@@ -60,7 +60,7 @@ private slots:
     void exportPhasesSceneSVG();
     
     void showCalibration(const QJsonObject& date);
-    void showEvents(bool show);
+    void showEvents();
     
 private:
     void exportSceneImage(QGraphicsScene* scene, bool asSvg);
@@ -69,14 +69,26 @@ private:
     QWidget* mLeftWrapper;
     QWidget* mRightWrapper;
     
-    QWidget* mEventsWrapper;
+    // ------
+    
     EventsScene* mEventsScene;
     QGraphicsView* mEventsView;
     
     SceneGlobalView* mEventsGlobalView;
     ScrollCompressor* mEventsGlobalZoom;
-    Button* mEventsButExportPNG;
-    Button* mEventsButExportSVG;
+    
+    Button* mButNewEvent;
+    Button* mButNewEventKnown;
+    Button* mButDeleteEvent;
+    Button* mButRecycleEvent;
+    Button* mButEventsPNG;
+    Button* mButEventsSVG;
+    Button* mButEventsOverview;
+    
+    // ------
+    
+    ImportDataView* mImportDataView;
+    EventPropertiesView* mEventPropertiesView;
     
     QWidget* mPhasesWrapper;
     PhasesScene* mPhasesScene;
@@ -84,49 +96,47 @@ private:
     
     SceneGlobalView* mPhasesGlobalView;
     ScrollCompressor* mPhasesGlobalZoom;
-    Button* mPhasesButExportPNG;
-    Button* mPhasesButExportSVG;
     
-    PhasesList* mPhasesList;
-    ImportDataView* mImportDataView;
-    EventPropertiesView* mEventPropertiesView;
-    
-    CalibrationView* mCalibrationView;
-    QPropertyAnimation* mAnimationCalib;
+    Button* mButNewPhase;
+    Button* mButDeletePhase;
+    Button* mButPhasesPNG;
+    Button* mButPhasesSVG;
     
     QPropertyAnimation* mAnimationHide;
     QPropertyAnimation* mAnimationShow;
     
+    // ------
+    
+    CalibrationView* mCalibrationView;
+    Button* mButBackEvents;
+    QPropertyAnimation* mAnimationCalib;
+    
+    // ------
+    
     Label* mMinLab;
     Label* mMaxLab;
     Label* mStepLab;
+    
     LineEdit* mMinEdit;
     LineEdit* mMaxEdit;
     LineEdit* mStepEdit;
+    
     Button* mButApply;
     
-    Button* mButEvents;
-    
-    Button* mButNewEvent;
-    Button* mButNewEventKnown;
-    Button* mButDeleteEvent;
-    Button* mButRecycleEvent;
-    
-    Button* mButNewPhase;
-    Button* mButDeletePhase;
-    
-    Button* mButImport;
-    Button* mButPhasesList;
-    Button* mButPhasesModel;
     Button* mButProperties;
+    Button* mButImport;
+    Button* mButPhasesModel;
     
-    QRect mToolBarRect;
     QRect mLeftRect;
-    QRect mLeftRectHidden;
+    QRect mLeftHiddenRect;
+    QRect mRightRect;
+    QRect mRightSubRect;
+    QRect mRightSubHiddenRect;
+    QRect mHandlerRect;
     
     int mMargin;
     int mToolbarH;
-    int mRightW;
+    float mSplitProp;
     int mHandlerW;
     bool mIsSplitting;
 };

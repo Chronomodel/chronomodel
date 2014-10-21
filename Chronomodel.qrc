@@ -27,10 +27,29 @@
 	<file alias="zoom_default.png">resources/zoom_default.png</file>
 	<file alias="zoom_default_w.png">resources/zoom_default_w.png</file>
 	
+	<file alias="new_event.png">resources/new_event.png</file>
+	<file alias="new_bound.png">resources/new_bound.png</file>
+	<file alias="delete.png">resources/delete.png</file>
+	<file alias="restore.png">resources/restore.png</file>
+	<file alias="topng.png">resources/topng.png</file>
+	<file alias="tosvg.png">resources/tosvg.png</file>
+	<file alias="eye.png">resources/eye.png</file>
 	
 	<file alias="new.png">resources/new.png</file>
+	<file alias="open.png">resources/open.png</file>
+	<file alias="save.png">resources/save.png</file>
+	<file alias="undo.png">resources/undo.png</file>
+	<file alias="redo.png">resources/redo.png</file>
+	<file alias="settings.png">resources/settings.png</file>
+	<file alias="model.png">resources/model.png</file>
+	<file alias="run.png">resources/run.png</file>
+	<file alias="results.png">resources/results.png</file>
+	
+	<file alias="settings_w.png">resources/settings_w.png</file>
+	<file alias="model_w.png">resources/model_w.png</file>
+	<file alias="from_csv.png">resources/from_csv.png</file>
+	
 	<file alias="new_w.png">resources/new_w.png</file>
-	<file alias="delete.png">resources/delete.png</file>
 	<file alias="delete_w.png">resources/delete_w.png</file>
 	<file alias="edit.png">resources/edit.png</file>
 	<file alias="import.png">resources/import.png</file>

@@ -65,11 +65,11 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     }
     
     mDeleteBut = new Button(tr("Delete"), mDefaultView);
-    mDeleteBut->setIcon(QIcon(":trash_w.png"));
+    mDeleteBut->setIcon(QIcon(":delete.png"));
     connect(mDeleteBut, SIGNAL(clicked()), this, SLOT(deleteSelectedDates()));
     
     mRecycleBut = new Button(tr("Restore"), mDefaultView);
-    mRecycleBut->setIcon(QIcon(":recycle_w.png"));
+    mRecycleBut->setIcon(QIcon(":restore.png"));
     connect(mRecycleBut, SIGNAL(clicked()), this, SLOT(recycleDates()));
     
     // ---------------
@@ -463,7 +463,14 @@ void EventPropertiesView::sendSplitDate()
 
 
 
-#pragma mark events
+#pragma mark Layout
+void EventPropertiesView::paintEvent(QPaintEvent* e)
+{
+    Q_UNUSED(e);
+    QPainter p(this);
+    p.fillRect(rect(), QColor(180, 180, 180));
+}
+
 void EventPropertiesView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
@@ -475,7 +482,7 @@ void EventPropertiesView::updateLayout()
     QRect r = rect().adjusted(0, 0, 0, 0);
     int m = 5;
     int w1 = 80;
-    int w2 = r.width() - w1 - m;
+    int w2 = r.width() - w1 - 3*m;
     int lineH = 20;
     int comboH = mMethodCombo->height();
     int butW = 80;
@@ -487,13 +494,13 @@ void EventPropertiesView::updateLayout()
         butW = 0;
     }
     
-    mNameLab->setGeometry(0, 0, w1, lineH);
-    mColorLab->setGeometry(0, lineH + m, w1, lineH);
+    mNameLab->setGeometry(m, m, w1, lineH);
+    mColorLab->setGeometry(m, 2*m + lineH, w1, lineH);
     
-    mNameEdit->setGeometry(r.x() + w1 + m, r.y(), w2, lineH);
-    mColorPicker->setGeometry(r.x() + w1 + m, r.y() + lineH + m, w2, lineH);
+    mNameEdit->setGeometry(2*m + w1, m, w2, lineH);
+    mColorPicker->setGeometry(2*m + w1, 2*m + lineH, w2, lineH);
     
-    QRect typeRect = r.adjusted(0, 2*(m+lineH), 0, 0);
+    QRect typeRect = r.adjusted(0, 3*m + 2*lineH, 0, 0);
     mDefaultView->setGeometry(typeRect);
     mKnownView->setGeometry(typeRect);
     
@@ -504,35 +511,30 @@ void EventPropertiesView::updateLayout()
     mMethodCombo->move(w1 + m, 0);
     mMethodCombo->setFixedWidth(w2);
     
-    QRect listRect(0, comboH + m, typeRect.width() - m - butW, typeRect.height() - comboH - butH - 2*m);
+    QRect listRect(0, comboH + m, typeRect.width() - butW, typeRect.height() - comboH - m);
     mDatesList->setGeometry(listRect);
     
-    mDeleteBut->setGeometry(0, listRect.height() + 2*m + comboH, (listRect.width()-m)/2, butH);
-    mRecycleBut->setGeometry((listRect.width()-m)/2 + m, listRect.height() + 2*m + comboH, (listRect.width()-m)/2, butH);
-    
-    int x = listRect.width() + m;
+    int x = listRect.width();
     int y = comboH + m;
     
     for(int i=0; i<mPluginButs1.size(); ++i)
     {
         mPluginButs1[i]->setGeometry(x, y, butW, butH);
-        y += m + butH;
+        y += butH;
     }
     
-    y += butGap - m;
+    //y += butGap;
     
     for(int i=0; i<mPluginButs2.size(); ++i)
     {
         mPluginButs2[i]->setGeometry(x, y, butW, butH);
-        y += m + butH;
+        y += butH;
     }
     
-    y += butGap - m;
-    
-    mMergeBut->setGeometry(x, y, butW, butH);
-    y += m + butH;
-    mSplitBut->setGeometry(x, y, butW, butH);
-    y += m + butH;
+    mMergeBut->setGeometry(x, comboH + m + listRect.height() - 4*butH, butW, butH);
+    mSplitBut->setGeometry(x, comboH + m + listRect.height() - 3*butH, butW, butH);
+    mDeleteBut->setGeometry(x, comboH + m + listRect.height() - 2*butH, butW, butH);
+    mRecycleBut->setGeometry(x, comboH + m + listRect.height() - butH, butW, butH);
     
     
     // Known view :

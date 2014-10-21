@@ -30,6 +30,7 @@ public slots:
     void setEvent(const QJsonObject& event);
     
 protected:
+    void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent* e);
     void updateLayout();
     

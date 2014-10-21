@@ -6,6 +6,7 @@
 float pointSize(float size);
 
 void drawButton(QPainter& painter, const QRectF& r, bool hover, bool isEnabled = true, const QString& text = QString(), const QIcon& icon = QIcon(), bool isFlat = false);
+void drawButton2(QPainter& painter, const QRectF& r, bool hover, bool isEnabled = true, const QString& text = QString(), const QIcon& icon = QIcon(), bool isFlat = false);
 void drawBox(QPainter& painter, const QRectF& r, const QString& text);
 void drawRadio(QPainter& painter, const QRectF& r, const QString& text, bool toggled);
 void drawCheckbox(QPainter& painter, const QRectF& r, const QString& text, Qt::CheckState state);

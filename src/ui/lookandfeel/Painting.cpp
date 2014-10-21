@@ -21,6 +21,63 @@ void drawButton(QPainter& painter, const QRectF& rect, bool hover, bool isEnable
     painter.save();
     painter.setRenderHint(QPainter::Antialiasing);
     
+    if(!isEnabled)
+    {
+        
+    }
+    else if(hover)
+    {
+        QLinearGradient grad(0, 0, 0, rect.height());
+        grad.setColorAt(0, QColor(0, 0, 0));
+        grad.setColorAt(1, QColor(20, 20, 20));
+        painter.fillRect(rect, grad);
+        
+        painter.setPen(QColor(10, 10, 10));
+        painter.drawLine(0, 0, rect.width(), 0);
+        
+        painter.setPen(QColor(30, 30, 30));
+        painter.drawLine(0, rect.height(), rect.width(), rect.height());
+    }
+    else
+    {
+        QLinearGradient grad(0, 0, 0, rect.height());
+        grad.setColorAt(0, QColor(40, 40, 40));
+        grad.setColorAt(1, QColor(30, 30, 30));
+        painter.fillRect(rect, grad);
+        
+        painter.setPen(QColor(50, 50, 50));
+        painter.drawLine(0, 0, rect.width(), 0);
+        
+        painter.setPen(Qt::black);
+        painter.drawLine(0, rect.height(), rect.width(), rect.height());
+    }
+    
+    int textH = 22;
+    
+    QFont font = painter.font();
+    font.setPointSizeF(pointSize(10.f));
+    painter.setFont(font);
+    
+    painter.setPen(QColor(200, 200, 200));
+    painter.drawText(rect.adjusted(0, rect.height() - textH, 0, 0), Qt::AlignCenter, text);
+    
+    float m = 8;
+    float w = rect.width() - 2*m;
+    float h = rect.height() - m - textH;
+    float s = qMin(w, h);
+    
+    QRectF iconRect((rect.width() - s)/2.f, m, s, s);
+    QPixmap pixmap = icon.pixmap(iconRect.size().toSize());
+    painter.drawPixmap(iconRect, pixmap, QRectF(0, 0, pixmap.width(), pixmap.height()));
+    
+    painter.restore();
+}
+
+void drawButton2(QPainter& painter, const QRectF& rect, bool hover, bool isEnabled, const QString& text, const QIcon& icon, bool isFlat)
+{
+    painter.save();
+    painter.setRenderHint(QPainter::Antialiasing);
+    
     QRectF r = rect;
     
     if(isFlat)

@@ -47,7 +47,7 @@ void MainWindow::createActions()
     mNewProjectAction->setStatusTip(tr("Create a new project"));
     connect(mNewProjectAction, SIGNAL(triggered()), this, SLOT(newProject()));
     
-    mOpenProjectAction = new QAction(QIcon(":open2.png"), tr("Open"), this);
+    mOpenProjectAction = new QAction(QIcon(":open.png"), tr("Open"), this);
     mOpenProjectAction->setShortcuts(QKeySequence::Open);
     mOpenProjectAction->setStatusTip(tr("Open an existing project"));
     connect(mOpenProjectAction, SIGNAL(triggered()), this, SLOT(openProject()));
@@ -57,26 +57,32 @@ void MainWindow::createActions()
     mProjectCloseAction->setEnabled(false);
     connect(mProjectCloseAction, SIGNAL(triggered()), this, SLOT(closeProject()));
     
-    mProjectSaveAction = new QAction(QIcon(":save2.png"), tr("&Save"), this);
+    mProjectSaveAction = new QAction(QIcon(":save.png"), tr("&Save"), this);
     mProjectSaveAction->setShortcuts(QKeySequence::Save);
     mProjectSaveAction->setEnabled(false);
     
-    mProjectSaveAsAction = new QAction(QIcon(":save2.png"), tr("Save as..."), this);
+    mProjectSaveAsAction = new QAction(QIcon(":save.png"), tr("Save as..."), this);
     
     mProjectExportAction = new QAction(QIcon(":export.png"), tr("Export"), this);
     mProjectExportAction->setEnabled(false);
+    mProjectExportAction->setVisible(false);
     
     mUndoAction = ProjectManager::getUndoStack().createUndoAction(this);
+    mUndoAction->setIcon(QIcon(":undo.png"));
+    mUndoAction->setText(tr("Undo"));
+    
     mRedoAction = ProjectManager::getUndoStack().createRedoAction(this);
+    mRedoAction->setIcon(QIcon(":redo.png"));
+    
     mUndoViewAction = mUndoDock->toggleViewAction();
     mUndoViewAction->setText(tr("Show Undo Stack"));
     
     //-----------------------------------------------------------------
     // MCMC Actions
     //-----------------------------------------------------------------
-    mMCMCSettingsAction = new QAction(QIcon(":settings2.png"), tr("MCMC"), this);
+    mMCMCSettingsAction = new QAction(QIcon(":settings.png"), tr("MCMC"), this);
     
-    mRunAction = new QAction(QIcon(":build.png"), tr("Run"), this);
+    mRunAction = new QAction(QIcon(":run.png"), tr("Run"), this);
     //runAction->setIcon(qApp->style()->standardIcon(QStyle::SP_MediaPlay));
     mRunAction->setIconText(tr("Run"));
     mRunAction->setIconVisibleInMenu(true);
@@ -88,7 +94,7 @@ void MainWindow::createActions()
     mViewModelAction = new QAction(QIcon(":model.png"), tr("Model"), this);
     mViewModelAction->setCheckable(true);
     
-    mViewResultsAction = new QAction(QIcon(":maths.png"), tr("Results"), this);
+    mViewResultsAction = new QAction(QIcon(":results.png"), tr("Results"), this);
     mViewResultsAction->setCheckable(true);
     
     mViewGroup = new QActionGroup(this);

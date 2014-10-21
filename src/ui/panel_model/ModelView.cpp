@@ -21,9 +21,9 @@
 
 ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mMargin(5),
-mToolbarH(70),
-mRightW(500),
-mHandlerW(20),
+mToolbarH(60),
+mSplitProp(0.6f),
+mHandlerW(15),
 mIsSplitting(false)
 {
     setMouseTracking(true);
@@ -35,114 +35,66 @@ mIsSplitting(false)
     
     // --------
     
-    mMinLab = new Label(tr("Start") + " :", this);
-    mMaxLab = new Label(tr("End") + " :", this);
-    mStepLab = new Label(tr("Step") + " :", this);
-    
-    mMinLab->setLight();
-    mMaxLab->setLight();
-    mStepLab->setLight();
-    
-    mMinEdit = new LineEdit(this);
-    mMaxEdit = new LineEdit(this);
-    mStepEdit = new LineEdit(this);
-    mButApply = new Button(tr("Apply"), this);
-    
-    QIntValidator* validator = new QIntValidator();
-    mMinEdit->setValidator(validator);
-    mMaxEdit->setValidator(validator);
-    mStepEdit->setValidator(validator);
-    
-    mButEvents = new Button(tr("Events"), this);
-    mButEvents->setIcon(QIcon(":model_w.png"));
-    mButEvents->setCheckable(true);
-    mButEvents->setChecked(true);
-    mButEvents->setEnabled(false);
-    
-    connect(mButEvents, SIGNAL(toggled(bool)), this, SLOT(showEvents(bool)));
-    connect(mButApply, SIGNAL(clicked()), this, SLOT(applySettings()));
-    
-    // --------
-    
-    mButImport = new Button(tr("Import Data"), this);
-    mButImport->setCheckable(true);
-    mButImport->setAutoExclusive(true);
-    //mButImport->setFlat(true);
-    mButImport->setIcon(QIcon(":import_w.png"));
-    //mButImport->setChecked(true);
-    
-    mButPhasesModel = new Button(tr("Phases"), this);
-    mButPhasesModel->setCheckable(true);
-    mButPhasesModel->setAutoExclusive(true);
-    //mButPhasesModel->setFlat(true);
-    mButPhasesModel->setIcon(QIcon(":model_w.png"));
-    
-    mButProperties = new Button(tr("Event"), this);
-    mButProperties->setCheckable(true);
-    mButProperties->setAutoExclusive(true);
-    //mButProperties->setFlat(true);
-    mButProperties->setIcon(QIcon(":e_w.png"));
-    mButProperties->setChecked(true);
-    
-    connect(mButImport, SIGNAL(clicked()), this, SLOT(slideRightPanel()));
-    connect(mButPhasesModel, SIGNAL(clicked()), this, SLOT(slideRightPanel()));
-    connect(mButProperties, SIGNAL(clicked()), this, SLOT(slideRightPanel()));
-    
-    // --------
-    
     mLeftWrapper = new QWidget(this);
     mRightWrapper = new QWidget(this);
     
     // --------
     
-    mEventsWrapper = new QWidget(mLeftWrapper);
-    
-    mEventsView = new QGraphicsView(mEventsWrapper);
+    mEventsView = new QGraphicsView(mLeftWrapper);
     mEventsScene = new EventsScene(mEventsView);
     mEventsView->setScene(mEventsScene);
     mEventsView->setAcceptDrops(true);
     mEventsView->setInteractive(true);
     mEventsView->setDragMode(QGraphicsView::RubberBandDrag);
     
-    mEventsGlobalView = new SceneGlobalView(mEventsScene, mEventsView, mEventsWrapper);
-    mEventsGlobalZoom = new ScrollCompressor(mEventsWrapper);
+    mEventsGlobalView = new SceneGlobalView(mEventsScene, mEventsView, mEventsView);
+    mEventsGlobalView->setVisible(false);
+    
+    mButNewEvent = new Button(tr("New Event"), mLeftWrapper);
+    mButNewEvent->setIcon(QIcon(":new_event.png"));
+    
+    mButNewEventKnown = new Button(tr("New Bound"), mLeftWrapper);
+    mButNewEventKnown->setIcon(QIcon(":new_bound.png"));
+    
+    mButDeleteEvent = new Button(tr("Delete"), mLeftWrapper);
+    mButDeleteEvent->setIcon(QIcon(":delete.png"));
+    
+    mButRecycleEvent = new Button(tr("Restore"), mLeftWrapper);
+    mButRecycleEvent->setIcon(QIcon(":restore.png"));
+    
+    mButEventsPNG = new Button(tr("Export"), mLeftWrapper);
+    mButEventsPNG->setIcon(QIcon(":topng.png"));
+    
+    mButEventsSVG = new Button(tr("Export"), mLeftWrapper);
+    mButEventsSVG->setIcon(QIcon(":tosvg.png"));
+    
+    mButEventsOverview = new Button(tr("Overview"), mLeftWrapper);
+    mButEventsOverview->setIcon(QIcon(":eye.png"));
+    mButEventsOverview->setCheckable(true);
+    
+    mEventsGlobalZoom = new ScrollCompressor(mLeftWrapper);
     mEventsGlobalZoom->setProp(1);
     mEventsGlobalZoom->showText(tr("Zoom"), true);
     
-    mEventsButExportPNG = new Button(tr("PNG"), mEventsWrapper);
-    //mEventsButExportPNG->setFlat(true);
-    
-    mEventsButExportSVG = new Button(tr("SVG"), mEventsWrapper);
-    //mEventsButExportSVG->setFlat(true);
-    
-    connect(mEventsGlobalZoom, SIGNAL(valueChanged(float)), this, SLOT(updateEventsZoom(float)));
-    connect(mEventsButExportPNG, SIGNAL(clicked()), this, SLOT(exportEventsScenePNG()));
-    connect(mEventsButExportSVG, SIGNAL(clicked()), this, SLOT(exportEventsSceneSVG()));
-    
     // just to refresh when selection changes :
     connect(mEventsScene, SIGNAL(selectionChanged()), mEventsGlobalView, SLOT(update()));
-    connect(mEventsScene, SIGNAL(eventDoubleClicked(Event*)), mButProperties, SLOT(click()));
-    
-    mButNewEvent = new Button(tr("New Event"), mEventsWrapper);
-    mButNewEvent->setIcon(QIcon(":new_w.png"));
-    //mButNewEvent->setFlat(true);
-    
-    mButNewEventKnown = new Button(tr("New Bound"), mEventsWrapper);
-    mButNewEventKnown->setIcon(QIcon(":bound_w.png"));
-    //mButNewEventKnown->setFlat(true);
-    
-    mButDeleteEvent = new Button(tr("Delete"), mEventsWrapper);
-    mButDeleteEvent->setIcon(QIcon(":trash_w.png"));
-    //mButDeleteEvent->setFlat(true);
-    
-    mButRecycleEvent = new Button(tr("Restore"), mEventsWrapper);
-    mButRecycleEvent->setIcon(QIcon(":recycle_w.png"));
-    //mButRecycleEvent->setFlat(true);
     
     connect(mButNewEvent, SIGNAL(clicked()), project, SLOT(createEvent()));
     connect(mButNewEventKnown, SIGNAL(clicked()), project, SLOT(createEventKnown()));
     connect(mButDeleteEvent, SIGNAL(clicked()), project, SLOT(deleteSelectedEvents()));
     connect(mButRecycleEvent, SIGNAL(clicked()), project, SLOT(recycleEvents()));
+    connect(mButEventsOverview, SIGNAL(toggled(bool)), mEventsGlobalView, SLOT(setVisible(bool)));
+    
+    connect(mEventsGlobalZoom, SIGNAL(valueChanged(float)), this, SLOT(updateEventsZoom(float)));
+    connect(mButEventsPNG, SIGNAL(clicked()), this, SLOT(exportEventsScenePNG()));
+    connect(mButEventsSVG, SIGNAL(clicked()), this, SLOT(exportEventsSceneSVG()));
+    
+    // --------
+    
+    mImportDataView = new ImportDataView(mRightWrapper);
+    connect(mEventsScene, SIGNAL(csvDataLineDropAccepted(QList<int>)), mImportDataView, SLOT(removeCsvRows(QList<int>)));
+    
+    mEventPropertiesView = new EventPropertiesView(mRightWrapper);
     
     // --------
     
@@ -159,43 +111,28 @@ mIsSplitting(false)
     connect(mEventsScene, SIGNAL(selectionChanged()), mPhasesScene, SLOT(updateCheckedPhases()));
     
     mPhasesGlobalView = new SceneGlobalView(mPhasesScene, mPhasesView, mPhasesWrapper);
-    mPhasesGlobalZoom = new ScrollCompressor(mPhasesWrapper);
-    mPhasesGlobalZoom->setProp(1);
     
-    mPhasesButExportPNG = new Button(tr("PNG"), mPhasesWrapper);
-    mPhasesButExportPNG->setFlat(true);
-    
-    mPhasesButExportSVG = new Button(tr("SVG"), mPhasesWrapper);
-    mPhasesButExportSVG->setFlat(true);
-    
-    connect(mPhasesGlobalZoom, SIGNAL(valueChanged(float)), this, SLOT(updatePhasesZoom(float)));
-    connect(mPhasesButExportPNG, SIGNAL(clicked()), this, SLOT(exportPhasesScenePNG()));
-    connect(mPhasesButExportSVG, SIGNAL(clicked()), this, SLOT(exportPhasesSceneSVG()));
-    
-    mButNewPhase = new Button(tr("New Phase"), mPhasesView);
+    mButNewPhase = new Button(tr("New Phase"), mPhasesWrapper);
     mButNewPhase->setIcon(QIcon(":new_w.png"));
     
-    mButDeletePhase = new Button(tr("Delete Phase"), mPhasesView);
+    mButDeletePhase = new Button(tr("Delete Phase"), mPhasesWrapper);
     mButDeletePhase->setIcon(QIcon(":trash_w"));
+    
+    mButPhasesPNG = new Button(tr("PNG"), mPhasesWrapper);
+    mButPhasesPNG->setFlat(true);
+    
+    mButPhasesSVG = new Button(tr("SVG"), mPhasesWrapper);
+    mButPhasesSVG->setFlat(true);
+    
+    mPhasesGlobalZoom = new ScrollCompressor(mPhasesWrapper);
+    mPhasesGlobalZoom->setProp(1);
     
     connect(mButNewPhase, SIGNAL(clicked()), project, SLOT(createPhase()));
     connect(mButDeletePhase, SIGNAL(clicked()), project, SLOT(deleteCurrentPhase()));
     
-    // --------
-    
-    mImportDataView = new ImportDataView(mRightWrapper);
-    connect(mEventsScene, SIGNAL(csvDataLineDropAccepted(QList<int>)), mImportDataView, SLOT(removeCsvRows(QList<int>)));
-    
-    mEventPropertiesView = new EventPropertiesView(mRightWrapper);
-    
-    // -------------
-    
-    mCalibrationView = new CalibrationView(this);
-    mAnimationCalib = new QPropertyAnimation();
-    mAnimationCalib->setPropertyName("geometry");
-    mAnimationCalib->setTargetObject(mCalibrationView);
-    mAnimationCalib->setDuration(400);
-    mAnimationCalib->setEasingCurve(QEasingCurve::OutCubic);
+    connect(mPhasesGlobalZoom, SIGNAL(valueChanged(float)), this, SLOT(updatePhasesZoom(float)));
+    connect(mButPhasesPNG, SIGNAL(clicked()), this, SLOT(exportPhasesScenePNG()));
+    connect(mButPhasesSVG, SIGNAL(clicked()), this, SLOT(exportPhasesSceneSVG()));
     
     // --------
     
@@ -203,7 +140,6 @@ mIsSplitting(false)
     mAnimationHide->setPropertyName("geometry");
     mAnimationHide->setDuration(200);
     mAnimationHide->setTargetObject(mEventPropertiesView);
-    //mAnimationHide->setTargetObject(mImportDataView);
     mAnimationHide->setEasingCurve(QEasingCurve::Linear);
     
     mAnimationShow = new QPropertyAnimation();
@@ -213,6 +149,65 @@ mIsSplitting(false)
     
     connect(mAnimationHide, SIGNAL(finished()), mAnimationShow, SLOT(start()));
     connect(mAnimationShow, SIGNAL(finished()), this, SLOT(prepareNextSlide()));
+    
+    // -------------
+    
+    mCalibrationView = new CalibrationView(this);
+    
+    mAnimationCalib = new QPropertyAnimation();
+    mAnimationCalib->setPropertyName("geometry");
+    mAnimationCalib->setTargetObject(mCalibrationView);
+    mAnimationCalib->setDuration(400);
+    mAnimationCalib->setEasingCurve(QEasingCurve::OutCubic);
+    
+    mButBackEvents = new Button(tr("Close"), mCalibrationView);
+    connect(mButBackEvents, SIGNAL(clicked()), this, SLOT(showEvents()));
+    
+    // --------
+    
+    mMinLab = new Label(tr("Start") + " :", mRightWrapper);
+    mMaxLab = new Label(tr("End") + " :", mRightWrapper);
+    mStepLab = new Label(tr("Step") + " :", mRightWrapper);
+    
+    mMinLab->setLight();
+    mMaxLab->setLight();
+    mStepLab->setLight();
+    
+    mMinEdit = new LineEdit(mRightWrapper);
+    mMaxEdit = new LineEdit(mRightWrapper);
+    mStepEdit = new LineEdit(mRightWrapper);
+    mButApply = new Button(tr("Apply"), mRightWrapper);
+    
+    QIntValidator* validator = new QIntValidator();
+    mMinEdit->setValidator(validator);
+    mMaxEdit->setValidator(validator);
+    mStepEdit->setValidator(validator);
+    
+    connect(mButApply, SIGNAL(clicked()), this, SLOT(applySettings()));
+    
+    // --------
+    
+    mButProperties = new Button(tr("Properties"), mRightWrapper);
+    mButProperties->setCheckable(true);
+    mButProperties->setAutoExclusive(true);
+    mButProperties->setIcon(QIcon(":settings_w.png"));
+    mButProperties->setChecked(true);
+    
+    mButImport = new Button(tr("Import Data"), mRightWrapper);
+    mButImport->setCheckable(true);
+    mButImport->setAutoExclusive(true);
+    mButImport->setIcon(QIcon(":from_csv.png"));
+    
+    mButPhasesModel = new Button(tr("Phases"), mRightWrapper);
+    mButPhasesModel->setCheckable(true);
+    mButPhasesModel->setAutoExclusive(true);
+    mButPhasesModel->setIcon(QIcon(":model_w.png"));
+    
+    connect(mButProperties, SIGNAL(clicked()), this, SLOT(slideRightPanel()));
+    connect(mButImport, SIGNAL(clicked()), this, SLOT(slideRightPanel()));
+    connect(mButPhasesModel, SIGNAL(clicked()), this, SLOT(slideRightPanel()));
+    
+    connect(mEventsScene, SIGNAL(eventDoubleClicked(Event*)), mButProperties, SLOT(click()));
 }
 
 ModelView::~ModelView()
@@ -265,26 +260,20 @@ void ModelView::applySettings()
     project->setSettings(settings);
 }
 
+#pragma mark Right animation
 void ModelView::slideRightPanel()
 {
-    mButEvents->setChecked(true);
+    mAnimationShow->setStartValue(mRightSubHiddenRect);
+    mAnimationShow->setEndValue(mRightSubRect);
     
-    int m = mMargin;
-    
-    QRect hiddenRect(width(), mToolbarH + m, mRightW - m, height() - mToolbarH - 2*m);
-    QRect visibleRect = hiddenRect.adjusted(-mRightW, 0, -mRightW, 0);
-    
-    mAnimationShow->setStartValue(hiddenRect);
-    mAnimationShow->setEndValue(visibleRect);
-    
-    mAnimationHide->setStartValue(visibleRect);
-    mAnimationHide->setEndValue(hiddenRect);
+    mAnimationHide->setStartValue(mRightSubRect);
+    mAnimationHide->setEndValue(mRightSubHiddenRect);
     
     QWidget* target = 0;
     if(mButImport->isChecked())
         target = mImportDataView;
     else if(mButPhasesModel->isChecked())
-        target = mPhasesView;
+        target = mPhasesWrapper;
     else if(mButProperties->isChecked())
         target = mEventPropertiesView;
     
@@ -302,7 +291,7 @@ void ModelView::prepareNextSlide()
     if(mButImport->isChecked())
         target = mImportDataView;
     else if(mButPhasesModel->isChecked())
-        target = mPhasesView;
+        target = mPhasesWrapper;
     else if(mButProperties->isChecked())
         target = mEventPropertiesView;
     
@@ -312,23 +301,16 @@ void ModelView::prepareNextSlide()
     }
 }
 
-
+#pragma mark Painting
 void ModelView::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
-    
     QPainter p(this);
-    p.setRenderHint(QPainter::Antialiasing);
-    
-    p.fillRect(rect(), QColor(180, 180, 180));
-    p.fillRect(mToolBarRect, QColor(100, 100, 100));
-    
-    p.setPen(Qt::NoPen);
-    p.setBrush(QColor(100, 100, 100));
-    QRect handlerRect(width() - mRightW - mHandlerW , mToolbarH + (height()-mToolbarH-mHandlerW)/2, mHandlerW, mHandlerW);
-    p.drawEllipse(handlerRect.adjusted(3, 3, -3, -3));
+    p.fillRect(mHandlerRect, QColor(50, 50, 50));
+    p.fillRect(mRightRect, QColor(50, 50, 50));
 }
 
+#pragma mark Layout
 void ModelView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
@@ -337,78 +319,83 @@ void ModelView::resizeEvent(QResizeEvent* e)
 void ModelView::updateLayout()
 {
     int m = mMargin;
-    int editLabelW = 50;
-    int editW = 50;
-    int editH = (mToolbarH - 4*m) / 3;
-    int butW = 80;
-    //int tabW = 100;
     
-    mToolBarRect = QRect(0, 0, width(), mToolbarH);
-
-    mMinLab->setGeometry(m, m, editLabelW, editH);
-    mMaxLab->setGeometry(m, 2*m + editH, editLabelW, editH);
-    mStepLab->setGeometry(m, 3*m + 2*editH, editLabelW, editH);
+    int x = width() * mSplitProp;
+    int minLeft = 200;
+    int minRight = 430 + mHandlerW/2;
+    x = (x < minLeft) ? minLeft : x;
+    x = (x > width() - minRight) ? width() - minRight : x;
     
-    mMinEdit->setGeometry(2*m + editLabelW, m, editW, editH);
-    mMaxEdit->setGeometry(2*m + editLabelW, 2*m + editH, editW, editH);
-    mStepEdit->setGeometry(2*m + editLabelW, 3*m + 2*editH, editW, editH);
-    mButApply->setGeometry(3*m + editLabelW + editW, m, butW, mToolbarH - 2*m);
-    mButEvents->setGeometry(4*m + editLabelW + editW + butW, m, butW, mToolbarH - 2*m);
+    mLeftRect = QRect(0, 0, x - mHandlerW/2, height());
+    mRightRect = QRect(x + mHandlerW/2, 0, width() - x - mHandlerW/2, height());
+    mLeftHiddenRect = mLeftRect.adjusted(-mLeftRect.width(), 0, -mLeftRect.width(), 0);
+    mRightSubRect = QRect(0, mToolbarH, mRightRect.width() - m, mRightRect.height() - mToolbarH - m);
+    mRightSubHiddenRect = mRightSubRect.adjusted(mRightSubRect.width() + 2*m, 0, mRightSubRect.width() + 2*m, 0);
+    mHandlerRect = QRect(x - mHandlerW/2, 0, mHandlerW, height());
     
-    /*mButProperties->setGeometry(width() - 3*tabW, 0, tabW, mToolbarH);
-    mButImport->setGeometry(width() - 2*tabW, 0, tabW, mToolbarH);
-    mButPhasesModel->setGeometry(width() - 1*tabW, 0, tabW, mToolbarH);*/
+    // ----------
     
-    mButProperties->setGeometry(width() - 3*(butW + m), m, butW, mToolbarH - 2*m);
-    mButImport->setGeometry(width() - 2*(butW + m), m, butW, mToolbarH - 2*m);
-    mButPhasesModel->setGeometry(width() - 1*(butW + m), m, butW, mToolbarH - 2*m);
-    
-    mLeftRect = QRect(m, mToolbarH + m, width() - m - mRightW - mHandlerW, height() - mToolbarH - 2*m);
     mLeftWrapper->setGeometry(mLeftRect);
-    mEventsWrapper->setGeometry(0, 0, mLeftRect.width(), mLeftRect.height());
+    mRightWrapper->setGeometry(mRightRect);
     
-    QRect rightRect(width() - mRightW, mToolbarH + m, mRightW - m, height() - mToolbarH - 2*m);
-    mRightWrapper->setGeometry(rightRect);
+    // ----------
+
+    int editLabelW = 35;
+    int editW = 50;
+    int editH = (mToolbarH - 3*m) / 2;
+    int butW = 80;
     
-    QRect rightR(0, 0, rightRect.width(), rightRect.height());
-    QRect rightRH(rightRect.width(), 0, rightRect.width(), rightRect.height());
+    mMinLab->setGeometry(0, m, editLabelW, editH);
+    mMaxLab->setGeometry(0, 2*m + editH, editLabelW, editH);
+    mStepLab->setGeometry(2*m + editLabelW + editW, m, editLabelW, editH);
     
-    mPhasesWrapper->setGeometry(mButPhasesModel->isChecked() ? rightR : rightRH);
-    mImportDataView->setGeometry(mButImport->isChecked() ? rightR : rightRH);
-    mEventPropertiesView->setGeometry(mButProperties->isChecked() ? rightR : rightRH);
+    mMinEdit->setGeometry(m + editLabelW, m, editW, editH);
+    mMaxEdit->setGeometry(m + editLabelW, 2*m + editH, editW, editH);
+    mStepEdit->setGeometry(3*m + 2*editLabelW + editW, m, editW, editH);
+    mButApply->setGeometry(2*m + editLabelW + editW, 2*m + editH, editLabelW + m + editW, editH);
     
-    int radarCtrlW = 60;
-    int sceneButW = 70;
-    int sceneButH = 50;
+    mButProperties->setGeometry(mRightRect.width() - 3*butW, 0, butW, mToolbarH);
+    mButImport->setGeometry(mRightRect.width() - 2*butW, 0, butW, mToolbarH);
+    mButPhasesModel->setGeometry(mRightRect.width() - butW, 0, butW, mToolbarH);
+    
+    // ----------
+    
+    mEventPropertiesView->setGeometry(mButProperties->isChecked() ? mRightSubRect : mRightSubHiddenRect);
+    mPhasesWrapper->setGeometry(mButPhasesModel->isChecked() ? mRightSubRect : mRightSubHiddenRect);
+    mImportDataView->setGeometry(mButImport->isChecked() ? mRightSubRect : mRightSubHiddenRect);
+    
+    // ----------
+    
+    int butH = 60;
     int radarW = 150;
-    int radarH = 2*sceneButH + m;
+    int radarH = 200;
     
-    mEventsView->setGeometry(0, 2*(m + sceneButH), mLeftRect.width(), mLeftRect.height() - 2*(m + sceneButH));
-    
+    mEventsView->setGeometry(butW, 0, mLeftRect.width() - butW, mLeftRect.height());
     mEventsGlobalView->setGeometry(0, 0, radarW, radarH);
-    mEventsGlobalZoom->setGeometry(radarW + m, 0, radarCtrlW, radarH);
     
-    mButNewEvent->setGeometry(mEventsWrapper->width() - 3*sceneButW - 2*m, 0, sceneButW, sceneButH);
-    mButNewEventKnown->setGeometry(mEventsView->width() - 3*sceneButW - 2*m, m + sceneButH, sceneButW, sceneButH);
-    mButDeleteEvent->setGeometry(mEventsView->width() - 2*sceneButW - m, 0, sceneButW, sceneButH);
-    mButRecycleEvent->setGeometry(mEventsView->width() - 2*sceneButW - m, m + sceneButH, sceneButW, sceneButH);
-    mEventsButExportPNG->setGeometry(mEventsView->width() - 1*sceneButW, 0, sceneButW, sceneButH);
-    mEventsButExportSVG->setGeometry(mEventsView->width() - 1*sceneButW, m + sceneButH, sceneButW, sceneButH);
+    mButNewEvent->setGeometry(0, 0, butW, butH);
+    mButNewEventKnown->setGeometry(0, butH, butW, butH);
+    mButDeleteEvent->setGeometry(0, 2*butH, butW, butH);
+    mButRecycleEvent->setGeometry(0, 3*butH, butW, butH);
+    mButEventsPNG->setGeometry(0, 4*butH, butW, butH);
+    mButEventsSVG->setGeometry(0, 5*butH, butW, butH);
+    mButEventsOverview->setGeometry(0, 6*butH, butW, butH);
+    mEventsGlobalZoom->setGeometry(0, 7*butH, butW, mLeftRect.height() - 7*butH);
     
     mPhasesGlobalView->setGeometry(0, 0, radarW, radarH);
-    mPhasesGlobalZoom->setGeometry(radarW, 0, radarCtrlW, radarH - 2*radarCtrlW);
-    mPhasesButExportPNG->setGeometry(radarW, radarH - 1*radarCtrlW, radarCtrlW, radarCtrlW);
-    mPhasesButExportSVG->setGeometry(radarW, radarH - 2*radarCtrlW, radarCtrlW, radarCtrlW);
+
+    mButNewPhase->setGeometry(mRightRect.width() - m - butW, m, butW, butH);
+    mButDeletePhase->setGeometry(mRightRect.width() - m - butW, 2*m + butH, butW, butH);
+    mButPhasesPNG->setGeometry(mRightRect.width() - m - butW, 3*m + 2*butH, butW, butH);
+    mButPhasesSVG->setGeometry(mRightRect.width() - m - butW, 4*m + 3*butH, butW, butH);
+    mPhasesGlobalZoom->setGeometry(mRightRect.width() - m - butW, 5*m + 4*butH, butW, mRightRect.height() - 4*butH - 6*m);
     
-    mButNewPhase->setGeometry(mPhasesWrapper->width() - sceneButW, 0, sceneButW, sceneButH);
-    mButDeletePhase->setGeometry(mPhasesWrapper->width() - sceneButW, m + sceneButH, sceneButW, sceneButH);
-    
-    mLeftRectHidden = mLeftRect.adjusted(-mLeftRect.width() - m, 0, -mLeftRect.width() - m, 0);
-    mCalibrationView->setGeometry(mButEvents->isChecked() ? mLeftRectHidden : mLeftRect);
+    mCalibrationView->setGeometry(mLeftHiddenRect);
     
     update();
 }
 
+#pragma mark Zoom
 void ModelView::updateEventsZoom(float prop)
 {
     qreal scale = prop;
@@ -425,6 +412,7 @@ void ModelView::updatePhasesZoom(float prop)
     mPhasesView->setMatrix(matrix);
 }
 
+#pragma mark Export images
 void ModelView::exportEventsScenePNG()
 {
     exportSceneImage(mEventsScene, false);
@@ -488,6 +476,7 @@ void ModelView::exportSceneImage(QGraphicsScene* scene, bool asSvg)
     }
 }
 
+#pragma mark Toggle Calibration
 void ModelView::showCalibration(const QJsonObject& date)
 {
     Date d = Date::fromJson(date);
@@ -495,37 +484,25 @@ void ModelView::showCalibration(const QJsonObject& date)
     {
         mCalibrationView->setDate(date);
         mCalibrationView->raise();
-        if(mButEvents->isChecked())
-        {
-            mButEvents->setChecked(false);
-        }
-    }
-    else
-    {
-        if(!mButEvents->isChecked())
-        {
-            mButEvents->setChecked(true);
-        }
+        
+        mAnimationCalib->setStartValue(mLeftHiddenRect);
+        mAnimationCalib->setEndValue(mLeftRect);
+        mAnimationCalib->start();
     }
 }
 
-void ModelView::showEvents(bool show)
+void ModelView::showEvents()
 {
-    mButEvents->setEnabled(!show);
-    mAnimationCalib->setStartValue(mLeftRectHidden);
-    mAnimationCalib->setEndValue(mLeftRect);
-    mAnimationCalib->setDirection(show ? QAbstractAnimation::Backward : QAbstractAnimation::Forward);
-    qDebug() << mLeftRect;
+    mAnimationCalib->setStartValue(mLeftRect);
+    mAnimationCalib->setEndValue(mLeftHiddenRect);
     mAnimationCalib->start();
 }
 
+#pragma mark Mouse Events
 void ModelView::mousePressEvent(QMouseEvent* e)
 {
-    QRect handlerRect(width() - mRightW - mHandlerW, mToolbarH, mHandlerW, height() - mToolbarH);
-    if(handlerRect.contains(e->pos()))
-    {
+    if(mHandlerRect.contains(e->pos()))
         mIsSplitting = true;
-    }
 }
 void ModelView::mouseReleaseEvent(QMouseEvent* e)
 {
@@ -534,25 +511,9 @@ void ModelView::mouseReleaseEvent(QMouseEvent* e)
 }
 void ModelView::mouseMoveEvent(QMouseEvent* e)
 {
-    /*QRect handlerRect(width() - mRightW - mHandlerW, mToolbarH, mHandlerW, height() - mToolbarH);
-    if(handlerRect.contains(e->pos()))
-    {
-        setCursor(Qt::SplitHCursor);
-    }
-    else
-    {
-        setCursor(Qt::ArrowCursor);
-    }*/
-    
     if(mIsSplitting)
     {
-        int leftMinW = 200;
-        int maxW = width() - (2*mMargin + mHandlerW + leftMinW);
-        
-        mRightW = width() - e->pos().x() - mHandlerW / 2;
-        mRightW = (mRightW < 0) ? 0 : mRightW;
-        mRightW = (mRightW > maxW) ? maxW : mRightW;
-        
+        mSplitProp = (float)e->pos().x() / (float)width();
         updateLayout();
     }
 }
@@ -560,9 +521,7 @@ void ModelView::mouseMoveEvent(QMouseEvent* e)
 void ModelView::keyPressEvent(QKeyEvent* event)
 {
     if(event->key() == Qt::Key_Escape)
-    {
         showCalibration(QJsonObject());
-    }
     else
         event->ignore();
 }
