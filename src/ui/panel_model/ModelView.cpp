@@ -52,25 +52,32 @@ mIsSplitting(false)
     
     mButNewEvent = new Button(tr("New Event"), mLeftWrapper);
     mButNewEvent->setIcon(QIcon(":new_event.png"));
+    mButNewEvent->setFlatVertical();
     
     mButNewEventKnown = new Button(tr("New Bound"), mLeftWrapper);
     mButNewEventKnown->setIcon(QIcon(":new_bound.png"));
+    mButNewEventKnown->setFlatVertical();
     
     mButDeleteEvent = new Button(tr("Delete"), mLeftWrapper);
     mButDeleteEvent->setIcon(QIcon(":delete.png"));
+    mButDeleteEvent->setFlatVertical();
     
     mButRecycleEvent = new Button(tr("Restore"), mLeftWrapper);
     mButRecycleEvent->setIcon(QIcon(":restore.png"));
+    mButRecycleEvent->setFlatVertical();
     
     mButEventsPNG = new Button(tr("Export"), mLeftWrapper);
     mButEventsPNG->setIcon(QIcon(":topng.png"));
+    mButEventsPNG->setFlatVertical();
     
     mButEventsSVG = new Button(tr("Export"), mLeftWrapper);
     mButEventsSVG->setIcon(QIcon(":tosvg.png"));
+    mButEventsSVG->setFlatVertical();
     
     mButEventsOverview = new Button(tr("Overview"), mLeftWrapper);
     mButEventsOverview->setIcon(QIcon(":eye.png"));
     mButEventsOverview->setCheckable(true);
+    mButEventsOverview->setFlatVertical();
     
     mEventsGlobalZoom = new ScrollCompressor(mLeftWrapper);
     mEventsGlobalZoom->setProp(1);
@@ -111,18 +118,28 @@ mIsSplitting(false)
     connect(mEventsScene, SIGNAL(selectionChanged()), mPhasesScene, SLOT(updateCheckedPhases()));
     
     mPhasesGlobalView = new SceneGlobalView(mPhasesScene, mPhasesView, mPhasesWrapper);
+    mPhasesGlobalView->setVisible(false);
     
     mButNewPhase = new Button(tr("New Phase"), mPhasesWrapper);
-    mButNewPhase->setIcon(QIcon(":new_w.png"));
+    mButNewPhase->setIcon(QIcon(":new_event.png"));
+    mButNewPhase->setFlatVertical();
     
     mButDeletePhase = new Button(tr("Delete Phase"), mPhasesWrapper);
-    mButDeletePhase->setIcon(QIcon(":trash_w"));
+    mButDeletePhase->setIcon(QIcon(":delete.png"));
+    mButDeletePhase->setFlatVertical();
     
     mButPhasesPNG = new Button(tr("PNG"), mPhasesWrapper);
-    mButPhasesPNG->setFlat(true);
+    mButPhasesPNG->setIcon(QIcon(":topng.png"));
+    mButPhasesPNG->setFlatVertical();
     
     mButPhasesSVG = new Button(tr("SVG"), mPhasesWrapper);
-    mButPhasesSVG->setFlat(true);
+    mButPhasesSVG->setIcon(QIcon(":tosvg.png"));
+    mButPhasesSVG->setFlatVertical();
+    
+    mButPhasesOverview = new Button(tr("Overview"), mPhasesWrapper);
+    mButPhasesOverview->setIcon(QIcon(":eye.png"));
+    mButPhasesOverview->setCheckable(true);
+    mButPhasesOverview->setFlatVertical();
     
     mPhasesGlobalZoom = new ScrollCompressor(mPhasesWrapper);
     mPhasesGlobalZoom->setProp(1);
@@ -133,6 +150,8 @@ mIsSplitting(false)
     connect(mPhasesGlobalZoom, SIGNAL(valueChanged(float)), this, SLOT(updatePhasesZoom(float)));
     connect(mButPhasesPNG, SIGNAL(clicked()), this, SLOT(exportPhasesScenePNG()));
     connect(mButPhasesSVG, SIGNAL(clicked()), this, SLOT(exportPhasesSceneSVG()));
+    
+    connect(mButPhasesOverview, SIGNAL(toggled(bool)), mPhasesGlobalView, SLOT(setVisible(bool)));
     
     // --------
     
@@ -192,16 +211,19 @@ mIsSplitting(false)
     mButProperties->setAutoExclusive(true);
     mButProperties->setIcon(QIcon(":settings_w.png"));
     mButProperties->setChecked(true);
+    mButProperties->setFlatHorizontal();
     
     mButImport = new Button(tr("Import Data"), mRightWrapper);
     mButImport->setCheckable(true);
     mButImport->setAutoExclusive(true);
     mButImport->setIcon(QIcon(":from_csv.png"));
+    mButImport->setFlatHorizontal();
     
     mButPhasesModel = new Button(tr("Phases"), mRightWrapper);
     mButPhasesModel->setCheckable(true);
     mButPhasesModel->setAutoExclusive(true);
     mButPhasesModel->setIcon(QIcon(":model_w.png"));
+    mButPhasesModel->setFlatHorizontal();
     
     connect(mButProperties, SIGNAL(clicked()), this, SLOT(slideRightPanel()));
     connect(mButImport, SIGNAL(clicked()), this, SLOT(slideRightPanel()));
@@ -382,13 +404,17 @@ void ModelView::updateLayout()
     mButEventsOverview->setGeometry(0, 6*butH, butW, butH);
     mEventsGlobalZoom->setGeometry(0, 7*butH, butW, mLeftRect.height() - 7*butH);
     
+    // ----------
+    
+    mPhasesView->setGeometry(0, 0, mRightSubRect.width() - butW, mRightSubRect.height());
     mPhasesGlobalView->setGeometry(0, 0, radarW, radarH);
-
-    mButNewPhase->setGeometry(mRightRect.width() - m - butW, m, butW, butH);
-    mButDeletePhase->setGeometry(mRightRect.width() - m - butW, 2*m + butH, butW, butH);
-    mButPhasesPNG->setGeometry(mRightRect.width() - m - butW, 3*m + 2*butH, butW, butH);
-    mButPhasesSVG->setGeometry(mRightRect.width() - m - butW, 4*m + 3*butH, butW, butH);
-    mPhasesGlobalZoom->setGeometry(mRightRect.width() - m - butW, 5*m + 4*butH, butW, mRightRect.height() - 4*butH - 6*m);
+    
+    mButNewPhase->setGeometry(mRightSubRect.width() - butW, 0, butW, butH);
+    mButDeletePhase->setGeometry(mRightSubRect.width() - butW, butH, butW, butH);
+    mButPhasesPNG->setGeometry(mRightSubRect.width() - butW, 2*butH, butW, butH);
+    mButPhasesSVG->setGeometry(mRightSubRect.width() - butW, 3*butH, butW, butH);
+    mButPhasesOverview->setGeometry(mRightSubRect.width() - butW, 4*butH, butW, butH);
+    mPhasesGlobalZoom->setGeometry(mRightSubRect.width() - butW, 5*butH, butW, mRightRect.height() - 5*butH);
     
     mCalibrationView->setGeometry(mLeftHiddenRect);
     

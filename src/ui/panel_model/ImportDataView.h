@@ -6,7 +6,6 @@
 
 class QTableWidgetItem;
 
-class Label;
 class Button;
 class ImportDataView;
 class HelpWidget;
@@ -47,10 +46,10 @@ private slots:
     void browse();
     
 protected:
+    void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent* e);
     
 private:
-    Label* mBrowseLab;
     Button* mBrowseBut;
     ImportDataTable* mTable;
     HelpWidget* mHelp;

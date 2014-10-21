@@ -11,8 +11,7 @@
 
 ImportDataView::ImportDataView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
 {
-    mBrowseLab = new Label(tr("Load CSV file") + " :", this);
-    mBrowseBut = new Button(tr("Browse..."), this);
+    mBrowseBut = new Button(tr("Load CSV file..."), this);
     mHelp = new HelpWidget(this);
     
     mHelp->setText(tr("Your CSV file must contain 1 data per row. Each row must start with the datation method to use. Allowed datation methods are : 14C, AM, Gauss, Typo, TL/OSL.\nComments are allowed in your CSV. They must start with  # or // and can be placed at the end of a data row. When placed at the begining of a row, the whole row is ignored."));
@@ -128,6 +127,13 @@ void ImportDataView::setHelp(const QString& help)
     //mHelp->setText(help);
 }
 
+void ImportDataView::paintEvent(QPaintEvent* e)
+{
+    Q_UNUSED(e);
+    QPainter p(this);
+    p.fillRect(rect(), QColor(200, 200, 200));
+}
+
 void ImportDataView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
@@ -135,12 +141,11 @@ void ImportDataView::resizeEvent(QResizeEvent* e)
     int m = 5;
     int labW = 100;
     int butH = 25;
-    int helpH = mHelp->heightForWidth(width());
+    int helpH = mHelp->heightForWidth(width() - 2*m);
     
-    mBrowseLab->setGeometry(0, 0, labW, butH);
-    mBrowseBut->setGeometry(labW + m, 0, width() - m - labW, butH);
-    mTable->setGeometry(0, m + butH, width(), height() - 2*m - butH - helpH);
-    mHelp->setGeometry(0, height() - helpH, width(), helpH);
+    mBrowseBut->setGeometry(m, m, width() - 2*m, butH);
+    mTable->setGeometry(0, 2*m + butH, width(), height() - 4*m - butH - helpH);
+    mHelp->setGeometry(m, height() - helpH - m, width() - 2*m, helpH);
 }
 
 // ------------------------------------------------------------------------------------

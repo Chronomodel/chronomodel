@@ -101,6 +101,7 @@ private:
     Button* mButDeletePhase;
     Button* mButPhasesPNG;
     Button* mButPhasesSVG;
+    Button* mButPhasesOverview;
     
     QPropertyAnimation* mAnimationHide;
     QPropertyAnimation* mAnimationShow;

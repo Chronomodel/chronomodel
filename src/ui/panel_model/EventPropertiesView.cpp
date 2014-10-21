@@ -56,6 +56,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     {
         Button* button = new Button(plugins[i]->getName(), mDefaultView);
         button->setIcon(plugins[i]->getIcon());
+        button->setFlatVertical();
         connect(button, SIGNAL(clicked()), this, SLOT(createDate()));
         
         if(plugins[i]->doesCalibration())
@@ -66,18 +67,22 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     
     mDeleteBut = new Button(tr("Delete"), mDefaultView);
     mDeleteBut->setIcon(QIcon(":delete.png"));
+    mDeleteBut->setFlatVertical();
     connect(mDeleteBut, SIGNAL(clicked()), this, SLOT(deleteSelectedDates()));
     
     mRecycleBut = new Button(tr("Restore"), mDefaultView);
     mRecycleBut->setIcon(QIcon(":restore.png"));
+    mRecycleBut->setFlatVertical();
     connect(mRecycleBut, SIGNAL(clicked()), this, SLOT(recycleDates()));
     
     // ---------------
     
     mMergeBut = new Button(tr("Combine"), mDefaultView);
+    mMergeBut->setFlatVertical();
     mMergeBut->setEnabled(false);
     
     mSplitBut = new Button(tr("Split"), mDefaultView);
+    mSplitBut->setFlatVertical();
     mSplitBut->setEnabled(false);
     
     
@@ -468,7 +473,7 @@ void EventPropertiesView::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
     QPainter p(this);
-    p.fillRect(rect(), QColor(180, 180, 180));
+    p.fillRect(rect(), QColor(200, 200, 200));
 }
 
 void EventPropertiesView::resizeEvent(QResizeEvent* e)
@@ -487,7 +492,6 @@ void EventPropertiesView::updateLayout()
     int comboH = mMethodCombo->height();
     int butW = 80;
     int butH = 50;
-    int butGap = 20;
     
     if(width() < 100)
     {

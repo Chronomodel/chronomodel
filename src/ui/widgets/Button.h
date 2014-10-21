@@ -8,14 +8,19 @@ class Button: public QPushButton
 {
     Q_OBJECT
 public:
-    explicit Button(QWidget* parent = 0);
-    explicit Button(const QString& text, QWidget* parent = 0);
-    
-    //Button(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    Button(QWidget* parent = 0);
+    Button(const QString& text, QWidget* parent = 0);
     ~Button();
+    void init();
+    
+    void setFlatVertical();
+    void setFlatHorizontal();
     
 protected:
     void paintEvent(QPaintEvent* e);
+    
+    bool mFlatVertical;
+    bool mFlatHorizontal;
 };
 
 #endif
