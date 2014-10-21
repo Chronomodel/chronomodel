@@ -5,9 +5,6 @@
 #include "MCMCSettings.h"
 
 class LineEdit;
-class QGroupBox;
-class Collapsible;
-class Label;
 class Button;
 
 
@@ -26,17 +23,7 @@ protected:
     void resizeEvent(QResizeEvent* e);
     void updateLayout();
     
-private slots:
-    void adaptSize();
-    
 private:
-    Label* mNumProcLab;
-    Label* mNumBurnLab;
-    Label* mNumIterLab;
-    Label* mMaxBatchesLab;
-    Label* mIterPerBatchLab;
-    Label* mDownSamplingLab;
-    
     LineEdit* mNumProcEdit;
     LineEdit* mNumBurnEdit;
     LineEdit* mNumIterEdit;
@@ -47,14 +34,12 @@ private:
     Button* mOkBut;
     Button* mCancelBut;
     
-    Collapsible* mAdvanced;
-    QWidget* mAdvancedWidget;
-    
-    int mWidth;
-    int mMargin;
-    int mLineH;
-    int mButW;
-    int mButH;
+    QRectF mBurnRect;
+    QRectF mAdaptRect;
+    QRectF mAquireRect;
+    QRectF mBatch1Rect;
+    QRectF mBatchInterRect;
+    QRectF mBatchNRect;
 };
 
 #endif

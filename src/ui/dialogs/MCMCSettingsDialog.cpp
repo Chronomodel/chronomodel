@@ -1,58 +1,47 @@
 #include "MCMCSettingsDialog.h"
-#include "Collapsible.h"
-#include "Label.h"
 #include "Button.h"
 #include "LineEdit.h"
+#include "Painting.h"
 #include <QtWidgets>
 
 
 MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, Qt::WindowFlags flags):
-QDialog(parent, flags),
-mWidth(600),
-mMargin(5),
-mLineH(20),
-mButW(80),
-mButH(25)
+QDialog(parent, flags)
 {
     setWindowTitle(tr("MCMC Options"));
     
-    mAdvancedWidget = new QWidget();
-    
-    mNumProcLab = new Label(tr("Chains") + " :", this);
-    mNumIterLab = new Label(tr("Run Iterations / Chains") + " :", mAdvancedWidget);
-    mNumBurnLab = new Label(tr("Burn Iterations") + " :", mAdvancedWidget);
-    mMaxBatchesLab = new Label(tr("Max Adapt Batches") + " :", mAdvancedWidget);
-    mIterPerBatchLab = new Label(tr("Iterations / Batch") + " :", mAdvancedWidget);
-    mDownSamplingLab = new Label(tr("Iterations to keep / Chains") + " :", mAdvancedWidget);
-    
     mNumProcEdit = new LineEdit(this);
-    mNumIterEdit = new LineEdit(mAdvancedWidget);
-    mNumBurnEdit = new LineEdit(mAdvancedWidget);
-    mMaxBatchesEdit = new LineEdit(mAdvancedWidget);
-    mIterPerBatchEdit = new LineEdit(mAdvancedWidget);
-    mDownSamplingEdit = new LineEdit(mAdvancedWidget);
+    mNumBurnEdit = new LineEdit(this);
+    mIterPerBatchEdit = new LineEdit(this);
+    mMaxBatchesEdit = new LineEdit(this);
+    mNumIterEdit = new LineEdit(this);
+    mDownSamplingEdit = new LineEdit(this);
+    mDownSamplingEdit->setVisible(false);
     
     QIntValidator* positiveValidator = new QIntValidator();
-    
     positiveValidator->setBottom(1);
+    
     mNumProcEdit->setValidator(positiveValidator);
     mNumIterEdit->setValidator(positiveValidator);
     mNumBurnEdit->setValidator(positiveValidator);
     mMaxBatchesEdit->setValidator(positiveValidator);
     mIterPerBatchEdit->setValidator(positiveValidator);
     mDownSamplingEdit->setValidator(positiveValidator);
+    
+    mNumBurnEdit->setAlignment(Qt::AlignCenter);
+    mNumIterEdit->setAlignment(Qt::AlignCenter);
+    mNumBurnEdit->setAlignment(Qt::AlignCenter);
+    mMaxBatchesEdit->setAlignment(Qt::AlignCenter);
+    mIterPerBatchEdit->setAlignment(Qt::AlignCenter);
+    mDownSamplingEdit->setAlignment(Qt::AlignCenter);
 
     mOkBut = new Button(tr("OK"), this);
     mCancelBut = new Button(tr("Cancel"), this);
     
     connect(mOkBut, SIGNAL(clicked()), this, SLOT(accept()));
     connect(mCancelBut, SIGNAL(clicked()), this, SLOT(reject()));
-
-    mAdvanced = new Collapsible(tr("Advanced"), this);
-    mAdvanced->setWidget(mAdvancedWidget, 6*mMargin + 5*mLineH);
-    connect(mAdvanced, SIGNAL(collapsing(int)), this, SLOT(adaptSize()));
     
-    adaptSize();
+    setFixedSize(600, 215);
 }
 
 MCMCSettingsDialog::~MCMCSettingsDialog()
@@ -86,8 +75,56 @@ void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
     
+    int m = 5;
+    float top = 65.f;
+    float lineH = 20;
+    float editW = 100;
+    float w = width() - 2*m;
+    float h = 115;
+    
     QPainter p(this);
     p.fillRect(rect(), QColor(220, 220, 220));
+    
+    p.setPen(QColor(50, 50, 50));
+    QFont font = p.font();
+    font.setWeight(QFont::Bold);
+    p.setFont(font);
+    
+    p.drawText(0, 0, width(), 30, Qt::AlignCenter, tr("MCMC Settings"));
+    
+    font.setWeight(QFont::Normal);
+    font.setPointSizeF(pointSize(11));
+    p.setFont(font);
+    
+    p.drawText(0, 40, width()/2, lineH, Qt::AlignVCenter | Qt::AlignRight, tr("Number of chains") + " :");
+    
+    p.setBrush(QColor(235, 115, 100));
+    p.drawRect(mBurnRect);
+    
+    p.setBrush(QColor(250, 180, 90));
+    p.drawRect(mAdaptRect);
+    
+    p.setBrush(QColor(130, 205, 110));
+    p.drawRect(mAquireRect);
+    
+    p.setBrush(QColor(255, 255, 255, 100));
+    p.drawRect(mBatch1Rect);
+    p.drawRect(mBatchInterRect);
+    p.drawRect(mBatchNRect);
+    
+    p.drawText(mBurnRect.adjusted(0, 0, 0, -mBurnRect.height() + lineH), Qt::AlignCenter, tr("1 - BURN"));
+    p.drawText(mAdaptRect.adjusted(0, 0, 0, -mAdaptRect.height() + lineH), Qt::AlignCenter, tr("2 - ADAPT"));
+    p.drawText(mAquireRect.adjusted(0, 0, 0, -mAquireRect.height() + lineH), Qt::AlignCenter, tr("3 - ACQUIRE"));
+    
+    p.drawText(mBurnRect.adjusted(0, 1*lineH, 0, -mBurnRect.height() + 2*lineH), Qt::AlignCenter, tr("Iterations") + " :");
+    p.drawText(mAquireRect.adjusted(0, 1*lineH, 0, -mAquireRect.height() + 2*lineH), Qt::AlignCenter, tr("Iterations") + " :");
+    
+    p.drawText(mBatch1Rect.adjusted(0, 0, 0, -mBatch1Rect.height() + lineH), Qt::AlignCenter, tr("BATCH 1"));
+    p.drawText(mBatchInterRect, Qt::AlignCenter, "...");
+    p.drawText(mBatchNRect, Qt::AlignCenter, tr("BATCH N"));
+    
+    p.drawText(mBatch1Rect.adjusted(0, 1*lineH, 0, -mBatch1Rect.height() + 2*lineH), Qt::AlignCenter, tr("Iterations") + " :");
+    p.drawText(mAdaptRect.x(), mAdaptRect.y() + lineH + mBatch1Rect.height() + m, mAdaptRect.width()/2, lineH, Qt::AlignVCenter | Qt::AlignRight, tr("Max batches") + " :");
 }
 
 void MCMCSettingsDialog::resizeEvent(QResizeEvent* e)
@@ -98,39 +135,33 @@ void MCMCSettingsDialog::resizeEvent(QResizeEvent* e)
 
 void MCMCSettingsDialog::updateLayout()
 {
-    int m = mMargin;
-    int w = width();
-    int h = height();
-    int w1 = 180;
-    int w2 = w - 3*m - w1;
+    int m = 5;
+    float top = 65.f;
+    float lineH = 20;
+    float editW = 100;
+    float w = width() - 2*m;
+    float h = 115;
     
-    mNumProcLab->setGeometry(m, m, w1, mLineH);
-    mNumProcEdit->setGeometry(2*m + w1, m, w2, mLineH);
+    mBurnRect = QRectF(m, top, w * 0.2, h);
+    mAdaptRect = QRectF(m + mBurnRect.width(), top, w * 0.4, h);
+    mAquireRect = QRectF(m + mBurnRect.width() + mAdaptRect.width(), top, w * 0.4, h);
+    mBatch1Rect = QRectF(mAdaptRect.x() + m,
+                         mAdaptRect.y() + lineH,
+                         (mAdaptRect.width() - 4*m) / 3,
+                         mAdaptRect.height() - 2*lineH - 2*m);
+    mBatchInterRect = mBatch1Rect.adjusted(mBatch1Rect.width() + m, 0, mBatch1Rect.width() + m, 0);
+    mBatchNRect = mBatch1Rect.adjusted(2*mBatch1Rect.width() + 2*m, 0, 2*mBatch1Rect.width() + 2*m, 0);
     
-    mOkBut->setGeometry(w - 2*m - 2*mButW, h - m - mButH, mButW, mButH);
-    mCancelBut->setGeometry(w - m - mButW, h - m - mButH, mButW, mButH);
+    mNumProcEdit->setGeometry(width()/2 + m, 40, editW, lineH);
+    mNumBurnEdit->setGeometry(mBurnRect.x() + (mBurnRect.width() - editW)/2, mBurnRect.y() + 2*lineH, editW, lineH);
+    mNumIterEdit->setGeometry(mAquireRect.x() + (mAquireRect.width() - editW)/2, mAquireRect.y() + 2*lineH, editW, lineH);
+    mIterPerBatchEdit->setGeometry(mBatch1Rect.x() + m, mBatch1Rect.y() + 2*lineH, mBatch1Rect.width() - 2*m, lineH);
+    mMaxBatchesEdit->setGeometry(mAdaptRect.x() + mAdaptRect.width()/2 + m, mAdaptRect.y() + mAdaptRect.height() - m - lineH, editW, lineH);
     
-    w2 = w - 5*m - w1;
-    
-    int i = 0;
-    mNumBurnLab->setGeometry(m, m + i * (m + mLineH), w1, mLineH); ++i;
-    mNumIterLab->setGeometry(m, m + i * (m + mLineH), w1, mLineH); ++i;
-    mMaxBatchesLab->setGeometry(m, m + i * (m + mLineH), w1, mLineH); ++i;
-    mIterPerBatchLab->setGeometry(m, m + i * (m + mLineH), w1, mLineH); ++i;
-    mDownSamplingLab->setGeometry(m, m + i * (m + mLineH), w1, mLineH); ++i;
-    
-    i = 0;
-    mNumBurnEdit->setGeometry(2*m + w1, m + i * (m + mLineH), w2, mLineH); ++i;
-    mNumIterEdit->setGeometry(2*m + w1, m + i * (m + mLineH), w2, mLineH); ++i;
-    mMaxBatchesEdit->setGeometry(2*m + w1, m + i * (m + mLineH), w2, mLineH); ++i;
-    mIterPerBatchEdit->setGeometry(2*m + w1, m + i * (m + mLineH), w2, mLineH); ++i;
-    mDownSamplingEdit->setGeometry(2*m + w1, m + i * (m + mLineH), w2, mLineH); ++i;
-    
-    mAdvanced->setGeometry(m, 2*m + mLineH, w - 2*m, mAdvanced->height());
+    int butW = 80;
+    int butH = 25;
+     
+    mOkBut->setGeometry(width() - 2*m - 2*butW, height() - m - butH, butW, butH);
+    mCancelBut->setGeometry(width() - m - butW, height() - m - butH, butW, butH);
 }
 
-void MCMCSettingsDialog::adaptSize()
-{
-    QSize s(mWidth, 4*mMargin + 1*mLineH + mButH + mAdvanced->height());
-    setFixedSize(s);
-}
