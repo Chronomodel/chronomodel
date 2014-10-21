@@ -1,0 +1,101 @@
+TODO:
+
+Lists : metrics on texts
+Phases List : item delegate
+
+Move dates to other fact
+Open/Close all facts
+Open/Close all phases
+
+
+
+Licence html formatting
+
+metrics on graph title
+move graph title to both sides
+
+zoom smooth and intermediate
+
+
+
+
+
+
+Model:
+/- plage d’étude visible en haut
+- « help » dans un bouton
+/- Phase Model : bouton dans phase toobar (checkable)
+/- Fact => Event
+/- New Fact
+/ - text dans help
+/ - Nom pré-sélectionné
+/ - Méthode d’évaluation : dans le header de la vue fait
+
+/- New Date
+/ - Range : min / max (à la place de unknown)
+
+/Ajouter plugin Gauss (idem TL)
+Ajouter import densité CSV
+/Pas de calib pour les « data sans observations » (Unif, gauss, import)
+
+/Plugin TL:
+/- Ajouter Ref. Year et remplacer mAge dans formule par (Y - A)
+
+/Enlever les edit.
+/Garder dialog d’édition depuis liste
+
+Calib:
+- coube de ref : erreurs en pointillés
+- gaussienne sur l’axe Y (Age) pour le C14 : exp(-0.5*((A - A0)/s)^2)
+
+- Saut au changement de date (show() ouvre une fenêtre)
+/- Mémoire de la date du fait courant
+
+/- Mémoire de la courbe C14
+- Calib : titre les courbes en margin top
+- calib : zoom global sur les courbes
+
+- HPD coché à 95 par défaut
+
+- HPD trapèzes?? 
+- HPD calcul mauvais sur calib
+
+- Export JPG, PNG
+- Export de toutes les calibs d’un fait, et de tout le modèle, trié par fait
+
+/- Les faits ont une plage d’étude
+/- On ne peut avoir de contrainte que si …
+
+/- Méthode du theta i à définir de façon globale pour un fait?
+
+- Affichage des traces en Y ??
+- Trace == History Plot ?
+
+- regrouper les traces dans les controles d’affichage
+- Adanced « MCMC sampler » pour le fait, à droite du nom et couleur
+- supprimer data envoie toujours à la corbeille : 
+- edit / delete (avec icone adaptée) / bin (icone poubelle)
+
+- init theta f : prendre le mode pose pb pour l’uniform. il faudrait prendre la moyenne…
+
+
+
+
+/- histos en barres, pas de pics
+/- nb iter d’adaptation avant stockage, mais après burn
+/- plage d’étude varie : faire varier celle des faits sauf si valeurs différentes
+
+
+
+
+- AM : si Incli + Décli, on retourne 2 dates!
+- Uniform => changer de nom est pas de delta i. Nom : Typo
+- Seed aléatoire à chaque run
+- On arrête d’adapter dès qu’on est dans la fourchette
+- Pas d’adapt pendant burn
+- Calib seule dans results
+- Faire tourner plusieurs chaines à suivre avec pour chacune : une graine aléat, un brun, une adapt, un stockage. Afficher traces/histos par chaine dans advanced, sinon traces consécutives avec segments. Pour chaque chaine, calculer acf pour déterminer le pas de sous-échantillonnage
+- Dans titre graph : moyenne, ecrat type, Inetrvalles HPD, interval de crédibilité
+- Pas de run si un seul fait dans phase
+- Pas de fait isolé sans contrainte avec une seule date
+- Bouton dans titre grpah pour afficher overlay avec résultats numériques

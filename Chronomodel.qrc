@@ -1,0 +1,45 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+
+	<file alias="chronomodel.png">resources/chronomodel.png</file>
+
+	<file alias="e_w.png">resources/e_w.png</file>
+	<file alias="model.png">resources/model.png</file>
+	<file alias="model_w.png">resources/model_w.png</file>
+	<file alias="bound.png">resources/bound.png</file>
+	<file alias="bound_w.png">resources/bound_w.png</file>
+	
+	<file alias="uniform.png">resources/uniform.png</file>
+	<file alias="uniform_w.png">resources/uniform_w.png</file>
+	<file alias="gauss.png">resources/gauss.png</file>
+	<file alias="gauss_w.png">resources/gauss_w.png</file>
+	<file alias="TL.png">resources/TL.png</file>
+	<file alias="TL_w.png">resources/TL_w.png</file>
+	<file alias="14C.png">resources/14C.png</file>
+	<file alias="14C_w.png">resources/14C_w.png</file>
+	<file alias="AM.png">resources/AM.png</file>
+	<file alias="AM_w.png">resources/AM_w.png</file>
+	
+	<file alias="zoom_out.png">resources/zoom_out.png</file>	
+	<file alias="zoom_out_w.png">resources/zoom_out_w.png</file>	
+	<file alias="zoom_in.png">resources/zoom_in.png</file>
+	<file alias="zoom_in_w.png">resources/zoom_in_w.png</file>
+	<file alias="zoom_default.png">resources/zoom_default.png</file>
+	<file alias="zoom_default_w.png">resources/zoom_default_w.png</file>
+	
+	
+	<file alias="new.png">resources/new.png</file>
+	<file alias="new_w.png">resources/new_w.png</file>
+	<file alias="delete.png">resources/delete.png</file>
+	<file alias="delete_w.png">resources/delete_w.png</file>
+	<file alias="edit.png">resources/edit.png</file>
+	<file alias="import.png">resources/import.png</file>
+	<file alias="import_w.png">resources/import_w.png</file>
+	<file alias="export.png">resources/export.png</file>
+	<file alias="trash.png">resources/trash.png</file>
+	<file alias="trash_w.png">resources/trash_w.png</file>
+	<file alias="recycle.png">resources/recycle.png</file>
+	<file alias="recycle_w.png">resources/recycle_w.png</file>
+
+</qresource>
+</RCC>
