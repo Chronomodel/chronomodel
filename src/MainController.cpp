@@ -12,9 +12,10 @@ MainController::MainController()
     mMainWindow->readSettings();
     mMainWindow->show();
     
-    Project* project = ProjectManager::newProject();
+    //Project* project = ProjectManager::newProject();
     // ProjectView must be created before loading the project :
-    mMainWindow->setProject(project);
+    //mMainWindow->setProject(project);
+    
     // This loads the project :
     ProjectManager::readSettings();
     mMainWindow->updateWindowTitle();

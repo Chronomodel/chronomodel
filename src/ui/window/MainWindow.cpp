@@ -4,6 +4,7 @@
 #include "ProjectView.h"
 #include "../PluginAbstract.h"
 #include "AboutDialog.h"
+#include "SettingsDialog.h"
 #include <QtWidgets>
 
 
@@ -35,8 +36,8 @@ mProject(0)
 
 void MainWindow::createActions()
 {
-    mAppSettingsAction = new QAction(QIcon(":settings2.png"), tr("Settings"), this);
-    //connect(mAppSettingsAction, SIGNAL(triggered()), projectManager, SLOT(appSettings()));
+    mAppSettingsAction = new QAction(QIcon(":settings.png"), tr("Settings"), this);
+    connect(mAppSettingsAction, SIGNAL(triggered()), this, SLOT(appSettings()));
     
     //-----------------------------------------------------------------
     // Project Actions
@@ -215,7 +216,7 @@ void MainWindow::openProject()
         {
             QFileInfo info(path);
             ProjectManager::setCurrentPath(info.absolutePath());
-            Project* project = ProjectManager::newProject();
+            Project* project = ProjectManager::newProject(false);
             setProject(project);
             
             project->load(path);
@@ -229,8 +230,9 @@ void MainWindow::newProject()
 {
     if(closeProject())
     {
-        Project* project = ProjectManager::newProject();
-        setProject(project);
+        Project* project = ProjectManager::newProject(true);
+        if(project)
+            setProject(project);
     }
 }
 
@@ -270,7 +272,7 @@ bool MainWindow::closeProject()
         {
             disconnect(mProjectSaveAction, SIGNAL(triggered()), this, SLOT(saveProject()));
             disconnect(mProjectSaveAsAction, SIGNAL(triggered()), this, SLOT(saveProjectAs()));
-            disconnect(mMCMCSettingsAction, SIGNAL(triggered()), mProject, SLOT(mcmcSettings()));
+            disconnect(mMCMCSettingsAction, SIGNAL(triggered()), this, SLOT(mcmcSettings()));
             disconnect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
             disconnect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));
             disconnect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
@@ -324,6 +326,16 @@ void MainWindow::about()
 {
     AboutDialog dialog;
     dialog.exec();
+}
+
+void MainWindow::appSettings()
+{
+    SettingsDialog dialog;
+    dialog.setSettings(ProjectManager::getSettings());
+    if(dialog.exec() == QDialog::Accepted)
+    {
+        ProjectManager::setSettings(dialog.getSettings());
+    }
 }
 
 // ---------

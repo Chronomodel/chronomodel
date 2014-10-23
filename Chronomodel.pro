@@ -88,7 +88,6 @@ INCLUDEPATH += lib/FFTW
 macx{
     LIBS += -Llib/FFTW/mac -lfftw3f
 }win32{
-    #LIBS += -L"lib/FFTW/win32" -lfftw3f-3
     LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
 }
 
@@ -119,135 +118,11 @@ INCLUDEPATH += src/ui/window/
 INCLUDEPATH += src/utilities/
 
 #########################################
-# SOURCES
-#########################################
-
-SOURCES += src/main.cpp
-SOURCES += src/MainController.cpp
-
-SOURCES += src/mcmc/Functions.cpp
-SOURCES += src/mcmc/Generator.cpp
-SOURCES += src/mcmc/MCMCLoop.cpp
-SOURCES += src/mcmc/MCMCLoopMain.cpp
-SOURCES += src/mcmc/MetropolisVariable.cpp
-SOURCES += src/mcmc/MHVariable.cpp
-SOURCES += src/mcmc/MCMCSettings.cpp
-
-SOURCES += src/model/Model.cpp
-SOURCES += src/model/Date.cpp
-SOURCES += src/model/Event.cpp
-SOURCES += src/model/EventKnown.cpp
-SOURCES += src/model/Phase.cpp
-SOURCES += src/model/EventConstraint.cpp
-SOURCES += src/model/PhaseConstraint.cpp
-SOURCES += src/model/ModelUtilities.cpp
-
-equals(USE_PLUGIN_TL, 1){
-	SOURCES += src/plugins/plugin_tl/PluginTL.cpp
-	SOURCES += src/plugins/plugin_tl/PluginTLForm.cpp
-	SOURCES += src/plugins/plugin_tl/PluginTLRefView.cpp
-}
-equals(USE_PLUGIN_14C, 1){
-	SOURCES += src/plugins/plugin_14C/Plugin14C.cpp
-	SOURCES += src/plugins/plugin_14C/Plugin14CForm.cpp
-	SOURCES += src/plugins/plugin_14C/Plugin14CRefView.cpp
-}
-equals(USE_PLUGIN_GAUSS, 1){
-	SOURCES += src/plugins/plugin_gauss/PluginGauss.cpp
-	SOURCES += src/plugins/plugin_gauss/PluginGaussForm.cpp
-	SOURCES += src/plugins/plugin_gauss/PluginGaussRefView.cpp
-}
-equals(USE_PLUGIN_AM, 1){
-	SOURCES += src/plugins/plugin_am/PluginMag.cpp
-	SOURCES += src/plugins/plugin_am/PluginMagForm.cpp
-	SOURCES += src/plugins/plugin_am/PluginMagRefView.cpp
-}
-equals(USE_PLUGIN_UNIFORM, 1){
-	SOURCES += src/plugins/plugin_uniform/PluginUniform.cpp
-	SOURCES += src/plugins/plugin_uniform/PluginUniformForm.cpp
-}
-
-SOURCES += src/project/Project.cpp
-SOURCES += src/project/ProjectManager.cpp
-SOURCES += src/project/PluginManager.cpp
-SOURCES += src/project/ProjectSettings.cpp
-SOURCES += src/project/ProjectSettingsDialog.cpp
-SOURCES += src/project/SetProjectState.cpp
-SOURCES += src/project/StateEvent.cpp
-    
-SOURCES += src/ui/dialogs/AboutDialog.cpp
-SOURCES += src/ui/dialogs/MCMCProgressDialog.cpp
-SOURCES += src/ui/dialogs/MCMCSettingsDialog.cpp
-
-SOURCES += src/ui/graphs/GraphViewAbstract.cpp
-SOURCES += src/ui/graphs/GraphView.cpp
-SOURCES += src/ui/graphs/GraphCurve.cpp
-SOURCES += src/ui/graphs/GraphZone.cpp
-SOURCES += src/ui/graphs/Ruler.cpp
-
-SOURCES += src/ui/lookandfeel/Painting.cpp
-SOURCES += src/ui/lookandfeel/DarkBlueStyle.cpp
-
-SOURCES += src/ui/panel_model/ModelView.cpp
-SOURCES += src/ui/panel_model/ImportDataView.cpp
-SOURCES += src/ui/panel_model/EventPropertiesView.cpp
-SOURCES += src/ui/panel_model/SceneGlobalView.cpp
-
-SOURCES += src/ui/panel_model/data/DatesList.cpp
-SOURCES += src/ui/panel_model/data/DateDialog.cpp
-SOURCES += src/ui/panel_model/data/TrashDialog.cpp
-SOURCES += src/ui/panel_model/data/CalibrationView.cpp
-
-SOURCES += src/ui/panel_model/events/EventsScene.cpp
-SOURCES += src/ui/panel_model/events/EventItem.cpp
-SOURCES += src/ui/panel_model/events/DateItem.cpp
-SOURCES += src/ui/panel_model/events/EventsSceneArrowItem.cpp
-SOURCES += src/ui/panel_model/events/EventsSceneArrowTmpItem.cpp
-SOURCES += src/ui/panel_model/events/EventDialog.cpp
-SOURCES += src/ui/panel_model/events/EventKnownItem.cpp
-SOURCES += src/ui/panel_model/events/EventConstraintDialog.cpp
-
-SOURCES += src/ui/panel_model/phases/PhasesScene.cpp
-SOURCES += src/ui/panel_model/phases/PhasesItem.cpp
-SOURCES += src/ui/panel_model/phases/PhasesSceneArrowItem.cpp
-SOURCES += src/ui/panel_model/phases/PhasesSceneArrowTmpItem.cpp
-SOURCES += src/ui/panel_model/phases/PhaseDialog.cpp
-SOURCES += src/ui/panel_model/phases/PhaseConstraintDialog.cpp
-
-SOURCES += src/ui/panel_results/ResultsView.cpp
-SOURCES += src/ui/panel_results/ResultsScroller.cpp
-SOURCES += src/ui/panel_results/ResultsMarker.cpp
-SOURCES += src/ui/panel_results/ResultsControls.cpp
-SOURCES += src/ui/panel_results/GraphViewWrapper.cpp
-SOURCES += src/ui/panel_results/GraphViewResults.cpp
-SOURCES += src/ui/panel_results/GraphViewDate.cpp
-SOURCES += src/ui/panel_results/GraphViewEvent.cpp
-SOURCES += src/ui/panel_results/GraphViewPhase.cpp
-
-SOURCES += src/ui/widgets/ColorPicker.cpp
-SOURCES += src/ui/widgets/ZoomControls.cpp
-SOURCES += src/ui/widgets/Collapsible.cpp
-SOURCES += src/ui/widgets/ScrollCompressor.cpp
-SOURCES += src/ui/widgets/Button.cpp
-SOURCES += src/ui/widgets/CheckBox.cpp
-SOURCES += src/ui/widgets/RadioButton.cpp
-SOURCES += src/ui/widgets/Label.cpp
-SOURCES += src/ui/widgets/LineEdit.cpp
-SOURCES += src/ui/widgets/GroupBox.cpp
-SOURCES += src/ui/widgets/HelpWidget.cpp
-
-SOURCES += src/ui/window/MainWindow.cpp
-SOURCES += src/ui/window/ProjectView.cpp
-
-SOURCES += src/utilities/StdUtilities.cpp
-SOURCES += src/utilities/QtUtilities.cpp
-
-
-#########################################
 # HEADERS
 #########################################
 
 HEADERS += src/MainController.h
+HEADERS += src/Settings.h
 
 HEADERS += src/mcmc/Functions.h
 HEADERS += src/mcmc/Generator.h
@@ -306,6 +181,7 @@ HEADERS += src/project/StateEvent.h
 HEADERS += src/ui/dialogs/AboutDialog.h
 HEADERS += src/ui/dialogs/MCMCProgressDialog.h
 HEADERS += src/ui/dialogs/MCMCSettingsDialog.h
+HEADERS += src/ui/dialogs/SettingsDialog.h
 
 HEADERS += src/ui/graphs/GraphViewAbstract.h
 HEADERS += src/ui/graphs/GraphView.h
@@ -372,3 +248,132 @@ HEADERS += src/ui/window/ProjectView.h
 HEADERS += src/utilities/Singleton.h
 HEADERS += src/utilities/StdUtilities.h
 HEADERS += src/utilities/QtUtilities.h
+
+
+#########################################
+# SOURCES
+#########################################
+
+SOURCES += src/main.cpp
+SOURCES += src/MainController.cpp
+SOURCES += src/Settings.cpp
+
+SOURCES += src/mcmc/Functions.cpp
+SOURCES += src/mcmc/Generator.cpp
+SOURCES += src/mcmc/MCMCLoop.cpp
+SOURCES += src/mcmc/MCMCLoopMain.cpp
+SOURCES += src/mcmc/MetropolisVariable.cpp
+SOURCES += src/mcmc/MHVariable.cpp
+SOURCES += src/mcmc/MCMCSettings.cpp
+
+SOURCES += src/model/Model.cpp
+SOURCES += src/model/Date.cpp
+SOURCES += src/model/Event.cpp
+SOURCES += src/model/EventKnown.cpp
+SOURCES += src/model/Phase.cpp
+SOURCES += src/model/EventConstraint.cpp
+SOURCES += src/model/PhaseConstraint.cpp
+SOURCES += src/model/ModelUtilities.cpp
+
+equals(USE_PLUGIN_TL, 1){
+	SOURCES += src/plugins/plugin_tl/PluginTL.cpp
+	SOURCES += src/plugins/plugin_tl/PluginTLForm.cpp
+	SOURCES += src/plugins/plugin_tl/PluginTLRefView.cpp
+}
+equals(USE_PLUGIN_14C, 1){
+	SOURCES += src/plugins/plugin_14C/Plugin14C.cpp
+	SOURCES += src/plugins/plugin_14C/Plugin14CForm.cpp
+	SOURCES += src/plugins/plugin_14C/Plugin14CRefView.cpp
+}
+equals(USE_PLUGIN_GAUSS, 1){
+	SOURCES += src/plugins/plugin_gauss/PluginGauss.cpp
+	SOURCES += src/plugins/plugin_gauss/PluginGaussForm.cpp
+	SOURCES += src/plugins/plugin_gauss/PluginGaussRefView.cpp
+}
+equals(USE_PLUGIN_AM, 1){
+	SOURCES += src/plugins/plugin_am/PluginMag.cpp
+	SOURCES += src/plugins/plugin_am/PluginMagForm.cpp
+	SOURCES += src/plugins/plugin_am/PluginMagRefView.cpp
+}
+equals(USE_PLUGIN_UNIFORM, 1){
+	SOURCES += src/plugins/plugin_uniform/PluginUniform.cpp
+	SOURCES += src/plugins/plugin_uniform/PluginUniformForm.cpp
+}
+
+SOURCES += src/project/Project.cpp
+SOURCES += src/project/ProjectManager.cpp
+SOURCES += src/project/PluginManager.cpp
+SOURCES += src/project/ProjectSettings.cpp
+SOURCES += src/project/ProjectSettingsDialog.cpp
+SOURCES += src/project/SetProjectState.cpp
+SOURCES += src/project/StateEvent.cpp
+    
+SOURCES += src/ui/dialogs/AboutDialog.cpp
+SOURCES += src/ui/dialogs/MCMCProgressDialog.cpp
+SOURCES += src/ui/dialogs/MCMCSettingsDialog.cpp
+SOURCES += src/ui/dialogs/SettingsDialog.cpp
+
+SOURCES += src/ui/graphs/GraphViewAbstract.cpp
+SOURCES += src/ui/graphs/GraphView.cpp
+SOURCES += src/ui/graphs/GraphCurve.cpp
+SOURCES += src/ui/graphs/GraphZone.cpp
+SOURCES += src/ui/graphs/Ruler.cpp
+
+SOURCES += src/ui/lookandfeel/Painting.cpp
+SOURCES += src/ui/lookandfeel/DarkBlueStyle.cpp
+
+SOURCES += src/ui/panel_model/ModelView.cpp
+SOURCES += src/ui/panel_model/ImportDataView.cpp
+SOURCES += src/ui/panel_model/EventPropertiesView.cpp
+SOURCES += src/ui/panel_model/SceneGlobalView.cpp
+
+SOURCES += src/ui/panel_model/data/DatesList.cpp
+SOURCES += src/ui/panel_model/data/DateDialog.cpp
+SOURCES += src/ui/panel_model/data/TrashDialog.cpp
+SOURCES += src/ui/panel_model/data/CalibrationView.cpp
+
+SOURCES += src/ui/panel_model/events/EventsScene.cpp
+SOURCES += src/ui/panel_model/events/EventItem.cpp
+SOURCES += src/ui/panel_model/events/DateItem.cpp
+SOURCES += src/ui/panel_model/events/EventsSceneArrowItem.cpp
+SOURCES += src/ui/panel_model/events/EventsSceneArrowTmpItem.cpp
+SOURCES += src/ui/panel_model/events/EventDialog.cpp
+SOURCES += src/ui/panel_model/events/EventKnownItem.cpp
+SOURCES += src/ui/panel_model/events/EventConstraintDialog.cpp
+
+SOURCES += src/ui/panel_model/phases/PhasesScene.cpp
+SOURCES += src/ui/panel_model/phases/PhasesItem.cpp
+SOURCES += src/ui/panel_model/phases/PhasesSceneArrowItem.cpp
+SOURCES += src/ui/panel_model/phases/PhasesSceneArrowTmpItem.cpp
+SOURCES += src/ui/panel_model/phases/PhaseDialog.cpp
+SOURCES += src/ui/panel_model/phases/PhaseConstraintDialog.cpp
+
+SOURCES += src/ui/panel_results/ResultsView.cpp
+SOURCES += src/ui/panel_results/ResultsScroller.cpp
+SOURCES += src/ui/panel_results/ResultsMarker.cpp
+SOURCES += src/ui/panel_results/ResultsControls.cpp
+SOURCES += src/ui/panel_results/GraphViewWrapper.cpp
+SOURCES += src/ui/panel_results/GraphViewResults.cpp
+SOURCES += src/ui/panel_results/GraphViewDate.cpp
+SOURCES += src/ui/panel_results/GraphViewEvent.cpp
+SOURCES += src/ui/panel_results/GraphViewPhase.cpp
+
+SOURCES += src/ui/widgets/ColorPicker.cpp
+SOURCES += src/ui/widgets/ZoomControls.cpp
+SOURCES += src/ui/widgets/Collapsible.cpp
+SOURCES += src/ui/widgets/ScrollCompressor.cpp
+SOURCES += src/ui/widgets/Button.cpp
+SOURCES += src/ui/widgets/CheckBox.cpp
+SOURCES += src/ui/widgets/RadioButton.cpp
+SOURCES += src/ui/widgets/Label.cpp
+SOURCES += src/ui/widgets/LineEdit.cpp
+SOURCES += src/ui/widgets/GroupBox.cpp
+SOURCES += src/ui/widgets/HelpWidget.cpp
+
+SOURCES += src/ui/window/MainWindow.cpp
+SOURCES += src/ui/window/ProjectView.cpp
+
+SOURCES += src/utilities/StdUtilities.cpp
+SOURCES += src/utilities/QtUtilities.cpp
+
+

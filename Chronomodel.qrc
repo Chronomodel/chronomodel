@@ -4,8 +4,6 @@
 	<file alias="chronomodel.png">resources/chronomodel.png</file>
 
 	<file alias="e_w.png">resources/e_w.png</file>
-	<file alias="model.png">resources/model.png</file>
-	<file alias="model_w.png">resources/model_w.png</file>
 	<file alias="bound.png">resources/bound.png</file>
 	<file alias="bound_w.png">resources/bound_w.png</file>
 	

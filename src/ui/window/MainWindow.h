@@ -45,6 +45,7 @@ public slots:
     void saveProject();
     void saveProjectAs();
     void about();
+    void appSettings();
     
 private:
     QStackedWidget* mCentralStack;

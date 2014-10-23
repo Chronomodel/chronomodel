@@ -1,6 +1,7 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
+#include "Settings.h"
 #include "ProjectSettings.h"
 #include "MCMCSettings.h"
 #include "Model.h"
@@ -60,12 +61,12 @@ public:
     
     
     bool load(const QString& path);
-    bool save();
     bool saveAs();
     bool askToSave();
     bool saveProjectToFile();
     
     void setSettings(const ProjectSettings& settings);
+    void setAppSettings(const Settings& settings);
     
     void addEvent(QJsonObject event, const QString& reason);
     int getUnusedEventId(const QJsonArray& events);
@@ -80,6 +81,8 @@ public:
     void recycleDates(int eventId);
     
 public slots:
+    bool save();
+    
     void mcmcSettings();
     void run();
     void exportAsText();
@@ -105,6 +108,8 @@ public:
     QString mProjectFileName;
     
     QList<Model> mModels;
+    
+    QTimer* mAutoSaveTimer;
 };
 
 #endif

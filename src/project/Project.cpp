@@ -45,11 +45,15 @@ mProjectFileDir(""),
 mProjectFileName(QObject::tr("Untitled"))
 {
     initState();
+    
+    mAutoSaveTimer = new QTimer(this);
+    connect(mAutoSaveTimer, SIGNAL(timeout()), this, SLOT(save()));
+    mAutoSaveTimer->start(3000);
 }
 
 Project::~Project()
 {
-    
+    mAutoSaveTimer->stop();
 }
 
 
@@ -195,6 +199,19 @@ bool Project::saveAs()
 
 bool Project::askToSave()
 {
+    // Check if modifs have been made
+    QFile file(mProjectFileDir + "/" + mProjectFileName);
+    if(file.open(QIODevice::ReadOnly))
+    {
+        QByteArray saveData = file.readAll();
+        QJsonDocument jsonDoc(QJsonDocument::fromJson(saveData));
+        QJsonObject fileState = jsonDoc.object();
+    
+        if(mState == fileState)
+            return true;
+    }
+    
+    // We have some modifications : ask to save :
     int result = QMessageBox::question(QApplication::activeWindow(),
                                        QApplication::applicationName(),
                                        tr("Do you want to save the project ?"),
@@ -202,14 +219,17 @@ bool Project::askToSave()
     
     if(result == QMessageBox::Yes)
     {
+        // return true if saving is done correcty
         return save();
     }
     else if(result == QMessageBox::No)
     {
+        // the user doesn't want to save : returning true to continue
         return true;
     }
     else if(result == QMessageBox::Cancel)
     {
+        // the user canceled : return false to cancel any further operations
         return false;
     }
     return false;
@@ -246,6 +266,15 @@ void Project::setSettings(const ProjectSettings& settings)
         stateNext[STATE_SETTINGS] = settings.toJson();
         pushProjectState(stateNext, tr("Settings updated"), true);
     }
+}
+
+void Project::setAppSettings(const Settings& settings)
+{
+    mAutoSaveTimer->setInterval(settings.mAutoSaveDelay * 1000);
+    if(mAutoSaveTimer->isActive() && !settings.mAutoSave)
+        mAutoSaveTimer->stop();
+    else if(!mAutoSaveTimer->isActive() && settings.mAutoSave)
+        mAutoSaveTimer->start();
 }
 
 void Project::mcmcSettings()

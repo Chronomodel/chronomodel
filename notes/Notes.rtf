@@ -4,7 +4,37 @@
 \paperw11900\paperh16840\margl1440\margr1440\vieww12600\viewh7800\viewkind0
 \pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
 
-\f0\b\fs24 \cf0 D\'e9ploiement Windows:
+\f0\b\fs24 \cf0 GIT\
+
+\b0 \
+\ul 1 - G\'e9n\'e9rer des clef ssh sur Mac (si pas d\'e9j\'e0 fait):\ulnone \
+
+\i ssh-keygen -t rsa
+\i0 \
+(Entrer une passphase pour encoder la clef)\
+Les clefs priv\'e9es et publiques sont cr\'e9\'e9es dans ~/.ssh/\
+\
+\ul 2 - V\'e9rifier que la clef est ajout\'e9e au ssh de la machine:\ulnone \
+
+\i ssh-add -l\
+
+\i0 Si aucune clef enregistr\'e9e, ajouter la clef priv\'e9e:\
+
+\i ssh-add -K ~/.ssh/id_rsa
+\i0 \
+\
+\ul 3 - Envoyer la clef publique sur Renater\ulnone \
+Sur SourceSup, onglet SCM, envoyer la clef id_rsa.pub\
+=> SourceTree devrait fonctionner directement\
+\
+\ul 4 - Copier la paire de clef sur Windows\ulnone \
+Renater ne peut enregistrer qu\'92une clef publique, il faut donc utiliser la m\'eame clef.\
+Charger la clef dans SourceTree et entrer la passphrase.\
+La clef priv\'e9e au format Putty ppk doit \'eatre sauv\'e9e sur la machine.\
+\
+\
+
+\b D\'e9ploiement Windows:
 \b0 \
 \
 => Copier les dll n\'e9cessaires dans le dossier de l\'92\'e9x\'e9cutable depuis :\
