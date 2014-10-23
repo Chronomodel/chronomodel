@@ -205,20 +205,20 @@ void MainWindow::createToolBars()
 
 void MainWindow::openProject()
 {
-    if(closeProject())
+    QString path = QFileDialog::getOpenFileName(qApp->activeWindow(),
+                                                tr("Open File"),
+                                                ProjectManager::getCurrentPath(),
+                                                tr("Chronomodel Project (*.chr)"));
+    
+    if(!path.isEmpty())
     {
-        QString path = QFileDialog::getOpenFileName(qApp->activeWindow(),
-                                                    tr("Open File"),
-                                                    ProjectManager::getCurrentPath(),
-                                                    tr("Chronomodel Project (*.chr)"));
-        
-        if(!path.isEmpty())
+        if(closeProject())
         {
             QFileInfo info(path);
             ProjectManager::setCurrentPath(info.absolutePath());
             Project* project = ProjectManager::newProject(false);
-            setProject(project);
             
+            setProject(project);
             project->load(path);
             
             updateWindowTitle();
@@ -259,6 +259,7 @@ void MainWindow::setProject(Project* project)
         
         updateWindowTitle();
         
+        connect(mProject, SIGNAL(projectStateChanged()), mProjectView, SLOT(updateProject()));
         connect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
         connect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
     }

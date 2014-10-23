@@ -21,7 +21,7 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     layout->addWidget(mStack);
     setLayout(layout);
     
-    Project* project = ProjectManager::getProject();
+    /*Project* project = ProjectManager::getProject();
     if(project)
     {
         connect(project, SIGNAL(projectStateChanged()), this, SLOT(updateProject()));
@@ -29,7 +29,7 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     else
     {
         qDebug() << "ERROR : ProjectView created before project : could not connect!";
-    }
+    }*/
 }
 
 ProjectView::~ProjectView()

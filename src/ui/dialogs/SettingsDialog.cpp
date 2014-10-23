@@ -13,7 +13,7 @@ QDialog(parent, flags)
     setWindowTitle(tr("Settings"));
     
     mAutoSaveCheck = new QCheckBox(tr("Auto save project every") + " :");
-    mAutoSaveDelayLab = new Label(tr("seconds"));
+    mAutoSaveDelayLab = new Label(tr("minutes"));
     mAutoSaveDelayEdit = new LineEdit();
     
     mAutoSaveDelayLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
@@ -62,7 +62,7 @@ SettingsDialog::~SettingsDialog()
 void SettingsDialog::setSettings(const Settings& settings)
 {
     mAutoSaveCheck->setChecked(settings.mAutoSave);
-    mAutoSaveDelayEdit->setText(QString::number(settings.mAutoSaveDelay));
+    mAutoSaveDelayEdit->setText(QString::number(settings.mAutoSaveDelay / 60));
     mAutoSaveDelayEdit->setEnabled(settings.mAutoSave);
 }
 
@@ -70,7 +70,7 @@ Settings SettingsDialog::getSettings()
 {
     Settings settings;
     settings.mAutoSave = mAutoSaveCheck->isChecked();
-    settings.mAutoSaveDelay = mAutoSaveDelayEdit->text().toInt();
+    settings.mAutoSaveDelay = mAutoSaveDelayEdit->text().toInt() * 60;
     return settings;
 }
 

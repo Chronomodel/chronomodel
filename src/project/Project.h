@@ -42,7 +42,7 @@ public:
     // This is the function to call when the project state is to be modified.
     // An undo command is created and a StateEvent is fired asynchronously.
     // The project state will be modified and the view notified (if required)
-    void pushProjectState(const QJsonObject& state, const QString& reason, bool notify);
+    void pushProjectState(const QJsonObject& state, const QString& reason, bool notify, bool force = false);
     
     // Sends a StateEvent asynchronously.
     // Called by "SetProjectState" undo/redo commands.

@@ -102,9 +102,9 @@ QJsonObject Project::state() const
     return mState;
 }
 
-void Project::pushProjectState(const QJsonObject& state, const QString& reason, bool notify)
+void Project::pushProjectState(const QJsonObject& state, const QString& reason, bool notify, bool force)
 {
-    if(mState != state)
+    if(mState != state || force)
     {
         SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
         ProjectManager::getUndoStack().push(command);
@@ -162,7 +162,7 @@ bool Project::load(const QString& path)
         QJsonDocument jsonDoc(QJsonDocument::fromJson(saveData));
         mState = jsonDoc.object();
         
-        pushProjectState(mState, "project loaded", true);
+        pushProjectState(mState, "project loaded", true, true);
         
         file.close();
         
