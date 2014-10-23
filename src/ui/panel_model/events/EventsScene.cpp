@@ -11,6 +11,7 @@
 #include "Project.h"
 #include "SetProjectState.h"
 #include "MainWindow.h"
+#include "HelpWidget.h"
 #include <QtWidgets>
 
 
@@ -24,7 +25,8 @@ mUpdatingItems(false)
     mTempArrow->setVisible(false);
     mTempArrow->setZValue(0);
     
-    mHelpView = new QLabel();
+    mHelpView = new HelpWidget(view);
+    mHelpTimer = new QTimer(this);
     
     mDatesAnimTimer = new QTimeLine(100);
     mDatesAnimTimer->setFrameRange(0, 2);
@@ -33,11 +35,54 @@ mUpdatingItems(false)
     mDatesAnim->setTimeLine(mDatesAnimTimer);
     
     connect(this, SIGNAL(selectionChanged()), this, SLOT(updateSelection()));
+    connect(mHelpTimer, SIGNAL(timeout()), this, SLOT(updateHelp()));
+    
+    mHelpTimer->start(200);
 }
 
 EventsScene::~EventsScene()
 {
     
+}
+
+#pragma mark Help Bubble
+void EventsScene::updateHelp()
+{
+    QString text;
+    QList<QGraphicsItem*> selected = selectedItems();
+    
+    if(mItems.size() == 0)
+    {
+        text = tr("Start creating your model by clicking on \"New Event...\".");
+    }
+    else if(selected.count() == 0)
+    {
+        text = tr("Select an event or a bound by clicking on it.");
+        if(mConstraintItems.size() != 0)
+            text += tr("\nYou can also edit constraints by double clicking on the arrow");
+    }
+    else if(selected.count() == 1)
+    {
+        if(dynamic_cast<EventKnownItem*>(selected[0]))
+            text = tr("Edit bound properties from the right panel.");
+        else
+            text = tr("Edit event properties from the right panel.");
+    }
+    else
+    {
+        text = tr("You have selected multiple elements. You can move them together or delete them (all constraints linked to them will also be deleted).");
+    }
+    
+    mHelpView->setText(text);
+    mHelpView->setGeometry(mHelpView->x(),
+                           mHelpView->y(),
+                           mHelpView->width(),
+                           mHelpView->heightForWidth(mHelpView->width()));
+}
+
+HelpWidget* EventsScene::getHelpView()
+{
+    return mHelpView;
 }
 
 #pragma mark Project Update

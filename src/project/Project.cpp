@@ -162,6 +162,8 @@ bool Project::load(const QString& path)
         QJsonDocument jsonDoc(QJsonDocument::fromJson(saveData));
         mState = jsonDoc.object();
         
+        mLastSavedState = mState;
+        
         pushProjectState(mState, "project loaded", true, true);
         
         file.close();
@@ -173,7 +175,6 @@ bool Project::load(const QString& path)
 
 bool Project::save()
 {
-    qDebug() << "Project::save() : " << mProjectFileDir + "/" + mProjectFileName;
     QFileInfo info(mProjectFileDir + "/" + mProjectFileName);
     return info.exists() ? saveProjectToFile() : saveAs();
 }
@@ -192,6 +193,10 @@ bool Project::saveAs()
         mProjectFileDir = info.absolutePath();
         mProjectFileName = info.fileName();
         
+        // We need to reset mLastSavedState because it corresponds
+        // to the last saved state in the previous file.
+        mLastSavedState = QJsonObject();
+        
         return saveProjectToFile();
     }
     return false;
@@ -200,16 +205,8 @@ bool Project::saveAs()
 bool Project::askToSave()
 {
     // Check if modifs have been made
-    QFile file(mProjectFileDir + "/" + mProjectFileName);
-    if(file.open(QIODevice::ReadOnly))
-    {
-        QByteArray saveData = file.readAll();
-        QJsonDocument jsonDoc(QJsonDocument::fromJson(saveData));
-        QJsonObject fileState = jsonDoc.object();
-    
-        if(mState == fileState)
-            return true;
-    }
+    if(mState == mLastSavedState)
+        return true;
     
     // We have some modifications : ask to save :
     int result = QMessageBox::question(QApplication::activeWindow(),
@@ -237,17 +234,26 @@ bool Project::askToSave()
 
 bool Project::saveProjectToFile()
 {
-    QFile file(mProjectFileDir + "/" + mProjectFileName);
-    if(file.open(QIODevice::ReadWrite))
+    if(mLastSavedState != mState)
     {
-        QJsonDocument jsonDoc(mState);
-        file.write(jsonDoc.toJson(QJsonDocument::Indented));
-        file.resize(file.pos());
-        file.close();
-        
-        return true;
+        QString path = mProjectFileDir + "/" + mProjectFileName;
+        QFile file(path);
+        if(file.open(QIODevice::ReadWrite))
+        {
+            qDebug() << "Project saved to : " << path;
+            mLastSavedState = mState;
+            
+            QJsonDocument jsonDoc(mState);
+            file.write(jsonDoc.toJson(QJsonDocument::Indented));
+            file.resize(file.pos());
+            file.close();
+            
+            return true;
+        }
+        else
+            return false;
     }
-    return false;
+    return true;
 }
 
 // --------------------------------------------------------------------

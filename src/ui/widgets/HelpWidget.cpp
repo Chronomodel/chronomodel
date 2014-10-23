@@ -7,6 +7,15 @@ HelpWidget::HelpWidget(QWidget* parent):QWidget(parent)
 {
     mFont = font();
     mFont.setPointSize(pointSize(11));
+    
+    // Not yet supported with retina display in Qt 5.3
+#ifndef Q_OS_MAC
+    QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect();
+    shadow->setColor(Qt::black);
+    shadow->setBlurRadius(4);
+    shadow->setOffset(1, 1);
+    setGraphicsEffect(shadow);
+#endif
 }
 
 HelpWidget::HelpWidget(const QString& text, QWidget* parent):QWidget(parent),
@@ -23,7 +32,7 @@ HelpWidget::~HelpWidget()
 
 void HelpWidget::setText(const QString& text)
 {
-    mText = text;
+    mText = tr("Help") + " : " + text;
     update();
 }
 
@@ -40,11 +49,13 @@ void HelpWidget::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
     
+    QRectF r = rect().adjusted(1, 1, -1, -1);
+    
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
     p.setPen(QColor(187, 174, 105));
     p.setBrush(QColor(242, 238, 184));
-    p.drawRoundedRect(rect(), 4, 4);
+    p.drawRoundedRect(r, 4, 4);
     
     p.setPen(QColor(104, 74, 64));
     p.setFont(mFont);

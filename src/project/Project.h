@@ -102,6 +102,7 @@ signals:
     
 public:
     QJsonObject mState;
+    QJsonObject mLastSavedState;
     
     QString mName;
     QString mProjectFileDir;

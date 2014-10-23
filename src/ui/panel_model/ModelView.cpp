@@ -14,6 +14,7 @@
 #include "SceneGlobalView.h"
 #include "ScrollCompressor.h"
 #include "CalibrationView.h"
+#include "HelpWidget.h"
 #include <QtWidgets>
 #include <QtSvg>
 #include <QPropertyAnimation>
@@ -403,6 +404,10 @@ void ModelView::updateLayout()
     mButEventsSVG->setGeometry(0, 5*butH, butW, butH);
     mButEventsOverview->setGeometry(0, 6*butH, butW, butH);
     mEventsGlobalZoom->setGeometry(0, 7*butH, butW, mLeftRect.height() - 7*butH);
+    
+    int helpW = qMin(400, mEventsView->width() - radarW - m);
+    int helpH = mEventsScene->getHelpView()->heightForWidth(helpW);
+    mEventsScene->getHelpView()->setGeometry(mEventsView->width() - m - helpW, m, helpW, helpH);
     
     // ----------
     

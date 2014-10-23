@@ -32,6 +32,7 @@ mProject(0)
     statusBar()->showMessage(tr("Ready"));
     setUnifiedTitleAndToolBarOnMac(true);
     setWindowIcon(QIcon(":chronomodel.png"));
+    setMinimumSize(1000, 700);
 }
 
 void MainWindow::createActions()

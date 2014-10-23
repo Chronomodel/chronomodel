@@ -16,6 +16,7 @@ class EventsSceneArrowItem;
 class EventsSceneArrowTmpItem;
 class DateItem;
 class Date;
+class HelpWidget;
 
 
 class EventsScene: public QGraphicsScene
@@ -27,8 +28,11 @@ public:
     
     void sendUpdateProject(const QString& reason, bool notify, bool async);
     
+    HelpWidget* getHelpView();
+    
 public slots:
     void updateProject();
+    void updateHelp();
 
 public:
     void eventClicked(EventItem* eventItem, QGraphicsSceneMouseEvent* e);
@@ -70,11 +74,12 @@ signals:
 private:
     QGraphicsView* mView;
     
+    HelpWidget* mHelpView;
+    QTimer* mHelpTimer;
+    
     QList<EventItem*> mItems;
     QList<EventsSceneArrowItem*> mConstraintItems;
     EventsSceneArrowTmpItem* mTempArrow;
-    
-    QLabel* mHelpView;
     
     bool mDrawingArrow;
     bool mUpdatingItems;
