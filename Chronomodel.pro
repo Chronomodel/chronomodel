@@ -85,8 +85,12 @@ DEFINES += "USE_PLUGIN_AM=$${USE_PLUGIN_AM}"
 #########################################
 
 INCLUDEPATH += lib/FFTW
-LIBS += -Llib/FFTW/mac -lfftw3f
-#LIBS += -L"lib/FFTW/win32" -lfftw3f-3
+macx{
+    LIBS += -Llib/FFTW/mac -lfftw3f
+}win32{
+    #LIBS += -L"lib/FFTW/win32" -lfftw3f-3
+    LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
+}
 
 #########################################
 # INCLUDES
