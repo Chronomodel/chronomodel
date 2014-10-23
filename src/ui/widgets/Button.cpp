@@ -69,8 +69,8 @@ void Button::paintEvent(QPaintEvent* e)
         {
             //gradColTop = QColor(20, 20, 20);
             //gradColBot = QColor(10, 10, 10);
-            gradColTop = QColor(54, 23, 106);
-            gradColBot = QColor(54, 23, 106);
+            gradColTop = mainColorDark;
+            gradColBot = mainColorDark;
             gradLineLight = QColor(30, 30, 30);
             gradLineDark = QColor(10, 10, 10);
         }

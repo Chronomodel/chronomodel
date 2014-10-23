@@ -144,9 +144,10 @@ mIsSplitting(false)
     
     mPhasesGlobalZoom = new ScrollCompressor(mPhasesWrapper);
     mPhasesGlobalZoom->setProp(1);
+    mPhasesGlobalZoom->showText(tr("Zoom"), true);
     
     connect(mButNewPhase, SIGNAL(clicked()), project, SLOT(createPhase()));
-    connect(mButDeletePhase, SIGNAL(clicked()), project, SLOT(deleteCurrentPhase()));
+    connect(mButDeletePhase, SIGNAL(clicked()), project, SLOT(deleteSelectedPhases()));
     
     connect(mPhasesGlobalZoom, SIGNAL(valueChanged(float)), this, SLOT(updatePhasesZoom(float)));
     connect(mButPhasesPNG, SIGNAL(clicked()), this, SLOT(exportPhasesScenePNG()));

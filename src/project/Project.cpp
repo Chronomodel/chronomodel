@@ -678,6 +678,85 @@ void Project::recycleDates(int eventId)
     }
 }
 
+#pragma mark Phases
+void Project::createPhase()
+{
+    PhaseDialog dialog(qApp->activeWindow(), Qt::Sheet);
+    if(dialog.exec() == QDialog::Accepted)
+    {
+        QJsonObject phase = dialog.getPhase();
+        
+        QJsonObject stateNext = mState;
+        QJsonArray phases = stateNext[STATE_PHASES].toArray();
+        
+        phase[STATE_PHASE_ID] = getUnusedPhaseId(phases);
+        phases.append(phase);
+        stateNext[STATE_PHASES] = phases;
+        
+        pushProjectState(stateNext, tr("Phase created"), true);
+    }
+}
+
+void Project::deleteSelectedPhases()
+{
+    QJsonObject stateNext = mState;
+    
+    QJsonArray phases = mState[STATE_PHASES].toArray();
+    QJsonArray phases_constraints = mState[STATE_PHASES_CONSTRAINTS].toArray();
+    QJsonArray events = mState[STATE_EVENTS].toArray();
+    
+    for(int i=phases.size()-1; i>=0; --i)
+    {
+        QJsonObject phase = phases[i].toObject();
+        if(phase[STATE_PHASE_IS_SELECTED].toBool())
+        {
+            int phase_id = phase[STATE_PHASE_ID].toInt();
+            for(int j=phases_constraints.size()-1; j>=0; --j)
+            {
+                QJsonObject constraint = phases_constraints[j].toObject();
+                int bwd_id = constraint[STATE_PHASE_CONSTRAINT_BWD_ID].toInt();
+                int fwd_id = constraint[STATE_PHASE_CONSTRAINT_FWD_ID].toInt();
+                if(bwd_id == phase_id || fwd_id == phase_id)
+                {
+                    phases_constraints.removeAt(j);
+                }
+            }
+            for(int j=0; j<events.size(); ++j)
+            {
+                QJsonObject event = events[j].toObject();
+                QString idsStr = event[STATE_EVENT_PHASE_IDS].toString();
+                QStringList ids = idsStr.split(",");
+                ids.removeAll(QString::number(phase_id));
+                event[STATE_EVENT_PHASE_IDS] = ids.join(",");
+                events[j] = event;
+            }
+            phases.removeAt(i);
+        }
+    }
+    stateNext[STATE_PHASES] = phases;
+    stateNext[STATE_PHASES_CONSTRAINTS] = phases_constraints;
+    stateNext[STATE_EVENTS] = events;
+    
+    pushProjectState(stateNext, tr("Phase(s) deleted"), true);
+}
+
+int Project::getUnusedPhaseId(const QJsonArray& phases)
+{
+    int id = -1;
+    bool idIsFree = false;
+    while(!idIsFree)
+    {
+        ++id;
+        idIsFree = true;
+        for(int i=0; i<phases.size(); ++i)
+        {
+            QJsonObject phase = phases[i].toObject();
+            if(phase[STATE_PHASE_ID].toInt() == id)
+                idIsFree = false;
+        }
+    }
+    return id;
+}
 
 // --------------------------------------------------------------------
 //     Event Constraints authorizations

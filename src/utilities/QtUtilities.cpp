@@ -86,3 +86,16 @@ bool isComment(const QString& str)
     }
     return false;
 }
+
+QColor getContrastedColor(const QColor& color)
+{
+    QColor frontColor = Qt::white;
+    qreal s = color.saturationF();
+    if(s < 0.4)
+    {
+        qreal l = color.lightnessF();
+        if(l >= 0.5)
+            frontColor = Qt::black;
+    }
+    return frontColor;
+}

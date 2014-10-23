@@ -22,6 +22,7 @@ class EventConstraint;
 #define STATE_EVENT_DATES "dates"
 #define STATE_EVENT_IS_SELECTED "is_selected"
 #define STATE_EVENT_IS_CURRENT "is_current"
+#define STATE_EVENT_PHASE_IDS "phase_ids"
 
 
 class Event
@@ -56,6 +57,9 @@ public:
     
     void reset();
     virtual void updateTheta(float min, float max);
+    
+    // TODO : when creating an event from JSON, phases have to exists already to be able set pointers to them.
+    // void initPhases(const QList<Phases*>& phases);
     
 public:
     Type mType;

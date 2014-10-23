@@ -6,6 +6,8 @@
 #include "DateItem.h"
 #include "ProjectManager.h"
 #include "Project.h"
+#include "QtUtilities.h"
+#include "Painting.h"
 #include <QtWidgets>
 
 
@@ -29,6 +31,15 @@ mMergeable(false)
              QGraphicsItem::ItemIsFocusable |
              QGraphicsItem::ItemSendsScenePositionChanges |
              QGraphicsItem::ItemSendsGeometryChanges);
+    
+    // Not yet supported with retina display in Qt 5.3
+#ifndef Q_OS_MAC
+    QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect();
+    shadow->setColor(Qt::black);
+    shadow->setBlurRadius(4);
+    shadow->setOffset(1, 1);
+    setGraphicsEffect(shadow);
+#endif
     
     setEvent(mEvent);
 }
@@ -112,7 +123,7 @@ void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
     QGraphicsItem::mousePressEvent(e);
     
     setZValue(2.);
-    if(toggleRect().contains(e->pos()))
+    /*if(toggleRect().contains(e->pos()))
     {
         mShowElts = !mShowElts;
         QList<QGraphicsItem*> children = childItems();
@@ -126,7 +137,8 @@ void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
     else
     {
         mEventsScene->eventClicked(this, e);
-    }
+    }*/
+    mEventsScene->eventClicked(this, e);
 }
 
 void EventItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
@@ -197,23 +209,18 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     Q_UNUSED(option);
     Q_UNUSED(widget);
     
+    painter->save();
     painter->setRenderHint(QPainter::Antialiasing);
     
     QRectF rect = boundingRect();
     
-    QPainterPath rounded;
-    rounded.addRoundedRect(rect, 5, 5);
-    
     QColor eventColor = QColor(mEvent[STATE_EVENT_RED].toInt(),
                                mEvent[STATE_EVENT_GREEN].toInt(),
                                mEvent[STATE_EVENT_BLUE].toInt());
-    QColor eventColorLight = eventColor;
-    eventColorLight.setAlpha(100);
+    painter->setPen(Qt::NoPen);
+    painter->setBrush(eventColor);
+    painter->drawRect(rect);
     
-    painter->fillPath(rounded, Qt::white);
-    painter->fillPath(rounded, eventColorLight);
-    if(isSelected())
-        painter->fillPath(rounded, QColor(0, 0, 0, 150));
     
     // Phases
     
@@ -235,15 +242,8 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->setPen(QPen(eventColor, 1));
     painter->drawLine(rect.x(), rect.y() + y, rect.x() + rect.width(), rect.y() + y);*/
     
-    // Border
-    
-    painter->setBrush(Qt::NoBrush);
-    painter->setPen(QPen(eventColor, mBorderWidth));
-    painter->drawPath(rounded);
-    
     
     // Name
-    
     QRectF tr(rect.x() + mBorderWidth + 2*mEltsMargin + mTitleHeight,
               rect.y() + mBorderWidth + mEltsMargin,
               rect.width() - 2*mBorderWidth - 2*(mTitleHeight + 2*mEltsMargin),
@@ -255,45 +255,25 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     QString name = mEvent[STATE_EVENT_NAME].toString();
     name = metrics.elidedText(name, Qt::ElideRight, tr.width());
     
-    painter->setPen(isSelected() ? Qt::white : Qt::black);
-    painter->drawText(tr, Qt::AlignCenter, name/* + " (" + QString::number(mEvent->mId) + ")"*/);
-    //painter->drawText(tr, Qt::AlignCenter, QString::number(scenePos().x()) + "|" + QString::number(scenePos().y()));
+    QColor frontColor = getContrastedColor(eventColor);
+    painter->setPen(frontColor);
+    painter->drawText(tr, Qt::AlignCenter, name);
     
     
-    // Color
-    
-    QRectF cr(rect.x() + mBorderWidth + mEltsMargin,
-             rect.y() + mBorderWidth + mEltsMargin,
-             mTitleHeight,
-             mTitleHeight);
-    painter->setPen(eventColor);
-    painter->setBrush(eventColor);
-    painter->drawRect(cr);
-    
-    
-    // Toggle
-    
-    /*QRectF tRect = toggleRect();
-    painter->setPen(Qt::NoPen);
-    painter->setBrush(isSelected() ? QColor(255, 255, 255, 30) : QColor(0, 0, 0, 30));
-    painter->drawEllipse(tRect);
-    
-    painter->setPen(isSelected() ? Qt::white : Qt::black);
-    float mg = 4;
-    painter->drawLine(tRect.x() + mg, tRect.y() + tRect.height()/2, tRect.x() + tRect.width() - mg, tRect.y() + tRect.height()/2);
-    if(!mShowElts)
-        painter->drawLine(tRect.x() + tRect.width()/2, tRect.y() + mg, tRect.x() + tRect.width()/2, tRect.y() + tRect.height() - mg);*/
-    
-    // Mergeable
+    // Border
+    painter->setBrush(Qt::NoBrush);
     if(mMergeable)
     {
-        QPen pen = painter->pen();
-        pen.setColor(Qt::blue);
-        pen.setWidth(2);
-        pen.setStyle(Qt::DashLine);
-        painter->setPen(pen);
-        painter->drawPath(rounded);
+        painter->setPen(QPen(mainColorLight, 3.f, Qt::DashLine));
+        painter->drawRect(rect.adjusted(1, 1, -1, -1));
     }
+    else if(isSelected())
+    {
+        painter->setPen(QPen(mainColorDark, 3.f));
+        painter->drawRect(rect.adjusted(1, 1, -1, -1));
+    }
+    
+    painter->restore();
 }
 
 #pragma mark Geometry

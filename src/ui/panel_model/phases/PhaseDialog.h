@@ -4,7 +4,8 @@
 #include <QDialog>
 
 class Phase;
-class QLabel;
+class Label;
+class Button;
 class LineEdit;
 class QComboBox;
 class ColorPicker;
@@ -14,28 +15,39 @@ class PhaseDialog: public QDialog
 {
     Q_OBJECT
 public:
-    PhaseDialog(Phase* phase, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    PhaseDialog(QWidget* parent = 0, Qt::WindowFlags flags = 0);
     ~PhaseDialog();
     
+    void setPhase(const QJsonObject& phase);
+    QJsonObject getPhase() const;
+    
 protected slots:
-    void acceptPhase();
-    void rejectPhase();
     void showAppropriateTauOptions(int typeIndex);
     
+protected:
+    void resizeEvent(QResizeEvent* event);
+    
 public:
-    Phase* mPhase;
-    bool mModifying;
+    Label* mNameLab;
+    Label* mColorLab;
+    Label* mTauTypeLab;
+    Label* mTauMinLab;
+    Label* mTauMaxLab;
     
     LineEdit* mNameEdit;
     ColorPicker* mColorPicker;
     QComboBox* mTauTypeCombo;
-    LineEdit* mTauFixedEdit;
     LineEdit* mTauMinEdit;
     LineEdit* mTauMaxEdit;
     
-    QLabel* mTauFixedLab;
-    QLabel* mTauMinLab;
-    QLabel* mTauMaxLab;
+    Button* mOkBut;
+    Button* mCancelBut;
+    
+    int mMargin;
+    int mLineH;
+    int mComboH;
+    int mButH;
+    int mButW;
 };
 
 #endif

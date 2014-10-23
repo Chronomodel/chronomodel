@@ -4,6 +4,8 @@
 #include "Painting.h"
 #include "ProjectManager.h"
 #include "Project.h"
+#include "QtUtilities.h"
+#include "Painting.h"
 #include <QtWidgets>
 
 
@@ -44,20 +46,22 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     QRectF rect = boundingRect();
     QRectF r = rect.adjusted(20, 20, -20, -20);
     
-    QPainterPath rounded;
-    rounded.addRoundedRect(rect, 5, 5);
-    
     QColor eventColor = QColor(mEvent[STATE_EVENT_RED].toInt(),
                                mEvent[STATE_EVENT_GREEN].toInt(),
                                mEvent[STATE_EVENT_BLUE].toInt());
     QColor eventColorLight = eventColor;
     eventColorLight.setAlpha(100);
     
-    painter->setPen(eventColor);
+    painter->setPen(Qt::NoPen);
     painter->setBrush(eventColor);
     painter->drawEllipse(rect);
-    painter->setBrush(isSelected() ? QColor(80, 80, 80) :  Qt::white);
-    painter->drawRoundedRect(r, 4, 4);
+    
+    if(isSelected())
+    {
+        painter->setPen(QPen(mainColorDark, 3.f));
+        painter->setBrush(Qt::NoBrush);
+        painter->drawEllipse(rect.adjusted(1, 1, -1, -1));
+    }
     
     // Phases
     
@@ -94,7 +98,8 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     QString name = mEvent[STATE_EVENT_NAME].toString();
     name = metrics.elidedText(name, Qt::ElideRight, tr.width());
     
-    painter->setPen(isSelected() ? Qt::white : Qt::black);
+    QColor frontColor = getContrastedColor(eventColor);
+    painter->setPen(frontColor);
     painter->drawText(tr, Qt::AlignCenter, name);
 }
 

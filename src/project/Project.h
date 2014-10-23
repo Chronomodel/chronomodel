@@ -80,6 +80,8 @@ public:
     void deleteDates(int eventId, const QList<int>& dateIndexes);
     void recycleDates(int eventId);
     
+    int getUnusedPhaseId(const QJsonArray& phases);
+    
 public slots:
     bool save();
     
@@ -91,6 +93,9 @@ public slots:
     void createEventKnown();
     void deleteSelectedEvents();
     void recycleEvents();
+    
+    void createPhase();
+    void deleteSelectedPhases();
     
 signals:
     void projectStateChanged();

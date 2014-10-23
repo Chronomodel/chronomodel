@@ -83,6 +83,8 @@ private:
     
     bool mDrawingArrow;
     bool mUpdatingItems;
+    bool mAltIsDown;
+    bool mShiftIsDown;
     
     QGraphicsItemAnimation* mDatesAnim;
     QTimeLine* mDatesAnimTimer;

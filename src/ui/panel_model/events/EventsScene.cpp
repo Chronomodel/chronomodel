@@ -18,7 +18,9 @@
 EventsScene::EventsScene(QGraphicsView* view, QObject* parent):QGraphicsScene(parent),
 mView(view),
 mDrawingArrow(false),
-mUpdatingItems(false)
+mUpdatingItems(false),
+mAltIsDown(false),
+mShiftIsDown(false)
 {
     mTempArrow = new EventsSceneArrowTmpItem(this);
     addItem(mTempArrow);
@@ -63,10 +65,22 @@ void EventsScene::updateHelp()
     }
     else if(selected.count() == 1)
     {
-        if(dynamic_cast<EventKnownItem*>(selected[0]))
-            text = tr("Edit bound properties from the right panel.");
+        bool isBound = (dynamic_cast<EventKnownItem*>(selected[0]) != 0);
+        
+        if(mAltIsDown)
+        {
+            text = tr("Mouve your mouse and click on another element to create a constraint.");
+        }
+        else if(mShiftIsDown && !isBound)
+        {
+            text = tr("Drag the event onto another one to merge them together.");
+        }
         else
-            text = tr("Edit event properties from the right panel.");
+        {
+            text = tr("You have selected an element. You can now:\n- Edit its properties from the right panel.\n- Create a constraint by holding the \"Option\" key down and clicking on another element.");
+            if(!isBound)
+                text += tr("\n- Merge it with another element by holding the \"Shift\" key down and dragging the selected element onto another one.");
+        }
     }
     else
     {
@@ -230,7 +244,8 @@ EventItem* EventsScene::collidingItem(QGraphicsItem* item)
 {
     for(int i=0; i<mItems.size(); ++i)
     {
-        if(item != mItems[i] && item->collidesWithItem(mItems[i]))
+        bool isBound = (dynamic_cast<EventKnownItem*>(mItems[i]) != 0);
+        if(item != mItems[i] && !isBound && item->collidesWithItem(mItems[i]))
             return mItems[i];
     }
     return 0;
@@ -548,6 +563,7 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
     }
     else if(keyEvent->modifiers() == Qt::AltModifier)
     {
+        mAltIsDown = true;
         EventItem* curItem = currentItem();
         if(curItem)
         {
@@ -556,13 +572,21 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
             mTempArrow->setFrom(curItem->pos().x(), curItem->pos().y());
         }
     }
+    else if(keyEvent->modifiers() == Qt::ShiftModifier)
+    {
+        mShiftIsDown = true;
+    }
     else
+    {
         keyEvent->ignore();
+    }
 }
 
 void EventsScene::keyReleaseEvent(QKeyEvent* keyEvent)
 {
     mDrawingArrow = false;
+    mAltIsDown = false;
+    mShiftIsDown = false;
     mTempArrow->setVisible(false);
     QGraphicsScene::keyReleaseEvent(keyEvent);
 }

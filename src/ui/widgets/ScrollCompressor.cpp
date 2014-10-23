@@ -50,8 +50,8 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
     p.drawRect(r);
     
     QLinearGradient grad2(0, 0, width(), 0);
-    grad2.setColorAt(0, QColor(146, 50, 154));
-    grad2.setColorAt(1, QColor(54, 23, 106));
+    grad2.setColorAt(0, mainColorLight);
+    grad2.setColorAt(1, mainColorDark);
     
     float h = r.height() * mProp;
     QRectF r2 = r.adjusted(0, r.height() - h, 0, 0);

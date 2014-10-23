@@ -32,8 +32,7 @@ class Phase
 public:
     enum TauType{
         eTauUnknown = 0,
-        eTauRange = 1,
-        eTauFixed = 2
+        eTauRange = 1
     };
     
     Phase();

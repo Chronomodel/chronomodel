@@ -3,6 +3,9 @@
 
 #include <QtWidgets>
 
+static QColor mainColorLight = QColor(146, 50, 154);
+static QColor mainColorDark = QColor(54, 23, 106);
+
 float pointSize(float size);
 
 void drawButton(QPainter& painter, const QRectF& r, bool hover, bool isEnabled = true, const QString& text = QString(), const QIcon& icon = QIcon(), bool isFlat = false);
