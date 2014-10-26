@@ -2,6 +2,7 @@
 #define PhaseDialog_H
 
 #include <QDialog>
+#include <QJsonObject>
 
 class Phase;
 class Label;
@@ -19,7 +20,7 @@ public:
     ~PhaseDialog();
     
     void setPhase(const QJsonObject& phase);
-    QJsonObject getPhase() const;
+    QJsonObject getPhase();
     
 protected slots:
     void showAppropriateTauOptions(int typeIndex);
@@ -28,6 +29,8 @@ protected:
     void resizeEvent(QResizeEvent* event);
     
 public:
+    QJsonObject mPhase;
+    
     Label* mNameLab;
     Label* mColorLab;
     Label* mTauTypeLab;

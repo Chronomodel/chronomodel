@@ -9,7 +9,6 @@
 
 PhasesItem::PhasesItem(PhasesScene* phasesView, const QJsonObject& phase, QGraphicsItem* parent):QGraphicsObject(parent),
 mPhasesScene(phasesView),
-mPhase(phase),
 mBorderWidth(1.f),
 mTitleHeight(20.f),
 mEltsMargin(3.f),
@@ -25,6 +24,8 @@ mState(Qt::Unchecked)
              QGraphicsItem::ItemIsFocusable |
              QGraphicsItem::ItemSendsScenePositionChanges |
              QGraphicsItem::ItemSendsGeometryChanges);
+    
+    setPhase(phase);
 }
 
 PhasesItem::~PhasesItem()
@@ -98,7 +99,7 @@ void PhasesItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
 
 void PhasesItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
 {
-    //mPhasesScene->phaseDoubleClicked(this, e);
+    mPhasesScene->phaseDoubleClicked(this, e);
     QGraphicsItem::mouseDoubleClickEvent(e);
 }
 

@@ -28,8 +28,8 @@ public slots:
     void updateSelection();
 
 public:
-    /*void phaseClicked(PhasesItem* phaseItem, QGraphicsSceneMouseEvent* e);
     void phaseDoubleClicked(PhasesItem* phaseItem, QGraphicsSceneMouseEvent* e);
+    /*void phaseClicked(PhasesItem* phaseItem, QGraphicsSceneMouseEvent* e);
     void phaseEntered(PhasesItem* phaseItem, QGraphicsSceneHoverEvent* e);
     void phaseLeaved(PhasesItem* phaseItem, QGraphicsSceneHoverEvent* e);
     void phaseMoved(PhasesItem* phaseItem, QGraphicsSceneMouseEvent* e);

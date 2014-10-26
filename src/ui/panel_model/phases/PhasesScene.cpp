@@ -120,70 +120,36 @@ void PhasesScene::updateSelection()
 {
     if(!mUpdatingItems)
     {
-        /*QList<int> selected_ids;
         for(int i=0; i<mItems.size(); ++i)
         {
             QJsonObject& phase = mItems[i]->phase();
             phase[STATE_PHASE_IS_SELECTED] = mItems[i]->isSelected();
-            if(mItems[i]->isSelected())
-                selected_ids.append(mItems[i]->phase()[STATE_PHASE_ID].toInt());
+            phase[STATE_PHASE_IS_CURRENT] = false;
         }
-        emit ProjectManager::getProject()->selectedPhasesChanged(selected_ids);*/
-        
-        Project* project = ProjectManager::getProject();
-        QJsonObject statePrev = project->state();
-        QJsonObject stateNext = statePrev;
-        
-        QJsonArray phases;
-        for(int i=0; i<mItems.size(); ++i)
-            phases.append(mItems[i]->phase());
-        stateNext[STATE_PHASES] = phases;
-        
-        if(statePrev != stateNext)
+        QJsonObject phase;
+        PhasesItem* curItem = currentItem();
+        if(curItem)
         {
-            ProjectManager::getProject()->sendUpdateState(stateNext, tr("Phases selection changed"), false);
+            QJsonObject& p = curItem->phase();
+            p[STATE_PHASE_IS_CURRENT] = true;
+            phase = p;
         }
+        emit ProjectManager::getProject()->currentPhaseChanged(phase);
+        sendUpdateProject(tr("phases selection updated"), false, false);
     }
 }
 
-// ----------------------------------------------------------------------------------------
-//  Phases Add / Delete / Update
-// ----------------------------------------------------------------------------------------
-#pragma mark Phases Add / Delete / Update
-
-/*void PhasesScene::createPhase(Phase* phase)
+PhasesItem* PhasesScene::currentItem()
 {
-    PhasesItem* item = new PhasesItem(this, phase);
-    item->setPos(phase->mItemX, phase->mItemY);
-    mItems.append(item);
-    addItem(item);
-}
-
-void PhasesScene::deletePhase(Phase* phase)
-{
-    for(int i=0; i<mItems.size(); ++i)
+    QList<QGraphicsItem*> items = selectedItems();
+    if(items.size() > 0)
     {
-        if(mItems[i]->mPhase == phase)
-        {
-            PhasesItem* item = mItems[i];
-            removeItem(item);
-            mItems.erase(mItems.begin() + i);
-            delete item;
-            break;
-        }
+        return (PhasesItem*)items[0];
     }
+    return 0;
 }
 
-void PhasesScene::updatePhase(Phase* phase)
-{
-    for(int i=0; i<mItems.size(); ++i)
-    {
-        if(mItems[i]->mPhase == phase)
-        {
-            mItems[i]->update();
-        }
-    }
-}
+/*
 
 void PhasesScene::updateCheckedPhases()
 {
@@ -233,17 +199,7 @@ void PhasesScene::updateCheckedPhases()
 
 #pragma mark Selection & Current
 
-/*PhasesItem* PhasesScene::currentItem()
-{
-    QList<QGraphicsItem*> items = selectedItems();
-    if(items.size() > 0)
-    {
-        PhasesItem* evtItem = dynamic_cast<PhasesItem*>(items[0]);
-        if(evtItem)
-            return evtItem;
-    }
-    return 0;
-}
+/*
 
 void PhasesScene::setCurrentPhase(Phase* phase)
 {
@@ -266,6 +222,16 @@ void PhasesScene::setCurrentPhase(Phase* phase)
 //  Phase Items Events
 // ----------------------------------------------------------------------------------------
 #pragma mark Phase Items Events
+void PhasesScene::phaseDoubleClicked(PhasesItem* item, QGraphicsSceneMouseEvent* e)
+{
+    Q_UNUSED(e);
+    if(!mDrawingArrow)
+    {
+        Project* project = ProjectManager::getProject();
+        project->updatePhase(item->phase());
+    }
+}
+
 
 /*void PhasesScene::phaseClicked(PhasesItem* item, QGraphicsSceneMouseEvent* e)
 {
@@ -280,16 +246,6 @@ void PhasesScene::setCurrentPhase(Phase* phase)
     else
     {
         project->setCurrentPhase(item->mPhase);
-    }
-}
-
-void PhasesScene::phaseDoubleClicked(PhasesItem* item, QGraphicsSceneMouseEvent* e)
-{
-    Q_UNUSED(e);
-    if(!mDrawingArrow)
-    {
-        Project* project = ProjectManager::getProject();
-        project->updatePhase(item->mPhase);
     }
 }
 

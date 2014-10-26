@@ -80,6 +80,7 @@ public:
     void deleteDates(int eventId, const QList<int>& dateIndexes);
     void recycleDates(int eventId);
     
+    void updatePhase(const QJsonObject& phaseIn);
     int getUnusedPhaseId(const QJsonArray& phases);
     
 public slots:
@@ -101,6 +102,7 @@ signals:
     void projectStateChanged();
     void currentEventChanged(const QJsonObject& event);
     void currentDateChanged(const QJsonObject& date);
+    void currentPhaseChanged(const QJsonObject& phase);
     void selectedPhasesChanged(const QList<int>& phasesIds);
     
     void mcmcFinished(const Model& model);

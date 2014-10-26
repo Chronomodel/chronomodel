@@ -250,6 +250,7 @@ void ModelView::updateProject()
     mStepEdit->setText(QString::number(settings.mStep));
     
     mEventsScene->updateProject();
+    mPhasesScene->updateProject();
     
     // TODO : refresh current date !!
     //mCalibrationView->setDate();

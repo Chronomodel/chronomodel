@@ -11,7 +11,8 @@ mTauType(Phase::eTauUnknown),
 mTauFixed(0),
 mTauMin(0),
 mTauMax(0),
-mIsSelected(false)
+mIsSelected(false),
+mIsCurrent(false)
 {
     mColor = QColor(120 + rand() % 50,
                     120 + rand() % 50,
@@ -62,6 +63,7 @@ void Phase::copyFrom(const Phase& phase)
     mItemY = phase.mItemY;
     
     mIsSelected = phase.mIsSelected;
+    mIsCurrent = phase.mIsCurrent;
 }
 
 Phase::~Phase()
@@ -83,6 +85,7 @@ Phase Phase::fromJson(const QJsonObject& json)
     p.mTauMin = json[STATE_PHASE_TAU_MIN].toDouble();
     p.mTauMax = json[STATE_PHASE_TAU_MAX].toDouble();
     p.mIsSelected = json[STATE_PHASE_IS_SELECTED].toBool();
+    p.mIsCurrent = json[STATE_PHASE_IS_CURRENT].toBool();
     
     QString ids_str = json[STATE_PHASE_EVENTS_IDS].toString();
     QStringList ids = ids_str.split(",");
@@ -118,6 +121,7 @@ QJsonObject Phase::toJson() const
     phase[STATE_PHASE_TAU_MIN] = mTauMin;
     phase[STATE_PHASE_TAU_MAX] = mTauMax;
     phase[STATE_PHASE_IS_SELECTED] = mIsSelected;
+    phase[STATE_PHASE_IS_CURRENT] = mIsCurrent;
     
     QStringList ids;
     for(int i=0; i<mEventsIds.size(); ++i)

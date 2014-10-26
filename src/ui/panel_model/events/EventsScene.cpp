@@ -222,7 +222,7 @@ void EventsScene::updateSelection()
             event = evt;
         }
         emit ProjectManager::getProject()->currentEventChanged(event);
-        sendUpdateProject(tr("selection updated"), false, false);
+        sendUpdateProject(tr("events selection updated"), false, false);
         // TODO : update event in Props view
     }
 }

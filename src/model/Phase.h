@@ -25,6 +25,7 @@
 #define STATE_PHASE_CONSTRAINTS_FWD_IDS "constraints_fwd_ids"
 #define STATE_PHASE_CONSTRAINTS_BWD_IDS "constraints_bwd_ids"
 #define STATE_PHASE_IS_SELECTED "is_selected"
+#define STATE_PHASE_IS_CURRENT "is_current"
 
 
 class Phase
@@ -92,6 +93,7 @@ public:
     float mItemY;
     
     bool mIsSelected;
+    bool mIsCurrent;
 };
 
 #endif

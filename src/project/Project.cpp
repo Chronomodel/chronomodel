@@ -697,6 +697,31 @@ void Project::createPhase()
     }
 }
 
+void Project::updatePhase(const QJsonObject& phaseIn)
+{
+    PhaseDialog dialog(qApp->activeWindow(), Qt::Sheet);
+    dialog.setPhase(phaseIn);
+    if(dialog.exec() == QDialog::Accepted)
+    {
+        QJsonObject phase = dialog.getPhase();
+        
+        QJsonObject stateNext = mState;
+        QJsonArray phases = stateNext[STATE_PHASES].toArray();
+        
+        for(int i=0; i<phases.size(); ++i)
+        {
+            QJsonObject p = phases[i].toObject();
+            if(p[STATE_PHASE_ID].toInt() == phase[STATE_PHASE_ID].toInt())
+            {
+                phases[i] = phase;
+                break;
+            }
+        }
+        stateNext[STATE_PHASES] = phases;
+        pushProjectState(stateNext, tr("Phase updated"), true);
+    }
+}
+
 void Project::deleteSelectedPhases()
 {
     QJsonObject stateNext = mState;
