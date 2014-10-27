@@ -95,6 +95,7 @@ macx{
 # INCLUDES
 #########################################
 
+INCLUDEPATH += src/
 INCLUDEPATH += src/mcmc/
 INCLUDEPATH += src/model/
 INCLUDEPATH += src/plugins/
@@ -110,8 +111,7 @@ INCLUDEPATH += src/ui/graphs/
 INCLUDEPATH += src/ui/lookandfeel/
 INCLUDEPATH += src/ui/panel_model/
 INCLUDEPATH += src/ui/panel_model/data/
-INCLUDEPATH += src/ui/panel_model/events/
-INCLUDEPATH += src/ui/panel_model/phases/
+INCLUDEPATH += src/ui/panel_model/scenes/
 INCLUDEPATH += src/ui/panel_results/
 INCLUDEPATH += src/ui/widgets/
 INCLUDEPATH += src/ui/window/
