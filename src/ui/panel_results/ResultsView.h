@@ -41,6 +41,7 @@ protected:
     void updateLayout();
     
 public slots:
+    void clearResults();
     void updateResults(const Model& model);
     void updateOptions();
     void toggleInfos();

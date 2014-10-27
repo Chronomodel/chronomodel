@@ -150,6 +150,7 @@ mShowPhasesScene(true)
     // -------------------------
     
     Project* project = ProjectManager::getProject();
+    connect(project, SIGNAL(mcmcStarted()), this, SLOT(clearResults()));
     connect(project, SIGNAL(mcmcFinished(const Model&)), this, SLOT(updateResults(const Model&)));
     //connect(project, SIGNAL(eventPropsUpdated(Event*)), this, SLOT(updateResults()));
     
@@ -344,14 +345,10 @@ void ResultsView::updateGraphs()
     update();
 }
 
-void ResultsView::updateResults(const Model& model)
+void ResultsView::clearResults()
 {
-    mRuler->setRange(model.mSettings.mTmin, model.mSettings.mTmax);
-    
-    mHasPhases = (model.mPhases.size() > 0);
-    
-    mEventsSceneBut->setVisible(mHasPhases);
-    mPhasesSceneBut->setVisible(mHasPhases);
+    mEventsSceneBut->setVisible(false);
+    mPhasesSceneBut->setVisible(false);
     
     for(int i=mCheckChainChecks.size()-1; i>=0; --i)
     {
@@ -362,18 +359,32 @@ void ResultsView::updateResults(const Model& model)
     }
     mCheckChainChecks.clear();
     
+    mResultsScrollerPhases->clear();
+    mResultsScrollerEvents->clear();
+}
+
+void ResultsView::updateResults(const Model& model)
+{
+    clearResults();
+    
+    mRuler->setRange(model.mSettings.mTmin, model.mSettings.mTmax);
+    
+    mHasPhases = (model.mPhases.size() > 0);
+    
+    mEventsSceneBut->setVisible(mHasPhases);
+    mPhasesSceneBut->setVisible(mHasPhases);
+    
     for(int i=0; i<(int)model.mMCMCSettings.mNumProcesses; ++i)
     {
         CheckBox* check = new CheckBox(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
         connect(check, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+        check->setVisible(true);
         mCheckChainChecks.append(check);
     }
     
     // ----------------------------------------------------
     //  Phases View
     // ----------------------------------------------------
-    mResultsScrollerPhases->clear();
-    
     for(int p=0; p<(int)model.mPhases.size(); ++p)
     {
         Phase* phase = (Phase*)&model.mPhases[p];
@@ -407,8 +418,6 @@ void ResultsView::updateResults(const Model& model)
     // ----------------------------------------------------
     //  Events View
     // ----------------------------------------------------
-    mResultsScrollerEvents->clear();
-    
     for(int i=0; i<(int)model.mEvents.size(); ++i)
     {
         Event* event = (Event*)&model.mEvents[i];
@@ -435,6 +444,7 @@ void ResultsView::updateResults(const Model& model)
     else
     {
         mStack->setCurrentWidget(mResultsScrollerEvents);
+        mResultsScrollerEvents->setVisible(true);
     }
     
     updateLayout();

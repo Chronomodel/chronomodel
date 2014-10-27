@@ -15,11 +15,10 @@ public:
     
     void sendUpdateProject(const QString& reason, bool notify, bool async);
     
-    void updateCheckedPhases();
-    
 public slots:
     void updateProject();
     void updateSelection();
+    void updateCheckedPhases();
     
 public:
     void itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);

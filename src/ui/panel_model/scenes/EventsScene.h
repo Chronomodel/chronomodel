@@ -49,6 +49,7 @@ protected:
     
 signals:
     void csvDataLineDropAccepted(QList<int> rows);
+    void eventDoubleClicked();
     
 private:
     HelpWidget* mHelpView;

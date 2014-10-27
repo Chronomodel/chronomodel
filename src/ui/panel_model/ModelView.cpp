@@ -231,7 +231,7 @@ mIsSplitting(false)
     connect(mButImport, SIGNAL(clicked()), this, SLOT(slideRightPanel()));
     connect(mButPhasesModel, SIGNAL(clicked()), this, SLOT(slideRightPanel()));
     
-    connect(mEventsScene, SIGNAL(eventDoubleClicked(Event*)), mButProperties, SLOT(click()));
+    connect(mEventsScene, SIGNAL(eventDoubleClicked()), mButProperties, SLOT(click()));
 }
 
 ModelView::~ModelView()

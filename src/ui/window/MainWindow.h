@@ -46,6 +46,8 @@ public slots:
     void saveProjectAs();
     void about();
     void appSettings();
+    void openManual();
+    void openWebsite();
     
 private:
     QStackedWidget* mCentralStack;
@@ -82,6 +84,9 @@ private:
     QAction* mUndoAction;
     QAction* mRedoAction;
     QAction* mUndoViewAction;
+    
+    QAction* mManualAction;
+    QAction* mWebsiteAction;
     
     Q_DISABLE_COPY(MainWindow);
 };

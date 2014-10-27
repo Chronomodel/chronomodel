@@ -9,6 +9,7 @@
 PhasesScene::PhasesScene(QGraphicsView* view, QObject* parent):AbstractScene(view, parent)
 {
     connect(this, SIGNAL(selectionChanged()), this, SLOT(updateSelection()));
+    connect(ProjectManager::getProject(), SIGNAL(selectedEventsChanged()), this, SLOT(updateCheckedPhases()));
 }
 
 PhasesScene::~PhasesScene()
@@ -251,46 +252,48 @@ void PhasesScene::constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEv
 #pragma mark Check state
 void PhasesScene::updateCheckedPhases()
 {
-    /*Project* project = ProjectManager::getProject();
-    if(project)
+    QJsonObject state = ProjectManager::getProject()->state();
+    QJsonArray events = state[STATE_EVENTS].toArray();
+    
+    // tableau contenant les id des phases associés à leur nombre d'apparition dans les events
+    QHash<int, int> phases;
+    // nombre d'évènements sélectionnés
+    int selectedEventsCount = 0;
+    for(int i=0; i<events.size(); ++i)
     {
-        QHash<Phase*, int> phases;
-        int eventsCount = 0;
-        for(int i=0; i<project->mEvents.size(); ++i)
+        QJsonObject event = events[i].toObject();
+        if(event[STATE_EVENT_IS_SELECTED].toBool())
         {
-            Event* e = project->mEvents[i];
-            if(e->mIsSelected)
+            QString phaseIdsStr = event[STATE_EVENT_PHASE_IDS].toString();
+            if(!phaseIdsStr.isEmpty())
             {
-                for(int j=0; j<e->mPhases.size(); ++j)
+                QStringList phaseIds = phaseIdsStr.split(",");
+                for(int j=0; j<phaseIds.size(); ++j)
                 {
-                    Phase* p = e->mPhases[j];
-                    if(phases.find(p) == phases.end())
-                        phases[p] = 1;
+                    int phaseId = phaseIds[j].toInt();
+                    if(phases.find(phaseId) == phases.end())
+                        phases[phaseId] = 1;
                     else
-                        phases[p] += 1;
+                        phases[phaseId] += 1;
                 }
-                ++eventsCount;
             }
+            ++selectedEventsCount;
         }
-        QHash<Phase*, bool> phasesStates;
-        QHashIterator<Phase*, int> iter(phases);
-        while(iter.hasNext())
-        {
-            iter.next();
-            phasesStates[iter.key()] = (iter.value() == eventsCount);
-            //qDebug() << "phase : " << iter.key() << ", count : " << iter.value();
-        }
+    }
+    
+    for(int i=0; i<mItems.size(); ++i)
+    {
+        PhaseItem* item = (PhaseItem*)mItems[i];
+        QJsonObject phase = item->phase();
+        int id = phase[STATE_PHASE_ID].toInt();
         
-        for(int i=0; i<mItems.size(); ++i)
+        if(phases.find(id) == phases.end())
         {
-            if(phasesStates.find(mItems[i]->mPhase) == phasesStates.end())
-            {
-                mItems[i]->setState(Qt::Unchecked);
-            }
-            else
-            {
-                mItems[i]->setState(phasesStates[mItems[i]->mPhase] ? Qt::Checked : Qt::PartiallyChecked);
-            }
+            item->setState(Qt::Unchecked);
         }
-    }*/
+        else
+        {
+            item->setState((phases[id] == selectedEventsCount) ? Qt::Checked : Qt::PartiallyChecked);
+        }
+    }
 }

@@ -36,6 +36,7 @@ ResultsScroller::~ResultsScroller()
 void ResultsScroller::addElement(GraphViewResults* graph)
 {
     graph->setParent(this);
+    graph->setVisible(true);
     connect(graph, SIGNAL(visibilityChanged(bool)), this, SLOT(updateLayout()));
     mGraphs.append(graph);
     updateLayout();

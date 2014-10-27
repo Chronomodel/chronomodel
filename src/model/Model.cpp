@@ -47,13 +47,13 @@ Model Model::fromJson(const QJsonObject& json)
     if(json.contains("settings"))
     {
         QJsonObject settings = json["settings"].toObject();
-        model.mSettings.fromJson(settings);
+        model.mSettings = ProjectSettings::fromJson(settings);
     }
     
     if(json.contains("mcmc"))
     {
         QJsonObject mcmc = json["mcmc"].toObject();
-        model.mMCMCSettings.fromJson(mcmc);
+        model.mMCMCSettings = MCMCSettings::fromJson(mcmc);
     }
     
     if(json.contains("events"))

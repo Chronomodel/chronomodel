@@ -36,7 +36,7 @@ void GraphViewDate::paintEvent(QPaintEvent* e)
     
     if(mDate)
     {
-        QColor color = mDate->mEvent->mColor;
+        QColor color = Qt::blue; //mDate->mEvent->mColor;
         bool isDark = colorIsDark(color);
         
         QRectF r(mMargin, mMargin, mLineH, mLineH);
@@ -69,7 +69,7 @@ void GraphViewDate::showHisto(bool showTheta, bool showSigma, bool showDelta, bo
     
     if(mDate)
     {
-        QColor color = mDate->mEvent->mColor;
+        QColor color = Qt::blue; //mDate->mEvent->mColor;
         
         mGraph->removeAllCurves();
         mGraph->removeAllZones();
@@ -147,8 +147,6 @@ void GraphViewDate::showTrace(bool showTheta, bool showSigma, bool showDelta, co
     
     if(mDate)
     {
-        QColor color(mDate->mEvent->mColor);
-        
         mGraph->removeAllCurves();
         mGraph->removeAllZones();
         
@@ -218,8 +216,6 @@ void GraphViewDate::showAccept(bool showTheta, bool showSigma, bool showDelta, c
     
     if(mDate)
     {
-        QColor color(mDate->mEvent->mColor);
-        
         mGraph->removeAllCurves();
         mGraph->removeAllZones();
         

@@ -42,6 +42,8 @@
 	<file alias="model.png">resources/model.png</file>
 	<file alias="run.png">resources/run.png</file>
 	<file alias="results.png">resources/results.png</file>
+	<file alias="help.png">resources/help.png</file>
+	<file alias="web.png">resources/web.png</file>
 	
 	<file alias="settings_w.png">resources/settings_w.png</file>
 	<file alias="model_w.png">resources/model_w.png</file>

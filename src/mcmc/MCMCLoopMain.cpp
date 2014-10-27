@@ -37,7 +37,7 @@ bool MCMCLoopMain::initModel()
     catch(QString error)
     {
         QMessageBox message(QMessageBox::Information,
-                            tr("Your Model is not valid"),
+                            tr("Your model is not valid"),
                             error,
                             QMessageBox::Ok,
                             qApp->activeWindow(),
@@ -101,36 +101,28 @@ void MCMCLoopMain::initMCMC()
     //  mSigmaThetaMH = variance de G(theta i) = vraissemblance,
     //  (différent de g(theta i) = fonction de calibration)
     // ----------------------------------------------------------------
-    QList<Date*> dates;
+    int numDates = 0;
+    for(int i=0; i<events.size(); ++i)
+        numDates += events[i].mDates.size();
+    
+    emit stepChanged(tr("Initializing dates..."), 0, numDates);
+
     for(int i=0; i<events.size(); ++i)
     {
-        int num_dates = (int)events[i].mDates.size();
-        for(int j=0; j<num_dates; ++j)
+        for(int j=0; j<events[i].mDates.size(); ++j)
         {
-            Date* date = &events[i].mDates[j];
-            dates.push_back(date);
+            Date& date = events[i].mDates[j];
+            
+            // TODO Init mieux que ça!
+            date.updateDelta();
+            
+            FunctionAnalysis data = analyseFunction(date.mCalibration);
+            
+            date.mTheta.mX = data.mode;
+            date.mTheta.mSigmaMH = sqrt(data.variance);
+            
+            emit stepProgressed(i);
         }
-    }
-    
-    emit stepChanged(tr("Initializing dates..."), 0, dates.size());
-
-    for(int i=0; i<dates.size(); ++i)
-    {
-        Date* date = dates[i];
-        
-        // TODO Init mieux que ça!
-        date->updateDelta();
-        
-        FunctionAnalysis data = analyseFunction(date->mCalibration);
-        
-        date->mTheta.mX = data.mode;
-        date->mTheta.mSigmaMH = sqrt(data.variance);
-        
-        //qDebug() << "Date init : " << data.mode;
-        
-        emit stepProgressed(i);
-        
-        //emit messageSent(QString::number(j+1) + "/" + QString::number(num_dates) + " (" + date.mName.c_str() + ") theta = " + QString::number(date.mTheta.mX) + ", sigmaMH(theta) = " + QString::number(date.mTheta.mSigmaMH));
     }
     
     // ----------------------------------------------------------------
@@ -139,7 +131,7 @@ void MCMCLoopMain::initMCMC()
     //  mS02 = moyenne harmonique de variances de G(theta i).
     //  Choix du shrinkage uniforme : 1
     // ----------------------------------------------------------------
-    emit stepChanged(tr("Initializing events..."), 0, dates.size());
+    emit stepChanged(tr("Initializing events..."), 0, events.size());
     for(int i=0; i<events.size(); ++i)
     {
         if(events[i].type() == Event::eKnown)
@@ -212,24 +204,21 @@ void MCMCLoopMain::initMCMC()
         
         emit stepProgressed(i);
         
-        //emit messageSent(QString::number(i+1) + "/" + QString::number(events.size()) + " (" + events[i].mName.c_str() + ") theta = " + QString::number(events[i].mTheta.mX) + ", SO2 = " + QString::number(events[i].mS02)+ ", AShrinkage = " + QString::number(events[i].mAShrinkage));
+        qDebug() << QString::number(i+1) + "/" + QString::number(events.size()) + " (" + events[i].mName + ") theta = " + QString::number(events[i].mTheta.mX) + ", SO2 = " + QString::number(events[i].mS02)+ ", AShrinkage = " + QString::number(events[i].mAShrinkage);
     }
     
     // ----------------------------------------------------------------
     //  Theta des Phases
     // ----------------------------------------------------------------
-    emit stepChanged(tr("Initializing phases..."), 0, dates.size());
+    emit stepChanged(tr("Initializing phases..."), 0, phases.size());
     for(int i=0; i<phases.size(); ++i)
     {
         phases[i].mAlpha.mX = Generator::randomUniform(t_min, phases[i].getMinThetaEvents());
         phases[i].mBeta.mX = Generator::randomUniform(phases[i].getMaxThetaEvents(), t_max);
         
-        //qDebug() << phases[i].mAlpha.mX;
-        //qDebug() << phases[i].mBeta.mX;
-        
         emit stepProgressed(i);
         
-        //emit messageSent(QString::number(i+1) + "/" + QString::number(phases.size()) + " (" + phases[i].mName.c_str() + ") alpha = " + QString::number(phases[i].mAlpha.mX) + ", beta = " + QString::number(phases[i].mBeta.mX));
+        qDebug() << QString::number(i+1) + "/" + QString::number(phases.size()) + " (" + phases[i].mName + ") alpha = " + QString::number(phases[i].mAlpha.mX) + ", beta = " + QString::number(phases[i].mBeta.mX);
     }
     
     // ----------------------------------------------------------------
@@ -268,21 +257,27 @@ void MCMCLoopMain::initMCMC()
     // ----------------------------------------------------------------
     //  Variance des Mesures
     // ----------------------------------------------------------------
-    emit stepChanged(tr("Initializing dates variances..."), 0, dates.size());
+    emit stepChanged(tr("Initializing dates variances..."), 0, numDates);
     
-    for(int i=0; i<dates.size(); ++i)
+    for(int i=0; i<events.size(); ++i)
     {
-        double diff = abs(dates[i]->mTheta.mX - dates[i]->mEvent->mTheta.mX);
-        if(diff != 0)
-            dates[i]->mSigma.mX = diff;
-        else
-            dates[i]->mSigma.mX = dates[i]->mTheta.mSigmaMH;
-        
-        dates[i]->mSigma.mSigmaMH = 1.;
-        
-        emit stepProgressed(i);
-        
-        //emit messageSent(QString::number(j+1) + "/" + QString::number(num_dates) + " (" + date.mName.c_str() + ") sigma = " + QString::number(date.mSigma.mX) + ", sigmaMH(sigma) = " + QString::number(date.mSigma.mSigmaMH));
+        Event& event = events[i];
+        for(int j=0; j<event.mDates.size(); ++j)
+        {
+            Date& date = event.mDates[j];
+            
+            double diff = abs(date.mTheta.mX - event.mTheta.mX);
+            if(diff != 0)
+                date.mSigma.mX = diff;
+            else
+                date.mSigma.mX = date.mTheta.mSigmaMH;
+            
+            date.mSigma.mSigmaMH = 1.;
+            
+            emit stepProgressed(i);
+            
+            qDebug() << QString::number(j+1) + "/" + QString::number(numDates) + " (" + date.mName + ") sigma = " + QString::number(date.mSigma.mX) + ", sigmaMH(sigma) = " + QString::number(date.mSigma.mSigmaMH);
+        }
     }
 }
 
@@ -314,7 +309,8 @@ void MCMCLoopMain::update()
     
     for(int i=0; i<events.size(); ++i)
     {
-        for(int j=0; j<events[i].mDates.size(); ++j)
+        Event& event = events[i];
+        for(int j=0; j<event.mDates.size(); ++j)
         {
             Date& date = events[i].mDates[j];
             
@@ -322,11 +318,11 @@ void MCMCLoopMain::update()
             if(doMemo)
                 date.mDelta.memo();
             
-            date.updateTheta(t_min, t_max);
+            date.updateTheta(t_min, t_max, event);
             if(doMemo)
                 date.mTheta.memo();
 
-            date.updateSigma();
+            date.updateSigma(event);
             if(doMemo)
                 date.mSigma.memo();
             

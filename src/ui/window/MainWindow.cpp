@@ -112,6 +112,12 @@ void MainWindow::createActions()
     
     mAboutQtAct = new QAction(QIcon(":qt.png"), tr("About Qt"), this);
     connect(mAboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+    
+    mManualAction = new QAction(QIcon(":help.png"), tr("Manual"), this);
+    connect(mManualAction, SIGNAL(triggered()), this, SLOT(openManual()));
+    
+    mWebsiteAction = new QAction(QIcon(":web.png"), tr("Website"), this);
+    connect(mWebsiteAction, SIGNAL(triggered()), this, SLOT(openWebsite()));
 }
 
 void MainWindow::createMenus()
@@ -197,6 +203,8 @@ void MainWindow::createToolBars()
     separator4->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     toolBar->addWidget(separator4);
     
+    toolBar->addAction(mManualAction);
+    toolBar->addAction(mWebsiteAction);
     /*toolBar->addAction(mAboutAct);
     toolBar->addAction(mAboutQtAct);*/
 }
@@ -274,7 +282,7 @@ bool MainWindow::closeProject()
         {
             disconnect(mProjectSaveAction, SIGNAL(triggered()), this, SLOT(saveProject()));
             disconnect(mProjectSaveAsAction, SIGNAL(triggered()), this, SLOT(saveProjectAs()));
-            disconnect(mMCMCSettingsAction, SIGNAL(triggered()), this, SLOT(mcmcSettings()));
+            disconnect(mMCMCSettingsAction, SIGNAL(triggered()), mProject, SLOT(mcmcSettings()));
             disconnect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
             disconnect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));
             disconnect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
@@ -338,6 +346,23 @@ void MainWindow::appSettings()
     {
         ProjectManager::setSettings(dialog.getSettings());
     }
+}
+
+void MainWindow::openManual()
+{
+    QString path = qApp->applicationDirPath();
+#ifdef Q_OS_MAC
+    QDir dir(path);
+    dir.cdUp();
+    path = dir.absolutePath() + "/Resources";
+#endif
+    path += "/Chronomodel.pdf";
+    QDesktopServices::openUrl(QUrl("file:///" + path, QUrl::TolerantMode));
+}
+
+void MainWindow::openWebsite()
+{
+    QDesktopServices::openUrl(QUrl("http://www.chronomodel.com", QUrl::TolerantMode));
 }
 
 // ---------

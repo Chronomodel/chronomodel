@@ -58,9 +58,9 @@ public:
     void calibrate(const float& tmin, const float& tmax, const float& step);
     float getLikelyhoodFromCalib(const float t);
     
-    void updateTheta(const float& tmin, const float& tmax);
+    void updateTheta(const float& tmin, const float& tmax, Event& event);
     void updateDelta();
-    void updateSigma();
+    void updateSigma(Event& event);
     
 public:
     MHVariable mTheta; // theta i de la date
@@ -79,8 +79,6 @@ public:
     float mDeltaMax;
     float mDeltaAverage;
     float mDeltaError;
-    
-    Event* mEvent;
     
     bool mIsCurrent;
     bool mIsSelected;

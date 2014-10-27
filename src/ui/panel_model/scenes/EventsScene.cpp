@@ -157,7 +157,6 @@ void EventsScene::updateProject()
     // ------------------------------------------------------
     //  Delete items not in current state
     // ------------------------------------------------------
-    qDebug() << "=> Delete items";
     for(int i=mItems.size()-1; i>=0; --i)
     {
         EventItem* eventItem = (EventItem*)mItems[i];
@@ -184,7 +183,6 @@ void EventsScene::updateProject()
     // ------------------------------------------------------
     //  Create / Update event items
     // ------------------------------------------------------
-    qDebug() << "=> Create / Update items";
     for(int i=0; i<events.size(); ++i)
     {
         QJsonObject event = events[i].toObject();
@@ -297,7 +295,7 @@ void EventsScene::updateSelection()
         }
         emit ProjectManager::getProject()->currentEventChanged(event);
         sendUpdateProject(tr("events selection updated"), false, false);
-        // TODO : update event in Props view
+        ProjectManager::getProject()->sendEventsSelectionChanged();
     }
 }
 
@@ -424,7 +422,7 @@ void EventsScene::dateReleased(DateItem* dateItem, QGraphicsSceneMouseEvent* e)
 void EventsScene::itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
 {
     AbstractScene::itemDoubleClicked(item, e);
-    // TODO : show properties panel
+    emit eventDoubleClicked();
 }
 
 void EventsScene::constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e)

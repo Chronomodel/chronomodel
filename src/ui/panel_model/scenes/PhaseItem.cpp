@@ -12,6 +12,7 @@ PhaseItem::PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsIt
 mState(Qt::Unchecked)
 {
     mBorderWidth = 10;
+    mEltsHeight = 15;
     setPhase(phase);
 }
 

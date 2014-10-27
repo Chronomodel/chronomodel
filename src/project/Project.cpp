@@ -128,6 +128,12 @@ bool Project::event(QEvent* e)
         }
         return true;
     }
+    else if(e->type() == 1001)
+    {
+        qDebug() << "(---) Receiving events selection";
+        emit selectedEventsChanged();
+        return true;
+    }
     else
     {
         return QObject::event(e);
@@ -139,7 +145,16 @@ void Project::updateState(const QJsonObject& state, const QString& reason, bool 
     qDebug() << "--- Receiving : " << reason;
     mState = state;
     if(notify)
+    {
         emit projectStateChanged();
+    }
+}
+
+void Project::sendEventsSelectionChanged()
+{
+    qDebug() << "(+++) Sending events selection";
+    QEvent* event = new QEvent((QEvent::Type)1001);
+    QCoreApplication::postEvent(this, event, Qt::NormalEventPriority);
 }
 
 
@@ -864,7 +879,7 @@ void Project::updatePhaseEvents(int phaseId, Qt::CheckState state)
         if(event[STATE_EVENT_IS_SELECTED].toBool())
         {
             QString phaseIdsStr = event[STATE_EVENT_PHASE_IDS].toString();
-            QStringList phaseIds = phaseIdsStr.split(",");
+            QStringList phaseIds = phaseIdsStr.isEmpty() ? QStringList() : phaseIdsStr.split(",");
             
             phaseIds.removeAll(QString::number(phaseId));
             if(state == Qt::Checked)
@@ -1380,8 +1395,11 @@ void Project::exportAsText()
 void Project::run()
 {
     mModels.clear();
+    
     Model model = Model::fromJson(mState);
     mModels.append(model);
+    
+    emit mcmcStarted();
     
     MCMCLoopMain loop(mModels[0]);
     MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::Sheet);

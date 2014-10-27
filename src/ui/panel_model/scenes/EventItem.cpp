@@ -47,7 +47,6 @@ void EventItem::setEvent(const QJsonObject& event)
     {
         mScene->removeItem(dateItems[i]);
         delete dateItems[i];
-        qDebug() << "== date removed";
     }
     
     // ----------------------------------------------
@@ -65,8 +64,6 @@ void EventItem::setEvent(const QJsonObject& event)
         
         DateItem* dateItem = new DateItem((EventsScene*)mScene, date, color, state[STATE_SETTINGS].toObject());
         dateItem->setParentItem(this);
-        
-        qDebug() << "== date added";
         
         QPointF pos(0,
                     boundingRect().y() +

@@ -56,6 +56,9 @@ public:
     // This is not async! so be careful when calling this from views with notify = true
     void updateState(const QJsonObject& state, const QString& reason, bool notify);
     
+    // Special event for selection... too bad!
+    void sendEventsSelectionChanged();
+    
     QJsonObject emptyState() const;
     QJsonObject state() const;
     
@@ -116,8 +119,9 @@ signals:
     void currentEventChanged(const QJsonObject& event);
     void currentDateChanged(const QJsonObject& date);
     void currentPhaseChanged(const QJsonObject& phase);
-    void selectedPhasesChanged(const QList<int>& phasesIds);
+    void selectedEventsChanged();
     
+    void mcmcStarted();
     void mcmcFinished(const Model& model);
     
 public:
