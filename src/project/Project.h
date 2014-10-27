@@ -71,6 +71,7 @@ public:
     void addEvent(QJsonObject event, const QString& reason);
     int getUnusedEventId(const QJsonArray& events);
     void updateEvent(const QJsonObject& event, const QString& reason);
+    void mergeEvents(int eventFromId, int eventToId);
     
     Date createDateFromPlugin(PluginAbstract* plugin);
     Date createDateFromData(const QString& pluginName, const QStringList& dataStr);
@@ -82,6 +83,18 @@ public:
     
     void updatePhase(const QJsonObject& phaseIn);
     int getUnusedPhaseId(const QJsonArray& phases);
+    void mergePhases(int phaseFromId, int phaseToId);
+    void updatePhaseEvents(int phaseId, Qt::CheckState state);
+    
+    void createEventConstraint(int eventFromId, int eventToId);
+    bool isEventConstraintAllowed(const QJsonObject& eventFrom, const QJsonObject& eventTo);
+    void updateEventConstraint(int constraintId);
+    int getUnusedEventConstraintId(const QJsonArray& constraints);
+    
+    void createPhaseConstraint(int phaseFromId, int phaseToId);
+    bool isPhaseConstraintAllowed(const QJsonObject& phaseFrom, const QJsonObject& phaseTo);
+    void updatePhaseConstraint(int constraintId);
+    int getUnusedPhaseConstraintId(const QJsonArray& constraints);
     
 public slots:
     bool save();

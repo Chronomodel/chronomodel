@@ -70,8 +70,6 @@ QJsonObject EventConstraint::toJson() const
     json[STATE_EVENT_CONSTRAINT_PHI_FIXED] = mPhiFixed;
     json[STATE_EVENT_CONSTRAINT_PHI_MIN] = mPhiMin;
     json[STATE_EVENT_CONSTRAINT_PHI_MAX] = mPhiMax;
-    json[STATE_EVENT_CONSTRAINT_BWD_ID] = mEventFrom ? mEventFrom->mId : -1;
-    json[STATE_EVENT_CONSTRAINT_FWD_ID] = mEventTo ? mEventTo->mId : -1;
     return json;
 }
 

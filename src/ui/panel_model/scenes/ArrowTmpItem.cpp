@@ -1,9 +1,8 @@
-#include "PhasesSceneArrowTmpItem.h"
+#include "ArrowTmpItem.h"
 #include <QtWidgets>
 
 
-PhasesSceneArrowTmpItem::PhasesSceneArrowTmpItem(PhasesScene* phasesView, QGraphicsItem* parent):QGraphicsItem(parent),
-mPhasesScene(phasesView),
+ArrowTmpItem::ArrowTmpItem(QGraphicsItem* parent):QGraphicsItem(parent),
 mXFrom(0),
 mYFrom(0),
 mXTo(0),
@@ -14,41 +13,40 @@ mLocked(false)
     setZValue(-1.);
 }
 
-void PhasesSceneArrowTmpItem::setFrom(double x, double y)
+void ArrowTmpItem::setFrom(double x, double y)
 {
     mXFrom = x;
     mYFrom = y;
+    
+    update();
     if(scene())
-    {
         scene()->update();
-    }
 }
 
-void PhasesSceneArrowTmpItem::setTo(double x, double y)
+void ArrowTmpItem::setTo(double x, double y)
 {
     if(!mLocked)
     {
         mXTo = x;
         mYTo = y;
+        update();
         if(scene())
-        {
             scene()->update();
-        }
     }
 }
 
-void PhasesSceneArrowTmpItem::setState(const State state)
+void ArrowTmpItem::setState(const State state)
 {
     mState = state;
     update();
 }
 
-void PhasesSceneArrowTmpItem::setLocked(bool locked)
+void ArrowTmpItem::setLocked(bool locked)
 {
     mLocked = locked;
 }
 
-QRectF PhasesSceneArrowTmpItem::boundingRect() const
+QRectF ArrowTmpItem::boundingRect() const
 {
     double x = qMin(mXFrom, mXTo);
     double y = qMin(mYFrom, mYTo);
@@ -58,7 +56,7 @@ QRectF PhasesSceneArrowTmpItem::boundingRect() const
     return QRectF(x, y, w, h);
 }
 
-void PhasesSceneArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
+void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
     Q_UNUSED(option);
     Q_UNUSED(widget);

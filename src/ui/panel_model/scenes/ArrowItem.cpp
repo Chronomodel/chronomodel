@@ -1,24 +1,22 @@
-#include "EventsSceneArrowItem.h"
+#include "ArrowItem.h"
 #include "EventItem.h"
 #include "EventConstraint.h"
 #include "ProjectManager.h"
+#include "Project.h"
 #include "Painting.h"
 #include <QtWidgets>
 #include <math.h>
 
 
-EventsSceneArrowItem::EventsSceneArrowItem(EventsScene* EventsScene, EventConstraint* constraint, QGraphicsItem* parent):QGraphicsItem(parent),
-mConstraint(constraint),
-mItemFrom(0),
-mItemTo(0),
-mEventsScene(EventsScene),
+ArrowItem::ArrowItem(AbstractScene* scene, Type type, const QJsonObject& constraint, QGraphicsItem* parent):QGraphicsItem(parent),
+mType(type),
+mScene(scene),
 mXStart(0),
 mYStart(0),
 mXEnd(0),
 mYEnd(0),
 mBubbleWidth(130.f),
 mBubbleHeight(40.f),
-mDeleteWidth(15.f),
 mEditing(false)
 {
     setZValue(-1.);
@@ -27,35 +25,83 @@ mEditing(false)
             QGraphicsItem::ItemIsFocusable |
             QGraphicsItem::ItemSendsScenePositionChanges |
             QGraphicsItem::ItemSendsGeometryChanges);
+    
+    setConstraint(constraint);
 }
 
-void EventsSceneArrowItem::setItemFrom(EventItem* itemFrom)
+QJsonObject& ArrowItem::constraint()
 {
-    mItemFrom = itemFrom;
+    return mConstraint;
+}
+
+void ArrowItem::setConstraint(const QJsonObject& c)
+{
+    mConstraint = c;
     updatePosition();
 }
 
-void EventsSceneArrowItem::setItemTo(EventItem* itemTo)
+void ArrowItem::updatePosition()
 {
-    mItemTo = itemTo;
-    updatePosition();
-}
-
-void EventsSceneArrowItem::updatePosition()
-{
-    mXStart = mItemFrom ? mItemFrom->pos().x() : 0;
-    mYStart = mItemFrom ? mItemFrom->pos().y() : 0;
+    Project* project = ProjectManager::getProject();
+    QJsonObject state = project->state();
     
-    mXEnd = mItemTo ? mItemTo->pos().x() : 0;
-    mYEnd = mItemTo ? mItemTo->pos().y() : 0;
-    
-    if(scene())
+    if(mType == eEvent)
     {
-        scene()->update();
+        int fromId = mConstraint[STATE_EVENT_CONSTRAINT_BWD_ID].toInt();
+        int toId = mConstraint[STATE_EVENT_CONSTRAINT_FWD_ID].toInt();
+        
+        QJsonArray events = state[STATE_EVENTS].toArray();
+        
+        QJsonObject from;
+        QJsonObject to;
+        
+        for(int i=0; i<events.size(); ++i)
+        {
+            QJsonObject event = events[i].toObject();
+            if(event[STATE_EVENT_ID].toInt() == fromId)
+                from = event;
+            if(event[STATE_EVENT_ID].toInt() == toId)
+                to = event;
+        }
+        
+        mXStart = from[STATE_EVENT_ITEM_X].toDouble();
+        mYStart = from[STATE_EVENT_ITEM_Y].toDouble();
+        
+        mXEnd = to[STATE_EVENT_ITEM_X].toDouble();
+        mYEnd = to[STATE_EVENT_ITEM_Y].toDouble();
     }
+    else
+    {
+        int fromId = mConstraint[STATE_PHASE_CONSTRAINT_BWD_ID].toInt();
+        int toId = mConstraint[STATE_PHASE_CONSTRAINT_FWD_ID].toInt();
+        
+        QJsonArray phases = state[STATE_PHASES].toArray();
+        
+        QJsonObject from;
+        QJsonObject to;
+        
+        for(int i=0; i<phases.size(); ++i)
+        {
+            QJsonObject phase = phases[i].toObject();
+            if(phase[STATE_PHASE_ID].toInt() == fromId)
+                from = phase;
+            if(phase[STATE_PHASE_ID].toInt() == toId)
+                to = phase;
+        }
+        
+        mXStart = from[STATE_PHASE_ITEM_X].toDouble();
+        mYStart = from[STATE_PHASE_ITEM_Y].toDouble();
+        
+        mXEnd = to[STATE_PHASE_ITEM_X].toDouble();
+        mYEnd = to[STATE_PHASE_ITEM_Y].toDouble();
+    }
+
+    update();
+    if(scene())
+        scene()->update();
 }
 
-void EventsSceneArrowItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
+void ArrowItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
 {
     QGraphicsItem::mouseDoubleClickEvent(e);
     //QRectF r = getBubbleRect();
@@ -64,7 +110,7 @@ void EventsSceneArrowItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
         mEditing = true;
         update();
         
-        mEventsScene->constraintDoubleClicked(this, e);
+        mScene->constraintDoubleClicked(this, e);
         
         mEditing = false;
         
@@ -73,7 +119,7 @@ void EventsSceneArrowItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
     }
 }
 
-QRectF EventsSceneArrowItem::boundingRect() const
+QRectF ArrowItem::boundingRect() const
 {
     double x = qMin(mXStart, mXEnd);
     double y = qMin(mYStart, mYEnd);
@@ -83,7 +129,7 @@ QRectF EventsSceneArrowItem::boundingRect() const
     return QRectF(x, y, w, h);
 }
 
-void EventsSceneArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
+void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
     Q_UNUSED(option);
     Q_UNUSED(widget);
@@ -121,9 +167,11 @@ void EventsSceneArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsIt
     float posY1 = rect.height()/3;
     float posY2 = 2*rect.height()/3;
     
+    EventConstraint::PhiType phiType = (EventConstraint::PhiType)mConstraint[STATE_EVENT_CONSTRAINT_PHI_TYPE].toInt();
+    
     if(mXStart < mXEnd && mYStart > mYEnd)
     {
-        if(mConstraint->mPhiType == EventConstraint::ePhiUnknown)
+        if(phiType == EventConstraint::ePhiUnknown)
         {
             painter->save();
             painter->translate(rect.x() + posX, rect.y() + posY);
@@ -148,7 +196,7 @@ void EventsSceneArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsIt
     }
     else if(mXStart < mXEnd && mYStart < mYEnd)
     {
-        if(mConstraint->mPhiType == EventConstraint::ePhiUnknown)
+        if(phiType == EventConstraint::ePhiUnknown)
         {
             painter->save();
             painter->translate(rect.x() + posX, rect.y() + posY);
@@ -173,7 +221,7 @@ void EventsSceneArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsIt
     }
     else if(mXStart > mXEnd && mYStart < mYEnd)
     {
-        if(mConstraint->mPhiType == EventConstraint::ePhiUnknown)
+        if(phiType == EventConstraint::ePhiUnknown)
         {
             painter->save();
             painter->translate(rect.x() + posX, rect.y() + posY);
@@ -198,7 +246,7 @@ void EventsSceneArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsIt
     }
     else if(mXStart > mXEnd && mYStart > mYEnd)
     {
-        if(mConstraint->mPhiType == EventConstraint::ePhiUnknown)
+        if(phiType == EventConstraint::ePhiUnknown)
         {
             painter->save();
             painter->translate(rect.x() + rect.width()/2, rect.y() + rect.height()/2);
@@ -224,7 +272,7 @@ void EventsSceneArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsIt
     
     // Bubble
     
-    switch(mConstraint->mPhiType)
+    switch(phiType)
     {
         case EventConstraint::ePhiUnknown:
         {
@@ -245,9 +293,12 @@ void EventsSceneArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsIt
             painter->setBrush(Qt::white);
             painter->drawRoundedRect(r, 5, 5);
             
+            float phiMin = mConstraint[STATE_EVENT_CONSTRAINT_PHI_MIN].toDouble();
+            float phiMax = mConstraint[STATE_EVENT_CONSTRAINT_PHI_MAX].toDouble();
+            
             //painter->setPen(QColor(120, 120, 120));
-            painter->drawText(r.adjusted(0, 0, 0, -r.height()/2), Qt::AlignCenter, QString::number(mConstraint->mPhiMin));
-            painter->drawText(r.adjusted(0, r.height()/2, 0, 0), Qt::AlignCenter, QString::number(mConstraint->mPhiMax));
+            painter->drawText(r.adjusted(0, 0, 0, -r.height()/2), Qt::AlignCenter, QString::number(phiMin));
+            painter->drawText(r.adjusted(0, r.height()/2, 0, 0), Qt::AlignCenter, QString::number(phiMax));
             painter->drawLine(r.x() + 4, r.y() + r.height()/2, r.x() + r.width() - 4, r.y() + r.height()/2);
             break;
         }
@@ -256,7 +307,7 @@ void EventsSceneArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsIt
     }
 }
 
-QRectF EventsSceneArrowItem::getBubbleRect() const
+QRectF ArrowItem::getBubbleRect() const
 {
     int w = 60;
     int h = 30;

@@ -182,6 +182,11 @@ HEADERS += src/ui/dialogs/AboutDialog.h
 HEADERS += src/ui/dialogs/MCMCProgressDialog.h
 HEADERS += src/ui/dialogs/MCMCSettingsDialog.h
 HEADERS += src/ui/dialogs/SettingsDialog.h
+HEADERS += src/ui/dialogs/EventDialog.h
+HEADERS += src/ui/dialogs/ConstraintDialog.h
+HEADERS += src/ui/dialogs/PhaseDialog.h
+HEADERS += src/ui/dialogs/DateDialog.h
+HEADERS += src/ui/dialogs/TrashDialog.h
 
 HEADERS += src/ui/graphs/GraphViewAbstract.h
 HEADERS += src/ui/graphs/GraphView.h
@@ -196,29 +201,22 @@ HEADERS += src/ui/panel_model/ModelView.h
 HEADERS += src/ui/panel_model/ImportDataView.h
 HEADERS += src/ui/panel_model/EventPropertiesView.h
 HEADERS += src/ui/panel_model/SceneGlobalView.h
+HEADERS += src/ui/panel_model/EventsListItemDelegate.h
 
 HEADERS += src/ui/panel_model/data/DatesList.h
-HEADERS += src/ui/panel_model/data/DateDialog.h
-HEADERS += src/ui/panel_model/data/TrashDialog.h
 HEADERS += src/ui/panel_model/data/DatesListItemDelegate.h
 HEADERS += src/ui/panel_model/data/CalibrationView.h
 
-HEADERS += src/ui/panel_model/events/EventsScene.h
-HEADERS += src/ui/panel_model/events/EventItem.h
-HEADERS += src/ui/panel_model/events/DateItem.h
-HEADERS += src/ui/panel_model/events/EventsSceneArrowItem.h
-HEADERS += src/ui/panel_model/events/EventsSceneArrowTmpItem.h
-HEADERS += src/ui/panel_model/events/EventDialog.h
-HEADERS += src/ui/panel_model/events/EventKnownItem.h
-HEADERS += src/ui/panel_model/events/EventConstraintDialog.h
-HEADERS += src/ui/panel_model/events/EventsListItemDelegate.h
-
-HEADERS += src/ui/panel_model/phases/PhasesScene.h
-HEADERS += src/ui/panel_model/phases/PhasesItem.h
-HEADERS += src/ui/panel_model/phases/PhasesSceneArrowItem.h
-HEADERS += src/ui/panel_model/phases/PhasesSceneArrowTmpItem.h
-HEADERS += src/ui/panel_model/phases/PhaseDialog.h
-HEADERS += src/ui/panel_model/phases/PhaseConstraintDialog.h
+HEADERS += src/ui/panel_model/scenes/AbstractScene.h
+HEADERS += src/ui/panel_model/scenes/EventsScene.h
+HEADERS += src/ui/panel_model/scenes/PhasesScene.h
+HEADERS += src/ui/panel_model/scenes/AbstractItem.h
+HEADERS += src/ui/panel_model/scenes/EventItem.h
+HEADERS += src/ui/panel_model/scenes/EventKnownItem.h
+HEADERS += src/ui/panel_model/scenes/DateItem.h
+HEADERS += src/ui/panel_model/scenes/PhaseItem.h
+HEADERS += src/ui/panel_model/scenes/ArrowItem.h
+HEADERS += src/ui/panel_model/scenes/ArrowTmpItem.h
 
 HEADERS += src/ui/panel_results/ResultsView.h
 HEADERS += src/ui/panel_results/ResultsScroller.h
@@ -312,6 +310,11 @@ SOURCES += src/ui/dialogs/AboutDialog.cpp
 SOURCES += src/ui/dialogs/MCMCProgressDialog.cpp
 SOURCES += src/ui/dialogs/MCMCSettingsDialog.cpp
 SOURCES += src/ui/dialogs/SettingsDialog.cpp
+SOURCES += src/ui/dialogs/EventDialog.cpp
+SOURCES += src/ui/dialogs/PhaseDialog.cpp
+SOURCES += src/ui/dialogs/ConstraintDialog.cpp
+SOURCES += src/ui/dialogs/DateDialog.cpp
+SOURCES += src/ui/dialogs/TrashDialog.cpp
 
 SOURCES += src/ui/graphs/GraphViewAbstract.cpp
 SOURCES += src/ui/graphs/GraphView.cpp
@@ -328,25 +331,18 @@ SOURCES += src/ui/panel_model/EventPropertiesView.cpp
 SOURCES += src/ui/panel_model/SceneGlobalView.cpp
 
 SOURCES += src/ui/panel_model/data/DatesList.cpp
-SOURCES += src/ui/panel_model/data/DateDialog.cpp
-SOURCES += src/ui/panel_model/data/TrashDialog.cpp
 SOURCES += src/ui/panel_model/data/CalibrationView.cpp
 
-SOURCES += src/ui/panel_model/events/EventsScene.cpp
-SOURCES += src/ui/panel_model/events/EventItem.cpp
-SOURCES += src/ui/panel_model/events/DateItem.cpp
-SOURCES += src/ui/panel_model/events/EventsSceneArrowItem.cpp
-SOURCES += src/ui/panel_model/events/EventsSceneArrowTmpItem.cpp
-SOURCES += src/ui/panel_model/events/EventDialog.cpp
-SOURCES += src/ui/panel_model/events/EventKnownItem.cpp
-SOURCES += src/ui/panel_model/events/EventConstraintDialog.cpp
-
-SOURCES += src/ui/panel_model/phases/PhasesScene.cpp
-SOURCES += src/ui/panel_model/phases/PhasesItem.cpp
-SOURCES += src/ui/panel_model/phases/PhasesSceneArrowItem.cpp
-SOURCES += src/ui/panel_model/phases/PhasesSceneArrowTmpItem.cpp
-SOURCES += src/ui/panel_model/phases/PhaseDialog.cpp
-SOURCES += src/ui/panel_model/phases/PhaseConstraintDialog.cpp
+SOURCES += src/ui/panel_model/scenes/AbstractScene.cpp
+SOURCES += src/ui/panel_model/scenes/EventsScene.cpp
+SOURCES += src/ui/panel_model/scenes/PhasesScene.cpp
+SOURCES += src/ui/panel_model/scenes/AbstractItem.cpp
+SOURCES += src/ui/panel_model/scenes/EventItem.cpp
+SOURCES += src/ui/panel_model/scenes/EventKnownItem.cpp
+SOURCES += src/ui/panel_model/scenes/DateItem.cpp
+SOURCES += src/ui/panel_model/scenes/PhaseItem.cpp
+SOURCES += src/ui/panel_model/scenes/ArrowItem.cpp
+SOURCES += src/ui/panel_model/scenes/ArrowTmpItem.cpp
 
 SOURCES += src/ui/panel_results/ResultsView.cpp
 SOURCES += src/ui/panel_results/ResultsScroller.cpp

@@ -85,7 +85,7 @@ void DateItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
     if(eventItem)
     {
         eventItem->setSelected(true);
-        mEventsScene->eventClicked(eventItem, e);
+        mEventsScene->itemClicked(eventItem, e);
         e->accept();
     }
     QGraphicsObject::mousePressEvent(e);

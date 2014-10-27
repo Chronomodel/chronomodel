@@ -1,21 +1,24 @@
-#ifndef EventsSceneArrowItem_H
-#define EventsSceneArrowItem_H
+#ifndef ArrowItem_H
+#define ArrowItem_H
 
 #include <QObject>
 #include <QGraphicsItem>
+#include <QJsonObject>
 
-class EventsScene;
-class EventConstraint;
-class EventItem;
+class AbstractScene;
+class AbstractItem;
 
 
-class EventsSceneArrowItem: public QGraphicsItem
+class ArrowItem: public QGraphicsItem
 {
 public:
-    EventsSceneArrowItem(EventsScene* EventsScene, EventConstraint* constraint = 0, QGraphicsItem* parent = 0);
+    enum Type{
+        eEvent = 0,
+        ePhase = 1
+    };
     
-    void setItemFrom(EventItem* itemFrom);
-    void setItemTo(EventItem* itemTo);
+    ArrowItem(AbstractScene* scene, Type type, const QJsonObject& constraint, QGraphicsItem* parent = 0);
+    
     void updatePosition();
 
     QRectF boundingRect() const;
@@ -24,12 +27,13 @@ public:
     
     QRectF getBubbleRect() const;
     
-    EventConstraint* mConstraint;
-    EventItem* mItemFrom;
-    EventItem* mItemTo;
+    void setConstraint(const QJsonObject& c);
+    QJsonObject& constraint();
     
 protected:
-    EventsScene* mEventsScene;
+    Type mType;
+    QJsonObject mConstraint;
+    AbstractScene* mScene;
     
     double mXStart;
     double mYStart;
@@ -38,7 +42,6 @@ protected:
     
     float mBubbleWidth;
     float mBubbleHeight;
-    float mDeleteWidth;
     
     bool mEditing;
 };

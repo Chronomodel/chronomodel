@@ -11,36 +11,9 @@
 #include <QtWidgets>
 
 
-EventItem::EventItem(EventsScene* EventsScene, const QJsonObject& event, QGraphicsItem* parent):QGraphicsItem(parent),
-mEventsScene(EventsScene),
-mEvent(event),
-mBorderWidth(1.f),
-mTitleHeight(20.f),
-mPhasesHeight(10.f),
-mEltsMargin(3.f),
-mEltsWidth(15.f),
-mEltsHeight(40.f),
-mShowElts(true),
-mMergeable(false)
+EventItem::EventItem(EventsScene* scene, const QJsonObject& event, QGraphicsItem* parent):AbstractItem(scene, parent),
+mEvent(event)
 {
-    setZValue(1.);
-    setAcceptHoverEvents(true);
-    setAcceptDrops(true);
-    setFlags(QGraphicsItem::ItemIsSelectable |
-             QGraphicsItem::ItemIsMovable |
-             QGraphicsItem::ItemIsFocusable |
-             QGraphicsItem::ItemSendsScenePositionChanges |
-             QGraphicsItem::ItemSendsGeometryChanges);
-    
-    // Not yet supported with retina display in Qt 5.3
-#ifndef Q_OS_MAC
-    QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect();
-    shadow->setColor(Qt::black);
-    shadow->setBlurRadius(4);
-    shadow->setOffset(1, 1);
-    setGraphicsEffect(shadow);
-#endif
-    
     setEvent(mEvent);
 }
 
@@ -72,7 +45,7 @@ void EventItem::setEvent(const QJsonObject& event)
     QList<QGraphicsItem*> dateItems = childItems();
     for(int i=0; i<dateItems.size(); ++i)
     {
-        mEventsScene->removeItem(dateItems[i]);
+        mScene->removeItem(dateItems[i]);
         delete dateItems[i];
         qDebug() << "== date removed";
     }
@@ -90,7 +63,7 @@ void EventItem::setEvent(const QJsonObject& event)
                      mEvent[STATE_EVENT_GREEN].toInt(),
                      mEvent[STATE_EVENT_BLUE].toInt());
         
-        DateItem* dateItem = new DateItem(mEventsScene, date, color, state[STATE_SETTINGS].toObject());
+        DateItem* dateItem = new DateItem((EventsScene*)mScene, date, color, state[STATE_SETTINGS].toObject());
         dateItem->setParentItem(this);
         
         qDebug() << "== date added";
@@ -111,71 +84,21 @@ void EventItem::setEvent(const QJsonObject& event)
     update();
 }
 
-void EventItem::setMergeable(bool mergeable)
-{
-    mMergeable = mergeable;
-    update();
-}
-
 #pragma mark Events
-void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
-{
-    QGraphicsItem::mousePressEvent(e);
-    
-    setZValue(2.);
-    /*if(toggleRect().contains(e->pos()))
-    {
-        mShowElts = !mShowElts;
-        QList<QGraphicsItem*> children = childItems();
-        for(int i=0; i<children.size(); ++i)
-            children[i]->setVisible(mShowElts);
-        
-        update();
-        if(scene())
-            scene()->update();
-    }
-    else
-    {
-        mEventsScene->eventClicked(this, e);
-    }*/
-    mEventsScene->eventClicked(this, e);
-}
-
 void EventItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
 {
-    // Call this first to ensure correct item manipulation :
-    QGraphicsItem::mouseReleaseEvent(e);
-    
-    setZValue(1.);
-    
     mEvent[STATE_EVENT_ITEM_X] = pos().x();
     mEvent[STATE_EVENT_ITEM_Y] = pos().y();
     
-    mEventsScene->eventReleased(this, e);
-}
-
-void EventItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
-{
-    mEventsScene->eventDoubleClicked(this, e);
-    QGraphicsItem::mouseDoubleClickEvent(e);
+    AbstractItem::mouseReleaseEvent(e);
 }
 
 void EventItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 {
-    QGraphicsItem::mouseMoveEvent(e);
-    mEventsScene->eventMoved(this, e);
-}
-
-void EventItem::hoverEnterEvent(QGraphicsSceneHoverEvent* e)
-{
-    mEventsScene->eventEntered(this, e);
-    QGraphicsItem::hoverEnterEvent(e);
-}
-
-void EventItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* e)
-{
-    mEventsScene->eventLeaved(this, e);
-    QGraphicsItem::hoverLeaveEvent(e);
+    mEvent[STATE_EVENT_ITEM_X] = pos().x();
+    mEvent[STATE_EVENT_ITEM_Y] = pos().y();
+    
+    AbstractItem::mouseMoveEvent(e);
 }
 
 void EventItem::dropEvent(QGraphicsSceneDragDropEvent* e)
@@ -190,7 +113,7 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
     QJsonObject event = mEvent;
     
     QJsonArray dates = event[STATE_EVENT_DATES].toArray();
-    QList<Date> datesDragged = mEventsScene->decodeDataDrop(e);
+    QList<Date> datesDragged = ((EventsScene*)mScene)->decodeDataDrop(e);
     for(int i=0; i<datesDragged.size(); ++i)
     {
         QJsonObject date = datesDragged[i].toJson();
@@ -201,7 +124,6 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
     
     project->updateEvent(event, QObject::tr("Dates added to event (CSV drag)"));
 }
-
 
 
 void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
@@ -223,24 +145,29 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     
     
     // Phases
+    QJsonArray phases = getPhases();
     
-    /*int y = rect.height() - mBorderWidth - mPhasesHeight;
+    int y = rect.height() - mBorderWidth - mPhasesHeight;
     QRectF r = rect.adjusted(0, y, 0, 0);
     QPainterPath clip;
     clip.addRoundedRect(rect, 5, 5);
     painter->setClipPath(clip);
-    int numPhases = (int)mEvent->mPhases.size();
+    int numPhases = (int)phases.size();
     float w = r.width()/numPhases;
+    
     for(int i=0; i<numPhases; ++i)
     {
-        QColor c = mEvent->mPhases[i]->mColor;
+        QJsonObject phase = phases[i].toObject();
+        QColor c(phase[STATE_PHASE_RED].toInt(),
+                 phase[STATE_PHASE_GREEN].toInt(),
+                 phase[STATE_PHASE_BLUE].toInt());
         painter->setPen(c);
         painter->setBrush(c);
         painter->drawRect(r.x() + i*w, r.y(), w, r.height());
     }
     painter->setClipRect(rect.adjusted(-1, -1, 1, 1));
     painter->setPen(QPen(eventColor, 1));
-    painter->drawLine(rect.x(), rect.y() + y, rect.x() + rect.width(), rect.y() + y);*/
+    painter->drawLine(rect.x(), rect.y() + y, rect.x() + rect.width(), rect.y() + y);
     
     
     // Name
@@ -276,6 +203,24 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->restore();
 }
 
+QJsonArray EventItem::getPhases() const
+{
+    QJsonObject state = ProjectManager::getProject()->state();
+    QJsonArray allPhases = state[STATE_PHASES].toArray();
+    QJsonArray phases;
+    QString eventPhaseIdsStr = mEvent[STATE_EVENT_PHASE_IDS].toString();
+    QStringList eventPhaseIds = eventPhaseIdsStr.split(",");
+    
+    for(int i=0; i<allPhases.size(); ++i)
+    {
+        QJsonObject phase = allPhases[i].toObject();
+        QString phaseId = QString::number(phase[STATE_PHASE_ID].toInt());
+        if(eventPhaseIds.contains(phaseId))
+            phases.append(phase);
+    }
+    return phases;
+}
+
 #pragma mark Geometry
 QRectF EventItem::boundingRect() const
 {
@@ -283,43 +228,31 @@ QRectF EventItem::boundingRect() const
     qreal w = 100.;
     
     float h = mTitleHeight + mPhasesHeight + 2*mBorderWidth + 2*mEltsMargin;
-    if(mShowElts)
+
+    QString name = mEvent[STATE_EVENT_NAME].toString();
+    QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+    
+    QFont font = qApp->font();
+    QFontMetrics metrics(font);
+    w = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin + 2*mTitleHeight;
+    
+    int count = dates.size();
+    
+    if(count > 0)
+        h += count * (mEltsHeight + mEltsMargin);
+    else
+        h += mEltsMargin + mEltsHeight;
+    
+    font.setPointSizeF(pointSize(11));
+    metrics = QFontMetrics(font);
+    for(int i=0; i<count; ++i)
     {
-        QString name = mEvent[STATE_EVENT_NAME].toString();
-        QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
-        
-        QFont font = qApp->font();
-        QFontMetrics metrics(font);
-        w = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin + 2*mTitleHeight;
-        
-        int count = dates.size();
-        
-        if(count > 0)
-            h += count * (mEltsHeight + mEltsMargin);
-        else
-            h += mEltsMargin + mEltsHeight;
-        
-        font.setPointSizeF(pointSize(11));
-        metrics = QFontMetrics(font);
-        for(int i=0; i<count; ++i)
-        {
-            QJsonObject date = dates[i].toObject();
-            name = date[STATE_DATE_NAME].toString();
-            int nw = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin;
-            w = (nw > w) ? nw : w;
-        }
-        w = (w < 150) ? 150 : w;
+        QJsonObject date = dates[i].toObject();
+        name = date[STATE_DATE_NAME].toString();
+        int nw = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin;
+        w = (nw > w) ? nw : w;
     }
+    w = (w < 150) ? 150 : w;
+    
     return QRectF(-(w+penWidth)/2, -(h+penWidth)/2, w + penWidth, h + penWidth);
 }
-
-QRectF EventItem::toggleRect() const
-{
-    QRectF rect = boundingRect();
-    QRectF r(rect.x() + rect.width() - mBorderWidth - mEltsMargin - mTitleHeight,
-             rect.y() + mBorderWidth + mEltsMargin,
-             mTitleHeight,
-             mTitleHeight);
-    return r;
-}
-

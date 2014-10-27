@@ -5,8 +5,8 @@
 #include "EventItem.h"
 #include "EventKnownItem.h"
 #include "DateItem.h"
-#include "EventsSceneArrowItem.h"
-#include "EventsSceneArrowTmpItem.h"
+#include "ArrowItem.h"
+#include "ArrowTmpItem.h"
 #include "ProjectManager.h"
 #include "Project.h"
 #include "SetProjectState.h"
@@ -15,18 +15,8 @@
 #include <QtWidgets>
 
 
-EventsScene::EventsScene(QGraphicsView* view, QObject* parent):QGraphicsScene(parent),
-mView(view),
-mDrawingArrow(false),
-mUpdatingItems(false),
-mAltIsDown(false),
-mShiftIsDown(false)
+EventsScene::EventsScene(QGraphicsView* view, QObject* parent):AbstractScene(view, parent)
 {
-    mTempArrow = new EventsSceneArrowTmpItem(this);
-    addItem(mTempArrow);
-    mTempArrow->setVisible(false);
-    mTempArrow->setZValue(0);
-    
     mHelpView = new HelpWidget(view);
     mHelpTimer = new QTimer(this);
     
@@ -45,6 +35,30 @@ mShiftIsDown(false)
 EventsScene::~EventsScene()
 {
     
+}
+
+#pragma mark Actions
+void EventsScene::deleteSelectedItems()
+{
+    ProjectManager::getProject()->deleteSelectedEvents();
+}
+
+void EventsScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
+{
+    QJsonObject eventFrom = ((EventItem*)itemFrom)->event();
+    QJsonObject eventTo = ((EventItem*)itemTo)->event();
+    
+    ProjectManager::getProject()->createEventConstraint(eventFrom[STATE_EVENT_ID].toInt(),
+                                                        eventTo[STATE_EVENT_ID].toInt());
+}
+
+void EventsScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
+{
+    QJsonObject eventFrom = ((EventItem*)itemFrom)->event();
+    QJsonObject eventTo = ((EventItem*)itemTo)->event();
+    
+    ProjectManager::getProject()->mergeEvents(eventFrom[STATE_EVENT_ID].toInt(),
+                                              eventTo[STATE_EVENT_ID].toInt());
 }
 
 #pragma mark Help Bubble
@@ -109,7 +123,10 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
     
     QJsonArray events;
     for(int i=0; i<mItems.size(); ++i)
-        events.append(mItems[i]->event());
+    {
+        EventItem* item = (EventItem*)mItems[i];
+        events.append(item->event());
+    }
     stateNext[STATE_EVENTS] = events;
     
     if(statePrev != stateNext)
@@ -125,10 +142,15 @@ void EventsScene::updateProject()
 {
     QJsonObject state = ProjectManager::getProject()->state();
     QJsonArray events = state[STATE_EVENTS].toArray();
+    QJsonArray constraints = state[STATE_EVENTS_CONSTRAINTS].toArray();
     
     QList<int> events_ids;
     for(int i=0; i<events.size(); ++i)
         events_ids << events[i].toObject()[STATE_EVENT_ID].toInt();
+    
+    QList<int> constraints_ids;
+    for(int i=0; i<constraints.size(); ++i)
+        constraints_ids << constraints[i].toObject()[STATE_EVENT_CONSTRAINT_ID].toInt();
     
     mUpdatingItems = true;
     
@@ -138,7 +160,7 @@ void EventsScene::updateProject()
     qDebug() << "=> Delete items";
     for(int i=mItems.size()-1; i>=0; --i)
     {
-        EventItem* eventItem = mItems[i];
+        EventItem* eventItem = (EventItem*)mItems[i];
         QJsonObject& event = eventItem->event();
         
         if(!events_ids.contains(event[STATE_EVENT_ID].toInt()))
@@ -170,7 +192,8 @@ void EventsScene::updateProject()
         bool itemExists = false;
         for(int j=0; j<mItems.size(); ++j)
         {
-            QJsonObject itemEvent = mItems[j]->event();
+            EventItem* item = (EventItem*)mItems[j];
+            QJsonObject itemEvent = item->event();
             if(itemEvent[STATE_EVENT_ID].toInt() == event[STATE_EVENT_ID].toInt())
             {
                 itemExists = true;
@@ -178,7 +201,7 @@ void EventsScene::updateProject()
                 {
                     // UPDATE ITEM
                     qDebug() << "Event updated : id = " << event[STATE_EVENT_ID].toInt();
-                    mItems[j]->setEvent(event);
+                    item->setEvent(event);
                 }
             }
         }
@@ -197,6 +220,56 @@ void EventsScene::updateProject()
             qDebug() << "Event created : id = " << event[STATE_EVENT_ID].toInt() << ", type : " << type;
         }
     }
+    
+    // ------------------------------------------------------
+    //  Delete constraints not in current state
+    // ------------------------------------------------------
+    for(int i=mConstraintItems.size()-1; i>=0; --i)
+    {
+        ArrowItem* constraintItem = mConstraintItems[i];
+        QJsonObject& constraint = constraintItem->constraint();
+        
+        if(!constraints_ids.contains(constraint[STATE_EVENT_CONSTRAINT_ID].toInt()))
+        {
+            qDebug() << "Constraint deleted : " << constraint[STATE_EVENT_CONSTRAINT_ID].toInt();
+            removeItem(constraintItem);
+            mConstraintItems.removeOne(constraintItem);
+            delete constraintItem;
+        }
+    }
+    
+    // ------------------------------------------------------
+    //  Create / Update constraint items
+    // ------------------------------------------------------
+    for(int i=0; i<constraints.size(); ++i)
+    {
+        QJsonObject constraint = constraints[i].toObject();
+        
+        bool itemExists = false;
+        for(int j=0; j<mConstraintItems.size(); ++j)
+        {
+            QJsonObject constraintItem = mConstraintItems[j]->constraint();
+            if(constraintItem[STATE_EVENT_CONSTRAINT_ID].toInt() == constraint[STATE_EVENT_CONSTRAINT_ID].toInt())
+            {
+                itemExists = true;
+                if(constraint != constraintItem)
+                {
+                    // UPDATE ITEM
+                    qDebug() << "Constraint updated : id = " << constraint[STATE_EVENT_CONSTRAINT_ID].toInt();
+                    mConstraintItems[j]->setConstraint(constraint);
+                }
+            }
+        }
+        if(!itemExists)
+        {
+            // CREATE ITEM
+            ArrowItem* constraintItem = new ArrowItem(this, ArrowItem::eEvent, constraint);
+            mConstraintItems.append(constraintItem);
+            addItem(constraintItem);
+            qDebug() << "Constraint created : id = " << constraint[STATE_EVENT_CONSTRAINT_ID].toInt();
+        }
+    }
+    
     mUpdatingItems = false;
     update();
 }
@@ -209,12 +282,13 @@ void EventsScene::updateSelection()
     {
         for(int i=0; i<mItems.size(); ++i)
         {
-            QJsonObject& event = mItems[i]->event();
+            EventItem* item = (EventItem*)mItems[i];
+            QJsonObject& event = item->event();
             event[STATE_EVENT_IS_SELECTED] = mItems[i]->isSelected();
             event[STATE_EVENT_IS_CURRENT] = false;
         }
         QJsonObject event;
-        EventItem* curItem = currentItem();
+        EventItem* curItem = (EventItem*)currentItem();
         if(curItem)
         {
             QJsonObject& evt = curItem->event();
@@ -228,7 +302,7 @@ void EventsScene::updateSelection()
 }
 
 #pragma mark Utilities
-EventItem* EventsScene::currentItem()
+AbstractItem* EventsScene::currentItem()
 {
     QList<QGraphicsItem*> items = selectedItems();
     if(items.size() > 0)
@@ -240,7 +314,7 @@ EventItem* EventsScene::currentItem()
     return 0;
 }
 
-EventItem* EventsScene::collidingItem(QGraphicsItem* item)
+AbstractItem* EventsScene::collidingItem(QGraphicsItem* item)
 {
     for(int i=0; i<mItems.size(); ++i)
     {
@@ -258,7 +332,7 @@ void EventsScene::dateMoved(DateItem* dateItem, QGraphicsSceneMouseEvent* e)
     if(dateItem)
     {
         static EventItem* lastEntered = 0;
-        EventItem* hoveredEventItem = collidingItem(dateItem);
+        EventItem* hoveredEventItem = (EventItem*)collidingItem(dateItem);
         EventItem* prevEventItem = (EventItem*)dateItem->parentItem();
         
         if(hoveredEventItem != lastEntered)
@@ -282,7 +356,7 @@ void EventsScene::dateReleased(DateItem* dateItem, QGraphicsSceneMouseEvent* e)
     Q_UNUSED(e);
     if(dateItem)
     {
-        EventItem* hoveredEventItem = collidingItem(dateItem);
+        EventItem* hoveredEventItem = (EventItem*)collidingItem(dateItem);
         EventItem* prevEventItem = (EventItem*)dateItem->parentItem();
         
         if(hoveredEventItem && prevEventItem && (hoveredEventItem != prevEventItem))
@@ -346,263 +420,22 @@ void EventsScene::dateReleased(DateItem* dateItem, QGraphicsSceneMouseEvent* e)
 // ----------------------------------------------------------------------------------------
 //  Event Items Events
 // ----------------------------------------------------------------------------------------
-#pragma mark Event Items
-
-void EventsScene::eventClicked(EventItem* item, QGraphicsSceneMouseEvent* e)
+#pragma mark Item mouse events
+void EventsScene::itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
 {
-    /*Q_UNUSED(e);
-    if(mDrawingArrow)
-    {
-        EventItem* current = currentItem();
-        if(current && item != current)
-        {
-            QString message;
-            Project* project = ProjectManager::getProject();
-            if(!project->createEventConstraint(current->mEvent, item->mEvent, message))
-            {
-                QString m(message);
-                QMessageBox message(QMessageBox::Critical, tr("Constraint refused"), m, QMessageBox::Ok, qApp->activeWindow(), Qt::Sheet);
-                message.exec();
-                
-                update();
-            }
-            else
-            {
-                mTempArrow->setVisible(false);
-                e->accept();
-            }
-        }
-    }*/
+    AbstractScene::itemDoubleClicked(item, e);
+    // TODO : show properties panel
 }
 
-void EventsScene::eventDoubleClicked(EventItem* item, QGraphicsSceneMouseEvent* e)
-{
-    /*Q_UNUSED(e);
-    Q_UNUSED(item);
-    if(!mDrawingArrow)
-    {
-        //((MainWindow*)qApp->activeWindow())->showDates(item->mEvent);
-        emit eventDoubleClicked(item->mEvent);
-    }*/
-}
-
-void EventsScene::eventEntered(EventItem* item, QGraphicsSceneHoverEvent* e)
-{
-    /*Q_UNUSED(e);
-    
-    if(mDrawingArrow)
-    {
-        Project* project = ProjectManager::getProject();
-        EventItem* current = currentItem();
-        QString message;
-        if(project->isEventConstraintAllowed(current->mEvent, item->mEvent, message))
-        {
-            mTempArrow->setState(EventsSceneArrowTmpItem::eAllowed);
-        }
-        else
-        {
-            mTempArrow->setState(EventsSceneArrowTmpItem::eForbidden);
-        }
-    }
-    mTempArrow->setTo(item->pos().x(), item->pos().y());
-    mTempArrow->setLocked(true);*/
-}
-
-void EventsScene::eventLeaved(EventItem* item, QGraphicsSceneHoverEvent* e)
-{
-    /*Q_UNUSED(item);
-    Q_UNUSED(e);
-    mTempArrow->setLocked(false);
-    mTempArrow->setState(EventsSceneArrowTmpItem::eNormal);*/
-}
-
-void EventsScene::eventMoved(EventItem* item, QGraphicsSceneMouseEvent* e)
-{
-    Q_UNUSED(e);
-    
-    //item->mEvent->mItemX = item->pos().x();
-    //item->mEvent->mItemY = item->pos().y();
-    
-    // Move constraints
-    updateConstraintsPos();
-    
-    // Ajust Scene rect to minimal
-    //setSceneRect(itemsBoundingRect());
-    
-    // Follow the moving item
-    /*QList<QGraphicsView*> graphicsViews = views();
-    for(int i=0; i<graphicsViews.size(); ++i)
-    {
-        graphicsViews[i]->ensureVisible(item);
-        graphicsViews[i]->centerOn(item->pos());
-    }*/
-    
-    // TODO : prevent collisions here ?
-    if(e->modifiers() == Qt::ShiftModifier)
-    {
-        EventItem* colliding = collidingItem(item);
-        for(int i=0; i<mItems.size(); ++i)
-        {
-            mItems[i]->setMergeable(colliding != 0 && (mItems[i] == item || mItems[i] == colliding));
-        }
-    }
-}
-
-void EventsScene::eventReleased(EventItem* item, QGraphicsSceneMouseEvent* e)
-{
-    Q_UNUSED(e);
-    
-    if(e->modifiers() == Qt::ShiftModifier)
-    {
-        EventItem* colliding = collidingItem(item);
-        if(colliding)
-        {
-            qDebug() << "fusion";
-            Project* project = ProjectManager::getProject();
-            //project->mergeEvents(item->mEvent, colliding->mEvent);
-        }
-    }
-    for(int i=0; i<mItems.size(); ++i)
-        mItems[i]->setMergeable(false);
-    
-    sendUpdateProject(tr("event moved"), true, true);
-}
-
-/*void EventsScene::handleEventMoved(EventItem* item)
-{
-    Q_UNUSED(item);
-    
-    if(mDrawingArrow)
-    {
-        mTempArrow->setFrom(item->pos().x(), item->pos().y());
-    }
-    for(int i=0; i<mConstraintItems.size(); ++i)
-    {
-        mConstraintItems[i]->updatePosition();
-    }
-}*/
-
-
-// ----------------------------------------------------------------------------------------
-//  Constraints Add / Delete / Update
-// ----------------------------------------------------------------------------------------
-#pragma mark Constraints Add / Delete / Update
-
-void EventsScene::createEventConstraint(EventConstraint* constraint)
-{
-    /*if(constraint)
-    {
-        EventsSceneArrowItem* arrow = new EventsSceneArrowItem(this, constraint);
-        for(int i=0; i<mItems.size(); ++i)
-        {
-            if(mItems[i]->mEvent == constraint->getEventFrom())
-                arrow->mItemFrom = mItems[i];
-            else if(mItems[i]->mEvent == constraint->getEventTo())
-                arrow->mItemTo = mItems[i];
-        }
-        addItem(arrow);
-        arrow->updatePosition();
-        mConstraintItems.append(arrow);
-    }*/
-}
-
-void EventsScene::deleteEventConstraint(EventConstraint* constraint)
-{
-    for(int i=0; i<mConstraintItems.size(); ++i)
-    {
-        if(mConstraintItems[i]->mConstraint == constraint)
-        {
-            EventsSceneArrowItem* item = mConstraintItems[i];
-            removeItem(item);
-            mConstraintItems.erase(mConstraintItems.begin() + i);
-            delete item;
-            break;
-        }
-    }
-}
-
-// ----------------------------------------------------------------------------------------
-//  Constraints Items Events
-// ----------------------------------------------------------------------------------------
-#pragma mark Constraints Items Events
-void EventsScene::constraintDoubleClicked(EventsSceneArrowItem* item, QGraphicsSceneMouseEvent* e)
+void EventsScene::constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e)
 {
     Q_UNUSED(e);
     Project* project = ProjectManager::getProject();
-    //project->updateEventConstraint(item->mConstraint);
+    project->updateEventConstraint(item->constraint()[STATE_EVENT_CONSTRAINT_ID].toInt());
 }
 
-void EventsScene::updateConstraintsPos()
-{
-    for(int i=0; i<mConstraintItems.size(); ++i)
-    {
-        mConstraintItems[i]->updatePosition();
-    }
-}
-
-
-
-
-// ----------------------------------------------------------------------------------------
-//  Scene Events
-// ----------------------------------------------------------------------------------------
-#pragma mark Scene Events
-void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
-{
-    QGraphicsScene::keyPressEvent(keyEvent);
-    
-    if(keyEvent->key() == Qt::Key_Delete)
-    {
-        Project* project = ProjectManager::getProject();
-        project->deleteSelectedEvents();
-    }
-    else if(keyEvent->key() == Qt::Key_N)
-    {
-        Project* project = ProjectManager::getProject();
-        project->createEvent();
-    }
-    else if(keyEvent->modifiers() == Qt::AltModifier)
-    {
-        mAltIsDown = true;
-        EventItem* curItem = currentItem();
-        if(curItem)
-        {
-            mDrawingArrow = true;
-            mTempArrow->setVisible(true);
-            mTempArrow->setFrom(curItem->pos().x(), curItem->pos().y());
-        }
-    }
-    else if(keyEvent->modifiers() == Qt::ShiftModifier)
-    {
-        mShiftIsDown = true;
-    }
-    else
-    {
-        keyEvent->ignore();
-    }
-}
-
-void EventsScene::keyReleaseEvent(QKeyEvent* keyEvent)
-{
-    mDrawingArrow = false;
-    mAltIsDown = false;
-    mShiftIsDown = false;
-    mTempArrow->setVisible(false);
-    QGraphicsScene::keyReleaseEvent(keyEvent);
-}
 
 #pragma mark Drag & Drop
-void EventsScene::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
-{
-    if(mDrawingArrow)
-    {
-        //qDebug() << e->scenePos().x();
-        mTempArrow->setVisible(true);
-        mTempArrow->setTo(e->scenePos().x(), e->scenePos().y());
-    }
-    QGraphicsScene::mouseMoveEvent(e);
-}
-
 void EventsScene::dragMoveEvent(QGraphicsSceneDragDropEvent* e)
 {
     for(int i=0; i<mItems.size(); ++i)

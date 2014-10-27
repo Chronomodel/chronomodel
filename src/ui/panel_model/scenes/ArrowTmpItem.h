@@ -1,13 +1,10 @@
-#ifndef PhasesSceneArrowTmpItem_H
-#define PhasesSceneArrowTmpItem_H
+#ifndef ArrowTmpItem_H
+#define ArrowTmpItem_H
 
-#include <QObject>
 #include <QGraphicsItem>
 
-class PhasesScene;
 
-
-class PhasesSceneArrowTmpItem: public QGraphicsItem
+class ArrowTmpItem: public QGraphicsItem
 {
 public:
     enum State{
@@ -16,7 +13,7 @@ public:
         eForbidden
     };
     
-    PhasesSceneArrowTmpItem(PhasesScene* phasesView, QGraphicsItem* parent = 0);
+    ArrowTmpItem(QGraphicsItem* parent = 0);
     
     void setFrom(double x, double y);
     void setTo(double x, double y);
@@ -27,8 +24,6 @@ public:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
     
 protected:
-    PhasesScene* mPhasesScene;
-    
     double mXFrom;
     double mYFrom;
     double mXTo;
