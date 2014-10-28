@@ -56,6 +56,17 @@ Model Model::fromJson(const QJsonObject& json)
         model.mMCMCSettings = MCMCSettings::fromJson(mcmc);
     }
     
+    if(json.contains("phases"))
+    {
+        QJsonArray phases = json["phases"].toArray();
+        for(int i=0; i<phases.size(); ++i)
+        {
+            QJsonObject phase = phases[i].toObject();
+            Phase p = Phase::fromJson(phase);
+            model.mPhases.append(p);
+        }
+    }
+    
     if(json.contains("events"))
     {
         QJsonArray events = json["events"].toArray();
@@ -72,17 +83,6 @@ Model Model::fromJson(const QJsonObject& json)
                 EventKnown e = EventKnown::fromJson(event);
                 model.mEvents.append(e);
             }
-        }
-    }
-    
-    if(json.contains("phases"))
-    {
-        QJsonArray phases = json["phases"].toArray();
-        for(int i=0; i<phases.size(); ++i)
-        {
-            QJsonObject phase = phases[i].toObject();
-            Phase p = Phase::fromJson(phase);
-            model.mPhases.append(p);
         }
     }
     
@@ -155,7 +155,7 @@ bool Model::validate()
     }
     for(int i=0; i<mPhases.size(); ++i)
     {
-        if(mPhases[i].mEvents.size() == 0)
+        if(mPhases[i].mEventsIds.size() == 0)
             throw tr("Phase") + " " + mPhases[i].mName + " " + tr("must contain at least 1 event");
     }
     return true;
