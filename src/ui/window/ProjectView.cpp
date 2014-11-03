@@ -42,3 +42,9 @@ void ProjectView::showResults()
 {
     mStack->setCurrentIndex(1);
 }
+
+void ProjectView::showHelp(bool show)
+{
+    mModelView->showHelp(show);
+    //mResultsView->showHelp(show);
+}

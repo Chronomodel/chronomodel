@@ -20,6 +20,7 @@ public slots:
     void updateProject();
     void showModel();
     void showResults();
+    void showHelp(bool show);
     
 private:
     QStackedWidget* mStack;

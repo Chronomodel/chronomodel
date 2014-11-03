@@ -297,6 +297,24 @@ void Project::setAppSettings(const Settings& settings)
         mAutoSaveTimer->start();
 }
 
+bool Project::areStudyBoundsValid()
+{
+    QJsonObject settings = mState[STATE_SETTINGS].toObject();
+    int tmin = settings[STATE_SETTINGS_TMIN].toInt();
+    int tmax = settings[STATE_SETTINGS_TMAX].toInt();
+    if(tmin >= tmax)
+    {
+        QMessageBox message(QMessageBox::Information,
+                            tr("Study period definition required"),
+                            tr("You need to define a study period in years (begin, end and step) before creating your model!"),
+                            QMessageBox::Ok,
+                            qApp->activeWindow(),
+                            Qt::Sheet);
+        message.exec();
+    }
+    return (tmin < tmax);
+}
+
 void Project::mcmcSettings()
 {
     MCMCSettingsDialog dialog(qApp->activeWindow(), Qt::Sheet);
@@ -338,27 +356,33 @@ int Project::getUnusedEventId(const QJsonArray& events)
 
 void Project::createEvent()
 {
-    EventDialog dialog(qApp->activeWindow(), Qt::Sheet);
-    if(dialog.exec() == QDialog::Accepted)
+    if(areStudyBoundsValid())
     {
-        Event event;
-        event.mName = dialog.getName();
-        event.mColor = dialog.getColor();
-        
-        addEvent(event.toJson(), tr("Event created"));
+        EventDialog dialog(qApp->activeWindow(), Qt::Sheet);
+        if(dialog.exec() == QDialog::Accepted)
+        {
+            Event event;
+            event.mName = dialog.getName();
+            event.mColor = dialog.getColor();
+            
+            addEvent(event.toJson(), tr("Event created"));
+        }
     }
 }
 
 void Project::createEventKnown()
 {
-    EventDialog dialog(qApp->activeWindow(), Qt::Sheet);
-    if(dialog.exec() == QDialog::Accepted)
+    if(areStudyBoundsValid())
     {
-        EventKnown event;
-        event.mName = dialog.getName();
-        event.mColor = dialog.getColor();
-        
-        addEvent(event.toJson(), tr("Bound created"));
+        EventDialog dialog(qApp->activeWindow(), Qt::Sheet);
+        if(dialog.exec() == QDialog::Accepted)
+        {
+            EventKnown event;
+            event.mName = dialog.getName();
+            event.mColor = dialog.getColor();
+            
+            addEvent(event.toJson(), tr("Bound created"));
+        }
     }
 }
 
@@ -710,19 +734,22 @@ void Project::recycleDates(int eventId)
 #pragma mark Phases
 void Project::createPhase()
 {
-    PhaseDialog dialog(qApp->activeWindow(), Qt::Sheet);
-    if(dialog.exec() == QDialog::Accepted)
+    if(areStudyBoundsValid())
     {
-        QJsonObject phase = dialog.getPhase();
-        
-        QJsonObject stateNext = mState;
-        QJsonArray phases = stateNext[STATE_PHASES].toArray();
-        
-        phase[STATE_PHASE_ID] = getUnusedPhaseId(phases);
-        phases.append(phase);
-        stateNext[STATE_PHASES] = phases;
-        
-        pushProjectState(stateNext, tr("Phase created"), true);
+        PhaseDialog dialog(qApp->activeWindow(), Qt::Sheet);
+        if(dialog.exec() == QDialog::Accepted)
+        {
+            QJsonObject phase = dialog.getPhase();
+            
+            QJsonObject stateNext = mState;
+            QJsonArray phases = stateNext[STATE_PHASES].toArray();
+            
+            phase[STATE_PHASE_ID] = getUnusedPhaseId(phases);
+            phases.append(phase);
+            stateNext[STATE_PHASES] = phases;
+            
+            pushProjectState(stateNext, tr("Phase created"), true);
+        }
     }
 }
 

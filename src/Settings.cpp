@@ -3,7 +3,8 @@
 
 Settings::Settings():
 mAutoSave(true),
-mAutoSaveDelay(300)
+mAutoSaveDelay(300),
+mShowHelp(true)
 {
     
 }
@@ -20,6 +21,7 @@ void Settings::copyFrom(const Settings& s)
 {
     mAutoSave = s.mAutoSave;
     mAutoSaveDelay = s.mAutoSaveDelay;
+    mShowHelp = s.mShowHelp;
 }
 Settings::~Settings()
 {

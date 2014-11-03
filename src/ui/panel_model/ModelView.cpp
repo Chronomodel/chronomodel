@@ -67,13 +67,9 @@ mIsSplitting(false)
     mButRecycleEvent->setIcon(QIcon(":restore.png"));
     mButRecycleEvent->setFlatVertical();
     
-    mButEventsPNG = new Button(tr("Export"), mLeftWrapper);
-    mButEventsPNG->setIcon(QIcon(":topng.png"));
-    mButEventsPNG->setFlatVertical();
-    
-    mButEventsSVG = new Button(tr("Export"), mLeftWrapper);
-    mButEventsSVG->setIcon(QIcon(":tosvg.png"));
-    mButEventsSVG->setFlatVertical();
+    mButExportEvents = new Button(tr("Export"), mLeftWrapper);
+    mButExportEvents->setIcon(QIcon(":topng.png"));
+    mButExportEvents->setFlatVertical();
     
     mButEventsOverview = new Button(tr("Overview"), mLeftWrapper);
     mButEventsOverview->setIcon(QIcon(":eye.png"));
@@ -94,8 +90,7 @@ mIsSplitting(false)
     connect(mButEventsOverview, SIGNAL(toggled(bool)), mEventsGlobalView, SLOT(setVisible(bool)));
     
     connect(mEventsGlobalZoom, SIGNAL(valueChanged(float)), this, SLOT(updateEventsZoom(float)));
-    connect(mButEventsPNG, SIGNAL(clicked()), this, SLOT(exportEventsScenePNG()));
-    connect(mButEventsSVG, SIGNAL(clicked()), this, SLOT(exportEventsSceneSVG()));
+    connect(mButExportEvents, SIGNAL(clicked()), this, SLOT(exportEventsScene()));
     
     // --------
     
@@ -129,13 +124,9 @@ mIsSplitting(false)
     mButDeletePhase->setIcon(QIcon(":delete.png"));
     mButDeletePhase->setFlatVertical();
     
-    mButPhasesPNG = new Button(tr("PNG"), mPhasesWrapper);
-    mButPhasesPNG->setIcon(QIcon(":topng.png"));
-    mButPhasesPNG->setFlatVertical();
-    
-    mButPhasesSVG = new Button(tr("SVG"), mPhasesWrapper);
-    mButPhasesSVG->setIcon(QIcon(":tosvg.png"));
-    mButPhasesSVG->setFlatVertical();
+    mButExportPhases = new Button(tr("Export"), mPhasesWrapper);
+    mButExportPhases->setIcon(QIcon(":topng.png"));
+    mButExportPhases->setFlatVertical();
     
     mButPhasesOverview = new Button(tr("Overview"), mPhasesWrapper);
     mButPhasesOverview->setIcon(QIcon(":eye.png"));
@@ -150,8 +141,7 @@ mIsSplitting(false)
     connect(mButDeletePhase, SIGNAL(clicked()), project, SLOT(deleteSelectedPhases()));
     
     connect(mPhasesGlobalZoom, SIGNAL(valueChanged(float)), this, SLOT(updatePhasesZoom(float)));
-    connect(mButPhasesPNG, SIGNAL(clicked()), this, SLOT(exportPhasesScenePNG()));
-    connect(mButPhasesSVG, SIGNAL(clicked()), this, SLOT(exportPhasesSceneSVG()));
+    connect(mButExportPhases, SIGNAL(clicked()), this, SLOT(exportPhasesScene()));
     
     connect(mButPhasesOverview, SIGNAL(toggled(bool)), mPhasesGlobalView, SLOT(setVisible(bool)));
     
@@ -285,6 +275,11 @@ void ModelView::applySettings()
     project->setSettings(settings);
 }
 
+void ModelView::showHelp(bool show)
+{
+    mEventsScene->showHelp(show);
+}
+
 #pragma mark Right animation
 void ModelView::slideRightPanel()
 {
@@ -402,10 +397,9 @@ void ModelView::updateLayout()
     mButNewEventKnown->setGeometry(0, butH, butW, butH);
     mButDeleteEvent->setGeometry(0, 2*butH, butW, butH);
     mButRecycleEvent->setGeometry(0, 3*butH, butW, butH);
-    mButEventsPNG->setGeometry(0, 4*butH, butW, butH);
-    mButEventsSVG->setGeometry(0, 5*butH, butW, butH);
-    mButEventsOverview->setGeometry(0, 6*butH, butW, butH);
-    mEventsGlobalZoom->setGeometry(0, 7*butH, butW, mLeftRect.height() - 7*butH);
+    mButExportEvents->setGeometry(0, 4*butH, butW, butH);
+    mButEventsOverview->setGeometry(0, 5*butH, butW, butH);
+    mEventsGlobalZoom->setGeometry(0, 6*butH, butW, mLeftRect.height() - 6*butH);
     
     int helpW = qMin(400, mEventsView->width() - radarW - m);
     int helpH = mEventsScene->getHelpView()->heightForWidth(helpW);
@@ -418,10 +412,9 @@ void ModelView::updateLayout()
     
     mButNewPhase->setGeometry(mRightSubRect.width() - butW, 0, butW, butH);
     mButDeletePhase->setGeometry(mRightSubRect.width() - butW, butH, butW, butH);
-    mButPhasesPNG->setGeometry(mRightSubRect.width() - butW, 2*butH, butW, butH);
-    mButPhasesSVG->setGeometry(mRightSubRect.width() - butW, 3*butH, butW, butH);
-    mButPhasesOverview->setGeometry(mRightSubRect.width() - butW, 4*butH, butW, butH);
-    mPhasesGlobalZoom->setGeometry(mRightSubRect.width() - butW, 5*butH, butW, mRightRect.height() - 5*butH);
+    mButExportPhases->setGeometry(mRightSubRect.width() - butW, 2*butH, butW, butH);
+    mButPhasesOverview->setGeometry(mRightSubRect.width() - butW, 3*butH, butW, butH);
+    mPhasesGlobalZoom->setGeometry(mRightSubRect.width() - butW, 4*butH, butW, mRightRect.height() - 4*butH);
     
     mCalibrationView->setGeometry(mLeftHiddenRect);
     
@@ -446,35 +439,27 @@ void ModelView::updatePhasesZoom(float prop)
 }
 
 #pragma mark Export images
-void ModelView::exportEventsScenePNG()
+void ModelView::exportEventsScene()
 {
-    exportSceneImage(mEventsScene, false);
+    exportSceneImage(mEventsScene);
 }
 
-void ModelView::exportPhasesScenePNG()
+void ModelView::exportPhasesScene()
 {
-    exportSceneImage(mPhasesScene, false);
+    exportSceneImage(mPhasesScene);
 }
 
-void ModelView::exportEventsSceneSVG()
+void ModelView::exportSceneImage(QGraphicsScene* scene)
 {
-    exportSceneImage(mEventsScene, true);
-}
-
-void ModelView::exportPhasesSceneSVG()
-{
-    exportSceneImage(mPhasesScene, true);
-}
-
-void ModelView::exportSceneImage(QGraphicsScene* scene, bool asSvg)
-{
-    QString filter = asSvg ? tr("Scalable Vector Graphics (*.svg)") : tr("Images (*.png)");
+    QString filter = tr("Image (*.png);;Scalable Vector Graphics (*.svg)");
     QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
-                                                    tr("Save model as..."),
+                                                    tr("Save model image as..."),
                                                     ProjectManager::getCurrentPath(),
                                                     filter);
     if(!fileName.isEmpty())
     {
+        bool asSvg = fileName.endsWith(".svg");
+        
         scene->clearSelection();
         scene->setSceneRect(scene->itemsBoundingRect());
         QRect r = scene->sceneRect().toRect();

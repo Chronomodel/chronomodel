@@ -18,12 +18,12 @@ float PluginUniform::getLikelyhood(const float& t, const QJsonObject& data)
     float min = data[DATE_UNIFORM_MIN_STR].toDouble();
     float max = data[DATE_UNIFORM_MAX_STR].toDouble();
     
-    return (t >= min && t < max) ? 1 : 0;
+    return (t >= min && t < max) ? 1.f / (max-min) : 0;
 }
 
 QString PluginUniform::getName() const
 {
-    return QString("Ref. Typo");
+    return QString("Typo Ref.");
 }
 QIcon PluginUniform::getIcon() const
 {

@@ -33,9 +33,9 @@ mButH(25)
     // ----------
     
     mMethodCombo = new QComboBox(mAdvancedWidget);
-    mMethodCombo->addItem(tr("MH : proposal = date prior"));
-    mMethodCombo->addItem(tr("MH : proposal = likelihood"));
-    mMethodCombo->addItem(tr("MH : proposal = adaptative Gauss"));
+    mMethodCombo->addItem(tr("MH : proposal = prior distribution"));
+    mMethodCombo->addItem(tr("MH : proposal = distribution of calibrated date"));
+    mMethodCombo->addItem(tr("MH : proposal = adapt. Gaussian random walk"));
     
     mComboH = mMethodCombo->sizeHint().height();
     

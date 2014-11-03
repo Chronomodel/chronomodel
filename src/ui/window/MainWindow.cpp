@@ -113,6 +113,10 @@ void MainWindow::createActions()
     mAboutQtAct = new QAction(QIcon(":qt.png"), tr("About Qt"), this);
     connect(mAboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     
+    mHelpAction = new QAction(QIcon(":help.png"), tr("Help"), this);
+    mHelpAction->setCheckable(true);
+    connect(mHelpAction, SIGNAL(toggled(bool)), this, SLOT(showHelp(bool)));
+    
     mManualAction = new QAction(QIcon(":help.png"), tr("Manual"), this);
     connect(mManualAction, SIGNAL(triggered()), this, SLOT(openManual()));
     
@@ -203,6 +207,7 @@ void MainWindow::createToolBars()
     separator4->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     toolBar->addWidget(separator4);
     
+    toolBar->addAction(mHelpAction);
     toolBar->addAction(mManualAction);
     toolBar->addAction(mWebsiteAction);
     /*toolBar->addAction(mAboutAct);
@@ -265,6 +270,10 @@ void MainWindow::setProject(Project* project)
         mProjectView = new ProjectView();
         mCentralStack->addWidget(mProjectView);
         mProjectView->updateProject();
+        
+        bool showHelp = ProjectManager::getSettings().mShowHelp;
+        mProjectView->showHelp(showHelp);
+        mHelpAction->setChecked(showHelp);
         
         updateWindowTitle();
         
@@ -358,6 +367,15 @@ void MainWindow::openManual()
 #endif
     path += "/Chronomodel.pdf";
     QDesktopServices::openUrl(QUrl("file:///" + path, QUrl::TolerantMode));
+}
+
+void MainWindow::showHelp(bool show)
+{
+    Settings settings = ProjectManager::getSettings();
+    settings.mShowHelp = show;
+    ProjectManager::setSettings(settings);
+    
+    mProjectView->showHelp(show);
 }
 
 void MainWindow::openWebsite()

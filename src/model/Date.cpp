@@ -80,7 +80,7 @@ Date::~Date()
 
 bool Date::isNull()
 {
-    return mData.isEmpty();
+    return mData.isEmpty() || (mPlugin == 0);
 }
 
 Date Date::fromJson(const QJsonObject& json)
@@ -92,7 +92,6 @@ Date Date::fromJson(const QJsonObject& json)
         date.mId = json[STATE_DATE_ID].toInt();
         date.mName = json[STATE_DATE_NAME].toString();
         date.mData = json[STATE_DATE_DATA].toObject();
-        date.mPlugin = PluginManager::getPluginFromId(json[STATE_DATE_PLUGIN_ID].toString());
         date.mMethod = (DataMethod)json[STATE_DATE_METHOD].toInt();
         
         date.mDeltaType = (Date::DeltaType)json[STATE_DATE_DELTA_TYPE].toInt();
@@ -101,6 +100,8 @@ Date Date::fromJson(const QJsonObject& json)
         date.mDeltaMax = json[STATE_DATE_DELTA_MAX].toDouble();
         date.mDeltaAverage = json[STATE_DATE_DELTA_AVERAGE].toDouble();
         date.mDeltaError = json[STATE_DATE_DELTA_ERROR].toDouble();
+        
+        date.mPlugin = PluginManager::getPluginFromId(json[STATE_DATE_PLUGIN_ID].toString());
     }
     
     return date;

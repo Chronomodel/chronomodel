@@ -23,7 +23,7 @@ float PluginGauss::getLikelyhood(const float& t, const QJsonObject& data)
     float b = data[DATE_GAUSS_B_STR].toDouble();
     float c = data[DATE_GAUSS_C_STR].toDouble();
     
-    float v = exp(-0.5 * powf((age - (a * t * t + b * t + c)) / error, 2)); // / (s * sqrt(2*M_PI))
+    float v = exp(-0.5f * powf((age - (a * t * t + b * t + c)) / error, 2.f)) / (error * sqrt(2.f * M_PI));
     return v;
 }
 

@@ -1,4 +1,5 @@
 #include "AboutDialog.h"
+#include "Button.h"
 #include <QtWidgets>
 
 
@@ -48,8 +49,12 @@ AboutDialog::AboutDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
     
     mLabel->setText(about);
     
+    mLicenseBut = new Button(tr("Licence"));
+    connect(mLicenseBut, SIGNAL(clicked()), this, SLOT(showLicense()));
+    
     QVBoxLayout* layout = new QVBoxLayout();
     layout->addWidget(mLabel);
+    layout->addWidget(mLicenseBut);
     setLayout(layout);
     
     setMinimumWidth(600);
@@ -58,4 +63,16 @@ AboutDialog::AboutDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
 AboutDialog::~AboutDialog()
 {
     
+}
+
+void AboutDialog::showLicense()
+{
+    QString path = qApp->applicationDirPath();
+#ifdef Q_OS_MAC
+    QDir dir(path);
+    dir.cdUp();
+    path = dir.absolutePath() + "/Resources";
+#endif
+    path += "/License.txt";
+    QDesktopServices::openUrl(QUrl("file:///" + path, QUrl::TolerantMode));
 }

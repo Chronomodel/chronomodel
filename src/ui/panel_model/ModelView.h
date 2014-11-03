@@ -34,6 +34,8 @@ public:
     ModelView(QWidget* parent = 0, Qt::WindowFlags flags = 0);
     ~ModelView();
     
+    void showHelp(bool show);
+    
 public slots:
     void updateProject();
     void applySettings();
@@ -52,18 +54,16 @@ private slots:
     void prepareNextSlide();
     
     void updateEventsZoom(float prop);
-    void exportEventsScenePNG();
-    void exportEventsSceneSVG();
+    void exportEventsScene();
     
     void updatePhasesZoom(float prop);
-    void exportPhasesScenePNG();
-    void exportPhasesSceneSVG();
+    void exportPhasesScene();
     
     void showCalibration(const QJsonObject& date);
     void showEvents();
     
 private:
-    void exportSceneImage(QGraphicsScene* scene, bool asSvg);
+    void exportSceneImage(QGraphicsScene* scene);
     
 private:
     QWidget* mLeftWrapper;
@@ -81,8 +81,7 @@ private:
     Button* mButNewEventKnown;
     Button* mButDeleteEvent;
     Button* mButRecycleEvent;
-    Button* mButEventsPNG;
-    Button* mButEventsSVG;
+    Button* mButExportEvents;
     Button* mButEventsOverview;
     
     // ------
@@ -99,8 +98,7 @@ private:
     
     Button* mButNewPhase;
     Button* mButDeletePhase;
-    Button* mButPhasesPNG;
-    Button* mButPhasesSVG;
+    Button* mButExportPhases;
     Button* mButPhasesOverview;
     
     QPropertyAnimation* mAnimationHide;
