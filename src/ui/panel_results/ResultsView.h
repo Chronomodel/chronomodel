@@ -10,6 +10,7 @@ class GraphView;
 class LineEdit;
 class QStackedWidget;
 
+class Tabs;
 class ResultsControls;
 class ZoomControls;
 class Ruler;
@@ -24,7 +25,6 @@ class Label;
 class Button;
 class CheckBox;
 class RadioButton;
-class GroupBox;
 
 
 class ResultsView: public QWidget
@@ -50,6 +50,7 @@ public slots:
 private slots:
     void showPhasesScene(bool show);
     void showEventsScene(bool show);
+    void changeTab(int index);
     
 private:
     int mMargin;
@@ -57,7 +58,9 @@ private:
     int mLineH;
     int mGraphLeft;
     int mRulerH;
+    int mTabsH;
     
+    Tabs* mTabs;
     Ruler* mRuler;
     QStackedWidget* mStack;
     ResultsScroller* mResultsScrollerPhases;
@@ -69,30 +72,30 @@ private:
     bool mHasPhases;
     bool mShowPhasesScene;
     
-    QRectF mOptionsRect;
+    QWidget* mOptionsWidget;
     
-    QRectF mZoomRect;
+    QWidget* mZoomWidget;
     Button* mZoomInBut;
     Button* mZoomDefaultBut;
     Button* mZoomOutBut;
     
-    GroupBox* mTypeGroup;
-    RadioButton* mHistoRadio;
     CheckBox* mHPDCheck;
     LineEdit* mHPDEdit;
-    RadioButton* mTraceRadio;
-    RadioButton* mAcceptRadio;
     
-    GroupBox* mChainsGroup;
+    Label* mChainsTitle;
+    Label* mPhasesTitle;
+    Label* mDataTitle;
+    
+    QWidget* mChainsGroup;
     CheckBox* mAllChainsCheck;
     QList<CheckBox*> mCheckChainChecks;
     
-    GroupBox* mPhasesGroup;
+    QWidget* mPhasesGroup;
     CheckBox* mAlphaCheck;
     CheckBox* mBetaCheck;
     CheckBox* mPredictCheck;
     
-    GroupBox* mDataGroup;
+    QWidget* mDataGroup;
     RadioButton* mDataThetaRadio;
     CheckBox* mDataCalibCheck;
     RadioButton* mDataSigmaRadio;

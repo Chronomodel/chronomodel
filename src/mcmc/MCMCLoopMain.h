@@ -13,7 +13,7 @@ public:
     ~MCMCLoopMain();
     
 protected:
-    virtual bool initModel();
+    virtual void initModel();
     virtual void calibrate();
     virtual void initMCMC();
     virtual void update();

@@ -1424,15 +1424,33 @@ void Project::run()
     mModels.clear();
     
     Model model = Model::fromJson(mState);
-    mModels.append(model);
     
-    emit mcmcStarted();
-    
-    MCMCLoopMain loop(mModels[0]);
-    MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::Sheet);
-    if(dialog.startMCMC() == QDialog::Accepted)
+    bool modelOk = false;
+    try
     {
-        emit mcmcFinished(mModels[0]);
+        modelOk = model.isValid();
+    }
+    catch(QString error)
+    {
+        QMessageBox message(QMessageBox::Information,
+                            tr("Your model is not valid"),
+                            error,
+                            QMessageBox::Ok,
+                            qApp->activeWindow(),
+                            Qt::Sheet);
+        message.exec();
+    }
+    if(modelOk)
+    {
+        emit mcmcStarted();
+        
+        mModels.append(model);
+        MCMCLoopMain loop(mModels[0]);
+        MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::Sheet);
+        if(dialog.startMCMC() == QDialog::Accepted)
+        {
+            emit mcmcFinished(mModels[0]);
+        }
     }
 }
 

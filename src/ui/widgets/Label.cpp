@@ -3,7 +3,8 @@
 #include <QtWidgets>
 
 
-Label::Label(QWidget* parent):QLabel(parent)
+Label::Label(QWidget* parent):QLabel(parent),
+mIsTitle(false)
 {
     init();
 }
@@ -26,6 +27,30 @@ void Label::init()
     setAlignment(Qt::AlignVCenter | Qt::AlignRight);
 }
 
+void Label::setIsTitle(bool isTitle)
+{
+    mIsTitle = isTitle;
+    
+    if(mIsTitle)
+    {
+        setAutoFillBackground(true);
+        
+        QPalette palette = QLabel::palette();
+        palette.setColor(QPalette::WindowText, Qt::white);
+        palette.setColor(QPalette::Window, mainColorDark);
+        setPalette(palette);
+        
+        QFont f = font();
+        f.setPointSize(pointSize(13));
+        setFont(f);
+        
+        setAlignment(Qt::AlignCenter);
+        setFixedHeight(20);
+    }
+    
+    update();
+}
+
 void Label::setLight()
 {
     QPalette palette = QLabel::palette();
@@ -36,6 +61,6 @@ void Label::setLight()
 void Label::setDark()
 {
     QPalette palette = QLabel::palette();
-    palette.setColor(QPalette::Text, Qt::black);
+    palette.setColor(QPalette::WindowText, Qt::black);
     setPalette(palette);
 }

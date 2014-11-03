@@ -140,7 +140,7 @@ QJsonObject Model::toJson() const
     return json;
 }
 
-bool Model::validate()
+bool Model::isValid()
 {
     if(mEvents.size() == 0)
         throw tr("At least one event is required");

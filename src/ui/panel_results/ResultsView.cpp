@@ -3,6 +3,7 @@
 #include "GraphViewDate.h"
 #include "GraphViewEvent.h"
 #include "GraphViewPhase.h"
+#include "Tabs.h"
 #include "Ruler.h"
 #include "ZoomControls.h"
 #include "ResultsControls.h"
@@ -19,7 +20,6 @@
 #include "Label.h"
 #include "Button.h"
 #include "LineEdit.h"
-#include "GroupBox.h"
 #include "CheckBox.h"
 #include "RadioButton.h"
 #include "Painting.h"
@@ -34,11 +34,22 @@ mOptionsW(200),
 mLineH(15),
 mGraphLeft(150),
 mRulerH(40),
+mTabsH(25),
 mHasPhases(false),
 mShowPhasesScene(true)
 {
     //Project* project = ProjectManager::getProject();
     //ProjectSettings s = ProjectSettings::fromJson(project->state()[STATE_SETTINGS].toObject());
+    
+    // -------------
+    
+    mTabs = new Tabs(this);
+    mTabs->addTab(tr("Results"));
+    mTabs->addTab(tr("Traces"));
+    mTabs->addTab(tr("Acceptation rate"));
+    mTabs->addTab(tr("Auto-correlation"));
+    
+    connect(mTabs, SIGNAL(tabClicked(int)), this, SLOT(changeTab(int)));
     
     // -------------
     
@@ -68,25 +79,33 @@ mShowPhasesScene(true)
     mPhasesSceneBut->setCheckable(true);
     mPhasesSceneBut->setChecked(true);
     mPhasesSceneBut->setAutoExclusive(true);
+    mPhasesSceneBut->setFlatHorizontal();
     
     mEventsSceneBut = new Button(tr("By events"), this);
     mEventsSceneBut->setCheckable(true);
     mEventsSceneBut->setChecked(false);
     mEventsSceneBut->setAutoExclusive(true);
+    mEventsSceneBut->setFlatHorizontal();
     
     connect(mPhasesSceneBut, SIGNAL(toggled(bool)), this, SLOT(showPhasesScene(bool)));
     connect(mEventsSceneBut, SIGNAL(toggled(bool)), this, SLOT(showEventsScene(bool)));
     
     // ----------
     
-    mZoomInBut = new Button(this);
-    mZoomInBut->setIcon(QIcon(":zoom_in_w.png"));
+    mZoomWidget = new QWidget();
+    mZoomWidget->setFixedHeight(mRulerH);
     
-    mZoomOutBut = new Button(this);
-    mZoomOutBut->setIcon(QIcon(":zoom_out_w.png"));
+    mZoomInBut = new Button(mZoomWidget);
+    mZoomInBut->setIcon(QIcon(":zoom_plus.png"));
+    mZoomInBut->setFlatHorizontal();
     
-    mZoomDefaultBut = new Button(this);
-    mZoomDefaultBut->setIcon(QIcon(":zoom_default_w.png"));
+    mZoomOutBut = new Button(mZoomWidget);
+    mZoomOutBut->setIcon(QIcon(":zoom_minus.png"));
+    mZoomOutBut->setFlatHorizontal();
+    
+    mZoomDefaultBut = new Button(mZoomWidget);
+    mZoomDefaultBut->setIcon(QIcon(":zoom_default.png"));
+    mZoomDefaultBut->setFlatHorizontal();
     
     connect(mZoomInBut, SIGNAL(clicked()), mRuler, SLOT(zoomIn()));
     connect(mZoomOutBut, SIGNAL(clicked()), mRuler, SLOT(zoomOut()));
@@ -94,39 +113,37 @@ mShowPhasesScene(true)
     
     // ----------
     
-    mTypeGroup = new GroupBox(tr("Results to display"), this);
-    mHistoRadio = new RadioButton(tr("Histogram"), mTypeGroup);
-    mHPDCheck = new CheckBox(tr("HPD") + " :", mTypeGroup);
+    mHPDCheck = new CheckBox(tr("HPD") + " :", this);
     mHPDCheck->setChecked(true);
-    mHPDEdit = new LineEdit(mTypeGroup);
+    mHPDEdit = new LineEdit(this);
     mHPDEdit->setText("95");
-    mTraceRadio = new RadioButton(tr("Trace"), mTypeGroup);
-    mAcceptRadio = new RadioButton(tr("Accept"), mTypeGroup);
-    mHistoRadio->setChecked(true);
     
-    connect(mHistoRadio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     connect(mHPDCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateGraphs()));
-    connect(mTraceRadio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    connect(mAcceptRadio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     
     // -----------
     
-    mChainsGroup = new GroupBox(tr("Chains"), this);
+    mChainsTitle = new Label(tr("MCMC Chains"));
+    mChainsTitle->setIsTitle(true);
+    mChainsGroup = new QWidget();
     mAllChainsCheck = new CheckBox(tr("Chains Sum (histos only)"), mChainsGroup);
     mAllChainsCheck->setChecked(true);
+    mChainsGroup->setFixedHeight(2*mMargin + 1*mLineH);
     
     connect(mAllChainsCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     
     // -----------
     
-    mPhasesGroup = new GroupBox(tr("Phases"), this);
+    mPhasesTitle = new Label(tr("Phases results"));
+    mPhasesTitle->setIsTitle(true);
+    mPhasesGroup = new QWidget();
     mAlphaCheck = new CheckBox(tr("Start"), mPhasesGroup);
     mBetaCheck = new CheckBox(tr("End"), mPhasesGroup);
     mPredictCheck = new CheckBox(tr("Predict"), mPhasesGroup);
     mAlphaCheck->setChecked(true);
     mBetaCheck->setChecked(true);
     mPredictCheck->setChecked(false);
+    mPhasesGroup->setFixedHeight(4*mMargin + 3*mLineH);
     
     connect(mAlphaCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     connect(mBetaCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
@@ -134,18 +151,38 @@ mShowPhasesScene(true)
     
     // -----------
     
-    mDataGroup = new GroupBox(tr("Data"), this);
+    mDataTitle = new Label(tr("Data results"));
+    mDataTitle->setIsTitle(true);
+    mDataGroup = new QWidget();
     mDataThetaRadio = new RadioButton(tr("Date"), mDataGroup);
     mDataSigmaRadio = new RadioButton(tr("Variance / event"), mDataGroup);
     mDataDeltaRadio = new RadioButton(tr("Wiggle"), mDataGroup);
     mDataCalibCheck = new CheckBox(tr("Calibration"), mDataGroup);
     mDataThetaRadio->setChecked(true);
     mDataCalibCheck->setChecked(true);
+    mDataGroup->setFixedHeight(5*mMargin + 4*mLineH);
     
     connect(mDataThetaRadio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     connect(mDataCalibCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     connect(mDataSigmaRadio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     connect(mDataDeltaRadio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+    
+    // -------------------------
+    
+    mOptionsWidget = new QWidget(this);
+    
+    QVBoxLayout* optionsLayout = new QVBoxLayout();
+    optionsLayout->setContentsMargins(0, 0, 0, 0);
+    optionsLayout->setSpacing(0);
+    optionsLayout->addWidget(mZoomWidget);
+    optionsLayout->addWidget(mChainsTitle);
+    optionsLayout->addWidget(mChainsGroup);
+    optionsLayout->addWidget(mDataTitle);
+    optionsLayout->addWidget(mDataGroup);
+    optionsLayout->addWidget(mPhasesTitle);
+    optionsLayout->addWidget(mPhasesGroup);
+    optionsLayout->addStretch();
+    mOptionsWidget->setLayout(optionsLayout);
     
     // -------------------------
     
@@ -169,8 +206,7 @@ void ResultsView::paintEvent(QPaintEvent* e)
     QPainter p(this);
     
     p.fillRect(0, 0, mGraphLeft, mRulerH, QColor(220, 220, 220));
-    p.fillRect(width() - mOptionsW, 0, mOptionsW, mRulerH, QColor(180, 180, 180));
-    p.fillRect(width() - mOptionsW, mRulerH, mOptionsW, height() - mRulerH, QColor(220, 220, 220));
+    p.fillRect(width() - mOptionsW, 0, mOptionsW, height() - mRulerH, QColor(220, 220, 220));
 }
 
 void ResultsView::mouseMoveEvent(QMouseEvent* e)
@@ -190,50 +226,44 @@ void ResultsView::resizeEvent(QResizeEvent* e)
 void ResultsView::updateLayout()
 {
     int m = mMargin;
-    int boxTitleH = GroupBox::sTitleHeight;
     int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     int dx = mLineH + m;
     
-    mPhasesSceneBut->setGeometry(m, m, (mGraphLeft - 3*m)/2, mRulerH - 2*m);
-    mEventsSceneBut->setGeometry(2*m + (mGraphLeft - 3*m)/2, m, (mGraphLeft - 3*m)/2, mRulerH - 2*m);
+    mPhasesSceneBut->setGeometry(0, 0, mGraphLeft/2, mRulerH);
+    mEventsSceneBut->setGeometry(mGraphLeft/2, 0, mGraphLeft/2, mRulerH);
     
-    mRuler->setGeometry(mGraphLeft, 0, width() - mGraphLeft - mOptionsW - sbe, mRulerH);
-    mStack->setGeometry(0, mRulerH, width() - mOptionsW, height() - mRulerH);
-    mMarker->setGeometry(mMarker->pos().x(), sbe, mMarker->thickness(), height() - sbe);
+    mTabs->setGeometry(mGraphLeft, 0, width() - mGraphLeft - mOptionsW - sbe, mTabsH);
+    mRuler->setGeometry(mGraphLeft, mTabsH, width() - mGraphLeft - mOptionsW - sbe, mRulerH);
+    mStack->setGeometry(0, mTabsH + mRulerH, width() - mOptionsW, height() - mRulerH - mTabsH);
+    mMarker->setGeometry(mMarker->pos().x(), mTabsH + sbe, mMarker->thickness(), height() - sbe - mTabsH);
     
-    mOptionsRect = QRectF(width() - mOptionsW, 0, mOptionsW, height());
+    mHPDEdit->setGeometry(width() - mOptionsW - sbe - m - 40, m, 40, mLineH);
+    mHPDCheck->setGeometry(width() - mOptionsW - sbe - 2*m - 40 - 50, m, 50, mLineH);
     
-    mZoomRect = QRectF(mOptionsRect.x(), 0, mOptionsW, mRulerH);
-    int zw = (mZoomRect.width() - 4*m) / 3;
-    mZoomInBut->setGeometry(mZoomRect.x() + m, mZoomRect.y() + m, zw, mZoomRect.height() - 2*m);
-    mZoomDefaultBut->setGeometry(mZoomRect.x() + 2*m + zw, mZoomRect.y() + m, zw, mZoomRect.height() - 2*m);
-    mZoomOutBut->setGeometry(mZoomRect.x() + 3*m + 2*zw, mZoomRect.y() + m, zw, mZoomRect.height() - 2*m);
+    mOptionsWidget->setGeometry(width() - mOptionsW, 0, mOptionsW, height());
     
-    mTypeGroup->setGeometry(mOptionsRect.x() + m, mZoomRect.y() + mZoomRect.height() + m, mOptionsW - 2*m, boxTitleH + 5*m + 4*mLineH);
-    mHistoRadio->setGeometry(m, boxTitleH + m, mTypeGroup->width()-2*m, mLineH);
-    mHPDCheck->setGeometry(m + dx, boxTitleH + 2*m + mLineH, mTypeGroup->width()-2*m - dx - (mTypeGroup->width() - 2*m)/2, mLineH);
-    mHPDEdit->setGeometry(m + (mTypeGroup->width() - 2*m)/2, boxTitleH + 2*m + mLineH, (mTypeGroup->width() - 2*m)/2, mLineH);
-    mTraceRadio->setGeometry(m, boxTitleH + 3*m + 2*mLineH, mTypeGroup->width()-2*m, mLineH);
-    mAcceptRadio->setGeometry(m, boxTitleH + 4*m + 3*mLineH, mTypeGroup->width()-2*m, mLineH);
+    float zw = mOptionsW / 3;
+    float zh = mRulerH;
+    mZoomInBut->setGeometry(0, 0, zw, zh);
+    mZoomDefaultBut->setGeometry(zw, 0, zw, zh);
+    mZoomOutBut->setGeometry(2*zw, 0, zw, zh);
     
     int numChains = mCheckChainChecks.size();
-    mChainsGroup->setGeometry(mOptionsRect.x() + m, mTypeGroup->y() + mTypeGroup->height() + m, mOptionsW - 2*m, boxTitleH + (numChains+2)*m + (numChains+1)*mLineH);
-    mAllChainsCheck->setGeometry(m, boxTitleH + m, mChainsGroup->width()-2*m, mLineH);
+    mChainsGroup->setFixedHeight(m + (numChains+1) * (mLineH + m));
+    mAllChainsCheck->setGeometry(m, m, mChainsGroup->width()-2*m, mLineH);
     for(int i=0; i<numChains; ++i)
     {
-        mCheckChainChecks[i]->setGeometry(m, boxTitleH + m + (i+1) * (mLineH + m), mChainsGroup->width()-2*m, mLineH);
+        mCheckChainChecks[i]->setGeometry(m, m + (i+1) * (mLineH + m), mChainsGroup->width()-2*m, mLineH);
     }
     
-    mPhasesGroup->setGeometry(mOptionsRect.x() + m, mChainsGroup->y() + mChainsGroup->height() + m, mOptionsW - 2*m, boxTitleH + 4*m + 3*mLineH);
-    mAlphaCheck->setGeometry(m, boxTitleH + m, mPhasesGroup->width()-2*m, mLineH);
-    mBetaCheck->setGeometry(m, boxTitleH + 2*m + mLineH, mPhasesGroup->width()-2*m, mLineH);
-    mPredictCheck->setGeometry(m, boxTitleH + 3*m + 2*mLineH, mPhasesGroup->width()-2*m, mLineH);
+    mAlphaCheck->setGeometry(m, m, mPhasesGroup->width()-2*m, mLineH);
+    mBetaCheck->setGeometry(m, 2*m + mLineH, mPhasesGroup->width()-2*m, mLineH);
+    mPredictCheck->setGeometry(m, 3*m + 2*mLineH, mPhasesGroup->width()-2*m, mLineH);
     
-    mDataGroup->setGeometry(mOptionsRect.x() + m, mPhasesGroup->y() + mPhasesGroup->height() + m, mOptionsW - 2*m, boxTitleH + 5*m + 4*mLineH);
-    mDataThetaRadio->setGeometry(m, boxTitleH + m, mDataGroup->width() - 2*m, mLineH);
-    mDataCalibCheck->setGeometry(m + dx, boxTitleH + 2*m + mLineH, mDataGroup->width() - 2*m - dx, mLineH);
-    mDataSigmaRadio->setGeometry(m, boxTitleH + 3*m + 2*mLineH, mDataGroup->width()-2*m, mLineH);
-    mDataDeltaRadio->setGeometry(m, boxTitleH + 4*m + 3*mLineH, mDataGroup->width()-2*m, mLineH);
+    mDataThetaRadio->setGeometry(m, m, mDataGroup->width() - 2*m, mLineH);
+    mDataCalibCheck->setGeometry(m + dx, 2*m + mLineH, mDataGroup->width() - 2*m - dx, mLineH);
+    mDataSigmaRadio->setGeometry(m, 3*m + 2*mLineH, mDataGroup->width()-2*m, mLineH);
+    mDataDeltaRadio->setGeometry(m, 4*m + 3*mLineH, mDataGroup->width()-2*m, mLineH);
     
     update();
 }
@@ -248,7 +278,7 @@ void ResultsView::updateGraphs()
     for(int i=0; i<mCheckChainChecks.size(); ++i)
         showChainList.append(mCheckChainChecks[i]->isChecked());
     
-    if(mHistoRadio->isChecked())
+    if(mTabs->currentIndex() == 0)
     {
         int min = s.mTmin;
         int max = s.mTmax;
@@ -290,7 +320,7 @@ void ResultsView::updateGraphs()
                                                mHPDCheck->isChecked(),
                                                mHPDEdit->text().toInt());
     }
-    else if(mTraceRadio->isChecked())
+    else if(mTabs->currentIndex() == 1)
     {
         int min = 0;
         int max = mcmc.mNumBurnIter + mcmc.mFinalBatchIndex * mcmc.mIterPerBatch + mcmc.mNumRunIter;
@@ -316,7 +346,7 @@ void ResultsView::updateGraphs()
                                                mDataDeltaRadio->isChecked(),
                                                showChainList);
     }
-    else if(mAcceptRadio->isChecked())
+    else if(mTabs->currentIndex() == 2)
     {
         int min = 0;
         int max = mcmc.mNumBurnIter + mcmc.mFinalBatchIndex * mcmc.mIterPerBatch + mcmc.mNumRunIter;
@@ -515,9 +545,23 @@ void ResultsView::toggleInfos()
 void ResultsView::showPhasesScene(bool)
 {
     mStack->setCurrentIndex(0);
+    mPhasesTitle->setVisible(true);
+    mPhasesGroup->setVisible(true);
 }
 
 void ResultsView::showEventsScene(bool)
 {
     mStack->setCurrentIndex(1);
+    mPhasesTitle->setVisible(false);
+    mPhasesGroup->setVisible(false);
+}
+
+void ResultsView::changeTab(int index)
+{
+    mHPDCheck->setVisible(index == 0);
+    mHPDEdit->setVisible(index == 0);
+    
+    //mChainsGroup->setVisible(true);
+    
+    updateGraphs();
 }

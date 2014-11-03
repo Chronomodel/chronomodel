@@ -239,6 +239,7 @@ HEADERS += src/ui/widgets/Label.h
 HEADERS += src/ui/widgets/LineEdit.h
 HEADERS += src/ui/widgets/GroupBox.h
 HEADERS += src/ui/widgets/HelpWidget.h
+HEADERS += src/ui/widgets/Tabs.h
 
 HEADERS += src/ui/window/MainWindow.h
 HEADERS += src/ui/window/ProjectView.h
@@ -365,6 +366,7 @@ SOURCES += src/ui/widgets/Label.cpp
 SOURCES += src/ui/widgets/LineEdit.cpp
 SOURCES += src/ui/widgets/GroupBox.cpp
 SOURCES += src/ui/widgets/HelpWidget.cpp
+SOURCES += src/ui/widgets/Tabs.cpp
 
 SOURCES += src/ui/window/MainWindow.cpp
 SOURCES += src/ui/window/ProjectView.cpp

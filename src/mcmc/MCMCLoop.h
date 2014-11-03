@@ -26,7 +26,7 @@ signals:
     void stepProgressed(int value);
     
 protected:
-    virtual bool initModel() = 0;
+    virtual void initModel() = 0;
     virtual void calibrate() = 0;
     virtual void initMCMC() = 0;
     virtual void update() = 0;

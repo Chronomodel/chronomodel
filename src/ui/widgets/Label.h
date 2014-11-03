@@ -16,8 +16,12 @@ public:
     void setLight();
     void setDark();
     
+    void setIsTitle(bool isTitle);
+    
 private:
     void init();
+    
+    bool mIsTitle;
 };
 
 #endif

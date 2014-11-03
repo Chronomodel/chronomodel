@@ -26,8 +26,7 @@ void MCMCLoop::run()
 {
     mTotalIter = 0;
     
-    if(!this->initModel())
-        return;
+    this->initModel();
     
     emit stepChanged(tr("Calibrating..."), 0, 0);
     this->calibrate();
