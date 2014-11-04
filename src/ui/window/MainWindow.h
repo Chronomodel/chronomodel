@@ -48,6 +48,7 @@ public slots:
     void appSettings();
     void openManual();
     void openWebsite();
+    void showHelp(bool);
     
 private:
     QStackedWidget* mCentralStack;
@@ -85,6 +86,7 @@ private:
     QAction* mRedoAction;
     QAction* mUndoViewAction;
     
+    QAction* mHelpAction;
     QAction* mManualAction;
     QAction* mWebsiteAction;
     

@@ -21,6 +21,7 @@ public:
     void sendUpdateProject(const QString& reason, bool notify, bool async);
     
     HelpWidget* getHelpView();
+    void showHelp(bool show);
     
 public slots:
     void updateProject();

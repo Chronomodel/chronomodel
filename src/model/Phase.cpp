@@ -40,7 +40,6 @@ void Phase::copyFrom(const Phase& phase)
     mId = phase.mId;
     mName = phase.mName;
     
-    mEvents = phase.mEvents;
     mConstraintsFwd = phase.mConstraintsFwd;
     mConstraintsBwd = phase.mConstraintsBwd;
     

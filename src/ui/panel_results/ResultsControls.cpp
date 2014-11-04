@@ -173,9 +173,9 @@ void ResultsControls::paintEvent(QPaintEvent* e)
     
     painter.fillRect(rect(), QColor(100, 100, 100));
     
-    drawButton(painter, mZoomInRect, mIsZoomInDown, true, QString(), QPixmap(":zoom_in_w.png"));
-    drawButton(painter, mZoomDefaultRect, mIsZoomDefaultDown, true, QString(), QPixmap(":zoom_default_w.png"));
-    drawButton(painter, mZoomOutRect, mIsZoomOutDown, true, QString(), QPixmap(":zoom_out_w.png"));
+    drawButton(painter, mZoomInRect, mIsZoomInDown, true, QString(), QPixmap(":zoom_plus.png"));
+    drawButton(painter, mZoomDefaultRect, mIsZoomDefaultDown, true, QString(), QPixmap(":zoom_default.png"));
+    drawButton(painter, mZoomOutRect, mIsZoomOutDown, true, QString(), QPixmap(":zoom_minus.png"));
     drawButton(painter, mInfosRect, mIsInfosChecked, true, QString(tr("Show Infos")));
     
     drawBox(painter, mChainsRect, tr("Chains"));

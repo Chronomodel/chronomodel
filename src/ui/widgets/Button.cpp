@@ -94,19 +94,34 @@ void Button::paintEvent(QPaintEvent* e)
         // ---------
         
         QIcon ic = icon();
-        
-        int textH = 22;
-        if(ic.isNull())
-            textH = height();
-        
         painter.setPen(QColor(200, 200, 200));
-        painter.drawText(r.adjusted(0, r.height() - textH, 0, 0), Qt::AlignCenter, text());
         
-        if(!ic.isNull())
+        if(!ic.isNull() && !text().isEmpty())
         {
+            int textH = 22;
+            if(ic.isNull())
+                textH = height();
+            
             float m = 8;
             float w = r.width() - 2*m;
             float h = r.height() - m - textH;
+            float s = qMin(w, h);
+            
+            painter.drawText(r.adjusted(0, r.height() - textH, 0, 0), Qt::AlignCenter, text());
+            
+            QRectF iconRect((r.width() - s)/2.f, m, s, s);
+            QPixmap pixmap = ic.pixmap(iconRect.size().toSize());
+            painter.drawPixmap(iconRect, pixmap, QRectF(0, 0, pixmap.width(), pixmap.height()));
+        }
+        else if(!text().isEmpty())
+        {
+            painter.drawText(r, Qt::AlignCenter, text());
+        }
+        else if(!ic.isNull())
+        {
+            float m = 5;
+            float w = r.width() - 2*m;
+            float h = r.height() - 2*m;
             float s = qMin(w, h);
             
             QRectF iconRect((r.width() - s)/2.f, m, s, s);

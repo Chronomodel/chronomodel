@@ -16,7 +16,6 @@ QDialog(parent, flags)
     mMaxBatchesEdit = new LineEdit(this);
     mNumIterEdit = new LineEdit(this);
     mDownSamplingEdit = new LineEdit(this);
-    mDownSamplingEdit->setVisible(false);
     
     QIntValidator* positiveValidator = new QIntValidator();
     positiveValidator->setBottom(1);
@@ -118,6 +117,7 @@ void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
     
     p.drawText(mBurnRect.adjusted(0, 1*lineH, 0, -mBurnRect.height() + 2*lineH), Qt::AlignCenter, tr("Iterations") + " :");
     p.drawText(mAquireRect.adjusted(0, 1*lineH, 0, -mAquireRect.height() + 2*lineH), Qt::AlignCenter, tr("Iterations") + " :");
+    p.drawText(mAquireRect.adjusted(0, 3*lineH, 0, -mAquireRect.height() + 4*lineH), Qt::AlignCenter, tr("Thinning interval") + " :");
     
     p.drawText(mBatch1Rect.adjusted(0, 0, 0, -mBatch1Rect.height() + lineH), Qt::AlignCenter, tr("BATCH 1"));
     p.drawText(mBatchInterRect, Qt::AlignCenter, "...");
@@ -155,6 +155,7 @@ void MCMCSettingsDialog::updateLayout()
     mNumProcEdit->setGeometry(width()/2 + m, 40, editW, lineH);
     mNumBurnEdit->setGeometry(mBurnRect.x() + (mBurnRect.width() - editW)/2, mBurnRect.y() + 2*lineH, editW, lineH);
     mNumIterEdit->setGeometry(mAquireRect.x() + (mAquireRect.width() - editW)/2, mAquireRect.y() + 2*lineH, editW, lineH);
+    mDownSamplingEdit->setGeometry(mAquireRect.x() + (mAquireRect.width() - editW)/2, mAquireRect.y() + 4*lineH, editW, lineH);
     mIterPerBatchEdit->setGeometry(mBatch1Rect.x() + m, mBatch1Rect.y() + 2*lineH, mBatch1Rect.width() - 2*m, lineH);
     mMaxBatchesEdit->setGeometry(mAdaptRect.x() + mAdaptRect.width()/2 + m, mAdaptRect.y() + mAdaptRect.height() - m - lineH, editW, lineH);
     

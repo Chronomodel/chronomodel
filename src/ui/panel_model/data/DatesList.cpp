@@ -45,21 +45,23 @@ void DatesList::setEvent(const QJsonObject& event)
             QJsonObject date = dates[i].toObject();
             
             Date d = Date::fromJson(date);
-            
-            QListWidgetItem* item = new QListWidgetItem();
-            item->setFlags(Qt::ItemIsSelectable
-                           | Qt::ItemIsDragEnabled
-                           | Qt::ItemIsUserCheckable
-                           | Qt::ItemIsEnabled
-                           | Qt::ItemNeverHasChildren);
-            
-            item->setText(d.mName);
-            item->setData(0x0101, d.mName);
-            item->setData(0x0102, d.mPlugin->getId());
-            item->setData(0x0103, d.getDesc());
-            item->setData(0x0104, d.mId);
-            item->setData(0x0105, d.mDeltaFixed);
-            addItem(item);
+            if(!d.isNull())
+            {
+                QListWidgetItem* item = new QListWidgetItem();
+                item->setFlags(Qt::ItemIsSelectable
+                               | Qt::ItemIsDragEnabled
+                               | Qt::ItemIsUserCheckable
+                               | Qt::ItemIsEnabled
+                               | Qt::ItemNeverHasChildren);
+                
+                item->setText(d.mName);
+                item->setData(0x0101, d.mName);
+                item->setData(0x0102, d.mPlugin->getId());
+                item->setData(0x0103, d.getDesc());
+                item->setData(0x0104, d.mId);
+                item->setData(0x0105, d.mDeltaFixed);
+                addItem(item);
+            }
         }
     }
 }

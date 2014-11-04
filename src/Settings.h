@@ -14,6 +14,7 @@ public:
 public:
     bool mAutoSave;
     int mAutoSaveDelay;
+    bool mShowHelp;
 };
 
 #endif

@@ -71,6 +71,8 @@ public:
     void setSettings(const ProjectSettings& settings);
     void setAppSettings(const Settings& settings);
     
+    bool areStudyBoundsValid();
+    
     void addEvent(QJsonObject event, const QString& reason);
     int getUnusedEventId(const QJsonArray& events);
     void updateEvent(const QJsonObject& event, const QString& reason);

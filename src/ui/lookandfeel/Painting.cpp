@@ -186,13 +186,20 @@ void drawRadio(QPainter& painter, const QRectF& rect, const QString& text, bool 
     QRectF r = rect.adjusted(1, 1, -1, -1);
     int subM = 0;
     
-    painter.setPen(QColor(50, 50, 50));
-    painter.setBrush(QColor(90, 90, 90));
+    painter.setPen(QColor(120, 120, 120));
+    painter.setBrush(QColor(230, 230, 230));
     painter.drawEllipse(r.adjusted(0, subM, r.height() - r.width() - 2*subM, -subM));
     
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(toggled ? QColor(40, 160, 206) : QColor(110, 110, 110));
-    painter.drawEllipse(r.adjusted(2, subM+2, r.height() - r.width() - 2*subM - 2, -subM - 2));
+    if(toggled)
+    {
+        int insideM = 3;
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(mainColorLight);
+        painter.drawEllipse(r.adjusted(insideM,
+                                       subM+insideM,
+                                       r.height() - r.width() - 2*subM - insideM,
+                                       -subM - insideM));
+    }
     
     QFont font = painter.font();
     font.setPointSize(pointSize(11));
@@ -209,7 +216,7 @@ void drawCheckbox(QPainter& painter, const QRectF& r, const QString& text, Qt::C
     int subM = 0;
     
     QRectF boxRect = r.adjusted(0, subM, r.height() - r.width() - 2*subM, -subM);
-    drawCheckBoxBox(painter, boxRect, state, QColor(50, 50, 50), QColor(90, 90, 90));
+    drawCheckBoxBox(painter, boxRect, state, QColor(230, 230, 230), QColor(120, 120, 120));
     
     QFont font = painter.font();
     font.setPointSize(pointSize(11));
@@ -219,9 +226,11 @@ void drawCheckbox(QPainter& painter, const QRectF& r, const QString& text, Qt::C
     painter.drawText(r.adjusted(r.height() - 2*subM + 5, 0, 0, 0), Qt::AlignLeft | Qt::AlignVCenter, text);
 }
 
-void drawCheckBoxBox(QPainter& painter, const QRectF& r, Qt::CheckState state, const QColor& back, const QColor& border)
+void drawCheckBoxBox(QPainter& painter, const QRectF& rect, Qt::CheckState state, const QColor& back, const QColor& border)
 {
     painter.setRenderHint(QPainter::Antialiasing);
+    
+    QRectF r = rect.adjusted(1, 1, -1, -1);
     
     painter.setPen(border);
     painter.setBrush(back);
@@ -230,11 +239,11 @@ void drawCheckBoxBox(QPainter& painter, const QRectF& r, Qt::CheckState state, c
     QPen pen = painter.pen();
     pen.setWidth(2);
     pen.setCapStyle(Qt::RoundCap);
-    pen.setColor(QColor(40, 160, 206));
+    pen.setColor(mainColorLight);
     painter.setPen(pen);
     
     int mi = 2;
-    QRectF lr = r.adjusted(mi, mi, -mi-1, -mi-1);
+    QRectF lr = r.adjusted(mi, mi, -mi, -mi);
     
     if(state == Qt::Checked)
     {

@@ -91,6 +91,7 @@ void ProjectManager::writeSettings()
     settings.beginGroup("settings");
     settings.setValue("auto_save", mSettings.mAutoSave);
     settings.setValue("auto_save_delay", mSettings.mAutoSaveDelay);
+    settings.setValue("show_help", mSettings.mShowHelp);
     settings.endGroup();
     
     settings.endGroup();
@@ -107,6 +108,7 @@ void ProjectManager::readSettings()
     settings.beginGroup("settings");
     mSettings.mAutoSave = settings.value("auto_save", true).toBool();
     mSettings.mAutoSaveDelay = settings.value("auto_save_delay", 300).toInt();
+    mSettings.mShowHelp = settings.value("show_help", true).toInt();
     settings.endGroup();
     
     QString path = dir + "/" + filename;

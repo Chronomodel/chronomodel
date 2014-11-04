@@ -64,7 +64,7 @@ void EventsScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
 #pragma mark Help Bubble
 void EventsScene::updateHelp()
 {
-    QString text;
+    /*QString text;
     QList<QGraphicsItem*> selected = selectedItems();
     
     if(mItems.size() == 0)
@@ -105,12 +105,17 @@ void EventsScene::updateHelp()
     mHelpView->setGeometry(mHelpView->x(),
                            mHelpView->y(),
                            mHelpView->width(),
-                           mHelpView->heightForWidth(mHelpView->width()));
+                           mHelpView->heightForWidth(mHelpView->width()));*/
 }
 
 HelpWidget* EventsScene::getHelpView()
 {
     return mHelpView;
+}
+
+void EventsScene::showHelp(bool show)
+{
+    mHelpView->setVisible(show);
 }
 
 #pragma mark Project Update

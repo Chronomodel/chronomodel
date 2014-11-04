@@ -141,12 +141,12 @@ void CalibrationView::paintEvent(QPaintEvent* e)
     if(mRefGraphView)
     {
         p.drawText(title1Rect, Qt::AlignVCenter | Qt::AlignLeft, tr("Calibration process") + " :");
-        p.drawText(title2Rect, Qt::AlignVCenter | Qt::AlignLeft, tr("Calibrated date") + " :");
+        p.drawText(title2Rect, Qt::AlignVCenter | Qt::AlignLeft, tr("Distribution of calibrated date") + " :");
     }
     else
     {
         p.drawText(title1Rect, Qt::AlignVCenter | Qt::AlignLeft, tr("No calibration process to display") + " !");
-        p.drawText(title2Rect, Qt::AlignVCenter | Qt::AlignLeft, tr("Date Prior") + " :");
+        p.drawText(title2Rect, Qt::AlignVCenter | Qt::AlignLeft, tr("Typological date") + " :");
     }
 }
 

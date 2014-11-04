@@ -25,7 +25,7 @@ public:
     static Model fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
     
-    bool validate();
+    bool isValid();
     
 public:
     ProjectSettings mSettings;

@@ -26,37 +26,17 @@ MCMCLoopMain::~MCMCLoopMain()
 
 }
 
-bool MCMCLoopMain::initModel()
+void MCMCLoopMain::initModel()
 {
-    bool modelOk = false;
-    try
+    
+    for(int i=0; i<mModel.mEvents.size(); ++i)
     {
-        mModel.validate();
-        modelOk = true;
-    }
-    catch(QString error)
-    {
-        QMessageBox message(QMessageBox::Information,
-                            tr("Your model is not valid"),
-                            error,
-                            QMessageBox::Ok,
-                            qApp->activeWindow(),
-                            Qt::Sheet);
-        message.exec();
-    }
-    if(modelOk)
-    {
-        for(int i=0; i<mModel.mEvents.size(); ++i)
+        mModel.mEvents[i].reset();
+        for(int j=0; j<(int)mModel.mEvents[i].mDates.size(); ++j)
         {
-            mModel.mEvents[i].reset();
-            for(int j=0; j<(int)mModel.mEvents[i].mDates.size(); ++j)
-            {
-                mModel.mEvents[i].mDates[j].reset();
-            }
+            mModel.mEvents[i].mDates[j].reset();
         }
-        return true;
     }
-    return false;
 }
 
 void MCMCLoopMain::calibrate()

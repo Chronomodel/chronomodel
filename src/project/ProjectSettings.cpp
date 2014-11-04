@@ -5,7 +5,7 @@
 
 ProjectSettings::ProjectSettings():
 mTmin(0),
-mTmax(2000),
+mTmax(0),
 mStep(1)
 {
 

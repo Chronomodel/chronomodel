@@ -18,12 +18,9 @@
 	<file alias="AM.png">resources/AM.png</file>
 	<file alias="AM_w.png">resources/AM_w.png</file>
 	
-	<file alias="zoom_out.png">resources/zoom_out.png</file>	
-	<file alias="zoom_out_w.png">resources/zoom_out_w.png</file>	
-	<file alias="zoom_in.png">resources/zoom_in.png</file>
-	<file alias="zoom_in_w.png">resources/zoom_in_w.png</file>
+	<file alias="zoom_plus.png">resources/zoom_plus.png</file>	
+	<file alias="zoom_minus.png">resources/zoom_minus.png</file>	
 	<file alias="zoom_default.png">resources/zoom_default.png</file>
-	<file alias="zoom_default_w.png">resources/zoom_default_w.png</file>
 	
 	<file alias="new_event.png">resources/new_event.png</file>
 	<file alias="new_bound.png">resources/new_bound.png</file>

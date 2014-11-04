@@ -1,48 +1,29 @@
+- Les plugins peuvent interdire des méthodes sur les dates
+- créneau : prior dist par défaut + interdire calibration
+- plugins : wiggle optionnel (actif pour C14 seulement)
+- Study begin / study end + message au départ pour les renseigner + défaut à 0 et interdire toute action tant que à 0
+- Taux d’accept : pas affiché pour les AR (message à la place sur les graphs)
+- Rapport RAM / variables à évaluer => OK?
+- Temps de calcul évaluable au lancement des calculs?
+- Sur les graphs : afficher les intervalles HPD en ligne grasse au-dessus de la densité
+- variance : superposer sur la ligne du fait.
+- variance : sur la période d’acquisition uniquement
+- taux d’accept : calculé sur le longueur d’un batch pour voir évolution.
+- Tri des faits suivant le y de l’item dans la scène (idem pour les phase)
+
+- Plus petit intervalle de crédibilité à 95% : 
+	- prendre la trace et trier les valeurs par ordre croissant
+	- enlever 5% des des éléments de la trace en retirant des valeurs à droite et à gauche du vecteur. Choisir droite ou gauche de manière à réduire au maximum l’intervalle restant.
+	- Au final, les valeurs min et max du vecteur correspondent à l’intervalle de crédibilité
+
+
+
+
 TODO:
-
-Lists : metrics on texts
-Phases List : item delegate
-
-Move dates to other fact
-Open/Close all facts
-Open/Close all phases
-
-
 
 Licence html formatting
 
-metrics on graph title
-move graph title to both sides
 
-zoom smooth and intermediate
-
-
-
-
-
-
-Model:
-/- plage d’étude visible en haut
-- « help » dans un bouton
-/- Phase Model : bouton dans phase toobar (checkable)
-/- Fact => Event
-/- New Fact
-/ - text dans help
-/ - Nom pré-sélectionné
-/ - Méthode d’évaluation : dans le header de la vue fait
-
-/- New Date
-/ - Range : min / max (à la place de unknown)
-
-/Ajouter plugin Gauss (idem TL)
-Ajouter import densité CSV
-/Pas de calib pour les « data sans observations » (Unif, gauss, import)
-
-/Plugin TL:
-/- Ajouter Ref. Year et remplacer mAge dans formule par (Y - A)
-
-/Enlever les edit.
-/Garder dialog d’édition depuis liste
 
 Calib:
 - coube de ref : erreurs en pointillés

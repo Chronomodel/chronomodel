@@ -85,6 +85,14 @@ Event Event::fromJson(const QJsonObject& json)
     event.mIsSelected = json[STATE_EVENT_IS_SELECTED].toBool();
     event.mIsCurrent = json[STATE_EVENT_IS_CURRENT].toBool();
     
+    QString eventIdsStr = json[STATE_EVENT_PHASE_IDS].toString();
+    if(!eventIdsStr.isEmpty())
+    {
+        QStringList eventIds = eventIdsStr.split(",");
+        for(int i=0; i<eventIds.size(); ++i)
+            event.mPhasesIds.append(eventIds[i].toInt());
+    }
+    
     QJsonArray dates = json[STATE_EVENT_DATES].toArray();
     for(int j=0; j<dates.size(); ++j)
     {
@@ -110,6 +118,16 @@ QJsonObject Event::toJson() const
     event[STATE_EVENT_ITEM_Y] = mItemY;
     event[STATE_EVENT_IS_SELECTED] = mIsSelected;
     event[STATE_EVENT_IS_CURRENT] = mIsCurrent;
+    
+    QString eventIdsStr;
+    if(mPhasesIds.size() > 0)
+    {
+        QStringList eventIds;
+        for(int i=0; i<mPhasesIds.size(); ++i)
+            eventIds.append(QString::number(mPhasesIds[i]));
+        eventIdsStr = eventIds.join(",");
+    }
+    event[STATE_EVENT_PHASE_IDS] = eventIdsStr;
     
     QJsonArray dates;
     for(int i=0; i<mDates.size(); ++i)
