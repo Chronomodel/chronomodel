@@ -93,6 +93,7 @@ void EventItem::setGreyedOut(bool greyedOut)
     {
         ((DateItem*)children[i])->setGreyedOut(greyedOut);
     }
+    setOpacity(mGreyedOut ? 0.3 : 1);
 }
 
 void EventItem::updateGreyedOut()
@@ -125,6 +126,7 @@ void EventItem::updateGreyedOut()
             }
         }
     }
+    setOpacity(mGreyedOut ? 0.3 : 1);
 }
 
 #pragma mark Events
@@ -238,12 +240,12 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->drawText(tr, Qt::AlignCenter, name);
     
     
-    if(mGreyedOut)
+    /*if(mGreyedOut)
     {
         painter->setPen(Painting::greyedOut);
         painter->setBrush(Painting::greyedOut);
         painter->drawRect(boundingRect());
-    }
+    }*/
     
     // Border
     painter->setBrush(Qt::NoBrush);
@@ -254,7 +256,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     }
     else if(isSelected())
     {
-        painter->setPen(QPen(Painting::mainColorDark, 3.f));
+        painter->setPen(QPen(Qt::red, 3.f));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
     }
     

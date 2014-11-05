@@ -115,10 +115,9 @@ Model* Model::fromJson(const QJsonObject& json)
     for(int i=0; i<model->mEvents.size(); ++i)
     {
         QList<int> phasesIds = model->mEvents[i].mPhasesIds;
-        qDebug() << model->mEvents[i].mPhasesIds;
         for(int j=0; j<model->mPhases.size(); ++j)
         {
-            int phaseId = model->mPhases[i].mId;
+            int phaseId = model->mPhases[j].mId;
             if(phasesIds.contains(phaseId))
             {
                 model->mEvents[i].mPhases.append(&(model->mPhases[j]));

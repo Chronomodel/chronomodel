@@ -338,33 +338,113 @@ void Event::reset()
 
 void Event::updateTheta(float tmin, float tmax)
 {
+    // ------------------------------------------------------------------
+    //  Déterminer la borne min
+    // ------------------------------------------------------------------
+    
+    float min1 = tmin;
+    float min2 = getMaxEventThetaBackward(tmin);
+    
+    // Le fait appartient à une ou plusieurs phases.
+    // Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
+    // Il faut s'assurer d'être au-dessus du plus grand theta de la phase moins la durée
+    // (on utilise la valeur courante de la durée pour cela puisqu'elle est échantillonnée)
+    float min3 = tmin;
+    for(int i=0; i<mPhases.size(); ++i)
+    {
+        if(mPhases[i]->mTauType != Phase::eTauUnknown)
+        {
+            float thetaMax = 0;
+            for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
+            {
+                Event* event = mPhases[i]->mEvents[j];
+                if(event != this)
+                {
+                    thetaMax = qMax(event->mTheta.mX, thetaMax);
+                }
+            }
+            min3 = qMax(min3, thetaMax - mPhases[i]->mTau.mX);
+        }
+    }
+    
+    // Contraintes des phases précédentes
+    float min4 = tmin;
+    for(int i=0; i<mPhases.size(); ++i)
+    {
+        float thetaMax = 0;
+        for(int j=0; j<mPhases[i]->mConstraintsBwd.size(); ++j)
+        {
+            PhaseConstraint* constraint = mPhases[i]->mConstraintsBwd[j];
+            Phase* phaseFrom = constraint->mPhaseFrom;
+            
+            if(constraint->mGammaType != PhaseConstraint::eGammaUnknown)
+                thetaMax = qMax(phaseFrom->mBeta.mX, thetaMax + constraint->mGamma.mX);
+            else
+                thetaMax = qMax(phaseFrom->mBeta.mX, thetaMax);
+        }
+        min4 = qMax(min4, thetaMax);
+    }
+    
+    float min_tmp1 = qMax(min1, min2);
+    float min_tmp2 = qMax(min3, min3);
+    float min = qMax(min_tmp1, min_tmp2);
+    
+    // ------------------------------------------------------------------
+    //  Déterminer la borne max
+    // ------------------------------------------------------------------
+    
+    float max1 = tmax;
+    float max2 = getMinEventThetaForward(tmax);
+    
+    // Le fait appartient à une ou plusieurs phases.
+    // Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
+    // Il faut s'assurer d'être en-dessous du plus petit theta de la phase plus la durée
+    // (on utilise la valeur courante de la durée pour cela puisqu'elle est échantillonnée)
+    float max3 = tmax;
+    for(int i=0; i<mPhases.size(); ++i)
+    {
+        if(mPhases[i]->mTauType != Phase::eTauUnknown)
+        {
+            float thetaMin = 0;
+            for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
+            {
+                Event* event = mPhases[i]->mEvents[j];
+                if(event != this)
+                {
+                    thetaMin = qMin(event->mTheta.mX, thetaMin);
+                }
+            }
+            min3 = qMin(min3, thetaMin + mPhases[i]->mTau.mX);
+        }
+    }
+    
+    // Contraintes des phases suivantes
+    float max4 = tmax;
+    for(int i=0; i<mPhases.size(); ++i)
+    {
+        float thetaMin = 0;
+        for(int j=0; j<mPhases[i]->mConstraintsFwd.size(); ++j)
+        {
+            PhaseConstraint* constraint = mPhases[i]->mConstraintsFwd[j];
+            Phase* phaseTo = constraint->mPhaseTo;
+            
+            if(constraint->mGammaType != PhaseConstraint::eGammaUnknown)
+                thetaMin = qMax(phaseTo->mAlpha.mX, thetaMin - constraint->mGamma.mX);
+            else
+                thetaMin = qMax(phaseTo->mAlpha.mX, thetaMin);
+        }
+        max4 = qMin(max4, thetaMin);
+    }
+    
+    float max_tmp1 = qMax(max1, max2);
+    float max_tmp2 = qMax(max3, max3);
+    float max = qMax(max_tmp1, max_tmp2);
+    
     // -------------------------------------------------------------------------------------------------
-    //  1 - Classic
-    //  Méthode de rejet avec echantillonneur double_exp.
-    //  - echantillonneur alternatif 1 : box_muller, couteux si on est en queue de distrib.
-    //  - echantillonneur alternatif 2 : MH avec marcheur aléatoire gaussien adaptatif.
-    //  Si les résultats sont "mauvais", on peut utiliser un autre échantillonneur.
-    //  (Les utilisateurs seront formés à comprendre les résultats de calculs MCMC)
-    //  => Le cas Wiggle est inclus ici car on utilise une formule générale.
-    //  On est en "wiggle" si au moins une des mesures a un delta (=phi) > 0.
-    //
-    //  TODO !!!! : Si le fait est en contrainte de type Fixed :
-    //  - S'il est en début de contrainte, on l'évalue normalement
-    //  en utilisant en plus les dates de l'autre fait avec des delta i = le phi fixed de la contrainte.
-    //  - S'il est en fin de contrainte, on ne l'évalue pas : on prend juste le theta du fait en début de
-    //  contrainte et on ajoute le phi fixed.
+    //  Evaluer theta.
+    //  Le cas Wiggle est inclus ici car on utilise une formule générale.
+    //  On est en "wiggle" si au moins une des mesures a un delta > 0.
     // -------------------------------------------------------------------------------------------------
-    
-    float min = getMaxEventThetaBackward(tmin);
-    float max = getMinEventThetaForward(tmax);
-    
-    float minPhases = getMaxAlphaPhases(tmin);
-    float maxPhases = getMinBetaPhases(tmax);
-    
-    min = (minPhases > min) ? minPhases : min;
-    max = (maxPhases < max) ? maxPhases : max;
-    
-    // ------------
     
     float sum_p = 0;
     float sum_t = 0;

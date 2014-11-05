@@ -3,7 +3,7 @@
 QColor Painting::mainColorLight = QColor(146, 50, 154);
 QColor Painting::mainColorDark = QColor(54, 23, 106);
 QList<QColor> Painting::chainColors = QList<QColor>();
-QColor Painting::greyedOut = QColor(100, 100, 100, 200);
+QColor Painting::greyedOut = QColor(255, 255, 255, 200);
 
 void Painting::init()
 {

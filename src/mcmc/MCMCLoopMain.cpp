@@ -339,7 +339,7 @@ void MCMCLoopMain::update()
 
     for(int i=0; i<phases.size(); ++i)
     {
-        phases[i].update(t_min, t_max);
+        phases[i].update();
         if(doMemo)
             phases[i].memoAll();
     }
@@ -430,11 +430,11 @@ void MCMCLoopMain::finalize()
             
             date.mTheta.generateFullHisto(tmin, tmax);
             date.mSigma.generateFullHisto(tmin, tmax);
-            date.mDelta.generateFullHisto(tmin, tmax);
+            //date.mDelta.generateFullHisto(tmin, tmax);
             
             date.mTheta.generateHistos(mSettings.mNumProcesses, tmin, tmax);
             date.mSigma.generateHistos(mSettings.mNumProcesses, tmin, tmax);
-            date.mDelta.generateHistos(mSettings.mNumProcesses, tmin, tmax);
+            //date.mDelta.generateHistos(mSettings.mNumProcesses, tmin, tmax);
             
             FunctionAnalysis data = analyseFunction(date.mTheta.fullHisto());
             date.mTheta.mHistoMode = data.mode;

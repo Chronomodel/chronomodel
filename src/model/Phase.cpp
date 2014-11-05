@@ -282,29 +282,23 @@ float Phase::getMaxBetaPrevPhases(float tmin)
 
 // --------------------------------------------------------------------------------
 
-void Phase::update(float tmin, float tmax)
+void Phase::update()
 {
-    // On utilise finalement alpha et beta !
-    float a = getMaxBetaPrevPhases(tmin);
+    mAlpha.mX = getMaxThetaEvents();
+    mBeta.mX = getMinThetaEvents();
+    
+    // ----------------------------------------
+    // Buck :
+    
+    /*float a = getMaxBetaPrevPhases(tmin);
     float b = getMinThetaEvents();
     mAlpha.mX = updatePhaseBound(a, b, mBeta.mX);
-    
-    /*qDebug() << "a : " << a;
-    qDebug() << "b : " << b;
-    qDebug() << "Alpha : " << mAlpha.mX;*/
     
     a = getMaxThetaEvents();
     b = getMinAlphaNextPhases(tmax);
     mBeta.mX = updatePhaseBound(a, b, mAlpha.mX);
     
-    mThetaPredict.mX = Generator::randomUniform(mAlpha.mX, mBeta.mX);
-    
-    /*qDebug() << "a : " << a;
-    qDebug() << "b : " << b;
-    qDebug() << "Beta : " << mBeta.mX;*/
-    
-    //qDebug() << "Predict : " << mThetaPredict.mX;
-    //qDebug() << "---------------------------------------------------------";
+    mThetaPredict.mX = Generator::randomUniform(mAlpha.mX, mBeta.mX);*/
 }
 
 void Phase::memoAll()

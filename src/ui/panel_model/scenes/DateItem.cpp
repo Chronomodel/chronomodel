@@ -84,12 +84,12 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
                         mCalibThumb,
                         mCalibThumb.rect());
     
-    if(mGreyedOut)
+    /*if(mGreyedOut)
     {
         painter->setPen(Painting::greyedOut);
         painter->setBrush(Painting::greyedOut);
         painter->drawRect(boundingRect());
-    }
+    }*/
 }
 
 void DateItem::mousePressEvent(QGraphicsSceneMouseEvent* e)

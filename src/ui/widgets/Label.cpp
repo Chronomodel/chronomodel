@@ -1,4 +1,4 @@
-#include "Label.h"
+    #include "Label.h"
 #include "Painting.h"
 #include <QtWidgets>
 

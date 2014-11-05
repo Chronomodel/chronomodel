@@ -58,7 +58,7 @@ public:
     float getMinAlphaNextPhases(float tmax);
     float getMaxBetaPrevPhases(float tmin);
     
-    void update(float tmin, float tmax);
+    void update();
     void memoAll();
     
 protected:
@@ -80,6 +80,7 @@ public:
     
     MetropolisVariable mAlpha;
     MetropolisVariable mBeta;
+    MetropolisVariable mTau;
     MetropolisVariable mThetaPredict;
     
     TauType mTauType;

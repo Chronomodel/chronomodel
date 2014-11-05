@@ -75,7 +75,10 @@ QJsonObject Plugin14C::dataFromList(const QStringList& list)
     {
         json.insert(DATE_14C_AGE_STR, list[1].toDouble());
         json.insert(DATE_14C_ERROR_STR, list[2].toDouble());
-        json.insert(DATE_14C_REF_CURVE_STR, list[3].toDouble());
+        json.insert(DATE_14C_REF_CURVE_STR, list[3]);
+        
+        qDebug() << list;
+        qDebug() << json;
     }
     return json;
 }

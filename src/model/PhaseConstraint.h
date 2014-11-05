@@ -1,6 +1,7 @@
 #ifndef PHASECONSTRAINT_H
 #define PHASECONSTRAINT_H
 
+#include "MHVariable.h"
 #include <QJsonObject>
 
 class Phase;
@@ -44,6 +45,8 @@ public:
     
     Phase* mPhaseFrom;
     Phase* mPhaseTo;
+    
+    MHVariable mGamma;
 };
 
 #endif
