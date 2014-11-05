@@ -150,7 +150,19 @@ Model* Model::fromJson(const QJsonObject& json)
             << " : " << model->mPhases[i].mConstraintsFwd.size() << " const. fwd.";
     }
     qDebug() << "=> Event Constraints : " << model->mEventConstraints.size();
+    for(int i=0; i<model->mEventConstraints.size(); ++i)
+    {
+        qDebug() << "  => E. Const. " << model->mEventConstraints[i].mId
+            << " : event " << model->mEventConstraints[i].mEventFrom->mId
+            << " to " << model->mEventConstraints[i].mEventTo->mId;
+    }
     qDebug() << "=> Phase Constraints : " << model->mPhaseConstraints.size();
+    for(int i=0; i<model->mPhaseConstraints.size(); ++i)
+    {
+        qDebug() << "  => P. Const. " << model->mPhaseConstraints[i].mId
+        << " : phase " << model->mPhaseConstraints[i].mPhaseFrom->mId
+        << " to " << model->mPhaseConstraints[i].mPhaseTo->mId;
+    }
     qDebug() << "===========================================";
     
     return model;
