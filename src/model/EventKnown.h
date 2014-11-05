@@ -56,8 +56,6 @@ public:
     float mGaussError;
     
     QMap<float, float> mValues;
-    
-    QPixmap mThumb;
 };
 
 #endif

@@ -113,6 +113,7 @@ INCLUDEPATH += src/ui/panel_model/
 INCLUDEPATH += src/ui/panel_model/data/
 INCLUDEPATH += src/ui/panel_model/scenes/
 INCLUDEPATH += src/ui/panel_results/
+INCLUDEPATH += src/ui/panel_mcmc/
 INCLUDEPATH += src/ui/widgets/
 INCLUDEPATH += src/ui/window/
 INCLUDEPATH += src/utilities/
@@ -219,14 +220,12 @@ HEADERS += src/ui/panel_model/scenes/ArrowItem.h
 HEADERS += src/ui/panel_model/scenes/ArrowTmpItem.h
 
 HEADERS += src/ui/panel_results/ResultsView.h
-HEADERS += src/ui/panel_results/ResultsScroller.h
-HEADERS += src/ui/panel_results/ResultsMarker.h
-HEADERS += src/ui/panel_results/ResultsControls.h
-HEADERS += src/ui/panel_results/GraphViewWrapper.h
 HEADERS += src/ui/panel_results/GraphViewResults.h
 HEADERS += src/ui/panel_results/GraphViewDate.h
 HEADERS += src/ui/panel_results/GraphViewEvent.h
 HEADERS += src/ui/panel_results/GraphViewPhase.h
+
+HEADERS += src/ui/panel_mcmc/MCMCView.h
 
 HEADERS += src/ui/widgets/ColorPicker.h
 HEADERS += src/ui/widgets/ZoomControls.h
@@ -240,6 +239,7 @@ HEADERS += src/ui/widgets/LineEdit.h
 HEADERS += src/ui/widgets/GroupBox.h
 HEADERS += src/ui/widgets/HelpWidget.h
 HEADERS += src/ui/widgets/Tabs.h
+HEADERS += src/ui/widgets/Marker.h
 
 HEADERS += src/ui/window/MainWindow.h
 HEADERS += src/ui/window/ProjectView.h
@@ -346,14 +346,12 @@ SOURCES += src/ui/panel_model/scenes/ArrowItem.cpp
 SOURCES += src/ui/panel_model/scenes/ArrowTmpItem.cpp
 
 SOURCES += src/ui/panel_results/ResultsView.cpp
-SOURCES += src/ui/panel_results/ResultsScroller.cpp
-SOURCES += src/ui/panel_results/ResultsMarker.cpp
-SOURCES += src/ui/panel_results/ResultsControls.cpp
-SOURCES += src/ui/panel_results/GraphViewWrapper.cpp
 SOURCES += src/ui/panel_results/GraphViewResults.cpp
 SOURCES += src/ui/panel_results/GraphViewDate.cpp
 SOURCES += src/ui/panel_results/GraphViewEvent.cpp
 SOURCES += src/ui/panel_results/GraphViewPhase.cpp
+
+SOURCES += src/ui/panel_mcmc/MCMCView.cpp
 
 SOURCES += src/ui/widgets/ColorPicker.cpp
 SOURCES += src/ui/widgets/ZoomControls.cpp
@@ -367,6 +365,7 @@ SOURCES += src/ui/widgets/LineEdit.cpp
 SOURCES += src/ui/widgets/GroupBox.cpp
 SOURCES += src/ui/widgets/HelpWidget.cpp
 SOURCES += src/ui/widgets/Tabs.cpp
+SOURCES += src/ui/widgets/Marker.cpp
 
 SOURCES += src/ui/window/MainWindow.cpp
 SOURCES += src/ui/window/ProjectView.cpp

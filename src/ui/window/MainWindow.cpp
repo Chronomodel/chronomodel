@@ -24,6 +24,7 @@ mProject(0)
     mUndoDock->setWidget(mUndoView);
     mUndoDock->setAllowedAreas(Qt::RightDockWidgetArea);
     addDockWidget(Qt::RightDockWidgetArea, mUndoDock);
+    mUndoDock->setVisible(false);
     
     createActions();
     createMenus();
@@ -260,7 +261,7 @@ void MainWindow::setProject(Project* project)
         connect(mMCMCSettingsAction, SIGNAL(triggered()), mProject, SLOT(mcmcSettings()));
         connect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
         connect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));
-        connect(mProject, SIGNAL(mcmcFinished(const Model&)), mViewResultsAction, SLOT(trigger()));
+        connect(mProject, SIGNAL(mcmcFinished(Model*)), mViewResultsAction, SLOT(trigger()));
         
         mProjectSaveAction->setEnabled(true);
         mProjectCloseAction->setEnabled(true);
@@ -278,6 +279,7 @@ void MainWindow::setProject(Project* project)
         updateWindowTitle();
         
         connect(mProject, SIGNAL(projectStateChanged()), mProjectView, SLOT(updateProject()));
+        connect(mProject, SIGNAL(mcmcStarted()), mProjectView, SLOT(showModel()));
         connect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
         connect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
     }
@@ -297,7 +299,7 @@ bool MainWindow::closeProject()
             disconnect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
             
             disconnect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
-            disconnect(mProject, SIGNAL(mcmcFinished(const Model&)), mViewResultsAction, SLOT(trigger()));
+            disconnect(mProject, SIGNAL(mcmcFinished(Model*)), mViewResultsAction, SLOT(trigger()));
             
             mProjectSaveAction->setEnabled(false);
             mProjectCloseAction->setEnabled(false);

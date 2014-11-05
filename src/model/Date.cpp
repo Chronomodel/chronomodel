@@ -4,6 +4,7 @@
 #include "StdUtilities.h"
 #include "PluginManager.h"
 #include "../PluginAbstract.h"
+#include "Painting.h"
 #include <QDebug>
 
 
@@ -215,21 +216,22 @@ void Date::calibrate(const float& tmin, const float& tmax, const float& step)
     GraphView* graph = new GraphView();
     graph->setFixedSize(200, 50);
     graph->setRangeX(tmin, tmax);
-    graph->setRangeY(0, 1);
+    graph->setRangeY(0, 1.1f);
     graph->showAxis(false);
     graph->showScrollBar(false);
     graph->showGrid(false);
     
     GraphCurve curve;
-    curve.mData = mCalibration;
+    curve.mData = normalize_map(mCalibration);
     curve.mName = "Calibration";
-    curve.mPen.setColor(Qt::blue);
-    curve.mPen.setWidth(1);
+    curve.mPen.setColor(Painting::mainColorLight);
+    curve.mPen.setWidthF(2.f);
     curve.mFillUnder = true;
     graph->addCurve(curve);
     
     mCalibThumb = QPixmap(graph->size());
     graph->render(&mCalibThumb);
+    delete graph;
     //mCalibThumb.save("test.png");
     //mCalibThumb = graph.grab();
 }

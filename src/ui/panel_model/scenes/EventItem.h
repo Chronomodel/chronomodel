@@ -10,11 +10,13 @@ class EventsScene;
 class EventItem : public AbstractItem
 {
 public:
-    EventItem(EventsScene* scene, const QJsonObject& event, QGraphicsItem* parent = 0);
+    EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent = 0);
     virtual ~EventItem();
 
-    QJsonObject& event();
-    void setEvent(const QJsonObject& event);
+    virtual void setGreyedOut(bool greyedOut);
+    
+    QJsonObject& getEvent();
+    virtual void setEvent(const QJsonObject& event, const QJsonObject& settings);
     
     virtual QRectF boundingRect() const;
     void handleDrop(QGraphicsSceneDragDropEvent* e);
@@ -25,6 +27,8 @@ protected:
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent* e);
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* e);
     virtual void dropEvent(QGraphicsSceneDragDropEvent* e);
+    
+    void updateGreyedOut();
     
 public:
     QJsonObject mEvent;

@@ -3,6 +3,7 @@
 #include "Event.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
+#include "Painting.h"
 #include <QtWidgets>
 
 
@@ -12,7 +13,9 @@
 GraphViewEvent::GraphViewEvent(QWidget *parent):GraphViewResults(parent),
 mEvent(0)
 {
-    setMainColor(QColor(100, 100, 120));
+    //setMainColor(QColor(100, 100, 120));
+    setMainColor(QColor(100, 100, 100));
+    mGraph->setBackgroundColor(QColor(230, 230, 230));
 }
 
 GraphViewEvent::~GraphViewEvent()
@@ -35,23 +38,20 @@ void GraphViewEvent::paintEvent(QPaintEvent* e)
     
     if(mEvent)
     {
-        QColor color = mEvent->mColor;
-        bool isDark = colorIsDark(color);
+        QColor backCol = mEvent->mColor;
+        QColor foreCol = getContrastedColor(backCol);
         
-        QRectF r(mMargin, mMargin, mLineH, mLineH);
-        p.setBrush(color);
-        p.setPen(Qt::black);
-        p.drawRect(r);
-        p.setPen(isDark ? Qt::white : Qt::black);
-        p.drawText(r, Qt::AlignCenter, "E");
+        QRect topRect(0, 0, mGraphLeft, mLineH);
+        p.fillRect(topRect.adjusted(1, 1, -1, 0), backCol);
         
-        r = QRectF(2*mMargin + mLineH,
-                   mMargin,
-                   mGraphLeft - 3*mMargin - mLineH,
-                   mLineH);
-        
-        p.setPen(Qt::black);
-        p.drawText(r, Qt::AlignLeft | Qt::AlignVCenter, mEvent->mName);
+        p.setPen(foreCol);
+        QFont font;
+        font.setPointSizeF(pointSize(11));
+        p.setFont(font);
+        QString type = (mEvent->mType == Event::eDefault) ? tr("Event") : tr("Bound");
+        p.drawText(topRect.adjusted(mMargin, 0, -mMargin, 0),
+                   Qt::AlignVCenter | Qt::AlignLeft,
+                   type + " : " + mEvent->mName);
     }
 }
 
@@ -91,7 +91,7 @@ void GraphViewEvent::showHisto(bool showAllChains, const QList<bool>& showChainL
         {
             if(showChainList[i])
             {
-                QColor col = mChainColors[i];
+                QColor col = Painting::chainColors[i];
                 
                 GraphCurve curve;
                 curve.mName = QString("histo chain " + QString::number(i));
@@ -157,7 +157,7 @@ void GraphViewEvent::showTrace(const QList<bool>& showChainList)
         {
             if(showChainList[i])
             {
-                QColor col = mChainColors[i];
+                QColor col = Painting::chainColors[i];
                 
                 GraphCurve curve;
                 curve.mName = QString("trace chain " + QString::number(i)).toUtf8();
@@ -230,7 +230,7 @@ void GraphViewEvent::showAccept(const QList<bool>& showChainList)
         {
             if(showChainList[i])
             {
-                QColor col = mChainColors[i];
+                QColor col = Painting::chainColors[i];
                 
                 GraphCurve curve;
                 curve.mName = QString("accept history chain " + QString::number(i));

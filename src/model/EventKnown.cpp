@@ -6,6 +6,7 @@
 
 
 EventKnown::EventKnown():Event(),
+mKnownType(eFixed),
 mFixed(0),
 mUniformStart(0),
 mUniformEnd(0),
@@ -42,6 +43,14 @@ EventKnown EventKnown::fromJson(const QJsonObject& json)
     event.mUniformEnd = json[STATE_EVENT_KNOWN_END].toDouble();
     event.mGaussMeasure = json[STATE_EVENT_KNOWN_MEASURE].toDouble();
     event.mGaussError = json[STATE_EVENT_KNOWN_ERROR].toDouble();
+    
+    QString eventIdsStr = json[STATE_EVENT_PHASE_IDS].toString();
+    if(!eventIdsStr.isEmpty())
+    {
+        QStringList eventIds = eventIdsStr.split(",");
+        for(int i=0; i<eventIds.size(); ++i)
+            event.mPhasesIds.append(eventIds[i].toInt());
+    }
     
     return event;
 }

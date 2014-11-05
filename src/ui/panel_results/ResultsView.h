@@ -1,30 +1,28 @@
 #ifndef ResultsWrapper_H
 #define ResultsWrapper_H
 
-#include "Model.h"
 #include <QWidget>
 
-class QScrollArea;
-class QVBoxLayout;
-class GraphView;
-class LineEdit;
 class QStackedWidget;
+class QScrollArea;
+class QTimer;
 
+class Model;
 class Tabs;
-class ResultsControls;
-class ZoomControls;
 class Ruler;
 class GraphView;
+class GraphViewResults;
 class GraphViewPhase;
 class GraphViewEvent;
 class GraphViewDate;
-class ResultsScroller;
-class ResultsMarker;
 
 class Label;
 class Button;
+class LineEdit;
 class CheckBox;
 class RadioButton;
+class Marker;
+class ScrollCompressor;
 
 
 class ResultsView: public QWidget
@@ -42,35 +40,46 @@ protected:
     
 public slots:
     void clearResults();
-    void updateResults(const Model& model);
-    void updateOptions();
-    void toggleInfos();
+    void updateResults(Model* model);
     void updateGraphs();
     
 private slots:
-    void showPhasesScene(bool show);
-    void showEventsScene(bool show);
+    void setGraphZoom(float min, float max);
+    void showByPhases(bool show);
+    void showByEvents(bool show);
     void changeTab(int index);
+    void unfoldResults(bool);
+    void updateScrollHeights();
+    void showInfos(bool);
+    void compress(float prop);
     
 private:
+    QList<QRect> getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases);
+    
+private:
+    Model* mModel;
+    
     int mMargin;
     int mOptionsW;
     int mLineH;
     int mGraphLeft;
     int mRulerH;
     int mTabsH;
+    int mGraphsH;
     
     Tabs* mTabs;
     Ruler* mRuler;
-    QStackedWidget* mStack;
-    ResultsScroller* mResultsScrollerPhases;
-    ResultsScroller* mResultsScrollerEvents;
-    ResultsMarker* mMarker;
+    Marker* mMarker;
     
-    Button* mPhasesSceneBut;
-    Button* mEventsSceneBut;
+    QStackedWidget* mStack;
+    QScrollArea* mEventsScrollArea;
+    QScrollArea* mPhasesScrollArea;
+    QList<GraphViewResults*> mByEventsGraphs;
+    QList<GraphViewResults*> mByPhasesGraphs;
+    
+    Button* mByPhasesBut;
+    Button* mByEventsBut;
     bool mHasPhases;
-    bool mShowPhasesScene;
     
     QWidget* mOptionsWidget;
     
@@ -100,6 +109,14 @@ private:
     CheckBox* mDataCalibCheck;
     RadioButton* mDataSigmaRadio;
     RadioButton* mDataDeltaRadio;
+    
+    Label* mDisplayTitle;
+    QWidget* mDisplayWidget;
+    Button* mUnfoldBut;
+    Button* mInfosBut;
+    ScrollCompressor* mCompressor;
+    
+    QTimer* mTimer;
 };
 
 #endif

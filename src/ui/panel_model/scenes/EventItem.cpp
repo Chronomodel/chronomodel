@@ -11,10 +11,9 @@
 #include <QtWidgets>
 
 
-EventItem::EventItem(EventsScene* scene, const QJsonObject& event, QGraphicsItem* parent):AbstractItem(scene, parent),
-mEvent(event)
+EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):AbstractItem(scene, parent)
 {
-    setEvent(mEvent);
+    setEvent(event, settings);
 }
 
 EventItem::~EventItem()
@@ -23,12 +22,12 @@ EventItem::~EventItem()
 }
 
 #pragma mark Event Managment
-QJsonObject& EventItem::event()
+QJsonObject& EventItem::getEvent()
 {
     return mEvent;
 }
 
-void EventItem::setEvent(const QJsonObject& event)
+void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
 {
     mEvent = event;
     
@@ -38,6 +37,11 @@ void EventItem::setEvent(const QJsonObject& event)
     setSelected(mEvent[STATE_EVENT_IS_SELECTED].toBool());
     setPos(mEvent[STATE_EVENT_ITEM_X].toDouble(),
            mEvent[STATE_EVENT_ITEM_Y].toDouble());
+    
+    // ----------------------------------------------
+    //  Check if item should be greyed out
+    // ----------------------------------------------
+    updateGreyedOut();
     
     // ----------------------------------------------
     //  Delete Date Items
@@ -52,8 +56,6 @@ void EventItem::setEvent(const QJsonObject& event)
     // ----------------------------------------------
     //  Re-create Date Items
     // ----------------------------------------------
-    QJsonObject state = ProjectManager::getProject()->state();
-    
     QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
     for(int i=0; i<dates.size(); ++i)
     {
@@ -62,8 +64,9 @@ void EventItem::setEvent(const QJsonObject& event)
                      mEvent[STATE_EVENT_GREEN].toInt(),
                      mEvent[STATE_EVENT_BLUE].toInt());
         
-        DateItem* dateItem = new DateItem((EventsScene*)mScene, date, color, state[STATE_SETTINGS].toObject());
+        DateItem* dateItem = new DateItem((EventsScene*)mScene, date, color, settings);
         dateItem->setParentItem(this);
+        dateItem->setGreyedOut(mGreyedOut);
         
         QPointF pos(0,
                     boundingRect().y() +
@@ -76,9 +79,52 @@ void EventItem::setEvent(const QJsonObject& event)
     }
     
     // ----------------------------------------------
-    //  Repaint base on mEvent
+    //  Repaint based on mEvent
     // ----------------------------------------------
     update();
+}
+
+void EventItem::setGreyedOut(bool greyedOut)
+{
+    AbstractItem::setGreyedOut(greyedOut);
+    
+    QList<QGraphicsItem*> children = childItems();
+    for(int i=0; i<children.size(); ++i)
+    {
+        ((DateItem*)children[i])->setGreyedOut(greyedOut);
+    }
+}
+
+void EventItem::updateGreyedOut()
+{
+    mGreyedOut = true;
+    QJsonObject state = ProjectManager::getProject()->state();
+    QJsonArray phases = state[STATE_PHASES].toArray();
+    QStringList selectedPhasesIds;
+    for(int i=0; i<phases.size(); ++i)
+    {
+        QJsonObject phase = phases[i].toObject();
+        bool isSelected = phase[STATE_PHASE_IS_SELECTED].toBool();
+        if(isSelected)
+            selectedPhasesIds.append(QString::number(phase[STATE_PHASE_ID].toInt()));
+    }
+    if(selectedPhasesIds.size() == 0)
+    {
+        mGreyedOut = false;
+    }
+    else
+    {
+        QString eventPhasesIdsStr = mEvent[STATE_EVENT_PHASE_IDS].toString();
+        QStringList eventPhasesIds = eventPhasesIdsStr.split(",");
+        for(int i=0; i<selectedPhasesIds.size(); ++i)
+        {
+            if(eventPhasesIds.contains(selectedPhasesIds[i]))
+            {
+                mGreyedOut = false;
+                break;
+            }
+        }
+    }
 }
 
 #pragma mark Events
@@ -143,14 +189,11 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     
     // Phases
     QJsonArray phases = getPhases();
+    QRectF phasesRect(rect.x(), rect.y() + rect.height() - mPhasesHeight, rect.width(), mPhasesHeight);
+    phasesRect.adjust(1, 1, -1, -1);
     
-    int y = rect.height() - mBorderWidth - mPhasesHeight;
-    QRectF r = rect.adjusted(0, y, 0, 0);
-    QPainterPath clip;
-    clip.addRoundedRect(rect, 5, 5);
-    painter->setClipPath(clip);
     int numPhases = (int)phases.size();
-    float w = r.width()/numPhases;
+    float w = phasesRect.width()/numPhases;
     
     for(int i=0; i<numPhases; ++i)
     {
@@ -160,11 +203,22 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
                  phase[STATE_PHASE_BLUE].toInt());
         painter->setPen(c);
         painter->setBrush(c);
-        painter->drawRect(r.x() + i*w, r.y(), w, r.height());
+        painter->drawRect(phasesRect.x() + i*w, phasesRect.y(), w, phasesRect.height());
     }
-    painter->setClipRect(rect.adjusted(-1, -1, 1, 1));
-    painter->setPen(QPen(eventColor, 1));
-    painter->drawLine(rect.x(), rect.y() + y, rect.x() + rect.width(), rect.y() + y);
+    
+    if(numPhases == 0)
+    {
+        QFont font = qApp->font();
+        font.setPointSizeF(pointSize(11));
+        painter->setFont(font);
+        painter->fillRect(phasesRect, QColor(0, 0, 0, 180));
+        painter->setPen(QColor(200, 200, 200));
+        painter->drawText(phasesRect, Qt::AlignCenter, tr("No Phase"));
+    }
+    
+    painter->setPen(QColor(0, 0, 0));
+    painter->setBrush(Qt::NoBrush);
+    painter->drawRect(phasesRect);
     
     
     // Name
@@ -184,16 +238,23 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->drawText(tr, Qt::AlignCenter, name);
     
     
+    if(mGreyedOut)
+    {
+        painter->setPen(Painting::greyedOut);
+        painter->setBrush(Painting::greyedOut);
+        painter->drawRect(boundingRect());
+    }
+    
     // Border
     painter->setBrush(Qt::NoBrush);
     if(mMergeable)
     {
-        painter->setPen(QPen(mainColorLight, 3.f, Qt::DashLine));
+        painter->setPen(QPen(Painting::mainColorLight, 3.f, Qt::DashLine));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
     }
     else if(isSelected())
     {
-        painter->setPen(QPen(mainColorDark, 3.f));
+        painter->setPen(QPen(Painting::mainColorDark, 3.f));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
     }
     

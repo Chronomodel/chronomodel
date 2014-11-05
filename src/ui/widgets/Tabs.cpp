@@ -33,7 +33,6 @@ void Tabs::paintEvent(QPaintEvent* e)
     p.setRenderHint(QPainter::Antialiasing);
     p.setFont(mFont);
     
-    p.fillRect(rect(), QColor(200, 200, 200));
     p.setPen(QColor(100, 100, 100));
     p.setBrush(QColor(200, 200, 200));
     
@@ -49,7 +48,7 @@ void Tabs::paintEvent(QPaintEvent* e)
     
     if(mCurrentIndex != -1)
     {
-        p.setPen(mainColorLight);
+        p.setPen(Painting::mainColorLight);
         p.setBrush(Qt::white);
         
         p.drawRect(mTabRects[mCurrentIndex].adjusted(0, 0, 0, 2));
@@ -69,8 +68,8 @@ void Tabs::mousePressEvent(QMouseEvent* e)
     {
         if(i != mCurrentIndex && mTabRects[i].contains(e->pos()))
         {
-            emit tabClicked(i);
             mCurrentIndex = i;
+            emit tabClicked(i);
             update();
         }
     }

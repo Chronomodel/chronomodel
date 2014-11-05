@@ -2,7 +2,7 @@
 #include "Ruler.h"
 #include "Date.h"
 #include "Event.h"
-#include "ResultsMarker.h"
+#include "Marker.h"
 #include "../PluginAbstract.h"
 #include "../GraphViewRefAbstract.h"
 #include "ProjectManager.h"
@@ -25,8 +25,8 @@ mRefGraphView(0)
     mCalibGraph->showYValues(true);
     mCalibGraph->showAxis(false);
     
-    mMarkerX = new ResultsMarker(this);
-    mMarkerY = new ResultsMarker(this);
+    mMarkerX = new Marker(this);
+    mMarkerY = new Marker(this);
     
     setMouseTracking(true);
     
@@ -74,7 +74,7 @@ void CalibrationView::updateGraphs()
         //  Calibration curve
         // ------------------------------------------------------------
         
-        QColor c = Qt::blue;//mDate->mEvent->mColor;
+        QColor c = Painting::mainColorLight;
         
         GraphCurve calibCurve;
         calibCurve.mName = "Calibration";

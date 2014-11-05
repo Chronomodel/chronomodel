@@ -12,6 +12,7 @@ public:
     virtual ~AbstractItem();
 
     void setMergeable(bool mergeable);
+    virtual void setGreyedOut(bool greyedOut);
     
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent* e);
@@ -33,6 +34,7 @@ public:
     
     bool mMoving;
     bool mMergeable;
+    bool mGreyedOut;
 };
 
 #endif

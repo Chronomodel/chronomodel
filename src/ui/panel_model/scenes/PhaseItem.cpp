@@ -199,7 +199,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->setBrush(Qt::NoBrush);
     if(isSelected())
     {
-        painter->setPen(QPen(mainColorDark, 3.f));
+        painter->setPen(QPen(Painting::mainColorDark, 3.f));
         painter->drawRoundedRect(rect.adjusted(1, 1, -1, -1), rounded, rounded);
     }
 }

@@ -17,6 +17,8 @@ public:
     const QJsonObject& date() const;
     void setOriginalPos(const QPointF pos);
     
+    void setGreyedOut(bool greyedOut);
+    
     QRectF boundingRect() const;
     
 protected:
@@ -32,6 +34,7 @@ public:
     QColor mColor;
     QPointF mOriginalPos;
     QPixmap mCalibThumb;
+    bool mGreyedOut;
 };
 
 #endif

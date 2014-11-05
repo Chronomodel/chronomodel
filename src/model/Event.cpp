@@ -61,6 +61,16 @@ void Event::copyFrom(const Event& event)
     
     mIsCurrent = event.mIsCurrent;
     mIsSelected = event.mIsSelected;
+    
+    mDates = event.mDates;
+    
+    mPhasesIds = event.mPhasesIds;
+    mConstraintsFwdIds = event.mConstraintsFwdIds;
+    mConstraintsBwdIds = event.mConstraintsBwdIds;
+    
+    mPhases = event.mPhases;
+    mConstraintsFwd = event.mConstraintsFwd;
+    mConstraintsBwd = event.mConstraintsBwd;
 }
 
 Event::~Event()
@@ -98,7 +108,14 @@ Event Event::fromJson(const QJsonObject& json)
     {
         QJsonObject date = dates[j].toObject();
         Date d = Date::fromJson(date);
-        event.mDates.append(d);
+        if(!d.isNull())
+        {
+            event.mDates.append(d);
+        }
+        else
+        {
+            qDebug() << "ERROR : date could not be created for plugin " << date[STATE_DATE_PLUGIN_ID].toString();
+        }
     }
     return event;
 }

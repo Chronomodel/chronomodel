@@ -10,7 +10,8 @@
 DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QColor& color, const QJsonObject& settings, QGraphicsItem* parent):QGraphicsObject(parent),
 mEventsScene(EventsScene),
 mDate(date),
-mColor(color)
+mColor(color),
+mGreyedOut(false)
 {
     setZValue(1.);
     setAcceptHoverEvents(true);
@@ -53,6 +54,12 @@ QRectF DateItem::boundingRect() const
     return QRectF(0, 0, 100, 30);
 }
 
+void DateItem::setGreyedOut(bool greyedOut)
+{
+    mGreyedOut = greyedOut;
+    update();
+}
+
 void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
     Q_UNUSED(option);
@@ -76,6 +83,13 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     painter->drawPixmap(r.adjusted(0, r.height()/2, 0, 0),
                         mCalibThumb,
                         mCalibThumb.rect());
+    
+    if(mGreyedOut)
+    {
+        painter->setPen(Painting::greyedOut);
+        painter->setBrush(Painting::greyedOut);
+        painter->drawRect(boundingRect());
+    }
 }
 
 void DateItem::mousePressEvent(QGraphicsSceneMouseEvent* e)

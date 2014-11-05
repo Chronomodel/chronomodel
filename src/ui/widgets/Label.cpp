@@ -37,7 +37,7 @@ void Label::setIsTitle(bool isTitle)
         
         QPalette palette = QLabel::palette();
         palette.setColor(QPalette::WindowText, Qt::white);
-        palette.setColor(QPalette::Window, mainColorDark);
+        palette.setColor(QPalette::Window, Painting::mainColorDark);
         setPalette(palette);
         
         QFont f = font();

@@ -1,5 +1,18 @@
 #include "Painting.h"
 
+QColor Painting::mainColorLight = QColor(146, 50, 154);
+QColor Painting::mainColorDark = QColor(54, 23, 106);
+QList<QColor> Painting::chainColors = QList<QColor>();
+QColor Painting::greyedOut = QColor(100, 100, 100, 200);
+
+void Painting::init()
+{
+    chainColors.append(Qt::blue);
+    chainColors.append(Qt::green);
+    chainColors.append(Qt::red);
+    chainColors.append(Qt::yellow);
+}
+
 
 float pointSize(float size)
 {
@@ -194,7 +207,7 @@ void drawRadio(QPainter& painter, const QRectF& rect, const QString& text, bool 
     {
         int insideM = 3;
         painter.setPen(Qt::NoPen);
-        painter.setBrush(mainColorLight);
+        painter.setBrush(Painting::mainColorLight);
         painter.drawEllipse(r.adjusted(insideM,
                                        subM+insideM,
                                        r.height() - r.width() - 2*subM - insideM,
@@ -239,7 +252,7 @@ void drawCheckBoxBox(QPainter& painter, const QRectF& rect, Qt::CheckState state
     QPen pen = painter.pen();
     pen.setWidth(2);
     pen.setCapStyle(Qt::RoundCap);
-    pen.setColor(mainColorLight);
+    pen.setColor(Painting::mainColorLight);
     painter.setPen(pen);
     
     int mi = 2;

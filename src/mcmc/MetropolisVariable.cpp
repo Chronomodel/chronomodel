@@ -51,6 +51,11 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
     // variance trace = traceStd()
     // Reverse FFTW => Histo lissé ! (tronquer le padding!)
     
+    // Some checks :
+    //qDebug() << "generate histo on trace size : " << dataSrc.size();
+    
+    
+    // Result map
     QMap<float, float> data;
     
 #if USE_FFT

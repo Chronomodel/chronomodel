@@ -26,6 +26,8 @@ EventsScene::EventsScene(QGraphicsView* view, QObject* parent):AbstractScene(vie
     mDatesAnim = new QGraphicsItemAnimation();
     mDatesAnim->setTimeLine(mDatesAnimTimer);
     
+    connect(ProjectManager::getProject(), SIGNAL(currentPhaseChanged(const QJsonObject&)), this, SLOT(setSelectedPhase(const QJsonObject&)));
+    
     connect(this, SIGNAL(selectionChanged()), this, SLOT(updateSelection()));
     connect(mHelpTimer, SIGNAL(timeout()), this, SLOT(updateHelp()));
     
@@ -45,8 +47,8 @@ void EventsScene::deleteSelectedItems()
 
 void EventsScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
 {
-    QJsonObject eventFrom = ((EventItem*)itemFrom)->event();
-    QJsonObject eventTo = ((EventItem*)itemTo)->event();
+    QJsonObject eventFrom = ((EventItem*)itemFrom)->getEvent();
+    QJsonObject eventTo = ((EventItem*)itemTo)->getEvent();
     
     ProjectManager::getProject()->createEventConstraint(eventFrom[STATE_EVENT_ID].toInt(),
                                                         eventTo[STATE_EVENT_ID].toInt());
@@ -54,11 +56,31 @@ void EventsScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
 
 void EventsScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
 {
-    QJsonObject eventFrom = ((EventItem*)itemFrom)->event();
-    QJsonObject eventTo = ((EventItem*)itemTo)->event();
+    QJsonObject eventFrom = ((EventItem*)itemFrom)->getEvent();
+    QJsonObject eventTo = ((EventItem*)itemTo)->getEvent();
     
     ProjectManager::getProject()->mergeEvents(eventFrom[STATE_EVENT_ID].toInt(),
                                               eventTo[STATE_EVENT_ID].toInt());
+}
+
+void EventsScene::setSelectedPhase(const QJsonObject& phase)
+{
+    if(!phase.isEmpty())
+    {
+        QString phaseId = QString::number(phase[STATE_PHASE_ID].toInt());
+        for(int i=0; i<mItems.size(); ++i)
+        {
+            const QJsonObject& event = ((EventItem*)mItems[i])->getEvent();
+            QString phaseIdsStr = event[STATE_EVENT_PHASE_IDS].toString();
+            QStringList phaseIds = phaseIdsStr.split(",");
+            mItems[i]->setGreyedOut(!phaseIds.contains(phaseId));
+        }
+    }
+    else
+    {
+        for(int i=0; i<mItems.size(); ++i)
+            mItems[i]->setGreyedOut(false);
+    }
 }
 
 #pragma mark Help Bubble
@@ -130,7 +152,7 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
     for(int i=0; i<mItems.size(); ++i)
     {
         EventItem* item = (EventItem*)mItems[i];
-        events.append(item->event());
+        events.append(item->getEvent());
     }
     stateNext[STATE_EVENTS] = events;
     
@@ -148,6 +170,7 @@ void EventsScene::updateProject()
     QJsonObject state = ProjectManager::getProject()->state();
     QJsonArray events = state[STATE_EVENTS].toArray();
     QJsonArray constraints = state[STATE_EVENTS_CONSTRAINTS].toArray();
+    QJsonObject settings = state[STATE_SETTINGS].toObject();
     
     QList<int> events_ids;
     for(int i=0; i<events.size(); ++i)
@@ -165,7 +188,7 @@ void EventsScene::updateProject()
     for(int i=mItems.size()-1; i>=0; --i)
     {
         EventItem* eventItem = (EventItem*)mItems[i];
-        QJsonObject& event = eventItem->event();
+        QJsonObject& event = eventItem->getEvent();
         
         if(!events_ids.contains(event[STATE_EVENT_ID].toInt()))
         {
@@ -196,7 +219,7 @@ void EventsScene::updateProject()
         for(int j=0; j<mItems.size(); ++j)
         {
             EventItem* item = (EventItem*)mItems[j];
-            QJsonObject itemEvent = item->event();
+            QJsonObject itemEvent = item->getEvent();
             if(itemEvent[STATE_EVENT_ID].toInt() == event[STATE_EVENT_ID].toInt())
             {
                 itemExists = true;
@@ -204,7 +227,7 @@ void EventsScene::updateProject()
                 {
                     // UPDATE ITEM
                     qDebug() << "Event updated : id = " << event[STATE_EVENT_ID].toInt();
-                    item->setEvent(event);
+                    item->setEvent(event, settings);
                 }
             }
         }
@@ -214,9 +237,9 @@ void EventsScene::updateProject()
             EventItem* eventItem = 0;
             Event::Type type = (Event::Type)event[STATE_EVENT_TYPE].toInt();
             if(type == Event::eDefault)
-                eventItem = new EventItem(this, event);
+                eventItem = new EventItem(this, event, settings);
             else if(type == Event::eKnown)
-                eventItem = new EventKnownItem(this, event);
+                eventItem = new EventKnownItem(this, event, settings);
             
             mItems.append(eventItem);
             addItem(eventItem);
@@ -274,6 +297,7 @@ void EventsScene::updateProject()
     }
     
     mUpdatingItems = false;
+    updateSelection();
     update();
 }
 
@@ -286,7 +310,7 @@ void EventsScene::updateSelection()
         for(int i=0; i<mItems.size(); ++i)
         {
             EventItem* item = (EventItem*)mItems[i];
-            QJsonObject& event = item->event();
+            QJsonObject& event = item->getEvent();
             event[STATE_EVENT_IS_SELECTED] = mItems[i]->isSelected();
             event[STATE_EVENT_IS_CURRENT] = false;
         }
@@ -294,7 +318,7 @@ void EventsScene::updateSelection()
         EventItem* curItem = (EventItem*)currentItem();
         if(curItem)
         {
-            QJsonObject& evt = curItem->event();
+            QJsonObject& evt = curItem->getEvent();
             evt[STATE_EVENT_IS_CURRENT] = true;
             event = evt;
         }
@@ -346,7 +370,7 @@ void EventsScene::dateMoved(DateItem* dateItem, QGraphicsSceneMouseEvent* e)
             
             if(hoveredEventItem && prevEventItem && (hoveredEventItem != prevEventItem))
             {
-                const QJsonObject& event = hoveredEventItem->event();
+                const QJsonObject& event = hoveredEventItem->getEvent();
                 if(event[STATE_EVENT_TYPE].toInt() == Event::eDefault)
                     hoveredEventItem->setMergeable(true);
             }
@@ -364,8 +388,8 @@ void EventsScene::dateReleased(DateItem* dateItem, QGraphicsSceneMouseEvent* e)
         
         if(hoveredEventItem && prevEventItem && (hoveredEventItem != prevEventItem))
         {
-            const QJsonObject& prevEvent = prevEventItem->event();
-            const QJsonObject& nextEvent = hoveredEventItem->event();
+            const QJsonObject& prevEvent = prevEventItem->getEvent();
+            const QJsonObject& nextEvent = hoveredEventItem->getEvent();
             const QJsonObject& dateMoving = dateItem->date();
             
             if(nextEvent[STATE_EVENT_TYPE].toInt() == Event::eDefault)
@@ -433,8 +457,9 @@ void EventsScene::itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent
 void EventsScene::constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e)
 {
     Q_UNUSED(e);
-    Project* project = ProjectManager::getProject();
-    project->updateEventConstraint(item->constraint()[STATE_EVENT_CONSTRAINT_ID].toInt());
+    Q_UNUSED(item);
+    //Project* project = ProjectManager::getProject();
+    //project->updateEventConstraint(item->constraint()[STATE_EVENT_CONSTRAINT_ID].toInt());
 }
 
 

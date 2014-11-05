@@ -2,6 +2,7 @@
 #include "GraphView.h"
 #include "Date.h"
 #include "Event.h"
+#include "Painting.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
 #include <QtWidgets>
@@ -11,9 +12,11 @@
 #pragma mark Constructor / Destructor
 
 GraphViewDate::GraphViewDate(QWidget *parent):GraphViewResults(parent),
-mDate(0)
+mDate(0),
+mColor(Qt::blue)
 {
-    setMainColor(QColor(100, 120, 100));
+    //setMainColor(QColor(100, 120, 100));
+    setMainColor(QColor(150, 150, 150));
 }
 
 GraphViewDate::~GraphViewDate()
@@ -28,6 +31,12 @@ void GraphViewDate::setDate(Date* date)
     update();
 }
 
+void GraphViewDate::setColor(const QColor& color)
+{
+    mColor = color;
+    update();
+}
+
 void GraphViewDate::paintEvent(QPaintEvent* e)
 {
     GraphViewResults::paintEvent(e);
@@ -36,22 +45,19 @@ void GraphViewDate::paintEvent(QPaintEvent* e)
     
     if(mDate)
     {
-        QColor color = Qt::blue; //mDate->mEvent->mColor;
-        bool isDark = colorIsDark(color);
+        QColor backCol = mColor;
+        QColor foreCol = getContrastedColor(backCol);
         
-        QRectF r(mMargin, mMargin, mLineH, mLineH);
-        p.setBrush(color);
-        p.drawRect(r);
-        p.setPen(isDark ? Qt::white : Qt::black);
-        p.drawText(r, Qt::AlignCenter, "D");
+        QRect topRect(0, 0, mGraphLeft, mLineH);
+        p.fillRect(topRect.adjusted(1, 1, -1, 0), backCol);
         
-        r = QRectF(2*mMargin + mLineH,
-                   mMargin,
-                   mGraphLeft - 3*mMargin - mLineH,
-                   mLineH);
-        
-        p.setPen(Qt::black);
-        p.drawText(r, Qt::AlignLeft | Qt::AlignVCenter, mDate->mName);
+        p.setPen(foreCol);
+        QFont font;
+        font.setPointSizeF(pointSize(11));
+        p.setFont(font);
+        p.drawText(topRect.adjusted(mMargin, 0, -mMargin, 0),
+                   Qt::AlignVCenter | Qt::AlignLeft,
+                   tr("Data") + " : " + mDate->mName);
     }
 }
 
@@ -60,7 +66,7 @@ void GraphViewDate::paintEvent(QPaintEvent* e)
 void GraphViewDate::showHisto(bool showTheta, bool showSigma, bool showDelta, bool showCalib, bool showAllChains, const QList<bool>& showChainList, bool showHPD, int thresholdHPD)
 {
     mGraph->showInfos(false);
-    mGraph->setRangeY(0, 1);
+    mGraph->setRangeY(0, 0.0001f);
     
     if(showTheta)
         mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
@@ -69,7 +75,7 @@ void GraphViewDate::showHisto(bool showTheta, bool showSigma, bool showDelta, bo
     
     if(mDate)
     {
-        QColor color = Qt::blue; //mDate->mEvent->mColor;
+        QColor color = mColor;
         
         mGraph->removeAllCurves();
         mGraph->removeAllZones();
@@ -89,7 +95,8 @@ void GraphViewDate::showHisto(bool showTheta, bool showSigma, bool showDelta, bo
             curve.mFillUnder = true;
             mGraph->addCurve(curve);
             
-            mGraph->setRangeY(0, qMax(mGraph->maximumY(), map_max_value(curve.mData)));
+            float yMax = 1.1f * map_max_value(curve.mData);
+            mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
         }
         
         if(showAllChains)
@@ -100,7 +107,8 @@ void GraphViewDate::showHisto(bool showTheta, bool showSigma, bool showDelta, bo
             curve.mPen.setColor(color);
             mGraph->addCurve(curve);
             
-            mGraph->setRangeY(0, qMax(mGraph->maximumY(), map_max_value(curve.mData)));
+            float yMax = 1.1f * map_max_value(curve.mData);
+            mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
             
             if(showHPD)
             {
@@ -116,7 +124,7 @@ void GraphViewDate::showHisto(bool showTheta, bool showSigma, bool showDelta, bo
         {
             if(showChainList[i])
             {
-                QColor col = mChainColors[i];
+                QColor col = Painting::chainColors[i];
                 
                 GraphCurve curve;
                 curve.mName = QString("histo chain " + QString::number(i));
@@ -124,7 +132,8 @@ void GraphViewDate::showHisto(bool showTheta, bool showSigma, bool showDelta, bo
                 curve.mPen.setColor(col);
                 mGraph->addCurve(curve);
                 
-                mGraph->setRangeY(0, qMax(mGraph->maximumY(), map_max_value(curve.mData)));
+                float yMax = 1.1f * map_max_value(curve.mData);
+                mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                 
                 if(showHPD)
                 {
@@ -187,13 +196,13 @@ void GraphViewDate::showTrace(bool showTheta, bool showSigma, bool showDelta, co
         {
             if(showChainList[i])
             {
-                QColor col = mChainColors[i];
+                QColor col = Painting::chainColors[i];
                 
                 GraphCurve curve;
                 curve.mName = QString("trace chain " + QString::number(i));
                 curve.mDataVector = variable->traceForChain(i, showChainList.size());
                 curve.mUseVectorData = true;
-                curve.mPen.setColor(mChainColors[i]);
+                curve.mPen.setColor(Painting::chainColors[i]);
                 mGraph->addCurve(curve);
                 
                 min = qMin(vector_min_value(curve.mDataVector), min);
@@ -267,7 +276,7 @@ void GraphViewDate::showAccept(bool showTheta, bool showSigma, bool showDelta, c
                 curve.mName = QString("accept history chain " + QString::number(i));
                 curve.mDataVector = variable->acceptationForChain(i, showChainList.size());
                 curve.mUseVectorData = true;
-                curve.mPen.setColor(mChainColors[i]);
+                curve.mPen.setColor(Painting::chainColors[i]);
                 mGraph->addCurve(curve);
                 
                 if(curve.mDataVector.size() > 0)

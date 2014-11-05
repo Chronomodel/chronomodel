@@ -9,7 +9,8 @@
 #include <QColor>
 
 class GraphView;
-class Event;
+class Button;
+class QPropertyAnimation;
 
 
 class GraphViewResults: public QWidget
@@ -21,23 +22,21 @@ public:
     
     void setSettings(const ProjectSettings& settings);
     void setMCMCSettings(const MCMCSettings& mcmc);
-    
-    void setParentGraph(GraphViewResults* graph);
-    bool visible() const;
-    void toggleUnfold(bool toggle);
-    void showUnfold(bool show, const QString& text);
+
     void setMainColor(const QColor& color);
+    void toggle(const QRect& geometry);
     
 public slots:
-    void setVisibility(bool visible);
     void setRange(float min, float max);
     void zoom(float min, float max);
+    
+private slots:
+    void exportAsImage();
+    void exportData();
     
 protected:
     virtual void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent* e);
-    void mousePressEvent(QMouseEvent* e);
-    void mouseReleaseEvent(QMouseEvent* e);
     
 signals:
     void unfoldToggled(bool toggled);
@@ -52,24 +51,14 @@ protected:
     
     QColor mMainColor;
     
-    QRectF mUnfoldRect;
-    QRectF mDataRect;
-    QRectF mImageRect;
-    
-    bool mVisible; // flag to indicate if the graph is hidden (eg :data in closed event)
-    
-    bool mUnfoldToggled; // unfold button state : to indicate if subgraphs must be shown
-    bool mShowUnfold;
-    QString mUnfoldText;
-    
-    bool mIsDataDown;
-    bool mIsImageDown;
+    Button* mImageBut;
+    Button* mDataBut;
     
     int mMargin;
     int mLineH;
     int mGraphLeft;
     
-    QList<QColor> mChainColors;
+    QPropertyAnimation* mAnimation;
 };
 
 #endif

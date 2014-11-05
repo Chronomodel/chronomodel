@@ -15,10 +15,10 @@
 #include <QApplication>
 
 
-MCMCLoopMain::MCMCLoopMain(Model& model):MCMCLoop(),
+MCMCLoopMain::MCMCLoopMain(Model* model):MCMCLoop(),
 mModel(model)
 {
-    mSettings = mModel.mMCMCSettings;
+    mSettings = mModel->mMCMCSettings;
 }
 
 MCMCLoopMain::~MCMCLoopMain()
@@ -29,22 +29,22 @@ MCMCLoopMain::~MCMCLoopMain()
 void MCMCLoopMain::initModel()
 {
     
-    for(int i=0; i<mModel.mEvents.size(); ++i)
+    for(int i=0; i<mModel->mEvents.size(); ++i)
     {
-        mModel.mEvents[i].reset();
-        for(int j=0; j<(int)mModel.mEvents[i].mDates.size(); ++j)
+        mModel->mEvents[i].reset();
+        for(int j=0; j<(int)mModel->mEvents[i].mDates.size(); ++j)
         {
-            mModel.mEvents[i].mDates[j].reset();
+            mModel->mEvents[i].mDates[j].reset();
         }
     }
 }
 
 void MCMCLoopMain::calibrate()
 {
-    QList<Event>& events = mModel.mEvents;
-    double tmin = mModel.mSettings.mTmin;
-    double tmax = mModel.mSettings.mTmax;
-    double step = mModel.mSettings.mStep;
+    QList<Event>& events = mModel->mEvents;
+    double tmin = mModel->mSettings.mTmin;
+    double tmax = mModel->mSettings.mTmax;
+    double step = mModel->mSettings.mStep;
     
     //----------------- Calibrate measures --------------------------------------
     
@@ -70,10 +70,10 @@ void MCMCLoopMain::calibrate()
 
 void MCMCLoopMain::initMCMC()
 {
-    QList<Event>& events = mModel.mEvents;
-    QList<Phase>& phases = mModel.mPhases;
-    double t_min = mModel.mSettings.mTmin;
-    double t_max = mModel.mSettings.mTmax;
+    QList<Event>& events = mModel->mEvents;
+    QList<Phase>& phases = mModel->mPhases;
+    double t_min = mModel->mSettings.mTmin;
+    double t_max = mModel->mSettings.mTmax;
     
     // ----------------------------------------------------------------
     //  Thetas des Mesures
@@ -263,10 +263,10 @@ void MCMCLoopMain::initMCMC()
 
 void MCMCLoopMain::update()
 {
-    QList<Event>& events = mModel.mEvents;
-    QList<Phase>& phases = mModel.mPhases;
-    double t_min = mModel.mSettings.mTmin;
-    double t_max = mModel.mSettings.mTmax;
+    QList<Event>& events = mModel->mEvents;
+    QList<Phase>& phases = mModel->mPhases;
+    double t_min = mModel->mSettings.mTmin;
+    double t_max = mModel->mSettings.mTmax;
 
     bool doMemo = false;
     if(mState == eRunning)
@@ -347,7 +347,7 @@ void MCMCLoopMain::update()
 
 bool MCMCLoopMain::adapt()
 {
-    QList<Event>& events = mModel.mEvents;
+    QList<Event>& events = mModel->mEvents;
     
     const double taux_min = 42.;           // taux_min minimal rate of acceptation=42
     const double taux_max = 46.;           // taux_max maximal rate of acceptation=46
@@ -369,7 +369,7 @@ bool MCMCLoopMain::adapt()
             
             if(date.mMethod == Date::eMHSymGaussAdapt)
             {
-                double taux = 100 * date.mTheta.mAcceptMHBatch / mModel.mMCMCSettings.mIterPerBatch;
+                double taux = 100 * date.mTheta.mAcceptMHBatch / mModel->mMCMCSettings.mIterPerBatch;
                 if(taux <= taux_min || taux >= taux_max)
                 {
                     allOK = false;
@@ -381,7 +381,7 @@ bool MCMCLoopMain::adapt()
             
             //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
             
-            double taux = 100 * date.mSigma.mAcceptMHBatch / mModel.mMCMCSettings.mIterPerBatch;
+            double taux = 100 * date.mSigma.mAcceptMHBatch / mModel->mMCMCSettings.mIterPerBatch;
             if(taux <= taux_min || taux >= taux_max)
             {
                 allOK = false;
@@ -395,7 +395,7 @@ bool MCMCLoopMain::adapt()
         
         if(event.mMethod == Event::eMHAdaptGauss)
         {
-            double taux = 100 * event.mTheta.mAcceptMHBatch / mModel.mMCMCSettings.mIterPerBatch;
+            double taux = 100 * event.mTheta.mAcceptMHBatch / mModel->mMCMCSettings.mIterPerBatch;
             if(taux <= taux_min || taux >= taux_max)
             {
                 allOK = false;
@@ -412,13 +412,13 @@ void MCMCLoopMain::finalize()
 {
     // TODO Generate HPD here ?
     
-    mModel.mMCMCSettings.mFinalBatchIndex = mFinalBatchIndex;
+    mModel->mMCMCSettings.mFinalBatchIndex = mFinalBatchIndex;
     
-    float tmin = mModel.mSettings.mTmin;
-    float tmax = mModel.mSettings.mTmax;
+    float tmin = mModel->mSettings.mTmin;
+    float tmax = mModel->mSettings.mTmax;
     
-    QList<Event>& events = mModel.mEvents;
-    QList<Phase>& phases = mModel.mPhases;
+    QList<Event>& events = mModel->mEvents;
+    QList<Phase>& phases = mModel->mPhases;
     
     for(int i=0; i<events.size(); ++i)
     {
@@ -455,13 +455,13 @@ void MCMCLoopMain::finalize()
     {
         Phase& phase = phases[i];
         
-        phase.mAlpha.generateFullHisto(tmin, tmax);
+        /*phase.mAlpha.generateFullHisto(tmin, tmax);
         phase.mBeta.generateFullHisto(tmin, tmax);
         phase.mThetaPredict.generateFullHisto(tmin, tmax);
         
         phase.mAlpha.generateHistos(mSettings.mNumProcesses, tmin, tmax);
         phase.mBeta.generateHistos(mSettings.mNumProcesses, tmin, tmax);
-        phase.mThetaPredict.generateHistos(mSettings.mNumProcesses, tmin, tmax);
+        phase.mThetaPredict.generateHistos(mSettings.mNumProcesses, tmin, tmax);*/
     }
 }
 

@@ -124,7 +124,7 @@ signals:
     void selectedEventsChanged();
     
     void mcmcStarted();
-    void mcmcFinished(const Model& model);
+    void mcmcFinished(Model* model);
     
 public:
     QJsonObject mState;
@@ -134,7 +134,7 @@ public:
     QString mProjectFileDir;
     QString mProjectFileName;
     
-    QList<Model> mModels;
+    Model* mModel;
     
     QTimer* mAutoSaveTimer;
 };

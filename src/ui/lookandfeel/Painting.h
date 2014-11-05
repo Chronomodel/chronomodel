@@ -1,10 +1,24 @@
 #ifndef Painting_H
 #define Painting_H
 
+#include <QList>
 #include <QtWidgets>
 
-static QColor mainColorLight = QColor(146, 50, 154);
-static QColor mainColorDark = QColor(54, 23, 106);
+class Painting
+{
+public:
+    static void init();
+    
+    static QColor mainColorLight;
+    static QColor mainColorDark;
+    static QList<QColor> chainColors;
+    static QColor greyedOut;
+};
+
+
+
+
+
 
 float pointSize(float size);
 

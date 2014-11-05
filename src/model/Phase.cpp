@@ -63,6 +63,14 @@ void Phase::copyFrom(const Phase& phase)
     
     mIsSelected = phase.mIsSelected;
     mIsCurrent = phase.mIsCurrent;
+    
+    mEvents = phase.mEvents;
+    mConstraintsFwd = phase.mConstraintsFwd;
+    mConstraintsBwd = phase.mConstraintsBwd;
+    
+    mEventsIds = phase.mEventsIds;
+    mConstraintsFwdIds = phase.mConstraintsFwdIds;
+    mConstraintsBwdIds = phase.mConstraintsBwdIds;
 }
 
 Phase::~Phase()

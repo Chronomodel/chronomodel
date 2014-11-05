@@ -6,12 +6,13 @@ AbstractItem::AbstractItem(AbstractScene* scene, QGraphicsItem* parent):QGraphic
 mScene(scene),
 mBorderWidth(1.f),
 mTitleHeight(20.f),
-mPhasesHeight(10.f),
+mPhasesHeight(20.f),
 mEltsMargin(3.f),
 mEltsWidth(15.f),
 mEltsHeight(40.f),
 mMoving(false),
-mMergeable(false)
+mMergeable(false),
+mGreyedOut(false)
 {
     setZValue(1.);
     setAcceptHoverEvents(true);
@@ -40,6 +41,12 @@ AbstractItem::~AbstractItem()
 void AbstractItem::setMergeable(bool mergeable)
 {
     mMergeable = mergeable;
+    update();
+}
+
+void AbstractItem::setGreyedOut(bool greyedOut)
+{
+    mGreyedOut = greyedOut;
     update();
 }
 

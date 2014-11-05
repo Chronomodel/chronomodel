@@ -6,13 +6,30 @@
 ScrollCompressor::ScrollCompressor(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mProp(0.5f),
 mIsDragging(false),
-mShowText(false)
+mShowText(false),
+mIsVertical(true)
 {
-    
+    setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
 }
+
 ScrollCompressor::~ScrollCompressor()
 {
     
+}
+
+QSize ScrollCompressor::sizeHint() const
+{
+    return mIsVertical ? QSize(20, 100) : QSize(100, 20);
+}
+
+void ScrollCompressor::setVertical(bool vertical)
+{
+    mIsVertical = vertical;
+    if(mIsVertical)
+        setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
+    else
+        setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
+    update();
 }
 
 void ScrollCompressor::setProp(const float& prop, bool sendNotification)
@@ -41,25 +58,50 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
     
-    QLinearGradient grad1(0, 0, width(), 0);
-    grad1.setColorAt(0, QColor(60, 60, 60));
-    grad1.setColorAt(1, QColor(80, 80, 80));
-    
-    p.setPen(Qt::NoPen);
-    p.setBrush(grad1);
-    p.drawRect(r);
-    
-    QLinearGradient grad2(0, 0, width(), 0);
-    grad2.setColorAt(0, mainColorLight);
-    grad2.setColorAt(1, mainColorDark);
-    
-    float h = r.height() * mProp;
-    QRectF r2 = r.adjusted(0, r.height() - h, 0, 0);
-    p.fillRect(r2, grad2);
-    
-    p.setPen(QColor(50, 50, 50));
-    p.setBrush(Qt::NoBrush);
-    p.drawRect(r);
+    if(mIsVertical)
+    {
+        QLinearGradient grad1(0, 0, width(), 0);
+        grad1.setColorAt(0, QColor(60, 60, 60));
+        grad1.setColorAt(1, QColor(80, 80, 80));
+        
+        p.setPen(Qt::NoPen);
+        p.setBrush(grad1);
+        p.drawRect(r);
+        
+        QLinearGradient grad2(0, 0, width(), 0);
+        grad2.setColorAt(0, Painting::mainColorLight);
+        grad2.setColorAt(1, Painting::mainColorDark);
+        
+        float h = r.height() * mProp;
+        QRectF r2 = r.adjusted(0, r.height() - h, 0, 0);
+        p.fillRect(r2, grad2);
+        
+        p.setPen(QColor(50, 50, 50));
+        p.setBrush(Qt::NoBrush);
+        p.drawRect(r);
+    }
+    else
+    {
+        QLinearGradient grad1(0, 0, 0, height());
+        grad1.setColorAt(0, QColor(60, 60, 60));
+        grad1.setColorAt(1, QColor(80, 80, 80));
+        
+        p.setPen(Qt::NoPen);
+        p.setBrush(grad1);
+        p.drawRect(r);
+        
+        QLinearGradient grad2(0, 0, 0, height());
+        grad2.setColorAt(0, Painting::mainColorLight);
+        grad2.setColorAt(1, Painting::mainColorDark);
+        
+        float w = r.width() * mProp;
+        QRectF r2 = r.adjusted(0, 0, -r.width() + w, 0);
+        p.fillRect(r2, grad2);
+        
+        p.setPen(QColor(50, 50, 50));
+        p.setBrush(Qt::NoBrush);
+        p.drawRect(r);
+    }
     
     if(mShowText)
     {
@@ -75,7 +117,7 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
 
 void ScrollCompressor::mousePressEvent(QMouseEvent* e)
 {
-    updateProp(e->pos().y());
+    updateProp(e);
     mIsDragging = true;
 }
 
@@ -89,17 +131,27 @@ void ScrollCompressor::mouseMoveEvent(QMouseEvent* e)
 {
     if(mIsDragging)
     {
-        updateProp(e->pos().y());
+        updateProp(e);
     }
 }
 
-void ScrollCompressor::updateProp(int y)
+void ScrollCompressor::updateProp(QMouseEvent* e)
 {
     QRect r = rect();
-    y = r.height() - y;
-    y = (y < 0) ? 0 : y;
-    y = (y > r.height()) ? r.height() : y;
-    mProp = (float)y / (float)r.height();
+    if(mIsVertical)
+    {
+        int y = r.height() - e->pos().y();
+        y = (y < 0) ? 0 : y;
+        y = (y > r.height()) ? r.height() : y;
+        mProp = (float)y / (float)r.height();
+    }
+    else
+    {
+        int x = e->pos().x();
+        x = (x < 0) ? 0 : x;
+        x = (x > r.width()) ? r.width() : x;
+        mProp = (float)x / (float)r.width();
+    }
     emit valueChanged(mProp);
     update();
 }

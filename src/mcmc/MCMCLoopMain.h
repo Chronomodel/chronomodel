@@ -9,7 +9,7 @@ class MCMCLoopMain: public MCMCLoop
 {
     Q_OBJECT
 public:
-    MCMCLoopMain(Model& model);
+    MCMCLoopMain(Model* model);
     ~MCMCLoopMain();
     
 protected:
@@ -21,7 +21,7 @@ protected:
     virtual void finalize();
 
 protected:
-    Model& mModel;
+    Model* mModel;
 };
 
 #endif

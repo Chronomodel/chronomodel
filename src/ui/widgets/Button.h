@@ -1,10 +1,10 @@
 #ifndef Button_H
 #define Button_H
 
-#include <QPushButton>
+#include <QAbstractButton>
 
 
-class Button: public QPushButton
+class Button: public QAbstractButton
 {
     Q_OBJECT
 public:
@@ -12,6 +12,8 @@ public:
     Button(const QString& text, QWidget* parent = 0);
     ~Button();
     void init();
+    
+    QSize sizeHint() const;
     
     void setFlatVertical();
     void setFlatHorizontal();

@@ -7,7 +7,7 @@
 class GraphView;
 class GraphViewRefAbstract;
 class Date;
-class ResultsMarker;
+class Marker;
 class Ruler;
 
 
@@ -36,8 +36,8 @@ public:
     GraphView* mCalibGraph;
     GraphViewRefAbstract* mRefGraphView;
     
-    ResultsMarker* mMarkerX;
-    ResultsMarker* mMarkerY;
+    Marker* mMarkerX;
+    Marker* mMarkerY;
 };
 
 #endif

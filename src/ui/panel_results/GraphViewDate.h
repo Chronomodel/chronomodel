@@ -14,6 +14,7 @@ public:
     virtual ~GraphViewDate();
     
     void setDate(Date* date);
+    void setColor(const QColor& color);
     
     // ----------------------------------------------------------------
     
@@ -28,6 +29,7 @@ protected:
     
 private:
     Date* mDate;
+    QColor mColor;
 };
 
 

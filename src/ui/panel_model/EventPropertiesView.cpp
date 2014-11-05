@@ -346,7 +346,7 @@ void EventPropertiesView::updateKnownGraph()
         GraphCurve curve;
         curve.mName = "Known";
         curve.mData = event.mValues;
-        curve.mPen.setColor(Qt::blue);
+        curve.mPen.setColor(Painting::mainColorLight);
         curve.mFillUnder = true;
         mKnownGraph->addCurve(curve);
     }
@@ -396,7 +396,8 @@ void EventPropertiesView::createDate()
                 if(plugins[i]->getName() == but->text())
                 {
                     Date date = project->createDateFromPlugin(plugins[i]);
-                    project->addDate(mEvent[STATE_EVENT_ID].toInt(), date.toJson());
+                    if(!date.isNull())
+                        project->addDate(mEvent[STATE_EVENT_ID].toInt(), date.toJson());
                 }
             }
         }

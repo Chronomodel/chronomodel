@@ -6,17 +6,80 @@
 #include "Project.h"
 #include "QtUtilities.h"
 #include "Painting.h"
+#include "GraphView.h"
+#include "EventKnown.h"
+#include "StdUtilities.h"
 #include <QtWidgets>
 
 
-EventKnownItem::EventKnownItem(EventsScene* eventsScene, const QJsonObject& event, QGraphicsItem* parent):EventItem(eventsScene, event, parent)
+EventKnownItem::EventKnownItem(EventsScene* eventsScene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):EventItem(eventsScene, event, settings, parent)
 {
-    mPhasesHeight = 20.f;
+    mThumbH = 20;
+    
+    setEvent(event, settings);
 }
 
 EventKnownItem::~EventKnownItem()
 {
     
+}
+
+void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
+{
+    mEvent = event;
+    
+    // ----------------------------------------------
+    //  Update item position and selection
+    // ----------------------------------------------
+    setSelected(mEvent[STATE_EVENT_IS_SELECTED].toBool());
+    setPos(mEvent[STATE_EVENT_ITEM_X].toDouble(),
+           mEvent[STATE_EVENT_ITEM_Y].toDouble());
+    
+    // ----------------------------------------------
+    //  Check if item should be greyed out
+    // ----------------------------------------------
+    updateGreyedOut();
+    
+    // ----------------------------------------------
+    //  Recreate thumb
+    // ----------------------------------------------
+    int tmin = settings[STATE_SETTINGS_TMIN].toDouble();
+    int tmax = settings[STATE_SETTINGS_TMAX].toDouble();
+    int step = settings[STATE_SETTINGS_STEP].toDouble();
+    
+    EventKnown bound = EventKnown::fromJson(event);
+    bound.updateValues(tmin, tmax, step);
+    
+    /*QRectF rect = boundingRect();
+    float side = 40.f;
+    float top = 25.f;
+    QRectF thumbRect(rect.x() + side, rect.y() + top + mEltsMargin + mTitleHeight, rect.width() - 2*side, mThumbH);*/
+    
+    GraphView* graph = new GraphView();
+    //graph->setFixedSize(thumbRect.width(), thumbRect.height());
+    graph->setFixedSize(200, 50);
+    graph->setRangeX(tmin, tmax);
+    graph->setRangeY(0, 1.1f);
+    graph->showAxis(false);
+    graph->showScrollBar(false);
+    graph->showGrid(false);
+    
+    GraphCurve curve;
+    curve.mData = normalize_map(bound.mValues);
+    curve.mName = "Bound";
+    curve.mPen.setColor(Painting::mainColorLight);
+    curve.mPen.setWidthF(2.f);
+    curve.mFillUnder = true;
+    graph->addCurve(curve);
+    
+    mThumb = QPixmap(graph->size());
+    graph->render(&mThumb);
+    delete graph;
+    
+    // ----------------------------------------------
+    //  Repaint based on mEvent
+    // ----------------------------------------------
+    update();
 }
 
 QRectF EventKnownItem::boundingRect() const
@@ -26,12 +89,12 @@ QRectF EventKnownItem::boundingRect() const
     QString name = mEvent[STATE_EVENT_NAME].toString();
     
     qreal w = metrics.width(name) + 2 * (mBorderWidth + mEltsMargin);
-    qreal h = mTitleHeight + mPhasesHeight + 2*mBorderWidth + 3*mEltsMargin;
+    qreal h = mTitleHeight + mThumbH + mPhasesHeight + 2*mEltsMargin;
     
-    w = qMax(w, 100.);
+    w += 80.f;
+    h += 50.f;
     
-    w += 40;
-    h += 40;
+    w = qMax(w, 180.);
     
     return QRectF(-w/2, -h/2, w, h);
 }
@@ -44,13 +107,10 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     painter->setRenderHint(QPainter::Antialiasing);
     
     QRectF rect = boundingRect();
-    QRectF r = rect.adjusted(20, 20, -20, -20);
     
     QColor eventColor = QColor(mEvent[STATE_EVENT_RED].toInt(),
                                mEvent[STATE_EVENT_GREEN].toInt(),
                                mEvent[STATE_EVENT_BLUE].toInt());
-    QColor eventColorLight = eventColor;
-    eventColorLight.setAlpha(100);
     
     painter->setPen(Qt::NoPen);
     painter->setBrush(eventColor);
@@ -58,49 +118,73 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     
     if(isSelected())
     {
-        painter->setPen(QPen(mainColorDark, 3.f));
+        painter->setPen(QPen(Painting::mainColorDark, 3.f));
         painter->setBrush(Qt::NoBrush);
         painter->drawEllipse(rect.adjusted(1, 1, -1, -1));
     }
     
-    // Phases
+    float side = 40.f;
+    float top = 25.f;
     
-    /*int y = r.height() - mBorderWidth - mPhasesHeight;
-    QRectF pr = r.adjusted(0, y, 0, 0);
-    QPainterPath clip;
-    clip.addRoundedRect(rect, 5, 5);
-    painter->setClipPath(clip);
-    int numPhases = (int)mEvent->mPhases.size();
-    float w = pr.width()/numPhases;
-    for(int i=0; i<numPhases; ++i)
-    {
-        QColor c = mEvent->mPhases[i]->mColor;
-        painter->setPen(c);
-        painter->setBrush(c);
-        painter->drawRect(r.x() + i*w, pr.y(), w, pr.height());
-    }
-    if(numPhases == 0)
-    {
-        painter->setPen(isSelected() ? Qt::white : Qt::black);
-        painter->drawText(pr, Qt::AlignCenter, QObject::tr("No Phase"));
-    }*/
+    QRectF nameRect(rect.x() + side, rect.y() + top, rect.width() - 2*side, mTitleHeight);
+    QRectF thumbRect(rect.x() + side, rect.y() + top + mEltsMargin + mTitleHeight, rect.width() - 2*side, mThumbH);
+    QRectF phasesRect(rect.x() + side, rect.y() + top + 2*mEltsMargin + mTitleHeight + mThumbH, rect.width() - 2*side, mPhasesHeight);
+    
+    phasesRect.adjust(1, 1, -1, -1);
     
     // Name
-    
-    QRectF tr(r.x() + mBorderWidth + mEltsMargin,
-              r.y() + mBorderWidth + mEltsMargin,
-              r.width() - 2*mBorderWidth - 2*mEltsMargin,
-              mTitleHeight);
     
     QFont font = qApp->font();
     painter->setFont(font);
     QFontMetrics metrics(font);
     QString name = mEvent[STATE_EVENT_NAME].toString();
-    name = metrics.elidedText(name, Qt::ElideRight, tr.width());
+    name = metrics.elidedText(name, Qt::ElideRight, nameRect.width());
     
     QColor frontColor = getContrastedColor(eventColor);
     painter->setPen(frontColor);
-    painter->drawText(tr, Qt::AlignCenter, name);
+    painter->drawText(nameRect, Qt::AlignCenter, name);
+    
+    // Thumb
+    
+    painter->drawPixmap(thumbRect, mThumb, mThumb.rect());
+    
+    // Phases
+    
+    QJsonArray phases = getPhases();
+    int numPhases = (int)phases.size();
+    float w = phasesRect.width()/numPhases;
+    
+    for(int i=0; i<numPhases; ++i)
+    {
+        QJsonObject phase = phases[i].toObject();
+        QColor c(phase[STATE_PHASE_RED].toInt(),
+                 phase[STATE_PHASE_GREEN].toInt(),
+                 phase[STATE_PHASE_BLUE].toInt());
+        painter->setPen(c);
+        painter->setBrush(c);
+        painter->drawRect(phasesRect.x() + i*w, phasesRect.y(), w, phasesRect.height());
+    }
+    
+    if(numPhases == 0)
+    {
+        QFont font = qApp->font();
+        font.setPointSizeF(pointSize(11));
+        painter->setFont(font);
+        painter->fillRect(phasesRect, QColor(0, 0, 0, 180));
+        painter->setPen(QColor(200, 200, 200));
+        painter->drawText(phasesRect, Qt::AlignCenter, tr("No Phase"));
+    }
+    
+    painter->setPen(QColor(0, 0, 0));
+    painter->setBrush(Qt::NoBrush);
+    painter->drawRect(phasesRect);
+    
+    if(mGreyedOut)
+    {
+        painter->setPen(Painting::greyedOut);
+        painter->setBrush(Painting::greyedOut);
+        painter->drawEllipse(boundingRect());
+    }
 }
 
 void EventKnownItem::dropEvent(QGraphicsSceneDragDropEvent* e)

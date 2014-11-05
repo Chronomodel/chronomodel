@@ -3,19 +3,22 @@
 #include <QtWidgets>
 
 
-Button::Button(QWidget* parent):QPushButton(parent)
+Button::Button(QWidget* parent):QAbstractButton(parent)
 {
     init();
 }
 
-Button::Button(const QString& text, QWidget* parent):QPushButton(text, parent)
+Button::Button(const QString& text, QWidget* parent):QAbstractButton(parent)
 {
+    setText(text);
     init();
 }
 
 void Button::init()
 {
     setCursor(Qt::PointingHandCursor);
+    setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
+    
     mFlatVertical = false;
     mFlatHorizontal = false;
 }
@@ -23,6 +26,11 @@ void Button::init()
 Button::~Button()
 {
 
+}
+
+QSize Button::sizeHint() const
+{
+    return QSize(50, 25);
 }
 
 void Button::setFlatVertical()
@@ -69,8 +77,8 @@ void Button::paintEvent(QPaintEvent* e)
         {
             //gradColTop = QColor(20, 20, 20);
             //gradColBot = QColor(10, 10, 10);
-            gradColTop = mainColorDark;
-            gradColBot = mainColorDark;
+            gradColTop = Painting::mainColorDark;
+            gradColBot = Painting::mainColorDark;
             gradLineLight = QColor(30, 30, 30);
             gradLineDark = QColor(10, 10, 10);
         }

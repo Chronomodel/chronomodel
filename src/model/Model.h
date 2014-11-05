@@ -22,7 +22,7 @@ public:
     void copyFrom(const Model& model);
     virtual ~Model();
 
-    static Model fromJson(const QJsonObject& json);
+    static Model* fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
     
     bool isValid();

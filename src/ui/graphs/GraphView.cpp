@@ -448,6 +448,11 @@ void GraphView::paint(QPainter& painter, int w, int h)
         painter.drawText(mMarginLeft + 5, mMarginTop + 5, mGraphWidth - 10, 15, Qt::AlignRight | Qt::AlignTop, infos);
     }
     
+    // Border
+    painter.setBrush(Qt::NoBrush);
+    painter.setPen(QColor(120, 120, 120));
+    painter.drawRect(mMarginLeft, mMarginTop, mGraphWidth, mGraphHeight);
+    
     // tip
     if(mTipVisible)
     {

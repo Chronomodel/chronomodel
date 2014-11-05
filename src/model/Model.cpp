@@ -40,20 +40,20 @@ Model::~Model()
 }
 
 
-Model Model::fromJson(const QJsonObject& json)
+Model* Model::fromJson(const QJsonObject& json)
 {
-    Model model;
+    Model* model = new Model();
     
     if(json.contains("settings"))
     {
         QJsonObject settings = json["settings"].toObject();
-        model.mSettings = ProjectSettings::fromJson(settings);
+        model->mSettings = ProjectSettings::fromJson(settings);
     }
     
     if(json.contains("mcmc"))
     {
         QJsonObject mcmc = json["mcmc"].toObject();
-        model.mMCMCSettings = MCMCSettings::fromJson(mcmc);
+        model->mMCMCSettings = MCMCSettings::fromJson(mcmc);
     }
     
     if(json.contains("phases"))
@@ -63,7 +63,7 @@ Model Model::fromJson(const QJsonObject& json)
         {
             QJsonObject phase = phases[i].toObject();
             Phase p = Phase::fromJson(phase);
-            model.mPhases.append(p);
+            model->mPhases.append(p);
         }
     }
     
@@ -76,12 +76,12 @@ Model Model::fromJson(const QJsonObject& json)
             if(event[STATE_EVENT_TYPE].toInt() == Event::eDefault)
             {
                 Event e = Event::fromJson(event);
-                model.mEvents.append(e);
+                model->mEvents.append(e);
             }
             else
             {
                 EventKnown e = EventKnown::fromJson(event);
-                model.mEvents.append(e);
+                model->mEvents.append(e);
             }
         }
     }
@@ -93,7 +93,7 @@ Model Model::fromJson(const QJsonObject& json)
         {
             QJsonObject constraint = constraints[i].toObject();
             EventConstraint c = EventConstraint::fromJson(constraint);
-            model.mEventConstraints.append(c);
+            model->mEventConstraints.append(c);
         }
     }
     
@@ -104,9 +104,47 @@ Model Model::fromJson(const QJsonObject& json)
         {
             QJsonObject constraint = constraints[i].toObject();
             PhaseConstraint c = PhaseConstraint::fromJson(constraint);
-            model.mPhaseConstraints.append(c);
+            model->mPhaseConstraints.append(c);
         }
     }
+    
+    // ------------------------------------------------------------
+    //  Link objects to each other
+    //  Must be done here !
+    // ------------------------------------------------------------
+    for(int i=0; i<model->mEvents.size(); ++i)
+    {
+        QList<int> phasesIds = model->mEvents[i].mPhasesIds;
+        qDebug() << model->mEvents[i].mPhasesIds;
+        for(int j=0; j<model->mPhases.size(); ++j)
+        {
+            int phaseId = model->mPhases[i].mId;
+            if(phasesIds.contains(phaseId))
+            {
+                model->mEvents[i].mPhases.append(&(model->mPhases[j]));
+                model->mPhases[j].mEvents.append(&(model->mEvents[i]));
+            }
+        }
+    }
+    
+    
+    qDebug() << "===========================================";
+    qDebug() << "MODEL CREATED";
+    qDebug() << "===========================================";
+    qDebug() << "=> Events : " << model->mEvents.size();
+    for(int i=0; i<model->mEvents.size(); ++i)
+    {
+        qDebug() << "  => Event " << model->mEvents[i].mId << " : " << model->mEvents[i].mPhases.size() << " phases";
+    }
+    qDebug() << "=> Phases : " << model->mPhases.size();
+    for(int i=0; i<model->mPhases.size(); ++i)
+    {
+        qDebug() << "  => Phase " << model->mPhases[i].mId << " : " << model->mPhases[i].mEvents.size() << " events";
+    }
+    qDebug() << "=> Event Constraints : " << model->mEventConstraints.size();
+    qDebug() << "=> Phase Constraints : " << model->mPhaseConstraints.size();
+    qDebug() << "===========================================";
+    
     return model;
 }
 

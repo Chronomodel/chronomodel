@@ -41,7 +41,8 @@
 Project::Project():
 mName(tr("Chronomodel Project")),
 mProjectFileDir(""),
-mProjectFileName(QObject::tr("Untitled"))
+mProjectFileName(QObject::tr("Untitled")),
+mModel(0)
 {
     initState();
     
@@ -1421,14 +1422,16 @@ void Project::exportAsText()
 #pragma mark Run Project
 void Project::run()
 {
-    mModels.clear();
+    emit mcmcStarted();
     
-    Model model = Model::fromJson(mState);
+    if(mModel)
+        delete mModel;
+    mModel = Model::fromJson(mState);
     
     bool modelOk = false;
     try
     {
-        modelOk = model.isValid();
+        modelOk = mModel->isValid();
     }
     catch(QString error)
     {
@@ -1442,14 +1445,11 @@ void Project::run()
     }
     if(modelOk)
     {
-        emit mcmcStarted();
-        
-        mModels.append(model);
-        MCMCLoopMain loop(mModels[0]);
+        MCMCLoopMain loop(mModel);
         MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::Sheet);
         if(dialog.startMCMC() == QDialog::Accepted)
         {
-            emit mcmcFinished(mModels[0]);
+            emit mcmcFinished(mModel);
         }
     }
 }

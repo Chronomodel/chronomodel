@@ -20,7 +20,7 @@ PhasesScene::~PhasesScene()
 #pragma mark Actions
 void PhasesScene::deleteSelectedItems()
 {
-    ProjectManager::getProject()->deleteSelectedEvents();
+    ProjectManager::getProject()->deleteSelectedPhases();
 }
 
 void PhasesScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)

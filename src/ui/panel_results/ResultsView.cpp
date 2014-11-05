@@ -6,9 +6,8 @@
 #include "Tabs.h"
 #include "Ruler.h"
 #include "ZoomControls.h"
-#include "ResultsControls.h"
-#include "ResultsScroller.h"
-#include "ResultsMarker.h"
+#include "Marker.h"
+#include "ScrollCompressor.h"
 
 #include "Date.h"
 #include "Event.h"
@@ -29,14 +28,15 @@
 
 
 ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
+mModel(0),
 mMargin(5),
 mOptionsW(200),
 mLineH(15),
-mGraphLeft(150),
+mGraphLeft(130),
 mRulerH(40),
 mTabsH(25),
-mHasPhases(false),
-mShowPhasesScene(true)
+mGraphsH(100),
+mHasPhases(false)
 {
     //Project* project = ProjectManager::getProject();
     //ProjectSettings s = ProjectSettings::fromJson(project->state()[STATE_SETTINGS].toObject());
@@ -58,37 +58,42 @@ mShowPhasesScene(true)
     mRuler->showControls(false);
     
     mStack = new QStackedWidget(this);
-    mResultsScrollerPhases = new ResultsScroller();
-    mResultsScrollerEvents = new ResultsScroller();
-    mStack->addWidget(mResultsScrollerPhases);
-    mStack->addWidget(mResultsScrollerEvents);
     
-    mMarker = new ResultsMarker(this);
+    mEventsScrollArea = new QScrollArea();
+    mEventsScrollArea->setMouseTracking(true);
+    mStack->addWidget(mEventsScrollArea);
+    
+    mPhasesScrollArea = new QScrollArea();
+    mPhasesScrollArea->setMouseTracking(true);
+    mStack->addWidget(mPhasesScrollArea);
+    
+    mTimer = new QTimer();
+    mTimer->setSingleShot(true);
+    connect(mTimer, SIGNAL(timeout()), this, SLOT(updateScrollHeights()));
+    
+    mMarker = new Marker(this);
     
     setMouseTracking(true);
     mStack->setMouseTracking(true);
-    mResultsScrollerPhases->setMouseTracking(true);
-    mResultsScrollerEvents->setMouseTracking(true);
     
-    connect(mRuler, SIGNAL(zoomChanged(float, float)), mResultsScrollerPhases, SLOT(zoom(float, float)));
-    connect(mRuler, SIGNAL(zoomChanged(float, float)), mResultsScrollerEvents, SLOT(zoom(float, float)));
+    connect(mRuler, SIGNAL(zoomChanged(float, float)), this, SLOT(setGraphZoom(float, float)));
     
     // ----------
     
-    mPhasesSceneBut = new Button(tr("By phases"), this);
-    mPhasesSceneBut->setCheckable(true);
-    mPhasesSceneBut->setChecked(true);
-    mPhasesSceneBut->setAutoExclusive(true);
-    mPhasesSceneBut->setFlatHorizontal();
+    mByPhasesBut = new Button(tr("By phases"), this);
+    mByPhasesBut->setCheckable(true);
+    mByPhasesBut->setChecked(true);
+    mByPhasesBut->setAutoExclusive(true);
+    mByPhasesBut->setFlatHorizontal();
     
-    mEventsSceneBut = new Button(tr("By events"), this);
-    mEventsSceneBut->setCheckable(true);
-    mEventsSceneBut->setChecked(false);
-    mEventsSceneBut->setAutoExclusive(true);
-    mEventsSceneBut->setFlatHorizontal();
+    mByEventsBut = new Button(tr("By events"), this);
+    mByEventsBut->setCheckable(true);
+    mByEventsBut->setChecked(false);
+    mByEventsBut->setAutoExclusive(true);
+    mByEventsBut->setFlatHorizontal();
     
-    connect(mPhasesSceneBut, SIGNAL(toggled(bool)), this, SLOT(showPhasesScene(bool)));
-    connect(mEventsSceneBut, SIGNAL(toggled(bool)), this, SLOT(showEventsScene(bool)));
+    connect(mByPhasesBut, SIGNAL(toggled(bool)), this, SLOT(showByPhases(bool)));
+    connect(mByEventsBut, SIGNAL(toggled(bool)), this, SLOT(showByEvents(bool)));
     
     // ----------
     
@@ -126,9 +131,9 @@ mShowPhasesScene(true)
     mChainsTitle = new Label(tr("MCMC Chains"));
     mChainsTitle->setIsTitle(true);
     mChainsGroup = new QWidget();
-    mAllChainsCheck = new CheckBox(tr("Chains Sum (histos only)"), mChainsGroup);
+    mAllChainsCheck = new CheckBox(tr("Chains concatenation"), mChainsGroup);
     mAllChainsCheck->setChecked(true);
-    mChainsGroup->setFixedHeight(2*mMargin + 1*mLineH);
+    mChainsGroup->setFixedHeight(2*mMargin + mLineH);
     
     connect(mAllChainsCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     
@@ -137,9 +142,9 @@ mShowPhasesScene(true)
     mPhasesTitle = new Label(tr("Phases results"));
     mPhasesTitle->setIsTitle(true);
     mPhasesGroup = new QWidget();
-    mAlphaCheck = new CheckBox(tr("Start"), mPhasesGroup);
+    mAlphaCheck = new CheckBox(tr("Begin"), mPhasesGroup);
     mBetaCheck = new CheckBox(tr("End"), mPhasesGroup);
-    mPredictCheck = new CheckBox(tr("Predict"), mPhasesGroup);
+    mPredictCheck = new CheckBox(tr("Phase"), mPhasesGroup);
     mAlphaCheck->setChecked(true);
     mBetaCheck->setChecked(true);
     mPredictCheck->setChecked(false);
@@ -154,10 +159,10 @@ mShowPhasesScene(true)
     mDataTitle = new Label(tr("Data results"));
     mDataTitle->setIsTitle(true);
     mDataGroup = new QWidget();
-    mDataThetaRadio = new RadioButton(tr("Date"), mDataGroup);
-    mDataSigmaRadio = new RadioButton(tr("Variance / event"), mDataGroup);
-    mDataDeltaRadio = new RadioButton(tr("Wiggle"), mDataGroup);
-    mDataCalibCheck = new CheckBox(tr("Calibration"), mDataGroup);
+    mDataThetaRadio = new RadioButton(tr("Distribution"), mDataGroup);
+    mDataSigmaRadio = new RadioButton(tr("Variance history"), mDataGroup);
+    mDataDeltaRadio = new RadioButton(tr("Wiggle maching"), mDataGroup);
+    mDataCalibCheck = new CheckBox(tr("Distrib. of calib. dates"), mDataGroup);
     mDataThetaRadio->setChecked(true);
     mDataCalibCheck->setChecked(true);
     mDataGroup->setFixedHeight(5*mMargin + 4*mLineH);
@@ -166,6 +171,33 @@ mShowPhasesScene(true)
     connect(mDataCalibCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     connect(mDataSigmaRadio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     connect(mDataDeltaRadio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+    
+    // -------------------------
+    
+    mDisplayTitle = new Label(tr("Display options"));
+    mDisplayTitle->setIsTitle(true);
+    
+    mCompressor = new ScrollCompressor(this);
+    mCompressor->setVertical(false);
+    
+    mUnfoldBut = new Button(tr("Unfold results"));
+    mUnfoldBut->setCheckable(true);
+    
+    mInfosBut = new Button(tr("Numerical results"));
+    mInfosBut->setCheckable(true);
+    
+    mDisplayWidget = new QWidget();
+    QVBoxLayout* displayLayout = new QVBoxLayout();
+    displayLayout->setContentsMargins(mMargin, mMargin, mMargin, mMargin);
+    displayLayout->setSpacing(mMargin);
+    displayLayout->addWidget(mCompressor);
+    displayLayout->addWidget(mUnfoldBut);
+    displayLayout->addWidget(mInfosBut);
+    mDisplayWidget->setLayout(displayLayout);
+    
+    connect(mCompressor, SIGNAL(valueChanged(float)), this, SLOT(compress(float)));
+    connect(mUnfoldBut, SIGNAL(toggled(bool)), this, SLOT(unfoldResults(bool)));
+    connect(mInfosBut, SIGNAL(toggled(bool)), this, SLOT(showInfos(bool)));
     
     // -------------------------
     
@@ -181,6 +213,8 @@ mShowPhasesScene(true)
     optionsLayout->addWidget(mDataGroup);
     optionsLayout->addWidget(mPhasesTitle);
     optionsLayout->addWidget(mPhasesGroup);
+    optionsLayout->addWidget(mDisplayTitle);
+    optionsLayout->addWidget(mDisplayWidget);
     optionsLayout->addStretch();
     mOptionsWidget->setLayout(optionsLayout);
     
@@ -188,7 +222,7 @@ mShowPhasesScene(true)
     
     Project* project = ProjectManager::getProject();
     connect(project, SIGNAL(mcmcStarted()), this, SLOT(clearResults()));
-    connect(project, SIGNAL(mcmcFinished(const Model&)), this, SLOT(updateResults(const Model&)));
+    connect(project, SIGNAL(mcmcFinished(Model*)), this, SLOT(updateResults(Model*)));
     //connect(project, SIGNAL(eventPropsUpdated(Event*)), this, SLOT(updateResults()));
     
     mMarker->raise();
@@ -202,11 +236,8 @@ ResultsView::~ResultsView()
 void ResultsView::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
-    
     QPainter p(this);
-    
-    p.fillRect(0, 0, mGraphLeft, mRulerH, QColor(220, 220, 220));
-    p.fillRect(width() - mOptionsW, 0, mOptionsW, height() - mRulerH, QColor(220, 220, 220));
+    p.fillRect(width() - mOptionsW, 0, mOptionsW, height(), QColor(220, 220, 220));
 }
 
 void ResultsView::mouseMoveEvent(QMouseEvent* e)
@@ -223,19 +254,75 @@ void ResultsView::resizeEvent(QResizeEvent* e)
     updateLayout();
 }
 
+QList<QRect> ResultsView::getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases)
+{
+    QList<QRect> rects;
+    int y = 0;
+    int h = mGraphsH;
+    int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
+    
+    for(int i=0; i<graphs.size(); ++i)
+    {
+        QRect rect = graphs[i]->geometry();
+        rect.setY(y);
+        rect.setWidth(width() - mOptionsW - sbe);
+        
+        if(byPhases)
+        {
+            GraphViewPhase* graph = dynamic_cast<GraphViewPhase*>(graphs[i]);
+            rect.setHeight((graph || open) ? h : 0);
+        }
+        else
+        {
+            GraphViewEvent* graph = dynamic_cast<GraphViewEvent*>(graphs[i]);
+            rect.setHeight((graph || open) ? h : 0);
+        }
+        y += rect.height();
+        rects.append(rect);
+    }
+    return rects;
+}
+
 void ResultsView::updateLayout()
 {
     int m = mMargin;
     int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     int dx = mLineH + m;
+    int graphYAxis = 50;
     
-    mPhasesSceneBut->setGeometry(0, 0, mGraphLeft/2, mRulerH);
-    mEventsSceneBut->setGeometry(mGraphLeft/2, 0, mGraphLeft/2, mRulerH);
+    mByPhasesBut->setGeometry(0, 0, mGraphLeft/2, mRulerH);
+    mByEventsBut->setGeometry(mGraphLeft/2, 0, mGraphLeft/2, mRulerH);
     
-    mTabs->setGeometry(mGraphLeft, 0, width() - mGraphLeft - mOptionsW - sbe, mTabsH);
-    mRuler->setGeometry(mGraphLeft, mTabsH, width() - mGraphLeft - mOptionsW - sbe, mRulerH);
+    mTabs->setGeometry(mGraphLeft + graphYAxis, 0, width() - mGraphLeft - mOptionsW - sbe - graphYAxis, mTabsH);
+    mRuler->setGeometry(mGraphLeft + graphYAxis, mTabsH, width() - mGraphLeft - mOptionsW - sbe - graphYAxis, mRulerH);
     mStack->setGeometry(0, mTabsH + mRulerH, width() - mOptionsW, height() - mRulerH - mTabsH);
     mMarker->setGeometry(mMarker->pos().x(), mTabsH + sbe, mMarker->thickness(), height() - sbe - mTabsH);
+    
+    if(QWidget* wid = mEventsScrollArea->widget())
+    {
+        QList<QRect> geometries = getGeometries(mByEventsGraphs, mUnfoldBut->isChecked(), false);
+        int h = 0;
+        for(int i=0; i<mByEventsGraphs.size(); ++i)
+        {
+            mByEventsGraphs[i]->setGeometry(geometries[i]);
+            h += geometries[i].height();
+        }
+        wid->setFixedSize(width() - sbe - mOptionsW, h);
+        qDebug() << "Graph events viewport : " << wid->geometry();
+    }
+    
+    if(QWidget* wid = mPhasesScrollArea->widget())
+    {
+        QList<QRect> geometries = getGeometries(mByPhasesGraphs, mUnfoldBut->isChecked(), true);
+        int h = 0;
+        for(int i=0; i<mByPhasesGraphs.size(); ++i)
+        {
+            mByPhasesGraphs[i]->setGeometry(geometries[i]);
+            h += geometries[i].height();
+        }
+        wid->setFixedSize(width() - sbe - mOptionsW, h);
+        qDebug() << "Graph phases viewport : " << wid->geometry();
+    }
     
     mHPDEdit->setGeometry(width() - mOptionsW - sbe - m - 40, m, 40, mLineH);
     mHPDCheck->setGeometry(width() - mOptionsW - sbe - 2*m - 40 - 50, m, 50, mLineH);
@@ -249,11 +336,18 @@ void ResultsView::updateLayout()
     mZoomOutBut->setGeometry(2*zw, 0, zw, zh);
     
     int numChains = mCheckChainChecks.size();
-    mChainsGroup->setFixedHeight(m + (numChains+1) * (mLineH + m));
-    mAllChainsCheck->setGeometry(m, m, mChainsGroup->width()-2*m, mLineH);
-    for(int i=0; i<numChains; ++i)
+    if(mTabs->currentIndex() == 0)
     {
-        mCheckChainChecks[i]->setGeometry(m, m + (i+1) * (mLineH + m), mChainsGroup->width()-2*m, mLineH);
+        mChainsGroup->setFixedHeight(m + (numChains+1) * (mLineH + m));
+        mAllChainsCheck->setGeometry(m, m, mChainsGroup->width()-2*m, mLineH);
+        for(int i=0; i<numChains; ++i)
+            mCheckChainChecks[i]->setGeometry(m, m + (i+1) * (mLineH + m), mChainsGroup->width()-2*m, mLineH);
+    }
+    else
+    {
+        mChainsGroup->setFixedHeight(m + numChains * (mLineH + m));
+        for(int i=0; i<numChains; ++i)
+            mCheckChainChecks[i]->setGeometry(m, m + i * (mLineH + m), mChainsGroup->width()-2*m, mLineH);
     }
     
     mAlphaCheck->setGeometry(m, m, mPhasesGroup->width()-2*m, mLineH);
@@ -284,41 +378,58 @@ void ResultsView::updateGraphs()
         int max = s.mTmax;
         mRuler->setRange(min, max);
         
-        mResultsScrollerPhases->showPhasesHistos(mAlphaCheck->isChecked(),
-                                                 mBetaCheck->isChecked(),
-                                                 mPredictCheck->isChecked(),
-                                                 mAllChainsCheck->isChecked(),
-                                                 showChainList,
-                                                 mHPDCheck->isChecked(),
-                                                 mHPDEdit->text().toInt());
-        
-        mResultsScrollerPhases->showEventsHistos(mAllChainsCheck->isChecked(),
-                                                 showChainList,
-                                                 mHPDCheck->isChecked(),
-                                                 mHPDEdit->text().toInt());
-        
-        mResultsScrollerPhases->showDataHistos(mDataThetaRadio->isChecked(),
-                                               mDataSigmaRadio->isChecked(),
-                                               mDataDeltaRadio->isChecked(),
-                                               mDataCalibCheck->isChecked(),
-                                               mAllChainsCheck->isChecked(),
-                                               showChainList,
-                                               mHPDCheck->isChecked(),
-                                               mHPDEdit->text().toInt());
-        
-        mResultsScrollerEvents->showEventsHistos(mAllChainsCheck->isChecked(),
-                                                 showChainList,
-                                                 mHPDCheck->isChecked(),
-                                                 mHPDEdit->text().toInt());
-        
-        mResultsScrollerEvents->showDataHistos(mDataThetaRadio->isChecked(),
-                                               mDataSigmaRadio->isChecked(),
-                                               mDataDeltaRadio->isChecked(),
-                                               mDataCalibCheck->isChecked(),
-                                               mAllChainsCheck->isChecked(),
-                                               showChainList,
-                                               mHPDCheck->isChecked(),
-                                               mHPDEdit->text().toInt());
+        for(int i=0; i<mByPhasesGraphs.size(); ++i)
+        {
+            if(GraphViewPhase* graph = dynamic_cast<GraphViewPhase*>(mByPhasesGraphs[i]))
+            {
+                graph->showHisto(mAlphaCheck->isChecked(),
+                                 mBetaCheck->isChecked(),
+                                 mPredictCheck->isChecked(),
+                                 mAllChainsCheck->isChecked(),
+                                 showChainList,
+                                 mHPDCheck->isChecked(),
+                                 mHPDEdit->text().toInt());
+            }
+            else if(GraphViewEvent* graph = dynamic_cast<GraphViewEvent*>(mByPhasesGraphs[i]))
+            {
+                graph->showHisto(mAllChainsCheck->isChecked(),
+                                 showChainList,
+                                 mHPDCheck->isChecked(),
+                                 mHPDEdit->text().toInt());
+            }
+            else if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByPhasesGraphs[i]))
+            {
+                graph->showHisto(mDataThetaRadio->isChecked(),
+                                 mDataSigmaRadio->isChecked(),
+                                 mDataDeltaRadio->isChecked(),
+                                 mDataCalibCheck->isChecked(),
+                                 mAllChainsCheck->isChecked(),
+                                 showChainList,
+                                 mHPDCheck->isChecked(),
+                                 mHPDEdit->text().toInt());
+            }
+        }
+        for(int i=0; i<mByEventsGraphs.size(); ++i)
+        {
+            if(GraphViewEvent* graph = dynamic_cast<GraphViewEvent*>(mByEventsGraphs[i]))
+            {
+                graph->showHisto(mAllChainsCheck->isChecked(),
+                                 showChainList,
+                                 mHPDCheck->isChecked(),
+                                 mHPDEdit->text().toInt());
+            }
+            else if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByEventsGraphs[i]))
+            {
+                graph->showHisto(mDataThetaRadio->isChecked(),
+                                 mDataSigmaRadio->isChecked(),
+                                 mDataDeltaRadio->isChecked(),
+                                 mDataCalibCheck->isChecked(),
+                                 mAllChainsCheck->isChecked(),
+                                 showChainList,
+                                 mHPDCheck->isChecked(),
+                                 mHPDEdit->text().toInt());
+            }
+        }
     }
     else if(mTabs->currentIndex() == 1)
     {
@@ -327,24 +438,41 @@ void ResultsView::updateGraphs()
         
         mRuler->setRange(min, max);
         
-        mResultsScrollerPhases->showPhasesTraces(mAlphaCheck->isChecked(),
-                                                 mBetaCheck->isChecked(),
-                                                 mPredictCheck->isChecked(),
-                                                 showChainList);
-        
-        mResultsScrollerPhases->showEventsTraces(showChainList);
-        
-        mResultsScrollerPhases->showDataTraces(mDataThetaRadio->isChecked(),
-                                               mDataSigmaRadio->isChecked(),
-                                               mDataDeltaRadio->isChecked(),
-                                               showChainList);
-        
-        mResultsScrollerEvents->showEventsTraces(showChainList);
-        
-        mResultsScrollerEvents->showDataTraces(mDataThetaRadio->isChecked(),
-                                               mDataSigmaRadio->isChecked(),
-                                               mDataDeltaRadio->isChecked(),
-                                               showChainList);
+        for(int i=0; i<mByPhasesGraphs.size(); ++i)
+        {
+            if(GraphViewPhase* graph = dynamic_cast<GraphViewPhase*>(mByPhasesGraphs[i]))
+            {
+                graph->showTrace(mAlphaCheck->isChecked(),
+                                 mBetaCheck->isChecked(),
+                                 mPredictCheck->isChecked(),
+                                 showChainList);
+            }
+            else if(GraphViewEvent* graph = dynamic_cast<GraphViewEvent*>(mByPhasesGraphs[i]))
+            {
+                graph->showTrace(showChainList);
+            }
+            else if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByPhasesGraphs[i]))
+            {
+                graph->showTrace(mDataThetaRadio->isChecked(),
+                                 mDataSigmaRadio->isChecked(),
+                                 mDataDeltaRadio->isChecked(),
+                                 showChainList);
+            }
+        }
+        for(int i=0; i<mByEventsGraphs.size(); ++i)
+        {
+            if(GraphViewEvent* graph = dynamic_cast<GraphViewEvent*>(mByEventsGraphs[i]))
+            {
+                graph->showTrace(showChainList);
+            }
+            else if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByEventsGraphs[i]))
+            {
+                graph->showTrace(mDataThetaRadio->isChecked(),
+                                 mDataSigmaRadio->isChecked(),
+                                 mDataDeltaRadio->isChecked(),
+                                 showChainList);
+            }
+        }
     }
     else if(mTabs->currentIndex() == 2)
     {
@@ -353,32 +481,49 @@ void ResultsView::updateGraphs()
         
         mRuler->setRange(min, max);
         
-        mResultsScrollerPhases->showPhasesAccept(mAlphaCheck->isChecked(),
-                                                 mBetaCheck->isChecked(),
-                                                 mPredictCheck->isChecked(),
-                                                 showChainList);
-        
-        mResultsScrollerPhases->showEventsAccept(showChainList);
-        
-        mResultsScrollerPhases->showDataAccept(mDataThetaRadio->isChecked(),
-                                               mDataSigmaRadio->isChecked(),
-                                               mDataDeltaRadio->isChecked(),
-                                               showChainList);
-        
-        mResultsScrollerEvents->showEventsAccept(showChainList);
-        
-        mResultsScrollerEvents->showDataAccept(mDataThetaRadio->isChecked(),
-                                               mDataSigmaRadio->isChecked(),
-                                               mDataDeltaRadio->isChecked(),
-                                               showChainList);
+        for(int i=0; i<mByPhasesGraphs.size(); ++i)
+        {
+            if(GraphViewPhase* graph = dynamic_cast<GraphViewPhase*>(mByPhasesGraphs[i]))
+            {
+                graph->showAccept(mAlphaCheck->isChecked(),
+                                 mBetaCheck->isChecked(),
+                                 mPredictCheck->isChecked(),
+                                 showChainList);
+            }
+            else if(GraphViewEvent* graph = dynamic_cast<GraphViewEvent*>(mByPhasesGraphs[i]))
+            {
+                graph->showAccept(showChainList);
+            }
+            else if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByPhasesGraphs[i]))
+            {
+                graph->showAccept(mDataThetaRadio->isChecked(),
+                                 mDataSigmaRadio->isChecked(),
+                                 mDataDeltaRadio->isChecked(),
+                                 showChainList);
+            }
+        }
+        for(int i=0; i<mByEventsGraphs.size(); ++i)
+        {
+            if(GraphViewEvent* graph = dynamic_cast<GraphViewEvent*>(mByEventsGraphs[i]))
+            {
+                graph->showAccept(showChainList);
+            }
+            else if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByEventsGraphs[i]))
+            {
+                graph->showAccept(mDataThetaRadio->isChecked(),
+                                 mDataSigmaRadio->isChecked(),
+                                 mDataDeltaRadio->isChecked(),
+                                 showChainList);
+            }
+        }
     }
     update();
 }
 
 void ResultsView::clearResults()
 {
-    mEventsSceneBut->setVisible(false);
-    mPhasesSceneBut->setVisible(false);
+    mByEventsBut->setVisible(false);
+    mByPhasesBut->setVisible(false);
     
     for(int i=mCheckChainChecks.size()-1; i>=0; --i)
     {
@@ -389,22 +534,30 @@ void ResultsView::clearResults()
     }
     mCheckChainChecks.clear();
     
-    mResultsScrollerPhases->clear();
-    mResultsScrollerEvents->clear();
+    QWidget* eventsWidget = mEventsScrollArea->takeWidget();
+    if(eventsWidget)
+        delete eventsWidget;
+    
+    QWidget* phasesWidget = mPhasesScrollArea->takeWidget();
+    if(phasesWidget)
+        delete phasesWidget;
 }
 
-void ResultsView::updateResults(const Model& model)
+void ResultsView::updateResults(Model* model)
 {
     clearResults();
     
-    mRuler->setRange(model.mSettings.mTmin, model.mSettings.mTmax);
+    if(!model)
+        return;
     
-    mHasPhases = (model.mPhases.size() > 0);
+    mRuler->setRange(model->mSettings.mTmin, model->mSettings.mTmax);
     
-    mEventsSceneBut->setVisible(mHasPhases);
-    mPhasesSceneBut->setVisible(mHasPhases);
+    mHasPhases = (model->mPhases.size() > 0);
     
-    for(int i=0; i<(int)model.mMCMCSettings.mNumProcesses; ++i)
+    mByEventsBut->setVisible(mHasPhases);
+    mByPhasesBut->setVisible(mHasPhases);
+    
+    for(int i=0; i<(int)model->mMCMCSettings.mNumProcesses; ++i)
     {
         CheckBox* check = new CheckBox(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
         connect(check, SIGNAL(clicked()), this, SLOT(updateGraphs()));
@@ -415,143 +568,161 @@ void ResultsView::updateResults(const Model& model)
     // ----------------------------------------------------
     //  Phases View
     // ----------------------------------------------------
-    for(int p=0; p<(int)model.mPhases.size(); ++p)
+    
+    QWidget* phasesWidget = new QWidget();
+    phasesWidget->setMouseTracking(true);
+    
+    for(int p=0; p<(int)model->mPhases.size(); ++p)
     {
-        Phase* phase = (Phase*)&model.mPhases[p];
-        GraphViewPhase* graphPhase = new GraphViewPhase();
+        Phase* phase = (Phase*)&model->mPhases[p];
+        GraphViewPhase* graphPhase = new GraphViewPhase(phasesWidget);
+        graphPhase->setSettings(model->mSettings);
         graphPhase->setPhase(phase);
-        graphPhase->showUnfold(true, tr("Show Events"));
-        mResultsScrollerPhases->addElement(graphPhase);
+        mByPhasesGraphs.append(graphPhase);
         
         for(int i=0; i<(int)phase->mEvents.size(); ++i)
         {
-            Event* event = (Event*)&model.mEvents[i];
-            GraphViewEvent* graphEvent = new GraphViewEvent();
+            Event* event = (Event*)&model->mEvents[i];
+            GraphViewEvent* graphEvent = new GraphViewEvent(phasesWidget);
+            graphEvent->setSettings(model->mSettings);
             graphEvent->setEvent(event);
-            graphEvent->setVisibility(false);
-            graphEvent->setParentGraph(graphPhase);
-            graphEvent->showUnfold(true, tr("Show Data"));
-            mResultsScrollerPhases->addElement(graphEvent);
+            mByPhasesGraphs.append(graphEvent);
             
             for(int j=0; j<(int)event->mDates.size(); ++j)
             {
                 Date& date = event->mDates[j];
-                GraphViewDate* graphDate = new GraphViewDate();
+                GraphViewDate* graphDate = new GraphViewDate(phasesWidget);
+                graphDate->setSettings(model->mSettings);
                 graphDate->setDate(&date);
-                graphDate->setVisibility(false);
-                graphDate->setParentGraph(graphEvent);
-                mResultsScrollerPhases->addElement(graphDate);
+                graphDate->setColor(event->mColor);
+                mByPhasesGraphs.append(graphDate);
             }
         }
     }
+    mPhasesScrollArea->setWidget(phasesWidget);
     
     // ----------------------------------------------------
     //  Events View
     // ----------------------------------------------------
-    for(int i=0; i<(int)model.mEvents.size(); ++i)
+    
+    QWidget* eventsWidget = new QWidget();
+    eventsWidget->setMouseTracking(true);
+    
+    for(int i=0; i<(int)model->mEvents.size(); ++i)
     {
-        Event* event = (Event*)&model.mEvents[i];
-        GraphViewEvent* graphEvent = new GraphViewEvent();
+        Event* event = (Event*)&model->mEvents[i];
+        GraphViewEvent* graphEvent = new GraphViewEvent(eventsWidget);
+        graphEvent->setSettings(model->mSettings);
         graphEvent->setEvent(event);
-        graphEvent->showUnfold(true, tr("Show Data"));
-        mResultsScrollerEvents->addElement(graphEvent);
+        mByEventsGraphs.append(graphEvent);
         
         for(int j=0; j<(int)event->mDates.size(); ++j)
         {
             Date& date = event->mDates[j];
-            GraphViewDate* graphDate = new GraphViewDate();
+            GraphViewDate* graphDate = new GraphViewDate(eventsWidget);
+            graphDate->setSettings(model->mSettings);
             graphDate->setDate(&date);
-            graphDate->setVisibility(false);
-            graphDate->setParentGraph(graphEvent);
-            mResultsScrollerEvents->addElement(graphDate);
+            graphDate->setColor(event->mColor);
+            mByEventsGraphs.append(graphDate);
         }
     }
+    mEventsScrollArea->setWidget(eventsWidget);
     
-    if(mHasPhases && mPhasesSceneBut->isChecked())
+    
+    if(mHasPhases && mByPhasesBut->isChecked())
     {
-        mStack->setCurrentWidget(mResultsScrollerPhases);
+        mStack->setCurrentWidget(mPhasesScrollArea);
     }
     else
     {
-        mStack->setCurrentWidget(mResultsScrollerEvents);
-        mResultsScrollerEvents->setVisible(true);
+        mStack->setCurrentWidget(mEventsScrollArea);
     }
     
     updateLayout();
     updateGraphs();
 }
 
-void ResultsView::updateOptions()
+void ResultsView::unfoldResults(bool open)
 {
-    /*Project* project = ProjectManager::getProject();
+    QList<QRect> geometries = getGeometries(mByEventsGraphs, open, false);
+    for(int i=0; i<mByEventsGraphs.size(); ++i)
+        mByEventsGraphs[i]->toggle(geometries[i]);
+
+    geometries = getGeometries(mByPhasesGraphs, open, true);
+    for(int i=0; i<mByPhasesGraphs.size(); ++i)
+        mByPhasesGraphs[i]->toggle(geometries[i]);
     
-    double hpdThreshold = mHPDValueEdit->text().toInt() / 100.;
-    bool showHPD = mShowHPDCheck->isChecked();
-    
-    if(showHPD)
+    if(open)
+        updateScrollHeights();
+    else
     {
-        for(int i=0; i<(int)model.mEvents.size(); ++i)
-        {
-            Event* event = model.mEvents[i];
-            event->mTheta.generateHPD(1, hpdThreshold);
-            
-            for(int j=0; j<(int)event->mDates.size(); ++j)
-            {
-                Date* date = event->mDates[j];
-                date->mTheta.generateHPD(1, hpdThreshold);
-                date->mSigma.generateHPD(1, hpdThreshold);
-                //date->mDelta.generateHPD(1, hpdThreshold);
-            }
-        }
-        for(int i=0; i<(int)model.mPhases.size(); ++i)
-        {
-            Phase* phase = model.mPhases[i];
-            phase->mAlpha.generateHPD(1, hpdThreshold);
-            phase->mBeta.generateHPD(1, hpdThreshold);
-            phase->mThetaPredict.generateHPD(1, hpdThreshold);
-        }
+        //mTimer->start(200);
     }
-    
-    for(QList<GraphViewDate*>::iterator it = mDatesGraphs.begin(); it != mDatesGraphs.end(); ++it)
-    {
-        (*it)->refresh(showHPD);
-    }
-    
-    for(QList<GraphViewEvent*>::iterator it = mEventsGraphs.begin(); it != mEventsGraphs.end(); ++it)
-    {
-        (*it)->refresh(showHPD);
-    }
-    
-    for(QList<GraphViewPhase*>::iterator it = mPhasesGraphs.begin(); it != mPhasesGraphs.end(); ++it)
-    {
-        (*it)->refresh(showHPD);
-    }*/
 }
 
-void ResultsView::toggleInfos()
+void ResultsView::updateScrollHeights()
+{
+    if(QWidget* wid = mEventsScrollArea->widget())
+    {
+        QList<QRect> geometries = getGeometries(mByEventsGraphs, mUnfoldBut->isChecked(), false);
+        int h = 0;
+        for(int i=0; i<geometries.size(); ++i)
+            h += geometries[i].height();
+        wid->setFixedHeight(h);
+        qDebug() << "Graph events viewport : " << wid->geometry();
+    }
+    if(QWidget* wid = mPhasesScrollArea->widget())
+    {
+        QList<QRect> geometries = getGeometries(mByPhasesGraphs, mUnfoldBut->isChecked(), true);
+        int h = 0;
+        for(int i=0; i<geometries.size(); ++i)
+            h += geometries[i].height();
+        wid->setFixedHeight(h);
+        qDebug() << "Graph phases viewport : " << wid->geometry();
+    }
+}
+
+void ResultsView::showInfos(bool)
 {
     /*bool show = mInfosBut->isChecked();
-    
-    for(QList<GraphViewPhase*>::iterator it = mPhasesGraphs.begin(); it != mPhasesGraphs.end(); ++it)
-        (*it)->showInfos(show);
-    
-    for(QList<GraphViewEvent*>::iterator it = mEventsGraphs.begin(); it != mEventsGraphs.end(); ++it)
-        (*it)->showInfos(show);
-    
-    for(QList<GraphViewDate*>::iterator it = mDatesGraphs.begin(); it != mDatesGraphs.end(); ++it)
-        (*it)->showInfos(show);*/
+     
+     for(QList<GraphViewPhase*>::iterator it = mPhasesGraphs.begin(); it != mPhasesGraphs.end(); ++it)
+     (*it)->showInfos(show);
+     
+     for(QList<GraphViewEvent*>::iterator it = mEventsGraphs.begin(); it != mEventsGraphs.end(); ++it)
+     (*it)->showInfos(show);
+     
+     for(QList<GraphViewDate*>::iterator it = mDatesGraphs.begin(); it != mDatesGraphs.end(); ++it)
+     (*it)->showInfos(show);*/
 }
 
-void ResultsView::showPhasesScene(bool)
+void ResultsView::compress(float prop)
 {
-    mStack->setCurrentIndex(0);
+    float min = 20;
+    float max = 200;
+    mGraphsH = min + prop * (max - min);
+    updateLayout();
+}
+
+void ResultsView::setGraphZoom(float min, float max)
+{
+    for(int i=0; i<mByPhasesGraphs.size(); ++i)
+        mByPhasesGraphs[i]->zoom(min, max);
+        
+    for(int i=0; i<mByEventsGraphs.size(); ++i)
+        mByEventsGraphs[i]->zoom(min, max);
+}
+
+void ResultsView::showByPhases(bool)
+{
+    mStack->setCurrentWidget(mPhasesScrollArea);
     mPhasesTitle->setVisible(true);
     mPhasesGroup->setVisible(true);
 }
 
-void ResultsView::showEventsScene(bool)
+void ResultsView::showByEvents(bool)
 {
-    mStack->setCurrentIndex(1);
+    mStack->setCurrentWidget(mEventsScrollArea);
     mPhasesTitle->setVisible(false);
     mPhasesGroup->setVisible(false);
 }
@@ -560,8 +731,8 @@ void ResultsView::changeTab(int index)
 {
     mHPDCheck->setVisible(index == 0);
     mHPDEdit->setVisible(index == 0);
+    mAllChainsCheck->setVisible(index == 0);
     
-    //mChainsGroup->setVisible(true);
-    
+    updateLayout();
     updateGraphs();
 }
