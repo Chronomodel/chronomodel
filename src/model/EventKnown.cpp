@@ -147,14 +147,8 @@ void EventKnown::updateValues(float tmin, float tmax, float step)
 
 void EventKnown::updateTheta(float tmin, float tmax)
 {
-    float min = getMaxEventThetaBackward(tmin);
-    float max = getMinEventThetaForward(tmax);
-    
-    float minPhases = getMaxAlphaPhases(tmin);
-    float maxPhases = getMinBetaPhases(tmax);
-    
-    min = (minPhases > min) ? minPhases : min;
-    max = (maxPhases < max) ? maxPhases : max;
+    float min = getThetaMin(tmin);
+    float max = getThetaMax(tmax);
     
     switch(mKnownType)
     {

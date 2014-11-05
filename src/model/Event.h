@@ -49,13 +49,9 @@ public:
     
     Type type() const;
     
-    float getMaxEventThetaBackward(float defaultValue);
-    float getMinEventThetaForward(float defaultValue);
-    
-    float getMaxAlphaPhases(float defaultValue);
-    float getMinBetaPhases(float defaultValue);
-    
     void reset();
+    float getThetaMin(float defaultValue);
+    float getThetaMax(float defaultValue);
     virtual void updateTheta(float min, float max);
     
     // TODO : when creating an event from JSON, phases have to exists already to be able set pointers to them.

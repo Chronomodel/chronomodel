@@ -111,6 +111,7 @@ Model* Model::fromJson(const QJsonObject& json)
     // ------------------------------------------------------------
     //  Link objects to each other
     //  Must be done here !
+    //  nb : Les data sont déjà linkées aux events à leur création
     // ------------------------------------------------------------
     for(int i=0; i<model->mEvents.size(); ++i)
     {
@@ -124,7 +125,10 @@ Model* Model::fromJson(const QJsonObject& json)
                 model->mPhases[j].mEvents.append(&(model->mEvents[i]));
             }
         }
+        
+        // TODO : Link des contraintes de fait
     }
+    // TODO : Link des contraintes de phase
     
     
     qDebug() << "===========================================";
@@ -133,12 +137,17 @@ Model* Model::fromJson(const QJsonObject& json)
     qDebug() << "=> Events : " << model->mEvents.size();
     for(int i=0; i<model->mEvents.size(); ++i)
     {
-        qDebug() << "  => Event " << model->mEvents[i].mId << " : " << model->mEvents[i].mPhases.size() << " phases";
+        qDebug() << "  => Event " << model->mEvents[i].mId << " : " << model->mEvents[i].mPhases.size() << " phases"
+            << ", " << model->mEvents[i].mDates.size() << " dates"
+            << ", " << model->mEvents[i].mConstraintsBwd.size() << " const. back."
+            << ", " << model->mEvents[i].mConstraintsFwd.size() << " const. fwd.";
     }
     qDebug() << "=> Phases : " << model->mPhases.size();
     for(int i=0; i<model->mPhases.size(); ++i)
     {
-        qDebug() << "  => Phase " << model->mPhases[i].mId << " : " << model->mPhases[i].mEvents.size() << " events";
+        qDebug() << "  => Phase " << model->mPhases[i].mId << " : " << model->mPhases[i].mEvents.size() << " events"
+            << " : " << model->mPhases[i].mConstraintsBwd.size() << " const. back."
+            << " : " << model->mPhases[i].mConstraintsFwd.size() << " const. fwd.";
     }
     qDebug() << "=> Event Constraints : " << model->mEventConstraints.size();
     qDebug() << "=> Phase Constraints : " << model->mPhaseConstraints.size();

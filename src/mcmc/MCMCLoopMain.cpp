@@ -210,25 +210,15 @@ void MCMCLoopMain::initMCMC()
         verif = true;
         for(int i=0; i<events.size(); ++i)
         {
-            // ----------------------------------------------------------------
-            //  start = max des theta f en contrainte avant en tenant compte de leur phi éventuel.
-            //  Ces thetas peuvent etre dans des phases en contrainte avec la phase à laquelle on appartient
-            //  et aussi avoir un gap.
-            //  end : pareil de l'autre coté.
-            // ----------------------------------------------------------------
-            // Faux:
-            //double start = max(events[i].getMaxThetaOfStartEvents(t_min), events[i].getMaxThetaBeginOfPhases(t_min));
-            //double end = min(events[i].getMinThetaOfEndEvents(t_max), events[i].getMinThetaEndOfPhases(t_max));
-            
             Event& event = events[i];
             
-            double start = event.getMaxEventThetaBackward(t_min);
-            double end = event.getMinEventThetaForward(t_max);
+            double thetaMin = event.getThetaMin(t_min);
+            double thetaMax = event.getThetaMax(t_max);
             
-            if(event.mTheta.mX <= start || event.mTheta.mX >= end)
+            if(event.mTheta.mX <= thetaMin || event.mTheta.mX >= thetaMax)
             {
                 verif = false;
-                double theta = (start + end) / 2; // random_uniform mieux pour s'en sortir !!!
+                double theta = thetaMin + (thetaMin + thetaMax) / 2; // random_uniform mieux pour s'en sortir !!!
                 event.mTheta.mX = theta;
             }
         }

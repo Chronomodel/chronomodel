@@ -163,193 +163,33 @@ Event::Type Event::type() const
     return mType;
 }
 
-#pragma mark Utilities
-float Event::getMaxAlphaPhases(float defaultValue)
-{
-    float max = defaultValue;
-    for(int i=0; i<mPhases.size(); ++i)
-    {
-        float alpha = mPhases[i]->mAlpha.mX;
-        max = (alpha > max) ? alpha : max;
-    }
-    return max;
-}
-
-float Event::getMinBetaPhases(float defaultValue)
-{
-    float min = defaultValue;
-    for(int i=0; i<mPhases.size(); ++i)
-    {
-        float beta = mPhases[i]->mBeta.mX;
-        min = (beta < min) ? beta : min;
-    }
-    return min;
-}
-
-float Event::getMaxEventThetaBackward(float defaultValue)
-{
-    float thetaMax = defaultValue;
-    
-    // ------------------------------------------------------------------------------------
-    //  Max des thetas des faits en contrainte directe antérieure
-    // ------------------------------------------------------------------------------------
-    for(int i=0; i<mConstraintsBwd.size(); ++i)
-    {
-        float thetaf = mConstraintsBwd[i]->mEventFrom->mTheta.mX;
-        
-        // Check if event constraint is respected :
-        switch(mConstraintsBwd[i]->mPhiType)
-        {
-            // Pas utilisé pour l'instant
-            /*case EventConstraint::ePhiFixed:
-            {
-                thetaf = mTheta.mX - (*it)->mPhiFixed;
-                break;
-            }*/
-            case EventConstraint::ePhiRange:
-            {
-                thetaf = thetaf + mConstraintsBwd[i]->mPhiMin;
-                break;
-            }
-            case EventConstraint::ePhiUnknown:
-            default:
-                break;
-        }
-        thetaMax = std::max(thetaMax, thetaf);
-    }
-    // TODO : respecter phi max avec les contraintes forward
-    
-    // ------------------------------------------------------------------------------------
-    //  Itération sur les phases ??
-    // ------------------------------------------------------------------------------------
-    for(int i=0; i<mPhases.size(); ++i)
-    {
-        // ------------------------------------------------------------------------------------
-        //  Itération sur les contraintes de phases antérieures
-        // ------------------------------------------------------------------------------------
-        for(int j=0; j<mPhases[i]->mConstraintsBwd.size(); ++j)
-        {
-            PhaseConstraint* constraint = mPhases[i]->mConstraintsBwd[j];
-            // ------------------------------------------------------------------------------------
-            //  On teste uniquement le plus grand theta f de la phase
-            // ------------------------------------------------------------------------------------
-            float thetaf = constraint->mPhaseFrom->getMaxThetaEvents();
-            
-            // Check if phase constraint is respected :
-            switch(constraint->mGammaType)
-            {
-                case PhaseConstraint::eGammaFixed:
-                {
-                    thetaf = std::min(mTheta.mX - constraint->mGammaFixed, thetaf);
-                    break;
-                }
-                case PhaseConstraint::eGammaRange:
-                {
-                    thetaf = std::min(mTheta.mX - constraint->mGammaMin, thetaf);
-                    break;
-                }
-                case PhaseConstraint::eGammaUnknown:
-                default:
-                    break;
-            }
-            thetaMax = std::max(thetaMax, thetaf);
-        }
-    }
-    return thetaMax;
-}
-
-float Event::getMinEventThetaForward(float defaultValue)
-{
-    float thetaMin = defaultValue;
-    
-    // ------------------------------------------------------------------------------------
-    //  Min des thetas des faits en contrainte directe et qui nous suivent
-    // ------------------------------------------------------------------------------------
-    for(int i=0; i<mConstraintsFwd.size(); ++i)
-    {
-        EventConstraint* constraint = mConstraintsFwd[i];
-        
-        float thetaf = constraint->mEventTo->mTheta.mX;
-        
-        // Check if event constraint is respected :
-        switch(constraint->mPhiType)
-        {
-            case EventConstraint::ePhiFixed:
-            {
-                thetaf = std::max(mTheta.mX + constraint->mPhiFixed, thetaf);
-                break;
-            }
-            case EventConstraint::ePhiRange:
-            {
-                thetaf = std::max(mTheta.mX + constraint->mPhiMin, thetaf);
-                break;
-            }
-            case EventConstraint::ePhiUnknown:
-            default:
-                break;
-        }
-        thetaMin = std::min(thetaMin, thetaf);
-    }
-    // ------------------------------------------------------------------------------------
-    //  Itération sur les phases
-    // ------------------------------------------------------------------------------------
-    for(int i=0; i<mPhases.size(); ++i)
-    {
-        // ------------------------------------------------------------------------------------
-        //  Itération sur les contraintes de phases postérieures
-        // ------------------------------------------------------------------------------------
-        for(int j=0; j<mPhases[i]->mConstraintsFwd.size(); ++j)
-        {
-            PhaseConstraint* constraint = mPhases[i]->mConstraintsFwd[j];
-            // ------------------------------------------------------------------------------------
-            //  On teste uniquement le plus petit theta f de la phase
-            // ------------------------------------------------------------------------------------
-            float thetaf = constraint->mPhaseTo->getMinThetaEvents();
-            
-            // Check if phase constraint is respected :
-            switch(constraint->mGammaType)
-            {
-                case PhaseConstraint::eGammaFixed:
-                {
-                    thetaf = std::max(mTheta.mX + constraint->mGammaFixed, thetaf);
-                    break;
-                }
-                case PhaseConstraint::eGammaRange:
-                {
-                    thetaf = std::max(mTheta.mX + constraint->mGammaMin, thetaf);
-                    break;
-                }
-                case PhaseConstraint::eGammaUnknown:
-                default:
-                    break;
-            }
-            thetaMin = std::min(thetaMin, thetaf);
-        }
-    }
-    return thetaMin;
-}
-
-
 #pragma mark MCMC
 void Event::reset()
 {
     mTheta.reset();
 }
 
-void Event::updateTheta(float tmin, float tmax)
+float Event::getThetaMin(float defaultValue)
 {
     // ------------------------------------------------------------------
-    //  Déterminer la borne min
+    //  Déterminer la borne min courante pour le tirage de theta
     // ------------------------------------------------------------------
     
-    float min1 = tmin;
-    float min2 = getMaxEventThetaBackward(tmin);
+    float min1 = defaultValue;
+    
+    // Max des thetas des faits en contrainte directe antérieure
+    float min2 = defaultValue;
+    for(int i=0; i<mConstraintsBwd.size(); ++i)
+    {
+        float thetaf = mConstraintsBwd[i]->mEventFrom->mTheta.mX;
+        min2 = qMax(min2, thetaf);
+    }
     
     // Le fait appartient à une ou plusieurs phases.
     // Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
     // Il faut s'assurer d'être au-dessus du plus grand theta de la phase moins la durée
     // (on utilise la valeur courante de la durée pour cela puisqu'elle est échantillonnée)
-    float min3 = tmin;
+    float min3 = defaultValue;
     for(int i=0; i<mPhases.size(); ++i)
     {
         if(mPhases[i]->mTauType != Phase::eTauUnknown)
@@ -368,7 +208,7 @@ void Event::updateTheta(float tmin, float tmax)
     }
     
     // Contraintes des phases précédentes
-    float min4 = tmin;
+    float min4 = defaultValue;
     for(int i=0; i<mPhases.size(); ++i)
     {
         float thetaMax = 0;
@@ -389,18 +229,30 @@ void Event::updateTheta(float tmin, float tmax)
     float min_tmp2 = qMax(min3, min3);
     float min = qMax(min_tmp1, min_tmp2);
     
+    return min;
+}
+
+float Event::getThetaMax(float defaultValue)
+{
     // ------------------------------------------------------------------
     //  Déterminer la borne max
     // ------------------------------------------------------------------
     
-    float max1 = tmax;
-    float max2 = getMinEventThetaForward(tmax);
+    float max1 = defaultValue;
+    
+    // Min des thetas des faits en contrainte directe et qui nous suivent
+    float max2 = defaultValue;
+    for(int i=0; i<mConstraintsFwd.size(); ++i)
+    {
+        float thetaf = mConstraintsFwd[i]->mEventTo->mTheta.mX;
+        max2 = qMin(max2, thetaf);
+    }
     
     // Le fait appartient à une ou plusieurs phases.
     // Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
     // Il faut s'assurer d'être en-dessous du plus petit theta de la phase plus la durée
     // (on utilise la valeur courante de la durée pour cela puisqu'elle est échantillonnée)
-    float max3 = tmax;
+    float max3 = defaultValue;
     for(int i=0; i<mPhases.size(); ++i)
     {
         if(mPhases[i]->mTauType != Phase::eTauUnknown)
@@ -414,12 +266,12 @@ void Event::updateTheta(float tmin, float tmax)
                     thetaMin = qMin(event->mTheta.mX, thetaMin);
                 }
             }
-            min3 = qMin(min3, thetaMin + mPhases[i]->mTau.mX);
+            max3 = qMin(max3, thetaMin + mPhases[i]->mTau.mX);
         }
     }
     
     // Contraintes des phases suivantes
-    float max4 = tmax;
+    float max4 = defaultValue;
     for(int i=0; i<mPhases.size(); ++i)
     {
         float thetaMin = 0;
@@ -439,6 +291,14 @@ void Event::updateTheta(float tmin, float tmax)
     float max_tmp1 = qMax(max1, max2);
     float max_tmp2 = qMax(max3, max3);
     float max = qMax(max_tmp1, max_tmp2);
+    
+    return max;
+}
+
+void Event::updateTheta(float tmin, float tmax)
+{
+    float min = getThetaMin(tmin);
+    float max = getThetaMax(tmax);
     
     // -------------------------------------------------------------------------------------------------
     //  Evaluer theta.
