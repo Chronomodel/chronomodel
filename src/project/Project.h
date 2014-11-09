@@ -4,6 +4,7 @@
 #include "Settings.h"
 #include "ProjectSettings.h"
 #include "MCMCSettings.h"
+#include "MCMCLoopMain.h"
 #include "Model.h"
 
 #include <QObject>
@@ -124,7 +125,7 @@ signals:
     void selectedEventsChanged();
     
     void mcmcStarted();
-    void mcmcFinished(Model* model);
+    void mcmcFinished(MCMCLoopMain& loop);
     
 public:
     QJsonObject mState;

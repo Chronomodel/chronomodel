@@ -4,19 +4,21 @@
 #include <QDebug>
 
 
-MHVariable::MHVariable():mAcceptMHBatch(0),mAcceptMHTotal(0){}
+MHVariable::MHVariable():mLastAcceptsLength(0){}
 MHVariable::~MHVariable(){}
 
 bool MHVariable::tryUpdate(const double x, const double rapport)
 {
     if(rapport == 0)
         return false;
-        
+    
+    if(mLastAccepts.length() >= mLastAcceptsLength)
+        mLastAccepts.removeAt(0);
+    
     if(rapport >= 1)
     {
         mX = x;
-        ++mAcceptMHBatch;
-        ++mAcceptMHTotal;
+        mLastAccepts.append(true);
         return true;
     }
     else
@@ -25,36 +27,70 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
         if(rapport >= uniform)
         {
             mX = x;
-            ++mAcceptMHBatch;
-            ++mAcceptMHTotal;
+            mLastAccepts.append(true);
             return true;
         }
         else
+        {
+            mLastAccepts.append(false);
             return false;
+        }
     }
 }
 
 void MHVariable::reset()
 {
     MetropolisVariable::reset();
-    mAcceptMHBatch = 0;
-    mAcceptMHTotal = 0;
+    mLastAccepts.clear();
     mHistorySigmaMH.clear();
     mHistoryAcceptRateMH.clear();
 }
 
-
-QVector<float> MHVariable::acceptationForChain(int index, int numChains)
+float MHVariable::getCurrentAcceptRate()
 {
-    //return mHistoryAcceptRateMH;
+    float sum = 0.f;
+    for(int i=0; i<mLastAccepts.length(); ++i)
+        sum += mLastAccepts[i] ? 1.f : 0.f;
+    return sum / (float)mLastAccepts.length();
+}
+
+void MHVariable::saveCurrentAcceptRate()
+{
+    float rate = 100.f * getCurrentAcceptRate();
+    mHistoryAcceptRateMH.push_back(rate);
+    mHistorySigmaMH.push_back(mSigmaMH);
+}
+
+QMap<float, float> MHVariable::acceptationForChain(const QList<Chain>& chains, int index)
+{
+    QMap<float, float> accept;
+    int shift = 0;
     
-    int itersPerChain = mHistoryAcceptRateMH.size() / numChains;
-    int start = index * itersPerChain;
-    
-    QVector<float> accept;
-    for(int i=start; i<start + itersPerChain; ++i)
+    for(int i=0; i<chains.size(); ++i)
     {
-        accept.push_back(mHistoryAcceptRateMH[i]);
+        int acceptSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + (chains[i].mNumRunIter / chains[i].mThinningInterval);
+        
+        if(i == index)
+        {
+            for(int j=shift; j<shift + acceptSize; ++j)
+            {
+                int burnAdaptLen = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter);
+                int curIndex = j - shift;
+                
+                if(curIndex < burnAdaptLen)
+                    accept[curIndex] = mHistoryAcceptRateMH[j];
+                else
+                {
+                    int runIndex = burnAdaptLen + (curIndex - burnAdaptLen) * chains[i].mThinningInterval;
+                    accept[runIndex] = mHistoryAcceptRateMH[j];
+                }
+            }
+            break;
+        }
+        else
+        {
+            shift += acceptSize;
+        }
     }
     return accept;
 }

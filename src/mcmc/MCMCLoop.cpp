@@ -1,18 +1,12 @@
 #include "MCMCLoop.h"
 #include "Generator.h"
-#include <iostream>
-#include <QDebug.h>
-using namespace std;
+#include <QDebug>
+#include <QTime>
+
 
 MCMCLoop::MCMCLoop():
-mState(eBurning),
-mProcIndex(0),
-mBurnIterIndex(0),
-mBatchIterIndex(0),
-mBatchIndex(0),
-mRunIterIndex(0),
-mTotalIter(0),
-mFinalBatchIndex(0)
+mChainIndex(0),
+mState(eBurning)
 {
     
 }
@@ -22,89 +16,222 @@ MCMCLoop::~MCMCLoop()
     
 }
 
+void MCMCLoop::setSettings(const MCMCSettings& s)
+{
+    mChains.clear();
+    for(unsigned int i=0; i<s.mNumChains; ++i)
+    {
+        Chain chain;
+        //chain.mSeed = ;
+        chain.mNumBurnIter = s.mNumBurnIter;
+        chain.mBurnIterIndex = 0;
+        chain.mMaxBatchs = s.mMaxBatches;
+        chain.mNumBatchIter = s.mNumBatchIter;
+        chain.mBatchIterIndex = 0;
+        chain.mBatchIndex = 0;
+        chain.mNumRunIter = s.mNumRunIter;
+        chain.mRunIterIndex = 0;
+        chain.mTotalIter = 0;
+        chain.mThinningInterval = s.mThinningInterval;
+        mChains.append(chain);
+    }
+}
+
+const QList<Chain>& MCMCLoop::chains()
+{
+    return mChains;
+}
+
+const QString& MCMCLoop::getLog() const
+{
+    return mLog;
+}
+
 void MCMCLoop::run()
 {
-    mTotalIter = 0;
+    mLog = QString();
+    int timeDiff = 0;
     
-    this->initModel();
+    QTime startTotalTime = QTime::currentTime();
     
-    emit stepChanged(tr("Calibrating..."), 0, 0);
+    mLog += "\n################################################\n";
+    mLog += tr("MCMC START") + "\n";
+    mLog += "################################################\n";
+    
+    //----------------------- Calibrating --------------------------------------
+    
+    mLog += "------------------------------------------------\n";
+    mLog += tr("CALIBRATION") + "\n";
+    mLog += "------------------------------------------------\n";
+    
+    emit stepChanged(tr("Calibrating data..."), 0, 0);
+    
+    QTime startCalibTime = QTime::currentTime();
+    
     this->calibrate();
     
-    for(mProcIndex = 0; mProcIndex < mSettings.mNumChains; ++mProcIndex)
+    QTime endCalibTime = QTime::currentTime();
+    timeDiff = startCalibTime.msecsTo(endCalibTime);
+    mLog += "=> Calib done in " + QString::number(timeDiff) + " ms\n";
+    
+    //----------------------- Chains --------------------------------------
+    
+    for(mChainIndex = 0; mChainIndex < mChains.size(); ++mChainIndex)
     {
-        Generator::changeSeed();
+        mLog += "================================================\n";
+        mLog += tr("CHAIN") + " " + QString::number(mChainIndex + 1) + "\n";
+        mLog += "================================================\n";
         
-        mBurnIterIndex = 0;
-        mBatchIterIndex = 0;
-        mBatchIndex = 0;
-        mRunIterIndex = 0;
+        QTime startChainTime = QTime::currentTime();
         
-        emit stepChanged("Process " + QString::number(mProcIndex+1) + " " + tr("Initializing"), 0, 0);
+        Chain& chain = mChains[mChainIndex];
+        chain.mSeed = Generator::createSeed();
+        Generator::initGenerator(chain.mSeed);
+        
+        mLog += tr("Seed = ") + QString::number(chain.mSeed) + "\n";
+        
+        this->initVariablesForChain();
+        
+        //----------------------- Initializing --------------------------------------
+        
+        mLog += "------------------------------------------------\n";
+        mLog += tr("INIT") + "\n";
+        mLog += "------------------------------------------------\n";
+        
+        emit stepChanged("Chain " + QString::number(mChainIndex+1) + " : " + tr("Initializing MCMC"), 0, 0);
+        
+        QTime startInitTime = QTime::currentTime();
+        
         this->initMCMC();
+        
+        QTime endInitTime = QTime::currentTime();
+        timeDiff = startInitTime.msecsTo(endInitTime);
+        mLog += "=> Init done in " + QString::number(timeDiff) + " ms\n";
         
         //----------------------- Burning --------------------------------------
         
-        emit stepChanged("Process " + QString::number(mProcIndex+1) + " " + tr("Burning"), 0, mSettings.mNumBurnIter);
+        mLog += "------------------------------------------------\n";
+        mLog += tr("BURN") + "\n";
+        mLog += "------------------------------------------------\n";
+        
+        emit stepChanged("Chain " + QString::number(mChainIndex+1) + " : " + tr("Burning"), 0, chain.mNumBurnIter);
         mState = eBurning;
         
-        while(mBurnIterIndex < mSettings.mNumBurnIter)
+        QTime startBurnTime = QTime::currentTime();
+        
+        while(chain.mBurnIterIndex < chain.mNumBurnIter)
         {
             if(isInterruptionRequested())
                 return;
             
             this->update();
             
-            ++mBurnIterIndex;
-            ++mTotalIter;
+            ++chain.mBurnIterIndex;
+            ++chain.mTotalIter;
             
-            emit stepProgressed(mBurnIterIndex);
+            emit stepProgressed(chain.mBurnIterIndex);
         }
+        
+        QTime endBurnTime = QTime::currentTime();
+        timeDiff = startBurnTime.msecsTo(endBurnTime);
+        mLog += "=> Burn done in " + QString::number(timeDiff) + " ms\n";
         
         //----------------------- Adapting --------------------------------------
         
-        emit stepChanged("Process " + QString::number(mProcIndex+1) + " " + tr("Adapting"), 0, mSettings.mMaxBatches * mSettings.mIterPerBatch);
+        mLog += "------------------------------------------------\n";
+        mLog += tr("ADAPT") + "\n";
+        mLog += "------------------------------------------------\n";
+        
+        emit stepChanged("Chain " + QString::number(mChainIndex+1) + " : " + tr("Adapting"), 0, chain.mMaxBatchs * chain.mNumBatchIter);
         mState = eAdapting;
         
-        while(mBatchIndex * mSettings.mIterPerBatch < mSettings.mMaxBatches * mSettings.mIterPerBatch)
+        QTime startAdaptTime = QTime::currentTime();
+        
+        while(chain.mBatchIndex * chain.mNumBatchIter < chain.mMaxBatchs * chain.mNumBatchIter)
         {
-            mBatchIterIndex = 0;
-            while(mBatchIterIndex < mSettings.mIterPerBatch)
+            chain.mBatchIterIndex = 0;
+            while(chain.mBatchIterIndex < chain.mNumBatchIter)
             {
                 if(isInterruptionRequested())
                     return;
                 
                 this->update();
-                ++mBatchIterIndex;
-                ++mTotalIter;
-                emit stepProgressed(mBatchIndex * mSettings.mIterPerBatch + mBatchIterIndex);
+                
+                ++chain.mBatchIterIndex;
+                ++chain.mTotalIter;
+                
+                emit stepProgressed(chain.mBatchIndex * chain.mNumBatchIter + chain.mBatchIterIndex);
             }
-            ++mBatchIndex;
+            ++chain.mBatchIndex;
+            
             if(adapt())
             {
-                qDebug() << "Adaptation OK at batch " << mBatchIndex << "/" << mSettings.mMaxBatches;
+                mLog += "=> Adapt OK at batch " + QString::number(chain.mBatchIndex) + "/" + QString::number(chain.mMaxBatchs) + "\n";
                 break;
             }
         }
-        mFinalBatchIndex = mBatchIndex;
+        
+        QTime endAdaptTime = QTime::currentTime();
+        timeDiff = startAdaptTime.msecsTo(endAdaptTime);
+        mLog += "=> Adapt done in " + QString::number(timeDiff) + " ms\n";
         
         //----------------------- Running --------------------------------------
         
-        emit stepChanged("Process " + QString::number(mProcIndex+1) + " " + tr("Running"), 0, mSettings.mNumRunIter);
+        mLog += "------------------------------------------------\n";
+        mLog += tr("ACQUIRE") + "\n";
+        mLog += "------------------------------------------------\n";
+        
+        emit stepChanged("Chain " + QString::number(mChainIndex+1) + " : " + tr("Running"), 0, chain.mNumRunIter);
         mState = eRunning;
         
-        while(mRunIterIndex < mSettings.mNumRunIter)
+        QTime startRunTime = QTime::currentTime();
+        
+        while(chain.mRunIterIndex < chain.mNumRunIter)
         {
             if(isInterruptionRequested())
                 return;
             
             this->update();
-            ++mRunIterIndex;
-            ++mTotalIter;
-            emit stepProgressed(mRunIterIndex);
+            
+            ++chain.mRunIterIndex;
+            ++chain.mTotalIter;
+            
+            emit stepProgressed(chain.mRunIterIndex);
         }
+        
+        QTime endRunTime = QTime::currentTime();
+        timeDiff = startRunTime.msecsTo(endRunTime);
+        mLog += "=> Acquire done in " + QString::number(timeDiff) + " ms\n";
+        
+        //-----------------------------------------------------------------------
+        
+        QTime endChainTime = QTime::currentTime();
+        timeDiff = startChainTime.msecsTo(endChainTime);
+        mLog += "=> Chain done in " + QString::number(timeDiff) + " ms\n";
     }
     
+    mLog += "================================================\n\n";
+    
+    QTime endTotalTime = QTime::currentTime();
+    timeDiff = startTotalTime.msecsTo(endTotalTime);
+    mLog += "=> MCMC done in " + QString::number(timeDiff) + " ms\n";
+    
+    //-----------------------------------------------------------------------
+    
+    QTime startFinalizeTime = QTime::currentTime();
+    
     this->finalize();
+
+    QTime endFinalizeTime = QTime::currentTime();
+    timeDiff = startFinalizeTime.msecsTo(endFinalizeTime);
+    mLog += "=> Histos and results computed in " + QString::number(timeDiff) + " ms\n";
+    
+    mLog += "\n################################################\n";
+    mLog += tr("MCMC END") + "\n";
+    mLog += "################################################\n";
+    
+    //-----------------------------------------------------------------------
+    
+    qDebug() << mLog;
 }
 

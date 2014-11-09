@@ -13,14 +13,14 @@ public:
     ~MCMCLoopMain();
     
 protected:
-    virtual void initModel();
     virtual void calibrate();
+    virtual void initVariablesForChain();
     virtual void initMCMC();
     virtual void update();
     virtual bool adapt();
     virtual void finalize();
 
-protected:
+public:
     Model* mModel;
 };
 

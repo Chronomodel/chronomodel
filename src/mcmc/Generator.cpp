@@ -17,15 +17,15 @@ void Generator::initGenerator(const int seed)
     sGenerator = std::mt19937(seed);
 }
 
-void Generator::changeSeed()
+int Generator::createSeed()
 {
     // obtain a seed from the system clock:
-    //unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    // unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     
     // http://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
     
     std::random_device rd;
-    sGenerator = std::mt19937(rd());
+    return rd();
 }
 
 

@@ -2,8 +2,10 @@
 #define ProjectView_H
 
 #include <QWidget>
+#include "MCMCLoopMain.h"
 
 class QStackedWidget;
+class QTextEdit;
 class ModelView;
 class ResultsView;
 class Event;
@@ -20,12 +22,15 @@ public slots:
     void updateProject();
     void showModel();
     void showResults();
+    void showLog();
     void showHelp(bool show);
+    void updateLog(MCMCLoopMain& loop);
     
 private:
     QStackedWidget* mStack;
     ModelView* mModelView;
     ResultsView* mResultsView;
+    QTextEdit* mLogEdit;
 };
 
 #endif

@@ -3,6 +3,7 @@
 
 #include "ProjectSettings.h"
 #include "MCMCSettings.h"
+#include "MCMCLoop.h"
 
 #include <QWidget>
 #include <QList>
@@ -29,7 +30,7 @@ public:
     virtual ~GraphViewResults();
     
     void setSettings(const ProjectSettings& settings);
-    void setMCMCSettings(const MCMCSettings& mcmc);
+    void setMCMCSettings(const MCMCSettings& mcmc, const QList<Chain>& chains);
     
     void updateChains(bool showAll, const QList<bool>& showChainList);
     void updateHPD(bool show, int threshold);
@@ -76,6 +77,7 @@ protected:
     
     ProjectSettings mSettings;
     MCMCSettings mMCMCSettings;
+    QList<Chain> mChains;
     
     QColor mMainColor;
     

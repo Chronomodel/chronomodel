@@ -10,7 +10,7 @@
 class Generator
 {
 public:
-    static void changeSeed();
+    static int createSeed();
     static void initGenerator(const int seed);
     
     static float randomUniform(float min = 0., float max = 1.);

@@ -154,127 +154,67 @@ void GraphViewDate::refresh()
         }
         if(mCurrentResult == eTrace)
         {
-            mGraph->setRangeX(0, mMCMCSettings.mNumBurnIter + mMCMCSettings.mFinalBatchIndex * mMCMCSettings.mIterPerBatch + mMCMCSettings.mNumRunIter);
-            
-            // ------
-            
-            GraphZone zoneBurn;
-            zoneBurn.mXStart = 0;
-            zoneBurn.mXEnd = mMCMCSettings.mNumBurnIter;
-            zoneBurn.mColor = QColor(200, 200, 200);
-            zoneBurn.mText = "Burn";
-            mGraph->addZone(zoneBurn);
-            
-            GraphZone zoneAdapt;
-            zoneAdapt.mXStart = mMCMCSettings.mNumBurnIter;
-            zoneAdapt.mXEnd = mMCMCSettings.mNumBurnIter + mMCMCSettings.mFinalBatchIndex * mMCMCSettings.mIterPerBatch;
-            zoneAdapt.mColor = QColor(230, 230, 230);
-            zoneAdapt.mText = "Adapt";
-            mGraph->addZone(zoneAdapt);
-            
-            GraphZone zoneAquire;
-            zoneAquire.mXStart = mMCMCSettings.mNumBurnIter + mMCMCSettings.mFinalBatchIndex * mMCMCSettings.mIterPerBatch;
-            zoneAquire.mXEnd = mMCMCSettings.mNumBurnIter + mMCMCSettings.mFinalBatchIndex * mMCMCSettings.mIterPerBatch + mMCMCSettings.mNumRunIter;
-            zoneAquire.mColor = QColor(255, 255, 255);
-            zoneAquire.mText = "Aquire";
-            mGraph->addZone(zoneAquire);
-            
-            // ------
-            
-            MHVariable* variable = &(mDate->mTheta);
-            if(mVariable == eTheta) variable = &(mDate->mTheta);
-            else if(mVariable == eSigma) variable = &(mDate->mSigma);
-            else if(mVariable == eDelta) variable = &(mDate->mDelta);
-            
-            float min = 999999;
-            float max = -999999;
-            
+            int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
-            {
                 if(mShowChainList[i])
-                {
-                    QColor col = Painting::chainColors[i];
-                    
-                    GraphCurve curve;
-                    curve.mName = QString("trace chain " + QString::number(i));
-                    curve.mDataVector = variable->traceForChain(i, mShowChainList.size());
-                    curve.mUseVectorData = true;
-                    curve.mPen.setColor(Painting::chainColors[i]);
-                    mGraph->addCurve(curve);
-                    
-                    min = qMin(vector_min_value(curve.mDataVector), min);
-                    max = qMax(vector_max_value(curve.mDataVector), max);
-                }
+                    chainIdx = i;
+            
+            if(chainIdx != -1)
+            {
+                Chain& chain = mChains[chainIdx];
+                mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter);
+                
+                MHVariable* variable = &(mDate->mTheta);
+                if(mVariable == eTheta) variable = &(mDate->mTheta);
+                else if(mVariable == eSigma) variable = &(mDate->mSigma);
+                else if(mVariable == eDelta) variable = &(mDate->mDelta);
+                
+                GraphCurve curve;
+                curve.mName = QString("trace chain " + QString::number(chainIdx));
+                curve.mData = variable->traceForChain(mChains, chainIdx);
+                curve.mPen.setColor(Painting::chainColors[chainIdx]);
+                curve.mIsHisto = false;
+                mGraph->addCurve(curve);
+                
+                float min = map_min_value(curve.mData);
+                float max = map_max_value(curve.mData);
+                mGraph->setRangeY(floorf(min), ceilf(max));
             }
-            if(min < max)
-                mGraph->setRangeY(min, max);
-            else
-                mGraph->setRangeY(0, 1);
         }
         else if(mCurrentResult == eAccept)
         {
-            mGraph->setRangeX(0, mMCMCSettings.mNumBurnIter + mMCMCSettings.mFinalBatchIndex * mMCMCSettings.mIterPerBatch + mMCMCSettings.mNumRunIter);
-            mGraph->setRangeY(0, 100);
-            
-            // ------
-            
-            GraphZone zoneBurn;
-            zoneBurn.mXStart = 0;
-            zoneBurn.mXEnd = mMCMCSettings.mNumBurnIter;
-            zoneBurn.mColor = QColor(200, 200, 200);
-            zoneBurn.mText = "Burn";
-            mGraph->addZone(zoneBurn);
-            
-            GraphZone zoneAdapt;
-            zoneAdapt.mXStart = mMCMCSettings.mNumBurnIter;
-            zoneAdapt.mXEnd = mMCMCSettings.mNumBurnIter + mMCMCSettings.mFinalBatchIndex * mMCMCSettings.mIterPerBatch;
-            zoneAdapt.mColor = QColor(230, 230, 230);
-            zoneAdapt.mText = "Adapt";
-            mGraph->addZone(zoneAdapt);
-            
-            GraphZone zoneAquire;
-            zoneAquire.mXStart = mMCMCSettings.mNumBurnIter + mMCMCSettings.mFinalBatchIndex * mMCMCSettings.mIterPerBatch;
-            zoneAquire.mXEnd = mMCMCSettings.mNumBurnIter + mMCMCSettings.mFinalBatchIndex * mMCMCSettings.mIterPerBatch + mMCMCSettings.mNumRunIter;
-            zoneAquire.mColor = QColor(255, 255, 255);
-            zoneAquire.mText = "Aquire";
-            mGraph->addZone(zoneAquire);
-            
-            // ------
-            
-            MHVariable* variable = &(mDate->mTheta);
-            if(mVariable == eTheta) variable = &(mDate->mTheta);
-            else if(mVariable == eSigma) variable = &(mDate->mSigma);
-            else if(mVariable == eDelta) variable = &(mDate->mDelta);
-            
-            GraphCurve curveTarget;
-            curveTarget.mName = "target";
-            curveTarget.mIsHorizontalLine = true;
-            curveTarget.mHorizontalValue = 44;
-            curveTarget.mPen.setStyle(Qt::DashLine);
-            curveTarget.mPen.setColor(QColor(180, 10, 20));
-            mGraph->addCurve(curveTarget);
-            
+            int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
-            {
                 if(mShowChainList[i])
-                {
-                    QColor col(20 + i*20, 50 + i*20, 80 + i*20);
-                    
-                    GraphCurve curve;
-                    curve.mName = QString("accept history chain " + QString::number(i));
-                    curve.mDataVector = variable->acceptationForChain(i, mShowChainList.size());
-                    curve.mUseVectorData = true;
-                    curve.mPen.setColor(Painting::chainColors[i]);
-                    mGraph->addCurve(curve);
-                    
-                    if(curve.mDataVector.size() > 0)
-                    {
-                        QString info(tr("Chain") + " " + QString::number(i+1) + " : " +
-                                     QString::number(curve.mDataVector[curve.mDataVector.size()-1], 'f', 1) + " %");
-                        mGraph->addInfo(info);
-                    }
-                }
+                    chainIdx = i;
+            
+            if(chainIdx != -1)
+            {
+                Chain& chain = mChains[chainIdx];
+                mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter);
+                mGraph->setRangeY(0, 100);
+                
+                MHVariable* variable = &(mDate->mTheta);
+                if(mVariable == eTheta) variable = &(mDate->mTheta);
+                else if(mVariable == eSigma) variable = &(mDate->mSigma);
+                else if(mVariable == eDelta) variable = &(mDate->mDelta);
+                
+                GraphCurve curveTarget;
+                curveTarget.mName = "target";
+                curveTarget.mIsHorizontalLine = true;
+                curveTarget.mHorizontalValue = 44;
+                curveTarget.mPen.setStyle(Qt::DashLine);
+                curveTarget.mPen.setColor(QColor(180, 10, 20));
+                mGraph->addCurve(curveTarget);
+                
+                GraphCurve curve;
+                curve.mName = QString("accept history chain " + QString::number(chainIdx));
+                curve.mData = variable->acceptationForChain(mChains, chainIdx);
+                curve.mPen.setColor(Painting::chainColors[chainIdx]);
+                curve.mIsHisto = false;
+                mGraph->addCurve(curve);
             }
+           
         }
         else if(mCurrentResult == eCorrel)
         {

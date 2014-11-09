@@ -81,6 +81,7 @@ private:
     QActionGroup* mViewGroup;
     QAction* mViewModelAction;
     QAction* mViewResultsAction;
+    QAction* mViewLogAction;
     
     QAction* mUndoAction;
     QAction* mRedoAction;

@@ -21,7 +21,7 @@ public:
     unsigned long long mNumRunIter;
     unsigned long long mNumBurnIter;
     unsigned long long mMaxBatches;
-    unsigned long long mIterPerBatch;
+    unsigned long long mNumBatchIter;
     unsigned int mThinningInterval;
     QList<int> mSeeds;
     

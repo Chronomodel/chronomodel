@@ -1449,7 +1449,7 @@ void Project::run()
         MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::Sheet);
         if(dialog.startMCMC() == QDialog::Accepted)
         {
-            emit mcmcFinished(mModel);
+            emit mcmcFinished(loop);
         }
     }
 }

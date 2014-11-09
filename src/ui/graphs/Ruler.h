@@ -5,6 +5,11 @@
 
 class QScrollBar;
 
+struct RulerArea{
+    float mStart;
+    float mStop;
+    QColor mColor;
+};
 
 class Ruler: public QWidget
 {
@@ -18,6 +23,9 @@ public:
     
     void showScrollBar(bool show);
     void showControls(bool show);
+    
+    void clearAreas();
+    void addArea(float start, float end, const QColor& color);
     
 protected:
     void resizeEvent(QResizeEvent* e);
@@ -73,6 +81,8 @@ private:
     
     bool mShowScrollBar;
     bool mShowControls;
+    
+    QVector<RulerArea> mAreas;
 };
 
 #endif

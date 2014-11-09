@@ -214,80 +214,70 @@ void GraphViewPhase::refresh()
         }
         else if(mCurrentResult == eTrace)
         {
-            mGraph->setRangeX(0, mMCMCSettings.mNumRunIter);
+            int chainIdx = -1;
+            for(int i=0; i<mShowChainList.size(); ++i)
+                if(mShowChainList[i])
+                    chainIdx = i;
             
-            float min = 999999;
-            float max = -999999;
-            
-            if(mShowAlpha)
+            if(chainIdx != -1)
             {
-                for(int i=0; i<mShowChainList.size(); ++i)
+                Chain& chain = mChains[chainIdx];
+                mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter);
+                
+                QColor col = Painting::chainColors[chainIdx];
+                
+                float min = 999999;
+                float max = -999999;
+                
+                if(mShowAlpha)
                 {
-                    if(mShowChainList[i])
-                    {
-                        QColor col = Painting::chainColors[i];
-                        
-                        GraphCurve curve;
-                        curve.mName = QString("alpha trace chain " + QString::number(i));
-                        curve.mUseVectorData = true;
-                        curve.mDataVector = mPhase->mAlpha.traceForChain(i, mShowChainList.size());
-                        curve.mPen.setColor(col);
-                        mGraph->addCurve(curve);
-                        
-                        min = qMin(vector_min_value(curve.mDataVector), min);
-                        max = qMax(vector_max_value(curve.mDataVector), max);
-                    }
+                    GraphCurve curve;
+                    curve.mName = QString("alpha trace chain " + QString::number(chainIdx));
+                    curve.mData = mPhase->mAlpha.traceForChain(mChains, chainIdx);
+                    curve.mPen.setColor(col);
+                    mGraph->addCurve(curve);
+                    
+                    min = qMin(map_min_value(curve.mData), min);
+                    max = qMax(map_max_value(curve.mData), max);
                 }
-            }
-            if(mShowBeta)
-            {
-                for(int i=0; i<mShowChainList.size(); ++i)
+                if(mShowBeta)
                 {
-                    if(mShowChainList[i])
-                    {
-                        QColor col = Painting::chainColors[i];
-                        
-                        GraphCurve curve;
-                        curve.mName = QString("beta trace chain " + QString::number(i));
-                        curve.mUseVectorData = true;
-                        curve.mDataVector = mPhase->mBeta.traceForChain(i, mShowChainList.size());
-                        curve.mPen.setColor(col);
-                        mGraph->addCurve(curve);
-                        
-                        min = qMin(vector_min_value(curve.mDataVector), min);
-                        max = qMax(vector_max_value(curve.mDataVector), max);
-                    }
+                    GraphCurve curve;
+                    curve.mName = QString("beta trace chain " + QString::number(chainIdx));
+                    curve.mData = mPhase->mBeta.traceForChain(mChains, chainIdx);
+                    curve.mPen.setColor(col);
+                    mGraph->addCurve(curve);
+                    
+                    min = qMin(map_min_value(curve.mData), min);
+                    max = qMax(map_max_value(curve.mData), max);
                 }
-            }
-            if(mShowTau)
-            {
-                for(int i=0; i<mShowChainList.size(); ++i)
+                if(mShowTau)
                 {
-                    if(mShowChainList[i])
-                    {
-                        QColor col = Painting::chainColors[i];
-                        
-                        GraphCurve curve;
-                        curve.mName = QString("predict trace chain " + QString::number(i));
-                        curve.mUseVectorData = true;
-                        curve.mDataVector = mPhase->mTau.traceForChain(i, mShowChainList.size());
-                        curve.mPen.setColor(col);
-                        mGraph->addCurve(curve);
-                        
-                        min = qMin(vector_min_value(curve.mDataVector), min);
-                        max = qMax(vector_max_value(curve.mDataVector), max);
-                    }
+                    GraphCurve curve;
+                    curve.mName = QString("duration trace chain " + QString::number(chainIdx));
+                    curve.mData = mPhase->mTau.traceForChain(mChains, chainIdx);
+                    curve.mPen.setColor(col);
+                    mGraph->addCurve(curve);
+                    
+                    min = qMin(map_min_value(curve.mData), min);
+                    max = qMax(map_max_value(curve.mData), max);
                 }
-            }
-            if(min < max)
                 mGraph->setRangeY(min, max);
-            else
-                mGraph->setRangeY(0, 1);
+            }
         }
         else if(mCurrentResult == eAccept)
         {
-            mGraph->setRangeX(0, mMCMCSettings.mNumRunIter);
             mGraph->setRangeY(0, 100);
+            int chainIdx = -1;
+            for(int i=0; i<mShowChainList.size(); ++i)
+                if(mShowChainList[i])
+                    chainIdx = i;
+            
+            if(chainIdx != -1)
+            {
+                Chain& chain = mChains[chainIdx];
+                mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter);
+            }
         }
         else if(mCurrentResult == eCorrel)
         {

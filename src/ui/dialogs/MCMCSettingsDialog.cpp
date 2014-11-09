@@ -54,7 +54,7 @@ void MCMCSettingsDialog::setSettings(const MCMCSettings& settings)
     mNumIterEdit->setText(QString::number(settings.mNumRunIter));
     mNumBurnEdit->setText(QString::number(settings.mNumBurnIter));
     mMaxBatchesEdit->setText(QString::number(settings.mMaxBatches));
-    mIterPerBatchEdit->setText(QString::number(settings.mIterPerBatch));
+    mIterPerBatchEdit->setText(QString::number(settings.mNumBatchIter));
     mDownSamplingEdit->setText(QString::number(settings.mThinningInterval));
 }
 
@@ -65,7 +65,7 @@ MCMCSettings MCMCSettingsDialog::getSettings()
     settings.mNumRunIter = mNumIterEdit->text().toLongLong();
     settings.mNumBurnIter = mNumBurnEdit->text().toLongLong();
     settings.mMaxBatches = mMaxBatchesEdit->text().toLongLong();
-    settings.mIterPerBatch = mIterPerBatchEdit->text().toLongLong();
+    settings.mNumBatchIter = mIterPerBatchEdit->text().toLongLong();
     settings.mThinningInterval = mDownSamplingEdit->text().toLong();
     return settings;
 }

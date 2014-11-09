@@ -5,6 +5,8 @@
 #include "Functions.h"
 #include "Generator.h"
 #include "StdUtilities.h"
+#include "Date.h"
+#include "../PluginAbstract.h"
 
 #include <vector>
 #include <cmath>
@@ -13,12 +15,13 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QApplication>
+#include <QTime>
 
 
 MCMCLoopMain::MCMCLoopMain(Model* model):MCMCLoop(),
 mModel(model)
 {
-    mSettings = mModel->mMCMCSettings;
+    setSettings(mModel->mMCMCSettings);
 }
 
 MCMCLoopMain::~MCMCLoopMain()
@@ -26,45 +29,66 @@ MCMCLoopMain::~MCMCLoopMain()
 
 }
 
-void MCMCLoopMain::initModel()
+void MCMCLoopMain::calibrate()
 {
-    
-    for(int i=0; i<mModel->mEvents.size(); ++i)
+    if(mModel)
     {
-        mModel->mEvents[i].reset();
-        for(int j=0; j<(int)mModel->mEvents[i].mDates.size(); ++j)
+        QList<Event>& events = mModel->mEvents;
+        double tmin = mModel->mSettings.mTmin;
+        double tmax = mModel->mSettings.mTmax;
+        double step = mModel->mSettings.mStep;
+        
+        //----------------- Calibrate measures --------------------------------------
+        
+        QList<Date*> dates;
+        for(int i=0; i<events.size(); ++i)
         {
-            mModel->mEvents[i].mDates[j].reset();
+            int num_dates = (int)events[i].mDates.size();
+            for(int j=0; j<num_dates; ++j)
+            {
+                Date* date = &events[i].mDates[j];
+                dates.push_back(date);
+            }
+        }
+        
+        emit stepChanged(tr("Calibrating..."), 0, dates.size());
+        
+        for(int i=0; i<dates.size(); ++i)
+        {
+            QTime startTime = QTime::currentTime();
+            
+            dates[i]->calibrate(tmin, tmax, step);
+            
+            emit stepProgressed(i);
+            
+            QTime endTime = QTime::currentTime();
+            int timeDiff = startTime.msecsTo(endTime);
+            mLog += "Data \"" + dates[i]->mName + "\" (" + dates[i]->mPlugin->getName() + ") calibrated in " + QString::number(timeDiff) + " ms\n";
         }
     }
 }
 
-void MCMCLoopMain::calibrate()
+void MCMCLoopMain::initVariablesForChain()
 {
+    Chain& chain = mChains[mChainIndex];
     QList<Event>& events = mModel->mEvents;
-    double tmin = mModel->mSettings.mTmin;
-    double tmax = mModel->mSettings.mTmax;
-    double step = mModel->mSettings.mStep;
     
-    //----------------- Calibrate measures --------------------------------------
-    
-    QList<Date*> dates;
     for(int i=0; i<events.size(); ++i)
     {
-        int num_dates = (int)events[i].mDates.size();
-        for(int j=0; j<num_dates; ++j)
+        Event& event = events[i];
+        event.mTheta.mLastAccepts.clear();
+        event.mTheta.mLastAcceptsLength = chain.mNumBatchIter;
+        
+        for(int j=0; j<event.mDates.size(); ++j)
         {
-            Date* date = &events[i].mDates[j];
-            dates.push_back(date);
+            Date& date = event.mDates[j];
+            date.mTheta.mLastAccepts.clear();
+            date.mTheta.mLastAcceptsLength = chain.mNumBatchIter;
+            date.mSigma.mLastAccepts.clear();
+            date.mSigma.mLastAcceptsLength = chain.mNumBatchIter;
+            date.mDelta.mLastAccepts.clear();
+            date.mDelta.mLastAcceptsLength = chain.mNumBatchIter;
         }
-    }
-    
-    emit stepChanged(tr("Calibrating..."), 0, dates.size());
-    
-    for(int i=0; i<dates.size(); ++i)
-    {
-        dates[i]->calibrate(tmin, tmax, step);
-        emit stepProgressed(i);
     }
 }
 
@@ -72,8 +96,8 @@ void MCMCLoopMain::initMCMC()
 {
     QList<Event>& events = mModel->mEvents;
     QList<Phase>& phases = mModel->mPhases;
-    double t_min = mModel->mSettings.mTmin;
-    double t_max = mModel->mSettings.mTmax;
+    double tmin = mModel->mSettings.mTmin;
+    double tmax = mModel->mSettings.mTmax;
     
     // ----------------------------------------------------------------
     //  Thetas des Mesures
@@ -183,8 +207,6 @@ void MCMCLoopMain::initMCMC()
         }
         
         emit stepProgressed(i);
-        
-        qDebug() << QString::number(i+1) + "/" + QString::number(events.size()) + " (" + events[i].mName + ") theta = " + QString::number(events[i].mTheta.mX) + ", SO2 = " + QString::number(events[i].mS02)+ ", AShrinkage = " + QString::number(events[i].mAShrinkage);
     }
     
     // ----------------------------------------------------------------
@@ -193,12 +215,10 @@ void MCMCLoopMain::initMCMC()
     emit stepChanged(tr("Initializing phases..."), 0, phases.size());
     for(int i=0; i<phases.size(); ++i)
     {
-        phases[i].mAlpha.mX = Generator::randomUniform(t_min, phases[i].getMinThetaEvents());
-        phases[i].mBeta.mX = Generator::randomUniform(phases[i].getMaxThetaEvents(), t_max);
+        phases[i].mAlpha.mX = Generator::randomUniform(tmin, phases[i].getMinThetaEvents());
+        phases[i].mBeta.mX = Generator::randomUniform(phases[i].getMaxThetaEvents(), tmax);
         
         emit stepProgressed(i);
-        
-        qDebug() << QString::number(i+1) + "/" + QString::number(phases.size()) + " (" + phases[i].mName + ") alpha = " + QString::number(phases[i].mAlpha.mX) + ", beta = " + QString::number(phases[i].mBeta.mX);
     }
     
     // ----------------------------------------------------------------
@@ -212,8 +232,8 @@ void MCMCLoopMain::initMCMC()
         {
             Event& event = events[i];
             
-            double thetaMin = event.getThetaMin(t_min);
-            double thetaMax = event.getThetaMax(t_max);
+            double thetaMin = event.getThetaMin(tmin);
+            double thetaMax = event.getThetaMax(tmax);
             
             if(event.mTheta.mX <= thetaMin || event.mTheta.mX >= thetaMax)
             {
@@ -245,9 +265,45 @@ void MCMCLoopMain::initMCMC()
             date.mSigma.mSigmaMH = 1.;
             
             emit stepProgressed(i);
-            
-            qDebug() << QString::number(j+1) + "/" + QString::number(numDates) + " (" + date.mName + ") sigma = " + QString::number(date.mSigma.mX) + ", sigmaMH(sigma) = " + QString::number(date.mSigma.mSigmaMH);
         }
+    }
+    // ----------------------------------------------------------------
+    
+    for(int i=0; i<events.size(); ++i)
+    {
+        Event& event = events[i];
+        
+        mLog += ">> Event : " + event.mName + "\n";
+        mLog += "  - theta (value) : " + QString::number(event.mTheta.mX) + "\n";
+        mLog += "  - theta (sigma MH) : " + QString::number(event.mTheta.mSigmaMH) + "\n";
+        mLog += "  - SO2 : " + QString::number(event.mS02) + "\n";
+        mLog += "  - AShrinkage : " + QString::number(event.mAShrinkage) + "\n";
+        mLog += "---------------\n";
+        
+        for(int j=0; j<event.mDates.size(); ++j)
+        {
+            Date& date = event.mDates[j];
+            
+            mLog += " > Data : " + date.mName + "\n";
+            mLog += "  - theta (value) : " + QString::number(date.mTheta.mX) + "\n";
+            mLog += "  - theta (sigma MH) : " + QString::number(date.mTheta.mSigmaMH) + "\n";
+            mLog += "  - sigma (value) : " + QString::number(date.mSigma.mX) + "\n";
+            mLog += "  - sigma (sigma MH) : " + QString::number(date.mSigma.mSigmaMH) + "\n";
+            mLog += "  - delta (value) : " + QString::number(date.mDelta.mX) + "\n";
+            mLog += "  - delta (sigma MH) : " + QString::number(date.mDelta.mSigmaMH) + "\n";
+            mLog += "--------\n";
+        }
+    }
+    
+    for(int i=0; i<phases.size(); ++i)
+    {
+        Phase& phase = phases[i];
+        
+        mLog += "---------------\n";
+        mLog += ">> Phase : " + phase.mName + "\n";
+        mLog += " - alpha : " + QString::number(phase.mAlpha.mX) + "\n";
+        mLog += " - beta : " + QString::number(phase.mBeta.mX) + "\n";
+        mLog += " - tau : " + QString::number(phase.mTau.mX) + "\n";
     }
 }
 
@@ -258,22 +314,9 @@ void MCMCLoopMain::update()
     double t_min = mModel->mSettings.mTmin;
     double t_max = mModel->mSettings.mTmax;
 
-    bool doMemo = false;
-    if(mState == eRunning)
-    {
-        // Using a down-sampling eventor :
-        //doMemo = (mIterIndex % mSettings.mThinningInterval == 0);
-        
-        // Using num of iters to keep :
-        int step = 1;
-        if(mSettings.mThinningInterval < mSettings.mNumRunIter)
-            step = floor(mSettings.mNumRunIter / mSettings.mThinningInterval);
-        
-        doMemo = (mRunIterIndex % step == 0);
-    }
+    Chain& chain = mChains[mChainIndex];
     
-    doMemo = true;
-    
+    bool doMemo = (mState != eRunning || (chain.mRunIterIndex % chain.mThinningInterval == 0));
     
     //--------------------- Update Dates -----------------------------------------
     
@@ -285,29 +328,18 @@ void MCMCLoopMain::update()
             Date& date = events[i].mDates[j];
             
             date.updateDelta();
-            if(doMemo)
-                date.mDelta.memo();
-            
             date.updateTheta(t_min, t_max, event);
-            if(doMemo)
-                date.mTheta.memo();
-
             date.updateSigma(event);
+            
             if(doMemo)
+            {
+                date.mTheta.memo();
                 date.mSigma.memo();
-            
-            // Calculate Acceptation Rate :
-            // TODO : calculer le taux sur les 100 dernières iterations minimum
-            
-            double taux = 100 * date.mTheta.mAcceptMHTotal / (mTotalIter + 1);
-            date.mTheta.mHistoryAcceptRateMH.push_back(taux);
-            date.mTheta.mHistorySigmaMH.push_back(date.mTheta.mSigmaMH);
-            
-            //qDebug() << "iter : " << (mTotalIter + 1) << ", num accept : " << date.mTheta.mAcceptMHTotal << ", taux : " << taux;
-            
-            taux = 100 * date.mSigma.mAcceptMHTotal / (mTotalIter + 1);
-            date.mSigma.mHistoryAcceptRateMH.push_back(taux);
-            date.mSigma.mHistorySigmaMH.push_back(date.mSigma.mSigmaMH);
+                date.mDelta.memo();
+                
+                date.mTheta.saveCurrentAcceptRate();
+                date.mSigma.saveCurrentAcceptRate();
+            }
         }
     }
 
@@ -315,14 +347,14 @@ void MCMCLoopMain::update()
 
     for(int i=0; i<events.size(); ++i)
     {
-        events[i].updateTheta(t_min, t_max);
-        if(doMemo)
-            events[i].mTheta.memo();
+        Event& event = events[i];
         
-        // Calculate Acceptation Rate :
-        double taux = 100 * events[i].mTheta.mAcceptMHTotal / (mTotalIter + 1);
-        events[i].mTheta.mHistoryAcceptRateMH.push_back(taux);
-        events[i].mTheta.mHistorySigmaMH.push_back(events[i].mTheta.mSigmaMH);
+        event.updateTheta(t_min, t_max);
+        if(doMemo)
+        {
+            event.mTheta.memo();
+            event.mTheta.saveCurrentAcceptRate();
+        }
     }
 
     //--------------------- Update Phases -----------------------------------------
@@ -337,6 +369,7 @@ void MCMCLoopMain::update()
 
 bool MCMCLoopMain::adapt()
 {
+    Chain& chain = mChains[mChainIndex];
     QList<Event>& events = mModel->mEvents;
     
     const double taux_min = 42.;           // taux_min minimal rate of acceptation=42
@@ -349,7 +382,7 @@ bool MCMCLoopMain::adapt()
     for(int i=0; i<events.size(); ++i)
     {
         Event& event = events[i];
-        double delta = (mBatchIndex < 10000) ? 0.01 : (1 / sqrt(mBatchIndex));
+        float delta = (chain.mBatchIndex < 10000) ? 0.01f : (1 / sqrtf(chain.mBatchIndex));
         
         for(int j=0; j<event.mDates.size(); ++j)
         {
@@ -359,40 +392,37 @@ bool MCMCLoopMain::adapt()
             
             if(date.mMethod == Date::eMHSymGaussAdapt)
             {
-                double taux = 100 * date.mTheta.mAcceptMHBatch / mModel->mMCMCSettings.mIterPerBatch;
+                float taux = 100.f * date.mTheta.getCurrentAcceptRate();
                 if(taux <= taux_min || taux >= taux_max)
                 {
                     allOK = false;
-                    double sign = (taux <= taux_min) ? -1 : 1;
-                    date.mTheta.mSigmaMH *= pow(10, sign * delta);
+                    float sign = (taux <= taux_min) ? -1.f : 1.f;
+                    date.mTheta.mSigmaMH *= powf(10.f, sign * delta);
                 }
-                date.mTheta.mAcceptMHBatch = 0;
             }
             
             //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
             
-            double taux = 100 * date.mSigma.mAcceptMHBatch / mModel->mMCMCSettings.mIterPerBatch;
+            float taux = 100.f * date.mSigma.getCurrentAcceptRate();
             if(taux <= taux_min || taux >= taux_max)
             {
                 allOK = false;
-                double sign = (taux <= taux_min) ? -1 : 1;
-                date.mSigma.mSigmaMH *= pow(10, sign * delta);
+                float sign = (taux <= taux_min) ? -1.f : 1.f;
+                date.mSigma.mSigmaMH *= powf(10.f, sign * delta);
             }
-            date.mSigma.mAcceptMHBatch = 0;
         }
         
         //--------------------- Adapt Theta MH de Theta f -----------------------------------------
         
         if(event.mMethod == Event::eMHAdaptGauss)
         {
-            double taux = 100 * event.mTheta.mAcceptMHBatch / mModel->mMCMCSettings.mIterPerBatch;
+            float taux = 100.f * event.mTheta.getCurrentAcceptRate();
             if(taux <= taux_min || taux >= taux_max)
             {
                 allOK = false;
-                double sign = (taux <= taux_min) ? -1 : 1;
-                event.mTheta.mSigmaMH *= pow(10, sign * delta);
+                float sign = (taux <= taux_min) ? -1.f : 1.f;
+                event.mTheta.mSigmaMH *= powf(10.f, sign * delta);
             }
-            event.mTheta.mAcceptMHBatch = 0;
         }
     }
     return allOK;
@@ -400,10 +430,6 @@ bool MCMCLoopMain::adapt()
 
 void MCMCLoopMain::finalize()
 {
-    // TODO Generate HPD here ?
-    
-    mModel->mMCMCSettings.mFinalBatchIndex = mFinalBatchIndex;
-    
     float tmin = mModel->mSettings.mTmin;
     float tmax = mModel->mSettings.mTmax;
     
@@ -414,44 +440,44 @@ void MCMCLoopMain::finalize()
     {
         Event& event = events[i];
         
+        event.mTheta.generateFullHisto(mChains, tmin, tmax);
+        event.mTheta.generateHistos(mChains, tmin, tmax);
+        
+        FunctionAnalysis data = analyseFunction(event.mTheta.fullHisto());
+        event.mTheta.mHistoMode = data.mode;
+        event.mTheta.mHistoMean = data.mean;
+        event.mTheta.mHistoVariance = data.variance;
+        
         for(int j=0; j<event.mDates.size(); ++j)
         {
             Date& date = event.mDates[j];
             
-            date.mTheta.generateFullHisto(tmin, tmax);
-            date.mSigma.generateFullHisto(tmin, tmax);
-            //date.mDelta.generateFullHisto(tmin, tmax);
+            date.mTheta.generateFullHisto(mChains, tmin, tmax);
+            date.mSigma.generateFullHisto(mChains, 0, tmax - tmin);
+            //date.mDelta.generateFullHisto(mChains, tmin, tmax);
             
-            date.mTheta.generateHistos(mSettings.mNumChains, tmin, tmax);
-            date.mSigma.generateHistos(mSettings.mNumChains, tmin, tmax);
-            //date.mDelta.generateHistos(mSettings.mNumChains, tmin, tmax);
+            date.mTheta.generateHistos(mChains, tmin, tmax);
+            date.mSigma.generateHistos(mChains, 0, tmax - tmin);
+            //date.mDelta.generateHistos(mChains, tmin, tmax);
             
             FunctionAnalysis data = analyseFunction(date.mTheta.fullHisto());
             date.mTheta.mHistoMode = data.mode;
             date.mTheta.mHistoMean = data.mean;
             date.mTheta.mHistoVariance = data.variance;
         }
-        
-        event.mTheta.generateFullHisto(tmin, tmax);
-        event.mTheta.generateHistos(mSettings.mNumChains, tmin, tmax);
-        
-        FunctionAnalysis data = analyseFunction(event.mTheta.fullHisto());
-        event.mTheta.mHistoMode = data.mode;
-        event.mTheta.mHistoMean = data.mean;
-        event.mTheta.mHistoVariance = data.variance;
     }
     
     for(int i=0; i<phases.size(); ++i)
     {
         Phase& phase = phases[i];
         
-        /*phase.mAlpha.generateFullHisto(tmin, tmax);
-        phase.mBeta.generateFullHisto(tmin, tmax);
-        phase.mThetaPredict.generateFullHisto(tmin, tmax);
+        phase.mAlpha.generateFullHisto(mChains, tmin, tmax);
+        phase.mBeta.generateFullHisto(mChains, tmin, tmax);
+        phase.mTau.generateFullHisto(mChains, tmin, tmax);
         
-        phase.mAlpha.generateHistos(mSettings.mNumChains, tmin, tmax);
-        phase.mBeta.generateHistos(mSettings.mNumChains, tmin, tmax);
-        phase.mThetaPredict.generateHistos(mSettings.mNumChains, tmin, tmax);*/
+        phase.mAlpha.generateHistos(mChains, tmin, tmax);
+        phase.mBeta.generateHistos(mChains, tmin, tmax);
+        phase.mTau.generateHistos(mChains, tmin, tmax);
     }
 }
 

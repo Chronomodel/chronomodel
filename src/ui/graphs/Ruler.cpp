@@ -50,6 +50,22 @@ void Ruler::showControls(bool show)
     layout();
 }
 
+void Ruler::clearAreas()
+{
+    mAreas.clear();
+    update();
+}
+
+void Ruler::addArea(float start, float end, const QColor& color)
+{
+    RulerArea area;
+    area.mStart = start;
+    area.mStop = end;
+    area.mColor = color;
+    mAreas.append(area);
+    update();
+}
+
 void Ruler::setRange(const float min, const float max)
 {
     if(mMin != min || mMax || max)
@@ -205,6 +221,21 @@ void Ruler::paintEvent(QPaintEvent* e)
     painter.setFont(font);
     
     painter.fillRect(mRulerRect, Qt::white);
+    
+    for(int i=0; i<mAreas.size(); ++i)
+    {
+        if(mAreas[i].mStart < mCurrentMax && mAreas[i].mStop > mCurrentMin)
+        {
+            float x1 = w * (mAreas[i].mStart - mCurrentMin) / (mCurrentMax - mCurrentMin);
+            float x2 = w;
+            if(mAreas[i].mStop < mCurrentMax)
+                x2 = w * (mAreas[i].mStop - mCurrentMin) / (mCurrentMax - mCurrentMin);
+            
+            painter.setPen(mAreas[i].mColor);
+            painter.setBrush(mAreas[i].mColor);
+            painter.drawRect(mRulerRect.x() + x1, mRulerRect.y(), x2 - x1, mRulerRect.height());
+        }
+    }
 
     painter.setPen(Qt::black);
     for(float x=xo; x<xo+w; x += mStepWidth)
@@ -215,7 +246,6 @@ void Ruler::paintEvent(QPaintEvent* e)
         {
             painter.drawLine(QLineF(sx, yo, sx, yo + h/6));
         }
-        
         
         int align = Qt::AlignCenter;
         float tx = x - 20;

@@ -4,6 +4,7 @@
 #include <QMap>
 #include <QVector>
 #include <QList>
+#include "MCMCLoop.h"
 
 
 class MetropolisVariable
@@ -18,8 +19,8 @@ public:
     void generateHPD(const float classe, const float threshold);
     
     
-    void generateFullHisto(float tmin, float tmax);
-    void generateHistos(int numChains, float tmin, float tmax);
+    void generateFullHisto(const QList<Chain>& chains, float tmin, float tmax);
+    void generateHistos(const QList<Chain>& chains, float tmin, float tmax);
 
     QMap<float, float>& fullHisto();
     QMap<float, float>& histoForChain(int index);
@@ -28,7 +29,7 @@ public:
     QMap<float, float> generateHPDForChain(int index, int threshold);
     
     QVector<float> fullTrace();
-    QVector<float> traceForChain(int index, int numChains);
+    QMap<float, float> traceForChain(const QList<Chain>& chains, int index);
     
 private:
     QMap<float, float> generateHisto(const QVector<float>& data, float tmin, float tmax);

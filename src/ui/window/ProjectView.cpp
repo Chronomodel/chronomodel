@@ -3,6 +3,7 @@
 #include "ResultsView.h"
 #include "ProjectManager.h"
 #include "Project.h"
+#include "Painting.h"
 #include <QtWidgets>
 
 
@@ -10,10 +11,21 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
 {
     mModelView = new ModelView();
     mResultsView = new ResultsView();
+    mLogEdit = new QTextEdit();
+    
+    mLogEdit->setReadOnly(true);
+    QPalette palette = mLogEdit->palette();
+    palette.setColor(QPalette::Base, QColor(0, 0, 0, 255));
+    palette.setColor(QPalette::Text, Qt::white);
+    mLogEdit->setPalette(palette);
+    QFont font = mLogEdit->font();
+    font.setPointSizeF(pointSize(11));
+    mLogEdit->setFont(font);
     
     mStack = new QStackedWidget();
     mStack->addWidget(mModelView);
     mStack->addWidget(mResultsView);
+    mStack->addWidget(mLogEdit);
     mStack->setCurrentIndex(0);
     
     QHBoxLayout* layout = new QHBoxLayout();
@@ -43,8 +55,19 @@ void ProjectView::showResults()
     mStack->setCurrentIndex(1);
 }
 
+void ProjectView::showLog()
+{
+    mStack->setCurrentIndex(2);
+}
+
 void ProjectView::showHelp(bool show)
 {
     mModelView->showHelp(show);
     //mResultsView->showHelp(show);
 }
+
+void ProjectView::updateLog(MCMCLoopMain& loop)
+{
+    mLogEdit->setText(loop.getLog());
+}
+

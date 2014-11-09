@@ -2,6 +2,7 @@
 #define ResultsWrapper_H
 
 #include <QWidget>
+#include "MCMCLoopMain.h"
 
 class QStackedWidget;
 class QScrollArea;
@@ -40,10 +41,11 @@ protected:
     
 public slots:
     void clearResults();
-    void updateResults(Model* model);
+    void updateResults(MCMCLoopMain&);
     void updateGraphs();
     void updateChains();
     void updateHPD();
+    void updateRulerAreas();
     
 private slots:
     void setGraphZoom(float min, float max);
@@ -60,6 +62,7 @@ private:
     
 private:
     Model* mModel;
+    QList<Chain> mChains;
     
     int mMargin;
     int mOptionsW;
@@ -100,6 +103,7 @@ private:
     QWidget* mChainsGroup;
     CheckBox* mAllChainsCheck;
     QList<CheckBox*> mCheckChainChecks;
+    QList<RadioButton*> mChainRadios;
     
     QWidget* mPhasesGroup;
     CheckBox* mAlphaCheck;

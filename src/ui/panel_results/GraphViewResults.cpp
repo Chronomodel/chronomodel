@@ -23,7 +23,7 @@ mGraphLeft(130)
     
     mGraph = new GraphView(this);
     
-    mGraph->showAxis(false);
+    mGraph->showAxis(true);
     mGraph->showScrollBar(false);
     mGraph->showYValues(true);
     mGraph->setRangeY(0, 1);
@@ -91,7 +91,7 @@ void GraphViewResults::toggle(const QRect& targetGeometry)
 {
     if(geometry() != targetGeometry)
     {
-        qDebug() << "Graph From : " << geometry() << ", To : " << targetGeometry;
+        //qDebug() << "Graph From : " << geometry() << ", To : " << targetGeometry;
         
         mAnimation->setStartValue(geometry());
         mAnimation->setEndValue(targetGeometry);
@@ -104,9 +104,10 @@ void GraphViewResults::setSettings(const ProjectSettings& settings)
     mSettings = settings;
 }
 
-void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc)
+void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc, const QList<Chain>& chains)
 {
     mMCMCSettings = mcmc;
+    mChains = chains;
 }
 
 void GraphViewResults::updateChains(bool showAll, const QList<bool>& showChainList)

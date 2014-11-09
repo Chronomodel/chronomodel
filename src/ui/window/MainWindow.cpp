@@ -100,9 +100,13 @@ void MainWindow::createActions()
     mViewResultsAction = new QAction(QIcon(":results.png"), tr("Results"), this);
     mViewResultsAction->setCheckable(true);
     
+    mViewLogAction = new QAction(QIcon(":results.png"), tr("Log"), this);
+    mViewLogAction->setCheckable(true);
+    
     mViewGroup = new QActionGroup(this);
     mViewGroup->addAction(mViewModelAction);
     mViewGroup->addAction(mViewResultsAction);
+    mViewGroup->addAction(mViewLogAction);
     mViewModelAction->setChecked(true);
     
     //-----------------------------------------------------------------
@@ -168,6 +172,7 @@ void MainWindow::createMenus()
     mViewMenu = menuBar()->addMenu(tr("View"));
     mViewMenu->addAction(mViewModelAction);
     mViewMenu->addAction(mViewResultsAction);
+    mViewMenu->addAction(mViewLogAction);
     
     //-----------------------------------------------------------------
     // Help/About Menu
@@ -203,6 +208,7 @@ void MainWindow::createToolBars()
     toolBar->addAction(mMCMCSettingsAction);
     toolBar->addAction(mRunAction);
     toolBar->addAction(mViewResultsAction);
+    toolBar->addAction(mViewLogAction);
     
     QWidget* separator4 = new QWidget(this);
     separator4->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -261,7 +267,7 @@ void MainWindow::setProject(Project* project)
         connect(mMCMCSettingsAction, SIGNAL(triggered()), mProject, SLOT(mcmcSettings()));
         connect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
         connect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));
-        connect(mProject, SIGNAL(mcmcFinished(Model*)), mViewResultsAction, SLOT(trigger()));
+        connect(mProject, SIGNAL(mcmcFinished(MCMCLoopMain&)), mViewResultsAction, SLOT(trigger()));
         
         mProjectSaveAction->setEnabled(true);
         mProjectCloseAction->setEnabled(true);
@@ -281,6 +287,8 @@ void MainWindow::setProject(Project* project)
         connect(mProject, SIGNAL(projectStateChanged()), mProjectView, SLOT(updateProject()));
         connect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
         connect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
+        connect(mViewLogAction, SIGNAL(triggered()), mProjectView, SLOT(showLog()));
+        connect(mProject, SIGNAL(mcmcFinished(MCMCLoopMain&)), mProjectView, SLOT(updateLog(MCMCLoopMain&)));
     }
 }
 
@@ -298,7 +306,10 @@ bool MainWindow::closeProject()
             disconnect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
             
             disconnect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
-            disconnect(mProject, SIGNAL(mcmcFinished(Model*)), mViewResultsAction, SLOT(trigger()));
+            disconnect(mViewLogAction, SIGNAL(triggered()), mProjectView, SLOT(showLog()));
+            
+            disconnect(mProject, SIGNAL(mcmcFinished(MCMCLoopMain&)), mViewResultsAction, SLOT(trigger()));
+            disconnect(mProject, SIGNAL(mcmcFinished(MCMCLoopMain&)), mProjectView, SLOT(updateLog(MCMCLoopMain&)));
             
             mProjectSaveAction->setEnabled(false);
             mProjectCloseAction->setEnabled(false);

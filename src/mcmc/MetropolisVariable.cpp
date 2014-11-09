@@ -178,37 +178,55 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
     return data;
 }
 
-void MetropolisVariable::generateFullHisto(float tmin, float tmax)
+void MetropolisVariable::generateFullHisto(const QList<Chain>& chains, float tmin, float tmax)
 {
-    mHistoFull.clear();
-    mHistoFull = generateHisto(mTrace, tmin, tmax);
+    // -----------------------
+    //  The full histo is constructed using the values saved during the "Run" phase of all chains.
+    //  The step of "Thinning interval" has been taken into account when saving.
+    //  (only necessary values are saved)
+    // -----------------------
+    
+    int curTotIter = 0;
+    QVector<float> subTrace;
+    
+    for(int i=0; i<chains.size(); ++i)
+    {
+        int traceStartIter = curTotIter + chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter);
+        
+        for(int j=traceStartIter; j<traceStartIter + (int)(chains[i].mNumRunIter / chains[i].mThinningInterval); ++j)
+            subTrace.append(mTrace[j]);
+        
+        curTotIter += chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + (chains[i].mNumRunIter / chains[i].mThinningInterval);
+    }
+    mHistoFull = generateHisto(subTrace, tmin, tmax);
 }
 
-void MetropolisVariable::generateHistos(int numChains, float tmin, float tmax)
+void MetropolisVariable::generateHistos(const QList<Chain>& chains, float tmin, float tmax)
 {
     mHistos.clear();
-    int itersPerChain = mTrace.size() / numChains;
     
-    for(int i=0; i<numChains; ++i)
+    // -----------------------
+    //  Histos are generated based on the trace's values saved during the "Run" phase
+    //  with a step of "thinning interval" between them.
+    //  We have to find those values in mTrace.
+    //  Note : all chains dont have the same length in the trace
+    //  because the adapt phase may have stop earlier for some chains.
+    // -----------------------
+    
+    int curTotIter = 0;
+    
+    for(int i=0; i<chains.size(); ++i)
     {
+        int traceStartIter = curTotIter + chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter);
+        
         QVector<float> subTrace;
-        for(int j=0; j<itersPerChain; ++j)
-        {
-            subTrace.append(mTrace[i * itersPerChain + j]);
-        }
+        for(int j=traceStartIter; j<traceStartIter + (int)(chains[i].mNumRunIter / chains[i].mThinningInterval); ++j)
+            subTrace.append(mTrace[j]);
+        
         QMap<float, float> histo = generateHisto(subTrace, tmin, tmax);
         mHistos.push_back(histo);
         
-        /*QMap<float, float> histo;
-        for(int j=0; j<itersPerChain; ++j)
-        {
-            float x = floor(mTrace[i * itersPerChain + j]);
-            if(histo.find(x) == histo.end())
-                histo[x] = 1;
-            else
-                histo[x] = histo[x] + 1;
-        }
-        mHistos.push_back(histo);*/
+        curTotIter += chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + (chains[i].mNumRunIter / chains[i].mThinningInterval);
     }
 }
 
@@ -241,15 +259,37 @@ QVector<float> MetropolisVariable::fullTrace()
     return mTrace;
 }
 
-QVector<float> MetropolisVariable::traceForChain(int index, int numChains)
+QMap<float, float> MetropolisVariable::traceForChain(const QList<Chain>& chains, int index)
 {
-    int itersPerChain = mTrace.size() / numChains;
-    int start = index * itersPerChain;
+    QMap<float, float> trace;
+    int shift = 0;
     
-    QVector<float> trace;
-    for(int i=start; i<start + itersPerChain; ++i)
+    for(int i=0; i<chains.size(); ++i)
     {
-        trace.push_back(mTrace[i]);
+        int traceSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + (chains[i].mNumRunIter / chains[i].mThinningInterval);
+        
+        if(i == index)
+        {
+            for(int j=shift; j<shift + traceSize; ++j)
+            {
+                int burnAdaptLen = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter);
+                int curIndex = j - shift;
+                
+                if(curIndex < burnAdaptLen)
+                    trace[curIndex] = mTrace[j];
+                else
+                {
+                    int runIndex = burnAdaptLen + (curIndex - burnAdaptLen) * chains[i].mThinningInterval;
+                    trace[runIndex] = mTrace[j];
+                }
+            }
+            break;
+        }
+        else
+        {
+            shift += traceSize;
+        }
     }
+    //qDebug() << "Trace for chain " << index << " : " << trace.size();
     return trace;
 }
