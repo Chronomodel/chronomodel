@@ -6,13 +6,14 @@
 #include "Painting.h"
 #include "QtUtilities.h"
 #include <QtWidgets>
+#include <QtSvg>
 
 
 
 #pragma mark Constructor / Destructor
 
 GraphViewResults::GraphViewResults(QWidget *parent):QWidget(parent),
-mParentGraph(0),
+mCurrentResult(eHisto),
 mMainColor(QColor(50, 50, 50)),
 mMargin(5),
 mLineH(20),
@@ -27,8 +28,21 @@ mGraphLeft(130)
     mGraph->showYValues(true);
     mGraph->setRangeY(0, 1);
     
-    mImageBut = new Button(tr("Image"), this);
-    mDataBut = new Button(tr("Export"), this);
+    mTextArea = new QTextEdit(this);
+    QPalette palette = mTextArea->palette();
+    palette.setColor(QPalette::Base, QColor(0, 0, 0, 150));
+    palette.setColor(QPalette::Text, Qt::white);
+    mTextArea->setPalette(palette);
+    QFont font = mTextArea->font();
+    font.setPointSizeF(pointSize(11));
+    mTextArea->setFont(font);
+    mTextArea->setText(tr("Nothing to display"));
+    mTextArea->setVisible(false);
+    
+    mImageSaveBut = new Button(tr("Save Image"), this);
+    mImageClipBut = new Button(tr("Copy Image"), this);
+    mResultsClipBut = new Button(tr("Copy results"), this);
+    mDataSaveBut = new Button(tr("Save Graph Data"), this);
     
     mAnimation = new QPropertyAnimation();
     mAnimation->setPropertyName("geometry");
@@ -36,8 +50,10 @@ mGraphLeft(130)
     mAnimation->setTargetObject(this);
     mAnimation->setEasingCurve(QEasingCurve::Linear);
     
-    connect(mImageBut, SIGNAL(clicked()), this, SLOT(exportAsImage()));
-    connect(mDataBut, SIGNAL(clicked()), this, SLOT(exportData()));
+    connect(mImageSaveBut, SIGNAL(clicked()), this, SLOT(saveAsImage()));
+    connect(mImageClipBut, SIGNAL(clicked()), this, SLOT(imageToClipboard()));
+    connect(mResultsClipBut, SIGNAL(clicked()), this, SLOT(resultsToClipboard()));
+    connect(mDataSaveBut, SIGNAL(clicked()), this, SLOT(saveGraphData()));
     
     setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
 }
@@ -45,6 +61,30 @@ mGraphLeft(130)
 GraphViewResults::~GraphViewResults()
 {
     
+}
+
+void GraphViewResults::showHisto()
+{
+    mCurrentResult = eHisto;
+    refresh();
+}
+
+void GraphViewResults::showTrace()
+{
+    mCurrentResult = eTrace;
+    refresh();
+}
+
+void GraphViewResults::showAccept()
+{
+    mCurrentResult = eAccept;
+    refresh();
+}
+
+void GraphViewResults::showCorrel()
+{
+    mCurrentResult = eCorrel;
+    refresh();
 }
 
 void GraphViewResults::toggle(const QRect& targetGeometry)
@@ -69,6 +109,20 @@ void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc)
     mMCMCSettings = mcmc;
 }
 
+void GraphViewResults::updateChains(bool showAll, const QList<bool>& showChainList)
+{
+    mShowAllChains = showAll;
+    mShowChainList = showChainList;
+    refresh();
+}
+
+void GraphViewResults::updateHPD(bool show, int threshold)
+{
+    mShowHPD = show;
+    mThresholdHPD = threshold;
+    refresh();
+}
+
 void GraphViewResults::setRange(float min, float max)
 {
     mGraph->setRangeX(min, max);
@@ -85,21 +139,57 @@ void GraphViewResults::setMainColor(const QColor& color)
     update();
 }
 
-void GraphViewResults::exportAsImage()
+void GraphViewResults::saveAsImage()
 {
-    
+    QString filter = tr("Image (*.png);;Scalable Vector Graphics (*.svg)");
+    QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                    tr("Save graph image as..."),
+                                                    ProjectManager::getCurrentPath(),
+                                                    filter);
+    if(!fileName.isEmpty())
+    {
+        bool asSvg = fileName.endsWith(".svg");
+        if(asSvg)
+        {
+            QSvgGenerator svgGen;
+            svgGen.setFileName(fileName);
+            svgGen.setSize(mGraph->size());
+            svgGen.setViewBox(QRect(0, 0, mGraph->width(), mGraph->height()));
+            QPainter p(&svgGen);
+            p.setRenderHint(QPainter::Antialiasing);
+            mGraph->render(&p);
+        }
+        else
+        {
+            QImage image(mGraph->size(), QImage::Format_ARGB32);
+            image.fill(Qt::transparent);
+            QPainter p(&image);
+            p.setRenderHint(QPainter::Antialiasing);
+            mGraph->render(&p);
+            image.save(fileName, "PNG");
+        }
+        QFileInfo fileInfo(fileName);
+        ProjectManager::setCurrentPath(fileInfo.dir().absolutePath());
+    }
 }
 
-void GraphViewResults::exportData()
+void GraphViewResults::imageToClipboard()
 {
-    /*QTextEdit* edit = new QTextEdit();
-     const QMap<double, double>& data = mGraph->curveData("graph");
-     QMap<double, double>::const_iterator it;
-     for(it = data.begin(); it != data.end(); ++it)
-     {
-     edit->append(QString::number(it->first) + "|" + QString::number(it->second) + "\n");
-     }
-     edit->show();*/
+    QClipboard* clipboard = QApplication::clipboard();
+    clipboard->setPixmap(mGraph->grab());
+}
+
+void GraphViewResults::resultsToClipboard()
+{
+    QClipboard* clipboard = QApplication::clipboard();
+    clipboard->setText(mResults);
+}
+
+void GraphViewResults::showNumericalValues(bool show)
+{
+    mTextArea->setVisible(show);
+    if(show)
+        mTextArea->raise();
 }
 
 void GraphViewResults::paintEvent(QPaintEvent* e)
@@ -124,9 +214,14 @@ void GraphViewResults::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
     
-    mImageBut->setGeometry(mMargin, mMargin + mLineH, (mGraphLeft - 2*mMargin), mLineH);
-    mDataBut->setGeometry(mMargin, 2*mMargin + 2*mLineH, (mGraphLeft - 2*mMargin), mLineH);
+    int bw = (mGraphLeft - 3*mMargin)/2;
     
-    mGraph->setGeometry(mGraphLeft, 0, width() - mGraphLeft, height());
-}
+    mImageSaveBut->setGeometry(mMargin, mMargin + mLineH, bw, mLineH);
+    mImageClipBut->setGeometry(2*mMargin + bw, mMargin + mLineH, bw, mLineH);
+    
+    mResultsClipBut->setGeometry(mMargin, 2*mMargin + 2*mLineH, bw, mLineH);
+    mDataSaveBut->setGeometry(2*mMargin + bw, 2*mMargin + 2*mLineH, bw, mLineH);
 
+    mGraph->setGeometry(mGraphLeft, 0, width() - mGraphLeft, height());
+    mTextArea->setGeometry(mGraph->geometry().adjusted(50, 10, 0, -10));
+}

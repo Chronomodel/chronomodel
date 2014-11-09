@@ -42,6 +42,8 @@ public slots:
     void clearResults();
     void updateResults(Model* model);
     void updateGraphs();
+    void updateChains();
+    void updateHPD();
     
 private slots:
     void setGraphZoom(float min, float max);
@@ -102,7 +104,7 @@ private:
     QWidget* mPhasesGroup;
     CheckBox* mAlphaCheck;
     CheckBox* mBetaCheck;
-    CheckBox* mPredictCheck;
+    CheckBox* mTauCheck;
     
     QWidget* mDataGroup;
     RadioButton* mDataThetaRadio;

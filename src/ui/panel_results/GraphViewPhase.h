@@ -15,19 +15,20 @@ public:
     
     void setPhase(Phase* phase);
     
-    // ----------------------------------------------------------------
-    
-    void showHisto(bool showAlpha, bool showBeta, bool showPredict, bool showAllChains, const QList<bool>& showChainList, bool showHPD, int thresholdHPD);
-    void showTrace(bool showAlpha, bool showBeta, bool showPredict, const QList<bool>& showChainList);
-    void showAccept(bool showAlpha, bool showBeta, bool showPredict, const QList<bool>& showChainList);
-    
-    // ----------------------------------------------------------------
+    void setVariablesToShow(bool showAlpha, bool showBeta, bool showTau);
+
+private slots:
+    void saveGraphData();
     
 protected:
     void paintEvent(QPaintEvent* e);
+    void refresh();
     
 private:
     Phase* mPhase;
+    bool mShowAlpha;
+    bool mShowBeta;
+    bool mShowTau;
 };
 
 #endif

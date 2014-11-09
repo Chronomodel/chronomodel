@@ -279,7 +279,6 @@ void MainWindow::setProject(Project* project)
         updateWindowTitle();
         
         connect(mProject, SIGNAL(projectStateChanged()), mProjectView, SLOT(updateProject()));
-        connect(mProject, SIGNAL(mcmcStarted()), mProjectView, SLOT(showModel()));
         connect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
         connect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
     }

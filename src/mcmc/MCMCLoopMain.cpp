@@ -262,12 +262,12 @@ void MCMCLoopMain::update()
     if(mState == eRunning)
     {
         // Using a down-sampling eventor :
-        //doMemo = (mIterIndex % mSettings.mDownSamplingFactor == 0);
+        //doMemo = (mIterIndex % mSettings.mThinningInterval == 0);
         
         // Using num of iters to keep :
         int step = 1;
-        if(mSettings.mDownSamplingFactor < mSettings.mNumRunIter)
-            step = floor(mSettings.mNumRunIter / mSettings.mDownSamplingFactor);
+        if(mSettings.mThinningInterval < mSettings.mNumRunIter)
+            step = floor(mSettings.mNumRunIter / mSettings.mThinningInterval);
         
         doMemo = (mRunIterIndex % step == 0);
     }
@@ -422,9 +422,9 @@ void MCMCLoopMain::finalize()
             date.mSigma.generateFullHisto(tmin, tmax);
             //date.mDelta.generateFullHisto(tmin, tmax);
             
-            date.mTheta.generateHistos(mSettings.mNumProcesses, tmin, tmax);
-            date.mSigma.generateHistos(mSettings.mNumProcesses, tmin, tmax);
-            //date.mDelta.generateHistos(mSettings.mNumProcesses, tmin, tmax);
+            date.mTheta.generateHistos(mSettings.mNumChains, tmin, tmax);
+            date.mSigma.generateHistos(mSettings.mNumChains, tmin, tmax);
+            //date.mDelta.generateHistos(mSettings.mNumChains, tmin, tmax);
             
             FunctionAnalysis data = analyseFunction(date.mTheta.fullHisto());
             date.mTheta.mHistoMode = data.mode;
@@ -433,7 +433,7 @@ void MCMCLoopMain::finalize()
         }
         
         event.mTheta.generateFullHisto(tmin, tmax);
-        event.mTheta.generateHistos(mSettings.mNumProcesses, tmin, tmax);
+        event.mTheta.generateHistos(mSettings.mNumChains, tmin, tmax);
         
         FunctionAnalysis data = analyseFunction(event.mTheta.fullHisto());
         event.mTheta.mHistoMode = data.mode;
@@ -449,9 +449,9 @@ void MCMCLoopMain::finalize()
         phase.mBeta.generateFullHisto(tmin, tmax);
         phase.mThetaPredict.generateFullHisto(tmin, tmax);
         
-        phase.mAlpha.generateHistos(mSettings.mNumProcesses, tmin, tmax);
-        phase.mBeta.generateHistos(mSettings.mNumProcesses, tmin, tmax);
-        phase.mThetaPredict.generateHistos(mSettings.mNumProcesses, tmin, tmax);*/
+        phase.mAlpha.generateHistos(mSettings.mNumChains, tmin, tmax);
+        phase.mBeta.generateHistos(mSettings.mNumChains, tmin, tmax);
+        phase.mThetaPredict.generateHistos(mSettings.mNumChains, tmin, tmax);*/
     }
 }
 

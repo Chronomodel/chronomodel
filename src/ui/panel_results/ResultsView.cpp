@@ -123,8 +123,8 @@ mHasPhases(false)
     mHPDEdit = new LineEdit(this);
     mHPDEdit->setText("95");
     
-    connect(mHPDCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateGraphs()));
+    connect(mHPDCheck, SIGNAL(clicked()), this, SLOT(updateHPD()));
+    connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateHPD()));
     
     // -----------
     
@@ -135,7 +135,7 @@ mHasPhases(false)
     mAllChainsCheck->setChecked(true);
     mChainsGroup->setFixedHeight(2*mMargin + mLineH);
     
-    connect(mAllChainsCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+    connect(mAllChainsCheck, SIGNAL(clicked()), this, SLOT(updateChains()));
     
     // -----------
     
@@ -144,15 +144,15 @@ mHasPhases(false)
     mPhasesGroup = new QWidget();
     mAlphaCheck = new CheckBox(tr("Begin"), mPhasesGroup);
     mBetaCheck = new CheckBox(tr("End"), mPhasesGroup);
-    mPredictCheck = new CheckBox(tr("Phase"), mPhasesGroup);
+    mTauCheck = new CheckBox(tr("Duration"), mPhasesGroup);
     mAlphaCheck->setChecked(true);
     mBetaCheck->setChecked(true);
-    mPredictCheck->setChecked(false);
+    mTauCheck->setChecked(false);
     mPhasesGroup->setFixedHeight(4*mMargin + 3*mLineH);
     
     connect(mAlphaCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     connect(mBetaCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    connect(mPredictCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+    connect(mTauCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     
     // -----------
     
@@ -198,6 +198,7 @@ mHasPhases(false)
     connect(mCompressor, SIGNAL(valueChanged(float)), this, SLOT(compress(float)));
     connect(mUnfoldBut, SIGNAL(toggled(bool)), this, SLOT(unfoldResults(bool)));
     connect(mInfosBut, SIGNAL(toggled(bool)), this, SLOT(showInfos(bool)));
+    
     
     // -------------------------
     
@@ -352,7 +353,7 @@ void ResultsView::updateLayout()
     
     mAlphaCheck->setGeometry(m, m, mPhasesGroup->width()-2*m, mLineH);
     mBetaCheck->setGeometry(m, 2*m + mLineH, mPhasesGroup->width()-2*m, mLineH);
-    mPredictCheck->setGeometry(m, 3*m + 2*mLineH, mPhasesGroup->width()-2*m, mLineH);
+    mTauCheck->setGeometry(m, 3*m + 2*mLineH, mPhasesGroup->width()-2*m, mLineH);
     
     mDataThetaRadio->setGeometry(m, m, mDataGroup->width() - 2*m, mLineH);
     mDataCalibCheck->setGeometry(m + dx, 2*m + mLineH, mDataGroup->width() - 2*m - dx, mLineH);
@@ -362,15 +363,72 @@ void ResultsView::updateLayout()
     update();
 }
 
+void ResultsView::updateChains()
+{
+    QList<bool> showChainList;
+    for(int i=0; i<mCheckChainChecks.size(); ++i)
+        showChainList.append(mCheckChainChecks[i]->isChecked());
+    
+    for(int i=0; i<mByPhasesGraphs.size(); ++i)
+        mByPhasesGraphs[i]->updateChains(mAllChainsCheck->isChecked(), showChainList);
+    
+    for(int i=0; i<mByEventsGraphs.size(); ++i)
+        mByEventsGraphs[i]->updateChains(mAllChainsCheck->isChecked(), showChainList);
+}
+
+void ResultsView::updateHPD()
+{
+    for(int i=0; i<mByPhasesGraphs.size(); ++i)
+        mByPhasesGraphs[i]->updateHPD(mHPDCheck->isChecked(), mHPDEdit->text().toInt());
+    
+    for(int i=0; i<mByEventsGraphs.size(); ++i)
+        mByEventsGraphs[i]->updateHPD(mHPDCheck->isChecked(), mHPDEdit->text().toInt());
+}
+
 void ResultsView::updateGraphs()
 {
     Project* project = ProjectManager::getProject();
     ProjectSettings s = ProjectSettings::fromJson(project->state()[STATE_SETTINGS].toObject());
     MCMCSettings mcmc = MCMCSettings::fromJson(project->state()[STATE_MCMC].toObject());
     
-    QList<bool> showChainList;
-    for(int i=0; i<mCheckChainChecks.size(); ++i)
-        showChainList.append(mCheckChainChecks[i]->isChecked());
+    GraphViewDate::Variable dataVariable;
+    if(mDataThetaRadio->isChecked())
+        dataVariable = GraphViewDate::eTheta;
+    else if(mDataSigmaRadio->isChecked())
+        dataVariable = GraphViewDate::eSigma;
+    else if(mDataDeltaRadio->isChecked())
+        dataVariable = GraphViewDate::eDelta;
+    
+    for(int i=0; i<mByPhasesGraphs.size(); ++i)
+    {
+        if(GraphViewPhase* graph = dynamic_cast<GraphViewPhase*>(mByPhasesGraphs[i]))
+        {
+            graph->setVariablesToShow(mAlphaCheck->isChecked(),
+                                      mBetaCheck->isChecked(),
+                                      mTauCheck->isChecked());
+        }
+        else if(GraphViewEvent* graph = dynamic_cast<GraphViewEvent*>(mByPhasesGraphs[i]))
+        {
+            graph->showVariances(dataVariable == GraphViewDate::eSigma);
+        }
+        else if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByPhasesGraphs[i]))
+        {
+            graph->setVariableToShow(dataVariable);
+            graph->showCalib(mDataCalibCheck->isChecked());
+        }
+    }
+    for(int i=0; i<mByEventsGraphs.size(); ++i)
+    {
+        if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByEventsGraphs[i]))
+        {
+            graph->setVariableToShow(dataVariable);
+            graph->showCalib(mDataCalibCheck->isChecked());
+        }
+        else if(GraphViewEvent* graph = dynamic_cast<GraphViewEvent*>(mByEventsGraphs[i]))
+        {
+            graph->showVariances(dataVariable == GraphViewDate::eSigma);
+        }
+    }
     
     if(mTabs->currentIndex() == 0)
     {
@@ -379,143 +437,46 @@ void ResultsView::updateGraphs()
         mRuler->setRange(min, max);
         
         for(int i=0; i<mByPhasesGraphs.size(); ++i)
-        {
-            if(GraphViewPhase* graph = dynamic_cast<GraphViewPhase*>(mByPhasesGraphs[i]))
-            {
-                graph->showHisto(mAlphaCheck->isChecked(),
-                                 mBetaCheck->isChecked(),
-                                 mPredictCheck->isChecked(),
-                                 mAllChainsCheck->isChecked(),
-                                 showChainList,
-                                 mHPDCheck->isChecked(),
-                                 mHPDEdit->text().toInt());
-            }
-            else if(GraphViewEvent* graph = dynamic_cast<GraphViewEvent*>(mByPhasesGraphs[i]))
-            {
-                graph->showHisto(mAllChainsCheck->isChecked(),
-                                 showChainList,
-                                 mHPDCheck->isChecked(),
-                                 mHPDEdit->text().toInt());
-            }
-            else if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByPhasesGraphs[i]))
-            {
-                graph->showHisto(mDataThetaRadio->isChecked(),
-                                 mDataSigmaRadio->isChecked(),
-                                 mDataDeltaRadio->isChecked(),
-                                 mDataCalibCheck->isChecked(),
-                                 mAllChainsCheck->isChecked(),
-                                 showChainList,
-                                 mHPDCheck->isChecked(),
-                                 mHPDEdit->text().toInt());
-            }
-        }
+            mByPhasesGraphs[i]->showHisto();
+        
         for(int i=0; i<mByEventsGraphs.size(); ++i)
-        {
-            if(GraphViewEvent* graph = dynamic_cast<GraphViewEvent*>(mByEventsGraphs[i]))
-            {
-                graph->showHisto(mAllChainsCheck->isChecked(),
-                                 showChainList,
-                                 mHPDCheck->isChecked(),
-                                 mHPDEdit->text().toInt());
-            }
-            else if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByEventsGraphs[i]))
-            {
-                graph->showHisto(mDataThetaRadio->isChecked(),
-                                 mDataSigmaRadio->isChecked(),
-                                 mDataDeltaRadio->isChecked(),
-                                 mDataCalibCheck->isChecked(),
-                                 mAllChainsCheck->isChecked(),
-                                 showChainList,
-                                 mHPDCheck->isChecked(),
-                                 mHPDEdit->text().toInt());
-            }
-        }
+            mByEventsGraphs[i]->showHisto();
     }
     else if(mTabs->currentIndex() == 1)
     {
         int min = 0;
         int max = mcmc.mNumBurnIter + mcmc.mFinalBatchIndex * mcmc.mIterPerBatch + mcmc.mNumRunIter;
-        
         mRuler->setRange(min, max);
         
         for(int i=0; i<mByPhasesGraphs.size(); ++i)
-        {
-            if(GraphViewPhase* graph = dynamic_cast<GraphViewPhase*>(mByPhasesGraphs[i]))
-            {
-                graph->showTrace(mAlphaCheck->isChecked(),
-                                 mBetaCheck->isChecked(),
-                                 mPredictCheck->isChecked(),
-                                 showChainList);
-            }
-            else if(GraphViewEvent* graph = dynamic_cast<GraphViewEvent*>(mByPhasesGraphs[i]))
-            {
-                graph->showTrace(showChainList);
-            }
-            else if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByPhasesGraphs[i]))
-            {
-                graph->showTrace(mDataThetaRadio->isChecked(),
-                                 mDataSigmaRadio->isChecked(),
-                                 mDataDeltaRadio->isChecked(),
-                                 showChainList);
-            }
-        }
+            mByPhasesGraphs[i]->showTrace();
+        
         for(int i=0; i<mByEventsGraphs.size(); ++i)
-        {
-            if(GraphViewEvent* graph = dynamic_cast<GraphViewEvent*>(mByEventsGraphs[i]))
-            {
-                graph->showTrace(showChainList);
-            }
-            else if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByEventsGraphs[i]))
-            {
-                graph->showTrace(mDataThetaRadio->isChecked(),
-                                 mDataSigmaRadio->isChecked(),
-                                 mDataDeltaRadio->isChecked(),
-                                 showChainList);
-            }
-        }
+            mByEventsGraphs[i]->showTrace();
     }
     else if(mTabs->currentIndex() == 2)
     {
         int min = 0;
         int max = mcmc.mNumBurnIter + mcmc.mFinalBatchIndex * mcmc.mIterPerBatch + mcmc.mNumRunIter;
-        
         mRuler->setRange(min, max);
         
         for(int i=0; i<mByPhasesGraphs.size(); ++i)
-        {
-            if(GraphViewPhase* graph = dynamic_cast<GraphViewPhase*>(mByPhasesGraphs[i]))
-            {
-                graph->showAccept(mAlphaCheck->isChecked(),
-                                 mBetaCheck->isChecked(),
-                                 mPredictCheck->isChecked(),
-                                 showChainList);
-            }
-            else if(GraphViewEvent* graph = dynamic_cast<GraphViewEvent*>(mByPhasesGraphs[i]))
-            {
-                graph->showAccept(showChainList);
-            }
-            else if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByPhasesGraphs[i]))
-            {
-                graph->showAccept(mDataThetaRadio->isChecked(),
-                                 mDataSigmaRadio->isChecked(),
-                                 mDataDeltaRadio->isChecked(),
-                                 showChainList);
-            }
-        }
+            mByPhasesGraphs[i]->showAccept();
+        
         for(int i=0; i<mByEventsGraphs.size(); ++i)
-        {
-            if(GraphViewEvent* graph = dynamic_cast<GraphViewEvent*>(mByEventsGraphs[i]))
-            {
-                graph->showAccept(showChainList);
-            }
-            else if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByEventsGraphs[i]))
-            {
-                graph->showAccept(mDataThetaRadio->isChecked(),
-                                 mDataSigmaRadio->isChecked(),
-                                 mDataDeltaRadio->isChecked(),
-                                 showChainList);
-            }
-        }
+            mByEventsGraphs[i]->showAccept();
+    }
+    else if(mTabs->currentIndex() == 3)
+    {
+        /*int min = 0;
+        int max = mcmc.mNumBurnIter + mcmc.mFinalBatchIndex * mcmc.mIterPerBatch + mcmc.mNumRunIter;
+        mRuler->setRange(min, max);*/
+        
+        for(int i=0; i<mByPhasesGraphs.size(); ++i)
+            mByPhasesGraphs[i]->showCorrel();
+        
+        for(int i=0; i<mByEventsGraphs.size(); ++i)
+            mByEventsGraphs[i]->showCorrel();
     }
     update();
 }
@@ -528,11 +489,23 @@ void ResultsView::clearResults()
     for(int i=mCheckChainChecks.size()-1; i>=0; --i)
     {
         CheckBox* check = mCheckChainChecks.takeAt(i);
-        disconnect(check, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+        disconnect(check, SIGNAL(clicked()), this, SLOT(updateChains()));
         check->setParent(0);
         delete check;
     }
     mCheckChainChecks.clear();
+    
+    for(int i=0; i<mByEventsGraphs.size(); ++i)
+    {
+        mByEventsGraphs[i]->setParent(0);
+        delete mByEventsGraphs[i];
+    }
+    
+    for(int i=0; i<mByPhasesGraphs.size(); ++i)
+    {
+        mByPhasesGraphs[i]->setParent(0);
+        delete mByPhasesGraphs[i];
+    }
     
     QWidget* eventsWidget = mEventsScrollArea->takeWidget();
     if(eventsWidget)
@@ -557,10 +530,10 @@ void ResultsView::updateResults(Model* model)
     mByEventsBut->setVisible(mHasPhases);
     mByPhasesBut->setVisible(mHasPhases);
     
-    for(int i=0; i<(int)model->mMCMCSettings.mNumProcesses; ++i)
+    for(int i=0; i<(int)model->mMCMCSettings.mNumChains; ++i)
     {
         CheckBox* check = new CheckBox(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
-        connect(check, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+        connect(check, SIGNAL(clicked()), this, SLOT(updateChains()));
         check->setVisible(true);
         mCheckChainChecks.append(check);
     }
@@ -630,14 +603,12 @@ void ResultsView::updateResults(Model* model)
     
     
     if(mHasPhases && mByPhasesBut->isChecked())
-    {
-        mStack->setCurrentWidget(mPhasesScrollArea);
-    }
+        showByPhases(true);
     else
-    {
-        mStack->setCurrentWidget(mEventsScrollArea);
-    }
+        showByEvents(true);
     
+    updateHPD();
+    updateChains();
     updateLayout();
     updateGraphs();
 }
@@ -682,18 +653,13 @@ void ResultsView::updateScrollHeights()
     }
 }
 
-void ResultsView::showInfos(bool)
+void ResultsView::showInfos(bool show)
 {
-    /*bool show = mInfosBut->isChecked();
-     
-     for(QList<GraphViewPhase*>::iterator it = mPhasesGraphs.begin(); it != mPhasesGraphs.end(); ++it)
-     (*it)->showInfos(show);
-     
-     for(QList<GraphViewEvent*>::iterator it = mEventsGraphs.begin(); it != mEventsGraphs.end(); ++it)
-     (*it)->showInfos(show);
-     
-     for(QList<GraphViewDate*>::iterator it = mDatesGraphs.begin(); it != mDatesGraphs.end(); ++it)
-     (*it)->showInfos(show);*/
+    for(int i=0; i<mByEventsGraphs.size(); ++i)
+        mByEventsGraphs[i]->showNumericalValues(show);
+    
+    for(int i=0; i<mByPhasesGraphs.size(); ++i)
+        mByPhasesGraphs[i]->showNumericalValues(show);
 }
 
 void ResultsView::compress(float prop)

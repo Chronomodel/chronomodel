@@ -1,15 +1,15 @@
 #include "MCMCSettings.h"
 #include <QVariant>
+#include <QJsonArray>
 
 
 MCMCSettings::MCMCSettings():
-mNumProcesses(3),
+mNumChains(3),
 mNumRunIter(100000),
 mNumBurnIter(1000),
 mMaxBatches(100),
 mIterPerBatch(100),
-mSeed(10),
-mDownSamplingFactor(100000),
+mThinningInterval(10),
 mFinalBatchIndex(0)
 {
     
@@ -28,13 +28,13 @@ MCMCSettings& MCMCSettings::operator=(const MCMCSettings& s)
 
 void MCMCSettings::copyFrom(const MCMCSettings& s)
 {
-    mNumProcesses = s.mNumProcesses;
+    mNumChains = s.mNumChains;
     mNumRunIter = s.mNumRunIter;
     mNumBurnIter = s.mNumBurnIter;
     mMaxBatches = s.mMaxBatches;
     mIterPerBatch = s.mIterPerBatch;
-    mSeed = s.mSeed;
-    mDownSamplingFactor = s.mDownSamplingFactor;
+    mSeeds = s.mSeeds;
+    mThinningInterval = s.mThinningInterval;
     mFinalBatchIndex = s.mFinalBatchIndex;
 }
 
@@ -46,25 +46,34 @@ MCMCSettings::~MCMCSettings()
 MCMCSettings MCMCSettings::fromJson(const QJsonObject& json)
 {
     MCMCSettings settings;
-    settings.mNumProcesses = json["num_proc"].toInt();
+    settings.mNumChains = json["num_proc"].toInt();
     settings.mNumRunIter = json["num_iter"].toInt();
     settings.mNumBurnIter = json["num_burn"].toInt();
     settings.mMaxBatches = json["max_batches"].toInt();
     settings.mIterPerBatch = json["iter_per_batch"].toInt();
-    settings.mSeed = json["seed"].toInt();
-    settings.mDownSamplingFactor = json["down_sampling_factor"].toInt();
+    settings.mThinningInterval = json["thinning_interval"].toInt();
+    
+    QJsonArray seeds = json["seeds"].toArray();
+    for(int i=0; i<seeds.size(); ++i)
+        settings.mSeeds.append(seeds[i].toInt());
+    
     return settings;
 }
 
 QJsonObject MCMCSettings::toJson() const
 {
     QJsonObject mcmc;
-    mcmc["num_proc"] = QJsonValue::fromVariant(mNumProcesses);
+    mcmc["num_proc"] = QJsonValue::fromVariant(mNumChains);
     mcmc["num_iter"] = QJsonValue::fromVariant(mNumRunIter);
     mcmc["num_burn"] = QJsonValue::fromVariant(mNumBurnIter);
     mcmc["max_batches"] = QJsonValue::fromVariant(mMaxBatches);
     mcmc["iter_per_batch"] = QJsonValue::fromVariant(mIterPerBatch);
-    mcmc["seed"] = QJsonValue::fromVariant(mSeed);
-    mcmc["down_sampling_factor"] = QJsonValue::fromVariant(mDownSamplingFactor);
+    mcmc["thinning_interval"] = QJsonValue::fromVariant(mThinningInterval);
+    
+    QJsonArray seeds;
+    for(int i=0; i<mSeeds.size(); ++i)
+        seeds.append(QJsonValue::fromVariant(mSeeds[i]));
+    mcmc["seeds"] = seeds;
+    
     return mcmc;
 }

@@ -15,19 +15,18 @@ public:
     
     void setEvent(Event* event);
     
-    // ----------------------------------------------------------------
-    
-    void showHisto(bool showAllChains, const QList<bool>& showChainList, bool showHPD, int thresholdHPD);
-    void showTrace(const QList<bool>& showChainList);
-    void showAccept(const QList<bool>& showChainList);
-    
-    // ----------------------------------------------------------------
+    void showVariances(bool show);
+
+private slots:
+    void saveGraphData();
     
 protected:
     void paintEvent(QPaintEvent* e);
+    void refresh();
     
 private:
     Event* mEvent;
+    bool mShowVariances;
 };
 
 #endif

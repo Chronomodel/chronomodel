@@ -81,7 +81,6 @@ public:
     MetropolisVariable mAlpha;
     MetropolisVariable mBeta;
     MetropolisVariable mTau;
-    MetropolisVariable mThetaPredict;
     
     TauType mTauType;
     float mTauFixed;

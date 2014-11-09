@@ -2,6 +2,7 @@
 #define MCMCSettings_H
 
 #include <QJsonObject>
+#include <QList>
 
 
 class MCMCSettings
@@ -16,13 +17,13 @@ public:
     static MCMCSettings fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
     
-    unsigned long long mNumProcesses;
+    unsigned long long mNumChains;
     unsigned long long mNumRunIter;
     unsigned long long mNumBurnIter;
     unsigned long long mMaxBatches;
     unsigned long long mIterPerBatch;
-    unsigned int mSeed;
-    unsigned int mDownSamplingFactor;
+    unsigned int mThinningInterval;
+    QList<int> mSeeds;
     
     unsigned long mFinalBatchIndex;
 };

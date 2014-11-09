@@ -31,7 +31,7 @@ void MCMCLoop::run()
     emit stepChanged(tr("Calibrating..."), 0, 0);
     this->calibrate();
     
-    for(mProcIndex = 0; mProcIndex < mSettings.mNumProcesses; ++mProcIndex)
+    for(mProcIndex = 0; mProcIndex < mSettings.mNumChains; ++mProcIndex)
     {
         Generator::changeSeed();
         
