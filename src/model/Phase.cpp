@@ -49,7 +49,7 @@ void Phase::copyFrom(const Phase& phase)
     
     mAlpha = phase.mAlpha;
     mBeta = phase.mBeta;
-    mThetaPredict = phase.mThetaPredict;
+    mTau = phase.mTau;
     
     mTauType = phase.mTauType;
     mTauFixed = phase.mTauFixed;
@@ -305,7 +305,7 @@ void Phase::memoAll()
 {
     mAlpha.memo();
     mBeta.memo();
-    mThetaPredict.memo();
+    mTau.memo();
 }
 
 

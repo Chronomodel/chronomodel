@@ -167,11 +167,11 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     float posY1 = rect.height()/3;
     float posY2 = 2*rect.height()/3;
     
-    EventConstraint::PhiType phiType = (EventConstraint::PhiType)mConstraint[STATE_EVENT_CONSTRAINT_PHI_TYPE].toInt();
+    //EventConstraint::PhiType phiType = (EventConstraint::PhiType)mConstraint[STATE_EVENT_CONSTRAINT_PHI_TYPE].toInt();
     
     if(mXStart < mXEnd && mYStart > mYEnd)
     {
-        if(phiType == EventConstraint::ePhiUnknown)
+        //if(phiType == EventConstraint::ePhiUnknown)
         {
             painter->save();
             painter->translate(rect.x() + posX, rect.y() + posY);
@@ -179,7 +179,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->fillPath(path, color);
             painter->restore();
         }
-        else
+        /*else
         {
             painter->save();
             painter->translate(rect.x() + posX1, rect.y() + posY2);
@@ -192,11 +192,11 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->rotate(angle_deg);
             painter->fillPath(path, color);
             painter->restore();
-        }
+        }*/
     }
     else if(mXStart < mXEnd && mYStart < mYEnd)
     {
-        if(phiType == EventConstraint::ePhiUnknown)
+        //if(phiType == EventConstraint::ePhiUnknown)
         {
             painter->save();
             painter->translate(rect.x() + posX, rect.y() + posY);
@@ -204,7 +204,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->fillPath(path, color);
             painter->restore();
         }
-        else
+        /*else
         {
             painter->save();
             painter->translate(rect.x() + posX1, rect.y() + posY1);
@@ -217,11 +217,11 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->rotate(180 - angle_deg);
             painter->fillPath(path, color);
             painter->restore();
-        }
+        }*/
     }
     else if(mXStart > mXEnd && mYStart < mYEnd)
     {
-        if(phiType == EventConstraint::ePhiUnknown)
+        //if(phiType == EventConstraint::ePhiUnknown)
         {
             painter->save();
             painter->translate(rect.x() + posX, rect.y() + posY);
@@ -229,7 +229,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->fillPath(path, color);
             painter->restore();
         }
-        else
+        /*else
         {
             painter->save();
             painter->translate(rect.x() + posX2, rect.y() + posY1);
@@ -242,11 +242,11 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->rotate(180 + angle_deg);
             painter->fillPath(path, color);
             painter->restore();
-        }
+        }*/
     }
     else if(mXStart > mXEnd && mYStart > mYEnd)
     {
-        if(phiType == EventConstraint::ePhiUnknown)
+        //if(phiType == EventConstraint::ePhiUnknown)
         {
             painter->save();
             painter->translate(rect.x() + rect.width()/2, rect.y() + rect.height()/2);
@@ -254,7 +254,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->fillPath(path, color);
             painter->restore();
         }
-        else
+        /*else
         {
             painter->save();
             painter->translate(rect.x() + 2*rect.width()/3, rect.y() + 2*rect.height()/3);
@@ -267,12 +267,12 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->rotate(-angle_deg);
             painter->fillPath(path, color);
             painter->restore();
-        }
+        }*/
     }
     
     // Bubble
     
-    switch(phiType)
+    /*switch(phiType)
     {
         case EventConstraint::ePhiUnknown:
         {
@@ -304,7 +304,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         }
         default:
             break;
-    }
+    }*/
 }
 
 QRectF ArrowItem::getBubbleRect() const
