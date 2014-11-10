@@ -442,6 +442,7 @@ void MCMCLoopMain::finalize()
         
         event.mTheta.generateFullHisto(mChains, tmin, tmax);
         event.mTheta.generateHistos(mChains, tmin, tmax);
+        event.mTheta.generateCorrelations(mChains);
         
         FunctionAnalysis data = analyseFunction(event.mTheta.fullHisto());
         event.mTheta.mHistoMode = data.mode;
@@ -459,6 +460,10 @@ void MCMCLoopMain::finalize()
             date.mTheta.generateHistos(mChains, tmin, tmax);
             date.mSigma.generateHistos(mChains, 0, tmax - tmin);
             //date.mDelta.generateHistos(mChains, tmin, tmax);
+            
+            date.mTheta.generateCorrelations(mChains);
+            date.mSigma.generateCorrelations(mChains);
+            //date.mDelta.generateCorrelations(mChains);
             
             FunctionAnalysis data = analyseFunction(date.mTheta.fullHisto());
             date.mTheta.mHistoMode = data.mode;
@@ -478,6 +483,10 @@ void MCMCLoopMain::finalize()
         phase.mAlpha.generateHistos(mChains, tmin, tmax);
         phase.mBeta.generateHistos(mChains, tmin, tmax);
         phase.mTau.generateHistos(mChains, tmin, tmax);
+        
+        phase.mAlpha.generateCorrelations(mChains);
+        phase.mBeta.generateCorrelations(mChains);
+        phase.mTau.generateCorrelations(mChains);
     }
 }
 

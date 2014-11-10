@@ -218,7 +218,30 @@ void GraphViewDate::refresh()
         }
         else if(mCurrentResult == eCorrel)
         {
+            int chainIdx = -1;
+            for(int i=0; i<mShowChainList.size(); ++i)
+                if(mShowChainList[i])
+                    chainIdx = i;
             
+            if(chainIdx != -1)
+            {
+                MHVariable* variable = &(mDate->mTheta);
+                if(mVariable == eTheta) variable = &(mDate->mTheta);
+                else if(mVariable == eSigma) variable = &(mDate->mSigma);
+                else if(mVariable == eDelta) variable = &(mDate->mDelta);
+                
+                GraphCurve curve;
+                curve.mName = QString("correlation chain " + QString::number(chainIdx));
+                curve.mDataVector = variable->correlationForChain(chainIdx);
+                curve.mUseVectorData = true;
+                curve.mPen.setColor(Painting::chainColors[chainIdx]);
+                curve.mIsHisto = false;
+                mGraph->addCurve(curve);
+                
+                mGraph->setRangeX(0, 100);
+                mGraph->setRangeY(vector_min_value(curve.mDataVector),
+                                  vector_max_value(curve.mDataVector));
+            }
         }
     }
 }

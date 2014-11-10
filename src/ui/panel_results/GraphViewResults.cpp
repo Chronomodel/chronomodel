@@ -23,7 +23,7 @@ mGraphLeft(130)
     
     mGraph = new GraphView(this);
     
-    mGraph->showAxis(true);
+    mGraph->showAxis(false);
     mGraph->showScrollBar(false);
     mGraph->showYValues(true);
     mGraph->setRangeY(0, 1);

@@ -500,6 +500,11 @@ void ResultsView::updateRulerAreas()
         else if(mDataSigmaRadio->isChecked())
             mRuler->setRange(0, max - min);
     }
+    else if(mTabs->currentIndex() == 3)
+    {
+        mRuler->clearAreas();
+        mRuler->setRange(0, 100);
+    }
     else
     {
         int curChainIdx = -1;

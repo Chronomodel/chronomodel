@@ -31,6 +31,9 @@ public:
     QVector<float> fullTrace();
     QMap<float, float> traceForChain(const QList<Chain>& chains, int index);
     
+    void generateCorrelations(const QList<Chain>& chains);
+    QVector<float> correlationForChain(int index);
+    
 private:
     QMap<float, float> generateHisto(const QVector<float>& data, float tmin, float tmax);
     
@@ -40,6 +43,8 @@ public:
     
     QList<QMap<float, float>> mHistos;
     QMap<float, float> mHistoFull;
+    
+    QList<QVector<float>> mCorrelations;
     
     float mHistoMode;
     float mHistoMean;

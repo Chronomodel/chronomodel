@@ -293,3 +293,41 @@ QMap<float, float> MetropolisVariable::traceForChain(const QList<Chain>& chains,
     //qDebug() << "Trace for chain " << index << " : " << trace.size();
     return trace;
 }
+
+void MetropolisVariable::generateCorrelations(const QList<Chain>& chains)
+{
+    int hmax = 100;
+    
+    for(int c=0; c<chains.size(); ++c)
+    {
+        QMap<float, float> traceMap = traceForChain(chains, c);
+        QList<float> trace = traceMap.values();
+        QVector<float> results;
+        float n = trace.size();
+        
+        for(float h=0; h<hmax; ++h)
+        {
+            float sum0 = 0;
+            float sum1 = 0;
+            float sum2 = 0;
+            for(float i=0; i<n-h; ++i)
+            {
+                sum0 += trace[i] * trace[i];
+                sum1 += trace[i] * trace[i + h];
+                sum2 += trace[i];
+            }
+            float s0 = sum0 / n;
+            float s = sum1 / (n-h);
+            float m = sum2 / n;
+            float result = (s -m*m) / (s0 -m*m);
+            
+            results.append(result);
+        }
+        mCorrelations.append(results);
+    }
+}
+
+QVector<float> MetropolisVariable::correlationForChain(int index)
+{
+    return mCorrelations[index];
+}
