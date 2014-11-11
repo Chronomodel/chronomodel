@@ -1,5 +1,5 @@
+- export data CSV en colonnes
 - export résultats : csv avec colonnes : moyenne, ecart type, Q1, Q2, Q3, intervalles HPD (avec %tage), intervalle de crédibilité (c1, c2, %age associé)
-- export to clipboard
 - version de l’app dans chr
 - Phases : click sur item : sélectionner les évènements
 => par contre, si click sur checkbox de la phase, pas de sélection des faits!

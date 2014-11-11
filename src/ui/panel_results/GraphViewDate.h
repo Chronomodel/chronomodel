@@ -10,19 +10,11 @@ class GraphViewDate: public GraphViewResults
 {
     Q_OBJECT
 public:
-    enum Variable{
-        eTheta = 0,
-        eSigma = 1,
-        eDelta = 2
-    };
-    
     explicit GraphViewDate(QWidget *parent = 0);
     virtual ~GraphViewDate();
     
     void setDate(Date* date);
     void setColor(const QColor& color);
-    
-    void setVariableToShow(Variable v);
     void showCalib(bool show);
     
 private slots:
@@ -34,7 +26,6 @@ protected:
     
 private:
     Date* mDate;
-    Variable mVariable;
     bool mShowCalib;
     QColor mColor;
 };

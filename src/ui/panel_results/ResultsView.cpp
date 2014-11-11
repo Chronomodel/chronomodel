@@ -44,10 +44,10 @@ mHasPhases(false)
     // -------------
     
     mTabs = new Tabs(this);
-    mTabs->addTab(tr("Results"));
-    mTabs->addTab(tr("Traces"));
+    mTabs->addTab(tr("Posterior distrib."));
+    mTabs->addTab(tr("History plots"));
     mTabs->addTab(tr("Acceptation rate"));
-    mTabs->addTab(tr("Auto-correlation"));
+    mTabs->addTab(tr("Autocorrelation"));
     
     connect(mTabs, SIGNAL(tabClicked(int)), this, SLOT(changeTab(int)));
     
@@ -155,16 +155,15 @@ mHasPhases(false)
     
     // -----------
     
-    mDataTitle = new Label(tr("Data results"));
+    mDataTitle = new Label(tr("Results options"));
     mDataTitle->setIsTitle(true);
     mDataGroup = new QWidget();
-    mDataThetaRadio = new RadioButton(tr("Distribution"), mDataGroup);
-    mDataSigmaRadio = new RadioButton(tr("Variance history"), mDataGroup);
+    mDataThetaRadio = new RadioButton(tr("Time"), mDataGroup);
+    mDataSigmaRadio = new RadioButton(tr("Individual variance"), mDataGroup);
     mDataDeltaRadio = new RadioButton(tr("Wiggle maching"), mDataGroup);
     mDataCalibCheck = new CheckBox(tr("Distrib. of calib. dates"), mDataGroup);
     mDataThetaRadio->setChecked(true);
     mDataCalibCheck->setChecked(true);
-    mDataGroup->setFixedHeight(5*mMargin + 4*mLineH);
     
     connect(mDataThetaRadio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     connect(mDataCalibCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
@@ -361,10 +360,13 @@ void ResultsView::updateLayout()
     mBetaCheck->setGeometry(m, 2*m + mLineH, mPhasesGroup->width()-2*m, mLineH);
     mTauCheck->setGeometry(m, 3*m + 2*mLineH, mPhasesGroup->width()-2*m, mLineH);
     
-    mDataThetaRadio->setGeometry(m, m, mDataGroup->width() - 2*m, mLineH);
-    mDataCalibCheck->setGeometry(m + dx, 2*m + mLineH, mDataGroup->width() - 2*m - dx, mLineH);
-    mDataSigmaRadio->setGeometry(m, 3*m + 2*mLineH, mDataGroup->width()-2*m, mLineH);
-    mDataDeltaRadio->setGeometry(m, 4*m + 3*mLineH, mDataGroup->width()-2*m, mLineH);
+    int y = m;
+    mDataThetaRadio->setGeometry(m, y, mDataGroup->width() - 2*m, mLineH);
+    if(mTabs->currentIndex() == 0)
+        mDataCalibCheck->setGeometry(m + dx, y += (m + mLineH), mDataGroup->width() - 2*m - dx, mLineH);
+    mDataSigmaRadio->setGeometry(m, y += (m + mLineH), mDataGroup->width()-2*m, mLineH);
+    mDataDeltaRadio->setGeometry(m, y += (m + mLineH), mDataGroup->width()-2*m, mLineH);
+    mDataGroup->setFixedHeight(y += (m + mLineH));
     
     update();
 }
@@ -407,78 +409,48 @@ void ResultsView::updateGraphs()
     ProjectSettings s = mModel->mSettings;
     MCMCSettings mcmc = mModel->mMCMCSettings;
     
-    GraphViewDate::Variable dataVariable;
-    if(mDataThetaRadio->isChecked())
-        dataVariable = GraphViewDate::eTheta;
-    else if(mDataSigmaRadio->isChecked())
-        dataVariable = GraphViewDate::eSigma;
-    else if(mDataDeltaRadio->isChecked())
-        dataVariable = GraphViewDate::eDelta;
+    GraphViewResults::Variable variable;
+    if(mDataThetaRadio->isChecked()) variable = GraphViewResults::eTheta;
+    else if(mDataSigmaRadio->isChecked()) variable = GraphViewResults::eSigma;
+    else if(mDataDeltaRadio->isChecked()) variable = GraphViewResults::eDelta;
+    
+    GraphViewResults::Result result;
+    if(mTabs->currentIndex() == 0) result = GraphViewResults::eHisto;
+    else if(mTabs->currentIndex() == 1) result = GraphViewResults::eTrace;
+    else if(mTabs->currentIndex() == 2) result = GraphViewResults::eAccept;
+    else if(mTabs->currentIndex() == 3) result = GraphViewResults::eCorrel;
     
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
     {
+        mByPhasesGraphs[i]->setResultToShow(result);
+        mByPhasesGraphs[i]->setVariableToShow(variable);
+        
         if(GraphViewPhase* graph = dynamic_cast<GraphViewPhase*>(mByPhasesGraphs[i]))
         {
             graph->setVariablesToShow(mAlphaCheck->isChecked(),
                                       mBetaCheck->isChecked(),
                                       mTauCheck->isChecked());
         }
-        else if(GraphViewEvent* graph = dynamic_cast<GraphViewEvent*>(mByPhasesGraphs[i]))
-        {
-            graph->showVariances(dataVariable == GraphViewDate::eSigma);
-        }
         else if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByPhasesGraphs[i]))
         {
-            graph->setVariableToShow(dataVariable);
             graph->showCalib(mDataCalibCheck->isChecked());
         }
     }
     for(int i=0; i<mByEventsGraphs.size(); ++i)
     {
-        if(GraphViewEvent* graph = dynamic_cast<GraphViewEvent*>(mByEventsGraphs[i]))
+        mByEventsGraphs[i]->setResultToShow(result);
+        mByEventsGraphs[i]->setVariableToShow(variable);
+        
+        if(GraphViewPhase* graph = dynamic_cast<GraphViewPhase*>(mByEventsGraphs[i]))
         {
-            graph->showVariances(dataVariable == GraphViewDate::eSigma);
+            graph->setVariablesToShow(mAlphaCheck->isChecked(),
+                                      mBetaCheck->isChecked(),
+                                      mTauCheck->isChecked());
         }
         else if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByEventsGraphs[i]))
         {
-            graph->setVariableToShow(dataVariable);
             graph->showCalib(mDataCalibCheck->isChecked());
         }
-    }
-    
-    // ----------------
-    
-    if(mTabs->currentIndex() == 0)
-    {
-        for(int i=0; i<mByPhasesGraphs.size(); ++i)
-            mByPhasesGraphs[i]->showHisto();
-        
-        for(int i=0; i<mByEventsGraphs.size(); ++i)
-            mByEventsGraphs[i]->showHisto();
-    }
-    else if(mTabs->currentIndex() == 1)
-    {
-        for(int i=0; i<mByPhasesGraphs.size(); ++i)
-            mByPhasesGraphs[i]->showTrace();
-        
-        for(int i=0; i<mByEventsGraphs.size(); ++i)
-            mByEventsGraphs[i]->showTrace();
-    }
-    else if(mTabs->currentIndex() == 2)
-    {
-        for(int i=0; i<mByPhasesGraphs.size(); ++i)
-            mByPhasesGraphs[i]->showAccept();
-        
-        for(int i=0; i<mByEventsGraphs.size(); ++i)
-            mByEventsGraphs[i]->showAccept();
-    }
-    else if(mTabs->currentIndex() == 3)
-    {
-        for(int i=0; i<mByPhasesGraphs.size(); ++i)
-            mByPhasesGraphs[i]->showCorrel();
-        
-        for(int i=0; i<mByEventsGraphs.size(); ++i)
-            mByEventsGraphs[i]->showCorrel();
     }
     update();
 }
@@ -779,6 +751,7 @@ void ResultsView::changeTab(int index)
     mHPDCheck->setVisible(index == 0);
     mHPDEdit->setVisible(index == 0);
     mAllChainsCheck->setVisible(index == 0);
+    mDataCalibCheck->setVisible(index == 0);
     
     if(index == 0)
     {

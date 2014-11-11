@@ -68,6 +68,8 @@ QJsonObject Project::emptyState() const
 {
     QJsonObject state;
     
+    state[STATE_APP_VERSION] = qApp->applicationVersion();
+    
     ProjectSettings projectSettings;
     QJsonObject settings = projectSettings.toJson();
     state[STATE_SETTINGS] = settings;
@@ -176,6 +178,9 @@ bool Project::load(const QString& path)
         QByteArray saveData = file.readAll();
         QJsonDocument jsonDoc(QJsonDocument::fromJson(saveData));
         mState = jsonDoc.object();
+        
+        if(!mState.contains(STATE_APP_VERSION))
+            mState[STATE_APP_VERSION] = qApp->applicationVersion();
         
         mLastSavedState = mState;
         

@@ -25,20 +25,23 @@ public:
         eAccept = 2,
         eCorrel = 3
     };
+    enum Variable{
+        eTheta = 0,
+        eSigma = 1,
+        eDelta = 2
+    };
     
     explicit GraphViewResults(QWidget *parent = 0);
     virtual ~GraphViewResults();
+    
+    void setResultToShow(Result result);
+    void setVariableToShow(Variable variable);
     
     void setSettings(const ProjectSettings& settings);
     void setMCMCSettings(const MCMCSettings& mcmc, const QList<Chain>& chains);
     
     void updateChains(bool showAll, const QList<bool>& showChainList);
     void updateHPD(bool show, int threshold);
-    
-    void showHisto();
-    void showTrace();
-    void showAccept();
-    void showCorrel();
     
     void setMainColor(const QColor& color);
     void toggle(const QRect& geometry);
@@ -67,13 +70,14 @@ signals:
 protected:
     GraphView* mGraph;
     
+    Result mCurrentResult;
+    Variable mCurrentVariable;
+    
     QString mResults;
     bool mShowAllChains;
     QList<bool> mShowChainList;
     bool mShowHPD;
     int mThresholdHPD;
-    
-    Result mCurrentResult;
     
     ProjectSettings mSettings;
     MCMCSettings mMCMCSettings;

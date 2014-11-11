@@ -350,7 +350,7 @@ void MainWindow::saveProjectAs()
 
 void MainWindow::updateWindowTitle()
 {
-    setWindowTitle(qApp->applicationName() + (mProject ? QString(" - ") + mProject->mProjectFileName : ""));
+    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + (mProject ? QString(" - ") + mProject->mProjectFileName : ""));
 }
 
 void MainWindow::about()

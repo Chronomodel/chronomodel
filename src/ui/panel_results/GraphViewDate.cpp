@@ -13,7 +13,7 @@
 
 GraphViewDate::GraphViewDate(QWidget *parent):GraphViewResults(parent),
 mDate(0),
-mVariable(eTheta),
+mShowCalib(true),
 mColor(Qt::blue)
 {
     //setMainColor(QColor(100, 120, 100));
@@ -36,6 +36,12 @@ void GraphViewDate::setColor(const QColor& color)
 {
     mColor = color;
     update();
+}
+
+void GraphViewDate::showCalib(bool show)
+{
+    mShowCalib = show;
+    refresh();
 }
 
 void GraphViewDate::saveGraphData()
@@ -80,17 +86,17 @@ void GraphViewDate::refresh()
         {
             mGraph->setRangeY(0, 0.0001f);
             
-            if(mVariable == eTheta)
+            if(mCurrentVariable == eTheta)
                 mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
-            else if(mVariable == eSigma || mVariable == eDelta)
+            else if(mCurrentVariable == eSigma || mCurrentVariable == eDelta)
                 mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
             
             MHVariable* variable = &(mDate->mTheta);
-            if(mVariable == eTheta) variable = &(mDate->mTheta);
-            else if(mVariable == eSigma) variable = &(mDate->mSigma);
-            else if(mVariable == eDelta) variable = &(mDate->mDelta);
+            if(mCurrentVariable == eTheta) variable = &(mDate->mTheta);
+            else if(mCurrentVariable == eSigma) variable = &(mDate->mSigma);
+            else if(mCurrentVariable == eDelta) variable = &(mDate->mDelta);
             
-            if(mShowCalib && mVariable == eTheta)
+            if(mShowCalib && mCurrentVariable == eTheta)
             {
                 GraphCurve curve;
                 curve.mName = "calibration";
@@ -165,9 +171,9 @@ void GraphViewDate::refresh()
                 mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter);
                 
                 MHVariable* variable = &(mDate->mTheta);
-                if(mVariable == eTheta) variable = &(mDate->mTheta);
-                else if(mVariable == eSigma) variable = &(mDate->mSigma);
-                else if(mVariable == eDelta) variable = &(mDate->mDelta);
+                if(mCurrentVariable == eTheta) variable = &(mDate->mTheta);
+                else if(mCurrentVariable == eSigma) variable = &(mDate->mSigma);
+                else if(mCurrentVariable == eDelta) variable = &(mDate->mDelta);
                 
                 GraphCurve curve;
                 curve.mName = QString("trace chain " + QString::number(chainIdx));
@@ -195,9 +201,9 @@ void GraphViewDate::refresh()
                 mGraph->setRangeY(0, 100);
                 
                 MHVariable* variable = &(mDate->mTheta);
-                if(mVariable == eTheta) variable = &(mDate->mTheta);
-                else if(mVariable == eSigma) variable = &(mDate->mSigma);
-                else if(mVariable == eDelta) variable = &(mDate->mDelta);
+                if(mCurrentVariable == eTheta) variable = &(mDate->mTheta);
+                else if(mCurrentVariable == eSigma) variable = &(mDate->mSigma);
+                else if(mCurrentVariable == eDelta) variable = &(mDate->mDelta);
                 
                 GraphCurve curveTarget;
                 curveTarget.mName = "target";
@@ -226,9 +232,9 @@ void GraphViewDate::refresh()
             if(chainIdx != -1)
             {
                 MHVariable* variable = &(mDate->mTheta);
-                if(mVariable == eTheta) variable = &(mDate->mTheta);
-                else if(mVariable == eSigma) variable = &(mDate->mSigma);
-                else if(mVariable == eDelta) variable = &(mDate->mDelta);
+                if(mCurrentVariable == eTheta) variable = &(mDate->mTheta);
+                else if(mCurrentVariable == eSigma) variable = &(mDate->mSigma);
+                else if(mCurrentVariable == eDelta) variable = &(mDate->mDelta);
                 
                 GraphCurve curve;
                 curve.mName = QString("correlation chain " + QString::number(chainIdx));
@@ -246,15 +252,4 @@ void GraphViewDate::refresh()
     }
 }
 
-void GraphViewDate::setVariableToShow(Variable v)
-{
-    mVariable = v;
-    refresh();
-}
-
-void GraphViewDate::showCalib(bool show)
-{
-    mShowCalib = show;
-    refresh();
-}
 

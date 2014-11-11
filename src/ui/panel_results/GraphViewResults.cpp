@@ -14,6 +14,7 @@
 
 GraphViewResults::GraphViewResults(QWidget *parent):QWidget(parent),
 mCurrentResult(eHisto),
+mCurrentVariable(eTheta),
 mMainColor(QColor(50, 50, 50)),
 mMargin(5),
 mLineH(20),
@@ -63,27 +64,15 @@ GraphViewResults::~GraphViewResults()
     
 }
 
-void GraphViewResults::showHisto()
+void GraphViewResults::setResultToShow(Result result)
 {
-    mCurrentResult = eHisto;
+    mCurrentResult = result;
     refresh();
 }
 
-void GraphViewResults::showTrace()
+void GraphViewResults::setVariableToShow(Variable variable)
 {
-    mCurrentResult = eTrace;
-    refresh();
-}
-
-void GraphViewResults::showAccept()
-{
-    mCurrentResult = eAccept;
-    refresh();
-}
-
-void GraphViewResults::showCorrel()
-{
-    mCurrentResult = eCorrel;
+    mCurrentVariable = variable;
     refresh();
 }
 

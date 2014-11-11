@@ -12,6 +12,7 @@
 #include <QString>
 #include <QJsonObject>
 
+#define STATE_APP_VERSION "app_version"
 #define STATE_SETTINGS "settings"
 #define STATE_MCMC "mcmc"
 #define STATE_EVENTS "events"
