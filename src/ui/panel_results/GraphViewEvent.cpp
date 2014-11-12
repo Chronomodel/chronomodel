@@ -17,7 +17,7 @@ mShowVariances(false)
 {
     //setMainColor(QColor(100, 100, 120));
     setMainColor(QColor(100, 100, 100));
-    mGraph->setBackgroundColor(QColor(230, 230, 230));
+    mGraph->setBackgroundColor(QColor(240, 240, 240));
 }
 
 GraphViewEvent::~GraphViewEvent()
@@ -49,7 +49,7 @@ void GraphViewEvent::refresh()
         
         if(mCurrentResult == eHisto)
         {
-            if(!mShowVariances)
+            if(mCurrentVariable == eTheta)
             {
                 mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
                 mGraph->setRangeY(0, 0.00001f);
@@ -102,7 +102,7 @@ void GraphViewEvent::refresh()
                     }
                 }
             }
-            else
+            else if(mCurrentVariable == eSigma)
             {
                 // On est en train de regarder les variances des data
                 // On affiche donc ici la superposition des variances (et pas le résultat de theta f)
@@ -161,8 +161,12 @@ void GraphViewEvent::refresh()
                     }
                 }
             }
+            else
+            {
+                mGraph->removeAllCurves();
+            }
         }
-        if(mCurrentResult == eTrace)
+        if(mCurrentResult == eTrace && mCurrentVariable == eTheta)
         {
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
@@ -186,7 +190,7 @@ void GraphViewEvent::refresh()
                 mGraph->setRangeY(floorf(min), ceilf(max));
             }
         }
-        else if(mCurrentResult == eAccept)
+        else if(mCurrentResult == eAccept && mCurrentVariable == eTheta)
         {
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
@@ -215,7 +219,7 @@ void GraphViewEvent::refresh()
                 mGraph->addCurve(curve);
             }
         }
-        else if(mCurrentResult == eCorrel)
+        else if(mCurrentResult == eCorrel && mCurrentVariable == eTheta)
         {
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
@@ -236,6 +240,10 @@ void GraphViewEvent::refresh()
                 mGraph->setRangeY(vector_min_value(curve.mDataVector),
                                   vector_max_value(curve.mDataVector));
             }
+        }
+        else
+        {
+            mGraph->removeAllCurves();
         }
     }
 }

@@ -282,10 +282,18 @@ float Phase::getMaxBetaPrevPhases(float tmin)
 
 // --------------------------------------------------------------------------------
 
-void Phase::update()
+void Phase::update(float tmin, float tmax)
 {
+    if(mTauType == eTauUnknown)
+        mTau.mX = Generator::randomUniform(0, tmax - tmin);
+    else if(mTauType == eTauFixed && mTauFixed != 0)
+        mTau.mX = Generator::randomUniform(0, mTauFixed);
+    else if(mTauType == eTauRange && mTauMax > mTauMin)
+        mTau.mX = Generator::randomUniform(0, mTauMax);
+    
     mAlpha.mX = getMaxThetaEvents();
     mBeta.mX = getMinThetaEvents();
+    
     
     // ----------------------------------------
     // Buck :

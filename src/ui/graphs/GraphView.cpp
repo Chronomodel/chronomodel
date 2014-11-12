@@ -410,6 +410,14 @@ void GraphView::updateGraphSize(int w, int h)
 
 void GraphView::paint(QPainter& painter, int w, int h)
 {
+    if(mCurves.size() == 0)
+    {
+        painter.fillRect(0, 0, w, h, QColor(200, 200, 200));
+        painter.setPen(QColor(100, 100, 100));
+        painter.drawText(0, 0, w, h, Qt::AlignCenter, tr("Nothing to display"));
+        return;
+    }
+    
     if(mBufferedImage.isNull())
     {
         mBufferedImage = QPixmap(w, h);

@@ -361,7 +361,7 @@ void MCMCLoopMain::update()
 
     for(int i=0; i<phases.size(); ++i)
     {
-        phases[i].update();
+        phases[i].update(t_min, t_max);
         if(doMemo)
             phases[i].memoAll();
     }

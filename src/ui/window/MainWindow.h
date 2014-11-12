@@ -21,7 +21,8 @@ class MainWindow : public QMainWindow, public Singleton<MainWindow>
     friend class Singleton<MainWindow>;
     
 public:
-    explicit MainWindow(QWidget* aParent = 0);
+    MainWindow(QWidget* aParent = 0);
+    ~MainWindow();
 
 protected:
     void closeEvent(QCloseEvent* e);
@@ -52,7 +53,8 @@ public slots:
     
 private:
     QStackedWidget* mCentralStack;
-    ProjectView* mProjectView;
+    QScopedPointer<ProjectView> mProjectView;
+    //ProjectView* mProjectView;
     Project* mProject;
     QUndoView* mUndoView;
     QDockWidget* mUndoDock;
@@ -91,6 +93,7 @@ private:
     QAction* mManualAction;
     QAction* mWebsiteAction;
     
+private:
     Q_DISABLE_COPY(MainWindow);
 };
 

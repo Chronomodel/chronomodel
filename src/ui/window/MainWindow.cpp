@@ -9,13 +9,15 @@
 
 
 MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent),
-mProjectView(0),
 mProject(0)
 {
     setWindowTitle("Chronomodel");
 
     mCentralStack = new QStackedWidget();
     setCentralWidget(mCentralStack);
+    
+    mProjectView.reset(new ProjectView());
+    mCentralStack->addWidget(mProjectView.data());
 
     mUndoView = new QUndoView(&ProjectManager::getUndoStack());
     mUndoView->setEmptyLabel(tr("Initial state"));
@@ -34,6 +36,11 @@ mProject(0)
     setUnifiedTitleAndToolBarOnMac(true);
     setWindowIcon(QIcon(":chronomodel.png"));
     setMinimumSize(1000, 700);
+}
+
+MainWindow::~MainWindow()
+{
+    
 }
 
 void MainWindow::createActions()
@@ -274,8 +281,8 @@ void MainWindow::setProject(Project* project)
         mProjectExportAction->setEnabled(true);
         mMCMCSettingsAction->setEnabled(true);
         
-        mProjectView = new ProjectView();
-        mCentralStack->addWidget(mProjectView);
+        //mProjectView.reset(new ProjectView());
+        //mCentralStack->addWidget(mProjectView.data());
         mProjectView->updateProject();
         
         bool showHelp = ProjectManager::getSettings().mShowHelp;
@@ -284,17 +291,17 @@ void MainWindow::setProject(Project* project)
         
         updateWindowTitle();
         
-        connect(mProject, SIGNAL(projectStateChanged()), mProjectView, SLOT(updateProject()));
-        connect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
-        connect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
-        connect(mViewLogAction, SIGNAL(triggered()), mProjectView, SLOT(showLog()));
-        connect(mProject, SIGNAL(mcmcFinished(MCMCLoopMain&)), mProjectView, SLOT(updateLog(MCMCLoopMain&)));
+        connect(mProject, SIGNAL(projectStateChanged()), mProjectView.data(), SLOT(updateProject()));
+        connect(mViewModelAction, SIGNAL(triggered()), mProjectView.data(), SLOT(showModel()));
+        connect(mViewResultsAction, SIGNAL(triggered()), mProjectView.data(), SLOT(showResults()));
+        connect(mViewLogAction, SIGNAL(triggered()), mProjectView.data(), SLOT(showLog()));
+        connect(mProject, SIGNAL(mcmcFinished(MCMCLoopMain&)), mProjectView.data(), SLOT(updateLog(MCMCLoopMain&)));
     }
 }
 
 bool MainWindow::closeProject()
 {
-    if(mProject)
+    if(mProject && !mProjectView.isNull())
     {
         if(ProjectManager::saveProject())
         {
@@ -303,22 +310,21 @@ bool MainWindow::closeProject()
             disconnect(mMCMCSettingsAction, SIGNAL(triggered()), mProject, SLOT(mcmcSettings()));
             disconnect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
             disconnect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));
-            disconnect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
+            disconnect(mViewModelAction, SIGNAL(triggered()), mProjectView.data(), SLOT(showModel()));
             
-            disconnect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
-            disconnect(mViewLogAction, SIGNAL(triggered()), mProjectView, SLOT(showLog()));
+            disconnect(mViewResultsAction, SIGNAL(triggered()), mProjectView.data(), SLOT(showResults()));
+            disconnect(mViewLogAction, SIGNAL(triggered()), mProjectView.data(), SLOT(showLog()));
             
             disconnect(mProject, SIGNAL(mcmcFinished(MCMCLoopMain&)), mViewResultsAction, SLOT(trigger()));
-            disconnect(mProject, SIGNAL(mcmcFinished(MCMCLoopMain&)), mProjectView, SLOT(updateLog(MCMCLoopMain&)));
+            disconnect(mProject, SIGNAL(mcmcFinished(MCMCLoopMain&)), mProjectView.data(), SLOT(updateLog(MCMCLoopMain&)));
             
             mProjectSaveAction->setEnabled(false);
             mProjectCloseAction->setEnabled(false);
             mProjectExportAction->setEnabled(false);
             mMCMCSettingsAction->setEnabled(false);
             
-            mCentralStack->removeWidget(mProjectView);
-            delete mProjectView;
-            mProjectView = 0;
+            //mCentralStack->removeWidget(mProjectView.data());
+            //mProjectView.reset();
             
             mProject = 0;
             
@@ -387,7 +393,7 @@ void MainWindow::showHelp(bool show)
     settings.mShowHelp = show;
     ProjectManager::setSettings(settings);
     
-    mProjectView->showHelp(show);
+    mProjectView.data()->showHelp(show);
 }
 
 void MainWindow::openWebsite()

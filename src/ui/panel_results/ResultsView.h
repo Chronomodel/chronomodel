@@ -62,6 +62,8 @@ private:
     
 private:
     Model* mModel;
+    ProjectSettings mSettings;
+    MCMCSettings mMCMCSettings;
     QList<Chain> mChains;
     
     int mMargin;
@@ -97,18 +99,12 @@ private:
     LineEdit* mHPDEdit;
     
     Label* mChainsTitle;
-    Label* mPhasesTitle;
     Label* mDataTitle;
     
     QWidget* mChainsGroup;
     CheckBox* mAllChainsCheck;
     QList<CheckBox*> mCheckChainChecks;
     QList<RadioButton*> mChainRadios;
-    
-    QWidget* mPhasesGroup;
-    CheckBox* mAlphaCheck;
-    CheckBox* mBetaCheck;
-    CheckBox* mTauCheck;
     
     QWidget* mDataGroup;
     RadioButton* mDataThetaRadio;

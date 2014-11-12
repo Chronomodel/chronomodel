@@ -14,8 +14,6 @@ public:
     virtual ~GraphViewPhase();
     
     void setPhase(Phase* phase);
-    
-    void setVariablesToShow(bool showAlpha, bool showBeta, bool showTau);
 
 private slots:
     void saveGraphData();
@@ -26,9 +24,6 @@ protected:
     
 private:
     Phase* mPhase;
-    bool mShowAlpha;
-    bool mShowBeta;
-    bool mShowTau;
 };
 
 #endif

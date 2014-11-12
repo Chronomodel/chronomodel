@@ -33,7 +33,8 @@ class Phase
 public:
     enum TauType{
         eTauUnknown = 0,
-        eTauRange = 1
+        eTauFixed = 1,
+        eTauRange = 2
     };
     
     Phase();
@@ -58,7 +59,7 @@ public:
     float getMinAlphaNextPhases(float tmax);
     float getMaxBetaPrevPhases(float tmin);
     
-    void update();
+    void update(float tmin, float tmax);
     void memoAll();
     
 protected:

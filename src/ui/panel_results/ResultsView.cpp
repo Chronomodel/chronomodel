@@ -138,28 +138,11 @@ mHasPhases(false)
     
     // -----------
     
-    mPhasesTitle = new Label(tr("Phases results"));
-    mPhasesTitle->setIsTitle(true);
-    mPhasesGroup = new QWidget();
-    mAlphaCheck = new CheckBox(tr("Begin"), mPhasesGroup);
-    mBetaCheck = new CheckBox(tr("End"), mPhasesGroup);
-    mTauCheck = new CheckBox(tr("Duration"), mPhasesGroup);
-    mAlphaCheck->setChecked(true);
-    mBetaCheck->setChecked(true);
-    mTauCheck->setChecked(false);
-    mPhasesGroup->setFixedHeight(4*mMargin + 3*mLineH);
-    
-    connect(mAlphaCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    connect(mBetaCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    connect(mTauCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    
-    // -----------
-    
     mDataTitle = new Label(tr("Results options"));
     mDataTitle->setIsTitle(true);
     mDataGroup = new QWidget();
-    mDataThetaRadio = new RadioButton(tr("Time"), mDataGroup);
-    mDataSigmaRadio = new RadioButton(tr("Individual variance"), mDataGroup);
+    mDataThetaRadio = new RadioButton(tr("Calendar dates"), mDataGroup);
+    mDataSigmaRadio = new RadioButton(tr("Individual variances"), mDataGroup);
     mDataDeltaRadio = new RadioButton(tr("Wiggle maching"), mDataGroup);
     mDataCalibCheck = new CheckBox(tr("Distrib. of calib. dates"), mDataGroup);
     mDataThetaRadio->setChecked(true);
@@ -210,8 +193,6 @@ mHasPhases(false)
     optionsLayout->addWidget(mChainsGroup);
     optionsLayout->addWidget(mDataTitle);
     optionsLayout->addWidget(mDataGroup);
-    optionsLayout->addWidget(mPhasesTitle);
-    optionsLayout->addWidget(mPhasesGroup);
     optionsLayout->addWidget(mDisplayTitle);
     optionsLayout->addWidget(mDisplayWidget);
     optionsLayout->addStretch();
@@ -356,10 +337,6 @@ void ResultsView::updateLayout()
         }
     }
     
-    mAlphaCheck->setGeometry(m, m, mPhasesGroup->width()-2*m, mLineH);
-    mBetaCheck->setGeometry(m, 2*m + mLineH, mPhasesGroup->width()-2*m, mLineH);
-    mTauCheck->setGeometry(m, 3*m + 2*mLineH, mPhasesGroup->width()-2*m, mLineH);
-    
     int y = m;
     mDataThetaRadio->setGeometry(m, y, mDataGroup->width() - 2*m, mLineH);
     if(mTabs->currentIndex() == 0)
@@ -406,8 +383,8 @@ void ResultsView::updateGraphs()
 {
     updateRulerAreas();
     
-    ProjectSettings s = mModel->mSettings;
-    MCMCSettings mcmc = mModel->mMCMCSettings;
+    ProjectSettings s = mSettings;
+    MCMCSettings mcmc = mMCMCSettings;
     
     GraphViewResults::Variable variable;
     if(mDataThetaRadio->isChecked()) variable = GraphViewResults::eTheta;
@@ -422,43 +399,25 @@ void ResultsView::updateGraphs()
     
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
     {
-        mByPhasesGraphs[i]->setResultToShow(result);
-        mByPhasesGraphs[i]->setVariableToShow(variable);
+        mByPhasesGraphs[i]->setResultToShow(result, variable);
         
-        if(GraphViewPhase* graph = dynamic_cast<GraphViewPhase*>(mByPhasesGraphs[i]))
-        {
-            graph->setVariablesToShow(mAlphaCheck->isChecked(),
-                                      mBetaCheck->isChecked(),
-                                      mTauCheck->isChecked());
-        }
-        else if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByPhasesGraphs[i]))
-        {
+        if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByPhasesGraphs[i]))
             graph->showCalib(mDataCalibCheck->isChecked());
-        }
     }
     for(int i=0; i<mByEventsGraphs.size(); ++i)
     {
-        mByEventsGraphs[i]->setResultToShow(result);
-        mByEventsGraphs[i]->setVariableToShow(variable);
+        mByEventsGraphs[i]->setResultToShow(result, variable);
         
-        if(GraphViewPhase* graph = dynamic_cast<GraphViewPhase*>(mByEventsGraphs[i]))
-        {
-            graph->setVariablesToShow(mAlphaCheck->isChecked(),
-                                      mBetaCheck->isChecked(),
-                                      mTauCheck->isChecked());
-        }
-        else if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByEventsGraphs[i]))
-        {
+        if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByEventsGraphs[i]))
             graph->showCalib(mDataCalibCheck->isChecked());
-        }
     }
     update();
 }
 
 void ResultsView::updateRulerAreas()
 {
-    ProjectSettings s = mModel->mSettings;
-    MCMCSettings mcmc = mModel->mMCMCSettings;
+    ProjectSettings s = mSettings;
+    MCMCSettings mcmc = mMCMCSettings;
     
     if(mTabs->currentIndex() == 0)
     {
@@ -557,6 +516,8 @@ void ResultsView::updateResults(MCMCLoopMain& loop)
     clearResults();
     mChains = loop.chains();
     mModel = loop.mModel;
+    mSettings = mModel->mSettings;
+    mMCMCSettings = mModel->mMCMCSettings;
     
     if(!mModel)
         return;
@@ -735,15 +696,11 @@ void ResultsView::setGraphZoom(float min, float max)
 void ResultsView::showByPhases(bool)
 {
     mStack->setCurrentWidget(mPhasesScrollArea);
-    mPhasesTitle->setVisible(true);
-    mPhasesGroup->setVisible(true);
 }
 
 void ResultsView::showByEvents(bool)
 {
     mStack->setCurrentWidget(mEventsScrollArea);
-    mPhasesTitle->setVisible(false);
-    mPhasesGroup->setVisible(false);
 }
 
 void ResultsView::changeTab(int index)

@@ -34,8 +34,7 @@ public:
     explicit GraphViewResults(QWidget *parent = 0);
     virtual ~GraphViewResults();
     
-    void setResultToShow(Result result);
-    void setVariableToShow(Variable variable);
+    void setResultToShow(Result result, Variable variable);
     
     void setSettings(const ProjectSettings& settings);
     void setMCMCSettings(const MCMCSettings& mcmc, const QList<Chain>& chains);

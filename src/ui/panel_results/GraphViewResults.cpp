@@ -64,14 +64,9 @@ GraphViewResults::~GraphViewResults()
     
 }
 
-void GraphViewResults::setResultToShow(Result result)
+void GraphViewResults::setResultToShow(Result result, Variable variable)
 {
     mCurrentResult = result;
-    refresh();
-}
-
-void GraphViewResults::setVariableToShow(Variable variable)
-{
     mCurrentVariable = variable;
     refresh();
 }
