@@ -18,7 +18,6 @@ public:
     bool tryUpdate(const double x, const double rapportToTry);
     
     QMap<float, float> acceptationForChain(const QList<Chain>& chains, int index);
-    QVector<float> sigmaMHForChain(int index, int numChains);
     
 public:
     double mSigmaMH;
@@ -26,7 +25,7 @@ public:
     QVector<bool> mLastAccepts;
     int mLastAcceptsLength;
     
-    QVector<float> mHistorySigmaMH;
+    //QVector<float> mHistorySigmaMH;
     QVector<float> mHistoryAcceptRateMH;
 };
 

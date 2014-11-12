@@ -256,7 +256,7 @@ QMap<float, float> MetropolisVariable::traceForChain(const QList<Chain>& chains,
             for(int j=shift; j<shift + traceSize; ++j)
             {
                 int curIndex = j - shift;
-                trace[curIndex] = mTrace[j];
+                trace[curIndex * chains[i].mThinningInterval] = mTrace[j];
                 
                 // Code utilisé quand on ne sauvait pas les 3 phases avec le même pas :
                 /*int burnAdaptLen = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter);

@@ -42,7 +42,7 @@ void MHVariable::reset()
 {
     MetropolisVariable::reset();
     mLastAccepts.clear();
-    mHistorySigmaMH.clear();
+    //mHistorySigmaMH.clear();
     mHistoryAcceptRateMH.clear();
 }
 
@@ -51,6 +51,9 @@ float MHVariable::getCurrentAcceptRate()
     float sum = 0.f;
     for(int i=0; i<mLastAccepts.length(); ++i)
         sum += mLastAccepts[i] ? 1.f : 0.f;
+    
+    //qDebug() << "Last accept on " << sum << " / " << mLastAccepts.length() << " values";
+    
     return sum / (float)mLastAccepts.length();
 }
 
@@ -58,7 +61,7 @@ void MHVariable::saveCurrentAcceptRate()
 {
     float rate = 100.f * getCurrentAcceptRate();
     mHistoryAcceptRateMH.push_back(rate);
-    mHistorySigmaMH.push_back(mSigmaMH);
+    //mHistorySigmaMH.push_back(mSigmaMH);
 }
 
 QMap<float, float> MHVariable::acceptationForChain(const QList<Chain>& chains, int index)
@@ -68,22 +71,14 @@ QMap<float, float> MHVariable::acceptationForChain(const QList<Chain>& chains, i
     
     for(int i=0; i<chains.size(); ++i)
     {
-        int acceptSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + (chains[i].mNumRunIter / chains[i].mThinningInterval);
+        int acceptSize = (chains[i].mNumBurnIter + chains[i].mBatchIndex * chains[i].mNumBatchIter + chains[i].mNumRunIter) / chains[i].mThinningInterval;
         
         if(i == index)
         {
             for(int j=shift; j<shift + acceptSize; ++j)
             {
-                int burnAdaptLen = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter);
                 int curIndex = j - shift;
-                
-                if(curIndex < burnAdaptLen)
-                    accept[curIndex] = mHistoryAcceptRateMH[j];
-                else
-                {
-                    int runIndex = burnAdaptLen + (curIndex - burnAdaptLen) * chains[i].mThinningInterval;
-                    accept[runIndex] = mHistoryAcceptRateMH[j];
-                }
+                accept[curIndex * chains[i].mThinningInterval] = mHistoryAcceptRateMH[j];
             }
             break;
         }
@@ -95,15 +90,3 @@ QMap<float, float> MHVariable::acceptationForChain(const QList<Chain>& chains, i
     return accept;
 }
 
-QVector<float> MHVariable::sigmaMHForChain(int index, int numChains)
-{
-    int itersPerChain = mHistorySigmaMH.size() / numChains;
-    int start = index * itersPerChain;
-    
-    QVector<float> sigmaMH;
-    for(int i=start; i<start + itersPerChain; ++i)
-    {
-        sigmaMH.push_back(mHistorySigmaMH[i]);
-    }
-    return sigmaMH;
-}

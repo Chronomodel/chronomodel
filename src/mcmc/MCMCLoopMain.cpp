@@ -73,21 +73,24 @@ void MCMCLoopMain::initVariablesForChain()
     Chain& chain = mChains[mChainIndex];
     QList<Event>& events = mModel->mEvents;
     
+    int chainLen = chain.mNumBurnIter + chain.mNumBatchIter * chain.mMaxBatchs * chain.mNumRunIter;
+    int acceptBufferLen = chain.mNumBatchIter; //chainLen / 100;
+    
     for(int i=0; i<events.size(); ++i)
     {
         Event& event = events[i];
         event.mTheta.mLastAccepts.clear();
-        event.mTheta.mLastAcceptsLength = chain.mNumBatchIter;
+        event.mTheta.mLastAcceptsLength = acceptBufferLen;
         
         for(int j=0; j<event.mDates.size(); ++j)
         {
             Date& date = event.mDates[j];
             date.mTheta.mLastAccepts.clear();
-            date.mTheta.mLastAcceptsLength = chain.mNumBatchIter;
+            date.mTheta.mLastAcceptsLength = acceptBufferLen;
             date.mSigma.mLastAccepts.clear();
-            date.mSigma.mLastAcceptsLength = chain.mNumBatchIter;
+            date.mSigma.mLastAcceptsLength = acceptBufferLen;
             date.mDelta.mLastAccepts.clear();
-            date.mDelta.mLastAcceptsLength = chain.mNumBatchIter;
+            date.mDelta.mLastAcceptsLength = acceptBufferLen;
         }
     }
 }

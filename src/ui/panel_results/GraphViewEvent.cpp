@@ -265,6 +265,7 @@ void GraphViewEvent::saveGraphData()
                     const QMap<float, float>& data = mEvent->mTheta.fullHisto();
                     if(!firstWritten)
                     {
+                        firstWritten = true;
                         QMapIterator<float, float> iter(data);
                         QStringList abscisses;
                         abscisses << "";
@@ -294,6 +295,7 @@ void GraphViewEvent::saveGraphData()
                         const QMap<float, float>& data = mEvent->mTheta.histoForChain(i);
                         if(!firstWritten)
                         {
+                            firstWritten = true;
                             QMapIterator<float, float> iter(data);
                             QStringList abscisses;
                             abscisses << "";
