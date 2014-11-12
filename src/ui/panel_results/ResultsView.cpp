@@ -117,8 +117,8 @@ mHasPhases(false)
     mHPDEdit = new LineEdit(this);
     mHPDEdit->setText("95");
     
-    connect(mHPDCheck, SIGNAL(clicked()), this, SLOT(updateHPD()));
-    connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateHPD()));
+    connect(mHPDCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+    connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateGraphs()));
     
     // -----------
     
@@ -129,7 +129,7 @@ mHasPhases(false)
     mAllChainsCheck->setChecked(true);
     mChainsGroup->setFixedHeight(2*mMargin + mLineH);
     
-    connect(mAllChainsCheck, SIGNAL(clicked()), this, SLOT(updateChains()));
+    connect(mAllChainsCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     
     // -----------
     
@@ -345,37 +345,6 @@ void ResultsView::updateLayout()
     update();
 }
 
-void ResultsView::updateChains()
-{
-    QList<bool> showChainList;
-    
-    if(mTabs->currentIndex() == 0)
-    {
-        for(int i=0; i<mCheckChainChecks.size(); ++i)
-            showChainList.append(mCheckChainChecks[i]->isChecked());
-    }
-    else
-    {
-        for(int i=0; i<mChainRadios.size(); ++i)
-            showChainList.append(mChainRadios[i]->isChecked());
-    }
-    
-    for(int i=0; i<mByPhasesGraphs.size(); ++i)
-        mByPhasesGraphs[i]->updateChains(mAllChainsCheck->isChecked(), showChainList);
-    
-    for(int i=0; i<mByEventsGraphs.size(); ++i)
-        mByEventsGraphs[i]->updateChains(mAllChainsCheck->isChecked(), showChainList);
-}
-
-void ResultsView::updateHPD()
-{
-    for(int i=0; i<mByPhasesGraphs.size(); ++i)
-        mByPhasesGraphs[i]->updateHPD(mHPDCheck->isChecked(), mHPDEdit->text().toInt());
-    
-    for(int i=0; i<mByEventsGraphs.size(); ++i)
-        mByEventsGraphs[i]->updateHPD(mHPDCheck->isChecked(), mHPDEdit->text().toInt());
-}
-
 void ResultsView::updateGraphs()
 {
     updateRulerAreas();
@@ -394,19 +363,32 @@ void ResultsView::updateGraphs()
     else if(mTabs->currentIndex() == 2) result = GraphViewResults::eAccept;
     else if(mTabs->currentIndex() == 3) result = GraphViewResults::eCorrel;
     
+    bool showAllChains = mAllChainsCheck->isChecked();
+    QList<bool> showChainList;
+    if(mTabs->currentIndex() == 0)
+    {
+        for(int i=0; i<mCheckChainChecks.size(); ++i)
+            showChainList.append(mCheckChainChecks[i]->isChecked());
+    }
+    else
+    {
+        for(int i=0; i<mChainRadios.size(); ++i)
+            showChainList.append(mChainRadios[i]->isChecked());
+    }
+    bool showHpd = mHPDCheck->isChecked();
+    int hdpThreshold = mHPDEdit->text().toInt();
+    
+    bool showCalib = mDataCalibCheck->isChecked();
+    
+    // ---------------------------
+    
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
     {
-        mByPhasesGraphs[i]->setResultToShow(result, variable);
-        
-        if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByPhasesGraphs[i]))
-            graph->showCalib(mDataCalibCheck->isChecked());
+        mByPhasesGraphs[i]->setResultToShow(result, variable, showAllChains, showChainList, showHpd, hdpThreshold, showCalib);
     }
     for(int i=0; i<mByEventsGraphs.size(); ++i)
     {
-        mByEventsGraphs[i]->setResultToShow(result, variable);
-        
-        if(GraphViewDate* graph = dynamic_cast<GraphViewDate*>(mByEventsGraphs[i]))
-            graph->showCalib(mDataCalibCheck->isChecked());
+        mByEventsGraphs[i]->setResultToShow(result, variable, showAllChains, showChainList, showHpd, hdpThreshold, showCalib);
     }
     update();
 }
@@ -470,7 +452,7 @@ void ResultsView::clearResults()
     for(int i=mCheckChainChecks.size()-1; i>=0; --i)
     {
         CheckBox* check = mCheckChainChecks.takeAt(i);
-        disconnect(check, SIGNAL(clicked()), this, SLOT(updateChains()));
+        disconnect(check, SIGNAL(clicked()), this, SLOT(updateGraphs()));
         check->setParent(0);
         delete check;
     }
@@ -479,7 +461,7 @@ void ResultsView::clearResults()
     for(int i=mChainRadios.size()-1; i>=0; --i)
     {
         RadioButton* but = mChainRadios.takeAt(i);
-        disconnect(but, SIGNAL(clicked()), this, SLOT(updateChains()));
+        disconnect(but, SIGNAL(clicked()), this, SLOT(updateGraphs()));
         but->setParent(0);
         delete but;
     }
@@ -529,12 +511,12 @@ void ResultsView::updateResults(MCMCLoopMain& loop)
     for(int i=0; i<mChains.size(); ++i)
     {
         CheckBox* check = new CheckBox(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
-        connect(check, SIGNAL(clicked()), this, SLOT(updateChains()));
+        connect(check, SIGNAL(clicked()), this, SLOT(updateGraphs()));
         check->setVisible(true);
         mCheckChainChecks.append(check);
         
         RadioButton* radio = new RadioButton(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
-        connect(radio, SIGNAL(clicked()), this, SLOT(updateChains()));
+        connect(radio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
         radio->setVisible(true);
         if(i == 0)
             radio->setChecked(true);
@@ -618,8 +600,6 @@ void ResultsView::updateResults(MCMCLoopMain& loop)
     changeTab(0);
     
     // Done by changeTab :
-    //updateHPD();
-    //updateChains();
     //updateLayout();
     //updateGraphs();
 }
@@ -667,10 +647,10 @@ void ResultsView::updateScrollHeights()
 void ResultsView::showInfos(bool show)
 {
     for(int i=0; i<mByEventsGraphs.size(); ++i)
-        mByEventsGraphs[i]->showNumericalValues(show);
+        mByEventsGraphs[i]->showNumericalResults(show);
     
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
-        mByPhasesGraphs[i]->showNumericalValues(show);
+        mByPhasesGraphs[i]->showNumericalResults(show);
 }
 
 void ResultsView::compress(float prop)
@@ -724,8 +704,6 @@ void ResultsView::changeTab(int index)
             mChainRadios[i]->setVisible(true);
     }
     
-    updateHPD();
-    updateChains();
     updateLayout();
     updateGraphs();
 }

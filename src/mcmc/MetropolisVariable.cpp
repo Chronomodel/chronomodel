@@ -8,10 +8,7 @@
 
 
 MetropolisVariable::MetropolisVariable():
-mX(0),
-mHistoMode(0),
-mHistoMean(0),
-mHistoVariance(0)
+mX(0)
 {
 
 }
@@ -173,38 +170,12 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
     }
     
 #endif
-    
-    //data = normalize_map(data);
-    return data;
-}
 
-void MetropolisVariable::generateFullHisto(const QList<Chain>& chains, float tmin, float tmax)
-{
-    // -----------------------
-    //  The full histo is constructed using the values saved during the "Run" phase of all chains.
-    //  The step of "Thinning interval" has been taken into account when saving.
-    //  (only necessary values are saved)
-    // -----------------------
-    
-    int curTotIter = 0;
-    QVector<float> subTrace;
-    
-    for(int i=0; i<chains.size(); ++i)
-    {
-        int traceStartIter = curTotIter + chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter);
-        
-        for(int j=traceStartIter; j<traceStartIter + (int)(chains[i].mNumRunIter / chains[i].mThinningInterval); ++j)
-            subTrace.append(mTrace[j]);
-        
-        curTotIter += chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + (chains[i].mNumRunIter / chains[i].mThinningInterval);
-    }
-    mHistoFull = generateHisto(subTrace, tmin, tmax);
+    return data;
 }
 
 void MetropolisVariable::generateHistos(const QList<Chain>& chains, float tmin, float tmax)
 {
-    mHistos.clear();
-    
     // -----------------------
     //  Histos are generated based on the trace's values saved during the "Run" phase
     //  with a step of "thinning interval" between them.
@@ -213,21 +184,33 @@ void MetropolisVariable::generateHistos(const QList<Chain>& chains, float tmin, 
     //  because the adapt phase may have stop earlier for some chains.
     // -----------------------
     
+    mHistos.clear();
+    
     int curTotIter = 0;
+    QVector<float> subFullTrace; // All chains trace but only in run phase
     
     for(int i=0; i<chains.size(); ++i)
     {
-        int traceStartIter = curTotIter + chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter);
+        int traceStartIter = curTotIter;
+        traceStartIter += chains[i].mNumBurnIter / chains[i].mThinningInterval;
+        traceStartIter += (chains[i].mBatchIndex * chains[i].mNumBatchIter) / chains[i].mThinningInterval;
         
-        QVector<float> subTrace;
+        QVector<float> subTrace; // Current chain trace in run phase
         for(int j=traceStartIter; j<traceStartIter + (int)(chains[i].mNumRunIter / chains[i].mThinningInterval); ++j)
+        {
             subTrace.append(mTrace[j]);
+            subFullTrace.append(mTrace[j]);
+        }
         
         QMap<float, float> histo = generateHisto(subTrace, tmin, tmax);
         mHistos.push_back(histo);
         
-        curTotIter += chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + (chains[i].mNumRunIter / chains[i].mThinningInterval);
+        curTotIter += chains[i].mNumBurnIter / chains[i].mThinningInterval;
+        curTotIter += (chains[i].mBatchIndex * chains[i].mNumBatchIter) / chains[i].mThinningInterval;
+        curTotIter += chains[i].mNumRunIter / chains[i].mThinningInterval;
     }
+    
+    mHistoFull = generateHisto(subFullTrace, tmin, tmax);
 }
 
 QMap<float, float>& MetropolisVariable::fullHisto()
@@ -266,14 +249,17 @@ QMap<float, float> MetropolisVariable::traceForChain(const QList<Chain>& chains,
     
     for(int i=0; i<chains.size(); ++i)
     {
-        int traceSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + (chains[i].mNumRunIter / chains[i].mThinningInterval);
+        int traceSize = (chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + chains[i].mNumRunIter) / chains[i].mThinningInterval;
         
         if(i == index)
         {
             for(int j=shift; j<shift + traceSize; ++j)
             {
-                int burnAdaptLen = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter);
                 int curIndex = j - shift;
+                trace[curIndex] = mTrace[j];
+                
+                // Code utilisé quand on ne sauvait pas les 3 phases avec le même pas :
+                /*int burnAdaptLen = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter);
                 
                 if(curIndex < burnAdaptLen)
                     trace[curIndex] = mTrace[j];
@@ -281,7 +267,7 @@ QMap<float, float> MetropolisVariable::traceForChain(const QList<Chain>& chains,
                 {
                     int runIndex = burnAdaptLen + (curIndex - burnAdaptLen) * chains[i].mThinningInterval;
                     trace[runIndex] = mTrace[j];
-                }
+                }*/
             }
             break;
         }
@@ -330,4 +316,40 @@ void MetropolisVariable::generateCorrelations(const QList<Chain>& chains)
 QVector<float> MetropolisVariable::correlationForChain(int index)
 {
     return mCorrelations[index];
+}
+
+void MetropolisVariable::generateResults(const QList<Chain>& chains, float tmin, float tmax)
+{
+    if(mHistos.size() == 0)
+        generateHistos(chains, tmin, tmax);
+    
+    for(int i = 0; i<mHistos.size(); ++i)
+    {
+        FunctionAnalysis results = analyseFunction(mHistos[i]);
+        mChainsResults.append(results);
+    }
+    mResults = analyseFunction(mHistoFull);
+}
+
+QString MetropolisVariable::resultsText() const
+{
+    QString result;
+    
+    result += "CHAINS CONCATENATION\n";
+    result += "Max : " + QString::number(mResults.max) + "\n";
+    result += "Mode : " + QString::number(mResults.mode) + "\n";
+    result += "Mean : " + QString::number(mResults.mean) + "\n";
+    result += "Variance : " + QString::number(mResults.variance) + "\n";
+    result += "-------------------------------\n";
+    
+    for(int i = 0; i<mChainsResults.size(); ++i)
+    {
+        result += "CHAIN " + QString::number(i) + "\n";
+        result += "Max : " + QString::number(mChainsResults[i].max) + "\n";
+        result += "Mode : " + QString::number(mChainsResults[i].mode) + "\n";
+        result += "Mean : " + QString::number(mChainsResults[i].mean) + "\n";
+        result += "Variance : " + QString::number(mChainsResults[i].variance) + "\n";
+        result += "-------------------------------\n";
+    }
+    return result;
 }

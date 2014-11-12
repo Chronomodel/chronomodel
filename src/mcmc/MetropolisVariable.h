@@ -5,6 +5,7 @@
 #include <QVector>
 #include <QList>
 #include "MCMCLoop.h"
+#include "Functions.h"
 
 
 class MetropolisVariable
@@ -16,23 +17,30 @@ public:
     void memo();
     virtual void reset();
     
-    void generateHPD(const float classe, const float threshold);
+    // -----
     
-    
-    void generateFullHisto(const QList<Chain>& chains, float tmin, float tmax);
     void generateHistos(const QList<Chain>& chains, float tmin, float tmax);
+    void generateCorrelations(const QList<Chain>& chains);
+    void generateResults(const QList<Chain>& chains, float tmin, float tmax);
 
+    // -----
+    
     QMap<float, float>& fullHisto();
     QMap<float, float>& histoForChain(int index);
-    
-    QMap<float, float> generateFullHPD(int threshold);
-    QMap<float, float> generateHPDForChain(int index, int threshold);
     
     QVector<float> fullTrace();
     QMap<float, float> traceForChain(const QList<Chain>& chains, int index);
     
-    void generateCorrelations(const QList<Chain>& chains);
     QVector<float> correlationForChain(int index);
+    
+    QString resultsText() const;
+    
+    // -----
+    
+    QMap<float, float> generateFullHPD(int threshold);
+    QMap<float, float> generateHPDForChain(int index, int threshold);
+    
+    // -----
     
 private:
     QMap<float, float> generateHisto(const QVector<float>& data, float tmin, float tmax);
@@ -46,9 +54,8 @@ public:
     
     QList<QVector<float>> mCorrelations;
     
-    float mHistoMode;
-    float mHistoMean;
-    float mHistoVariance;
+    FunctionAnalysis mResults;
+    QList<FunctionAnalysis> mChainsResults;
 };
 
 #endif

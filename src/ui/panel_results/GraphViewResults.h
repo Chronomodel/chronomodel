@@ -34,13 +34,10 @@ public:
     explicit GraphViewResults(QWidget *parent = 0);
     virtual ~GraphViewResults();
     
-    void setResultToShow(Result result, Variable variable);
+    void setResultToShow(Result result, Variable variablee, bool showAllChains, const QList<bool>& showChainList, bool showHpd, int threshold, bool showCalib);
     
     void setSettings(const ProjectSettings& settings);
     void setMCMCSettings(const MCMCSettings& mcmc, const QList<Chain>& chains);
-    
-    void updateChains(bool showAll, const QList<bool>& showChainList);
-    void updateHPD(bool show, int threshold);
     
     void setMainColor(const QColor& color);
     void toggle(const QRect& geometry);
@@ -48,7 +45,8 @@ public:
 public slots:
     void setRange(float min, float max);
     void zoom(float min, float max);
-    void showNumericalValues(bool show);
+    void showNumericalResults(bool show);
+    void setNumericalResults(const QString& results);
     
 private slots:
     void saveAsImage();
@@ -77,6 +75,7 @@ protected:
     QList<bool> mShowChainList;
     bool mShowHPD;
     int mThresholdHPD;
+    bool mShowCalib;
     
     ProjectSettings mSettings;
     MCMCSettings mMCMCSettings;

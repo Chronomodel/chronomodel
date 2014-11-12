@@ -63,10 +63,15 @@ GraphViewResults::~GraphViewResults()
     
 }
 
-void GraphViewResults::setResultToShow(Result result, Variable variable)
+void GraphViewResults::setResultToShow(Result result, Variable variable, bool showAllChains, const QList<bool>& showChainList, bool showHpd, int threshold, bool showCalib)
 {
     mCurrentResult = result;
     mCurrentVariable = variable;
+    mShowAllChains = showAllChains;
+    mShowChainList = showChainList;
+    mShowHPD = showHpd;
+    mThresholdHPD = threshold;
+    mShowCalib = showCalib;
     refresh();
 }
 
@@ -91,20 +96,6 @@ void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc, const QList<Cha
 {
     mMCMCSettings = mcmc;
     mChains = chains;
-}
-
-void GraphViewResults::updateChains(bool showAll, const QList<bool>& showChainList)
-{
-    mShowAllChains = showAll;
-    mShowChainList = showChainList;
-    refresh();
-}
-
-void GraphViewResults::updateHPD(bool show, int threshold)
-{
-    mShowHPD = show;
-    mThresholdHPD = threshold;
-    refresh();
 }
 
 void GraphViewResults::setRange(float min, float max)
@@ -169,11 +160,22 @@ void GraphViewResults::resultsToClipboard()
     clipboard->setText(mResults);
 }
 
-void GraphViewResults::showNumericalValues(bool show)
+void GraphViewResults::setNumericalResults(const QString& results)
 {
-    mTextArea->setVisible(show);
-    if(show)
-        mTextArea->raise();
+    mResults = results;
+    mTextArea->setText(mResults);
+}
+
+void GraphViewResults::showNumericalResults(bool show)
+{
+    if(mGraph->numCurves() != 0)
+    {
+        mTextArea->setVisible(show);
+        if(show)
+            mTextArea->raise();
+    }
+    else
+        mTextArea->setVisible(false);
 }
 
 void GraphViewResults::paintEvent(QPaintEvent* e)

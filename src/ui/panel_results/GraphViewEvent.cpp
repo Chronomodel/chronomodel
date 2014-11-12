@@ -12,8 +12,7 @@
 #pragma mark Constructor / Destructor
 
 GraphViewEvent::GraphViewEvent(QWidget *parent):GraphViewResults(parent),
-mEvent(0),
-mShowVariances(false)
+mEvent(0)
 {
     //setMainColor(QColor(100, 100, 120));
     setMainColor(QColor(100, 100, 100));
@@ -32,20 +31,16 @@ void GraphViewEvent::setEvent(Event* event)
     update();
 }
 
-void GraphViewEvent::showVariances(bool show)
-{
-    mShowVariances = show;
-    refresh();
-}
-
 void GraphViewEvent::refresh()
 {
+    mGraph->removeAllCurves();
+    mGraph->removeAllZones();
+    
     if(mEvent)
     {
         QColor color = mEvent->mColor;
         
-        mGraph->removeAllCurves();
-        mGraph->removeAllZones();
+        setNumericalResults(mEvent->mTheta.resultsText());
         
         if(mCurrentResult == eHisto)
         {
@@ -166,7 +161,7 @@ void GraphViewEvent::refresh()
                 mGraph->removeAllCurves();
             }
         }
-        if(mCurrentResult == eTrace && mCurrentVariable == eTheta)
+        else if(mCurrentResult == eTrace && mCurrentVariable == eTheta)
         {
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)

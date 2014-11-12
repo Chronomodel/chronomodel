@@ -13,7 +13,6 @@
 
 GraphViewDate::GraphViewDate(QWidget *parent):GraphViewResults(parent),
 mDate(0),
-mShowCalib(true),
 mColor(Qt::blue)
 {
     //setMainColor(QColor(100, 120, 100));
@@ -36,12 +35,6 @@ void GraphViewDate::setColor(const QColor& color)
 {
     mColor = color;
     update();
-}
-
-void GraphViewDate::showCalib(bool show)
-{
-    mShowCalib = show;
-    refresh();
 }
 
 void GraphViewDate::saveGraphData()
@@ -81,6 +74,7 @@ void GraphViewDate::refresh()
     if(mDate)
     {
         QColor color = mColor;
+        setNumericalResults(mDate->mTheta.resultsText());
         
         if(mCurrentResult == eHisto)
         {

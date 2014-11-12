@@ -66,6 +66,18 @@ void GraphViewPhase::refresh()
     {
         QColor color = mPhase->mColor;
         
+        QString results;
+        results += "----------------------------------\n";
+        results += tr("PHASE BEGIN");
+        results += "----------------------------------\n";
+        results += mPhase->mAlpha.resultsText();
+        results += "----------------------------------\n";
+        results += tr("PHASE END");
+        results += "----------------------------------\n";
+        results += mPhase->mBeta.resultsText();
+        
+        setNumericalResults(results);
+        
         if(mCurrentResult == eHisto)
         {
             mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);

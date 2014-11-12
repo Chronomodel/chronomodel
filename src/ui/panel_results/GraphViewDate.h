@@ -15,7 +15,6 @@ public:
     
     void setDate(Date* date);
     void setColor(const QColor& color);
-    void showCalib(bool show);
     
 private slots:
     void saveGraphData();
@@ -26,7 +25,6 @@ protected:
     
 private:
     Date* mDate;
-    bool mShowCalib;
     QColor mColor;
 };
 

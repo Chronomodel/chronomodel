@@ -316,7 +316,7 @@ void MCMCLoopMain::update()
 
     Chain& chain = mChains[mChainIndex];
     
-    bool doMemo = (mState != eRunning || (chain.mRunIterIndex % chain.mThinningInterval == 0));
+    bool doMemo = (chain.mTotalIter % chain.mThinningInterval == 0);
     
     //--------------------- Update Dates -----------------------------------------
     
@@ -432,6 +432,7 @@ void MCMCLoopMain::finalize()
 {
     float tmin = mModel->mSettings.mTmin;
     float tmax = mModel->mSettings.mTmax;
+    float step = mModel->mSettings.mStep;
     
     QList<Event>& events = mModel->mEvents;
     QList<Phase>& phases = mModel->mPhases;
@@ -440,22 +441,13 @@ void MCMCLoopMain::finalize()
     {
         Event& event = events[i];
         
-        event.mTheta.generateFullHisto(mChains, tmin, tmax);
         event.mTheta.generateHistos(mChains, tmin, tmax);
         event.mTheta.generateCorrelations(mChains);
-        
-        FunctionAnalysis data = analyseFunction(event.mTheta.fullHisto());
-        event.mTheta.mHistoMode = data.mode;
-        event.mTheta.mHistoMean = data.mean;
-        event.mTheta.mHistoVariance = data.variance;
+        event.mTheta.generateResults(mChains, tmin, tmax);
         
         for(int j=0; j<event.mDates.size(); ++j)
         {
             Date& date = event.mDates[j];
-            
-            date.mTheta.generateFullHisto(mChains, tmin, tmax);
-            date.mSigma.generateFullHisto(mChains, 0, tmax - tmin);
-            //date.mDelta.generateFullHisto(mChains, tmin, tmax);
             
             date.mTheta.generateHistos(mChains, tmin, tmax);
             date.mSigma.generateHistos(mChains, 0, tmax - tmin);
@@ -465,20 +457,15 @@ void MCMCLoopMain::finalize()
             date.mSigma.generateCorrelations(mChains);
             //date.mDelta.generateCorrelations(mChains);
             
-            FunctionAnalysis data = analyseFunction(date.mTheta.fullHisto());
-            date.mTheta.mHistoMode = data.mode;
-            date.mTheta.mHistoMean = data.mean;
-            date.mTheta.mHistoVariance = data.variance;
+            date.mTheta.generateResults(mChains, tmin, tmax);
+            date.mSigma.generateResults(mChains, tmin, tmax);
+            //date.mDelta.generateResults(mChains, tmin, tmax);
         }
     }
     
     for(int i=0; i<phases.size(); ++i)
     {
         Phase& phase = phases[i];
-        
-        phase.mAlpha.generateFullHisto(mChains, tmin, tmax);
-        phase.mBeta.generateFullHisto(mChains, tmin, tmax);
-        phase.mTau.generateFullHisto(mChains, tmin, tmax);
         
         phase.mAlpha.generateHistos(mChains, tmin, tmax);
         phase.mBeta.generateHistos(mChains, tmin, tmax);
@@ -487,6 +474,10 @@ void MCMCLoopMain::finalize()
         phase.mAlpha.generateCorrelations(mChains);
         phase.mBeta.generateCorrelations(mChains);
         phase.mTau.generateCorrelations(mChains);
+        
+        phase.mAlpha.generateResults(mChains, tmin, tmax);
+        phase.mBeta.generateResults(mChains, tmin, tmax);
+        //phase.mTau.generateResults(mChains, tmin, tmax);
     }
 }
 

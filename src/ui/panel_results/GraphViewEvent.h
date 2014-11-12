@@ -14,8 +14,6 @@ public:
     virtual ~GraphViewEvent();
     
     void setEvent(Event* event);
-    
-    void showVariances(bool show);
 
 private slots:
     void saveGraphData();
@@ -26,7 +24,6 @@ protected:
     
 private:
     Event* mEvent;
-    bool mShowVariances;
 };
 
 #endif

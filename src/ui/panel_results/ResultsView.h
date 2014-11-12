@@ -46,8 +46,6 @@ public slots:
     void clearResults();
     void updateResults(MCMCLoopMain&);
     void updateGraphs();
-    void updateChains();
-    void updateHPD();
     void updateRulerAreas();
     
 private slots:

@@ -176,6 +176,11 @@ GraphCurve* GraphView::getCurve(const QString& name)
     return 0;
 }
 
+int GraphView::numCurves() const
+{
+    return mCurves.size();
+}
+
 void GraphView::addZone(const GraphZone& zone)
 {
     mZones.append(zone);

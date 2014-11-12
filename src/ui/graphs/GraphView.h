@@ -53,6 +53,7 @@ public:
     void removeCurve(const QString& name);
     void removeAllCurves();
     GraphCurve* getCurve(const QString& name);
+    int numCurves() const;
     
     void addZone(const GraphZone& zone);
     void removeAllZones();
