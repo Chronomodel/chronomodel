@@ -3,6 +3,12 @@
 
 	<file alias="chronomodel.png">resources/chronomodel.png</file>
 
+	<file alias="pdf.png">resources/pdf.png</file>
+	<file alias="text.png">resources/text.png</file>
+	<file alias="data.png">resources/data.png</file>
+	<file alias="picture_save.png">resources/picture_save.png</file>
+	<file alias="picture_copy.png">resources/picture_copy.png</file>
+
 	<file alias="e_w.png">resources/e_w.png</file>
 	<file alias="bound.png">resources/bound.png</file>
 	<file alias="bound_w.png">resources/bound_w.png</file>

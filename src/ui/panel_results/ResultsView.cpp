@@ -35,7 +35,7 @@ mLineH(15),
 mGraphLeft(130),
 mRulerH(40),
 mTabsH(25),
-mGraphsH(100),
+mGraphsH(130),
 mHasPhases(false)
 {
     mTabs = new Tabs(this);

@@ -74,7 +74,7 @@ void GraphViewDate::refresh()
     if(mDate)
     {
         QColor color = mColor;
-        setNumericalResults(mDate->mTheta.resultsText());
+        setNumericalResults(mDate->mTheta.resultsText(mThresholdHPD));
         
         if(mCurrentResult == eHisto)
         {

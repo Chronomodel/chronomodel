@@ -165,7 +165,7 @@ void MainWindow::createActions()
     mHelpAction->setCheckable(true);
     connect(mHelpAction, SIGNAL(toggled(bool)), this, SLOT(showHelp(bool)));
     
-    mManualAction = new QAction(QIcon(":help.png"), tr("Manual"), this);
+    mManualAction = new QAction(QIcon(":pdf.png"), tr("Manual"), this);
     connect(mManualAction, SIGNAL(triggered()), this, SLOT(openManual()));
     
     mWebsiteAction = new QAction(QIcon(":web.png"), tr("Website"), this);

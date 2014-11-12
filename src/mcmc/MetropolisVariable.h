@@ -25,25 +25,26 @@ public:
 
     // -----
     
-    QMap<float, float>& fullHisto();
-    QMap<float, float>& histoForChain(int index);
+    const QMap<float, float>& fullHisto() const;
+    const QMap<float, float>& histoForChain(int index) const;
     
     QVector<float> fullTrace();
     QMap<float, float> traceForChain(const QList<Chain>& chains, int index);
     
     QVector<float> correlationForChain(int index);
     
-    QString resultsText() const;
+    QString resultsText(int threshold) const;
     
     // -----
     
-    QMap<float, float> generateFullHPD(int threshold);
-    QMap<float, float> generateHPDForChain(int index, int threshold);
+    QMap<float, float> generateFullHPD(int threshold) const;
+    QMap<float, float> generateHPDForChain(int index, int threshold) const;
     
     // -----
     
 private:
     QMap<float, float> generateHisto(const QVector<float>& data, float tmin, float tmax);
+    QString getHPDText(int threshold) const;
     
 public:
     float mX;

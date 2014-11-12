@@ -213,26 +213,26 @@ void MetropolisVariable::generateHistos(const QList<Chain>& chains, float tmin, 
     mHistoFull = generateHisto(subFullTrace, tmin, tmax);
 }
 
-QMap<float, float>& MetropolisVariable::fullHisto()
+const QMap<float, float>& MetropolisVariable::fullHisto() const
 {
     return mHistoFull;
 }
 
-QMap<float, float>& MetropolisVariable::histoForChain(int index)
+const QMap<float, float>& MetropolisVariable::histoForChain(int index) const
 {
     return mHistos[index];
 }
 
-QMap<float, float> MetropolisVariable::generateFullHPD(int threshold)
+QMap<float, float> MetropolisVariable::generateFullHPD(int threshold) const
 {
-    QMap<float, float>& histo = fullHisto();
+    const QMap<float, float>& histo = fullHisto();
     QMap<float, float> hpd = create_HPD(histo, 1, threshold);
     return hpd;
 }
 
-QMap<float, float> MetropolisVariable::generateHPDForChain(int index, int threshold)
+QMap<float, float> MetropolisVariable::generateHPDForChain(int index, int threshold) const
 {
-    QMap<float, float>& histo = histoForChain(index);
+    const QMap<float, float>& histo = histoForChain(index);
     QMap<float, float> hpd = create_HPD(histo, 1, threshold);
     return hpd;
 }
@@ -331,18 +331,21 @@ void MetropolisVariable::generateResults(const QList<Chain>& chains, float tmin,
     mResults = analyseFunction(mHistoFull);
 }
 
-QString MetropolisVariable::resultsText() const
+QString MetropolisVariable::resultsText(int threshold) const
 {
     QString result;
     
-    result += "CHAINS CONCATENATION\n";
-    result += "Max : " + QString::number(mResults.max) + "\n";
-    result += "Mode : " + QString::number(mResults.mode) + "\n";
-    result += "Mean : " + QString::number(mResults.mean) + "\n";
-    result += "Variance : " + QString::number(mResults.variance) + "\n";
-    result += "-------------------------------\n";
+    //result += "CHAINS CONCATENATION\n";
+    result += "POSTERIOR DISTRIBUTION (Chains Concatenation)\n";
+    result += "------------------------------------------------\n";
+    result += "Max : " + QString::number(mResults.max, 'f', 2) + "   ";
+    result += "Mode : " + QString::number(mResults.mode, 'f', 2) + "   ";
+    result += "Mean : " + QString::number(mResults.mean, 'f', 2) + "   ";
+    result += "Variance : " + QString::number(mResults.variance, 'f', 2) + "\n";
+    result += "HPD Intervals : " + getHPDText(threshold) + "\n";
+    result += "------------------------------------------------\n";
     
-    for(int i = 0; i<mChainsResults.size(); ++i)
+    /*for(int i = 0; i<mChainsResults.size(); ++i)
     {
         result += "CHAIN " + QString::number(i) + "\n";
         result += "Max : " + QString::number(mChainsResults[i].max) + "\n";
@@ -350,6 +353,40 @@ QString MetropolisVariable::resultsText() const
         result += "Mean : " + QString::number(mChainsResults[i].mean) + "\n";
         result += "Variance : " + QString::number(mChainsResults[i].variance) + "\n";
         result += "-------------------------------\n";
+    }*/
+    return result;
+}
+
+QString MetropolisVariable::getHPDText(int threshold) const
+{
+    QMap<float, float> hpd = generateFullHPD(threshold);
+    QMapIterator<float, float> it(hpd);
+    QList<QPair<float, float>> intervals;
+    
+    bool inInterval = false;
+    QPair<float, float> curInterval;
+    
+    while(it.hasNext())
+    {
+        it.next();
+        if(it.value() != 0 && !inInterval)
+        {
+            inInterval = true;
+            curInterval.first = it.key();
+        }
+        else if(it.value() == 0 && inInterval)
+        {
+            inInterval = false;
+            curInterval.second = it.key();
+            intervals.append(curInterval);
+        }
     }
+    
+    QStringList results;
+    for(int i=0; i<intervals.size(); ++i)
+    {
+        results << "[" + QString::number(intervals[i].first) + ", " + QString::number(intervals[i].second) + "]";
+    }
+    QString result = results.join(" ");
     return result;
 }

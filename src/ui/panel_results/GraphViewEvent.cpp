@@ -40,7 +40,7 @@ void GraphViewEvent::refresh()
     {
         QColor color = mEvent->mColor;
         
-        setNumericalResults(mEvent->mTheta.resultsText());
+        setNumericalResults(mEvent->mTheta.resultsText(mThresholdHPD));
         
         if(mCurrentResult == eHisto)
         {

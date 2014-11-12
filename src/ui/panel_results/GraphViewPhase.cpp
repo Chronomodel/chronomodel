@@ -70,11 +70,11 @@ void GraphViewPhase::refresh()
         results += "----------------------------------\n";
         results += tr("PHASE BEGIN");
         results += "----------------------------------\n";
-        results += mPhase->mAlpha.resultsText();
+        results += mPhase->mAlpha.resultsText(mThresholdHPD);
         results += "----------------------------------\n";
         results += tr("PHASE END");
         results += "----------------------------------\n";
-        results += mPhase->mBeta.resultsText();
+        results += mPhase->mBeta.resultsText(mThresholdHPD);
         
         setNumericalResults(results);
         

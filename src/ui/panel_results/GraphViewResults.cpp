@@ -29,8 +29,9 @@ mGraphLeft(130)
     mGraph->setRangeY(0, 1);
     
     mTextArea = new QTextEdit(this);
+    mTextArea->setFrameStyle(QFrame::NoFrame);
     QPalette palette = mTextArea->palette();
-    palette.setColor(QPalette::Base, QColor(0, 0, 0, 150));
+    palette.setColor(QPalette::Base, QColor(0, 0, 0, 200));
     palette.setColor(QPalette::Text, Qt::white);
     mTextArea->setPalette(palette);
     QFont font = mTextArea->font();
@@ -39,10 +40,21 @@ mGraphLeft(130)
     mTextArea->setText(tr("Nothing to display"));
     mTextArea->setVisible(false);
     
-    mImageSaveBut = new Button(tr("Save Image"), this);
-    mImageClipBut = new Button(tr("Copy Image"), this);
-    mResultsClipBut = new Button(tr("Copy results"), this);
-    mDataSaveBut = new Button(tr("Save Graph Data"), this);
+    mImageSaveBut = new Button(tr("Save"), this);
+    mImageSaveBut->setIcon(QIcon(":picture_save.png"));
+    mImageSaveBut->setFlatVertical();
+    
+    mImageClipBut = new Button(tr("Copy"), this);
+    mImageClipBut->setIcon(QIcon(":picture_copy.png"));
+    mImageClipBut->setFlatVertical();
+    
+    mResultsClipBut = new Button(tr("Copy"), this);
+    mResultsClipBut->setIcon(QIcon(":text.png"));
+    mResultsClipBut->setFlatVertical();
+    
+    mDataSaveBut = new Button(tr("Save"), this);
+    mDataSaveBut->setIcon(QIcon(":data.png"));
+    mDataSaveBut->setFlatVertical();
     
     mAnimation = new QPropertyAnimation();
     mAnimation->setPropertyName("geometry");
@@ -200,14 +212,16 @@ void GraphViewResults::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
     
-    int bw = (mGraphLeft - 3*mMargin)/2;
+    int bw = mGraphLeft/2;
+    int bh = (height() - mLineH) / 2;
+    bh = qMin(bh, 100);
     
-    mImageSaveBut->setGeometry(mMargin, mMargin + mLineH, bw, mLineH);
-    mImageClipBut->setGeometry(2*mMargin + bw, mMargin + mLineH, bw, mLineH);
+    mImageSaveBut->setGeometry(0, mLineH, bw, bh);
+    mDataSaveBut->setGeometry(bw, mLineH, bw, bh);
     
-    mResultsClipBut->setGeometry(mMargin, 2*mMargin + 2*mLineH, bw, mLineH);
-    mDataSaveBut->setGeometry(2*mMargin + bw, 2*mMargin + 2*mLineH, bw, mLineH);
+    mImageClipBut->setGeometry(0, mLineH + bh, bw, bh);
+    mResultsClipBut->setGeometry(bw, mLineH + bh, bw, bh);
 
     mGraph->setGeometry(mGraphLeft, 0, width() - mGraphLeft, height());
-    mTextArea->setGeometry(mGraph->geometry().adjusted(50, 10, 0, -10));
+    mTextArea->setGeometry(mGraph->geometry().adjusted(50, 8, 0, -8));
 }
