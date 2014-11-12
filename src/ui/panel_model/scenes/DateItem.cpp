@@ -2,7 +2,6 @@
 #include "Date.h"
 #include "Painting.h"
 #include "EventItem.h"
-#include "ProjectManager.h"
 #include "Project.h"
 #include <QtWidgets>
 

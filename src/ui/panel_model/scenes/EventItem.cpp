@@ -4,10 +4,10 @@
 #include "Date.h"
 #include "Painting.h"
 #include "DateItem.h"
-#include "ProjectManager.h"
-#include "Project.h"
 #include "QtUtilities.h"
 #include "Painting.h"
+#include "MainWindow.h"
+#include "Project.h"
 #include <QtWidgets>
 
 
@@ -99,7 +99,7 @@ void EventItem::setGreyedOut(bool greyedOut)
 void EventItem::updateGreyedOut()
 {
     mGreyedOut = true;
-    QJsonObject state = ProjectManager::getProject()->state();
+    QJsonObject state = MainWindow::getInstance()->getProject()->state();
     QJsonArray phases = state[STATE_PHASES].toArray();
     QStringList selectedPhasesIds;
     for(int i=0; i<phases.size(); ++i)
@@ -154,7 +154,7 @@ void EventItem::dropEvent(QGraphicsSceneDragDropEvent* e)
 void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
 {
     e->acceptProposedAction();
-    Project* project = ProjectManager::getProject();
+    Project* project = MainWindow::getInstance()->getProject();
     QJsonObject event = mEvent;
     
     QJsonArray dates = event[STATE_EVENT_DATES].toArray();
@@ -265,7 +265,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
 QJsonArray EventItem::getPhases() const
 {
-    QJsonObject state = ProjectManager::getProject()->state();
+    QJsonObject state = MainWindow::getInstance()->getProject()->state();
     QJsonArray allPhases = state[STATE_PHASES].toArray();
     QJsonArray phases;
     QString eventPhaseIdsStr = mEvent[STATE_EVENT_PHASE_IDS].toString();

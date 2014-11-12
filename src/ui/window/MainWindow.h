@@ -3,11 +3,14 @@
 
 #include <QMainWindow>
 #include "Singleton.h"
+#include "AppSettings.h"
 
 class QMenu;
 class QAction;
 class QActionGroup;
 class QStackedWidget;
+class QUndoStack;
+class QUndoView;
 class QUndoView;
 class QDockWidget;
 class ProjectView;
@@ -23,6 +26,13 @@ class MainWindow : public QMainWindow, public Singleton<MainWindow>
 public:
     MainWindow(QWidget* aParent = 0);
     ~MainWindow();
+    
+    Project* getProject();
+    QUndoStack* getUndoStack();
+    QString getCurrentPath();
+    void setCurrentPath(const QString& path);
+    
+    void activateInterface(bool activate);
 
 protected:
     void closeEvent(QCloseEvent* e);
@@ -41,8 +51,6 @@ private:
 public slots:
     void newProject();
     void openProject();
-    void setProject(Project* project);
-    bool closeProject();
     void saveProject();
     void saveProjectAs();
     void about();
@@ -53,11 +61,14 @@ public slots:
     
 private:
     QStackedWidget* mCentralStack;
-    QScopedPointer<ProjectView> mProjectView;
-    //ProjectView* mProjectView;
+    ProjectView* mProjectView;
     Project* mProject;
+    QUndoStack* mUndoStack;
     QUndoView* mUndoView;
     QDockWidget* mUndoDock;
+    
+    AppSettings mAppSettings;
+    QString mLastPath;
     
     QMenu* mProjectMenu;
     QMenu* mEditMenu;
@@ -74,7 +85,6 @@ private:
     
     QAction* mProjectSaveAction;
     QAction* mProjectSaveAsAction;
-    QAction* mProjectCloseAction;
     QAction* mProjectExportAction;
     
     QAction* mMCMCSettingsAction;

@@ -1,25 +1,29 @@
 #include "MainWindow.h"
-#include "ProjectManager.h"
 #include "Project.h"
 #include "ProjectView.h"
 #include "../PluginAbstract.h"
 #include "AboutDialog.h"
-#include "SettingsDialog.h"
+#include "AppSettingsDialog.h"
 #include <QtWidgets>
 
 
-MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent),
-mProject(0)
+#pragma mark constructor / destructor
+MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
 {
     setWindowTitle("Chronomodel");
-
-    mCentralStack = new QStackedWidget();
-    setCentralWidget(mCentralStack);
     
-    mProjectView.reset(new ProjectView());
-    mCentralStack->addWidget(mProjectView.data());
+    mLastPath = QDir::homePath();
+    
+    mUndoStack = new QUndoStack();
+    mUndoStack->setUndoLimit(1000);
+    
+    mProject = new Project();
+    mProject->setAppSettings(mAppSettings);
 
-    mUndoView = new QUndoView(&ProjectManager::getUndoStack());
+    mProjectView = new ProjectView();
+    setCentralWidget(mProjectView);
+
+    mUndoView = new QUndoView(mUndoStack);
     mUndoView->setEmptyLabel(tr("Initial state"));
     mUndoDock = new QDockWidget(this);
     mUndoDock->setFixedWidth(250);
@@ -36,6 +40,23 @@ mProject(0)
     setUnifiedTitleAndToolBarOnMac(true);
     setWindowIcon(QIcon(":chronomodel.png"));
     setMinimumSize(1000, 700);
+    
+    connect(mProjectSaveAction, SIGNAL(triggered()), this, SLOT(saveProject()));
+    connect(mProjectSaveAsAction, SIGNAL(triggered()), this, SLOT(saveProjectAs()));
+    connect(mMCMCSettingsAction, SIGNAL(triggered()), mProject, SLOT(mcmcSettings()));
+    connect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
+    connect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));
+    connect(mProject, SIGNAL(mcmcFinished(MCMCLoopMain&)), mViewResultsAction, SLOT(trigger()));
+    
+    connect(mProject, SIGNAL(projectStateChanged()), mProjectView, SLOT(updateProject()));
+    connect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
+    connect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
+    connect(mViewLogAction, SIGNAL(triggered()), mProjectView, SLOT(showLog()));
+    connect(mProject, SIGNAL(mcmcFinished(MCMCLoopMain&)), mProjectView, SLOT(updateLog(MCMCLoopMain&)));
+    
+    mProjectView->doProjectConnections(mProject);
+    
+    activateInterface(false);
 }
 
 MainWindow::~MainWindow()
@@ -43,6 +64,28 @@ MainWindow::~MainWindow()
     
 }
 
+#pragma mark Accessors
+Project* MainWindow::getProject()
+{
+    return mProject;
+}
+
+QUndoStack* MainWindow::getUndoStack()
+{
+    return mUndoStack;
+}
+
+QString MainWindow::getCurrentPath()
+{
+    return mLastPath;
+}
+
+void MainWindow::setCurrentPath(const QString& path)
+{
+    mLastPath = path;
+}
+
+#pragma mark Actions & Menus
 void MainWindow::createActions()
 {
     mAppSettingsAction = new QAction(QIcon(":settings.png"), tr("Settings"), this);
@@ -62,26 +105,19 @@ void MainWindow::createActions()
     mOpenProjectAction->setStatusTip(tr("Open an existing project"));
     connect(mOpenProjectAction, SIGNAL(triggered()), this, SLOT(openProject()));
     
-    mProjectCloseAction = new QAction(tr("Close"), this);
-    mProjectCloseAction->setShortcuts(QKeySequence::Close);
-    mProjectCloseAction->setEnabled(false);
-    connect(mProjectCloseAction, SIGNAL(triggered()), this, SLOT(closeProject()));
-    
     mProjectSaveAction = new QAction(QIcon(":save.png"), tr("&Save"), this);
     mProjectSaveAction->setShortcuts(QKeySequence::Save);
-    mProjectSaveAction->setEnabled(false);
     
     mProjectSaveAsAction = new QAction(QIcon(":save.png"), tr("Save as..."), this);
     
     mProjectExportAction = new QAction(QIcon(":export.png"), tr("Export"), this);
-    mProjectExportAction->setEnabled(false);
     mProjectExportAction->setVisible(false);
     
-    mUndoAction = ProjectManager::getUndoStack().createUndoAction(this);
+    mUndoAction = mUndoStack->createUndoAction(this);
     mUndoAction->setIcon(QIcon(":undo.png"));
     mUndoAction->setText(tr("Undo"));
     
-    mRedoAction = ProjectManager::getUndoStack().createRedoAction(this);
+    mRedoAction = mUndoStack->createRedoAction(this);
     mRedoAction->setIcon(QIcon(":redo.png"));
     
     mUndoViewAction = mUndoDock->toggleViewAction();
@@ -146,7 +182,6 @@ void MainWindow::createMenus()
     mProjectMenu->addAction(mAppSettingsAction);
     mProjectMenu->addAction(mNewProjectAction);
     mProjectMenu->addAction(mOpenProjectAction);
-    mProjectMenu->addAction(mProjectCloseAction);
 
     mProjectMenu->addSeparator();
 
@@ -231,127 +266,62 @@ void MainWindow::createToolBars()
 
 // -----------
 
+#pragma mark Project Management
+
+void MainWindow::newProject()
+{
+    // Ask to save the previous project.
+    // Return true if the project doesn't need to be saved.
+    // Returns true if the user saves the project or if the user doesn't want to save it.
+    // Returns false if the user cancels.
+    if(mProject->askToSave())
+    {
+        // Ask to save the new project.
+        // Returns true only if a new file is created.
+        // Note : at this point, the project state is still the previous project state.
+        if(mProject->saveAs())
+        {
+            mUndoStack->clear();
+            // Reset the project state and send a notification to update the views :
+            mProject->initState();
+            activateInterface(true);
+        }
+        updateWindowTitle();
+    }
+}
+
 void MainWindow::openProject()
 {
     QString path = QFileDialog::getOpenFileName(qApp->activeWindow(),
                                                 tr("Open File"),
-                                                ProjectManager::getCurrentPath(),
+                                                MainWindow::getInstance()->getCurrentPath(),
                                                 tr("Chronomodel Project (*.chr)"));
     
     if(!path.isEmpty())
     {
-        if(closeProject())
+        if(mProject->askToSave())
         {
             QFileInfo info(path);
-            ProjectManager::setCurrentPath(info.absolutePath());
-            Project* project = ProjectManager::newProject(false);
+            setCurrentPath(info.absolutePath());
             
-            setProject(project);
-            project->load(path);
-            
+            mUndoStack->clear();
+            mProject->load(path);
+            activateInterface(true);
             updateWindowTitle();
         }
     }
 }
 
-void MainWindow::newProject()
-{
-    if(closeProject())
-    {
-        Project* project = ProjectManager::newProject(true);
-        if(project)
-            setProject(project);
-    }
-}
-
-void MainWindow::setProject(Project* project)
-{
-    mProject = project;
-    if(mProject)
-    {
-        connect(mProjectSaveAction, SIGNAL(triggered()), this, SLOT(saveProject()));
-        connect(mProjectSaveAsAction, SIGNAL(triggered()), this, SLOT(saveProjectAs()));
-        connect(mMCMCSettingsAction, SIGNAL(triggered()), mProject, SLOT(mcmcSettings()));
-        connect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
-        connect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));
-        connect(mProject, SIGNAL(mcmcFinished(MCMCLoopMain&)), mViewResultsAction, SLOT(trigger()));
-        
-        mProjectSaveAction->setEnabled(true);
-        mProjectCloseAction->setEnabled(true);
-        mProjectExportAction->setEnabled(true);
-        mMCMCSettingsAction->setEnabled(true);
-        
-        //mProjectView.reset(new ProjectView());
-        //mCentralStack->addWidget(mProjectView.data());
-        mProjectView->updateProject();
-        
-        bool showHelp = ProjectManager::getSettings().mShowHelp;
-        mProjectView->showHelp(showHelp);
-        mHelpAction->setChecked(showHelp);
-        
-        updateWindowTitle();
-        
-        connect(mProject, SIGNAL(projectStateChanged()), mProjectView.data(), SLOT(updateProject()));
-        connect(mViewModelAction, SIGNAL(triggered()), mProjectView.data(), SLOT(showModel()));
-        connect(mViewResultsAction, SIGNAL(triggered()), mProjectView.data(), SLOT(showResults()));
-        connect(mViewLogAction, SIGNAL(triggered()), mProjectView.data(), SLOT(showLog()));
-        connect(mProject, SIGNAL(mcmcFinished(MCMCLoopMain&)), mProjectView.data(), SLOT(updateLog(MCMCLoopMain&)));
-    }
-}
-
-bool MainWindow::closeProject()
-{
-    if(mProject && !mProjectView.isNull())
-    {
-        if(ProjectManager::saveProject())
-        {
-            disconnect(mProjectSaveAction, SIGNAL(triggered()), this, SLOT(saveProject()));
-            disconnect(mProjectSaveAsAction, SIGNAL(triggered()), this, SLOT(saveProjectAs()));
-            disconnect(mMCMCSettingsAction, SIGNAL(triggered()), mProject, SLOT(mcmcSettings()));
-            disconnect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
-            disconnect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));
-            disconnect(mViewModelAction, SIGNAL(triggered()), mProjectView.data(), SLOT(showModel()));
-            
-            disconnect(mViewResultsAction, SIGNAL(triggered()), mProjectView.data(), SLOT(showResults()));
-            disconnect(mViewLogAction, SIGNAL(triggered()), mProjectView.data(), SLOT(showLog()));
-            
-            disconnect(mProject, SIGNAL(mcmcFinished(MCMCLoopMain&)), mViewResultsAction, SLOT(trigger()));
-            disconnect(mProject, SIGNAL(mcmcFinished(MCMCLoopMain&)), mProjectView.data(), SLOT(updateLog(MCMCLoopMain&)));
-            
-            mProjectSaveAction->setEnabled(false);
-            mProjectCloseAction->setEnabled(false);
-            mProjectExportAction->setEnabled(false);
-            mMCMCSettingsAction->setEnabled(false);
-            
-            //mCentralStack->removeWidget(mProjectView.data());
-            //mProjectView.reset();
-            
-            mProject = 0;
-            
-            ProjectManager::deleteProject();
-            return true;
-        }
-        return false;
-    }
-    return true;
-}
-
 void MainWindow::saveProject()
 {
-    if(mProject)
-    {
-        mProject->save();
-        updateWindowTitle();
-    }
+    mProject->save();
+    updateWindowTitle();
 }
 
 void MainWindow::saveProjectAs()
 {
-    if(mProject)
-    {
-        mProject->saveAs();
-        updateWindowTitle();
-    }
+    mProject->saveAs();
+    updateWindowTitle();
 }
 
 void MainWindow::updateWindowTitle()
@@ -359,6 +329,7 @@ void MainWindow::updateWindowTitle()
     setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + (mProject ? QString(" - ") + mProject->mProjectFileName : ""));
 }
 
+#pragma mark Settings & About
 void MainWindow::about()
 {
     AboutDialog dialog;
@@ -367,11 +338,12 @@ void MainWindow::about()
 
 void MainWindow::appSettings()
 {
-    SettingsDialog dialog;
-    dialog.setSettings(ProjectManager::getSettings());
+    AppSettingsDialog dialog;
+    dialog.setSettings(mAppSettings);
     if(dialog.exec() == QDialog::Accepted)
     {
-        ProjectManager::setSettings(dialog.getSettings());
+        mAppSettings = dialog.getSettings();
+        mProject->setAppSettings(mAppSettings);
     }
 }
 
@@ -389,11 +361,8 @@ void MainWindow::openManual()
 
 void MainWindow::showHelp(bool show)
 {
-    Settings settings = ProjectManager::getSettings();
-    settings.mShowHelp = show;
-    ProjectManager::setSettings(settings);
-    
-    mProjectView.data()->showHelp(show);
+    mAppSettings.mShowHelp = show;
+    mProjectView->showHelp(show);
 }
 
 void MainWindow::openWebsite()
@@ -401,42 +370,47 @@ void MainWindow::openWebsite()
     QDesktopServices::openUrl(QUrl("http://www.chronomodel.com", QUrl::TolerantMode));
 }
 
-// ---------
-
-void MainWindow::closeEvent(QCloseEvent* aEvent)
+#pragma mark Events
+void MainWindow::closeEvent(QCloseEvent* e)
 {
+    saveProject();
     writeSettings();
-    ProjectManager::writeSettings();
-    
-    if(closeProject())
-    {
-        aEvent->accept();
-    }
-    else
-    {
-        aEvent->ignore();
-    }
+    e->accept();
 }
 
 void MainWindow::keyPressEvent(QKeyEvent* keyEvent)
 {
     if(keyEvent->matches(QKeySequence::Undo))
     {
-        ProjectManager::getUndoStack().undo();
+        mUndoStack->undo();
     }
     else if(keyEvent->matches(QKeySequence::Redo))
     {
-        ProjectManager::getUndoStack().redo();
+        mUndoStack->redo();
     }
     QMainWindow::keyPressEvent(keyEvent);
 }
 
+#pragma mark Settings
 void MainWindow::writeSettings()
 {
     QSettings settings;
     settings.beginGroup("MainWindow");
+    
     settings.setValue("size", size());
     settings.setValue("pos", pos());
+    
+    settings.setValue("last_project_dir", mProject->mProjectFileDir);
+    settings.setValue("last_project_filename", mProject->mProjectFileName);
+    
+    settings.beginGroup("AppSettings");
+    settings.setValue("auto_save", mAppSettings.mAutoSave);
+    settings.setValue("auto_save_delay", mAppSettings.mAutoSaveDelay);
+    settings.setValue("show_help", mAppSettings.mShowHelp);
+    settings.endGroup();
+    
+    settings.endGroup();
+    
     settings.endGroup();
 }
 
@@ -444,8 +418,41 @@ void MainWindow::readSettings()
 {
     QSettings settings;
     settings.beginGroup("MainWindow");
+    
     resize(settings.value("size", QSize(400, 400)).toSize());
     move(settings.value("pos", QPoint(200, 200)).toPoint());
+    
+    settings.beginGroup("AppSettings");
+    mAppSettings.mAutoSave = settings.value("auto_save", true).toBool();
+    mAppSettings.mAutoSaveDelay = settings.value("auto_save_delay", 300).toInt();
+    mAppSettings.mShowHelp = settings.value("show_help", true).toInt();
+    settings.endGroup();
+    
+    mProjectView->showHelp(mAppSettings.mShowHelp);
+    mHelpAction->setChecked(mAppSettings.mShowHelp);
+    
+    QString dir = settings.value("last_project_dir", "").toString();
+    QString filename = settings.value("last_project_filename", "").toString();
+    
+    QString path = dir + "/" + filename;
+    QFileInfo fileInfo(path);
+    qDebug() << "Loading project file : " << path;
+    if(fileInfo.isFile())
+    {
+        mProject->load(path);
+        activateInterface(true);
+        updateWindowTitle();
+    }
+    
     settings.endGroup();
 }
 
+void MainWindow::activateInterface(bool activate)
+{
+    mProjectView->setVisible(activate);
+    mProjectSaveAction->setEnabled(activate);
+    mProjectSaveAsAction->setEnabled(activate);
+    mProjectExportAction->setEnabled(activate);
+    mMCMCSettingsAction->setEnabled(activate);
+    mRunAction->setEnabled(activate);
+}

@@ -13,15 +13,15 @@
 #include "Event.h"
 #include "Phase.h"
 
-#include "ProjectManager.h"
-#include "Project.h"
-
 #include "Label.h"
 #include "Button.h"
 #include "LineEdit.h"
 #include "CheckBox.h"
 #include "RadioButton.h"
 #include "Painting.h"
+
+#include "MainWindow.h"
+#include "Project.h"
 
 #include <QtWidgets>
 #include <iostream>
@@ -38,11 +38,6 @@ mTabsH(25),
 mGraphsH(100),
 mHasPhases(false)
 {
-    //Project* project = ProjectManager::getProject();
-    //ProjectSettings s = ProjectSettings::fromJson(project->state()[STATE_SETTINGS].toObject());
-    
-    // -------------
-    
     mTabs = new Tabs(this);
     mTabs->addTab(tr("Posterior distrib."));
     mTabs->addTab(tr("History plots"));
@@ -200,16 +195,18 @@ mHasPhases(false)
     
     // -------------------------
     
-    Project* project = ProjectManager::getProject();
-    connect(project, SIGNAL(mcmcStarted()), this, SLOT(clearResults()));
-    connect(project, SIGNAL(mcmcFinished(MCMCLoopMain&)), this, SLOT(updateResults(MCMCLoopMain&)));
-    
     mMarker->raise();
 }
 
 ResultsView::~ResultsView()
 {
     
+}
+
+void ResultsView::doProjectConnections(Project* project)
+{
+    connect(project, SIGNAL(mcmcStarted()), this, SLOT(clearResults()));
+    connect(project, SIGNAL(mcmcFinished(MCMCLoopMain&)), this, SLOT(updateResults(MCMCLoopMain&)));
 }
 
 void ResultsView::paintEvent(QPaintEvent* e)

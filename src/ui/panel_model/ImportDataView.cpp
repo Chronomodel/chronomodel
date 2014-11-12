@@ -1,11 +1,11 @@
 #include "ImportDataView.h"
-#include "ProjectManager.h"
 #include "PluginManager.h"
 #include "../PluginAbstract.h"
 #include "QtUtilities.h"
 #include "HelpWidget.h"
 #include "Button.h"
 #include "Label.h"
+#include "MainWindow.h"
 #include <QtWidgets>
 
 
@@ -33,14 +33,14 @@ ImportDataView::~ImportDataView()
 
 void ImportDataView::browse()
 {
-    QString currentDir = ProjectManager::getCurrentPath();
+    QString currentDir = MainWindow::getInstance()->getCurrentPath();
     QString path = QFileDialog::getOpenFileName(qApp->activeWindow(), tr("Open CSV File"), currentDir, tr("CSV File (*.csv)"));
     
     if(!path.isEmpty())
     {
         QFileInfo info(path);
         mPath = info.absolutePath();
-        ProjectManager::setCurrentPath(mPath);
+        MainWindow::getInstance()->setCurrentPath(mPath);
         
         while(mTable->rowCount() > 0)
             mTable->removeRow(0);

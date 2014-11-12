@@ -1,4 +1,4 @@
-#include "SettingsDialog.h"
+#include "AppSettingsDialog.h"
 #include "Button.h"
 #include "LineEdit.h"
 #include "Label.h"
@@ -7,7 +7,7 @@
 #include <QtWidgets>
 
 
-SettingsDialog::SettingsDialog(QWidget* parent, Qt::WindowFlags flags):
+AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags):
 QDialog(parent, flags)
 {
     setWindowTitle(tr("Settings"));
@@ -54,21 +54,21 @@ QDialog(parent, flags)
     setFixedWidth(300);
 }
 
-SettingsDialog::~SettingsDialog()
+AppSettingsDialog::~AppSettingsDialog()
 {
 
 }
 
-void SettingsDialog::setSettings(const Settings& settings)
+void AppSettingsDialog::setSettings(const AppSettings& settings)
 {
     mAutoSaveCheck->setChecked(settings.mAutoSave);
     mAutoSaveDelayEdit->setText(QString::number(settings.mAutoSaveDelay / 60));
     mAutoSaveDelayEdit->setEnabled(settings.mAutoSave);
 }
 
-Settings SettingsDialog::getSettings()
+AppSettings AppSettingsDialog::getSettings()
 {
-    Settings settings;
+    AppSettings settings;
     settings.mAutoSave = mAutoSaveCheck->isChecked();
     settings.mAutoSaveDelay = mAutoSaveDelayEdit->text().toInt() * 60;
     return settings;

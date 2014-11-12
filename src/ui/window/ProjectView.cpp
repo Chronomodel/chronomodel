@@ -1,8 +1,6 @@
 #include "ProjectView.h"
 #include "ModelView.h"
 #include "ResultsView.h"
-#include "ProjectManager.h"
-#include "Project.h"
 #include "Painting.h"
 #include <QtWidgets>
 
@@ -37,6 +35,12 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
 ProjectView::~ProjectView()
 {
     
+}
+
+void ProjectView::doProjectConnections(Project* project)
+{
+    mModelView->doProjectConnections(project);
+    mResultsView->doProjectConnections(project);
 }
 
 void ProjectView::updateProject()

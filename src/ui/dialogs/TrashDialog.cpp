@@ -3,7 +3,7 @@
 #include "EventsListItemDelegate.h"
 #include "../PluginAbstract.h"
 #include "../PluginFormAbstract.h"
-#include "ProjectManager.h"
+#include "MainWindow.h"
 #include "Project.h"
 #include <QtWidgets>
 
@@ -66,7 +66,7 @@ mType(type)
     
     // ----------
     
-    Project* project = ProjectManager::getProject();
+    Project* project = MainWindow::getInstance()->getProject();
     
     if(mType == eDate)
     {

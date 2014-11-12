@@ -1,7 +1,7 @@
 #include "PhasesScene.h"
 #include "PhaseItem.h"
 #include "ArrowItem.h"
-#include "ProjectManager.h"
+#include "MainWindow.h"
 #include "Project.h"
 #include <QtWidgets>
 
@@ -9,7 +9,6 @@
 PhasesScene::PhasesScene(QGraphicsView* view, QObject* parent):AbstractScene(view, parent)
 {
     connect(this, SIGNAL(selectionChanged()), this, SLOT(updateSelection()));
-    connect(ProjectManager::getProject(), SIGNAL(selectedEventsChanged()), this, SLOT(updateCheckedPhases()));
 }
 
 PhasesScene::~PhasesScene()
@@ -20,7 +19,7 @@ PhasesScene::~PhasesScene()
 #pragma mark Actions
 void PhasesScene::deleteSelectedItems()
 {
-    ProjectManager::getProject()->deleteSelectedPhases();
+    MainWindow::getInstance()->getProject()->deleteSelectedPhases();
 }
 
 void PhasesScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
@@ -28,7 +27,7 @@ void PhasesScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
     QJsonObject phaseFrom = ((PhaseItem*)itemFrom)->phase();
     QJsonObject phaseTo = ((PhaseItem*)itemTo)->phase();
     
-    ProjectManager::getProject()->createPhaseConstraint(phaseFrom[STATE_PHASE_ID].toInt(),
+    MainWindow::getInstance()->getProject()->createPhaseConstraint(phaseFrom[STATE_PHASE_ID].toInt(),
                                                         phaseTo[STATE_PHASE_ID].toInt());
 }
 
@@ -37,14 +36,14 @@ void PhasesScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
     QJsonObject phaseFrom = ((PhaseItem*)itemFrom)->phase();
     QJsonObject phaseTo = ((PhaseItem*)itemTo)->phase();
     
-    ProjectManager::getProject()->mergePhases(phaseFrom[STATE_PHASE_ID].toInt(),
+    MainWindow::getInstance()->getProject()->mergePhases(phaseFrom[STATE_PHASE_ID].toInt(),
                                               phaseTo[STATE_PHASE_ID].toInt());
 }
 
 #pragma mark Project Update
 void PhasesScene::sendUpdateProject(const QString& reason, bool notify, bool storeUndoCommand)
 {
-    Project* project = ProjectManager::getProject();
+    Project* project = MainWindow::getInstance()->getProject();
     
     QJsonObject statePrev = project->state();
     QJsonObject stateNext = statePrev;
@@ -57,15 +56,15 @@ void PhasesScene::sendUpdateProject(const QString& reason, bool notify, bool sto
     if(statePrev != stateNext)
     {
         if(storeUndoCommand)
-            ProjectManager::getProject()->pushProjectState(stateNext, reason, notify);
+            MainWindow::getInstance()->getProject()->pushProjectState(stateNext, reason, notify);
         else
-            ProjectManager::getProject()->sendUpdateState(stateNext, reason, notify);
+            MainWindow::getInstance()->getProject()->sendUpdateState(stateNext, reason, notify);
     }
 }
 
 void PhasesScene::updateProject()
 {
-    QJsonObject state = ProjectManager::getProject()->state();
+    QJsonObject state = MainWindow::getInstance()->getProject()->state();
     QJsonArray phases = state[STATE_PHASES].toArray();
     QJsonArray constraints = state[STATE_PHASES_CONSTRAINTS].toArray();
     
@@ -200,7 +199,7 @@ void PhasesScene::updateSelection()
             p[STATE_PHASE_IS_CURRENT] = true;
             phase = p;
         }
-        emit ProjectManager::getProject()->currentPhaseChanged(phase);
+        emit MainWindow::getInstance()->getProject()->currentPhaseChanged(phase);
         sendUpdateProject(tr("phases selection updated"), false, false);
     }
 }
@@ -236,7 +235,7 @@ void PhasesScene::itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent
     AbstractScene::itemDoubleClicked(item, e);
     if(!mDrawingArrow)
     {
-        Project* project = ProjectManager::getProject();
+        Project* project = MainWindow::getInstance()->getProject();
         project->updatePhase(((PhaseItem*)item)->phase());
     }
 }
@@ -244,7 +243,7 @@ void PhasesScene::itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent
 void PhasesScene::constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e)
 {
     Q_UNUSED(e);
-    Project* project = ProjectManager::getProject();
+    Project* project = MainWindow::getInstance()->getProject();
     project->updatePhaseConstraint(item->constraint()[STATE_PHASE_CONSTRAINT_ID].toInt());
 }
 
@@ -252,7 +251,7 @@ void PhasesScene::constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEv
 #pragma mark Check state
 void PhasesScene::updateCheckedPhases()
 {
-    QJsonObject state = ProjectManager::getProject()->state();
+    QJsonObject state = MainWindow::getInstance()->getProject()->state();
     QJsonArray events = state[STATE_EVENTS].toArray();
     
     // tableau contenant les id des phases associés à leur nombre d'apparition dans les events

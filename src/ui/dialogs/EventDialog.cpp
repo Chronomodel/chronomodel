@@ -1,6 +1,4 @@
 #include "EventDialog.h"
-#include "ProjectManager.h"
-#include "Project.h"
 #include "ColorPicker.h"
 #include "LineEdit.h"
 #include "ModelUtilities.h"

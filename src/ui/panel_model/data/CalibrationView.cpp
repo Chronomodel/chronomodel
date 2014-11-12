@@ -5,7 +5,7 @@
 #include "Marker.h"
 #include "../PluginAbstract.h"
 #include "../GraphViewRefAbstract.h"
-#include "ProjectManager.h"
+#include "MainWindow.h"
 #include "Project.h"
 #include "GraphView.h"
 #include "StdUtilities.h"
@@ -46,7 +46,7 @@ void CalibrationView::setDate(const QJsonObject& date)
 
 void CalibrationView::updateGraphs()
 {
-    Project* project = ProjectManager::getProject();
+    Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
     
     QJsonObject settings = state[STATE_SETTINGS].toObject();

@@ -1,8 +1,6 @@
 #include "ModelView.h"
 #include "EventsScene.h"
 #include "PhasesScene.h"
-#include "ProjectManager.h"
-#include "Project.h"
 #include "Event.h"
 #include "EventKnown.h"
 #include "Painting.h"
@@ -15,6 +13,8 @@
 #include "ScrollCompressor.h"
 #include "CalibrationView.h"
 #include "HelpWidget.h"
+#include "MainWindow.h"
+#include "Project.h"
 #include <QtWidgets>
 #include <QtSvg>
 #include <QPropertyAnimation>
@@ -28,11 +28,6 @@ mHandlerW(15),
 mIsSplitting(false)
 {
     setMouseTracking(true);
-    
-    // --------
-    
-    Project* project = ProjectManager::getProject();
-    connect(project, SIGNAL(currentDateChanged(const QJsonObject&)), this, SLOT(showCalibration(const QJsonObject&)));
     
     // --------
     
@@ -82,11 +77,6 @@ mIsSplitting(false)
     
     // just to refresh when selection changes :
     connect(mEventsScene, SIGNAL(selectionChanged()), mEventsGlobalView, SLOT(update()));
-    
-    connect(mButNewEvent, SIGNAL(clicked()), project, SLOT(createEvent()));
-    connect(mButNewEventKnown, SIGNAL(clicked()), project, SLOT(createEventKnown()));
-    connect(mButDeleteEvent, SIGNAL(clicked()), project, SLOT(deleteSelectedEvents()));
-    connect(mButRecycleEvent, SIGNAL(clicked()), project, SLOT(recycleEvents()));
     connect(mButEventsOverview, SIGNAL(toggled(bool)), mEventsGlobalView, SLOT(setVisible(bool)));
     
     connect(mEventsGlobalZoom, SIGNAL(valueChanged(float)), this, SLOT(updateEventsZoom(float)));
@@ -136,9 +126,6 @@ mIsSplitting(false)
     mPhasesGlobalZoom = new ScrollCompressor(mPhasesWrapper);
     mPhasesGlobalZoom->setProp(1);
     mPhasesGlobalZoom->showText(tr("Zoom"), true);
-    
-    connect(mButNewPhase, SIGNAL(clicked()), project, SLOT(createPhase()));
-    connect(mButDeletePhase, SIGNAL(clicked()), project, SLOT(deleteSelectedPhases()));
     
     connect(mPhasesGlobalZoom, SIGNAL(valueChanged(float)), this, SLOT(updatePhasesZoom(float)));
     connect(mButExportPhases, SIGNAL(clicked()), this, SLOT(exportPhasesScene()));
@@ -229,9 +216,27 @@ ModelView::~ModelView()
     
 }
 
+void ModelView::doProjectConnections(Project* project)
+{
+    connect(project, SIGNAL(currentDateChanged(const QJsonObject&)), this, SLOT(showCalibration(const QJsonObject&)));
+    
+    connect(mButNewEvent, SIGNAL(clicked()), project, SLOT(createEvent()));
+    connect(mButNewEventKnown, SIGNAL(clicked()), project, SLOT(createEventKnown()));
+    connect(mButDeleteEvent, SIGNAL(clicked()), project, SLOT(deleteSelectedEvents()));
+    connect(mButRecycleEvent, SIGNAL(clicked()), project, SLOT(recycleEvents()));
+    
+    connect(mButNewPhase, SIGNAL(clicked()), project, SLOT(createPhase()));
+    connect(mButDeletePhase, SIGNAL(clicked()), project, SLOT(deleteSelectedPhases()));
+    
+    connect(project, SIGNAL(currentPhaseChanged(const QJsonObject&)), mEventsScene, SLOT(setSelectedPhase(const QJsonObject&)));
+    connect(project, SIGNAL(selectedEventsChanged()), mPhasesScene, SLOT(updateCheckedPhases()));
+    
+    connect(project, SIGNAL(currentEventChanged(const QJsonObject&)), mEventPropertiesView, SLOT(setEvent(const QJsonObject&)));
+}
+
 void ModelView::updateProject()
 {
-    Project* project = ProjectManager::getProject();
+    Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
     ProjectSettings settings = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
     
@@ -271,7 +276,7 @@ void ModelView::applySettings()
     settings.mTmax = mMaxEdit->text().toInt();
     settings.mStep = mStepEdit->text().toInt();
     
-    Project* project = ProjectManager::getProject();
+    Project* project = MainWindow::getInstance()->getProject();
     project->setSettings(settings);
 }
 
@@ -454,7 +459,7 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
     QString filter = tr("Image (*.png);;Scalable Vector Graphics (*.svg)");
     QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                     tr("Save model image as..."),
-                                                    ProjectManager::getCurrentPath(),
+                                                    MainWindow::getInstance()->getCurrentPath(),
                                                     filter);
     if(!fileName.isEmpty())
     {
@@ -484,7 +489,7 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
             image.save(fileName, "PNG");
         }
         QFileInfo fileInfo(fileName);
-        ProjectManager::setCurrentPath(fileInfo.dir().absolutePath());
+        MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
         
         
         // Usefull one day ???

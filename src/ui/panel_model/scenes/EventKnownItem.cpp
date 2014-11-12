@@ -2,13 +2,12 @@
 #include "Phase.h"
 #include "Event.h"
 #include "Painting.h"
-#include "ProjectManager.h"
-#include "Project.h"
 #include "QtUtilities.h"
 #include "Painting.h"
 #include "GraphView.h"
 #include "EventKnown.h"
 #include "StdUtilities.h"
+#include "Project.h"
 #include <QtWidgets>
 
 

@@ -1,7 +1,7 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
-#include "Settings.h"
+#include "AppSettings.h"
 #include "ProjectSettings.h"
 #include "MCMCSettings.h"
 #include "MCMCLoopMain.h"
@@ -71,7 +71,7 @@ public:
     bool saveProjectToFile();
     
     void setSettings(const ProjectSettings& settings);
-    void setAppSettings(const Settings& settings);
+    void setAppSettings(const AppSettings& settings);
     
     bool areStudyBoundsValid();
     

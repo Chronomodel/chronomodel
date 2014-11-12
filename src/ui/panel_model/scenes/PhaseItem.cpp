@@ -2,9 +2,9 @@
 #include "Event.h"
 #include "Date.h"
 #include "Painting.h"
-#include "Project.h"
-#include "ProjectManager.h"
 #include "QtUtilities.h"
+#include "MainWindow.h"
+#include "Project.h"
 #include <QtWidgets>
 
 
@@ -41,7 +41,7 @@ void PhaseItem::setPhase(const QJsonObject& phase)
 #pragma mark Check state
 void PhaseItem::stateChanged(bool checked)
 {
-    Project* project = ProjectManager::getProject();
+    Project* project = MainWindow::getInstance()->getProject();
     //project->updateEventsPhase(mPhase[STATE_PHASE_ID].toInt(), checked);
 }
 
@@ -61,7 +61,7 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
         else if(mState == Qt::Checked) mState = Qt::Unchecked;
         else if(mState == Qt::Unchecked) mState = Qt::Checked;
         
-        ProjectManager::getProject()->updatePhaseEvents(mPhase[STATE_PHASE_ID].toInt(), mState);
+        MainWindow::getInstance()->getProject()->updatePhaseEvents(mPhase[STATE_PHASE_ID].toInt(), mState);
         
         update();
         if(scene())
@@ -207,7 +207,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 QJsonArray PhaseItem::getEvents() const
 {
     QString phaseId = QString::number(mPhase[STATE_PHASE_ID].toInt());
-    QJsonObject state = ProjectManager::getProject()->state();
+    QJsonObject state = MainWindow::getInstance()->getProject()->state();
     QJsonArray allEvents = state[STATE_EVENTS].toArray();
     QJsonArray events;
     for(int i=0; i<allEvents.size(); ++i)

@@ -3,7 +3,6 @@
 
 #include <QItemDelegate>
 #include <QtWidgets>
-#include "ProjectManager.h"
 #include "PluginManager.h"
 #include "../PluginAbstract.h"
 #include "Painting.h"

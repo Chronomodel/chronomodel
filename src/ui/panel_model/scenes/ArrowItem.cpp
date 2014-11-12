@@ -1,7 +1,7 @@
 #include "ArrowItem.h"
 #include "EventItem.h"
 #include "EventConstraint.h"
-#include "ProjectManager.h"
+#include "MainWindow.h"
 #include "Project.h"
 #include "Painting.h"
 #include <QtWidgets>
@@ -42,7 +42,7 @@ void ArrowItem::setConstraint(const QJsonObject& c)
 
 void ArrowItem::updatePosition()
 {
-    Project* project = ProjectManager::getProject();
+    Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
     
     if(mType == eEvent)

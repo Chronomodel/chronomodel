@@ -123,7 +123,7 @@ INCLUDEPATH += src/utilities/
 #########################################
 
 HEADERS += src/MainController.h
-HEADERS += src/Settings.h
+HEADERS += src/AppSettings.h
 
 HEADERS += src/mcmc/Functions.h
 HEADERS += src/mcmc/Generator.h
@@ -172,7 +172,6 @@ equals(USE_PLUGIN_UNIFORM, 1){
 }
 
 HEADERS += src/project/Project.h
-HEADERS += src/project/ProjectManager.h
 HEADERS += src/project/PluginManager.h
 HEADERS += src/project/ProjectSettings.h
 HEADERS += src/project/ProjectSettingsDialog.h
@@ -182,7 +181,7 @@ HEADERS += src/project/StateEvent.h
 HEADERS += src/ui/dialogs/AboutDialog.h
 HEADERS += src/ui/dialogs/MCMCProgressDialog.h
 HEADERS += src/ui/dialogs/MCMCSettingsDialog.h
-HEADERS += src/ui/dialogs/SettingsDialog.h
+HEADERS += src/ui/dialogs/AppSettingsDialog.h
 HEADERS += src/ui/dialogs/EventDialog.h
 HEADERS += src/ui/dialogs/ConstraintDialog.h
 HEADERS += src/ui/dialogs/PhaseDialog.h
@@ -255,7 +254,7 @@ HEADERS += src/utilities/QtUtilities.h
 
 SOURCES += src/main.cpp
 SOURCES += src/MainController.cpp
-SOURCES += src/Settings.cpp
+SOURCES += src/AppSettings.cpp
 
 SOURCES += src/mcmc/Functions.cpp
 SOURCES += src/mcmc/Generator.cpp
@@ -300,7 +299,6 @@ equals(USE_PLUGIN_UNIFORM, 1){
 }
 
 SOURCES += src/project/Project.cpp
-SOURCES += src/project/ProjectManager.cpp
 SOURCES += src/project/PluginManager.cpp
 SOURCES += src/project/ProjectSettings.cpp
 SOURCES += src/project/ProjectSettingsDialog.cpp
@@ -310,7 +308,7 @@ SOURCES += src/project/StateEvent.cpp
 SOURCES += src/ui/dialogs/AboutDialog.cpp
 SOURCES += src/ui/dialogs/MCMCProgressDialog.cpp
 SOURCES += src/ui/dialogs/MCMCSettingsDialog.cpp
-SOURCES += src/ui/dialogs/SettingsDialog.cpp
+SOURCES += src/ui/dialogs/AppSettingsDialog.cpp
 SOURCES += src/ui/dialogs/EventDialog.cpp
 SOURCES += src/ui/dialogs/PhaseDialog.cpp
 SOURCES += src/ui/dialogs/ConstraintDialog.cpp

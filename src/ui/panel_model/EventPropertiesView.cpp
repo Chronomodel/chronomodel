@@ -9,10 +9,10 @@
 #include "RadioButton.h"
 #include "GraphView.h"
 #include "Painting.h"
+#include "MainWindow.h"
+#include "Project.h"
 #include "../PluginAbstract.h"
 #include "PluginManager.h"
-#include "ProjectManager.h"
-#include "Project.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
 #include <QtWidgets>
@@ -20,11 +20,6 @@
 
 EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
 {
-    Project* project = ProjectManager::getProject();
-    connect(project, SIGNAL(currentEventChanged(const QJsonObject&)), this, SLOT(setEvent(const QJsonObject&)));
-    
-    // -------------
-    
     mNameLab = new Label(tr("Name") + " :", this);
     mColorLab = new Label(tr("Color") + " :", this);
     
@@ -213,7 +208,7 @@ void EventPropertiesView::updateEventName(const QString& name)
 {
     QJsonObject event = mEvent;
     event[STATE_EVENT_NAME] = name;
-    ProjectManager::getProject()->updateEvent(event, tr("Event name updated"));
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event name updated"));
 }
 
 void EventPropertiesView::updateEventColor(QColor color)
@@ -222,14 +217,14 @@ void EventPropertiesView::updateEventColor(QColor color)
     event[STATE_EVENT_RED] = color.red();
     event[STATE_EVENT_GREEN] = color.green();
     event[STATE_EVENT_BLUE] = color.blue();
-    ProjectManager::getProject()->updateEvent(event, tr("Event color updated"));
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event color updated"));
 }
 
 void EventPropertiesView::updateEventMethod(int index)
 {
     QJsonObject event = mEvent;
     event[STATE_EVENT_METHOD] = index;
-    ProjectManager::getProject()->updateEvent(event, tr("Event method updated"));
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event method updated"));
 }
 
 #pragma mark Event Known Properties
@@ -247,7 +242,7 @@ void EventPropertiesView::updateKnownType()
         {
             QJsonObject event = mEvent;
             event[STATE_EVENT_KNOWN_TYPE] = type;
-            ProjectManager::getProject()->updateEvent(event, tr("Bound type updated"));
+            MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound type updated"));
         }
     }
 }
@@ -256,48 +251,48 @@ void EventPropertiesView::updateKnownFixed()
 {
     QJsonObject event = mEvent;
     event[STATE_EVENT_KNOWN_FIXED] = mKnownFixedEdit->text().toFloat();
-    ProjectManager::getProject()->updateEvent(event, tr("Bound fixed value updated"));
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound fixed value updated"));
 }
 void EventPropertiesView::updateKnownUnifStart()
 {
     QJsonObject event = mEvent;
     event[STATE_EVENT_KNOWN_START] = mKnownStartEdit->text().toFloat();
-    ProjectManager::getProject()->updateEvent(event, tr("Bound min updated"));
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound min updated"));
 }
 
 void EventPropertiesView::updateKnownUnifEnd()
 {
     QJsonObject event = mEvent;
     event[STATE_EVENT_KNOWN_END] = mKnownEndEdit->text().toFloat();
-    ProjectManager::getProject()->updateEvent(event, tr("Bound max updated"));
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound max updated"));
 }
 
 void EventPropertiesView::updateKnownGaussMeasure()
 {
     QJsonObject event = mEvent;
     event[STATE_EVENT_KNOWN_MEASURE] = mKnownGaussMeasure->text().toFloat();
-    ProjectManager::getProject()->updateEvent(event, tr("Bound average updated"));
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound average updated"));
 }
 
 void EventPropertiesView::updateKnownGaussError()
 {
     QJsonObject event = mEvent;
     event[STATE_EVENT_KNOWN_ERROR] = mKnownGaussError->text().toFloat();
-    ProjectManager::getProject()->updateEvent(event, tr("Bound error updated"));
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound error updated"));
 }
 
 void EventPropertiesView::loadKnownCsv()
 {
     /*if(mEvent)
      {
-     QString currentDir = ProjectManager::getCurrentPath();
+     QString currentDir = MainWindow::getInstance()->getCurrentPath();
      QString path = QFileDialog::getOpenFileName(qApp->activeWindow(), tr("Open CSV File"), currentDir, tr("CSV File (*.csv)"));
      
      if(!path.isEmpty())
      {
      QFileInfo info(path);
      QString dirPath = info.absolutePath();
-     ProjectManager::setCurrentPath(dirPath);
+     MainWindow::getInstance()->setCurrentPath(dirPath);
      
      QList<QStringList> csv = readCSV(path, ";");
      qDebug() << csv;
@@ -315,7 +310,7 @@ void EventPropertiesView::loadKnownCsv()
      }
      e->mValues = normalize_map(e->mValues);
      
-     Project* project = ProjectManager::getProject();
+     Project* project = MainWindow::getInstance()->getProject();
      e->updateValues(project->mSettings.mTmin, project->mSettings.mTmax, project->mSettings.mStep);
      updateKnownGraph();
      }
@@ -329,7 +324,7 @@ void EventPropertiesView::updateKnownGraph()
     
     if(mEvent[STATE_EVENT_TYPE].toInt() == Event::eKnown)
     {
-        Project* project = ProjectManager::getProject();
+        Project* project = MainWindow::getInstance()->getProject();
         QJsonObject state = project->state();
         QJsonObject settings = state[STATE_SETTINGS].toObject();
         
@@ -388,7 +383,7 @@ void EventPropertiesView::createDate()
         Button* but = dynamic_cast<Button*>(sender());
         if(but)
         {
-            Project* project = ProjectManager::getProject();
+            Project* project = MainWindow::getInstance()->getProject();
             const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
             
             for(int i=0; i<plugins.size(); ++i)
@@ -411,12 +406,12 @@ void EventPropertiesView::deleteSelectedDates()
     for(int i=0; i<items.size(); ++i)
         indexes.push_back(mDatesList->row(items[i]));
     
-    ProjectManager::getProject()->deleteDates(mEvent[STATE_EVENT_ID].toInt(), indexes);
+    MainWindow::getInstance()->getProject()->deleteDates(mEvent[STATE_EVENT_ID].toInt(), indexes);
 }
 
 void EventPropertiesView::recycleDates()
 {
-    ProjectManager::getProject()->recycleDates(mEvent[STATE_EVENT_ID].toInt());
+    MainWindow::getInstance()->getProject()->recycleDates(mEvent[STATE_EVENT_ID].toInt());
 }
 
 #pragma mark Merge / Split

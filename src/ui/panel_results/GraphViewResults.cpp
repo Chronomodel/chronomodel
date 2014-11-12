@@ -1,10 +1,9 @@
 #include "GraphViewResults.h"
 #include "GraphView.h"
 #include "Button.h"
-#include "ProjectManager.h"
-#include "Project.h"
 #include "Painting.h"
 #include "QtUtilities.h"
+#include "MainWindow.h"
 #include <QtWidgets>
 #include <QtSvg>
 
@@ -129,7 +128,7 @@ void GraphViewResults::saveAsImage()
     QString filter = tr("Image (*.png);;Scalable Vector Graphics (*.svg)");
     QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                     tr("Save graph image as..."),
-                                                    ProjectManager::getCurrentPath(),
+                                                    MainWindow::getInstance()->getCurrentPath(),
                                                     filter);
     if(!fileName.isEmpty())
     {
@@ -154,7 +153,7 @@ void GraphViewResults::saveAsImage()
             image.save(fileName, "PNG");
         }
         QFileInfo fileInfo(fileName);
-        ProjectManager::setCurrentPath(fileInfo.dir().absolutePath());
+        MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
     }
 }
 

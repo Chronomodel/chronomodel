@@ -1,5 +1,5 @@
 #include "Project.h"
-#include "ProjectManager.h"
+#include "MainWindow.h"
 #include "Model.h"
 #include "PluginManager.h"
 #include "ProjectSettingsDialog.h"
@@ -44,7 +44,8 @@ mProjectFileDir(""),
 mProjectFileName(QObject::tr("Untitled")),
 mModel(0)
 {
-    initState();
+    mState = emptyState();
+    mLastSavedState = mState;
     
     mAutoSaveTimer = new QTimer(this);
     connect(mAutoSaveTimer, SIGNAL(timeout()), this, SLOT(save()));
@@ -61,7 +62,8 @@ Project::~Project()
 
 void Project::initState()
 {
-    mState = emptyState();
+    QJsonObject state = emptyState();
+    pushProjectState(state, tr("New Project"), true, false);
 }
 
 QJsonObject Project::emptyState() const
@@ -109,7 +111,7 @@ void Project::pushProjectState(const QJsonObject& state, const QString& reason, 
     if(mState != state || force)
     {
         SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
-        ProjectManager::getUndoStack().push(command);
+        MainWindow::getInstance()->getUndoStack()->push(command);
     }
 }
 
@@ -170,7 +172,7 @@ bool Project::load(const QString& path)
     if(file.open(QIODevice::ReadOnly))
     {
         QFileInfo info(path);
-        ProjectManager::setCurrentPath(info.absolutePath());
+        MainWindow::getInstance()->setCurrentPath(info.absolutePath());
         
         mProjectFileDir = info.absolutePath();
         mProjectFileName = info.fileName();
@@ -202,13 +204,13 @@ bool Project::save()
 bool Project::saveAs()
 {
     QString path = QFileDialog::getSaveFileName(qApp->activeWindow(),
-                                                tr("Save File"),
-                                                ProjectManager::getCurrentPath(),
+                                                tr("Save project as..."),
+                                                MainWindow::getInstance()->getCurrentPath(),
                                                 tr("Chronomodel Project (*.chr)"));
     if(!path.isEmpty())
     {
         QFileInfo info(path);
-        ProjectManager::setCurrentPath(info.absolutePath());
+        MainWindow::getInstance()->setCurrentPath(info.absolutePath());
         
         mProjectFileDir = info.absolutePath();
         mProjectFileName = info.fileName();
@@ -231,7 +233,7 @@ bool Project::askToSave()
     // We have some modifications : ask to save :
     int result = QMessageBox::question(QApplication::activeWindow(),
                                        QApplication::applicationName(),
-                                       tr("Do you want to save the project ?"),
+                                       tr("Do you want to save the current project ?"),
                                        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
     
     if(result == QMessageBox::Yes)
@@ -294,7 +296,7 @@ void Project::setSettings(const ProjectSettings& settings)
     }
 }
 
-void Project::setAppSettings(const Settings& settings)
+void Project::setAppSettings(const AppSettings& settings)
 {
     mAutoSaveTimer->setInterval(settings.mAutoSaveDelay * 1000);
     if(mAutoSaveTimer->isActive() && !settings.mAutoSave)
@@ -1347,12 +1349,12 @@ int Project::getUnusedPhaseConstraintId(const QJsonArray& constraints)
 #pragma mark export
 void Project::exportAsText()
 {
-    /*QString currentDir = ProjectManager::getCurrentPath();
+    /*QString currentDir = MainWindow::getInstance()->getCurrentPath();
     
     QString path = QFileDialog::getExistingDirectory(qApp->activeWindow(), tr("Location"), currentDir);
     if(!path.isEmpty())
     {
-        ProjectManager::setCurrentPath(path);
+        MainWindow::getInstance()->setCurrentPath(path);
         
         QString folderBaseName = mName.simplified().toLower().replace(" ", "_");
         QString folderName = folderBaseName;

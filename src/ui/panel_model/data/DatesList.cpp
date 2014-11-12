@@ -1,9 +1,9 @@
 #include "DatesList.h"
 #include "Phase.h"
-#include "ProjectManager.h"
-#include "Project.h"
 #include "Date.h"
 #include "Event.h"
+#include "MainWindow.h"
+#include "Project.h"
 #include "../PluginAbstract.h"
 #include "DatesListItemDelegate.h"
 #include <QtWidgets>
@@ -73,7 +73,7 @@ void DatesList::handleItemClicked(QListWidgetItem* item)
     if(index < dates.size())
     {
         QJsonObject date = dates[index].toObject();
-        emit ProjectManager::getProject()->currentDateChanged(date);
+        emit MainWindow::getInstance()->getProject()->currentDateChanged(date);
     }
 }
 
@@ -81,7 +81,7 @@ void DatesList::handleItemDoubleClicked(QListWidgetItem* item)
 {
     if(!mEvent.isEmpty())
     {
-        ProjectManager::getProject()->updateDate(mEvent[STATE_EVENT_ID].toInt(), row(item));
+        MainWindow::getInstance()->getProject()->updateDate(mEvent[STATE_EVENT_ID].toInt(), row(item));
     }
 }
 
@@ -114,7 +114,7 @@ void DatesList::dropEvent(QDropEvent* e)
         }
     }
     event[STATE_EVENT_DATES] = datesOrdered;
-    ProjectManager::getProject()->updateEvent(event, tr("Dates order changed"));
+    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Dates order changed"));
 }
 
 

@@ -12,6 +12,7 @@ class LineEdit;
 class QPropertyAnimation;
 class QGraphicsScene;
 
+class Project;
 class ModelToolsView;
 class EventsScene;
 class PhasesScene;
@@ -34,6 +35,7 @@ public:
     ModelView(QWidget* parent = 0, Qt::WindowFlags flags = 0);
     ~ModelView();
     
+    void doProjectConnections(Project* project);
     void showHelp(bool show);
     
 public slots:

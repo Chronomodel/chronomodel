@@ -4,7 +4,7 @@
 #include "StdUtilities.h"
 #include "QtUtilities.h"
 #include "Painting.h"
-#include "ProjectManager.h"
+#include "MainWindow.h"
 #include <QtWidgets>
 
 
@@ -255,7 +255,7 @@ void GraphViewEvent::saveGraphData()
         QString filter = tr("CSV (*.csv)");
         QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                         tr("Save graph data as..."),
-                                                        ProjectManager::getCurrentPath(),
+                                                        MainWindow::getInstance()->getCurrentPath(),
                                                         filter);
         QFile file(filename);
         if(file.open(QFile::WriteOnly | QFile::Truncate))

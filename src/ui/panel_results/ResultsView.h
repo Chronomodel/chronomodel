@@ -8,6 +8,7 @@ class QStackedWidget;
 class QScrollArea;
 class QTimer;
 
+class Project;
 class Model;
 class Tabs;
 class Ruler;
@@ -32,6 +33,8 @@ class ResultsView: public QWidget
 public:
     ResultsView(QWidget* parent = 0, Qt::WindowFlags flags = 0);
     ~ResultsView();
+    
+    void doProjectConnections(Project* project);
     
 protected:
     void paintEvent(QPaintEvent* e);

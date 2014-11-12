@@ -1,29 +1,29 @@
-#include "Settings.h"
+#include "AppSettings.h"
 
 
-Settings::Settings():
+AppSettings::AppSettings():
 mAutoSave(true),
 mAutoSaveDelay(300),
 mShowHelp(true)
 {
     
 }
-Settings::Settings(const Settings& s)
+AppSettings::AppSettings(const AppSettings& s)
 {
     copyFrom(s);
 }
-Settings& Settings::operator=(const Settings& s)
+AppSettings& AppSettings::operator=(const AppSettings& s)
 {
     copyFrom(s);
     return *this;
 }
-void Settings::copyFrom(const Settings& s)
+void AppSettings::copyFrom(const AppSettings& s)
 {
     mAutoSave = s.mAutoSave;
     mAutoSaveDelay = s.mAutoSaveDelay;
     mShowHelp = s.mShowHelp;
 }
-Settings::~Settings()
+AppSettings::~AppSettings()
 {
     
 }

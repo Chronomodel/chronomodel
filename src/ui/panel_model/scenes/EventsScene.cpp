@@ -7,10 +7,9 @@
 #include "DateItem.h"
 #include "ArrowItem.h"
 #include "ArrowTmpItem.h"
-#include "ProjectManager.h"
-#include "Project.h"
 #include "SetProjectState.h"
 #include "MainWindow.h"
+#include "Project.h"
 #include "HelpWidget.h"
 #include <QtWidgets>
 
@@ -26,8 +25,6 @@ EventsScene::EventsScene(QGraphicsView* view, QObject* parent):AbstractScene(vie
     mDatesAnim = new QGraphicsItemAnimation();
     mDatesAnim->setTimeLine(mDatesAnimTimer);
     
-    connect(ProjectManager::getProject(), SIGNAL(currentPhaseChanged(const QJsonObject&)), this, SLOT(setSelectedPhase(const QJsonObject&)));
-    
     connect(this, SIGNAL(selectionChanged()), this, SLOT(updateSelection()));
     connect(mHelpTimer, SIGNAL(timeout()), this, SLOT(updateHelp()));
     
@@ -42,7 +39,7 @@ EventsScene::~EventsScene()
 #pragma mark Actions
 void EventsScene::deleteSelectedItems()
 {
-    ProjectManager::getProject()->deleteSelectedEvents();
+    MainWindow::getInstance()->getProject()->deleteSelectedEvents();
 }
 
 void EventsScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
@@ -50,7 +47,7 @@ void EventsScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
     QJsonObject eventFrom = ((EventItem*)itemFrom)->getEvent();
     QJsonObject eventTo = ((EventItem*)itemTo)->getEvent();
     
-    ProjectManager::getProject()->createEventConstraint(eventFrom[STATE_EVENT_ID].toInt(),
+    MainWindow::getInstance()->getProject()->createEventConstraint(eventFrom[STATE_EVENT_ID].toInt(),
                                                         eventTo[STATE_EVENT_ID].toInt());
 }
 
@@ -59,7 +56,7 @@ void EventsScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
     QJsonObject eventFrom = ((EventItem*)itemFrom)->getEvent();
     QJsonObject eventTo = ((EventItem*)itemTo)->getEvent();
     
-    ProjectManager::getProject()->mergeEvents(eventFrom[STATE_EVENT_ID].toInt(),
+    MainWindow::getInstance()->getProject()->mergeEvents(eventFrom[STATE_EVENT_ID].toInt(),
                                               eventTo[STATE_EVENT_ID].toInt());
 }
 
@@ -143,7 +140,7 @@ void EventsScene::showHelp(bool show)
 #pragma mark Project Update
 void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool storeUndoCommand)
 {
-    Project* project = ProjectManager::getProject();
+    Project* project = MainWindow::getInstance()->getProject();
     
     QJsonObject statePrev = project->state();
     QJsonObject stateNext = statePrev;
@@ -159,15 +156,15 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
     if(statePrev != stateNext)
     {
         if(storeUndoCommand)
-            ProjectManager::getProject()->pushProjectState(stateNext, reason, notify);
+            MainWindow::getInstance()->getProject()->pushProjectState(stateNext, reason, notify);
         else
-            ProjectManager::getProject()->sendUpdateState(stateNext, reason, notify);
+            MainWindow::getInstance()->getProject()->sendUpdateState(stateNext, reason, notify);
     }
 }
 
 void EventsScene::updateProject()
 {
-    QJsonObject state = ProjectManager::getProject()->state();
+    QJsonObject state = MainWindow::getInstance()->getProject()->state();
     QJsonArray events = state[STATE_EVENTS].toArray();
     QJsonArray constraints = state[STATE_EVENTS_CONSTRAINTS].toArray();
     QJsonObject settings = state[STATE_SETTINGS].toObject();
@@ -322,9 +319,9 @@ void EventsScene::updateSelection()
             evt[STATE_EVENT_IS_CURRENT] = true;
             event = evt;
         }
-        emit ProjectManager::getProject()->currentEventChanged(event);
+        emit MainWindow::getInstance()->getProject()->currentEventChanged(event);
         sendUpdateProject(tr("events selection updated"), false, false);
-        ProjectManager::getProject()->sendEventsSelectionChanged();
+        MainWindow::getInstance()->getProject()->sendEventsSelectionChanged();
     }
 }
 
@@ -396,7 +393,7 @@ void EventsScene::dateReleased(DateItem* dateItem, QGraphicsSceneMouseEvent* e)
             {
                 // Move the date to another event :
                 
-                Project* project = ProjectManager::getProject();
+                Project* project = MainWindow::getInstance()->getProject();
                 QJsonObject state = project->state();
                 QJsonArray events = state[STATE_EVENTS].toArray();
                 
@@ -458,7 +455,7 @@ void EventsScene::constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEv
 {
     Q_UNUSED(e);
     Q_UNUSED(item);
-    //Project* project = ProjectManager::getProject();
+    //Project* project = MainWindow::getInstance()->getProject();
     //project->updateEventConstraint(item->constraint()[STATE_EVENT_CONSTRAINT_ID].toInt());
 }
 
@@ -493,7 +490,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
     }
     
     e->accept();
-    Project* project = ProjectManager::getProject();
+    Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
     QJsonArray events = state[STATE_EVENTS].toArray();
     
@@ -517,7 +514,7 @@ QList<Date> EventsScene::decodeDataDrop(QGraphicsSceneDragDropEvent* e)
 {
     const QMimeData* mimeData = e->mimeData();
     
-    Project* project = ProjectManager::getProject();
+    Project* project = MainWindow::getInstance()->getProject();
     
     QByteArray encodedData = mimeData->data("application/chronomodel.import.data");
     QDataStream stream(&encodedData, QIODevice::ReadOnly);

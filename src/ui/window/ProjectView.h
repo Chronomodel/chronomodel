@@ -9,6 +9,7 @@ class QTextEdit;
 class ModelView;
 class ResultsView;
 class Event;
+class Project;
 
 
 class ProjectView: public QWidget
@@ -17,6 +18,8 @@ class ProjectView: public QWidget
 public:
     ProjectView(QWidget* parent = 0, Qt::WindowFlags flags = 0);
     ~ProjectView();
+    
+    void doProjectConnections(Project* project);
     
 public slots:
     void updateProject();
