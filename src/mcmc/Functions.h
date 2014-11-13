@@ -6,10 +6,10 @@
 
 
 struct FunctionAnalysis{
-    double max = 0.;
-    double mode = 0.;
-    double mean = 0.;
-    double variance = 0.;
+    float max = 0.;
+    float mode = 0.;
+    float mean = 0.;
+    float variance = 0.;
 };
 
 FunctionAnalysis analyseFunction(const QMap<float, float>& aFunction);

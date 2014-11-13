@@ -291,8 +291,8 @@ void Phase::update(float tmin, float tmax)
     else if(mTauType == eTauRange && mTauMax > mTauMin)
         mTau.mX = Generator::randomUniform(0, mTauMax);
     
-    mAlpha.mX = getMaxThetaEvents();
-    mBeta.mX = getMinThetaEvents();
+    mAlpha.mX = getMinThetaEvents();
+    mBeta.mX = getMaxThetaEvents();
     
     
     // ----------------------------------------

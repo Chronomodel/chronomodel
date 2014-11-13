@@ -117,6 +117,8 @@ mHasPhases(false)
     mHPDEdit = new LineEdit(this);
     mHPDEdit->setText("95");
     
+    connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(generateHPD()));
+    
     connect(mHPDCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateGraphs()));
     
@@ -345,6 +347,45 @@ void ResultsView::updateLayout()
     update();
 }
 
+void ResultsView::generateHPD()
+{
+    int hdpThreshold = mHPDEdit->text().toInt();
+    if(mModel)
+    {
+        QList<Event>& events = mModel->mEvents;
+        QList<Phase>& phases = mModel->mPhases;
+        
+        for(int i=0; i<events.size(); ++i)
+        {
+            Event& event = events[i];
+            event.mTheta.generateHPD(hdpThreshold);
+            event.mTheta.generateCredibility(mChains, hdpThreshold);
+            QList<Date>& dates = event.mDates;
+            
+            for(int j=0; j<dates.size(); ++j)
+            {
+                Date& date = dates[j];
+                date.mTheta.generateHPD(hdpThreshold);
+                date.mSigma.generateHPD(hdpThreshold);
+                //date.mDelta.generateHPD(hdpThreshold);
+                
+                date.mTheta.generateCredibility(mChains, hdpThreshold);
+                date.mSigma.generateCredibility(mChains, hdpThreshold);
+                date.mDelta.generateCredibility(mChains, hdpThreshold);
+            }
+        }
+        for(int i=0; i<phases.size(); ++i)
+        {
+            Phase& phase = phases[i];
+            phase.mAlpha.generateHPD(hdpThreshold);
+            phase.mBeta.generateHPD(hdpThreshold);
+            
+            phase.mAlpha.generateCredibility(mChains, hdpThreshold);
+            phase.mBeta.generateCredibility(mChains, hdpThreshold);
+        }
+    }
+}
+
 void ResultsView::updateGraphs()
 {
     updateRulerAreas();
@@ -522,6 +563,11 @@ void ResultsView::updateResults(MCMCLoopMain& loop)
             radio->setChecked(true);
         mChainRadios.append(radio);
     }
+    
+    // ----------------------------------------------------
+    //  Generate HPD (will then be updated only when HPD value changed)
+    // ----------------------------------------------------
+    generateHPD();
     
     // ----------------------------------------------------
     //  Phases View

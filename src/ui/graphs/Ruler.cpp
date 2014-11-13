@@ -340,15 +340,21 @@ void Ruler::mousePressEvent(QMouseEvent* e)
 
 void Ruler::zoomIn()
 {
-    mCurrentProp -= mZoomPropStep;
+    //mCurrentProp -= mZoomPropStep;
+    //mCurrentProp = (mCurrentProp <= 0.f) ? mZoomPropStep : mCurrentProp;
+    
+    mCurrentProp = mCurrentProp * 0.9f;
     mCurrentProp = (mCurrentProp <= 0.f) ? mZoomPropStep : mCurrentProp;
     updateZoom();
 }
 
 void Ruler::zoomOut()
 {
-    mCurrentProp += mZoomPropStep;
-    mCurrentProp = (mCurrentProp > 1.f) ? 1.f : mCurrentProp;
+    //mCurrentProp += mZoomPropStep;
+    //mCurrentProp = (mCurrentProp > 1.f) ? 1.f : mCurrentProp;
+    
+    mCurrentProp = mCurrentProp * 1.1f;
+    mCurrentProp = (mCurrentProp <= 0.f) ? mZoomPropStep : mCurrentProp;
     updateZoom();
 }
 

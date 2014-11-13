@@ -6,6 +6,7 @@
 #include "Label.h"
 #include "LineEdit.h"
 #include "Painting.h"
+#include "ModelUtilities.h"
 #include <QtWidgets>
 
 
@@ -33,9 +34,9 @@ mButH(25)
     // ----------
     
     mMethodCombo = new QComboBox(mAdvancedWidget);
-    mMethodCombo->addItem(tr("MH : proposal = prior distribution"));
-    mMethodCombo->addItem(tr("MH : proposal = distribution of calibrated date"));
-    mMethodCombo->addItem(tr("MH : proposal = adapt. Gaussian random walk"));
+    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHIndependant));
+    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eInversion));
+    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
     
     mComboH = mMethodCombo->sizeHint().height();
     

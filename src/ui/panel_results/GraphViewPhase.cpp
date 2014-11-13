@@ -61,57 +61,77 @@ void GraphViewPhase::refresh()
 {
     mGraph->removeAllCurves();
     mGraph->removeAllZones();
+    setNumericalResults("");
     
     if(mPhase)
     {
         QColor color = mPhase->mColor;
         
-        QString results;
-        results += "----------------------------------\n";
-        results += tr("PHASE BEGIN");
-        results += "----------------------------------\n";
-        results += mPhase->mAlpha.resultsText(mThresholdHPD);
-        results += "----------------------------------\n";
-        results += tr("PHASE END");
-        results += "----------------------------------\n";
-        results += mPhase->mBeta.resultsText(mThresholdHPD);
-        
-        setNumericalResults(results);
-        
-        if(mCurrentResult == eHisto)
+        if(mCurrentResult == eHisto && mCurrentVariable == eTheta)
         {
+            QString results;
+            results += "Period : [" + QString::number(mPhase->mAlpha.mResults.mean, 'f', 0) + ", " + QString::number(mPhase->mBeta.mResults.mean, 'f', 0) + "]\n";
+            results += "----------------------------------\n";
+            results += tr("PHASE BEGIN") + "\n";
+            results += mPhase->mAlpha.resultsText();
+            results += "----------------------------------\n";
+            results += tr("PHASE END") + "\n";
+            results += mPhase->mBeta.resultsText();
+            setNumericalResults(results);
+            
             mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
-            mGraph->setRangeY(0, 1);
+            mGraph->setRangeY(0, 0.0001f);
             
             if(mShowAllChains)
             {
+                QColor alphaCol = color.lighter().lighter();
+                QColor betaCol = color.darker().darker();
+                //alphaCol.setRed(color.blue());
+                //alphaCol.setBlue(color.red());
+                
                 GraphCurve curveAlpha;
                 curveAlpha.mName = "alpha full";
-                curveAlpha.mPen.setColor(color);
-                curveAlpha.mData = normalize_map(mPhase->mAlpha.fullHisto());
+                curveAlpha.mPen.setColor(alphaCol);
+                curveAlpha.mData = equal_areas(mPhase->mAlpha.fullHisto(), 100);
                 mGraph->addCurve(curveAlpha);
+                
+                float yMax = 1.1f * map_max_value(curveAlpha.mData);
+                mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                 
                 GraphCurve curveBeta;
                 curveBeta.mName = QString("beta full");
-                curveBeta.mPen.setColor(color);
-                curveBeta.mData = normalize_map(mPhase->mBeta.fullHisto());
+                curveBeta.mPen.setColor(betaCol);
+                curveBeta.mData = equal_areas(mPhase->mBeta.fullHisto(), 100);
                 mGraph->addCurve(curveBeta);
+                
+                yMax = 1.1f * map_max_value(curveBeta.mData);
+                mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                 
                 if(mShowHPD)
                 {
                     GraphCurve curveAlphaHPD;
                     curveAlphaHPD.mName = "alpha HPD full";
-                    curveAlphaHPD.mPen.setColor(color);
+                    curveAlphaHPD.mPen.setColor(alphaCol);
                     curveAlphaHPD.mFillUnder = true;
-                    curveAlphaHPD.mData = normalize_map(mPhase->mAlpha.generateFullHPD(mThresholdHPD));
+                    curveAlphaHPD.mData = equal_areas(mPhase->mAlpha.mHPD, mThresholdHPD);
                     mGraph->addCurve(curveAlphaHPD);
                     
                     GraphCurve curveBetaHPD;
                     curveBetaHPD.mName = "beta HPD full";
                     curveBetaHPD.mPen.setColor(color);
                     curveBetaHPD.mFillUnder = true;
-                    curveBetaHPD.mData = normalize_map(mPhase->mBeta.generateFullHPD(mThresholdHPD));
+                    curveBetaHPD.mData = equal_areas(mPhase->mBeta.mHPD, mThresholdHPD);
                     mGraph->addCurve(curveBetaHPD);
+                    
+                    GraphCurve curveCredAlpha;
+                    curveCredAlpha.mName = "alpha credibility full";
+                    curveCredAlpha.mSections.append(QPair<float, float>(mPhase->mAlpha.mResults.mean, mPhase->mBeta.mResults.mean));
+                    curveCredAlpha.mHorizontalValue = mGraph->maximumY();
+                    curveCredAlpha.mPen.setStyle(Qt::DashLine);
+                    curveCredAlpha.mPen.setColor(color);
+                    curveCredAlpha.mPen.setWidth(5);
+                    curveCredAlpha.mIsHorizontalSections = true;
+                    mGraph->addCurve(curveCredAlpha);
                 }
             }
             for(int i=0; i<mShowChainList.size(); ++i)
@@ -123,16 +143,22 @@ void GraphViewPhase::refresh()
                     GraphCurve curveAlphaChain;
                     curveAlphaChain.mName = QString("alpha chain " + QString::number(i));
                     curveAlphaChain.mPen.setColor(col);
-                    curveAlphaChain.mData = normalize_map(mPhase->mAlpha.histoForChain(i));
+                    curveAlphaChain.mData = equal_areas(mPhase->mAlpha.histoForChain(i), 100);
                     mGraph->addCurve(curveAlphaChain);
+                    
+                    float yMax = 1.1f * map_max_value(curveAlphaChain.mData);
+                    mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                     
                     GraphCurve curveBetaChain;
                     curveBetaChain.mName = QString("beta chain " + QString::number(i));
                     curveBetaChain.mPen.setColor(col);
-                    curveBetaChain.mData = normalize_map(mPhase->mBeta.histoForChain(i));
+                    curveBetaChain.mData = equal_areas(mPhase->mBeta.histoForChain(i), 100);
                     mGraph->addCurve(curveBetaChain);
                     
-                    if(mShowHPD)
+                    yMax = 1.1f * map_max_value(curveBetaChain.mData);
+                    mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
+                    
+                    /*if(mShowHPD)
                     {
                         GraphCurve curveAlphaChainHPD;
                         curveAlphaChainHPD.mName = QString("alpha HPD chain " + QString::number(i));
@@ -147,11 +173,11 @@ void GraphViewPhase::refresh()
                         curveBetaChainHPD.mFillUnder = true;
                         curveBetaChainHPD.mData = normalize_map(mPhase->mBeta.generateHPDForChain(i, mThresholdHPD));
                         mGraph->addCurve(curveBetaChainHPD);
-                    }
+                    }*/
                 }
             }
         }
-        else if(mCurrentResult == eTrace)
+        else if(mCurrentResult == eTrace && mCurrentVariable == eTheta)
         {
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
@@ -167,13 +193,13 @@ void GraphViewPhase::refresh()
                 
                 GraphCurve curveAlpha;
                 curveAlpha.mName = QString("alpha trace chain " + QString::number(chainIdx));
-                curveAlpha.mData = mPhase->mAlpha.traceForChain(mChains, chainIdx);
+                curveAlpha.mData = mPhase->mAlpha.fullTraceForChain(mChains, chainIdx);
                 curveAlpha.mPen.setColor(col);
                 mGraph->addCurve(curveAlpha);
                 
                 GraphCurve curveBeta;
                 curveBeta.mName = QString("beta trace chain " + QString::number(chainIdx));
-                curveBeta.mData = mPhase->mBeta.traceForChain(mChains, chainIdx);
+                curveBeta.mData = mPhase->mBeta.fullTraceForChain(mChains, chainIdx);
                 curveBeta.mPen.setColor(col);
                 mGraph->addCurve(curveBeta);
                 
@@ -182,14 +208,6 @@ void GraphViewPhase::refresh()
                 
                 mGraph->setRangeY(min, max);
             }
-        }
-        else if(mCurrentResult == eAccept)
-        {
-            mGraph->removeAllCurves();
-        }
-        else if(mCurrentResult == eCorrel)
-        {
-            mGraph->removeAllCurves();
         }
     }
 }

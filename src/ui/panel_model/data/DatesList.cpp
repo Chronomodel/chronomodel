@@ -6,6 +6,7 @@
 #include "Project.h"
 #include "../PluginAbstract.h"
 #include "DatesListItemDelegate.h"
+#include "ModelUtilities.h"
 #include <QtWidgets>
 
 
@@ -60,6 +61,7 @@ void DatesList::setEvent(const QJsonObject& event)
                 item->setData(0x0103, d.getDesc());
                 item->setData(0x0104, d.mId);
                 item->setData(0x0105, d.mDeltaFixed);
+                item->setData(0x0106, ModelUtilities::getDataMethodText(d.mMethod));
                 addItem(item);
             }
         }

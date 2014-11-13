@@ -70,11 +70,11 @@ void GraphViewDate::refresh()
 {
     mGraph->removeAllCurves();
     mGraph->removeAllZones();
+    setNumericalResults("");
     
     if(mDate)
     {
         QColor color = mColor;
-        setNumericalResults(mDate->mTheta.resultsText(mThresholdHPD));
         
         if(mCurrentResult == eHisto)
         {
@@ -89,6 +89,8 @@ void GraphViewDate::refresh()
             if(mCurrentVariable == eTheta) variable = &(mDate->mTheta);
             else if(mCurrentVariable == eSigma) variable = &(mDate->mSigma);
             else if(mCurrentVariable == eDelta) variable = &(mDate->mDelta);
+            
+            setNumericalResults(variable->resultsText());
             
             if(mShowCalib && mCurrentVariable == eTheta)
             {
@@ -119,10 +121,19 @@ void GraphViewDate::refresh()
                 {
                     GraphCurve curveHPD;
                     curveHPD.mName = "histo HPD full";
-                    curveHPD.mData = equal_areas(variable->generateFullHPD(mThresholdHPD), mThresholdHPD);
+                    curveHPD.mData = equal_areas(variable->mHPD, mThresholdHPD);
                     curveHPD.mPen.setColor(color);
                     curveHPD.mFillUnder = true;
                     mGraph->addCurve(curveHPD);
+                    
+                    GraphCurve curveCred;
+                    curveCred.mName = "credibility full";
+                    curveCred.mSections.append(variable->mCredibility);
+                    curveCred.mHorizontalValue = mGraph->maximumY();
+                    curveCred.mPen.setColor(color);
+                    curveCred.mPen.setWidth(5);
+                    curveCred.mIsHorizontalSections = true;
+                    mGraph->addCurve(curveCred);
                 }
             }
             for(int i=0; i<mShowChainList.size(); ++i)
@@ -140,7 +151,7 @@ void GraphViewDate::refresh()
                     float yMax = 1.1f * map_max_value(curve.mData);
                     mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                     
-                    if(mShowHPD)
+                    /*if(mShowHPD)
                     {
                         GraphCurve curveHPD;
                         curveHPD.mName = QString("histo HPD chain " + QString::number(i));
@@ -148,7 +159,7 @@ void GraphViewDate::refresh()
                         curveHPD.mPen.setColor(col);
                         curveHPD.mFillUnder = true;
                         mGraph->addCurve(curveHPD);
-                    }
+                    }*/
                 }
             }
         }
@@ -171,7 +182,7 @@ void GraphViewDate::refresh()
                 
                 GraphCurve curve;
                 curve.mName = QString("trace chain " + QString::number(chainIdx));
-                curve.mData = variable->traceForChain(mChains, chainIdx);
+                curve.mData = variable->fullTraceForChain(mChains, chainIdx);
                 curve.mPen.setColor(Painting::chainColors[chainIdx]);
                 curve.mIsHisto = false;
                 mGraph->addCurve(curve);

@@ -57,6 +57,7 @@ private slots:
     void updateScrollHeights();
     void showInfos(bool);
     void compress(float prop);
+    void generateHPD();
     
 private:
     QList<QRect> getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases);

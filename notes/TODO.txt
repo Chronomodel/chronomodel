@@ -16,13 +16,13 @@
 - Sur les graphs : afficher les intervalles HPD en ligne grasse au-dessus de la densité
 - variance : superposer sur la ligne du fait.
 - variance : sur la période d’acquisition uniquement
-- taux d’accept : calculé sur le longueur d’un batch pour voir évolution.
+/- taux d’accept : calculé sur la longueur d’un batch pour voir évolution.
 - Tri des faits suivant le y de l’item dans la scène (idem pour les phase)
 
-- Plus petit intervalle de crédibilité à 95% : 
-	- prendre la trace et trier les valeurs par ordre croissant
-	- enlever 5% des des éléments de la trace en retirant des valeurs à droite et à gauche du vecteur. Choisir droite ou gauche de manière à réduire au maximum l’intervalle restant.
-	- Au final, les valeurs min et max du vecteur correspondent à l’intervalle de crédibilité
+/- Plus petit intervalle de crédibilité à 95% : 
+/	- prendre la trace et trier les valeurs par ordre croissant
+/	- enlever 5% des des éléments de la trace en retirant des valeurs à droite et à gauche du vecteur. Choisir droite ou gauche de manière à réduire au maximum l’intervalle restant.
+/	- Au final, les valeurs min et max du vecteur correspondent à l’intervalle de crédibilité
 
 
 

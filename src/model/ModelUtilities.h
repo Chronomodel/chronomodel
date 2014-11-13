@@ -1,5 +1,5 @@
-#ifndef EventTools_H
-#define EventTools_H
+#ifndef ModelUtilities_H
+#define ModelUtilities_H
 
 #include <QIcon>
 #include <QString>

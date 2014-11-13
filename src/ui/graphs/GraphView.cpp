@@ -511,6 +511,18 @@ void GraphView::drawCurves(QPainter& painter)
             path.lineTo(x, mMarginTop);
             painter.strokePath(path, curve.mPen);
         }
+        else if(curve.mIsHorizontalSections)
+        {
+            float y = getYForValue(curve.mHorizontalValue);
+            path.moveTo(mMarginLeft, y);
+            for(int i=0; i<curve.mSections.size(); ++i)
+            {
+                path.moveTo(getXForValue(curve.mSections[i].first), y);
+                path.lineTo(getXForValue(curve.mSections[i].second), y);
+            }
+            path.moveTo(mMarginLeft + mGraphWidth, y);
+            painter.strokePath(path, curve.mPen);
+        }
         else if(curve.mIsVertical)
         {
             path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
@@ -588,7 +600,75 @@ void GraphView::drawCurves(QPainter& painter)
             }
             else
             {
-                QMapIterator<float, float> iter(curve.mData);
+                /*QMapIterator<float, float> iter(curve.mData);
+                while(iter.hasNext())
+                {
+                    iter.next();
+                    float valueX = iter.key();
+                    float valueY = iter.value();
+                    
+                    if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
+                    {
+                        float x = getXForValue(valueX, false);
+                        float y = getYForValue(valueY, false);
+                        
+                        if(index == 0)
+                        {
+                            path.moveTo(x, y);
+                        }
+                        else
+                        {
+                            if(curve.mIsHisto)
+                                path.lineTo(x, last_y);
+                            path.lineTo(x, y);
+                        }
+                        last_x = x;
+                        last_y = y;
+                        ++index;
+                    }
+                }*/
+                
+                // Down sample curve for better performances
+                
+                QMap<float, float> subData;
+                if(mCurrentMinX != mMinX || mCurrentMaxX != mMaxX)
+                {
+                    QMapIterator<float, float> iter(curve.mData);
+                    while(iter.hasNext())
+                    {
+                        iter.next();
+                        float valueX = iter.key();
+                        if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
+                            subData[valueX] = iter.value();
+                    }
+                }
+                else
+                {
+                    subData = curve.mData;
+                }
+                QMap<float, float> lightMap;
+                if(subData.size() > 4*mGraphWidth)
+                {
+                    int valuesPerPixel = subData.size() / mGraphWidth;
+                    qDebug() << "Graph drawing : step = " << valuesPerPixel << ", data size = " << subData.size() << ", org data size = " << curve.mData.size();
+                    QMapIterator<float, float> iter(subData);
+                    int index = 0;
+                    while(iter.hasNext())
+                    {
+                        iter.next();
+                        if(index % valuesPerPixel == 0)
+                            lightMap[iter.key()] = iter.value();
+                        ++index;
+                    }
+                }
+                else
+                {
+                    lightMap = subData;
+                }
+                
+                // Draw
+
+                QMapIterator<float, float> iter(lightMap);
                 while(iter.hasNext())
                 {
                     iter.next();
@@ -615,6 +695,7 @@ void GraphView::drawCurves(QPainter& painter)
                         ++index;
                     }
                 }
+                
             }
             painter.drawPath(path);
         }

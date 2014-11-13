@@ -66,6 +66,7 @@ public:
         QString dateDesc = index.model()->data(index, 0x0103).toString();
         QString pluginId = index.model()->data(index, 0x0102).toString();
         QString delta = index.model()->data(index, 0x0105).toString();
+        QString dateMethodStr = index.model()->data(index, 0x0106).toString();
         
         
         PluginAbstract* plugin = PluginManager::getPluginFromId(pluginId);
@@ -86,7 +87,7 @@ public:
         painter->drawText(x + iconW, y + mm, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, dateName);
         
         painter->setPen(QColor(120, 120, 120));
-        painter->drawText(x + iconW, y + 2*mm + mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, tr("Type") + " : " + plugin->getName());
+        painter->drawText(x + iconW, y + 2*mm + mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, tr("Type") + " : " + plugin->getName() + " | " + tr("Method") + " : " + dateMethodStr);
         painter->drawText(x + iconW, y + 3*mm + 2*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, dateDesc);
         
         painter->setPen(QColor(80, 160, 90));

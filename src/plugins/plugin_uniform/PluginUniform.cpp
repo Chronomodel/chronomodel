@@ -35,7 +35,7 @@ bool PluginUniform::doesCalibration() const
 }
 Date::DataMethod PluginUniform::getDataMethod() const
 {
-    return Date::eInversion;
+    return Date::eMHIndependant;
 }
 QStringList PluginUniform::csvColumns() const
 {

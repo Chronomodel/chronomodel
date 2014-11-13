@@ -31,15 +31,15 @@ QString ModelUtilities::getDataMethodText(Date::DataMethod method)
     {
         case Date::eMHIndependant:
         {
-            return QObject::tr("MH Independant");
-        }
-        case Date::eMHSymGaussAdapt:
-        {
-            return QObject::tr("Sym Gauss Adapt");
+            return QObject::tr("MH : proposal = prior distribution");
         }
         case Date::eInversion:
         {
-            return QObject::tr("Inversion");
+            return QObject::tr("MH : proposal = distribution of calibrated date");
+        }
+        case Date::eMHSymGaussAdapt:
+        {
+            return QObject::tr("MH : proposal = adapt. Gaussian random walk");
         }
         default:
         {

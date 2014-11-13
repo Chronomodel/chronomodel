@@ -58,6 +58,8 @@ void MCMCLoop::run()
     mLog += tr("MCMC START") + "\n";
     mLog += "################################################\n";
     
+    mLog += "Start time : " + startTotalTime.toString() + "\n";
+    
     //----------------------- Calibrating --------------------------------------
     
     mLog += "------------------------------------------------\n";
@@ -220,11 +222,15 @@ void MCMCLoop::run()
     
     QTime startFinalizeTime = QTime::currentTime();
     
+    emit stepChanged(tr("Computing posterior distributions and numerical results (HPD, credibility, ...)"), 0, 0);
+    
     this->finalize();
 
     QTime endFinalizeTime = QTime::currentTime();
     timeDiff = startFinalizeTime.msecsTo(endFinalizeTime);
     mLog += "=> Histos and results computed in " + QString::number(timeDiff) + " ms\n";
+    
+    mLog += "End time : " + endFinalizeTime.toString() + "\n";
     
     mLog += "\n################################################\n";
     mLog += tr("MCMC END") + "\n";

@@ -14,19 +14,23 @@ public:
 
 public:
     QMap<float, float> mData;
-    QVector<float> mDataVector;
-    bool mUseVectorData;
     
     QString mName;
     QPen mPen;
     bool mFillUnder;
     bool mIsHisto;
     
+    bool mUseVectorData;
+    QVector<float> mDataVector;
+    
     bool mIsHorizontalLine;
     float mHorizontalValue;
     
     bool mIsVerticalLine;
     float mVerticalValue;
+    
+    bool mIsHorizontalSections;
+    QList<QPair<float, float>> mSections;
     
     bool mIsVertical;
 };
