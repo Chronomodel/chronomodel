@@ -87,7 +87,7 @@ DEFINES += "USE_PLUGIN_AM=$${USE_PLUGIN_AM}"
 INCLUDEPATH += lib/FFTW
 macx{
     LIBS += -Llib/FFTW/mac -lfftw3f
-    LIBS += -Llib/JUCE/mac -ljuce_lib
+    #LIBS += -Llib/JUCE/mac -ljuce_lib
     LIBS += -framework IOKit
     LIBS += -framework Carbon
     LIBS += -framework Cocoa
@@ -129,7 +129,7 @@ INCLUDEPATH += src/juce/
 # HEADERS
 #########################################
 
-#HEADERS += src/juce/modules/juce_core/juce_core.h
+HEADERS += src/juce/modules/juce_core/juce_core.h
 
 HEADERS += src/MainController.h
 HEADERS += src/AppSettings.h
@@ -261,7 +261,11 @@ HEADERS += src/utilities/QtUtilities.h
 # SOURCES
 #########################################
 
-#OBJECTIVE_SOURCES += src/juce/modules/juce_core/juce_core.mm
+macx{
+    OBJECTIVE_SOURCES += src/juce/modules/juce_core/juce_core.mm
+}win32{
+    SOURCES += src/juce/modules/juce_core/juce_core.cpp
+}
 
 SOURCES += src/main.cpp
 SOURCES += src/MainController.cpp
