@@ -22,7 +22,9 @@ public:
     QString getName() const;
     QIcon getIcon() const;
     bool doesCalibration() const;
+    bool wiggleAllowed() const;
     Date::DataMethod getDataMethod() const;
+    QList<Date::DataMethod> allowedDataMethods() const;
     QStringList csvColumns() const;
     QJsonObject dataFromList(const QStringList& list);
     

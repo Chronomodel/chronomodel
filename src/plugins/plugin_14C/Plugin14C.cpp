@@ -50,9 +50,21 @@ bool Plugin14C::doesCalibration() const
 {
     return true;
 }
+bool Plugin14C::wiggleAllowed() const
+{
+    return true;
+}
 Date::DataMethod Plugin14C::getDataMethod() const
 {
     return Date::eInversion;
+}
+QList<Date::DataMethod> Plugin14C::allowedDataMethods() const
+{
+    QList<Date::DataMethod> methods;
+    methods.append(Date::eMHIndependant);
+    methods.append(Date::eInversion);
+    methods.append(Date::eMHSymGaussAdapt);
+    return methods;
 }
 QStringList Plugin14C::csvColumns() const
 {

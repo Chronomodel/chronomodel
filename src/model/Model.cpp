@@ -39,6 +39,11 @@ Model::~Model()
     
 }
 
+bool sortEvents(const Event& e1, const Event& e2)
+{
+    return (e1.mItemY < e2.mItemY);
+}
+
 
 Model* Model::fromJson(const QJsonObject& json)
 {
@@ -85,6 +90,9 @@ Model* Model::fromJson(const QJsonObject& json)
             }
         }
     }
+    
+    // Sort events based on items y position
+    std::sort(model->mEvents.begin(), model->mEvents.end(), sortEvents);
     
     if(json.contains("event_constraints"))
     {

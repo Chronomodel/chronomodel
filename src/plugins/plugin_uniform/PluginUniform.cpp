@@ -33,9 +33,20 @@ bool PluginUniform::doesCalibration() const
 {
     return false;
 }
+bool PluginUniform::wiggleAllowed() const
+{
+    return false;
+}
 Date::DataMethod PluginUniform::getDataMethod() const
 {
     return Date::eMHIndependant;
+}
+QList<Date::DataMethod> PluginUniform::allowedDataMethods() const
+{
+    QList<Date::DataMethod> methods;
+    methods.append(Date::eMHIndependant);
+    methods.append(Date::eMHSymGaussAdapt);
+    return methods;
 }
 QStringList PluginUniform::csvColumns() const
 {

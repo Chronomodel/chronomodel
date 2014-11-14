@@ -649,8 +649,8 @@ void GraphView::drawCurves(QPainter& painter)
                 QMap<float, float> lightMap;
                 if(subData.size() > 4*mGraphWidth)
                 {
-                    int valuesPerPixel = subData.size() / mGraphWidth;
-                    qDebug() << "Graph drawing : step = " << valuesPerPixel << ", data size = " << subData.size() << ", org data size = " << curve.mData.size();
+                    int valuesPerPixel = subData.size() / (4*mGraphWidth);
+                    //qDebug() << "Graph drawing : step = " << valuesPerPixel << ", data size = " << subData.size() << ", org data size = " << curve.mData.size();
                     QMapIterator<float, float> iter(subData);
                     int index = 0;
                     while(iter.hasNext())

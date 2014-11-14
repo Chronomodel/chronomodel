@@ -39,9 +39,21 @@ bool PluginGauss::doesCalibration() const
 {
     return true;
 }
+bool PluginGauss::wiggleAllowed() const
+{
+    return false;
+}
 Date::DataMethod PluginGauss::getDataMethod() const
 {
     return Date::eMHIndependant;
+}
+QList<Date::DataMethod> PluginGauss::allowedDataMethods() const
+{
+    QList<Date::DataMethod> methods;
+    methods.append(Date::eMHIndependant);
+    methods.append(Date::eInversion);
+    methods.append(Date::eMHSymGaussAdapt);
+    return methods;
 }
 QString PluginGauss::csvHelp() const
 {

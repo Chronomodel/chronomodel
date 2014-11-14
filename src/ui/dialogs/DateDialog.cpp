@@ -7,6 +7,8 @@
 #include "LineEdit.h"
 #include "Painting.h"
 #include "ModelUtilities.h"
+#include "PluginManager.h"
+#include "../PluginAbstract.h"
 #include <QtWidgets>
 
 
@@ -99,6 +101,35 @@ void DateDialog::setForm(PluginFormAbstract* form)
         mForm = form;
         mForm->setParent(this);
         mForm->setVisible(true);
+        
+        // Check if wiggle is allowed by plugin
+        
+        PluginAbstract* plugin = form->mPlugin;
+        if(plugin->wiggleAllowed())
+        {
+            mAdvanced->setWidget(mAdvancedWidget, 10*mMargin + 8*mLineH + mComboH);
+        }
+        else
+        {
+            mAdvanced->setWidget(mAdvancedWidget, 2*mMargin + mComboH);
+        }
+        
+        
+        // Disable methods forbidden by plugin
+        
+        const QStandardItemModel* model = qobject_cast<const QStandardItemModel*>(mMethodCombo->model());
+        for(int i=0; i<mMethodCombo->count(); ++i)
+        {
+            QStandardItem* item = model->item(i);
+            bool allowed = plugin->allowedDataMethods().contains((Date::DataMethod)i);
+            
+            item->setFlags(!allowed ? item->flags() & ~(Qt::ItemIsSelectable|Qt::ItemIsEnabled)
+                           : Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+            // visually disable by greying out - works only if combobox has been painted already and palette returns the wanted color
+            item->setData(!allowed ? mMethodCombo->palette().color(QPalette::Disabled, QPalette::Text)
+                          : QVariant(), // clear item data in order to use default color
+                          Qt::TextColorRole);
+        }
         
         adaptSize();
     }

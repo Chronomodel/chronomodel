@@ -81,9 +81,21 @@ bool PluginMag::doesCalibration() const
 {
     return true;
 }
+bool PluginMag::wiggleAllowed() const
+{
+    return false;
+}
 Date::DataMethod PluginMag::getDataMethod() const
 {
     return Date::eInversion;
+}
+QList<Date::DataMethod> PluginMag::allowedDataMethods() const
+{
+    QList<Date::DataMethod> methods;
+    methods.append(Date::eMHIndependant);
+    methods.append(Date::eInversion);
+    methods.append(Date::eMHSymGaussAdapt);
+    return methods;
 }
 QStringList PluginMag::csvColumns() const
 {

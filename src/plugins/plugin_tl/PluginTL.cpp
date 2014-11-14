@@ -38,9 +38,21 @@ bool PluginTL::doesCalibration() const
 {
     return true;
 }
+bool PluginTL::wiggleAllowed() const
+{
+    return false;
+}
 Date::DataMethod PluginTL::getDataMethod() const
 {
     return Date::eMHIndependant;
+}
+QList<Date::DataMethod> PluginTL::allowedDataMethods() const
+{
+    QList<Date::DataMethod> methods;
+    methods.append(Date::eMHIndependant);
+    methods.append(Date::eInversion);
+    methods.append(Date::eMHSymGaussAdapt);
+    return methods;
 }
 QStringList PluginTL::csvColumns() const
 {

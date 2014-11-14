@@ -5,9 +5,18 @@
 
 #include "fftw3.h"
 
+#include <iostream>
+
+#ifdef Q_OS_MAC
+#include "JuceHeader.h"
+#endif
 
 int main(int argc, char *argv[])
 {
+#ifdef Q_OS_MAC
+    std::cout << "CPU speed : " << SystemStats::getCpuSpeedInMegaherz() << "MHz" << std::endl;
+#endif
+    
     QApplication a(argc, argv);
     
     a.setApplicationName("Chronomodel");
@@ -18,20 +27,7 @@ int main(int argc, char *argv[])
     a.setWindowIcon(QIcon(":chronomodel.png"));
     
     qApp->setAttribute(Qt::AA_UseHighDpiPixmaps);
-    
-    /*
-    QPalette palette = QGuiApplication::palette();
-    palette.setColor(QPalette::Window, QColor(75, 75, 75));
-    palette.setColor(QPalette::WindowText, QColor(200, 200, 200));
-    palette.setColor(QPalette::Base, Qt::white);
-    palette.setColor(QPalette::AlternateBase, QColor(230, 230, 230));
-    palette.setColor(QPalette::ToolTipBase, QColor(110, 110, 110));
-    palette.setColor(QPalette::ToolTipText, Qt::white);
-    palette.setColor(QPalette::Text, Qt::black);
-    palette.setColor(QPalette::Button, QColor(50, 50, 50));
-    palette.setColor(QPalette::BrightText, Qt::white);
-    palette.setBrush(QPalette::Window, QColor(75, 75, 75));
-    a.setPalette(palette);*/
+
     
     //QApplication::setStyle(new DarkBlueStyle());
     

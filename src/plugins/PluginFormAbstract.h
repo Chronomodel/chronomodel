@@ -19,7 +19,7 @@ public:
     virtual void setData(const QJsonObject& data) = 0;
     virtual QJsonObject getData() = 0;
     
-protected:
+public:
     PluginAbstract* mPlugin;
 };
 
