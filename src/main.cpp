@@ -7,15 +7,12 @@
 
 #include <iostream>
 
-#ifdef Q_OS_MAC
 #include "JuceHeader.h"
-#endif
+
 
 int main(int argc, char *argv[])
 {
-#ifdef Q_OS_MAC
     std::cout << "CPU speed : " << SystemStats::getCpuSpeedInMegaherz() << "MHz" << std::endl;
-#endif
     
     QApplication a(argc, argv);
     

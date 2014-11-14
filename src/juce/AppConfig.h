@@ -22,19 +22,19 @@
 // [END_USER_CODE_SECTION]
 
 //==============================================================================
-#define JUCE_MODULE_AVAILABLE_juce_audio_basics          1
-#define JUCE_MODULE_AVAILABLE_juce_audio_devices         1
-#define JUCE_MODULE_AVAILABLE_juce_audio_formats         1
-#define JUCE_MODULE_AVAILABLE_juce_audio_processors      1
+#define JUCE_MODULE_AVAILABLE_juce_audio_basics          0
+#define JUCE_MODULE_AVAILABLE_juce_audio_devices         0
+#define JUCE_MODULE_AVAILABLE_juce_audio_formats         0
+#define JUCE_MODULE_AVAILABLE_juce_audio_processors      0
 #define JUCE_MODULE_AVAILABLE_juce_core                  1
-#define JUCE_MODULE_AVAILABLE_juce_cryptography          1
-#define JUCE_MODULE_AVAILABLE_juce_data_structures       1
-#define JUCE_MODULE_AVAILABLE_juce_events                1
-#define JUCE_MODULE_AVAILABLE_juce_graphics              1
-#define JUCE_MODULE_AVAILABLE_juce_gui_basics            1
-#define JUCE_MODULE_AVAILABLE_juce_gui_extra             1
-#define JUCE_MODULE_AVAILABLE_juce_opengl                1
-#define JUCE_MODULE_AVAILABLE_juce_video                 1
+#define JUCE_MODULE_AVAILABLE_juce_cryptography          0
+#define JUCE_MODULE_AVAILABLE_juce_data_structures       0
+#define JUCE_MODULE_AVAILABLE_juce_events                0
+#define JUCE_MODULE_AVAILABLE_juce_graphics              0
+#define JUCE_MODULE_AVAILABLE_juce_gui_basics            0
+#define JUCE_MODULE_AVAILABLE_juce_gui_extra             0
+#define JUCE_MODULE_AVAILABLE_juce_opengl                0
+#define JUCE_MODULE_AVAILABLE_juce_video                 0
 
 //==============================================================================
 // juce_audio_devices flags:

@@ -87,11 +87,7 @@ DEFINES += "USE_PLUGIN_AM=$${USE_PLUGIN_AM}"
 INCLUDEPATH += lib/FFTW
 macx{
     LIBS += -Llib/FFTW/mac -lfftw3f
-    #LIBS += -Llib/JUCE/mac -ljuce_lib
-    LIBS += -framework IOKit
-    LIBS += -framework Carbon
     LIBS += -framework Cocoa
-    LIBS += -framework Accelerate
 }win32{
     LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
 }
@@ -129,6 +125,8 @@ INCLUDEPATH += src/juce/
 # HEADERS
 #########################################
 
+#HEADERS += src/juce/JuceHeader.h
+#HEADERS += src/juce/AppConfig.h
 HEADERS += src/juce/modules/juce_core/juce_core.h
 
 HEADERS += src/MainController.h
