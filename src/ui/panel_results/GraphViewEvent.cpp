@@ -35,6 +35,7 @@ void GraphViewEvent::refresh()
 {
     mGraph->removeAllCurves();
     mGraph->removeAllZones();
+    mGraph->clearInfos();
     setNumericalResults("");
     
     if(mEvent)
@@ -56,6 +57,7 @@ void GraphViewEvent::refresh()
                     curve.mName = "histo full";
                     curve.mPen.setColor(color);
                     curve.mData = equal_areas(mEvent->mTheta.fullHisto(), 100.f);
+                    curve.mIsHisto = false;
                     mGraph->addCurve(curve);
                     
                     float yMax = 1.1f * map_max_value(curve.mData);
@@ -67,6 +69,7 @@ void GraphViewEvent::refresh()
                         curveHPD.mName = "histo HPD full";
                         curveHPD.mPen.setColor(color);
                         curveHPD.mFillUnder = true;
+                        curveHPD.mIsHisto = false;
                         curveHPD.mData = equal_areas(mEvent->mTheta.mHPD, mThresholdHPD);
                         mGraph->addCurve(curveHPD);
                         
@@ -89,6 +92,7 @@ void GraphViewEvent::refresh()
                         GraphCurve curve;
                         curve.mName = QString("histo chain " + QString::number(i));
                         curve.mPen.setColor(col);
+                        curve.mIsHisto = false;
                         curve.mData = equal_areas(mEvent->mTheta.histoForChain(i), 100.f);
                         mGraph->addCurve(curve);
                         
@@ -122,6 +126,7 @@ void GraphViewEvent::refresh()
                         GraphCurve curve;
                         curve.mName = "histo full date " + QString::number(i);
                         curve.mPen.setColor(color);
+                        curve.mIsHisto = false;
                         curve.mData = equal_areas(date.mSigma.fullHisto(), 100.f);
                         mGraph->addCurve(curve);
                         
@@ -147,6 +152,7 @@ void GraphViewEvent::refresh()
                             GraphCurve curve;
                             curve.mName = QString("histo sigma data " + QString::number(i) + " for chain" + QString::number(j));
                             curve.mPen.setColor(col);
+                            curve.mIsHisto = false;
                             curve.mData = equal_areas(date.mSigma.histoForChain(j), 100.f);
                             mGraph->addCurve(curve);
                             
@@ -204,6 +210,13 @@ void GraphViewEvent::refresh()
                 mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter);
                 mGraph->setRangeY(0, 100);
                 
+                GraphCurve curve;
+                curve.mName = QString("accept history chain " + QString::number(chainIdx));
+                curve.mData = mEvent->mTheta.acceptationForChain(mChains, chainIdx);
+                curve.mPen.setColor(Painting::chainColors[chainIdx]);
+                curve.mIsHisto = false;
+                mGraph->addCurve(curve);
+                
                 GraphCurve curveTarget;
                 curveTarget.mName = "target";
                 curveTarget.mIsHorizontalLine = true;
@@ -211,13 +224,6 @@ void GraphViewEvent::refresh()
                 curveTarget.mPen.setStyle(Qt::DashLine);
                 curveTarget.mPen.setColor(QColor(180, 10, 20));
                 mGraph->addCurve(curveTarget);
-                
-                GraphCurve curve;
-                curve.mName = QString("accept history chain " + QString::number(chainIdx));
-                curve.mData = mEvent->mTheta.acceptationForChain(mChains, chainIdx);
-                curve.mPen.setColor(Painting::chainColors[chainIdx]);
-                curve.mIsHisto = false;
-                mGraph->addCurve(curve);
             }
         }
         else if(mCurrentResult == eCorrel && mCurrentVariable == eTheta)

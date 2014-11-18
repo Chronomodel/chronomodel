@@ -59,13 +59,13 @@ public:
     float getLikelyhoodFromCalib(const float t);
     
     void updateTheta(const float& tmin, const float& tmax, Event& event);
-    void updateDelta();
+    void updateDelta(Event& event);
     void updateSigma(Event& event);
     
 public:
     MHVariable mTheta; // theta i de la date
     MHVariable mSigma; // sigma i de la date (par rapport au fait)
-    MHVariable mDelta;
+    float mDelta;
     
     int mId;
     QString mName;

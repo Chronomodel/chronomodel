@@ -178,19 +178,31 @@ bool Project::load(const QString& path)
         mProjectFileName = info.fileName();
         
         QByteArray saveData = file.readAll();
-        QJsonDocument jsonDoc(QJsonDocument::fromJson(saveData));
-        mState = jsonDoc.object();
         
-        if(!mState.contains(STATE_APP_VERSION))
-            mState[STATE_APP_VERSION] = qApp->applicationVersion();
+        QJsonParseError error;
         
-        mLastSavedState = mState;
+        QJsonDocument jsonDoc(QJsonDocument::fromJson(saveData, &error));
         
-        pushProjectState(mState, "project loaded", true, true);
-        
-        file.close();
-        
-        return true;
+        if(error.error !=  QJsonParseError::NoError)
+        {
+            qDebug() << "ERROR loading project file : " << error.errorString();
+            return false;
+        }
+        else
+        {
+            mState = jsonDoc.object();
+            
+            if(!mState.contains(STATE_APP_VERSION))
+                mState[STATE_APP_VERSION] = qApp->applicationVersion();
+            
+            mLastSavedState = mState;
+            
+            pushProjectState(mState, "project loaded", true, true);
+            
+            file.close();
+            
+            return true;
+        }
     }
     return false;
 }
@@ -1429,6 +1441,8 @@ void Project::exportAsText()
 #pragma mark Run Project
 void Project::run()
 {
+    // This is the occasion to clean EVERYTHING using the previous model before deleting it!
+    // e.g. : clean the result view with any graphs, ...
     emit mcmcStarted();
     
     if(mModel)

@@ -89,8 +89,6 @@ void MCMCLoopMain::initVariablesForChain()
             date.mTheta.mLastAcceptsLength = acceptBufferLen;
             date.mSigma.mLastAccepts.clear();
             date.mSigma.mLastAcceptsLength = acceptBufferLen;
-            date.mDelta.mLastAccepts.clear();
-            date.mDelta.mLastAcceptsLength = acceptBufferLen;
         }
     }
 }
@@ -121,7 +119,7 @@ void MCMCLoopMain::initMCMC()
             Date& date = events[i].mDates[j];
             
             // TODO Init mieux que ça!
-            date.updateDelta();
+            date.updateDelta(events[i]);
             
             FunctionAnalysis data = analyseFunction(date.mCalibration);
             
@@ -292,8 +290,7 @@ void MCMCLoopMain::initMCMC()
             mLog += "  - theta (sigma MH) : " + QString::number(date.mTheta.mSigmaMH) + "\n";
             mLog += "  - sigma (value) : " + QString::number(date.mSigma.mX) + "\n";
             mLog += "  - sigma (sigma MH) : " + QString::number(date.mSigma.mSigmaMH) + "\n";
-            mLog += "  - delta (value) : " + QString::number(date.mDelta.mX) + "\n";
-            mLog += "  - delta (sigma MH) : " + QString::number(date.mDelta.mSigmaMH) + "\n";
+            mLog += "  - delta (value) : " + QString::number(date.mDelta) + "\n";
             mLog += "--------\n";
         }
     }
@@ -330,7 +327,7 @@ void MCMCLoopMain::update()
         {
             Date& date = events[i].mDates[j];
             
-            date.updateDelta();
+            date.updateDelta(event);
             date.updateTheta(t_min, t_max, event);
             date.updateSigma(event);
             
@@ -338,7 +335,6 @@ void MCMCLoopMain::update()
             {
                 date.mTheta.memo();
                 date.mSigma.memo();
-                date.mDelta.memo();
                 
                 date.mTheta.saveCurrentAcceptRate();
                 date.mSigma.saveCurrentAcceptRate();
@@ -382,10 +378,11 @@ bool MCMCLoopMain::adapt()
     
     //--------------------- Adapt -----------------------------------------
     
+    float delta = (chain.mBatchIndex < 10000) ? 0.01f : (1 / sqrtf(chain.mBatchIndex));
+    
     for(int i=0; i<events.size(); ++i)
     {
         Event& event = events[i];
-        float delta = (chain.mBatchIndex < 10000) ? 0.01f : (1 / sqrtf(chain.mBatchIndex));
         
         for(int j=0; j<event.mDates.size(); ++j)
         {
@@ -444,6 +441,8 @@ void MCMCLoopMain::finalize()
     {
         Event& event = events[i];
         
+        qDebug() << "=> Generate Results for event " << i << "/" << events.size() << " : " << event.mName;
+        
         event.mTheta.generateHistos(mChains, tmin, tmax);
         event.mTheta.generateCorrelations(mChains);
         event.mTheta.generateResults(mChains, tmin, tmax);
@@ -451,6 +450,8 @@ void MCMCLoopMain::finalize()
         for(int j=0; j<event.mDates.size(); ++j)
         {
             Date& date = event.mDates[j];
+            
+            qDebug() << " -> Generate Results for date " << j << "/" << event.mDates.size() << " : " << date.mName;
             
             date.mTheta.generateHistos(mChains, tmin, tmax);
             date.mSigma.generateHistos(mChains, 0, tmax - tmin);

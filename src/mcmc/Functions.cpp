@@ -86,18 +86,37 @@ FunctionAnalysis analyseFunction(const QMap<float, float>& aFunction)
 
 float dataStd(const QVector<float>& data)
 {
-    float sum = 0.;
-    float sum2 = 0.;
+    // Work with double precision here because sum2 might be big !
+    
+    double sum = 0.;
+    double sum2 = 0.;
     
     for(int i=0; i<data.size(); ++i)
     {
-        float x = data[i];
+        double x = (double)data[i];
         sum += x;
         sum2 += x * x;
     }
     
-    float mean = sum / data.size();
-    float variance = (sum2 / data.size()) - pow(mean, 2);
+    double mean = sum / data.size();
+    double variance = sum2 / data.size() - mean * mean;
     
-    return sqrt(variance);
+    /*qDebug() << "sum : " << sum;
+    qDebug() << "sum2 : " << sum2;
+    qDebug() << "size : " << data.size();
+    qDebug() << "mean : " << mean;
+    qDebug() << "variance : " << variance;
+    qDebug() << "std : " << sqrtf(variance);*/
+    
+    if(variance < 0)
+    {
+        for(int i=0; i<20; ++i)
+        {
+            qDebug() << "data " << i << " : "<< data[i];
+        }
+        
+        qDebug() << "ERROR : negative variance found : " << variance;
+        return 0.f;
+    }
+    return (float)sqrt(variance);
 }

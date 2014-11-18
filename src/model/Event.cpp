@@ -310,7 +310,7 @@ void Event::updateTheta(float tmin, float tmax)
     float sum_t = 0;
     for(int i=0; i<mDates.size(); ++i)
     {
-        sum_t += (mDates[i].mTheta.mX - mDates[i].mDelta.mX) / pow(mDates[i].mSigma.mX, 2);
+        sum_t += (mDates[i].mTheta.mX + mDates[i].mDelta) / pow(mDates[i].mSigma.mX, 2);
         sum_p += 1 / pow(mDates[i].mSigma.mX, 2);
     }
     float theta_avg = sum_t / sum_p;
@@ -320,14 +320,12 @@ void Event::updateTheta(float tmin, float tmax)
     {
         case eDoubleExp:
         {
-            // Gibbs
             float theta = Generator::gaussByDoubleExp(theta_avg, sigma, min, max);
             mTheta.tryUpdate(theta, 1);
             break;
         }
         case eBoxMuller:
         {
-            // Gibbs
             float theta;
             do{
                 theta = Generator::gaussByBoxMuller(theta_avg, sigma);

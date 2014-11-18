@@ -27,8 +27,7 @@ public:
     };
     enum Variable{
         eTheta = 0,
-        eSigma = 1,
-        eDelta = 2
+        eSigma = 1
     };
     
     explicit GraphViewResults(QWidget *parent = 0);

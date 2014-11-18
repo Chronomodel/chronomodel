@@ -15,6 +15,7 @@
 #include "PluginManager.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
+#include "ModelUtilities.h"
 #include <QtWidgets>
 
 
@@ -32,9 +33,9 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     
     mMethodLab = new Label(tr("Method") + " :", mDefaultView);
     mMethodCombo = new QComboBox(mDefaultView);
-    mMethodCombo->addItem(tr("AR : proposal = Double-Exponential"));
-    mMethodCombo->addItem(tr("AR : proposal = Gaussian")); // simulation with Box-Müller
-    mMethodCombo->addItem(tr("MH : proposal = adapt. Gaussian random walk"));
+    mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eDoubleExp));
+    mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eBoxMuller));
+    mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eMHAdaptGauss));
     
     connect(mNameEdit, SIGNAL(textEdited(const QString&)), this, SLOT(updateEventName(const QString&)));
     connect(mColorPicker, SIGNAL(colorChanged(QColor)), this, SLOT(updateEventColor(QColor)));

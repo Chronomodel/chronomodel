@@ -61,6 +61,7 @@ void GraphViewPhase::refresh()
 {
     mGraph->removeAllCurves();
     mGraph->removeAllZones();
+    mGraph->clearInfos();
     setNumericalResults("");
     
     if(mPhase)
@@ -92,6 +93,7 @@ void GraphViewPhase::refresh()
                 GraphCurve curveAlpha;
                 curveAlpha.mName = "alpha full";
                 curveAlpha.mPen.setColor(alphaCol);
+                curveAlpha.mIsHisto = false;
                 curveAlpha.mData = equal_areas(mPhase->mAlpha.fullHisto(), 100);
                 mGraph->addCurve(curveAlpha);
                 
@@ -101,6 +103,7 @@ void GraphViewPhase::refresh()
                 GraphCurve curveBeta;
                 curveBeta.mName = QString("beta full");
                 curveBeta.mPen.setColor(betaCol);
+                curveBeta.mIsHisto = false;
                 curveBeta.mData = equal_areas(mPhase->mBeta.fullHisto(), 100);
                 mGraph->addCurve(curveBeta);
                 
@@ -113,6 +116,7 @@ void GraphViewPhase::refresh()
                     curveAlphaHPD.mName = "alpha HPD full";
                     curveAlphaHPD.mPen.setColor(alphaCol);
                     curveAlphaHPD.mFillUnder = true;
+                    curveAlphaHPD.mIsHisto = false;
                     curveAlphaHPD.mData = equal_areas(mPhase->mAlpha.mHPD, mThresholdHPD);
                     mGraph->addCurve(curveAlphaHPD);
                     
@@ -120,6 +124,7 @@ void GraphViewPhase::refresh()
                     curveBetaHPD.mName = "beta HPD full";
                     curveBetaHPD.mPen.setColor(color);
                     curveBetaHPD.mFillUnder = true;
+                    curveBetaHPD.mIsHisto = false;
                     curveBetaHPD.mData = equal_areas(mPhase->mBeta.mHPD, mThresholdHPD);
                     mGraph->addCurve(curveBetaHPD);
                     
@@ -143,6 +148,7 @@ void GraphViewPhase::refresh()
                     GraphCurve curveAlphaChain;
                     curveAlphaChain.mName = QString("alpha chain " + QString::number(i));
                     curveAlphaChain.mPen.setColor(col);
+                    curveAlphaChain.mIsHisto = false;
                     curveAlphaChain.mData = equal_areas(mPhase->mAlpha.histoForChain(i), 100);
                     mGraph->addCurve(curveAlphaChain);
                     
@@ -152,6 +158,7 @@ void GraphViewPhase::refresh()
                     GraphCurve curveBetaChain;
                     curveBetaChain.mName = QString("beta chain " + QString::number(i));
                     curveBetaChain.mPen.setColor(col);
+                    curveBetaChain.mIsHisto = false;
                     curveBetaChain.mData = equal_areas(mPhase->mBeta.histoForChain(i), 100);
                     mGraph->addCurve(curveBetaChain);
                     

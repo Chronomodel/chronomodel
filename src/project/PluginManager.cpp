@@ -80,7 +80,7 @@ PluginAbstract* PluginManager::getPluginFromId(const QString& pluginId)
 PluginAbstract* PluginManager::getPluginFromName(const QString& pluginName)
 {
     for(int i=0; i<mPlugins.size(); ++i)
-        if(mPlugins[i]->getName() == pluginName)
+        if(mPlugins[i]->getName().toLower() == pluginName.toLower())
             return mPlugins[i];
     return 0;
 }

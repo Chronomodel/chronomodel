@@ -367,11 +367,9 @@ void ResultsView::generateHPD()
                 Date& date = dates[j];
                 date.mTheta.generateHPD(hdpThreshold);
                 date.mSigma.generateHPD(hdpThreshold);
-                //date.mDelta.generateHPD(hdpThreshold);
                 
                 date.mTheta.generateCredibility(mChains, hdpThreshold);
                 date.mSigma.generateCredibility(mChains, hdpThreshold);
-                date.mDelta.generateCredibility(mChains, hdpThreshold);
             }
         }
         for(int i=0; i<phases.size(); ++i)
@@ -396,7 +394,6 @@ void ResultsView::updateGraphs()
     GraphViewResults::Variable variable;
     if(mDataThetaRadio->isChecked()) variable = GraphViewResults::eTheta;
     else if(mDataSigmaRadio->isChecked()) variable = GraphViewResults::eSigma;
-    else if(mDataDeltaRadio->isChecked()) variable = GraphViewResults::eDelta;
     
     GraphViewResults::Result result;
     if(mTabs->currentIndex() == 0) result = GraphViewResults::eHisto;

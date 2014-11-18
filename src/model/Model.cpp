@@ -1,5 +1,6 @@
 #include "Model.h"
 #include "Date.h"
+#include "Project.h"
 #include "EventKnown.h"
 #include "MCMCLoopMain.h"
 #include "MCMCProgressDialog.h"
@@ -7,12 +8,12 @@
 #include <QtWidgets>
 
 
-Model::Model()
+Model::Model():QObject()
 {
     
 }
 
-Model::Model(const Model& model)
+Model::Model(const Model& model):QObject()
 {
     copyFrom(model);
 }
@@ -44,26 +45,25 @@ bool sortEvents(const Event& e1, const Event& e2)
     return (e1.mItemY < e2.mItemY);
 }
 
-
 Model* Model::fromJson(const QJsonObject& json)
 {
     Model* model = new Model();
     
-    if(json.contains("settings"))
+    if(json.contains(STATE_SETTINGS))
     {
-        QJsonObject settings = json["settings"].toObject();
+        QJsonObject settings = json[STATE_SETTINGS].toObject();
         model->mSettings = ProjectSettings::fromJson(settings);
     }
     
-    if(json.contains("mcmc"))
+    if(json.contains(STATE_MCMC))
     {
-        QJsonObject mcmc = json["mcmc"].toObject();
+        QJsonObject mcmc = json[STATE_MCMC].toObject();
         model->mMCMCSettings = MCMCSettings::fromJson(mcmc);
     }
     
-    if(json.contains("phases"))
+    if(json.contains(STATE_PHASES))
     {
-        QJsonArray phases = json["phases"].toArray();
+        QJsonArray phases = json[STATE_PHASES].toArray();
         for(int i=0; i<phases.size(); ++i)
         {
             QJsonObject phase = phases[i].toObject();
@@ -72,9 +72,9 @@ Model* Model::fromJson(const QJsonObject& json)
         }
     }
     
-    if(json.contains("events"))
+    if(json.contains(STATE_EVENTS))
     {
-        QJsonArray events = json["events"].toArray();
+        QJsonArray events = json[STATE_EVENTS].toArray();
         for(int i=0; i<events.size(); ++i)
         {
             QJsonObject event = events[i].toObject();
@@ -94,9 +94,9 @@ Model* Model::fromJson(const QJsonObject& json)
     // Sort events based on items y position
     std::sort(model->mEvents.begin(), model->mEvents.end(), sortEvents);
     
-    if(json.contains("event_constraints"))
+    if(json.contains(STATE_EVENTS_CONSTRAINTS))
     {
-        QJsonArray constraints = json["event_constraints"].toArray();
+        QJsonArray constraints = json[STATE_EVENTS_CONSTRAINTS].toArray();
         for(int i=0; i<constraints.size(); ++i)
         {
             QJsonObject constraint = constraints[i].toObject();
@@ -105,9 +105,9 @@ Model* Model::fromJson(const QJsonObject& json)
         }
     }
     
-    if(json.contains("phase_constraints"))
+    if(json.contains(STATE_PHASES_CONSTRAINTS))
     {
-        QJsonArray constraints = json["phase_constraints"].toArray();
+        QJsonArray constraints = json[STATE_PHASES_CONSTRAINTS].toArray();
         for(int i=0; i<constraints.size(); ++i)
         {
             QJsonObject constraint = constraints[i].toObject();
@@ -123,7 +123,10 @@ Model* Model::fromJson(const QJsonObject& json)
     // ------------------------------------------------------------
     for(int i=0; i<model->mEvents.size(); ++i)
     {
+        int eventId = model->mEvents[i].mId;
         QList<int> phasesIds = model->mEvents[i].mPhasesIds;
+        
+        // Link des events / phases
         for(int j=0; j<model->mPhases.size(); ++j)
         {
             int phaseId = model->mPhases[j].mId;
@@ -134,9 +137,40 @@ Model* Model::fromJson(const QJsonObject& json)
             }
         }
         
-        // TODO : Link des contraintes de fait
+        // Link des events / contraintes d'event
+        for(int j=0; j<model->mEventConstraints.size(); ++j)
+        {
+            if(model->mEventConstraints[j].mEventFromId == eventId)
+            {
+                model->mEventConstraints[j].mEventFrom = &(model->mEvents[i]);
+                model->mEvents[i].mConstraintsFwd.append(&(model->mEventConstraints[j]));
+            }
+            else if(model->mEventConstraints[j].mEventToId == eventId)
+            {
+                model->mEventConstraints[j].mEventTo = &(model->mEvents[i]);
+                model->mEvents[i].mConstraintsBwd.append(&(model->mEventConstraints[j]));
+            }
+        }
     }
-    // TODO : Link des contraintes de phase
+    // Link des phases / contraintes de phase
+    for(int i=0; i<model->mPhases.size(); ++i)
+    {
+        int phaseId = model->mPhases[i].mId;
+        for(int j=0; j<model->mPhaseConstraints.size(); ++j)
+        {
+            if(model->mPhaseConstraints[j].mPhaseFromId == phaseId)
+            {
+                model->mPhaseConstraints[j].mPhaseFrom = &(model->mPhases[i]);
+                model->mPhases[i].mConstraintsFwd.append(&(model->mPhaseConstraints[j]));
+            }
+            else if(model->mPhaseConstraints[j].mPhaseToId == phaseId)
+            {
+                model->mPhaseConstraints[j].mPhaseTo = &(model->mPhases[i]);
+                model->mPhases[i].mConstraintsBwd.append(&(model->mPhaseConstraints[j]));
+            }
+        }
+    }
+    
     
     
     qDebug() << "===========================================";
@@ -161,8 +195,8 @@ Model* Model::fromJson(const QJsonObject& json)
     for(int i=0; i<model->mEventConstraints.size(); ++i)
     {
         qDebug() << "  => E. Const. " << model->mEventConstraints[i].mId
-            << " : event " << model->mEventConstraints[i].mEventFrom->mId
-            << " to " << model->mEventConstraints[i].mEventTo->mId;
+            << " : event " << model->mEventConstraints[i].mEventFrom->mId << "(" + model->mEventConstraints[i].mEventFrom->mName + ")"
+            << " to " << model->mEventConstraints[i].mEventTo->mId << "(" + model->mEventConstraints[i].mEventTo->mName + ")";
     }
     qDebug() << "=> Phase Constraints : " << model->mPhaseConstraints.size();
     for(int i=0; i<model->mPhaseConstraints.size(); ++i)

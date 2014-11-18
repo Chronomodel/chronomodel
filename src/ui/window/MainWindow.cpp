@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     createToolBars();
     
     statusBar()->showMessage(tr("Ready"));
-    setUnifiedTitleAndToolBarOnMac(true);
+    //setUnifiedTitleAndToolBarOnMac(true);
     setWindowIcon(QIcon(":chronomodel.png"));
     setMinimumSize(1000, 700);
     

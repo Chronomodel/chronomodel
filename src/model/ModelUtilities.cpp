@@ -8,15 +8,15 @@ QString ModelUtilities::getEventMethodText(Event::Method method)
     {
         case Event::eMHAdaptGauss:
         {
-            return QObject::tr("MH Gaussian Adaptative");
+            return QObject::tr("MH : proposal = adapt. Gaussian random walk");
         }
         case Event::eBoxMuller:
         {
-            return QObject::tr("Box Muller");
+            return QObject::tr("AR : proposal = Gaussian");
         }
         case Event::eDoubleExp:
         {
-            return QObject::tr("Double Exp");
+            return QObject::tr("AR : proposal = Double-Exponential");
         }
         default:
         {

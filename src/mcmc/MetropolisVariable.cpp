@@ -97,6 +97,12 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
     float deltaBefore = ceilf(deltaPoints/2);
     float deltaAfter = floorf(deltaPoints/2);
     
+    /*qDebug() << "sigma = " << sigma;
+    qDebug() << "h = " << h;
+    qDebug() << "r = " << r;
+    qDebug() << "numPointsRequired = " << numPointsRequired;
+    qDebug() << "numPointsFinal = " << numPointsFinal;*/
+    
     /*qDebug() << "------------------";
     qDebug() << "Sigma = " << sigma << ", H = " << h;
     qDebug() << "Num Points : " << numPoints;
@@ -119,6 +125,7 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
     int inputSize = numPointsFinal;
     int outputSize = 2 * (numPointsFinal / 2 + 1);
     
+    //qDebug() << "FFT malloc num points : " << inputSize;
     float* input = (float*) fftwf_malloc(inputSize * sizeof(float));
 	float* output = (float*) fftwf_malloc(outputSize * sizeof(float));
     
@@ -226,8 +233,12 @@ void MetropolisVariable::generateCorrelations(const QList<Chain>& chains)
     
     for(int c=0; c<chains.size(); ++c)
     {
+        // Retourne la trace de la partie "acquisition" de la chaine :
         QVector<float> trace = runTraceForChain(chains, c);
+        
+        // Correlation pour cette chaine
         QVector<float> results;
+        
         float n = trace.size();
         
         for(float h=0; h<hmax; ++h)
@@ -248,6 +259,7 @@ void MetropolisVariable::generateCorrelations(const QList<Chain>& chains)
             
             results.append(result);
         }
+        // Correlation ajoutée à la liste (une corbe de corrélation par chaine)
         mCorrelations.append(results);
     }
 }

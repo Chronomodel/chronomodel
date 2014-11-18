@@ -5,6 +5,7 @@
 #include "Painting.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
+#include "ModelUtilities.h"
 #include <QtWidgets>
 
 
@@ -70,6 +71,7 @@ void GraphViewDate::refresh()
 {
     mGraph->removeAllCurves();
     mGraph->removeAllZones();
+    mGraph->clearInfos();
     setNumericalResults("");
     
     if(mDate)
@@ -82,13 +84,12 @@ void GraphViewDate::refresh()
             
             if(mCurrentVariable == eTheta)
                 mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
-            else if(mCurrentVariable == eSigma || mCurrentVariable == eDelta)
+            else if(mCurrentVariable == eSigma)
                 mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
             
             MHVariable* variable = &(mDate->mTheta);
             if(mCurrentVariable == eTheta) variable = &(mDate->mTheta);
             else if(mCurrentVariable == eSigma) variable = &(mDate->mSigma);
-            else if(mCurrentVariable == eDelta) variable = &(mDate->mDelta);
             
             setNumericalResults(variable->resultsText());
             
@@ -100,6 +101,7 @@ void GraphViewDate::refresh()
                 curve.mData = equal_areas(mDate->mCalibration, 100.f);
                 curve.mPen.setColor(QColor(0, 0, 0));
                 curve.mFillUnder = false;
+                curve.mIsHisto = false;
                 mGraph->addCurve(curve);
                 
                 float yMax = 1.1f * map_max_value(curve.mData);
@@ -112,6 +114,7 @@ void GraphViewDate::refresh()
                 curve.mName = "histo full";
                 curve.mData = equal_areas(variable->fullHisto(), 100.f);
                 curve.mPen.setColor(color);
+                curve.mIsHisto = false;
                 mGraph->addCurve(curve);
                 
                 float yMax = 1.1f * map_max_value(curve.mData);
@@ -124,6 +127,7 @@ void GraphViewDate::refresh()
                     curveHPD.mData = equal_areas(variable->mHPD, mThresholdHPD);
                     curveHPD.mPen.setColor(color);
                     curveHPD.mFillUnder = true;
+                    curveHPD.mIsHisto = false;
                     mGraph->addCurve(curveHPD);
                     
                     GraphCurve curveCred;
@@ -146,6 +150,7 @@ void GraphViewDate::refresh()
                     curve.mName = QString("histo chain " + QString::number(i));
                     curve.mData = equal_areas(variable->histoForChain(i), 100.f);
                     curve.mPen.setColor(col);
+                    curve.mIsHisto = false;
                     mGraph->addCurve(curve);
                     
                     float yMax = 1.1f * map_max_value(curve.mData);
@@ -178,7 +183,6 @@ void GraphViewDate::refresh()
                 MHVariable* variable = &(mDate->mTheta);
                 if(mCurrentVariable == eTheta) variable = &(mDate->mTheta);
                 else if(mCurrentVariable == eSigma) variable = &(mDate->mSigma);
-                else if(mCurrentVariable == eDelta) variable = &(mDate->mDelta);
                 
                 GraphCurve curve;
                 curve.mName = QString("trace chain " + QString::number(chainIdx));
@@ -208,7 +212,16 @@ void GraphViewDate::refresh()
                 MHVariable* variable = &(mDate->mTheta);
                 if(mCurrentVariable == eTheta) variable = &(mDate->mTheta);
                 else if(mCurrentVariable == eSigma) variable = &(mDate->mSigma);
-                else if(mCurrentVariable == eDelta) variable = &(mDate->mDelta);
+                
+                mGraph->addInfo(tr("MCMC") + " : " + ModelUtilities::getDataMethodText(mDate->mMethod));
+                mGraph->showInfos(true);
+                
+                GraphCurve curve;
+                curve.mName = QString("accept history chain " + QString::number(chainIdx));
+                curve.mData = variable->acceptationForChain(mChains, chainIdx);
+                curve.mPen.setColor(Painting::chainColors[chainIdx]);
+                curve.mIsHisto = false;
+                mGraph->addCurve(curve);
                 
                 GraphCurve curveTarget;
                 curveTarget.mName = "target";
@@ -217,13 +230,6 @@ void GraphViewDate::refresh()
                 curveTarget.mPen.setStyle(Qt::DashLine);
                 curveTarget.mPen.setColor(QColor(180, 10, 20));
                 mGraph->addCurve(curveTarget);
-                
-                GraphCurve curve;
-                curve.mName = QString("accept history chain " + QString::number(chainIdx));
-                curve.mData = variable->acceptationForChain(mChains, chainIdx);
-                curve.mPen.setColor(Painting::chainColors[chainIdx]);
-                curve.mIsHisto = false;
-                mGraph->addCurve(curve);
             }
            
         }
@@ -239,7 +245,6 @@ void GraphViewDate::refresh()
                 MHVariable* variable = &(mDate->mTheta);
                 if(mCurrentVariable == eTheta) variable = &(mDate->mTheta);
                 else if(mCurrentVariable == eSigma) variable = &(mDate->mSigma);
-                else if(mCurrentVariable == eDelta) variable = &(mDate->mDelta);
                 
                 GraphCurve curve;
                 curve.mName = QString("correlation chain " + QString::number(chainIdx));

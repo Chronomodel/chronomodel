@@ -221,6 +221,7 @@ void ImportDataTable::updateTableHeaders()
     
     if(!pluginName.isEmpty())
     {
+        qDebug() << pluginName;
         PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
         mImportView->setHelp(plugin->csvHelp());
         
