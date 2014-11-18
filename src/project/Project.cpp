@@ -185,7 +185,14 @@ bool Project::load(const QString& path)
         
         if(error.error !=  QJsonParseError::NoError)
         {
-            qDebug() << "ERROR loading project file : " << error.errorString();
+            QMessageBox message(QMessageBox::Critical,
+                                tr("Error loading project file"),
+                                tr("The project file could not be loaded.") + "\n" + 
+                                tr("Error message") + " : " + error.errorString(),
+                                QMessageBox::Ok,
+                                qApp->activeWindow(),
+                                Qt::Sheet);
+            message.exec();
             return false;
         }
         else
@@ -299,6 +306,7 @@ void Project::setSettings(const ProjectSettings& settings)
     if(settings.mTmin >= settings.mTmax)
     {
         QMessageBox message(QMessageBox::Critical, tr("Inconsistent values"), tr("Start Date must be lower than End Date !"), QMessageBox::Ok, qApp->activeWindow(), Qt::Sheet);
+        message.exec();
     }
     else
     {
