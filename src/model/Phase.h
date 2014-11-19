@@ -21,9 +21,6 @@
 #define STATE_PHASE_TAU_FIXED "tau_fixed"
 #define STATE_PHASE_TAU_MIN "tau_min"
 #define STATE_PHASE_TAU_MAX "tau_max"
-#define STATE_PHASE_EVENTS_IDS "events_ids"
-#define STATE_PHASE_CONSTRAINTS_FWD_IDS "constraints_fwd_ids"
-#define STATE_PHASE_CONSTRAINTS_BWD_IDS "constraints_bwd_ids"
 #define STATE_PHASE_IS_SELECTED "is_selected"
 #define STATE_PHASE_IS_CURRENT "is_current"
 
@@ -74,10 +71,6 @@ public:
     QList<Event*> mEvents;
     QList<PhaseConstraint*> mConstraintsFwd;
     QList<PhaseConstraint*> mConstraintsBwd;
-    
-    QList<int> mEventsIds;
-    QList<int> mConstraintsFwdIds;
-    QList<int> mConstraintsBwdIds;
     
     MetropolisVariable mAlpha;
     MetropolisVariable mBeta;

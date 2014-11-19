@@ -83,6 +83,8 @@ void EventsScene::setSelectedPhase(const QJsonObject& phase)
 
 void EventsScene::updateGreyedOutEvents(const QMap<int, bool>& eyedPhases)
 {
+    qDebug() << "-> Update greyed out events";
+    
     // If no phases is eyed, then no event must be greyed out!
     bool noEyedPhases = true;
     QMapIterator<int, bool> iter(eyedPhases);

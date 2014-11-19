@@ -40,13 +40,6 @@ void Phase::copyFrom(const Phase& phase)
     mId = phase.mId;
     mName = phase.mName;
     
-    mConstraintsFwd = phase.mConstraintsFwd;
-    mConstraintsBwd = phase.mConstraintsBwd;
-    
-    mEventsIds = phase.mEventsIds;
-    mConstraintsFwdIds = phase.mConstraintsFwdIds;
-    mConstraintsBwdIds = phase.mConstraintsBwdIds;
-    
     mAlpha = phase.mAlpha;
     mBeta = phase.mBeta;
     mTau = phase.mTau;
@@ -67,10 +60,6 @@ void Phase::copyFrom(const Phase& phase)
     mEvents = phase.mEvents;
     mConstraintsFwd = phase.mConstraintsFwd;
     mConstraintsBwd = phase.mConstraintsBwd;
-    
-    mEventsIds = phase.mEventsIds;
-    mConstraintsFwdIds = phase.mConstraintsFwdIds;
-    mConstraintsBwdIds = phase.mConstraintsBwdIds;
 }
 
 Phase::~Phase()
@@ -94,21 +83,6 @@ Phase Phase::fromJson(const QJsonObject& json)
     p.mIsSelected = json[STATE_PHASE_IS_SELECTED].toBool();
     p.mIsCurrent = json[STATE_PHASE_IS_CURRENT].toBool();
     
-    QString ids_str = json[STATE_PHASE_EVENTS_IDS].toString();
-    QStringList ids = ids_str.split(",");
-    for(int i=0; i<ids.size(); ++i)
-        p.mEventsIds.append(ids[i].toInt());
-    
-    ids_str = json[STATE_PHASE_CONSTRAINTS_FWD_IDS].toString();
-    ids = ids_str.split(",");
-    for(int i=0; i<ids.size(); ++i)
-        p.mConstraintsFwdIds.append(ids[i].toInt());
-    
-    ids_str = json[STATE_PHASE_CONSTRAINTS_BWD_IDS].toString();
-    ids = ids_str.split(",");
-    for(int i=0; i<ids.size(); ++i)
-        p.mConstraintsBwdIds.append(ids[i].toInt());
-    
     return p;
 }
 
@@ -129,21 +103,6 @@ QJsonObject Phase::toJson() const
     phase[STATE_PHASE_TAU_MAX] = mTauMax;
     phase[STATE_PHASE_IS_SELECTED] = mIsSelected;
     phase[STATE_PHASE_IS_CURRENT] = mIsCurrent;
-    
-    QStringList ids;
-    for(int i=0; i<mEventsIds.size(); ++i)
-        ids.append(QString::number(mEventsIds[i]));
-    phase[STATE_PHASE_EVENTS_IDS] = ids.join(",");
-    
-    ids.clear();
-    for(int i=0; i<mConstraintsFwdIds.size(); ++i)
-        ids.append(QString::number(mConstraintsFwdIds[i]));
-    phase[STATE_PHASE_CONSTRAINTS_FWD_IDS] = ids.join(",");
-    
-    ids.clear();
-    for(int i=0; i<mConstraintsBwdIds.size(); ++i)
-        ids.append(QString::number(mConstraintsBwdIds[i]));
-    phase[STATE_PHASE_CONSTRAINTS_BWD_IDS] = ids.join(",");
     
     return phase;
 }

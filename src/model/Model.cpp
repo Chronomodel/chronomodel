@@ -253,10 +253,10 @@ bool Model::isValid()
                 throw tr("Event") + " " + mEvents[i].mName + " " + tr("must contain at least 1 data");
         }
     }
-    for(int i=0; i<mPhases.size(); ++i)
+    /*for(int i=0; i<mPhases.size(); ++i)
     {
         if(mPhases[i].mEventsIds.size() == 0)
             throw tr("Phase") + " " + mPhases[i].mName + " " + tr("must contain at least 1 event");
-    }
+    }*/
     return true;
 }

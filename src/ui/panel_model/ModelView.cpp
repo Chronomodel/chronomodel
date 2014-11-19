@@ -590,3 +590,4 @@ void ModelView::readSettings()
     
     settings.endGroup();
 }
+

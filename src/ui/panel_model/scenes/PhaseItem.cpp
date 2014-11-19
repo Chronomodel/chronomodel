@@ -58,8 +58,10 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
     if(checkRect().contains(e->pos()))
     {
+        qDebug() << "-> Check clicked";
+        
         // Do not select phase when clicking on the box
-        e->ignore();
+        e->accept();
         
         if(mState == Qt::PartiallyChecked) mState = Qt::Checked;
         else if(mState == Qt::Checked) mState = Qt::Unchecked;
@@ -73,8 +75,10 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
     }
     else if(eyeRect().contains(e->pos()))
     {
+        qDebug() << "-> Eye clicked";
+        
         // Do not select phase when clicking on the box
-        e->ignore();
+        e->accept();
         
         mEyeActivated = !mEyeActivated;
         ((PhasesScene*)mScene)->updateEyedPhases();
@@ -244,7 +248,10 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->setBrush(Qt::NoBrush);
     if(isSelected())
     {
-        painter->setPen(QPen(Painting::mainColorDark, 3.f));
+        painter->setPen(QPen(Qt::white, 5.f));
+        painter->drawRoundedRect(rect.adjusted(1, 1, -1, -1), rounded, rounded);
+        
+        painter->setPen(QPen(Qt::red, 3.f));
         painter->drawRoundedRect(rect.adjusted(1, 1, -1, -1), rounded, rounded);
     }
 }
