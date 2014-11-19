@@ -1,4 +1,5 @@
 #include "PhaseItem.h"
+#include "PhasesScene.h"
 #include "Event.h"
 #include "Date.h"
 #include "Painting.h"
@@ -9,7 +10,8 @@
 
 
 PhaseItem::PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsItem* parent):AbstractItem(scene, parent),
-mState(Qt::Unchecked)
+mState(Qt::Unchecked),
+mEyeActivated(false)
 {
     mBorderWidth = 10;
     mEltsHeight = 15;
@@ -54,9 +56,11 @@ void PhaseItem::setState(Qt::CheckState state)
 #pragma mark Mouse events
 void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-    AbstractItem::mousePressEvent(e);
     if(checkRect().contains(e->pos()))
     {
+        // Do not select phase when clicking on the box
+        e->ignore();
+        
         if(mState == Qt::PartiallyChecked) mState = Qt::Checked;
         else if(mState == Qt::Checked) mState = Qt::Unchecked;
         else if(mState == Qt::Unchecked) mState = Qt::Checked;
@@ -67,22 +71,52 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
         if(scene())
             scene()->update();
     }
+    else if(eyeRect().contains(e->pos()))
+    {
+        // Do not select phase when clicking on the box
+        e->ignore();
+        
+        mEyeActivated = !mEyeActivated;
+        ((PhasesScene*)mScene)->updateEyedPhases();
+        
+        update();
+        if(scene())
+            scene()->update();
+    }
+    else
+    {
+        AbstractItem::mousePressEvent(e);
+    }
 }
 
 void PhaseItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
 {
-    mPhase[STATE_PHASE_ITEM_X] = pos().x();
-    mPhase[STATE_PHASE_ITEM_Y] = pos().y();
-    
-    AbstractItem::mouseReleaseEvent(e);
+    if(checkRect().contains(e->pos()) || eyeRect().contains(e->pos()))
+    {
+        e->ignore();
+    }
+    else
+    {
+        mPhase[STATE_PHASE_ITEM_X] = pos().x();
+        mPhase[STATE_PHASE_ITEM_Y] = pos().y();
+        
+        AbstractItem::mouseReleaseEvent(e);
+    }
 }
 
 void PhaseItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 {
-    mPhase[STATE_PHASE_ITEM_X] = pos().x();
-    mPhase[STATE_PHASE_ITEM_Y] = pos().y();
-    
-    AbstractItem::mouseMoveEvent(e);
+    if(checkRect().contains(e->pos()) || eyeRect().contains(e->pos()))
+    {
+        e->ignore();
+    }
+    else
+    {
+        mPhase[STATE_PHASE_ITEM_X] = pos().x();
+        mPhase[STATE_PHASE_ITEM_Y] = pos().y();
+        
+        AbstractItem::mouseReleaseEvent(e);
+    }
 }
 
 
@@ -98,7 +132,7 @@ QRectF PhaseItem::boundingRect() const
     QFont font = qApp->font();
     QString name = mPhase[STATE_PHASE_NAME].toString();
     QFontMetrics metrics(font);
-    int nw = metrics.width(name) + 2*mBorderWidth + 3*mEltsMargin + mTitleHeight;
+    int nw = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin + 2*mTitleHeight;
     w = (nw > w) ? nw : w;
     
     font.setPointSizeF(pointSize(11));
@@ -137,6 +171,17 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     // Checked
     QRectF cRect = checkRect();
     drawCheckBoxBox(*painter, cRect, mState, Qt::white, QColor(150, 150, 150));
+    
+    // Eye
+    QRectF eRect = eyeRect();
+    painter->setBrush(Qt::white);
+    painter->setPen(Qt::black);
+    painter->drawRect(eRect);
+    if(mEyeActivated)
+    {
+        QPixmap eye(":eye.png");
+        painter->drawPixmap(eRect, eye, eye.rect());
+    }
     
     // Name
     QRectF tr(rect.x() + mBorderWidth + 2*mEltsMargin + mTitleHeight,
@@ -231,3 +276,12 @@ QRectF PhaseItem::checkRect() const
     return r;
 }
 
+QRectF PhaseItem::eyeRect() const
+{
+    QRectF rect = boundingRect();
+    QRectF r(rect.x() + rect.width() - mBorderWidth - mEltsMargin - mTitleHeight,
+             rect.y() + mBorderWidth + mEltsMargin,
+             mTitleHeight,
+             mTitleHeight);
+    return r;
+}

@@ -200,7 +200,8 @@ void PhasesScene::updateSelection()
             phase = p;
         }
         emit MainWindow::getInstance()->getProject()->currentPhaseChanged(phase);
-        sendUpdateProject(tr("phases selection updated"), false, false);
+        sendUpdateProject(tr("phases selection updated : phases marked as selected"), false, false);
+        MainWindow::getInstance()->getProject()->sendPhasesSelectionChanged();
     }
 }
 
@@ -247,8 +248,20 @@ void PhasesScene::constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEv
     project->updatePhaseConstraint(item->constraint()[STATE_PHASE_CONSTRAINT_ID].toInt());
 }
 
+void PhasesScene::updateEyedPhases()
+{
+    QMap<int, bool> mEyedPhases;
+    for(int i=0; i<mItems.size(); ++i)
+    {
+        PhaseItem* item = ((PhaseItem*)mItems[i]);
+        mEyedPhases.insert(item->mPhase[STATE_PHASE_ID].toInt(), item->mEyeActivated);
+    }
+    emit MainWindow::getInstance()->getProject()->eyedPhasesModified(mEyedPhases);
+}
+
 
 #pragma mark Check state
+
 void PhasesScene::updateCheckedPhases()
 {
     QJsonObject state = MainWindow::getInstance()->getProject()->state();

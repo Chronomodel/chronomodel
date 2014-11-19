@@ -27,6 +27,9 @@ public slots:
     void updateProject();
     void updateSelection();
     void updateHelp();
+    
+    void updateSelectedEventsFromPhases();
+    void updateGreyedOutEvents(const QMap<int, bool>& eyedPhases);
 
 public:
     void itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);

@@ -42,6 +42,11 @@ void ScrollCompressor::setProp(const float& prop, bool sendNotification)
     update();
 }
 
+float ScrollCompressor::getProp() const
+{
+    return mProp;
+}
+
 void ScrollCompressor::showText(const QString& text, bool show)
 {
     mShowText = show;

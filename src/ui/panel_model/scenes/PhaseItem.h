@@ -26,6 +26,7 @@ protected:
     void mouseMoveEvent(QGraphicsSceneMouseEvent* e);
     
     QRectF checkRect() const;
+    QRectF eyeRect() const;
     QJsonArray getEvents() const;
     
 private slots:
@@ -34,6 +35,7 @@ private slots:
 public:
     QJsonObject mPhase;
     Qt::CheckState mState;
+    bool mEyeActivated;
 };
 
 #endif

@@ -67,7 +67,7 @@ mIsSplitting(false)
     mButExportEvents->setFlatVertical();
     
     mButEventsOverview = new Button(tr("Overview"), mLeftWrapper);
-    mButEventsOverview->setIcon(QIcon(":eye.png"));
+    mButEventsOverview->setIcon(QIcon(":eye_w.png"));
     mButEventsOverview->setCheckable(true);
     mButEventsOverview->setFlatVertical();
     
@@ -119,7 +119,7 @@ mIsSplitting(false)
     mButExportPhases->setFlatVertical();
     
     mButPhasesOverview = new Button(tr("Overview"), mPhasesWrapper);
-    mButPhasesOverview->setIcon(QIcon(":eye.png"));
+    mButPhasesOverview->setIcon(QIcon(":eye_w.png"));
     mButPhasesOverview->setCheckable(true);
     mButPhasesOverview->setFlatVertical();
     
@@ -230,8 +230,11 @@ void ModelView::doProjectConnections(Project* project)
     
     connect(project, SIGNAL(currentPhaseChanged(const QJsonObject&)), mEventsScene, SLOT(setSelectedPhase(const QJsonObject&)));
     connect(project, SIGNAL(selectedEventsChanged()), mPhasesScene, SLOT(updateCheckedPhases()));
+    connect(project, SIGNAL(selectedPhasesChanged()), mEventsScene, SLOT(updateSelectedEventsFromPhases()));
     
     connect(project, SIGNAL(currentEventChanged(const QJsonObject&)), mEventPropertiesView, SLOT(setEvent(const QJsonObject&)));
+    
+    connect(project, SIGNAL(eyedPhasesModified(const QMap<int, bool>&)), mEventsScene, SLOT(updateGreyedOutEvents(const QMap<int, bool>&)));
 }
 
 void ModelView::updateProject()
@@ -547,4 +550,43 @@ void ModelView::keyPressEvent(QKeyEvent* event)
         showCalibration(QJsonObject());
     else
         event->ignore();
+}
+
+
+
+void ModelView::writeSettings()
+{
+    QSettings settings;
+    settings.beginGroup("ModelView");
+    
+    int panelIndex = 0;
+    if(mButProperties->isChecked()) panelIndex = 1;
+    else if(mButImport->isChecked()) panelIndex = 2;
+    else if(mButPhasesModel->isChecked()) panelIndex = 3;
+    settings.setValue("right_panel", panelIndex);
+    
+    settings.setValue("events_zoom", mEventsGlobalZoom->getProp());
+    settings.setValue("phases_zoom", mPhasesGlobalZoom->getProp());
+    
+    settings.endGroup();
+}
+
+void ModelView::readSettings()
+{
+    QSettings settings;
+    settings.beginGroup("ModelView");
+    
+    int panelIndex = settings.value("right_panel", 0).toInt();
+    
+    if(panelIndex == 1) mButProperties->setChecked(true);
+    else if(panelIndex == 2) mButImport->setChecked(true);
+    else if(panelIndex == 3) mButPhasesModel->setChecked(true);
+    
+    mEventsGlobalZoom->setProp(settings.value("events_zoom", 1.f).toFloat(), true);
+    mPhasesGlobalZoom->setProp(settings.value("phases_zoom", 1.f).toFloat(), true);
+    
+    prepareNextSlide();
+    updateLayout();
+    
+    settings.endGroup();
 }

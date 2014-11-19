@@ -24,6 +24,8 @@ public:
     void itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);
     void constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e);
     
+    void updateEyedPhases();
+    
 protected:
     AbstractItem* collidingItem(QGraphicsItem* item);
     AbstractItem* currentItem();

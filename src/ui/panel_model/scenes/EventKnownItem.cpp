@@ -37,7 +37,7 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     // ----------------------------------------------
     //  Check if item should be greyed out
     // ----------------------------------------------
-    updateGreyedOut();
+    //updateGreyedOut();
     
     // ----------------------------------------------
     //  Recreate thumb

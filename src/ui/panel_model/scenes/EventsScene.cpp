@@ -11,6 +11,7 @@
 #include "MainWindow.h"
 #include "Project.h"
 #include "HelpWidget.h"
+#include "QtUtilities.h"
 #include <QtWidgets>
 
 
@@ -62,7 +63,7 @@ void EventsScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
 
 void EventsScene::setSelectedPhase(const QJsonObject& phase)
 {
-    if(!phase.isEmpty())
+    /*if(!phase.isEmpty())
     {
         QString phaseId = QString::number(phase[STATE_PHASE_ID].toInt());
         for(int i=0; i<mItems.size(); ++i)
@@ -77,6 +78,48 @@ void EventsScene::setSelectedPhase(const QJsonObject& phase)
     {
         for(int i=0; i<mItems.size(); ++i)
             mItems[i]->setGreyedOut(false);
+    }*/
+}
+
+void EventsScene::updateGreyedOutEvents(const QMap<int, bool>& eyedPhases)
+{
+    // If no phases is eyed, then no event must be greyed out!
+    bool noEyedPhases = true;
+    QMapIterator<int, bool> iter(eyedPhases);
+    while(iter.hasNext())
+    {
+        iter.next();
+        if(iter.value())
+        {
+            noEyedPhases = false;
+            break;
+        }
+    }
+    
+    for(int i=0; i<mItems.size(); ++i)
+    {
+        EventItem* item = (EventItem*)mItems[i];
+        if(noEyedPhases)
+        {
+            item->setGreyedOut(false);
+        }
+        else
+        {
+            QString eventPhasesIdsStr = item->mEvent[STATE_EVENT_PHASE_IDS].toString();
+            bool mustBeGreyedOut = true;
+            if(!eventPhasesIdsStr.isEmpty())
+            {
+                QStringList eventPhasesIds = eventPhasesIdsStr.split(",");
+                for(int j=0; j<eventPhasesIds.size(); ++j)
+                {
+                    if(eyedPhases[eventPhasesIds[j].toInt()])
+                    {
+                        mustBeGreyedOut = false;
+                    }
+                }
+            }
+            item->setGreyedOut(mustBeGreyedOut);
+        }
     }
 }
 
@@ -310,6 +353,9 @@ void EventsScene::updateSelection()
             QJsonObject& event = item->getEvent();
             event[STATE_EVENT_IS_SELECTED] = mItems[i]->isSelected();
             event[STATE_EVENT_IS_CURRENT] = false;
+            
+            if(mItems[i]->isSelected())
+                qDebug() << "Marke selected event : " << item->mEvent[STATE_EVENT_NAME].toString();
         }
         QJsonObject event;
         EventItem* curItem = (EventItem*)currentItem();
@@ -320,9 +366,41 @@ void EventsScene::updateSelection()
             event = evt;
         }
         emit MainWindow::getInstance()->getProject()->currentEventChanged(event);
-        sendUpdateProject(tr("events selection updated"), false, false);
+        sendUpdateProject(tr("events selection updated : events marked as selected"), false, false);
         MainWindow::getInstance()->getProject()->sendEventsSelectionChanged();
     }
+}
+
+void EventsScene::updateSelectedEventsFromPhases()
+{
+    // Do not send "selection updated" each time an item is selected in this function!
+    // Do it all at once at the end.
+    mUpdatingItems = true;
+    
+    QJsonObject state = MainWindow::getInstance()->getProject()->state();
+    QJsonArray phases = state[STATE_PHASES].toArray();
+    
+    for(int i=0; i<mItems.size(); ++i)
+    {
+        EventItem* item = (EventItem*)mItems[i];
+        bool mustBeSelected = false;
+        QList<int> eventPhasesIds = stringListToIntList(item->mEvent[STATE_EVENT_PHASE_IDS].toString());
+        
+        for(int i=0; i<phases.size(); ++i)
+        {
+            QJsonObject phase = phases[i].toObject();
+            int phaseId = phase[STATE_PHASE_ID].toInt();
+            
+            if(eventPhasesIds.contains(phaseId))
+            {
+                if(phase[STATE_PHASE_IS_SELECTED].toBool())
+                    mustBeSelected = true;
+            }
+        }
+        item->setSelected(mustBeSelected);
+    }
+    mUpdatingItems = false;
+    updateSelection();
 }
 
 #pragma mark Utilities

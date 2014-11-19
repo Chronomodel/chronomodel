@@ -117,7 +117,7 @@ void Project::pushProjectState(const QJsonObject& state, const QString& reason, 
 
 void Project::sendUpdateState(const QJsonObject& state, const QString& reason, bool notify)
 {
-    qDebug() << "+++ Sending : " << reason;
+    qDebug() << " +++  Sending : " << reason;
     StateEvent* event = new StateEvent(state, reason, notify);
     QCoreApplication::postEvent(this, event, Qt::NormalEventPriority);
 }
@@ -135,8 +135,14 @@ bool Project::event(QEvent* e)
     }
     else if(e->type() == 1001)
     {
-        qDebug() << "(---) Receiving events selection";
+        qDebug() << "(---) Receiving events selection : using marked events";
         emit selectedEventsChanged();
+        return true;
+    }
+    else if(e->type() == 1002)
+    {
+        qDebug() << "(---) Receiving phases selection : using marked phases";
+        emit selectedPhasesChanged();
         return true;
     }
     else
@@ -147,7 +153,7 @@ bool Project::event(QEvent* e)
 
 void Project::updateState(const QJsonObject& state, const QString& reason, bool notify)
 {
-    qDebug() << "--- Receiving : " << reason;
+    qDebug() << " ---  Receiving : " << reason;
     mState = state;
     if(notify)
     {
@@ -157,9 +163,16 @@ void Project::updateState(const QJsonObject& state, const QString& reason, bool 
 
 void Project::sendEventsSelectionChanged()
 {
-    qDebug() << "(+++) Sending events selection";
-    QEvent* event = new QEvent((QEvent::Type)1001);
-    QCoreApplication::postEvent(this, event, Qt::NormalEventPriority);
+    qDebug() << "(+++) Sending events selection : use marked events";
+    QEvent* e = new QEvent((QEvent::Type)1001);
+    QCoreApplication::postEvent(this, e, Qt::NormalEventPriority);
+}
+
+void Project::sendPhasesSelectionChanged()
+{
+    qDebug() << "(+++) Sending phases selection : use marked phases";
+    QEvent* e = new QEvent((QEvent::Type)1002);
+    QCoreApplication::postEvent(this, e, Qt::NormalEventPriority);
 }
 
 
@@ -947,6 +960,47 @@ void Project::updatePhaseEvents(int phaseId, Qt::CheckState state)
     stateNext[STATE_EVENTS] = events;
     pushProjectState(stateNext, tr("Phase's events updated"), true);
 }
+
+/*void Project::updatePhaseEyed(int phaseId, bool eyed)
+{
+    QJsonObject stateNext = mState;
+    QJsonArray events = mState[STATE_EVENTS].toArray();
+    QJsonArray phases = mState[STATE_PHASES].toArray();
+    
+    // Update eyed phase
+    for(int i=0; i<phases.size(); ++i)
+    {
+        QJsonObject phase = phases[i].toObject();
+        if(phase[STATE_PHASE_ID].toInt() == phaseId)
+        {
+            phase[STATE_PHASE_EYED] = eyed;
+            phases[i] = phase;
+            break;
+        }
+    }
+    
+    // Update events greyed out
+    for(int i=0; i<events.size(); ++i)
+    {
+        QJsonObject event = events[i].toObject();
+        int eventId = event[STATE_EVENT_ID].toInt();
+        QString eventPhasesIdsStr = event[STATE_EVENT_PHASE_IDS].toString();
+        QStringList eventPhasesIds = eventPhasesIdsStr.split(",");
+        bool mustBeGreyedOut = true;
+        
+        for(int j=0; j<phases.size(); ++j)
+        {
+            QJsonObject phase = phases[j].toObject();
+            if(phase[STATE_PHASE_EYED].toBool() && eventPhasesIds.contains(phase[STATE_PHASE_ID].toString()))
+                mustBeGreyedOut = false;
+        }
+        event[STATE_EVENT_GREYED_OUT] = mustBeGreyedOut;
+        events[i] = event;
+    }
+    stateNext[STATE_EVENTS] = events;
+    stateNext[STATE_PHASES] = phases;
+    pushProjectState(stateNext, tr("Phase eyed updated"), true);
+}*/
 
 // --------------------------------------------------------------------
 //     Event Constraints authorizations

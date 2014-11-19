@@ -177,6 +177,8 @@ void MCMCLoopMain::initMCMC()
             // Moyenne des theta i
             events[i].mTheta.mX = theta_sum / events[i].mDates.size();
             
+            qDebug() << "Init event : " << events[i].mName << " : " << events[i].mTheta.mX;
+            
             // Si la moyenne n'est pas dans le support du fait, on prend la moyenne des theta i qui s'y trouvent
             /*if(events[i].mTheta.mX < events[i].mTmin || events[i].mTheta.mX > events[i].mTmax)
              {
@@ -225,9 +227,13 @@ void MCMCLoopMain::initMCMC()
     // ----------------------------------------------------------------
     // Vérifier thetas des Faits et alpha beta TODO !!!!!!
     // ----------------------------------------------------------------
+    emit stepChanged(tr("Initializing events with constraints ..."), 0, phases.size());
     bool verif = false;
     while(!verif)
     {
+        if(isInterruptionRequested())
+            return;
+        
         verif = true;
         for(int i=0; i<events.size(); ++i)
         {
@@ -236,11 +242,20 @@ void MCMCLoopMain::initMCMC()
             double thetaMin = event.getThetaMin(tmin);
             double thetaMax = event.getThetaMax(tmax);
             
+            qDebug() << "Init constraint for : " << events[i].mName << " : " << thetaMin << " < " << event.mTheta.mX << " < " << thetaMax;
+            
+            if(thetaMin > thetaMax)
+            {
+                qDebug() << "No init possible!";
+            }
+            
             if(event.mTheta.mX <= thetaMin || event.mTheta.mX >= thetaMax)
             {
                 verif = false;
-                double theta = thetaMin + (thetaMin + thetaMax) / 2; // random_uniform mieux pour s'en sortir !!!
+                double theta = thetaMin + (thetaMax - thetaMin) * Generator::randomUniform();
                 event.mTheta.mX = theta;
+                
+                qDebug() << "Corrigé : " << thetaMin << " < " << event.mTheta.mX << " < " << thetaMax;
             }
         }
     }
@@ -305,6 +320,7 @@ void MCMCLoopMain::initMCMC()
         mLog += " - beta : " + QString::number(phase.mBeta.mX) + "\n";
         mLog += " - tau : " + QString::number(phase.mTau.mX) + "\n";
     }
+    qDebug() << mLog;
 }
 
 void MCMCLoopMain::update()

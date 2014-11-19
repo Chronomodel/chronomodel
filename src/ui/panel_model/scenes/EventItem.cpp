@@ -41,7 +41,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     // ----------------------------------------------
     //  Check if item should be greyed out
     // ----------------------------------------------
-    updateGreyedOut();
+    //updateGreyedOut();
     
     // ----------------------------------------------
     //  Delete Date Items
