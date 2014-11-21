@@ -132,7 +132,7 @@ void GraphViewPhase::refresh()
                     curveCredAlpha.mName = "alpha credibility full";
                     curveCredAlpha.mSections.append(QPair<float, float>(mPhase->mAlpha.mResults.mean, mPhase->mBeta.mResults.mean));
                     curveCredAlpha.mHorizontalValue = mGraph->maximumY();
-                    curveCredAlpha.mPen.setStyle(Qt::DashLine);
+                    curveCredAlpha.mPen.setStyle(Qt::DotLine);
                     curveCredAlpha.mPen.setColor(color);
                     curveCredAlpha.mPen.setWidth(5);
                     curveCredAlpha.mIsHorizontalSections = true;

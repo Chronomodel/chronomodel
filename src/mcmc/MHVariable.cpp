@@ -19,6 +19,7 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
     {
         mX = x;
         mLastAccepts.append(true);
+        mAllAccepts.append(true);
         return true;
     }
     else
@@ -28,11 +29,13 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
         {
             mX = x;
             mLastAccepts.append(true);
+            mAllAccepts.append(true);
             return true;
         }
         else
         {
             mLastAccepts.append(false);
+            mAllAccepts.append(false);
             return false;
         }
     }
@@ -88,5 +91,45 @@ QMap<float, float> MHVariable::acceptationForChain(const QList<Chain>& chains, i
         }
     }
     return accept;
+}
+
+void MHVariable::generateGlobalRunAcceptation(const QList<Chain>& chains)
+{
+    float accepted = 0;
+    float acceptsLength = 0;
+    int shift = 0;
+    
+    for(int i=0; i<chains.size(); ++i)
+    {
+        int burnAdaptSize = (chains[i].mNumBurnIter + chains[i].mBatchIndex * chains[i].mNumBatchIter) / chains[i].mThinningInterval;
+        
+        int runSize = chains[i].mNumRunIter / chains[i].mThinningInterval;
+        
+        shift += burnAdaptSize;
+        
+        for(int j=shift; j<shift + runSize; ++j)
+        {
+            int curIndex = j - shift;
+            if(mAllAccepts[curIndex])
+                ++accepted;
+        }
+        shift += runSize;
+        acceptsLength += runSize;
+    }
+    mGlobalAcceptation = accepted / acceptsLength;
+}
+
+void MHVariable::generateResults(const QList<Chain>& chains, float tmin, float tmax)
+{
+    MetropolisVariable::generateResults(chains, tmin, tmax);
+    generateGlobalRunAcceptation(chains);
+}
+
+QString MHVariable::resultsText() const
+{
+    QString result = MetropolisVariable::resultsText();
+    if(!mProposal.isEmpty())
+        result += "Taux d'acceptation global : " + QString::number(mGlobalAcceptation*100, 'f', 1) + "% ("+mProposal+")\n";
+    return result;
 }
 

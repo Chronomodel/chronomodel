@@ -2,7 +2,6 @@
 #define EventItem_H
 
 #include "AbstractItem.h"
-#include <QJsonObject>
 
 class EventsScene;
 
@@ -22,16 +21,13 @@ public:
     void handleDrop(QGraphicsSceneDragDropEvent* e);
     QJsonArray getPhases() const;
     
+    virtual void updateItemPosition(const QPointF& pos);
+    
 protected:
     virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent* e);
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* e);
     virtual void dropEvent(QGraphicsSceneDragDropEvent* e);
     
     void updateGreyedOut();
-    
-public:
-    QJsonObject mEvent;
 };
 
 #endif

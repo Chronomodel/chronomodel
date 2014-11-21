@@ -2,6 +2,7 @@
 #include "AbstractItem.h"
 #include "ArrowItem.h"
 #include "ArrowTmpItem.h"
+#include "StateKeys.h"
 #include <QtWidgets>
 
 
@@ -23,11 +24,35 @@ AbstractScene::~AbstractScene()
     
 }
 
-void AbstractScene::updateConstraintsPos()
+void AbstractScene::updateConstraintsPos(AbstractItem* movedItem, const QPointF& newPos)
 {
-    for(int i=0; i<mConstraintItems.size(); ++i)
+    AbstractItem* curItem = currentItem();
+    if(curItem)
+        mTempArrow->setFrom(curItem->pos().x(), curItem->pos().y());
+    
+    if(movedItem)
     {
-        mConstraintItems[i]->updatePosition();
+        int itemId = movedItem->mData[STATE_ID].toInt();
+        int itemX = movedItem->mData[STATE_ITEM_X].toInt();
+        int itemY = movedItem->mData[STATE_ITEM_Y].toInt();
+        
+        for(int i=0; i<mConstraintItems.size(); ++i)
+        {
+            QJsonObject cData = mConstraintItems[i]->data();
+            int bwdId = cData[STATE_CONSTRAINT_BWD_ID].toInt();
+            int fwdId = cData[STATE_CONSTRAINT_FWD_ID].toInt();
+            
+            if(bwdId == itemId)
+            {
+                mConstraintItems[i]->setFrom(itemX, itemY);
+            }
+            else if(fwdId == itemId)
+            {
+                mConstraintItems[i]->setTo(itemX, itemY);
+            }
+            
+            //mConstraintItems[i]->updatePosition();
+        }
     }
 }
 
@@ -73,17 +98,15 @@ void AbstractScene::itemLeaved(AbstractItem* item, QGraphicsSceneHoverEvent* e)
     mTempArrow->setState(ArrowTmpItem::eNormal);
 }
 
-void AbstractScene::itemMoved(AbstractItem* item, QGraphicsSceneMouseEvent* e)
+void AbstractScene::itemMoved(AbstractItem* item, QPointF newPos, bool merging)
 {
-    Q_UNUSED(e);
-    updateConstraintsPos();
-    mTempArrow->setFrom(item->pos().x(), item->pos().y());
     
-    // Save item position in project state : constraints need it to update their position.
-    // Dot not save this as an undo command and don't notify views for update
-    sendUpdateProject(tr("item moved"), false, false);
     
-    if(e->modifiers() == Qt::ShiftModifier)
+    qDebug() << " moved : " << newPos;
+    
+    
+    
+    if(merging)
     {
         AbstractItem* colliding = collidingItem(item);
         for(int i=0; i<mItems.size(); ++i)

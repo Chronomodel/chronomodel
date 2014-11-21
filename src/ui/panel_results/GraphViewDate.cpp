@@ -97,7 +97,6 @@ void GraphViewDate::refresh()
             {
                 GraphCurve curve;
                 curve.mName = "calibration";
-                //curve.mData = normalize_map(mDate->mCalibration);
                 curve.mData = equal_areas(mDate->mCalibration, 100.f);
                 curve.mPen.setColor(QColor(0, 0, 0));
                 curve.mFillUnder = false;
@@ -255,9 +254,18 @@ void GraphViewDate::refresh()
                 mGraph->addCurve(curve);
                 
                 mGraph->setRangeX(0, 100);
-                mGraph->setRangeY(vector_min_value(curve.mDataVector),
-                                  vector_max_value(curve.mDataVector));
+                mGraph->setRangeY(-1, 1);
             }
+            
+            /*mGraph->setRangeY(0, 1);
+            mGraph->setRangeX(0, 2000);
+            
+            GraphCurve curve;
+            curve.mName = QString("Repartition");
+            curve.mData = mDate->mRepartition;
+            curve.mPen.setColor(Qt::blue);
+            curve.mIsHisto = true;
+            mGraph->addCurve(curve);*/
         }
     }
 }

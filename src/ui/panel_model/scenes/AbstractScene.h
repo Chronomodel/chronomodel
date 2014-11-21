@@ -22,8 +22,12 @@ public:
     virtual void itemDoubleClicked(AbstractItem* eventItem, QGraphicsSceneMouseEvent* e);
     virtual void itemEntered(AbstractItem* eventItem, QGraphicsSceneHoverEvent* e);
     virtual void itemLeaved(AbstractItem* item, QGraphicsSceneHoverEvent* e);
-    virtual void itemMoved(AbstractItem* item, QGraphicsSceneMouseEvent* e);
+    virtual void itemMoved(AbstractItem* item, QPointF newPos, bool merging);
     virtual void itemReleased(AbstractItem* item, QGraphicsSceneMouseEvent* e);
+    
+    virtual void sendUpdateProject(const QString& reason, bool notify, bool async) = 0;
+    
+    void updateConstraintsPos(AbstractItem* movedItem, const QPointF& newPos);
     
 protected:
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* e);
@@ -31,7 +35,6 @@ protected:
     virtual void keyPressEvent(QKeyEvent* keyEvent);
     virtual void keyReleaseEvent(QKeyEvent* keyEvent);
     
-    virtual void sendUpdateProject(const QString& reason, bool notify, bool async) = 0;
     virtual AbstractItem* currentItem() = 0;
     virtual AbstractItem* collidingItem(QGraphicsItem* item) = 0;
     
@@ -39,7 +42,7 @@ protected:
     virtual void createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo) = 0;
     virtual void mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo) = 0;
     
-    void updateConstraintsPos();
+    
 
 protected:
     QGraphicsView* mView;

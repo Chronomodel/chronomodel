@@ -227,8 +227,7 @@ void ModelView::doProjectConnections(Project* project)
     
     connect(mButNewPhase, SIGNAL(clicked()), project, SLOT(createPhase()));
     connect(mButDeletePhase, SIGNAL(clicked()), project, SLOT(deleteSelectedPhases()));
-    
-    connect(project, SIGNAL(currentPhaseChanged(const QJsonObject&)), mEventsScene, SLOT(setSelectedPhase(const QJsonObject&)));
+
     connect(project, SIGNAL(selectedEventsChanged()), mPhasesScene, SLOT(updateCheckedPhases()));
     connect(project, SIGNAL(selectedPhasesChanged()), mEventsScene, SLOT(updateSelectedEventsFromPhases()));
     
@@ -260,7 +259,7 @@ void ModelView::updateProject()
         for(int i=0; i<events.size(); ++i)
         {
             QJsonObject evt = events[i].toObject();
-            if(evt[STATE_EVENT_ID].toInt() == event[STATE_EVENT_ID].toInt())
+            if(evt[STATE_ID].toInt() == event[STATE_ID].toInt())
             {
                 qDebug() << evt[STATE_EVENT_KNOWN_TYPE].toInt();
                 qDebug() << event[STATE_EVENT_KNOWN_TYPE].toInt();

@@ -162,10 +162,10 @@ void EventPropertiesView::updateEvent()
     else
     {
         Event::Type type = (Event::Type)mEvent[STATE_EVENT_TYPE].toInt();
-        QString name = mEvent[STATE_EVENT_NAME].toString();
-        QColor color(mEvent[STATE_EVENT_RED].toInt(),
-                     mEvent[STATE_EVENT_GREEN].toInt(),
-                     mEvent[STATE_EVENT_BLUE].toInt());
+        QString name = mEvent[STATE_NAME].toString();
+        QColor color(mEvent[STATE_COLOR_RED].toInt(),
+                     mEvent[STATE_COLOR_GREEN].toInt(),
+                     mEvent[STATE_COLOR_BLUE].toInt());
         
         mNameEdit->setText(name);
         mColorPicker->setColor(color);
@@ -208,16 +208,16 @@ const QJsonObject& EventPropertiesView::getEvent() const
 void EventPropertiesView::updateEventName(const QString& name)
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_NAME] = name;
+    event[STATE_NAME] = name;
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event name updated"));
 }
 
 void EventPropertiesView::updateEventColor(QColor color)
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_RED] = color.red();
-    event[STATE_EVENT_GREEN] = color.green();
-    event[STATE_EVENT_BLUE] = color.blue();
+    event[STATE_COLOR_RED] = color.red();
+    event[STATE_COLOR_GREEN] = color.green();
+    event[STATE_COLOR_BLUE] = color.blue();
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event color updated"));
 }
 
@@ -393,7 +393,7 @@ void EventPropertiesView::createDate()
                 {
                     Date date = project->createDateFromPlugin(plugins[i]);
                     if(!date.isNull())
-                        project->addDate(mEvent[STATE_EVENT_ID].toInt(), date.toJson());
+                        project->addDate(mEvent[STATE_ID].toInt(), date.toJson());
                 }
             }
         }
@@ -407,12 +407,12 @@ void EventPropertiesView::deleteSelectedDates()
     for(int i=0; i<items.size(); ++i)
         indexes.push_back(mDatesList->row(items[i]));
     
-    MainWindow::getInstance()->getProject()->deleteDates(mEvent[STATE_EVENT_ID].toInt(), indexes);
+    MainWindow::getInstance()->getProject()->deleteDates(mEvent[STATE_ID].toInt(), indexes);
 }
 
 void EventPropertiesView::recycleDates()
 {
-    MainWindow::getInstance()->getProject()->recycleDates(mEvent[STATE_EVENT_ID].toInt());
+    MainWindow::getInstance()->getProject()->recycleDates(mEvent[STATE_ID].toInt());
 }
 
 #pragma mark Merge / Split

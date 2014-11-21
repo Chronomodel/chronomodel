@@ -27,8 +27,8 @@ void PhasesScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
     QJsonObject phaseFrom = ((PhaseItem*)itemFrom)->phase();
     QJsonObject phaseTo = ((PhaseItem*)itemTo)->phase();
     
-    MainWindow::getInstance()->getProject()->createPhaseConstraint(phaseFrom[STATE_PHASE_ID].toInt(),
-                                                        phaseTo[STATE_PHASE_ID].toInt());
+    MainWindow::getInstance()->getProject()->createPhaseConstraint(phaseFrom[STATE_ID].toInt(),
+                                                        phaseTo[STATE_ID].toInt());
 }
 
 void PhasesScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
@@ -36,8 +36,8 @@ void PhasesScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
     QJsonObject phaseFrom = ((PhaseItem*)itemFrom)->phase();
     QJsonObject phaseTo = ((PhaseItem*)itemTo)->phase();
     
-    MainWindow::getInstance()->getProject()->mergePhases(phaseFrom[STATE_PHASE_ID].toInt(),
-                                              phaseTo[STATE_PHASE_ID].toInt());
+    MainWindow::getInstance()->getProject()->mergePhases(phaseFrom[STATE_ID].toInt(),
+                                              phaseTo[STATE_ID].toInt());
 }
 
 #pragma mark Project Update
@@ -70,11 +70,11 @@ void PhasesScene::updateProject()
     
     QList<int> phases_ids;
     for(int i=0; i<phases.size(); ++i)
-        phases_ids << phases[i].toObject()[STATE_PHASE_ID].toInt();
+        phases_ids << phases[i].toObject()[STATE_ID].toInt();
     
     QList<int> constraints_ids;
     for(int i=0; i<constraints.size(); ++i)
-        constraints_ids << constraints[i].toObject()[STATE_PHASE_CONSTRAINT_ID].toInt();
+        constraints_ids << constraints[i].toObject()[STATE_ID].toInt();
     
     mUpdatingItems = true;
     
@@ -86,9 +86,9 @@ void PhasesScene::updateProject()
         PhaseItem* item = (PhaseItem*)mItems[i];
         QJsonObject& phase = item->phase();
         
-        if(!phases_ids.contains(phase[STATE_PHASE_ID].toInt()))
+        if(!phases_ids.contains(phase[STATE_ID].toInt()))
         {
-            qDebug() << "=> Phase item deleted : " << phase[STATE_PHASE_ID].toInt();
+            qDebug() << "=> Phase item deleted : " << phase[STATE_ID].toInt();
             removeItem(item);
             mItems.removeOne(item);
             delete item;
@@ -106,13 +106,13 @@ void PhasesScene::updateProject()
         for(int j=0; j<mItems.size(); ++j)
         {
             QJsonObject itemPhase = ((PhaseItem*)mItems[j])->phase();
-            if(itemPhase[STATE_PHASE_ID].toInt() == phase[STATE_PHASE_ID].toInt())
+            if(itemPhase[STATE_ID].toInt() == phase[STATE_ID].toInt())
             {
                 itemExists = true;
                 if(phase != itemPhase)
                 {
                     // UPDATE ITEM
-                    qDebug() << "Phase item updated : id = " << phase[STATE_PHASE_ID].toInt();
+                    qDebug() << "Phase item updated : id = " << phase[STATE_ID].toInt();
                     ((PhaseItem*)mItems[j])->setPhase(phase);
                 }
             }
@@ -123,7 +123,7 @@ void PhasesScene::updateProject()
             PhaseItem* phaseItem = new PhaseItem(this, phase);
             mItems.append(phaseItem);
             addItem(phaseItem);
-            qDebug() << "Phase item created : id = " << phase[STATE_PHASE_ID].toInt();
+            qDebug() << "Phase item created : id = " << phase[STATE_ID].toInt();
         }
     }
     
@@ -133,11 +133,11 @@ void PhasesScene::updateProject()
     for(int i=mConstraintItems.size()-1; i>=0; --i)
     {
         ArrowItem* constraintItem = mConstraintItems[i];
-        QJsonObject& constraint = constraintItem->constraint();
+        QJsonObject& constraint = constraintItem->data();
         
-        if(!constraints_ids.contains(constraint[STATE_PHASE_CONSTRAINT_ID].toInt()))
+        if(!constraints_ids.contains(constraint[STATE_ID].toInt()))
         {
-            qDebug() << "Constraint deleted : " << constraint[STATE_PHASE_CONSTRAINT_ID].toInt();
+            qDebug() << "Constraint deleted : " << constraint[STATE_ID].toInt();
             removeItem(constraintItem);
             mConstraintItems.removeOne(constraintItem);
             delete constraintItem;
@@ -154,15 +154,15 @@ void PhasesScene::updateProject()
         bool itemExists = false;
         for(int j=0; j<mConstraintItems.size(); ++j)
         {
-            QJsonObject constraintItem = mConstraintItems[j]->constraint();
-            if(constraintItem[STATE_PHASE_CONSTRAINT_ID].toInt() == constraint[STATE_PHASE_CONSTRAINT_ID].toInt())
+            QJsonObject constraintItem = mConstraintItems[j]->data();
+            if(constraintItem[STATE_ID].toInt() == constraint[STATE_ID].toInt())
             {
                 itemExists = true;
                 if(constraint != constraintItem)
                 {
                     // UPDATE ITEM
-                    qDebug() << "Constraint updated : id = " << constraint[STATE_PHASE_CONSTRAINT_ID].toInt();
-                    mConstraintItems[j]->setConstraint(constraint);
+                    qDebug() << "Constraint updated : id = " << constraint[STATE_ID].toInt();
+                    mConstraintItems[j]->setData(constraint);
                 }
             }
         }
@@ -172,7 +172,7 @@ void PhasesScene::updateProject()
             ArrowItem* constraintItem = new ArrowItem(this, ArrowItem::ePhase, constraint);
             mConstraintItems.append(constraintItem);
             addItem(constraintItem);
-            qDebug() << "Constraint created : id = " << constraint[STATE_PHASE_CONSTRAINT_ID].toInt();
+            qDebug() << "Constraint created : id = " << constraint[STATE_ID].toInt();
         }
     }
     
@@ -188,15 +188,15 @@ void PhasesScene::updateSelection()
         for(int i=0; i<mItems.size(); ++i)
         {
             QJsonObject& phase = ((PhaseItem*)mItems[i])->phase();
-            phase[STATE_PHASE_IS_SELECTED] = mItems[i]->isSelected();
-            phase[STATE_PHASE_IS_CURRENT] = false;
+            phase[STATE_IS_SELECTED] = mItems[i]->isSelected();
+            phase[STATE_IS_CURRENT] = false;
         }
         QJsonObject phase;
         PhaseItem* curItem = (PhaseItem*)currentItem();
         if(curItem)
         {
             QJsonObject& p = curItem->phase();
-            p[STATE_PHASE_IS_CURRENT] = true;
+            p[STATE_IS_CURRENT] = true;
             phase = p;
         }
         emit MainWindow::getInstance()->getProject()->currentPhaseChanged(phase);
@@ -245,7 +245,7 @@ void PhasesScene::constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEv
 {
     Q_UNUSED(e);
     Project* project = MainWindow::getInstance()->getProject();
-    project->updatePhaseConstraint(item->constraint()[STATE_PHASE_CONSTRAINT_ID].toInt());
+    project->updatePhaseConstraint(item->data()[STATE_ID].toInt());
 }
 
 void PhasesScene::updateEyedPhases()
@@ -254,14 +254,13 @@ void PhasesScene::updateEyedPhases()
     for(int i=0; i<mItems.size(); ++i)
     {
         PhaseItem* item = ((PhaseItem*)mItems[i]);
-        mEyedPhases.insert(item->mPhase[STATE_PHASE_ID].toInt(), item->mEyeActivated);
+        mEyedPhases.insert(item->mData[STATE_ID].toInt(), item->mEyeActivated);
     }
     emit MainWindow::getInstance()->getProject()->eyedPhasesModified(mEyedPhases);
 }
 
 
 #pragma mark Check state
-
 void PhasesScene::updateCheckedPhases()
 {
     QJsonObject state = MainWindow::getInstance()->getProject()->state();
@@ -274,7 +273,7 @@ void PhasesScene::updateCheckedPhases()
     for(int i=0; i<events.size(); ++i)
     {
         QJsonObject event = events[i].toObject();
-        if(event[STATE_EVENT_IS_SELECTED].toBool())
+        if(event[STATE_IS_SELECTED].toBool())
         {
             QString phaseIdsStr = event[STATE_EVENT_PHASE_IDS].toString();
             if(!phaseIdsStr.isEmpty())
@@ -297,7 +296,7 @@ void PhasesScene::updateCheckedPhases()
     {
         PhaseItem* item = (PhaseItem*)mItems[i];
         QJsonObject phase = item->phase();
-        int id = phase[STATE_PHASE_ID].toInt();
+        int id = phase[STATE_ID].toInt();
         
         if(phases.find(id) == phases.end())
         {

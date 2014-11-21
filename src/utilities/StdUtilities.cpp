@@ -155,9 +155,52 @@ QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const floa
     return result;
 }
 
-float map_interpolate_key_for_value(const float value, const QMap<float, float>& aMap)
+float map_interpolate_key_for_value(const float value, const QMap<float, float>& map)
 {
-    for(QMap<float, float>::const_iterator it = aMap.begin(); it != aMap.end(); ++it)
+    if(map.key(value, -99999) != -99999)
+    {
+        return map.key(value);
+    }
+    else
+    {
+        float keyInf = map.firstKey();
+        float keySup = map.lastKey();
+        do
+        {
+            float keyMid = keyInf + floorf((keySup - keyInf) / 2.f);
+            float valueMid;
+            QMap<float, float>::const_iterator it = map.find(keyMid);
+            if(it != map.end())
+                valueMid = it.value();
+            else
+            {
+                float valueMidInf = map.value(floorf(keyMid));
+                float valueMidSup = map.value(ceilf(keyMid));
+                valueMid = valueMidInf + (valueMidSup - valueMidInf) / 2.f;
+            }
+            if(value < valueMid)
+                keySup = keyMid;
+            else
+                keyInf = keyMid;
+            
+            //qDebug() << keyInf << ", " << keySup;
+            
+        }while(keySup - keyInf > 1);
+        
+        float valueInf = map.value(keyInf);
+        float valueSup = map.value(keySup);
+        float prop = (value - valueInf) / (valueSup - valueInf);
+        float key = keyInf + prop * (keySup - keyInf);
+        
+        //qDebug() << key;
+        
+        return key;
+    }
+    
+    
+    // ---
+    
+    /*for(QMap<float, float>::const_iterator it = aMap.begin(); it != aMap.end(); ++it)
     {
         if(it.value() > value)
         {
@@ -174,7 +217,9 @@ float map_interpolate_key_for_value(const float value, const QMap<float, float>&
             return k;
         }
     }
-    return 0;
+    return 0;*/
+    
+    // ----
     
     /*QMap<float, float>::const_iterator under = aMap.begin();
     QMap<float, float>::const_iterator above = aMap.begin();
@@ -225,10 +270,32 @@ float map_interpolate_key_for_value(const float value, const QMap<float, float>&
     return k;*/
 }
 
-float map_interpolate_value_for_key(const float key, const QMap<float, float>& aMap)
+float map_interpolate_value_for_key(const float key, const QMap<float, float>& map)
 {
+    QMap<float, float>::const_iterator iter = map.find(key);
+    if(iter != map.end())
+    {
+        return map.value(key);
+    }
+    else
+    {
+        // Weird but exact :
+        QMap<float, float>::const_iterator iterAfter = map.lowerBound(key);
+        QMap<float, float>::const_iterator iterBefore = iterAfter - 1;
+        if(iterBefore != map.begin())
+        {
+            float valueBefore = iterBefore.value();
+            float valueAfter = iterAfter.value();
+            return valueBefore + (valueAfter - valueBefore) / 2;
+        }
+        else
+        {
+            return iterAfter.value();
+        }
+    }
+    
     // method 1
-    for(QMap<float, float>::const_iterator it = aMap.begin(); it != aMap.end(); ++it)
+    /*for(QMap<float, float>::const_iterator it = aMap.begin(); it != aMap.end(); ++it)
     {
         if(it.key() > key)
         {
@@ -241,7 +308,7 @@ float map_interpolate_value_for_key(const float key, const QMap<float, float>& a
             float v = v1 + (v2 - v1) * (key - k1) / (k2 - k1);
             return v;
         }
-    }
+    }*/
     
     // method 2 : dichotomie ?
     /*std::pair<QMap<float, float>::const_iterator, QMap<float, float>::const_iterator> range = aMap.equal_range(key);

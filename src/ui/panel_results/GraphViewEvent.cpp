@@ -244,8 +244,7 @@ void GraphViewEvent::refresh()
                 mGraph->addCurve(curve);
                 
                 mGraph->setRangeX(0, 100);
-                mGraph->setRangeY(vector_min_value(curve.mDataVector),
-                                  vector_max_value(curve.mDataVector));
+                mGraph->setRangeY(-1, 1);
             }
         }
     }

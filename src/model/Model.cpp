@@ -140,12 +140,12 @@ Model* Model::fromJson(const QJsonObject& json)
         // Link des events / contraintes d'event
         for(int j=0; j<model->mEventConstraints.size(); ++j)
         {
-            if(model->mEventConstraints[j].mEventFromId == eventId)
+            if(model->mEventConstraints[j].mFromId == eventId)
             {
                 model->mEventConstraints[j].mEventFrom = &(model->mEvents[i]);
                 model->mEvents[i].mConstraintsFwd.append(&(model->mEventConstraints[j]));
             }
-            else if(model->mEventConstraints[j].mEventToId == eventId)
+            else if(model->mEventConstraints[j].mToId == eventId)
             {
                 model->mEventConstraints[j].mEventTo = &(model->mEvents[i]);
                 model->mEvents[i].mConstraintsBwd.append(&(model->mEventConstraints[j]));
@@ -158,12 +158,12 @@ Model* Model::fromJson(const QJsonObject& json)
         int phaseId = model->mPhases[i].mId;
         for(int j=0; j<model->mPhaseConstraints.size(); ++j)
         {
-            if(model->mPhaseConstraints[j].mPhaseFromId == phaseId)
+            if(model->mPhaseConstraints[j].mFromId == phaseId)
             {
                 model->mPhaseConstraints[j].mPhaseFrom = &(model->mPhases[i]);
                 model->mPhases[i].mConstraintsFwd.append(&(model->mPhaseConstraints[j]));
             }
-            else if(model->mPhaseConstraints[j].mPhaseToId == phaseId)
+            else if(model->mPhaseConstraints[j].mToId == phaseId)
             {
                 model->mPhaseConstraints[j].mPhaseTo = &(model->mPhases[i]);
                 model->mPhases[i].mConstraintsBwd.append(&(model->mPhaseConstraints[j]));

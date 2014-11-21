@@ -191,6 +191,7 @@ QMap<float, float> normalize_map(const QMap<float, float>& aMap);
 QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const QMap<float, float>& mapWithTargetArea);
 QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const float targetArea);
 float map_interpolate_key_for_value(const float value, const QMap<float, float>& aMap);
+float map_interpolate_value_for_key(const float key, const QMap<float, float>& aMap);
 QMap<float, float> vector_to_indexed_map(const QList<float>& aVector, const float minKey = 0, const float maxKey = 0);
 QList<float> vector_shift_values_by(const QList<float>& aVector, const float v);
 QList<float> sample_vector(const QList<float>& aVector, const int numValues);

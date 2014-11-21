@@ -96,11 +96,13 @@ public:
     //void updatePhaseEyed(int phaseId, bool eyed);
     
     void createEventConstraint(int eventFromId, int eventToId);
+    void deleteEventConstraint(int constraintId);
     bool isEventConstraintAllowed(const QJsonObject& eventFrom, const QJsonObject& eventTo);
     void updateEventConstraint(int constraintId);
     int getUnusedEventConstraintId(const QJsonArray& constraints);
     
     void createPhaseConstraint(int phaseFromId, int phaseToId);
+    void deletePhaseConstraint(int constraintId);
     bool isPhaseConstraintAllowed(const QJsonObject& phaseFrom, const QJsonObject& phaseTo);
     void updatePhaseConstraint(int constraintId);
     int getUnusedPhaseConstraintId(const QJsonArray& constraints);

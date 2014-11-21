@@ -26,25 +26,18 @@ PhaseItem::~PhaseItem()
 #pragma mark Phase
 QJsonObject& PhaseItem::phase()
 {
-    return mPhase;
+    return mData;
 }
 
 void PhaseItem::setPhase(const QJsonObject& phase)
 {
-    mPhase = phase;
+    mData = phase;
     
-    setSelected(mPhase[STATE_PHASE_IS_SELECTED].toBool());
-    setPos(mPhase[STATE_PHASE_ITEM_X].toDouble(),
-           mPhase[STATE_PHASE_ITEM_Y].toDouble());
+    setSelected(mData[STATE_IS_SELECTED].toBool());
+    setPos(mData[STATE_ITEM_X].toDouble(),
+           mData[STATE_ITEM_Y].toDouble());
     
     update();
-}
-
-#pragma mark Check state
-void PhaseItem::stateChanged(bool checked)
-{
-    Project* project = MainWindow::getInstance()->getProject();
-    //project->updateEventsPhase(mPhase[STATE_PHASE_ID].toInt(), checked);
 }
 
 void PhaseItem::setState(Qt::CheckState state)
@@ -67,7 +60,7 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
         else if(mState == Qt::Checked) mState = Qt::Unchecked;
         else if(mState == Qt::Unchecked) mState = Qt::Checked;
         
-        MainWindow::getInstance()->getProject()->updatePhaseEvents(mPhase[STATE_PHASE_ID].toInt(), mState);
+        MainWindow::getInstance()->getProject()->updatePhaseEvents(mData[STATE_ID].toInt(), mState);
         
         update();
         if(scene())
@@ -93,36 +86,11 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
     }
 }
 
-void PhaseItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
+void PhaseItem::updateItemPosition(const QPointF& pos)
 {
-    if(checkRect().contains(e->pos()) || eyeRect().contains(e->pos()))
-    {
-        e->ignore();
-    }
-    else
-    {
-        mPhase[STATE_PHASE_ITEM_X] = pos().x();
-        mPhase[STATE_PHASE_ITEM_Y] = pos().y();
-        
-        AbstractItem::mouseReleaseEvent(e);
-    }
+    mData[STATE_ITEM_X] = pos.x();
+    mData[STATE_ITEM_Y] = pos.y();
 }
-
-void PhaseItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
-{
-    if(checkRect().contains(e->pos()) || eyeRect().contains(e->pos()))
-    {
-        e->ignore();
-    }
-    else
-    {
-        mPhase[STATE_PHASE_ITEM_X] = pos().x();
-        mPhase[STATE_PHASE_ITEM_Y] = pos().y();
-        
-        AbstractItem::mouseReleaseEvent(e);
-    }
-}
-
 
 QRectF PhaseItem::boundingRect() const
 {
@@ -134,7 +102,7 @@ QRectF PhaseItem::boundingRect() const
         h = mTitleHeight + 2*mBorderWidth + mEltsMargin + events.size() * (mEltsHeight + mEltsMargin);
     
     QFont font = qApp->font();
-    QString name = mPhase[STATE_PHASE_NAME].toString();
+    QString name = mData[STATE_NAME].toString();
     QFontMetrics metrics(font);
     int nw = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin + 2*mTitleHeight;
     w = (nw > w) ? nw : w;
@@ -145,7 +113,7 @@ QRectF PhaseItem::boundingRect() const
     for(int i=0; i<events.size(); ++i)
     {
         QJsonObject event = events[i].toObject();
-        name = event[STATE_EVENT_NAME].toString();
+        name = event[STATE_NAME].toString();
         nw = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin;
         w = (nw > w) ? nw : w;
     }
@@ -163,9 +131,9 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     QRectF rect = boundingRect();
     int rounded = 15;
     
-    QColor phaseColor = QColor(mPhase[STATE_PHASE_RED].toInt(),
-                               mPhase[STATE_PHASE_GREEN].toInt(),
-                               mPhase[STATE_PHASE_BLUE].toInt());
+    QColor phaseColor = QColor(mData[STATE_COLOR_RED].toInt(),
+                               mData[STATE_COLOR_GREEN].toInt(),
+                               mData[STATE_COLOR_BLUE].toInt());
     QColor fontColor = getContrastedColor(phaseColor);
     
     painter->setPen(Qt::NoPen);
@@ -180,7 +148,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     QRectF eRect = eyeRect();
     painter->setBrush(Qt::white);
     painter->setPen(Qt::black);
-    painter->drawRect(eRect);
+    painter->drawRoundedRect(eRect, 10, 10);
     if(mEyeActivated)
     {
         QPixmap eye(":eye.png");
@@ -196,7 +164,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     QFont font = qApp->font();
     painter->setFont(font);
     QFontMetrics metrics(font);
-    QString name = mPhase[STATE_PHASE_NAME].toString();
+    QString name = mData[STATE_NAME].toString();
     name = metrics.elidedText(name, Qt::ElideRight, tr.width());
     painter->setPen(fontColor);
     painter->drawText(tr, Qt::AlignCenter, name);
@@ -207,11 +175,11 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
                rect.width() - 2*mBorderWidth - 2*mEltsMargin,
                mEltsHeight);
     
-    Phase::TauType tauType = (Phase::TauType)mPhase[STATE_PHASE_TAU_TYPE].toInt();
+    Phase::TauType tauType = (Phase::TauType)mData[STATE_PHASE_TAU_TYPE].toInt();
     if(tauType == Phase::eTauRange)
     {
-        float tauMin = mPhase[STATE_PHASE_TAU_MIN].toDouble();
-        float tauMax = mPhase[STATE_PHASE_TAU_MAX].toDouble();
+        float tauMin = mData[STATE_PHASE_TAU_MIN].toDouble();
+        float tauMax = mData[STATE_PHASE_TAU_MAX].toDouble();
         
         QString tau = QString::number(tauMin) +
         " < " + QObject::tr("Duration") + " < " +
@@ -233,15 +201,15 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     for(int i=0; i<events.size(); ++i)
     {
         QJsonObject event = events[i].toObject();
-        QColor eventColor(event[STATE_EVENT_RED].toInt(),
-                          event[STATE_EVENT_GREEN].toInt(),
-                          event[STATE_EVENT_BLUE].toInt());
+        QColor eventColor(event[STATE_COLOR_RED].toInt(),
+                          event[STATE_COLOR_GREEN].toInt(),
+                          event[STATE_COLOR_BLUE].toInt());
         if(i > 0)
             r.adjust(0, dy, 0, dy);
         
         painter->fillRect(r, eventColor);
         painter->setPen(getContrastedColor(eventColor));
-        painter->drawText(r, Qt::AlignCenter, event[STATE_EVENT_NAME].toString());
+        painter->drawText(r, Qt::AlignCenter, event[STATE_NAME].toString());
     }
     
     // Border
@@ -258,7 +226,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
 QJsonArray PhaseItem::getEvents() const
 {
-    QString phaseId = QString::number(mPhase[STATE_PHASE_ID].toInt());
+    QString phaseId = QString::number(mData[STATE_ID].toInt());
     QJsonObject state = MainWindow::getInstance()->getProject()->state();
     QJsonArray allEvents = state[STATE_EVENTS].toArray();
     QJsonArray events;

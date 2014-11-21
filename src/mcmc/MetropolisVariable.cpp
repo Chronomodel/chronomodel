@@ -55,8 +55,6 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
     // Result map
     QMap<float, float> data;
     
-#if USE_FFT
-    
     // Init data grid
     
     float delta = 1.f;
@@ -80,6 +78,8 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
         data[t_under] += contrib_under;
         data[t_upper] += contrib_upper;
     }
+  
+#if USE_FFT
     
     // Variables
     
@@ -134,9 +134,9 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
         float t = tmin - delta * deltaBefore + i*delta;
         if(data.find(t) == data.end())
         {
-            qDebug() << "Data not found at : " << t;
+            qDebug() << "FFT Error : Data not found at : " << t;
         }
-        input[i] = data[t]; // * sinf(3.141592f * i / (float)inputSize);
+        input[i] = data[t];
     }
 		
     
@@ -164,17 +164,14 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
         }
 		data[t] = input[i];
     }
-   
-#else
     
-    for(int i=0; i<(int)dataSrc.size(); ++i)
-    {
-        float x = floor(dataSrc[i]);
-        if(data.find(x) == data.end())
-            data[x] = 1;
-        else
-            data[x] = data[x] + 1;
-    }
+    // Remove padding
+    
+    for(int t=tmin-delta; t >= tmin - delta * deltaBefore; t -= delta)
+        data.remove(t);
+    
+    for(int t=tmax; t < tmax + delta * deltaAfter; t += delta)
+        data.remove(t);
     
 #endif
 
@@ -218,7 +215,7 @@ void MetropolisVariable::generateCredibility(const QList<Chain>& chains, int thr
     if(!mHisto.isEmpty())
     {
         mThreshold = threshold;
-        mCredibility = credibilityForTrace(fullRunTrace(chains), threshold);
+        mCredibility = credibilityForTrace(fullRunTrace(chains), threshold, mExactCredibilityThreshold);
         
         // No need to have HPD for al chains !
         //mChainsHPD.clear();
@@ -246,20 +243,24 @@ void MetropolisVariable::generateCorrelations(const QList<Chain>& chains)
             float sum0 = 0;
             float sum1 = 0;
             float sum2 = 0;
+            
             for(float i=0; i<n-h; ++i)
             {
-                sum0 += trace[i] * trace[i];
                 sum1 += trace[i] * trace[i + h];
+            }
+            for(float i=0; i<n; ++i)
+            {
+                sum0 += trace[i] * trace[i];
                 sum2 += trace[i];
             }
             float s0 = sum0 / n;
             float s = sum1 / (n-h);
             float m = sum2 / n;
-            float result = (s -m*m) / (s0 -m*m);
+            float result = (s - m*m) / (s0 - m*m);
             
             results.append(result);
         }
-        // Correlation ajoutée à la liste (une corbe de corrélation par chaine)
+        // Correlation ajoutée à la liste (une courbe de corrélation par chaine)
         mCorrelations.append(results);
     }
 }
@@ -411,7 +412,7 @@ Quartiles MetropolisVariable::quartilesForTrace(const QVector<float>& trace)
     return quartiles;
 }
 
-QPair<float, float> MetropolisVariable::credibilityForTrace(const QVector<float>& trace, int threshold)
+QPair<float, float> MetropolisVariable::credibilityForTrace(const QVector<float>& trace, int threshold, float& exactThresholdResult)
 {
     QPair<float, float> credibility;
     
@@ -419,6 +420,7 @@ QPair<float, float> MetropolisVariable::credibilityForTrace(const QVector<float>
     qSort(sorted);
     
     int numToRemove = floorf((float)sorted.size() * (1.f - (float)threshold / 100.f));
+    exactThresholdResult = ((float)sorted.size() - (float)numToRemove) / (float)sorted.size();
     int removed = 0;
     
     int leftIndex = 0;
@@ -446,7 +448,8 @@ QString MetropolisVariable::resultsText() const
     
     int precision = 0;
     
-    result += "Max : " + QString::number(mResults.max, 'f', precision) + "   ";
+    // Max Y is useless :
+    //result += "Max : " + QString::number(mResults.max, 'f', precision) + "   ";
     result += "Mode : " + QString::number(mResults.mode, 'f', precision) + "   ";
     result += "Mean : " + QString::number(mResults.mean, 'f', precision) + "   ";
     result += "Std deviation : " + QString::number(mResults.stddev, 'f', precision) + "\n";
@@ -454,7 +457,7 @@ QString MetropolisVariable::resultsText() const
     result += "Q2 (Median) : " + QString::number(mResults.quartiles.Q2, 'f', precision) + "   ";
     result += "Q3 : " + QString::number(mResults.quartiles.Q3, 'f', precision) + "\n";
     result += "HPD Intervals (" + QString::number(mThreshold) + "%) : " + getHPDText(mHPD) + "\n";
-    result += "Credibility Interval (" + QString::number(mThreshold) + "%) : [" + QString::number(mCredibility.first, 'f', precision) + ", " + QString::number(mCredibility.second, 'f', precision) + "]\n";
+    result += "Credibility Interval (" + QString::number(mExactCredibilityThreshold * 100.f, 'f', 2) + "%) : [" + QString::number(mCredibility.first, 'f', precision) + ", " + QString::number(mCredibility.second, 'f', precision) + "]\n";
     
     /*for(int i = 0; i<mChainsResults.size(); ++i)
     {

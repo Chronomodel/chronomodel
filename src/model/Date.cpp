@@ -5,6 +5,7 @@
 #include "PluginManager.h"
 #include "../PluginAbstract.h"
 #include "Painting.h"
+#include "ModelUtilities.h"
 #include <QDebug>
 
 
@@ -23,6 +24,7 @@ void Date::init()
 {
     mId = 0;
     mMethod = eMHIndependant;
+    mDelta = 0;
     mDeltaType = eDeltaFixed;
     mDeltaFixed = 0;
     mDeltaMin = 0;
@@ -90,8 +92,8 @@ Date Date::fromJson(const QJsonObject& json)
     
     if(!json.isEmpty())
     {
-        date.mId = json[STATE_DATE_ID].toInt();
-        date.mName = json[STATE_DATE_NAME].toString();
+        date.mId = json[STATE_ID].toInt();
+        date.mName = json[STATE_NAME].toString();
         date.mData = json[STATE_DATE_DATA].toObject();
         date.mMethod = (DataMethod)json[STATE_DATE_METHOD].toInt();
         
@@ -103,6 +105,8 @@ Date Date::fromJson(const QJsonObject& json)
         date.mDeltaError = json[STATE_DATE_DELTA_ERROR].toDouble();
         
         date.mPlugin = PluginManager::getPluginFromId(json[STATE_DATE_PLUGIN_ID].toString());
+        
+        date.mTheta.mProposal = ModelUtilities::getDataMethodText(date.mMethod);
     }
     
     return date;
@@ -111,8 +115,8 @@ Date Date::fromJson(const QJsonObject& json)
 QJsonObject Date::toJson() const
 {
     QJsonObject date;
-    date[STATE_DATE_ID] = mId;
-    date[STATE_DATE_NAME] = mName;
+    date[STATE_ID] = mId;
+    date[STATE_NAME] = mName;
     date[STATE_DATE_DATA] = mData;
     date[STATE_DATE_PLUGIN_ID] = mPlugin->getId();
     date[STATE_DATE_METHOD] = mMethod;
@@ -169,49 +173,22 @@ void Date::calibrate(const float& tmin, const float& tmax, const float& step)
     
     if(mSubDates.size() == 0)
     {
-        mCalibration[tmin] = getLikelyhood(tmin);
-        mRepartition[tmin] = mCalibration[tmin];
+        float lastRepVal = 0.f;
         
         for(int t=tmin; t<=tmax; t += step)
         {
             float v = getLikelyhood(t);
             mCalibration[t] = v;
-            mRepartition[t] = mRepartition[t-1] + v;
+            
+            float repVal = lastRepVal + v;
+            mRepartition[t] = repVal;
+            lastRepVal = repVal;
         }
     }
     else
     {
-        for(int i=0; i<mSubDates.size(); ++i)
-        {
-            mSubDates[i]->calibrate(tmin, tmax, step);
-        }
-        
-        float v = 1.f;
-        for(int i=0; i<mSubDates.size(); ++i)
-            v *= mSubDates[i]->getLikelyhoodFromCalib(tmin);
-        mCalibration[tmin] = v;
-        mRepartition[tmin] = mCalibration[tmin];
-        
-        for(int t=tmin+1; t<=tmax; ++t)
-        {
-            v = 1.f;
-            for(int i=0; i<mSubDates.size(); ++i)
-                v *= mSubDates[i]->getLikelyhoodFromCalib(t);
-                
-            mCalibration[t] = v;
-            mRepartition[t] = mRepartition[t-1] + v;
-        }
-        
-        for(int i=tmin+1; i<=tmax; ++i)
-        {
-            float v = getLikelyhood(i);
-            mCalibration[i] = v;
-            mRepartition[i] = mRepartition[i-1] + v;
-        }
+        // TODO
     }
-    
-    //mCalibration = QMap<float, float>(normalize_map(mCalibration));
-    mRepartition = QMap<float, float>(normalize_map(mRepartition));
     
     GraphView* graph = new GraphView();
     graph->setFixedSize(200, 50);

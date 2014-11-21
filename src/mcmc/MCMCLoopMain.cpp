@@ -318,7 +318,7 @@ void MCMCLoopMain::initMCMC()
         mLog += ">> Phase : " + phase.mName + "\n";
         mLog += " - alpha : " + QString::number(phase.mAlpha.mX) + "\n";
         mLog += " - beta : " + QString::number(phase.mBeta.mX) + "\n";
-        mLog += " - tau : " + QString::number(phase.mTau.mX) + "\n";
+        mLog += " - tau : " + QString::number(phase.mTau) + "\n";
     }
     qDebug() << mLog;
 }
@@ -327,6 +327,8 @@ void MCMCLoopMain::update()
 {
     QList<Event>& events = mModel->mEvents;
     QList<Phase>& phases = mModel->mPhases;
+    QList<PhaseConstraint>& phasesConstraints = mModel->mPhaseConstraints;
+    
     double t_min = mModel->mSettings.mTmin;
     double t_max = mModel->mSettings.mTmax;
 
@@ -379,6 +381,13 @@ void MCMCLoopMain::update()
         phases[i].update(t_min, t_max);
         if(doMemo)
             phases[i].memoAll();
+    }
+    
+    //--------------------- Update Phases constraints -----------------------------------------
+    
+    for(int i=0; i<phasesConstraints.size(); ++i)
+    {
+        phasesConstraints[i].update();
     }
 }
 
@@ -471,15 +480,12 @@ void MCMCLoopMain::finalize()
             
             date.mTheta.generateHistos(mChains, tmin, tmax);
             date.mSigma.generateHistos(mChains, 0, tmax - tmin);
-            //date.mDelta.generateHistos(mChains, tmin, tmax);
             
             date.mTheta.generateCorrelations(mChains);
             date.mSigma.generateCorrelations(mChains);
-            //date.mDelta.generateCorrelations(mChains);
             
             date.mTheta.generateResults(mChains, tmin, tmax);
             date.mSigma.generateResults(mChains, tmin, tmax);
-            //date.mDelta.generateResults(mChains, tmin, tmax);
         }
     }
     
@@ -489,15 +495,12 @@ void MCMCLoopMain::finalize()
         
         phase.mAlpha.generateHistos(mChains, tmin, tmax);
         phase.mBeta.generateHistos(mChains, tmin, tmax);
-        phase.mTau.generateHistos(mChains, tmin, tmax);
         
         phase.mAlpha.generateCorrelations(mChains);
         phase.mBeta.generateCorrelations(mChains);
-        phase.mTau.generateCorrelations(mChains);
         
         phase.mAlpha.generateResults(mChains, tmin, tmax);
         phase.mBeta.generateResults(mChains, tmin, tmax);
-        //phase.mTau.generateResults(mChains, tmin, tmax);
     }
 }
 

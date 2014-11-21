@@ -62,11 +62,11 @@ void AbstractItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 
 void AbstractItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
 {
-    // Call this first to ensure correct item manipulation :
-    QGraphicsItem::mouseReleaseEvent(e);
     setZValue(1.);
     mScene->itemReleased(this, e);
+    // Must be changed AFTER "itemReleased" because used by this function :
     mMoving = false;
+    QGraphicsItem::mouseReleaseEvent(e);
 }
 
 void AbstractItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
@@ -77,9 +77,8 @@ void AbstractItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
 
 void AbstractItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 {
-    QGraphicsItem::mouseMoveEvent(e);
     mMoving = true;
-    mScene->itemMoved(this, e);
+    QGraphicsItem::mouseMoveEvent(e);
 }
 
 void AbstractItem::hoverEnterEvent(QGraphicsSceneHoverEvent* e)
@@ -92,5 +91,32 @@ void AbstractItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* e)
 {
     mScene->itemLeaved(this, e);
     QGraphicsItem::hoverLeaveEvent(e);
+}
+
+QVariant AbstractItem::itemChange(GraphicsItemChange change, const QVariant& value)
+{
+    if(change == ItemPositionChange && scene())
+    {
+        // value is the new position.
+        QPointF newPos = value.toPointF();
+        updateItemPosition(newPos);
+        
+        // Save item position in project state : constraints need it to update their position.
+        // Dot not save this as an undo command and don't notify views for update
+        //mScene->sendUpdateProject(tr("item moved"), false, false);
+        mScene->updateConstraintsPos(this, newPos);
+        
+        return newPos;
+        
+        // Migth be useful one day...
+        /*QRectF rect = scene()->sceneRect();
+        if (!rect.contains(newPos)) {
+            // Keep the item inside the scene rect.
+            newPos.setX(qMin(rect.right(), qMax(newPos.x(), rect.left())));
+            newPos.setY(qMin(rect.bottom(), qMax(newPos.y(), rect.top())));
+            return newPos;
+        }*/
+    }
+    return QGraphicsItem::itemChange(change, value);
 }
 

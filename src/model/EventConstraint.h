@@ -1,24 +1,14 @@
 #ifndef EVENTCONSTRAINT_H
 #define EVENTCONSTRAINT_H
 
-#include <QJsonObject>
+#include "Constraint.h"
 
 class Event;
 
-#define STATE_EVENT_CONSTRAINT_ID "id"
-#define STATE_EVENT_CONSTRAINT_BWD_ID "bwd_id"
-#define STATE_EVENT_CONSTRAINT_FWD_ID "fwd_id"
 
-
-class EventConstraint
+class EventConstraint: public Constraint
 {
 public:
-    enum PhiType{
-        ePhiUnknown = 0,
-        ePhiRange = 1,
-        ePhiFixed = 2
-    };
-    
     EventConstraint();
     EventConstraint(const EventConstraint& ec);
     EventConstraint& operator=(const EventConstraint& ec);
@@ -29,10 +19,6 @@ public:
     QJsonObject toJson() const;
     
 public:
-    int mId;
-    int mEventFromId;
-    int mEventToId;
-    
     Event* mEventFrom;
     Event* mEventTo;
 };

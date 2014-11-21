@@ -17,23 +17,19 @@ public:
     void setPhase(const QJsonObject& phase);
     
     void setState(Qt::CheckState state);
+    
+    virtual void updateItemPosition(const QPointF& pos);
 
 protected:
     QRectF boundingRect() const;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
     void mousePressEvent(QGraphicsSceneMouseEvent* e);
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent* e);
-    void mouseMoveEvent(QGraphicsSceneMouseEvent* e);
     
     QRectF checkRect() const;
     QRectF eyeRect() const;
     QJsonArray getEvents() const;
     
-private slots:
-    void stateChanged(bool checked);
-    
 public:
-    QJsonObject mPhase;
     Qt::CheckState mState;
     bool mEyeActivated;
 };

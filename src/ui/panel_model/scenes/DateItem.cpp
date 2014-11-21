@@ -77,7 +77,7 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     painter->setFont(font);
     
     painter->setPen(Qt::black);
-    painter->drawText(r.adjusted(0, 0, 0, -r.height()/2), Qt::AlignCenter, mDate[STATE_DATE_NAME].toString());
+    painter->drawText(r.adjusted(0, 0, 0, -r.height()/2), Qt::AlignCenter, mDate[STATE_NAME].toString());
     
     painter->drawPixmap(r.adjusted(0, r.height()/2, 0, 0),
                         mCalibThumb,

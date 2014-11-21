@@ -14,6 +14,8 @@ public:
     void setMergeable(bool mergeable);
     virtual void setGreyedOut(bool greyedOut);
     
+    virtual void updateItemPosition(const QPointF& pos) = 0;
+    
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent* e);
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent* e);
@@ -21,8 +23,10 @@ protected:
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* e);
     virtual void hoverEnterEvent(QGraphicsSceneHoverEvent* e);
     virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent* e);
+    virtual QVariant itemChange(GraphicsItemChange change, const QVariant& value);
     
 public:
+    QJsonObject mData;
     AbstractScene* mScene;
     
     float mBorderWidth;
