@@ -421,23 +421,48 @@ QPair<float, float> MetropolisVariable::credibilityForTrace(const QVector<float>
     
     int numToRemove = floorf((float)sorted.size() * (1.f - (float)threshold / 100.f));
     exactThresholdResult = ((float)sorted.size() - (float)numToRemove) / (float)sorted.size();
-    int removed = 0;
     
+    /*int removed = 0;
     int leftIndex = 0;
     int rightIndex = sorted.size() - 1;
+    QString lastDecision = "left";
     
     while(removed < numToRemove)
     {
         float diffLeft = sorted[leftIndex+1] - sorted[leftIndex];
         float diffRight = sorted[rightIndex] - sorted[rightIndex - 1];
-        if(diffLeft > diffRight)
+        if(diffLeft == diffRight)
+        {
+            rightIndex -= 1;
+            leftIndex += 1;
+            std::cout << "symetric" << std::endl;
+        }
+        else if(diffLeft > diffRight)
             leftIndex += 1;
         else
             rightIndex -= 1;
         ++removed;
     }
     credibility.first = sorted[leftIndex];
-    credibility.second = sorted[rightIndex];
+    credibility.second = sorted[rightIndex];*/
+    
+    
+    int k = numToRemove;
+    int n = sorted.size();
+    float lmin = 999999999;
+    int foundJ = 0;
+    for(int j=0; j<k-1; ++j)
+    {
+        float l = sorted[n - k + j + 1] - sorted[j];
+        if(l < lmin)
+        {
+            foundJ = j;
+            lmin = l;
+        }
+    }
+    
+    credibility.first = sorted[foundJ];
+    credibility.second = sorted[n - k + foundJ + 1];
     
     return credibility;
 }
