@@ -11,53 +11,51 @@
 #PRO_PATH=$$PWD
 #_PRO_FILE_PWD_
 PRO_PATH=$$_PRO_FILE_PWD_
-message($$PRO_PATH)
+#message($$PRO_PATH)
 
 TARGET = Chronomodel
 TEMPLATE = app
 
 # Config must use C++ 11 for random number generator
 CONFIG += c++11
+
+
 CONFIG(debug, debug|release) {
-    DESTDIR = $$PRO_PATH/build/debug
-    OBJECTS_DIR = $$PRO_PATH/build/debug/obj
-    MOC_DIR = $$PRO_PATH/build/debug/moc
-    RCC_DIR = $$PRO_PATH/build/debug/rcc
+	DESTDIR = build/debug
+	OBJECTS_DIR = build/debug/obj
+	MOC_DIR = build/debug/moc
+	RCC_DIR = build/debug/rcc
 } else {
-    DESTDIR = $$PRO_PATH/build/release
-    OBJECTS_DIR = $$PRO_PATH/build/release/obj
-    MOC_DIR = $$PRO_PATH/build/release/moc
-    RCC_DIR = $$PRO_PATH/build/release/rcc
+	DESTDIR = build/release
+	OBJECTS_DIR = build/release/obj
+	MOC_DIR = build/release/moc
+	RCC_DIR = build/release/rcc
 }
+
 
 # Qt modules (must be deployed along with the application
 QT += core gui widgets svg
 
 # Output directories
-DESTDIR = build
+#DESTDIR = deploy/mac
+#OBJECTS_DIR = build/obj
+#MOC_DIR = build/moc
+#RCC_DIR = build/rcc
 
 
 
 # Resource file (for images)
-RESOURCES = Chronomodel.qrc
+RESOURCES = $$PRO_PATH/Chronomodel.qrc
 
 # Resource file (Windows only)
-RC_FILE = Chronomodel.rc
+RC_FILE = $$PRO_PATH/Chronomodel.rc
 
 # Icon file
-ICON = icon/Chronomodel.icns
+ICON = $$PRO_PATH/icon/Chronomodel.icns
 
 
 #QMAKE_MAC_SDK = "10.9"
 #QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.9
-
-
-#CONFIG(debug, debug|release) {
-#    DESTDIR = ../../Binaries/Debug
-#} else {
-#    DESTDIR = ../../Binaries/Release
-#}
-
 
 # Compilation warning flags
 
@@ -97,7 +95,7 @@ INCLUDEPATH += lib/FFTW
 macx{
     LIBS += -Llib/FFTW/mac -lfftw3f
     # this is for juce :
-    LIBS += -framework Cocoa
+    #LIBS += -framework Cocoa
 }win32{
     LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
     #LIBS += -luser32
@@ -149,7 +147,7 @@ INCLUDEPATH += src/ui/window/
 INCLUDEPATH += src/utilities/
 
 macx{
-	INCLUDEPATH += src/juce/
+	#INCLUDEPATH += src/juce/
 }
 
 #########################################
@@ -157,7 +155,7 @@ macx{
 #########################################
 
 macx{
-	HEADERS += src/juce/modules/juce_core/juce_core.h
+	#HEADERS += src/juce/modules/juce_core/juce_core.h
 }
 
 HEADERS += src/MainController.h
@@ -293,7 +291,7 @@ HEADERS += src/utilities/QtUtilities.h
 #########################################
 
 macx{
-    OBJECTIVE_SOURCES += src/juce/modules/juce_core/juce_core.mm
+    #OBJECTIVE_SOURCES += src/juce/modules/juce_core/juce_core.mm
 }win32{
     #SOURCES += src/juce/modules/juce_core/juce_core.cpp
 }

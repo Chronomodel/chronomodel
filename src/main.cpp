@@ -34,10 +34,11 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
     }
     
     QFile outFile("LogFile.log");
-    outFile.open(QIODevice::WriteOnly | QIODevice::Append);
-    
-    QTextStream textStream(&outFile);
-    textStream << txt << endl;
+    if(outFile.open(QIODevice::WriteOnly | QIODevice::Append))
+    {
+        QTextStream textStream(&outFile);
+        textStream << txt << endl;
+    }
 }
 
 

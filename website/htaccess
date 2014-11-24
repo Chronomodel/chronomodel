@@ -1,0 +1,9 @@
+#!/bin/sh
+
+#  htaccess.sh
+#  Created by Helori on 27/08/12.
+
+PUBLIC_PATH=$(dirname $0)
+echo $PUBLIC_PATH
+cp $PUBLIC_PATH/htaccess.txt $PUBLIC_PATH/.htaccess
+exit 0
