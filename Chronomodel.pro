@@ -90,6 +90,25 @@ macx{
     LIBS += -framework Cocoa
 }win32{
     LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
+    LIBS += -luser32
+    LIBS += -lpsapi
+    LIBS += -lkernel32
+LIBS += -lgdi32
+LIBS += -lwinspool
+LIBS += -lcomdlg32
+LIBS += -ladvapi32
+LIBS += -lshell32
+LIBS += -lole32
+LIBS += -loleaut32
+LIBS += -luuid
+LIBS += -lodbc32
+LIBS += -lodbccp32
+LIBS += -lcrypt32
+LIBS += -lws2_32
+LIBS += -lversion
+
+    #kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;
+#oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)
 }
 
 #########################################
