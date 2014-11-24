@@ -13,6 +13,7 @@ public:
     
     void setVertical(bool vertical);
     void setProp(const float& prop, bool sendNotification = false);
+    float getProp() const;
     void showText(const QString& text, bool show);
     
     QSize sizeHint() const;

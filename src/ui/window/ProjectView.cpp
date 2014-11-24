@@ -75,3 +75,14 @@ void ProjectView::updateLog(MCMCLoopMain& loop)
     mLogEdit->setText(loop.getLog());
 }
 
+
+
+void ProjectView::writeSettings()
+{
+    mModelView->writeSettings();
+}
+
+void ProjectView::readSettings()
+{
+    mModelView->readSettings();
+}

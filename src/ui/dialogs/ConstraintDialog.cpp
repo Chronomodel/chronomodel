@@ -63,9 +63,9 @@ void ConstraintDialog::setConstraint(const QJsonObject& constraint)
     }
     else if(mType == ePhase)
     {
-        mTypeCombo->setCurrentIndex(mConstraint[STATE_PHASE_CONSTRAINT_GAMMA_TYPE].toInt());
-        mMinEdit->setText(QString::number(mConstraint[STATE_PHASE_CONSTRAINT_GAMMA_MIN].toDouble()));
-        mMaxEdit->setText(QString::number(mConstraint[STATE_PHASE_CONSTRAINT_GAMMA_MAX].toDouble()));
+        mTypeCombo->setCurrentIndex(mConstraint[STATE_CONSTRAINT_GAMMA_TYPE].toInt());
+        mMinEdit->setText(QString::number(mConstraint[STATE_CONSTRAINT_GAMMA_MIN].toDouble()));
+        mMaxEdit->setText(QString::number(mConstraint[STATE_CONSTRAINT_GAMMA_MAX].toDouble()));
     }
     showAppropriateOptions();
 }
@@ -80,9 +80,9 @@ const QJsonObject& ConstraintDialog::constraint() const
     }
     else if(mType == ePhase)
     {
-        mConstraint[STATE_PHASE_CONSTRAINT_GAMMA_TYPE] = mTypeCombo->currentIndex();
-        mConstraint[STATE_PHASE_CONSTRAINT_GAMMA_MIN] = mMinEdit->text().toDouble();
-        mConstraint[STATE_PHASE_CONSTRAINT_GAMMA_MAX] = mMaxEdit->text().toDouble();
+        mConstraint[STATE_CONSTRAINT_GAMMA_TYPE] = mTypeCombo->currentIndex();
+        mConstraint[STATE_CONSTRAINT_GAMMA_MIN] = mMinEdit->text().toDouble();
+        mConstraint[STATE_CONSTRAINT_GAMMA_MAX] = mMaxEdit->text().toDouble();
     }
     return mConstraint;
 }

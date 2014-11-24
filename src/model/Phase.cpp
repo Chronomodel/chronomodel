@@ -40,13 +40,6 @@ void Phase::copyFrom(const Phase& phase)
     mId = phase.mId;
     mName = phase.mName;
     
-    mConstraintsFwd = phase.mConstraintsFwd;
-    mConstraintsBwd = phase.mConstraintsBwd;
-    
-    mEventsIds = phase.mEventsIds;
-    mConstraintsFwdIds = phase.mConstraintsFwdIds;
-    mConstraintsBwdIds = phase.mConstraintsBwdIds;
-    
     mAlpha = phase.mAlpha;
     mBeta = phase.mBeta;
     mTau = phase.mTau;
@@ -67,10 +60,6 @@ void Phase::copyFrom(const Phase& phase)
     mEvents = phase.mEvents;
     mConstraintsFwd = phase.mConstraintsFwd;
     mConstraintsBwd = phase.mConstraintsBwd;
-    
-    mEventsIds = phase.mEventsIds;
-    mConstraintsFwdIds = phase.mConstraintsFwdIds;
-    mConstraintsBwdIds = phase.mConstraintsBwdIds;
 }
 
 Phase::~Phase()
@@ -82,32 +71,17 @@ Phase::~Phase()
 Phase Phase::fromJson(const QJsonObject& json)
 {
     Phase p;
-    p.mId = json[STATE_PHASE_ID].toInt();
-    p.mName = json[STATE_PHASE_NAME].toString();
-    p.mColor = QColor(json[STATE_PHASE_RED].toInt(), json[STATE_PHASE_GREEN].toInt(), json[STATE_PHASE_BLUE].toInt());
-    p.mItemX = json[STATE_PHASE_ITEM_X].toDouble();
-    p.mItemY = json[STATE_PHASE_ITEM_Y].toDouble();
+    p.mId = json[STATE_ID].toInt();
+    p.mName = json[STATE_NAME].toString();
+    p.mColor = QColor(json[STATE_COLOR_RED].toInt(), json[STATE_COLOR_GREEN].toInt(), json[STATE_COLOR_BLUE].toInt());
+    p.mItemX = json[STATE_ITEM_X].toDouble();
+    p.mItemY = json[STATE_ITEM_Y].toDouble();
     p.mTauType = (Phase::TauType)json[STATE_PHASE_TAU_TYPE].toInt();
     p.mTauFixed = json[STATE_PHASE_TAU_FIXED].toDouble();
     p.mTauMin = json[STATE_PHASE_TAU_MIN].toDouble();
     p.mTauMax = json[STATE_PHASE_TAU_MAX].toDouble();
-    p.mIsSelected = json[STATE_PHASE_IS_SELECTED].toBool();
-    p.mIsCurrent = json[STATE_PHASE_IS_CURRENT].toBool();
-    
-    QString ids_str = json[STATE_PHASE_EVENTS_IDS].toString();
-    QStringList ids = ids_str.split(",");
-    for(int i=0; i<ids.size(); ++i)
-        p.mEventsIds.append(ids[i].toInt());
-    
-    ids_str = json[STATE_PHASE_CONSTRAINTS_FWD_IDS].toString();
-    ids = ids_str.split(",");
-    for(int i=0; i<ids.size(); ++i)
-        p.mConstraintsFwdIds.append(ids[i].toInt());
-    
-    ids_str = json[STATE_PHASE_CONSTRAINTS_BWD_IDS].toString();
-    ids = ids_str.split(",");
-    for(int i=0; i<ids.size(); ++i)
-        p.mConstraintsBwdIds.append(ids[i].toInt());
+    p.mIsSelected = json[STATE_IS_SELECTED].toBool();
+    p.mIsCurrent = json[STATE_IS_CURRENT].toBool();
     
     return p;
 }
@@ -116,34 +90,19 @@ QJsonObject Phase::toJson() const
 {
     QJsonObject phase;
     
-    phase[STATE_PHASE_ID] = mId;
-    phase[STATE_PHASE_NAME] = mName;
-    phase[STATE_PHASE_RED] = mColor.red();
-    phase[STATE_PHASE_GREEN] = mColor.green();
-    phase[STATE_PHASE_BLUE] = mColor.blue();
-    phase[STATE_PHASE_ITEM_X] = mItemX;
-    phase[STATE_PHASE_ITEM_Y] = mItemY;
+    phase[STATE_ID] = mId;
+    phase[STATE_NAME] = mName;
+    phase[STATE_COLOR_RED] = mColor.red();
+    phase[STATE_COLOR_GREEN] = mColor.green();
+    phase[STATE_COLOR_BLUE] = mColor.blue();
+    phase[STATE_ITEM_X] = mItemX;
+    phase[STATE_ITEM_Y] = mItemY;
     phase[STATE_PHASE_TAU_TYPE] = mTauType;
     phase[STATE_PHASE_TAU_FIXED] = mTauFixed;
     phase[STATE_PHASE_TAU_MIN] = mTauMin;
     phase[STATE_PHASE_TAU_MAX] = mTauMax;
-    phase[STATE_PHASE_IS_SELECTED] = mIsSelected;
-    phase[STATE_PHASE_IS_CURRENT] = mIsCurrent;
-    
-    QStringList ids;
-    for(int i=0; i<mEventsIds.size(); ++i)
-        ids.append(QString::number(mEventsIds[i]));
-    phase[STATE_PHASE_EVENTS_IDS] = ids.join(",");
-    
-    ids.clear();
-    for(int i=0; i<mConstraintsFwdIds.size(); ++i)
-        ids.append(QString::number(mConstraintsFwdIds[i]));
-    phase[STATE_PHASE_CONSTRAINTS_FWD_IDS] = ids.join(",");
-    
-    ids.clear();
-    for(int i=0; i<mConstraintsBwdIds.size(); ++i)
-        ids.append(QString::number(mConstraintsBwdIds[i]));
-    phase[STATE_PHASE_CONSTRAINTS_BWD_IDS] = ids.join(",");
+    phase[STATE_IS_SELECTED] = mIsSelected;
+    phase[STATE_IS_CURRENT] = mIsCurrent;
     
     return phase;
 }
@@ -284,15 +243,17 @@ float Phase::getMaxBetaPrevPhases(float tmin)
 
 void Phase::update(float tmin, float tmax)
 {
-    if(mTauType == eTauUnknown)
-        mTau.mX = Generator::randomUniform(0, tmax - tmin);
-    else if(mTauType == eTauFixed && mTauFixed != 0)
-        mTau.mX = Generator::randomUniform(0, mTauFixed);
-    else if(mTauType == eTauRange && mTauMax > mTauMin)
-        mTau.mX = Generator::randomUniform(0, mTauMax);
-    
     mAlpha.mX = getMinThetaEvents();
     mBeta.mX = getMaxThetaEvents();
+    
+    if(mTauType == eTauUnknown)
+    {
+        // Nothing to do!
+    }
+    else if(mTauType == eTauFixed && mTauFixed != 0)
+        mTau = mTauFixed;
+    else if(mTauType == eTauRange && mTauMax > mTauMin)
+        mTau = Generator::randomUniform(qMax(mTauMin, mBeta.mX - mAlpha.mX), mTauMax);
     
     
     // ----------------------------------------
@@ -313,7 +274,7 @@ void Phase::memoAll()
 {
     mAlpha.memo();
     mBeta.memo();
-    mTau.memo();
+    //mTau.memo();
 }
 
 

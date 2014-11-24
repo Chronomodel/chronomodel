@@ -94,12 +94,12 @@ mType(type)
         for(int i=0; i<events.size(); ++i)
         {
             QJsonObject event = events[i].toObject();
-            QListWidgetItem* item = new QListWidgetItem(event[STATE_EVENT_NAME].toString());
-            item->setData(0x0101, event[STATE_EVENT_NAME].toString());
+            QListWidgetItem* item = new QListWidgetItem(event[STATE_NAME].toString());
+            item->setData(0x0101, event[STATE_NAME].toString());
             item->setData(0x0103, event[STATE_EVENT_DATES].toArray().size());
-            item->setData(0x0104, event[STATE_EVENT_RED].toInt());
-            item->setData(0x0105, event[STATE_EVENT_GREEN].toInt());
-            item->setData(0x0106, event[STATE_EVENT_BLUE].toInt());
+            item->setData(0x0104, event[STATE_COLOR_RED].toInt());
+            item->setData(0x0105, event[STATE_COLOR_GREEN].toInt());
+            item->setData(0x0106, event[STATE_COLOR_BLUE].toInt());
             mList->addItem(item);
         }
     }

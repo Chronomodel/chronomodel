@@ -87,6 +87,7 @@ DEFINES += "USE_PLUGIN_AM=$${USE_PLUGIN_AM}"
 INCLUDEPATH += lib/FFTW
 macx{
     LIBS += -Llib/FFTW/mac -lfftw3f
+    # this is for juce :
     LIBS += -framework Cocoa
 }win32{
     LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
@@ -138,18 +139,21 @@ INCLUDEPATH += src/ui/widgets/
 INCLUDEPATH += src/ui/window/
 INCLUDEPATH += src/utilities/
 
-INCLUDEPATH += src/juce/
+macx{
+	INCLUDEPATH += src/juce/
+}
 
 #########################################
 # HEADERS
 #########################################
 
-#HEADERS += src/juce/JuceHeader.h
-#HEADERS += src/juce/AppConfig.h
-HEADERS += src/juce/modules/juce_core/juce_core.h
+macx{
+	HEADERS += src/juce/modules/juce_core/juce_core.h
+}
 
 HEADERS += src/MainController.h
 HEADERS += src/AppSettings.h
+HEADERS += src/StateKeys.h
 
 HEADERS += src/mcmc/Functions.h
 HEADERS += src/mcmc/Generator.h
@@ -164,6 +168,7 @@ HEADERS += src/model/Date.h
 HEADERS += src/model/Event.h
 HEADERS += src/model/EventKnown.h
 HEADERS += src/model/Phase.h
+HEADERS += src/model/Constraint.h
 HEADERS += src/model/EventConstraint.h
 HEADERS += src/model/PhaseConstraint.h
 HEADERS += src/model/ModelUtilities.h
@@ -281,7 +286,7 @@ HEADERS += src/utilities/QtUtilities.h
 macx{
     OBJECTIVE_SOURCES += src/juce/modules/juce_core/juce_core.mm
 }win32{
-    SOURCES += src/juce/modules/juce_core/juce_core.cpp
+    #SOURCES += src/juce/modules/juce_core/juce_core.cpp
 }
 
 SOURCES += src/main.cpp
@@ -301,6 +306,7 @@ SOURCES += src/model/Date.cpp
 SOURCES += src/model/Event.cpp
 SOURCES += src/model/EventKnown.cpp
 SOURCES += src/model/Phase.cpp
+SOURCES += src/model/Constraint.cpp
 SOURCES += src/model/EventConstraint.cpp
 SOURCES += src/model/PhaseConstraint.cpp
 SOURCES += src/model/ModelUtilities.cpp

@@ -34,6 +34,7 @@
 	<file alias="restore.png">resources/restore.png</file>
 	<file alias="topng.png">resources/topng.png</file>
 	<file alias="tosvg.png">resources/tosvg.png</file>
+	<file alias="eye_w.png">resources/eye_w.png</file>
 	<file alias="eye.png">resources/eye.png</file>
 	
 	<file alias="new.png">resources/new.png</file>

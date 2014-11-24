@@ -58,8 +58,9 @@ public:
     // This is not async! so be careful when calling this from views with notify = true
     void updateState(const QJsonObject& state, const QString& reason, bool notify);
     
-    // Special event for selection... too bad!
+    // Special events for selection... too bad!
     void sendEventsSelectionChanged();
+    void sendPhasesSelectionChanged();
     
     QJsonObject emptyState() const;
     QJsonObject state() const;
@@ -92,13 +93,16 @@ public:
     int getUnusedPhaseId(const QJsonArray& phases);
     void mergePhases(int phaseFromId, int phaseToId);
     void updatePhaseEvents(int phaseId, Qt::CheckState state);
+    //void updatePhaseEyed(int phaseId, bool eyed);
     
     void createEventConstraint(int eventFromId, int eventToId);
+    void deleteEventConstraint(int constraintId);
     bool isEventConstraintAllowed(const QJsonObject& eventFrom, const QJsonObject& eventTo);
     void updateEventConstraint(int constraintId);
     int getUnusedEventConstraintId(const QJsonArray& constraints);
     
     void createPhaseConstraint(int phaseFromId, int phaseToId);
+    void deletePhaseConstraint(int constraintId);
     bool isPhaseConstraintAllowed(const QJsonObject& phaseFrom, const QJsonObject& phaseTo);
     void updatePhaseConstraint(int constraintId);
     int getUnusedPhaseConstraintId(const QJsonArray& constraints);
@@ -124,6 +128,8 @@ signals:
     void currentDateChanged(const QJsonObject& date);
     void currentPhaseChanged(const QJsonObject& phase);
     void selectedEventsChanged();
+    void selectedPhasesChanged();
+    void eyedPhasesModified(const QMap<int, bool>& eyedPhases);
     
     void mcmcStarted();
     void mcmcFinished(MCMCLoopMain& loop);

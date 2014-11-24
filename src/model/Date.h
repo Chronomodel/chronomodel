@@ -2,22 +2,12 @@
 #define DATE_H
 
 #include "MHVariable.h"
+#include "StateKeys.h"
+
 #include <QMap>
 #include <QJsonObject>
 #include <QString>
 #include <QPixmap>
-
-#define STATE_DATE_ID "id"
-#define STATE_DATE_NAME "name"
-#define STATE_DATE_DATA "data"
-#define STATE_DATE_PLUGIN_ID "plugin_id"
-#define STATE_DATE_METHOD "method"
-#define STATE_DATE_DELTA_TYPE "delta_type"
-#define STATE_DATE_DELTA_FIXED "delta_fixed"
-#define STATE_DATE_DELTA_MIN "delta_min"
-#define STATE_DATE_DELTA_MAX "delta_max"
-#define STATE_DATE_DELTA_AVERAGE "delta_average"
-#define STATE_DATE_DELTA_ERROR "delta_error"
 
 class Event;
 class PluginAbstract;

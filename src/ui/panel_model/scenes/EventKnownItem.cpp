@@ -25,19 +25,19 @@ EventKnownItem::~EventKnownItem()
 
 void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
 {
-    mEvent = event;
+    mData = event;
     
     // ----------------------------------------------
     //  Update item position and selection
     // ----------------------------------------------
-    setSelected(mEvent[STATE_EVENT_IS_SELECTED].toBool());
-    setPos(mEvent[STATE_EVENT_ITEM_X].toDouble(),
-           mEvent[STATE_EVENT_ITEM_Y].toDouble());
+    setSelected(mData[STATE_IS_SELECTED].toBool());
+    setPos(mData[STATE_ITEM_X].toDouble(),
+           mData[STATE_ITEM_Y].toDouble());
     
     // ----------------------------------------------
     //  Check if item should be greyed out
     // ----------------------------------------------
-    updateGreyedOut();
+    //updateGreyedOut();
     
     // ----------------------------------------------
     //  Recreate thumb
@@ -85,7 +85,7 @@ QRectF EventKnownItem::boundingRect() const
 {
     QFont font = qApp->font();
     QFontMetrics metrics(font);
-    QString name = mEvent[STATE_EVENT_NAME].toString();
+    QString name = mData[STATE_NAME].toString();
     
     qreal w = metrics.width(name) + 2 * (mBorderWidth + mEltsMargin);
     qreal h = mTitleHeight + mThumbH + mPhasesHeight + 2*mEltsMargin;
@@ -107,9 +107,9 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     
     QRectF rect = boundingRect();
     
-    QColor eventColor = QColor(mEvent[STATE_EVENT_RED].toInt(),
-                               mEvent[STATE_EVENT_GREEN].toInt(),
-                               mEvent[STATE_EVENT_BLUE].toInt());
+    QColor eventColor = QColor(mData[STATE_COLOR_RED].toInt(),
+                               mData[STATE_COLOR_GREEN].toInt(),
+                               mData[STATE_COLOR_BLUE].toInt());
     
     painter->setPen(Qt::NoPen);
     painter->setBrush(eventColor);
@@ -136,7 +136,7 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     QFont font = qApp->font();
     painter->setFont(font);
     QFontMetrics metrics(font);
-    QString name = mEvent[STATE_EVENT_NAME].toString();
+    QString name = mData[STATE_NAME].toString();
     name = metrics.elidedText(name, Qt::ElideRight, nameRect.width());
     
     QColor frontColor = getContrastedColor(eventColor);
@@ -156,9 +156,9 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     for(int i=0; i<numPhases; ++i)
     {
         QJsonObject phase = phases[i].toObject();
-        QColor c(phase[STATE_PHASE_RED].toInt(),
-                 phase[STATE_PHASE_GREEN].toInt(),
-                 phase[STATE_PHASE_BLUE].toInt());
+        QColor c(phase[STATE_COLOR_RED].toInt(),
+                 phase[STATE_COLOR_GREEN].toInt(),
+                 phase[STATE_COLOR_BLUE].toInt());
         painter->setPen(c);
         painter->setBrush(c);
         painter->drawRect(phasesRect.x() + i*w, phasesRect.y(), w, phasesRect.height());

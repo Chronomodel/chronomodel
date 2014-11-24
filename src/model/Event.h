@@ -3,26 +3,13 @@
 
 #include "Date.h"
 #include "MHVariable.h"
+#include "StateKeys.h"
 
 #include <QMap>
 #include <QColor>
 
 class Phase;
 class EventConstraint;
-
-#define STATE_EVENT_TYPE "type"
-#define STATE_EVENT_ID "id"
-#define STATE_EVENT_NAME "name"
-#define STATE_EVENT_RED "color_red"
-#define STATE_EVENT_GREEN "color_green"
-#define STATE_EVENT_BLUE "color_blue"
-#define STATE_EVENT_METHOD "method"
-#define STATE_EVENT_ITEM_X "item_x"
-#define STATE_EVENT_ITEM_Y "item_y"
-#define STATE_EVENT_DATES "dates"
-#define STATE_EVENT_IS_SELECTED "is_selected"
-#define STATE_EVENT_IS_CURRENT "is_current"
-#define STATE_EVENT_PHASE_IDS "phase_ids"
 
 
 class Event

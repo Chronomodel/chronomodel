@@ -40,7 +40,9 @@ public:
     void generateCorrelations(const QList<Chain>& chains);
     void generateHPD(int threshold);
     void generateCredibility(const QList<Chain>& chains, int threshold);
-    void generateResults(const QList<Chain>& chains, float tmin, float tmax);
+    
+    // Virtual because MHVariable subclass adds some information
+    virtual void generateResults(const QList<Chain>& chains, float tmin, float tmax);
 
     // -----
     // These functions do not make any calculation
@@ -63,10 +65,10 @@ public:
     
     // -----
     
-    QString resultsText() const;
+    virtual QString resultsText() const;
     
     static Quartiles quartilesForTrace(const QVector<float>& trace);
-    static QPair<float, float> credibilityForTrace(const QVector<float>& trace, int threshold);
+    static QPair<float, float> credibilityForTrace(const QVector<float>& trace, int threshold, float& exactThresholdResult);
     static QString getHPDText(const QMap<float, float>& hpd);
     static QList<QPair<float, float>> intervalsForHpd(const QMap<float, float>& hpd);
     
@@ -87,7 +89,8 @@ public:
     QMap<float, float> mHPD;
     QPair<float, float> mCredibility;
     int mThreshold;
-    //QList<QMap<float, float>> mChainsHPD;
+    
+    float mExactCredibilityThreshold;
     
     MetropolisResult mResults;
     QList<MetropolisResult> mChainsResults;

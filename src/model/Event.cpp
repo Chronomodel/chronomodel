@@ -5,6 +5,8 @@
 #include "Generator.h"
 #include "StdUtilities.h"
 #include "EventKnown.h"
+#include "ModelUtilities.h"
+#include "QtUtilities.h"
 #include <QString>
 #include <QJsonArray>
 #include <QObject>
@@ -84,24 +86,20 @@ Event Event::fromJson(const QJsonObject& json)
     Event event;
     
     event.mType = (Type)json[STATE_EVENT_TYPE].toInt();
-    event.mId = json[STATE_EVENT_ID].toInt();
-    event.mName = json[STATE_EVENT_NAME].toString();
-    event.mColor = QColor(json[STATE_EVENT_RED].toInt(),
-                          json[STATE_EVENT_GREEN].toInt(),
-                          json[STATE_EVENT_BLUE].toInt());
+    event.mId = json[STATE_ID].toInt();
+    event.mName = json[STATE_NAME].toString();
+    event.mColor = QColor(json[STATE_COLOR_RED].toInt(),
+                          json[STATE_COLOR_GREEN].toInt(),
+                          json[STATE_COLOR_BLUE].toInt());
     event.mMethod = (Method)json[STATE_EVENT_METHOD].toInt();
-    event.mItemX = json[STATE_EVENT_ITEM_X].toDouble();
-    event.mItemY = json[STATE_EVENT_ITEM_Y].toDouble();
-    event.mIsSelected = json[STATE_EVENT_IS_SELECTED].toBool();
-    event.mIsCurrent = json[STATE_EVENT_IS_CURRENT].toBool();
+    event.mItemX = json[STATE_ITEM_X].toDouble();
+    event.mItemY = json[STATE_ITEM_Y].toDouble();
+    event.mIsSelected = json[STATE_IS_SELECTED].toBool();
+    event.mIsCurrent = json[STATE_IS_CURRENT].toBool();
     
-    QString eventIdsStr = json[STATE_EVENT_PHASE_IDS].toString();
-    if(!eventIdsStr.isEmpty())
-    {
-        QStringList eventIds = eventIdsStr.split(",");
-        for(int i=0; i<eventIds.size(); ++i)
-            event.mPhasesIds.append(eventIds[i].toInt());
-    }
+    event.mTheta.mProposal = ModelUtilities::getEventMethodText(event.mMethod);
+    
+    event.mPhasesIds = stringListToIntList(json[STATE_EVENT_PHASE_IDS].toString());
     
     QJsonArray dates = json[STATE_EVENT_DATES].toArray();
     for(int j=0; j<dates.size(); ++j)
@@ -125,16 +123,16 @@ QJsonObject Event::toJson() const
     QJsonObject event;
     
     event[STATE_EVENT_TYPE] = mType;
-    event[STATE_EVENT_ID] = mId;
-    event[STATE_EVENT_NAME] = mName;
-    event[STATE_EVENT_RED] = mColor.red();
-    event[STATE_EVENT_GREEN] = mColor.green();
-    event[STATE_EVENT_BLUE] = mColor.blue();
+    event[STATE_ID] = mId;
+    event[STATE_NAME] = mName;
+    event[STATE_COLOR_RED] = mColor.red();
+    event[STATE_COLOR_GREEN] = mColor.green();
+    event[STATE_COLOR_BLUE] = mColor.blue();
     event[STATE_EVENT_METHOD] = mMethod;
-    event[STATE_EVENT_ITEM_X] = mItemX;
-    event[STATE_EVENT_ITEM_Y] = mItemY;
-    event[STATE_EVENT_IS_SELECTED] = mIsSelected;
-    event[STATE_EVENT_IS_CURRENT] = mIsCurrent;
+    event[STATE_ITEM_X] = mItemX;
+    event[STATE_ITEM_Y] = mItemY;
+    event[STATE_IS_SELECTED] = mIsSelected;
+    event[STATE_IS_CURRENT] = mIsCurrent;
     
     QString eventIdsStr;
     if(mPhasesIds.size() > 0)
@@ -194,7 +192,7 @@ float Event::getThetaMin(float defaultValue)
     {
         if(mPhases[i]->mTauType != Phase::eTauUnknown)
         {
-            float thetaMax = 0;
+            float thetaMax = defaultValue;
             for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
             {
                 Event* event = mPhases[i]->mEvents[j];
@@ -203,7 +201,7 @@ float Event::getThetaMin(float defaultValue)
                     thetaMax = qMax(event->mTheta.mX, thetaMax);
                 }
             }
-            min3 = qMax(min3, thetaMax - mPhases[i]->mTau.mX);
+            min3 = qMax(min3, thetaMax - mPhases[i]->mTau);
         }
     }
     
@@ -211,14 +209,14 @@ float Event::getThetaMin(float defaultValue)
     float min4 = defaultValue;
     for(int i=0; i<mPhases.size(); ++i)
     {
-        float thetaMax = 0;
+        float thetaMax = defaultValue;
         for(int j=0; j<mPhases[i]->mConstraintsBwd.size(); ++j)
         {
             PhaseConstraint* constraint = mPhases[i]->mConstraintsBwd[j];
             Phase* phaseFrom = constraint->mPhaseFrom;
             
             if(constraint->mGammaType != PhaseConstraint::eGammaUnknown)
-                thetaMax = qMax(phaseFrom->mBeta.mX, thetaMax + constraint->mGamma.mX);
+                thetaMax = qMax(phaseFrom->mBeta.mX + constraint->mGamma, thetaMax);
             else
                 thetaMax = qMax(phaseFrom->mBeta.mX, thetaMax);
         }
@@ -226,7 +224,7 @@ float Event::getThetaMin(float defaultValue)
     }
     
     float min_tmp1 = qMax(min1, min2);
-    float min_tmp2 = qMax(min3, min3);
+    float min_tmp2 = qMax(min3, min4);
     float min = qMax(min_tmp1, min_tmp2);
     
     return min;
@@ -257,7 +255,7 @@ float Event::getThetaMax(float defaultValue)
     {
         if(mPhases[i]->mTauType != Phase::eTauUnknown)
         {
-            float thetaMin = 0;
+            float thetaMin = defaultValue;
             for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
             {
                 Event* event = mPhases[i]->mEvents[j];
@@ -266,7 +264,7 @@ float Event::getThetaMax(float defaultValue)
                     thetaMin = qMin(event->mTheta.mX, thetaMin);
                 }
             }
-            max3 = qMin(max3, thetaMin + mPhases[i]->mTau.mX);
+            max3 = qMin(max3, thetaMin + mPhases[i]->mTau);
         }
     }
     
@@ -274,23 +272,23 @@ float Event::getThetaMax(float defaultValue)
     float max4 = defaultValue;
     for(int i=0; i<mPhases.size(); ++i)
     {
-        float thetaMin = 0;
+        float thetaMin = defaultValue;
         for(int j=0; j<mPhases[i]->mConstraintsFwd.size(); ++j)
         {
             PhaseConstraint* constraint = mPhases[i]->mConstraintsFwd[j];
             Phase* phaseTo = constraint->mPhaseTo;
             
             if(constraint->mGammaType != PhaseConstraint::eGammaUnknown)
-                thetaMin = qMax(phaseTo->mAlpha.mX, thetaMin - constraint->mGamma.mX);
+                thetaMin = qMax(phaseTo->mAlpha.mX - constraint->mGamma, thetaMin);
             else
                 thetaMin = qMax(phaseTo->mAlpha.mX, thetaMin);
         }
         max4 = qMin(max4, thetaMin);
     }
     
-    float max_tmp1 = qMax(max1, max2);
-    float max_tmp2 = qMax(max3, max3);
-    float max = qMax(max_tmp1, max_tmp2);
+    float max_tmp1 = qMin(max1, max2);
+    float max_tmp2 = qMin(max3, max4);
+    float max = qMin(max_tmp1, max_tmp2);
     
     return max;
 }
@@ -300,21 +298,24 @@ void Event::updateTheta(float tmin, float tmax)
     float min = getThetaMin(tmin);
     float max = getThetaMax(tmax);
     
+    //qDebug() << "[" << min << ", " << max << "]";
+    
     // -------------------------------------------------------------------------------------------------
     //  Evaluer theta.
     //  Le cas Wiggle est inclus ici car on utilise une formule générale.
     //  On est en "wiggle" si au moins une des mesures a un delta > 0.
     // -------------------------------------------------------------------------------------------------
     
-    float sum_p = 0;
-    float sum_t = 0;
+    float sum_p = 0.f;
+    float sum_t = 0.f;
     for(int i=0; i<mDates.size(); ++i)
     {
-        sum_t += (mDates[i].mTheta.mX + mDates[i].mDelta) / pow(mDates[i].mSigma.mX, 2);
-        sum_p += 1 / pow(mDates[i].mSigma.mX, 2);
+        float variance = (mDates[i].mSigma.mX * mDates[i].mSigma.mX);
+        sum_t += (mDates[i].mTheta.mX + mDates[i].mDelta) / variance;
+        sum_p += 1.f / variance;
     }
     float theta_avg = sum_t / sum_p;
-    float sigma = 1/sqrt(sum_p);
+    float sigma = 1.f / sqrtf(sum_p);
     
     switch(mMethod)
     {

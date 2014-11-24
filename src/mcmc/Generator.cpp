@@ -47,10 +47,10 @@ float Generator::gaussByDoubleExp(const float mean, const float sigma, const flo
     float x = (x_max + x_min) / 2;
     const float sqrt_e = sqrt(exp(1.));
     
-    float ur;
-    float rap;
+    float ur = 1;
+    float rap = 0;
     
-    do
+    while(rap < ur)
     {
         float u = randomUniform();
         
@@ -80,6 +80,7 @@ float Generator::gaussByDoubleExp(const float mean, const float sigma, const flo
             }
         }
         
+        ur = randomUniform();
         
         if(std::isinf(x))
         {
@@ -90,12 +91,20 @@ float Generator::gaussByDoubleExp(const float mean, const float sigma, const flo
         {
             if(x_min > 1)
             {
-                std::cout << "floatExp : x_min : " << x_min << std::endl;
                 rap = exp(0.5 * (x_min * x_min - x * x) + x - x_min);
+                
+                /*std::cout << "------" << std::endl;
+                std::cout << "floatExp : x_min : " << x_min << std::endl;
+                std::cout << "floatExp : min : " << min << std::endl;
+                std::cout << "floatExp : max : " << max << std::endl;
+                std::cout << "floatExp : mean : " << mean << std::endl;
+                std::cout << "floatExp : sigma : " << sigma << std::endl;
+                std::cout << "floatExp : rapport : " << rap << std::endl;
+                std::cout << "floatExp : ur : " << ur << std::endl;*/
             }
-            if(x_max < -1)
+            else if(x_max < -1)
             {
-                std::cout << "floatExp : x_max : " << x_max << std::endl;
+                //std::cout << "floatExp : x_max : " << x_max << std::endl;
                 rap = exp(0.5 * (x_max * x_max - x * x) + x_max - x);
             }
             else
@@ -103,9 +112,8 @@ float Generator::gaussByDoubleExp(const float mean, const float sigma, const flo
                 rap = exp(-0.5 * x * x + abs(x)) / sqrt_e;
             }
         }
-        ur = randomUniform();
-        
-    }while(rap < ur);
+        //ur = randomUniform();
+    }
     
     return (mean + (x * sigma));
 }

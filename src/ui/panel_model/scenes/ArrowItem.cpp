@@ -17,7 +17,8 @@ mXEnd(0),
 mYEnd(0),
 mBubbleWidth(130.f),
 mBubbleHeight(40.f),
-mEditing(false)
+mEditing(false),
+mShowDelete(false)
 {
     setZValue(-1.);
     setAcceptHoverEvents(true);
@@ -26,18 +27,36 @@ mEditing(false)
             QGraphicsItem::ItemSendsScenePositionChanges |
             QGraphicsItem::ItemSendsGeometryChanges);
     
-    setConstraint(constraint);
+    setData(constraint);
 }
 
-QJsonObject& ArrowItem::constraint()
+QJsonObject& ArrowItem::data()
 {
-    return mConstraint;
+    return mData;
 }
 
-void ArrowItem::setConstraint(const QJsonObject& c)
+void ArrowItem::setData(const QJsonObject& c)
 {
-    mConstraint = c;
+    mData = c;
     updatePosition();
+}
+
+void ArrowItem::setFrom(float x, float y)
+{
+    mXStart = x;
+    mYStart = y;
+    update();
+    if(scene())
+        scene()->update();
+}
+
+void ArrowItem::setTo(float x, float y)
+{
+    mXEnd = x;
+    mYEnd = y;
+    update();
+    if(scene())
+        scene()->update();
 }
 
 void ArrowItem::updatePosition()
@@ -47,8 +66,8 @@ void ArrowItem::updatePosition()
     
     if(mType == eEvent)
     {
-        int fromId = mConstraint[STATE_EVENT_CONSTRAINT_BWD_ID].toInt();
-        int toId = mConstraint[STATE_EVENT_CONSTRAINT_FWD_ID].toInt();
+        int fromId = mData[STATE_CONSTRAINT_BWD_ID].toInt();
+        int toId = mData[STATE_CONSTRAINT_FWD_ID].toInt();
         
         QJsonArray events = state[STATE_EVENTS].toArray();
         
@@ -58,22 +77,24 @@ void ArrowItem::updatePosition()
         for(int i=0; i<events.size(); ++i)
         {
             QJsonObject event = events[i].toObject();
-            if(event[STATE_EVENT_ID].toInt() == fromId)
+            if(event[STATE_ID].toInt() == fromId)
                 from = event;
-            if(event[STATE_EVENT_ID].toInt() == toId)
+            if(event[STATE_ID].toInt() == toId)
                 to = event;
         }
         
-        mXStart = from[STATE_EVENT_ITEM_X].toDouble();
-        mYStart = from[STATE_EVENT_ITEM_Y].toDouble();
+        mXStart = from[STATE_ITEM_X].toDouble();
+        mYStart = from[STATE_ITEM_Y].toDouble();
         
-        mXEnd = to[STATE_EVENT_ITEM_X].toDouble();
-        mYEnd = to[STATE_EVENT_ITEM_Y].toDouble();
+        mXEnd = to[STATE_ITEM_X].toDouble();
+        mYEnd = to[STATE_ITEM_Y].toDouble();
+        
+        qDebug() << "[" << mXStart << ", " << mYStart << "]" << " => " << "[" << mXEnd << ", " << mYEnd << "]";
     }
     else
     {
-        int fromId = mConstraint[STATE_PHASE_CONSTRAINT_BWD_ID].toInt();
-        int toId = mConstraint[STATE_PHASE_CONSTRAINT_FWD_ID].toInt();
+        int fromId = mData[STATE_CONSTRAINT_BWD_ID].toInt();
+        int toId = mData[STATE_CONSTRAINT_FWD_ID].toInt();
         
         QJsonArray phases = state[STATE_PHASES].toArray();
         
@@ -83,17 +104,17 @@ void ArrowItem::updatePosition()
         for(int i=0; i<phases.size(); ++i)
         {
             QJsonObject phase = phases[i].toObject();
-            if(phase[STATE_PHASE_ID].toInt() == fromId)
+            if(phase[STATE_ID].toInt() == fromId)
                 from = phase;
-            if(phase[STATE_PHASE_ID].toInt() == toId)
+            if(phase[STATE_ID].toInt() == toId)
                 to = phase;
         }
         
-        mXStart = from[STATE_PHASE_ITEM_X].toDouble();
-        mYStart = from[STATE_PHASE_ITEM_Y].toDouble();
+        mXStart = from[STATE_ITEM_X].toDouble();
+        mYStart = from[STATE_ITEM_Y].toDouble();
         
-        mXEnd = to[STATE_PHASE_ITEM_X].toDouble();
-        mYEnd = to[STATE_PHASE_ITEM_Y].toDouble();
+        mXEnd = to[STATE_ITEM_X].toDouble();
+        mYEnd = to[STATE_ITEM_Y].toDouble();
     }
 
     update();
@@ -107,15 +128,41 @@ void ArrowItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
     //QRectF r = getBubbleRect();
     //if(r.contains(e->pos()))
     {
-        mEditing = true;
-        update();
-        
         mScene->constraintDoubleClicked(this, e);
+    }
+}
+
+void ArrowItem::hoverMoveEvent(QGraphicsSceneHoverEvent* e)
+{
+    QGraphicsItem::hoverMoveEvent(e);
+    
+    if(mType == eEvent)
+    {
+        float hoverSide = 100;
+        QRectF br = boundingRect();
+        br.adjust((br.width()-hoverSide)/2,
+                  (br.height()-hoverSide)/2,
+                  -(br.width()-hoverSide)/2,
+                  -(br.height()-hoverSide)/2);
         
-        mEditing = false;
-        
-        // TODO : cannot refresh if the constraint has been deleted !
-        //update();
+        bool shouldShowDelete = br.contains(e->pos());
+        qDebug() << br;
+        qDebug() << e->pos();
+        if(shouldShowDelete != mShowDelete)
+        {
+            mShowDelete = shouldShowDelete;
+            update();
+        }
+    }
+}
+void ArrowItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* e)
+{
+    QGraphicsItem::hoverLeaveEvent(e);
+    
+    if(mShowDelete)
+    {
+        mShowDelete = false;
+        update();
     }
 }
 
@@ -141,8 +188,8 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     
     int penWidth = 1;
     QColor color = mEditing ? QColor(77, 180, 62) : QColor(0, 0, 0);
-    //if(isUnderMouse())
-     //   color = QColor(30, 50, 150);
+    if(mShowDelete)
+        color = Qt::red;
     
     painter->setPen(QPen(color, penWidth, mEditing ? Qt::DashLine : Qt::SolidLine));
     painter->drawLine(mXStart, mYStart, mXEnd, mYEnd);
@@ -167,7 +214,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     float posY1 = rect.height()/3;
     float posY2 = 2*rect.height()/3;
     
-    //EventConstraint::PhiType phiType = (EventConstraint::PhiType)mConstraint[STATE_EVENT_CONSTRAINT_PHI_TYPE].toInt();
+    //EventConstraint::PhiType phiType = (EventConstraint::PhiType)mData[STATE_EVENT_CONSTRAINT_PHI_TYPE].toInt();
     
     if(mXStart < mXEnd && mYStart > mYEnd)
     {
@@ -293,8 +340,8 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->setBrush(Qt::white);
             painter->drawRoundedRect(r, 5, 5);
             
-            float phiMin = mConstraint[STATE_EVENT_CONSTRAINT_PHI_MIN].toDouble();
-            float phiMax = mConstraint[STATE_EVENT_CONSTRAINT_PHI_MAX].toDouble();
+            float phiMin = mData[STATE_EVENT_CONSTRAINT_PHI_MIN].toDouble();
+            float phiMax = mData[STATE_EVENT_CONSTRAINT_PHI_MAX].toDouble();
             
             //painter->setPen(QColor(120, 120, 120));
             painter->drawText(r.adjusted(0, 0, 0, -r.height()/2), Qt::AlignCenter, QString::number(phiMin));
@@ -312,7 +359,7 @@ QRectF ArrowItem::getBubbleRect() const
     int w = 60;
     int h = 30;
     
-    /*switch(mConstraint->mPhiType)
+    /*switch(mData->mPhiType)
     {
         case EventConstraint::ePhiUnknown:
         {

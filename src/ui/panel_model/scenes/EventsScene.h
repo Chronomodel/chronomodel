@@ -27,6 +27,9 @@ public slots:
     void updateProject();
     void updateSelection();
     void updateHelp();
+    
+    void updateSelectedEventsFromPhases();
+    void updateGreyedOutEvents(const QMap<int, bool>& eyedPhases);
 
 public:
     void itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);
@@ -47,9 +50,6 @@ protected:
     void deleteSelectedItems();
     void createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo);
     void mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo);
-    
-private slots:
-    void setSelectedPhase(const QJsonObject& phase);
     
 signals:
     void csvDataLineDropAccepted(QList<int> rows);

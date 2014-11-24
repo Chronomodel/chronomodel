@@ -142,7 +142,7 @@ void DateDialog::setDataMethod(Date::DataMethod method)
 
 void DateDialog::setDate(const QJsonObject& date)
 {
-    mNameEdit->setText(date[STATE_DATE_NAME].toString());
+    mNameEdit->setText(date[STATE_NAME].toString());
     mMethodCombo->setCurrentIndex(date[STATE_DATE_METHOD].toInt());
     
     Date::DeltaType deltaType = (Date::DeltaType)date[STATE_DATE_DELTA_TYPE].toInt();

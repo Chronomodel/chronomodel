@@ -88,10 +88,10 @@ void PhaseDialog::setPhase(const QJsonObject& phase)
 {
     mPhase = phase;
     
-    mNameEdit->setText(mPhase[STATE_PHASE_NAME].toString());
-    mColorPicker->setColor(QColor(mPhase[STATE_PHASE_RED].toInt(),
-                                  mPhase[STATE_PHASE_GREEN].toInt(),
-                                  mPhase[STATE_PHASE_BLUE].toInt()));
+    mNameEdit->setText(mPhase[STATE_NAME].toString());
+    mColorPicker->setColor(QColor(mPhase[STATE_COLOR_RED].toInt(),
+                                  mPhase[STATE_COLOR_GREEN].toInt(),
+                                  mPhase[STATE_COLOR_BLUE].toInt()));
     mTauTypeCombo->setCurrentIndex(mPhase[STATE_PHASE_TAU_TYPE].toInt());
     mTauMinEdit->setText(mPhase[STATE_PHASE_TAU_MIN].toString());
     mTauMaxEdit->setText(mPhase[STATE_PHASE_TAU_MAX].toString());
@@ -101,10 +101,10 @@ void PhaseDialog::setPhase(const QJsonObject& phase)
 
 QJsonObject PhaseDialog::getPhase()
 {
-    mPhase[STATE_PHASE_NAME] = mNameEdit->text();
-    mPhase[STATE_PHASE_RED] = mColorPicker->getColor().red();
-    mPhase[STATE_PHASE_GREEN] = mColorPicker->getColor().green();
-    mPhase[STATE_PHASE_BLUE] = mColorPicker->getColor().blue();
+    mPhase[STATE_NAME] = mNameEdit->text();
+    mPhase[STATE_COLOR_RED] = mColorPicker->getColor().red();
+    mPhase[STATE_COLOR_GREEN] = mColorPicker->getColor().green();
+    mPhase[STATE_COLOR_BLUE] = mColorPicker->getColor().blue();
     mPhase[STATE_PHASE_TAU_TYPE] = (Phase::TauType) mTauTypeCombo->currentIndex();
     mPhase[STATE_PHASE_TAU_MIN] = mTauMinEdit->text().toFloat();
     mPhase[STATE_PHASE_TAU_MAX] = mTauMaxEdit->text().toFloat();

@@ -20,30 +20,35 @@ public:
     ArrowItem(AbstractScene* scene, Type type, const QJsonObject& constraint, QGraphicsItem* parent = 0);
     
     void updatePosition();
+    void setFrom(float x, float y);
+    void setTo(float x, float y);
 
     QRectF boundingRect() const;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e);
+    void hoverMoveEvent(QGraphicsSceneHoverEvent* event);
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent* e);
     
     QRectF getBubbleRect() const;
     
-    void setConstraint(const QJsonObject& c);
-    QJsonObject& constraint();
+    void setData(const QJsonObject& c);
+    QJsonObject& data();
     
 protected:
     Type mType;
-    QJsonObject mConstraint;
+    QJsonObject mData;
     AbstractScene* mScene;
     
-    double mXStart;
-    double mYStart;
-    double mXEnd;
-    double mYEnd;
+    float mXStart;
+    float mYStart;
+    float mXEnd;
+    float mYEnd;
     
     float mBubbleWidth;
     float mBubbleHeight;
     
     bool mEditing;
+    bool mShowDelete;
 };
 
 #endif

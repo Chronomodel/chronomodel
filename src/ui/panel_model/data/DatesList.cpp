@@ -83,7 +83,7 @@ void DatesList::handleItemDoubleClicked(QListWidgetItem* item)
 {
     if(!mEvent.isEmpty())
     {
-        MainWindow::getInstance()->getProject()->updateDate(mEvent[STATE_EVENT_ID].toInt(), row(item));
+        MainWindow::getInstance()->getProject()->updateDate(mEvent[STATE_ID].toInt(), row(item));
     }
 }
 
@@ -107,7 +107,7 @@ void DatesList::dropEvent(QDropEvent* e)
         for(int j=0; j<dates.size(); ++j)
         {
             QJsonObject date = dates[j].toObject();
-            int dateId = date[STATE_DATE_ID].toInt();
+            int dateId = date[STATE_ID].toInt();
             if(dateId == id)
             {
                 datesOrdered.append(date);

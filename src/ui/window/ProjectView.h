@@ -21,6 +21,9 @@ public:
     
     void doProjectConnections(Project* project);
     
+    void readSettings();
+    void writeSettings();
+    
 public slots:
     void updateProject();
     void showModel();

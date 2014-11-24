@@ -38,6 +38,9 @@ public:
     void doProjectConnections(Project* project);
     void showHelp(bool show);
     
+    void readSettings();
+    void writeSettings();
+    
 public slots:
     void updateProject();
     void applySettings();

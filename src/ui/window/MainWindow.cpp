@@ -394,6 +394,8 @@ void MainWindow::keyPressEvent(QKeyEvent* keyEvent)
 #pragma mark Settings
 void MainWindow::writeSettings()
 {
+    mProjectView->writeSettings();
+    
     QSettings settings;
     settings.beginGroup("MainWindow");
     
@@ -445,6 +447,8 @@ void MainWindow::readSettings()
     }
     
     settings.endGroup();
+    
+    mProjectView->readSettings();
 }
 
 void MainWindow::activateInterface(bool activate)
