@@ -6,43 +6,42 @@
 #
 #-------------------------------------------------
 
-#$$absolute_path
+message("-------------------------------------------")
+CONFIG(debug, debug|release) {
+	BUILD_DIR=build/debug
+	message("Running qmake : Debug")
+	macx{
+		REAL_DESTDIR=Debug
+	}
+} else {
+	BUILD_DIR=build/release
+	message("Running qmake : Release")
+	macx{
+		REAL_DESTDIR=Release
+	}
+}
+message("-------------------------------------------")
 
 #PRO_PATH=$$PWD
-#_PRO_FILE_PWD_
 PRO_PATH=$$_PRO_FILE_PWD_
-#message($$PRO_PATH)
 
 TARGET = Chronomodel
 TEMPLATE = app
 
-# Config must use C++ 11 for random number generator
-CONFIG += c++11
+DESTDIR = $$BUILD_DIR
+OBJECTS_DIR = $$BUILD_DIR/obj
+MOC_DIR = $$BUILD_DIR/moc
+RCC_DIR = $$BUILD_DIR/rcc
 
-
-CONFIG(debug, debug|release) {
-	DESTDIR = build/debug
-	OBJECTS_DIR = build/debug/obj
-	MOC_DIR = build/debug/moc
-	RCC_DIR = build/debug/rcc
-} else {
-	DESTDIR = build/release
-	OBJECTS_DIR = build/release/obj
-	MOC_DIR = build/release/moc
-	RCC_DIR = build/release/rcc
-}
+message("BUILD_DIR : $$BUILD_DIR")
+message("DESTDIR : $$DESTDIR")
+message("OBJECTS_DIR : $$OBJECTS_DIR")
+message("MOC_DIR : $$MOC_DIR")
+message("RCC_DIR : $$RCC_DIR")
 
 
 # Qt modules (must be deployed along with the application
 QT += core gui widgets svg
-
-# Output directories
-#DESTDIR = deploy/mac
-#OBJECTS_DIR = build/obj
-#MOC_DIR = build/moc
-#RCC_DIR = build/rcc
-
-
 
 # Resource file (for images)
 RESOURCES = $$PRO_PATH/Chronomodel.qrc
@@ -50,16 +49,27 @@ RESOURCES = $$PRO_PATH/Chronomodel.qrc
 # Resource file (Windows only)
 RC_FILE = $$PRO_PATH/Chronomodel.rc
 
+# Config must use C++ 11 for random number generator
+CONFIG += c++11
+
+# Compilation warning flags
+QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas
+
 # Icon file
 ICON = $$PRO_PATH/icon/Chronomodel.icns
 
+macx{
+	QMAKE_MAC_SDK = macosx10.9
+	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.6
 
-#QMAKE_MAC_SDK = "10.9"
-#QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.9
-
-# Compilation warning flags
-
-QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas
+	RESOURCES_FILES.path = Contents/Resources
+	RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
+	RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
+	RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel_User_Manual.pdf
+	RESOURCES_FILES.files += $$PRO_PATH/deploy/LicenseGPL30.txt
+	RESOURCES_FILES.files += $$PRO_PATH/deploy/readme.rtf
+	QMAKE_BUNDLE_DATA += RESOURCES_FILES
+}
 
 
 #########################################
@@ -94,29 +104,8 @@ DEFINES += "USE_PLUGIN_AM=$${USE_PLUGIN_AM}"
 INCLUDEPATH += lib/FFTW
 macx{
     LIBS += -Llib/FFTW/mac -lfftw3f
-    # this is for juce :
-    #LIBS += -framework Cocoa
 }win32{
     LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
-    #LIBS += -luser32
-    #LIBS += -lpsapi
-    #LIBS += -lkernel32
-    #LIBS += -lgdi32
-    #LIBS += -lwinspool
-    #LIBS += -lcomdlg32
-    #LIBS += -ladvapi32
-    #LIBS += -lshell32
-    #LIBS += -lole32
-    #LIBS += -loleaut32
-    #LIBS += -luuid
-    #LIBS += -lodbc32
-    #LIBS += -lodbccp32
-    #LIBS += -lcrypt32
-    #LIBS += -lws2_32
-    #LIBS += -lversion
-
-    #kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;
-#oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)
 }
 
 #########################################
@@ -146,17 +135,9 @@ INCLUDEPATH += src/ui/widgets/
 INCLUDEPATH += src/ui/window/
 INCLUDEPATH += src/utilities/
 
-macx{
-	#INCLUDEPATH += src/juce/
-}
-
 #########################################
 # HEADERS
 #########################################
-
-macx{
-	#HEADERS += src/juce/modules/juce_core/juce_core.h
-}
 
 HEADERS += src/MainController.h
 HEADERS += src/AppSettings.h
@@ -290,12 +271,6 @@ HEADERS += src/utilities/QtUtilities.h
 # SOURCES
 #########################################
 
-macx{
-    #OBJECTIVE_SOURCES += src/juce/modules/juce_core/juce_core.mm
-}win32{
-    #SOURCES += src/juce/modules/juce_core/juce_core.cpp
-}
-
 SOURCES += src/main.cpp
 SOURCES += src/MainController.cpp
 SOURCES += src/AppSettings.cpp
@@ -417,3 +392,4 @@ SOURCES += src/utilities/StdUtilities.cpp
 SOURCES += src/utilities/QtUtilities.cpp
 
 
+message("-------------------------------------------")

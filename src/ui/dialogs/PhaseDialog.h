@@ -34,12 +34,14 @@ public:
     Label* mNameLab;
     Label* mColorLab;
     Label* mTauTypeLab;
+    Label* mTauFixedLab;
     Label* mTauMinLab;
     Label* mTauMaxLab;
     
     LineEdit* mNameEdit;
     ColorPicker* mColorPicker;
     QComboBox* mTauTypeCombo;
+    LineEdit* mTauFixedEdit;
     LineEdit* mTauMinEdit;
     LineEdit* mTauMaxEdit;
     

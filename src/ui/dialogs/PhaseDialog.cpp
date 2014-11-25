@@ -18,16 +18,19 @@ mButW(80)
     mNameLab = new Label(tr("Phase name") + " :", this);
     mColorLab = new Label(tr("Phase color") + " :", this);
     mTauTypeLab = new Label(tr("Phase duration") + " :", this);
-    mTauMinLab = new Label(tr("Value min") + " :", this);
-    mTauMaxLab = new Label(tr("Value max") + " :", this);
+    mTauFixedLab = new Label(tr("Fixed duration") + " :", this);
+    mTauMinLab = new Label(tr("Lower date") + " :", this);
+    mTauMaxLab = new Label(tr("Upper date") + " :", this);
     
     mNameEdit = new LineEdit(this);
     mColorPicker = new ColorPicker(QColor(), this);
     
     mTauTypeCombo = new QComboBox(this);
     mTauTypeCombo->addItem(tr("Unknown"));
+    mTauTypeCombo->addItem(tr("Fixed"));
     mTauTypeCombo->addItem(tr("Range (uniform)"));
     
+    mTauFixedEdit = new LineEdit(this);
     mTauMinEdit = new LineEdit(this);
     mTauMaxEdit = new LineEdit(this);
     
@@ -40,7 +43,7 @@ mButW(80)
     
     mComboH = mTauTypeCombo->sizeHint().height();
     
-    setFixedSize(400, mComboH + 2*mLineH + 5*mMargin + mButH);
+    setFixedWidth(400);
     
     Phase phase;
     setPhase(phase.toJson());
@@ -59,6 +62,9 @@ void PhaseDialog::showAppropriateTauOptions(int typeIndex)
     {
         case Phase::eTauUnknown:
         {
+            mTauFixedLab->setVisible(false);
+            mTauFixedEdit->setVisible(false);
+            
             mTauMinLab->setVisible(false);
             mTauMaxLab->setVisible(false);
             mTauMinEdit->setVisible(false);
@@ -68,8 +74,25 @@ void PhaseDialog::showAppropriateTauOptions(int typeIndex)
             
             break;
         }
+        case Phase::eTauFixed:
+        {
+            mTauFixedLab->setVisible(true);
+            mTauFixedEdit->setVisible(true);
+            
+            mTauMinLab->setVisible(false);
+            mTauMaxLab->setVisible(false);
+            mTauMinEdit->setVisible(false);
+            mTauMaxEdit->setVisible(false);
+            
+            setFixedHeight(mComboH + 3*mLineH + 6*mMargin + mButH);
+            
+            break;
+        }
         case Phase::eTauRange:
         {
+            mTauFixedLab->setVisible(false);
+            mTauFixedEdit->setVisible(false);
+            
             mTauMinLab->setVisible(true);
             mTauMaxLab->setVisible(true);
             mTauMinEdit->setVisible(true);
@@ -93,6 +116,7 @@ void PhaseDialog::setPhase(const QJsonObject& phase)
                                   mPhase[STATE_COLOR_GREEN].toInt(),
                                   mPhase[STATE_COLOR_BLUE].toInt()));
     mTauTypeCombo->setCurrentIndex(mPhase[STATE_PHASE_TAU_TYPE].toInt());
+    mTauFixedEdit->setText(mPhase[STATE_PHASE_TAU_FIXED].toString());
     mTauMinEdit->setText(mPhase[STATE_PHASE_TAU_MIN].toString());
     mTauMaxEdit->setText(mPhase[STATE_PHASE_TAU_MAX].toString());
     
@@ -106,6 +130,7 @@ QJsonObject PhaseDialog::getPhase()
     mPhase[STATE_COLOR_GREEN] = mColorPicker->getColor().green();
     mPhase[STATE_COLOR_BLUE] = mColorPicker->getColor().blue();
     mPhase[STATE_PHASE_TAU_TYPE] = (Phase::TauType) mTauTypeCombo->currentIndex();
+    mPhase[STATE_PHASE_TAU_FIXED] = mTauFixedEdit->text().toFloat();
     mPhase[STATE_PHASE_TAU_MIN] = mTauMinEdit->text().toFloat();
     mPhase[STATE_PHASE_TAU_MAX] = mTauMaxEdit->text().toFloat();
     return mPhase;
@@ -121,12 +146,14 @@ void PhaseDialog::resizeEvent(QResizeEvent* event)
     mNameLab->setGeometry(mMargin, mMargin, w1, mLineH);
     mColorLab->setGeometry(mMargin, 2*mMargin + mLineH, w1, mLineH);
     mTauTypeLab->setGeometry(mMargin, 3*mMargin + 2*mLineH, w1, mComboH);
+    mTauFixedLab->setGeometry(mMargin, 4*mMargin + 2*mLineH + mComboH, w1, mLineH);
     mTauMinLab->setGeometry(mMargin, 4*mMargin + 2*mLineH + mComboH, w1, mLineH);
     mTauMaxLab->setGeometry(mMargin, 5*mMargin + 3*mLineH + mComboH, w1, mLineH);
     
     mNameEdit->setGeometry(2*mMargin + w1, mMargin, w2, mLineH);
     mColorPicker->setGeometry(2*mMargin + w1, 2*mMargin + mLineH, w2, mLineH);
     mTauTypeCombo->setGeometry(2*mMargin + w1, 3*mMargin + 2*mLineH, w2, mComboH);
+    mTauFixedEdit->setGeometry(2*mMargin + w1, 4*mMargin + 2*mLineH + mComboH, w2, mLineH);
     mTauMinEdit->setGeometry(2*mMargin + w1, 4*mMargin + 2*mLineH + mComboH, w2, mLineH);
     mTauMaxEdit->setGeometry(2*mMargin + w1, 5*mMargin + 3*mLineH + mComboH, w2, mLineH);
     

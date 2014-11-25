@@ -226,7 +226,12 @@ void ImportDataTable::updateTableHeaders()
         mImportView->setHelp(plugin->csvHelp());
         
         headers = plugin->csvColumns();
-        headers << "Wiggle Maching";
+        if(plugin->wiggleAllowed())
+        {
+            headers << "Wiggle Type (fixed | range | gaussian)";
+            headers << "Wiggle value 1 (fixed | Lower date | Average)";
+            headers << "Wiggle value 2 (Upper date | Error)";
+        }
         while(headers.size() < numCols)
             headers << "comment";
     }

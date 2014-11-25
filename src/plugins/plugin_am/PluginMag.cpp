@@ -104,10 +104,10 @@ QStringList PluginMag::csvColumns() const
         << "inclination? (1|0)"
         << "declination? (1|0)"
         << "intensity? (1|0)"
-        << "Inclination value (if inclination)"
-        << "Declination value (if declination)"
-        << "Inclination value (if declination)"
-        << "Intensity value (if intensity)"
+        << "Inclination value (if inclination only)"
+        << "Declination value (if declination only)"
+        << "Inclination value (if declination only)"
+        << "Intensity value (if intensity only)"
         << "Error (or alpha 95)"
         << "Reference curve (file name)";
     return cols;
@@ -158,7 +158,7 @@ QString PluginMag::getRefsPath() const
 #ifdef Q_OS_MAC
     QDir dir(path);
     dir.cdUp();
-    path = dir.absolutePath();
+    path = dir.absolutePath() + "/Resources";
 #endif
     QString calibPath = path + "/Calib/AM";
     return calibPath;

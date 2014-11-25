@@ -603,6 +603,7 @@ QList<Date> EventsScene::decodeDataDrop(QGraphicsSceneDragDropEvent* e)
         
         // Remove first column corresponding to csvRow
         int csvRow = dataStr.takeFirst().toInt();
+        
         QString pluginName = dataStr.takeFirst();
         
         Date date = project->createDateFromData(pluginName, dataStr);

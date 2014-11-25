@@ -51,7 +51,7 @@ QList<Date::DataMethod> PluginUniform::allowedDataMethods() const
 QStringList PluginUniform::csvColumns() const
 {
     QStringList cols;
-    cols << "Name" << "Min" << "Max";
+    cols << "Name" << "Lower date" << "Upper date";
     return cols;
 }
 

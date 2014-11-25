@@ -619,11 +619,35 @@ Date Project::createDateFromData(const QString& pluginName, const QStringList& d
         date.mData = plugin->dataFromList(dataStr);
         
         int minColNum = plugin->csvMinColumns();
-        if(dataStr.size() > minColNum)
+        if(dataStr.size() >= minColNum + 1)
         {
-            QString delta = dataStr[minColNum];
-            if(!delta.contains("//"))
-                date.mDeltaFixed = delta.toDouble();
+            QString deltaType = dataStr[minColNum];
+            QString delta1 = dataStr[minColNum + 1];
+            QString delta2 = "0";
+            if(dataStr.size() >= minColNum + 2)
+                delta2 = dataStr[minColNum + 2];
+            
+            if(!deltaType.contains("//") && !delta1.contains("//") && !delta2.contains("//"))
+            {
+                if(deltaType == "fixed")
+                {
+                    date.mDeltaType = Date::eDeltaFixed;
+                    date.mDeltaFixed = delta1.toDouble();
+                }
+                else if(deltaType == "range")
+                {
+                    date.mDeltaType = Date::eDeltaRange;
+                    date.mDeltaMin = delta1.toDouble();
+                    date.mDeltaMax = delta2.toDouble();
+                }
+                else if(deltaType == "gaussian")
+                {
+                    date.mDeltaType = Date::eDeltaGaussian;
+                    date.mDeltaAverage = delta1.toDouble();
+                    date.mDeltaError = delta2.toDouble();
+                }
+            }
+            
         }
     }
     return date;

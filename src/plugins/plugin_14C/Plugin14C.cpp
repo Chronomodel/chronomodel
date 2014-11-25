@@ -115,7 +115,7 @@ QString Plugin14C::getRefsPath() const
 #ifdef Q_OS_MAC
     QDir dir(path);
     dir.cdUp();
-    path = dir.absolutePath();
+    path = dir.absolutePath() + "/Resources";
 #endif
     QString calibPath = path + "/Calib/14C";
     return calibPath;
