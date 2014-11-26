@@ -45,7 +45,12 @@ void GraphViewPhase::paintEvent(QPaintEvent* e)
         QColor foreCol = getContrastedColor(backCol);
         
         QRect topRect(0, 0, mGraphLeft, mLineH);
-        p.fillRect(topRect.adjusted(1, 1, -1, 0), backCol);
+        p.setPen(backCol);
+        p.setBrush(backCol);
+        p.drawRect(topRect);
+        
+        p.setPen(Qt::black);
+        p.drawLine(0, height(), mGraphLeft, height());
         
         p.setPen(foreCol);
         QFont font;
@@ -71,7 +76,7 @@ void GraphViewPhase::refresh()
         if(mCurrentResult == eHisto && mCurrentVariable == eTheta)
         {
             QString results;
-            results += "Period : [" + QString::number(mPhase->mAlpha.mResults.mean, 'f', 0) + ", " + QString::number(mPhase->mBeta.mResults.mean, 'f', 0) + "]\n";
+            results += "Period : [" + QString::number(mPhase->mAlpha.mResults.analysis.mean, 'f', 0) + ", " + QString::number(mPhase->mBeta.mResults.analysis.mean, 'f', 0) + "]\n";
             results += "----------------------------------\n";
             results += tr("PHASE BEGIN") + "\n";
             results += mPhase->mAlpha.resultsText();
@@ -130,7 +135,7 @@ void GraphViewPhase::refresh()
                     
                     GraphCurve curveCredAlpha;
                     curveCredAlpha.mName = "alpha credibility full";
-                    curveCredAlpha.mSections.append(QPair<float, float>(mPhase->mAlpha.mResults.mean, mPhase->mBeta.mResults.mean));
+                    curveCredAlpha.mSections.append(QPair<float, float>(mPhase->mAlpha.mResults.analysis.mean, mPhase->mBeta.mResults.analysis.mean));
                     curveCredAlpha.mHorizontalValue = mGraph->maximumY();
                     curveCredAlpha.mPen.setStyle(Qt::DotLine);
                     curveCredAlpha.mPen.setColor(color);

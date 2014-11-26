@@ -111,6 +111,7 @@ private:
     QWidget* mDataGroup;
     RadioButton* mDataThetaRadio;
     CheckBox* mDataCalibCheck;
+    CheckBox* mWiggleCheck;
     RadioButton* mDataSigmaRadio;
     RadioButton* mDataDeltaRadio;
     

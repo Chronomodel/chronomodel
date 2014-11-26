@@ -91,7 +91,7 @@ public:
         painter->drawText(x + iconW, y + 3*mm + 2*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, dateDesc);
         
         painter->setPen(QColor(80, 160, 90));
-        painter->drawText(x + iconW, y + 4*mm + 3*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, tr("Shift") + " : " + delta);
+        painter->drawText(x + iconW, y + 4*mm + 3*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, delta);
         
         painter->setPen(QColor(200, 200, 200));
         painter->drawLine(x, y + h, x + w, y + h);

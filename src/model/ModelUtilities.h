@@ -12,6 +12,7 @@ class ModelUtilities
 public:
     static QString getEventMethodText(Event::Method method);
     static QString getDataMethodText(Date::DataMethod method);
+    static QString getDeltaText(const Date& date);
 };
 
 #endif

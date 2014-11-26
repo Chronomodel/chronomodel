@@ -124,7 +124,7 @@ void MCMCLoopMain::initMCMC()
             FunctionAnalysis data = analyseFunction(date.mCalibration);
             
             date.mTheta.mX = data.mode;
-            date.mTheta.mSigmaMH = sqrt(data.variance);
+            date.mTheta.mSigmaMH = data.stddev;
             
             emit stepProgressed(i);
         }
@@ -348,11 +348,13 @@ void MCMCLoopMain::update()
             date.updateDelta(event);
             date.updateTheta(t_min, t_max, event);
             date.updateSigma(event);
+            date.updateWiggle();
             
             if(doMemo)
             {
                 date.mTheta.memo();
                 date.mSigma.memo();
+                date.mWiggle.memo();
                 
                 date.mTheta.saveCurrentAcceptRate();
                 date.mSigma.saveCurrentAcceptRate();
@@ -480,6 +482,7 @@ void MCMCLoopMain::finalize()
             
             date.mTheta.generateHistos(mChains, tmin, tmax);
             date.mSigma.generateHistos(mChains, 0, tmax - tmin);
+            date.mWiggle.generateHistos(mChains, 0, tmax - tmin);
             
             date.mTheta.generateCorrelations(mChains);
             date.mSigma.generateCorrelations(mChains);

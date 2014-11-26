@@ -20,7 +20,7 @@ float PluginMag::getLikelyhood(const float& t, const QJsonObject& data)
     float is_inc = data[DATE_AM_IS_INC_STR].toBool();
     float is_dec = data[DATE_AM_IS_DEC_STR].toBool();
     float is_int = data[DATE_AM_IS_INT_STR].toBool();
-    float error = data[DATE_AM_ERROR_STR].toDouble();
+    float alpha = data[DATE_AM_ERROR_STR].toDouble();
     float inc = data[DATE_AM_INC_STR].toDouble();
     float dec = data[DATE_AM_DEC_STR].toDouble();
     float intensity = data[DATE_AM_INTENSITY_STR].toDouble();
@@ -39,19 +39,19 @@ float PluginMag::getLikelyhood(const float& t, const QJsonObject& data)
         // pour la combinaison, il faut multiplier les 2 cas suivants :
         if(is_inc)
         {
-            float variance = e * e + error * error / (2.448 * 2.448);
-            result = exp(-0.5 * pow(g - inc, 2) / variance) / sqrt(variance);
+            float variance = (e * e) + (alpha * alpha) / (2.448 * 2.448);
+            result = expf(-0.5 * powf(g - inc, 2) / variance) / sqrtf(variance);
         }
         else if(is_dec)
         {
-            float variance = e * e + pow(error / (2.448 * cos(inc * M_PI / 180.)), 2);
-            result = exp(-0.5 * pow(g - dec, 2) / variance) / sqrt(variance);
+            float variance = e * e + pow(alpha / (2.448 * cos(inc * M_PI / 180.)), 2);
+            result = expf(-0.5 * powf(g - dec, 2) / variance) / sqrtf(variance);
         }
         else if(is_int)
         {
-            // TODO
+            float error = alpha;
             float variance = e * e + error * error;
-            result = sqrt(variance) * exp(-0.5 * pow(g - intensity, 2) / variance);
+            result = sqrtf(variance) * expf(-0.5 * powf(g - intensity, 2) / variance);
         }
     }
     return result;
@@ -120,6 +120,42 @@ QJsonObject PluginMag::dataFromList(const QStringList& list)
         json.insert(DATE_AM_REF_CURVE_STR, list[6]);
     }
     return json;
+}
+
+QString PluginMag::getDateDesc(const Date* date) const
+{
+    QString result;
+    if(date)
+    {
+        QJsonObject data = date->mData;
+        
+        float is_inc = data[DATE_AM_IS_INC_STR].toBool();
+        float is_dec = data[DATE_AM_IS_DEC_STR].toBool();
+        float is_int = data[DATE_AM_IS_INT_STR].toBool();
+        float alpha = data[DATE_AM_ERROR_STR].toDouble();
+        float inc = data[DATE_AM_INC_STR].toDouble();
+        float dec = data[DATE_AM_DEC_STR].toDouble();
+        float intensity = data[DATE_AM_INTENSITY_STR].toDouble();
+        QString ref_curve = data[DATE_AM_REF_CURVE_STR].toString();
+        
+        if(is_inc)
+        {
+            result += QObject::tr("Inclination") + " : " + QString::number(inc);
+            result += ", " + QObject::tr("Alpha95") + " : " + QString::number(alpha);
+        }
+        else if(is_dec)
+        {
+            result += QObject::tr("Declination") + " : " + QString::number(dec);
+            result += ", " + QObject::tr("Alpha95") + " : " + QString::number(alpha);
+        }
+        else if(is_int)
+        {
+            result += QObject::tr("Intensity") + " : " + QString::number(intensity);
+            result += ", " + QObject::tr("Error") + " : " + QString::number(alpha);
+        }
+        result += ", " + QObject::tr("Ref. curve : ") + " : " + ref_curve;
+    }
+    return result;
 }
 
 // ------------------------------------------------------------------

@@ -76,10 +76,13 @@ FunctionAnalysis analyseFunction(const QMap<float, float>& aFunction)
     result.max = max;
     result.mode = mode;
     result.mean = sum / sumP;
-    result.variance = (sum2 / sumP) - pow(result.mean, 2);
     
-    if(result.variance < 0)
-        result.variance = 0;
+    float variance = (sum2 / sumP) - powf(result.mean, 2);
+    
+    if(variance < 0)
+        variance = 0;
+    
+    result.stddev = sqrtf(variance);
     
     return result;
 }
@@ -119,4 +122,28 @@ float dataStd(const QVector<float>& data)
         return 0.f;
     }
     return (float)sqrt(variance);
+}
+
+QString functionAnalysisToString(const FunctionAnalysis& analysis)
+{
+    QString result;
+    int precision = 0;
+    
+    result += "Mode : " + QString::number(analysis.mode, 'f', precision) + "   ";
+    result += "Mean : " + QString::number(analysis.mean, 'f', precision) + "   ";
+    result += "Std deviation : " + QString::number(analysis.stddev, 'f', precision) + "\n";
+    
+    return result;
+}
+
+QString densityAnalysisToString(const DensityAnalysis& analysis)
+{
+    QString result = functionAnalysisToString(analysis.analysis);
+    int precision = 0;
+    
+    result += "Q1 : " + QString::number(analysis.quartiles.Q1, 'f', precision) + "   ";
+    result += "Q2 (Median) : " + QString::number(analysis.quartiles.Q2, 'f', precision) + "   ";
+    result += "Q3 : " + QString::number(analysis.quartiles.Q3, 'f', precision) + "\n";
+    
+    return result;
 }

@@ -12,9 +12,9 @@ QDialog(parent, flags)
 {
     setWindowTitle(tr("Settings"));
     
-    mAutoSaveCheck = new QCheckBox(tr("Auto save project every") + " :");
-    mAutoSaveDelayLab = new Label(tr("minutes"));
-    mAutoSaveDelayEdit = new LineEdit();
+    mAutoSaveCheck = new CheckBox(tr("Auto save project"), this);
+    mAutoSaveDelayLab = new Label(tr("Auto save interval (in minutes)"), this);
+    mAutoSaveDelayEdit = new LineEdit(this);
     
     mAutoSaveDelayLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     
@@ -22,36 +22,21 @@ QDialog(parent, flags)
     positiveValidator->setBottom(1);
     mAutoSaveDelayEdit->setValidator(positiveValidator);
     
-    mOkBut = new Button(tr("OK"));
-    mCancelBut = new Button(tr("Cancel"));
+    mOkBut = new Button(tr("OK"), this);
+    mCancelBut = new Button(tr("Cancel"), this);
+    
+    mCSVSepLab = new Label(tr("CSV cell separator") + " : ", this);
+    mCSVSepEdit = new LineEdit(this);
     
     mOkBut->setFixedSize(80, 25);
     mCancelBut->setFixedSize(80, 25);
     
-    QHBoxLayout* saveLayout = new QHBoxLayout();
-    saveLayout->setContentsMargins(0, 0, 0, 0);
-    saveLayout->setSpacing(5);
-    saveLayout->addWidget(mAutoSaveCheck);
-    saveLayout->addWidget(mAutoSaveDelayEdit);
-    saveLayout->addWidget(mAutoSaveDelayLab);
-    
-    QHBoxLayout* butLayout = new QHBoxLayout();
-    butLayout->setContentsMargins(0, 0, 0, 0);
-    butLayout->setSpacing(5);
-    butLayout->addWidget(mOkBut);
-    butLayout->addWidget(mCancelBut);
-    
-    QVBoxLayout* layout = new QVBoxLayout();
-    layout->setContentsMargins(5, 5, 5, 5);
-    layout->addStretch();
-    layout->addLayout(saveLayout);
-    layout->addLayout(butLayout);
-    setLayout(layout);
+    mOkBut->setAutoDefault(true);
     
     connect(mOkBut, SIGNAL(clicked()), this, SLOT(accept()));
     connect(mCancelBut, SIGNAL(clicked()), this, SLOT(reject()));
     
-    setFixedWidth(300);
+    setFixedSize(500, 180);
 }
 
 AppSettingsDialog::~AppSettingsDialog()
@@ -74,3 +59,24 @@ AppSettings AppSettingsDialog::getSettings()
     return settings;
 }
 
+void AppSettingsDialog::resizeEvent(QResizeEvent* e)
+{
+    Q_UNUSED(e);
+    
+    int m = 5;
+    int lineH = 25;
+    int wl = 200;
+    int wr = width() - 3*m - wl;
+    int butW = 100;
+    int butH = 30;
+    
+    mAutoSaveCheck->setGeometry(m, m, width() - 2*m, lineH);
+    mAutoSaveDelayLab->setGeometry(m, 2*m + lineH, wl, lineH);
+    mAutoSaveDelayEdit->setGeometry(wl + 2*m, 2*m + lineH, wr, lineH);
+    
+    mCSVSepLab->setGeometry(m, 3*m + 2*lineH, wl, lineH);
+    mCSVSepEdit->setGeometry(wl + 2*m, 3*m + 2*lineH, wr, lineH);
+    
+    mOkBut->setGeometry(width() - 2*m - 2*butW, height() - m - butH, butW, butH);
+    mCancelBut->setGeometry(width() - m - butW, height() - m - butH, butW, butH);
+}

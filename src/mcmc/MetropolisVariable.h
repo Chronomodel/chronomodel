@@ -8,21 +8,6 @@
 #include "Functions.h"
 
 
-struct Quartiles{
-    float Q1;
-    float Q2;
-    float Q3;
-};
-
-struct MetropolisResult
-{
-    Quartiles quartiles;
-    float max = 0.;
-    float mode = 0.;
-    float mean = 0.;
-    float stddev = 0.;
-};
-
 class MetropolisVariable
 {
 public:
@@ -92,8 +77,8 @@ public:
     
     float mExactCredibilityThreshold;
     
-    MetropolisResult mResults;
-    QList<MetropolisResult> mChainsResults;
+    DensityAnalysis mResults;
+    QList<DensityAnalysis> mChainsResults;
 };
 
 #endif

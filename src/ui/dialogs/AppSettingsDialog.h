@@ -5,7 +5,6 @@
 #include "AppSettings.h"
 
 class CheckBox;
-class QCheckBox;
 class Label;
 class LineEdit;
 class Button;
@@ -21,10 +20,16 @@ public:
     void setSettings(const AppSettings& settings);
     AppSettings getSettings();
     
+protected:
+    void resizeEvent(QResizeEvent* e);
+    
 private:
-    QCheckBox* mAutoSaveCheck;
+    CheckBox* mAutoSaveCheck;
     Label* mAutoSaveDelayLab;
     LineEdit* mAutoSaveDelayEdit;
+    
+    Label* mCSVSepLab;
+    LineEdit* mCSVSepEdit;
     
     Button* mOkBut;
     Button* mCancelBut;

@@ -177,16 +177,16 @@ mIsSplitting(false)
     mButApply = new Button(tr("Apply"), mRightWrapper);
     
     QIntValidator* validator = new QIntValidator();
-    mMinEdit->setValidator(validator);
-    mMaxEdit->setValidator(validator);
+    //mMinEdit->setValidator(validator);
+    //mMaxEdit->setValidator(validator);
     
     validator->setBottom(1);
     mStepEdit->setValidator(validator);
     
-    connect(mMinEdit, SIGNAL(clicked()), this, SLOT(applySettings()));
-    connect(mMaxEdit, SIGNAL(clicked()), this, SLOT(applySettings()));
-    connect(mStepEdit, SIGNAL(clicked()), this, SLOT(applySettings()));
-    //connect(mButApply, SIGNAL(clicked()), this, SLOT(applySettings()));
+    //connect(mMinEdit, SIGNAL(clicked()), this, SLOT(applySettings()));
+    //connect(mMaxEdit, SIGNAL(clicked()), this, SLOT(applySettings()));
+    //connect(mStepEdit, SIGNAL(clicked()), this, SLOT(applySettings()));
+    connect(mButApply, SIGNAL(clicked()), this, SLOT(applySettings()));
     
     // --------
     

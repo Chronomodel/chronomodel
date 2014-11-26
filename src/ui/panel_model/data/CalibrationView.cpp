@@ -8,6 +8,9 @@
 #include "MainWindow.h"
 #include "Project.h"
 #include "GraphView.h"
+#include "CheckBox.h"
+#include "LineEdit.h"
+#include "Button.h"
 #include "StdUtilities.h"
 #include "Painting.h"
 #include <QtWidgets>
@@ -28,9 +31,32 @@ mRefGraphView(0)
     mMarkerX = new Marker(this);
     mMarkerY = new Marker(this);
     
+    mHPDCheck = new CheckBox(tr("HPD"), this);
+    mHPDEdit = new LineEdit(this);
+    mHPDEdit->setText("95");
+    
+    mResultsBut = new Button(tr("Show results"), this);
+    mResultsBut->setCheckable(true);
+    
+    mResultsEdit = new QTextEdit(this);
+    mResultsEdit->setFrameStyle(QFrame::NoFrame);
+    QPalette palette = mResultsEdit->palette();
+    palette.setColor(QPalette::Base, QColor(0, 0, 0, 200));
+    palette.setColor(QPalette::Text, Qt::white);
+    mResultsEdit->setPalette(palette);
+    QFont font = mResultsEdit->font();
+    font.setPointSizeF(pointSize(11));
+    mResultsEdit->setFont(font);
+    mResultsEdit->setText(tr("Nothing to display"));
+    mResultsEdit->setVisible(false);
+    
     setMouseTracking(true);
     
     connect(mRuler, SIGNAL(zoomChanged(float, float)), mCalibGraph, SLOT(zoomX(float, float)));
+    
+    connect(mHPDCheck, SIGNAL(checked(bool)), this, SLOT(updateGraphs()));
+    connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateGraphs()));
+    connect(mResultsBut, SIGNAL(toggled(bool)), this, SLOT(showResults(bool)));
 }
 
 CalibrationView::~CalibrationView()
@@ -42,6 +68,12 @@ void CalibrationView::setDate(const QJsonObject& date)
 {
     mDate = date;
     updateGraphs();
+}
+
+void CalibrationView::showResults(bool show)
+{
+    mResultsEdit->setVisible(show);
+    mResultsEdit->raise();
 }
 
 void CalibrationView::updateGraphs()
@@ -70,6 +102,12 @@ void CalibrationView::updateGraphs()
     {
         date.calibrate(s.mTmin, s.mTmax, s.mStep);
         
+        DensityAnalysis results;
+        results.analysis = analyseFunction(date.mCalibration);
+        mResultsEdit->setText(densityAnalysisToString(results));
+        
+        QMap<float, float> hpd = create_HPD(date.mCalibration, 1, 95);
+        
         // ------------------------------------------------------------
         //  Calibration curve
         // ------------------------------------------------------------
@@ -79,18 +117,31 @@ void CalibrationView::updateGraphs()
         GraphCurve calibCurve;
         calibCurve.mName = "Calibration";
         calibCurve.mPen.setColor(c);
-        calibCurve.mFillUnder = true;
+        calibCurve.mFillUnder = false;
         calibCurve.mData = date.mCalibration;
         
         float yMin = map_min_value(date.mCalibration);
         float yMax = map_max_value(date.mCalibration);
         
+        yMax += (yMax - yMin) * 0.05f;
+        
+        mCalibGraph->setRangeY(yMin, yMax);
+        
         ProjectSettings s = ProjectSettings::fromJson(project->state()[STATE_SETTINGS].toObject());
         
         mCalibGraph->setRangeX(s.mTmin, s.mTmax);
-        mCalibGraph->setRangeY(yMin, yMax);
         mCalibGraph->addCurve(calibCurve);
         mCalibGraph->setVisible(true);
+        
+        //if(mHPDCheck->isChecked())
+        {
+            GraphCurve hpdCurve;
+            hpdCurve.mName = "Calibration HPD";
+            hpdCurve.mPen.setColor(c);
+            hpdCurve.mFillUnder = true;
+            hpdCurve.mData = hpd;
+            mCalibGraph->addCurve(hpdCurve);
+        }
         
         // ------------------------------------------------------------
         //  Reference curve from plugin
@@ -161,6 +212,10 @@ void CalibrationView::updateLayout()
     int m = 5;
     int calibH = 200;
     int titleH = 30;
+    int lineH = 25;
+    int editW = 30;
+    int checkW = 50;
+    int butW = 100;
     int rulerH = 40;
     int graphLeft = 50.f;
     int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
@@ -175,6 +230,11 @@ void CalibrationView::updateLayout()
                                    height() - 2*titleH - rulerH - 2*m - calibH);
     }
     mCalibGraph->setGeometry(m, height() - calibH - m, width() - 2*m, calibH);
+    mResultsEdit->setGeometry(m, height() - calibH - m, width() - 2*m, calibH);
+    
+    mHPDEdit->setGeometry(width() - m - editW, height() - calibH - 2*m - lineH, editW, lineH);
+    mHPDCheck->setGeometry(width() - 2*m - editW - checkW, height() - calibH - 2*m - lineH, checkW, lineH);
+    mResultsBut->setGeometry(width() - 3*m - editW - checkW - butW, height() - calibH - 2*m - lineH, butW, lineH);
     
     mMarkerX->setGeometry(mMarkerX->pos().x(), m + sbe, mMarkerX->thickness(), height() - 2*m - sbe - 8.f); // 8 = graph margin bottom
     mMarkerY->setGeometry(m + graphLeft, mMarkerY->pos().y(), width() - 2*m - graphLeft, mMarkerY->thickness());

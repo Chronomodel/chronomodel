@@ -109,11 +109,11 @@ void GraphView::showScrollBar(bool show)
     showAxis(mShowAxis);
 }
 
-void GraphView::showYValues(bool show)
+void GraphView::showYValues(bool show, bool keepMargin)
 {
     mShowYValues = show;
-    setMarginLeft(mShowYValues ? 50 : 0);
-    setMarginTop(mStepYMinHeight);
+    setMarginLeft(mShowYValues ? 50 : keepMargin ? 50 : 0);
+    setMarginTop(show ? mStepYMinHeight : 0);
     adaptMarginBottom();
 }
 
@@ -461,10 +461,27 @@ void GraphView::paint(QPainter& painter, int w, int h)
         painter.drawText(mMarginLeft + 5, mMarginTop + 5, mGraphWidth - 10, 15, Qt::AlignRight | Qt::AlignTop, infos);
     }
     
-    // Border
-    painter.setBrush(Qt::NoBrush);
-    painter.setPen(QColor(120, 120, 120));
-    painter.drawRect(mMarginLeft, mMarginTop, mGraphWidth, mGraphHeight);
+    // Axis
+    QColor axisCol(120, 120, 120);
+    painter.setBrush(axisCol);
+    painter.setPen(axisCol);
+    painter.drawLine(mMarginLeft, mMarginTop, mMarginLeft, mMarginTop + mGraphHeight);
+    painter.drawLine(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth - mMarginRight, mMarginTop + mGraphHeight);
+    
+    QPainterPath arrowTop;
+    arrowTop.moveTo(mMarginLeft, mMarginTop);
+    arrowTop.lineTo(mMarginLeft - 3, mMarginTop + 5);
+    arrowTop.lineTo(mMarginLeft + 3, mMarginTop + 5);
+    arrowTop.lineTo(mMarginLeft, mMarginTop);
+    painter.drawPath(arrowTop);
+    
+    QPainterPath arrowRight;
+    arrowRight.moveTo(mMarginLeft + mGraphWidth, mMarginTop + mGraphHeight);
+    arrowRight.lineTo(mMarginLeft + mGraphWidth - 5, mMarginTop + mGraphHeight - 3);
+    arrowRight.lineTo(mMarginLeft + mGraphWidth - 5, mMarginTop + mGraphHeight + 3);
+    arrowRight.lineTo(mMarginLeft + mGraphWidth, mMarginTop + mGraphHeight);
+    painter.drawPath(arrowRight);
+    
     
     // tip
     if(mTipVisible)
@@ -675,6 +692,10 @@ void GraphView::drawCurves(QPainter& painter)
                     float valueX = iter.key();
                     float valueY = iter.value();
                     
+                    if(curve.mName == "G")
+                    {
+                        //qDebug() << valueX << " : " << valueY;
+                    }
                     if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
                     {
                         float x = getXForValue(valueX, false);

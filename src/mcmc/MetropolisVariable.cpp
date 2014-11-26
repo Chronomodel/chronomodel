@@ -238,26 +238,26 @@ void MetropolisVariable::generateCorrelations(const QList<Chain>& chains)
         
         float n = trace.size();
         
+        float sum = 0;
+        float sum2 = 0;
+        
+        for(float i=0; i<n; ++i)
+        {
+            sum += trace[i];
+            sum2 += trace[i] * trace[i];
+        }
+        float m = sum / n;
+        float s0 = sum2 / n;
+        
         for(float h=0; h<hmax; ++h)
         {
-            float sum0 = 0;
-            float sum1 = 0;
-            float sum2 = 0;
-            
+            float sumH = 0;
             for(float i=0; i<n-h; ++i)
             {
-                sum1 += trace[i] * trace[i + h];
+                sumH += trace[i] * trace[i + h];
             }
-            for(float i=0; i<n; ++i)
-            {
-                sum0 += trace[i] * trace[i];
-                sum2 += trace[i];
-            }
-            float s0 = sum0 / n;
-            float s = sum1 / (n-h);
-            float m = sum2 / n;
+            float s = sumH / (n-h);
             float result = (s - m*m) / (s0 - m*m);
-            
             results.append(result);
         }
         // Correlation ajoutée à la liste (une courbe de corrélation par chaine)
@@ -269,11 +269,7 @@ void MetropolisVariable::generateResults(const QList<Chain>& chains, float tmin,
 {
     // Results for chain concatenation
     
-    FunctionAnalysis analysis = analyseFunction(mHisto);
-    mResults.max = analysis.max;
-    mResults.mode = analysis.mode;
-    mResults.mean = analysis.mean;
-    mResults.stddev = sqrtf(analysis.variance);
+    mResults.analysis = analyseFunction(mHisto);
     mResults.quartiles = quartilesForTrace(fullRunTrace(chains));
     
     // Results for individual chains
@@ -284,12 +280,8 @@ void MetropolisVariable::generateResults(const QList<Chain>& chains, float tmin,
     mChainsResults.clear();
     for(int i = 0; i<mChainsHistos.size(); ++i)
     {
-        MetropolisResult result;
-        FunctionAnalysis analysis = analyseFunction(mChainsHistos[i]);
-        result.max = analysis.max;
-        result.mode = analysis.mode;
-        result.mean = analysis.mean;
-        result.stddev = sqrtf(analysis.variance);
+        DensityAnalysis result;
+        result.analysis = analyseFunction(mChainsHistos[i]);
         result.quartiles = quartilesForTrace(runTraceForChain(chains, i));
         mChainsResults.append(result);
     }
@@ -469,30 +461,12 @@ QPair<float, float> MetropolisVariable::credibilityForTrace(const QVector<float>
 
 QString MetropolisVariable::resultsText() const
 {
-    QString result;
-    
+    QString result = densityAnalysisToString(mResults);
     int precision = 0;
     
-    // Max Y is useless :
-    //result += "Max : " + QString::number(mResults.max, 'f', precision) + "   ";
-    result += "Mode : " + QString::number(mResults.mode, 'f', precision) + "   ";
-    result += "Mean : " + QString::number(mResults.mean, 'f', precision) + "   ";
-    result += "Std deviation : " + QString::number(mResults.stddev, 'f', precision) + "\n";
-    result += "Q1 : " + QString::number(mResults.quartiles.Q1, 'f', precision) + "   ";
-    result += "Q2 (Median) : " + QString::number(mResults.quartiles.Q2, 'f', precision) + "   ";
-    result += "Q3 : " + QString::number(mResults.quartiles.Q3, 'f', precision) + "\n";
     result += "HPD Intervals (" + QString::number(mThreshold) + "%) : " + getHPDText(mHPD) + "\n";
     result += "Credibility Interval (" + QString::number(mExactCredibilityThreshold * 100.f, 'f', 2) + "%) : [" + QString::number(mCredibility.first, 'f', precision) + ", " + QString::number(mCredibility.second, 'f', precision) + "]\n";
     
-    /*for(int i = 0; i<mChainsResults.size(); ++i)
-    {
-        result += "CHAIN " + QString::number(i) + "\n";
-        result += "Max : " + QString::number(mChainsResults[i].max) + "\n";
-        result += "Mode : " + QString::number(mChainsResults[i].mode) + "\n";
-        result += "Mean : " + QString::number(mChainsResults[i].mean) + "\n";
-        result += "Variance : " + QString::number(mChainsResults[i].variance) + "\n";
-        result += "-------------------------------\n";
-    }*/
     return result;
 }
 

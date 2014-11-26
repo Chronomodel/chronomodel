@@ -104,33 +104,36 @@ void Button::paintEvent(QPaintEvent* e)
         QIcon ic = icon();
         painter.setPen(QColor(200, 200, 200));
         
-        if(!ic.isNull() && !text().isEmpty())
-        {
-            int textH = 22;
-            if(ic.isNull())
-                textH = height();
-            
-            float m = 8;
-            float w = r.width() - 2*m;
-            float h = r.height() - m - textH;
-            float s = qMin(w, h);
-            
-            painter.drawText(r.adjusted(0, r.height() - textH, 0, 0), Qt::AlignCenter, text());
-            
-            QRectF iconRect((r.width() - s)/2.f, m, s, s);
-            QPixmap pixmap = ic.pixmap(iconRect.size().toSize());
-            painter.drawPixmap(iconRect, pixmap, QRectF(0, 0, pixmap.width(), pixmap.height()));
-        }
-        else if(!text().isEmpty())
+        bool iconOnly = !ic.isNull() && (text().isEmpty() || height() <= 45);
+        bool textOnly = ic.isNull() && !text().isEmpty();
+        
+        if(textOnly)
         {
             painter.drawText(r, Qt::AlignCenter, text());
         }
-        else if(!ic.isNull())
+        else if(iconOnly)
         {
             float m = 5;
             float w = r.width() - 2*m;
             float h = r.height() - 2*m;
             float s = qMin(w, h);
+            
+            QRectF iconRect((r.width() - s)/2.f, m, s, s);
+            QPixmap pixmap = ic.pixmap(iconRect.size().toSize());
+            painter.drawPixmap(iconRect, pixmap, QRectF(0, 0, pixmap.width(), pixmap.height()));
+        }
+        else if(!ic.isNull() && !text().isEmpty())
+        {
+            int textH = 22;
+            if(ic.isNull())
+                textH = height();
+            
+            float m = 5;
+            float w = r.width() - 2*m;
+            float h = r.height() - m - textH;
+            float s = qMin(w, h);
+            
+            painter.drawText(r.adjusted(0, r.height() - textH, 0, 0), Qt::AlignCenter, text());
             
             QRectF iconRect((r.width() - s)/2.f, m, s, s);
             QPixmap pixmap = ic.pixmap(iconRect.size().toSize());

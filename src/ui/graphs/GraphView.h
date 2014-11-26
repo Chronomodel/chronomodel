@@ -44,7 +44,7 @@ public:
     void showInfos(bool show);
     void showAxis(bool show);
     void showScrollBar(bool show);
-    void showYValues(bool show);
+    void showYValues(bool show, bool keepMargin = false);
     void showGrid(bool show);
     
     // Manage Curves

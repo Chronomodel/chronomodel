@@ -37,6 +37,7 @@ public:
     virtual QStringList csvColumns() const{return QStringList();}
     int csvMinColumns() const {return csvColumns().size();}
     virtual QJsonObject dataFromList(const QStringList& list) = 0;
+    virtual QString getDateDesc(const Date* date) const = 0;
     
     QString getId() const{
         QString name = getName().simplified().toLower();

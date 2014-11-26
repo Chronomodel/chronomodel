@@ -72,7 +72,6 @@ void Date::copyFrom(const Date& date)
     mRepartition = date.mRepartition;
     mCalibHPD = date.mCalibHPD;
     
-    mCalibThumb = date.mCalibThumb;
     mSubDates = date.mSubDates;
 }
 
@@ -141,20 +140,27 @@ float Date::getLikelyhood(const float& t)
 
 QString Date::getDesc() const
 {
-    QStringList params;
-    QJsonObject::const_iterator iter;
-    for(iter = mData.begin(); iter!=mData.end(); ++iter)
+    if(mPlugin)
     {
-        QString val;
-        if(iter.value().isString())
-            val = iter.value().toString();
-        else if(iter.value().isDouble())
-            val = QString::number(iter.value().toDouble());
-        else if(iter.value().isBool())
-            val = iter.value().toBool() ? QObject::tr("yes") : QObject::tr("no");
-        params << iter.key() + " = " + val;
+        return mPlugin->getDateDesc(this);
     }
-    return params.join(", ");
+    else
+    {
+        QStringList params;
+        QJsonObject::const_iterator iter;
+        for(iter = mData.begin(); iter!=mData.end(); ++iter)
+        {
+            QString val;
+            if(iter.value().isString())
+                val = iter.value().toString();
+            else if(iter.value().isDouble())
+                val = QString::number(iter.value().toDouble());
+            else if(iter.value().isBool())
+                val = iter.value().toBool() ? QObject::tr("yes") : QObject::tr("no");
+            params << iter.key() + " = " + val;
+        }
+        return params.join(", ");
+    }
 }
 
 void Date::reset()
@@ -163,9 +169,10 @@ void Date::reset()
     mSigma.reset();
     mCalibration.clear();
     mRepartition.clear();
+    mWiggle.reset();
 }
 
-void Date::calibrate(const float& tmin, const float& tmax, const float& step)
+void Date::calibrate(const float tmin, const float tmax, const float step)
 {
     mCalibration.clear();
     mRepartition.clear();
@@ -184,19 +191,24 @@ void Date::calibrate(const float& tmin, const float& tmax, const float& step)
             mRepartition[t] = repVal;
             lastRepVal = repVal;
         }
+        mRepartition = normalize_map(mRepartition);
     }
     else
     {
         // TODO
     }
-    
+}
+
+QPixmap Date::generateCalibThumb(const float tmin, const float tmax)
+{
     GraphView* graph = new GraphView();
-    graph->setFixedSize(200, 50);
+    graph->setFixedSize(200, 30);
     graph->setRangeX(tmin, tmax);
     graph->setRangeY(0, 1.1f);
     graph->showAxis(false);
     graph->showScrollBar(false);
     graph->showGrid(false);
+    graph->setMargins(5, 5, 5, 5);
     
     GraphCurve curve;
     curve.mData = normalize_map(mCalibration);
@@ -206,11 +218,13 @@ void Date::calibrate(const float& tmin, const float& tmax, const float& step)
     curve.mFillUnder = true;
     graph->addCurve(curve);
     
-    mCalibThumb = QPixmap(graph->size());
-    graph->render(&mCalibThumb);
+    QPixmap thumb(graph->size());
+    graph->render(&thumb);
     delete graph;
-    //mCalibThumb.save("test.png");
-    //mCalibThumb = graph.grab();
+    
+    return thumb;
+    //thumb.save("test.png");
+    //thumb = graph.grab();
 }
 
 float Date::getLikelyhoodFromCalib(const float t)
@@ -341,5 +355,10 @@ void Date::updateSigma(Event& event)
         rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1; // (V2 / V1) est le jacobien!
     }
     mSigma.tryUpdate(sqrt(V2), rapport);
+}
+
+void Date::updateWiggle()
+{
+    mWiggle.mX = mTheta.mX + mDelta;
 }
 

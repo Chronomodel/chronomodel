@@ -9,6 +9,10 @@ class GraphViewRefAbstract;
 class Date;
 class Marker;
 class Ruler;
+class CheckBox;
+class LineEdit;
+class Button;
+class QTextEdit;
 
 
 class CalibrationView: public QWidget
@@ -28,6 +32,7 @@ protected:
     
 private slots:
     void updateGraphs();
+    void showResults(bool show);
     
 public:
     QJsonObject mDate;
@@ -38,6 +43,11 @@ public:
     
     Marker* mMarkerX;
     Marker* mMarkerY;
+    
+    CheckBox* mHPDCheck;
+    LineEdit* mHPDEdit;
+    Button* mResultsBut;
+    QTextEdit* mResultsEdit;
 };
 
 #endif

@@ -35,6 +35,7 @@ public:
     QList<Date::DataMethod> allowedDataMethods() const;
     QStringList csvColumns() const;
     QJsonObject dataFromList(const QStringList& list);
+    QString getDateDesc(const Date* date) const;
     
     PluginFormAbstract* getForm();
     GraphViewRefAbstract* getGraphViewRef();

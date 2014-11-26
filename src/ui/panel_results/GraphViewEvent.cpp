@@ -344,7 +344,12 @@ void GraphViewEvent::paintEvent(QPaintEvent* e)
         QColor foreCol = getContrastedColor(backCol);
         
         QRect topRect(0, 0, mGraphLeft, mLineH);
-        p.fillRect(topRect.adjusted(1, 1, -1, 0), backCol);
+        p.setPen(backCol);
+        p.setBrush(backCol);
+        p.drawRect(topRect);
+        
+        p.setPen(Qt::black);
+        p.drawLine(0, height(), mGraphLeft, height());
         
         p.setPen(foreCol);
         QFont font;

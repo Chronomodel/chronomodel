@@ -87,6 +87,21 @@ QJsonObject PluginGauss::dataFromList(const QStringList& list)
     return json;
 }
 
+QString PluginGauss::getDateDesc(const Date* date) const
+{
+    QString result;
+    if(date)
+    {
+        QJsonObject data = date->mData;
+        result += QObject::tr("Age") + " : " + QString::number(data[DATE_GAUSS_AGE_STR].toDouble());
+        result += " +- " + QString::number(data[DATE_GAUSS_ERROR_STR].toDouble());
+        result += ", " + QObject::tr("Ref. curve") + " = " +
+            QString::number(data[DATE_GAUSS_A_STR].toDouble()) + "t^2 + ";
+            QString::number(data[DATE_GAUSS_B_STR].toDouble()) + "t + ";
+            QString::number(data[DATE_GAUSS_C_STR].toDouble());
+    }
+    return result;
+}
 
 // ------------------------------------------------------------------
 

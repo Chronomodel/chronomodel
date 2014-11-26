@@ -55,7 +55,12 @@ void GraphViewDate::paintEvent(QPaintEvent* e)
         QColor foreCol = getContrastedColor(backCol);
         
         QRect topRect(0, 0, mGraphLeft, mLineH);
-        p.fillRect(topRect.adjusted(1, 1, -1, 0), backCol);
+        p.setPen(backCol);
+        p.setBrush(backCol);
+        p.drawRect(topRect);
+        
+        p.setPen(Qt::black);
+        p.drawLine(0, height(), mGraphLeft, height());
         
         p.setPen(foreCol);
         QFont font;
@@ -99,6 +104,20 @@ void GraphViewDate::refresh()
                 curve.mName = "calibration";
                 curve.mData = equal_areas(mDate->mCalibration, 100.f);
                 curve.mPen.setColor(QColor(0, 0, 0));
+                curve.mFillUnder = false;
+                curve.mIsHisto = false;
+                mGraph->addCurve(curve);
+                
+                float yMax = 1.1f * map_max_value(curve.mData);
+                mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
+            }
+            
+            if(mShowWiggle && mCurrentVariable == eTheta)
+            {
+                GraphCurve curve;
+                curve.mName = "wiggle";
+                curve.mData = equal_areas(mDate->mWiggle.fullHisto(), 100.f);
+                curve.mPen.setColor(Qt::blue);
                 curve.mFillUnder = false;
                 curve.mIsHisto = false;
                 mGraph->addCurve(curve);
@@ -262,7 +281,7 @@ void GraphViewDate::refresh()
             
             GraphCurve curve;
             curve.mName = QString("Repartition");
-            curve.mData = mDate->mRepartition;
+            curve.mData = normalize_map(mDate->mRepartition);
             curve.mPen.setColor(Qt::blue);
             curve.mIsHisto = true;
             mGraph->addCurve(curve);*/

@@ -95,6 +95,19 @@ QJsonObject Plugin14C::dataFromList(const QStringList& list)
     return json;
 }
 
+QString Plugin14C::getDateDesc(const Date* date) const
+{
+    QString result;
+    if(date)
+    {
+        QJsonObject data = date->mData;
+        result += QObject::tr("Age") + " : " + QString::number(data[DATE_14C_AGE_STR].toDouble());
+        result += " +- " + QString::number(data[DATE_14C_ERROR_STR].toDouble());
+        result += ", " + QObject::tr("Ref. curve") + " : " + data[DATE_14C_REF_CURVE_STR].toString();
+    }
+    return result;
+}
+
 // ------------------------------------------------------------------
 
 QStringList Plugin14C::getRefsNames() const

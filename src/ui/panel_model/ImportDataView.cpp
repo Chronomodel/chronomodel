@@ -49,6 +49,8 @@ void ImportDataView::browse()
         if(file.open(QIODevice::ReadOnly))
         {
             QTextStream stream(&file);
+            // TODO
+            QTextCodec* codec = stream.codec();
             QList<QStringList> data;
             
             int rows = 0;

@@ -142,11 +142,13 @@ mHasPhases(false)
     mDataSigmaRadio = new RadioButton(tr("Individual variances"), mDataGroup);
     mDataDeltaRadio = new RadioButton(tr("Wiggle maching"), mDataGroup);
     mDataCalibCheck = new CheckBox(tr("Distrib. of calib. dates"), mDataGroup);
+    mWiggleCheck = new CheckBox(tr("Wiggle unshifted"), mDataGroup);
     mDataThetaRadio->setChecked(true);
     mDataCalibCheck->setChecked(true);
     
     connect(mDataThetaRadio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     connect(mDataCalibCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+    connect(mWiggleCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     connect(mDataSigmaRadio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     connect(mDataDeltaRadio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     
@@ -339,7 +341,10 @@ void ResultsView::updateLayout()
     int y = m;
     mDataThetaRadio->setGeometry(m, y, mDataGroup->width() - 2*m, mLineH);
     if(mTabs->currentIndex() == 0)
+    {
         mDataCalibCheck->setGeometry(m + dx, y += (m + mLineH), mDataGroup->width() - 2*m - dx, mLineH);
+        mWiggleCheck->setGeometry(m + dx, y += (m + mLineH), mDataGroup->width() - 2*m - dx, mLineH);
+    }
     mDataSigmaRadio->setGeometry(m, y += (m + mLineH), mDataGroup->width()-2*m, mLineH);
     mDataDeltaRadio->setGeometry(m, y += (m + mLineH), mDataGroup->width()-2*m, mLineH);
     mDataGroup->setFixedHeight(y += (m + mLineH));
@@ -417,16 +422,17 @@ void ResultsView::updateGraphs()
     int hdpThreshold = mHPDEdit->text().toInt();
     
     bool showCalib = mDataCalibCheck->isChecked();
+    bool showWiggle = mWiggleCheck->isChecked();
     
     // ---------------------------
     
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
     {
-        mByPhasesGraphs[i]->setResultToShow(result, variable, showAllChains, showChainList, showHpd, hdpThreshold, showCalib);
+        mByPhasesGraphs[i]->setResultToShow(result, variable, showAllChains, showChainList, showHpd, hdpThreshold, showCalib, showWiggle);
     }
     for(int i=0; i<mByEventsGraphs.size(); ++i)
     {
-        mByEventsGraphs[i]->setResultToShow(result, variable, showAllChains, showChainList, showHpd, hdpThreshold, showCalib);
+        mByEventsGraphs[i]->setResultToShow(result, variable, showAllChains, showChainList, showHpd, hdpThreshold, showCalib, showWiggle);
     }
     update();
 }
@@ -729,6 +735,7 @@ void ResultsView::changeTab(int index)
     mHPDEdit->setVisible(index == 0);
     mAllChainsCheck->setVisible(index == 0);
     mDataCalibCheck->setVisible(index == 0);
+    mWiggleCheck->setVisible(index == 0);
     
     if(index == 0)
     {

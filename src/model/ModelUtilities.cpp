@@ -1,4 +1,6 @@
 #include "ModelUtilities.h"
+#include "Date.h"
+#include "../PluginAbstract.h"
 #include <QObject>
 
 
@@ -46,6 +48,31 @@ QString ModelUtilities::getDataMethodText(Date::DataMethod method)
             return QObject::tr("Unknown");
         }
     }
+}
+
+QString ModelUtilities::getDeltaText(const Date& date)
+{
+    QString result;
+    PluginAbstract* plugin = date.mPlugin;
+    if(plugin && plugin->wiggleAllowed())
+    {
+        switch(date.mDeltaType)
+        {
+            case Date::eDeltaFixed:
+                result = QObject::tr("Wiggle") + " : " + QString::number(date.mDeltaFixed);
+                break;
+            case Date::eDeltaRange:
+                result = QObject::tr("Wiggle") + " : [" + QString::number(date.mDeltaMin) + ", " + QString::number(date.mDeltaMax) + "]";
+                break;
+            case Date::eDeltaGaussian:
+                result = QObject::tr("Wiggle") + " : " + QString::number(date.mDeltaAverage) + " +- " + QString::number(date.mDeltaError);
+                break;
+                
+            default:
+                break;
+        }
+    }
+    return result;
 }
 
 

@@ -157,6 +157,8 @@ QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const floa
 
 float map_interpolate_key_for_value(const float value, const QMap<float, float>& map)
 {
+    // Dichotomie
+    
     if(map.key(value, -99999) != -99999)
     {
         return map.key(value);
@@ -198,9 +200,9 @@ float map_interpolate_key_for_value(const float value, const QMap<float, float>&
     }
     
     
-    // ---
+    // Old school
     
-    /*for(QMap<float, float>::const_iterator it = aMap.begin(); it != aMap.end(); ++it)
+    /*for(QMap<float, float>::const_iterator it = map.begin(); it != map.end(); ++it)
     {
         if(it.value() > value)
         {

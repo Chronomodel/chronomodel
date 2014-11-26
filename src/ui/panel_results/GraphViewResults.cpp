@@ -14,6 +14,11 @@
 GraphViewResults::GraphViewResults(QWidget *parent):QWidget(parent),
 mCurrentResult(eHisto),
 mCurrentVariable(eTheta),
+mShowAllChains(true),
+mShowHPD(false),
+mThresholdHPD(95),
+mShowCalib(false),
+mShowWiggle(false),
 mMainColor(QColor(50, 50, 50)),
 mMargin(5),
 mLineH(20),
@@ -26,6 +31,7 @@ mGraphLeft(130)
     mGraph->showAxis(false);
     mGraph->showScrollBar(false);
     mGraph->showYValues(true);
+    mGraph->setMarginRight(10);
     mGraph->setRangeY(0, 1);
     
     mTextArea = new QTextEdit(this);
@@ -43,18 +49,22 @@ mGraphLeft(130)
     mImageSaveBut = new Button(tr("Save"), this);
     mImageSaveBut->setIcon(QIcon(":picture_save.png"));
     mImageSaveBut->setFlatVertical();
+    mImageSaveBut->setToolTip(tr("Save image as file"));
     
     mImageClipBut = new Button(tr("Copy"), this);
     mImageClipBut->setIcon(QIcon(":picture_copy.png"));
     mImageClipBut->setFlatVertical();
+    mImageClipBut->setToolTip(tr("Copy image to clipboard"));
     
     mResultsClipBut = new Button(tr("Copy"), this);
     mResultsClipBut->setIcon(QIcon(":text.png"));
     mResultsClipBut->setFlatVertical();
+    mImageClipBut->setToolTip(tr("Copy text results to clipboard"));
     
     mDataSaveBut = new Button(tr("Save"), this);
     mDataSaveBut->setIcon(QIcon(":data.png"));
     mDataSaveBut->setFlatVertical();
+    mDataSaveBut->setToolTip(tr("Save graph data to file"));
     
     mAnimation = new QPropertyAnimation();
     mAnimation->setPropertyName("geometry");
@@ -75,7 +85,7 @@ GraphViewResults::~GraphViewResults()
     
 }
 
-void GraphViewResults::setResultToShow(Result result, Variable variable, bool showAllChains, const QList<bool>& showChainList, bool showHpd, int threshold, bool showCalib)
+void GraphViewResults::setResultToShow(Result result, Variable variable, bool showAllChains, const QList<bool>& showChainList, bool showHpd, int threshold, bool showCalib, bool showWiggle)
 {
     mCurrentResult = result;
     mCurrentVariable = variable;
@@ -84,6 +94,7 @@ void GraphViewResults::setResultToShow(Result result, Variable variable, bool sh
     mShowHPD = showHpd;
     mThresholdHPD = threshold;
     mShowCalib = showCalib;
+    mShowWiggle = showWiggle;
     refresh();
 }
 
@@ -195,33 +206,50 @@ void GraphViewResults::paintEvent(QPaintEvent* e)
     Q_UNUSED(e);
     QPainter p(this);
     
-    QLinearGradient grad(0, 0, 0, height());
-    grad.setColorAt(0, mMainColor.lighter());
-    grad.setColorAt(1, mMainColor);
-    //p.fillRect(rect(), grad);
+    p.fillRect(0, 0, mGraphLeft, height(), mMainColor);
     
-    p.fillRect(rect(), mMainColor);
-    QColor foreCol = getContrastedColor(mMainColor);
-    p.setPen(foreCol);
-    
-    p.setPen(Qt::black);
-    p.drawRect(0, 0, mGraphLeft, height());
+    p.setPen(QColor(200, 200, 200));
+    p.drawLine(0, height(), width(), height());
 }
 
 void GraphViewResults::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
     
-    int bw = mGraphLeft/2;
-    int bh = (height() - mLineH) / 2;
-    bh = qMin(bh, 100);
+    int h = height();
+    int butMinH = 30;
+    int butInlineMaxH = 50;
+    //int bh = (height() - mLineH) / 2;
+    //bh = qMin(bh, 100);
     
-    mImageSaveBut->setGeometry(0, mLineH, bw, bh);
-    mDataSaveBut->setGeometry(bw, mLineH, bw, bh);
+    bool showButs = (h >= mLineH + butMinH);
     
-    mImageClipBut->setGeometry(0, mLineH + bh, bw, bh);
-    mResultsClipBut->setGeometry(bw, mLineH + bh, bw, bh);
-
-    mGraph->setGeometry(mGraphLeft, 0, width() - mGraphLeft, height());
-    mTextArea->setGeometry(mGraph->geometry().adjusted(50, 8, 0, -8));
+    mImageSaveBut->setVisible(showButs);
+    mDataSaveBut->setVisible(showButs);
+    mImageClipBut->setVisible(showButs);
+    mResultsClipBut->setVisible(showButs);
+    
+    if(showButs)
+    {
+        int bw = mGraphLeft / 4;
+        int bh = height() - mLineH;
+        bh = qMin(bh, butInlineMaxH);
+        
+        mImageSaveBut->setGeometry(0, mLineH, bw, bh);
+        mDataSaveBut->setGeometry(bw, mLineH, bw, bh);
+        mImageClipBut->setGeometry(2*bw, mLineH, bw, bh);
+        mResultsClipBut->setGeometry(3*bw, mLineH, bw, bh);
+    }
+    
+    QRect graphRect(mGraphLeft, 0, width() - mGraphLeft, height()-1);
+    if(h <= mLineH + butMinH)
+    {
+        mGraph->showYValues(false, true);
+    }
+    else
+    {
+        mGraph->showYValues(true);
+    }
+    mGraph->setGeometry(graphRect);
+    mTextArea->setGeometry(graphRect);
 }
