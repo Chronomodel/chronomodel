@@ -13,8 +13,8 @@ class PhaseConstraint: public Constraint
 public:
     enum GammaType{
         eGammaUnknown = 0,
-        eGammaRange = 1,
-        eGammaFixed = 2
+        eGammaFixed = 1,
+        eGammaRange = 2
     };
     
     PhaseConstraint();

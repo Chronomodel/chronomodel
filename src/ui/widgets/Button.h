@@ -1,10 +1,10 @@
 #ifndef Button_H
 #define Button_H
 
-#include <QAbstractButton>
+#include <QPushButton>
 
 
-class Button: public QAbstractButton
+class Button: public QPushButton
 {
     Q_OBJECT
 public:

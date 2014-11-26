@@ -59,16 +59,6 @@ PluginMagForm::~PluginMagForm()
 
 }
 
-#define DATE_AM_IS_INC_STR "is_inc"
-#define DATE_AM_IS_DEC_STR "is_dec"
-#define DATE_AM_IS_INT_STR "is_int"
-#define DATE_AM_ERROR_STR "error"
-#define DATE_AM_INC_STR "inc"
-#define DATE_AM_DEC_INC_STR "dec_inc"
-#define DATE_AM_DEC_DEC_STR "dec_dec"
-#define DATE_AM_INTENSITY_STR "intensity"
-#define DATE_AM_REF_CURVE_STR "ref_curve"
-
 void PluginMagForm::setData(const QJsonObject& data)
 {
     bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
@@ -76,8 +66,7 @@ void PluginMagForm::setData(const QJsonObject& data)
     bool is_int = data.value(DATE_AM_IS_INT_STR).toBool();
     
     float inc = data.value(DATE_AM_INC_STR).toDouble();
-    float dec_dec = data.value(DATE_AM_DEC_DEC_STR).toDouble();
-    float dec_inc = data.value(DATE_AM_DEC_INC_STR).toDouble();
+    float dec = data.value(DATE_AM_DEC_STR).toDouble();
     float intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
     float error = data.value(DATE_AM_ERROR_STR).toDouble();
     QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString();
@@ -87,8 +76,8 @@ void PluginMagForm::setData(const QJsonObject& data)
     mIntensityRadio->setChecked(is_int);
     
     mIncEdit->setText(QString::number(inc));
-    mDecEdit->setText(QString::number(dec_dec));
-    mDecIncEdit->setText(QString::number(dec_inc));
+    mDecEdit->setText(QString::number(dec));
+    mDecIncEdit->setText(QString::number(inc));
     mIntensityEdit->setText(QString::number(intensity));
     mAlpha95Edit->setText(QString::number(error));
     mRefCombo->setCurrentText(ref_curve);
@@ -103,8 +92,9 @@ QJsonObject PluginMagForm::getData()
     bool is_int = mIntensityRadio->isChecked();
     
     float inc = mIncEdit->text().toDouble();
-    float dec_dec = mDecEdit->text().toDouble();
-    float dec_inc = mDecIncEdit->text().toDouble();
+    float dec = mDecEdit->text().toDouble();
+    if(is_dec)
+        inc = mDecIncEdit->text().toDouble();
     float intensity = mIntensityEdit->text().toDouble();
     float error = mAlpha95Edit->text().toDouble();
     QString ref_curve = mRefCombo->currentText();
@@ -114,8 +104,7 @@ QJsonObject PluginMagForm::getData()
     data.insert(DATE_AM_IS_INT_STR, is_int);
     
     data.insert(DATE_AM_INC_STR, inc);
-    data.insert(DATE_AM_DEC_DEC_STR, dec_dec);
-    data.insert(DATE_AM_DEC_INC_STR, dec_inc);
+    data.insert(DATE_AM_DEC_STR, dec);
     data.insert(DATE_AM_INTENSITY_STR, intensity);
     data.insert(DATE_AM_ERROR_STR, error);
     data.insert(DATE_AM_REF_CURVE_STR, ref_curve);

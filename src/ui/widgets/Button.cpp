@@ -3,12 +3,12 @@
 #include <QtWidgets>
 
 
-Button::Button(QWidget* parent):QAbstractButton(parent)
+Button::Button(QWidget* parent):QPushButton(parent)
 {
     init();
 }
 
-Button::Button(const QString& text, QWidget* parent):QAbstractButton(parent)
+Button::Button(const QString& text, QWidget* parent):QPushButton(parent)
 {
     setText(text);
     init();

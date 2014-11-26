@@ -111,6 +111,7 @@ Model* Model::fromJson(const QJsonObject& json)
         for(int i=0; i<constraints.size(); ++i)
         {
             QJsonObject constraint = constraints[i].toObject();
+            qDebug() << constraint;
             PhaseConstraint c = PhaseConstraint::fromJson(constraint);
             model->mPhaseConstraints.append(c);
         }
@@ -156,8 +157,12 @@ Model* Model::fromJson(const QJsonObject& json)
     for(int i=0; i<model->mPhases.size(); ++i)
     {
         int phaseId = model->mPhases[i].mId;
+        qDebug() << "Phase " << phaseId;
         for(int j=0; j<model->mPhaseConstraints.size(); ++j)
         {
+            qDebug() << "constr. from " << model->mPhaseConstraints[j].mFromId;
+            qDebug() << "constr. to " << model->mPhaseConstraints[j].mToId;
+            
             if(model->mPhaseConstraints[j].mFromId == phaseId)
             {
                 model->mPhaseConstraints[j].mPhaseFrom = &(model->mPhases[i]);

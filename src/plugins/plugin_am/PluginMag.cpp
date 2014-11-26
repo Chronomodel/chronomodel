@@ -9,17 +9,6 @@
 #include <QJsonObject>
 #include <QtWidgets>
 
-#define DATE_AM_IS_INC_STR "is_inc"
-#define DATE_AM_IS_DEC_STR "is_dec"
-#define DATE_AM_IS_INT_STR "is_int"
-#define DATE_AM_ERROR_STR "error"
-#define DATE_AM_INC_STR "inc"
-#define DATE_AM_DEC_INC_STR "dec_inc"
-#define DATE_AM_DEC_DEC_STR "dec_dec"
-#define DATE_AM_INTENSITY_STR "intensity"
-#define DATE_AM_REF_CURVE_STR "ref_curve"
-
-
 
 PluginMag::PluginMag()
 {
@@ -33,8 +22,7 @@ float PluginMag::getLikelyhood(const float& t, const QJsonObject& data)
     float is_int = data[DATE_AM_IS_INT_STR].toBool();
     float error = data[DATE_AM_ERROR_STR].toDouble();
     float inc = data[DATE_AM_INC_STR].toDouble();
-    float dec_inc = data[DATE_AM_DEC_INC_STR].toDouble();
-    float dec_dec = data[DATE_AM_DEC_DEC_STR].toDouble();
+    float dec = data[DATE_AM_DEC_STR].toDouble();
     float intensity = data[DATE_AM_INTENSITY_STR].toDouble();
     QString ref_curve = data[DATE_AM_REF_CURVE_STR].toString();
     
@@ -56,8 +44,8 @@ float PluginMag::getLikelyhood(const float& t, const QJsonObject& data)
         }
         else if(is_dec)
         {
-            float variance = e * e + pow(error / (2.448 * cos(dec_inc * M_PI / 180.)), 2);
-            result = exp(-0.5 * pow(g - dec_dec, 2) / variance) / sqrt(variance);
+            float variance = e * e + pow(error / (2.448 * cos(inc * M_PI / 180.)), 2);
+            result = exp(-0.5 * pow(g - dec, 2) / variance) / sqrt(variance);
         }
         else if(is_int)
         {
@@ -101,13 +89,10 @@ QStringList PluginMag::csvColumns() const
 {
     QStringList cols;
     cols << "Name"
-        << "inclination? (1|0)"
-        << "declination? (1|0)"
-        << "intensity? (1|0)"
-        << "Inclination value (if inclination only)"
-        << "Declination value (if declination only)"
-        << "Inclination value (if declination only)"
-        << "Intensity value (if intensity only)"
+        << "type (inclination | declination | intensity)"
+        << "Inclination value"
+        << "Declination value"
+        << "Intensity value"
         << "Error (or alpha 95)"
         << "Reference curve (file name)";
     return cols;
@@ -125,15 +110,14 @@ QJsonObject PluginMag::dataFromList(const QStringList& list)
     QJsonObject json;
     if(list.size() >= csvMinColumns())
     {
-        json.insert(DATE_AM_IS_INC_STR, list[1].toInt() != 0);
-        json.insert(DATE_AM_IS_DEC_STR, list[2].toInt() != 0);
-        json.insert(DATE_AM_IS_INT_STR, list[3].toInt() != 0);
-        json.insert(DATE_AM_INC_STR, list[4].toFloat());
-        json.insert(DATE_AM_DEC_DEC_STR, list[5].toFloat());
-        json.insert(DATE_AM_DEC_INC_STR, list[6].toFloat());
-        json.insert(DATE_AM_INTENSITY_STR, list[7].toFloat());
-        json.insert(DATE_AM_ERROR_STR, list[8].toFloat());
-        json.insert(DATE_AM_REF_CURVE_STR, list[9]);
+        json.insert(DATE_AM_IS_INC_STR, list[1] == "inclination");
+        json.insert(DATE_AM_IS_DEC_STR, list[1] == "declination");
+        json.insert(DATE_AM_IS_INT_STR, list[1] == "intensity");
+        json.insert(DATE_AM_INC_STR, list[2].toFloat());
+        json.insert(DATE_AM_DEC_STR, list[3].toFloat());
+        json.insert(DATE_AM_INTENSITY_STR, list[4].toFloat());
+        json.insert(DATE_AM_ERROR_STR, list[5].toFloat());
+        json.insert(DATE_AM_REF_CURVE_STR, list[6]);
     }
     return json;
 }

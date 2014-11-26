@@ -584,7 +584,7 @@ void ResultsView::updateResults(MCMCLoopMain& loop)
         
         for(int i=0; i<(int)phase->mEvents.size(); ++i)
         {
-            Event* event = (Event*)&mModel->mEvents[i];
+            Event* event = phase->mEvents[i];
             GraphViewEvent* graphEvent = new GraphViewEvent(phasesWidget);
             graphEvent->setSettings(mModel->mSettings);
             graphEvent->setMCMCSettings(mModel->mMCMCSettings, mChains);

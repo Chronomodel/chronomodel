@@ -8,9 +8,9 @@ mGamma(0),
 mPhaseFrom(0),
 mPhaseTo(0),
 mGammaType(PhaseConstraint::eGammaUnknown),
-mGammaFixed(0),
+mGammaFixed(1),
 mGammaMin(0),
-mGammaMax(0)
+mGammaMax(1)
 {
     
 }
@@ -28,6 +28,8 @@ PhaseConstraint& PhaseConstraint::operator=(const PhaseConstraint& pc)
 
 void PhaseConstraint::copyFrom(const PhaseConstraint& pc)
 {
+    Constraint::copyFrom(pc);
+    
     mGamma = pc.mGamma;
     
     mPhaseFrom = pc.mPhaseFrom;

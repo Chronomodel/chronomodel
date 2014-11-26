@@ -355,7 +355,7 @@ void MainWindow::openManual()
     dir.cdUp();
     path = dir.absolutePath() + "/Resources";
 #endif
-    path += "/Chronomodel.pdf";
+    path += "/Chronomodel_User_Manual.pdf";
     QDesktopServices::openUrl(QUrl("file:///" + path, QUrl::TolerantMode));
 }
 
@@ -367,7 +367,7 @@ void MainWindow::showHelp(bool show)
 
 void MainWindow::openWebsite()
 {
-    QDesktopServices::openUrl(QUrl("http://www.chronomodel.com", QUrl::TolerantMode));
+    QDesktopServices::openUrl(QUrl("http://www.chronomodel.fr", QUrl::TolerantMode));
 }
 
 #pragma mark Events

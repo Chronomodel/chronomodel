@@ -23,7 +23,7 @@ public:
     ~ConstraintDialog();
     
     void setConstraint(const QJsonObject& constraint);
-    const QJsonObject& constraint() const;
+    QJsonObject constraint() const;
     bool deleteRequested() const;
     
 protected slots:
@@ -39,10 +39,12 @@ private:
     bool mDeleteRequested;
     
     Label* mTypeLab;
+    Label* mFixedLab;
     Label* mMinLab;
     Label* mMaxLab;
     
     QComboBox* mTypeCombo;
+    LineEdit* mFixedEdit;
     LineEdit* mMinEdit;
     LineEdit* mMaxEdit;
     

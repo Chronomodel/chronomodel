@@ -619,12 +619,12 @@ Date Project::createDateFromData(const QString& pluginName, const QStringList& d
         date.mData = plugin->dataFromList(dataStr);
         
         int minColNum = plugin->csvMinColumns();
-        if(dataStr.size() >= minColNum + 1)
+        if(dataStr.size() >= minColNum + 2)
         {
             QString deltaType = dataStr[minColNum];
             QString delta1 = dataStr[minColNum + 1];
             QString delta2 = "0";
-            if(dataStr.size() >= minColNum + 2)
+            if(dataStr.size() >= minColNum + 3)
                 delta2 = dataStr[minColNum + 2];
             
             if(!deltaType.contains("//") && !delta1.contains("//") && !delta2.contains("//"))
@@ -1452,6 +1452,32 @@ void Project::updatePhaseConstraint(int constraintId)
             else
             {
                 constraint = dialog.constraint();
+                qDebug() << constraint;
+                if(constraint[STATE_CONSTRAINT_GAMMA_TYPE].toInt() == PhaseConstraint::eGammaFixed &&
+                   constraint[STATE_CONSTRAINT_GAMMA_FIXED].toDouble() == 0.)
+                {
+                    QMessageBox message(QMessageBox::Critical,
+                                        tr("Invalid value"),
+                                        tr("The fixed value must be positive!"),
+                                        QMessageBox::Ok,
+                                        qApp->activeWindow(),
+                                        Qt::Sheet);
+                    message.exec();
+                    return;
+                }
+                else if(constraint[STATE_CONSTRAINT_GAMMA_TYPE].toInt() == PhaseConstraint::eGammaRange &&
+                        constraint[STATE_CONSTRAINT_GAMMA_MIN].toDouble() >= constraint[STATE_CONSTRAINT_GAMMA_MAX].toDouble())
+                {
+                    QMessageBox message(QMessageBox::Critical,
+                                        tr("Invalid values"),
+                                        tr("Min must be lower than max!"),
+                                        QMessageBox::Ok,
+                                        qApp->activeWindow(),
+                                        Qt::Sheet);
+                    message.exec();
+                    return;
+                }
+                
                 constraints[index] = constraint;
             }
             stateNext[STATE_PHASES_CONSTRAINTS] = constraints;

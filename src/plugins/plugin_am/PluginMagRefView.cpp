@@ -34,8 +34,7 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         bool is_int = date.mData.value(DATE_AM_IS_INT_STR).toBool();
         
         float inc = date.mData.value(DATE_AM_INC_STR).toDouble();
-        float dec_dec = date.mData.value(DATE_AM_DEC_DEC_STR).toDouble();
-        float dec_inc = date.mData.value(DATE_AM_DEC_INC_STR).toDouble();
+        float dec = date.mData.value(DATE_AM_DEC_STR).toDouble();
         float intensity = date.mData.value(DATE_AM_INTENSITY_STR).toDouble();
         float error = date.mData.value(DATE_AM_ERROR_STR).toDouble();
         QString ref_curve = date.mData.value(DATE_AM_REF_CURVE_STR).toString();
@@ -94,8 +93,8 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         }
         else if(is_dec)
         {
-            yMin = qMin(yMin, dec_dec);
-            yMax = qMax(yMax, dec_dec);
+            yMin = qMin(yMin, dec);
+            yMax = qMax(yMax, dec);
         }
         else if(is_int)
         {
@@ -124,7 +123,7 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
             if(is_inc)
                 v = exp(-0.5 * pow((t - inc) / error, 2));
             else if(is_dec)
-                v = exp(-0.5 * pow((t - dec_dec) / error, 2));
+                v = exp(-0.5 * pow((t - dec) / error, 2));
             else if(is_int)
                 v = exp(-0.5 * pow((t - intensity) / error, 2));
             
