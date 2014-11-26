@@ -21,9 +21,12 @@ chronoControllers.controller('DownloadsCtrl', ['$scope', function DownloadsCtrl(
 
 }]);
 
-chronoControllers.controller('FaqCtrl', ['$scope', function FaqCtrl($scope)
+chronoControllers.controller('FaqCtrl', ['$scope', '$http', function FaqCtrl($scope, $http)
 {
-
+    $scope.todoList = null;
+    $http.get("contents/todo.json").success(function(result) {
+        $scope.todoList = result;
+    });
 }]);
 
 chronoControllers.controller('DocumentationCtrl', ['$scope', function DocumentationCtrl($scope)
