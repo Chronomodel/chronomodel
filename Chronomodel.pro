@@ -66,7 +66,7 @@ macx{
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
 	RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel_User_Manual.pdf
-	RESOURCES_FILES.files += $$PRO_PATH/deploy/LicenseGPL30.txt
+	RESOURCES_FILES.files += $$PRO_PATH/deploy/License.txt
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/readme.rtf
 	QMAKE_BUNDLE_DATA += RESOURCES_FILES
 }
