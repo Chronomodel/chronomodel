@@ -139,36 +139,11 @@ void GraphViewResults::setMainColor(const QColor& color)
 
 void GraphViewResults::saveAsImage()
 {
-    QString filter = tr("Image (*.png);;Scalable Vector Graphics (*.svg)");
-    QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
-                                                    tr("Save graph image as..."),
-                                                    MainWindow::getInstance()->getCurrentPath(),
-                                                    filter);
-    if(!fileName.isEmpty())
-    {
-        bool asSvg = fileName.endsWith(".svg");
-        if(asSvg)
-        {
-            QSvgGenerator svgGen;
-            svgGen.setFileName(fileName);
-            svgGen.setSize(mGraph->size());
-            svgGen.setViewBox(QRect(0, 0, mGraph->width(), mGraph->height()));
-            QPainter p(&svgGen);
-            p.setRenderHint(QPainter::Antialiasing);
-            mGraph->render(&p);
-        }
-        else
-        {
-            QImage image(mGraph->size(), QImage::Format_ARGB32);
-            image.fill(Qt::transparent);
-            QPainter p(&image);
-            p.setRenderHint(QPainter::Antialiasing);
-            mGraph->render(&p);
-            image.save(fileName, "PNG");
-        }
-        QFileInfo fileInfo(fileName);
+    QRect r(0, 0, mGraph->width(), mGraph->height());
+    QFileInfo fileInfo = saveWidgetAsImage(mGraph, r, tr("Save graph image as..."),
+                                           MainWindow::getInstance()->getCurrentPath());
+    if(fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
-    }
 }
 
 void GraphViewResults::imageToClipboard()

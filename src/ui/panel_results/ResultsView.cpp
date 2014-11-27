@@ -23,6 +23,8 @@
 #include "MainWindow.h"
 #include "Project.h"
 
+#include "QtUtilities.h"
+
 #include <QtWidgets>
 #include <iostream>
 
@@ -160,24 +162,41 @@ mHasPhases(false)
     mCompressor = new ScrollCompressor(this);
     mCompressor->setVertical(false);
     
-    mUnfoldBut = new Button(tr("Unfold results"));
+    mUnfoldBut = new Button(tr("Unfold"));
     mUnfoldBut->setCheckable(true);
+    mUnfoldBut->setFlatHorizontal();
+    mUnfoldBut->setIcon(QIcon(":picture_save.png"));
+    mUnfoldBut->setFixedHeight(50);
     
-    mInfosBut = new Button(tr("Numerical results"));
+    mInfosBut = new Button(tr("Results"));
     mInfosBut->setCheckable(true);
+    mInfosBut->setFlatHorizontal();
+    mInfosBut->setIcon(QIcon(":picture_save.png"));
+    mInfosBut->setFixedHeight(50);
+    
+    mExportImgBut = new Button(tr("Save"));
+    mExportImgBut->setFlatHorizontal();
+    mExportImgBut->setIcon(QIcon(":picture_save.png"));
+    mExportImgBut->setFixedHeight(50);
     
     mDisplayWidget = new QWidget();
+    QHBoxLayout* displayButsLayout = new QHBoxLayout();
+    displayButsLayout->setContentsMargins(0, 0, 0, 0);
+    displayButsLayout->setSpacing(0);
+    displayButsLayout->addWidget(mUnfoldBut);
+    displayButsLayout->addWidget(mInfosBut);
+    displayButsLayout->addWidget(mExportImgBut);
     QVBoxLayout* displayLayout = new QVBoxLayout();
-    displayLayout->setContentsMargins(mMargin, mMargin, mMargin, mMargin);
-    displayLayout->setSpacing(mMargin);
+    displayLayout->setContentsMargins(0, 0, 0, 0);
+    displayLayout->setSpacing(0);
     displayLayout->addWidget(mCompressor);
-    displayLayout->addWidget(mUnfoldBut);
-    displayLayout->addWidget(mInfosBut);
+    displayLayout->addLayout(displayButsLayout);
     mDisplayWidget->setLayout(displayLayout);
     
     connect(mCompressor, SIGNAL(valueChanged(float)), this, SLOT(compress(float)));
     connect(mUnfoldBut, SIGNAL(toggled(bool)), this, SLOT(unfoldResults(bool)));
     connect(mInfosBut, SIGNAL(toggled(bool)), this, SLOT(showInfos(bool)));
+    connect(mExportImgBut, SIGNAL(clicked()), this, SLOT(exportFullImage()));
     
     
     // -------------------------
@@ -188,12 +207,12 @@ mHasPhases(false)
     optionsLayout->setContentsMargins(0, 0, 0, 0);
     optionsLayout->setSpacing(0);
     optionsLayout->addWidget(mZoomWidget);
+    optionsLayout->addWidget(mDisplayTitle);
+    optionsLayout->addWidget(mDisplayWidget);
     optionsLayout->addWidget(mChainsTitle);
     optionsLayout->addWidget(mChainsGroup);
     optionsLayout->addWidget(mDataTitle);
     optionsLayout->addWidget(mDataGroup);
-    optionsLayout->addWidget(mDisplayTitle);
-    optionsLayout->addWidget(mDisplayWidget);
     optionsLayout->addStretch();
     mOptionsWidget->setLayout(optionsLayout);
     
@@ -700,6 +719,17 @@ void ResultsView::showInfos(bool show)
     
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
         mByPhasesGraphs[i]->showNumericalResults(show);
+}
+
+void ResultsView::exportFullImage()
+{
+    QRect r(0, 0, mEventsScrollArea->widget()->width(), mEventsScrollArea->widget()->height());
+    QFileInfo fileInfo = saveWidgetAsImage(mEventsScrollArea->widget(),
+                                           r,
+                                           tr("Save graph image as..."),
+                                           MainWindow::getInstance()->getCurrentPath());
+    if(fileInfo.isFile())
+        MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
 }
 
 void ResultsView::compress(float prop)

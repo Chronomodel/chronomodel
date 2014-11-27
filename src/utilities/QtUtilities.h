@@ -3,6 +3,7 @@
 
 #include <QStringList>
 #include <QColor>
+#include <QFileInfo>
 
 bool colorIsDark(const QColor& color);
 void sortIntList(QList<int>& list);
@@ -12,7 +13,7 @@ int defaultDpiX();
 qreal dpiScaled(qreal value);
 QColor getContrastedColor(const QColor& color);
 QList<int> stringListToIntList(const QString& listStr, const QString& separator = ",");
-
+QFileInfo saveWidgetAsImage(QObject* widget, const QRect& r, const QString& dialogTitle, const QString& defaultPath);
 bool isComment(const QString& str);
 
 #endif

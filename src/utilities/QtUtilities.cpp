@@ -1,10 +1,6 @@
 #include "QtUtilities.h"
-
-#include <QApplication>
-#include <QScreen>
-#include <QFile>
-#include <QTextStream>
-#include <QDebug>
+#include <QtWidgets>
+#include <QtSvg>
 
 
 bool colorIsDark(const QColor& color)
@@ -112,3 +108,63 @@ QList<int> stringListToIntList(const QString& listStr, const QString& separator)
     return result;
 }
 
+QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogTitle, const QString& defaultPath)
+{
+    QFileInfo fileInfo;
+    
+    QGraphicsScene* scene = 0;
+    QWidget* widget = dynamic_cast<QWidget*>(wid);
+    if(!widget)
+    {
+        scene = dynamic_cast<QGraphicsScene*>(wid);
+        if(!scene)
+            return fileInfo;
+    }
+    
+    QString filter = QObject::tr("Image (*.png);;Scalable Vector Graphics (*.svg)");
+    QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                    dialogTitle,
+                                                    defaultPath,
+                                                    filter);
+    if(!fileName.isEmpty())
+    {
+        fileInfo = QFileInfo(fileName);
+        bool asSvg = fileName.endsWith(".svg");
+        if(asSvg)
+        {
+            QSvgGenerator svgGen;
+            svgGen.setFileName(fileName);
+            svgGen.setSize(r.size());
+            svgGen.setViewBox(QRect(0, 0, r.width(), r.height()));
+            QPainter p(&svgGen);
+            p.setRenderHint(QPainter::Antialiasing);
+            if(widget)
+                widget->render(&p);
+            else if(scene)
+                scene->render(&p);
+        }
+        else
+        {
+            qreal pr = qApp->devicePixelRatio();
+            qDebug() << "Saving PNG with pixel ratio : " << pr;
+            QImage image(r.width() * pr, r.height() * pr, QImage::Format_ARGB32);
+            image.setDevicePixelRatio(pr);
+            image.fill(Qt::transparent);
+            QPainter p(&image);
+            p.setRenderHint(QPainter::Antialiasing);
+            if(widget)
+            {
+                widget->render(&p);
+            }
+            else if(scene)
+            {
+                QRectF srcRect = r;
+                srcRect.setWidth(r.width() * pr);
+                srcRect.setHeight(r.height() * pr);
+                scene->render(&p, image.rect(), srcRect);
+            }
+            image.save(fileName, "PNG");
+        }
+    }
+    return fileInfo;
+}

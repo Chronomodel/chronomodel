@@ -15,6 +15,7 @@
 #include "HelpWidget.h"
 #include "MainWindow.h"
 #include "Project.h"
+#include "QtUtilities.h"
 #include <QtWidgets>
 #include <QtSvg>
 #include <QPropertyAnimation>
@@ -463,47 +464,20 @@ void ModelView::exportPhasesScene()
 
 void ModelView::exportSceneImage(QGraphicsScene* scene)
 {
-    QString filter = tr("Image (*.png);;Scalable Vector Graphics (*.svg)");
-    QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
-                                                    tr("Save model image as..."),
-                                                    MainWindow::getInstance()->getCurrentPath(),
-                                                    filter);
-    if(!fileName.isEmpty())
-    {
-        bool asSvg = fileName.endsWith(".svg");
-        
-        scene->clearSelection();
-        scene->setSceneRect(scene->itemsBoundingRect());
-        QRect r = scene->sceneRect().toRect();
-        
-        if(asSvg)
-        {
-            QSvgGenerator svgGen;
-            svgGen.setFileName(fileName);
-            svgGen.setSize(r.size());
-            svgGen.setViewBox(QRect(0, 0, r.width(), r.height()));
-            QPainter p(&svgGen);
-            p.setRenderHint(QPainter::Antialiasing);
-            scene->render(&p);
-        }
-        else
-        {
-            QImage image(r.size(), QImage::Format_ARGB32);
-            image.fill(Qt::transparent);
-            QPainter p(&image);
-            p.setRenderHint(QPainter::Antialiasing);
-            scene->render(&p);
-            image.save(fileName, "PNG");
-        }
-        QFileInfo fileInfo(fileName);
+    //scene->clearSelection();
+    scene->setSceneRect(scene->itemsBoundingRect());
+    QRect r = scene->sceneRect().toRect();
+    
+    QFileInfo fileInfo = saveWidgetAsImage(scene, r,
+                                           tr("Save model image as..."),
+                                           MainWindow::getInstance()->getCurrentPath());
+    if(fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
-        
-        
-        // Usefull one day ???
-        /*QMimeData * d = new QMimeData();
-         d->setData("image/svg+xml", b.buffer());
-         QApplication::clipboard()->setMimeData(d, QClipboard::Clipboard);*/
-    }
+    
+    // Usefull one day ???
+    /*QMimeData * d = new QMimeData();
+     d->setData("image/svg+xml", b.buffer());
+     QApplication::clipboard()->setMimeData(d, QClipboard::Clipboard);*/
 }
 
 #pragma mark Toggle Calibration

@@ -56,6 +56,7 @@ private slots:
     void unfoldResults(bool);
     void updateScrollHeights();
     void showInfos(bool);
+    void exportFullImage();
     void compress(float prop);
     void generateHPD();
     
@@ -119,6 +120,7 @@ private:
     QWidget* mDisplayWidget;
     Button* mUnfoldBut;
     Button* mInfosBut;
+    Button* mExportImgBut;
     ScrollCompressor* mCompressor;
     
     QTimer* mTimer;
