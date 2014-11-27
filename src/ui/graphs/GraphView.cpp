@@ -737,3 +737,91 @@ void GraphView::drawCurves(QPainter& painter)
     }
 }
 
+void GraphView::exportCurrentCurves(const QString& defaultPath, const QString& csvSep, bool writeInRows) const
+{
+    QString filter = tr("CSV (*.csv)");
+    QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                    tr("Save graph data as..."),
+                                                    defaultPath,
+                                                    filter);
+    QFile file(filename);
+    if(file.open(QFile::WriteOnly | QFile::Truncate))
+    {
+        bool abscissesWritten = false;
+        QList<QStringList> rows;
+        
+        for(int i=0; i<mCurves.size(); ++i)
+        {
+            if(!mCurves[i].mIsHorizontalLine &&
+               !mCurves[i].mIsVerticalLine &&
+               !mCurves[i].mIsVertical &&
+               !mCurves[i].mIsHorizontalSections &&
+               !mCurves[i].mUseVectorData)
+            {
+                if(writeInRows)
+                {
+                    const QMap<float, float>& data = mCurves[i].mData;
+                    if(!abscissesWritten)
+                    {
+                        abscissesWritten = true;
+                        QMapIterator<float, float> iter(data);
+                        QStringList abscisses;
+                        abscisses << "";
+                        while(iter.hasNext())
+                        {
+                            iter.next();
+                            abscisses << QString::number(iter.key());
+                        }
+                        rows.append(abscisses);
+                    }
+                    QMapIterator<float, float> iter(data);
+                    QStringList ordonnees;
+                    ordonnees << mCurves[i].mName;
+                    while(iter.hasNext())
+                    {
+                        iter.next();
+                        ordonnees << QString::number(iter.value());
+                    }
+                    rows.append(ordonnees);
+                }
+                else
+                {
+                    const QMap<float, float>& data = mCurves[i].mData;
+                    if(!abscissesWritten)
+                    {
+                        abscissesWritten = true;
+                        QMapIterator<float, float> iter(data);
+                        QStringList abscisses;
+                        abscisses << "";
+                        rows.append(QStringList(""));
+                        while(iter.hasNext())
+                        {
+                            iter.next();
+                            rows.append(QStringList(QString::number(iter.key())));
+                        }
+                    }
+                    if(abscissesWritten)
+                    {
+                        QMapIterator<float, float> iter(data);
+                        rows[0] << mCurves[i].mName;
+                        int index = 0;
+                        while(iter.hasNext())
+                        {
+                            iter.next();
+                            ++index;
+                            rows[index] << QString::number(iter.value());
+                        }
+                    }
+                }
+            }
+        }
+        
+        QTextStream output(&file);
+        for(int i=0; i<rows.size(); ++i)
+        {
+            output << rows[i].join(csvSep);
+            output << "\n";
+        }
+        file.close();
+    }
+}

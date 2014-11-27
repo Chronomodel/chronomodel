@@ -28,11 +28,6 @@ void GraphViewPhase::setPhase(Phase* phase)
     update();
 }
 
-void GraphViewPhase::saveGraphData()
-{
-    
-}
-
 void GraphViewPhase::paintEvent(QPaintEvent* e)
 {
     GraphViewResults::paintEvent(e);

@@ -28,6 +28,7 @@ public:
     ~MainWindow();
     
     Project* getProject();
+    AppSettings getAppSettings() const;
     QUndoStack* getUndoStack();
     QString getCurrentPath();
     void setCurrentPath(const QString& path);

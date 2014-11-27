@@ -14,9 +14,6 @@ public:
     virtual ~GraphViewPhase();
     
     void setPhase(Phase* phase);
-
-private slots:
-    void saveGraphData();
     
 protected:
     void paintEvent(QPaintEvent* e);

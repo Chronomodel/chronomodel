@@ -49,9 +49,10 @@ void ImportDataView::browse()
         if(file.open(QIODevice::ReadOnly))
         {
             QTextStream stream(&file);
-            // TODO
-            QTextCodec* codec = stream.codec();
             QList<QStringList> data;
+            
+            // TODO : File encoding must be UTF8, Unix LF !!
+            //QTextCodec* codec = stream.codec();
             
             int rows = 0;
             int cols = 0;
@@ -59,11 +60,14 @@ void ImportDataView::browse()
             QStringList headers;
             QStringList pluginNames = PluginManager::getPluginsNames();
             
+            AppSettings settings = MainWindow::getInstance()->getAppSettings();
+            QString csvSep = settings.mCSVCellSeparator;
+            
             // Read every lines of the file
             while(!stream.atEnd())
             {
                 QString line = stream.readLine();
-                QStringList values = line.split(",");
+                QStringList values = line.split(csvSep);
                 if(values.size() > 0)
                 {
                     if(isComment(values[0]))
@@ -175,6 +179,9 @@ QMimeData* ImportDataTable::mimeData(const QList<QTableWidgetItem*> items) const
     int row = -1;
     QStringList itemStr;
     
+    AppSettings settings = MainWindow::getInstance()->getAppSettings();
+    QString csvSep = settings.mCSVCellSeparator;
+    
     foreach(QTableWidgetItem* item, items)
     {
         if(item)
@@ -182,7 +189,7 @@ QMimeData* ImportDataTable::mimeData(const QList<QTableWidgetItem*> items) const
             if(item->row() != row)
             {
                 if(!itemStr.empty())
-                    stream << itemStr.join(";");
+                    stream << itemStr.join(csvSep);
                 
                 itemStr.clear();
                 row = item->row();
@@ -196,7 +203,7 @@ QMimeData* ImportDataTable::mimeData(const QList<QTableWidgetItem*> items) const
         }
     }
     if(!itemStr.empty())
-        stream << itemStr.join(";");
+        stream << itemStr.join(csvSep);
     
     mimeData->setData("application/chronomodel.import.data", encodedData);
     return mimeData;

@@ -21,16 +21,30 @@ public:
     AppSettings getSettings();
     
 protected:
+    void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent* e);
     
+private slots:
+    void reset();
+    
 private:
+    Label* mTitleLab;
+    
+    Label* mAutoSaveLab;
     CheckBox* mAutoSaveCheck;
     Label* mAutoSaveDelayLab;
     LineEdit* mAutoSaveDelayEdit;
     
-    Label* mCSVSepLab;
-    LineEdit* mCSVSepEdit;
+    Label* mCSVCellSepLab;
+    LineEdit* mCSVCellSepEdit;
     
+    Label* mCSVDecSepLab;
+    LineEdit* mCSVDecSepEdit;
+    
+    Label* mOpenLastProjectLab;
+    CheckBox* mOpenLastProjectCheck;
+    
+    Button* mResetBut;
     Button* mOkBut;
     Button* mCancelBut;
 };

@@ -38,11 +38,6 @@ void GraphViewDate::setColor(const QColor& color)
     update();
 }
 
-void GraphViewDate::saveGraphData()
-{
-    
-}
-
 void GraphViewDate::paintEvent(QPaintEvent* e)
 {
     GraphViewResults::paintEvent(e);

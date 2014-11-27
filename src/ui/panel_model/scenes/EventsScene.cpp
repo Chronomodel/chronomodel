@@ -595,11 +595,14 @@ QList<Date> EventsScene::decodeDataDrop(QGraphicsSceneDragDropEvent* e)
     QList<int> acceptedRows;
     QList<Date> dates;
     
+    AppSettings settings = MainWindow::getInstance()->getAppSettings();
+    QString csvSep = settings.mCSVCellSeparator;
+    
     while(!stream.atEnd())
     {
         QString itemStr;
         stream >> itemStr;
-        QStringList dataStr = itemStr.split(";");
+        QStringList dataStr = itemStr.split(csvSep);
         
         // Remove first column corresponding to csvRow
         int csvRow = dataStr.takeFirst().toInt();

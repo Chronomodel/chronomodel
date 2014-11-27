@@ -183,6 +183,14 @@ void GraphViewResults::resultsToClipboard()
     clipboard->setText(mResults);
 }
 
+void GraphViewResults::saveGraphData() const
+{
+    AppSettings settings = MainWindow::getInstance()->getAppSettings();
+    QString csvSep = settings.mCSVCellSeparator;
+    
+    mGraph->exportCurrentCurves(MainWindow::getInstance()->getCurrentPath(), csvSep, false);
+}
+
 void GraphViewResults::setNumericalResults(const QString& results)
 {
     mResults = results;

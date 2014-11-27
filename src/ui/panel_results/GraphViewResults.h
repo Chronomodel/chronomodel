@@ -51,7 +51,7 @@ private slots:
     void saveAsImage();
     void imageToClipboard();
     void resultsToClipboard();
-    virtual void saveGraphData() = 0;
+    void saveGraphData() const;
     
 protected:
     virtual void paintEvent(QPaintEvent* e);

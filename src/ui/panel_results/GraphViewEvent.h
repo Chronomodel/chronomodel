@@ -14,9 +14,6 @@ public:
     virtual ~GraphViewEvent();
     
     void setEvent(Event* event);
-
-private slots:
-    void saveGraphData();
     
 protected:
     void paintEvent(QPaintEvent* e);

@@ -16,9 +16,6 @@ public:
     void setDate(Date* date);
     void setColor(const QColor& color);
     
-private slots:
-    void saveGraphData();
-    
 protected:
     void paintEvent(QPaintEvent* e);
     void refresh();

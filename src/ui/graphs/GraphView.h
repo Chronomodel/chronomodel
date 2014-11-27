@@ -31,6 +31,7 @@ public slots:
     void zoomX(const float min, const float max);
     // Change graph only, not ruler :
     void setCurrentRangeX(const float min, const float max);
+    void exportCurrentCurves(const QString& defaultPath, const QString& csvSep, bool writeInRows) const;
     
 public:
     

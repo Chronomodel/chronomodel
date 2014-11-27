@@ -70,6 +70,11 @@ Project* MainWindow::getProject()
     return mProject;
 }
 
+AppSettings MainWindow::getAppSettings() const
+{
+    return mAppSettings;
+}
+
 QUndoStack* MainWindow::getUndoStack()
 {
     return mUndoStack;
@@ -338,7 +343,7 @@ void MainWindow::about()
 
 void MainWindow::appSettings()
 {
-    AppSettingsDialog dialog;
+    AppSettingsDialog dialog(qApp->activeWindow(), Qt::Sheet);
     dialog.setSettings(mAppSettings);
     if(dialog.exec() == QDialog::Accepted)
     {
@@ -406,9 +411,12 @@ void MainWindow::writeSettings()
     settings.setValue("last_project_filename", mProject->mProjectFileName);
     
     settings.beginGroup("AppSettings");
-    settings.setValue("auto_save", mAppSettings.mAutoSave);
-    settings.setValue("auto_save_delay", mAppSettings.mAutoSaveDelay);
-    settings.setValue("show_help", mAppSettings.mShowHelp);
+    settings.setValue(APP_SETTINGS_STR_AUTO_SAVE, mAppSettings.mAutoSave);
+    settings.setValue(APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC, mAppSettings.mAutoSaveDelay);
+    settings.setValue(APP_SETTINGS_STR_SHOW_HELP, mAppSettings.mShowHelp);
+    settings.setValue(APP_SETTINGS_STR_CELL_SEP, mAppSettings.mCSVCellSeparator);
+    settings.setValue(APP_SETTINGS_STR_DEC_SEP, mAppSettings.mCSVDecSeparator);
+    settings.setValue(APP_SETTINGS_STR_OPEN_PROJ, mAppSettings.mOpenLastProjectAtLaunch);
     settings.endGroup();
     
     settings.endGroup();
@@ -425,9 +433,12 @@ void MainWindow::readSettings()
     move(settings.value("pos", QPoint(200, 200)).toPoint());
     
     settings.beginGroup("AppSettings");
-    mAppSettings.mAutoSave = settings.value("auto_save", true).toBool();
-    mAppSettings.mAutoSaveDelay = settings.value("auto_save_delay", 300).toInt();
-    mAppSettings.mShowHelp = settings.value("show_help", true).toInt();
+    mAppSettings.mAutoSave = settings.value(APP_SETTINGS_STR_AUTO_SAVE, APP_SETTINGS_DEFAULT_AUTO_SAVE).toBool();
+    mAppSettings.mAutoSaveDelay = settings.value(APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC, APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC).toInt();
+    mAppSettings.mShowHelp = settings.value(APP_SETTINGS_STR_SHOW_HELP, APP_SETTINGS_DEFAULT_SHOW_HELP).toBool();
+    mAppSettings.mCSVCellSeparator = settings.value(APP_SETTINGS_STR_CELL_SEP, APP_SETTINGS_DEFAULT_CELL_SEP).toString();
+    mAppSettings.mCSVDecSeparator = settings.value(APP_SETTINGS_STR_DEC_SEP, APP_SETTINGS_DEFAULT_DEC_SEP).toString();
+    mAppSettings.mOpenLastProjectAtLaunch = settings.value(APP_SETTINGS_STR_OPEN_PROJ, APP_SETTINGS_DEFAULT_OPEN_PROJ).toBool();
     settings.endGroup();
     
     mProjectView->showHelp(mAppSettings.mShowHelp);
