@@ -11,6 +11,7 @@ public:
     
     static QColor mainColorLight;
     static QColor mainColorDark;
+    static QColor mainGreen;
     static QList<QColor> chainColors;
     static QColor greyedOut;
 };

@@ -6,7 +6,7 @@
 ScrollCompressor::ScrollCompressor(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mProp(0.5f),
 mIsDragging(false),
-mShowText(false),
+mShowText(true),
 mIsVertical(true)
 {
     setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
@@ -63,6 +63,10 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
     
+    QFont font = p.font();
+    font.setPointSizeF(pointSize(11));
+    p.setFont(font);
+    
     if(mIsVertical)
     {
         QLinearGradient grad1(0, 0, width(), 0);
@@ -84,10 +88,20 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
         p.setPen(QColor(50, 50, 50));
         p.setBrush(Qt::NoBrush);
         p.drawRect(r);
+        
+        if(mShowText)
+        {
+            QString text = mText + "\n" + QString::number(qRound(mProp * 100)) + " %";
+            p.setPen(QColor(200, 200, 200));
+            p.drawText(r, Qt::AlignCenter, text);
+        }
     }
     else
     {
-        QLinearGradient grad1(0, 0, 0, height());
+        float w = r.width() * mProp;
+        QRectF r2 = r.adjusted(0, 0, -r.width() + w, 0);
+        
+        /*QLinearGradient grad1(0, 0, 0, height());
         grad1.setColorAt(0, QColor(60, 60, 60));
         grad1.setColorAt(1, QColor(80, 80, 80));
         
@@ -98,25 +112,26 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
         QLinearGradient grad2(0, 0, 0, height());
         grad2.setColorAt(0, Painting::mainColorLight);
         grad2.setColorAt(1, Painting::mainColorDark);
-        
-        float w = r.width() * mProp;
-        QRectF r2 = r.adjusted(0, 0, -r.width() + w, 0);
         p.fillRect(r2, grad2);
-        
+         
         p.setPen(QColor(50, 50, 50));
         p.setBrush(Qt::NoBrush);
-        p.drawRect(r);
-    }
-    
-    if(mShowText)
-    {
-        QFont font = p.font();
-        font.setPointSizeF(pointSize(11));
-        p.setFont(font);
+        p.drawRect(r);*/
         
-        QString text = mText + "\n" + QString::number(qRound(mProp * 100)) + " %";
-        p.setPen(QColor(200, 200, 200));
-        p.drawText(r, Qt::AlignCenter, text);
+        p.setPen(QColor(150, 150, 150));
+        p.setBrush(QColor(150, 150, 150));
+        p.drawRect(r);
+        
+        p.setPen(Painting::mainGreen);
+        p.setBrush(Painting::mainGreen);
+        p.drawRect(r2);
+        
+        if(mShowText)
+        {
+            QString text = mText + " : " + QString::number(qRound(mProp * 100)) + " %";
+            p.setPen(Qt::white);
+            p.drawText(r, Qt::AlignCenter, text);
+        }
     }
 }
 

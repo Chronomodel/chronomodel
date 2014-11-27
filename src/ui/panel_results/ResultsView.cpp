@@ -161,6 +161,7 @@ mHasPhases(false)
     
     mCompressor = new ScrollCompressor(this);
     mCompressor->setVertical(false);
+    mCompressor->showText(tr("Scale"), true);
     
     mUnfoldBut = new Button(tr("Unfold"));
     mUnfoldBut->setCheckable(true);
@@ -190,6 +191,7 @@ mHasPhases(false)
     displayLayout->setContentsMargins(0, 0, 0, 0);
     displayLayout->setSpacing(0);
     displayLayout->addWidget(mCompressor);
+    displayLayout->addWidget(mZoomWidget);
     displayLayout->addLayout(displayButsLayout);
     mDisplayWidget->setLayout(displayLayout);
     
@@ -206,7 +208,6 @@ mHasPhases(false)
     QVBoxLayout* optionsLayout = new QVBoxLayout();
     optionsLayout->setContentsMargins(0, 0, 0, 0);
     optionsLayout->setSpacing(0);
-    optionsLayout->addWidget(mZoomWidget);
     optionsLayout->addWidget(mDisplayTitle);
     optionsLayout->addWidget(mDisplayWidget);
     optionsLayout->addWidget(mChainsTitle);
@@ -682,11 +683,15 @@ void ResultsView::unfoldResults(bool open)
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
         mByPhasesGraphs[i]->toggle(geometries[i]);
     
+    //updateScrollHeights();
+    
     if(open)
+    {
         updateScrollHeights();
+    }
     else
     {
-        //mTimer->start(200);
+        mTimer->start(200);
     }
 }
 

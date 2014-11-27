@@ -4,6 +4,7 @@ QColor Painting::mainColorLight = QColor(146, 50, 154);
 QColor Painting::mainColorDark = QColor(54, 23, 106);
 QList<QColor> Painting::chainColors = QList<QColor>();
 QColor Painting::greyedOut = QColor(255, 255, 255, 200);
+QColor Painting::mainGreen = QColor(0, 169, 157);
 
 void Painting::init()
 {
