@@ -13,6 +13,7 @@ class CheckBox;
 class LineEdit;
 class Button;
 class QTextEdit;
+class QLabel;
 
 
 class CalibrationView: public QWidget
@@ -32,7 +33,6 @@ protected:
     
 private slots:
     void updateGraphs();
-    void showResults(bool show);
     
 public:
     QJsonObject mDate;
@@ -46,8 +46,7 @@ public:
     
     CheckBox* mHPDCheck;
     LineEdit* mHPDEdit;
-    Button* mResultsBut;
-    QTextEdit* mResultsEdit;
+    QLabel* mResultsLab;
 };
 
 #endif

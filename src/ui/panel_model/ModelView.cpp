@@ -434,7 +434,7 @@ void ModelView::updateLayout()
     mPhasesGlobalZoom->setGeometry(mRightSubRect.width() - butW, 4*butH, butW, mRightRect.height() - 4*butH);
     
     mCalibrationView->setGeometry(mLeftHiddenRect);
-    mButBackEvents->setGeometry(mCalibrationView->width() - 27, 2, 25, 25);
+    mButBackEvents->setGeometry(mCalibrationView->width() - 30, 5, 25, 25);
     
     update();
 }

@@ -101,12 +101,12 @@ void DatesList::handleItemClicked(QListWidgetItem* item)
     QRect updateRect(iconW, yOffset + rowH - mm - butH, butW, butH);
     QRect calibRect(iconW + butW + mm, yOffset + rowH - mm - butH, butW, butH);
     
-    qDebug() << "----";
+    /*qDebug() << "----";
     qDebug() << "index : " << index;
     qDebug() << "rowH : " << rowH;
     qDebug() << "yOffset : " << yOffset;
     qDebug() << "pos : " << pos;
-    qDebug() << "updateRect : " << updateRect;
+    qDebug() << "updateRect : " << updateRect;*/
     
     if(updateRect.contains(pos))
     {
