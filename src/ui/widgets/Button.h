@@ -17,12 +17,14 @@ public:
     
     void setFlatVertical();
     void setFlatHorizontal();
+    void setIsClose(bool isClose);
     
 protected:
     void paintEvent(QPaintEvent* e);
     
     bool mFlatVertical;
     bool mFlatHorizontal;
+    bool mIsClose;
 };
 
 #endif

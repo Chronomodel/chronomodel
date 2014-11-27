@@ -64,8 +64,9 @@ private slots:
     void updatePhasesZoom(float prop);
     void exportPhasesScene();
     
-    void showCalibration(const QJsonObject& date);
-    void showEvents();
+    void updateCalibration(const QJsonObject& date);
+    void showCalibration(bool show = true);
+    void hideCalibration();
     
 private:
     void exportSceneImage(QGraphicsScene* scene);
@@ -143,6 +144,7 @@ private:
     float mSplitProp;
     int mHandlerW;
     bool mIsSplitting;
+    bool mCalibVisible;
 };
 
 #endif

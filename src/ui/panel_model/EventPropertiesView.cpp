@@ -45,6 +45,8 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     
     mDatesList = new DatesList(mDefaultView);
     
+    connect(mDatesList, SIGNAL(calibRequested(const QJsonObject&)), this, SIGNAL(calibRequested(const QJsonObject&)));
+    
     // -------------
     
     const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();

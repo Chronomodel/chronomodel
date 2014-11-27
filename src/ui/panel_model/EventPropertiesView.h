@@ -62,6 +62,7 @@ private slots:
 signals:
     void mergeSelectedDates(Event* event);
     void splitDate(Date* date);
+    void calibRequested(const QJsonObject& date);
     
 private:
     QJsonObject mEvent;

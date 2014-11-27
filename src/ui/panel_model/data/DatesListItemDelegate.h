@@ -22,7 +22,8 @@ public:
         
         int mm = 2;
         int mh = metrics.height();
-        return QSize(option.rect.width(), 4*mh + 5*mm);
+        int butH = 20;
+        return QSize(option.rect.width(), 4*mh + butH + 6*mm);
         
         /*QVariant value = index.data(Qt::SizeHintRole);
         if(value.isValid())
@@ -48,12 +49,15 @@ public:
             return;
         }*/
         
+        int mm = 2;
         int x = option.rect.x();
         int y = option.rect.y();
         int w = option.rect.width();
         int h = option.rect.height();
         int iconW = 30;
         int iconS = 20;
+        int butH = 20;
+        int butW = 60;
         
         painter->setRenderHint(QPainter::Antialiasing);
         
@@ -71,46 +75,62 @@ public:
         
         PluginAbstract* plugin = PluginManager::getPluginFromId(pluginId);
         
-        QIcon icon = plugin->getIcon();
-        QPixmap pixmap = icon.pixmap(iconS, iconS);
-        painter->drawPixmap(x + (iconW - iconS)/2, y + (h - iconS)/2, iconS, iconS, pixmap, 0, 0, pixmap.width(), pixmap.height());
-        
-        QFont font = option.font;
-        font.setPointSizeF(pointSize(11));
-        painter->setFont(font);
-        QFontMetrics metrics(font);
-        
-        int mm = 2;
-        int mh = metrics.height();
-        
-        painter->setPen(Qt::black);
-        painter->drawText(x + iconW, y + mm, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, dateName);
-        
-        painter->setPen(QColor(120, 120, 120));
-        painter->drawText(x + iconW, y + 2*mm + mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, tr("Type") + " : " + plugin->getName() + " | " + tr("Method") + " : " + dateMethodStr);
-        painter->drawText(x + iconW, y + 3*mm + 2*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, dateDesc);
-        
-        painter->setPen(QColor(80, 160, 90));
-        painter->drawText(x + iconW, y + 4*mm + 3*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, delta);
-        
-        painter->setPen(QColor(200, 200, 200));
-        painter->drawLine(x, y + h, x + w, y + h);
-        
-        /*if (option.state & QStyle::State_Selected)
-            painter->fillRect(option.rect, option.palette.highlight());
-        
-        int size = qMin(option.rect.width(), option.rect.height());
-        int brightness = index.model()->data(index, Qt::DisplayRole).toInt();
-        double radius = (size / 2.0) - (brightness / 255.0 * size / 2.0);
-        if (radius == 0.0)
-            return;
-        
-        painter->save();
-        painter->setRenderHint(QPainter::Antialiasing, true);
-        painter->setPen(Qt::NoPen);
-        if (option.state & QStyle::State_Selected)
-            painter->setBrush(option.palette.highlightedText());
-        else*/
+        if(plugin)
+        {
+            QIcon icon = plugin->getIcon();
+            QPixmap pixmap = icon.pixmap(iconS, iconS);
+            painter->drawPixmap(x + (iconW - iconS)/2, y + (h - iconS)/2, iconS, iconS, pixmap, 0, 0, pixmap.width(), pixmap.height());
+            
+            QFont font = option.font;
+            font.setPointSizeF(pointSize(11));
+            painter->setFont(font);
+            QFontMetrics metrics(font);
+            
+            int mh = metrics.height();
+            
+            painter->setPen(Qt::black);
+            painter->drawText(x + iconW, y + mm, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, dateName);
+            
+            painter->setPen(QColor(120, 120, 120));
+            painter->drawText(x + iconW, y + 2*mm + mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, tr("Type") + " : " + plugin->getName() + " | " + tr("Method") + " : " + dateMethodStr);
+            painter->drawText(x + iconW, y + 3*mm + 2*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, dateDesc);
+            
+            painter->setPen(QColor(80, 160, 90));
+            painter->drawText(x + iconW, y + 4*mm + 3*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, delta);
+            
+            painter->setPen(QColor(200, 200, 200));
+            painter->drawLine(x, y + h, x + w, y + h);
+            
+            // ------
+            
+            QRect updateRect(x + iconW, y + h - mm - butH, butW, butH);
+            QRect calibRect(x + iconW + mm + butW, y + h - mm - butH, butW, butH);
+            
+            painter->setPen(QColor(130, 130, 130));
+            painter->setBrush(QColor(130, 130, 130));
+            painter->drawRoundedRect(updateRect, 4, 4);
+            painter->drawRoundedRect(calibRect, 4, 4);
+            
+            painter->setPen(Qt::white);
+            painter->drawText(updateRect, Qt::AlignCenter, tr("Update"));
+            painter->drawText(calibRect, Qt::AlignCenter, tr("Calibrate"));
+            
+            /*if (option.state & QStyle::State_Selected)
+             painter->fillRect(option.rect, option.palette.highlight());
+             
+             int size = qMin(option.rect.width(), option.rect.height());
+             int brightness = index.model()->data(index, Qt::DisplayRole).toInt();
+             double radius = (size / 2.0) - (brightness / 255.0 * size / 2.0);
+             if (radius == 0.0)
+             return;
+             
+             painter->save();
+             painter->setRenderHint(QPainter::Antialiasing, true);
+             painter->setPen(Qt::NoPen);
+             if (option.state & QStyle::State_Selected)
+             painter->setBrush(option.palette.highlightedText());
+             else*/
+        }
     }
 };
 

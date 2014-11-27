@@ -26,7 +26,8 @@ mMargin(5),
 mToolbarH(60),
 mSplitProp(0.6f),
 mHandlerW(15),
-mIsSplitting(false)
+mIsSplitting(false),
+mCalibVisible(false)
 {
     setMouseTracking(true);
     
@@ -89,6 +90,8 @@ mIsSplitting(false)
     connect(mEventsScene, SIGNAL(csvDataLineDropAccepted(QList<int>)), mImportDataView, SLOT(removeCsvRows(QList<int>)));
     
     mEventPropertiesView = new EventPropertiesView(mRightWrapper);
+    connect(mEventPropertiesView, SIGNAL(calibRequested(const QJsonObject&)), this, SLOT(updateCalibration(const QJsonObject&)));
+    connect(mEventPropertiesView, SIGNAL(calibRequested(const QJsonObject&)), this, SLOT(showCalibration()));
     
     // --------
     
@@ -160,7 +163,8 @@ mIsSplitting(false)
     mAnimationCalib->setEasingCurve(QEasingCurve::OutCubic);
     
     mButBackEvents = new Button(tr("Close"), mCalibrationView);
-    connect(mButBackEvents, SIGNAL(clicked()), this, SLOT(showEvents()));
+    mButBackEvents->setIsClose(true);
+    connect(mButBackEvents, SIGNAL(clicked()), this, SLOT(hideCalibration()));
     
     // --------
     
@@ -224,7 +228,7 @@ ModelView::~ModelView()
 
 void ModelView::doProjectConnections(Project* project)
 {
-    connect(project, SIGNAL(currentDateChanged(const QJsonObject&)), this, SLOT(showCalibration(const QJsonObject&)));
+    connect(project, SIGNAL(currentDateChanged(const QJsonObject&)), this, SLOT(updateCalibration(const QJsonObject&)));
     
     connect(mButNewEvent, SIGNAL(clicked()), project, SLOT(createEvent()));
     connect(mButNewEventKnown, SIGNAL(clicked()), project, SLOT(createEventKnown()));
@@ -430,6 +434,7 @@ void ModelView::updateLayout()
     mPhasesGlobalZoom->setGeometry(mRightSubRect.width() - butW, 4*butH, butW, mRightRect.height() - 4*butH);
     
     mCalibrationView->setGeometry(mLeftHiddenRect);
+    mButBackEvents->setGeometry(mCalibrationView->width() - 27, 2, 25, 25);
     
     update();
 }
@@ -481,25 +486,39 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
 }
 
 #pragma mark Toggle Calibration
-void ModelView::showCalibration(const QJsonObject& date)
+void ModelView::updateCalibration(const QJsonObject& date)
 {
     Date d = Date::fromJson(date);
     if(!date.isEmpty())
     {
         mCalibrationView->setDate(date);
-        mCalibrationView->raise();
-        
-        mAnimationCalib->setStartValue(mLeftHiddenRect);
-        mAnimationCalib->setEndValue(mLeftRect);
+    }
+}
+
+void ModelView::showCalibration(bool show)
+{
+    if(mCalibVisible != show)
+    {
+        mCalibVisible = show;
+        if(mCalibVisible)
+        {
+            mCalibrationView->raise();
+            mAnimationCalib->setStartValue(mLeftHiddenRect);
+            mAnimationCalib->setEndValue(mLeftRect);
+            
+        }
+        else
+        {
+            mAnimationCalib->setStartValue(mLeftRect);
+            mAnimationCalib->setEndValue(mLeftHiddenRect);
+        }
         mAnimationCalib->start();
     }
 }
 
-void ModelView::showEvents()
+void ModelView::hideCalibration()
 {
-    mAnimationCalib->setStartValue(mLeftRect);
-    mAnimationCalib->setEndValue(mLeftHiddenRect);
-    mAnimationCalib->start();
+    showCalibration(false);
 }
 
 #pragma mark Mouse Events
@@ -525,7 +544,7 @@ void ModelView::mouseMoveEvent(QMouseEvent* e)
 void ModelView::keyPressEvent(QKeyEvent* event)
 {
     if(event->key() == Qt::Key_Escape)
-        showCalibration(QJsonObject());
+        showCalibration(false);
     else
         event->ignore();
 }

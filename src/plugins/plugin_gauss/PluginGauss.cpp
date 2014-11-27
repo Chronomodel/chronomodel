@@ -93,12 +93,41 @@ QString PluginGauss::getDateDesc(const Date* date) const
     if(date)
     {
         QJsonObject data = date->mData;
+        
+        float a = data[DATE_GAUSS_A_STR].toDouble();
+        float b = data[DATE_GAUSS_B_STR].toDouble();
+        float c = data[DATE_GAUSS_C_STR].toDouble();
+        
+        QString aStr;
+        if(a != 0.f)
+        {
+            if(a == -1.f) aStr += "-";
+            else if(a != 1.f) aStr += QString::number(a);
+            aStr += "t²";
+        }
+        QString bStr;
+        if(b != 0.f)
+        {
+            if(b == -1.f) bStr += "-";
+            else if(b != 1.f) bStr += QString::number(b);
+            bStr += "t";
+        }
+        QString cStr;
+        if(c != 0.f)
+        {
+            cStr += QString::number(c);
+        }
+        QString eq = aStr;
+        if(!eq.isEmpty() && !bStr.isEmpty())
+           eq += " + ";
+        eq += bStr;
+        if(!eq.isEmpty() && !cStr.isEmpty())
+            eq += " + ";
+        eq += cStr;
+        
         result += QObject::tr("Age") + " : " + QString::number(data[DATE_GAUSS_AGE_STR].toDouble());
         result += " +- " + QString::number(data[DATE_GAUSS_ERROR_STR].toDouble());
-        result += ", " + QObject::tr("Ref. curve") + " = " +
-            QString::number(data[DATE_GAUSS_A_STR].toDouble()) + "t^2 + ";
-            QString::number(data[DATE_GAUSS_B_STR].toDouble()) + "t + ";
-            QString::number(data[DATE_GAUSS_C_STR].toDouble());
+        result += ", " + QObject::tr("Ref. curve") + " : g(t) = " + eq;
     }
     return result;
 }

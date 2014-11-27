@@ -7,6 +7,7 @@
 #include "../PluginAbstract.h"
 #include "DatesListItemDelegate.h"
 #include "ModelUtilities.h"
+#include "Button.h"
 #include <QtWidgets>
 
 
@@ -62,7 +63,17 @@ void DatesList::setEvent(const QJsonObject& event)
                 item->setData(0x0104, d.mId);
                 item->setData(0x0105, ModelUtilities::getDeltaText(d));
                 item->setData(0x0106, ModelUtilities::getDataMethodText(d.mMethod));
+                
                 addItem(item);
+                
+                /*Button* updateBut = new Button(tr("Update"));
+                Button* calibBut = new Button(tr("Calibrate"));
+                
+                updateBut->setMaximumSize(70, 25);
+                updateBut->setGeometry(100, 10, 70, 25);
+                
+                setItemWidget(item, updateBut);
+                //setItemWidget(item, calibBut);*/
             }
         }
     }
@@ -70,8 +81,48 @@ void DatesList::setEvent(const QJsonObject& event)
 
 void DatesList::handleItemClicked(QListWidgetItem* item)
 {
-    QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+    QFont font;
+    font.setPointSizeF(pointSize(11));
+    QFontMetrics metrics(font);
+    int mm = 2;
+    int mh = metrics.height();
+    int butW = 60;
+    int butH = 20;
+    int iconW = 30;
+    int rowH = 4*mh + 6*mm + butH;
+    
+    QPoint pos = mapFromGlobal(QCursor::pos());
     int index = row(item);
+    int yOffset = index * rowH;
+    
+    //pos.setY(pos.y() - yOffset);
+    //qDebug() << yOffset << ", " << pos;
+    
+    QRect updateRect(iconW, yOffset + rowH - mm - butH, butW, butH);
+    QRect calibRect(iconW + butW + mm, yOffset + rowH - mm - butH, butW, butH);
+    
+    qDebug() << "----";
+    qDebug() << "index : " << index;
+    qDebug() << "rowH : " << rowH;
+    qDebug() << "yOffset : " << yOffset;
+    qDebug() << "pos : " << pos;
+    qDebug() << "updateRect : " << updateRect;
+    
+    if(updateRect.contains(pos))
+    {
+        MainWindow::getInstance()->getProject()->updateDate(mEvent[STATE_ID].toInt(), index);
+    }
+    else if(calibRect.contains(pos))
+    {
+        QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+        if(index < dates.size())
+        {
+            QJsonObject date = dates[index].toObject();
+            emit calibRequested(date);
+        }
+    }
+    
+    QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
     if(index < dates.size())
     {
         QJsonObject date = dates[index].toObject();
@@ -81,10 +132,11 @@ void DatesList::handleItemClicked(QListWidgetItem* item)
 
 void DatesList::handleItemDoubleClicked(QListWidgetItem* item)
 {
-    if(!mEvent.isEmpty())
+    Q_UNUSED(item);
+    /*if(!mEvent.isEmpty())
     {
         MainWindow::getInstance()->getProject()->updateDate(mEvent[STATE_ID].toInt(), row(item));
-    }
+    }*/
 }
 
 void DatesList::dropEvent(QDropEvent* e)

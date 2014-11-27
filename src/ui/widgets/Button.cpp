@@ -21,6 +21,7 @@ void Button::init()
     
     mFlatVertical = false;
     mFlatHorizontal = false;
+    mIsClose = false;
 }
 
 Button::~Button()
@@ -45,6 +46,12 @@ void Button::setFlatHorizontal()
     update();
 }
 
+void Button::setIsClose(bool isClose)
+{
+    mIsClose = isClose;
+    update();
+}
+
 void Button::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
@@ -59,7 +66,38 @@ void Button::paintEvent(QPaintEvent* e)
     
     QRectF r = rect();
     
-    if(mFlatVertical || mFlatHorizontal)
+    if(mIsClose)
+    {
+        r.adjust(1, 1, -1, -1);
+        
+        painter.setPen(Qt::black);
+        painter.setBrush(Qt::white);
+        painter.drawEllipse(r);
+        
+        int m1 = 3;
+        int m2 = 6;
+        
+        painter.setBrush(Qt::black);
+        painter.drawEllipse(r.adjusted(m1, m1, -m1, -m1));
+        
+        painter.save();
+        
+        painter.translate(r.x() + r.width()/2, r.y() + r.height()/2);
+        painter.rotate(45.);
+        QPen pen;
+        pen.setColor(Qt::white);
+        pen.setCapStyle(Qt::RoundCap);
+        pen.setWidthF(3.f);
+        painter.setPen(pen);
+        
+        int s = r.width()/2 - m2;
+        
+        painter.drawLine(0, -s, 0, s);
+        painter.drawLine(-s, 0, s, 0);
+        
+        painter.restore();
+    }
+    else if(mFlatVertical || mFlatHorizontal)
     {
         QColor gradColTop(40, 40, 40);
         QColor gradColBot(30, 30, 30);

@@ -103,6 +103,36 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         }
         curveMeasure.mData = normalize_map(curveMeasure.mData);
         mGraph->addCurve(curveMeasure);
+        
+        // ----------------------------------------------
+        //  Error on measure
+        // ----------------------------------------------
+        
+        GraphCurve curveMeasureAvg;
+        curveMeasureAvg.mName = "MeasureAvg";
+        curveMeasureAvg.mPen.setColor(mMeasureColor);
+        curveMeasureAvg.mPen.setStyle(Qt::SolidLine);
+        curveMeasureAvg.mIsHorizontalLine = true;
+        
+        GraphCurve curveMeasureSup;
+        curveMeasureSup.mName = "MeasureSup";
+        curveMeasureSup.mPen.setColor(mMeasureColor);
+        curveMeasureSup.mPen.setStyle(Qt::DashLine);
+        curveMeasureSup.mIsHorizontalLine = true;
+        
+        GraphCurve curveMeasureInf;
+        curveMeasureInf.mName = "MeasureInf";
+        curveMeasureInf.mPen.setColor(mMeasureColor);
+        curveMeasureInf.mPen.setStyle(Qt::DashLine);
+        curveMeasureInf.mIsHorizontalLine = true;
+        
+        curveMeasureAvg.mHorizontalValue = age;
+        curveMeasureSup.mHorizontalValue = age + error;
+        curveMeasureInf.mHorizontalValue = age - error;
+        
+        mGraph->addCurve(curveMeasureAvg);
+        mGraph->addCurve(curveMeasureSup);
+        mGraph->addCurve(curveMeasureInf);
     }
 }
 

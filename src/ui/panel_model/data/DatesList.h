@@ -22,6 +22,9 @@ protected slots:
     void handleItemClicked(QListWidgetItem* item);
     void handleItemDoubleClicked(QListWidgetItem* item);
     
+signals:
+    void calibRequested(const QJsonObject& date);
+    
 protected:
     void dropEvent(QDropEvent* e);
     
