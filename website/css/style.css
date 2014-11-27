@@ -98,4 +98,13 @@ h3 {
   padding: 20px 20px;
   background: #dff0d8; }
 
+.download {
+  padding: 30px;
+  background: #00a99d;
+  color: white; }
+
+.download.even {
+  background: #F0F0F0;
+  color: black; }
+
 /*# sourceMappingURL=style.css.map */

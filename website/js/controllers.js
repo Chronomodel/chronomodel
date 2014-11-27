@@ -16,17 +16,25 @@ chronoControllers.controller('HomeCtrl', ['$scope', function HomeCtrl($scope)
 {
 
 }]);
-chronoControllers.controller('DownloadsCtrl', ['$scope', function DownloadsCtrl($scope)
+chronoControllers.controller('DownloadsCtrl', ['$scope', '$http', function DownloadsCtrl($scope, $http)
 {
-
+    $scope.downloads = null;
+    $http.get("contents/downloads.json").success(function(result) {
+        $scope.downloads = result;
+    });
 }]);
 
-chronoControllers.controller('FaqCtrl', ['$scope', '$http', function FaqCtrl($scope, $http)
+chronoControllers.controller('TodoCtrl', ['$scope', '$http', function TodoCtrl($scope, $http)
 {
     $scope.todoList = null;
     $http.get("contents/todo.json").success(function(result) {
         $scope.todoList = result;
     });
+}]);
+
+chronoControllers.controller('FaqCtrl', ['$scope', '$http', function FaqCtrl($scope, $http)
+{
+
 }]);
 
 chronoControllers.controller('DocumentationCtrl', ['$scope', function DocumentationCtrl($scope)

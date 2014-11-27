@@ -1,1 +1,11 @@
-Downloads...
+<div id="page-downloads">
+    <div ng-repeat="item in downloads" ng-class="{even : $index % 2}" class="download">
+        <h3 class="version">Chronomodel {{item.version}} ({{item.date}})</h3>
+        <a class="btn btn-primary mac" href="{{item.mac}}" ng-show="item.mac">Mac Download</a>
+        <a class="btn btn-primary win" href="{{item.win}}" ng-show="item.win">Windows download</a>
+        <h4>Solved issues :</h4>
+        <ul class="solved">
+            <li ng-repeat="issue in item.done">{{issue}}</li>
+        </ul>
+    </div>
+</div>

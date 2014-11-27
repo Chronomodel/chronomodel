@@ -1,0 +1,35 @@
+[
+    {
+        "version": "0.0.1",
+        "mac": "releases/chronomodel_mac_0.0.1.pkg",
+        "win": "releases/chronomodel_win_0.0.1.exe",
+        "date": "26/11/2014",
+        "done": [
+            "Repartition curve normalized (solves problem when evaluating dates with g(theta i)",
+            "CSV Import modified for AM : more simple, but breaks old project!",
+            "Added DensityAnalysis for numerical results",
+            "Wiggle stored and displayed at the end",
+            "Auto-correlation improved",
+            "Date description depends on plugin now (not generic json display anymore)",
+            "Calib pixmap generation externalized from calibration process",
+            "Wiggle displayed in date list only when necessary and in correct format",
+            "Graphs : axis with arrow drawn",
+            "Calib view : ref curves drawn only where they exist",
+            "Added Calib numerical results",
+            "Buttons displayed inline in results graphs left side",
+            "constraints and phases edition fixed",
+            "results grouped by phase : correct events displayed",
+            "Minor fixes on Phase editing and CSV imports",
+            "Calib paths modified on Mac"
+        ]
+    },
+    {
+        "version": "0.0.0",
+        "mac": "releases/chronomodel_mac_0.0.0.pkg",
+        "win": "releases/chronomodel_win_0.0.0.exe",
+        "date": "24/11/2014",
+        "done": [
+
+        ]
+    }
+]

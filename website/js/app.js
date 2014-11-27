@@ -23,6 +23,9 @@ chronoApp.config(['$httpProvider', '$routeProvider', function($httpProvider, $ro
     }).when('/faq', {
         templateUrl: 'partials/faq.html',
         controller: 'FaqCtrl'
+    }).when('/todo', {
+        templateUrl: 'partials/todo.html',
+        controller: 'TodoCtrl'
     }).when('/documentation', {
         templateUrl: 'partials/documentation.html',
         controller: 'DocumentationCtrl'
