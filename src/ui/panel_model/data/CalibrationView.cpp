@@ -59,21 +59,31 @@ CalibrationView::~CalibrationView()
 
 void CalibrationView::setDate(const QJsonObject& date)
 {
-    mDate = date;
+    mDate = Date::fromJson(date);
+    
+    Project* project = MainWindow::getInstance()->getProject();
+    QJsonObject state = project->state();
+    
+    QJsonObject settings = state[STATE_SETTINGS].toObject();
+    mSettings = ProjectSettings::fromJson(settings);
+    
+    mDate.calibrate(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
+    
+    mRuler->setRange(mSettings.mTmin, mSettings.mTmax);
+    mRuler->zoomDefault();
+    mCalibGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
+    
     updateGraphs();
 }
 
 void CalibrationView::updateGraphs()
 {
-    Project* project = MainWindow::getInstance()->getProject();
-    QJsonObject state = project->state();
-    
-    QJsonObject settings = state[STATE_SETTINGS].toObject();
-    ProjectSettings s = ProjectSettings::fromJson(settings);
+    DensityAnalysis results;
+    results.analysis = analyseFunction(mDate.mCalibration);
+    results.quartiles = quartilesForRepartition(mDate.mRepartition);
+    mResultsLab->setText(densityAnalysisToString(results));
     
     mCalibGraph->removeAllCurves();
-    mRuler->setRange(s.mTmin, s.mTmax);
-    mRuler->zoomDefault();
     
     // The current ref graph belongs to a plugin
     // So, we simply remove it without deleting it, for further use
@@ -84,15 +94,8 @@ void CalibrationView::updateGraphs()
         mRefGraphView->setVisible(false);
     }
     
-    Date date = Date::fromJson(mDate);
-    if(!date.isNull())
+    if(!mDate.isNull())
     {
-        date.calibrate(s.mTmin, s.mTmax, s.mStep);
-        
-        DensityAnalysis results;
-        results.analysis = analyseFunction(date.mCalibration);
-        mResultsLab->setText(densityAnalysisToString(results));
-        
         // ------------------------------------------------------------
         //  Calibration curve
         // ------------------------------------------------------------
@@ -103,24 +106,21 @@ void CalibrationView::updateGraphs()
         calibCurve.mName = "Calibration";
         calibCurve.mPen.setColor(c);
         calibCurve.mFillUnder = false;
-        calibCurve.mData = date.mCalibration;
+        calibCurve.mData = mDate.mCalibration;
         
-        float yMin = map_min_value(date.mCalibration);
-        float yMax = map_max_value(date.mCalibration);
+        float yMin = map_min_value(mDate.mCalibration);
+        float yMax = map_max_value(mDate.mCalibration);
         
         yMax += (yMax - yMin) * 0.05f;
         
         mCalibGraph->setRangeY(yMin, yMax);
         
-        ProjectSettings s = ProjectSettings::fromJson(project->state()[STATE_SETTINGS].toObject());
-        
-        mCalibGraph->setRangeX(s.mTmin, s.mTmax);
         mCalibGraph->addCurve(calibCurve);
         mCalibGraph->setVisible(true);
         
         if(mHPDCheck->isChecked())
         {
-            QMap<float, float> hpd = create_HPD(date.mCalibration, 1, 95);
+            QMap<float, float> hpd = create_HPD(mDate.mCalibration, 1, mHPDEdit->text().toFloat());
             
             GraphCurve hpdCurve;
             hpdCurve.mName = "Calibration HPD";
@@ -128,7 +128,7 @@ void CalibrationView::updateGraphs()
             hpdCurve.mFillUnder = true;
             hpdCurve.mData = hpd;
             mCalibGraph->addCurve(hpdCurve);
-            mResultsLab->setText(mResultsLab->text() + "HPD : " + MetropolisVariable::getHPDText(hpd));
+            mResultsLab->setText(mResultsLab->text() + "HPD : " + getHPDText(hpd));
         }
         
         // ------------------------------------------------------------
@@ -136,10 +136,10 @@ void CalibrationView::updateGraphs()
         // ------------------------------------------------------------
         
         // Get the ref graph for this plugin and this date
-        mRefGraphView = date.mPlugin->getGraphViewRef();
+        mRefGraphView = mDate.mPlugin->getGraphViewRef();
         if(mRefGraphView)
         {
-            mRefGraphView->setDate(date, s);
+            mRefGraphView->setDate(mDate, mSettings);
             mRefGraphView->setParent(this);
             mRefGraphView->setVisible(true);
             connect(mRuler, SIGNAL(zoomChanged(float, float)), mRefGraphView, SLOT(zoomX(float, float)));

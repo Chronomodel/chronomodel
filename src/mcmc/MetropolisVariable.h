@@ -52,11 +52,6 @@ public:
     
     virtual QString resultsText() const;
     
-    static Quartiles quartilesForTrace(const QVector<float>& trace);
-    static QPair<float, float> credibilityForTrace(const QVector<float>& trace, int threshold, float& exactThresholdResult);
-    static QString getHPDText(const QMap<float, float>& hpd);
-    static QList<QPair<float, float>> intervalsForHpd(const QMap<float, float>& hpd);
-    
     // -----
     
 private:

@@ -147,3 +147,139 @@ QString densityAnalysisToString(const DensityAnalysis& analysis)
     
     return result;
 }
+
+Quartiles quartilesForTrace(const QVector<float>& trace)
+{
+    Quartiles quartiles;
+    
+    QVector<float> sorted = trace;
+    qSort(sorted);
+    
+    int q1index = ceilf((float)sorted.size() * 0.25f);
+    int q3index = ceilf((float)sorted.size() * 0.75f);
+    
+    quartiles.Q1 = sorted[q1index];
+    quartiles.Q3 = sorted[q3index];
+    
+    if(sorted.size() % 2 == 0)
+    {
+        int q2indexLow = sorted.size() / 2;
+        int q2indexUp = q2indexLow + 1;
+        
+        quartiles.Q2 = sorted[q2indexLow] + (sorted[q2indexUp] - sorted[q2indexLow]) / 2.f;
+    }
+    else
+    {
+        int q2index = ceilf((float)sorted.size() * 0.5f);
+        quartiles.Q2 = sorted[q2index];
+    }
+    return quartiles;
+}
+
+Quartiles quartilesForRepartition(const QMap<float, float>& repartition)
+{
+    Quartiles quartiles;
+    
+    QMapIterator<float, float> it(repartition);
+    int curIndex = 0;
+    it.next();
+    while(it.value() < 0.25f)
+    {
+        it.next();
+        ++curIndex;
+    }
+    quartiles.Q1 = it.key();
+    while(it.value() < 0.5f)
+    {
+        it.next();
+        ++curIndex;
+    }
+    if(repartition.size() % 2 == 0)
+    {
+        float low = it.key();
+        it.next();
+        float up = it.key();
+        quartiles.Q2 = low + (up - low) / 2.f;
+    }
+    else
+    {
+        quartiles.Q2 = it.key();
+    }
+    while(it.value() < 0.75f)
+    {
+        it.next();
+        ++curIndex;
+    }
+    quartiles.Q3 = it.key();
+    
+    return quartiles;
+}
+
+QPair<float, float> credibilityForTrace(const QVector<float>& trace, int threshold, float& exactThresholdResult)
+{
+    QPair<float, float> credibility;
+    
+    QVector<float> sorted = trace;
+    qSort(sorted);
+    
+    int numToRemove = floorf((float)sorted.size() * (1.f - (float)threshold / 100.f));
+    exactThresholdResult = ((float)sorted.size() - (float)numToRemove) / (float)sorted.size();
+    
+    int k = numToRemove;
+    int n = sorted.size();
+    float lmin = 999999999;
+    int foundJ = 0;
+    for(int j=0; j<k-1; ++j)
+    {
+        float l = sorted[n - k + j + 1] - sorted[j];
+        if(l < lmin)
+        {
+            foundJ = j;
+            lmin = l;
+        }
+    }
+    
+    credibility.first = sorted[foundJ];
+    credibility.second = sorted[n - k + foundJ + 1];
+    
+    return credibility;
+}
+
+QString getHPDText(const QMap<float, float>& hpd)
+{
+    QList<QPair<float, float>> intervals = intervalsForHpd(hpd);
+    
+    QStringList results;
+    for(int i=0; i<intervals.size(); ++i)
+    {
+        results << "[" + QString::number(intervals[i].first) + ", " + QString::number(intervals[i].second) + "]";
+    }
+    QString result = results.join(" ");
+    return result;
+}
+
+QList<QPair<float, float>> intervalsForHpd(const QMap<float, float>& hpd)
+{
+    QMapIterator<float, float> it(hpd);
+    QList<QPair<float, float>> intervals;
+    
+    bool inInterval = false;
+    QPair<float, float> curInterval;
+    
+    while(it.hasNext())
+    {
+        it.next();
+        if(it.value() != 0 && !inInterval)
+        {
+            inInterval = true;
+            curInterval.first = it.key();
+        }
+        else if(it.value() == 0 && inInterval)
+        {
+            inInterval = false;
+            curInterval.second = it.key();
+            intervals.append(curInterval);
+        }
+    }
+    return intervals;
+}

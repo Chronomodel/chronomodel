@@ -64,7 +64,7 @@ public:
         if(option.state & QStyle::State_Selected)
         {
             //painter->fillRect(option.rect, option.palette.highlight());
-            painter->fillRect(option.rect, QColor(220, 220, 220));
+            painter->fillRect(option.rect, QColor(230, 230, 230));
         }
         QString dateName = index.model()->data(index, 0x0101).toString();
         QString dateDesc = index.model()->data(index, 0x0103).toString();
@@ -95,7 +95,7 @@ public:
             painter->drawText(x + iconW, y + 2*mm + mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, tr("Type") + " : " + plugin->getName() + " | " + tr("Method") + " : " + dateMethodStr);
             painter->drawText(x + iconW, y + 3*mm + 2*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, dateDesc);
             
-            painter->setPen(QColor(80, 160, 90));
+            painter->setPen(Painting::mainColorLight);
             painter->drawText(x + iconW, y + 4*mm + 3*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, delta);
             
             painter->setPen(QColor(200, 200, 200));
@@ -104,14 +104,14 @@ public:
             // ------
             
             QRect updateRect(x + iconW, y + h - mm - butH, butW, butH);
-            QRect calibRect(x + iconW + mm + butW, y + h - mm - butH, butW, butH);
+            QRect calibRect(x + iconW + 2*mm + butW, y + h - mm - butH, butW, butH);
             
-            painter->setPen(QColor(130, 130, 130));
-            painter->setBrush(QColor(130, 130, 130));
-            painter->drawRoundedRect(updateRect, 4, 4);
-            painter->drawRoundedRect(calibRect, 4, 4);
+            painter->setPen(QColor(150, 150, 150));
+            painter->setBrush(QColor(240, 240, 240));
+            painter->drawRect(updateRect);
+            painter->drawRect(calibRect);
             
-            painter->setPen(Qt::white);
+            painter->setPen(QColor(40, 40, 40));
             painter->drawText(updateRect, Qt::AlignCenter, tr("Update"));
             painter->drawText(calibRect, Qt::AlignCenter, tr("Calibrate"));
             

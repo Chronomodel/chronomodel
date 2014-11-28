@@ -1,6 +1,8 @@
 #ifndef CalibrationView_H
 #define CalibrationView_H
 
+#include "Date.h"
+#include "ProjectSettings.h"
 #include <QWidget>
 #include <QJsonObject>
 
@@ -35,7 +37,8 @@ private slots:
     void updateGraphs();
     
 public:
-    QJsonObject mDate;
+    Date mDate;
+    ProjectSettings mSettings;
     
     Ruler* mRuler;
     GraphView* mCalibGraph;

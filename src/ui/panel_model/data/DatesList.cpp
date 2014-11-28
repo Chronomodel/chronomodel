@@ -99,7 +99,7 @@ void DatesList::handleItemClicked(QListWidgetItem* item)
     //qDebug() << yOffset << ", " << pos;
     
     QRect updateRect(iconW, yOffset + rowH - mm - butH, butW, butH);
-    QRect calibRect(iconW + butW + mm, yOffset + rowH - mm - butH, butW, butH);
+    QRect calibRect(iconW + butW + 2*mm, yOffset + rowH - mm - butH, butW, butH);
     
     /*qDebug() << "----";
     qDebug() << "index : " << index;
