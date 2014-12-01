@@ -121,7 +121,7 @@ float dataStd(const QVector<float>& data)
         qDebug() << "ERROR : negative variance found : " << variance;
         return 0.f;
     }
-    return (float)sqrt(variance);
+    return (float)sqrtf(variance);
 }
 
 QString functionAnalysisToString(const FunctionAnalysis& analysis)

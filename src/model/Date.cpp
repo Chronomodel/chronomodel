@@ -246,14 +246,14 @@ float Date::getLikelyhoodFromCalib(const float t)
     }
 }
 
-void Date::updateTheta(const float& tmin, const float& tmax, Event& event)
+void Date::updateTheta(const float& tmin, const float& tmax, Event* event)
 {
     switch(mMethod)
     {
         case eMHIndependant:
         {
             // Ici, le marcheur est forcément gaussien avec H(theta i) : double_exp (gaussien tronqué)
-            float theta = Generator::gaussByDoubleExp(event.mTheta.mX - mDelta, mSigma.mX, tmin, tmax);
+            float theta = Generator::gaussByDoubleExp(event->mTheta.mX - mDelta, mSigma.mX, tmin, tmax);
             
             // rapport = G(theta_new) / G(theta_old)
             float rapport = getLikelyhoodFromCalib(theta) / getLikelyhoodFromCalib(mTheta.mX);
@@ -269,7 +269,7 @@ void Date::updateTheta(const float& tmin, const float& tmax, Event& event)
             float theta = map_interpolate_key_for_value(u, mRepartition);
             
             // rapport = H(theta_new) / H(theta_old)
-            float rapport = exp((-0.5/(mSigma.mX * mSigma.mX)) * (pow(theta - (event.mTheta.mX - mDelta), 2) - pow(mTheta.mX - (event.mTheta.mX - mDelta), 2)));
+            float rapport = expf((-0.5/(mSigma.mX * mSigma.mX)) * (powf(theta - (event->mTheta.mX - mDelta), 2) - powf(mTheta.mX - (event->mTheta.mX - mDelta), 2)));
             
             mTheta.tryUpdate(theta, rapport);
             break;
@@ -284,7 +284,7 @@ void Date::updateTheta(const float& tmin, const float& tmax, Event& event)
             {
                 // rapport = (G(theta_new) / G(theta_old)) * (H(theta_new) / H(theta_old))
                 rapport = getLikelyhoodFromCalib(theta) / getLikelyhoodFromCalib(mTheta.mX); // rapport des G(theta i)
-                rapport *= exp((-0.5/(mSigma.mX * mSigma.mX)) * (pow(theta - (event.mTheta.mX - mDelta), 2) - pow(mTheta.mX - (event.mTheta.mX - mDelta), 2)));
+                rapport *= expf((-0.5/(mSigma.mX * mSigma.mX)) * (powf(theta - (event->mTheta.mX - mDelta), 2) - powf(mTheta.mX - (event->mTheta.mX - mDelta), 2)));
             }
             
             mTheta.tryUpdate(theta, rapport);
@@ -297,7 +297,7 @@ void Date::updateTheta(const float& tmin, const float& tmax, Event& event)
     }
 }
 
-void Date::updateDelta(Event& event)
+void Date::updateDelta(Event* event)
 {
     switch(mDeltaType)
     {
@@ -307,7 +307,7 @@ void Date::updateDelta(Event& event)
             while(delta < mDeltaMin || delta > mDeltaMax)
             {
                 float x = Generator::gaussByBoxMuller(0, 1);
-                float lambda = event.mTheta.mX - mTheta.mX;
+                float lambda = event->mTheta.mX - mTheta.mX;
                 delta = mSigma.mX * x + lambda;
             }
             mDelta = delta;
@@ -315,7 +315,7 @@ void Date::updateDelta(Event& event)
         }
         case eDeltaGaussian:
         {
-            float lambda = event.mTheta.mX - mTheta.mX;
+            float lambda = event->mTheta.mX - mTheta.mX;
             float w = (1/(mSigma.mX * mSigma.mX)) + (1/(mDeltaError * mDeltaError));
             float deltaAvg = (lambda / (mSigma.mX * mSigma.mX) + mDeltaAverage / (mDeltaError * mDeltaError)) / w;
             float x = Generator::gaussByBoxMuller(0, 1);
@@ -333,28 +333,28 @@ void Date::updateDelta(Event& event)
     }
 }
 
-void Date::updateSigma(Event& event)
+void Date::updateSigma(Event* event)
 {
     // ------------------------------------------------------------------------------------------
     //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
     // ------------------------------------------------------------------------------------------
-    float lambda = pow(mTheta.mX - (event.mTheta.mX - mDelta), 2) / 2.;
+    float lambda = powf(mTheta.mX - (event->mTheta.mX - mDelta), 2) / 2.;
     
     const int logVMin = -6;
     const int logVMax = 100;
     
     float V1 = mSigma.mX * mSigma.mX;
     float logV2 = Generator::gaussByBoxMuller(log10(V1), mSigma.mSigmaMH);
-    float V2 = pow(10, logV2);
+    float V2 = powf(10, logV2);
     
     float rapport = 0;
     if(logV2 >= logVMin && logV2 <= logVMax)
     {
-        float x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
-        float x2 = pow((event.mS02 + V1) / (event.mS02 + V2), event.mAShrinkage + 1);
-        rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1; // (V2 / V1) est le jacobien!
+        float x1 = expf(-lambda * (V1 - V2) / (V1 * V2));
+        float x2 = powf((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1);
+        rapport = x1 * sqrtf(V1/V2) * x2 * V2 / V1; // (V2 / V1) est le jacobien!
     }
-    mSigma.tryUpdate(sqrt(V2), rapport);
+    mSigma.tryUpdate(sqrtf(V2), rapport);
 }
 
 void Date::updateWiggle()

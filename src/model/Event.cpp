@@ -343,7 +343,7 @@ void Event::updateTheta(float tmin, float tmax)
             float rapport = 0;
             if(theta >= min && theta <= max)
             {
-                rapport = exp((-0.5/(sigma*sigma)) * (pow(theta - theta_avg, 2) - pow(mTheta.mX - theta_avg, 2)));
+                rapport = expf((-0.5/(sigma*sigma)) * (powf(theta - theta_avg, 2) - powf(mTheta.mX - theta_avg, 2)));
             }
             mTheta.tryUpdate(theta, rapport);
             break;

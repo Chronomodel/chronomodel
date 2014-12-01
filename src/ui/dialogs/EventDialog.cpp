@@ -5,9 +5,9 @@
 #include <QtWidgets>
 
 
-EventDialog::EventDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags)
+EventDialog::EventDialog(QWidget* parent, const QString& title, Qt::WindowFlags flags):QDialog(parent, flags)
 {
-    setWindowTitle(tr("New Event"));
+    setWindowTitle(title);
     
     // -----------
     
@@ -48,7 +48,7 @@ EventDialog::EventDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
     QFont font;
     font.setWeight(QFont::Bold);
     
-    QLabel* titleLab = new QLabel(tr("New Event"));
+    QLabel* titleLab = new QLabel(title);
     titleLab->setFont(font);
     titleLab->setAlignment(Qt::AlignCenter);
     

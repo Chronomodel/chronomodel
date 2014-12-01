@@ -178,11 +178,30 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     painter->setBrush(Qt::NoBrush);
     painter->drawRect(phasesRect);
     
-    if(mGreyedOut)
+    /*if(mGreyedOut)
     {
         painter->setPen(Painting::greyedOut);
         painter->setBrush(Painting::greyedOut);
         painter->drawEllipse(boundingRect());
+    }*/
+    
+    // Border
+    painter->setBrush(Qt::NoBrush);
+    if(mMergeable)
+    {
+        painter->setPen(QPen(Qt::white, 5.f));
+        painter->drawEllipse(rect.adjusted(1, 1, -1, -1));
+        
+        painter->setPen(QPen(Painting::mainColorLight, 3.f, Qt::DashLine));
+        painter->drawEllipse(rect.adjusted(1, 1, -1, -1));
+    }
+    else if(isSelected())
+    {
+        painter->setPen(QPen(Qt::white, 5.f));
+        painter->drawEllipse(rect.adjusted(1, 1, -1, -1));
+        
+        painter->setPen(QPen(Qt::red, 3.f));
+        painter->drawEllipse(rect.adjusted(1, 1, -1, -1));
     }
 }
 

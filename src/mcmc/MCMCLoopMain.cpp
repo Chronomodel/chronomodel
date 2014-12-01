@@ -33,7 +33,7 @@ void MCMCLoopMain::calibrate()
 {
     if(mModel)
     {
-        QList<Event>& events = mModel->mEvents;
+        QList<Event*>& events = mModel->mEvents;
         double tmin = mModel->mSettings.mTmin;
         double tmax = mModel->mSettings.mTmax;
         double step = mModel->mSettings.mStep;
@@ -43,10 +43,10 @@ void MCMCLoopMain::calibrate()
         QList<Date*> dates;
         for(int i=0; i<events.size(); ++i)
         {
-            int num_dates = (int)events[i].mDates.size();
+            int num_dates = (int)events[i]->mDates.size();
             for(int j=0; j<num_dates; ++j)
             {
-                Date* date = &events[i].mDates[j];
+                Date* date = &events[i]->mDates[j];
                 dates.push_back(date);
             }
         }
@@ -71,20 +71,20 @@ void MCMCLoopMain::calibrate()
 void MCMCLoopMain::initVariablesForChain()
 {
     Chain& chain = mChains[mChainIndex];
-    QList<Event>& events = mModel->mEvents;
+    QList<Event*>& events = mModel->mEvents;
     
     int chainLen = chain.mNumBurnIter + chain.mNumBatchIter * chain.mMaxBatchs * chain.mNumRunIter;
     int acceptBufferLen = chain.mNumBatchIter; //chainLen / 100;
     
     for(int i=0; i<events.size(); ++i)
     {
-        Event& event = events[i];
-        event.mTheta.mLastAccepts.clear();
-        event.mTheta.mLastAcceptsLength = acceptBufferLen;
+        Event* event = events[i];
+        event->mTheta.mLastAccepts.clear();
+        event->mTheta.mLastAcceptsLength = acceptBufferLen;
         
-        for(int j=0; j<event.mDates.size(); ++j)
+        for(int j=0; j<event->mDates.size(); ++j)
         {
-            Date& date = event.mDates[j];
+            Date& date = event->mDates[j];
             date.mTheta.mLastAccepts.clear();
             date.mTheta.mLastAcceptsLength = acceptBufferLen;
             date.mSigma.mLastAccepts.clear();
@@ -95,8 +95,8 @@ void MCMCLoopMain::initVariablesForChain()
 
 void MCMCLoopMain::initMCMC()
 {
-    QList<Event>& events = mModel->mEvents;
-    QList<Phase>& phases = mModel->mPhases;
+    QList<Event*>& events = mModel->mEvents;
+    QList<Phase*>& phases = mModel->mPhases;
     double tmin = mModel->mSettings.mTmin;
     double tmax = mModel->mSettings.mTmax;
     
@@ -108,15 +108,15 @@ void MCMCLoopMain::initMCMC()
     // ----------------------------------------------------------------
     int numDates = 0;
     for(int i=0; i<events.size(); ++i)
-        numDates += events[i].mDates.size();
+        numDates += events[i]->mDates.size();
     
     emit stepChanged(tr("Initializing dates..."), 0, numDates);
 
     for(int i=0; i<events.size(); ++i)
     {
-        for(int j=0; j<events[i].mDates.size(); ++j)
+        for(int j=0; j<events[i]->mDates.size(); ++j)
         {
-            Date& date = events[i].mDates[j];
+            Date& date = events[i]->mDates[j];
             
             // TODO Init mieux que ça!
             date.updateDelta(events[i]);
@@ -139,45 +139,46 @@ void MCMCLoopMain::initMCMC()
     emit stepChanged(tr("Initializing events..."), 0, events.size());
     for(int i=0; i<events.size(); ++i)
     {
-        if(events[i].type() == Event::eKnown)
+        if(events[i]->type() == Event::eKnown)
         {
             EventKnown& ek = (EventKnown&)events[i];
             switch (ek.knownType())
             {
                 case EventKnown::eFixed:
-                    events[i].mTheta.mX = ek.fixedValue();
+                    events[i]->mTheta.mX = ek.fixedValue();
                     break;
                 case EventKnown::eUniform:
-                    events[i].mTheta.mX = ek.uniformStart() + (ek.uniformEnd() - ek.uniformStart())/2;
+                    events[i]->mTheta.mX = ek.uniformStart() + (ek.uniformEnd() - ek.uniformStart())/2;
                     break;
                 case EventKnown::eGauss:
-                    events[i].mTheta.mX = ek.gaussMeasure();
+                    events[i]->mTheta.mX = ek.gaussMeasure();
                     break;
                 default:
                     break;
             }
+            qDebug() << "Init bound : " << events[i]->mName << " : " << events[i]->mTheta.mX;
         }
         else
         {
             double theta_sum = 0;
             double s02_sum = 0;
-            for(int j=0; j<events[i].mDates.size(); ++j)
+            for(int j=0; j<events[i]->mDates.size(); ++j)
             {
-                theta_sum += events[i].mDates[j].mTheta.mX;
+                theta_sum += events[i]->mDates[j].mTheta.mX;
                 
                 // SO2 est la moyenne harmonique des variances sur les dates calibrées a posteriori
                 // On doit donc utiliser "sigma(calib)" (variance de la date calibrée), qui a déjà servi à initialiser mTheta.mSigmaMH
-                double sigmaCalib = events[i].mDates[j].mTheta.mSigmaMH;
+                double sigmaCalib = events[i]->mDates[j].mTheta.mSigmaMH;
                 s02_sum += 1 / (sigmaCalib * sigmaCalib);
             }
             
-            events[i].mS02 = events[i].mDates.size() / s02_sum;
-            events[i].mAShrinkage = 1.;
+            events[i]->mS02 = events[i]->mDates.size() / s02_sum;
+            events[i]->mAShrinkage = 1.;
             
             // Moyenne des theta i
-            events[i].mTheta.mX = theta_sum / events[i].mDates.size();
+            events[i]->mTheta.mX = theta_sum / events[i]->mDates.size();
             
-            qDebug() << "Init event : " << events[i].mName << " : " << events[i].mTheta.mX;
+            qDebug() << "Init event : " << events[i]->mName << " : " << events[i]->mTheta.mX;
             
             // Si la moyenne n'est pas dans le support du fait, on prend la moyenne des theta i qui s'y trouvent
             /*if(events[i].mTheta.mX < events[i].mTmin || events[i].mTheta.mX > events[i].mTmax)
@@ -206,7 +207,7 @@ void MCMCLoopMain::initMCMC()
              }*/
             
             // Init sigmaMH de theta f
-            events[i].mTheta.mSigmaMH = sqrt(events[i].mS02);
+            events[i]->mTheta.mSigmaMH = sqrtf(events[i]->mS02);
         }
         
         emit stepProgressed(i);
@@ -218,8 +219,8 @@ void MCMCLoopMain::initMCMC()
     emit stepChanged(tr("Initializing phases..."), 0, phases.size());
     for(int i=0; i<phases.size(); ++i)
     {
-        phases[i].mAlpha.mX = Generator::randomUniform(tmin, phases[i].getMinThetaEvents());
-        phases[i].mBeta.mX = Generator::randomUniform(phases[i].getMaxThetaEvents(), tmax);
+        phases[i]->mAlpha.mX = Generator::randomUniform(tmin, phases[i]->getMinThetaEvents());
+        phases[i]->mBeta.mX = Generator::randomUniform(phases[i]->getMaxThetaEvents(), tmax);
         
         emit stepProgressed(i);
     }
@@ -237,25 +238,25 @@ void MCMCLoopMain::initMCMC()
         verif = true;
         for(int i=0; i<events.size(); ++i)
         {
-            Event& event = events[i];
+            Event* event = events[i];
             
-            double thetaMin = event.getThetaMin(tmin);
-            double thetaMax = event.getThetaMax(tmax);
+            double thetaMin = event->getThetaMin(tmin);
+            double thetaMax = event->getThetaMax(tmax);
             
-            qDebug() << "Init constraint for : " << events[i].mName << " : " << thetaMin << " < " << event.mTheta.mX << " < " << thetaMax;
+            qDebug() << "Init constraint for : " << event->mName << " : " << thetaMin << " < " << event->mTheta.mX << " < " << thetaMax;
             
             if(thetaMin > thetaMax)
             {
                 qDebug() << "No init possible!";
             }
             
-            if(event.mTheta.mX <= thetaMin || event.mTheta.mX >= thetaMax)
+            if(event->mTheta.mX <= thetaMin || event->mTheta.mX >= thetaMax)
             {
                 verif = false;
                 double theta = thetaMin + (thetaMax - thetaMin) * Generator::randomUniform();
-                event.mTheta.mX = theta;
+                event->mTheta.mX = theta;
                 
-                qDebug() << "Corrigé : " << thetaMin << " < " << event.mTheta.mX << " < " << thetaMax;
+                qDebug() << "Corrigé : " << thetaMin << " < " << event->mTheta.mX << " < " << thetaMax;
             }
         }
     }
@@ -267,12 +268,12 @@ void MCMCLoopMain::initMCMC()
     
     for(int i=0; i<events.size(); ++i)
     {
-        Event& event = events[i];
-        for(int j=0; j<event.mDates.size(); ++j)
+        Event* event = events[i];
+        for(int j=0; j<event->mDates.size(); ++j)
         {
-            Date& date = event.mDates[j];
+            Date& date = event->mDates[j];
             
-            double diff = abs(date.mTheta.mX - event.mTheta.mX);
+            double diff = abs(date.mTheta.mX - event->mTheta.mX);
             if(diff != 0)
                 date.mSigma.mX = diff;
             else
@@ -287,18 +288,27 @@ void MCMCLoopMain::initMCMC()
     
     for(int i=0; i<events.size(); ++i)
     {
-        Event& event = events[i];
+        Event* event = events[i];
         
-        mLog += ">> Event : " + event.mName + "\n";
-        mLog += "  - theta (value) : " + QString::number(event.mTheta.mX) + "\n";
-        mLog += "  - theta (sigma MH) : " + QString::number(event.mTheta.mSigmaMH) + "\n";
-        mLog += "  - SO2 : " + QString::number(event.mS02) + "\n";
-        mLog += "  - AShrinkage : " + QString::number(event.mAShrinkage) + "\n";
+        if(event->type() == Event::eKnown)
+        {
+            mLog += ">> Bound : " + event->mName + "\n";
+            mLog += "  - theta (value) : " + QString::number(event->mTheta.mX) + "\n";
+            mLog += "  - theta (sigma MH) : " + QString::number(event->mTheta.mSigmaMH) + "\n";
+        }
+        else
+        {
+            mLog += ">> Event : " + event->mName + "\n";
+            mLog += "  - theta (value) : " + QString::number(event->mTheta.mX) + "\n";
+            mLog += "  - theta (sigma MH) : " + QString::number(event->mTheta.mSigmaMH) + "\n";
+            mLog += "  - SO2 : " + QString::number(event->mS02) + "\n";
+            mLog += "  - AShrinkage : " + QString::number(event->mAShrinkage) + "\n";
+        }
         mLog += "---------------\n";
         
-        for(int j=0; j<event.mDates.size(); ++j)
+        for(int j=0; j<event->mDates.size(); ++j)
         {
-            Date& date = event.mDates[j];
+            Date& date = event->mDates[j];
             
             mLog += " > Data : " + date.mName + "\n";
             mLog += "  - theta (value) : " + QString::number(date.mTheta.mX) + "\n";
@@ -312,22 +322,22 @@ void MCMCLoopMain::initMCMC()
     
     for(int i=0; i<phases.size(); ++i)
     {
-        Phase& phase = phases[i];
+        Phase* phase = phases[i];
         
         mLog += "---------------\n";
-        mLog += ">> Phase : " + phase.mName + "\n";
-        mLog += " - alpha : " + QString::number(phase.mAlpha.mX) + "\n";
-        mLog += " - beta : " + QString::number(phase.mBeta.mX) + "\n";
-        mLog += " - tau : " + QString::number(phase.mTau) + "\n";
+        mLog += ">> Phase : " + phase->mName + "\n";
+        mLog += " - alpha : " + QString::number(phase->mAlpha.mX) + "\n";
+        mLog += " - beta : " + QString::number(phase->mBeta.mX) + "\n";
+        mLog += " - tau : " + QString::number(phase->mTau) + "\n";
     }
-    qDebug() << mLog;
+    //qDebug() << mLog;
 }
 
 void MCMCLoopMain::update()
 {
-    QList<Event>& events = mModel->mEvents;
-    QList<Phase>& phases = mModel->mPhases;
-    QList<PhaseConstraint>& phasesConstraints = mModel->mPhaseConstraints;
+    QList<Event*>& events = mModel->mEvents;
+    QList<Phase*>& phases = mModel->mPhases;
+    QList<PhaseConstraint*>& phasesConstraints = mModel->mPhaseConstraints;
     
     double t_min = mModel->mSettings.mTmin;
     double t_max = mModel->mSettings.mTmax;
@@ -340,10 +350,10 @@ void MCMCLoopMain::update()
     
     for(int i=0; i<events.size(); ++i)
     {
-        Event& event = events[i];
-        for(int j=0; j<event.mDates.size(); ++j)
+        Event* event = events[i];
+        for(int j=0; j<event->mDates.size(); ++j)
         {
-            Date& date = events[i].mDates[j];
+            Date& date = events[i]->mDates[j];
             
             date.updateDelta(event);
             date.updateTheta(t_min, t_max, event);
@@ -366,13 +376,13 @@ void MCMCLoopMain::update()
 
     for(int i=0; i<events.size(); ++i)
     {
-        Event& event = events[i];
+        Event* event = events[i];
         
-        event.updateTheta(t_min, t_max);
+        event->updateTheta(t_min, t_max);
         if(doMemo)
         {
-            event.mTheta.memo();
-            event.mTheta.saveCurrentAcceptRate();
+            event->mTheta.memo();
+            event->mTheta.saveCurrentAcceptRate();
         }
     }
 
@@ -380,23 +390,23 @@ void MCMCLoopMain::update()
 
     for(int i=0; i<phases.size(); ++i)
     {
-        phases[i].update(t_min, t_max);
+        phases[i]->update(t_min, t_max);
         if(doMemo)
-            phases[i].memoAll();
+            phases[i]->memoAll();
     }
     
     //--------------------- Update Phases constraints -----------------------------------------
     
     for(int i=0; i<phasesConstraints.size(); ++i)
     {
-        phasesConstraints[i].update();
+        phasesConstraints[i]->update();
     }
 }
 
 bool MCMCLoopMain::adapt()
 {
     Chain& chain = mChains[mChainIndex];
-    QList<Event>& events = mModel->mEvents;
+    QList<Event*>& events = mModel->mEvents;
     
     const double taux_min = 42.;           // taux_min minimal rate of acceptation=42
     const double taux_max = 46.;           // taux_max maximal rate of acceptation=46
@@ -409,11 +419,11 @@ bool MCMCLoopMain::adapt()
     
     for(int i=0; i<events.size(); ++i)
     {
-        Event& event = events[i];
+        Event* event = events[i];
         
-        for(int j=0; j<event.mDates.size(); ++j)
+        for(int j=0; j<event->mDates.size(); ++j)
         {
-            Date& date = event.mDates[j];
+            Date& date = event->mDates[j];
             
             //--------------------- Adapt Sigma MH de Theta i -----------------------------------------
             
@@ -441,14 +451,14 @@ bool MCMCLoopMain::adapt()
         
         //--------------------- Adapt Theta MH de Theta f -----------------------------------------
         
-        if(event.mMethod == Event::eMHAdaptGauss)
+        if(event->mMethod == Event::eMHAdaptGauss)
         {
-            float taux = 100.f * event.mTheta.getCurrentAcceptRate();
+            float taux = 100.f * event->mTheta.getCurrentAcceptRate();
             if(taux <= taux_min || taux >= taux_max)
             {
                 allOK = false;
                 float sign = (taux <= taux_min) ? -1.f : 1.f;
-                event.mTheta.mSigmaMH *= powf(10.f, sign * delta);
+                event->mTheta.mSigmaMH *= powf(10.f, sign * delta);
             }
         }
     }
@@ -461,24 +471,41 @@ void MCMCLoopMain::finalize()
     float tmax = mModel->mSettings.mTmax;
     float step = mModel->mSettings.mStep;
     
-    QList<Event>& events = mModel->mEvents;
-    QList<Phase>& phases = mModel->mPhases;
+    QList<Event*>& events = mModel->mEvents;
+    QList<Phase*>& phases = mModel->mPhases;
     
     for(int i=0; i<events.size(); ++i)
     {
-        Event& event = events[i];
+        Event* event = events[i];
         
-        qDebug() << "=> Generate Results for event " << i << "/" << events.size() << " : " << event.mName;
-        
-        event.mTheta.generateHistos(mChains, tmin, tmax);
-        event.mTheta.generateCorrelations(mChains);
-        event.mTheta.generateResults(mChains, tmin, tmax);
-        
-        for(int j=0; j<event.mDates.size(); ++j)
+        bool generateEventHistos = true;
+        if(event->type() == Event::eKnown)
         {
-            Date& date = event.mDates[j];
+            EventKnown& ek = (EventKnown&)events[i];
+            if(ek.knownType() == EventKnown::eFixed)
+            {
+                generateEventHistos = false;
+                qDebug() << "Nothing todo : this is just a Dirac !";
+            }
+            qDebug() << "=> Generate Results for bound " << i << "/" << events.size() << " : " << event->mName;
+        }
+        else
+        {
+            qDebug() << "=> Generate Results for event " << i << "/" << events.size() << " : " << event->mName;
+        }
+        
+        if(generateEventHistos)
+        {
+            event->mTheta.generateHistos(mChains, tmin, tmax);
+            event->mTheta.generateCorrelations(mChains);
+            event->mTheta.generateResults(mChains, tmin, tmax);
+        }
+        
+        for(int j=0; j<event->mDates.size(); ++j)
+        {
+            Date& date = event->mDates[j];
             
-            qDebug() << " -> Generate Results for date " << j << "/" << event.mDates.size() << " : " << date.mName;
+            qDebug() << " -> Generate Results for date " << j << "/" << event->mDates.size() << " : " << date.mName;
             
             date.mTheta.generateHistos(mChains, tmin, tmax);
             date.mSigma.generateHistos(mChains, 0, tmax - tmin);
@@ -494,16 +521,16 @@ void MCMCLoopMain::finalize()
     
     for(int i=0; i<phases.size(); ++i)
     {
-        Phase& phase = phases[i];
+        Phase* phase = phases[i];
         
-        phase.mAlpha.generateHistos(mChains, tmin, tmax);
-        phase.mBeta.generateHistos(mChains, tmin, tmax);
+        phase->mAlpha.generateHistos(mChains, tmin, tmax);
+        phase->mBeta.generateHistos(mChains, tmin, tmax);
         
-        phase.mAlpha.generateCorrelations(mChains);
-        phase.mBeta.generateCorrelations(mChains);
+        phase->mAlpha.generateCorrelations(mChains);
+        phase->mBeta.generateCorrelations(mChains);
         
-        phase.mAlpha.generateResults(mChains, tmin, tmax);
-        phase.mBeta.generateResults(mChains, tmin, tmax);
+        phase->mAlpha.generateResults(mChains, tmin, tmax);
+        phase->mBeta.generateResults(mChains, tmin, tmax);
     }
 }
 

@@ -1,6 +1,7 @@
 #include "GraphViewEvent.h"
 #include "GraphView.h"
 #include "Event.h"
+#include "EventKnown.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
 #include "Painting.h"
@@ -46,68 +47,93 @@ void GraphViewEvent::refresh()
         {
             if(mCurrentVariable == eTheta)
             {
-                setNumericalResults(mEvent->mTheta.resultsText());
-                
                 mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
-                mGraph->setRangeY(0, 0.00001f);
                 
-                if(mShowAllChains)
+                bool isFixedBound = false;
+                if(mEvent->type() == Event::eKnown)
                 {
-                    GraphCurve curve;
-                    curve.mName = "histo full";
-                    curve.mPen.setColor(color);
-                    curve.mData = equal_areas(mEvent->mTheta.fullHisto(), 100.f);
-                    curve.mIsHisto = false;
-                    mGraph->addCurve(curve);
-                    
-                    float yMax = 1.1f * map_max_value(curve.mData);
-                    mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
-                    
-                    if(mShowHPD)
+                    EventKnown* ek = (EventKnown*)mEvent;
+                    if(ek->knownType() == EventKnown::eFixed)
                     {
-                        GraphCurve curveHPD;
-                        curveHPD.mName = "histo HPD full";
-                        curveHPD.mPen.setColor(color);
-                        curveHPD.mFillUnder = true;
-                        curveHPD.mIsHisto = false;
-                        curveHPD.mData = equal_areas(mEvent->mTheta.mHPD, mThresholdHPD);
-                        mGraph->addCurve(curveHPD);
+                        isFixedBound = true;
                         
-                        GraphCurve curveCred;
-                        curveCred.mName = "credibility full";
-                        curveCred.mSections.append(mEvent->mTheta.mCredibility);
-                        curveCred.mHorizontalValue = mGraph->maximumY();
-                        curveCred.mPen.setColor(color);
-                        curveCred.mPen.setWidth(5);
-                        curveCred.mIsHorizontalSections = true;
-                        mGraph->addCurve(curveCred);
-                    }
-                }
-                for(int i=0; i<mShowChainList.size(); ++i)
-                {
-                    if(mShowChainList[i])
-                    {
-                        QColor col = Painting::chainColors[i];
+                        mGraph->setRangeY(0, 1.f);
                         
                         GraphCurve curve;
-                        curve.mName = QString("histo chain " + QString::number(i));
-                        curve.mPen.setColor(col);
+                        curve.mName = "Fixed Bound";
+                        curve.mPen.setColor(color);
+                        curve.mIsHisto = true;
+                        
+                        for(int t=mSettings.mTmin; t< mSettings.mTmax; ++t)
+                            curve.mData[t] = 0.f;
+                        curve.mData[floorf(ek->fixedValue())] = 1.f;
+                        
+                        mGraph->addCurve(curve);
+                    }
+                }
+                if(!isFixedBound)
+                {
+                    mGraph->setRangeY(0, 0.00001f);
+                    setNumericalResults(mEvent->mTheta.resultsText());
+                    
+                    if(mShowAllChains)
+                    {
+                        GraphCurve curve;
+                        curve.mName = "histo full";
+                        curve.mPen.setColor(color);
+                        curve.mData = equal_areas(mEvent->mTheta.fullHisto(), 100.f);
                         curve.mIsHisto = false;
-                        curve.mData = equal_areas(mEvent->mTheta.histoForChain(i), 100.f);
                         mGraph->addCurve(curve);
                         
                         float yMax = 1.1f * map_max_value(curve.mData);
                         mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                         
-                        /*if(mShowHPD)
+                        if(mShowHPD)
                         {
                             GraphCurve curveHPD;
-                            curveHPD.mName = QString("histo HPD chain " + QString::number(i));
+                            curveHPD.mName = "histo HPD full";
                             curveHPD.mPen.setColor(color);
                             curveHPD.mFillUnder = true;
-                            curveHPD.mData = equal_areas(mEvent->mTheta.generateHPDForChain(i, mThresholdHPD), mThresholdHPD);
+                            curveHPD.mIsHisto = false;
+                            curveHPD.mData = equal_areas(mEvent->mTheta.mHPD, mThresholdHPD);
                             mGraph->addCurve(curveHPD);
-                        }*/
+                            
+                            GraphCurve curveCred;
+                            curveCred.mName = "credibility full";
+                            curveCred.mSections.append(mEvent->mTheta.mCredibility);
+                            curveCred.mHorizontalValue = mGraph->maximumY();
+                            curveCred.mPen.setColor(color);
+                            curveCred.mPen.setWidth(5);
+                            curveCred.mIsHorizontalSections = true;
+                            mGraph->addCurve(curveCred);
+                        }
+                    }
+                    for(int i=0; i<mShowChainList.size(); ++i)
+                    {
+                        if(mShowChainList[i])
+                        {
+                            QColor col = Painting::chainColors[i];
+                            
+                            GraphCurve curve;
+                            curve.mName = QString("histo chain " + QString::number(i));
+                            curve.mPen.setColor(col);
+                            curve.mIsHisto = false;
+                            curve.mData = equal_areas(mEvent->mTheta.histoForChain(i), 100.f);
+                            mGraph->addCurve(curve);
+                            
+                            float yMax = 1.1f * map_max_value(curve.mData);
+                            mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
+                            
+                            /*if(mShowHPD)
+                             {
+                             GraphCurve curveHPD;
+                             curveHPD.mName = QString("histo HPD chain " + QString::number(i));
+                             curveHPD.mPen.setColor(color);
+                             curveHPD.mFillUnder = true;
+                             curveHPD.mData = equal_areas(mEvent->mTheta.generateHPDForChain(i, mThresholdHPD), mThresholdHPD);
+                             mGraph->addCurve(curveHPD);
+                             }*/
+                        }
                     }
                 }
             }

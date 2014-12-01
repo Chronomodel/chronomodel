@@ -14,7 +14,7 @@ class EventDialog: public QDialog
 {
     Q_OBJECT
 public:
-    EventDialog(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    EventDialog(QWidget* parent, const QString& title, Qt::WindowFlags flags = 0);
     ~EventDialog();
     
     QString getName() const;

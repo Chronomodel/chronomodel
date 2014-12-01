@@ -49,9 +49,9 @@ public:
     QPixmap generateCalibThumb(const float tmin, const float tmax);
     float getLikelyhoodFromCalib(const float t);
     
-    void updateTheta(const float& tmin, const float& tmax, Event& event);
-    void updateDelta(Event& event);
-    void updateSigma(Event& event);
+    void updateTheta(const float& tmin, const float& tmax, Event* event);
+    void updateDelta(Event* event);
+    void updateSigma(Event* event);
     void updateWiggle();
     
 public:

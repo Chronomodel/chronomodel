@@ -111,13 +111,17 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mKnownGaussMeasure = new LineEdit(mKnownView);
     mKnownGaussError = new LineEdit(mKnownView);
     
+    QDoubleValidator* doubleValidator = new QDoubleValidator();
+    doubleValidator->setDecimals(2);
+    //mKnownFixedEdit->setValidator(doubleValidator);
+    
     mKnownGraph = new GraphView(mKnownView);
     mKnownGraph->showAxis(false);
     mKnownGraph->showGrid(true);
     mKnownGraph->showYValues(true);
     mKnownGraph->showScrollBar(false);
     
-    connect(mKnownFixedEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateKnownFixed()));
+    connect(mKnownFixedEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateKnownFixed(const QString&)));
     connect(mKnownStartEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateKnownUnifStart()));
     connect(mKnownEndEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateKnownUnifEnd()));
     connect(mKnownGaussMeasure, SIGNAL(textChanged(const QString&)), this, SLOT(updateKnownGaussMeasure()));
@@ -250,10 +254,19 @@ void EventPropertiesView::updateKnownType()
     }
 }
 
-void EventPropertiesView::updateKnownFixed()
+void EventPropertiesView::updateKnownFixed(const QString& text)
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_KNOWN_FIXED] = mKnownFixedEdit->text().toFloat();
+    //bool ok = false;
+    //float value = mKnownFixedEdit->text().toDouble(&ok);
+    qDebug() << text;
+    qDebug() << mKnownFixedEdit->text();
+    qDebug() << text.toFloat();
+    //qDebug() << ok;
+    
+    event[STATE_EVENT_KNOWN_FIXED] = text.toFloat();
+    qDebug() << event;
+    qDebug() << "-----";
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound fixed value updated"));
 }
 void EventPropertiesView::updateKnownUnifStart()

@@ -16,10 +16,10 @@ class Model: public QObject
 {
     Q_OBJECT
 public:
-    explicit Model();
-    Model(const Model& model);
+    Model();
+    /*Model(const Model& model);
     Model& operator=(const Model& model);
-    void copyFrom(const Model& model);
+    void copyFrom(const Model& model);*/
     virtual ~Model();
 
     static Model* fromJson(const QJsonObject& json);
@@ -31,10 +31,10 @@ public:
     ProjectSettings mSettings;
     MCMCSettings mMCMCSettings;
     
-    QList<Event> mEvents;
-    QList<Phase> mPhases;
-    QList<EventConstraint> mEventConstraints;
-    QList<PhaseConstraint> mPhaseConstraints;
+    QList<Event*> mEvents;
+    QList<Phase*> mPhases;
+    QList<EventConstraint*> mEventConstraints;
+    QList<PhaseConstraint*> mPhaseConstraints;
 };
 
 #endif

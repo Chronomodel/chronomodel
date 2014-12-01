@@ -35,13 +35,13 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
     // Définir un pas sur l'axe des t (delta)
     // répartir les valeurs de la trace sur cette grille avec pondération
     // Touver la puissance de 2 entière immédiatemment supérieur au nombre d'années de la plage d'étude [a, b].
-    // delta = ((b-a) + 8h) / 2^r => r = ceil(log(b-a + 8h) / log(2))
+    // delta = ((b-a) + 8h) / 2^r => r = ceil(logf(b-a + 8h) / logf(2))
     // eg : sur [0, 2000], on prendra 2048 points.
     // Le padding doit contenir 8h.
     // Remplir de 0 les points qui dépassent (padding)
     // Lancer la FFTW sur les points.
     // Multiplier tous les points par:
-    // exp(-0.5 * s^2 * h^2)
+    // expf(-0.5 * s^2 * h^2)
     // s = (2 * Pi * t) / (b-a)
     // t = iteration en cours (dans l'espace des fréquences!!!)
     // h = 1.06 * écart type de la trace * nb d'éléments de la trace ^-1/5 (silvermann)
@@ -91,7 +91,7 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
     float numPointsRequired = tmax - tmin + 8*h;
     float r = ceilf(logf(numPointsRequired) / logf(2.f));
     
-    float numPointsFinal = pow(2.f, r);
+    float numPointsFinal = powf(2.f, r);
     
     float deltaPoints = numPointsFinal - numPoints;
     float deltaBefore = ceilf(deltaPoints/2);

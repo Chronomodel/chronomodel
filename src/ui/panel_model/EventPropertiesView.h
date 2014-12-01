@@ -49,7 +49,7 @@ private slots:
     void sendSplitDate();
     
     void updateKnownType();
-    void updateKnownFixed();
+    void updateKnownFixed(const QString& text);
     void updateKnownUnifStart();
     void updateKnownUnifEnd();
     void updateKnownGaussMeasure();

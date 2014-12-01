@@ -103,10 +103,8 @@ void EventKnown::updateValues(float tmin, float tmax, float step)
         case eFixed:
         {
             for(int t=tmin; t<=tmax; t+=step)
-            {
-                float v = (t == mFixed) ? 1 : 0;
-                mValues[t] = v;
-            }
+                mValues[t] = 0.f;
+            mValues[mFixed] = 1.f;
             break;
         }
         case eUniform:
@@ -171,7 +169,7 @@ void EventKnown::updateTheta(float tmin, float tmax)
             float rapport = 0;
             if(theta >= min && theta <= max)
             {
-                rapport = exp((-0.5/(mGaussError*mGaussError)) * (pow(theta - mGaussMeasure, 2) - pow(mTheta.mX - mGaussMeasure, 2)));
+                rapport = expf((-0.5/(mGaussError*mGaussError)) * (powf(theta - mGaussMeasure, 2) - powf(mTheta.mX - mGaussMeasure, 2)));
             }
             mTheta.tryUpdate(theta, rapport);
             break;

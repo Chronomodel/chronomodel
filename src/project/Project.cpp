@@ -399,7 +399,7 @@ void Project::createEvent()
 {
     if(areStudyBoundsValid())
     {
-        EventDialog dialog(qApp->activeWindow(), Qt::Sheet);
+        EventDialog dialog(qApp->activeWindow(), tr("New Event"), Qt::Sheet);
         if(dialog.exec() == QDialog::Accepted)
         {
             Event event;
@@ -415,7 +415,7 @@ void Project::createEventKnown()
 {
     if(areStudyBoundsValid())
     {
-        EventDialog dialog(qApp->activeWindow(), Qt::Sheet);
+        EventDialog dialog(qApp->activeWindow(), tr("New Bound"), Qt::Sheet);
         if(dialog.exec() == QDialog::Accepted)
         {
             EventKnown event;

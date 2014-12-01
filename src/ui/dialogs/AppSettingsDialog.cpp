@@ -20,8 +20,6 @@ QDialog(parent, flags)
     mAutoSaveDelayLab = new Label(tr("Auto save interval (in minutes)") + " : ", this);
     mAutoSaveDelayEdit = new LineEdit(this);
     
-    mAutoSaveDelayLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    
     QIntValidator* positiveValidator = new QIntValidator();
     positiveValidator->setBottom(1);
     mAutoSaveDelayEdit->setValidator(positiveValidator);

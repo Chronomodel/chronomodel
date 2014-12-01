@@ -11,6 +11,7 @@
 
 #include "Date.h"
 #include "Event.h"
+#include "EventKnown.h"
 #include "Phase.h"
 
 #include "Label.h"
@@ -377,34 +378,51 @@ void ResultsView::generateHPD()
     int hdpThreshold = mHPDEdit->text().toInt();
     if(mModel)
     {
-        QList<Event>& events = mModel->mEvents;
-        QList<Phase>& phases = mModel->mPhases;
+        QList<Event*>& events = mModel->mEvents;
+        QList<Phase*>& phases = mModel->mPhases;
         
         for(int i=0; i<events.size(); ++i)
         {
-            Event& event = events[i];
-            event.mTheta.generateHPD(hdpThreshold);
-            event.mTheta.generateCredibility(mChains, hdpThreshold);
-            QList<Date>& dates = event.mDates;
+            Event* event = events[i];
             
-            for(int j=0; j<dates.size(); ++j)
+            qDebug() << event->toJson();
+            
+            bool isFixedBound = false;
+            if(event->type() == Event::eKnown)
             {
-                Date& date = dates[j];
-                date.mTheta.generateHPD(hdpThreshold);
-                date.mSigma.generateHPD(hdpThreshold);
+                EventKnown* ek = dynamic_cast<EventKnown*>(event);
                 
-                date.mTheta.generateCredibility(mChains, hdpThreshold);
-                date.mSigma.generateCredibility(mChains, hdpThreshold);
+                qDebug() << ek->fixedValue();
+                
+                if(ek->knownType() == EventKnown::eFixed)
+                    isFixedBound = true;
+            }
+            
+            if(!isFixedBound)
+            {
+                event->mTheta.generateHPD(hdpThreshold);
+                event->mTheta.generateCredibility(mChains, hdpThreshold);
+                QList<Date>& dates = event->mDates;
+                
+                for(int j=0; j<dates.size(); ++j)
+                {
+                    Date& date = dates[j];
+                    date.mTheta.generateHPD(hdpThreshold);
+                    date.mSigma.generateHPD(hdpThreshold);
+                    
+                    date.mTheta.generateCredibility(mChains, hdpThreshold);
+                    date.mSigma.generateCredibility(mChains, hdpThreshold);
+                }
             }
         }
         for(int i=0; i<phases.size(); ++i)
         {
-            Phase& phase = phases[i];
-            phase.mAlpha.generateHPD(hdpThreshold);
-            phase.mBeta.generateHPD(hdpThreshold);
+            Phase* phase = phases[i];
+            phase->mAlpha.generateHPD(hdpThreshold);
+            phase->mBeta.generateHPD(hdpThreshold);
             
-            phase.mAlpha.generateCredibility(mChains, hdpThreshold);
-            phase.mBeta.generateCredibility(mChains, hdpThreshold);
+            phase->mAlpha.generateCredibility(mChains, hdpThreshold);
+            phase->mBeta.generateCredibility(mChains, hdpThreshold);
         }
     }
 }
@@ -601,7 +619,7 @@ void ResultsView::updateResults(MCMCLoopMain& loop)
     
     for(int p=0; p<(int)mModel->mPhases.size(); ++p)
     {
-        Phase* phase = (Phase*)&mModel->mPhases[p];
+        Phase* phase = mModel->mPhases[p];
         GraphViewPhase* graphPhase = new GraphViewPhase(phasesWidget);
         graphPhase->setSettings(mModel->mSettings);
         graphPhase->setMCMCSettings(mModel->mMCMCSettings, mChains);
@@ -640,7 +658,7 @@ void ResultsView::updateResults(MCMCLoopMain& loop)
     
     for(int i=0; i<(int)mModel->mEvents.size(); ++i)
     {
-        Event* event = (Event*)&mModel->mEvents[i];
+        Event* event = mModel->mEvents[i];
         GraphViewEvent* graphEvent = new GraphViewEvent(eventsWidget);
         graphEvent->setSettings(mModel->mSettings);
         graphEvent->setMCMCSettings(mModel->mMCMCSettings, mChains);
