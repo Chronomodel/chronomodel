@@ -44,7 +44,7 @@ float PluginMag::getLikelyhood(const float& t, const QJsonObject& data)
         }
         else if(is_dec)
         {
-            float variance = e * e + pow(alpha / (2.448 * cos(inc * M_PI / 180.)), 2);
+            float variance = e * e + powf(alpha / (2.448 * cos(inc * M_PI / 180.)), 2);
             result = expf(-0.5 * powf(g - dec, 2) / variance) / sqrtf(variance);
         }
         else if(is_int)

@@ -69,7 +69,7 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
         
         for(int t=yMin; t<yMax; ++t)
         {
-            float v = exp(-0.5 * pow((t - age) / error, 2));
+            float v = expf(-0.5 * powf((t - age) / error, 2));
             curveMeasure.mData[t] = v;
         }
         curveMeasure.mData = normalize_map(curveMeasure.mData);
