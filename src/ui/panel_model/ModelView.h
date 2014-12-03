@@ -119,6 +119,7 @@ private:
     
     // ------
     
+    Label* mStudyLab;
     Label* mMinLab;
     Label* mMaxLab;
     Label* mStepLab;

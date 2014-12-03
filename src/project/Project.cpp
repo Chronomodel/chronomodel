@@ -106,13 +106,15 @@ QJsonObject Project::state() const
     return mState;
 }
 
-void Project::pushProjectState(const QJsonObject& state, const QString& reason, bool notify, bool force)
+bool Project::pushProjectState(const QJsonObject& state, const QString& reason, bool notify, bool force)
 {
     if(mState != state || force)
     {
         SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
         MainWindow::getInstance()->getUndoStack()->push(command);
+        return true;
     }
+    return false;
 }
 
 void Project::sendUpdateState(const QJsonObject& state, const QString& reason, bool notify)
@@ -314,18 +316,25 @@ bool Project::saveProjectToFile()
 //     Project Settings
 // --------------------------------------------------------------------
 #pragma mark Settings
-void Project::setSettings(const ProjectSettings& settings)
+bool Project::setSettings(const ProjectSettings& settings)
 {
     if(settings.mTmin >= settings.mTmax)
     {
         QMessageBox message(QMessageBox::Critical, tr("Inconsistent values"), tr("Start Date must be lower than End Date !"), QMessageBox::Ok, qApp->activeWindow(), Qt::Sheet);
         message.exec();
+        return false;
+    }
+    else if(settings.mStep < 1)
+    {
+        QMessageBox message(QMessageBox::Critical, tr("Inconsistent values"), tr("Step must be >= 1 !"), QMessageBox::Ok, qApp->activeWindow(), Qt::Sheet);
+        message.exec();
+        return false;
     }
     else
     {
         QJsonObject stateNext = mState;
         stateNext[STATE_SETTINGS] = settings.toJson();
-        pushProjectState(stateNext, tr("Settings updated"), true);
+        return pushProjectState(stateNext, tr("Settings updated"), true);
     }
 }
 

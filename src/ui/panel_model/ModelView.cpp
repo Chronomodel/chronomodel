@@ -168,13 +168,25 @@ mCalibVisible(false)
     
     // --------
     
+    mStudyLab = new Label(tr("STUDY PERIOD"), mRightWrapper);
     mMinLab = new Label(tr("Start") + " :", mRightWrapper);
     mMaxLab = new Label(tr("End") + " :", mRightWrapper);
     mStepLab = new Label(tr("Step") + " :", mRightWrapper);
     
+    mStudyLab->setLight();
     mMinLab->setLight();
     mMaxLab->setLight();
     mStepLab->setLight();
+    
+    mStudyLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    QFont font;
+    font.setPointSizeF(16.f);
+    mStudyLab->setFont(font);
+    QPalette palette = mStudyLab->palette();
+    palette.setColor(QPalette::WindowText, Qt::white);
+    mStudyLab->setPalette(palette);
+    
+    mStepLab->setToolTip(tr("The step is useful for large study periods.\nFor example with a step of 10 years, calibrated date's values will be stored every 10 years.\nIt lowers memory requirements and graph plots are faster.\nHowever, interpolation between these points\nleads to less precision in calculations."));
     
     mMinEdit = new LineEdit(mRightWrapper);
     mMaxEdit = new LineEdit(mRightWrapper);
@@ -184,10 +196,8 @@ mCalibVisible(false)
     mButApply->setColorState(Button::eWarning);
     
     QIntValidator* validator = new QIntValidator();
-    //mMinEdit->setValidator(validator);
-    //mMaxEdit->setValidator(validator);
-    
     validator->setBottom(1);
+    validator->setTop(10000);
     mStepEdit->setValidator(validator);
     
     connect(mMinEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));
@@ -258,7 +268,11 @@ void ModelView::updateProject()
     mMaxEdit->setText(QString::number(settings.mTmax));
     mStepEdit->setText(QString::number(settings.mStep));
     
-    mButApply->setColorState(Button::eReady);
+    
+    if(settings.mStep < 1 || settings.mTmin >= settings.mTmax)
+        mButApply->setColorState(Button::eWarning);
+    else
+        mButApply->setColorState(Button::eReady);
     
     mEventsScene->updateProject();
     mPhasesScene->updateProject();
@@ -296,7 +310,17 @@ void ModelView::applySettings()
     settings.mStep = mStepEdit->text().toInt();
     
     Project* project = MainWindow::getInstance()->getProject();
-    project->setSettings(settings);
+    
+    if(!project->setSettings(settings))
+    {
+        QJsonObject state = project->state();
+        ProjectSettings oldSettings = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
+        
+        mStepEdit->setText(QString::number(oldSettings.mStep));
+        mMinEdit->setText(QString::number(oldSettings.mTmin));
+        mMaxEdit->setText(QString::number(oldSettings.mTmax));
+        mButApply->setColorState(Button::eReady);
+    }
 }
 
 void ModelView::studyPeriodChanging()
@@ -371,7 +395,7 @@ void ModelView::updateLayout()
     
     int x = width() * mSplitProp;
     int minLeft = 200;
-    int minRight = 430 + mHandlerW/2;
+    int minRight = 525 + mHandlerW/2;
     x = (x < minLeft) ? minLeft : x;
     x = (x > width() - minRight) ? width() - minRight : x;
     
@@ -389,19 +413,22 @@ void ModelView::updateLayout()
     
     // ----------
 
-    int editLabelW = 35;
+    int labelW = 35;
     int editW = 50;
     int editH = (mToolbarH - 3*m) / 2;
     int butW = 80;
     
-    mMinLab->setGeometry(0, m, editLabelW, editH);
-    mMaxLab->setGeometry(0, 2*m + editH, editLabelW, editH);
-    mStepLab->setGeometry(2*m + editLabelW + editW, m, editLabelW, editH);
+    mStudyLab->setGeometry(0, m, 135, editH);
+    mButApply->setGeometry(135, m, 150, editH);
     
-    mMinEdit->setGeometry(m + editLabelW, m, editW, editH);
-    mMaxEdit->setGeometry(m + editLabelW, 2*m + editH, editW, editH);
-    mStepEdit->setGeometry(3*m + 2*editLabelW + editW, m, editW, editH);
-    mButApply->setGeometry(2*m + editLabelW + editW, 2*m + editH, editLabelW + m + editW, editH);
+    int y = 2*m + editH;
+    
+    mMinLab->setGeometry(0, y, labelW, editH);
+    mMinEdit->setGeometry(m + labelW, y, editW, editH);
+    mMaxLab->setGeometry(2*m + labelW + editW, y, labelW, editH);
+    mMaxEdit->setGeometry(3*m + 2*labelW + editW, y, editW, editH);
+    mStepLab->setGeometry(4*m + 2*labelW + 2*editW, y, labelW, editH);
+    mStepEdit->setGeometry(5*m + 3*labelW + 2*editW, y, editW, editH);
     
     mButProperties->setGeometry(mRightRect.width() - 3*butW, 0, butW, mToolbarH);
     mButImport->setGeometry(mRightRect.width() - 2*butW, 0, butW, mToolbarH);
