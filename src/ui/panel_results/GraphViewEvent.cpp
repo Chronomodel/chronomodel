@@ -43,35 +43,33 @@ void GraphViewEvent::refresh()
     {
         QColor color = mEvent->mColor;
         
+        bool isFixedBound = false;
+        EventKnown* ek = dynamic_cast<EventKnown*>(mEvent);
+        if(mEvent->type() == Event::eKnown && ek && ek->knownType() == EventKnown::eFixed)
+            isFixedBound = true;
+        
         if(mCurrentResult == eHisto)
         {
             if(mCurrentVariable == eTheta)
             {
                 mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
                 
-                bool isFixedBound = false;
-                if(mEvent->type() == Event::eKnown)
+                if(isFixedBound)
                 {
-                    EventKnown* ek = (EventKnown*)mEvent;
-                    if(ek->knownType() == EventKnown::eFixed)
-                    {
-                        isFixedBound = true;
-                        
-                        mGraph->setRangeY(0, 1.f);
-                        
-                        GraphCurve curve;
-                        curve.mName = "Fixed Bound";
-                        curve.mPen.setColor(color);
-                        curve.mIsHisto = true;
-                        
-                        for(int t=mSettings.mTmin; t< mSettings.mTmax; ++t)
-                            curve.mData[t] = 0.f;
-                        curve.mData[floorf(ek->fixedValue())] = 1.f;
-                        
-                        mGraph->addCurve(curve);
-                    }
+                    mGraph->setRangeY(0, 1.f);
+                    
+                    GraphCurve curve;
+                    curve.mName = "Fixed Bound";
+                    curve.mPen.setColor(color);
+                    curve.mIsHisto = true;
+                    
+                    for(int t=mSettings.mTmin; t< mSettings.mTmax; ++t)
+                        curve.mData[t] = 0.f;
+                    curve.mData[floorf(ek->fixedValue())] = 1.f;
+                    
+                    mGraph->addCurve(curve);
                 }
-                if(!isFixedBound)
+                else
                 {
                     mGraph->setRangeY(0, 0.00001f);
                     setNumericalResults(mEvent->mTheta.resultsText());
@@ -104,6 +102,7 @@ void GraphViewEvent::refresh()
                             curveCred.mHorizontalValue = mGraph->maximumY();
                             curveCred.mPen.setColor(color);
                             curveCred.mPen.setWidth(5);
+                            curveCred.mPen.setCapStyle(Qt::FlatCap);
                             curveCred.mIsHorizontalSections = true;
                             mGraph->addCurve(curveCred);
                         }
@@ -252,7 +251,7 @@ void GraphViewEvent::refresh()
                 mGraph->addCurve(curveTarget);
             }
         }
-        else if(mCurrentResult == eCorrel && mCurrentVariable == eTheta)
+        else if(mCurrentResult == eCorrel && mCurrentVariable == eTheta && !isFixedBound)
         {
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)

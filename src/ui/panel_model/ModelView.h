@@ -44,6 +44,7 @@ public:
 public slots:
     void updateProject();
     void applySettings();
+    void studyPeriodChanging();
     
 protected:
     void paintEvent(QPaintEvent* e);

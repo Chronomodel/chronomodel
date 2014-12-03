@@ -385,14 +385,10 @@ void ResultsView::generateHPD()
         {
             Event* event = events[i];
             
-            qDebug() << event->toJson();
-            
             bool isFixedBound = false;
             if(event->type() == Event::eKnown)
             {
                 EventKnown* ek = dynamic_cast<EventKnown*>(event);
-                
-                qDebug() << ek->fixedValue();
                 
                 if(ek->knownType() == EventKnown::eFixed)
                     isFixedBound = true;

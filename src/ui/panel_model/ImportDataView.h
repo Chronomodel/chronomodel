@@ -37,8 +37,6 @@ public:
     ImportDataView(QWidget* parent = 0, Qt::WindowFlags flags = 0);
     ~ImportDataView();
     
-    void setHelp(const QString& help);
-    
 public slots:
     void removeCsvRows(QList<int> rows);
     

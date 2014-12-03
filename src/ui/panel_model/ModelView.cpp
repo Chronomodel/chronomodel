@@ -181,6 +181,8 @@ mCalibVisible(false)
     mStepEdit = new LineEdit(mRightWrapper);
     mButApply = new Button(tr("Apply"), mRightWrapper);
     
+    mButApply->setColorState(Button::eWarning);
+    
     QIntValidator* validator = new QIntValidator();
     //mMinEdit->setValidator(validator);
     //mMaxEdit->setValidator(validator);
@@ -188,9 +190,9 @@ mCalibVisible(false)
     validator->setBottom(1);
     mStepEdit->setValidator(validator);
     
-    //connect(mMinEdit, SIGNAL(clicked()), this, SLOT(applySettings()));
-    //connect(mMaxEdit, SIGNAL(clicked()), this, SLOT(applySettings()));
-    //connect(mStepEdit, SIGNAL(clicked()), this, SLOT(applySettings()));
+    connect(mMinEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));
+    connect(mMaxEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));
+    connect(mStepEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));
     connect(mButApply, SIGNAL(clicked()), this, SLOT(applySettings()));
     
     // --------
@@ -256,6 +258,8 @@ void ModelView::updateProject()
     mMaxEdit->setText(QString::number(settings.mTmax));
     mStepEdit->setText(QString::number(settings.mStep));
     
+    mButApply->setColorState(Button::eReady);
+    
     mEventsScene->updateProject();
     mPhasesScene->updateProject();
     
@@ -290,6 +294,11 @@ void ModelView::applySettings()
     
     Project* project = MainWindow::getInstance()->getProject();
     project->setSettings(settings);
+}
+
+void ModelView::studyPeriodChanging()
+{
+    mButApply->setColorState(Button::eWarning);
 }
 
 void ModelView::showHelp(bool show)

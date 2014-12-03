@@ -106,6 +106,7 @@ void CalibrationView::updateGraphs()
         calibCurve.mName = "Calibration";
         calibCurve.mPen.setColor(c);
         calibCurve.mFillUnder = false;
+        calibCurve.mIsHisto = false;
         calibCurve.mData = mDate.mCalibration;
         
         float yMin = map_min_value(mDate.mCalibration);
@@ -204,7 +205,6 @@ void CalibrationView::updateLayout()
     int lineH = 25;
     int editW = 30;
     int checkW = 70;
-    int butW = 100;
     int rulerH = 40;
     int graphLeft = 50.f;
     int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);

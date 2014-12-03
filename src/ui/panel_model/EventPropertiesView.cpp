@@ -94,22 +94,16 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mKnownFixedLab = new Label(tr("Value") + " :", mKnownView);
     mKnownStartLab = new Label(tr("Start") + " :", mKnownView);
     mKnownEndLab = new Label(tr("End") + " :", mKnownView);
-    mKnownGaussMeasureLab = new Label(tr("Measure") + " :", mKnownView);
-    mKnownGaussErrorLab = new Label(tr("Error") + " :", mKnownView);
     
     mKnownFixedRadio = new RadioButton(tr("Fixed") + " :", mKnownView);
     mKnownUniformRadio = new RadioButton(tr("Uniform") + " :", mKnownView);
-    mKnownGaussRadio = new RadioButton(tr("Gauss") + " :", mKnownView);
     
     connect(mKnownFixedRadio, SIGNAL(clicked()), this, SLOT(updateKnownType()));
     connect(mKnownUniformRadio, SIGNAL(clicked()), this, SLOT(updateKnownType()));
-    connect(mKnownGaussRadio, SIGNAL(clicked()), this, SLOT(updateKnownType()));
     
     mKnownFixedEdit = new LineEdit(mKnownView);
     mKnownStartEdit = new LineEdit(mKnownView);
     mKnownEndEdit = new LineEdit(mKnownView);
-    mKnownGaussMeasure = new LineEdit(mKnownView);
-    mKnownGaussError = new LineEdit(mKnownView);
     
     QDoubleValidator* doubleValidator = new QDoubleValidator();
     doubleValidator->setDecimals(2);
@@ -124,8 +118,6 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     connect(mKnownFixedEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateKnownFixed(const QString&)));
     connect(mKnownStartEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateKnownUnifStart()));
     connect(mKnownEndEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateKnownUnifEnd()));
-    connect(mKnownGaussMeasure, SIGNAL(textChanged(const QString&)), this, SLOT(updateKnownGaussMeasure()));
-    connect(mKnownGaussError, SIGNAL(textChanged(const QString&)), this, SLOT(updateKnownGaussError()));
     
     setEvent(QJsonObject());
 }
@@ -189,13 +181,10 @@ void EventPropertiesView::updateEvent()
             
             mKnownFixedRadio->setChecked(knownType == EventKnown::eFixed);
             mKnownUniformRadio->setChecked(knownType == EventKnown::eUniform);
-            mKnownGaussRadio->setChecked(knownType == EventKnown::eGauss);
             
             mKnownFixedEdit->setText(QString::number(mEvent[STATE_EVENT_KNOWN_FIXED].toDouble()));
             mKnownStartEdit->setText(QString::number(mEvent[STATE_EVENT_KNOWN_START].toDouble()));
             mKnownEndEdit->setText(QString::number(mEvent[STATE_EVENT_KNOWN_END].toDouble()));
-            mKnownGaussMeasure->setText(QString::number(mEvent[STATE_EVENT_KNOWN_MEASURE].toDouble()));
-            mKnownGaussError->setText(QString::number(mEvent[STATE_EVENT_KNOWN_ERROR].toDouble()));
             
             updateKnownControls();
             updateKnownGraph();
@@ -242,8 +231,6 @@ void EventPropertiesView::updateKnownType()
         EventKnown::KnownType type = EventKnown::eFixed;
         if(mKnownUniformRadio->isChecked())
             type = EventKnown::eUniform;
-        else if(mKnownGaussRadio->isChecked())
-            type = EventKnown::eGauss;
         
         if(mEvent[STATE_EVENT_KNOWN_TYPE].toInt() != type)
         {
@@ -281,20 +268,6 @@ void EventPropertiesView::updateKnownUnifEnd()
     QJsonObject event = mEvent;
     event[STATE_EVENT_KNOWN_END] = mKnownEndEdit->text().toFloat();
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound max updated"));
-}
-
-void EventPropertiesView::updateKnownGaussMeasure()
-{
-    QJsonObject event = mEvent;
-    event[STATE_EVENT_KNOWN_MEASURE] = mKnownGaussMeasure->text().toFloat();
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound average updated"));
-}
-
-void EventPropertiesView::updateKnownGaussError()
-{
-    QJsonObject event = mEvent;
-    event[STATE_EVENT_KNOWN_ERROR] = mKnownGaussError->text().toFloat();
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound error updated"));
 }
 
 void EventPropertiesView::loadKnownCsv()
@@ -370,24 +343,12 @@ void EventPropertiesView::updateKnownControls()
         mKnownFixedEdit->setEnabled(true);
         mKnownStartEdit->setEnabled(false);
         mKnownEndEdit->setEnabled(false);
-        mKnownGaussMeasure->setEnabled(false);
-        mKnownGaussError->setEnabled(false);
     }
     else if(mKnownUniformRadio->isChecked())
     {
         mKnownFixedEdit->setEnabled(false);
         mKnownStartEdit->setEnabled(true);
         mKnownEndEdit->setEnabled(true);
-        mKnownGaussMeasure->setEnabled(false);
-        mKnownGaussError->setEnabled(false);
-    }
-    else if(mKnownGaussRadio->isChecked())
-    {
-        mKnownFixedEdit->setEnabled(false);
-        mKnownStartEdit->setEnabled(false);
-        mKnownEndEdit->setEnabled(false);
-        mKnownGaussMeasure->setEnabled(true);
-        mKnownGaussError->setEnabled(true);
     }
 }
 
@@ -566,12 +527,6 @@ void EventPropertiesView::updateLayout()
     mKnownStartEdit->setGeometry(w1 + 2*m, y, w2, lineH);
     mKnownEndLab->setGeometry(m, y += (lineH + m), w1, lineH);
     mKnownEndEdit->setGeometry(w1 + 2*m, y, w2, lineH);
-    
-    mKnownGaussRadio->setGeometry(m, y += (lineH + m), r.width() - 2*m, lineH);
-    mKnownGaussMeasureLab->setGeometry(m, y += (lineH + m), w1, lineH);
-    mKnownGaussMeasure->setGeometry(w1 + 2*m, y, w2, lineH);
-    mKnownGaussErrorLab->setGeometry(m, y += (lineH + m), w1, lineH);
-    mKnownGaussError->setGeometry(w1 + 2*m, y, w2, lineH);
     
     mKnownGraph->setGeometry(m, y += (lineH + m), r.width() - 2*m, 100);
 }

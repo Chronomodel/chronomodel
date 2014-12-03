@@ -30,8 +30,6 @@
 #define STATE_EVENT_KNOWN_FIXED "known_fixed"
 #define STATE_EVENT_KNOWN_START "known_unif_start"
 #define STATE_EVENT_KNOWN_END "known_unif_end"
-#define STATE_EVENT_KNOWN_MEASURE "known_gauss_measure"
-#define STATE_EVENT_KNOWN_ERROR "known_gauss_error"
 
 #define STATE_PHASE_TAU_TYPE "tau_type"
 #define STATE_PHASE_TAU_FIXED "tau_fixed"

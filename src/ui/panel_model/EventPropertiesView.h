@@ -52,8 +52,6 @@ private slots:
     void updateKnownFixed(const QString& text);
     void updateKnownUnifStart();
     void updateKnownUnifEnd();
-    void updateKnownGaussMeasure();
-    void updateKnownGaussError();
     void loadKnownCsv();
     
     void updateKnownGraph();
@@ -89,19 +87,14 @@ private:
     
     RadioButton* mKnownFixedRadio;
     RadioButton* mKnownUniformRadio;
-    RadioButton* mKnownGaussRadio;
     
     Label* mKnownFixedLab;
     Label* mKnownStartLab;
     Label* mKnownEndLab;
-    Label* mKnownGaussMeasureLab;
-    Label* mKnownGaussErrorLab;
     
     LineEdit* mKnownFixedEdit;
     LineEdit* mKnownStartEdit;
     LineEdit* mKnownEndEdit;
-    LineEdit* mKnownGaussMeasure;
-    LineEdit* mKnownGaussError;
     
     GraphView* mKnownGraph;
 };

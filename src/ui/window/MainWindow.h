@@ -59,6 +59,7 @@ public slots:
     void openManual();
     void openWebsite();
     void showHelp(bool);
+    void mcmcFinished();
     
 private:
     QStackedWidget* mCentralStack;

@@ -75,11 +75,7 @@ void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
     Q_UNUSED(e);
     
     int m = 5;
-    float top = 65.f;
     float lineH = 20;
-    float editW = 100;
-    float w = width() - 2*m;
-    float h = 115;
     
     QPainter p(this);
     p.fillRect(rect(), QColor(220, 220, 220));

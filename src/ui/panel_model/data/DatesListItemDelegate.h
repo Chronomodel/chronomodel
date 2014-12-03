@@ -112,7 +112,7 @@ public:
             painter->drawRect(calibRect);
             
             painter->setPen(QColor(40, 40, 40));
-            painter->drawText(updateRect, Qt::AlignCenter, tr("Update"));
+            painter->drawText(updateRect, Qt::AlignCenter, tr("Modify"));
             painter->drawText(calibRect, Qt::AlignCenter, tr("Calibrate"));
             
             /*if (option.state & QStyle::State_Selected)

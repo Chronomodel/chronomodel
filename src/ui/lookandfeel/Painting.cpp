@@ -30,7 +30,7 @@ float pointSize(float size)
     return size;
 }
 
-void drawButton(QPainter& painter, const QRectF& rect, bool hover, bool isEnabled, const QString& text, const QIcon& icon, bool isFlat)
+void drawButton(QPainter& painter, const QRectF& rect, bool hover, bool isEnabled, const QString& text, const QIcon& icon)
 {
     painter.save();
     painter.setRenderHint(QPainter::Antialiasing);

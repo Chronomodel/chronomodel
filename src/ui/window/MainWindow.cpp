@@ -46,7 +46,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     connect(mMCMCSettingsAction, SIGNAL(triggered()), mProject, SLOT(mcmcSettings()));
     connect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
     connect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));
-    connect(mProject, SIGNAL(mcmcFinished(MCMCLoopMain&)), mViewResultsAction, SLOT(trigger()));
+    connect(mProject, SIGNAL(mcmcFinished(MCMCLoopMain&)), this, SLOT(mcmcFinished()));
     
     connect(mProject, SIGNAL(projectStateChanged()), mProjectView, SLOT(updateProject()));
     connect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
@@ -147,6 +147,7 @@ void MainWindow::createActions()
     
     mViewResultsAction = new QAction(QIcon(":results.png"), tr("Results"), this);
     mViewResultsAction->setCheckable(true);
+    mViewResultsAction->setEnabled(false);
     
     mViewLogAction = new QAction(QIcon(":results.png"), tr("Log"), this);
     mViewLogAction->setCheckable(true);
@@ -291,6 +292,8 @@ void MainWindow::newProject()
             mProject->initState();
             activateInterface(true);
         }
+        mProjectView->showModel();
+        mViewResultsAction->setEnabled(false);
         updateWindowTitle();
     }
 }
@@ -299,7 +302,7 @@ void MainWindow::openProject()
 {
     QString path = QFileDialog::getOpenFileName(qApp->activeWindow(),
                                                 tr("Open File"),
-                                                MainWindow::getInstance()->getCurrentPath(),
+                                                getCurrentPath(),
                                                 tr("Chronomodel Project (*.chr)"));
     
     if(!path.isEmpty())
@@ -470,4 +473,10 @@ void MainWindow::activateInterface(bool activate)
     mProjectExportAction->setEnabled(activate);
     mMCMCSettingsAction->setEnabled(activate);
     mRunAction->setEnabled(activate);
+}
+
+void MainWindow::mcmcFinished()
+{
+    mViewResultsAction->setEnabled(true);
+    mViewResultsAction->trigger();
 }

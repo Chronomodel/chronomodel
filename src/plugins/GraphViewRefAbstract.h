@@ -20,6 +20,7 @@ public:
 
     virtual void setDate(const Date& date, const ProjectSettings& settings)
     {
+        Q_UNUSED(date);
         mSettings = settings;
     }
     

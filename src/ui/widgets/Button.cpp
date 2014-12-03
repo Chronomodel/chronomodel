@@ -22,6 +22,8 @@ void Button::init()
     mFlatVertical = false;
     mFlatHorizontal = false;
     mIsClose = false;
+    
+    mColorState = eDefault;
 }
 
 Button::~Button()
@@ -49,6 +51,12 @@ void Button::setFlatHorizontal()
 void Button::setIsClose(bool isClose)
 {
     mIsClose = isClose;
+    update();
+}
+
+void Button::setColorState(ColorState state)
+{
+    mColorState = state;
     update();
 }
 
@@ -202,6 +210,8 @@ void Button::paintEvent(QPaintEvent* e)
         painter.setBrush(grad);
         painter.setPen(QColor(120, 120, 120));
         painter.drawRoundedRect(r, 5, 5);
+        
+        // TODO : color state
         
         painter.setPen(QColor(50, 50, 50));
         painter.drawText(r, Qt::AlignCenter, text());

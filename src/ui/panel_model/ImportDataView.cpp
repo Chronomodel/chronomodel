@@ -128,11 +128,6 @@ void ImportDataView::removeCsvRows(QList<int> rows)
     }
 }
 
-void ImportDataView::setHelp(const QString& help)
-{
-    //mHelp->setText(help);
-}
-
 void ImportDataView::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
@@ -145,7 +140,6 @@ void ImportDataView::resizeEvent(QResizeEvent* e)
     Q_UNUSED(e);
     
     int m = 5;
-    int labW = 100;
     int butH = 25;
     int helpH = mHelp->heightForWidth(width() - 2*m);
     
@@ -232,7 +226,6 @@ void ImportDataTable::updateTableHeaders()
     {
         qDebug() << pluginName;
         PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
-        mImportView->setHelp(plugin->csvHelp());
         
         headers = plugin->csvColumns();
         if(plugin->wiggleAllowed())
