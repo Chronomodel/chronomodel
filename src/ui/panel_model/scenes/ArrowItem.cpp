@@ -146,8 +146,6 @@ void ArrowItem::hoverMoveEvent(QGraphicsSceneHoverEvent* e)
                   -(br.height()-hoverSide)/2);
         
         bool shouldShowDelete = br.contains(e->pos());
-        qDebug() << br;
-        qDebug() << e->pos();
         if(shouldShowDelete != mShowDelete)
         {
             mShowDelete = shouldShowDelete;

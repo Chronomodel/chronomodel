@@ -108,7 +108,7 @@ void EventsScene::updateGreyedOutEvents(const QMap<int, bool>& eyedPhases)
 #pragma mark Help Bubble
 void EventsScene::updateHelp()
 {
-    /*QString text;
+    QString text;
     QList<QGraphicsItem*> selected = selectedItems();
     
     if(mItems.size() == 0)
@@ -149,7 +149,7 @@ void EventsScene::updateHelp()
     mHelpView->setGeometry(mHelpView->x(),
                            mHelpView->y(),
                            mHelpView->width(),
-                           mHelpView->heightForWidth(mHelpView->width()));*/
+                           mHelpView->heightForWidth(mHelpView->width()));
 }
 
 HelpWidget* EventsScene::getHelpView()
@@ -345,7 +345,7 @@ void EventsScene::updateSelection()
             event[STATE_IS_CURRENT] = false;
             
             if(mItems[i]->isSelected())
-                qDebug() << "Marke selected event : " << item->mData[STATE_NAME].toString();
+                qDebug() << "Marked selected event : " << item->mData[STATE_NAME].toString();
         }
         QJsonObject event;
         EventItem* curItem = (EventItem*)currentItem();

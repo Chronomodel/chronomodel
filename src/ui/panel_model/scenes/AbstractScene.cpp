@@ -35,21 +35,28 @@ void AbstractScene::updateConstraintsPos(AbstractItem* movedItem, const QPointF&
     if(movedItem)
     {
         int itemId = movedItem->mData[STATE_ID].toInt();
-        int itemX = movedItem->mData[STATE_ITEM_X].toInt();
-        int itemY = movedItem->mData[STATE_ITEM_Y].toInt();
+        float itemX = movedItem->mData[STATE_ITEM_X].toDouble();
+        float itemY = movedItem->mData[STATE_ITEM_Y].toDouble();
+        
+        //qDebug() << "---------";
+        //qDebug() << "Moving event id : " << itemId;
         
         for(int i=0; i<mConstraintItems.size(); ++i)
         {
             QJsonObject cData = mConstraintItems[i]->data();
+            
+            int cId = cData[STATE_ID].toInt();
             int bwdId = cData[STATE_CONSTRAINT_BWD_ID].toInt();
             int fwdId = cData[STATE_CONSTRAINT_FWD_ID].toInt();
             
             if(bwdId == itemId)
             {
+                //qDebug() << "Backward const. id : " << cId << " (link: "<<bwdId<<" -> "<< fwdId <<", setFrom: " << itemX << ", " << itemY << ")";
                 mConstraintItems[i]->setFrom(itemX, itemY);
             }
             else if(fwdId == itemId)
             {
+                //qDebug() << "Forward const. id : " << cId << " (link: "<<bwdId<<" -> "<< fwdId <<", setTo: " << itemX << ", " << itemY << ")";
                 mConstraintItems[i]->setTo(itemX, itemY);
             }
             
@@ -104,7 +111,7 @@ void AbstractScene::itemMoved(AbstractItem* item, QPointF newPos, bool merging)
 {
     
     
-    qDebug() << " moved : " << newPos;
+    //qDebug() << " moved : " << newPos;
     
     
     
