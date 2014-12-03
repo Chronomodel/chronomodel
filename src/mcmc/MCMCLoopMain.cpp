@@ -420,6 +420,7 @@ void MCMCLoopMain::update()
     
     //--------------------- Update Dates -----------------------------------------
     
+    int counter = 0;
     for(int i=0; i<events.size(); ++i)
     {
         Event* event = events[i];
@@ -432,6 +433,8 @@ void MCMCLoopMain::update()
             date.updateSigma(event);
             date.updateWiggle();
             
+            //qDebug() << "it #" << chain.mTotalIter << " | date " << counter;
+            
             if(doMemo)
             {
                 date.mTheta.memo();
@@ -441,6 +444,7 @@ void MCMCLoopMain::update()
                 date.mTheta.saveCurrentAcceptRate();
                 date.mSigma.saveCurrentAcceptRate();
             }
+            ++counter;
         }
     }
 
@@ -456,6 +460,7 @@ void MCMCLoopMain::update()
             event->mTheta.memo();
             event->mTheta.saveCurrentAcceptRate();
         }
+        //qDebug() << "it #" << chain.mTotalIter << " | event " << i;
     }
 
     //--------------------- Update Phases -----------------------------------------

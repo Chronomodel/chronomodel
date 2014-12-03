@@ -336,10 +336,12 @@ void Event::updateTheta(float tmin, float tmax)
         case eBoxMuller:
         {
             float theta;
+            int counter = 0;
             do{
                 theta = Generator::gaussByBoxMuller(theta_avg, sigma);
+                ++counter;
             }while(theta < min || theta > max);
-            
+            qDebug() << "Event update num trials : " << counter;
             mTheta.tryUpdate(theta, 1);
             break;
         }

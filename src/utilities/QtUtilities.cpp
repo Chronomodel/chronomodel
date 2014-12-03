@@ -168,3 +168,9 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
     }
     return fileInfo;
 }
+
+QString prepareTooltipText(const QString& title, const QString& text)
+{
+    QString result = "<div style=\"margin:10px\"><p style=\"font-weight: bold; font-style: normal\">" + title + "</p><p>" + text + "</p></div>";
+    return result;
+}

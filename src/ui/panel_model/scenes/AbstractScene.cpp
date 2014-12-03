@@ -17,6 +17,10 @@ mShiftIsDown(false)
     addItem(mTempArrow);
     mTempArrow->setVisible(false);
     mTempArrow->setZValue(0);
+    
+    QBrush backBrush;
+    backBrush.setTexture(QPixmap(":grid.png"));
+    setBackgroundBrush(backBrush);
 }
 
 AbstractScene::~AbstractScene()

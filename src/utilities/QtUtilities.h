@@ -15,5 +15,6 @@ QColor getContrastedColor(const QColor& color);
 QList<int> stringListToIntList(const QString& listStr, const QString& separator = ",");
 QFileInfo saveWidgetAsImage(QObject* widget, const QRect& r, const QString& dialogTitle, const QString& defaultPath);
 bool isComment(const QString& str);
+QString prepareTooltipText(const QString& title, const QString& text);
 
 #endif

@@ -186,7 +186,7 @@ mCalibVisible(false)
     palette.setColor(QPalette::WindowText, Qt::white);
     mStudyLab->setPalette(palette);
     
-    mStepLab->setToolTip(tr("The step is useful for large study periods.\nFor example with a step of 10 years, calibrated date's values will be stored every 10 years.\nIt lowers memory requirements and graph plots are faster.\nHowever, interpolation between these points\nleads to less precision in calculations."));
+    mStepLab->setToolTip(prepareTooltipText(tr("Step :"), tr("The step is useful for large study periods.\nFor example with a step of 10 years, calibrated date's values will be stored every 10 years.\nIt lowers memory requirements and graph plots are faster.\nHowever, interpolation between these points\nleads to less precision in calculations.")));
     
     mMinEdit = new LineEdit(mRightWrapper);
     mMaxEdit = new LineEdit(mRightWrapper);

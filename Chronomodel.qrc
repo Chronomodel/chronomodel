@@ -2,7 +2,8 @@
 <qresource>
 
 	<file alias="chronomodel.png">resources/chronomodel.png</file>
-
+	<file alias="grid.png">resources/grid.png</file>
+	
 	<file alias="pdf.png">resources/pdf.png</file>
 	<file alias="text.png">resources/text.png</file>
 	<file alias="data.png">resources/data.png</file>

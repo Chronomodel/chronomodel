@@ -12,6 +12,15 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
 {
     setWindowTitle("Chronomodel");
     
+    QPalette tooltipPalette;
+    tooltipPalette.setColor(QPalette::ToolTipBase, Qt::white);
+    tooltipPalette.setColor(QPalette::ToolTipText, Qt::black);
+    QToolTip::setPalette(tooltipPalette);
+    QFont tooltipFont;
+    tooltipFont.setItalic(true);
+    tooltipFont.setPointSizeF(11.f);
+    QToolTip::setFont(tooltipFont);
+    
     mLastPath = QDir::homePath();
     
     mUndoStack = new QUndoStack();
