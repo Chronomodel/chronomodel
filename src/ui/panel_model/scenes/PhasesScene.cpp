@@ -89,14 +89,18 @@ void PhasesScene::updateProject()
         if(!phases_ids.contains(phase[STATE_ID].toInt()))
         {
             qDebug() << "=> Phase item deleted : " << phase[STATE_ID].toInt();
-            removeItem(item);
-            mItems.removeOne(item);
-            delete item;
+            mItems.removeAt(i);
+            
+            // ????? This breaks the program!!! Delete abose does the jobs but is it safe?
+            //removeItem(item);
+            
+            // This is a QObject : call deleteLater instead of delete
+            item->deleteLater();
         }
     }
     
     // ------------------------------------------------------
-    //  Create / Update event items
+    //  Create / Update phase items
     // ------------------------------------------------------
     for(int i=0; i<phases.size(); ++i)
     {
@@ -105,7 +109,8 @@ void PhasesScene::updateProject()
         bool itemExists = false;
         for(int j=0; j<mItems.size(); ++j)
         {
-            QJsonObject itemPhase = ((PhaseItem*)mItems[j])->phase();
+            PhaseItem* item = (PhaseItem*)mItems[j];
+            QJsonObject itemPhase = item->phase();
             if(itemPhase[STATE_ID].toInt() == phase[STATE_ID].toInt())
             {
                 itemExists = true;
@@ -113,7 +118,7 @@ void PhasesScene::updateProject()
                 {
                     // UPDATE ITEM
                     qDebug() << "Phase item updated : id = " << phase[STATE_ID].toInt();
-                    ((PhaseItem*)mItems[j])->setPhase(phase);
+                    item->setPhase(phase);
                 }
             }
         }
@@ -175,6 +180,8 @@ void PhasesScene::updateProject()
             qDebug() << "Constraint created : id = " << constraint[STATE_ID].toInt();
         }
     }
+    
+    qDebug() << "PhasesScene : " << items().count() << " items";
     
     mUpdatingItems = false;
     update();

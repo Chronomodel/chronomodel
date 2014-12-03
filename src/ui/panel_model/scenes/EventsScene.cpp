@@ -232,9 +232,12 @@ void EventsScene::updateProject()
                 }
             }
             qDebug() << "Event deleted : " << event[STATE_ID].toInt();
-            removeItem(eventItem);
-            mItems.removeOne(eventItem);
-            delete eventItem;
+            mItems.removeAt(i);
+            
+            // This does not break the code but is commented to match PhasesScene implementation
+            //removeItem(eventItem);
+            
+            eventItem->deleteLater();
         }
     }
     
