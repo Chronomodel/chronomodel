@@ -292,7 +292,10 @@ void MainWindow::newProject()
             mProject->initState();
             activateInterface(true);
         }
-        mProjectView->showModel();
+        
+        mViewModelAction->trigger();
+        //mProjectView->showModel();
+        
         mViewResultsAction->setEnabled(false);
         updateWindowTitle();
     }

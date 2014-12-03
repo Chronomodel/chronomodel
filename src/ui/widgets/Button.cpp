@@ -192,6 +192,21 @@ void Button::paintEvent(QPaintEvent* e)
         
         QColor gradColTop(255, 255, 255);
         QColor gradColBot(220, 220, 220);
+        QColor penCol(50, 50, 50);
+        
+        if(mColorState == eReady)
+        {
+            gradColTop = QColor(91, 196, 98);
+            gradColBot = QColor(73, 161, 90);
+            penCol = Qt::white;
+        }
+        else if(mColorState == eWarning)
+        {
+            gradColTop = QColor(255, 151, 123);
+            gradColBot = QColor(140, 20, 20);
+            penCol = Qt::white;
+        }
+        
         
         if(!isEnabled())
         {
@@ -213,7 +228,7 @@ void Button::paintEvent(QPaintEvent* e)
         
         // TODO : color state
         
-        painter.setPen(QColor(50, 50, 50));
+        painter.setPen(penCol);
         painter.drawText(r, Qt::AlignCenter, text());
     }
     
