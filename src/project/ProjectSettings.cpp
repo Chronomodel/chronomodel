@@ -22,6 +22,25 @@ ProjectSettings& ProjectSettings::operator=(const ProjectSettings& s)
     return *this;
 }
 
+bool ProjectSettings::operator!=(const ProjectSettings& s)
+{
+    return !isEqual(s);
+}
+
+bool ProjectSettings::operator==(const ProjectSettings& s)
+{
+    return isEqual(s);
+}
+
+bool ProjectSettings::isEqual(const ProjectSettings& s)
+{
+    if(s.mTmin != this->mTmin ||
+       s.mTmax != this->mTmax ||
+       s.mStep != this->mStep)
+        return false;
+    return true;
+}
+
 void ProjectSettings::copyFrom(const ProjectSettings& s)
 {
     mTmin = s.mTmin;
