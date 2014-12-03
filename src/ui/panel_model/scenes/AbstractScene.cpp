@@ -26,6 +26,8 @@ AbstractScene::~AbstractScene()
 
 void AbstractScene::updateConstraintsPos(AbstractItem* movedItem, const QPointF& newPos)
 {
+    Q_UNUSED(newPos);
+    
     AbstractItem* curItem = currentItem();
     if(curItem)
         mTempArrow->setFrom(curItem->pos().x(), curItem->pos().y());

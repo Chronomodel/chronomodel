@@ -17,6 +17,7 @@ public:
 
 public:
     virtual void constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e) = 0;
+    virtual void constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e) = 0;
     
     virtual bool itemClicked(AbstractItem* eventItem, QGraphicsSceneMouseEvent* e);
     virtual void itemDoubleClicked(AbstractItem* eventItem, QGraphicsSceneMouseEvent* e);

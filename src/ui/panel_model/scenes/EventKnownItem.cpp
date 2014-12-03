@@ -25,6 +25,8 @@ EventKnownItem::~EventKnownItem()
 
 void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
 {
+    prepareGeometryChange();
+    
     mData = event;
     
     // ----------------------------------------------

@@ -202,6 +202,14 @@ void EventsScene::updateProject()
     for(int i=0; i<constraints.size(); ++i)
         constraints_ids << constraints[i].toObject()[STATE_ID].toInt();
     
+    bool settingsChanged = false;
+    ProjectSettings s = ProjectSettings::fromJson(settings);
+    if(mSettings != s)
+    {
+        settingsChanged = true;
+        mSettings = s;
+    }
+    
     mUpdatingItems = true;
     
     // ------------------------------------------------------
@@ -245,7 +253,7 @@ void EventsScene::updateProject()
             if(itemEvent[STATE_ID].toInt() == event[STATE_ID].toInt())
             {
                 itemExists = true;
-                if(event != itemEvent)
+                if(event != itemEvent || settingsChanged)
                 {
                     // UPDATE ITEM
                     qDebug() << "Event updated : id = " << event[STATE_ID].toInt();
@@ -512,6 +520,22 @@ void EventsScene::itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent
 }
 
 void EventsScene::constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e)
+{
+    Q_UNUSED(e);
+    Q_UNUSED(item);
+    
+    /*QMessageBox message(QMessageBox::Question, tr("Delete constraint"), tr("Do you really want to delete this constraint?"), QMessageBox::Yes | QMessageBox::No, qApp->activeWindow(), Qt::Sheet);
+    if(message.exec() == QMessageBox::Yes)
+    {
+        MainWindow::getInstance()->getProject()->deleteEventConstraint(item->data()[STATE_ID].toInt());
+        qDebug() << "TODO : delete constraint";
+    }*/
+    
+    //Project* project = MainWindow::getInstance()->getProject();
+    //project->updateEventConstraint(item->constraint()[STATE_ID].toInt());
+}
+
+void EventsScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e)
 {
     Q_UNUSED(e);
     Q_UNUSED(item);

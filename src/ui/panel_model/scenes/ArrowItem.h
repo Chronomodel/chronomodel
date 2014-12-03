@@ -24,12 +24,15 @@ public:
     void setTo(float x, float y);
 
     QRectF boundingRect() const;
+    QPainterPath shape() const;
+    
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e);
+    void mousePressEvent(QGraphicsSceneMouseEvent* e);
     void hoverMoveEvent(QGraphicsSceneHoverEvent* event);
     void hoverLeaveEvent(QGraphicsSceneHoverEvent* e);
     
-    QRectF getBubbleRect() const;
+    QRectF getBubbleRect(const QString& text = QString()) const;
     
     void setData(const QJsonObject& c);
     QJsonObject& data();

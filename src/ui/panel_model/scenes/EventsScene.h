@@ -2,6 +2,7 @@
 #define EventsScene_H
 
 #include "AbstractScene.h"
+#include "ProjectSettings.h"
 
 class QGraphicsItemAnimation;
 class QTimeLine;
@@ -34,6 +35,7 @@ public slots:
 public:
     void itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);
     void constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e);
+    void constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e);
     
     void dateMoved(DateItem* dateItem, QGraphicsSceneMouseEvent* e);
     void dateReleased(DateItem* dateItem, QGraphicsSceneMouseEvent* e);
@@ -58,6 +60,7 @@ signals:
 private:
     HelpWidget* mHelpView;
     QTimer* mHelpTimer;
+    ProjectSettings mSettings;
     
     QGraphicsItemAnimation* mDatesAnim;
     QTimeLine* mDatesAnimTimer;

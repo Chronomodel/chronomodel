@@ -248,6 +248,12 @@ void PhasesScene::constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEv
     project->updatePhaseConstraint(item->data()[STATE_ID].toInt());
 }
 
+void PhasesScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e)
+{
+    Q_UNUSED(item);
+    Q_UNUSED(e);
+}
+
 void PhasesScene::updateEyedPhases()
 {
     QMap<int, bool> mEyedPhases;

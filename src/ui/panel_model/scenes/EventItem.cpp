@@ -29,6 +29,8 @@ QJsonObject& EventItem::getEvent()
 
 void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
 {
+    prepareGeometryChange();
+    
     mData = event;
     
     // ----------------------------------------------
@@ -93,7 +95,7 @@ void EventItem::setGreyedOut(bool greyedOut)
     {
         ((DateItem*)children[i])->setGreyedOut(greyedOut);
     }
-    setOpacity(mGreyedOut ? 0.3 : 1);
+    setOpacity(mGreyedOut ? 0.1 : 1);
 }
 
 void EventItem::updateGreyedOut()
