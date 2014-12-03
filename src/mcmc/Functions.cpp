@@ -1,4 +1,5 @@
 #include "Functions.h"
+#include "Generator.h"
 #include <cmath>
 #include <QDebug>
 
@@ -122,6 +123,12 @@ float dataStd(const QVector<float>& data)
         return 0.f;
     }
     return (float)sqrtf(variance);
+}
+
+float shrinkageUniform(float so2)
+{
+    float u = Generator::randomUniform();
+    return (so2 * (1.f - u) / u);
 }
 
 QString functionAnalysisToString(const FunctionAnalysis& analysis)

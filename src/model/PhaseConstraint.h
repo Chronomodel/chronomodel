@@ -20,13 +20,14 @@ public:
     PhaseConstraint();
     PhaseConstraint(const PhaseConstraint& pc);
     PhaseConstraint& operator=(const PhaseConstraint& pc);
-    void copyFrom(const PhaseConstraint& pc);
+    void copyFrom(const Constraint& pc);
     virtual ~PhaseConstraint();
     
     static PhaseConstraint fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
     
-    void update();
+    void initGamma();
+    void updateGamma();
     
 public:
     float mGamma;

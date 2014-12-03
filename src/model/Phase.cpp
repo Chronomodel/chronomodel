@@ -241,19 +241,12 @@ float Phase::getMaxBetaPrevPhases(float tmin)
 
 // --------------------------------------------------------------------------------
 
-void Phase::update(float tmin, float tmax)
+void Phase::updateAll()
 {
     mAlpha.mX = getMinThetaEvents();
     mBeta.mX = getMaxThetaEvents();
     
-    if(mTauType == eTauUnknown)
-    {
-        // Nothing to do!
-    }
-    else if(mTauType == eTauFixed && mTauFixed != 0)
-        mTau = mTauFixed;
-    else if(mTauType == eTauRange && mTauMax > mTauMin)
-        mTau = Generator::randomUniform(qMax(mTauMin, mBeta.mX - mAlpha.mX), mTauMax);
+    updateTau();
     
     
     // ----------------------------------------
@@ -268,6 +261,30 @@ void Phase::update(float tmin, float tmax)
     mBeta.mX = updatePhaseBound(a, b, mAlpha.mX);
     
     mThetaPredict.mX = Generator::randomUniform(mAlpha.mX, mBeta.mX);*/
+}
+
+void Phase::initTau()
+{
+    if(mTauType == eTauUnknown)
+    {
+        // Nothing to do!
+    }
+    else if(mTauType == eTauFixed && mTauFixed != 0)
+        mTau = mTauFixed;
+    else if(mTauType == eTauRange && mTauMax > mTauMin)
+        mTau = mTauMax;
+}
+
+void Phase::updateTau()
+{
+    if(mTauType == eTauUnknown)
+    {
+        // Nothing to do!
+    }
+    else if(mTauType == eTauFixed && mTauFixed != 0)
+        mTau = mTauFixed;
+    else if(mTauType == eTauRange && mTauMax > mTauMin)
+        mTau = Generator::randomUniform(qMax(mTauMin, mBeta.mX - mAlpha.mX), mTauMax);
 }
 
 void Phase::memoAll()

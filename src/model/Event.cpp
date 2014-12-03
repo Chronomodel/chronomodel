@@ -18,7 +18,8 @@ mType(eDefault),
 mId(0),
 mMethod(Event::eDoubleExp),
 mIsCurrent(false),
-mIsSelected(false)
+mIsSelected(false),
+mInitialized(false)
 {
     mColor = QColor(120 + rand() % 50,
                     120 + rand() % 50,
@@ -165,6 +166,7 @@ Event::Type Event::type() const
 void Event::reset()
 {
     mTheta.reset();
+    mInitialized = false;
 }
 
 float Event::getThetaMin(float defaultValue)
@@ -179,8 +181,11 @@ float Event::getThetaMin(float defaultValue)
     float min2 = defaultValue;
     for(int i=0; i<mConstraintsBwd.size(); ++i)
     {
-        float thetaf = mConstraintsBwd[i]->mEventFrom->mTheta.mX;
-        min2 = qMax(min2, thetaf);
+        if(mConstraintsBwd[i]->mEventFrom->mInitialized)
+        {
+            float thetaf = mConstraintsBwd[i]->mEventFrom->mTheta.mX;
+            min2 = qMax(min2, thetaf);
+        }
     }
     
     // Le fait appartient à une ou plusieurs phases.
@@ -196,7 +201,7 @@ float Event::getThetaMin(float defaultValue)
             for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
             {
                 Event* event = mPhases[i]->mEvents[j];
-                if(event != this)
+                if(event != this && event->mInitialized)
                 {
                     thetaMax = qMax(event->mTheta.mX, thetaMax);
                 }
@@ -242,8 +247,11 @@ float Event::getThetaMax(float defaultValue)
     float max2 = defaultValue;
     for(int i=0; i<mConstraintsFwd.size(); ++i)
     {
-        float thetaf = mConstraintsFwd[i]->mEventTo->mTheta.mX;
-        max2 = qMin(max2, thetaf);
+        if(mConstraintsFwd[i]->mEventTo->mInitialized)
+        {
+            float thetaf = mConstraintsFwd[i]->mEventTo->mTheta.mX;
+            max2 = qMin(max2, thetaf);
+        }
     }
     
     // Le fait appartient à une ou plusieurs phases.
@@ -259,7 +267,7 @@ float Event::getThetaMax(float defaultValue)
             for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
             {
                 Event* event = mPhases[i]->mEvents[j];
-                if(event != this)
+                if(event != this && event->mInitialized)
                 {
                     thetaMin = qMin(event->mTheta.mX, thetaMin);
                 }

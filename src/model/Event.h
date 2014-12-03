@@ -70,6 +70,7 @@ public:
     MHVariable mTheta;
     float mS02;
     float mAShrinkage;
+    bool mInitialized;
 };
 
 #endif

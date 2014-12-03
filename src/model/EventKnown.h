@@ -9,8 +9,7 @@ class EventKnown: public Event
 public:
     enum KnownType{
         eFixed = 0,
-        eUniform = 1,
-        eGauss = 2
+        eUniform = 1
     };
     
     EventKnown();
@@ -23,15 +22,11 @@ public:
     void setFixedValue(const float& value);
     void setUniformStart(const float& value);
     void setUniformEnd(const float& value);
-    void setGaussMeasure(const float& value);
-    void setGaussError(const float& value);
     
     KnownType knownType() const;
     float fixedValue() const;
     float uniformStart() const;
     float uniformEnd() const;
-    float gaussMeasure() const;
-    float gaussError() const;
     
     void updateValues(float tmin, float tmax, float step);
     
@@ -44,9 +39,6 @@ public:
     
     float mUniformStart;
     float mUniformEnd;
-    
-    float mGaussMeasure;
-    float mGaussError;
     
     QMap<float, float> mValues;
 };

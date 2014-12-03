@@ -297,6 +297,29 @@ void Date::updateTheta(const float& tmin, const float& tmax, Event* event)
     }
 }
 
+void Date::initDelta(Event* event)
+{
+    switch(mDeltaType)
+    {
+        case eDeltaRange:
+        {
+            mDelta = Generator::randomUniform(mDeltaMin, mDeltaMax);
+            break;
+        }
+        case eDeltaGaussian:
+        {
+            mDelta = event->mTheta.mX - mTheta.mX;
+            break;
+        }
+        case eDeltaFixed:
+        default:
+        {
+            mDelta = mDeltaFixed;
+            break;
+        }
+    }
+}
+
 void Date::updateDelta(Event* event)
 {
     switch(mDeltaType)

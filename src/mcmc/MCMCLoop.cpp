@@ -104,7 +104,7 @@ void MCMCLoop::run()
         
         QTime startInitTime = QTime::currentTime();
         
-        this->initMCMC();
+        this->initMCMC2();
         
         QTime endInitTime = QTime::currentTime();
         timeDiff = startInitTime.msecsTo(endInitTime);
@@ -238,6 +238,6 @@ void MCMCLoop::run()
     
     //-----------------------------------------------------------------------
     
-    qDebug() << mLog;
+    //qDebug() << mLog;
 }
 

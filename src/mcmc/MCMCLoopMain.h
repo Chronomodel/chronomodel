@@ -16,6 +16,7 @@ protected:
     virtual void calibrate();
     virtual void initVariablesForChain();
     virtual void initMCMC();
+    virtual void initMCMC2();
     virtual void update();
     virtual bool adapt();
     virtual void finalize();

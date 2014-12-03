@@ -78,6 +78,8 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
         data[t_under] += contrib_under;
         data[t_upper] += contrib_upper;
     }
+    
+    //return data;
   
 #if USE_FFT
     
@@ -373,7 +375,9 @@ QVector<float> MetropolisVariable::runTraceForChain(const QList<Chain>& chains, 
 
 QVector<float> MetropolisVariable::correlationForChain(int index)
 {
-    return mCorrelations[index];
+    if(index < mCorrelations.size())
+        return mCorrelations[index];
+    return QVector<float>();
 }
 
 

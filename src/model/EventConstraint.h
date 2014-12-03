@@ -12,7 +12,7 @@ public:
     EventConstraint();
     EventConstraint(const EventConstraint& ec);
     EventConstraint& operator=(const EventConstraint& ec);
-    void copyFrom(const EventConstraint& ec);
+    void copyFrom(const Constraint& ec);
     virtual ~EventConstraint();
     
     static EventConstraint fromJson(const QJsonObject& json);

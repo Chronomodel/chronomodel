@@ -31,6 +31,8 @@ QString densityAnalysisToString(const DensityAnalysis& analysis);
 // Standard Deviation (= écart type) of a vector of data
 float dataStd(const QVector<float>& data);
 
+float shrinkageUniform(float so2);
+
 Quartiles quartilesForTrace(const QVector<float>& trace);
 Quartiles quartilesForRepartition(const QMap<float, float>& repartition);
 QPair<float, float> credibilityForTrace(const QVector<float>& trace, int threshold, float& exactThresholdResult);

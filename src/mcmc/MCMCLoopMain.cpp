@@ -73,7 +73,6 @@ void MCMCLoopMain::initVariablesForChain()
     Chain& chain = mChains[mChainIndex];
     QList<Event*>& events = mModel->mEvents;
     
-    int chainLen = chain.mNumBurnIter + chain.mNumBatchIter * chain.mMaxBatchs * chain.mNumRunIter;
     int acceptBufferLen = chain.mNumBatchIter; //chainLen / 100;
     
     for(int i=0; i<events.size(); ++i)
@@ -93,12 +92,88 @@ void MCMCLoopMain::initVariablesForChain()
     }
 }
 
+void MCMCLoopMain::initMCMC2()
+{
+    QList<Event*>& events = mModel->mEvents;
+    QList<Phase*>& phases = mModel->mPhases;
+    QList<PhaseConstraint*>& phasesConstraints = mModel->mPhaseConstraints;
+    float tmin = mModel->mSettings.mTmin;
+    float tmax = mModel->mSettings.mTmax;
+    
+    // ----------------------------------------------------------------
+    //  Init gamma
+    // ----------------------------------------------------------------
+    emit stepChanged(tr("Initializing phases gaps..."), 0, events.size());
+    for(int i=0; i<phasesConstraints.size(); ++i)
+    {
+        phasesConstraints[i]->initGamma();
+        emit stepProgressed(i);
+    }
+    
+    // ----------------------------------------------------------------
+    //  Init tau
+    // ----------------------------------------------------------------
+    emit stepChanged(tr("Initializing phases durations..."), 0, events.size());
+    for(int i=0; i<phases.size(); ++i)
+    {
+        phases[i]->initTau();
+        emit stepProgressed(i);
+    }
+    
+    // ----------------------------------------------------------------
+    //  Init theta f, ti, ...
+    // ----------------------------------------------------------------
+    emit stepChanged(tr("Initializing events..."), 0, events.size());
+    for(int i=0; i<events.size(); ++i)
+    {
+        float min = events[i]->getThetaMin(tmin);
+        float max = events[i]->getThetaMax(tmax);
+        
+        events[i]->mTheta.mX = Generator::randomUniform(min, max);
+        events[i]->mInitialized = true;
+        
+        float s02_sum = 0.f;
+        for(int j=0; j<events[i]->mDates.size(); ++j)
+        {
+            Date& date = events[i]->mDates[j];
+            
+            // Init ti and its sigma
+            FunctionAnalysis data = analyseFunction(date.mCalibration);
+            date.mTheta.mX = map_interpolate_key_for_value(Generator::randomUniform(), date.mRepartition);
+            date.mTheta.mSigmaMH = data.stddev;
+            date.initDelta(events[i]);
+            
+            s02_sum += 1.f / (date.mTheta.mSigmaMH * date.mTheta.mSigmaMH);
+        }
+        events[i]->mS02 = events[i]->mDates.size() / s02_sum;
+        events[i]->mAShrinkage = 1.;
+        
+        emit stepProgressed(i);
+    }
+    
+    // ----------------------------------------------------------------
+    //  Init sigma i
+    // ----------------------------------------------------------------
+    emit stepChanged(tr("Initializing variances..."), 0, events.size());
+    for(int i=0; i<events.size(); ++i)
+    {
+        for(int j=0; j<events[i]->mDates.size(); ++j)
+        {
+            Date& date = events[i]->mDates[j];
+            float so = date.mTheta.mX - (events[i]->mTheta.mX - date.mDelta);
+            date.mSigma.mX = shrinkageUniform(so * so);
+            date.mSigma.mSigmaMH = 1.f;
+        }
+        emit stepProgressed(i);
+    }
+}
+
 void MCMCLoopMain::initMCMC()
 {
     QList<Event*>& events = mModel->mEvents;
     QList<Phase*>& phases = mModel->mPhases;
-    double tmin = mModel->mSettings.mTmin;
-    double tmax = mModel->mSettings.mTmax;
+    float tmin = mModel->mSettings.mTmin;
+    float tmax = mModel->mSettings.mTmax;
     
     // ----------------------------------------------------------------
     //  Thetas des Mesures
@@ -149,9 +224,6 @@ void MCMCLoopMain::initMCMC()
                     break;
                 case EventKnown::eUniform:
                     events[i]->mTheta.mX = ek.uniformStart() + (ek.uniformEnd() - ek.uniformStart())/2;
-                    break;
-                case EventKnown::eGauss:
-                    events[i]->mTheta.mX = ek.gaussMeasure();
                     break;
                 default:
                     break;
@@ -390,7 +462,7 @@ void MCMCLoopMain::update()
 
     for(int i=0; i<phases.size(); ++i)
     {
-        phases[i]->update(t_min, t_max);
+        phases[i]->updateAll();
         if(doMemo)
             phases[i]->memoAll();
     }
@@ -399,7 +471,7 @@ void MCMCLoopMain::update()
     
     for(int i=0; i<phasesConstraints.size(); ++i)
     {
-        phasesConstraints[i]->update();
+        phasesConstraints[i]->updateGamma();
     }
 }
 
@@ -469,7 +541,6 @@ void MCMCLoopMain::finalize()
 {
     float tmin = mModel->mSettings.mTmin;
     float tmax = mModel->mSettings.mTmax;
-    float step = mModel->mSettings.mStep;
     
     QList<Event*>& events = mModel->mEvents;
     QList<Phase*>& phases = mModel->mPhases;
@@ -481,8 +552,8 @@ void MCMCLoopMain::finalize()
         bool generateEventHistos = true;
         if(event->type() == Event::eKnown)
         {
-            EventKnown& ek = (EventKnown&)events[i];
-            if(ek.knownType() == EventKnown::eFixed)
+            EventKnown* ek = dynamic_cast<EventKnown*>(event);
+            if(ek && ek->knownType() == EventKnown::eFixed)
             {
                 generateEventHistos = false;
                 qDebug() << "Nothing todo : this is just a Dirac !";

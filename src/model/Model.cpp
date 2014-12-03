@@ -184,7 +184,11 @@ Model* Model::fromJson(const QJsonObject& json)
     qDebug() << "=> Events : " << model->mEvents.size();
     for(int i=0; i<model->mEvents.size(); ++i)
     {
-        qDebug() << "  => Event " << model->mEvents[i]->mId << " : " << model->mEvents[i]->mPhases.size() << " phases"
+        QString objType = "Event";
+        if(model->mEvents[i]->type() == Event::eKnown)
+            objType = "Bound";
+            
+        qDebug() << "  => " << objType << " (id: " << model->mEvents[i]->mId << ", name: "<< model->mEvents[i]->mName <<") : " << model->mEvents[i]->mPhases.size() << " phases"
             << ", " << model->mEvents[i]->mDates.size() << " dates"
             << ", " << model->mEvents[i]->mConstraintsBwd.size() << " const. back."
             << ", " << model->mEvents[i]->mConstraintsFwd.size() << " const. fwd.";

@@ -20,9 +20,12 @@ EventConstraint& EventConstraint::operator=(const EventConstraint& ec)
     return *this;
 }
 
-void EventConstraint::copyFrom(const EventConstraint& ec)
+void EventConstraint::copyFrom(const Constraint& c)
 {
-    Constraint::copyFrom(ec);
+    Constraint::copyFrom(c);
+    
+    const EventConstraint& ec = ((EventConstraint&)c);
+    
     mEventFrom = ec.mEventFrom;
     mEventTo = ec.mEventTo;
 }

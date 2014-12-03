@@ -43,8 +43,11 @@ public:
     float getMinAlphaNextPhases(float tmax);
     float getMaxBetaPrevPhases(float tmin);
     
-    void update(float tmin, float tmax);
+    void updateAll();
     void memoAll();
+    
+    void initTau();
+    void updateTau();
     
 protected:
     float updatePhaseBound(float a, float b, float old);

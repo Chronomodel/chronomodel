@@ -26,9 +26,11 @@ PhaseConstraint& PhaseConstraint::operator=(const PhaseConstraint& pc)
     return *this;
 }
 
-void PhaseConstraint::copyFrom(const PhaseConstraint& pc)
+void PhaseConstraint::copyFrom(const Constraint& c)
 {
-    Constraint::copyFrom(pc);
+    Constraint::copyFrom(c);
+    
+    const PhaseConstraint& pc = ((PhaseConstraint&)c);
     
     mGamma = pc.mGamma;
     
@@ -72,7 +74,17 @@ QJsonObject PhaseConstraint::toJson() const
     return json;
 }
 
-void PhaseConstraint::update()
+void PhaseConstraint::initGamma()
+{
+    if(mGammaType == eGammaUnknown)
+        mGamma = 0;
+    else if(mGammaType == eGammaFixed && mGammaFixed != 0)
+        mGamma = mGammaFixed;
+    else if(mGammaType == eGammaRange && mGammaMax > mGammaMin)
+        mGamma = mGammaMin;
+}
+
+void PhaseConstraint::updateGamma()
 {
     if(mGammaType == eGammaUnknown)
         mGamma = 0;
