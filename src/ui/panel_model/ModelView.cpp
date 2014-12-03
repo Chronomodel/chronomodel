@@ -263,6 +263,9 @@ void ModelView::updateProject()
     mEventsScene->updateProject();
     mPhasesScene->updateProject();
     
+    mEventsScene->updateSelection();
+    mPhasesScene->updateSelection();
+    
     // TODO : refresh current date !!
     //mCalibrationView->setDate();
     

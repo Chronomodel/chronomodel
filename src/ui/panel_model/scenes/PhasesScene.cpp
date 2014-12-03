@@ -137,7 +137,7 @@ void PhasesScene::updateProject()
         
         if(!constraints_ids.contains(constraint[STATE_ID].toInt()))
         {
-            qDebug() << "Constraint deleted : " << constraint[STATE_ID].toInt();
+            qDebug() << "Phase Constraint deleted : " << constraint[STATE_ID].toInt();
             removeItem(constraintItem);
             mConstraintItems.removeOne(constraintItem);
             delete constraintItem;
