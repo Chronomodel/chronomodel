@@ -52,6 +52,7 @@ private:
 public slots:
     void newProject();
     void openProject();
+    void closeProject();
     void saveProject();
     void saveProjectAs();
     void about();
@@ -84,6 +85,7 @@ private:
     
     QAction* mNewProjectAction;
     QAction* mOpenProjectAction;
+    QAction* mCloseProjectAction;
     
     QAction* mProjectSaveAction;
     QAction* mProjectSaveAsAction;

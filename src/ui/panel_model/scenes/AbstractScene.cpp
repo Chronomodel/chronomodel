@@ -45,7 +45,7 @@ void AbstractScene::updateConstraintsPos(AbstractItem* movedItem, const QPointF&
         {
             QJsonObject cData = mConstraintItems[i]->data();
             
-            int cId = cData[STATE_ID].toInt();
+            //int cId = cData[STATE_ID].toInt();
             int bwdId = cData[STATE_CONSTRAINT_BWD_ID].toInt();
             int fwdId = cData[STATE_CONSTRAINT_FWD_ID].toInt();
             
@@ -109,7 +109,7 @@ void AbstractScene::itemLeaved(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 
 void AbstractScene::itemMoved(AbstractItem* item, QPointF newPos, bool merging)
 {
-    
+    Q_UNUSED(newPos);
     
     //qDebug() << " moved : " << newPos;
     

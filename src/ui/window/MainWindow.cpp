@@ -110,6 +110,11 @@ void MainWindow::createActions()
     mOpenProjectAction->setStatusTip(tr("Open an existing project"));
     connect(mOpenProjectAction, SIGNAL(triggered()), this, SLOT(openProject()));
     
+    mCloseProjectAction = new QAction(tr("Close"), this);
+    mCloseProjectAction->setShortcuts(QKeySequence::Close);
+    mCloseProjectAction->setStatusTip(tr("Open an existing project"));
+    connect(mCloseProjectAction, SIGNAL(triggered()), this, SLOT(closeProject()));
+    
     mProjectSaveAction = new QAction(QIcon(":save.png"), tr("&Save"), this);
     mProjectSaveAction->setShortcuts(QKeySequence::Save);
     
@@ -188,6 +193,7 @@ void MainWindow::createMenus()
     mProjectMenu->addAction(mAppSettingsAction);
     mProjectMenu->addAction(mNewProjectAction);
     mProjectMenu->addAction(mOpenProjectAction);
+    mProjectMenu->addAction(mCloseProjectAction);
 
     mProjectMenu->addSeparator();
 
@@ -323,6 +329,25 @@ void MainWindow::openProject()
     }
 }
 
+void MainWindow::closeProject()
+{
+    if(mProject->askToSave())
+    {
+        mUndoStack->clear();
+        
+        mProject->initState();
+        mProject->mProjectFileName = QString();
+        
+        mViewModelAction->trigger();
+        //mProjectView->showModel();
+        
+        activateInterface(false);
+        mViewResultsAction->setEnabled(false);
+        
+        updateWindowTitle();
+    }
+}
+
 void MainWindow::saveProject()
 {
     mProject->save();
@@ -337,7 +362,7 @@ void MainWindow::saveProjectAs()
 
 void MainWindow::updateWindowTitle()
 {
-    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + (mProject ? QString(" - ") + mProject->mProjectFileName : ""));
+    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + (!(mProject->mProjectFileName.isEmpty()) ? QString(" - ") + mProject->mProjectFileName : ""));
 }
 
 #pragma mark Settings & About
