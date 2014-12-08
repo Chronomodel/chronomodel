@@ -257,7 +257,7 @@ QString getHPDText(const QMap<float, float>& hpd)
     QStringList results;
     for(int i=0; i<intervals.size(); ++i)
     {
-        results << "[" + QString::number(intervals[i].first) + ", " + QString::number(intervals[i].second) + "]";
+        results << "[" + QString::number(intervals[i].first, 'f', 0) + ", " + QString::number(intervals[i].second, 'f', 0) + "]";
     }
     QString result = results.join(" ");
     return result;

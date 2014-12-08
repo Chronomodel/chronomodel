@@ -166,10 +166,23 @@ void MCMCLoopMain::initMCMC2()
         }
         emit stepProgressed(i);
     }
+    // ----------------------------------------------------------------
+    //  Init sigma i
+    // ----------------------------------------------------------------
+    emit stepChanged(tr("Initializing phases..."), 0, events.size());
+    for(int i=0; i<phases.size(); ++i)
+    {
+        Phase* phase = phases[i];
+        phase->updateAll();
+        emit stepProgressed(i);
+    }
     
     // ----------------------------------------------------------------
     //  Log Init
     // ----------------------------------------------------------------
+    mLog += "---------------\n";
+    mLog += "INIT\n";
+    mLog += "---------------\n";
     for(int i=0; i<events.size(); ++i)
     {
         Event* event = events[i];
@@ -635,7 +648,7 @@ void MCMCLoopMain::finalize()
             event->mTheta.generateResults(mChains, tmin, tmax);
         }
         
-        /*for(int j=0; j<event->mDates.size(); ++j)
+        for(int j=0; j<event->mDates.size(); ++j)
         {
             Date& date = event->mDates[j];
             
@@ -650,7 +663,7 @@ void MCMCLoopMain::finalize()
             
             date.mTheta.generateResults(mChains, tmin, tmax);
             date.mSigma.generateResults(mChains, tmin, tmax);
-        }*/
+        }
     }
     
     for(int i=0; i<phases.size(); ++i)

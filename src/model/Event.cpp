@@ -287,9 +287,9 @@ float Event::getThetaMax(float defaultValue)
             Phase* phaseTo = constraint->mPhaseTo;
             
             if(constraint->mGammaType != PhaseConstraint::eGammaUnknown)
-                thetaMin = qMax(phaseTo->mAlpha.mX - constraint->mGamma, thetaMin);
+                thetaMin = qMin(phaseTo->mAlpha.mX - constraint->mGamma, thetaMin);
             else
-                thetaMin = qMax(phaseTo->mAlpha.mX, thetaMin);
+                thetaMin = qMin(phaseTo->mAlpha.mX, thetaMin);
         }
         max4 = qMin(max4, thetaMin);
     }

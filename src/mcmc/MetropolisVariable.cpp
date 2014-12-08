@@ -199,14 +199,14 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
     float numPts = powf(2.f, r);
     float delta = (b - a) / numPts;
     
-    qDebug() << "--------------------------";
+    /*qDebug() << "--------------------------";
     qDebug() << "trace std dev : " << sigma;
     qDebug() << "h : " << h;
     qDebug() << "a : " << a;
     qDebug() << "b : " << b;
     qDebug() << "r : " << r;
     qDebug() << "numPts : " << numPts;
-    qDebug() << "delta : " << delta;
+    qDebug() << "delta : " << delta;*/
     
     float prec = 1000.f;
     
@@ -214,11 +214,11 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
     int bi = (int) roundf(b * prec);
     int deltai = (int) roundf(delta * prec);
     
-    qDebug() << "------ Int equivalent ------------";
+    /*qDebug() << "------ Int equivalent ------------";
     qDebug() << "ai : " << ai;
     qDebug() << "bi : " << bi;
     qDebug() << "deltai : " << deltai;
-    qDebug() << "------------------";
+    qDebug() << "------------------";*/
     
     for(int ti=ai; ti<=bi; ti+=deltai)
     {
@@ -253,7 +253,7 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
         data[ti_under] += contrib_under;
         data[ti_upper] += contrib_upper;
     }
-    qDebug() << "Final contrib : " << final_contrib * delta * delta;
+    //qDebug() << "Final contrib : " << final_contrib * delta * delta;
     
     int index = 0;
     QMapIterator<int, float> it(data);
@@ -287,9 +287,6 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
         ++index2;
     }
     
-    qDebug() << "FFT input size : " << inputSize;
-    qDebug() << "FFT output size : " << outputSize;
-    
     fftwf_plan plan_forward = fftwf_plan_dft_r2c_1d(numPts, input, (fftwf_complex*)output, FFTW_ESTIMATE);
     fftwf_execute(plan_forward);
     
@@ -305,7 +302,7 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
     fftwf_plan plan_backward = fftwf_plan_dft_c2r_1d(numPts, (fftwf_complex*)output, input, FFTW_ESTIMATE);
     fftwf_execute(plan_backward);
     
-    qDebug() << "--------------------------";
+    //qDebug() << "--------------------------";
     
     for(int i=0; i<inputSize; ++i)
     {
