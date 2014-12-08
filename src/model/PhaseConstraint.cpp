@@ -4,7 +4,7 @@
 
 
 PhaseConstraint::PhaseConstraint():Constraint(),
-mGamma(0),
+mGamma(0.f),
 mPhaseFrom(0),
 mPhaseTo(0),
 mGammaType(PhaseConstraint::eGammaUnknown),

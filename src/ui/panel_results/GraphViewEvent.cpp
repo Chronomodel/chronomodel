@@ -79,7 +79,7 @@ void GraphViewEvent::refresh()
                         GraphCurve curve;
                         curve.mName = "histo full";
                         curve.mPen.setColor(color);
-                        curve.mData = equal_areas(mEvent->mTheta.fullHisto(), 100.f);
+                        curve.mData = mEvent->mTheta.fullHisto();
                         curve.mIsHisto = false;
                         mGraph->addCurve(curve);
                         
@@ -93,7 +93,7 @@ void GraphViewEvent::refresh()
                             curveHPD.mPen.setColor(color);
                             curveHPD.mFillUnder = true;
                             curveHPD.mIsHisto = false;
-                            curveHPD.mData = equal_areas(mEvent->mTheta.mHPD, mThresholdHPD);
+                            curveHPD.mData = mEvent->mTheta.mHPD;
                             mGraph->addCurve(curveHPD);
                             
                             GraphCurve curveCred;
@@ -270,6 +270,27 @@ void GraphViewEvent::refresh()
                 
                 mGraph->setRangeX(0, 100);
                 mGraph->setRangeY(-1, 1);
+                
+                float n = mEvent->mTheta.runTraceForChain(mChains, chainIdx).size();
+                float limit = 1.96f / sqrtf(n);
+                
+                qDebug() << n << ", " <<limit;
+                
+                GraphCurve curveLimitLower;
+                curveLimitLower.mName = QString("correlation limit lower " + QString::number(chainIdx));
+                curveLimitLower.mIsHorizontalLine = true;
+                curveLimitLower.mHorizontalValue = -limit;
+                curveLimitLower.mPen.setColor(Qt::red);
+                curveLimitLower.mPen.setStyle(Qt::DotLine);
+                mGraph->addCurve(curveLimitLower);
+                
+                GraphCurve curveLimitUpper;
+                curveLimitUpper.mName = QString("correlation limit upper " + QString::number(chainIdx));
+                curveLimitUpper.mIsHorizontalLine = true;
+                curveLimitUpper.mHorizontalValue = limit;
+                curveLimitUpper.mPen.setColor(Qt::red);
+                curveLimitUpper.mPen.setStyle(Qt::DotLine);
+                mGraph->addCurve(curveLimitUpper);
             }
         }
     }

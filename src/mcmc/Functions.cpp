@@ -1,6 +1,5 @@
 #include "Functions.h"
 #include "Generator.h"
-#include <cmath>
 #include <QDebug>
 
 // -----------------------------------------------------------------
@@ -234,20 +233,19 @@ QPair<float, float> credibilityForTrace(const QVector<float>& trace, int thresho
     
     int k = numToRemove;
     int n = sorted.size();
-    float lmin = 999999999;
+    float lmin = 0.f;
     int foundJ = 0;
-    for(int j=0; j<k-1; ++j)
+    for(int j=0; j<=k; ++j)
     {
-        float l = sorted[n - k + j + 1] - sorted[j];
-        if(l < lmin)
+        float l = sorted[(n - 1) - k + j] - sorted[j];
+        if(lmin == 0.f || l < lmin)
         {
             foundJ = j;
             lmin = l;
         }
     }
-    
     credibility.first = sorted[foundJ];
-    credibility.second = sorted[n - k + foundJ + 1];
+    credibility.second = sorted[(n - 1) - k + foundJ];
     
     return credibility;
 }

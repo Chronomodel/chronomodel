@@ -7,6 +7,7 @@
 
 Phase::Phase():
 mId(0),
+mTau(0.f),
 mTauType(Phase::eTauUnknown),
 mTauFixed(0),
 mTauMin(0),

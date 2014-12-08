@@ -30,7 +30,7 @@ float Plugin14C::getLikelyhood(const float& t, const QJsonObject& data)
         float e = (curveG95Sup[t] - curveG[t]) / 1.96f;
         
         float variance = e * e + error * error;
-        float result = sqrtf(variance) * expf(-0.5 * powf(g - age, 2) / variance);
+        float result = expf(-0.5f * powf(g - age, 2.f) / variance) / sqrtf(variance);
         
         return result;
     }

@@ -56,6 +56,7 @@ public:
     
 private:
     QMap<float, float> generateHisto(const QVector<float>& data, float tmin, float tmax);
+    QMap<float, float> generateHistoOld(const QVector<float>& dataSrc, float tmin, float tmax);
     
 public:
     float mX;

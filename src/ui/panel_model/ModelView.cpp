@@ -292,8 +292,6 @@ void ModelView::updateProject()
             QJsonObject evt = events[i].toObject();
             if(evt[STATE_ID].toInt() == event[STATE_ID].toInt())
             {
-                qDebug() << evt[STATE_EVENT_KNOWN_TYPE].toInt();
-                qDebug() << event[STATE_EVENT_KNOWN_TYPE].toInt();
                 if(evt != event)
                     mEventPropertiesView->setEvent(evt);
             }

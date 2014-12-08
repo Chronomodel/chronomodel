@@ -121,22 +121,50 @@ T map_max_value(const QMap<U, T>& aMap)
 template <class U, class T>
 T map_min_value(const QMap<U, T>& aMap)
 {
-    if(aMap.isEmpty())
+    QMapIterator<float, float> iter(aMap);
+    float min = 0.f;
+    if(iter.hasNext())
+    {
+        iter.next();
+        min = iter.value();
+    }
+    while(iter.hasNext())
+    {
+        iter.next();
+        min = qMin(min, iter.value());
+    }
+    return min;
+
+    /*if(aMap.isEmpty())
         return 0;
     
     QMap<T, U> reversed = map_reverse(aMap);
-    return reversed.firstKey();
+    return reversed.firstKey();*/
 }
 
 // get the key of the maximum value
 template <class U, class T>
 T map_max_value_key(const QMap<U, T>& aMap)
 {
-    if(aMap.isEmpty())
+    QMapIterator<float, float> iter(aMap);
+    float max = 0.f;
+    if(iter.hasNext())
+    {
+        iter.next();
+        max = iter.value();
+    }
+    while(iter.hasNext())
+    {
+        iter.next();
+        max = qMax(max, iter.value());
+    }
+    return max;
+    
+    /*if(aMap.isEmpty())
         return 0;
     
     QMap<T, U> reversed = map_reverse(aMap);
-    return reversed.last();
+    return reversed.last();*/
 }
 
 template <class T, class U>

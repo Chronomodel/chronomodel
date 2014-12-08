@@ -39,19 +39,19 @@ float PluginMag::getLikelyhood(const float& t, const QJsonObject& data)
         // pour la combinaison, il faut multiplier les 2 cas suivants :
         if(is_inc)
         {
-            float variance = (e * e) + (alpha * alpha) / (2.448 * 2.448);
-            result = expf(-0.5 * powf(g - inc, 2) / variance) / sqrtf(variance);
+            float variance = (e * e) + (alpha * alpha) / (2.448f * 2.448f);
+            result = expf(-0.5f * powf(g - inc, 2.f) / variance) / sqrtf(variance);
         }
         else if(is_dec)
         {
-            float variance = e * e + powf(alpha / (2.448 * cos(inc * M_PI / 180.)), 2);
-            result = expf(-0.5 * powf(g - dec, 2) / variance) / sqrtf(variance);
+            float variance = e * e + powf(alpha / (2.448f * cos(inc * M_PI / 180.f)), 2.f);
+            result = expf(-0.5f * powf(g - dec, 2.f) / variance) / sqrtf(variance);
         }
         else if(is_int)
         {
             float error = alpha;
             float variance = e * e + error * error;
-            result = sqrtf(variance) * expf(-0.5 * powf(g - intensity, 2) / variance);
+            result = expf(-0.5f * powf(g - intensity, 2.f) / variance) / sqrtf(variance);
         }
     }
     return result;

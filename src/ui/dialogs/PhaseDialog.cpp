@@ -17,7 +17,7 @@ mButW(80)
     
     mNameLab = new Label(tr("Phase name") + " :", this);
     mColorLab = new Label(tr("Phase color") + " :", this);
-    mTauTypeLab = new Label(tr("Phase duration") + " :", this);
+    mTauTypeLab = new Label(tr("Max. duration") + " :", this);
     mTauFixedLab = new Label(tr("Fixed duration") + " :", this);
     mTauMinLab = new Label(tr("Lower date") + " :", this);
     mTauMaxLab = new Label(tr("Upper date") + " :", this);

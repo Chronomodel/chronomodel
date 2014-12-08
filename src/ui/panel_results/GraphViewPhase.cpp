@@ -85,8 +85,8 @@ void GraphViewPhase::refresh()
             
             if(mShowAllChains)
             {
-                QColor alphaCol = color.lighter().lighter();
-                QColor betaCol = color.darker().darker();
+                QColor alphaCol = color;
+                QColor betaCol = color;
                 //alphaCol.setRed(color.blue());
                 //alphaCol.setBlue(color.red());
                 

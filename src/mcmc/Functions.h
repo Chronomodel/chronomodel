@@ -3,6 +3,7 @@
 
 #include <QMap>
 #include <QVector>
+#include <cmath>
 
 
 struct FunctionAnalysis{
@@ -38,5 +39,20 @@ Quartiles quartilesForRepartition(const QMap<float, float>& repartition);
 QPair<float, float> credibilityForTrace(const QVector<float>& trace, int threshold, float& exactThresholdResult);
 QString getHPDText(const QMap<float, float>& hpd);
 QList<QPair<float, float>> intervalsForHpd(const QMap<float, float>& hpd);
+
+inline float roundFloat(float f, int prec)
+{
+    float result;
+    if(prec > 0)
+    {
+        float factor = powf(10.f, (float)prec);
+        result = roundf(f * factor) / factor;
+    }
+    else
+    {
+        result = roundf(f);
+    }
+    return result;
+}
 
 #endif

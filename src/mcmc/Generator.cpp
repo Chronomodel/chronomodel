@@ -44,28 +44,28 @@ float Generator::gaussByDoubleExp(const float mean, const float sigma, const flo
         return randomUniform(min, max);
     }
     
-    float x = (x_max + x_min) / 2;
-    const float sqrt_e = sqrtf(expf(1.));
+    float x = (x_max + x_min) / 2.f;
+    const float sqrt_e = sqrtf(expf(1.f));
     
-    float ur = 1;
-    float rap = 0;
+    float ur = 1.f;
+    float rap = 0.f;
     
     while(rap < ur)
     {
         float u = randomUniform();
         
-        if(x_min < 0 && x_max > 0)
+        if(x_min < 0.f && x_max > 0.f)
         {
-            const float c = 1 - 0.5 * (expf(x_min) + expf(-x_max));
-            const float f0 = 0.5 * (1 - expf(x_min)) / c;
+            const float c = 1.f - 0.5f * (expf(x_min) + expf(-x_max));
+            const float f0 = 0.5f * (1.f - expf(x_min)) / c;
             
             if(u <= f0)
             {
-                x = logf(expf(x_min) + 2*c*u);
+                x = logf(expf(x_min) + 2.f * c * u);
             }
             else
             {
-                x = -logf(1 - 2*c*(u-f0));
+                x = -logf(1.f - 2.f*c*(u-f0));
             }
         }
         else
@@ -89,9 +89,9 @@ float Generator::gaussByDoubleExp(const float mean, const float sigma, const flo
         }
         else
         {
-            if(x_min > 1)
+            if(x_min > 1.f)
             {
-                rap = expf(0.5 * (x_min * x_min - x * x) + x - x_min);
+                rap = expf(0.5f * (x_min * x_min - x * x) + x - x_min);
                 
                 /*std::cout << "------" << std::endl;
                 std::cout << "floatExp : x_min : " << x_min << std::endl;
@@ -102,14 +102,14 @@ float Generator::gaussByDoubleExp(const float mean, const float sigma, const flo
                 std::cout << "floatExp : rapport : " << rap << std::endl;
                 std::cout << "floatExp : ur : " << ur << std::endl;*/
             }
-            else if(x_max < -1)
+            else if(x_max < -1.f)
             {
                 //std::cout << "floatExp : x_max : " << x_max << std::endl;
-                rap = expf(0.5 * (x_max * x_max - x * x) + x_max - x);
+                rap = expf(0.5f * (x_max * x_max - x * x) + x_max - x);
             }
             else
             {
-                rap = expf(-0.5 * x * x + abs(x)) / sqrt_e;
+                rap = expf(-0.5f * x * x + abs(x)) / sqrt_e;
             }
         }
         //ur = randomUniform();

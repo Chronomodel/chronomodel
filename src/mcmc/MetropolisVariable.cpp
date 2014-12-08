@@ -28,7 +28,7 @@ void MetropolisVariable::reset()
     mTrace.clear();
 }
 
-QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataSrc, float tmin, float tmax)
+QMap<float, float> MetropolisVariable::generateHistoOld(const QVector<float>& dataSrc, float tmin, float tmax)
 {
     // Use FFT here !
     
@@ -180,6 +180,145 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
     return data;
 }
 
+QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataSrc, float tmin, float tmax)
+{
+    Q_UNUSED(tmin);
+    Q_UNUSED(tmax);
+    
+    // Use FFT here !
+    
+    QMap<int, float> data;
+    QMap<float, float> result;
+    
+    float sigma = dataStd(dataSrc);
+    float h = 1.06f * sigma * powf(dataSrc.size(), -1.f/5.f);
+    
+    float a = vector_min_value(dataSrc) - 4.f * h;
+    float b = vector_max_value(dataSrc) + 4.f * h;
+    float r = 10.f;
+    float numPts = powf(2.f, r);
+    float delta = (b - a) / numPts;
+    
+    qDebug() << "--------------------------";
+    qDebug() << "trace std dev : " << sigma;
+    qDebug() << "h : " << h;
+    qDebug() << "a : " << a;
+    qDebug() << "b : " << b;
+    qDebug() << "r : " << r;
+    qDebug() << "numPts : " << numPts;
+    qDebug() << "delta : " << delta;
+    
+    float prec = 1000.f;
+    
+    int ai = (int) roundf(a * prec);
+    int bi = (int) roundf(b * prec);
+    int deltai = (int) roundf(delta * prec);
+    
+    qDebug() << "------ Int equivalent ------------";
+    qDebug() << "ai : " << ai;
+    qDebug() << "bi : " << bi;
+    qDebug() << "deltai : " << deltai;
+    qDebug() << "------------------";
+    
+    for(int ti=ai; ti<=bi; ti+=deltai)
+    {
+        data[ti] = 0.f;
+        //qDebug() << "Preparing Grid at : " << ti;
+    }
+    
+    float denum = delta * delta * dataSrc.size();
+    
+    float final_contrib = 0.f;
+    for(int i=0; i<(int)dataSrc.size(); ++i)
+    {
+        float t = dataSrc[i];
+        int ti = (int) roundf(t * prec); ;
+        
+        int ti_under = ai + (int)floorf((float)(ti - ai) / (float)deltai) * deltai;
+        int ti_upper = ti_under + deltai;
+        
+        float t_under = (float)ti_under / prec;
+        float t_upper = (float)ti_upper / prec;
+        
+        float contrib_under = ((t_upper - t) / (t_upper - t_under)) / denum;
+        float contrib_upper = ((t - t_under) / (t_upper - t_under)) / denum;
+        
+        final_contrib += (contrib_under + contrib_upper);
+        
+        if(data.find(ti_under) == data.end() || data.find(ti_upper) == data.end())
+        {
+            qDebug() << "Error : Filling grid between points!";
+        }
+        
+        data[ti_under] += contrib_under;
+        data[ti_upper] += contrib_upper;
+    }
+    qDebug() << "Final contrib : " << final_contrib * delta * delta;
+    
+    int index = 0;
+    QMapIterator<int, float> it(data);
+    while(it.hasNext())
+    {
+        it.next();
+        float t = a + (float)index * delta;
+        result[t] = it.value();
+        ++index;
+    }
+    
+    //return result;
+    
+#if USE_FFT
+    
+    int inputSize = numPts;
+    int outputSize = 2 * (numPts / 2 + 1);
+    
+    //qDebug() << "FFT malloc num points : " << inputSize;
+    float* input = (float*) fftwf_malloc(inputSize * sizeof(float));
+    float* output = (float*) fftwf_malloc(outputSize * sizeof(float));
+    
+    // Copy all data to FFT buffer;
+    int index2 = 0;
+    QMapIterator<int, float> iter(data);
+    while(iter.hasNext())
+    {
+        iter.next();
+        input[index2] = iter.value();
+        //qDebug() << "input = " << input[i];
+        ++index2;
+    }
+    
+    qDebug() << "FFT input size : " << inputSize;
+    qDebug() << "FFT output size : " << outputSize;
+    
+    fftwf_plan plan_forward = fftwf_plan_dft_r2c_1d(numPts, input, (fftwf_complex*)output, FFTW_ESTIMATE);
+    fftwf_execute(plan_forward);
+    
+    for(int i=0; i<outputSize/2; ++i)
+    {
+        float s = 2.f * M_PI * i / (b-a);
+        float factor = expf(-0.5f * s * s * h * h);
+        
+        output[2*i] *= factor;
+        output[2*i + 1] *= factor;
+    }
+    
+    fftwf_plan plan_backward = fftwf_plan_dft_c2r_1d(numPts, (fftwf_complex*)output, input, FFTW_ESTIMATE);
+    fftwf_execute(plan_backward);
+    
+    qDebug() << "--------------------------";
+    
+    for(int i=0; i<inputSize; ++i)
+    {
+        float t = a + (float)i * delta;
+        //qDebug() << "Final grid t = " << t << ", v = " << input[i];
+        result[t] = input[i];
+    }
+    
+#endif
+    
+    return result;
+}
+
 void MetropolisVariable::generateHistos(const QList<Chain>& chains, float tmin, float tmax)
 {
     mChainsHistos.clear();
@@ -241,25 +380,21 @@ void MetropolisVariable::generateCorrelations(const QList<Chain>& chains)
         float n = trace.size();
         
         float sum = 0;
-        float sum2 = 0;
-        
         for(float i=0; i<n; ++i)
-        {
             sum += trace[i];
-            sum2 += trace[i] * trace[i];
-        }
         float m = sum / n;
-        float s0 = sum2 / n;
+        
+        float sum2 = 0;
+        for(float i=0; i<n; ++i)
+            sum2 += (trace[i] - m) * (trace[i] - m);
         
         for(float h=0; h<hmax; ++h)
         {
             float sumH = 0;
             for(float i=0; i<n-h; ++i)
-            {
-                sumH += trace[i] * trace[i + h];
-            }
-            float s = sumH / (n-h);
-            float result = (s - m*m) / (s0 - m*m);
+                sumH += (trace[i] - m) * (trace[i + h] - m);
+            
+            float result = sumH / sum2;
             results.append(result);
         }
         // Correlation ajoutée à la liste (une courbe de corrélation par chaine)

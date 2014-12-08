@@ -124,6 +124,9 @@ QMap<float, float> normalize_map(const QMap<float, float>& aMap)
 
 QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const QMap<float, float>& mapWithTargetArea)
 {
+    if(mapToModify.isEmpty())
+        return QMap<float, float>();
+    
     QMapIterator<float, float> iter(mapWithTargetArea);
     float targetArea = 0.f;
     while(iter.hasNext())
@@ -136,14 +139,31 @@ QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const QMap
 
 QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const float targetArea)
 {
+    if(mapToModify.isEmpty())
+        return QMap<float, float>();
+        
     QMapIterator<float, float> iter(mapToModify);
+    
+    iter.next();
+    float lastT = iter.key();
+    
     float srcArea = 0.f;
+    
+    //qDebug() << "------";
+    
     while(iter.hasNext())
     {
         iter.next();
-        srcArea += iter.value();
+        float t = iter.key();
+        float v = iter.value() * (t - lastT);
+        //qDebug() << t << ", " << v;
+        srcArea += v;
+        lastT = t;
     }
     float prop = targetArea / srcArea;
+    /*qDebug() << "Equal_areas prop = " << prop;
+    qDebug() << "targetArea = " << targetArea;
+    qDebug() << "srcArea = " << srcArea;*/
     
     QMap<float, float> result;
     QMapIterator<float, float> iter2(mapToModify);

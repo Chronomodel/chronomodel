@@ -151,6 +151,9 @@ void MCMCLoop::run()
         
         while(chain.mBatchIndex * chain.mNumBatchIter < chain.mMaxBatchs * chain.mNumBatchIter)
         {
+            if(isInterruptionRequested())
+                return;
+            
             chain.mBatchIterIndex = 0;
             while(chain.mBatchIterIndex < chain.mNumBatchIter)
             {

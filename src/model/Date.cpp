@@ -182,7 +182,7 @@ void Date::calibrate(const float tmin, const float tmax, const float step)
     {
         float lastRepVal = 0.f;
         
-        for(int t=tmin; t<=tmax; t += step)
+        for(float t=tmin; t<=tmax; t += step)
         {
             float v = getLikelyhood(t);
             mCalibration[t] = v;
@@ -192,6 +192,7 @@ void Date::calibrate(const float tmin, const float tmax, const float step)
             lastRepVal = repVal;
         }
         mRepartition = normalize_map(mRepartition);
+        mCalibration = equal_areas(mCalibration, 1.f);
     }
     else
     {
