@@ -2,7 +2,6 @@
     "todo":[
         "Résoudre les problèmes d’affichage des graduation en X et Y pour les graphs",
         "Enrichir l’aide contextuelle en général",
-        "La suppression des phases fait planter l’appli (bug aléatoire…)",
         "clic sur date doit sélectionner le fait",
         "Sauvegarder les résultats de calcul dans un fichier binaire.",
         "Tester le produit sur les systèmes 32 / 64 bits",
@@ -10,7 +9,7 @@
         "Changer la courbe de calibration C14 pour tous les data d’un coup ?",
         "Détecter au maximum les conflits de contraintes avant le calcul",
         "Bouton RESET MCMC : remet toutes les méthodes par défaut des events et data.",
-        "Initialisation MCMC",
+        "Initialisation MCMC pour bounds",
         "Intervalles HPD : à partir de quel écart entre les intervalles faut-il les regrouper ?",
         "FFT : l’estimateur à noyau retourne une densité mais l’aire obtenue est différente de 1 (beaucoup plus grande)",
         "FFT sur buffer de tailler fixe (1024 par exemple) pour gérer les grandes périodes d’étude",
@@ -21,6 +20,8 @@
 
     ],
     "done":[
+        "Initialisation MCMC (sauf pour bounds)",
+        "La suppression des phases fait planter l’appli (bug aléatoire…)",
         "Contraintes de faits : dessiner une croix rouge pour proposer la destruction",
         "Bound : supprimer l’option Gaussienne",
         "Bound : sélection visuelle identique aux autres objets",

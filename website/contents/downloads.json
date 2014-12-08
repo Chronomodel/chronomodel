@@ -1,5 +1,14 @@
 [
     {
+        "version": "0.0.2",
+        "mac": "releases/chronomodel_mac_0.0.2.pkg",
+        "win": "releases/chronomodel_win_0.0.2.exe",
+        "date": "03/12/2014",
+        "done": [
+            "Voir todo list..."
+        ]
+    },
+    {
         "version": "0.0.1",
         "mac": "releases/chronomodel_mac_0.0.1.pkg",
         "win": "releases/chronomodel_win_0.0.1.exe",
