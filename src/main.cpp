@@ -6,6 +6,9 @@
 #include "fftw3.h"
 
 #include <iostream>
+#include <cmath>
+#include <errno.h>
+#include <fenv.h>
 
 //#include "JuceHeader.h"
 
@@ -44,13 +47,23 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
 
 int main(int argc, char *argv[])
 {
+    if(math_errhandling & MATH_ERREXCEPT)
+    {
+        std::cout << "cmath raises exceptions" << std::endl;
+        feclearexcept(FE_ALL_EXCEPT);
+    }
+    if(math_errhandling & MATH_ERRNO)
+    {
+        std::cout << "cmath uses errno" << std::endl;
+    }
+    
     //std::cout << "CPU speed : " << SystemStats::getCpuSpeedInMegaherz() << "MHz" << std::endl;
     
     QApplication a(argc, argv);
     
     a.setApplicationName("Chronomodel");
     a.setApplicationDisplayName("Chronomodel");
-    a.setApplicationVersion("0.0.2");
+    a.setApplicationVersion("0.0.3");
     a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));
