@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Chronomodel"
-#define MyAppVersion "1.0"
+#define MyAppVersion "0.0.2"
 #define MyAppPublisher "CNRS"
 #define MyAppURL "http://www.chronomodel.com"
 #define MyAppExeName "Chronomodel.exe"
@@ -22,10 +22,10 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
-LicenseFile="..\LicenseGPL30.txt"
+LicenseFile="..\License.txt"
 InfoBeforeFile="..\readme.rtf"
 OutputDir=.\
-OutputBaseFilename=Chronomodel_installer
+OutputBaseFilename=chronomodel_win_{#MyAppVersion}
 SetupIconFile="..\..\icon\Chronomodel.ico"
 Compression=lzma
 SolidCompression=yes
@@ -42,21 +42,9 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
 
 [Files]
-Source: "..\..\build\release\build\Chronomodel.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\build\release\Chronomodel.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\Chronomodel_user_Manual.pdf"; DestDir: "{app}"; Flags: ignoreversion
-Source: "additionnal_files\icudt51.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "additionnal_files\icuin51.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "additionnal_files\icuuc51.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "additionnal_files\libgcc_s_dw2-1.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "additionnal_files\libstdc++-6.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "additionnal_files\libwinpthread-1.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "additionnal_files\Qt5Core.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "additionnal_files\Qt5Gui.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "additionnal_files\Qt5Svg.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "additionnal_files\Qt5Widgets.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "additionnal_files\libfftw3f-3.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "additionnal_files\imageformats"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "additionnal_files\platforms"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "additionnal_files\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\Calib"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 

@@ -6,15 +6,18 @@
 #
 #-------------------------------------------------
 
+#PRO_PATH=$$PWD
+PRO_PATH=$$_PRO_FILE_PWD_
+
 message("-------------------------------------------")
 CONFIG(debug, debug|release) {
-	BUILD_DIR=build/debug
+        BUILD_DIR=build/debug
 	message("Running qmake : Debug")
 	macx{
 		REAL_DESTDIR=Debug
 	}
 } else {
-	BUILD_DIR=build/release
+        BUILD_DIR=build/release
 	message("Running qmake : Release")
 	macx{
 		REAL_DESTDIR=Release
@@ -22,8 +25,6 @@ CONFIG(debug, debug|release) {
 }
 message("-------------------------------------------")
 
-#PRO_PATH=$$PWD
-PRO_PATH=$$_PRO_FILE_PWD_
 
 TARGET = Chronomodel
 TEMPLATE = app

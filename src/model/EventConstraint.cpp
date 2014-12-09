@@ -9,7 +9,7 @@ mEventTo(0)
     
 }
 
-EventConstraint::EventConstraint(const EventConstraint& ec)
+EventConstraint::EventConstraint(const EventConstraint& ec):Constraint()
 {
     copyFrom(ec);
 }

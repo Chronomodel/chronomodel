@@ -47,6 +47,7 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
 
 int main(int argc, char *argv[])
 {
+#if Q_OS_MAC
     if(math_errhandling & MATH_ERREXCEPT)
     {
         std::cout << "cmath raises exceptions" << std::endl;
@@ -56,7 +57,7 @@ int main(int argc, char *argv[])
     {
         std::cout << "cmath uses errno" << std::endl;
     }
-    
+#endif
     //std::cout << "CPU speed : " << SystemStats::getCpuSpeedInMegaherz() << "MHz" << std::endl;
     
     QApplication a(argc, argv);

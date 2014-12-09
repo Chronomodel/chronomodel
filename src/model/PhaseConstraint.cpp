@@ -15,7 +15,7 @@ mGammaMax(1)
     
 }
 
-PhaseConstraint::PhaseConstraint(const PhaseConstraint& pc)
+PhaseConstraint::PhaseConstraint(const PhaseConstraint& pc):Constraint()
 {
     copyFrom(pc);
 }
