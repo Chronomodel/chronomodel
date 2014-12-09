@@ -36,6 +36,12 @@ float Generator::randomUniform(float min, float max)
 
 float Generator::gaussByDoubleExp(const float mean, const float sigma, const float min, const float max)
 {
+    if(min >= max)
+    {
+        std::cout << "FLOAT EXP ERROR : min == max";
+        return min;
+    }
+    
     const float x_min = (min - mean) / sigma;
     const float x_max = (max - mean) / sigma;
 
@@ -85,11 +91,27 @@ float Generator::gaussByDoubleExp(const float mean, const float sigma, const flo
         if(std::isinf(x))
         {
             std::cout << "floatExp : ERROR : infinity" << std::endl;
+            if(x_min < 0.f && x_max > 0.f)
+            {
+                const float c = 1.f - 0.5f * (expf(x_min) + expf(-x_max));
+                const float f0 = 0.5f * (1.f - expf(x_min)) / c;
+                if(u <= f0)
+                    std::cout << "u <= f0" << std::endl;
+                else
+                    std::cout << "u > f0" << std::endl;
+            }
+            else
+            {
+                if(x_min >= 0)
+                    std::cout << "x_min >= 0" << std::endl;
+                else
+                    std::cout << "x_min < 0" << std::endl;
+            }
             rap = 0;
         }
         else
         {
-            if(x_min > 1.f)
+            if(x_min >= 1.f)
             {
                 rap = expf(0.5f * (x_min * x_min - x * x) + x - x_min);
                 
@@ -102,7 +124,7 @@ float Generator::gaussByDoubleExp(const float mean, const float sigma, const flo
                 std::cout << "floatExp : rapport : " << rap << std::endl;
                 std::cout << "floatExp : ur : " << ur << std::endl;*/
             }
-            else if(x_max < -1.f)
+            else if(x_max <= -1.f)
             {
                 //std::cout << "floatExp : x_max : " << x_max << std::endl;
                 rap = expf(0.5f * (x_max * x_max - x * x) + x_max - x);
