@@ -47,7 +47,7 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
 
 int main(int argc, char *argv[])
 {
-#if Q_OS_MAC
+#ifdef Q_OS_MAC
     if(math_errhandling & MATH_ERREXCEPT)
     {
         std::cout << "cmath raises exceptions" << std::endl;
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     
     a.setApplicationName("Chronomodel");
     a.setApplicationDisplayName("Chronomodel");
-    a.setApplicationVersion("0.0.3");
+    a.setApplicationVersion("0.0.4");
     a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));

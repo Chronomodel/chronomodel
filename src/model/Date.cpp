@@ -91,6 +91,8 @@ Date Date::fromJson(const QJsonObject& json)
     
     if(!json.isEmpty())
     {
+        qDebug() << json;
+        
         date.mId = json[STATE_ID].toInt();
         date.mName = json[STATE_NAME].toString();
         date.mData = json[STATE_DATE_DATA].toObject();

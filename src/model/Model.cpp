@@ -269,3 +269,140 @@ bool Model::isValid()
     }*/
     return true;
 }
+
+void Model::generateCorrelations(const QList<Chain>& chains)
+{
+    for(int i=0; i<mEvents.size(); ++i)
+    {
+        Event* event = mEvents[i];
+        event->mTheta.generateCorrelations(chains);
+        
+        for(int j=0; j<event->mDates.size(); ++j)
+        {
+            Date& date = event->mDates[j];
+            date.mTheta.generateCorrelations(chains);
+            date.mSigma.generateCorrelations(chains);
+        }
+    }
+    
+    for(int i=0; i<mPhases.size(); ++i)
+    {
+        Phase* phase = mPhases[i];
+        phase->mAlpha.generateCorrelations(chains);
+        phase->mBeta.generateCorrelations(chains);
+    }
+}
+
+void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen)
+{
+    float tmin = mSettings.mTmin;
+    float tmax = mSettings.mTmax;
+    
+    for(int i=0; i<mEvents.size(); ++i)
+    {
+        Event* event = mEvents[i];
+        
+        bool generateEventHistos = true;
+        if(event->type() == Event::eKnown)
+        {
+            EventKnown* ek = dynamic_cast<EventKnown*>(event);
+            if(ek && ek->knownType() == EventKnown::eFixed)
+            {
+                generateEventHistos = false;
+                qDebug() << "Nothing todo : this is just a Dirac !";
+            }
+            qDebug() << "=> Generating post. density for bound " << i << "/" << mEvents.size() << " : " << event->mName;
+        }
+        else
+            qDebug() << "=> Generating post. density for event " << i << "/" << mEvents.size() << " : " << event->mName;
+        
+        if(generateEventHistos)
+        {
+            event->mTheta.generateHistos(chains, fftLen, tmin, tmax);
+        }
+        
+        for(int j=0; j<event->mDates.size(); ++j)
+        {
+            Date& date = event->mDates[j];
+            
+            qDebug() << " -> Generate post. density for date " << j << "/" << event->mDates.size() << " : " << date.mName;
+            
+            date.mTheta.generateHistos(chains, fftLen, tmin, tmax);
+            date.mSigma.generateHistos(chains, fftLen, 0, tmax - tmin);
+        }
+    }
+    
+    for(int i=0; i<mPhases.size(); ++i)
+    {
+        Phase* phase = mPhases[i];
+        
+        phase->mAlpha.generateHistos(chains, fftLen, tmin, tmax);
+        phase->mBeta.generateHistos(chains, fftLen, tmin, tmax);
+    }
+}
+
+void Model::generateNumericalResults(const QList<Chain>& chains)
+{
+    for(int i=0; i<mEvents.size(); ++i)
+    {
+        Event* event = mEvents[i];
+        event->mTheta.generateNumericalResults(chains);
+        
+        for(int j=0; j<event->mDates.size(); ++j)
+        {
+            Date& date = event->mDates[j];
+            date.mTheta.generateNumericalResults(chains);
+            date.mSigma.generateNumericalResults(chains);
+        }
+    }
+    
+    for(int i=0; i<mPhases.size(); ++i)
+    {
+        Phase* phase = mPhases[i];
+        phase->mAlpha.generateNumericalResults(chains);
+        phase->mBeta.generateNumericalResults(chains);
+    }
+}
+
+void Model::generateCredibilityAndHPD(const QList<Chain>& chains, int threshold)
+{
+    for(int i=0; i<mEvents.size(); ++i)
+    {
+        Event* event = mEvents[i];
+        
+        bool isFixedBound = false;
+        if(event->type() == Event::eKnown)
+        {
+            EventKnown* ek = dynamic_cast<EventKnown*>(event);
+            if(ek->knownType() == EventKnown::eFixed)
+                isFixedBound = true;
+        }
+        
+        if(!isFixedBound)
+        {
+            event->mTheta.generateHPD(threshold);
+            event->mTheta.generateCredibility(chains, threshold);
+            QList<Date>& dates = event->mDates;
+            
+            for(int j=0; j<dates.size(); ++j)
+            {
+                Date& date = dates[j];
+                date.mTheta.generateHPD(threshold);
+                date.mSigma.generateHPD(threshold);
+                
+                date.mTheta.generateCredibility(chains, threshold);
+                date.mSigma.generateCredibility(chains, threshold);
+            }
+        }
+    }
+    for(int i=0; i<mPhases.size(); ++i)
+    {
+        Phase* phase = mPhases[i];
+        phase->mAlpha.generateHPD(threshold);
+        phase->mBeta.generateHPD(threshold);
+        
+        phase->mAlpha.generateCredibility(chains, threshold);
+        phase->mBeta.generateCredibility(chains, threshold);
+    }
+}
+

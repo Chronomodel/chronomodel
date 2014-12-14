@@ -1,6 +1,16 @@
 #ifndef STATEKEYS_H
 #define STATEKEYS_H
 
+#define STATE_APP_VERSION "app_version"
+#define STATE_SETTINGS "settings"
+#define STATE_MCMC "mcmc"
+#define STATE_EVENTS "events"
+#define STATE_PHASES "phases"
+#define STATE_EVENTS_CONSTRAINTS "events_constraints"
+#define STATE_PHASES_CONSTRAINTS "phases_constraints"
+#define STATE_DATES_TRASH "dates_trash"
+#define STATE_EVENTS_TRASH "events_trash"
+
 #define STATE_ID "id"
 #define STATE_NAME "name"
 #define STATE_COLOR_RED "red"
@@ -43,5 +53,15 @@
 #define STATE_CONSTRAINT_GAMMA_FIXED "gamma_fixed"
 #define STATE_CONSTRAINT_GAMMA_MIN "gamma_min"
 #define STATE_CONSTRAINT_GAMMA_MAX "gamma_max"
+
+#define STATE_MCMC_NUM_CHAINS "num_proc"
+#define STATE_MCMC_NUM_RUN_ITER "num_iter"
+#define STATE_MCMC_NUM_BURN_ITER "num_burn"
+#define STATE_MCMC_MAX_ADAPT_BATCHES "max_batches"
+#define STATE_MCMC_ITER_PER_BATCH "iter_per_batch"
+#define STATE_MCMC_THINNING_INTERVAL "thinning_interval"
+#define STATE_MCMC_FFT_LEN "fft_len"
+#define STATE_MCMC_CALIB_STEP "calib_step"
+#define STATE_MCMC_SEEDS "seeds"
 
 #endif
