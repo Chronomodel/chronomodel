@@ -1,11 +1,60 @@
 [
     {
+        "version": "0.0.4",
+        "mac": "releases/chronomodel_mac_0.0.6.pkg",
+        "date": "14/12/2014",
+        "done": [
+            
+        ]
+    },
+    {
+        "version": "0.0.3",
+        "mac": "releases/chronomodel_mac_0.0.3.pkg",
+        "win": "releases/chronomodel_win_0.0.3.exe",
+        "date": "09/12/2014",
+        "done": [
+            "FFT, correlation and credibility updated",
+            "MCMC corrected : there was a major bug when updating events in phases with gamma!",
+            "doubleExp debug help => Infinity issue is still here...",
+            "DoubleExp works with double values (64 bits) to avoid infinity issues",
+            "Exception raised if exp breaks code"
+        ]
+    },
+    {
         "version": "0.0.2",
         "mac": "releases/chronomodel_mac_0.0.2.pkg",
         "win": "releases/chronomodel_win_0.0.2.exe",
         "date": "03/12/2014",
         "done": [
-            "Voir todo list..."
+            "Application Settings updated with CSV preferences",
+            "CSV import/export using preferences",
+            "App Settings dialog redrawn",
+            "Results graphs data cdv export in columns",
+            "Hight-DPI screenshots (for Retina screens)",
+            "Global results view exports",
+            "Fixed Fold / Unfold results display issue (graphs were still a bit visible in folded state)",
+            "Grouped display options in results",
+            "Calibration measure errors displayed by all plugins",
+            "Buttons in data list for update and calibration",
+            "Calibration layout improved",
+            "Calibration : quartiles calculated from repartition",
+            "Bounds : fixed values displayed in results as dirac (as well as in scene preview)",
+            "Model class uses pointers to Events and Phases : easier to cast events to bounds",
+            "Float maths functions used instead of double version",
+            "Event Dialog title ok with bounds",
+            "New Init (Still not working with bounds)",
+            "Project Settings can be copied now!",
+            "Arrows in scenes now use shape instead of boundingRect for collision detection, allowing interaction with the mouse when they cross each other : the focus is given to the closest one. This could still be improved though.",
+            "Warning removed",
+            "Bounds : Gauss option removed",
+            "Results view disabled if run has not been done, or if a new project is opened",
+            "Constraints position update improved",
+            "Help restored in scene",
+            "Phase deletion updated (items refresh improved)",
+            "PHASES UPDATE SEGFAULT FIXED !!! => very weird solution (Qt bug???)",
+            "Button state updated (red or green)",
+            "Project can be closed from menu",
+            "Study period management and display improved"
         ]
     },
     {
