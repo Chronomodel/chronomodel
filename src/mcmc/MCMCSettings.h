@@ -3,7 +3,16 @@
 
 #include <QJsonObject>
 #include <QList>
+#include "StateKeys.h"
 
+#define MCMC_NUM_CHAINS_DEFAULT 3
+#define MCMC_NUM_RUN_DEFAULT 100000
+#define MCMC_NUM_BURN_DEFAULT 1000
+#define MCMC_MAX_ADAPT_BATCHES_DEFAULT 100
+#define MCMC_ITER_PER_BATCH_DEFAULT 100
+#define MCMC_THINNING_INTERVAL_DEFAULT 10
+#define MCMC_FFT_LEN_DEFAULT 1024
+#define MCMC_CALIB_STEP_DEFAULT 1
 
 class MCMCSettings
 {
@@ -26,6 +35,9 @@ public:
     QList<int> mSeeds;
     
     unsigned long mFinalBatchIndex;
+    
+    int mFFTLength;
+    int mCalibStep;
 };
 
 #endif

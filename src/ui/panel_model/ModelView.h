@@ -36,6 +36,7 @@ public:
     ~ModelView();
     
     void doProjectConnections(Project* project);
+    void resetInterface();
     void showHelp(bool show);
     
     void readSettings();
@@ -56,6 +57,9 @@ protected:
     void keyPressEvent(QKeyEvent* event);
     
 private slots:
+    void showProperties();
+    void showImport();
+    void showPhases();
     void slideRightPanel();
     void prepareNextSlide();
     
@@ -111,6 +115,8 @@ private:
     QPropertyAnimation* mAnimationHide;
     QPropertyAnimation* mAnimationShow;
     
+    QWidget* mCurrentRightWidget;
+    
     // ------
     
     CalibrationView* mCalibrationView;
@@ -122,11 +128,11 @@ private:
     Label* mStudyLab;
     Label* mMinLab;
     Label* mMaxLab;
-    Label* mStepLab;
+    //Label* mStepLab;
     
     LineEdit* mMinEdit;
     LineEdit* mMaxEdit;
-    LineEdit* mStepEdit;
+    //LineEdit* mStepEdit;
     
     Button* mButApply;
     

@@ -6,21 +6,14 @@
 #include "MCMCSettings.h"
 #include "MCMCLoopMain.h"
 #include "Model.h"
+#include "StateKeys.h"
 
 #include <QObject>
 #include <QList>
 #include <QString>
 #include <QJsonObject>
 
-#define STATE_APP_VERSION "app_version"
-#define STATE_SETTINGS "settings"
-#define STATE_MCMC "mcmc"
-#define STATE_EVENTS "events"
-#define STATE_PHASES "phases"
-#define STATE_EVENTS_CONSTRAINTS "events_constraints"
-#define STATE_PHASES_CONSTRAINTS "phases_constraints"
-#define STATE_DATES_TRASH "dates_trash"
-#define STATE_EVENTS_TRASH "events_trash"
+#define PROJECT_LOADED_REASON "project loaded"
 
 class Date;
 class Date;

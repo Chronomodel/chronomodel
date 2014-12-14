@@ -43,6 +43,11 @@ void ProjectView::doProjectConnections(Project* project)
     mResultsView->doProjectConnections(project);
 }
 
+void ProjectView::resetInterface()
+{
+    mModelView->resetInterface();
+}
+
 void ProjectView::updateProject()
 {
     mModelView->updateProject();

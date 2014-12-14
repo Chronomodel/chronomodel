@@ -13,6 +13,8 @@ int defaultDpiX();
 qreal dpiScaled(qreal value);
 QColor getContrastedColor(const QColor& color);
 QList<int> stringListToIntList(const QString& listStr, const QString& separator = ",");
+QStringList intListToStringList(const QList<int>& intList);
+QString intListToString(const QList<int>& intList, const QString& separator = ",");
 QFileInfo saveWidgetAsImage(QObject* widget, const QRect& r, const QString& dialogTitle, const QString& defaultPath);
 bool isComment(const QString& str);
 QString prepareTooltipText(const QString& title, const QString& text);

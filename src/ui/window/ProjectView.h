@@ -20,6 +20,7 @@ public:
     ~ProjectView();
     
     void doProjectConnections(Project* project);
+    void resetInterface();
     
     void readSettings();
     void writeSettings();

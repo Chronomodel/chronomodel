@@ -21,7 +21,7 @@
 MCMCLoopMain::MCMCLoopMain(Model* model):MCMCLoop(),
 mModel(model)
 {
-    setSettings(mModel->mMCMCSettings);
+    setMCMCSettings(mModel->mMCMCSettings);
 }
 
 MCMCLoopMain::~MCMCLoopMain()
@@ -615,70 +615,9 @@ bool MCMCLoopMain::adapt()
 
 void MCMCLoopMain::finalize()
 {
-    float tmin = mModel->mSettings.mTmin;
-    float tmax = mModel->mSettings.mTmax;
-    
-    QList<Event*>& events = mModel->mEvents;
-    QList<Phase*>& phases = mModel->mPhases;
-    
-    for(int i=0; i<events.size(); ++i)
-    {
-        Event* event = events[i];
-        
-        bool generateEventHistos = true;
-        if(event->type() == Event::eKnown)
-        {
-            EventKnown* ek = dynamic_cast<EventKnown*>(event);
-            if(ek && ek->knownType() == EventKnown::eFixed)
-            {
-                generateEventHistos = false;
-                qDebug() << "Nothing todo : this is just a Dirac !";
-            }
-            qDebug() << "=> Generate Results for bound " << i << "/" << events.size() << " : " << event->mName;
-        }
-        else
-        {
-            qDebug() << "=> Generate Results for event " << i << "/" << events.size() << " : " << event->mName;
-        }
-        
-        if(generateEventHistos)
-        {
-            event->mTheta.generateHistos(mChains, tmin, tmax);
-            event->mTheta.generateCorrelations(mChains);
-            event->mTheta.generateResults(mChains, tmin, tmax);
-        }
-        
-        for(int j=0; j<event->mDates.size(); ++j)
-        {
-            Date& date = event->mDates[j];
-            
-            qDebug() << " -> Generate Results for date " << j << "/" << event->mDates.size() << " : " << date.mName;
-            
-            date.mTheta.generateHistos(mChains, tmin, tmax);
-            date.mSigma.generateHistos(mChains, 0, tmax - tmin);
-            //date.mWiggle.generateHistos(mChains, 0, tmax - tmin);
-            
-            date.mTheta.generateCorrelations(mChains);
-            date.mSigma.generateCorrelations(mChains);
-            
-            date.mTheta.generateResults(mChains, tmin, tmax);
-            date.mSigma.generateResults(mChains, tmin, tmax);
-        }
-    }
-    
-    for(int i=0; i<phases.size(); ++i)
-    {
-        Phase* phase = phases[i];
-        
-        phase->mAlpha.generateHistos(mChains, tmin, tmax);
-        phase->mBeta.generateHistos(mChains, tmin, tmax);
-        
-        phase->mAlpha.generateCorrelations(mChains);
-        phase->mBeta.generateCorrelations(mChains);
-        
-        phase->mAlpha.generateResults(mChains, tmin, tmax);
-        phase->mBeta.generateResults(mChains, tmin, tmax);
-    }
+    mModel->generateCorrelations(mChains);
+    mModel->generatePosteriorDensities(mChains, mModel->mMCMCSettings.mFFTLength);
+    mModel->generateNumericalResults(mChains);
 }
 
 

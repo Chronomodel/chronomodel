@@ -21,20 +21,22 @@ public:
     //  These functions are time consuming!
     // -----
     
-    void generateHistos(const QList<Chain>& chains, float tmin, float tmax);
+    void generateHistos(const QList<Chain>& chains, int fftLen, float tmin, float tmax);
     void generateCorrelations(const QList<Chain>& chains);
     void generateHPD(int threshold);
     void generateCredibility(const QList<Chain>& chains, int threshold);
     
     // Virtual because MHVariable subclass adds some information
-    virtual void generateResults(const QList<Chain>& chains, float tmin, float tmax);
+    virtual void generateNumericalResults(const QList<Chain>& chains);
 
     // -----
     // These functions do not make any calculation
     // -----
     
     const QMap<float, float>& fullHisto() const;
+    const QMap<float, float>& fullRawHisto() const;
     const QMap<float, float>& histoForChain(int index) const;
+    const QMap<float, float>& rawHistoForChain(int index) const;
     
     // Full trace (burn + adapt + run) as a map
     QMap<float, float> fullTrace(int thinningInterval);
@@ -55,7 +57,8 @@ public:
     // -----
     
 private:
-    QMap<float, float> generateHisto(const QVector<float>& data, float tmin, float tmax);
+    QMap<float, float> generateRawHisto(const QVector<float>& data, int fftLen);
+    QMap<float, float> generateHisto(const QVector<float>& data, int fftLen, float tmin, float tmax);
     QMap<float, float> generateHistoOld(const QVector<float>& dataSrc, float tmin, float tmax);
     
 public:
@@ -64,6 +67,9 @@ public:
     
     QMap<float, float> mHisto;
     QList<QMap<float, float>> mChainsHistos;
+    
+    QMap<float, float> mRawHisto;
+    QList<QMap<float, float>> mChainsRawHistos;
     
     QList<QVector<float>> mCorrelations;
     

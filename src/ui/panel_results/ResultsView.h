@@ -7,6 +7,7 @@
 class QStackedWidget;
 class QScrollArea;
 class QTimer;
+class QComboBox;
 
 class Project;
 class Model;
@@ -59,6 +60,7 @@ private slots:
     void exportFullImage();
     void compress(float prop);
     void generateHPD();
+    void updateFFTLength();
     
 private:
     QList<QRect> getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases);
@@ -100,6 +102,10 @@ private:
     
     CheckBox* mHPDCheck;
     LineEdit* mHPDEdit;
+    
+    Label* mFFTLenLab;
+    QComboBox* mFFTLenCombo;
+    int mComboH;
     
     Label* mChainsTitle;
     Label* mDataTitle;

@@ -181,8 +181,6 @@ void PhasesScene::updateProject()
         }
     }
     
-    qDebug() << "PhasesScene : " << items().count() << " items";
-    
     mUpdatingItems = false;
     update();
 }
@@ -192,23 +190,41 @@ void PhasesScene::updateSelection()
 {
     if(!mUpdatingItems)
     {
+        bool modified = false;
+        
         for(int i=0; i<mItems.size(); ++i)
         {
             QJsonObject& phase = ((PhaseItem*)mItems[i])->phase();
-            phase[STATE_IS_SELECTED] = mItems[i]->isSelected();
-            phase[STATE_IS_CURRENT] = false;
+            bool selected = mItems[i]->isSelected();
+            if(phase[STATE_IS_SELECTED].toBool() != selected)
+            {
+                phase[STATE_IS_SELECTED] = selected;
+                modified = true;
+            }
+            if(phase[STATE_IS_CURRENT].toBool())
+            {
+                phase[STATE_IS_CURRENT] = false;
+                modified = true;
+            }
         }
         QJsonObject phase;
         PhaseItem* curItem = (PhaseItem*)currentItem();
         if(curItem)
         {
             QJsonObject& p = curItem->phase();
-            p[STATE_IS_CURRENT] = true;
-            phase = p;
+            if(!p[STATE_IS_CURRENT].toBool())
+            {
+                p[STATE_IS_CURRENT] = true;
+                phase = p;
+                modified = true;
+            }
         }
-        emit MainWindow::getInstance()->getProject()->currentPhaseChanged(phase);
-        sendUpdateProject(tr("phases selection updated : phases marked as selected"), false, false);
-        MainWindow::getInstance()->getProject()->sendPhasesSelectionChanged();
+        if(modified)
+        {
+            emit MainWindow::getInstance()->getProject()->currentPhaseChanged(phase);
+            sendUpdateProject(tr("phases selection updated : phases marked as selected"), false, false);
+            MainWindow::getInstance()->getProject()->sendPhasesSelectionChanged();
+        }
     }
 }
 

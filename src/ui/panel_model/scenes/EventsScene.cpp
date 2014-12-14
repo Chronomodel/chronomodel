@@ -113,7 +113,7 @@ void EventsScene::updateHelp()
     
     if(mItems.size() == 0)
     {
-        text = tr("Start creating your model by clicking on \"New Event...\".");
+        text = tr("Define a study period on the right panel, apply it, and start creating your model by clicking on \"New Event...\".");
     }
     else if(selected.count() == 0)
     {
@@ -339,27 +339,43 @@ void EventsScene::updateSelection()
 {
     if(!mUpdatingItems)
     {
+        bool modified = false;
+        
         for(int i=0; i<mItems.size(); ++i)
         {
             EventItem* item = (EventItem*)mItems[i];
             QJsonObject& event = item->getEvent();
-            event[STATE_IS_SELECTED] = mItems[i]->isSelected();
-            event[STATE_IS_CURRENT] = false;
+            bool selected = mItems[i]->isSelected();
             
-            if(mItems[i]->isSelected())
-                qDebug() << "Marked selected event : " << item->mData[STATE_NAME].toString();
+            if(event[STATE_IS_SELECTED].toBool() != selected)
+            {
+                event[STATE_IS_SELECTED] = selected;
+                modified = true;
+            }
+            if(event[STATE_IS_CURRENT].toBool())
+            {
+                event[STATE_IS_CURRENT] = false;
+                modified = true;
+            }
         }
         QJsonObject event;
         EventItem* curItem = (EventItem*)currentItem();
         if(curItem)
         {
             QJsonObject& evt = curItem->getEvent();
-            evt[STATE_IS_CURRENT] = true;
-            event = evt;
+            if(!evt[STATE_IS_CURRENT].toBool())
+            {
+                evt[STATE_IS_CURRENT] = true;
+                event = evt;
+                modified = true;
+            }
         }
-        emit MainWindow::getInstance()->getProject()->currentEventChanged(event);
-        sendUpdateProject(tr("events selection updated : events marked as selected"), false, false);
-        MainWindow::getInstance()->getProject()->sendEventsSelectionChanged();
+        if(modified)
+        {
+            emit MainWindow::getInstance()->getProject()->currentEventChanged(event);
+            sendUpdateProject(tr("events selection : no undo, no view update!"), false, false);
+            MainWindow::getInstance()->getProject()->sendEventsSelectionChanged();
+        }
     }
 }
 

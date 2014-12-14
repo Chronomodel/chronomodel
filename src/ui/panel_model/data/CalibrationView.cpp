@@ -59,30 +59,26 @@ CalibrationView::~CalibrationView()
 
 void CalibrationView::setDate(const QJsonObject& date)
 {
-    mDate = Date::fromJson(date);
-    
     Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
-    
     QJsonObject settings = state[STATE_SETTINGS].toObject();
     mSettings = ProjectSettings::fromJson(settings);
     
-    mDate.calibrate(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
+    mDate = Date::fromJson(date);
     
-    mRuler->setRange(mSettings.mTmin, mSettings.mTmax);
-    mRuler->zoomDefault();
-    mCalibGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
-    
+    if(!mDate.isNull())
+    {
+        mDate.calibrate(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
+        
+        mRuler->setRange(mSettings.mTmin, mSettings.mTmax);
+        mRuler->zoomDefault();
+        mCalibGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
+    }
     updateGraphs();
 }
 
 void CalibrationView::updateGraphs()
 {
-    DensityAnalysis results;
-    results.analysis = analyseFunction(mDate.mCalibration);
-    results.quartiles = quartilesForRepartition(mDate.mRepartition);
-    mResultsLab->setText(densityAnalysisToString(results));
-    
     mCalibGraph->removeAllCurves();
     
     // The current ref graph belongs to a plugin
@@ -96,6 +92,11 @@ void CalibrationView::updateGraphs()
     
     if(!mDate.isNull())
     {
+        DensityAnalysis results;
+        results.analysis = analyseFunction(mDate.mCalibration);
+        results.quartiles = quartilesForRepartition(mDate.mRepartition);
+        mResultsLab->setText(densityAnalysisToString(results));
+        
         // ------------------------------------------------------------
         //  Calibration curve
         // ------------------------------------------------------------

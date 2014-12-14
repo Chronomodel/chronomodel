@@ -130,6 +130,7 @@ EventPropertiesView::~EventPropertiesView()
 #pragma mark Event Managment
 void EventPropertiesView::setEvent(const QJsonObject& event)
 {
+    qDebug() << "Event Property view updated";
     mEvent = event;
     updateEvent();
 }
@@ -156,6 +157,8 @@ void EventPropertiesView::updateEvent()
     {
         mDefaultView->setVisible(true);
         mKnownView->setVisible(false);
+        mNameEdit->setText("");
+        mMethodCombo->setCurrentIndex(0);
     }
     else
     {

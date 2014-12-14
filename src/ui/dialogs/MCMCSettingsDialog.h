@@ -4,6 +4,7 @@
 #include <QDialog>
 #include "MCMCSettings.h"
 
+class Label;
 class LineEdit;
 class Button;
 
@@ -24,12 +25,15 @@ protected:
     void updateLayout();
     
 private:
+    Label* mSeedsLab;
+    
     LineEdit* mNumProcEdit;
     LineEdit* mNumBurnEdit;
     LineEdit* mNumIterEdit;
     LineEdit* mMaxBatchesEdit;
     LineEdit* mIterPerBatchEdit;
     LineEdit* mDownSamplingEdit;
+    LineEdit* mSeedsEdit;
     
     Button* mOkBut;
     Button* mCancelBut;
@@ -40,6 +44,9 @@ private:
     QRectF mBatch1Rect;
     QRectF mBatchInterRect;
     QRectF mBatchNRect;
+    
+    int mFFTLength;
+    int mCalibStep;
 };
 
 #endif

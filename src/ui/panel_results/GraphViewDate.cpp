@@ -97,7 +97,7 @@ void GraphViewDate::refresh()
             {
                 GraphCurve curve;
                 curve.mName = "calibration";
-                curve.mData = equal_areas(mDate->mCalibration, 100.f);
+                curve.mData = equal_areas(mDate->mCalibration, 1.f);
                 curve.mPen.setColor(QColor(0, 0, 0));
                 curve.mFillUnder = false;
                 curve.mIsHisto = false;
@@ -111,7 +111,7 @@ void GraphViewDate::refresh()
             {
                 GraphCurve curve;
                 curve.mName = "wiggle";
-                curve.mData = equal_areas(mDate->mWiggle.fullHisto(), 100.f);
+                curve.mData = equal_areas(mDate->mWiggle.fullHisto(), 1.f);
                 curve.mPen.setColor(Qt::blue);
                 curve.mFillUnder = false;
                 curve.mIsHisto = false;
@@ -125,7 +125,7 @@ void GraphViewDate::refresh()
             {
                 GraphCurve curve;
                 curve.mName = "histo full";
-                curve.mData = equal_areas(variable->fullHisto(), 100.f);
+                curve.mData = equal_areas(variable->fullHisto(), 1.f);
                 curve.mPen.setColor(color);
                 curve.mIsHisto = false;
                 mGraph->addCurve(curve);
@@ -133,25 +133,15 @@ void GraphViewDate::refresh()
                 float yMax = 1.1f * map_max_value(curve.mData);
                 mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                 
-                if(mShowHPD)
-                {
-                    GraphCurve curveHPD;
-                    curveHPD.mName = "histo HPD full";
-                    curveHPD.mData = equal_areas(variable->mHPD, mThresholdHPD);
-                    curveHPD.mPen.setColor(color);
-                    curveHPD.mFillUnder = true;
-                    curveHPD.mIsHisto = false;
-                    mGraph->addCurve(curveHPD);
-                    
-                    GraphCurve curveCred;
-                    curveCred.mName = "credibility full";
-                    curveCred.mSections.append(variable->mCredibility);
-                    curveCred.mHorizontalValue = mGraph->maximumY();
-                    curveCred.mPen.setColor(color);
-                    curveCred.mPen.setWidth(5);
-                    curveCred.mIsHorizontalSections = true;
-                    mGraph->addCurve(curveCred);
-                }
+                /*GraphCurve curveRaw;
+                curveRaw.mName = "raw histo full";
+                curveRaw.mPen.setColor(Qt::red);
+                curveRaw.mData = equal_areas(variable->fullRawHisto(), 1.f);
+                curveRaw.mIsHisto = true;
+                mGraph->addCurve(curveRaw);
+                
+                float yMax2 = 1.1f * map_max_value(curveRaw.mData);
+                mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax2));*/
             }
             for(int i=0; i<mShowChainList.size(); ++i)
             {
@@ -161,24 +151,33 @@ void GraphViewDate::refresh()
                     
                     GraphCurve curve;
                     curve.mName = QString("histo chain " + QString::number(i));
-                    curve.mData = equal_areas(variable->histoForChain(i), 100.f);
+                    curve.mData = equal_areas(variable->histoForChain(i), 1.f);
                     curve.mPen.setColor(col);
                     curve.mIsHisto = false;
                     mGraph->addCurve(curve);
                     
                     float yMax = 1.1f * map_max_value(curve.mData);
                     mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
-                    
-                    /*if(mShowHPD)
-                    {
-                        GraphCurve curveHPD;
-                        curveHPD.mName = QString("histo HPD chain " + QString::number(i));
-                        curveHPD.mData = equal_areas(variable->generateHPDForChain(i, mThresholdHPD), mThresholdHPD);
-                        curveHPD.mPen.setColor(col);
-                        curveHPD.mFillUnder = true;
-                        mGraph->addCurve(curveHPD);
-                    }*/
                 }
+            }
+            if(mShowAllChains &&  mShowHPD)
+            {
+                GraphCurve curveHPD;
+                curveHPD.mName = "histo HPD full";
+                curveHPD.mData = equal_areas(variable->mHPD, mThresholdHPD/100.f);
+                curveHPD.mPen.setColor(color);
+                curveHPD.mFillUnder = true;
+                curveHPD.mIsHisto = false;
+                mGraph->addCurve(curveHPD);
+                
+                GraphCurve curveCred;
+                curveCred.mName = "credibility full";
+                curveCred.mSections.append(variable->mCredibility);
+                curveCred.mHorizontalValue = mGraph->maximumY();
+                curveCred.mPen.setColor(color);
+                curveCred.mPen.setWidth(5);
+                curveCred.mIsHorizontalSections = true;
+                mGraph->addCurve(curveCred);
             }
         }
         if(mCurrentResult == eTrace)

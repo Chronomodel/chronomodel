@@ -108,6 +108,20 @@ QList<int> stringListToIntList(const QString& listStr, const QString& separator)
     return result;
 }
 
+QStringList intListToStringList(const QList<int>& intList)
+{
+    QStringList list;
+    for(int i=0; i<intList.size(); ++i)
+        list.append(QString::number(intList[i]));
+    return list;
+}
+
+QString intListToString(const QList<int>& intList, const QString& separator)
+{
+    QStringList list = intListToStringList(intList);
+    return list.join(separator);
+}
+
 QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogTitle, const QString& defaultPath)
 {
     QFileInfo fileInfo;

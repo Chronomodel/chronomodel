@@ -34,7 +34,7 @@ public:
     MCMCLoop();
     virtual ~MCMCLoop();
     
-    void setSettings(const MCMCSettings& settings);
+    void setMCMCSettings(const MCMCSettings& settings);
     const QList<Chain>& chains();
     const QString& getLog() const;
     

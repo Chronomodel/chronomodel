@@ -137,13 +137,13 @@ bool Project::event(QEvent* e)
     }
     else if(e->type() == 1001)
     {
-        qDebug() << "(---) Receiving events selection : using marked events";
+        qDebug() << "(---) Receiving events selection : adapt checked phases";
         emit selectedEventsChanged();
         return true;
     }
     else if(e->type() == 1002)
     {
-        qDebug() << "(---) Receiving phases selection : using marked phases";
+        qDebug() << "(---) Receiving phases selection : adapt selected events";
         emit selectedPhasesChanged();
         return true;
     }
@@ -159,7 +159,27 @@ void Project::updateState(const QJsonObject& state, const QString& reason, bool 
     mState = state;
     if(notify)
     {
+        QProgressDialog* progress = 0;
+        if(reason == PROJECT_LOADED_REASON)
+        {
+            
+            progress = new QProgressDialog(qApp->activeWindow(), Qt::Sheet);
+            progress->setLabelText(tr("Loading project..."));
+            progress->setRange(0, 0);
+            progress->setModal(true);
+            progress->setCancelButton(0);
+            //progress.setValue(0);
+            //progress.setMinimumDuration(0);
+            progress->show();
+        }
+        
         emit projectStateChanged();
+        
+        if(progress)
+        {
+            progress->hide();
+            progress->deleteLater();
+        }
     }
 }
 
@@ -219,7 +239,7 @@ bool Project::load(const QString& path)
             
             mLastSavedState = mState;
             
-            pushProjectState(mState, "project loaded", true, true);
+            pushProjectState(mState, PROJECT_LOADED_REASON, true, true);
             
             file.close();
             
@@ -308,6 +328,10 @@ bool Project::saveProjectToFile()
         }
         else
             return false;
+    }
+    else
+    {
+        qDebug() << "Nothing new to save in project";
     }
     return true;
 }

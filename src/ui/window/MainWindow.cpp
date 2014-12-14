@@ -303,9 +303,12 @@ void MainWindow::newProject()
         if(mProject->saveAs())
         {
             mUndoStack->clear();
+            
+            resetInterface();
+            activateInterface(true);
+            
             // Reset the project state and send a notification to update the views :
             mProject->initState();
-            activateInterface(true);
         }
         
         mViewModelAction->trigger();
@@ -330,9 +333,12 @@ void MainWindow::openProject()
             QFileInfo info(path);
             setCurrentPath(info.absolutePath());
             
+            resetInterface();
+            activateInterface(true);
+            
             mUndoStack->clear();
             mProject->load(path);
-            activateInterface(true);
+            
             updateWindowTitle();
         }
     }
@@ -350,6 +356,7 @@ void MainWindow::closeProject()
         mViewModelAction->trigger();
         //mProjectView->showModel();
         
+        resetInterface();
         activateInterface(false);
         mViewResultsAction->setEnabled(false);
         
@@ -500,6 +507,11 @@ void MainWindow::readSettings()
     settings.endGroup();
     
     mProjectView->readSettings();
+}
+
+void MainWindow::resetInterface()
+{
+    mProjectView->resetInterface();
 }
 
 void MainWindow::activateInterface(bool activate)

@@ -20,7 +20,7 @@ public:
     QMap<float, float> acceptationForChain(const QList<Chain>& chains, int index);
     void generateGlobalRunAcceptation(const QList<Chain>& chains);
     
-    void generateResults(const QList<Chain>& chains, float tmin, float tmax);
+    void generateNumericalResults(const QList<Chain>& chains);
     QString resultsText() const;
     
 public:

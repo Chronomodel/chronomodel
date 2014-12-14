@@ -1,5 +1,6 @@
 #include "MCMCLoop.h"
 #include "Generator.h"
+#include "QtUtilities.h"
 #include <QDebug>
 #include <QTime>
 
@@ -16,13 +17,18 @@ MCMCLoop::~MCMCLoop()
     
 }
 
-void MCMCLoop::setSettings(const MCMCSettings& s)
+void MCMCLoop::setMCMCSettings(const MCMCSettings& s)
 {
     mChains.clear();
-    for(unsigned int i=0; i<s.mNumChains; ++i)
+    for(int i=0; i<(int)s.mNumChains; ++i)
     {
         Chain chain;
-        //chain.mSeed = ;
+        
+        if(i < s.mSeeds.size())
+            chain.mSeed = s.mSeeds[i];
+        else
+            chain.mSeed = Generator::createSeed();
+        
         chain.mNumBurnIter = s.mNumBurnIter;
         chain.mBurnIterIndex = 0;
         chain.mMaxBatchs = s.mMaxBatches;
@@ -87,7 +93,6 @@ void MCMCLoop::run()
         QTime startChainTime = QTime::currentTime();
         
         Chain& chain = mChains[mChainIndex];
-        chain.mSeed = Generator::createSeed();
         Generator::initGenerator(chain.mSeed);
         
         mLog += tr("Seed = ") + QString::number(chain.mSeed) + "\n";

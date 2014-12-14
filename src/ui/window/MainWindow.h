@@ -33,6 +33,7 @@ public:
     QString getCurrentPath();
     void setCurrentPath(const QString& path);
     
+    void resetInterface();
     void activateInterface(bool activate);
 
 protected:

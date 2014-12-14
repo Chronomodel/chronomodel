@@ -22,6 +22,7 @@
 
 
 ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
+mCurrentRightWidget(0),
 mMargin(5),
 mToolbarH(60),
 mSplitProp(0.6f),
@@ -171,26 +172,26 @@ mCalibVisible(false)
     mStudyLab = new Label(tr("STUDY PERIOD"), mRightWrapper);
     mMinLab = new Label(tr("Start") + " :", mRightWrapper);
     mMaxLab = new Label(tr("End") + " :", mRightWrapper);
-    mStepLab = new Label(tr("Step") + " :", mRightWrapper);
+    //mStepLab = new Label(tr("Step") + " :", mRightWrapper);
     
     mStudyLab->setLight();
     mMinLab->setLight();
     mMaxLab->setLight();
-    mStepLab->setLight();
+    //mStepLab->setLight();
     
     mStudyLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     QFont font;
-    font.setPointSizeF(16.f);
+    font.setPointSizeF(pointSize(15.f));
     mStudyLab->setFont(font);
     QPalette palette = mStudyLab->palette();
     palette.setColor(QPalette::WindowText, Qt::white);
     mStudyLab->setPalette(palette);
     
-    mStepLab->setToolTip(prepareTooltipText(tr("Step :"), tr("The step is useful for large study periods.\nFor example with a step of 10 years, calibrated date's values will be stored every 10 years.\nIt lowers memory requirements and graph plots are faster.\nHowever, interpolation between these points\nleads to less precision in calculations.")));
+    //mStepLab->setToolTip(prepareTooltipText(tr("Step :"), tr("The step is useful for large study periods.\nFor example with a step of 10 years, calibrated date's values will be stored every 10 years.\nIt lowers memory requirements and graph plots are faster.\nHowever, interpolation between these points\nleads to less precision in calculations.")));
     
     mMinEdit = new LineEdit(mRightWrapper);
     mMaxEdit = new LineEdit(mRightWrapper);
-    mStepEdit = new LineEdit(mRightWrapper);
+    //mStepEdit = new LineEdit(mRightWrapper);
     mButApply = new Button(tr("Apply"), mRightWrapper);
     
     mButApply->setColorState(Button::eWarning);
@@ -198,11 +199,11 @@ mCalibVisible(false)
     QIntValidator* validator = new QIntValidator();
     validator->setBottom(1);
     validator->setTop(10000);
-    mStepEdit->setValidator(validator);
+    //mStepEdit->setValidator(validator);
     
     connect(mMinEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));
     connect(mMaxEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));
-    connect(mStepEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));
+    //connect(mStepEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));
     connect(mButApply, SIGNAL(clicked()), this, SLOT(applySettings()));
     
     // --------
@@ -226,9 +227,9 @@ mCalibVisible(false)
     mButPhasesModel->setIcon(QIcon(":model_w.png"));
     mButPhasesModel->setFlatHorizontal();
     
-    connect(mButProperties, SIGNAL(clicked()), this, SLOT(slideRightPanel()));
-    connect(mButImport, SIGNAL(clicked()), this, SLOT(slideRightPanel()));
-    connect(mButPhasesModel, SIGNAL(clicked()), this, SLOT(slideRightPanel()));
+    connect(mButProperties, SIGNAL(clicked()), this, SLOT(showProperties()));
+    connect(mButImport, SIGNAL(clicked()), this, SLOT(showImport()));
+    connect(mButPhasesModel, SIGNAL(clicked()), this, SLOT(showPhases()));
     
     connect(mEventsScene, SIGNAL(eventDoubleClicked()), mButProperties, SLOT(click()));
 }
@@ -258,6 +259,13 @@ void ModelView::doProjectConnections(Project* project)
     connect(project, SIGNAL(eyedPhasesModified(const QMap<int, bool>&)), mEventsScene, SLOT(updateGreyedOutEvents(const QMap<int, bool>&)));
 }
 
+void ModelView::resetInterface()
+{
+    mCalibrationView->setDate(QJsonObject());
+    mEventPropertiesView->setEvent(QJsonObject());
+    mButProperties->click();
+}
+
 void ModelView::updateProject()
 {
     Project* project = MainWindow::getInstance()->getProject();
@@ -266,7 +274,7 @@ void ModelView::updateProject()
     
     mMinEdit->setText(QString::number(settings.mTmin));
     mMaxEdit->setText(QString::number(settings.mTmax));
-    mStepEdit->setText(QString::number(settings.mStep));
+    //mStepEdit->setText(QString::number(settings.mStep));
     
     
     if(settings.mStep < 1 || settings.mTmin >= settings.mTmax)
@@ -305,7 +313,12 @@ void ModelView::applySettings()
     
     settings.mTmin = mMinEdit->text().toInt();
     settings.mTmax = mMaxEdit->text().toInt();
-    settings.mStep = mStepEdit->text().toInt();
+    //settings.mStep = mStepEdit->text().toInt();
+    
+    float diff = settings.mTmax - settings.mTmin;
+    float maxPts = 10000.f;
+    float rap = diff / maxPts;
+    settings.mStep = ceilf(rap);
     
     Project* project = MainWindow::getInstance()->getProject();
     
@@ -314,7 +327,7 @@ void ModelView::applySettings()
         QJsonObject state = project->state();
         ProjectSettings oldSettings = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
         
-        mStepEdit->setText(QString::number(oldSettings.mStep));
+        //mStepEdit->setText(QString::number(oldSettings.mStep));
         mMinEdit->setText(QString::number(oldSettings.mTmin));
         mMaxEdit->setText(QString::number(oldSettings.mTmax));
         mButApply->setColorState(Button::eReady);
@@ -332,6 +345,27 @@ void ModelView::showHelp(bool show)
 }
 
 #pragma mark Right animation
+void ModelView::showProperties()
+{
+    mButProperties->setChecked(true);
+    mButImport->setChecked(false);
+    mButPhasesModel->setChecked(false);
+    slideRightPanel();
+}
+void ModelView::showImport()
+{
+    mButProperties->setChecked(false);
+    mButImport->setChecked(true);
+    mButPhasesModel->setChecked(false);
+    slideRightPanel();
+}
+void ModelView::showPhases()
+{
+    mButProperties->setChecked(false);
+    mButImport->setChecked(false);
+    mButPhasesModel->setChecked(true);
+    slideRightPanel();
+}
 void ModelView::slideRightPanel()
 {
     mAnimationShow->setStartValue(mRightSubHiddenRect);
@@ -348,12 +382,13 @@ void ModelView::slideRightPanel()
     else if(mButProperties->isChecked())
         target = mEventPropertiesView;
     
-    if(target)
+    if(target != mCurrentRightWidget)
     {
+        mCurrentRightWidget = target;
         target->raise();
         mAnimationShow->setTargetObject(target);
+        mAnimationHide->start();
     }
-    mAnimationHide->start();
 }
 
 void ModelView::prepareNextSlide()
@@ -412,21 +447,26 @@ void ModelView::updateLayout()
     // ----------
 
     int labelW = 35;
-    int editW = 50;
+    int editW = 80;
     int editH = (mToolbarH - 3*m) / 2;
     int butW = 80;
     
     mStudyLab->setGeometry(0, m, 135, editH);
-    mButApply->setGeometry(135, m, 150, editH);
+    mButApply->setGeometry(135, m, 110, editH);
     
     int y = 2*m + editH;
+    
+    /*mMinLab->setGeometry(0, y, labelW, editH);
+    mMinEdit->setGeometry(m + labelW, y, editW, editH);
+    mMaxLab->setGeometry(2*m + labelW + editW, y, labelW, editH);
+    mMaxEdit->setGeometry(3*m + 2*labelW + editW, y, editW, editH);
+    mStepLab->setGeometry(4*m + 2*labelW + 2*editW, y, labelW, editH);
+    mStepEdit->setGeometry(5*m + 3*labelW + 2*editW, y, editW, editH);*/
     
     mMinLab->setGeometry(0, y, labelW, editH);
     mMinEdit->setGeometry(m + labelW, y, editW, editH);
     mMaxLab->setGeometry(2*m + labelW + editW, y, labelW, editH);
     mMaxEdit->setGeometry(3*m + 2*labelW + editW, y, editW, editH);
-    mStepLab->setGeometry(4*m + 2*labelW + 2*editW, y, labelW, editH);
-    mStepEdit->setGeometry(5*m + 3*labelW + 2*editW, y, editW, editH);
     
     mButProperties->setGeometry(mRightRect.width() - 3*butW, 0, butW, mToolbarH);
     mButImport->setGeometry(mRightRect.width() - 2*butW, 0, butW, mToolbarH);

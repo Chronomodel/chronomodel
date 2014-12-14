@@ -119,9 +119,9 @@ void MHVariable::generateGlobalRunAcceptation(const QList<Chain>& chains)
     mGlobalAcceptation = accepted / acceptsLength;
 }
 
-void MHVariable::generateResults(const QList<Chain>& chains, float tmin, float tmax)
+void MHVariable::generateNumericalResults(const QList<Chain>& chains)
 {
-    MetropolisVariable::generateResults(chains, tmin, tmax);
+    MetropolisVariable::generateNumericalResults(chains);
     generateGlobalRunAcceptation(chains);
 }
 

@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <chrono>
 #include <iostream>
+#include <QDebug>
 
 
 std::mt19937 Generator::sGenerator = std::mt19937(0);
@@ -45,7 +46,10 @@ float Generator::gaussByDoubleExp(const float meanf, const float sigmaf, const f
     
     if(min >= max)
     {
-        std::cout << "FLOAT EXP ERROR : min == max";
+        if(min == max)
+            qDebug() << "DOUBLE EXP ERROR : min == max";
+        else
+            qDebug() << "DOUBLE EXP ERROR : min > max";
         return minf;
     }
     

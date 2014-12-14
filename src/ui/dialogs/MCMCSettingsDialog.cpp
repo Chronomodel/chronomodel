@@ -1,7 +1,9 @@
 #include "MCMCSettingsDialog.h"
 #include "Button.h"
+#include "Label.h"
 #include "LineEdit.h"
 #include "Painting.h"
+#include "QtUtilities.h"
 #include <QtWidgets>
 
 
@@ -9,6 +11,9 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, Qt::WindowFlags flags):
 QDialog(parent, flags)
 {
     setWindowTitle(tr("MCMC Options"));
+    
+    mSeedsLab = new Label(tr("Seeds") + ": ", this);
+    mSeedsEdit = new LineEdit(this);
     
     mNumProcEdit = new LineEdit(this);
     mNumBurnEdit = new LineEdit(this);
@@ -40,7 +45,7 @@ QDialog(parent, flags)
     connect(mOkBut, SIGNAL(clicked()), this, SLOT(accept()));
     connect(mCancelBut, SIGNAL(clicked()), this, SLOT(reject()));
     
-    setFixedSize(600, 215);
+    setFixedSize(600, 240);
 }
 
 MCMCSettingsDialog::~MCMCSettingsDialog()
@@ -56,6 +61,10 @@ void MCMCSettingsDialog::setSettings(const MCMCSettings& settings)
     mMaxBatchesEdit->setText(QString::number(settings.mMaxBatches));
     mIterPerBatchEdit->setText(QString::number(settings.mNumBatchIter));
     mDownSamplingEdit->setText(QString::number(settings.mThinningInterval));
+    mSeedsEdit->setText(intListToString(settings.mSeeds));
+    
+    mFFTLength = settings.mFFTLength;
+    mCalibStep = settings.mCalibStep;
 }
 
 MCMCSettings MCMCSettingsDialog::getSettings()
@@ -67,6 +76,11 @@ MCMCSettings MCMCSettingsDialog::getSettings()
     settings.mMaxBatches = mMaxBatchesEdit->text().toLongLong();
     settings.mNumBatchIter = mIterPerBatchEdit->text().toLongLong();
     settings.mThinningInterval = mDownSamplingEdit->text().toLong();
+    settings.mSeeds = stringListToIntList(mSeedsEdit->text());
+    
+    settings.mFFTLength = mFFTLength;
+    settings.mCalibStep = mCalibStep;
+    
     return settings;
 }
 
@@ -137,6 +151,8 @@ void MCMCSettingsDialog::updateLayout()
     float editW = 100;
     float w = width() - 2*m;
     float h = 115;
+    int butW = 80;
+    int butH = 25;
     
     mBurnRect = QRectF(m, top, w * 0.2, h);
     mAdaptRect = QRectF(m + mBurnRect.width(), top, w * 0.4, h);
@@ -155,9 +171,9 @@ void MCMCSettingsDialog::updateLayout()
     mIterPerBatchEdit->setGeometry(mBatch1Rect.x() + m, mBatch1Rect.y() + 2*lineH, mBatch1Rect.width() - 2*m, lineH);
     mMaxBatchesEdit->setGeometry(mAdaptRect.x() + mAdaptRect.width()/2 + m, mAdaptRect.y() + mAdaptRect.height() - m - lineH, editW, lineH);
     
-    int butW = 80;
-    int butH = 25;
-     
+    mSeedsLab->setGeometry(width()/2 - m/2 - editW, height() - 2*m - butH - lineH, editW, lineH);
+    mSeedsEdit->setGeometry(width()/2 + m/2, height() - 2*m - butH - lineH, editW, lineH);
+    
     mOkBut->setGeometry(width() - 2*m - 2*butW, height() - m - butH, butW, butH);
     mCancelBut->setGeometry(width() - m - butW, height() - m - butH, butW, butH);
 }

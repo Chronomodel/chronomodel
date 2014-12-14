@@ -37,7 +37,7 @@ mOptionsW(200),
 mLineH(15),
 mGraphLeft(130),
 mRulerH(40),
-mTabsH(25),
+mTabsH(30),
 mGraphsH(130),
 mHasPhases(false)
 {
@@ -115,7 +115,7 @@ mHasPhases(false)
     
     // ----------
     
-    mHPDCheck = new CheckBox(tr("HPD") + " :", this);
+    mHPDCheck = new CheckBox(tr("HPD / Credibility (%)") + " :", this);
     mHPDCheck->setChecked(true);
     mHPDEdit = new LineEdit(this);
     mHPDEdit->setText("95");
@@ -124,6 +124,25 @@ mHasPhases(false)
     
     connect(mHPDCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateGraphs()));
+    
+    // ----------
+    
+    mFFTLenLab = new Label(tr("FFT length") + ": ", this);
+    mFFTLenCombo = new QComboBox(this);
+    mFFTLenCombo->addItem(tr("128"));
+    mFFTLenCombo->addItem(tr("256"));
+    mFFTLenCombo->addItem(tr("512"));
+    mFFTLenCombo->addItem(tr("1024"));
+    mFFTLenCombo->addItem(tr("2048"));
+    mFFTLenCombo->addItem(tr("4096"));
+    mFFTLenCombo->addItem(tr("8192"));
+    mFFTLenCombo->addItem(tr("16384"));
+    mFFTLenCombo->setCurrentIndex(3);
+    
+    mComboH = mFFTLenCombo->sizeHint().height();
+    mTabsH = mComboH + 2*mMargin;
+    
+    connect(mFFTLenCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(updateFFTLength()));
     
     // -----------
     
@@ -325,8 +344,10 @@ void ResultsView::updateLayout()
         //qDebug() << "Graph phases viewport : " << wid->geometry();
     }
     
-    mHPDEdit->setGeometry(width() - mOptionsW - sbe - m - 40, m, 40, mLineH);
-    mHPDCheck->setGeometry(width() - mOptionsW - sbe - 2*m - 40 - 50, m, 50, mLineH);
+    mHPDEdit->setGeometry(width() - mOptionsW - sbe - m - 40, m, 40, mComboH);
+    mHPDCheck->setGeometry(width() - mOptionsW - sbe - 2*m - 40 - 140, m + (mComboH - mLineH)/2, 140, mLineH);
+    mFFTLenCombo->setGeometry(width() - mOptionsW - sbe - 3*m - 40 - 140 - 80, m, 80, mComboH);
+    mFFTLenLab->setGeometry(width() - mOptionsW - sbe - 4*m - 40 - 140 - 80 - 80, m, 80, mComboH);
     
     mOptionsWidget->setGeometry(width() - mOptionsW, 0, mOptionsW, height());
     
@@ -375,51 +396,23 @@ void ResultsView::updateLayout()
 
 void ResultsView::generateHPD()
 {
-    int hdpThreshold = mHPDEdit->text().toInt();
     if(mModel)
     {
-        QList<Event*>& events = mModel->mEvents;
-        QList<Phase*>& phases = mModel->mPhases;
+        mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toInt());
+    }
+}
+
+void ResultsView::updateFFTLength()
+{
+    if(mModel)
+    {
+        int len = mFFTLenCombo->currentText().toInt();
         
-        for(int i=0; i<events.size(); ++i)
-        {
-            Event* event = events[i];
-            
-            bool isFixedBound = false;
-            if(event->type() == Event::eKnown)
-            {
-                EventKnown* ek = dynamic_cast<EventKnown*>(event);
-                
-                if(ek->knownType() == EventKnown::eFixed)
-                    isFixedBound = true;
-            }
-            
-            if(!isFixedBound)
-            {
-                event->mTheta.generateHPD(hdpThreshold);
-                event->mTheta.generateCredibility(mChains, hdpThreshold);
-                QList<Date>& dates = event->mDates;
-                
-                for(int j=0; j<dates.size(); ++j)
-                {
-                    Date& date = dates[j];
-                    date.mTheta.generateHPD(hdpThreshold);
-                    date.mSigma.generateHPD(hdpThreshold);
-                    
-                    date.mTheta.generateCredibility(mChains, hdpThreshold);
-                    date.mSigma.generateCredibility(mChains, hdpThreshold);
-                }
-            }
-        }
-        for(int i=0; i<phases.size(); ++i)
-        {
-            Phase* phase = phases[i];
-            phase->mAlpha.generateHPD(hdpThreshold);
-            phase->mBeta.generateHPD(hdpThreshold);
-            
-            phase->mAlpha.generateCredibility(mChains, hdpThreshold);
-            phase->mBeta.generateCredibility(mChains, hdpThreshold);
-        }
+        mModel->generatePosteriorDensities(mChains, len);
+        mModel->generateNumericalResults(mChains);
+        mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toInt());
+        
+        updateGraphs();
     }
 }
 
