@@ -721,7 +721,7 @@ void GraphView::drawCurves(QPainter& painter)
                                (curve.mIsRectFromZero && last_value_y != 0.f && valueY == 0.f))
                             {
                                 path.lineTo(x, last_y);
-                                qDebug() << "y = " << valueY << ", last_y = " << last_value_y;
+                                //qDebug() << "y = " << valueY << ", last_y = " << last_value_y;
                             }
                             
                             path.lineTo(x, y);
