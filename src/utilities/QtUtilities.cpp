@@ -152,10 +152,11 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             svgGen.setViewBox(QRect(0, 0, r.width(), r.height()));
             QPainter p(&svgGen);
             p.setRenderHint(QPainter::Antialiasing);
+            
             if(widget)
-                widget->render(&p);
+                widget->render(&p, QPoint(), QRegion(r));
             else if(scene)
-                scene->render(&p);
+                scene->render(&p, r, r);
         }
         else
         {
@@ -166,15 +167,19 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             image.fill(Qt::transparent);
             QPainter p(&image);
             p.setRenderHint(QPainter::Antialiasing);
+            
+            QRectF srcRect = r;
+            srcRect.setX(r.x());
+            srcRect.setY(r.y());
+            srcRect.setWidth(r.width() * pr);
+            srcRect.setHeight(r.height() * pr);
+            
             if(widget)
             {
-                widget->render(&p);
+                widget->render(&p, QPoint(), QRegion(srcRect.toRect()));
             }
             else if(scene)
             {
-                QRectF srcRect = r;
-                srcRect.setWidth(r.width() * pr);
-                srcRect.setHeight(r.height() * pr);
                 scene->render(&p, image.rect(), srcRect);
             }
             image.save(fileName, "PNG");
