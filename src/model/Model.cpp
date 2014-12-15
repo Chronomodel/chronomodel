@@ -329,6 +329,9 @@ void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen)
             
             date.mTheta.generateHistos(chains, fftLen, tmin, tmax);
             date.mSigma.generateHistos(chains, fftLen, 0, tmax - tmin);
+            
+            if(!(date.mDeltaType == Date::eDeltaFixed && date.mDeltaFixed == 0))
+                date.mWiggle.generateHistos(chains, fftLen, tmin, tmax);
         }
     }
     
@@ -361,6 +364,7 @@ void Model::generateNumericalResults(const QList<Chain>& chains)
         Phase* phase = mPhases[i];
         phase->mAlpha.generateNumericalResults(chains);
         phase->mBeta.generateNumericalResults(chains);
+        phase->generateDurationCredibility();
     }
 }
 

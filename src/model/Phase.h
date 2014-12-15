@@ -49,6 +49,8 @@ public:
     void initTau();
     void updateTau();
     
+    void generateDurationCredibility();
+    
 protected:
     float updatePhaseBound(float a, float b, float old);
 
@@ -65,6 +67,9 @@ public:
     MetropolisVariable mAlpha;
     MetropolisVariable mBeta;
     float mTau;
+    
+    QVector<float> mDurations;
+    QString mDurationCredibility;
     
     TauType mTauType;
     float mTauFixed;

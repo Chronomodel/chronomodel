@@ -292,10 +292,14 @@ void Phase::memoAll()
 {
     mAlpha.memo();
     mBeta.memo();
-    //mTau.memo();
+    mDurations.append(mBeta.mX - mAlpha.mX);
 }
 
-
+void Phase::generateDurationCredibility()
+{
+    float exactThreshold;
+    mDurationCredibility = intervalText(credibilityForTrace(mDurations, 95, exactThreshold));
+}
 
 // ------------------------------------------------------------------------------------
 //  Formule d'inversion avec alpha et beta

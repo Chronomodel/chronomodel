@@ -65,7 +65,7 @@ QString ModelUtilities::getDeltaText(const Date& date)
                 result = QObject::tr("Wiggle") + " : [" + QString::number(date.mDeltaMin) + ", " + QString::number(date.mDeltaMax) + "]";
                 break;
             case Date::eDeltaGaussian:
-                result = QObject::tr("Wiggle") + " : " + QString::number(date.mDeltaAverage) + " +- " + QString::number(date.mDeltaError);
+                result = QObject::tr("Wiggle") + " : " + QString::number(date.mDeltaAverage) + " ± " + QString::number(date.mDeltaError);
                 break;
                 
             default:
