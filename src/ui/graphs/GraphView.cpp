@@ -77,6 +77,11 @@ void GraphView::setBackgroundColor(const QColor& aColor)
     repaintGraph(true);
 }
 
+QColor GraphView::backgroundColor() const
+{
+    return mBackgroundColor;
+}
+
 void GraphView::addInfo(const QString& info)
 {
     mInfos << info;
@@ -584,8 +589,10 @@ void GraphView::drawCurves(QPainter& painter)
             path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
             
             int index = 0;
-            double last_x = 0;
-            double last_y = 0;
+            float last_x = 0;
+            float last_y = 0;
+            float last_value_y = 0;
+            float last_value_x = 0;
             
             if(curve.mUseVectorData)
             {
@@ -611,6 +618,8 @@ void GraphView::drawCurves(QPainter& painter)
                         }
                         last_x = x;
                         last_y = y;
+                        last_value_x = valueX;
+                        last_value_y = valueY;
                         ++index;
                     }
                 }
@@ -707,12 +716,20 @@ void GraphView::drawCurves(QPainter& painter)
                         }
                         else
                         {
-                            if(curve.mIsHisto)
+                            if(curve.mIsHisto ||
+                               (curve.mIsRectFromZero && last_value_y == 0.f && valueY != 0.f) ||
+                               (curve.mIsRectFromZero && last_value_y != 0.f && valueY == 0.f))
+                            {
                                 path.lineTo(x, last_y);
+                                qDebug() << "y = " << valueY << ", last_y = " << last_value_y;
+                            }
+                            
                             path.lineTo(x, y);
                         }
                         last_x = x;
                         last_y = y;
+                        last_value_x = valueX;
+                        last_value_y = valueY;
                         ++index;
                     }
                 }

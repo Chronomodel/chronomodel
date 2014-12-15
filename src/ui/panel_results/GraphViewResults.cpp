@@ -14,11 +14,13 @@
 GraphViewResults::GraphViewResults(QWidget *parent):QWidget(parent),
 mCurrentResult(eHisto),
 mCurrentVariable(eTheta),
+mMinHeighttoDisplayTitle(100),
 mShowAllChains(true),
 mShowHPD(false),
 mThresholdHPD(95),
 mShowCalib(false),
 mShowWiggle(false),
+mShowRawResults(false),
 mMainColor(QColor(50, 50, 50)),
 mMargin(5),
 mLineH(20),
@@ -35,16 +37,17 @@ mGraphLeft(130)
     mGraph->setRangeY(0, 1);
     
     mTextArea = new QTextEdit(this);
-    mTextArea->setFrameStyle(QFrame::NoFrame);
+    mTextArea->setFrameStyle(QFrame::HLine);
     QPalette palette = mTextArea->palette();
-    palette.setColor(QPalette::Base, QColor(0, 0, 0, 200));
-    palette.setColor(QPalette::Text, Qt::white);
+    palette.setColor(QPalette::Base, QColor(200, 200, 200, 240));
+    palette.setColor(QPalette::Text, Qt::black);
     mTextArea->setPalette(palette);
     QFont font = mTextArea->font();
     font.setPointSizeF(pointSize(11));
     mTextArea->setFont(font);
     mTextArea->setText(tr("Nothing to display"));
     mTextArea->setVisible(false);
+    mTextArea->setReadOnly(true);
     
     mImageSaveBut = new Button(tr("Save"), this);
     mImageSaveBut->setIcon(QIcon(":picture_save.png"));
@@ -85,7 +88,7 @@ GraphViewResults::~GraphViewResults()
     
 }
 
-void GraphViewResults::setResultToShow(Result result, Variable variable, bool showAllChains, const QList<bool>& showChainList, bool showHpd, int threshold, bool showCalib, bool showWiggle)
+void GraphViewResults::setResultToShow(Result result, Variable variable, bool showAllChains, const QList<bool>& showChainList, bool showHpd, int threshold, bool showCalib, bool showWiggle, bool showRawResults)
 {
     mCurrentResult = result;
     mCurrentVariable = variable;
@@ -95,6 +98,7 @@ void GraphViewResults::setResultToShow(Result result, Variable variable, bool sh
     mThresholdHPD = threshold;
     mShowCalib = showCalib;
     mShowWiggle = showWiggle;
+    mShowRawResults = showRawResults;
     refresh();
 }
 
@@ -193,6 +197,22 @@ void GraphViewResults::paintEvent(QPaintEvent* e)
     
     p.setPen(QColor(200, 200, 200));
     p.drawLine(0, height(), width(), height());
+    
+    if(height() >= mMinHeighttoDisplayTitle)
+    {
+        QRectF textRect(mGraphLeft, 0, mGraph->width(), 25);
+        
+        p.setPen(mGraph->backgroundColor());
+        p.setBrush(mGraph->backgroundColor());
+        p.drawRect(textRect);
+        
+        p.setPen(Qt::black);
+        QFont font = p.font();
+        font.setPointSizeF(pointSize(11.f));
+        p.setFont(font);
+        
+        p.drawText(textRect.adjusted(mGraph->marginLeft(), 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
+    }
 }
 
 void GraphViewResults::resizeEvent(QResizeEvent* e)
@@ -233,6 +253,12 @@ void GraphViewResults::resizeEvent(QResizeEvent* e)
     {
         mGraph->showYValues(true);
     }
+    if(height() >= mMinHeighttoDisplayTitle)
+    {
+        graphRect.adjust(0, 25, 0, 0);
+    }
+    
+    
     mGraph->setGeometry(graphRect);
-    mTextArea->setGeometry(graphRect);
+    mTextArea->setGeometry(mGraphLeft, 0, width() - mGraphLeft, height());
 }

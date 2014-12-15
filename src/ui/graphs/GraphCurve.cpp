@@ -5,6 +5,7 @@ GraphCurve::GraphCurve():
 mPen(Qt::black),
 mFillUnder(false),
 mIsHisto(true),
+mIsRectFromZero(false),
 mUseVectorData(false),
 mIsHorizontalLine(false),
 mHorizontalValue(0),

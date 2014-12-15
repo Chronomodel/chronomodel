@@ -146,6 +146,13 @@ mHasPhases(false)
     
     // -----------
     
+    mRawCheck = new CheckBox(tr("Raw results"), this);
+    mRawCheck->setChecked(false);
+    
+    connect(mRawCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+    
+    // -----------
+    
     mChainsTitle = new Label(tr("MCMC Chains"));
     mChainsTitle->setIsTitle(true);
     mChainsGroup = new QWidget();
@@ -162,7 +169,6 @@ mHasPhases(false)
     mDataGroup = new QWidget();
     mDataThetaRadio = new RadioButton(tr("Calendar dates"), mDataGroup);
     mDataSigmaRadio = new RadioButton(tr("Individual variances"), mDataGroup);
-    mDataDeltaRadio = new RadioButton(tr("Wiggle maching"), mDataGroup);
     mDataCalibCheck = new CheckBox(tr("Distrib. of calib. dates"), mDataGroup);
     mWiggleCheck = new CheckBox(tr("Wiggle unshifted"), mDataGroup);
     mDataThetaRadio->setChecked(true);
@@ -172,7 +178,6 @@ mHasPhases(false)
     connect(mDataCalibCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     connect(mWiggleCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     connect(mDataSigmaRadio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    connect(mDataDeltaRadio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     
     // -------------------------
     
@@ -348,6 +353,7 @@ void ResultsView::updateLayout()
     mHPDCheck->setGeometry(width() - mOptionsW - sbe - 2*m - 40 - 140, m + (mComboH - mLineH)/2, 140, mLineH);
     mFFTLenCombo->setGeometry(width() - mOptionsW - sbe - 3*m - 40 - 140 - 80, m, 80, mComboH);
     mFFTLenLab->setGeometry(width() - mOptionsW - sbe - 4*m - 40 - 140 - 80 - 80, m, 80, mComboH);
+    mRawCheck->setGeometry(width() - mOptionsW - sbe - 5*m - 40 - 140 - 80 - 80 - 90, m + (mComboH - mLineH)/2, 90, mLineH);
     
     mOptionsWidget->setGeometry(width() - mOptionsW, 0, mOptionsW, height());
     
@@ -388,7 +394,6 @@ void ResultsView::updateLayout()
         mWiggleCheck->setGeometry(m + dx, y += (m + mLineH), mDataGroup->width() - 2*m - dx, mLineH);
     }
     mDataSigmaRadio->setGeometry(m, y += (m + mLineH), mDataGroup->width()-2*m, mLineH);
-    mDataDeltaRadio->setGeometry(m, y += (m + mLineH), mDataGroup->width()-2*m, mLineH);
     mDataGroup->setFixedHeight(y += (m + mLineH));
     
     update();
@@ -448,6 +453,8 @@ void ResultsView::updateGraphs()
     bool showHpd = mHPDCheck->isChecked();
     int hdpThreshold = mHPDEdit->text().toInt();
     
+    bool showRaw = mRawCheck->isChecked();
+    
     bool showCalib = mDataCalibCheck->isChecked();
     bool showWiggle = mWiggleCheck->isChecked();
     
@@ -455,11 +462,11 @@ void ResultsView::updateGraphs()
     
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
     {
-        mByPhasesGraphs[i]->setResultToShow(result, variable, showAllChains, showChainList, showHpd, hdpThreshold, showCalib, showWiggle);
+        mByPhasesGraphs[i]->setResultToShow(result, variable, showAllChains, showChainList, showHpd, hdpThreshold, showCalib, showWiggle, showRaw);
     }
     for(int i=0; i<mByEventsGraphs.size(); ++i)
     {
-        mByEventsGraphs[i]->setResultToShow(result, variable, showAllChains, showChainList, showHpd, hdpThreshold, showCalib, showWiggle);
+        mByEventsGraphs[i]->setResultToShow(result, variable, showAllChains, showChainList, showHpd, hdpThreshold, showCalib, showWiggle, showRaw);
     }
     update();
 }
@@ -735,9 +742,10 @@ void ResultsView::showInfos(bool show)
 
 void ResultsView::exportFullImage()
 {
-    QRect r(0, 0, mEventsScrollArea->widget()->width(), mEventsScrollArea->widget()->height());
-    QFileInfo fileInfo = saveWidgetAsImage(mEventsScrollArea->widget(),
-                                           r,
+    QWidget* curWid = (mStack->currentWidget() == mPhasesScrollArea) ? mPhasesScrollArea->widget() : mEventsScrollArea->widget();
+    
+    QRect r(mGraphLeft, 0, curWid->width() - mGraphLeft, curWid->height());
+    QFileInfo fileInfo = saveWidgetAsImage(curWid, r,
                                            tr("Save graph image as..."),
                                            MainWindow::getInstance()->getCurrentPath());
     if(fileInfo.isFile())
@@ -775,6 +783,9 @@ void ResultsView::changeTab(int index)
 {
     mHPDCheck->setVisible(index == 0);
     mHPDEdit->setVisible(index == 0);
+    mRawCheck->setVisible(index == 0);
+    mFFTLenLab->setVisible(index == 0);
+    mFFTLenCombo->setVisible(index == 0);
     mAllChainsCheck->setVisible(index == 0);
     mDataCalibCheck->setVisible(index == 0);
     mWiggleCheck->setVisible(index == 0);

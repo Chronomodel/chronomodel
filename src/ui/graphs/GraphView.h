@@ -38,6 +38,7 @@ public:
     // Options
     
     void setBackgroundColor(const QColor& aColor);
+    QColor backgroundColor() const;
 
     void addInfo(const QString& info);
     void clearInfos();

@@ -19,6 +19,7 @@ public:
     QPen mPen;
     bool mFillUnder;
     bool mIsHisto;
+    bool mIsRectFromZero; // draw a vertical line when graph value leaves 0 : usefull for HPD and Typo!
     
     bool mUseVectorData;
     QVector<float> mDataVector;

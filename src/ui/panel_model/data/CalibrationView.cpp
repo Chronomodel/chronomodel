@@ -128,6 +128,7 @@ void CalibrationView::updateGraphs()
             hpdCurve.mName = "Calibration HPD";
             hpdCurve.mPen.setColor(c);
             hpdCurve.mFillUnder = true;
+            hpdCurve.mIsRectFromZero = true;
             hpdCurve.mData = hpd;
             mCalibGraph->addCurve(hpdCurve);
             mResultsLab->setText(mResultsLab->text() + "HPD : " + getHPDText(hpd));

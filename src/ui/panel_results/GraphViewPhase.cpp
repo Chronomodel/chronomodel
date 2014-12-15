@@ -24,7 +24,10 @@ GraphViewPhase::~GraphViewPhase()
 void GraphViewPhase::setPhase(Phase* phase)
 {
     if(phase)
+    {
         mPhase = phase;
+        mTitle = tr("Phase") + " : " + mPhase->mName;
+    }
     update();
 }
 
@@ -71,13 +74,17 @@ void GraphViewPhase::refresh()
         if(mCurrentResult == eHisto && mCurrentVariable == eTheta)
         {
             QString results;
-            results += "Period : [" + QString::number(mPhase->mAlpha.mResults.analysis.mean, 'f', 0) + ", " + QString::number(mPhase->mBeta.mResults.analysis.mean, 'f', 0) + "]\n";
+            results += mTitle + "\n";
+            results += "----------------------------------\n";
+            //results += "Period : [" + QString::number(mPhase->mAlpha.mResults.analysis.mean, 'f', 0) + ", " + QString::number(mPhase->mBeta.mResults.analysis.mean, 'f', 0) + "]\n";
+            results += "Duration credibility (95%) : " + mPhase->mDurationCredibility + "\n";
             results += "----------------------------------\n";
             results += tr("PHASE BEGIN") + "\n";
             results += mPhase->mAlpha.resultsText();
             results += "----------------------------------\n";
             results += tr("PHASE END") + "\n";
             results += mPhase->mBeta.resultsText();
+            
             setNumericalResults(results);
             
             mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
@@ -94,7 +101,7 @@ void GraphViewPhase::refresh()
                 curveAlpha.mName = "alpha full";
                 curveAlpha.mPen.setColor(alphaCol);
                 curveAlpha.mIsHisto = false;
-                curveAlpha.mData = equal_areas(mPhase->mAlpha.fullHisto(), 100);
+                curveAlpha.mData = equal_areas(mPhase->mAlpha.fullHisto(), 1.f);
                 mGraph->addCurve(curveAlpha);
                 
                 float yMax = 1.1f * map_max_value(curveAlpha.mData);
@@ -104,20 +111,21 @@ void GraphViewPhase::refresh()
                 curveBeta.mName = QString("beta full");
                 curveBeta.mPen.setColor(betaCol);
                 curveBeta.mIsHisto = false;
-                curveBeta.mData = equal_areas(mPhase->mBeta.fullHisto(), 100);
+                curveBeta.mData = equal_areas(mPhase->mBeta.fullHisto(), 1.f);
                 mGraph->addCurve(curveBeta);
                 
                 yMax = 1.1f * map_max_value(curveBeta.mData);
                 mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                 
-                if(mShowHPD)
+                if(mShowAllChains && mShowHPD)
                 {
                     GraphCurve curveAlphaHPD;
                     curveAlphaHPD.mName = "alpha HPD full";
                     curveAlphaHPD.mPen.setColor(alphaCol);
                     curveAlphaHPD.mFillUnder = true;
                     curveAlphaHPD.mIsHisto = false;
-                    curveAlphaHPD.mData = equal_areas(mPhase->mAlpha.mHPD, mThresholdHPD);
+                    curveAlphaHPD.mIsRectFromZero = true;
+                    curveAlphaHPD.mData = equal_areas(mPhase->mAlpha.mHPD, mThresholdHPD / 100.f);
                     mGraph->addCurve(curveAlphaHPD);
                     
                     GraphCurve curveBetaHPD;
@@ -125,10 +133,11 @@ void GraphViewPhase::refresh()
                     curveBetaHPD.mPen.setColor(color);
                     curveBetaHPD.mFillUnder = true;
                     curveBetaHPD.mIsHisto = false;
-                    curveBetaHPD.mData = equal_areas(mPhase->mBeta.mHPD, mThresholdHPD);
+                    curveBetaHPD.mIsRectFromZero = true;
+                    curveBetaHPD.mData = equal_areas(mPhase->mBeta.mHPD, mThresholdHPD / 100.f);
                     mGraph->addCurve(curveBetaHPD);
                     
-                    GraphCurve curveCredAlpha;
+                    /*GraphCurve curveCredAlpha;
                     curveCredAlpha.mName = "alpha credibility full";
                     curveCredAlpha.mSections.append(QPair<float, float>(mPhase->mAlpha.mResults.analysis.mean, mPhase->mBeta.mResults.analysis.mean));
                     curveCredAlpha.mHorizontalValue = mGraph->maximumY();
@@ -136,7 +145,30 @@ void GraphViewPhase::refresh()
                     curveCredAlpha.mPen.setColor(color);
                     curveCredAlpha.mPen.setWidth(5);
                     curveCredAlpha.mIsHorizontalSections = true;
-                    mGraph->addCurve(curveCredAlpha);
+                    mGraph->addCurve(curveCredAlpha);*/
+                }
+                
+                if(mShowRawResults)
+                {
+                    GraphCurve curveRawAlpha;
+                    curveRawAlpha.mName = "raw alpha";
+                    curveRawAlpha.mPen.setColor(Qt::red);
+                    curveRawAlpha.mData = equal_areas(mPhase->mAlpha.fullRawHisto(), 1.f);
+                    curveRawAlpha.mIsHisto = true;
+                    mGraph->addCurve(curveRawAlpha);
+                    
+                    yMax = 1.1f * map_max_value(curveRawAlpha.mData);
+                    mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
+                    
+                    GraphCurve curveRawBeta;
+                    curveRawBeta.mName = "raw beta";
+                    curveRawBeta.mPen.setColor(Qt::red);
+                    curveRawBeta.mData = equal_areas(mPhase->mBeta.fullRawHisto(), 1.f);
+                    curveRawBeta.mIsHisto = true;
+                    mGraph->addCurve(curveRawBeta);
+                    
+                    yMax = 1.1f * map_max_value(curveRawBeta.mData);
+                    mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                 }
             }
             for(int i=0; i<mShowChainList.size(); ++i)
@@ -149,7 +181,7 @@ void GraphViewPhase::refresh()
                     curveAlphaChain.mName = QString("alpha chain " + QString::number(i));
                     curveAlphaChain.mPen.setColor(col);
                     curveAlphaChain.mIsHisto = false;
-                    curveAlphaChain.mData = equal_areas(mPhase->mAlpha.histoForChain(i), 100);
+                    curveAlphaChain.mData = equal_areas(mPhase->mAlpha.histoForChain(i), 1.f);
                     mGraph->addCurve(curveAlphaChain);
                     
                     float yMax = 1.1f * map_max_value(curveAlphaChain.mData);
@@ -159,28 +191,11 @@ void GraphViewPhase::refresh()
                     curveBetaChain.mName = QString("beta chain " + QString::number(i));
                     curveBetaChain.mPen.setColor(col);
                     curveBetaChain.mIsHisto = false;
-                    curveBetaChain.mData = equal_areas(mPhase->mBeta.histoForChain(i), 100);
+                    curveBetaChain.mData = equal_areas(mPhase->mBeta.histoForChain(i), 1.f);
                     mGraph->addCurve(curveBetaChain);
                     
                     yMax = 1.1f * map_max_value(curveBetaChain.mData);
                     mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
-                    
-                    /*if(mShowHPD)
-                    {
-                        GraphCurve curveAlphaChainHPD;
-                        curveAlphaChainHPD.mName = QString("alpha HPD chain " + QString::number(i));
-                        curveAlphaChainHPD.mPen.setColor(col);
-                        curveAlphaChainHPD.mFillUnder = true;
-                        curveAlphaChainHPD.mData = normalize_map(mPhase->mAlpha.generateHPDForChain(i, mThresholdHPD));
-                        mGraph->addCurve(curveAlphaChainHPD);
-                        
-                        GraphCurve curveBetaChainHPD;
-                        curveBetaChainHPD.mName = QString("beta HPD chain " + QString::number(i));
-                        curveBetaChainHPD.mPen.setColor(col);
-                        curveBetaChainHPD.mFillUnder = true;
-                        curveBetaChainHPD.mData = normalize_map(mPhase->mBeta.generateHPDForChain(i, mThresholdHPD));
-                        mGraph->addCurve(curveBetaChainHPD);
-                    }*/
                 }
             }
         }

@@ -28,7 +28,10 @@ GraphViewEvent::~GraphViewEvent()
 void GraphViewEvent::setEvent(Event* event)
 {
     if(event)
+    {
         mEvent = event;
+        mTitle = tr("Event") + " : " + mEvent->mName;
+    }
     update();
 }
 
@@ -72,7 +75,7 @@ void GraphViewEvent::refresh()
                 else
                 {
                     mGraph->setRangeY(0, 0.00001f);
-                    setNumericalResults(mEvent->mTheta.resultsText());
+                    setNumericalResults(mTitle + "\n" + mEvent->mTheta.resultsText());
                     
                     if(mShowAllChains)
                     {
@@ -86,15 +89,18 @@ void GraphViewEvent::refresh()
                         float yMax = 1.1f * map_max_value(curve.mData);
                         mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                         
-                        /*GraphCurve curveRaw;
-                        curveRaw.mName = "raw histo full";
-                        curveRaw.mPen.setColor(Qt::red);
-                        curveRaw.mData = equal_areas(mEvent->mTheta.fullRawHisto(), 1.f);
-                        curveRaw.mIsHisto = true;
-                        mGraph->addCurve(curveRaw);
-                        
-                        float yMax2 = 1.1f * map_max_value(curveRaw.mData);
-                        mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax2));*/
+                        if(mShowRawResults)
+                        {
+                            GraphCurve curveRaw;
+                            curveRaw.mName = "raw histo full";
+                            curveRaw.mPen.setColor(Qt::red);
+                            curveRaw.mData = equal_areas(mEvent->mTheta.fullRawHisto(), 1.f);
+                            curveRaw.mIsHisto = true;
+                            mGraph->addCurve(curveRaw);
+                            
+                            float yMax2 = 1.1f * map_max_value(curveRaw.mData);
+                            mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax2));
+                        }
                     }
                     for(int i=0; i<mShowChainList.size(); ++i)
                     {
@@ -120,6 +126,7 @@ void GraphViewEvent::refresh()
                         curveHPD.mPen.setColor(color);
                         curveHPD.mFillUnder = true;
                         curveHPD.mIsHisto = false;
+                        curveHPD.mIsRectFromZero = true;
                         curveHPD.mData = equal_areas(mEvent->mTheta.mHPD, mThresholdHPD/100.f);
                         mGraph->addCurve(curveHPD);
                         
@@ -151,21 +158,11 @@ void GraphViewEvent::refresh()
                         curve.mName = "histo full date " + QString::number(i);
                         curve.mPen.setColor(color);
                         curve.mIsHisto = false;
-                        curve.mData = equal_areas(date.mSigma.fullHisto(), 100.f);
+                        curve.mData = equal_areas(date.mSigma.fullHisto(), 1.f);
                         mGraph->addCurve(curve);
                         
                         float yMax = 1.1f * map_max_value(curve.mData);
                         mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
-                        
-                        /*if(mShowHPD)
-                        {
-                            GraphCurve curveHPD;
-                            curveHPD.mName = "histo HPD full";
-                            curveHPD.mPen.setColor(color);
-                            curveHPD.mFillUnder = true;
-                            curveHPD.mData = equal_areas(date.mSigma.generateFullHPD(mThresholdHPD), mThresholdHPD);
-                            mGraph->addCurve(curveHPD);
-                        }*/
                     }
                     for(int j=0; j<mShowChainList.size(); ++j)
                     {
@@ -177,21 +174,11 @@ void GraphViewEvent::refresh()
                             curve.mName = QString("histo sigma data " + QString::number(i) + " for chain" + QString::number(j));
                             curve.mPen.setColor(col);
                             curve.mIsHisto = false;
-                            curve.mData = equal_areas(date.mSigma.histoForChain(j), 100.f);
+                            curve.mData = equal_areas(date.mSigma.histoForChain(j), 1.f);
                             mGraph->addCurve(curve);
                             
                             float yMax = 1.1f * map_max_value(curve.mData);
                             mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
-                            
-                            /*if(mShowHPD)
-                            {
-                                GraphCurve curveHPD;
-                                curveHPD.mName = QString("hpd sigma data " + QString::number(i) + " for chain" + QString::number(j));
-                                curveHPD.mPen.setColor(color);
-                                curveHPD.mFillUnder = true;
-                                curveHPD.mData = equal_areas(date.mSigma.generateHPDForChain(j, mThresholdHPD), mThresholdHPD);
-                                mGraph->addCurve(curveHPD);
-                            }*/
                         }
                     }
                 }

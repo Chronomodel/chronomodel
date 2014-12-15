@@ -107,6 +107,8 @@ private:
     QComboBox* mFFTLenCombo;
     int mComboH;
     
+    CheckBox* mRawCheck;
+    
     Label* mChainsTitle;
     Label* mDataTitle;
     
@@ -120,7 +122,6 @@ private:
     CheckBox* mDataCalibCheck;
     CheckBox* mWiggleCheck;
     RadioButton* mDataSigmaRadio;
-    RadioButton* mDataDeltaRadio;
     
     Label* mDisplayTitle;
     QWidget* mDisplayWidget;
