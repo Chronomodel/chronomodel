@@ -59,7 +59,7 @@ mLoop(loop)
 MCMCProgressDialog::~MCMCProgressDialog()
 {
     mLoop->quit();
-    mLoop->wait();
+    //mLoop->wait();
 }
 
 int MCMCProgressDialog::startMCMC()
