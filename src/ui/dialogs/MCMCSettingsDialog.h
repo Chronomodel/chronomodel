@@ -7,6 +7,7 @@
 class Label;
 class LineEdit;
 class Button;
+class QSpinBox;
 
 
 class MCMCSettingsDialog: public QDialog
@@ -31,7 +32,7 @@ private:
     LineEdit* mNumBurnEdit;
     LineEdit* mNumIterEdit;
     LineEdit* mMaxBatchesEdit;
-    LineEdit* mIterPerBatchEdit;
+    QSpinBox* mIterPerBatchSpin;
     LineEdit* mDownSamplingEdit;
     LineEdit* mSeedsEdit;
     

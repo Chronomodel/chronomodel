@@ -17,26 +17,27 @@ QDialog(parent, flags)
     
     mNumProcEdit = new LineEdit(this);
     mNumBurnEdit = new LineEdit(this);
-    mIterPerBatchEdit = new LineEdit(this);
     mMaxBatchesEdit = new LineEdit(this);
     mNumIterEdit = new LineEdit(this);
     mDownSamplingEdit = new LineEdit(this);
     
-    QIntValidator* positiveValidator = new QIntValidator();
-    positiveValidator->setBottom(1);
+    QIntValidator* positiveValidator = new QIntValidator(this);
+    positiveValidator->setBottom(10);
+    
+    mIterPerBatchSpin = new QSpinBox(this);
+    mIterPerBatchSpin->setRange(100, 10000);
+    mIterPerBatchSpin->setSingleStep(100);
     
     mNumProcEdit->setValidator(positiveValidator);
     mNumIterEdit->setValidator(positiveValidator);
     mNumBurnEdit->setValidator(positiveValidator);
     mMaxBatchesEdit->setValidator(positiveValidator);
-    mIterPerBatchEdit->setValidator(positiveValidator);
     mDownSamplingEdit->setValidator(positiveValidator);
     
     mNumBurnEdit->setAlignment(Qt::AlignCenter);
     mNumIterEdit->setAlignment(Qt::AlignCenter);
     mNumBurnEdit->setAlignment(Qt::AlignCenter);
     mMaxBatchesEdit->setAlignment(Qt::AlignCenter);
-    mIterPerBatchEdit->setAlignment(Qt::AlignCenter);
     mDownSamplingEdit->setAlignment(Qt::AlignCenter);
 
     mOkBut = new Button(tr("OK"), this);
@@ -59,7 +60,7 @@ void MCMCSettingsDialog::setSettings(const MCMCSettings& settings)
     mNumIterEdit->setText(QString::number(settings.mNumRunIter));
     mNumBurnEdit->setText(QString::number(settings.mNumBurnIter));
     mMaxBatchesEdit->setText(QString::number(settings.mMaxBatches));
-    mIterPerBatchEdit->setText(QString::number(settings.mNumBatchIter));
+    mIterPerBatchSpin->setValue(settings.mNumBatchIter);
     mDownSamplingEdit->setText(QString::number(settings.mThinningInterval));
     mSeedsEdit->setText(intListToString(settings.mSeeds));
     
@@ -74,7 +75,7 @@ MCMCSettings MCMCSettingsDialog::getSettings()
     settings.mNumRunIter = mNumIterEdit->text().toLongLong();
     settings.mNumBurnIter = mNumBurnEdit->text().toLongLong();
     settings.mMaxBatches = mMaxBatchesEdit->text().toLongLong();
-    settings.mNumBatchIter = mIterPerBatchEdit->text().toLongLong();
+    settings.mNumBatchIter = mIterPerBatchSpin->value();
     settings.mThinningInterval = mDownSamplingEdit->text().toLong();
     settings.mSeeds = stringListToIntList(mSeedsEdit->text());
     
@@ -168,7 +169,7 @@ void MCMCSettingsDialog::updateLayout()
     mNumBurnEdit->setGeometry(mBurnRect.x() + (mBurnRect.width() - editW)/2, mBurnRect.y() + 2*lineH, editW, lineH);
     mNumIterEdit->setGeometry(mAquireRect.x() + (mAquireRect.width() - editW)/2, mAquireRect.y() + 2*lineH, editW, lineH);
     mDownSamplingEdit->setGeometry(mAquireRect.x() + (mAquireRect.width() - editW)/2, mAquireRect.y() + 4*lineH, editW, lineH);
-    mIterPerBatchEdit->setGeometry(mBatch1Rect.x() + m, mBatch1Rect.y() + 2*lineH, mBatch1Rect.width() - 2*m, lineH);
+    mIterPerBatchSpin->setGeometry(mBatch1Rect.x() + m, mBatch1Rect.y() + 2*lineH, mBatch1Rect.width() - 2*m, lineH);
     mMaxBatchesEdit->setGeometry(mAdaptRect.x() + mAdaptRect.width()/2 + m, mAdaptRect.y() + mAdaptRect.height() - m - lineH, editW, lineH);
     
     mSeedsLab->setGeometry(width()/2 - m/2 - editW, height() - 2*m - butH - lineH, editW, lineH);
@@ -177,4 +178,3 @@ void MCMCSettingsDialog::updateLayout()
     mOkBut->setGeometry(width() - 2*m - 2*butW, height() - m - butH, butW, butH);
     mCancelBut->setGeometry(width() - m - butW, height() - m - butH, butW, butH);
 }
-
