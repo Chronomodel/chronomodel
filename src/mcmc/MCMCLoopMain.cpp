@@ -617,7 +617,7 @@ bool MCMCLoopMain::adapt()
 void MCMCLoopMain::finalize()
 {
     mModel->generateCorrelations(mChains);
-    mModel->generatePosteriorDensities(mChains, mModel->mMCMCSettings.mFFTLength);
+    mModel->generatePosteriorDensities(mChains, 1024);
     mModel->generateNumericalResults(mChains);
 }
 

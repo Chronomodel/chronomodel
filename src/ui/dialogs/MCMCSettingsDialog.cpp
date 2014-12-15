@@ -63,9 +63,6 @@ void MCMCSettingsDialog::setSettings(const MCMCSettings& settings)
     mIterPerBatchSpin->setValue(settings.mNumBatchIter);
     mDownSamplingEdit->setText(QString::number(settings.mThinningInterval));
     mSeedsEdit->setText(intListToString(settings.mSeeds));
-    
-    mFFTLength = settings.mFFTLength;
-    mCalibStep = settings.mCalibStep;
 }
 
 MCMCSettings MCMCSettingsDialog::getSettings()
@@ -78,9 +75,6 @@ MCMCSettings MCMCSettingsDialog::getSettings()
     settings.mNumBatchIter = mIterPerBatchSpin->value();
     settings.mThinningInterval = mDownSamplingEdit->text().toLong();
     settings.mSeeds = stringListToIntList(mSeedsEdit->text());
-    
-    settings.mFFTLength = mFFTLength;
-    settings.mCalibStep = mCalibStep;
     
     return settings;
 }

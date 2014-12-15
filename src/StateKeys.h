@@ -11,6 +11,11 @@
 #define STATE_DATES_TRASH "dates_trash"
 #define STATE_EVENTS_TRASH "events_trash"
 
+#define STATE_SETTINGS_TMIN "tmin"
+#define STATE_SETTINGS_TMAX "tmax"
+#define STATE_SETTINGS_STEP "step"
+#define STATE_SETTINGS_STEP_FORCED "step_forced"
+
 #define STATE_ID "id"
 #define STATE_NAME "name"
 #define STATE_COLOR_RED "red"

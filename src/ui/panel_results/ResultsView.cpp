@@ -129,15 +129,17 @@ mHasPhases(false)
     
     mFFTLenLab = new Label(tr("FFT length") + ": ", this);
     mFFTLenCombo = new QComboBox(this);
-    mFFTLenCombo->addItem(tr("128"));
-    mFFTLenCombo->addItem(tr("256"));
-    mFFTLenCombo->addItem(tr("512"));
-    mFFTLenCombo->addItem(tr("1024"));
-    mFFTLenCombo->addItem(tr("2048"));
-    mFFTLenCombo->addItem(tr("4096"));
-    mFFTLenCombo->addItem(tr("8192"));
-    mFFTLenCombo->addItem(tr("16384"));
-    mFFTLenCombo->setCurrentIndex(3);
+    mFFTLenCombo->addItem("32");
+    mFFTLenCombo->addItem("64");
+    mFFTLenCombo->addItem("128");
+    mFFTLenCombo->addItem("256");
+    mFFTLenCombo->addItem("512");
+    mFFTLenCombo->addItem("1024");
+    mFFTLenCombo->addItem("2048");
+    mFFTLenCombo->addItem("4096");
+    mFFTLenCombo->addItem("8192");
+    mFFTLenCombo->addItem("16384");
+    mFFTLenCombo->setCurrentText("1024");
     
     mComboH = mFFTLenCombo->sizeHint().height();
     mTabsH = mComboH + 2*mMargin;
@@ -575,6 +577,7 @@ void ResultsView::updateResults(MCMCLoopMain& loop)
     mModel = loop.mModel;
     mSettings = mModel->mSettings;
     mMCMCSettings = mModel->mMCMCSettings;
+    mFFTLenCombo->setCurrentText("1024");
     
     if(!mModel)
         return;

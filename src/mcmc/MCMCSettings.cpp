@@ -10,9 +10,7 @@ mNumBurnIter(MCMC_NUM_BURN_DEFAULT),
 mMaxBatches(MCMC_MAX_ADAPT_BATCHES_DEFAULT),
 mNumBatchIter(MCMC_ITER_PER_BATCH_DEFAULT),
 mThinningInterval(MCMC_THINNING_INTERVAL_DEFAULT),
-mFinalBatchIndex(0),
-mFFTLength(MCMC_FFT_LEN_DEFAULT),
-mCalibStep(MCMC_CALIB_STEP_DEFAULT)
+mFinalBatchIndex(0)
 {
     
 }
@@ -38,8 +36,6 @@ void MCMCSettings::copyFrom(const MCMCSettings& s)
     mSeeds = s.mSeeds;
     mThinningInterval = s.mThinningInterval;
     mFinalBatchIndex = s.mFinalBatchIndex;
-    mFFTLength = s.mFFTLength;
-    mCalibStep = s.mCalibStep;
 }
 
 MCMCSettings::~MCMCSettings()
@@ -56,8 +52,6 @@ MCMCSettings MCMCSettings::fromJson(const QJsonObject& json)
     settings.mMaxBatches = json.contains(STATE_MCMC_MAX_ADAPT_BATCHES) ? json[STATE_MCMC_MAX_ADAPT_BATCHES].toInt() : MCMC_MAX_ADAPT_BATCHES_DEFAULT;
     settings.mNumBatchIter = json.contains(STATE_MCMC_ITER_PER_BATCH) ? json[STATE_MCMC_ITER_PER_BATCH].toInt() : MCMC_ITER_PER_BATCH_DEFAULT;
     settings.mThinningInterval = json.contains(STATE_MCMC_THINNING_INTERVAL) ? json[STATE_MCMC_THINNING_INTERVAL].toInt() : MCMC_THINNING_INTERVAL_DEFAULT;
-    settings.mFFTLength = json.contains(STATE_MCMC_FFT_LEN) ? json[STATE_MCMC_FFT_LEN].toInt() : MCMC_FFT_LEN_DEFAULT;
-    settings.mCalibStep = json.contains(STATE_MCMC_CALIB_STEP) ? json[STATE_MCMC_CALIB_STEP].toInt() : MCMC_CALIB_STEP_DEFAULT;
     
     QJsonArray seeds = json[STATE_MCMC_SEEDS].toArray();
     for(int i=0; i<seeds.size(); ++i)
@@ -75,8 +69,6 @@ QJsonObject MCMCSettings::toJson() const
     mcmc[STATE_MCMC_MAX_ADAPT_BATCHES] = QJsonValue::fromVariant(mMaxBatches);
     mcmc[STATE_MCMC_ITER_PER_BATCH] = QJsonValue::fromVariant(mNumBatchIter);
     mcmc[STATE_MCMC_THINNING_INTERVAL] = QJsonValue::fromVariant(mThinningInterval);
-    mcmc[STATE_MCMC_FFT_LEN] = QJsonValue::fromVariant(mFFTLength);
-    mcmc[STATE_MCMC_CALIB_STEP] = QJsonValue::fromVariant(mCalibStep);
     
     QJsonArray seeds;
     for(int i=0; i<mSeeds.size(); ++i)

@@ -11,8 +11,6 @@
 #define MCMC_MAX_ADAPT_BATCHES_DEFAULT 100
 #define MCMC_ITER_PER_BATCH_DEFAULT 100
 #define MCMC_THINNING_INTERVAL_DEFAULT 10
-#define MCMC_FFT_LEN_DEFAULT 1024
-#define MCMC_CALIB_STEP_DEFAULT 1
 
 class MCMCSettings
 {
@@ -35,9 +33,6 @@ public:
     QList<int> mSeeds;
     
     unsigned long mFinalBatchIndex;
-    
-    int mFFTLength;
-    int mCalibStep;
 };
 
 #endif

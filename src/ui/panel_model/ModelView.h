@@ -45,6 +45,7 @@ public:
 public slots:
     void updateProject();
     void applySettings();
+    void adjustStep();
     void studyPeriodChanging();
     
 protected:
@@ -135,6 +136,7 @@ private:
     //LineEdit* mStepEdit;
     
     Button* mButApply;
+    Button* mButStep;
     
     Button* mButProperties;
     Button* mButImport;

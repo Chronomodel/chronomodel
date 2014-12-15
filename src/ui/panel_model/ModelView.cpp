@@ -16,6 +16,7 @@
 #include "MainWindow.h"
 #include "Project.h"
 #include "QtUtilities.h"
+#include "StepDialog.h"
 #include <QtWidgets>
 #include <QtSvg>
 #include <QPropertyAnimation>
@@ -192,19 +193,18 @@ mCalibVisible(false)
     mMinEdit = new LineEdit(mRightWrapper);
     mMaxEdit = new LineEdit(mRightWrapper);
     //mStepEdit = new LineEdit(mRightWrapper);
-    mButApply = new Button(tr("Apply"), mRightWrapper);
     
+    mButApply = new Button(tr("Apply"), mRightWrapper);
     mButApply->setColorState(Button::eWarning);
     
-    QIntValidator* validator = new QIntValidator();
-    validator->setBottom(1);
-    validator->setTop(10000);
-    //mStepEdit->setValidator(validator);
+    mButStep = new Button(tr("Calib. Resol."), mRightWrapper);
     
     connect(mMinEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));
     connect(mMaxEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));
     //connect(mStepEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));
+    
     connect(mButApply, SIGNAL(clicked()), this, SLOT(applySettings()));
+    connect(mButStep, SIGNAL(clicked()), this, SLOT(adjustStep()));
     
     // --------
     
@@ -309,28 +309,47 @@ void ModelView::updateProject()
 
 void ModelView::applySettings()
 {
-    ProjectSettings settings;
-    
-    settings.mTmin = mMinEdit->text().toInt();
-    settings.mTmax = mMaxEdit->text().toInt();
-    //settings.mStep = mStepEdit->text().toInt();
-    
-    float diff = settings.mTmax - settings.mTmin;
-    float maxPts = 10000.f;
-    float rap = diff / maxPts;
-    settings.mStep = ceilf(rap);
-    
     Project* project = MainWindow::getInstance()->getProject();
+    QJsonObject state = project->state();
+    ProjectSettings s = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
+    ProjectSettings oldSettings = s;
     
-    if(!project->setSettings(settings))
+    s.mTmin = mMinEdit->text().toInt();
+    s.mTmax = mMaxEdit->text().toInt();
+    if(!s.mStepForced)
+        s.mStep = ProjectSettings::getStep(s.mTmin, s.mTmax);
+    
+    if(!project->setSettings(s))
     {
-        QJsonObject state = project->state();
-        ProjectSettings oldSettings = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
+        // Min and max are not consistents :
+        // go back to previous values and mark button as ready
         
-        //mStepEdit->setText(QString::number(oldSettings.mStep));
         mMinEdit->setText(QString::number(oldSettings.mTmin));
         mMaxEdit->setText(QString::number(oldSettings.mTmax));
         mButApply->setColorState(Button::eReady);
+    }
+}
+
+void ModelView::adjustStep()
+{
+    Project* project = MainWindow::getInstance()->getProject();
+    QJsonObject state = project->state();
+    ProjectSettings s = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
+    
+    int defaultVal = ProjectSettings::getStep(s.mTmin, s.mTmax);
+    
+    StepDialog dialog(qApp->activeWindow(), Qt::Sheet);
+    dialog.setStep(s.mStep, s.mStepForced, defaultVal);
+    
+    if(dialog.exec() == QDialog::Accepted)
+    {
+        s.mStepForced = dialog.forced();
+        if(s.mStepForced)
+            s.mStep = dialog.step();
+        else
+            s.mStep = defaultVal;
+        
+        project->setSettings(s);
     }
 }
 
@@ -447,21 +466,15 @@ void ModelView::updateLayout()
     // ----------
 
     int labelW = 35;
-    int editW = 80;
+    int editW = 90;
     int editH = (mToolbarH - 3*m) / 2;
     int butW = 80;
     
     mStudyLab->setGeometry(0, m, 135, editH);
-    mButApply->setGeometry(135, m, 110, editH);
+    mButApply->setGeometry(120, m, 70, editH);
+    mButStep->setGeometry(195, m, 70, editH);
     
     int y = 2*m + editH;
-    
-    /*mMinLab->setGeometry(0, y, labelW, editH);
-    mMinEdit->setGeometry(m + labelW, y, editW, editH);
-    mMaxLab->setGeometry(2*m + labelW + editW, y, labelW, editH);
-    mMaxEdit->setGeometry(3*m + 2*labelW + editW, y, editW, editH);
-    mStepLab->setGeometry(4*m + 2*labelW + 2*editW, y, labelW, editH);
-    mStepEdit->setGeometry(5*m + 3*labelW + 2*editW, y, editW, editH);*/
     
     mMinLab->setGeometry(0, y, labelW, editH);
     mMinEdit->setGeometry(m + labelW, y, editW, editH);

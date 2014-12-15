@@ -45,9 +45,6 @@ private:
     QRectF mBatch1Rect;
     QRectF mBatchInterRect;
     QRectF mBatchNRect;
-    
-    int mFFTLength;
-    int mCalibStep;
 };
 
 #endif

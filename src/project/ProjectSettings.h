@@ -3,10 +3,12 @@
 
 #include <QString>
 #include <QJsonObject>
+#include "StateKeys.h"
 
-#define STATE_SETTINGS_TMIN "tmin"
-#define STATE_SETTINGS_TMAX "tmax"
-#define STATE_SETTINGS_STEP "step"
+#define STATE_SETTINGS_TMIN_DEF 0
+#define STATE_SETTINGS_TMAX_DEF 0
+#define STATE_SETTINGS_STEP_DEF 1
+#define STATE_SETTINGS_STEP_FORCED_DEF false
 
 
 class ProjectSettings
@@ -23,11 +25,14 @@ public:
     
     static ProjectSettings fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
+    
+    static int getStep(float tmin, float tmax);
 
 public:
     int mTmin;
     int mTmax;
     int mStep;
+    bool mStepForced;
 };
 
 #endif
