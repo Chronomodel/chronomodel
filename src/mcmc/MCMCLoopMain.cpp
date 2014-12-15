@@ -484,6 +484,7 @@ void MCMCLoopMain::update()
     
     double t_min = mModel->mSettings.mTmin;
     double t_max = mModel->mSettings.mTmax;
+    double step = mModel->mSettings.mStep;
 
     Chain& chain = mChains[mChainIndex];
     
@@ -500,7 +501,7 @@ void MCMCLoopMain::update()
             Date& date = events[i]->mDates[j];
             
             date.updateDelta(event);
-            date.updateTheta(t_min, t_max, event);
+            date.updateTheta(t_min, t_max, step, event);
             date.updateSigma(event);
             date.updateWiggle();
             

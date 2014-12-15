@@ -230,7 +230,7 @@ QPixmap Date::generateCalibThumb(const float tmin, const float tmax)
     //thumb = graph.grab();
 }
 
-float Date::getLikelyhoodFromCalib(const float t)
+float Date::getLikelyhoodFromCalib(const float t, const float step)
 {
     if(mCalibration.find(t) != mCalibration.end())
     {
@@ -241,6 +241,17 @@ float Date::getLikelyhoodFromCalib(const float t)
         float t_under = floorf(t);
         float t_upper = ceilf(t);
         
+        if(step > 1.f)
+        {
+            t_under = floorf(t_under / step) * step;
+            t_upper = t_under + step;
+        }
+        
+        if(mCalibration.find(t_under) == mCalibration.end())
+            qDebug() << "ERROR : calling calib on unknown t_under";
+        if(mCalibration.find(t_upper) == mCalibration.end())
+            qDebug() << "ERROR : calling calib on unknown t_upper";
+        
         float value_under = mCalibration[t_under];
         float value_upper = mCalibration[t_upper];
         
@@ -249,7 +260,7 @@ float Date::getLikelyhoodFromCalib(const float t)
     }
 }
 
-void Date::updateTheta(const float& tmin, const float& tmax, Event* event)
+void Date::updateTheta(const float& tmin, const float& tmax, const float& step, Event* event)
 {
     switch(mMethod)
     {
@@ -259,7 +270,7 @@ void Date::updateTheta(const float& tmin, const float& tmax, Event* event)
             float theta = Generator::gaussByDoubleExp(event->mTheta.mX - mDelta, mSigma.mX, tmin, tmax);
             
             // rapport = G(theta_new) / G(theta_old)
-            float rapport = getLikelyhoodFromCalib(theta) / getLikelyhoodFromCalib(mTheta.mX);
+            float rapport = getLikelyhoodFromCalib(theta, step) / getLikelyhoodFromCalib(mTheta.mX, step);
             
             mTheta.tryUpdate(theta, rapport);
             break;
@@ -286,7 +297,7 @@ void Date::updateTheta(const float& tmin, const float& tmax, Event* event)
             if(theta >= tmin && theta <= tmax)
             {
                 // rapport = (G(theta_new) / G(theta_old)) * (H(theta_new) / H(theta_old))
-                rapport = getLikelyhoodFromCalib(theta) / getLikelyhoodFromCalib(mTheta.mX); // rapport des G(theta i)
+                rapport = getLikelyhoodFromCalib(theta, step) / getLikelyhoodFromCalib(mTheta.mX, step); // rapport des G(theta i)
                 rapport *= expf((-0.5/(mSigma.mX * mSigma.mX)) * (powf(theta - (event->mTheta.mX - mDelta), 2) - powf(mTheta.mX - (event->mTheta.mX - mDelta), 2)));
             }
             
