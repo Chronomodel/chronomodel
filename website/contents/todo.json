@@ -1,5 +1,8 @@
 {
     "todo":[
+        "Save zoom and scene scroll position in project settings",
+        "calib AM et C14 : coeff devant exponentielle à vérifier car sigma dépend de t (utilise l’erreur e de la courbe de calibration)",
+        "somme des gamma sur une branche inférieur à plage d’étude : alerte sinon",
         "Résoudre les problèmes d’affichage des graduation en X et Y pour les graphs",
         "Enrichir l’aide contextuelle en général",
         "clic sur date doit sélectionner le fait",
@@ -11,15 +14,23 @@
         "Bouton RESET MCMC : remet toutes les méthodes par défaut des events et data.",
         "Initialisation MCMC pour bounds",
         "Intervalles HPD : à partir de quel écart entre les intervalles faut-il les regrouper ?",
-        "FFT : l’estimateur à noyau retourne une densité mais l’aire obtenue est différente de 1 (beaucoup plus grande)",
-        "FFT sur buffer de tailler fixe (1024 par exemple) pour gérer les grandes périodes d’étude",
         "Bound dans la scène des phase ?? (pour limiter le nombre de flèches du côté des faits)… (question du mail du 18/11)",
-        "Option interpolation : linéaire, quadratique ou cubique (pour courbes de référence et MCMC ?)",
-        "Nuage de points de corrélation entre 2 chaines ? (=> dans R ?)",
-        "Pouvoir définir les graines manuellement (random sinon)"
-
+        "Nuage de points de corrélation entre 2 chaines ? (=> dans R ?)"
     ],
     "done":[
+        "Enlever curseurs pour captures d’ecran",
+        "gamma dans bulle : signe « > »",
+        "phase : tau doit s’afficher dans les items",
+        "titre au-dessus des graphs quand déplié? pour export image sans barre de gauche…",
+        "wiggle : que pour dates autoriséees et si pas nul",
+        "bruitage de l’acceptation : OK ! Mais taille de batch >= 100",
+        "calibration affichage dans les résultats avec un step : problème sur gaussiennes et créneau",
+        "Attaques verticales sur HPD et calibrations",
+        "Phases : stocker betai - alphai puis calculer intervalle de credibilité. Afficher cet interval correspondant à la durée de la phase, non situable sur le graph (entre les moyennes de alpha et de beta n’a pas de justification)",
+        "Enlever Wiggle matching dans controls results",
+        "Pouvoir définir les graines manuellement (random sinon)",
+        "FFT : l’estimateur à noyau retourne une densité mais l’aire obtenue est différente de 1 (beaucoup plus grande)",
+        "FFT sur buffer de tailler fixe (1024 par exemple) pour gérer les grandes périodes d’étude",
         "Initialisation MCMC (sauf pour bounds)",
         "La suppression des phases fait planter l’appli (bug aléatoire…)",
         "Contraintes de faits : dessiner une croix rouge pour proposer la destruction",
