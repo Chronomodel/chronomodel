@@ -126,7 +126,7 @@ QString PluginGauss::getDateDesc(const Date* date) const
         eq += cStr;
         
         result += QObject::tr("Age") + " : " + QString::number(data[DATE_GAUSS_AGE_STR].toDouble());
-        result += " +- " + QString::number(data[DATE_GAUSS_ERROR_STR].toDouble());
+        result += " ± " + QString::number(data[DATE_GAUSS_ERROR_STR].toDouble());
         result += ", " + QObject::tr("Ref. curve") + " : g(t) = " + eq;
     }
     return result;

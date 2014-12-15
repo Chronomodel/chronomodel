@@ -87,7 +87,7 @@ QString PluginTL::getDateDesc(const Date* date) const
     {
         QJsonObject data = date->mData;
         result += QObject::tr("Age") + " : " + QString::number(data[DATE_TL_AGE_STR].toDouble());
-        result += " +- " + QString::number(data[DATE_TL_ERROR_STR].toDouble());
+        result += " ± " + QString::number(data[DATE_TL_ERROR_STR].toDouble());
         result += ", " + QObject::tr("Ref. year") + " : " + QString::number(data[DATE_TL_REF_YEAR_STR].toDouble());
     }
     return result;
