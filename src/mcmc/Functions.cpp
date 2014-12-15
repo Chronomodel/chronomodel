@@ -250,6 +250,11 @@ QPair<float, float> credibilityForTrace(const QVector<float>& trace, int thresho
     return credibility;
 }
 
+QString intervalText(const QPair<float, float>& interval)
+{
+    return "[" + QString::number(interval.first, 'f', 0) + ", " + QString::number(interval.second, 'f', 0) + "]";
+}
+
 QString getHPDText(const QMap<float, float>& hpd)
 {
     QList<QPair<float, float>> intervals = intervalsForHpd(hpd);
@@ -257,7 +262,7 @@ QString getHPDText(const QMap<float, float>& hpd)
     QStringList results;
     for(int i=0; i<intervals.size(); ++i)
     {
-        results << "[" + QString::number(intervals[i].first, 'f', 0) + ", " + QString::number(intervals[i].second, 'f', 0) + "]";
+        results << intervalText(intervals[i]);
     }
     QString result = results.join(" ");
     return result;
