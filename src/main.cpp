@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <fenv.h>
 
-//#include "JuceHeader.h"
+
 
 void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
@@ -58,13 +58,12 @@ int main(int argc, char *argv[])
         std::cout << "cmath uses errno" << std::endl;
     }
 #endif
-    //std::cout << "CPU speed : " << SystemStats::getCpuSpeedInMegaherz() << "MHz" << std::endl;
     
     QApplication a(argc, argv);
     
     a.setApplicationName("Chronomodel");
     a.setApplicationDisplayName("Chronomodel");
-    a.setApplicationVersion("0.0.4");
+    a.setApplicationVersion("0.0.5");
     a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));
