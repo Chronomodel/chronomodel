@@ -12,7 +12,7 @@ QDialog(parent, flags)
 {
     setWindowTitle(tr("MCMC Options"));
     
-    mSeedsLab = new Label(tr("Seeds") + ": ", this);
+    mSeedsLab = new Label(tr("Seeds (separated by \";\")") + ": ", this);
     mSeedsEdit = new LineEdit(this);
     
     mNumProcEdit = new LineEdit(this);
@@ -62,7 +62,7 @@ void MCMCSettingsDialog::setSettings(const MCMCSettings& settings)
     mMaxBatchesEdit->setText(QString::number(settings.mMaxBatches));
     mIterPerBatchSpin->setValue(settings.mNumBatchIter);
     mDownSamplingEdit->setText(QString::number(settings.mThinningInterval));
-    mSeedsEdit->setText(intListToString(settings.mSeeds));
+    mSeedsEdit->setText(intListToString(settings.mSeeds, ";"));
 }
 
 MCMCSettings MCMCSettingsDialog::getSettings()
@@ -74,7 +74,7 @@ MCMCSettings MCMCSettingsDialog::getSettings()
     settings.mMaxBatches = mMaxBatchesEdit->text().toLongLong();
     settings.mNumBatchIter = mIterPerBatchSpin->value();
     settings.mThinningInterval = mDownSamplingEdit->text().toLong();
-    settings.mSeeds = stringListToIntList(mSeedsEdit->text());
+    settings.mSeeds = stringListToIntList(mSeedsEdit->text(), ";");
     
     return settings;
 }
@@ -166,7 +166,7 @@ void MCMCSettingsDialog::updateLayout()
     mIterPerBatchSpin->setGeometry(mBatch1Rect.x() + m, mBatch1Rect.y() + 2*lineH, mBatch1Rect.width() - 2*m, lineH);
     mMaxBatchesEdit->setGeometry(mAdaptRect.x() + mAdaptRect.width()/2 + m, mAdaptRect.y() + mAdaptRect.height() - m - lineH, editW, lineH);
     
-    mSeedsLab->setGeometry(width()/2 - m/2 - editW, height() - 2*m - butH - lineH, editW, lineH);
+    mSeedsLab->setGeometry(width()/2 - m/2 - 200, height() - 2*m - butH - lineH, 200, lineH);
     mSeedsEdit->setGeometry(width()/2 + m/2, height() - 2*m - butH - lineH, editW, lineH);
     
     mOkBut->setGeometry(width() - 2*m - 2*butW, height() - m - butH, butW, butH);

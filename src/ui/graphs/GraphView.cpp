@@ -716,15 +716,28 @@ void GraphView::drawCurves(QPainter& painter)
                         }
                         else
                         {
-                            if(curve.mIsHisto ||
-                               (curve.mIsRectFromZero && last_value_y == 0.f && valueY != 0.f) ||
-                               (curve.mIsRectFromZero && last_value_y != 0.f && valueY == 0.f))
+                            if(curve.mIsHisto)
                             {
-                                path.lineTo(x, last_y);
+                                // histo bars must be centered around x value :
+                                float dx2 = (x - last_x)/2.f;
+                                path.lineTo(x - dx2, last_y);
+                                path.lineTo(x - dx2, y);
                                 //qDebug() << "y = " << valueY << ", last_y = " << last_value_y;
                             }
-                            
-                            path.lineTo(x, y);
+                            else if(curve.mIsRectFromZero && last_value_y == 0.f && valueY != 0.f)
+                            {
+                                path.lineTo(x, last_y);
+                                path.lineTo(x, y);
+                            }
+                            else if(curve.mIsRectFromZero && last_value_y != 0.f && valueY == 0.f)
+                            {
+                                path.lineTo(last_x, y);
+                                path.lineTo(x, y);
+                            }
+                            else
+                            {
+                                path.lineTo(x, y);
+                            }
                         }
                         last_x = x;
                         last_y = y;

@@ -57,7 +57,9 @@ public:
     // -----
     
 private:
-    QMap<float, float> generateRawHisto(const QVector<float>& data, int fftLen);
+    float* generateBufferForHisto(const QVector<float>& dataSrc, int numPts);
+    QMap<float, float> bufferToMap(const float* buffer);
+    QMap<float, float> generateRawHisto(const QVector<float>& data, int fftLen, float tmin, float tmax);
     QMap<float, float> generateHisto(const QVector<float>& data, int fftLen, float tmin, float tmax);
     QMap<float, float> generateHistoOld(const QVector<float>& dataSrc, float tmin, float tmax);
     
