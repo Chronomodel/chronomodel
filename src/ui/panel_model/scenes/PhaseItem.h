@@ -28,6 +28,7 @@ protected:
     QRectF checkRect() const;
     QRectF eyeRect() const;
     QJsonArray getEvents() const;
+    QString getTauString() const;
     
 public:
     Qt::CheckState mState;

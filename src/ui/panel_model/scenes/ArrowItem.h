@@ -33,6 +33,7 @@ public:
     void hoverLeaveEvent(QGraphicsSceneHoverEvent* e);
     
     QRectF getBubbleRect(const QString& text = QString()) const;
+    QString getBubbleText() const;
     
     void setData(const QJsonObject& c);
     QJsonObject& data();

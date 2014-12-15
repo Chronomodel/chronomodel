@@ -233,17 +233,9 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     
     // Bubble
     
-    QString bubbleText;
-    if(mType == ePhase)
-    {
-        PhaseConstraint::GammaType gammaType = (PhaseConstraint::GammaType)mData[STATE_CONSTRAINT_GAMMA_TYPE].toInt();
-        if(gammaType == PhaseConstraint::eGammaFixed)
-            bubbleText = QString::number(mData[STATE_CONSTRAINT_GAMMA_FIXED].toDouble());
-        else if(gammaType == PhaseConstraint::eGammaRange)
-            bubbleText = "[" + QString::number(mData[STATE_CONSTRAINT_GAMMA_MIN].toDouble()) +
-                "; " + QString::number(mData[STATE_CONSTRAINT_GAMMA_MAX].toDouble()) + "]";
-    }
+    QString bubbleText = getBubbleText();
     bool showMiddleArrow = true;
+    
     if(mShowDelete)
     {
         showMiddleArrow = false;
@@ -418,5 +410,18 @@ QRectF ArrowItem::getBubbleRect(const QString& text) const
     return r;
 }
 
-
+QString ArrowItem::getBubbleText() const
+{
+    QString bubbleText;
+    if(mType == ePhase)
+    {
+        PhaseConstraint::GammaType gammaType = (PhaseConstraint::GammaType)mData[STATE_CONSTRAINT_GAMMA_TYPE].toInt();
+        if(gammaType == PhaseConstraint::eGammaFixed)
+            bubbleText = "hiatus ≥ " + QString::number(mData[STATE_CONSTRAINT_GAMMA_FIXED].toDouble());
+        else if(gammaType == PhaseConstraint::eGammaRange)
+            bubbleText = "hiatus min ∈ [" + QString::number(mData[STATE_CONSTRAINT_GAMMA_MIN].toDouble()) +
+            "; " + QString::number(mData[STATE_CONSTRAINT_GAMMA_MAX].toDouble()) + "]";
+    }
+    return bubbleText;
+}
 

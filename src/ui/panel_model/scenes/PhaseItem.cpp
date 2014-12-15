@@ -99,7 +99,11 @@ QRectF PhaseItem::boundingRect() const
     
     QJsonArray events = getEvents();
     if(events.size() > 0)
-        h = mTitleHeight + 2*mBorderWidth + mEltsMargin + events.size() * (mEltsHeight + mEltsMargin);
+        h += events.size() * (mEltsHeight + mEltsMargin) - mEltsMargin;
+    
+    QString tauStr = getTauString();
+    if(!tauStr.isEmpty())
+        h += mEltsMargin + mEltsHeight;
     
     QFont font = qApp->font();
     QString name = mData[STATE_NAME].toString();
@@ -107,8 +111,11 @@ QRectF PhaseItem::boundingRect() const
     int nw = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin + 2*mTitleHeight;
     w = (nw > w) ? nw : w;
     
-    font.setPointSizeF(pointSize(11));
+    font.setPointSizeF(pointSize(11.f));
     metrics = QFontMetrics(font);
+    
+    nw = metrics.width(tauStr) + 2*mBorderWidth + 4*mEltsMargin;
+    w = (nw > w) ? nw : w;
     
     for(int i=0; i<events.size(); ++i)
     {
@@ -169,25 +176,23 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->setPen(fontColor);
     painter->drawText(tr, Qt::AlignCenter, name);
     
-    // Type
-    QRectF tpr(rect.x() + mBorderWidth + mEltsMargin,
-               rect.y() + rect.height() - mBorderWidth - mEltsMargin - mEltsHeight,
-               rect.width() - 2*mBorderWidth - 2*mEltsMargin,
-               mEltsHeight);
+    // Change font
+    font.setPointSizeF(pointSize(11.f));
+    painter->setFont(font);
     
-    Phase::TauType tauType = (Phase::TauType)mData[STATE_PHASE_TAU_TYPE].toInt();
-    if(tauType == Phase::eTauRange)
+    // Type (duration tau)
+    QString tauStr = getTauString();
+    if(!tauStr.isEmpty())
     {
-        float tauMin = mData[STATE_PHASE_TAU_MIN].toDouble();
-        float tauMax = mData[STATE_PHASE_TAU_MAX].toDouble();
+        QRectF tpr(rect.x() + mBorderWidth + mEltsMargin,
+                   rect.y() + rect.height() - mBorderWidth - mEltsMargin - mEltsHeight,
+                   rect.width() - 2*mBorderWidth - 2*mEltsMargin,
+                   mEltsHeight);
         
-        QString tau = QString::number(tauMin) +
-        " < " + QObject::tr("Duration") + " < " +
-        QString::number(tauMax);
-        
-        font.setPointSizeF(pointSize(11));
-        painter->setFont(font);
-        painter->drawText(tpr, Qt::AlignCenter, tau);
+        painter->setPen(Qt::black);
+        painter->setBrush(Qt::white);
+        painter->drawRect(tpr);
+        painter->drawText(tpr, Qt::AlignCenter, tauStr);
     }
     
     // Events
@@ -239,6 +244,21 @@ QJsonArray PhaseItem::getEvents() const
             events.append(event);
     }
     return events;
+}
+
+QString PhaseItem::getTauString() const
+{
+    QString tauStr;
+    Phase::TauType type = (Phase::TauType)mData[STATE_PHASE_TAU_TYPE].toInt();
+    if(type == Phase::eTauFixed)
+    {
+        tauStr += tr("duration") + " ≤ " + QString::number(mData[STATE_PHASE_TAU_FIXED].toDouble());
+    }
+    else if(type == Phase::eTauRange)
+    {
+        tauStr += tr("max duration") + " ∈ [" + QString::number(mData[STATE_PHASE_TAU_MIN].toDouble()) + "; " + QString::number(mData[STATE_PHASE_TAU_MAX].toDouble()) + "]";
+    }
+    return tauStr;
 }
 
 QRectF PhaseItem::checkRect() const
