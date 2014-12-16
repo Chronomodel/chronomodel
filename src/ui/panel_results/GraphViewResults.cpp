@@ -256,6 +256,11 @@ void GraphViewResults::resizeEvent(QResizeEvent* e)
     if(height() >= mMinHeighttoDisplayTitle)
     {
         graphRect.adjust(0, 25, 0, 0);
+        mGraph->showAxis(true);
+    }
+    else
+    {
+        mGraph->showAxis(false);
     }
     
     

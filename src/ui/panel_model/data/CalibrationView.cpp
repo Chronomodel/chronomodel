@@ -26,7 +26,7 @@ mRefGraphView(0)
     
     mCalibGraph = new GraphView(this);
     mCalibGraph->showYValues(true);
-    mCalibGraph->showAxis(false);
+    mCalibGraph->showAxis(true);
     
     mMarkerX = new Marker(this);
     mMarkerY = new Marker(this);
@@ -34,7 +34,7 @@ mRefGraphView(0)
     mResultsLab = new QLabel(this);
     mResultsLab->setWordWrap(true);
     QFont font;
-    font.setPointSizeF(pointSize(11.));
+    font.setPointSizeF(pointSize(9.));
     mResultsLab->setFont(font);
     
     mHPDCheck = new CheckBox(tr("HPD (%)"), this);
@@ -115,7 +115,7 @@ void CalibrationView::updateGraphs()
         
         yMax += (yMax - yMin) * 0.05f;
         
-        mCalibGraph->setRangeY(yMin, yMax);
+        mCalibGraph->setRangeY(0, yMax);
         
         mCalibGraph->addCurve(calibCurve);
         mCalibGraph->setVisible(true);
