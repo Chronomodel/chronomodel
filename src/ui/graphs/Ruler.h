@@ -5,6 +5,22 @@
 
 class QScrollBar;
 
+class AxisTool
+{
+public:
+    AxisTool();
+    void updateValues(float totalPix, float minDeltaPix, float minVal, float maxVal);
+    QVector<float> paint(QPainter& p, const QRectF& r, float textW);
+    
+public:
+    bool mIsHorizontal;
+    bool mShowSubs;
+    float mDeltaVal;
+    float mDeltaPix;
+    float mStartVal;
+    float mStartPix;
+};
+
 struct RulerArea{
     float mStart;
     float mStop;
@@ -74,6 +90,8 @@ private:
     float mStepMinWidth;
     float mStepWidth;
     float mYearsPerStep;
+    
+    AxisTool mAxisTool;
     
     bool mIsZoomInHovered;
     bool mIsZoomOutHovered;

@@ -51,6 +51,10 @@ mStepYMinHeight(8.f)
     mRuler = new Ruler(this);
     connect(mRuler, SIGNAL(zoomChanged(const float, const float)), this, SLOT(setCurrentRangeX(const float, const float)));
     
+    mAxisToolX.mIsHorizontal = true;
+    mAxisToolY.mIsHorizontal = false;
+    mAxisToolY.mShowSubs = false;
+    
     mTipRect.setTop(0);
     mTipRect.setLeft(0);
     mTipRect.setWidth(mTipWidth);
@@ -103,7 +107,8 @@ void GraphView::showInfos(bool show)
 void GraphView::showAxis(bool show)
 {
     mShowAxis = show;
-    mRuler->setVisible(mShowAxis);
+    //mRuler->setVisible(mShowAxis);
+    mRuler->setVisible(false);
     adaptMarginBottom();
 }
 
@@ -132,8 +137,9 @@ void GraphView::adaptMarginBottom()
 {
     if(mShowAxis)
     {
-        int barH = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
-        setMarginBottom(mShowScrollBar ? 40 : 40 - barH);
+        //int barH = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
+        //setMarginBottom(mShowScrollBar ? 40 : 40 - barH);
+        setMarginBottom(16);
     }
     else
     {
@@ -215,6 +221,8 @@ void GraphView::repaintGraph(const bool aAlsoPaintBackground, const bool aAlsoPa
     {
         mBufferedImageWithGraphs = QPixmap();
     }
+    mAxisToolX.updateValues(mGraphWidth, 40, mCurrentMinX, mCurrentMaxX);
+    mAxisToolY.updateValues(mGraphHeight, 12, mMinY, mMaxY);
     update();
 }
 
@@ -435,11 +443,11 @@ void GraphView::paint(QPainter& painter, int w, int h)
         painter.setRenderHints(QPainter::Antialiasing);
         
         drawBackground(p);
-        if(mShowGrid)
+        /*if(mShowGrid)
         {
             drawXAxis(p);
             drawYAxis(p);
-        }
+        }*/
     }
     
     if(mBufferedImageWithGraphs.isNull())
@@ -452,9 +460,30 @@ void GraphView::paint(QPainter& painter, int w, int h)
     
     painter.drawPixmap(0, 0, mBufferedImageWithGraphs);
     
+    if(mShowAxis)
+    {
+        QVector<float> linesXPos = mAxisToolX.paint(painter, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth, mMarginBottom), 40);
+        
+        painter.setPen(QColor(0, 0, 0, 20));
+        for(int i=0; i<linesXPos.size(); ++i)
+        {
+            float x = linesXPos[i];
+            painter.drawLine(x, mMarginTop, x, mMarginTop + mGraphHeight);
+        }
+    }
+    
     if(mShowYValues)
     {
-        drawYValues(painter);
+        //drawYValues(painter);
+        
+        QVector<float> linesYPos = mAxisToolY.paint(painter, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), 20);
+        
+        painter.setPen(QColor(0, 0, 0, 20));
+        for(int i=0; i<linesYPos.size(); ++i)
+        {
+            float y = linesYPos[i];
+            painter.drawLine(mMarginLeft, y, mMarginLeft + mGraphWidth, y);
+        }
     }
     if(mShowInfos)
     {
@@ -471,7 +500,7 @@ void GraphView::paint(QPainter& painter, int w, int h)
     painter.setBrush(axisCol);
     painter.setPen(axisCol);
     painter.drawLine(mMarginLeft, mMarginTop, mMarginLeft, mMarginTop + mGraphHeight);
-    painter.drawLine(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth - mMarginRight, mMarginTop + mGraphHeight);
+    painter.drawLine(mMarginLeft, mMarginTop + mGraphHeight, mMarginLeft + mGraphWidth, mMarginTop + mGraphHeight);
     
     QPainterPath arrowTop;
     arrowTop.moveTo(mMarginLeft, mMarginTop);

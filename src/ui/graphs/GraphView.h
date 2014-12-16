@@ -4,6 +4,7 @@
 #include "GraphViewAbstract.h"
 #include "GraphCurve.h"
 #include "GraphZone.h"
+#include "Ruler.h"
 
 #include <QWidget>
 #include <QString>
@@ -13,8 +14,6 @@
 
 #include <vector>
 #include <map>
-
-class Ruler;
 
 
 class GraphView: public QWidget, public GraphViewAbstract
@@ -85,6 +84,8 @@ protected:
     
 protected:
     Ruler* mRuler;
+    AxisTool mAxisToolX;
+    AxisTool mAxisToolY;
     
     QPixmap	mBufferedImage;
     QPixmap mBufferedImageWithGraphs;
