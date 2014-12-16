@@ -207,6 +207,7 @@ HEADERS += src/ui/dialogs/ConstraintDialog.h
 HEADERS += src/ui/dialogs/PhaseDialog.h
 HEADERS += src/ui/dialogs/DateDialog.h
 HEADERS += src/ui/dialogs/TrashDialog.h
+HEADERS += src/ui/dialogs/StepDialog.h
 
 HEADERS += src/ui/graphs/GraphViewAbstract.h
 HEADERS += src/ui/graphs/GraphView.h
@@ -335,6 +336,7 @@ SOURCES += src/ui/dialogs/PhaseDialog.cpp
 SOURCES += src/ui/dialogs/ConstraintDialog.cpp
 SOURCES += src/ui/dialogs/DateDialog.cpp
 SOURCES += src/ui/dialogs/TrashDialog.cpp
+SOURCES += src/ui/dialogs/StepDialog.cpp
 
 SOURCES += src/ui/graphs/GraphViewAbstract.cpp
 SOURCES += src/ui/graphs/GraphView.cpp
