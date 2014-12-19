@@ -491,17 +491,19 @@ void MainWindow::readSettings()
     mProjectView->showHelp(mAppSettings.mShowHelp);
     mHelpAction->setChecked(mAppSettings.mShowHelp);
     
-    QString dir = settings.value("last_project_dir", "").toString();
-    QString filename = settings.value("last_project_filename", "").toString();
-    
-    QString path = dir + "/" + filename;
-    QFileInfo fileInfo(path);
-    qDebug() << "Loading project file : " << path;
-    if(fileInfo.isFile())
+    if(mAppSettings.mOpenLastProjectAtLaunch)
     {
-        mProject->load(path);
-        activateInterface(true);
-        updateWindowTitle();
+        QString dir = settings.value("last_project_dir", "").toString();
+        QString filename = settings.value("last_project_filename", "").toString();
+        QString path = dir + "/" + filename;
+        QFileInfo fileInfo(path);
+        
+        if(fileInfo.isFile())
+        {
+            mProject->load(path);
+            activateInterface(true);
+            updateWindowTitle();
+        }
     }
     
     settings.endGroup();
