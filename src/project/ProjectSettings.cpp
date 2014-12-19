@@ -78,15 +78,19 @@ QJsonObject ProjectSettings::toJson() const
     return settings;
 }
 
-int ProjectSettings::getStep(float tmin, float tmax)
+float ProjectSettings::getStep(float tmin, float tmax)
 {
     float diff = tmax - tmin;
-    if(diff <= 40000)
+    float linearUntil = 10000;
+    
+    if(diff <= linearUntil)
         return 1;
     else
     {
-        float maxPts = 10000;
-        float step = floorf(diff / maxPts);
-        return (int)step;
+        float maxPts = 50000;
+        float lambda = - log((maxPts - linearUntil)/maxPts) / linearUntil;
+        float nbPts = maxPts * (1 - exp(-lambda * diff));
+        float step = diff / nbPts;
+        return (float)step;
     }
 }
