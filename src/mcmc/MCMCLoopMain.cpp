@@ -121,6 +121,16 @@ void MCMCLoopMain::initMCMC2()
     }
     
     // ----------------------------------------------------------------
+    //  Init Bounds
+    // ----------------------------------------------------------------
+    
+    // - Définir des niveaux pour les faits
+    // - Initialiser les bornes (uniquement, pas les faits) par niveaux croissants
+    // => Init borne :
+    //  - si valeur fixe, facile!
+    //  - si intervalle : random uniform sur l'intervalle (vérifier si min < max pour l'intervalle qui a été modifié par la validation du modèle)
+    
+    // ----------------------------------------------------------------
     //  Init theta f, ti, ...
     // ----------------------------------------------------------------
     emit stepChanged(tr("Initializing events..."), 0, events.size());
@@ -557,8 +567,8 @@ bool MCMCLoopMain::adapt()
     Chain& chain = mChains[mChainIndex];
     QList<Event*>& events = mModel->mEvents;
     
-    const double taux_min = 42.;           // taux_min minimal rate of acceptation=42
-    const double taux_max = 46.;           // taux_max maximal rate of acceptation=46
+    const double taux_min = 41.;           // taux_min minimal rate of acceptation=42
+    const double taux_max = 47.;           // taux_max maximal rate of acceptation=46
     
     bool allOK = true;
     

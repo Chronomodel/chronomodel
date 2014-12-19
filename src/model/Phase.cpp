@@ -266,26 +266,26 @@ void Phase::updateAll()
 
 void Phase::initTau()
 {
-    if(mTauType == eTauUnknown)
-    {
-        // Nothing to do!
-    }
-    else if(mTauType == eTauFixed && mTauFixed != 0)
+    if(mTauType == eTauFixed && mTauFixed != 0)
         mTau = mTauFixed;
     else if(mTauType == eTauRange && mTauMax > mTauMin)
         mTau = mTauMax;
+    else if(mTauType == eTauUnknown)
+    {
+        // nothing to do
+    }
 }
 
 void Phase::updateTau()
 {
-    if(mTauType == eTauUnknown)
-    {
-        // Nothing to do!
-    }
-    else if(mTauType == eTauFixed && mTauFixed != 0)
+    if(mTauType == eTauFixed && mTauFixed != 0)
         mTau = mTauFixed;
     else if(mTauType == eTauRange && mTauMax > mTauMin)
         mTau = Generator::randomUniform(qMax(mTauMin, mBeta.mX - mAlpha.mX), mTauMax);
+    else if(mTauType == eTauUnknown)
+    {
+        // Nothing to do!
+    }
 }
 
 void Phase::memoAll()

@@ -254,6 +254,23 @@ bool Model::isValid()
     if(mEvents.size() == 0)
         throw tr("At least one event is required");
     
+    // 1 - Au moins 1 fait dans le modèle
+    // 2 - Un fait ne paut pas appartenir à 2 phases en contrainte
+    // 3 - Pas de circularité sur les contraintes de faits
+    // 4 - Pas de circularité sur les contraintes de phases
+    
+    // 5 - Bounds : verifier cohérence des bornes en fonction des contraintes de faits (page 2)
+    //  => Modifier les bornes des intervalles des bounds !! (juste dans le modèle servant pour le calcul)
+    // 6 - Gammas : sur toutes les branches, la somme des gamma min < plage d'étude :
+    // => trouver tous les faits au départ de branche, puis tous les chemins jusqu'en haut.
+    // 7 - Gamma min (ou fixe) entre 2 phases doit être inférieur à la différence entre : le min des sups des intervalles des bornes de la phase suivante ET le max des infs des intervalles des bornes de la phase précédente
+    // 8 - Au sein d'une phase, tau max (ou fixe) doit être supérieur à la différence entre le max des infs des intervalles des bornes et le min des sups des intervalles des bornes.
+    //  => Modifier les intervalles des bornes:
+    //      - L'inf est le max entre : sa valeur courante ou (le max des infs des intervalles des bornes - tau max ou fixe)
+    //      - Le sup est le min entre : sa valeur courante ou (le min des sups des intervalles des bornes + tau max ou fixe)
+    
+    
+    
     for(int i=0; i<mEvents.size(); ++i)
     {
         if(mEvents[i]->type() == Event::eDefault)

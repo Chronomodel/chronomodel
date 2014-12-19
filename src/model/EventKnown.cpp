@@ -121,9 +121,6 @@ void EventKnown::updateValues(float tmin, float tmax, float step)
 
 void EventKnown::updateTheta(float tmin, float tmax)
 {
-    float min = getThetaMin(tmin);
-    float max = getThetaMax(tmax);
-    
     switch(mKnownType)
     {
         case eFixed:
@@ -133,9 +130,13 @@ void EventKnown::updateTheta(float tmin, float tmax)
         }
         case eUniform:
         {
-            min = (mUniformStart > min) ? mUniformStart : min;
-            max = (mUniformEnd < max) ? mUniformEnd : max;
-            float theta = max + Generator::randomUniform() * (max - min);
+            float min = getThetaMin(tmin);
+            float max = getThetaMax(tmax);
+            
+            min = qMax(mUniformStart, min);
+            max = qMin(mUniformEnd, max);
+            
+            float theta = min + Generator::randomUniform() * (max - min);
             mTheta.tryUpdate(theta, 1);
             break;
         }
