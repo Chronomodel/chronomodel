@@ -68,7 +68,7 @@ void CalibrationView::setDate(const QJsonObject& date)
     
     if(!mDate.isNull())
     {
-        mDate.calibrate(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
+        mDate.calibrate(mSettings);
         
         mRuler->setRange(mSettings.mTmin, mSettings.mTmax);
         mRuler->zoomDefault();
@@ -93,7 +93,7 @@ void CalibrationView::updateGraphs()
     if(!mDate.isNull())
     {
         DensityAnalysis results;
-        results.analysis = analyseFunction(mDate.mCalibration);
+        results.analysis = analyseFunction(mDate.getCalibMap());
         results.quartiles = quartilesForRepartition(mDate.mRepartition);
         mResultsLab->setText(densityAnalysisToString(results));
         
@@ -108,21 +108,17 @@ void CalibrationView::updateGraphs()
         calibCurve.mPen.setColor(c);
         calibCurve.mFillUnder = false;
         calibCurve.mIsHisto = false;
-        calibCurve.mData = mDate.mCalibration;
+        calibCurve.mData = mDate.getCalibMap();
         
-        float yMin = map_min_value(mDate.mCalibration);
-        float yMax = map_max_value(mDate.mCalibration);
-        
-        yMax += (yMax - yMin) * 0.05f;
-        
-        mCalibGraph->setRangeY(0, yMax);
+        float yMax = map_max_value(calibCurve.mData);
+        mCalibGraph->setRangeY(0, 1.1f * yMax);
         
         mCalibGraph->addCurve(calibCurve);
         mCalibGraph->setVisible(true);
         
         if(mHPDCheck->isChecked())
         {
-            QMap<float, float> hpd = create_HPD(mDate.mCalibration, 1, mHPDEdit->text().toFloat());
+            QMap<float, float> hpd = create_HPD(calibCurve.mData, 1, mHPDEdit->text().toFloat());
             
             GraphCurve hpdCurve;
             hpdCurve.mName = "Calibration HPD";

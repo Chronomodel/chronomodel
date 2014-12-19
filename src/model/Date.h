@@ -3,6 +3,7 @@
 
 #include "MHVariable.h"
 #include "StateKeys.h"
+#include "ProjectSettings.h"
 
 #include <QMap>
 #include <QJsonObject>
@@ -45,13 +46,14 @@ public:
     QString getDesc() const;
     
     void reset();
-    void calibrate(const float tmin, const float tmax, const float step);
-    QPixmap generateCalibThumb(const float tmin, const float tmax);
-    float getLikelyhoodFromCalib(const float t, const float step);
+    void calibrate(const ProjectSettings& settings);
+    float getLikelyhoodFromCalib(const float t);
+    QMap<float, float> getCalibMap() const;
+    QPixmap generateCalibThumb();
     
     void initDelta(Event* event);
     
-    void updateTheta(const float& tmin, const float& tmax, const float& step, Event* event);
+    void updateTheta(Event* event);
     void updateDelta(Event* event);
     void updateSigma(Event* event);
     void updateWiggle();
@@ -78,9 +80,10 @@ public:
     bool mIsCurrent;
     bool mIsSelected;
     
-    QMap<float, float> mCalibration;
+    QVector<float> mCalibration;
     QMap<float, float> mRepartition;
     QMap<float, float> mCalibHPD;
+    ProjectSettings mSettings;
     
     QList<Date*> mSubDates;
 };

@@ -113,74 +113,6 @@ mHasPhases(false)
     connect(mZoomOutBut, SIGNAL(clicked()), mRuler, SLOT(zoomOut()));
     connect(mZoomDefaultBut, SIGNAL(clicked()), mRuler, SLOT(zoomDefault()));
     
-    // ----------
-    
-    mHPDCheck = new CheckBox(tr("HPD / Credibility (%)") + " :", this);
-    mHPDCheck->setChecked(true);
-    mHPDEdit = new LineEdit(this);
-    mHPDEdit->setText("95");
-    
-    connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(generateHPD()));
-    
-    connect(mHPDCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateGraphs()));
-    
-    // ----------
-    
-    mFFTLenLab = new Label(tr("FFT length") + ": ", this);
-    mFFTLenCombo = new QComboBox(this);
-    mFFTLenCombo->addItem("32");
-    mFFTLenCombo->addItem("64");
-    mFFTLenCombo->addItem("128");
-    mFFTLenCombo->addItem("256");
-    mFFTLenCombo->addItem("512");
-    mFFTLenCombo->addItem("1024");
-    mFFTLenCombo->addItem("2048");
-    mFFTLenCombo->addItem("4096");
-    mFFTLenCombo->addItem("8192");
-    mFFTLenCombo->addItem("16384");
-    mFFTLenCombo->setCurrentText("1024");
-    
-    mComboH = mFFTLenCombo->sizeHint().height();
-    mTabsH = mComboH + 2*mMargin;
-    
-    connect(mFFTLenCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(updateFFTLength()));
-    
-    // -----------
-    
-    mRawCheck = new CheckBox(tr("Raw results"), this);
-    mRawCheck->setChecked(false);
-    
-    connect(mRawCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    
-    // -----------
-    
-    mChainsTitle = new Label(tr("MCMC Chains"));
-    mChainsTitle->setIsTitle(true);
-    mChainsGroup = new QWidget();
-    mAllChainsCheck = new CheckBox(tr("Chains concatenation"), mChainsGroup);
-    mAllChainsCheck->setChecked(true);
-    mChainsGroup->setFixedHeight(2*mMargin + mLineH);
-    
-    connect(mAllChainsCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    
-    // -----------
-    
-    mDataTitle = new Label(tr("Results options"));
-    mDataTitle->setIsTitle(true);
-    mDataGroup = new QWidget();
-    mDataThetaRadio = new RadioButton(tr("Calendar dates"), mDataGroup);
-    mDataSigmaRadio = new RadioButton(tr("Individual variances"), mDataGroup);
-    mDataCalibCheck = new CheckBox(tr("Distrib. of calib. dates"), mDataGroup);
-    mWiggleCheck = new CheckBox(tr("Wiggle unshifted"), mDataGroup);
-    mDataThetaRadio->setChecked(true);
-    mDataCalibCheck->setChecked(true);
-    
-    connect(mDataThetaRadio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    connect(mDataCalibCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    connect(mWiggleCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    connect(mDataSigmaRadio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    
     // -------------------------
     
     mDisplayTitle = new Label(tr("Display options"));
@@ -207,7 +139,7 @@ mHasPhases(false)
     mExportImgBut->setIcon(QIcon(":picture_save.png"));
     mExportImgBut->setFixedHeight(50);
     
-    mDisplayWidget = new QWidget();
+    mDisplayGroup = new QWidget();
     QHBoxLayout* displayButsLayout = new QHBoxLayout();
     displayButsLayout->setContentsMargins(0, 0, 0, 0);
     displayButsLayout->setSpacing(0);
@@ -220,13 +152,86 @@ mHasPhases(false)
     displayLayout->addWidget(mCompressor);
     displayLayout->addWidget(mZoomWidget);
     displayLayout->addLayout(displayButsLayout);
-    mDisplayWidget->setLayout(displayLayout);
+    mDisplayGroup->setLayout(displayLayout);
     
     connect(mCompressor, SIGNAL(valueChanged(float)), this, SLOT(compress(float)));
     connect(mUnfoldBut, SIGNAL(toggled(bool)), this, SLOT(unfoldResults(bool)));
     connect(mInfosBut, SIGNAL(toggled(bool)), this, SLOT(showInfos(bool)));
     connect(mExportImgBut, SIGNAL(clicked()), this, SLOT(exportFullImage()));
     
+    // -----------
+    
+    mChainsTitle = new Label(tr("MCMC Chains"));
+    mChainsTitle->setIsTitle(true);
+    mChainsGroup = new QWidget();
+    mAllChainsCheck = new CheckBox(tr("Chains concatenation"), mChainsGroup);
+    mAllChainsCheck->setChecked(true);
+    mChainsGroup->setFixedHeight(2*mMargin + mLineH);
+    
+    connect(mAllChainsCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+    
+    // -----------
+    
+    mDataTitle = new Label(tr("Results options"));
+    mDataTitle->setIsTitle(true);
+    mDataGroup = new QWidget();
+    
+    mDataThetaRadio = new RadioButton(tr("Calendar dates"), mDataGroup);
+    mDataSigmaRadio = new RadioButton(tr("Individual variances"), mDataGroup);
+    mDataCalibCheck = new CheckBox(tr("Distrib. of calib. dates"), mDataGroup);
+    mWiggleCheck = new CheckBox(tr("Wiggle unshifted"), mDataGroup);
+    mDataThetaRadio->setChecked(true);
+    mDataCalibCheck->setChecked(true);
+    
+    connect(mDataThetaRadio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+    connect(mDataCalibCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+    connect(mWiggleCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+    connect(mDataSigmaRadio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+    
+    // -----------
+    
+    mPostDistOptsTitle = new Label(tr("Post. distrib. options"));
+    mPostDistOptsTitle->setIsTitle(true);
+    mPostDistGroup = new QWidget();
+    
+    mHPDCheck = new CheckBox(tr("HPD / Credibility (%)") + " :", mPostDistGroup);
+    mHPDCheck->setChecked(true);
+    mHPDEdit = new LineEdit(mPostDistGroup);
+    mHPDEdit->setText("95");
+    
+    connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(generateHPD()));
+    connect(mHPDCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+    connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateGraphs()));
+    
+    mRawCheck = new CheckBox(tr("Raw results"), mPostDistGroup);
+    mRawCheck->setChecked(false);
+    
+    connect(mRawCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+    
+    mFFTLenLab = new Label(tr("FFT length") + ": ", mPostDistGroup);
+    mFFTLenCombo = new QComboBox(mPostDistGroup);
+    mFFTLenCombo->addItem("32");
+    mFFTLenCombo->addItem("64");
+    mFFTLenCombo->addItem("128");
+    mFFTLenCombo->addItem("256");
+    mFFTLenCombo->addItem("512");
+    mFFTLenCombo->addItem("1024");
+    mFFTLenCombo->addItem("2048");
+    mFFTLenCombo->addItem("4096");
+    mFFTLenCombo->addItem("8192");
+    mFFTLenCombo->addItem("16384");
+    mFFTLenCombo->setCurrentText("1024");
+    
+    mComboH = mFFTLenCombo->sizeHint().height();
+    mTabsH = mComboH + 2*mMargin;
+    
+    connect(mFFTLenCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(updateFFTLength()));
+    
+    mHFactorLab = new Label(tr("Bandwidth factor") + ": ", mPostDistGroup);
+    mHFactorEdit = new LineEdit(mPostDistGroup);
+    mHFactorEdit->setText("1");
+    
+    connect(mHFactorEdit, SIGNAL(returnPressed()), this, SLOT(updateHFactor()));
     
     // -------------------------
     
@@ -236,11 +241,13 @@ mHasPhases(false)
     optionsLayout->setContentsMargins(0, 0, 0, 0);
     optionsLayout->setSpacing(0);
     optionsLayout->addWidget(mDisplayTitle);
-    optionsLayout->addWidget(mDisplayWidget);
+    optionsLayout->addWidget(mDisplayGroup);
     optionsLayout->addWidget(mChainsTitle);
     optionsLayout->addWidget(mChainsGroup);
     optionsLayout->addWidget(mDataTitle);
     optionsLayout->addWidget(mDataGroup);
+    optionsLayout->addWidget(mPostDistOptsTitle);
+    optionsLayout->addWidget(mPostDistGroup);
     optionsLayout->addStretch();
     mOptionsWidget->setLayout(optionsLayout);
     
@@ -351,12 +358,6 @@ void ResultsView::updateLayout()
         //qDebug() << "Graph phases viewport : " << wid->geometry();
     }
     
-    mHPDEdit->setGeometry(width() - mOptionsW - sbe - m - 40, m, 40, mComboH);
-    mHPDCheck->setGeometry(width() - mOptionsW - sbe - 2*m - 40 - 140, m + (mComboH - mLineH)/2, 140, mLineH);
-    mFFTLenCombo->setGeometry(width() - mOptionsW - sbe - 3*m - 40 - 140 - 80, m, 80, mComboH);
-    mFFTLenLab->setGeometry(width() - mOptionsW - sbe - 4*m - 40 - 140 - 80 - 80, m, 80, mComboH);
-    mRawCheck->setGeometry(width() - mOptionsW - sbe - 5*m - 40 - 140 - 80 - 80 - 90, m + (mComboH - mLineH)/2, 90, mLineH);
-    
     mOptionsWidget->setGeometry(width() - mOptionsW, 0, mOptionsW, height());
     
     float zw = mOptionsW / 3;
@@ -398,6 +399,17 @@ void ResultsView::updateLayout()
     mDataSigmaRadio->setGeometry(m, y += (m + mLineH), mDataGroup->width()-2*m, mLineH);
     mDataGroup->setFixedHeight(y += (m + mLineH));
     
+    y = m;
+    int sw = (mPostDistGroup->width() - 3*m) / 2;
+    mHPDCheck->setGeometry(m, y, sw, mLineH);
+    mHPDEdit->setGeometry(2*m + sw, y, sw, mLineH);
+    mRawCheck->setGeometry(m, y += (m + mLineH), mPostDistGroup->width() - 2*m, mLineH);
+    mFFTLenLab->setGeometry(m, y += (m + mLineH), sw, mComboH);
+    mFFTLenCombo->setGeometry(2*m + sw, y, sw, mComboH);
+    mHFactorLab->setGeometry(m, y += (m + mComboH), sw, mLineH);
+    mHFactorEdit->setGeometry(2*m + sw, y, sw, mLineH);
+    mPostDistGroup->setFixedHeight(y += (m + mLineH));
+    
     update();
 }
 
@@ -414,8 +426,29 @@ void ResultsView::updateFFTLength()
     if(mModel)
     {
         int len = mFFTLenCombo->currentText().toInt();
+        float hFactor = mHFactorEdit->text().toFloat();
         
-        mModel->generatePosteriorDensities(mChains, len);
+        mModel->generatePosteriorDensities(mChains, len, hFactor);
+        mModel->generateNumericalResults(mChains);
+        mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toInt());
+        
+        updateGraphs();
+    }
+}
+
+void ResultsView::updateHFactor()
+{
+    if(mModel)
+    {
+        int len = mFFTLenCombo->currentText().toInt();
+        float hFactor = mHFactorEdit->text().toFloat();
+        if(!(hFactor > 0 && hFactor <= 100))
+        {
+            hFactor = 1;
+            mHFactorEdit->setText("1");
+        }
+        
+        mModel->generatePosteriorDensities(mChains, len, hFactor);
         mModel->generateNumericalResults(mChains);
         mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toInt());
         

@@ -30,7 +30,7 @@ public:
     // Only trace needed for this :
     void generateCorrelations(const QList<Chain>& chains);
     // Computed from trace using FFT :
-    void generatePosteriorDensities(const QList<Chain>& chains, int fftLen);
+    void generatePosteriorDensities(const QList<Chain>& chains, int fftLen, float hFactor);
     // Trace and Posterior density needed for this :
     void generateCredibilityAndHPD(const QList<Chain>& chains, int threshold);
     // Trace and Posterior density needed for this :

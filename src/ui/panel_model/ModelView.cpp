@@ -373,17 +373,37 @@ void ModelView::showProperties()
 }
 void ModelView::showImport()
 {
-    mButProperties->setChecked(false);
-    mButImport->setChecked(true);
-    mButPhasesModel->setChecked(false);
-    slideRightPanel();
+    Project* project = MainWindow::getInstance()->getProject();
+    if(project->studyPeriodIsValid())
+    {
+        mButProperties->setChecked(false);
+        mButImport->setChecked(true);
+        mButPhasesModel->setChecked(false);
+        slideRightPanel();
+    }
+    else
+    {
+        mButProperties->setChecked(true);
+        mButImport->setChecked(false);
+        mButPhasesModel->setChecked(false);
+    }
 }
 void ModelView::showPhases()
 {
-    mButProperties->setChecked(false);
-    mButImport->setChecked(false);
-    mButPhasesModel->setChecked(true);
-    slideRightPanel();
+    Project* project = MainWindow::getInstance()->getProject();
+    if(project->studyPeriodIsValid())
+    {
+        mButProperties->setChecked(false);
+        mButImport->setChecked(false);
+        mButPhasesModel->setChecked(true);
+        slideRightPanel();
+    }
+    else
+    {
+        mButProperties->setChecked(true);
+        mButImport->setChecked(false);
+        mButPhasesModel->setChecked(false);
+    }
 }
 void ModelView::slideRightPanel()
 {

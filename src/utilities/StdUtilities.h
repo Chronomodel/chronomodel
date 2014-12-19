@@ -24,7 +24,7 @@
 template <typename T>
 T interpolate(const T& x, const T& x1, const T& x2, const T& y1, const T& y2)
 {
-    return (y1 + (x - x1) * (y2 - y1) / (x2 - x1));
+    return (y1 + (y2 - y1) * (x - x1) / (x2 - x1));
 }
 
 template <typename T,typename U>
@@ -218,6 +218,8 @@ QList<float> normalize_vector(const QList<float>& aVector);
 QMap<float, float> normalize_map(const QMap<float, float>& aMap);
 QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const QMap<float, float>& mapWithTargetArea);
 QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const float targetArea);
+QVector<float> equal_areas(const QVector<float>& data, const float step, const float area);
+QMap<float, float> vector_to_map(const QVector<float>& data, const float min, const float max, const float step);
 float map_interpolate_key_for_value(const float value, const QMap<float, float>& aMap);
 float map_interpolate_value_for_key(const float key, const QMap<float, float>& aMap);
 QMap<float, float> vector_to_indexed_map(const QList<float>& aVector, const float minKey = 0, const float maxKey = 0);

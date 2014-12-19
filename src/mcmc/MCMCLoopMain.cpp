@@ -34,9 +34,6 @@ void MCMCLoopMain::calibrate()
     if(mModel)
     {
         QList<Event*>& events = mModel->mEvents;
-        double tmin = mModel->mSettings.mTmin;
-        double tmax = mModel->mSettings.mTmax;
-        double step = mModel->mSettings.mStep;
         
         //----------------- Calibrate measures --------------------------------------
         
@@ -57,7 +54,7 @@ void MCMCLoopMain::calibrate()
         {
             QTime startTime = QTime::currentTime();
             
-            dates[i]->calibrate(tmin, tmax, step);
+            dates[i]->calibrate(mModel->mSettings);
             
             emit stepProgressed(i);
             
@@ -97,8 +94,10 @@ void MCMCLoopMain::initMCMC2()
     QList<Event*>& events = mModel->mEvents;
     QList<Phase*>& phases = mModel->mPhases;
     QList<PhaseConstraint*>& phasesConstraints = mModel->mPhaseConstraints;
+    
     float tmin = mModel->mSettings.mTmin;
     float tmax = mModel->mSettings.mTmax;
+    float step = mModel->mSettings.mStep;
     
     // ----------------------------------------------------------------
     //  Init gamma
@@ -148,7 +147,7 @@ void MCMCLoopMain::initMCMC2()
             Date& date = events[i]->mDates[j];
             
             // Init ti and its sigma
-            FunctionAnalysis data = analyseFunction(date.mCalibration);
+            FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration, tmin, tmax, step));
             date.mTheta.mX = map_interpolate_key_for_value(Generator::randomUniform(), date.mRepartition);
             date.mTheta.mSigmaMH = data.stddev;
             date.initDelta(events[i]);
@@ -253,8 +252,10 @@ void MCMCLoopMain::initMCMC()
 {
     QList<Event*>& events = mModel->mEvents;
     QList<Phase*>& phases = mModel->mPhases;
+    
     float tmin = mModel->mSettings.mTmin;
     float tmax = mModel->mSettings.mTmax;
+    float step = mModel->mSettings.mStep;
     
     // ----------------------------------------------------------------
     //  Thetas des Mesures
@@ -277,7 +278,7 @@ void MCMCLoopMain::initMCMC()
             // TODO Init mieux que ça!
             date.updateDelta(events[i]);
             
-            FunctionAnalysis data = analyseFunction(date.mCalibration);
+            FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration, tmin, tmax, step));
             
             date.mTheta.mX = data.mode;
             date.mTheta.mSigmaMH = data.stddev;
@@ -494,8 +495,7 @@ void MCMCLoopMain::update()
     
     double t_min = mModel->mSettings.mTmin;
     double t_max = mModel->mSettings.mTmax;
-    double step = mModel->mSettings.mStep;
-
+    
     Chain& chain = mChains[mChainIndex];
     
     bool doMemo = (chain.mTotalIter % chain.mThinningInterval == 0);
@@ -511,7 +511,7 @@ void MCMCLoopMain::update()
             Date& date = events[i]->mDates[j];
             
             date.updateDelta(event);
-            date.updateTheta(t_min, t_max, step, event);
+            date.updateTheta(event);
             date.updateSigma(event);
             date.updateWiggle();
             
@@ -627,7 +627,7 @@ bool MCMCLoopMain::adapt()
 void MCMCLoopMain::finalize()
 {
     mModel->generateCorrelations(mChains);
-    mModel->generatePosteriorDensities(mChains, 1024);
+    mModel->generatePosteriorDensities(mChains, 1024, 1);
     mModel->generateNumericalResults(mChains);
 }
 

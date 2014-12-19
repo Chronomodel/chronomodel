@@ -100,7 +100,7 @@ void GraphViewDate::refresh()
             {
                 GraphCurve curve;
                 curve.mName = "calibration";
-                curve.mData = equal_areas(mDate->mCalibration, 1.f);
+                curve.mData = equal_areas(mDate->getCalibMap(), 1.f);
                 curve.mPen.setColor(QColor(120, 120, 120));
                 curve.mFillUnder = false;
                 curve.mIsHisto = false;

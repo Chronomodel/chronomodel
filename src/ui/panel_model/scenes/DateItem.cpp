@@ -18,13 +18,10 @@ mGreyedOut(false)
     setFlags(ItemIsMovable | ItemIsSelectable);
     
     Date d = Date::fromJson(date);
+    ProjectSettings s = ProjectSettings::fromJson(settings);
     
-    float tmin = settings[STATE_SETTINGS_TMIN].toDouble();
-    float tmax = settings[STATE_SETTINGS_TMAX].toDouble();
-    float step = settings[STATE_SETTINGS_STEP].toDouble();
-    
-    d.calibrate(tmin, tmax, step);
-    mCalibThumb = d.generateCalibThumb(tmin, tmax);
+    d.calibrate(s);
+    mCalibThumb = d.generateCalibThumb();
 }
 
 const QJsonObject& DateItem::date() const

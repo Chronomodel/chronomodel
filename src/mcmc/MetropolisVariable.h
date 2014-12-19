@@ -21,7 +21,7 @@ public:
     //  These functions are time consuming!
     // -----
     
-    void generateHistos(const QList<Chain>& chains, int fftLen, float tmin, float tmax);
+    void generateHistos(const QList<Chain>& chains, int fftLen, float hFactor, float tmin, float tmax);
     void generateCorrelations(const QList<Chain>& chains);
     void generateHPD(int threshold);
     void generateCredibility(const QList<Chain>& chains, int threshold);
@@ -57,10 +57,10 @@ public:
     // -----
     
 private:
-    float* generateBufferForHisto(const QVector<float>& dataSrc, int numPts);
+    float* generateBufferForHisto(const QVector<float>& dataSrc, int numPts, float hFactor);
     QMap<float, float> bufferToMap(const float* buffer);
-    QMap<float, float> generateRawHisto(const QVector<float>& data, int fftLen, float tmin, float tmax);
-    QMap<float, float> generateHisto(const QVector<float>& data, int fftLen, float tmin, float tmax);
+    QMap<float, float> generateRawHisto(const QVector<float>& data, int fftLen, float hFactor, float tmin, float tmax);
+    QMap<float, float> generateHisto(const QVector<float>& data, int fftLen, float hFactor, float tmin, float tmax);
     QMap<float, float> generateHistoOld(const QVector<float>& dataSrc, float tmin, float tmax);
     
 public:

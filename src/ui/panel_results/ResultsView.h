@@ -61,6 +61,7 @@ private slots:
     void compress(float prop);
     void generateHPD();
     void updateFFTLength();
+    void updateHFactor();
     
 private:
     QList<QRect> getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases);
@@ -100,35 +101,36 @@ private:
     Button* mZoomDefaultBut;
     Button* mZoomOutBut;
     
-    CheckBox* mHPDCheck;
-    LineEdit* mHPDEdit;
-    
-    Label* mFFTLenLab;
-    QComboBox* mFFTLenCombo;
-    int mComboH;
-    
-    CheckBox* mRawCheck;
+    Label* mDisplayTitle;
+    QWidget* mDisplayGroup;
+    Button* mUnfoldBut;
+    Button* mInfosBut;
+    Button* mExportImgBut;
+    ScrollCompressor* mCompressor;
     
     Label* mChainsTitle;
-    Label* mDataTitle;
-    
     QWidget* mChainsGroup;
     CheckBox* mAllChainsCheck;
     QList<CheckBox*> mCheckChainChecks;
     QList<RadioButton*> mChainRadios;
     
+    Label* mDataTitle;
     QWidget* mDataGroup;
     RadioButton* mDataThetaRadio;
     CheckBox* mDataCalibCheck;
     CheckBox* mWiggleCheck;
     RadioButton* mDataSigmaRadio;
     
-    Label* mDisplayTitle;
-    QWidget* mDisplayWidget;
-    Button* mUnfoldBut;
-    Button* mInfosBut;
-    Button* mExportImgBut;
-    ScrollCompressor* mCompressor;
+    Label* mPostDistOptsTitle;
+    QWidget* mPostDistGroup;
+    CheckBox* mHPDCheck;
+    LineEdit* mHPDEdit;
+    CheckBox* mRawCheck;
+    Label* mFFTLenLab;
+    QComboBox* mFFTLenCombo;
+    Label* mHFactorLab;
+    LineEdit* mHFactorEdit;
+    int mComboH;
     
     QTimer* mTimer;
 };

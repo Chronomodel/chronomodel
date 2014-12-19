@@ -67,7 +67,7 @@ public:
     bool setSettings(const ProjectSettings& settings);
     void setAppSettings(const AppSettings& settings);
     
-    bool areStudyBoundsValid();
+    bool studyPeriodIsValid();
     
     void addEvent(QJsonObject event, const QString& reason);
     int getUnusedEventId(const QJsonArray& events);
@@ -101,7 +101,7 @@ public:
     int getUnusedPhaseConstraintId(const QJsonArray& constraints);
     
 public slots:
-    bool save(const QString& dialogTitle);
+    bool save(const QString& dialogTitle = tr("Save project as..."));
     
     void mcmcSettings();
     void run();

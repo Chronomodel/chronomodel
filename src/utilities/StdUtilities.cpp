@@ -175,6 +175,36 @@ QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const floa
     return result;
 }
 
+QVector<float> equal_areas(const QVector<float>& data, const float step, const float area)
+{
+    if(data.isEmpty())
+        return QVector<float>();
+    
+    float srcArea = 0.f;
+    for(int i=0; i<data.size(); ++i)
+        srcArea += step * data[i];
+    
+    float prop = area / srcArea;
+    QVector<float> result;
+    for(int i=0; i<data.size(); ++i)
+        result.append(data[i] * prop);
+    
+    return result;
+}
+
+QMap<float, float> vector_to_map(const QVector<float>& data, const float min, const float max, const float step)
+{
+    QMap<float, float> map;
+    int i = 0;
+    for(float t = min; t <= max; t += step)
+    {
+        if(i < data.size())
+            map.insert(t, data[i]);
+        ++i;
+    }
+    return map;
+}
+
 float map_interpolate_key_for_value(const float value, const QMap<float, float>& map)
 {
     // Dichotomie

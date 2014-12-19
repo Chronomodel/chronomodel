@@ -371,7 +371,7 @@ void Project::setAppSettings(const AppSettings& settings)
         mAutoSaveTimer->start();
 }
 
-bool Project::areStudyBoundsValid()
+bool Project::studyPeriodIsValid()
 {
     QJsonObject settings = mState[STATE_SETTINGS].toObject();
     int tmin = settings[STATE_SETTINGS_TMIN].toInt();
@@ -430,7 +430,7 @@ int Project::getUnusedEventId(const QJsonArray& events)
 
 void Project::createEvent()
 {
-    if(areStudyBoundsValid())
+    if(studyPeriodIsValid())
     {
         EventDialog dialog(qApp->activeWindow(), tr("New Event"), Qt::Sheet);
         if(dialog.exec() == QDialog::Accepted)
@@ -446,7 +446,7 @@ void Project::createEvent()
 
 void Project::createEventKnown()
 {
-    if(areStudyBoundsValid())
+    if(studyPeriodIsValid())
     {
         EventDialog dialog(qApp->activeWindow(), tr("New Bound"), Qt::Sheet);
         if(dialog.exec() == QDialog::Accepted)
@@ -832,7 +832,7 @@ void Project::recycleDates(int eventId)
 #pragma mark Phases
 void Project::createPhase()
 {
-    if(areStudyBoundsValid())
+    if(studyPeriodIsValid())
     {
         PhaseDialog dialog(qApp->activeWindow(), Qt::Sheet);
         if(dialog.exec() == QDialog::Accepted)

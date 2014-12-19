@@ -174,36 +174,48 @@ void Date::reset()
     mWiggle.reset();
 }
 
-void Date::calibrate(const float tmin, const float tmax, const float step)
+void Date::calibrate(const ProjectSettings& settings)
 {
     mCalibration.clear();
     mRepartition.clear();
     mCalibHPD.clear();
+    mSettings = settings;
     
-    if(mSubDates.size() == 0)
+    float tmin = mSettings.mTmin;
+    float tmax = mSettings.mTmax;
+    float step = mSettings.mStep;
+    
+    if(mSubDates.size() == 0) // not a combination !
     {
-        float lastRepVal = 0.f;
-        
-        for(float t=tmin; t<=tmax; t += step)
+        float lastRepVal = 0;
+        for(float t = tmin; t <= tmax; t += step)
         {
             float v = getLikelyhood(t);
-            mCalibration[t] = v;
+            mCalibration.append(v);
+            //qDebug() << "v = " << v;
             
-            float repVal = lastRepVal + v;
-            mRepartition[t] = repVal;
-            lastRepVal = repVal;
+            mRepartition[t] = lastRepVal;
+            lastRepVal += v;
         }
         mRepartition = normalize_map(mRepartition);
-        mCalibration = equal_areas(mCalibration, 1.f);
+        mCalibration = equal_areas(mCalibration, step, 1.f);
     }
     else
     {
-        // TODO
+        // TODO : combination
     }
 }
 
-QPixmap Date::generateCalibThumb(const float tmin, const float tmax)
+QMap<float, float> Date::getCalibMap() const
 {
+    return vector_to_map(mCalibration, mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
+}
+
+QPixmap Date::generateCalibThumb()
+{
+    float tmin = mSettings.mTmin;
+    float tmax = mSettings.mTmax;
+    
     GraphView* graph = new GraphView();
     graph->setFixedSize(200, 30);
     graph->setRangeX(tmin, tmax);
@@ -214,7 +226,7 @@ QPixmap Date::generateCalibThumb(const float tmin, const float tmax)
     graph->setMargins(5, 5, 5, 5);
     
     GraphCurve curve;
-    curve.mData = normalize_map(mCalibration);
+    curve.mData = normalize_map(getCalibMap());
     curve.mName = "Calibration";
     curve.mPen.setColor(Painting::mainColorLight);
     curve.mPen.setWidthF(2.f);
@@ -230,38 +242,29 @@ QPixmap Date::generateCalibThumb(const float tmin, const float tmax)
     //thumb = graph.grab();
 }
 
-float Date::getLikelyhoodFromCalib(const float t, const float step)
+float Date::getLikelyhoodFromCalib(const float t)
 {
-    if(mCalibration.find(t) != mCalibration.end())
-    {
-        return mCalibration[t];
-    }
-    else
-    {
-        float t_under = floorf(t);
-        float t_upper = ceilf(t);
-        
-        if(step > 1.f)
-        {
-            t_under = floorf(t_under / step) * step;
-            t_upper = t_under + step;
-        }
-        
-        if(mCalibration.find(t_under) == mCalibration.end())
-            qDebug() << "ERROR : calling calib on unknown t_under";
-        if(mCalibration.find(t_upper) == mCalibration.end())
-            qDebug() << "ERROR : calling calib on unknown t_upper";
-        
-        float value_under = mCalibration[t_under];
-        float value_upper = mCalibration[t_upper];
-        
-        float v = interpolate(t, t_under, t_upper, value_under, value_upper);
-        return v;
-    }
+    float tmin = mSettings.mTmin;
+    float tmax = mSettings.mTmax;
+    
+    // We need at least two points to interpolate
+    if(mCalibration.size() < 2 || t < tmin || t > tmax)
+        return 0;
+    
+    float prop = (t - tmin) / (tmax - tmin);
+    float idx = prop * (mCalibration.size() - 1); // tricky : if (tmax - tmin) = 2000, then calib size is 2001 !
+    int idxUnder = (int)floorf(idx);
+    int idxUpper = idxUnder + 1;
+    
+    float v = interpolate(idx, (float)idxUnder, (float)idxUpper, mCalibration[idxUnder], mCalibration[idxUpper]);
+    return v;
 }
 
-void Date::updateTheta(const float& tmin, const float& tmax, const float& step, Event* event)
+void Date::updateTheta(Event* event)
 {
+    float tmin = mSettings.mTmin;
+    float tmax = mSettings.mTmax;
+    
     switch(mMethod)
     {
         case eMHIndependant:
@@ -270,7 +273,7 @@ void Date::updateTheta(const float& tmin, const float& tmax, const float& step, 
             float theta = Generator::gaussByDoubleExp(event->mTheta.mX - mDelta, mSigma.mX, tmin, tmax);
             
             // rapport = G(theta_new) / G(theta_old)
-            float rapport = getLikelyhoodFromCalib(theta, step) / getLikelyhoodFromCalib(mTheta.mX, step);
+            float rapport = getLikelyhoodFromCalib(theta) / getLikelyhoodFromCalib(mTheta.mX);
             
             mTheta.tryUpdate(theta, rapport);
             break;
@@ -297,7 +300,7 @@ void Date::updateTheta(const float& tmin, const float& tmax, const float& step, 
             if(theta >= tmin && theta <= tmax)
             {
                 // rapport = (G(theta_new) / G(theta_old)) * (H(theta_new) / H(theta_old))
-                rapport = getLikelyhoodFromCalib(theta, step) / getLikelyhoodFromCalib(mTheta.mX, step); // rapport des G(theta i)
+                rapport = getLikelyhoodFromCalib(theta) / getLikelyhoodFromCalib(mTheta.mX); // rapport des G(theta i)
                 rapport *= expf((-0.5/(mSigma.mX * mSigma.mX)) * (powf(theta - (event->mTheta.mX - mDelta), 2) - powf(mTheta.mX - (event->mTheta.mX - mDelta), 2)));
             }
             

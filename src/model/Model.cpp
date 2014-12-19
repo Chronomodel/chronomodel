@@ -310,7 +310,7 @@ void Model::generateCorrelations(const QList<Chain>& chains)
     }
 }
 
-void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen)
+void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen, float hFactor)
 {
     float tmin = mSettings.mTmin;
     float tmax = mSettings.mTmax;
@@ -335,7 +335,7 @@ void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen)
         
         if(generateEventHistos)
         {
-            event->mTheta.generateHistos(chains, fftLen, tmin, tmax);
+            event->mTheta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
         }
         
         for(int j=0; j<event->mDates.size(); ++j)
@@ -344,11 +344,11 @@ void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen)
             
             qDebug() << " -> Generate post. density for date " << j << "/" << event->mDates.size() << " : " << date.mName;
             
-            date.mTheta.generateHistos(chains, fftLen, tmin, tmax);
-            date.mSigma.generateHistos(chains, fftLen, 0, tmax - tmin);
+            date.mTheta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
+            date.mSigma.generateHistos(chains, fftLen, hFactor, 0, tmax - tmin);
             
             if(!(date.mDeltaType == Date::eDeltaFixed && date.mDeltaFixed == 0))
-                date.mWiggle.generateHistos(chains, fftLen, tmin, tmax);
+                date.mWiggle.generateHistos(chains, fftLen, hFactor, tmin, tmax);
         }
     }
     
@@ -356,8 +356,8 @@ void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen)
     {
         Phase* phase = mPhases[i];
         
-        phase->mAlpha.generateHistos(chains, fftLen, tmin, tmax);
-        phase->mBeta.generateHistos(chains, fftLen, tmin, tmax);
+        phase->mAlpha.generateHistos(chains, fftLen, hFactor, tmin, tmax);
+        phase->mBeta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
     }
 }
 
