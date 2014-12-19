@@ -45,7 +45,7 @@ bool PluginGauss::wiggleAllowed() const
 }
 Date::DataMethod PluginGauss::getDataMethod() const
 {
-    return Date::eMHIndependant;
+    return Date::eMHSymGaussAdapt;
 }
 QList<Date::DataMethod> PluginGauss::allowedDataMethods() const
 {
