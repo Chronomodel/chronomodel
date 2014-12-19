@@ -249,16 +249,16 @@ bool Project::load(const QString& path)
     return false;
 }
 
-bool Project::save()
+bool Project::save(const QString& dialogTitle)
 {
     QFileInfo info(mProjectFileDir + "/" + mProjectFileName);
-    return info.exists() ? saveProjectToFile() : saveAs();
+    return info.exists() ? saveProjectToFile() : saveAs(dialogTitle);
 }
 
-bool Project::saveAs()
+bool Project::saveAs(const QString& dialogTitle)
 {
     QString path = QFileDialog::getSaveFileName(qApp->activeWindow(),
-                                                tr("Save project as..."),
+                                                dialogTitle,
                                                 MainWindow::getInstance()->getCurrentPath(),
                                                 tr("Chronomodel Project (*.chr)"));
     if(!path.isEmpty())
@@ -278,7 +278,7 @@ bool Project::saveAs()
     return false;
 }
 
-bool Project::askToSave()
+bool Project::askToSave(const QString& saveDialogTitle)
 {
     // Check if modifs have been made
     if(mState == mLastSavedState)
@@ -293,7 +293,7 @@ bool Project::askToSave()
     if(result == QMessageBox::Yes)
     {
         // return true if saving is done correcty
-        return save();
+        return save(saveDialogTitle);
     }
     else if(result == QMessageBox::No)
     {

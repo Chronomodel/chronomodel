@@ -400,7 +400,7 @@ void AxisTool::updateValues(float totalPix, float minDeltaPix, float minVal, flo
     mStartVal = ceilf(minVal / mDeltaVal) * mDeltaVal;
     mStartPix = (mStartVal - minVal) * pixelsPerUnit;
     
-    qDebug() << "------------";
+    /*qDebug() << "------------";
      qDebug() << "w = " << w;
      qDebug() << "numSteps = " << numSteps;
      qDebug() << "delta = " << delta;
@@ -411,7 +411,7 @@ void AxisTool::updateValues(float totalPix, float minDeltaPix, float minVal, flo
      qDebug() << "mStartVal = " << mStartVal;
      qDebug() << "mStartPix = " << mStartPix;
      qDebug() << "mDeltaVal = " << mDeltaVal;
-     qDebug() << "mDeltaPix = " << mDeltaPix;
+     qDebug() << "mDeltaPix = " << mDeltaPix;*/
 }
 
 QVector<float> AxisTool::paint(QPainter& p, const QRectF& r, float textS)

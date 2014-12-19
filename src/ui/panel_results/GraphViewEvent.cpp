@@ -148,6 +148,7 @@ void GraphViewEvent::refresh()
                 // On affiche donc ici la superposition des variances (et pas le résultat de theta f)
                 
                 mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
+                float yMax = 0;
                 
                 for(int i=0; i<mEvent->mDates.size(); ++i)
                 {
@@ -161,8 +162,8 @@ void GraphViewEvent::refresh()
                         curve.mData = equal_areas(date.mSigma.fullHisto(), 1.f);
                         mGraph->addCurve(curve);
                         
-                        float yMax = 1.1f * map_max_value(curve.mData);
-                        mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
+                        yMax = qMax(yMax, 1.1f * map_max_value(curve.mData));
+                        mGraph->setRangeY(0, yMax);
                     }
                     for(int j=0; j<mShowChainList.size(); ++j)
                     {
@@ -177,7 +178,7 @@ void GraphViewEvent::refresh()
                             curve.mData = equal_areas(date.mSigma.histoForChain(j), 1.f);
                             mGraph->addCurve(curve);
                             
-                            float yMax = 1.1f * map_max_value(curve.mData);
+                            yMax = 1.1f * map_max_value(curve.mData);
                             mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                         }
                     }

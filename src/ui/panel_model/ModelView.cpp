@@ -336,7 +336,7 @@ void ModelView::adjustStep()
     QJsonObject state = project->state();
     ProjectSettings s = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
     
-    int defaultVal = ProjectSettings::getStep(s.mTmin, s.mTmax);
+    float defaultVal = ProjectSettings::getStep(s.mTmin, s.mTmax);
     
     StepDialog dialog(qApp->activeWindow(), Qt::Sheet);
     dialog.setStep(s.mStep, s.mStepForced, defaultVal);

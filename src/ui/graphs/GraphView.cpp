@@ -455,10 +455,11 @@ void GraphView::paint(QPainter& painter, int w, int h)
         mBufferedImageWithGraphs = mBufferedImage;
         QPainter p(&mBufferedImageWithGraphs);
         p.setRenderHints(QPainter::Antialiasing);
-        drawCurves(p);
     }
     
     painter.drawPixmap(0, 0, mBufferedImageWithGraphs);
+    drawCurves(painter);
+    //painter.drawPixmap(0, 0, mBufferedImageWithGraphs);
     
     if(mShowAxis)
     {

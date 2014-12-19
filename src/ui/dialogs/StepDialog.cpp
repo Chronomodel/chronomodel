@@ -38,7 +38,7 @@ StepDialog::~StepDialog()
 
 }
 
-void StepDialog::setStep(int step, bool forced, int suggested)
+void StepDialog::setStep(int step, bool forced, float suggested)
 {
     mForcedCheck->setText("(" + tr("suggested/default value : ") + QString::number(suggested) + ")");
     mForcedCheck->setChecked(forced);

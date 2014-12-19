@@ -295,12 +295,12 @@ void MainWindow::newProject()
     // Return true if the project doesn't need to be saved.
     // Returns true if the user saves the project or if the user doesn't want to save it.
     // Returns false if the user cancels.
-    if(mProject->askToSave())
+    if(mProject->askToSave(tr("Save current project as...")))
     {
         // Ask to save the new project.
         // Returns true only if a new file is created.
         // Note : at this point, the project state is still the previous project state.
-        if(mProject->saveAs())
+        if(mProject->saveAs(tr("Save new project as...")))
         {
             mUndoStack->clear();
             
@@ -328,7 +328,7 @@ void MainWindow::openProject()
     
     if(!path.isEmpty())
     {
-        if(mProject->askToSave())
+        if(mProject->askToSave(tr("Save current project as...")))
         {
             QFileInfo info(path);
             setCurrentPath(info.absolutePath());
@@ -346,7 +346,7 @@ void MainWindow::openProject()
 
 void MainWindow::closeProject()
 {
-    if(mProject->askToSave())
+    if(mProject->askToSave(tr("Save current project as...")))
     {
         mUndoStack->clear();
         
@@ -366,13 +366,13 @@ void MainWindow::closeProject()
 
 void MainWindow::saveProject()
 {
-    mProject->save();
+    mProject->save(tr("Save current project as..."));
     updateWindowTitle();
 }
 
 void MainWindow::saveProjectAs()
 {
-    mProject->saveAs();
+    mProject->saveAs(tr("Save current project as..."));
     updateWindowTitle();
 }
 

@@ -419,7 +419,7 @@ QString ArrowItem::getBubbleText() const
         if(gammaType == PhaseConstraint::eGammaFixed)
             bubbleText = "hiatus ≥ " + QString::number(mData[STATE_CONSTRAINT_GAMMA_FIXED].toDouble());
         else if(gammaType == PhaseConstraint::eGammaRange)
-            bubbleText = "hiatus min ∈ [" + QString::number(mData[STATE_CONSTRAINT_GAMMA_MIN].toDouble()) +
+            bubbleText = "min hiatus ∈ [" + QString::number(mData[STATE_CONSTRAINT_GAMMA_MIN].toDouble()) +
             "; " + QString::number(mData[STATE_CONSTRAINT_GAMMA_MAX].toDouble()) + "]";
     }
     return bubbleText;

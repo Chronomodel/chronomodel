@@ -11,6 +11,9 @@
 #define STATE_DATES_TRASH "dates_trash"
 #define STATE_EVENTS_TRASH "events_trash"
 
+#define STATE_RUN "run"
+#define STATE_RESULTS_FILE "results_file"
+
 #define STATE_SETTINGS_TMIN "tmin"
 #define STATE_SETTINGS_TMAX "tmax"
 #define STATE_SETTINGS_STEP "step"

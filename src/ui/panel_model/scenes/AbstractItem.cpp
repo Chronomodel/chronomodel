@@ -99,16 +99,21 @@ QVariant AbstractItem::itemChange(GraphicsItemChange change, const QVariant& val
     {
         // value is the new position.
         QPointF newPos = value.toPointF();
-        updateItemPosition(newPos);
+
+        // See comment in itemMoved function!
+        //mScene->itemMoved(this, newPos, false);
         
         // Save item position in project state : constraints need it to update their position.
         // Dot not save this as an undo command and don't notify views for update
         //mScene->sendUpdateProject(tr("item moved"), false, false);
+        updateItemPosition(newPos);
+
+        // Update constraints positions
         mScene->updateConstraintsPos(this, newPos);
         
         return newPos;
         
-        // Migth be useful one day...
+        // Migth be useful one day to constrain event inside the current scene...
         /*QRectF rect = scene()->sceneRect();
         if (!rect.contains(newPos)) {
             // Keep the item inside the scene rect.

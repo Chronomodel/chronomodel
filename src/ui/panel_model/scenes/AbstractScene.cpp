@@ -113,11 +113,12 @@ void AbstractScene::itemLeaved(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 
 void AbstractScene::itemMoved(AbstractItem* item, QPointF newPos, bool merging)
 {
+    // This function is not called at the moment
+    // It could be used to adjust the scene rect and to follow the moving item
+    // But at the moment a bug occurs sometimes when moving an event out from the scene:
+    // Its bounding rect seems to be not correct...
+    
     Q_UNUSED(newPos);
-    
-    //qDebug() << " moved : " << newPos;
-    
-    
     
     if(merging)
     {
@@ -129,15 +130,15 @@ void AbstractScene::itemMoved(AbstractItem* item, QPointF newPos, bool merging)
     }
     
     // Ajust Scene rect to minimal
-    //setSceneRect(itemsBoundingRect());
+    setSceneRect(itemsBoundingRect());
     
     // Follow the moving item
-    /*QList<QGraphicsView*> graphicsViews = views();
-     for(int i=0; i<graphicsViews.size(); ++i)
-     {
-     graphicsViews[i]->ensureVisible(item);
-     graphicsViews[i]->centerOn(item->pos());
-     }*/
+    QList<QGraphicsView*> graphicsViews = views();
+    for(int i=0; i<graphicsViews.size(); ++i)
+    {
+        graphicsViews[i]->ensureVisible(item);
+        graphicsViews[i]->centerOn(item->pos());
+    }
 }
 
 void AbstractScene::itemReleased(AbstractItem* item, QGraphicsSceneMouseEvent* e)

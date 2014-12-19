@@ -16,7 +16,7 @@ public:
     StepDialog(QWidget* parent = 0, Qt::WindowFlags flags = 0);
     virtual ~StepDialog();
 
-    void setStep(int step, bool forced, int suggested);
+    void setStep(int step, bool forced, float suggested);
     int step() const;
     bool forced() const;
     

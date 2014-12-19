@@ -60,8 +60,8 @@ public:
     
     
     bool load(const QString& path);
-    bool saveAs();
-    bool askToSave();
+    bool saveAs(const QString& dialogTitle);
+    bool askToSave(const QString& saveDialogTitle);
     bool saveProjectToFile();
     
     bool setSettings(const ProjectSettings& settings);
@@ -101,7 +101,7 @@ public:
     int getUnusedPhaseConstraintId(const QJsonArray& constraints);
     
 public slots:
-    bool save();
+    bool save(const QString& dialogTitle);
     
     void mcmcSettings();
     void run();
