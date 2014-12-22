@@ -194,8 +194,10 @@ mHasPhases(false)
     mPostDistOptsTitle->setIsTitle(true);
     mPostDistGroup = new QWidget();
     
-    mHPDCheck = new CheckBox(tr("HPD / Credibility (%)") + " :", mPostDistGroup);
+    mHPDCheck = new CheckBox(tr("Show credibility"), mPostDistGroup);
     mHPDCheck->setChecked(true);
+    mThreshLab = new Label(tr("HPD / Credibility (%)") + " :", mPostDistGroup);
+    mThreshLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mHPDEdit = new LineEdit(mPostDistGroup);
     mHPDEdit->setText("95");
     
@@ -208,7 +210,8 @@ mHasPhases(false)
     
     connect(mRawCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     
-    mFFTLenLab = new Label(tr("FFT length") + ": ", mPostDistGroup);
+    mFFTLenLab = new Label(tr("FFT length") + " :", mPostDistGroup);
+    mFFTLenLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mFFTLenCombo = new QComboBox(mPostDistGroup);
     mFFTLenCombo->addItem("32");
     mFFTLenCombo->addItem("64");
@@ -227,7 +230,8 @@ mHasPhases(false)
     
     connect(mFFTLenCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(updateFFTLength()));
     
-    mHFactorLab = new Label(tr("Bandwidth factor") + ": ", mPostDistGroup);
+    mHFactorLab = new Label(tr("Bandwidth factor") + " :", mPostDistGroup);
+    mHFactorLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mHFactorEdit = new LineEdit(mPostDistGroup);
     mHFactorEdit->setText("1");
     
@@ -400,14 +404,17 @@ void ResultsView::updateLayout()
     mDataGroup->setFixedHeight(y += (m + mLineH));
     
     y = m;
-    int sw = (mPostDistGroup->width() - 3*m) / 2;
-    mHPDCheck->setGeometry(m, y, sw, mLineH);
-    mHPDEdit->setGeometry(2*m + sw, y, sw, mLineH);
+    int sw = (mPostDistGroup->width() - 3*m) * 0.5;
+    int w1 = (mPostDistGroup->width() - 3*m) * 0.7;
+    int w2 = (mPostDistGroup->width() - 3*m) * 0.3;
+    mHPDCheck->setGeometry(m, y, mPostDistGroup->width() - 2*m, mLineH);
+    mThreshLab->setGeometry(m, y += (m + mLineH), w1, mLineH);
+    mHPDEdit->setGeometry(2*m + w1, y, w2, mLineH);
     mRawCheck->setGeometry(m, y += (m + mLineH), mPostDistGroup->width() - 2*m, mLineH);
     mFFTLenLab->setGeometry(m, y += (m + mLineH), sw, mComboH);
     mFFTLenCombo->setGeometry(2*m + sw, y, sw, mComboH);
-    mHFactorLab->setGeometry(m, y += (m + mComboH), sw, mLineH);
-    mHFactorEdit->setGeometry(2*m + sw, y, sw, mLineH);
+    mHFactorLab->setGeometry(m, y += (m + mComboH), w1, mLineH);
+    mHFactorEdit->setGeometry(2*m + w1, y, w2, mLineH);
     mPostDistGroup->setFixedHeight(y += (m + mLineH));
     
     update();

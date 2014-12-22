@@ -123,6 +123,7 @@ private:
     
     Label* mPostDistOptsTitle;
     QWidget* mPostDistGroup;
+    Label* mThreshLab;
     CheckBox* mHPDCheck;
     LineEdit* mHPDEdit;
     CheckBox* mRawCheck;

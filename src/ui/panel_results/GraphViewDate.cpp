@@ -138,6 +138,18 @@ void GraphViewDate::refresh()
                 float yMax = 1.1f * map_max_value(curve.mData);
                 mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                 
+                if(mCurrentVariable != GraphViewResults::eSigma)
+                {
+                    GraphCurve curveHPD;
+                    curveHPD.mName = "histo HPD full";
+                    curveHPD.mData = equal_areas(variable->mHPD, mThresholdHPD/100.f);
+                    curveHPD.mPen.setColor(color);
+                    curveHPD.mFillUnder = true;
+                    curveHPD.mIsHisto = false;
+                    curveHPD.mIsRectFromZero = true;
+                    mGraph->addCurve(curveHPD);
+                }
+                
                 if(mShowRawResults)
                 {
                     GraphCurve curveRaw;
@@ -170,15 +182,6 @@ void GraphViewDate::refresh()
             }
             if(mShowAllChains && mShowHPD && mCurrentVariable != GraphViewResults::eSigma)
             {
-                GraphCurve curveHPD;
-                curveHPD.mName = "histo HPD full";
-                curveHPD.mData = equal_areas(variable->mHPD, mThresholdHPD/100.f);
-                curveHPD.mPen.setColor(color);
-                curveHPD.mFillUnder = true;
-                curveHPD.mIsHisto = false;
-                curveHPD.mIsRectFromZero = true;
-                mGraph->addCurve(curveHPD);
-                
                 GraphCurve curveCred;
                 curveCred.mName = "credibility full";
                 curveCred.mSections.append(variable->mCredibility);

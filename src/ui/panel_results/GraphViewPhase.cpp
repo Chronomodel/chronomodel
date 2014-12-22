@@ -117,36 +117,25 @@ void GraphViewPhase::refresh()
                 yMax = 1.1f * map_max_value(curveBeta.mData);
                 mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                 
-                if(mShowAllChains && mShowHPD)
-                {
-                    GraphCurve curveAlphaHPD;
-                    curveAlphaHPD.mName = "alpha HPD full";
-                    curveAlphaHPD.mPen.setColor(alphaCol);
-                    curveAlphaHPD.mFillUnder = true;
-                    curveAlphaHPD.mIsHisto = false;
-                    curveAlphaHPD.mIsRectFromZero = true;
-                    curveAlphaHPD.mData = equal_areas(mPhase->mAlpha.mHPD, mThresholdHPD / 100.f);
-                    mGraph->addCurve(curveAlphaHPD);
-                    
-                    GraphCurve curveBetaHPD;
-                    curveBetaHPD.mName = "beta HPD full";
-                    curveBetaHPD.mPen.setColor(color);
-                    curveBetaHPD.mFillUnder = true;
-                    curveBetaHPD.mIsHisto = false;
-                    curveBetaHPD.mIsRectFromZero = true;
-                    curveBetaHPD.mData = equal_areas(mPhase->mBeta.mHPD, mThresholdHPD / 100.f);
-                    mGraph->addCurve(curveBetaHPD);
-                    
-                    /*GraphCurve curveCredAlpha;
-                    curveCredAlpha.mName = "alpha credibility full";
-                    curveCredAlpha.mSections.append(QPair<float, float>(mPhase->mAlpha.mResults.analysis.mean, mPhase->mBeta.mResults.analysis.mean));
-                    curveCredAlpha.mHorizontalValue = mGraph->maximumY();
-                    curveCredAlpha.mPen.setStyle(Qt::DotLine);
-                    curveCredAlpha.mPen.setColor(color);
-                    curveCredAlpha.mPen.setWidth(5);
-                    curveCredAlpha.mIsHorizontalSections = true;
-                    mGraph->addCurve(curveCredAlpha);*/
-                }
+                // HPD
+                
+                GraphCurve curveAlphaHPD;
+                curveAlphaHPD.mName = "alpha HPD full";
+                curveAlphaHPD.mPen.setColor(alphaCol);
+                curveAlphaHPD.mFillUnder = true;
+                curveAlphaHPD.mIsHisto = false;
+                curveAlphaHPD.mIsRectFromZero = true;
+                curveAlphaHPD.mData = equal_areas(mPhase->mAlpha.mHPD, mThresholdHPD / 100.f);
+                mGraph->addCurve(curveAlphaHPD);
+                
+                GraphCurve curveBetaHPD;
+                curveBetaHPD.mName = "beta HPD full";
+                curveBetaHPD.mPen.setColor(color);
+                curveBetaHPD.mFillUnder = true;
+                curveBetaHPD.mIsHisto = false;
+                curveBetaHPD.mIsRectFromZero = true;
+                curveBetaHPD.mData = equal_areas(mPhase->mBeta.mHPD, mThresholdHPD / 100.f);
+                mGraph->addCurve(curveBetaHPD);
                 
                 if(mShowRawResults)
                 {

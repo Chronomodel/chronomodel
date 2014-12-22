@@ -47,9 +47,19 @@ void GraphViewEvent::refresh()
         QColor color = mEvent->mColor;
         
         bool isFixedBound = false;
-        EventKnown* ek = dynamic_cast<EventKnown*>(mEvent);
-        if(mEvent->type() == Event::eKnown && ek && ek->knownType() == EventKnown::eFixed)
-            isFixedBound = true;
+        bool isUnifBound = false;
+        EventKnown* bound = 0;
+        if(mEvent->type() == Event::eKnown)
+        {
+            bound = dynamic_cast<EventKnown*>(mEvent);
+            if(bound)
+            {
+                if(bound->knownType() == EventKnown::eFixed)
+                    isFixedBound = true;
+                else if(bound->knownType() == EventKnown::eUniform)
+                    isUnifBound = true;
+            }
+        }
         
         if(mCurrentResult == eHisto)
         {
@@ -68,7 +78,7 @@ void GraphViewEvent::refresh()
                     
                     for(int t=mSettings.mTmin; t< mSettings.mTmax; ++t)
                         curve.mData[t] = 0.f;
-                    curve.mData[floorf(ek->fixedValue())] = 1.f;
+                    curve.mData[floorf(bound->fixedValue())] = 1.f;
                     
                     mGraph->addCurve(curve);
                 }
@@ -77,6 +87,18 @@ void GraphViewEvent::refresh()
                     mGraph->setRangeY(0, 0.00001f);
                     setNumericalResults(mTitle + "\n" + mEvent->mTheta.resultsText());
                     
+                    if(isUnifBound && mShowCalib)
+                    {
+                        GraphCurve curve;
+                        curve.mName = "Uniform Bound";
+                        curve.mPen.setColor(QColor(120, 120, 120));
+                        curve.mIsHisto = true;
+                        curve.mData = bound->mValues;
+                        mGraph->addCurve(curve);
+                        
+                        float yMax = 1.1f * map_max_value(curve.mData);
+                        mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
+                    }
                     if(mShowAllChains)
                     {
                         GraphCurve curve;
@@ -88,6 +110,15 @@ void GraphViewEvent::refresh()
                         
                         float yMax = 1.1f * map_max_value(curve.mData);
                         mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
+                        
+                        GraphCurve curveHPD;
+                        curveHPD.mName = "histo HPD full";
+                        curveHPD.mPen.setColor(color);
+                        curveHPD.mFillUnder = true;
+                        curveHPD.mIsHisto = false;
+                        curveHPD.mIsRectFromZero = true;
+                        curveHPD.mData = equal_areas(mEvent->mTheta.mHPD, mThresholdHPD/100.f);
+                        mGraph->addCurve(curveHPD);
                         
                         if(mShowRawResults)
                         {
@@ -121,15 +152,6 @@ void GraphViewEvent::refresh()
                     }
                     if(mShowAllChains && mShowHPD)
                     {
-                        GraphCurve curveHPD;
-                        curveHPD.mName = "histo HPD full";
-                        curveHPD.mPen.setColor(color);
-                        curveHPD.mFillUnder = true;
-                        curveHPD.mIsHisto = false;
-                        curveHPD.mIsRectFromZero = true;
-                        curveHPD.mData = equal_areas(mEvent->mTheta.mHPD, mThresholdHPD/100.f);
-                        mGraph->addCurve(curveHPD);
-                        
                         GraphCurve curveCred;
                         curveCred.mName = "credibility full";
                         curveCred.mSections.append(mEvent->mTheta.mCredibility);
