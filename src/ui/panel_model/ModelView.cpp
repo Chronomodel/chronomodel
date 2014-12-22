@@ -322,12 +322,13 @@ void ModelView::applySettings()
     if(!project->setSettings(s))
     {
         // Min and max are not consistents :
-        // go back to previous values and mark button as ready
+        // go back to previous values
         
         mMinEdit->setText(QString::number(oldSettings.mTmin));
         mMaxEdit->setText(QString::number(oldSettings.mTmax));
-        mButApply->setColorState(Button::eReady);
     }
+    // Mark button as ready
+    mButApply->setColorState(Button::eReady);
 }
 
 void ModelView::adjustStep()

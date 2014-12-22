@@ -62,7 +62,7 @@ ProjectSettings ProjectSettings::fromJson(const QJsonObject& json)
     ProjectSettings settings;
     settings.mTmin = json.contains(STATE_SETTINGS_TMIN) ? json[STATE_SETTINGS_TMIN].toInt() : STATE_SETTINGS_TMIN_DEF;
     settings.mTmax = json.contains(STATE_SETTINGS_TMAX) ? json[STATE_SETTINGS_TMAX].toInt() : STATE_SETTINGS_TMAX_DEF;
-    settings.mStep = json.contains(STATE_SETTINGS_STEP) ? json[STATE_SETTINGS_STEP].toInt() : STATE_SETTINGS_STEP_DEF;
+    settings.mStep = json.contains(STATE_SETTINGS_STEP) ? json[STATE_SETTINGS_STEP].toDouble() : STATE_SETTINGS_STEP_DEF;
     settings.mStepForced = json.contains(STATE_SETTINGS_STEP_FORCED) ? json[STATE_SETTINGS_STEP_FORCED].toBool() : STATE_SETTINGS_STEP_FORCED_DEF;
     
     return settings;
