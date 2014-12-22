@@ -45,7 +45,7 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 Source: "..\..\build\release\Chronomodel.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\Chronomodel_user_Manual.pdf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "additionnal_files\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\Calib"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Source: "..\Calib\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
