@@ -328,7 +328,10 @@ void EventPropertiesView::updateKnownGraph()
         mKnownGraph->setRangeX(settings[STATE_SETTINGS_TMIN].toDouble(),
                                settings[STATE_SETTINGS_TMAX].toDouble());
         
-        mKnownGraph->setRangeY(0, map_max_value(event.mValues));
+        qDebug() << event.mValues.size();
+        float max = map_max_value(event.mValues);
+        max = (max == 0) ? 1 : max;
+        mKnownGraph->setRangeY(0, max);
         
         GraphCurve curve;
         curve.mName = "Known";
