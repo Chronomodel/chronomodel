@@ -221,31 +221,39 @@ Quartiles quartilesForRepartition(const QMap<float, float>& repartition)
     return quartiles;
 }
 
-QPair<float, float> credibilityForTrace(const QVector<float>& trace, int threshold, float& exactThresholdResult)
+QPair<float, float> credibilityForTrace(const QVector<float>& trace, int thresh, float& exactThresholdResult)
 {
     QPair<float, float> credibility;
+    credibility.first = 0;
+    credibility.second = 0;
+    exactThresholdResult = 0;
     
-    QVector<float> sorted = trace;
-    qSort(sorted);
-    
-    int numToRemove = floorf((float)sorted.size() * (1.f - (float)threshold / 100.f));
-    exactThresholdResult = ((float)sorted.size() - (float)numToRemove) / (float)sorted.size();
-    
-    int k = numToRemove;
-    int n = sorted.size();
-    float lmin = 0.f;
-    int foundJ = 0;
-    for(int j=0; j<=k; ++j)
+    if(thresh > 0)
     {
-        float l = sorted[(n - 1) - k + j] - sorted[j];
-        if(lmin == 0.f || l < lmin)
+        int threshold = qMin(thresh, 100);
+        
+        QVector<float> sorted = trace;
+        qSort(sorted);
+        
+        int numToRemove = floorf((float)sorted.size() * (1.f - (float)threshold / 100.f));
+        exactThresholdResult = ((float)sorted.size() - (float)numToRemove) / (float)sorted.size();
+        
+        int k = numToRemove;
+        int n = sorted.size();
+        float lmin = 0.f;
+        int foundJ = 0;
+        for(int j=0; j<=k; ++j)
         {
-            foundJ = j;
-            lmin = l;
+            float l = sorted[(n - 1) - k + j] - sorted[j];
+            if(lmin == 0.f || l < lmin)
+            {
+                foundJ = j;
+                lmin = l;
+            }
         }
+        credibility.first = sorted[foundJ];
+        credibility.second = sorted[(n - 1) - k + foundJ];
     }
-    credibility.first = sorted[foundJ];
-    credibility.second = sorted[(n - 1) - k + foundJ];
     
     return credibility;
 }
