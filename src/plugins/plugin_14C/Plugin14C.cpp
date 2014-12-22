@@ -34,6 +34,10 @@ float Plugin14C::getLikelyhood(const float& t, const QJsonObject& data)
         
         return result;
     }
+    else
+    {
+        qDebug() << "failed";
+    }
     return 0;
 }
 
