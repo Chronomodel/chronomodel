@@ -6,6 +6,7 @@
 #include "Generator.h"
 #include "StdUtilities.h"
 #include "Date.h"
+#include "ModelUtilities.h"
 #include "../PluginAbstract.h"
 
 #include <vector>
@@ -123,6 +124,40 @@ void MCMCLoopMain::initMCMC2()
     //  Init Bounds
     // ----------------------------------------------------------------
     
+    QVector<Event*> eventsByLevel = ModelUtilities::sortEventsByLevel(mModel->mEvents);
+    int curLevel = 0;
+    float curLevelMaxValue = mModel->mSettings.mTmin;
+    float prevLevelMaxValue = mModel->mSettings.mTmin;
+    
+    for(int i=0; i<eventsByLevel.size(); ++i)
+    {
+        if(eventsByLevel[i]->mType == Event::eKnown)
+        {
+            EventKnown* bound = dynamic_cast<EventKnown*>(mModel->mEvents[i]);
+            if(bound)
+            {
+                if(curLevel != bound->mLevel)
+                {
+                    curLevel = bound->mLevel;
+                    prevLevelMaxValue = curLevelMaxValue;
+                    curLevelMaxValue = mModel->mSettings.mTmin;
+                }
+                
+                if(bound->mKnownType == EventKnown::eFixed)
+                {
+                    bound->mTheta.mX = bound->mFixed;
+                }
+                else if(bound->mKnownType == EventKnown::eUniform)
+                {
+                    bound->mTheta.mX = Generator::randomUniform(qMax(bound->mUniformStart, prevLevelMaxValue),
+                                                                bound->mUniformEnd);
+                }
+                curLevelMaxValue = qMax(curLevelMaxValue, bound->mTheta.mX);
+                
+                bound->mInitialized = true;
+            }
+        }
+    }
     // - Définir des niveaux pour les faits
     // - Initialiser les bornes (uniquement, pas les faits) par niveaux croissants
     // => Init borne :
