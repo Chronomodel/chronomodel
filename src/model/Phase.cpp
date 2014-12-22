@@ -13,7 +13,8 @@ mTauFixed(0),
 mTauMin(0),
 mTauMax(0),
 mIsSelected(false),
-mIsCurrent(false)
+mIsCurrent(false),
+mLevel(0)
 {
     mColor = QColor(120 + rand() % 50,
                     120 + rand() % 50,

@@ -83,6 +83,8 @@ public:
     
     bool mIsSelected;
     bool mIsCurrent;
+    
+    int mLevel;
 };
 
 #endif

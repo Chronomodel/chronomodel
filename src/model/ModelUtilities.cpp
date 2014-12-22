@@ -1,5 +1,6 @@
 #include "ModelUtilities.h"
 #include "Date.h"
+#include "EventConstraint.h"
 #include "../PluginAbstract.h"
 #include <QObject>
 
@@ -75,5 +76,211 @@ QString ModelUtilities::getDeltaText(const Date& date)
     return result;
 }
 
+#pragma mark Events Branches
+QVector<QVector<Event*>> ModelUtilities::getNextBranches(const QVector<Event*>& curBranch, Event* lastNode)
+{
+    QVector<QVector<Event*>> branches;
+    QList<EventConstraint*> cts = lastNode->mConstraintsFwd;
+    if(cts.size() > 0)
+    {
+        for(int i=0; i<cts.size(); ++i)
+        {
+            QVector<Event*> branch = curBranch;
+            Event* newNode = cts[i]->mEventTo;
+            
+            if(newNode->mLevel <= lastNode->mLevel)
+                newNode->mLevel = lastNode->mLevel + 1;
+            
+            if(!branch.contains(newNode))
+            {
+                branch.append(newNode);
+                QVector<QVector<Event*>> nextBranches = getNextBranches(branch, cts[i]->mEventTo);
+                for(int j=0; j<nextBranches.size(); ++j)
+                    branches.append(nextBranches[j]);
+            }
+            else
+            {
+                QStringList evtNames;
+                for(int j=0; j<branch.size(); ++j)
+                    evtNames << branch[j]->mName;
+                evtNames << newNode->mName;
+                
+                throw QObject::tr("Circularity found in events model !\nPlease correct this branch :\n") + evtNames.join(" -> ");
+            }
+        }
+    }
+    else
+    {
+        branches.append(curBranch);
+    }
+    return branches;
+}
 
+QVector<QVector<Event*>> ModelUtilities::getBranchesFromEvent(Event* start)
+{
+    QVector<Event*> startBranch;
+    start->mLevel = 0;
+    startBranch.append(start);
+    
+    QVector<QVector<Event*>> nextBranches;
+    try{
+        nextBranches = getNextBranches(startBranch, start);
+    }catch(QString error){
+        throw error;
+    }
+    
+    return nextBranches;
+}
+
+
+QVector<QVector<Event*>> ModelUtilities::getAllEventsBranches(const QList<Event*>& events)
+{
+    QVector<QVector<Event*>> branches;
+    
+    QVector<Event*> starts;
+    for(int i=0; i<events.size(); ++i)
+    {
+        events[i]->mLevel = 0;
+        if(events[i]->mConstraintsBwd.size() == 0)
+            starts.append(events[i]);
+    }
+    for(int i=0; i<starts.size(); ++i)
+    {
+        QVector<QVector<Event*>> eventBranches;
+        try{
+            eventBranches = getBranchesFromEvent(starts[i]);
+        }catch(QString error){
+            throw error;
+        }
+        for(int j=0; j<eventBranches.size(); ++j)
+            branches.append(eventBranches[j]);
+    }
+    
+    return branches;
+}
+
+
+
+
+#pragma mark Phases Branches
+QVector<QVector<Phase*>> ModelUtilities::getNextBranches(const QVector<Phase*>& curBranch, Phase* lastNode, const float gammaSum, const float maxLength)
+{
+    QVector<QVector<Phase*>> branches;
+    QList<PhaseConstraint*> cts = lastNode->mConstraintsFwd;
+    if(cts.size() > 0)
+    {
+        for(int i=0; i<cts.size(); ++i)
+        {
+            QVector<Phase*> branch = curBranch;
+            Phase* newNode = cts[i]->mPhaseTo;
+            
+            float gamma = gammaSum;
+            if(cts[i]->mGammaType == PhaseConstraint::eGammaFixed)
+                gamma += cts[i]->mGammaFixed;
+            else if(cts[i]->mGammaType == PhaseConstraint::eGammaRange)
+                gamma += cts[i]->mGammaMin;
+            
+            if(gamma < maxLength)
+            {
+                if(newNode->mLevel <= lastNode->mLevel)
+                    newNode->mLevel = lastNode->mLevel + 1;
+                
+                if(!branch.contains(newNode))
+                {
+                    branch.append(newNode);
+                    QVector<QVector<Phase*>> nextBranches = getNextBranches(branch, cts[i]->mPhaseTo, gamma, maxLength);
+                    for(int j=0; j<nextBranches.size(); ++j)
+                        branches.append(nextBranches[j]);
+                }
+                else
+                {
+                    QStringList names;
+                    for(int j=0; j<branch.size(); ++j)
+                        names << branch[j]->mName;
+                    names << newNode->mName;
+                    
+                    throw QObject::tr("Circularity found in phases model !\nPlease correct this branch :\n") + names.join(" -> ");
+                }
+            }
+            else
+            {
+                QStringList names;
+                for(int j=0; j<curBranch.size(); ++j)
+                    names << curBranch[j]->mName;
+                names << newNode->mName;
+                throw QObject::tr("Phases branch too long :\n") + names.join(" -> ");
+            }
+        }
+    }
+    else
+    {
+        branches.append(curBranch);
+    }
+    return branches;
+}
+
+QVector<QVector<Phase*>> ModelUtilities::getBranchesFromPhase(Phase* start, const float maxLength)
+{
+    QVector<Phase*> startBranch;
+    start->mLevel = 0;
+    startBranch.append(start);
+    
+    QVector<QVector<Phase*>> nextBranches;
+    try{
+        nextBranches = getNextBranches(startBranch, start, 0, maxLength);
+    }catch(QString error){
+        throw error;
+    }
+    
+    return nextBranches;
+}
+
+
+QVector<QVector<Phase*>> ModelUtilities::getAllPhasesBranches(const QList<Phase*>& phases, const float maxLength)
+{
+    QVector<QVector<Phase*>> branches;
+    
+    QVector<Phase*> starts;
+    for(int i=0; i<phases.size(); ++i)
+    {
+        phases[i]->mLevel = 0;
+        if(phases[i]->mConstraintsBwd.size() == 0)
+            starts.append(phases[i]);
+    }
+    for(int i=0; i<starts.size(); ++i)
+    {
+        QVector<QVector<Phase*>> phaseBranches;
+        try{
+            phaseBranches = getBranchesFromPhase(starts[i], maxLength);
+        }catch(QString error){
+            throw error;
+        }
+        for(int j=0; j<phaseBranches.size(); ++j)
+            branches.append(phaseBranches[j]);
+    }
+    return branches;
+}
+
+
+#pragma mark sort events by level
+QVector<Event*> ModelUtilities::sortEventsByLevel(const QList<Event*>& events)
+{
+    int numSorted = 0;
+    int curLevel = 0;
+    QVector<Event*> results;
+    
+    while(numSorted < events.size())
+    {
+        for(int i=0; i<events.size(); ++i)
+        {
+            if(events[i]->mLevel == curLevel)
+            {
+                results.append(events[i]);
+                ++numSorted;
+            }
+        }
+        ++curLevel;
+    }
+    return results;
+}
 

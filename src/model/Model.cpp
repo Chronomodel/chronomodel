@@ -4,6 +4,7 @@
 #include "EventKnown.h"
 #include "MCMCLoopMain.h"
 #include "MCMCProgressDialog.h"
+#include "ModelUtilities.h"
 #include <QJsonArray>
 #include <QtWidgets>
 
@@ -86,6 +87,7 @@ Model* Model::fromJson(const QJsonObject& json)
             else
             {
                 EventKnown* e = new EventKnown(EventKnown::fromJson(event));
+                e->updateValues(model->mSettings.mTmin, model->mSettings.mTmax, model->mSettings.mStep);
                 model->mEvents.append(e);
             }
         }
@@ -251,39 +253,241 @@ QJsonObject Model::toJson() const
 
 bool Model::isValid()
 {
+    // 1 - Au moins 1 fait dans le modèle
     if(mEvents.size() == 0)
         throw tr("At least one event is required");
     
-    // 1 - Au moins 1 fait dans le modèle
-    // 2 - Un fait ne paut pas appartenir à 2 phases en contrainte
-    // 3 - Pas de circularité sur les contraintes de faits
-    // 4 - Pas de circularité sur les contraintes de phases
-    
-    // 5 - Bounds : verifier cohérence des bornes en fonction des contraintes de faits (page 2)
-    //  => Modifier les bornes des intervalles des bounds !! (juste dans le modèle servant pour le calcul)
-    // 6 - Gammas : sur toutes les branches, la somme des gamma min < plage d'étude :
-    // => trouver tous les faits au départ de branche, puis tous les chemins jusqu'en haut.
-    // 7 - Gamma min (ou fixe) entre 2 phases doit être inférieur à la différence entre : le min des sups des intervalles des bornes de la phase suivante ET le max des infs des intervalles des bornes de la phase précédente
-    // 8 - Au sein d'une phase, tau max (ou fixe) doit être supérieur à la différence entre le max des infs des intervalles des bornes et le min des sups des intervalles des bornes.
-    //  => Modifier les intervalles des bornes:
-    //      - L'inf est le max entre : sa valeur courante ou (le max des infs des intervalles des bornes - tau max ou fixe)
-    //      - Le sup est le min entre : sa valeur courante ou (le min des sups des intervalles des bornes + tau max ou fixe)
-    
-    
-    
+    // 2 - Au moins 1 data dans chaque event
     for(int i=0; i<mEvents.size(); ++i)
     {
         if(mEvents[i]->type() == Event::eDefault)
         {
             if(mEvents[i]->mDates.size() == 0)
-                throw tr("Event") + " " + mEvents[i]->mName + " " + tr("must contain at least 1 data");
+                throw tr(" The event") + " \"" + mEvents[i]->mName + "\" " + tr("must contain at least 1 data");
         }
     }
-    /*for(int i=0; i<mPhases.size(); ++i)
+    
+    // 3 - Au moins 1 event dans chaque phase
+    for(int i=0; i<mPhases.size(); ++i)
     {
-        if(mPhases[i].mEventsIds.size() == 0)
-            throw tr("Phase") + " " + mPhases[i].mName + " " + tr("must contain at least 1 event");
-    }*/
+        if(mPhases[i]->mEvents.size() == 0)
+            throw tr("The phase") + " \"" + mPhases[i]->mName + "\" " + tr("must contain at least 1 event");
+    }
+    
+    // 4 - Pas de circularité sur les contraintes de faits
+    QVector<QVector<Event*>> eventBranches;
+    try{
+        eventBranches = ModelUtilities::getAllEventsBranches(mEvents);
+    }catch(QString error){
+        throw error;
+    }
+    
+    // 5 - Pas de circularité sur les contraintes de phases
+    // 6 - Gammas : sur toutes les branches, la somme des gamma min < plage d'étude :
+    QVector<QVector<Phase*>> phaseBranches;
+    try{
+        phaseBranches = ModelUtilities::getAllPhasesBranches(mPhases, mSettings.mTmax - mSettings.mTmin);
+    }catch(QString error){
+        throw error;
+    }
+    
+    // 7 - Un fait ne paut pas appartenir à 2 phases en contrainte
+    for(int i=0; i<phaseBranches.size(); ++i)
+    {
+        QVector<Event*> branchEvents;
+        for(int j=0; j<phaseBranches[i].size(); ++j)
+        {
+            Phase* phase = phaseBranches[i][j];
+            for(int k=0; k<phase->mEvents.size(); ++k)
+            {
+                if(!branchEvents.contains(phase->mEvents[k]))
+                {
+                    branchEvents.append(phase->mEvents[k]);
+                    qDebug() << phase->mEvents[k]->mName << " in " << phase->mName;
+                }
+                else
+                    throw QString("The event \"" + phase->mEvents[k]->mName + "\" cannot belong to several phases in a same branch!");
+            }
+        }
+    }
+    
+    // 8 - Bounds : verifier cohérence des bornes en fonction des contraintes de faits (page 2)
+    //  => Modifier les bornes des intervalles des bounds !! (juste dans le modèle servant pour le calcul)
+    for(int i=0; i<eventBranches.size(); ++i)
+    {
+        for(int j=0; j<eventBranches[i].size(); ++j)
+        {
+            Event* event = eventBranches[i][j];
+            if(event->mType == Event::eKnown)
+            {
+                EventKnown* bound = dynamic_cast<EventKnown*>(event);
+                
+                // --------------------
+                // Check bound interval lower value
+                // --------------------
+                
+                // On vérifie toutes les bornes avant et on prend le max
+                // de leurs valeurs fixes ou du début de leur intervalle :
+                float lower = mSettings.mTmin;
+                for(int k=0; k<j; ++k)
+                {
+                    Event* evt = eventBranches[i][k];
+                    if(evt->mType == Event::eKnown)
+                    {
+                        EventKnown* bd = dynamic_cast<EventKnown*>(evt);
+                        if(bd->mKnownType == EventKnown::eFixed)
+                            lower = qMax(lower, bd->mFixed);
+                        else if(bd->mKnownType == EventKnown::eUniform)
+                            lower = qMax(lower, bd->mUniformStart);
+                    }
+                }
+                // Update bound interval
+                if(bound->mKnownType == EventKnown::eFixed && bound->mFixed < lower)
+                {
+                    throw QString("The bound \"" + bound->mName + "\" has a fixed value inconsistent with previous bounds in chain!");
+                }
+                else if(bound->mKnownType == EventKnown::eUniform)
+                {
+                    bound->mUniformStart = qMax(bound->mUniformStart, lower);
+                }
+                
+                // --------------------
+                // Check bound interval upper value
+                // --------------------
+                float upper = mSettings.mTmax;
+                for(int k=j+1; k<eventBranches[i].size(); ++k)
+                {
+                    Event* evt = eventBranches[i][k];
+                    if(evt->mType == Event::eKnown)
+                    {
+                        EventKnown* bd = dynamic_cast<EventKnown*>(evt);
+                        if(bd->mKnownType == EventKnown::eFixed)
+                            upper = qMin(upper, bd->mFixed);
+                        else if(bd->mKnownType == EventKnown::eUniform)
+                            upper = qMin(upper, bd->mUniformEnd);
+                    }
+                }
+                // Update bound interval
+                if(bound->mKnownType == EventKnown::eFixed && bound->mFixed > upper)
+                {
+                    throw QString("The bound \"" + bound->mName + "\" has a fixed value inconsistent with next bounds in chain!");
+                }
+                else if(bound->mKnownType == EventKnown::eUniform)
+                {
+                    bound->mUniformEnd = qMin(bound->mUniformEnd, upper);
+                    if(bound->mUniformStart >= bound->mUniformEnd)
+                    {
+                        throw QString("The bound \"" + bound->mName + "\" has an inconsistent range with other related bounds!");
+                    }
+                }
+            }
+        }
+    }
+    
+    // 9 - Gamma min (ou fixe) entre 2 phases doit être inférieur à la différence entre : le min des sups des intervalles des bornes de la phase suivante ET le max des infs des intervalles des bornes de la phase précédente
+    for(int i=0; i<mPhaseConstraints.size(); ++i)
+    {
+        float gammaMin = 0;
+        PhaseConstraint::GammaType gType = mPhaseConstraints[i]->mGammaType;
+        if(gType == PhaseConstraint::eGammaFixed)
+            gammaMin = mPhaseConstraints[i]->mGammaFixed;
+        else if(gType == PhaseConstraint::eGammaRange)
+            gammaMin = mPhaseConstraints[i]->mGammaMin;
+        
+        float lower = mSettings.mTmin;
+        Phase* phaseFrom = mPhaseConstraints[i]->mPhaseFrom;
+        for(int j=0; j<phaseFrom->mEvents.size(); ++j)
+        {
+            EventKnown* bound = dynamic_cast<EventKnown*>(phaseFrom->mEvents[j]);
+            if(bound)
+            {
+                if(bound->mKnownType == EventKnown::eFixed)
+                    lower = qMax(lower, bound->mFixed);
+                else if(bound->mKnownType == EventKnown::eUniform)
+                    lower = qMax(lower, bound->mUniformStart);
+            }
+        }
+        float upper = mSettings.mTmax;
+        Phase* phaseTo = mPhaseConstraints[i]->mPhaseTo;
+        for(int j=0; j<phaseTo->mEvents.size(); ++j)
+        {
+            EventKnown* bound = dynamic_cast<EventKnown*>(phaseTo->mEvents[j]);
+            if(bound)
+            {
+                if(bound->mKnownType == EventKnown::eFixed)
+                    upper = qMin(upper, bound->mFixed);
+                else if(bound->mKnownType == EventKnown::eUniform)
+                    upper = qMin(upper, bound->mUniformEnd);
+            }
+        }
+        if(gammaMin >= (upper - lower))
+        {
+            throw QString("The constraint between phases \"" + phaseFrom->mName + "\" and \"" + phaseTo->mName + "\" is not consistent with the bounds they contain!");
+        }
+    }
+    
+    // 10 - Au sein d'une phase, tau max (ou fixe) doit être supérieur à la différence entre le max des infs des intervalles des bornes et le min des sups des intervalles des bornes.
+    //  => Modifier les intervalles des bornes:
+    //      - L'inf est le max entre : sa valeur courante ou (le max des infs des intervalles des bornes - tau max ou fixe)
+    //      - Le sup est le min entre : sa valeur courante ou (le min des sups des intervalles des bornes + tau max ou fixe)
+    
+    for(int i=0; i<mPhases.size(); ++i)
+    {
+        if(mPhases[i]->mTauType != Phase::eTauUnknown)
+        {
+            float tauMax = mPhases[i]->mTauFixed;
+            if(mPhases[i]->mTauType == Phase::eTauRange)
+                tauMax = mPhases[i]->mTauMax;
+            
+            float min = mSettings.mTmin;
+            float max = mSettings.mTmax;
+            
+            for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
+            {
+                if(mPhases[i]->mEvents[j]->mType == Event::eKnown)
+                {
+                    EventKnown* bound = dynamic_cast<EventKnown*>(mPhases[i]->mEvents[j]);
+                    if(bound)
+                    {
+                        if(bound->mKnownType == EventKnown::eFixed)
+                        {
+                            min = qMax(min, bound->mFixed);
+                            max = qMin(max, bound->mFixed);
+                        }
+                        else if(bound->mKnownType == EventKnown::eUniform)
+                        {
+                            min = qMax(min, bound->mUniformEnd);
+                            max = qMin(max, bound->mUniformStart);
+                        }
+                    }
+                }
+            }
+            if(tauMax < (max - min))
+            {
+                throw QString("The phase \"" + mPhases[i]->mName + "\" has a duration inconsistent with the bounds it contains!");
+            }
+            // Modify bounds intervals to match max phase duration
+            for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
+            {
+                if(mPhases[i]->mEvents[j]->mType == Event::eKnown)
+                {
+                    EventKnown* bound = dynamic_cast<EventKnown*>(mPhases[i]->mEvents[j]);
+                    if(bound)
+                    {
+                        if(bound->mKnownType == EventKnown::eUniform)
+                        {
+                            bound->mUniformStart = qMax(bound->mUniformStart, max - tauMax);
+                            bound->mUniformEnd = qMin(bound->mUniformEnd, min + tauMax);
+                            
+                            min = qMax(min, bound->mUniformEnd);
+                            max = qMin(max, bound->mUniformStart);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
     return true;
 }
 

@@ -71,6 +71,8 @@ public:
     float mS02;
     float mAShrinkage;
     bool mInitialized;
+    
+    int mLevel; // used to init mcmc
 };
 
 #endif

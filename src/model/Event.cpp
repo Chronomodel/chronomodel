@@ -19,7 +19,8 @@ mId(0),
 mMethod(Event::eDoubleExp),
 mIsCurrent(false),
 mIsSelected(false),
-mInitialized(false)
+mInitialized(false),
+mLevel(0)
 {
     mColor = QColor(120 + rand() % 50,
                     120 + rand() % 50,
