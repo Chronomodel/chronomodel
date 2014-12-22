@@ -449,6 +449,7 @@ void MainWindow::writeSettings()
     mProjectView->writeSettings();
     
     QSettings settings;
+    
     settings.beginGroup("MainWindow");
     
     settings.setValue("size", size());
@@ -464,8 +465,6 @@ void MainWindow::writeSettings()
     settings.setValue(APP_SETTINGS_STR_CELL_SEP, mAppSettings.mCSVCellSeparator);
     settings.setValue(APP_SETTINGS_STR_DEC_SEP, mAppSettings.mCSVDecSeparator);
     settings.setValue(APP_SETTINGS_STR_OPEN_PROJ, mAppSettings.mOpenLastProjectAtLaunch);
-    settings.endGroup();
-    
     settings.endGroup();
     
     settings.endGroup();
