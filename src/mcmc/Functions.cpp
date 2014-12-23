@@ -1,5 +1,6 @@
 #include "Functions.h"
 #include "Generator.h"
+#include "StdUtilities.h"
 #include <QDebug>
 
 // -----------------------------------------------------------------
@@ -145,7 +146,7 @@ QString functionAnalysisToString(const FunctionAnalysis& analysis)
 QString densityAnalysisToString(const DensityAnalysis& analysis)
 {
     QString result = functionAnalysisToString(analysis.analysis);
-    int precision = 0;
+    int precision = 2;
     
     result += "Q1 : " + QString::number(analysis.quartiles.Q1, 'f', precision) + "   ";
     result += "Q2 (Median) : " + QString::number(analysis.quartiles.Q2, 'f', precision) + "   ";
@@ -182,41 +183,19 @@ Quartiles quartilesForTrace(const QVector<float>& trace)
     return quartiles;
 }
 
-Quartiles quartilesForRepartition(const QMap<float, float>& repartition)
+Quartiles quartilesForRepartition(const QVector<float>& repartition, float tmin, float step)
 {
     Quartiles quartiles;
     
-    QMapIterator<float, float> it(repartition);
-    int curIndex = 0;
-    it.next();
-    while(it.value() < 0.25f)
-    {
-        it.next();
-        ++curIndex;
-    }
-    quartiles.Q1 = it.key();
-    while(it.value() < 0.5f)
-    {
-        it.next();
-        ++curIndex;
-    }
-    if(repartition.size() % 2 == 0)
-    {
-        float low = it.key();
-        it.next();
-        float up = it.key();
-        quartiles.Q2 = low + (up - low) / 2.f;
-    }
-    else
-    {
-        quartiles.Q2 = it.key();
-    }
-    while(it.value() < 0.75f)
-    {
-        it.next();
-        ++curIndex;
-    }
-    quartiles.Q3 = it.key();
+    qDebug() << repartition[0];
+    
+    float q1index = vector_interpolate_idx_for_value(0.25, repartition);
+    float q2index = vector_interpolate_idx_for_value(0.5, repartition);
+    float q3index = vector_interpolate_idx_for_value(0.75, repartition);
+    
+    quartiles.Q1 = tmin + q1index * step;
+    quartiles.Q2 = tmin + q2index * step;
+    quartiles.Q3 = tmin + q3index * step;
     
     return quartiles;
 }
