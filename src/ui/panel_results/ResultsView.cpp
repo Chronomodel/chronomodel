@@ -179,7 +179,7 @@ mHasPhases(false)
     mDataThetaRadio = new RadioButton(tr("Calendar dates"), mDataGroup);
     mDataSigmaRadio = new RadioButton(tr("Individual variances"), mDataGroup);
     mDataCalibCheck = new CheckBox(tr("Distrib. of calib. dates"), mDataGroup);
-    mWiggleCheck = new CheckBox(tr("Wiggle unshifted"), mDataGroup);
+    mWiggleCheck = new CheckBox(tr("Wiggle shifted"), mDataGroup);
     mDataThetaRadio->setChecked(true);
     mDataCalibCheck->setChecked(true);
     
@@ -243,7 +243,7 @@ mHasPhases(false)
     
     QVBoxLayout* optionsLayout = new QVBoxLayout();
     optionsLayout->setContentsMargins(0, 0, 0, 0);
-    optionsLayout->setSpacing(0);
+    optionsLayout->setSpacing(5);
     optionsLayout->addWidget(mDisplayTitle);
     optionsLayout->addWidget(mDisplayGroup);
     optionsLayout->addWidget(mChainsTitle);
