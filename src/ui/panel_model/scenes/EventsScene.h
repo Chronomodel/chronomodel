@@ -26,7 +26,7 @@ public:
     
 public slots:
     void updateProject();
-    void updateSelection();
+    void updateSelection(bool force = false);
     void updateHelp();
     
     void updateSelectedEventsFromPhases();

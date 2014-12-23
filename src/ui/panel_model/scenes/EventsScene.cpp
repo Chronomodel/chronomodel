@@ -215,6 +215,7 @@ void EventsScene::updateProject()
     // ------------------------------------------------------
     //  Delete items not in current state
     // ------------------------------------------------------
+    bool hasDeleted = false;
     for(int i=mItems.size()-1; i>=0; --i)
     {
         EventItem* eventItem = (EventItem*)mItems[i];
@@ -233,6 +234,7 @@ void EventsScene::updateProject()
             }
             qDebug() << "Event deleted : " << event[STATE_ID].toInt();
             mItems.removeAt(i);
+            hasDeleted = true;
             
             // This does not break the code but is commented to match PhasesScene implementation
             //removeItem(eventItem);
@@ -330,12 +332,21 @@ void EventsScene::updateProject()
     }
     
     mUpdatingItems = false;
-    update();
+    
+    // Deleting an item that was selected involves changing the selection (and updating properties view)
+    // Nothing has been triggered so far because of the mUpdatingItems flag,
+    // so we need to trigger it now!
+    if(hasDeleted)
+    {
+        updateSelection(true);
+    }
+    
+    update(sceneRect());
 }
 
 
 #pragma mark Selection & Current
-void EventsScene::updateSelection()
+void EventsScene::updateSelection(bool force)
 {
     if(!mUpdatingItems)
     {
@@ -370,7 +381,7 @@ void EventsScene::updateSelection()
                 modified = true;
             }
         }
-        if(modified)
+        if(modified || force)
         {
             emit MainWindow::getInstance()->getProject()->currentEventChanged(event);
             sendUpdateProject(tr("events selection : no undo, no view update!"), false, false);

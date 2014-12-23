@@ -17,7 +17,7 @@ public:
     
 public slots:
     void updateProject();
-    void updateSelection();
+    void updateSelection(bool forced = false);
     void updateCheckedPhases();
     
 public:

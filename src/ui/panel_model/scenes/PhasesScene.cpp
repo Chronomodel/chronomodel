@@ -81,6 +81,7 @@ void PhasesScene::updateProject()
     // ------------------------------------------------------
     //  Delete items not in current state
     // ------------------------------------------------------
+    bool hasDeleted = false;
     for(int i=mItems.size()-1; i>=0; --i)
     {
         PhaseItem* item = (PhaseItem*)mItems[i];
@@ -90,6 +91,7 @@ void PhasesScene::updateProject()
         {
             qDebug() << "=> Phase item deleted : " << phase[STATE_ID].toInt();
             mItems.removeAt(i);
+            hasDeleted = true;
             
             // ????? This breaks the program!!! Delete abose does the jobs but is it safe?
             //removeItem(item);
@@ -182,11 +184,20 @@ void PhasesScene::updateProject()
     }
     
     mUpdatingItems = false;
-    update();
+    
+    // Deleting an item that was selected involves changing the selection (and updating properties view)
+    // Nothing has been triggered so far because of the mUpdatingItems flag,
+    // so we need to trigger it now!
+    if(hasDeleted)
+    {
+        updateSelection(true);
+    }
+    
+    update(sceneRect());
 }
 
 #pragma mark Selection & Current
-void PhasesScene::updateSelection()
+void PhasesScene::updateSelection(bool forced)
 {
     if(!mUpdatingItems)
     {
@@ -219,7 +230,7 @@ void PhasesScene::updateSelection()
                 modified = true;
             }
         }
-        if(modified)
+        if(modified || forced)
         {
             emit MainWindow::getInstance()->getProject()->currentPhaseChanged(phase);
             sendUpdateProject(tr("phases selection updated : phases marked as selected"), false, false);
