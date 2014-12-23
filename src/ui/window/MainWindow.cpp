@@ -351,6 +351,7 @@ void MainWindow::closeProject()
         mUndoStack->clear();
         
         mProject->initState();
+        mProject->mLastSavedState = mProject->emptyState();
         mProject->mProjectFileName = QString();
         
         mViewModelAction->trigger();
