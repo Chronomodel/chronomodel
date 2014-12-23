@@ -326,9 +326,17 @@ void ModelView::applySettings()
         
         mMinEdit->setText(QString::number(oldSettings.mTmin));
         mMaxEdit->setText(QString::number(oldSettings.mTmax));
+        
+        if(oldSettings.mTmin < oldSettings.mTmax)
+        {
+            mButApply->setColorState(Button::eReady);
+        }
     }
-    // Mark button as ready
-    mButApply->setColorState(Button::eReady);
+    else
+    {
+        // Mark button as ready
+        mButApply->setColorState(Button::eReady);
+    }
 }
 
 void ModelView::adjustStep()
