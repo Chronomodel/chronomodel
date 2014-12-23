@@ -194,7 +194,7 @@ float* MetropolisVariable::generateBufferForHisto(const QVector<float>& dataSrc,
     double a = vector_min_value(dataSrc) - 4. * h;
     double b = vector_max_value(dataSrc) + 4. * h;
     
-    double delta = (b - a) / numPts;
+    double delta = (b - a) / (numPts - 1);
     double denum = delta * delta * dataSrc.size();
     
     float* input = (float*) fftwf_malloc(numPts * sizeof(float));
@@ -216,27 +216,26 @@ float* MetropolisVariable::generateBufferForHisto(const QVector<float>& dataSrc,
         {
             qDebug() << "FFT input : infinity contrib!";
         }
-        if(idx_under < 0 || idx_under >= numPts || idx_upper < 0 || idx_upper >= numPts)
+        if(idx_under < 0 || idx_under >= numPts || idx_upper < 0 || idx_upper > numPts)
         {
             qDebug() << "FFT input : Wrong index";
         }
         input[(int)idx_under] += (float)contrib_under;
-        input[(int)idx_upper] += (float)contrib_upper;
+        if(idx_upper < numPts) // This is to handle the case when matching the last point index !
+            input[(int)idx_upper] += (float)contrib_upper;
     }
     return input;
 }
 
-QMap<float, float> MetropolisVariable::generateRawHisto(const QVector<float>& dataSrc, int fftLen, float hFactor, float tmin, float tmax)
+QMap<float, float> MetropolisVariable::generateRawHisto(const QVector<float>& dataSrc, int fftLen, float tmin, float tmax)
 {
     int inputSize = fftLen;
     
-    float sigma = dataStd(dataSrc);
-    float h = 1.06f * sigma * powf(dataSrc.size(), -1.f/5.f);
-    float a = vector_min_value(dataSrc) - 4.f * h;
-    float b = vector_max_value(dataSrc) + 4.f * h;
+    float a = vector_min_value(dataSrc);
+    float b = vector_max_value(dataSrc);
     float delta = (b - a) / fftLen;
     
-    float* input = generateBufferForHisto(dataSrc, fftLen, hFactor);
+    float* input = generateBufferForHisto(dataSrc, fftLen, 0);
     
     QMap<float, float> result;
     if(input != 0)
@@ -314,13 +313,13 @@ void MetropolisVariable::generateHistos(const QList<Chain>& chains, int fftLen, 
     
     QVector<float> subFullTrace = fullRunTrace(chains);
     mHisto = generateHisto(subFullTrace, fftLen, hFactor, tmin, tmax);
-    mRawHisto = generateRawHisto(subFullTrace, fftLen, hFactor, tmin, tmax);
+    mRawHisto = generateRawHisto(subFullTrace, fftLen, tmin, tmax);
     
     for(int i=0; i<chains.size(); ++i)
     {
         QVector<float> subTrace = runTraceForChain(chains, i);
         mChainsHistos.append(generateHisto(subTrace, fftLen, hFactor, tmin, tmax));
-        mChainsRawHistos.append(generateRawHisto(subTrace, fftLen, hFactor, tmin, tmax));
+        mChainsRawHistos.append(generateRawHisto(subTrace, fftLen, tmin, tmax));
     }
 }
 
