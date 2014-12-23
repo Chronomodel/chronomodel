@@ -37,7 +37,7 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         float dec = date.mData.value(DATE_AM_DEC_STR).toDouble();
         float intensity = date.mData.value(DATE_AM_INTENSITY_STR).toDouble();
         float alpha = date.mData.value(DATE_AM_ERROR_STR).toDouble();
-        QString ref_curve = date.mData.value(DATE_AM_REF_CURVE_STR).toString();
+        QString ref_curve = date.mData.value(DATE_AM_REF_CURVE_STR).toString().toLower();
         
         // ----------------------------------------------
         //  Reference curve

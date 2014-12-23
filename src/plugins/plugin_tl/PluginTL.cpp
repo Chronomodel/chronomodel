@@ -22,7 +22,7 @@ float PluginTL::getLikelyhood(const float& t, const QJsonObject& data)
     float ref_year = data[DATE_TL_REF_YEAR_STR].toDouble();
     
     // gaussienne TL
-    float v = expf(-0.5f * powf((age - (ref_year - t)) / error, 2.f)) / (error * sqrtf(2.f * M_PI));
+    float v = expf(-0.5f * powf((age - (ref_year - t)) / error, 2.f)) / error; //  * sqrtf(2.f * M_PI)
     return v;
 }
 

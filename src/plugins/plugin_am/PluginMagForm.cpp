@@ -69,7 +69,7 @@ void PluginMagForm::setData(const QJsonObject& data)
     float dec = data.value(DATE_AM_DEC_STR).toDouble();
     float intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
     float error = data.value(DATE_AM_ERROR_STR).toDouble();
-    QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString();
+    QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
     
     mIncRadio->setChecked(is_inc);
     mDecRadio->setChecked(is_dec);

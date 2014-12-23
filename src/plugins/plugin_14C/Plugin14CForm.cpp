@@ -48,7 +48,7 @@ void Plugin14CForm::setData(const QJsonObject& data)
 {
     float a = data.value(DATE_14C_AGE_STR).toDouble();
     float e = data.value(DATE_14C_ERROR_STR).toDouble();
-    QString r = data.value(DATE_14C_REF_CURVE_STR).toString();
+    QString r = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
     
     mAverageEdit->setText(QString::number(a));
     mErrorEdit->setText(QString::number(e));

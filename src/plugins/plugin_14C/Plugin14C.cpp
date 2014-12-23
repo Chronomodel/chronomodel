@@ -1,6 +1,7 @@
 #include "Plugin14C.h"
 #if USE_PLUGIN_14C
 
+#include "QtUtilities.h"
 #include "StdUtilities.h"
 #include "Plugin14CForm.h"
 #include "Plugin14CRefView.h"
@@ -19,7 +20,7 @@ float Plugin14C::getLikelyhood(const float& t, const QJsonObject& data)
 {
     float age = data[DATE_14C_AGE_STR].toDouble();
     float error = data[DATE_14C_ERROR_STR].toDouble();
-    QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString();
+    QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString().toLower();
     
     float result = 0;
     
@@ -107,7 +108,7 @@ QJsonObject Plugin14C::dataFromList(const QStringList& list)
     {
         json.insert(DATE_14C_AGE_STR, list[1].toDouble());
         json.insert(DATE_14C_ERROR_STR, list[2].toDouble());
-        json.insert(DATE_14C_REF_CURVE_STR, list[3]);
+        json.insert(DATE_14C_REF_CURVE_STR, list[3].toLower());
         
         qDebug() << list;
         qDebug() << json;
@@ -123,7 +124,7 @@ QString Plugin14C::getDateDesc(const Date* date) const
         QJsonObject data = date->mData;
         result += QObject::tr("Age") + " : " + QString::number(data[DATE_14C_AGE_STR].toDouble());
         result += " ± " + QString::number(data[DATE_14C_ERROR_STR].toDouble());
-        result += ", " + QObject::tr("Ref. curve") + " : " + data[DATE_14C_REF_CURVE_STR].toString();
+        result += ", " + QObject::tr("Ref. curve") + " : " + data[DATE_14C_REF_CURVE_STR].toString().toLower();
     }
     return result;
 }
@@ -162,78 +163,99 @@ void Plugin14C::loadRefDatas()
     QFileInfoList files = calibDir.entryInfoList(QStringList(), QDir::Files);
     for(int i=0; i<files.size(); ++i)
     {
-        QFile file(files[i].absoluteFilePath());
-        if(file.open(QIODevice::ReadOnly))
+        if(files[i].suffix().toLower() == "14c")
         {
-            QMap<QString, QMap<float, float>> curves;
-            
-            QMap<float, float> curveG;
-            QMap<float, float> curveG95Sup;
-            QMap<float, float> curveG95Inf;
-            
-            QTextStream stream(&file);
-            while(!stream.atEnd())
+            QFile file(files[i].absoluteFilePath());
+            if(file.open(QIODevice::ReadOnly))
             {
-                QString line = stream.readLine();
-                if(line.left(1) != "#")
+                QMap<QString, QMap<float, float>> curves;
+                
+                QMap<float, float> curveG;
+                QMap<float, float> curveG95Sup;
+                QMap<float, float> curveG95Inf;
+                
+                QTextStream stream(&file);
+                while(!stream.atEnd())
                 {
-                    QStringList values = line.split(",");
-                    if(values.size() >= 3)
+                    QString line = stream.readLine();
+                    if(!isComment(line))
                     {
-                        int t = 1950 - values[0].toInt();
-                        
-                        float g = values[1].toFloat();
-                        float gSup = g + 1.96f * values[2].toFloat();
-                        float gInf = g - 1.96f * values[2].toFloat();
-                        
-                        curveG[t] = g;
-                        curveG95Sup[t] = gSup;
-                        curveG95Inf[t] = gInf;
+                        QStringList values = line.split(",");
+                        if(values.size() >= 3)
+                        {
+                            int t = 1950 - values[0].toInt();
+                            
+                            float g = values[1].toFloat();
+                            float gSup = g + 1.96f * values[2].toFloat();
+                            float gInf = g - 1.96f * values[2].toFloat();
+                            
+                            curveG[t] = g;
+                            curveG95Sup[t] = gSup;
+                            curveG95Inf[t] = gInf;
+                        }
                     }
                 }
-            }
-            file.close();
-            
-            // The curves do not have 1-year precision!
-            // We have to interpolate in the blanks
-            
-            float tmin = curveG.firstKey();
-            float tmax = curveG.lastKey();
-            
-            for(float t=tmin; t<tmax; ++t)
-            {
-                if(curveG.find(t) == curveG.end())
+                file.close();
+                
+                // The curves do not have 1-year precision!
+                // We have to interpolate in the blanks
+                
+                float tmin = curveG.firstKey();
+                float tmax = curveG.lastKey();
+                
+                for(float t=tmin; t<tmax; ++t)
                 {
-                    // This actually return the iterator with the nearest greater key !!!
-                    QMap<float, float>::const_iterator iter = curveG.lowerBound(t);
-                    float t_upper = iter.key();
-                    --iter;
-                    float t_under = iter.key();
-                    
-                    //qDebug() << t_under << " < " << t << " < " << t_upper;
-                    
-                    float g_under = curveG[t_under];
-                    float g_upper = curveG[t_upper];
-                    
-                    float gsup_under = curveG95Sup[t_under];
-                    float gsup_upper = curveG95Sup[t_upper];
-                    
-                    float ginf_under = curveG95Inf[t_under];
-                    float ginf_upper = curveG95Inf[t_upper];
-                    
-                    curveG[t] = interpolate(t, t_under, t_upper, g_under, g_upper);
-                    curveG95Sup[t] = interpolate(t, t_under, t_upper, gsup_under, gsup_upper);
-                    curveG95Inf[t] = interpolate(t, t_under, t_upper, ginf_under, ginf_upper);
+                    if(curveG.find(t) == curveG.end())
+                    {
+                        // This actually return the iterator with the nearest greater key !!!
+                        QMap<float, float>::const_iterator iter = curveG.lowerBound(t);
+                        if(iter != curveG.end())
+                        {
+                            float t_upper = iter.key();
+                            --iter;
+                            if(iter != curveG.begin())
+                            {
+                                float t_under = iter.key();
+                                
+                                //qDebug() << t_under << " < " << t << " < " << t_upper;
+                                
+                                float g_under = curveG[t_under];
+                                float g_upper = curveG[t_upper];
+                                
+                                float gsup_under = curveG95Sup[t_under];
+                                float gsup_upper = curveG95Sup[t_upper];
+                                
+                                float ginf_under = curveG95Inf[t_under];
+                                float ginf_upper = curveG95Inf[t_upper];
+                                
+                                curveG[t] = interpolate(t, t_under, t_upper, g_under, g_upper);
+                                curveG95Sup[t] = interpolate(t, t_under, t_upper, gsup_under, gsup_upper);
+                                curveG95Inf[t] = interpolate(t, t_under, t_upper, ginf_under, ginf_upper);
+                            }
+                            else
+                            {
+                                curveG[t] = 0;
+                                curveG95Sup[t] = 0;
+                                curveG95Inf[t] = 0;
+                            }
+                        }
+                        else
+                        {
+                            curveG[t] = 0;
+                            curveG95Sup[t] = 0;
+                            curveG95Inf[t] = 0;
+                        }
+                    }
                 }
+                
+                // Store the resulting curves :
+                
+                curves["G"] = curveG;
+                curves["G95Sup"] = curveG95Sup;
+                curves["G95Inf"] = curveG95Inf;
+                
+                mRefDatas[files[i].fileName().toLower()] = curves;
             }
-            
-            // Store the resulting curves :
-            
-            curves["G"] = curveG;
-            curves["G95Sup"] = curveG95Sup;
-            curves["G95Inf"] = curveG95Inf;
-            
-            mRefDatas[files[i].fileName()] = curves;
         }
     }
 }
@@ -247,7 +269,7 @@ GraphViewRefAbstract* Plugin14C::getGraphViewRef()
 
 const QMap<QString, QMap<float, float> >& Plugin14C::getRefData(const QString& name)
 {
-    return mRefDatas[name];
+    return mRefDatas[name.toLower()];
 }
 
 #endif

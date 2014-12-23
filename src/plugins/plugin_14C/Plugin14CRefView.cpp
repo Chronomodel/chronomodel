@@ -32,7 +32,7 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
     {
         float age = date.mData.value(DATE_14C_AGE_STR).toDouble();
         float error = date.mData.value(DATE_14C_ERROR_STR).toDouble();
-        QString ref_curve = date.mData.value(DATE_14C_REF_CURVE_STR).toString();
+        QString ref_curve = date.mData.value(DATE_14C_REF_CURVE_STR).toString().toLower();
         
         // ----------------------------------------------
         //  Reference curve
