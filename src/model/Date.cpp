@@ -33,6 +33,7 @@ void Date::init()
     mDeltaError = 0;
     mIsCurrent = false;
     mIsSelected = false;
+    mCalibSum = 0;
 }
 
 Date::Date(const Date& date)
@@ -180,6 +181,7 @@ void Date::calibrate(const ProjectSettings& settings)
     mRepartition.clear();
     mCalibHPD.clear();
     mSettings = settings;
+    mCalibSum = 0;
     
     float tmin = mSettings.mTmin;
     float tmax = mSettings.mTmax;
@@ -192,6 +194,7 @@ void Date::calibrate(const ProjectSettings& settings)
         {
             float v = getLikelyhood(t);
             mCalibration.append(v);
+            mCalibSum += v;
             //qDebug() << "v = " << v;
             
             mRepartition[t] = lastRepVal;

@@ -81,6 +81,7 @@ public:
     bool mIsSelected;
     
     QVector<float> mCalibration;
+    float mCalibSum;
     QMap<float, float> mRepartition;
     QMap<float, float> mCalibHPD;
     ProjectSettings mSettings;

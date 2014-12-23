@@ -76,7 +76,11 @@ void MCMCLoop::run()
     
     QTime startCalibTime = QTime::currentTime();
     
-    this->calibrate();
+    mAbortedReason = this->calibrate();
+    if(!mAbortedReason.isEmpty())
+    {
+        return;
+    }
     
     QTime endCalibTime = QTime::currentTime();
     timeDiff = startCalibTime.msecsTo(endCalibTime);

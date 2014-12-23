@@ -378,7 +378,7 @@ bool Project::studyPeriodIsValid()
     int tmax = settings[STATE_SETTINGS_TMAX].toInt();
     if(tmin >= tmax)
     {
-        QMessageBox message(QMessageBox::Information,
+        QMessageBox message(QMessageBox::Warning,
                             tr("Study period definition required"),
                             tr("You need to define a study period in years (begin, end and step) before creating your model!"),
                             QMessageBox::Ok,
@@ -1637,7 +1637,7 @@ void Project::run()
     }
     catch(QString error)
     {
-        QMessageBox message(QMessageBox::Information,
+        QMessageBox message(QMessageBox::Warning,
                             tr("Your model is not valid"),
                             error,
                             QMessageBox::Ok,
@@ -1651,42 +1651,20 @@ void Project::run()
         MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::Sheet);
         if(dialog.startMCMC() == QDialog::Accepted)
         {
-            emit mcmcFinished(loop);
+            if(loop.mAbortedReason.isEmpty())
+            {
+                emit mcmcFinished(loop);
+            }
+            else
+            {
+                QMessageBox message(QMessageBox::Warning,
+                                    tr("Error"),
+                                    loop.mAbortedReason,
+                                    QMessageBox::Ok,
+                                    qApp->activeWindow(),
+                                    Qt::Sheet);
+                message.exec();
+            }
         }
     }
 }
-
-
-
-/*void Project::calibrateAllDates()
- {
- QList<Date*> dates;
- for(int i=0; i<mEvents.size(); ++i)
- {
- Event* event = mEvents[i];
- for(int j=0; j<event->mDates.size(); ++j)
- {
- dates.push_back(event->mDates[j]);
- }
- }
- 
- QProgressDialog progress(qApp->activeWindow(), Qt::Sheet);
- progress.setLabelText(tr("Calibrating data..."));
- progress.setRange(0, dates.size());
- progress.setModal(true);
- progress.setCancelButton(0);
- progress.setValue(0);
- progress.setMinimumDuration(0);
- progress.show();
- 
- for(int i=0; i<dates.size(); ++i)
- {
- progress.setValue(i);
- if(progress.wasCanceled())
- break;
- 
- dates[i]->calibrate(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
- }
- 
- progress.setValue(dates.size());
- }*/

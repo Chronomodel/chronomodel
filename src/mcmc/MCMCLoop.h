@@ -45,7 +45,7 @@ signals:
     void stepProgressed(int value);
     
 protected:
-    virtual void calibrate() = 0;
+    virtual QString calibrate() = 0;
     virtual void initVariablesForChain() = 0;
     virtual void initMCMC() = 0;
     virtual void initMCMC2() = 0;
@@ -58,6 +58,9 @@ protected:
     int mChainIndex;
     State mState;
     QString mLog;
+    
+public:
+    QString mAbortedReason;
 };
 
 #endif

@@ -13,7 +13,7 @@ public:
     ~MCMCLoopMain();
     
 protected:
-    virtual void calibrate();
+    virtual QString calibrate();
     virtual void initVariablesForChain();
     virtual void initMCMC();
     virtual void initMCMC2();

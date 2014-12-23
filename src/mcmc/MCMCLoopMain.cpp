@@ -30,7 +30,7 @@ MCMCLoopMain::~MCMCLoopMain()
 
 }
 
-void MCMCLoopMain::calibrate()
+QString MCMCLoopMain::calibrate()
 {
     if(mModel)
     {
@@ -56,6 +56,10 @@ void MCMCLoopMain::calibrate()
             QTime startTime = QTime::currentTime();
             
             dates[i]->calibrate(mModel->mSettings);
+            if(dates[i]->mCalibSum == 0)
+            {
+                return tr("The following data cannot be nul : ") + dates[i]->mName;
+            }
             
             emit stepProgressed(i);
             
@@ -63,7 +67,9 @@ void MCMCLoopMain::calibrate()
             int timeDiff = startTime.msecsTo(endTime);
             mLog += "Data \"" + dates[i]->mName + "\" (" + dates[i]->mPlugin->getName() + ") calibrated in " + QString::number(timeDiff) + " ms\n";
         }
+        return QString();
     }
+    return tr("Invalid model");
 }
 
 void MCMCLoopMain::initVariablesForChain()
