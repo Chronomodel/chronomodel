@@ -283,7 +283,7 @@ void GraphViewEvent::refresh()
                 float n = mEvent->mTheta.runTraceForChain(mChains, chainIdx).size();
                 float limit = 1.96f / sqrtf(n);
                 
-                qDebug() << n << ", " <<limit;
+                //qDebug() << n << ", " <<limit;
                 
                 GraphCurve curveLimitLower;
                 curveLimitLower.mName = QString("correlation limit lower " + QString::number(chainIdx));

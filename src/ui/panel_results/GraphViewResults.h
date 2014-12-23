@@ -4,12 +4,12 @@
 #include "ProjectSettings.h"
 #include "MCMCSettings.h"
 #include "MCMCLoop.h"
+#include "GraphView.h"
 
 #include <QWidget>
 #include <QList>
 #include <QColor>
 
-class GraphView;
 class Button;
 class QPropertyAnimation;
 class QTextEdit;
@@ -40,6 +40,8 @@ public:
     
     void setMainColor(const QColor& color);
     void toggle(const QRect& geometry);
+    
+    void setRendering(GraphView::Rendering render);
     
 public slots:
     void setRange(float min, float max);

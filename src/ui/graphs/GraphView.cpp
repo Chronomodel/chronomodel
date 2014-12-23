@@ -15,6 +15,12 @@ void GraphView::setRangeX(const float min, const float max)
     GraphViewAbstract::setRangeX(min, max);
 }
 
+void GraphView::setRendering(GraphView::Rendering render)
+{
+    mRendering = render;
+    repaintGraph(true, true);
+}
+
 void GraphView::setCurrentRangeX(const float min, const float max)
 {
     if(mCurrentMinX != min || mCurrentMaxX || max)
@@ -34,6 +40,7 @@ void GraphView::zoomX(const float min, const float max)
 #pragma mark Constructor / Destructor
 
 GraphView::GraphView(QWidget *parent):QWidget(parent),
+mRendering(eSD),
 mBackgroundColor(Qt::white),
 mTipX(0.),
 mTipY(0.),

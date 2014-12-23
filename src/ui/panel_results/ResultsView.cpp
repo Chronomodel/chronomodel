@@ -7,7 +7,6 @@
 #include "Ruler.h"
 #include "ZoomControls.h"
 #include "Marker.h"
-#include "ScrollCompressor.h"
 
 #include "Date.h"
 #include "Event.h"
@@ -77,13 +76,13 @@ mHasPhases(false)
     
     // ----------
     
-    mByPhasesBut = new Button(tr("By phases"), this);
+    mByPhasesBut = new Button(tr("Phases"), this);
     mByPhasesBut->setCheckable(true);
     mByPhasesBut->setChecked(true);
     mByPhasesBut->setAutoExclusive(true);
     mByPhasesBut->setFlatHorizontal();
     
-    mByEventsBut = new Button(tr("By events"), this);
+    mByEventsBut = new Button(tr("Events"), this);
     mByEventsBut->setCheckable(true);
     mByEventsBut->setChecked(false);
     mByEventsBut->setAutoExclusive(true);
@@ -115,12 +114,8 @@ mHasPhases(false)
     
     // -------------------------
     
-    mDisplayTitle = new Label(tr("Display options"));
+    mDisplayTitle = new Label(tr("Display Options"));
     mDisplayTitle->setIsTitle(true);
-    
-    mCompressor = new ScrollCompressor(this);
-    mCompressor->setVertical(false);
-    mCompressor->showText(tr("Scale"), true);
     
     mUnfoldBut = new Button(tr("Unfold"));
     mUnfoldBut->setCheckable(true);
@@ -139,22 +134,61 @@ mHasPhases(false)
     mExportImgBut->setIcon(QIcon(":picture_save.png"));
     mExportImgBut->setFixedHeight(50);
     
-    mDisplayGroup = new QWidget();
+    mXScaleLab = new Label(tr("Zoom X :"));
+    mYScaleLab = new Label(tr("Zoom Y :"));
+    
+    mXScaleLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mYScaleLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    
+    mXSlider = new QSlider(Qt::Horizontal);
+    mXSlider->setRange(0, 100);
+    mXSlider->setTickInterval(1);
+    
+    mYSlider = new QSlider(Qt::Horizontal);
+    mYSlider->setRange(0, 100);
+    mYSlider->setTickInterval(1);
+    mYSlider->setValue(50);
+    
+    connect(mXSlider, SIGNAL(valueChanged(int)), this, SLOT(updateScaleX(int)));
+    connect(mYSlider, SIGNAL(valueChanged(int)), this, SLOT(updateScaleY(int)));
+    
+    mRenderLab = new Label(tr("Rendering :"));
+    mRenderCombo = new QComboBox();
+    mRenderCombo->addItem(tr("Standard (faster)"));
+    mRenderCombo->addItem(tr("High (slower)"));
+    
+    connect(mRenderCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(updateRendering(int)));
+    
+    QHBoxLayout* renderLayout = new QHBoxLayout();
+    renderLayout->setContentsMargins(5, 5, 5, 5);
+    renderLayout->setSpacing(5);
+    renderLayout->addWidget(mRenderLab);
+    renderLayout->addWidget(mRenderCombo);
+    
+    QVBoxLayout* scaleLayout = new QVBoxLayout();
+    scaleLayout->setContentsMargins(5, 5, 5, 5);
+    scaleLayout->setSpacing(5);
+    scaleLayout->addWidget(mXScaleLab);
+    scaleLayout->addWidget(mXSlider);
+    scaleLayout->addWidget(mYScaleLab);
+    scaleLayout->addWidget(mYSlider);
+    scaleLayout->addLayout(renderLayout);
+    
     QHBoxLayout* displayButsLayout = new QHBoxLayout();
     displayButsLayout->setContentsMargins(0, 0, 0, 0);
     displayButsLayout->setSpacing(0);
     displayButsLayout->addWidget(mUnfoldBut);
     displayButsLayout->addWidget(mInfosBut);
     displayButsLayout->addWidget(mExportImgBut);
+    
+    mDisplayGroup = new QWidget();
     QVBoxLayout* displayLayout = new QVBoxLayout();
     displayLayout->setContentsMargins(0, 0, 0, 0);
     displayLayout->setSpacing(0);
-    displayLayout->addWidget(mCompressor);
-    displayLayout->addWidget(mZoomWidget);
-    displayLayout->addLayout(displayButsLayout);
+    //displayLayout->addWidget(mZoomWidget);
+    displayLayout->addLayout(scaleLayout);
     mDisplayGroup->setLayout(displayLayout);
     
-    connect(mCompressor, SIGNAL(valueChanged(float)), this, SLOT(compress(float)));
     connect(mUnfoldBut, SIGNAL(toggled(bool)), this, SLOT(unfoldResults(bool)));
     connect(mInfosBut, SIGNAL(toggled(bool)), this, SLOT(showInfos(bool)));
     connect(mExportImgBut, SIGNAL(clicked()), this, SLOT(exportFullImage()));
@@ -244,6 +278,7 @@ mHasPhases(false)
     QVBoxLayout* optionsLayout = new QVBoxLayout();
     optionsLayout->setContentsMargins(0, 0, 0, 0);
     optionsLayout->setSpacing(5);
+    optionsLayout->addLayout(displayButsLayout);
     optionsLayout->addWidget(mDisplayTitle);
     optionsLayout->addWidget(mDisplayGroup);
     optionsLayout->addWidget(mChainsTitle);
@@ -674,7 +709,7 @@ void ResultsView::updateResults(MCMCLoopMain& loop)
             graphEvent->setEvent(event);
             mByPhasesGraphs.append(graphEvent);
             
-            for(int j=0; j<(int)event->mDates.size(); ++j)
+            /*for(int j=0; j<(int)event->mDates.size(); ++j)
             {
                 Date& date = event->mDates[j];
                 GraphViewDate* graphDate = new GraphViewDate(phasesWidget);
@@ -683,7 +718,7 @@ void ResultsView::updateResults(MCMCLoopMain& loop)
                 graphDate->setDate(&date);
                 graphDate->setColor(event->mColor);
                 mByPhasesGraphs.append(graphDate);
-            }
+            }*/
         }
     }
     mPhasesScrollArea->setWidget(phasesWidget);
@@ -795,14 +830,6 @@ void ResultsView::exportFullImage()
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
 }
 
-void ResultsView::compress(float prop)
-{
-    float min = 20;
-    float max = 200;
-    mGraphsH = min + prop * (max - min);
-    updateLayout();
-}
-
 void ResultsView::setGraphZoom(float min, float max)
 {
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
@@ -810,6 +837,37 @@ void ResultsView::setGraphZoom(float min, float max)
         
     for(int i=0; i<mByEventsGraphs.size(); ++i)
         mByEventsGraphs[i]->zoom(min, max);
+}
+
+void ResultsView::updateScaleX(int value)
+{
+    float prop = value / 100.f;
+    
+    // TODO !!
+    
+    /*for(int i=0; i<mByPhasesGraphs.size(); ++i)
+        mByPhasesGraphs[i]->zoom(min, max);
+    
+    for(int i=0; i<mByEventsGraphs.size(); ++i)
+        mByEventsGraphs[i]->zoom(min, max);*/
+}
+
+void ResultsView::updateScaleY(int value)
+{
+    float min = 20;
+    float max = 240;
+    float prop = value / 100.f;
+    mGraphsH = min + prop * (max - min);
+    updateLayout();
+}
+
+void ResultsView::updateRendering(int index)
+{
+    for(int i=0; i<mByPhasesGraphs.size(); ++i)
+        mByPhasesGraphs[i]->setRendering((GraphView::Rendering) index);
+    
+    for(int i=0; i<mByEventsGraphs.size(); ++i)
+        mByEventsGraphs[i]->setRendering((GraphView::Rendering) index);
 }
 
 void ResultsView::showByPhases(bool)
@@ -824,14 +882,11 @@ void ResultsView::showByEvents(bool)
 
 void ResultsView::changeTab(int index)
 {
-    mHPDCheck->setVisible(index == 0);
-    mHPDEdit->setVisible(index == 0);
-    mRawCheck->setVisible(index == 0);
-    mFFTLenLab->setVisible(index == 0);
-    mFFTLenCombo->setVisible(index == 0);
-    mAllChainsCheck->setVisible(index == 0);
+    mPostDistOptsTitle->setVisible(index == 0);
+    mPostDistGroup->setVisible(index == 0);
     mDataCalibCheck->setVisible(index == 0);
     mWiggleCheck->setVisible(index == 0);
+    mAllChainsCheck->setVisible(index == 0);
     
     if(index == 0)
     {

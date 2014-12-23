@@ -8,6 +8,7 @@ class QStackedWidget;
 class QScrollArea;
 class QTimer;
 class QComboBox;
+class QSlider;
 
 class Project;
 class Model;
@@ -25,7 +26,6 @@ class LineEdit;
 class CheckBox;
 class RadioButton;
 class Marker;
-class ScrollCompressor;
 
 
 class ResultsView: public QWidget
@@ -51,6 +51,9 @@ public slots:
     
 private slots:
     void setGraphZoom(float min, float max);
+    void updateScaleX(int value);
+    void updateScaleY(int value);
+    void updateRendering(int index);
     void showByPhases(bool show);
     void showByEvents(bool show);
     void changeTab(int index);
@@ -58,7 +61,6 @@ private slots:
     void updateScrollHeights();
     void showInfos(bool);
     void exportFullImage();
-    void compress(float prop);
     void generateHPD();
     void updateFFTLength();
     void updateHFactor();
@@ -106,7 +108,13 @@ private:
     Button* mUnfoldBut;
     Button* mInfosBut;
     Button* mExportImgBut;
-    ScrollCompressor* mCompressor;
+    
+    Label* mXScaleLab;
+    Label* mYScaleLab;
+    QSlider* mXSlider;
+    QSlider* mYSlider;
+    Label* mRenderLab;
+    QComboBox* mRenderCombo;
     
     Label* mChainsTitle;
     QWidget* mChainsGroup;

@@ -20,10 +20,17 @@ class GraphView: public QWidget, public GraphViewAbstract
 {
     Q_OBJECT
 public:
+    enum Rendering{
+        eSD = 0,
+        eHD = 1
+    };
+    
     explicit GraphView(QWidget *parent = 0);
     virtual ~GraphView();
     
     void setRangeX(const float min, const float max);
+    
+    void setRendering(Rendering render);
     
 public slots:
     // Change the ruler => emit signal => change graph
@@ -86,6 +93,8 @@ protected:
     Ruler* mRuler;
     AxisTool mAxisToolX;
     AxisTool mAxisToolY;
+    
+    Rendering mRendering;
     
     QPixmap	mBufferedImage;
     QPixmap mBufferedImageWithGraphs;

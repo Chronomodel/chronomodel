@@ -1,5 +1,4 @@
 #include "GraphViewResults.h"
-#include "GraphView.h"
 #include "Button.h"
 #include "Painting.h"
 #include "QtUtilities.h"
@@ -186,6 +185,11 @@ void GraphViewResults::showNumericalResults(bool show)
     }
     else
         mTextArea->setVisible(false);
+}
+
+void GraphViewResults::setRendering(GraphView::Rendering render)
+{
+    mGraph->setRendering(render);
 }
 
 void GraphViewResults::paintEvent(QPaintEvent* e)

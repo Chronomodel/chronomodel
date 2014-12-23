@@ -94,7 +94,7 @@ void CalibrationView::updateGraphs()
     {
         DensityAnalysis results;
         results.analysis = analyseFunction(mDate.getCalibMap());
-        results.quartiles = quartilesForRepartition(mDate.mRepartition);
+        results.quartiles = quartilesForRepartition(mDate.mRepartition, mSettings.mTmin, mSettings.mStep);
         mResultsLab->setText(densityAnalysisToString(results));
         
         // ------------------------------------------------------------
