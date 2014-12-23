@@ -111,6 +111,7 @@ void CalibrationView::updateGraphs()
         calibCurve.mData = mDate.getCalibMap();
         
         float yMax = map_max_value(calibCurve.mData);
+        yMax = (yMax > 0) ? yMax : 1;
         mCalibGraph->setRangeY(0, 1.1f * yMax);
         
         mCalibGraph->addCurve(calibCurve);
