@@ -17,7 +17,7 @@ QList<float> reshape_trace(const QList<float>& trace)
     
     float min = vector_min_value(trace);
     QList<float> reshaped = vector_shift_values_by(trace, min);
-    return normalize_vector(reshaped);
+    return normalize_list(reshaped);
 }
 
 QList<float> sample_vector(const QList<float>& aVector, const int numValues)
@@ -93,7 +93,7 @@ QMap<float, float> vector_to_indexed_map(const QList<float>& aVector, const floa
     return result;
 }
 
-QList<float> normalize_vector(const QList<float>& aVector)
+QList<float> normalize_list(const QList<float>& aVector)
 {
     QList<float> histo;
 
@@ -102,6 +102,22 @@ QList<float> normalize_vector(const QList<float>& aVector)
     {
         float max_value = *it;
         for(QList<float>::const_iterator it = aVector.begin(); it != aVector.end(); ++it)
+        {
+            histo.push_back((*it)/max_value);
+        }
+    }
+    return histo;
+}
+
+QVector<float> normalize_vector(const QVector<float>& aVector)
+{
+    QVector<float> histo;
+    
+    QVector<float>::const_iterator it = max_element(aVector.begin(), aVector.end());
+    if(it != aVector.end())
+    {
+        float max_value = *it;
+        for(QVector<float>::const_iterator it = aVector.begin(); it != aVector.end(); ++it)
         {
             histo.push_back((*it)/max_value);
         }
@@ -195,14 +211,47 @@ QVector<float> equal_areas(const QVector<float>& data, const float step, const f
 QMap<float, float> vector_to_map(const QVector<float>& data, const float min, const float max, const float step)
 {
     QMap<float, float> map;
-    int i = 0;
-    for(float t = min; t <= max; t += step)
+    int nbPts = 1 + (int)roundf((max - min) / step);
+    for(int i=0; i<nbPts; ++i)
     {
+        float t = min + i * step;
         if(i < data.size())
             map.insert(t, data[i]);
-        ++i;
     }
     return map;
+}
+
+float vector_interpolate_idx_for_value(const float value, const QVector<float>& vector)
+{
+    // Dichotomie
+    
+    int idxInf = 0;
+    int idxSup = vector.size() - 1;
+    
+    if(idxSup > idxInf)
+    {
+        do
+        {
+            int idxMid = idxInf + floorf((idxSup - idxInf) / 2.f);
+            float valueMid = vector[idxMid];
+            
+            if(value < valueMid)
+                idxSup = idxMid;
+            else
+                idxInf = idxMid;
+            
+            //qDebug() << idxInf << ", " << idxSup;
+            
+        }while(idxSup - idxInf > 1);
+        
+        float valueInf = vector[idxInf];
+        float valueSup = vector[idxSup];
+        float prop = (value - valueInf) / (valueSup - valueInf);
+        float idx = (float)idxInf + prop;
+        
+        return idx;
+    }
+    return 0;
 }
 
 float map_interpolate_key_for_value(const float value, const QMap<float, float>& map)

@@ -82,7 +82,7 @@ public:
     
     QVector<float> mCalibration;
     float mCalibSum;
-    QMap<float, float> mRepartition;
+    QVector<float> mRepartition;
     QMap<float, float> mCalibHPD;
     ProjectSettings mSettings;
     

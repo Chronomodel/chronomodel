@@ -186,11 +186,24 @@ void Date::calibrate(const ProjectSettings& settings)
     float tmin = mSettings.mTmin;
     float tmax = mSettings.mTmax;
     float step = mSettings.mStep;
+    float nbPts = 1 + roundf((tmax - tmin) / step);
     
     if(mSubDates.size() == 0) // not a combination !
     {
         float lastRepVal = 0;
-        for(float t = tmin; t <= tmax; t += step)
+        for(int i = 0; i < nbPts; ++i)
+        {
+            float t = tmin + (float)i * step;
+            float v = getLikelyhood(t);
+            mCalibration.append(v);
+            mCalibSum += v;
+            //qDebug() << "v = " << v;
+            
+            mRepartition.append(lastRepVal);
+            lastRepVal += v;
+        }
+        
+        /*for(float t = tmin; t <= tmax; t += step)
         {
             float v = getLikelyhood(t);
             mCalibration.append(v);
@@ -199,8 +212,8 @@ void Date::calibrate(const ProjectSettings& settings)
             
             mRepartition[t] = lastRepVal;
             lastRepVal += v;
-        }
-        mRepartition = normalize_map(mRepartition);
+        }*/
+        mRepartition = normalize_vector(mRepartition);
         mCalibration = equal_areas(mCalibration, step, 1.f);
     }
     else
@@ -267,6 +280,7 @@ void Date::updateTheta(Event* event)
 {
     float tmin = mSettings.mTmin;
     float tmax = mSettings.mTmax;
+    float step = mSettings.mStep;
     
     switch(mMethod)
     {
@@ -286,7 +300,8 @@ void Date::updateTheta(Event* event)
             // 3eme méthode : marche aléatoire G(theta i),
             // utilisation de la courbe cumulative avec interpolation linéaire
             float u = Generator::randomUniform();
-            float theta = map_interpolate_key_for_value(u, mRepartition);
+            float idx = vector_interpolate_idx_for_value(u, mRepartition);
+            float theta = tmin + idx * step;
             
             // rapport = H(theta_new) / H(theta_old)
             float rapport = expf((-0.5/(mSigma.mX * mSigma.mX)) * (powf(theta - (event->mTheta.mX - mDelta), 2) - powf(mTheta.mX - (event->mTheta.mX - mDelta), 2)));

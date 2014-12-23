@@ -188,10 +188,13 @@ void MCMCLoopMain::initMCMC2()
             Date& date = events[i]->mDates[j];
             
             // Init ti and its sigma
+            float idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mRepartition);
+            date.mTheta.mX = tmin + idx * step;
+            
             FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration, tmin, tmax, step));
-            date.mTheta.mX = map_interpolate_key_for_value(Generator::randomUniform(), date.mRepartition);
             date.mTheta.mSigmaMH = data.stddev;
             date.initDelta(events[i]);
+            
             
             s02_sum += 1.f / (date.mTheta.mSigmaMH * date.mTheta.mSigmaMH);
         }

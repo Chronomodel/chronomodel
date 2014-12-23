@@ -222,12 +222,14 @@ typename QMap<T, U>::const_iterator map_upper_bound(const QMap<T, U>& aMap, cons
 
 
 QList<float> create_histo(const QMap<long, float> &aMap, const int t_min, const int t_max);
-QList<float> normalize_vector(const QList<float>& aVector);
+QList<float> normalize_list(const QList<float>& aVector);
+QVector<float> normalize_vector(const QVector<float>& aVector);
 QMap<float, float> normalize_map(const QMap<float, float>& aMap);
 QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const QMap<float, float>& mapWithTargetArea);
 QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const float targetArea);
 QVector<float> equal_areas(const QVector<float>& data, const float step, const float area);
 QMap<float, float> vector_to_map(const QVector<float>& data, const float min, const float max, const float step);
+float vector_interpolate_idx_for_value(const float value, const QVector<float>& vector);
 float map_interpolate_key_for_value(const float value, const QMap<float, float>& aMap);
 float map_interpolate_value_for_key(const float key, const QMap<float, float>& aMap);
 QMap<float, float> vector_to_indexed_map(const QList<float>& aVector, const float minKey = 0, const float maxKey = 0);
