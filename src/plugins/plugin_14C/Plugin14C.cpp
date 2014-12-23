@@ -21,24 +21,40 @@ float Plugin14C::getLikelyhood(const float& t, const QJsonObject& data)
     float error = data[DATE_14C_ERROR_STR].toDouble();
     QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString();
     
-    const QMap<float, float>& curveG = mRefDatas[ref_curve]["G"];
-    const QMap<float, float>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
+    float result = 0;
     
-    if(curveG.find(t) != curveG.end())
+    // Check if calib curve exists !
+    if(mRefDatas.find(ref_curve) != mRefDatas.end())
     {
-        float g = curveG[t];
-        float e = (curveG95Sup[t] - curveG[t]) / 1.96f;
+        const QMap<float, float>& curveG = mRefDatas[ref_curve]["G"];
+        const QMap<float, float>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
         
-        float variance = e * e + error * error;
-        float result = expf(-0.5f * powf(g - age, 2.f) / variance) / sqrtf(variance);
+        float t_under = floorf(t);
+        float t_upper = t_under + 1;
         
-        return result;
+        if(curveG.find(t_under) != curveG.end() &&
+           curveG.find(t_upper) != curveG.end())
+        {
+            float g_under = curveG[t_under];
+            float g_upper = curveG[t_upper];
+            float g = interpolate(t, t_under, t_upper, g_under, g_upper);
+            
+            float g_sup_under = curveG95Sup[t_under];
+            float g_sup_upper = curveG95Sup[t_upper];
+            float g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
+            
+            float e = (g_sup - g) / 1.96f;
+            float variance = e * e + error * error;
+            
+            result = expf(-0.5f * powf(g - age, 2.f) / variance) / sqrtf(variance);
+        }
+        else
+        {
+            //qDebug() << "failed";
+        }
     }
-    else
-    {
-        qDebug() << "failed";
-    }
-    return 0;
+    
+    return result;
 }
 
 

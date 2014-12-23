@@ -26,32 +26,46 @@ float PluginMag::getLikelyhood(const float& t, const QJsonObject& data)
     float intensity = data[DATE_AM_INTENSITY_STR].toDouble();
     QString ref_curve = data[DATE_AM_REF_CURVE_STR].toString();
     
-    const QMap<float, float>& curveG = mRefDatas[ref_curve]["G"];
-    const QMap<float, float>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
-    
     float result = 0.f;
     
-    if(curveG.find(t) != curveG.end())
+    if(mRefDatas.find(ref_curve) != mRefDatas.end())
     {
-        float g = curveG[t];
-        float e = (curveG95Sup[t] - curveG[t]) / 1.96f;
+        const QMap<float, float>& curveG = mRefDatas[ref_curve]["G"];
+        const QMap<float, float>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
         
-        // pour la combinaison, il faut multiplier les 2 cas suivants :
-        if(is_inc)
+        float t_under = floorf(t);
+        float t_upper = t_under + 1;
+        
+        if(curveG.find(t_under) != curveG.end() &&
+           curveG.find(t_upper) != curveG.end())
         {
-            float variance = (e * e) + (alpha * alpha) / (2.448f * 2.448f);
-            result = expf(-0.5f * powf(g - inc, 2.f) / variance) / sqrtf(variance);
-        }
-        else if(is_dec)
-        {
-            float variance = e * e + powf(alpha / (2.448f * cos(inc * M_PI / 180.f)), 2.f);
-            result = expf(-0.5f * powf(g - dec, 2.f) / variance) / sqrtf(variance);
-        }
-        else if(is_int)
-        {
-            float error = alpha;
-            float variance = e * e + error * error;
-            result = expf(-0.5f * powf(g - intensity, 2.f) / variance) / sqrtf(variance);
+            float g_under = curveG[t_under];
+            float g_upper = curveG[t_upper];
+            float g = interpolate(t, t_under, t_upper, g_under, g_upper);
+            
+            float g_sup_under = curveG95Sup[t_under];
+            float g_sup_upper = curveG95Sup[t_upper];
+            float g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
+            
+            float e = (g_sup - g) / 1.96f;
+            
+            // pour la combinaison, il faut multiplier les 2 cas suivants :
+            if(is_inc)
+            {
+                float variance = (e * e) + (alpha * alpha) / (2.448f * 2.448f);
+                result = expf(-0.5f * powf(g - inc, 2.f) / variance) / sqrtf(variance);
+            }
+            else if(is_dec)
+            {
+                float variance = e * e + powf(alpha / (2.448f * cos(inc * M_PI / 180.f)), 2.f);
+                result = expf(-0.5f * powf(g - dec, 2.f) / variance) / sqrtf(variance);
+            }
+            else if(is_int)
+            {
+                float error = alpha;
+                float variance = e * e + error * error;
+                result = expf(-0.5f * powf(g - intensity, 2.f) / variance) / sqrtf(variance);
+            }
         }
     }
     return result;
