@@ -77,15 +77,15 @@ void Tabs::mousePressEvent(QMouseEvent* e)
 
 void Tabs::updateLayout()
 {
-    float m = 10.f;
+    double m = 10.f;
     mTabRects.clear();
-    float x = 1.f;
-    float h = height()-1;
+    double x = 1.f;
+    double h = height()-1;
     QFontMetrics metrics(mFont);
     
     for(int i=0; i<mTabNames.size(); ++i)
     {
-        float w = metrics.width(mTabNames[i]);
+        double w = metrics.width(mTabNames[i]);
         mTabRects.append(QRectF(x, 1, 2*m + w, h));
         x += 2*m + w;
     }

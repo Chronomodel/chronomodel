@@ -42,13 +42,13 @@ public:
     static Date fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
     
-    float getLikelyhood(const float& t);
+    double getLikelyhood(const double& t);
     QString getDesc() const;
     
     void reset();
     void calibrate(const ProjectSettings& settings);
-    float getLikelyhoodFromCalib(const float t);
-    QMap<float, float> getCalibMap() const;
+    double getLikelyhoodFromCalib(const double t);
+    QMap<double, double> getCalibMap() const;
     QPixmap generateCalibThumb();
     
     void initDelta(Event* event);
@@ -62,7 +62,7 @@ public:
     MHVariable mTheta; // theta i de la date
     MHVariable mSigma; // sigma i de la date (par rapport au fait)
     MHVariable mWiggle;
-    float mDelta;
+    double mDelta;
     
     int mId;
     QString mName;
@@ -71,19 +71,19 @@ public:
     DataMethod mMethod;
 
     DeltaType mDeltaType;
-    float mDeltaFixed;
-    float mDeltaMin;
-    float mDeltaMax;
-    float mDeltaAverage;
-    float mDeltaError;
+    double mDeltaFixed;
+    double mDeltaMin;
+    double mDeltaMax;
+    double mDeltaAverage;
+    double mDeltaError;
     
     bool mIsCurrent;
     bool mIsSelected;
     
-    QVector<float> mCalibration;
-    float mCalibSum;
-    QVector<float> mRepartition;
-    QMap<float, float> mCalibHPD;
+    QVector<double> mCalibration;
+    double mCalibSum;
+    QVector<double> mRepartition;
+    QMap<double, double> mCalibHPD;
     ProjectSettings mSettings;
     
     QList<Date*> mSubDates;

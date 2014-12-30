@@ -45,31 +45,30 @@ void MHVariable::reset()
 {
     MetropolisVariable::reset();
     mLastAccepts.clear();
-    //mHistorySigmaMH.clear();
     mHistoryAcceptRateMH.clear();
 }
 
-float MHVariable::getCurrentAcceptRate()
+double MHVariable::getCurrentAcceptRate()
 {
-    float sum = 0.f;
+    double sum = 0.f;
     for(int i=0; i<mLastAccepts.length(); ++i)
         sum += mLastAccepts[i] ? 1.f : 0.f;
     
     //qDebug() << "Last accept on " << sum << " / " << mLastAccepts.length() << " values";
     
-    return sum / (float)mLastAccepts.length();
+    return sum / (double)mLastAccepts.length();
 }
 
 void MHVariable::saveCurrentAcceptRate()
 {
-    float rate = 100.f * getCurrentAcceptRate();
+    double rate = 100.f * getCurrentAcceptRate();
     mHistoryAcceptRateMH.push_back(rate);
     //mHistorySigmaMH.push_back(mSigmaMH);
 }
 
-QMap<float, float> MHVariable::acceptationForChain(const QList<Chain>& chains, int index)
+QMap<double, double> MHVariable::acceptationForChain(const QList<Chain>& chains, int index)
 {
-    QMap<float, float> accept;
+    QMap<double, double> accept;
     int shift = 0;
     
     for(int i=0; i<chains.size(); ++i)
@@ -95,8 +94,8 @@ QMap<float, float> MHVariable::acceptationForChain(const QList<Chain>& chains, i
 
 void MHVariable::generateGlobalRunAcceptation(const QList<Chain>& chains)
 {
-    float accepted = 0;
-    float acceptsLength = 0;
+    double accepted = 0;
+    double acceptsLength = 0;
     int shift = 0;
     
     for(int i=0; i<chains.size(); ++i)

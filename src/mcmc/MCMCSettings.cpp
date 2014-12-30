@@ -1,4 +1,5 @@
 #include "MCMCSettings.h"
+#include "Generator.h"
 #include <QVariant>
 #include <QJsonArray>
 
@@ -76,4 +77,33 @@ QJsonObject MCMCSettings::toJson() const
     mcmc[STATE_MCMC_SEEDS] = seeds;
     
     return mcmc;
+}
+
+QList<Chain> MCMCSettings::getChains() const
+{
+    QList<Chain> chains;
+    
+    for(int i=0; i<(int)mNumChains; ++i)
+    {
+        Chain chain;
+        
+        if(i < mSeeds.size())
+            chain.mSeed = mSeeds[i];
+        else
+            chain.mSeed = Generator::createSeed();
+        
+        chain.mNumBurnIter = mNumBurnIter;
+        chain.mBurnIterIndex = 0;
+        chain.mMaxBatchs = mMaxBatches;
+        chain.mNumBatchIter = mNumBatchIter;
+        chain.mBatchIterIndex = 0;
+        chain.mBatchIndex = 0;
+        chain.mNumRunIter = mNumRunIter;
+        chain.mRunIterIndex = 0;
+        chain.mTotalIter = 0;
+        chain.mThinningInterval = mThinningInterval;
+        
+        chains.append(chain);
+    }
+    return chains;
 }

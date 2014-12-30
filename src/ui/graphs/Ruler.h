@@ -9,21 +9,22 @@ class AxisTool
 {
 public:
     AxisTool();
-    void updateValues(float totalPix, float minDeltaPix, float minVal, float maxVal);
-    QVector<float> paint(QPainter& p, const QRectF& r, float textW);
+    void updateValues(double totalPix, double minDeltaPix, double minVal, double maxVal);
+    QVector<double> paint(QPainter& p, const QRectF& r, double textW);
     
 public:
     bool mIsHorizontal;
     bool mShowSubs;
-    float mDeltaVal;
-    float mDeltaPix;
-    float mStartVal;
-    float mStartPix;
+    bool mMinMaxOnly;
+    double mDeltaVal;
+    double mDeltaPix;
+    double mStartVal;
+    double mStartPix;
 };
 
 struct RulerArea{
-    float mStart;
-    float mStop;
+    double mStart;
+    double mStop;
     QColor mColor;
 };
 
@@ -34,14 +35,14 @@ public:
     Ruler(QWidget* parent = 0, Qt::WindowFlags flags = 0);
     ~Ruler();
     
-    void setRange(const float min, const float max);
-    void setCurrentRange(const float min, const float max);
+    void setRange(const double min, const double max);
+    void setCurrentRange(const double min, const double max);
     
     void showScrollBar(bool show);
     void showControls(bool show);
     
     void clearAreas();
-    void addArea(float start, float end, const QColor& color);
+    void addArea(double start, double end, const QColor& color);
     
 protected:
     void resizeEvent(QResizeEvent* e);
@@ -65,7 +66,7 @@ private slots:
     void setZoomPosition(int pos);
     
 signals:
-    void zoomChanged(float min, float max);
+    void zoomChanged(double min, double max);
     
 private:
     QScrollBar* mScrollBar;
@@ -79,17 +80,17 @@ private:
     QRectF mZoomOutRect;
     QRectF mZoomDefaultRect;
     
-    float mMin;
-    float mMax;
-    float mCurrentMin;
-    float mCurrentMax;
+    double mMin;
+    double mMax;
+    double mCurrentMin;
+    double mCurrentMax;
     
-    float mZoomPropStep;
-    float mCurrentProp;
+    double mZoomPropStep;
+    double mCurrentProp;
     
-    float mStepMinWidth;
-    float mStepWidth;
-    float mYearsPerStep;
+    double mStepMinWidth;
+    double mStepWidth;
+    double mYearsPerStep;
     
     AxisTool mAxisTool;
     

@@ -19,28 +19,28 @@ public:
     virtual QJsonObject toJson() const;
     
     void setKnownType(KnownType type);
-    void setFixedValue(const float& value);
-    void setUniformStart(const float& value);
-    void setUniformEnd(const float& value);
+    void setFixedValue(const double& value);
+    void setUniformStart(const double& value);
+    void setUniformEnd(const double& value);
     
     KnownType knownType() const;
-    float fixedValue() const;
-    float uniformStart() const;
-    float uniformEnd() const;
+    double fixedValue() const;
+    double uniformStart() const;
+    double uniformEnd() const;
     
-    void updateValues(float tmin, float tmax, float step);
+    void updateValues(double tmin, double tmax, double step);
     
-    virtual void updateTheta(float min, float max);
+    virtual void updateTheta(double min, double max);
     
 public:
     KnownType mKnownType;
     
-    float mFixed;
+    double mFixed;
     
-    float mUniformStart;
-    float mUniformEnd;
+    double mUniformStart;
+    double mUniformEnd;
     
-    QMap<float, float> mValues;
+    QMap<double, double> mValues;
 };
 
 #endif

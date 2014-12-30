@@ -92,8 +92,6 @@ Date Date::fromJson(const QJsonObject& json)
     
     if(!json.isEmpty())
     {
-        qDebug() << json;
-        
         date.mId = json[STATE_ID].toInt();
         date.mName = json[STATE_NAME].toString();
         date.mData = json[STATE_DATE_DATA].toObject();
@@ -133,9 +131,9 @@ QJsonObject Date::toJson() const
     return date;
 }
 
-float Date::getLikelyhood(const float& t)
+double Date::getLikelyhood(const double& t)
 {
-    float result = 0.f;
+    double result = 0.f;
     if(mPlugin)
         result = mPlugin->getLikelyhood(t, mData);
     return result;
@@ -183,18 +181,18 @@ void Date::calibrate(const ProjectSettings& settings)
     mSettings = settings;
     mCalibSum = 0;
     
-    float tmin = mSettings.mTmin;
-    float tmax = mSettings.mTmax;
-    float step = mSettings.mStep;
-    float nbPts = 1 + roundf((tmax - tmin) / step);
+    double tmin = mSettings.mTmin;
+    double tmax = mSettings.mTmax;
+    double step = mSettings.mStep;
+    double nbPts = 1 + roundf((tmax - tmin) / step);
     
     if(mSubDates.size() == 0) // not a combination !
     {
-        float lastRepVal = 0;
+        double lastRepVal = 0;
         for(int i = 0; i < nbPts; ++i)
         {
-            float t = tmin + (float)i * step;
-            float v = getLikelyhood(t);
+            double t = tmin + (double)i * step;
+            double v = getLikelyhood(t);
             mCalibration.append(v);
             mCalibSum += v;
             //qDebug() << "v = " << v;
@@ -203,9 +201,9 @@ void Date::calibrate(const ProjectSettings& settings)
             lastRepVal += v;
         }
         
-        /*for(float t = tmin; t <= tmax; t += step)
+        /*for(double t = tmin; t <= tmax; t += step)
         {
-            float v = getLikelyhood(t);
+            double v = getLikelyhood(t);
             mCalibration.append(v);
             mCalibSum += v;
             //qDebug() << "v = " << v;
@@ -222,24 +220,27 @@ void Date::calibrate(const ProjectSettings& settings)
     }
 }
 
-QMap<float, float> Date::getCalibMap() const
+QMap<double, double> Date::getCalibMap() const
 {
     return vector_to_map(mCalibration, mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
 }
 
 QPixmap Date::generateCalibThumb()
 {
-    float tmin = mSettings.mTmin;
-    float tmax = mSettings.mTmax;
+    double tmin = mSettings.mTmin;
+    double tmax = mSettings.mTmax;
     
     GraphView* graph = new GraphView();
     graph->setFixedSize(200, 30);
+    graph->setMargins(0, 0, 0, 0);
+    
     graph->setRangeX(tmin, tmax);
     graph->setRangeY(0, 1.1f);
-    graph->showAxis(false);
-    graph->showScrollBar(false);
-    graph->showGrid(false);
-    graph->setMargins(5, 5, 5, 5);
+    
+    graph->showAxisArrows(false);
+    graph->showAxisLines(false);
+    graph->setXAxisMode(GraphView::eHidden);
+    graph->setYAxisMode(GraphView::eHidden);
     
     GraphCurve curve;
     curve.mData = normalize_map(getCalibMap());
@@ -258,39 +259,39 @@ QPixmap Date::generateCalibThumb()
     //thumb = graph.grab();
 }
 
-float Date::getLikelyhoodFromCalib(const float t)
+double Date::getLikelyhoodFromCalib(const double t)
 {
-    float tmin = mSettings.mTmin;
-    float tmax = mSettings.mTmax;
+    double tmin = mSettings.mTmin;
+    double tmax = mSettings.mTmax;
     
     // We need at least two points to interpolate
     if(mCalibration.size() < 2 || t < tmin || t > tmax)
         return 0;
     
-    float prop = (t - tmin) / (tmax - tmin);
-    float idx = prop * (mCalibration.size() - 1); // tricky : if (tmax - tmin) = 2000, then calib size is 2001 !
+    double prop = (t - tmin) / (tmax - tmin);
+    double idx = prop * (mCalibration.size() - 1); // tricky : if (tmax - tmin) = 2000, then calib size is 2001 !
     int idxUnder = (int)floorf(idx);
     int idxUpper = idxUnder + 1;
     
-    float v = interpolate(idx, (float)idxUnder, (float)idxUpper, mCalibration[idxUnder], mCalibration[idxUpper]);
+    double v = interpolate(idx, (double)idxUnder, (double)idxUpper, mCalibration[idxUnder], mCalibration[idxUpper]);
     return v;
 }
 
 void Date::updateTheta(Event* event)
 {
-    float tmin = mSettings.mTmin;
-    float tmax = mSettings.mTmax;
-    float step = mSettings.mStep;
+    double tmin = mSettings.mTmin;
+    double tmax = mSettings.mTmax;
+    double step = mSettings.mStep;
     
     switch(mMethod)
     {
         case eMHIndependant:
         {
             // Ici, le marcheur est forcément gaussien avec H(theta i) : double_exp (gaussien tronqué)
-            float theta = Generator::gaussByDoubleExp(event->mTheta.mX - mDelta, mSigma.mX, tmin, tmax);
+            double theta = Generator::gaussByDoubleExp(event->mTheta.mX - mDelta, mSigma.mX, tmin, tmax);
             
             // rapport = G(theta_new) / G(theta_old)
-            float rapport = getLikelyhoodFromCalib(theta) / getLikelyhoodFromCalib(mTheta.mX);
+            double rapport = getLikelyhoodFromCalib(theta) / getLikelyhoodFromCalib(mTheta.mX);
             
             mTheta.tryUpdate(theta, rapport);
             break;
@@ -299,12 +300,12 @@ void Date::updateTheta(Event* event)
         {
             // 3eme méthode : marche aléatoire G(theta i),
             // utilisation de la courbe cumulative avec interpolation linéaire
-            float u = Generator::randomUniform();
-            float idx = vector_interpolate_idx_for_value(u, mRepartition);
-            float theta = tmin + idx * step;
+            double u = Generator::randomUniform();
+            double idx = vector_interpolate_idx_for_value(u, mRepartition);
+            double theta = tmin + idx * step;
             
             // rapport = H(theta_new) / H(theta_old)
-            float rapport = expf((-0.5/(mSigma.mX * mSigma.mX)) * (powf(theta - (event->mTheta.mX - mDelta), 2) - powf(mTheta.mX - (event->mTheta.mX - mDelta), 2)));
+            double rapport = expf((-0.5/(mSigma.mX * mSigma.mX)) * (powf(theta - (event->mTheta.mX - mDelta), 2) - powf(mTheta.mX - (event->mTheta.mX - mDelta), 2)));
             
             mTheta.tryUpdate(theta, rapport);
             break;
@@ -312,9 +313,9 @@ void Date::updateTheta(Event* event)
             // Seul cas où le taux d'acceptation a du sens car on utilise sigmaMH :
         case eMHSymGaussAdapt:
         {
-            float theta = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
+            double theta = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
             
-            float rapport = 0;
+            double rapport = 0;
             if(theta >= tmin && theta <= tmax)
             {
                 // rapport = (G(theta_new) / G(theta_old)) * (H(theta_new) / H(theta_old))
@@ -361,11 +362,11 @@ void Date::updateDelta(Event* event)
     {
         case eDeltaRange:
         {
-            float delta = -1;
+            double delta = -1;
             while(delta < mDeltaMin || delta > mDeltaMax)
             {
-                float x = Generator::gaussByBoxMuller(0, 1);
-                float lambda = event->mTheta.mX - mTheta.mX;
+                double x = Generator::gaussByBoxMuller(0, 1);
+                double lambda = event->mTheta.mX - mTheta.mX;
                 delta = mSigma.mX * x + lambda;
             }
             mDelta = delta;
@@ -373,11 +374,11 @@ void Date::updateDelta(Event* event)
         }
         case eDeltaGaussian:
         {
-            float lambda = event->mTheta.mX - mTheta.mX;
-            float w = (1/(mSigma.mX * mSigma.mX)) + (1/(mDeltaError * mDeltaError));
-            float deltaAvg = (lambda / (mSigma.mX * mSigma.mX) + mDeltaAverage / (mDeltaError * mDeltaError)) / w;
-            float x = Generator::gaussByBoxMuller(0, 1);
-            float delta = deltaAvg + x / sqrtf(w);
+            double lambda = event->mTheta.mX - mTheta.mX;
+            double w = (1/(mSigma.mX * mSigma.mX)) + (1/(mDeltaError * mDeltaError));
+            double deltaAvg = (lambda / (mSigma.mX * mSigma.mX) + mDeltaAverage / (mDeltaError * mDeltaError)) / w;
+            double x = Generator::gaussByBoxMuller(0, 1);
+            double delta = deltaAvg + x / sqrtf(w);
             
             mDelta = delta;
             break;
@@ -396,20 +397,20 @@ void Date::updateSigma(Event* event)
     // ------------------------------------------------------------------------------------------
     //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
     // ------------------------------------------------------------------------------------------
-    float lambda = powf(mTheta.mX - (event->mTheta.mX - mDelta), 2) / 2.;
+    double lambda = powf(mTheta.mX - (event->mTheta.mX - mDelta), 2) / 2.;
     
     const int logVMin = -6;
     const int logVMax = 100;
     
-    float V1 = mSigma.mX * mSigma.mX;
-    float logV2 = Generator::gaussByBoxMuller(log10(V1), mSigma.mSigmaMH);
-    float V2 = powf(10, logV2);
+    double V1 = mSigma.mX * mSigma.mX;
+    double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigma.mSigmaMH);
+    double V2 = powf(10, logV2);
     
-    float rapport = 0;
+    double rapport = 0;
     if(logV2 >= logVMin && logV2 <= logVMax)
     {
-        float x1 = expf(-lambda * (V1 - V2) / (V1 * V2));
-        float x2 = powf((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1);
+        double x1 = expf(-lambda * (V1 - V2) / (V1 * V2));
+        double x2 = powf((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1);
         rapport = x1 * sqrtf(V1/V2) * x2 * V2 / V1; // (V2 / V1) est le jacobien!
     }
     mSigma.tryUpdate(sqrtf(V2), rapport);

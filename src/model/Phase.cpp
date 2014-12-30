@@ -177,92 +177,104 @@ void Phase::removeConstraintBackward(PhaseConstraint* c)
 
 // --------------------------------------------------------------------------------
 
-float Phase::getMaxThetaEvents()
+double Phase::getMaxThetaEvents(double tmax)
 {
-    if(mEvents.size() > 0)
+    double theta = 0;
+    bool found = false;
+    for(int i=0; i<mEvents.size(); ++i)
     {
-        float maxTheta = (*(mEvents.begin()))->mTheta.mX;;
-        // ------------------------------------------------------------------------------------
-        //  Itération sur les faits de la phase
-        // ------------------------------------------------------------------------------------
-        for(QList<Event*>::iterator it = mEvents.begin() ; it != mEvents.end(); ++it)
+        if(mEvents[i]->mInitialized)
         {
-            float theta = (*it)->mTheta.mX;
-            maxTheta = std::max(maxTheta, theta);
+            if(!found)
+                theta = mEvents[i]->mTheta.mX;
+            else
+            {
+                found = true;
+                theta = std::max(theta, mEvents[i]->mTheta.mX);
+            }
         }
-        return maxTheta;
     }
-    return 0;
+    return found ? theta : tmax;
 }
 
-float Phase::getMinThetaEvents()
+double Phase::getMinThetaEvents(double tmin)
 {
-    if(mEvents.size() > 0)
+    double theta = 0;
+    bool found = false;
+    for(int i=0; i<mEvents.size(); ++i)
     {
-        float minTheta = (*(mEvents.begin()))->mTheta.mX;
-        // ------------------------------------------------------------------------------------
-        //  Itération sur les faits de la phase
-        // ------------------------------------------------------------------------------------
-        for(QList<Event*>::iterator it = mEvents.begin() ; it != mEvents.end(); ++it)
+        if(mEvents[i]->mInitialized)
         {
-            float theta = (*it)->mTheta.mX;
+            if(!found)
+                theta = mEvents[i]->mTheta.mX;
+            else
+            {
+                found = true;
+                theta = std::min(theta, mEvents[i]->mTheta.mX);
+            }
+        }
+    }
+    return found ? theta : tmin;
+}
+
+double Phase::getMinThetaNextPhases(double tmax)
+{
+    //qDebug() << "=> Phase étudiée : " << mName << " : getMinThetaNextPhases";
+    
+    double minTheta = tmax;
+    for(int i=0; i<mConstraintsFwd.size(); ++i)
+    {
+        Phase* phaseTo = mConstraintsFwd[i]->mPhaseTo;
+        
+        //qDebug() << "==> Phase après : " << phaseTo->mName << " (" << phaseTo->mEvents.size() << " events)";
+        
+        double theta = tmax;
+        for(int j=0; j<phaseTo->mEvents.size(); ++j)
+        {
+            if(phaseTo->mEvents[j]->mInitialized)
+            {
+                theta = std::min(theta, phaseTo->mEvents[j]->mTheta.mX);
+            }
+        }
+        //qDebug() << "===> Min Theta : " << theta;
+        if(mConstraintsFwd[i]->mGammaType != PhaseConstraint::eGammaUnknown)
+            minTheta = std::min(minTheta, theta - mConstraintsFwd[i]->mGamma);
+        else
             minTheta = std::min(minTheta, theta);
+    }
+    return minTheta;
+}
+
+double Phase::getMaxThetaPrevPhases(double tmin)
+{
+    double maxTheta = tmin;
+    for(int i=0; i<mConstraintsBwd.size(); ++i)
+    {
+        Phase* phaseFrom = mConstraintsBwd[i]->mPhaseFrom;
+        double theta = tmin;
+        for(int j=0; j<phaseFrom->mEvents.size(); ++j)
+        {
+            if(phaseFrom->mEvents[j]->mInitialized)
+            {
+                theta = std::max(theta, phaseFrom->mEvents[j]->mTheta.mX);
+            }
         }
-        return minTheta;
+        if(mConstraintsBwd[i]->mGammaType != PhaseConstraint::eGammaUnknown)
+            maxTheta = std::max(maxTheta, theta + mConstraintsBwd[i]->mGamma);
+        else
+            maxTheta = std::max(maxTheta, theta);
     }
-    return 0;
-}
-
-float Phase::getMinAlphaNextPhases(float tmax)
-{
-    float minAlpha = tmax;
-    // ------------------------------------------------------------------------------------
-    //  Itération sur les phases en contrainte après pour trouver leur alpha min
-    // ------------------------------------------------------------------------------------
-    for(QList<PhaseConstraint*>::iterator it = mConstraintsFwd.begin() ; it != mConstraintsFwd.end(); ++it)
-    {
-        float alpha = (*it)->mPhaseTo->mAlpha.mX;
-        minAlpha = std::min(minAlpha, alpha);
-    }
-    return minAlpha;
-}
-
-float Phase::getMaxBetaPrevPhases(float tmin)
-{
-    float maxBeta = tmin;
-    // ------------------------------------------------------------------------------------
-    //  Itération sur les phases en contrainte avant pour trouver leur beta max
-    // ------------------------------------------------------------------------------------
-    for(QList<PhaseConstraint*>::iterator it = mConstraintsBwd.begin() ; it != mConstraintsBwd.end(); ++it)
-    {
-        float beta = (*it)->mPhaseFrom->mBeta.mX;
-        maxBeta = std::min(maxBeta, beta);
-    }
-    return maxBeta;
+    return maxTheta;
 }
 
 // --------------------------------------------------------------------------------
 
-void Phase::updateAll()
+void Phase::updateAll(double tmin, double tmax)
 {
-    mAlpha.mX = getMinThetaEvents();
-    mBeta.mX = getMaxThetaEvents();
+    mAlpha.mX = getMinThetaEvents(tmin);
+    mBeta.mX = getMaxThetaEvents(tmax);
     
     updateTau();
-    
-    
-    // ----------------------------------------
-    // Buck :
-    
-    /*float a = getMaxBetaPrevPhases(tmin);
-    float b = getMinThetaEvents();
-    mAlpha.mX = updatePhaseBound(a, b, mBeta.mX);
-    
-    a = getMaxThetaEvents();
-    b = getMinAlphaNextPhases(tmax);
-    mBeta.mX = updatePhaseBound(a, b, mAlpha.mX);
-    
-    mThetaPredict.mX = Generator::randomUniform(mAlpha.mX, mBeta.mX);*/
 }
 
 void Phase::initTau()
@@ -298,7 +310,7 @@ void Phase::memoAll()
 
 void Phase::generateDurationCredibility()
 {
-    float exactThreshold;
+    double exactThreshold;
     mDurationCredibility = intervalText(credibilityForTrace(mDurations, 95, exactThreshold));
 }
 
@@ -306,13 +318,13 @@ void Phase::generateDurationCredibility()
 //  Formule d'inversion avec alpha et beta
 // ------------------------------------------------------------------------------------
 // TODO : formule spéciale si alpha = beta
-float Phase::updatePhaseBound(float a, float b, float bound)
+double Phase::updatePhaseBound(double a, double b, double bound)
 {
-    float newBound = bound;
+    double newBound = bound;
     if(bound != a && bound != b)
     {
-        float u = Generator::randomUniform();
-        float m = (float) mEvents.size();
+        double u = Generator::randomUniform();
+        double m = (double) mEvents.size();
         
         if(m >= 2)
         {

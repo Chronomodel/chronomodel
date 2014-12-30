@@ -41,7 +41,7 @@ void ArrowItem::setData(const QJsonObject& c)
     updatePosition();
 }
 
-void ArrowItem::setFrom(float x, float y)
+void ArrowItem::setFrom(double x, double y)
 {
     prepareGeometryChange();
     mXStart = x;
@@ -51,7 +51,7 @@ void ArrowItem::setFrom(float x, float y)
         scene()->update();
 }
 
-void ArrowItem::setTo(float x, float y)
+void ArrowItem::setTo(double x, double y)
 {
     prepareGeometryChange();
     mXEnd = x;
@@ -138,7 +138,7 @@ void ArrowItem::hoverMoveEvent(QGraphicsSceneHoverEvent* e)
     
     if(mType == eEvent)
     {
-        float hoverSide = 100;
+        double hoverSide = 100;
         QRectF br = boundingRect();
         br.adjust((br.width()-hoverSide)/2,
                   (br.height()-hoverSide)/2,
@@ -178,7 +178,7 @@ QPainterPath ArrowItem::shape() const
 {
     QPainterPath path;
     QRectF rect = boundingRect();
-    float shift = 15;
+    double shift = 15;
     
     if(mXStart < mXEnd && mYStart > mYEnd)
     {
@@ -251,7 +251,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         pen.setCapStyle(Qt::RoundCap);
         pen.setWidthF(4.f);
         painter->setPen(pen);
-        float r = br.width()/3.f;
+        double r = br.width()/3.f;
         painter->drawLine(-r, 0.f, r, 0.f);
         painter->drawLine(0.f, -r, 0.f, r);
         painter->restore();
@@ -271,8 +271,8 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     
     // arrows
     
-    float angle_rad = atanf(rect.width() / rect.height());
-    float angle_deg = angle_rad * 180. / M_PI;
+    double angle_rad = atanf(rect.width() / rect.height());
+    double angle_deg = angle_rad * 180. / M_PI;
     
     QPainterPath path;
     int arrow_w = 10;
@@ -282,12 +282,12 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     path.lineTo(0, -arrow_l/2);
     path.closeSubpath();
     
-    float posX = rect.width()/2;
-    float posY = rect.height()/2;
-    float posX1 = rect.width()/3;
-    float posX2 = 2*rect.width()/3;
-    float posY1 = rect.height()/3;
-    float posY2 = 2*rect.height()/3;
+    double posX = rect.width()/2;
+    double posY = rect.height()/2;
+    double posX1 = rect.width()/3;
+    double posX2 = 2*rect.width()/3;
+    double posY1 = rect.height()/3;
+    double posY2 = 2*rect.height()/3;
     
     if(mXStart < mXEnd && mYStart > mYEnd)
     {
@@ -404,8 +404,8 @@ QRectF ArrowItem::getBubbleRect(const QString& text) const
     int h = 25;
     
     QRectF rect = boundingRect();
-    float bubble_x = rect.x() + (rect.width() - w) / 2.f - 0.5f;
-    float bubble_y = rect.y() + (rect.height() - h) / 2.f - 0.5f;
+    double bubble_x = rect.x() + (rect.width() - w) / 2.f - 0.5f;
+    double bubble_y = rect.y() + (rect.height() - h) / 2.f - 0.5f;
     QRectF r(bubble_x, bubble_y, w, h);
     return r;
 }

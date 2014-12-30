@@ -72,7 +72,7 @@ mHasPhases(false)
     setMouseTracking(true);
     mStack->setMouseTracking(true);
     
-    connect(mRuler, SIGNAL(zoomChanged(float, float)), this, SLOT(setGraphZoom(float, float)));
+    connect(mRuler, SIGNAL(zoomChanged(double, double)), this, SLOT(setGraphZoom(double, double)));
     
     // ----------
     
@@ -303,7 +303,7 @@ ResultsView::~ResultsView()
 void ResultsView::doProjectConnections(Project* project)
 {
     connect(project, SIGNAL(mcmcStarted()), this, SLOT(clearResults()));
-    connect(project, SIGNAL(mcmcFinished(MCMCLoopMain&)), this, SLOT(updateResults(MCMCLoopMain&)));
+    connect(project, SIGNAL(mcmcFinished(Model*)), this, SLOT(updateResults(Model*)));
 }
 
 void ResultsView::paintEvent(QPaintEvent* e)
@@ -399,8 +399,8 @@ void ResultsView::updateLayout()
     
     mOptionsWidget->setGeometry(width() - mOptionsW, 0, mOptionsW, height());
     
-    float zw = mOptionsW / 3;
-    float zh = mRulerH;
+    double zw = mOptionsW / 3;
+    double zh = mRulerH;
     mZoomInBut->setGeometry(0, 0, zw, zh);
     mZoomDefaultBut->setGeometry(zw, 0, zw, zh);
     mZoomOutBut->setGeometry(2*zw, 0, zw, zh);
@@ -468,7 +468,7 @@ void ResultsView::updateFFTLength()
     if(mModel)
     {
         int len = mFFTLenCombo->currentText().toInt();
-        float hFactor = mHFactorEdit->text().toFloat();
+        double hFactor = mHFactorEdit->text().toDouble();
         
         mModel->generatePosteriorDensities(mChains, len, hFactor);
         mModel->generateNumericalResults(mChains);
@@ -483,7 +483,7 @@ void ResultsView::updateHFactor()
     if(mModel)
     {
         int len = mFFTLenCombo->currentText().toInt();
-        float hFactor = mHFactorEdit->text().toFloat();
+        double hFactor = mHFactorEdit->text().toDouble();
         if(!(hFactor > 0 && hFactor <= 100))
         {
             hFactor = 1;
@@ -645,11 +645,11 @@ void ResultsView::clearResults()
         delete phasesWidget;
 }
 
-void ResultsView::updateResults(MCMCLoopMain& loop)
+void ResultsView::updateResults(Model* model)
 {
     clearResults();
-    mChains = loop.chains();
-    mModel = loop.mModel;
+    mModel = model;
+    mChains = model->mChains;
     mSettings = mModel->mSettings;
     mMCMCSettings = mModel->mMCMCSettings;
     mFFTLenCombo->setCurrentText("1024");
@@ -820,6 +820,10 @@ void ResultsView::showInfos(bool show)
 
 void ResultsView::exportFullImage()
 {
+    // Force rendering to HD for export
+    int rendering = mRenderCombo->currentIndex();
+    updateRendering(1);
+    
     QWidget* curWid = (mStack->currentWidget() == mPhasesScrollArea) ? mPhasesScrollArea->widget() : mEventsScrollArea->widget();
     
     QRect r(mGraphLeft, 0, curWid->width() - mGraphLeft, curWid->height());
@@ -828,9 +832,12 @@ void ResultsView::exportFullImage()
                                            MainWindow::getInstance()->getCurrentPath());
     if(fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
+    
+    // Reset rendering back to its current value
+    updateRendering(rendering);
 }
 
-void ResultsView::setGraphZoom(float min, float max)
+void ResultsView::setGraphZoom(double min, double max)
 {
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
         mByPhasesGraphs[i]->zoom(min, max);
@@ -841,7 +848,7 @@ void ResultsView::setGraphZoom(float min, float max)
 
 void ResultsView::updateScaleX(int value)
 {
-    float prop = value / 100.f;
+    double prop = value / 100.f;
     
     // TODO !!
     
@@ -854,9 +861,9 @@ void ResultsView::updateScaleX(int value)
 
 void ResultsView::updateScaleY(int value)
 {
-    float min = 20;
-    float max = 240;
-    float prop = value / 100.f;
+    double min = 20;
+    double max = 240;
+    double prop = value / 100.f;
     mGraphsH = min + prop * (max - min);
     updateLayout();
 }

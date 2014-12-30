@@ -12,12 +12,12 @@ public:
     
     virtual void reset();
     
-    float getCurrentAcceptRate();
+    double getCurrentAcceptRate();
     void saveCurrentAcceptRate();
     
     bool tryUpdate(const double x, const double rapportToTry);
     
-    QMap<float, float> acceptationForChain(const QList<Chain>& chains, int index);
+    QMap<double, double> acceptationForChain(const QList<Chain>& chains, int index);
     void generateGlobalRunAcceptation(const QList<Chain>& chains);
     
     void generateNumericalResults(const QList<Chain>& chains);
@@ -32,13 +32,17 @@ public:
     int mLastAcceptsLength;
     
     // Buffer contenant toutes les acceptations cumulées pour toutes les chaines
-    // sur les parties acquisition uniquement
+    // sur les parties acquisition uniquement.
+    // A stocker dans les résultats!
     QVector<bool> mAllAccepts;
-    int mAllAcceptsLength;
-    float mGlobalAcceptation;
     
-    //QVector<float> mHistorySigmaMH;
-    QVector<float> mHistoryAcceptRateMH;
+    // Computed at the end as numerical result :
+    double mGlobalAcceptation;
+    
+    // Buffer contenant tous les taux d'acceptation calculés (1 par batch)
+    // On en affiche des sous-parties (correspondant aux chaines) dans la vue des résultats
+    // A stocker dans les résultats!
+    QVector<double> mHistoryAcceptRateMH;
     
     QString mProposal;
 };

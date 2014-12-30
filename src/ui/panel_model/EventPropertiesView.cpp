@@ -110,10 +110,12 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     //mKnownFixedEdit->setValidator(doubleValidator);
     
     mKnownGraph = new GraphView(mKnownView);
-    mKnownGraph->showAxis(false);
-    mKnownGraph->showGrid(true);
-    mKnownGraph->showYValues(true);
-    mKnownGraph->showScrollBar(false);
+    
+    mKnownGraph->setRendering(GraphView::eHD);
+    mKnownGraph->showAxisArrows(true);
+    mKnownGraph->showAxisLines(true);
+    mKnownGraph->setXAxisMode(GraphView::eMinMax);
+    mKnownGraph->setYAxisMode(GraphView::eMinMax);
     
     connect(mKnownFixedEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateKnownFixed(const QString&)));
     connect(mKnownStartEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateKnownUnifStart()));
@@ -248,13 +250,13 @@ void EventPropertiesView::updateKnownFixed(const QString& text)
 {
     QJsonObject event = mEvent;
     //bool ok = false;
-    //float value = mKnownFixedEdit->text().toDouble(&ok);
+    //double value = mKnownFixedEdit->text().toDouble(&ok);
     qDebug() << text;
     qDebug() << mKnownFixedEdit->text();
-    qDebug() << text.toFloat();
+    qDebug() << text.toDouble();
     //qDebug() << ok;
     
-    event[STATE_EVENT_KNOWN_FIXED] = text.toFloat();
+    event[STATE_EVENT_KNOWN_FIXED] = text.toDouble();
     qDebug() << event;
     qDebug() << "-----";
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound fixed value updated"));
@@ -262,14 +264,14 @@ void EventPropertiesView::updateKnownFixed(const QString& text)
 void EventPropertiesView::updateKnownUnifStart()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_KNOWN_START] = mKnownStartEdit->text().toFloat();
+    event[STATE_EVENT_KNOWN_START] = mKnownStartEdit->text().toDouble();
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound min updated"));
 }
 
 void EventPropertiesView::updateKnownUnifEnd()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_KNOWN_END] = mKnownEndEdit->text().toFloat();
+    event[STATE_EVENT_KNOWN_END] = mKnownEndEdit->text().toDouble();
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound max updated"));
 }
 
@@ -296,8 +298,8 @@ void EventPropertiesView::loadKnownCsv()
      {
      for(int i=0; i<csv.size(); ++i)
      {
-     float x = csv[i][0].replace(",", ".").toFloat();
-     float y = csv[i][1].replace(",", ".").toFloat();
+     double x = csv[i][0].replace(",", ".").toDouble();
+     double y = csv[i][1].replace(",", ".").toDouble();
      e->mValues[x] = y;
      }
      e->mValues = normalize_map(e->mValues);
@@ -329,7 +331,7 @@ void EventPropertiesView::updateKnownGraph()
                                settings[STATE_SETTINGS_TMAX].toDouble());
         
         qDebug() << event.mValues.size();
-        float max = map_max_value(event.mValues);
+        double max = map_max_value(event.mValues);
         max = (max == 0) ? 1 : max;
         mKnownGraph->setRangeY(0, max);
         

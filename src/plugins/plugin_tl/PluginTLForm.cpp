@@ -33,9 +33,9 @@ PluginTLForm::~PluginTLForm()
 
 void PluginTLForm::setData(const QJsonObject& data)
 {
-    float a = data.value(DATE_TL_AGE_STR).toDouble();
-    float e = data.value(DATE_TL_ERROR_STR).toDouble();
-    float y = data.value(DATE_TL_REF_YEAR_STR).toDouble();
+    double a = data.value(DATE_TL_AGE_STR).toDouble();
+    double e = data.value(DATE_TL_ERROR_STR).toDouble();
+    double y = data.value(DATE_TL_REF_YEAR_STR).toDouble();
     
     mAverageEdit->setText(QString::number(a));
     mErrorEdit->setText(QString::number(e));
@@ -46,9 +46,9 @@ QJsonObject PluginTLForm::getData()
 {
     QJsonObject data;
     
-    float a = mAverageEdit->text().toDouble();
-    float e = mErrorEdit->text().toDouble();
-    float y = mYearEdit->text().toDouble();
+    double a = mAverageEdit->text().toDouble();
+    double e = mErrorEdit->text().toDouble();
+    double y = mYearEdit->text().toDouble();
     
     data.insert(DATE_TL_AGE_STR, a);
     data.insert(DATE_TL_ERROR_STR, e);

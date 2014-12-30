@@ -202,7 +202,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
              mEltsHeight);
     
     QJsonArray events = getEvents();
-    float dy = mEltsMargin + mEltsHeight;
+    double dy = mEltsMargin + mEltsHeight;
     for(int i=0; i<events.size(); ++i)
     {
         QJsonObject event = events[i].toObject();

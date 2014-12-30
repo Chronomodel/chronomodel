@@ -29,6 +29,7 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     mRefLab = new Label(tr("Reference") + " :", this);
     mRefPathLab = new Label(tr("Folder") + " : " + pluginMag->getRefsPath(), this);
     mRefPathLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mRefPathLab->setWordWrap(true);
     
     mIncEdit = new LineEdit(this);
     mDecEdit = new LineEdit(this);
@@ -51,7 +52,7 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     
     mIncRadio->setChecked(true);
     
-    setFixedHeight(sTitleHeight + 5*mLineH + mComboH + 7*mMargin);
+    setFixedHeight(sTitleHeight + 6*mLineH + mComboH + 7*mMargin);
 }
 
 PluginMagForm::~PluginMagForm()
@@ -65,10 +66,10 @@ void PluginMagForm::setData(const QJsonObject& data)
     bool is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
     bool is_int = data.value(DATE_AM_IS_INT_STR).toBool();
     
-    float inc = data.value(DATE_AM_INC_STR).toDouble();
-    float dec = data.value(DATE_AM_DEC_STR).toDouble();
-    float intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
-    float error = data.value(DATE_AM_ERROR_STR).toDouble();
+    double inc = data.value(DATE_AM_INC_STR).toDouble();
+    double dec = data.value(DATE_AM_DEC_STR).toDouble();
+    double intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
+    double error = data.value(DATE_AM_ERROR_STR).toDouble();
     QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
     
     mIncRadio->setChecked(is_inc);
@@ -91,12 +92,12 @@ QJsonObject PluginMagForm::getData()
     bool is_dec = mDecRadio->isChecked();
     bool is_int = mIntensityRadio->isChecked();
     
-    float inc = mIncEdit->text().toDouble();
-    float dec = mDecEdit->text().toDouble();
+    double inc = mIncEdit->text().toDouble();
+    double dec = mDecEdit->text().toDouble();
     if(is_dec)
         inc = mDecIncEdit->text().toDouble();
-    float intensity = mIntensityEdit->text().toDouble();
-    float error = mAlpha95Edit->text().toDouble();
+    double intensity = mIntensityEdit->text().toDouble();
+    double error = mAlpha95Edit->text().toDouble();
     QString ref_curve = mRefCombo->currentText();
     
     data.insert(DATE_AM_IS_INC_STR, is_inc);
@@ -140,11 +141,16 @@ void PluginMagForm::resizeEvent(QResizeEvent* e)
     mIntensityEdit->setGeometry(2*m + w1, sTitleHeight + 3*m + 2*mLineH, w3, mLineH);
     mAlpha95Edit->setGeometry(2*m + w1, sTitleHeight + 4*m + 3*mLineH, w3, mLineH);
     mRefCombo->setGeometry(2*m + w1, sTitleHeight + 5*m + 4*mLineH, w3, mComboH);
-    mRefPathLab->setGeometry(2*m + w1, sTitleHeight + 6*m + 4*mLineH + mComboH, w3, mLineH);
+    mRefPathLab->setGeometry(2*m + w1, sTitleHeight + 6*m + 4*mLineH + mComboH, w3, 2*mLineH);
 }
 
 void PluginMagForm::updateOptions()
 {
+    mIncEdit->setEnabled(mIncRadio->isChecked());
+    mDecEdit->setEnabled(mDecRadio->isChecked());
+    mDecIncEdit->setEnabled(mDecRadio->isChecked());
+    mIntensityEdit->setEnabled(mIntensityRadio->isChecked());
+    
     if(mIntensityRadio->isChecked())
         mAlpha95Lab->setText(tr("Error") + " :");
     else

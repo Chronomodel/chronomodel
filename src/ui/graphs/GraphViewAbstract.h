@@ -9,13 +9,13 @@ public:
 	
     // Getters
     
-    float rangeX() const;
-    float rangeY() const;
+    double rangeX() const;
+    double rangeY() const;
     
-    float minimumX() const;
-    float maximumX() const;
-    float minimumY() const;
-    float maximumY() const;
+    double minimumX() const;
+    double maximumX() const;
+    double minimumY() const;
+    double maximumY() const;
     
     int marginLeft() const;
     int marginRight() const;
@@ -24,13 +24,13 @@ public:
     
     // Setters
     
-    virtual void setRangeX(const float aMinX, const float aMaxX);
-    virtual void setRangeY(const float aMinY, const float aMaxY);
+    virtual void setRangeX(const double aMinX, const double aMaxX);
+    virtual void setRangeY(const double aMinY, const double aMaxY);
     
-	void setMinimumX(const float aMinX);
-	void setMaximumX(const float aMaxX);
-	void setMinimumY(const float aMinY);
-    void setMaximumY(const float aMaxY);
+	void setMinimumX(const double aMinX);
+	void setMaximumX(const double aMaxX);
+	void setMinimumY(const double aMinY);
+    void setMaximumY(const double aMaxY);
     
     void setMarginLeft(const int aMarginLeft);
 	void setMarginRight(const int aMarginRight);
@@ -39,14 +39,14 @@ public:
 	void setMargins(const int aMarginLeft, const int aMarginRight, const int aMarginTop, const int aMarginBottom);
 	
 protected:
-	virtual void repaintGraph(const bool aAlsoPaintBackground, const bool aAlsoPaintGraphs = true) = 0;
+	virtual void repaintGraph(const bool aAlsoPaintBackground) = 0;
 	
-    virtual float getXForValue(const float aValue, const bool aConstainResult = true);
-    virtual float getValueForX(const float x, const bool aConstainResult = true);
-    virtual float getYForValue(const float aValue, const bool aConstainResult = true);
-    virtual float getValueForY(const float y, const bool aConstainResult = true);
+    virtual double getXForValue(const double aValue, const bool aConstainResult = true);
+    virtual double getValueForX(const double x, const bool aConstainResult = true);
+    virtual double getYForValue(const double aValue, const bool aConstainResult = true);
+    virtual double getValueForY(const double y, const bool aConstainResult = true);
     
-    float valueForProportion(const float v1, const float v1min, const float v1max, const float v2min, const float m2max, const bool resultInBounds = true);
+    double valueForProportion(const double v1, const double v1min, const double v1max, const double v2min, const double m2max, const bool resultInBounds = true);
 	
 protected:
 	int		mGraphWidth;
@@ -57,12 +57,12 @@ protected:
 	int		mMarginTop;
 	int		mMarginBottom;
 	
-	float	mMinX;
-	float	mMaxX;
-	float	mMinY;
-	float	mMaxY;
+	double	mMinX;
+	double	mMaxX;
+	double	mMinY;
+	double	mMaxY;
     
-    float   mCurrentMinX;
-    float   mCurrentMaxX;
+    double   mCurrentMinX;
+    double   mCurrentMaxX;
 };
 

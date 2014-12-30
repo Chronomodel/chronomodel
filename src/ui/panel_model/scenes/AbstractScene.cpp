@@ -39,8 +39,8 @@ void AbstractScene::updateConstraintsPos(AbstractItem* movedItem, const QPointF&
     if(movedItem)
     {
         int itemId = movedItem->mData[STATE_ID].toInt();
-        float itemX = movedItem->mData[STATE_ITEM_X].toDouble();
-        float itemY = movedItem->mData[STATE_ITEM_Y].toDouble();
+        double itemX = movedItem->mData[STATE_ITEM_X].toDouble();
+        double itemY = movedItem->mData[STATE_ITEM_Y].toDouble();
         
         //qDebug() << "---------";
         //qDebug() << "Moving event id : " << itemId;

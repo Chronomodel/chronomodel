@@ -7,16 +7,16 @@
 
 
 struct FunctionAnalysis{
-    float max = 0.f;
-    float mode = 0.f;
-    float mean = 0.f;
-    float stddev = 0.f;
+    double max = 0.f;
+    double mode = 0.f;
+    double mean = 0.f;
+    double stddev = 0.f;
 };
 
 struct Quartiles{
-    float Q1 = 0.f;
-    float Q2 = 0.f;
-    float Q3 = 0.f;
+    double Q1 = 0.f;
+    double Q2 = 0.f;
+    double Q3 = 0.f;
 };
 
 struct DensityAnalysis
@@ -25,28 +25,28 @@ struct DensityAnalysis
     FunctionAnalysis analysis;
 };
 
-FunctionAnalysis analyseFunction(const QMap<float, float>& aFunction);
+FunctionAnalysis analyseFunction(const QMap<double, double>& aFunction);
 QString functionAnalysisToString(const FunctionAnalysis& analysis);
 QString densityAnalysisToString(const DensityAnalysis& analysis);
 
 // Standard Deviation (= écart type) of a vector of data
-float dataStd(const QVector<float>& data);
+double dataStd(const QVector<double>& data);
 
-float shrinkageUniform(float so2);
+double shrinkageUniform(double so2);
 
-Quartiles quartilesForTrace(const QVector<float>& trace);
-Quartiles quartilesForRepartition(const QVector<float>& repartition, float tmin, float step);
-QPair<float, float> credibilityForTrace(const QVector<float>& trace, int threshold, float& exactThresholdResult);
-QString intervalText(const QPair<float, float>& interval);
-QString getHPDText(const QMap<float, float>& hpd);
-QList<QPair<float, float>> intervalsForHpd(const QMap<float, float>& hpd);
+Quartiles quartilesForTrace(const QVector<double>& trace);
+Quartiles quartilesForRepartition(const QVector<double>& repartition, double tmin, double step);
+QPair<double, double> credibilityForTrace(const QVector<double>& trace, int threshold, double& exactThresholdResult);
+QString intervalText(const QPair<double, double>& interval);
+QString getHPDText(const QMap<double, double>& hpd);
+QList<QPair<double, double>> intervalsForHpd(const QMap<double, double>& hpd);
 
-inline float roundFloat(float f, int prec)
+inline double rounddouble(double f, int prec)
 {
-    float result;
+    double result;
     if(prec > 0)
     {
-        float factor = powf(10.f, (float)prec);
+        double factor = powf(10.f, (double)prec);
         result = roundf(f * factor) / factor;
     }
     else

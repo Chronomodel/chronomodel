@@ -107,7 +107,7 @@ void GraphViewDate::refresh()
                 curve.mIsRectFromZero = true; // for typo. calibs., invisible for others!
                 mGraph->addCurve(curve);
                 
-                float yMax = 1.1f * map_max_value(curve.mData);
+                double yMax = 1.1f * map_max_value(curve.mData);
                 mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
             }
             
@@ -122,12 +122,25 @@ void GraphViewDate::refresh()
                 curve.mIsHisto = false;
                 mGraph->addCurve(curve);
                 
-                float yMax = 1.1f * map_max_value(curve.mData);
+                double yMax = 1.1f * map_max_value(curve.mData);
                 mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
             }
             
             if(mShowAllChains)
             {
+                if(mShowRawResults)
+                {
+                    GraphCurve curveRaw;
+                    curveRaw.mName = "raw histo full";
+                    curveRaw.mPen.setColor(Qt::red);
+                    curveRaw.mData = equal_areas(variable->fullRawHisto(), 1.f);
+                    curveRaw.mIsHisto = true;
+                    mGraph->addCurve(curveRaw);
+                    
+                    double yMax2 = 1.1f * map_max_value(curveRaw.mData);
+                    mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax2));
+                }
+                
                 GraphCurve curve;
                 curve.mName = "histo full";
                 curve.mData = equal_areas(variable->fullHisto(), 1.f);
@@ -135,7 +148,7 @@ void GraphViewDate::refresh()
                 curve.mIsHisto = false;
                 mGraph->addCurve(curve);
                 
-                float yMax = 1.1f * map_max_value(curve.mData);
+                double yMax = 1.1f * map_max_value(curve.mData);
                 mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                 
                 if(mCurrentVariable != GraphViewResults::eSigma)
@@ -148,19 +161,6 @@ void GraphViewDate::refresh()
                     curveHPD.mIsHisto = false;
                     curveHPD.mIsRectFromZero = true;
                     mGraph->addCurve(curveHPD);
-                }
-                
-                if(mShowRawResults)
-                {
-                    GraphCurve curveRaw;
-                    curveRaw.mName = "raw histo full";
-                    curveRaw.mPen.setColor(Qt::red);
-                    curveRaw.mData = equal_areas(variable->fullRawHisto(), 1.f);
-                    curveRaw.mIsHisto = true;
-                    mGraph->addCurve(curveRaw);
-                    
-                    float yMax2 = 1.1f * map_max_value(curveRaw.mData);
-                    mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax2));
                 }
             }
             for(int i=0; i<mShowChainList.size(); ++i)
@@ -176,7 +176,7 @@ void GraphViewDate::refresh()
                     curve.mIsHisto = false;
                     mGraph->addCurve(curve);
                     
-                    float yMax = 1.1f * map_max_value(curve.mData);
+                    double yMax = 1.1f * map_max_value(curve.mData);
                     mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                 }
             }
@@ -215,8 +215,8 @@ void GraphViewDate::refresh()
                 curve.mIsHisto = false;
                 mGraph->addCurve(curve);
                 
-                float min = map_min_value(curve.mData);
-                float max = map_max_value(curve.mData);
+                double min = map_min_value(curve.mData);
+                double max = map_max_value(curve.mData);
                 mGraph->setRangeY(floorf(min), ceilf(max));
             }
         }
@@ -281,8 +281,8 @@ void GraphViewDate::refresh()
                 mGraph->setRangeX(0, 100);
                 mGraph->setRangeY(-1, 1);
                 
-                float n = variable->runTraceForChain(mChains, chainIdx).size();
-                float limit = 1.96f / sqrtf(n);
+                double n = variable->runTraceForChain(mChains, chainIdx).size();
+                double limit = 1.96f / sqrtf(n);
                 
                 //qDebug() << n << ", " <<limit;
                 

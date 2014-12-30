@@ -13,7 +13,7 @@ public:
     virtual ~GraphCurve();
 
 public:
-    QMap<float, float> mData;
+    QMap<double, double> mData;
     
     QString mName;
     QPen mPen;
@@ -22,16 +22,16 @@ public:
     bool mIsRectFromZero; // draw a vertical line when graph value leaves 0 : usefull for HPD and Typo!
     
     bool mUseVectorData;
-    QVector<float> mDataVector;
+    QVector<double> mDataVector;
     
     bool mIsHorizontalLine;
-    float mHorizontalValue;
+    double mHorizontalValue;
     
     bool mIsVerticalLine;
-    float mVerticalValue;
+    double mVerticalValue;
     
     bool mIsHorizontalSections;
-    QList<QPair<float, float>> mSections;
+    QList<QPair<double, double>> mSections;
     
     bool mIsVertical;
 };

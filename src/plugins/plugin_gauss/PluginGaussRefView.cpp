@@ -11,8 +11,10 @@ PluginGaussRefView::PluginGaussRefView(QWidget* parent):GraphViewRefAbstract(par
 mGraph(0)
 {
     mGraph = new GraphView(this);
-    mGraph->showYValues(true);
-    mGraph->showAxis(false);
+    
+    mGraph->setXAxisMode(GraphView::eAllTicks);
+    mGraph->setYAxisMode(GraphView::eMinMax);
+    mGraph->setRendering(GraphView::eHD);
 }
 
 PluginGaussRefView::~PluginGaussRefView()
@@ -30,11 +32,11 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
     
     if(!date.isNull())
     {
-        float age = date.mData.value(DATE_GAUSS_AGE_STR).toDouble();
-        float error = date.mData.value(DATE_GAUSS_ERROR_STR).toDouble();
-        float a = date.mData.value(DATE_GAUSS_A_STR).toDouble();
-        float b = date.mData.value(DATE_GAUSS_B_STR).toDouble();
-        float c = date.mData.value(DATE_GAUSS_C_STR).toDouble();
+        double age = date.mData.value(DATE_GAUSS_AGE_STR).toDouble();
+        double error = date.mData.value(DATE_GAUSS_ERROR_STR).toDouble();
+        double a = date.mData.value(DATE_GAUSS_A_STR).toDouble();
+        double b = date.mData.value(DATE_GAUSS_B_STR).toDouble();
+        double c = date.mData.value(DATE_GAUSS_C_STR).toDouble();
         
         // ----------------------------------------------
         //  Reference curve
@@ -49,8 +51,8 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
         
         // ----------------------------------------------
         
-        float yMin = map_min_value(curve.mData);
-        float yMax = map_max_value(curve.mData);
+        double yMin = map_min_value(curve.mData);
+        double yMax = map_max_value(curve.mData);
         
         yMin = qMin(yMin, age);
         yMax = qMax(yMax, age);
@@ -69,7 +71,7 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
         
         for(int t=yMin; t<yMax; ++t)
         {
-            float v = expf(-0.5 * powf((t - age) / error, 2));
+            double v = expf(-0.5 * powf((t - age) / error, 2));
             curveMeasure.mData[t] = v;
         }
         curveMeasure.mData = normalize_map(curveMeasure.mData);
@@ -107,7 +109,7 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
     }
 }
 
-void PluginGaussRefView::zoomX(float min, float max)
+void PluginGaussRefView::zoomX(double min, double max)
 {
     mGraph->zoomX(min, max);
 }

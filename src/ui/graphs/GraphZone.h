@@ -12,8 +12,8 @@ public:
     virtual ~GraphZone();
 
 public:
-    float mXStart;
-    float mXEnd;
+    double mXStart;
+    double mXEnd;
     QColor mColor;
     QString mText;
 };

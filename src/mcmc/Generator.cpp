@@ -13,7 +13,7 @@
 
 
 std::mt19937 Generator::sGenerator = std::mt19937(0);
-std::uniform_real_distribution<float> Generator::sDistribution = std::uniform_real_distribution<float>(0, 1);
+std::uniform_real_distribution<double> Generator::sDistribution = std::uniform_real_distribution<double>(0, 1);
 
 void Generator::initGenerator(const int seed)
 {
@@ -32,25 +32,20 @@ int Generator::createSeed()
 }
 
 
-float Generator::randomUniform(float min, float max)
+double Generator::randomUniform(double min, double max)
 {
     return min + sDistribution(sGenerator) * (max - min);
 }
 
-float Generator::gaussByDoubleExp(const float meanf, const float sigmaf, const float minf, const float maxf)
+double Generator::gaussByDoubleExp(const double mean, const double sigma, const double min, const double max)
 {
-    double mean = (double)meanf;
-    double sigma = (double)sigmaf;
-    double min = (double)minf;
-    double max = (double)maxf;
-    
     if(min >= max)
     {
         if(min == max)
             qDebug() << "DOUBLE EXP ERROR : min == max";
         else
             qDebug() << "DOUBLE EXP ERROR : min > max";
-        return minf;
+        return min;
     }
     
     const double x_min = (min - mean) / sigma;
@@ -58,7 +53,7 @@ float Generator::gaussByDoubleExp(const float meanf, const float sigmaf, const f
 
     if(abs(x_max - x_min) < 1E-3)
     {
-        return randomUniform(minf, maxf);
+        return randomUniform(min, max);
     }
     
     double x = (x_max + x_min) / 2.;
@@ -147,7 +142,7 @@ float Generator::gaussByDoubleExp(const float meanf, const float sigmaf, const f
             }
             else if(x_max <= -1.)
             {
-                //std::cout << "floatExp : x_max : " << x_max << std::endl;
+                //std::cout << "doubleExp : x_max : " << x_max << std::endl;
                 rap = exp(0.5 * (x_max * x_max - x * x) + x_max - x);
             }
             else
@@ -158,22 +153,22 @@ float Generator::gaussByDoubleExp(const float meanf, const float sigmaf, const f
         //ur = randomUniform();
     }
     
-    return (float)(mean + (x * sigma));
+    return (double)(mean + (x * sigma));
 }
 
 // Simulation d'une loi gaussienne centrée réduite
-float Generator::boxMuller()
+double Generator::boxMuller()
 {
-    float rand1 = randomUniform();
-    float rand2 = randomUniform();
+    double rand1 = randomUniform();
+    double rand2 = randomUniform();
     return sqrtf(-2. * logf(rand1)) * cos(2. * M_PI * rand2);
 }
 
-float Generator::gaussByBoxMuller(const float mean, const float sigma)
+double Generator::gaussByBoxMuller(const double mean, const double sigma)
 {
     return mean + boxMuller() * sigma;
     
-    /*float x;
+    /*double x;
     do
     {
         x = mean + boxMuller() * sigma;

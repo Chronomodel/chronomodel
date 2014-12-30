@@ -5,21 +5,6 @@
 #include "MCMCSettings.h"
 
 
-struct Chain
-{
-    int mSeed;
-    unsigned long long mNumBurnIter;
-    unsigned long long mBurnIterIndex;
-    unsigned long long mMaxBatchs;
-    unsigned long long mNumBatchIter;
-    unsigned long long mBatchIterIndex;
-    unsigned long mBatchIndex;
-    unsigned long long mNumRunIter;
-    unsigned long long mRunIterIndex;
-    unsigned long long mTotalIter; // burn + adapt + run
-    unsigned int mThinningInterval;
-};
-
 class MCMCLoop : public QThread
 {
     Q_OBJECT

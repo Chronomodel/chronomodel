@@ -12,10 +12,11 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     mLogEdit = new QTextEdit();
     
     mLogEdit->setReadOnly(true);
-    QPalette palette = mLogEdit->palette();
+    mLogEdit->setAcceptRichText(true);
+    /*QPalette palette = mLogEdit->palette();
     palette.setColor(QPalette::Base, QColor(0, 0, 0, 255));
     palette.setColor(QPalette::Text, Qt::white);
-    mLogEdit->setPalette(palette);
+    mLogEdit->setPalette(palette);*/
     QFont font = mLogEdit->font();
     font.setPointSizeF(pointSize(11));
     mLogEdit->setFont(font);
@@ -75,9 +76,10 @@ void ProjectView::showHelp(bool show)
     //mResultsView->showHelp(show);
 }
 
-void ProjectView::updateLog(MCMCLoopMain& loop)
+void ProjectView::updateLog(Model* model)
 {
-    mLogEdit->setText(loop.getLog());
+    if(model)
+        mLogEdit->setText(model->mLog);
 }
 
 

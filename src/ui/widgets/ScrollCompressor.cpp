@@ -32,7 +32,7 @@ void ScrollCompressor::setVertical(bool vertical)
     update();
 }
 
-void ScrollCompressor::setProp(const float& prop, bool sendNotification)
+void ScrollCompressor::setProp(const double& prop, bool sendNotification)
 {
     mProp = prop;
     mProp = (mProp < 0) ? 0 : mProp;
@@ -42,7 +42,7 @@ void ScrollCompressor::setProp(const float& prop, bool sendNotification)
     update();
 }
 
-float ScrollCompressor::getProp() const
+double ScrollCompressor::getProp() const
 {
     return mProp;
 }
@@ -81,7 +81,7 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
         grad2.setColorAt(0, Painting::mainColorLight);
         grad2.setColorAt(1, Painting::mainColorDark);
         
-        float h = r.height() * mProp;
+        double h = r.height() * mProp;
         QRectF r2 = r.adjusted(0, r.height() - h, 0, 0);
         p.fillRect(r2, grad2);
         
@@ -98,7 +98,7 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
     }
     else
     {
-        float w = r.width() * mProp;
+        double w = r.width() * mProp;
         QRectF r2 = r.adjusted(0, 0, -r.width() + w, 0);
         
         /*QLinearGradient grad1(0, 0, 0, height());
@@ -163,14 +163,14 @@ void ScrollCompressor::updateProp(QMouseEvent* e)
         int y = r.height() - e->pos().y();
         y = (y < 0) ? 0 : y;
         y = (y > r.height()) ? r.height() : y;
-        mProp = (float)y / (float)r.height();
+        mProp = (double)y / (double)r.height();
     }
     else
     {
         int x = e->pos().x();
         x = (x < 0) ? 0 : x;
         x = (x > r.width()) ? r.width() : x;
-        mProp = (float)x / (float)r.width();
+        mProp = (double)x / (double)r.width();
     }
     emit valueChanged(mProp);
     update();

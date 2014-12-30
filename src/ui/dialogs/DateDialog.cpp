@@ -4,6 +4,7 @@
 #include "RadioButton.h"
 #include "Button.h"
 #include "Label.h"
+#include "HelpWidget.h"
 #include "LineEdit.h"
 #include "Painting.h"
 #include "ModelUtilities.h"
@@ -49,6 +50,7 @@ mButH(25)
     mDeltaGaussRadio = new RadioButton(tr("Wiggle Matching : Gaussian"), mAdvancedWidget);
     
     mMethodLab = new Label(tr("Method") + " :", mAdvancedWidget);
+    mDeltaHelp = new HelpWidget(tr("Wiggle Sign Help : \"+\" if data ≤ event, \"-\" if data ≥ event"), mAdvancedWidget);
     mDeltaFixedLab = new Label(tr("Value") + " :", mAdvancedWidget);
     mDeltaMinLab = new Label(tr("Min") + " :", mAdvancedWidget);
     mDeltaMaxLab = new Label(tr("Max") + " :", mAdvancedWidget);
@@ -231,6 +233,7 @@ void DateDialog::updateLayout()
     
     int i = 1;
     mMethodLab->setGeometry(m, m, w1, mComboH);
+    mDeltaHelp->setGeometry(m, 2*m + mComboH, width() - 4*m, mLineH); ++i;
     mDeltaFixedLab->setGeometry(m, 2*m + mComboH + i * (m + mLineH), w1, mLineH); ++i; ++i;
     mDeltaMinLab->setGeometry(m, 2*m + mComboH + i * (m + mLineH), w1, mLineH); ++i;
     mDeltaMaxLab->setGeometry(m, 2*m + mComboH + i * (m + mLineH), w1, mLineH); ++i; ++i;
@@ -238,7 +241,7 @@ void DateDialog::updateLayout()
     mDeltaErrorLab->setGeometry(m, 2*m + mComboH + i * (m + mLineH), w1, mLineH); ++i;
     
     i = 0;
-    mMethodCombo->setGeometry(2*m + w1, m, w2, mComboH);
+    mMethodCombo->setGeometry(2*m + w1, m, w2, mComboH); ++i;
     mDeltaFixedRadio->setGeometry(m, 2*m + mComboH + i * (m + mLineH), w - 4*m, mLineH); ++i;
     mDeltaFixedEdit->setGeometry(2*m + w1, 2*m + mComboH + i * (m + mLineH), w2, mLineH); ++i;
     mDeltaRangeRadio->setGeometry(m, 2*m + mComboH + i * (m + mLineH), w - 4*m, mLineH); ++i;

@@ -32,6 +32,10 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     {
         mRefCombo->addItem(refCurves[i]);
     }
+    QString defCurve = QString("intcal13.14c").toLower();
+    if(mSelectedRefCurve.isEmpty() && refCurves.contains(defCurve, Qt::CaseInsensitive))
+       mSelectedRefCurve = defCurve;
+        
     mRefCombo->setCurrentText(mSelectedRefCurve);
     
     mComboH = mRefCombo->sizeHint().height();
@@ -46,8 +50,8 @@ Plugin14CForm::~Plugin14CForm()
 
 void Plugin14CForm::setData(const QJsonObject& data)
 {
-    float a = data.value(DATE_14C_AGE_STR).toDouble();
-    float e = data.value(DATE_14C_ERROR_STR).toDouble();
+    double a = data.value(DATE_14C_AGE_STR).toDouble();
+    double e = data.value(DATE_14C_ERROR_STR).toDouble();
     QString r = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
     
     mAverageEdit->setText(QString::number(a));
@@ -59,13 +63,15 @@ QJsonObject Plugin14CForm::getData()
 {
     QJsonObject data;
     
-    float a = mAverageEdit->text().toDouble();
-    float e = mErrorEdit->text().toDouble();
+    double a = mAverageEdit->text().toDouble();
+    double e = mErrorEdit->text().toDouble();
     QString r = mRefCombo->currentText();
     
     data.insert(DATE_14C_AGE_STR, a);
     data.insert(DATE_14C_ERROR_STR, e);
     data.insert(DATE_14C_REF_CURVE_STR, r);
+    
+    mSelectedRefCurve = r;
     
     return data;
 }

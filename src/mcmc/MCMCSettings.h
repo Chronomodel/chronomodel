@@ -12,6 +12,22 @@
 #define MCMC_ITER_PER_BATCH_DEFAULT 100
 #define MCMC_THINNING_INTERVAL_DEFAULT 10
 
+struct Chain
+{
+    int mSeed;
+    unsigned long long mNumBurnIter;
+    unsigned long long mBurnIterIndex;
+    unsigned long long mMaxBatchs;
+    unsigned long long mNumBatchIter;
+    unsigned long long mBatchIterIndex;
+    unsigned long mBatchIndex;
+    unsigned long long mNumRunIter;
+    unsigned long long mRunIterIndex;
+    unsigned long long mTotalIter; // burn + adapt + run
+    unsigned int mThinningInterval;
+};
+
+
 class MCMCSettings
 {
 public:
@@ -23,6 +39,8 @@ public:
     
     static MCMCSettings fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
+    
+    QList<Chain> getChains() const;
     
     unsigned long long mNumChains;
     unsigned long long mNumRunIter;

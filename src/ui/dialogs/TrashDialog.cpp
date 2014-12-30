@@ -4,6 +4,7 @@
 #include "../PluginAbstract.h"
 #include "../PluginFormAbstract.h"
 #include "MainWindow.h"
+#include "Button.h"
 #include "Project.h"
 #include <QtWidgets>
 
@@ -15,10 +16,9 @@ mType(type)
     
     // -----------
     
-    mList = new QListWidget();
+    mList = new QListWidget(this);
     mList->setSelectionMode(QAbstractItemView::ExtendedSelection);
     mList->setMinimumHeight(400);
-    
     
     QItemDelegate* delegate = 0;
     if(mType == eDate)
@@ -28,14 +28,25 @@ mType(type)
     if(delegate)
         mList->setItemDelegate(delegate);
     
+    connect(mList, SIGNAL(itemSelectionChanged()), this, SLOT(updateFromSelection()));
+    
     // ----------
     
-    QDialogButtonBox* buttonBox = new QDialogButtonBox();
-    buttonBox->addButton(tr("OK"), QDialogButtonBox::AcceptRole);
-    buttonBox->addButton(tr("Cancel"), QDialogButtonBox::RejectRole);
+    mDeleteBut = new Button(tr("Delete"), this);
+    mOkBut = new Button(tr("OK"), this);
+    mCancelBut = new Button(tr("Cancel"), this);
     
-    connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
-    connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+    connect(mDeleteBut, SIGNAL(clicked()), this, SLOT(deleteItems()));
+    connect(mOkBut, SIGNAL(clicked()), this, SLOT(accept()));
+    connect(mCancelBut, SIGNAL(clicked()), this, SLOT(reject()));
+    
+    QHBoxLayout* butLayout = new QHBoxLayout();
+    butLayout->setContentsMargins(0, 0, 0, 0);
+    butLayout->setSpacing(5);
+    //butLayout->addStretch();
+    butLayout->addWidget(mDeleteBut);
+    butLayout->addWidget(mOkBut);
+    butLayout->addWidget(mCancelBut);
     
     // ----------
     
@@ -46,22 +57,12 @@ mType(type)
     titleLab->setFont(font);
     titleLab->setAlignment(Qt::AlignCenter);
     
-    QFrame* separator = new QFrame();
-    separator->setFrameShape(QFrame::HLine);
-    separator->setFrameShadow(QFrame::Sunken);
-    
-    QLabel* intro = new QLabel(tr("<p>TODO...</p>"));
-    intro->setTextFormat(Qt::RichText);
-    intro->setWordWrap(true);
-    
     // ----------
     
     QVBoxLayout* layout = new QVBoxLayout();
     layout->addWidget(titleLab);
-    //layout->addWidget(intro);
-    //layout->addWidget(separator);
     layout->addWidget(mList);
-    layout->addWidget(buttonBox);
+    layout->addLayout(butLayout);
     setLayout(layout);
     
     // ----------
@@ -83,6 +84,7 @@ mType(type)
             item->setData(0x0102, d.mPlugin->getId());
             item->setData(0x0103, d.getDesc());
             item->setData(0x0105, d.mDeltaFixed);
+            item->setData(0x0106, d.mId);
             mList->addItem(item);
         }
     }
@@ -100,6 +102,7 @@ mType(type)
             item->setData(0x0104, event[STATE_COLOR_RED].toInt());
             item->setData(0x0105, event[STATE_COLOR_GREEN].toInt());
             item->setData(0x0106, event[STATE_COLOR_BLUE].toInt());
+            item->setData(0x0107, event[STATE_ID].toInt());
             mList->addItem(item);
         }
     }
@@ -118,4 +121,38 @@ QList<int> TrashDialog::getSelectedIndexes()
         result.push_back(mList->row(items[i]));
     return result;
 }
+
+void TrashDialog::updateFromSelection()
+{
+    QList<QListWidgetItem*> items = mList->selectedItems();
+    mDeleteBut->setEnabled(items.count() > 0);
+}
+
+void TrashDialog::deleteItems()
+{
+    Project* project = MainWindow::getInstance()->getProject();
+    QList<QListWidgetItem*> items = mList->selectedItems();
+    QList<int> ids;
+    
+    if(mType == eEvent)
+    {
+        for(int i=0; i<items.size(); ++i)
+            ids.append(items[i]->data(0x0107).toInt());
+        project->deleteSelectedTrashedEvents(ids);
+    }
+    else if(mType == eDate)
+    {
+        for(int i=0; i<items.size(); ++i)
+            ids.append(items[i]->data(0x0106).toInt());
+        project->deleteSelectedTrashedDates(ids);
+    }
+    
+    // Delete items now!
+    // An event has been sent to the app to destroy these items, but our dialog cannot listen to the notification that will be sent after (at least not for now...)
+    // Deleting items now is thus a bit anticipated but works well!
+    for(int i=0; i<items.size(); ++i)
+        mList->takeItem(mList->row(items[i]));
+    mList->update();
+}
+
 

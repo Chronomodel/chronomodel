@@ -18,7 +18,7 @@ public:
     void setDate(const Date& d, const ProjectSettings& settings);
     
 public slots:
-    void zoomX(float min, float max);
+    void zoomX(double min, double max);
 
 protected:
     void resizeEvent(QResizeEvent* e);

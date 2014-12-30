@@ -11,8 +11,10 @@ Plugin14CRefView::Plugin14CRefView(QWidget* parent):GraphViewRefAbstract(parent)
 mGraph(0)
 {
     mGraph = new GraphView(this);
-    mGraph->showYValues(true);
-    mGraph->showAxis(false);
+    
+    mGraph->setXAxisMode(GraphView::eAllTicks);
+    mGraph->setYAxisMode(GraphView::eMinMax);
+    mGraph->setRendering(GraphView::eHD);
 }
 
 Plugin14CRefView::~Plugin14CRefView()
@@ -30,8 +32,8 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
     
     if(!date.isNull())
     {
-        float age = date.mData.value(DATE_14C_AGE_STR).toDouble();
-        float error = date.mData.value(DATE_14C_ERROR_STR).toDouble();
+        double age = date.mData.value(DATE_14C_AGE_STR).toDouble();
+        double error = date.mData.value(DATE_14C_ERROR_STR).toDouble();
         QString ref_curve = date.mData.value(DATE_14C_REF_CURVE_STR).toString().toLower();
         
         // ----------------------------------------------
@@ -41,11 +43,11 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         QColor color2(150, 150, 150);
         
         Plugin14C* plugin = (Plugin14C*)date.mPlugin;
-        const QMap<QString, QMap<float, float>>& curves = plugin->getRefData(ref_curve);
+        const QMap<QString, QMap<double, double>>& curves = plugin->getRefData(ref_curve);
         
-        QMap<float, float> curveG;
-        QMap<float, float> curveG95Sup;
-        QMap<float, float> curveG95Inf;
+        QMap<double, double> curveG;
+        QMap<double, double> curveG95Sup;
+        QMap<double, double> curveG95Inf;
         
         //qDebug() << curves["G"][0];
         
@@ -78,8 +80,8 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         
         // ----------------------------------------------
         
-        float yMin = map_min_value(curveG95Inf);
-        float yMax = map_max_value(curveG95Sup);
+        double yMin = map_min_value(curveG95Inf);
+        double yMax = map_max_value(curveG95Sup);
         
         yMin = qMin(yMin, age);
         yMax = qMax(yMax, age);
@@ -98,7 +100,7 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         
         for(int t=yMin; t<yMax; ++t)
         {
-            float v = expf(-0.5 * powf((age - t) / error, 2));
+            double v = expf(-0.5 * powf((age - t) / error, 2));
             curveMeasure.mData[t] = v;
         }
         curveMeasure.mData = normalize_map(curveMeasure.mData);
@@ -136,7 +138,7 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
     }
 }
 
-void Plugin14CRefView::zoomX(float min, float max)
+void Plugin14CRefView::zoomX(double min, double max)
 {
     mGraph->zoomX(min, max);
 }

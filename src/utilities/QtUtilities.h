@@ -19,4 +19,11 @@ QFileInfo saveWidgetAsImage(QObject* widget, const QRect& r, const QString& dial
 bool isComment(const QString& str);
 QString prepareTooltipText(const QString& title, const QString& text);
 
+QString line(const QString& str);
+QString textBold(const QString& str);
+QString textRed(const QString& str);
+QString textGreen(const QString& str);
+QString textBlue(const QString& str);
+
+
 #endif

@@ -38,12 +38,13 @@ public:
     void removeConstraintForward(PhaseConstraint* c);
     void removeConstraintBackward(PhaseConstraint* c);
     
-    float getMaxThetaEvents();
-    float getMinThetaEvents();
-    float getMinAlphaNextPhases(float tmax);
-    float getMaxBetaPrevPhases(float tmin);
+    double getMaxThetaEvents(double tmax);
+    double getMinThetaEvents(double tmin);
     
-    void updateAll();
+    double getMinThetaNextPhases(double tmax);
+    double getMaxThetaPrevPhases(double tmin);
+    
+    void updateAll(double tmin, double tmax);
     void memoAll();
     
     void initTau();
@@ -52,7 +53,7 @@ public:
     void generateDurationCredibility();
     
 protected:
-    float updatePhaseBound(float a, float b, float old);
+    double updatePhaseBound(double a, double b, double old);
 
     //---------------------------------------------------
     
@@ -66,20 +67,20 @@ public:
     
     MetropolisVariable mAlpha;
     MetropolisVariable mBeta;
-    float mTau;
+    double mTau;
     
-    QVector<float> mDurations;
+    QVector<double> mDurations;
     QString mDurationCredibility;
     
     TauType mTauType;
-    float mTauFixed;
-    float mTauMin;
-    float mTauMax;
+    double mTauFixed;
+    double mTauMin;
+    double mTauMax;
     
     QColor mColor;
     
-    float mItemX;
-    float mItemY;
+    double mItemX;
+    double mItemY;
     
     bool mIsSelected;
     bool mIsCurrent;

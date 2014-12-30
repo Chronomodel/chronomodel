@@ -13,10 +13,10 @@ PluginUniform::PluginUniform()
     
 }
 
-float PluginUniform::getLikelyhood(const float& t, const QJsonObject& data)
+double PluginUniform::getLikelyhood(const double& t, const QJsonObject& data)
 {
-    float min = data[DATE_UNIFORM_MIN_STR].toDouble();
-    float max = data[DATE_UNIFORM_MAX_STR].toDouble();
+    double min = data[DATE_UNIFORM_MIN_STR].toDouble();
+    double max = data[DATE_UNIFORM_MAX_STR].toDouble();
     
     return (t >= min && t < max) ? 1.f / (max-min) : 0;
 }

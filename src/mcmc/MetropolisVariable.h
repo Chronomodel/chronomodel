@@ -21,7 +21,7 @@ public:
     //  These functions are time consuming!
     // -----
     
-    void generateHistos(const QList<Chain>& chains, int fftLen, float hFactor, float tmin, float tmax);
+    void generateHistos(const QList<Chain>& chains, int fftLen, double hFactor, double tmin, double tmax);
     void generateCorrelations(const QList<Chain>& chains);
     void generateHPD(int threshold);
     void generateCredibility(const QList<Chain>& chains, int threshold);
@@ -33,22 +33,22 @@ public:
     // These functions do not make any calculation
     // -----
     
-    const QMap<float, float>& fullHisto() const;
-    const QMap<float, float>& fullRawHisto() const;
-    const QMap<float, float>& histoForChain(int index) const;
-    const QMap<float, float>& rawHistoForChain(int index) const;
+    const QMap<double, double>& fullHisto() const;
+    const QMap<double, double>& fullRawHisto() const;
+    const QMap<double, double>& histoForChain(int index) const;
+    const QMap<double, double>& rawHistoForChain(int index) const;
     
     // Full trace (burn + adapt + run) as a map
-    QMap<float, float> fullTrace(int thinningInterval);
+    QMap<double, double> fullTrace(int thinningInterval);
     // Full trace for the chain (burn + adapt + run) as a map
-    QMap<float, float> fullTraceForChain(const QList<Chain>& chains, int index);
+    QMap<double, double> fullTraceForChain(const QList<Chain>& chains, int index);
     
     // Trace for run part as a vector
-    QVector<float> fullRunTrace(const QList<Chain>& chains);
+    QVector<double> fullRunTrace(const QList<Chain>& chains);
     // Trace for run part of the chain as a vector
-    QVector<float> runTraceForChain(const QList<Chain>& chains, int index);
+    QVector<double> runTraceForChain(const QList<Chain>& chains, int index);
     
-    QVector<float> correlationForChain(int index);
+    QVector<double> correlationForChain(int index);
     
     // -----
     
@@ -57,29 +57,28 @@ public:
     // -----
     
 private:
-    float* generateBufferForHisto(const QVector<float>& dataSrc, int numPts, float hFactor);
-    QMap<float, float> bufferToMap(const float* buffer);
-    QMap<float, float> generateRawHisto(const QVector<float>& data, int fftLen, float tmin, float tmax);
-    QMap<float, float> generateHisto(const QVector<float>& data, int fftLen, float hFactor, float tmin, float tmax);
-    QMap<float, float> generateHistoOld(const QVector<float>& dataSrc, float tmin, float tmax);
+    float* generateBufferForHisto(const QVector<double>& dataSrc, int numPts, double hFactor);
+    QMap<double, double> bufferToMap(const double* buffer);
+    QMap<double, double> generateRawHisto(const QVector<double>& data, int fftLen, double tmin, double tmax);
+    QMap<double, double> generateHisto(const QVector<double>& data, int fftLen, double hFactor, double tmin, double tmax);
     
 public:
-    float mX;
-    QVector<float> mTrace;
+    double mX;
+    QVector<double> mTrace;
     
-    QMap<float, float> mHisto;
-    QList<QMap<float, float>> mChainsHistos;
+    QMap<double, double> mHisto;
+    QList<QMap<double, double>> mChainsHistos;
     
-    QMap<float, float> mRawHisto;
-    QList<QMap<float, float>> mChainsRawHistos;
+    QMap<double, double> mRawHisto;
+    QList<QMap<double, double>> mChainsRawHistos;
     
-    QList<QVector<float>> mCorrelations;
+    QList<QVector<double>> mCorrelations;
     
-    QMap<float, float> mHPD;
-    QPair<float, float> mCredibility;
+    QMap<double, double> mHPD;
+    QPair<double, double> mCredibility;
     int mThreshold;
     
-    float mExactCredibilityThreshold;
+    double mExactCredibilityThreshold;
     
     DensityAnalysis mResults;
     QList<DensityAnalysis> mChainsResults;

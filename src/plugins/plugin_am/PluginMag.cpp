@@ -16,55 +16,55 @@ PluginMag::PluginMag()
     loadRefDatas();
 }
 
-float PluginMag::getLikelyhood(const float& t, const QJsonObject& data)
+double PluginMag::getLikelyhood(const double& t, const QJsonObject& data)
 {
-    float is_inc = data[DATE_AM_IS_INC_STR].toBool();
-    float is_dec = data[DATE_AM_IS_DEC_STR].toBool();
-    float is_int = data[DATE_AM_IS_INT_STR].toBool();
-    float alpha = data[DATE_AM_ERROR_STR].toDouble();
-    float inc = data[DATE_AM_INC_STR].toDouble();
-    float dec = data[DATE_AM_DEC_STR].toDouble();
-    float intensity = data[DATE_AM_INTENSITY_STR].toDouble();
+    double is_inc = data[DATE_AM_IS_INC_STR].toBool();
+    double is_dec = data[DATE_AM_IS_DEC_STR].toBool();
+    double is_int = data[DATE_AM_IS_INT_STR].toBool();
+    double alpha = data[DATE_AM_ERROR_STR].toDouble();
+    double inc = data[DATE_AM_INC_STR].toDouble();
+    double dec = data[DATE_AM_DEC_STR].toDouble();
+    double intensity = data[DATE_AM_INTENSITY_STR].toDouble();
     QString ref_curve = data[DATE_AM_REF_CURVE_STR].toString().toLower();
     
-    float result = 0.f;
+    double result = 0.f;
     
     if(mRefDatas.find(ref_curve) != mRefDatas.end())
     {
-        const QMap<float, float>& curveG = mRefDatas[ref_curve]["G"];
-        const QMap<float, float>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
+        const QMap<double, double>& curveG = mRefDatas[ref_curve]["G"];
+        const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
         
-        float t_under = floorf(t);
-        float t_upper = t_under + 1;
+        double t_under = floorf(t);
+        double t_upper = t_under + 1;
         
         if(curveG.find(t_under) != curveG.end() &&
            curveG.find(t_upper) != curveG.end())
         {
-            float g_under = curveG[t_under];
-            float g_upper = curveG[t_upper];
-            float g = interpolate(t, t_under, t_upper, g_under, g_upper);
+            double g_under = curveG[t_under];
+            double g_upper = curveG[t_upper];
+            double g = interpolate(t, t_under, t_upper, g_under, g_upper);
             
-            float g_sup_under = curveG95Sup[t_under];
-            float g_sup_upper = curveG95Sup[t_upper];
-            float g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
+            double g_sup_under = curveG95Sup[t_under];
+            double g_sup_upper = curveG95Sup[t_upper];
+            double g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
             
-            float e = (g_sup - g) / 1.96f;
+            double e = (g_sup - g) / 1.96f;
             
             // pour la combinaison, il faut multiplier les 2 cas suivants :
             if(is_inc)
             {
-                float variance = (e * e) + (alpha * alpha) / (2.448f * 2.448f);
+                double variance = (e * e) + (alpha * alpha) / (2.448f * 2.448f);
                 result = expf(-0.5f * powf(g - inc, 2.f) / variance) / sqrtf(variance);
             }
             else if(is_dec)
             {
-                float variance = e * e + powf(alpha / (2.448f * cos(inc * M_PI / 180.f)), 2.f);
+                double variance = e * e + powf(alpha / (2.448f * cos(inc * M_PI / 180.f)), 2.f);
                 result = expf(-0.5f * powf(g - dec, 2.f) / variance) / sqrtf(variance);
             }
             else if(is_int)
             {
-                float error = alpha;
-                float variance = e * e + error * error;
+                double error = alpha;
+                double variance = e * e + error * error;
                 result = expf(-0.5f * powf(g - intensity, 2.f) / variance) / sqrtf(variance);
             }
         }
@@ -128,10 +128,10 @@ QJsonObject PluginMag::dataFromList(const QStringList& list)
         json.insert(DATE_AM_IS_INC_STR, list[1] == "inclination");
         json.insert(DATE_AM_IS_DEC_STR, list[1] == "declination");
         json.insert(DATE_AM_IS_INT_STR, list[1] == "intensity");
-        json.insert(DATE_AM_INC_STR, list[2].toFloat());
-        json.insert(DATE_AM_DEC_STR, list[3].toFloat());
-        json.insert(DATE_AM_INTENSITY_STR, list[4].toFloat());
-        json.insert(DATE_AM_ERROR_STR, list[5].toFloat());
+        json.insert(DATE_AM_INC_STR, list[2].toDouble());
+        json.insert(DATE_AM_DEC_STR, list[3].toDouble());
+        json.insert(DATE_AM_INTENSITY_STR, list[4].toDouble());
+        json.insert(DATE_AM_ERROR_STR, list[5].toDouble());
         json.insert(DATE_AM_REF_CURVE_STR, list[6].toLower());
     }
     return json;
@@ -144,13 +144,13 @@ QString PluginMag::getDateDesc(const Date* date) const
     {
         QJsonObject data = date->mData;
         
-        float is_inc = data[DATE_AM_IS_INC_STR].toBool();
-        float is_dec = data[DATE_AM_IS_DEC_STR].toBool();
-        float is_int = data[DATE_AM_IS_INT_STR].toBool();
-        float alpha = data[DATE_AM_ERROR_STR].toDouble();
-        float inc = data[DATE_AM_INC_STR].toDouble();
-        float dec = data[DATE_AM_DEC_STR].toDouble();
-        float intensity = data[DATE_AM_INTENSITY_STR].toDouble();
+        double is_inc = data[DATE_AM_IS_INC_STR].toBool();
+        double is_dec = data[DATE_AM_IS_DEC_STR].toBool();
+        double is_int = data[DATE_AM_IS_INT_STR].toBool();
+        double alpha = data[DATE_AM_ERROR_STR].toDouble();
+        double inc = data[DATE_AM_INC_STR].toDouble();
+        double dec = data[DATE_AM_DEC_STR].toDouble();
+        double intensity = data[DATE_AM_INTENSITY_STR].toDouble();
         QString ref_curve = data[DATE_AM_REF_CURVE_STR].toString().toLower();
         
         if(is_inc)
@@ -178,7 +178,7 @@ QString PluginMag::getDateDesc(const Date* date) const
 QStringList PluginMag::getRefsNames() const
 {
     QStringList refNames;
-    typename QMap< QString, QMap<QString, QMap<float, float> > >::const_iterator it = mRefDatas.begin();
+    typename QMap< QString, QMap<QString, QMap<double, double> > >::const_iterator it = mRefDatas.begin();
     while(it != mRefDatas.end())
     {
         refNames.push_back(it.key());
@@ -214,11 +214,11 @@ void PluginMag::loadRefDatas()
             QFile file(files[i].absoluteFilePath());
             if(file.open(QIODevice::ReadOnly))
             {
-                QMap<QString, QMap<float, float>> curves;
+                QMap<QString, QMap<double, double>> curves;
                 
-                QMap<float, float> curveG;
-                QMap<float, float> curveG95Sup;
-                QMap<float, float> curveG95Inf;
+                QMap<double, double> curveG;
+                QMap<double, double> curveG95Sup;
+                QMap<double, double> curveG95Inf;
                 
                 QTextStream stream(&file);
                 while(!stream.atEnd())
@@ -238,9 +238,9 @@ void PluginMag::loadRefDatas()
                         {
                             int t = values[0].toInt();
                             
-                            float g = values[1].toFloat();
-                            float gSup = g + 1.96f * values[2].toFloat();
-                            float gInf = g - 1.96f * values[2].toFloat();
+                            double g = values[1].toDouble();
+                            double gSup = g + 1.96f * values[2].toDouble();
+                            double gInf = g - 1.96f * values[2].toDouble();
                             
                             curveG[t] = g;
                             curveG95Sup[t] = gSup;
@@ -253,33 +253,33 @@ void PluginMag::loadRefDatas()
                 // The curves do not have 1-year precision!
                 // We have to interpolate in the blanks
                 
-                float tmin = curveG.firstKey();
-                float tmax = curveG.lastKey();
+                double tmin = curveG.firstKey();
+                double tmax = curveG.lastKey();
                 
-                for(float t=tmin; t<tmax; ++t)
+                for(double t=tmin; t<tmax; ++t)
                 {
                     if(curveG.find(t) == curveG.end())
                     {
                         // This actually return the iterator with the nearest greater key !!!
-                        QMap<float, float>::const_iterator iter = curveG.lowerBound(t);
+                        QMap<double, double>::const_iterator iter = curveG.lowerBound(t);
                         if(iter != curveG.end())
                         {
-                            float t_upper = iter.key();
+                            double t_upper = iter.key();
                             --iter;
                             if(iter != curveG.begin())
                             {
-                                float t_under = iter.key();
+                                double t_under = iter.key();
                                 
                                 //qDebug() << t_under << " < " << t << " < " << t_upper;
                                 
-                                float g_under = curveG[t_under];
-                                float g_upper = curveG[t_upper];
+                                double g_under = curveG[t_under];
+                                double g_upper = curveG[t_upper];
                                 
-                                float gsup_under = curveG95Sup[t_under];
-                                float gsup_upper = curveG95Sup[t_upper];
+                                double gsup_under = curveG95Sup[t_under];
+                                double gsup_upper = curveG95Sup[t_upper];
                                 
-                                float ginf_under = curveG95Inf[t_under];
-                                float ginf_upper = curveG95Inf[t_upper];
+                                double ginf_under = curveG95Inf[t_under];
+                                double ginf_upper = curveG95Inf[t_upper];
                                 
                                 curveG[t] = interpolate(t, t_under, t_upper, g_under, g_upper);
                                 curveG95Sup[t] = interpolate(t, t_under, t_upper, gsup_under, gsup_upper);
@@ -320,7 +320,7 @@ GraphViewRefAbstract* PluginMag::getGraphViewRef()
     return mRefGraph;
 }
 
-const QMap<QString, QMap<float, float> >& PluginMag::getRefData(const QString& name)
+const QMap<QString, QMap<double, double> >& PluginMag::getRefData(const QString& name)
 {
     return mRefDatas[name.toLower()];
 }

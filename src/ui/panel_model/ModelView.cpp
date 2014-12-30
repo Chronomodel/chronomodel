@@ -83,7 +83,7 @@ mCalibVisible(false)
     connect(mEventsScene, SIGNAL(selectionChanged()), mEventsGlobalView, SLOT(update()));
     connect(mButEventsOverview, SIGNAL(toggled(bool)), mEventsGlobalView, SLOT(setVisible(bool)));
     
-    connect(mEventsGlobalZoom, SIGNAL(valueChanged(float)), this, SLOT(updateEventsZoom(float)));
+    connect(mEventsGlobalZoom, SIGNAL(valueChanged(double)), this, SLOT(updateEventsZoom(double)));
     connect(mButExportEvents, SIGNAL(clicked()), this, SLOT(exportEventsScene()));
     
     // --------
@@ -133,7 +133,7 @@ mCalibVisible(false)
     mPhasesGlobalZoom->setProp(1);
     mPhasesGlobalZoom->showText(tr("Zoom"), true);
     
-    connect(mPhasesGlobalZoom, SIGNAL(valueChanged(float)), this, SLOT(updatePhasesZoom(float)));
+    connect(mPhasesGlobalZoom, SIGNAL(valueChanged(double)), this, SLOT(updatePhasesZoom(double)));
     connect(mButExportPhases, SIGNAL(clicked()), this, SLOT(exportPhasesScene()));
     
     connect(mButPhasesOverview, SIGNAL(toggled(bool)), mPhasesGlobalView, SLOT(setVisible(bool)));
@@ -268,6 +268,8 @@ void ModelView::resetInterface()
 
 void ModelView::updateProject()
 {
+    hideCalibration();
+    
     Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
     ProjectSettings settings = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
@@ -309,6 +311,8 @@ void ModelView::updateProject()
 
 void ModelView::applySettings()
 {
+    hideCalibration();
+    
     Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
     ProjectSettings s = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
@@ -345,7 +349,7 @@ void ModelView::adjustStep()
     QJsonObject state = project->state();
     ProjectSettings s = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
     
-    float defaultVal = ProjectSettings::getStep(s.mTmin, s.mTmax);
+    double defaultVal = ProjectSettings::getStep(s.mTmin, s.mTmax);
     
     StepDialog dialog(qApp->activeWindow(), Qt::Sheet);
     dialog.setStep(s.mStep, s.mStepForced, defaultVal);
@@ -559,7 +563,7 @@ void ModelView::updateLayout()
 }
 
 #pragma mark Zoom
-void ModelView::updateEventsZoom(float prop)
+void ModelView::updateEventsZoom(double prop)
 {
     qreal scale = prop;
     QMatrix matrix;
@@ -567,7 +571,7 @@ void ModelView::updateEventsZoom(float prop)
     mEventsView->setMatrix(matrix);
 }
 
-void ModelView::updatePhasesZoom(float prop)
+void ModelView::updatePhasesZoom(double prop)
 {
     qreal scale = prop;
     QMatrix matrix;
@@ -655,7 +659,7 @@ void ModelView::mouseMoveEvent(QMouseEvent* e)
 {
     if(mIsSplitting)
     {
-        mSplitProp = (float)e->pos().x() / (float)width();
+        mSplitProp = (double)e->pos().x() / (double)width();
         updateLayout();
     }
 }
@@ -698,8 +702,8 @@ void ModelView::readSettings()
     else if(panelIndex == 2) mButImport->setChecked(true);
     else if(panelIndex == 3) mButPhasesModel->setChecked(true);
     
-    mEventsGlobalZoom->setProp(settings.value("events_zoom", 1.f).toFloat(), true);
-    mPhasesGlobalZoom->setProp(settings.value("phases_zoom", 1.f).toFloat(), true);
+    mEventsGlobalZoom->setProp(settings.value("events_zoom", 1.f).toDouble(), true);
+    mPhasesGlobalZoom->setProp(settings.value("phases_zoom", 1.f).toDouble(), true);
     
     prepareNextSlide();
     updateLayout();

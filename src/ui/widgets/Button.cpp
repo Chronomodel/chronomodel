@@ -159,10 +159,10 @@ void Button::paintEvent(QPaintEvent* e)
         }
         else if(iconOnly)
         {
-            float m = 5;
-            float w = r.width() - 2*m;
-            float h = r.height() - 2*m;
-            float s = qMin(w, h);
+            double m = 5;
+            double w = r.width() - 2*m;
+            double h = r.height() - 2*m;
+            double s = qMin(w, h);
             
             QRectF iconRect((r.width() - s)/2.f, m, s, s);
             QPixmap pixmap = ic.pixmap(iconRect.size().toSize());
@@ -174,10 +174,10 @@ void Button::paintEvent(QPaintEvent* e)
             if(ic.isNull())
                 textH = height();
             
-            float m = 5;
-            float w = r.width() - 2*m;
-            float h = r.height() - m - textH;
-            float s = qMin(w, h);
+            double m = 5;
+            double w = r.width() - 2*m;
+            double h = r.height() - m - textH;
+            double s = qMin(w, h);
             
             painter.drawText(r.adjusted(0, r.height() - textH, 0, 0), Qt::AlignCenter, text());
             

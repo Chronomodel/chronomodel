@@ -69,10 +69,13 @@ public:
     
     bool studyPeriodIsValid();
     
+    // ---------------------------
+    
     void addEvent(QJsonObject event, const QString& reason);
     int getUnusedEventId(const QJsonArray& events);
     void updateEvent(const QJsonObject& event, const QString& reason);
     void mergeEvents(int eventFromId, int eventToId);
+    void deleteSelectedTrashedEvents(const QList<int>& ids);
     
     Date createDateFromPlugin(PluginAbstract* plugin);
     Date createDateFromData(const QString& pluginName, const QStringList& dataStr);
@@ -81,6 +84,7 @@ public:
     void updateDate(int eventId, int dateId);
     void deleteDates(int eventId, const QList<int>& dateIndexes);
     void recycleDates(int eventId);
+    void deleteSelectedTrashedDates(const QList<int>& ids);
     
     void updatePhase(const QJsonObject& phaseIn);
     int getUnusedPhaseId(const QJsonArray& phases);
@@ -125,7 +129,7 @@ signals:
     void eyedPhasesModified(const QMap<int, bool>& eyedPhases);
     
     void mcmcStarted();
-    void mcmcFinished(MCMCLoopMain& loop);
+    void mcmcFinished(Model* model);
     
 public:
     QJsonObject mState;

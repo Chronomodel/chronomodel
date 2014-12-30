@@ -193,3 +193,24 @@ QString prepareTooltipText(const QString& title, const QString& text)
     QString result = "<div style=\"margin:10px\"><p style=\"font-weight: bold; font-style: normal\">" + title + "</p><p>" + text + "</p></div>";
     return result;
 }
+
+QString line(const QString& str)
+{
+    return str + "<br>";
+}
+QString textBold(const QString& str)
+{
+    return "<b>" + str + "</b>";
+}
+QString textRed(const QString& str)
+{
+    return "<span style=\"color: red;\">" + str + "</span>";
+}
+QString textGreen(const QString& str)
+{
+    return "<span style=\"color: green;\">" + str + "</span>";
+}
+QString textBlue(const QString& str)
+{
+    return "<span style=\"color: blue;\">" + str + "</span>";
+}

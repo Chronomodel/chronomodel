@@ -25,8 +25,10 @@ mRefGraphView(0)
     mRuler->showControls(true);
     
     mCalibGraph = new GraphView(this);
-    mCalibGraph->showYValues(true);
-    mCalibGraph->showAxis(true);
+    
+    mCalibGraph->setRendering(GraphView::eHD);
+    mCalibGraph->setYAxisMode(GraphView::eMinMax);
+    mCalibGraph->setXAxisMode(GraphView::eAllTicks);
     
     mMarkerX = new Marker(this);
     mMarkerY = new Marker(this);
@@ -46,7 +48,7 @@ mRefGraphView(0)
     
     setMouseTracking(true);
     
-    connect(mRuler, SIGNAL(zoomChanged(float, float)), mCalibGraph, SLOT(zoomX(float, float)));
+    connect(mRuler, SIGNAL(zoomChanged(double, double)), mCalibGraph, SLOT(zoomX(double, double)));
     
     connect(mHPDCheck, SIGNAL(toggled(bool)), this, SLOT(updateGraphs()));
     connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateGraphs()));
@@ -85,7 +87,7 @@ void CalibrationView::updateGraphs()
     // So, we simply remove it without deleting it, for further use
     if(mRefGraphView)
     {
-        disconnect(mRuler, SIGNAL(zoomChanged(float, float)), mRefGraphView, SLOT(zoomX(float, float)));
+        disconnect(mRuler, SIGNAL(zoomChanged(double, double)), mRefGraphView, SLOT(zoomX(double, double)));
         mRefGraphView->setParent(0);
         mRefGraphView->setVisible(false);
     }
@@ -110,7 +112,7 @@ void CalibrationView::updateGraphs()
         calibCurve.mIsHisto = false;
         calibCurve.mData = mDate.getCalibMap();
         
-        float yMax = map_max_value(calibCurve.mData);
+        double yMax = map_max_value(calibCurve.mData);
         yMax = (yMax > 0) ? yMax : 1;
         mCalibGraph->setRangeY(0, 1.1f * yMax);
         
@@ -119,7 +121,7 @@ void CalibrationView::updateGraphs()
         
         if(mHPDCheck->isChecked())
         {
-            QMap<float, float> hpd = create_HPD(calibCurve.mData, 1, mHPDEdit->text().toFloat());
+            QMap<double, double> hpd = create_HPD(calibCurve.mData, 1, mHPDEdit->text().toDouble());
             
             GraphCurve hpdCurve;
             hpdCurve.mName = "Calibration HPD";
@@ -142,7 +144,7 @@ void CalibrationView::updateGraphs()
             mRefGraphView->setDate(mDate, mSettings);
             mRefGraphView->setParent(this);
             mRefGraphView->setVisible(true);
-            connect(mRuler, SIGNAL(zoomChanged(float, float)), mRefGraphView, SLOT(zoomX(float, float)));
+            connect(mRuler, SIGNAL(zoomChanged(double, double)), mRefGraphView, SLOT(zoomX(double, double)));
         }
     }
     

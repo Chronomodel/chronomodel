@@ -163,7 +163,7 @@ QVector<QVector<Event*>> ModelUtilities::getAllEventsBranches(const QList<Event*
 
 
 #pragma mark Phases Branches
-QVector<QVector<Phase*>> ModelUtilities::getNextBranches(const QVector<Phase*>& curBranch, Phase* lastNode, const float gammaSum, const float maxLength)
+QVector<QVector<Phase*>> ModelUtilities::getNextBranches(const QVector<Phase*>& curBranch, Phase* lastNode, const double gammaSum, const double maxLength)
 {
     QVector<QVector<Phase*>> branches;
     QList<PhaseConstraint*> cts = lastNode->mConstraintsFwd;
@@ -174,7 +174,7 @@ QVector<QVector<Phase*>> ModelUtilities::getNextBranches(const QVector<Phase*>& 
             QVector<Phase*> branch = curBranch;
             Phase* newNode = cts[i]->mPhaseTo;
             
-            float gamma = gammaSum;
+            double gamma = gammaSum;
             if(cts[i]->mGammaType == PhaseConstraint::eGammaFixed)
                 gamma += cts[i]->mGammaFixed;
             else if(cts[i]->mGammaType == PhaseConstraint::eGammaRange)
@@ -219,7 +219,7 @@ QVector<QVector<Phase*>> ModelUtilities::getNextBranches(const QVector<Phase*>& 
     return branches;
 }
 
-QVector<QVector<Phase*>> ModelUtilities::getBranchesFromPhase(Phase* start, const float maxLength)
+QVector<QVector<Phase*>> ModelUtilities::getBranchesFromPhase(Phase* start, const double maxLength)
 {
     QVector<Phase*> startBranch;
     start->mLevel = 0;
@@ -236,7 +236,7 @@ QVector<QVector<Phase*>> ModelUtilities::getBranchesFromPhase(Phase* start, cons
 }
 
 
-QVector<QVector<Phase*>> ModelUtilities::getAllPhasesBranches(const QList<Phase*>& phases, const float maxLength)
+QVector<QVector<Phase*>> ModelUtilities::getAllPhasesBranches(const QList<Phase*>& phases, const double maxLength)
 {
     QVector<QVector<Phase*>> branches;
     

@@ -76,16 +76,16 @@ QJsonObject EventKnown::toJson() const
 }
 
 void EventKnown::setKnownType(KnownType type) {mKnownType = type;}
-void EventKnown::setFixedValue(const float& value) {mFixed = value;}
-void EventKnown::setUniformStart(const float& value) {mUniformStart = value;}
-void EventKnown::setUniformEnd(const float& value) {mUniformEnd = value;}
+void EventKnown::setFixedValue(const double& value) {mFixed = value;}
+void EventKnown::setUniformStart(const double& value) {mUniformStart = value;}
+void EventKnown::setUniformEnd(const double& value) {mUniformEnd = value;}
 
 EventKnown::KnownType EventKnown::knownType() const {return mKnownType;}
-float EventKnown::fixedValue() const {return mFixed;}
-float EventKnown::uniformStart() const {return mUniformStart;}
-float EventKnown::uniformEnd() const {return mUniformEnd;}
+double EventKnown::fixedValue() const {return mFixed;}
+double EventKnown::uniformStart() const {return mUniformStart;}
+double EventKnown::uniformEnd() const {return mUniformEnd;}
 
-void EventKnown::updateValues(float tmin, float tmax, float step)
+void EventKnown::updateValues(double tmin, double tmax, double step)
 {
     mValues.clear();
     switch(mKnownType)
@@ -103,7 +103,7 @@ void EventKnown::updateValues(float tmin, float tmax, float step)
             {
                 for(int t=tmin; t<=tmax; t+=step)
                 {
-                    float v = (t > mUniformStart && t <= mUniformEnd) ? 1 / (mUniformEnd - mUniformStart) : 0;
+                    double v = (t > mUniformStart && t <= mUniformEnd) ? 1 / (mUniformEnd - mUniformStart) : 0;
                     mValues[t] = v;
                 }
             }
@@ -119,7 +119,7 @@ void EventKnown::updateValues(float tmin, float tmax, float step)
     }
 }
 
-void EventKnown::updateTheta(float tmin, float tmax)
+void EventKnown::updateTheta(double tmin, double tmax)
 {
     switch(mKnownType)
     {
@@ -130,13 +130,13 @@ void EventKnown::updateTheta(float tmin, float tmax)
         }
         case eUniform:
         {
-            float min = getThetaMin(tmin);
-            float max = getThetaMax(tmax);
+            double min = getThetaMin(tmin);
+            double max = getThetaMax(tmax);
             
             min = qMax(mUniformStart, min);
             max = qMin(mUniformEnd, max);
             
-            float theta = min + Generator::randomUniform() * (max - min);
+            double theta = min + Generator::randomUniform() * (max - min);
             mTheta.tryUpdate(theta, 1);
             break;
         }

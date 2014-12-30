@@ -5,9 +5,12 @@
 #include "MCMCLoopMain.h"
 #include "MCMCProgressDialog.h"
 #include "ModelUtilities.h"
+#include "QtUtilities.h"
 #include <QJsonArray>
 #include <QtWidgets>
 
+
+QString Model::mLog = QString();
 
 Model::Model():QObject()
 {
@@ -46,6 +49,11 @@ bool sortEvents(Event* e1, Event* e2)
     return (e1->mItemY < e2->mItemY);
 }
 
+bool sortPhases(Phase* p1, Phase* p2)
+{
+    return (p1->mItemY < p2->mItemY);
+}
+
 Model* Model::fromJson(const QJsonObject& json)
 {
     Model* model = new Model();
@@ -60,6 +68,7 @@ Model* Model::fromJson(const QJsonObject& json)
     {
         QJsonObject mcmc = json[STATE_MCMC].toObject();
         model->mMCMCSettings = MCMCSettings::fromJson(mcmc);
+        model->mChains = model->mMCMCSettings.getChains();
     }
     
     if(json.contains(STATE_PHASES))
@@ -72,6 +81,9 @@ Model* Model::fromJson(const QJsonObject& json)
             model->mPhases.append(p);
         }
     }
+    
+    // Sort phases based on items y position
+    std::sort(model->mPhases.begin(), model->mPhases.end(), sortPhases);
     
     if(json.contains(STATE_EVENTS))
     {
@@ -113,7 +125,6 @@ Model* Model::fromJson(const QJsonObject& json)
         for(int i=0; i<constraints.size(); ++i)
         {
             QJsonObject constraint = constraints[i].toObject();
-            qDebug() << constraint;
             PhaseConstraint* c = new PhaseConstraint(PhaseConstraint::fromJson(constraint));
             model->mPhaseConstraints.append(c);
         }
@@ -159,12 +170,8 @@ Model* Model::fromJson(const QJsonObject& json)
     for(int i=0; i<model->mPhases.size(); ++i)
     {
         int phaseId = model->mPhases[i]->mId;
-        qDebug() << "Phase " << phaseId;
         for(int j=0; j<model->mPhaseConstraints.size(); ++j)
         {
-            qDebug() << "constr. from " << model->mPhaseConstraints[j]->mFromId;
-            qDebug() << "constr. to " << model->mPhaseConstraints[j]->mToId;
-            
             if(model->mPhaseConstraints[j]->mFromId == phaseId)
             {
                 model->mPhaseConstraints[j]->mPhaseFrom = model->mPhases[i];
@@ -179,23 +186,24 @@ Model* Model::fromJson(const QJsonObject& json)
     }
     
     
+    mLog = QString();
     
-    qDebug() << "===========================================";
-    qDebug() << "MODEL CREATED";
-    qDebug() << "===========================================";
-    qDebug() << "=> Events : " << model->mEvents.size();
+    mLog += line(textBold("Events : " + QString::number(model->mEvents.size())));
     for(int i=0; i<model->mEvents.size(); ++i)
     {
         QString objType = "Event";
         if(model->mEvents[i]->type() == Event::eKnown)
             objType = "Bound";
-            
-        qDebug() << "  => " << objType << " (id: " << model->mEvents[i]->mId << ", name: "<< model->mEvents[i]->mName <<") : " << model->mEvents[i]->mPhases.size() << " phases"
-            << ", " << model->mEvents[i]->mDates.size() << " dates"
-            << ", " << model->mEvents[i]->mConstraintsBwd.size() << " const. back."
-            << ", " << model->mEvents[i]->mConstraintsFwd.size() << " const. fwd.";
+        
+        mLog += line(textBlue(objType + " (name: " + model->mEvents[i]->mName + ", " +
+                    QString::number(model->mEvents[i]->mDates.size()) + " data, " +
+                    QString::number(model->mEvents[i]->mPhases.size()) + " phases, " +
+                    QString::number(model->mEvents[i]->mConstraintsBwd.size()) + " const. back., " +
+                    QString::number(model->mEvents[i]->mConstraintsFwd.size()) + " const. fwd.)"));
     }
-    qDebug() << "=> Phases : " << model->mPhases.size();
+    
+    
+    /*qDebug() << "=> Phases : " << model->mPhases.size();
     for(int i=0; i<model->mPhases.size(); ++i)
     {
         qDebug() << "  => Phase " << model->mPhases[i]->mId << " : " << model->mPhases[i]->mEvents.size() << " events"
@@ -216,7 +224,7 @@ Model* Model::fromJson(const QJsonObject& json)
         << " : phase " << model->mPhaseConstraints[i]->mPhaseFrom->mId
         << " to " << model->mPhaseConstraints[i]->mPhaseTo->mId;
     }
-    qDebug() << "===========================================";
+    qDebug() << "===========================================";*/
     
     return model;
 }
@@ -328,7 +336,7 @@ bool Model::isValid()
                 
                 // On vérifie toutes les bornes avant et on prend le max
                 // de leurs valeurs fixes ou du début de leur intervalle :
-                float lower = mSettings.mTmin;
+                double lower = mSettings.mTmin;
                 for(int k=0; k<j; ++k)
                 {
                     Event* evt = eventBranches[i][k];
@@ -354,7 +362,7 @@ bool Model::isValid()
                 // --------------------
                 // Check bound interval upper value
                 // --------------------
-                float upper = mSettings.mTmax;
+                double upper = mSettings.mTmax;
                 for(int k=j+1; k<eventBranches[i].size(); ++k)
                 {
                     Event* evt = eventBranches[i][k];
@@ -387,14 +395,14 @@ bool Model::isValid()
     // 9 - Gamma min (ou fixe) entre 2 phases doit être inférieur à la différence entre : le min des sups des intervalles des bornes de la phase suivante ET le max des infs des intervalles des bornes de la phase précédente
     for(int i=0; i<mPhaseConstraints.size(); ++i)
     {
-        float gammaMin = 0;
+        double gammaMin = 0;
         PhaseConstraint::GammaType gType = mPhaseConstraints[i]->mGammaType;
         if(gType == PhaseConstraint::eGammaFixed)
             gammaMin = mPhaseConstraints[i]->mGammaFixed;
         else if(gType == PhaseConstraint::eGammaRange)
             gammaMin = mPhaseConstraints[i]->mGammaMin;
         
-        float lower = mSettings.mTmin;
+        double lower = mSettings.mTmin;
         Phase* phaseFrom = mPhaseConstraints[i]->mPhaseFrom;
         for(int j=0; j<phaseFrom->mEvents.size(); ++j)
         {
@@ -407,7 +415,7 @@ bool Model::isValid()
                     lower = qMax(lower, bound->mUniformStart);
             }
         }
-        float upper = mSettings.mTmax;
+        double upper = mSettings.mTmax;
         Phase* phaseTo = mPhaseConstraints[i]->mPhaseTo;
         for(int j=0; j<phaseTo->mEvents.size(); ++j)
         {
@@ -435,12 +443,12 @@ bool Model::isValid()
     {
         if(mPhases[i]->mTauType != Phase::eTauUnknown)
         {
-            float tauMax = mPhases[i]->mTauFixed;
+            double tauMax = mPhases[i]->mTauFixed;
             if(mPhases[i]->mTauType == Phase::eTauRange)
                 tauMax = mPhases[i]->mTauMax;
             
-            float min = mSettings.mTmin;
-            float max = mSettings.mTmax;
+            double min = mSettings.mTmin;
+            double max = mSettings.mTmax;
             
             for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
             {
@@ -514,10 +522,10 @@ void Model::generateCorrelations(const QList<Chain>& chains)
     }
 }
 
-void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen, float hFactor)
+void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen, double hFactor)
 {
-    float tmin = mSettings.mTmin;
-    float tmax = mSettings.mTmax;
+    double tmin = mSettings.mTmin;
+    double tmax = mSettings.mTmax;
     
     for(int i=0; i<mEvents.size(); ++i)
     {
@@ -631,3 +639,133 @@ void Model::generateCredibilityAndHPD(const QList<Chain>& chains, int threshold)
     }
 }
 
+void Model::saveToFile(const QString& path)
+{
+    // -----------------------------------------------------
+    //  Create file
+    // -----------------------------------------------------
+    
+    QFile file(path);
+    QByteArray data;
+    if(file.open(QIODevice::WriteOnly))
+    {
+        QDataStream out(&data, QIODevice::WriteOnly);
+        
+        // -----------------------------------------------------
+        //  Write data
+        // -----------------------------------------------------
+        
+        out << (qint32)mPhases.size();
+        out << (qint32)mEvents.size();
+        qint32 numDates = 0;
+        for(int i=0; i<mEvents.size(); ++i)
+            numDates += mEvents[i]->mDates.size();
+        out << numDates;
+        
+        for(int i=0; i<mPhases.size(); ++i)
+        {
+            Phase* phase = mPhases[i];
+            out << phase->mAlpha.mTrace;
+            out << phase->mBeta.mTrace;
+            out << phase->mDurations;
+        }
+
+        for(int i=0; i<mEvents.size(); ++i)
+        {
+            Event* event = mEvents[i];
+            out << event->mTheta.mTrace;
+            out << event->mTheta.mHistoryAcceptRateMH;
+            out << event->mTheta.mAllAccepts;
+        }
+        for(int i=0; i<mEvents.size(); ++i)
+        {
+            Event* event = mEvents[i];
+            QList<Date>& dates = event->mDates;
+            for(int j=0; j<dates.size(); ++j)
+            {
+                Date& date = dates[j];
+                
+                out << date.mTheta.mTrace;
+                out << date.mSigma.mHistoryAcceptRateMH;
+                out << date.mSigma.mAllAccepts;
+                
+                out << date.mSigma.mTrace;
+                out << date.mSigma.mHistoryAcceptRateMH;
+                out << date.mSigma.mAllAccepts;
+            }
+        }
+        data = qCompress(data, -1);
+        file.write(data);
+        file.close();
+    }
+}
+
+void Model::restoreFromFile(const QString& path)
+{
+    QFile file(path);
+    if(file.open(QIODevice::ReadOnly))
+    {
+        QByteArray data = file.readAll();
+        data = qUncompress(data);
+        QDataStream in(&data, QIODevice::ReadOnly);
+        
+        // -----------------------------------------------------
+        //  Read info
+        // -----------------------------------------------------
+       
+        qint32 numPhases = 0;
+        in >> numPhases;
+        
+        qint32 numEvents = 0;
+        in >> numEvents;
+        
+        qint32 numdates = 0;
+        in >> numdates;
+        
+        // -----------------------------------------------------
+        //  Read phases data
+        // -----------------------------------------------------
+        
+        for(int i=0; i<mPhases.size(); ++i)
+        {
+            in >> mPhases[i]->mAlpha.mTrace;
+            in >> mPhases[i]->mBeta.mTrace;
+            in >> mPhases[i]->mDurations;
+        }
+        
+        // -----------------------------------------------------
+        //  Read events data
+        // -----------------------------------------------------
+        
+        for(int i=0; i<mEvents.size(); ++i)
+        {
+            in >> mEvents[i]->mTheta.mTrace;
+            in >> mEvents[i]->mTheta.mHistoryAcceptRateMH;
+            in >> mEvents[i]->mTheta.mAllAccepts;
+        }
+        
+        // -----------------------------------------------------
+        //  Read dates data
+        // -----------------------------------------------------
+        
+        for(int i=0; i<mEvents.size(); ++i)
+        {
+            for(int j=0; j<mEvents[i]->mDates.size(); ++j)
+            {
+                in >> mEvents[i]->mDates[j].mTheta.mTrace;
+                in >> mEvents[i]->mDates[j].mTheta.mHistoryAcceptRateMH;
+                in >> mEvents[i]->mDates[j].mTheta.mAllAccepts;
+                
+                in >> mEvents[i]->mDates[j].mSigma.mTrace;
+                in >> mEvents[i]->mDates[j].mSigma.mHistoryAcceptRateMH;
+                in >> mEvents[i]->mDates[j].mSigma.mAllAccepts;
+            }
+        }
+        
+        file.close();
+        
+        generateCorrelations(mChains);
+        generatePosteriorDensities(mChains, 1024, 1);
+        generateNumericalResults(mChains);
+    }
+}

@@ -132,9 +132,9 @@ QJsonObject PhaseDialog::getPhase()
     mPhase[STATE_COLOR_GREEN] = mColorPicker->getColor().green();
     mPhase[STATE_COLOR_BLUE] = mColorPicker->getColor().blue();
     mPhase[STATE_PHASE_TAU_TYPE] = (Phase::TauType) mTauTypeCombo->currentIndex();
-    mPhase[STATE_PHASE_TAU_FIXED] = mTauFixedEdit->text().toFloat();
-    mPhase[STATE_PHASE_TAU_MIN] = mTauMinEdit->text().toFloat();
-    mPhase[STATE_PHASE_TAU_MAX] = mTauMaxEdit->text().toFloat();
+    mPhase[STATE_PHASE_TAU_FIXED] = mTauFixedEdit->text().toDouble();
+    mPhase[STATE_PHASE_TAU_MIN] = mTauMinEdit->text().toDouble();
+    mPhase[STATE_PHASE_TAU_MAX] = mTauMaxEdit->text().toDouble();
     return mPhase;
 }
 

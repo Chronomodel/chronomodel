@@ -64,10 +64,10 @@ private slots:
     void slideRightPanel();
     void prepareNextSlide();
     
-    void updateEventsZoom(float prop);
+    void updateEventsZoom(double prop);
     void exportEventsScene();
     
-    void updatePhasesZoom(float prop);
+    void updatePhasesZoom(double prop);
     void exportPhasesScene();
     
     void updateCalibration(const QJsonObject& date);
@@ -151,7 +151,7 @@ private:
     
     int mMargin;
     int mToolbarH;
-    float mSplitProp;
+    double mSplitProp;
     int mHandlerW;
     bool mIsSplitting;
     bool mCalibVisible;

@@ -16,36 +16,36 @@ Plugin14C::Plugin14C()
     loadRefDatas();
 }
 
-float Plugin14C::getLikelyhood(const float& t, const QJsonObject& data)
+double Plugin14C::getLikelyhood(const double& t, const QJsonObject& data)
 {
-    float age = data[DATE_14C_AGE_STR].toDouble();
-    float error = data[DATE_14C_ERROR_STR].toDouble();
+    double age = data[DATE_14C_AGE_STR].toDouble();
+    double error = data[DATE_14C_ERROR_STR].toDouble();
     QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString().toLower();
     
-    float result = 0;
+    double result = 0;
     
     // Check if calib curve exists !
     if(mRefDatas.find(ref_curve) != mRefDatas.end())
     {
-        const QMap<float, float>& curveG = mRefDatas[ref_curve]["G"];
-        const QMap<float, float>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
+        const QMap<double, double>& curveG = mRefDatas[ref_curve]["G"];
+        const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
         
-        float t_under = floorf(t);
-        float t_upper = t_under + 1;
+        double t_under = floorf(t);
+        double t_upper = t_under + 1;
         
         if(curveG.find(t_under) != curveG.end() &&
            curveG.find(t_upper) != curveG.end())
         {
-            float g_under = curveG[t_under];
-            float g_upper = curveG[t_upper];
-            float g = interpolate(t, t_under, t_upper, g_under, g_upper);
+            double g_under = curveG[t_under];
+            double g_upper = curveG[t_upper];
+            double g = interpolate(t, t_under, t_upper, g_under, g_upper);
             
-            float g_sup_under = curveG95Sup[t_under];
-            float g_sup_upper = curveG95Sup[t_upper];
-            float g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
+            double g_sup_under = curveG95Sup[t_under];
+            double g_sup_upper = curveG95Sup[t_upper];
+            double g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
             
-            float e = (g_sup - g) / 1.96f;
-            float variance = e * e + error * error;
+            double e = (g_sup - g) / 1.96f;
+            double variance = e * e + error * error;
             
             result = expf(-0.5f * powf(g - age, 2.f) / variance) / sqrtf(variance);
         }
@@ -134,7 +134,7 @@ QString Plugin14C::getDateDesc(const Date* date) const
 QStringList Plugin14C::getRefsNames() const
 {
     QStringList refNames;
-    typename QMap< QString, QMap<QString, QMap<float, float> > >::const_iterator it = mRefDatas.begin();
+    typename QMap< QString, QMap<QString, QMap<double, double> > >::const_iterator it = mRefDatas.begin();
     while(it != mRefDatas.end())
     {
         refNames.push_back(it.key());
@@ -168,11 +168,11 @@ void Plugin14C::loadRefDatas()
             QFile file(files[i].absoluteFilePath());
             if(file.open(QIODevice::ReadOnly))
             {
-                QMap<QString, QMap<float, float>> curves;
+                QMap<QString, QMap<double, double>> curves;
                 
-                QMap<float, float> curveG;
-                QMap<float, float> curveG95Sup;
-                QMap<float, float> curveG95Inf;
+                QMap<double, double> curveG;
+                QMap<double, double> curveG95Sup;
+                QMap<double, double> curveG95Inf;
                 
                 QTextStream stream(&file);
                 while(!stream.atEnd())
@@ -185,9 +185,9 @@ void Plugin14C::loadRefDatas()
                         {
                             int t = 1950 - values[0].toInt();
                             
-                            float g = values[1].toFloat();
-                            float gSup = g + 1.96f * values[2].toFloat();
-                            float gInf = g - 1.96f * values[2].toFloat();
+                            double g = values[1].toDouble();
+                            double gSup = g + 1.96f * values[2].toDouble();
+                            double gInf = g - 1.96f * values[2].toDouble();
                             
                             curveG[t] = g;
                             curveG95Sup[t] = gSup;
@@ -200,33 +200,33 @@ void Plugin14C::loadRefDatas()
                 // The curves do not have 1-year precision!
                 // We have to interpolate in the blanks
                 
-                float tmin = curveG.firstKey();
-                float tmax = curveG.lastKey();
+                double tmin = curveG.firstKey();
+                double tmax = curveG.lastKey();
                 
-                for(float t=tmin; t<tmax; ++t)
+                for(double t=tmin; t<tmax; ++t)
                 {
                     if(curveG.find(t) == curveG.end())
                     {
                         // This actually return the iterator with the nearest greater key !!!
-                        QMap<float, float>::const_iterator iter = curveG.lowerBound(t);
+                        QMap<double, double>::const_iterator iter = curveG.lowerBound(t);
                         if(iter != curveG.end())
                         {
-                            float t_upper = iter.key();
+                            double t_upper = iter.key();
                             --iter;
                             if(iter != curveG.begin())
                             {
-                                float t_under = iter.key();
+                                double t_under = iter.key();
                                 
                                 //qDebug() << t_under << " < " << t << " < " << t_upper;
                                 
-                                float g_under = curveG[t_under];
-                                float g_upper = curveG[t_upper];
+                                double g_under = curveG[t_under];
+                                double g_upper = curveG[t_upper];
                                 
-                                float gsup_under = curveG95Sup[t_under];
-                                float gsup_upper = curveG95Sup[t_upper];
+                                double gsup_under = curveG95Sup[t_under];
+                                double gsup_upper = curveG95Sup[t_upper];
                                 
-                                float ginf_under = curveG95Inf[t_under];
-                                float ginf_upper = curveG95Inf[t_upper];
+                                double ginf_under = curveG95Inf[t_under];
+                                double ginf_upper = curveG95Inf[t_upper];
                                 
                                 curveG[t] = interpolate(t, t_under, t_upper, g_under, g_upper);
                                 curveG95Sup[t] = interpolate(t, t_under, t_upper, gsup_under, gsup_upper);
@@ -267,7 +267,7 @@ GraphViewRefAbstract* Plugin14C::getGraphViewRef()
     return mRefGraph;
 }
 
-const QMap<QString, QMap<float, float> >& Plugin14C::getRefData(const QString& name)
+const QMap<QString, QMap<double, double> >& Plugin14C::getRefData(const QString& name)
 {
     return mRefDatas[name.toLower()];
 }

@@ -18,7 +18,7 @@ class DATATION_SHARED_EXPORT Plugin14C : public PluginAbstract
 public:
     Plugin14C();
     
-    float getLikelyhood(const float& t, const QJsonObject& data);
+    double getLikelyhood(const double& t, const QJsonObject& data);
     
     QString getName() const;
     QIcon getIcon() const;
@@ -38,9 +38,9 @@ public:
     QString getRefsPath() const;
     void loadRefDatas();
     QStringList getRefsNames() const;
-    const QMap<QString, QMap<float, float>>& getRefData(const QString& name);
+    const QMap<QString, QMap<double, double>>& getRefData(const QString& name);
     
-    QMap< QString, QMap<QString, QMap<float, float> > > mRefDatas;
+    QMap< QString, QMap<QString, QMap<double, double> > > mRefDatas;
 };
 
 #endif

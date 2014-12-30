@@ -11,8 +11,10 @@ PluginTLRefView::PluginTLRefView(QWidget* parent):GraphViewRefAbstract(parent),
 mGraph(0)
 {
     mGraph = new GraphView(this);
-    mGraph->showYValues(true);
-    mGraph->showAxis(false);
+    
+    mGraph->setXAxisMode(GraphView::eAllTicks);
+    mGraph->setYAxisMode(GraphView::eMinMax);
+    mGraph->setRendering(GraphView::eHD);
 }
 
 PluginTLRefView::~PluginTLRefView()
@@ -30,9 +32,9 @@ void PluginTLRefView::setDate(const Date& d, const ProjectSettings& settings)
     
     if(!date.isNull())
     {
-        float age = date.mData.value(DATE_TL_AGE_STR).toDouble();
-        float error = date.mData.value(DATE_TL_ERROR_STR).toDouble();
-        float ref_year = date.mData.value(DATE_TL_REF_YEAR_STR).toDouble();
+        double age = date.mData.value(DATE_TL_AGE_STR).toDouble();
+        double error = date.mData.value(DATE_TL_ERROR_STR).toDouble();
+        double ref_year = date.mData.value(DATE_TL_REF_YEAR_STR).toDouble();
         
         // ----------------------------------------------
         //  Reference curve
@@ -48,8 +50,8 @@ void PluginTLRefView::setDate(const Date& d, const ProjectSettings& settings)
         
         // ----------------------------------------------
         
-        float yMin = map_min_value(curve.mData);
-        float yMax = map_max_value(curve.mData);
+        double yMin = map_min_value(curve.mData);
+        double yMax = map_max_value(curve.mData);
         
         yMin = qMin(yMin, age);
         yMax = qMax(yMax, age);
@@ -68,7 +70,7 @@ void PluginTLRefView::setDate(const Date& d, const ProjectSettings& settings)
         
         for(int t=yMin; t<yMax; ++t)
         {
-            float v = expf(-0.5 * powf((t - age) / error, 2));
+            double v = expf(-0.5 * powf((t - age) / error, 2));
             curveMeasure.mData[t] = v;
         }
         curveMeasure.mData = normalize_map(curveMeasure.mData);
@@ -106,7 +108,7 @@ void PluginTLRefView::setDate(const Date& d, const ProjectSettings& settings)
     }
 }
 
-void PluginTLRefView::zoomX(float min, float max)
+void PluginTLRefView::zoomX(double min, double max)
 {
     mGraph->zoomX(min, max);
 }

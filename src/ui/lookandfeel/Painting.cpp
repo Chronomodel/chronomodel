@@ -15,7 +15,7 @@ void Painting::init()
 }
 
 
-float pointSize(float size)
+double pointSize(double size)
 {
 #if defined(QT_OS_MAC)
     
@@ -75,10 +75,10 @@ void drawButton(QPainter& painter, const QRectF& rect, bool hover, bool isEnable
     painter.setPen(QColor(200, 200, 200));
     painter.drawText(rect.adjusted(0, rect.height() - textH, 0, 0), Qt::AlignCenter, text);
     
-    float m = 8;
-    float w = rect.width() - 2*m;
-    float h = rect.height() - m - textH;
-    float s = qMin(w, h);
+    double m = 8;
+    double w = rect.width() - 2*m;
+    double h = rect.height() - m - textH;
+    double s = qMin(w, h);
     
     QRectF iconRect((rect.width() - s)/2.f, m, s, s);
     QPixmap pixmap = icon.pixmap(iconRect.size().toSize());

@@ -30,15 +30,15 @@ public:
     void updateGamma();
     
 public:
-    float mGamma;
+    double mGamma;
     
     Phase* mPhaseFrom;
     Phase* mPhaseTo;
     
     GammaType mGammaType;
-    float mGammaFixed;
-    float mGammaMin;
-    float mGammaMax;
+    double mGammaFixed;
+    double mGammaMin;
+    double mGammaMax;
 };
 
 #endif

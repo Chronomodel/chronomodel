@@ -204,6 +204,7 @@ void Project::sendPhasesSelectionChanged()
 bool Project::load(const QString& path)
 {
     QFile file(path);
+    qDebug() << "Loading project file : " << path;
     if(file.open(QIODevice::ReadOnly))
     {
         QFileInfo info(path);
@@ -242,6 +243,40 @@ bool Project::load(const QString& path)
             pushProjectState(mState, PROJECT_LOADED_REASON, true, true);
             
             file.close();
+            
+            
+            // --------------------
+            
+            if(mModel)
+            {
+                delete mModel;
+                mModel = 0;
+                qDebug() << "Deleting old project model";
+            }
+            
+            QString dataPath = path + ".dat";
+            QFile dataFile(dataPath);
+            if(dataFile.exists())
+            {
+                qDebug() << "Loading model file : " << dataPath;
+                
+                mModel = Model::fromJson(mState);
+                try{
+                    mModel->restoreFromFile(dataPath);
+                    emit mcmcFinished(mModel);
+                }catch(QString error){
+                    QMessageBox message(QMessageBox::Critical,
+                                        tr("Error loading project MCMC results"),
+                                        tr("The project MCMC results could not be loaded.") + "\n" +
+                                        tr("Error message") + " : " + error,
+                                        QMessageBox::Ok,
+                                        qApp->activeWindow(),
+                                        Qt::Sheet);
+                    message.exec();
+                }
+            }
+            
+            // --------------------
             
             return true;
         }
@@ -327,11 +362,18 @@ bool Project::saveProjectToFile()
             return true;
         }
         else
+        {
             return false;
+        }
     }
     else
     {
-        qDebug() << "Nothing new to save in project";
+        qDebug() << "Nothing new to save in project model";
+    }
+    if(mModel)
+    {
+        qDebug() << "Saving project results";
+        mModel->saveToFile(mProjectFileDir + "/" + mProjectFileName + ".dat");
     }
     return true;
 }
@@ -506,6 +548,27 @@ void Project::deleteSelectedEvents()
     stateNext[STATE_EVENTS_TRASH] = events_trash;
     
     pushProjectState(stateNext, tr("Event(s) deleted"), true);
+}
+
+void Project::deleteSelectedTrashedEvents(const QList<int>& ids)
+{
+    QJsonObject stateNext = mState;
+    
+    QJsonArray events_trash = mState[STATE_EVENTS_TRASH].toArray();
+    
+    for(int i=events_trash.size()-1; i>=0; --i)
+    {
+        QJsonObject event = events_trash[i].toObject();
+        int id = event[STATE_ID].toInt();
+        
+        if(ids.contains(id))
+        {
+            events_trash.removeAt(i);
+        }
+    }
+    stateNext[STATE_EVENTS_TRASH] = events_trash;
+    
+    pushProjectState(stateNext, tr("Trashed event(s) deleted"), true);
 }
 
 void Project::recycleEvents()
@@ -790,6 +853,27 @@ void Project::deleteDates(int eventId, const QList<int>& dateIndexes)
             break;
         }
     }
+}
+
+void Project::deleteSelectedTrashedDates(const QList<int>& ids)
+{
+    QJsonObject stateNext = mState;
+    
+    QJsonArray dates_trash = mState[STATE_DATES_TRASH].toArray();
+    
+    for(int i=dates_trash.size()-1; i>=0; --i)
+    {
+        QJsonObject date = dates_trash[i].toObject();
+        int id = date[STATE_ID].toInt();
+        
+        if(ids.contains(id))
+        {
+            dates_trash.removeAt(i);
+        }
+    }
+    stateNext[STATE_DATES_TRASH] = dates_trash;
+    
+    pushProjectState(stateNext, tr("Trashed data deleted"), true);
 }
 
 void Project::recycleDates(int eventId)
@@ -1653,7 +1737,7 @@ void Project::run()
         {
             if(loop.mAbortedReason.isEmpty())
             {
-                emit mcmcFinished(loop);
+                emit mcmcFinished(mModel);
             }
             else
             {
@@ -1664,6 +1748,19 @@ void Project::run()
                                     qApp->activeWindow(),
                                     Qt::Sheet);
                 message.exec();
+                if(mModel)
+                {
+                    delete mModel;
+                    mModel = 0;
+                }
+            }
+        }
+        else
+        {
+            if(mModel)
+            {
+                delete mModel;
+                mModel = 0;
             }
         }
     }

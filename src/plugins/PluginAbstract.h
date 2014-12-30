@@ -25,7 +25,7 @@ public:
     PluginAbstract():mRefGraph(0){}
     virtual ~PluginAbstract(){}
     
-    virtual float getLikelyhood(const float& t, const QJsonObject& data) = 0;
+    virtual double getLikelyhood(const double& t, const QJsonObject& data) = 0;
 
     virtual QString getName() const = 0;
     virtual QIcon getIcon() const = 0;

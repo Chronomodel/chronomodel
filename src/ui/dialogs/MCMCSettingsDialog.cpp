@@ -4,6 +4,7 @@
 #include "LineEdit.h"
 #include "Painting.h"
 #include "QtUtilities.h"
+#include "HelpWidget.h"
 #include <QtWidgets>
 
 
@@ -14,6 +15,7 @@ QDialog(parent, flags)
     
     mSeedsLab = new Label(tr("Seeds (separated by \";\")") + ": ", this);
     mSeedsEdit = new LineEdit(this);
+    mHelp = new HelpWidget(tr("About seeds : each MCMC chain is different from the others because it uses a different seed. By default, seeds are picked randomly. However, you can force the chains to use specific seeds by entering them below. By doing so, you can replicate exactly the same results using the same seeds."), this);
     
     mNumProcEdit = new LineEdit(this);
     mNumBurnEdit = new LineEdit(this);
@@ -46,7 +48,7 @@ QDialog(parent, flags)
     connect(mOkBut, SIGNAL(clicked()), this, SLOT(accept()));
     connect(mCancelBut, SIGNAL(clicked()), this, SLOT(reject()));
     
-    setFixedSize(600, 240);
+    setFixedSize(600, 300);
 }
 
 MCMCSettingsDialog::~MCMCSettingsDialog()
@@ -84,7 +86,7 @@ void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
     Q_UNUSED(e);
     
     int m = 5;
-    float lineH = 20;
+    double lineH = 20;
     
     QPainter p(this);
     p.fillRect(rect(), QColor(220, 220, 220));
@@ -141,11 +143,11 @@ void MCMCSettingsDialog::resizeEvent(QResizeEvent* e)
 void MCMCSettingsDialog::updateLayout()
 {
     int m = 5;
-    float top = 65.f;
-    float lineH = 20;
-    float editW = 100;
-    float w = width() - 2*m;
-    float h = 115;
+    double top = 65.f;
+    double lineH = 20;
+    double editW = 100;
+    double w = width() - 2*m;
+    double h = 115;
     int butW = 80;
     int butH = 25;
     
@@ -165,6 +167,11 @@ void MCMCSettingsDialog::updateLayout()
     mDownSamplingEdit->setGeometry(mAquireRect.x() + (mAquireRect.width() - editW)/2, mAquireRect.y() + 4*lineH, editW, lineH);
     mIterPerBatchSpin->setGeometry(mBatch1Rect.x() + m, mBatch1Rect.y() + 2*lineH, mBatch1Rect.width() - 2*m, lineH);
     mMaxBatchesEdit->setGeometry(mAdaptRect.x() + mAdaptRect.width()/2 + m, mAdaptRect.y() + mAdaptRect.height() - m - lineH, editW, lineH);
+    
+    mHelp->setGeometry(m,
+                       height() - 3*m - butH - lineH - mHelp->heightForWidth(width() - 2*m),
+                       width() - 2*m,
+                       mHelp->heightForWidth(width() - 2*m));
     
     mSeedsLab->setGeometry(width()/2 - m/2 - 200, height() - 2*m - butH - lineH, 200, lineH);
     mSeedsEdit->setGeometry(width()/2 + m/2, height() - 2*m - butH - lineH, editW, lineH);

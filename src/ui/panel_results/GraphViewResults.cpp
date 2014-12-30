@@ -29,10 +29,11 @@ mGraphLeft(130)
     
     mGraph = new GraphView(this);
     
-    mGraph->showAxis(false);
-    mGraph->showScrollBar(false);
-    mGraph->showYValues(true);
-    mGraph->setMarginRight(10);
+    mGraph->showHorizGrid(false);
+    mGraph->setXAxisMode(GraphView::eAllTicks);
+    mGraph->setYAxisMode(GraphView::eMinMax);
+    
+    mGraph->setMargins(50, 10, 5, 15);
     mGraph->setRangeY(0, 1);
     
     mTextArea = new QTextEdit(this);
@@ -124,12 +125,12 @@ void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc, const QList<Cha
     mChains = chains;
 }
 
-void GraphViewResults::setRange(float min, float max)
+void GraphViewResults::setRange(double min, double max)
 {
     mGraph->setRangeX(min, max);
 }
 
-void GraphViewResults::zoom(float min, float max)
+void GraphViewResults::zoom(double min, double max)
 {
     mGraph->zoomX(min, max);
 }
@@ -206,8 +207,8 @@ void GraphViewResults::paintEvent(QPaintEvent* e)
     {
         QRectF textRect(mGraphLeft, 0, mGraph->width(), 25);
         
-        p.setPen(mGraph->backgroundColor());
-        p.setBrush(mGraph->backgroundColor());
+        p.setPen(mGraph->getBackgroundColor());
+        p.setBrush(mGraph->getBackgroundColor());
         p.drawRect(textRect);
         
         p.setPen(Qt::black);
@@ -251,20 +252,22 @@ void GraphViewResults::resizeEvent(QResizeEvent* e)
     QRect graphRect(mGraphLeft, 0, width() - mGraphLeft, height()-1);
     if(h <= mLineH + butMinH)
     {
-        mGraph->showYValues(false, true);
+        mGraph->setYAxisMode(GraphView::eHidden);
     }
     else
     {
-        mGraph->showYValues(true);
+        mGraph->setYAxisMode(GraphView::eMinMax);
     }
     if(height() >= mMinHeighttoDisplayTitle)
     {
-        graphRect.adjust(0, 25, 0, 0);
-        mGraph->showAxis(true);
+        graphRect.adjust(0, 20, 0, 0);
+        mGraph->setXAxisMode(GraphView::eAllTicks);
+        mGraph->setMarginBottom(15);
     }
     else
     {
-        mGraph->showAxis(false);
+        mGraph->setXAxisMode(GraphView::eHidden);
+        mGraph->setMarginBottom(0);
     }
     
     

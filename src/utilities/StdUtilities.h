@@ -111,8 +111,8 @@ U map_min_key(const QMap<U, T>& aMap)
 template <class U, class T>
 T map_max_value(const QMap<U, T>& aMap)
 {
-    QMapIterator<float, float> iter(aMap);
-    float max = 0.f;
+    QMapIterator<double, double> iter(aMap);
+    double max = 0.f;
     if(iter.hasNext())
     {
         iter.next();
@@ -129,8 +129,8 @@ T map_max_value(const QMap<U, T>& aMap)
 template <class U, class T>
 T map_min_value(const QMap<U, T>& aMap)
 {
-    QMapIterator<float, float> iter(aMap);
-    float min = 0.f;
+    QMapIterator<double, double> iter(aMap);
+    double min = 0.f;
     if(iter.hasNext())
     {
         iter.next();
@@ -154,8 +154,8 @@ T map_min_value(const QMap<U, T>& aMap)
 template <class U, class T>
 T map_max_value_key(const QMap<U, T>& aMap)
 {
-    QMapIterator<float, float> iter(aMap);
-    float max = 0.f;
+    QMapIterator<double, double> iter(aMap);
+    double max = 0.f;
     if(iter.hasNext())
     {
         iter.next();
@@ -221,27 +221,27 @@ typename QMap<T, U>::const_iterator map_upper_bound(const QMap<T, U>& aMap, cons
 
 
 
-QList<float> create_histo(const QMap<long, float> &aMap, const int t_min, const int t_max);
-QList<float> normalize_list(const QList<float>& aVector);
-QVector<float> normalize_vector(const QVector<float>& aVector);
-QMap<float, float> normalize_map(const QMap<float, float>& aMap);
-QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const QMap<float, float>& mapWithTargetArea);
-QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const float targetArea);
-QVector<float> equal_areas(const QVector<float>& data, const float step, const float area);
-QMap<float, float> vector_to_map(const QVector<float>& data, const float min, const float max, const float step);
-float vector_interpolate_idx_for_value(const float value, const QVector<float>& vector);
-float map_interpolate_key_for_value(const float value, const QMap<float, float>& aMap);
-float map_interpolate_value_for_key(const float key, const QMap<float, float>& aMap);
-QMap<float, float> vector_to_indexed_map(const QList<float>& aVector, const float minKey = 0, const float maxKey = 0);
-QList<float> vector_shift_values_by(const QList<float>& aVector, const float v);
-QList<float> sample_vector(const QList<float>& aVector, const int numValues);
+QList<double> create_histo(const QMap<long, double> &aMap, const int t_min, const int t_max);
+QList<double> normalize_list(const QList<double>& aVector);
+QVector<double> normalize_vector(const QVector<double>& aVector);
+QMap<double, double> normalize_map(const QMap<double, double>& aMap);
+QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const QMap<double, double>& mapWithTargetArea);
+QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const double targetArea);
+QVector<double> equal_areas(const QVector<double>& data, const double step, const double area);
+QMap<double, double> vector_to_map(const QVector<double>& data, const double min, const double max, const double step);
+double vector_interpolate_idx_for_value(const double value, const QVector<double>& vector);
+double map_interpolate_key_for_value(const double value, const QMap<double, double>& aMap);
+double map_interpolate_value_for_key(const double key, const QMap<double, double>& aMap);
+QMap<double, double> vector_to_indexed_map(const QList<double>& aVector, const double minKey = 0, const double maxKey = 0);
+QList<double> vector_shift_values_by(const QList<double>& aVector, const double v);
+QList<double> sample_vector(const QList<double>& aVector, const int numValues);
 
-QList<float> reshape_trace(const QList<float>& trace);
-QMap<long, long> map_to_histogram(const QMap<long, float> &aMap, long aClasse);
-QMap<long int,float> map_to_surface(const QMap<long, float> &aMap, long aClasse = 1);
-//long int num_iterations_for_value(QMap<float, float> &aMap, const float value);
-QMap<float, float> map_to_surface(const QMap<float, float>& aMap, float aClasse = 1);
-QList<std::pair<float,float>> HPD_from_surface(const QMap<float, float>& aMap, float aClasse, float threshold);
-const QMap<float, float> create_HPD(const QMap<float, float>& aMap, float aClasse = 1, float threshold = 0.95);
+QList<double> reshape_trace(const QList<double>& trace);
+QMap<long, long> map_to_histogram(const QMap<long, double> &aMap, long aClasse);
+QMap<long int,double> map_to_surface(const QMap<long, double> &aMap, long aClasse = 1);
+//long int num_iterations_for_value(QMap<double, double> &aMap, const double value);
+QMap<double, double> map_to_surface(const QMap<double, double>& aMap, double aClasse = 1);
+QList<std::pair<double,double>> HPD_from_surface(const QMap<double, double>& aMap, double aClasse, double threshold);
+const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double aClasse = 1, double threshold = 0.95);
 
 #endif

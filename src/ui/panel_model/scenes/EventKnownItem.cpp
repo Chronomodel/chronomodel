@@ -52,18 +52,22 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     bound.updateValues(tmin, tmax, step);
     
     /*QRectF rect = boundingRect();
-    float side = 40.f;
-    float top = 25.f;
+    double side = 40.f;
+    double top = 25.f;
     QRectF thumbRect(rect.x() + side, rect.y() + top + mEltsMargin + mTitleHeight, rect.width() - 2*side, mThumbH);*/
     
     GraphView* graph = new GraphView();
     //graph->setFixedSize(thumbRect.width(), thumbRect.height());
     graph->setFixedSize(200, 50);
+    graph->setMargins(0, 0, 0, 0);
+    
     graph->setRangeX(tmin, tmax);
     graph->setRangeY(0, 1.1f);
-    graph->showAxis(false);
-    graph->showScrollBar(false);
-    graph->showGrid(false);
+    
+    graph->showAxisArrows(false);
+    graph->showAxisLines(false);
+    graph->setXAxisMode(GraphView::eHidden);
+    graph->setYAxisMode(GraphView::eHidden);
     
     GraphCurve curve;
     curve.mData = normalize_map(bound.mValues);
@@ -124,8 +128,8 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
         painter->drawEllipse(rect.adjusted(1, 1, -1, -1));
     }
     
-    float side = 40.f;
-    float top = 25.f;
+    double side = 40.f;
+    double top = 25.f;
     
     QRectF nameRect(rect.x() + side, rect.y() + top, rect.width() - 2*side, mTitleHeight);
     QRectF thumbRect(rect.x() + side, rect.y() + top + mEltsMargin + mTitleHeight, rect.width() - 2*side, mThumbH);
@@ -153,7 +157,7 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     
     QJsonArray phases = getPhases();
     int numPhases = (int)phases.size();
-    float w = phasesRect.width()/numPhases;
+    double w = phasesRect.width()/numPhases;
     
     for(int i=0; i<numPhases; ++i)
     {

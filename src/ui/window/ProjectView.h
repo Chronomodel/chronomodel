@@ -31,7 +31,7 @@ public slots:
     void showResults();
     void showLog();
     void showHelp(bool show);
-    void updateLog(MCMCLoopMain& loop);
+    void updateLog(Model*);
     
 private:
     QStackedWidget* mStack;

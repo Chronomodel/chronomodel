@@ -27,14 +27,20 @@ public:
     
     bool isValid();
     
+    void saveToFile(const QString& path);
+    void restoreFromFile(const QString& path);
+    
     // Only trace needed for this :
     void generateCorrelations(const QList<Chain>& chains);
     // Computed from trace using FFT :
-    void generatePosteriorDensities(const QList<Chain>& chains, int fftLen, float hFactor);
+    void generatePosteriorDensities(const QList<Chain>& chains, int fftLen, double hFactor);
     // Trace and Posterior density needed for this :
     void generateCredibilityAndHPD(const QList<Chain>& chains, int threshold);
     // Trace and Posterior density needed for this :
     void generateNumericalResults(const QList<Chain>& chains);
+    
+signals:
+    void modelLogCreated(const QString& log);
     
 public:
     ProjectSettings mSettings;
@@ -44,6 +50,10 @@ public:
     QList<Phase*> mPhases;
     QList<EventConstraint*> mEventConstraints;
     QList<PhaseConstraint*> mPhaseConstraints;
+    
+    QList<Chain> mChains;
+    
+    static QString mLog;
 };
 
 #endif

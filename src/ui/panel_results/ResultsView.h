@@ -45,12 +45,12 @@ protected:
     
 public slots:
     void clearResults();
-    void updateResults(MCMCLoopMain&);
+    void updateResults(Model* model);
     void updateGraphs();
     void updateRulerAreas();
     
 private slots:
-    void setGraphZoom(float min, float max);
+    void setGraphZoom(double min, double max);
     void updateScaleX(int value);
     void updateScaleY(int value);
     void updateRendering(int index);

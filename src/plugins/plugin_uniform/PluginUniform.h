@@ -17,7 +17,7 @@ class DATATION_SHARED_EXPORT PluginUniform : public PluginAbstract
 public:
     PluginUniform();
     
-    float getLikelyhood(const float& t, const QJsonObject& data);
+    double getLikelyhood(const double& t, const QJsonObject& data);
     
     QString getName() const;
     QIcon getIcon() const;

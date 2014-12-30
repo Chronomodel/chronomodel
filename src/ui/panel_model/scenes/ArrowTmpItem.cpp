@@ -88,8 +88,8 @@ void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
     
     // arrows
     
-    float angle_rad = atanf(rect.width() / rect.height());
-    float angle_deg = angle_rad * 180. / M_PI;
+    double angle_rad = atanf(rect.width() / rect.height());
+    double angle_deg = angle_rad * 180. / M_PI;
     
     QPainterPath path;
     int arrow_w = 10;
@@ -99,8 +99,8 @@ void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
     path.lineTo(0, -arrow_l/2);
     path.closeSubpath();
     
-    float posX = rect.width()/2;
-    float posY = rect.height()/2;
+    double posX = rect.width()/2;
+    double posY = rect.height()/2;
     
     if(mXFrom < mXTo && mYFrom > mYTo)
     {
@@ -142,8 +142,8 @@ void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
         case eAllowed:
         case eForbidden:
         {
-            float w = 40;
-            float h = 40;
+            double w = 40;
+            double h = 40;
             QRectF r(rect.x() + (rect.width() - w)/2, rect.y() + (rect.height() - h)/2, w, h);
             painter->setBrush(Qt::white);
             painter->drawEllipse(r);

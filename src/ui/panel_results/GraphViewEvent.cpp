@@ -96,7 +96,7 @@ void GraphViewEvent::refresh()
                         curve.mData = bound->mValues;
                         mGraph->addCurve(curve);
                         
-                        float yMax = 1.1f * map_max_value(curve.mData);
+                        double yMax = 1.1f * map_max_value(curve.mData);
                         mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                     }
                     if(mShowAllChains)
@@ -108,7 +108,7 @@ void GraphViewEvent::refresh()
                         curve.mIsHisto = false;
                         mGraph->addCurve(curve);
                         
-                        float yMax = 1.1f * map_max_value(curve.mData);
+                        double yMax = 1.1f * map_max_value(curve.mData);
                         mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                         
                         GraphCurve curveHPD;
@@ -129,7 +129,7 @@ void GraphViewEvent::refresh()
                             curveRaw.mIsHisto = true;
                             mGraph->addCurve(curveRaw);
                             
-                            float yMax2 = 1.1f * map_max_value(curveRaw.mData);
+                            double yMax2 = 1.1f * map_max_value(curveRaw.mData);
                             mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax2));
                         }
                     }
@@ -146,7 +146,7 @@ void GraphViewEvent::refresh()
                             curve.mData = equal_areas(mEvent->mTheta.histoForChain(i), 1.f);
                             mGraph->addCurve(curve);
                             
-                            float yMax = 1.1f * map_max_value(curve.mData);
+                            double yMax = 1.1f * map_max_value(curve.mData);
                             mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                         }
                     }
@@ -170,7 +170,7 @@ void GraphViewEvent::refresh()
                 // On affiche donc ici la superposition des variances (et pas le résultat de theta f)
                 
                 mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
-                float yMax = 0;
+                double yMax = 0;
                 
                 for(int i=0; i<mEvent->mDates.size(); ++i)
                 {
@@ -226,8 +226,8 @@ void GraphViewEvent::refresh()
                 curve.mIsHisto = false;
                 mGraph->addCurve(curve);
                 
-                float min = map_min_value(curve.mData);
-                float max = map_max_value(curve.mData);
+                double min = map_min_value(curve.mData);
+                double max = map_max_value(curve.mData);
                 mGraph->setRangeY(floorf(min), ceilf(max));
             }
         }
@@ -280,8 +280,8 @@ void GraphViewEvent::refresh()
                 mGraph->setRangeX(0, 100);
                 mGraph->setRangeY(-1, 1);
                 
-                float n = mEvent->mTheta.runTraceForChain(mChains, chainIdx).size();
-                float limit = 1.96f / sqrtf(n);
+                double n = mEvent->mTheta.runTraceForChain(mChains, chainIdx).size();
+                double limit = 1.96f / sqrtf(n);
                 
                 //qDebug() << n << ", " <<limit;
                 

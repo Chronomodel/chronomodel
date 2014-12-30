@@ -22,7 +22,10 @@
 MCMCLoopMain::MCMCLoopMain(Model* model):MCMCLoop(),
 mModel(model)
 {
-    setMCMCSettings(mModel->mMCMCSettings);
+    if(mModel)
+    {
+        setMCMCSettings(mModel->mMCMCSettings);
+    }
 }
 
 MCMCLoopMain::~MCMCLoopMain()
@@ -102,9 +105,9 @@ void MCMCLoopMain::initMCMC2()
     QList<Phase*>& phases = mModel->mPhases;
     QList<PhaseConstraint*>& phasesConstraints = mModel->mPhaseConstraints;
     
-    float tmin = mModel->mSettings.mTmin;
-    float tmax = mModel->mSettings.mTmax;
-    float step = mModel->mSettings.mStep;
+    double tmin = mModel->mSettings.mTmin;
+    double tmax = mModel->mSettings.mTmax;
+    double step = mModel->mSettings.mStep;
     
     // ----------------------------------------------------------------
     //  Init gamma
@@ -132,8 +135,8 @@ void MCMCLoopMain::initMCMC2()
     
     QVector<Event*> eventsByLevel = ModelUtilities::sortEventsByLevel(mModel->mEvents);
     int curLevel = 0;
-    float curLevelMaxValue = mModel->mSettings.mTmin;
-    float prevLevelMaxValue = mModel->mSettings.mTmin;
+    double curLevelMaxValue = mModel->mSettings.mTmin;
+    double prevLevelMaxValue = mModel->mSettings.mTmin;
     
     for(int i=0; i<eventsByLevel.size(); ++i)
     {
@@ -176,19 +179,21 @@ void MCMCLoopMain::initMCMC2()
     emit stepChanged(tr("Initializing events..."), 0, events.size());
     for(int i=0; i<events.size(); ++i)
     {
-        float min = events[i]->getThetaMin(tmin);
-        float max = events[i]->getThetaMax(tmax);
+        double min = events[i]->getThetaMin(tmin);
+        double max = events[i]->getThetaMax(tmax);
         
         events[i]->mTheta.mX = Generator::randomUniform(min, max);
         events[i]->mInitialized = true;
         
-        float s02_sum = 0.f;
+        qDebug() << "--> Event initialized : " << events[i]->mName << " : " << events[i]->mTheta.mX;
+        
+        double s02_sum = 0.f;
         for(int j=0; j<events[i]->mDates.size(); ++j)
         {
             Date& date = events[i]->mDates[j];
             
             // Init ti and its sigma
-            float idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mRepartition);
+            double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mRepartition);
             date.mTheta.mX = tmin + idx * step;
             
             FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration, tmin, tmax, step));
@@ -213,20 +218,20 @@ void MCMCLoopMain::initMCMC2()
         for(int j=0; j<events[i]->mDates.size(); ++j)
         {
             Date& date = events[i]->mDates[j];
-            float so = date.mTheta.mX - (events[i]->mTheta.mX - date.mDelta);
+            double so = date.mTheta.mX - (events[i]->mTheta.mX - date.mDelta);
             date.mSigma.mX = shrinkageUniform(so * so);
             date.mSigma.mSigmaMH = 1.f;
         }
         emit stepProgressed(i);
     }
     // ----------------------------------------------------------------
-    //  Init sigma i
+    //  Init phases
     // ----------------------------------------------------------------
     emit stepChanged(tr("Initializing phases..."), 0, events.size());
     for(int i=0; i<phases.size(); ++i)
     {
         Phase* phase = phases[i];
-        phase->updateAll();
+        phase->updateAll(tmin, tmax);
         emit stepProgressed(i);
     }
     
@@ -297,9 +302,9 @@ void MCMCLoopMain::initMCMC()
     QList<Event*>& events = mModel->mEvents;
     QList<Phase*>& phases = mModel->mPhases;
     
-    float tmin = mModel->mSettings.mTmin;
-    float tmax = mModel->mSettings.mTmax;
-    float step = mModel->mSettings.mStep;
+    double tmin = mModel->mSettings.mTmin;
+    double tmax = mModel->mSettings.mTmax;
+    double step = mModel->mSettings.mStep;
     
     // ----------------------------------------------------------------
     //  Thetas des Mesures
@@ -417,8 +422,8 @@ void MCMCLoopMain::initMCMC()
     emit stepChanged(tr("Initializing phases..."), 0, phases.size());
     for(int i=0; i<phases.size(); ++i)
     {
-        phases[i]->mAlpha.mX = Generator::randomUniform(tmin, phases[i]->getMinThetaEvents());
-        phases[i]->mBeta.mX = Generator::randomUniform(phases[i]->getMaxThetaEvents(), tmax);
+        phases[i]->mAlpha.mX = Generator::randomUniform(tmin, phases[i]->getMinThetaEvents(tmin));
+        phases[i]->mBeta.mX = Generator::randomUniform(phases[i]->getMaxThetaEvents(tmax), tmax);
         
         emit stepProgressed(i);
     }
@@ -593,7 +598,7 @@ void MCMCLoopMain::update()
 
     for(int i=0; i<phases.size(); ++i)
     {
-        phases[i]->updateAll();
+        phases[i]->updateAll(t_min, t_max);
         if(doMemo)
             phases[i]->memoAll();
     }
@@ -618,7 +623,7 @@ bool MCMCLoopMain::adapt()
     
     //--------------------- Adapt -----------------------------------------
     
-    float delta = (chain.mBatchIndex < 10000) ? 0.01f : (1 / sqrtf(chain.mBatchIndex));
+    double delta = (chain.mBatchIndex < 10000) ? 0.01f : (1 / sqrtf(chain.mBatchIndex));
     
     for(int i=0; i<events.size(); ++i)
     {
@@ -632,22 +637,22 @@ bool MCMCLoopMain::adapt()
             
             if(date.mMethod == Date::eMHSymGaussAdapt)
             {
-                float taux = 100.f * date.mTheta.getCurrentAcceptRate();
+                double taux = 100.f * date.mTheta.getCurrentAcceptRate();
                 if(taux <= taux_min || taux >= taux_max)
                 {
                     allOK = false;
-                    float sign = (taux <= taux_min) ? -1.f : 1.f;
+                    double sign = (taux <= taux_min) ? -1.f : 1.f;
                     date.mTheta.mSigmaMH *= powf(10.f, sign * delta);
                 }
             }
             
             //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
             
-            float taux = 100.f * date.mSigma.getCurrentAcceptRate();
+            double taux = 100.f * date.mSigma.getCurrentAcceptRate();
             if(taux <= taux_min || taux >= taux_max)
             {
                 allOK = false;
-                float sign = (taux <= taux_min) ? -1.f : 1.f;
+                double sign = (taux <= taux_min) ? -1.f : 1.f;
                 date.mSigma.mSigmaMH *= powf(10.f, sign * delta);
             }
         }
@@ -656,11 +661,11 @@ bool MCMCLoopMain::adapt()
         
         if(event->mMethod == Event::eMHAdaptGauss)
         {
-            float taux = 100.f * event->mTheta.getCurrentAcceptRate();
+            double taux = 100.f * event->mTheta.getCurrentAcceptRate();
             if(taux <= taux_min || taux >= taux_max)
             {
                 allOK = false;
-                float sign = (taux <= taux_min) ? -1.f : 1.f;
+                double sign = (taux <= taux_min) ? -1.f : 1.f;
                 event->mTheta.mSigmaMH *= powf(10.f, sign * delta);
             }
         }
@@ -670,6 +675,8 @@ bool MCMCLoopMain::adapt()
 
 void MCMCLoopMain::finalize()
 {
+    mModel->mChains = mChains;
+    
     mModel->generateCorrelations(mChains);
     mModel->generatePosteriorDensities(mChains, 1024, 1);
     mModel->generateNumericalResults(mChains);

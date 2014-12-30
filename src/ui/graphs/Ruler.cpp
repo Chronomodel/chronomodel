@@ -56,7 +56,7 @@ void Ruler::clearAreas()
     update();
 }
 
-void Ruler::addArea(float start, float end, const QColor& color)
+void Ruler::addArea(double start, double end, const QColor& color)
 {
     RulerArea area;
     area.mStart = start;
@@ -66,7 +66,7 @@ void Ruler::addArea(float start, float end, const QColor& color)
     update();
 }
 
-void Ruler::setRange(const float min, const float max)
+void Ruler::setRange(const double min, const double max)
 {
     if(mMin != min || mMax || max)
     {
@@ -119,10 +119,10 @@ void Ruler::paintEvent(QPaintEvent* e)
 {
     QWidget::paintEvent(e);
     
-    float w = mRulerRect.width();
-    float h = mRulerRect.height();
-    float xo = mRulerRect.x();
-    float yo = mRulerRect.y();
+    double w = mRulerRect.width();
+    double h = mRulerRect.height();
+    double xo = mRulerRect.x();
+    double yo = mRulerRect.y();
     
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
@@ -137,8 +137,8 @@ void Ruler::paintEvent(QPaintEvent* e)
     {
         if(mAreas[i].mStart < mCurrentMax && mAreas[i].mStop > mCurrentMin)
         {
-            float x1 = w * (mAreas[i].mStart - mCurrentMin) / (mCurrentMax - mCurrentMin);
-            float x2 = w;
+            double x1 = w * (mAreas[i].mStart - mCurrentMin) / (mCurrentMax - mCurrentMin);
+            double x2 = w;
             if(mAreas[i].mStop < mCurrentMax)
                 x2 = w * (mAreas[i].mStop - mCurrentMin) / (mCurrentMax - mCurrentMin);
             
@@ -255,18 +255,18 @@ void Ruler::zoomDefault()
 
 void Ruler::updateZoom()
 {
-    float posProp = 0;
-    float rangeBefore = (float)mScrollBar->maximum();
+    double posProp = 0;
+    double rangeBefore = (double)mScrollBar->maximum();
     if(rangeBefore > 0)
     {
-        posProp = (float)mScrollBar->value() / rangeBefore;
+        posProp = (double)mScrollBar->value() / rangeBefore;
     }
     
-    float newDelta = mCurrentProp * (mMax - mMin);
+    double newDelta = mCurrentProp * (mMax - mMin);
     setCurrentRange(0, newDelta);
     
-    float pos = 0;
-    float rangeAfter = (float)mScrollBar->maximum();
+    double pos = 0;
+    double rangeAfter = (double)mScrollBar->maximum();
     if(rangeAfter > 0)
     {
         pos = floorf(posProp * rangeAfter);
@@ -285,7 +285,7 @@ void Ruler::updateZoom()
     std::cout << "pos : " << pos << std::endl;*/
 }
 
-void Ruler::setCurrentRange(const float min, const float max)
+void Ruler::setCurrentRange(const double min, const double max)
 {
     if((mCurrentMin != min || mCurrentMax != max))
     {
@@ -328,15 +328,15 @@ void Ruler::setCurrentRange(const float min, const float max)
 
 void Ruler::setZoomPosition(int pos)
 {
-    float range = (float)mScrollBar->maximum();
+    double range = (double)mScrollBar->maximum();
     if(range > 0)
     {
-        float prop = (float)pos / range;
-        float posMin = (mCurrentMax - mCurrentMin) / 2;
-        float posMax = mMax - posMin;
-        float newPos = posMin + prop * (posMax - posMin);
-        float newMin = newPos - posMin;
-        float newMax = newPos + posMin;
+        double prop = (double)pos / range;
+        double posMin = (mCurrentMax - mCurrentMin) / 2;
+        double posMax = mMax - posMin;
+        double newPos = posMin + prop * (posMax - posMin);
+        double newMin = newPos - posMin;
+        double newMax = newPos + posMin;
         
         setCurrentRange(newMin, newMax);
         
@@ -353,6 +353,7 @@ void Ruler::setZoomPosition(int pos)
 AxisTool::AxisTool():
 mIsHorizontal(true),
 mShowSubs(true),
+mMinMaxOnly(false),
 mDeltaVal(0),
 mDeltaPix(0),
 mStartVal(0),
@@ -360,20 +361,20 @@ mStartPix(0)
 {
     
 }
-void AxisTool::updateValues(float totalPix, float minDeltaPix, float minVal, float maxVal)
+void AxisTool::updateValues(double totalPix, double minDeltaPix, double minVal, double maxVal)
 {
-    float w = totalPix;
+    double w = totalPix;
     w = (w <= 0.f) ? minDeltaPix : w;
-    float numSteps = floor(w / minDeltaPix);
+    double numSteps = floor(w / minDeltaPix);
     numSteps = (numSteps <= 0) ? 1 : numSteps;
     
-    float delta = maxVal - minVal;
-    float unitsPerStep = delta / numSteps;
+    double delta = maxVal - minVal;
+    double unitsPerStep = delta / numSteps;
     
-    float pixelsPerUnit = w / delta;
-    //float unitsPerPixel = delta / w;
+    double pixelsPerUnit = w / delta;
+    //double unitsPerPixel = delta / w;
     
-    float pow10 = 0;
+    double pow10 = 0;
     if(unitsPerStep < 1)
     {
         while(unitsPerStep < 1)
@@ -391,7 +392,7 @@ void AxisTool::updateValues(float totalPix, float minDeltaPix, float minVal, flo
         }
     }
     
-    float factor = powf(10.f, pow10);
+    double factor = powf(10.f, pow10);
     
     //mDeltaVal = floorf(unitsPerStep) * factor;
     mDeltaVal = 10.f * factor;
@@ -414,9 +415,9 @@ void AxisTool::updateValues(float totalPix, float minDeltaPix, float minVal, flo
      qDebug() << "mDeltaPix = " << mDeltaPix;*/
 }
 
-QVector<float> AxisTool::paint(QPainter& p, const QRectF& r, float textS)
+QVector<double> AxisTool::paint(QPainter& p, const QRectF& r, double textS)
 {
-    QVector<float> linesPos;
+    QVector<double> linesPos;
     
     QFont font = p.font();
     font.setPointSizeF(pointSize(9.f));
@@ -425,87 +426,105 @@ QVector<float> AxisTool::paint(QPainter& p, const QRectF& r, float textS)
     
     if(mIsHorizontal)
     {
-        float xo = r.x();
-        float yo = r.y();
-        float w = r.width();
-        float h = r.height();
+        double xo = r.x();
+        double yo = r.y();
+        double w = r.width();
+        double h = r.height();
         
-        int i = 0;
-        for(float x = xo + mStartPix - mDeltaPix; x < xo + w; x += mDeltaPix)
+        if(mMinMaxOnly)
         {
-            if(mShowSubs)
+            QRectF tr(xo, yo, w, h);
+            p.drawText(tr, Qt::AlignLeft | Qt::AlignVCenter, QString::number(mStartVal, 'G', 5));
+            p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, QString::number(mStartVal + mDeltaVal * (w/mDeltaPix), 'G', 5));
+        }
+        else
+        {
+            int i = 0;
+            for(double x = xo + mStartPix - mDeltaPix; x < xo + w; x += mDeltaPix)
             {
-                for(float sx = x + mDeltaPix/10; sx < std::min(x + mDeltaPix, xo + w); sx += mDeltaPix/10)
+                if(mShowSubs)
                 {
-                    if(sx >= xo)
-                        p.drawLine(QLineF(sx, yo, sx, yo + h/6));
+                    for(double sx = x + mDeltaPix/10; sx < std::min(x + mDeltaPix, xo + w); sx += mDeltaPix/10)
+                    {
+                        if(sx >= xo)
+                            p.drawLine(QLineF(sx, yo, sx, yo + h/6));
+                    }
                 }
-            }
-            
-            if(x >= xo)
-            {
-                p.drawLine(QLineF(x, yo, x, yo + h/3));
                 
-                int align = Qt::AlignCenter;
-                float tx = x - textS/2;
-                if(tx < xo)
+                if(x >= xo)
                 {
-                    tx = xo + 2;
-                    align = (Qt::AlignLeft | Qt::AlignVCenter);
+                    p.drawLine(QLineF(x, yo, x, yo + h/3));
+                    
+                    int align = Qt::AlignCenter;
+                    double tx = x - textS/2;
+                    /*if(tx < xo)
+                     {
+                     tx = xo + 2;
+                     align = (Qt::AlignLeft | Qt::AlignVCenter);
+                     }
+                     else if(tx > xo + w - textS)
+                     {
+                     tx = xo + w - textS;
+                     align = (Qt::AlignRight | Qt::AlignVCenter);
+                     }*/
+                    QRectF tr(tx, yo + h/3, textS, 2*h/3);
+                    p.drawText(tr, align, QString::number(mStartVal + i * mDeltaVal, 'G', 5));
+                    
+                    linesPos.append(x);
+                    ++i;
                 }
-                else if(tx > xo + w - textS)
-                {
-                    tx = xo + w - textS;
-                    align = (Qt::AlignRight | Qt::AlignVCenter);
-                }
-                QRectF tr(tx, yo + h/3, textS, 2*h/3);
-                p.drawText(tr, align, QString::number(mStartVal + i * mDeltaVal));
-                
-                linesPos.append(x);
-                ++i;
             }
         }
     }
     else
     {
-        float xo = r.x() + r.width();
-        float yo = r.y() + r.height();
-        float w = r.width();
-        float h = r.height();
+        double xo = r.x() + r.width();
+        double yo = r.y() + r.height();
+        double w = r.width();
+        double h = r.height();
         
-        int i = 0;
-        for(float y = yo - (mStartPix - mDeltaPix); y > yo - h; y -= mDeltaPix)
+        if(mMinMaxOnly)
         {
-            if(mShowSubs)
+            QRectF tr(r.x(), r.y(), w - 8, h);
+            p.drawText(tr, Qt::AlignRight | Qt::AlignBottom, QString::number(mStartVal, 'g', 1));
+            p.drawText(tr, Qt::AlignRight | Qt::AlignTop, QString::number(mStartVal + mDeltaVal * (h/mDeltaPix), 'g', 1));
+        }
+        else
+        {
+            int i = 0;
+            for(double y = yo - (mStartPix - mDeltaPix); y > yo - h; y -= mDeltaPix)
             {
-                for(float sy = y + mDeltaPix/10; sy > std::max(y - mDeltaPix, yo - h); sy -= mDeltaPix/10)
+                if(mShowSubs)
                 {
-                    if(sy <= yo)
-                        p.drawLine(QLineF(xo, sy, xo - 3, sy));
+                    for(double sy = y + mDeltaPix/10; sy > std::max(y - mDeltaPix, yo - h); sy -= mDeltaPix/10)
+                    {
+                        if(sy <= yo)
+                            p.drawLine(QLineF(xo, sy, xo - 3, sy));
+                    }
                 }
-            }
-            
-            if(y <= yo)
-            {
-                p.drawLine(QLineF(xo, y, xo - 6, y));
                 
-                int align = (Qt::AlignRight | Qt::AlignVCenter);
-                float ty = y - textS/2;
-                if(ty + textS > yo)
+                if(y <= yo)
                 {
-                    ty = yo - textS;
-                    align = (Qt::AlignRight | Qt::AlignBottom);
+                    p.drawLine(QLineF(xo, y, xo - 6, y));
+                    
+                    int align = (Qt::AlignRight | Qt::AlignVCenter);
+                    double ty = y - textS/2;
+                    /*if(ty + textS > yo)
+                     {
+                     ty = yo - textS;
+                     align = (Qt::AlignRight | Qt::AlignBottom);
+                     }
+                     else if(ty < yo - h)
+                     {
+                     ty = yo - h;
+                     align = (Qt::AlignRight | Qt::AlignTop);
+                     }*/
+                    QRectF tr(xo - w, ty, w - 8, textS);
+                    p.drawText(tr, align, QString::number(mStartVal + i * mDeltaVal, 'G', 5));
+                    
+                    linesPos.append(y);
+                    ++i;
                 }
-                else if(ty < yo - h)
-                {
-                    ty = yo - h;
-                    align = (Qt::AlignRight | Qt::AlignTop);
-                }
-                QRectF tr(xo - w, ty, w - 8, textS);
-                p.drawText(tr, align, QString::number(mStartVal + i * mDeltaVal));
-                
-                linesPos.append(y);
-                ++i;
             }
         }
     }

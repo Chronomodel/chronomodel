@@ -20,8 +20,8 @@ public:
     ArrowItem(AbstractScene* scene, Type type, const QJsonObject& constraint, QGraphicsItem* parent = 0);
     
     void updatePosition();
-    void setFrom(float x, float y);
-    void setTo(float x, float y);
+    void setFrom(double x, double y);
+    void setTo(double x, double y);
 
     QRectF boundingRect() const;
     QPainterPath shape() const;
@@ -43,13 +43,13 @@ protected:
     QJsonObject mData;
     AbstractScene* mScene;
     
-    float mXStart;
-    float mYStart;
-    float mXEnd;
-    float mYEnd;
+    double mXStart;
+    double mYStart;
+    double mXEnd;
+    double mYEnd;
     
-    float mBubbleWidth;
-    float mBubbleHeight;
+    double mBubbleWidth;
+    double mBubbleHeight;
     
     bool mEditing;
     bool mShowDelete;

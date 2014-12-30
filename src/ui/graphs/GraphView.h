@@ -12,9 +12,6 @@
 #include <QColor>
 #include <QPixmap>
 
-#include <vector>
-#include <map>
-
 
 class GraphView: public QWidget, public GraphViewAbstract
 {
@@ -24,36 +21,32 @@ public:
         eSD = 0,
         eHD = 1
     };
+    enum AxisMode{
+        eHidden = 0,
+        eMinMax = 1,
+        eMainTicksOnly = 2,
+        eAllTicks = 3
+    };
     
-    explicit GraphView(QWidget *parent = 0);
+    GraphView(QWidget* parent = 0);
     virtual ~GraphView();
-    
-    void setRangeX(const float min, const float max);
-    
-    void setRendering(Rendering render);
-    
-public slots:
-    // Change the ruler => emit signal => change graph
-    void zoomX(const float min, const float max);
-    // Change graph only, not ruler :
-    void setCurrentRangeX(const float min, const float max);
-    void exportCurrentCurves(const QString& defaultPath, const QString& csvSep, bool writeInRows) const;
-    
-public:
     
     // Options
     
     void setBackgroundColor(const QColor& aColor);
-    QColor backgroundColor() const;
-
+    QColor getBackgroundColor() const;
+    
     void addInfo(const QString& info);
     void clearInfos();
-    
     void showInfos(bool show);
-    void showAxis(bool show);
-    void showScrollBar(bool show);
-    void showYValues(bool show, bool keepMargin = false);
-    void showGrid(bool show);
+    
+    void setRendering(Rendering render);
+    void showAxisArrows(bool show);
+    void showAxisLines(bool show);
+    void showVertGrid(bool show);
+    void showHorizGrid(bool show);
+    void setXAxisMode(AxisMode mode);
+    void setYAxisMode(AxisMode mode);
     
     // Manage Curves
     
@@ -66,15 +59,19 @@ public:
     void addZone(const GraphZone& zone);
     void removeAllZones();
     
-    // SVG export
+    // Paint
     
-    void paint(QPainter& painter, int w, int h);
+    void paintToDevice(QPaintDevice* device);
+    
+public slots:
+    void zoomX(const double min, const double max);
+    void exportCurrentCurves(const QString& defaultPath, const QString& csvSep, bool writeInRows) const;
     
 protected:
     void adaptMarginBottom();
     
     void updateGraphSize(int w, int h);
-    void repaintGraph(const bool aAlsoPaintBackground, const bool aAlsoPaintGraphs = true);
+    void repaintGraph(const bool aAlsoPaintBackground);
     void drawCurves(QPainter& painter);
 
     void resizeEvent(QResizeEvent* aEvent);
@@ -83,21 +80,23 @@ protected:
     void leaveEvent(QEvent* e);
     void mouseMoveEvent(QMouseEvent* e);
     
-    void drawBackground(QPainter& painter);
-    void drawXAxis(QPainter& painter);
-    void drawYAxis(QPainter& painter);
-    void drawYValues(QPainter& painter);
-    
-    
 protected:
-    Ruler* mRuler;
+    QPixmap	mBufferBack;
+    
     AxisTool mAxisToolX;
     AxisTool mAxisToolY;
     
     Rendering mRendering;
+    bool mShowAxisArrows;
+    bool mShowAxisLines;
+    bool mShowVertGrid;
+    bool mShowHorizGrid;
+    AxisMode mXAxisMode;
+    AxisMode mYAxisMode;
     
-    QPixmap	mBufferedImage;
-    QPixmap mBufferedImageWithGraphs;
+    bool mShowInfos;
+    QStringList mInfos;
+    
     QColor	mBackgroundColor;
     
     QRectF  mTipRect;
@@ -108,23 +107,9 @@ protected:
     double  mTipVisible;
     double  mUseTip;
     
-    QStringList mInfos;
-    
-    bool mShowInfos;
-    bool mShowScrollBar;
-    bool mShowAxis;
-    bool mShowYValues;
-    bool mShowGrid;
-    
     int mCurveMaxResolution;
     QList<GraphCurve> mCurves;
     QList<GraphZone> mZones;
-    
-    float mStepXWidth;
-    
-    float mStepYHeight;
-    float mDyPerStep;
-    float mStepYMinHeight;
 };
 
 #endif

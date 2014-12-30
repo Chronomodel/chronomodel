@@ -20,9 +20,9 @@ public:
     static QVector<QVector<Event*>> getBranchesFromEvent(Event* start);
     static QVector<QVector<Event*>> getAllEventsBranches(const QList<Event*>& events);
     
-    static QVector<QVector<Phase*>> getNextBranches(const QVector<Phase*>& curBranch, Phase* lastNode, const float gammaSum, const float maxLength);
-    static QVector<QVector<Phase*>> getBranchesFromPhase(Phase* start, const float maxLength);
-    static QVector<QVector<Phase*>> getAllPhasesBranches(const QList<Phase*>& events, const float maxLength);
+    static QVector<QVector<Phase*>> getNextBranches(const QVector<Phase*>& curBranch, Phase* lastNode, const double gammaSum, const double maxLength);
+    static QVector<QVector<Phase*>> getBranchesFromPhase(Phase* start, const double maxLength);
+    static QVector<QVector<Phase*>> getAllPhasesBranches(const QList<Phase*>& events, const double maxLength);
     
     static QVector<Event*> sortEventsByLevel(const QList<Event*>& events);
 };

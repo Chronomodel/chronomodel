@@ -13,16 +13,16 @@ public:
     static int createSeed();
     static void initGenerator(const int seed);
     
-    static float randomUniform(float min = 0., float max = 1.);
-    static float gaussByDoubleExp(const float mean, const float sigma, const float min, const float max);
-    static float gaussByBoxMuller(const float mean, const float sigma);
+    static double randomUniform(double min = 0., double max = 1.);
+    static double gaussByDoubleExp(const double mean, const double sigma, const double min, const double max);
+    static double gaussByBoxMuller(const double mean, const double sigma);
     
 private:
     Generator(){}
-    static float boxMuller();
+    static double boxMuller();
     
     static std::mt19937 sGenerator;
-    static std::uniform_real_distribution<float> sDistribution;
+    static std::uniform_real_distribution<double> sDistribution;
 };
 
 #endif

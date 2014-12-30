@@ -45,11 +45,11 @@ PluginGaussForm::~PluginGaussForm()
 
 void PluginGaussForm::setData(const QJsonObject& data)
 {
-    float age = data.value(DATE_GAUSS_AGE_STR).toDouble();
-    float error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
-    float a = data.value(DATE_GAUSS_A_STR).toDouble();
-    float b = data.value(DATE_GAUSS_B_STR).toDouble();
-    float c = data.value(DATE_GAUSS_C_STR).toDouble();
+    double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
+    double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
+    double a = data.value(DATE_GAUSS_A_STR).toDouble();
+    double b = data.value(DATE_GAUSS_B_STR).toDouble();
+    double c = data.value(DATE_GAUSS_C_STR).toDouble();
     
     mAverageEdit->setText(QString::number(age));
     mErrorEdit->setText(QString::number(error));
@@ -62,11 +62,11 @@ QJsonObject PluginGaussForm::getData()
 {
     QJsonObject data;
     
-    float age = mAverageEdit->text().toDouble();
-    float error = mErrorEdit->text().toDouble();
-    float a = mAEdit->text().toDouble();
-    float b = mBEdit->text().toDouble();
-    float c = mCEdit->text().toDouble();
+    double age = mAverageEdit->text().toDouble();
+    double error = mErrorEdit->text().toDouble();
+    double a = mAEdit->text().toDouble();
+    double b = mBEdit->text().toDouble();
+    double c = mCEdit->text().toDouble();
     
     data.insert(DATE_GAUSS_AGE_STR, age);
     data.insert(DATE_GAUSS_ERROR_STR, error);

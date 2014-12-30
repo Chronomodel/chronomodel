@@ -187,7 +187,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     phasesRect.adjust(1, 1, -1, -1);
     
     int numPhases = (int)phases.size();
-    float w = phasesRect.width()/numPhases;
+    double w = phasesRect.width()/numPhases;
     
     for(int i=0; i<numPhases; ++i)
     {
@@ -286,7 +286,7 @@ QRectF EventItem::boundingRect() const
     qreal penWidth = 1;
     qreal w = 100.;
     
-    float h = mTitleHeight + mPhasesHeight + 2*mBorderWidth + 2*mEltsMargin;
+    double h = mTitleHeight + mPhasesHeight + 2*mBorderWidth + 2*mEltsMargin;
 
     QString name = mData[STATE_NAME].toString();
     QJsonArray dates = mData[STATE_EVENT_DATES].toArray();

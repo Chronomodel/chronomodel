@@ -170,21 +170,21 @@ void Event::reset()
     mInitialized = false;
 }
 
-float Event::getThetaMin(float defaultValue)
+double Event::getThetaMin(double defaultValue)
 {
     // ------------------------------------------------------------------
     //  Déterminer la borne min courante pour le tirage de theta
     // ------------------------------------------------------------------
     
-    float min1 = defaultValue;
+    double min1 = defaultValue;
     
     // Max des thetas des faits en contrainte directe antérieure
-    float min2 = defaultValue;
+    double min2 = defaultValue;
     for(int i=0; i<mConstraintsBwd.size(); ++i)
     {
         if(mConstraintsBwd[i]->mEventFrom->mInitialized)
         {
-            float thetaf = mConstraintsBwd[i]->mEventFrom->mTheta.mX;
+            double thetaf = mConstraintsBwd[i]->mEventFrom->mTheta.mX;
             min2 = qMax(min2, thetaf);
         }
     }
@@ -193,12 +193,12 @@ float Event::getThetaMin(float defaultValue)
     // Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
     // Il faut s'assurer d'être au-dessus du plus grand theta de la phase moins la durée
     // (on utilise la valeur courante de la durée pour cela puisqu'elle est échantillonnée)
-    float min3 = defaultValue;
+    double min3 = defaultValue;
     for(int i=0; i<mPhases.size(); ++i)
     {
         if(mPhases[i]->mTauType != Phase::eTauUnknown)
         {
-            float thetaMax = defaultValue;
+            double thetaMax = defaultValue;
             for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
             {
                 Event* event = mPhases[i]->mEvents[j];
@@ -212,45 +212,35 @@ float Event::getThetaMin(float defaultValue)
     }
     
     // Contraintes des phases précédentes
-    float min4 = defaultValue;
+    double min4 = defaultValue;
     for(int i=0; i<mPhases.size(); ++i)
     {
-        float thetaMax = defaultValue;
-        for(int j=0; j<mPhases[i]->mConstraintsBwd.size(); ++j)
-        {
-            PhaseConstraint* constraint = mPhases[i]->mConstraintsBwd[j];
-            Phase* phaseFrom = constraint->mPhaseFrom;
-            
-            if(constraint->mGammaType != PhaseConstraint::eGammaUnknown)
-                thetaMax = qMax(phaseFrom->mBeta.mX + constraint->mGamma, thetaMax);
-            else
-                thetaMax = qMax(phaseFrom->mBeta.mX, thetaMax);
-        }
-        min4 = qMax(min4, thetaMax);
+        double thetaMax = mPhases[i]->getMaxThetaPrevPhases(defaultValue);
+        min4 = std::max(min4, thetaMax);
     }
     
-    float min_tmp1 = qMax(min1, min2);
-    float min_tmp2 = qMax(min3, min4);
-    float min = qMax(min_tmp1, min_tmp2);
+    double min_tmp1 = qMax(min1, min2);
+    double min_tmp2 = qMax(min3, min4);
+    double min = qMax(min_tmp1, min_tmp2);
     
     return min;
 }
 
-float Event::getThetaMax(float defaultValue)
+double Event::getThetaMax(double defaultValue)
 {
     // ------------------------------------------------------------------
     //  Déterminer la borne max
     // ------------------------------------------------------------------
     
-    float max1 = defaultValue;
+    double max1 = defaultValue;
     
     // Min des thetas des faits en contrainte directe et qui nous suivent
-    float max2 = defaultValue;
+    double max2 = defaultValue;
     for(int i=0; i<mConstraintsFwd.size(); ++i)
     {
         if(mConstraintsFwd[i]->mEventTo->mInitialized)
         {
-            float thetaf = mConstraintsFwd[i]->mEventTo->mTheta.mX;
+            double thetaf = mConstraintsFwd[i]->mEventTo->mTheta.mX;
             max2 = qMin(max2, thetaf);
         }
     }
@@ -259,12 +249,12 @@ float Event::getThetaMax(float defaultValue)
     // Si la phase à une contrainte de durée (!= Phase::eTauUnknown),
     // Il faut s'assurer d'être en-dessous du plus petit theta de la phase plus la durée
     // (on utilise la valeur courante de la durée pour cela puisqu'elle est échantillonnée)
-    float max3 = defaultValue;
+    double max3 = defaultValue;
     for(int i=0; i<mPhases.size(); ++i)
     {
         if(mPhases[i]->mTauType != Phase::eTauUnknown)
         {
-            float thetaMin = defaultValue;
+            double thetaMin = defaultValue;
             for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
             {
                 Event* event = mPhases[i]->mEvents[j];
@@ -278,34 +268,24 @@ float Event::getThetaMax(float defaultValue)
     }
     
     // Contraintes des phases suivantes
-    float max4 = defaultValue;
+    double max4 = defaultValue;
     for(int i=0; i<mPhases.size(); ++i)
     {
-        float thetaMin = defaultValue;
-        for(int j=0; j<mPhases[i]->mConstraintsFwd.size(); ++j)
-        {
-            PhaseConstraint* constraint = mPhases[i]->mConstraintsFwd[j];
-            Phase* phaseTo = constraint->mPhaseTo;
-            
-            if(constraint->mGammaType != PhaseConstraint::eGammaUnknown)
-                thetaMin = qMin(phaseTo->mAlpha.mX - constraint->mGamma, thetaMin);
-            else
-                thetaMin = qMin(phaseTo->mAlpha.mX, thetaMin);
-        }
-        max4 = qMin(max4, thetaMin);
+        double thetaMin = mPhases[i]->getMinThetaNextPhases(defaultValue);
+        max4 = std::min(max4, thetaMin);
     }
     
-    float max_tmp1 = qMin(max1, max2);
-    float max_tmp2 = qMin(max3, max4);
-    float max = qMin(max_tmp1, max_tmp2);
+    double max_tmp1 = qMin(max1, max2);
+    double max_tmp2 = qMin(max3, max4);
+    double max = qMin(max_tmp1, max_tmp2);
     
     return max;
 }
 
-void Event::updateTheta(float tmin, float tmax)
+void Event::updateTheta(double tmin, double tmax)
 {
-    float min = getThetaMin(tmin);
-    float max = getThetaMax(tmax);
+    double min = getThetaMin(tmin);
+    double max = getThetaMax(tmax);
     
     //qDebug() << "[" << min << ", " << max << "]";
     
@@ -315,43 +295,43 @@ void Event::updateTheta(float tmin, float tmax)
     //  On est en "wiggle" si au moins une des mesures a un delta > 0.
     // -------------------------------------------------------------------------------------------------
     
-    float sum_p = 0.f;
-    float sum_t = 0.f;
+    double sum_p = 0.f;
+    double sum_t = 0.f;
     for(int i=0; i<mDates.size(); ++i)
     {
-        float variance = (mDates[i].mSigma.mX * mDates[i].mSigma.mX);
+        double variance = (mDates[i].mSigma.mX * mDates[i].mSigma.mX);
         sum_t += (mDates[i].mTheta.mX + mDates[i].mDelta) / variance;
         sum_p += 1.f / variance;
     }
-    float theta_avg = sum_t / sum_p;
-    float sigma = 1.f / sqrtf(sum_p);
+    double theta_avg = sum_t / sum_p;
+    double sigma = 1.f / sqrtf(sum_p);
     
     switch(mMethod)
     {
         case eDoubleExp:
         {
-            float theta = Generator::gaussByDoubleExp(theta_avg, sigma, min, max);
+            double theta = Generator::gaussByDoubleExp(theta_avg, sigma, min, max);
             mTheta.tryUpdate(theta, 1);
             break;
         }
         case eBoxMuller:
         {
-            float theta;
+            double theta;
             int counter = 0;
             do{
                 theta = Generator::gaussByBoxMuller(theta_avg, sigma);
                 ++counter;
             }while(theta < min || theta > max);
-            qDebug() << "Event update num trials : " << counter;
+            //qDebug() << "Event update num trials : " << counter;
             mTheta.tryUpdate(theta, 1);
             break;
         }
         case eMHAdaptGauss:
         {
             // MH : Seul cas où le taux d'acceptation a du sens car on utilise sigma MH :
-            float theta = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
+            double theta = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
             
-            float rapport = 0;
+            double rapport = 0;
             if(theta >= min && theta <= max)
             {
                 rapport = expf((-0.5/(sigma*sigma)) * (powf(theta - theta_avg, 2) - powf(mTheta.mX - theta_avg, 2)));

@@ -14,6 +14,7 @@ class Collapsible;
 class RadioButton;
 class Button;
 class Label;
+class HelpWidget;
 
 
 class DateDialog: public QDialog
@@ -60,6 +61,7 @@ public:
     RadioButton* mDeltaRangeRadio;
     RadioButton* mDeltaGaussRadio;
     
+    HelpWidget* mDeltaHelp;
     Label* mDeltaFixedLab;
     Label* mDeltaMinLab;
     Label* mDeltaMaxLab;

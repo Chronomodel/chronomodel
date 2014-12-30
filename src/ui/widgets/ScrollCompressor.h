@@ -12,8 +12,8 @@ public:
     ~ScrollCompressor();
     
     void setVertical(bool vertical);
-    void setProp(const float& prop, bool sendNotification = false);
-    float getProp() const;
+    void setProp(const double& prop, bool sendNotification = false);
+    double getProp() const;
     void showText(const QString& text, bool show);
     
     QSize sizeHint() const;
@@ -26,10 +26,10 @@ protected:
     void updateProp(QMouseEvent* e);
     
 signals:
-    void valueChanged(float value);
+    void valueChanged(double value);
     
 private:
-    float mProp;
+    double mProp;
     bool mIsDragging;
     bool mShowText;
     bool mIsVertical;

@@ -29,12 +29,12 @@ public:
     QJsonObject mData;
     AbstractScene* mScene;
     
-    float mBorderWidth;
-    float mTitleHeight;
-    float mPhasesHeight;
-    float mEltsMargin;
-    float mEltsWidth;
-    float mEltsHeight;
+    double mBorderWidth;
+    double mTitleHeight;
+    double mPhasesHeight;
+    double mEltsMargin;
+    double mEltsWidth;
+    double mEltsHeight;
     
     bool mMoving;
     bool mMergeable;

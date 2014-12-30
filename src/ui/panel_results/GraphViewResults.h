@@ -44,8 +44,8 @@ public:
     void setRendering(GraphView::Rendering render);
     
 public slots:
-    void setRange(float min, float max);
-    void zoom(float min, float max);
+    void setRange(double min, double max);
+    void zoom(double min, double max);
     void showNumericalResults(bool show);
     void setNumericalResults(const QString& results);
     

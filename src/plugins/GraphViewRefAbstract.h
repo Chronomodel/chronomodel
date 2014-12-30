@@ -25,7 +25,7 @@ public:
     }
     
 public slots:
-    virtual void zoomX(float min, float max)
+    virtual void zoomX(double min, double max)
     {
         Q_UNUSED(min);
         Q_UNUSED(max);

@@ -15,15 +15,15 @@ PluginGauss::PluginGauss()
     
 }
 
-float PluginGauss::getLikelyhood(const float& t, const QJsonObject& data)
+double PluginGauss::getLikelyhood(const double& t, const QJsonObject& data)
 {
-    float age = data[DATE_GAUSS_AGE_STR].toDouble();
-    float error = data[DATE_GAUSS_ERROR_STR].toDouble();
-    float a = data[DATE_GAUSS_A_STR].toDouble();
-    float b = data[DATE_GAUSS_B_STR].toDouble();
-    float c = data[DATE_GAUSS_C_STR].toDouble();
+    double age = data[DATE_GAUSS_AGE_STR].toDouble();
+    double error = data[DATE_GAUSS_ERROR_STR].toDouble();
+    double a = data[DATE_GAUSS_A_STR].toDouble();
+    double b = data[DATE_GAUSS_B_STR].toDouble();
+    double c = data[DATE_GAUSS_C_STR].toDouble();
     
-    float v = expf(-0.5f * powf((age - (a * t * t + b * t + c)) / error, 2.f)) / error; //  * sqrtf(2.f * M_PI)
+    double v = expf(-0.5f * powf((age - (a * t * t + b * t + c)) / error, 2.f)) / error; //  * sqrtf(2.f * M_PI)
     return v;
 }
 
@@ -94,9 +94,9 @@ QString PluginGauss::getDateDesc(const Date* date) const
     {
         QJsonObject data = date->mData;
         
-        float a = data[DATE_GAUSS_A_STR].toDouble();
-        float b = data[DATE_GAUSS_B_STR].toDouble();
-        float c = data[DATE_GAUSS_C_STR].toDouble();
+        double a = data[DATE_GAUSS_A_STR].toDouble();
+        double b = data[DATE_GAUSS_B_STR].toDouble();
+        double c = data[DATE_GAUSS_C_STR].toDouble();
         
         QString aStr;
         if(a != 0.f)

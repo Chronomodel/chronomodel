@@ -5,6 +5,7 @@
 #include "Date.h"
 
 class QListWidget;
+class Button;
 
 
 class TrashDialog: public QDialog
@@ -21,9 +22,17 @@ public:
     
     QList<int> getSelectedIndexes();
     
+private slots:
+    void updateFromSelection();
+    void deleteItems();
+    
 public:
     QListWidget* mList;
     Type mType;
+    
+    Button* mDeleteBut;
+    Button* mOkBut;
+    Button* mCancelBut;
 };
 
 #endif

@@ -28,159 +28,7 @@ void MetropolisVariable::reset()
     mTrace.clear();
 }
 
-QMap<float, float> MetropolisVariable::generateHistoOld(const QVector<float>& dataSrc, float tmin, float tmax)
-{
-    // Use FFT here !
-    
-    // Définir un pas sur l'axe des t (delta)
-    // répartir les valeurs de la trace sur cette grille avec pondération
-    // Touver la puissance de 2 entière immédiatemment supérieur au nombre d'années de la plage d'étude [a, b].
-    // delta = ((b-a) + 8h) / 2^r => r = ceil(logf(b-a + 8h) / logf(2))
-    // eg : sur [0, 2000], on prendra 2048 points.
-    // Le padding doit contenir 8h.
-    // Remplir de 0 les points qui dépassent (padding)
-    // Lancer la FFTW sur les points.
-    // Multiplier tous les points par:
-    // expf(-0.5 * s^2 * h^2)
-    // s = (2 * Pi * t) / (b-a)
-    // t = iteration en cours (dans l'espace des fréquences!!!)
-    // h = 1.06 * écart type de la trace * nb d'éléments de la trace ^-1/5 (silvermann)
-    // variance trace = traceStd()
-    // Reverse FFTW => Histo lissé ! (tronquer le padding!)
-    
-    // Some checks :
-    //qDebug() << "generate histo on trace size : " << dataSrc.size();
-    
-    
-    // Result map
-    QMap<float, float> data;
-    
-    // Init data grid
-    
-    float delta = 1.f;
-    for(int t=tmin; t<tmax; t+=delta)
-        data[t] = 0;
-    
-    // Fill data grid
-    
-    for(int i=0; i<(int)dataSrc.size(); ++i)
-    {
-        float t = dataSrc[i];
-        
-        float t_under = floorf(t / delta) * delta;
-        float t_upper = t_under + delta;
-        
-        float denum = delta * delta * dataSrc.size();
-        
-        float contrib_under = (t_upper - t) / denum;
-        float contrib_upper = (t - t_under) / denum;
-        
-        data[t_under] += contrib_under;
-        data[t_upper] += contrib_upper;
-    }
-    
-    //return data;
-  
-#if USE_FFT
-    
-    // Variables
-    
-    float numPoints = (tmax - tmin) / delta;
-    
-    float sigma = dataStd(dataSrc);
-    float h = 1.06f * sigma * powf(dataSrc.size(), -1.f/5.f);
-    
-    float numPointsRequired = tmax - tmin + 8*h;
-    float r = ceilf(logf(numPointsRequired) / logf(2.f));
-    
-    float numPointsFinal = powf(2.f, r);
-    
-    float deltaPoints = numPointsFinal - numPoints;
-    float deltaBefore = ceilf(deltaPoints/2);
-    float deltaAfter = floorf(deltaPoints/2);
-    
-    /*qDebug() << "sigma = " << sigma;
-    qDebug() << "h = " << h;
-    qDebug() << "r = " << r;
-    qDebug() << "numPointsRequired = " << numPointsRequired;
-    qDebug() << "numPointsFinal = " << numPointsFinal;*/
-    
-    /*qDebug() << "------------------";
-    qDebug() << "Sigma = " << sigma << ", H = " << h;
-    qDebug() << "Num Points : " << numPoints;
-    qDebug() << "Num Points required (+8h) : " << numPointsRequired;
-    qDebug() << "Num Points final : 2^" << r << " = " << numPointsFinal;
-    qDebug() << "Before padding : " << data.size();*/
-    
-    // Fill padding
-    
-    for(int t=tmin-delta; t >= tmin - delta * deltaBefore; t -= delta)
-        data[t] = 0;
-    
-    for(int t=tmax; t < tmax + delta * deltaAfter; t += delta)
-        data[t] = 0;
-    
-    //qDebug() << "After padding : " << data.size();
-    
-    // FFT
-    
-    int inputSize = numPointsFinal;
-    int outputSize = 2 * (numPointsFinal / 2 + 1);
-    
-    //qDebug() << "FFT malloc num points : " << inputSize;
-    float* input = (float*) fftwf_malloc(inputSize * sizeof(float));
-	float* output = (float*) fftwf_malloc(outputSize * sizeof(float));
-    
-    for(int i=0; i<inputSize; ++i)
-    {
-        float t = tmin - delta * deltaBefore + i*delta;
-        if(data.find(t) == data.end())
-        {
-            qDebug() << "FFT Error : Data not found at : " << t;
-        }
-        input[i] = data[t];
-    }
-		
-    
-    fftwf_plan plan_forward = fftwf_plan_dft_r2c_1d(numPointsFinal, input, (fftwf_complex*)output, FFTW_ESTIMATE);
-    fftwf_execute(plan_forward);
-    
-    for(int i=0; i<outputSize/2; ++i)
-	{
-        float s = 2.f * M_PI * i / outputSize;
-        float factor = expf(-0.5 * s * s * h * h);
-        
-        output[2*i] *= factor;
-        output[2*i + 1] *= factor;
-	}
-    
-    fftwf_plan plan_backward = fftwf_plan_dft_c2r_1d(numPointsFinal, (fftwf_complex*)output, input, FFTW_ESTIMATE);
-    fftwf_execute(plan_backward);
-    
-    for(int i=0; i<inputSize; ++i)
-    {
-        float t = tmin - delta * deltaBefore + i*delta;
-        if(data.find(t) == data.end())
-        {
-            qDebug() << "Data does not correspond : " << t;
-        }
-		data[t] = input[i];
-    }
-    
-    // Remove padding
-    
-    for(int t=tmin-delta; t >= tmin - delta * deltaBefore; t -= delta)
-        data.remove(t);
-    
-    for(int t=tmax; t < tmax + delta * deltaAfter; t += delta)
-        data.remove(t);
-    
-#endif
-
-    return data;
-}
-
-float* MetropolisVariable::generateBufferForHisto(const QVector<float>& dataSrc, int numPts, float hFactor)
+float* MetropolisVariable::generateBufferForHisto(const QVector<double>& dataSrc, int numPts, double hFactor)
 {
     // Work with double precision here !
     // Otherwise, "denum" can be very large and lead to infinity contribs!
@@ -203,7 +51,7 @@ float* MetropolisVariable::generateBufferForHisto(const QVector<float>& dataSrc,
     
     for(int i=0; i<(int)dataSrc.size(); ++i)
     {
-        double t = (double)dataSrc[i];
+        double t = dataSrc[i];
         
         double idx = (t - a) / delta;
         double idx_under = floor(idx);
@@ -227,22 +75,22 @@ float* MetropolisVariable::generateBufferForHisto(const QVector<float>& dataSrc,
     return input;
 }
 
-QMap<float, float> MetropolisVariable::generateRawHisto(const QVector<float>& dataSrc, int fftLen, float tmin, float tmax)
+QMap<double, double> MetropolisVariable::generateRawHisto(const QVector<double>& dataSrc, int fftLen, double tmin, double tmax)
 {
     int inputSize = fftLen;
     
-    float a = vector_min_value(dataSrc);
-    float b = vector_max_value(dataSrc);
-    float delta = (b - a) / fftLen;
+    double a = vector_min_value(dataSrc);
+    double b = vector_max_value(dataSrc);
+    double delta = (b - a) / fftLen;
     
     float* input = generateBufferForHisto(dataSrc, fftLen, 0);
     
-    QMap<float, float> result;
+    QMap<double, double> result;
     if(input != 0)
     {
         for(int i=0; i<inputSize; ++i)
         {
-            float t = a + (float)i * delta;
+            double t = a + (double)i * delta;
             if(t >= tmin && t<= tmax)
             {
                 result[t] = input[i];
@@ -255,21 +103,21 @@ QMap<float, float> MetropolisVariable::generateRawHisto(const QVector<float>& da
     return result;
 }
 
-QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataSrc, int fftLen, float hFactor, float tmin, float tmax)
+QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& dataSrc, int fftLen, double hFactor, double tmin, double tmax)
 {
     int inputSize = fftLen;
     int outputSize = 2 * (inputSize / 2 + 1);
     
-    float sigma = dataStd(dataSrc);
-    float h = 1.06f * sigma * powf(dataSrc.size(), -1.f/5.f);
-    float a = vector_min_value(dataSrc) - 4.f * h;
-    float b = vector_max_value(dataSrc) + 4.f * h;
-    float delta = (b - a) / fftLen;
+    double sigma = dataStd(dataSrc);
+    double h = 1.06f * sigma * powf(dataSrc.size(), -1.f/5.f);
+    double a = vector_min_value(dataSrc) - 4.f * h;
+    double b = vector_max_value(dataSrc) + 4.f * h;
+    double delta = (b - a) / fftLen;
     
     float* input = generateBufferForHisto(dataSrc, fftLen, hFactor);
     float* output = (float*) fftwf_malloc(outputSize * sizeof(float));
     
-    QMap<float, float> result;
+    QMap<double, double> result;
     if(input != 0)
     {
         // ----- FFT -----
@@ -279,8 +127,8 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
         
         for(int i=0; i<outputSize/2; ++i)
         {
-            float s = 2.f * M_PI * i / (b-a);
-            float factor = expf(-0.5f * s * s * h * h);
+            double s = 2.f * M_PI * i / (b-a);
+            double factor = expf(-0.5f * s * s * h * h);
             
             output[2*i] *= factor;
             output[2*i + 1] *= factor;
@@ -293,7 +141,7 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
         
         for(int i=0; i<inputSize; ++i)
         {
-            float t = a + (float)i * delta;
+            double t = a + (double)i * delta;
             if(t >= tmin && t<= tmax)
             {
                 result[t] = input[i];
@@ -307,17 +155,17 @@ QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataS
     return result;
 }
 
-void MetropolisVariable::generateHistos(const QList<Chain>& chains, int fftLen, float hFactor, float tmin, float tmax)
+void MetropolisVariable::generateHistos(const QList<Chain>& chains, int fftLen, double hFactor, double tmin, double tmax)
 {
     mChainsHistos.clear();
     
-    QVector<float> subFullTrace = fullRunTrace(chains);
+    QVector<double> subFullTrace = fullRunTrace(chains);
     mHisto = generateHisto(subFullTrace, fftLen, hFactor, tmin, tmax);
     mRawHisto = generateRawHisto(subFullTrace, fftLen, tmin, tmax);
     
     for(int i=0; i<chains.size(); ++i)
     {
-        QVector<float> subTrace = runTraceForChain(chains, i);
+        QVector<double> subTrace = runTraceForChain(chains, i);
         mChainsHistos.append(generateHisto(subTrace, fftLen, hFactor, tmin, tmax));
         mChainsRawHistos.append(generateRawHisto(subTrace, fftLen, tmin, tmax));
     }
@@ -362,29 +210,29 @@ void MetropolisVariable::generateCorrelations(const QList<Chain>& chains)
     for(int c=0; c<chains.size(); ++c)
     {
         // Retourne la trace de la partie "acquisition" de la chaine :
-        QVector<float> trace = runTraceForChain(chains, c);
+        QVector<double> trace = runTraceForChain(chains, c);
         
         // Correlation pour cette chaine
-        QVector<float> results;
+        QVector<double> results;
         
-        float n = trace.size();
+        double n = trace.size();
         
-        float sum = 0;
-        for(float i=0; i<n; ++i)
+        double sum = 0;
+        for(double i=0; i<n; ++i)
             sum += trace[i];
-        float m = sum / n;
+        double m = sum / n;
         
-        float sum2 = 0;
-        for(float i=0; i<n; ++i)
+        double sum2 = 0;
+        for(double i=0; i<n; ++i)
             sum2 += (trace[i] - m) * (trace[i] - m);
         
-        for(float h=0; h<hmax; ++h)
+        for(double h=0; h<hmax; ++h)
         {
-            float sumH = 0;
-            for(float i=0; i<n-h; ++i)
+            double sumH = 0;
+            for(double i=0; i<n-h; ++i)
                 sumH += (trace[i] - m) * (trace[i + h] - m);
             
-            float result = sumH / sum2;
+            double result = sumH / sum2;
             results.append(result);
         }
         // Correlation ajoutée à la liste (une courbe de corrélation par chaine)
@@ -410,29 +258,29 @@ void MetropolisVariable::generateNumericalResults(const QList<Chain>& chains)
 }
 
 #pragma mark getters (no calculs)
-const QMap<float, float>& MetropolisVariable::fullHisto() const
+const QMap<double, double>& MetropolisVariable::fullHisto() const
 {
     return mHisto;
 }
 
-const QMap<float, float>& MetropolisVariable::fullRawHisto() const
+const QMap<double, double>& MetropolisVariable::fullRawHisto() const
 {
     return mRawHisto;
 }
 
-const QMap<float, float>& MetropolisVariable::histoForChain(int index) const
+const QMap<double, double>& MetropolisVariable::histoForChain(int index) const
 {
     return mChainsHistos[index];
 }
 
-const QMap<float, float>& MetropolisVariable::rawHistoForChain(int index) const
+const QMap<double, double>& MetropolisVariable::rawHistoForChain(int index) const
 {
     return mChainsRawHistos[index];
 }
 
-QMap<float, float> MetropolisVariable::fullTrace(int thinningInterval)
+QMap<double, double> MetropolisVariable::fullTrace(int thinningInterval)
 {
-    QMap<float, float> trace;
+    QMap<double, double> trace;
     for(int i=0; i<mTrace.size(); ++i)
     {
         trace[i * thinningInterval] = mTrace[i];
@@ -440,9 +288,9 @@ QMap<float, float> MetropolisVariable::fullTrace(int thinningInterval)
     return trace;
 }
 
-QMap<float, float> MetropolisVariable::fullTraceForChain(const QList<Chain>& chains, int index)
+QMap<double, double> MetropolisVariable::fullTraceForChain(const QList<Chain>& chains, int index)
 {
-    QMap<float, float> trace;
+    QMap<double, double> trace;
     int shift = 0;
     
     for(int i=0; i<chains.size(); ++i)
@@ -466,9 +314,9 @@ QMap<float, float> MetropolisVariable::fullTraceForChain(const QList<Chain>& cha
     return trace;
 }
 
-QVector<float> MetropolisVariable::fullRunTrace(const QList<Chain>& chains)
+QVector<double> MetropolisVariable::fullRunTrace(const QList<Chain>& chains)
 {
-    QVector<float> trace;
+    QVector<double> trace;
     int shift = 0;
     for(int i=0; i<chains.size(); ++i)
     {
@@ -483,9 +331,9 @@ QVector<float> MetropolisVariable::fullRunTrace(const QList<Chain>& chains)
     return trace;
 }
 
-QVector<float> MetropolisVariable::runTraceForChain(const QList<Chain>& chains, int index)
+QVector<double> MetropolisVariable::runTraceForChain(const QList<Chain>& chains, int index)
 {
-    QVector<float> trace;
+    QVector<double> trace;
     int shift = 0;
     for(int i=0; i<chains.size(); ++i)
     {
@@ -505,11 +353,11 @@ QVector<float> MetropolisVariable::runTraceForChain(const QList<Chain>& chains, 
     return trace;
 }
 
-QVector<float> MetropolisVariable::correlationForChain(int index)
+QVector<double> MetropolisVariable::correlationForChain(int index)
 {
     if(index < mCorrelations.size())
         return mCorrelations[index];
-    return QVector<float>();
+    return QVector<double>();
 }
 
 

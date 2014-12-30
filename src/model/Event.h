@@ -37,9 +37,9 @@ public:
     Type type() const;
     
     void reset();
-    float getThetaMin(float defaultValue);
-    float getThetaMax(float defaultValue);
-    virtual void updateTheta(float min, float max);
+    double getThetaMin(double defaultValue);
+    double getThetaMax(double defaultValue);
+    virtual void updateTheta(double min, double max);
     
     // TODO : when creating an event from JSON, phases have to exists already to be able set pointers to them.
     // void initPhases(const QList<Phases*>& phases);
@@ -51,8 +51,8 @@ public:
     Method mMethod;
     QColor mColor;
     
-    float mItemX;
-    float mItemY;
+    double mItemX;
+    double mItemY;
     
     bool mIsCurrent;
     bool mIsSelected;
@@ -68,8 +68,8 @@ public:
     QList<EventConstraint*> mConstraintsBwd;
     
     MHVariable mTheta;
-    float mS02;
-    float mAShrinkage;
+    double mS02;
+    double mAShrinkage;
     bool mInitialized;
     
     int mLevel; // used to init mcmc

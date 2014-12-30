@@ -104,7 +104,7 @@ void GraphViewPhase::refresh()
                 curveAlpha.mData = equal_areas(mPhase->mAlpha.fullHisto(), 1.f);
                 mGraph->addCurve(curveAlpha);
                 
-                float yMax = 1.1f * map_max_value(curveAlpha.mData);
+                double yMax = 1.1f * map_max_value(curveAlpha.mData);
                 mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                 
                 GraphCurve curveBeta;
@@ -173,7 +173,7 @@ void GraphViewPhase::refresh()
                     curveAlphaChain.mData = equal_areas(mPhase->mAlpha.histoForChain(i), 1.f);
                     mGraph->addCurve(curveAlphaChain);
                     
-                    float yMax = 1.1f * map_max_value(curveAlphaChain.mData);
+                    double yMax = 1.1f * map_max_value(curveAlphaChain.mData);
                     mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                     
                     GraphCurve curveBetaChain;
@@ -214,8 +214,8 @@ void GraphViewPhase::refresh()
                 curveBeta.mPen.setColor(col);
                 mGraph->addCurve(curveBeta);
                 
-                float min = qMin(map_min_value(curveBeta.mData), map_min_value(curveAlpha.mData));
-                float max = qMax(map_max_value(curveBeta.mData), map_max_value(curveAlpha.mData));
+                double min = qMin(map_min_value(curveBeta.mData), map_min_value(curveAlpha.mData));
+                double max = qMax(map_max_value(curveBeta.mData), map_max_value(curveAlpha.mData));
                 
                 mGraph->setRangeY(min, max);
             }

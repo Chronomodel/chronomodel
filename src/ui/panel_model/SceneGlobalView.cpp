@@ -56,10 +56,10 @@ void SceneGlobalView::paintEvent(QPaintEvent* e)
                            viewRect.width(),
                            viewRect.height());
         
-        float propX = (visibleRect.x() - sceneRect.x()) / sceneRect.width();
-        float propY = (visibleRect.y() - sceneRect.y()) / sceneRect.height();
-        float propW = visibleRect.width() / sceneRect.width();
-        float propH = visibleRect.height() / sceneRect.height();
+        double propX = (visibleRect.x() - sceneRect.x()) / sceneRect.width();
+        double propY = (visibleRect.y() - sceneRect.y()) / sceneRect.height();
+        double propW = visibleRect.width() / sceneRect.width();
+        double propH = visibleRect.height() / sceneRect.height();
         
         propX = (propX < 0) ? 0 : propX;
         propY = (propY < 0) ? 0 : propY;
@@ -89,15 +89,15 @@ void SceneGlobalView::paintEvent(QPaintEvent* e)
 
 QRectF SceneGlobalView::getTargetRect()
 {
-    float w = width();
-    float h = height();
+    double w = width();
+    double h = height();
     
     QRectF sceneRect = mScene->sceneRect();
     QMatrix matrix = mView->matrix();
     sceneRect.setWidth(sceneRect.width() * matrix.m11());
     sceneRect.setHeight(sceneRect.height() * matrix.m22());
     
-    float sceneProp = sceneRect.width() / sceneRect.height();
+    double sceneProp = sceneRect.width() / sceneRect.height();
     QSizeF targetSize;
     
     if(sceneProp > w / h)
@@ -145,8 +145,8 @@ void SceneGlobalView::setPosition(const QPoint& pos)
     
     if(targetRect.contains(pos))
     {
-        float propX = (float)(pos.x() - targetRect.x()) / targetRect.width();
-        float propY = (float)(pos.y() - targetRect.y()) / targetRect.height();
+        double propX = (double)(pos.x() - targetRect.x()) / targetRect.width();
+        double propY = (double)(pos.y() - targetRect.y()) / targetRect.height();
         
         QRectF sceneRect = mScene->sceneRect();
         QPointF scenePos(sceneRect.x() + sceneRect.width() * propX,

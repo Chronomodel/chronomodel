@@ -15,14 +15,14 @@ PluginTL::PluginTL()
     
 }
 
-float PluginTL::getLikelyhood(const float& t, const QJsonObject& data)
+double PluginTL::getLikelyhood(const double& t, const QJsonObject& data)
 {
-    float age = data[DATE_TL_AGE_STR].toDouble();
-    float error = data[DATE_TL_ERROR_STR].toDouble();
-    float ref_year = data[DATE_TL_REF_YEAR_STR].toDouble();
+    double age = data[DATE_TL_AGE_STR].toDouble();
+    double error = data[DATE_TL_ERROR_STR].toDouble();
+    double ref_year = data[DATE_TL_REF_YEAR_STR].toDouble();
     
     // gaussienne TL
-    float v = expf(-0.5f * powf((age - (ref_year - t)) / error, 2.f)) / error; //  * sqrtf(2.f * M_PI)
+    double v = expf(-0.5f * powf((age - (ref_year - t)) / error, 2.f)) / error; //  * sqrtf(2.f * M_PI)
     return v;
 }
 

@@ -26,12 +26,12 @@ public:
     static ProjectSettings fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
     
-    static float getStep(float tmin, float tmax);
+    static double getStep(double tmin, double tmax);
 
 public:
     int mTmin;
     int mTmax;
-    float mStep;
+    double mStep;
     bool mStepForced;
 };
 

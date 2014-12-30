@@ -11,26 +11,26 @@
 
 // TODO : handle empty function case and null density case (pi = 0)
 
-FunctionAnalysis analyseFunction(const QMap<float, float>& aFunction)
+FunctionAnalysis analyseFunction(const QMap<double, double>& aFunction)
 {
-    typename QMap<float, float>::const_iterator it;
+    typename QMap<double, double>::const_iterator it;
     
-    float max = 0;
-    float mode = 0;
-    float sum = 0.;
-    float sum2 = 0.;
-    float sumP = 0.;
+    double max = 0;
+    double mode = 0;
+    double sum = 0.;
+    double sum2 = 0.;
+    double sumP = 0.;
     
-    float prevY = 0;
-    QList<float> uniformXValues;
+    double prevY = 0;
+    QList<double> uniformXValues;
     
-    QMapIterator<float, float> iter(aFunction);
+    QMapIterator<double, double> iter(aFunction);
     while(iter.hasNext())
     {
         iter.next();
         
-        float x = iter.key();
-        float y = iter.value();
+        double x = iter.key();
+        double y = iter.value();
         
         sumP += y;
         sum += y * x;
@@ -78,7 +78,7 @@ FunctionAnalysis analyseFunction(const QMap<float, float>& aFunction)
     result.mode = mode;
     result.mean = sum / sumP;
     
-    float variance = (sum2 / sumP) - powf(result.mean, 2);
+    double variance = (sum2 / sumP) - powf(result.mean, 2);
     
     if(variance < 0)
         variance = 0;
@@ -88,7 +88,7 @@ FunctionAnalysis analyseFunction(const QMap<float, float>& aFunction)
     return result;
 }
 
-float dataStd(const QVector<float>& data)
+double dataStd(const QVector<double>& data)
 {
     // Work with double precision here because sum2 might be big !
     
@@ -114,20 +114,15 @@ float dataStd(const QVector<float>& data)
     
     if(variance < 0)
     {
-        for(int i=0; i<20; ++i)
-        {
-            qDebug() << "data " << i << " : "<< data[i];
-        }
-        
         qDebug() << "ERROR : negative variance found : " << variance;
         return 0.f;
     }
-    return (float)sqrtf(variance);
+    return (double)sqrtf(variance);
 }
 
-float shrinkageUniform(float so2)
+double shrinkageUniform(double so2)
 {
-    float u = Generator::randomUniform();
+    double u = Generator::randomUniform();
     return (so2 * (1.f - u) / u);
 }
 
@@ -155,15 +150,15 @@ QString densityAnalysisToString(const DensityAnalysis& analysis)
     return result;
 }
 
-Quartiles quartilesForTrace(const QVector<float>& trace)
+Quartiles quartilesForTrace(const QVector<double>& trace)
 {
     Quartiles quartiles;
     
-    QVector<float> sorted = trace;
+    QVector<double> sorted = trace;
     qSort(sorted);
     
-    int q1index = ceilf((float)sorted.size() * 0.25f);
-    int q3index = ceilf((float)sorted.size() * 0.75f);
+    int q1index = ceilf((double)sorted.size() * 0.25f);
+    int q3index = ceilf((double)sorted.size() * 0.75f);
     
     quartiles.Q1 = sorted[q1index];
     quartiles.Q3 = sorted[q3index];
@@ -177,21 +172,21 @@ Quartiles quartilesForTrace(const QVector<float>& trace)
     }
     else
     {
-        int q2index = ceilf((float)sorted.size() * 0.5f);
+        int q2index = ceilf((double)sorted.size() * 0.5f);
         quartiles.Q2 = sorted[q2index];
     }
     return quartiles;
 }
 
-Quartiles quartilesForRepartition(const QVector<float>& repartition, float tmin, float step)
+Quartiles quartilesForRepartition(const QVector<double>& repartition, double tmin, double step)
 {
     Quartiles quartiles;
     
     qDebug() << repartition[0];
     
-    float q1index = vector_interpolate_idx_for_value(0.25, repartition);
-    float q2index = vector_interpolate_idx_for_value(0.5, repartition);
-    float q3index = vector_interpolate_idx_for_value(0.75, repartition);
+    double q1index = vector_interpolate_idx_for_value(0.25, repartition);
+    double q2index = vector_interpolate_idx_for_value(0.5, repartition);
+    double q3index = vector_interpolate_idx_for_value(0.75, repartition);
     
     quartiles.Q1 = tmin + q1index * step;
     quartiles.Q2 = tmin + q2index * step;
@@ -200,30 +195,30 @@ Quartiles quartilesForRepartition(const QVector<float>& repartition, float tmin,
     return quartiles;
 }
 
-QPair<float, float> credibilityForTrace(const QVector<float>& trace, int thresh, float& exactThresholdResult)
+QPair<double, double> credibilityForTrace(const QVector<double>& trace, int thresh, double& exactThresholdResult)
 {
-    QPair<float, float> credibility;
+    QPair<double, double> credibility;
     credibility.first = 0;
     credibility.second = 0;
     exactThresholdResult = 0;
     
-    if(thresh > 0)
+    if(thresh > 0 && trace.size() > 0)
     {
         int threshold = qMin(thresh, 100);
         
-        QVector<float> sorted = trace;
+        QVector<double> sorted = trace;
         qSort(sorted);
         
-        int numToRemove = floorf((float)sorted.size() * (1.f - (float)threshold / 100.f));
-        exactThresholdResult = ((float)sorted.size() - (float)numToRemove) / (float)sorted.size();
+        int numToRemove = floorf((double)sorted.size() * (1.f - (double)threshold / 100.f));
+        exactThresholdResult = ((double)sorted.size() - (double)numToRemove) / (double)sorted.size();
         
         int k = numToRemove;
         int n = sorted.size();
-        float lmin = 0.f;
+        double lmin = 0.f;
         int foundJ = 0;
         for(int j=0; j<=k; ++j)
         {
-            float l = sorted[(n - 1) - k + j] - sorted[j];
+            double l = sorted[(n - 1) - k + j] - sorted[j];
             if(lmin == 0.f || l < lmin)
             {
                 foundJ = j;
@@ -237,14 +232,14 @@ QPair<float, float> credibilityForTrace(const QVector<float>& trace, int thresh,
     return credibility;
 }
 
-QString intervalText(const QPair<float, float>& interval)
+QString intervalText(const QPair<double, double>& interval)
 {
     return "[" + QString::number(interval.first, 'f', 0) + ", " + QString::number(interval.second, 'f', 0) + "]";
 }
 
-QString getHPDText(const QMap<float, float>& hpd)
+QString getHPDText(const QMap<double, double>& hpd)
 {
-    QList<QPair<float, float>> intervals = intervalsForHpd(hpd);
+    QList<QPair<double, double>> intervals = intervalsForHpd(hpd);
     
     QStringList results;
     for(int i=0; i<intervals.size(); ++i)
@@ -255,13 +250,13 @@ QString getHPDText(const QMap<float, float>& hpd)
     return result;
 }
 
-QList<QPair<float, float>> intervalsForHpd(const QMap<float, float>& hpd)
+QList<QPair<double, double>> intervalsForHpd(const QMap<double, double>& hpd)
 {
-    QMapIterator<float, float> it(hpd);
-    QList<QPair<float, float>> intervals;
+    QMapIterator<double, double> it(hpd);
+    QList<QPair<double, double>> intervals;
     
     bool inInterval = false;
-    QPair<float, float> curInterval;
+    QPair<double, double> curInterval;
     
     while(it.hasNext())
     {

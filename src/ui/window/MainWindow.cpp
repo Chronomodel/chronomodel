@@ -55,13 +55,13 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     connect(mMCMCSettingsAction, SIGNAL(triggered()), mProject, SLOT(mcmcSettings()));
     connect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
     connect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));
-    connect(mProject, SIGNAL(mcmcFinished(MCMCLoopMain&)), this, SLOT(mcmcFinished()));
+    connect(mProject, SIGNAL(mcmcFinished(Model*)), this, SLOT(mcmcFinished()));
     
     connect(mProject, SIGNAL(projectStateChanged()), mProjectView, SLOT(updateProject()));
     connect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
     connect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
     connect(mViewLogAction, SIGNAL(triggered()), mProjectView, SLOT(showLog()));
-    connect(mProject, SIGNAL(mcmcFinished(MCMCLoopMain&)), mProjectView, SLOT(updateLog(MCMCLoopMain&)));
+    connect(mProject, SIGNAL(mcmcFinished(Model*)), mProjectView, SLOT(updateLog(Model*)));
     
     mProjectView->doProjectConnections(mProject);
     
@@ -426,7 +426,7 @@ void MainWindow::openWebsite()
 #pragma mark Events
 void MainWindow::closeEvent(QCloseEvent* e)
 {
-    saveProject();
+    mProject->askToSave(tr("Save project before quitting?"));
     writeSettings();
     e->accept();
 }
