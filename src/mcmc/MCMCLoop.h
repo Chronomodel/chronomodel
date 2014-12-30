@@ -21,7 +21,8 @@ public:
     
     void setMCMCSettings(const MCMCSettings& settings);
     const QList<Chain>& chains();
-    const QString& getLog() const;
+    const QString& getMCMCLog() const;
+    const QString& getInitLog() const;
     
     void run();
     
@@ -32,8 +33,7 @@ signals:
 protected:
     virtual QString calibrate() = 0;
     virtual void initVariablesForChain() = 0;
-    virtual void initMCMC() = 0;
-    virtual void initMCMC2() = 0;
+    virtual QString initMCMC() = 0;
     virtual void update() = 0;
     virtual void finalize() = 0;
     virtual bool adapt() = 0;
@@ -43,6 +43,7 @@ protected:
     int mChainIndex;
     State mState;
     QString mLog;
+    QString mInitLog;
     
 public:
     QString mAbortedReason;

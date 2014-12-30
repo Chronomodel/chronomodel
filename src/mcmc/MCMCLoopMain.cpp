@@ -99,7 +99,7 @@ void MCMCLoopMain::initVariablesForChain()
     }
 }
 
-void MCMCLoopMain::initMCMC2()
+QString MCMCLoopMain::initMCMC()
 {
     QList<Event*>& events = mModel->mEvents;
     QList<Phase*>& phases = mModel->mPhases;
@@ -238,26 +238,28 @@ void MCMCLoopMain::initMCMC2()
     // ----------------------------------------------------------------
     //  Log Init
     // ----------------------------------------------------------------
-    mLog += "---------------\n";
-    mLog += "INIT\n";
-    mLog += "---------------\n";
+    QString initLog;
+    
+    initLog += "---------------\n";
+    initLog += "INIT\n";
+    initLog += "---------------\n";
     for(int i=0; i<events.size(); ++i)
     {
         Event* event = events[i];
         
         if(event->type() == Event::eKnown)
         {
-            mLog += ">> Bound : " + event->mName + "\n";
-            mLog += "  - theta (value) : " + QString::number(event->mTheta.mX) + "\n";
-            mLog += "  - theta (sigma MH) : " + QString::number(event->mTheta.mSigmaMH) + "\n";
+            initLog += ">> Bound : " + event->mName + "\n";
+            initLog += "  - theta (value) : " + QString::number(event->mTheta.mX) + "\n";
+            initLog += "  - theta (sigma MH) : " + QString::number(event->mTheta.mSigmaMH) + "\n";
         }
         else
         {
-            mLog += ">> Event : " + event->mName + "\n";
-            mLog += "  - theta (value) : " + QString::number(event->mTheta.mX) + "\n";
-            mLog += "  - theta (sigma MH) : " + QString::number(event->mTheta.mSigmaMH) + "\n";
-            mLog += "  - SO2 : " + QString::number(event->mS02) + "\n";
-            mLog += "  - AShrinkage : " + QString::number(event->mAShrinkage) + "\n";
+            initLog += ">> Event : " + event->mName + "\n";
+            initLog += "  - theta (value) : " + QString::number(event->mTheta.mX) + "\n";
+            initLog += "  - theta (sigma MH) : " + QString::number(event->mTheta.mSigmaMH) + "\n";
+            initLog += "  - SO2 : " + QString::number(event->mS02) + "\n";
+            initLog += "  - AShrinkage : " + QString::number(event->mAShrinkage) + "\n";
         }
         mLog += "---------------\n";
         
@@ -265,13 +267,13 @@ void MCMCLoopMain::initMCMC2()
         {
             Date& date = event->mDates[j];
             
-            mLog += " > Data : " + date.mName + "\n";
-            mLog += "  - theta (value) : " + QString::number(date.mTheta.mX) + "\n";
-            mLog += "  - theta (sigma MH) : " + QString::number(date.mTheta.mSigmaMH) + "\n";
-            mLog += "  - sigma (value) : " + QString::number(date.mSigma.mX) + "\n";
-            mLog += "  - sigma (sigma MH) : " + QString::number(date.mSigma.mSigmaMH) + "\n";
-            mLog += "  - delta (value) : " + QString::number(date.mDelta) + "\n";
-            mLog += "--------\n";
+            initLog += " > Data : " + date.mName + "\n";
+            initLog += "  - theta (value) : " + QString::number(date.mTheta.mX) + "\n";
+            initLog += "  - theta (sigma MH) : " + QString::number(date.mTheta.mSigmaMH) + "\n";
+            initLog += "  - sigma (value) : " + QString::number(date.mSigma.mX) + "\n";
+            initLog += "  - sigma (sigma MH) : " + QString::number(date.mSigma.mSigmaMH) + "\n";
+            initLog += "  - delta (value) : " + QString::number(date.mDelta) + "\n";
+            initLog += "--------\n";
         }
     }
     
@@ -279,261 +281,22 @@ void MCMCLoopMain::initMCMC2()
     {
         Phase* phase = phases[i];
         
-        mLog += "---------------\n";
-        mLog += ">> Phase : " + phase->mName + "\n";
-        mLog += " - alpha : " + QString::number(phase->mAlpha.mX) + "\n";
-        mLog += " - beta : " + QString::number(phase->mBeta.mX) + "\n";
-        mLog += " - tau : " + QString::number(phase->mTau) + "\n";
+        initLog += "---------------\n";
+        initLog += ">> Phase : " + phase->mName + "\n";
+        initLog += " - alpha : " + QString::number(phase->mAlpha.mX) + "\n";
+        initLog += " - beta : " + QString::number(phase->mBeta.mX) + "\n";
+        initLog += " - tau : " + QString::number(phase->mTau) + "\n";
     }
     
     for(int i=0; i<phasesConstraints.size(); ++i)
     {
         PhaseConstraint* constraint = phasesConstraints[i];
         
-        mLog += "---------------\n";
-        mLog += ">> PhaseConstraint : " + QString::number(constraint->mId) + "\n";
-        mLog += " - gamma : " + QString::number(constraint->mGamma) + "\n";
+        initLog += "---------------\n";
+        initLog += ">> PhaseConstraint : " + QString::number(constraint->mId) + "\n";
+        initLog += " - gamma : " + QString::number(constraint->mGamma) + "\n";
     }
-    qDebug() << mLog;
-}
-
-void MCMCLoopMain::initMCMC()
-{
-    QList<Event*>& events = mModel->mEvents;
-    QList<Phase*>& phases = mModel->mPhases;
-    
-    double tmin = mModel->mSettings.mTmin;
-    double tmax = mModel->mSettings.mTmax;
-    double step = mModel->mSettings.mStep;
-    
-    // ----------------------------------------------------------------
-    //  Thetas des Mesures
-    //  mTheta = mode max de g(theta i) = fonction de calibration
-    //  mSigmaThetaMH = variance de G(theta i) = vraissemblance,
-    //  (différent de g(theta i) = fonction de calibration)
-    // ----------------------------------------------------------------
-    int numDates = 0;
-    for(int i=0; i<events.size(); ++i)
-        numDates += events[i]->mDates.size();
-    
-    emit stepChanged(tr("Initializing dates..."), 0, numDates);
-
-    for(int i=0; i<events.size(); ++i)
-    {
-        for(int j=0; j<events[i]->mDates.size(); ++j)
-        {
-            Date& date = events[i]->mDates[j];
-            
-            // TODO Init mieux que ça!
-            date.updateDelta(events[i]);
-            
-            FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration, tmin, tmax, step));
-            
-            date.mTheta.mX = data.mode;
-            date.mTheta.mSigmaMH = data.stddev;
-            
-            emit stepProgressed(i);
-        }
-    }
-    
-    // ----------------------------------------------------------------
-    //  Thetas des Faits
-    //  mTheta = moyenne des thetas des dates.
-    //  mS02 = moyenne harmonique de variances de G(theta i).
-    //  Choix du shrinkage uniforme : 1
-    // ----------------------------------------------------------------
-    emit stepChanged(tr("Initializing events..."), 0, events.size());
-    for(int i=0; i<events.size(); ++i)
-    {
-        if(events[i]->type() == Event::eKnown)
-        {
-            EventKnown& ek = (EventKnown&)events[i];
-            switch (ek.knownType())
-            {
-                case EventKnown::eFixed:
-                    events[i]->mTheta.mX = ek.fixedValue();
-                    break;
-                case EventKnown::eUniform:
-                    events[i]->mTheta.mX = ek.uniformStart() + (ek.uniformEnd() - ek.uniformStart())/2;
-                    break;
-                default:
-                    break;
-            }
-            qDebug() << "Init bound : " << events[i]->mName << " : " << events[i]->mTheta.mX;
-        }
-        else
-        {
-            double theta_sum = 0;
-            double s02_sum = 0;
-            for(int j=0; j<events[i]->mDates.size(); ++j)
-            {
-                theta_sum += events[i]->mDates[j].mTheta.mX;
-                
-                // SO2 est la moyenne harmonique des variances sur les dates calibrées a posteriori
-                // On doit donc utiliser "sigma(calib)" (variance de la date calibrée), qui a déjà servi à initialiser mTheta.mSigmaMH
-                double sigmaCalib = events[i]->mDates[j].mTheta.mSigmaMH;
-                s02_sum += 1 / (sigmaCalib * sigmaCalib);
-            }
-            
-            events[i]->mS02 = events[i]->mDates.size() / s02_sum;
-            events[i]->mAShrinkage = 1.;
-            
-            // Moyenne des theta i
-            events[i]->mTheta.mX = theta_sum / events[i]->mDates.size();
-            
-            qDebug() << "Init event : " << events[i]->mName << " : " << events[i]->mTheta.mX;
-            
-            // Si la moyenne n'est pas dans le support du fait, on prend la moyenne des theta i qui s'y trouvent
-            /*if(events[i].mTheta.mX < events[i].mTmin || events[i].mTheta.mX > events[i].mTmax)
-             {
-             theta_sum = 0;
-             int counter = 0;
-             for(unsigned int j=0; j<events[i].mDates.size(); ++j)
-             {
-             double thetaDate = events[i].mDates[j].mTheta.mX;
-             if(thetaDate >= events[i].mTmin && thetaDate <= events[i].mTmax)
-             {
-             theta_sum += thetaDate;
-             ++counter;
-             }
-             }
-             if(counter == 0)
-             {
-             // Aucun theta i dans le support du fait ! => on prend le centre du support
-             events[i].mTheta.mX = (events[i].mTmax - events[i].mTmin) / 2;
-             }
-             else
-             {
-             // Moyenne des theta i se trouvant dans le support
-             events[i].mTheta.mX = theta_sum / counter;
-             }
-             }*/
-            
-            // Init sigmaMH de theta f
-            events[i]->mTheta.mSigmaMH = sqrtf(events[i]->mS02);
-        }
-        
-        emit stepProgressed(i);
-    }
-    
-    // ----------------------------------------------------------------
-    //  Theta des Phases
-    // ----------------------------------------------------------------
-    emit stepChanged(tr("Initializing phases..."), 0, phases.size());
-    for(int i=0; i<phases.size(); ++i)
-    {
-        phases[i]->mAlpha.mX = Generator::randomUniform(tmin, phases[i]->getMinThetaEvents(tmin));
-        phases[i]->mBeta.mX = Generator::randomUniform(phases[i]->getMaxThetaEvents(tmax), tmax);
-        
-        emit stepProgressed(i);
-    }
-    
-    // ----------------------------------------------------------------
-    // Vérifier thetas des Faits et alpha beta TODO !!!!!!
-    // ----------------------------------------------------------------
-    emit stepChanged(tr("Initializing events with constraints ..."), 0, phases.size());
-    bool verif = false;
-    while(!verif)
-    {
-        if(isInterruptionRequested())
-            return;
-        
-        verif = true;
-        for(int i=0; i<events.size(); ++i)
-        {
-            Event* event = events[i];
-            
-            double thetaMin = event->getThetaMin(tmin);
-            double thetaMax = event->getThetaMax(tmax);
-            
-            qDebug() << "Init constraint for : " << event->mName << " : " << thetaMin << " < " << event->mTheta.mX << " < " << thetaMax;
-            
-            if(thetaMin > thetaMax)
-            {
-                qDebug() << "No init possible!";
-            }
-            
-            if(event->mTheta.mX <= thetaMin || event->mTheta.mX >= thetaMax)
-            {
-                verif = false;
-                double theta = thetaMin + (thetaMax - thetaMin) * Generator::randomUniform();
-                event->mTheta.mX = theta;
-                
-                qDebug() << "Corrigé : " << thetaMin << " < " << event->mTheta.mX << " < " << thetaMax;
-            }
-        }
-    }
-    
-    // ----------------------------------------------------------------
-    //  Variance des Mesures
-    // ----------------------------------------------------------------
-    emit stepChanged(tr("Initializing dates variances..."), 0, numDates);
-    
-    for(int i=0; i<events.size(); ++i)
-    {
-        Event* event = events[i];
-        for(int j=0; j<event->mDates.size(); ++j)
-        {
-            Date& date = event->mDates[j];
-            
-            double diff = abs(date.mTheta.mX - event->mTheta.mX);
-            if(diff != 0)
-                date.mSigma.mX = diff;
-            else
-                date.mSigma.mX = date.mTheta.mSigmaMH;
-            
-            date.mSigma.mSigmaMH = 1.;
-            
-            emit stepProgressed(i);
-        }
-    }
-    // ----------------------------------------------------------------
-    
-    for(int i=0; i<events.size(); ++i)
-    {
-        Event* event = events[i];
-        
-        if(event->type() == Event::eKnown)
-        {
-            mLog += ">> Bound : " + event->mName + "\n";
-            mLog += "  - theta (value) : " + QString::number(event->mTheta.mX) + "\n";
-            mLog += "  - theta (sigma MH) : " + QString::number(event->mTheta.mSigmaMH) + "\n";
-        }
-        else
-        {
-            mLog += ">> Event : " + event->mName + "\n";
-            mLog += "  - theta (value) : " + QString::number(event->mTheta.mX) + "\n";
-            mLog += "  - theta (sigma MH) : " + QString::number(event->mTheta.mSigmaMH) + "\n";
-            mLog += "  - SO2 : " + QString::number(event->mS02) + "\n";
-            mLog += "  - AShrinkage : " + QString::number(event->mAShrinkage) + "\n";
-        }
-        mLog += "---------------\n";
-        
-        for(int j=0; j<event->mDates.size(); ++j)
-        {
-            Date& date = event->mDates[j];
-            
-            mLog += " > Data : " + date.mName + "\n";
-            mLog += "  - theta (value) : " + QString::number(date.mTheta.mX) + "\n";
-            mLog += "  - theta (sigma MH) : " + QString::number(date.mTheta.mSigmaMH) + "\n";
-            mLog += "  - sigma (value) : " + QString::number(date.mSigma.mX) + "\n";
-            mLog += "  - sigma (sigma MH) : " + QString::number(date.mSigma.mSigmaMH) + "\n";
-            mLog += "  - delta (value) : " + QString::number(date.mDelta) + "\n";
-            mLog += "--------\n";
-        }
-    }
-    
-    for(int i=0; i<phases.size(); ++i)
-    {
-        Phase* phase = phases[i];
-        
-        mLog += "---------------\n";
-        mLog += ">> Phase : " + phase->mName + "\n";
-        mLog += " - alpha : " + QString::number(phase->mAlpha.mX) + "\n";
-        mLog += " - beta : " + QString::number(phase->mBeta.mX) + "\n";
-        mLog += " - tau : " + QString::number(phase->mTau) + "\n";
-    }
-    //qDebug() << mLog;
+    return initLog;
 }
 
 void MCMCLoopMain::update()

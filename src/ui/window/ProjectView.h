@@ -6,6 +6,8 @@
 
 class QStackedWidget;
 class QTextEdit;
+class QTabWidget;
+
 class ModelView;
 class ResultsView;
 class Event;
@@ -37,7 +39,10 @@ private:
     QStackedWidget* mStack;
     ModelView* mModelView;
     ResultsView* mResultsView;
-    QTextEdit* mLogEdit;
+    QTabWidget* mLogTabs;
+    QTextEdit* mLogModelEdit;
+    QTextEdit* mLogInitEdit;
+    QTextEdit* mLogResultsEdit;
 };
 
 #endif

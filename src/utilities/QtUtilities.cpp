@@ -214,3 +214,7 @@ QString textBlue(const QString& str)
 {
     return "<span style=\"color: blue;\">" + str + "</span>";
 }
+QString textPurple(const QString& str)
+{
+    return "<span style=\"color: #8E60AB;\">" + str + "</span>";
+}

@@ -69,30 +69,6 @@ int main(int argc, char *argv[])
     a.setWindowIcon(QIcon(":chronomodel.png"));
     
     qApp->setAttribute(Qt::AA_UseHighDpiPixmaps);
-
-    
-    /*QVector<double> data1;
-    data1 << 1.5 << 2 << 3.7;
-    QVector<double> data2;
-    data2 << 8 << 9.2 << 11.6;
-    QFile file("test.dat");
-    if(file.open(QIODevice::WriteOnly))
-    {
-        QDataStream out(&file);
-        out << data1;
-        out << data2;
-    }*/
-    
-    /*QVector<double> data;
-    QFile file("test.dat");
-    if(file.open(QIODevice::ReadOnly))
-    {
-        QDataStream in(&file);
-        in >> data;
-        in >> data;
-        qDebug() << data;
-    }
-    return;*/
     
     
     qInstallMessageHandler(customMessageHandler);

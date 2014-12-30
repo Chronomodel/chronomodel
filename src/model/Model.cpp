@@ -6,38 +6,15 @@
 #include "MCMCProgressDialog.h"
 #include "ModelUtilities.h"
 #include "QtUtilities.h"
+#include "../PluginAbstract.h"
 #include <QJsonArray>
 #include <QtWidgets>
 
-
-QString Model::mLog = QString();
 
 Model::Model():QObject()
 {
     
 }
-
-/*Model::Model(const Model& model):QObject()
-{
-    copyFrom(model);
-}
-
-Model& Model::operator=(const Model& model)
-{
-    copyFrom(model);
-    return *this;
-}
-
-void Model::copyFrom(const Model& model)
-{
-    mSettings = model.mSettings;
-    mMCMCSettings = model.mMCMCSettings;
-    
-    mEvents = model.mEvents;
-    mPhases = model.mPhases;
-    mEventConstraints = model.mEventConstraints;
-    mPhaseConstraints = model.mPhaseConstraints;
-}*/
 
 Model::~Model()
 {
@@ -184,48 +161,6 @@ Model* Model::fromJson(const QJsonObject& json)
             }
         }
     }
-    
-    
-    mLog = QString();
-    
-    mLog += line(textBold("Events : " + QString::number(model->mEvents.size())));
-    for(int i=0; i<model->mEvents.size(); ++i)
-    {
-        QString objType = "Event";
-        if(model->mEvents[i]->type() == Event::eKnown)
-            objType = "Bound";
-        
-        mLog += line(textBlue(objType + " (name: " + model->mEvents[i]->mName + ", " +
-                    QString::number(model->mEvents[i]->mDates.size()) + " data, " +
-                    QString::number(model->mEvents[i]->mPhases.size()) + " phases, " +
-                    QString::number(model->mEvents[i]->mConstraintsBwd.size()) + " const. back., " +
-                    QString::number(model->mEvents[i]->mConstraintsFwd.size()) + " const. fwd.)"));
-    }
-    
-    
-    /*qDebug() << "=> Phases : " << model->mPhases.size();
-    for(int i=0; i<model->mPhases.size(); ++i)
-    {
-        qDebug() << "  => Phase " << model->mPhases[i]->mId << " : " << model->mPhases[i]->mEvents.size() << " events"
-            << " : " << model->mPhases[i]->mConstraintsBwd.size() << " const. back."
-            << " : " << model->mPhases[i]->mConstraintsFwd.size() << " const. fwd.";
-    }
-    qDebug() << "=> Event Constraints : " << model->mEventConstraints.size();
-    for(int i=0; i<model->mEventConstraints.size(); ++i)
-    {
-        qDebug() << "  => E. Const. " << model->mEventConstraints[i]->mId
-            << " : event " << model->mEventConstraints[i]->mEventFrom->mId << "(" + model->mEventConstraints[i]->mEventFrom->mName + ")"
-            << " to " << model->mEventConstraints[i]->mEventTo->mId << "(" + model->mEventConstraints[i]->mEventTo->mName + ")";
-    }
-    qDebug() << "=> Phase Constraints : " << model->mPhaseConstraints.size();
-    for(int i=0; i<model->mPhaseConstraints.size(); ++i)
-    {
-        qDebug() << "  => P. Const. " << model->mPhaseConstraints[i]->mId
-        << " : phase " << model->mPhaseConstraints[i]->mPhaseFrom->mId
-        << " to " << model->mPhaseConstraints[i]->mPhaseTo->mId;
-    }
-    qDebug() << "===========================================";*/
-    
     return model;
 }
 
@@ -257,6 +192,76 @@ QJsonObject Model::toJson() const
     json["phase_constraints"] = phase_constraints;
     
     return json;
+}
+
+QString Model::modelLog() const
+{
+    QString log;
+    
+    log += line(textBold(QString::number(mEvents.size()) + " events"));
+    for(int i=0; i<mEvents.size(); ++i)
+    {
+        QString objType = "Event";
+        if(mEvents[i]->type() == Event::eKnown)
+        {
+            log += line(textRed("-> Bound : " + mEvents[i]->mName + ", " +
+                                 QString::number(mEvents[i]->mPhases.size()) + " phases, " +
+                                 QString::number(mEvents[i]->mConstraintsBwd.size()) + " const. back., " +
+                                 QString::number(mEvents[i]->mConstraintsFwd.size()) + " const. fwd.)"));
+        }
+        else
+        {
+            log += line(textBlue("-> " + mEvents[i]->mName + " : " +
+                                 QString::number(mEvents[i]->mDates.size()) + " data, " +
+                                 QString::number(mEvents[i]->mPhases.size()) + " phases, " +
+                                 QString::number(mEvents[i]->mConstraintsBwd.size()) + " const. back., " +
+                                 QString::number(mEvents[i]->mConstraintsFwd.size()) + " const. fwd."));
+        }
+        
+        for(int j=0; j<mEvents[i]->mDates.size(); ++j)
+        {
+            log += line(textGreen("-> " + mEvents[i]->mDates[j].mName +
+                                  "<br>Type : " + mEvents[i]->mDates[j].mPlugin->getName() +
+                                  "<br>Method : " + ModelUtilities::getDataMethodText(mEvents[i]->mDates[j].mMethod) +
+                                  "<br>Params : " + mEvents[i]->mDates[j].getDesc()));
+        }
+    }
+    
+    log += line(textBold(QString::number(mPhases.size()) + " phases"));
+    for(int i=0; i<mPhases.size(); ++i)
+    {
+        log += line(textPurple(mPhases[i]->mName + " (" + QString::number(mPhases[i]->mEvents.size()) + ")"));
+        
+        for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
+        {
+            log += line(textBlue("-> " + mPhases[i]->mEvents[j]->mName));
+        }
+    }
+    return log;
+    
+    
+    /*qDebug() << "=> Phases : " << model->mPhases.size();
+     for(int i=0; i<model->mPhases.size(); ++i)
+     {
+     qDebug() << "  => Phase " << model->mPhases[i]->mId << " : " << model->mPhases[i]->mEvents.size() << " events"
+     << " : " << model->mPhases[i]->mConstraintsBwd.size() << " const. back."
+     << " : " << model->mPhases[i]->mConstraintsFwd.size() << " const. fwd.";
+     }
+     qDebug() << "=> Event Constraints : " << model->mEventConstraints.size();
+     for(int i=0; i<model->mEventConstraints.size(); ++i)
+     {
+     qDebug() << "  => E. Const. " << model->mEventConstraints[i]->mId
+     << " : event " << model->mEventConstraints[i]->mEventFrom->mId << "(" + model->mEventConstraints[i]->mEventFrom->mName + ")"
+     << " to " << model->mEventConstraints[i]->mEventTo->mId << "(" + model->mEventConstraints[i]->mEventTo->mName + ")";
+     }
+     qDebug() << "=> Phase Constraints : " << model->mPhaseConstraints.size();
+     for(int i=0; i<model->mPhaseConstraints.size(); ++i)
+     {
+     qDebug() << "  => P. Const. " << model->mPhaseConstraints[i]->mId
+     << " : phase " << model->mPhaseConstraints[i]->mPhaseFrom->mId
+     << " to " << model->mPhaseConstraints[i]->mPhaseTo->mId;
+     }
+     qDebug() << "===========================================";*/
 }
 
 bool Model::isValid()

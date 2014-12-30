@@ -24,6 +24,7 @@ QString textBold(const QString& str);
 QString textRed(const QString& str);
 QString textGreen(const QString& str);
 QString textBlue(const QString& str);
+QString textPurple(const QString& str);
 
 
 #endif

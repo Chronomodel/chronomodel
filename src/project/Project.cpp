@@ -1737,6 +1737,7 @@ void Project::run()
         {
             if(loop.mAbortedReason.isEmpty())
             {
+                mModel->mMCMCLog = loop.getMCMCLog() + "<br><br>" + loop.getInitLog();
                 emit mcmcFinished(mModel);
             }
             else

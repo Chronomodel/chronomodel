@@ -9,22 +9,35 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
 {
     mModelView = new ModelView();
     mResultsView = new ResultsView();
-    mLogEdit = new QTextEdit();
     
-    mLogEdit->setReadOnly(true);
-    mLogEdit->setAcceptRichText(true);
-    /*QPalette palette = mLogEdit->palette();
-    palette.setColor(QPalette::Base, QColor(0, 0, 0, 255));
-    palette.setColor(QPalette::Text, Qt::white);
-    mLogEdit->setPalette(palette);*/
-    QFont font = mLogEdit->font();
+    mLogModelEdit = new QTextEdit();
+    mLogModelEdit->setReadOnly(true);
+    mLogModelEdit->setAcceptRichText(true);
+    
+    mLogInitEdit = new QTextEdit();
+    mLogInitEdit->setReadOnly(true);
+    mLogInitEdit->setAcceptRichText(true);
+    
+    mLogResultsEdit = new QTextEdit();
+    mLogResultsEdit->setReadOnly(true);
+    mLogResultsEdit->setAcceptRichText(true);
+    
+    QFont font = mLogInitEdit->font();
     font.setPointSizeF(pointSize(11));
-    mLogEdit->setFont(font);
+    
+    mLogModelEdit->setFont(font);
+    mLogInitEdit->setFont(font);
+    mLogResultsEdit->setFont(font);
+    
+    mLogTabs = new QTabWidget();
+    mLogTabs->addTab(mLogModelEdit, tr("Model Log"));
+    mLogTabs->addTab(mLogInitEdit, tr("MCMC Log"));
+    mLogTabs->addTab(mLogResultsEdit, tr("Results Log"));
     
     mStack = new QStackedWidget();
     mStack->addWidget(mModelView);
     mStack->addWidget(mResultsView);
-    mStack->addWidget(mLogEdit);
+    mStack->addWidget(mLogTabs);
     mStack->setCurrentIndex(0);
     
     QHBoxLayout* layout = new QHBoxLayout();
@@ -79,7 +92,10 @@ void ProjectView::showHelp(bool show)
 void ProjectView::updateLog(Model* model)
 {
     if(model)
-        mLogEdit->setText(model->mLog);
+    {
+        mLogModelEdit->setText(model->modelLog());
+        mLogInitEdit->setText(model->mMCMCLog);
+    }
 }
 
 

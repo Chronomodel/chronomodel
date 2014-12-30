@@ -15,8 +15,7 @@ public:
 protected:
     virtual QString calibrate();
     virtual void initVariablesForChain();
-    virtual void initMCMC();
-    virtual void initMCMC2();
+    virtual QString initMCMC();
     virtual void update();
     virtual bool adapt();
     virtual void finalize();

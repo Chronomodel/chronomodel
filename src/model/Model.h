@@ -17,9 +17,6 @@ class Model: public QObject
     Q_OBJECT
 public:
     Model();
-    /*Model(const Model& model);
-    Model& operator=(const Model& model);
-    void copyFrom(const Model& model);*/
     virtual ~Model();
 
     static Model* fromJson(const QJsonObject& json);
@@ -39,8 +36,8 @@ public:
     // Trace and Posterior density needed for this :
     void generateNumericalResults(const QList<Chain>& chains);
     
-signals:
-    void modelLogCreated(const QString& log);
+    
+    QString modelLog() const;
     
 public:
     ProjectSettings mSettings;
@@ -53,7 +50,7 @@ public:
     
     QList<Chain> mChains;
     
-    static QString mLog;
+    QString mMCMCLog;
 };
 
 #endif

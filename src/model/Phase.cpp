@@ -186,10 +186,12 @@ double Phase::getMaxThetaEvents(double tmax)
         if(mEvents[i]->mInitialized)
         {
             if(!found)
+            {
                 theta = mEvents[i]->mTheta.mX;
+                found = true;
+            }
             else
             {
-                found = true;
                 theta = std::max(theta, mEvents[i]->mTheta.mX);
             }
         }
@@ -206,10 +208,12 @@ double Phase::getMinThetaEvents(double tmin)
         if(mEvents[i]->mInitialized)
         {
             if(!found)
+            {
                 theta = mEvents[i]->mTheta.mX;
+                found = true;
+            }
             else
             {
-                found = true;
                 theta = std::min(theta, mEvents[i]->mTheta.mX);
             }
         }

@@ -48,9 +48,14 @@ const QList<Chain>& MCMCLoop::chains()
     return mChains;
 }
 
-const QString& MCMCLoop::getLog() const
+const QString& MCMCLoop::getMCMCLog() const
 {
     return mLog;
+}
+
+const QString& MCMCLoop::getInitLog() const
+{
+    return mInitLog;
 }
 
 void MCMCLoop::run()
@@ -60,17 +65,9 @@ void MCMCLoop::run()
     
     QTime startTotalTime = QTime::currentTime();
     
-    mLog += "\n################################################\n";
-    mLog += tr("MCMC START") + "\n";
-    mLog += "################################################\n";
-    
     mLog += "Start time : " + startTotalTime.toString() + "\n";
     
     //----------------------- Calibrating --------------------------------------
-    
-    mLog += "------------------------------------------------\n";
-    mLog += tr("CALIBRATION") + "\n";
-    mLog += "------------------------------------------------\n";
     
     emit stepChanged(tr("Calibrating data..."), 0, 0);
     
@@ -92,7 +89,6 @@ void MCMCLoop::run()
     {
         mLog += "================================================\n";
         mLog += tr("CHAIN") + " " + QString::number(mChainIndex + 1) + "\n";
-        mLog += "================================================\n";
         
         QTime startChainTime = QTime::currentTime();
         
@@ -105,25 +101,17 @@ void MCMCLoop::run()
         
         //----------------------- Initializing --------------------------------------
         
-        mLog += "------------------------------------------------\n";
-        mLog += tr("INIT") + "\n";
-        mLog += "------------------------------------------------\n";
-        
         emit stepChanged("Chain " + QString::number(mChainIndex+1) + " : " + tr("Initializing MCMC"), 0, 0);
         
         QTime startInitTime = QTime::currentTime();
         
-        this->initMCMC2();
+        mInitLog = this->initMCMC();
         
         QTime endInitTime = QTime::currentTime();
         timeDiff = startInitTime.msecsTo(endInitTime);
         mLog += "=> Init done in " + QString::number(timeDiff) + " ms\n";
         
         //----------------------- Burning --------------------------------------
-        
-        mLog += "------------------------------------------------\n";
-        mLog += tr("BURN") + "\n";
-        mLog += "------------------------------------------------\n";
         
         emit stepChanged("Chain " + QString::number(mChainIndex+1) + " : " + tr("Burning"), 0, chain.mNumBurnIter);
         mState = eBurning;
@@ -148,10 +136,6 @@ void MCMCLoop::run()
         mLog += "=> Burn done in " + QString::number(timeDiff) + " ms\n";
         
         //----------------------- Adapting --------------------------------------
-        
-        mLog += "------------------------------------------------\n";
-        mLog += tr("ADAPT") + "\n";
-        mLog += "------------------------------------------------\n";
         
         emit stepChanged("Chain " + QString::number(mChainIndex+1) + " : " + tr("Adapting"), 0, chain.mMaxBatchs * chain.mNumBatchIter);
         mState = eAdapting;
@@ -190,10 +174,6 @@ void MCMCLoop::run()
         mLog += "=> Adapt done in " + QString::number(timeDiff) + " ms\n";
         
         //----------------------- Running --------------------------------------
-        
-        mLog += "------------------------------------------------\n";
-        mLog += tr("ACQUIRE") + "\n";
-        mLog += "------------------------------------------------\n";
         
         emit stepChanged("Chain " + QString::number(mChainIndex+1) + " : " + tr("Running"), 0, chain.mNumRunIter);
         mState = eRunning;
@@ -243,10 +223,6 @@ void MCMCLoop::run()
     mLog += "=> Histos and results computed in " + QString::number(timeDiff) + " ms\n";
     
     mLog += "End time : " + endFinalizeTime.toString() + "\n";
-    
-    mLog += "\n################################################\n";
-    mLog += tr("MCMC END") + "\n";
-    mLog += "################################################\n";
     
     //-----------------------------------------------------------------------
     
