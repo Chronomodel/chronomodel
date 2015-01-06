@@ -32,7 +32,7 @@ HelpWidget::~HelpWidget()
 
 void HelpWidget::setText(const QString& text)
 {
-    mText = tr("Help") + " : " + text;
+    mText = text;
     update();
 }
 

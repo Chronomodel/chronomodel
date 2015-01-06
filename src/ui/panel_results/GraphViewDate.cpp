@@ -282,7 +282,7 @@ void GraphViewDate::refresh()
                 mGraph->setRangeY(-1, 1);
                 
                 double n = variable->runTraceForChain(mChains, chainIdx).size();
-                double limit = 1.96f / sqrtf(n);
+                double limit = 1.96f / sqrt(n);
                 
                 //qDebug() << n << ", " <<limit;
                 

@@ -281,7 +281,7 @@ void GraphViewEvent::refresh()
                 mGraph->setRangeY(-1, 1);
                 
                 double n = mEvent->mTheta.runTraceForChain(mChains, chainIdx).size();
-                double limit = 1.96f / sqrtf(n);
+                double limit = 1.96f / sqrt(n);
                 
                 //qDebug() << n << ", " <<limit;
                 

@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 #ifdef Q_OS_MAC
     if(math_errhandling & MATH_ERREXCEPT)
     {
-        std::cout << "cmath raises exceptions" << std::endl;
+        //std::cout << "cmath raises exceptions" << std::endl;
         feclearexcept(FE_ALL_EXCEPT);
     }
     if(math_errhandling & MATH_ERRNO)
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
     qApp->setAttribute(Qt::AA_UseHighDpiPixmaps);
     
     
-    qInstallMessageHandler(customMessageHandler);
+    //qInstallMessageHandler(customMessageHandler);
     
     //QApplication::setStyle(new DarkBlueStyle());
     
