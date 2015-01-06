@@ -16,6 +16,7 @@
 #include "StdUtilities.h"
 #include "QtUtilities.h"
 #include "ModelUtilities.h"
+#include "PluginOptionsDialog.h"
 #include <QtWidgets>
 
 
@@ -75,6 +76,9 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     
     // ---------------
     
+    mOptsBut = new Button(tr("Options"), mDefaultView);
+    mOptsBut->setFlatVertical();
+    
     mMergeBut = new Button(tr("Combine"), mDefaultView);
     mMergeBut->setFlatVertical();
     mMergeBut->setEnabled(false);
@@ -84,6 +88,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mSplitBut->setEnabled(false);
     
     
+    connect(mOptsBut, SIGNAL(clicked()), this, SLOT(showDatesOptions()));
     connect(mMergeBut, SIGNAL(clicked()), this, SLOT(sendMergeSelectedDates()));
     connect(mSplitBut, SIGNAL(clicked()), this, SLOT(sendSplitDate()));
     
@@ -132,7 +137,7 @@ EventPropertiesView::~EventPropertiesView()
 #pragma mark Event Managment
 void EventPropertiesView::setEvent(const QJsonObject& event)
 {
-    qDebug() << "Event Property view updated";
+    //qDebug() << "Event Property view updated";
     mEvent = event;
     updateEvent();
 }
@@ -448,6 +453,35 @@ void EventPropertiesView::sendSplitDate()
 }
 
 
+#pragma mark Dates Options
+void EventPropertiesView::showDatesOptions()
+{
+    // ---------------------------------------------------------
+    //  TODO : each plugin should return (or not) a view with
+    //  a set of options that can be applied to all dates of this type.
+    //  For now, we just use a simple temporary dialog
+    // ---------------------------------------------------------
+    
+    PluginOptionsDialog dialog(qApp->activeWindow(), Qt::Sheet);
+    
+    /*const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
+    for(int i=0; i<plugins.size(); ++i)
+    {
+        QWidget* plgOptsView = plugins[i]->optionsView();
+        if(plgOptsView)
+        {
+            dialog.addOptions(plugins[i]->getName(), plgOptsView);
+        }
+    }*/
+    
+    if(dialog.exec() == QDialog::Accepted)
+    {
+        QString ref14C = dialog.getC14Ref();
+        Project* project = MainWindow::getInstance()->getProject();
+        project->updateAll14CData(ref14C);
+    }
+}
+
 
 #pragma mark Layout
 void EventPropertiesView::paintEvent(QPaintEvent* e)
@@ -516,8 +550,9 @@ void EventPropertiesView::updateLayout()
         y += butH;
     }
     
-    mMergeBut->setGeometry(x, comboH + m + listRect.height() - 4*butH, butW, butH);
-    mSplitBut->setGeometry(x, comboH + m + listRect.height() - 3*butH, butW, butH);
+    mMergeBut->setGeometry(x, comboH + m + listRect.height() - 5*butH, butW, butH);
+    mSplitBut->setGeometry(x, comboH + m + listRect.height() - 4*butH, butW, butH);
+    mOptsBut->setGeometry(x, comboH + m + listRect.height() - 3*butH, butW, butH);
     mDeleteBut->setGeometry(x, comboH + m + listRect.height() - 2*butH, butW, butH);
     mRecycleBut->setGeometry(x, comboH + m + listRect.height() - butH, butW, butH);
     

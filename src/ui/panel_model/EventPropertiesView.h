@@ -45,6 +45,7 @@ private slots:
     void recycleDates();
     void updateDatesSelection();
     
+    void showDatesOptions();
     void sendMergeSelectedDates();
     void sendSplitDate();
     
@@ -82,6 +83,7 @@ private:
     Button* mDeleteBut;
     Button* mRecycleBut;
     
+    Button* mOptsBut;
     Button* mMergeBut;
     Button* mSplitBut;
     
