@@ -208,11 +208,13 @@ HEADERS += src/ui/dialogs/PhaseDialog.h
 HEADERS += src/ui/dialogs/DateDialog.h
 HEADERS += src/ui/dialogs/TrashDialog.h
 HEADERS += src/ui/dialogs/StepDialog.h
+HEADERS += src/ui/dialogs/PluginOptionsDialog.h
 
 HEADERS += src/ui/graphs/GraphViewAbstract.h
 HEADERS += src/ui/graphs/GraphView.h
 HEADERS += src/ui/graphs/GraphCurve.h
 HEADERS += src/ui/graphs/GraphZone.h
+HEADERS += src/ui/graphs/AxisTool.h
 HEADERS += src/ui/graphs/Ruler.h
 
 HEADERS += src/ui/lookandfeel/Painting.h
@@ -337,11 +339,13 @@ SOURCES += src/ui/dialogs/ConstraintDialog.cpp
 SOURCES += src/ui/dialogs/DateDialog.cpp
 SOURCES += src/ui/dialogs/TrashDialog.cpp
 SOURCES += src/ui/dialogs/StepDialog.cpp
+SOURCES += src/ui/dialogs/PluginOptionsDialog.cpp
 
 SOURCES += src/ui/graphs/GraphViewAbstract.cpp
 SOURCES += src/ui/graphs/GraphView.cpp
 SOURCES += src/ui/graphs/GraphCurve.cpp
 SOURCES += src/ui/graphs/GraphZone.cpp
+SOURCES += src/ui/graphs/AxisTool.cpp
 SOURCES += src/ui/graphs/Ruler.cpp
 
 SOURCES += src/ui/lookandfeel/Painting.cpp
