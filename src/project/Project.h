@@ -14,6 +14,7 @@
 #include <QJsonObject>
 
 #define PROJECT_LOADED_REASON "project loaded"
+#define NEW_PROJECT_REASON "new project"
 
 class Date;
 class Date;
@@ -68,6 +69,7 @@ public:
     void setAppSettings(const AppSettings& settings);
     
     bool studyPeriodIsValid();
+    void showStudyPeriodWarning();
     
     // ---------------------------
     
@@ -85,6 +87,9 @@ public:
     void deleteDates(int eventId, const QList<int>& dateIndexes);
     void recycleDates(int eventId);
     void deleteSelectedTrashedDates(const QList<int>& ids);
+    
+    // TODO : Should be in Plugin14C but how ??
+    void updateAll14CData(const QString& refCurve);
     
     void updatePhase(const QJsonObject& phaseIn);
     int getUnusedPhaseId(const QJsonArray& phases);
@@ -122,7 +127,6 @@ public slots:
 signals:
     void projectStateChanged();
     void currentEventChanged(const QJsonObject& event);
-    void currentDateChanged(const QJsonObject& date);
     void currentPhaseChanged(const QJsonObject& phase);
     void selectedEventsChanged();
     void selectedPhasesChanged();

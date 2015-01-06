@@ -37,6 +37,10 @@
 #include <QJsonObject>
 
 
+// Temporary
+#include "Plugin14C.h"
+
+
 
 Project::Project():
 mName(tr("Chronomodel Project")),
@@ -63,7 +67,7 @@ Project::~Project()
 void Project::initState()
 {
     QJsonObject state = emptyState();
-    pushProjectState(state, tr("New Project"), true, false);
+    pushProjectState(state, NEW_PROJECT_REASON, true, false);
 }
 
 QJsonObject Project::emptyState() const
@@ -119,7 +123,9 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
 
 void Project::sendUpdateState(const QJsonObject& state, const QString& reason, bool notify)
 {
+#if DEBUG
     qDebug() << " +++  Sending : " << reason;
+#endif
     StateEvent* event = new StateEvent(state, reason, notify);
     QCoreApplication::postEvent(this, event, Qt::NormalEventPriority);
 }
@@ -137,13 +143,17 @@ bool Project::event(QEvent* e)
     }
     else if(e->type() == 1001)
     {
+#if DEBUG
         qDebug() << "(---) Receiving events selection : adapt checked phases";
+#endif
         emit selectedEventsChanged();
         return true;
     }
     else if(e->type() == 1002)
     {
+#if DEBUG
         qDebug() << "(---) Receiving phases selection : adapt selected events";
+#endif
         emit selectedPhasesChanged();
         return true;
     }
@@ -155,7 +165,9 @@ bool Project::event(QEvent* e)
 
 void Project::updateState(const QJsonObject& state, const QString& reason, bool notify)
 {
+#if DEBUG
     qDebug() << " ---  Receiving : " << reason;
+#endif
     mState = state;
     if(notify)
     {
@@ -172,6 +184,10 @@ void Project::updateState(const QJsonObject& state, const QString& reason, bool 
             //progress.setMinimumDuration(0);
             progress->show();
         }
+        else if(reason == NEW_PROJECT_REASON)
+        {
+            showStudyPeriodWarning();
+        }
         
         emit projectStateChanged();
         
@@ -185,14 +201,18 @@ void Project::updateState(const QJsonObject& state, const QString& reason, bool 
 
 void Project::sendEventsSelectionChanged()
 {
+#if DEBUG
     qDebug() << "(+++) Sending events selection : use marked events";
+#endif
     QEvent* e = new QEvent((QEvent::Type)1001);
     QCoreApplication::postEvent(this, e, Qt::NormalEventPriority);
 }
 
 void Project::sendPhasesSelectionChanged()
 {
+#if DEBUG
     qDebug() << "(+++) Sending phases selection : use marked phases";
+#endif
     QEvent* e = new QEvent((QEvent::Type)1002);
     QCoreApplication::postEvent(this, e, Qt::NormalEventPriority);
 }
@@ -204,7 +224,9 @@ void Project::sendPhasesSelectionChanged()
 bool Project::load(const QString& path)
 {
     QFile file(path);
+#if DEBUG
     qDebug() << "Loading project file : " << path;
+#endif
     if(file.open(QIODevice::ReadOnly))
     {
         QFileInfo info(path);
@@ -258,8 +280,9 @@ bool Project::load(const QString& path)
             QFile dataFile(dataPath);
             if(dataFile.exists())
             {
+#if DEBUG
                 qDebug() << "Loading model file : " << dataPath;
-                
+#endif       
                 mModel = Model::fromJson(mState);
                 try{
                     mModel->restoreFromFile(dataPath);
@@ -351,7 +374,9 @@ bool Project::saveProjectToFile()
         QFile file(path);
         if(file.open(QIODevice::ReadWrite))
         {
+#if DEBUG
             qDebug() << "Project saved to : " << path;
+#endif
             mLastSavedState = mState;
             
             QJsonDocument jsonDoc(mState);
@@ -368,7 +393,9 @@ bool Project::saveProjectToFile()
     }
     else
     {
+#if DEBUG
         qDebug() << "Nothing new to save in project model";
+#endif
     }
     if(mModel)
     {
@@ -413,24 +440,6 @@ void Project::setAppSettings(const AppSettings& settings)
         mAutoSaveTimer->start();
 }
 
-bool Project::studyPeriodIsValid()
-{
-    QJsonObject settings = mState[STATE_SETTINGS].toObject();
-    int tmin = settings[STATE_SETTINGS_TMIN].toInt();
-    int tmax = settings[STATE_SETTINGS_TMAX].toInt();
-    if(tmin >= tmax)
-    {
-        QMessageBox message(QMessageBox::Warning,
-                            tr("Study period definition required"),
-                            tr("You need to define a study period in years (begin, end and step) before creating your model!"),
-                            QMessageBox::Ok,
-                            qApp->activeWindow(),
-                            Qt::Sheet);
-        message.exec();
-    }
-    return (tmin < tmax);
-}
-
 void Project::mcmcSettings()
 {
     MCMCSettingsDialog dialog(qApp->activeWindow(), Qt::Sheet);
@@ -446,6 +455,30 @@ void Project::mcmcSettings()
         stateNext[STATE_MCMC] = settings.toJson();
         pushProjectState(stateNext, tr("MCMC Settings updated"), true);
     }
+}
+
+bool Project::studyPeriodIsValid()
+{
+    QJsonObject settings = mState[STATE_SETTINGS].toObject();
+    int tmin = settings[STATE_SETTINGS_TMIN].toInt();
+    int tmax = settings[STATE_SETTINGS_TMAX].toInt();
+    if(tmin >= tmax)
+    {
+        showStudyPeriodWarning();
+    }
+    return (tmin < tmax);
+}
+
+void Project::showStudyPeriodWarning()
+{
+    // Display help message
+    QMessageBox message(QMessageBox::Information,
+                        tr("Study period definition required"),
+                        tr("To start your new project, you first have to define a study period and click the \"Apply\" button."),
+                        QMessageBox::Ok,
+                        qApp->activeWindow(),
+                        Qt::Sheet);
+    message.exec();
 }
 
 // --------------------------------------------------------------------
@@ -687,63 +720,30 @@ Date Project::createDateFromPlugin(PluginAbstract* plugin)
         
         if(dialog.exec() == QDialog::Accepted)
         {
-            date.mPlugin = plugin;
-            date.mData = form->getData();
-            
-            date.mName = dialog.getName();
-            date.mMethod = dialog.getMethod();
-            date.mDeltaType = dialog.getDeltaType();
-            date.mDeltaFixed = dialog.getDeltaFixed();
-            date.mDeltaMin = dialog.getDeltaMin();
-            date.mDeltaMax = dialog.getDeltaMax();
-            date.mDeltaAverage = dialog.getDeltaAverage();
-            date.mDeltaError = dialog.getDeltaError();
-        }
-    }
-    return date;
-}
-
-Date Project::createDateFromData(const QString& pluginName, const QStringList& dataStr)
-{
-    Date date;
-    PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
-    if(plugin)
-    {
-        date.mName = dataStr[0];
-        date.mPlugin = plugin;
-        date.mMethod = plugin->getDataMethod();
-        date.mData = plugin->dataFromList(dataStr);
-        
-        int minColNum = plugin->csvMinColumns();
-        if(dataStr.size() >= minColNum + 2)
-        {
-            QString deltaType = dataStr[minColNum];
-            QString delta1 = dataStr[minColNum + 1];
-            QString delta2 = "0";
-            if(dataStr.size() >= minColNum + 3)
-                delta2 = dataStr[minColNum + 2];
-            
-            if(!deltaType.contains("//") && !delta1.contains("//") && !delta2.contains("//"))
+            if(form->isValid())
             {
-                if(deltaType == "fixed")
-                {
-                    date.mDeltaType = Date::eDeltaFixed;
-                    date.mDeltaFixed = delta1.toDouble();
-                }
-                else if(deltaType == "range")
-                {
-                    date.mDeltaType = Date::eDeltaRange;
-                    date.mDeltaMin = delta1.toDouble();
-                    date.mDeltaMax = delta2.toDouble();
-                }
-                else if(deltaType == "gaussian")
-                {
-                    date.mDeltaType = Date::eDeltaGaussian;
-                    date.mDeltaAverage = delta1.toDouble();
-                    date.mDeltaError = delta2.toDouble();
-                }
+                date.mPlugin = plugin;
+                date.mData = form->getData();
+                
+                date.mName = dialog.getName();
+                date.mMethod = dialog.getMethod();
+                date.mDeltaType = dialog.getDeltaType();
+                date.mDeltaFixed = dialog.getDeltaFixed();
+                date.mDeltaMin = dialog.getDeltaMin();
+                date.mDeltaMax = dialog.getDeltaMax();
+                date.mDeltaAverage = dialog.getDeltaAverage();
+                date.mDeltaError = dialog.getDeltaError();
             }
-            
+            else
+            {
+                QMessageBox message(QMessageBox::Critical,
+                                    tr("Invalid data"),
+                                    form->mError,
+                                    QMessageBox::Ok,
+                                    qApp->activeWindow(),
+                                    Qt::Sheet);
+                message.exec();
+            }
         }
     }
     return date;
@@ -796,25 +796,38 @@ void Project::updateDate(int eventId, int dateIndex)
                 
                 if(dialog.exec() == QDialog::Accepted)
                 {
-                    date[STATE_DATE_DATA] = form->getData();
-                    date[STATE_NAME] = dialog.getName();
-                    date[STATE_DATE_METHOD] = dialog.getMethod();
-                    
-                    date[STATE_DATE_DELTA_TYPE] = dialog.getDeltaType();
-                    date[STATE_DATE_DELTA_FIXED] = dialog.getDeltaFixed();
-                    date[STATE_DATE_DELTA_MIN] = dialog.getDeltaMin();
-                    date[STATE_DATE_DELTA_MAX] = dialog.getDeltaMax();
-                    date[STATE_DATE_DELTA_AVERAGE] = dialog.getDeltaAverage();
-                    date[STATE_DATE_DELTA_ERROR] = dialog.getDeltaError();
-                    
-                    dates[dateIndex] = date;
-                    event[STATE_EVENT_DATES] = dates;
-                    events[i] = event;
-                    state[STATE_EVENTS] = events;
-                    
-                    pushProjectState(state, tr("Date updated"), true);
-                    
-                    //date->calibrate(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
+                    if(form->isValid())
+                    {
+                        date[STATE_DATE_DATA] = form->getData();
+                        date[STATE_NAME] = dialog.getName();
+                        date[STATE_DATE_METHOD] = dialog.getMethod();
+                        
+                        date[STATE_DATE_DELTA_TYPE] = dialog.getDeltaType();
+                        date[STATE_DATE_DELTA_FIXED] = dialog.getDeltaFixed();
+                        date[STATE_DATE_DELTA_MIN] = dialog.getDeltaMin();
+                        date[STATE_DATE_DELTA_MAX] = dialog.getDeltaMax();
+                        date[STATE_DATE_DELTA_AVERAGE] = dialog.getDeltaAverage();
+                        date[STATE_DATE_DELTA_ERROR] = dialog.getDeltaError();
+                        
+                        dates[dateIndex] = date;
+                        event[STATE_EVENT_DATES] = dates;
+                        events[i] = event;
+                        state[STATE_EVENTS] = events;
+                        
+                        pushProjectState(state, tr("Date updated"), true);
+                        
+                        //date->calibrate(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
+                    }
+                    else
+                    {
+                        QMessageBox message(QMessageBox::Critical,
+                                            tr("Invalid data"),
+                                            form->mError,
+                                            QMessageBox::Ok,
+                                            qApp->activeWindow(),
+                                            Qt::Sheet);
+                        message.exec();
+                    }
                 }
             }
             break;
@@ -874,6 +887,38 @@ void Project::deleteSelectedTrashedDates(const QList<int>& ids)
     stateNext[STATE_DATES_TRASH] = dates_trash;
     
     pushProjectState(stateNext, tr("Trashed data deleted"), true);
+}
+
+// TODO : Should be in Plugin14C but how ??
+void Project::updateAll14CData(const QString& refCurve)
+{
+    QJsonObject stateNext = mState;
+    QJsonArray events = mState[STATE_EVENTS].toArray();
+    
+    for(int i=0; i<events.size(); ++i)
+    {
+        QJsonObject event = events[i].toObject();
+        if(event[STATE_EVENT_TYPE].toInt() == Event::eDefault)
+        {
+            QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+            for(int j=0; j<dates.size(); ++j)
+            {
+                QJsonObject date = dates[j].toObject();
+                if(date[STATE_DATE_PLUGIN_ID].toString() == "14c")
+                {
+                    QJsonObject data = date[STATE_DATE_DATA].toObject();
+                    data[DATE_14C_REF_CURVE_STR] = refCurve;
+                    date[STATE_DATE_DATA] = data;
+                    dates[j] = date;
+                }
+            }
+            event[STATE_EVENT_DATES] = dates;
+            events[i] = event;
+        }
+    }
+    stateNext[STATE_EVENTS] = events;
+    
+    pushProjectState(stateNext, tr("C14 Refs modified"), true);
 }
 
 void Project::recycleDates(int eventId)
