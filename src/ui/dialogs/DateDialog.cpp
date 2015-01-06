@@ -50,7 +50,7 @@ mButH(25)
     mDeltaGaussRadio = new RadioButton(tr("Wiggle Matching : Gaussian"), mAdvancedWidget);
     
     mMethodLab = new Label(tr("Method") + " :", mAdvancedWidget);
-    mDeltaHelp = new HelpWidget(tr("Wiggle Sign Help : \"+\" if data ≤ event, \"-\" if data ≥ event"), mAdvancedWidget);
+    mDeltaHelp = new HelpWidget(tr("Wiggle Sign : \"+\" if data ≤ event, \"-\" if data ≥ event"), mAdvancedWidget);
     mDeltaFixedLab = new Label(tr("Value") + " :", mAdvancedWidget);
     mDeltaMinLab = new Label(tr("Min") + " :", mAdvancedWidget);
     mDeltaMaxLab = new Label(tr("Max") + " :", mAdvancedWidget);
@@ -66,7 +66,7 @@ mButH(25)
     // ----------
     
     mAdvanced = new Collapsible(tr("Advanced"), this);
-    mAdvanced->setWidget(mAdvancedWidget, 10*mMargin + 8*mLineH + mComboH);
+    mAdvanced->setWidget(mAdvancedWidget, 11*mMargin + 8*mLineH + mComboH + mDeltaHelp->heightForWidth(mWidth - 4*mMargin));
     
     connect(mAdvanced, SIGNAL(collapsing(int)), this, SLOT(adaptSize()));
     
@@ -109,7 +109,7 @@ void DateDialog::setForm(PluginFormAbstract* form)
         PluginAbstract* plugin = form->mPlugin;
         if(plugin->wiggleAllowed())
         {
-            mAdvanced->setWidget(mAdvancedWidget, 10*mMargin + 8*mLineH + mComboH);
+            mAdvanced->setWidget(mAdvancedWidget, 11*mMargin + 8*mLineH + mComboH + mDeltaHelp->heightForWidth(mWidth - 4*mMargin));
         }
         else
         {
@@ -233,23 +233,23 @@ void DateDialog::updateLayout()
     
     int i = 1;
     mMethodLab->setGeometry(m, m, w1, mComboH);
-    mDeltaHelp->setGeometry(m, 2*m + mComboH, width() - 4*m, mLineH); ++i;
-    mDeltaFixedLab->setGeometry(m, 2*m + mComboH + i * (m + mLineH), w1, mLineH); ++i; ++i;
-    mDeltaMinLab->setGeometry(m, 2*m + mComboH + i * (m + mLineH), w1, mLineH); ++i;
-    mDeltaMaxLab->setGeometry(m, 2*m + mComboH + i * (m + mLineH), w1, mLineH); ++i; ++i;
-    mDeltaAverageLab->setGeometry(m, 2*m + mComboH + i * (m + mLineH), w1, mLineH); ++i;
-    mDeltaErrorLab->setGeometry(m, 2*m + mComboH + i * (m + mLineH), w1, mLineH); ++i;
+    mDeltaHelp->setGeometry(m, 2*m + mComboH, width() - 4*m, mDeltaHelp->heightForWidth(width() - 4*m));
+    mDeltaFixedLab->setGeometry(m, 3*m + mComboH + mDeltaHelp->height() + i * (m + mLineH), w1, mLineH); ++i; ++i;
+    mDeltaMinLab->setGeometry(m, 3*m + mComboH + mDeltaHelp->height() + i * (m + mLineH), w1, mLineH); ++i;
+    mDeltaMaxLab->setGeometry(m, 3*m + mComboH + mDeltaHelp->height() + i * (m + mLineH), w1, mLineH); ++i; ++i;
+    mDeltaAverageLab->setGeometry(m, 3*m + mComboH + mDeltaHelp->height() + i * (m + mLineH), w1, mLineH); ++i;
+    mDeltaErrorLab->setGeometry(m, 3*m + mComboH + mDeltaHelp->height() + i * (m + mLineH), w1, mLineH); ++i;
     
     i = 0;
     mMethodCombo->setGeometry(2*m + w1, m, w2, mComboH); ++i;
-    mDeltaFixedRadio->setGeometry(m, 2*m + mComboH + i * (m + mLineH), w - 4*m, mLineH); ++i;
-    mDeltaFixedEdit->setGeometry(2*m + w1, 2*m + mComboH + i * (m + mLineH), w2, mLineH); ++i;
-    mDeltaRangeRadio->setGeometry(m, 2*m + mComboH + i * (m + mLineH), w - 4*m, mLineH); ++i;
-    mDeltaMinEdit->setGeometry(2*m + w1, 2*m + mComboH + i * (m + mLineH), w2, mLineH); ++i;
-    mDeltaMaxEdit->setGeometry(2*m + w1, 2*m + mComboH + i * (m + mLineH), w2, mLineH); ++i;
-    mDeltaGaussRadio->setGeometry(m, 2*m + mComboH + i * (m + mLineH), w - 4*m, mLineH); ++i;
-    mDeltaAverageEdit->setGeometry(2*m + w1, 2*m + mComboH + i * (m + mLineH), w2, mLineH); ++i;
-    mDeltaErrorEdit->setGeometry(2*m + w1, 2*m + mComboH + i * (m + mLineH), w2, mLineH); ++i;
+    mDeltaFixedRadio->setGeometry(m, 3*m + mComboH + mDeltaHelp->height(), w - 4*m, mLineH);
+    mDeltaFixedEdit->setGeometry(2*m + w1, 3*m + mComboH + mDeltaHelp->height() + i * (m + mLineH), w2, mLineH); ++i;
+    mDeltaRangeRadio->setGeometry(m, 3*m + mComboH + mDeltaHelp->height() + i * (m + mLineH), w - 4*m, mLineH); ++i;
+    mDeltaMinEdit->setGeometry(2*m + w1, 3*m + mComboH + mDeltaHelp->height() + i * (m + mLineH), w2, mLineH); ++i;
+    mDeltaMaxEdit->setGeometry(2*m + w1, 3*m + mComboH + mDeltaHelp->height() + i * (m + mLineH), w2, mLineH); ++i;
+    mDeltaGaussRadio->setGeometry(m, 3*m + mComboH + mDeltaHelp->height() + i * (m + mLineH), w - 4*m, mLineH); ++i;
+    mDeltaAverageEdit->setGeometry(2*m + w1, 3*m + mComboH + mDeltaHelp->height() + i * (m + mLineH), w2, mLineH); ++i;
+    mDeltaErrorEdit->setGeometry(2*m + w1, 3*m + mComboH + mDeltaHelp->height() + i * (m + mLineH), w2, mLineH); ++i;
 }
 
 void DateDialog::adaptSize()
