@@ -9,6 +9,7 @@ class QScrollArea;
 class QTimer;
 class QComboBox;
 class QSlider;
+class QScrollBar;
 
 class Project;
 class Model;
@@ -50,9 +51,10 @@ public slots:
     void updateRulerAreas();
     
 private slots:
-    void setGraphZoom(double min, double max);
-    void updateScaleX(int value);
     void updateScaleY(int value);
+    void updateScaleX();
+    void updateScroll(double min, double max);
+    
     void updateRendering(int index);
     void showByPhases(bool show);
     void showByEvents(bool show);
@@ -73,6 +75,9 @@ private:
     ProjectSettings mSettings;
     MCMCSettings mMCMCSettings;
     QList<Chain> mChains;
+    
+    double mMinX;
+    double mMaxX;
     
     int mMargin;
     int mOptionsW;
@@ -98,10 +103,10 @@ private:
     
     QWidget* mOptionsWidget;
     
-    QWidget* mZoomWidget;
+    /*QWidget* mZoomWidget;
     Button* mZoomInBut;
     Button* mZoomDefaultBut;
-    Button* mZoomOutBut;
+    Button* mZoomOutBut;*/
     
     Label* mDisplayTitle;
     QWidget* mDisplayGroup;

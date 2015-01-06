@@ -50,9 +50,6 @@ mHasPhases(false)
     
     // -------------
     
-    mRuler = new Ruler(this);
-    mRuler->showControls(false);
-    
     mStack = new QStackedWidget(this);
     
     mEventsScrollArea = new QScrollArea();
@@ -72,8 +69,6 @@ mHasPhases(false)
     setMouseTracking(true);
     mStack->setMouseTracking(true);
     
-    connect(mRuler, SIGNAL(zoomChanged(double, double)), this, SLOT(setGraphZoom(double, double)));
-    
     // ----------
     
     mByPhasesBut = new Button(tr("Phases"), this);
@@ -90,27 +85,6 @@ mHasPhases(false)
     
     connect(mByPhasesBut, SIGNAL(toggled(bool)), this, SLOT(showByPhases(bool)));
     connect(mByEventsBut, SIGNAL(toggled(bool)), this, SLOT(showByEvents(bool)));
-    
-    // ----------
-    
-    mZoomWidget = new QWidget();
-    mZoomWidget->setFixedHeight(mRulerH);
-    
-    mZoomInBut = new Button(mZoomWidget);
-    mZoomInBut->setIcon(QIcon(":zoom_plus.png"));
-    mZoomInBut->setFlatHorizontal();
-    
-    mZoomOutBut = new Button(mZoomWidget);
-    mZoomOutBut->setIcon(QIcon(":zoom_minus.png"));
-    mZoomOutBut->setFlatHorizontal();
-    
-    mZoomDefaultBut = new Button(mZoomWidget);
-    mZoomDefaultBut->setIcon(QIcon(":zoom_default.png"));
-    mZoomDefaultBut->setFlatHorizontal();
-    
-    connect(mZoomInBut, SIGNAL(clicked()), mRuler, SLOT(zoomIn()));
-    connect(mZoomOutBut, SIGNAL(clicked()), mRuler, SLOT(zoomOut()));
-    connect(mZoomDefaultBut, SIGNAL(clicked()), mRuler, SLOT(zoomDefault()));
     
     // -------------------------
     
@@ -149,8 +123,12 @@ mHasPhases(false)
     mYSlider->setTickInterval(1);
     mYSlider->setValue(50);
     
-    connect(mXSlider, SIGNAL(valueChanged(int)), this, SLOT(updateScaleX(int)));
+    connect(mXSlider, SIGNAL(valueChanged(int)), this, SLOT(updateScaleX()));
     connect(mYSlider, SIGNAL(valueChanged(int)), this, SLOT(updateScaleY(int)));
+    
+    mRuler = new Ruler(this);
+    connect(mRuler, SIGNAL(positionChanged(double, double)), this, SLOT(updateScroll(double, double)));
+    
     
     mRenderLab = new Label(tr("Rendering :"));
     mRenderCombo = new QComboBox();
@@ -367,9 +345,9 @@ void ResultsView::updateLayout()
     mByEventsBut->setGeometry(mGraphLeft/2, 0, mGraphLeft/2, mRulerH);
     
     mTabs->setGeometry(mGraphLeft + graphYAxis, 0, width() - mGraphLeft - mOptionsW - sbe - graphYAxis, mTabsH);
-    mRuler->setGeometry(mGraphLeft + graphYAxis, mTabsH, width() - mGraphLeft - mOptionsW - sbe - graphYAxis, mRulerH);
+    mRuler->setGeometry(mGraphLeft + graphYAxis, mTabsH, width() - mGraphLeft - mOptionsW - sbe - graphYAxis - 10, mRulerH);
     mStack->setGeometry(0, mTabsH + mRulerH, width() - mOptionsW, height() - mRulerH - mTabsH);
-    mMarker->setGeometry(mMarker->pos().x(), mTabsH + sbe, mMarker->thickness(), height() - sbe - mTabsH);
+    mMarker->setGeometry(mMarker->pos().x(), mTabsH + mRulerH, mMarker->thickness(), height() - mRulerH - mTabsH);
     
     if(QWidget* wid = mEventsScrollArea->widget())
     {
@@ -398,12 +376,6 @@ void ResultsView::updateLayout()
     }
     
     mOptionsWidget->setGeometry(width() - mOptionsW, 0, mOptionsW, height());
-    
-    double zw = mOptionsW / 3;
-    double zh = mRulerH;
-    mZoomInBut->setGeometry(0, 0, zw, zh);
-    mZoomDefaultBut->setGeometry(zw, 0, zw, zh);
-    mZoomOutBut->setGeometry(2*zw, 0, zw, zh);
     
     int numChains = mCheckChainChecks.size();
     if(mTabs->currentIndex() == 0)
@@ -557,13 +529,18 @@ void ResultsView::updateRulerAreas()
     {
         int min = s.mTmin;
         int max = s.mTmax;
+        
         mRuler->clearAreas();
         mRuler->setRange(min, max);
         
         if(mDataThetaRadio->isChecked())
+        {
             mRuler->setRange(min, max);
+        }
         else if(mDataSigmaRadio->isChecked())
+        {
             mRuler->setRange(0, max - min);
+        }
     }
     else if(mTabs->currentIndex() == 3)
     {
@@ -597,6 +574,7 @@ void ResultsView::updateRulerAreas()
                             QColor(130, 205, 110));
         }
     }
+    updateScaleX();
 }
 
 void ResultsView::clearResults()
@@ -657,7 +635,9 @@ void ResultsView::updateResults(Model* model)
     if(!mModel)
         return;
     
-    //mRuler->setRange(model->mSettings.mTmin, model->mSettings.mTmax);
+    mMinX = model->mSettings.mTmin;
+    mMaxX = model->mSettings.mTmax;
+    mRuler->setRange(model->mSettings.mTmin, model->mSettings.mTmax);
     
     mHasPhases = (mModel->mPhases.size() > 0);
     
@@ -708,6 +688,9 @@ void ResultsView::updateResults(Model* model)
             graphEvent->setMCMCSettings(mModel->mMCMCSettings, mChains);
             graphEvent->setEvent(event);
             mByPhasesGraphs.append(graphEvent);
+            
+            // Do not display datas in phases layout,
+            // but if needed, it can be done by uncommenting this :
             
             /*for(int j=0; j<(int)event->mDates.size(); ++j)
             {
@@ -837,26 +820,18 @@ void ResultsView::exportFullImage()
     updateRendering(rendering);
 }
 
-void ResultsView::setGraphZoom(double min, double max)
+void ResultsView::updateScaleX()
+{
+    mRuler->setZoom(mXSlider->value());
+}
+
+void ResultsView::updateScroll(double min, double max)
 {
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
         mByPhasesGraphs[i]->zoom(min, max);
-        
+    
     for(int i=0; i<mByEventsGraphs.size(); ++i)
         mByEventsGraphs[i]->zoom(min, max);
-}
-
-void ResultsView::updateScaleX(int value)
-{
-    double prop = value / 100.f;
-    
-    // TODO !!
-    
-    /*for(int i=0; i<mByPhasesGraphs.size(); ++i)
-        mByPhasesGraphs[i]->zoom(min, max);
-    
-    for(int i=0; i<mByEventsGraphs.size(); ++i)
-        mByEventsGraphs[i]->zoom(min, max);*/
 }
 
 void ResultsView::updateScaleY(int value)
