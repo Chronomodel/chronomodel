@@ -59,6 +59,7 @@ void ProjectView::doProjectConnections(Project* project)
 
 void ProjectView::resetInterface()
 {
+    showModel();
     mModelView->resetInterface();
 }
 

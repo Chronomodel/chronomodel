@@ -241,8 +241,6 @@ ModelView::~ModelView()
 
 void ModelView::doProjectConnections(Project* project)
 {
-    connect(project, SIGNAL(currentDateChanged(const QJsonObject&)), this, SLOT(updateCalibration(const QJsonObject&)));
-    
     connect(mButNewEvent, SIGNAL(clicked()), project, SLOT(createEvent()));
     connect(mButNewEventKnown, SIGNAL(clicked()), project, SLOT(createEventKnown()));
     connect(mButDeleteEvent, SIGNAL(clicked()), project, SLOT(deleteSelectedEvents()));
@@ -261,9 +259,12 @@ void ModelView::doProjectConnections(Project* project)
 
 void ModelView::resetInterface()
 {
+    mEventsScene->clean();
+    mPhasesScene->clean();
     mCalibrationView->setDate(QJsonObject());
     mEventPropertiesView->setEvent(QJsonObject());
     mButProperties->click();
+    updateLayout();
 }
 
 void ModelView::updateProject()
@@ -369,6 +370,7 @@ void ModelView::adjustStep()
 void ModelView::studyPeriodChanging()
 {
     mButApply->setColorState(Button::eWarning);
+    hideCalibration();
 }
 
 void ModelView::showHelp(bool show)
@@ -491,6 +493,9 @@ void ModelView::updateLayout()
     mRightSubHiddenRect = mRightSubRect.adjusted(mRightSubRect.width() + 2*m, 0, mRightSubRect.width() + 2*m, 0);
     mHandlerRect = QRect(x - mHandlerW/2, 0, mHandlerW, height());
     
+    //qDebug() << "Model rect" << rect();
+    //qDebug() << "Right rect" << mRightRect;
+    
     // ----------
     
     mLeftWrapper->setGeometry(mLeftRect);
@@ -556,7 +561,7 @@ void ModelView::updateLayout()
     mButPhasesOverview->setGeometry(mRightSubRect.width() - butW, 3*butH, butW, butH);
     mPhasesGlobalZoom->setGeometry(mRightSubRect.width() - butW, 4*butH, butW, mRightRect.height() - 4*butH);
     
-    mCalibrationView->setGeometry(mLeftHiddenRect);
+    mCalibrationView->setGeometry(mCalibVisible ? mLeftRect : mLeftHiddenRect);
     mButBackEvents->setGeometry(mCalibrationView->width() - 30, 5, 25, 25);
     
     update();

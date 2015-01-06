@@ -16,6 +16,7 @@ public:
     void sendUpdateProject(const QString& reason, bool notify, bool async);
     
 public slots:
+    void clean();
     void updateProject();
     void updateSelection(bool forced = false);
     void updateCheckedPhases();

@@ -25,6 +25,8 @@ public:
     void showHelp(bool show);
     
 public slots:
+    void clean();
+    
     void updateProject();
     void updateSelection(bool force = false);
     void updateHelp();

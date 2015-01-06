@@ -16,6 +16,8 @@ public:
     ~AbstractScene();
 
 public:
+    virtual void clean() = 0;
+    
     virtual void constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e) = 0;
     virtual void constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e) = 0;
     

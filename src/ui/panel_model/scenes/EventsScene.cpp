@@ -232,7 +232,9 @@ void EventsScene::updateProject()
                     delete dateItems[j];
                 }
             }
+#if DEBUG
             qDebug() << "Event deleted : " << event[STATE_ID].toInt();
+#endif
             mItems.removeAt(i);
             hasDeleted = true;
             
@@ -261,7 +263,9 @@ void EventsScene::updateProject()
                 if(event != itemEvent || settingsChanged)
                 {
                     // UPDATE ITEM
+#if DEBUG
                     qDebug() << "Event updated : id = " << event[STATE_ID].toInt();
+#endif
                     item->setEvent(event, settings);
                 }
             }
@@ -278,7 +282,9 @@ void EventsScene::updateProject()
             
             mItems.append(eventItem);
             addItem(eventItem);
+#if DEBUG
             qDebug() << "Event created : id = " << event[STATE_ID].toInt() << ", type : " << type;
+#endif
         }
     }
     
@@ -292,7 +298,9 @@ void EventsScene::updateProject()
         
         if(!constraints_ids.contains(constraint[STATE_ID].toInt()))
         {
+#if DEBUG
             qDebug() << "Event Constraint deleted : " << constraint[STATE_ID].toInt();
+#endif
             removeItem(constraintItem);
             mConstraintItems.removeOne(constraintItem);
             delete constraintItem;
@@ -316,7 +324,9 @@ void EventsScene::updateProject()
                 if(constraint != constraintItem)
                 {
                     // UPDATE ITEM
+#if DEBUG
                     qDebug() << "Constraint updated : id = " << constraint[STATE_ID].toInt();
+#endif
                     mConstraintItems[j]->setData(constraint);
                 }
             }
@@ -327,7 +337,9 @@ void EventsScene::updateProject()
             ArrowItem* constraintItem = new ArrowItem(this, ArrowItem::eEvent, constraint);
             mConstraintItems.append(constraintItem);
             addItem(constraintItem);
+#if DEBUG
             qDebug() << "Constraint created : id = " << constraint[STATE_ID].toInt();
+#endif
         }
     }
     
@@ -342,6 +354,53 @@ void EventsScene::updateProject()
     }
     
     update(sceneRect());
+}
+
+void EventsScene::clean()
+{
+    // ------------------------------------------------------
+    //  Delete all items
+    // ------------------------------------------------------
+    for(int i=mItems.size()-1; i>=0; --i)
+    {
+        EventItem* eventItem = (EventItem*)mItems[i];
+        QJsonObject& event = eventItem->getEvent();
+        
+        if(event[STATE_EVENT_TYPE].toInt() == Event::eDefault)
+        {
+            QList<QGraphicsItem*> dateItems = eventItem->childItems();
+            for(int j=0; j<dateItems.size(); ++j)
+            {
+                removeItem(dateItems[j]);
+                delete dateItems[j];
+            }
+        }
+#if DEBUG
+        qDebug() << "Event deleted : " << event[STATE_ID].toInt();
+#endif
+        mItems.removeAt(i);
+        
+        // This does not break the code but is commented to match PhasesScene implementation
+        //removeItem(eventItem);
+        
+        eventItem->deleteLater();
+    }
+    
+    // ------------------------------------------------------
+    //  Delete all constraints
+    // ------------------------------------------------------
+    for(int i=mConstraintItems.size()-1; i>=0; --i)
+    {
+        ArrowItem* constraintItem = mConstraintItems[i];
+        QJsonObject& constraint = constraintItem->data();
+        
+#if DEBUG
+        qDebug() << "Event Constraint deleted : " << constraint[STATE_ID].toInt();
+#endif
+        removeItem(constraintItem);
+        mConstraintItems.removeOne(constraintItem);
+        delete constraintItem;
+    }
 }
 
 
@@ -639,7 +698,7 @@ QList<Date> EventsScene::decodeDataDrop(QGraphicsSceneDragDropEvent* e)
 {
     const QMimeData* mimeData = e->mimeData();
     
-    Project* project = MainWindow::getInstance()->getProject();
+    //Project* project = MainWindow::getInstance()->getProject();
     
     QByteArray encodedData = mimeData->data("application/chronomodel.import.data");
     QDataStream stream(&encodedData, QIODevice::ReadOnly);
@@ -660,9 +719,9 @@ QList<Date> EventsScene::decodeDataDrop(QGraphicsSceneDragDropEvent* e)
         // Remove first column corresponding to csvRow
         int csvRow = dataStr.takeFirst().toInt();
         
-        QString pluginName = dataStr.takeFirst();
+        //QString pluginName = dataStr.takeFirst();
         
-        Date date = project->createDateFromData(pluginName, dataStr);
+        Date date = Date::fromCSV(dataStr);// project->createDateFromData(pluginName, dataStr);
         if(!date.isNull())
         {
             dates << date;
