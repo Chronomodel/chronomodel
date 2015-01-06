@@ -15,6 +15,7 @@ mShowVertGrid(true),
 mShowHorizGrid(true),
 mXAxisMode(eAllTicks),
 mYAxisMode(eAllTicks),
+mAutoAdjustYScale(false),
 mShowInfos(false),
 mBackgroundColor(Qt::white),
 mTipX(0.),
@@ -52,6 +53,35 @@ void GraphView::zoomX(const double min, const double max)
     {
         mCurrentMinX = min;
         mCurrentMaxX = max;
+        
+        if(mAutoAdjustYScale)
+        {
+            double yMax = -100000000;
+            double yMin = 100000000;
+            for(int curveIndex=0; curveIndex<mCurves.size(); ++curveIndex)
+            {
+                const GraphCurve& curve = mCurves[curveIndex];
+                if(curve.mIsHorizontalLine)
+                {
+                    yMax = qMax(yMax, curve.mHorizontalValue);
+                    yMin = qMin(yMin, curve.mHorizontalValue);
+                }
+                else if(curve.mUseVectorData)
+                {
+                    QVector<double> subData = curve.getVectorDataInRange(mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
+                    yMax = qMax(yMax, vector_max_value(subData));
+                    yMin = qMin(yMin, vector_min_value(subData));
+                }
+                else if(!curve.mIsVertical && !curve.mIsVerticalLine && !curve.mIsHorizontalSections)
+                {
+                    QMap<double, double> subData = curve.getMapDataInRange(mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
+                    yMax = qMax(yMax, map_max_value(subData));
+                    yMin = qMin(yMin, map_min_value(subData));
+                }
+            }
+            if(yMax > yMin)
+                setRangeY(yMin, yMax);
+        }
         repaintGraph(true);
     }
 }
@@ -152,6 +182,12 @@ void GraphView::setYAxisMode(AxisMode mode)
         mAxisToolY.mMinMaxOnly = (mYAxisMode == eMinMax);
         repaintGraph(true);
     }
+}
+
+void GraphView::autoAdjustYScale(bool active)
+{
+    mAutoAdjustYScale = active;
+    repaintGraph(true);
 }
 
 /* ------------------------------------------------------
@@ -584,20 +620,8 @@ void GraphView::drawCurves(QPainter& painter)
                 
                 // Down sample vector
                 
-                QVector<double> subData;
-                if(mCurrentMinX != mMinX || mCurrentMaxX != mMaxX)
-                {
-                    int idxStart = floor(curve.mDataVector.size() * (mCurrentMinX - mMinX) / (mMaxX - mMinX));
-                    int idxEnd = floor(curve.mDataVector.size() * (mCurrentMaxX - mMinX) / (mMaxX - mMinX));
-                    for(int i=idxStart; i<idxEnd; ++i)
-                    {
-                        subData.append(curve.mDataVector[i]);
-                    }
-                }
-                else
-                {
-                    subData = curve.mDataVector;
-                }
+                QVector<double> subData = curve.getVectorDataInRange(mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
+                
                 QVector<double> lightData;
                 if(subData.size() > 2*mGraphWidth)
                 {
@@ -673,22 +697,8 @@ void GraphView::drawCurves(QPainter& painter)
                 
                 // Down sample curve for better performances
                 
-                QMap<double, double> subData;
-                if(mCurrentMinX != mMinX || mCurrentMaxX != mMaxX)
-                {
-                    QMapIterator<double, double> iter(curve.mData);
-                    while(iter.hasNext())
-                    {
-                        iter.next();
-                        double valueX = iter.key();
-                        if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
-                            subData[valueX] = iter.value();
-                    }
-                }
-                else
-                {
-                    subData = curve.mData;
-                }
+                QMap<double, double> subData = curve.getMapDataInRange(mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
+                
                 QMap<double, double> lightMap;
                 if(subData.size() > 4*mGraphWidth)
                 {

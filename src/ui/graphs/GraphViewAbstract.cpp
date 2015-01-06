@@ -45,9 +45,12 @@ void GraphViewAbstract::setRangeX(const double aMinX, const double aMaxX)
 
 void GraphViewAbstract::setRangeY(const double aMinY, const double aMaxY)
 {
-    mMinY = aMinY;
-    mMaxY = aMaxY;
-    repaintGraph(true);
+    if(aMinY != mMinY || aMaxY != mMaxY)
+    {
+        mMinY = aMinY;
+        mMaxY = aMaxY;
+        repaintGraph(true);
+    }
 }
 
 void GraphViewAbstract::setMinimumX(const double aMinX)				{mMinX = aMinX; repaintGraph(true);}

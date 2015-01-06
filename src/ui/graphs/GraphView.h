@@ -47,6 +47,7 @@ public:
     void showHorizGrid(bool show);
     void setXAxisMode(AxisMode mode);
     void setYAxisMode(AxisMode mode);
+    void autoAdjustYScale(bool active);
     
     // Manage Curves
     
@@ -93,6 +94,7 @@ protected:
     bool mShowHorizGrid;
     AxisMode mXAxisMode;
     AxisMode mYAxisMode;
+    bool mAutoAdjustYScale;
     
     bool mShowInfos;
     QStringList mInfos;
