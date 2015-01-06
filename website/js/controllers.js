@@ -20,6 +20,7 @@ chronoControllers.controller('DownloadsCtrl', ['$scope', '$http', function Downl
 {
     $scope.downloads = null;
     $http.get("contents/downloads.json").success(function(result) {
+        console.log(result);
         $scope.downloads = result;
     });
 }]);

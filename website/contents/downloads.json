@@ -1,10 +1,94 @@
 [
     {
+        "version": "0.0.8",
+        "mac": "releases/chronomodel_mac_0.0.8.pkg",
+        "win": "releases/chronomodel_win_0.0.8.exe",
+        "date": "30/12/2014",
+        "done": [
+            "Passage float => double",
+            "Optimisation de l'affichage des graphs utilisant des vecteurs de données",
+            "GraphView class : ré-écriture / nettoyage + ajout de HD/SD rendering + affichage des axes avec uniquement les valeurs min/max possible",
+            "Sauvegarde des résultats dans un fichier de données compressé, rechargé à l'ouverture du projet",
+            "C14 : mémorisation de la dernière courbe choisie",
+            "Vidage des corbeilles possible",
+            "On quitte la fenêtre de calibration si une modification est enregistrée",
+            "Classement des phases selon leur position Y dans la scène",
+            "Correction des getThetaMin et Max : on utilise uniquement les events déjà initialisés (ce n'était pas le cas pour les phases...)",
+            "Log HTML du modèle (à continuer...)",
+            "Raw data affichées au-dessus de la densité",
+            "Help ajouté pour les params MCMC et le Wiggle (dans les dialogues)"
+        ]
+    },
+    {
+        "version": "0.0.7",
+        "win": "releases/chronomodel_win_0.0.7.exe",
+        "date": "23/12/2014",
+        "done": [
+            "Correction pour la génération des buffers FFT et raw : le delta est calculé avec (nbPts - 1) et le cas de la dernière valeur du buffer est bien géré.",
+            "Bouton Apply de la plage d'études prend la bonne couleur au bon moment (!)",
+            "Espace ajouté entre les sections dans les résultats",
+            "Sélection d'éléments de la scène mise à jour après destruction d'un fait.",
+            "Dessin de la scène rafraichi correctement lors de undo/redo successifs",
+            "Quand on ferme un projet puis qu'on en créé un nouveau, pas de demande de sauvegarde inutile.",
+            "La calibration d'une date nulle ne bloque plus l'affichage",
+            "Le MCMC s'arrête avec un message si une date nulle est rencontrée lors de la calibration",
+            "Calibrations C14 et AM corrigées pour fonctionner avec un pas de calibration non entier",
+            "Le pas de calibration est bien lu dans le json comme float (et non int!!)"
+        ]
+    },
+    {
+        "version": "0.0.6",
+        "win": "releases/chronomodel_win_0.0.6.exe",
+        "date": "22/12/2014",
+        "done": [
+
+            "Validation du modèle au lancement des calculs (10 conditions à vérifier sur les contraintes, les durées, les bornes, ...) et ajustement des intervalles des bornes",
+            "Initialisation des bornes dans l'ordre stratigraphique.",
+            "Affichage des résultats : HPD toujours visible, possibilité de cacher la crédibilité.",
+            "Crédibilité non calulée pour 0% (!)",
+            "La préférence permettant de ré-ouvrir ou non le dernier projet au lancement de l'application fonctionne.",
+            "La calbration utilise un tableau et plus une QMap : passage des valeurs en index et plus en clef (devrait légèrement accélérer les calculs par rapport à la version précédente)",
+            "La plage d'étude doit être définie avant de passer aux onglets Phases et Import",
+            "Affichage des résultats : ajout d'un facteur réglable pour faire varier H, utilisé pour le lissage FFT",
+            "Le step de calibration est calculé automatiquement en fonction de la plage d'étude selon une loi exponentielle saturante (linéaire jusqu'à 10000 pts, saturation à 50000 pts)",
+            "Plugins Gauss et TL utilisent Gauss Adapt par défault",
+            "Phase d'adaptation acceptée si tous les taux d'acceptation des variables utilisant le gaussien adaptatif sont dans [41%; 47%] (avant : [42%; 46%])"
+        ]
+    },
+    {
+        "version": "0.0.5",
+        "mac": "releases/chronomodel_mac_0.0.5.pkg",
+        "win": "releases/chronomodel_win_0.0.5.exe",
+        "date": "16/12/2014",
+        "done": [
+            "Graph axis display improved",
+            "Step dialog added to project",
+            "Better computation of Raw results (using same function for raw and fft results)",
+            "Graph display improved for histos (bars centered) and HPD",
+            "Calibration resolution auto calculated and can be forced by user",
+            "Special characters used",
+            "Image export uses subrect source correctly (Still a bug on image top left??)",
+            "Better gamma and Tau display on phases scene",
+            "Graphs Typo and HPD with vertical lines",
+            "Raw results option in results",
+            "Numerical results with title",
+            "Title added on top of graph when height is sufficient",
+            "Old wiggle radio but removed",
+            "Spinbox for batch length",
+            "Phase duration credibility and wiggle visualisation",
+            "Date likelihood from calib uses step! => This correct a bug in results view : calibration had extra points with value = 0, created when interpolating calib with unexisting points"
+        ]
+    },
+    {
         "version": "0.0.4",
         "mac": "releases/chronomodel_mac_0.0.4.pkg",
         "date": "14/12/2014",
         "done": [
-
+            "Event Selection not lost anymore when modifying it",
+            "MCMC settings with calib step and fft size",
+            "FFT size changeable in results",
+            "FFT computed on exact buffer length (there was a bug sometimes, using 1025 points...)",
+            "Results generation factorized"
         ]
     },
     {

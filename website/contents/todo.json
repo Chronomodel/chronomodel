@@ -1,5 +1,10 @@
 {
     "todo":[
+        "Améliorer les execptions levées lors du calcul des exp, sqrt, log... sans planter le calcul!",
+        "Alert si densité nulle sur plage d'étude",
+        "Problème radar : la zone rouge déborde",
+        "Calib : HPD et valeurs numériques + export image et data",
+        "CSV Import : marquer lignes importées",
         "Save zoom and scene scroll position in project settings",
         "calib AM et C14 : coeff devant exponentielle à vérifier car sigma dépend de t (utilise l’erreur e de la courbe de calibration)",
         "somme des gamma sur une branche inférieur à plage d’étude : alerte sinon",
@@ -18,6 +23,8 @@
         "Nuage de points de corrélation entre 2 chaines ? (=> dans R ?)"
     ],
     "done":[
+        "undo / redo events refresh?",
+        "Step : calcul automatique forçable par utilisateur",
         "Enlever curseurs pour captures d’ecran",
         "gamma dans bulle : signe « > »",
         "phase : tau doit s’afficher dans les items",
