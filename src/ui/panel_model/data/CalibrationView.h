@@ -10,12 +10,14 @@ class GraphView;
 class GraphViewRefAbstract;
 class Date;
 class Marker;
-class Ruler;
 class CheckBox;
 class LineEdit;
 class Button;
 class QTextEdit;
 class QLabel;
+class Label;
+class QSlider;
+class QScrollBar;
 
 
 class CalibrationView: public QWidget
@@ -35,18 +37,26 @@ protected:
     
 private slots:
     void updateGraphs();
+    void updateZoom();
+    void updateScroll();
     
 public:
     Date mDate;
     ProjectSettings mSettings;
     
-    Ruler* mRuler;
     GraphView* mCalibGraph;
     GraphViewRefAbstract* mRefGraphView;
     
     Marker* mMarkerX;
     Marker* mMarkerY;
     
+    Label* mTopLab;
+    Label* mProcessTitle;
+    Label* mDistribTitle;
+    
+    Label* mZoomLab;
+    QSlider* mZoomSlider;
+    QScrollBar* mScrollBar;
     CheckBox* mHPDCheck;
     LineEdit* mHPDEdit;
     QLabel* mResultsLab;

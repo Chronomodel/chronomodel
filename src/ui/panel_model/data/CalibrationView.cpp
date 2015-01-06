@@ -13,6 +13,8 @@
 #include "Button.h"
 #include "StdUtilities.h"
 #include "Painting.h"
+#include "Label.h"
+#include "ModelUtilities.h"
 #include <QtWidgets>
 
 
@@ -20,10 +22,6 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
 mCalibGraph(0),
 mRefGraphView(0)
 {
-    mRuler = new Ruler(this);
-    mRuler->showScrollBar(true);
-    mRuler->showControls(true);
-    
     mCalibGraph = new GraphView(this);
     
     mCalibGraph->setRendering(GraphView::eHD);
@@ -33,11 +31,36 @@ mRefGraphView(0)
     mMarkerX = new Marker(this);
     mMarkerY = new Marker(this);
     
+    mTopLab = new Label(tr(""), this);
+    mProcessTitle = new Label(tr(""), this);
+    mDistribTitle = new Label(tr(""), this);
+    
+    mTopLab->setAlignment(Qt::AlignCenter);
+    mProcessTitle->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mDistribTitle->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    
+    QFont titleFont;
+    titleFont.setPointSizeF(pointSize(12.));
+    titleFont.setBold(true);
+    mProcessTitle->setFont(titleFont);
+    mDistribTitle->setFont(titleFont);
+    titleFont.setPointSizeF(pointSize(16.));
+    mTopLab->setFont(titleFont);
+    
     mResultsLab = new QLabel(this);
     mResultsLab->setWordWrap(true);
     QFont font;
-    font.setPointSizeF(pointSize(9.));
+    font.setPointSizeF(pointSize(12.));
     mResultsLab->setFont(font);
+    
+    mZoomLab = new Label(tr("Scale") + " : ", this);
+    mZoomSlider = new QSlider(Qt::Horizontal, this);
+    mZoomSlider->setRange(0, 100);
+    mZoomSlider->setValue(0);
+    mZoomSlider->setSingleStep(1);
+    
+    mScrollBar = new QScrollBar(Qt::Horizontal, this);
+    mScrollBar->setRange(0, 0);
     
     mHPDCheck = new CheckBox(tr("HPD (%)"), this);
     mHPDEdit = new LineEdit(this);
@@ -48,8 +71,8 @@ mRefGraphView(0)
     
     setMouseTracking(true);
     
-    connect(mRuler, SIGNAL(zoomChanged(double, double)), mCalibGraph, SLOT(zoomX(double, double)));
-    
+    connect(mZoomSlider, SIGNAL(valueChanged(int)), this, SLOT(updateZoom()));
+    connect(mScrollBar, SIGNAL(valueChanged(int)), this, SLOT(updateScroll()));
     connect(mHPDCheck, SIGNAL(toggled(bool)), this, SLOT(updateGraphs()));
     connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateGraphs()));
 }
@@ -71,10 +94,9 @@ void CalibrationView::setDate(const QJsonObject& date)
     if(!mDate.isNull())
     {
         mDate.calibrate(mSettings);
-        
-        mRuler->setRange(mSettings.mTmin, mSettings.mTmax);
-        mRuler->zoomDefault();
+        mTopLab->setText(mDate.mName + " (" + mDate.mPlugin->getName() + ")");
         mCalibGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
+        mZoomSlider->setValue(0);
     }
     updateGraphs();
 }
@@ -87,7 +109,6 @@ void CalibrationView::updateGraphs()
     // So, we simply remove it without deleting it, for further use
     if(mRefGraphView)
     {
-        disconnect(mRuler, SIGNAL(zoomChanged(double, double)), mRefGraphView, SLOT(zoomX(double, double)));
         mRefGraphView->setParent(0);
         mRefGraphView->setVisible(false);
     }
@@ -112,6 +133,12 @@ void CalibrationView::updateGraphs()
         calibCurve.mIsHisto = false;
         calibCurve.mData = mDate.getCalibMap();
         
+        // TODO : looks like an ugly hack...
+        bool isTypo = (mDate.mPlugin->getName() == "Typo Ref.");
+        calibCurve.mIsRectFromZero = isTypo;
+        mHPDCheck->setVisible(!isTypo);
+        mHPDEdit->setVisible(!isTypo);
+        
         double yMax = map_max_value(calibCurve.mData);
         yMax = (yMax > 0) ? yMax : 1;
         mCalibGraph->setRangeY(0, 1.1f * yMax);
@@ -119,7 +146,7 @@ void CalibrationView::updateGraphs()
         mCalibGraph->addCurve(calibCurve);
         mCalibGraph->setVisible(true);
         
-        if(mHPDCheck->isChecked())
+        if(mHPDCheck->isChecked() && !isTypo)
         {
             QMap<double, double> hpd = create_HPD(calibCurve.mData, 1, mHPDEdit->text().toDouble());
             
@@ -144,7 +171,20 @@ void CalibrationView::updateGraphs()
             mRefGraphView->setDate(mDate, mSettings);
             mRefGraphView->setParent(this);
             mRefGraphView->setVisible(true);
-            connect(mRuler, SIGNAL(zoomChanged(double, double)), mRefGraphView, SLOT(zoomX(double, double)));
+        }
+        
+        // ------------------------------------------------------------
+        //  Labels
+        // ------------------------------------------------------------
+        if(mRefGraphView)
+        {
+            mProcessTitle->setText(tr("Calibration process") + " :");
+            mDistribTitle->setText(tr("Distribution of calibrated date") + " :");
+        }
+        else
+        {
+            mProcessTitle->setText(tr("No calibration process to display") + " !");
+            mDistribTitle->setText(tr("Typological date") + " :");
         }
     }
     
@@ -155,41 +195,80 @@ void CalibrationView::updateGraphs()
     updateLayout();
 }
 
+void CalibrationView::updateZoom()
+{
+    float min = mCalibGraph->minimumX();
+    float max = mCalibGraph->maximumX();
+    float minProp = 5 / (max - min);
+    float prop = (100. - mZoomSlider->value()) / 100.;
+    if(prop < minProp) prop = minProp;
+    
+    if(prop != 1)
+    {
+        // Remember old scroll position
+        double posProp = 0;
+        double rangeBefore = (double)mScrollBar->maximum();
+        if(rangeBefore > 0)
+            posProp = (double)mScrollBar->value() / rangeBefore;
+        
+        // Update Scroll Range
+        int fullScrollSteps = 1000;
+        int scrollSteps = (1.f - prop) * fullScrollSteps;
+        mScrollBar->setRange(0, scrollSteps);
+        mScrollBar->setPageStep(fullScrollSteps);
+
+        // Set scroll to correct position
+        double pos = 0;
+        double rangeAfter = (double)mScrollBar->maximum();
+        if(rangeAfter > 0)
+            pos = floorf(posProp * rangeAfter);
+        mScrollBar->setValue(pos);
+    }
+    else
+    {
+        mScrollBar->setRange(0, 0);
+    }
+    updateScroll();
+}
+
+void CalibrationView::updateScroll()
+{
+    float min = mCalibGraph->minimumX();
+    float max = mCalibGraph->maximumX();
+    float minProp = 5 / (max - min);
+    float prop = (100. - mZoomSlider->value()) / 100.;
+    if(prop < minProp) prop = minProp;
+    
+    if(prop != 1)
+    {
+        // Update graphs with new zoom
+        double delta = prop * (max - min);
+        double deltaStart = (max - min) - delta;
+        double start = min + deltaStart * ((double)mScrollBar->value() / (double)mScrollBar->maximum());
+        double end = start + delta;
+        mCalibGraph->zoomX(start, end);
+        if(mRefGraphView)
+            mRefGraphView->zoomX(start, end);
+    }
+    else
+    {
+        mCalibGraph->zoomX(min, max);
+        if(mRefGraphView)
+            mRefGraphView->zoomX(min, max);
+    }
+}
+
 void CalibrationView::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
     
     int m = 5;
-    int calibH = 200;
-    int titleH = 30;
-    int rulerH = 40;
-    int lineH = 25;
-    int graphLeft = 50.f;
     
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
     p.setPen(QPen(QColor(100, 100, 100), 2*m));
     p.setBrush(Qt::white);
     p.drawRect(rect());
-    
-    p.setPen(Qt::black);
-    QFont font = p.font();
-    font.setPointSize(pointSize(14));
-    p.setFont(font);
-    
-    QRectF title1Rect(m + graphLeft, 2*m + lineH + rulerH, width() - 2*m - graphLeft, titleH);
-    QRectF title2Rect(m + graphLeft, height() - 3*m - calibH - titleH - 2*lineH, width() - 2*m - graphLeft, titleH);
-    
-    if(mRefGraphView)
-    {
-        p.drawText(title1Rect, Qt::AlignVCenter | Qt::AlignLeft, tr("Calibration process") + " :");
-        p.drawText(title2Rect, Qt::AlignVCenter | Qt::AlignLeft, tr("Distribution of calibrated date") + " :");
-    }
-    else
-    {
-        p.drawText(title1Rect, Qt::AlignVCenter | Qt::AlignLeft, tr("No calibration process to display") + " !");
-        p.drawText(title2Rect, Qt::AlignVCenter | Qt::AlignLeft, tr("Typological date") + " :");
-    }
 }
 
 void CalibrationView::resizeEvent(QResizeEvent* e)
@@ -200,33 +279,44 @@ void CalibrationView::resizeEvent(QResizeEvent* e)
 
 void CalibrationView::updateLayout()
 {
-    int m = 5;
-    int calibH = 200;
-    int titleH = 30;
-    int lineH = 25;
-    int editW = 30;
-    int checkW = 70;
-    int rulerH = 40;
-    int graphLeft = 50.f;
+    int m1 = 5;
+    int m2 = 10;
+    
+    int w = width() - 2*m2;
     int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     
-    mRuler->setGeometry(m + graphLeft, 2*m + lineH, width() - 3*m - graphLeft, rulerH);
+    int topH = 40;
+    int botH = 60;
+    int calibH = 200;
+    int titleH = 30;
+    int refH = height() - calibH - 2*titleH - topH - botH - sbe - 2*m2;
     
+    int lineH = 20;
+    int editW = 30;
+    int checkW = 70;
+    //int rulerH = 40;
+    int graphLeft = 50;
+    int sliderW = 100;
+    int zoomLabW = 60;
+    
+    mTopLab->setGeometry(m2, m1, w, topH);
+    mScrollBar->setGeometry(m2 + graphLeft, m1 + topH, w - graphLeft - zoomLabW - sliderW - m1, sbe);
+    mZoomLab->setGeometry(width() - m2 - sliderW - m1 - zoomLabW, m1 + topH, zoomLabW, lineH);
+    mZoomSlider->setGeometry(width() - m2 - sliderW, m1 + topH, sliderW, lineH);
+    
+    mProcessTitle->setGeometry(m2 + graphLeft, m1 + topH + sbe, w - graphLeft, titleH);
     if(mRefGraphView)
-    {
-        mRefGraphView->setGeometry(m,
-                                   2*m + rulerH + titleH + lineH,
-                                   width() - 3*m,
-                                   height() - 2*titleH - rulerH - 5*m - calibH - 3*lineH);
-    }
-    mCalibGraph->setGeometry(m, height() - calibH - 3*m - 2*lineH, width() - 3*m, calibH);
-    mResultsLab->setGeometry(m + graphLeft, height() - 2*m - 2*lineH, width() - 3*m, 2*lineH);
+        mRefGraphView->setGeometry(m2, m1 + topH + sbe + titleH, w, refH);
+    mDistribTitle->setGeometry(m2 + graphLeft, m1 + topH + sbe + titleH + refH, w - graphLeft, titleH);
+    mCalibGraph->setGeometry(m2, m1 + topH + sbe + 2*titleH + refH, w, calibH);
     
-    mHPDEdit->setGeometry(width() - 2*m - editW, height() - 3*m - 2*lineH, editW, lineH);
-    mHPDCheck->setGeometry(width() - 3*m - editW - checkW, height() - 3*m - 2*lineH, checkW, lineH);
+    mResultsLab->setGeometry(m2 + graphLeft, height() - m2 - botH, w, botH);
     
-    mMarkerX->setGeometry(mMarkerX->pos().x(), m + sbe, mMarkerX->thickness(), height() - 2*m - sbe - 8.f); // 8 = graph margin bottom
-    mMarkerY->setGeometry(m + graphLeft, mMarkerY->pos().y(), width() - 2*m - graphLeft, mMarkerY->thickness());
+    mHPDEdit->setGeometry(width() - m2 - editW, height() - m2 - botH + lineH, editW, lineH);
+    mHPDCheck->setGeometry(width() - m2 - editW - checkW, height() - m2 - botH + lineH, checkW, lineH);
+    
+    mMarkerX->setGeometry(mMarkerX->pos().x(), m1 + sbe, mMarkerX->thickness(), height() - 2*m1 - sbe - 8.f); // 8 = graph margin bottom
+    mMarkerY->setGeometry(m1 + graphLeft, mMarkerY->pos().y(), width() - 2*m1 - graphLeft, mMarkerY->thickness());
     
     update();
 }
