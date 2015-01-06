@@ -42,6 +42,9 @@ public:
     static Date fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
     
+    static Date fromCSV(QStringList dataStr);
+    QStringList toCSV() const;
+    
     double getLikelyhood(const double& t);
     QString getDesc() const;
     

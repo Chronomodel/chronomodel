@@ -5,6 +5,7 @@
 #include "PluginManager.h"
 #include "../PluginAbstract.h"
 #include "Painting.h"
+#include "QtUtilities.h"
 #include "ModelUtilities.h"
 #include <QDebug>
 
@@ -248,6 +249,8 @@ QPixmap Date::generateCalibThumb()
     curve.mPen.setColor(Painting::mainColorLight);
     curve.mPen.setWidthF(2.f);
     curve.mFillUnder = true;
+    curve.mIsHisto = false;
+    curve.mIsRectFromZero = true; // For Typo !!
     graph->addCurve(curve);
     
     QPixmap thumb(graph->size());
@@ -305,7 +308,7 @@ void Date::updateTheta(Event* event)
             double theta = tmin + idx * step;
             
             // rapport = H(theta_new) / H(theta_old)
-            double rapport = expf((-0.5/(mSigma.mX * mSigma.mX)) * (powf(theta - (event->mTheta.mX - mDelta), 2) - powf(mTheta.mX - (event->mTheta.mX - mDelta), 2)));
+            double rapport = exp((-0.5/(mSigma.mX * mSigma.mX)) * (pow(theta - (event->mTheta.mX - mDelta), 2) - pow(mTheta.mX - (event->mTheta.mX - mDelta), 2)));
             
             mTheta.tryUpdate(theta, rapport);
             break;
@@ -320,7 +323,7 @@ void Date::updateTheta(Event* event)
             {
                 // rapport = (G(theta_new) / G(theta_old)) * (H(theta_new) / H(theta_old))
                 rapport = getLikelyhoodFromCalib(theta) / getLikelyhoodFromCalib(mTheta.mX); // rapport des G(theta i)
-                rapport *= expf((-0.5/(mSigma.mX * mSigma.mX)) * (powf(theta - (event->mTheta.mX - mDelta), 2) - powf(mTheta.mX - (event->mTheta.mX - mDelta), 2)));
+                rapport *= exp((-0.5/(mSigma.mX * mSigma.mX)) * (pow(theta - (event->mTheta.mX - mDelta), 2) - pow(mTheta.mX - (event->mTheta.mX - mDelta), 2)));
             }
             
             mTheta.tryUpdate(theta, rapport);
@@ -378,7 +381,7 @@ void Date::updateDelta(Event* event)
             double w = (1/(mSigma.mX * mSigma.mX)) + (1/(mDeltaError * mDeltaError));
             double deltaAvg = (lambda / (mSigma.mX * mSigma.mX) + mDeltaAverage / (mDeltaError * mDeltaError)) / w;
             double x = Generator::gaussByBoxMuller(0, 1);
-            double delta = deltaAvg + x / sqrtf(w);
+            double delta = deltaAvg + x / sqrt(w);
             
             mDelta = delta;
             break;
@@ -397,23 +400,23 @@ void Date::updateSigma(Event* event)
     // ------------------------------------------------------------------------------------------
     //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
     // ------------------------------------------------------------------------------------------
-    double lambda = powf(mTheta.mX - (event->mTheta.mX - mDelta), 2) / 2.;
+    double lambda = pow(mTheta.mX - (event->mTheta.mX - mDelta), 2) / 2.;
     
     const int logVMin = -6;
     const int logVMax = 100;
     
     double V1 = mSigma.mX * mSigma.mX;
     double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigma.mSigmaMH);
-    double V2 = powf(10, logV2);
+    double V2 = pow(10, logV2);
     
     double rapport = 0;
     if(logV2 >= logVMin && logV2 <= logVMax)
     {
-        double x1 = expf(-lambda * (V1 - V2) / (V1 * V2));
-        double x2 = powf((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1);
-        rapport = x1 * sqrtf(V1/V2) * x2 * V2 / V1; // (V2 / V1) est le jacobien!
+        double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
+        double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1);
+        rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1; // (V2 / V1) est le jacobien!
     }
-    mSigma.tryUpdate(sqrtf(V2), rapport);
+    mSigma.tryUpdate(sqrt(V2), rapport);
 }
 
 void Date::updateWiggle()
@@ -421,3 +424,81 @@ void Date::updateWiggle()
     mWiggle.mX = mTheta.mX + mDelta;
 }
 
+#pragma mark CSV dates
+Date Date::fromCSV(QStringList dataStr)
+{
+    Date date;
+    QString pluginName = dataStr.takeFirst();
+    PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
+    if(plugin)
+    {
+        date.mName = dataStr[0];
+        date.mPlugin = plugin;
+        date.mMethod = plugin->getDataMethod();
+        date.mData = plugin->fromCSV(dataStr);
+        
+        int minColNum = plugin->csvMinColumns();
+        if(dataStr.size() >= minColNum + 2)
+        {
+            QString deltaType = dataStr[minColNum];
+            QString delta1 = dataStr[minColNum + 1];
+            QString delta2 = "0";
+            if(dataStr.size() >= minColNum + 3)
+                delta2 = dataStr[minColNum + 2];
+            
+            if(!isComment(deltaType) && !isComment(delta1) && !isComment(delta2))
+            {
+                if(deltaType == "fixed")
+                {
+                    date.mDeltaType = Date::eDeltaFixed;
+                    date.mDeltaFixed = delta1.toDouble();
+                }
+                else if(deltaType == "range")
+                {
+                    date.mDeltaType = Date::eDeltaRange;
+                    date.mDeltaMin = delta1.toDouble();
+                    date.mDeltaMax = delta2.toDouble();
+                }
+                else if(deltaType == "gaussian")
+                {
+                    date.mDeltaType = Date::eDeltaGaussian;
+                    date.mDeltaAverage = delta1.toDouble();
+                    date.mDeltaError = delta2.toDouble();
+                }
+            }
+        }
+    }
+    return date;
+}
+
+QStringList Date::toCSV() const
+{
+    QStringList csv;
+    
+    csv << mPlugin->getName();
+    csv << mName;
+    csv << mPlugin->toCSV(mData);
+    
+    if(mDeltaType == Date::eDeltaFixed)
+    {
+        if(mDeltaFixed != 0)
+        {
+            csv << "fixed";
+            csv << QString::number(mDeltaFixed);
+        }
+    }
+    else if(mDeltaType == Date::eDeltaRange)
+    {
+        csv << "range";
+        csv << QString::number(mDeltaMin);
+        csv << QString::number(mDeltaMax);
+    }
+    else if(mDeltaType == Date::eDeltaGaussian)
+    {
+        csv << "gaussian";
+        csv << QString::number(mDeltaAverage);
+        csv << QString::number(mDeltaError);
+    }
+    
+    return csv;
+}
