@@ -13,8 +13,9 @@ mGraph(0)
     mGraph = new GraphView(this);
     
     mGraph->setXAxisMode(GraphView::eAllTicks);
-    mGraph->setYAxisMode(GraphView::eMinMax);
+    mGraph->setYAxisMode(GraphView::eAllTicks);
     mGraph->setRendering(GraphView::eHD);
+    mGraph->autoAdjustYScale(true);
 }
 
 PluginGaussRefView::~PluginGaussRefView()
@@ -45,6 +46,7 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
         GraphCurve curve;
         curve.mName = "Reference";
         curve.mPen.setColor(Qt::blue);
+        curve.mIsHisto = false;
         for(int t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep)
             curve.mData[t] = a * t * t + b * t + c;
         mGraph->addCurve(curve);
@@ -68,10 +70,12 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
         curveMeasure.mPen.setColor(mMeasureColor);
         curveMeasure.mFillUnder = true;
         curveMeasure.mIsVertical = true;
+        curveMeasure.mIsHisto = false;
         
-        for(int t=yMin; t<yMax; ++t)
+        double step = (yMax - yMin) / 600.;
+        for(double t=yMin; t<yMax; t += step)
         {
-            double v = expf(-0.5 * powf((t - age) / error, 2));
+            double v = exp(-0.5 * pow((t - age) / error, 2));
             curveMeasure.mData[t] = v;
         }
         curveMeasure.mData = normalize_map(curveMeasure.mData);

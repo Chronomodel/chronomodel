@@ -23,7 +23,7 @@ double PluginGauss::getLikelyhood(const double& t, const QJsonObject& data)
     double b = data[DATE_GAUSS_B_STR].toDouble();
     double c = data[DATE_GAUSS_C_STR].toDouble();
     
-    double v = expf(-0.5f * powf((age - (a * t * t + b * t + c)) / error, 2.f)) / error; //  * sqrtf(2.f * M_PI)
+    double v = exp(-0.5f * pow((age - (a * t * t + b * t + c)) / error, 2.f)) / error; //  * sqrt(2.f * M_PI)
     return v;
 }
 
@@ -73,7 +73,7 @@ PluginFormAbstract* PluginGauss::getForm()
     return form;
 }
 
-QJsonObject PluginGauss::dataFromList(const QStringList& list)
+QJsonObject PluginGauss::fromCSV(const QStringList& list)
 {
     QJsonObject json;
     if(list.size() >= csvMinColumns())
@@ -85,6 +85,17 @@ QJsonObject PluginGauss::dataFromList(const QStringList& list)
         json.insert(DATE_GAUSS_C_STR, list[5].toDouble());
     }
     return json;
+}
+
+QStringList PluginGauss::toCSV(const QJsonObject& data)
+{
+    QStringList list;
+    list << QString::number(data[DATE_GAUSS_AGE_STR].toDouble());
+    list << QString::number(data[DATE_GAUSS_ERROR_STR].toDouble());
+    list << QString::number(data[DATE_GAUSS_A_STR].toDouble());
+    list << QString::number(data[DATE_GAUSS_B_STR].toDouble());
+    list << QString::number(data[DATE_GAUSS_C_STR].toDouble());
+    return list;
 }
 
 QString PluginGauss::getDateDesc(const Date* date) const

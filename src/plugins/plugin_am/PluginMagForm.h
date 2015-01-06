@@ -22,6 +22,8 @@ public:
     void setData(const QJsonObject& data);
     QJsonObject getData();
     
+    bool isValid();
+    
 protected:
     void resizeEvent(QResizeEvent* e);
     

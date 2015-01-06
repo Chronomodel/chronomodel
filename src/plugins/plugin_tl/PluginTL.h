@@ -27,7 +27,8 @@ public:
     Date::DataMethod getDataMethod() const;
     QList<Date::DataMethod> allowedDataMethods() const;
     QStringList csvColumns() const;
-    QJsonObject dataFromList(const QStringList& list);
+    QJsonObject fromCSV(const QStringList& list);
+    QStringList toCSV(const QJsonObject& data);
     QString getDateDesc(const Date* date) const;
     
     PluginFormAbstract* getForm();

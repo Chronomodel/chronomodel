@@ -13,8 +13,9 @@ mGraph(0)
     mGraph = new GraphView(this);
     
     mGraph->setXAxisMode(GraphView::eAllTicks);
-    mGraph->setYAxisMode(GraphView::eMinMax);
+    mGraph->setYAxisMode(GraphView::eAllTicks);
     mGraph->setRendering(GraphView::eHD);
+    mGraph->autoAdjustYScale(true);
 }
 
 Plugin14CRefView::~Plugin14CRefView()
@@ -64,18 +65,21 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         graphCurveG.mName = "G";
         graphCurveG.mData = curveG;
         graphCurveG.mPen.setColor(Qt::blue);
+        graphCurveG.mIsHisto = false;
         mGraph->addCurve(graphCurveG);
         
         GraphCurve graphCurveG95Sup;
         graphCurveG95Sup.mName = "G95Sup";
         graphCurveG95Sup.mData = curveG95Sup;
         graphCurveG95Sup.mPen.setColor(QColor(180, 180, 180));
+        graphCurveG95Sup.mIsHisto = false;
         mGraph->addCurve(graphCurveG95Sup);
         
         GraphCurve graphCurveG95Inf;
         graphCurveG95Inf.mName = "G95Inf";
         graphCurveG95Inf.mData = curveG95Inf;
         graphCurveG95Inf.mPen.setColor(QColor(180, 180, 180));
+        graphCurveG95Inf.mIsHisto = false;
         mGraph->addCurve(graphCurveG95Inf);
         
         // ----------------------------------------------
@@ -97,10 +101,12 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         curveMeasure.mPen.setColor(mMeasureColor);
         curveMeasure.mFillUnder = true;
         curveMeasure.mIsVertical = true;
+        curveMeasure.mIsHisto = false;
         
-        for(int t=yMin; t<yMax; ++t)
+        double step = (yMax - yMin) / 600.;
+        for(double t=yMin; t<yMax; t += step)
         {
-            double v = expf(-0.5 * powf((age - t) / error, 2));
+            double v = exp(-0.5 * pow((age - t) / error, 2));
             curveMeasure.mData[t] = v;
         }
         curveMeasure.mData = normalize_map(curveMeasure.mData);

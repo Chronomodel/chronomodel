@@ -12,8 +12,9 @@ PluginMagRefView::PluginMagRefView(QWidget* parent):GraphViewRefAbstract(parent)
     mGraph = new GraphView(this);
     
     mGraph->setXAxisMode(GraphView::eAllTicks);
-    mGraph->setYAxisMode(GraphView::eMinMax);
+    mGraph->setYAxisMode(GraphView::eAllTicks);
     mGraph->setRendering(GraphView::eHD);
+    mGraph->autoAdjustYScale(true);
 }
 
 PluginMagRefView::~PluginMagRefView()
@@ -73,18 +74,21 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         graphCurveG.mName = "G";
         graphCurveG.mData = curveG;
         graphCurveG.mPen.setColor(Qt::blue);
+        graphCurveG.mIsHisto = false;
         mGraph->addCurve(graphCurveG);
         
         GraphCurve graphCurveG95Sup;
         graphCurveG95Sup.mName = "G95Sup";
         graphCurveG95Sup.mData = curveG95Sup;
         graphCurveG95Sup.mPen.setColor(QColor(180, 180, 180));
+        graphCurveG95Sup.mIsHisto = false;
         mGraph->addCurve(graphCurveG95Sup);
         
         GraphCurve graphCurveG95Inf;
         graphCurveG95Inf.mName = "G95Inf";
         graphCurveG95Inf.mData = curveG95Inf;
         graphCurveG95Inf.mPen.setColor(QColor(180, 180, 180));
+        graphCurveG95Inf.mIsHisto = false;
         mGraph->addCurve(graphCurveG95Inf);
         
         // ----------------------------------------------
@@ -126,23 +130,23 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         curveMeasure.mPen.setColor(mMeasureColor);
         curveMeasure.mFillUnder = true;
         curveMeasure.mIsVertical = true;
+        curveMeasure.mIsHisto = false;
         
-        double yStep = (yMax - yMin) / 500.f;
-        
+        double yStep = (yMax - yMin) / 600.;
         for(double t=yMin; t<yMax; t+=yStep)
         {
             double v = 0.f;
             if(is_inc)
             {
-                v = expf(-0.5f * powf((t - inc) / error, 2.f));
+                v = exp(-0.5f * pow((t - inc) / error, 2.f));
             }
             else if(is_dec)
             {
-                v = expf(-0.5f * powf((t - dec) / error, 2));
+                v = exp(-0.5f * pow((t - dec) / error, 2));
             }
             else if(is_int)
             {
-                v = expf(-0.5f * powf((t - intensity) / error, 2));
+                v = exp(-0.5f * pow((t - intensity) / error, 2));
             }
             curveMeasure.mData[t] = v;
         }

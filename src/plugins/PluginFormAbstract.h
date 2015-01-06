@@ -3,6 +3,7 @@
 
 #include "GroupBox.h"
 #include "Date.h"
+#include <QString>
 
 class PluginAbstract;
 
@@ -19,8 +20,11 @@ public:
     virtual void setData(const QJsonObject& data) = 0;
     virtual QJsonObject getData() = 0;
     
+    virtual bool isValid() = 0;
+    
 public:
     PluginAbstract* mPlugin;
+    QString mError;
 };
 
 #endif

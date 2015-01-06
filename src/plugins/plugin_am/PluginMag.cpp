@@ -54,18 +54,18 @@ double PluginMag::getLikelyhood(const double& t, const QJsonObject& data)
             if(is_inc)
             {
                 double variance = (e * e) + (alpha * alpha) / (2.448f * 2.448f);
-                result = expf(-0.5f * powf(g - inc, 2.f) / variance) / sqrtf(variance);
+                result = exp(-0.5f * pow(g - inc, 2.f) / variance) / sqrt(variance);
             }
             else if(is_dec)
             {
-                double variance = e * e + powf(alpha / (2.448f * cos(inc * M_PI / 180.f)), 2.f);
-                result = expf(-0.5f * powf(g - dec, 2.f) / variance) / sqrtf(variance);
+                double variance = e * e + pow(alpha / (2.448f * cos(inc * M_PI / 180.f)), 2.f);
+                result = exp(-0.5f * pow(g - dec, 2.f) / variance) / sqrt(variance);
             }
             else if(is_int)
             {
                 double error = alpha;
                 double variance = e * e + error * error;
-                result = expf(-0.5f * powf(g - intensity, 2.f) / variance) / sqrtf(variance);
+                result = exp(-0.5f * pow(g - intensity, 2.f) / variance) / sqrt(variance);
             }
         }
     }
@@ -120,7 +120,7 @@ PluginFormAbstract* PluginMag::getForm()
     return form;
 }
 
-QJsonObject PluginMag::dataFromList(const QStringList& list)
+QJsonObject PluginMag::fromCSV(const QStringList& list)
 {
     QJsonObject json;
     if(list.size() >= csvMinColumns())
@@ -135,6 +135,18 @@ QJsonObject PluginMag::dataFromList(const QStringList& list)
         json.insert(DATE_AM_REF_CURVE_STR, list[6].toLower());
     }
     return json;
+}
+
+QStringList PluginMag::toCSV(const QJsonObject& data)
+{
+    QStringList list;
+    list << (data[DATE_AM_IS_INC_STR].toBool() ? "inclination" : (data[DATE_AM_IS_DEC_STR].toBool() ? "declination" : "intensity"));
+    list << QString::number(data[DATE_AM_INC_STR].toDouble());
+    list << QString::number(data[DATE_AM_DEC_STR].toDouble());
+    list << QString::number(data[DATE_AM_INTENSITY_STR].toDouble());
+    list << QString::number(data[DATE_AM_ERROR_STR].toDouble());
+    list << data[DATE_AM_REF_CURVE_STR].toString();
+    return list;
 }
 
 QString PluginMag::getDateDesc(const Date* date) const

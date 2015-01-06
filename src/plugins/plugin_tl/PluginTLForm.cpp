@@ -57,6 +57,11 @@ QJsonObject PluginTLForm::getData()
     return data;
 }
 
+bool PluginTLForm::isValid()
+{
+    return true;
+}
+
 void PluginTLForm::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);

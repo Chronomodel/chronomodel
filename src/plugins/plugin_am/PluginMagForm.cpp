@@ -113,6 +113,14 @@ QJsonObject PluginMagForm::getData()
     return data;
 }
 
+bool PluginMagForm::isValid()
+{
+    QString refCurve = mRefCombo->currentText();
+    if(refCurve.isEmpty())
+        mError = tr("Ref. curve is empty!");
+    return !refCurve.isEmpty();
+}
+
 void PluginMagForm::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);

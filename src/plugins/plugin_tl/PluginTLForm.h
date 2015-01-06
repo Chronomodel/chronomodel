@@ -20,6 +20,8 @@ public:
     virtual void setData(const QJsonObject& data);
     virtual QJsonObject getData();
     
+    bool isValid();
+    
 protected:
     void resizeEvent(QResizeEvent* e);
 

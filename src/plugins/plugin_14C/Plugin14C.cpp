@@ -47,7 +47,7 @@ double Plugin14C::getLikelyhood(const double& t, const QJsonObject& data)
             double e = (g_sup - g) / 1.96f;
             double variance = e * e + error * error;
             
-            result = expf(-0.5f * powf(g - age, 2.f) / variance) / sqrtf(variance);
+            result = exp(-0.5f * pow(g - age, 2.f) / variance) / sqrt(variance);
         }
         else
         {
@@ -101,7 +101,7 @@ PluginFormAbstract* Plugin14C::getForm()
     return form;
 }
 
-QJsonObject Plugin14C::dataFromList(const QStringList& list)
+QJsonObject Plugin14C::fromCSV(const QStringList& list)
 {
     QJsonObject json;
     if(list.size() >= csvMinColumns())
@@ -114,6 +114,15 @@ QJsonObject Plugin14C::dataFromList(const QStringList& list)
         qDebug() << json;
     }
     return json;
+}
+
+QStringList Plugin14C::toCSV(const QJsonObject& data)
+{
+    QStringList list;
+    list << QString::number(data[DATE_14C_AGE_STR].toDouble());
+    list << QString::number(data[DATE_14C_ERROR_STR].toDouble());
+    list << data[DATE_14C_REF_CURVE_STR].toString();
+    return list;
 }
 
 QString Plugin14C::getDateDesc(const Date* date) const

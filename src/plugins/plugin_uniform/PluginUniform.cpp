@@ -18,7 +18,7 @@ double PluginUniform::getLikelyhood(const double& t, const QJsonObject& data)
     double min = data[DATE_UNIFORM_MIN_STR].toDouble();
     double max = data[DATE_UNIFORM_MAX_STR].toDouble();
     
-    return (t >= min && t < max) ? 1.f / (max-min) : 0;
+    return (t >= min && t <= max) ? 1.f / (max-min) : 0;
 }
 
 QString PluginUniform::getName() const
@@ -62,7 +62,7 @@ PluginFormAbstract* PluginUniform::getForm()
     return form;
 }
 
-QJsonObject PluginUniform::dataFromList(const QStringList& list)
+QJsonObject PluginUniform::fromCSV(const QStringList& list)
 {
     QJsonObject json;
     if(list.size() >= csvMinColumns())
@@ -71,6 +71,14 @@ QJsonObject PluginUniform::dataFromList(const QStringList& list)
         json.insert(DATE_UNIFORM_MAX_STR, list[2].toDouble());
     }
     return json;
+}
+
+QStringList PluginUniform::toCSV(const QJsonObject& data)
+{
+    QStringList list;
+    list << QString::number(data[DATE_UNIFORM_MIN_STR].toDouble());
+    list << QString::number(data[DATE_UNIFORM_MAX_STR].toDouble());
+    return list;
 }
 
 QString PluginUniform::getDateDesc(const Date* date) const

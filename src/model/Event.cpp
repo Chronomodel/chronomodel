@@ -304,7 +304,7 @@ void Event::updateTheta(double tmin, double tmax)
         sum_p += 1.f / variance;
     }
     double theta_avg = sum_t / sum_p;
-    double sigma = 1.f / sqrtf(sum_p);
+    double sigma = 1.f / sqrt(sum_p);
     
     switch(mMethod)
     {
@@ -334,7 +334,7 @@ void Event::updateTheta(double tmin, double tmax)
             double rapport = 0;
             if(theta >= min && theta <= max)
             {
-                rapport = expf((-0.5/(sigma*sigma)) * (powf(theta - theta_avg, 2) - powf(mTheta.mX - theta_avg, 2)));
+                rapport = exp((-0.5/(sigma*sigma)) * (pow(theta - theta_avg, 2) - pow(mTheta.mX - theta_avg, 2)));
             }
             mTheta.tryUpdate(theta, rapport);
             break;

@@ -76,6 +76,14 @@ QJsonObject Plugin14CForm::getData()
     return data;
 }
 
+bool Plugin14CForm::isValid()
+{
+    QString refCurve = mRefCombo->currentText();
+    if(refCurve.isEmpty())
+        mError = tr("Ref. curve is empty!");
+    return !refCurve.isEmpty();
+}
+
 void Plugin14CForm::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);

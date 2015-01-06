@@ -22,7 +22,7 @@ double PluginTL::getLikelyhood(const double& t, const QJsonObject& data)
     double ref_year = data[DATE_TL_REF_YEAR_STR].toDouble();
     
     // gaussienne TL
-    double v = expf(-0.5f * powf((age - (ref_year - t)) / error, 2.f)) / error; //  * sqrtf(2.f * M_PI)
+    double v = exp(-0.5f * pow((age - (ref_year - t)) / error, 2.f)) / error; //  * sqrt(2.f * M_PI)
     return v;
 }
 
@@ -68,7 +68,7 @@ PluginFormAbstract* PluginTL::getForm()
     return form;
 }
 
-QJsonObject PluginTL::dataFromList(const QStringList& list)
+QJsonObject PluginTL::fromCSV(const QStringList& list)
 {
     QJsonObject json;
     if(list.size() >= csvMinColumns())
@@ -78,6 +78,15 @@ QJsonObject PluginTL::dataFromList(const QStringList& list)
         json.insert(DATE_TL_REF_YEAR_STR, list[3].toDouble());
     }
     return json;
+}
+
+QStringList PluginTL::toCSV(const QJsonObject& data)
+{
+    QStringList list;
+    list << QString::number(data[DATE_TL_AGE_STR].toDouble());
+    list << QString::number(data[DATE_TL_ERROR_STR].toDouble());
+    list << QString::number(data[DATE_TL_REF_YEAR_STR].toDouble());
+    return list;
 }
 
 QString PluginTL::getDateDesc(const Date* date) const

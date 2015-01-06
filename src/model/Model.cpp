@@ -543,12 +543,16 @@ void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen, d
             if(ek && ek->knownType() == EventKnown::eFixed)
             {
                 generateEventHistos = false;
-                qDebug() << "Nothing todo : this is just a Dirac !";
+                //qDebug() << "Nothing todo : this is just a Dirac !";
             }
-            qDebug() << "=> Generating post. density for bound " << i << "/" << mEvents.size() << " : " << event->mName;
+            {
+                //qDebug() << "=> Generating post. density for bound " << i << "/" << mEvents.size() << " : " << event->mName;
+            }
         }
         else
-            qDebug() << "=> Generating post. density for event " << i << "/" << mEvents.size() << " : " << event->mName;
+        {
+            //qDebug() << "=> Generating post. density for event " << i << "/" << mEvents.size() << " : " << event->mName;
+        }
         
         if(generateEventHistos)
         {
@@ -559,7 +563,7 @@ void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen, d
         {
             Date& date = event->mDates[j];
             
-            qDebug() << " -> Generate post. density for date " << j << "/" << event->mDates.size() << " : " << date.mName;
+            //qDebug() << " -> Generate post. density for date " << j << "/" << event->mDates.size() << " : " << date.mName;
             
             date.mTheta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
             date.mSigma.generateHistos(chains, fftLen, hFactor, 0, tmax - tmin);

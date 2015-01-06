@@ -332,12 +332,12 @@ double Phase::updatePhaseBound(double a, double b, double bound)
         
         if(m >= 2)
         {
-            newBound = bound - (bound - a) / powf(u * powf((bound - b) / (bound - a), 1-m) - u + 1, 1/(m-1));
+            newBound = bound - (bound - a) / pow(u * pow((bound - b) / (bound - a), 1-m) - u + 1, 1/(m-1));
         }
         else if(m == 1)
         {
             // Problem : nan au bout d'un moment ??? Formule symétrique pour alpha & beta ???
-            newBound = bound - (bound - a) * expf(-u * logf((bound - a) / (bound - b)));
+            newBound = bound - (bound - a) * exp(-u * logf((bound - a) / (bound - b)));
             //qDebug() << "Bound : " << bound << ", a : " << a << ", b : " << b;
             //qDebug() << newBound;
         }

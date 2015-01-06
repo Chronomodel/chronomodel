@@ -77,6 +77,11 @@ QJsonObject PluginGaussForm::getData()
     return data;
 }
 
+bool PluginGaussForm::isValid()
+{
+    return true;
+}
+
 void PluginGaussForm::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);

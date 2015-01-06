@@ -49,6 +49,15 @@ QJsonObject PluginUniformForm::getData()
     return data;
 }
 
+bool PluginUniformForm::isValid()
+{
+    double min = mMinEdit->text().toDouble();
+    double max = mMaxEdit->text().toDouble();
+    if(min >= max)
+        mError = tr("Forbidden : min >= max");
+    return min < max;
+}
+
 void PluginUniformForm::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
