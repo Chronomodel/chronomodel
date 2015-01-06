@@ -6,12 +6,14 @@
 #include "Button.h"
 #include "Label.h"
 #include "MainWindow.h"
+#include "Project.h"
 #include <QtWidgets>
 
 
 ImportDataView::ImportDataView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
 {
     mBrowseBut = new Button(tr("Load CSV file..."), this);
+    mExportBut = new Button(tr("Export all project data as CSV"), this);
     mHelp = new HelpWidget(this);
     
     mHelp->setText(tr("Your CSV file must contain 1 data per row. Each row must start with the datation method to use. Allowed datation methods are : 14C, AM, Gauss, Typo, TL/OSL.\nComments are allowed in your CSV. They must start with  # or // and can be placed at the end of a data row. When placed at the begining of a row, the whole row is ignored."));
@@ -24,6 +26,7 @@ ImportDataView::ImportDataView(QWidget* parent, Qt::WindowFlags flags):QWidget(p
     mTable->setDragDropMode(QAbstractItemView::DragOnly);
     
     connect(mBrowseBut, SIGNAL(clicked()), this, SLOT(browse()));
+    connect(mExportBut, SIGNAL(clicked()), this, SLOT(exportDates()));
 }
 
 ImportDataView::~ImportDataView()
@@ -98,7 +101,7 @@ void ImportDataView::browse()
             for(int i=0; i<data.size(); ++i)
             {
                 QStringList d = data[i];
-                qDebug() << d;
+                //qDebug() << d;
                 for(int j=0; j<d.size(); ++j)
                 {
                     // Skip the first column containing the plugin name (already used in the table line header)
@@ -116,15 +119,59 @@ void ImportDataView::browse()
     }
 }
 
+void ImportDataView::exportDates()
+{
+    QString currentDir = MainWindow::getInstance()->getCurrentPath();
+    QString path = QFileDialog::getSaveFileName(qApp->activeWindow(), tr("Save as CSV"), currentDir, tr("CSV File (*.csv)"));
+    
+    if(!path.isEmpty())
+    {
+        QFileInfo info(path);
+        mPath = info.absolutePath();
+        MainWindow::getInstance()->setCurrentPath(mPath);
+        
+        QString sep = MainWindow::getInstance()->getAppSettings().mCSVCellSeparator;
+        
+        QFile file(path);
+        if(file.open(QIODevice::WriteOnly))
+        {
+            QTextStream stream(&file);
+            
+            Project* project = MainWindow::getInstance()->getProject();
+            QJsonArray events = project->mState[STATE_EVENTS].toArray();
+            
+            for(int i=0; i<events.size(); ++i)
+            {
+                QJsonObject event = events[i].toObject();
+                QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+                for(int j=0; j<dates.size(); ++j)
+                {
+                    QJsonObject date = dates[j].toObject();
+                    Date d = Date::fromJson(date);
+                    QStringList dateCsv = d.toCSV();
+                    stream << dateCsv.join(sep) << "\n";
+                }
+                stream << "\n";
+            }
+            file.close();
+        }
+    }
+}
+
 void ImportDataView::removeCsvRows(QList<int> rows)
 {
-    qDebug() << rows;
     sortIntList(rows);
-    qDebug() << rows;
     for(int i=rows.size()-1; i>=0; --i)
     {
-        qDebug() << "Removing row : " << rows[i];
-        mTable->removeRow(rows[i]);
+        //qDebug() << "Removing row : " << rows[i];
+        //mTable->removeRow(rows[i]);
+        
+        for(int c=0; c<mTable->columnCount(); ++c)
+        {
+            QTableWidgetItem* item = mTable->item(rows[i], c);
+            if(item)
+                item->setBackgroundColor(QColor(100, 200, 100));
+        }
     }
 }
 
@@ -143,7 +190,9 @@ void ImportDataView::resizeEvent(QResizeEvent* e)
     int butH = 25;
     int helpH = mHelp->heightForWidth(width() - 2*m);
     
-    mBrowseBut->setGeometry(m, m, width() - 2*m, butH);
+    mBrowseBut->setGeometry(m, m, (width() - 3*m)/2, butH);
+    mExportBut->setGeometry(2*m + (width() - 3*m)/2, m, (width() - 3*m)/2, butH);
+    
     mTable->setGeometry(0, 2*m + butH, width(), height() - 4*m - butH - helpH);
     mHelp->setGeometry(m, height() - helpH - m, width() - 2*m, helpH);
 }
@@ -224,7 +273,7 @@ void ImportDataTable::updateTableHeaders()
     
     if(!pluginName.isEmpty())
     {
-        qDebug() << pluginName;
+        //qDebug() << pluginName;
         PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
         
         headers = plugin->csvColumns();

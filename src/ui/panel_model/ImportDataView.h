@@ -42,6 +42,7 @@ public slots:
     
 private slots:
     void browse();
+    void exportDates();
     
 protected:
     void paintEvent(QPaintEvent* e);
@@ -49,6 +50,7 @@ protected:
     
 private:
     Button* mBrowseBut;
+    Button* mExportBut;
     ImportDataTable* mTable;
     HelpWidget* mHelp;
     
