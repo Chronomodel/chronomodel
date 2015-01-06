@@ -11,6 +11,9 @@ class GraphCurve
 public:
     explicit GraphCurve();
     virtual ~GraphCurve();
+    
+    QVector<double> getVectorDataInRange(double subMin, double subMax, double min, double max) const;
+    QMap<double, double> getMapDataInRange(double subMin, double subMax, double min, double max) const;
 
 public:
     QMap<double, double> mData;
