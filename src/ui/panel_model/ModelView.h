@@ -95,6 +95,7 @@ private:
     Button* mButRecycleEvent;
     Button* mButExportEvents;
     Button* mButEventsOverview;
+    Button* mButEventsGrid;
     
     // ------
     
@@ -112,6 +113,7 @@ private:
     Button* mButDeletePhase;
     Button* mButExportPhases;
     Button* mButPhasesOverview;
+    Button* mButPhasesGrid;
     
     QPropertyAnimation* mAnimationHide;
     QPropertyAnimation* mAnimationShow;

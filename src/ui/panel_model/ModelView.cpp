@@ -75,6 +75,11 @@ mCalibVisible(false)
     mButEventsOverview->setCheckable(true);
     mButEventsOverview->setFlatVertical();
     
+    mButEventsGrid = new Button(tr("Grid"), mLeftWrapper);
+    mButEventsGrid->setIcon(QIcon(":eye_w.png"));
+    mButEventsGrid->setCheckable(true);
+    mButEventsGrid->setFlatVertical();
+    
     mEventsGlobalZoom = new ScrollCompressor(mLeftWrapper);
     mEventsGlobalZoom->setProp(1);
     mEventsGlobalZoom->showText(tr("Zoom"), true);
@@ -84,6 +89,7 @@ mCalibVisible(false)
     connect(mButEventsOverview, SIGNAL(toggled(bool)), mEventsGlobalView, SLOT(setVisible(bool)));
     
     connect(mEventsGlobalZoom, SIGNAL(valueChanged(double)), this, SLOT(updateEventsZoom(double)));
+    connect(mButEventsGrid, SIGNAL(toggled(bool)), mEventsScene, SLOT(showGrid(bool)));
     connect(mButExportEvents, SIGNAL(clicked()), this, SLOT(exportEventsScene()));
     
     // --------
@@ -129,6 +135,11 @@ mCalibVisible(false)
     mButPhasesOverview->setCheckable(true);
     mButPhasesOverview->setFlatVertical();
     
+    mButPhasesGrid = new Button(tr("Grid"), mPhasesWrapper);
+    mButPhasesGrid->setIcon(QIcon(":eye_w.png"));
+    mButPhasesGrid->setCheckable(true);
+    mButPhasesGrid->setFlatVertical();
+    
     mPhasesGlobalZoom = new ScrollCompressor(mPhasesWrapper);
     mPhasesGlobalZoom->setProp(1);
     mPhasesGlobalZoom->showText(tr("Zoom"), true);
@@ -137,6 +148,7 @@ mCalibVisible(false)
     connect(mButExportPhases, SIGNAL(clicked()), this, SLOT(exportPhasesScene()));
     
     connect(mButPhasesOverview, SIGNAL(toggled(bool)), mPhasesGlobalView, SLOT(setVisible(bool)));
+    connect(mButPhasesGrid, SIGNAL(toggled(bool)), mPhasesScene, SLOT(showGrid(bool)));
     
     // --------
     
@@ -544,7 +556,8 @@ void ModelView::updateLayout()
     mButRecycleEvent->setGeometry(0, 3*butH, butW, butH);
     mButExportEvents->setGeometry(0, 4*butH, butW, butH);
     mButEventsOverview->setGeometry(0, 5*butH, butW, butH);
-    mEventsGlobalZoom->setGeometry(0, 6*butH, butW, mLeftRect.height() - 6*butH);
+    mButEventsGrid->setGeometry(0, 6*butH, butW, butH);
+    mEventsGlobalZoom->setGeometry(0, 7*butH, butW, mLeftRect.height() - 6*butH);
     
     int helpW = qMin(400, mEventsView->width() - radarW - m);
     int helpH = mEventsScene->getHelpView()->heightForWidth(helpW);
@@ -559,7 +572,8 @@ void ModelView::updateLayout()
     mButDeletePhase->setGeometry(mRightSubRect.width() - butW, butH, butW, butH);
     mButExportPhases->setGeometry(mRightSubRect.width() - butW, 2*butH, butW, butH);
     mButPhasesOverview->setGeometry(mRightSubRect.width() - butW, 3*butH, butW, butH);
-    mPhasesGlobalZoom->setGeometry(mRightSubRect.width() - butW, 4*butH, butW, mRightRect.height() - 4*butH);
+    mButPhasesGrid->setGeometry(mRightSubRect.width() - butW, 4*butH, butW, butH);
+    mPhasesGlobalZoom->setGeometry(mRightSubRect.width() - butW, 5*butH, butW, mRightRect.height() - 4*butH);
     
     mCalibrationView->setGeometry(mCalibVisible ? mLeftRect : mLeftHiddenRect);
     mButBackEvents->setGeometry(mCalibrationView->width() - 30, 5, 25, 25);

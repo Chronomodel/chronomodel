@@ -14,6 +14,9 @@ class AbstractScene: public QGraphicsScene
 public:
     AbstractScene(QGraphicsView* view, QObject* parent = 0);
     ~AbstractScene();
+    
+public slots:
+    void showGrid(bool show);
 
 public:
     virtual void clean() = 0;

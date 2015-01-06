@@ -18,14 +18,26 @@ mShiftIsDown(false)
     mTempArrow->setVisible(false);
     mTempArrow->setZValue(0);
     
-    QBrush backBrush;
-    backBrush.setTexture(QPixmap(":grid.png"));
-    setBackgroundBrush(backBrush);
+    
 }
 
 AbstractScene::~AbstractScene()
 {
     
+}
+
+void AbstractScene::showGrid(bool show)
+{
+    if(show)
+    {
+        QBrush backBrush;
+        backBrush.setTexture(QPixmap(":grid.png"));
+        setBackgroundBrush(backBrush);
+    }
+    else
+    {
+        setBackgroundBrush(Qt::NoBrush);
+    }
 }
 
 void AbstractScene::updateConstraintsPos(AbstractItem* movedItem, const QPointF& newPos)
