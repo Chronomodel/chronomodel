@@ -426,9 +426,26 @@ void MainWindow::openWebsite()
 #pragma mark Events
 void MainWindow::closeEvent(QCloseEvent* e)
 {
-    mProject->askToSave(tr("Save project before quitting?"));
-    writeSettings();
-    e->accept();
+    int result = QMessageBox::question(QApplication::activeWindow(),
+                                       QApplication::applicationName(),
+                                       tr("Do you really want to quit Chronomodel ?"),
+                                       QMessageBox::Yes | QMessageBox::No);
+    if(result == QMessageBox::Yes)
+    {
+        if(mProject->askToSave(tr("Save project before quitting?")))
+        {
+            writeSettings();
+            e->accept();
+        }
+        else
+        {
+            e->ignore();
+        }
+    }
+    else
+    {
+        e->ignore();
+    }
 }
 
 void MainWindow::keyPressEvent(QKeyEvent* keyEvent)
