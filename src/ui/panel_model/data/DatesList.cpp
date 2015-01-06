@@ -92,41 +92,34 @@ void DatesList::handleItemClicked(QListWidgetItem* item)
     int rowH = 4*mh + 6*mm + butH;
     
     QPoint pos = mapFromGlobal(QCursor::pos());
+    int scrollOffset = verticalScrollBar()->value() * rowH;
+    pos.setY(pos.y() + scrollOffset);
+    
     int index = row(item);
     int yOffset = index * rowH;
-    
-    //pos.setY(pos.y() - yOffset);
-    //qDebug() << yOffset << ", " << pos;
     
     QRect updateRect(iconW, yOffset + rowH - mm - butH, butW, butH);
     QRect calibRect(iconW + butW + 2*mm, yOffset + rowH - mm - butH, butW, butH);
     
-    /*qDebug() << "----";
-    qDebug() << "index : " << index;
-    qDebug() << "rowH : " << rowH;
-    qDebug() << "yOffset : " << yOffset;
-    qDebug() << "pos : " << pos;
-    qDebug() << "updateRect : " << updateRect;*/
+    //qDebug() << "----";
+    //qDebug() << "index : " << index << ", y dans [" << (index * rowH) << ", " << ((index+1) * rowH) << "]";
+    //qDebug() << "scroll offset : " << scrollOffset;
+    //qDebug() << "position in scrolled widget : " << pos;
     
     if(updateRect.contains(pos))
     {
+        //qDebug() << "update clicked for item at : " << index;
         MainWindow::getInstance()->getProject()->updateDate(mEvent[STATE_ID].toInt(), index);
     }
     else if(calibRect.contains(pos))
     {
+        //qDebug() << "calib clicked for item at : " << index;
         QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
         if(index < dates.size())
         {
             QJsonObject date = dates[index].toObject();
             emit calibRequested(date);
         }
-    }
-    
-    QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
-    if(index < dates.size())
-    {
-        QJsonObject date = dates[index].toObject();
-        emit MainWindow::getInstance()->getProject()->currentDateChanged(date);
     }
 }
 
