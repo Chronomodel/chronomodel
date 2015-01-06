@@ -78,12 +78,12 @@ FunctionAnalysis analyseFunction(const QMap<double, double>& aFunction)
     result.mode = mode;
     result.mean = sum / sumP;
     
-    double variance = (sum2 / sumP) - powf(result.mean, 2);
+    double variance = (sum2 / sumP) - pow(result.mean, 2);
     
     if(variance < 0)
         variance = 0;
     
-    result.stddev = sqrtf(variance);
+    result.stddev = sqrt(variance);
     
     return result;
 }
@@ -110,14 +110,14 @@ double dataStd(const QVector<double>& data)
     qDebug() << "size : " << data.size();
     qDebug() << "mean : " << mean;
     qDebug() << "variance : " << variance;
-    qDebug() << "std : " << sqrtf(variance);*/
+    qDebug() << "std : " << sqrt(variance);*/
     
     if(variance < 0)
     {
         qDebug() << "ERROR : negative variance found : " << variance;
         return 0.f;
     }
-    return (double)sqrtf(variance);
+    return (double)sqrt(variance);
 }
 
 double shrinkageUniform(double so2)
@@ -182,7 +182,7 @@ Quartiles quartilesForRepartition(const QVector<double>& repartition, double tmi
 {
     Quartiles quartiles;
     
-    qDebug() << repartition[0];
+    //qDebug() << repartition[0];
     
     double q1index = vector_interpolate_idx_for_value(0.25, repartition);
     double q2index = vector_interpolate_idx_for_value(0.5, repartition);

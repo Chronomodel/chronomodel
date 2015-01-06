@@ -46,7 +46,7 @@ inline double rounddouble(double f, int prec)
     double result;
     if(prec > 0)
     {
-        double factor = powf(10.f, (double)prec);
+        double factor = pow(10.f, (double)prec);
         result = roundf(f * factor) / factor;
     }
     else

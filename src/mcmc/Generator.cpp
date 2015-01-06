@@ -161,7 +161,7 @@ double Generator::boxMuller()
 {
     double rand1 = randomUniform();
     double rand2 = randomUniform();
-    return sqrtf(-2. * logf(rand1)) * cos(2. * M_PI * rand2);
+    return sqrt(-2. * logf(rand1)) * cos(2. * M_PI * rand2);
 }
 
 double Generator::gaussByBoxMuller(const double mean, const double sigma)

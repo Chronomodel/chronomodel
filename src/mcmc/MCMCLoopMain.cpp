@@ -386,7 +386,7 @@ bool MCMCLoopMain::adapt()
     
     //--------------------- Adapt -----------------------------------------
     
-    double delta = (chain.mBatchIndex < 10000) ? 0.01f : (1 / sqrtf(chain.mBatchIndex));
+    double delta = (chain.mBatchIndex < 10000) ? 0.01f : (1 / sqrt(chain.mBatchIndex));
     
     for(int i=0; i<events.size(); ++i)
     {
@@ -405,7 +405,7 @@ bool MCMCLoopMain::adapt()
                 {
                     allOK = false;
                     double sign = (taux <= taux_min) ? -1.f : 1.f;
-                    date.mTheta.mSigmaMH *= powf(10.f, sign * delta);
+                    date.mTheta.mSigmaMH *= pow(10.f, sign * delta);
                 }
             }
             
@@ -416,7 +416,7 @@ bool MCMCLoopMain::adapt()
             {
                 allOK = false;
                 double sign = (taux <= taux_min) ? -1.f : 1.f;
-                date.mSigma.mSigmaMH *= powf(10.f, sign * delta);
+                date.mSigma.mSigmaMH *= pow(10.f, sign * delta);
             }
         }
         
@@ -429,7 +429,7 @@ bool MCMCLoopMain::adapt()
             {
                 allOK = false;
                 double sign = (taux <= taux_min) ? -1.f : 1.f;
-                event->mTheta.mSigmaMH *= powf(10.f, sign * delta);
+                event->mTheta.mSigmaMH *= pow(10.f, sign * delta);
             }
         }
     }
