@@ -109,7 +109,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
     int outputSize = 2 * (inputSize / 2 + 1);
     
     double sigma = dataStd(dataSrc);
-    double h = 1.06f * sigma * pow(dataSrc.size(), -1.f/5.f);
+    double h = hFactor * 1.06 * sigma * pow(dataSrc.size(), -1.f/5.f);
     double a = vector_min_value(dataSrc) - 4.f * h;
     double b = vector_max_value(dataSrc) + 4.f * h;
     double delta = (b - a) / fftLen;
