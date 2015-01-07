@@ -185,7 +185,7 @@ QString MCMCLoopMain::initMCMC()
         events[i]->mTheta.mX = Generator::randomUniform(min, max);
         events[i]->mInitialized = true;
         
-        qDebug() << "--> Event initialized : " << events[i]->mName << " : " << events[i]->mTheta.mX;
+        //qDebug() << "--> Event initialized : " << events[i]->mName << " : " << events[i]->mTheta.mX;
         
         double s02_sum = 0.f;
         for(int j=0; j<events[i]->mDates.size(); ++j)
@@ -200,10 +200,10 @@ QString MCMCLoopMain::initMCMC()
             date.mTheta.mSigmaMH = data.stddev;
             date.initDelta(events[i]);
             
-            
             s02_sum += 1.f / (date.mTheta.mSigmaMH * date.mTheta.mSigmaMH);
         }
         events[i]->mS02 = events[i]->mDates.size() / s02_sum;
+        events[i]->mTheta.mSigmaMH = events[i]->mS02;
         events[i]->mAShrinkage = 1.;
         
         emit stepProgressed(i);
@@ -259,7 +259,7 @@ QString MCMCLoopMain::initMCMC()
             initLog += "  - theta (value) : " + QString::number(event->mTheta.mX) + "\n";
             initLog += "  - theta (sigma MH) : " + QString::number(event->mTheta.mSigmaMH) + "\n";
             initLog += "  - SO2 : " + QString::number(event->mS02) + "\n";
-            initLog += "  - AShrinkage : " + QString::number(event->mAShrinkage) + "\n";
+            //initLog += "  - AShrinkage : " + QString::number(event->mAShrinkage) + "\n";
         }
         mLog += "---------------\n";
         
@@ -268,11 +268,11 @@ QString MCMCLoopMain::initMCMC()
             Date& date = event->mDates[j];
             
             initLog += " > Data : " + date.mName + "\n";
-            initLog += "  - theta (value) : " + QString::number(date.mTheta.mX) + "\n";
-            initLog += "  - theta (sigma MH) : " + QString::number(date.mTheta.mSigmaMH) + "\n";
-            initLog += "  - sigma (value) : " + QString::number(date.mSigma.mX) + "\n";
-            initLog += "  - sigma (sigma MH) : " + QString::number(date.mSigma.mSigmaMH) + "\n";
-            initLog += "  - delta (value) : " + QString::number(date.mDelta) + "\n";
+            initLog += "  - ti (value) : " + QString::number(date.mTheta.mX) + "\n";
+            initLog += "  - ti (sigma MH) : " + QString::number(date.mTheta.mSigmaMH) + "\n";
+            initLog += "  - sigmai (value) : " + QString::number(date.mSigma.mX) + "\n";
+            initLog += "  - sigmai (sigma MH) : " + QString::number(date.mSigma.mSigmaMH) + "\n";
+            initLog += "  - deltai (value) : " + QString::number(date.mDelta) + "\n";
             initLog += "--------\n";
         }
     }
