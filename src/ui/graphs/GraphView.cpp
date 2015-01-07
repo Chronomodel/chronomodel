@@ -373,6 +373,30 @@ void GraphView::paintEvent(QPaintEvent*)
         p.drawPixmap(mBufferBack.rect(), mBufferBack, rect());
         p.end();
     }
+    
+    // ----------------------------------------------------
+    //  Tool Tip (above all)
+    // ----------------------------------------------------
+    if(mTipVisible)
+    {
+        QPainterPath tipPath;
+        tipPath.addRoundedRect(mTipRect, 5, 5);
+     
+        QPainter p(this);
+        
+        QFont font;
+        font.setPointSizeF(pointSize(9));
+        p.setFont(font);
+        
+        p.fillPath(tipPath, QColor(0, 0, 0, 180));
+        p.setPen(Qt::black);
+        p.drawPath(tipPath);
+        p.setPen(Qt::white);
+        p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, "x : " + QString::number(mTipX));
+        p.drawText(mTipRect.adjusted(0, mTipRect.height()/2, 0, 0), Qt::AlignCenter, "y : " + QString::number(mTipY));
+        
+        p.end();
+    }
 }
 
 void GraphView::paintToDevice(QPaintDevice* device)
@@ -476,26 +500,6 @@ void GraphView::paintToDevice(QPaintDevice* device)
         arrowRight.lineTo(mMarginLeft + mGraphWidth - 5, mMarginTop + mGraphHeight + 3);
         arrowRight.lineTo(mMarginLeft + mGraphWidth, mMarginTop + mGraphHeight);
         p.drawPath(arrowRight);
-    }
-    
-    // ----------------------------------------------------
-    //  Tool Tip (above all)
-    // ----------------------------------------------------
-    if(mTipVisible)
-    {
-        QPainterPath tipPath;
-        tipPath.addRoundedRect(mTipRect, 5, 5);
-        
-        QFont font;
-        font.setPointSizeF(pointSize(9));
-        p.setFont(font);
-        
-        p.fillPath(tipPath, QColor(0, 0, 0, 180));
-        p.setPen(Qt::black);
-        p.drawPath(tipPath);
-        p.setPen(Qt::white);
-        p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, "x : " + QString::number(mTipX));
-        p.drawText(mTipRect.adjusted(0, mTipRect.height()/2, 0, 0), Qt::AlignCenter, "y : " + QString::number(mTipY));
     }
     
     p.end();
