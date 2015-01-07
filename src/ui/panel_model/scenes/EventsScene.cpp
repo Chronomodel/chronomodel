@@ -353,7 +353,7 @@ void EventsScene::updateProject()
         updateSelection(true);
     }
     
-    update(sceneRect());
+    adjustSceneRect();
 }
 
 void EventsScene::clean()
@@ -401,6 +401,11 @@ void EventsScene::clean()
         mConstraintItems.removeOne(constraintItem);
         delete constraintItem;
     }
+    
+    // ------------------------------------------------------
+    //  Reset scene rect
+    // ------------------------------------------------------
+    //setSceneRect(QRectF(-100, -100, 200, 200));
 }
 
 

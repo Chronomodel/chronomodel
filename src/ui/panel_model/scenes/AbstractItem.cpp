@@ -101,7 +101,7 @@ QVariant AbstractItem::itemChange(GraphicsItemChange change, const QVariant& val
         QPointF newPos = value.toPointF();
 
         // See comment in itemMoved function!
-        //mScene->itemMoved(this, newPos, false);
+        mScene->itemMoved(this, newPos, false);
         
         // Save item position in project state : constraints need it to update their position.
         // Dot not save this as an undo command and don't notify views for update

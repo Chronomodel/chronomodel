@@ -205,7 +205,7 @@ void PhasesScene::updateProject()
         updateSelection(true);
     }
     
-    update(sceneRect());
+    adjustSceneRect();
 }
 
 void PhasesScene::clean()

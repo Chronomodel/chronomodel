@@ -15,6 +15,9 @@ public:
     AbstractScene(QGraphicsView* view, QObject* parent = 0);
     ~AbstractScene();
     
+    QRectF specialItemsBoundingRect(QRectF r = QRectF()) const;
+    void adjustSceneRect();
+    
 public slots:
     void showGrid(bool show);
 
@@ -48,7 +51,7 @@ protected:
     virtual void createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo) = 0;
     virtual void mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo) = 0;
     
-    
+    void drawBackground(QPainter* painter, const QRectF& rect);
 
 protected:
     QGraphicsView* mView;

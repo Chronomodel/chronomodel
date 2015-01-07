@@ -125,8 +125,7 @@ void AbstractScene::itemLeaved(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 
 void AbstractScene::itemMoved(AbstractItem* item, QPointF newPos, bool merging)
 {
-    // This function is not called at the moment
-    // It could be used to adjust the scene rect and to follow the moving item
+    // Could be used to adjust the scene rect and to follow the moving item
     // But at the moment a bug occurs sometimes when moving an event out from the scene:
     // Its bounding rect seems to be not correct...
     
@@ -140,17 +139,28 @@ void AbstractScene::itemMoved(AbstractItem* item, QPointF newPos, bool merging)
             mItems[i]->setMergeable(colliding != 0 && (mItems[i] == item || mItems[i] == colliding));
         }
     }
+
+    adjustSceneRect();
     
-    // Ajust Scene rect to minimal
-    setSceneRect(itemsBoundingRect());
+    QRectF r(newPos.x() - item->boundingRect().width()/2,
+             newPos.y() - item->boundingRect().height()/2,
+             item->boundingRect().size().width(),
+             item->boundingRect().size().height());
     
     // Follow the moving item
     QList<QGraphicsView*> graphicsViews = views();
     for(int i=0; i<graphicsViews.size(); ++i)
     {
-        graphicsViews[i]->ensureVisible(item);
-        graphicsViews[i]->centerOn(item->pos());
+        //graphicsViews[i]->ensureVisible(r, 30, 30);
+        //graphicsViews[i]->centerOn(item->scenePos());
     }
+}
+
+void AbstractScene::adjustSceneRect()
+{
+    // Ajust Scene rect to minimal
+    setSceneRect(specialItemsBoundingRect().adjusted(-30, -30, 30, 30));
+    update(sceneRect());
 }
 
 void AbstractScene::itemReleased(AbstractItem* item, QGraphicsSceneMouseEvent* e)
@@ -169,7 +179,31 @@ void AbstractScene::itemReleased(AbstractItem* item, QGraphicsSceneMouseEvent* e
         }
         else
             sendUpdateProject(tr("item moved"), true, true);
+        
+        // Ajust Scene rect to minimal (and also fix the scene rect)
+        // After doing this, the scene no longer stetches when moving items!
+        // It is possible to reset it by calling setSceneRect(QRectF()),
+        // but the scene rect is reverted to the largest size it has had!
+        
+        //setSceneRect(specialItemsBoundingRect().adjusted(-30, -30, 30, 30));
+        
+        update();
     }
+}
+
+QRectF AbstractScene::specialItemsBoundingRect(QRectF r) const
+{
+    QRectF rect = r;
+    for(int i=0; i<mItems.size(); ++i)
+    {
+        QRectF r(mItems[i]->scenePos().x() - mItems[i]->boundingRect().width()/2,
+                 mItems[i]->scenePos().y() - mItems[i]->boundingRect().height()/2,
+                 mItems[i]->boundingRect().size().width(),
+                 mItems[i]->boundingRect().size().height());
+        rect = rect.united(r);
+    }
+    //QRectF rect2 = itemsBoundingRect();
+    return rect;
 }
 
 #pragma mark Mouse events
@@ -227,3 +261,12 @@ void AbstractScene::keyReleaseEvent(QKeyEvent* keyEvent)
     QGraphicsScene::keyReleaseEvent(keyEvent);
 }
 
+void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
+{
+    painter->fillRect(rect, QColor(230, 230, 230));
+    painter->fillRect(sceneRect(), Qt::white);
+    
+    painter->setPen(QColor(150, 150, 150));
+    painter->drawLine(-10, 0, 10, 0);
+    painter->drawLine(0, -10, 0, 10);
+}
