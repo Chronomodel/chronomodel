@@ -454,6 +454,7 @@ bool Model::isValid()
             
             double min = mSettings.mTmin;
             double max = mSettings.mTmax;
+            bool boundFound = false;
             
             for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
             {
@@ -462,6 +463,7 @@ bool Model::isValid()
                     EventKnown* bound = dynamic_cast<EventKnown*>(mPhases[i]->mEvents[j]);
                     if(bound)
                     {
+                        boundFound = true;
                         if(bound->mKnownType == EventKnown::eFixed)
                         {
                             min = qMax(min, bound->mFixed);
@@ -475,25 +477,28 @@ bool Model::isValid()
                     }
                 }
             }
-            if(tauMax < (max - min))
+            if(boundFound)
             {
-                throw QString("The phase \"" + mPhases[i]->mName + "\" has a duration inconsistent with the bounds it contains!");
-            }
-            // Modify bounds intervals to match max phase duration
-            for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
-            {
-                if(mPhases[i]->mEvents[j]->mType == Event::eKnown)
+                if(tauMax < (max - min))
                 {
-                    EventKnown* bound = dynamic_cast<EventKnown*>(mPhases[i]->mEvents[j]);
-                    if(bound)
+                    throw QString("The phase \"" + mPhases[i]->mName + "\" has a duration inconsistent with the bounds it contains!");
+                }
+                // Modify bounds intervals to match max phase duration
+                for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
+                {
+                    if(mPhases[i]->mEvents[j]->mType == Event::eKnown)
                     {
-                        if(bound->mKnownType == EventKnown::eUniform)
+                        EventKnown* bound = dynamic_cast<EventKnown*>(mPhases[i]->mEvents[j]);
+                        if(bound)
                         {
-                            bound->mUniformStart = qMax(bound->mUniformStart, max - tauMax);
-                            bound->mUniformEnd = qMin(bound->mUniformEnd, min + tauMax);
-                            
-                            min = qMax(min, bound->mUniformEnd);
-                            max = qMin(max, bound->mUniformStart);
+                            if(bound->mKnownType == EventKnown::eUniform)
+                            {
+                                bound->mUniformStart = qMax(bound->mUniformStart, max - tauMax);
+                                bound->mUniformEnd = qMin(bound->mUniformEnd, min + tauMax);
+                                
+                                min = qMax(min, bound->mUniformEnd);
+                                max = qMin(max, bound->mUniformStart);
+                            }
                         }
                     }
                 }
@@ -608,6 +613,9 @@ void Model::generateNumericalResults(const QList<Chain>& chains)
 
 void Model::generateCredibilityAndHPD(const QList<Chain>& chains, int threshold)
 {
+    threshold = (threshold > 100) ? 100 : threshold;
+    threshold = (threshold < 0) ? 0 : threshold;
+    
     for(int i=0; i<mEvents.size(); ++i)
     {
         Event* event = mEvents[i];
