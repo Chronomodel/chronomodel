@@ -248,6 +248,7 @@ void EventsScene::updateProject()
     // ------------------------------------------------------
     //  Create / Update event items
     // ------------------------------------------------------
+    bool hasCreated = false;
     for(int i=0; i<events.size(); ++i)
     {
         QJsonObject event = events[i].toObject();
@@ -282,6 +283,28 @@ void EventsScene::updateProject()
             
             mItems.append(eventItem);
             addItem(eventItem);
+            
+            // Pratique pour ajouter des dates au dernier event créé!
+            clearSelection();
+            eventItem->setSelected(true);
+            
+            // Note : setting an event in (0, 0) tells the scene that this item is new!
+            // Thus the scene will move it randomly around the currently viewed center point.
+            QPointF pos = eventItem->pos();
+            if(pos.isNull())
+            {
+                QList<QGraphicsView*> gviews = views();
+                if(gviews.size() > 0)
+                {
+                    QGraphicsView* gview = gviews[0];
+                    QPointF pt = gview->mapToScene(gview->width()/2, gview->height()/2);
+                    int posDelta = 100;
+                    eventItem->setPos(pt.x() + rand() % posDelta - posDelta/2,
+                                      pt.y() + rand() % posDelta - posDelta/2);
+                }
+            }
+            
+            hasCreated = true;
 #if DEBUG
             qDebug() << "Event created : id = " << event[STATE_ID].toInt() << ", type : " << type;
 #endif
@@ -346,9 +369,9 @@ void EventsScene::updateProject()
     mUpdatingItems = false;
     
     // Deleting an item that was selected involves changing the selection (and updating properties view)
-    // Nothing has been triggered so far because of the mUpdatingItems flag,
-    // so we need to trigger it now!
-    if(hasDeleted)
+    // Nothing has been triggered so far because of the mUpdatingItems flag, so we need to trigger it now!
+    // As well, creating an item changes the selection because we want the newly created item to be selected.
+    if(hasDeleted || hasCreated)
     {
         updateSelection(true);
     }
@@ -406,6 +429,7 @@ void EventsScene::clean()
     //  Reset scene rect
     // ------------------------------------------------------
     //setSceneRect(QRectF(-100, -100, 200, 200));
+    update(sceneRect());
 }
 
 

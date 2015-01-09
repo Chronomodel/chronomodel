@@ -243,6 +243,8 @@ void PhasesScene::clean()
         mConstraintItems.removeOne(constraintItem);
         delete constraintItem;
     }
+    
+    update(sceneRect());
 }
 
 

@@ -140,7 +140,8 @@ void AbstractScene::itemMoved(AbstractItem* item, QPointF newPos, bool merging)
         }
     }
 
-    adjustSceneRect();
+    // Bug moving multiple items out from the scene...
+    //adjustSceneRect();
     
     QRectF r(newPos.x() - item->boundingRect().width()/2,
              newPos.y() - item->boundingRect().height()/2,
@@ -186,6 +187,8 @@ void AbstractScene::itemReleased(AbstractItem* item, QGraphicsSceneMouseEvent* e
         // but the scene rect is reverted to the largest size it has had!
         
         //setSceneRect(specialItemsBoundingRect().adjusted(-30, -30, 30, 30));
+        
+        adjustSceneRect();
         
         update();
     }

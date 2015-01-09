@@ -56,13 +56,15 @@ protected:
 protected:
     QGraphicsView* mView;
     QList<AbstractItem*> mItems;
-    ArrowTmpItem* mTempArrow;
     QList<ArrowItem*> mConstraintItems;
     
     bool mDrawingArrow;
     bool mUpdatingItems;
     bool mAltIsDown;
     bool mShiftIsDown;
+    
+public:
+    ArrowTmpItem* mTempArrow;
 };
 
 #endif

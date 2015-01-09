@@ -1,4 +1,5 @@
 #include "AbstractItem.h"
+#include "ArrowTmpItem.h"
 #include <QtWidgets>
 
 
@@ -57,6 +58,10 @@ void AbstractItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
     {
         setZValue(2.);
         QGraphicsItem::mousePressEvent(e);
+    }
+    else
+    {
+        mScene->mTempArrow->setFrom(pos().x(), pos().y());
     }
 }
 
