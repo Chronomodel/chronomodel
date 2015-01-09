@@ -96,6 +96,7 @@ private:
     
     QAction* mMCMCSettingsAction;
     QAction* mRunAction;
+    QAction* mResetMCMCAction;
     
     QActionGroup* mViewGroup;
     QAction* mViewModelAction;

@@ -114,6 +114,7 @@ public slots:
     bool save(const QString& dialogTitle = tr("Save project as..."));
     
     void mcmcSettings();
+    void resetMCMC();
     void run();
     void exportAsText();
     

@@ -461,6 +461,40 @@ void Project::mcmcSettings()
     }
 }
 
+void Project::resetMCMC()
+{
+    QMessageBox message(QMessageBox::Warning,
+                        tr("Reset MCMC options"),
+                        tr("All event's and data's MCMC methods will be reset to their default value.\nDo you really want to do this ?"),
+                        QMessageBox::Yes | QMessageBox::No,
+                        qApp->activeWindow(),
+                        Qt::Sheet);
+    if(message.exec() == QMessageBox::Yes)
+    {
+        QJsonObject stateNext = mState;
+        QJsonArray events = mState[STATE_EVENTS].toArray();
+        
+        for(int i=0; i<events.size(); ++i)
+        {
+            QJsonObject event = events[i].toObject();
+            event[STATE_EVENT_METHOD] = (int)Event::eDoubleExp;
+            
+            QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+            for(int j=0; j<dates.size(); ++j)
+            {
+                QJsonObject date = dates[j].toObject();
+                Date d = Date::fromJson(date);
+                date[STATE_DATE_METHOD] = (int)d.mPlugin->getDataMethod();
+                dates[j] = date;
+            }
+            event[STATE_EVENT_DATES] = dates;
+            events[i] = event;
+        }
+        stateNext[STATE_EVENTS] = events;
+        pushProjectState(stateNext, tr("MCMC methods reset"), true);
+    }
+}
+
 bool Project::studyPeriodIsValid()
 {
     QJsonObject settings = mState[STATE_SETTINGS].toObject();

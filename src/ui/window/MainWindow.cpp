@@ -53,6 +53,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     connect(mProjectSaveAction, SIGNAL(triggered()), this, SLOT(saveProject()));
     connect(mProjectSaveAsAction, SIGNAL(triggered()), this, SLOT(saveProjectAs()));
     connect(mMCMCSettingsAction, SIGNAL(triggered()), mProject, SLOT(mcmcSettings()));
+    connect(mResetMCMCAction, SIGNAL(triggered()), mProject, SLOT(resetMCMC()));
     connect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
     connect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));
     connect(mProject, SIGNAL(mcmcFinished(Model*)), this, SLOT(mcmcFinished()));
@@ -153,6 +154,8 @@ void MainWindow::createActions()
     mRunAction->setIconVisibleInMenu(true);
     mRunAction->setToolTip(tr("Run Model"));
     
+    mResetMCMCAction = new QAction(tr("Reset MCMC Options"), this);
+    
     //-----------------------------------------------------------------
     // View Actions
     //-----------------------------------------------------------------
@@ -229,6 +232,8 @@ void MainWindow::createMenus()
     mMCMCMenu = menuBar()->addMenu(tr("MCMC"));
     mMCMCMenu->addAction(mRunAction);
     mMCMCMenu->addAction(mMCMCSettingsAction);
+    mMCMCMenu->addSeparator();
+    mMCMCMenu->addAction(mResetMCMCAction);
     
     //-----------------------------------------------------------------
     // View menu
@@ -546,7 +551,10 @@ void MainWindow::activateInterface(bool activate)
     
     mViewModelAction->setEnabled(activate);
     mMCMCSettingsAction->setEnabled(activate);
+    mResetMCMCAction->setEnabled(activate);
     
+    // Les actions suivantes doivent être désactivées si on ferme le projet.
+    // Par contre, elles ne doivent pas être ré-activée dès l'ouverture d'un projet
     if(!activate)
     {
         mRunAction->setEnabled(activate);
