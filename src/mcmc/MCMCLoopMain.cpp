@@ -420,7 +420,7 @@ bool MCMCLoopMain::adapt()
             }
         }
         
-        //--------------------- Adapt Theta MH de Theta f -----------------------------------------
+        //--------------------- Adapt Sigma MH de Theta f -----------------------------------------
         
         if(event->mMethod == Event::eMHAdaptGauss)
         {
