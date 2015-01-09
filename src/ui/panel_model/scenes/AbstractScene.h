@@ -63,6 +63,8 @@ protected:
     bool mAltIsDown;
     bool mShiftIsDown;
     
+    bool mShowGrid;
+    
 public:
     ArrowTmpItem* mTempArrow;
 };

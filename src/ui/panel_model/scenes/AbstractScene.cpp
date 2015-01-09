@@ -11,7 +11,8 @@ mView(view),
 mDrawingArrow(false),
 mUpdatingItems(false),
 mAltIsDown(false),
-mShiftIsDown(false)
+mShiftIsDown(false),
+mShowGrid(false)
 {
     mTempArrow = new ArrowTmpItem();
     addItem(mTempArrow);
@@ -28,16 +29,8 @@ AbstractScene::~AbstractScene()
 
 void AbstractScene::showGrid(bool show)
 {
-    if(show)
-    {
-        QBrush backBrush;
-        backBrush.setTexture(QPixmap(":grid.png"));
-        setBackgroundBrush(backBrush);
-    }
-    else
-    {
-        setBackgroundBrush(Qt::NoBrush);
-    }
+    mShowGrid = show;
+    update();
 }
 
 void AbstractScene::updateConstraintsPos(AbstractItem* movedItem, const QPointF& newPos)
@@ -267,9 +260,21 @@ void AbstractScene::keyReleaseEvent(QKeyEvent* keyEvent)
 void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
 {
     painter->fillRect(rect, QColor(230, 230, 230));
-    painter->fillRect(sceneRect(), Qt::white);
     
-    painter->setPen(QColor(150, 150, 150));
+    QBrush backBrush;
+    if(mShowGrid)
+    {
+        backBrush.setTexture(QPixmap(":grid.png"));
+        painter->setBrush(backBrush);
+    }
+    else
+    {
+        painter->setBrush(Qt::white);
+    }
+    painter->setPen(Qt::NoPen);
+    painter->drawRect(sceneRect());
+    
+    painter->setPen(QColor(100, 100, 100));
     painter->drawLine(-10, 0, 10, 0);
     painter->drawLine(0, -10, 0, 10);
 }
