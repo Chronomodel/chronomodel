@@ -592,21 +592,21 @@ void Model::generateNumericalResults(const QList<Chain>& chains)
     for(int i=0; i<mEvents.size(); ++i)
     {
         Event* event = mEvents[i];
-        event->mTheta.generateNumericalResults(chains);
+        event->mTheta.generateNumericalResults(chains, mSettings);
         
         for(int j=0; j<event->mDates.size(); ++j)
         {
             Date& date = event->mDates[j];
-            date.mTheta.generateNumericalResults(chains);
-            date.mSigma.generateNumericalResults(chains);
+            date.mTheta.generateNumericalResults(chains, mSettings);
+            date.mSigma.generateNumericalResults(chains, mSettings);
         }
     }
     
     for(int i=0; i<mPhases.size(); ++i)
     {
         Phase* phase = mPhases[i];
-        phase->mAlpha.generateNumericalResults(chains);
-        phase->mBeta.generateNumericalResults(chains);
+        phase->mAlpha.generateNumericalResults(chains, mSettings);
+        phase->mBeta.generateNumericalResults(chains, mSettings);
         phase->generateDurationCredibility();
     }
 }

@@ -34,7 +34,7 @@ double PluginMag::getLikelyhood(const double& t, const QJsonObject& data)
         const QMap<double, double>& curveG = mRefDatas[ref_curve]["G"];
         const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
         
-        double t_under = floorf(t);
+        double t_under = floor(t);
         double t_upper = t_under + 1;
         
         if(curveG.find(t_under) != curveG.end() &&

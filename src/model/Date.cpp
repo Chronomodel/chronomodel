@@ -185,7 +185,7 @@ void Date::calibrate(const ProjectSettings& settings)
     double tmin = mSettings.mTmin;
     double tmax = mSettings.mTmax;
     double step = mSettings.mStep;
-    double nbPts = 1 + roundf((tmax - tmin) / step);
+    double nbPts = 1 + round((tmax - tmin) / step);
     
     if(mSubDates.size() == 0) // not a combination !
     {
@@ -202,18 +202,13 @@ void Date::calibrate(const ProjectSettings& settings)
             lastRepVal += v;
         }
         
-        /*for(double t = tmin; t <= tmax; t += step)
-        {
-            double v = getLikelyhood(t);
-            mCalibration.append(v);
-            mCalibSum += v;
-            //qDebug() << "v = " << v;
-            
-            mRepartition[t] = lastRepVal;
-            lastRepVal += v;
-        }*/
+        //qDebug() << "Calib size : " << mCalibration.size();
+        
+        // La courbe de répartition est transformée de sorte que sa valeur maximale soit 1
         mRepartition = normalize_vector(mRepartition);
-        mCalibration = equal_areas(mCalibration, step, 1.f);
+        
+        // La courbe de calibration est transformée de sorte que l'aire sous la courbe soit 1
+        mCalibration = equal_areas(mCalibration, step, 1.);
     }
     else
     {
@@ -273,7 +268,7 @@ double Date::getLikelyhoodFromCalib(const double t)
     
     double prop = (t - tmin) / (tmax - tmin);
     double idx = prop * (mCalibration.size() - 1); // tricky : if (tmax - tmin) = 2000, then calib size is 2001 !
-    int idxUnder = (int)floorf(idx);
+    int idxUnder = (int)floor(idx);
     int idxUpper = idxUnder + 1;
     
     double v = interpolate(idx, (double)idxUnder, (double)idxUpper, mCalibration[idxUnder], mCalibration[idxUpper]);
