@@ -165,6 +165,7 @@ void MainWindow::createActions()
     
     mViewLogAction = new QAction(QIcon(":results.png"), tr("Log"), this);
     mViewLogAction->setCheckable(true);
+    mViewLogAction->setEnabled(false);
     
     mViewGroup = new QActionGroup(this);
     mViewGroup->addAction(mViewModelAction);
@@ -220,7 +221,7 @@ void MainWindow::createMenus()
     
     mEditMenu->addAction(mUndoAction);
     mEditMenu->addAction(mRedoAction);
-    mEditMenu->addAction(mUndoViewAction);
+    //mEditMenu->addAction(mUndoViewAction);
     
     //-----------------------------------------------------------------
     // MCMC menu
@@ -308,7 +309,7 @@ void MainWindow::newProject()
             activateInterface(true);
             
             // Reset the project state and send a notification to update the views :
-            mProject->initState();
+            mProject->initState(NEW_PROJECT_REASON);
         }
         
         mViewModelAction->trigger();
@@ -350,7 +351,7 @@ void MainWindow::closeProject()
     {
         mUndoStack->clear();
         
-        mProject->initState();
+        mProject->initState(CLOSE_PROJECT_REASON);
         mProject->mLastSavedState = mProject->emptyState();
         mProject->mProjectFileName = QString();
         
@@ -426,11 +427,14 @@ void MainWindow::openWebsite()
 #pragma mark Events
 void MainWindow::closeEvent(QCloseEvent* e)
 {
-    int result = QMessageBox::question(QApplication::activeWindow(),
-                                       QApplication::applicationName(),
-                                       tr("Do you really want to quit Chronomodel ?"),
-                                       QMessageBox::Yes | QMessageBox::No);
-    if(result == QMessageBox::Yes)
+    QMessageBox message(QMessageBox::Question,
+                        QApplication::applicationName(),
+                        tr("Do you really want to quit Chronomodel ?"),
+                        QMessageBox::Yes | QMessageBox::No,
+                        qApp->activeWindow(),
+                        Qt::Sheet);
+    
+    if(message.exec() == QMessageBox::Yes)
     {
         if(mProject->askToSave(tr("Save project before quitting?")))
         {
@@ -539,12 +543,31 @@ void MainWindow::activateInterface(bool activate)
     mProjectSaveAction->setEnabled(activate);
     mProjectSaveAsAction->setEnabled(activate);
     mProjectExportAction->setEnabled(activate);
+    
+    mViewModelAction->setEnabled(activate);
     mMCMCSettingsAction->setEnabled(activate);
-    mRunAction->setEnabled(activate);
+    
+    if(!activate)
+    {
+        mRunAction->setEnabled(activate);
+        mViewResultsAction->setEnabled(activate);
+        mViewLogAction->setEnabled(activate);
+    }
+}
+
+void MainWindow::setRunEnabled(bool enabled)
+{
+    mRunAction->setEnabled(enabled);
+}
+
+void MainWindow::setLogEnabled(bool enabled)
+{
+    mViewLogAction->setEnabled(enabled);
 }
 
 void MainWindow::mcmcFinished()
 {
+    mViewLogAction->setEnabled(true);
     mViewResultsAction->setEnabled(true);
     mViewResultsAction->trigger();
 }

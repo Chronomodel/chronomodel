@@ -64,10 +64,14 @@ Project::~Project()
 
 #pragma mark Project State
 
-void Project::initState()
+void Project::initState(const QString& reason)
 {
     QJsonObject state = emptyState();
-    pushProjectState(state, NEW_PROJECT_REASON, true, false);
+    
+    // Do no call pushProjectState here because we don't want to store this state in the UndoStack
+    // This is called when closing a project or openning a new one,
+    // so the undoStack has just been cleared and we want to keep it empty at project start!
+    sendUpdateState(state, reason, true);
 }
 
 QJsonObject Project::emptyState() const

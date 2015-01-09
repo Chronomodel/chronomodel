@@ -35,6 +35,8 @@ public:
     
     void resetInterface();
     void activateInterface(bool activate);
+    void setRunEnabled(bool enabled);
+    void setLogEnabled(bool enabled);
 
 protected:
     void closeEvent(QCloseEvent* e);

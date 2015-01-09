@@ -15,6 +15,7 @@
 
 #define PROJECT_LOADED_REASON "project loaded"
 #define NEW_PROJECT_REASON "new project"
+#define CLOSE_PROJECT_REASON "close project"
 
 class Date;
 class Date;
@@ -33,7 +34,7 @@ public:
     Project();
     virtual ~Project();
     
-    void initState();
+    void initState(const QString& reason);
     
     // This is the function to call when the project state is to be modified.
     // An undo command is created and a StateEvent is fired asynchronously.
