@@ -15,6 +15,7 @@
 #include "Painting.h"
 #include "Label.h"
 #include "ModelUtilities.h"
+#include "QtUtilities.h"
 #include <QtWidgets>
 
 
@@ -62,19 +63,25 @@ mRefGraphView(0)
     mScrollBar = new QScrollBar(Qt::Horizontal, this);
     mScrollBar->setRange(0, 0);
     
-    mHPDCheck = new CheckBox(tr("HPD (%)"), this);
+    mHPDLab = new Label(tr("HPD (%) : "), this);
     mHPDEdit = new LineEdit(this);
     mHPDEdit->setText("95");
     
-    mHPDCheck->raise();
+    mHPDLab->raise();
     mHPDEdit->raise();
+    
+    mExportBut = new Button(tr("Export Image"), this);
+    
+    mButBack = new Button(tr("Close"), this);
+    mButBack->setIsClose(true);
+    connect(mButBack, SIGNAL(clicked()), this, SIGNAL(closed()));
     
     setMouseTracking(true);
     
     connect(mZoomSlider, SIGNAL(valueChanged(int)), this, SLOT(updateZoom()));
     connect(mScrollBar, SIGNAL(valueChanged(int)), this, SLOT(updateScroll()));
-    connect(mHPDCheck, SIGNAL(toggled(bool)), this, SLOT(updateGraphs()));
     connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateGraphs()));
+    connect(mExportBut, SIGNAL(clicked()), this, SLOT(exportImage()));
 }
 
 CalibrationView::~CalibrationView()
@@ -136,7 +143,7 @@ void CalibrationView::updateGraphs()
         // TODO : looks like an ugly hack...
         bool isTypo = (mDate.mPlugin->getName() == "Typo Ref.");
         calibCurve.mIsRectFromZero = isTypo;
-        mHPDCheck->setVisible(!isTypo);
+        mHPDLab->setVisible(!isTypo);
         mHPDEdit->setVisible(!isTypo);
         
         double yMax = map_max_value(calibCurve.mData);
@@ -146,18 +153,28 @@ void CalibrationView::updateGraphs()
         mCalibGraph->addCurve(calibCurve);
         mCalibGraph->setVisible(true);
         
-        if(mHPDCheck->isChecked() && !isTypo)
+        if(!isTypo) // mHPDCheck->isChecked() &&
         {
-            QMap<double, double> hpd = create_HPD(calibCurve.mData, 1, mHPDEdit->text().toDouble());
+            int thresh = mHPDEdit->text().toDouble();
+            thresh = qMin(thresh, 100);
+            thresh = qMax(thresh, 0);
+            
+            QMap<double, double> hpd = create_HPD(calibCurve.mData, 1, thresh);
+            hpd = equal_areas(hpd, thresh/100.f);
             
             GraphCurve hpdCurve;
             hpdCurve.mName = "Calibration HPD";
             hpdCurve.mPen.setColor(c);
             hpdCurve.mFillUnder = true;
+            hpdCurve.mIsHisto = false;
             hpdCurve.mIsRectFromZero = true;
-            hpdCurve.mData = hpd;
+            hpdCurve.mData = create_HPD(calibCurve.mData, 1, thresh);
             mCalibGraph->addCurve(hpdCurve);
-            mResultsLab->setText(mResultsLab->text() + "HPD : " + getHPDText(hpd));
+            
+            yMax = map_max_value(hpdCurve.mData);
+            mCalibGraph->setRangeY(0, qMax(1.1f * yMax, mCalibGraph->maximumY()));
+            
+            mResultsLab->setText(mResultsLab->text() + "HPD (" + QString::number(thresh) + "%) : " + getHPDText(hpd));
         }
         
         // ------------------------------------------------------------
@@ -221,7 +238,7 @@ void CalibrationView::updateZoom()
         double pos = 0;
         double rangeAfter = (double)mScrollBar->maximum();
         if(rangeAfter > 0)
-            pos = floorf(posProp * rangeAfter);
+            pos = floor(posProp * rangeAfter);
         mScrollBar->setValue(pos);
     }
     else
@@ -256,6 +273,36 @@ void CalibrationView::updateScroll()
         if(mRefGraphView)
             mRefGraphView->zoomX(min, max);
     }
+}
+
+void CalibrationView::exportImage()
+{
+    mExportBut->setVisible(false);
+    mZoomLab->setVisible(false);
+    mZoomSlider->setVisible(false);
+    mScrollBar->setVisible(false);
+    mHPDEdit->setVisible(false);
+    mHPDLab->setVisible(false);
+    mMarkerX->setVisible(false);
+    mMarkerY->setVisible(false);
+    mButBack->setVisible(false);
+    
+    int m = 5;
+    QRect r(m, m, this->width() - 2*m, this->height() - 2*m);
+    QFileInfo fileInfo = saveWidgetAsImage(this, r, tr("Save calibration image as..."),
+                                           MainWindow::getInstance()->getCurrentPath());
+    if(fileInfo.isFile())
+        MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
+    
+    mExportBut->setVisible(true);
+    mZoomLab->setVisible(true);
+    mZoomSlider->setVisible(true);
+    mScrollBar->setVisible(true);
+    mHPDEdit->setVisible(true);
+    mHPDLab->setVisible(true);
+    mMarkerX->setVisible(true);
+    mMarkerY->setVisible(true);
+    mButBack->setVisible(true);
 }
 
 void CalibrationView::paintEvent(QPaintEvent* e)
@@ -298,6 +345,8 @@ void CalibrationView::updateLayout()
     int graphLeft = 50;
     int sliderW = 100;
     int zoomLabW = 60;
+    int butW = 100;
+    int butH = 25;
     
     mTopLab->setGeometry(m2, m1, w, topH);
     mScrollBar->setGeometry(m2 + graphLeft, m1 + topH, w - graphLeft - zoomLabW - sliderW - m1, sbe);
@@ -312,11 +361,15 @@ void CalibrationView::updateLayout()
     
     mResultsLab->setGeometry(m2 + graphLeft, height() - m2 - botH, w, botH);
     
-    mHPDEdit->setGeometry(width() - m2 - editW, height() - m2 - botH + lineH, editW, lineH);
-    mHPDCheck->setGeometry(width() - m2 - editW - checkW, height() - m2 - botH + lineH, checkW, lineH);
+    mHPDEdit->setGeometry(width() - m2 - 10 - editW, height() - m2 - botH, editW, lineH);
+    mHPDLab->setGeometry(width() - m2 - 10 - editW - checkW, height() - m2 - botH, checkW, lineH);
+    
+    mExportBut->setGeometry(width() - m2 - 10 - butW, height() - m2 - botH + lineH + m1, butW, butH);
     
     mMarkerX->setGeometry(mMarkerX->pos().x(), m1 + sbe, mMarkerX->thickness(), height() - 2*m1 - sbe - 8.f); // 8 = graph margin bottom
     mMarkerY->setGeometry(m1 + graphLeft, mMarkerY->pos().y(), width() - 2*m1 - graphLeft, mMarkerY->thickness());
+    
+    mButBack->setGeometry(width() - m2 - 25, m2, 25, 25);
     
     update();
 }

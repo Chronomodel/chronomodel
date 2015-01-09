@@ -10,7 +10,6 @@ class GraphView;
 class GraphViewRefAbstract;
 class Date;
 class Marker;
-class CheckBox;
 class LineEdit;
 class Button;
 class QTextEdit;
@@ -39,6 +38,10 @@ private slots:
     void updateGraphs();
     void updateZoom();
     void updateScroll();
+    void exportImage();
+    
+signals:
+    void closed();
     
 public:
     Date mDate;
@@ -57,9 +60,12 @@ public:
     Label* mZoomLab;
     QSlider* mZoomSlider;
     QScrollBar* mScrollBar;
-    CheckBox* mHPDCheck;
+    Label* mHPDLab;
     LineEdit* mHPDEdit;
     QLabel* mResultsLab;
+    Button* mExportBut;
+    
+    Button* mButBack;
 };
 
 #endif
