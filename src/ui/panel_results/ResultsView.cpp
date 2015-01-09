@@ -38,7 +38,11 @@ mGraphLeft(130),
 mRulerH(40),
 mTabsH(30),
 mGraphsH(130),
-mHasPhases(false)
+mHasPhases(false),
+mZoomDensity(0),
+mZoomTrace(0),
+mZoomAccept(0),
+mZoomCorrel(0)
 {
     mTabs = new Tabs(this);
     mTabs->addTab(tr("Posterior distrib."));
@@ -123,7 +127,7 @@ mHasPhases(false)
     mYSlider->setTickInterval(1);
     mYSlider->setValue(50);
     
-    connect(mXSlider, SIGNAL(valueChanged(int)), this, SLOT(updateScaleX()));
+    connect(mXSlider, SIGNAL(valueChanged(int)), this, SLOT(updateScaleX(int)));
     connect(mYSlider, SIGNAL(valueChanged(int)), this, SLOT(updateScaleY(int)));
     
     mRuler = new Ruler(this);
@@ -517,6 +521,17 @@ void ResultsView::updateGraphs()
     {
         mByEventsGraphs[i]->setResultToShow(result, variable, showAllChains, showChainList, showHpd, hdpThreshold, showCalib, showWiggle, showRaw);
     }
+    
+    // Restore current zoom
+    if(mTabs->currentIndex() == 0)
+        updateScaleX(mZoomDensity);
+    else if(mTabs->currentIndex() == 1)
+        updateScaleX(mZoomTrace);
+    else if(mTabs->currentIndex() == 2)
+        updateScaleX(mZoomAccept);
+    else if(mTabs->currentIndex() == 3)
+        updateScaleX(mZoomCorrel);
+    
     update();
 }
 
@@ -574,7 +589,8 @@ void ResultsView::updateRulerAreas()
                             QColor(130, 205, 110));
         }
     }
-    updateScaleX();
+    //updateScaleX(mXSlider->value());
+    mRuler->setZoom(mXSlider->value());
 }
 
 void ResultsView::clearResults()
@@ -820,9 +836,19 @@ void ResultsView::exportFullImage()
     updateRendering(rendering);
 }
 
-void ResultsView::updateScaleX()
+void ResultsView::updateScaleX(int zoom)
 {
-    mRuler->setZoom(mXSlider->value());
+    if(mTabs->currentIndex() == 0)
+        mZoomDensity = zoom;
+    else if(mTabs->currentIndex() == 1)
+        mZoomTrace = zoom;
+    else if(mTabs->currentIndex() == 2)
+        mZoomAccept = zoom;
+    else if(mTabs->currentIndex() == 3)
+        mZoomCorrel = zoom;
+    
+    mXSlider->setValue(zoom);
+    mRuler->setZoom(zoom);
 }
 
 void ResultsView::updateScroll(double min, double max)

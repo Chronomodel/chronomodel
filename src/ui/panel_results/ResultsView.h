@@ -52,7 +52,7 @@ public slots:
     
 private slots:
     void updateScaleY(int value);
-    void updateScaleX();
+    void updateScaleX(int value);
     void updateScroll(double min, double max);
     
     void updateRendering(int index);
@@ -147,6 +147,11 @@ private:
     int mComboH;
     
     QTimer* mTimer;
+    
+    int mZoomDensity;
+    int mZoomTrace;
+    int mZoomAccept;
+    int mZoomCorrel;
 };
 
 #endif
