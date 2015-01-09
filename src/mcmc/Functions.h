@@ -34,7 +34,7 @@ double dataStd(const QVector<double>& data);
 
 double shrinkageUniform(double so2);
 
-Quartiles quartilesForTrace(const QVector<double>& trace);
+Quartiles quartilesForTrace(const QVector<double>& trace, double step);
 Quartiles quartilesForRepartition(const QVector<double>& repartition, double tmin, double step);
 QPair<double, double> credibilityForTrace(const QVector<double>& trace, int threshold, double& exactThresholdResult);
 QString intervalText(const QPair<double, double>& interval);
@@ -47,11 +47,11 @@ inline double rounddouble(double f, int prec)
     if(prec > 0)
     {
         double factor = pow(10.f, (double)prec);
-        result = roundf(f * factor) / factor;
+        result = round(f * factor) / factor;
     }
     else
     {
-        result = roundf(f);
+        result = round(f);
     }
     return result;
 }

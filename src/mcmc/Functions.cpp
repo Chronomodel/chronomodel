@@ -150,15 +150,20 @@ QString densityAnalysisToString(const DensityAnalysis& analysis)
     return result;
 }
 
-Quartiles quartilesForTrace(const QVector<double>& trace)
+Quartiles quartilesForTrace(const QVector<double>& trace, double step)
 {
+    Q_UNUSED(step);
+    // Should step be used as in quartilesForRepartition ??
+    // Is the found quartiles shifted by step/2 because using indexed arrays ??
+    // Difficult to say looking at numerical results because random seeds give different results each time...
+    
     Quartiles quartiles;
     
     QVector<double> sorted = trace;
     qSort(sorted);
     
-    int q1index = ceilf((double)sorted.size() * 0.25f);
-    int q3index = ceilf((double)sorted.size() * 0.75f);
+    int q1index = ceil((double)sorted.size() * 0.25f);
+    int q3index = ceil((double)sorted.size() * 0.75f);
     
     quartiles.Q1 = sorted[q1index];
     quartiles.Q3 = sorted[q3index];
@@ -172,7 +177,7 @@ Quartiles quartilesForTrace(const QVector<double>& trace)
     }
     else
     {
-        int q2index = ceilf((double)sorted.size() * 0.5f);
+        int q2index = ceil((double)sorted.size() * 0.5f);
         quartiles.Q2 = sorted[q2index];
     }
     return quartiles;
@@ -188,9 +193,14 @@ Quartiles quartilesForRepartition(const QVector<double>& repartition, double tmi
     double q2index = vector_interpolate_idx_for_value(0.5, repartition);
     double q3index = vector_interpolate_idx_for_value(0.75, repartition);
     
-    quartiles.Q1 = tmin + q1index * step;
-    quartiles.Q2 = tmin + q2index * step;
-    quartiles.Q3 = tmin + q3index * step;
+    // La courbe de répartition sur une plage [-50; 50] comporte 101 valeurs (tout comme la courbe de calibration)
+    // On regarde l'aire sous chaque point de largeur step : idem diagramme en barres
+    // Chaque point est centré sur sa barre en step/2.
+    // => Il faut donc retirer step/2 dans le calcul ci-dessous.
+    
+    quartiles.Q1 = tmin + q1index * step - (step/2);
+    quartiles.Q2 = tmin + q2index * step - (step/2);
+    quartiles.Q3 = tmin + q3index * step - (step/2);
     
     return quartiles;
 }
@@ -209,7 +219,7 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, int thre
         QVector<double> sorted = trace;
         qSort(sorted);
         
-        int numToRemove = floorf((double)sorted.size() * (1.f - (double)threshold / 100.f));
+        int numToRemove = floor((double)sorted.size() * (1.f - (double)threshold / 100.f));
         exactThresholdResult = ((double)sorted.size() - (double)numToRemove) / (double)sorted.size();
         
         int k = numToRemove;
