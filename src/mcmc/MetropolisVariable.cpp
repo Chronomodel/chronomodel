@@ -240,11 +240,11 @@ void MetropolisVariable::generateCorrelations(const QList<Chain>& chains)
     }
 }
 
-void MetropolisVariable::generateNumericalResults(const QList<Chain>& chains)
+void MetropolisVariable::generateNumericalResults(const QList<Chain>& chains, const ProjectSettings& settings)
 {
     // Results for chain concatenation
     mResults.analysis = analyseFunction(mHisto);
-    mResults.quartiles = quartilesForTrace(fullRunTrace(chains));
+    mResults.quartiles = quartilesForTrace(fullRunTrace(chains), settings.mStep);
     
     // Results for individual chains
     mChainsResults.clear();
@@ -252,7 +252,7 @@ void MetropolisVariable::generateNumericalResults(const QList<Chain>& chains)
     {
         DensityAnalysis result;
         result.analysis = analyseFunction(mChainsHistos[i]);
-        result.quartiles = quartilesForTrace(runTraceForChain(chains, i));
+        result.quartiles = quartilesForTrace(runTraceForChain(chains, i), settings.mStep);
         mChainsResults.append(result);
     }
 }

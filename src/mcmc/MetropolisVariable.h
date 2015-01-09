@@ -6,6 +6,7 @@
 #include <QList>
 #include "MCMCLoop.h"
 #include "Functions.h"
+#include "ProjectSettings.h"
 
 
 class MetropolisVariable
@@ -27,7 +28,7 @@ public:
     void generateCredibility(const QList<Chain>& chains, int threshold);
     
     // Virtual because MHVariable subclass adds some information
-    virtual void generateNumericalResults(const QList<Chain>& chains);
+    virtual void generateNumericalResults(const QList<Chain>& chains, const ProjectSettings& settings);
 
     // -----
     // These functions do not make any calculation

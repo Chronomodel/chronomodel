@@ -118,9 +118,9 @@ void MHVariable::generateGlobalRunAcceptation(const QList<Chain>& chains)
     mGlobalAcceptation = accepted / acceptsLength;
 }
 
-void MHVariable::generateNumericalResults(const QList<Chain>& chains)
+void MHVariable::generateNumericalResults(const QList<Chain>& chains, const ProjectSettings& settings)
 {
-    MetropolisVariable::generateNumericalResults(chains);
+    MetropolisVariable::generateNumericalResults(chains, settings);
     generateGlobalRunAcceptation(chains);
 }
 
