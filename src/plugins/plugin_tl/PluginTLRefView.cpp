@@ -71,7 +71,10 @@ void PluginTLRefView::setDate(const Date& d, const ProjectSettings& settings)
         curveMeasure.mIsVertical = true;
         curveMeasure.mIsHisto = false;
         
-        double step = (yMax - yMin) / 600.;
+        // 5000 pts are used on vertical measure
+        // because the y scale auto adjusts depending on x zoom.
+        // => the visible part of the measure may be very reduced !
+        double step = (yMax - yMin) / 5000.;
         for(double t=yMin; t<yMax; t += step)
         {
             double v = exp(-0.5 * pow((t - age) / error, 2));

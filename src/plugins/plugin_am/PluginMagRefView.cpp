@@ -132,7 +132,10 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         curveMeasure.mIsVertical = true;
         curveMeasure.mIsHisto = false;
         
-        double yStep = (yMax - yMin) / 600.;
+        // 5000 pts are used on vertical measure
+        // because the y scale auto adjusts depending on x zoom.
+        // => the visible part of the measure may be very reduced !
+        double yStep = (yMax - yMin) / 5000.;
         for(double t=yMin; t<yMax; t+=yStep)
         {
             double v = 0.f;
