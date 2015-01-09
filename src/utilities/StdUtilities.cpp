@@ -211,7 +211,7 @@ QVector<double> equal_areas(const QVector<double>& data, const double step, cons
 QMap<double, double> vector_to_map(const QVector<double>& data, const double min, const double max, const double step)
 {
     QMap<double, double> map;
-    int nbPts = 1 + (int)roundf((max - min) / step);
+    int nbPts = 1 + (int)round((max - min) / step);
     for(int i=0; i<nbPts; ++i)
     {
         double t = min + i * step;
@@ -232,7 +232,7 @@ double vector_interpolate_idx_for_value(const double value, const QVector<double
     {
         do
         {
-            int idxMid = idxInf + floorf((idxSup - idxInf) / 2.f);
+            int idxMid = idxInf + floor((idxSup - idxInf) / 2.f);
             double valueMid = vector[idxMid];
             
             if(value < valueMid)
@@ -268,15 +268,15 @@ double map_interpolate_key_for_value(const double value, const QMap<double, doub
         double keySup = map.lastKey();
         do
         {
-            double keyMid = keyInf + floorf((keySup - keyInf) / 2.f);
+            double keyMid = keyInf + floor((keySup - keyInf) / 2.f);
             double valueMid;
             QMap<double, double>::const_iterator it = map.find(keyMid);
             if(it != map.end())
                 valueMid = it.value();
             else
             {
-                double valueMidInf = map.value(floorf(keyMid));
-                double valueMidSup = map.value(ceilf(keyMid));
+                double valueMidInf = map.value(floor(keyMid));
+                double valueMidSup = map.value(ceil(keyMid));
                 valueMid = valueMidInf + (valueMidSup - valueMidInf) / 2.f;
             }
             if(value < valueMid)
@@ -625,7 +625,7 @@ QList<pair<double,double>> HPD_from_surface(const QMap<double, double> &aMap, do
 
 const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double /*aClasse*/, double threshold)
 {
-    QMap<double, double> inverted;
+    QMultiMap<double, double> inverted;
     QMapIterator<double, double> iter(aMap);
     double areaTot = 0.f;
     while(iter.hasNext())
@@ -633,150 +633,26 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double /
         iter.next();
         double t = iter.key();
         double v = iter.value();
-        inverted[v] = t;
-        areaTot += iter.value();
+        
+        areaTot += v;
+        inverted.insertMulti(v, t);
     }
-    double areaSearched = areaTot * threshold / 100;
+    
+    double areaSearched = areaTot * threshold / 100.;
     
     QMap<double, double> result;
-    QMapIterator<double, double> iter2(inverted);
-    iter2.toBack();
+    iter = QMapIterator<double, double>(inverted);
+    iter.toBack();
     double area = 0.f;
-    while(iter2.hasPrevious() && area < areaSearched)
+    while(iter.hasPrevious())
     {
-        iter2.previous();
-        double t = iter2.value();
-        double v = iter2.key();
+        iter.previous();
+        double t = iter.value();
+        double v = iter.key();
         area += v;
-        result[t] = v;
-    }
-    
-    QMapIterator<double, double> iter3(aMap);
-    while(iter3.hasNext())
-    {
-        iter3.next();
-        double t = iter3.key();
-        if(result.find(t) == result.end())
-        {
-            result[t] = 0.f;
-        }
+        result[t] = (area < areaSearched) ? v : 0;
     }
     return result;
-    
-    
-    /*QMap<double,double> input = normalize_map(aMap);
-    
-    // Aire totale
-    double area_tot = 0;
-    for(QMap<double,double>::const_iterator it = input.begin(); it != input.end(); ++it)
-        area_tot += it.value();
-    
-    // Dichotomie
-    double under = map_min_value(input);
-    double above = map_max_value(input);
-    
-    double value = above;
-    double area = area_tot;
-    
-    double limit_under = area_tot * (threshold-0.02);
-    double limit_above = area_tot * (threshold+0.02);
-    
-    std::cout << "area_tot : " << area_tot << std::endl;
-    std::cout << "threshold : " << threshold << std::endl;
-    std::cout << "limit under : " << limit_under << std::endl;
-    std::cout << "limit above : " << limit_above << std::endl;
-    
-    while(area < limit_under || area > limit_above)
-    {
-        value = under + (above - under) / 2;
-        area = 0;
-        for(QMap<double,double>::const_iterator it = input.begin(); it != input.end(); ++it)
-        {
-            if(it.value() > value)
-                area += it.value();
-        }
-        
-        std::cout << "---------" << std::endl;
-        std::cout << "under : " << under << std::endl;
-        std::cout << "above : " << above << std::endl;
-        std::cout << "value : " << value << std::endl;
-        std::cout << "area : " << area << std::endl;
-        std::cout << "area percent : " << area / area_tot << std::endl;
-        
-        if(area / area_tot < threshold)
-        {
-            std::cout << "GO DOWN" << std::endl;
-            above = value;
-        }
-        else
-        {
-            std::cout << "GO UP" << std::endl;
-            under = value;
-        }
-    }
-    std::cout << "OK OK OK OK OK OK OK OK" << std::endl;
-    std::cout << "---------" << std::endl;
-    std::cout << "Found value : " << value << std::endl;
-    std::cout << "Area Percent : " << area / area_tot << std::endl;
-    std::cout << "Area : " << area << std::endl;
-    std::cout << "---------" << std::endl;
-    
-    QMap<double, double> bounds;
-    QMap<double, double> result;
-    bool is_under = true;
-    double start = 0;
-    double end = 0;
-    for(QMap<double,double>::const_iterator it = input.begin(); it != input.end(); ++it)
-    {
-        if(is_under && it.value() > value)
-        {
-            is_under = false;
-            
-            //double v2 = it.value();
-            //double k2 = it.key();
-            //std::cout << "Cross above at : " << k2 << ", " << v2 << std::endl;
-            //--it;
-            //double v1 = it.value();
-            //double k1 = it.key();
-            //++it;
-            //double k = k1 + (k2 - k1) * (value - v1) / (v2 - v1);
-            //results[k] = value;
-            
-            //results[it.key()] = it.value();
-            
-            start = it.key();
-            std::cout << "Start : " << start << std::endl;
-        }
-        else if(!is_under && it.value() <= value)
-        {
-            is_under = true;
-            
-            //double v1 = it.value();
-            //double k1 = it.key();
-            //++it;
-            //double v2 = it.value();
-            //double k2 = it.key();
-            //--it;
-            //double k = k1 + (k2 - k1) * (value - v1) / (v2 - v1);
-            //results[k] = value;
-            
-            end = it.key();
-            std::cout << "End : " << end << std::endl;
-            
-            bounds[start] = end;
-            std::cout << "----------" << std::endl;
-        }
-        
-        if(it.value() > value)
-        {
-            result[it.key()] = it.value();
-        }
-        else
-        {
-            result[it.key()] = 0;
-        }
-    }
-    return result;*/
 }
 
 
