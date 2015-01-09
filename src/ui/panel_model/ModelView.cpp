@@ -176,9 +176,7 @@ mCalibVisible(false)
     mAnimationCalib->setDuration(400);
     mAnimationCalib->setEasingCurve(QEasingCurve::OutCubic);
     
-    mButBackEvents = new Button(tr("Close"), mCalibrationView);
-    mButBackEvents->setIsClose(true);
-    connect(mButBackEvents, SIGNAL(clicked()), this, SLOT(hideCalibration()));
+    connect(mCalibrationView, SIGNAL(closed()), this, SLOT(hideCalibration()));
     
     // --------
     
@@ -293,9 +291,9 @@ void ModelView::updateProject()
     
     
     if(settings.mStep < 1 || settings.mTmin >= settings.mTmax)
-        mButApply->setColorState(Button::eWarning);
+        setSettingsValid(false);
     else
-        mButApply->setColorState(Button::eReady);
+        setSettingsValid(true);
     
     mEventsScene->updateProject();
     mPhasesScene->updateProject();
@@ -346,13 +344,13 @@ void ModelView::applySettings()
         
         if(oldSettings.mTmin < oldSettings.mTmax)
         {
-            mButApply->setColorState(Button::eReady);
+            setSettingsValid(true);
         }
     }
     else
     {
         // Mark button as ready
-        mButApply->setColorState(Button::eReady);
+        setSettingsValid(true);
     }
 }
 
@@ -381,8 +379,14 @@ void ModelView::adjustStep()
 
 void ModelView::studyPeriodChanging()
 {
-    mButApply->setColorState(Button::eWarning);
+    setSettingsValid(false);
     hideCalibration();
+}
+
+void ModelView::setSettingsValid(bool valid)
+{
+    mButApply->setColorState(valid ? Button::eReady : Button::eWarning);
+    MainWindow::getInstance()->setRunEnabled(valid);
 }
 
 void ModelView::showHelp(bool show)
@@ -576,7 +580,6 @@ void ModelView::updateLayout()
     mPhasesGlobalZoom->setGeometry(mRightSubRect.width() - butW, 5*butH, butW, mRightRect.height() - 4*butH);
     
     mCalibrationView->setGeometry(mCalibVisible ? mLeftRect : mLeftHiddenRect);
-    mButBackEvents->setGeometry(mCalibrationView->width() - 30, 5, 25, 25);
     
     update();
 }

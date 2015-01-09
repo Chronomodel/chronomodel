@@ -74,6 +74,8 @@ private slots:
     void showCalibration(bool show = true);
     void hideCalibration();
     
+    void setSettingsValid(bool valid);
+    
 private:
     void exportSceneImage(QGraphicsScene* scene);
     
@@ -123,7 +125,6 @@ private:
     // ------
     
     CalibrationView* mCalibrationView;
-    Button* mButBackEvents;
     QPropertyAnimation* mAnimationCalib;
     
     // ------
