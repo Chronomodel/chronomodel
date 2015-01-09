@@ -49,6 +49,7 @@ public slots:
     void updateResults(Model* model);
     void updateGraphs();
     void updateRulerAreas();
+    void updateModel();
     
 private slots:
     void updateScaleY(int value);

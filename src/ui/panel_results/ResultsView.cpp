@@ -288,19 +288,12 @@ void ResultsView::doProjectConnections(Project* project)
     connect(project, SIGNAL(mcmcFinished(Model*)), this, SLOT(updateResults(Model*)));
 }
 
+#pragma mark Layout & Paint
 void ResultsView::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
     QPainter p(this);
     p.fillRect(width() - mOptionsW, 0, mOptionsW, height(), QColor(220, 220, 220));
-}
-
-void ResultsView::mouseMoveEvent(QMouseEvent* e)
-{
-    int x = e->pos().x() - 5;
-    x = (x >= mGraphLeft) ? x : mGraphLeft;
-    x = (x <= width() - mOptionsW) ? x : width() - mOptionsW;
-    mMarker->setGeometry(x, mMarker->pos().y(), mMarker->width(), mMarker->height());
 }
 
 void ResultsView::resizeEvent(QResizeEvent* e)
@@ -336,6 +329,28 @@ QList<QRect> ResultsView::getGeometries(const QList<GraphViewResults*>& graphs, 
         rects.append(rect);
     }
     return rects;
+}
+
+void ResultsView::updateScrollHeights()
+{
+    if(QWidget* wid = mEventsScrollArea->widget())
+    {
+        QList<QRect> geometries = getGeometries(mByEventsGraphs, mUnfoldBut->isChecked(), false);
+        int h = 0;
+        for(int i=0; i<geometries.size(); ++i)
+            h += geometries[i].height();
+        wid->setFixedHeight(h);
+        //qDebug() << "Graph events viewport : " << wid->geometry();
+    }
+    if(QWidget* wid = mPhasesScrollArea->widget())
+    {
+        QList<QRect> geometries = getGeometries(mByPhasesGraphs, mUnfoldBut->isChecked(), true);
+        int h = 0;
+        for(int i=0; i<geometries.size(); ++i)
+            h += geometries[i].height();
+        wid->setFixedHeight(h);
+        //qDebug() << "Graph phases viewport : " << wid->geometry();
+    }
 }
 
 void ResultsView::updateLayout()
@@ -431,6 +446,16 @@ void ResultsView::updateLayout()
     update();
 }
 
+#pragma mark Mouse & Marker
+void ResultsView::mouseMoveEvent(QMouseEvent* e)
+{
+    int x = e->pos().x() - 5;
+    x = (x >= mGraphLeft) ? x : mGraphLeft;
+    x = (x <= width() - mOptionsW) ? x : width() - mOptionsW;
+    mMarker->setGeometry(x, mMarker->pos().y(), mMarker->width(), mMarker->height());
+}
+
+#pragma mark Options
 void ResultsView::generateHPD()
 {
     if(mModel)
@@ -472,6 +497,178 @@ void ResultsView::updateHFactor()
         
         updateGraphs();
     }
+}
+
+#pragma mark Update
+void ResultsView::clearResults()
+{
+    mByEventsBut->setVisible(false);
+    mByPhasesBut->setVisible(false);
+    
+    for(int i=mCheckChainChecks.size()-1; i>=0; --i)
+    {
+        CheckBox* check = mCheckChainChecks.takeAt(i);
+        disconnect(check, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+        check->setParent(0);
+        delete check;
+    }
+    mCheckChainChecks.clear();
+    
+    for(int i=mChainRadios.size()-1; i>=0; --i)
+    {
+        RadioButton* but = mChainRadios.takeAt(i);
+        disconnect(but, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+        but->setParent(0);
+        delete but;
+    }
+    mChainRadios.clear();
+    
+    for(int i=0; i<mByEventsGraphs.size(); ++i)
+    {
+        mByEventsGraphs[i]->setParent(0);
+        delete mByEventsGraphs[i];
+    }
+    mByEventsGraphs.clear();
+    
+    for(int i=0; i<mByPhasesGraphs.size(); ++i)
+    {
+        mByPhasesGraphs[i]->setParent(0);
+        delete mByPhasesGraphs[i];
+    }
+    mByPhasesGraphs.clear();
+    
+    QWidget* eventsWidget = mEventsScrollArea->takeWidget();
+    if(eventsWidget)
+        delete eventsWidget;
+    
+    QWidget* phasesWidget = mPhasesScrollArea->takeWidget();
+    if(phasesWidget)
+        delete phasesWidget;
+}
+
+void ResultsView::updateResults(Model* model)
+{
+    clearResults();
+    mModel = model;
+    mChains = model->mChains;
+    mSettings = mModel->mSettings;
+    mMCMCSettings = mModel->mMCMCSettings;
+    mFFTLenCombo->setCurrentText("1024");
+    
+    if(!mModel)
+        return;
+    
+    mMinX = model->mSettings.mTmin;
+    mMaxX = model->mSettings.mTmax;
+    mRuler->setRange(model->mSettings.mTmin, model->mSettings.mTmax);
+    
+    mHasPhases = (mModel->mPhases.size() > 0);
+    
+    mByEventsBut->setVisible(mHasPhases);
+    mByPhasesBut->setVisible(mHasPhases);
+    
+    for(int i=0; i<mChains.size(); ++i)
+    {
+        CheckBox* check = new CheckBox(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
+        connect(check, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+        check->setVisible(true);
+        mCheckChainChecks.append(check);
+        
+        RadioButton* radio = new RadioButton(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
+        connect(radio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
+        radio->setVisible(true);
+        if(i == 0)
+            radio->setChecked(true);
+        mChainRadios.append(radio);
+    }
+    
+    // ----------------------------------------------------
+    //  Generate HPD (will then be updated only when HPD value changed)
+    // ----------------------------------------------------
+    generateHPD();
+    
+    // ----------------------------------------------------
+    //  Phases View
+    // ----------------------------------------------------
+    
+    QWidget* phasesWidget = new QWidget();
+    phasesWidget->setMouseTracking(true);
+    
+    for(int p=0; p<(int)mModel->mPhases.size(); ++p)
+    {
+        Phase* phase = mModel->mPhases[p];
+        GraphViewPhase* graphPhase = new GraphViewPhase(phasesWidget);
+        graphPhase->setSettings(mModel->mSettings);
+        graphPhase->setMCMCSettings(mModel->mMCMCSettings, mChains);
+        graphPhase->setPhase(phase);
+        mByPhasesGraphs.append(graphPhase);
+        
+        for(int i=0; i<(int)phase->mEvents.size(); ++i)
+        {
+            Event* event = phase->mEvents[i];
+            GraphViewEvent* graphEvent = new GraphViewEvent(phasesWidget);
+            graphEvent->setSettings(mModel->mSettings);
+            graphEvent->setMCMCSettings(mModel->mMCMCSettings, mChains);
+            graphEvent->setEvent(event);
+            mByPhasesGraphs.append(graphEvent);
+            
+            // Do not display datas in phases layout,
+            // but if needed, it can be done by uncommenting this :
+            
+            /*for(int j=0; j<(int)event->mDates.size(); ++j)
+             {
+             Date& date = event->mDates[j];
+             GraphViewDate* graphDate = new GraphViewDate(phasesWidget);
+             graphDate->setSettings(mModel->mSettings);
+             graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
+             graphDate->setDate(&date);
+             graphDate->setColor(event->mColor);
+             mByPhasesGraphs.append(graphDate);
+             }*/
+        }
+    }
+    mPhasesScrollArea->setWidget(phasesWidget);
+    
+    // ----------------------------------------------------
+    //  Events View
+    // ----------------------------------------------------
+    
+    QWidget* eventsWidget = new QWidget();
+    eventsWidget->setMouseTracking(true);
+    
+    for(int i=0; i<(int)mModel->mEvents.size(); ++i)
+    {
+        Event* event = mModel->mEvents[i];
+        GraphViewEvent* graphEvent = new GraphViewEvent(eventsWidget);
+        graphEvent->setSettings(mModel->mSettings);
+        graphEvent->setMCMCSettings(mModel->mMCMCSettings, mChains);
+        graphEvent->setEvent(event);
+        mByEventsGraphs.append(graphEvent);
+        
+        for(int j=0; j<(int)event->mDates.size(); ++j)
+        {
+            Date& date = event->mDates[j];
+            GraphViewDate* graphDate = new GraphViewDate(eventsWidget);
+            graphDate->setSettings(mModel->mSettings);
+            graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
+            graphDate->setDate(&date);
+            graphDate->setColor(event->mColor);
+            mByEventsGraphs.append(graphDate);
+        }
+    }
+    mEventsScrollArea->setWidget(eventsWidget);
+    
+    
+    if(mHasPhases && mByPhasesBut->isChecked())
+        showByPhases(true);
+    else
+        showByEvents(true);
+    
+    changeTab(0);
+    
+    // Done by changeTab :
+    //updateLayout();
+    //updateGraphs();
 }
 
 void ResultsView::updateGraphs()
@@ -593,177 +790,74 @@ void ResultsView::updateRulerAreas()
     mRuler->setZoom(mXSlider->value());
 }
 
-void ResultsView::clearResults()
+void ResultsView::updateModel()
 {
-    mByEventsBut->setVisible(false);
-    mByPhasesBut->setVisible(false);
-    
-    for(int i=mCheckChainChecks.size()-1; i>=0; --i)
-    {
-        CheckBox* check = mCheckChainChecks.takeAt(i);
-        disconnect(check, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-        check->setParent(0);
-        delete check;
-    }
-    mCheckChainChecks.clear();
-    
-    for(int i=mChainRadios.size()-1; i>=0; --i)
-    {
-        RadioButton* but = mChainRadios.takeAt(i);
-        disconnect(but, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-        but->setParent(0);
-        delete but;
-    }
-    mChainRadios.clear();
-    
-    for(int i=0; i<mByEventsGraphs.size(); ++i)
-    {
-        mByEventsGraphs[i]->setParent(0);
-        delete mByEventsGraphs[i];
-    }
-    mByEventsGraphs.clear();
-    
-    for(int i=0; i<mByPhasesGraphs.size(); ++i)
-    {
-        mByPhasesGraphs[i]->setParent(0);
-        delete mByPhasesGraphs[i];
-    }
-    mByPhasesGraphs.clear();
-    
-    QWidget* eventsWidget = mEventsScrollArea->takeWidget();
-    if(eventsWidget)
-        delete eventsWidget;
-    
-    QWidget* phasesWidget = mPhasesScrollArea->takeWidget();
-    if(phasesWidget)
-        delete phasesWidget;
-}
-
-void ResultsView::updateResults(Model* model)
-{
-    clearResults();
-    mModel = model;
-    mChains = model->mChains;
-    mSettings = mModel->mSettings;
-    mMCMCSettings = mModel->mMCMCSettings;
-    mFFTLenCombo->setCurrentText("1024");
-    
     if(!mModel)
         return;
     
-    mMinX = model->mSettings.mTmin;
-    mMaxX = model->mSettings.mTmax;
-    mRuler->setRange(model->mSettings.mTmin, model->mSettings.mTmax);
+    QJsonObject state = MainWindow::getInstance()->getProject()->state();
     
-    mHasPhases = (mModel->mPhases.size() > 0);
+    QJsonArray events = state[STATE_EVENTS].toArray();
+    QJsonArray phases = state[STATE_PHASES].toArray();
     
-    mByEventsBut->setVisible(mHasPhases);
-    mByPhasesBut->setVisible(mHasPhases);
-    
-    for(int i=0; i<mChains.size(); ++i)
+    for(int i=0; i<events.size(); ++i)
     {
-        CheckBox* check = new CheckBox(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
-        connect(check, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-        check->setVisible(true);
-        mCheckChainChecks.append(check);
+        QJsonObject event = events[i].toObject();
+        int eventId = event[STATE_ID].toInt();
+        QJsonArray dates = event[STATE_EVENT_DATES].toArray();
         
-        RadioButton* radio = new RadioButton(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
-        connect(radio, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-        radio->setVisible(true);
-        if(i == 0)
-            radio->setChecked(true);
-        mChainRadios.append(radio);
-    }
-    
-    // ----------------------------------------------------
-    //  Generate HPD (will then be updated only when HPD value changed)
-    // ----------------------------------------------------
-    generateHPD();
-    
-    // ----------------------------------------------------
-    //  Phases View
-    // ----------------------------------------------------
-    
-    QWidget* phasesWidget = new QWidget();
-    phasesWidget->setMouseTracking(true);
-    
-    for(int p=0; p<(int)mModel->mPhases.size(); ++p)
-    {
-        Phase* phase = mModel->mPhases[p];
-        GraphViewPhase* graphPhase = new GraphViewPhase(phasesWidget);
-        graphPhase->setSettings(mModel->mSettings);
-        graphPhase->setMCMCSettings(mModel->mMCMCSettings, mChains);
-        graphPhase->setPhase(phase);
-        mByPhasesGraphs.append(graphPhase);
-        
-        for(int i=0; i<(int)phase->mEvents.size(); ++i)
+        for(int j=0; j<mModel->mEvents.size(); ++j)
         {
-            Event* event = phase->mEvents[i];
-            GraphViewEvent* graphEvent = new GraphViewEvent(phasesWidget);
-            graphEvent->setSettings(mModel->mSettings);
-            graphEvent->setMCMCSettings(mModel->mMCMCSettings, mChains);
-            graphEvent->setEvent(event);
-            mByPhasesGraphs.append(graphEvent);
-            
-            // Do not display datas in phases layout,
-            // but if needed, it can be done by uncommenting this :
-            
-            /*for(int j=0; j<(int)event->mDates.size(); ++j)
+            Event* e = mModel->mEvents[j];
+            if(e->mId == eventId)
             {
-                Date& date = event->mDates[j];
-                GraphViewDate* graphDate = new GraphViewDate(phasesWidget);
-                graphDate->setSettings(mModel->mSettings);
-                graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
-                graphDate->setDate(&date);
-                graphDate->setColor(event->mColor);
-                mByPhasesGraphs.append(graphDate);
-            }*/
+                e->mName = event[STATE_NAME].toString();
+                e->mColor = QColor(event[STATE_COLOR_RED].toInt(),
+                                   event[STATE_COLOR_GREEN].toInt(),
+                                   event[STATE_COLOR_BLUE].toInt());
+                
+                for(int k=0; k<e->mDates.size(); ++k)
+                {
+                    Date& d = e->mDates[k];
+                    
+                    for(int l=0; l<dates.size(); ++l)
+                    {
+                        QJsonObject date = dates[l].toObject();
+                        int dateId = date[STATE_ID].toInt();
+                        
+                        if(dateId == d.mId)
+                        {
+                            d.mName = date[STATE_NAME].toString();
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
         }
     }
-    mPhasesScrollArea->setWidget(phasesWidget);
-    
-    // ----------------------------------------------------
-    //  Events View
-    // ----------------------------------------------------
-    
-    QWidget* eventsWidget = new QWidget();
-    eventsWidget->setMouseTracking(true);
-    
-    for(int i=0; i<(int)mModel->mEvents.size(); ++i)
+    for(int i=0; i<phases.size(); ++i)
     {
-        Event* event = mModel->mEvents[i];
-        GraphViewEvent* graphEvent = new GraphViewEvent(eventsWidget);
-        graphEvent->setSettings(mModel->mSettings);
-        graphEvent->setMCMCSettings(mModel->mMCMCSettings, mChains);
-        graphEvent->setEvent(event);
-        mByEventsGraphs.append(graphEvent);
+        QJsonObject phase = phases[i].toObject();
+        int phaseId = phase[STATE_ID].toInt();
         
-        for(int j=0; j<(int)event->mDates.size(); ++j)
+        for(int j=0; j<mModel->mPhases.size(); ++j)
         {
-            Date& date = event->mDates[j];
-            GraphViewDate* graphDate = new GraphViewDate(eventsWidget);
-            graphDate->setSettings(mModel->mSettings);
-            graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
-            graphDate->setDate(&date);
-            graphDate->setColor(event->mColor);
-            mByEventsGraphs.append(graphDate);
+            Phase* p = mModel->mPhases[j];
+            if(p->mId == phaseId)
+            {
+                p->mName = phase[STATE_NAME].toString();
+                p->mColor = QColor(phase[STATE_COLOR_RED].toInt(),
+                                   phase[STATE_COLOR_GREEN].toInt(),
+                                   phase[STATE_COLOR_BLUE].toInt());
+                break;
+            }
         }
     }
-    mEventsScrollArea->setWidget(eventsWidget);
-    
-    
-    if(mHasPhases && mByPhasesBut->isChecked())
-        showByPhases(true);
-    else
-        showByEvents(true);
-    
-    changeTab(0);
-    
-    // Done by changeTab :
-    //updateLayout();
-    //updateGraphs();
+    updateResults(mModel);
 }
 
+#pragma mark Display options
 void ResultsView::unfoldResults(bool open)
 {
     QList<QRect> geometries = getGeometries(mByEventsGraphs, open, false);
@@ -783,28 +877,6 @@ void ResultsView::unfoldResults(bool open)
     else
     {
         mTimer->start(200);
-    }
-}
-
-void ResultsView::updateScrollHeights()
-{
-    if(QWidget* wid = mEventsScrollArea->widget())
-    {
-        QList<QRect> geometries = getGeometries(mByEventsGraphs, mUnfoldBut->isChecked(), false);
-        int h = 0;
-        for(int i=0; i<geometries.size(); ++i)
-            h += geometries[i].height();
-        wid->setFixedHeight(h);
-        //qDebug() << "Graph events viewport : " << wid->geometry();
-    }
-    if(QWidget* wid = mPhasesScrollArea->widget())
-    {
-        QList<QRect> geometries = getGeometries(mByPhasesGraphs, mUnfoldBut->isChecked(), true);
-        int h = 0;
-        for(int i=0; i<geometries.size(); ++i)
-            h += geometries[i].height();
-        wid->setFixedHeight(h);
-        //qDebug() << "Graph phases viewport : " << wid->geometry();
     }
 }
 

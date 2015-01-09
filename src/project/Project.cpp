@@ -1794,7 +1794,12 @@ void Project::run()
     emit mcmcStarted();
     
     if(mModel)
+    {
         delete mModel;
+        // Very important!
+        // ResultsView uses a pointer to the model and will use it if it is not set to 0 !!
+        mModel = 0;
+    }
     mModel = Model::fromJson(mState);
     
     bool modelOk = false;
