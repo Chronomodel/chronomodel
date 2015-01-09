@@ -19,6 +19,7 @@ void sortIntList(QList<int>& list)
     qSort(list.begin(), list.end(), intLessThan);
 }
 
+
 QList<QStringList> readCSV(const QString& filePath, const QString& separator)
 {
     QFile file(filePath);
@@ -161,7 +162,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
         else
         {
             qreal pr = qApp->devicePixelRatio();
-            qDebug() << "Saving PNG with pixel ratio : " << pr;
+            //qDebug() << "Saving PNG with pixel ratio : " << pr;
             QImage image(r.width() * pr, r.height() * pr, QImage::Format_ARGB32);
             image.setDevicePixelRatio(pr);
             image.fill(Qt::transparent);

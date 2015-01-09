@@ -86,7 +86,7 @@ void Ruler::setZoom(int prop)
         double pos = 0;
         double rangeAfter = (double)mScrollBar->maximum();
         if(rangeAfter > 0)
-            pos = floorf(posProp * rangeAfter);
+            pos = floor(posProp * rangeAfter);
         mScrollBar->setValue(pos);
     }
     else

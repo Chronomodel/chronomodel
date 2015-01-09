@@ -514,6 +514,9 @@ void GraphView::drawCurves(QPainter& painter)
     {
         const GraphCurve& curve = mCurves[curveIndex];
         
+        if(!curve.mVisible)
+            continue;
+        
         QPainterPath path;
         painter.setPen(curve.mPen);
         

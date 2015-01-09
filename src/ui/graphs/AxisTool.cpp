@@ -48,11 +48,11 @@ void AxisTool::updateValues(double totalPix, double minDeltaPix, double minVal, 
     
     double factor = pow(10.f, pow10);
     
-    //mDeltaVal = floorf(unitsPerStep) * factor;
+    //mDeltaVal = floor(unitsPerStep) * factor;
     mDeltaVal = 10.f * factor;
     mDeltaPix = mDeltaVal * pixelsPerUnit;
     
-    mStartVal = ceilf(minVal / mDeltaVal) * mDeltaVal;
+    mStartVal = ceil(minVal / mDeltaVal) * mDeltaVal;
     mStartPix = (mStartVal - minVal) * pixelsPerUnit;
     
     /*qDebug() << "------------";

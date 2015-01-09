@@ -78,7 +78,7 @@ void GraphViewEvent::refresh()
                     
                     for(int t=mSettings.mTmin; t< mSettings.mTmax; ++t)
                         curve.mData[t] = 0.f;
-                    curve.mData[floorf(bound->fixedValue())] = 1.f;
+                    curve.mData[floor(bound->fixedValue())] = 1.f;
                     
                     mGraph->addCurve(curve);
                 }
@@ -228,7 +228,7 @@ void GraphViewEvent::refresh()
                 
                 double min = map_min_value(curve.mData);
                 double max = map_max_value(curve.mData);
-                mGraph->setRangeY(floorf(min), ceilf(max));
+                mGraph->setRangeY(floor(min), ceil(max));
             }
         }
         else if(mCurrentResult == eAccept && mCurrentVariable == eTheta && mEvent->mMethod == Event::eMHAdaptGauss)

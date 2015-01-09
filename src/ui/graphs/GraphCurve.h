@@ -37,6 +37,8 @@ public:
     QList<QPair<double, double>> mSections;
     
     bool mIsVertical;
+    
+    bool mVisible;
 };
 
 #endif

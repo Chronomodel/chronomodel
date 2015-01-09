@@ -217,7 +217,7 @@ void GraphViewDate::refresh()
                 
                 double min = map_min_value(curve.mData);
                 double max = map_max_value(curve.mData);
-                mGraph->setRangeY(floorf(min), ceilf(max));
+                mGraph->setRangeY(floor(min), ceil(max));
             }
         }
         else if(mCurrentResult == eAccept)
