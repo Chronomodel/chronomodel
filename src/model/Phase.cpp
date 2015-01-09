@@ -2,6 +2,7 @@
 #include "Event.h"
 #include "PhaseConstraint.h"
 #include "Generator.h"
+#include "QtUtilities.h"
 #include <QtWidgets>
 
 
@@ -16,14 +17,12 @@ mIsSelected(false),
 mIsCurrent(false),
 mLevel(0)
 {
-    mColor = QColor(120 + rand() % 50,
-                    120 + rand() % 50,
-                    120 + rand() % 50);
+    mColor = randomColor();
     
     // Item initial position :
-    int posDelta = 100;
-    mItemX = rand() % posDelta - posDelta/2;
-    mItemY = rand() % posDelta - posDelta/2;
+    //int posDelta = 100;
+    mItemX = 0;//rand() % posDelta - posDelta/2;
+    mItemY = 0;//rand() % posDelta - posDelta/2;
 }
 
 Phase::Phase(const Phase& phase)

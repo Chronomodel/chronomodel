@@ -26,5 +26,6 @@ QString textGreen(const QString& str);
 QString textBlue(const QString& str);
 QString textPurple(const QString& str);
 
+QColor randomColor();
 
 #endif

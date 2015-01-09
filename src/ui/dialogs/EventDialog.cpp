@@ -2,6 +2,7 @@
 #include "ColorPicker.h"
 #include "LineEdit.h"
 #include "ModelUtilities.h"
+#include "QtUtilities.h"
 #include <QtWidgets>
 
 
@@ -23,9 +24,7 @@ EventDialog::EventDialog(QWidget* parent, const QString& title, Qt::WindowFlags 
     mNameEdit->setFocus();
     
     mColorPicker = new ColorPicker();
-    mColorPicker->setColor(QColor(120 + rand() % 50,
-                                  120 + rand() % 50,
-                                  120 + rand() % 50));
+    mColorPicker->setColor(randomColor());
     
     QGridLayout* gridLayout = new QGridLayout();
     gridLayout->setContentsMargins(0, 0, 0, 0);

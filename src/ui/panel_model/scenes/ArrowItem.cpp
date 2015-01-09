@@ -61,6 +61,12 @@ void ArrowItem::setTo(double x, double y)
         scene()->update();
 }
 
+void ArrowItem::setGreyedOut(bool greyedOut)
+{
+    mGreyedOut = greyedOut;
+    update();
+}
+
 void ArrowItem::updatePosition()
 {
     prepareGeometryChange();
@@ -227,6 +233,9 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     QColor color = mEditing ? QColor(77, 180, 62) : QColor(0, 0, 0);
     if(mShowDelete)
         color = Qt::red;
+    
+    if(mGreyedOut)
+        color.setAlphaF(0.05);
     
     painter->setPen(QPen(color, penWidth, mEditing ? Qt::DashLine : Qt::SolidLine));
     painter->drawLine(mXStart, mYStart, mXEnd, mYEnd);

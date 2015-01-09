@@ -22,9 +22,7 @@ mIsSelected(false),
 mInitialized(false),
 mLevel(0)
 {
-    mColor = QColor(120 + rand() % 50,
-                    120 + rand() % 50,
-                    120 + rand() % 50);
+    mColor = randomColor();
     
     // Item initial position :
     //int posDelta = 100;

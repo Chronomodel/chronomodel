@@ -63,7 +63,7 @@ void EventsScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
 
 void EventsScene::updateGreyedOutEvents(const QMap<int, bool>& eyedPhases)
 {
-    qDebug() << "-> Update greyed out events";
+    //qDebug() << "-> Update greyed out events";
     
     // If no phases is eyed, then no event must be greyed out!
     bool noEyedPhases = true;
@@ -78,6 +78,9 @@ void EventsScene::updateGreyedOutEvents(const QMap<int, bool>& eyedPhases)
         }
     }
     
+    // ----------------------------------------------------
+    //  Grey out events
+    // ----------------------------------------------------
     for(int i=0; i<mItems.size(); ++i)
     {
         EventItem* item = (EventItem*)mItems[i];
@@ -101,6 +104,56 @@ void EventsScene::updateGreyedOutEvents(const QMap<int, bool>& eyedPhases)
                 }
             }
             item->setGreyedOut(mustBeGreyedOut);
+        }
+    }
+    
+    // ----------------------------------------------------
+    //  Grey out constraints
+    // ----------------------------------------------------
+    for(int i=0; i<mConstraintItems.size(); ++i)
+    {
+        ArrowItem* item = (ArrowItem*)mConstraintItems[i];
+        if(noEyedPhases)
+        {
+            item->setGreyedOut(false);
+        }
+        else
+        {
+            int eventFromId = item->mData[STATE_CONSTRAINT_BWD_ID].toInt();
+            int eventToId = item->mData[STATE_CONSTRAINT_FWD_ID].toInt();
+            
+            bool eventFromIsOk = false;
+            bool eventToIsOk = false;
+            
+            QJsonObject state = MainWindow::getInstance()->getProject()->state();
+            QJsonArray events = state[STATE_EVENTS].toArray();
+            
+            for(int i=0; i<events.size(); ++i)
+            {
+                QJsonObject event = events[i].toObject();
+                
+                if(event[STATE_ID].toInt() == eventFromId)
+                {
+                    QString eventFromPhasesIdsStr = event[STATE_EVENT_PHASE_IDS].toString();
+                    QList<int> eventFromPhasesIds = stringListToIntList(eventFromPhasesIdsStr);
+                    for(int j=0; j<eventFromPhasesIds.size(); ++j)
+                    {
+                        if(eyedPhases[eventFromPhasesIds[j]])
+                            eventFromIsOk = true;
+                    }
+                }
+                else if(event[STATE_ID].toInt() == eventToId)
+                {
+                    QString eventToPhasesIdsStr = event[STATE_EVENT_PHASE_IDS].toString();
+                    QList<int> eventToPhasesIds = stringListToIntList(eventToPhasesIdsStr);
+                    for(int j=0; j<eventToPhasesIds.size(); ++j)
+                    {
+                        if(eyedPhases[eventToPhasesIds[j]])
+                            eventToIsOk = true;
+                    }
+                }
+            }
+            item->setGreyedOut(!eventFromIsOk || !eventToIsOk);
         }
     }
 }

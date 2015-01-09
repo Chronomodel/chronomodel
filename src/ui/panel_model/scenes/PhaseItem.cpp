@@ -51,7 +51,7 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
     if(checkRect().contains(e->pos()))
     {
-        qDebug() << "-> Check clicked";
+        //qDebug() << "-> Check clicked";
         
         // Do not select phase when clicking on the box
         e->accept();
@@ -68,7 +68,7 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
     }
     else if(eyeRect().contains(e->pos()))
     {
-        qDebug() << "-> Eye clicked";
+        //qDebug() << "-> Eye clicked";
         
         // Do not select phase when clicking on the box
         e->accept();

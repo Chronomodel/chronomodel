@@ -22,6 +22,8 @@ public:
     void updatePosition();
     void setFrom(double x, double y);
     void setTo(double x, double y);
+    
+    void setGreyedOut(bool greyedOut);
 
     QRectF boundingRect() const;
     QPainterPath shape() const;
@@ -38,7 +40,7 @@ public:
     void setData(const QJsonObject& c);
     QJsonObject& data();
     
-protected:
+public:
     Type mType;
     QJsonObject mData;
     AbstractScene* mScene;
@@ -53,6 +55,8 @@ protected:
     
     bool mEditing;
     bool mShowDelete;
+    
+    bool mGreyedOut;
 };
 
 #endif

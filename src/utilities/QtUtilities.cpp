@@ -219,3 +219,10 @@ QString textPurple(const QString& str)
 {
     return "<span style=\"color: #8E60AB;\">" + str + "</span>";
 }
+
+QColor randomColor()
+{
+    return QColor(rand() % 255,
+                  rand() % 255,
+                  rand() % 255);
+}

@@ -106,6 +106,7 @@ void PhasesScene::updateProject()
     // ------------------------------------------------------
     //  Create / Update phase items
     // ------------------------------------------------------
+    bool hasCreated = false;
     for(int i=0; i<phases.size(); ++i)
     {
         QJsonObject phase = phases[i].toObject();
@@ -134,6 +135,28 @@ void PhasesScene::updateProject()
             PhaseItem* phaseItem = new PhaseItem(this, phase);
             mItems.append(phaseItem);
             addItem(phaseItem);
+            
+            // Pratique
+            clearSelection();
+            phaseItem->setSelected(true);
+            
+            // Note : setting an event in (0, 0) tells the scene that this item is new!
+            // Thus the scene will move it randomly around the currently viewed center point.
+            QPointF pos = phaseItem->pos();
+            if(pos.isNull())
+            {
+                QList<QGraphicsView*> gviews = views();
+                if(gviews.size() > 0)
+                {
+                    QGraphicsView* gview = gviews[0];
+                    QPointF pt = gview->mapToScene(gview->width()/2, gview->height()/2);
+                    int posDelta = 100;
+                    phaseItem->setPos(pt.x() + rand() % posDelta - posDelta/2,
+                                      pt.y() + rand() % posDelta - posDelta/2);
+                }
+            }
+            
+            hasCreated = true;
 #if DEBUG
             qDebug() << "Phase item created : id = " << phase[STATE_ID].toInt();
 #endif
@@ -198,9 +221,9 @@ void PhasesScene::updateProject()
     mUpdatingItems = false;
     
     // Deleting an item that was selected involves changing the selection (and updating properties view)
-    // Nothing has been triggered so far because of the mUpdatingItems flag,
-    // so we need to trigger it now!
-    if(hasDeleted)
+    // Nothing has been triggered so far because of the mUpdatingItems flag, so we need to trigger it now!
+    // As well, creating an item changes the selection because we want the newly created item to be selected.
+    if(hasDeleted || hasCreated)
     {
         updateSelection(true);
     }
