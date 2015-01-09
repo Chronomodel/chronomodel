@@ -28,6 +28,8 @@ public:
     
     void updateEyedPhases();
     
+    void adaptItemsForZoom(double prop);
+    
 protected:
     AbstractItem* collidingItem(QGraphicsItem* item);
     AbstractItem* currentItem();

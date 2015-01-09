@@ -44,6 +44,8 @@ public:
     
     QList<Date> decodeDataDrop(QGraphicsSceneDragDropEvent* e);
     
+    void adaptItemsForZoom(double prop);
+    
 protected:
     void dropEvent(QGraphicsSceneDragDropEvent* e);
     void dragMoveEvent(QGraphicsSceneDragDropEvent* e);

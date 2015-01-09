@@ -430,6 +430,7 @@ void EventsScene::updateProject()
     }
     
     adjustSceneRect();
+    adaptItemsForZoom(mZoom);
 }
 
 void EventsScene::clean()
@@ -468,9 +469,8 @@ void EventsScene::clean()
     for(int i=mConstraintItems.size()-1; i>=0; --i)
     {
         ArrowItem* constraintItem = mConstraintItems[i];
-        QJsonObject& constraint = constraintItem->data();
-        
 #if DEBUG
+        QJsonObject& constraint = constraintItem->data();
         qDebug() << "Event Constraint deleted : " << constraint[STATE_ID].toInt();
 #endif
         removeItem(constraintItem);
@@ -561,6 +561,16 @@ void EventsScene::updateSelectedEventsFromPhases()
     }
     mUpdatingItems = false;
     updateSelection();
+}
+
+void EventsScene::adaptItemsForZoom(double prop)
+{
+    mZoom = prop;
+    for(int i=0; i<mItems.size(); ++i)
+    {
+        EventItem* item = (EventItem*)mItems[i];
+        item->setDatesVisible(mZoom > 0.6);
+    }
 }
 
 #pragma mark Utilities

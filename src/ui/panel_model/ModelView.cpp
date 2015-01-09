@@ -591,6 +591,7 @@ void ModelView::updateEventsZoom(double prop)
     QMatrix matrix;
     matrix.scale(scale, scale);
     mEventsView->setMatrix(matrix);
+    mEventsScene->adaptItemsForZoom(scale);
 }
 
 void ModelView::updatePhasesZoom(double prop)
@@ -599,6 +600,7 @@ void ModelView::updatePhasesZoom(double prop)
     QMatrix matrix;
     matrix.scale(scale, scale);
     mPhasesView->setMatrix(matrix);
+    mPhasesScene->adaptItemsForZoom(scale);
 }
 
 #pragma mark Export images

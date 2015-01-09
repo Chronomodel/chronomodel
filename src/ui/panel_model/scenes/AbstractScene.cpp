@@ -12,7 +12,8 @@ mDrawingArrow(false),
 mUpdatingItems(false),
 mAltIsDown(false),
 mShiftIsDown(false),
-mShowGrid(false)
+mShowGrid(false),
+mZoom(1.)
 {
     mTempArrow = new ArrowTmpItem();
     addItem(mTempArrow);

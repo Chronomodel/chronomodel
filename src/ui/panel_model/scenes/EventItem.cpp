@@ -131,6 +131,15 @@ void EventItem::updateGreyedOut()
     setOpacity(mGreyedOut ? 0.3 : 1);
 }
 
+void EventItem::setDatesVisible(bool visible)
+{
+    QList<QGraphicsItem*> dateItems = childItems();
+    for(int i=0; i<dateItems.size(); ++i)
+    {
+        dateItems[i]->setVisible(visible);
+    }
+}
+
 #pragma mark Events
 void EventItem::updateItemPosition(const QPointF& pos)
 {

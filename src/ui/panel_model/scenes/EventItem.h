@@ -23,6 +23,8 @@ public:
     
     virtual void updateItemPosition(const QPointF& pos);
     
+    void setDatesVisible(bool visible);
+    
 protected:
     virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
     virtual void dropEvent(QGraphicsSceneDragDropEvent* e);

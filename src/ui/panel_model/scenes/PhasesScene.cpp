@@ -229,6 +229,7 @@ void PhasesScene::updateProject()
     }
     
     adjustSceneRect();
+    adaptItemsForZoom(mZoom);
 }
 
 void PhasesScene::clean()
@@ -239,8 +240,9 @@ void PhasesScene::clean()
     for(int i=mItems.size()-1; i>=0; --i)
     {
         PhaseItem* item = (PhaseItem*)mItems[i];
-        QJsonObject& phase = item->phase();
+        
 #if DEBUG
+        QJsonObject& phase = item->phase();
         qDebug() << "=> Phase item deleted : " << phase[STATE_ID].toInt();
 #endif
         mItems.removeAt(i);
@@ -311,6 +313,16 @@ void PhasesScene::updateSelection(bool forced)
             sendUpdateProject(tr("phases selection updated : phases marked as selected"), false, false);
             MainWindow::getInstance()->getProject()->sendPhasesSelectionChanged();
         }
+    }
+}
+
+void PhasesScene::adaptItemsForZoom(double prop)
+{
+    mZoom = prop;
+    for(int i=0; i<mItems.size(); ++i)
+    {
+        PhaseItem* item = (PhaseItem*)mItems[i];
+        item->setControlsVisible(mZoom > 0.6);
     }
 }
 

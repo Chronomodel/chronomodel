@@ -11,7 +11,8 @@
 
 PhaseItem::PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsItem* parent):AbstractItem(scene, parent),
 mState(Qt::Unchecked),
-mEyeActivated(false)
+mEyeActivated(false),
+mControlsVisible(true)
 {
     mBorderWidth = 10;
     mEltsHeight = 15;
@@ -46,10 +47,16 @@ void PhaseItem::setState(Qt::CheckState state)
     update();
 }
 
+void PhaseItem::setControlsVisible(double visible)
+{
+    mControlsVisible = visible;
+    update();
+}
+
 #pragma mark Mouse events
 void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-    if(checkRect().contains(e->pos()))
+    if(mControlsVisible && checkRect().contains(e->pos()))
     {
         //qDebug() << "-> Check clicked";
         
@@ -66,7 +73,7 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
         if(scene())
             scene()->update();
     }
-    else if(eyeRect().contains(e->pos()))
+    else if(mControlsVisible && eyeRect().contains(e->pos()))
     {
         //qDebug() << "-> Eye clicked";
         
@@ -147,19 +154,22 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->setBrush(phaseColor);
     painter->drawRoundedRect(rect, rounded, rounded);
     
-    // Checked
-    QRectF cRect = checkRect();
-    drawCheckBoxBox(*painter, cRect, mState, Qt::white, QColor(150, 150, 150));
-    
-    // Eye
-    QRectF eRect = eyeRect();
-    painter->setBrush(Qt::white);
-    painter->setPen(Qt::black);
-    painter->drawRoundedRect(eRect, 10, 10);
-    if(mEyeActivated)
+    if(mControlsVisible)
     {
-        QPixmap eye(":eye.png");
-        painter->drawPixmap(eRect, eye, eye.rect());
+        // Checked
+        QRectF cRect = checkRect();
+        drawCheckBoxBox(*painter, cRect, mState, Qt::white, QColor(150, 150, 150));
+        
+        // Eye
+        QRectF eRect = eyeRect();
+        painter->setBrush(Qt::white);
+        painter->setPen(Qt::black);
+        painter->drawRoundedRect(eRect, 10, 10);
+        if(mEyeActivated)
+        {
+            QPixmap eye(":eye.png");
+            painter->drawPixmap(eRect, eye, eye.rect());
+        }
     }
     
     // Name

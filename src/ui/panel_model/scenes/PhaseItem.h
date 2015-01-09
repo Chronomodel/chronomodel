@@ -19,6 +19,8 @@ public:
     void setState(Qt::CheckState state);
     
     virtual void updateItemPosition(const QPointF& pos);
+    
+    void setControlsVisible(double visible);
 
 protected:
     QRectF boundingRect() const;
@@ -33,6 +35,7 @@ protected:
 public:
     Qt::CheckState mState;
     bool mEyeActivated;
+    bool mControlsVisible;
 };
 
 #endif

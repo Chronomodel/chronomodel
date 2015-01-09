@@ -65,6 +65,8 @@ protected:
     
     bool mShowGrid;
     
+    double mZoom;
+    
 public:
     ArrowTmpItem* mTempArrow;
 };
