@@ -20,6 +20,7 @@ mThresholdHPD(95),
 mShowCalib(false),
 mShowWiggle(false),
 mShowRawResults(false),
+mShowNumResults(false),
 mMainColor(QColor(50, 50, 50)),
 mMargin(5),
 mLineH(20),
@@ -39,7 +40,7 @@ mGraphLeft(130)
     mTextArea = new QTextEdit(this);
     mTextArea->setFrameStyle(QFrame::HLine);
     QPalette palette = mTextArea->palette();
-    palette.setColor(QPalette::Base, QColor(200, 200, 200, 240));
+    palette.setColor(QPalette::Base, Qt::white);
     palette.setColor(QPalette::Text, Qt::black);
     mTextArea->setPalette(palette);
     QFont font = mTextArea->font();
@@ -178,14 +179,8 @@ void GraphViewResults::setNumericalResults(const QString& results)
 
 void GraphViewResults::showNumericalResults(bool show)
 {
-    if(mGraph->numCurves() != 0)
-    {
-        mTextArea->setVisible(show);
-        if(show)
-            mTextArea->raise();
-    }
-    else
-        mTextArea->setVisible(false);
+    mShowNumResults = show;
+    updateLayout();
 }
 
 void GraphViewResults::setRendering(GraphView::Rendering render)
@@ -223,7 +218,11 @@ void GraphViewResults::paintEvent(QPaintEvent* e)
 void GraphViewResults::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
-    
+    updateLayout();
+}
+
+void GraphViewResults::updateLayout()
+{
     int h = height();
     int butMinH = 30;
     int butInlineMaxH = 50;
@@ -270,7 +269,15 @@ void GraphViewResults::resizeEvent(QResizeEvent* e)
         mGraph->setMarginBottom(0);
     }
     
-    
-    mGraph->setGeometry(graphRect);
-    mTextArea->setGeometry(mGraphLeft, 0, width() - mGraphLeft, height());
+    if(mShowNumResults && height() >= 100)
+    {
+        mGraph->setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
+        mTextArea->setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
+        mTextArea->setVisible(true);
+    }
+    else
+    {
+        mGraph->setGeometry(graphRect);
+        mTextArea->setVisible(false);
+    }
 }

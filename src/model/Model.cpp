@@ -21,16 +21,6 @@ Model::~Model()
     
 }
 
-bool sortEvents(Event* e1, Event* e2)
-{
-    return (e1->mItemY < e2->mItemY);
-}
-
-bool sortPhases(Phase* p1, Phase* p2)
-{
-    return (p1->mItemY < p2->mItemY);
-}
-
 Model* Model::fromJson(const QJsonObject& json)
 {
     Model* model = new Model();

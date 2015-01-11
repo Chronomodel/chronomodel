@@ -25,6 +25,12 @@ public:
     static QVector<QVector<Phase*>> getAllPhasesBranches(const QList<Phase*>& events, const double maxLength);
     
     static QVector<Event*> sortEventsByLevel(const QList<Event*>& events);
+    static QVector<Phase*> sortPhasesByLevel(const QList<Phase*>& phases);
 };
+
+// These 2 global functions are used to sort events and phases lists in result view
+
+bool sortEvents(Event* e1, Event* e2);
+bool sortPhases(Phase* p1, Phase* p2);
 
 #endif

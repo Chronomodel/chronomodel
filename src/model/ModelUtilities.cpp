@@ -5,6 +5,9 @@
 #include <QObject>
 
 
+bool sortEvents(Event* e1, Event* e2){return (e1->mItemY < e2->mItemY);}
+bool sortPhases(Phase* p1, Phase* p2){return (p1->mItemY < p2->mItemY);}
+
 QString ModelUtilities::getEventMethodText(Event::Method method)
 {
     switch(method)
@@ -276,6 +279,27 @@ QVector<Event*> ModelUtilities::sortEventsByLevel(const QList<Event*>& events)
             if(events[i]->mLevel == curLevel)
             {
                 results.append(events[i]);
+                ++numSorted;
+            }
+        }
+        ++curLevel;
+    }
+    return results;
+}
+
+QVector<Phase*> ModelUtilities::sortPhasesByLevel(const QList<Phase*>& phases)
+{
+    int numSorted = 0;
+    int curLevel = 0;
+    QVector<Phase*> results;
+    
+    while(numSorted < phases.size())
+    {
+        for(int i=0; i<phases.size(); ++i)
+        {
+            if(phases[i]->mLevel == curLevel)
+            {
+                results.append(phases[i]);
                 ++numSorted;
             }
         }

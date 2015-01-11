@@ -145,6 +145,7 @@ private:
     QComboBox* mFFTLenCombo;
     Label* mHFactorLab;
     LineEdit* mHFactorEdit;
+    Button* mUpdateDisplay;
     int mComboH;
     
     QTimer* mTimer;

@@ -24,6 +24,7 @@
 #include "Project.h"
 
 #include "QtUtilities.h"
+#include "ModelUtilities.h"
 
 #include <QtWidgets>
 #include <iostream>
@@ -141,6 +142,10 @@ mZoomCorrel(0)
     
     connect(mRenderCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(updateRendering(int)));
     
+    mUpdateDisplay = new Button(tr("Update display"));
+    
+    connect(mUpdateDisplay, SIGNAL(clicked()), this, SLOT(updateModel()));
+    
     QHBoxLayout* renderLayout = new QHBoxLayout();
     renderLayout->setContentsMargins(5, 5, 5, 5);
     renderLayout->setSpacing(5);
@@ -154,7 +159,6 @@ mZoomCorrel(0)
     scaleLayout->addWidget(mXSlider);
     scaleLayout->addWidget(mYScaleLab);
     scaleLayout->addWidget(mYSlider);
-    scaleLayout->addLayout(renderLayout);
     
     QHBoxLayout* displayButsLayout = new QHBoxLayout();
     displayButsLayout->setContentsMargins(0, 0, 0, 0);
@@ -169,6 +173,8 @@ mZoomCorrel(0)
     displayLayout->setSpacing(0);
     //displayLayout->addWidget(mZoomWidget);
     displayLayout->addLayout(scaleLayout);
+    displayLayout->addLayout(renderLayout);
+    displayLayout->addWidget(mUpdateDisplay);
     mDisplayGroup->setLayout(displayLayout);
     
     connect(mUnfoldBut, SIGNAL(toggled(bool)), this, SLOT(unfoldResults(bool)));
@@ -664,7 +670,7 @@ void ResultsView::updateResults(Model* model)
     else
         showByEvents(true);
     
-    changeTab(0);
+    mTabs->setTab(0);
     
     // Done by changeTab :
     //updateLayout();
@@ -812,6 +818,8 @@ void ResultsView::updateModel()
             if(e->mId == eventId)
             {
                 e->mName = event[STATE_NAME].toString();
+                e->mItemX = event[STATE_ITEM_X].toDouble();
+                e->mItemY = event[STATE_ITEM_Y].toDouble();
                 e->mColor = QColor(event[STATE_COLOR_RED].toInt(),
                                    event[STATE_COLOR_GREEN].toInt(),
                                    event[STATE_COLOR_BLUE].toInt());
@@ -847,6 +855,8 @@ void ResultsView::updateModel()
             if(p->mId == phaseId)
             {
                 p->mName = phase[STATE_NAME].toString();
+                p->mItemX = phase[STATE_ITEM_X].toDouble();
+                p->mItemY = phase[STATE_ITEM_Y].toDouble();
                 p->mColor = QColor(phase[STATE_COLOR_RED].toInt(),
                                    phase[STATE_COLOR_GREEN].toInt(),
                                    phase[STATE_COLOR_BLUE].toInt());
@@ -854,6 +864,10 @@ void ResultsView::updateModel()
             }
         }
     }
+    
+    std::sort(mModel->mEvents.begin(), mModel->mEvents.end(), sortEvents);
+    std::sort(mModel->mPhases.begin(), mModel->mPhases.end(), sortPhases);
+    
     updateResults(mModel);
 }
 
@@ -967,6 +981,7 @@ void ResultsView::changeTab(int index)
     mDataCalibCheck->setVisible(index == 0);
     mWiggleCheck->setVisible(index == 0);
     mAllChainsCheck->setVisible(index == 0);
+    mDataCalibCheck->setVisible(index == 0);
     
     if(index == 0)
     {

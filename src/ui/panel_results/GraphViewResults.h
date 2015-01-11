@@ -58,6 +58,7 @@ private slots:
 protected:
     virtual void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent* e);
+    void updateLayout();
     
     virtual void refresh() = 0;
     
@@ -82,6 +83,7 @@ protected:
     bool mShowCalib;
     bool mShowWiggle;
     bool mShowRawResults;
+    bool mShowNumResults;
     
     ProjectSettings mSettings;
     MCMCSettings mMCMCSettings;
@@ -95,7 +97,6 @@ protected:
     Button* mImageClipBut;
     Button* mResultsClipBut;
     Button* mDataSaveBut;
-    
     
     int mMargin;
     int mLineH;
