@@ -75,7 +75,9 @@ void GraphViewDate::refresh()
     mGraph->removeAllCurves();
     mGraph->removeAllZones();
     mGraph->clearInfos();
-    setNumericalResults("");
+    //setNumericalResults("");
+    
+    mGraph->autoAdjustYScale(mCurrentResult == eTrace);
     
     if(mDate)
     {
@@ -190,6 +192,10 @@ void GraphViewDate::refresh()
                 curveCred.mPen.setWidth(5);
                 curveCred.mIsHorizontalSections = true;
                 mGraph->addCurve(curveCred);
+            }
+            if(mCurrentVariable == GraphViewResults::eSigma)
+            {
+                mGraph->autoAdjustYScale(true);
             }
         }
         if(mCurrentResult == eTrace)

@@ -65,7 +65,9 @@ void GraphViewPhase::refresh()
     mGraph->removeAllCurves();
     mGraph->removeAllZones();
     mGraph->clearInfos();
-    setNumericalResults("");
+    //setNumericalResults("");
+    
+    mGraph->autoAdjustYScale(mCurrentResult == eTrace);
     
     if(mPhase)
     {

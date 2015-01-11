@@ -40,7 +40,9 @@ void GraphViewEvent::refresh()
     mGraph->removeAllCurves();
     mGraph->removeAllZones();
     mGraph->clearInfos();
-    setNumericalResults("");
+    //setNumericalResults("");
+    
+    mGraph->autoAdjustYScale(mCurrentResult == eTrace);
     
     if(mEvent)
     {
@@ -168,6 +170,8 @@ void GraphViewEvent::refresh()
             {
                 // On est en train de regarder les variances des data
                 // On affiche donc ici la superposition des variances (et pas le résultat de theta f)
+                
+                mGraph->autoAdjustYScale(true);
                 
                 mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
                 double yMax = 0;
