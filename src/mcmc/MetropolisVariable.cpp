@@ -176,6 +176,8 @@ void MetropolisVariable::generateHPD(int threshold)
     if(!mHisto.isEmpty())
     {
         mThreshold = threshold;
+        threshold = qMin(threshold, 100);
+        threshold = qMax(threshold, 0);
         mHPD = create_HPD(mHisto, 1, threshold);
         
         // No need to have HPD for al chains !

@@ -162,11 +162,11 @@ void MainWindow::createActions()
     mViewModelAction = new QAction(QIcon(":model.png"), tr("Model"), this);
     mViewModelAction->setCheckable(true);
     
-    mViewResultsAction = new QAction(QIcon(":results.png"), tr("Results"), this);
+    mViewResultsAction = new QAction(QIcon(":stats.png"), tr("Stats"), this);
     mViewResultsAction->setCheckable(true);
     mViewResultsAction->setEnabled(false);
     
-    mViewLogAction = new QAction(QIcon(":results.png"), tr("Log"), this);
+    mViewLogAction = new QAction(QIcon(":log.png"), tr("Log"), this);
     mViewLogAction->setCheckable(true);
     mViewLogAction->setEnabled(false);
     

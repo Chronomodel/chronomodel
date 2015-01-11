@@ -168,7 +168,7 @@ void CalibrationView::updateGraphs()
             hpdCurve.mFillUnder = true;
             hpdCurve.mIsHisto = false;
             hpdCurve.mIsRectFromZero = true;
-            hpdCurve.mData = create_HPD(calibCurve.mData, 1, thresh);
+            hpdCurve.mData = hpd;
             mCalibGraph->addCurve(hpdCurve);
             
             yMax = map_max_value(hpdCurve.mData);

@@ -67,7 +67,7 @@ mCalibVisible(false)
     mButRecycleEvent->setFlatVertical();
     
     mButExportEvents = new Button(tr("Export"), mLeftWrapper);
-    mButExportEvents->setIcon(QIcon(":topng.png"));
+    mButExportEvents->setIcon(QIcon(":export_w.png"));
     mButExportEvents->setFlatVertical();
     
     mButEventsOverview = new Button(tr("Overview"), mLeftWrapper);
@@ -76,7 +76,7 @@ mCalibVisible(false)
     mButEventsOverview->setFlatVertical();
     
     mButEventsGrid = new Button(tr("Grid"), mLeftWrapper);
-    mButEventsGrid->setIcon(QIcon(":eye_w.png"));
+    mButEventsGrid->setIcon(QIcon(":grid2.png"));
     mButEventsGrid->setCheckable(true);
     mButEventsGrid->setFlatVertical();
     
@@ -127,7 +127,7 @@ mCalibVisible(false)
     mButDeletePhase->setFlatVertical();
     
     mButExportPhases = new Button(tr("Export"), mPhasesWrapper);
-    mButExportPhases->setIcon(QIcon(":topng.png"));
+    mButExportPhases->setIcon(QIcon(":export_w.png"));
     mButExportPhases->setFlatVertical();
     
     mButPhasesOverview = new Button(tr("Overview"), mPhasesWrapper);
@@ -136,7 +136,7 @@ mCalibVisible(false)
     mButPhasesOverview->setFlatVertical();
     
     mButPhasesGrid = new Button(tr("Grid"), mPhasesWrapper);
-    mButPhasesGrid->setIcon(QIcon(":eye_w.png"));
+    mButPhasesGrid->setIcon(QIcon(":grid2.png"));
     mButPhasesGrid->setCheckable(true);
     mButPhasesGrid->setFlatVertical();
     
