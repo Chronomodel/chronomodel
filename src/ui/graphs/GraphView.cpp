@@ -3,6 +3,7 @@
 #include "StdUtilities.h"
 #include "Painting.h"
 #include <QtWidgets>
+#include <algorithm>
 
 
 #pragma mark Constructor / Destructor
@@ -540,8 +541,16 @@ void GraphView::drawCurves(QPainter& painter)
             path.moveTo(mMarginLeft, y);
             for(int i=0; i<curve.mSections.size(); ++i)
             {
-                path.moveTo(getXForValue(curve.mSections[i].first), y);
-                path.lineTo(getXForValue(curve.mSections[i].second), y);
+                double x1 = getXForValue(curve.mSections[i].first);
+                x1 = std::max(x1, (double)mMarginLeft);
+                x1 = std::min(x1, (double)(mMarginLeft + mGraphWidth));
+                
+                double x2 = getXForValue(curve.mSections[i].second);
+                x2 = std::max(x2, (double)mMarginLeft);
+                x2 = std::min(x2, (double)(mMarginLeft + mGraphWidth));
+                
+                path.moveTo(x1, y);
+                path.lineTo(x2, y);
             }
             path.moveTo(mMarginLeft + mGraphWidth, y);
             painter.strokePath(path, curve.mPen);
