@@ -26,6 +26,13 @@ int Tabs::currentIndex() const
     return mCurrentIndex;
 }
 
+void Tabs::setTab(int i)
+{
+    mCurrentIndex = i;
+    emit tabClicked(i);
+    update();
+}
+
 void Tabs::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
@@ -68,9 +75,7 @@ void Tabs::mousePressEvent(QMouseEvent* e)
     {
         if(i != mCurrentIndex && mTabRects[i].contains(e->pos()))
         {
-            mCurrentIndex = i;
-            emit tabClicked(i);
-            update();
+            setTab(i);
         }
     }
 }

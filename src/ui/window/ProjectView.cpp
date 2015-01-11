@@ -77,7 +77,6 @@ void ProjectView::showModel()
 void ProjectView::showResults()
 {
     mStack->setCurrentIndex(1);
-    mResultsView->updateModel();
 }
 
 void ProjectView::showLog()
