@@ -2,7 +2,15 @@
 <qresource>
 
 	<file alias="chronomodel.png">resources/chronomodel.png</file>
+	
 	<file alias="grid.png">resources/grid.png</file>
+	
+	<file alias="grid2.png">resources/grid2.png</file>
+	<file alias="import_w.png">resources/import_w.png</file>
+	<file alias="export_w.png">resources/export_w.png</file>
+	<file alias="log.png">resources/log.png</file>
+	<file alias="stats.png">resources/stats.png</file>
+	
 	
 	<file alias="pdf.png">resources/pdf.png</file>
 	<file alias="text.png">resources/text.png</file>
@@ -58,7 +66,6 @@
 	<file alias="delete_w.png">resources/delete_w.png</file>
 	<file alias="edit.png">resources/edit.png</file>
 	<file alias="import.png">resources/import.png</file>
-	<file alias="import_w.png">resources/import_w.png</file>
 	<file alias="export.png">resources/export.png</file>
 	<file alias="trash.png">resources/trash.png</file>
 	<file alias="trash_w.png">resources/trash_w.png</file>
