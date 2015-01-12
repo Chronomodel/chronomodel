@@ -75,6 +75,8 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     curve.mPen.setColor(Painting::mainColorLight);
     curve.mPen.setWidthF(2.f);
     curve.mFillUnder = true;
+    curve.mIsRectFromZero = true;
+    curve.mIsHisto = (bound.knownType() == EventKnown::eUniform);
     graph->addCurve(curve);
     
     mThumb = QPixmap(graph->size());
