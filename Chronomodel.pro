@@ -143,6 +143,7 @@ INCLUDEPATH += src/utilities/
 HEADERS += src/MainController.h
 HEADERS += src/AppSettings.h
 HEADERS += src/StateKeys.h
+HEADERS += src/ChronoApp.h
 
 HEADERS += src/mcmc/Functions.h
 HEADERS += src/mcmc/Generator.h
@@ -278,6 +279,7 @@ HEADERS += src/utilities/QtUtilities.h
 SOURCES += src/main.cpp
 SOURCES += src/MainController.cpp
 SOURCES += src/AppSettings.cpp
+SOURCES += src/ChronoApp.cpp
 
 SOURCES += src/mcmc/Functions.cpp
 SOURCES += src/mcmc/Generator.cpp

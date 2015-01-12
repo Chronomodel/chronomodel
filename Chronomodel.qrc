@@ -5,12 +5,28 @@
 	
 	<file alias="grid.png">resources/grid.png</file>
 	
+	<file alias="save_p.png">resources/save_p.png</file>
+	<file alias="open_p.png">resources/open_p.png</file>
+	<file alias="new_p.png">resources/new_p.png</file>
+	<file alias="pdf_p.png">resources/pdf_p.png</file>
+	<file alias="web_p.png">resources/web_p.png</file>
+	<file alias="help_p.png">resources/help_p.png</file>
+	<file alias="log_p.png">resources/log_p.png</file>
+	<file alias="run_p.png">resources/run_p.png</file>
+	<file alias="settings_p.png">resources/settings_p.png</file>
+	<file alias="model_p.png">resources/model_p.png</file>
+	<file alias="undo_p.png">resources/undo_p.png</file>
+	<file alias="redo_p.png">resources/redo_p.png</file>
+	<file alias="results_p.png">resources/results_p.png</file>
+	
 	<file alias="grid2.png">resources/grid2.png</file>
 	<file alias="import_w.png">resources/import_w.png</file>
 	<file alias="export_w.png">resources/export_w.png</file>
 	<file alias="log.png">resources/log.png</file>
 	<file alias="stats.png">resources/stats.png</file>
-	
+	<file alias="stats_w.png">resources/stats_w.png</file>
+	<file alias="unfold.png">resources/unfold.png</file>
+	<file alias="csv_import.png">resources/csv_import.png</file>
 	
 	<file alias="pdf.png">resources/pdf.png</file>
 	<file alias="text.png">resources/text.png</file>
