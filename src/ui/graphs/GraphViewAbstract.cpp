@@ -1,5 +1,6 @@
 #include "GraphViewAbstract.h"
 #include <cmath>
+#include <QDebug>
 
 
 #pragma mark Constructor / Destructor
@@ -47,8 +48,21 @@ void GraphViewAbstract::setRangeY(const double aMinY, const double aMaxY)
 {
     if(aMinY != mMinY || aMaxY != mMaxY)
     {
-        mMinY = aMinY;
-        mMaxY = aMaxY;
+        if(aMinY == aMaxY)
+        {
+            mMinY = aMinY - 1;
+            mMaxY = aMaxY + 1;
+            //qDebug() << "Warning : setting min == max for graph y scale : " << aMinY;
+        }
+        else if(mMinY > mMaxY)
+        {
+            qDebug() << "ERROR : setting min > max for graph y scale : [" << mMinY << "; " << mMaxY << "]";
+        }
+        else
+        {
+            mMinY = aMinY;
+            mMaxY = aMaxY;
+        }
         repaintGraph(true);
     }
 }

@@ -76,7 +76,8 @@ void GraphViewEvent::refresh()
                     GraphCurve curve;
                     curve.mName = "Fixed Bound";
                     curve.mPen.setColor(color);
-                    curve.mIsHisto = true;
+                    curve.mIsHisto = false;
+                    curve.mIsRectFromZero = true;
                     
                     for(int t=mSettings.mTmin; t< mSettings.mTmax; ++t)
                         curve.mData[t] = 0.f;
@@ -95,6 +96,7 @@ void GraphViewEvent::refresh()
                         curve.mName = "Uniform Bound";
                         curve.mPen.setColor(QColor(120, 120, 120));
                         curve.mIsHisto = true;
+                        curve.mIsRectFromZero = true;
                         curve.mData = bound->mValues;
                         mGraph->addCurve(curve);
                         
@@ -221,17 +223,18 @@ void GraphViewEvent::refresh()
             if(chainIdx != -1)
             {
                 Chain& chain = mChains[chainIdx];
-                mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter);
+                mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
                 
                 GraphCurve curve;
+                curve.mUseVectorData = true;
                 curve.mName = QString("trace chain " + QString::number(chainIdx)).toUtf8();
-                curve.mData = mEvent->mTheta.fullTraceForChain(mChains, chainIdx);
+                curve.mDataVector = mEvent->mTheta.fullTraceForChain(mChains, chainIdx);
                 curve.mPen.setColor(Painting::chainColors[chainIdx]);
                 curve.mIsHisto = false;
                 mGraph->addCurve(curve);
                 
-                double min = map_min_value(curve.mData);
-                double max = map_max_value(curve.mData);
+                double min = vector_min_value(curve.mDataVector);
+                double max = vector_max_value(curve.mDataVector);
                 mGraph->setRangeY(floor(min), ceil(max));
             }
         }
@@ -245,7 +248,7 @@ void GraphViewEvent::refresh()
             if(chainIdx != -1)
             {
                 Chain& chain = mChains[chainIdx];
-                mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter);
+                mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
                 mGraph->setRangeY(0, 100);
                 
                 GraphCurve curve;

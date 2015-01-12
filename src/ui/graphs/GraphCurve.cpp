@@ -33,7 +33,8 @@ QVector<double> GraphCurve::getVectorDataInRange(double subMin, double subMax, d
         int idxEnd = floor(mDataVector.size() * (subMax - min) / (max - min));
         for(int i=idxStart; i<idxEnd; ++i)
         {
-            subData.append(mDataVector[i]);
+            if(i >= 0 && i < mDataVector.size())
+                subData.append(mDataVector[i]);
         }
         return subData;
     }

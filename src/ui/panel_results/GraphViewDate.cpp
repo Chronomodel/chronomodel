@@ -208,21 +208,22 @@ void GraphViewDate::refresh()
             if(chainIdx != -1)
             {
                 Chain& chain = mChains[chainIdx];
-                mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter);
+                mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
                 
                 MHVariable* variable = &(mDate->mTheta);
                 if(mCurrentVariable == eTheta) variable = &(mDate->mTheta);
                 else if(mCurrentVariable == eSigma) variable = &(mDate->mSigma);
                 
                 GraphCurve curve;
+                curve.mUseVectorData = true;
                 curve.mName = QString("trace chain " + QString::number(chainIdx));
-                curve.mData = variable->fullTraceForChain(mChains, chainIdx);
+                curve.mDataVector = variable->fullTraceForChain(mChains, chainIdx);
                 curve.mPen.setColor(Painting::chainColors[chainIdx]);
                 curve.mIsHisto = false;
                 mGraph->addCurve(curve);
                 
-                double min = map_min_value(curve.mData);
-                double max = map_max_value(curve.mData);
+                double min = vector_min_value(curve.mDataVector);
+                double max = vector_max_value(curve.mDataVector);
                 mGraph->setRangeY(floor(min), ceil(max));
             }
         }
@@ -236,7 +237,7 @@ void GraphViewDate::refresh()
             if(chainIdx != -1)
             {
                 Chain& chain = mChains[chainIdx];
-                mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter);
+                mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
                 mGraph->setRangeY(0, 100);
                 
                 MHVariable* variable = &(mDate->mTheta);

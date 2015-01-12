@@ -200,24 +200,26 @@ void GraphViewPhase::refresh()
             if(chainIdx != -1)
             {
                 Chain& chain = mChains[chainIdx];
-                mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter);
+                mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
                 
                 QColor col = Painting::chainColors[chainIdx];
                 
                 GraphCurve curveAlpha;
+                curveAlpha.mUseVectorData = true;
                 curveAlpha.mName = QString("alpha trace chain " + QString::number(chainIdx));
-                curveAlpha.mData = mPhase->mAlpha.fullTraceForChain(mChains, chainIdx);
+                curveAlpha.mDataVector = mPhase->mAlpha.fullTraceForChain(mChains, chainIdx);
                 curveAlpha.mPen.setColor(col);
                 mGraph->addCurve(curveAlpha);
                 
                 GraphCurve curveBeta;
+                curveBeta.mUseVectorData = true;
                 curveBeta.mName = QString("beta trace chain " + QString::number(chainIdx));
-                curveBeta.mData = mPhase->mBeta.fullTraceForChain(mChains, chainIdx);
+                curveBeta.mDataVector = mPhase->mBeta.fullTraceForChain(mChains, chainIdx);
                 curveBeta.mPen.setColor(col);
                 mGraph->addCurve(curveBeta);
                 
-                double min = qMin(map_min_value(curveBeta.mData), map_min_value(curveAlpha.mData));
-                double max = qMax(map_max_value(curveBeta.mData), map_max_value(curveAlpha.mData));
+                double min = qMin(vector_min_value(curveBeta.mDataVector), vector_min_value(curveAlpha.mDataVector));
+                double max = qMax(vector_max_value(curveBeta.mDataVector), vector_max_value(curveAlpha.mDataVector));
                 
                 mGraph->setRangeY(min, max);
             }

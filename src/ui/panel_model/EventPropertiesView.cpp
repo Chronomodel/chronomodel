@@ -254,29 +254,20 @@ void EventPropertiesView::updateKnownType()
 void EventPropertiesView::updateKnownFixed(const QString& text)
 {
     QJsonObject event = mEvent;
-    //bool ok = false;
-    //double value = mKnownFixedEdit->text().toDouble(&ok);
-    qDebug() << text;
-    qDebug() << mKnownFixedEdit->text();
-    qDebug() << text.toDouble();
-    //qDebug() << ok;
-    
-    event[STATE_EVENT_KNOWN_FIXED] = text.toDouble();
-    qDebug() << event;
-    qDebug() << "-----";
+    event[STATE_EVENT_KNOWN_FIXED] = round(text.toDouble());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound fixed value updated"));
 }
 void EventPropertiesView::updateKnownUnifStart()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_KNOWN_START] = mKnownStartEdit->text().toDouble();
+    event[STATE_EVENT_KNOWN_START] = round(mKnownStartEdit->text().toDouble());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound min updated"));
 }
 
 void EventPropertiesView::updateKnownUnifEnd()
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_KNOWN_END] = mKnownEndEdit->text().toDouble();
+    event[STATE_EVENT_KNOWN_END] = round(mKnownEndEdit->text().toDouble());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound max updated"));
 }
 
@@ -345,6 +336,16 @@ void EventPropertiesView::updateKnownGraph()
         curve.mData = event.mValues;
         curve.mPen.setColor(Painting::mainColorLight);
         curve.mFillUnder = true;
+        if(event.knownType() == EventKnown::eUniform)
+        {
+            curve.mIsHisto = true;
+            curve.mIsRectFromZero = true;
+        }
+        else if(event.knownType() == EventKnown::eFixed)
+        {
+            curve.mIsHisto = false;
+            curve.mIsRectFromZero = true;
+        }
         mKnownGraph->addCurve(curve);
     }
 }

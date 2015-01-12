@@ -280,31 +280,20 @@ const QMap<double, double>& MetropolisVariable::rawHistoForChain(int index) cons
     return mChainsRawHistos[index];
 }
 
-QMap<double, double> MetropolisVariable::fullTrace(int thinningInterval)
+QVector<double> MetropolisVariable::fullTraceForChain(const QList<Chain>& chains, int index)
 {
-    QMap<double, double> trace;
-    for(int i=0; i<mTrace.size(); ++i)
-    {
-        trace[i * thinningInterval] = mTrace[i];
-    }
-    return trace;
-}
-
-QMap<double, double> MetropolisVariable::fullTraceForChain(const QList<Chain>& chains, int index)
-{
-    QMap<double, double> trace;
+    QVector<double> trace;
     int shift = 0;
     
     for(int i=0; i<chains.size(); ++i)
     {
-        int traceSize = (chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + chains[i].mNumRunIter) / chains[i].mThinningInterval;
+        int traceSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + chains[i].mNumRunIter / chains[i].mThinningInterval;
         
         if(i == index)
         {
             for(int j=shift; j<shift + traceSize; ++j)
             {
-                int curIndex = j - shift;
-                trace[curIndex * chains[i].mThinningInterval] = mTrace[j];
+                trace.append(mTrace[j]);
             }
             break;
         }
@@ -322,7 +311,7 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<Chain>& chains)
     int shift = 0;
     for(int i=0; i<chains.size(); ++i)
     {
-        int burnAdaptSize = (chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter)) / chains[i].mThinningInterval;
+        int burnAdaptSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter);
         int traceSize = burnAdaptSize + chains[i].mNumRunIter / chains[i].mThinningInterval;
         
         for(int j=shift + burnAdaptSize; j<shift + traceSize; ++j)
@@ -339,15 +328,13 @@ QVector<double> MetropolisVariable::runTraceForChain(const QList<Chain>& chains,
     int shift = 0;
     for(int i=0; i<chains.size(); ++i)
     {
-        int burnAdaptSize = (chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter)) / chains[i].mThinningInterval;
+        int burnAdaptSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter);
         int traceSize = burnAdaptSize + chains[i].mNumRunIter / chains[i].mThinningInterval;
         
         if(i == index)
         {
             for(int j=shift + burnAdaptSize; j<shift + traceSize; ++j)
-            {
                 trace.append(mTrace[j]);
-            }
             break;
         }
         shift += traceSize;

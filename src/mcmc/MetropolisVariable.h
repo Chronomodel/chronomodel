@@ -39,10 +39,8 @@ public:
     const QMap<double, double>& histoForChain(int index) const;
     const QMap<double, double>& rawHistoForChain(int index) const;
     
-    // Full trace (burn + adapt + run) as a map
-    QMap<double, double> fullTrace(int thinningInterval);
-    // Full trace for the chain (burn + adapt + run) as a map
-    QMap<double, double> fullTraceForChain(const QList<Chain>& chains, int index);
+    // Full trace for the chain (burn + adapt + run)
+    QVector<double> fullTraceForChain(const QList<Chain>& chains, int index);
     
     // Trace for run part as a vector
     QVector<double> fullRunTrace(const QList<Chain>& chains);

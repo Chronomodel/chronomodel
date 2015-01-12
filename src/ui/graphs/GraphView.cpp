@@ -639,24 +639,31 @@ void GraphView::drawCurves(QPainter& painter)
                 QVector<double> subData = curve.getVectorDataInRange(mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
                 
                 QVector<double> lightData;
-                if(subData.size() > 2*mGraphWidth)
+                double dataStep = (double)subData.size() / (double)(2.*mGraphWidth);
+                if(dataStep > 1)
                 {
-                    double step = subData.size() / (2*mGraphWidth);
                     for(int i=0; i<2*mGraphWidth; ++i)
                     {
-                        int idx = (int)round(i * step);
-                        lightData[i] = subData[idx];
+                        int idx = (int)round(i * dataStep);
+                        lightData.append(subData[idx]);
                     }
                 }
                 else
                 {
                     lightData = subData;
                 }
+                qDebug() << "-----------------------";
+                qDebug() << "dataStep : " << dataStep;
+                qDebug() << "data : " << curve.mDataVector.size();
+                qDebug() << "subData : " << subData.size();
+                qDebug() << "lightData : " << lightData.size();
                 
-                for(int x=0; x<lightData.size(); ++x)
+                
+                for(int i=0; i<lightData.size(); ++i)
                 {
-                    double valueX = x;
-                    double valueY = lightData[x];
+                    // Use "dataStep" only if lightData is different of subData !
+                    double valueX = mCurrentMinX + ((dataStep > 1) ? i * dataStep : i);
+                    double valueY = lightData[i];
                     
                     if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
                     {

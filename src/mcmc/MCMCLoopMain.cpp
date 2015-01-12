@@ -310,7 +310,7 @@ void MCMCLoopMain::update()
     
     Chain& chain = mChains[mChainIndex];
     
-    bool doMemo = (chain.mTotalIter % chain.mThinningInterval == 0);
+    bool doMemo = (mState == eBurning) || (mState == eAdapting) || (chain.mTotalIter % chain.mThinningInterval == 0);
     
     //--------------------- Update Dates -----------------------------------------
     
