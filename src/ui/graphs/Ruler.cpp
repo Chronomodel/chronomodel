@@ -10,6 +10,7 @@ mMin(0),
 mMax(0),
 mCurrentMin(0),
 mCurrentMax(1000),
+mZoomProp(1.),
 mStepMinWidth(40),
 mStepWidth(100)
 {
@@ -78,7 +79,7 @@ void Ruler::setZoom(int prop)
         
         // Update Scroll Range
         int fullScrollSteps = 1000;
-        int scrollSteps = (1.f - mZoomProp) * fullScrollSteps;
+        int scrollSteps = (1. - mZoomProp) * (double)fullScrollSteps;
         mScrollBar->setRange(0, scrollSteps);
         mScrollBar->setPageStep(fullScrollSteps);
         
@@ -105,6 +106,11 @@ void Ruler::updateScroll()
         
         mCurrentMin = mMin + deltaStart * ((double)mScrollBar->value() / (double)mScrollBar->maximum());
         mCurrentMax = mCurrentMin + delta;
+    }
+    else
+    {
+        mCurrentMin = mMin;
+        mCurrentMax = mMax;
     }
     mAxisTool.updateValues(mRulerRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
     

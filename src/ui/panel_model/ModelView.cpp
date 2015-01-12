@@ -66,8 +66,8 @@ mCalibVisible(false)
     mButRecycleEvent->setIcon(QIcon(":restore.png"));
     mButRecycleEvent->setFlatVertical();
     
-    mButExportEvents = new Button(tr("Export"), mLeftWrapper);
-    mButExportEvents->setIcon(QIcon(":export_w.png"));
+    mButExportEvents = new Button(tr("Save Image"), mLeftWrapper);
+    mButExportEvents->setIcon(QIcon(":picture_save.png"));
     mButExportEvents->setFlatVertical();
     
     mButEventsOverview = new Button(tr("Overview"), mLeftWrapper);
@@ -126,8 +126,8 @@ mCalibVisible(false)
     mButDeletePhase->setIcon(QIcon(":delete.png"));
     mButDeletePhase->setFlatVertical();
     
-    mButExportPhases = new Button(tr("Export"), mPhasesWrapper);
-    mButExportPhases->setIcon(QIcon(":export_w.png"));
+    mButExportPhases = new Button(tr("Save Image"), mPhasesWrapper);
+    mButExportPhases->setIcon(QIcon(":picture_save.png"));
     mButExportPhases->setFlatVertical();
     
     mButPhasesOverview = new Button(tr("Overview"), mPhasesWrapper);
@@ -225,10 +225,10 @@ mCalibVisible(false)
     mButProperties->setChecked(true);
     mButProperties->setFlatHorizontal();
     
-    mButImport = new Button(tr("Import Data"), mRightWrapper);
+    mButImport = new Button(tr("Data"), mRightWrapper);
     mButImport->setCheckable(true);
     mButImport->setAutoExclusive(true);
-    mButImport->setIcon(QIcon(":from_csv.png"));
+    mButImport->setIcon(QIcon(":csv_import.png"));
     mButImport->setFlatHorizontal();
     
     mButPhasesModel = new Button(tr("Phases"), mRightWrapper);
