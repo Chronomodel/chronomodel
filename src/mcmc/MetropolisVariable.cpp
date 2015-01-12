@@ -178,9 +178,9 @@ void MetropolisVariable::generateHPD(int threshold)
         mThreshold = threshold;
         threshold = qMin(threshold, 100);
         threshold = qMax(threshold, 0);
-        mHPD = create_HPD(mHisto, 1, threshold);
+        mHPD = create_HPD(mHisto, threshold);
         
-        // No need to have HPD for al chains !
+        // No need to have HPD for all chains !
         //mChainsHPD.clear();
         //for(int i=0; i<mChainsHistos.size(); ++i)
           //  mChainsHPD.append(create_HPD(mChainsHistos[i], 1, threshold));
@@ -201,7 +201,7 @@ void MetropolisVariable::generateCredibility(const QList<Chain>& chains, int thr
         // No need to have HPD for al chains !
         //mChainsHPD.clear();
         //for(int i=0; i<mChainsHistos.size(); ++i)
-        //  mChainsHPD.append(create_HPD(mChainsHistos[i], 1, threshold));
+        //  mChainsHPD.append(create_HPD(mChainsHistos[i], threshold));
     }
 }
 

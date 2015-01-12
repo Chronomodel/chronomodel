@@ -40,8 +40,8 @@ QJsonObject PluginUniformForm::getData()
 {
     QJsonObject data;
     
-    double min = mMinEdit->text().toDouble();
-    double max = mMaxEdit->text().toDouble();
+    double min = round(mMinEdit->text().toDouble());
+    double max = round(mMaxEdit->text().toDouble());
     
     data.insert(DATE_UNIFORM_MIN_STR, min);
     data.insert(DATE_UNIFORM_MAX_STR, max);
@@ -51,8 +51,8 @@ QJsonObject PluginUniformForm::getData()
 
 bool PluginUniformForm::isValid()
 {
-    double min = mMinEdit->text().toDouble();
-    double max = mMaxEdit->text().toDouble();
+    double min = round(mMinEdit->text().toDouble());
+    double max = round(mMaxEdit->text().toDouble());
     if(min >= max)
         mError = tr("Forbidden : min >= max");
     return min < max;

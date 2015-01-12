@@ -187,20 +187,13 @@ Quartiles quartilesForRepartition(const QVector<double>& repartition, double tmi
 {
     Quartiles quartiles;
     
-    //qDebug() << repartition[0];
-    
     double q1index = vector_interpolate_idx_for_value(0.25, repartition);
     double q2index = vector_interpolate_idx_for_value(0.5, repartition);
     double q3index = vector_interpolate_idx_for_value(0.75, repartition);
     
-    // La courbe de répartition sur une plage [-50; 50] comporte 101 valeurs (tout comme la courbe de calibration)
-    // On regarde l'aire sous chaque point de largeur step : idem diagramme en barres
-    // Chaque point est centré sur sa barre en step/2.
-    // => Il faut donc retirer step/2 dans le calcul ci-dessous.
-    
-    quartiles.Q1 = tmin + q1index * step - (step/2);
-    quartiles.Q2 = tmin + q2index * step - (step/2);
-    quartiles.Q3 = tmin + q3index * step - (step/2);
+    quartiles.Q1 = tmin + q1index * step;
+    quartiles.Q2 = tmin + q2index * step;
+    quartiles.Q3 = tmin + q3index * step;
     
     return quartiles;
 }
@@ -266,6 +259,7 @@ QList<QPair<double, double>> intervalsForHpd(const QMap<double, double>& hpd)
     QList<QPair<double, double>> intervals;
     
     bool inInterval = false;
+    double lastKeyInInter = 0.;
     QPair<double, double> curInterval;
     
     while(it.hasNext())
@@ -275,12 +269,20 @@ QList<QPair<double, double>> intervalsForHpd(const QMap<double, double>& hpd)
         {
             inInterval = true;
             curInterval.first = it.key();
+            lastKeyInInter = it.key();
         }
-        else if(it.value() == 0 && inInterval)
+        else if(inInterval)
         {
-            inInterval = false;
-            curInterval.second = it.key();
-            intervals.append(curInterval);
+            if(it.value() == 0)
+            {
+                inInterval = false;
+                curInterval.second = lastKeyInInter;
+                intervals.append(curInterval);
+            }
+            else
+            {
+                lastKeyInInter = it.key();
+            }
         }
     }
     return intervals;

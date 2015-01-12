@@ -242,6 +242,7 @@ QMap<long int,double> map_to_surface(const QMap<long, double> &aMap, long aClass
 //long int num_iterations_for_value(QMap<double, double> &aMap, const double value);
 QMap<double, double> map_to_surface(const QMap<double, double>& aMap, double aClasse = 1);
 QList<std::pair<double,double>> HPD_from_surface(const QMap<double, double>& aMap, double aClasse, double threshold);
-const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double aClasse = 1, double threshold = 0.95);
+double map_area(const QMap<double, double>& map);
+const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double threshold);
 
 #endif

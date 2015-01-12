@@ -623,7 +623,7 @@ QList<pair<double,double>> HPD_from_surface(const QMap<double, double> &aMap, do
     return regions;
 }
 
-const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double /*aClasse*/, double threshold)
+const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double threshold)
 {
     QMultiMap<double, double> inverted;
     QMapIterator<double, double> iter(aMap);
@@ -643,18 +643,67 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double /
     QMap<double, double> result;
     iter = QMapIterator<double, double>(inverted);
     iter.toBack();
-    double area = 0.f;
+    
+    double area = 0.;
+    double finalArea = 0.;
+    bool areaFound = false;
+    bool symetryTested = false;
+    double lastV = 0;
+    
     while(iter.hasPrevious())
     {
         iter.previous();
         double t = iter.value();
         double v = iter.key();
+        
         area += v;
-        result[t] = (area < areaSearched) ? v : 0;
+        
+        if(area < areaSearched)
+        {
+            result[t] = v;
+            finalArea = area;
+        }
+        else if(area > areaSearched)
+        {
+            if(!areaFound)
+            {
+                areaFound = true;
+                result[t] = v;
+                finalArea = area;
+            }
+            else if(!symetryTested)
+            {
+                symetryTested = true;
+                if(v == lastV)
+                {
+                    result[t] = v;
+                    finalArea = area;
+                }
+                else
+                    result[t] = 0;
+            }
+            else
+            {
+                result[t] = 0;
+            }
+        }
+        lastV = v;
     }
+    //double realThresh = finalArea / areaTot;
     return result;
 }
 
+double map_area(const QMap<double, double>& map)
+{
+    QMapIterator<double, double> iter(map);
+    double area = 0.;
+    while(iter.hasNext())
+    {
+        iter.next();
+        area += iter.value();
+    }
+    return area;
+}
 
 
 

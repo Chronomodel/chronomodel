@@ -189,20 +189,30 @@ void Date::calibrate(const ProjectSettings& settings)
     
     if(mSubDates.size() == 0) // not a combination !
     {
-        double lastRepVal = 0;
-        for(int i = 0; i < nbPts; ++i)
+        double v = getLikelyhood(tmin);
+        double lastRepVal = v;
+        
+        mCalibration.append(v);
+        mRepartition.append(0);
+        mCalibSum += v;
+        
+        for(int i = 1; i < nbPts; ++i)
         {
             double t = tmin + (double)i * step;
-            double v = getLikelyhood(t);
+            
+            float lastV = v;
+            v = getLikelyhood(t);
             mCalibration.append(v);
             mCalibSum += v;
-            //qDebug() << "v = " << v;
             
-            mRepartition.append(lastRepVal);
-            lastRepVal += v;
+            double rep = lastRepVal;
+            if(v != 0 && lastV != 0)
+            {
+                rep = lastRepVal + step * (lastV + v) / 2.;
+            }
+            mRepartition.append(rep);
+            lastRepVal = rep;
         }
-        
-        //qDebug() << "Calib size : " << mCalibration.size();
         
         // La courbe de répartition est transformée de sorte que sa valeur maximale soit 1
         mRepartition = normalize_vector(mRepartition);

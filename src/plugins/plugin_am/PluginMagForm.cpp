@@ -53,6 +53,8 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     mIncRadio->setChecked(true);
     
     setFixedHeight(sTitleHeight + 6*mLineH + mComboH + 7*mMargin);
+    
+    updateOptions();
 }
 
 PluginMagForm::~PluginMagForm()

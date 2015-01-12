@@ -17,6 +17,9 @@ mStartPix(0)
 }
 void AxisTool::updateValues(double totalPix, double minDeltaPix, double minVal, double maxVal)
 {
+    if(minDeltaPix == 0)
+        return;
+    
     double w = totalPix;
     w = (w <= 0.f) ? minDeltaPix : w;
     double numSteps = floor(w / minDeltaPix);

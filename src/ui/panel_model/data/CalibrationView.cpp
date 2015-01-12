@@ -159,8 +159,8 @@ void CalibrationView::updateGraphs()
             thresh = qMin(thresh, 100);
             thresh = qMax(thresh, 0);
             
-            QMap<double, double> hpd = create_HPD(calibCurve.mData, 1, thresh);
-            hpd = equal_areas(hpd, thresh/100.f);
+            QMap<double, double> hpd = create_HPD(calibCurve.mData, thresh);
+            //hpd = equal_areas(hpd, thresh/100.f);
             
             GraphCurve hpdCurve;
             hpdCurve.mName = "Calibration HPD";
@@ -174,7 +174,8 @@ void CalibrationView::updateGraphs()
             yMax = map_max_value(hpdCurve.mData);
             mCalibGraph->setRangeY(0, qMax(1.1f * yMax, mCalibGraph->maximumY()));
             
-            mResultsLab->setText(mResultsLab->text() + "HPD (" + QString::number(thresh) + "%) : " + getHPDText(hpd));
+            double realThresh = 100. * map_area(hpd) / map_area(calibCurve.mData);
+            mResultsLab->setText(mResultsLab->text() + "HPD (" + QString::number(realThresh, 'f', 1) + "%) : " + getHPDText(hpd));
         }
         
         // ------------------------------------------------------------
