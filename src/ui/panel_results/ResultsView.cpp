@@ -99,19 +99,22 @@ mZoomCorrel(0)
     mUnfoldBut = new Button(tr("Unfold"));
     mUnfoldBut->setCheckable(true);
     mUnfoldBut->setFlatHorizontal();
-    mUnfoldBut->setIcon(QIcon(":picture_save.png"));
+    mUnfoldBut->setIcon(QIcon(":unfold.png"));
     mUnfoldBut->setFixedHeight(50);
+    mUnfoldBut->setToolTip(tr("Display event's data or phase's events, depending on the chosen layout."));
     
-    mInfosBut = new Button(tr("Results"));
+    mInfosBut = new Button(tr("Stats"));
     mInfosBut->setCheckable(true);
     mInfosBut->setFlatHorizontal();
-    mInfosBut->setIcon(QIcon(":picture_save.png"));
+    mInfosBut->setIcon(QIcon(":stats_w.png"));
     mInfosBut->setFixedHeight(50);
+    mInfosBut->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
     
     mExportImgBut = new Button(tr("Save"));
     mExportImgBut->setFlatHorizontal();
     mExportImgBut->setIcon(QIcon(":picture_save.png"));
     mExportImgBut->setFixedHeight(50);
+    mExportImgBut->setToolTip(tr("Save all currently visible results as an image.<br><u>Note</u> : If you want to copy textual results, see the Log tab."));
     
     mXScaleLab = new Label(tr("Zoom X :"));
     mYScaleLab = new Label(tr("Zoom Y :"));
@@ -370,7 +373,7 @@ void ResultsView::updateLayout()
     mByEventsBut->setGeometry(mGraphLeft/2, 0, mGraphLeft/2, mRulerH);
     
     mTabs->setGeometry(mGraphLeft + graphYAxis, 0, width() - mGraphLeft - mOptionsW - sbe - graphYAxis, mTabsH);
-    mRuler->setGeometry(mGraphLeft + graphYAxis, mTabsH, width() - mGraphLeft - mOptionsW - sbe - graphYAxis - 10, mRulerH);
+    mRuler->setGeometry(mGraphLeft + graphYAxis, mTabsH, width() - mGraphLeft - graphYAxis - mOptionsW - sbe - 10, mRulerH);
     mStack->setGeometry(0, mTabsH + mRulerH, width() - mOptionsW, height() - mRulerH - mTabsH);
     mMarker->setGeometry(mMarker->pos().x(), mTabsH + mRulerH, mMarker->thickness(), height() - mRulerH - mTabsH);
     
@@ -555,6 +558,7 @@ void ResultsView::clearResults()
 void ResultsView::updateResults(Model* model)
 {
     clearResults();
+    
     mModel = model;
     mChains = model->mChains;
     mSettings = mModel->mSettings;
@@ -775,7 +779,7 @@ void ResultsView::updateRulerAreas()
         if(curChainIdx != -1)
         {
             int min = 0;
-            int max = mChains[curChainIdx].mNumBurnIter + mChains[curChainIdx].mBatchIndex * mChains[curChainIdx].mNumBatchIter + mChains[curChainIdx].mNumRunIter;
+            int max = mChains[curChainIdx].mNumBurnIter + mChains[curChainIdx].mBatchIndex * mChains[curChainIdx].mNumBatchIter + mChains[curChainIdx].mNumRunIter / mChains[curChainIdx].mThinningInterval;
             mRuler->setRange(min, max);
             mRuler->clearAreas();
             
@@ -788,7 +792,7 @@ void ResultsView::updateRulerAreas()
                             QColor(250, 180, 90));
             
             mRuler->addArea(mChains[curChainIdx].mNumBurnIter + mChains[curChainIdx].mBatchIndex * mChains[curChainIdx].mNumBatchIter,
-                            mChains[curChainIdx].mNumBurnIter + mChains[curChainIdx].mBatchIndex * mChains[curChainIdx].mNumBatchIter + mChains[curChainIdx].mNumRunIter,
+                            mChains[curChainIdx].mNumBurnIter + mChains[curChainIdx].mBatchIndex * mChains[curChainIdx].mNumBatchIter + mChains[curChainIdx].mNumRunIter / mChains[curChainIdx].mThinningInterval,
                             QColor(130, 205, 110));
         }
     }
@@ -1000,6 +1004,6 @@ void ResultsView::changeTab(int index)
             mChainRadios[i]->setVisible(true);
     }
     
-    updateLayout();
     updateGraphs();
+    updateLayout();
 }
