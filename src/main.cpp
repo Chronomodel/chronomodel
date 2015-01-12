@@ -1,4 +1,4 @@
-    #include <QApplication>
+#include "ChronoApp.h"
 #include <QtWidgets>
 #include "DarkBlueStyle.h"
 #include "MainController.h"
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     }
 #endif
     
-    QApplication a(argc, argv);
+    ChronoApp a(argc, argv);
     
     a.setApplicationName("Chronomodel");
     a.setApplicationDisplayName("Chronomodel");
@@ -70,12 +70,25 @@ int main(int argc, char *argv[])
     
     qApp->setAttribute(Qt::AA_UseHighDpiPixmaps);
     
+    QString filePath;
+    for(int i=0; i<argc; ++i)
+    {
+        QString arg(argv[i]);
+        if(arg.contains(".chr", Qt::CaseInsensitive))
+        {
+            filePath = arg;
+        }
+    }
+    
+    //if(argv)
+    //QString filePath(argv[1]);
+    
     
     //qInstallMessageHandler(customMessageHandler);
     
     //QApplication::setStyle(new DarkBlueStyle());
     
-    MainController* c = new MainController();
+    MainController* c = new MainController(filePath);
     (void) c;
     
     return a.exec();

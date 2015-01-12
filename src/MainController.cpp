@@ -4,13 +4,13 @@
 #include "Painting.h"
 
 
-MainController::MainController()
+MainController::MainController(const QString& filePath)
 {
     Painting::init();
     
     PluginManager::loadPlugins();
     
     mMainWindow = MainWindow::getInstance();
-    mMainWindow->readSettings();
+    mMainWindow->readSettings(filePath);
     mMainWindow->show();
 }
