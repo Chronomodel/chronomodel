@@ -189,19 +189,21 @@ QString Model::modelLog() const
     QString log;
     
     log += line(textBold(QString::number(mEvents.size()) + " events"));
+    log += "<br>";
+    
     for(int i=0; i<mEvents.size(); ++i)
     {
         QString objType = "Event";
         if(mEvents[i]->type() == Event::eKnown)
         {
-            log += line(textRed("-> Bound : " + mEvents[i]->mName + ", " +
+            log += line(textRed("=> Bound : " + mEvents[i]->mName + ", " +
                                  QString::number(mEvents[i]->mPhases.size()) + " phases, " +
                                  QString::number(mEvents[i]->mConstraintsBwd.size()) + " const. back., " +
                                  QString::number(mEvents[i]->mConstraintsFwd.size()) + " const. fwd.)"));
         }
         else
         {
-            log += line(textBlue("-> " + mEvents[i]->mName + " : " +
+            log += line(textBlue("=> " + mEvents[i]->mName + " : " +
                                  QString::number(mEvents[i]->mDates.size()) + " data, " +
                                  QString::number(mEvents[i]->mPhases.size()) + " phases, " +
                                  QString::number(mEvents[i]->mConstraintsBwd.size()) + " const. back., " +
@@ -210,22 +212,27 @@ QString Model::modelLog() const
         
         for(int j=0; j<mEvents[i]->mDates.size(); ++j)
         {
-            log += line(textGreen("-> " + mEvents[i]->mDates[j].mName +
-                                  "<br>Type : " + mEvents[i]->mDates[j].mPlugin->getName() +
-                                  "<br>Method : " + ModelUtilities::getDataMethodText(mEvents[i]->mDates[j].mMethod) +
-                                  "<br>Params : " + mEvents[i]->mDates[j].getDesc()));
+            log += line(textGreen("=> " + mEvents[i]->mDates[j].mName +
+                                  "<br>- Type : " + mEvents[i]->mDates[j].mPlugin->getName() +
+                                  "<br>- Method : " + ModelUtilities::getDataMethodText(mEvents[i]->mDates[j].mMethod) +
+                                  "<br>- Params : " + mEvents[i]->mDates[j].getDesc()));
         }
+        log += "<br>";
     }
     
+    log += "<br><br>";
     log += line(textBold(QString::number(mPhases.size()) + " phases"));
+    log += "<br>";
+    
     for(int i=0; i<mPhases.size(); ++i)
     {
         log += line(textPurple(mPhases[i]->mName + " (" + QString::number(mPhases[i]->mEvents.size()) + ")"));
         
         for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
         {
-            log += line(textBlue("-> " + mPhases[i]->mEvents[j]->mName));
+            log += line(textBlue("=> " + mPhases[i]->mEvents[j]->mName));
         }
+        log += "<br>";
     }
     return log;
     

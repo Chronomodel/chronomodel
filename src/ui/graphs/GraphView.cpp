@@ -652,11 +652,11 @@ void GraphView::drawCurves(QPainter& painter)
                 {
                     lightData = subData;
                 }
-                qDebug() << "-----------------------";
+                /*qDebug() << "-----------------------";
                 qDebug() << "dataStep : " << dataStep;
                 qDebug() << "data : " << curve.mDataVector.size();
                 qDebug() << "subData : " << subData.size();
-                qDebug() << "lightData : " << lightData.size();
+                qDebug() << "lightData : " << lightData.size();*/
                 
                 
                 for(int i=0; i<lightData.size(); ++i)
