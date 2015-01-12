@@ -110,12 +110,12 @@ void MainWindow::createActions()
     // Project Actions
     //-----------------------------------------------------------------
     
-    mNewProjectAction = new QAction(QIcon(":new.png"), tr("&New"), this);
+    mNewProjectAction = new QAction(QIcon(":new_p.png"), tr("&New"), this);
     mNewProjectAction->setShortcuts(QKeySequence::New);
     mNewProjectAction->setStatusTip(tr("Create a new project"));
     connect(mNewProjectAction, SIGNAL(triggered()), this, SLOT(newProject()));
     
-    mOpenProjectAction = new QAction(QIcon(":open.png"), tr("Open"), this);
+    mOpenProjectAction = new QAction(QIcon(":open_p.png"), tr("Open"), this);
     mOpenProjectAction->setShortcuts(QKeySequence::Open);
     mOpenProjectAction->setStatusTip(tr("Open an existing project"));
     connect(mOpenProjectAction, SIGNAL(triggered()), this, SLOT(openProject()));
@@ -125,20 +125,20 @@ void MainWindow::createActions()
     mCloseProjectAction->setStatusTip(tr("Open an existing project"));
     connect(mCloseProjectAction, SIGNAL(triggered()), this, SLOT(closeProject()));
     
-    mProjectSaveAction = new QAction(QIcon(":save.png"), tr("&Save"), this);
+    mProjectSaveAction = new QAction(QIcon(":save_p.png"), tr("&Save"), this);
     mProjectSaveAction->setShortcuts(QKeySequence::Save);
     
-    mProjectSaveAsAction = new QAction(QIcon(":save.png"), tr("Save as..."), this);
+    mProjectSaveAsAction = new QAction(QIcon(":save_p.png"), tr("Save as..."), this);
     
     mProjectExportAction = new QAction(QIcon(":export.png"), tr("Export"), this);
     mProjectExportAction->setVisible(false);
     
     mUndoAction = mUndoStack->createUndoAction(this);
-    mUndoAction->setIcon(QIcon(":undo.png"));
+    mUndoAction->setIcon(QIcon(":undo_p.png"));
     mUndoAction->setText(tr("Undo"));
     
     mRedoAction = mUndoStack->createRedoAction(this);
-    mRedoAction->setIcon(QIcon(":redo.png"));
+    mRedoAction->setIcon(QIcon(":redo_p.png"));
     
     mUndoViewAction = mUndoDock->toggleViewAction();
     mUndoViewAction->setText(tr("Show Undo Stack"));
@@ -146,9 +146,9 @@ void MainWindow::createActions()
     //-----------------------------------------------------------------
     // MCMC Actions
     //-----------------------------------------------------------------
-    mMCMCSettingsAction = new QAction(QIcon(":settings.png"), tr("MCMC"), this);
+    mMCMCSettingsAction = new QAction(QIcon(":settings_p.png"), tr("MCMC"), this);
     
-    mRunAction = new QAction(QIcon(":run.png"), tr("Run"), this);
+    mRunAction = new QAction(QIcon(":run_p.png"), tr("Run"), this);
     //runAction->setIcon(qApp->style()->standardIcon(QStyle::SP_MediaPlay));
     mRunAction->setIconText(tr("Run"));
     mRunAction->setIconVisibleInMenu(true);
@@ -159,14 +159,14 @@ void MainWindow::createActions()
     //-----------------------------------------------------------------
     // View Actions
     //-----------------------------------------------------------------
-    mViewModelAction = new QAction(QIcon(":model.png"), tr("Model"), this);
+    mViewModelAction = new QAction(QIcon(":model_p.png"), tr("Model"), this);
     mViewModelAction->setCheckable(true);
     
-    mViewResultsAction = new QAction(QIcon(":stats.png"), tr("Stats"), this);
+    mViewResultsAction = new QAction(QIcon(":results_p.png"), tr("Results"), this);
     mViewResultsAction->setCheckable(true);
     mViewResultsAction->setEnabled(false);
     
-    mViewLogAction = new QAction(QIcon(":log.png"), tr("Log"), this);
+    mViewLogAction = new QAction(QIcon(":log_p.png"), tr("Log"), this);
     mViewLogAction->setCheckable(true);
     mViewLogAction->setEnabled(false);
     
@@ -185,14 +185,14 @@ void MainWindow::createActions()
     mAboutQtAct = new QAction(QIcon(":qt.png"), tr("About Qt"), this);
     connect(mAboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     
-    mHelpAction = new QAction(QIcon(":help.png"), tr("Help"), this);
+    mHelpAction = new QAction(QIcon(":help_p.png"), tr("Help"), this);
     mHelpAction->setCheckable(true);
     connect(mHelpAction, SIGNAL(toggled(bool)), this, SLOT(showHelp(bool)));
     
-    mManualAction = new QAction(QIcon(":pdf.png"), tr("Manual"), this);
+    mManualAction = new QAction(QIcon(":pdf_p.png"), tr("Manual"), this);
     connect(mManualAction, SIGNAL(triggered()), this, SLOT(openManual()));
     
-    mWebsiteAction = new QAction(QIcon(":web.png"), tr("Website"), this);
+    mWebsiteAction = new QAction(QIcon(":web_p.png"), tr("Website"), this);
     connect(mWebsiteAction, SIGNAL(triggered()), this, SLOT(openWebsite()));
 }
 
@@ -497,7 +497,7 @@ void MainWindow::writeSettings()
     settings.endGroup();
 }
 
-void MainWindow::readSettings()
+void MainWindow::readSettings(const QString& defaultFilePath)
 {
     QSettings settings;
     settings.beginGroup("MainWindow");
@@ -517,7 +517,21 @@ void MainWindow::readSettings()
     mProjectView->showHelp(mAppSettings.mShowHelp);
     mHelpAction->setChecked(mAppSettings.mShowHelp);
     
-    if(mAppSettings.mOpenLastProjectAtLaunch)
+    bool fileOpened = false;
+    if(!defaultFilePath.isEmpty())
+    {
+        qDebug() << defaultFilePath;
+        QFileInfo fileInfo(defaultFilePath);
+        if(fileInfo.isFile())
+        {
+            mProject->load(defaultFilePath);
+            activateInterface(true);
+            updateWindowTitle();
+            fileOpened = true;
+        }
+    }
+    
+    if(!fileOpened && mAppSettings.mOpenLastProjectAtLaunch)
     {
         QString dir = settings.value("last_project_dir", "").toString();
         QString filename = settings.value("last_project_filename", "").toString();

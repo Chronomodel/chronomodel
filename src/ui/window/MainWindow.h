@@ -43,7 +43,7 @@ protected:
     void keyPressEvent(QKeyEvent* e);
 
 public:
-    void readSettings();
+    void readSettings(const QString& defaultFilePath);
     void writeSettings();
     void updateWindowTitle();
 

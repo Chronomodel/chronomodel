@@ -39,6 +39,7 @@ private:
     QStackedWidget* mStack;
     ModelView* mModelView;
     ResultsView* mResultsView;
+    QWidget* mLogView;
     QTabWidget* mLogTabs;
     QTextEdit* mLogModelEdit;
     QTextEdit* mLogInitEdit;
