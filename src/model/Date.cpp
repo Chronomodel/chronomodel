@@ -281,7 +281,10 @@ double Date::getLikelyhoodFromCalib(const double t)
     int idxUnder = (int)floor(idx);
     int idxUpper = idxUnder + 1;
     
-    double v = interpolate(idx, (double)idxUnder, (double)idxUpper, mCalibration[idxUnder], mCalibration[idxUpper]);
+    // Important pour le créneau : pas d'interpolation autour des créneaux!
+    double v = 0.;
+    if(mCalibration[idxUnder] != 0 && mCalibration[idxUpper] != 0)
+        v = interpolate(idx, (double)idxUnder, (double)idxUpper, mCalibration[idxUnder], mCalibration[idxUpper]);
     return v;
 }
 
