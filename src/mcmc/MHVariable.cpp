@@ -73,7 +73,7 @@ QMap<double, double> MHVariable::acceptationForChain(const QList<Chain>& chains,
     
     for(int i=0; i<chains.size(); ++i)
     {
-        int acceptSize = (chains[i].mNumBurnIter + chains[i].mBatchIndex * chains[i].mNumBatchIter + chains[i].mNumRunIter) / chains[i].mThinningInterval;
+        int acceptSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + chains[i].mNumRunIter / chains[i].mThinningInterval;
         
         if(i == index)
         {
@@ -100,8 +100,7 @@ void MHVariable::generateGlobalRunAcceptation(const QList<Chain>& chains)
     
     for(int i=0; i<chains.size(); ++i)
     {
-        int burnAdaptSize = (chains[i].mNumBurnIter + chains[i].mBatchIndex * chains[i].mNumBatchIter) / chains[i].mThinningInterval;
-        
+        int burnAdaptSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter);
         int runSize = chains[i].mNumRunIter / chains[i].mThinningInterval;
         
         shift += burnAdaptSize;
