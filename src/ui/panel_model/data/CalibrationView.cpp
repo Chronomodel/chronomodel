@@ -67,6 +67,11 @@ mRefGraphView(0)
     mHPDEdit = new LineEdit(this);
     mHPDEdit->setText("95");
     
+    QDoubleValidator* percentValidator = new QDoubleValidator();
+    percentValidator->setBottom(0.);
+    percentValidator->setTop(100.);
+    mHPDEdit->setValidator(percentValidator);
+    
     mHPDLab->raise();
     mHPDEdit->raise();
     
@@ -155,12 +160,11 @@ void CalibrationView::updateGraphs()
         
         if(!isTypo) // mHPDCheck->isChecked() &&
         {
-            int thresh = mHPDEdit->text().toDouble();
-            thresh = qMin(thresh, 100);
-            thresh = qMax(thresh, 0);
+            double thresh = mHPDEdit->text().toDouble();
+            thresh = qMin(thresh, 100.);
+            thresh = qMax(thresh, 0.);
             
             QMap<double, double> hpd = create_HPD(calibCurve.mData, thresh);
-            //hpd = equal_areas(hpd, thresh/100.f);
             
             GraphCurve hpdCurve;
             hpdCurve.mName = "Calibration HPD";

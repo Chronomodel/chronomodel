@@ -226,6 +226,11 @@ mZoomCorrel(0)
     mHPDEdit = new LineEdit(mPostDistGroup);
     mHPDEdit->setText("95");
     
+    QDoubleValidator* percentValidator = new QDoubleValidator();
+    percentValidator->setBottom(0.);
+    percentValidator->setTop(100.);
+    mHPDEdit->setValidator(percentValidator);
+    
     connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(generateHPD()));
     connect(mHPDCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateGraphs()));
@@ -469,7 +474,7 @@ void ResultsView::generateHPD()
 {
     if(mModel)
     {
-        mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toInt());
+        mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toDouble());
     }
 }
 
@@ -482,7 +487,7 @@ void ResultsView::updateFFTLength()
         
         mModel->generatePosteriorDensities(mChains, len, hFactor);
         mModel->generateNumericalResults(mChains);
-        mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toInt());
+        mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toDouble());
         
         updateGraphs();
     }
@@ -502,7 +507,7 @@ void ResultsView::updateHFactor()
         
         mModel->generatePosteriorDensities(mChains, len, hFactor);
         mModel->generateNumericalResults(mChains);
-        mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toInt());
+        mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toDouble());
         
         updateGraphs();
     }
@@ -711,7 +716,9 @@ void ResultsView::updateGraphs()
             showChainList.append(mChainRadios[i]->isChecked());
     }
     bool showHpd = mHPDCheck->isChecked();
-    int hdpThreshold = mHPDEdit->text().toInt();
+    int hdpThreshold = mHPDEdit->text().toDouble();
+    hdpThreshold = qMin(100, hdpThreshold);
+    hdpThreshold = qMax(0, hdpThreshold);
     
     bool showRaw = mRawCheck->isChecked();
     
@@ -779,7 +786,8 @@ void ResultsView::updateRulerAreas()
         if(curChainIdx != -1)
         {
             int min = 0;
-            int max = mChains[curChainIdx].mNumBurnIter + mChains[curChainIdx].mBatchIndex * mChains[curChainIdx].mNumBatchIter + mChains[curChainIdx].mNumRunIter / mChains[curChainIdx].mThinningInterval;
+            int max = mChains[curChainIdx].mNumBurnIter + (mChains[curChainIdx].mBatchIndex * mChains[curChainIdx].mNumBatchIter) + mChains[curChainIdx].mNumRunIter / mChains[curChainIdx].mThinningInterval;
+            
             mRuler->setRange(min, max);
             mRuler->clearAreas();
             
