@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<installer-gui-script minSpecVersion="1">
+    <pkg-ref id="hl.Chronomodel"/>
+    <product id="hl.Chronomodel"/>
+    <options customize="never" require-scripts="false" hostArchitectures="x86_64"/>
+    <choices-outline>
+        <line choice="default">
+            <line choice="hl.Chronomodel"/>
+        </line>
+    </choices-outline>
+    <choice id="default"/>
+    <choice id="hl.Chronomodel" visible="false">
+        <pkg-ref id="hl.Chronomodel"/>
+    </choice>
+    <pkg-ref id="hl.Chronomodel" version="0" onConclusion="none">hl.Chronomodel.pkg</pkg-ref>
+</installer-gui-script>
