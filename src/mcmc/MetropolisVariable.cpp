@@ -191,7 +191,7 @@ void MetropolisVariable::generateHPD(int threshold)
     }
 }
 
-void MetropolisVariable::generateCredibility(const QList<Chain>& chains, int threshold)
+void MetropolisVariable::generateCredibility(const QList<Chain>& chains, double threshold)
 {
     if(!mHisto.isEmpty())
     {
@@ -356,8 +356,8 @@ QString MetropolisVariable::resultsText() const
     QString result = densityAnalysisToString(mResults);
     int precision = 0;
     
-    result += "HPD Intervals (" + QString::number(mThreshold) + "%) : " + getHPDText(mHPD) + "\n";
-    result += "Credibility Interval (" + QString::number(mExactCredibilityThreshold * 100.f, 'f', 2) + "%) : [" + QString::number(mCredibility.first, 'f', precision) + ", " + QString::number(mCredibility.second, 'f', precision) + "]\n";
+    result += "HPD Intervals (" + QString::number(mThreshold, 'f', 1) + "%) : " + getHPDText(mHPD) + "\n";
+    result += "Credibility Interval (" + QString::number(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + QString::number(mCredibility.first, 'f', precision) + ", " + QString::number(mCredibility.second, 'f', precision) + "]\n";
     
     return result;
 }

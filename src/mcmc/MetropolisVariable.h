@@ -25,7 +25,7 @@ public:
     void generateHistos(const QList<Chain>& chains, int fftLen, double hFactor, double tmin, double tmax);
     void generateCorrelations(const QList<Chain>& chains);
     void generateHPD(int threshold);
-    void generateCredibility(const QList<Chain>& chains, int threshold);
+    void generateCredibility(const QList<Chain>& chains, double threshold);
     
     // Virtual because MHVariable subclass adds some information
     virtual void generateNumericalResults(const QList<Chain>& chains, const ProjectSettings& settings);
@@ -75,7 +75,7 @@ public:
     
     QMap<double, double> mHPD;
     QPair<double, double> mCredibility;
-    int mThreshold;
+    double mThreshold;
     
     double mExactCredibilityThreshold;
     
