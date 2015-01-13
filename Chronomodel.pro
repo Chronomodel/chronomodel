@@ -60,7 +60,7 @@ QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas
 ICON = $$PRO_PATH/icon/Chronomodel.icns
 
 macx{
-	QMAKE_MAC_SDK = macosx10.9
+	QMAKE_MAC_SDK = macosx10.10
 	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.6
 
 	RESOURCES_FILES.path = Contents/Resources
