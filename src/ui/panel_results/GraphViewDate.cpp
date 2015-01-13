@@ -83,6 +83,8 @@ void GraphViewDate::refresh()
     {
         QColor color = mColor;
         
+        setNumericalResults(mTitle + "\n" + mDate->mTheta.resultsText() + "=> Variance :\n" + mDate->mSigma.resultsText());
+        
         if(mCurrentResult == eHisto)
         {
             mGraph->setRangeY(0, 0.0001f);
@@ -95,8 +97,6 @@ void GraphViewDate::refresh()
             MHVariable* variable = &(mDate->mTheta);
             if(mCurrentVariable == eTheta) variable = &(mDate->mTheta);
             else if(mCurrentVariable == eSigma) variable = &(mDate->mSigma);
-            
-            setNumericalResults(mTitle + "\n" + variable->resultsText());
             
             if(mShowCalib && mCurrentVariable == eTheta)
             {
@@ -244,7 +244,10 @@ void GraphViewDate::refresh()
                 if(mCurrentVariable == eTheta) variable = &(mDate->mTheta);
                 else if(mCurrentVariable == eSigma) variable = &(mDate->mSigma);
                 
-                mGraph->addInfo(tr("MCMC") + " : " + ModelUtilities::getDataMethodText(mDate->mMethod));
+                if(mCurrentVariable == eTheta)
+                    mGraph->addInfo(tr("MCMC") + " : " + ModelUtilities::getDataMethodText(mDate->mMethod));
+                else if(mCurrentVariable == eSigma)
+                    mGraph->addInfo(tr("MCMC") + " : " + ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
                 mGraph->showInfos(true);
                 
                 GraphCurve curve;
