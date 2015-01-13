@@ -80,6 +80,8 @@ int main(int argc, char *argv[])
         }
     }
     
+    QLocale::setDefault(QLocale(QLocale::English, QLocale::UnitedStates));
+    
     //if(argv)
     //QString filePath(argv[1]);
     
