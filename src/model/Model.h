@@ -32,7 +32,7 @@ public:
     // Computed from trace using FFT :
     void generatePosteriorDensities(const QList<Chain>& chains, int fftLen, double hFactor);
     // Trace and Posterior density needed for this :
-    void generateCredibilityAndHPD(const QList<Chain>& chains, int threshold);
+    void generateCredibilityAndHPD(const QList<Chain>& chains, double threshold);
     // Trace and Posterior density needed for this :
     void generateNumericalResults(const QList<Chain>& chains);
     

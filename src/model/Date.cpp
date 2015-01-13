@@ -108,6 +108,7 @@ Date Date::fromJson(const QJsonObject& json)
         date.mPlugin = PluginManager::getPluginFromId(json[STATE_DATE_PLUGIN_ID].toString());
         
         date.mTheta.mProposal = ModelUtilities::getDataMethodText(date.mMethod);
+        date.mSigma.mProposal = ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt);
     }
     
     return date;

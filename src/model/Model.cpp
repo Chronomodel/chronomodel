@@ -608,11 +608,11 @@ void Model::generateNumericalResults(const QList<Chain>& chains)
     }
 }
 
-void Model::generateCredibilityAndHPD(const QList<Chain>& chains, int thresh)
+void Model::generateCredibilityAndHPD(const QList<Chain>& chains, double thresh)
 {
-    int threshold = thresh;
-    threshold = qMin(100, threshold);
-    threshold = qMax(0, threshold);
+    double threshold = thresh;
+    threshold = qMin(100., threshold);
+    threshold = qMax(0., threshold);
     
     for(int i=0; i<mEvents.size(); ++i)
     {
