@@ -575,6 +575,8 @@ void GraphView::drawCurves(QPainter& painter)
                 // They are drawn using a 100px width
                 double x = mMarginLeft + valueX * 100;
                 double y = getYForValue(valueY, false);
+                y = qMin(y, (double)mMarginTop + mGraphHeight);
+                y = qMax(y, (double)mMarginTop);
                 
                 //qDebug() << valueY << ", " << valueX << " => " << y << ", " << x;
                 
