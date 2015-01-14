@@ -69,6 +69,10 @@ public:
     MetropolisVariable mBeta;
     double mTau;
     
+    // Used to display correctly if alpha or beta is a fixed bound
+    bool mIsAlphaFixed;
+    bool mIsBetaFixed;
+    
     QVector<double> mDurations;
     QString mDurationCredibility;
     

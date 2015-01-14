@@ -71,7 +71,7 @@ private slots:
     void exportPhasesScene();
     
     void updateCalibration(const QJsonObject& date);
-    void showCalibration(bool show = true);
+    void showCalibration(bool show);
     void hideCalibration();
     
     void setSettingsValid(bool valid);

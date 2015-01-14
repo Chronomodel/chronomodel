@@ -11,7 +11,7 @@
 PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("Gauss Prior"), parent, flags)
 {
     mAverageLab = new Label(tr("Measure") + " :", this);
-    mErrorLab = new Label(tr("Error") + " :", this);
+    mErrorLab = new Label(tr("Error (sd)") + " :", this);
     
     mEq1Lab = new Label("g(t) = ", this);
     mEq2Lab = new Label(" t^2 + ", this);

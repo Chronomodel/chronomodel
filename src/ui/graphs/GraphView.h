@@ -49,6 +49,9 @@ public:
     void setYAxisMode(AxisMode mode);
     void autoAdjustYScale(bool active);
     
+    void setGraphFont(const QFont& font);
+    void setCurvesThickness(int value);
+    
     // Manage Curves
     
     void addCurve(const GraphCurve& curve);
@@ -62,11 +65,11 @@ public:
     
     // Paint
     
-    void paintToDevice(QPaintDevice* device);
+    void paintToDevice(QPaintDevice* device, QPaintEvent* e);
     
 public slots:
     void zoomX(const double min, const double max);
-    void exportCurrentCurves(const QString& defaultPath, const QString& csvSep, bool writeInRows) const;
+    void exportCurrentCurves(const QString& defaultPath, const QString& csvSep, bool writeInRows, int offset = 0) const;
     
 protected:
     void adaptMarginBottom();
@@ -100,6 +103,7 @@ protected:
     QStringList mInfos;
     
     QColor	mBackgroundColor;
+    int mThickness;
     
     QRectF  mTipRect;
     double  mTipX;

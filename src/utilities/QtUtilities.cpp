@@ -161,9 +161,11 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
         }
         else
         {
+            int versionHeight = 20;
+            
             qreal pr = qApp->devicePixelRatio();
             //qDebug() << "Saving PNG with pixel ratio : " << pr;
-            QImage image(r.width() * pr, r.height() * pr, QImage::Format_ARGB32);
+            QImage image(r.width() * pr, (r.height() + versionHeight) * pr, QImage::Format_ARGB32);
             image.setDevicePixelRatio(pr);
             image.fill(Qt::transparent);
             QPainter p(&image);
@@ -177,12 +179,20 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             
             if(widget)
             {
-                widget->render(&p, QPoint(), QRegion(srcRect.toRect()));
+                widget->render(&p, QPoint(0, 0), QRegion(r.x()-2, r.y()-2, r.width(), r.height()));
             }
             else if(scene)
             {
-                scene->render(&p, image.rect(), srcRect);
+                QRectF tgtRect = image.rect();
+                tgtRect.adjust(0, 0, 0, -versionHeight * pr);
+                
+                scene->render(&p, tgtRect, srcRect);
             }
+            p.setPen(Qt::black);
+            p.drawText(0, r.height(), r.width(), versionHeight,
+                       Qt::AlignCenter,
+                       qApp->applicationName() + " " + qApp->applicationVersion());
+            
             image.save(fileName, "PNG");
         }
     }

@@ -78,6 +78,7 @@ void ProjectView::resetInterface()
 {
     showModel();
     mModelView->resetInterface();
+    mResultsView->clearResults();
 }
 
 void ProjectView::updateProject()

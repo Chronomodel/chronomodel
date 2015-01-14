@@ -230,6 +230,7 @@ void PhasesScene::updateProject()
     
     adjustSceneRect();
     adaptItemsForZoom(mZoom);
+    updateEyedPhases();
 }
 
 void PhasesScene::clean()

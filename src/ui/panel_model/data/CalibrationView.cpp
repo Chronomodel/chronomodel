@@ -79,6 +79,7 @@ mRefGraphView(0)
     
     mButBack = new Button(tr("Close"), this);
     mButBack->setIsClose(true);
+    mButBack->setVisible(false);
     connect(mButBack, SIGNAL(clicked()), this, SIGNAL(closed()));
     
     setMouseTracking(true);
@@ -290,7 +291,7 @@ void CalibrationView::exportImage()
     mHPDLab->setVisible(false);
     mMarkerX->setVisible(false);
     mMarkerY->setVisible(false);
-    mButBack->setVisible(false);
+    //mButBack->setVisible(false);
     
     int m = 5;
     QRect r(m, m, this->width() - 2*m, this->height() - 2*m);
@@ -307,7 +308,7 @@ void CalibrationView::exportImage()
     mHPDLab->setVisible(true);
     mMarkerX->setVisible(true);
     mMarkerY->setVisible(true);
-    mButBack->setVisible(true);
+    //mButBack->setVisible(true);
 }
 
 void CalibrationView::paintEvent(QPaintEvent* e)

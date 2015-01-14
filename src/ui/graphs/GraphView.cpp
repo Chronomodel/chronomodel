@@ -19,6 +19,7 @@ mYAxisMode(eAllTicks),
 mAutoAdjustYScale(false),
 mShowInfos(false),
 mBackgroundColor(Qt::white),
+mThickness(1),
 mTipX(0.),
 mTipY(0.),
 mTipWidth(100.),
@@ -191,6 +192,18 @@ void GraphView::autoAdjustYScale(bool active)
     repaintGraph(true);
 }
 
+void GraphView::setGraphFont(const QFont& font)
+{
+    setFont(font);
+    repaintGraph(true);
+}
+
+void GraphView::setCurvesThickness(int value)
+{
+    mThickness = value;
+    repaintGraph(true);
+}
+
 /* ------------------------------------------------------
  Curves & Zones
  ------------------------------------------------------ */
@@ -332,7 +345,7 @@ void GraphView::updateGraphSize(int w, int h)
     mAxisToolY.updateValues(mGraphHeight, 12, mMinY, mMaxY);
 }
 
-void GraphView::paintEvent(QPaintEvent*)
+void GraphView::paintEvent(QPaintEvent* e)
 {
     updateGraphSize(width(), height());
     
@@ -342,6 +355,7 @@ void GraphView::paintEvent(QPaintEvent*)
     if(mCurves.size() == 0)
     {
         QPainter p(this);
+        p.setFont(font());
         p.fillRect(0, 0, width(), height(), QColor(200, 200, 200));
         p.setPen(QColor(100, 100, 100));
         p.drawText(0, 0, width(), height(), Qt::AlignCenter, tr("Nothing to display"));
@@ -355,14 +369,14 @@ void GraphView::paintEvent(QPaintEvent*)
     if(mBufferBack.isNull() && mRendering == eSD)
     {
         mBufferBack = QPixmap(width(), height());
-        paintToDevice(&mBufferBack);
+        paintToDevice(&mBufferBack, e);
     }
     // ----------------------------------------------------
     //  HD : draw directly on widget
     // ----------------------------------------------------
     else if(mRendering == eHD)
     {
-        paintToDevice(this);
+        paintToDevice(this, e);
     }
     // ----------------------------------------------------
     //  SD rendering : draw buffer on widget !
@@ -400,16 +414,17 @@ void GraphView::paintEvent(QPaintEvent*)
     }
 }
 
-void GraphView::paintToDevice(QPaintDevice* device)
+void GraphView::paintToDevice(QPaintDevice* device, QPaintEvent* e)
 {
     QPainter p;
     p.begin(device);
+    p.setFont(font());
     p.setRenderHints(QPainter::Antialiasing);
     
     // ----------------------------------------------------
     //  Background
     // ----------------------------------------------------
-    p.fillRect(0, 0, width(), height(), mBackgroundColor);
+    p.fillRect(e->rect(), mBackgroundColor);
     
     // ----------------------------------------------------
     //  Zones
@@ -423,12 +438,16 @@ void GraphView::paintToDevice(QPaintDevice* device)
         p.drawText(r.adjusted(5, 5, -5, -5), Qt::AlignHCenter | Qt::AlignTop, mZones[i].mText);
     }
     
+    QFont font = p.font();
+    font.setPointSizeF(font.pointSizeF() - 2.);
+    p.setFont(font);
+    
     // ----------------------------------------------------
     //  Vertical Grid
     // ----------------------------------------------------
     if(mXAxisMode != eHidden)
     {
-        QVector<double> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth, mMarginBottom), 40);
+        QVector<double> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth, mMarginBottom), 100);
         
         if(mShowVertGrid)
         {
@@ -446,7 +465,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     // ----------------------------------------------------
     if(mYAxisMode != eHidden)
     {
-        QVector<double> linesYPos = mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), 20);
+        QVector<double> linesYPos = mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), 40);
         
         if(mShowHorizGrid)
         {
@@ -458,6 +477,9 @@ void GraphView::paintToDevice(QPaintDevice* device)
             }
         }
     }
+    
+    font.setPointSizeF(font.pointSizeF() + 2.);
+    p.setFont(font);
     
     // ----------------------------------------------------
     //  Curves
@@ -471,9 +493,6 @@ void GraphView::paintToDevice(QPaintDevice* device)
     {
         QString infos = mInfos.join(" | ");
         p.setPen(QColor(50, 50, 50));
-        QFont font = p.font();
-        font.setPointSize(pointSize(11));
-        p.setFont(font);
         p.drawText(mMarginLeft + 5, mMarginTop + 5, mGraphWidth - 10, 15, Qt::AlignRight | Qt::AlignTop, infos);
     }
     
@@ -519,7 +538,9 @@ void GraphView::drawCurves(QPainter& painter)
             continue;
         
         QPainterPath path;
-        painter.setPen(curve.mPen);
+        QPen pen = curve.mPen;
+        pen.setWidth(pen.width() * mThickness);
+        painter.setPen(pen);
         
         if(curve.mIsHorizontalLine)
         {
@@ -819,7 +840,7 @@ void GraphView::drawCurves(QPainter& painter)
     }
 }
 
-void GraphView::exportCurrentCurves(const QString& defaultPath, const QString& csvSep, bool writeInRows) const
+void GraphView::exportCurrentCurves(const QString& defaultPath, const QString& csvSep, bool writeInRows, int offset) const
 {
     QString filter = tr("CSV (*.csv)");
     QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
@@ -876,6 +897,11 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QString& c
                         QStringList abscisses;
                         abscisses << "";
                         rows.append(QStringList(""));
+                        
+                        int i = 0;
+                        while(iter.hasNext() && i<offset)
+                            iter.next();
+                        
                         while(iter.hasNext())
                         {
                             iter.next();
@@ -886,12 +912,45 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QString& c
                     {
                         QMapIterator<double, double> iter(data);
                         rows[0] << mCurves[i].mName;
+                        
+                        int i = 0;
+                        while(iter.hasNext() && i<offset)
+                            iter.next();
+                        
                         int index = 0;
                         while(iter.hasNext())
                         {
                             iter.next();
                             ++index;
                             rows[index] << QString::number(iter.value());
+                        }
+                    }
+                }
+            }
+            else if(mCurves[i].mUseVectorData)
+            {
+                // Vertical only is used...
+                if(!writeInRows)
+                {
+                    const QVector<double>& data = mCurves[i].mDataVector;
+                    if(!abscissesWritten)
+                    {
+                        abscissesWritten = true;
+                        QStringList abscisses;
+                        abscisses << "";
+                        
+                        rows.append(QStringList(""));
+                        for(int i=offset; i<data.size(); ++i)
+                        {
+                            rows.append(QStringList(QString::number(i-offset+1)));
+                        }
+                    }
+                    if(abscissesWritten)
+                    {
+                        rows[0] << mCurves[i].mName;
+                        for(int i=offset; i<data.size(); ++i)
+                        {
+                            rows[i-offset+1] << QString::number(data[i]);
                         }
                     }
                 }

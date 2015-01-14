@@ -76,9 +76,6 @@ QVector<double> AxisTool::paint(QPainter& p, const QRectF& r, double textS)
 {
     QVector<double> linesPos;
     
-    QFont font = p.font();
-    font.setPointSizeF(pointSize(9.f));
-    p.setFont(font);
     p.setPen(Qt::black);
     
     if(mIsHorizontal)

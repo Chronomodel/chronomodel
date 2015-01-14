@@ -62,7 +62,7 @@ QString PluginGauss::csvHelp() const
 QStringList PluginGauss::csvColumns() const
 {
     QStringList cols;
-    cols << "Name" << "Age" << "Error" << "a" << "b" << "c";
+    cols << "Name" << "Age" << "Error (sd)" << "a" << "b" << "c";
     return cols;
 }
 

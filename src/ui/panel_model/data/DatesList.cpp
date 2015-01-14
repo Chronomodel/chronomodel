@@ -81,7 +81,7 @@ void DatesList::setEvent(const QJsonObject& event)
 
 void DatesList::handleItemClicked(QListWidgetItem* item)
 {
-    QFont font;
+    /*QFont font;
     font.setPointSizeF(pointSize(11));
     QFontMetrics metrics(font);
     int mm = 2;
@@ -120,16 +120,25 @@ void DatesList::handleItemClicked(QListWidgetItem* item)
             QJsonObject date = dates[index].toObject();
             emit calibRequested(date);
         }
+    }*/
+    
+    
+    int index = row(item);
+    QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+    if(index < dates.size())
+    {
+        QJsonObject date = dates[index].toObject();
+        emit calibRequested(date);
     }
 }
 
 void DatesList::handleItemDoubleClicked(QListWidgetItem* item)
 {
-    Q_UNUSED(item);
-    /*if(!mEvent.isEmpty())
+    //Q_UNUSED(item);
+    if(!mEvent.isEmpty())
     {
         MainWindow::getInstance()->getProject()->updateDate(mEvent[STATE_ID].toInt(), row(item));
-    }*/
+    }
 }
 
 void DatesList::dropEvent(QDropEvent* e)

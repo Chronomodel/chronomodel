@@ -245,9 +245,9 @@ void GraphViewDate::refresh()
                 else if(mCurrentVariable == eSigma) variable = &(mDate->mSigma);
                 
                 if(mCurrentVariable == eTheta)
-                    mGraph->addInfo(tr("MCMC") + " : " + ModelUtilities::getDataMethodText(mDate->mMethod));
+                    mGraph->addInfo(ModelUtilities::getDataMethodText(mDate->mMethod));
                 else if(mCurrentVariable == eSigma)
-                    mGraph->addInfo(tr("MCMC") + " : " + ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
+                    mGraph->addInfo(ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
                 mGraph->showInfos(true);
                 
                 GraphCurve curve;

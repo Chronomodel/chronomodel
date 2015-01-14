@@ -14,7 +14,7 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     Plugin14C* plugin14C = (Plugin14C*)mPlugin;
     
     mAverageLab = new Label(tr("Age") + " :", this);
-    mErrorLab = new Label(tr("Error") + " :", this);
+    mErrorLab = new Label(tr("Error (sd)") + " :", this);
     mRefLab = new Label(tr("Reference curve") + " :", this);
     mRefPathLab = new Label(tr("Folder") + " : " + plugin14C->getRefsPath(), this);
     mRefPathLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);

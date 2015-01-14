@@ -108,7 +108,7 @@ QStringList PluginMag::csvColumns() const
         << "Inclination value"
         << "Declination value"
         << "Intensity value"
-        << "Error (or alpha 95)"
+        << "Error (sd) or alpha 95"
         << "Reference curve (file name)";
     return cols;
 }

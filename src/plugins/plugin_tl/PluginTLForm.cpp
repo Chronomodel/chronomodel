@@ -11,7 +11,7 @@
 PluginTLForm::PluginTLForm(PluginTL* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("TL Measurements"), parent, flags)
 {
     mAverageLab = new Label(tr("Age") + " :", this);
-    mErrorLab = new Label(tr("Error") + " :", this);
+    mErrorLab = new Label(tr("Error (sd)") + " :", this);
     mYearLab = new Label(tr("Ref. year") + " :", this);
     
     mAverageEdit = new LineEdit(this);

@@ -42,6 +42,8 @@ public:
     void toggle(const QRect& geometry);
     
     void setRendering(GraphView::Rendering render);
+    void setGraphFont(const QFont& font);
+    void setGraphsThickness(int value);
     
 public slots:
     void setRange(double min, double max);

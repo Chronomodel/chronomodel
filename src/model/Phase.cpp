@@ -9,6 +9,8 @@
 Phase::Phase():
 mId(0),
 mTau(0.f),
+mIsAlphaFixed(true),
+mIsBetaFixed(true),
 mTauType(Phase::eTauUnknown),
 mTauFixed(0),
 mTauMin(0),
@@ -274,10 +276,25 @@ double Phase::getMaxThetaPrevPhases(double tmin)
 
 void Phase::updateAll(double tmin, double tmax)
 {
+    static bool initilized = false;
+    
+    double oldAlpha = mAlpha.mX;
+    double oldBeta = mBeta.mX;
+    
     mAlpha.mX = getMinThetaEvents(tmin);
     mBeta.mX = getMaxThetaEvents(tmax);
     
+    if(initilized)
+    {
+        if(mAlpha.mX != oldAlpha)
+            mIsAlphaFixed = false;
+        if(mBeta.mX != oldBeta)
+            mIsAlphaFixed = false;
+    }
+    
     updateTau();
+    
+    initilized = true;
 }
 
 void Phase::initTau()

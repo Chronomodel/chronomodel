@@ -137,6 +137,13 @@ mZoomCorrel(0)
     mRuler = new Ruler(this);
     connect(mRuler, SIGNAL(positionChanged(double, double)), this, SLOT(updateScroll(double, double)));
     
+    QVBoxLayout* scaleLayout = new QVBoxLayout();
+    scaleLayout->setContentsMargins(5, 5, 5, 5);
+    scaleLayout->setSpacing(5);
+    scaleLayout->addWidget(mXScaleLab);
+    scaleLayout->addWidget(mXSlider);
+    scaleLayout->addWidget(mYScaleLab);
+    scaleLayout->addWidget(mYSlider);
     
     mRenderLab = new Label(tr("Rendering :"));
     mRenderCombo = new QComboBox();
@@ -145,23 +152,31 @@ mZoomCorrel(0)
     
     connect(mRenderCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(updateRendering(int)));
     
-    mUpdateDisplay = new Button(tr("Update display"));
-    
-    connect(mUpdateDisplay, SIGNAL(clicked()), this, SLOT(updateModel()));
-    
     QHBoxLayout* renderLayout = new QHBoxLayout();
     renderLayout->setContentsMargins(5, 5, 5, 5);
     renderLayout->setSpacing(5);
     renderLayout->addWidget(mRenderLab);
     renderLayout->addWidget(mRenderCombo);
     
-    QVBoxLayout* scaleLayout = new QVBoxLayout();
-    scaleLayout->setContentsMargins(5, 5, 5, 5);
-    scaleLayout->setSpacing(5);
-    scaleLayout->addWidget(mXScaleLab);
-    scaleLayout->addWidget(mXSlider);
-    scaleLayout->addWidget(mYScaleLab);
-    scaleLayout->addWidget(mYSlider);
+    mUpdateDisplay = new Button(tr("Update display"));
+    
+    connect(mUpdateDisplay, SIGNAL(clicked()), this, SLOT(updateModel()));
+    
+    mFont.setPointSize(pointSize(11.));
+    mFontBut = new Button(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
+    
+    mThicknessLab = new Label(tr("Graph thichness : "));
+    mThicknessSpin = new QSpinBox();
+    mThicknessSpin->setRange(1, 5);
+    
+    connect(mFontBut, SIGNAL(clicked()), this, SLOT(updateFont()));
+    connect(mThicknessSpin, SIGNAL(valueChanged(int)), this, SLOT(updateThickness(int)));
+    
+    QHBoxLayout* thickLayout = new QHBoxLayout();
+    thickLayout->setContentsMargins(0, 0, 0, 0);
+    thickLayout->setSpacing(5);
+    thickLayout->addWidget(mThicknessLab);
+    thickLayout->addWidget(mThicknessSpin);
     
     QHBoxLayout* displayButsLayout = new QHBoxLayout();
     displayButsLayout->setContentsMargins(0, 0, 0, 0);
@@ -173,11 +188,13 @@ mZoomCorrel(0)
     mDisplayGroup = new QWidget();
     QVBoxLayout* displayLayout = new QVBoxLayout();
     displayLayout->setContentsMargins(0, 0, 0, 0);
-    displayLayout->setSpacing(0);
+    displayLayout->setSpacing(5);
     //displayLayout->addWidget(mZoomWidget);
     displayLayout->addLayout(scaleLayout);
     displayLayout->addLayout(renderLayout);
     displayLayout->addWidget(mUpdateDisplay);
+    displayLayout->addWidget(mFontBut);
+    displayLayout->addLayout(thickLayout);
     mDisplayGroup->setLayout(displayLayout);
     
     connect(mUnfoldBut, SIGNAL(toggled(bool)), this, SLOT(unfoldResults(bool)));
@@ -202,7 +219,7 @@ mZoomCorrel(0)
     mDataGroup = new QWidget();
     
     mDataThetaRadio = new RadioButton(tr("Calendar dates"), mDataGroup);
-    mDataSigmaRadio = new RadioButton(tr("Individual variances"), mDataGroup);
+    mDataSigmaRadio = new RadioButton(tr("Individual std. deviations"), mDataGroup);
     mDataCalibCheck = new CheckBox(tr("Distrib. of calib. dates"), mDataGroup);
     mWiggleCheck = new CheckBox(tr("Wiggle shifted"), mDataGroup);
     mDataThetaRadio->setChecked(true);
@@ -237,6 +254,7 @@ mZoomCorrel(0)
     
     mRawCheck = new CheckBox(tr("Raw results"), mPostDistGroup);
     mRawCheck->setChecked(false);
+    mRawCheck->setVisible(false);
     
     connect(mRawCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     
@@ -450,7 +468,7 @@ void ResultsView::updateLayout()
     mHPDCheck->setGeometry(m, y, mPostDistGroup->width() - 2*m, mLineH);
     mThreshLab->setGeometry(m, y += (m + mLineH), w1, mLineH);
     mHPDEdit->setGeometry(2*m + w1, y, w2, mLineH);
-    mRawCheck->setGeometry(m, y += (m + mLineH), mPostDistGroup->width() - 2*m, mLineH);
+    //mRawCheck->setGeometry(m, y += (m + mLineH), mPostDistGroup->width() - 2*m, mLineH);
     mFFTLenLab->setGeometry(m, y += (m + mLineH), sw, mComboH);
     mFFTLenCombo->setGeometry(2*m + sw, y, sw, mComboH);
     mHFactorLab->setGeometry(m, y += (m + mComboH), w1, mLineH);
@@ -510,6 +528,43 @@ void ResultsView::updateHFactor()
         mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toDouble());
         
         updateGraphs();
+    }
+}
+
+#pragma mark Display options
+void ResultsView::updateFont()
+{
+    QFontDialog dialog;
+    dialog.setParent(qApp->activeWindow());
+    dialog.setFont(mFont);
+    
+    bool ok;
+    QFont font = QFontDialog::getFont(&ok, mFont, this);
+    if(ok)
+    {
+        mFont = font;
+        mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
+        
+        for(int i=0; i<mByPhasesGraphs.size(); ++i)
+        {
+            mByPhasesGraphs[i]->setGraphFont(mFont);
+        }
+        for(int i=0; i<mByEventsGraphs.size(); ++i)
+        {
+            mByEventsGraphs[i]->setGraphFont(mFont);
+        }
+    }
+}
+
+void ResultsView::updateThickness(int value)
+{
+    for(int i=0; i<mByPhasesGraphs.size(); ++i)
+    {
+        mByPhasesGraphs[i]->setGraphsThickness(value);
+    }
+    for(int i=0; i<mByEventsGraphs.size(); ++i)
+    {
+        mByEventsGraphs[i]->setGraphsThickness(value);
     }
 }
 
@@ -616,6 +671,8 @@ void ResultsView::updateResults(Model* model)
         graphPhase->setSettings(mModel->mSettings);
         graphPhase->setMCMCSettings(mModel->mMCMCSettings, mChains);
         graphPhase->setPhase(phase);
+        graphPhase->setGraphFont(mFont);
+        graphPhase->setGraphsThickness(mThicknessSpin->value());
         mByPhasesGraphs.append(graphPhase);
         
         for(int i=0; i<(int)phase->mEvents.size(); ++i)
@@ -625,6 +682,8 @@ void ResultsView::updateResults(Model* model)
             graphEvent->setSettings(mModel->mSettings);
             graphEvent->setMCMCSettings(mModel->mMCMCSettings, mChains);
             graphEvent->setEvent(event);
+            graphEvent->setGraphFont(mFont);
+            graphEvent->setGraphsThickness(mThicknessSpin->value());
             mByPhasesGraphs.append(graphEvent);
             
             // Do not display datas in phases layout,
@@ -658,6 +717,8 @@ void ResultsView::updateResults(Model* model)
         graphEvent->setSettings(mModel->mSettings);
         graphEvent->setMCMCSettings(mModel->mMCMCSettings, mChains);
         graphEvent->setEvent(event);
+        graphEvent->setGraphFont(mFont);
+        graphEvent->setGraphsThickness(mThicknessSpin->value());
         mByEventsGraphs.append(graphEvent);
         
         for(int j=0; j<(int)event->mDates.size(); ++j)
@@ -668,6 +729,8 @@ void ResultsView::updateResults(Model* model)
             graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
             graphDate->setDate(&date);
             graphDate->setColor(event->mColor);
+            graphDate->setGraphFont(mFont);
+            graphDate->setGraphsThickness(mThicknessSpin->value());
             mByEventsGraphs.append(graphDate);
         }
     }
@@ -961,7 +1024,7 @@ void ResultsView::updateScroll(double min, double max)
 void ResultsView::updateScaleY(int value)
 {
     double min = 20;
-    double max = 240;
+    double max = 1000;
     double prop = value / 100.f;
     mGraphsH = min + prop * (max - min);
     updateLayout();

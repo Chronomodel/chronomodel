@@ -34,7 +34,7 @@ mGraphLeft(130)
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eMinMax);
     
-    mGraph->setMargins(50, 10, 5, 15);
+    mGraph->setMargins(50, 10, 5, 20);
     mGraph->setRangeY(0, 1);
     
     mTextArea = new QTextEdit(this);
@@ -168,7 +168,20 @@ void GraphViewResults::saveGraphData() const
     AppSettings settings = MainWindow::getInstance()->getAppSettings();
     QString csvSep = settings.mCSVCellSeparator;
     
-    mGraph->exportCurrentCurves(MainWindow::getInstance()->getCurrentPath(), csvSep, false);
+    int offset = 0;
+    if(mCurrentResult == eTrace)
+    {
+        int chainIdx = -1;
+        for(int i=0; i<mShowChainList.size(); ++i)
+            if(mShowChainList[i])
+                chainIdx = i;
+        if(chainIdx != -1)
+        {
+            offset = mChains[chainIdx].mNumBurnIter + mChains[chainIdx].mBatchIndex * mChains[chainIdx].mNumBatchIter;
+        }
+    }
+    
+    mGraph->exportCurrentCurves(MainWindow::getInstance()->getCurrentPath(), csvSep, false, offset);
 }
 
 void GraphViewResults::setNumericalResults(const QString& results)
@@ -188,6 +201,17 @@ void GraphViewResults::setRendering(GraphView::Rendering render)
     mGraph->setRendering(render);
 }
 
+void GraphViewResults::setGraphFont(const QFont& font)
+{
+    mGraph->setGraphFont(font);
+    mGraph->setMarginBottom(font.pointSizeF() + 10);
+}
+
+void GraphViewResults::setGraphsThickness(int value)
+{
+    mGraph->setCurvesThickness(value);
+}
+
 void GraphViewResults::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
@@ -201,10 +225,7 @@ void GraphViewResults::paintEvent(QPaintEvent* e)
     if(height() >= mMinHeighttoDisplayTitle)
     {
         QRectF textRect(mGraphLeft, 0, mGraph->width(), 25);
-        
-        p.setPen(mGraph->getBackgroundColor());
-        p.setBrush(mGraph->getBackgroundColor());
-        p.drawRect(textRect);
+        p.fillRect(textRect, mGraph->getBackgroundColor());
         
         p.setPen(Qt::black);
         QFont font = p.font();

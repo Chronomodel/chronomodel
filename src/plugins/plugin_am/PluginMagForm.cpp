@@ -162,7 +162,7 @@ void PluginMagForm::updateOptions()
     mIntensityEdit->setEnabled(mIntensityRadio->isChecked());
     
     if(mIntensityRadio->isChecked())
-        mAlpha95Lab->setText(tr("Error") + " :");
+        mAlpha95Lab->setText(tr("Error (sd)") + " :");
     else
         mAlpha95Lab->setText(tr("Alpha 95") + " :");
 }

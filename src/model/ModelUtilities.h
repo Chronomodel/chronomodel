@@ -26,6 +26,8 @@ public:
     
     static QVector<Event*> sortEventsByLevel(const QList<Event*>& events);
     static QVector<Phase*> sortPhasesByLevel(const QList<Phase*>& phases);
+    
+    static QVector<Event*> unsortEvents(const QList<Event*>& events);
 };
 
 // These 2 global functions are used to sort events and phases lists in result view

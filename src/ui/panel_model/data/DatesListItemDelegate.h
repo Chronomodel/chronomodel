@@ -20,35 +20,18 @@ public:
         font.setPointSizeF(pointSize(11));
         QFontMetrics metrics(font);
         
-        int mm = 2;
+        /*int mm = 2;
         int mh = metrics.height();
         int butH = 20;
-        return QSize(option.rect.width(), 4*mh + butH + 6*mm);
+        return QSize(option.rect.width(), 4*mh + butH + 6*mm);*/
         
-        /*QVariant value = index.data(Qt::SizeHintRole);
-        if(value.isValid())
-            return qvariant_cast<QSize>(value);
-        
-        QRect decorationRect = rect(option, index, Qt::DecorationRole);
-        QRect displayRect = rect(option, index, Qt::DisplayRole);
-        QRect checkRect = rect(option, index, Qt::CheckStateRole);
-        
-        doLayout(option, &checkRect, &decorationRect, &displayRect, true);
-        
-        return (decorationRect|displayRect|checkRect).size();*/
+        int mm = 2;
+        int mh = metrics.height();
+        return QSize(option.rect.width(), 4*mh + 5*mm);
     }
     
     inline void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
     {
-        /*QItemDelegate::paint(painter, option, index);
-        return;
-        
-        if(index.column() != 2)
-        {
-            QItemDelegate::paint(painter, option, index);
-            return;
-        }*/
-        
         int mm = 2;
         int x = option.rect.x();
         int y = option.rect.y();
@@ -56,8 +39,8 @@ public:
         int h = option.rect.height();
         int iconW = 30;
         int iconS = 20;
-        int butH = 20;
-        int butW = 60;
+        //int butH = 20;
+        //int butW = 60;
         
         painter->setRenderHint(QPainter::Antialiasing);
         
@@ -103,7 +86,7 @@ public:
             
             // ------
             
-            QRect updateRect(x + iconW, y + h - mm - butH, butW, butH);
+            /*QRect updateRect(x + iconW, y + h - mm - butH, butW, butH);
             QRect calibRect(x + iconW + 2*mm + butW, y + h - mm - butH, butW, butH);
             
             painter->setPen(QColor(150, 150, 150));
@@ -113,23 +96,7 @@ public:
             
             painter->setPen(QColor(40, 40, 40));
             painter->drawText(updateRect, Qt::AlignCenter, tr("Modify"));
-            painter->drawText(calibRect, Qt::AlignCenter, tr("Calibrate"));
-            
-            /*if (option.state & QStyle::State_Selected)
-             painter->fillRect(option.rect, option.palette.highlight());
-             
-             int size = qMin(option.rect.width(), option.rect.height());
-             int brightness = index.model()->data(index, Qt::DisplayRole).toInt();
-             double radius = (size / 2.0) - (brightness / 255.0 * size / 2.0);
-             if (radius == 0.0)
-             return;
-             
-             painter->save();
-             painter->setRenderHint(QPainter::Antialiasing, true);
-             painter->setPen(Qt::NoPen);
-             if (option.state & QStyle::State_Selected)
-             painter->setBrush(option.palette.highlightedText());
-             else*/
+            painter->drawText(calibRect, Qt::AlignCenter, tr("Calibrate"));*/
         }
     }
 };

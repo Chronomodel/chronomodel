@@ -54,8 +54,8 @@ mButH(25)
     mDeltaFixedLab = new Label(tr("Value") + " :", mAdvancedWidget);
     mDeltaMinLab = new Label(tr("Min") + " :", mAdvancedWidget);
     mDeltaMaxLab = new Label(tr("Max") + " :", mAdvancedWidget);
-    mDeltaAverageLab = new Label(tr("Average") + " :", mAdvancedWidget);
-    mDeltaErrorLab = new Label(tr("Error") + " :", mAdvancedWidget);
+    mDeltaAverageLab = new Label(tr("Mean") + " :", mAdvancedWidget);
+    mDeltaErrorLab = new Label(tr("Error (sd)") + " :", mAdvancedWidget);
     
     mDeltaFixedEdit = new LineEdit(mAdvancedWidget);
     mDeltaMinEdit = new LineEdit(mAdvancedWidget);

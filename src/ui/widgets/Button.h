@@ -20,8 +20,6 @@ public:
     ~Button();
     void init();
     
-    QSize sizeHint() const;
-    
     void setFlatVertical();
     void setFlatHorizontal();
     void setIsClose(bool isClose);

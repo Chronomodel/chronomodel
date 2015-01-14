@@ -10,6 +10,7 @@ class QTimer;
 class QComboBox;
 class QSlider;
 class QScrollBar;
+class QSpinBox;
 
 class Project;
 class Model;
@@ -67,6 +68,9 @@ private slots:
     void generateHPD();
     void updateFFTLength();
     void updateHFactor();
+    
+    void updateFont();
+    void updateThickness(int value);
     
 private:
     QList<QRect> getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases);
@@ -146,6 +150,13 @@ private:
     Label* mHFactorLab;
     LineEdit* mHFactorEdit;
     Button* mUpdateDisplay;
+    
+    Button* mFontBut;
+    QFont mFont;
+    
+    Label* mThicknessLab;
+    QSpinBox* mThicknessSpin;
+    
     int mComboH;
     
     QTimer* mTimer;

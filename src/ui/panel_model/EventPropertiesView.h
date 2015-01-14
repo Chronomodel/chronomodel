@@ -58,10 +58,15 @@ private slots:
     void updateKnownGraph();
     void updateKnownControls();
     
+public slots:
+    void hideCalibration();
+    
 signals:
     void mergeSelectedDates(Event* event);
     void splitDate(Date* date);
-    void calibRequested(const QJsonObject& date);
+    
+    void updateCalibRequested(const QJsonObject& date);
+    void showCalibRequested(bool show);
     
 private:
     QJsonObject mEvent;
@@ -83,6 +88,7 @@ private:
     Button* mDeleteBut;
     Button* mRecycleBut;
     
+    Button* mCalibBut;
     Button* mOptsBut;
     Button* mMergeBut;
     Button* mSplitBut;

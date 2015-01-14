@@ -90,7 +90,7 @@ QList<Date::DataMethod> Plugin14C::allowedDataMethods() const
 QStringList Plugin14C::csvColumns() const
 {
     QStringList cols;
-    cols << "Name" << "Age" << "Error" << "Reference curve";
+    cols << "Name" << "Age" << "Error (sd)" << "Reference curve";
     return cols;
 }
 

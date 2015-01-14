@@ -131,7 +131,7 @@ QString functionAnalysisToString(const FunctionAnalysis& analysis)
     QString result;
     int precision = 0;
     
-    result += "Mode : " + QString::number(analysis.mode, 'f', precision) + "   ";
+    result += "MAP : " + QString::number(analysis.mode, 'f', precision) + "   ";
     result += "Mean : " + QString::number(analysis.mean, 'f', precision) + "   ";
     result += "Std deviation : " + QString::number(analysis.stddev, 'f', precision) + "\n";
     

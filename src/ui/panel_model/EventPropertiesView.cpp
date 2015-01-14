@@ -46,7 +46,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     
     mDatesList = new DatesList(mDefaultView);
     
-    connect(mDatesList, SIGNAL(calibRequested(const QJsonObject&)), this, SIGNAL(calibRequested(const QJsonObject&)));
+    connect(mDatesList, SIGNAL(calibRequested(const QJsonObject&)), this, SIGNAL(updateCalibRequested(const QJsonObject&)));
     
     // -------------
     
@@ -76,18 +76,26 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     
     // ---------------
     
+    mCalibBut = new Button(tr("Calibrate"), mDefaultView);
+    mCalibBut->setIcon(QIcon(":results_w.png"));
+    mCalibBut->setFlatVertical();
+    mCalibBut->setCheckable(true);
+    
     mOptsBut = new Button(tr("Options"), mDefaultView);
+    mOptsBut->setIcon(QIcon(":settings_w.png"));
     mOptsBut->setFlatVertical();
     
     mMergeBut = new Button(tr("Combine"), mDefaultView);
     mMergeBut->setFlatVertical();
     mMergeBut->setEnabled(false);
+    mMergeBut->setVisible(false);
     
     mSplitBut = new Button(tr("Split"), mDefaultView);
     mSplitBut->setFlatVertical();
     mSplitBut->setEnabled(false);
+    mSplitBut->setVisible(false);
     
-    
+    connect(mCalibBut, SIGNAL(toggled(bool)), this, SIGNAL(showCalibRequested(bool)));
     connect(mOptsBut, SIGNAL(clicked()), this, SLOT(showDatesOptions()));
     connect(mMergeBut, SIGNAL(clicked()), this, SLOT(sendMergeSelectedDates()));
     connect(mSplitBut, SIGNAL(clicked()), this, SLOT(sendSplitDate()));
@@ -153,6 +161,7 @@ void EventPropertiesView::updateEvent()
     mMethodCombo->setEnabled(!empty);
     mDeleteBut->setEnabled(!empty);
     mRecycleBut->setEnabled(!empty);
+    mCalibBut->setEnabled(!empty);
     
     for(int i=0; i<mPluginButs1.size(); ++i)
         mPluginButs1[i]->setEnabled(!empty);
@@ -366,6 +375,11 @@ void EventPropertiesView::updateKnownControls()
     }
 }
 
+void EventPropertiesView::hideCalibration()
+{
+    mCalibBut->setChecked(false);
+}
+
 #pragma mark Event Data
 void EventPropertiesView::createDate()
 {
@@ -551,8 +565,9 @@ void EventPropertiesView::updateLayout()
         y += butH;
     }
     
-    mMergeBut->setGeometry(x, comboH + m + listRect.height() - 5*butH, butW, butH);
-    mSplitBut->setGeometry(x, comboH + m + listRect.height() - 4*butH, butW, butH);
+    //mMergeBut->setGeometry(x, comboH + m + listRect.height() - 5*butH, butW, butH);
+    //mSplitBut->setGeometry(x, comboH + m + listRect.height() - 4*butH, butW, butH);
+    mCalibBut->setGeometry(x, comboH + m + listRect.height() - 4*butH, butW, butH);
     mOptsBut->setGeometry(x, comboH + m + listRect.height() - 3*butH, butW, butH);
     mDeleteBut->setGeometry(x, comboH + m + listRect.height() - 2*butH, butW, butH);
     mRecycleBut->setGeometry(x, comboH + m + listRect.height() - butH, butW, butH);

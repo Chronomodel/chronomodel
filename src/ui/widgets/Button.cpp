@@ -17,7 +17,11 @@ Button::Button(const QString& text, QWidget* parent):QPushButton(parent)
 void Button::init()
 {
     setCursor(Qt::PointingHandCursor);
-    setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
+    //setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
+    
+    QFont font;
+    font.setPointSizeF(pointSize(11));
+    setFont(font);
     
     mFlatVertical = false;
     mFlatHorizontal = false;
@@ -29,11 +33,6 @@ void Button::init()
 Button::~Button()
 {
 
-}
-
-QSize Button::sizeHint() const
-{
-    return QSize(50, 25);
 }
 
 void Button::setFlatVertical()
@@ -62,8 +61,6 @@ void Button::setColorState(ColorState state)
 
 void Button::paintEvent(QPaintEvent* e)
 {
-    Q_UNUSED(e);
-    
     QPainter painter(this);
     painter.save();
     painter.setRenderHint(QPainter::Antialiasing);
@@ -72,7 +69,12 @@ void Button::paintEvent(QPaintEvent* e)
     font.setPointSizeF(pointSize(10.f));
     painter.setFont(font);
     
-    QRectF r = rect();
+    
+    
+    QRectF r = rect().adjusted(contentsMargins().left(),
+                               contentsMargins().top(),
+                               -contentsMargins().right(),
+                               -contentsMargins().bottom());
     
     if(mIsClose)
     {
@@ -230,8 +232,12 @@ void Button::paintEvent(QPaintEvent* e)
         
         painter.setPen(penCol);
         painter.drawText(r, Qt::AlignCenter, text());
+        
+        QPushButton::paintEvent(e);
     }
     
     painter.restore();
+    
+    QPushButton::paintEvent(e);
 }
 

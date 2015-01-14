@@ -308,3 +308,20 @@ QVector<Phase*> ModelUtilities::sortPhasesByLevel(const QList<Phase*>& phases)
     return results;
 }
 
+QVector<Event*> ModelUtilities::unsortEvents(const QList<Event*>& events)
+{
+    QList<int> indexes;
+    QVector<Event*> results;
+    
+    while(indexes.size() < events.size())
+    {
+        int index = rand() % events.size();
+        if(!indexes.contains(index))
+        {
+            indexes.append(index);
+            results.append(events[index]);
+        }
+    }
+    return results;
+}
+

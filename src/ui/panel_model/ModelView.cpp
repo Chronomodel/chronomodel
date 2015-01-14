@@ -98,8 +98,9 @@ mCalibVisible(false)
     connect(mEventsScene, SIGNAL(csvDataLineDropAccepted(QList<int>)), mImportDataView, SLOT(removeCsvRows(QList<int>)));
     
     mEventPropertiesView = new EventPropertiesView(mRightWrapper);
-    connect(mEventPropertiesView, SIGNAL(calibRequested(const QJsonObject&)), this, SLOT(updateCalibration(const QJsonObject&)));
-    connect(mEventPropertiesView, SIGNAL(calibRequested(const QJsonObject&)), this, SLOT(showCalibration()));
+    connect(mEventPropertiesView, SIGNAL(updateCalibRequested(const QJsonObject&)), this, SLOT(updateCalibration(const QJsonObject&)));
+    
+    connect(mEventPropertiesView, SIGNAL(showCalibRequested(bool)), this, SLOT(showCalibration(bool)));
     
     // --------
     
@@ -400,6 +401,7 @@ void ModelView::showProperties()
     mButProperties->setChecked(true);
     mButImport->setChecked(false);
     mButPhasesModel->setChecked(false);
+    mPhasesScene->clearSelection();
     slideRightPanel();
 }
 void ModelView::showImport()
@@ -410,6 +412,7 @@ void ModelView::showImport()
         mButProperties->setChecked(false);
         mButImport->setChecked(true);
         mButPhasesModel->setChecked(false);
+        mPhasesScene->clearSelection();
         slideRightPanel();
     }
     else
@@ -691,7 +694,9 @@ void ModelView::mouseMoveEvent(QMouseEvent* e)
 void ModelView::keyPressEvent(QKeyEvent* event)
 {
     if(event->key() == Qt::Key_Escape)
-        showCalibration(false);
+    {
+        mEventPropertiesView->hideCalibration();
+    }
     else
         event->ignore();
 }

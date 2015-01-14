@@ -18,7 +18,8 @@ mYEnd(0),
 mBubbleWidth(130.f),
 mBubbleHeight(40.f),
 mEditing(false),
-mShowDelete(false)
+mShowDelete(false),
+mGreyedOut(false)
 {
     setZValue(-1.);
     setAcceptHoverEvents(true);

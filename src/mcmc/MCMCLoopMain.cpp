@@ -177,35 +177,38 @@ QString MCMCLoopMain::initMCMC()
     //  Init theta f, ti, ...
     // ----------------------------------------------------------------
     emit stepChanged(tr("Initializing events..."), 0, events.size());
-    for(int i=0; i<events.size(); ++i)
+    QVector<Event*> unsortedEvents = ModelUtilities::unsortEvents(events);
+    for(int i=0; i<unsortedEvents.size(); ++i)
     {
-        double min = events[i]->getThetaMin(tmin);
-        double max = events[i]->getThetaMax(tmax);
-        
-        events[i]->mTheta.mX = Generator::randomUniform(min, max);
-        events[i]->mInitialized = true;
-        
-        //qDebug() << "--> Event initialized : " << events[i]->mName << " : " << events[i]->mTheta.mX;
-        
-        double s02_sum = 0.f;
-        for(int j=0; j<events[i]->mDates.size(); ++j)
+        if(unsortedEvents[i]->mType == Event::eDefault)
         {
-            Date& date = events[i]->mDates[j];
+            double min = unsortedEvents[i]->getThetaMin(tmin);
+            double max = unsortedEvents[i]->getThetaMax(tmax);
             
-            // Init ti and its sigma
-            double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mRepartition);
-            date.mTheta.mX = tmin + idx * step;
+            unsortedEvents[i]->mTheta.mX = Generator::randomUniform(min, max);
+            unsortedEvents[i]->mInitialized = true;
             
-            FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration, tmin, tmax, step));
-            date.mTheta.mSigmaMH = data.stddev;
-            date.initDelta(events[i]);
+            //qDebug() << "--> Event initialized : " << events[i]->mName << " : " << events[i]->mTheta.mX;
             
-            s02_sum += 1.f / (date.mTheta.mSigmaMH * date.mTheta.mSigmaMH);
+            double s02_sum = 0.f;
+            for(int j=0; j<unsortedEvents[i]->mDates.size(); ++j)
+            {
+                Date& date = unsortedEvents[i]->mDates[j];
+                
+                // Init ti and its sigma
+                double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mRepartition);
+                date.mTheta.mX = tmin + idx * step;
+                
+                FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration, tmin, tmax, step));
+                date.mTheta.mSigmaMH = data.stddev;
+                date.initDelta(unsortedEvents[i]);
+                
+                s02_sum += 1.f / (date.mTheta.mSigmaMH * date.mTheta.mSigmaMH);
+            }
+            unsortedEvents[i]->mS02 = unsortedEvents[i]->mDates.size() / s02_sum;
+            unsortedEvents[i]->mTheta.mSigmaMH = unsortedEvents[i]->mS02;
+            unsortedEvents[i]->mAShrinkage = 1.;
         }
-        events[i]->mS02 = events[i]->mDates.size() / s02_sum;
-        events[i]->mTheta.mSigmaMH = events[i]->mS02;
-        events[i]->mAShrinkage = 1.;
-        
         emit stepProgressed(i);
     }
     
@@ -249,9 +252,13 @@ QString MCMCLoopMain::initMCMC()
         
         if(event->type() == Event::eKnown)
         {
-            initLog += ">> Bound : " + event->mName + "\n";
-            initLog += "  - theta (value) : " + QString::number(event->mTheta.mX) + "\n";
-            initLog += "  - theta (sigma MH) : " + QString::number(event->mTheta.mSigmaMH) + "\n";
+            EventKnown* bound = dynamic_cast<EventKnown*>(event);
+            if(bound)
+            {
+                initLog += ">> Bound : " + bound->mName + "\n";
+                initLog += "  - theta (value) : " + QString::number(bound->mTheta.mX) + "\n";
+                initLog += "  - theta (sigma MH) : " + QString::number(bound->mTheta.mSigmaMH) + "\n";
+            }
         }
         else
         {
