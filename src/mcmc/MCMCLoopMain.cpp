@@ -56,6 +56,9 @@ QString MCMCLoopMain::calibrate()
         
         for(int i=0; i<dates.size(); ++i)
         {
+            if(isInterruptionRequested())
+                return;
+            
             QTime startTime = QTime::currentTime();
             
             dates[i]->calibrate(mModel->mSettings);
@@ -178,12 +181,16 @@ QString MCMCLoopMain::initMCMC()
     // ----------------------------------------------------------------
     emit stepChanged(tr("Initializing events..."), 0, events.size());
     QVector<Event*> unsortedEvents = ModelUtilities::unsortEvents(events);
+    
+    QVector<QVector<Event*>> eventBranches = ModelUtilities::getAllEventsBranches(events);
+    QVector<QVector<Phase*>> phaseBranches = ModelUtilities::getAllPhasesBranches(phases, mModel->mSettings.mTmax - mModel->mSettings.mTmin);
+    
     for(int i=0; i<unsortedEvents.size(); ++i)
     {
         if(unsortedEvents[i]->mType == Event::eDefault)
         {
-            double min = unsortedEvents[i]->getThetaMin(tmin);
-            double max = unsortedEvents[i]->getThetaMax(tmax);
+            double min = unsortedEvents[i]->getThetaMinRecursive(tmin, eventBranches, phaseBranches);
+            double max = unsortedEvents[i]->getThetaMaxRecursive(tmax, eventBranches, phaseBranches);
             
             unsortedEvents[i]->mTheta.mX = Generator::randomUniform(min, max);
             unsortedEvents[i]->mInitialized = true;

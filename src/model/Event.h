@@ -37,8 +37,18 @@ public:
     Type type() const;
     
     void reset();
+    
     double getThetaMin(double defaultValue);
     double getThetaMax(double defaultValue);
+    
+    double getThetaMinRecursive(double defaultValue,
+                                const QVector<QVector<Event*>>& eventBranches,
+                                const QVector<QVector<Phase*>>& phaseBranches);
+
+    double getThetaMaxRecursive(double defaultValue,
+                                const QVector<QVector<Event*>>& eventBranches,
+                                const QVector<QVector<Phase*>>& phaseBranches);
+    
     virtual void updateTheta(double min, double max);
     
     // TODO : when creating an event from JSON, phases have to exists already to be able set pointers to them.
