@@ -233,7 +233,7 @@ void Button::paintEvent(QPaintEvent* e)
         painter.setPen(penCol);
         painter.drawText(r, Qt::AlignCenter, text());
         
-        QPushButton::paintEvent(e);
+        //QPushButton::paintEvent(e);
     }
     
     painter.restore();
