@@ -238,6 +238,6 @@ void Button::paintEvent(QPaintEvent* e)
     
     painter.restore();
     
-    QPushButton::paintEvent(e);
+    //QPushButton::paintEvent(e);
 }
 

@@ -18,6 +18,7 @@
 	<file alias="undo_p.png">resources/undo_p.png</file>
 	<file alias="redo_p.png">resources/redo_p.png</file>
 	<file alias="results_p.png">resources/results_p.png</file>
+	<file alias="results_w.png">resources/results_w.png</file>
 	
 	<file alias="grid2.png">resources/grid2.png</file>
 	<file alias="import_w.png">resources/import_w.png</file>

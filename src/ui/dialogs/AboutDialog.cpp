@@ -12,6 +12,28 @@ AboutDialog::AboutDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
     mLabel = new QLabel();
     mLabel->setTextFormat(Qt::RichText);
     mLabel->setWordWrap(true);
+ 
+    /*
+    ChronoModel
+    
+http://www.chronomodel.com
+    
+    Copyright © CNRS
+    Published in 2015
+    
+    Project director : Philippe LANOS
+    philippe.lanos@univ-rennes1.fr
+    
+    Project co-director : Anne PHILIPPE
+    anne.philippe@univ-nantes.fr
+    
+    Authors :
+    Helori LANOS
+    helori.lanos@gmail.com
+    Philippe DUFRESNE
+    philippe.dufresne@univ-rennes1.fr
+    
+*/
     
     QString about = "Copyright CNRS 2014<br>\
     Authors:<br>\

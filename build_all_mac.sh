@@ -27,8 +27,14 @@ ${QT_BIN_PATH}/macdeployqt $BUNDLE_PATH
 #cp -r $ROOT_PATH/deploy/readme.rtf $BUNDLE_PATH/Contents/Resources/
 
 # Create package
-pkgbuild --analyze --root ./Release/Chronomodel.app ./Release/Chronomodel.plist
-pkgbuild --root ./Release/Chronomodel.app --component-plist ./Release/Chronomodel.plist ./deploy/mac/Chronomodel.pkg
+# Note : pkgbuild : create a component package.
+
+# Create the component plist :
+pkgbuild --analyze --root ./Release/Chronomodel.app ./Release/ChronomodelComponent.plist
+# Create the component package :
+pkgbuild --root ./Release/Chronomodel.app --component-plist ./Release/ChronomodelComponent.plist ChronomodelComponent.pkg
+
+
 productbuild --synthesize --package deploy/mac/Chronomodel.pkg deploy/mac/Distribution.xml 
 productbuild --distribution ./Distribution.xml --package-path deploy/mac deploy/mac/Installer.pkg
 productbuild --distribution deploy/mac/distribution.xml --component Release/Chronomodel.app /Applications deploy/mac/Chronomodel.pkg
