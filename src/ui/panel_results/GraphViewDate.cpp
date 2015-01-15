@@ -83,7 +83,7 @@ void GraphViewDate::refresh()
     {
         QColor color = mColor;
         
-        setNumericalResults(mTitle + "\n" + mDate->mTheta.resultsText() + "=> Variance :\n" + mDate->mSigma.resultsText());
+        setNumericalResults(mTitle + "\n" + mDate->mTheta.resultsText() + "=> Standard Deviation :\n" + mDate->mSigma.resultsText());
         
         if(mCurrentResult == eHisto)
         {
