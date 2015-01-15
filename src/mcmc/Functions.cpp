@@ -123,7 +123,7 @@ double dataStd(const QVector<double>& data)
 double shrinkageUniform(double so2)
 {
     double u = Generator::randomUniform();
-    return (so2 * (1.f - u) / u);
+    return (so2 * (1. - u) / u);
 }
 
 QString functionAnalysisToString(const FunctionAnalysis& analysis)

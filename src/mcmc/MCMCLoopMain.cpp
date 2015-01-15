@@ -230,11 +230,11 @@ void MCMCLoopMain::initMCMC()
         {
             Date& date = events[i]->mDates[j];
             
-            double so = date.mTheta.mX - (events[i]->mTheta.mX - date.mDelta);
-            date.mSigma.mX = shrinkageUniform(so * so);
+            //double so = date.mTheta.mX - (events[i]->mTheta.mX - date.mDelta);
             
-            //date.mSigma.mX = shrinkageUniform(events[i]->mS02);
-            
+            date.mSigma.mX = sqrt(shrinkageUniform(events[i]->mS02));
+            //date.mSigma.mX = sqrt(shrinkageUniform(so * so));
+            //date.mSigma.mX = date.mTheta.mX - (events[i]->mTheta.mX - date.mDelta);
             
             date.mSigma.mSigmaMH = 1.;
         }
