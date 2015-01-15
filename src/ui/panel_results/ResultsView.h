@@ -72,8 +72,13 @@ private slots:
     void updateFont();
     void updateThickness(int value);
     
+signals:
+    void resultsLogUpdated(const QString& log);
+    
 private:
     QList<QRect> getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases);
+    
+    void updateResultsLog();
     
 private:
     Model* mModel;

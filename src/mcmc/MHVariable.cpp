@@ -118,9 +118,9 @@ void MHVariable::generateGlobalRunAcceptation(const QList<Chain>& chains)
     mGlobalAcceptation = accepted / acceptsLength;
 }
 
-void MHVariable::generateNumericalResults(const QList<Chain>& chains, const ProjectSettings& settings)
+void MHVariable::generateNumericalResults(const QList<Chain>& chains)
 {
-    MetropolisVariable::generateNumericalResults(chains, settings);
+    MetropolisVariable::generateNumericalResults(chains);
     generateGlobalRunAcceptation(chains);
 }
 
@@ -128,7 +128,7 @@ QString MHVariable::resultsText() const
 {
     QString result = MetropolisVariable::resultsText();
     if(!mProposal.isEmpty())
-        result += "Global acceptation rate (acquire section with thinning) : " + QString::number(mGlobalAcceptation*100, 'f', 1) + "% ("+mProposal+")\n";
+        result += "Global acceptation rate (acquire section with thinning) : " + QString::number(mGlobalAcceptation*100, 'f', 1) + "% ("+mProposal+")";
     return result;
 }
 

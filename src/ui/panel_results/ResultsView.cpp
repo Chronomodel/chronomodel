@@ -494,7 +494,10 @@ void ResultsView::generateHPD()
 {
     if(mModel)
     {
+        mModel->generateNumericalResults(mChains, mHPDEdit->text().toDouble());
         mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toDouble());
+        
+        updateGraphs();
     }
 }
 
@@ -506,7 +509,7 @@ void ResultsView::updateFFTLength()
         double hFactor = mHFactorEdit->text().toDouble();
         
         mModel->generatePosteriorDensities(mChains, len, hFactor);
-        mModel->generateNumericalResults(mChains);
+        mModel->generateNumericalResults(mChains, mHPDEdit->text().toDouble());
         mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toDouble());
         
         updateGraphs();
@@ -526,7 +529,7 @@ void ResultsView::updateHFactor()
         }
         
         mModel->generatePosteriorDensities(mChains, len, hFactor);
-        mModel->generateNumericalResults(mChains);
+        mModel->generateNumericalResults(mChains, mHPDEdit->text().toDouble());
         mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toDouble());
         
         updateGraphs();
@@ -619,13 +622,21 @@ void ResultsView::clearResults()
 
 void ResultsView::updateResults(Model* model)
 {
+    // ------------------------------------------------
+    //  Cette fonction est appelée seulement après un "Run"
+    // ------------------------------------------------
+    
     clearResults();
     
     mModel = model;
     mChains = model->mChains;
     mSettings = mModel->mSettings;
     mMCMCSettings = mModel->mMCMCSettings;
+    
+    // On force les valeurs par défaut ici puisque
+    // les résultats on été calculés avec les valeurs par défaut
     mFFTLenCombo->setCurrentText("1024");
+    mHFactorEdit->setText("1");
     
     if(!mModel)
         return;
@@ -811,7 +822,28 @@ void ResultsView::updateGraphs()
     else if(mTabs->currentIndex() == 3)
         updateScaleX(mZoomCorrel);
     
+    updateResultsLog();
+    
     update();
+}
+
+void ResultsView::updateResultsLog()
+{
+    QString log;
+    
+    for(int i=0; i<mModel->mEvents.size(); ++i)
+    {
+        Event* event = mModel->mEvents[i];
+        log += ModelUtilities::eventResultsText(event, true);
+    }
+    
+    for(int i=0; i<mModel->mPhases.size(); ++i)
+    {
+        Phase* phase = mModel->mPhases[i];
+        log += ModelUtilities::phaseResultsText(phase);
+    }
+    
+    emit resultsLogUpdated(log);
 }
 
 void ResultsView::updateRulerAreas()

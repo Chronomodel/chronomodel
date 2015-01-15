@@ -196,43 +196,46 @@ QString Model::modelLog() const
         QString objType = "Event";
         if(mEvents[i]->type() == Event::eKnown)
         {
-            log += line(textRed("=> Bound : " + mEvents[i]->mName + ", " +
+            log += line(textRed("Bound (" + QString::number(i+1) + "/" + QString::number(mEvents.size()) + ") : " + mEvents[i]->mName + " (" +
                                  QString::number(mEvents[i]->mPhases.size()) + " phases, " +
                                  QString::number(mEvents[i]->mConstraintsBwd.size()) + " const. back., " +
                                  QString::number(mEvents[i]->mConstraintsFwd.size()) + " const. fwd.)"));
+            log += line(textRed("--------"));
         }
         else
         {
-            log += line(textBlue("=> " + mEvents[i]->mName + " : " +
+            log += line(textBlue("Event (" + QString::number(i+1) + "/" + QString::number(mEvents.size()) + ") : " + mEvents[i]->mName + " (" +
                                  QString::number(mEvents[i]->mDates.size()) + " data, " +
                                  QString::number(mEvents[i]->mPhases.size()) + " phases, " +
                                  QString::number(mEvents[i]->mConstraintsBwd.size()) + " const. back., " +
-                                 QString::number(mEvents[i]->mConstraintsFwd.size()) + " const. fwd."));
+                                 QString::number(mEvents[i]->mConstraintsFwd.size()) + " const. fwd.)"));
+            log += line(textBlue("--------"));
         }
         
         for(int j=0; j<mEvents[i]->mDates.size(); ++j)
         {
-            log += line(textGreen("=> " + mEvents[i]->mDates[j].mName +
+            log += line(textGreen("Data (" + QString::number(j+1) + "/" + QString::number(mEvents[i]->mDates.size()) + ") : " + mEvents[i]->mDates[j].mName +
                                   "<br>- Type : " + mEvents[i]->mDates[j].mPlugin->getName() +
                                   "<br>- Method : " + ModelUtilities::getDataMethodText(mEvents[i]->mDates[j].mMethod) +
                                   "<br>- Params : " + mEvents[i]->mDates[j].getDesc()));
+            log += line(textGreen("--------"));
         }
         log += "<br>";
     }
     
-    log += "<br><br>";
+    log += "<br>";
     log += line(textBold(QString::number(mPhases.size()) + " phases"));
     log += "<br>";
     
     for(int i=0; i<mPhases.size(); ++i)
     {
-        log += line(textPurple(mPhases[i]->mName + " (" + QString::number(mPhases[i]->mEvents.size()) + ")"));
+        log += line(textPurple("Phase (" + QString::number(i+1) + "/" + QString::number(mPhases.size()) + ") : " + mPhases[i]->mName + " (" + QString::number(mPhases[i]->mEvents.size()) + ")"));
+        log += line(textPurple("--------"));
         
         for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
         {
-            log += line(textBlue("=> " + mPhases[i]->mEvents[j]->mName));
+            log += line(textBlue("Event : " + mPhases[i]->mEvents[j]->mName));
         }
-        log += "<br>";
     }
     return log;
     
@@ -584,27 +587,27 @@ void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen, d
     }
 }
 
-void Model::generateNumericalResults(const QList<Chain>& chains)
+void Model::generateNumericalResults(const QList<Chain>& chains, int threshold)
 {
     for(int i=0; i<mEvents.size(); ++i)
     {
         Event* event = mEvents[i];
-        event->mTheta.generateNumericalResults(chains, mSettings);
+        event->mTheta.generateNumericalResults(chains);
         
         for(int j=0; j<event->mDates.size(); ++j)
         {
             Date& date = event->mDates[j];
-            date.mTheta.generateNumericalResults(chains, mSettings);
-            date.mSigma.generateNumericalResults(chains, mSettings);
+            date.mTheta.generateNumericalResults(chains);
+            date.mSigma.generateNumericalResults(chains);
         }
     }
     
     for(int i=0; i<mPhases.size(); ++i)
     {
         Phase* phase = mPhases[i];
-        phase->mAlpha.generateNumericalResults(chains, mSettings);
-        phase->mBeta.generateNumericalResults(chains, mSettings);
-        phase->generateDurationCredibility();
+        phase->mAlpha.generateNumericalResults(chains);
+        phase->mBeta.generateNumericalResults(chains);
+        phase->generateDurationCredibility(threshold);
     }
 }
 
@@ -781,6 +784,6 @@ void Model::restoreFromFile(const QString& path)
         
         generateCorrelations(mChains);
         generatePosteriorDensities(mChains, 1024, 1);
-        generateNumericalResults(mChains);
+        generateNumericalResults(mChains, 95);
     }
 }

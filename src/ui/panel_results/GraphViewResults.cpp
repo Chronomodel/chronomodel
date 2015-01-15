@@ -203,6 +203,7 @@ void GraphViewResults::setRendering(GraphView::Rendering render)
 
 void GraphViewResults::setGraphFont(const QFont& font)
 {
+    setFont(font);
     mGraph->setGraphFont(font);
     mGraph->setMarginBottom(font.pointSizeF() + 10);
 }
@@ -228,9 +229,7 @@ void GraphViewResults::paintEvent(QPaintEvent* e)
         p.fillRect(textRect, mGraph->getBackgroundColor());
         
         p.setPen(Qt::black);
-        QFont font = p.font();
-        font.setPointSizeF(pointSize(11.f));
-        p.setFont(font);
+        p.setFont(this->font());
         
         p.drawText(textRect.adjusted(mGraph->marginLeft(), 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
     }

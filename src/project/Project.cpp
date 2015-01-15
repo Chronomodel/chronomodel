@@ -286,7 +286,8 @@ bool Project::load(const QString& path)
                 qDebug() << "Loading model file : " << dataPath;
 #endif       
                 mModel = Model::fromJson(mState);
-                try{
+                
+                /*try{
                     mModel->restoreFromFile(dataPath);
                     emit mcmcFinished(mModel);
                 }catch(QString error){
@@ -298,7 +299,7 @@ bool Project::load(const QString& path)
                                         qApp->activeWindow(),
                                         Qt::Sheet);
                     message.exec();
-                }
+                }*/
             }
             
             // --------------------
@@ -399,11 +400,11 @@ bool Project::saveProjectToFile()
         qDebug() << "Nothing new to save in project model";
 #endif
     }
-    if(mModel)
+    /*if(mModel)
     {
         qDebug() << "Saving project results";
         mModel->saveToFile(mProjectFileDir + "/" + mProjectFileName + ".dat");
-    }
+    }*/
     return true;
 }
 
@@ -1823,7 +1824,7 @@ void Project::run()
         {
             if(loop.mAbortedReason.isEmpty())
             {
-                mModel->mMCMCLog = loop.getMCMCLog() + "<br><br>" + loop.getInitLog();
+                mModel->mMCMCLog = loop.getChainsLog() + "<br><br>" + loop.getInitLog();
                 emit mcmcFinished(mModel);
             }
             else

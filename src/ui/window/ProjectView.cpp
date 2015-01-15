@@ -61,6 +61,8 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(mStack);
     setLayout(layout);
+    
+    connect(mResultsView, SIGNAL(resultsLogUpdated(const QString&)), this, SLOT(updateResultsLog(const QString&)));
 }
 
 ProjectView::~ProjectView()
@@ -116,7 +118,10 @@ void ProjectView::updateLog(Model* model)
         mLogInitEdit->setText(model->mMCMCLog);
     }
 }
-
+void ProjectView::updateResultsLog(const QString& log)
+{
+    mLogResultsEdit->setText(log);
+}
 
 
 void ProjectView::writeSettings()

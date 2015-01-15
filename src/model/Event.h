@@ -51,9 +51,6 @@ public:
     
     virtual void updateTheta(double min, double max);
     
-    // TODO : when creating an event from JSON, phases have to exists already to be able set pointers to them.
-    // void initPhases(const QList<Phases*>& phases);
-    
 public:
     Type mType;
     int mId;
