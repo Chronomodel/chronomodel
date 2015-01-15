@@ -45,6 +45,7 @@ void MHVariable::reset()
 {
     MetropolisVariable::reset();
     mLastAccepts.clear();
+    mAllAccepts.clear();
     mHistoryAcceptRateMH.clear();
 }
 
@@ -127,7 +128,7 @@ QString MHVariable::resultsText() const
 {
     QString result = MetropolisVariable::resultsText();
     if(!mProposal.isEmpty())
-        result += "Global acceptation rate : " + QString::number(mGlobalAcceptation*100, 'f', 1) + "% ("+mProposal+")\n";
+        result += "Global acceptation rate (acquire section with thinning) : " + QString::number(mGlobalAcceptation*100, 'f', 1) + "% ("+mProposal+")\n";
     return result;
 }
 
