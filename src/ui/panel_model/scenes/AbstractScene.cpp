@@ -263,7 +263,7 @@ void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
     painter->fillRect(rect, QColor(230, 230, 230));
     
     QBrush backBrush;
-    if(mShowGrid)
+    /*if(mShowGrid)
     {
         backBrush.setTexture(QPixmap(":grid.png"));
         painter->setBrush(backBrush);
@@ -271,10 +271,26 @@ void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
     else
     {
         painter->setBrush(Qt::white);
-    }
+    }*/
+    painter->setBrush(Qt::white);
     painter->setPen(Qt::NoPen);
     painter->drawRect(sceneRect());
     
+    if(mShowGrid)
+    {
+        painter->setPen(QColor(220, 220, 220));
+        int x = sceneRect().x();
+        int y = sceneRect().y();
+        int w = sceneRect().width();
+        int h = sceneRect().height();
+        int delta = 100;
+        for(int i=0; i<w; i+=delta)
+            painter->drawLine(x + i, y, x + i, y + h);
+        for(int i=0; i<h; i+=delta)
+            painter->drawLine(x, y + i, x+w, y + i);
+    }
+    
+    // Cross for origin :
     painter->setPen(QColor(100, 100, 100));
     painter->drawLine(-10, 0, 10, 0);
     painter->drawLine(0, -10, 0, 10);
