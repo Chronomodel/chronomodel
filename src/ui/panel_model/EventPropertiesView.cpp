@@ -184,7 +184,8 @@ void EventPropertiesView::updateEvent()
                      mEvent[STATE_COLOR_GREEN].toInt(),
                      mEvent[STATE_COLOR_BLUE].toInt());
         
-        mNameEdit->setText(name);
+        if(name != mNameEdit->text())
+            mNameEdit->setText(name);
         mColorPicker->setColor(color);
         
         mDefaultView->setVisible(type == Event::eDefault);
