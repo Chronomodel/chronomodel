@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<installer-gui-script minSpecVersion="1">
+	<background mime-type="image/png" file="background.png" alignment="bottomleft"/>
+    <options customize="never" require-scripts="true" hostArchitectures="x86_64"/>
+    <readme file="readme.rtf" mime-type="application/rtf" />
+    <welcome file="welcome.rtf" mime-type="application/rtf" />
+    <license file="license.rtf" mime-type="application/rtf" />
+    <conclusion file="conclusion.rtf" mime-type="application/rtf" />
+    <choice id="choice.chronomodel" title="Chronomodel title" description="Une petite description...">
+	    <pkg-ref id="com.chronomodel.pkg">Chronomodel.pkg</pkg-ref>
+    </choice>
+    <choices-outline>
+        <line choice="choice.chronomodel"/>
+    </choices-outline>
+</installer-gui-script>
