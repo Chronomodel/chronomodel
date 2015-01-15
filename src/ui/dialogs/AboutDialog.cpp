@@ -1,5 +1,6 @@
 #include "AboutDialog.h"
 #include "Button.h"
+#include "Painting.h"
 #include <QtWidgets>
 
 
@@ -13,65 +14,26 @@ AboutDialog::AboutDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
     mLabel->setTextFormat(Qt::RichText);
     mLabel->setWordWrap(true);
  
-    /*
-    ChronoModel
+    QString text = "<b>" + qApp->applicationName() + " " + qApp->applicationVersion() + "</b><br><br>";
+    text += "<a href=\"http://www.chronomodel.com\">http://www.chronomodel.com</a><br><br>";
+    text += "Copyright © CNRS<br>";
+    text += "Published in 2015<br><br>";
+    text += "<b>Project director</b> : Philippe LANOS<br>";
+    text += "<a href=\"mailto:philippe.lanos@univ-rennes1.fr\">philippe.lanos@univ-rennes1.fr</a><br><br>";
+    text += "<b>Project co-director</b> : Anne PHILIPPE<br>";
+    text += "<a href=\"mailto:anne.philippe@univ-nantes.fr\">anne.philippe@univ-nantes.fr</a><br><br>";
+    text += "<b>Authors</b> :<br>";
+    text += "Helori LANOS<br>";
+    text += "<a href=\"mailto:helori.lanos@gmail.com\">helori.lanos@gmail.com</a><br><br>";
+    text += "Philippe DUFRESNE<br>";
+    text += "<a href=\"mailto:philippe.dufresne@univ-rennes1.fr\">philippe.dufresne@univ-rennes1.fr</a><br><br>";
     
-http://www.chronomodel.com
+    mLabel->setText(text);
     
-    Copyright © CNRS
-    Published in 2015
-    
-    Project director : Philippe LANOS
-    philippe.lanos@univ-rennes1.fr
-    
-    Project co-director : Anne PHILIPPE
-    anne.philippe@univ-nantes.fr
-    
-    Authors :
-    Helori LANOS
-    helori.lanos@gmail.com
-    Philippe DUFRESNE
-    philippe.dufresne@univ-rennes1.fr
-    
-*/
-    
-    QString about = "Copyright CNRS 2014<br>\
-    Authors:<br>\
-    H. LANOS (IEventory)<br>\
-    Ph. DUFRESNE<br>\
-    <br>\
-    Contact:<br>\
-    Email : philippe.lanos@univ-rennes1.fr (project manager)<br>\
-    philippe.dufresne@u-bordeaux-montaigne.fr (software support)<br>\
-    <br>\
-    Français<br>\
-    <br><br>\
-    Ce logiciel est un logiciel gratuit et ne peut donc pas être vendu.<br>\
-    <br>\
-    Ce logiciel peut être redistribué du moment qu'il n'est pas modifié par rapport à la version disponible sur notre site officiel. Cette redistribution ne peut être effectuée qu'à titre gratuit et sans aucun frais.<br>\
-    <br>\
-    Il est interdit de décompiler, désassembler ou modifier les fichiers de ce logiciel (exécutable ou non). Toute tentative de modification ou récupération de code source par quelque moyen que ce soit est interdite.<br>\
-    <br>\
-    Ce logiciel est distribué sans aucune garantie. Nous ne pourrons être tenus responsable de tout dommage directs, induits ou consécutifs à un quelconque dysfonctionnement d'un de nos produits. Le fonctionnement de ce logiciel n'est pas garanti.<br>\
-    <br>\
-    Il est interdit d'utiliser ce logiciel dans des environnements à risque comme par exemple et sans s'y limiter installations nucléaires, système de contrôle aérien ou d'armement.<br>\
-    <br><br>\
-    English<br>\
-    <br>\
-    This software is freeware and can not be sold.<br>\
-    <br>\
-    This software can be redistributed as long it is strictly similar from the version available on our official website. Redistribution must be free with no hidden cost.<br>\
-    <br>\
-    It is prohibited to decompile, disassemble or modify any files of this software (executable or not). Any attempt to modify or recovering the source code by any means is prohibited.<br>\
-    <br>\
-    This software is provided without any warranty. We are not liable for any damage caused directly, induced or resulting by any malfunction of this software. The function of this software is not guaranteed.<br>\
-    <br>\
-    It is forbidden to use this software in dangerous environments such as but not limited to nuclear facilities, air traffic control systems or weapons.<br>\
-    ";
-    
-    mLabel->setText(about);
-    
-    mLicenseBut = new Button(tr("Licence"));
+    mLicenseBut = new Button(tr("Open Licence File"));
+    QFont font = mLicenseBut->font();
+    font.setPointSizeF(pointSize(12));
+    mLicenseBut->setFont(font);
     connect(mLicenseBut, SIGNAL(clicked()), this, SLOT(showLicense()));
     
     QVBoxLayout* layout = new QVBoxLayout();
@@ -97,4 +59,17 @@ void AboutDialog::showLicense()
 #endif
     path += "/License.txt";
     QDesktopServices::openUrl(QUrl("file:///" + path, QUrl::TolerantMode));
+}
+
+void AboutDialog::paintEvent(QPaintEvent* e)
+{
+    Q_UNUSED(e);
+    QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing);
+    
+    QPixmap icon(":chronomodel.png");
+    int s = 200;
+    int m = 50;
+    p.drawPixmap(QRect(width() - m - s, m, s, s), icon, icon.rect());
+    
 }

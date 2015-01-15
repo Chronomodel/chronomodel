@@ -17,6 +17,9 @@ public:
 private slots:
     void showLicense();
     
+protected:
+    void paintEvent(QPaintEvent* e);
+    
 public:
     QLabel* mLabel;
     Button* mLicenseBut;
