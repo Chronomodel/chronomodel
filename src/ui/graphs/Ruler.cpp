@@ -174,6 +174,10 @@ void Ruler::paintEvent(QPaintEvent* e)
     //  Axis
     // ----------------------------------------------
     
+    QFont font = painter.font();
+    font.setPointSizeF(pointSize(9.));
+    painter.setFont(font);
+    
     mAxisTool.paint(painter, mRulerRect, mStepMinWidth);
 }
 

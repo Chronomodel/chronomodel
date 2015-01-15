@@ -424,7 +424,7 @@ void GraphView::paintToDevice(QPaintDevice* device, QPaintEvent* e)
     // ----------------------------------------------------
     //  Background
     // ----------------------------------------------------
-    p.fillRect(e->rect(), mBackgroundColor);
+    p.fillRect(rect(), mBackgroundColor);
     
     // ----------------------------------------------------
     //  Zones
