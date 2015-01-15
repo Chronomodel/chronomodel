@@ -18,7 +18,7 @@ public:
 public slots:
     void clean();
     void updateProject();
-    void updateSelection(bool forced = false);
+    void updateSelection(bool sendNotif = true, bool forced = false);
     void updateCheckedPhases();
     
 public:

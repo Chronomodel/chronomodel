@@ -299,8 +299,12 @@ void ModelView::updateProject()
     mEventsScene->updateProject();
     mPhasesScene->updateProject();
     
-    mEventsScene->updateSelection();
-    mPhasesScene->updateSelection();
+    // Les sélections dans les scènes doivent être mises à jour après que
+    // LES 2 SCENES aient été updatées
+    // false : ne pas envoyer de notification pour updater l'état du projet,
+    // puisque c'est justement ce que l'on fait ici!
+    mEventsScene->updateSelection(false);
+    mPhasesScene->updateSelection(false);
     
     // TODO : refresh current date !!
     //mCalibrationView->setDate();

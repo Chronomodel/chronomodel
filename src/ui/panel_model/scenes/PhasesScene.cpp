@@ -275,7 +275,7 @@ void PhasesScene::clean()
 
 
 #pragma mark Selection & Current
-void PhasesScene::updateSelection(bool forced)
+void PhasesScene::updateSelection(bool sendNotif, bool forced)
 {
     if(!mUpdatingItems)
     {
@@ -311,8 +311,11 @@ void PhasesScene::updateSelection(bool forced)
         if(modified || forced)
         {
             emit MainWindow::getInstance()->getProject()->currentPhaseChanged(phase);
-            sendUpdateProject(tr("phases selection updated : phases marked as selected"), false, false);
-            MainWindow::getInstance()->getProject()->sendPhasesSelectionChanged();
+            if(sendNotif)
+            {
+                sendUpdateProject(tr("phases selection updated : phases marked as selected"), false, false);
+                MainWindow::getInstance()->getProject()->sendPhasesSelectionChanged();
+            }
         }
     }
 }

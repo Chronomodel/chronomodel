@@ -28,7 +28,7 @@ public slots:
     void clean();
     
     void updateProject();
-    void updateSelection(bool force = false);
+    void updateSelection(bool sendNotification = true, bool force = false);
     void updateHelp();
     
     void updateSelectedEventsFromPhases();

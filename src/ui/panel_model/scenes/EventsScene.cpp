@@ -487,11 +487,15 @@ void EventsScene::clean()
 
 
 #pragma mark Selection & Current
-void EventsScene::updateSelection(bool force)
+void EventsScene::updateSelection(bool sendNotification, bool force)
 {
     if(!mUpdatingItems)
     {
         bool modified = false;
+        
+        //static int counter = 0;
+        //qDebug() << "---------- selection " << counter;
+        //counter++;
         
         for(int i=0; i<mItems.size(); ++i)
         {
@@ -509,6 +513,7 @@ void EventsScene::updateSelection(bool force)
                 event[STATE_IS_CURRENT] = false;
                 modified = true;
             }
+            //qDebug() << event[STATE_ID].toInt() << event[STATE_IS_SELECTED].toBool();
         }
         QJsonObject event;
         EventItem* curItem = (EventItem*)currentItem();
@@ -525,8 +530,11 @@ void EventsScene::updateSelection(bool force)
         if(modified || force)
         {
             emit MainWindow::getInstance()->getProject()->currentEventChanged(event);
-            sendUpdateProject(tr("events selection : no undo, no view update!"), false, false);
-            MainWindow::getInstance()->getProject()->sendEventsSelectionChanged();
+            if(sendNotification)
+            {
+                sendUpdateProject(tr("events selection : no undo, no view update!"), false, false);
+                MainWindow::getInstance()->getProject()->sendEventsSelectionChanged();
+            }
         }
     }
 }
