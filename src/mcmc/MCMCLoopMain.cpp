@@ -57,7 +57,7 @@ QString MCMCLoopMain::calibrate()
         for(int i=0; i<dates.size(); ++i)
         {
             if(isInterruptionRequested())
-                return;
+                return tr("Aborted by user");
             
             QTime startTime = QTime::currentTime();
             
