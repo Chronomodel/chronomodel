@@ -538,5 +538,3 @@ void Event::updateTheta(double tmin, double tmax)
             break;
     }
 }
-
-

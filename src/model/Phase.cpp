@@ -328,10 +328,10 @@ void Phase::memoAll()
     mDurations.append(mBeta.mX - mAlpha.mX);
 }
 
-void Phase::generateDurationCredibility()
+void Phase::generateDurationCredibility(int threshold)
 {
     double exactThreshold;
-    mDurationCredibility = intervalText(credibilityForTrace(mDurations, 95, exactThreshold));
+    mDurationCredibility = intervalText(credibilityForTrace(mDurations, threshold, exactThreshold));
 }
 
 // ------------------------------------------------------------------------------------

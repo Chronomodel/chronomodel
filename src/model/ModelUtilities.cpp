@@ -2,7 +2,9 @@
 #include "Date.h"
 #include "EventConstraint.h"
 #include "../PluginAbstract.h"
+#include "QtUtilities.h"
 #include <QObject>
+#include <QString>
 
 
 bool sortEvents(Event* e1, Event* e2){return (e1->mItemY < e2->mItemY);}
@@ -325,3 +327,70 @@ QVector<Event*> ModelUtilities::unsortEvents(const QList<Event*>& events)
     return results;
 }
 
+QString ModelUtilities::dateResultsText(Date* d)
+{
+    QString text;
+    if(d)
+    {
+        text += line(textBold(textGreen("Data : " + d->mName)));
+        text += "<br>";
+        text += line(textBold(textGreen("Date :")));
+        text += line(textGreen(d->mTheta.resultsText()));
+        text += "<br>";
+        text += line(textBold(textGreen("Std. Deviation :")));
+        text += line(textGreen(d->mSigma.resultsText()));
+        text += line(textGreen("----------------------"));
+    }
+    return text;
+}
+
+QString ModelUtilities::eventResultsText(Event* e, bool withDates)
+{
+    QString text;
+    if(e)
+    {
+        if(e->mType == Event::eKnown)
+        {
+            text += line(textBold(textRed("Bound : " + e->mName))) + "<br>";
+            text += line(textRed(e->mTheta.resultsText()));
+            text += line(textRed("----------------------"));
+        }
+        else
+        {
+            text += line(textBold(textBlue("Event : " + e->mName))) + "<br>";
+            text += line(textBlue(e->mTheta.resultsText()));
+            text += line(textBlue("----------------------"));
+            if(withDates)
+            {
+                for(int i=0; i<e->mDates.size(); ++i)
+                {
+                    text += dateResultsText(&(e->mDates[i]));
+                }
+            }
+        }
+    }
+    return text;
+}
+
+QString ModelUtilities::phaseResultsText(Phase* p)
+{
+    QString text;
+    if(p)
+    {
+        text += line(textBold(textPurple("Phase : " + p->mName)));
+        text += line(textPurple("Duration credibility ("+ QString::number(p->mAlpha.mThreshold) +"%) : " + p->mDurationCredibility));
+        Quartiles quartiles = quartilesForTrace(p->mDurations);
+        text += line(textPurple("Duration quartiles : Q1 : " + QString::number(quartiles.Q1, 'f', 1) + " Q2 (Median) : " + QString::number(quartiles.Q2, 'f', 1) + " Q3 : " + QString::number(quartiles.Q3, 'f', 1)));
+        
+        text += "<br>";
+        text += line(textBold(textPurple("Begin : ")));
+        text += line(textPurple(p->mAlpha.resultsText()));
+        
+        text += "<br>";
+        text += line(textBold(textPurple("End : ")));
+        text += line(textPurple(p->mBeta.resultsText()));
+        
+        text += line(textPurple("----------------------"));
+    }
+    return text;
+}

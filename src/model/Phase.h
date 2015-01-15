@@ -50,7 +50,7 @@ public:
     void initTau();
     void updateTau();
     
-    void generateDurationCredibility();
+    void generateDurationCredibility(int threshold);
     
 protected:
     double updatePhaseBound(double a, double b, double old);

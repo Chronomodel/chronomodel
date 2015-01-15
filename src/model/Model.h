@@ -34,7 +34,7 @@ public:
     // Trace and Posterior density needed for this :
     void generateCredibilityAndHPD(const QList<Chain>& chains, double threshold);
     // Trace and Posterior density needed for this :
-    void generateNumericalResults(const QList<Chain>& chains);
+    void generateNumericalResults(const QList<Chain>& chains, int threshold);
     
     
     QString modelLog() const;

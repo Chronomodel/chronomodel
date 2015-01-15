@@ -28,6 +28,10 @@ public:
     static QVector<Phase*> sortPhasesByLevel(const QList<Phase*>& phases);
     
     static QVector<Event*> unsortEvents(const QList<Event*>& events);
+    
+    static QString dateResultsText(Date* d);
+    static QString eventResultsText(Event* e, bool withDates);
+    static QString phaseResultsText(Phase* p);
 };
 
 // These 2 global functions are used to sort events and phases lists in result view
