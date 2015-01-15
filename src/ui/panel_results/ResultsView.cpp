@@ -129,7 +129,7 @@ mZoomCorrel(0)
     mYSlider = new QSlider(Qt::Horizontal);
     mYSlider->setRange(0, 100);
     mYSlider->setTickInterval(1);
-    mYSlider->setValue(50);
+    mYSlider->setValue(13);
     
     connect(mXSlider, SIGNAL(valueChanged(int)), this, SLOT(updateScaleX(int)));
     connect(mYSlider, SIGNAL(valueChanged(int)), this, SLOT(updateScaleY(int)));
@@ -1026,7 +1026,7 @@ void ResultsView::updateScroll(double min, double max)
 void ResultsView::updateScaleY(int value)
 {
     double min = 20;
-    double max = 1000;
+    double max = 1020;
     double prop = value / 100.f;
     mGraphsH = min + prop * (max - min);
     updateLayout();
