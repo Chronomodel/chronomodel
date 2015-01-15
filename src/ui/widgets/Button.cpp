@@ -76,8 +76,8 @@ void Button::paintEvent(QPaintEvent* e)
     {
 #ifdef Q_OS_MAC
         int m = style()->pixelMetric(QStyle::PM_ButtonMargin);
-#endif
         r.adjust(m, m, -m, -m);
+#endif
     }
     if(mIsClose)
     {
