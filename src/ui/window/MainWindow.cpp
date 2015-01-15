@@ -391,7 +391,7 @@ void MainWindow::updateWindowTitle()
 #pragma mark Settings & About
 void MainWindow::about()
 {
-    AboutDialog dialog;
+    AboutDialog dialog(qApp->activeWindow(), Qt::Sheet);
     dialog.exec();
 }
 

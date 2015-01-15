@@ -159,11 +159,13 @@ mZoomCorrel(0)
     renderLayout->addWidget(mRenderCombo);
     
     mUpdateDisplay = new Button(tr("Update display"));
+    mUpdateDisplay->mUseMargin = true;
     
     connect(mUpdateDisplay, SIGNAL(clicked()), this, SLOT(updateModel()));
     
     mFont.setPointSize(pointSize(11.));
     mFontBut = new Button(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
+    mFontBut->mUseMargin = true;
     
     mThicknessLab = new Label(tr("Graph thichness : "));
     mThicknessSpin = new QSpinBox();

@@ -34,7 +34,7 @@ mGraphLeft(130)
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eMinMax);
     
-    mGraph->setMargins(50, 10, 5, 20);
+    mGraph->setMargins(50, 10, 5, 30);
     mGraph->setRangeY(0, 1);
     
     mTextArea = new QTextEdit(this);
@@ -282,7 +282,7 @@ void GraphViewResults::updateLayout()
     {
         graphRect.adjust(0, 20, 0, 0);
         mGraph->setXAxisMode(GraphView::eAllTicks);
-        mGraph->setMarginBottom(15);
+        mGraph->setMarginBottom(mGraph->font().pointSizeF() + 10);
     }
     else
     {

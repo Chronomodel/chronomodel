@@ -193,7 +193,7 @@ mCalibVisible(false)
     
     mStudyLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     QFont font;
-    font.setPointSizeF(pointSize(15.f));
+    font.setPointSizeF(pointSize(13.f));
     mStudyLab->setFont(font);
     QPalette palette = mStudyLab->palette();
     palette.setColor(QPalette::WindowText, Qt::white);
@@ -522,8 +522,8 @@ void ModelView::updateLayout()
     
     // ----------
 
-    int labelW = 35;
-    int editW = 90;
+    int labelW = 45;
+    int editW = 80;
     int editH = (mToolbarH - 3*m) / 2;
     int butW = 80;
     

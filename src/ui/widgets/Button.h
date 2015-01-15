@@ -34,6 +34,9 @@ protected:
     bool mIsClose;
     
     ColorState mColorState;
+    
+public:
+    bool mUseMargin;
 };
 
 #endif

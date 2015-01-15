@@ -20,7 +20,7 @@ void Button::init()
     //setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
     
     QFont font;
-    font.setPointSizeF(pointSize(11));
+    font.setPointSizeF(pointSize(10));
     setFont(font);
     
     mFlatVertical = false;
@@ -28,6 +28,8 @@ void Button::init()
     mIsClose = false;
     
     mColorState = eDefault;
+    
+    mUseMargin = false;
 }
 
 Button::~Button()
@@ -61,21 +63,20 @@ void Button::setColorState(ColorState state)
 
 void Button::paintEvent(QPaintEvent* e)
 {
+    Q_UNUSED(e);
+    
     QPainter painter(this);
     painter.save();
     painter.setRenderHint(QPainter::Antialiasing);
     
-    QFont font = painter.font();
-    font.setPointSizeF(pointSize(10.f));
-    painter.setFont(font);
+    painter.setFont(font());
     
-    
-    
-    QRectF r = rect().adjusted(contentsMargins().left(),
-                               contentsMargins().top(),
-                               -contentsMargins().right(),
-                               -contentsMargins().bottom());
-    
+    QRectF r = rect();
+    if(mUseMargin)
+    {
+        int m = style()->pixelMetric(QStyle::PM_ButtonMargin);
+        r.adjust(m, m, -m, -m);
+    }
     if(mIsClose)
     {
         r.adjust(1, 1, -1, -1);
