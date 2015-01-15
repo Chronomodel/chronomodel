@@ -133,7 +133,7 @@ QString functionAnalysisToString(const FunctionAnalysis& analysis)
     
     result += "MAP : " + QString::number(analysis.mode, 'f', precision) + "   ";
     result += "Mean : " + QString::number(analysis.mean, 'f', precision) + "   ";
-    result += "Std deviation : " + QString::number(analysis.stddev, 'f', precision) + "\n";
+    result += "Std deviation : " + QString::number(analysis.stddev, 'f', precision) + "<br>";
     
     return result;
 }
@@ -145,18 +145,13 @@ QString densityAnalysisToString(const DensityAnalysis& analysis)
     
     result += "Q1 : " + QString::number(analysis.quartiles.Q1, 'f', precision) + "   ";
     result += "Q2 (Median) : " + QString::number(analysis.quartiles.Q2, 'f', precision) + "   ";
-    result += "Q3 : " + QString::number(analysis.quartiles.Q3, 'f', precision) + "\n";
+    result += "Q3 : " + QString::number(analysis.quartiles.Q3, 'f', precision) + "<br>";
     
     return result;
 }
 
-Quartiles quartilesForTrace(const QVector<double>& trace, double step)
+Quartiles quartilesForTrace(const QVector<double>& trace)
 {
-    Q_UNUSED(step);
-    // Should step be used as in quartilesForRepartition ??
-    // Is the found quartiles shifted by step/2 because using indexed arrays ??
-    // Difficult to say looking at numerical results because random seeds give different results each time...
-    
     Quartiles quartiles;
     
     QVector<double> sorted = trace;

@@ -4,6 +4,7 @@
 #include "EventKnown.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
+#include "ModelUtilities.h"
 #include "Painting.h"
 #include "MainWindow.h"
 #include <QtWidgets>
@@ -63,6 +64,9 @@ void GraphViewEvent::refresh()
             }
         }
         
+        QString results = ModelUtilities::eventResultsText(mEvent, false);
+        setNumericalResults(results);
+        
         if(mCurrentResult == eHisto)
         {
             if(mCurrentVariable == eTheta)
@@ -88,7 +92,7 @@ void GraphViewEvent::refresh()
                 else
                 {
                     mGraph->setRangeY(0, 0.00001f);
-                    setNumericalResults(mTitle + "\n" + mEvent->mTheta.resultsText());
+                    //setNumericalResults(mTitle + "\n" + mEvent->mTheta.resultsText());
                     
                     if(isUnifBound && mShowCalib)
                     {

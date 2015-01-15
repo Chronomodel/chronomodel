@@ -242,11 +242,11 @@ void MetropolisVariable::generateCorrelations(const QList<Chain>& chains)
     }
 }
 
-void MetropolisVariable::generateNumericalResults(const QList<Chain>& chains, const ProjectSettings& settings)
+void MetropolisVariable::generateNumericalResults(const QList<Chain>& chains)
 {
     // Results for chain concatenation
     mResults.analysis = analyseFunction(mHisto);
-    mResults.quartiles = quartilesForTrace(fullRunTrace(chains), settings.mStep);
+    mResults.quartiles = quartilesForTrace(fullRunTrace(chains));
     
     // Results for individual chains
     mChainsResults.clear();
@@ -254,7 +254,7 @@ void MetropolisVariable::generateNumericalResults(const QList<Chain>& chains, co
     {
         DensityAnalysis result;
         result.analysis = analyseFunction(mChainsHistos[i]);
-        result.quartiles = quartilesForTrace(runTraceForChain(chains, i), settings.mStep);
+        result.quartiles = quartilesForTrace(runTraceForChain(chains, i));
         mChainsResults.append(result);
     }
 }
@@ -356,8 +356,8 @@ QString MetropolisVariable::resultsText() const
     QString result = densityAnalysisToString(mResults);
     int precision = 0;
     
-    result += "HPD Intervals (" + QString::number(mThreshold, 'f', 1) + "%) : " + getHPDText(mHPD) + "\n";
-    result += "Credibility Interval (" + QString::number(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + QString::number(mCredibility.first, 'f', precision) + ", " + QString::number(mCredibility.second, 'f', precision) + "]\n";
+    result += "HPD Intervals (" + QString::number(mThreshold, 'f', 1) + "%) : " + getHPDText(mHPD) + "<br>";
+    result += "Credibility Interval (" + QString::number(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + QString::number(mCredibility.first, 'f', precision) + ", " + QString::number(mCredibility.second, 'f', precision) + "]<br>";
     
     return result;
 }

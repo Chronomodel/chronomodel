@@ -7,6 +7,7 @@
 #include "StdUtilities.h"
 #include "Date.h"
 #include "ModelUtilities.h"
+#include "QtUtilities.h"
 #include "../PluginAbstract.h"
 
 #include <vector>
@@ -57,9 +58,9 @@ QString MCMCLoopMain::calibrate()
         for(int i=0; i<dates.size(); ++i)
         {
             if(isInterruptionRequested())
-                return;
+                return tr("Aborted by user");
             
-            QTime startTime = QTime::currentTime();
+            //QTime startTime = QTime::currentTime();
             
             dates[i]->calibrate(mModel->mSettings);
             if(dates[i]->mCalibSum == 0)
@@ -69,9 +70,9 @@ QString MCMCLoopMain::calibrate()
             
             emit stepProgressed(i);
             
-            QTime endTime = QTime::currentTime();
-            int timeDiff = startTime.msecsTo(endTime);
-            mLog += "Data \"" + dates[i]->mName + "\" (" + dates[i]->mPlugin->getName() + ") calibrated in " + QString::number(timeDiff) + " ms\n";
+            //QTime endTime = QTime::currentTime();
+            //int timeDiff = startTime.msecsTo(endTime);
+            //mLog += "Data \"" + dates[i]->mName + "\" (" + dates[i]->mPlugin->getName() + ") calibrated in " + QString::number(timeDiff) + " ms\n";
         }
         return QString();
     }
@@ -102,7 +103,7 @@ void MCMCLoopMain::initVariablesForChain()
     }
 }
 
-QString MCMCLoopMain::initMCMC()
+void MCMCLoopMain::initMCMC()
 {
     QList<Event*>& events = mModel->mEvents;
     QList<Phase*>& phases = mModel->mPhases;
@@ -210,7 +211,7 @@ QString MCMCLoopMain::initMCMC()
                 date.mTheta.mSigmaMH = data.stddev;
                 date.initDelta(unsortedEvents[i]);
                 
-                s02_sum += 1.f / (date.mTheta.mSigmaMH * date.mTheta.mSigmaMH);
+                s02_sum += 1.f / (data.stddev * data.stddev);
             }
             unsortedEvents[i]->mS02 = unsortedEvents[i]->mDates.size() / s02_sum;
             unsortedEvents[i]->mTheta.mSigmaMH = unsortedEvents[i]->mS02;
@@ -228,9 +229,14 @@ QString MCMCLoopMain::initMCMC()
         for(int j=0; j<events[i]->mDates.size(); ++j)
         {
             Date& date = events[i]->mDates[j];
+            
             double so = date.mTheta.mX - (events[i]->mTheta.mX - date.mDelta);
             date.mSigma.mX = shrinkageUniform(so * so);
-            date.mSigma.mSigmaMH = 1.f;
+            
+            //date.mSigma.mX = shrinkageUniform(events[i]->mS02);
+            
+            
+            date.mSigma.mSigmaMH = 1.;
         }
         emit stepProgressed(i);
     }
@@ -248,69 +254,88 @@ QString MCMCLoopMain::initMCMC()
     // ----------------------------------------------------------------
     //  Log Init
     // ----------------------------------------------------------------
-    QString initLog;
+    QString log;
     
-    initLog += "---------------\n";
-    initLog += "INIT\n";
-    initLog += "---------------\n";
+    log += line(textBold("Events Initialisation (with their data)"));
+    log += "<br>";
+    
     for(int i=0; i<events.size(); ++i)
     {
         Event* event = events[i];
+        
+        log += line("--------");
         
         if(event->type() == Event::eKnown)
         {
             EventKnown* bound = dynamic_cast<EventKnown*>(event);
             if(bound)
             {
-                initLog += ">> Bound : " + bound->mName + "\n";
-                initLog += "  - theta (value) : " + QString::number(bound->mTheta.mX) + "\n";
-                initLog += "  - theta (sigma MH) : " + QString::number(bound->mTheta.mSigmaMH) + "\n";
+                log += line(textRed("Bound (" + QString::number(i+1) + "/" + QString::number(events.size()) + ") : " + bound->mName));
+                log += line(textRed(" - theta (value) : " + QString::number(bound->mTheta.mX)));
+                log += line(textRed(" - theta (sigma MH) : " + QString::number(bound->mTheta.mSigmaMH)));
+                log += line(textRed("--------"));
             }
         }
         else
         {
-            initLog += ">> Event : " + event->mName + "\n";
-            initLog += "  - theta (value) : " + QString::number(event->mTheta.mX) + "\n";
-            initLog += "  - theta (sigma MH) : " + QString::number(event->mTheta.mSigmaMH) + "\n";
-            initLog += "  - SO2 : " + QString::number(event->mS02) + "\n";
-            //initLog += "  - AShrinkage : " + QString::number(event->mAShrinkage) + "\n";
+            log += line(textBlue("Event (" + QString::number(i+1) + "/" + QString::number(events.size()) + ") : " + event->mName));
+            log += line(textBlue(" - theta (value) : " + QString::number(event->mTheta.mX)));
+            log += line(textBlue(" - theta (sigma MH) : " + QString::number(event->mTheta.mSigmaMH)));
+            log += line(textBlue(" - SO2 : " + QString::number(event->mS02)));
+            log += line(textBlue("--------"));
         }
-        mLog += "---------------\n";
         
         for(int j=0; j<event->mDates.size(); ++j)
         {
             Date& date = event->mDates[j];
             
-            initLog += " > Data : " + date.mName + "\n";
-            initLog += "  - ti (value) : " + QString::number(date.mTheta.mX) + "\n";
-            initLog += "  - ti (sigma MH) : " + QString::number(date.mTheta.mSigmaMH) + "\n";
-            initLog += "  - sigmai (value) : " + QString::number(date.mSigma.mX) + "\n";
-            initLog += "  - sigmai (sigma MH) : " + QString::number(date.mSigma.mSigmaMH) + "\n";
-            initLog += "  - deltai (value) : " + QString::number(date.mDelta) + "\n";
-            initLog += "--------\n";
+            log += line(textGreen("Data (" + QString::number(j+1) + "/" + QString::number(event->mDates.size()) + ") : " + date.mName));
+            log += line(textGreen(" - ti (value) : " + QString::number(date.mTheta.mX)));
+            log += line(textGreen(" - ti (sigma MH) : " + QString::number(date.mTheta.mSigmaMH)));
+            log += line(textGreen(" - sigmai (value) : " + QString::number(date.mSigma.mX)));
+            log += line(textGreen(" - sigmai (sigma MH) : " + QString::number(date.mSigma.mSigmaMH)));
+            log += line(textGreen(" - deltai (value) : " + QString::number(date.mDelta)));
+            log += line(textGreen("--------"));
         }
     }
     
-    for(int i=0; i<phases.size(); ++i)
+    if(phases.size() > 0)
     {
-        Phase* phase = phases[i];
+        log += "<br>";
+        log += line(textBold("Phases Initialisation"));
+        log += "<br>";
         
-        initLog += "---------------\n";
-        initLog += ">> Phase : " + phase->mName + "\n";
-        initLog += " - alpha : " + QString::number(phase->mAlpha.mX) + "\n";
-        initLog += " - beta : " + QString::number(phase->mBeta.mX) + "\n";
-        initLog += " - tau : " + QString::number(phase->mTau) + "\n";
+        for(int i=0; i<phases.size(); ++i)
+        {
+            Phase* phase = phases[i];
+            
+            log += line(textPurple("Phase (" + QString::number(i+1) + "/" + QString::number(phases.size()) + ") : " + phase->mName));
+            log += line(textPurple(" - alpha : " + QString::number(phase->mAlpha.mX)));
+            log += line(textPurple(" - beta : " + QString::number(phase->mBeta.mX)));
+            log += line(textPurple(" - tau : " + QString::number(phase->mTau)));
+            log += line(textPurple("--------"));
+        }
     }
     
-    for(int i=0; i<phasesConstraints.size(); ++i)
+    if(phasesConstraints.size() > 0)
     {
-        PhaseConstraint* constraint = phasesConstraints[i];
+        log += "<br>";
+        log += line(textBold("Phases Constraints Initialisation"));
+        log += "<br>";
         
-        initLog += "---------------\n";
-        initLog += ">> PhaseConstraint : " + QString::number(constraint->mId) + "\n";
-        initLog += " - gamma : " + QString::number(constraint->mGamma) + "\n";
+        for(int i=0; i<phasesConstraints.size(); ++i)
+        {
+            PhaseConstraint* constraint = phasesConstraints[i];
+            
+            log += line("PhaseConstraint (" + QString::number(i+1) + "/" + QString::number(phasesConstraints.size()) + ") : " + QString::number(constraint->mId));
+            log += line(" - gamma : " + QString::number(constraint->mGamma));
+        }
     }
-    return initLog;
+    
+    mInitLog += line(textBold("------------------------------------"));
+    mInitLog += line(textBold("Init Chain " + QString::number(mChainIndex+1)));
+    mInitLog += line(textBold("------------------------------------"));
+    mInitLog += log;
 }
 
 void MCMCLoopMain::update()
@@ -456,7 +481,7 @@ void MCMCLoopMain::finalize()
     
     mModel->generateCorrelations(mChains);
     mModel->generatePosteriorDensities(mChains, 1024, 1);
-    mModel->generateNumericalResults(mChains);
+    mModel->generateNumericalResults(mChains, 95);
 }
 
 

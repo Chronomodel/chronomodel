@@ -34,6 +34,7 @@ public slots:
     void showLog();
     void showHelp(bool show);
     void updateLog(Model*);
+    void updateResultsLog(const QString& log);
     
 private:
     QStackedWidget* mStack;

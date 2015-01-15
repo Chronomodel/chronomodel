@@ -4,6 +4,7 @@
 #include "Painting.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
+#include "ModelUtilities.h"
 #include <QtWidgets>
 
 
@@ -75,24 +76,7 @@ void GraphViewPhase::refresh()
         
         if(mCurrentResult == eHisto && mCurrentVariable == eTheta)
         {
-            QString results;
-            results += mTitle + "\n";
-            results += "----------------------------------\n";
-            //results += "Period : [" + QString::number(mPhase->mAlpha.mResults.analysis.mean, 'f', 0) + ", " + QString::number(mPhase->mBeta.mResults.analysis.mean, 'f', 0) + "]\n";
-            results += "Duration credibility (95%) : " + mPhase->mDurationCredibility + "\n";
-            
-            Quartiles quartiles = quartilesForTrace(mPhase->mDurations, mSettings.mStep);
-            results += "Q1 : " + QString::number(quartiles.Q1, 'f', 1) + "   ";
-            results += "Q2 (Median) : " + QString::number(quartiles.Q2, 'f', 1) + "   ";
-            results += "Q3 : " + QString::number(quartiles.Q3, 'f', 1) + "\n";
-            
-            results += "----------------------------------\n";
-            results += tr("PHASE BEGIN") + "\n";
-            results += mPhase->mAlpha.resultsText();
-            results += "----------------------------------\n";
-            results += tr("PHASE END") + "\n";
-            results += mPhase->mBeta.resultsText();
-            
+            QString results = ModelUtilities::phaseResultsText(mPhase);
             setNumericalResults(results);
             
             mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);

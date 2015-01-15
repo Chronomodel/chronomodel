@@ -28,7 +28,7 @@ public:
     void generateCredibility(const QList<Chain>& chains, double threshold);
     
     // Virtual because MHVariable subclass adds some information
-    virtual void generateNumericalResults(const QList<Chain>& chains, const ProjectSettings& settings);
+    virtual void generateNumericalResults(const QList<Chain>& chains);
 
     // -----
     // These functions do not make any calculation
