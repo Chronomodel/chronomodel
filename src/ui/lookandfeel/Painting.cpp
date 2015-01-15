@@ -1,4 +1,6 @@
 #include "Painting.h"
+#include "QtUtilities.h"
+
 
 QColor Painting::mainColorLight = QColor(49, 112, 176); //QColor(146, 50, 154);
 QColor Painting::mainColorDark = QColor(31, 80, 128); // QColor(54, 23, 106);
@@ -12,6 +14,9 @@ void Painting::init()
     chainColors.append(Qt::green);
     chainColors.append(Qt::red);
     chainColors.append(Qt::yellow);
+    
+    for(int i=0; i<200; ++i)
+        chainColors.append(randomColor());
 }
 
 
