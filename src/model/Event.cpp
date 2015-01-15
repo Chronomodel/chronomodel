@@ -490,8 +490,8 @@ void Event::updateTheta(double tmin, double tmax)
     //  On est en "wiggle" si au moins une des mesures a un delta > 0.
     // -------------------------------------------------------------------------------------------------
     
-    double sum_p = 0.f;
-    double sum_t = 0.f;
+    double sum_p = 0.;
+    double sum_t = 0.;
     for(int i=0; i<mDates.size(); ++i)
     {
         double variance = (mDates[i].mSigma.mX * mDates[i].mSigma.mX);
@@ -499,7 +499,7 @@ void Event::updateTheta(double tmin, double tmax)
         sum_p += 1.f / variance;
     }
     double theta_avg = sum_t / sum_p;
-    double sigma = 1.f / sqrt(sum_p);
+    double sigma = 1. / sqrt(sum_p);
     
     switch(mMethod)
     {
