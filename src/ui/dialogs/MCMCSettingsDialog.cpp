@@ -24,13 +24,18 @@ QDialog(parent, flags)
     mDownSamplingEdit = new LineEdit(this);
     
     QIntValidator* positiveValidator = new QIntValidator(this);
-    positiveValidator->setBottom(10);
+    positiveValidator->setBottom(1);
+    
+    QIntValidator* chainsValidator = new QIntValidator(this);
+    chainsValidator->setRange(1, 5);
     
     mIterPerBatchSpin = new QSpinBox(this);
     mIterPerBatchSpin->setRange(100, 10000);
     mIterPerBatchSpin->setSingleStep(100);
     
-    mNumProcEdit->setValidator(positiveValidator);
+    mNumProcEdit->setValidator(chainsValidator);
+    mNumProcEdit->setPlaceholderText(tr("From 1 to 5"));
+    
     mNumIterEdit->setValidator(positiveValidator);
     mNumBurnEdit->setValidator(positiveValidator);
     mMaxBatchesEdit->setValidator(positiveValidator);

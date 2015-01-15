@@ -169,9 +169,7 @@ bool Project::event(QEvent* e)
 
 void Project::updateState(const QJsonObject& state, const QString& reason, bool notify)
 {
-#if DEBUG
     qDebug() << " ---  Receiving : " << reason;
-#endif
     mState = state;
     if(notify)
     {
