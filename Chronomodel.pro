@@ -61,7 +61,7 @@ ICON = $$PRO_PATH/icon/Chronomodel.icns
 
 macx{
 	QMAKE_MAC_SDK = macosx10.10
-	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.6
+	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
 
 	RESOURCES_FILES.path = Contents/Resources
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
