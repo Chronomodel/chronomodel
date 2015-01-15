@@ -127,7 +127,7 @@ QString MHVariable::resultsText() const
 {
     QString result = MetropolisVariable::resultsText();
     if(!mProposal.isEmpty())
-        result += "Taux d'acceptation global : " + QString::number(mGlobalAcceptation*100, 'f', 1) + "% ("+mProposal+")\n";
+        result += "Global acceptation rate : " + QString::number(mGlobalAcceptation*100, 'f', 1) + "% ("+mProposal+")\n";
     return result;
 }
 

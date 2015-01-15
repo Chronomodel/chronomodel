@@ -501,7 +501,7 @@ void ModelView::updateLayout()
     
     int x = width() * mSplitProp;
     int minLeft = 200;
-    int minRight = 525 + mHandlerW/2;
+    int minRight = 580 + mHandlerW/2;
     x = (x < minLeft) ? minLeft : x;
     x = (x > width() - minRight) ? width() - minRight : x;
     
@@ -522,14 +522,15 @@ void ModelView::updateLayout()
     
     // ----------
 
-    int labelW = 45;
-    int editW = 80;
+    int labelW = 60;
+    int editW = 100;
     int editH = (mToolbarH - 3*m) / 2;
     int butW = 80;
+    int butW2 = 85;
     
-    mStudyLab->setGeometry(0, m, 135, editH);
-    mButApply->setGeometry(120, m, 70, editH);
-    mButStep->setGeometry(195, m, 70, editH);
+    mStudyLab->setGeometry(0, m, 160, editH);
+    mButApply->setGeometry(160, m, butW2, editH);
+    mButStep->setGeometry(160 + butW2 + m, m, butW2, editH);
     
     int y = 2*m + editH;
     
