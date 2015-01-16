@@ -1,0 +1,143 @@
+{
+    "app_version": "1.0.0",
+    "events": [
+        {
+            "blue": 157,
+            "dates": [
+                {
+                    "data": {
+                        "dec": 0,
+                        "error": 1,
+                        "inc": 69.199996948242188,
+                        "intensity": 0,
+                        "is_dec": false,
+                        "is_inc": true,
+                        "is_int": false,
+                        "ref_curve": "GAL2002sph2014_I.ref"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "Inc",
+                    "plugin_id": "am"
+                },
+                {
+                    "data": {
+                        "dec": 12.899999618530273,
+                        "error": 1,
+                        "inc": 69.199996948242188,
+                        "intensity": 0,
+                        "is_dec": true,
+                        "is_inc": false,
+                        "is_int": false,
+                        "ref_curve": "GAL2002sph2014_D.ref"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 1,
+                    "method": 1,
+                    "name": "Dec",
+                    "plugin_id": "am"
+                },
+                {
+                    "data": {
+                        "dec": 0,
+                        "error": 1.7000000476837158,
+                        "inc": 0,
+                        "intensity": 58.400001525878906,
+                        "is_dec": false,
+                        "is_inc": false,
+                        "is_int": true,
+                        "ref_curve": "GwH2013uni_F.ref"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 2,
+                    "method": 1,
+                    "name": "Intensite (F)",
+                    "plugin_id": "am"
+                },
+                {
+                    "data": {
+                        "age": 460,
+                        "error": 30,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 3,
+                    "method": 1,
+                    "name": "14C_Conv",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 415,
+                        "error": 25,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 4,
+                    "method": 1,
+                    "name": "14C_AMS",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 148,
+            "id": 1,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": -123,
+            "item_y": -206,
+            "known_type": null,
+            "method": 0,
+            "name": "Cuers",
+            "phase_ids": "",
+            "red": 33,
+            "type": 0
+        }
+    ],
+    "events_constraints": [
+    ],
+    "events_trash": [
+    ],
+    "mcmc": {
+        "iter_per_batch": 100,
+        "max_batches": 100,
+        "num_burn": 1000,
+        "num_iter": 50000,
+        "num_proc": 1,
+        "seeds": [
+        ],
+        "thinning_interval": 10
+    },
+    "phases": [
+    ],
+    "settings": {
+        "step": 1,
+        "tmax": 2000,
+        "tmin": 0
+    }
+}

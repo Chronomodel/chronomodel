@@ -1,0 +1,366 @@
+{
+    "app_version": "1.0.0",
+    "dates_trash": [
+    ],
+    "events": [
+        {
+            "blue": 0,
+            "dates": [
+                {
+                    "data": {
+                        "age": 1530,
+                        "error": 30,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "14C Beta US 2128",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 1450,
+                        "error": 30,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 2,
+                    "method": 1,
+                    "name": "14C US 2102",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 1580,
+                        "error": 30,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 1,
+                    "method": 1,
+                    "name": "14C US 2126",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "dec": 0,
+                        "error": 2.2999999523162842,
+                        "inc": 68.599998474121094,
+                        "intensity": 0,
+                        "is_dec": false,
+                        "is_inc": true,
+                        "is_int": false,
+                        "ref_curve": "gal2002sph2014_i.ref"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 3,
+                    "method": 1,
+                    "name": "AM Inc",
+                    "plugin_id": "am"
+                },
+                {
+                    "data": {
+                        "dec": -2.5,
+                        "error": 2.2999999523162842,
+                        "inc": 68.599998474121094,
+                        "intensity": 0,
+                        "is_dec": true,
+                        "is_inc": false,
+                        "is_int": false,
+                        "ref_curve": "gal2002sph2014_d.ref"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 4,
+                    "method": 1,
+                    "name": "<New Date>",
+                    "plugin_id": "am"
+                }
+            ],
+            "green": 85,
+            "id": 0,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": -1087.631866426299,
+            "item_y": -3995.9611786811902,
+            "known_type": null,
+            "method": 0,
+            "name": "Four à Chaux 2009",
+            "phase_ids": "",
+            "red": 255,
+            "type": 0
+        },
+        {
+            "blue": 0,
+            "dates": [
+                {
+                    "data": {
+                        "dec": 0,
+                        "error": 3.0999999046325684,
+                        "inc": 67.099998474121094,
+                        "intensity": 0,
+                        "is_dec": false,
+                        "is_inc": true,
+                        "is_int": false,
+                        "ref_curve": "gal2002sph2014_i.ref"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "AM Inc",
+                    "plugin_id": "am"
+                },
+                {
+                    "data": {
+                        "dec": -0.20000000298023224,
+                        "error": 3.0999999046325684,
+                        "inc": 67.099998474121094,
+                        "intensity": 0,
+                        "is_dec": true,
+                        "is_inc": false,
+                        "is_int": false,
+                        "ref_curve": "gal2002sph2014_d.ref"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 1,
+                    "method": 1,
+                    "name": "<New Date>",
+                    "plugin_id": "am"
+                },
+                {
+                    "data": {
+                        "age": 1490,
+                        "error": 30,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 2,
+                    "method": 1,
+                    "name": "14C Beta 373829",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 170,
+            "id": 1,
+            "is_current": true,
+            "is_selected": true,
+            "item_x": -1084.7052097815986,
+            "item_y": -4441.5202998428204,
+            "method": 0,
+            "name": "Four à pain 2008",
+            "phase_ids": "",
+            "red": 255,
+            "type": 0
+        },
+        {
+            "blue": 24,
+            "dates": [
+                {
+                    "data": {
+                        "age": 1540,
+                        "error": 30,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "14C",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 157,
+            "id": 2,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": -871.01598346101093,
+            "item_y": -4236.0212477804043,
+            "method": 0,
+            "name": "Four à pain 2029",
+            "phase_ids": "",
+            "red": 48,
+            "type": 0
+        }
+    ],
+    "events_constraints": [
+        {
+            "bwd_id": 0,
+            "fwd_id": 2,
+            "id": 0
+        },
+        {
+            "bwd_id": 2,
+            "fwd_id": 1,
+            "id": 1
+        }
+    ],
+    "events_trash": [
+        {
+            "blue": 155,
+            "dates": [
+                {
+                    "data": {
+                        "a": 0,
+                        "age": 1000,
+                        "b": 1,
+                        "c": 0,
+                        "error": 50
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 0,
+                    "name": "gauss",
+                    "plugin_id": "gauss"
+                },
+                {
+                    "data": {
+                        "a": 0,
+                        "age": 1100,
+                        "b": 1,
+                        "c": 0,
+                        "error": 50
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 1,
+                    "method": 0,
+                    "name": "gauss 2",
+                    "plugin_id": "gauss"
+                }
+            ],
+            "green": 163,
+            "id": 0,
+            "is_current": true,
+            "is_selected": true,
+            "item_x": 221.54117647468013,
+            "item_y": 95.729410545322722,
+            "method": 0,
+            "name": "event 1",
+            "phase_ids": "",
+            "red": 163,
+            "type": 0
+        },
+        {
+            "blue": 161,
+            "dates": [
+                {
+                    "data": {
+                        "age": 2000,
+                        "error": 30,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 100,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "<New Date>",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 1900,
+                        "error": 30,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 1,
+                    "method": 1,
+                    "name": "<New Date>",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 137,
+            "id": 1,
+            "is_current": true,
+            "is_selected": true,
+            "item_x": -546.21495283731826,
+            "item_y": -3394.081638859956,
+            "method": 0,
+            "name": "Untitled",
+            "phase_ids": "",
+            "red": 154,
+            "type": 0
+        }
+    ],
+    "mcmc": {
+        "iter_per_batch": 100,
+        "max_batches": 100,
+        "num_burn": 1000,
+        "num_iter": 100000,
+        "num_proc": 1,
+        "seeds": [
+        ],
+        "thinning_interval": 10
+    },
+    "phases": [
+    ],
+    "phases_constraints": [
+    ],
+    "settings": {
+        "step": 1,
+        "tmax": 2000,
+        "tmin": -1000
+    }
+}

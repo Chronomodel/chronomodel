@@ -1,0 +1,2275 @@
+{
+    "app_version": "1.0.0",
+    "dates_trash": [
+    ],
+    "events": [
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3610,
+                        "error": 40,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "Poz-30625",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 1,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 594.22806751435758,
+            "item_y": 87.543858076665742,
+            "known_type": null,
+            "method": 2,
+            "name": "US1029",
+            "phase_ids": "16",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3420,
+                        "error": 50,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 1,
+                    "method": 1,
+                    "name": "Poz-29412",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 3,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 775.08187392547154,
+            "item_y": 88.327481912647571,
+            "known_type": null,
+            "method": 2,
+            "name": "US1037",
+            "phase_ids": "16",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4195,
+                        "error": 55,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 17,
+                    "method": 1,
+                    "name": "Ly-720",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 5090,
+                        "error": 55,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "Ly-8737",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 41,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 823.92982431948701,
+            "item_y": 559.02923871777693,
+            "known_type": null,
+            "method": 2,
+            "name": "ST 155",
+            "phase_ids": "50,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4210,
+                        "error": 100,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 21,
+                    "method": 1,
+                    "name": "LY-6551",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 43,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 823.58479503940146,
+            "item_y": 681.309941439829,
+            "known_type": null,
+            "method": 2,
+            "name": "LY-6551",
+            "phase_ids": "50,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3810,
+                        "error": 85,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 17,
+                    "method": 1,
+                    "name": "Ly-6676",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 45,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 821.20467791905958,
+            "item_y": 786.0409369627356,
+            "known_type": null,
+            "method": 2,
+            "name": "ST 7",
+            "phase_ids": "50,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3895,
+                        "error": 110,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "GrA-22988",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 47,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 820.89473647923035,
+            "item_y": 888.42690320555721,
+            "known_type": null,
+            "method": 2,
+            "name": "ST 14",
+            "phase_ids": "50,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3350,
+                        "error": 95,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 19,
+                    "method": 1,
+                    "name": "Ly-8739",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 49,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 823.54970719914502,
+            "item_y": 1000.8830451288914,
+            "known_type": null,
+            "method": 2,
+            "name": "ST 196/155",
+            "phase_ids": "50,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4200,
+                        "error": 100,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 14,
+                    "method": 1,
+                    "name": "MC-2494",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 52,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 1002.9729970230085,
+            "item_y": 540.71362224302936,
+            "known_type": null,
+            "method": 2,
+            "name": "MC-2494",
+            "phase_ids": "65,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4100,
+                        "error": 100,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 22,
+                    "method": 1,
+                    "name": "MC-2497",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 54,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 996.45029280085498,
+            "item_y": 900.94737168692484,
+            "known_type": null,
+            "method": 2,
+            "name": "MC-2497",
+            "phase_ids": "65,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4000,
+                        "error": 100,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 26,
+                    "method": 1,
+                    "name": "MC-2496",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 56,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 999.21052704153874,
+            "item_y": 784.42105408307771,
+            "known_type": null,
+            "method": 2,
+            "name": "MC-2496",
+            "phase_ids": "65,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3969,
+                        "error": 100,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 24,
+                    "method": 1,
+                    "name": "MC-2495",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 58,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 997.90058560170996,
+            "item_y": 665.08823569436072,
+            "known_type": null,
+            "method": 2,
+            "name": "MC-2495",
+            "phase_ids": "65,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4000,
+                        "error": 105,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 23,
+                    "method": 1,
+                    "name": "MC-1707",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 60,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 1188.0944302703087,
+            "item_y": 546.78826940511442,
+            "known_type": null,
+            "method": 2,
+            "name": "MC-1707",
+            "phase_ids": "65,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3580,
+                        "error": 120,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 28,
+                    "method": 1,
+                    "name": "GIF-4146",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 62,
+            "is_current": true,
+            "is_selected": true,
+            "item_x": 1188.0593424300519,
+            "item_y": 657.24441132844879,
+            "known_type": null,
+            "method": 2,
+            "name": "GIF-4146",
+            "phase_ids": "65,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3910,
+                        "error": 90,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 25,
+                    "method": 1,
+                    "name": "Gif-6804",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 64,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 1189.7538724717949,
+            "item_y": 772.15755327499551,
+            "known_type": null,
+            "method": 2,
+            "name": "Gif-6804",
+            "phase_ids": "65,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4090,
+                        "error": 35,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 29,
+                    "method": 1,
+                    "name": "Ly-3494 (OxA)",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 4230,
+                        "error": 35,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 38,
+                    "method": 1,
+                    "name": "Ly-3493 (OxA)",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 68,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 1379.1988356912,
+            "item_y": 570.95132362746745,
+            "known_type": null,
+            "method": 2,
+            "name": "Couche 2",
+            "phase_ids": "69,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3840,
+                        "error": 45,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "MC-1426",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 71,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 277.53800895418652,
+            "item_y": 1173.947371686925,
+            "known_type": null,
+            "method": 2,
+            "name": "S3",
+            "phase_ids": "76,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4480,
+                        "error": 100,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 37,
+                    "method": 1,
+                    "name": "MC-2499",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 73,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 274.4327454334171,
+            "item_y": 1294.5087771310286,
+            "known_type": null,
+            "method": 2,
+            "name": "S4",
+            "phase_ids": "76,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4000,
+                        "error": 125,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "Ly-4780",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 78,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 458.53800895418647,
+            "item_y": 1297.6140406517984,
+            "known_type": null,
+            "method": 2,
+            "name": "ST24 Ph4",
+            "phase_ids": "87,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3245,
+                        "error": 235,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 34,
+                    "method": 1,
+                    "name": "Ly-4779",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 82,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 454.88303823427196,
+            "item_y": 1171.8479572886349,
+            "known_type": null,
+            "method": 2,
+            "name": "ST 16",
+            "phase_ids": "87,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3967,
+                        "error": 60,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "Ly-5057",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 90,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 734.83625214905669,
+            "item_y": 1458.7076128222282,
+            "known_type": null,
+            "method": 2,
+            "name": "Le Capty",
+            "phase_ids": "103,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4120,
+                        "error": 35,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 42,
+                    "method": 1,
+                    "name": "POZ-43922",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 96,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1330.4611329459351,
+            "item_y": 1401.4656044275073,
+            "known_type": null,
+            "method": 2,
+            "name": "US329 Ph2",
+            "phase_ids": "104,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4140,
+                        "error": 35,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "POZ-43923",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 98,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1098.5644992847679,
+            "item_y": 1401.4260451056787,
+            "known_type": null,
+            "method": 2,
+            "name": "US397 Ph2",
+            "phase_ids": "104,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4125,
+                        "error": 35,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 41,
+                    "method": 1,
+                    "name": "POZ-43921",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 100,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1248.1871374462416,
+            "item_y": 1152.3040923173498,
+            "known_type": null,
+            "method": 2,
+            "name": "US344 Ph3",
+            "phase_ids": "104,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4579,
+                        "error": 200,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "MC-1365",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 106,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1626.7953289755596,
+            "item_y": 866.96490526512389,
+            "known_type": null,
+            "method": 2,
+            "name": "MC-1365",
+            "phase_ids": "115,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4350,
+                        "error": 110,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 45,
+                    "method": 1,
+                    "name": "MC-2209",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 108,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1794.5321736209457,
+            "item_y": 905.62572510751761,
+            "known_type": null,
+            "method": 2,
+            "name": "MC-2209",
+            "phase_ids": "115,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4100,
+                        "error": 110,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 47,
+                    "method": 1,
+                    "name": "MC-2210",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 112,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1793.8070272205182,
+            "item_y": 1022.1169548711086,
+            "known_type": null,
+            "method": 2,
+            "name": "MC-2210",
+            "phase_ids": "115,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 0,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4490,
+                        "error": 120,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "Ly-3018",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 4410,
+                        "error": 150,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 53,
+                    "method": 1,
+                    "name": "Ly-3019",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 124,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1023.3450223854659,
+            "item_y": 1552.4678401682932,
+            "known_type": null,
+            "method": 2,
+            "name": "Couche 2A",
+            "phase_ids": "125",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3500,
+                        "error": 65,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 2,
+                    "method": 1,
+                    "name": "Poz-29414",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 5,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 669.85964863897425,
+            "item_y": 207.43859455589632,
+            "known_type": null,
+            "method": 2,
+            "name": "US1060",
+            "phase_ids": "16",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3660,
+                        "error": 100,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "MC-1279",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 7,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1099.6081846346999,
+            "item_y": 90.269004477093247,
+            "known_type": null,
+            "method": 2,
+            "name": "MC-1279",
+            "phase_ids": "17",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3630,
+                        "error": 50,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 4,
+                    "method": 1,
+                    "name": "GRA-17366 (LYON-1350)",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 9,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1335.333337929746,
+            "item_y": 214.57894591692224,
+            "known_type": null,
+            "method": 2,
+            "name": "GRA-17366 (LYON-1350)",
+            "phase_ids": "17",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3600,
+                        "error": 50,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 5,
+                    "method": 1,
+                    "name": "GRA-17367 (LYON-1349)",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 11,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1090.8830382342719,
+            "item_y": 202,
+            "known_type": null,
+            "method": 2,
+            "name": "GRA-17367 (LYON-1349)",
+            "phase_ids": "17",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3500,
+                        "error": 55,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 6,
+                    "method": 1,
+                    "name": "MC-1150",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 13,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1332.6959076826499,
+            "item_y": 96.684209437691692,
+            "known_type": null,
+            "method": 2,
+            "name": "MC-1150",
+            "phase_ids": "17",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 0,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3775,
+                        "error": 90,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "Ly-1351-OxA",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 15,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 881.8823542219543,
+            "item_y": 363.7352956385709,
+            "known_type": null,
+            "method": 2,
+            "name": "Ly-1351-OxA",
+            "phase_ids": "18",
+            "red": 255,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4100,
+                        "error": 35,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "Gif-705",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 20,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 285.2339166368368,
+            "item_y": 648.15617563408796,
+            "known_type": null,
+            "method": 2,
+            "name": "Couche 3",
+            "phase_ids": "23,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3500,
+                        "error": 120,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "Gif-706",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 22,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 287.99191513673492,
+            "item_y": 536.57223869456482,
+            "known_type": null,
+            "method": 2,
+            "name": "Couche 4",
+            "phase_ids": "23,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3750,
+                        "error": 35,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "Gif-2758",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 25,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 463.54970719914502,
+            "item_y": 540.58341739849379,
+            "known_type": null,
+            "method": 2,
+            "name": "Gif-2758",
+            "phase_ids": "37,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3750,
+                        "error": 110,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "Gif-2278",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 27,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 459.21138514141717,
+            "item_y": 647.46164559234501,
+            "known_type": null,
+            "method": 2,
+            "name": "Gif-2278",
+            "phase_ids": "37,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3855,
+                        "error": 50,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 39,
+                    "method": 1,
+                    "name": "ARC-606",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 29,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 639.10526352076943,
+            "item_y": 539.1988287965803,
+            "known_type": null,
+            "method": 2,
+            "name": "Les Calades 2 niv",
+            "phase_ids": "38,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3200,
+                        "error": 170,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 13,
+                    "method": 1,
+                    "name": "Ly-4521",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 31,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 632.95820493738586,
+            "item_y": 646.00447148157207,
+            "known_type": null,
+            "method": 2,
+            "name": "Les Calades 2 niv",
+            "phase_ids": "38,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3945,
+                        "error": 35,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "Poznan / 1487/06",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 33,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 629.61988287965789,
+            "item_y": 907.6725180873525,
+            "known_type": null,
+            "method": 2,
+            "name": "Les Calades 1niv",
+            "phase_ids": "38,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3935,
+                        "error": 40,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "Poznan / 2045/07",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3735,
+                        "error": 80,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 16,
+                    "method": 1,
+                    "name": "Poznan / 3728/09",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 35,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 632.65049923834283,
+            "item_y": 778.01840546731603,
+            "known_type": null,
+            "method": 2,
+            "name": "Les Calades 2 niv",
+            "phase_ids": "38,128",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4150,
+                        "error": 100,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 31,
+                    "method": 1,
+                    "name": "MC-2498",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 75,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 276.12280399358798,
+            "item_y": 1424.4853875357308,
+            "known_type": null,
+            "method": 2,
+            "name": "S6",
+            "phase_ids": "76,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4155,
+                        "error": 90,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 33,
+                    "method": 1,
+                    "name": "Ly-4781",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 80,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 461.88303823427202,
+            "item_y": 1430.7953289755594,
+            "known_type": null,
+            "method": 2,
+            "name": "ST 58 Ph3",
+            "phase_ids": "87,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4140,
+                        "error": 60,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 35,
+                    "method": 1,
+                    "name": "Gif-6807",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 84,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 734.47953151863226,
+            "item_y": 1224.7426937678654,
+            "known_type": null,
+            "method": 2,
+            "name": "Gif-6807",
+            "phase_ids": "88,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4120,
+                        "error": 60,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 36,
+                    "method": 1,
+                    "name": "Gif-6806",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 86,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 736.82456079871747,
+            "item_y": 1349.3742748924819,
+            "known_type": null,
+            "method": 2,
+            "name": "Gif-6806",
+            "phase_ids": "88,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4120,
+                        "error": 30,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 44,
+                    "method": 1,
+                    "name": "Ly-11009",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 92,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1251.7426937678658,
+            "item_y": 964.04677919059566,
+            "known_type": null,
+            "method": 2,
+            "name": "USS 73 FY 19 Ph4",
+            "phase_ids": "104,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4110,
+                        "error": 35,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 43,
+                    "method": 1,
+                    "name": "POZ-43919",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 94,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1062.5555563216244,
+            "item_y": 1151.3391801576063,
+            "known_type": null,
+            "method": 2,
+            "name": "US335 Ph3",
+            "phase_ids": "104,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4245,
+                        "error": 35,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 40,
+                    "method": 1,
+                    "name": "Ly-10133",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 102,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1441.6140406517977,
+            "item_y": 1155.6491215974349,
+            "known_type": null,
+            "method": 2,
+            "name": "US51 Ph3",
+            "phase_ids": "104,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4200,
+                        "error": 110,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 46,
+                    "method": 1,
+                    "name": "MC-2211",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 110,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1624.7953289755601,
+            "item_y": 977.04093006811627,
+            "known_type": null,
+            "method": 2,
+            "name": "MC-2211",
+            "phase_ids": "115,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4025,
+                        "error": 160,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 48,
+                    "method": 1,
+                    "name": "MC-1223",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 114,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1789.198842585819,
+            "item_y": 1133.9181260745286,
+            "known_type": null,
+            "method": 2,
+            "name": "MC-1223",
+            "phase_ids": "115,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4185,
+                        "error": 50,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "Poz-18003",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 117,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 2098.6608336316322,
+            "item_y": 905.2806958274324,
+            "known_type": null,
+            "method": 2,
+            "name": "US 139",
+            "phase_ids": "126,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 4115,
+                        "error": 45,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 50,
+                    "method": 1,
+                    "name": "Poz-18004",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 119,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 2099.9707750714615,
+            "item_y": 1017.3918084706812,
+            "known_type": null,
+            "method": 2,
+            "name": "US 142",
+            "phase_ids": "126,127",
+            "red": 0,
+            "type": 0
+        },
+        {
+            "blue": 255,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3940,
+                        "error": 55,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 51,
+                    "method": 1,
+                    "name": "Poz-19251",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 0,
+            "id": 121,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 2098.5906579511202,
+            "item_y": 1135.5730967944432,
+            "known_type": null,
+            "method": 2,
+            "name": "US 168",
+            "phase_ids": "126,127",
+            "red": 0,
+            "type": 0
+        }
+    ],
+    "events_constraints": [
+        {
+            "bwd_id": 94,
+            "fwd_id": 92,
+            "id": 0
+        },
+        {
+            "bwd_id": 100,
+            "fwd_id": 92,
+            "id": 1
+        },
+        {
+            "bwd_id": 102,
+            "fwd_id": 92,
+            "id": 2
+        },
+        {
+            "bwd_id": 96,
+            "fwd_id": 94,
+            "id": 3
+        },
+        {
+            "bwd_id": 98,
+            "fwd_id": 94,
+            "id": 4
+        },
+        {
+            "bwd_id": 96,
+            "fwd_id": 100,
+            "id": 5
+        },
+        {
+            "bwd_id": 98,
+            "fwd_id": 100,
+            "id": 6
+        },
+        {
+            "bwd_id": 96,
+            "fwd_id": 102,
+            "id": 7
+        },
+        {
+            "bwd_id": 98,
+            "fwd_id": 102,
+            "id": 8
+        }
+    ],
+    "events_trash": [
+    ],
+    "mcmc": {
+        "iter_per_batch": 100,
+        "max_batches": 100,
+        "num_burn": 1000,
+        "num_iter": 10000,
+        "num_proc": 1,
+        "seeds": [
+        ],
+        "thinning_interval": 1
+    },
+    "phases": [
+        {
+            "blue": 255,
+            "green": 128,
+            "id": 76,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1323.7482923076795,
+            "item_y": 888.0408174064147,
+            "name": "Les Lauzieres",
+            "red": 255,
+            "tau_fixed": 0,
+            "tau_max": 0,
+            "tau_min": 0,
+            "tau_type": 0
+        },
+        {
+            "blue": 128,
+            "green": 128,
+            "id": 16,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 420.53741683778571,
+            "item_y": 110.99999999999999,
+            "name": "Chemin de Barjols",
+            "red": 0,
+            "tau_fixed": 0,
+            "tau_max": 0,
+            "tau_min": 0,
+            "tau_type": 0
+        },
+        {
+            "blue": 0,
+            "green": 255,
+            "id": 17,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 851.46258739536052,
+            "item_y": 127.67346921497361,
+            "name": "Camp de Laure",
+            "red": 0,
+            "tau_fixed": 0,
+            "tau_max": 0,
+            "tau_min": 0,
+            "tau_type": 0
+        },
+        {
+            "blue": 0,
+            "green": 0,
+            "id": 18,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 663.67347133154681,
+            "item_y": 404.91836730374342,
+            "name": "Pendimoun",
+            "red": 255,
+            "tau_fixed": 0,
+            "tau_max": 0,
+            "tau_min": 0,
+            "tau_type": 0
+        },
+        {
+            "blue": 255,
+            "green": 0,
+            "id": 23,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1052.8775456641824,
+            "item_y": 824.2176850734445,
+            "name": "La Balance",
+            "red": 0,
+            "tau_fixed": 0,
+            "tau_max": 0,
+            "tau_min": 0,
+            "tau_type": 0
+        },
+        {
+            "blue": 255,
+            "green": 0,
+            "id": 37,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1333.1088372452896,
+            "item_y": 1205.1564579055357,
+            "name": "Place du palais",
+            "red": 0,
+            "tau_fixed": 0,
+            "tau_max": 0,
+            "tau_min": 0,
+            "tau_type": 0
+        },
+        {
+            "blue": 255,
+            "green": 0,
+            "id": 38,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1303.5850290317396,
+            "item_y": 1045.3605407044638,
+            "name": "Les Calades",
+            "red": 0,
+            "tau_fixed": 0,
+            "tau_max": 0,
+            "tau_min": 0,
+            "tau_type": 0
+        },
+        {
+            "blue": 255,
+            "green": 0,
+            "id": 50,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1273.823125983251,
+            "item_y": 718.87754989732866,
+            "name": "La Fare",
+            "red": 0,
+            "tau_fixed": 0,
+            "tau_max": 0,
+            "tau_min": 0,
+            "tau_type": 0
+        },
+        {
+            "blue": 255,
+            "green": 0,
+            "id": 65,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1230.3265286684532,
+            "item_y": 485.46938853261861,
+            "name": "La Citadelle",
+            "red": 0,
+            "tau_fixed": 0,
+            "tau_max": 0,
+            "tau_min": 0,
+            "tau_type": 0
+        },
+        {
+            "blue": 255,
+            "green": 0,
+            "id": 69,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1500.8095215921614,
+            "item_y": 136.36054705418297,
+            "name": "Pilon du Roi",
+            "red": 0,
+            "tau_fixed": 0,
+            "tau_max": 0,
+            "tau_min": 0,
+            "tau_type": 0
+        },
+        {
+            "blue": 192,
+            "green": 128,
+            "id": 87,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1533.2857070288921,
+            "item_y": 1222.0340120360102,
+            "name": "Les Fabrys",
+            "red": 255,
+            "tau_fixed": 0,
+            "tau_max": 0,
+            "tau_min": 0,
+            "tau_type": 0
+        },
+        {
+            "blue": 255,
+            "green": 0,
+            "id": 88,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1533.1972731953776,
+            "item_y": 1066.0816326962563,
+            "name": "La Bremonde",
+            "red": 255,
+            "tau_fixed": 0,
+            "tau_max": 0,
+            "tau_min": 0,
+            "tau_type": 0
+        },
+        {
+            "blue": 128,
+            "green": 0,
+            "id": 103,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1522.4285668930577,
+            "item_y": 912.312926393937,
+            "name": "Le Capty",
+            "red": 255,
+            "tau_fixed": 0,
+            "tau_max": 0,
+            "tau_min": 0,
+            "tau_type": 0
+        },
+        {
+            "blue": 64,
+            "green": 128,
+            "id": 104,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1520.2516971094547,
+            "item_y": 706.19728166166988,
+            "name": "Ponteau",
+            "red": 255,
+            "tau_fixed": 0,
+            "tau_max": 0,
+            "tau_min": 0,
+            "tau_type": 0
+        },
+        {
+            "blue": 0,
+            "green": 128,
+            "id": 115,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1466.7210877586467,
+            "item_y": 468.32653501817254,
+            "name": "Miouvin Couche2",
+            "red": 255,
+            "tau_fixed": 0,
+            "tau_max": 0,
+            "tau_min": 0,
+            "tau_type": 0
+        },
+        {
+            "blue": 0,
+            "green": 0,
+            "id": 125,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 334.57143522351566,
+            "item_y": 1339.7346942663091,
+            "name": "La Clairiere",
+            "red": 0,
+            "tau_fixed": 0,
+            "tau_max": 0,
+            "tau_min": 0,
+            "tau_type": 0
+        },
+        {
+            "blue": 255,
+            "green": 0,
+            "id": 126,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 1437.1768719001759,
+            "item_y": 296.72109410836606,
+            "name": "Collet-Redon",
+            "red": 255,
+            "tau_fixed": 0,
+            "tau_max": 0,
+            "tau_min": 0,
+            "tau_type": 0
+        },
+        {
+            "blue": 0,
+            "green": 0,
+            "id": 127,
+            "is_current": false,
+            "is_selected": false,
+            "item_x": 591.84353574474494,
+            "item_y": 1010.9455782024954,
+            "name": "Phase:1",
+            "red": 128,
+            "tau_fixed": 0,
+            "tau_max": 0,
+            "tau_min": 0,
+            "tau_type": 0
+        },
+        {
+            "blue": 255,
+            "green": 0,
+            "id": 128,
+            "is_current": true,
+            "is_selected": true,
+            "item_x": 324.91836730374337,
+            "item_y": 742.00680113725844,
+            "name": "Phase:2",
+            "red": 0,
+            "tau_fixed": 0,
+            "tau_max": 0,
+            "tau_min": 0,
+            "tau_type": 0
+        }
+    ],
+    "phases_constraints": [
+        {
+            "bwd_id": 18,
+            "fwd_id": 16,
+            "gamma_fixed": 0,
+            "gamma_max": 0,
+            "gamma_min": 0,
+            "gamma_type": 0,
+            "id": 0
+        },
+        {
+            "bwd_id": 18,
+            "fwd_id": 17,
+            "gamma_fixed": 0,
+            "gamma_max": 0,
+            "gamma_min": 0,
+            "gamma_type": 0,
+            "id": 1
+        },
+        {
+            "bwd_id": 128,
+            "fwd_id": 18,
+            "gamma_fixed": 0,
+            "gamma_max": 0,
+            "gamma_min": 0,
+            "gamma_type": 0,
+            "id": 2
+        },
+        {
+            "bwd_id": 125,
+            "fwd_id": 127,
+            "gamma_fixed": 0,
+            "gamma_max": 0,
+            "gamma_min": 0,
+            "gamma_type": 0,
+            "id": 3
+        },
+        {
+            "bwd_id": 127,
+            "fwd_id": 128,
+            "gamma_fixed": 0,
+            "gamma_max": 0,
+            "gamma_min": 0,
+            "gamma_type": 0,
+            "id": 4
+        }
+    ],
+    "settings": {
+        "step": 1,
+        "tmax": 1950,
+        "tmin": -5000
+    }
+}
