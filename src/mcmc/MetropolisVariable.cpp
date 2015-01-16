@@ -68,7 +68,8 @@ float* MetropolisVariable::generateBufferForHisto(const QVector<double>& dataSrc
         {
             qDebug() << "FFT input : Wrong index";
         }
-        input[(int)idx_under] += (float)contrib_under;
+        if(idx_under < numPts)
+            input[(int)idx_under] += (float)contrib_under;
         if(idx_upper < numPts) // This is to handle the case when matching the last point index !
             input[(int)idx_upper] += (float)contrib_upper;
     }

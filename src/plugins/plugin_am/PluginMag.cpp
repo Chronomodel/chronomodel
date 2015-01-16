@@ -173,6 +173,7 @@ QString PluginMag::getDateDesc(const Date* date) const
         else if(is_dec)
         {
             result += QObject::tr("Declination") + " : " + QString::number(dec);
+            result += ", " + QObject::tr("Inclination") + " : " + QString::number(inc);
             result += ", " + QObject::tr("Alpha95") + " : " + QString::number(alpha);
         }
         else if(is_int)
@@ -180,7 +181,7 @@ QString PluginMag::getDateDesc(const Date* date) const
             result += QObject::tr("Intensity") + " : " + QString::number(intensity);
             result += ", " + QObject::tr("Error") + " : " + QString::number(alpha);
         }
-        result += ", " + QObject::tr("Ref. curve : ") + " : " + ref_curve;
+        result += ", " + QObject::tr("Ref. curve") + " : " + ref_curve;
     }
     return result;
 }

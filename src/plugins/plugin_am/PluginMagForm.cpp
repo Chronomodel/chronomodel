@@ -84,6 +84,8 @@ void PluginMagForm::setData(const QJsonObject& data)
     mIntensityEdit->setText(QString::number(intensity));
     mAlpha95Edit->setText(QString::number(error));
     mRefCombo->setCurrentText(ref_curve);
+    
+    updateOptions();
 }
 
 QJsonObject PluginMagForm::getData()
