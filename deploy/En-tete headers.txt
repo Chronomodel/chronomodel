@@ -3,7 +3,7 @@ Created by Helori LANOS on 07/06/2014.
 helori.lanos@gmail.com
 
 This software is a computer program whose purpose is to 
-create chronological models of archeological data with Bayesian statistics
+create chronological models of archeological data using Bayesian statistics
 
 This software is governed by the CeCILL license under French law and
 abiding by the rules of distribution of free software. You can use, 
