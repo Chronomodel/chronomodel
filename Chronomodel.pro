@@ -107,6 +107,8 @@ macx{
     LIBS += -Llib/FFTW/mac -lfftw3f
 }win32{
     LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
+}else{
+    LIBS += -lfftw3f
 }
 
 #########################################
