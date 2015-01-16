@@ -1,8 +1,10 @@
 {
-    "app_version": "1.0.0",
+    "app_version": "0.0.5",
+    "dates_trash": [
+    ],
     "events": [
         {
-            "blue": 157,
+            "blue": 123,
             "dates": [
                 {
                     "data": {
@@ -28,14 +30,14 @@
                 },
                 {
                     "data": {
-                        "dec": 12.899999618530273,
+                        "dec": 12.9,
                         "error": 1,
-                        "inc": 69.199996948242188,
+                        "inc": 69.200000000000003,
                         "intensity": 0,
                         "is_dec": true,
                         "is_inc": false,
                         "is_int": false,
-                        "ref_curve": "GAL2002sph2014_D.ref"
+                        "ref_curve": "gal2002sph2014_d.ref"
                     },
                     "delta_average": 0,
                     "delta_error": 0,
@@ -50,7 +52,7 @@
                 },
                 {
                     "data": {
-                        "dec": 0,
+                        "dec": 1,
                         "error": 1.7000000476837158,
                         "inc": 0,
                         "intensity": 58.400001525878906,
@@ -67,7 +69,7 @@
                     "delta_type": 0,
                     "id": 2,
                     "method": 1,
-                    "name": "Intensite (F)",
+                    "name": "F",
                     "plugin_id": "am"
                 },
                 {
@@ -105,17 +107,16 @@
                     "plugin_id": "14c"
                 }
             ],
-            "green": 148,
-            "id": 1,
-            "is_current": false,
-            "is_selected": false,
-            "item_x": -123,
-            "item_y": -206,
-            "known_type": null,
+            "green": 136,
+            "id": 0,
+            "is_current": true,
+            "is_selected": true,
+            "item_x": 161.6745913233558,
+            "item_y": -719.08027773010235,
             "method": 0,
             "name": "Cuers",
             "phase_ids": "",
-            "red": 33,
+            "red": 153,
             "type": 0
         }
     ],
@@ -127,16 +128,24 @@
         "iter_per_batch": 100,
         "max_batches": 100,
         "num_burn": 1000,
-        "num_iter": 50000,
-        "num_proc": 1,
+        "num_iter": 100000,
+        "num_proc": 5,
         "seeds": [
+            -1670713492,
+            1839680382,
+            -621518932,
+            956826781,
+            -1789729315
         ],
         "thinning_interval": 10
     },
     "phases": [
     ],
+    "phases_constraints": [
+    ],
     "settings": {
         "step": 1,
+        "step_forced": false,
         "tmax": 2000,
         "tmin": 0
     }
