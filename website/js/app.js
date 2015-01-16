@@ -17,6 +17,9 @@ chronoApp.config(['$httpProvider', '$routeProvider', function($httpProvider, $ro
     $routeProvider.when('/home', {
         templateUrl: 'partials/home.html',
         controller: 'HomeCtrl'
+    }).when('/features', {
+        templateUrl: 'partials/features.html',
+        controller: 'FeaturesCtrl'
     }).when('/downloads', {
         templateUrl: 'partials/downloads.html',
         controller: 'DownloadsCtrl'

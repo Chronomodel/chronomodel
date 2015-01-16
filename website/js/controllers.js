@@ -16,6 +16,10 @@ chronoControllers.controller('HomeCtrl', ['$scope', function HomeCtrl($scope)
 {
 
 }]);
+chronoControllers.controller('FeaturesCtrl', ['$scope', function FeaturesCtrl($scope)
+{
+
+}]);
 chronoControllers.controller('DownloadsCtrl', ['$scope', '$http', function DownloadsCtrl($scope, $http)
 {
     $scope.downloads = null;

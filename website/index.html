@@ -50,7 +50,7 @@
                 </button>
                 <a id="logo" class="navbar-brand" href="#">
                     <img src="images/logo.png" alt="Chronomodel Logo"/>
-                    <span>Chronomodel</span>
+                    <span>ChronoModel</span>
                 </a>
             </div>
 
@@ -58,11 +58,12 @@
             <div class="collapse navbar-collapse" id="nav-menu">
                 <ul class="nav navbar-nav navbar-right">
                     <li ng-class="menuClass('home')"><a href="#/home"><span>Home</span></a></li>
+                    <li ng-class="menuClass('features')"><a href="#/features"><span>Features</span></a></li>
                     <li ng-class="menuClass('downloads')"><a href="#/downloads"><span>Downloads</span></a></li>
                     <li ng-class="menuClass('documentation')"><a href="#/documentation"><span>Documentation</span></a></li>
-                    <li ng-class="menuClass('todo')"><a href="#/todo"><span>Todo</span></a></li>
+                    <!--li ng-class="menuClass('todo')"><a href="#/todo"><span>Todo</span></a></li-->
                     <li ng-class="menuClass('faq')"><a href="#/faq"><span>FAQ</span></a></li>
-                    <li ng-class="menuClass('about')"><a href="#/about"><span>About</span></a></li>
+                    <!--li ng-class="menuClass('about')"><a href="#/about"><span>About</span></a></li-->
                 </ul>
             </div><!-- /.navbar-collapse -->
         </div><!-- /.container-fluid -->
@@ -70,6 +71,30 @@
 
     <div id="main-wrapper">
         <div ng-view></div>
+    </div>
+    <div id="footer1">
+        <div class="container">
+            <a class="left" href="http://www.agence-nationale-recherche.fr/" target="_blank">
+                <img src="images/logos/anr2.jpg" alt="ANR">
+            </a>
+            <a class="left" href="http://www.cnrs.fr/" target="_blank">
+                <img src="images/logos/cnrs.jpg" alt="CNRS">
+            </a>
+            <a class="right" href="http://www.u-bordeaux-montaigne.fr/fr/index.html" target="_blank">
+                <img src="images/logos/bordeaux.png" alt="Bordeaux">
+            </a>
+            <a class="right" href="http://www.math.sciences.univ-nantes.fr/" target="_blank">
+                <img src="images/logos/nantes.png" alt="Nantes">
+            </a>
+            <a class="right" href="https://www.univ-rennes1.fr/" target="_blank">
+                <img src="images/logos/rennes1.png" alt="Rennes1">
+            </a>
+        </div>
+    </div>
+    <div id="footer2">
+        <div class="container">
+            Copyright &copy; CNRS 2015
+        </div>
     </div>
 
     <script src="bower_components/jquery/dist/jquery.min.js"></script>

@@ -1,3 +1,5 @@
+$violet: #752989;
+
 body{
   font-family: SourceSansPro;
   font-weight: 300;
@@ -16,9 +18,8 @@ body{
 
 h1
 {
-  font-size: 60px;
+  font-size: 40px;
   font-weight: 500;
-  text-align: left;
   margin: 0 0 10px 0;
 }
 h2
@@ -26,7 +27,6 @@ h2
   line-height: 40px;
   font-size: 30px;
   font-weight: 300;
-  text-align: left;
   margin: 0 0 60px 0;
 }
 h3
@@ -34,6 +34,14 @@ h3
   font-size: 26px;
   font-weight: 300;
   margin: 20px 0 10px 0;
+}
+
+h2 .glyphicon
+{
+  color: $violet;
+  font-size: 28px;
+  top: 4px;
+  margin-right: 5px;
 }
 
 #doxy
@@ -117,11 +125,85 @@ h3
   color: #00a99d;
 }
 
+.slide
+{
+  padding: 30px 0;
+}
+
+.slide-intro
+{
+  background: #F0F0F0;
+  text-align: center;
+}
+a.pdf
+{
+  display: inline-block;
+  line-height: 40px;
+  vertical-align: top;
+}
+a.pdf:before
+{
+  display: inline-block;
+  content: '';
+  width: 40px;
+  height: 40px;
+  margin: 0 10px 0 0;
+  background: url('../images/pdf.png') no-repeat center center;
+  background-size: contain;
+}
+
 #home-main
 {
   padding: 50px;
-  background: #00a99d;
+  background: #2A6096; //#00a99d;
   color: white;
+}
+#home .slide-intro
+{
+  text-align: center;
+}
+
+.home1
+{
+  background: #2A6096; //#00a99d;
+  color: white;
+}
+.home2
+{
+  background: #F0F0F0; //#00a99d;
+  color: black;
+}
+.home1 h2 .glyphicon
+{
+  color: white;
+}
+#home-news
+{
+  background: rgba(255, 255, 255, 0.5);
+  margin: 15px 0;
+  padding: 30px;
+  color: black;
+  text-align: center;
+}
+#home-news h4
+{
+  margin: 0 0 15px 0;
+  font-weight: 500;
+  font-size: 28px;
+}
+#home-news .date
+{
+
+}
+#home-news a{
+  text-decoration: underline;
+  color: black;
+}
+
+
+#features .slide img
+{
+  box-shadow: 0 0 20px black;
 }
 
 #page-todo
@@ -150,4 +232,63 @@ h3
 {
   background: #F0F0F0;
   color: black;
+}
+
+#footer1
+{
+  padding: 30px 0;
+  background: white;
+  text-align: center;
+}
+#footer1 a{
+  display: block;
+  margin: 0 20px;
+  text-decoration: none;
+}
+#footer1 a.left{
+  float: left;
+}
+#footer1 a.right{
+  float: right;
+}
+#footer1 img
+{
+  height: 80px;
+  display: inline-block;
+}
+#footer2
+{
+  background: #444;
+  color: white;
+  font-size: 16px;
+  text-align: center;
+  padding: 15px 0;
+}
+
+.slide-faq-1
+{
+  background:#FA805A;
+}
+.slide-faq-2
+{
+  background:#F0F0F0;
+}
+.question
+{
+  font-weight: bold;
+  font-size: 22px;
+  margin: 0 0 20px 0;
+}
+.answer
+{
+
+}
+
+#downloads td
+{
+  vertical-align: middle;
+}
+#downloads .slide-dwl-1
+{
+  background: #F0F0F0; //#00a99d;
 }
