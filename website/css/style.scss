@@ -158,6 +158,15 @@ a.pdf:before
   background: #2A6096; //#00a99d;
   color: white;
 }
+#home-main p
+{
+  margin: 0 0 20px 0;
+}
+#home-main a
+{
+  color: white;
+  text-decoration: underline;
+}
 #home .slide-intro
 {
   text-align: center;
@@ -200,6 +209,10 @@ a.pdf:before
   color: black;
 }
 
+#downloads table img
+{
+  margin-right: 15px;
+}
 
 #features .slide img
 {
