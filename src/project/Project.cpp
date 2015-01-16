@@ -169,7 +169,7 @@ bool Project::event(QEvent* e)
 
 void Project::updateState(const QJsonObject& state, const QString& reason, bool notify)
 {
-    qDebug() << " ---  Receiving : " << reason;
+    //qDebug() << " ---  Receiving : " << reason;
     mState = state;
     if(notify)
     {
@@ -1003,16 +1003,30 @@ void Project::createPhase()
         PhaseDialog dialog(qApp->activeWindow(), Qt::Sheet);
         if(dialog.exec() == QDialog::Accepted)
         {
-            QJsonObject phase = dialog.getPhase();
-            
-            QJsonObject stateNext = mState;
-            QJsonArray phases = stateNext[STATE_PHASES].toArray();
-            
-            phase[STATE_ID] = getUnusedPhaseId(phases);
-            phases.append(phase);
-            stateNext[STATE_PHASES] = phases;
-            
-            pushProjectState(stateNext, tr("Phase created"), true);
+            if(dialog.isValid())
+            {
+                QJsonObject phase = dialog.getPhase();
+                
+                QJsonObject stateNext = mState;
+                QJsonArray phases = stateNext[STATE_PHASES].toArray();
+                
+                phase[STATE_ID] = getUnusedPhaseId(phases);
+                phases.append(phase);
+                stateNext[STATE_PHASES] = phases;
+                
+                pushProjectState(stateNext, tr("Phase created"), true);
+            }
+            else
+            {
+                QMessageBox message(QMessageBox::Critical,
+                                    tr("Invalid value"),
+                                    dialog.mError,
+                                    QMessageBox::Ok,
+                                    qApp->activeWindow(),
+                                    Qt::Sheet);
+                message.exec();
+                return;
+            }
         }
     }
 }
@@ -1023,22 +1037,36 @@ void Project::updatePhase(const QJsonObject& phaseIn)
     dialog.setPhase(phaseIn);
     if(dialog.exec() == QDialog::Accepted)
     {
-        QJsonObject phase = dialog.getPhase();
-        
-        QJsonObject stateNext = mState;
-        QJsonArray phases = stateNext[STATE_PHASES].toArray();
-        
-        for(int i=0; i<phases.size(); ++i)
+        if(dialog.isValid())
         {
-            QJsonObject p = phases[i].toObject();
-            if(p[STATE_ID].toInt() == phase[STATE_ID].toInt())
+            QJsonObject phase = dialog.getPhase();
+            
+            QJsonObject stateNext = mState;
+            QJsonArray phases = stateNext[STATE_PHASES].toArray();
+            
+            for(int i=0; i<phases.size(); ++i)
             {
-                phases[i] = phase;
-                break;
+                QJsonObject p = phases[i].toObject();
+                if(p[STATE_ID].toInt() == phase[STATE_ID].toInt())
+                {
+                    phases[i] = phase;
+                    break;
+                }
             }
+            stateNext[STATE_PHASES] = phases;
+            pushProjectState(stateNext, tr("Phase updated"), true);
         }
-        stateNext[STATE_PHASES] = phases;
-        pushProjectState(stateNext, tr("Phase updated"), true);
+        else
+        {
+            QMessageBox message(QMessageBox::Critical,
+                                tr("Invalid value"),
+                                dialog.mError,
+                                QMessageBox::Ok,
+                                qApp->activeWindow(),
+                                Qt::Sheet);
+            message.exec();
+            return;
+        }
     }
 }
 

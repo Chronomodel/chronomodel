@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QJsonObject>
+#include <QString>
 
 class Phase;
 class Label;
@@ -21,6 +22,8 @@ public:
     
     void setPhase(const QJsonObject& phase);
     QJsonObject getPhase();
+    
+    bool isValid();
     
 protected slots:
     void showAppropriateTauOptions(int typeIndex);
@@ -53,6 +56,8 @@ public:
     int mComboH;
     int mButH;
     int mButW;
+    
+    QString mError;
 };
 
 #endif

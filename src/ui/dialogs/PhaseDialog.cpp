@@ -138,6 +138,30 @@ QJsonObject PhaseDialog::getPhase()
     return mPhase;
 }
 
+bool PhaseDialog::isValid()
+{
+    if(mTauTypeCombo->currentIndex() == 1)
+    {
+        int tau = mTauFixedEdit->text().toInt();
+        if(tau < 1)
+        {
+            mError = tr("Phase fixed duration must be more than 1 !");
+            return false;
+        }
+    }
+    else if(mTauTypeCombo->currentIndex() == 2)
+    {
+        int tauMin = mTauMinEdit->text().toInt();
+        int tauMax = mTauMaxEdit->text().toInt();
+        if(tauMin >= tauMax)
+        {
+            mError = tr("Duration min must be lower than duration max !");
+            return false;
+        }
+    }
+    return true;
+}
+
 void PhaseDialog::resizeEvent(QResizeEvent* event)
 {
     Q_UNUSED(event);
