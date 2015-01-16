@@ -27,8 +27,10 @@ int Generator::createSeed()
     
     // http://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
     
-    std::random_device rd;
-    return rd();
+    //std::random_device rd;
+    //return rd();
+    
+    return rand() % 1000;
 }
 
 
