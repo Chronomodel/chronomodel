@@ -71,8 +71,7 @@ int MCMCProgressDialog::startMCMC()
 void MCMCProgressDialog::cancelMCMC()
 {
     mLoop->requestInterruption();
-    
-    reject();
+    accept();
 }
 
 void MCMCProgressDialog::setTitle1(const QString& message, int minProgress, int maxProgress)

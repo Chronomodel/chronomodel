@@ -1858,13 +1858,16 @@ void Project::run()
             }
             else
             {
-                QMessageBox message(QMessageBox::Warning,
-                                    tr("Error"),
-                                    loop.mAbortedReason,
-                                    QMessageBox::Ok,
-                                    qApp->activeWindow(),
-                                    Qt::Sheet);
-                message.exec();
+                if(loop.mAbortedReason != ABORTED_BY_USER)
+                {
+                    QMessageBox message(QMessageBox::Warning,
+                                        tr("Error"),
+                                        loop.mAbortedReason,
+                                        QMessageBox::Ok,
+                                        qApp->activeWindow(),
+                                        Qt::Sheet);
+                    message.exec();
+                }
                 if(mModel)
                 {
                     delete mModel;
