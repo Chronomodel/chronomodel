@@ -316,7 +316,7 @@ bool Model::isValid()
                 if(!branchEvents.contains(phase->mEvents[k]))
                 {
                     branchEvents.append(phase->mEvents[k]);
-                    qDebug() << phase->mEvents[k]->mName << " in " << phase->mName;
+                    //qDebug() << phase->mEvents[k]->mName << " in " << phase->mName;
                 }
                 else
                     throw QString("The event \"" + phase->mEvents[k]->mName + "\" cannot belong to several phases in a same branch!");
