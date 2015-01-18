@@ -1848,7 +1848,7 @@ void Project::run()
     if(modelOk)
     {
         MCMCLoopMain loop(mModel);
-        MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::Sheet);
+        MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::Sheet);
         if(dialog.startMCMC() == QDialog::Accepted)
         {
             if(loop.mAbortedReason.isEmpty())
