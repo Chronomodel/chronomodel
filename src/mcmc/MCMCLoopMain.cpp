@@ -58,7 +58,7 @@ QString MCMCLoopMain::calibrate()
         for(int i=0; i<dates.size(); ++i)
         {
             if(isInterruptionRequested())
-                return tr("Aborted by user");
+                return ABORTED_BY_USER;
             
             //QTime startTime = QTime::currentTime();
             
@@ -481,7 +481,7 @@ void MCMCLoopMain::finalize()
     
     mModel->generateCorrelations(mChains);
     mModel->generatePosteriorDensities(mChains, 1024, 1);
-    mModel->generateNumericalResults(mChains, 95);
+    mModel->generateNumericalResults(mChains);
 }
 
 

@@ -40,6 +40,9 @@ public:
     void clearInfos();
     void showInfos(bool show);
     
+    void setNothingMessage(const QString& message);
+    void resetNothingMessage();
+    
     void setRendering(Rendering render);
     void showAxisArrows(bool show);
     void showAxisLines(bool show);
@@ -101,6 +104,8 @@ protected:
     
     bool mShowInfos;
     QStringList mInfos;
+    
+    QString mNothingMessage;
     
     QColor	mBackgroundColor;
     int mThickness;

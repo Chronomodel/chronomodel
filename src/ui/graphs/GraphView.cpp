@@ -41,6 +41,8 @@ mUseTip(true)
     
     setRangeX(0, 2000);
     setRangeY(0.f, 1.f);
+    
+    resetNothingMessage();
 }
 
 GraphView::~GraphView(){}
@@ -121,6 +123,18 @@ void GraphView::clearInfos()
 void GraphView::showInfos(bool show)
 {
     mShowInfos = show;
+    repaintGraph(true);
+}
+
+void GraphView::setNothingMessage(const QString& message)
+{
+    mNothingMessage = message;
+    repaintGraph(true);
+}
+
+void GraphView::resetNothingMessage()
+{
+    mNothingMessage = tr("Nothing to display");
     repaintGraph(true);
 }
 
@@ -358,7 +372,7 @@ void GraphView::paintEvent(QPaintEvent* e)
         p.setFont(font());
         p.fillRect(0, 0, width(), height(), QColor(200, 200, 200));
         p.setPen(QColor(100, 100, 100));
-        p.drawText(0, 0, width(), height(), Qt::AlignCenter, tr("Nothing to display"));
+        p.drawText(0, 0, width(), height(), Qt::AlignCenter, mNothingMessage);
         p.end();
         return;
     }

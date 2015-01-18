@@ -70,8 +70,8 @@ int MCMCProgressDialog::startMCMC()
 
 void MCMCProgressDialog::cancelMCMC()
 {
-    //mLoop->exit(0);
     mLoop->requestInterruption();
+    
     reject();
 }
 

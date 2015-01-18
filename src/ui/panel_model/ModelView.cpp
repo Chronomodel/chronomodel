@@ -177,8 +177,6 @@ mCalibVisible(false)
     mAnimationCalib->setDuration(400);
     mAnimationCalib->setEasingCurve(QEasingCurve::OutCubic);
     
-    connect(mCalibrationView, SIGNAL(closed()), this, SLOT(hideCalibration()));
-    
     // --------
     
     mStudyLab = new Label(tr("STUDY PERIOD"), mRightWrapper);
@@ -280,7 +278,7 @@ void ModelView::resetInterface()
 
 void ModelView::updateProject()
 {
-    hideCalibration();
+    mEventPropertiesView->hideCalibration();
     
     Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
@@ -327,7 +325,7 @@ void ModelView::updateProject()
 
 void ModelView::applySettings()
 {
-    hideCalibration();
+    mEventPropertiesView->hideCalibration();
     
     Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
@@ -385,7 +383,7 @@ void ModelView::adjustStep()
 void ModelView::studyPeriodChanging()
 {
     setSettingsValid(false);
-    hideCalibration();
+    mEventPropertiesView->hideCalibration();
 }
 
 void ModelView::setSettingsValid(bool valid)
@@ -413,6 +411,8 @@ void ModelView::showImport()
     Project* project = MainWindow::getInstance()->getProject();
     if(project->studyPeriodIsValid())
     {
+        mEventPropertiesView->hideCalibration();
+        
         mButProperties->setChecked(false);
         mButImport->setChecked(true);
         mButPhasesModel->setChecked(false);
@@ -431,6 +431,8 @@ void ModelView::showPhases()
     Project* project = MainWindow::getInstance()->getProject();
     if(project->studyPeriodIsValid())
     {
+        mEventPropertiesView->hideCalibration();
+        
         mButProperties->setChecked(false);
         mButImport->setChecked(false);
         mButPhasesModel->setChecked(true);
@@ -569,7 +571,7 @@ void ModelView::updateLayout()
     mButExportEvents->setGeometry(0, 4*butH, butW, butH);
     mButEventsOverview->setGeometry(0, 5*butH, butW, butH);
     mButEventsGrid->setGeometry(0, 6*butH, butW, butH);
-    mEventsGlobalZoom->setGeometry(0, 7*butH, butW, mLeftRect.height() - 6*butH);
+    mEventsGlobalZoom->setGeometry(0, 7*butH, butW, mLeftRect.height() - 7*butH);
     
     int helpW = qMin(400, mEventsView->width() - radarW - m);
     int helpH = mEventsScene->getHelpView()->heightForWidth(helpW);
@@ -585,7 +587,7 @@ void ModelView::updateLayout()
     mButExportPhases->setGeometry(mRightSubRect.width() - butW, 2*butH, butW, butH);
     mButPhasesOverview->setGeometry(mRightSubRect.width() - butW, 3*butH, butW, butH);
     mButPhasesGrid->setGeometry(mRightSubRect.width() - butW, 4*butH, butW, butH);
-    mPhasesGlobalZoom->setGeometry(mRightSubRect.width() - butW, 5*butH, butW, mRightRect.height() - 4*butH);
+    mPhasesGlobalZoom->setGeometry(mRightSubRect.width() - butW, 5*butH, butW, mPhasesWrapper->height() - 5*butH);
     
     mCalibrationView->setGeometry(mCalibVisible ? mLeftRect : mLeftHiddenRect);
     
@@ -669,11 +671,6 @@ void ModelView::showCalibration(bool show)
         }
         mAnimationCalib->start();
     }
-}
-
-void ModelView::hideCalibration()
-{
-    showCalibration(false);
 }
 
 #pragma mark Mouse Events

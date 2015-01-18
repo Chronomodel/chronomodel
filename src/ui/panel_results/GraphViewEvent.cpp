@@ -41,7 +41,7 @@ void GraphViewEvent::refresh()
     mGraph->removeAllCurves();
     mGraph->removeAllZones();
     mGraph->clearInfos();
-    //setNumericalResults("");
+    mGraph->resetNothingMessage();
     
     mGraph->autoAdjustYScale(mCurrentResult == eTrace);
     
@@ -280,8 +280,9 @@ void GraphViewEvent::refresh()
                 
                 GraphCurve curve;
                 curve.mName = QString("accept history chain " + QString::number(chainIdx));
-                curve.mData = mEvent->mTheta.acceptationForChain(mChains, chainIdx);
+                curve.mDataVector = mEvent->mTheta.acceptationForChain(mChains, chainIdx);
                 curve.mPen.setColor(Painting::chainColors[chainIdx]);
+                curve.mUseVectorData = true;
                 curve.mIsHisto = false;
                 mGraph->addCurve(curve);
                 
@@ -301,39 +302,53 @@ void GraphViewEvent::refresh()
                 if(mShowChainList[i])
                     chainIdx = i;
             
-            if(chainIdx != -1)
+            if(chainIdx != -1 && chainIdx < mChains.size())
             {
-                GraphCurve curve;
-                curve.mName = QString("correlation chain " + QString::number(chainIdx));
-                curve.mDataVector = mEvent->mTheta.correlationForChain(chainIdx);
-                curve.mUseVectorData = true;
-                curve.mPen.setColor(Painting::chainColors[chainIdx]);
-                curve.mIsHisto = false;
-                mGraph->addCurve(curve);
-                
-                mGraph->setRangeX(0, 100);
-                mGraph->setRangeY(-1, 1);
-                
-                double n = mEvent->mTheta.runTraceForChain(mChains, chainIdx).size();
-                double limit = 1.96f / sqrt(n);
-                
-                //qDebug() << n << ", " <<limit;
-                
-                GraphCurve curveLimitLower;
-                curveLimitLower.mName = QString("correlation limit lower " + QString::number(chainIdx));
-                curveLimitLower.mIsHorizontalLine = true;
-                curveLimitLower.mHorizontalValue = -limit;
-                curveLimitLower.mPen.setColor(Qt::red);
-                curveLimitLower.mPen.setStyle(Qt::DotLine);
-                mGraph->addCurve(curveLimitLower);
-                
-                GraphCurve curveLimitUpper;
-                curveLimitUpper.mName = QString("correlation limit upper " + QString::number(chainIdx));
-                curveLimitUpper.mIsHorizontalLine = true;
-                curveLimitUpper.mHorizontalValue = limit;
-                curveLimitUpper.mPen.setColor(Qt::red);
-                curveLimitUpper.mPen.setStyle(Qt::DotLine);
-                mGraph->addCurve(curveLimitUpper);
+                if(mChains[chainIdx].mThinningInterval == 1)
+                {
+                    GraphCurve curve;
+                    curve.mName = QString("correlation chain " + QString::number(chainIdx));
+                    curve.mDataVector = mEvent->mTheta.correlationForChain(chainIdx);
+                    curve.mUseVectorData = true;
+                    curve.mPen.setColor(Painting::chainColors[chainIdx]);
+                    curve.mIsHisto = false;
+                    mGraph->addCurve(curve);
+                    
+                    mGraph->setRangeX(0, 100);
+                    mGraph->setRangeY(-1, 1);
+                    
+                    double n = mEvent->mTheta.runTraceForChain(mChains, chainIdx).size();
+                    double limit = 1.96f / sqrt(n);
+                    
+                    //qDebug() << n << ", " <<limit;
+                    
+                    GraphCurve curveLimitLower;
+                    curveLimitLower.mName = QString("correlation limit lower " + QString::number(chainIdx));
+                    curveLimitLower.mIsHorizontalLine = true;
+                    curveLimitLower.mHorizontalValue = -limit;
+                    curveLimitLower.mPen.setColor(Qt::red);
+                    curveLimitLower.mPen.setStyle(Qt::DotLine);
+                    mGraph->addCurve(curveLimitLower);
+                    
+                    GraphCurve curveLimitUpper;
+                    curveLimitUpper.mName = QString("correlation limit upper " + QString::number(chainIdx));
+                    curveLimitUpper.mIsHorizontalLine = true;
+                    curveLimitUpper.mHorizontalValue = limit;
+                    curveLimitUpper.mPen.setColor(Qt::red);
+                    curveLimitUpper.mPen.setStyle(Qt::DotLine);
+                    mGraph->addCurve(curveLimitUpper);
+                }
+                else
+                {
+                    // -----------------------------------------------
+                    //  Important : auto-correlation must be calculated on  ALL TRACE VALUES !!
+                    //  Otherwise, it is false. => The thinning must be 1!
+                    //  TODO : find a solution to calculate auto-correlation on all trace points
+                    //  without having to store all trace points (with thinning > 1)
+                    // -----------------------------------------------
+                    
+                    mGraph->setNothingMessage(tr("The thinning interval must be 1 to display this curve."));
+                }
             }
         }
     }

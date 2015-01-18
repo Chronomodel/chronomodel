@@ -283,6 +283,7 @@ void Phase::updateAll(double tmin, double tmax)
     
     mAlpha.mX = getMinThetaEvents(tmin);
     mBeta.mX = getMaxThetaEvents(tmax);
+    mDuration.mX = mBeta.mX - mAlpha.mX;
     
     if(initilized)
     {
@@ -325,39 +326,7 @@ void Phase::memoAll()
 {
     mAlpha.memo();
     mBeta.memo();
-    mDurations.append(mBeta.mX - mAlpha.mX);
+    mDuration.memo();
 }
 
-void Phase::generateDurationCredibility(int threshold)
-{
-    double exactThreshold;
-    mDurationCredibility = intervalText(credibilityForTrace(mDurations, threshold, exactThreshold));
-}
-
-// ------------------------------------------------------------------------------------
-//  Formule d'inversion avec alpha et beta
-// ------------------------------------------------------------------------------------
-// TODO : formule spéciale si alpha = beta
-double Phase::updatePhaseBound(double a, double b, double bound)
-{
-    double newBound = bound;
-    if(bound != a && bound != b)
-    {
-        double u = Generator::randomUniform();
-        double m = (double) mEvents.size();
-        
-        if(m >= 2)
-        {
-            newBound = bound - (bound - a) / pow(u * pow((bound - b) / (bound - a), 1-m) - u + 1, 1/(m-1));
-        }
-        else if(m == 1)
-        {
-            // Problem : nan au bout d'un moment ??? Formule symétrique pour alpha & beta ???
-            newBound = bound - (bound - a) * exp(-u * logf((bound - a) / (bound - b)));
-            //qDebug() << "Bound : " << bound << ", a : " << a << ", b : " << b;
-            //qDebug() << newBound;
-        }
-    }
-    return newBound;
-}
 

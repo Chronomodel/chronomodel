@@ -77,11 +77,6 @@ mRefGraphView(0)
     
     mExportBut = new Button(tr("Export Image"), this);
     
-    mButBack = new Button(tr("Close"), this);
-    mButBack->setIsClose(true);
-    mButBack->setVisible(false);
-    connect(mButBack, SIGNAL(clicked()), this, SIGNAL(closed()));
-    
     setMouseTracking(true);
     
     connect(mZoomSlider, SIGNAL(valueChanged(int)), this, SLOT(updateZoom()));
@@ -291,7 +286,6 @@ void CalibrationView::exportImage()
     mHPDLab->setVisible(false);
     mMarkerX->setVisible(false);
     mMarkerY->setVisible(false);
-    //mButBack->setVisible(false);
     
     int m = 5;
     QRect r(m, m, this->width() - 2*m, this->height() - 2*m);
@@ -308,7 +302,6 @@ void CalibrationView::exportImage()
     mHPDLab->setVisible(true);
     mMarkerX->setVisible(true);
     mMarkerY->setVisible(true);
-    //mButBack->setVisible(true);
 }
 
 void CalibrationView::paintEvent(QPaintEvent* e)
@@ -374,8 +367,6 @@ void CalibrationView::updateLayout()
     
     mMarkerX->setGeometry(mMarkerX->pos().x(), m1 + sbe, mMarkerX->thickness(), height() - 2*m1 - sbe - 8.f); // 8 = graph margin bottom
     mMarkerY->setGeometry(m1 + graphLeft, mMarkerY->pos().y(), width() - 2*m1 - graphLeft, mMarkerY->thickness());
-    
-    mButBack->setGeometry(width() - m2 - 25, m2, 25, 25);
     
     update();
 }

@@ -494,7 +494,7 @@ void ResultsView::generateHPD()
 {
     if(mModel)
     {
-        mModel->generateNumericalResults(mChains, mHPDEdit->text().toDouble());
+        mModel->generateNumericalResults(mChains);
         mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toDouble());
         
         updateGraphs();
@@ -509,7 +509,7 @@ void ResultsView::updateFFTLength()
         double hFactor = mHFactorEdit->text().toDouble();
         
         mModel->generatePosteriorDensities(mChains, len, hFactor);
-        mModel->generateNumericalResults(mChains, mHPDEdit->text().toDouble());
+        mModel->generateNumericalResults(mChains);
         mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toDouble());
         
         updateGraphs();
@@ -529,7 +529,7 @@ void ResultsView::updateHFactor()
         }
         
         mModel->generatePosteriorDensities(mChains, len, hFactor);
-        mModel->generateNumericalResults(mChains, mHPDEdit->text().toDouble());
+        mModel->generateNumericalResults(mChains);
         mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toDouble());
         
         updateGraphs();

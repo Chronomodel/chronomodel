@@ -4,6 +4,8 @@
 #include <QThread>
 #include "MCMCSettings.h"
 
+#define ABORTED_BY_USER "Aborted by user"
+
 
 class MCMCLoop : public QThread
 {

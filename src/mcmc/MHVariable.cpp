@@ -9,36 +9,27 @@ MHVariable::~MHVariable(){}
 
 bool MHVariable::tryUpdate(const double x, const double rapport)
 {
-    if(rapport == 0)
-        return false;
-    
     if(mLastAccepts.length() >= mLastAcceptsLength)
         mLastAccepts.removeAt(0);
     
+    bool accepted = false;
+    
     if(rapport >= 1)
     {
-        mX = x;
-        mLastAccepts.append(true);
-        mAllAccepts.append(true);
-        return true;
+        accepted = true;
     }
     else
     {
         double uniform = Generator::randomUniform();
-        if(rapport >= uniform)
-        {
-            mX = x;
-            mLastAccepts.append(true);
-            mAllAccepts.append(true);
-            return true;
-        }
-        else
-        {
-            mLastAccepts.append(false);
-            mAllAccepts.append(false);
-            return false;
-        }
+        accepted = (rapport >= uniform);
     }
+    
+    if(accepted)
+        mX = x;
+    
+    mLastAccepts.append(accepted);
+    mAllAccepts.append(accepted);
+    return accepted;
 }
 
 void MHVariable::reset()
@@ -64,31 +55,25 @@ void MHVariable::saveCurrentAcceptRate()
 {
     double rate = 100.f * getCurrentAcceptRate();
     mHistoryAcceptRateMH.push_back(rate);
-    //mHistorySigmaMH.push_back(mSigmaMH);
 }
 
-QMap<double, double> MHVariable::acceptationForChain(const QList<Chain>& chains, int index)
+QVector<double> MHVariable::acceptationForChain(const QList<Chain>& chains, int index)
 {
-    QMap<double, double> accept;
+    QVector<double> accept;
     int shift = 0;
     
     for(int i=0; i<chains.size(); ++i)
     {
-        int acceptSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + chains[i].mNumRunIter / chains[i].mThinningInterval;
+        int chainSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + chains[i].mNumRunIter / chains[i].mThinningInterval;
         
         if(i == index)
         {
-            for(int j=shift; j<shift + acceptSize; ++j)
-            {
-                int curIndex = j - shift;
-                accept[curIndex * chains[i].mThinningInterval] = mHistoryAcceptRateMH[j];
-            }
+            for(int j=0; j<chainSize; ++j)
+                accept.append(mHistoryAcceptRateMH[shift + j]);
             break;
         }
         else
-        {
-            shift += acceptSize;
-        }
+            shift += chainSize;
     }
     return accept;
 }
@@ -102,14 +87,13 @@ void MHVariable::generateGlobalRunAcceptation(const QList<Chain>& chains)
     for(int i=0; i<chains.size(); ++i)
     {
         int burnAdaptSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter);
-        int runSize = chains[i].mNumRunIter / chains[i].mThinningInterval;
+        int runSize = chains[i].mNumRunIter;
         
         shift += burnAdaptSize;
         
         for(int j=shift; j<shift + runSize; ++j)
         {
-            int curIndex = j - shift;
-            if(mAllAccepts[curIndex])
+            if(mAllAccepts[j])
                 ++accepted;
         }
         shift += runSize;
@@ -128,7 +112,7 @@ QString MHVariable::resultsText() const
 {
     QString result = MetropolisVariable::resultsText();
     if(!mProposal.isEmpty())
-        result += "Global acceptation rate (acquire section with thinning) : " + QString::number(mGlobalAcceptation*100, 'f', 1) + "% ("+mProposal+")";
+        result += "<br>Acceptation rate (all acquire iterations) : " + QString::number(mGlobalAcceptation*100, 'f', 1) + "% ("+mProposal+")";
     return result;
 }
 

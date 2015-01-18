@@ -173,18 +173,25 @@ void Project::updateState(const QJsonObject& state, const QString& reason, bool 
     mState = state;
     if(notify)
     {
-        QProgressDialog* progress = 0;
+        QProgressDialog progress(qApp->activeWindow(), Qt::Sheet);
+        progress.setLabelText(tr("Loading..."));
+        progress.setRange(0, 0);
+        progress.setModal(true);
+        progress.setCancelButton(0);
+        
         if(reason == PROJECT_LOADED_REASON)
         {
+            // ------------------------------------------
+            //  TODO : find a way to show progress by theading the loading process
+            // ------------------------------------------
             
-            progress = new QProgressDialog(qApp->activeWindow(), Qt::Sheet);
-            progress->setLabelText(tr("Loading project..."));
-            progress->setRange(0, 0);
-            progress->setModal(true);
-            progress->setCancelButton(0);
-            //progress.setValue(0);
-            //progress.setMinimumDuration(0);
-            progress->show();
+            progress.setWindowModality(Qt::WindowModal);
+            progress.show();
+            QThread::currentThread()->msleep(200);
+            if(progress.wasCanceled())
+            {
+                
+            }
         }
         else if(reason == NEW_PROJECT_REASON)
         {
@@ -192,12 +199,6 @@ void Project::updateState(const QJsonObject& state, const QString& reason, bool 
         }
         
         emit projectStateChanged();
-        
-        if(progress)
-        {
-            progress->hide();
-            progress->deleteLater();
-        }
     }
 }
 

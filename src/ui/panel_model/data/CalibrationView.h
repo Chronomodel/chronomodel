@@ -64,8 +64,6 @@ public:
     LineEdit* mHPDEdit;
     QLabel* mResultsLab;
     Button* mExportBut;
-    
-    Button* mButBack;
 };
 
 #endif

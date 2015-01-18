@@ -17,7 +17,7 @@ public:
     
     bool tryUpdate(const double x, const double rapportToTry);
     
-    QMap<double, double> acceptationForChain(const QList<Chain>& chains, int index);
+    QVector<double> acceptationForChain(const QList<Chain>& chains, int index);
     void generateGlobalRunAcceptation(const QList<Chain>& chains);
     
     void generateNumericalResults(const QList<Chain>& chains);
@@ -33,7 +33,7 @@ public:
     
     // Buffer contenant toutes les acceptations cumulées pour toutes les chaines
     // sur les parties acquisition uniquement.
-    // A stocker dans les résultats!
+    // A stocker dans le fichier résultats .dat !
     QVector<bool> mAllAccepts;
     
     // Computed at the end as numerical result :

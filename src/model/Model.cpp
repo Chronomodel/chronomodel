@@ -584,10 +584,11 @@ void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen, d
         
         phase->mAlpha.generateHistos(chains, fftLen, hFactor, tmin, tmax);
         phase->mBeta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
+        phase->mDuration.generateHistos(chains, fftLen, hFactor, 0, tmax - tmin);
     }
 }
 
-void Model::generateNumericalResults(const QList<Chain>& chains, int threshold)
+void Model::generateNumericalResults(const QList<Chain>& chains)
 {
     for(int i=0; i<mEvents.size(); ++i)
     {
@@ -607,7 +608,7 @@ void Model::generateNumericalResults(const QList<Chain>& chains, int threshold)
         Phase* phase = mPhases[i];
         phase->mAlpha.generateNumericalResults(chains);
         phase->mBeta.generateNumericalResults(chains);
-        phase->generateDurationCredibility(threshold);
+        phase->mDuration.generateNumericalResults(chains);
     }
 }
 
@@ -651,9 +652,11 @@ void Model::generateCredibilityAndHPD(const QList<Chain>& chains, double thresh)
         Phase* phase = mPhases[i];
         phase->mAlpha.generateHPD(threshold);
         phase->mBeta.generateHPD(threshold);
+        phase->mDuration.generateHPD(threshold);
         
         phase->mAlpha.generateCredibility(chains, threshold);
         phase->mBeta.generateCredibility(chains, threshold);
+        phase->mDuration.generateCredibility(chains, threshold);
     }
 }
 
@@ -685,7 +688,7 @@ void Model::saveToFile(const QString& path)
             Phase* phase = mPhases[i];
             out << phase->mAlpha.mTrace;
             out << phase->mBeta.mTrace;
-            out << phase->mDurations;
+            out << phase->mDuration.mTrace;
         }
 
         for(int i=0; i<mEvents.size(); ++i)
@@ -748,7 +751,7 @@ void Model::restoreFromFile(const QString& path)
         {
             in >> mPhases[i]->mAlpha.mTrace;
             in >> mPhases[i]->mBeta.mTrace;
-            in >> mPhases[i]->mDurations;
+            in >> mPhases[i]->mDuration.mTrace;
         }
         
         // -----------------------------------------------------
@@ -784,6 +787,6 @@ void Model::restoreFromFile(const QString& path)
         
         generateCorrelations(mChains);
         generatePosteriorDensities(mChains, 1024, 1);
-        generateNumericalResults(mChains, 95);
+        generateNumericalResults(mChains);
     }
 }

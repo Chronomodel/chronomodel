@@ -16,10 +16,10 @@ mDeleteRequested(false)
     
     // -----------
     
-    mTypeLab = new Label(tr("Time Lag min") + " :", this);
-    mFixedLab = new Label(tr("Time Lag min fixed") + " :", this);
-    mMinLab = new Label(tr("Lower time lag min") + " :", this);
-    mMaxLab = new Label(tr("Upper time lag min") + " :", this);
+    mTypeLab = new Label(tr("Hiatus min") + " :", this);
+    mFixedLab = new Label(tr("Hiatus min fixed") + " :", this);
+    mMinLab = new Label(tr("Lower hiatus min") + " :", this);
+    mMaxLab = new Label(tr("Upper hiatus min") + " :", this);
     
     mTypeCombo = new QComboBox(this);
     mTypeCombo->addItem(tr("Unknown"));

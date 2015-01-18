@@ -72,7 +72,6 @@ private slots:
     
     void updateCalibration(const QJsonObject& date);
     void showCalibration(bool show);
-    void hideCalibration();
     
     void setSettingsValid(bool valid);
     

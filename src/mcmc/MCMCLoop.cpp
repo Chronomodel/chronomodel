@@ -110,7 +110,14 @@ void MCMCLoop::run()
         
         QTime startInitTime = QTime::currentTime();
         
-        this->initMCMC();
+        try{
+            this->initMCMC();
+        }
+        catch(QString error)
+        {
+            mAbortedReason = error;
+            return;
+        }
         
         QTime endInitTime = QTime::currentTime();
         timeDiff = startInitTime.msecsTo(endInitTime);
@@ -127,9 +134,20 @@ void MCMCLoop::run()
         while(chain.mBurnIterIndex < chain.mNumBurnIter)
         {
             if(isInterruptionRequested())
+            {
+                mAbortedReason = ABORTED_BY_USER;
                 return;
+            }
             
-            this->update();
+            try{
+                this->update();
+            }
+            catch(QString error)
+            {
+                mAbortedReason = error;
+                return;
+            }
+            
             
             ++chain.mBurnIterIndex;
             ++chain.mTotalIter;
@@ -151,15 +169,28 @@ void MCMCLoop::run()
         while(chain.mBatchIndex * chain.mNumBatchIter < chain.mMaxBatchs * chain.mNumBatchIter)
         {
             if(isInterruptionRequested())
+            {
+                mAbortedReason = ABORTED_BY_USER;
                 return;
+            }
             
             chain.mBatchIterIndex = 0;
             while(chain.mBatchIterIndex < chain.mNumBatchIter)
             {
                 if(isInterruptionRequested())
+                {
+                    mAbortedReason = ABORTED_BY_USER;
                     return;
+                }
                 
-                this->update();
+                try{
+                    this->update();
+                }
+                catch(QString error)
+                {
+                    mAbortedReason = error;
+                    return;
+                }
                 
                 ++chain.mBatchIterIndex;
                 ++chain.mTotalIter;
@@ -189,9 +220,19 @@ void MCMCLoop::run()
         while(chain.mRunIterIndex < chain.mNumRunIter)
         {
             if(isInterruptionRequested())
+            {
+                mAbortedReason = ABORTED_BY_USER;
                 return;
+            }
             
-            this->update();
+            try{
+                this->update();
+            }
+            catch(QString error)
+            {
+                mAbortedReason = error;
+                return;
+            }
             
             ++chain.mRunIterIndex;
             ++chain.mTotalIter;
@@ -224,7 +265,14 @@ void MCMCLoop::run()
     
     emit stepChanged(tr("Computing posterior distributions and numerical results (HPD, credibility, ...)"), 0, 0);
     
-    this->finalize();
+    try{
+        this->finalize();
+    }
+    catch(QString error)
+    {
+        mAbortedReason = error;
+        return;
+    }
 
     QTime endFinalizeTime = QTime::currentTime();
     timeDiff = startFinalizeTime.msecsTo(endFinalizeTime);

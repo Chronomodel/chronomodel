@@ -26,6 +26,18 @@ void MetropolisVariable::memo()
 void MetropolisVariable::reset()
 {
     mTrace.clear();
+    
+    mHisto.clear();
+    mChainsHistos.clear();
+    
+    mRawHisto.clear();
+    mChainsRawHistos.clear();
+    
+    mCorrelations.clear();
+    
+    mHPD.clear();
+    
+    mChainsResults.clear();
 }
 
 float* MetropolisVariable::generateBufferForHisto(const QVector<double>& dataSrc, int numPts, double hFactor)
@@ -293,15 +305,10 @@ QVector<double> MetropolisVariable::fullTraceForChain(const QList<Chain>& chains
         if(i == index)
         {
             for(int j=shift; j<shift + traceSize; ++j)
-            {
                 trace.append(mTrace[j]);
-            }
             break;
         }
-        else
-        {
-            shift += traceSize;
-        }
+        shift += traceSize;
     }
     return trace;
 }
@@ -355,10 +362,11 @@ QVector<double> MetropolisVariable::correlationForChain(int index)
 QString MetropolisVariable::resultsText() const
 {
     QString result = densityAnalysisToString(mResults);
+    
     int precision = 0;
     
-    result += "HPD Intervals (" + QString::number(mThreshold, 'f', 1) + "%) : " + getHPDText(mHPD) + "<br>";
-    result += "Credibility Interval (" + QString::number(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + QString::number(mCredibility.first, 'f', precision) + ", " + QString::number(mCredibility.second, 'f', precision) + "]<br>";
+    result += "HPD Region (" + QString::number(mThreshold, 'f', 1) + "%) : " + getHPDText(mHPD) + "<br>";
+    result += "Credibility Interval (" + QString::number(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + QString::number(mCredibility.first, 'f', precision) + ", " + QString::number(mCredibility.second, 'f', precision) + "]";
     
     return result;
 }

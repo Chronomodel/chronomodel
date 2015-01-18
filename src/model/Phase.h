@@ -50,13 +50,6 @@ public:
     void initTau();
     void updateTau();
     
-    void generateDurationCredibility(int threshold);
-    
-protected:
-    double updatePhaseBound(double a, double b, double old);
-
-    //---------------------------------------------------
-    
 public:
     int mId;
     QString mName;
@@ -73,7 +66,7 @@ public:
     bool mIsAlphaFixed;
     bool mIsBetaFixed;
     
-    QVector<double> mDurations;
+    MetropolisVariable mDuration;
     QString mDurationCredibility;
     
     TauType mTauType;

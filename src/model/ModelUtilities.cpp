@@ -142,6 +142,10 @@ QVector<QVector<Event*>> ModelUtilities::getAllEventsBranches(const QList<Event*
 {
     QVector<QVector<Event*>> branches;
     
+    // ----------------------------------------
+    //  Put all events level to 0 and
+    //  store events at start of branches (= not having constraint backward)
+    // ----------------------------------------
     QVector<Event*> starts;
     for(int i=0; i<events.size(); ++i)
     {
@@ -149,18 +153,24 @@ QVector<QVector<Event*>> ModelUtilities::getAllEventsBranches(const QList<Event*
         if(events[i]->mConstraintsBwd.size() == 0)
             starts.append(events[i]);
     }
-    for(int i=0; i<starts.size(); ++i)
+    if(starts.size() == 0)
     {
-        QVector<QVector<Event*>> eventBranches;
-        try{
-            eventBranches = getBranchesFromEvent(starts[i]);
-        }catch(QString error){
-            throw error;
-        }
-        for(int j=0; j<eventBranches.size(); ++j)
-            branches.append(eventBranches[j]);
+        throw QObject::tr("Circularity found in events model !");
     }
-    
+    else
+    {
+        for(int i=0; i<starts.size(); ++i)
+        {
+            QVector<QVector<Event*>> eventBranches;
+            try{
+                eventBranches = getBranchesFromEvent(starts[i]);
+            }catch(QString error){
+                throw error;
+            }
+            for(int j=0; j<eventBranches.size(); ++j)
+                branches.append(eventBranches[j]);
+        }
+    }
     return branches;
 }
 
@@ -251,6 +261,10 @@ QVector<QVector<Phase*>> ModelUtilities::getAllPhasesBranches(const QList<Phase*
         phases[i]->mLevel = 0;
         if(phases[i]->mConstraintsBwd.size() == 0)
             starts.append(phases[i]);
+    }
+    if(starts.size() == 0)
+    {
+        throw QObject::tr("Circularity found in phases model !");
     }
     for(int i=0; i<starts.size(); ++i)
     {
@@ -378,9 +392,10 @@ QString ModelUtilities::phaseResultsText(Phase* p)
     if(p)
     {
         text += line(textBold(textPurple("Phase : " + p->mName)));
-        text += line(textPurple("Duration credibility ("+ QString::number(p->mAlpha.mThreshold) +"%) : " + p->mDurationCredibility));
-        Quartiles quartiles = quartilesForTrace(p->mDurations);
-        text += line(textPurple("Duration quartiles : Q1 : " + QString::number(quartiles.Q1, 'f', 1) + " Q2 (Median) : " + QString::number(quartiles.Q2, 'f', 1) + " Q3 : " + QString::number(quartiles.Q3, 'f', 1)));
+        
+        text += "<br>";
+        text += line(textBold(textPurple("Duration : ")));
+        text += line(textPurple(p->mDuration.resultsText()));
         
         text += "<br>";
         text += line(textBold(textPurple("Begin : ")));
