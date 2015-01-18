@@ -512,11 +512,16 @@ void Event::updateTheta(double tmin, double tmax)
         case eBoxMuller:
         {
             double theta;
-            int counter = 0;
+            long long counter = 0;
             do{
                 theta = Generator::gaussByBoxMuller(theta_avg, sigma);
                 ++counter;
+                if(counter == 100000000)
+                {
+                    throw QObject::tr("No MCMC solution could be found using event method ") + ModelUtilities::getEventMethodText(mMethod) + " for event named " + mName + ". (" + QString::number(counter) + " trials done)";
+                }
             }while(theta < min || theta > max);
+            
             //qDebug() << "Event update num trials : " << counter;
             mTheta.tryUpdate(theta, 1);
             break;
