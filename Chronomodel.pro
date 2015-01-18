@@ -68,7 +68,7 @@ macx{
 	RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel_User_Manual.pdf
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/License.txt
-	RESOURCES_FILES.files += $$PRO_PATH/deploy/readme.rtf
+	RESOURCES_FILES.files += $$PRO_PATH/deploy/mac/resources/readme.rtf
 	QMAKE_BUNDLE_DATA += RESOURCES_FILES
 }
 
