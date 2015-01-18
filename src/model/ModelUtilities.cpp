@@ -153,7 +153,7 @@ QVector<QVector<Event*>> ModelUtilities::getAllEventsBranches(const QList<Event*
         if(events[i]->mConstraintsBwd.size() == 0)
             starts.append(events[i]);
     }
-    if(starts.size() == 0)
+    if(starts.size() == 0 && events.size() != 0)
     {
         throw QObject::tr("Circularity found in events model !");
     }
@@ -262,7 +262,7 @@ QVector<QVector<Phase*>> ModelUtilities::getAllPhasesBranches(const QList<Phase*
         if(phases[i]->mConstraintsBwd.size() == 0)
             starts.append(phases[i]);
     }
-    if(starts.size() == 0)
+    if(starts.size() == 0 && phases.size() != 0)
     {
         throw QObject::tr("Circularity found in phases model !");
     }
