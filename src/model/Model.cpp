@@ -18,7 +18,36 @@ Model::Model():QObject()
 
 Model::~Model()
 {
+    qDebug() << "Deleting old project model";
     
+    for(int i=mEvents.size()-1; i>=0; --i)
+    {
+        Event* item = mEvents[i];
+        delete item;
+        item = 0;
+        mEvents.removeAt(i);
+    }
+    for(int i=mPhases.size()-1; i>=0; --i)
+    {
+        Phase* item = mPhases[i];
+        delete item;
+        item = 0;
+        mPhases.removeAt(i);
+    }
+    for(int i=mEventConstraints.size()-1; i>=0; --i)
+    {
+        EventConstraint* item = mEventConstraints[i];
+        delete item;
+        item = 0;
+        mEventConstraints.removeAt(i);
+    }
+    for(int i=mPhaseConstraints.size()-1; i>=0; --i)
+    {
+        PhaseConstraint* item = mPhaseConstraints[i];
+        delete item;
+        item = 0;
+        mPhaseConstraints.removeAt(i);
+    }
 }
 
 Model* Model::fromJson(const QJsonObject& json)
@@ -60,8 +89,19 @@ Model* Model::fromJson(const QJsonObject& json)
             QJsonObject event = events[i].toObject();
             if(event[STATE_EVENT_TYPE].toInt() == Event::eDefault)
             {
-                Event* e = new Event(Event::fromJson(event));
-                model->mEvents.append(e);
+                try{
+                    Event* e = new Event(Event::fromJson(event));
+                    model->mEvents.append(e);
+                }
+                catch(QString error){
+                    QMessageBox message(QMessageBox::Critical,
+                                        qApp->applicationName() + " " + qApp->applicationVersion(),
+                                        tr("Error : ") + error,
+                                        QMessageBox::Ok,
+                                        qApp->activeWindow(),
+                                        Qt::Sheet);
+                    message.exec();
+                }
             }
             else
             {
