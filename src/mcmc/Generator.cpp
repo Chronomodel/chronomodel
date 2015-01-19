@@ -47,17 +47,17 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
         if(min == max)
             qDebug() << "DOUBLE EXP WARNING : min == max";
         else
-            throw QObject::tr("DOUBLE EXP ERROR : min > max");
+            throw QObject::tr("DOUBLE EXP ERROR : min = ") + QString::number(min) + ", max = " + QString::number(max);
         return min;
     }
     
     const double x_min = (min - mean) / sigma;
     const double x_max = (max - mean) / sigma;
 
-    if(abs(x_max - x_min) < 1E-3)
+    /*if(abs(x_max - x_min) < 1E-20)
     {
         return randomUniform(min, max);
-    }
+    }*/
     
     double x = (x_max + x_min) / 2.;
     const double sqrt_e = sqrt(exp(1.));
@@ -123,8 +123,9 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
                     error = "x_min < 0";
             }
             rap = 0;
-            std::cout << "doubleExp : ERROR : infinity" << std::endl;
-            throw QObject::tr("doubleExp ERROR : x = infinity, ") + error;
+            throw QObject::tr("64 bits computation is not enough for current calculations. Please try to run it again with a different seed ! (nb: we are currently working on a fix for the next version)");
+            
+            //throw QObject::tr("doubleExp ERROR : x = infinity, ") + error + ", x_min = " + QString::number(x_min) + ", x_max = " + QString::number(x_max);
         }
         else
         {

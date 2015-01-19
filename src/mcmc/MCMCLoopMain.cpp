@@ -351,6 +351,8 @@ void MCMCLoopMain::update()
     
     bool doMemo = (mState == eBurning) || (mState == eAdapting) || (chain.mTotalIter % chain.mThinningInterval == 0);
     
+    //qDebug() << mState << " : " << chain.mTotalIter << " : " << doMemo;
+    
     //--------------------- Update Dates -----------------------------------------
     
     int counter = 0;
