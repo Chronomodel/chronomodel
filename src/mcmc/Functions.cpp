@@ -52,38 +52,24 @@ FunctionAnalysis analyseFunction(const QMap<double, double>& aFunction)
             }
         }
         prevY = y;
-        
-        
-        
-        // TODO
-        /*if((*it).second == prev)
-         {
-         uniformFound = true;
-         uniformValue = prev;
-         }
-         else
-         {
-         if(uniformFound)
-         {
-         //mode = moyenne sur l'uniforme
-         }
-         uniformFound = false;
-         }
-         
-         prev = (*it).second;*/
     }
     
     FunctionAnalysis result;
     result.max = max;
     result.mode = mode;
-    result.mean = sum / sumP;
+    result.mean = 0;
+    result.stddev = 0;
     
-    double variance = (sum2 / sumP) - pow(result.mean, 2);
-    
-    if(variance < 0)
-        variance = 0;
-    
-    result.stddev = sqrt(variance);
+    if(sumP != 0)
+    {
+        result.mean = sum / sumP;
+        double variance = (sum2 / sumP) - pow(result.mean, 2);
+        
+        if(variance < 0)
+            variance = 0;
+        
+        result.stddev = sqrt(variance);
+    }
     
     return result;
 }
