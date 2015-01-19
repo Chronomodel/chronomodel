@@ -51,7 +51,7 @@ public:
     
     // -----
     
-    virtual QString resultsText() const;
+    virtual QString resultsText(const QString& noResultMessage = QObject::tr("No result to display")) const;
     
     // -----
     

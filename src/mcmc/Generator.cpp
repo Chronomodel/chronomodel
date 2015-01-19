@@ -105,7 +105,6 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
         
         if(std::isinf(x))
         {
-            std::cout << "doubleExp : ERROR : infinity" << std::endl;
             QString error;
             if(x_min < 0. && x_max > 0.)
             {
@@ -124,6 +123,7 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
                     error = "x_min < 0";
             }
             rap = 0;
+            std::cout << "doubleExp : ERROR : infinity" << std::endl;
             throw QObject::tr("doubleExp ERROR : x = infinity, ") + error;
         }
         else

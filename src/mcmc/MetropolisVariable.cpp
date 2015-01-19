@@ -200,7 +200,11 @@ void MetropolisVariable::generateHPD(int threshold)
     }
     else
     {
-        qDebug() << "ERROR : Cannot generate HPD on empty histo";
+        // This can happen on phase duration, if only one event inside.
+        // alpha = beta => duration is always null !
+        // We don't display the phase duration but we print the numerical HPD result.
+        
+        qDebug() << "WARNING : Cannot generate HPD on empty histo";
     }
 }
 
@@ -359,8 +363,11 @@ QVector<double> MetropolisVariable::correlationForChain(int index)
 
 
 
-QString MetropolisVariable::resultsText() const
+QString MetropolisVariable::resultsText(const QString& noResultMessage) const
 {
+    if(mHisto.isEmpty())
+        return noResultMessage;
+    
     QString result = densityAnalysisToString(mResults);
     
     int precision = 0;
