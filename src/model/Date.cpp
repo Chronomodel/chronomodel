@@ -105,8 +105,12 @@ Date Date::fromJson(const QJsonObject& json)
         date.mDeltaAverage = json[STATE_DATE_DELTA_AVERAGE].toDouble();
         date.mDeltaError = json[STATE_DATE_DELTA_ERROR].toDouble();
         
-        date.mPlugin = PluginManager::getPluginFromId(json[STATE_DATE_PLUGIN_ID].toString());
-        
+        QString pluginId = json[STATE_DATE_PLUGIN_ID].toString();
+        date.mPlugin = PluginManager::getPluginFromId(pluginId);
+        if(date.mPlugin == 0)
+        {
+            throw QObject::tr("Data could not be loaded : invalid plugin : ") + pluginId;
+        }
         date.mTheta.mProposal = ModelUtilities::getDataMethodText(date.mMethod);
         date.mSigma.mProposal = ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt);
     }

@@ -97,16 +97,26 @@ void CalibrationView::setDate(const QJsonObject& date)
     QJsonObject settings = state[STATE_SETTINGS].toObject();
     mSettings = ProjectSettings::fromJson(settings);
     
-    mDate = Date::fromJson(date);
-    
-    if(!mDate.isNull())
-    {
-        mDate.calibrate(mSettings);
-        mTopLab->setText(mDate.mName + " (" + mDate.mPlugin->getName() + ")");
-        mCalibGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
-        mZoomSlider->setValue(0);
+    try{
+        mDate = Date::fromJson(date);
+        if(!mDate.isNull())
+        {
+            mDate.calibrate(mSettings);
+            mTopLab->setText(mDate.mName + " (" + mDate.mPlugin->getName() + ")");
+            mCalibGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
+            mZoomSlider->setValue(0);
+        }
+        updateGraphs();
     }
-    updateGraphs();
+    catch(QString error){
+        QMessageBox message(QMessageBox::Critical,
+                            qApp->applicationName() + " " + qApp->applicationVersion(),
+                            tr("Error : ") + error,
+                            QMessageBox::Ok,
+                            qApp->activeWindow(),
+                            Qt::Sheet);
+        message.exec();
+    }
 }
 
 void CalibrationView::updateGraphs()

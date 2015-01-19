@@ -635,17 +635,11 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
                                            MainWindow::getInstance()->getCurrentPath());
     if(fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
-    
-    // Usefull one day ???
-    /*QMimeData * d = new QMimeData();
-     d->setData("image/svg+xml", b.buffer());
-     QApplication::clipboard()->setMimeData(d, QClipboard::Clipboard);*/
 }
 
 #pragma mark Toggle Calibration
 void ModelView::updateCalibration(const QJsonObject& date)
 {
-    Date d = Date::fromJson(date);
     if(!date.isEmpty())
     {
         mCalibrationView->setDate(date);

@@ -108,6 +108,7 @@ Event Event::fromJson(const QJsonObject& json)
     for(int j=0; j<dates.size(); ++j)
     {
         QJsonObject date = dates[j].toObject();
+        
         Date d = Date::fromJson(date);
         if(!d.isNull())
         {
@@ -115,7 +116,7 @@ Event Event::fromJson(const QJsonObject& json)
         }
         else
         {
-            qDebug() << "ERROR : date could not be created for plugin " << date[STATE_DATE_PLUGIN_ID].toString();
+            throw QObject::tr("ERROR : data could not be created with plugin ") + date[STATE_DATE_PLUGIN_ID].toString();
         }
     }
     return event;

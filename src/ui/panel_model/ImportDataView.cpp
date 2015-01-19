@@ -147,9 +147,24 @@ void ImportDataView::exportDates()
                 for(int j=0; j<dates.size(); ++j)
                 {
                     QJsonObject date = dates[j].toObject();
-                    Date d = Date::fromJson(date);
-                    QStringList dateCsv = d.toCSV();
-                    stream << dateCsv.join(sep) << "\n";
+                    
+                    try{
+                        Date d = Date::fromJson(date);
+                        if(!d.isNull())
+                        {
+                            QStringList dateCsv = d.toCSV();
+                            stream << dateCsv.join(sep) << "\n";
+                        }
+                    }
+                    catch(QString error){
+                        QMessageBox message(QMessageBox::Critical,
+                                            qApp->applicationName() + " " + qApp->applicationVersion(),
+                                            tr("Error : ") + error,
+                                            QMessageBox::Ok,
+                                            qApp->activeWindow(),
+                                            Qt::Sheet);
+                        message.exec();
+                    }
                 }
                 stream << "\n";
             }

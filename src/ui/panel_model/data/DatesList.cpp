@@ -46,34 +46,36 @@ void DatesList::setEvent(const QJsonObject& event)
         {
             QJsonObject date = dates[i].toObject();
             
-            Date d = Date::fromJson(date);
-            if(!d.isNull())
-            {
-                QListWidgetItem* item = new QListWidgetItem();
-                item->setFlags(Qt::ItemIsSelectable
-                               | Qt::ItemIsDragEnabled
-                               | Qt::ItemIsUserCheckable
-                               | Qt::ItemIsEnabled
-                               | Qt::ItemNeverHasChildren);
-                
-                item->setText(d.mName);
-                item->setData(0x0101, d.mName);
-                item->setData(0x0102, d.mPlugin->getId());
-                item->setData(0x0103, d.getDesc());
-                item->setData(0x0104, d.mId);
-                item->setData(0x0105, ModelUtilities::getDeltaText(d));
-                item->setData(0x0106, ModelUtilities::getDataMethodText(d.mMethod));
-                
-                addItem(item);
-                
-                /*Button* updateBut = new Button(tr("Update"));
-                Button* calibBut = new Button(tr("Calibrate"));
-                
-                updateBut->setMaximumSize(70, 25);
-                updateBut->setGeometry(100, 10, 70, 25);
-                
-                setItemWidget(item, updateBut);
-                //setItemWidget(item, calibBut);*/
+            try{
+                Date d = Date::fromJson(date);
+                if(!d.isNull())
+                {
+                    QListWidgetItem* item = new QListWidgetItem();
+                    item->setFlags(Qt::ItemIsSelectable
+                                   | Qt::ItemIsDragEnabled
+                                   | Qt::ItemIsUserCheckable
+                                   | Qt::ItemIsEnabled
+                                   | Qt::ItemNeverHasChildren);
+                    
+                    item->setText(d.mName);
+                    item->setData(0x0101, d.mName);
+                    item->setData(0x0102, d.mPlugin->getId());
+                    item->setData(0x0103, d.getDesc());
+                    item->setData(0x0104, d.mId);
+                    item->setData(0x0105, ModelUtilities::getDeltaText(d));
+                    item->setData(0x0106, ModelUtilities::getDataMethodText(d.mMethod));
+                    
+                    addItem(item);
+                }
+            }
+            catch(QString error){
+                QMessageBox message(QMessageBox::Critical,
+                                    qApp->applicationName() + " " + qApp->applicationVersion(),
+                                    tr("Error : ") + error,
+                                    QMessageBox::Ok,
+                                    qApp->activeWindow(),
+                                    Qt::Sheet);
+                message.exec();
             }
         }
     }

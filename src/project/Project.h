@@ -110,6 +110,8 @@ public:
     void updatePhaseConstraint(int constraintId);
     int getUnusedPhaseConstraintId(const QJsonArray& constraints);
     
+    void deleteModel();
+    
 public slots:
     bool save(const QString& dialogTitle = tr("Save project as..."));
     

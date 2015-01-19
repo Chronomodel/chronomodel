@@ -360,8 +360,9 @@ void MainWindow::closeProject()
         mProject->mLastSavedState = mProject->emptyState();
         mProject->mProjectFileName = QString();
         
+        // Go back to model tab :
         mViewModelAction->trigger();
-        //mProjectView->showModel();
+        mProject->deleteModel();
         
         resetInterface();
         activateInterface(false);

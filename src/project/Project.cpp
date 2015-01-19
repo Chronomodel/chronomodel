@@ -185,13 +185,13 @@ void Project::updateState(const QJsonObject& state, const QString& reason, bool 
             //  TODO : find a way to show progress by theading the loading process
             // ------------------------------------------
             
-            progress.setWindowModality(Qt::WindowModal);
+            /*progress.setWindowModality(Qt::WindowModal);
             progress.show();
             QThread::currentThread()->msleep(200);
             if(progress.wasCanceled())
             {
                 
-            }
+            }*/
         }
         else if(reason == NEW_PROJECT_REASON)
         {
@@ -272,23 +272,33 @@ bool Project::load(const QString& path)
             
             // --------------------
             
-            if(mModel)
-            {
-                delete mModel;
-                mModel = 0;
-                qDebug() << "Deleting old project model";
-            }
+            deleteModel();
             
-            QString dataPath = path + ".dat";
+            /*QString dataPath = path + ".dat";
             QFile dataFile(dataPath);
             if(dataFile.exists())
             {
 #if DEBUG
                 qDebug() << "Loading model file : " << dataPath;
 #endif       
-                mModel = Model::fromJson(mState);
+                try{
+                    mModel = Model::fromJson(mState);
+                }
+                catch(QString error){
+                    QMessageBox message(QMessageBox::Critical,
+                                        tr("Error loading project"),
+                                        tr("The project could not be loaded.") + "\n" +
+                                        tr("Error message") + " : " + error,
+                                        QMessageBox::Ok,
+                                        qApp->activeWindow(),
+                                        Qt::Sheet);
+                    message.exec();
+                    
+                    deleteModel();
+                }
                 
-                /*try{
+                
+                try{
                     mModel->restoreFromFile(dataPath);
                     emit mcmcFinished(mModel);
                 }catch(QString error){
@@ -300,8 +310,8 @@ bool Project::load(const QString& path)
                                         qApp->activeWindow(),
                                         Qt::Sheet);
                     message.exec();
-                }*/
-            }
+                }
+            }*/
             
             // --------------------
             
@@ -483,9 +493,24 @@ void Project::resetMCMC()
             for(int j=0; j<dates.size(); ++j)
             {
                 QJsonObject date = dates[j].toObject();
-                Date d = Date::fromJson(date);
-                date[STATE_DATE_METHOD] = (int)d.mPlugin->getDataMethod();
-                dates[j] = date;
+                
+                try{
+                    Date d = Date::fromJson(date);
+                    if(!d.isNull())
+                    {
+                        date[STATE_DATE_METHOD] = (int)d.mPlugin->getDataMethod();
+                        dates[j] = date;
+                    }
+                }
+                catch(QString error){
+                    QMessageBox message(QMessageBox::Critical,
+                                        qApp->applicationName() + " " + qApp->applicationVersion(),
+                                        tr("Error : ") + error,
+                                        QMessageBox::Ok,
+                                        qApp->activeWindow(),
+                                        Qt::Sheet);
+                    message.exec();
+                }
             }
             event[STATE_EVENT_DATES] = dates;
             events[i] = event;
@@ -1821,13 +1846,7 @@ void Project::run()
     // e.g. : clean the result view with any graphs, ...
     emit mcmcStarted();
     
-    if(mModel)
-    {
-        delete mModel;
-        // Very important!
-        // ResultsView uses a pointer to the model and will use it if it is not set to 0 !!
-        mModel = 0;
-    }
+    deleteModel();
     mModel = Model::fromJson(mState);
     
     bool modelOk = false;
@@ -1868,20 +1887,23 @@ void Project::run()
                                         Qt::Sheet);
                     message.exec();
                 }
-                if(mModel)
-                {
-                    delete mModel;
-                    mModel = 0;
-                }
+                deleteModel();
             }
         }
         else
         {
-            if(mModel)
-            {
-                delete mModel;
-                mModel = 0;
-            }
+            deleteModel();
         }
+    }
+}
+
+void Project::deleteModel()
+{
+    if(mModel)
+    {
+        delete mModel;
+        // Very important!
+        // ResultsView uses a pointer to the model and will use it if it is not set to 0 !!
+        mModel = 0;
     }
 }

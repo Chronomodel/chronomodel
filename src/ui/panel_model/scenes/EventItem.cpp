@@ -66,18 +66,29 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
                      mData[STATE_COLOR_GREEN].toInt(),
                      mData[STATE_COLOR_BLUE].toInt());
         
-        DateItem* dateItem = new DateItem((EventsScene*)mScene, date, color, settings);
-        dateItem->setParentItem(this);
-        dateItem->setGreyedOut(mGreyedOut);
-        
-        QPointF pos(0,
-                    boundingRect().y() +
-                    mTitleHeight +
-                    mBorderWidth +
-                    2*mEltsMargin +
-                    i * (mEltsHeight + mEltsMargin));
-        dateItem->setPos(pos);
-        dateItem->setOriginalPos(pos);
+        try{
+            DateItem* dateItem = new DateItem((EventsScene*)mScene, date, color, settings);
+            dateItem->setParentItem(this);
+            dateItem->setGreyedOut(mGreyedOut);
+            
+            QPointF pos(0,
+                        boundingRect().y() +
+                        mTitleHeight +
+                        mBorderWidth +
+                        2*mEltsMargin +
+                        i * (mEltsHeight + mEltsMargin));
+            dateItem->setPos(pos);
+            dateItem->setOriginalPos(pos);
+        }
+        catch(QString error){
+            QMessageBox message(QMessageBox::Critical,
+                                qApp->applicationName() + " " + qApp->applicationVersion(),
+                                tr("Error : ") + error,
+                                QMessageBox::Ok,
+                                qApp->activeWindow(),
+                                Qt::Sheet);
+            message.exec();
+        }
     }
     
     // ----------------------------------------------

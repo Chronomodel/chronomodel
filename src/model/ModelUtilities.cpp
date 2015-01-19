@@ -395,7 +395,7 @@ QString ModelUtilities::phaseResultsText(Phase* p)
         
         text += "<br>";
         text += line(textBold(textPurple("Duration : ")));
-        text += line(textPurple(p->mDuration.resultsText()));
+        text += line(textPurple(p->mDuration.resultsText(QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"))));
         
         text += "<br>";
         text += line(textBold(textPurple("Begin : ")));

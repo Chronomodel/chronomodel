@@ -76,16 +76,29 @@ mType(type)
         
         for(int i=0; i<dates.size(); ++i)
         {
-            QJsonObject date = dates[i].toObject();
-            Date d = Date::fromJson(date);
-            
-            QListWidgetItem* item = new QListWidgetItem(d.mName);
-            item->setData(0x0101, d.mName);
-            item->setData(0x0102, d.mPlugin->getId());
-            item->setData(0x0103, d.getDesc());
-            item->setData(0x0105, d.mDeltaFixed);
-            item->setData(0x0106, d.mId);
-            mList->addItem(item);
+            try{
+                QJsonObject date = dates[i].toObject();
+                Date d = Date::fromJson(date);
+                if(!d.isNull())
+                {
+                    QListWidgetItem* item = new QListWidgetItem(d.mName);
+                    item->setData(0x0101, d.mName);
+                    item->setData(0x0102, d.mPlugin->getId());
+                    item->setData(0x0103, d.getDesc());
+                    item->setData(0x0105, d.mDeltaFixed);
+                    item->setData(0x0106, d.mId);
+                    mList->addItem(item);
+                }
+            }
+            catch(QString error){
+                QMessageBox message(QMessageBox::Warning,
+                                    qApp->applicationName() + " " + qApp->applicationVersion(),
+                                    tr("Warning : ") + error,
+                                    QMessageBox::Ok,
+                                    qApp->activeWindow(),
+                                    Qt::Sheet);
+                message.exec();
+            }
         }
     }
     else if(mType == eEvent)
