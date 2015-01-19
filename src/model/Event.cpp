@@ -294,7 +294,7 @@ double Event::getThetaMaxRecursive(double defaultValue,
                 break;
             }
             if(event->mInitialized)
-                branchMax = qMax(branchMax, event->mTheta.mX);
+                branchMax = qMin(branchMax, event->mTheta.mX);
         }
     }
     
