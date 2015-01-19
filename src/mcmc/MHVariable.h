@@ -21,7 +21,7 @@ public:
     void generateGlobalRunAcceptation(const QList<Chain>& chains);
     
     void generateNumericalResults(const QList<Chain>& chains);
-    QString resultsText() const;
+    QString resultsText(const QString& noResultMessage = QObject::tr("No result to display")) const;
     
 public:
     double mSigmaMH;

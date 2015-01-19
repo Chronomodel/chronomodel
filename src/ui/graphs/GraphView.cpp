@@ -430,6 +430,8 @@ void GraphView::paintEvent(QPaintEvent* e)
 
 void GraphView::paintToDevice(QPaintDevice* device, QPaintEvent* e)
 {
+    Q_UNUSED(e);
+    
     QPainter p;
     p.begin(device);
     p.setFont(font());

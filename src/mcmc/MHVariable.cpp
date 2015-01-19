@@ -108,9 +108,9 @@ void MHVariable::generateNumericalResults(const QList<Chain>& chains)
     generateGlobalRunAcceptation(chains);
 }
 
-QString MHVariable::resultsText() const
+QString MHVariable::resultsText(const QString& noResultMessage) const
 {
-    QString result = MetropolisVariable::resultsText();
+    QString result = MetropolisVariable::resultsText(noResultMessage);
     if(!mProposal.isEmpty())
         result += "<br>Acceptation rate (all acquire iterations) : " + QString::number(mGlobalAcceptation*100, 'f', 1) + "% ("+mProposal+")";
     return result;

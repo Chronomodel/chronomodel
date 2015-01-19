@@ -38,9 +38,13 @@ public:
     
     void reset();
     
+    
+    // 2 fonctions utilisées pendant le MCMC (mais pas l'init!) :
     double getThetaMin(double defaultValue);
     double getThetaMax(double defaultValue);
     
+    
+    // 2 fonctions utilisées pour l'init du MCMC :
     double getThetaMinRecursive(double defaultValue,
                                 const QVector<QVector<Event*>>& eventBranches,
                                 const QVector<QVector<Phase*>>& phaseBranches);
