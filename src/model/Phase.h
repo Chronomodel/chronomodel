@@ -29,14 +29,6 @@ public:
     
     static Phase fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
-
-    void addEvent(Event* event);
-    void removeEvent(Event* event);
-    
-    void addConstraintForward(PhaseConstraint* c);
-    void addConstraintBackward(PhaseConstraint* c);
-    void removeConstraintForward(PhaseConstraint* c);
-    void removeConstraintBackward(PhaseConstraint* c);
     
     double getMaxThetaEvents(double tmax);
     double getMinThetaEvents(double tmin);

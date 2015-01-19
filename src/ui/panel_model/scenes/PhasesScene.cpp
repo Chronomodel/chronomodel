@@ -261,8 +261,8 @@ void PhasesScene::clean()
     for(int i=mConstraintItems.size()-1; i>=0; --i)
     {
         ArrowItem* constraintItem = mConstraintItems[i];
-        QJsonObject& constraint = constraintItem->data();
 #if DEBUG
+        QJsonObject& constraint = constraintItem->data();
         qDebug() << "Phase Constraint deleted : " << constraint[STATE_ID].toInt();
 #endif
         removeItem(constraintItem);

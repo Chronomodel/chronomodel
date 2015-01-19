@@ -8,7 +8,7 @@
 
 Phase::Phase():
 mId(0),
-mTau(0.f),
+mTau(0.),
 mIsAlphaFixed(true),
 mIsBetaFixed(true),
 mTauType(Phase::eTauUnknown),
@@ -108,72 +108,6 @@ QJsonObject Phase::toJson() const
     phase[STATE_IS_CURRENT] = mIsCurrent;
     
     return phase;
-}
-
-void Phase::addEvent(Event* event)
-{
-    if(event)
-    {
-        for(int i=0; i<mEvents.size(); ++i)
-            if(mEvents[i] == event)
-                return;
-        
-        mEvents.push_back(event);
-    }
-}
-
-void Phase::removeEvent(Event* event)
-{
-    for(int i=0; i<mEvents.size(); ++i)
-    {
-        if(mEvents[i] == event)
-        {
-            mEvents.erase(mEvents.begin() + i);
-            break;
-        }
-    }
-}
-
-
-void Phase::addConstraintForward(PhaseConstraint* c)
-{
-    if(c)
-    {
-        mConstraintsFwd.push_back(c);
-    }
-    else
-        throw "Cannot add null phase constraint to phase.";
-}
-void Phase::addConstraintBackward(PhaseConstraint* c)
-{
-    if(c)
-    {
-        mConstraintsBwd.push_back(c);
-    }
-    else
-        throw "Cannot add null phase constraint to phase.";
-}
-
-void Phase::removeConstraintForward(PhaseConstraint* c)
-{
-    for(int i=0; i<(int)mConstraintsFwd.size(); ++i)
-    {
-        if(mConstraintsFwd[i] == c)
-        {
-            mConstraintsFwd.erase(mConstraintsFwd.begin() + i);
-        }
-    }
-}
-
-void Phase::removeConstraintBackward(PhaseConstraint* c)
-{
-    for(int i=0; i<(int)mConstraintsBwd.size(); ++i)
-    {
-        if(mConstraintsBwd[i] == c)
-        {
-            mConstraintsBwd.erase(mConstraintsBwd.begin() + i);
-        }
-    }
 }
 
 // --------------------------------------------------------------------------------
