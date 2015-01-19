@@ -14,8 +14,8 @@ public:
     enum State
     {
         eBurning = 0,
-        eAdapting = 0,
-        eRunning = 0
+        eAdapting = 1,
+        eRunning = 2
     };
     
     MCMCLoop();
