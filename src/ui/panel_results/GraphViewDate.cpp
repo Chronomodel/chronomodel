@@ -226,6 +226,29 @@ void GraphViewDate::refresh()
                 double min = vector_min_value(curve.mDataVector);
                 double max = vector_max_value(curve.mDataVector);
                 mGraph->setRangeY(floor(min), ceil(max));
+                
+                const Quartiles& quartiles = variable->mResults.quartiles;
+                
+                GraphCurve curveQ1;
+                curveQ1.mIsHorizontalLine = true;
+                curveQ1.mHorizontalValue = quartiles.Q1;
+                curveQ1.mName = QString("Q1");
+                curveQ1.mPen.setColor(Qt::green);
+                mGraph->addCurve(curveQ1);
+                
+                GraphCurve curveQ2;
+                curveQ2.mIsHorizontalLine = true;
+                curveQ2.mHorizontalValue = quartiles.Q2;
+                curveQ2.mName = QString("Q2");
+                curveQ2.mPen.setColor(Qt::red);
+                mGraph->addCurve(curveQ2);
+                
+                GraphCurve curveQ3;
+                curveQ3.mIsHorizontalLine = true;
+                curveQ3.mHorizontalValue = quartiles.Q3;
+                curveQ3.mName = QString("Q3");
+                curveQ3.mPen.setColor(Qt::green);
+                mGraph->addCurve(curveQ3);
             }
         }
         else if(mCurrentResult == eAccept)
@@ -278,7 +301,7 @@ void GraphViewDate::refresh()
             
             if(chainIdx != -1 && chainIdx < mChains.size())
             {
-                if(mChains[chainIdx].mThinningInterval == 1)
+                if(true)//mChains[chainIdx].mThinningInterval == 1)
                 {
                     MHVariable* variable = &(mDate->mTheta);
                     if(mCurrentVariable == eTheta) variable = &(mDate->mTheta);

@@ -304,7 +304,7 @@ void GraphViewEvent::refresh()
             
             if(chainIdx != -1 && chainIdx < mChains.size())
             {
-                if(mChains[chainIdx].mThinningInterval == 1)
+                if(true)//mChains[chainIdx].mThinningInterval == 1)
                 {
                     GraphCurve curve;
                     curve.mName = QString("correlation chain " + QString::number(chainIdx));
