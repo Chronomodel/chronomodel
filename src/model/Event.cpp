@@ -506,8 +506,13 @@ void Event::updateTheta(double tmin, double tmax)
     {
         case eDoubleExp:
         {
-            double theta = Generator::gaussByDoubleExp(theta_avg, sigma, min, max);
-            mTheta.tryUpdate(theta, 1);
+            try{
+                double theta = Generator::gaussByDoubleExp(theta_avg, sigma, min, max);
+                mTheta.tryUpdate(theta, 1);
+            }
+            catch(QString error){
+                throw QObject::tr("Error for event : ") + mName + " : " + error;
+            }
             break;
         }
         case eBoxMuller:

@@ -602,6 +602,7 @@ void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen, d
         if(generateEventHistos)
         {
             event->mTheta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
+            //qDebug() << "Trace size : " << event->mTheta.mTrace.size();
         }
         
         for(int j=0; j<event->mDates.size(); ++j)
