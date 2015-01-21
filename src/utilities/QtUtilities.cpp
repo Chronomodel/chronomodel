@@ -163,7 +163,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
         {
             int versionHeight = 20;
             
-            qreal pr = qApp->devicePixelRatio();
+            qreal pr = 4;//qApp->devicePixelRatio();
             //qDebug() << "Saving PNG with pixel ratio : " << pr;
             QImage image(r.width() * pr, (r.height() + versionHeight) * pr, QImage::Format_ARGB32);
             image.setDevicePixelRatio(pr);
