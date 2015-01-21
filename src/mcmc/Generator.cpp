@@ -10,6 +10,7 @@
 #include <chrono>
 #include <iostream>
 #include <QDebug>
+#include "StdUtilities.h"
 
 
 std::mt19937 Generator::sGenerator = std::mt19937(0);
@@ -53,6 +54,8 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     
     const double x_min = (min - mean) / sigma;
     const double x_max = (max - mean) / sigma;
+    
+    QString info = "DoubleExp : x_min = " + QString::number(x_min) + ", x_max = " + QString::number(x_max);
 
     /*if(abs(x_max - x_min) < 1E-20)
     {
@@ -62,97 +65,104 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     double x = (x_max + x_min) / 2.;
     const double sqrt_e = sqrt(exp(1.));
     
+    feclearexcept(FE_ALL_EXCEPT);
+    
+    /*double exp_x_min = safeExp(x_min);
+    checkFloatingPointException(info + ", calculating exp(x_min)");
+    double exp_x_max = safeExp(x_max);
+    checkFloatingPointException(info + ", calculating exp(x_max)");
+    double exp_minus_x_min = safeExp(-x_min);
+    checkFloatingPointException(info + ", calculating exp(-x_min)");
+    double exp_minus_x_max = safeExp(-x_max);
+    checkFloatingPointException(info + ", calculating exp(-x_max)");*/
+    
+    double exp_x_min = exp(x_min);
+    double exp_x_max = exp(x_max);
+    double exp_minus_x_min = exp(-x_min);
+    double exp_minus_x_max = exp(-x_max);
+    
     double ur = 1.;
     double rap = 0.;
     
-    while(rap < ur)
+    int trials = 0;
+    int limit = 100000;
+    
+    while(rap < ur && trials < limit)
     {
         double u = (double)randomUniform();
         
-        try{
-            if(x_min < 0. && x_max > 0.)
-            {
-                const double c = 1. - 0.5 * (exp(x_min) + exp(-x_max));
-                const double f0 = 0.5 * (1. - exp(x_min)) / c;
-                
-                if(u <= f0)
-                {
-                    x = log(exp(x_min) + 2. * c * u);
-                }
-                else
-                {
-                    x = -log(1. - 2.*c*(u-f0));
-                }
-            }
-            else
-            {
-                if(x_min >= 0.)
-                {
-                    x = -log(exp(-x_min) - u * (exp(-x_min) - exp(-x_max)));
-                }
-                else
-                {
-                    x = log(exp(x_min) - u * (exp(x_min) - exp(x_max)));
-                }
-            }
-        }
-        catch(std::exception& e){
-            throw QObject::tr("Exception caught : ") + e.what();
-        }
-        
-        
-        ur = randomUniform();
-        
-        if(std::isinf(x))
+        if(x_min < 0. && x_max > 0.)
         {
-            QString error;
-            if(x_min < 0. && x_max > 0.)
+            const double c = 1. - 0.5 * (exp_x_min + exp_minus_x_max);
+            //checkFloatingPointException(info + ", calculating c.");
+            
+            const double f0 = 0.5 * (1. - exp_x_min) / c;
+            //checkFloatingPointException(info + ", calculating f0 with exp(x_min) = " + QString::number(exp_x_min));
+            
+            if(u <= f0)
             {
-                const double c = 1. - 0.5 * (exp(x_min) + exp(-x_max));
-                const double f0 = 0.5 * (1. - exp(x_min)) / c;
-                if(u <= f0)
-                    error = "u <= f0";
-                else
-                    error = "u > f0";
+                x = log(exp_x_min + 2. * c * u);
+                
+                //x = safeLog(exp_x_min + 2. * c * u);
+                //checkFloatingPointException(info + ", u <= f0");
             }
             else
             {
-                if(x_min >= 0)
-                    error = "x_min >= 0";
-                else
-                    error = "x_min < 0";
+                x = -log(1. - 2.*c*(u-f0));
+                
+                //x = -safeLog(1. - 2.*c*(u-f0));
+                //checkFloatingPointException(info + ", u > f0");
             }
-            rap = 0;
-            throw QObject::tr("64 bits computation is not enough for current calculations. Please try to run it again with a different seed ! (nb: we are currently working on a fix for the next version)");
-            
-            //throw QObject::tr("doubleExp ERROR : x = infinity, ") + error + ", x_min = " + QString::number(x_min) + ", x_max = " + QString::number(x_max);
         }
         else
         {
-            if(x_min >= 1.)
+            if(x_min >= 0.)
             {
-                rap = exp(0.5 * (x_min * x_min - x * x) + x - x_min);
+                x = -log(exp_minus_x_min - u * (exp_minus_x_min - exp_minus_x_max));
                 
-                /*std::cout << "------" << std::endl;
-                std::cout << "doubleExp : x_min : " << x_min << std::endl;
-                std::cout << "doubleExp : min : " << min << std::endl;
-                std::cout << "doubleExp : max : " << max << std::endl;
-                std::cout << "doubleExp : mean : " << mean << std::endl;
-                std::cout << "doubleExp : sigma : " << sigma << std::endl;
-                std::cout << "doubleExp : rapport : " << rap << std::endl;
-                std::cout << "doubleExp : ur : " << ur << std::endl;*/
-            }
-            else if(x_max <= -1.)
-            {
-                //std::cout << "doubleExp : x_max : " << x_max << std::endl;
-                rap = exp(0.5 * (x_max * x_max - x * x) + x_max - x);
+                //x = -safeLog(exp_minus_x_min - u * (exp_minus_x_min - exp_minus_x_max));
+                //checkFloatingPointException(info + ", x_min >= 0");
             }
             else
             {
-                rap = exp(-0.5 * x * x + abs(x)) / sqrt_e;
+                x = log(exp_x_min - u * (exp_x_min - exp_x_max));
+                
+                //x = safeLog(exp_x_min - u * (exp_x_min - exp_x_max));
+                //checkFloatingPointException(info + ", x_min < 0");
             }
         }
-        //ur = randomUniform();
+        
+        ur = randomUniform();
+        
+        if(x_min >= 1.)
+        {
+            rap = exp(0.5 * (x_min * x_min - x * x) + x - x_min);
+            
+            //rap = safeExp(0.5 * (x_min * x_min - x * x) + x - x_min);
+            //checkFloatingPointException(info + ", rap failed with x_min >= 1");
+        }
+        else if(x_max <= -1.)
+        {
+            rap = exp(0.5 * (x_max * x_max - x * x) + x_max - x);
+            
+            //rap = safeExp(0.5 * (x_max * x_max - x * x) + x_max - x);
+            //checkFloatingPointException(info + ", rap failed with x_max <= 1");
+        }
+        else
+        {
+            rap = exp(-0.5 * x * x + abs(x)) / sqrt_e;
+            
+            //rap = safeExp(-0.5 * x * x + abs(x)) / sqrt_e;
+            //checkFloatingPointException(info + ", rap failed");
+        }
+        
+        ++trials;
+    }
+    //checkFloatingPointException(info);
+    
+    if(trials == limit)
+    {
+        throw "DoubleExp could not find a solution after " + QString::number(limit) + " trials! This may be ue to Taylor unsufficients developpement orders. Please try to run the calculations again!";
     }
     
     return (double)(mean + (x * sigma));
@@ -161,14 +171,10 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
 // Simulation d'une loi gaussienne centrée réduite
 double Generator::boxMuller()
 {
-    try{
-        double rand1 = randomUniform();
-        double rand2 = randomUniform();
-        return sqrt(-2. * log(rand1)) * cos(2. * M_PI * rand2);
-    }
-    catch(std::exception& e){
-        throw QObject::tr("Exception caught : ") + e.what();
-    }
+    double rand1 = randomUniform();
+    double rand2 = randomUniform();
+    return sqrt(-2. * log(rand1)) * cos(2. * M_PI * rand2);
+    checkFloatingPointException("boxMuller");
 }
 
 double Generator::gaussByBoxMuller(const double mean, const double sigma)
