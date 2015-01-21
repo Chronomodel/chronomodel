@@ -483,7 +483,7 @@ void Event::updateTheta(double tmin, double tmax)
     double min = getThetaMin(tmin);
     double max = getThetaMax(tmax);
     
-    if(min > max)
+    if(min >= max)
     {
         throw QObject::tr("Error for event : ") + mName + " : min = " + QString::number(min) + " : max = " + QString::number(max);
     }
