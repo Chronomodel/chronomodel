@@ -216,41 +216,52 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, int thre
     return credibility;
 }
 
-QString intervalText(const QPair<double, double>& interval)
+QString intervalText(const QPair<double, QPair<double, double> >& interval)
 {
-    return "[" + QString::number(interval.first, 'f', 0) + ", " + QString::number(interval.second, 'f', 0) + "]";
+    return "[" + QString::number(interval.second.first, 'f', 0) + "; " + QString::number(interval.second.second, 'f', 0) + "] (" + QString::number(interval.first, 'f', 1) + "%)";
 }
 
-QString getHPDText(const QMap<double, double>& hpd)
+QString getHPDText(const QMap<double, double>& hpd, double thresh)
 {
-    QList<QPair<double, double>> intervals = intervalsForHpd(hpd);
+    QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(hpd, thresh);
     
     QStringList results;
     for(int i=0; i<intervals.size(); ++i)
     {
         results << intervalText(intervals[i]);
     }
-    QString result = results.join(" ");
+    QString result = results.join(", ");
     return result;
 }
 
-QList<QPair<double, double>> intervalsForHpd(const QMap<double, double>& hpd)
+QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double, double>& hpd, double thresh)
 {
     QMapIterator<double, double> it(hpd);
-    QList<QPair<double, double>> intervals;
+    QList<QPair<double, QPair<double, double> > > intervals;
     
     bool inInterval = false;
     double lastKeyInInter = 0.;
     QPair<double, double> curInterval;
     
+    double areaTot = 0;
     while(it.hasNext())
     {
         it.next();
+        areaTot += it.value();
+    }
+    
+    double areaCur = 0;
+    it.toFront();
+    while(it.hasNext())
+    {
+        it.next();
+        
         if(it.value() != 0 && !inInterval)
         {
             inInterval = true;
             curInterval.first = it.key();
             lastKeyInInter = it.key();
+            areaCur = it.value();
         }
         else if(inInterval)
         {
@@ -258,11 +269,18 @@ QList<QPair<double, double>> intervalsForHpd(const QMap<double, double>& hpd)
             {
                 inInterval = false;
                 curInterval.second = lastKeyInInter;
-                intervals.append(curInterval);
+                
+                QPair<double, QPair<double, double> > inter;
+                inter.first = thresh * areaCur / areaTot;
+                inter.second = curInterval;
+                intervals.append(inter);
+                
+                areaCur = 0;
             }
             else
             {
                 lastKeyInInter = it.key();
+                areaCur += it.value();
             }
         }
     }
