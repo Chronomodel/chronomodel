@@ -868,109 +868,86 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QString& c
     {
         bool abscissesWritten = false;
         QList<QStringList> rows;
+        rows.append(QStringList(""));
+        
+        QMap<double, QVector<double> > rowsData;
+        
+        int colInx = 0;
         
         for(int i=0; i<mCurves.size(); ++i)
         {
+            colInx++;
+            
             if(!mCurves[i].mIsHorizontalLine &&
                !mCurves[i].mIsVerticalLine &&
                !mCurves[i].mIsVertical &&
                !mCurves[i].mIsHorizontalSections &&
                !mCurves[i].mUseVectorData)
             {
-                if(writeInRows)
+                const QMap<double, double>& data = mCurves[i].mData;
+                
+                QMapIterator<double, double> iter(data);
+                rows[0] << mCurves[i].mName;
+                
+                int sht = 0;
+                while(iter.hasNext() && sht<offset)
                 {
-                    const QMap<double, double>& data = mCurves[i].mData;
-                    if(!abscissesWritten)
-                    {
-                        abscissesWritten = true;
-                        QMapIterator<double, double> iter(data);
-                        QStringList abscisses;
-                        abscisses << "";
-                        while(iter.hasNext())
-                        {
-                            iter.next();
-                            abscisses << QString::number(iter.key());
-                        }
-                        rows.append(abscisses);
-                    }
-                    QMapIterator<double, double> iter(data);
-                    QStringList ordonnees;
-                    ordonnees << mCurves[i].mName;
-                    while(iter.hasNext())
-                    {
-                        iter.next();
-                        ordonnees << QString::number(iter.value());
-                    }
-                    rows.append(ordonnees);
+                    ++sht;
+                    iter.next();
                 }
-                else
+                
+                while(iter.hasNext())
                 {
-                    const QMap<double, double>& data = mCurves[i].mData;
-                    if(!abscissesWritten)
+                    iter.next();
+                    
+                    // Nouvelle abscisse trouvée
+                    if(rowsData.find(iter.key()) == rowsData.end())
                     {
-                        abscissesWritten = true;
-                        QMapIterator<double, double> iter(data);
-                        QStringList abscisses;
-                        abscisses << "";
-                        rows.append(QStringList(""));
-                        
-                        int i = 0;
-                        while(iter.hasNext() && i<offset)
-                            iter.next();
-                        
-                        while(iter.hasNext())
-                        {
-                            iter.next();
-                            rows.append(QStringList(QString::number(iter.key())));
-                        }
+                        QVector<double> rowData;
+                        for(int c=0; c<colInx-1; ++c)
+                            rowData.append(0);
+                        rowData.append(iter.value());
+                        rowsData.insert(iter.key(), rowData);
                     }
-                    if(abscissesWritten)
+                    else
                     {
-                        QMapIterator<double, double> iter(data);
-                        rows[0] << mCurves[i].mName;
-                        
-                        int i = 0;
-                        while(iter.hasNext() && i<offset)
-                            iter.next();
-                        
-                        int index = 0;
-                        while(iter.hasNext())
-                        {
-                            iter.next();
-                            ++index;
-                            rows[index] << QString::number(iter.value());
-                        }
+                        rowsData[iter.key()].append(iter.value());
                     }
                 }
             }
             else if(mCurves[i].mUseVectorData)
             {
-                // Vertical only is used...
-                if(!writeInRows)
+                const QVector<double>& data = mCurves[i].mDataVector;
+                if(!abscissesWritten)
                 {
-                    const QVector<double>& data = mCurves[i].mDataVector;
-                    if(!abscissesWritten)
+                    abscissesWritten = true;
+                    
+                    //rows.append(QStringList(""));
+                    for(int i=offset; i<data.size(); ++i)
                     {
-                        abscissesWritten = true;
-                        QStringList abscisses;
-                        abscisses << "";
-                        
-                        rows.append(QStringList(""));
-                        for(int i=offset; i<data.size(); ++i)
-                        {
-                            rows.append(QStringList(QString::number(i-offset+1)));
-                        }
+                        rows.append(QStringList(QString::number(i-offset+1)));
                     }
-                    if(abscissesWritten)
+                }
+                if(abscissesWritten)
+                {
+                    rows[0] << mCurves[i].mName;
+                    for(int i=offset; i<data.size(); ++i)
                     {
-                        rows[0] << mCurves[i].mName;
-                        for(int i=offset; i<data.size(); ++i)
-                        {
-                            rows[i-offset+1] << QString::number(data[i]);
-                        }
+                        rows[i-offset+1] << QString::number(data[i]);
                     }
                 }
             }
+        }
+        
+        QMapIterator<double, QVector<double> > iter2(rowsData);
+        while(iter2.hasNext())
+        {
+            iter2.next();
+            QStringList list;
+            list << QString::number(iter2.key());
+            for(int i=0; i<iter2.value().size(); ++i)
+                list << QString::number(iter2.value()[i]);
+            rows.append(list);
         }
         
         QTextStream output(&file);
