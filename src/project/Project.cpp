@@ -743,7 +743,21 @@ void Project::mergeEvents(int eventFromId, int eventToId)
     events.removeAt(fromIndex);
     stateNext[STATE_EVENTS] = events;
     
-    qDebug() << events;
+    // Delete constraints around the disappearing event
+    QJsonArray constraints = stateNext[STATE_EVENTS_CONSTRAINTS].toArray();
+    for(int i=constraints.size()-1; i>=0; --i)
+    {
+        QJsonObject c = constraints[i].toObject();
+        int fromId = c[STATE_CONSTRAINT_BWD_ID].toInt();
+        int toId = c[STATE_CONSTRAINT_FWD_ID].toInt();
+        if(eventFromId == fromId || eventFromId == toId)
+        {
+            constraints.removeAt(i);
+        }
+    }
+    stateNext[STATE_EVENTS_CONSTRAINTS] = constraints;
+    
+    //qDebug() << events;
     
     pushProjectState(stateNext, tr("Events merged"), true);
 }
