@@ -784,7 +784,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
     for(int i=0; i<dates.size(); ++i)
     {
         Event event;
-        event.mName = tr("Untitled");
+        event.mName = dates[i].mName;
         event.mId = project->getUnusedEventId(events);
         dates[i].mId = 0;
         event.mDates.append(dates[i]);
