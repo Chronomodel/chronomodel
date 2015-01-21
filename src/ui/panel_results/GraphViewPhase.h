@@ -15,12 +15,21 @@ public:
     
     void setPhase(Phase* phase);
     
+    void setGraphFont(const QFont& font);
+    
 protected:
     void paintEvent(QPaintEvent* e);
     void refresh();
+    void updateLayout();
+    
+protected slots:
+    void showDuration(bool show);
     
 private:
     Phase* mPhase;
+    
+    GraphView* mDurationGraph;
+    Button* mShowDuration;
 };
 
 #endif

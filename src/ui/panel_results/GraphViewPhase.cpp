@@ -5,6 +5,7 @@
 #include "StdUtilities.h"
 #include "QtUtilities.h"
 #include "ModelUtilities.h"
+#include "Button.h"
 #include <QtWidgets>
 
 
@@ -15,11 +16,36 @@ GraphViewPhase::GraphViewPhase(QWidget *parent):GraphViewResults(parent),
 mPhase(0)
 {
     mGraph->setBackgroundColor(QColor(230, 230, 230));
+    
+    
+    mDurationGraph = new GraphView(this);
+    mDurationGraph->setBackgroundColor(QColor(230, 230, 230));
+    mDurationGraph->addInfo("WARNING : this graph scale is NOT the study period!");
+    
+    mDurationGraph->showHorizGrid(false);
+    mDurationGraph->setXAxisMode(GraphView::eAllTicks);
+    mDurationGraph->setYAxisMode(GraphView::eMinMax);
+    
+    mDurationGraph->setMargins(50, 10, 5, 30);
+    mDurationGraph->setRangeY(0, 1);
+    
+    mDurationGraph->setVisible(false);
+    
+    mShowDuration = new Button(tr("Show Duration"), this);
+    mShowDuration->setCheckable(true);
+    mShowDuration->setFlatHorizontal();
+    connect(mShowDuration, SIGNAL(toggled(bool)), this, SLOT(showDuration(bool)));
 }
 
 GraphViewPhase::~GraphViewPhase()
 {
     mPhase = 0;
+}
+
+void GraphViewPhase::setGraphFont(const QFont& font)
+{
+    GraphViewResults::setGraphFont(font);
+    mDurationGraph->setGraphFont(font);
 }
 
 void GraphViewPhase::setPhase(Phase* phase)
@@ -70,12 +96,18 @@ void GraphViewPhase::refresh()
     
     mGraph->autoAdjustYScale(mCurrentResult == eTrace);
     
+    mDurationGraph->removeAllCurves();
+    
     if(mPhase)
     {
         QColor color = mPhase->mColor;
         
         if(mCurrentResult == eHisto && mCurrentVariable == eTheta)
         {
+            mShowDuration->setVisible(true);
+            mShowDuration->setChecked(false);
+            showDuration(false);
+            
             QString results = ModelUtilities::phaseResultsText(mPhase);
             setNumericalResults(results);
             
@@ -153,6 +185,32 @@ void GraphViewPhase::refresh()
                 curveBetaHPD.mData = equal_areas(mPhase->mBeta.mHPD, mThresholdHPD / 100.f);
                 mGraph->addCurve(curveBetaHPD);
                 
+                // Duration
+                
+                GraphCurve curveDur;
+                curveDur.mName = QString("duration");
+                curveDur.mPen.setColor(betaCol);
+                curveDur.mIsHisto = false;
+                curveDur.mData = equal_areas(mPhase->mDuration.fullHisto(), 1.f);
+                
+                if(!curveDur.mData.isEmpty())
+                {
+                    mDurationGraph->addCurve(curveDur);
+                    
+                    yMax = 1.1f * map_max_value(curveDur.mData);
+                    mDurationGraph->setRangeY(0, qMax(mGraph->maximumY(), 0.000001));
+                    mDurationGraph->setRangeX(0, qMax(curveDur.mData.lastKey(), 0.01));
+                    
+                    GraphCurve curveDurHPD;
+                    curveDurHPD.mName = "duration HPD";
+                    curveDurHPD.mPen.setColor(color);
+                    curveDurHPD.mFillUnder = true;
+                    curveDurHPD.mIsHisto = false;
+                    curveDurHPD.mIsRectFromZero = true;
+                    curveDurHPD.mData = equal_areas(mPhase->mDuration.mHPD, mThresholdHPD / 100.f);
+                    mDurationGraph->addCurve(curveDurHPD);
+                }
+                
                 if(mShowRawResults)
                 {
                     GraphCurve curveRawAlpha;
@@ -210,6 +268,10 @@ void GraphViewPhase::refresh()
         }
         else if(mCurrentResult == eTrace && mCurrentVariable == eTheta)
         {
+            mShowDuration->setVisible(false);
+            mShowDuration->setChecked(false);
+            showDuration(false);
+            
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
                 if(mShowChainList[i])
@@ -247,4 +309,55 @@ void GraphViewPhase::refresh()
             }
         }
     }
+}
+
+void GraphViewPhase::updateLayout()
+{
+    GraphViewResults::updateLayout();
+    
+    int h = height();
+    int butMinH = 30;
+    
+    QRect graphRect(mGraphLeft, 0, width() - mGraphLeft, height()-1);
+    if(h <= mLineH + butMinH)
+    {
+        mDurationGraph->setYAxisMode(GraphView::eHidden);
+    }
+    else
+    {
+        mDurationGraph->setYAxisMode(GraphView::eMinMax);
+    }
+    if(height() >= mMinHeighttoDisplayTitle)
+    {
+        graphRect.adjust(0, 20, 0, 0);
+        mDurationGraph->setXAxisMode(GraphView::eAllTicks);
+        mDurationGraph->setMarginBottom(mGraph->font().pointSizeF() + 10);
+    }
+    else
+    {
+        mDurationGraph->setXAxisMode(GraphView::eHidden);
+        mDurationGraph->setMarginBottom(0);
+    }
+    
+    if(mShowNumResults && height() >= 100)
+    {
+        mDurationGraph->setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
+    }
+    else
+    {
+        mDurationGraph->setGeometry(graphRect);
+    }
+    
+    
+    int butInlineMaxH = 50;
+    int bh = height() - mLineH;
+    bh = qMin(bh, butInlineMaxH);
+    mShowDuration->setGeometry(0, mLineH + bh, mGraphLeft, bh);
+}
+
+void GraphViewPhase::showDuration(bool show)
+{
+    mDurationGraph->setVisible(show);
+    mGraph->setVisible(!show);
+    mShowDuration->raise();
 }

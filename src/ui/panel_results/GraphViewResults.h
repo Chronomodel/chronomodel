@@ -42,7 +42,7 @@ public:
     void toggle(const QRect& geometry);
     
     void setRendering(GraphView::Rendering render);
-    void setGraphFont(const QFont& font);
+    virtual void setGraphFont(const QFont& font);
     void setGraphsThickness(int value);
     
 public slots:
@@ -60,7 +60,7 @@ private slots:
 protected:
     virtual void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent* e);
-    void updateLayout();
+    virtual void updateLayout();
     
     virtual void refresh() = 0;
     
