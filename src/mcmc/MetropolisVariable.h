@@ -66,12 +66,12 @@ public:
     QVector<double> mTrace;
     
     QMap<double, double> mHisto;
-    QList<QMap<double, double>> mChainsHistos;
+    QList<QMap<double, double> > mChainsHistos;
     
     QMap<double, double> mRawHisto;
-    QList<QMap<double, double>> mChainsRawHistos;
+    QList<QMap<double, double> > mChainsRawHistos;
     
-    QList<QVector<double>> mCorrelations;
+    QList<QVector<double> > mCorrelations;
     
     QMap<double, double> mHPD;
     QPair<double, double> mCredibility;
