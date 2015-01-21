@@ -73,9 +73,14 @@ void ImportDataView::browse()
                 QStringList values = line.split(csvSep);
                 if(values.size() > 0)
                 {
-                    if(isComment(values[0]))
+                    if(isComment(values[0]) || values[0] == "")
                     {
                         // Comment line found : do not display it
+                        headers << "";
+                        values.push_front("");
+                        data << values;
+                        cols = (values.size() > cols) ? values.size() : cols;
+                        ++rows;
                     }
                     else if(values.size() > 0)
                     {
