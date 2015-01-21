@@ -10,6 +10,10 @@
 #include <errno.h>
 #include <fenv.h>
 
+#include "StdUtilities.h"
+
+#pragma STDC FENV_ACCESS on
+
 
 
 void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
@@ -50,7 +54,7 @@ int main(int argc, char *argv[])
 #ifdef Q_OS_MAC
     if(math_errhandling & MATH_ERREXCEPT)
     {
-        //std::cout << "cmath raises exceptions" << std::endl;
+        std::cout << "cmath raises exceptions" << std::endl;
         feclearexcept(FE_ALL_EXCEPT);
     }
     if(math_errhandling & MATH_ERRNO)
@@ -63,7 +67,7 @@ int main(int argc, char *argv[])
     
     a.setApplicationName("Chronomodel");
     a.setApplicationDisplayName("Chronomodel");
-    a.setApplicationVersion("1.0");
+    a.setApplicationVersion("1.1");
     a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));
