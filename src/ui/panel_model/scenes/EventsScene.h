@@ -46,6 +46,8 @@ public:
     
     void adaptItemsForZoom(double prop);
     
+    void centerOnEvent(int eventId);
+    
 protected:
     void dropEvent(QGraphicsSceneDragDropEvent* e);
     void dragMoveEvent(QGraphicsSceneDragDropEvent* e);

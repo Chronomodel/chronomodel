@@ -16,6 +16,7 @@
 #include "MainWindow.h"
 #include "Project.h"
 #include "QtUtilities.h"
+#include "StdUtilities.h"
 #include "StepDialog.h"
 #include <QtWidgets>
 #include <QtSvg>
@@ -49,6 +50,9 @@ mCalibVisible(false)
     
     mEventsGlobalView = new SceneGlobalView(mEventsScene, mEventsView, mEventsView);
     mEventsGlobalView->setVisible(false);
+    
+    mEventsSearchEdit = new LineEdit(mEventsView);
+    mEventsSearchEdit->setPlaceholderText(tr("Search event name..."));
     
     mButNewEvent = new Button(tr("New Event"), mLeftWrapper);
     mButNewEvent->setIcon(QIcon(":new_event.png"));
@@ -88,6 +92,7 @@ mCalibVisible(false)
     connect(mEventsScene, SIGNAL(selectionChanged()), mEventsGlobalView, SLOT(update()));
     connect(mButEventsOverview, SIGNAL(toggled(bool)), mEventsGlobalView, SLOT(setVisible(bool)));
     
+    connect(mEventsSearchEdit, SIGNAL(returnPressed()), this, SLOT(searchEvent()));
     connect(mEventsGlobalZoom, SIGNAL(valueChanged(double)), this, SLOT(updateEventsZoom(double)));
     connect(mButEventsGrid, SIGNAL(toggled(bool)), mEventsScene, SLOT(showGrid(bool)));
     connect(mButExportEvents, SIGNAL(clicked()), this, SLOT(exportEventsScene()));
@@ -397,6 +402,37 @@ void ModelView::showHelp(bool show)
     mEventsScene->showHelp(show);
 }
 
+void ModelView::searchEvent()
+{
+    QString search = mEventsSearchEdit->text();
+    QJsonObject state = MainWindow::getInstance()->getProject()->state();
+    QJsonArray events = state[STATE_EVENTS].toArray();
+
+    int foundId;
+    QString bestName;
+    int bestScore = 99999999;
+    
+    int counter = 0;
+    for(int i=0; i<events.size(); ++i)
+    {
+        QJsonObject event = events[i].toObject();
+        int id = event[STATE_ID].toInt();
+        QString name = event[STATE_NAME].toString();
+        
+        int score = compareStrings(std::string(name.toUtf8()), std::string(search.toUtf8()));
+        if(abs(score) < bestScore)
+        {
+            bestScore = abs(score);
+            foundId = id;
+            bestName = name;
+            qDebug() << name;
+        }
+        ++counter;
+    }
+    qDebug() << "Names tried : " << counter << ", bestScore : " << bestScore;
+    mEventsScene->centerOnEvent(foundId);
+}
+
 #pragma mark Right animation
 void ModelView::showProperties()
 {
@@ -560,9 +596,11 @@ void ModelView::updateLayout()
     int butH = 60;
     int radarW = 150;
     int radarH = 200;
+    int searchH = 30;
     
     mEventsView->setGeometry(butW, 0, mLeftRect.width() - butW, mLeftRect.height());
-    mEventsGlobalView->setGeometry(0, 0, radarW, radarH);
+    mEventsSearchEdit->setGeometry(0, 0, radarW, searchH);
+    mEventsGlobalView->setGeometry(0, searchH, radarW, radarH);
     
     mButNewEvent->setGeometry(0, 0, butW, butH);
     mButNewEventKnown->setGeometry(0, butH, butW, butH);

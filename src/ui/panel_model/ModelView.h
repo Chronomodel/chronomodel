@@ -75,6 +75,8 @@ private slots:
     
     void setSettingsValid(bool valid);
     
+    void searchEvent();
+    
 private:
     void exportSceneImage(QGraphicsScene* scene);
     
@@ -89,6 +91,8 @@ private:
     
     SceneGlobalView* mEventsGlobalView;
     ScrollCompressor* mEventsGlobalZoom;
+    
+    LineEdit* mEventsSearchEdit;
     
     Button* mButNewEvent;
     Button* mButNewEventKnown;

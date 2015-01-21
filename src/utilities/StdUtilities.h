@@ -21,6 +21,8 @@
 #define M_PI 3.14159265358979323846 //utile pour PhD
 #endif
 
+int compareStrings(const std::string &s1, const std::string &s2);
+
 double safeExp(const double& x, int n = 10);
 double safeLog(const double& x, int n = 5);
 

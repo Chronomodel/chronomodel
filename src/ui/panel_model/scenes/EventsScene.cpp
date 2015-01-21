@@ -581,6 +581,22 @@ void EventsScene::adaptItemsForZoom(double prop)
     }
 }
 
+void EventsScene::centerOnEvent(int eventId)
+{
+    for(int i=0; i<mItems.size(); ++i)
+    {
+        EventItem* item = (EventItem*)mItems[i];
+        QJsonObject& event = item->getEvent();
+        if(event[STATE_ID].toInt() == eventId && views().size() > 0)
+        {
+            views()[0]->centerOn(item);
+            clearSelection();
+            item->setSelected(true);
+            break;
+        }
+    }
+}
+
 #pragma mark Utilities
 AbstractItem* EventsScene::currentItem()
 {

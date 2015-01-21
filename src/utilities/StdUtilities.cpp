@@ -11,6 +11,35 @@
 
 using namespace std;
 
+// http://openclassrooms.com/forum/sujet/algorithme-de-levenshtein-50070
+int compareStrings(const string &s1, const string &s2) {
+    const size_t m = s1.size();
+    const size_t n = s2.size();
+    
+    std::vector<int> prev(n+1);
+    std::vector<int> crt(n+1);
+    
+    for(size_t j = 0; j <= n; j ++)
+        crt[j] = j;
+    
+    for(size_t i = 1; i <= m; i ++) {
+        crt.swap(prev);
+        crt[0] = i; // par construction il semble inutile de procéder au moindre reset sur les autres colonnes
+        for(size_t j = 1; j <= n; j++) {
+            const int compt = (s1[i-1] == s2[i-1]) ? 0 : 1;
+            crt[j] = min(min(prev[j]+1, crt[j-1]+1),prev[j-1]+compt);
+#if 0
+            // voire même ...
+            const int compt = (s1[i-1] == s2[i-1]) ? 1 : 0;
+            crt[j] = 1 + min(min(prev[j], crt[j-1]),prev[j-1]-compt);
+            // ... qui me parait micropouillèmement plus optimisé
+#endif
+        }
+    }
+    
+    return crt[n];
+}
+
 double safeExp(const double& x, int n)
 {
     feclearexcept(FE_ALL_EXCEPT);
