@@ -546,6 +546,60 @@ bool Model::isValid()
         }
     }
     
+    // 11 - Vérifier la cohérence entre les contraintes de faits et de phase
+    for(int i=0; i<phaseBranches.size(); ++i)
+    {
+        for(int j=0; j<phaseBranches[i].size(); ++j)
+        {
+            Phase* phase = phaseBranches[i][j];
+            for(int k=0; k<phase->mEvents.size(); ++k)
+            {
+                Event* event = phase->mEvents[k];
+                
+                bool phaseFound = false;
+                
+                // On réinspecte toutes les phases de la branche et on vérifie que le fait n'a pas de contrainte en contradiction avec les contraintes de phase !
+                for(int l=0; l<phaseBranches[i].size(); ++l)
+                {
+                    Phase* p = phaseBranches[i][l];
+                    if(p == phase)
+                    {
+                        phaseFound = true;
+                    }
+                    else
+                    {
+                        for(int m=0; m<p->mEvents.size(); ++m)
+                        {
+                            Event* e = p->mEvents[m];
+                            
+                            // Si on regarde l'élément d'un phase d'avant, le fait ne peut pas être en contrainte vers un fait de cette phase
+                            if(!phaseFound)
+                            {
+                                for(int n=0; n<e->mConstraintsBwd.size(); ++n)
+                                {
+                                    if(e->mConstraintsBwd[n]->mEventFrom == event)
+                                    {
+                                        throw "The event " + event->mName + " (in phase " + phase->mName + ") is before the event " + e->mName + " (in phase " + p->mName + "), BUT the phase " + phase->mName + " is after the phase " + p->mName + ".\n=> Contradiction !";
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                for(int n=0; n<e->mConstraintsFwd.size(); ++n)
+                                {
+                                    if(e->mConstraintsFwd[n]->mEventTo == event)
+                                    {
+                                        throw "The event " + event->mName + " (in phase " + phase->mName + ") is after the event " + e->mName + " (in phase " + p->mName + "), BUT the phase " + phase->mName + " is before the phase " + p->mName + ".\n=> Contradiction !";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
     return true;
 }
 
