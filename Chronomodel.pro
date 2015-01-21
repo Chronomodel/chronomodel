@@ -50,8 +50,27 @@ RESOURCES = $$PRO_PATH/Chronomodel.qrc
 # Resource file (Windows only)
 RC_FILE = $$PRO_PATH/Chronomodel.rc
 
+#########################################
+# C++ 11
 # Config must use C++ 11 for random number generator
+#########################################
 CONFIG += c++11
+macx{
+	# This is a custom build of the C++11 library on mac for 10.6 compatibility !!!
+	# Must be built on a 10.6 mac...
+	#QMAKE_CXXFLAGS += -std=c++0x
+	
+	#INCLUDEPATH += lib/stdlib/libcxxabi/include
+	#LIBS +=  -lc++abi -Llib/stdlib/libcxxabi/lib
+	
+	#INCLUDEPATH += lib/stdlib/libcxx/include
+	#LIBS +=  -lc++ -Llib/stdlib/libcxx/lib
+	
+}else{
+	# This works for Windows, Linux & Mac 10.7 and +
+	#CONFIG += c++11
+}
+#########################################
 
 # Compilation warning flags
 QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas
@@ -99,15 +118,17 @@ DEFINES += "USE_PLUGIN_TL=$${USE_PLUGIN_TL}"
 DEFINES += "USE_PLUGIN_AM=$${USE_PLUGIN_AM}"
 
 #########################################
-# LIBS
+# FFTW
 #########################################
 
-INCLUDEPATH += lib/FFTW
 macx{
+	INCLUDEPATH += lib/FFTW/mac
     LIBS += -Llib/FFTW/mac -lfftw3f
 }win32{
+	INCLUDEPATH += lib/FFTW
     LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
 }else{
+	INCLUDEPATH += lib/FFTW
     LIBS += -lfftw3f
 }
 
@@ -272,6 +293,7 @@ HEADERS += src/ui/window/ProjectView.h
 HEADERS += src/utilities/Singleton.h
 HEADERS += src/utilities/StdUtilities.h
 HEADERS += src/utilities/QtUtilities.h
+HEADERS += src/utilities/DoubleValidator.h
 
 
 #########################################
@@ -401,6 +423,7 @@ SOURCES += src/ui/window/ProjectView.cpp
 
 SOURCES += src/utilities/StdUtilities.cpp
 SOURCES += src/utilities/QtUtilities.cpp
+SOURCES += src/utilities/DoubleValidator.cpp
 
 
 message("-------------------------------------------")

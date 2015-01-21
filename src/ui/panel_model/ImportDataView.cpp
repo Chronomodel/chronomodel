@@ -149,6 +149,11 @@ void ImportDataView::exportDates()
             {
                 QJsonObject event = events[i].toObject();
                 QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+                
+                int type = event[STATE_EVENT_TYPE].toInt();
+                stream << "// " << ((type == Event::eKnown) ? tr("Bound") : tr("Event")) << " : ";
+                stream << event[STATE_NAME].toString() << "\n";
+                
                 for(int j=0; j<dates.size(); ++j)
                 {
                     QJsonObject date = dates[j].toObject();

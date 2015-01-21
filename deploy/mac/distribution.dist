@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
-<installer-gui-script minSpecVersion="1">
+<installer-gui-script minSpecVersion="2">
 	<background mime-type="image/png" file="background.png" alignment="bottomleft"/>
     <options customize="never" require-scripts="true" hostArchitectures="x86_64"/>
     <readme file="readme.rtf" mime-type="application/rtf" />
@@ -12,4 +12,7 @@
     <choices-outline>
         <line choice="choice.chronomodel"/>
     </choices-outline>
+    <allowed-os-versions>
+    	<os-version min="10.7.1" />
+    </allowed-os-versions>
 </installer-gui-script>
