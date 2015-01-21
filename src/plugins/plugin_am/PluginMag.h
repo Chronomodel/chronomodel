@@ -46,7 +46,7 @@ public:
     QString getRefsPath() const;
     void loadRefDatas();
     QStringList getRefsNames() const;
-    const QMap<QString, QMap<double, double>>& getRefData(const QString& name);
+    const QMap<QString, QMap<double, double> >& getRefData(const QString& name);
     
     QMap< QString, QMap<QString, QMap<double, double> > > mRefDatas;
 };

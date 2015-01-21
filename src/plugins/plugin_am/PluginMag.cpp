@@ -227,7 +227,7 @@ void PluginMag::loadRefDatas()
             QFile file(files[i].absoluteFilePath());
             if(file.open(QIODevice::ReadOnly))
             {
-                QMap<QString, QMap<double, double>> curves;
+                QMap<QString, QMap<double, double> > curves;
                 
                 QMap<double, double> curveG;
                 QMap<double, double> curveG95Sup;

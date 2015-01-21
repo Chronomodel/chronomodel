@@ -44,7 +44,7 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         QColor color2(150, 150, 150);
         
         Plugin14C* plugin = (Plugin14C*)date.mPlugin;
-        const QMap<QString, QMap<double, double>>& curves = plugin->getRefData(ref_curve);
+        const QMap<QString, QMap<double, double> >& curves = plugin->getRefData(ref_curve);
         
         QMap<double, double> curveG;
         QMap<double, double> curveG95Sup;
