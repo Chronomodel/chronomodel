@@ -146,7 +146,7 @@ void MCMCLoopMain::initMCMC()
     {
         if(eventsByLevel[i]->mType == Event::eKnown)
         {
-            EventKnown* bound = dynamic_cast<EventKnown*>(mModel->mEvents[i]);
+            EventKnown* bound = dynamic_cast<EventKnown*>(eventsByLevel[i]);
             if(bound)
             {
                 if(curLevel != bound->mLevel)
@@ -183,8 +183,18 @@ void MCMCLoopMain::initMCMC()
     emit stepChanged(tr("Initializing events..."), 0, events.size());
     QVector<Event*> unsortedEvents = ModelUtilities::unsortEvents(events);
     
-    QVector<QVector<Event*>> eventBranches = ModelUtilities::getAllEventsBranches(events);
-    QVector<QVector<Phase*>> phaseBranches = ModelUtilities::getAllPhasesBranches(phases, mModel->mSettings.mTmax - mModel->mSettings.mTmin);
+    QVector<QVector<Event*> > eventBranches = ModelUtilities::getAllEventsBranches(events);
+    QVector<QVector<Phase*> > phaseBranches = ModelUtilities::getAllPhasesBranches(phases, mModel->mSettings.mTmax - mModel->mSettings.mTmin);
+    
+    /*qDebug() << "==================";
+    for(int i=0; i<phaseBranches.size(); ++i)
+    {
+        qDebug() << "----------- branch " << i;
+        for(int j=0; j<phaseBranches[i].size(); ++j)
+        {
+            qDebug() << phaseBranches[i][j]->mName << " => ";
+        }
+    }*/
     
     for(int i=0; i<unsortedEvents.size(); ++i)
     {
@@ -336,6 +346,8 @@ void MCMCLoopMain::initMCMC()
     mInitLog += line(textBold("Init Chain " + QString::number(mChainIndex+1)));
     mInitLog += line(textBold("------------------------------------"));
     mInitLog += log;
+    
+    //qDebug() << log;
 }
 
 void MCMCLoopMain::update()
