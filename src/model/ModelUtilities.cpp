@@ -82,9 +82,9 @@ QString ModelUtilities::getDeltaText(const Date& date)
 }
 
 #pragma mark Events Branches
-QVector<QVector<Event*>> ModelUtilities::getNextBranches(const QVector<Event*>& curBranch, Event* lastNode)
+QVector<QVector<Event*> > ModelUtilities::getNextBranches(const QVector<Event*>& curBranch, Event* lastNode)
 {
-    QVector<QVector<Event*>> branches;
+    QVector<QVector<Event*> > branches;
     QList<EventConstraint*> cts = lastNode->mConstraintsFwd;
     if(cts.size() > 0)
     {
@@ -99,7 +99,7 @@ QVector<QVector<Event*>> ModelUtilities::getNextBranches(const QVector<Event*>& 
             if(!branch.contains(newNode))
             {
                 branch.append(newNode);
-                QVector<QVector<Event*>> nextBranches = getNextBranches(branch, cts[i]->mEventTo);
+                QVector<QVector<Event*> > nextBranches = getNextBranches(branch, cts[i]->mEventTo);
                 for(int j=0; j<nextBranches.size(); ++j)
                     branches.append(nextBranches[j]);
             }
@@ -121,13 +121,13 @@ QVector<QVector<Event*>> ModelUtilities::getNextBranches(const QVector<Event*>& 
     return branches;
 }
 
-QVector<QVector<Event*>> ModelUtilities::getBranchesFromEvent(Event* start)
+QVector<QVector<Event*> > ModelUtilities::getBranchesFromEvent(Event* start)
 {
     QVector<Event*> startBranch;
     start->mLevel = 0;
     startBranch.append(start);
     
-    QVector<QVector<Event*>> nextBranches;
+    QVector<QVector<Event*> > nextBranches;
     try{
         nextBranches = getNextBranches(startBranch, start);
     }catch(QString error){
@@ -138,9 +138,9 @@ QVector<QVector<Event*>> ModelUtilities::getBranchesFromEvent(Event* start)
 }
 
 
-QVector<QVector<Event*>> ModelUtilities::getAllEventsBranches(const QList<Event*>& events)
+QVector<QVector<Event*> > ModelUtilities::getAllEventsBranches(const QList<Event*>& events)
 {
-    QVector<QVector<Event*>> branches;
+    QVector<QVector<Event*> > branches;
     
     // ----------------------------------------
     //  Put all events level to 0 and
@@ -161,7 +161,7 @@ QVector<QVector<Event*>> ModelUtilities::getAllEventsBranches(const QList<Event*
     {
         for(int i=0; i<starts.size(); ++i)
         {
-            QVector<QVector<Event*>> eventBranches;
+            QVector<QVector<Event*> > eventBranches;
             try{
                 eventBranches = getBranchesFromEvent(starts[i]);
             }catch(QString error){
@@ -178,9 +178,9 @@ QVector<QVector<Event*>> ModelUtilities::getAllEventsBranches(const QList<Event*
 
 
 #pragma mark Phases Branches
-QVector<QVector<Phase*>> ModelUtilities::getNextBranches(const QVector<Phase*>& curBranch, Phase* lastNode, const double gammaSum, const double maxLength)
+QVector<QVector<Phase*> > ModelUtilities::getNextBranches(const QVector<Phase*>& curBranch, Phase* lastNode, const double gammaSum, const double maxLength)
 {
-    QVector<QVector<Phase*>> branches;
+    QVector<QVector<Phase*> > branches;
     QList<PhaseConstraint*> cts = lastNode->mConstraintsFwd;
     if(cts.size() > 0)
     {
@@ -203,7 +203,7 @@ QVector<QVector<Phase*>> ModelUtilities::getNextBranches(const QVector<Phase*>& 
                 if(!branch.contains(newNode))
                 {
                     branch.append(newNode);
-                    QVector<QVector<Phase*>> nextBranches = getNextBranches(branch, cts[i]->mPhaseTo, gamma, maxLength);
+                    QVector<QVector<Phase*> > nextBranches = getNextBranches(branch, cts[i]->mPhaseTo, gamma, maxLength);
                     for(int j=0; j<nextBranches.size(); ++j)
                         branches.append(nextBranches[j]);
                 }
@@ -234,13 +234,13 @@ QVector<QVector<Phase*>> ModelUtilities::getNextBranches(const QVector<Phase*>& 
     return branches;
 }
 
-QVector<QVector<Phase*>> ModelUtilities::getBranchesFromPhase(Phase* start, const double maxLength)
+QVector<QVector<Phase*> > ModelUtilities::getBranchesFromPhase(Phase* start, const double maxLength)
 {
     QVector<Phase*> startBranch;
     start->mLevel = 0;
     startBranch.append(start);
     
-    QVector<QVector<Phase*>> nextBranches;
+    QVector<QVector<Phase*> > nextBranches;
     try{
         nextBranches = getNextBranches(startBranch, start, 0, maxLength);
     }catch(QString error){
@@ -251,9 +251,9 @@ QVector<QVector<Phase*>> ModelUtilities::getBranchesFromPhase(Phase* start, cons
 }
 
 
-QVector<QVector<Phase*>> ModelUtilities::getAllPhasesBranches(const QList<Phase*>& phases, const double maxLength)
+QVector<QVector<Phase*> > ModelUtilities::getAllPhasesBranches(const QList<Phase*>& phases, const double maxLength)
 {
-    QVector<QVector<Phase*>> branches;
+    QVector<QVector<Phase*> > branches;
     
     QVector<Phase*> starts;
     for(int i=0; i<phases.size(); ++i)
@@ -268,7 +268,7 @@ QVector<QVector<Phase*>> ModelUtilities::getAllPhasesBranches(const QList<Phase*
     }
     for(int i=0; i<starts.size(); ++i)
     {
-        QVector<QVector<Phase*>> phaseBranches;
+        QVector<QVector<Phase*> > phaseBranches;
         try{
             phaseBranches = getBranchesFromPhase(starts[i], maxLength);
         }catch(QString error){

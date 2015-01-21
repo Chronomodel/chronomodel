@@ -328,7 +328,7 @@ bool Model::isValid()
     }
     
     // 4 - Pas de circularité sur les contraintes de faits
-    QVector<QVector<Event*>> eventBranches;
+    QVector<QVector<Event*> > eventBranches;
     try{
         eventBranches = ModelUtilities::getAllEventsBranches(mEvents);
     }catch(QString error){
@@ -337,7 +337,7 @@ bool Model::isValid()
     
     // 5 - Pas de circularité sur les contraintes de phases
     // 6 - Gammas : sur toutes les branches, la somme des gamma min < plage d'étude :
-    QVector<QVector<Phase*>> phaseBranches;
+    QVector<QVector<Phase*> > phaseBranches;
     try{
         phaseBranches = ModelUtilities::getAllPhasesBranches(mPhases, mSettings.mTmax - mSettings.mTmin);
     }catch(QString error){
