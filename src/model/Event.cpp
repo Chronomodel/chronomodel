@@ -173,8 +173,8 @@ void Event::reset()
 }
 
 double Event::getThetaMinRecursive(double defaultValue,
-                                   const QVector<QVector<Event*>>& eventBranches,
-                                   const QVector<QVector<Phase*>>& phaseBranches)
+                                   const QVector<QVector<Event*> >& eventBranches,
+                                   const QVector<QVector<Phase*> >& phaseBranches)
 {
     // ------------------------------------------------------------------
     //  Déterminer la borne min courante pour le tirage de theta
@@ -270,8 +270,8 @@ double Event::getThetaMinRecursive(double defaultValue,
 }
 
 double Event::getThetaMaxRecursive(double defaultValue,
-                                   const QVector<QVector<Event*>>& eventBranches,
-                                   const QVector<QVector<Phase*>>& phaseBranches)
+                                   const QVector<QVector<Event*> >& eventBranches,
+                                   const QVector<QVector<Phase*> >& phaseBranches)
 {
     // ------------------------------------------------------------------
     //  Déterminer la borne max courante pour le tirage de theta
@@ -482,6 +482,11 @@ void Event::updateTheta(double tmin, double tmax)
 {
     double min = getThetaMin(tmin);
     double max = getThetaMax(tmax);
+    
+    if(min > max)
+    {
+        throw QObject::tr("Error for event : ") + mName + " : min = " + QString::number(min) + " : max = " + QString::number(max);
+    }
     
     //qDebug() << "[" << min << ", " << max << "]";
     
