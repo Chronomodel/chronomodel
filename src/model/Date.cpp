@@ -378,13 +378,14 @@ void Date::updateDelta(Event* event)
     {
         case eDeltaRange:
         {
-            double delta = -1;
-            while(delta < mDeltaMin || delta > mDeltaMax)
+            double delta;
+            do
             {
                 double x = Generator::gaussByBoxMuller(0, 1);
                 double lambda = event->mTheta.mX - mTheta.mX;
                 delta = mSigma.mX * x + lambda;
-            }
+            }while(delta < mDeltaMin || delta > mDeltaMax);
+                
             mDelta = delta;
             break;
         }
