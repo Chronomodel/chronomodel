@@ -16,6 +16,7 @@
 #include "Label.h"
 #include "ModelUtilities.h"
 #include "QtUtilities.h"
+#include "DoubleValidator.h"
 #include <QtWidgets>
 
 
@@ -67,9 +68,10 @@ mRefGraphView(0)
     mHPDEdit = new LineEdit(this);
     mHPDEdit->setText("95");
     
-    QDoubleValidator* percentValidator = new QDoubleValidator();
+    DoubleValidator* percentValidator = new DoubleValidator();
     percentValidator->setBottom(0.);
     percentValidator->setTop(100.);
+    percentValidator->setDecimals(1);
     mHPDEdit->setValidator(percentValidator);
     
     mHPDLab->raise();
@@ -81,7 +83,7 @@ mRefGraphView(0)
     
     connect(mZoomSlider, SIGNAL(valueChanged(int)), this, SLOT(updateZoom()));
     connect(mScrollBar, SIGNAL(valueChanged(int)), this, SLOT(updateScroll()));
-    connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateGraphs()));
+    connect(mHPDEdit, SIGNAL(textEdited(const QString&)), this, SLOT(updateGraphs()));
     connect(mExportBut, SIGNAL(clicked()), this, SLOT(exportImage()));
 }
 
@@ -166,6 +168,10 @@ void CalibrationView::updateGraphs()
         
         if(!isTypo) // mHPDCheck->isChecked() &&
         {
+            QString input = mHPDEdit->text();
+            mHPDEdit->validator()->fixup(input);
+            mHPDEdit->setText(input);
+            
             double thresh = mHPDEdit->text().toDouble();
             thresh = qMin(thresh, 100.);
             thresh = qMax(thresh, 0.);
@@ -184,8 +190,8 @@ void CalibrationView::updateGraphs()
             yMax = map_max_value(hpdCurve.mData);
             mCalibGraph->setRangeY(0, qMax(1.1f * yMax, mCalibGraph->maximumY()));
             
-            double realThresh = 100. * map_area(hpd) / map_area(calibCurve.mData);
-            mResultsLab->setText(mResultsLab->text() + "HPD (" + QString::number(realThresh, 'f', 1) + "%) : " + getHPDText(hpd));
+            double realThresh = map_area(hpd) / map_area(calibCurve.mData);
+            mResultsLab->setText(mResultsLab->text() + "HPD (" + QString::number(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.));
         }
         
         // ------------------------------------------------------------
@@ -364,9 +370,9 @@ void CalibrationView::updateLayout()
     
     mProcessTitle->setGeometry(m2 + graphLeft, m1 + topH + sbe, w - graphLeft, titleH);
     if(mRefGraphView)
-        mRefGraphView->setGeometry(m2, m1 + topH + sbe + titleH, w, refH);
+        mRefGraphView->setGeometry(m2+1, m1 + topH + sbe + titleH, w, refH);
     mDistribTitle->setGeometry(m2 + graphLeft, m1 + topH + sbe + titleH + refH, w - graphLeft, titleH);
-    mCalibGraph->setGeometry(m2, m1 + topH + sbe + 2*titleH + refH, w, calibH);
+    mCalibGraph->setGeometry(m2+1, m1 + topH + sbe + 2*titleH + refH, w, calibH);
     
     mResultsLab->setGeometry(m2 + graphLeft, height() - m2 - botH, w, botH);
     
