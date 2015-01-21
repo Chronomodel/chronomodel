@@ -47,7 +47,7 @@ protected:
     
 public slots:
     void clearResults();
-    void updateResults(Model* model);
+    void updateResults(Model* model = 0);
     void updateGraphs();
     void updateRulerAreas();
     void updateModel();
@@ -113,16 +113,12 @@ private:
     
     QWidget* mOptionsWidget;
     
-    /*QWidget* mZoomWidget;
-    Button* mZoomInBut;
-    Button* mZoomDefaultBut;
-    Button* mZoomOutBut;*/
-    
     Label* mDisplayTitle;
     QWidget* mDisplayGroup;
     Button* mUnfoldBut;
     Button* mInfosBut;
     Button* mExportImgBut;
+    CheckBox* mShowDataUnderPhasesCheck;
     
     Label* mXScaleLab;
     Label* mYScaleLab;

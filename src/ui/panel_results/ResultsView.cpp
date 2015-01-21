@@ -25,6 +25,7 @@
 
 #include "QtUtilities.h"
 #include "ModelUtilities.h"
+#include "DoubleValidator.h"
 
 #include <QtWidgets>
 #include <iostream>
@@ -180,6 +181,10 @@ mZoomCorrel(0)
     thickLayout->addWidget(mThicknessLab);
     thickLayout->addWidget(mThicknessSpin);
     
+    mShowDataUnderPhasesCheck = new CheckBox(tr("Show data under phases"));
+    
+    connect(mShowDataUnderPhasesCheck, SIGNAL(toggled(bool)), this, SLOT(updateResults()));
+    
     QHBoxLayout* displayButsLayout = new QHBoxLayout();
     displayButsLayout->setContentsMargins(0, 0, 0, 0);
     displayButsLayout->setSpacing(0);
@@ -197,6 +202,7 @@ mZoomCorrel(0)
     displayLayout->addWidget(mUpdateDisplay);
     displayLayout->addWidget(mFontBut);
     displayLayout->addLayout(thickLayout);
+    displayLayout->addWidget(mShowDataUnderPhasesCheck);
     mDisplayGroup->setLayout(displayLayout);
     
     connect(mUnfoldBut, SIGNAL(toggled(bool)), this, SLOT(unfoldResults(bool)));
@@ -245,12 +251,13 @@ mZoomCorrel(0)
     mHPDEdit = new LineEdit(mPostDistGroup);
     mHPDEdit->setText("95");
     
-    QDoubleValidator* percentValidator = new QDoubleValidator();
+    DoubleValidator* percentValidator = new DoubleValidator();
     percentValidator->setBottom(0.);
     percentValidator->setTop(100.);
+    percentValidator->setDecimals(1);
     mHPDEdit->setValidator(percentValidator);
     
-    connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(generateHPD()));
+    connect(mHPDEdit, SIGNAL(textEdited(const QString&)), this, SLOT(generateHPD()));
     connect(mHPDCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateGraphs()));
     
@@ -494,6 +501,10 @@ void ResultsView::generateHPD()
 {
     if(mModel)
     {
+        QString input = mHPDEdit->text();
+        mHPDEdit->validator()->fixup(input);
+        mHPDEdit->setText(input);
+        
         mModel->generateNumericalResults(mChains);
         mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toDouble());
         
@@ -628,22 +639,24 @@ void ResultsView::updateResults(Model* model)
     
     clearResults();
     
-    mModel = model;
-    mChains = model->mChains;
-    mSettings = mModel->mSettings;
-    mMCMCSettings = mModel->mMCMCSettings;
-    
     // On force les valeurs par défaut ici puisque
     // les résultats on été calculés avec les valeurs par défaut
     mFFTLenCombo->setCurrentText("1024");
     mHFactorEdit->setText("1");
     
-    if(!mModel)
+    if(!mModel && !model)
         return;
     
-    mMinX = model->mSettings.mTmin;
-    mMaxX = model->mSettings.mTmax;
-    mRuler->setRange(model->mSettings.mTmin, model->mSettings.mTmax);
+    if(model)
+        mModel = model;
+    
+    mChains = mModel->mChains;
+    mSettings = mModel->mSettings;
+    mMCMCSettings = mModel->mMCMCSettings;
+    
+    mMinX = mModel->mSettings.mTmin;
+    mMaxX = mModel->mSettings.mTmax;
+    mRuler->setRange(mModel->mSettings.mTmin, mModel->mSettings.mTmax);
     
     mHasPhases = (mModel->mPhases.size() > 0);
     
@@ -699,19 +712,24 @@ void ResultsView::updateResults(Model* model)
             graphEvent->setGraphsThickness(mThicknessSpin->value());
             mByPhasesGraphs.append(graphEvent);
             
-            // Do not display datas in phases layout,
-            // but if needed, it can be done by uncommenting this :
-            
-            /*for(int j=0; j<(int)event->mDates.size(); ++j)
-             {
-             Date& date = event->mDates[j];
-             GraphViewDate* graphDate = new GraphViewDate(phasesWidget);
-             graphDate->setSettings(mModel->mSettings);
-             graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
-             graphDate->setDate(&date);
-             graphDate->setColor(event->mColor);
-             mByPhasesGraphs.append(graphDate);
-             }*/
+            // --------------------------------------------------
+            //  Display dates only if required
+            // --------------------------------------------------
+            if(mShowDataUnderPhasesCheck->isChecked())
+            {
+                for(int j=0; j<(int)event->mDates.size(); ++j)
+                {
+                    Date& date = event->mDates[j];
+                    GraphViewDate* graphDate = new GraphViewDate(phasesWidget);
+                    graphDate->setSettings(mModel->mSettings);
+                    graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
+                    graphDate->setDate(&date);
+                    graphDate->setGraphFont(mFont);
+                    graphDate->setGraphsThickness(mThicknessSpin->value());
+                    graphDate->setColor(event->mColor);
+                    mByPhasesGraphs.append(graphDate);
+                }
+            }
         }
     }
     mPhasesScrollArea->setWidget(phasesWidget);
@@ -756,6 +774,7 @@ void ResultsView::updateResults(Model* model)
         showByEvents(true);
     
     mTabs->setTab(0);
+    showInfos(mInfosBut->isChecked());
     
     // Done by changeTab :
     //updateLayout();
@@ -1076,11 +1095,13 @@ void ResultsView::updateRendering(int index)
 void ResultsView::showByPhases(bool)
 {
     mStack->setCurrentWidget(mPhasesScrollArea);
+    mShowDataUnderPhasesCheck->setVisible(true);
 }
 
 void ResultsView::showByEvents(bool)
 {
     mStack->setCurrentWidget(mEventsScrollArea);
+    mShowDataUnderPhasesCheck->setVisible(false);
 }
 
 void ResultsView::changeTab(int index)
