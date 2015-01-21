@@ -41,7 +41,7 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
     }
     
     QFile outFile("LogFile.log");
-    if(outFile.open(QIODevice::WriteOnly | QIODevice::Append))
+    if(outFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append))
     {
         QTextStream textStream(&outFile);
         textStream << txt << endl;

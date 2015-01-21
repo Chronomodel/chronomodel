@@ -23,7 +23,7 @@ void sortIntList(QList<int>& list)
 QList<QStringList> readCSV(const QString& filePath, const QString& separator)
 {
     QFile file(filePath);
-    if(file.open(QIODevice::ReadOnly))
+    if(file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         QList<QStringList> data;
         

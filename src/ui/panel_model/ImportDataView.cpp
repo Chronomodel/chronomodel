@@ -49,7 +49,7 @@ void ImportDataView::browse()
             mTable->removeRow(0);
         
         QFile file(path);
-        if(file.open(QIODevice::ReadOnly))
+        if(file.open(QIODevice::ReadOnly | QIODevice::Text))
         {
             QTextStream stream(&file);
             QList<QStringList> data;
@@ -138,7 +138,7 @@ void ImportDataView::exportDates()
         QString sep = MainWindow::getInstance()->getAppSettings().mCSVCellSeparator;
         
         QFile file(path);
-        if(file.open(QIODevice::WriteOnly))
+        if(file.open(QIODevice::WriteOnly | QIODevice::Text))
         {
             QTextStream stream(&file);
             

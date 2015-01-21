@@ -230,7 +230,7 @@ bool Project::load(const QString& path)
 #if DEBUG
     qDebug() << "Loading project file : " << path;
 #endif
-    if(file.open(QIODevice::ReadOnly))
+    if(file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         QFileInfo info(path);
         MainWindow::getInstance()->setCurrentPath(info.absolutePath());
@@ -386,7 +386,7 @@ bool Project::saveProjectToFile()
     {
         QString path = mProjectFileDir + "/" + mProjectFileName;
         QFile file(path);
-        if(file.open(QIODevice::ReadWrite))
+        if(file.open(QIODevice::ReadWrite | QIODevice::Text))
         {
 #if DEBUG
             qDebug() << "Project saved to : " << path;
@@ -1798,7 +1798,7 @@ void Project::exportAsText()
             
             QString descFileName = "description.txt";
             QFile descFile(dir.absoluteFilePath(descFileName));
-            if(descFile.open(QIODevice::ReadWrite))
+            if(descFile.open(QIODevice::ReadWrite | QIODevice::Text))
             {
                 QTextStream stream(&descFile);
                 

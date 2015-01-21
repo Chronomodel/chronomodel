@@ -709,7 +709,7 @@ void Model::saveToFile(const QString& path)
     
     QFile file(path);
     QByteArray data;
-    if(file.open(QIODevice::WriteOnly))
+    if(file.open(QIODevice::WriteOnly | QIODevice::Text))
     {
         QDataStream out(&data, QIODevice::WriteOnly);
         
@@ -765,7 +765,7 @@ void Model::saveToFile(const QString& path)
 void Model::restoreFromFile(const QString& path)
 {
     QFile file(path);
-    if(file.open(QIODevice::ReadOnly))
+    if(file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         QByteArray data = file.readAll();
         data = qUncompress(data);
