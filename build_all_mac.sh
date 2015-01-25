@@ -31,6 +31,7 @@ rm -rf ${BUNDLE_PATH}
 
 cd $ROOT_PATH
 
+
 # -------------------------------------------------------
 #	Créer le projet XCode : qmake a une option pour ça (-spec macx-xcode)
 #	Ajouter la config "Release" car le .pro est en debug
