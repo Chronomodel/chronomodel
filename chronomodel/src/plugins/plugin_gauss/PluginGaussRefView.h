@@ -1,0 +1,33 @@
+#ifndef PluginGaussRefView_H
+#define PluginGaussRefView_H
+
+#if USE_PLUGIN_GAUSS
+
+#include "../GraphViewRefAbstract.h"
+
+class GraphView;
+class QVBoxLayout;
+
+
+class PluginGaussRefView: public GraphViewRefAbstract
+{
+    Q_OBJECT
+public:
+    explicit PluginGaussRefView(QWidget* parent = 0);
+    virtual ~PluginGaussRefView();
+    
+    void setDate(const Date& d, const ProjectSettings& settings);
+    
+public slots:
+    void zoomX(double min, double max);
+    
+protected:
+    void resizeEvent(QResizeEvent* e);
+    
+private:
+    GraphView* mGraph;
+};
+
+#endif
+#endif
+
