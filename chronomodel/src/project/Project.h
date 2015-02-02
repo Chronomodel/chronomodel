@@ -1,4 +1,4 @@
-#ifndef PROJECT_H
+﻿#ifndef PROJECT_H
 #define PROJECT_H
 
 #include "AppSettings.h"
@@ -110,7 +110,8 @@ public:
     void updatePhaseConstraint(int constraintId);
     int getUnusedPhaseConstraintId(const QJsonArray& constraints);
     
-    void deleteModel();
+    //void deleteModel();
+    void clearModel();
     
 public slots:
     bool save(const QString& dialogTitle = tr("Save project as..."));

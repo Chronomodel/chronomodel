@@ -1,4 +1,4 @@
-#ifndef ProjectView_H
+﻿#ifndef ProjectView_H
 #define ProjectView_H
 
 #include <QWidget>
@@ -43,7 +43,7 @@ private:
     QWidget* mLogView;
     QTabWidget* mLogTabs;
     QTextEdit* mLogModelEdit;
-    QTextEdit* mLogInitEdit;
+    QTextEdit* mLogMCMCEdit;
     QTextEdit* mLogResultsEdit;
 };
 

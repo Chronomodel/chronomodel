@@ -597,7 +597,7 @@ void GraphView::drawCurves(QPainter& painter)
             path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
             
             int index = 0;
-            double last_x = 0;
+            //double last_x = 0;
             double last_y = 0;
             
             QMapIterator<double, double> iter(curve.mData);
@@ -627,7 +627,7 @@ void GraphView::drawCurves(QPainter& painter)
                         path.lineTo(x, last_y);
                     path.lineTo(x, y);
                 }
-                last_x = x;
+                //last_x = x;
                 last_y = y;
                 ++index;
             }
@@ -641,7 +641,7 @@ void GraphView::drawCurves(QPainter& painter)
             double last_x = 0;
             double last_y = 0;
             double last_value_y = 0;
-            double last_value_x = 0;
+            //double last_value_x = 0;
             
             if(curve.mUseVectorData)
             {
@@ -729,7 +729,7 @@ void GraphView::drawCurves(QPainter& painter)
                         }
                         last_x = x;
                         last_y = y;
-                        last_value_x = valueX;
+                        //last_value_x = valueX;
                         last_value_y = valueY;
                         ++index;
                     }
@@ -838,7 +838,7 @@ void GraphView::drawCurves(QPainter& painter)
                         }
                         last_x = x;
                         last_y = y;
-                        last_value_x = valueX;
+                        //last_value_x = valueX;
                         last_value_y = valueY;
                         ++index;
                     }

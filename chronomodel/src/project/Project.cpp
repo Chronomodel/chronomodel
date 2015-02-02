@@ -1,4 +1,4 @@
-#include "Project.h"
+﻿#include "Project.h"
 #include "MainWindow.h"
 #include "Model.h"
 #include "PluginManager.h"
@@ -45,8 +45,8 @@
 Project::Project():
 mName(tr("Chronomodel Project")),
 mProjectFileDir(""),
-mProjectFileName(QObject::tr("Untitled")),
-mModel(0)
+mProjectFileName(QObject::tr("Untitled"))
+//,mModel(0)
 {
     mState = emptyState();
     mLastSavedState = mState;
@@ -54,6 +54,7 @@ mModel(0)
     mAutoSaveTimer = new QTimer(this);
     connect(mAutoSaveTimer, SIGNAL(timeout()), this, SLOT(save()));
     mAutoSaveTimer->start(3000);
+    mModel =new Model();
 }
 
 Project::~Project()
@@ -272,9 +273,9 @@ bool Project::load(const QString& path)
             
             // --------------------
             
-            deleteModel();
+            clearModel();
             
-            /*QString dataPath = path + ".dat";
+            QString dataPath = path + ".dat";
             QFile dataFile(dataPath);
             if(dataFile.exists())
             {
@@ -282,7 +283,9 @@ bool Project::load(const QString& path)
                 qDebug() << "Loading model file : " << dataPath;
 #endif       
                 try{
-                    mModel = Model::fromJson(mState);
+                    //mModel = Model::fromJson(mState);
+                    mModel->fromJson(mState);
+
                 }
                 catch(QString error){
                     QMessageBox message(QMessageBox::Critical,
@@ -294,7 +297,7 @@ bool Project::load(const QString& path)
                                         Qt::Sheet);
                     message.exec();
                     
-                    deleteModel();
+                    clearModel();
                 }
                 
                 
@@ -311,7 +314,7 @@ bool Project::load(const QString& path)
                                         Qt::Sheet);
                     message.exec();
                 }
-            }*/
+            }
             
             // --------------------
             
@@ -398,7 +401,7 @@ bool Project::saveProjectToFile()
             file.resize(file.pos());
             file.close();
             
-            return true;
+            //return true;
         }
         else
         {
@@ -411,11 +414,11 @@ bool Project::saveProjectToFile()
         qDebug() << "Nothing new to save in project model";
 #endif
     }
-    /*if(mModel)
+    if(mModel)
     {
-        qDebug() << "Saving project results";
+      //  qDebug() << "Saving project results";
         mModel->saveToFile(mProjectFileDir + "/" + mProjectFileName + ".dat");
-    }*/
+    }
     return true;
 }
 
@@ -1860,9 +1863,9 @@ void Project::run()
     // e.g. : clean the result view with any graphs, ...
     emit mcmcStarted();
     
-    deleteModel();
-    mModel = Model::fromJson(mState);
-    
+    clearModel();
+    //mModel = Model::fromJson(mState);
+    mModel->fromJson(mState);
     bool modelOk = false;
     try
     {
@@ -1901,23 +1904,31 @@ void Project::run()
                                         Qt::Sheet);
                     message.exec();
                 }
-                deleteModel();
+                clearModel();
             }
         }
         else
         {
-            deleteModel();
+            clearModel();
         }
     }
 }
 
-void Project::deleteModel()
+/*void Project::deleteModel()
 {
     if(mModel)
     {
-        delete mModel;
+        mModel->clear();
+        //delete mModel;
+
         // Very important!
         // ResultsView uses a pointer to the model and will use it if it is not set to 0 !!
-        mModel = 0;
+      //  mModel = 0;
+
     }
+}*/
+
+void Project::clearModel()
+{
+     mModel->clear();
 }

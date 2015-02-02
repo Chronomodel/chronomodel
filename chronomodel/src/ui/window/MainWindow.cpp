@@ -1,4 +1,4 @@
-#include "MainWindow.h"
+﻿#include "MainWindow.h"
 #include "Project.h"
 #include "ProjectView.h"
 #include "../PluginAbstract.h"
@@ -189,8 +189,8 @@ void MainWindow::createActions()
     mHelpAction->setCheckable(true);
     connect(mHelpAction, SIGNAL(toggled(bool)), this, SLOT(showHelp(bool)));
     
-    mManualAction = new QAction(QIcon(":pdf_p.png"), tr("Manual"), this);
-    connect(mManualAction, SIGNAL(triggered()), this, SLOT(openManual()));
+    /*mManualAction = new QAction(QIcon(":pdf_p.png"), tr("Manual"), this);
+    connect(mManualAction, SIGNAL(triggered()), this, SLOT(openManual()));*/
     
     mWebsiteAction = new QAction(QIcon(":web_p.png"), tr("Website"), this);
     connect(mWebsiteAction, SIGNAL(triggered()), this, SLOT(openWebsite()));
@@ -284,7 +284,7 @@ void MainWindow::createToolBars()
     toolBar->addWidget(separator4);
     
     toolBar->addAction(mHelpAction);
-    toolBar->addAction(mManualAction);
+    //toolBar->addAction(mManualAction);
     toolBar->addAction(mWebsiteAction);
     /*toolBar->addAction(mAboutAct);
     toolBar->addAction(mAboutQtAct);*/
@@ -362,7 +362,7 @@ void MainWindow::closeProject()
         
         // Go back to model tab :
         mViewModelAction->trigger();
-        mProject->deleteModel();
+        mProject->clearModel();
         
         resetInterface();
         activateInterface(false);
@@ -407,7 +407,7 @@ void MainWindow::appSettings()
     }
 }
 
-void MainWindow::openManual()
+/*void MainWindow::openManual()
 {
     QString path = qApp->applicationDirPath();
 #ifdef Q_OS_MAC
@@ -417,7 +417,7 @@ void MainWindow::openManual()
 #endif
     path += "/Chronomodel_User_Manual.pdf";
     QDesktopServices::openUrl(QUrl("file:///" + path, QUrl::TolerantMode));
-}
+}*/
 
 void MainWindow::showHelp(bool show)
 {
