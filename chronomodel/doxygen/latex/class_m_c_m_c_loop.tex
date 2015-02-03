@@ -1,0 +1,102 @@
+\hypertarget{class_m_c_m_c_loop}{\section{M\-C\-M\-C\-Loop Class Reference}
+\label{class_m_c_m_c_loop}\index{M\-C\-M\-C\-Loop@{M\-C\-M\-C\-Loop}}
+}
+Inheritance diagram for M\-C\-M\-C\-Loop\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=3.000000cm]{class_m_c_m_c_loop}
+\end{center}
+\end{figure}
+\subsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+enum {\bfseries State} \{ {\bfseries e\-Burning} = 0, 
+{\bfseries e\-Adapting} = 1, 
+{\bfseries e\-Running} = 2
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Signals}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_m_c_m_c_loop_adad18b9f81fe65fa41fa8e0dbaf92969}{void {\bfseries step\-Changed} (Q\-String title, int min, int max)}\label{class_m_c_m_c_loop_adad18b9f81fe65fa41fa8e0dbaf92969}
+
+\item 
+\hypertarget{class_m_c_m_c_loop_a3f37a6212f91042d07ade6b96377cfd2}{void {\bfseries step\-Progressed} (int value)}\label{class_m_c_m_c_loop_a3f37a6212f91042d07ade6b96377cfd2}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_m_c_m_c_loop_a44a2a35a91db7f2e32efecb70bf12d6d}{void {\bfseries set\-M\-C\-M\-C\-Settings} (const \hyperlink{class_m_c_m_c_settings}{M\-C\-M\-C\-Settings} \&settings)}\label{class_m_c_m_c_loop_a44a2a35a91db7f2e32efecb70bf12d6d}
+
+\item 
+\hypertarget{class_m_c_m_c_loop_a1036b058871c0261942cad03fe3d7fca}{const Q\-List$<$ \hyperlink{struct_chain}{Chain} $>$ \& {\bfseries chains} ()}\label{class_m_c_m_c_loop_a1036b058871c0261942cad03fe3d7fca}
+
+\item 
+\hypertarget{class_m_c_m_c_loop_a5a5f74164103703ef907567fbbc7ac31}{const Q\-String \& {\bfseries get\-Chains\-Log} () const }\label{class_m_c_m_c_loop_a5a5f74164103703ef907567fbbc7ac31}
+
+\item 
+\hypertarget{class_m_c_m_c_loop_a2703806d0260564b1c243439eaf8e421}{const Q\-String \& {\bfseries get\-Init\-Log} () const }\label{class_m_c_m_c_loop_a2703806d0260564b1c243439eaf8e421}
+
+\item 
+\hypertarget{class_m_c_m_c_loop_ad9b7ba7afd62e0ead77c50dfbeb73da5}{void {\bfseries run} ()}\label{class_m_c_m_c_loop_ad9b7ba7afd62e0ead77c50dfbeb73da5}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_m_c_m_c_loop_af906cc8bf954527042bbe239c833b66c}{Q\-String {\bfseries m\-Aborted\-Reason}}\label{class_m_c_m_c_loop_af906cc8bf954527042bbe239c833b66c}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_m_c_m_c_loop_a811448d75f58895a01abb4eb48967fd8}{virtual Q\-String {\bfseries calibrate} ()=0}\label{class_m_c_m_c_loop_a811448d75f58895a01abb4eb48967fd8}
+
+\item 
+\hypertarget{class_m_c_m_c_loop_a9ceca368eca19c09302c4e11d0758ca1}{virtual void {\bfseries init\-Variables\-For\-Chain} ()=0}\label{class_m_c_m_c_loop_a9ceca368eca19c09302c4e11d0758ca1}
+
+\item 
+\hypertarget{class_m_c_m_c_loop_a67b5231151f706840dbbc5a12fb3da27}{virtual void {\bfseries init\-M\-C\-M\-C} ()=0}\label{class_m_c_m_c_loop_a67b5231151f706840dbbc5a12fb3da27}
+
+\item 
+\hypertarget{class_m_c_m_c_loop_aff45437f83d2ad393bda02da235845f9}{virtual void {\bfseries update} ()=0}\label{class_m_c_m_c_loop_aff45437f83d2ad393bda02da235845f9}
+
+\item 
+\hypertarget{class_m_c_m_c_loop_adfe3500c4b7206143f9c2c6d6ec71319}{virtual void {\bfseries finalize} ()=0}\label{class_m_c_m_c_loop_adfe3500c4b7206143f9c2c6d6ec71319}
+
+\item 
+\hypertarget{class_m_c_m_c_loop_a5c02bc7060e1f90a0a1d6c71d8a5e3bb}{virtual bool {\bfseries adapt} ()=0}\label{class_m_c_m_c_loop_a5c02bc7060e1f90a0a1d6c71d8a5e3bb}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_m_c_m_c_loop_a74395cee92e542eceec38d17398b192c}{Q\-List$<$ \hyperlink{struct_chain}{Chain} $>$ {\bfseries m\-Chains}}\label{class_m_c_m_c_loop_a74395cee92e542eceec38d17398b192c}
+
+\item 
+\hypertarget{class_m_c_m_c_loop_aef82872438332bf6816ccd1b8d65a03c}{int {\bfseries m\-Chain\-Index}}\label{class_m_c_m_c_loop_aef82872438332bf6816ccd1b8d65a03c}
+
+\item 
+\hypertarget{class_m_c_m_c_loop_a6ee56ea4f14a04e9372663c136d4ba39}{State {\bfseries m\-State}}\label{class_m_c_m_c_loop_a6ee56ea4f14a04e9372663c136d4ba39}
+
+\item 
+\hypertarget{class_m_c_m_c_loop_a873d8e6708ab37d733166f010151487a}{Q\-String {\bfseries m\-Chains\-Log}}\label{class_m_c_m_c_loop_a873d8e6708ab37d733166f010151487a}
+
+\item 
+\hypertarget{class_m_c_m_c_loop_a1d9ce0616b5e6caf501d6f9f9af4763f}{Q\-String {\bfseries m\-Init\-Log}}\label{class_m_c_m_c_loop_a1d9ce0616b5e6caf501d6f9f9af4763f}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 10 of file M\-C\-M\-C\-Loop.\-h.
+
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+D\-:/\-Dufresne/\-Project\-\_\-\-Q\-T/\-Chrono\-Model/chronomodel/chronomodel/src/mcmc/M\-C\-M\-C\-Loop.\-h\item 
+D\-:/\-Dufresne/\-Project\-\_\-\-Q\-T/\-Chrono\-Model/chronomodel/chronomodel/src/mcmc/M\-C\-M\-C\-Loop.\-cpp\end{DoxyCompactItemize}
