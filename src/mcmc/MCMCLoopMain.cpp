@@ -1,4 +1,4 @@
-#include "MCMCLoopMain.h"
+﻿#include "MCMCLoopMain.h"
 
 #include "Model.h"
 #include "EventKnown.h"
@@ -218,7 +218,8 @@ void MCMCLoopMain::initMCMC()
                 date.mTheta.mX = tmin + idx * step;
                 
                 FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration, tmin, tmax, step));
-                date.mTheta.mSigmaMH = data.stddev;
+                //date.mTheta.mSigmaMH = data.stddev;
+                date.mTheta.mSigmaMH = abs(date.mTheta.mX-unsortedEvents[i]->mTheta.mX);
                 date.initDelta(unsortedEvents[i]);
                 
                 s02_sum += 1.f / (data.stddev * data.stddev);

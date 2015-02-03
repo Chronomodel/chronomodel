@@ -54,7 +54,7 @@ RC_FILE = $$PRO_PATH/Chronomodel.rc
 # C++ 11
 # Config must use C++ 11 for random number generator
 #########################################
-CONFIG += c++11
+CONFIG += C++11
 macx{
 	# This is a custom build of the C++11 library on mac for 10.6 compatibility !!!
 	# Must be built on a 10.6 mac...

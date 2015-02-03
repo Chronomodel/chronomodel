@@ -1,4 +1,4 @@
-#include "Generator.h"
+﻿#include "Generator.h"
 #include <cmath>
 #include <errno.h>
 #include <fenv.h>
@@ -12,6 +12,7 @@
 #include <QDebug>
 #include "StdUtilities.h"
 
+//int matherr(struct exception *e);
 
 std::mt19937 Generator::sGenerator = std::mt19937(0);
 std::uniform_real_distribution<double> Generator::sDistribution = std::uniform_real_distribution<double>(0, 1);
@@ -43,6 +44,7 @@ double Generator::randomUniform(double min, double max)
 
 double Generator::gaussByDoubleExp(const double mean, const double sigma, const double min, const double max)
 {
+    errno=0;
     if(min >= max)
     {
         if(min == max)
@@ -52,119 +54,125 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
         return min;
     }
     
-    const double x_min = (min - mean) / sigma;
-    const double x_max = (max - mean) / sigma;
+    const long double x_min = (min - mean) / sigma;
+    const long double x_max = (max - mean) / sigma;
     
-    QString info = "DoubleExp : x_min = " + QString::number(x_min) + ", x_max = " + QString::number(x_max);
+  //  QString info = "DoubleExp : x_min = " + QString::number(x_min) + ", x_max = " + QString::number(x_max);
 
     /*if(abs(x_max - x_min) < 1E-20)
     {
         return randomUniform(min, max);
     }*/
     
-    double x = (x_max + x_min) / 2.;
-    const double sqrt_e = sqrt(exp(1.));
+    long double x = (x_max + x_min) / 2.;// initialisation arbitraire, valeur ecrasée ensuite
+    const long double sqrt_e = sqrt(exp(1.));
     
     feclearexcept(FE_ALL_EXCEPT);
     
-    /*double exp_x_min = safeExp(x_min);
-    checkFloatingPointException(info + ", calculating exp(x_min)");
-    double exp_x_max = safeExp(x_max);
-    checkFloatingPointException(info + ", calculating exp(x_max)");
-    double exp_minus_x_min = safeExp(-x_min);
-    checkFloatingPointException(info + ", calculating exp(-x_min)");
-    double exp_minus_x_max = safeExp(-x_max);
-    checkFloatingPointException(info + ", calculating exp(-x_max)");*/
-    
-    double exp_x_min = exp(x_min);
-    double exp_x_max = exp(x_max);
-    double exp_minus_x_min = exp(-x_min);
-    double exp_minus_x_max = exp(-x_max);
-    
+
+    //qDebug() << "DOUBLE EXP DoubleExp : errno avant = "<<strerror(errno);
+    long double exp_x_min = 0.;
+    long double exp_x_max = 0;
+    long double exp_minus_x_min = 0.;
+    long double exp_minus_x_max = 0;
+    long double c = 0.;
+    long double f0 = 0.;
+
+    if(x_min < 0. && x_max > 0.)
+    {
+        exp_x_min = expl(x_min);
+        exp_minus_x_max = expl(-x_max);
+        c = 1. - 0.5 * (exp_x_min + exp_minus_x_max);
+        f0 = 0.5 * (1. - exp_x_min) / c;
+    }
+    else
+    {
+        if(x_min >= 0.)
+        {
+            exp_minus_x_min = expl(-x_min);
+            exp_minus_x_max = expl(-x_max);
+        }
+        else
+        {
+            exp_x_min = expl(x_min);
+            exp_x_max = expl(x_max);
+        }
+    }
+    //info = "DoubleExp : exp_x_min = " + QString::number(exp_x_min) + ", exp_x_max = " + QString::number(exp_x_max);
+    //qDebug() <<"DoubleExp : exp_x_min = "<<exp_x_min;
+    //qDebug() << "exp(10 000=="<<exp((long double)(1000));
+    //qDebug() << "DOUBLE EXP DoubleExp : errno apres = "<<strerror(errno);
+    if(errno != 0)
+    {
+        qDebug() << "DOUBLE EXP : errno apres exp_minus_x_max = "<<strerror(errno);
+        qDebug() <<"DoubleExp : mean = "<< mean<<" min="<<min<<" max="<<max<<" sigma"<<sigma;
+        qDebug() <<" x_min="<< (double)(x_min)<<" x_max="<<(double)(x_max);
+
+        errno=0;
+    }
     double ur = 1.;
-    double rap = 0.;
+    long double rap = 0.;
     
     int trials = 0;
     int limit = 100000;
     
     while(rap < ur && trials < limit)
     {
-        double u = (double)randomUniform();
+        long double u = (long double)randomUniform();
         
         if(x_min < 0. && x_max > 0.)
         {
-            const double c = 1. - 0.5 * (exp_x_min + exp_minus_x_max);
-            //checkFloatingPointException(info + ", calculating c.");
-            
-            const double f0 = 0.5 * (1. - exp_x_min) / c;
-            //checkFloatingPointException(info + ", calculating f0 with exp(x_min) = " + QString::number(exp_x_min));
-            
+
             if(u <= f0)
             {
-                x = log(exp_x_min + 2. * c * u);
-                
-                //x = safeLog(exp_x_min + 2. * c * u);
-                //checkFloatingPointException(info + ", u <= f0");
+                x = logl(exp_x_min + 2. * c * u);
             }
             else
             {
-                x = -log(1. - 2.*c*(u-f0));
-                
-                //x = -safeLog(1. - 2.*c*(u-f0));
-                //checkFloatingPointException(info + ", u > f0");
+                x = -logl(1. - 2.*c*(u-f0));
             }
         }
         else
         {
             if(x_min >= 0.)
             {
-                x = -log(exp_minus_x_min - u * (exp_minus_x_min - exp_minus_x_max));
-                
-                //x = -safeLog(exp_minus_x_min - u * (exp_minus_x_min - exp_minus_x_max));
-                //checkFloatingPointException(info + ", x_min >= 0");
+                x = -logl(exp_minus_x_min - u * (exp_minus_x_min - exp_minus_x_max));
             }
             else
             {
-                x = log(exp_x_min - u * (exp_x_min - exp_x_max));
-                
-                //x = safeLog(exp_x_min - u * (exp_x_min - exp_x_max));
-                //checkFloatingPointException(info + ", x_min < 0");
+                x = logl(exp_x_min - u * (exp_x_min - exp_x_max));
             }
         }
-        
+        if(errno != 0)
+        {
+            //qDebug() << "DOUBLE EXP dans boucle = "<<strerror(errno);
+            throw "DoubleExp could not find a solution after " + QString::number(limit) + " trials! This may be ue to Taylor unsufficients developpement orders. Please try to run the calculations again!";
+        }
         ur = randomUniform();
         
         if(x_min >= 1.)
         {
-            rap = exp(0.5 * (x_min * x_min - x * x) + x - x_min);
-            
-            //rap = safeExp(0.5 * (x_min * x_min - x * x) + x - x_min);
-            //checkFloatingPointException(info + ", rap failed with x_min >= 1");
+            rap = expl(0.5 * (x_min * x_min - x * x) + x - x_min);
         }
         else if(x_max <= -1.)
         {
-            rap = exp(0.5 * (x_max * x_max - x * x) + x_max - x);
-            
-            //rap = safeExp(0.5 * (x_max * x_max - x * x) + x_max - x);
-            //checkFloatingPointException(info + ", rap failed with x_max <= 1");
+            rap = expl(0.5 * (x_max * x_max - x * x) + x_max - x);
         }
         else
         {
-            rap = exp(-0.5 * x * x + abs(x)) / sqrt_e;
-            
-            //rap = safeExp(-0.5 * x * x + abs(x)) / sqrt_e;
-            //checkFloatingPointException(info + ", rap failed");
+            rap = expl(-0.5 * x * x + abs(x)) / sqrt_e;
         }
         
         ++trials;
     }
-    //checkFloatingPointException(info);
-    
+
     if(trials == limit)
     {
         throw "DoubleExp could not find a solution after " + QString::number(limit) + " trials! This may be ue to Taylor unsufficients developpement orders. Please try to run the calculations again!";
     }
-    
+    //qDebug() << "DOUBLE EXP DoubleExp : x = "<<x;
+    //qDebug() << "DOUBLE EXP DoubleExp : (mean + (x * sigma)) = "<<(mean + (x * sigma));
+    //qDebug() << "DOUBLE EXP DoubleExp : (double)(mean + (x * sigma)) = "<<(double)(mean + (x * sigma));
     return (double)(mean + (x * sigma));
 }
 

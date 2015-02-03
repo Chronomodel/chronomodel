@@ -1,4 +1,4 @@
-#include "MetropolisVariable.h"
+﻿#include "MetropolisVariable.h"
 #include "StdUtilities.h"
 #include "Functions.h"
 #if USE_FFT
@@ -296,7 +296,12 @@ const QMap<double, double>& MetropolisVariable::rawHistoForChain(int index) cons
 {
     return mChainsRawHistos[index];
 }
-
+/**
+ * @brief MetropolisVariable::fullTraceForChain
+ * @param chains QList of the Chain in the Model
+ * @param index
+ * @return The complet trace (Burning, adaptation, acquire) corresponding to chain n°index
+ */
 QVector<double> MetropolisVariable::fullTraceForChain(const QList<Chain>& chains, int index)
 {
     QVector<double> trace;
@@ -333,7 +338,12 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<Chain>& chains)
     }
     return trace;
 }
-
+/**
+ * @brief MetropolisVariable::runTraceForChain
+ * @param chains
+ * @param index the number of the Trace to extract
+ * @return a QVector containing juste the acquisition Trace for one chaine n° index
+ */
 QVector<double> MetropolisVariable::runTraceForChain(const QList<Chain>& chains, int index)
 {
     QVector<double> trace;

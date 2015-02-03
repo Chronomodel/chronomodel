@@ -1,4 +1,4 @@
-#include "GraphView.h"
+﻿#include "GraphView.h"
 #include "Ruler.h"
 #include "StdUtilities.h"
 #include "Painting.h"
@@ -597,7 +597,7 @@ void GraphView::drawCurves(QPainter& painter)
             path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
             
             int index = 0;
-            double last_x = 0;
+            //double last_x = 0;
             double last_y = 0;
             
             QMapIterator<double, double> iter(curve.mData);
@@ -627,7 +627,7 @@ void GraphView::drawCurves(QPainter& painter)
                         path.lineTo(x, last_y);
                     path.lineTo(x, y);
                 }
-                last_x = x;
+                //last_x = x;
                 last_y = y;
                 ++index;
             }
@@ -641,7 +641,7 @@ void GraphView::drawCurves(QPainter& painter)
             double last_x = 0;
             double last_y = 0;
             double last_value_y = 0;
-            double last_value_x = 0;
+            //double last_value_x = 0;
             
             if(curve.mUseVectorData)
             {
@@ -683,6 +683,14 @@ void GraphView::drawCurves(QPainter& painter)
                 {
                     for(int i=0; i<2*mGraphWidth; ++i)
                     {
+
+                       /* double dataMean=0;
+                        for(int j=i*dataStep; (j<(i+1)*dataStep) and (j<subData.size());j++)
+                        {
+                          dataMean+=subData[j];
+                        }
+                        dataMean=dataMean/dataStep;
+                        lightData.append(dataMean);*/
                         int idx = (int)round(i * dataStep);
                         lightData.append(subData[idx]);
                     }
@@ -721,7 +729,7 @@ void GraphView::drawCurves(QPainter& painter)
                         }
                         last_x = x;
                         last_y = y;
-                        last_value_x = valueX;
+                        //last_value_x = valueX;
                         last_value_y = valueY;
                         ++index;
                     }
@@ -830,7 +838,7 @@ void GraphView::drawCurves(QPainter& painter)
                         }
                         last_x = x;
                         last_y = y;
-                        last_value_x = valueX;
+                        //last_value_x = valueX;
                         last_value_y = valueY;
                         ++index;
                     }

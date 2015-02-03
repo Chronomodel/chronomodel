@@ -1,4 +1,4 @@
-#include "Date.h"
+﻿#include "Date.h"
 #include "Event.h"
 #include "Generator.h"
 #include "StdUtilities.h"
@@ -378,15 +378,21 @@ void Date::updateDelta(Event* event)
     {
         case eDeltaRange:
         {
-            double delta;
+           /* double delta;
+            double lambdai = event->mTheta.mX - mTheta.mX;
             do
             {
                 double x = Generator::gaussByBoxMuller(0, 1);
-                double lambda = event->mTheta.mX - mTheta.mX;
-                delta = mSigma.mX * x + lambda;
+
+                double lambdai = event->mTheta.mX - mTheta.mX;
+                delta = mSigma.mX * x + lambdai;
             }while(delta < mDeltaMin || delta > mDeltaMax);
-                
-            mDelta = delta;
+
+            mDelta = delta;*/
+
+            double lambdai = event->mTheta.mX - mTheta.mX;
+
+            mDelta = Generator::gaussByDoubleExp(lambdai,mSigma.mX,mDeltaMin, mDeltaMax);
             break;
         }
         case eDeltaGaussian:

@@ -1,4 +1,4 @@
-#ifndef METROPOLISVARIABLE_H
+﻿#ifndef METROPOLISVARIABLE_H
 #define METROPOLISVARIABLE_H
 
 #include <QMap>
@@ -64,8 +64,9 @@ private:
 public:
     double mX;
     QVector<double> mTrace;
-    
+   // QVector<float> mTrace;
     QMap<double, double> mHisto;
+
     QList<QMap<double, double> > mChainsHistos;
     
     QMap<double, double> mRawHisto;

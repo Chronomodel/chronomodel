@@ -1,4 +1,4 @@
-#include "MCMCLoop.h"
+﻿#include "MCMCLoop.h"
 #include "Generator.h"
 #include "QtUtilities.h"
 #include <QDebug>
@@ -59,19 +59,22 @@ const QString& MCMCLoop::getInitLog() const
 }
 
 void MCMCLoop::run()
-{
-    QString log;
+{    
+    QString mDate =QDateTime::currentDateTime().toString("dddd dd MMMM yyyy");
+    QTime startChainTime = QTime::currentTime();
+    QString mTime = startChainTime.toString("hh:mm:ss.zzz");
+    QString log= line("Start " +mDate+" ->>> " +mTime);
     log += line(textBold("MCMC Chains Log"));
     
-    int timeDiff = 0;
+    //int timeDiff = 0;
     
-    QTime startTotalTime = QTime::currentTime();
+    //QTime startTotalTime = QTime::currentTime();
     
     //----------------------- Calibrating --------------------------------------
     
     emit stepChanged(tr("Calibrating data..."), 0, 0);
     
-    QTime startCalibTime = QTime::currentTime();
+    //QTime startCalibTime = QTime::currentTime();
     
     mAbortedReason = this->calibrate();
     if(!mAbortedReason.isEmpty())
@@ -79,9 +82,9 @@ void MCMCLoop::run()
         return;
     }
     
-    QTime endCalibTime = QTime::currentTime();
-    timeDiff = startCalibTime.msecsTo(endCalibTime);
-    //log += line("Calib done in " + QString::number(timeDiff) + " ms");
+    /*QTime endCalibTime = QTime::currentTime();
+    int timeDiff = startCalibTime.msecsTo(endCalibTime);
+    log += line("Calib done in " + QString::number(timeDiff) + " ms");*/
     
     //----------------------- Chains --------------------------------------
     
@@ -90,11 +93,11 @@ void MCMCLoop::run()
     mInitLog = QString();
     
     for(mChainIndex = 0; mChainIndex < mChains.size(); ++mChainIndex)
-    {
+    {        
         log += line("--------------------------");
         log += line("Chain : " + QString::number(mChainIndex + 1));
         
-        QTime startChainTime = QTime::currentTime();
+
         
         Chain& chain = mChains[mChainIndex];
         Generator::initGenerator(chain.mSeed);
@@ -108,7 +111,7 @@ void MCMCLoop::run()
         
         emit stepChanged("Chain " + QString::number(mChainIndex+1) + " : " + tr("Initializing MCMC"), 0, 0);
         
-        QTime startInitTime = QTime::currentTime();
+        //QTime startInitTime = QTime::currentTime();
         
         try{
             this->initMCMC();
@@ -119,17 +122,17 @@ void MCMCLoop::run()
             return;
         }
         
-        QTime endInitTime = QTime::currentTime();
+        /*QTime endInitTime = QTime::currentTime();
         timeDiff = startInitTime.msecsTo(endInitTime);
         
-        //log += "=> Init done in " + QString::number(timeDiff) + " ms\n";
+        log += "=> Init done in " + QString::number(timeDiff) + " ms\n";*/
         
         //----------------------- Burning --------------------------------------
         
         emit stepChanged("Chain " + QString::number(mChainIndex+1) + " : " + tr("Burning"), 0, chain.mNumBurnIter);
         mState = eBurning;
         
-        QTime startBurnTime = QTime::currentTime();
+        //QTime startBurnTime = QTime::currentTime();
         
         while(chain.mBurnIterIndex < chain.mNumBurnIter)
         {
@@ -155,16 +158,16 @@ void MCMCLoop::run()
             emit stepProgressed(chain.mBurnIterIndex);
         }
         
-        QTime endBurnTime = QTime::currentTime();
+        /*QTime endBurnTime = QTime::currentTime();
         timeDiff = startBurnTime.msecsTo(endBurnTime);
-        //log += "=> Burn done in " + QString::number(timeDiff) + " ms\n";
+        log += "=> Burn done in " + QString::number(timeDiff) + " ms\n";*/
         
         //----------------------- Adapting --------------------------------------
         
         emit stepChanged("Chain " + QString::number(mChainIndex+1) + " : " + tr("Adapting"), 0, chain.mMaxBatchs * chain.mNumBatchIter);
         mState = eAdapting;
         
-        QTime startAdaptTime = QTime::currentTime();
+        //QTime startAdaptTime = QTime::currentTime();
         
         while(chain.mBatchIndex * chain.mNumBatchIter < chain.mMaxBatchs * chain.mNumBatchIter)
         {
@@ -206,16 +209,16 @@ void MCMCLoop::run()
         }
         log += line("Adapt OK at batch : " + QString::number(chain.mBatchIndex) + "/" + QString::number(chain.mMaxBatchs));
         
-        QTime endAdaptTime = QTime::currentTime();
+       /* QTime endAdaptTime = QTime::currentTime();
         timeDiff = startAdaptTime.msecsTo(endAdaptTime);
-        //log += "=> Adapt done in " + QString::number(timeDiff) + " ms\n";
+        log += "=> Adapt done in " + QString::number(timeDiff) + " ms\n";*/
         
         //----------------------- Running --------------------------------------
         
         emit stepChanged("Chain " + QString::number(mChainIndex+1) + " : " + tr("Running"), 0, chain.mNumRunIter);
         mState = eRunning;
         
-        QTime startRunTime = QTime::currentTime();
+        //QTime startRunTime = QTime::currentTime();
         
         while(chain.mRunIterIndex < chain.mNumRunIter)
         {
@@ -240,29 +243,29 @@ void MCMCLoop::run()
             emit stepProgressed(chain.mRunIterIndex);
         }
         
-        QTime endRunTime = QTime::currentTime();
+        /*QTime endRunTime = QTime::currentTime();
         timeDiff = startRunTime.msecsTo(endRunTime);
-        //log += "=> Acquire done in " + QString::number(timeDiff) + " ms\n";
+        log += "=> Acquire done in " + QString::number(timeDiff) + " ms\n";*/
         
         //-----------------------------------------------------------------------
         
-        QTime endChainTime = QTime::currentTime();
+       /* QTime endChainTime = QTime::currentTime();
         timeDiff = startChainTime.msecsTo(endChainTime);
-        //log += "=> Chain done in " + QString::number(timeDiff) + " ms\n";
+        log += "=> Chain done in " + QString::number(timeDiff) + " ms\n";*/
     }
     
     log += line("--------------------------");
     log += line("All Seeds (to be used in MCMC Settings dialog) :<br>" + seeds.join(";"));
     
     
-    QTime endTotalTime = QTime::currentTime();
+    /*QTime endTotalTime = QTime::currentTime();
     timeDiff = startTotalTime.msecsTo(endTotalTime);
-    //log += "=> MCMC done in " + QString::number(timeDiff) + " ms\n";
-    
+    log += "=> MCMC done in " + QString::number(timeDiff) + " ms\n";
+
+
+    QTime startFinalizeTime = QTime::currentTime();*/
     //-----------------------------------------------------------------------
-    
-    QTime startFinalizeTime = QTime::currentTime();
-    
+
     emit stepChanged(tr("Computing posterior distributions and numerical results (HPD, credibility, ...)"), 0, 0);
     
     try{
@@ -274,12 +277,12 @@ void MCMCLoop::run()
         return;
     }
 
-    QTime endFinalizeTime = QTime::currentTime();
+   /* QTime endFinalizeTime = QTime::currentTime();
     timeDiff = startFinalizeTime.msecsTo(endFinalizeTime);
-    //log += "=> Histos and results computed in " + QString::number(timeDiff) + " ms\n";
+    log += "=> Histos and results computed in " + QString::number(timeDiff) + " ms\n";
     
-    //log += "End time : " + endFinalizeTime.toString() + "\n";
-    
+    log += "End time : " + endFinalizeTime.toString() + "\n";
+    */
     //-----------------------------------------------------------------------
     
     mChainsLog = log;

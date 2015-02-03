@@ -1,4 +1,4 @@
-#include "Event.h"
+﻿#include "Event.h"
 #include "Phase.h"
 #include "EventConstraint.h"
 #include "PhaseConstraint.h"
@@ -505,7 +505,7 @@ void Event::updateTheta(double tmin, double tmax)
         sum_p += 1.f / variance;
     }
     double theta_avg = sum_t / sum_p;
-    double sigma = 1. / sqrt(sum_p);
+    double sigma = 1.f / sqrt(sum_p);
     
     switch(mMethod)
     {

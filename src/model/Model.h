@@ -1,4 +1,4 @@
-#ifndef MODEL_H
+﻿#ifndef MODEL_H
 #define MODEL_H
 
 #include "ProjectSettings.h"
@@ -17,15 +17,21 @@ class Model: public QObject
     Q_OBJECT
 public:
     Model();
+    QJsonObject toJson() const;
+    QString modelLog() const;
+    QString resultsLog() const;
+
     virtual ~Model();
 
-    static Model* fromJson(const QJsonObject& json);
-    QJsonObject toJson() const;
-    
+    //static fromJson(const QJsonObject& json);
+
+
+    void fromJson(const QJsonObject& json);
     bool isValid();
-    
-    void saveToFile(const QString& path);
-    void restoreFromFile(const QString& path);
+    void clear();
+
+    void saveToFile(const QString& fileName);
+    void restoreFromFile(const QString& fileName);
     
     // Only trace needed for this :
     void generateCorrelations(const QList<Chain>& chains);
@@ -37,7 +43,7 @@ public:
     void generateNumericalResults(const QList<Chain>& chains);
     
     
-    QString modelLog() const;
+
     
 public:
     ProjectSettings mSettings;
@@ -50,7 +56,9 @@ public:
     
     QList<Chain> mChains;
     
-    QString mMCMCLog;
+    QString mLogModel;
+    QString mLogMCMC;
+    QString mLogResults;
 };
 
 #endif

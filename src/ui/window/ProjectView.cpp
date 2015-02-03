@@ -1,4 +1,4 @@
-#include "ProjectView.h"
+﻿#include "ProjectView.h"
 #include "ModelView.h"
 #include "ResultsView.h"
 #include "Painting.h"
@@ -21,11 +21,11 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     mLogModelEdit->setFrameStyle(QFrame::NoFrame);
     mLogModelEdit->setPalette(palette);
     
-    mLogInitEdit = new QTextEdit();
-    mLogInitEdit->setReadOnly(true);
-    mLogInitEdit->setAcceptRichText(true);
-    mLogInitEdit->setFrameStyle(QFrame::NoFrame);
-    mLogInitEdit->setPalette(palette);
+    mLogMCMCEdit = new QTextEdit();
+    mLogMCMCEdit->setReadOnly(true);
+    mLogMCMCEdit->setAcceptRichText(true);
+    mLogMCMCEdit->setFrameStyle(QFrame::NoFrame);
+    mLogMCMCEdit->setPalette(palette);
     
     mLogResultsEdit = new QTextEdit();
     mLogResultsEdit->setReadOnly(true);
@@ -33,16 +33,16 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     mLogResultsEdit->setFrameStyle(QFrame::NoFrame);
     mLogResultsEdit->setPalette(palette);
     
-    QFont font = mLogInitEdit->font();
+    QFont font = mLogMCMCEdit->font();
     font.setPointSizeF(pointSize(11));
     
     mLogModelEdit->setFont(font);
-    mLogInitEdit->setFont(font);
+    mLogMCMCEdit->setFont(font);
     mLogResultsEdit->setFont(font);
     
     mLogTabs = new QTabWidget();
     mLogTabs->addTab(mLogModelEdit, tr("Model"));
-    mLogTabs->addTab(mLogInitEdit, tr("MCMC"));
+    mLogTabs->addTab(mLogMCMCEdit, tr("MCMC"));
     mLogTabs->addTab(mLogResultsEdit, tr("Results"));
     mLogTabs->setContentsMargins(15, 15, 15, 15);
     
@@ -114,8 +114,13 @@ void ProjectView::updateLog(Model* model)
 {
     if(model)
     {
-        mLogModelEdit->setText(model->modelLog());
-        mLogInitEdit->setText(model->mMCMCLog);
+        model->mLogModel=model->modelLog();
+        mLogModelEdit->setText(model->mLogModel);
+
+        mLogMCMCEdit->setText(model->mLogMCMC);
+
+        model->mLogResults=model->resultsLog();
+        mLogResultsEdit->setText(model->mLogResults);
     }
 }
 void ProjectView::updateResultsLog(const QString& log)
