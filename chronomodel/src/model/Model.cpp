@@ -61,7 +61,9 @@ void Model::clear()
     mEventConstraints.clear();
 
     mChains.clear();
-    mMCMCLog.clear();
+    mLogModel.clear();
+    mLogMCMC.clear();
+    mLogResults.clear();
 }
 
 /*Model* Model::fromJson(const QJsonObject& json)
@@ -1004,6 +1006,9 @@ void Model::saveToFile(const QString& fileName)
 
             }
         }
+        out << mLogModel;
+        out << mLogMCMC;
+        out << mLogResults;
         QByteArray compressedData = qCompress(uncompresedData);
         file.write(compressedData);
         file.close();
@@ -1086,7 +1091,9 @@ void Model::restoreFromFile(const QString& fileName)
                     in >> mEvents[i]->mDates[j].mWiggle.mAllAccepts;
                 }
             }
-
+            in >> mLogModel;
+            in >> mLogMCMC;
+            in >> mLogResults;
         
             generateCorrelations(mChains);
             generatePosteriorDensities(mChains, 1024, 1);

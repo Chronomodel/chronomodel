@@ -114,9 +114,13 @@ void ProjectView::updateLog(Model* model)
 {
     if(model)
     {
-        mLogModelEdit->setText(model->modelLog());
-        mLogMCMCEdit->setText(model->mMCMCLog);
-        mLogResultsEdit->setText(model->resultsLog());
+        model->mLogModel=model->modelLog();
+        mLogModelEdit->setText(model->mLogModel);
+
+        mLogMCMCEdit->setText(model->mLogMCMC);
+
+        model->mLogResults=model->resultsLog();
+        mLogResultsEdit->setText(model->mLogResults);
     }
 }
 void ProjectView::updateResultsLog(const QString& log)

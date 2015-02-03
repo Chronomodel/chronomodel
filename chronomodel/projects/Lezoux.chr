@@ -1,0 +1,180 @@
+{
+    "app_version": "1.0.0",
+    "dates_trash": [
+    ],
+    "events": [
+        {
+            "blue": 102,
+            "color_blue": 148,
+            "color_green": 169,
+            "color_red": 153,
+            "dates": [
+                {
+                    "data": {
+                        "age": 1170,
+                        "error": 140,
+                        "ref_year": 1990
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 4,
+                    "method": 1,
+                    "name": "TL-CLER-202b",
+                    "plugin_id": "tl/osl"
+                },
+                {
+                    "data": {
+                        "age": 1370,
+                        "error": 50,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 2,
+                    "method": 1,
+                    "name": "14C_Ly_5212",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 1280,
+                        "error": 170,
+                        "ref_year": 1990
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 5,
+                    "method": 1,
+                    "name": "TL-CLER-203",
+                    "plugin_id": "tl/osl"
+                },
+                {
+                    "data": {
+                        "age": 987,
+                        "error": 120,
+                        "ref_year": 1990
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 3,
+                    "method": 1,
+                    "name": "TL-CLER-202a",
+                    "plugin_id": "tl/osl"
+                },
+                {
+                    "data": {
+                        "dec_dec": 0,
+                        "dec_inc": 0,
+                        "error": 1.2000000476837158,
+                        "inc": 69.199996948242188,
+                        "intensity": 0,
+                        "is_dec": false,
+                        "is_inc": true,
+                        "is_int": false,
+                        "ref_curve": "GAL2002sph2014_I.ref"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "Inc",
+                    "plugin_id": "am"
+                },
+                {
+                    "data": {
+                        "dec_dec": -2.7999999523162842,
+                        "dec_inc": 69.199996948242188,
+                        "error": 1.2000000476837158,
+                        "inc": 0,
+                        "intensity": 0,
+                        "is_dec": true,
+                        "is_inc": false,
+                        "is_int": false,
+                        "ref_curve": "GAL2002sph2014_D.ref"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 1,
+                    "method": 1,
+                    "name": "Dec",
+                    "plugin_id": "am"
+                }
+            ],
+            "green": 113,
+            "id": 0,
+            "is_current": true,
+            "is_selected": true,
+            "item_x": 886.08661417322844,
+            "item_y": 2186.944881889764,
+            "known_type": null,
+            "method": 0,
+            "name": "Lezoux",
+            "phase_ids": "",
+            "red": 0,
+            "type": 0
+        }
+    ],
+    "events_constraints": [
+    ],
+    "events_trash": [
+        {
+            "blue": 162,
+            "dates": [
+            ],
+            "green": 135,
+            "id": 1,
+            "is_current": true,
+            "is_selected": true,
+            "item_x": 1096,
+            "item_y": 2176,
+            "method": 0,
+            "name": "event 2",
+            "phase_ids": "",
+            "red": 160,
+            "type": 0
+        }
+    ],
+    "mcmc": {
+        "iter_per_batch": 500,
+        "max_batches": 20,
+        "num_burn": 1000,
+        "num_iter": 100000,
+        "num_proc": 1,
+        "seeds": [
+        ],
+        "thinning_interval": 10
+    },
+    "phases": [
+    ],
+    "phases_constraints": [
+    ],
+    "settings": {
+        "step": 1,
+        "tmax": 2000,
+        "tmin": 0
+    }
+}

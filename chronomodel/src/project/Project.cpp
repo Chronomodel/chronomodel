@@ -1889,7 +1889,8 @@ void Project::run()
         {
             if(loop.mAbortedReason.isEmpty())
             {
-                mModel->mMCMCLog = loop.getChainsLog() + "<br><br>" + loop.getInitLog();
+                //Memo of the init varaible state to show in Log view
+                mModel->mLogMCMC = loop.getChainsLog() + "<br><br>" + loop.getInitLog();
                 emit mcmcFinished(mModel);
             }
             else

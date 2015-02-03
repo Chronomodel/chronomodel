@@ -1,0 +1,307 @@
+$violet: #752989;
+
+body{
+  font-family: SourceSansPro;
+  font-weight: 300;
+  font-size: 18px;
+  color: #25382f;
+}
+
+.btn-primary {
+  /*background-color: #8D3694;*/
+}
+
+#header
+{
+  margin-bottom: 0;
+}
+
+h1
+{
+  font-size: 40px;
+  font-weight: 500;
+  margin: 0 0 10px 0;
+}
+h2
+{
+  line-height: 40px;
+  font-size: 30px;
+  font-weight: 300;
+  margin: 0 0 60px 0;
+}
+h3
+{
+  font-size: 26px;
+  font-weight: 300;
+  margin: 20px 0 10px 0;
+}
+
+h2 .glyphicon
+{
+  color: $violet;
+  font-size: 28px;
+  top: 4px;
+  margin-right: 5px;
+}
+
+#doxy
+{
+  margin: 20px 0 10px 0;
+}
+
+#doxy a
+{
+  color: white;
+  text-decoration: underline;
+}
+
+#logo
+{
+  height: 30px;
+}
+
+#logo img
+{
+  width: 50px;
+  height: 50px;
+  margin-top: -15px;
+  display: block;
+  float: left;
+}
+#logo span
+{
+  height: 50px;
+  line-height: 50px;
+  margin-top: -15px;
+  display: block;
+  margin-left: 70px;
+  font-size: 24px;
+  color: #25382f;
+}
+
+.navbar-default
+{
+  background-color: white;
+  border-color: #F0F0F0;
+}
+
+.navbar-default .navbar-nav>li>a
+{
+  font-weight: 500;
+  font-size: 16px;
+  color: inherit;
+}
+
+.navbar-default .navbar-nav>.active>a,
+.navbar-default .navbar-nav>.active>a:hover,
+.navbar-default .navbar-nav>.active>a:focus
+{
+  background: transparent;
+  color: #25382f;
+}
+
+.navbar-default .navbar-nav>.active>a span,
+.navbar-default .navbar-nav>.active>a:hover span,
+.navbar-default .navbar-nav>.active>a:focus span
+{
+  border-bottom: 3px solid #8D3694;
+}
+
+
+#header:after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  right: 0;
+  border-bottom: 2px solid rgba(0,0,0,0.1);
+}
+
+#main-wrapper{
+
+}
+
+.color{
+  color: #00a99d;
+}
+
+.slide
+{
+  padding: 30px 0;
+}
+
+.slide-intro
+{
+  background: #F0F0F0;
+  text-align: center;
+}
+a.pdf
+{
+  display: inline-block;
+  line-height: 40px;
+  vertical-align: top;
+}
+a.pdf:before
+{
+  display: inline-block;
+  content: '';
+  width: 40px;
+  height: 40px;
+  margin: 0 10px 0 0;
+  background: url('../images/pdf.png') no-repeat center center;
+  background-size: contain;
+}
+
+#home-main
+{
+  padding: 50px;
+  background: #2A6096; //#00a99d;
+  color: white;
+}
+#home-main p
+{
+  margin: 0 0 20px 0;
+}
+#home-main a
+{
+  color: white;
+  text-decoration: underline;
+}
+#home .slide-intro
+{
+  text-align: center;
+}
+
+.home1
+{
+  background: #2A6096; //#00a99d;
+  color: white;
+}
+.home2
+{
+  background: #F0F0F0; //#00a99d;
+  color: black;
+}
+.home1 h2 .glyphicon
+{
+  color: white;
+}
+#home-news
+{
+  background: rgba(255, 255, 255, 0.5);
+  margin: 15px 0;
+  padding: 30px;
+  color: black;
+  text-align: center;
+}
+#home-news h4
+{
+  margin: 0 0 15px 0;
+  font-weight: 500;
+  font-size: 28px;
+}
+#home-news .date
+{
+
+}
+#home-news a{
+  text-decoration: underline;
+  color: black;
+}
+
+#downloads table img
+{
+  margin-right: 15px;
+}
+
+#features .slide img
+{
+  box-shadow: 0 0 20px black;
+}
+
+#page-todo
+{
+
+}
+#page-todo .todo
+{
+  padding: 20px 20px;
+  background: #f2dede;
+}
+#page-todo .done
+{
+  padding: 20px 20px;
+  background: #dff0d8;
+}
+
+.download
+{
+  padding: 30px;
+  background: #00a99d;
+  color: white;
+}
+
+.download.even
+{
+  background: #F0F0F0;
+  color: black;
+}
+
+#footer1
+{
+  padding: 30px 0;
+  background: white;
+  text-align: center;
+}
+#footer1 a{
+  display: block;
+  margin: 0 20px;
+  text-decoration: none;
+}
+#footer1 a.left{
+  float: left;
+}
+#footer1 a.right{
+  float: right;
+}
+#footer1 img
+{
+  height: 80px;
+  display: inline-block;
+}
+#footer2
+{
+  background: #444;
+  color: white;
+  font-size: 16px;
+  text-align: center;
+  padding: 15px 0;
+}
+
+.slide-faq-1
+{
+  background:#FA805A;
+}
+.slide-faq-2
+{
+  background:#F0F0F0;
+}
+.question
+{
+  font-weight: bold;
+  font-size: 22px;
+  margin: 0 0 20px 0;
+}
+.answer
+{
+
+}
+
+#downloads td
+{
+  vertical-align: middle;
+}
+#downloads .slide-dwl-1
+{
+  background: #F0F0F0; //#00a99d;
+}

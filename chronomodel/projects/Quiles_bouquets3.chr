@@ -1,0 +1,473 @@
+{
+    "app_version": "1.0.0",
+    "dates_trash": [
+        {
+            "data": {
+                "a": 0,
+                "age": 0,
+                "b": 1,
+                "c": 0,
+                "error": 50
+            },
+            "delta_average": 0,
+            "delta_error": 0,
+            "delta_fixed": 0,
+            "delta_max": 0,
+            "delta_min": 0,
+            "delta_type": 0,
+            "id": 6,
+            "method": 0,
+            "name": "Test",
+            "plugin_id": "gauss"
+        }
+    ],
+    "events": [
+        {
+            "blue": 146,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3101,
+                        "error": 34,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "SacA15966",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3128,
+                        "error": 26,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 1,
+                    "method": 1,
+                    "name": "SacA18758",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3123,
+                        "error": 39,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 2,
+                    "method": 1,
+                    "name": "SacA15967",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3089,
+                        "error": 26,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 3,
+                    "method": 1,
+                    "name": "SacA18759",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3047,
+                        "error": 36,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 4,
+                    "method": 1,
+                    "name": "SacA15968",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3042,
+                        "error": 29,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 5,
+                    "method": 1,
+                    "name": "SacA18760",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": null,
+            "id": 1,
+            "is_current": true,
+            "is_selected": true,
+            "item_x": -160.52223940369703,
+            "item_y": -393.29786628255351,
+            "method": 0,
+            "name": "bouquet1",
+            "phase_ids": "",
+            "red": null,
+            "type": 0
+        }
+    ],
+    "events_constraints": [
+    ],
+    "events_trash": [
+        {
+            "blue": 33,
+            "dates": [
+                {
+                    "data": {
+                        "a": 0,
+                        "age": 1000,
+                        "b": 1,
+                        "c": 0,
+                        "error": 50
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 0,
+                    "name": "Test",
+                    "plugin_id": "gauss"
+                }
+            ],
+            "green": 27,
+            "id": 1,
+            "is_current": true,
+            "is_selected": true,
+            "item_x": 226,
+            "item_y": 193,
+            "known_type": null,
+            "method": 0,
+            "name": "Test",
+            "phase_ids": "",
+            "red": 169,
+            "type": 0
+        },
+        {
+            "blue": 143,
+            "dates": [
+                {
+                    "data": {
+                        "dec_dec": 0,
+                        "dec_inc": 0,
+                        "error": 1,
+                        "inc": 69.199996948242188,
+                        "intensity": 0,
+                        "is_dec": false,
+                        "is_inc": true,
+                        "is_int": false,
+                        "ref_curve": "GAL2002sph2014_I.ref"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 2,
+                    "name": "Inc",
+                    "plugin_id": "am"
+                },
+                {
+                    "data": {
+                        "dec_dec": 0,
+                        "dec_inc": 0,
+                        "error": 1.7000000476837158,
+                        "inc": 0,
+                        "intensity": 58.400001525878906,
+                        "is_dec": false,
+                        "is_inc": false,
+                        "is_int": true,
+                        "ref_curve": "GwH2013uni_F.ref"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 2,
+                    "method": 2,
+                    "name": "Intensite (F)",
+                    "plugin_id": "am"
+                },
+                {
+                    "data": {
+                        "dec_dec": 12.899999618530273,
+                        "dec_inc": 69.199996948242188,
+                        "error": 1,
+                        "inc": 0,
+                        "intensity": 0,
+                        "is_dec": true,
+                        "is_inc": false,
+                        "is_int": false,
+                        "ref_curve": "GAL2002sph2014_D.ref"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 1,
+                    "method": 2,
+                    "name": "Dec",
+                    "plugin_id": "am"
+                },
+                {
+                    "data": {
+                        "age": 460,
+                        "error": 30,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 3,
+                    "method": 2,
+                    "name": "14C_Conv",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 415,
+                        "error": 25,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 4,
+                    "method": 2,
+                    "name": "14C_AMS",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 169,
+            "id": 0,
+            "is_current": true,
+            "is_selected": true,
+            "item_x": -340,
+            "item_y": -570,
+            "known_type": null,
+            "method": 0,
+            "name": "Cuers",
+            "phase_ids": "",
+            "red": 127,
+            "type": 0
+        },
+        {
+            "blue": 160,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3031,
+                        "error": 36,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "SacA15969",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 2990,
+                        "error": 44,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 1,
+                    "method": 1,
+                    "name": "SacA18761",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3024,
+                        "error": 37,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 2,
+                    "method": 1,
+                    "name": "SacA15970",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3085,
+                        "error": 26,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 3,
+                    "method": 1,
+                    "name": "SacA18762",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3079,
+                        "error": 35,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 4,
+                    "method": 1,
+                    "name": "SacA15971",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3170,
+                        "error": 26,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 5,
+                    "method": 1,
+                    "name": "SacA18763",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 166,
+                        "error": 30,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 6,
+                    "method": 1,
+                    "name": "SacA15972",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": -94,
+                        "error": 43,
+                        "ref_curve": "intcal13.14c"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 7,
+                    "method": 1,
+                    "name": "SacA18764",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": null,
+            "id": 2,
+            "is_current": true,
+            "is_selected": true,
+            "item_x": 29.414894956742973,
+            "item_y": -227.0638198849432,
+            "method": 0,
+            "name": "bouquet2",
+            "phase_ids": "",
+            "red": null,
+            "type": 0
+        }
+    ],
+    "mcmc": {
+        "iter_per_batch": 100,
+        "max_batches": 100,
+        "num_burn": 1000,
+        "num_iter": 10000,
+        "num_proc": 1,
+        "seeds": [
+        ],
+        "thinning_interval": 10
+    },
+    "phases": [
+    ],
+    "settings": {
+        "step": 1,
+        "tmax": 0,
+        "tmin": -3000
+    }
+}

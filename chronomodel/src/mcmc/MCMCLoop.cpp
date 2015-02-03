@@ -59,8 +59,11 @@ const QString& MCMCLoop::getInitLog() const
 }
 
 void MCMCLoop::run()
-{
-    QString log;
+{    
+    QString mDate =QDateTime::currentDateTime().toString("dddd dd MMMM yyyy");
+    QTime startChainTime = QTime::currentTime();
+    QString mTime = startChainTime.toString("hh:mm:ss.zzz");
+    QString log= line("Start " +mDate+" ->>> " +mTime);
     log += line(textBold("MCMC Chains Log"));
     
     //int timeDiff = 0;
@@ -90,11 +93,11 @@ void MCMCLoop::run()
     mInitLog = QString();
     
     for(mChainIndex = 0; mChainIndex < mChains.size(); ++mChainIndex)
-    {
+    {        
         log += line("--------------------------");
         log += line("Chain : " + QString::number(mChainIndex + 1));
         
-        //QTime startChainTime = QTime::currentTime();
+
         
         Chain& chain = mChains[mChainIndex];
         Generator::initGenerator(chain.mSeed);

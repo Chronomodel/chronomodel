@@ -56,7 +56,9 @@ public:
     
     QList<Chain> mChains;
     
-    QString mMCMCLog;
+    QString mLogModel;
+    QString mLogMCMC;
+    QString mLogResults;
 };
 
 #endif

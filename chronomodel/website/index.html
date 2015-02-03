@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html ng-app="chronoApp">
+<head>
+	
+	<title>Chronomodel</title>
+	
+	<meta charset="UTF-8">	
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	
+	<meta name="description" content="">
+	<meta name="keywords" content="">
+	<meta name="author" content="Helori Lanos">
+	
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="white" />
+	
+	<!-- apple-touch-icon-precomposed : apple n'ajoute pas d'effet supplémentaire sur l'icon -->
+	<link rel="apple-touch-icon" href="mobile/touch-icon-60-60.png" /> <!-- iPhone -->
+	<link rel="apple-touch-icon" sizes="76x76" href="touch-icon-ipad.png"> <!-- iPad -->
+	<link rel="apple-touch-icon" sizes="120x120" href="touch-icon-iphone-retina.png"> <!-- iPhone Retina -->
+	<link rel="apple-touch-icon" sizes="152x152" href="touch-icon-ipad-retina.png"> <!-- iPad Retina -->
+	<link rel="apple-touch-startup-image" href="mobile/startup.png">
+	
+	<link rel="shortcut icon" href="favicon.png" type="image/png">
+
+    <link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <link href="SourceSansPro/stylesheet.css" rel="stylesheet" media="screen">
+    <link href="css/style.css" rel="stylesheet" media="screen">
+
+    <script src="bower_components/angular/angular.min.js"></script>
+    <script src="bower_components/angular-route/angular-route.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/controllers.js"></script>
+    <script src="js/services.js"></script>
+
+</head>
+
+<body>
+
+    <nav id="header" class="navbar navbar-default" role="navigation" ng-controller="NavCtrl">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#nav-menu">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a id="logo" class="navbar-brand" href="#">
+                    <img src="images/logo.png" alt="Chronomodel Logo"/>
+                    <span>ChronoModel</span>
+                </a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="nav-menu">
+                <ul class="nav navbar-nav navbar-right">
+                    <li ng-class="menuClass('home')"><a href="#/home"><span>Home</span></a></li>
+                    <li ng-class="menuClass('features')"><a href="#/features"><span>Features</span></a></li>
+                    <li ng-class="menuClass('downloads')"><a href="#/downloads"><span>Downloads</span></a></li>
+                    <li ng-class="menuClass('documentation')"><a href="#/documentation"><span>Documentation</span></a></li>
+                    <!--li ng-class="menuClass('todo')"><a href="#/todo"><span>Todo</span></a></li-->
+                    <li ng-class="menuClass('faq')"><a href="#/faq"><span>FAQ</span></a></li>
+                    <!--li ng-class="menuClass('about')"><a href="#/about"><span>About</span></a></li-->
+                </ul>
+            </div><!-- /.navbar-collapse -->
+        </div><!-- /.container-fluid -->
+    </nav>
+
+    <div id="main-wrapper">
+        <div ng-view></div>
+    </div>
+    <div id="footer1">
+        <div class="container">
+            <a class="left" href="http://www.agence-nationale-recherche.fr/" target="_blank">
+                <img src="images/logos/anr2.jpg" alt="ANR">
+            </a>
+            <a class="left" href="http://www.cnrs.fr/" target="_blank">
+                <img src="images/logos/cnrs.jpg" alt="CNRS">
+            </a>
+            <a class="right" href="http://www.u-bordeaux-montaigne.fr/fr/index.html" target="_blank">
+                <img src="images/logos/bordeaux.png" alt="Bordeaux">
+            </a>
+            <a class="right" href="http://www.math.sciences.univ-nantes.fr/" target="_blank">
+                <img src="images/logos/nantes.png" alt="Nantes">
+            </a>
+            <a class="right" href="https://www.univ-rennes1.fr/" target="_blank">
+                <img src="images/logos/rennes1.png" alt="Rennes1">
+            </a>
+        </div>
+    </div>
+    <div id="footer2">
+        <div class="container">
+            Copyright &copy; CNRS 2015
+        </div>
+    </div>
+
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+
+</body>

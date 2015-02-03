@@ -1,0 +1,138 @@
+\hypertarget{class_phase}{\section{Phase Class Reference}
+\label{class_phase}\index{Phase@{Phase}}
+}
+\subsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+enum {\bfseries Tau\-Type} \{ {\bfseries e\-Tau\-Unknown} = 0, 
+{\bfseries e\-Tau\-Fixed} = 1, 
+{\bfseries e\-Tau\-Range} = 2
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_phase_a2c00d601d23fb3895375e02163db1d2a}{{\bfseries Phase} (const \hyperlink{class_phase}{Phase} \&phase)}\label{class_phase_a2c00d601d23fb3895375e02163db1d2a}
+
+\item 
+\hypertarget{class_phase_ab68bfa4e8cd25b35b5efc3ae32289055}{\hyperlink{class_phase}{Phase} \& {\bfseries operator=} (const \hyperlink{class_phase}{Phase} \&phase)}\label{class_phase_ab68bfa4e8cd25b35b5efc3ae32289055}
+
+\item 
+\hypertarget{class_phase_a2a360b862200a801fbc3098b4e80cafe}{void {\bfseries copy\-From} (const \hyperlink{class_phase}{Phase} \&phase)}\label{class_phase_a2a360b862200a801fbc3098b4e80cafe}
+
+\item 
+\hypertarget{class_phase_a09d6e76a1ba26b112039a5f6d0ffd346}{Q\-Json\-Object {\bfseries to\-Json} () const }\label{class_phase_a09d6e76a1ba26b112039a5f6d0ffd346}
+
+\item 
+\hypertarget{class_phase_afdf7eeac44c59f4d600314a3edaf8016}{double {\bfseries get\-Max\-Theta\-Events} (double tmax)}\label{class_phase_afdf7eeac44c59f4d600314a3edaf8016}
+
+\item 
+\hypertarget{class_phase_a021e4abe1530f7c115a52e2993dc3cec}{double {\bfseries get\-Min\-Theta\-Events} (double tmin)}\label{class_phase_a021e4abe1530f7c115a52e2993dc3cec}
+
+\item 
+\hypertarget{class_phase_a63d9e76a9dd2d21f4fb88fcd23a3f946}{double {\bfseries get\-Min\-Theta\-Next\-Phases} (double tmax)}\label{class_phase_a63d9e76a9dd2d21f4fb88fcd23a3f946}
+
+\item 
+\hypertarget{class_phase_a009cd29fa4926d2cbffb7dbe5ba73233}{double {\bfseries get\-Max\-Theta\-Prev\-Phases} (double tmin)}\label{class_phase_a009cd29fa4926d2cbffb7dbe5ba73233}
+
+\item 
+\hypertarget{class_phase_a96028a76d205bea069022a75bff8e9c8}{void {\bfseries update\-All} (double tmin, double tmax)}\label{class_phase_a96028a76d205bea069022a75bff8e9c8}
+
+\item 
+\hypertarget{class_phase_a809f524936eb51825bbf5bf7fb900b5c}{void {\bfseries memo\-All} ()}\label{class_phase_a809f524936eb51825bbf5bf7fb900b5c}
+
+\item 
+\hypertarget{class_phase_a3154a81e4affa1714037f5514c34cd81}{void {\bfseries init\-Tau} ()}\label{class_phase_a3154a81e4affa1714037f5514c34cd81}
+
+\item 
+\hypertarget{class_phase_ab2536b85a742e2f0aa0f78df2df2281e}{void {\bfseries update\-Tau} ()}\label{class_phase_ab2536b85a742e2f0aa0f78df2df2281e}
+
+\end{DoxyCompactItemize}
+\subsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_phase_abb5c8636c9f8815e893fb842aca9c990}{static \hyperlink{class_phase}{Phase} {\bfseries from\-Json} (const Q\-Json\-Object \&json)}\label{class_phase_abb5c8636c9f8815e893fb842aca9c990}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_phase_a72047fa4d4314c9bc41aab51bbf036d8}{int {\bfseries m\-Id}}\label{class_phase_a72047fa4d4314c9bc41aab51bbf036d8}
+
+\item 
+\hypertarget{class_phase_acd43c95ddf8c0ad782e9411a2ff93bac}{Q\-String {\bfseries m\-Name}}\label{class_phase_acd43c95ddf8c0ad782e9411a2ff93bac}
+
+\item 
+\hypertarget{class_phase_a75816bdc5589b871414d098edcfea8b0}{Q\-List$<$ \hyperlink{class_event}{Event} $\ast$ $>$ {\bfseries m\-Events}}\label{class_phase_a75816bdc5589b871414d098edcfea8b0}
+
+\item 
+\hypertarget{class_phase_a3585415a643ae1d36b0d047b4b4a973e}{Q\-List$<$ \hyperlink{class_phase_constraint}{Phase\-Constraint} $\ast$ $>$ {\bfseries m\-Constraints\-Fwd}}\label{class_phase_a3585415a643ae1d36b0d047b4b4a973e}
+
+\item 
+\hypertarget{class_phase_ad9f6a4c027ae1cc91bb8c13a97d03336}{Q\-List$<$ \hyperlink{class_phase_constraint}{Phase\-Constraint} $\ast$ $>$ {\bfseries m\-Constraints\-Bwd}}\label{class_phase_ad9f6a4c027ae1cc91bb8c13a97d03336}
+
+\item 
+\hypertarget{class_phase_a80e272874c7cd53384077ea972a57e23}{\hyperlink{class_metropolis_variable}{Metropolis\-Variable} {\bfseries m\-Alpha}}\label{class_phase_a80e272874c7cd53384077ea972a57e23}
+
+\item 
+\hypertarget{class_phase_ad876588d6d633dc40f5e4d4493cca7fd}{\hyperlink{class_metropolis_variable}{Metropolis\-Variable} {\bfseries m\-Beta}}\label{class_phase_ad876588d6d633dc40f5e4d4493cca7fd}
+
+\item 
+\hypertarget{class_phase_a017f39e583656017f28c83e8fa2ebb13}{double {\bfseries m\-Tau}}\label{class_phase_a017f39e583656017f28c83e8fa2ebb13}
+
+\item 
+\hypertarget{class_phase_a781ae58b4d5d0cf3534e9ecd29643ff5}{bool {\bfseries m\-Is\-Alpha\-Fixed}}\label{class_phase_a781ae58b4d5d0cf3534e9ecd29643ff5}
+
+\item 
+\hypertarget{class_phase_aefb77dead058b3fd291f4c51a2277bca}{bool {\bfseries m\-Is\-Beta\-Fixed}}\label{class_phase_aefb77dead058b3fd291f4c51a2277bca}
+
+\item 
+\hypertarget{class_phase_acbafd19d0528a2f84fc2ebc0e42945ea}{\hyperlink{class_metropolis_variable}{Metropolis\-Variable} {\bfseries m\-Duration}}\label{class_phase_acbafd19d0528a2f84fc2ebc0e42945ea}
+
+\item 
+\hypertarget{class_phase_a19eec5bca72b892603b2584f9ed2bc7b}{Q\-String {\bfseries m\-Duration\-Credibility}}\label{class_phase_a19eec5bca72b892603b2584f9ed2bc7b}
+
+\item 
+\hypertarget{class_phase_a08e2634dca3525debfb79b77d62ca856}{Tau\-Type {\bfseries m\-Tau\-Type}}\label{class_phase_a08e2634dca3525debfb79b77d62ca856}
+
+\item 
+\hypertarget{class_phase_ade3baea5762a8dc8a1e8741af3320af3}{double {\bfseries m\-Tau\-Fixed}}\label{class_phase_ade3baea5762a8dc8a1e8741af3320af3}
+
+\item 
+\hypertarget{class_phase_ab3169dc4011476585c386002c9ef6a45}{double {\bfseries m\-Tau\-Min}}\label{class_phase_ab3169dc4011476585c386002c9ef6a45}
+
+\item 
+\hypertarget{class_phase_a158ad836b8d3d66d9926d51ff81e540b}{double {\bfseries m\-Tau\-Max}}\label{class_phase_a158ad836b8d3d66d9926d51ff81e540b}
+
+\item 
+\hypertarget{class_phase_a07403473fe3dc1aed4ad66a8049f09c6}{Q\-Color {\bfseries m\-Color}}\label{class_phase_a07403473fe3dc1aed4ad66a8049f09c6}
+
+\item 
+\hypertarget{class_phase_a8c14895ffdb788de2df5c97ade00c166}{double {\bfseries m\-Item\-X}}\label{class_phase_a8c14895ffdb788de2df5c97ade00c166}
+
+\item 
+\hypertarget{class_phase_a83a4014d755c4e95c1c1466b3cf1a3d2}{double {\bfseries m\-Item\-Y}}\label{class_phase_a83a4014d755c4e95c1c1466b3cf1a3d2}
+
+\item 
+\hypertarget{class_phase_a5a2fbcee9a072fb6f9ce1bb01de6bbde}{bool {\bfseries m\-Is\-Selected}}\label{class_phase_a5a2fbcee9a072fb6f9ce1bb01de6bbde}
+
+\item 
+\hypertarget{class_phase_aa8bd1968d675a35e6ab1b835f8989239}{bool {\bfseries m\-Is\-Current}}\label{class_phase_aa8bd1968d675a35e6ab1b835f8989239}
+
+\item 
+\hypertarget{class_phase_ab86a05a3ae25b19e105ea90e77629d34}{int {\bfseries m\-Level}}\label{class_phase_ab86a05a3ae25b19e105ea90e77629d34}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 15 of file Phase.\-h.
+
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+D\-:/\-Dufresne/\-Project\-\_\-\-Q\-T/\-Chrono\-Model/chronomodel/chronomodel/src/model/Phase.\-h\item 
+D\-:/\-Dufresne/\-Project\-\_\-\-Q\-T/\-Chrono\-Model/chronomodel/chronomodel/src/model/Phase.\-cpp\end{DoxyCompactItemize}

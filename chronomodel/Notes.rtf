@@ -1,0 +1,90 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1265\cocoasubrtf210
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww12600\viewh7800\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+
+\f0\b\fs24 \cf0 GIT\
+
+\b0 \
+\ul 1 - G\'e9n\'e9rer des clef ssh sur Mac (si pas d\'e9j\'e0 fait):\ulnone \
+
+\i ssh-keygen -t rsa
+\i0 \
+(Entrer une passphase pour encoder la clef)\
+Les clefs priv\'e9es et publiques sont cr\'e9\'e9es dans ~/.ssh/\
+\
+\ul 2 - V\'e9rifier que la clef est ajout\'e9e au ssh de la machine:\ulnone \
+
+\i ssh-add -l\
+
+\i0 Si aucune clef enregistr\'e9e, ajouter la clef priv\'e9e:\
+
+\i ssh-add -K ~/.ssh/id_rsa
+\i0 \
+\
+\ul 3 - Envoyer la clef publique sur Renater\ulnone \
+Sur SourceSup, onglet SCM, envoyer la clef id_rsa.pub\
+=> SourceTree devrait fonctionner directement\
+\
+\ul 4 - Copier la paire de clef sur Windows\ulnone \
+Renater ne peut enregistrer qu\'92une clef publique, il faut donc utiliser la m\'eame clef.\
+Charger la clef dans SourceTree et entrer la passphrase.\
+La clef priv\'e9e au format Putty ppk doit \'eatre sauv\'e9e sur la machine.\
+\
+
+\b MAC icon
+\b0 \
+Use command line tool:\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\f1\fs22 \cf0 \CocoaLigature0 iconutil -c icns foldername.iconset
+\f0\fs24 \CocoaLigature1 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+{\field{\*\fldinst{HYPERLINK "https://developer.apple.com/library/mac/documentation/GraphicsAnimation/Conceptual/HighResolutionOSX/Optimizing/Optimizing.html#//apple_ref/doc/uid/TP40012302-CH7-SW3"}}{\fldrslt \cf0 https://developer.apple.com/library/mac/documentation/GraphicsAnimation/Conceptual/HighResolutionOSX/Optimizing/Optimizing.html#//apple_ref/doc/uid/TP40012302-CH7-SW3}}\
+\
+\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+
+\b \cf0 D\'e9ploiement Windows:
+\b0 \
+\
+=> Projet .pro : dans l\'92onglet projet, donner les chemin de build : build/debug et build/release.\
+Ceci cr\'e9era un autre dossier build dans les dossiers debug et release (\'e0 cot\'e9 de moc, \'85)\
+\
+=> Copier les dll n\'e9cessaires dans le dossier de l\'92\'e9x\'e9cutable depuis :\
+- C:\\Qt\\5.2.1\\mingw48_32\\bin\
+- C:\\Qt\\5.2.1\\mingw48_32\\plugins (copier les dossiers qui s\'92y trouvent)\
+\
+=> OU BIEN : modifier la variable PATH et lancer windeployqt.exe (dans le dossier C:\\Qt\\5.2.1\\mingw48_32\\bin)\
+\
+\
+
+\b FFTW pour Windows:
+\b0 \
+\
+G\'e9n\'e9rer les .lib \'e0 partir des .def :\
+- Installer Visual Studio\
+- utiliser l\'92utilitaire lib.exe sur les fichiers .def :\
+\
+\ul Version 32 bits:\ulnone \
+\
+D\'e9marrer => cmd\
+cd C:\\Users\\Helori\\Desktop\\Chronomodel-2014-09-30\\lib\\FFTW\\win32\
+C:\\Program Files\\Microsoft Visual Studio 12.0\\VC\\bin\\lib.exe /def:libfftw3-3.def\
+C:\\Program Files\\Microsoft Visual Studio 12.0\\VC\\bin\\lib.exe /def:libfftw3f-3.def\
+C:\\Program Files\\Microsoft Visual Studio 12.0\\VC\\bin\\lib.exe /def:libfftw3l-3.def\
+\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+\cf0 \ul \ulc0 Version 64 bits:\ulnone \
+\
+cd C:\\Users\\Helori\\Desktop\\Chronomodel-2014-09-30\\lib\\FFTW\\win64\
+C:\\Program Files\\Microsoft Visual Studio 12.0\\VC\\bin\\lib.exe /machine:x64 /def:libfftw3-3.def\
+C:\\Program Files\\Microsoft Visual Studio 12.0\\VC\\bin\\lib.exe /machine:x64 /def:libfftw3f-3.def\
+C:\\Program Files\\Microsoft Visual Studio 12.0\\VC\\bin\\lib.exe /machine:x64 /def:libfftw3l-3.def\
+\
+
+\b DEPLOYER SUR WINDOWS:
+\b0 \
+\
+}

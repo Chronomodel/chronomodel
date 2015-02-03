@@ -1,0 +1,834 @@
+{
+    "app_version": "1.0.0",
+    "dates_trash": [
+        {
+            "data": {
+                "age": 3409,
+                "error": 13,
+                "ref_curve": "intcal09.14C"
+            },
+            "delta_average": 0,
+            "delta_error": 0,
+            "delta_fixed": -10,
+            "delta_max": 0,
+            "delta_min": 0,
+            "delta_type": 0,
+            "id": 1,
+            "method": 1,
+            "name": "20136",
+            "plugin_id": "14c"
+        },
+        {
+            "data": {
+                "age": 3430,
+                "error": 14,
+                "ref_curve": "intcal09.14C"
+            },
+            "delta_average": 0,
+            "delta_error": 0,
+            "delta_fixed": 0,
+            "delta_max": 0,
+            "delta_min": 0,
+            "delta_type": 0,
+            "id": 0,
+            "method": 1,
+            "name": "20157",
+            "plugin_id": "14c"
+        }
+    ],
+    "events": [
+        {
+            "blue": 146,
+            "dates": [
+                {
+                    "data": {
+                        "age": 3430,
+                        "error": 14,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 1,
+                    "name": "20157",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3409,
+                        "error": 13,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -10,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 1,
+                    "method": 1,
+                    "name": "20136",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3432,
+                        "error": 16,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -20,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 2,
+                    "method": 1,
+                    "name": "20137",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3426,
+                        "error": 13,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -30,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 3,
+                    "method": 1,
+                    "name": "20138",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3403,
+                        "error": 18,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -40,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 4,
+                    "method": 1,
+                    "name": "20139",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3335,
+                        "error": 16,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -50,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 5,
+                    "method": 1,
+                    "name": "20140",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3348,
+                        "error": 17,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -60,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 6,
+                    "method": 1,
+                    "name": "20141",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3401,
+                        "error": 16,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -70,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 7,
+                    "method": 1,
+                    "name": "20142",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3372,
+                        "error": 13,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -80,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 8,
+                    "method": 1,
+                    "name": "20143",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3356,
+                        "error": 18,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -90,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 9,
+                    "method": 1,
+                    "name": "20144",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3342,
+                        "error": 16,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -100,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 10,
+                    "method": 1,
+                    "name": "20145",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3334,
+                        "error": 18,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -110,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 11,
+                    "method": 1,
+                    "name": "20146",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3336,
+                        "error": 19,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -120,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 12,
+                    "method": 1,
+                    "name": "20147",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3236,
+                        "error": 19,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -130,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 13,
+                    "method": 1,
+                    "name": "20148",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3280,
+                        "error": 16,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -130,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 14,
+                    "method": 1,
+                    "name": "25791",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3302,
+                        "error": 14,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -140,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 15,
+                    "method": 1,
+                    "name": "20149",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3329,
+                        "error": 14,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -140,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 16,
+                    "method": 1,
+                    "name": "25792",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3323,
+                        "error": 22,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -149,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 17,
+                    "method": 1,
+                    "name": "27603",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3284,
+                        "error": 17,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -150,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 18,
+                    "method": 1,
+                    "name": "20150",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3308,
+                        "error": 16,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -150,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 19,
+                    "method": 1,
+                    "name": "25793",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3329,
+                        "error": 23,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -159,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 20,
+                    "method": 1,
+                    "name": "27604",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3338,
+                        "error": 18,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -160,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 21,
+                    "method": 1,
+                    "name": "20151",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3296,
+                        "error": 18,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -160,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 22,
+                    "method": 1,
+                    "name": "25755",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3330,
+                        "error": 21,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -169,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 23,
+                    "method": 1,
+                    "name": "27605",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3289,
+                        "error": 18,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -170,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 24,
+                    "method": 1,
+                    "name": "20152",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3288,
+                        "error": 22,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -170,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 25,
+                    "method": 1,
+                    "name": "25756",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3310,
+                        "error": 18,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -180,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 26,
+                    "method": 1,
+                    "name": "20153",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3322,
+                        "error": 19,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -180,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 27,
+                    "method": 1,
+                    "name": "25757",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3292,
+                        "error": 16,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -190,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 28,
+                    "method": 1,
+                    "name": "20154",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3319,
+                        "error": 18,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -190,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 29,
+                    "method": 1,
+                    "name": "25794",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3292,
+                        "error": 23,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -200,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 30,
+                    "method": 1,
+                    "name": "20155",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3223,
+                        "error": 19,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -210,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 31,
+                    "method": 1,
+                    "name": "20156",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3257,
+                        "error": 18,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -229,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 32,
+                    "method": 1,
+                    "name": "27610",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3218,
+                        "error": 18,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -239,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 33,
+                    "method": 1,
+                    "name": "27611",
+                    "plugin_id": "14c"
+                },
+                {
+                    "data": {
+                        "age": 3203,
+                        "error": 20,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": -249,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 34,
+                    "method": 1,
+                    "name": "27612",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 129,
+            "id": 0,
+            "is_current": true,
+            "is_selected": true,
+            "item_x": 131,
+            "item_y": -157,
+            "known_type": null,
+            "method": 0,
+            "name": "Gordion",
+            "phase_ids": "",
+            "red": 23,
+            "type": 0
+        }
+    ],
+    "events_constraints": [
+    ],
+    "events_trash": [
+        {
+            "blue": 157,
+            "dates": [
+                {
+                    "data": {
+                        "a": 0,
+                        "age": 1900,
+                        "b": 1,
+                        "c": 0,
+                        "error": 50
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 0,
+                    "name": "Gauss4",
+                    "plugin_id": "gauss"
+                }
+            ],
+            "green": 148,
+            "id": 3,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 328.12767262219245,
+            "item_y": -203.01064394800301,
+            "method": 0,
+            "name": "Event4",
+            "phase_ids": "0",
+            "red": 141,
+            "type": 0
+        },
+        {
+            "blue": 136,
+            "dates": [
+                {
+                    "data": {
+                        "a": 0,
+                        "age": 300,
+                        "b": 1,
+                        "c": 0,
+                        "error": 50
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 0,
+                    "name": "Gauss3",
+                    "plugin_id": "gauss"
+                }
+            ],
+            "green": 122,
+            "id": 2,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 203.20213645513866,
+            "item_y": -9.7872360230113529,
+            "known_type": null,
+            "method": 0,
+            "name": "Event3",
+            "phase_ids": "1",
+            "red": 152,
+            "type": 0
+        },
+        {
+            "blue": 147,
+            "dates": [
+                {
+                    "data": {
+                        "a": 0,
+                        "age": 500,
+                        "b": 1,
+                        "c": 0,
+                        "error": 50
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 0,
+                    "name": "Gauss1",
+                    "plugin_id": "gauss"
+                }
+            ],
+            "green": 123,
+            "id": 0,
+            "is_current": true,
+            "is_selected": true,
+            "item_x": 19,
+            "item_y": -41,
+            "method": 0,
+            "name": "Event1",
+            "phase_ids": "1",
+            "red": 157,
+            "type": 0
+        },
+        {
+            "blue": 153,
+            "dates": [
+                {
+                    "data": {
+                        "a": 0,
+                        "age": 1500,
+                        "b": 1,
+                        "c": 0,
+                        "error": 50
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 0,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 0,
+                    "method": 0,
+                    "name": "Gauss2",
+                    "plugin_id": "gauss"
+                },
+                {
+                    "data": {
+                        "age": 1500,
+                        "error": 50,
+                        "ref_curve": "intcal09.14C"
+                    },
+                    "delta_average": 0,
+                    "delta_error": 0,
+                    "delta_fixed": 100,
+                    "delta_max": 0,
+                    "delta_min": 0,
+                    "delta_type": 0,
+                    "id": 1,
+                    "method": 1,
+                    "name": "C14",
+                    "plugin_id": "14c"
+                }
+            ],
+            "green": 130,
+            "id": 1,
+            "is_current": false,
+            "is_selected": true,
+            "item_x": 88,
+            "item_y": -225,
+            "method": 0,
+            "name": "Event2",
+            "phase_ids": "0",
+            "red": 127,
+            "type": 0
+        }
+    ],
+    "mcmc": {
+        "iter_per_batch": 10,
+        "max_batches": 100,
+        "num_burn": 100,
+        "num_iter": 1000,
+        "num_proc": 1,
+        "seeds": [
+        ],
+        "thinning_interval": 10
+    },
+    "phases": [
+    ],
+    "phases_constraints": [
+    ],
+    "settings": {
+        "step": 1,
+        "tmax": -1000,
+        "tmin": -3000
+    }
+}
