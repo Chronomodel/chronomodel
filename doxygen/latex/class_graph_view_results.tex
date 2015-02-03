@@ -1,0 +1,188 @@
+\hypertarget{class_graph_view_results}{\section{Graph\-View\-Results Class Reference}
+\label{class_graph_view_results}\index{Graph\-View\-Results@{Graph\-View\-Results}}
+}
+Inheritance diagram for Graph\-View\-Results\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=3.000000cm]{class_graph_view_results}
+\end{center}
+\end{figure}
+\subsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+enum {\bfseries Result} \{ {\bfseries e\-Histo} = 0, 
+{\bfseries e\-Trace} = 1, 
+{\bfseries e\-Accept} = 2, 
+{\bfseries e\-Correl} = 3
+ \}
+\item 
+enum {\bfseries Variable} \{ {\bfseries e\-Theta} = 0, 
+{\bfseries e\-Sigma} = 1
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Public Slots}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_graph_view_results_adedf912569f2f1bfce2ce18d83eff743}{void {\bfseries set\-Range} (double min, double max)}\label{class_graph_view_results_adedf912569f2f1bfce2ce18d83eff743}
+
+\item 
+\hypertarget{class_graph_view_results_af7a95a98429d6e1098b254a132d62bf7}{void {\bfseries zoom} (double min, double max)}\label{class_graph_view_results_af7a95a98429d6e1098b254a132d62bf7}
+
+\item 
+\hypertarget{class_graph_view_results_ab6ce38f587f19b5cfa5f7ef25d98a040}{void {\bfseries show\-Numerical\-Results} (bool show)}\label{class_graph_view_results_ab6ce38f587f19b5cfa5f7ef25d98a040}
+
+\item 
+\hypertarget{class_graph_view_results_aba70ac0f4b321aa7d088ececed235564}{void {\bfseries set\-Numerical\-Results} (const Q\-String \&results)}\label{class_graph_view_results_aba70ac0f4b321aa7d088ececed235564}
+
+\end{DoxyCompactItemize}
+\subsection*{Signals}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_graph_view_results_a2ea44a53869e882e4c777c6c3c7d5a80}{void {\bfseries unfold\-Toggled} (bool toggled)}\label{class_graph_view_results_a2ea44a53869e882e4c777c6c3c7d5a80}
+
+\item 
+\hypertarget{class_graph_view_results_a0465f26d23da3dccfe2649141c00c916}{void {\bfseries visibility\-Changed} (bool visible)}\label{class_graph_view_results_a0465f26d23da3dccfe2649141c00c916}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_graph_view_results_a18e8eb08efa0a8fa0cf0ee594e8b5d76}{{\bfseries Graph\-View\-Results} (Q\-Widget $\ast$parent=0)}\label{class_graph_view_results_a18e8eb08efa0a8fa0cf0ee594e8b5d76}
+
+\item 
+\hypertarget{class_graph_view_results_a9580458bf4e19c8ead43de565dc4e63b}{void {\bfseries set\-Result\-To\-Show} (Result result, Variable variablee, bool show\-All\-Chains, const Q\-List$<$ bool $>$ \&show\-Chain\-List, bool show\-Hpd, int threshold, bool show\-Calib, bool show\-Wiggle, bool show\-Raw\-Results)}\label{class_graph_view_results_a9580458bf4e19c8ead43de565dc4e63b}
+
+\item 
+\hypertarget{class_graph_view_results_abb6b232202ec83c76a81b4da5e811715}{void {\bfseries set\-Settings} (const \hyperlink{class_project_settings}{Project\-Settings} \&settings)}\label{class_graph_view_results_abb6b232202ec83c76a81b4da5e811715}
+
+\item 
+\hypertarget{class_graph_view_results_aac8aab9d52756246b54252c86d07336e}{void {\bfseries set\-M\-C\-M\-C\-Settings} (const \hyperlink{class_m_c_m_c_settings}{M\-C\-M\-C\-Settings} \&mcmc, const Q\-List$<$ \hyperlink{struct_chain}{Chain} $>$ \&chains)}\label{class_graph_view_results_aac8aab9d52756246b54252c86d07336e}
+
+\item 
+\hypertarget{class_graph_view_results_a266b7cfb6156be834b5ff15220bb45fe}{void {\bfseries set\-Main\-Color} (const Q\-Color \&color)}\label{class_graph_view_results_a266b7cfb6156be834b5ff15220bb45fe}
+
+\item 
+\hypertarget{class_graph_view_results_a1ebefed3ecce96ecb6325c2bcb690421}{void {\bfseries toggle} (const Q\-Rect \&geometry)}\label{class_graph_view_results_a1ebefed3ecce96ecb6325c2bcb690421}
+
+\item 
+\hypertarget{class_graph_view_results_a76162d60863ae340de7ffe18e92b95d4}{void {\bfseries set\-Rendering} (Graph\-View\-::\-Rendering render)}\label{class_graph_view_results_a76162d60863ae340de7ffe18e92b95d4}
+
+\item 
+\hypertarget{class_graph_view_results_ac54d411a964b8f98110cbfc819725c50}{virtual void {\bfseries set\-Graph\-Font} (const Q\-Font \&font)}\label{class_graph_view_results_ac54d411a964b8f98110cbfc819725c50}
+
+\item 
+\hypertarget{class_graph_view_results_ae85458ded04b07dcdd577e22c471b735}{void {\bfseries set\-Graphs\-Thickness} (int value)}\label{class_graph_view_results_ae85458ded04b07dcdd577e22c471b735}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_graph_view_results_a33052e94aa87524bd42096fdd6021611}{virtual void {\bfseries paint\-Event} (Q\-Paint\-Event $\ast$e)}\label{class_graph_view_results_a33052e94aa87524bd42096fdd6021611}
+
+\item 
+\hypertarget{class_graph_view_results_a69ee90a26c663efd665fe3434c110f3e}{void {\bfseries resize\-Event} (Q\-Resize\-Event $\ast$e)}\label{class_graph_view_results_a69ee90a26c663efd665fe3434c110f3e}
+
+\item 
+\hypertarget{class_graph_view_results_a9e0786ef752718a0daa0563ceaddc45a}{virtual void {\bfseries update\-Layout} ()}\label{class_graph_view_results_a9e0786ef752718a0daa0563ceaddc45a}
+
+\item 
+\hypertarget{class_graph_view_results_a83257e5999a77450994b150890284c6f}{virtual void {\bfseries refresh} ()=0}\label{class_graph_view_results_a83257e5999a77450994b150890284c6f}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_graph_view_results_ab098e6f451d386a0bc2474dec9a10eb0}{\hyperlink{class_graph_view}{Graph\-View} $\ast$ {\bfseries m\-Graph}}\label{class_graph_view_results_ab098e6f451d386a0bc2474dec9a10eb0}
+
+\item 
+\hypertarget{class_graph_view_results_ac9a7d30c31b208ddce5b321a272cd8ef}{Result {\bfseries m\-Current\-Result}}\label{class_graph_view_results_ac9a7d30c31b208ddce5b321a272cd8ef}
+
+\item 
+\hypertarget{class_graph_view_results_aaf533362cc83133ab6c1dcc2ab32c695}{Variable {\bfseries m\-Current\-Variable}}\label{class_graph_view_results_aaf533362cc83133ab6c1dcc2ab32c695}
+
+\item 
+\hypertarget{class_graph_view_results_a076efdc13dc2dad5310929901ee782c2}{Q\-String {\bfseries m\-Title}}\label{class_graph_view_results_a076efdc13dc2dad5310929901ee782c2}
+
+\item 
+\hypertarget{class_graph_view_results_a5dc1e968115b65c3a41242dcbf30396c}{int {\bfseries m\-Min\-Heightto\-Display\-Title}}\label{class_graph_view_results_a5dc1e968115b65c3a41242dcbf30396c}
+
+\item 
+\hypertarget{class_graph_view_results_a15321c0e49204b90f8864e8074eaeb36}{Q\-String {\bfseries m\-Results}}\label{class_graph_view_results_a15321c0e49204b90f8864e8074eaeb36}
+
+\item 
+\hypertarget{class_graph_view_results_af38bd9b3a859ff055a7d5b11f79aa0a1}{bool {\bfseries m\-Show\-All\-Chains}}\label{class_graph_view_results_af38bd9b3a859ff055a7d5b11f79aa0a1}
+
+\item 
+\hypertarget{class_graph_view_results_a73d1ef39ff11e24cd2f0669865225b26}{Q\-List$<$ bool $>$ {\bfseries m\-Show\-Chain\-List}}\label{class_graph_view_results_a73d1ef39ff11e24cd2f0669865225b26}
+
+\item 
+\hypertarget{class_graph_view_results_a35888affb8eddaad403be004b3d39b50}{bool {\bfseries m\-Show\-H\-P\-D}}\label{class_graph_view_results_a35888affb8eddaad403be004b3d39b50}
+
+\item 
+\hypertarget{class_graph_view_results_afdf45212b6a91557b010bfe165aa9776}{int {\bfseries m\-Threshold\-H\-P\-D}}\label{class_graph_view_results_afdf45212b6a91557b010bfe165aa9776}
+
+\item 
+\hypertarget{class_graph_view_results_adb8ccbffa5d71c683775914dd00028e8}{bool {\bfseries m\-Show\-Calib}}\label{class_graph_view_results_adb8ccbffa5d71c683775914dd00028e8}
+
+\item 
+\hypertarget{class_graph_view_results_abfb41254a941d4293e3ba53f6731cb8b}{bool {\bfseries m\-Show\-Wiggle}}\label{class_graph_view_results_abfb41254a941d4293e3ba53f6731cb8b}
+
+\item 
+\hypertarget{class_graph_view_results_a89647edfd0beca056db5552a43fcf6f5}{bool {\bfseries m\-Show\-Raw\-Results}}\label{class_graph_view_results_a89647edfd0beca056db5552a43fcf6f5}
+
+\item 
+\hypertarget{class_graph_view_results_a47154f70c24dc54b81173858b820e044}{bool {\bfseries m\-Show\-Num\-Results}}\label{class_graph_view_results_a47154f70c24dc54b81173858b820e044}
+
+\item 
+\hypertarget{class_graph_view_results_a5f568b9c7ce04f801dcb92b3e3750594}{\hyperlink{class_project_settings}{Project\-Settings} {\bfseries m\-Settings}}\label{class_graph_view_results_a5f568b9c7ce04f801dcb92b3e3750594}
+
+\item 
+\hypertarget{class_graph_view_results_ab31d54dacca8bef05a9af8d63b2cbb25}{\hyperlink{class_m_c_m_c_settings}{M\-C\-M\-C\-Settings} {\bfseries m\-M\-C\-M\-C\-Settings}}\label{class_graph_view_results_ab31d54dacca8bef05a9af8d63b2cbb25}
+
+\item 
+\hypertarget{class_graph_view_results_a98fbcc4bc78ec4548e4a9eba5da91e4b}{Q\-List$<$ \hyperlink{struct_chain}{Chain} $>$ {\bfseries m\-Chains}}\label{class_graph_view_results_a98fbcc4bc78ec4548e4a9eba5da91e4b}
+
+\item 
+\hypertarget{class_graph_view_results_a1b8ebbd31324a69005fe91779caf55ac}{Q\-Color {\bfseries m\-Main\-Color}}\label{class_graph_view_results_a1b8ebbd31324a69005fe91779caf55ac}
+
+\item 
+\hypertarget{class_graph_view_results_a8d90896856d50c65c8386ee06b6da96e}{Q\-Text\-Edit $\ast$ {\bfseries m\-Text\-Area}}\label{class_graph_view_results_a8d90896856d50c65c8386ee06b6da96e}
+
+\item 
+\hypertarget{class_graph_view_results_a9fbd4864f31b1160e92cb66812a07f1a}{\hyperlink{class_button}{Button} $\ast$ {\bfseries m\-Image\-Save\-But}}\label{class_graph_view_results_a9fbd4864f31b1160e92cb66812a07f1a}
+
+\item 
+\hypertarget{class_graph_view_results_a86353924ad273ceb19bbdd627fb55625}{\hyperlink{class_button}{Button} $\ast$ {\bfseries m\-Image\-Clip\-But}}\label{class_graph_view_results_a86353924ad273ceb19bbdd627fb55625}
+
+\item 
+\hypertarget{class_graph_view_results_a10a6ee26287373c29a34a51488e30808}{\hyperlink{class_button}{Button} $\ast$ {\bfseries m\-Results\-Clip\-But}}\label{class_graph_view_results_a10a6ee26287373c29a34a51488e30808}
+
+\item 
+\hypertarget{class_graph_view_results_a539f7869532b10e6db15e7af3f51eb75}{\hyperlink{class_button}{Button} $\ast$ {\bfseries m\-Data\-Save\-But}}\label{class_graph_view_results_a539f7869532b10e6db15e7af3f51eb75}
+
+\item 
+\hypertarget{class_graph_view_results_a5e5d2ffec769ed8b8bd55cd750c19da3}{int {\bfseries m\-Margin}}\label{class_graph_view_results_a5e5d2ffec769ed8b8bd55cd750c19da3}
+
+\item 
+\hypertarget{class_graph_view_results_a478c5e80ed16241c3263633f1329c24c}{int {\bfseries m\-Line\-H}}\label{class_graph_view_results_a478c5e80ed16241c3263633f1329c24c}
+
+\item 
+\hypertarget{class_graph_view_results_a44bb02df4ee7513a7f94cb46f3c96a57}{int {\bfseries m\-Graph\-Left}}\label{class_graph_view_results_a44bb02df4ee7513a7f94cb46f3c96a57}
+
+\item 
+\hypertarget{class_graph_view_results_a989d9932ed0fc1c27495dea38266f1cd}{Q\-Property\-Animation $\ast$ {\bfseries m\-Animation}}\label{class_graph_view_results_a989d9932ed0fc1c27495dea38266f1cd}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 18 of file Graph\-View\-Results.\-h.
+
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+D\-:/\-Dufresne/\-Project\-\_\-\-Q\-T/\-Chrono\-Model/chronomodel/chronomodel/src/ui/panel\-\_\-results/Graph\-View\-Results.\-h\item 
+D\-:/\-Dufresne/\-Project\-\_\-\-Q\-T/\-Chrono\-Model/chronomodel/chronomodel/src/ui/panel\-\_\-results/Graph\-View\-Results.\-cpp\end{DoxyCompactItemize}
