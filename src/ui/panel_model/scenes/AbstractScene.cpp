@@ -76,12 +76,18 @@ void AbstractScene::updateConstraintsPos(AbstractItem* movedItem, const QPointF&
 }
 
 #pragma mark Items events
+// Arrive lorsque la souris clique dans un Event
 bool AbstractScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
 {
     Q_UNUSED(e);
+    AbstractItem* current = currentItem();
+    if(current && item && (item != current)) {qDebug() << "AbstractScene::itemClicked nouveau";}
+    else {qDebug() << "AbstractScene::itemClicked";}
+
     if(mDrawingArrow)
     {
-        AbstractItem* current = currentItem();
+        qDebug() << "AbstractScene::itemClicked if(mDrawingArrow)";
+        //AbstractItem* current = currentItem();
         if(current && item && (item != current))
         {
             createConstraint(current, item);
@@ -97,7 +103,7 @@ void AbstractScene::itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEve
     Q_UNUSED(item);
     Q_UNUSED(e);
 }
-
+// Arrive lorsque la souris passe sur un Event
 void AbstractScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 {
     Q_UNUSED(e);
@@ -108,7 +114,7 @@ void AbstractScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
         mTempArrow->setLocked(true);
     }
 }
-
+// Arrive lorsque la souris sort d'un Event
 void AbstractScene::itemLeaved(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 {
     Q_UNUSED(item);
@@ -216,20 +222,26 @@ void AbstractScene::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 }
 
 #pragma mark Key events
+// Arrive quand on appuie sur une touche du clavier
 void AbstractScene::keyPressEvent(QKeyEvent* keyEvent)
 {
     QGraphicsScene::keyPressEvent(keyEvent);
-    
+
+    if (keyEvent->isAutoRepeat())  keyEvent->ignore();
+
     if(keyEvent->key() == Qt::Key_Delete)
     {
         deleteSelectedItems();
     }
-    else if(keyEvent->key() == Qt::Key_N)
+   /* else if(keyEvent->key() == Qt::Key_N)
     {
         // create ?
-    }
-    else if(keyEvent->modifiers() == Qt::AltModifier)
+    }*/
+    // Ici reperage de la touche Alt
+    //else if(keyEvent->modifiers() == Qt::AltModifier)
+     else if(keyEvent->key() == Qt::Key_Alt)
     {
+        //qDebug() << "You Press: "<< "Qt::Key_Alt";
         mAltIsDown = true;
         AbstractItem* curItem = currentItem();
         if(curItem)
@@ -239,7 +251,8 @@ void AbstractScene::keyPressEvent(QKeyEvent* keyEvent)
             mTempArrow->setFrom(curItem->pos().x(), curItem->pos().y());
         }
     }
-    else if(keyEvent->modifiers() == Qt::ShiftModifier)
+    //else if(keyEvent->modifiers() == Qt::ShiftModifier)
+    else if(keyEvent->key() == Qt::Key_Shift)
     {
         mShiftIsDown = true;
     }
@@ -251,11 +264,21 @@ void AbstractScene::keyPressEvent(QKeyEvent* keyEvent)
 
 void AbstractScene::keyReleaseEvent(QKeyEvent* keyEvent)
 {
-    mDrawingArrow = false;
-    mAltIsDown = false;
-    mShiftIsDown = false;
-    mTempArrow->setVisible(false);
-    QGraphicsScene::keyReleaseEvent(keyEvent);
+    if(keyEvent->isAutoRepeat() )
+    {
+        keyEvent->ignore();
+    }
+
+    if(keyEvent->key() == Qt::Key_Alt)
+        {
+             //qDebug() << "You Released: "<<"Qt::Key_Alt";
+             mDrawingArrow = false;
+             mAltIsDown = false;
+             mShiftIsDown = false;
+             mTempArrow->setVisible(false);
+             QGraphicsScene::keyReleaseEvent(keyEvent);
+        }
+
 }
 
 void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)

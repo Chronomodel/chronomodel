@@ -55,7 +55,12 @@ QRectF ArrowTmpItem::boundingRect() const
 
     return QRectF(x, y, w, h);
 }
-
+/**
+ * @brief ArrowTmpItem::paint Draw the dach line linking Event or Phase
+ * @param painter
+ * @param option
+ * @param widget
+ */
 void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
     Q_UNUSED(option);
@@ -136,7 +141,7 @@ void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
     }
     
     // Message
-    
+    //qDebug() <<"mSate="<<QString::number(eAllowed);
     switch(mState)
     {
         case eAllowed:
@@ -150,6 +155,7 @@ void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
             
             if(mState == eAllowed)
             {
+                //qDebug() <<"if mSate==eAllowed"<<QString::number(eAllowed);
                 painter->drawText(r, Qt::AlignCenter, "OK");
             }
             else
