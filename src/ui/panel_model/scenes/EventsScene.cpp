@@ -601,14 +601,26 @@ void EventsScene::centerOnEvent(int eventId)
 AbstractItem* EventsScene::currentItem()
 {
     QList<QGraphicsItem*> items = selectedItems();
-    if(items.size() > 0)
+   /* if(items.size() > 0)
     {
         EventItem* evtItem = dynamic_cast<EventItem*>(items[0]);
         if(evtItem)
             return evtItem;
     }
-    return 0;
+    return 0;*/
+
+    if(!items.isEmpty())
+    {
+        EventItem* evtItem = dynamic_cast<EventItem*>(items.first());
+        return evtItem;
+    }
+    else
+    {
+        return 0;
+    }
 }
+
+
 
 AbstractItem* EventsScene::collidingItem(QGraphicsItem* item)
 {

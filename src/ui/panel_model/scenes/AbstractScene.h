@@ -37,6 +37,8 @@ public:
     virtual void sendUpdateProject(const QString& reason, bool notify, bool async) = 0;
     
     void updateConstraintsPos(AbstractItem* movedItem, const QPointF& newPos);
+
+    void setCurrentItem(QGraphicsItem *item);
     
 protected:
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* e);
@@ -45,6 +47,7 @@ protected:
     virtual void keyReleaseEvent(QKeyEvent* keyEvent);
     
     virtual AbstractItem* currentItem() = 0;
+
     virtual AbstractItem* collidingItem(QGraphicsItem* item) = 0;
     
     virtual void deleteSelectedItems() = 0;

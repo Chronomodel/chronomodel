@@ -121,6 +121,7 @@ void ArrowItem::updatePosition()
 
 void ArrowItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
 {
+    qDebug()<<"ArrowItem::mouseDoubleClickEvent";
     QGraphicsItem::mouseDoubleClickEvent(e);
     //QRectF r = getBubbleRect();
     //if(r.contains(e->pos()))
@@ -131,6 +132,7 @@ void ArrowItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
 
 void ArrowItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
+   //  qDebug()<<"ArrowItem::mousePressEvent";
     QGraphicsItem::mousePressEvent(e);
     QRectF r = getBubbleRect();
     if(r.contains(e->pos()))

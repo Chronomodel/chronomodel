@@ -33,7 +33,8 @@ public:
 protected:
     AbstractItem* collidingItem(QGraphicsItem* item);
     AbstractItem* currentItem();
-    
+    void setCurrentItem(QGraphicsItem* item);
+
     void deleteSelectedItems();
     void createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo);
     void mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo);

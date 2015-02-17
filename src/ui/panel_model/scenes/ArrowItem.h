@@ -29,7 +29,7 @@ public:
     QPainterPath shape() const;
     
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
-    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e);
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e);   
     void mousePressEvent(QGraphicsSceneMouseEvent* e);
     void hoverMoveEvent(QGraphicsSceneHoverEvent* event);
     void hoverLeaveEvent(QGraphicsSceneHoverEvent* e);

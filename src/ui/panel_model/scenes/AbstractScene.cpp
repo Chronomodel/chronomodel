@@ -34,6 +34,11 @@ void AbstractScene::showGrid(bool show)
     update();
 }
 
+void AbstractScene::setCurrentItem(QGraphicsItem *item)
+{
+    selectedItems().clear();
+    selectedItems().append(item);
+}
 void AbstractScene::updateConstraintsPos(AbstractItem* movedItem, const QPointF& newPos)
 {
     Q_UNUSED(newPos);
@@ -76,26 +81,72 @@ void AbstractScene::updateConstraintsPos(AbstractItem* movedItem, const QPointF&
 }
 
 #pragma mark Items events
-// Arrive lorsque la souris clique dans un Event
+/**
+ * @brief AbstractScene::itemClicked
+ * @param item ie anEvent or a Phase
+ * @param e
+ * @return
+ * Arrive with a click on item (ie an Event or a Phase),
+ * Becareful with the linux system Alt+click can't be detected,
+ *  in this case the user must combine Alt+Shift+click to valided a constraint
+ */
 bool AbstractScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
 {
     Q_UNUSED(e);
-    AbstractItem* current = currentItem();
-    if(current && item && (item != current)) {qDebug() << "AbstractScene::itemClicked nouveau";}
-    else {qDebug() << "AbstractScene::itemClicked";}
-
-    if(mDrawingArrow)
+   /* qDebug() << " bool AbstractScene::itemClicked";
+    if (QApplication::keyboardModifiers().testFlag(Qt::AltModifier) == true)
     {
-        qDebug() << "AbstractScene::itemClicked if(mDrawingArrow)";
-        //AbstractItem* current = currentItem();
+         qDebug() << "QApplication::keyboardModifiers().testFlag(Qt::AltModifier) == true";
+    }
+    if (QApplication::keyboardModifiers().testFlag(Qt::AltModifier) == true)
+    {
+         qDebug() << "QApplication::keyboardModifiers().testFlag(Qt::Key_Alt) == true";
+    }
+
+    if (QApplication::keyboardModifiers().testFlag(Qt::ControlModifier) == true)
+    {
+         qDebug() << "QApplication::keyboardModifiers().testFlag(Qt::ControlModifier) == true";
+    }
+
+
+    qDebug() << "AbstractScene::itemClicked if(current==0)"<<current;*/
+
+
+
+    /*
+      AbstractItem* current = currentItem();
+      if(mDrawingArrow)
+    {
+
         if(current && item && (item != current))
         {
             createConstraint(current, item);
-            mTempArrow->setVisible(false);
+            mTempArrow->setVisible(false);           
+            mDrawingArrow=false;
+            setCurrentItem(item);
             return true;
         }
     }
-    return false;
+    else
+    {
+        qDebug() << "AbstractScene::itemClicked else(mDrawingArrow)";
+    }
+    return false;*/
+
+    AbstractItem* current = currentItem();
+    if(mDrawingArrow && current && item && (item != current))
+    {
+            createConstraint(current, item);
+            mTempArrow->setVisible(false);
+            mDrawingArrow=false;
+            setCurrentItem(item);
+            return true;
+    }
+    else
+    {
+            return false;
+    }
+
 }
 
 void AbstractScene::itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
@@ -115,6 +166,12 @@ void AbstractScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
     }
 }
 // Arrive lorsque la souris sort d'un Event
+/**
+ * @brief AbstractScene::itemLeaved
+ * @param item
+ * @param e
+ *
+ */
 void AbstractScene::itemLeaved(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 {
     Q_UNUSED(item);
@@ -232,23 +289,30 @@ void AbstractScene::keyPressEvent(QKeyEvent* keyEvent)
     if(keyEvent->key() == Qt::Key_Delete)
     {
         deleteSelectedItems();
-    }
-   /* else if(keyEvent->key() == Qt::Key_N)
-    {
-        // create ?
-    }*/
+    }  
     // Ici reperage de la touche Alt
-    //else if(keyEvent->modifiers() == Qt::AltModifier)
-     else if(keyEvent->key() == Qt::Key_Alt)
+   else if(keyEvent->modifiers() == Qt::AltModifier && selectedItems().count()==1)
+     // else if(keyEvent->key() == Qt::Key_Alt)
     {
-        //qDebug() << "You Press: "<< "Qt::Key_Alt";
+        qDebug() << "You Press: "<< "Qt::Key_Alt";
         mAltIsDown = true;
+        QList<QGraphicsItem*> items = selectedItems();
+        //if(items.size() > 0)
+        if(items.count()==1)
+        {
+          qDebug() <<  "this->selectedItems()::count()==1)";
+        }
         AbstractItem* curItem = currentItem();
-        if(curItem)
+        if(curItem) // Controle si un item est déjà sélectionné
         {
             mDrawingArrow = true;
             mTempArrow->setVisible(true);
             mTempArrow->setFrom(curItem->pos().x(), curItem->pos().y());
+        }
+        else
+        {
+            mDrawingArrow = false;
+            mTempArrow->setVisible(false);
         }
     }
     //else if(keyEvent->modifiers() == Qt::ShiftModifier)
@@ -270,8 +334,9 @@ void AbstractScene::keyReleaseEvent(QKeyEvent* keyEvent)
     }
 
     if(keyEvent->key() == Qt::Key_Alt)
+ //elseif(keyEvent->modifiers() == Qt::AltModifier)
         {
-             //qDebug() << "You Released: "<<"Qt::Key_Alt";
+             qDebug() << "You Released: "<<"Qt::Key_Alt";
              mDrawingArrow = false;
              mAltIsDown = false;
              mShiftIsDown = false;
