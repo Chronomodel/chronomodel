@@ -26,7 +26,9 @@ public:
     void generateCorrelations(const QList<Chain>& chains);
     void generateHPD(int threshold);
     void generateCredibility(const QList<Chain>& chains, double threshold);
-    
+
+    void saveToStream(QDataStream *out); // ajout PhD
+    void loadFromStream(QDataStream *in); // ajout PhD
     // Virtual because MHVariable subclass adds some information
     virtual void generateNumericalResults(const QList<Chain>& chains);
 

@@ -939,6 +939,8 @@ void Model::generateCredibilityAndHPD(const QList<Chain>& chains, double thresh)
  * */
 void Model::saveToFile(const QString& fileName)
 {
+    if(!mEvents[0]->mTheta.mTrace.empty())
+    {
     // -----------------------------------------------------
     //  Create file
     // -----------------------------------------------------
@@ -964,10 +966,14 @@ void Model::saveToFile(const QString& fileName)
         // -----------------------------------------------------
         for(int i=0; i<mPhases.size(); ++i)
         {
-            Phase* phase = mPhases[i];
+            /*Phase* phase = mPhases[i];
             out << phase->mAlpha.mTrace;
+            out << phase->mAlpha.;
             out << phase->mBeta.mTrace;
-            out << phase->mDuration.mTrace;
+            out << phase->mDuration.mTrace;*/
+            mPhases[i]->mAlpha.saveToStream(&out);
+            mPhases[i]->mBeta.saveToStream(&out);
+            mPhases[i]->mDuration.saveToStream(&out);
         }
 
         // -----------------------------------------------------
@@ -975,10 +981,12 @@ void Model::saveToFile(const QString& fileName)
         // -----------------------------------------------------
         for(int i=0; i<mEvents.size(); ++i)
         {
-            Event* event = mEvents[i];
+            /*Event* event = mEvents[i];
             out << event->mTheta.mTrace;
             out << event->mTheta.mHistoryAcceptRateMH;
-            out << event->mTheta.mAllAccepts;
+            out << event->mTheta.mAllAccepts;*/
+
+           mEvents[i]->mTheta.saveToStream(&out);
         }
 
         // -----------------------------------------------------
@@ -990,7 +998,7 @@ void Model::saveToFile(const QString& fileName)
             QList<Date>& dates = event->mDates;
             for(int j=0; j<dates.size(); ++j)
             {
-                Date& date = dates[j];
+                /*Date& date = dates[j];
                 
                 out << date.mTheta.mTrace;
                 out << date.mTheta.mHistoryAcceptRateMH;
@@ -1002,7 +1010,11 @@ void Model::saveToFile(const QString& fileName)
 
                 out << date.mWiggle.mTrace;
                 out << date.mWiggle.mHistoryAcceptRateMH;
-                out << date.mWiggle.mAllAccepts;
+                out << date.mWiggle.mAllAccepts;*/
+
+                dates[j].mTheta.saveToStream(&out);
+                dates[j].mSigma.saveToStream(&out);
+                dates[j].mWiggle.saveToStream(&out);
 
             }
         }
@@ -1013,6 +1025,7 @@ void Model::saveToFile(const QString& fileName)
         file.write(compressedData);
         file.close();
     }
+  }
 }
 /** @Brief Read the .dat file, it's the result of the saved computation and uncompress it
  *
@@ -1020,7 +1033,8 @@ void Model::saveToFile(const QString& fileName)
 void Model::restoreFromFile(const QString& fileName)
 {
     QFile file(fileName);
-    if(file.open(QIODevice::ReadOnly))
+
+    if(file.exists() && file.open(QIODevice::ReadOnly))
     {
         QByteArray compressedData = file.readAll();
 
@@ -1054,9 +1068,12 @@ void Model::restoreFromFile(const QString& fileName)
 
             for(int i=0; i<mPhases.size(); ++i)
             {
-                in >> mPhases[i]->mAlpha.mTrace;
+                /*in >> mPhases[i]->mAlpha.mTrace;
                 in >> mPhases[i]->mBeta.mTrace;
-                in >> mPhases[i]->mDuration.mTrace;
+                in >> mPhases[i]->mDuration.mTrace;*/
+                mPhases[i]->mAlpha.loadFromStream(&in);
+                mPhases[i]->mBeta.loadFromStream(&in);
+                mPhases[i]->mDuration.loadFromStream(&in);
             }
 
             // -----------------------------------------------------
@@ -1065,9 +1082,10 @@ void Model::restoreFromFile(const QString& fileName)
 
             for(int i=0; i<mEvents.size(); ++i)
             {
-                in >> mEvents[i]->mTheta.mTrace;
+                /*in >> mEvents[i]->mTheta.mTrace;
                 in >> mEvents[i]->mTheta.mHistoryAcceptRateMH;
-                in >> mEvents[i]->mTheta.mAllAccepts;
+                in >> mEvents[i]->mTheta.mAllAccepts;*/
+                mEvents[i]->mTheta.loadFromStream(&in);
             }
 
             // -----------------------------------------------------
@@ -1078,7 +1096,7 @@ void Model::restoreFromFile(const QString& fileName)
             {
                 for(int j=0; j<mEvents[i]->mDates.size(); ++j)
                 {
-                    in >> mEvents[i]->mDates[j].mTheta.mTrace;
+                    /*in >> mEvents[i]->mDates[j].mTheta.mTrace;
                     in >> mEvents[i]->mDates[j].mTheta.mHistoryAcceptRateMH;
                     in >> mEvents[i]->mDates[j].mTheta.mAllAccepts;
 
@@ -1088,7 +1106,11 @@ void Model::restoreFromFile(const QString& fileName)
 
                     in >> mEvents[i]->mDates[j].mWiggle.mTrace;
                     in >> mEvents[i]->mDates[j].mWiggle.mHistoryAcceptRateMH;
-                    in >> mEvents[i]->mDates[j].mWiggle.mAllAccepts;
+                    in >> mEvents[i]->mDates[j].mWiggle.mAllAccepts;*/
+
+                    mEvents[i]->mDates[j].mTheta.loadFromStream(&in);
+                    mEvents[i]->mDates[j].mSigma.loadFromStream(&in);
+                    mEvents[i]->mDates[j].mWiggle.loadFromStream(&in);
                 }
             }
             in >> mLogModel;

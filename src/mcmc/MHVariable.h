@@ -22,6 +22,9 @@ public:
     
     void generateNumericalResults(const QList<Chain>& chains);
     QString resultsText(const QString& noResultMessage = QObject::tr("No result to display")) const;
+
+    void saveToStream(QDataStream *out); // ajout PhD
+    void loadFromStream(QDataStream *in); // ajout PhD
     
 public:
     double mSigmaMH;

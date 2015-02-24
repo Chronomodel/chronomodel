@@ -20,7 +20,7 @@ mPhase(0)
     
     mDurationGraph = new GraphView(this);
     mDurationGraph->setBackgroundColor(QColor(230, 230, 230));
-    mDurationGraph->addInfo("WARNING : this graph scale is NOT the study period!");
+    mDurationGraph->addInfo(tr("WARNING : this graph scale is NOT the study period!"));
     
     mDurationGraph->showHorizGrid(false);
     mDurationGraph->setXAxisMode(GraphView::eAllTicks);
@@ -101,7 +101,8 @@ void GraphViewPhase::refresh()
     if(mPhase)
     {
         QColor color = mPhase->mColor;
-        
+
+        /* Dessine une densité*/
         if(mCurrentResult == eHisto && mCurrentVariable == eTheta)
         {
             mShowDuration->setVisible(true);
@@ -122,7 +123,7 @@ void GraphViewPhase::refresh()
                 //alphaCol.setBlue(color.red());
                 
                 GraphCurve curveAlpha;
-                curveAlpha.mName = "alpha full";
+                curveAlpha.mName = QString(tr("alpha full"));
                 curveAlpha.mPen.setColor(alphaCol);
                 curveAlpha.mPen.setStyle(Qt::DotLine);
                 curveAlpha.mIsHisto = false;
@@ -143,7 +144,7 @@ void GraphViewPhase::refresh()
                 mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                 
                 GraphCurve curveBeta;
-                curveBeta.mName = QString("beta full");
+                curveBeta.mName = QString(tr("beta full"));
                 curveBeta.mPen.setColor(betaCol);
                 curveBeta.mPen.setStyle(Qt::DashLine);
                 curveBeta.mIsHisto = false;
@@ -166,7 +167,7 @@ void GraphViewPhase::refresh()
                 // HPD
                 
                 GraphCurve curveAlphaHPD;
-                curveAlphaHPD.mName = "alpha HPD full";
+                curveAlphaHPD.mName = QString(tr("alpha HPD full"));
                 curveAlphaHPD.mPen.setColor(alphaCol);
                 curveAlphaHPD.mPen.setStyle(Qt::DotLine);
                 curveAlphaHPD.mFillUnder = true;
@@ -176,7 +177,7 @@ void GraphViewPhase::refresh()
                 mGraph->addCurve(curveAlphaHPD);
                 
                 GraphCurve curveBetaHPD;
-                curveBetaHPD.mName = "beta HPD full";
+                curveBetaHPD.mName = QString(tr("beta HPD full"));
                 curveBetaHPD.mPen.setColor(color);
                 curveBetaHPD.mPen.setStyle(Qt::DashLine);
                 curveBetaHPD.mFillUnder = true;
@@ -188,7 +189,7 @@ void GraphViewPhase::refresh()
                 // Duration
                 
                 GraphCurve curveDur;
-                curveDur.mName = QString("duration");
+                curveDur.mName = QString(tr("duration"));
                 curveDur.mPen.setColor(betaCol);
                 curveDur.mIsHisto = false;
                 curveDur.mData = equal_areas(mPhase->mDuration.fullHisto(), 1.f);
@@ -200,21 +201,25 @@ void GraphViewPhase::refresh()
                     yMax = 1.1f * map_max_value(curveDur.mData);
                     mDurationGraph->setRangeY(0, qMax(mGraph->maximumY(), 0.000001));
                     mDurationGraph->setRangeX(0, qMax(curveDur.mData.lastKey(), 0.01));
-                    
+                    /* ajoute la densité HPD sur durée*/
                     GraphCurve curveDurHPD;
-                    curveDurHPD.mName = "duration HPD";
+                    curveDurHPD.mName = QString(tr("duration HPD"));
                     curveDurHPD.mPen.setColor(color);
                     curveDurHPD.mFillUnder = true;
                     curveDurHPD.mIsHisto = false;
                     curveDurHPD.mIsRectFromZero = true;
                     curveDurHPD.mData = equal_areas(mPhase->mDuration.mHPD, mThresholdHPD / 100.f);
+
+                    double max = map_max_value(curveDurHPD.mData);
+
+                    mDurationGraph->setRangeY(0, max);
                     mDurationGraph->addCurve(curveDurHPD);
                 }
-                
+                /* dessine les densités alpha et beta sans lissage*/
                 if(mShowRawResults)
                 {
                     GraphCurve curveRawAlpha;
-                    curveRawAlpha.mName = "raw alpha";
+                    curveRawAlpha.mName = QString(tr("raw alpha"));
                     curveRawAlpha.mPen.setColor(Qt::red);
                     curveRawAlpha.mPen.setStyle(Qt::DotLine);
                     curveRawAlpha.mData = equal_areas(mPhase->mAlpha.fullRawHisto(), 1.f);
@@ -225,7 +230,7 @@ void GraphViewPhase::refresh()
                     mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                     
                     GraphCurve curveRawBeta;
-                    curveRawBeta.mName = "raw beta";
+                    curveRawBeta.mName = QString(tr("raw beta"));
                     curveRawBeta.mPen.setColor(Qt::red);
                     curveRawBeta.mPen.setStyle(Qt::DashLine);
                     curveRawBeta.mData = equal_areas(mPhase->mBeta.fullRawHisto(), 1.f);
@@ -243,7 +248,7 @@ void GraphViewPhase::refresh()
                     QColor col = Painting::chainColors[i];
                     
                     GraphCurve curveAlphaChain;
-                    curveAlphaChain.mName = QString("alpha chain " + QString::number(i));
+                    curveAlphaChain.mName = QString(tr("alpha chain ") + QString::number(i));
                     curveAlphaChain.mPen.setColor(col);
                     curveAlphaChain.mPen.setStyle(Qt::DotLine);
                     curveAlphaChain.mIsHisto = false;
@@ -254,7 +259,7 @@ void GraphViewPhase::refresh()
                     mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                     
                     GraphCurve curveBetaChain;
-                    curveBetaChain.mName = QString("beta chain " + QString::number(i));
+                    curveBetaChain.mName = QString(tr("beta chain ") + QString::number(i));
                     curveBetaChain.mPen.setColor(col);
                     curveBetaChain.mPen.setStyle(Qt::DashLine);
                     curveBetaChain.mIsHisto = false;
@@ -266,6 +271,8 @@ void GraphViewPhase::refresh()
                 }
             }
         }
+
+        /* Dessine une trace*/
         else if(mCurrentResult == eTrace && mCurrentVariable == eTheta)
         {
             mShowDuration->setVisible(false);
@@ -286,7 +293,7 @@ void GraphViewPhase::refresh()
                 
                 GraphCurve curveAlpha;
                 curveAlpha.mUseVectorData = true;
-                curveAlpha.mName = QString("alpha trace chain " + QString::number(chainIdx));
+                curveAlpha.mName = QString(tr("alpha trace chain ") + QString::number(chainIdx));
                 curveAlpha.mDataVector = mPhase->mAlpha.fullTraceForChain(mChains, chainIdx);
                 curveAlpha.mPen.setColor(col);
                 //curveAlpha.mPen.setStyle(Qt::DotLine);
@@ -295,7 +302,7 @@ void GraphViewPhase::refresh()
                 
                 GraphCurve curveBeta;
                 curveBeta.mUseVectorData = true;
-                curveBeta.mName = QString("beta trace chain " + QString::number(chainIdx));
+                curveBeta.mName = QString(tr("beta trace chain ") + QString::number(chainIdx));
                 curveBeta.mDataVector = mPhase->mBeta.fullTraceForChain(mChains, chainIdx);
                 curveBeta.mPen.setColor(col);
                 //curveBeta.mPen.setStyle(Qt::DashLine);
@@ -319,6 +326,7 @@ void GraphViewPhase::updateLayout()
     int butMinH = 30;
     
     QRect graphRect(mGraphLeft, 0, width() - mGraphLeft, height()-1);
+
     if(h <= mLineH + butMinH)
     {
         mDurationGraph->setYAxisMode(GraphView::eHidden);
@@ -327,6 +335,7 @@ void GraphViewPhase::updateLayout()
     {
         mDurationGraph->setYAxisMode(GraphView::eMinMax);
     }
+
     if(height() >= mMinHeighttoDisplayTitle)
     {
         graphRect.adjust(0, 20, 0, 0);

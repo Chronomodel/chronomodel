@@ -210,7 +210,7 @@ double Phase::getMaxThetaPrevPhases(double tmin)
 
 void Phase::updateAll(double tmin, double tmax)
 {
-    static bool initilized = false;
+    static bool initalized = false;
     
     double oldAlpha = mAlpha.mX;
     double oldBeta = mBeta.mX;
@@ -219,7 +219,7 @@ void Phase::updateAll(double tmin, double tmax)
     mBeta.mX = getMaxThetaEvents(tmax);
     mDuration.mX = mBeta.mX - mAlpha.mX;
     
-    if(initilized)
+    if(initalized)
     {
         if(mAlpha.mX != oldAlpha)
             mIsAlphaFixed = false;
@@ -229,7 +229,7 @@ void Phase::updateAll(double tmin, double tmax)
     
     updateTau();
     
-    initilized = true;
+    initalized = true;
 }
 
 void Phase::initTau()
