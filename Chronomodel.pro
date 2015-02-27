@@ -34,6 +34,8 @@ OBJECTS_DIR = $$BUILD_DIR/obj
 MOC_DIR = $$BUILD_DIR/moc
 RCC_DIR = $$BUILD_DIR/rcc
 
+
+message("PRO_PATH : $$_PRO_FILE_PWD_")
 message("BUILD_DIR : $$BUILD_DIR")
 message("DESTDIR : $$DESTDIR")
 message("OBJECTS_DIR : $$OBJECTS_DIR")
@@ -48,8 +50,9 @@ QT += core gui widgets svg
 RESOURCES = $$PRO_PATH/Chronomodel.qrc
 
 # Resource file (Windows only)
-RC_FILE = $$PRO_PATH/Chronomodel.rc
-
+win32{
+    RC_FILE = $$PRO_PATH/Chronomodel.rc
+}
 #########################################
 # C++ 11
 # Config must use C++ 11 for random number generator
@@ -76,7 +79,7 @@ macx{
 QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas
 
 # Icon file
-ICON = $$PRO_PATH/icon/Chronomodel.icns
+#ICON = $$PRO_PATH/icon/Chronomodel.icns
 
 macx{
 	QMAKE_MAC_SDK = macosx10.10
@@ -88,6 +91,7 @@ macx{
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel_User_Manual.pdf
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/License.txt
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/mac/resources/readme.rtf
+
 	QMAKE_BUNDLE_DATA += RESOURCES_FILES
 }
 
@@ -98,7 +102,7 @@ macx{
 
 DEFINES += _USE_MATH_DEFINES
 
-# Activate this to use FFT kernel method on hiostograms
+# Activate this to use FFT kernel method on histograms
 
 USE_FFT = 1
 DEFINES += "USE_FFT=$${USE_FFT}"
@@ -122,16 +126,30 @@ DEFINES += "USE_PLUGIN_AM=$${USE_PLUGIN_AM}"
 #########################################
 
 macx{
-	INCLUDEPATH += lib/FFTW/mac
-    LIBS += -Llib/FFTW/mac -lfftw3f
-}win32{
-	INCLUDEPATH += lib/FFTW
-    LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
-}else{
-	INCLUDEPATH += lib/FFTW
-    LIBS += -lfftw3f
+        #  macx:INCLUDEPATH += $$quote(/lib/FFTW)
+        LIBS += -l"$$_PRO_FILE_PWD_/lib/FFTW/mac/libfftw3.3.dylib"
+        message("macx->FFTW")
 }
-
+win32{
+        INCLUDEPATH += lib/FFTW
+        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
+        message("win32->FFTW")
+}
+linux{
+	INCLUDEPATH += lib/FFTW
+        LIBS += -lfftw3f
+        message("linux->FFTW")
+}
+unix{
+        INCLUDEPATH += lib/FFTW
+        LIBS += -lfftw3f
+        message("unix->FFTW")
+}
+else{
+        INCLUDEPATH += lib/FFTW
+        LIBS += -lfftw3f
+        message("else->FFTW")
+}
 #########################################
 # INCLUDES
 #########################################
