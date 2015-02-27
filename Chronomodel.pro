@@ -34,7 +34,6 @@ OBJECTS_DIR = $$BUILD_DIR/obj
 MOC_DIR = $$BUILD_DIR/moc
 RCC_DIR = $$BUILD_DIR/rcc
 
-
 message("PRO_PATH : $$_PRO_FILE_PWD_")
 message("BUILD_DIR : $$BUILD_DIR")
 message("DESTDIR : $$DESTDIR")

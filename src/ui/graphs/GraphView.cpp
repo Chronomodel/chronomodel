@@ -798,10 +798,10 @@ void GraphView::drawCurves(QPainter& painter)
                     double valueX = iter.key();
                     double valueY = iter.value();
                     
-                    if(curve.mName == "G")
+                   /* if(curve.mName == "G")
                     {
                         //qDebug() << valueX << " : " << valueY;
-                    }
+                    }*/
                     if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
                     {
                         double x = getXForValue(valueX, false);

@@ -204,7 +204,7 @@ void MetropolisVariable::generateHPD(int threshold)
         // alpha = beta => duration is always null !
         // We don't display the phase duration but we print the numerical HPD result.
         
-        qDebug() << "WARNING : Cannot generate HPD on empty histo";
+        qDebug() << "WARNING : Cannot generate HPD on empty histo in MetropolisVariable::generateHPD";
     }
 }
 
@@ -388,3 +388,35 @@ QString MetropolisVariable::resultsText(const QString& noResultMessage) const
     return result;
 }
 
+void MetropolisVariable::saveToStream(QDataStream* out) // ajout PhD
+{
+     *out << this->mChainsHistos;
+     *out << this->mChainsRawHistos;
+     //out << this->mChainsResults;
+     *out << this->mCorrelations;
+     *out << this->mCredibility;
+     *out << this->mExactCredibilityThreshold;
+     *out << this->mHisto;
+     *out << this->mHPD;
+     *out << this->mRawHisto;
+     //out << this->mResults;
+     *out << this->mThreshold;
+     *out << this->mTrace;
+     *out << this->mX;
+}
+void MetropolisVariable::loadFromStream(QDataStream *in) // ajout PhD
+{
+    *in >> this->mChainsHistos;
+    *in >> this->mChainsRawHistos;
+    //in >> this->mChainsResults;
+    *in >> this->mCorrelations;
+    *in >> this->mCredibility;
+    *in >> this->mExactCredibilityThreshold;
+    *in >> this->mHisto;
+    *in >> this->mHPD;
+    *in >> this->mRawHisto;
+    //in >> this->mResults;
+    *in >> this->mThreshold;
+    *in >> this->mTrace;
+    *in >> this->mX;
+}

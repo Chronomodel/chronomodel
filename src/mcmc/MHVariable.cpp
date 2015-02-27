@@ -116,3 +116,56 @@ QString MHVariable::resultsText(const QString& noResultMessage) const
     return result;
 }
 
+void MHVariable::saveToStream(QDataStream *out) // ajout PhD
+{
+     /* herited from MetropolisVariable*/
+    *out << this->mChainsHistos;
+     *out << this->mChainsRawHistos;
+     //out << this->mChainsResults;
+     *out << this->mCorrelations;
+     *out << this->mCredibility;
+     *out << this->mExactCredibilityThreshold;
+     *out << this->mHisto;
+     *out << this->mHPD;
+     *out << this->mRawHisto;
+     //out << this->mResults;
+     *out << this->mThreshold;
+     *out << this->mTrace;
+     *out << this->mX;
+
+     /* owned by MHVariable*/
+     *out << this->mAllAccepts;
+     *out << this->mGlobalAcceptation;
+     *out << this->mHistoryAcceptRateMH;
+     *out << this->mLastAccepts;
+     *out << this->mLastAcceptsLength;
+     *out << this->mProposal;
+     *out << this->mSigmaMH;
+
+}
+void MHVariable::loadFromStream(QDataStream *in) // ajout PhD
+{
+    /* herited from MetropolisVariable*/
+    *in >> this->mChainsHistos;
+    *in >> this->mChainsRawHistos;
+    //*in >> this->mChainsResults;
+    *in >> this->mCorrelations;
+    *in >> this->mCredibility;
+    *in >> this->mExactCredibilityThreshold;
+    *in >> this->mHisto;
+    *in >> this->mHPD;
+    *in >> this->mRawHisto;
+    //*in >> this->mResults;
+    *in >> this->mThreshold;
+    *in >> this->mTrace;
+    *in >> this->mX;
+
+     /* owned by MHVariable*/
+    *in >> this->mAllAccepts;
+    *in >> this->mGlobalAcceptation;
+    *in >> this->mHistoryAcceptRateMH;
+    *in >> this->mLastAccepts;
+    *in >> this->mLastAcceptsLength;
+    *in >> this->mProposal;
+    *in >> this->mSigmaMH;
+}
