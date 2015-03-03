@@ -70,6 +70,14 @@ T vector_min_value(const QVector<T>& aVector)
     return 0;
 }
 
+ template<typename T>
+ const T inRange(const T x,const T minimum,const T maximum)
+{
+    T R = (x > minimum)? x : minimum ;
+      R = (R < maximum)? R : maximum;
+    return R;
+}
+
 template <class U, class T>
 T map_max_value(const QMap<U, T>& aMap)
 {

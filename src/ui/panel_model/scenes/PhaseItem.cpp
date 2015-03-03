@@ -25,7 +25,7 @@ PhaseItem::~PhaseItem()
 }
 
 #pragma mark Phase
-QJsonObject& PhaseItem::phase()
+QJsonObject& PhaseItem::getPhase()
 {
     return mData;
 }

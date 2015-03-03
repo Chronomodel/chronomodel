@@ -866,6 +866,8 @@ void GraphView::drawCurves(QPainter& painter)
 
 void GraphView::exportCurrentCurves(const QString& defaultPath, const QString& csvSep, bool writeInRows, int offset) const
 {
+    Q_UNUSED(writeInRows);
+    
     QString filter = tr("CSV (*.csv)");
     QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                     tr("Save graph data as..."),

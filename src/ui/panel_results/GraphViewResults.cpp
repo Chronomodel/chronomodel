@@ -89,7 +89,7 @@ GraphViewResults::~GraphViewResults()
     
 }
 
-void GraphViewResults::setResultToShow(Result result, Variable variable, bool showAllChains, const QList<bool>& showChainList, bool showHpd, int threshold, bool showCalib, bool showWiggle, bool showRawResults)
+void GraphViewResults::setResultToShow(Result result, Variable variable, bool showAllChains, const QList<bool>& showChainList, bool showHpd, float threshold, bool showCalib, bool showWiggle, bool showRawResults)
 {
     mCurrentResult = result;
     mCurrentVariable = variable;

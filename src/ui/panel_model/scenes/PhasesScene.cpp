@@ -3,6 +3,7 @@
 #include "ArrowItem.h"
 #include "MainWindow.h"
 #include "Project.h"
+#include "QtUtilities.h"
 #include <QtWidgets>
 
 
@@ -22,10 +23,52 @@ void PhasesScene::deleteSelectedItems()
     MainWindow::getInstance()->getProject()->deleteSelectedPhases();
 }
 
+bool PhasesScene::constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo)
+{
+    QJsonArray constraints = MainWindow::getInstance()->getProject()->mState[STATE_PHASES_CONSTRAINTS].toArray();
+    
+    QJsonObject phaseFrom = ((PhaseItem*)itemFrom)->getPhase();
+    QJsonObject phaseTo   = ((PhaseItem*)itemTo)->getPhase();
+    
+    int phaseFromId = phaseFrom[STATE_ID].toInt();
+    int phaseToId   = phaseTo[STATE_ID].toInt();
+    
+    bool ConstraintAllowed = true;
+    
+    for(int i=0; i<constraints.size(); ++i)
+    {
+        QJsonObject constraint = constraints[i].toObject();
+        // Interdit le doublon
+        if(constraint[STATE_CONSTRAINT_BWD_ID].toInt() == phaseFromId && constraint[STATE_CONSTRAINT_FWD_ID].toInt() == phaseToId) {
+            
+            ConstraintAllowed = false;
+            //qDebug() << "PhasesScene::constraintAllowed: not Allowed " ;
+        }
+        //Interdit l'inversion
+        else if(constraint[STATE_CONSTRAINT_BWD_ID].toInt() == phaseToId && constraint[STATE_CONSTRAINT_FWD_ID].toInt() == phaseFromId) {
+            
+            ConstraintAllowed = false;
+            //qDebug() << "PhasesScene::constraintAllowed: not Allowed Inversion" ;
+        }
+    }
+    if ( ConstraintAllowed && constraintIsCircular(constraints, phaseFromId, phaseToId) ) {
+        
+        ConstraintAllowed = false;
+        
+#ifdef DEBUG
+        qDebug() << "EventsScene::constraintAllowed: not Allowed Circular" ;
+#endif
+    }
+    return ConstraintAllowed;
+    
+    
+}
+
+
 void PhasesScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
 {
-    QJsonObject phaseFrom = ((PhaseItem*)itemFrom)->phase();
-    QJsonObject phaseTo = ((PhaseItem*)itemTo)->phase();
+    QJsonObject phaseFrom = ((PhaseItem*)itemFrom)->getPhase();
+    QJsonObject phaseTo = ((PhaseItem*)itemTo)->getPhase();
     
     MainWindow::getInstance()->getProject()->createPhaseConstraint(phaseFrom[STATE_ID].toInt(),
                                                         phaseTo[STATE_ID].toInt());
@@ -33,8 +76,8 @@ void PhasesScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
 
 void PhasesScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
 {
-    QJsonObject phaseFrom = ((PhaseItem*)itemFrom)->phase();
-    QJsonObject phaseTo = ((PhaseItem*)itemTo)->phase();
+    QJsonObject phaseFrom = ((PhaseItem*)itemFrom)->getPhase();
+    QJsonObject phaseTo = ((PhaseItem*)itemTo)->getPhase();
     
     MainWindow::getInstance()->getProject()->mergePhases(phaseFrom[STATE_ID].toInt(),
                                               phaseTo[STATE_ID].toInt());
@@ -50,7 +93,7 @@ void PhasesScene::sendUpdateProject(const QString& reason, bool notify, bool sto
     
     QJsonArray phases;
     for(int i=0; i<mItems.size(); ++i)
-        phases.append(((PhaseItem*)mItems[i])->phase());
+        phases.append(((PhaseItem*)mItems[i])->getPhase());
     stateNext[STATE_PHASES] = phases;
     
     if(statePrev != stateNext)
@@ -85,7 +128,7 @@ void PhasesScene::updateProject()
     for(int i=mItems.size()-1; i>=0; --i)
     {
         PhaseItem* item = (PhaseItem*)mItems[i];
-        QJsonObject& phase = item->phase();
+        QJsonObject& phase = item->getPhase();
         
         if(!phases_ids.contains(phase[STATE_ID].toInt()))
         {
@@ -115,7 +158,7 @@ void PhasesScene::updateProject()
         for(int j=0; j<mItems.size(); ++j)
         {
             PhaseItem* item = (PhaseItem*)mItems[j];
-            QJsonObject itemPhase = item->phase();
+            QJsonObject itemPhase = item->getPhase();
             if(itemPhase[STATE_ID].toInt() == phase[STATE_ID].toInt())
             {
                 itemExists = true;
@@ -283,7 +326,7 @@ void PhasesScene::updateSelection(bool sendNotif, bool forced)
         
         for(int i=0; i<mItems.size(); ++i)
         {
-            QJsonObject& phase = ((PhaseItem*)mItems[i])->phase();
+            QJsonObject& phase = ((PhaseItem*)mItems[i])->getPhase();
             bool selected = mItems[i]->isSelected();
             if(phase[STATE_IS_SELECTED].toBool() != selected)
             {
@@ -300,7 +343,7 @@ void PhasesScene::updateSelection(bool sendNotif, bool forced)
         PhaseItem* curItem = (PhaseItem*)currentItem();
         if(curItem)
         {
-            QJsonObject& p = curItem->phase();
+            QJsonObject& p = curItem->getPhase();
             if(!p[STATE_IS_CURRENT].toBool())
             {
                 p[STATE_IS_CURRENT] = true;
@@ -362,7 +405,7 @@ void PhasesScene::itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent
     if(!mDrawingArrow)
     {
         Project* project = MainWindow::getInstance()->getProject();
-        project->updatePhase(((PhaseItem*)item)->phase());
+        project->updatePhase(((PhaseItem*)item)->getPhase());
     }
 }
 
@@ -426,7 +469,7 @@ void PhasesScene::updateCheckedPhases()
     for(int i=0; i<mItems.size(); ++i)
     {
         PhaseItem* item = (PhaseItem*)mItems[i];
-        QJsonObject phase = item->phase();
+        QJsonObject phase = item->getPhase();
         int id = phase[STATE_ID].toInt();
         
         if(phases.find(id) == phases.end())

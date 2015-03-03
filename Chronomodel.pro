@@ -42,7 +42,7 @@ message("MOC_DIR : $$MOC_DIR")
 message("RCC_DIR : $$RCC_DIR")
 
 # Icon file
-ICON = $$PRO_PATH/icon/Chronomodel.icns
+#ICON = $$PRO_PATH/icon/Chronomodel.icns
 
 # Qt modules (must be deployed along with the application
 QT += core gui widgets svg

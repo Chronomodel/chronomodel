@@ -80,6 +80,11 @@ Project* MainWindow::getProject()
     return mProject;
 }
 
+QJsonObject MainWindow::getState()
+{
+    return mProject->mState;
+}
+
 AppSettings MainWindow::getAppSettings() const
 {
     return mAppSettings;

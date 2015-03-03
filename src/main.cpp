@@ -65,9 +65,9 @@ int main(int argc, char *argv[])
     
     ChronoApp a(argc, argv);
     
-    a.setApplicationName("Chronomodel");
-    a.setApplicationDisplayName("Chronomodel");
-    a.setApplicationVersion("1.1");
+    a.setApplicationName("ChronoModel");
+    a.setApplicationDisplayName("ChronoModel");
+    a.setApplicationVersion("1.2.3 beta");
     a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));

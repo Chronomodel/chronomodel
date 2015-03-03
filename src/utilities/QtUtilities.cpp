@@ -1,4 +1,5 @@
 #include "QtUtilities.h"
+#include "StateKeys.h"
 #include <QtWidgets>
 #include <QtSvg>
 
@@ -235,4 +236,37 @@ QColor randomColor()
     return QColor(rand() % 255,
                   rand() % 255,
                   rand() % 255);
+}
+
+bool constraintIsCircular( QJsonArray constraints, const int FromId, const int ToId)
+{    
+    /*bool isCircular = false;
+   qDebug() << "entre dans constraintIsCircular true FromId="<< FromId <<"  ToId="<<ToId ;*/
+    
+    for(int i=0; i<constraints.size(); ++i)
+    {
+        QJsonObject constraint = constraints[i].toObject();
+        
+      /* qDebug() << "------------------------------";
+       qDebug() << "comparaison constraint[STATE_CONSTRAINT_BWD_ID].toInt()=="<< constraint[STATE_CONSTRAINT_BWD_ID].toInt()<<"  constraint[STATE_CONSTRAINT_FWD_ID].toInt()=="<<constraint[STATE_CONSTRAINT_FWD_ID].toInt() ;*/
+        
+        //Interdit l'inversion
+        if(constraint[STATE_CONSTRAINT_BWD_ID].toInt() == ToId && constraint[STATE_CONSTRAINT_FWD_ID].toInt() == FromId)
+        {
+            /*isCircular = true;
+            qDebug() << "constraintIsCircular true" ;*/
+            return true;
+        }
+        else if (constraint[STATE_CONSTRAINT_BWD_ID].toInt() == ToId) {
+                int ToIdFellower =  constraint[STATE_CONSTRAINT_FWD_ID].toInt();
+                if(constraintIsCircular(constraints, FromId ,ToIdFellower))
+                {
+                   /* isCircular = true;
+                    qDebug() << "constraintIsCircular true" ;*/
+                    return true;
+                };
+            }
+    }
+    
+    return false;//isCircular;
 }

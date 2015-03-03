@@ -13,7 +13,7 @@ public:
     PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsItem* parent = 0);
     virtual ~PhaseItem();
     
-    QJsonObject& phase();
+    QJsonObject& getPhase();
     void setPhase(const QJsonObject& phase);
     
     void setState(Qt::CheckState state);

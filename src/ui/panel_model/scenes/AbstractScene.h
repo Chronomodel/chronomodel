@@ -51,6 +51,8 @@ protected:
     virtual AbstractItem* collidingItem(QGraphicsItem* item) = 0;
     
     virtual void deleteSelectedItems() = 0;
+    
+    virtual bool constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo) = 0;
     virtual void createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo) = 0;
     virtual void mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo) = 0;
     

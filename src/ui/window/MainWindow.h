@@ -28,6 +28,7 @@ public:
     ~MainWindow();
     
     Project* getProject();
+    QJsonObject getState();
     AppSettings getAppSettings() const;
     QUndoStack* getUndoStack();
     QString getCurrentPath();

@@ -134,13 +134,22 @@ bool AbstractScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
     return false;*/
 
     AbstractItem* current = currentItem();
-    if(mDrawingArrow && current && item && (item != current))
-    {
+    if(mDrawingArrow && current && item && (item != current)) {
+        
+        if (constraintAllowed(current, item)) {
             createConstraint(current, item);
             mTempArrow->setVisible(false);
             mDrawingArrow=false;
             setCurrentItem(item);
+            qDebug() << "AbstractScene::itemClicked constraintAllowed==true";
             return true;
+
+        }
+        else {
+            qDebug() << "AbstractScene::itemClicked constraintAllowed==false";
+            return false;
+        }
+        
     }
     else
     {
@@ -158,14 +167,38 @@ void AbstractScene::itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEve
 void AbstractScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 {
     Q_UNUSED(e);
-    if(mDrawingArrow)
+    
+    AbstractItem* current = currentItem();
+    mTempArrow->setTo(item->pos().x(), item->pos().y());
+    if(mDrawingArrow && current && item && (item != current)) {
+        
+        if (constraintAllowed(current, item)) {
+            mTempArrow->setState(ArrowTmpItem::eAllowed);
+           
+            mTempArrow->setLocked(true);
+            qDebug() << "AbstractScene::itemEntered constraintAllowed==true";
+            
+            
+        }
+        else {
+            mTempArrow->setState(ArrowTmpItem::eForbidden);
+            
+            mTempArrow->setLocked(false);
+            qDebug() << "AbstractScene::itemEntered constraintAllowed==false";
+            
+        }
+        
+    }
+    
+    //--------------
+    /*if(mDrawingArrow)
     {
         
         
         mTempArrow->setState(ArrowTmpItem::eAllowed);
         mTempArrow->setTo(item->pos().x(), item->pos().y());
         mTempArrow->setLocked(true);
-    }
+    }*/
 }
 // Arrive lorsque la souris sort d'un Event
 /**

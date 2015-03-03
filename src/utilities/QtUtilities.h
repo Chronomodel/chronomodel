@@ -28,4 +28,7 @@ QString textPurple(const QString& str);
 
 QColor randomColor();
 
+bool constraintIsCircular( QJsonArray constraints, const int FromId, const int ToId);
+
+
 #endif

@@ -144,8 +144,9 @@ void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
     //qDebug() <<"mSate="<<QString::number(eAllowed);
     switch(mState)
     {
+        
+        case eForbidden: qDebug() <<"if mSate==eForbidden";
         case eAllowed:
-        case eForbidden:
         {
             double w = 40;
             double h = 40;

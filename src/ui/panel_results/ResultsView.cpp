@@ -24,6 +24,7 @@
 #include "Project.h"
 
 #include "QtUtilities.h"
+#include "StdUtilities.h"
 #include "ModelUtilities.h"
 #include "DoubleValidator.h"
 
@@ -811,9 +812,12 @@ void ResultsView::updateGraphs()
             showChainList.append(mChainRadios[i]->isChecked());
     }
     bool showHpd = mHPDCheck->isChecked();
-    int hdpThreshold = mHPDEdit->text().toDouble();
-    hdpThreshold = qMin(100, hdpThreshold);
-    hdpThreshold = qMax(0, hdpThreshold);
+    /*float hpdThreshold = mHPDEdit->text().toFloat();//.toDouble();
+    hpdThreshold = qMin(100, hpdThreshold);
+    hpdThreshold = qMax(0, hpdThreshold);*/
+    
+    float hpdThreshold = inRange<float>(mHPDEdit->text().toFloat(),0.0 ,100.0);
+    
     
     bool showRaw = mRawCheck->isChecked();
     
@@ -824,11 +828,11 @@ void ResultsView::updateGraphs()
     
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
     {
-        mByPhasesGraphs[i]->setResultToShow(result, variable, showAllChains, showChainList, showHpd, hdpThreshold, showCalib, showWiggle, showRaw);
+        mByPhasesGraphs[i]->setResultToShow(result, variable, showAllChains, showChainList, showHpd, hpdThreshold, showCalib, showWiggle, showRaw);
     }
     for(int i=0; i<mByEventsGraphs.size(); ++i)
     {
-        mByEventsGraphs[i]->setResultToShow(result, variable, showAllChains, showChainList, showHpd, hdpThreshold, showCalib, showWiggle, showRaw);
+        mByEventsGraphs[i]->setResultToShow(result, variable, showAllChains, showChainList, showHpd, hpdThreshold, showCalib, showWiggle, showRaw);
     }
     
     // Restore current zoom

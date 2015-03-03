@@ -43,6 +43,45 @@ void EventsScene::deleteSelectedItems()
     MainWindow::getInstance()->getProject()->deleteSelectedEvents();
 }
 
+bool EventsScene::constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo)
+{
+    QJsonArray constraints = MainWindow::getInstance()->getProject()->mState[STATE_EVENTS_CONSTRAINTS].toArray();
+    
+    QJsonObject eventFrom = ((EventItem*)itemFrom)->getEvent();
+    QJsonObject eventTo = ((EventItem*)itemTo)->getEvent();
+    
+    int eventFromId = eventFrom[STATE_ID].toInt();
+    int eventToId = eventTo[STATE_ID].toInt();
+    
+    bool ConstraintAllowed = true;
+    
+    for(int i=0; i<constraints.size(); ++i)
+    {
+        QJsonObject constraint = constraints[i].toObject();
+        // Interdit le doublon
+        if(constraint[STATE_CONSTRAINT_BWD_ID].toInt() == eventFromId && constraint[STATE_CONSTRAINT_FWD_ID].toInt() == eventToId)
+        {
+            ConstraintAllowed = false;
+            qDebug() << "EventsScene::constraintAllowed: not Allowed " ;
+        }
+        //Interdit l'inversion
+        else if(constraint[STATE_CONSTRAINT_BWD_ID].toInt() == eventToId && constraint[STATE_CONSTRAINT_FWD_ID].toInt() == eventFromId)
+        {
+            ConstraintAllowed = false;
+            qDebug() << "EventsScene::constraintAllowed: not Allowed Inversion" ;
+        }
+        
+    }
+    if ( ConstraintAllowed && constraintIsCircular(constraints, eventFromId, eventToId) )
+             {
+                 ConstraintAllowed = false;
+                 qDebug() << "EventsScene::constraintAllowed: not Allowed Circular" ;
+             }
+    return ConstraintAllowed;
+    
+    
+}
+
 void EventsScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
 {
     QJsonObject eventFrom = ((EventItem*)itemFrom)->getEvent();

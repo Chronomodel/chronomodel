@@ -36,6 +36,7 @@ protected:
     void setCurrentItem(QGraphicsItem* item);
 
     void deleteSelectedItems();
+    bool constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo);
     void createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo);
     void mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo);
 };
