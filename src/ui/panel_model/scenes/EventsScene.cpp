@@ -760,7 +760,7 @@ void EventsScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e
     if(message.exec() == QMessageBox::Yes)
     {
         MainWindow::getInstance()->getProject()->deleteEventConstraint(item->data()[STATE_ID].toInt());
-        qDebug() << "TODO : delete constraint";
+       // qDebug() << "TODO : delete constraint";
     }
     
     //Project* project = MainWindow::getInstance()->getProject();

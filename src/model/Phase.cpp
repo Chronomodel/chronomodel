@@ -156,6 +156,7 @@ double Phase::getMinThetaEvents(double tmin)
     return found ? theta : tmin;
 }
 
+// On pourra regarder juste les alpha et beta qui sont déjà mémorisés
 double Phase::getMinThetaNextPhases(double tmax)
 {
     //qDebug() << "=> Phase étudiée : " << mName << " : getMinThetaNextPhases";
@@ -167,6 +168,8 @@ double Phase::getMinThetaNextPhases(double tmax)
         
         //qDebug() << "==> Phase après : " << phaseTo->mName << " (" << phaseTo->mEvents.size() << " events)";
         
+        
+        // PhD : On pourra regarder juste les alpha et beta qui sont déjà mémorisés 
         double theta = tmax;
         for(int j=0; j<phaseTo->mEvents.size(); ++j)
         {

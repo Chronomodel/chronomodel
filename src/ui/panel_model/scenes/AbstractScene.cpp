@@ -160,6 +160,8 @@ void AbstractScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
     Q_UNUSED(e);
     if(mDrawingArrow)
     {
+        
+        
         mTempArrow->setState(ArrowTmpItem::eAllowed);
         mTempArrow->setTo(item->pos().x(), item->pos().y());
         mTempArrow->setLocked(true);
@@ -292,16 +294,11 @@ void AbstractScene::keyPressEvent(QKeyEvent* keyEvent)
     }  
     // Ici reperage de la touche Alt
    else if(keyEvent->modifiers() == Qt::AltModifier && selectedItems().count()==1)
-     // else if(keyEvent->key() == Qt::Key_Alt)
     {
-        qDebug() << "You Press: "<< "Qt::Key_Alt";
+        //qDebug() << "You Press: "<< "Qt::Key_Alt";
         mAltIsDown = true;
-        QList<QGraphicsItem*> items = selectedItems();
-        //if(items.size() > 0)
-        if(items.count()==1)
-        {
-          qDebug() <<  "this->selectedItems()::count()==1)";
-        }
+        QList<QGraphicsItem*> items = selectedItems();        
+        
         AbstractItem* curItem = currentItem();
         if(curItem) // Controle si un item est déjà sélectionné
         {
@@ -334,9 +331,8 @@ void AbstractScene::keyReleaseEvent(QKeyEvent* keyEvent)
     }
 
     if(keyEvent->key() == Qt::Key_Alt)
- //elseif(keyEvent->modifiers() == Qt::AltModifier)
         {
-             qDebug() << "You Released: "<<"Qt::Key_Alt";
+             //qDebug() << "You Released: "<<"Qt::Key_Alt";
              mDrawingArrow = false;
              mAltIsDown = false;
              mShiftIsDown = false;

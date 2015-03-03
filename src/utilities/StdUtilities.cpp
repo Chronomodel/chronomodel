@@ -258,7 +258,9 @@ double vector_interpolate_idx_for_value(const double value, const QVector<double
     }
     return 0;
 }
-
+/**
+    @brief threshold is in percent
+ */
 const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double threshold)
 {
     QMultiMap<double, double> inverted;

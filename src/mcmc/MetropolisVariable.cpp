@@ -184,13 +184,16 @@ void MetropolisVariable::generateHistos(const QList<Chain>& chains, int fftLen, 
     }
 }
 
-void MetropolisVariable::generateHPD(int threshold)
+void MetropolisVariable::generateHPD(double threshold)
 {
     if(!mHisto.isEmpty())
     {
+        
+        //threshold = qMin(threshold, 100);
+        //threshold = qMax(threshold, 0);
+        threshold =  (threshold > 100 ? threshold = 100.0 : threshold);
+        threshold = (threshold < 0 ? threshold = 0.0 : threshold);
         mThreshold = threshold;
-        threshold = qMin(threshold, 100);
-        threshold = qMax(threshold, 0);
         mHPD = create_HPD(mHisto, threshold);
         
         // No need to have HPD for all chains !

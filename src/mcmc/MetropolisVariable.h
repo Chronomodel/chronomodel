@@ -24,7 +24,7 @@ public:
     
     void generateHistos(const QList<Chain>& chains, int fftLen, double hFactor, double tmin, double tmax);
     void generateCorrelations(const QList<Chain>& chains);
-    void generateHPD(int threshold);
+    void generateHPD(double threshold);
     void generateCredibility(const QList<Chain>& chains, double threshold);
 
     void saveToStream(QDataStream *out); // ajout PhD

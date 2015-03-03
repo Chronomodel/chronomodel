@@ -927,6 +927,7 @@ void Model::generateCredibilityAndHPD(const QList<Chain>& chains, double thresh)
         Phase* phase = mPhases[i];
         phase->mAlpha.generateHPD(threshold);
         phase->mBeta.generateHPD(threshold);
+        // if there is only one Event in the phase, there is no Duration
         phase->mDuration.generateHPD(threshold);
         
         phase->mAlpha.generateCredibility(chains, threshold);
@@ -939,7 +940,8 @@ void Model::generateCredibilityAndHPD(const QList<Chain>& chains, double thresh)
  * */
 void Model::saveToFile(const QString& fileName)
 {
-    if(!mEvents[0]->mTheta.mTrace.empty())
+    if(!mEvents.empty())
+    //if(!mEvents[0]->mTheta.mTrace.empty())
     {
     // -----------------------------------------------------
     //  Create file

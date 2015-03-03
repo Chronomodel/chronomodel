@@ -1520,11 +1520,35 @@ QList<Phase*> Project::getAllPhasesTo(Phase* phase)
 bool Project::isEventConstraintAllowed(const QJsonObject& eventFrom, const QJsonObject& eventTo)
 {
     // TODO
+    /*qDebug() << "Project::isEventConstraintAllowed: " << eventFrom.value("name")<< eventFrom.value("id");
+    qDebug() << "Project::isEventConstraintAllowed: " << eventTo.value("name")<< eventTo.value("id");
     if(!eventFrom.isEmpty() && !eventTo.isEmpty())
     {
         return true;
+        qDebug() << "Project::isEventConstraintAllowed: " << eventFrom.keys();
+        qDebug() << "Project::isEventConstraintAllowed: " << eventTo.keys();
     }
-    return false;
+    return false;*/
+    //-----------------
+    //QJsonObject stateNext = mState;
+    
+    //QJsonArray events = mState[STATE_EVENTS].toArray();
+    QJsonArray constraints = mState[STATE_EVENTS_CONSTRAINTS].toArray();
+   
+    int eventFromId = eventFrom[STATE_ID].toInt();
+    int eventToId = eventTo[STATE_ID].toInt();
+    bool ConstraintAllowed = true;
+    for(int i=0; i<constraints.size(); ++i)
+    {
+        QJsonObject constraint = constraints[i].toObject();
+        if(constraint[STATE_CONSTRAINT_BWD_ID] == eventFromId && constraint[STATE_CONSTRAINT_FWD_ID] == eventToId)
+        {
+            ConstraintAllowed = false;
+            qDebug() << "Project::isEventConstraintAllowed: not Allowed " ;
+        }
+    }
+    return ConstraintAllowed;
+    
 }
 
 void Project::createEventConstraint(int eventFromId, int eventToId)

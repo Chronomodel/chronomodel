@@ -155,7 +155,7 @@ void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
             
             if(mState == eAllowed)
             {
-                //qDebug() <<"if mSate==eAllowed"<<QString::number(eAllowed);
+                qDebug() <<"if mSate==eAllowed"<<QString::number(eAllowed);
                 painter->drawText(r, Qt::AlignCenter, "OK");
             }
             else

@@ -54,7 +54,6 @@ void AbstractItem::setGreyedOut(bool greyedOut)
 #pragma mark Events
 void AbstractItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-    //qDebug()<<"AbstractItem::mousePressEvent";
     if(!mScene->itemClicked(this, e))
     {
         setZValue(2.);
@@ -77,7 +76,6 @@ void AbstractItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
 
 void AbstractItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
 {
-   // qDebug()<<"AbstractItem::mouseDoubleClickEvent";
     mScene->itemDoubleClicked(this, e);
     QGraphicsItem::mouseDoubleClickEvent(e);
 }

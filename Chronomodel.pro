@@ -41,6 +41,8 @@ message("OBJECTS_DIR : $$OBJECTS_DIR")
 message("MOC_DIR : $$MOC_DIR")
 message("RCC_DIR : $$RCC_DIR")
 
+# Icon file
+ICON = $$PRO_PATH/icon/Chronomodel.icns
 
 # Qt modules (must be deployed along with the application
 QT += core gui widgets svg
@@ -77,19 +79,21 @@ macx{
 # Compilation warning flags
 QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas
 
-# Icon file
-#ICON = $$PRO_PATH/icon/Chronomodel.icns
-
 macx{
+
+# Icon file
+    ICON = $$PRO_PATH/icon/Chronomodel.icns
+
 	QMAKE_MAC_SDK = macosx10.10
 	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
 
 	RESOURCES_FILES.path = Contents/Resources
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
 	RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
-	RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel_User_Manual.pdf
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/License.txt
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/mac/resources/readme.rtf
+
+#RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel_User_Manual.pdf
 
 	QMAKE_BUNDLE_DATA += RESOURCES_FILES
 }
@@ -125,30 +129,41 @@ DEFINES += "USE_PLUGIN_AM=$${USE_PLUGIN_AM}"
 #########################################
 
 macx{
-        #  macx:INCLUDEPATH += $$quote(/lib/FFTW)
-        LIBS += -l"$$_PRO_FILE_PWD_/lib/FFTW/mac/libfftw3.3.dylib"
-        message("macx->FFTW")
+#http://openclassrooms.com/forum/sujet/qt-creator-mac-fmodex-probleme-lancement-appli-48210
+#
+#APP_DESTDIR = $${TARGET}.app/Contents/MacOS/
+# cree le répertoire pour y mettre le .dylib
+#APP_DESTLIB = $${APP_DESTLIB}/lib
+#QMAKE_POST_LINK += mkdir -p $${APP_DESTLIB} ;
+# copie le .dylib
+#QMAKE_POST_LINK += cp $$INCLUDEPATH/libfftw3.dylib $${APP_DESTLIB} ;
+# change son nom (pas sûr que ce soit nécessaire en fait)
+#QMAKE_POST_LINK += install_name_tool -id @loader_path/$$INCLUDEPATH/libfftw3.dylib $${APP_DESTLIB}/libfftw3.dylib ;
+## change son nom dans l'application
+#QMAKE_POST_LINK += install_name_tool -change ./libfftw3.dylib @loader_path/../Librairies/libfftw3.dylib $${APP_DESTDIR}/$${TARGET};
+
+#QMAKE_LFLAGS += -Wl,-rpath,@loader_path/../Lib
+#DEPENDPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac/
+
+        INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW
+        #ne pas mettre le le lib devant le nom du fichier, ni le .dylib d'extension
+#LIBS += -L/lib/FFTW/mac -lfftw3f
+        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
+        message("macx->FFTW $$LIBS ")
+
+
 }
 win32{
         INCLUDEPATH += lib/FFTW
         LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
         message("win32->FFTW")
 }
-linux{
+unix:!macx{ #linux
 	INCLUDEPATH += lib/FFTW
         LIBS += -lfftw3f
         message("linux->FFTW")
 }
-unix{
-        INCLUDEPATH += lib/FFTW
-        LIBS += -lfftw3f
-        message("unix->FFTW")
-}
-else{
-        INCLUDEPATH += lib/FFTW
-        LIBS += -lfftw3f
-        message("else->FFTW")
-}
+
 #########################################
 # INCLUDES
 #########################################
