@@ -89,7 +89,7 @@ macx{
 
 	RESOURCES_FILES.path = Contents/Resources
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
-	RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
+#RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/License.txt
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/mac/resources/readme.rtf
 
@@ -143,7 +143,7 @@ macx{
 #QMAKE_POST_LINK += install_name_tool -change ./libfftw3.dylib @loader_path/../Librairies/libfftw3.dylib $${APP_DESTDIR}/$${TARGET};
 
 #QMAKE_LFLAGS += -Wl,-rpath,@loader_path/../Lib
-#DEPENDPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac/
+DEPENDPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac/
 
         INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW
         #ne pas mettre le le lib devant le nom du fichier, ni le .dylib d'extension

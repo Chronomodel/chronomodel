@@ -14,7 +14,7 @@
 
 #pragma STDC FENV_ACCESS on
 
-
+#define DEBUG
 
 void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {

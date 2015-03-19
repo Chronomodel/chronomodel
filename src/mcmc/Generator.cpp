@@ -64,19 +64,19 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
         return randomUniform(min, max);
     }*/
     
-    long double x = (x_max + x_min) / 2.;// initialisation arbitraire, valeur ecrasée ensuite
-    const long double sqrt_e = sqrt(exp(1.));
+    long double x = (x_max + x_min) / 2.0;// initialisation arbitraire, valeur ecrasée ensuite
+    const long double sqrt_e = sqrtl(expl(1.0));
     
     feclearexcept(FE_ALL_EXCEPT);
     
 
     //qDebug() << "DOUBLE EXP DoubleExp : errno avant = "<<strerror(errno);
-    long double exp_x_min = 0.;
-    long double exp_x_max = 0;
-    long double exp_minus_x_min = 0.;
-    long double exp_minus_x_max = 0;
-    long double c = 0.;
-    long double f0 = 0.;
+    long double exp_x_min = 0.0;
+    long double exp_x_max = 0.0;
+    long double exp_minus_x_min = 0.0;
+    long double exp_minus_x_max = 0.0;
+    long double c = 0.0;
+    long double f0 = 0.0;
 
     if(x_min < 0. && x_max > 0.)
     {
@@ -110,8 +110,8 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
 
         errno=0;
     }
-    double ur = 1.;
-    long double rap = 0.;
+    double ur = 1.0;
+    long double rap = 0.0;
     
     int trials = 0;
     int limit = 100000;
@@ -125,11 +125,11 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
 
             if(u <= f0)
             {
-                x = logl(exp_x_min + 2. * c * u);
+                x = logl(exp_x_min + 2.0 * c * u);
             }
             else
             {
-                x = -logl(1. - 2.*c*(u-f0));
+                x = -logl(1. - 2.0*c*(u-f0));
             }
         }
         else
@@ -170,9 +170,14 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     {
         throw "DoubleExp could not find a solution after " + QString::number(limit) + " trials! This may be ue to Taylor unsufficients developpement orders. Please try to run the calculations again!";
     }
-    //qDebug() << "DOUBLE EXP DoubleExp : x = "<<x;
-    //qDebug() << "DOUBLE EXP DoubleExp : (mean + (x * sigma)) = "<<(mean + (x * sigma));
-    //qDebug() << "DOUBLE EXP DoubleExp : (double)(mean + (x * sigma)) = "<<(double)(mean + (x * sigma));
+    if ((x<x_min) or (x>x_max)) {
+        
+    
+    qDebug() << "DOUBLE EXP DoubleExp : x = "<<(double)(x);
+    qDebug() << "DOUBLE EXP DoubleExp : (mean + (x * sigma)) = "<<(double)(mean + (x * sigma));
+    qDebug() <<" min="<< min<<" max=" <<(double)(x_max);
+        
+    }
     return (double)(mean + (x * sigma));
 }
 

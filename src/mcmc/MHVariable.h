@@ -1,4 +1,4 @@
-﻿#ifndef MHVARIABLE_H
+#ifndef MHVARIABLE_H
 #define MHVARIABLE_H
 
 #include "MetropolisVariable.h"
@@ -31,13 +31,18 @@ public:
     
     // Buffer glissant de la taille d'un batch pour calculer la courbe d'évolution
     // du taux d'acceptation chaine par chaine
-    QVector<bool> mLastAccepts;
+    
+    QVector<bool> mLastAccepts;//par HL
+    //std::vector<bool> mLastAccepts; // PhD
+    
     int mLastAcceptsLength;
     
     // Buffer contenant toutes les acceptations cumulées pour toutes les chaines
     // sur les parties acquisition uniquement.
     // A stocker dans le fichier résultats .dat !
-    QVector<bool> mAllAccepts;
+    
+    QVector<bool> mAllAccepts; //par HL
+    //std::vector<bool> mAllAccepts; // PhD
     
     // Computed at the end as numerical result :
     double mGlobalAcceptation;
@@ -45,8 +50,10 @@ public:
     // Buffer contenant tous les taux d'acceptation calculés (1 par batch)
     // On en affiche des sous-parties (correspondant aux chaines) dans la vue des résultats
     // A stocker dans les résultats!
-    QVector<double> mHistoryAcceptRateMH;
-   // QVector<float> mHistoryAcceptRateMH;
+    
+    QVector<double> mHistoryAcceptRateMH; //par HL
+    //std::vector<double> mHistoryAcceptRateMH; // PhD
+    
     QString mProposal;
 };
 

@@ -1,4 +1,4 @@
-﻿#include "MainWindow.h"
+#include "MainWindow.h"
 #include "Project.h"
 #include "ProjectView.h"
 #include "../PluginAbstract.h"
@@ -524,6 +524,9 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     mHelpAction->setChecked(mAppSettings.mShowHelp);
     
     bool fileOpened = false;
+    //defaultFilePath="";
+    qDebug() << defaultFilePath;
+    //mAppSettings.mOpenLastProjectAtLaunch=false;
     if(!defaultFilePath.isEmpty())
     {
         qDebug() << defaultFilePath;
@@ -541,6 +544,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     {
         QString dir = settings.value("last_project_dir", "").toString();
         QString filename = settings.value("last_project_filename", "").toString();
+        //QString filename ="";
         QString path = dir + "/" + filename;
         QFileInfo fileInfo(path);
         

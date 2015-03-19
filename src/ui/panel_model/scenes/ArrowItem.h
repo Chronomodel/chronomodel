@@ -45,13 +45,13 @@ public:
     QJsonObject mData;
     AbstractScene* mScene;
     
-    double mXStart;
-    double mYStart;
-    double mXEnd;
-    double mYEnd;
+    qreal mXStart;
+    qreal mYStart;
+    qreal mXEnd;
+    qreal mYEnd;
     
-    double mBubbleWidth;
-    double mBubbleHeight;
+    qreal mBubbleWidth;
+    qreal mBubbleHeight;
     
     bool mEditing;
     bool mShowDelete;

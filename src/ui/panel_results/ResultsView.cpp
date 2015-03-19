@@ -402,8 +402,8 @@ void ResultsView::updateLayout()
     int dx = mLineH + m;
     int graphYAxis = 50;
     
-    mByPhasesBut->setGeometry(0, 0, mGraphLeft/2, mRulerH);
-    mByEventsBut->setGeometry(mGraphLeft/2, 0, mGraphLeft/2, mRulerH);
+    mByPhasesBut->setGeometry(0, 0, (int)(mGraphLeft/2), mRulerH);
+    mByEventsBut->setGeometry(mGraphLeft/2, 0, (int)(mGraphLeft/2), mRulerH);
     
     mTabs->setGeometry(mGraphLeft + graphYAxis, 0, width() - mGraphLeft - mOptionsW - sbe - graphYAxis, mTabsH);
     mRuler->setGeometry(mGraphLeft + graphYAxis, mTabsH, width() - mGraphLeft - graphYAxis - mOptionsW - sbe - 10, mRulerH);
@@ -442,10 +442,10 @@ void ResultsView::updateLayout()
     if(mTabs->currentIndex() == 0)
     {
         mChainsGroup->setFixedHeight(m + (numChains+1) * (mLineH + m));
-        mAllChainsCheck->setGeometry(m, m, mChainsGroup->width()-2*m, mLineH);
+        mAllChainsCheck->setGeometry(m, m, (int)(mChainsGroup->width()-2*m), mLineH);
         for(int i=0; i<numChains; ++i)
         {
-            QRect geometry(m, m + (i+1) * (mLineH + m), mChainsGroup->width()-2*m, mLineH);
+            QRect geometry(m, m + (i+1) * (mLineH + m), (int)(mChainsGroup->width()-2*m), mLineH);
             mCheckChainChecks[i]->setGeometry(geometry);
             mChainRadios[i]->setGeometry(geometry);
         }
@@ -455,18 +455,18 @@ void ResultsView::updateLayout()
         mChainsGroup->setFixedHeight(m + numChains * (mLineH + m));
         for(int i=0; i<numChains; ++i)
         {
-            QRect geometry(m, m + i * (mLineH + m), mChainsGroup->width()-2*m, mLineH);
+            QRect geometry(m, (int)(m + i * (mLineH + m)), (int)(mChainsGroup->width()-2*m), mLineH);
             mCheckChainChecks[i]->setGeometry(geometry);
             mChainRadios[i]->setGeometry(geometry);
         }
     }
     
     int y = m;
-    mDataThetaRadio->setGeometry(m, y, mDataGroup->width() - 2*m, mLineH);
+    mDataThetaRadio->setGeometry(m, y, (int)(mDataGroup->width() - 2*m), mLineH);
     if(mTabs->currentIndex() == 0)
     {
-        mDataCalibCheck->setGeometry(m + dx, y += (m + mLineH), mDataGroup->width() - 2*m - dx, mLineH);
-        mWiggleCheck->setGeometry(m + dx, y += (m + mLineH), mDataGroup->width() - 2*m - dx, mLineH);
+        mDataCalibCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mDataGroup->width() - 2*m - dx), mLineH);
+        mWiggleCheck->setGeometry(m + dx, y += (m + mLineH),(int)( mDataGroup->width() - 2*m - dx), mLineH);
     }
     mDataSigmaRadio->setGeometry(m, y += (m + mLineH), mDataGroup->width()-2*m, mLineH);
     mDataGroup->setFixedHeight(y += (m + mLineH));

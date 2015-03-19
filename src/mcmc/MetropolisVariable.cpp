@@ -1,4 +1,4 @@
-﻿#include "MetropolisVariable.h"
+#include "MetropolisVariable.h"
 #include "StdUtilities.h"
 #include "Functions.h"
 #if USE_FFT
@@ -274,7 +274,8 @@ void MetropolisVariable::generateNumericalResults(const QList<Chain>& chains)
     {
         DensityAnalysis result;
         result.analysis = analyseFunction(mChainsHistos[i]);
-        result.quartiles = quartilesForTrace(runTraceForChain(chains, i));
+        QVector<double> trace =runTraceForChain(chains, i);
+        result.quartiles = quartilesForTrace(trace);
         mChainsResults.append(result);
     }
 }
@@ -312,11 +313,11 @@ QVector<double> MetropolisVariable::fullTraceForChain(const QList<Chain>& chains
     
     for(int i=0; i<chains.size(); ++i)
     {
-        int traceSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + chains[i].mNumRunIter / chains[i].mThinningInterval;
+        unsigned long traceSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + chains[i].mNumRunIter / chains[i].mThinningInterval;
         
         if(i == index)
         {
-            for(int j=shift; j<shift + traceSize; ++j)
+            for(unsigned int j=shift; j<shift + traceSize; ++j)
                 trace.append(mTrace[j]);
             break;
         }
@@ -331,11 +332,11 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<Chain>& chains)
     int shift = 0;
     for(int i=0; i<chains.size(); ++i)
     {
-        int burnAdaptSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter);
-        int traceSize = burnAdaptSize + chains[i].mNumRunIter / chains[i].mThinningInterval;
+        unsigned long burnAdaptSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter);
+        unsigned long traceSize = burnAdaptSize + chains[i].mNumRunIter / chains[i].mThinningInterval;
         
-        for(int j=shift + burnAdaptSize; j<shift + traceSize; ++j)
-            trace.append(mTrace[j]);
+        for(int j=(int)(shift + burnAdaptSize); j<(int)(shift + traceSize); ++j)
+            trace.append(mTrace[j]); // j must be integer type while mTrace is QVector
         
         shift += traceSize;
     }
@@ -350,21 +351,31 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<Chain>& chains)
 QVector<double> MetropolisVariable::runTraceForChain(const QList<Chain>& chains, int index)
 {
     QVector<double> trace;
-    int shift = 0;
-    for(int i=0; i<chains.size(); ++i)
+    if (mTrace.empty()) {
+        qDebug() << "mtrace vide";
+        return trace ;
+    }
+    else
     {
-        int burnAdaptSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter);
-        int traceSize = burnAdaptSize + chains[i].mNumRunIter / chains[i].mThinningInterval;
+    //QVector<double> trace;
+    int shift = 0;
+    for(int i=0; i<chains.size(); ++i) // if chains[i] is std::vector
+//    for(int i=0; i<chains.length(); ++i) // if chains[i] is QVector
+    {
+        unsigned int burnAdaptSize = int (chains[i].mNumBurnIter + chains[i].mBatchIndex * chains[i].mNumBatchIter);
+        unsigned int traceSize = int (burnAdaptSize + chains[i].mNumRunIter / chains[i].mThinningInterval);
         
         if(i == index)
         {
-            for(int j=shift + burnAdaptSize; j<shift + traceSize; ++j)
+            //for(unsigned long j=shift + burnAdaptSize; j<shift + traceSize; ++j) // if mTrace is std::vector
+            for(int j=(int)(shift + burnAdaptSize); (j<(int)(shift + traceSize)) && (j<mTrace.length()); ++j)
                 trace.append(mTrace[j]);
             break;
         }
         shift += traceSize;
     }
     return trace;
+    }
 }
 
 QVector<double> MetropolisVariable::correlationForChain(int index)

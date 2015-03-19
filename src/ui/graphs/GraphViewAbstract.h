@@ -46,7 +46,7 @@ protected:
     virtual double getYForValue(const double aValue, const bool aConstainResult = true);
     virtual double getValueForY(const double y, const bool aConstainResult = true);
     
-    double valueForProportion(const double v1, const double v1min, const double v1max, const double v2min, const double m2max, const bool resultInBounds = true);
+    double valueForProportion(const double v1, const double valMin, const double valMax, const double Pmin, const double Pmax, const bool resultInBounds = true);
 	
 protected:
 	int		mGraphWidth;

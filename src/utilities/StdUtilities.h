@@ -71,11 +71,10 @@ T vector_min_value(const QVector<T>& aVector)
 }
 
  template<typename T>
- const T inRange(const T x,const T minimum,const T maximum)
+ const T inRange(const T minimum, const T value ,const T maximum)
 {
-    T R = (x > minimum)? x : minimum ;
-      R = (R < maximum)? R : maximum;
-    return R;
+    // voir qBound dans qglobal
+    return std::max(minimum, std::min(maximum, value));
 }
 
 template <class U, class T>

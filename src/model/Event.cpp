@@ -1,4 +1,4 @@
-﻿#include "Event.h"
+#include "Event.h"
 #include "Phase.h"
 #include "EventConstraint.h"
 #include "PhaseConstraint.h"
@@ -94,7 +94,7 @@ Event Event::fromJson(const QJsonObject& json)
     event.mColor = QColor(json[STATE_COLOR_RED].toInt(),
                           json[STATE_COLOR_GREEN].toInt(),
                           json[STATE_COLOR_BLUE].toInt());
-    event.mMethod = (Method)json[STATE_EVENT_METHOD].toInt();
+    event.mMethod = (Method)(json[STATE_EVENT_METHOD].toInt());
     event.mItemX = json[STATE_ITEM_X].toDouble();
     event.mItemY = json[STATE_ITEM_Y].toDouble();
     event.mIsSelected = json[STATE_IS_SELECTED].toBool();
@@ -372,16 +372,16 @@ double Event::getThetaMin(double defaultValue)
     //  Déterminer la borne min courante pour le tirage de theta
     // ------------------------------------------------------------------
     
-    double min1 = defaultValue;
+    //double min1 = defaultValue;
     
     // Max des thetas des faits en contrainte directe antérieure
-    double min2 = defaultValue;
+    double maxThetaBwd = defaultValue;
     for(int i=0; i<mConstraintsBwd.size(); ++i)
     {
         if(mConstraintsBwd[i]->mEventFrom->mInitialized)
         {
             double thetaf = mConstraintsBwd[i]->mEventFrom->mTheta.mX;
-            min2 = qMax(min2, thetaf);
+            maxThetaBwd = std::max(maxThetaBwd, thetaf);
         }
     }
     
@@ -400,24 +400,25 @@ double Event::getThetaMin(double defaultValue)
                 Event* event = mPhases[i]->mEvents[j];
                 if(event != this && event->mInitialized)
                 {
-                    thetaMax = qMax(event->mTheta.mX, thetaMax);
+                    thetaMax = std::max(event->mTheta.mX, thetaMax);
                 }
             }
-            min3 = qMax(min3, thetaMax - mPhases[i]->mTau);
+            min3 = std::max(min3, thetaMax - mPhases[i]->mTau);
         }
     }
     
     // Contraintes des phases précédentes
-    double min4 = defaultValue;
+    double maxPhasePrev = defaultValue;
     for(int i=0; i<mPhases.size(); ++i)
     {
-        double thetaMax = mPhases[i]->getMaxThetaPrevPhases(defaultValue);
-        min4 = std::max(min4, thetaMax);
+        double thetaMax = mPhases[i]->getMaxThetaPrevPhases(defaultValue);//HL
+        //double thetaMax = mPhases[i]->mBeta.mX;// PhD faisable uniquement quand les phases sont remises à jour après chaque tirage de theta d'une phase
+        maxPhasePrev = std::max(maxPhasePrev, thetaMax);
     }
     
-    double min_tmp1 = qMax(min1, min2);
-    double min_tmp2 = qMax(min3, min4);
-    double min = qMax(min_tmp1, min_tmp2);
+    double min_tmp1 = std::max(defaultValue, maxThetaBwd);
+    double min_tmp2 = std::max(min3, maxPhasePrev);
+    double min = std::max(min_tmp1, min_tmp2);
     
     return min;
 }
@@ -431,13 +432,13 @@ double Event::getThetaMax(double defaultValue)
     double max1 = defaultValue;
     
     // Min des thetas des faits en contrainte directe et qui nous suivent
-    double max2 = defaultValue;
+    double maxThetaFwd = defaultValue;
     for(int i=0; i<mConstraintsFwd.size(); ++i)
     {
         if(mConstraintsFwd[i]->mEventTo->mInitialized)
         {
             double thetaf = mConstraintsFwd[i]->mEventTo->mTheta.mX;
-            max2 = qMin(max2, thetaf);
+            maxThetaFwd = std::min(maxThetaFwd, thetaf);
         }
     }
     
@@ -456,24 +457,24 @@ double Event::getThetaMax(double defaultValue)
                 Event* event = mPhases[i]->mEvents[j];
                 if(event != this && event->mInitialized)
                 {
-                    thetaMin = qMin(event->mTheta.mX, thetaMin);
+                    thetaMin = std::min(event->mTheta.mX, thetaMin);
                 }
             }
-            max3 = qMin(max3, thetaMin + mPhases[i]->mTau);
+            max3 = std::min(max3, thetaMin + mPhases[i]->mTau);
         }
     }
     
     // Contraintes des phases suivantes
-    double max4 = defaultValue;
+    double maxPhaseNext = defaultValue;
     for(int i=0; i<mPhases.size(); ++i)
     {
         double thetaMin = mPhases[i]->getMinThetaNextPhases(defaultValue);
-        max4 = std::min(max4, thetaMin);
+        maxPhaseNext = std::min(maxPhaseNext, thetaMin);
     }
     
-    double max_tmp1 = qMin(max1, max2);
-    double max_tmp2 = qMin(max3, max4);
-    double max = qMin(max_tmp1, max_tmp2);
+    double max_tmp1 = std::min(max1, maxThetaFwd);
+    double max_tmp2 = std::min(max3, maxPhaseNext);
+    double max = std::min(max_tmp1, max_tmp2);
     
     return max;
 }
@@ -498,7 +499,8 @@ void Event::updateTheta(double tmin, double tmax)
     
     double sum_p = 0.;
     double sum_t = 0.;
-    for(int i=0; i<mDates.size(); ++i)
+//    for(int i=0; i<mDates.size(); ++i) // if mDates is std::vector
+    for(int i=0; i<mDates.length(); ++i)
     {
         double variance = (mDates[i].mSigma.mX * mDates[i].mSigma.mX);
         sum_t += (mDates[i].mTheta.mX + mDates[i].mDelta) / variance;

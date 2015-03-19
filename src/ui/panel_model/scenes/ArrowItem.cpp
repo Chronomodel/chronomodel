@@ -175,10 +175,10 @@ void ArrowItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* e)
 
 QRectF ArrowItem::boundingRect() const
 {
-    double x = qMin(mXStart, mXEnd);
-    double y = qMin(mYStart, mYEnd);
-    double w = qAbs(mXEnd - mXStart);
-    double h = qAbs(mYEnd - mYStart);
+    qreal x = qMin(mXStart, mXEnd);
+    qreal y = qMin(mYStart, mYEnd);
+    qreal w = qAbs(mXEnd - mXStart);
+    qreal h = qAbs(mYEnd - mYStart);
 
     return QRectF(x, y, w, h);
 }
@@ -187,7 +187,7 @@ QPainterPath ArrowItem::shape() const
 {
     QPainterPath path;
     QRectF rect = boundingRect();
-    double shift = 15;
+    qreal shift = 15;
     
     if(mXStart < mXEnd && mYStart > mYEnd)
     {

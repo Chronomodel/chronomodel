@@ -1,4 +1,4 @@
-﻿#include "Project.h"
+#include "Project.h"
 #include "MainWindow.h"
 #include "Model.h"
 #include "PluginManager.h"
@@ -228,9 +228,9 @@ void Project::sendPhasesSelectionChanged()
 bool Project::load(const QString& path)
 {
     QFile file(path);
-#if DEBUG
-    qDebug() << "Loading project file : " << path;
-#endif
+
+    qDebug() << "in Project::load Loading project file : " << path;
+
     if(file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         QFileInfo info(path);
@@ -276,12 +276,20 @@ bool Project::load(const QString& path)
             clearModel();
             
             QString dataPath = path + ".dat";
-            QFile dataFile(dataPath);
+            //QFile dataFile(dataPath); // HL
+            QFile dataFile;
+            //QDir::setCurrent("/tmp");
+            dataFile.setFileName(dataPath);
+            
+            //QFileInfo fi(dataFile);
+            //dataFile.open(QIODevice::ReadOnly);
+            //if(fi.isFile())
+
             if(dataFile.exists())
             {
-#if DEBUG
-                qDebug() << "Loading model file : " << dataPath;
-#endif       
+
+                qDebug() << "Project::load Loading model file.dat : " << dataPath << " size="<< dataFile.size();
+      
                 try{
                     //mModel = Model::fromJson(mState);
                     mModel->fromJson(mState);

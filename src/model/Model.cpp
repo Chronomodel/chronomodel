@@ -1,4 +1,4 @@
-﻿#include "Model.h"
+#include "Model.h"
 #include "Date.h"
 #include "Project.h"
 #include "EventKnown.h"
@@ -6,6 +6,7 @@
 #include "MCMCProgressDialog.h"
 #include "ModelUtilities.h"
 #include "QtUtilities.h"
+#include "StdUtilities.h"
 #include "../PluginAbstract.h"
 #include <QJsonArray>
 #include <QtWidgets>
@@ -686,13 +687,13 @@ bool Model::isValid()
                         boundFound = true;
                         if(bound->mKnownType == EventKnown::eFixed)
                         {
-                            min = qMax(min, bound->mFixed);
-                            max = qMin(max, bound->mFixed);
+                            min = std::max(min, bound->mFixed);
+                            max = std::min(max, bound->mFixed);
                         }
                         else if(bound->mKnownType == EventKnown::eUniform)
                         {
-                            min = qMax(min, bound->mUniformEnd);
-                            max = qMin(max, bound->mUniformStart);
+                            min = std::max(min, bound->mUniformEnd);
+                            max = std::min(max, bound->mUniformStart);
                         }
                     }
                 }
@@ -713,11 +714,11 @@ bool Model::isValid()
                         {
                             if(bound->mKnownType == EventKnown::eUniform)
                             {
-                                bound->mUniformStart = qMax(bound->mUniformStart, max - tauMax);
-                                bound->mUniformEnd = qMin(bound->mUniformEnd, min + tauMax);
+                                bound->mUniformStart = std::max(bound->mUniformStart, max - tauMax);
+                                bound->mUniformEnd = std::min(bound->mUniformEnd, min + tauMax);
                                 
-                                min = qMax(min, bound->mUniformEnd);
-                                max = qMin(max, bound->mUniformStart);
+                                min = std::max(min, bound->mUniformEnd);
+                                max = std::min(max, bound->mUniformStart);
                             }
                         }
                     }
@@ -792,17 +793,17 @@ void Model::generateCorrelations(const QList<Chain>& chains)
         
         for(int j=0; j<event->mDates.size(); ++j)
         {
-            Date& date = event->mDates[j];
-            date.mTheta.generateCorrelations(chains);
-            date.mSigma.generateCorrelations(chains);
+            Date* date = &(event->mDates[j]);
+            date->mTheta.generateCorrelations(chains);
+            date->mSigma.generateCorrelations(chains);
         }
     }
     
     for(int i=0; i<mPhases.size(); ++i)
     {
-        Phase* phase = mPhases[i];
-        phase->mAlpha.generateCorrelations(chains);
-        phase->mBeta.generateCorrelations(chains);
+        //Phase* phase = mPhases[i];
+        mPhases[i]->mAlpha.generateCorrelations(chains);
+        mPhases[i]->mBeta.generateCorrelations(chains);
     }
 }
 
@@ -889,9 +890,10 @@ void Model::generateNumericalResults(const QList<Chain>& chains)
 
 void Model::generateCredibilityAndHPD(const QList<Chain>& chains, double thresh)
 {
-    double threshold = thresh;
-    threshold = qMin(100., threshold);
-    threshold = qMax(0., threshold);
+    /* double threshold = thresh;
+    threshold = std::min(100.0, threshold);
+    threshold = std::max(0.0, threshold); */
+    double threshold = inRange(0.0,thresh,100.0);
     
     for(int i=0; i<mEvents.size(); ++i)
     {
@@ -968,11 +970,7 @@ void Model::saveToFile(const QString& fileName)
         // -----------------------------------------------------
         for(int i=0; i<mPhases.size(); ++i)
         {
-            /*Phase* phase = mPhases[i];
-            out << phase->mAlpha.mTrace;
-            out << phase->mAlpha.;
-            out << phase->mBeta.mTrace;
-            out << phase->mDuration.mTrace;*/
+           
             mPhases[i]->mAlpha.saveToStream(&out);
             mPhases[i]->mBeta.saveToStream(&out);
             mPhases[i]->mDuration.saveToStream(&out);
@@ -983,10 +981,6 @@ void Model::saveToFile(const QString& fileName)
         // -----------------------------------------------------
         for(int i=0; i<mEvents.size(); ++i)
         {
-            /*Event* event = mEvents[i];
-            out << event->mTheta.mTrace;
-            out << event->mTheta.mHistoryAcceptRateMH;
-            out << event->mTheta.mAllAccepts;*/
 
            mEvents[i]->mTheta.saveToStream(&out);
         }
@@ -1000,19 +994,6 @@ void Model::saveToFile(const QString& fileName)
             QList<Date>& dates = event->mDates;
             for(int j=0; j<dates.size(); ++j)
             {
-                /*Date& date = dates[j];
-                
-                out << date.mTheta.mTrace;
-                out << date.mTheta.mHistoryAcceptRateMH;
-                out << date.mTheta.mAllAccepts;
-                
-                out << date.mSigma.mTrace;
-                out << date.mSigma.mHistoryAcceptRateMH;
-                out << date.mSigma.mAllAccepts;
-
-                out << date.mWiggle.mTrace;
-                out << date.mWiggle.mHistoryAcceptRateMH;
-                out << date.mWiggle.mAllAccepts;*/
 
                 dates[j].mTheta.saveToStream(&out);
                 dates[j].mSigma.saveToStream(&out);
@@ -1042,11 +1023,11 @@ void Model::restoreFromFile(const QString& fileName)
 
         QByteArray uncompresedData = qUncompress(compressedData);
 
-#if DEBUG
+/* #if DEBUG
         qDebug() << "Lecture fichier :"<< fileName;
         qDebug() << "TAILLE compressedData :" << compressedData.size();
         qDebug() << "TAILLE uncompresedData :" << uncompresedData.size();
-#endif
+#endif */
         if(uncompresedData.size()!=0)
         {
             QDataStream in(&uncompresedData, QIODevice::ReadOnly);

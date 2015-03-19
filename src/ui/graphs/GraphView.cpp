@@ -1,4 +1,4 @@
-﻿#include "GraphView.h"
+#include "GraphView.h"
 #include "Ruler.h"
 #include "StdUtilities.h"
 #include "Painting.h"
@@ -421,13 +421,15 @@ void GraphView::paintEvent(QPaintEvent* e)
         p.setPen(Qt::black);
         p.drawPath(tipPath);
         p.setPen(Qt::white);
-        p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, "x : " + QString::number(mTipX));
-        p.drawText(mTipRect.adjusted(0, mTipRect.height()/2, 0, 0), Qt::AlignCenter, "y : " + QString::number(mTipY));
+        p.drawText(mTipRect.adjusted(0, 0, 0, (int)(-mTipRect.height()/2) ), Qt::AlignCenter, QString("x : ") + QString::number(mTipX) );
+        p.drawText(mTipRect.adjusted(0, (int)(mTipRect.height()/2), 0, 0), Qt::AlignCenter, QString("y : ") + QString::number(mTipY));
         
         p.end();
     }
 }
-
+/**
+ * @brief trace le graphe
+ */
 void GraphView::paintToDevice(QPaintDevice* device, QPaintEvent* e)
 {
     Q_UNUSED(e);
@@ -443,16 +445,17 @@ void GraphView::paintToDevice(QPaintDevice* device, QPaintEvent* e)
     p.fillRect(rect(), mBackgroundColor);
     
     // ----------------------------------------------------
-    //  Zones
+    //  Zones : n'affiche pas le texte ??
     // ----------------------------------------------------
-    for(int i=0; i<mZones.size(); ++i)
+ /*   for(int i=0; i<mZones.size(); ++i)
     {
-        double x1 = getXForValue(mZones[i].mXStart);
-        double x2 = getXForValue(mZones[i].mXEnd);
+        qreal x1 = getXForValue(mZones[i].mXStart);
+        qreal x2 = getXForValue(mZones[i].mXEnd);
         QRectF r(x1, mMarginTop, x2 - x1, mGraphHeight);
         p.fillRect(r, mZones[i].mColor);
-        p.drawText(r.adjusted(5, 5, -5, -5), Qt::AlignHCenter | Qt::AlignTop, mZones[i].mText);
-    }
+        //p.drawText(r.adjusted(5, 5, -5, -5), Qt::AlignHCenter | Qt::AlignTop, mZones[i].mText); //HL
+p.drawText(r, Qt::AlignHCenter | Qt::AlignTop, QString("1")); //PhD
+    }*/
     
     QFont font = p.font();
     font.setPointSizeF(font.pointSizeF() - 2.);
@@ -557,32 +560,35 @@ void GraphView::drawCurves(QPainter& painter)
         QPen pen = curve.mPen;
         pen.setWidth(pen.width() * mThickness);
         painter.setPen(pen);
+        // je suis ici
+         painter.drawText(mMarginLeft + 5, mMarginTop + 5, mGraphWidth - 10, 15, Qt::AlignRight | Qt::AlignTop, curve.mName);
+        //p.drawText(r, Qt::AlignHCenter | Qt::AlignTop, QString("1"));
         
         if(curve.mIsHorizontalLine)
         {
-            double y = getYForValue(curve.mHorizontalValue);
+            qreal y = getYForValue(curve.mHorizontalValue);
             path.moveTo(mMarginLeft, y);
             path.lineTo(mMarginLeft + mGraphWidth, y);
             painter.strokePath(path, curve.mPen);
         }
         else if(curve.mIsVerticalLine)
         {
-            double x = getXForValue(curve.mVerticalValue);
+            qreal x = getXForValue(curve.mVerticalValue);
             path.moveTo(x, mMarginTop + mGraphHeight);
             path.lineTo(x, mMarginTop);
             painter.strokePath(path, curve.mPen);
         }
         else if(curve.mIsHorizontalSections)
         {
-            double y = getYForValue(curve.mHorizontalValue);
+            qreal y = getYForValue(curve.mHorizontalValue);
             path.moveTo(mMarginLeft, y);
             for(int i=0; i<curve.mSections.size(); ++i)
             {
-                double x1 = getXForValue(curve.mSections[i].first);
+                qreal x1 = getXForValue(curve.mSections[i].first);
                 x1 = std::max(x1, (double)mMarginLeft);
                 x1 = std::min(x1, (double)(mMarginLeft + mGraphWidth));
                 
-                double x2 = getXForValue(curve.mSections[i].second);
+                qreal x2 = getXForValue(curve.mSections[i].second);
                 x2 = std::max(x2, (double)mMarginLeft);
                 x2 = std::min(x2, (double)(mMarginLeft + mGraphWidth));
                 

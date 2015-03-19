@@ -164,21 +164,24 @@ double Phase::getMinThetaNextPhases(double tmax)
     double minTheta = tmax;
     for(int i=0; i<mConstraintsFwd.size(); ++i)
     {
-        Phase* phaseTo = mConstraintsFwd[i]->mPhaseTo;
+        //Phase* phaseTo = mConstraintsFwd[i]->mPhaseTo;
         
         //qDebug() << "==> Phase après : " << phaseTo->mName << " (" << phaseTo->mEvents.size() << " events)";
         
-        
+
         // PhD : On pourra regarder juste les alpha et beta qui sont déjà mémorisés 
-        double theta = tmax;
+        /* double theta = tmax;
         for(int j=0; j<phaseTo->mEvents.size(); ++j)
         {
             if(phaseTo->mEvents[j]->mInitialized)
             {
                 theta = std::min(theta, phaseTo->mEvents[j]->mTheta.mX);
             }
-        }
+        } */
         //qDebug() << "===> Min Theta : " << theta;
+        
+        double theta= mConstraintsFwd[i]->mPhaseTo->getMinThetaEvents(tmax);
+        
         if(mConstraintsFwd[i]->mGammaType != PhaseConstraint::eGammaUnknown)
             minTheta = std::min(minTheta, theta - mConstraintsFwd[i]->mGamma);
         else
@@ -192,15 +195,19 @@ double Phase::getMaxThetaPrevPhases(double tmin)
     double maxTheta = tmin;
     for(int i=0; i<mConstraintsBwd.size(); ++i)
     {
-        Phase* phaseFrom = mConstraintsBwd[i]->mPhaseFrom;
-        double theta = tmin;
+        //Phase* phaseFrom = mConstraintsBwd[i]->mPhaseFrom;
+
+        
+        /* double theta = tmin;
         for(int j=0; j<phaseFrom->mEvents.size(); ++j)
         {
             if(phaseFrom->mEvents[j]->mInitialized)
             {
                 theta = std::max(theta, phaseFrom->mEvents[j]->mTheta.mX);
             }
-        }
+        } */
+        double theta= mConstraintsBwd[i]->mPhaseFrom->getMaxThetaEvents(tmin);
+        
         if(mConstraintsBwd[i]->mGammaType != PhaseConstraint::eGammaUnknown)
             maxTheta = std::max(maxTheta, theta + mConstraintsBwd[i]->mGamma);
         else

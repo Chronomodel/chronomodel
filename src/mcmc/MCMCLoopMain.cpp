@@ -55,7 +55,8 @@ QString MCMCLoopMain::calibrate()
         
         emit stepChanged(tr("Calibrating..."), 0, dates.size());
         
-        for(int i=0; i<dates.size(); ++i)
+//        for(int i=0; i<dates.size(); ++i) // if dates[i] type is std::vector
+        for(int i=0; i<dates.length(); ++i)
         {
             if(isInterruptionRequested())
                 return ABORTED_BY_USER;

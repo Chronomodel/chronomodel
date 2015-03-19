@@ -30,7 +30,7 @@ void GraphViewDate::setDate(Date* date)
     if(date)
     {
         mDate = date;
-        mTitle = tr("Data") + " : " + mDate->mName;
+        mTitle = QString(tr("Data") + " : " + mDate->mName);
     }
     update();
 }
@@ -64,6 +64,7 @@ void GraphViewDate::paintEvent(QPaintEvent* e)
         QFont font;
         font.setPointSizeF(pointSize(11));
         p.setFont(font);
+        // affihce le texte dans la boite de droite
         p.drawText(topRect.adjusted(mMargin, 0, -mMargin, 0),
                    Qt::AlignVCenter | Qt::AlignLeft,
                    tr("Data") + " : " + mDate->mName);
@@ -138,6 +139,7 @@ void GraphViewDate::refresh()
                     curveRaw.mPen.setColor(Qt::red);
                     curveRaw.mData = equal_areas(variable->fullRawHisto(), 1.f);
                     curveRaw.mIsHisto = true;
+                    // mGraph->mZones[0].mText="coucou";
                     mGraph->addCurve(curveRaw);
                     
                     double yMax2 = 1.1f * map_max_value(curveRaw.mData);

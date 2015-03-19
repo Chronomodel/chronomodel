@@ -15,16 +15,16 @@
 struct Chain
 {
     int mSeed;
-    unsigned long long mNumBurnIter;
-    unsigned long long mBurnIterIndex;
-    unsigned long long mMaxBatchs;
-    unsigned long long mNumBatchIter;
-    unsigned long long mBatchIterIndex;
+    unsigned long mNumBurnIter;
+    unsigned long mBurnIterIndex;
+    unsigned long mMaxBatchs;
+    unsigned long mNumBatchIter;
+    unsigned long mBatchIterIndex;
     unsigned long mBatchIndex;
-    unsigned long long mNumRunIter;
-    unsigned long long mRunIterIndex;
-    unsigned long long mTotalIter; // burn + adapt + run
-    unsigned int mThinningInterval;
+    unsigned long mNumRunIter;
+    unsigned long mRunIterIndex;
+    unsigned long mTotalIter; // burn + adapt + run
+    unsigned long mThinningInterval;
 };
 
 

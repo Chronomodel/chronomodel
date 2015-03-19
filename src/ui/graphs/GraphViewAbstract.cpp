@@ -1,4 +1,5 @@
 #include "GraphViewAbstract.h"
+#include "StdUtilities.h"
 #include <cmath>
 #include <QDebug>
 
@@ -87,39 +88,40 @@ void GraphViewAbstract::setMargins(const int aMarginLeft, const int aMarginRight
 
 #pragma mark Values utilities
 
-double GraphViewAbstract::getXForValue(const double aValue, const bool aConstainResult)
+qreal GraphViewAbstract::getXForValue(const double aValue, const bool aConstainResult)
 {
-	return mMarginLeft + valueForProportion(aValue, mCurrentMinX, mCurrentMaxX, 0.f, (double)mGraphWidth, aConstainResult);
+	return (qreal)(mMarginLeft + valueForProportion(aValue, mCurrentMinX, mCurrentMaxX, 0.f, (double)mGraphWidth, aConstainResult));
 }
 
-double GraphViewAbstract::getValueForX(const double x, const bool aConstainResult)
+qreal GraphViewAbstract::getValueForX(const double x, const bool aConstainResult)
 {
-	const double lXFromSide = x - mMarginLeft;
-	double lValue = valueForProportion(lXFromSide, 0.f, (double)mGraphWidth, mCurrentMinX, mCurrentMaxX, aConstainResult);
+	const qreal lXFromSide = x - mMarginLeft;
+	const qreal lValue = valueForProportion(lXFromSide, 0.f, (double)mGraphWidth, mCurrentMinX, mCurrentMaxX, aConstainResult);
 	return lValue;
 }
-double GraphViewAbstract::getYForValue(const double aValue, const bool aConstainResult)
+qreal GraphViewAbstract::getYForValue(const double aValue, const bool aConstainResult)
 {
-	double lYFromBase = valueForProportion(aValue, mMinY, mMaxY, 0.f, (double)mGraphHeight, aConstainResult);
-	const double y = mMarginTop + mGraphHeight - lYFromBase;
+	const qreal lYFromBase = valueForProportion(aValue, mMinY, mMaxY, 0.f, (double)mGraphHeight, aConstainResult);
+	const qreal y = mMarginTop + mGraphHeight - lYFromBase;
 	return y;	
 }
-double GraphViewAbstract::getValueForY(const double y, const bool aConstainResult)
+qreal GraphViewAbstract::getValueForY(const double y, const bool aConstainResult)
 {
-	const double lYFromBase = mMarginTop + mGraphHeight - y;
-	double lValue = valueForProportion(lYFromBase, 0.f, (double)mGraphHeight, mMinY, mMaxY, aConstainResult);
+	const qreal lYFromBase = mMarginTop + mGraphHeight - y;
+	const qreal lValue = valueForProportion(lYFromBase, 0.f, (double)mGraphHeight, mMinY, mMaxY, aConstainResult);
 	return lValue;
 }
 
-double GraphViewAbstract::valueForProportion(const double v1, const double v1min, const double v1max, const double v2min, const double v2max, const bool resultInBounds)
+double GraphViewAbstract::valueForProportion(const double value, const double valMin, const double valMax, const double Pmin, const double Pmax, const bool resultInBounds)
 {
-    double v2 = v2min + (v1 - v1min) * (v2max - v2min) / (v1max - v1min);
-    return v2;
+    double v2 = Pmin + (value - valMin) * (Pmax - Pmin) / (valMax - valMin);
+    //return v2;
     
 	if(resultInBounds)
 	{
-		v2 = (v2 > v2max) ? v2max : v2;
-		v2 = (v2 < v2min) ? v2min : v2;
+		//v2 = (v2 > v2max) ? v2max : v2;
+		//v2 = (v2 < v2min) ? v2min : v2;
+        v2 = inRange(Pmin,v2,Pmax);
 	}
 	return v2;
 }

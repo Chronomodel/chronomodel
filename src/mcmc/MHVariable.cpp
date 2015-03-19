@@ -9,9 +9,10 @@ MHVariable::~MHVariable(){}
 
 bool MHVariable::tryUpdate(const double x, const double rapport)
 {
-    if(mLastAccepts.length() >= mLastAcceptsLength)
-        mLastAccepts.removeAt(0);
-    
+   /* if(mLastAccepts.length() >= mLastAcceptsLength)
+        mLastAccepts.removeAt(0);*/
+    if(mLastAccepts.size() >= mLastAcceptsLength)
+     mLastAccepts.erase(mLastAccepts.begin(), mLastAccepts.end());
     bool accepted = false;
     
     if(rapport >= 1)
@@ -27,8 +28,10 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
     if(accepted)
         mX = x;
     
-    mLastAccepts.append(accepted);
-    mAllAccepts.append(accepted);
+    /*mLastAccepts.append(accepted);
+    mAllAccepts.append(accepted);*/
+    mLastAccepts.push_back(accepted); //PhD
+    mAllAccepts.push_back(accepted);
     return accepted;
 }
 
@@ -43,12 +46,19 @@ void MHVariable::reset()
 double MHVariable::getCurrentAcceptRate()
 {
     double sum = 0.f;
-    for(int i=0; i<mLastAccepts.length(); ++i)
+   /* for(int i=0; i<mLastAccepts.length(); ++i)
         sum += mLastAccepts[i] ? 1.f : 0.f;
     
     //qDebug() << "Last accept on " << sum << " / " << mLastAccepts.length() << " values";
     
-    return sum / (double)mLastAccepts.length();
+    return sum / (double)mLastAccepts.length();*/
+    
+    for(unsigned long i=0; i<mLastAccepts.size(); ++i)
+        sum += mLastAccepts[i] ? 1.f : 0.f;
+    
+    //qDebug() << "Last accept on " << sum << " / " << mLastAccepts.length() << " values";
+    
+    return sum / (double)mLastAccepts.size();
 }
 
 void MHVariable::saveCurrentAcceptRate()
@@ -60,15 +70,15 @@ void MHVariable::saveCurrentAcceptRate()
 QVector<double> MHVariable::acceptationForChain(const QList<Chain>& chains, int index)
 {
     QVector<double> accept;
-    int shift = 0;
+    unsigned long long shift = 0;
     
     for(int i=0; i<chains.size(); ++i)
     {
-        int chainSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + chains[i].mNumRunIter / chains[i].mThinningInterval;
+        unsigned long long chainSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + chains[i].mNumRunIter / chains[i].mThinningInterval;
         
         if(i == index)
         {
-            for(int j=0; j<chainSize; ++j)
+            for(unsigned long long j=0; j<chainSize; ++j)
                 accept.append(mHistoryAcceptRateMH[shift + j]);
             break;
         }
@@ -119,7 +129,7 @@ QString MHVariable::resultsText(const QString& noResultMessage) const
 void MHVariable::saveToStream(QDataStream *out) // ajout PhD
 {
      /* herited from MetropolisVariable*/
-    *out << this->mChainsHistos;
+   /* *out << this->mChainsHistos;
      *out << this->mChainsRawHistos;
      //out << this->mChainsResults;
      *out << this->mCorrelations;
@@ -131,13 +141,20 @@ void MHVariable::saveToStream(QDataStream *out) // ajout PhD
      //out << this->mResults;
      *out << this->mThreshold;
      *out << this->mTrace;
-     *out << this->mX;
-
+     *out << this->mX;*/
+    
+    this->MetropolisVariable::saveToStream(out);
      /* owned by MHVariable*/
-     *out << this->mAllAccepts;
+    *out << this->mAllAccepts;
+    
+    //*out << QVector<bool>::fromStdVector(this->mAllAccepts);
+    
      *out << this->mGlobalAcceptation;
-     *out << this->mHistoryAcceptRateMH;
-     *out << this->mLastAccepts;
+    *out << this->mHistoryAcceptRateMH;
+    *out << this->mLastAccepts;
+    
+      /**out << QVector<float>::fromStdVector(this->mHistoryAcceptRateMH);
+     *out << QVector<bool>::fromStdVector(this->mLastAccepts);*/
      *out << this->mLastAcceptsLength;
      *out << this->mProposal;
      *out << this->mSigmaMH;
@@ -145,8 +162,10 @@ void MHVariable::saveToStream(QDataStream *out) // ajout PhD
 }
 void MHVariable::loadFromStream(QDataStream *in) // ajout PhD
 {
+    
+    
     /* herited from MetropolisVariable*/
-    *in >> this->mChainsHistos;
+   /* *in >> this->mChainsHistos;
     *in >> this->mChainsRawHistos;
     //*in >> this->mChainsResults;
     *in >> this->mCorrelations;
@@ -155,16 +174,30 @@ void MHVariable::loadFromStream(QDataStream *in) // ajout PhD
     *in >> this->mHisto;
     *in >> this->mHPD;
     *in >> this->mRawHisto;
-    //*in >> this->mResults;
+    // *in >> this->mResults;
     *in >> this->mThreshold;
     *in >> this->mTrace;
-    *in >> this->mX;
-
+    *in >> this->mX;*/
+    
+    this->MetropolisVariable::loadFromStream(in);
      /* owned by MHVariable*/
+    QVector<bool> vectorOfBool;
+    QVector<float> vectorOfFoat;
+    
+     /* *in >> vectorOfBool;
+    this->mAllAccepts=vectorOfBool.toStdVector();*/
+    
     *in >> this->mAllAccepts;
     *in >> this->mGlobalAcceptation;
+    
+    /* *in >> vectorOfFoat;
+    this->mHistoryAcceptRateMH=vectorOfFoat.toStdVector();*/
     *in >> this->mHistoryAcceptRateMH;
+    
+    /* *in >> vectorOfBool;
+    this->mLastAccepts=vectorOfBool.toStdVector();*/
     *in >> this->mLastAccepts;
+    
     *in >> this->mLastAcceptsLength;
     *in >> this->mProposal;
     *in >> this->mSigmaMH;
