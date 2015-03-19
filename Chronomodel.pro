@@ -6,7 +6,7 @@
 #
 #-------------------------------------------------
 
-#PRO_PATH=$$PWD
+PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_
 
 message("-------------------------------------------")
@@ -155,6 +155,7 @@ DEPENDPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac/
 }
 win32{
         INCLUDEPATH += lib/FFTW
+        INCLUDEPATH += PWD
         LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
         message("win32->FFTW")
 }
