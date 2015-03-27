@@ -8,6 +8,7 @@
 
 
 
+
 #pragma mark Constructor / Destructor
 
 GraphViewResults::GraphViewResults(QWidget *parent):QWidget(parent),
@@ -144,11 +145,22 @@ void GraphViewResults::setMainColor(const QColor& color)
 
 void GraphViewResults::saveAsImage()
 {
+    //GraphView::Rendering memoRendering= mGraph->getRendering();
+    /* We can not have a svg graph in eSD Rendering Mode */
+    //mGraph->setRendering(GraphView::eHD);
     QRect r(0, 0, mGraph->width(), mGraph->height());
     QFileInfo fileInfo = saveWidgetAsImage(mGraph, r, tr("Save graph image as..."),
                                            MainWindow::getInstance()->getCurrentPath());
+    
+    
+    
+    
+    
+    
     if(fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
+    
+   // mGraph->setRendering(memoRendering);
 }
 
 void GraphViewResults::imageToClipboard()
@@ -219,11 +231,11 @@ void GraphViewResults::paintEvent(QPaintEvent* e)
     QPainter p(this);
     
     p.fillRect(0, 0, mGraphLeft, height(), mMainColor);
-    
+    // trace ligne horizontal
     p.setPen(QColor(200, 200, 200));
     p.drawLine(0, height(), width(), height());
     
-    if(height() >= mMinHeighttoDisplayTitle)
+    if(height() >= mMinHeighttoDisplayTitle) // écrit juste mTitle
     {
         QRectF textRect(mGraphLeft, 0, mGraph->width(), 25);
         p.fillRect(textRect, mGraph->getBackgroundColor());
@@ -260,7 +272,7 @@ void GraphViewResults::updateLayout()
     {
         int bw = mGraphLeft / 4;
         int bh = height() - mLineH;
-        bh = qMin(bh, butInlineMaxH);
+        bh = std::min(bh, butInlineMaxH);
         
         mImageSaveBut->setGeometry(0, mLineH, bw, bh);
         mDataSaveBut->setGeometry(bw, mLineH, bw, bh);

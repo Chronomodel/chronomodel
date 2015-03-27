@@ -2,7 +2,7 @@
 #include "StateKeys.h"
 #include <QtWidgets>
 #include <QtSvg>
-
+#include "GraphView.h"
 
 bool colorIsDark(const QColor& color)
 {
@@ -130,7 +130,9 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
     
     QGraphicsScene* scene = 0;
     QWidget* widget = dynamic_cast<QWidget*>(wid);
-    if(!widget)
+    GraphView* mGraph = dynamic_cast<GraphView*>(wid);
+    //if(!widget)
+    if(!mGraph && !widget)
     {
         scene = dynamic_cast<QGraphicsScene*>(wid);
         if(!scene)
@@ -148,17 +150,34 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
         bool asSvg = fileName.endsWith(".svg");
         if(asSvg)
         {
-            QSvgGenerator svgGen;
+           if(mGraph)
+            {
+                mGraph->saveAsSVG(fileName, "titre", "description");
+            }
+            else if(scene)
+            {
+                QSvgGenerator svgGen;
+                svgGen.setFileName(fileName);
+                svgGen.setSize(r.size());
+                svgGen.setViewBox(QRect(0, 0, r.width(), r.height()));
+                svgGen.setDescription(QObject::tr("SVG scene drawing "));
+                QPainter p(&svgGen);
+                //sce
+                 scene->render(&p, r, r);
+            }
+            else if(widget)
+            {
+             
+             QSvgGenerator svgGen;
             svgGen.setFileName(fileName);
             svgGen.setSize(r.size());
             svgGen.setViewBox(QRect(0, 0, r.width(), r.height()));
-            QPainter p(&svgGen);
-            p.setRenderHint(QPainter::Antialiasing);
-            
-            if(widget)
-                widget->render(&p, QPoint(), QRegion(r));
-            else if(scene)
-                scene->render(&p, r, r);
+            svgGen.setDescription(QObject::tr("SVG widget drawing "));
+            QPainter p(&svgGen);   
+              widget->render(&p, QPoint(), QRegion(r));
+                
+            }
+           
         }
         else
         {

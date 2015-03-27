@@ -4,6 +4,7 @@
 #include "Painting.h"
 #include <QtWidgets>
 #include <algorithm>
+#include <QtSvg>
 
 
 #pragma mark Constructor / Destructor
@@ -143,6 +144,12 @@ void GraphView::setRendering(GraphView::Rendering render)
     mRendering = render;
     repaintGraph(true);
 }
+
+GraphView::Rendering GraphView::getRendering()
+{
+    return mRendering;
+}
+
 
 void GraphView::showAxisArrows(bool show)
 {
@@ -561,7 +568,7 @@ void GraphView::drawCurves(QPainter& painter)
         pen.setWidth(pen.width() * mThickness);
         painter.setPen(pen);
         // je suis ici
-         painter.drawText(mMarginLeft + 5, mMarginTop + 5, mGraphWidth - 10, 15, Qt::AlignRight | Qt::AlignTop, curve.mName);
+        // painter.drawText(mMarginLeft + 5, mMarginTop + 5, mGraphWidth - 10, 15, Qt::AlignRight | Qt::AlignTop, curve.mName);
         //p.drawText(r, Qt::AlignHCenter | Qt::AlignTop, QString("1"));
         
         if(curve.mIsHorizontalLine)
@@ -585,12 +592,12 @@ void GraphView::drawCurves(QPainter& painter)
             for(int i=0; i<curve.mSections.size(); ++i)
             {
                 qreal x1 = getXForValue(curve.mSections[i].first);
-                x1 = std::max(x1, (double)mMarginLeft);
-                x1 = std::min(x1, (double)(mMarginLeft + mGraphWidth));
+                x1 = qMax(x1, mMarginLeft);
+                x1 = qMin(x1,mMarginLeft + mGraphWidth);
                 
                 qreal x2 = getXForValue(curve.mSections[i].second);
-                x2 = std::max(x2, (double)mMarginLeft);
-                x2 = std::min(x2, (double)(mMarginLeft + mGraphWidth));
+                x2 = qMax(x2,mMarginLeft);
+                x2 = qMin(x2, mMarginLeft + mGraphWidth);
                 
                 path.moveTo(x1, y);
                 path.lineTo(x2, y);
@@ -604,22 +611,22 @@ void GraphView::drawCurves(QPainter& painter)
             
             int index = 0;
             //double last_x = 0;
-            double last_y = 0;
+            qreal last_y = 0;
             
             QMapIterator<double, double> iter(curve.mData);
             while(iter.hasNext())
             {
                 iter.next();
                 
-                double valueX = iter.value();
-                double valueY = iter.key();
+                qreal valueX = iter.value();
+                qreal valueY = iter.key();
                 
                 // vertical curves must be normalized (values from 0 to 1)
                 // They are drawn using a 100px width
-                double x = mMarginLeft + valueX * 100;
-                double y = getYForValue(valueY, false);
-                y = qMin(y, (double)mMarginTop + mGraphHeight);
-                y = qMax(y, (double)mMarginTop);
+                qreal x = mMarginLeft + valueX * 100;
+                qreal y = getYForValue(valueY, false);
+                y = qMin(y, mMarginTop + mGraphHeight);
+                y = qMax(y, mMarginTop);
                 
                 //qDebug() << valueY << ", " << valueX << " => " << y << ", " << x;
                 
@@ -644,9 +651,9 @@ void GraphView::drawCurves(QPainter& painter)
             path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
             
             int index = 0;
-            double last_x = 0;
-            double last_y = 0;
-            double last_value_y = 0;
+            qreal last_x = 0;
+            qreal last_y = 0;
+            qreal last_value_y = 0;
             //double last_value_x = 0;
             
             if(curve.mUseVectorData)
@@ -720,8 +727,8 @@ void GraphView::drawCurves(QPainter& painter)
                     
                     if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
                     {
-                        double x = getXForValue(valueX, false);
-                        double y = getYForValue(valueY, false);
+                        qreal x = getXForValue(valueX, false);
+                        qreal y = getYForValue(valueY, false);
                         
                         if(index == 0)
                         {
@@ -810,8 +817,8 @@ void GraphView::drawCurves(QPainter& painter)
                     }*/
                     if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
                     {
-                        double x = getXForValue(valueX, false);
-                        double y = getYForValue(valueY, false);
+                        qreal x = getXForValue(valueX, false);
+                        qreal y = getYForValue(valueY, false);
                         
                         if(index == 0)
                         {
@@ -822,7 +829,7 @@ void GraphView::drawCurves(QPainter& painter)
                             if(curve.mIsHisto)
                             {
                                 // histo bars must be centered around x value :
-                                double dx2 = (x - last_x)/2.f;
+                                qreal dx2 = (x - last_x)/2.f;
                                 path.lineTo(x - dx2, last_y);
                                 path.lineTo(x - dx2, y);
                                 //qDebug() << "y = " << valueY << ", last_y = " << last_value_y;
@@ -974,4 +981,33 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QString& c
         }
         file.close();
     }
+}
+
+bool GraphView::saveAsSVG(const QString& fileName, const QString svgTitle, const QString svgDescrition)
+{
+    if(fileName.isEmpty())
+    {
+        return false;
+    }
+    else
+    {
+        Rendering memoRendering= mRendering;
+        QRect r(0, 0, width(), height());
+        
+        /* We can not have a svg graph in eSD Rendering Mode */
+        setRendering(eHD);
+        QSvgGenerator svgGen;
+        svgGen.setFileName(fileName);
+        svgGen.setSize(r.size());
+        svgGen.setViewBox(r);
+        svgGen.setTitle(svgTitle);
+        svgGen.setDescription(svgDescrition);
+        QPainter painter(&svgGen);
+        render(&painter, QPoint(), QRegion(r, QRegion::Rectangle));
+        setRendering(memoRendering);
+        
+        return true;
+        
+    }
+    
 }

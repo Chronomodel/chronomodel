@@ -1,5 +1,6 @@
 #pragma once
 
+#include <qglobal.h>
 
 class GraphViewAbstract
 {
@@ -52,11 +53,15 @@ protected:
 	int		mGraphWidth;
 	int		mGraphHeight;
 	
-	int		mMarginLeft;
+	/* int		mMarginLeft;
 	int		mMarginRight;
 	int		mMarginTop;
-	int		mMarginBottom;
-	
+	int		mMarginBottom; */
+    qreal		mMarginLeft;
+    qreal		mMarginRight;
+    qreal		mMarginTop;
+    qreal		mMarginBottom;
+    
 	double	mMinX;
 	double	mMaxX;
 	double	mMinY;

@@ -440,7 +440,7 @@ void MainWindow::closeEvent(QCloseEvent* e)
 {
     QMessageBox message(QMessageBox::Question,
                         QApplication::applicationName(),
-                        tr("Do you really want to quit Chronomodel ?"),
+                        tr("Do you really want to quit ChronoModel ?"),
                         QMessageBox::Yes | QMessageBox::No,
                         qApp->activeWindow(),
                         Qt::Sheet);

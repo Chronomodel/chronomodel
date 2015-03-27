@@ -53,7 +53,7 @@ double MHVariable::getCurrentAcceptRate()
     
     return sum / (double)mLastAccepts.length();*/
     
-    for(unsigned long i=0; i<mLastAccepts.size(); ++i)
+    for(int i=0; i<mLastAccepts.size(); ++i)
         sum += mLastAccepts[i] ? 1.f : 0.f;
     
     //qDebug() << "Last accept on " << sum << " / " << mLastAccepts.length() << " values";
@@ -78,7 +78,7 @@ QVector<double> MHVariable::acceptationForChain(const QList<Chain>& chains, int 
         
         if(i == index)
         {
-            for(unsigned long long j=0; j<chainSize; ++j)
+            for(int j=0; j<chainSize; ++j)
                 accept.append(mHistoryAcceptRateMH[shift + j]);
             break;
         }
@@ -167,7 +167,7 @@ void MHVariable::loadFromStream(QDataStream *in) // ajout PhD
     /* herited from MetropolisVariable*/
    /* *in >> this->mChainsHistos;
     *in >> this->mChainsRawHistos;
-    //*in >> this->mChainsResults;
+    // *in >> this->mChainsResults;
     *in >> this->mCorrelations;
     *in >> this->mCredibility;
     *in >> this->mExactCredibilityThreshold;

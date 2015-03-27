@@ -11,6 +11,7 @@
 #include <QFont>
 #include <QColor>
 #include <QPixmap>
+#include <QFileInfo>
 
 
 class GraphView: public QWidget, public GraphViewAbstract
@@ -44,6 +45,8 @@ public:
     void resetNothingMessage();
     
     void setRendering(Rendering render);
+    Rendering getRendering();
+    
     void showAxisArrows(bool show);
     void showAxisLines(bool show);
     void showVertGrid(bool show);
@@ -69,6 +72,10 @@ public:
     // Paint
     
     void paintToDevice(QPaintDevice* device, QPaintEvent* e);
+    
+    // Save
+    
+    bool saveAsSVG(const QString& fileName, const QString svgTitle, const QString svgDescrition);
     
 public slots:
     void zoomX(const double min, const double max);
