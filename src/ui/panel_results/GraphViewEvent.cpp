@@ -18,7 +18,10 @@ mEvent(0)
 {
     //setMainColor(QColor(100, 100, 120));
     setMainColor(QColor(100, 100, 100));
-    mGraph->setBackgroundColor(QColor(240, 240, 240));
+    mGraph->setBackgroundColor(QColor(230, 230, 230));
+
+    
+    
 }
 
 GraphViewEvent::~GraphViewEvent()
@@ -276,7 +279,8 @@ void GraphViewEvent::refresh()
             {
                 Chain& chain = mChains[chainIdx];
                 mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
-                mGraph->setRangeY(0, 100);
+              
+               mGraph->setRangeY(0, 100);
                 
                 GraphCurve curve;
                 curve.mName = QString("accept history chain " + QString::number(chainIdx));
@@ -356,13 +360,18 @@ void GraphViewEvent::refresh()
 
 void GraphViewEvent::paintEvent(QPaintEvent* e)
 {
-    GraphViewResults::paintEvent(e);
+   
+    //QPainter p(this);
     
-    QPainter p(this);
     
     if(mEvent)
     {
-        QColor backCol = mEvent->mColor;
+        
+        this->setItemColor(mEvent->mColor);
+        
+        QString evenTitle = ( (mEvent->mType == Event::eDefault) ? tr("Event") : tr("Bound") ) ;
+        this->setItemTitle(evenTitle + " : " + mEvent->mName);
+       /* QColor backCol = mEvent->mColor;
         QColor foreCol = getContrastedColor(backCol);
         
         QRect topRect(0, 0, mGraphLeft, mLineH);
@@ -377,9 +386,14 @@ void GraphViewEvent::paintEvent(QPaintEvent* e)
         QFont font;
         font.setPointSizeF(pointSize(11));
         p.setFont(font);
+        
         QString type = (mEvent->mType == Event::eDefault) ? tr("Event") : tr("Bound");
         p.drawText(topRect.adjusted(mMargin, 0, -mMargin, 0),
                    Qt::AlignVCenter | Qt::AlignLeft,
                    type + " : " + mEvent->mName);
+       */ 
+       
     }
+     GraphViewResults::paintEvent(e);
+     //p.end();
 }

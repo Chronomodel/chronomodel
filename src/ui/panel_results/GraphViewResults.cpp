@@ -12,6 +12,7 @@
 #pragma mark Constructor / Destructor
 
 GraphViewResults::GraphViewResults(QWidget *parent):QWidget(parent),
+mButtonVisible(true),
 mCurrentResult(eHisto),
 mCurrentVariable(eTheta),
 mMinHeighttoDisplayTitle(100),
@@ -25,7 +26,7 @@ mShowNumResults(false),
 mMainColor(QColor(50, 50, 50)),
 mMargin(5),
 mLineH(20),
-mGraphLeft(130)
+mGraphLeft(128)
 {
     setMouseTracking(true);
     
@@ -83,6 +84,27 @@ mGraphLeft(130)
     connect(mDataSaveBut, SIGNAL(clicked()), this, SLOT(saveGraphData()));
     
     setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
+    
+    
+    if(mCurrentResult == eAccept || mCurrentResult == eTrace ) {
+        Chain& chain = mChains[0];
+        mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
+    }
+    
+    if(mCurrentResult == eHisto)
+    {
+        if(mCurrentVariable == eTheta)
+        {
+            mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
+        }
+        if(mCurrentVariable == eSigma){
+            mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
+        }
+    }
+    if(mCurrentResult == eCorrel){
+        mGraph->setRangeX(0, 100);
+    }
+    
 }
 
 GraphViewResults::~GraphViewResults()
@@ -90,7 +112,7 @@ GraphViewResults::~GraphViewResults()
     
 }
 
-void GraphViewResults::setResultToShow(Result result, Variable variable, bool showAllChains, const QList<bool>& showChainList, bool showHpd, float threshold, bool showCalib, bool showWiggle, bool showRawResults)
+void GraphViewResults::setResultToShow(Result result, Variable variable, bool showAllChains, const QList<bool>& showChainList, bool showHpd, float threshold, bool showCalib, bool showPosterior, bool showWiggle, bool showRawResults)
 {
     mCurrentResult = result;
     mCurrentVariable = variable;
@@ -98,6 +120,7 @@ void GraphViewResults::setResultToShow(Result result, Variable variable, bool sh
     mShowChainList = showChainList;
     mShowHPD = showHpd;
     mThresholdHPD = threshold;
+    mShowPosterior = showPosterior;
     mShowCalib = showCalib;
     mShowWiggle = showWiggle;
     mShowRawResults = showRawResults;
@@ -127,6 +150,9 @@ void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc, const QList<Cha
     mChains = chains;
 }
 
+/**
+ @brief set date range on all the study
+ */
 void GraphViewResults::setRange(double min, double max)
 {
     mGraph->setRangeX(min, max);
@@ -134,7 +160,10 @@ void GraphViewResults::setRange(double min, double max)
 
 void GraphViewResults::zoom(double min, double max)
 {
+   // ici ca marche qDebug()<<"avant GraphViewResults::zoom"<<mGraph->getCurrentMaxX();
     mGraph->zoomX(min, max);
+   // qDebug()<<"apres GraphViewResults::zoom"<<mGraph->getCurrentMaxX();
+   
 }
 
 void GraphViewResults::setMainColor(const QColor& color)
@@ -142,25 +171,42 @@ void GraphViewResults::setMainColor(const QColor& color)
     mMainColor = color;
     update();
 }
+#pragma mark Export Image & Data
+
 
 void GraphViewResults::saveAsImage()
 {
     //GraphView::Rendering memoRendering= mGraph->getRendering();
     /* We can not have a svg graph in eSD Rendering Mode */
     //mGraph->setRendering(GraphView::eHD);
-    QRect r(0, 0, mGraph->width(), mGraph->height());
+/*    QRect r(0, 0, mGraph->width(), mGraph->height());
     QFileInfo fileInfo = saveWidgetAsImage(mGraph, r, tr("Save graph image as..."),
                                            MainWindow::getInstance()->getCurrentPath());
     
-    
-    
-    
+ 
     
     
     if(fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
-    
+ */
    // mGraph->setRendering(memoRendering);
+    QString filter = QObject::tr("Image (*.png);;Scalable Vector Graphics (*.svg)");
+    QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                    tr("Save graph image as..."),
+                                                    MainWindow::getInstance()->getCurrentPath(),
+                                                    filter);
+    if(!fileName.isEmpty())
+    {
+        QFileInfo fileInfo = QFileInfo(fileName);
+        bool asSvg = fileName.endsWith(".svg");
+        if(asSvg)
+        {
+            if(mGraph)
+            {
+                mGraph->saveAsSVG(fileName, mTitle, "GraphViewResults",true);
+            }
+        }
+    }
 }
 
 void GraphViewResults::imageToClipboard()
@@ -218,24 +264,31 @@ void GraphViewResults::setGraphFont(const QFont& font)
     setFont(font);
     mGraph->setGraphFont(font);
     mGraph->setMarginBottom(font.pointSizeF() + 10);
+   // updateLayout();
 }
 
 void GraphViewResults::setGraphsThickness(int value)
 {
     mGraph->setCurvesThickness(value);
+    updateLayout();
 }
 
-void GraphViewResults::paintEvent(QPaintEvent* e)
+void GraphViewResults::paintEvent(QPaintEvent* )
 {
-    Q_UNUSED(e);
+   // Q_UNUSED(e);
+
     QPainter p(this);
-    
-    p.fillRect(0, 0, mGraphLeft, height(), mMainColor);
-    // trace ligne horizontal
-    p.setPen(QColor(200, 200, 200));
+    if (mButtonVisible) { // the box under the button
+        p.fillRect(0, 0, mGraphLeft, height(), mMainColor);
+    }
+
+    // draw a horizontal ligne
+ /*   p.setPen(QColor(200, 200, 200));
     p.drawLine(0, height(), width(), height());
-    
-    if(height() >= mMinHeighttoDisplayTitle) // écrit juste mTitle
+  */  
+    updateLayout();
+    p.end();
+/*    if(height() >= mMinHeighttoDisplayTitle) // écrit juste mTitle
     {
         QRectF textRect(mGraphLeft, 0, mGraph->width(), 25);
         p.fillRect(textRect, mGraph->getBackgroundColor());
@@ -244,7 +297,7 @@ void GraphViewResults::paintEvent(QPaintEvent* e)
         p.setFont(this->font());
         
         p.drawText(textRect.adjusted(mGraph->marginLeft(), 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
-    }
+    }*/
 }
 
 void GraphViewResults::resizeEvent(QResizeEvent* e)
@@ -253,63 +306,154 @@ void GraphViewResults::resizeEvent(QResizeEvent* e)
     updateLayout();
 }
 
+#pragma mark Layout
+
 void GraphViewResults::updateLayout()
 {
+    // la ca marche qDebug()<<"in GraphViewResults::updateLayout mCurrentMaxX "<<mGraph->getCurrentMaxX();
     int h = height();
     int butMinH = 30;
     int butInlineMaxH = 50;
     //int bh = (height() - mLineH) / 2;
     //bh = qMin(bh, 100);
+    QPainter p;
+    p.begin(this);
     
-    bool showButs = (h >= mLineH + butMinH);
+    int leftShift = 0;
+    int topShift = 0;
     
-    mImageSaveBut->setVisible(showButs);
-    mDataSaveBut->setVisible(showButs);
-    mImageClipBut->setVisible(showButs);
-    mResultsClipBut->setVisible(showButs);
-    
-    if(showButs)
-    {
-        int bw = mGraphLeft / 4;
-        int bh = height() - mLineH;
-        bh = std::min(bh, butInlineMaxH);
-        
-        mImageSaveBut->setGeometry(0, mLineH, bw, bh);
-        mDataSaveBut->setGeometry(bw, mLineH, bw, bh);
-        mImageClipBut->setGeometry(2*bw, mLineH, bw, bh);
-        mResultsClipBut->setGeometry(3*bw, mLineH, bw, bh);
+    if(height() >= mMinHeighttoDisplayTitle) {
+        topShift = mLineH;
     }
+        
     
-    QRect graphRect(mGraphLeft, 0, width() - mGraphLeft, height()-1);
+    if (mButtonVisible) {
+        
+        bool showButs = (h >= mLineH + butMinH);
+        //showButs = false;
+        leftShift = mGraphLeft;
+     
+        mImageSaveBut   -> setVisible(showButs);
+        mDataSaveBut    -> setVisible(showButs);
+        mImageClipBut   -> setVisible(showButs);
+        mResultsClipBut -> setVisible(showButs);
+        
+        
+        QColor backCol = mItemColor;
+        QColor foreCol = getContrastedColor(backCol);
+        
+    
+        if(showButs)  {
+            qreal bw = mGraphLeft / 4;
+            int bh = height() - mLineH;
+            bh = std::min(bh, butInlineMaxH);
+        
+            mImageSaveBut   -> setGeometry(0, mLineH, bw, bh);
+            mDataSaveBut    -> setGeometry(bw, mLineH, bw, bh);
+            mImageClipBut   -> setGeometry(2*bw, mLineH, bw, bh);
+            mResultsClipBut -> setGeometry(mGraphLeft-bw, mLineH, bw, bh);
+            
+            
+            
+            QRect topRect(0, 0, mGraphLeft, mLineH);
+            p.setPen(backCol);
+            p.setBrush(backCol);
+            p.drawRect(topRect);
+            
+            
+        }
+    
+        
+    
+    /*    QColor backCol = mItemColor;
+        QColor foreCol = getContrastedColor(backCol);
+    
+//      QRect topRect(0, 0, mGraphLeft, mLineH);
+        QRect topRect(0, 0, mGraphLeft, mLineH);
+        p.setPen(backCol);
+        p.setBrush(backCol);
+        p.drawRect(topRect);
+   */
+       // p.setPen(Qt::black);
+       // p.drawLine(0, height(), mGraphLeft, height());
+    
+        p.setPen(foreCol);
+        QFont font;
+        font.setPointSizeF(pointSize(11));
+        p.setFont(font);
+        // affiche le texte dans la boite de droite avec les boutons
+        p.drawText(QRectF(0, 0, mGraphLeft-p.pen().widthF(), mLineH-p.pen().widthF()),
+                   Qt::AlignVCenter | Qt::AlignCenter,
+                   mItemTitle);
+        
+        
+    }
+    else {
+        leftShift = 0;
+        mImageSaveBut   -> setVisible(false);
+        mDataSaveBut    -> setVisible(false);
+        mImageClipBut   -> setVisible(false);
+        mResultsClipBut -> setVisible(false);
+    }
+   
     if(h <= mLineH + butMinH)
     {
-        mGraph->setYAxisMode(GraphView::eHidden);
+        mGraph -> setYAxisMode(GraphView::eHidden);
     }
     else
     {
         mGraph->setYAxisMode(GraphView::eMinMax);
     }
-    if(height() >= mMinHeighttoDisplayTitle)
-    {
-        graphRect.adjust(0, 20, 0, 0);
-        mGraph->setXAxisMode(GraphView::eAllTicks);
-        mGraph->setMarginBottom(mGraph->font().pointSizeF() + 10);
+    
+    if(height() >= mMinHeighttoDisplayTitle)  {
+       
+        mGraph -> setXAxisMode(GraphView::eAllTicks);
+        mGraph -> setMarginBottom(mGraph->font().pointSizeF() + 10);
+        
+        // écrit juste mTitle au dessus de la courbe
+        QRectF textRect(leftShift, 0, this->width()-leftShift,mLineH);
+        p.fillRect(textRect, mGraph->getBackgroundColor());
+        
+        p.setPen(Qt::black);
+        p.setFont(this->font());
+        
+        p.drawText(textRect.adjusted(50, 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
+        
+        
     }
     else
     {
-        mGraph->setXAxisMode(GraphView::eHidden);
-        mGraph->setMarginBottom(0);
+        mGraph -> setXAxisMode(GraphView::eHidden);
+        
+        //mGraph -> setMarginBottom(0);
+        mGraph -> setMarginBottom(10);
+        
     }
     
+    
+    QRect graphRect(leftShift, topShift, this->width() - leftShift, height()-1-topShift);
     if(mShowNumResults && height() >= 100)
     {
-        mGraph->setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
-        mTextArea->setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
-        mTextArea->setVisible(true);
+        mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
+        mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
+        mTextArea -> setVisible(true);
     }
     else
     {
-        mGraph->setGeometry(graphRect);
-        mTextArea->setVisible(false);
+        mGraph    -> setGeometry(graphRect);
+        mTextArea -> setVisible(false);
     }
+    
+    p.end();
+    refresh();
+}
+
+ void GraphViewResults::setItemColor(const QColor& itemColor)
+{
+    mItemColor = itemColor;
+}
+
+void GraphViewResults::setItemTitle(const QString& ItemTitle)
+{
+    mItemTitle = ItemTitle;
 }

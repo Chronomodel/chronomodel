@@ -11,16 +11,23 @@ class AxisTool
 public:
     AxisTool();
     void updateValues(double totalPix, double minDeltaPix, double minVal, double maxVal);
-    QVector<double> paint(QPainter& p, const QRectF& r, double textW);
+    QVector<qreal> paint(QPainter& p, const QRectF& r, qreal heigthSize);
     
 public:
     bool mIsHorizontal;
     bool mShowSubs;
+    bool mShowSubSubs;
+    bool mShowText;
     bool mMinMaxOnly;
+    bool mShowArrow;
+    
     double mDeltaVal;
     double mDeltaPix;
     double mStartVal;
     double mStartPix;
+    double mPixelsPerUnit;
+    
+    QColor mAxisColor;
 };
 
 #endif

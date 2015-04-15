@@ -16,8 +16,13 @@ GraphViewDate::GraphViewDate(QWidget *parent):GraphViewResults(parent),
 mDate(0),
 mColor(Qt::blue)
 {
-    //setMainColor(QColor(100, 120, 100));
-    setMainColor(QColor(150, 150, 150));
+    //setMainColor(QColor(150, 150, 150));
+    setMainColor(QColor(255, 255, 255));
+    mGraph->setBackgroundColor(Qt::white);
+    if(mCurrentVariable == eTheta)
+        mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
+    else if(mCurrentVariable == eSigma)
+        mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
 }
 
 GraphViewDate::~GraphViewDate()
@@ -43,32 +48,12 @@ void GraphViewDate::setColor(const QColor& color)
 
 void GraphViewDate::paintEvent(QPaintEvent* e)
 {
-    GraphViewResults::paintEvent(e);
-    
-    QPainter p(this);
-    
     if(mDate)
     {
-        QColor backCol = mColor;
-        QColor foreCol = getContrastedColor(backCol);
-        
-        QRect topRect(0, 0, mGraphLeft, mLineH);
-        p.setPen(backCol);
-        p.setBrush(backCol);
-        p.drawRect(topRect);
-        
-        p.setPen(Qt::black);
-        p.drawLine(0, height(), mGraphLeft, height());
-        
-        p.setPen(foreCol);
-        QFont font;
-        font.setPointSizeF(pointSize(11));
-        p.setFont(font);
-        // affihce le texte dans la boite de droite
-        p.drawText(topRect.adjusted(mMargin, 0, -mMargin, 0),
-                   Qt::AlignVCenter | Qt::AlignLeft,
-                   tr("Data") + " : " + mDate->mName);
+        this->setItemColor(mColor);
+        this->setItemTitle(tr("Data") + " : " + mDate->mName);
     }
+  GraphViewResults::paintEvent(e);
 }
 
 void GraphViewDate::refresh()
@@ -95,7 +80,7 @@ void GraphViewDate::refresh()
                 mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
             else if(mCurrentVariable == eSigma)
                 mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
-            
+           
             MHVariable* variable = &(mDate->mTheta);
             if(mCurrentVariable == eTheta) variable = &(mDate->mTheta);
             else if(mCurrentVariable == eSigma) variable = &(mDate->mSigma);
@@ -106,6 +91,7 @@ void GraphViewDate::refresh()
                 curve.mName = "calibration";
                 curve.mData = equal_areas(mDate->getCalibMap(), 1.f);
                 curve.mPen.setColor(QColor(120, 120, 120));
+                curve.mPen.setStyle(Qt::DashLine);
                 curve.mFillUnder = false;
                 curve.mIsHisto = false;
                 curve.mIsRectFromZero = true; // for typo. calibs., invisible for others!
@@ -139,34 +125,37 @@ void GraphViewDate::refresh()
                     curveRaw.mPen.setColor(Qt::red);
                     curveRaw.mData = equal_areas(variable->fullRawHisto(), 1.f);
                     curveRaw.mIsHisto = true;
-                    // mGraph->mZones[0].mText="coucou";
+                    // mGraph->mZones[0].mText="curveRaw";
                     mGraph->addCurve(curveRaw);
                     
                     double yMax2 = 1.1f * map_max_value(curveRaw.mData);
                     mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax2));
                 }
                 
-                GraphCurve curve;
-                curve.mName = "histo full";
-                curve.mData = equal_areas(variable->fullHisto(), 1.f);
-                curve.mPen.setColor(color);
-                curve.mIsHisto = false;
-                mGraph->addCurve(curve);
                 
-                double yMax = 1.1f * map_max_value(curve.mData);
-                mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
+                if (mShowPosterior) {
+                    GraphCurve curve;
+                    curve.mName = "histo full";
+                    curve.mData = equal_areas(variable->fullHisto(), 1.f);
+                    curve.mPen.setColor(color);
+                    curve.mIsHisto = false;
+                    mGraph->addCurve(curve);
+                    double yMax = 1.1f * map_max_value(curve.mData);
+                    mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
+                    
+                    if(mCurrentVariable != GraphViewResults::eSigma)
+                    {
+                        GraphCurve curveHPD;
+                        curveHPD.mName = "histo HPD full";
+                        curveHPD.mData = equal_areas(variable->mHPD, mThresholdHPD/100.f);
+                        curveHPD.mPen.setColor(color);
+                        curveHPD.mFillUnder = true;
+                        curveHPD.mIsHisto = false;
+                        curveHPD.mIsRectFromZero = true;
+                        mGraph->addCurve(curveHPD);
+                    }
+                }                
                 
-                if(mCurrentVariable != GraphViewResults::eSigma)
-                {
-                    GraphCurve curveHPD;
-                    curveHPD.mName = "histo HPD full";
-                    curveHPD.mData = equal_areas(variable->mHPD, mThresholdHPD/100.f);
-                    curveHPD.mPen.setColor(color);
-                    curveHPD.mFillUnder = true;
-                    curveHPD.mIsHisto = false;
-                    curveHPD.mIsRectFromZero = true;
-                    mGraph->addCurve(curveHPD);
-                }
             }
             for(int i=0; i<mShowChainList.size(); ++i)
             {

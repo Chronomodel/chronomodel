@@ -15,8 +15,9 @@
 GraphViewPhase::GraphViewPhase(QWidget *parent):GraphViewResults(parent),
 mPhase(0)
 {
-    mGraph->setBackgroundColor(QColor(230, 230, 230));
-    
+    setMainColor(QColor(50, 50, 50));
+    mGraph->setBackgroundColor(QColor(210, 210, 210));
+    //mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax); // it's done in GraphViewResults
     
     mDurationGraph = new GraphView(this);
     mDurationGraph->setBackgroundColor(QColor(230, 230, 230));
@@ -62,11 +63,13 @@ void GraphViewPhase::paintEvent(QPaintEvent* e)
 {
     GraphViewResults::paintEvent(e);
     
-    QPainter p(this);
-    
     if(mPhase)
     {
-        QColor backCol = mPhase->mColor;
+        this->setItemColor(mPhase->mColor);
+        this->setItemTitle(mTitle);
+        
+        
+/*        QColor backCol = mPhase->mColor;
         QColor foreCol = getContrastedColor(backCol);
         
         QRect topRect(0, 0, mGraphLeft, mLineH);
@@ -84,6 +87,7 @@ void GraphViewPhase::paintEvent(QPaintEvent* e)
         p.drawText(topRect.adjusted(mMargin, 0, -mMargin, 0),
                    Qt::AlignVCenter | Qt::AlignLeft,
                    tr("Phase") + " : " + mPhase->mName);
+ */
     }
 }
 
@@ -95,7 +99,7 @@ void GraphViewPhase::refresh()
     mGraph->resetNothingMessage();
     
     mGraph->autoAdjustYScale(mCurrentResult == eTrace);
-    
+
     mDurationGraph->removeAllCurves();
     
     if(mPhase)
@@ -112,7 +116,8 @@ void GraphViewPhase::refresh()
             QString results = ModelUtilities::phaseResultsText(mPhase);
             setNumericalResults(results);
             
-            mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
+            mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax); 
+
             mGraph->setRangeY(0, 0.0001f);
             
             if(mShowAllChains)
@@ -287,6 +292,7 @@ void GraphViewPhase::refresh()
             if(chainIdx != -1)
             {
                 Chain& chain = mChains[chainIdx];
+                
                 mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
                 
                 QColor col = Painting::chainColors[chainIdx];
@@ -361,7 +367,11 @@ void GraphViewPhase::updateLayout()
     int butInlineMaxH = 50;
     int bh = height() - mLineH;
     bh = qMin(bh, butInlineMaxH);
+    
+    this->mShowDuration->setVisible(this->GraphViewResults::mButtonVisible);
     mShowDuration->setGeometry(0, mLineH + bh, mGraphLeft, bh);
+    
+    
 }
 
 void GraphViewPhase::showDuration(bool show)

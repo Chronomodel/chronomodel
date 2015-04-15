@@ -30,10 +30,11 @@ public:
         eSigma = 1
     };
     
+    
     explicit GraphViewResults(QWidget *parent = 0);
     virtual ~GraphViewResults();
     
-    void setResultToShow(Result result, Variable variablee, bool showAllChains, const QList<bool>& showChainList, bool showHpd, float threshold, bool showCalib, bool showWiggle, bool showRawResults);
+    void setResultToShow(Result result, Variable variablee, bool showAllChains, const QList<bool>& showChainList, bool showHpd, float threshold, bool showCalib, bool showPosterior, bool showWiggle, bool showRawResults);
     
     void setSettings(const ProjectSettings& settings);
     void setMCMCSettings(const MCMCSettings& mcmc, const QList<Chain>& chains);
@@ -44,6 +45,13 @@ public:
     void setRendering(GraphView::Rendering render);
     virtual void setGraphFont(const QFont& font);
     void setGraphsThickness(int value);
+    
+    void setItemColor(const QColor& itemColor);
+    void setItemTitle(const QString& itemTitle);
+
+    
+    GraphView* mGraph;
+    bool mButtonVisible = true;
     
 public slots:
     void setRange(double min, double max);
@@ -69,7 +77,7 @@ signals:
     void visibilityChanged(bool visible);
     
 protected:
-    GraphView* mGraph;
+    
     
     Result mCurrentResult;
     Variable mCurrentVariable;
@@ -78,11 +86,16 @@ protected:
     int mMinHeighttoDisplayTitle;
     
     QString mResults;
+    QColor mItemColor;
+    QString mItemTitle;
+    
     bool mShowAllChains;
     QList<bool> mShowChainList;
     bool mShowHPD;
     //int mThresholdHPD;
     float mThresholdHPD;
+    
+    bool mShowPosterior;
     bool mShowCalib;
     bool mShowWiggle;
     bool mShowRawResults;

@@ -71,11 +71,12 @@ public:
     
     // Paint
     
-    void paintToDevice(QPaintDevice* device, QPaintEvent* e);
+    void paintToDevice(QPaintDevice* device);//, QPaintEvent* e);// HL
+
     
     // Save
     
-    bool saveAsSVG(const QString& fileName, const QString svgTitle, const QString svgDescrition);
+    bool saveAsSVG(const QString& fileName, const QString svgTitle, const QString svgDescrition, const bool withVersion, int const versionHeight=20);
     
 public slots:
     void zoomX(const double min, const double max);
@@ -88,8 +89,9 @@ protected:
     void repaintGraph(const bool aAlsoPaintBackground);
     void drawCurves(QPainter& painter);
 
-    void resizeEvent(QResizeEvent* aEvent);
-    void paintEvent(QPaintEvent* aEvent);
+    void resizeEvent(QResizeEvent* event);
+    void paintEvent(QPaintEvent*);
+   
     void enterEvent(QEvent* e);
     void leaveEvent(QEvent* e);
     void mouseMoveEvent(QMouseEvent* e);
@@ -99,6 +101,7 @@ protected:
     
     AxisTool mAxisToolX;
     AxisTool mAxisToolY;
+    qreal mStepMinWidth;
     
     Rendering mRendering;
     bool mShowAxisArrows;

@@ -38,8 +38,9 @@ mCalibVisible(false)
     setMouseTracking(true);
    // this->setGeometry(parentWidget()->rect());
     // --------
-    qreal x = width() * mSplitProp;
-    qreal editH = (mToolbarH - 3*mMargin) / 2;
+ //   qreal x = width() * mSplitProp;
+ //   qreal editH = (mToolbarH - 3*mMargin) / 2;
+    
    //QRectF mEventPropWrapperRectF(x+(mHandlerW)/2,mButPhasesModel->y()+mButPhasesModel->height(), width()-x-mHandlerW/2-mButPhasesModel->x()-mButPhasesModel->width(), height()-mMargin);
     
     mLeftWrapper = new QWidget(this);
@@ -50,13 +51,6 @@ mCalibVisible(false)
     QRectF mRightWrapperRectF((this->width()-mHandlerW)/2,0, (this->width()-mHandlerW)/2, this->height());
     mRightWrapper->setGeometry(mRightWrapperRectF.toRect());
     
-/*    qDebug()<<"mRightWrapperRecctF="<<mRightWrapperRectF;
-    qDebug()<<"width="<<width();
-    qDebug()<<"((width()-mHandlerW)/2)="<<(int)((width()-mHandlerW)/2);
-*/    //mRightWrapper->setGeometry((int)((width()-mHandlerW)/2), 0, (int)((width()-mHandlerW)/2), height());
-//  setRect((50, 50, (int)((width()-mHandlerW)/2), height()) );
-    //=QRect(50, 50, (int)((width()-mHandlerW)/2), height());
-    //mRightWrapper->setGeometry(0, 0, width(), height());
    
     // --------
    

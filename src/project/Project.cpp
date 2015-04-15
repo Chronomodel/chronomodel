@@ -311,6 +311,7 @@ bool Project::load(const QString& path)
                 
                 try{
                     mModel->restoreFromFile(dataPath);
+                    
                     emit mcmcFinished(mModel);
                 }catch(QString error){
                     QMessageBox message(QMessageBox::Critical,

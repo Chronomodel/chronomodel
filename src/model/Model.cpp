@@ -998,6 +998,7 @@ void Model::saveToFile(const QString& fileName)
                 dates[j].mTheta.saveToStream(&out);
                 dates[j].mSigma.saveToStream(&out);
                 dates[j].mWiggle.saveToStream(&out);
+             //    out << dates[j].mCalibration;
 
             }
         }
@@ -1094,6 +1095,7 @@ void Model::restoreFromFile(const QString& fileName)
                     mEvents[i]->mDates[j].mTheta.loadFromStream(&in);
                     mEvents[i]->mDates[j].mSigma.loadFromStream(&in);
                     mEvents[i]->mDates[j].mWiggle.loadFromStream(&in);
+                 //   in >> mEvents[i]->mDates[j].mCalibration;
                 }
             }
             in >> mLogModel;
@@ -1106,4 +1108,5 @@ void Model::restoreFromFile(const QString& fileName)
         }
         file.close();
     }
+    
 }
