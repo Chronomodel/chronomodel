@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "ChronoModel"
-#define MyAppVersion "1.2.1 beta"
+#define MyAppVersion "1.2.4 beta"
 #define MyAppPublisher "CNRS"
 #define MyAppURL "http://www.chronomodel.com"
 #define MyAppExeName "Chronomodel.exe"
