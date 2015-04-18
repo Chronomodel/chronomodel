@@ -29,6 +29,12 @@ QIcon PluginUniform::getIcon() const
 {
     return QIcon(":/uniform_w.png");
 }
+
+QColor PluginUniform::getColor() const
+{
+    return Qt::black;
+}
+
 bool PluginUniform::doesCalibration() const
 {
     return false;

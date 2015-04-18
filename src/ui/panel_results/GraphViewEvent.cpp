@@ -34,7 +34,10 @@ void GraphViewEvent::setEvent(Event* event)
     if(event)
     {
         mEvent = event;
-        mTitle = tr("Event") + " : " + mEvent->mName;
+        if (mEvent->type()==Event::eKnown) {
+            mTitle = tr("Bound ") + " : " + mEvent->mName;
+        }
+        else mTitle = tr("Event") + " : " + mEvent->mName;
     }
     update();
 }
@@ -139,6 +142,10 @@ void GraphViewEvent::refresh()
                         curveHPD.mName = "histo HPD full";
                         curveHPD.mPen.setColor(color);
                         curveHPD.mFillUnder = true;
+                        QColor HPDColor(color);
+                        HPDColor.setAlpha(50);
+                        curveHPD.mBrush.setStyle(Qt::SolidPattern);
+                        curveHPD.mBrush.setColor(HPDColor);
                         curveHPD.mIsHisto = false;
                         curveHPD.mIsRectFromZero = true;
                         curveHPD.mData = equal_areas(mEvent->mTheta.mHPD, mThresholdHPD/100.f);

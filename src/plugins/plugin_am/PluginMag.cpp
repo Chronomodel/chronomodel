@@ -80,6 +80,10 @@ QIcon PluginMag::getIcon() const
 {
     return QIcon(":/AM_w.png");
 }
+QColor PluginMag::getColor() const
+{
+    return QColor(243, 92, 26);//Qt::red;
+}
 bool PluginMag::doesCalibration() const
 {
     return true;

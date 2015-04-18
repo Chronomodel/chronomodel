@@ -541,7 +541,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolY.mShowArrow = true;
         QVector<qreal> linesYPos = mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), 5);
         
-       /* if(mShowHorizGrid)
+        if(mShowHorizGrid)
         {
             p.setPen(QColor(0, 0, 0, 20));
             for(int i=0; i<linesYPos.size(); ++i)
@@ -549,7 +549,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
                 double y = linesYPos[i];
                 p.drawLine(mMarginLeft, y, mMarginLeft + mGraphWidth, y);
             }
-        }*/
+        }
     }
     
     font.setPointSizeF(font.pointSizeF() + 2.);
@@ -891,7 +891,9 @@ void GraphView::drawCurves(QPainter& painter)
             
             QColor c = curve.mPen.color();
             c.setAlpha(50);
-            painter.fillPath(path, c);
+            painter.setPen(curve.mPen);
+            painter.setBrush(curve.mBrush);
+            painter.fillPath(path, curve.mBrush);
         }
     }
 }

@@ -14,7 +14,7 @@ mDeltaVal(0),
 mDeltaPix(0),
 mStartVal(0),
 mStartPix(0),
-mAxisColor(120, 120, 120)
+mAxisColor(0, 0, 0)
 {
     
 }
@@ -46,10 +46,11 @@ void AxisTool::updateValues(double totalPix, double minDeltaPix, double minVal, 
     }
     else
     {
-        while(unitsPerStep >= 10)
-        {
-            unitsPerStep /= 10;
-            pow10 += 1;
+        if(unitsPerStep < 100000){
+            while(unitsPerStep >= 10)  {
+                unitsPerStep /= 10;
+                pow10 += 1;
+            }
         }
     }
     

@@ -63,31 +63,10 @@ void GraphViewPhase::paintEvent(QPaintEvent* e)
 {
     GraphViewResults::paintEvent(e);
     
-    if(mPhase)
-    {
+    if(mPhase)  {
         this->setItemColor(mPhase->mColor);
         this->setItemTitle(mTitle);
         
-        
-/*        QColor backCol = mPhase->mColor;
-        QColor foreCol = getContrastedColor(backCol);
-        
-        QRect topRect(0, 0, mGraphLeft, mLineH);
-        p.setPen(backCol);
-        p.setBrush(backCol);
-        p.drawRect(topRect);
-        
-        p.setPen(Qt::black);
-        p.drawLine(0, height(), mGraphLeft, height());
-        
-        p.setPen(foreCol);
-        QFont font;
-        font.setPointSizeF(pointSize(11));
-        p.setFont(font);
-        p.drawText(topRect.adjusted(mMargin, 0, -mMargin, 0),
-                   Qt::AlignVCenter | Qt::AlignLeft,
-                   tr("Phase") + " : " + mPhase->mName);
- */
     }
 }
 
@@ -176,6 +155,10 @@ void GraphViewPhase::refresh()
                 curveAlphaHPD.mPen.setColor(alphaCol);
                 curveAlphaHPD.mPen.setStyle(Qt::DotLine);
                 curveAlphaHPD.mFillUnder = true;
+                curveAlphaHPD.mBrush.setStyle(Qt::SolidPattern);
+                QColor HPDAlphaColor(alphaCol);
+                HPDAlphaColor.setAlpha(50);
+                curveAlphaHPD.mBrush.setColor(HPDAlphaColor);
                 curveAlphaHPD.mIsHisto = false;
                 curveAlphaHPD.mIsRectFromZero = true;
                 curveAlphaHPD.mData = equal_areas(mPhase->mAlpha.mHPD, mThresholdHPD / 100.f);
@@ -186,6 +169,10 @@ void GraphViewPhase::refresh()
                 curveBetaHPD.mPen.setColor(color);
                 curveBetaHPD.mPen.setStyle(Qt::DashLine);
                 curveBetaHPD.mFillUnder = true;
+                curveBetaHPD.mBrush.setStyle(Qt::SolidPattern);
+                QColor HPDBetaColor(betaCol);
+                HPDBetaColor.setAlpha(50);
+                curveBetaHPD.mBrush.setColor(HPDBetaColor);
                 curveBetaHPD.mIsHisto = false;
                 curveBetaHPD.mIsRectFromZero = true;
                 curveBetaHPD.mData = equal_areas(mPhase->mBeta.mHPD, mThresholdHPD / 100.f);
@@ -211,6 +198,10 @@ void GraphViewPhase::refresh()
                     curveDurHPD.mName = QString(tr("duration HPD"));
                     curveDurHPD.mPen.setColor(color);
                     curveDurHPD.mFillUnder = true;
+                    QColor HPDColor(color);
+                    HPDColor.setAlpha(50);
+                    curveDurHPD.mBrush.setStyle(Qt::SolidPattern);
+                    curveDurHPD.mBrush.setColor(HPDColor);
                     curveDurHPD.mIsHisto = false;
                     curveDurHPD.mIsRectFromZero = true;
                     curveDurHPD.mData = equal_areas(mPhase->mDuration.mHPD, mThresholdHPD / 100.f);
@@ -302,7 +293,7 @@ void GraphViewPhase::refresh()
                 curveAlpha.mName = QString(tr("alpha trace chain ") + QString::number(chainIdx));
                 curveAlpha.mDataVector = mPhase->mAlpha.fullTraceForChain(mChains, chainIdx);
                 curveAlpha.mPen.setColor(col);
-                //curveAlpha.mPen.setStyle(Qt::DotLine);
+
                 curveAlpha.mIsHisto = false;
                 mGraph->addCurve(curveAlpha);
                 
@@ -311,7 +302,7 @@ void GraphViewPhase::refresh()
                 curveBeta.mName = QString(tr("beta trace chain ") + QString::number(chainIdx));
                 curveBeta.mDataVector = mPhase->mBeta.fullTraceForChain(mChains, chainIdx);
                 curveBeta.mPen.setColor(col);
-                //curveBeta.mPen.setStyle(Qt::DashLine);
+
                 curveBeta.mIsHisto = false;
                 mGraph->addCurve(curveBeta);
                 

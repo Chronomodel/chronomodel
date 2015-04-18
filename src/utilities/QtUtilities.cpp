@@ -141,7 +141,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             return fileInfo;
     }
     
-    QString filter = QObject::tr("Image (*.png);;Scalable Vector Graphics (*.svg)");
+    QString filter = QObject::tr("Image (*.png);;Photo (*.jpg);; Windows Bitmap (*.bmp);;Scalable Vector Graphics (*.svg)");
     QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                     dialogTitle,
                                                     defaultPath,
@@ -149,12 +149,19 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
     if(!fileName.isEmpty())
     {
         fileInfo = QFileInfo(fileName);
-        bool asSvg = fileName.endsWith(".svg");
-        if(asSvg)
-        {
+        QString fileExtension = fileInfo.suffix();
+        
+        //QString fileExtension = fileName.(".svg");
+       // bool asSvg = fileName.endsWith(".svg");
+       // if(asSvg)
+       
+        
+        
+        if (fileExtension == "svg") {
+           
            if(mGraph)
             {
-                mGraph->saveAsSVG(fileName, "titre", "description",true);
+                mGraph->saveAsSVG(fileName, "Title", "Description",true);
             }
             else if(scene)
             {
@@ -163,7 +170,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 svgGen.setSize(r.size());
                 svgGen.setViewBox(QRect(0, 0, r.width(), r.height()));
                 svgGen.setDescription(QObject::tr("SVG scene drawing "));
-                qDebug()<<"export scene as SVG";
+                //qDebug()<<"export scene as SVG";
                 
                 QPainter p;
                 p.begin(&svgGen);
@@ -173,8 +180,6 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             else if(widget)
             {;
                 saveWidgetAsSVG(widget, r, fileName);
-               
-
                 
             }
            
@@ -182,65 +187,64 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
         else
         { // save PNG
             
-            
+            int versionHeight = 20;
+            //qreal pr = 1;//qApp->devicePixelRatio();
+            qreal pr=  32000. / ( r.height() + versionHeight) ; // QImage axes are limited to 32767x32767 pixels
+           /* if (fileName.endsWith(".PNG")) {
+                pr = 3;
+            }*/
+            if (pr>4) {
+                pr=4;
+            }
             if(widget)
             {
-                //
-               qreal pr = 4;//qApp->devicePixelRatio();
-                int versionHeight = 20;
-                
-/*                //QPixmap *px = new QPixmap(widget->grab());
-                //QPixmap spx = px->copy(r);
-                
-                QPixmap spx = widget->grab().copy(r);
-                spx.setDevicePixelRatio(20);
-                //spx.setRenderHint(QPainter::Antialiasing);
-                //spx.setPen(Qt::black);
-                //spx.drawText(0, r.height(), r.width(), versionHeight,                           Qt::AlignCenter,                           qApp->applicationName() + " " + qApp->applicationVersion());
-                
-                spx.save(fileName, "PNG");
-                
-                //QPixmap(widget->grab().copy(r)).save(fileName, "PNG"); // all in one line to the fun
-*/
                
+                QImage image(r.width() * pr, (r.height() + versionHeight) * pr, QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
+
                 
-                //qDebug() << "Saving PNG with pixel ratio : " << pr;
-                QImage image(r.width() * pr, (r.height() + versionHeight) * pr, QImage::Format_ARGB32);
                 image.setDevicePixelRatio(pr);
                 image.fill(Qt::transparent);
                 
                 QPainter p;
                 p.begin(&image);
                 p.setRenderHint(QPainter::Antialiasing);
-                
-                QRectF srcRect = r;
-                srcRect.setX(r.x());
-                srcRect.setY(r.y());
-                srcRect.setWidth(r.width() * pr);
-                srcRect.setHeight(r.height() * pr);
-                
-                
-                
-                
-                QRectF tgtRect = image.rect();
+                             QRectF tgtRect = image.rect();
                 tgtRect.adjust(0, 0, 0, -versionHeight * pr);
                 widget->render(&p, QPoint(0, 0), QRegion(r.x()-2, r.y()-2, r.width(), r.height()));
                 p.setPen(Qt::black);
                 p.drawText(0, r.height(), r.width(), versionHeight,
                            Qt::AlignCenter,
                            qApp->applicationName() + " " + qApp->applicationVersion());
-               // QPainterPath pp=p.clipPath();
-                
+              
                 p.end();
-                image.save(fileName, "PNG");
-  
+                //image.save(fileName, "PNG");
+               // char formatExt[];
+                if (fileExtension=="png") {
+                 //   formatExt[] = "png";
+                     image.save(fileName, "png");
+                }
+                else if (fileExtension == "jpg") {
+                    //formatExt[5] = "jpg";
+                     image.save(fileName, "jpg");
+                }
+                else if (fileExtension == "bmp") {
+                   
+                    image.save(fileName, "bmp");
+                }
+                    
+                //image.save(fileName, formatExt);
+                /*QImageWriter writer;
+                writer.setFormat("jpg");
+                writer.setQuality(100);
+                writer.setFileName(fileName+"_jpg");
+                writer.write(image);*/
                
             }
             else if(scene)
             {
                 int versionHeight = 20;
                 
-                qreal pr = 4;//qApp->devicePixelRatio();
+                //qreal pr = 4;//qApp->devicePixelRatio();
                 //qDebug() << "Saving PNG with pixel ratio : " << pr;
                 QImage image(r.width() * pr, (r.height() + versionHeight) * pr, QImage::Format_ARGB32);
                 image.setDevicePixelRatio(pr);
@@ -255,10 +259,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 srcRect.setY(r.y());
                 srcRect.setWidth(r.width() * pr);
                 srcRect.setHeight(r.height() * pr);
-                
-                
-                
-                
+               
                 QRectF tgtRect = image.rect();
                 tgtRect.adjust(0, 0, 0, -versionHeight * pr);
                 
@@ -270,14 +271,11 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 p.end();
                image.save(fileName, "PNG");
             }
-            /*p.setPen(Qt::black);
-            p.drawText(0, r.height(), r.width(), versionHeight,
-                       Qt::AlignCenter,
-                       qApp->applicationName() + " " + qApp->applicationVersion());*/
-            
-          //  image.save(fileName, "PNG");
+           
         }
     }
+   // qDebug()<<"QFileInfo saveWidgetAsImage image.save"<<fileName;
+    
     return fileInfo;
 }
 

@@ -34,6 +34,10 @@ QIcon PluginTL::getIcon() const
 {
     return QIcon(":/TL_w.png");
 }
+QColor PluginTL::getColor() const
+{
+    return Qt::red;
+}
 bool PluginTL::doesCalibration() const
 {
     return true;

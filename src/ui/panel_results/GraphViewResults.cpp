@@ -275,8 +275,6 @@ void GraphViewResults::setGraphsThickness(int value)
 
 void GraphViewResults::paintEvent(QPaintEvent* )
 {
-   // Q_UNUSED(e);
-
     QPainter p(this);
     if (mButtonVisible) { // the box under the button
         p.fillRect(0, 0, mGraphLeft, height(), mMainColor);
@@ -288,7 +286,7 @@ void GraphViewResults::paintEvent(QPaintEvent* )
   */  
     updateLayout();
     p.end();
-/*    if(height() >= mMinHeighttoDisplayTitle) // écrit juste mTitle
+/*    if(height() >= mMinHeighttoDisplayTitle) // juste write mTitle
     {
         QRectF textRect(mGraphLeft, 0, mGraph->width(), 25);
         p.fillRect(textRect, mGraph->getBackgroundColor());
@@ -310,7 +308,6 @@ void GraphViewResults::resizeEvent(QResizeEvent* e)
 
 void GraphViewResults::updateLayout()
 {
-    // la ca marche qDebug()<<"in GraphViewResults::updateLayout mCurrentMaxX "<<mGraph->getCurrentMaxX();
     int h = height();
     int butMinH = 30;
     int butInlineMaxH = 50;
@@ -385,7 +382,7 @@ void GraphViewResults::updateLayout()
         p.drawText(QRectF(0, 0, mGraphLeft-p.pen().widthF(), mLineH-p.pen().widthF()),
                    Qt::AlignVCenter | Qt::AlignCenter,
                    mItemTitle);
-        
+        //qDebug()<<"GraphViewResults::updateLayout() mItemTitle "<<mItemTitle;
         
     }
     else {
@@ -405,17 +402,19 @@ void GraphViewResults::updateLayout()
         mGraph->setYAxisMode(GraphView::eMinMax);
     }
     
+    
+    p.setPen(Qt::black);
+    p.setFont(this->font());
+    
+    
     if(height() >= mMinHeighttoDisplayTitle)  {
        
         mGraph -> setXAxisMode(GraphView::eAllTicks);
         mGraph -> setMarginBottom(mGraph->font().pointSizeF() + 10);
         
-        // écrit juste mTitle au dessus de la courbe
+        // write mTitle under the curve field
         QRectF textRect(leftShift, 0, this->width()-leftShift,mLineH);
         p.fillRect(textRect, mGraph->getBackgroundColor());
-        
-        p.setPen(Qt::black);
-        p.setFont(this->font());
         
         p.drawText(textRect.adjusted(50, 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
         
@@ -425,9 +424,20 @@ void GraphViewResults::updateLayout()
     {
         mGraph -> setXAxisMode(GraphView::eHidden);
         
-        //mGraph -> setMarginBottom(0);
         mGraph -> setMarginBottom(10);
         
+        // write mTitle inside curve field
+     /*   QFontMetrics fm(this->font());
+        qreal textWidth = fm.width(mTitle);
+        //QRectF textRect(leftShift+100, mLineH, this->width()-leftShift,mLineH);
+        QRectF textRect(leftShift+100, this->height()/2, this->width()-leftShift,mLineH);
+        //p.fillRect(textRect, mGraph->getBackgroundColor());
+       // p.setBrush(QBrush(Qt::NoBrush));
+      //  p.drawText(textRect.adjusted(50, mLineH, this->width()-50-textWidth, 0), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
+        qDebug()<<"GraphViewResults::updateLayout() inside mTitle "<<mTitle;
+         p.drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft, mTitle);
+        p.setBrush(QBrush(Qt::SolidPattern));
+      */
     }
     
     

@@ -129,19 +129,6 @@ QString MHVariable::resultsText(const QString& noResultMessage) const
 void MHVariable::saveToStream(QDataStream *out) // ajout PhD
 {
      /* herited from MetropolisVariable*/
-   /* *out << this->mChainsHistos;
-     *out << this->mChainsRawHistos;
-     //out << this->mChainsResults;
-     *out << this->mCorrelations;
-     *out << this->mCredibility;
-     *out << this->mExactCredibilityThreshold;
-     *out << this->mHisto;
-     *out << this->mHPD;
-     *out << this->mRawHisto;
-     //out << this->mResults;
-     *out << this->mThreshold;
-     *out << this->mTrace;
-     *out << this->mX;*/
     
     this->MetropolisVariable::saveToStream(out);
      /* owned by MHVariable*/
@@ -165,19 +152,7 @@ void MHVariable::loadFromStream(QDataStream *in) // ajout PhD
     
     
     /* herited from MetropolisVariable*/
-   /* *in >> this->mChainsHistos;
-    *in >> this->mChainsRawHistos;
-    // *in >> this->mChainsResults;
-    *in >> this->mCorrelations;
-    *in >> this->mCredibility;
-    *in >> this->mExactCredibilityThreshold;
-    *in >> this->mHisto;
-    *in >> this->mHPD;
-    *in >> this->mRawHisto;
-    // *in >> this->mResults;
-    *in >> this->mThreshold;
-    *in >> this->mTrace;
-    *in >> this->mX;*/
+   
     
     this->MetropolisVariable::loadFromStream(in);
      /* owned by MHVariable*/

@@ -101,16 +101,16 @@ void Ruler::setRange(const double min, const double max)
 
 void Ruler::setCurrent(const double min, const double max)
 {
-    qDebug()<<" Ruler::setCurrent mCurrentMin 0" << mCurrentMin<<" "<< mCurrentMax;
-    qDebug()<<" Ruler::setCurrent min 1" << min<<" "<< max;
+    //qDebug()<<" Ruler::setCurrent mCurrentMin 0" << mCurrentMin<<" "<< mCurrentMax;
+    //qDebug()<<" Ruler::setCurrent min 1" << min<<" "<< max;
     
     mCurrentMin = min; //inRange(mMin,min, mCurrentMax);
     mCurrentMax = max; //inRange(mCurrentMin,max, mCurrentMax);
     
-    qDebug()<<" Ruler::setCurrent mCurrentMin 2" << mCurrentMin<<" "<< mCurrentMax;
+   // qDebug()<<" Ruler::setCurrent mCurrentMin 2" << mCurrentMin<<" "<< mCurrentMax;
    // realPosition = (mCurrentMax + mCurrentMin) /2 /( mCurrentMax - mCurrentMin);
     
-    double zoom =  (mCurrentMax - mCurrentMin) / (mMax - mMin) * 100;
+   // double zoom =  (mCurrentMax - mCurrentMin) / (mMax - mMin) * 100;
    // setZoom(zoom);
     
     
@@ -126,7 +126,7 @@ void Ruler::setCurrent(const double min, const double max)
     
   //
     mAxisTool.updateValues(mRulerRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
-    qDebug()<<" Ruler::setCurrent mCurrentMin 3" << mCurrentMin<<" "<< mCurrentMax<<" position"<<position;
+   // qDebug()<<" Ruler::setCurrent mCurrentMin 3" << mCurrentMin<<" "<< mCurrentMax<<" position"<<position;
   /*
     void Ruler::setRange(const double min, const double max)
     {

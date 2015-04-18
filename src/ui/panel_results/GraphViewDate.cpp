@@ -7,6 +7,8 @@
 #include "QtUtilities.h"
 #include "ModelUtilities.h"
 #include <QtWidgets>
+#include "PluginAbstract.h"
+#include "GraphViewRefAbstract.h"
 
 
 
@@ -17,7 +19,7 @@ mDate(0),
 mColor(Qt::blue)
 {
     //setMainColor(QColor(150, 150, 150));
-    setMainColor(QColor(255, 255, 255));
+    setMainColor(QColor(155, 155, 155));
     mGraph->setBackgroundColor(Qt::white);
     if(mCurrentVariable == eTheta)
         mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
@@ -89,10 +91,24 @@ void GraphViewDate::refresh()
             {
                 GraphCurve curve;
                 curve.mName = "calibration";
+                if(!mDate->isNull()) {
+                    mDate->calibrate(mSettings);
+                }
                 curve.mData = equal_areas(mDate->getCalibMap(), 1.f);
-                curve.mPen.setColor(QColor(120, 120, 120));
-                curve.mPen.setStyle(Qt::DashLine);
-                curve.mFillUnder = false;
+                QString namePlugin = mDate->mPlugin->getName();
+                QColor dataColor   = mDate->mPlugin->getColor();//QColor(120, 120, 120); // more set the plugin color mDate.mPlugin->getName()
+                QIcon dataIcon     = mDate->mPlugin->getIcon();
+                curve.mName = "calibration : "+namePlugin;
+                curve.mPen.setColor(dataColor);
+                curve.mPen.setStyle(Qt::SolidLine);
+               
+                curve.mBrush.setStyle(Qt::VerPattern);//Qt::LinearGradientPattern);//Qt::HorPattern);// Qt::Dense6Pattern);VerPattern
+                QColor brushColor(dataColor);
+                //brushColor.setAlpha(70); //50
+                curve.mBrush.setColor(brushColor);
+                
+                curve.mFillUnder = !mShowPosterior;
+                
                 curve.mIsHisto = false;
                 curve.mIsRectFromZero = true; // for typo. calibs., invisible for others!
                 mGraph->addCurve(curve);
@@ -150,6 +166,10 @@ void GraphViewDate::refresh()
                         curveHPD.mData = equal_areas(variable->mHPD, mThresholdHPD/100.f);
                         curveHPD.mPen.setColor(color);
                         curveHPD.mFillUnder = true;
+                        curveHPD.mBrush.setStyle(Qt::SolidPattern);
+                        QColor HPDColor(color);
+                        HPDColor.setAlpha(50);
+                        curveHPD.mBrush.setColor(HPDColor);
                         curveHPD.mIsHisto = false;
                         curveHPD.mIsRectFromZero = true;
                         mGraph->addCurve(curveHPD);
@@ -312,7 +332,6 @@ void GraphViewDate::refresh()
                     double n = variable->runTraceForChain(mChains, chainIdx).size();
                     double limit = 1.96f / sqrt(n);
                     
-                    //qDebug() << n << ", " <<limit;
                     
                     GraphCurve curveLimitLower;
                     curveLimitLower.mName = QString("correlation limit lower " + QString::number(chainIdx));

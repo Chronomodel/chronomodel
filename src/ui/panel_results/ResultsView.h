@@ -135,7 +135,7 @@ private:
     CheckBox* mShowDataUnderPhasesCheck;
     
     // ------ mDisplayGroup -----
-    QWidget* mScaleGroup;
+   // QWidget* mScaleGroup;
     Label* mDisplayTitle;
     QWidget* mDisplayGroup;
     Label* mXScaleLab;
@@ -157,8 +157,8 @@ private:
     QList<CheckBox*> mCheckChainChecks;
     QList<RadioButton*> mChainRadios;
     
-    Label* mDataTitle;
-    QWidget* mDataGroup;
+    Label* mResultsTitle;
+    QWidget* mResultsGroup;
     RadioButton* mDataThetaRadio;
     
     CheckBox* mDataPosteriorCheck; // new PhD

@@ -104,8 +104,6 @@ mZoomCorrel(0)
     
     // -------------------------
     
-    mDisplayTitle = new Label(tr("Display Options"));
-    mDisplayTitle->setIsTitle(true);
     
     mUnfoldBut = new Button(tr("Unfold"));
     mUnfoldBut->setCheckable(true);
@@ -113,6 +111,7 @@ mZoomCorrel(0)
     mUnfoldBut->setIcon(QIcon(":unfold.png"));
     mUnfoldBut->setFixedHeight(50);
     mUnfoldBut->setToolTip(tr("Display event's data or phase's events, depending on the chosen layout."));
+    connect(mUnfoldBut, SIGNAL(toggled(bool)), this, SLOT(unfoldResults(bool)));
     
     mInfosBut = new Button(tr("Stats"));
     mInfosBut->setCheckable(true);
@@ -120,6 +119,8 @@ mZoomCorrel(0)
     mInfosBut->setIcon(QIcon(":stats_w.png"));
     mInfosBut->setFixedHeight(50);
     mInfosBut->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
+    connect(mInfosBut, SIGNAL(toggled(bool)), this, SLOT(showInfos(bool)));
+
     
     mExportImgBut = new Button(tr("Save"));
     mExportImgBut->setFlatHorizontal();
@@ -128,10 +129,31 @@ mZoomCorrel(0)
     mExportImgBut->setToolTip(tr("Save all currently visible results as an image.<br><u>Note</u> : If you want to copy textual results, see the Log tab."));
     connect(mExportImgBut, SIGNAL(clicked()), this, SLOT(exportFullImage()));
     
+    QHBoxLayout* displayButsLayout = new QHBoxLayout();
+    displayButsLayout->setContentsMargins(0, 0, 0, 0);
+    displayButsLayout->setSpacing(0);
+    displayButsLayout->addWidget(mUnfoldBut);
+    displayButsLayout->addWidget(mInfosBut);
+    displayButsLayout->addWidget(mExportImgBut);
     
-    mScaleGroup = new QWidget();
     
-    mCurrentXMinEdit = new LineEdit(mScaleGroup);
+    mRuler = new Ruler(this);
+    //connect(mRuler, SIGNAL(valueChanged(int)), this, SLOT(updateRuler(int)));
+    connect(mRuler, SIGNAL(positionChanged(double, double)), this, SLOT(updateScroll(double, double)));
+    // connect(mRuler, SIGNAL(positionChanged(double, double)), this, SLOT(currentChanged(double, double)));
+    mRuler->mMax = mSettings.mTmax;
+    mRuler->mMin = mSettings.mTmin;
+    mRuler->mCurrentMax = mSettings.mTmax;
+    mRuler->mCurrentMin = mSettings.mTmin;
+    
+    /* -------------------------------------- mDisplayGroup---------------------------------------------------*/
+    mDisplayGroup = new QWidget();
+   
+    
+    mDisplayTitle = new Label(tr("Display Options"));
+    mDisplayTitle->setIsTitle(true);
+    
+    mCurrentXMinEdit = new LineEdit(mDisplayGroup);
     mCurrentXMinEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mCurrentXMinEdit->setAlignment(Qt::AlignHCenter);
     mCurrentXMinEdit->setFixedSize(45, 15);
@@ -140,36 +162,27 @@ mZoomCorrel(0)
     connect(mCurrentXMinEdit, SIGNAL(textEdited(QString)), this, SLOT(editCurrentMinX(QString)) );
 
     
-    mCurrentXMaxEdit = new LineEdit(mScaleGroup);
+    mCurrentXMaxEdit = new LineEdit(mDisplayGroup);
     mCurrentXMaxEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mCurrentXMaxEdit->setAlignment(Qt::AlignHCenter);
     mCurrentXMaxEdit->setFixedSize(45, 15);
+   // mCurrentXMaxEdit->setGeometry(0, 5, 50, 20);
     mCurrentXMaxEdit->setValidator(new QDoubleValidator(-99999.0, 99999.0, 1, mCurrentXMaxEdit));
     //connect(mCurrentXMaxEdit, SIGNAL(editingFinished()), this, SLOT(setCurrentMaxX()) ); //editCurrentMaxX
     connect(mCurrentXMaxEdit, SIGNAL(textEdited(QString)), this, SLOT(editCurrentMaxX(QString)) );
     
     
-    //DoubleValidator *currentMaxValidator = new DoubleValidator ();
-   // currentMaxValidator->setRange(-1000000., 1000000.);
-    //currentMaxValidator->setDecimals(1);
-    //mCurrentXMaxEdit->setValidator(currentMaxValidator);
-
-  //    connect(mCurrentXMaxEdit, SIGNAL(textChanged(QString)), this, SLOT(setCurrentMaxX(QString)) );
-    
-    
-    
-    
-    mXScaleLab = new Label(tr("Zoom X :"),mScaleGroup);
-    mYScaleLab = new Label(tr("Zoom Y :"),mScaleGroup);
+    mXScaleLab = new Label(tr("Zoom X :"),mDisplayGroup);
+    mYScaleLab = new Label(tr("Zoom Y :"),mDisplayGroup);
     
     mXScaleLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mYScaleLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     
-    mXSlider = new QSlider(Qt::Horizontal,mScaleGroup);
+    mXSlider = new QSlider(Qt::Horizontal,mDisplayGroup);
     mXSlider->setRange(0, 100);
     mXSlider->setTickInterval(1);
     
-    mYSlider = new QSlider(Qt::Horizontal,mScaleGroup);
+    mYSlider = new QSlider(Qt::Horizontal,mDisplayGroup);
     mYSlider->setRange(0, 100);
     mYSlider->setTickInterval(1);
     mYSlider->setValue(13);
@@ -179,131 +192,114 @@ mZoomCorrel(0)
     
     connect(mYSlider, SIGNAL(valueChanged(int)), this, SLOT(updateScaleY(int)));
     
-    mRuler = new Ruler(this);
-    //connect(mRuler, SIGNAL(valueChanged(int)), this, SLOT(updateRuler(int)));
-    connect(mRuler, SIGNAL(positionChanged(double, double)), this, SLOT(updateScroll(double, double)));
-   // connect(mRuler, SIGNAL(positionChanged(double, double)), this, SLOT(currentChanged(double, double)));
-    mRuler->mMax = mSettings.mTmax;
-    mRuler->mMin = mSettings.mTmin;
-    mRuler->mCurrentMax = mSettings.mTmax;
-    mRuler->mCurrentMin = mSettings.mTmin;
     
-    
-    //mRuler->setCurrent(mSettings.mTmin, mSettings.mTmax);
-    
-    //mScaleGroup = new QWidget();
-    QGridLayout* scaleLayout = new QGridLayout(mScaleGroup);
-    //scaleLayout->setContentsMargins(5, 5, 5, 5);
-   // scaleLayout->setSpacing(5);
-    scaleLayout->addWidget(mCurrentXMinEdit,0,0);
-    scaleLayout->addWidget(mXScaleLab,0,1);
-    scaleLayout->addWidget(mCurrentXMaxEdit,0,2);
-    scaleLayout->addWidget(mXSlider,1,0,1,3);
-    scaleLayout->addWidget(mYScaleLab,2,0,2,3);
-    scaleLayout->addWidget(mYSlider,3,0,3,3);
-    mScaleGroup->setLayout(scaleLayout);
-    
-    //mScaleGroup->resize(20, 20);
-    mScaleGroup->setFixedHeight(90);
-    
-    mRenderLab = new Label(tr("Rendering :"));
-    mRenderCombo = new QComboBox();
+    mRenderLab = new Label(tr("Rendering :"),mDisplayGroup);
+    mRenderCombo = new QComboBox(mDisplayGroup);
     mRenderCombo->addItem(tr("Standard (faster)"));
     mRenderCombo->addItem(tr("High (slower)"));
     
     connect(mRenderCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(updateRendering(int)));
     
-    QHBoxLayout* renderLayout = new QHBoxLayout();
-    renderLayout->setContentsMargins(5, 5, 5, 5);
-    renderLayout->setSpacing(5);
-    renderLayout->addWidget(mRenderLab);
-    renderLayout->addWidget(mRenderCombo);
     
-    mUpdateDisplay = new Button(tr("Update display"));
+    
+   /*  keep in memory
+    mUpdateDisplay = new Button(tr("Update display"),mScaleGroup);
     mUpdateDisplay->mUseMargin = true;
     
     connect(mUpdateDisplay, SIGNAL(clicked()), this, SLOT(updateModel()));
+   */
+    
+    
     
     mFont.setPointSize(pointSize(11.));
-    mFontBut = new Button(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
+    mFontBut = new Button(mFont.family() + ", " + QString::number(mFont.pointSizeF()),mDisplayGroup);
     mFontBut->mUseMargin = true;
     
-    mThicknessLab = new Label(tr("Graph thichness : "));
+    mThicknessLab = new Label(tr("Graph thichness : "),mDisplayGroup);
     mThicknessSpin = new QSpinBox();
     mThicknessSpin->setRange(1, 5);
-    
     connect(mFontBut, SIGNAL(clicked()), this, SLOT(updateFont()));
     connect(mThicknessSpin, SIGNAL(valueChanged(int)), this, SLOT(updateThickness(int)));
     
-    QHBoxLayout* thickLayout = new QHBoxLayout();
-    thickLayout->setContentsMargins(0, 0, 0, 0);
-    thickLayout->setSpacing(5);
-    thickLayout->addWidget(mThicknessLab);
-    thickLayout->addWidget(mThicknessSpin);
     
-    mShowDataUnderPhasesCheck = new CheckBox(tr("Show data under phases"));
-    
-    connect(mShowDataUnderPhasesCheck, SIGNAL(toggled(bool)), this, SLOT(updateResults()));
-    
-    QHBoxLayout* displayButsLayout = new QHBoxLayout();
-    displayButsLayout->setContentsMargins(0, 0, 0, 0);
-    displayButsLayout->setSpacing(0);
-    displayButsLayout->addWidget(mUnfoldBut);
-    displayButsLayout->addWidget(mInfosBut);
-    displayButsLayout->addWidget(mExportImgBut);
-    
-    mDisplayGroup = new QWidget();
-    QVBoxLayout* displayLayout = new QVBoxLayout();
-    displayLayout->setContentsMargins(0, 0, 0, 0);
-    displayLayout->setSpacing(5);
-    displayLayout->addWidget(mScaleGroup);
-    displayLayout->addLayout(renderLayout);
-    displayLayout->addWidget(mUpdateDisplay);
-    displayLayout->addWidget(mFontBut);
-    displayLayout->addLayout(thickLayout);
-    displayLayout->addWidget(mShowDataUnderPhasesCheck);
-    mDisplayGroup->setLayout(displayLayout);
-    mDisplayGroup->setFixedHeight(220);     /////////////////////////////////////////////
-    
-    connect(mUnfoldBut, SIGNAL(toggled(bool)), this, SLOT(unfoldResults(bool)));
-    connect(mInfosBut, SIGNAL(toggled(bool)), this, SLOT(showInfos(bool)));
+    QGridLayout* displayLayout = new QGridLayout(mDisplayGroup);
+    displayLayout->setContentsMargins(3, 3, 3, 3);
+    displayLayout->setSpacing(3);
 
     
-    // -----------
+    displayLayout->addWidget(mCurrentXMinEdit,1,0,1,2);
+    displayLayout->addWidget(mXScaleLab,1,3,1,2);
+    displayLayout->addWidget(mCurrentXMaxEdit,1,6,1,2);
+    
+    displayLayout->addWidget(mXSlider,2,0,1,8);
+    
+    displayLayout->addWidget(mYScaleLab,3,3,1,2);
+    
+    displayLayout->addWidget(mYSlider,4,0,1,8);
+    
+    displayLayout->addWidget(mRenderLab,5,0,1,3);
+    displayLayout->addWidget(mRenderCombo,5,3,1,5);
+    
+    //displayLayout->addWidget(mUpdateDisplay,6,0);
+    
+    displayLayout->addWidget(mFontBut,6,0,1,8);
+    
+    displayLayout->addWidget(mThicknessLab,7,0,1,5);
+    displayLayout->addWidget(mThicknessSpin,7,5,1,2);
+    
+    mDisplayGroup->setLayout(displayLayout);
+    mDisplayGroup->setFixedHeight(140);
+
+    
+    /* -------------------------------------- mChainsGroup---------------------------------------------------*/
+    mChainsGroup = new QWidget();
     
     mChainsTitle = new Label(tr("MCMC Chains"));
     mChainsTitle->setIsTitle(true);
-    mChainsGroup = new QWidget();
+    
     mAllChainsCheck = new CheckBox(tr("Chains concatenation"), mChainsGroup);
     mAllChainsCheck->setChecked(true);
     mChainsGroup->setFixedHeight(2*mMargin + mLineH);
     
     connect(mAllChainsCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     
-    // -----------
+    /* -------------------------------------- mResultsGroup---------------------------------------------------*/
+
+    mResultsGroup = new QWidget();
     
-    mDataTitle = new Label(tr("Results options"));
-    mDataTitle->setIsTitle(true);
-    mDataGroup = new QWidget();
+    mResultsTitle = new Label(tr("Results options"));
+    mResultsTitle->setIsTitle(true);
     
-    mDataThetaRadio = new RadioButton(tr("Calendar dates"), mDataGroup);
-    mDataSigmaRadio = new RadioButton(tr("Individual std. deviations"), mDataGroup);
     
-    mDataPosteriorCheck = new CheckBox(tr("Distrib. of post. dates"), mDataGroup); // new PhD
-    mDataCalibCheck     = new CheckBox(tr("Distrib. of calib. dates"), mDataGroup);
-    mWiggleCheck        = new CheckBox(tr("Wiggle shifted"), mDataGroup);
-    mDataThetaRadio->setChecked(true);
-    mDataPosteriorCheck->setChecked(true);
-    mDataCalibCheck->setChecked(true);
+    mDataThetaRadio = new RadioButton(tr("Calendar dates"), mResultsGroup);
+    mDataSigmaRadio = new RadioButton(tr("Individual std. deviations"), mResultsGroup);
     
-    connect(mDataThetaRadio,     SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    connect(mDataPosteriorCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    connect(mDataCalibCheck,     SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    connect(mWiggleCheck,        SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    connect(mDataSigmaRadio,     SIGNAL(clicked()), this, SLOT(updateGraphs()));
+    mDataPosteriorCheck       = new CheckBox(tr("Distrib. of post. dates"), mResultsGroup); // new PhD
+    mDataCalibCheck           = new CheckBox(tr("Individual calib. dates"), mResultsGroup);
+    mShowDataUnderPhasesCheck = new CheckBox(tr("Show data under phases"),mResultsGroup);
+    mWiggleCheck              = new CheckBox(tr("Wiggle shifted"), mResultsGroup);
+    mDataThetaRadio           -> setChecked(true);
+    mDataPosteriorCheck       -> setChecked(true);
+    mDataCalibCheck           -> setChecked(true);
+    mShowDataUnderPhasesCheck -> setChecked(false);
     
-    connect(mDataGroup,     SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    // -----------
+    connect(mShowDataUnderPhasesCheck, SIGNAL(toggled(bool)), this, SLOT(updateResults()));
+    
+    connect(mDataThetaRadio,     SIGNAL(clicked()), this, SLOT(updateResults()));
+    connect(mDataPosteriorCheck, SIGNAL(clicked()), this, SLOT(updateResults()));
+    connect(mDataCalibCheck,     SIGNAL(clicked()), this, SLOT(updateResults()));
+    connect(mWiggleCheck,        SIGNAL(clicked()), this, SLOT(updateResults()));
+    connect(mDataSigmaRadio,     SIGNAL(clicked()), this, SLOT(updateResults()));
+    
+    //connect(mDataGroup,     SIGNAL(clicked()), this, SLOT(updateResults()));// Unusefull
+  /*  QVBoxLayout* mResultsLayout = new QVBoxLayout();
+    mResultsLayout->addWidget(mShowDataUnderPhasesCheck);
+    mResultsLayout->addWidget(mDataThetaRadio);
+        mResultsLayout->addWidget(mDataSigmaRadio);
+        mResultsLayout->addWidget(mDataThetaRadio);
+    mResultsGroup->setLayout(mResultsLayout);
+   */
+    /* -------------------------------------- mPostDistGroup ---------------------------------------------------*/
     
     mPostDistOptsTitle = new Label(tr("Post. distrib. options"));
     mPostDistOptsTitle->setIsTitle(true);
@@ -317,18 +313,18 @@ mZoomCorrel(0)
     mHPDEdit->setText("95");
     
     DoubleValidator* percentValidator = new DoubleValidator();
-    percentValidator->setBottom(0.);
-    percentValidator->setTop(100.);
-    percentValidator->setDecimals(1);
+    percentValidator -> setBottom(0.);
+    percentValidator -> setTop(100.);
+    percentValidator -> setDecimals(1);
     mHPDEdit->setValidator(percentValidator);
     
-    connect(mHPDEdit, SIGNAL(textEdited(const QString&)), this, SLOT(generateHPD()));
-    connect(mHPDCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
-    connect(mHPDEdit, SIGNAL(textChanged(const QString&)), this, SLOT(updateGraphs()));
+    connect(mHPDEdit,  SIGNAL(textEdited(const QString&)),  this, SLOT(generateHPD()));
+    connect(mHPDCheck, SIGNAL(clicked()),                   this, SLOT(updateGraphs()));
+    connect(mHPDEdit,  SIGNAL(textChanged(const QString&)), this, SLOT(updateGraphs()));
     
     mRawCheck = new CheckBox(tr("Raw results"), mPostDistGroup);
-    mRawCheck->setChecked(false);
-    mRawCheck->setVisible(false);
+    mRawCheck -> setChecked(false);
+    mRawCheck -> setVisible(false);
     
     connect(mRawCheck, SIGNAL(clicked()), this, SLOT(updateGraphs()));
     
@@ -364,18 +360,19 @@ mZoomCorrel(0)
     mOptionsWidget = new QWidget(this);
     
     QVBoxLayout* optionsLayout = new QVBoxLayout();
-    //optionsLayout->setContentsMargins(0, 0, 0, 0);
-    //optionsLayout->setSpacing(5);
+    optionsLayout->setContentsMargins(0, 0, 0, 0);
+    optionsLayout->setSpacing(0);
     optionsLayout->addLayout(displayButsLayout);
     optionsLayout->addWidget(mDisplayTitle);
     optionsLayout->addWidget(mDisplayGroup);
     optionsLayout->addWidget(mChainsTitle);
     optionsLayout->addWidget(mChainsGroup);
-    optionsLayout->addWidget(mDataTitle);
-    optionsLayout->addWidget(mDataGroup);
+    optionsLayout->addWidget(mResultsTitle);
+    optionsLayout->addWidget(mResultsGroup);
     optionsLayout->addWidget(mPostDistOptsTitle);
     optionsLayout->addWidget(mPostDistGroup);
     optionsLayout->addStretch();
+    
     mOptionsWidget->setLayout(optionsLayout);
     
     // -------------------------
@@ -483,7 +480,7 @@ void ResultsView::updateScrollHeights()
 
 void ResultsView::updateLayout()
 {
-    qDebug()<<"ResultsView::updateLayout()";
+    //qDebug()<<"ResultsView::updateLayout()";
     int m = mMargin;
     int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     int dx = mLineH + m;
@@ -524,7 +521,7 @@ void ResultsView::updateLayout()
     }
 
     mOptionsWidget->setGeometry(width() - mOptionsW, 0, mOptionsW, height());
-    mScaleGroup->setGeometry(m, mRulerH, mPostDistGroup->width() - 2*m, 90);
+    mDisplayGroup->setGeometry(0, mDisplayTitle->y()+ mDisplayTitle->height(), mOptionsW, mDisplayGroup->height());
     
  //   mOptionsWidget->move(width() - mOptionsW, 0);
     int numChains = mCheckChainChecks.size();
@@ -551,21 +548,22 @@ void ResultsView::updateLayout()
     }
     
     int y = m;
-    mDataThetaRadio->setGeometry(m, y, (int)(mDataGroup->width() - 2*m), mLineH);
+    mDataThetaRadio->setGeometry(m, y, (int)(mResultsGroup->width() - 2*m), mLineH);
     if(mTabs->currentIndex() == 0)
     {
-        mDataPosteriorCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mDataGroup->width() - 2*m - dx), mLineH);
-        mDataCalibCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mDataGroup->width() - 2*m - dx), mLineH);
-        mWiggleCheck->setGeometry(m + dx, y += (m + mLineH),(int)( mDataGroup->width() - 2*m - dx), mLineH);
+        mShowDataUnderPhasesCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
+        mDataPosteriorCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
+        mDataCalibCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
+        mWiggleCheck->setGeometry(m + dx, y += (m + mLineH),(int)( mResultsGroup->width() - 2*m - dx), mLineH);
     }
-    mDataSigmaRadio->setGeometry(m, y += (m + mLineH), mDataGroup->width()-2*m, mLineH);
-    mDataGroup->setFixedHeight(y += (m + mLineH));
+    mDataSigmaRadio->setGeometry(m, y += (m + mLineH), mResultsGroup->width()-2*m, mLineH);
+    mResultsGroup->setFixedHeight(y += (m + mLineH));
     
     y = m;
     int sw = (mPostDistGroup->width() - 3*m) * 0.5;
     int w1 = (mPostDistGroup->width() - 3*m) * 0.7;
     int w2 = (mPostDistGroup->width() - 3*m) * 0.3;
-    mScaleGroup->setGeometry(m, y, mPostDistGroup->width() - 2*m, mLineH);
+   // mScaleGroup->setGeometry(m, y, mPostDistGroup->width() - 2*m, mLineH);
     
     mHPDCheck->setGeometry(m, y, mPostDistGroup->width() - 2*m, mLineH);
     mThreshLab->setGeometry(m, y += (m + mLineH), w1, mLineH);

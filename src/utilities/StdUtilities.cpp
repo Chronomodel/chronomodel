@@ -167,24 +167,37 @@ QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const 
     
     iter.next();
     double lastT = iter.key();
-    
+    double lastV = iter.value();
     double srcArea = 0.f;
     
     //qDebug() << "------";
     
-    while(iter.hasNext())
+   /* while(iter.hasNext()) // original code HL
     {
         iter.next();
         double t = iter.key();
         double v = iter.value() * (t - lastT);
-        //qDebug() << t << ", " << v;
+        qDebug() << t << ", " << v;
         srcArea += v;
         lastT = t;
+    } */
+    while(iter.hasNext())   {
+        iter.next();
+        double t = iter.key();
+        double v = iter.value();// * (t - lastT);
+        if (lastV>0 && v>0) {
+            srcArea += (lastV+v)/2 * (t - lastT);
+        }
+        // qDebug() << t << ", " << v;
+        lastV = v;
+        lastT = t;
     }
+    
     double prop = targetArea / srcArea;
-    /*qDebug() << "Equal_areas prop = " << prop;
+   /* qDebug() << "Equal_areas prop = " << prop;
     qDebug() << "targetArea = " << targetArea;
-    qDebug() << "srcArea = " << srcArea;*/
+    qDebug() << "srcArea = " << srcArea;
+    */
     
     QMap<double, double> result;
     QMapIterator<double, double> iter2(mapToModify);
@@ -202,9 +215,19 @@ QVector<double> equal_areas(const QVector<double>& data, const double step, cons
         return QVector<double>();
     
     double srcArea = 0.f;
-    for(int i=0; i<data.size(); ++i)
+    double lastV = data[0];
+   /* for(int i=0; i<data.size(); ++i) // original code HL
         srcArea += step * data[i];
+    */
     
+    for(int i=1; i<data.size(); ++i) {
+        double v =data[i];
+        
+        if (lastV>0 && v>0) {
+            srcArea += (lastV+v)/2 * step;
+        }
+       lastV = v;
+    }
     double prop = area / srcArea;
     QVector<double> result;
     for(int i=0; i<data.size(); ++i)
