@@ -29,6 +29,8 @@
 #include "ModelUtilities.h"
 #include "DoubleValidator.h"
 
+#include "PluginAbstract.h"
+
 #include <QtWidgets>
 #include <iostream>
 #include <QtSvg>
@@ -850,14 +852,23 @@ void ResultsView::updateResults(Model* model)
                 for(int j=0; j<(int)event->mDates.size(); ++j)
                 {
                     Date& date = event->mDates[j];
+                    //PluginAbstract* mDatePlugin =  date.mPlugin;
                     GraphViewDate* graphDate = new GraphViewDate(phasesWidget);
                     graphDate->setSettings(mModel->mSettings);
                     graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
                     graphDate->setDate(&date);
                     graphDate->setGraphFont(mFont);
                     graphDate->setGraphsThickness(mThicknessSpin->value());
-                    graphDate->setColor(event->mColor);
+                    QColor dataPluginColor = date.mPlugin->getColor();
+                    graphDate->setColor(dataPluginColor);//event->mColor);
                     mByPhasesGraphs.append(graphDate);
+                    /*qDebug()<<"mName"<<date.mName;
+                    for(int k=0; k<(int)date.mCalibration.size(); ++k)
+                    {
+                       qDebug()<<"cal"<<date.mCalibration[k];
+                    }*/
+                    
+                    
                 }
             }
         }
@@ -890,7 +901,9 @@ void ResultsView::updateResults(Model* model)
             graphDate->setSettings(mModel->mSettings);
             graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
             graphDate->setDate(&date);
-            graphDate->setColor(event->mColor);
+            QColor dataPluginColor = date.mPlugin->getColor();
+            graphDate->setColor(dataPluginColor);
+           // graphDate->setColor(event->mColor);
             graphDate->setGraphFont(mFont);
             graphDate->setGraphsThickness(mThicknessSpin->value());
             mByEventsGraphs.append(graphDate);

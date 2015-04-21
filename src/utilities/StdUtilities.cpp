@@ -239,7 +239,7 @@ QVector<double> equal_areas(const QVector<double>& data, const double step, cons
 QMap<double, double> vector_to_map(const QVector<double>& data, const double min, const double max, const double step)
 {
     QMap<double, double> map;
-    int nbPts = 1 + (int)round((max - min) / step);
+    int nbPts = 1 + (int)round((max - min) / step); // PhD step is not usefull, it's must be data.size/(max-min+1)
     for(int i=0; i<nbPts; ++i)
     {
         double t = min + i * step;

@@ -189,19 +189,28 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             
             int versionHeight = 20;
             //qreal pr = 1;//qApp->devicePixelRatio();
-            qreal pr=  32000. / ( r.height() + versionHeight) ; // QImage axes are limited to 32767x32767 pixels
-           /* if (fileName.endsWith(".PNG")) {
+            qreal prh=  32000. / ( r.height() + versionHeight) ; // QImage axes are limited to 32767x32767 pixels
+           
+            qreal prw=  32000. / r.width() ;            /* if (fileName.endsWith(".PNG")) {
                 pr = 3;
             }*/
+            qreal pr = (prh<prw)? prh : prw;
             if (pr>4) {
                 pr=4;
             }
+           qDebug()<<" pr="<<pr;
             if(widget)
             {
-               
-                QImage image(r.width() * pr, (r.height() + versionHeight) * pr, QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
-
-                
+                //QSize wSize = widget->size();
+               // QImage image(r.width() * pr, (r.height() + versionHeight) * pr, QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
+                QImage image(int(r.width() * pr), int((r.height() + versionHeight) * pr), QImage::Format_ARGB32_Premultiplied);
+                //QImage image(wSize, QImage::Format_ARGB32_Premultiplied);
+                qDebug()<<"r.width() * pr"<< (r.width() * pr)<<" (r.height() + versionHeight) * pr"<<(r.height() + versionHeight) * pr;
+                //qDebug()<<" wSize.width()"<< wSize.width()<<" wSize.height()"<<wSize.height();
+                if (image.isNull() ) {
+                    qDebug()<< " image width = 0";
+                    return fileInfo;
+                }
                 image.setDevicePixelRatio(pr);
                 image.fill(Qt::transparent);
                 
@@ -210,7 +219,9 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 p.setRenderHint(QPainter::Antialiasing);
                              QRectF tgtRect = image.rect();
                 tgtRect.adjust(0, 0, 0, -versionHeight * pr);
-                widget->render(&p, QPoint(0, 0), QRegion(r.x()-2, r.y()-2, r.width(), r.height()));
+                widget->render(&p, QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), r.height()));
+                //widget->render(&p,QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), r.height()/2));
+                //widget->render(&p,QPoint(0, r.height()/2), QRegion(r.x(), r.y()+r.height()/2, r.width(), r.height()));
                 p.setPen(Qt::black);
                 p.drawText(0, r.height(), r.width(), versionHeight,
                            Qt::AlignCenter,

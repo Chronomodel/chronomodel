@@ -1,4 +1,4 @@
-﻿#include "Date.h"
+#include "Date.h"
 #include "Event.h"
 #include "Generator.h"
 #include "StdUtilities.h"
@@ -234,6 +234,7 @@ void Date::calibrate(const ProjectSettings& settings)
 
 QMap<double, double> Date::getCalibMap() const
 {
+ 
     return vector_to_map(mCalibration, mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
 }
 

@@ -64,7 +64,7 @@ void GraphViewDate::refresh()
     mGraph->removeAllZones();
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
-    
+    mGraph->setMaximumY(0);
     mGraph->autoAdjustYScale(mCurrentResult == eTrace);
     
     if(mDate)
@@ -78,28 +78,36 @@ void GraphViewDate::refresh()
         {
             mGraph->setRangeY(0, 0.0001f);
             
-            if(mCurrentVariable == eTheta)
+          /*  if(mCurrentVariable == eTheta)
                 mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
             else if(mCurrentVariable == eSigma)
                 mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
-           
-            MHVariable* variable = &(mDate->mTheta);
+          */
+            
+          /*  MHVariable* variable = &(mDate->mTheta);
             if(mCurrentVariable == eTheta) variable = &(mDate->mTheta);
             else if(mCurrentVariable == eSigma) variable = &(mDate->mSigma);
-            
+          */
             if(mShowCalib && mCurrentVariable == eTheta)
             {
                 GraphCurve curve;
                 curve.mName = "calibration";
-                if(!mDate->isNull()) {
-                    mDate->calibrate(mSettings);
-                }
-                curve.mData = equal_areas(mDate->getCalibMap(), 1.f);
+                //if(mDate->mCalibration.isEmpty()) {
+                //if(mDate->mCalibration.isEmpty()) {
+                //    mDate->calibrate(mSettings);
+               //     qDebug()<<"mDate->calibrate(mSettings);";
+               // }
+                //curve.mData = equal_areas(mDate->getCalibMap(), 1.f);
+                
+                curve.mData = mDate->getCalibMap();
+                //curve.mData = mDate->mCalibration;
                 QString namePlugin = mDate->mPlugin->getName();
-                QColor dataColor   = mDate->mPlugin->getColor();//QColor(120, 120, 120); // more set the plugin color mDate.mPlugin->getName()
+                QColor dataColor   = mDate->mPlugin->getColor();//QColor(120, 120, 120); 
                 QIcon dataIcon     = mDate->mPlugin->getIcon();
                 curve.mName = "calibration : "+namePlugin;
+                
                 curve.mPen.setColor(dataColor);
+                //curve.mPen.setColor(Qt::black);
                 curve.mPen.setStyle(Qt::SolidLine);
                
                 curve.mBrush.setStyle(Qt::VerPattern);//Qt::LinearGradientPattern);//Qt::HorPattern);// Qt::Dense6Pattern);VerPattern
@@ -113,7 +121,10 @@ void GraphViewDate::refresh()
                 curve.mIsRectFromZero = true; // for typo. calibs., invisible for others!
                 mGraph->addCurve(curve);
                 
+                qDebug()<<"mName"<<mDate->mName;
+              
                 double yMax = 1.1f * map_max_value(curve.mData);
+                //qDebug()<<"yMax"<<yMax<<" mSetting.mTmin"<<mSettings.mTmin<<" mSettings.mTmin"<<mSettings.mTmax<<" mStep"<<mSettings.mStep;;
                 mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
             }
             
@@ -132,8 +143,13 @@ void GraphViewDate::refresh()
                 mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
             }
             
+            MHVariable* variable = &(mDate->mTheta);
+            if(mCurrentVariable == eTheta) variable = &(mDate->mTheta);
+            else if(mCurrentVariable == eSigma) variable = &(mDate->mSigma);
+
             if(mShowAllChains)
             {
+                
                 if(mShowRawResults)
                 {
                     GraphCurve curveRaw;
@@ -147,14 +163,17 @@ void GraphViewDate::refresh()
                     double yMax2 = 1.1f * map_max_value(curveRaw.mData);
                     mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax2));
                 }
-                
+
                 
                 if (mShowPosterior) {
+                    QColor HPDColor(color);
+                    HPDColor.setAlpha(50);
                     GraphCurve curve;
                     curve.mName = "histo full";
                     curve.mData = equal_areas(variable->fullHisto(), 1.f);
-                    curve.mPen.setColor(color);
+                    curve.mPen.setColor(HPDColor);
                     curve.mIsHisto = false;
+                    curve.mFillUnder = false;
                     mGraph->addCurve(curve);
                     double yMax = 1.1f * map_max_value(curve.mData);
                     mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
@@ -167,8 +186,8 @@ void GraphViewDate::refresh()
                         curveHPD.mPen.setColor(color);
                         curveHPD.mFillUnder = true;
                         curveHPD.mBrush.setStyle(Qt::SolidPattern);
-                        QColor HPDColor(color);
-                        HPDColor.setAlpha(50);
+                        //QColor HPDColor(color);
+                        //HPDColor.setAlpha(50);
                         curveHPD.mBrush.setColor(HPDColor);
                         curveHPD.mIsHisto = false;
                         curveHPD.mIsRectFromZero = true;
