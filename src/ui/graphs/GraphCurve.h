@@ -20,6 +20,7 @@ public:
     
     QString mName;
     QPen mPen;
+    QBrush mBrush;
     bool mFillUnder;
     bool mIsHisto;
     bool mIsRectFromZero; // draw a vertical line when graph value leaves 0 : usefull for HPD and Typo!

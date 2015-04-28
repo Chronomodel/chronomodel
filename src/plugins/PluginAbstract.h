@@ -29,6 +29,7 @@ public:
 
     virtual QString getName() const = 0;
     virtual QIcon getIcon() const = 0;
+    virtual QColor getColor() const = 0;
     virtual bool doesCalibration() const = 0;
     virtual bool wiggleAllowed() const {return true;}
     virtual Date::DataMethod getDataMethod() const = 0;

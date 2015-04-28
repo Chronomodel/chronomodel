@@ -35,6 +35,11 @@ QIcon PluginGauss::getIcon() const
 {
     return QIcon(":/gauss_w.png");
 }
+
+QColor PluginGauss::getColor() const
+{
+    return Qt::black;
+}
 bool PluginGauss::doesCalibration() const
 {
     return true;

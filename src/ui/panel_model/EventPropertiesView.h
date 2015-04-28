@@ -25,6 +25,7 @@ public:
     
     void updateEvent();
     const QJsonObject& getEvent() const;
+    int mToolbarH;
     
 public slots:
     void setEvent(const QJsonObject& event);
@@ -69,10 +70,11 @@ signals:
     void showCalibRequested(bool show);
     
 private:
+    int minimumHeight;
     QJsonObject mEvent;
     
-    QWidget* mDefaultView;
-    QWidget* mKnownView;
+    QWidget* mEventView;
+    QWidget* mBoundView;
     
     Label* mNameLab;
     Label* mColorLab;

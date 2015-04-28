@@ -5,7 +5,7 @@
 ColorPicker::ColorPicker(const QColor& color, QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mColor(color)
 {
-    
+   
 }
 
 ColorPicker::~ColorPicker()
@@ -37,8 +37,22 @@ void ColorPicker::openDialog()
 void ColorPicker::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
-    QPainter p(this);
-    p.fillRect(rect(), isEnabled() ? mColor : QColor(220, 220, 220));
+    QRectF roundedRect(rect().x() + borderSize / 2,
+                rect().y() + borderSize / 2,
+                rect().width() - borderSize,
+                rect().height() - borderSize);
+    
+    pen.setWidth(borderSize);
+    pen.setColor(isEnabled() ? mColor : QColor(220, 220, 220));
+    
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setPen(pen);
+    
+    painter.drawRoundedRect(roundedRect.translated(0.5, 0.5), borderRadius, borderRadius);
+    
+    painter.fillRect(roundedRect, pen.color());
+    
 }
 
 void ColorPicker::mousePressEvent(QMouseEvent* e)

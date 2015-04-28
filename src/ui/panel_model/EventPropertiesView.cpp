@@ -20,43 +20,60 @@
 #include <QtWidgets>
 
 
-EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
+EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
+mToolbarH(60)
 {
+    minimumHeight =0;
+    
+    
+
+    // ------------- commun with defautlt Event and Bound ----------
     mNameLab = new Label(tr("Name") + " :", this);
     mColorLab = new Label(tr("Color") + " :", this);
     
+    
     mNameEdit = new LineEdit(this);
+    mNameEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
+    mNameEdit->setAlignment(Qt::AlignHCenter);
+    
     mColorPicker = new ColorPicker(Qt::black, this);
+    //mColorPicker ->  QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     
-    mDefaultView = new QWidget(this);
+    connect(mNameEdit, SIGNAL(textEdited(const QString&)), this, SLOT(updateEventName(const QString&)));
+    connect(mColorPicker, SIGNAL(colorChanged(QColor)), this, SLOT(updateEventColor(QColor)));
     
-    // -------------
+    // Event default propreties Window mEventView
+    mEventView = new QWidget(this);
+    mMethodLab = new Label(tr("Method") + " :", mEventView);
+    mMethodCombo = new QComboBox(mEventView);
     
-    mMethodLab = new Label(tr("Method") + " :", mDefaultView);
-    mMethodCombo = new QComboBox(mDefaultView);
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eDoubleExp));
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eBoxMuller));
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eMHAdaptGauss));
     
-    connect(mNameEdit, SIGNAL(textEdited(const QString&)), this, SLOT(updateEventName(const QString&)));
-    connect(mColorPicker, SIGNAL(colorChanged(QColor)), this, SLOT(updateEventColor(QColor)));
+   
     connect(mMethodCombo, SIGNAL(activated(int)), this, SLOT(updateEventMethod(int)));
     
+    minimumHeight += mEventView->height();
     // -------------
     
-    mDatesList = new DatesList(mDefaultView);
-    
+    mDatesList = new DatesList(mEventView);
     connect(mDatesList, SIGNAL(calibRequested(const QJsonObject&)), this, SIGNAL(updateCalibRequested(const QJsonObject&)));
     
     // -------------
-    
+
     const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
+    //int totalH=0;
     for(int i=0; i<plugins.size(); ++i)
     {
-        Button* button = new Button(plugins[i]->getName(), mDefaultView);
+        
+        Button* button = new Button(plugins[i]->getName(), mEventView);
         button->setIcon(plugins[i]->getIcon());
         button->setFlatVertical();
         connect(button, SIGNAL(clicked()), this, SLOT(createDate()));
+        
+        //minimumHeight+=button->height();
+        
         
         if(plugins[i]->doesCalibration())
             mPluginButs1.append(button);
@@ -64,65 +81,70 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
             mPluginButs2.append(button);
     }
     
-    mDeleteBut = new Button(tr("Delete"), mDefaultView);
+    mDeleteBut = new Button(tr("Delete"), mEventView);
     mDeleteBut->setIcon(QIcon(":delete.png"));
     mDeleteBut->setFlatVertical();
     connect(mDeleteBut, SIGNAL(clicked()), this, SLOT(deleteSelectedDates()));
+    minimumHeight+=mDeleteBut->height();
     
-    mRecycleBut = new Button(tr("Restore"), mDefaultView);
+    mRecycleBut = new Button(tr("Restore"), mEventView);
     mRecycleBut->setIcon(QIcon(":restore.png"));
     mRecycleBut->setFlatVertical();
     connect(mRecycleBut, SIGNAL(clicked()), this, SLOT(recycleDates()));
-    
+    minimumHeight+=mRecycleBut->height();
     // ---------------
     
-    mCalibBut = new Button(tr("Calibrate"), mDefaultView);
+    mCalibBut = new Button(tr("Calibrate"), mEventView);
     mCalibBut->setIcon(QIcon(":results_w.png"));
     mCalibBut->setFlatVertical();
     mCalibBut->setCheckable(true);
+    minimumHeight+=mCalibBut->height();
     
-    mOptsBut = new Button(tr("Options"), mDefaultView);
+    mOptsBut = new Button(tr("Options"), mEventView);
     mOptsBut->setIcon(QIcon(":settings_w.png"));
     mOptsBut->setFlatVertical();
+    minimumHeight+=mOptsBut->height();
     
-    mMergeBut = new Button(tr("Combine"), mDefaultView);
+    mMergeBut = new Button(tr("Combine"), mEventView);
     mMergeBut->setFlatVertical();
     mMergeBut->setEnabled(false);
     mMergeBut->setVisible(false);
+    minimumHeight+=mMergeBut->height();
     
-    mSplitBut = new Button(tr("Split"), mDefaultView);
+    mSplitBut = new Button(tr("Split"), mEventView);
     mSplitBut->setFlatVertical();
     mSplitBut->setEnabled(false);
     mSplitBut->setVisible(false);
+    minimumHeight+=mSplitBut->height();
     
     connect(mCalibBut, SIGNAL(toggled(bool)), this, SIGNAL(showCalibRequested(bool)));
-    connect(mOptsBut, SIGNAL(clicked()), this, SLOT(showDatesOptions()));
+    connect(mOptsBut,  SIGNAL(clicked()), this, SLOT(showDatesOptions()));
     connect(mMergeBut, SIGNAL(clicked()), this, SLOT(sendMergeSelectedDates()));
     connect(mSplitBut, SIGNAL(clicked()), this, SLOT(sendSplitDate()));
+
+    // --------------- Case of Event is a Bound -> Bound properties windows---------------------------
     
-    // ---------------
+    mBoundView = new QWidget(this);
     
-    mKnownView = new QWidget(this);
+    mKnownFixedLab = new Label(tr("Value") + " :", mBoundView);
+    mKnownStartLab = new Label(tr("Start") + " :", mBoundView);
+    mKnownEndLab   = new Label(tr("End")   + " :", mBoundView);
     
-    mKnownFixedLab = new Label(tr("Value") + " :", mKnownView);
-    mKnownStartLab = new Label(tr("Start") + " :", mKnownView);
-    mKnownEndLab = new Label(tr("End") + " :", mKnownView);
+    mKnownFixedRadio   = new RadioButton(tr("Fixed")   + " :", mBoundView);
+    mKnownUniformRadio = new RadioButton(tr("Uniform") + " :", mBoundView);
     
-    mKnownFixedRadio = new RadioButton(tr("Fixed") + " :", mKnownView);
-    mKnownUniformRadio = new RadioButton(tr("Uniform") + " :", mKnownView);
-    
-    connect(mKnownFixedRadio, SIGNAL(clicked()), this, SLOT(updateKnownType()));
+    connect(mKnownFixedRadio, SIGNAL(clicked())  , this, SLOT(updateKnownType()));
     connect(mKnownUniformRadio, SIGNAL(clicked()), this, SLOT(updateKnownType()));
     
-    mKnownFixedEdit = new LineEdit(mKnownView);
-    mKnownStartEdit = new LineEdit(mKnownView);
-    mKnownEndEdit = new LineEdit(mKnownView);
+    mKnownFixedEdit = new LineEdit(mBoundView);
+    mKnownStartEdit = new LineEdit(mBoundView);
+    mKnownEndEdit   = new LineEdit(mBoundView);
     
     QDoubleValidator* doubleValidator = new QDoubleValidator();
     doubleValidator->setDecimals(2);
     //mKnownFixedEdit->setValidator(doubleValidator);
     
-    mKnownGraph = new GraphView(mKnownView);
+    mKnownGraph = new GraphView(mBoundView);
     
     mKnownGraph->setRendering(GraphView::eHD);
     mKnownGraph->showAxisArrows(true);
@@ -135,6 +157,10 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     connect(mKnownEndEdit, SIGNAL(textEdited(const QString&)), this, SLOT(updateKnownUnifEnd()));
     
     setEvent(QJsonObject());
+    
+/*    qDebug()<<"minimumHeight"<<minimumHeight;
+    qDebug()<<"EventPropertiesView::sortie constructeur width"<<width()<<" ; height"<<height();
+*/    updateLayout();
 }
 
 EventPropertiesView::~EventPropertiesView()
@@ -153,16 +179,16 @@ void EventPropertiesView::setEvent(const QJsonObject& event)
 void EventPropertiesView::updateEvent()
 {
     mDatesList->setEvent(mEvent);
-    
+    qDebug()<<"EventPropertiesView::updateEvent()";
     bool empty = mEvent.isEmpty();
     
-    mNameEdit->setEnabled(!empty);
+    mNameEdit   ->setEnabled(!empty);
     mColorPicker->setEnabled(!empty);
     mMethodCombo->setEnabled(!empty);
-    mDeleteBut->setEnabled(!empty);
+/*    mDeleteBut->setEnabled(!empty);
     mRecycleBut->setEnabled(!empty);
     mCalibBut->setEnabled(!empty);
-    
+*/    
     for(int i=0; i<mPluginButs1.size(); ++i)
         mPluginButs1[i]->setEnabled(!empty);
     
@@ -171,8 +197,8 @@ void EventPropertiesView::updateEvent()
     
     if(empty)
     {
-        mDefaultView->setVisible(true);
-        mKnownView->setVisible(false);
+        mEventView->setVisible(true);
+        mBoundView->setVisible(false);
         mNameEdit->setText("");
         mMethodCombo->setCurrentIndex(0);
     }
@@ -188,8 +214,8 @@ void EventPropertiesView::updateEvent()
             mNameEdit->setText(name);
         mColorPicker->setColor(color);
         
-        mDefaultView->setVisible(type == Event::eDefault);
-        mKnownView->setVisible(type == Event::eKnown);
+        mEventView->setVisible(type == Event::eDefault);
+        mBoundView->setVisible(type == Event::eKnown);
         
         if(type == Event::eDefault)
         {
@@ -199,12 +225,12 @@ void EventPropertiesView::updateEvent()
         {
             EventKnown::KnownType knownType = (EventKnown::KnownType)mEvent[STATE_EVENT_KNOWN_TYPE].toInt();
             
-            mKnownFixedRadio->setChecked(knownType == EventKnown::eFixed);
-            mKnownUniformRadio->setChecked(knownType == EventKnown::eUniform);
+            mKnownFixedRadio   -> setChecked(knownType == EventKnown::eFixed);
+            mKnownUniformRadio -> setChecked(knownType == EventKnown::eUniform);
             
-            mKnownFixedEdit->setText(QString::number(mEvent[STATE_EVENT_KNOWN_FIXED].toDouble()));
-            mKnownStartEdit->setText(QString::number(mEvent[STATE_EVENT_KNOWN_START].toDouble()));
-            mKnownEndEdit->setText(QString::number(mEvent[STATE_EVENT_KNOWN_END].toDouble()));
+            mKnownFixedEdit -> setText(QString::number(mEvent[STATE_EVENT_KNOWN_FIXED].toDouble()));
+            mKnownStartEdit -> setText(QString::number(mEvent[STATE_EVENT_KNOWN_START].toDouble()));
+            mKnownEndEdit   -> setText(QString::number(mEvent[STATE_EVENT_KNOWN_END].toDouble()));
             
             updateKnownControls();
             updateKnownGraph();
@@ -378,7 +404,7 @@ void EventPropertiesView::updateKnownControls()
 
 void EventPropertiesView::hideCalibration()
 {
-    mCalibBut->setChecked(false);
+//    mCalibBut->setChecked(false);
 }
 
 #pragma mark Event Data
@@ -515,72 +541,92 @@ void EventPropertiesView::resizeEvent(QResizeEvent* e)
 
 void EventPropertiesView::updateLayout()
 {
-    QRect r = rect().adjusted(0, 0, 0, 0);
-    int m = 5;
-    int w1 = 80;
-    int w2 = r.width() - w1 - 3*m;
-    int lineH = 20;
-    int comboH = mMethodCombo->height();
-    int butW = 80;
-    int butH = 50;
+  
+    this->setGeometry(0, mToolbarH, this->parentWidget()->width(),this->parentWidget()->height()-mToolbarH);
+    
+    int mTalonLabel = 7;
+    int mTalonBox = 80;
+    
+    int mLabelWidth = 50;
+    
+    int butPluginWidth = 80;
+    int butPluginHeigth = 50;
+    
+    int mBoxWidth = this->width() - butPluginWidth-int(floor(2*mTalonLabel));
+    
+    int mBoxHeigth = int(floor( (mToolbarH-3*mTalonLabel) /2 ));//20;
+    
+
     
     if(width() < 100)
     {
-        butW = 0;
+        butPluginWidth = 0;
     }
     
-    mNameLab->setGeometry(m, m, w1, lineH);
-    mColorLab->setGeometry(m, 2*m + lineH, w1, lineH);
-    
-    mNameEdit->setGeometry(2*m + w1, m, w2, lineH);
-    mColorPicker->setGeometry(2*m + w1, 2*m + lineH, w2, lineH);
-    
-    QRect typeRect = r.adjusted(0, 3*m + 2*lineH, 0, 0);
-    mDefaultView->setGeometry(typeRect);
-    mKnownView->setGeometry(typeRect);
     
     
-    // Default view :
+    // place the QLabel
+    // mNameLab, mColorLab, mMethodLab, belong to mEventView
+    int y = mTalonLabel;
+    mNameLab  -> setGeometry(mTalonLabel, y, mLabelWidth, mBoxHeigth);
+    mNameEdit -> setGeometry(mTalonBox, y, mBoxWidth, mBoxHeigth);
+    y += mNameEdit -> height() + mTalonLabel;
     
-    mMethodLab->setGeometry(0, 0, w1, comboH);
-    mMethodCombo->move(w1 + m, 0);
-    mMethodCombo->setFixedWidth(w2);
+    mColorLab    -> setGeometry(mTalonLabel, y, mLabelWidth, mBoxHeigth);
+    mColorPicker -> setGeometry(mTalonBox, 2*mTalonLabel + mBoxHeigth, mBoxWidth, mBoxHeigth);
+    //mColorPicker->etGeometry(mTalonBox, 2*mTalonLabel + mBoxHeigth, mBoxWidth, mBoxHeigth);
+    y += mColorPicker -> height() + mTalonLabel;
     
-    QRect listRect(0, comboH + m, typeRect.width() - butW, typeRect.height() - comboH - m);
+    mEventView->setGeometry(0, y, this->width(), this->height()-y);
+    mBoundView->setGeometry(0, y, this->width(), this->height()-y);
+    
+    // Event properties view :
+    y = 0;
+    
+    mMethodLab   -> setGeometry(mTalonLabel, y  , mLabelWidth, mBoxHeigth);
+    mMethodCombo -> setGeometry(mTalonBox-4, y-4, mBoxWidth+8, mBoxHeigth+8);
+    y += mMethodCombo->height() + mTalonLabel;
+    
+    QRect listRect(0, y, mEventView->width() - butPluginWidth, mEventView->height() - y);
+    
     mDatesList->setGeometry(listRect);
     
     int x = listRect.width();
-    int y = comboH + m;
+    //int y = listRect.y();
     
     for(int i=0; i<mPluginButs1.size(); ++i)
     {
-        mPluginButs1[i]->setGeometry(x, y, butW, butH);
-        y += butH;
+        mPluginButs1[i]->setGeometry(x, y, butPluginWidth, butPluginHeigth);
+        y += butPluginHeigth;
     }
     
-    //y += butGap;
     
     for(int i=0; i<mPluginButs2.size(); ++i)
     {
-        mPluginButs2[i]->setGeometry(x, y, butW, butH);
-        y += butH;
+        mPluginButs2[i]->setGeometry(x, y, butPluginWidth, butPluginHeigth);
+        y += butPluginHeigth;
     }
     
-    //mMergeBut->setGeometry(x, comboH + m + listRect.height() - 5*butH, butW, butH);
-    //mSplitBut->setGeometry(x, comboH + m + listRect.height() - 4*butH, butW, butH);
-    mCalibBut->setGeometry(x, comboH + m + listRect.height() - 4*butH, butW, butH);
-    mOptsBut->setGeometry(x, comboH + m + listRect.height() - 3*butH, butW, butH);
-    mDeleteBut->setGeometry(x, comboH + m + listRect.height() - 2*butH, butW, butH);
-    mRecycleBut->setGeometry(x, comboH + m + listRect.height() - butH, butW, butH);
+    y +=mTalonBox;
+    mCalibBut  ->setGeometry(x, mEventView->height() -4*butPluginHeigth, butPluginWidth,butPluginHeigth);
+    y += butPluginHeigth;
+    mOptsBut   ->setGeometry(x, mEventView->height() -3*butPluginHeigth, butPluginWidth,butPluginHeigth);
+    y += butPluginHeigth;
+    mDeleteBut ->setGeometry(x, mEventView->height() -2*butPluginHeigth, butPluginWidth,butPluginHeigth);
+    y += butPluginHeigth;
+    mRecycleBut->setGeometry(x, mEventView->height() - 0-butPluginHeigth  , butPluginWidth, butPluginHeigth);
+ 
+    // Known view : Used with Bound
     
-    
-    // Known view :
-    
-    y = 0;
-        
+    y = 0;//mMethodCombo->y() + mTalonLabel;;
+    QRect r = this->rect();
+    int m = mTalonLabel;//5;
+    int w1 = 80;
+    int lineH = 20;
+    int w2 = r.width() - w1 - 3*m;
     mKnownFixedRadio->setGeometry(m, y, r.width() - 2*m, lineH);
-    mKnownFixedLab->setGeometry(m, y += (lineH + m), w1, lineH);
-    mKnownFixedEdit->setGeometry(w1 + 2*m, y, w2, lineH);
+    mKnownFixedLab  ->setGeometry(m, y += (lineH + m), w1, lineH);
+    mKnownFixedEdit ->setGeometry(w1 + 2*m, y, w2, lineH);
     
     mKnownUniformRadio->setGeometry(m, y += (lineH + m), r.width() - 2*m, lineH);
     mKnownStartLab->setGeometry(m, y += (lineH + m), w1, lineH);
@@ -589,5 +635,8 @@ void EventPropertiesView::updateLayout()
     mKnownEndEdit->setGeometry(w1 + 2*m, y, w2, lineH);
     
     mKnownGraph->setGeometry(m, y += (lineH + m), r.width() - 2*m, 100);
+/* qDebug()<<"EventPropertiesView::sortie update width"<<width()<<" ; height"<<height();
+     qDebug()<<"EventPropertiesView::sortie constructeur mEventView width"<<mEventView-> width()<<" ; height"<<mEventView-> height();
+   // update(); */
 }
 

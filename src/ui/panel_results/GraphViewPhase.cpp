@@ -15,8 +15,9 @@
 GraphViewPhase::GraphViewPhase(QWidget *parent):GraphViewResults(parent),
 mPhase(0)
 {
-    mGraph->setBackgroundColor(QColor(230, 230, 230));
-    
+    setMainColor(QColor(50, 50, 50));
+    mGraph->setBackgroundColor(QColor(210, 210, 210));
+    //mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax); // it's done in GraphViewResults
     
     mDurationGraph = new GraphView(this);
     mDurationGraph->setBackgroundColor(QColor(230, 230, 230));
@@ -62,28 +63,10 @@ void GraphViewPhase::paintEvent(QPaintEvent* e)
 {
     GraphViewResults::paintEvent(e);
     
-    QPainter p(this);
-    
-    if(mPhase)
-    {
-        QColor backCol = mPhase->mColor;
-        QColor foreCol = getContrastedColor(backCol);
+    if(mPhase)  {
+        this->setItemColor(mPhase->mColor);
+        this->setItemTitle(mTitle);
         
-        QRect topRect(0, 0, mGraphLeft, mLineH);
-        p.setPen(backCol);
-        p.setBrush(backCol);
-        p.drawRect(topRect);
-        
-        p.setPen(Qt::black);
-        p.drawLine(0, height(), mGraphLeft, height());
-        
-        p.setPen(foreCol);
-        QFont font;
-        font.setPointSizeF(pointSize(11));
-        p.setFont(font);
-        p.drawText(topRect.adjusted(mMargin, 0, -mMargin, 0),
-                   Qt::AlignVCenter | Qt::AlignLeft,
-                   tr("Phase") + " : " + mPhase->mName);
     }
 }
 
@@ -95,7 +78,7 @@ void GraphViewPhase::refresh()
     mGraph->resetNothingMessage();
     
     mGraph->autoAdjustYScale(mCurrentResult == eTrace);
-    
+
     mDurationGraph->removeAllCurves();
     
     if(mPhase)
@@ -112,7 +95,8 @@ void GraphViewPhase::refresh()
             QString results = ModelUtilities::phaseResultsText(mPhase);
             setNumericalResults(results);
             
-            mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
+            mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax); 
+
             mGraph->setRangeY(0, 0.0001f);
             
             if(mShowAllChains)
@@ -171,6 +155,10 @@ void GraphViewPhase::refresh()
                 curveAlphaHPD.mPen.setColor(alphaCol);
                 curveAlphaHPD.mPen.setStyle(Qt::DotLine);
                 curveAlphaHPD.mFillUnder = true;
+                curveAlphaHPD.mBrush.setStyle(Qt::SolidPattern);
+                QColor HPDAlphaColor(alphaCol);
+                HPDAlphaColor.setAlpha(50);
+                curveAlphaHPD.mBrush.setColor(HPDAlphaColor);
                 curveAlphaHPD.mIsHisto = false;
                 curveAlphaHPD.mIsRectFromZero = true;
                 curveAlphaHPD.mData = equal_areas(mPhase->mAlpha.mHPD, mThresholdHPD / 100.f);
@@ -181,6 +169,10 @@ void GraphViewPhase::refresh()
                 curveBetaHPD.mPen.setColor(color);
                 curveBetaHPD.mPen.setStyle(Qt::DashLine);
                 curveBetaHPD.mFillUnder = true;
+                curveBetaHPD.mBrush.setStyle(Qt::SolidPattern);
+                QColor HPDBetaColor(betaCol);
+                HPDBetaColor.setAlpha(50);
+                curveBetaHPD.mBrush.setColor(HPDBetaColor);
                 curveBetaHPD.mIsHisto = false;
                 curveBetaHPD.mIsRectFromZero = true;
                 curveBetaHPD.mData = equal_areas(mPhase->mBeta.mHPD, mThresholdHPD / 100.f);
@@ -206,6 +198,10 @@ void GraphViewPhase::refresh()
                     curveDurHPD.mName = QString(tr("duration HPD"));
                     curveDurHPD.mPen.setColor(color);
                     curveDurHPD.mFillUnder = true;
+                    QColor HPDColor(color);
+                    HPDColor.setAlpha(50);
+                    curveDurHPD.mBrush.setStyle(Qt::SolidPattern);
+                    curveDurHPD.mBrush.setColor(HPDColor);
                     curveDurHPD.mIsHisto = false;
                     curveDurHPD.mIsRectFromZero = true;
                     curveDurHPD.mData = equal_areas(mPhase->mDuration.mHPD, mThresholdHPD / 100.f);
@@ -287,6 +283,7 @@ void GraphViewPhase::refresh()
             if(chainIdx != -1)
             {
                 Chain& chain = mChains[chainIdx];
+                
                 mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
                 
                 QColor col = Painting::chainColors[chainIdx];
@@ -296,7 +293,7 @@ void GraphViewPhase::refresh()
                 curveAlpha.mName = QString(tr("alpha trace chain ") + QString::number(chainIdx));
                 curveAlpha.mDataVector = mPhase->mAlpha.fullTraceForChain(mChains, chainIdx);
                 curveAlpha.mPen.setColor(col);
-                //curveAlpha.mPen.setStyle(Qt::DotLine);
+
                 curveAlpha.mIsHisto = false;
                 mGraph->addCurve(curveAlpha);
                 
@@ -305,7 +302,7 @@ void GraphViewPhase::refresh()
                 curveBeta.mName = QString(tr("beta trace chain ") + QString::number(chainIdx));
                 curveBeta.mDataVector = mPhase->mBeta.fullTraceForChain(mChains, chainIdx);
                 curveBeta.mPen.setColor(col);
-                //curveBeta.mPen.setStyle(Qt::DashLine);
+
                 curveBeta.mIsHisto = false;
                 mGraph->addCurve(curveBeta);
                 
@@ -361,7 +358,11 @@ void GraphViewPhase::updateLayout()
     int butInlineMaxH = 50;
     int bh = height() - mLineH;
     bh = qMin(bh, butInlineMaxH);
+    
+    this->mShowDuration->setVisible(this->GraphViewResults::mButtonVisible);
     mShowDuration->setGeometry(0, mLineH + bh, mGraphLeft, bh);
+    
+    
 }
 
 void GraphViewPhase::showDuration(bool show)

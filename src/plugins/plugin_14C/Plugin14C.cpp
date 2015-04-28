@@ -67,6 +67,10 @@ QIcon Plugin14C::getIcon() const
 {
     return QIcon(":/14C_w.png");
 }
+QColor Plugin14C::getColor() const
+{
+    return Qt::black;
+}
 bool Plugin14C::doesCalibration() const
 {
     return true;

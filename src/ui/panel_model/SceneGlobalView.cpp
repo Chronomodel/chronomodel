@@ -7,7 +7,7 @@ mScene(scene),
 mView(view),
 mIsDragging(false)
 {
-    
+    this->setGeometry(parentWidget()->rect());
 }
 
 SceneGlobalView::~SceneGlobalView()

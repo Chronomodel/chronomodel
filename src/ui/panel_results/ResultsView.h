@@ -37,10 +37,16 @@ public:
     ResultsView(QWidget* parent = 0, Qt::WindowFlags flags = 0);
     ~ResultsView();
     
+    double mResultZoomX;
+    double mResultCurrentMinX;
+    double mResultCurrentMaxX;
+    double mResultMinX;
+    double mResultMaxX;
     void doProjectConnections(Project* project);
+    void updateAllZoom();
     
 protected:
-    void paintEvent(QPaintEvent* e);
+    void paintEvent(QPaintEvent* );
     void mouseMoveEvent(QMouseEvent* e);
     void resizeEvent(QResizeEvent* e);
     void updateLayout();
@@ -54,8 +60,16 @@ public slots:
     
 private slots:
     void updateScaleY(int value);
-    void updateScaleX(int value);
-    void updateScroll(double min, double max);
+    void updateZoomX(int value);
+    void withSlider();
+    
+    void updateScroll(const double min, const double max);
+    void updateRuler(int value);
+    
+    void setCurrentMinX();
+    void editCurrentMinX(QString str);
+    void setCurrentMaxX();
+    void editCurrentMaxX(QString str);
     
     void updateRendering(int index);
     void showByPhases(bool show);
@@ -79,6 +93,8 @@ private:
     QList<QRect> getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases);
     
     void updateResultsLog();
+    void memoZoom(const double& zoom);
+    void restoreZoom();
     
 private:
     Model* mModel;
@@ -86,8 +102,7 @@ private:
     MCMCSettings mMCMCSettings;
     QList<Chain> mChains;
     
-    double mMinX;
-    double mMaxX;
+    
     
     int mMargin;
     int mOptionsW;
@@ -113,19 +128,28 @@ private:
     
     QWidget* mOptionsWidget;
     
-    Label* mDisplayTitle;
-    QWidget* mDisplayGroup;
+    
     Button* mUnfoldBut;
     Button* mInfosBut;
     Button* mExportImgBut;
     CheckBox* mShowDataUnderPhasesCheck;
     
+    // ------ mDisplayGroup -----
+   // QWidget* mScaleGroup;
+    Label* mDisplayTitle;
+    QWidget* mDisplayGroup;
     Label* mXScaleLab;
     Label* mYScaleLab;
     QSlider* mXSlider;
     QSlider* mYSlider;
+    LineEdit* mCurrentXMinEdit;
+    LineEdit* mCurrentXMaxEdit;
     Label* mRenderLab;
     QComboBox* mRenderCombo;
+    
+   
+    
+    
     
     Label* mChainsTitle;
     QWidget* mChainsGroup;
@@ -133,9 +157,11 @@ private:
     QList<CheckBox*> mCheckChainChecks;
     QList<RadioButton*> mChainRadios;
     
-    Label* mDataTitle;
-    QWidget* mDataGroup;
+    Label* mResultsTitle;
+    QWidget* mResultsGroup;
     RadioButton* mDataThetaRadio;
+    
+    CheckBox* mDataPosteriorCheck; // new PhD
     CheckBox* mDataCalibCheck;
     CheckBox* mWiggleCheck;
     RadioButton* mDataSigmaRadio;
@@ -162,10 +188,10 @@ private:
     
     QTimer* mTimer;
     
-    int mZoomDensity;
-    int mZoomTrace;
-    int mZoomAccept;
-    int mZoomCorrel;
+    double mZoomDensity;
+    double mZoomTrace;
+    double mZoomAccept;
+    double mZoomCorrel;
 };
 
 #endif

@@ -11,9 +11,9 @@ mGraphWidth(50), mGraphHeight(50),
 mMarginLeft(50), mMarginRight(10), mMarginTop(5), mMarginBottom(15),
 mMinX(0), mMaxX(10),
 mMinY(0), mMaxY(10),
-mCurrentMinX(0),mCurrentMaxX(1000)
+mCurrentMinX(0),mCurrentMaxX(2000)
 {
-
+//qDebug()<<"contructor GraphViewAbstract::GraphViewAbstrac ";
 }
 
 GraphViewAbstract::~GraphViewAbstract(){}
@@ -22,6 +22,10 @@ GraphViewAbstract::~GraphViewAbstract(){}
 
 double GraphViewAbstract::rangeX() const {return mMaxX - mMinX;}
 double GraphViewAbstract::rangeY() const {return mMaxY - mMinY;}
+
+double GraphViewAbstract::getCurrentMaxX() const {return mCurrentMaxX;}
+double GraphViewAbstract::getCurrentMinX() const {return mCurrentMinX;}
+
 
 double GraphViewAbstract::minimumX() const {return mMinX;}
 double GraphViewAbstract::maximumX() const {return mMaxX;}
@@ -40,9 +44,20 @@ void GraphViewAbstract::setRangeX(const double aMinX, const double aMaxX)
 {
     mMinX = aMinX;
     mMaxX = aMaxX;
+    //mCurrentMinX = aMinX;
+    //mCurrentMaxX = aMaxX;
+    repaintGraph(true);
+    
+}
+
+void GraphViewAbstract::setCurrentX(const double aMinX, const double aMaxX)
+{
+    //mMinX = aMinX;
+    //mMaxX = aMaxX;
     mCurrentMinX = aMinX;
     mCurrentMaxX = aMaxX;
     repaintGraph(true);
+    
 }
 
 void GraphViewAbstract::setRangeY(const double aMinY, const double aMaxY)

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <qglobal.h>
+#include <QPainterPath>
 
 class GraphViewAbstract
 {
@@ -7,10 +9,13 @@ public:
     GraphViewAbstract();
     virtual ~GraphViewAbstract();
 	
+    QPainterPath mPainterPath;
     // Getters
     
     double rangeX() const;
     double rangeY() const;
+    double getCurrentMaxX() const;
+    double getCurrentMinX() const;
     
     double minimumX() const;
     double maximumX() const;
@@ -25,6 +30,7 @@ public:
     // Setters
     
     virtual void setRangeX(const double aMinX, const double aMaxX);
+    virtual void setCurrentX(const double aMinX, const double aMaxX);
     virtual void setRangeY(const double aMinY, const double aMaxY);
     
 	void setMinimumX(const double aMinX);
@@ -52,11 +58,11 @@ protected:
 	int		mGraphWidth;
 	int		mGraphHeight;
 	
-	int		mMarginLeft;
-	int		mMarginRight;
-	int		mMarginTop;
-	int		mMarginBottom;
-	
+    qreal		mMarginLeft;
+    qreal		mMarginRight;
+    qreal		mMarginTop;
+    qreal		mMarginBottom;
+    
 	double	mMinX;
 	double	mMaxX;
 	double	mMinY;

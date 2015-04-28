@@ -2,6 +2,7 @@
 #define COLORPICKER_H
 
 #include <QWidget>
+#include <QPen>
 
 
 class ColorPicker: public QWidget
@@ -10,8 +11,12 @@ class ColorPicker: public QWidget
 public:
     ColorPicker(const QColor& color = Qt::red, QWidget* parent = 0, Qt::WindowFlags flags = 0);
     ~ColorPicker();
+    QPen pen;
+    int borderSize = 5;
+    int borderRadius = 3;
     
     void setColor(const QColor& color);
+   
     QColor getColor() const;
     void openDialog();
     

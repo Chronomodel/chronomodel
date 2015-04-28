@@ -17,10 +17,10 @@ struct Chain
     int mSeed;
     unsigned long mNumBurnIter;
     unsigned long mBurnIterIndex;
-    unsigned long mMaxBatchs;
-    unsigned long mNumBatchIter;
+    unsigned int mMaxBatchs;
+    unsigned int mNumBatchIter;
     unsigned long mBatchIterIndex;
-    unsigned long mBatchIndex;
+    unsigned int mBatchIndex;
     unsigned long mNumRunIter;
     unsigned long mRunIterIndex;
     unsigned long mTotalIter; // burn + adapt + run
@@ -42,15 +42,15 @@ public:
     
     QList<Chain> getChains() const;
     
-    unsigned long long mNumChains;
+    unsigned int mNumChains;
     unsigned long long mNumRunIter;
     unsigned long long mNumBurnIter;
-    unsigned long long mMaxBatches;
+    unsigned int mMaxBatches;
     unsigned long long mNumBatchIter;
     unsigned int mThinningInterval;
     QList<int> mSeeds;
     
-    unsigned long mFinalBatchIndex;
+    unsigned int mFinalBatchIndex;
 };
 
 #endif

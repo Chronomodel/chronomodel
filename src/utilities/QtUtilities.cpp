@@ -3,6 +3,7 @@
 #include <QtWidgets>
 #include <QtSvg>
 
+#include "GraphView.h"
 
 bool colorIsDark(const QColor& color)
 {
@@ -123,6 +124,7 @@ QString intListToString(const QList<int>& intList, const QString& separator)
     QStringList list = intListToStringList(intList);
     return list.join(separator);
 }
+# pragma mark Save Widget
 
 QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogTitle, const QString& defaultPath)
 {
@@ -130,14 +132,16 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
     
     QGraphicsScene* scene = 0;
     QWidget* widget = dynamic_cast<QWidget*>(wid);
-    if(!widget)
+    GraphView* mGraph = dynamic_cast<GraphView*>(wid);
+    
+    if(!mGraph && !widget)
     {
         scene = dynamic_cast<QGraphicsScene*>(wid);
         if(!scene)
             return fileInfo;
     }
     
-    QString filter = QObject::tr("Image (*.png);;Scalable Vector Graphics (*.svg)");
+    QString filter = QObject::tr("Image (*.png);;Photo (*.jpg);; Windows Bitmap (*.bmp);;Scalable Vector Graphics (*.svg)");
     QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                     dialogTitle,
                                                     defaultPath,
@@ -145,59 +149,172 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
     if(!fileName.isEmpty())
     {
         fileInfo = QFileInfo(fileName);
-        bool asSvg = fileName.endsWith(".svg");
-        if(asSvg)
-        {
-            QSvgGenerator svgGen;
-            svgGen.setFileName(fileName);
-            svgGen.setSize(r.size());
-            svgGen.setViewBox(QRect(0, 0, r.width(), r.height()));
-            QPainter p(&svgGen);
-            p.setRenderHint(QPainter::Antialiasing);
-            
-            if(widget)
-                widget->render(&p, QPoint(), QRegion(r));
-            else if(scene)
-                scene->render(&p, r, r);
-        }
-        else
-        {
-            int versionHeight = 20;
-            
-            qreal pr = 4;//qApp->devicePixelRatio();
-            //qDebug() << "Saving PNG with pixel ratio : " << pr;
-            QImage image(r.width() * pr, (r.height() + versionHeight) * pr, QImage::Format_ARGB32);
-            image.setDevicePixelRatio(pr);
-            image.fill(Qt::transparent);
-            QPainter p(&image);
-            p.setRenderHint(QPainter::Antialiasing);
-            
-            QRectF srcRect = r;
-            srcRect.setX(r.x());
-            srcRect.setY(r.y());
-            srcRect.setWidth(r.width() * pr);
-            srcRect.setHeight(r.height() * pr);
-            
-            if(widget)
+        QString fileExtension = fileInfo.suffix();
+        
+        //QString fileExtension = fileName.(".svg");
+       // bool asSvg = fileName.endsWith(".svg");
+       // if(asSvg)
+       
+        
+        
+        if (fileExtension == "svg") {
+           
+           if(mGraph)
             {
-                widget->render(&p, QPoint(0, 0), QRegion(r.x()-2, r.y()-2, r.width(), r.height()));
+                mGraph->saveAsSVG(fileName, "Title", "Description",true);
             }
             else if(scene)
             {
+                QSvgGenerator svgGen;
+                svgGen.setFileName(fileName);
+                svgGen.setSize(r.size());
+                svgGen.setViewBox(QRect(0, 0, r.width(), r.height()));
+                svgGen.setDescription(QObject::tr("SVG scene drawing "));
+                //qDebug()<<"export scene as SVG";
+                
+                QPainter p;
+                p.begin(&svgGen);
+                scene->render(&p, r, r);
+                p.end();
+            }
+            else if(widget)
+            {;
+                saveWidgetAsSVG(widget, r, fileName);
+                
+            }
+           
+        }
+        else
+        { // save PNG
+            
+            int versionHeight = 20;
+            //qreal pr = 1;//qApp->devicePixelRatio();
+            qreal prh=  32000. / ( r.height() + versionHeight) ; // QImage axes are limited to 32767x32767 pixels
+           
+            qreal prw=  32000. / r.width() ;            /* if (fileName.endsWith(".PNG")) {
+                pr = 3;
+            }*/
+            qreal pr = (prh<prw)? prh : prw;
+            if (pr>4) {
+                pr=4;
+            }
+           qDebug()<<" pr="<<pr;
+            if(widget)
+            {
+                //QSize wSize = widget->size();
+               // QImage image(r.width() * pr, (r.height() + versionHeight) * pr, QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
+                QImage image(int(r.width() * pr), int((r.height() + versionHeight) * pr), QImage::Format_ARGB32_Premultiplied);
+                //QImage image(wSize, QImage::Format_ARGB32_Premultiplied);
+                qDebug()<<"r.width() * pr"<< (r.width() * pr)<<" (r.height() + versionHeight) * pr"<<(r.height() + versionHeight) * pr;
+                //qDebug()<<" wSize.width()"<< wSize.width()<<" wSize.height()"<<wSize.height();
+                if (image.isNull() ) {
+                    qDebug()<< " image width = 0";
+                    return fileInfo;
+                }
+                image.setDevicePixelRatio(pr);
+                image.fill(Qt::transparent);
+                
+                QPainter p;
+                p.begin(&image);
+                p.setRenderHint(QPainter::Antialiasing);
+                             QRectF tgtRect = image.rect();
+                tgtRect.adjust(0, 0, 0, -versionHeight * pr);
+                widget->render(&p, QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), r.height()));
+                //widget->render(&p,QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), r.height()/2));
+                //widget->render(&p,QPoint(0, r.height()/2), QRegion(r.x(), r.y()+r.height()/2, r.width(), r.height()));
+                p.setPen(Qt::black);
+                p.drawText(0, r.height(), r.width(), versionHeight,
+                           Qt::AlignCenter,
+                           qApp->applicationName() + " " + qApp->applicationVersion());
+              
+                p.end();
+                //image.save(fileName, "PNG");
+               // char formatExt[];
+                if (fileExtension=="png") {
+                 //   formatExt[] = "png";
+                     image.save(fileName, "png");
+                }
+                else if (fileExtension == "jpg") {
+                    //formatExt[5] = "jpg";
+                     image.save(fileName, "jpg");
+                }
+                else if (fileExtension == "bmp") {
+                   
+                    image.save(fileName, "bmp");
+                }
+                    
+                //image.save(fileName, formatExt);
+                /*QImageWriter writer;
+                writer.setFormat("jpg");
+                writer.setQuality(100);
+                writer.setFileName(fileName+"_jpg");
+                writer.write(image);*/
+               
+            }
+            else if(scene)
+            {
+                int versionHeight = 20;
+                
+                //qreal pr = 4;//qApp->devicePixelRatio();
+                //qDebug() << "Saving PNG with pixel ratio : " << pr;
+                QImage image(r.width() * pr, (r.height() + versionHeight) * pr, QImage::Format_ARGB32);
+                image.setDevicePixelRatio(pr);
+                image.fill(Qt::transparent);
+                
+                QPainter p;
+                p.begin(&image);
+                p.setRenderHint(QPainter::Antialiasing);
+                
+                QRectF srcRect = r;
+                srcRect.setX(r.x());
+                srcRect.setY(r.y());
+                srcRect.setWidth(r.width() * pr);
+                srcRect.setHeight(r.height() * pr);
+               
                 QRectF tgtRect = image.rect();
                 tgtRect.adjust(0, 0, 0, -versionHeight * pr);
                 
                 scene->render(&p, tgtRect, srcRect);
+                p.setPen(Qt::black);
+                p.drawText(0, r.height(), r.width(), versionHeight,
+                           Qt::AlignCenter,
+                           qApp->applicationName() + " " + qApp->applicationVersion());
+                p.end();
+               image.save(fileName, "PNG");
             }
-            p.setPen(Qt::black);
-            p.drawText(0, r.height(), r.width(), versionHeight,
-                       Qt::AlignCenter,
-                       qApp->applicationName() + " " + qApp->applicationVersion());
-            
-            image.save(fileName, "PNG");
+           
         }
     }
+   // qDebug()<<"QFileInfo saveWidgetAsImage image.save"<<fileName;
+    
     return fileInfo;
+}
+
+bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName)
+{
+    
+    int versionHeight = 20;
+  
+    
+    QSvgGenerator svgGenFile;
+    svgGenFile.setFileName(fileName);
+    svgGenFile.setViewBox(r);
+    svgGenFile.setDescription(QObject::tr("SVG widget drawing "));
+    
+    QPainter p;
+    p.begin(&svgGenFile);
+    widget->render(&p);//, QPoint(0, 0), QRegion(r));
+  
+    p.setPen(Qt::black);
+    p.drawText(0, r.height(), r.width(), versionHeight,
+                Qt::AlignCenter,
+                qApp->applicationName() + " " + qApp->applicationVersion());
+    
+    p.end();
+    
+   
+    
+    return true;
 }
 
 QString prepareTooltipText(const QString& title, const QString& text)

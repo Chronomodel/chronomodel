@@ -21,26 +21,42 @@
 #include <QtWidgets>
 #include <QtSvg>
 #include <QPropertyAnimation>
+#include <QRectF>
 
 
 ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mCurrentRightWidget(0),
 mMargin(5),
 mToolbarH(60),
+mButtonWidth(80),
 mSplitProp(0.6f),
 mHandlerW(15),
 mIsSplitting(false),
 mCalibVisible(false)
+
 {
     setMouseTracking(true);
-    
+   // this->setGeometry(parentWidget()->rect());
     // --------
+ //   qreal x = width() * mSplitProp;
+ //   qreal editH = (mToolbarH - 3*mMargin) / 2;
+    
+   //QRectF mEventPropWrapperRectF(x+(mHandlerW)/2,mButPhasesModel->y()+mButPhasesModel->height(), width()-x-mHandlerW/2-mButPhasesModel->x()-mButPhasesModel->width(), height()-mMargin);
     
     mLeftWrapper = new QWidget(this);
+    mLeftWrapper->setGeometry(0,0, round((this->width()-mHandlerW)/2), this->height());
+    
     mRightWrapper = new QWidget(this);
+    //QRectF mRightWrapperRectF(5, 25, 50, 30);
+    QRectF mRightWrapperRectF((this->width()-mHandlerW)/2,0, (this->width()-mHandlerW)/2, this->height());
+    mRightWrapper->setGeometry(mRightWrapperRectF.toRect());
     
+   
     // --------
+   
     
+    // ---- Windows on the left hand Event scene --------------
+   //  qDebug()<<"ModelView::ModelView mLeftWrapper "<<mLeftWrapper->rect();
     mEventsView = new QGraphicsView(mLeftWrapper);
     mEventsScene = new EventsScene(mEventsView);
     mEventsView->setScene(mEventsScene);
@@ -97,17 +113,14 @@ mCalibVisible(false)
     connect(mButEventsGrid, SIGNAL(toggled(bool)), mEventsScene, SLOT(showGrid(bool)));
     connect(mButExportEvents, SIGNAL(clicked()), this, SLOT(exportEventsScene()));
     
-    // --------
+    // -------- Windows Data Importation --------------------
     
     mImportDataView = new ImportDataView(mRightWrapper);
     connect(mEventsScene, SIGNAL(csvDataLineDropAccepted(QList<int>)), mImportDataView, SLOT(removeCsvRows(QList<int>)));
     
-    mEventPropertiesView = new EventPropertiesView(mRightWrapper);
-    connect(mEventPropertiesView, SIGNAL(updateCalibRequested(const QJsonObject&)), this, SLOT(updateCalibration(const QJsonObject&)));
     
-    connect(mEventPropertiesView, SIGNAL(showCalibRequested(bool)), this, SLOT(showCalibration(bool)));
     
-    // --------
+    // -------- Windows Phase scene ---------------------------
     
     mPhasesWrapper = new QWidget(mRightWrapper);
     
@@ -156,42 +169,34 @@ mCalibVisible(false)
     connect(mButPhasesOverview, SIGNAL(toggled(bool)), mPhasesGlobalView, SLOT(setVisible(bool)));
     connect(mButPhasesGrid, SIGNAL(toggled(bool)), mPhasesScene, SLOT(showGrid(bool)));
     
-    // --------
+   
     
-    mAnimationHide = new QPropertyAnimation();
-    mAnimationHide->setPropertyName("geometry");
-    mAnimationHide->setDuration(200);
-    mAnimationHide->setTargetObject(mEventPropertiesView);
-    mAnimationHide->setEasingCurve(QEasingCurve::Linear);
-    
-    mAnimationShow = new QPropertyAnimation();
-    mAnimationShow->setPropertyName("geometry");
-    mAnimationShow->setDuration(200);
-    mAnimationShow->setEasingCurve(QEasingCurve::OutCubic);
-    
-    connect(mAnimationHide, SIGNAL(finished()), mAnimationShow, SLOT(start()));
-    connect(mAnimationShow, SIGNAL(finished()), this, SLOT(prepareNextSlide()));
-    
-    // -------------
-    
-    mCalibrationView = new CalibrationView(this);
-    
-    mAnimationCalib = new QPropertyAnimation();
-    mAnimationCalib->setPropertyName("geometry");
-    mAnimationCalib->setTargetObject(mCalibrationView);
-    mAnimationCalib->setDuration(400);
-    mAnimationCalib->setEasingCurve(QEasingCurve::OutCubic);
-    
-    // --------
+    // -------- Windows Event propreties -----------------------
     
     mStudyLab = new Label(tr("STUDY PERIOD"), mRightWrapper);
     mMinLab = new Label(tr("Start") + " :", mRightWrapper);
     mMaxLab = new Label(tr("End") + " :", mRightWrapper);
     //mStepLab = new Label(tr("Step") + " :", mRightWrapper);
     
+    qreal butW = 80;
+ /*   qDebug()<<"ModelView::ModelView mRightWrapper->x()="<<mRightWrapper->x();
+    qDebug()<<"ModelView::ModelView mRightWrapper->y()="<<mRightWrapper->y();
+    qDebug()<<"ModelView::ModelView mRightWrapper->width()="<<mRightWrapper->width()<<"height "<<mRightWrapper->height();
+  */
+    mEventPropertiesView = new EventPropertiesView(mRightWrapper);
+    qDebug()<<"Model::mEventPropertiesView()  new width"<<mEventPropertiesView->width()<<" ; height"<<mEventPropertiesView->height();
+    mEventPropertiesView->mToolbarH = this->mToolbarH;
+ 
+    
+    connect(mEventPropertiesView, SIGNAL(updateCalibRequested(const QJsonObject&)), this, SLOT(updateCalibration(const QJsonObject&)));
+    
+    connect(mEventPropertiesView, SIGNAL(showCalibRequested(bool)), this, SLOT(showCalibration(bool)));
+    
+    // -----------Header on mRightWrapper ------------------
+    
     mStudyLab->setLight();
-    mMinLab->setLight();
-    mMaxLab->setLight();
+    mMinLab  ->setLight();
+    mMaxLab  ->setLight();
     //mStepLab->setLight();
     
     mStudyLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
@@ -205,7 +210,13 @@ mCalibVisible(false)
     //mStepLab->setToolTip(prepareTooltipText(tr("Step :"), tr("The step is useful for large study periods.\nFor example with a step of 10 years, calibrated date's values will be stored every 10 years.\nIt lowers memory requirements and graph plots are faster.\nHowever, interpolation between these points\nleads to less precision in calculations.")));
     
     mMinEdit = new LineEdit(mRightWrapper);
+    mMinEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+    mMinEdit->setAlignment(Qt::AlignHCenter);
+    //mMinEdit->setFont(font.style(),font.pointSize(),QFont::Bold,font);
+    
     mMaxEdit = new LineEdit(mRightWrapper);
+    mMaxEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+    mMaxEdit->setAlignment(Qt::AlignHCenter);
     //mStepEdit = new LineEdit(mRightWrapper);
     
     mButApply = new Button(tr("Apply"), mRightWrapper);
@@ -246,6 +257,44 @@ mCalibVisible(false)
     connect(mButPhasesModel, SIGNAL(clicked()), this, SLOT(showPhases()));
     
     connect(mEventsScene, SIGNAL(eventDoubleClicked()), mButProperties, SLOT(click()));
+    // --- resize
+/*    mButProperties ->setGeometry(mRightWrapper->width() - 3*butW, 0, butW, mToolbarH);
+    mButImport     ->setGeometry(mRightWrapper->width() - 2*butW, 0, butW, mToolbarH);
+    mButPhasesModel->setGeometry(mRightWrapper->width() - butW, 0, butW, mToolbarH);
+    qDebug()<<"call setgeometry";
+*/    // mEventPropertiesView->setGeometry(0,mToolbarH, mRightWrapper->width(),mRightWrapper->height()- mToolbarH );
+    qDebug()<<"ModelView::ModelView mEventPropertiesView heigth "<<mEventPropertiesView->height();
+    // ------------- Windows calibration ---------------------
+    
+    mCalibrationView = new CalibrationView(this);
+    
+    // -------- Animation -------------------------------
+    
+    mAnimationHide = new QPropertyAnimation();
+    mAnimationHide->setPropertyName("geometry");
+    mAnimationHide->setDuration(200);
+    mAnimationHide->setTargetObject(mEventPropertiesView);
+    mAnimationHide->setEasingCurve(QEasingCurve::Linear);
+    
+    mAnimationShow = new QPropertyAnimation();
+    mAnimationShow->setPropertyName("geometry");
+    mAnimationShow->setDuration(200);
+    mAnimationShow->setEasingCurve(QEasingCurve::OutCubic);
+    
+    connect(mAnimationHide, SIGNAL(finished()), mAnimationShow, SLOT(start()));
+    connect(mAnimationShow, SIGNAL(finished()), this, SLOT(prepareNextSlide()));
+    
+   
+    
+    mAnimationCalib = new QPropertyAnimation();
+    mAnimationCalib->setPropertyName("geometry");
+    mAnimationCalib->setTargetObject(mCalibrationView);
+    mAnimationCalib->setDuration(400);
+    mAnimationCalib->setEasingCurve(QEasingCurve::OutCubic);
+    
+    // ---- update and paint
+    
+    updateLayout();
 }
 
 ModelView::~ModelView()
@@ -539,94 +588,117 @@ void ModelView::resizeEvent(QResizeEvent* e)
 }
 void ModelView::updateLayout()
 {
-    int m = mMargin;
-    
-    int x = width() * mSplitProp;
-    int minLeft = 200;
-    int minRight = 580 + mHandlerW/2;
+    //qreal m = mMargin;
+    // mToolbarH, correspond à la hauteur de la barre avec study period
+    qreal x = width() * mSplitProp;
+
+    qreal minLeft = 200;
+    qreal minRight = 580 + mHandlerW/2;
     x = (x < minLeft) ? minLeft : x;
     x = (x > width() - minRight) ? width() - minRight : x;
+
     
-    mLeftRect = QRect(0, 0, x - mHandlerW/2, height());
-    mRightRect = QRect(x + mHandlerW/2, 0, width() - x - mHandlerW/2, height());
-    mLeftHiddenRect = mLeftRect.adjusted(-mLeftRect.width(), 0, -mLeftRect.width(), 0);
-    mRightSubRect = QRect(0, mToolbarH, mRightRect.width() - m, mRightRect.height() - mToolbarH - m);
-    mRightSubHiddenRect = mRightSubRect.adjusted(mRightSubRect.width() + 2*m, 0, mRightSubRect.width() + 2*m, 0);
+    
+    QRectF mEventPropWrapperRectF(x+(mHandlerW)/2,mToolbarH, width()-x-mHandlerW/2, height()-mToolbarH);
+
+
+    
     mHandlerRect = QRect(x - mHandlerW/2, 0, mHandlerW, height());
     
-    //qDebug() << "Model rect" << rect();
-    //qDebug() << "Right rect" << mRightRect;
+    
     
     // ----------
-    
+    mLeftRect = QRect(0, 0, x - mHandlerW/2, height());
+    mLeftHiddenRect = mLeftRect.adjusted(-mLeftRect.width(), 0, -mLeftRect.width(), 0);
     mLeftWrapper->setGeometry(mLeftRect);
-    mRightWrapper->setGeometry(mRightRect);
+
+ 
+    mRightRect = QRect(x + mHandlerW/2, 0, this->width() - x - mHandlerW/2, this->height());
     
+    mRightWrapper->setGeometry(mRightRect);
+  
     // ----------
 
-    int labelW = 60;
-    int editW = 100;
-    int editH = (mToolbarH - 3*m) / 2;
-    int butW = 80;
-    int butW2 = 85;
+    qreal labelW = 60;
+    qreal editW = 100;
+    qreal editH = (mToolbarH - 3*mMargin) / 2;
+
+    //qreal butW = mButtonWidth;
+    qreal butW2 = 85;
+   
+    qreal y = 2*mMargin + editH;
     
-    mStudyLab->setGeometry(0, m, 160, editH);
-    mButApply->setGeometry(160, m, butW2, editH);
-    mButStep->setGeometry(160 + butW2 + m, m, butW2, editH);
+    mStudyLab->setGeometry(mMargin, mMargin, 160, editH);
+    mButApply->setGeometry(160, mMargin, butW2, editH);
+    mButStep->setGeometry(160 + butW2 + mMargin, mMargin, butW2, editH);
+    mMinLab ->setGeometry(0, y, labelW, editH);
+    mMinEdit->setGeometry(mMargin + labelW, y, editW, editH);
+    mMaxLab ->setGeometry(2*mMargin + labelW + editW, y, labelW, editH);
+    mMaxEdit->setGeometry(3*mMargin + 2*labelW + editW, y, editW, editH);
+
+    mButProperties ->setGeometry(mRightWrapper->width()- 3*mButtonWidth, 0, mButtonWidth, mToolbarH);
+    mButImport     ->setGeometry(mRightWrapper->width()- 2*mButtonWidth, 0, mButtonWidth, mToolbarH);
+    mButPhasesModel->setGeometry(mRightWrapper->width()- mButtonWidth, 0, mButtonWidth, mToolbarH);
     
-    int y = 2*m + editH;
-    
-    mMinLab->setGeometry(0, y, labelW, editH);
-    mMinEdit->setGeometry(m + labelW, y, editW, editH);
-    mMaxLab->setGeometry(2*m + labelW + editW, y, labelW, editH);
-    mMaxEdit->setGeometry(3*m + 2*labelW + editW, y, editW, editH);
-    
-    mButProperties->setGeometry(mRightRect.width() - 3*butW, 0, butW, mToolbarH);
-    mButImport->setGeometry(mRightRect.width() - 2*butW, 0, butW, mToolbarH);
-    mButPhasesModel->setGeometry(mRightRect.width() - butW, 0, butW, mToolbarH);
-    
+ 
     // ----------
+    //mRightSubRect = mRightWrapper->rect().adjusted(0, mButPhasesModel->y()+mButPhasesModel->height(), 0, mRightWrapper->rect().height()-mButPhasesModel->y()-mButPhasesModel->height());
     
+    //mRightSubRect=QRect(0, mButPhasesModel->y()+mButPhasesModel->height(), 0, mRightWrapper->rect().height()-mButPhasesModel->y()-mButPhasesModel->height());
+    //qDebug() << "ModelView::updateLayout() mRightSubRect"  << mRightSubRect;
+    
+    
+    //mRightWrapper->setGeometry(mEventPropWrapperRectF.toRect());
+    
+    
+   //mEventPropertiesView->setGeometry(mButProperties->isChecked() ? mEventPropWrapperRectF.toRect() : mRightSubHiddenRect);
+    
+    mRightSubRect=QRect(0, mToolbarH, this->width()-x, this->height()-mToolbarH);
+    mRightSubHiddenRect = mRightSubRect.adjusted(mRightSubRect.width() + 2*mMargin, 0, mRightSubRect.width() + 2*mMargin, 0);
+   
     mEventPropertiesView->setGeometry(mButProperties->isChecked() ? mRightSubRect : mRightSubHiddenRect);
-    mPhasesWrapper->setGeometry(mButPhasesModel->isChecked() ? mRightSubRect : mRightSubHiddenRect);
-    mImportDataView->setGeometry(mButImport->isChecked() ? mRightSubRect : mRightSubHiddenRect);
+   
     
+
+    mPhasesWrapper  ->setGeometry(mButPhasesModel->isChecked() ? mRightSubRect : mRightSubHiddenRect);
+    mImportDataView ->setGeometry(mButImport     ->isChecked() ? mRightSubRect : mRightSubHiddenRect);
+
     // ----------
     
-    int butH = 60;
-    int radarW = 150;
-    int radarH = 200;
-    int searchH = 30;
+    qreal butH = 60;
+    qreal radarW = 150;
+    qreal radarH = 200;
+    qreal searchH = 30;
     
-    mEventsView->setGeometry(butW, 0, mLeftRect.width() - butW, mLeftRect.height());
+    mEventsView      ->setGeometry(mButtonWidth, 0, mLeftRect.width() - mButtonWidth, mLeftRect.height());
     mEventsSearchEdit->setGeometry(0, 0, radarW, searchH);
     mEventsGlobalView->setGeometry(0, searchH, radarW, radarH);
     
-    mButNewEvent->setGeometry(0, 0, butW, butH);
-    mButNewEventKnown->setGeometry(0, butH, butW, butH);
-    mButDeleteEvent->setGeometry(0, 2*butH, butW, butH);
-    mButRecycleEvent->setGeometry(0, 3*butH, butW, butH);
-    mButExportEvents->setGeometry(0, 4*butH, butW, butH);
-    mButEventsOverview->setGeometry(0, 5*butH, butW, butH);
-    mButEventsGrid->setGeometry(0, 6*butH, butW, butH);
-    mEventsGlobalZoom->setGeometry(0, 7*butH, butW, mLeftRect.height() - 7*butH);
+    mButNewEvent      ->setGeometry(0, 0, mButtonWidth, butH);
+    mButNewEventKnown ->setGeometry(0, butH, mButtonWidth, butH);
+    mButDeleteEvent   ->setGeometry(0, 2*butH, mButtonWidth, butH);
+    mButRecycleEvent  ->setGeometry(0, 3*butH, mButtonWidth, butH);
+    mButExportEvents  ->setGeometry(0, 4*butH, mButtonWidth, butH);
+    mButEventsOverview->setGeometry(0, 5*butH, mButtonWidth, butH);
+    mButEventsGrid    ->setGeometry(0, 6*butH, mButtonWidth, butH);
+    mEventsGlobalZoom ->setGeometry(0, 7*butH, mButtonWidth, mLeftRect.height() - 7*butH);
     
-    int helpW = qMin(400, mEventsView->width() - radarW - m);
-    int helpH = mEventsScene->getHelpView()->heightForWidth(helpW);
-    mEventsScene->getHelpView()->setGeometry(mEventsView->width() - m - helpW, m, helpW, helpH);
-    
+    qreal helpW = qMin(400.0, mEventsView->width() - radarW - mMargin);
+    qreal helpH = mEventsScene->getHelpView()->heightForWidth(helpW);
+    mEventsScene->getHelpView()->setGeometry(mEventsView->width() - mMargin - helpW, mMargin, helpW, helpH);
+
     // ----------
     
-    mPhasesView->setGeometry(0, 0, mRightSubRect.width() - butW, mRightSubRect.height());
+    mPhasesView      ->setGeometry(0, 0, mRightSubRect.width() - mButtonWidth, mRightSubRect.height());
     mPhasesGlobalView->setGeometry(0, 0, radarW, radarH);
     
-    mButNewPhase->setGeometry(mRightSubRect.width() - butW, 0, butW, butH);
-    mButDeletePhase->setGeometry(mRightSubRect.width() - butW, butH, butW, butH);
-    mButExportPhases->setGeometry(mRightSubRect.width() - butW, 2*butH, butW, butH);
-    mButPhasesOverview->setGeometry(mRightSubRect.width() - butW, 3*butH, butW, butH);
-    mButPhasesGrid->setGeometry(mRightSubRect.width() - butW, 4*butH, butW, butH);
-    mPhasesGlobalZoom->setGeometry(mRightSubRect.width() - butW, 5*butH, butW, mPhasesWrapper->height() - 5*butH);
-    
+    mButNewPhase      ->setGeometry(mRightSubRect.width() - mButtonWidth, 0, mButtonWidth, butH);
+    mButDeletePhase   ->setGeometry(mRightSubRect.width() - mButtonWidth, butH, mButtonWidth, butH);
+    mButExportPhases  ->setGeometry(mRightSubRect.width() - mButtonWidth, 2*butH, mButtonWidth, butH);
+    mButPhasesOverview->setGeometry(mRightSubRect.width() - mButtonWidth, 3*butH, mButtonWidth, butH);
+    mButPhasesGrid    ->setGeometry(mRightSubRect.width() - mButtonWidth, 4*butH, mButtonWidth, butH);
+    mPhasesGlobalZoom ->setGeometry(mRightSubRect.width() - mButtonWidth, 5*butH, mButtonWidth, mPhasesWrapper->height() - 5*butH);
+
     mCalibrationView->setGeometry(mCalibVisible ? mLeftRect : mLeftHiddenRect);
     
     update();

@@ -157,6 +157,7 @@ private:
     
     int mMargin;
     int mToolbarH;
+    int mButtonWidth;
     double mSplitProp;
     int mHandlerW;
     bool mIsSplitting;

@@ -998,6 +998,24 @@ void Model::saveToFile(const QString& fileName)
                 dates[j].mTheta.saveToStream(&out);
                 dates[j].mSigma.saveToStream(&out);
                 dates[j].mWiggle.saveToStream(&out);
+                
+               
+                out << dates[j].mDeltaFixed;
+                out << dates[j].mDeltaMin;
+                out << dates[j].mDeltaMax;
+                out << dates[j].mDeltaAverage;
+                out << dates[j].mDeltaError;
+                
+                out << dates[j].mSettings.mTmin;
+                out << dates[j].mSettings.mTmax;
+                out << dates[j].mSettings.mStep;
+                out << dates[j].mSettings.mStepForced;
+                
+              //  out << dates[j].mSubDates;
+                
+                out << dates[j].mCalibration;
+                out << dates[j].mRepartition;
+                out << dates[j].mCalibHPD;
 
             }
         }
@@ -1094,6 +1112,25 @@ void Model::restoreFromFile(const QString& fileName)
                     mEvents[i]->mDates[j].mTheta.loadFromStream(&in);
                     mEvents[i]->mDates[j].mSigma.loadFromStream(&in);
                     mEvents[i]->mDates[j].mWiggle.loadFromStream(&in);
+                                                            
+                    
+                    in >> mEvents[i]->mDates[j].mDeltaFixed;
+                    in >> mEvents[i]->mDates[j].mDeltaMin;
+                    in >> mEvents[i]->mDates[j].mDeltaMax;
+                    in >> mEvents[i]->mDates[j].mDeltaAverage;
+                    in >> mEvents[i]->mDates[j].mDeltaError;
+                    
+                    in >> mEvents[i]->mDates[j].mSettings.mTmin;
+                    in >> mEvents[i]->mDates[j].mSettings.mTmax;
+                    in >> mEvents[i]->mDates[j].mSettings.mStep;
+                    in >> mEvents[i]->mDates[j].mSettings.mStepForced;
+                    
+                   // in >> mEvents[i]->mDates[j].mSubDates;
+                    
+                    in >> mEvents[i]->mDates[j].mCalibration;
+                    in >> mEvents[i]->mDates[j].mRepartition;
+                    in >> mEvents[i]->mDates[j].mCalibHPD;
+                    
                 }
             }
             in >> mLogModel;
@@ -1106,4 +1143,5 @@ void Model::restoreFromFile(const QString& fileName)
         }
         file.close();
     }
+    
 }

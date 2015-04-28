@@ -53,7 +53,7 @@ double MHVariable::getCurrentAcceptRate()
     
     return sum / (double)mLastAccepts.length();*/
     
-    for(unsigned long i=0; i<mLastAccepts.size(); ++i)
+    for(int i=0; i<mLastAccepts.size(); ++i)
         sum += mLastAccepts[i] ? 1.f : 0.f;
     
     //qDebug() << "Last accept on " << sum << " / " << mLastAccepts.length() << " values";
@@ -78,7 +78,7 @@ QVector<double> MHVariable::acceptationForChain(const QList<Chain>& chains, int 
         
         if(i == index)
         {
-            for(unsigned long long j=0; j<chainSize; ++j)
+            for(int j=0; j<chainSize; ++j)
                 accept.append(mHistoryAcceptRateMH[shift + j]);
             break;
         }
@@ -129,19 +129,6 @@ QString MHVariable::resultsText(const QString& noResultMessage) const
 void MHVariable::saveToStream(QDataStream *out) // ajout PhD
 {
      /* herited from MetropolisVariable*/
-   /* *out << this->mChainsHistos;
-     *out << this->mChainsRawHistos;
-     //out << this->mChainsResults;
-     *out << this->mCorrelations;
-     *out << this->mCredibility;
-     *out << this->mExactCredibilityThreshold;
-     *out << this->mHisto;
-     *out << this->mHPD;
-     *out << this->mRawHisto;
-     //out << this->mResults;
-     *out << this->mThreshold;
-     *out << this->mTrace;
-     *out << this->mX;*/
     
     this->MetropolisVariable::saveToStream(out);
      /* owned by MHVariable*/
@@ -165,19 +152,7 @@ void MHVariable::loadFromStream(QDataStream *in) // ajout PhD
     
     
     /* herited from MetropolisVariable*/
-   /* *in >> this->mChainsHistos;
-    *in >> this->mChainsRawHistos;
-    //*in >> this->mChainsResults;
-    *in >> this->mCorrelations;
-    *in >> this->mCredibility;
-    *in >> this->mExactCredibilityThreshold;
-    *in >> this->mHisto;
-    *in >> this->mHPD;
-    *in >> this->mRawHisto;
-    // *in >> this->mResults;
-    *in >> this->mThreshold;
-    *in >> this->mTrace;
-    *in >> this->mX;*/
+   
     
     this->MetropolisVariable::loadFromStream(in);
      /* owned by MHVariable*/
