@@ -1,4 +1,4 @@
 build/
 doxygen/
 # propre a chaque systeme, sur windows correspond a QtCreator
-Chronomodel.pro.user
+Chronomodel.pro.user*
