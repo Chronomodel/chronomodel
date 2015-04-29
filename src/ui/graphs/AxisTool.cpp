@@ -21,7 +21,7 @@ mAxisColor(0, 0, 0)
 
 void AxisTool::updateValues(double totalPix, double minDeltaPix, double minVal, double maxVal)
 {
-    if((minDeltaPix == 0) || (minVal==maxVal) || (totalPix == 0))
+    if((minDeltaPix == 0) || (minVal==maxVal) || (totalPix == 0) || (minVal>= maxVal))
         return;
     
     double w = totalPix;

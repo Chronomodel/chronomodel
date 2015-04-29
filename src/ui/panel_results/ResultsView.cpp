@@ -276,19 +276,19 @@ mZoomCorrel(0)
     mDataThetaRadio = new RadioButton(tr("Calendar dates"), mResultsGroup);
     mDataSigmaRadio = new RadioButton(tr("Individual std. deviations"), mResultsGroup);
     
-    mDataPosteriorCheck       = new CheckBox(tr("Distrib. of post. dates"), mResultsGroup); // new PhD
+   // mDataPosteriorCheck       = new CheckBox(tr("Distrib. of post. dates"), mResultsGroup); // new PhD suppr le 28/04/2015
     mDataCalibCheck           = new CheckBox(tr("Individual calib. dates"), mResultsGroup);
     mShowDataUnderPhasesCheck = new CheckBox(tr("Show data under phases"),mResultsGroup);
     mWiggleCheck              = new CheckBox(tr("Wiggle shifted"), mResultsGroup);
     mDataThetaRadio           -> setChecked(true);
-    mDataPosteriorCheck       -> setChecked(true);
+   // mDataPosteriorCheck       -> setChecked(true); //suppr le 28/04/2015
     mDataCalibCheck           -> setChecked(true);
     mShowDataUnderPhasesCheck -> setChecked(false);
     
     connect(mShowDataUnderPhasesCheck, SIGNAL(toggled(bool)), this, SLOT(updateResults()));
     
     connect(mDataThetaRadio,     SIGNAL(clicked()), this, SLOT(updateResults()));
-    connect(mDataPosteriorCheck, SIGNAL(clicked()), this, SLOT(updateResults()));
+  //  connect(mDataPosteriorCheck, SIGNAL(clicked()), this, SLOT(updateResults())); //suppr le 28/04/2015
     connect(mDataCalibCheck,     SIGNAL(clicked()), this, SLOT(updateResults()));
     connect(mWiggleCheck,        SIGNAL(clicked()), this, SLOT(updateResults()));
     connect(mDataSigmaRadio,     SIGNAL(clicked()), this, SLOT(updateResults()));
@@ -554,7 +554,7 @@ void ResultsView::updateLayout()
     if(mTabs->currentIndex() == 0)
     {
         mShowDataUnderPhasesCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
-        mDataPosteriorCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
+      //  mDataPosteriorCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
         mDataCalibCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
         mWiggleCheck->setGeometry(m + dx, y += (m + mLineH),(int)( mResultsGroup->width() - 2*m - dx), mLineH);
     }
@@ -965,7 +965,7 @@ void ResultsView::updateGraphs()
     bool showRaw = mRawCheck->isChecked();
     
     bool showCalib = mDataCalibCheck->isChecked();
-    bool showPosterior = mDataPosteriorCheck->isChecked();
+    bool showPosterior = true; //mDataPosteriorCheck->isChecked();
     bool showWiggle = mWiggleCheck->isChecked();
     
     // ---------------------------

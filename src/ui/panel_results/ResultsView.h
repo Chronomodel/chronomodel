@@ -161,7 +161,7 @@ private:
     QWidget* mResultsGroup;
     RadioButton* mDataThetaRadio;
     
-    CheckBox* mDataPosteriorCheck; // new PhD
+    //CheckBox* mDataPosteriorCheck; // new PhD //suppr le 28/04/2015
     CheckBox* mDataCalibCheck;
     CheckBox* mWiggleCheck;
     RadioButton* mDataSigmaRadio;

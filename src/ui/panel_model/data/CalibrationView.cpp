@@ -144,24 +144,30 @@ void CalibrationView::updateGraphs()
         //  Calibration curve
         // ------------------------------------------------------------
         
-        QColor c = Painting::mainColorLight;
+        QColor color = Painting::mainColorLight;
+        QColor HPDColor(color);
+        HPDColor.setAlpha(75);
         
         GraphCurve calibCurve;
         calibCurve.mName = "Calibration";
-        calibCurve.mPen.setColor(c);
-        calibCurve.mFillUnder = false;
+        calibCurve.mPen.setColor(color);
+        
         calibCurve.mIsHisto = false;
         calibCurve.mData = mDate.getCalibMap();
+        calibCurve.mBrush.setColor(HPDColor);
         
         // TODO : looks like an ugly hack...
         bool isTypo = (mDate.mPlugin->getName() == "Typo Ref.");
         calibCurve.mIsRectFromZero = isTypo;
+        calibCurve.mFillUnder = isTypo;//false;
         mHPDLab->setVisible(!isTypo);
         mHPDEdit->setVisible(!isTypo);
         
         double yMax = map_max_value(calibCurve.mData);
         yMax = (yMax > 0) ? yMax : 1;
         mCalibGraph->setRangeY(0, 1.1f * yMax);
+        mCalibGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
+        mCalibGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
         
         mCalibGraph->addCurve(calibCurve);
         mCalibGraph->setVisible(true);
@@ -180,7 +186,9 @@ void CalibrationView::updateGraphs()
             
             GraphCurve hpdCurve;
             hpdCurve.mName = "Calibration HPD";
-            hpdCurve.mPen.setColor(c);
+            //QColor HPDColor(color);
+            //HPDColor.setAlpha(50);
+            hpdCurve.mBrush.setColor(HPDColor);
             hpdCurve.mFillUnder = true;
             hpdCurve.mIsHisto = false;
             hpdCurve.mIsRectFromZero = true;

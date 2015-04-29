@@ -102,7 +102,7 @@ void GraphViewDate::refresh()
                 curve.mData = mDate->getCalibMap();
                 //curve.mData = mDate->mCalibration;
                 QString namePlugin = mDate->mPlugin->getName();
-                QColor dataColor   = mDate->mPlugin->getColor();//QColor(120, 120, 120); 
+                QColor dataColor   = QColor(Qt::black);//mDate->mPlugin->getColor();//QColor(120, 120, 120); ///since 28/04/2015
                 QIcon dataIcon     = mDate->mPlugin->getIcon();
                 curve.mName = "calibration : "+namePlugin;
                 
@@ -115,7 +115,7 @@ void GraphViewDate::refresh()
                 //brushColor.setAlpha(70); //50
                 curve.mBrush.setColor(brushColor);
                 
-                curve.mFillUnder = !mShowPosterior;
+                curve.mFillUnder = false;//!mShowPosterior; //since 28/04/2015
                 
                 curve.mIsHisto = false;
                 curve.mIsRectFromZero = true; // for typo. calibs., invisible for others!
@@ -166,8 +166,8 @@ void GraphViewDate::refresh()
 
                 
                 if (mShowPosterior) {
-                    QColor HPDColor(color);
-                    HPDColor.setAlpha(50);
+                   QColor HPDColor(color);
+                    HPDColor.setAlpha(100);//HPDColor.setAlpha(50); // since 28/04/2015
                     GraphCurve curve;
                     curve.mName = "histo full";
                     curve.mData = equal_areas(variable->fullHisto(), 1.f);
@@ -177,6 +177,16 @@ void GraphViewDate::refresh()
                     mGraph->addCurve(curve);
                     double yMax = 1.1f * map_max_value(curve.mData);
                     mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
+                    
+                    
+                    /*
+                     GraphCurve curve;
+                     curve.mName = "histo full";
+                     curve.mPen.setColor(color);
+                     curve.mData = equal_areas(mEvent->mTheta.fullHisto(), 1.f);
+                     curve.mIsHisto = false;
+                     mGraph->addCurve(curve);
+                     */
                     
                     if(mCurrentVariable != GraphViewResults::eSigma)
                     {

@@ -462,7 +462,7 @@ void GraphView::paintEvent(QPaintEvent* )
         p.setPen(Qt::black);
         p.drawPath(tipPath);
         p.setPen(Qt::white);
-        p.drawText(mTipRect.adjusted(0, 0, 0, (int)(-mTipRect.height()/2) ), Qt::AlignCenter, QString("x : ") + QString::number(mTipX,'f',0) );
+        p.drawText(mTipRect.adjusted(0, 0, 0, (int)(-mTipRect.height()/2) ), Qt::AlignCenter, QString("x : ") + QString::number(mTipX,'f',3) );
         p.drawText(mTipRect.adjusted(0, (int)(mTipRect.height()/2), 0, 0), Qt::AlignCenter, QString("y : ") + QString::number(mTipY));
        
     }
