@@ -262,7 +262,7 @@ QPixmap Date::generateCalibThumb()
     HPDColor.setAlpha(100);
     
     GraphCurve curve;
-    QMap<double, double> mDataCalib;
+    //QMap<double, double> mDataCalib;
    // mDataCalib  = getCalibMap();
     curve.mData = normalize_map(getCalibMap());
     

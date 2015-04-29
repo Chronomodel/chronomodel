@@ -62,6 +62,7 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     graph->setMargins(0, 0, 0, 0);
     
     graph->setRangeX(tmin, tmax);
+    graph->setCurrentX(tmin, tmax);
     graph->setRangeY(0, 1.1f);
     
     graph->showAxisArrows(false);

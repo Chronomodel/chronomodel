@@ -503,7 +503,8 @@ void GraphView::paintToDevice(QPaintDevice* device)
     //  Vertical Grid
     // ----------------------------------------------------
     
-    mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
+    
+    
     if(mXAxisMode != eHidden)
     {
         mAxisToolX.mShowText = true;
@@ -511,8 +512,10 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolX.mShowSubSubs = true;
         mAxisToolX.mShowArrow = true;
        //QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth ,  mMarginBottom), 5);
+        mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
+        QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 5);
         
-       /* if(mShowVertGrid)
+        if(mShowVertGrid)
         {
             p.setPen(QColor(0, 0, 0, 20));
             for(int i=0; i<linesXPos.size(); ++i)
@@ -520,16 +523,17 @@ void GraphView::paintToDevice(QPaintDevice* device)
                 qreal x = linesXPos[i];
                 p.drawLine(x, mMarginTop, x, mMarginTop + mGraphHeight);
             }
-        }*/
+        }
     }
     else {
         mAxisToolX.mShowText = false;
         mAxisToolX.mShowSubs = true;
         mAxisToolX.mShowSubSubs = false;
         mAxisToolX.mShowArrow = true;
+        mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 5);
         //QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 5);
     }
-    QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 5);
+   
     // ----------------------------------------------------
     //  Horizontal Grid
     // ----------------------------------------------------
@@ -845,7 +849,7 @@ void GraphView::drawCurves(QPainter& painter)
                         }
                         else
                         {
-                            if(curve.mIsHisto)
+                            if(curve.mIsHisto) // a revoir
                             {
                                 // histo bars must be centered around x value :
                                 qreal dx2 = (x - last_x)/2.f;
