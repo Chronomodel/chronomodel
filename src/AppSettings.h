@@ -9,6 +9,7 @@
 #define APP_SETTINGS_DEFAULT_CELL_SEP ","
 #define APP_SETTINGS_DEFAULT_DEC_SEP "."
 #define APP_SETTINGS_DEFAULT_OPEN_PROJ true
+#define APP_SETTINGS_DEFAULT_PIXELRATIO 1
 
 #define APP_SETTINGS_STR_AUTO_SAVE "auto_save_enabled"
 #define APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC "auto_save_delay"
@@ -34,6 +35,7 @@ public:
     QString mCSVCellSeparator;
     QString mCSVDecSeparator;
     bool mOpenLastProjectAtLaunch;
+    short mPixelRatio;
 };
 
 #endif

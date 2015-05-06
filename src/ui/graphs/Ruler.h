@@ -36,6 +36,8 @@ public:
     double mMax;
     double mZoomProp;
     
+    AxisTool mAxisTool;
+    
 protected:
     void layout();
     void resizeEvent(QResizeEvent* e);
@@ -66,7 +68,7 @@ private:
     qreal mStepMinWidth;
     qreal mStepWidth;
     
-    AxisTool mAxisTool;
+    //AxisTool mAxisTool;
     
     QVector<RulerArea> mAreas;
 };

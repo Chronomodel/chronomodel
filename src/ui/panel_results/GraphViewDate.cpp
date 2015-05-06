@@ -64,8 +64,8 @@ void GraphViewDate::refresh()
     mGraph->removeAllZones();
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
-    mGraph->setMaximumY(0);
-    mGraph->autoAdjustYScale(mCurrentResult == eTrace);
+    //mGraph->setMaximumY(0);
+    mGraph->autoAdjustYScale(mCurrentTypeGraph == eTrace);
     
     if(mDate)
     {
@@ -74,7 +74,7 @@ void GraphViewDate::refresh()
         QString results = ModelUtilities::dateResultsText(mDate);
         setNumericalResults(results);
         
-        if(mCurrentResult == eHisto)
+        if(mCurrentTypeGraph == eHisto)
         {
             mGraph->setRangeY(0, 0.0001f);
             
@@ -230,7 +230,7 @@ void GraphViewDate::refresh()
                 curveCred.mSections.append(variable->mCredibility);
                 curveCred.mHorizontalValue = mGraph->maximumY();
                 curveCred.mPen.setColor(color);
-                curveCred.mPen.setWidth(5);
+                curveCred.mPen.setWidth(3);
                 curveCred.mIsHorizontalSections = true;
                 mGraph->addCurve(curveCred);
             }
@@ -239,7 +239,7 @@ void GraphViewDate::refresh()
                 mGraph->autoAdjustYScale(true);
             }
         }
-        if(mCurrentResult == eTrace)
+        if(mCurrentTypeGraph == eTrace)
         {
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
@@ -249,6 +249,7 @@ void GraphViewDate::refresh()
             if(chainIdx != -1)
             {
                 Chain& chain = mChains[chainIdx];
+                //mGraph->setCurrentX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval); // NO lock the horizontal scroll
                 mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
                 
                 MHVariable* variable = &(mDate->mTheta);
@@ -291,7 +292,7 @@ void GraphViewDate::refresh()
                 mGraph->addCurve(curveQ3);
             }
         }
-        else if(mCurrentResult == eAccept)
+        else if(mCurrentTypeGraph == eAccept)
         {
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
@@ -302,6 +303,7 @@ void GraphViewDate::refresh()
             {
                 Chain& chain = mChains[chainIdx];
                 mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
+                //mGraph->setCurrentX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
                 mGraph->setRangeY(0, 100);
                 
                 MHVariable* variable = &(mDate->mTheta);
@@ -332,7 +334,7 @@ void GraphViewDate::refresh()
             }
            
         }
-        else if(mCurrentResult == eCorrel)
+        else if(mCurrentTypeGraph == eCorrel)
         {
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
@@ -356,6 +358,7 @@ void GraphViewDate::refresh()
                     mGraph->addCurve(curve);
                     
                     mGraph->setRangeX(0, 100);
+                    //mGraph->setCurrentX(0, 100);
                     mGraph->setRangeY(-1, 1);
                     
                     double n = variable->runTraceForChain(mChains, chainIdx).size();

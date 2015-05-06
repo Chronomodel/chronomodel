@@ -7,7 +7,8 @@ mAutoSaveDelay(APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC),
 mShowHelp(APP_SETTINGS_DEFAULT_SHOW_HELP),
 mCSVCellSeparator(APP_SETTINGS_DEFAULT_CELL_SEP),
 mCSVDecSeparator(APP_SETTINGS_DEFAULT_DEC_SEP),
-mOpenLastProjectAtLaunch(APP_SETTINGS_DEFAULT_OPEN_PROJ)
+mOpenLastProjectAtLaunch(APP_SETTINGS_DEFAULT_OPEN_PROJ),
+mPixelRatio(APP_SETTINGS_DEFAULT_PIXELRATIO)
 {
     
 }
@@ -28,6 +29,7 @@ void AppSettings::copyFrom(const AppSettings& s)
     mCSVCellSeparator = s.mCSVCellSeparator;
     mCSVDecSeparator = s.mCSVDecSeparator;
     mOpenLastProjectAtLaunch = s.mOpenLastProjectAtLaunch;
+    mPixelRatio = s.mPixelRatio;
 }
 AppSettings::~AppSettings()
 {

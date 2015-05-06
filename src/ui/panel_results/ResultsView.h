@@ -37,6 +37,13 @@ public:
     ResultsView(QWidget* parent = 0, Qt::WindowFlags flags = 0);
     ~ResultsView();
     
+    enum TypeGraph{
+        eHisto = 0,
+        eTrace = 1,
+        eAccept = 2,
+        eCorrel = 3
+    };
+    
     double mResultZoomX;
     double mResultCurrentMinX;
     double mResultCurrentMaxX;
@@ -44,6 +51,9 @@ public:
     double mResultMaxX;
     void doProjectConnections(Project* project);
     void updateAllZoom();
+    TypeGraph mCurrentTypeGraph;
+    
+    Ruler* mRuler;
     
 protected:
     void paintEvent(QPaintEvent* );
@@ -113,7 +123,7 @@ private:
     int mGraphsH;
     
     Tabs* mTabs;
-    Ruler* mRuler;
+    //Ruler* mRuler;
     Marker* mMarker;
     
     QStackedWidget* mStack;
@@ -147,10 +157,7 @@ private:
     Label* mRenderLab;
     QComboBox* mRenderCombo;
     
-   
-    
-    
-    
+       
     Label* mChainsTitle;
     QWidget* mChainsGroup;
     CheckBox* mAllChainsCheck;

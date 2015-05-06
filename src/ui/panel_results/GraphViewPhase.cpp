@@ -77,7 +77,7 @@ void GraphViewPhase::refresh()
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
     
-    mGraph->autoAdjustYScale(mCurrentResult == eTrace);
+    mGraph->autoAdjustYScale(mCurrentTypeGraph == eTrace);
 
     mDurationGraph->removeAllCurves();
     
@@ -86,7 +86,7 @@ void GraphViewPhase::refresh()
         QColor color = mPhase->mColor;
 
         /* Dessine une densité*/
-        if(mCurrentResult == eHisto && mCurrentVariable == eTheta)
+        if(mCurrentTypeGraph == eHisto && mCurrentVariable == eTheta)
         {
             mShowDuration->setVisible(true);
             mShowDuration->setChecked(false);
@@ -269,7 +269,7 @@ void GraphViewPhase::refresh()
         }
 
         /* Dessine une trace*/
-        else if(mCurrentResult == eTrace && mCurrentVariable == eTheta)
+        else if(mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta)
         {
             mShowDuration->setVisible(false);
             mShowDuration->setChecked(false);
@@ -283,7 +283,7 @@ void GraphViewPhase::refresh()
             if(chainIdx != -1)
             {
                 Chain& chain = mChains[chainIdx];
-                
+                //mGraph->setCurrentX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
                 mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
                 
                 QColor col = Painting::chainColors[chainIdx];

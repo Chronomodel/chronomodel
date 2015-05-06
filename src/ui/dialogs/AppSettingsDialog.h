@@ -4,10 +4,12 @@
 #include <QDialog>
 #include "AppSettings.h"
 
+
 class CheckBox;
 class Label;
 class LineEdit;
 class Button;
+class QSpinBox;
 
 
 class AppSettingsDialog: public QDialog
@@ -43,6 +45,9 @@ private:
     
     Label* mOpenLastProjectLab;
     CheckBox* mOpenLastProjectCheck;
+    
+    Label* mPixelRatioLab;
+    QSpinBox* mPixelRatio;
     
     Button* mResetBut;
     Button* mOkBut;

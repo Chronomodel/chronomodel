@@ -23,7 +23,7 @@ void AxisTool::updateValues(double totalPix, double minDeltaPix, double minVal, 
 {
     if((minDeltaPix == 0) || (minVal==maxVal) || (totalPix == 0) || (minVal>= maxVal))
         return;
-    
+    mEndVal = maxVal;
     double w = totalPix;
     w = (w <= 0.f) ? minDeltaPix : w;
     double numSteps = floor(w / minDeltaPix);
@@ -62,6 +62,7 @@ void AxisTool::updateValues(double totalPix, double minDeltaPix, double minVal, 
     
     mStartVal = (minVal / mDeltaVal) * mDeltaVal;
     mStartPix = (mStartVal - minVal) * mPixelsPerUnit;
+    mEndVal   = mStartVal+ totalPix/ mPixelsPerUnit;
     
 /*    qDebug() << "------------";
      qDebug() << "w = " << w;

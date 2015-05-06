@@ -313,8 +313,9 @@ void CalibrationView::exportImage()
     
     int m = 5;
     QRect r(m, m, this->width() - 2*m, this->height() - 2*m);
+    AxisTool axe;
     QFileInfo fileInfo = saveWidgetAsImage(this, r, tr("Save calibration image as..."),
-                                           MainWindow::getInstance()->getCurrentPath());
+                                           MainWindow::getInstance()->getCurrentPath(),AppSettings(),axe);
     if(fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
     

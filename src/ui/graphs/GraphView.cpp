@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <QtSvg>
 
+class ProjectSettings;
 
 #pragma mark Constructor / Destructor
 
@@ -466,7 +467,7 @@ void GraphView::paintEvent(QPaintEvent* )
         p.drawText(mTipRect.adjusted(0, (int)(mTipRect.height()/2), 0, 0), Qt::AlignCenter, QString("y : ") + QString::number(mTipY));
        
     }
-    //jamais update dans paintEvent
+    //never update in paintEvent
 }
 
 

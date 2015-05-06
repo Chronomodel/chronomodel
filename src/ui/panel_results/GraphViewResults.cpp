@@ -13,7 +13,7 @@
 
 GraphViewResults::GraphViewResults(QWidget *parent):QWidget(parent),
 mButtonVisible(true),
-mCurrentResult(eHisto),
+mCurrentTypeGraph(eHisto),
 mCurrentVariable(eTheta),
 mMinHeighttoDisplayTitle(100),
 mShowAllChains(true),
@@ -86,12 +86,12 @@ mGraphLeft(128)
     setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
     
     
-    if(mCurrentResult == eAccept || mCurrentResult == eTrace ) {
+    if(mCurrentTypeGraph == eAccept || mCurrentTypeGraph == eTrace ) {
         Chain& chain = mChains[0];
         mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
     }
     
-    if(mCurrentResult == eHisto)
+    if(mCurrentTypeGraph == eHisto)
     {
         if(mCurrentVariable == eTheta)
         {
@@ -101,7 +101,7 @@ mGraphLeft(128)
             mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
         }
     }
-    if(mCurrentResult == eCorrel){
+    if(mCurrentTypeGraph == eCorrel){
         mGraph->setRangeX(0, 100);
     }
     
@@ -112,9 +112,9 @@ GraphViewResults::~GraphViewResults()
     
 }
 
-void GraphViewResults::setResultToShow(Result result, Variable variable, bool showAllChains, const QList<bool>& showChainList, bool showHpd, float threshold, bool showCalib, bool showPosterior, bool showWiggle, bool showRawResults)
+void GraphViewResults::setResultToShow(TypeGraph typGraph, Variable variable, bool showAllChains, const QList<bool>& showChainList, bool showHpd, float threshold, bool showCalib, bool showPosterior, bool showWiggle, bool showRawResults)
 {
-    mCurrentResult = result;
+    mCurrentTypeGraph = typGraph;
     mCurrentVariable = variable;
     mShowAllChains = showAllChains;
     mShowChainList = showChainList;
@@ -190,22 +190,78 @@ void GraphViewResults::saveAsImage()
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
  */
    // mGraph->setRendering(memoRendering);
-    QString filter = QObject::tr("Image (*.png);;Scalable Vector Graphics (*.svg)");
+    QString filter = QObject::tr("Image (*.png);;Photo (*.jpg);;Scalable Vector Graphics (*.svg)");
     QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                     tr("Save graph image as..."),
                                                     MainWindow::getInstance()->getCurrentPath(),
                                                     filter);
+    QFileInfo fileInfo;
+    fileInfo = QFileInfo(fileName);
+    QString fileExtension = fileInfo.suffix();
     if(!fileName.isEmpty())
     {
         QFileInfo fileInfo = QFileInfo(fileName);
         bool asSvg = fileName.endsWith(".svg");
-        if(asSvg)
-        {
+        if(asSvg) {
             if(mGraph)
             {
                 mGraph->saveAsSVG(fileName, mTitle, "GraphViewResults",true);
             }
         }
+        else {
+        
+            //---
+            GraphView::Rendering memoRendering= mGraph->getRendering();
+            setRendering(GraphView::eHD);
+            short pr = MainWindow::getInstance()->getAppSettings().mPixelRatio;// 4.;//0.005;
+            //qDebug()<<"GraphViewResults::saveAsImage() pr="<<pr;
+            int versionHeight = 20;
+            //QSize wSize = widget->size();
+            QImage image(mGraph->width() * pr, (mGraph->height() + versionHeight) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
+        
+            //    qDebug()<<"r.width() * pr"<< (r.width() * pr)<<" (r.height() + versionHeight) * pr"<<(r.height() + versionHeight) * pr;
+
+            if (image.isNull() ) {
+                qDebug()<< " image width = 0";
+                
+            }
+            
+            image.setDevicePixelRatio(pr);
+            image.fill(Qt::transparent);
+            
+            QPainter p;
+            p.begin(&image);
+            p.setRenderHint(QPainter::Antialiasing);
+            //QRectF tgtRect = image.rect();
+
+//            mGraph->render(&p, QPoint(0, 0), QRegion(mGraph->x(), mGraph->y(), mGraph->width(), mGraph->height()));
+            mGraph->render(&p, QPoint(0, 0), QRegion(0, 0, mGraph->width(), mGraph->height()));
+        
+            p.setPen(Qt::black);
+            p.drawText(0, mGraph->height(), mGraph->width(), versionHeight,
+                       Qt::AlignCenter,
+                       qApp->applicationName() + " " + qApp->applicationVersion());
+            
+            p.end();
+            //image.save(fileName, "PNG");
+            // char formatExt[];
+            if (fileExtension=="png") {
+                //   formatExt[] = "png";
+                image.save(fileName, "png");
+            }
+            else if (fileExtension == "jpg") {
+                //formatExt[5] = "jpg";
+                image.save(fileName, "jpg",50);
+            }
+            else if (fileExtension == "bmp") {
+                
+                image.save(fileName, "bmp");
+            }
+            
+            mGraph->setRendering(memoRendering);
+        }
+        //---
+        
     }
 }
 
@@ -227,7 +283,7 @@ void GraphViewResults::saveGraphData() const
     QString csvSep = settings.mCSVCellSeparator;
     
     int offset = 0;
-    if(mCurrentResult == eTrace)
+    if(mCurrentTypeGraph == eTrace)
     {
         int chainIdx = -1;
         for(int i=0; i<mShowChainList.size(); ++i)
@@ -406,9 +462,34 @@ void GraphViewResults::updateLayout()
     p.setPen(Qt::black);
     p.setFont(this->font());
     
+ /*   QRect graphRect(leftShift, topShift, this->width() - leftShift, height()-1-topShift);
+    if(mShowNumResults && height() >= mMinHeighttoDisplayTitle/2)//100)
+    {
+        mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
+        mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
+        mTextArea -> setVisible(true);
+    }
+    else
+    {
+        mGraph    -> setGeometry(graphRect);
+        mTextArea -> setVisible(false);
+    }*/
     
     if(height() >= mMinHeighttoDisplayTitle)  {
        
+        QRect graphRect(leftShift, topShift, this->width() - leftShift, height()-1-topShift);
+        if(mShowNumResults) {
+            
+            mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
+            mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
+            mTextArea -> setVisible(true);
+        }
+        else {
+            mGraph    -> setGeometry(graphRect);
+            mTextArea -> setVisible(false);
+        }
+        
+        
         mGraph -> setXAxisMode(GraphView::eAllTicks);
         mGraph -> setMarginBottom(mGraph->font().pointSizeF() + 10);
         
@@ -423,10 +504,27 @@ void GraphViewResults::updateLayout()
     else
     {
         mGraph -> setXAxisMode(GraphView::eHidden);
-        
+
         mGraph -> setMarginBottom(10);
         
         // write mTitle inside curve field
+        QRect graphRect(leftShift, topShift, this->width() - leftShift, height()-1-topShift);
+        if(mShowNumResults) {
+            
+            mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
+            mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
+            mTextArea -> setVisible(true);
+        }
+        else {
+            mGraph    -> setGeometry(graphRect);
+            mTextArea -> setVisible(false);
+        }
+       
+        QRectF textRect(leftShift, 0, this->width()-leftShift,mLineH);
+        p.fillRect(textRect, mGraph->getBackgroundColor());
+        
+        p.drawText(textRect.adjusted(50, 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
+        
      /*   QFontMetrics fm(this->font());
         qreal textWidth = fm.width(mTitle);
         //QRectF textRect(leftShift+100, mLineH, this->width()-leftShift,mLineH);
@@ -441,8 +539,8 @@ void GraphViewResults::updateLayout()
     }
     
     
-    QRect graphRect(leftShift, topShift, this->width() - leftShift, height()-1-topShift);
-    if(mShowNumResults && height() >= 100)
+   /* QRect graphRect(leftShift, topShift, this->width() - leftShift, height()-1-topShift);
+    if(mShowNumResults)// && height() >= 100)
     {
         mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
         mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
@@ -452,7 +550,7 @@ void GraphViewResults::updateLayout()
     {
         mGraph    -> setGeometry(graphRect);
         mTextArea -> setVisible(false);
-    }
+    }*/
     
     p.end();
     refresh();

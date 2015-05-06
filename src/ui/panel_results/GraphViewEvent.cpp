@@ -49,7 +49,7 @@ void GraphViewEvent::refresh()
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
     
-    mGraph->autoAdjustYScale(mCurrentResult == eTrace);
+    mGraph->autoAdjustYScale(mCurrentTypeGraph == eTrace);
     
     if(mEvent)
     {
@@ -73,7 +73,7 @@ void GraphViewEvent::refresh()
         QString results = ModelUtilities::eventResultsText(mEvent, false);
         setNumericalResults(results);
         
-        if(mCurrentResult == eHisto)
+        if(mCurrentTypeGraph == eHisto)
         {
             if(mCurrentVariable == eTheta)
             {
@@ -175,7 +175,7 @@ void GraphViewEvent::refresh()
                         curveCred.mSections.append(mEvent->mTheta.mCredibility);
                         curveCred.mHorizontalValue = mGraph->maximumY();
                         curveCred.mPen.setColor(color);
-                        curveCred.mPen.setWidth(5);
+                        curveCred.mPen.setWidth(3);
                         curveCred.mPen.setCapStyle(Qt::FlatCap);
                         curveCred.mIsHorizontalSections = true;
                         mGraph->addCurve(curveCred);
@@ -188,7 +188,8 @@ void GraphViewEvent::refresh()
                 // On affiche donc ici la superposition des variances (et pas le résultat de theta f)
                 
                 mGraph->autoAdjustYScale(true);
-                
+               // mGraph->setCurrentX(0, mSettings.mTmax-mSettings.mTmin);
+               // mGraph->setCurrentX(, <#const double aMaxX#>)
                 mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
                 double yMax = 0;
                 
@@ -227,7 +228,7 @@ void GraphViewEvent::refresh()
                 }
             }
         }
-        else if(mCurrentResult == eTrace && mCurrentVariable == eTheta)
+        else if(mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta)
         {
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
@@ -237,6 +238,7 @@ void GraphViewEvent::refresh()
             if(chainIdx != -1)
             {
                 Chain& chain = mChains[chainIdx];
+                //mGraph->setCurrentX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
                 mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
                 
                 GraphCurve curve;
@@ -275,7 +277,7 @@ void GraphViewEvent::refresh()
                 mGraph->setRangeY(floor(min), ceil(max));
             }
         }
-        else if(mCurrentResult == eAccept && mCurrentVariable == eTheta && mEvent->mMethod == Event::eMHAdaptGauss)
+        else if(mCurrentTypeGraph == eAccept && mCurrentVariable == eTheta && mEvent->mMethod == Event::eMHAdaptGauss)
         {
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
@@ -285,6 +287,7 @@ void GraphViewEvent::refresh()
             if(chainIdx != -1)
             {
                 Chain& chain = mChains[chainIdx];
+                //mGraph->setCurrentX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
                 mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
               
                mGraph->setRangeY(0, 100);
@@ -306,7 +309,7 @@ void GraphViewEvent::refresh()
                 mGraph->addCurve(curveTarget);
             }
         }
-        else if(mCurrentResult == eCorrel && mCurrentVariable == eTheta && !isFixedBound)
+        else if(mCurrentTypeGraph == eCorrel && mCurrentVariable == eTheta && !isFixedBound)
         {
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)

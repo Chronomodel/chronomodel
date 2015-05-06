@@ -4,6 +4,8 @@
 #include <QtSvg>
 
 #include "GraphView.h"
+#include "AppSettings.h"
+
 
 bool colorIsDark(const QColor& color)
 {
@@ -126,7 +128,7 @@ QString intListToString(const QList<int>& intList, const QString& separator)
 }
 # pragma mark Save Widget
 
-QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogTitle, const QString& defaultPath)
+QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogTitle, const QString& defaultPath, const AppSettings & appSetting, AxisTool& Axe)
 {
     QFileInfo fileInfo;
     
@@ -189,23 +191,25 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             
             int versionHeight = 20;
             //qreal pr = 1;//qApp->devicePixelRatio();
-            qreal prh=  32000. / ( r.height() + versionHeight) ; // QImage axes are limited to 32767x32767 pixels
+           /* qreal prh=  32000. / ( r.height() + versionHeight) ; // QImage axes are limited to 32767x32767 pixels
            
-            qreal prw=  32000. / r.width() ;            /* if (fileName.endsWith(".PNG")) {
-                pr = 3;
-            }*/
-            qreal pr = (prh<prw)? prh : prw;
+            qreal prw=  32000. / r.width() ;                  qreal pr = (prh<prw)? prh : prw;
             if (pr>4) {
                 pr=4;
             }
-           qDebug()<<" pr="<<pr;
+            */
+          
+            short pr =  appSetting.mPixelRatio;// 4.;//0.005;
+            qDebug()<<" pr="<<pr;
             if(widget)
             {
                 //QSize wSize = widget->size();
-               // QImage image(r.width() * pr, (r.height() + versionHeight) * pr, QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
-                QImage image(int(r.width() * pr), int((r.height() + versionHeight) * pr), QImage::Format_ARGB32_Premultiplied);
+                int heightAxe = 0;
+                if (Axe.mDeltaPix>0) heightAxe = 20;
+                QImage image(r.width() * pr, (r.height() + versionHeight + heightAxe+20) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
+              //  QImage image(int(r.width() * pr), int((r.height() + versionHeight) * pr), QImage::Format_ARGB32_Premultiplied);
                 //QImage image(wSize, QImage::Format_ARGB32_Premultiplied);
-                qDebug()<<"r.width() * pr"<< (r.width() * pr)<<" (r.height() + versionHeight) * pr"<<(r.height() + versionHeight) * pr;
+               // qDebug()<<"r.width() * pr"<< (r.width() * pr)<<" (r.height() + versionHeight) * pr"<<(r.height() + versionHeight) * pr;
                 //qDebug()<<" wSize.width()"<< wSize.width()<<" wSize.height()"<<wSize.height();
                 if (image.isNull() ) {
                     qDebug()<< " image width = 0";
@@ -217,15 +221,31 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 QPainter p;
                 p.begin(&image);
                 p.setRenderHint(QPainter::Antialiasing);
-                             QRectF tgtRect = image.rect();
-                tgtRect.adjust(0, 0, 0, -versionHeight * pr);
+                //QRectF tgtRect = image.rect();
+             //   tgtRect.adjust(0, 0, 0, -versionHeight * pr);
                 widget->render(&p, QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), r.height()));
                 //widget->render(&p,QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), r.height()/2));
                 //widget->render(&p,QPoint(0, r.height()/2), QRegion(r.x(), r.y()+r.height()/2, r.width(), r.height()));
+               
+                //Keep it in memory : mMarginLeft(50), mMarginRight(10), mMarginTop(5), mMarginBottom(15), in graphViewAbstract
+               
+                if (Axe.mDeltaPix>0){
+                    
+                    //Axe.updateValues(r.width()-10-50 , Axe.mDeltaPix, Axe.mStartVal, Axe.mEndVal);
+                    Axe.updateValues(r.width()-10-50 , 50, Axe.mStartVal, Axe.mEndVal);
+                    Axe.mMinMaxOnly = false;
+                    Axe.mShowSubs = true;
+                    Axe.mShowSubSubs = true;
+                    Axe.mShowText = true;
+                    Axe.paint(p, QRectF(50, r.height()+heightAxe, r.width()-10-50 ,  heightAxe), 5);
+                }
+                
                 p.setPen(Qt::black);
-                p.drawText(0, r.height(), r.width(), versionHeight,
+                p.drawText(0, r.height()+heightAxe+versionHeight, r.width(), versionHeight,
                            Qt::AlignCenter,
                            qApp->applicationName() + " " + qApp->applicationVersion());
+                
+                //mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth ,  mMarginBottom), 5);
               
                 p.end();
                 //image.save(fileName, "PNG");
@@ -236,7 +256,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 }
                 else if (fileExtension == "jpg") {
                     //formatExt[5] = "jpg";
-                     image.save(fileName, "jpg");
+                     image.save(fileName, "jpg",50);
                 }
                 else if (fileExtension == "bmp") {
                    
