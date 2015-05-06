@@ -156,7 +156,8 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
         //QString fileExtension = fileName.(".svg");
        // bool asSvg = fileName.endsWith(".svg");
        // if(asSvg)
-       
+        int heightAxe = 0;
+        if (Axe.mDeltaPix>0) heightAxe = 20;
         
         
         if (fileExtension == "svg") {
@@ -181,7 +182,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             }
             else if(widget)
             {;
-                saveWidgetAsSVG(widget, r, fileName);
+                saveWidgetAsSVG(widget, r, fileName, Axe);
                 
             }
            
@@ -204,8 +205,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             if(widget)
             {
                 //QSize wSize = widget->size();
-                int heightAxe = 0;
-                if (Axe.mDeltaPix>0) heightAxe = 20;
+                
                 QImage image(r.width() * pr, (r.height() + versionHeight + heightAxe+20) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
               //  QImage image(int(r.width() * pr), int((r.height() + versionHeight) * pr), QImage::Format_ARGB32_Premultiplied);
                 //QImage image(wSize, QImage::Format_ARGB32_Premultiplied);
@@ -237,7 +237,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                     Axe.mShowSubs = true;
                     Axe.mShowSubSubs = true;
                     Axe.mShowText = true;
-                    Axe.paint(p, QRectF(50, r.height()+heightAxe, r.width()-10-50 ,  heightAxe), 5);
+                    Axe.paint(p, QRectF(50, r.height()+heightAxe, r.width()-10-50 ,  heightAxe), 7);
                 }
                 
                 p.setPen(Qt::black);
@@ -310,11 +310,13 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
     return fileInfo;
 }
 
-bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName)
+bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName,AxisTool& Axe)
 {
     
     int versionHeight = 20;
-  
+    int heightAxe = 0;
+    if (Axe.mDeltaPix>0) heightAxe = 20;
+    
     
     QSvgGenerator svgGenFile;
     svgGenFile.setFileName(fileName);
@@ -325,10 +327,21 @@ bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName)
     p.begin(&svgGenFile);
     widget->render(&p);//, QPoint(0, 0), QRegion(r));
   
+    if (Axe.mDeltaPix>0){
+        
+        //Axe.updateValues(r.width()-10-50 , Axe.mDeltaPix, Axe.mStartVal, Axe.mEndVal);
+        Axe.updateValues(r.width()-10-50 , 50, Axe.mStartVal, Axe.mEndVal);
+        Axe.mMinMaxOnly = false;
+        Axe.mShowSubs = true;
+        Axe.mShowSubSubs = true;
+        Axe.mShowText = true;
+        Axe.paint(p, QRectF(50, r.height()+heightAxe, r.width()-10-50 ,  heightAxe), 7);
+    }
     p.setPen(Qt::black);
-    p.drawText(0, r.height(), r.width(), versionHeight,
-                Qt::AlignCenter,
-                qApp->applicationName() + " " + qApp->applicationVersion());
+   
+    p.drawText(0, r.height()+heightAxe+versionHeight, r.width(), versionHeight,
+               Qt::AlignCenter,
+               qApp->applicationName() + " " + qApp->applicationVersion());
     
     p.end();
     

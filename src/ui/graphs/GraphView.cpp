@@ -514,7 +514,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolX.mShowArrow = true;
        //QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth ,  mMarginBottom), 5);
         mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
-        QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 5);
+        QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 7);
         
         if(mShowVertGrid)
         {
@@ -531,7 +531,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolX.mShowSubs = true;
         mAxisToolX.mShowSubSubs = false;
         mAxisToolX.mShowArrow = true;
-        mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 5);
+        mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 7);
         //QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 5);
     }
    
@@ -591,8 +591,8 @@ void GraphView::drawCurves(QPainter& painter)
         QPen pen = curve.mPen;
         pen.setWidth(pen.width() * mThickness);
         painter.setPen(pen);
-       
-        // painter.drawText(mMarginLeft + 5, mMarginTop + 5, mGraphWidth - 10, 15, Qt::AlignRight | Qt::AlignTop, curve.mName);
+      // QFontMetrics fm(painter.font());
+        // painter.drawText(mMarginRight + 50, mMarginTop + 5, fm.width(curve.mName), 15, Qt::AlignLeft | Qt::AlignTop, curve.mName);
         //p.drawText(r, Qt::AlignHCenter | Qt::AlignTop, QString("1"));
         
         if(curve.mIsHorizontalLine)
@@ -1058,4 +1058,8 @@ bool GraphView::saveAsSVG(const QString& fileName, const QString graphTitle, con
         
     }
     
+}
+QString GraphView::getInfo()
+{
+    return mInfos.join("|");
 }

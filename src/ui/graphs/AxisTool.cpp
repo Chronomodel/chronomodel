@@ -103,7 +103,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
             QPainterPath arrowRight;
             
             QPolygonF triangle;
-            triangle << QPointF(xo + w, yo) << QPointF(xo + w - heigthSize, yo - heigthSize) << QPointF(xo + w - heigthSize, yo + heigthSize);
+            triangle << QPointF(xo + w + heigthSize*.65, yo) << QPointF(xo + w , yo - heigthSize*.65) << QPointF(xo + w, yo + heigthSize*.65);
           
             p.setBrush(mAxisColor);
             p.drawPolygon(triangle);
@@ -170,7 +170,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
             
             QPolygonF triangle;
             
-            triangle << QPointF(xov, yov - h) << QPointF(xov - heigthSize, yov - h + heigthSize) << QPointF(xov + heigthSize, yov- h + heigthSize);
+            triangle << QPointF(xov, yov - h) << QPointF(xov - heigthSize*.65, yov - h + heigthSize*.65) << QPointF(xov + heigthSize*.65, yov- h + heigthSize*.65);
             
             p.setBrush(mAxisColor);
             p.drawPolygon(triangle);

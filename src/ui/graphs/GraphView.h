@@ -38,6 +38,7 @@ public:
     QColor getBackgroundColor() const;
     
     void addInfo(const QString& info);
+    QString getInfo();
     void clearInfos();
     void showInfos(bool show);
     
