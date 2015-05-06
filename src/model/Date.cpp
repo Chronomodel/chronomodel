@@ -187,12 +187,12 @@ void Date::calibrate(const ProjectSettings& settings)
     mCalibHPD.clear();
     mSettings = settings;
     mCalibSum = 0;
-    
+   // mCalibration.erase(mCalibration.begin(), mCalibration.end());
     double tmin = mSettings.mTmin;
     double tmax = mSettings.mTmax;
     double step = mSettings.mStep;
     double nbPts = 1 + round((tmax - tmin) / step);
-    
+  //  qDebug()<<" Date::calibrate"<<tmin<<tmax<<step<<nbPts<<"size"<<mCalibration.size();
     if(mSubDates.size() == 0) // not a combination !
     {
         double v = getLikelyhood(tmin);
@@ -225,6 +225,7 @@ void Date::calibrate(const ProjectSettings& settings)
         
         // La courbe de calibration est transformée de sorte que l'aire sous la courbe soit 1
         mCalibration = equal_areas(mCalibration, step, 1.);
+          //  qDebug()<<" Date::calibrate end"<<tmin<<tmax<<step<<nbPts<<"size"<<mCalibration.size();
     }
     else
     {
@@ -242,12 +243,13 @@ QPixmap Date::generateCalibThumb()
 {
     double tmin = mSettings.mTmin;
     double tmax = mSettings.mTmax;
-    
+   // qDebug()<<" Date::generateCalibThumb"<<tmin<<tmax<<mSettings.mStep;
     GraphView* graph = new GraphView();
     graph->setFixedSize(200, 30);
     graph->setMargins(0, 0, 0, 0);
     
     graph->setRangeX(tmin, tmax);
+    graph->setCurrentX(tmin, tmax);
     graph->setRangeY(0, 1.1f);
     
     graph->showAxisArrows(false);
@@ -255,14 +257,23 @@ QPixmap Date::generateCalibThumb()
     graph->setXAxisMode(GraphView::eHidden);
     graph->setYAxisMode(GraphView::eHidden);
     
+    QColor color = mPlugin->getColor();//  Painting::mainColorLight;
+    QColor HPDColor(color);
+    HPDColor.setAlpha(100);
+    
     GraphCurve curve;
+    //QMap<double, double> mDataCalib;
+   // mDataCalib  = getCalibMap();
     curve.mData = normalize_map(getCalibMap());
+    
     curve.mName = "Calibration";
-    curve.mPen.setColor(Painting::mainColorLight);
+    curve.mPen.setColor(color);
     curve.mPen.setWidthF(2.f);
+    curve.mBrush.setColor(HPDColor);
     curve.mFillUnder = true;
     curve.mIsHisto = false;
     curve.mIsRectFromZero = true; // For Typo !!
+    
     graph->addCurve(curve);
     
     QPixmap thumb(graph->size());

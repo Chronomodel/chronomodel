@@ -90,12 +90,6 @@ void Ruler::setRange(const double min, const double max)
     {
         mMin = min;
         mMax = max;
-        
-       // this->mScrollBar->setMinimum(min);
-       // this->mScrollBar->setMaximum(max);
-       // mCurrentMin = min;
-       // mCurrentMax = max;
-       // updateScroll();
     }
 }
 
@@ -104,21 +98,13 @@ void Ruler::setCurrent(const double min, const double max)
     //qDebug()<<" Ruler::setCurrent mCurrentMin 0" << mCurrentMin<<" "<< mCurrentMax;
     //qDebug()<<" Ruler::setCurrent min 1" << min<<" "<< max;
     
-    mCurrentMin = min; //inRange(mMin,min, mCurrentMax);
-    mCurrentMax = max; //inRange(mCurrentMin,max, mCurrentMax);
-    
-   // qDebug()<<" Ruler::setCurrent mCurrentMin 2" << mCurrentMin<<" "<< mCurrentMax;
-   // realPosition = (mCurrentMax + mCurrentMin) /2 /( mCurrentMax - mCurrentMin);
-    
-   // double zoom =  (mCurrentMax - mCurrentMin) / (mMax - mMin) * 100;
-   // setZoom(zoom);
-    
-    
-  //  emit positionChanged(mCurrentMin, mCurrentMax);
+    mCurrentMin = min;
+    mCurrentMax = max;
+ 
     int fullScrollSteps = 1000;
     mScrollBar->setRange(0, fullScrollSteps);
     
-    double position = mCurrentMin;// (mCurrentMax + mCurrentMin)/2;
+    double position = mCurrentMin;
     position = (position - mMin) / (mMax-mMin) * double (mScrollBar->maximum());
     mScrollBar->setTracking(false);
     mScrollBar->setSliderPosition(floor(position));//  setValue(floor(position));
@@ -127,23 +113,10 @@ void Ruler::setCurrent(const double min, const double max)
   //
     mAxisTool.updateValues(mRulerRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
    // qDebug()<<" Ruler::setCurrent mCurrentMin 3" << mCurrentMin<<" "<< mCurrentMax<<" position"<<position;
-  /*
-    void Ruler::setRange(const double min, const double max)
-    {
-        if(mMin != min || mMax || max)
-        {
-            mMin = min;
-            mMax = max;
-            mCurrentMin = min;
-            mCurrentMax = max;
-            updateScroll();
-        }
-    }
-   */
+
     
     update();
-   // updateScroll();
-  
+
 }
 void Ruler::currentChanged(const double min, const double max)
 {    
@@ -152,60 +125,13 @@ void Ruler::currentChanged(const double min, const double max)
     emit positionChanged(mCurrentMin, mCurrentMax);
     
     update();
-    //updateScroll();
     
 }
 double Ruler::getZoom()
 {
     return (100.-mZoomProp);
 }
-/* 
-  @brief prop must be a percent
- */
-/*
-double Ruler::setZoomPhD(const double prop)
-{
-    // Ici, 10 correspond à la différence minimale de valeur (quand le zoom est le plus fort)
-    double minProp = 10 / (mMax - mMin)*100;
-    
-    mZoomProp = prop;//(100. - prop);// / 100.;
-    if(mZoomProp < minProp) mZoomProp = minProp;
-    
-    if(mZoomProp != 1)
-    {
-        // Remember old scroll position
-        double posProp = 0;
-        double rangeBefore = (double)( mScrollBar->maximum() );
-        if(rangeBefore > 0)
-           // posProp = (double)mScrollBar->value() / rangeBefore;
-            posProp = realPosition / rangeBefore;
-        
-        // Update Scroll Range
-        double fullScrollSteps = 1000.0;
-//        double scrollSteps = (1. - mZoomProp/100.) * fullScrollSteps;
-        double scrollSteps = (1. - mZoomProp/100.) /(mMax - mMin)* fullScrollSteps;
-//        mScrollBar->setRange(0, floor(scrollSteps));
-        mScrollBar->setRange(0, 200);
-        mScrollBar->setPageStep(floor(fullScrollSteps));
-        
-        // Set scroll to correct position
-        double pos = 0;
-        double rangeAfter = (double) (mScrollBar->maximum());
-        
-        if(rangeAfter > 0){
-            realPosition = posProp * rangeAfter;
-            pos = floor(realPosition);
-        }
-        
-        mScrollBar->setSliderPosition(pos);// setValue(pos); setSliderPosition function don't notify the valueChanged signal
-    }
-    else
-    {
-        mScrollBar->setRange(0, 0);
-    }
-    updateScroll();
-    return mZoomProp;
-} */
+
 
 void Ruler::setZoom(int prop)
 {

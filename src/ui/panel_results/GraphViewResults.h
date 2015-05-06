@@ -19,7 +19,7 @@ class GraphViewResults: public QWidget
 {
     Q_OBJECT
 public:
-    enum Result{
+    enum TypeGraph{
         eHisto = 0,
         eTrace = 1,
         eAccept = 2,
@@ -34,7 +34,7 @@ public:
     explicit GraphViewResults(QWidget *parent = 0);
     virtual ~GraphViewResults();
     
-    void setResultToShow(Result result, Variable variablee, bool showAllChains, const QList<bool>& showChainList, bool showHpd, float threshold, bool showCalib, bool showPosterior, bool showWiggle, bool showRawResults);
+    void setResultToShow(TypeGraph typGraph, Variable variablee, bool showAllChains, const QList<bool>& showChainList, bool showHpd, float threshold, bool showCalib, bool showPosterior, bool showWiggle, bool showRawResults);
     
     void setSettings(const ProjectSettings& settings);
     void setMCMCSettings(const MCMCSettings& mcmc, const QList<Chain>& chains);
@@ -79,7 +79,7 @@ signals:
 protected:
     
     
-    Result mCurrentResult;
+    TypeGraph mCurrentTypeGraph;
     Variable mCurrentVariable;
     
     QString mTitle;

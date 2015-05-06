@@ -24,6 +24,11 @@ QDialog(parent, flags)
     positiveValidator->setBottom(1);
     mAutoSaveDelayEdit->setValidator(positiveValidator);
     
+    mPixelRatioLab = new Label(tr("Pixel Ratio") + ": ", this);
+    mPixelRatio = new QSpinBox(this);
+    mPixelRatio->setRange(1, 5);
+    mPixelRatio->setSingleStep(1);
+    
     mCSVCellSepLab = new Label(tr("CSV cell separator") + " : ", this);
     mCSVCellSepEdit = new LineEdit(this);
     
@@ -44,7 +49,7 @@ QDialog(parent, flags)
     connect(mCancelBut, SIGNAL(clicked()), this, SLOT(reject()));
     connect(mResetBut, SIGNAL(clicked()), this, SLOT(reset()));
     
-    setFixedSize(500, 185);
+    setFixedSize(500, 250);
 }
 
 AppSettingsDialog::~AppSettingsDialog()
@@ -62,6 +67,8 @@ void AppSettingsDialog::setSettings(const AppSettings& settings)
     mCSVDecSepEdit->setText(settings.mCSVDecSeparator);
     
     mOpenLastProjectCheck->setChecked(settings.mOpenLastProjectAtLaunch);
+    
+    mPixelRatio->setValue(settings.mPixelRatio);
 }
 
 AppSettings AppSettingsDialog::getSettings()
@@ -72,6 +79,7 @@ AppSettings AppSettingsDialog::getSettings()
     settings.mCSVCellSeparator = mCSVCellSepEdit->text();
     settings.mCSVDecSeparator = mCSVDecSepEdit->text();
     settings.mOpenLastProjectAtLaunch = mOpenLastProjectCheck->isChecked();
+    settings.mPixelRatio = mPixelRatio->value();
     return settings;
 }
 
@@ -85,6 +93,8 @@ void AppSettingsDialog::reset()
     mCSVDecSepEdit->setText(".");
     
     mOpenLastProjectCheck->setChecked(true);
+    
+    mPixelRatio->setValue(1);
 }
 
 void AppSettingsDialog::resizeEvent(QResizeEvent* e)
@@ -116,6 +126,9 @@ void AppSettingsDialog::resizeEvent(QResizeEvent* e)
     
     mOpenLastProjectLab->setGeometry(m, y += (lineH + m), w1, lineH);
     mOpenLastProjectCheck->setGeometry(2*m + w1, y, w2, lineH);
+    
+    mPixelRatioLab->setGeometry(m, y += (lineH + m), w1, lineH);
+    mPixelRatio->setGeometry(2*m + w1, y, w2, lineH);
     
     mResetBut->setGeometry(width() - 3*m - 3*butW, height() - m - butH, butW, butH);
     mOkBut->setGeometry(width() - 2*m - 2*butW, height() - m - butH, butW, butH);

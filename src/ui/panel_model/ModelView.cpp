@@ -23,7 +23,7 @@
 #include <QPropertyAnimation>
 #include <QRectF>
 
-
+#pragma mark constructor
 ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mCurrentRightWidget(0),
 mMargin(5),
@@ -739,10 +739,10 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
     //scene->clearSelection();
     scene->setSceneRect(scene->itemsBoundingRect());
     QRect r = scene->sceneRect().toRect();
-    
+    AxisTool axe;
     QFileInfo fileInfo = saveWidgetAsImage(scene, r,
                                            tr("Save model image as..."),
-                                           MainWindow::getInstance()->getCurrentPath());
+                                           MainWindow::getInstance()->getCurrentPath(),MainWindow::getInstance()->getAppSettings(),axe);//AppSettings());
     if(fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
 }

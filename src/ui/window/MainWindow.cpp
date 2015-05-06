@@ -206,7 +206,7 @@ void MainWindow::createMenus()
     //-----------------------------------------------------------------
     // Project menu
     //-----------------------------------------------------------------
-    mProjectMenu = menuBar()->addMenu(tr("Project"));
+    mProjectMenu = menuBar()->addMenu(tr("File"));
 
     mProjectMenu->addAction(mAppSettingsAction);
     mProjectMenu->addAction(mNewProjectAction);

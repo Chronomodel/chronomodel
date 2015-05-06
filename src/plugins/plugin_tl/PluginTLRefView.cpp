@@ -16,6 +16,8 @@ mGraph(0)
     mGraph->setYAxisMode(GraphView::eAllTicks);
     mGraph->setRendering(GraphView::eHD);
     mGraph->autoAdjustYScale(true);
+    
+    mMeasureColor=QColor(56, 120, 50);
 }
 
 PluginTLRefView::~PluginTLRefView()
@@ -67,6 +69,9 @@ void PluginTLRefView::setDate(const Date& d, const ProjectSettings& settings)
         GraphCurve curveMeasure;
         curveMeasure.mName = "Measure";
         curveMeasure.mPen.setColor(mMeasureColor);
+        QColor curveColor(mMeasureColor);
+        curveColor.setAlpha(50);
+        curveMeasure.mBrush.setColor(curveColor);
         curveMeasure.mFillUnder = true;
         curveMeasure.mIsVertical = true;
         curveMeasure.mIsHisto = false;

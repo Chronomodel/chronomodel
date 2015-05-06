@@ -19,8 +19,12 @@ mGreyedOut(false)
     
     Date d = Date::fromJson(date);
     ProjectSettings s = ProjectSettings::fromJson(settings);
-    
+    qDebug()<<"setting"<< s.mTmin;
+    d.mSettings.mTmin = s.mTmin;
+    d.mSettings.mTmax = s.mTmax;
+    d.mSettings.mStep = s.mStep;
     d.calibrate(s);
+        qDebug()<<" DateItem::DateItem"<<d.mSettings.mTmin<<d.mSettings.mTmax<<d.mSettings.mStep;
     mCalibThumb = d.generateCalibThumb();
 }
 

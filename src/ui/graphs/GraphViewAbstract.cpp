@@ -46,7 +46,7 @@ void GraphViewAbstract::setRangeX(const double aMinX, const double aMaxX)
     mMaxX = aMaxX;
     //mCurrentMinX = aMinX;
     //mCurrentMaxX = aMaxX;
-    repaintGraph(true);
+   // repaintGraph(true);
     
 }
 

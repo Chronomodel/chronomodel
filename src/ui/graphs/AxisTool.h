@@ -24,6 +24,7 @@ public:
     double mDeltaVal;
     double mDeltaPix;
     double mStartVal;
+    double mEndVal;
     double mStartPix;
     double mPixelsPerUnit;
     

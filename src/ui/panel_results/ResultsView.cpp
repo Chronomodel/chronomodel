@@ -276,19 +276,19 @@ mZoomCorrel(0)
     mDataThetaRadio = new RadioButton(tr("Calendar dates"), mResultsGroup);
     mDataSigmaRadio = new RadioButton(tr("Individual std. deviations"), mResultsGroup);
     
-    mDataPosteriorCheck       = new CheckBox(tr("Distrib. of post. dates"), mResultsGroup); // new PhD
+   // mDataPosteriorCheck       = new CheckBox(tr("Distrib. of post. dates"), mResultsGroup); // new PhD suppr le 28/04/2015
     mDataCalibCheck           = new CheckBox(tr("Individual calib. dates"), mResultsGroup);
     mShowDataUnderPhasesCheck = new CheckBox(tr("Show data under phases"),mResultsGroup);
     mWiggleCheck              = new CheckBox(tr("Wiggle shifted"), mResultsGroup);
     mDataThetaRadio           -> setChecked(true);
-    mDataPosteriorCheck       -> setChecked(true);
+   // mDataPosteriorCheck       -> setChecked(true); //suppr le 28/04/2015
     mDataCalibCheck           -> setChecked(true);
     mShowDataUnderPhasesCheck -> setChecked(false);
     
     connect(mShowDataUnderPhasesCheck, SIGNAL(toggled(bool)), this, SLOT(updateResults()));
     
     connect(mDataThetaRadio,     SIGNAL(clicked()), this, SLOT(updateResults()));
-    connect(mDataPosteriorCheck, SIGNAL(clicked()), this, SLOT(updateResults()));
+  //  connect(mDataPosteriorCheck, SIGNAL(clicked()), this, SLOT(updateResults())); //suppr le 28/04/2015
     connect(mDataCalibCheck,     SIGNAL(clicked()), this, SLOT(updateResults()));
     connect(mWiggleCheck,        SIGNAL(clicked()), this, SLOT(updateResults()));
     connect(mDataSigmaRadio,     SIGNAL(clicked()), this, SLOT(updateResults()));
@@ -488,13 +488,13 @@ void ResultsView::updateLayout()
     int dx = mLineH + m;
     int graphYAxis = 50;
     
-    mByPhasesBut->setGeometry(0, 0, (int)(mGraphLeft/2), mRulerH);
-    mByEventsBut->setGeometry(mGraphLeft/2, 0, (int)(mGraphLeft/2), mRulerH);
+    mByPhasesBut -> setGeometry(0, 0, (int)(mGraphLeft/2), mRulerH);
+    mByEventsBut -> setGeometry(mGraphLeft/2, 0, (int)(mGraphLeft/2), mRulerH);
     
-    mTabs->setGeometry(mGraphLeft + graphYAxis, 0, width() - mGraphLeft - mOptionsW - sbe - graphYAxis, mTabsH);
-    mRuler->setGeometry(mGraphLeft + graphYAxis, mTabsH, width() - mGraphLeft - graphYAxis - mOptionsW - sbe - 10, mRulerH);
-    mStack->setGeometry(0, mTabsH + mRulerH, width() - mOptionsW, height() - mRulerH - mTabsH);
-    mMarker->setGeometry(mMarker->pos().x(), mTabsH + mRulerH, mMarker->thickness(), height() - mRulerH - mTabsH);
+    mTabs   -> setGeometry(mGraphLeft + graphYAxis, 0, width() - mGraphLeft - mOptionsW - sbe - graphYAxis, mTabsH);
+    mRuler  -> setGeometry(mGraphLeft + graphYAxis, mTabsH, width() - mGraphLeft - graphYAxis - mOptionsW - sbe - 10, mRulerH);
+    mStack  -> setGeometry(0, mTabsH + mRulerH, width() - mOptionsW, height() - mRulerH - mTabsH);
+    mMarker -> setGeometry(mMarker->pos().x(), mTabsH + mRulerH, mMarker->thickness(), height() - mRulerH - mTabsH);
     
     if(QWidget* wid = mEventsScrollArea->widget())
     {
@@ -554,7 +554,7 @@ void ResultsView::updateLayout()
     if(mTabs->currentIndex() == 0)
     {
         mShowDataUnderPhasesCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
-        mDataPosteriorCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
+      //  mDataPosteriorCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
         mDataCalibCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
         mWiggleCheck->setGeometry(m + dx, y += (m + mLineH),(int)( mResultsGroup->width() - 2*m - dx), mLineH);
     }
@@ -599,10 +599,15 @@ void ResultsView::updateAllZoom()
     
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
         mByPhasesGraphs[i]->zoom(mResultCurrentMinX, mResultCurrentMaxX);
+   // if(mCurrentResult == eHisto && mCurrentVariable == eTheta)
+    //mByEventsGraphs[i]->setCurrentMaxX(
     
-    for(int i=0; i<mByEventsGraphs.size(); ++i)
+    for(int i=0; i<mByEventsGraphs.size(); ++i) {
         mByEventsGraphs[i]->zoom(mResultCurrentMinX, mResultCurrentMaxX);
     
+        //for(int j=0; i<int(mByEventsGraphs[i]->); ++i)
+        //mByEventsGraphs[i]->zoom(mResultCurrentMinX, mResultCurrentMaxX);
+    }
     memoZoom(mResultZoomX);
     update();
     
@@ -777,15 +782,69 @@ void ResultsView::updateResults(Model* model)
     mSettings = mModel->mSettings;
     mMCMCSettings = mModel->mMCMCSettings;
     
+    
+/*
+    if(mTabs->currentIndex() == 0){
+        
+        mCurrentTypeGraph = ResultsView::TypeGraph(GraphViewResults::eHisto);
+        if(mDataThetaRadio->isChecked()) {
+            mResultCurrentMinX = mSettings.mTmin;
+            mResultMinX = mSettings.mTmin;
+            mResultCurrentMaxX = mSettings.mTmax;
+            mResultMaxX = mSettings.mTmax;
+        }
+        else if(mDataSigmaRadio->isChecked())  {
+            mResultCurrentMinX = 0;
+            mResultMinX = 0;
+            mResultCurrentMaxX = mSettings.mTmax - mSettings.mTmin;
+            mResultMaxX = mSettings.mTmax - mSettings.mTmin;
+        }
+    }
+    else if(mTabs->currentIndex() == 1) {
+        mResultCurrentMinX = mSettings.mTmin;
+        mResultMinX = mSettings.mTmin;
+        mResultCurrentMaxX = mSettings.mTmax;
+        mResultMaxX = mSettings.mTmax;
+         mCurrentTypeGraph = ResultsView::TypeGraph(GraphViewResults::eTrace);
+    }
+    else if(mTabs->currentIndex() == 2) {
+        int curChainIdx = -1;
+        for(int i=0; i<mChainRadios.size(); ++i)
+            if(mChainRadios[i]->isChecked())
+                curChainIdx = i;
+        
+        if(curChainIdx != -1)  {
+            mResultCurrentMinX = 0;
+            mResultMinX = 0;
+            mResultCurrentMaxX = mChains[curChainIdx].mNumBurnIter + (mChains[curChainIdx].mBatchIndex * mChains[curChainIdx].mNumBatchIter) + mChains[curChainIdx].mNumRunIter / mChains[curChainIdx].mThinningInterval;
+            mResultMaxX = mResultCurrentMaxX;
+        }
+         mCurrentTypeGraph = ResultsView::TypeGraph(GraphViewResults::eAccept);
+    }
+    else if(mTabs->currentIndex() == 3) {
+        
+        mResultCurrentMinX = 0;
+        mResultMinX = 0;
+        mResultCurrentMaxX = 100;
+        mResultMaxX = 100;
+         mCurrentTypeGraph = ResultsView::TypeGraph(GraphViewResults::eCorrel);
+    }
+
+ */
+    
+    
+   /*
     mResultMinX = mModel->mSettings.mTmin;
     mResultMaxX = mModel->mSettings.mTmax;
     
     mResultCurrentMinX = mResultMinX;
     mResultCurrentMaxX = mResultMaxX;
+    */
     mResultZoomX     = 1;
     
     mRuler->setRange(mResultMinX, mResultMaxX);
     mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
+    updateRulerAreas();
     
     mCurrentXMinEdit->setText( QString::number(mResultMinX) );
     mCurrentXMaxEdit->setText( QString::number(mResultMaxX) );
@@ -897,6 +956,7 @@ void ResultsView::updateResults(Model* model)
         for(int j=0; j<(int)event->mDates.size(); ++j)
         {
             Date& date = event->mDates[j];
+            
             GraphViewDate* graphDate = new GraphViewDate(eventsWidget);
             graphDate->setSettings(mModel->mSettings);
             graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
@@ -936,12 +996,69 @@ void ResultsView::updateGraphs()
     if(mDataThetaRadio->isChecked()) variable = GraphViewResults::eTheta;
     else if(mDataSigmaRadio->isChecked()) variable = GraphViewResults::eSigma;
     
-    GraphViewResults::Result result;
+   /* GraphViewResults::Result result;
+    if(mTabs->currentIndex() == 0){
+        
+        result = GraphViewResults::eHisto;
+        if(mDataThetaRadio->isChecked()) {
+            mResultCurrentMinX = s.mTmin;
+            mResultMinX = s.mTmin;
+            mResultCurrentMaxX = s.mTmax;
+            mResultMaxX = s.mTmax;
+        }
+        else if(mDataSigmaRadio->isChecked())  {
+            mResultCurrentMinX = 0;
+            mResultMinX = 0;
+            mResultCurrentMaxX = s.mTmax - s.mTmin;
+            mResultMaxX = s.mTmax - s.mTmin;
+        }
+    }
+    else if(mTabs->currentIndex() == 1) {
+        mResultCurrentMinX = s.mTmin;
+        mResultMinX = s.mTmin;
+        mResultCurrentMaxX = s.mTmax;
+        mResultMaxX = s.mTmax;
+        result = GraphViewResults::eHisto;
+    }
+    else if(mTabs->currentIndex() == 2) {
+        int curChainIdx = -1;
+        for(int i=0; i<mChainRadios.size(); ++i)
+            if(mChainRadios[i]->isChecked())
+                curChainIdx = i;
+        
+        if(curChainIdx != -1)  {
+            mResultCurrentMinX = 0;
+            mResultMinX = 0;
+            mResultCurrentMaxX = mChains[curChainIdx].mNumBurnIter + (mChains[curChainIdx].mBatchIndex * mChains[curChainIdx].mNumBatchIter) + mChains[curChainIdx].mNumRunIter / mChains[curChainIdx].mThinningInterval;
+            mResultMaxX = mResultCurrentMaxX;
+        }
+        result = GraphViewResults::eAccept;
+    }
+    else if(mTabs->currentIndex() == 3) {
+        mResultCurrentMinX = 0;
+        mResultMinX = 0;
+        mResultCurrentMaxX = 100;
+        mResultMaxX = 100;
+        result = GraphViewResults::eCorrel;
+    }
+    
+    mResultZoomX     = 1;
+    
+    mRuler->setRange(mResultMinX, mResultMaxX);
+    mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
+    updateRulerAreas();
+    
+    mCurrentXMinEdit->setText( QString::number(mResultMinX) );
+    mCurrentXMaxEdit->setText( QString::number(mResultMaxX) );
+    */
+    
+    /*
+     GraphViewResults::Result result;
     if(mTabs->currentIndex() == 0)      result = GraphViewResults::eHisto;
     else if(mTabs->currentIndex() == 1) result = GraphViewResults::eTrace;
     else if(mTabs->currentIndex() == 2) result = GraphViewResults::eAccept;
     else if(mTabs->currentIndex() == 3) result = GraphViewResults::eCorrel;
-    
+    */
     bool showAllChains = mAllChainsCheck->isChecked();
     QList<bool> showChainList;
     if(mTabs->currentIndex() == 0)
@@ -965,19 +1082,19 @@ void ResultsView::updateGraphs()
     bool showRaw = mRawCheck->isChecked();
     
     bool showCalib = mDataCalibCheck->isChecked();
-    bool showPosterior = mDataPosteriorCheck->isChecked();
+    bool showPosterior = true; //mDataPosteriorCheck->isChecked();
     bool showWiggle = mWiggleCheck->isChecked();
     
-    // ---------------------------
+    // --------------------------- mCurrentTypeGraph = GraphViewResults::TypeGraph(
     
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
     {
-        mByPhasesGraphs[i]->setResultToShow(result, variable, showAllChains, showChainList, showHpd, hpdThreshold, showCalib,showPosterior, showWiggle, showRaw);
+        
+        mByPhasesGraphs[i]->setResultToShow(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable, showAllChains, showChainList, showHpd, hpdThreshold, showCalib,showPosterior, showWiggle, showRaw);
     }
     for(int i=0; i<mByEventsGraphs.size(); ++i)
     {
-        
-        mByEventsGraphs[i]->setResultToShow(result, variable, showAllChains, showChainList, showHpd, hpdThreshold, showCalib,showPosterior, showWiggle, showRaw);
+        mByEventsGraphs[i]->setResultToShow(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable, showAllChains, showChainList, showHpd, hpdThreshold, showCalib,showPosterior, showWiggle, showRaw);
     }
     
     // Restore current zoom
@@ -1019,20 +1136,25 @@ void ResultsView::updateRulerAreas()
         
         mRuler->clearAreas();
         mRuler->setRange(min, max);
+        mRuler->setCurrent(min, max);
         
         if(mDataThetaRadio->isChecked())
         {
             mRuler->setRange(min, max);
+            mRuler->setCurrent(min, max);
         }
         else if(mDataSigmaRadio->isChecked())
         {
             mRuler->setRange(0, max - min);
+            mRuler->setCurrent(0, max - min);
+            
         }
     }
     else if(mTabs->currentIndex() == 3)
     {
         mRuler->clearAreas();
         mRuler->setRange(0, 100);
+        mRuler->setCurrent(0, 100);
     }
     else
     {
@@ -1047,6 +1169,7 @@ void ResultsView::updateRulerAreas()
             int max = mChains[curChainIdx].mNumBurnIter + (mChains[curChainIdx].mBatchIndex * mChains[curChainIdx].mNumBatchIter) + mChains[curChainIdx].mNumRunIter / mChains[curChainIdx].mThinningInterval;
             
             mRuler->setRange(min, max);
+            mRuler->setCurrent(min, max);
             mRuler->clearAreas();
             
             mRuler->addArea(0,
@@ -1175,7 +1298,7 @@ void ResultsView::showInfos(bool show)
 
 void ResultsView::exportFullImage()
 {  
-    //  hide all buttons
+    //  hide all buttons in the both scrollAreaWidget
     for(int i=0; i<mByEventsGraphs.size(); ++i)
         mByEventsGraphs[i]->mButtonVisible = false;
     
@@ -1192,10 +1315,17 @@ void ResultsView::exportFullImage()
   
     QRect r(0, 0, curWid->width() , curWid->height());
    
-    
+    AxisTool axe;
+    axe.mShowText = true;
+    axe.mShowSubs = true;
+    axe.mShowSubSubs = true;
+    axe.mShowArrow = true;
+    axe.mShowText = true;
+    //QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth ,  mMarginBottom), 5);
+    axe.updateValues(r.width()-50, 40, mResultCurrentMinX, mResultCurrentMaxX);
     QFileInfo fileInfo = saveWidgetAsImage(curWid, r,
                                            tr("Save graph image as..."),
-                                           MainWindow::getInstance()->getCurrentPath());
+                                           MainWindow::getInstance()->getCurrentPath(),MainWindow::getInstance()->getAppSettings(),axe);
     if(fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
     
@@ -1243,6 +1373,7 @@ void ResultsView::withSlider()
     // change Ruler
     
     mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
+    
     
     // update graphes
     updateAllZoom();
@@ -1482,6 +1613,73 @@ void ResultsView::changeTab(int index)
     mWiggleCheck->setVisible(index == 0);
     mAllChainsCheck->setVisible(index == 0);
     mDataCalibCheck->setVisible(index == 0);
+    
+    ProjectSettings s = mSettings;
+
+    if(mTabs->currentIndex() == 0){
+        mCurrentTypeGraph = eHisto;
+        if(mDataThetaRadio->isChecked()) {
+            mResultCurrentMinX = s.mTmin;
+            mResultMinX = s.mTmin;
+            mResultCurrentMaxX = s.mTmax;
+            mResultMaxX = s.mTmax;
+        }
+        else if(mDataSigmaRadio->isChecked())  {
+            mResultCurrentMinX = 0;
+            mResultMinX = 0;
+            mResultCurrentMaxX = s.mTmax - s.mTmin;
+            mResultMaxX = s.mTmax - s.mTmin;
+        }
+    }
+    else if(mTabs->currentIndex() == 1) {
+        mCurrentTypeGraph = eTrace;
+        
+        mResultCurrentMinX = 0;
+        mResultMinX = 0;
+        
+        int curChainIdx = -1;
+        for(int i=0; i<mChainRadios.size(); ++i)
+            if(mChainRadios[i]->isChecked())
+                curChainIdx = i;
+        if(curChainIdx != -1)  {
+            mResultCurrentMaxX = mChains[curChainIdx].mNumBurnIter + (mChains[curChainIdx].mBatchIndex * mChains[curChainIdx].mNumBatchIter) + mChains[curChainIdx].mNumRunIter / mChains[curChainIdx].mThinningInterval;
+            mResultMaxX = mResultCurrentMaxX;
+        }
+
+    }
+    else if(mTabs->currentIndex() == 2) {
+        mCurrentTypeGraph = eAccept;
+        int curChainIdx = -1;
+        for(int i=0; i<mChainRadios.size(); ++i)
+            if(mChainRadios[i]->isChecked())
+                curChainIdx = i;
+        
+        if(curChainIdx != -1)  {
+            mResultCurrentMinX = 0;
+            mResultMinX = 0;
+            mResultCurrentMaxX = mChains[curChainIdx].mNumBurnIter + (mChains[curChainIdx].mBatchIndex * mChains[curChainIdx].mNumBatchIter) + mChains[curChainIdx].mNumRunIter / mChains[curChainIdx].mThinningInterval;
+            mResultMaxX = mResultCurrentMaxX;
+        }
+        
+    }
+    else if(mTabs->currentIndex() == 3) {
+        mCurrentTypeGraph = eCorrel;
+        mResultCurrentMinX = 0;
+        mResultMinX = 0;
+        mResultCurrentMaxX = 100;
+        mResultMaxX = 100;
+        
+    }
+    mXSlider->setValue(1);
+    mResultZoomX     = 1;
+    
+    mRuler->setRange(mResultMinX, mResultMaxX);
+    mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
+    updateRulerAreas();
+    
+    mCurrentXMinEdit->setText( QString::number(mResultMinX) );
+    mCurrentXMaxEdit->setText( QString::number(mResultMaxX) );
+    
     
     if(index == 0)
     {

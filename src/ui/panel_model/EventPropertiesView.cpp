@@ -353,23 +353,30 @@ void EventPropertiesView::updateKnownGraph()
         Project* project = MainWindow::getInstance()->getProject();
         QJsonObject state = project->state();
         QJsonObject settings = state[STATE_SETTINGS].toObject();
-        
+        double tmin = settings[STATE_SETTINGS_TMIN].toDouble();
+        double tmax = settings[STATE_SETTINGS_TMAX].toDouble();
+        double step = settings[STATE_SETTINGS_STEP].toDouble();
         EventKnown event = EventKnown::fromJson(mEvent);
-        event.updateValues(settings[STATE_SETTINGS_TMIN].toDouble(),
-                           settings[STATE_SETTINGS_TMAX].toDouble(),
-                           settings[STATE_SETTINGS_STEP].toDouble());
+        event.updateValues(tmin, tmax,step );
         
-        mKnownGraph->setRangeX(settings[STATE_SETTINGS_TMIN].toDouble(),
-                               settings[STATE_SETTINGS_TMAX].toDouble());
+        mKnownGraph->setRangeX(tmin,tmax);
         
-        qDebug() << event.mValues.size();
+        qDebug() << "EventPropertiesView::updateKnownGraph()"<<event.mValues.size();
+        mKnownGraph->setCurrentX(tmin,tmax);
+        
         double max = map_max_value(event.mValues);
         max = (max == 0) ? 1 : max;
         mKnownGraph->setRangeY(0, max);
+        mKnownGraph->showAxisArrows(false);
+        mKnownGraph->showAxisLines(false);
+        mKnownGraph->setXAxisMode(GraphView::eHidden);
+        //mKnownGraph->setYAxisMode(GraphView::eHidden);
         
+        // draw the calibrate curve on the rigth hand panel
         GraphCurve curve;
         curve.mName = "Known";
         curve.mData = event.mValues;
+        
         curve.mPen.setColor(Painting::mainColorLight);
         curve.mFillUnder = true;
         if(event.knownType() == EventKnown::eUniform)
