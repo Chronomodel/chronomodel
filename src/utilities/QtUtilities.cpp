@@ -157,7 +157,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
        // bool asSvg = fileName.endsWith(".svg");
        // if(asSvg)
         int heightAxe = 0;
-        if (Axe.mDeltaPix>0) heightAxe = 20;
+        if (Axe.mShowSubs) heightAxe = 30;
         
         
         if (fileExtension == "svg") {
@@ -201,12 +201,12 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             */
           
             short pr =  appSetting.mPixelRatio;// 4.;//0.005;
-            qDebug()<<" pr="<<pr;
+            //qDebug()<<" pr="<<pr;
             if(widget)
             {
                 //QSize wSize = widget->size();
                 
-                QImage image(r.width() * pr, (r.height() + versionHeight + heightAxe+20) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
+                QImage image(r.width() * pr, (r.height() + versionHeight + heightAxe+10 +20) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
               //  QImage image(int(r.width() * pr), int((r.height() + versionHeight) * pr), QImage::Format_ARGB32_Premultiplied);
                 //QImage image(wSize, QImage::Format_ARGB32_Premultiplied);
                // qDebug()<<"r.width() * pr"<< (r.width() * pr)<<" (r.height() + versionHeight) * pr"<<(r.height() + versionHeight) * pr;
@@ -218,7 +218,10 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 image.setDevicePixelRatio(pr);
                 image.fill(Qt::transparent);
                 
+                //widget->font();
+                
                 QPainter p;
+                p.setFont(widget->font());
                 p.begin(&image);
                 p.setRenderHint(QPainter::Antialiasing);
                 //QRectF tgtRect = image.rect();
@@ -229,7 +232,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                
                 //Keep it in memory : mMarginLeft(50), mMarginRight(10), mMarginTop(5), mMarginBottom(15), in graphViewAbstract
                
-                if (Axe.mDeltaPix>0){
+                if (Axe.mShowSubs){
                     
                     //Axe.updateValues(r.width()-10-50 , Axe.mDeltaPix, Axe.mStartVal, Axe.mEndVal);
                     Axe.updateValues(r.width()-10-50 , 50, Axe.mStartVal, Axe.mEndVal);
@@ -237,11 +240,12 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                     Axe.mShowSubs = true;
                     Axe.mShowSubSubs = true;
                     Axe.mShowText = true;
-                    Axe.paint(p, QRectF(50, r.height()+heightAxe, r.width()-10-50 ,  heightAxe), 7);
+                    Axe.paint(p, QRectF(50, r.height()+10, r.width()-10-50 ,  heightAxe), 7);
+                    heightAxe += 7;
                 }
                 
                 p.setPen(Qt::black);
-                p.drawText(0, r.height()+heightAxe+versionHeight, r.width(), versionHeight,
+                p.drawText(0, r.height()+heightAxe+ 10, r.width(), versionHeight,
                            Qt::AlignCenter,
                            qApp->applicationName() + " " + qApp->applicationVersion());
                 

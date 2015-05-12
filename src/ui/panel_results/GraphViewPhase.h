@@ -17,6 +17,10 @@ public:
     
     void setGraphFont(const QFont& font);
     
+    //double getMaxDuration();
+    
+    GraphView* mDurationGraph;
+    Phase* mPhase;
 protected:
     void paintEvent(QPaintEvent* e);
     void refresh();
@@ -26,9 +30,9 @@ protected slots:
     void showDuration(bool show);
     
 private:
-    Phase* mPhase;
+    //Phase* mPhase;
     
-    GraphView* mDurationGraph;
+    //GraphView* mDurationGraph;
     Button* mShowDuration;
 };
 

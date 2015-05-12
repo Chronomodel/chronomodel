@@ -118,7 +118,7 @@ void GraphViewEvent::refresh()
                         if(mShowRawResults)
                         {
                             GraphCurve curveRaw;
-                            curveRaw.mName = "";//"raw histo full";
+                            curveRaw.mName = "raw histo full";
                             curveRaw.mPen.setColor(Qt::red);
                             curveRaw.mData = equal_areas(mEvent->mTheta.fullRawHisto(), 1.f);
                             curveRaw.mIsHisto = true;
@@ -129,7 +129,7 @@ void GraphViewEvent::refresh()
                         }
                         
                         GraphCurve curve;
-                        curve.mName = "";//"histo full";
+                        curve.mName = "histo full";
                         curve.mPen.setColor(color);
                         curve.mData = equal_areas(mEvent->mTheta.fullHisto(), 1.f);
                         curve.mIsHisto = false;
@@ -139,11 +139,11 @@ void GraphViewEvent::refresh()
                         mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                         
                         GraphCurve curveHPD;
-                        curveHPD.mName = "";//"histo HPD full";
+                        curveHPD.mName = "histo HPD full";
                         curveHPD.mPen.setColor(color);
                         curveHPD.mFillUnder = true;
                         QColor HPDColor(color);
-                        HPDColor.setAlpha(50);
+                        HPDColor.setAlpha(100);
                         curveHPD.mBrush.setStyle(Qt::SolidPattern);
                         curveHPD.mBrush.setColor(HPDColor);
                         curveHPD.mIsHisto = false;
@@ -158,7 +158,7 @@ void GraphViewEvent::refresh()
                             QColor col = Painting::chainColors[i];
                             
                             GraphCurve curve;
-                            curve.mName = "";//QString("histo chain " + QString::number(i));
+                            curve.mName = QString("histo chain " + QString::number(i));
                             curve.mPen.setColor(col);
                             curve.mIsHisto = false;
                             curve.mData = equal_areas(mEvent->mTheta.histoForChain(i), 1.f);
@@ -171,11 +171,11 @@ void GraphViewEvent::refresh()
                     if(mShowAllChains && mShowHPD)
                     {
                         GraphCurve curveCred;
-                        curveCred.mName = "";//"credibility full";
+                        curveCred.mName = "credibility full";
                         curveCred.mSections.append(mEvent->mTheta.mCredibility);
                         curveCred.mHorizontalValue = mGraph->maximumY();
                         curveCred.mPen.setColor(color);
-                        curveCred.mPen.setWidth(3);
+                        curveCred.mPen.setWidth(4);
                         curveCred.mPen.setCapStyle(Qt::FlatCap);
                         curveCred.mIsHorizontalSections = true;
                         mGraph->addCurve(curveCred);
@@ -199,7 +199,7 @@ void GraphViewEvent::refresh()
                     if(mShowAllChains)
                     {
                         GraphCurve curve;
-                        curve.mName = "";//"histo full date " + QString::number(i);
+                        curve.mName = "histo full date " + QString::number(i);
                         curve.mPen.setColor(color);
                         curve.mIsHisto = false;
                         curve.mData = equal_areas(date.mSigma.fullHisto(), 1.f);
@@ -215,7 +215,7 @@ void GraphViewEvent::refresh()
                             QColor col = Painting::chainColors[j];
                             
                             GraphCurve curve;
-                            curve.mName = "";//QString("histo sigma data " + QString::number(i) + " for chain" + QString::number(j));
+                            curve.mName = QString("histo sigma data " + QString::number(i) + " for chain" + QString::number(j));
                             curve.mPen.setColor(col);
                             curve.mIsHisto = false;
                             curve.mData = equal_areas(date.mSigma.histoForChain(j), 1.f);

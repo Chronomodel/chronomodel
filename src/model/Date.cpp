@@ -259,7 +259,7 @@ QPixmap Date::generateCalibThumb()
     
     QColor color = mPlugin->getColor();//  Painting::mainColorLight;
     QColor HPDColor(color);
-    HPDColor.setAlpha(100);
+    //HPDColor.setAlpha(100);
     
     GraphCurve curve;
     //QMap<double, double> mDataCalib;

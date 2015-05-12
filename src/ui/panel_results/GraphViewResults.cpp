@@ -384,7 +384,7 @@ void GraphViewResults::updateLayout()
         
         bool showButs = (h >= mLineH + butMinH);
         //showButs = false;
-        leftShift = mGraphLeft;
+        leftShift = mGraphLeft ;
      
         mImageSaveBut   -> setVisible(showButs);
         mDataSaveBut    -> setVisible(showButs);
@@ -393,6 +393,7 @@ void GraphViewResults::updateLayout()
         
         
         QColor backCol = mItemColor;
+
         QColor foreCol = getContrastedColor(backCol);
         
     
@@ -406,13 +407,22 @@ void GraphViewResults::updateLayout()
             mImageClipBut   -> setGeometry(2*bw, mLineH, bw, bh);
             mResultsClipBut -> setGeometry(mGraphLeft-bw, mLineH, bw, bh);
             
-            
-            
-            QRect topRect(0, 0, mGraphLeft, mLineH);
+            // affiche le texte dans la boite de droite avec les boutons
+            QRectF topRect(0, 1, mGraphLeft-p.pen().widthF(), mLineH-p.pen().widthF() - 1);
+           
             p.setPen(backCol);
             p.setBrush(backCol);
             p.drawRect(topRect);
             
+            p.setPen(foreCol);
+            QFont font;
+            font.setPointSizeF(pointSize(11));
+            p.setFont(font);
+            
+            
+            p.drawText(QRectF(0, 1, mGraphLeft-p.pen().widthF(), mLineH-p.pen().widthF()-1),
+                       Qt::AlignVCenter | Qt::AlignCenter,
+                       mItemTitle);
             
         }
     
@@ -430,15 +440,7 @@ void GraphViewResults::updateLayout()
        // p.setPen(Qt::black);
        // p.drawLine(0, height(), mGraphLeft, height());
     
-        p.setPen(foreCol);
-        QFont font;
-        font.setPointSizeF(pointSize(11));
-        p.setFont(font);
-        // affiche le texte dans la boite de droite avec les boutons
         
-        p.drawText(QRectF(0, 0, mGraphLeft-p.pen().widthF(), mLineH-p.pen().widthF()),
-                   Qt::AlignVCenter | Qt::AlignCenter,
-                   mItemTitle);
         //qDebug()<<"GraphViewResults::updateLayout() mItemTitle "<<mItemTitle;
         
     }
@@ -477,23 +479,29 @@ void GraphViewResults::updateLayout()
     }*/
     // write mTitle under the curve field
     QFontMetrics fm = this->fontMetrics();
-    int topShift = fm.height()+4;
-    //QRectF textRect(leftShift, 0, this->width()-leftShift,topShift);
-    QRectF textRect(leftShift, 2, this->width()-leftShift,topShift);
+    
+    QFont fontTitle(this->font());
+    fontTitle.setPointSizeF(this->font().pointSizeF()*1.1);
+    QFontMetrics fmTitle(fontTitle);
+    
+    int topShift = fmTitle.height()+4+1;
+    
+    //leftShift = mGraphLeft+p.pen().widthF();
+    //leftShift = leftShift+p.pen().widthF();
+    QRectF textRect(leftShift, 1, this->width()-leftShift,topShift-1);
     p.fillRect(textRect, mGraph->getBackgroundColor());
     
-    //p.drawText(textRect.adjusted(50, 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
-    //QFont fontTitle(this->font());
-    //fontTitle.weight()= fontTitle.weight()*1.5;
-    //p.font()=fontTitle;
-    p.drawText(QRect(50, 0, topShift-2, fm.width(mTitle)), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
+
+    p.setFont(fontTitle);
     
-    p.drawText(textRect.adjusted(100, 0, 0, 0), Qt::AlignVCenter | Qt::AlignRight, mGraph->getInfo());
+    p.drawText(QRect(leftShift + 50, 3, fmTitle.width(mTitle), topShift - 1), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
     
     
+    p.drawText(QRect(leftShift + this->width() - fmTitle.width(mGraph->getInfo()) - 150 ,3 ,fmTitle.width(mGraph->getInfo()), topShift-1), Qt::AlignVCenter | Qt::AlignLeft, mGraph->getInfo());
     
-    QRect graphRect(leftShift, topShift, this->width() - leftShift, height()-1-topShift);
     
+    QRect graphRect(leftShift, topShift, this->width() - leftShift, height()-topShift);
+ 
     if(mShowNumResults) {
         
         mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));

@@ -178,7 +178,7 @@ mCalibVisible(false)
     mMaxLab = new Label(tr("End") + " :", mRightWrapper);
     //mStepLab = new Label(tr("Step") + " :", mRightWrapper);
     
-    qreal butW = 80;
+   // qreal butW = 80;
  /*   qDebug()<<"ModelView::ModelView mRightWrapper->x()="<<mRightWrapper->x();
     qDebug()<<"ModelView::ModelView mRightWrapper->y()="<<mRightWrapper->y();
     qDebug()<<"ModelView::ModelView mRightWrapper->width()="<<mRightWrapper->width()<<"height "<<mRightWrapper->height();
@@ -263,7 +263,7 @@ mCalibVisible(false)
     mButPhasesModel->setGeometry(mRightWrapper->width() - butW, 0, butW, mToolbarH);
     qDebug()<<"call setgeometry";
 */    // mEventPropertiesView->setGeometry(0,mToolbarH, mRightWrapper->width(),mRightWrapper->height()- mToolbarH );
-    qDebug()<<"ModelView::ModelView mEventPropertiesView heigth "<<mEventPropertiesView->height();
+  //  qDebug()<<"ModelView::ModelView mEventPropertiesView heigth "<<mEventPropertiesView->height();
     // ------------- Windows calibration ---------------------
     
     mCalibrationView = new CalibrationView(this);
