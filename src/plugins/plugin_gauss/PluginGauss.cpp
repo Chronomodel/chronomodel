@@ -38,7 +38,7 @@ QIcon PluginGauss::getIcon() const
 
 QColor PluginGauss::getColor() const
 {
-    return Qt::black;
+    return QColor(217,37,37);//Qt::black;
 }
 bool PluginGauss::doesCalibration() const
 {

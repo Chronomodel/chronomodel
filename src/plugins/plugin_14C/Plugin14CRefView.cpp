@@ -31,6 +31,7 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
     
     mGraph->removeAllCurves();
     mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
+    mGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
     
     if(!date.isNull())
     {
@@ -45,21 +46,25 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         QColor color2(150, 150, 150);
         
         Plugin14C* plugin = (Plugin14C*)date.mPlugin;
+
         const QMap<QString, QMap<double, double> >& curves = plugin->getRefData(ref_curve);
+        
         
         QMap<double, double> curveG;
         QMap<double, double> curveG95Sup;
         QMap<double, double> curveG95Inf;
         
         //qDebug() << curves["G"][0];
+        double yMin = curves["G95Inf"][mSettings.mTmin];
+        double yMax = curves["G95Sup"][mSettings.mTmin];
         
-        for(int t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep)
-        {
+        for(int t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep) {
             curveG[t] = curves["G"][t];
             curveG95Sup[t] = curves["G95Sup"][t];
             curveG95Inf[t] = curves["G95Inf"][t];
             
-            //qDebug() << t << ", " << curves["G"][t];
+            yMin = qMin(yMin, curveG95Inf[t]);
+            yMax = qMax(yMax, curveG95Sup[t]);
         }
         
         GraphCurve graphCurveG;
@@ -85,14 +90,18 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         
         // ----------------------------------------------
         
-        double yMin = map_min_value(curveG95Inf);
-        double yMax = map_max_value(curveG95Sup);
+       // double yMin = map_min_value(curveG95Inf);
+       // double yMax = map_max_value(curveG95Sup);
         
         yMin = qMin(yMin, age);
+        yMin = floor(yMin/10)*10;
+        
         yMax = qMax(yMax, age);
+        yMax = ceil(yMax/10)*10;
         
         mGraph->setRangeY(yMin, yMax);
-        
+       // qDebug()<<"Plugin14CRefView::setDate yMin"<<yMin;
+       // qDebug()<<"Plugin14CRefView::setDate yMax"<<yMax;
         // ----------------------------------------------
         //  Measure curve
         // ----------------------------------------------

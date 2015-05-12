@@ -106,6 +106,7 @@ void CalibrationView::setDate(const QJsonObject& date)
             mDate.calibrate(mSettings);
             mTopLab->setText(mDate.mName + " (" + mDate.mPlugin->getName() + ")");
             mCalibGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
+            mCalibGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
             mZoomSlider->setValue(0);
         }
         updateGraphs();
@@ -145,8 +146,8 @@ void CalibrationView::updateGraphs()
         // ------------------------------------------------------------
         
         QColor color = Painting::mainColorLight;
-        QColor HPDColor(color);
-        HPDColor.setAlpha(75);
+        QColor HPDColor(mDate.mPlugin->getColor());//color);
+        HPDColor.setAlpha(255);
         
         GraphCurve calibCurve;
         calibCurve.mName = "Calibration";
@@ -155,6 +156,7 @@ void CalibrationView::updateGraphs()
         calibCurve.mIsHisto = false;
         calibCurve.mData = mDate.getCalibMap();
         calibCurve.mBrush.setColor(HPDColor);
+        calibCurve.mPen.setColor(Qt::black);
         
         // TODO : looks like an ugly hack...
         bool isTypo = (mDate.mPlugin->getName() == "Typo Ref.");
@@ -284,10 +286,13 @@ void CalibrationView::updateScroll()
     if(prop != 1)
     {
         // Update graphs with new zoom
+        //double delta = prop * (max - min);
         double delta = prop * (max - min);
         double deltaStart = (max - min) - delta;
-        double start = min + deltaStart * ((double)mScrollBar->value() / (double)mScrollBar->maximum());
+        double start = min + deltaStart * ((double)mScrollBar->value() / (double)mScrollBar->maximum()) ;
+        start = (floor(start)<min ? min : floor(start));
         double end = start + delta;
+        end = (ceil(end)>max ? max : ceil(end));
         mCalibGraph->zoomX(start, end);
         if(mRefGraphView)
             mRefGraphView->zoomX(start, end);
@@ -405,7 +410,7 @@ void CalibrationView::mouseMoveEvent(QMouseEvent* e)
     int y = e->pos().y()-2;
     y = (y < 0) ? 0 : y;
     y = (y > height()) ? height() : y;
-    
+    // draw the red cross lines
     mMarkerX->setGeometry(x, mMarkerX->pos().y(), mMarkerX->width(), mMarkerX->height());
     mMarkerY->setGeometry(mMarkerY->pos().x(), y, mMarkerY->width(), mMarkerY->height());
 }

@@ -32,7 +32,7 @@ QIcon PluginUniform::getIcon() const
 
 QColor PluginUniform::getColor() const
 {
-    return Qt::black;
+    return QColor(220,204,173);//Qt::black;
 }
 
 bool PluginUniform::doesCalibration() const

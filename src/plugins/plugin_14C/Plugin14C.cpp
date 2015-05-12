@@ -69,7 +69,7 @@ QIcon Plugin14C::getIcon() const
 }
 QColor Plugin14C::getColor() const
 {
-    return Qt::black;
+    return QColor(47,46,68);//Qt::black;
 }
 bool Plugin14C::doesCalibration() const
 {
@@ -203,6 +203,7 @@ void Plugin14C::loadRefDatas()
                             double gInf = g - 1.96f * values[2].toDouble();
                             
                             curveG[t] = g;
+                            
                             curveG95Sup[t] = gSup;
                             curveG95Inf[t] = gInf;
                         }

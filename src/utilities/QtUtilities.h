@@ -19,7 +19,7 @@ QStringList intListToStringList(const QList<int>& intList);
 QString intListToString(const QList<int>& intList, const QString& separator = ",");
 
 QFileInfo saveWidgetAsImage(QObject* widget, const QRect& r, const QString& dialogTitle, const QString& defaultPath,  const AppSettings & setting,AxisTool& Axe);
-bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName);
+bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName, AxisTool& Axe);
 
 bool isComment(const QString& str);
 QString prepareTooltipText(const QString& title, const QString& text);

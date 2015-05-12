@@ -32,7 +32,7 @@ void PluginTLRefView::setDate(const Date& d, const ProjectSettings& settings)
     
     mGraph->removeAllCurves();
     mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
-    
+    mGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
     if(!date.isNull())
     {
         double age = date.mData.value(DATE_TL_AGE_STR).toDouble();
@@ -57,7 +57,7 @@ void PluginTLRefView::setDate(const Date& d, const ProjectSettings& settings)
         double yMin = map_min_value(curve.mData);
         double yMax = map_max_value(curve.mData);
         
-        yMin = qMin(yMin, age);
+        yMin = qMin(yMin, age);       
         yMax = qMax(yMax, age);
         
         mGraph->setRangeY(yMin, yMax);

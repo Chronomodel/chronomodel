@@ -84,7 +84,7 @@ void GraphViewEvent::refresh()
                     mGraph->setRangeY(0, 1.f);
                     
                     GraphCurve curve;
-                    curve.mName = "Fixed Bound";
+                    curve.mName = mTitle+" : "+"Fixed Bound";
                     curve.mPen.setColor(color);
                     curve.mIsHisto = false;
                     curve.mIsRectFromZero = true;
@@ -103,7 +103,7 @@ void GraphViewEvent::refresh()
                     if(isUnifBound && mShowCalib)
                     {
                         GraphCurve curve;
-                        curve.mName = "Uniform Bound";
+                        curve.mName = mTitle+" : "+"Uniform Bound";
                         curve.mPen.setColor(QColor(120, 120, 120));
                         curve.mIsHisto = true;
                         curve.mIsRectFromZero = true;
@@ -143,7 +143,7 @@ void GraphViewEvent::refresh()
                         curveHPD.mPen.setColor(color);
                         curveHPD.mFillUnder = true;
                         QColor HPDColor(color);
-                        HPDColor.setAlpha(50);
+                        HPDColor.setAlpha(100);
                         curveHPD.mBrush.setStyle(Qt::SolidPattern);
                         curveHPD.mBrush.setColor(HPDColor);
                         curveHPD.mIsHisto = false;
@@ -175,7 +175,7 @@ void GraphViewEvent::refresh()
                         curveCred.mSections.append(mEvent->mTheta.mCredibility);
                         curveCred.mHorizontalValue = mGraph->maximumY();
                         curveCred.mPen.setColor(color);
-                        curveCred.mPen.setWidth(3);
+                        curveCred.mPen.setWidth(4);
                         curveCred.mPen.setCapStyle(Qt::FlatCap);
                         curveCred.mIsHorizontalSections = true;
                         mGraph->addCurve(curveCred);

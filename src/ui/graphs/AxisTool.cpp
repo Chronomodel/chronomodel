@@ -11,7 +11,7 @@ mShowSubSubs(true),
 mShowText(true),
 mMinMaxOnly(false),
 mDeltaVal(0),
-mDeltaPix(0),
+mDeltaPix(20),
 mStartVal(0),
 mStartPix(0),
 mAxisColor(0, 0, 0)
@@ -103,7 +103,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
             QPainterPath arrowRight;
             
             QPolygonF triangle;
-            triangle << QPointF(xo + w, yo) << QPointF(xo + w - heigthSize, yo - heigthSize) << QPointF(xo + w - heigthSize, yo + heigthSize);
+            triangle << QPointF(xo + w + heigthSize*.65, yo) << QPointF(xo + w , yo - heigthSize*.65) << QPointF(xo + w, yo + heigthSize*.65);
           
             p.setBrush(mAxisColor);
             p.drawPolygon(triangle);
@@ -133,8 +133,13 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
                        p.drawLine(QLineF(x, yo, x, yo + heigthSize));
                        linesPos.append(x);
                     }
+                    
                     if (mShowText) {
-                        QString text = QString::number((x-xo)/mPixelsPerUnit + mStartVal, 'G', 5);
+                        QString text;
+                        if (fabs((x-xo)/mPixelsPerUnit + mStartVal)<1E-6) {
+                            text = "0";
+                        }
+                        else text = QString::number((x-xo)/mPixelsPerUnit + mStartVal, 'G', 5);
                         
                         int textWidth =  fm.width(text) ;
                         qreal tx = x - textWidth/2;
@@ -170,7 +175,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
             
             QPolygonF triangle;
             
-            triangle << QPointF(xov, yov - h) << QPointF(xov - heigthSize, yov - h + heigthSize) << QPointF(xov + heigthSize, yov- h + heigthSize);
+            triangle << QPointF(xov, yov - h) << QPointF(xov - heigthSize*.65, yov - h + heigthSize*.65) << QPointF(xov + heigthSize*.65, yov- h + heigthSize*.65);
             
             p.setBrush(mAxisColor);
             p.drawPolygon(triangle);
@@ -202,7 +207,11 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
                     
                     int align = (Qt::AlignRight | Qt::AlignVCenter);
                     QString text = QString::number(mStartVal + i * mDeltaVal, 'g', 5);
-                    int textWidth = fm.width(text);
+                    //qDebug()<<"Axistool::paint mSartVal"<<mStartVal<<" endvalue"<<mEndVal;
+                    //QString text = QString::number((-y+yov)/mPixelsPerUnit + mStartVal, 'g', 5);
+                    
+                    
+                   // int textWidth = fm.width(text);
                    // double ty = y - textS/2;
                     qreal ty = y - heightText/2;
                     /*if(ty + textS > yo)

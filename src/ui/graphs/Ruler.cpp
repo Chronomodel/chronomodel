@@ -12,7 +12,7 @@ mCurrentMax(1000),
 mMin(0),
 mMax(1000),
 mZoomProp(1.),
-mStepMinWidth(40),
+mStepMinWidth(20),//define secondary scale
 mStepWidth(100)
 {
     mScrollBarHeight = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);

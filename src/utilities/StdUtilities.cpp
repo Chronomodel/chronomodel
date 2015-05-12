@@ -306,7 +306,7 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double t
     iter.toBack();
     
     double area = 0.;
-    double finalArea = 0.;
+//    double finalArea = 0.;
     bool areaFound = false;
     bool symetryTested = false;
     double lastV = 0;
@@ -322,7 +322,7 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double t
         if(area < areaSearched)
         {
             result[t] = v;
-            finalArea = area;
+//            finalArea = area;
         }
         else if(area > areaSearched)
         {
@@ -330,15 +330,15 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double t
             {
                 areaFound = true;
                 result[t] = v;
-                finalArea = area;
+//                finalArea = area;
             }
-            else if(!symetryTested)
+            else  if(!symetryTested)
             {
                 symetryTested = true;
                 if(v == lastV)
                 {
                     result[t] = v;
-                    finalArea = area;
+//                    finalArea = area;
                 }
                 else
                     result[t] = 0;

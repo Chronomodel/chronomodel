@@ -11,7 +11,7 @@ class ProjectSettings;
 #pragma mark Constructor / Destructor
 
 GraphView::GraphView(QWidget *parent):QWidget(parent),
-mStepMinWidth(40),
+mStepMinWidth(30), // define secondary scale on axis
 mRendering(eSD),
 mShowAxisArrows(true),
 mShowAxisLines(true),
@@ -68,7 +68,7 @@ void GraphView::zoomX(const double min, const double max)
         if(mAutoAdjustYScale)
         {
             double yMax = -100000000;
-            double yMin = 100000000;
+            double yMin =  100000000;
             for(int curveIndex=0; curveIndex<mCurves.size(); ++curveIndex)
             {
                 const GraphCurve& curve = mCurves[curveIndex];
@@ -337,8 +337,8 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
         mTipRect.setWidth(mTipWidth);
         mTipRect.setHeight(mTipHeight);
         
-        mTipX = getValueForX(e->x()-4.65 );
-        mTipY = getValueForY(e->y());
+        mTipX = getValueForX(e->x()-0.5 );
+        mTipY = getValueForY(e->y()+0,5);
         
         update(old_rect.adjusted(-30, -30, 30, 30).toRect());
     }
@@ -514,7 +514,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolX.mShowArrow = true;
        //QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth ,  mMarginBottom), 5);
         mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
-        QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 5);
+        QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 7);
         
         if(mShowVertGrid)
         {
@@ -531,7 +531,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolX.mShowSubs = true;
         mAxisToolX.mShowSubSubs = false;
         mAxisToolX.mShowArrow = true;
-        mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 5);
+        mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 7);
         //QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 5);
     }
    
@@ -544,6 +544,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolY.mShowSubs = true;
         mAxisToolY.mShowSubSubs = true;
         mAxisToolY.mShowArrow = true;
+        
         QVector<qreal> linesYPos = mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), 5);
         
         if(mShowHorizGrid)
@@ -563,14 +564,16 @@ void GraphView::paintToDevice(QPaintDevice* device)
     
     
     // ----------------------------------------------------
-    //  Infos
+    //  Infos, since v 1.2.6 infos are transfered to the title panel in GraphViewResult
     // ----------------------------------------------------
-    if(mShowInfos)
+    /*
+     if(mShowInfos)
     {
         QString infos = mInfos.join(" | ");
         p.setPen(QColor(50, 50, 50));
         p.drawText(mMarginLeft + 5, mMarginTop + 5, mGraphWidth - 10, 15, Qt::AlignRight | Qt::AlignTop, infos);
     }
+     */
     
 }
 
@@ -591,8 +594,8 @@ void GraphView::drawCurves(QPainter& painter)
         QPen pen = curve.mPen;
         pen.setWidth(pen.width() * mThickness);
         painter.setPen(pen);
-       
-        // painter.drawText(mMarginLeft + 5, mMarginTop + 5, mGraphWidth - 10, 15, Qt::AlignRight | Qt::AlignTop, curve.mName);
+      // QFontMetrics fm(painter.font());
+        // painter.drawText(mMarginRight + 50, mMarginTop + 5, fm.width(curve.mName), 15, Qt::AlignLeft | Qt::AlignTop, curve.mName);
         //p.drawText(r, Qt::AlignHCenter | Qt::AlignTop, QString("1"));
         
         if(curve.mIsHorizontalLine)
@@ -770,6 +773,7 @@ void GraphView::drawCurves(QPainter& painter)
                         last_value_y = valueY;
                         ++index;
                     }
+                    
                 }
             }
             else
@@ -829,11 +833,20 @@ void GraphView::drawCurves(QPainter& painter)
                 // Draw
 
                 QMapIterator<double, double> iter(lightMap);
+                iter.toFront();
+                double valueX = iter.key();
+                double valueY = iter.value();
+                
+                qreal x = getXForValue(mCurrentMinX, false);
+                qreal y = getYForValue(0, false);
+
+                path.moveTo(x, y);
+                
                 while(iter.hasNext())
                 {
                     iter.next();
-                    double valueX = iter.key();
-                    double valueY = iter.value();
+                    valueX = iter.key();
+                    valueY = iter.value();
                     
                    /* if(curve.mName == "G")
                     {
@@ -841,12 +854,13 @@ void GraphView::drawCurves(QPainter& painter)
                     }*/
                     if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
                     {
-                        qreal x = getXForValue(valueX, false);
-                        qreal y = getYForValue(valueY, false);
+                         x = getXForValue(valueX, false);
+                         y = getYForValue(valueY, false);
                         
                         if(index == 0)
                         {
-                            path.moveTo(x, y);
+                            //path.moveTo(x, y);
+                            path.lineTo(x, y);
                         }
                         else
                         {
@@ -880,7 +894,15 @@ void GraphView::drawCurves(QPainter& painter)
                         ++index;
                     }
                 }
-                
+                if(curve.mIsRectFromZero && valueY != 0.f)
+                {
+                    //iter.toBack();
+                    x = getXForValue(mCurrentMaxX, false);
+                    y = getYForValue(0, false);
+                    path.lineTo(x, y);
+                    
+                }
+
             }
             painter.drawPath(path);
         }
@@ -892,10 +914,12 @@ void GraphView::drawCurves(QPainter& painter)
                 path.lineTo(mMarginLeft, mMarginTop);
             else
                 path.lineTo(mMarginLeft + mGraphWidth, mMarginTop + mGraphHeight);
+            //path.lineTo( mGraphWidth - 10, mMarginTop + mGraphHeight);
+            
             path.lineTo(mMarginLeft, mMarginTop + mGraphHeight);
             
-            QColor c = curve.mPen.color();
-            c.setAlpha(50);
+            //QColor c = curve.mPen.color();
+            //c.setAlpha(50);
             painter.setPen(curve.mPen);
             painter.setBrush(curve.mBrush);
             painter.fillPath(path, curve.mBrush);
@@ -1058,4 +1082,18 @@ bool GraphView::saveAsSVG(const QString& fileName, const QString graphTitle, con
         
     }
     
+}
+QString GraphView::getInfo()
+{
+    
+    return ( isShow() ? mInfos.join("|") : "");
+}
+
+bool GraphView::isShow()
+{
+    return mShowInfos;
+}
+bool GraphView::getXAxisMode()
+{
+    return mXAxisMode;
 }

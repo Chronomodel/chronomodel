@@ -111,7 +111,7 @@ QMap<double, double> MetropolisVariable::generateRawHisto(const QVector<double>&
         }
     }
     
-    fftwf_free(input);
+    fftwf_free(input); // ??
     
     return result;
 }
@@ -165,7 +165,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
         fftwf_free(output);
     }
     
-    return result;
+    return result; // return a map between a and b with a step delta = (b - a) / fftLen;
 }
 
 void MetropolisVariable::generateHistos(const QList<Chain>& chains, int fftLen, double hFactor, double tmin, double tmax)

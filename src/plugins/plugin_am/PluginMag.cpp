@@ -82,7 +82,7 @@ QIcon PluginMag::getIcon() const
 }
 QColor PluginMag::getColor() const
 {
-    return QColor(Qt::red);//Qt::red; //243, 92, 26
+    return QColor(198,79,32);//Qt::red; //243, 92, 26
 }
 bool PluginMag::doesCalibration() const
 {

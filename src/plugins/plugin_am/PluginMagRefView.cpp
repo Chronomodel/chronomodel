@@ -30,6 +30,7 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
     
     mGraph->removeAllCurves();
     mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
+    mGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
     
     if(!date.isNull())
     {

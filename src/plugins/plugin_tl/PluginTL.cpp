@@ -36,7 +36,7 @@ QIcon PluginTL::getIcon() const
 }
 QColor PluginTL::getColor() const
 {
-    return Qt::red;
+    return QColor(216,207,52);//Qt::red;
 }
 bool PluginTL::doesCalibration() const
 {

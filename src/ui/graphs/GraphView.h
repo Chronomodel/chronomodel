@@ -38,8 +38,10 @@ public:
     QColor getBackgroundColor() const;
     
     void addInfo(const QString& info);
+    QString getInfo();
     void clearInfos();
     void showInfos(bool show);
+    bool isShow();
     
     void setNothingMessage(const QString& message);
     void resetNothingMessage();
@@ -52,6 +54,7 @@ public:
     void showVertGrid(bool show);
     void showHorizGrid(bool show);
     void setXAxisMode(AxisMode mode);
+    bool getXAxisMode();
     void setYAxisMode(AxisMode mode);
     void autoAdjustYScale(bool active);
     
@@ -73,7 +76,7 @@ public:
     
     void paintToDevice(QPaintDevice* device);//, QPaintEvent* e);// HL
 
-    
+ 
     // Save
     
     bool saveAsSVG(const QString& fileName, const QString svgTitle, const QString svgDescrition, const bool withVersion, int const versionHeight=20);
