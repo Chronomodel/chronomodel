@@ -1,4 +1,4 @@
-#include "GraphView.h"
+﻿#include "GraphView.h"
 #include "Ruler.h"
 #include "StdUtilities.h"
 #include "Painting.h"
@@ -834,6 +834,7 @@ void GraphView::drawCurves(QPainter& painter)
 
                 QMapIterator<double, double> iter(lightMap);
                 iter.toFront();
+                iter.next();
                 double valueX = iter.key();
                 double valueY = iter.value();
                 

@@ -1,4 +1,4 @@
-#include "Date.h"
+﻿#include "Date.h"
 #include "Event.h"
 #include "Generator.h"
 #include "StdUtilities.h"
@@ -275,10 +275,13 @@ QPixmap Date::generateCalibThumb()
     curve.mIsRectFromZero = true; // For Typo !!
     
     graph->addCurve(curve);
-    
+    graph->repaint();
     QPixmap thumb(graph->size());
-    graph->render(&thumb);
-    delete graph;
+    QPainter p;
+    p.begin(&thumb);
+    graph->render(&p);
+    p.end();
+   // delete graph;
     
     return thumb;
     //thumb.save("test.png");
