@@ -1,4 +1,4 @@
-#include "ChronoApp.h"
+﻿#include "ChronoApp.h"
 #include <QtWidgets>
 #include "DarkBlueStyle.h"
 #include "MainController.h"
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     
     a.setApplicationName("ChronoModel");
     a.setApplicationDisplayName("ChronoModel");
-    a.setApplicationVersion("1.2.8");
+    a.setApplicationVersion("1.2.9");
     a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));

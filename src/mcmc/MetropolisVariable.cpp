@@ -1,4 +1,4 @@
-#include "MetropolisVariable.h"
+﻿#include "MetropolisVariable.h"
 #include "StdUtilities.h"
 #include "Functions.h"
 #if USE_FFT
@@ -122,6 +122,9 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
     int outputSize = 2 * (inputSize / 2 + 1);
     
     double sigma = dataStd(dataSrc);
+    QMap<double, double> result;
+    if (sigma==0) return result;
+
     double h = hFactor * 1.06 * sigma * pow(dataSrc.size(), -1.f/5.f);
     double a = vector_min_value(dataSrc) - 4.f * h;
     double b = vector_max_value(dataSrc) + 4.f * h;
@@ -130,7 +133,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
     float* input = generateBufferForHisto(dataSrc, fftLen, hFactor);
     float* output = (float*) fftwf_malloc(outputSize * sizeof(float));
     
-    QMap<double, double> result;
+
     if(input != 0)
     {
         // ----- FFT -----

@@ -1,4 +1,4 @@
-#include "GraphViewDate.h"
+﻿#include "GraphViewDate.h"
 #include "GraphView.h"
 #include "Date.h"
 #include "Event.h"
@@ -99,9 +99,10 @@ void GraphViewDate::refresh()
                 //    mDate->calibrate(mSettings);
                //     qDebug()<<"mDate->calibrate(mSettings);";
                // }
-                //curve.mData = equal_areas(mDate->getCalibMap(), 1.f);
-                
-                curve.mData = mDate->getCalibMap();
+                //curve.mData = equal_areas_old(mDate->getCalibMap(), 1.f);
+                //curve.mData = normalize_map(mDate->getCalibMap());
+                curve.mData = equal_areas(mDate->getCalibMap(), 1.f);
+                //curve.mData = mDate->getCalibMap();
 
                 QString namePlugin = mDate->mPlugin->getName();
                 QColor dataColor   = QColor(Qt::black);//mDate->mPlugin->getColor();//QColor(120, 120, 120); ///since 28/04/2015
@@ -117,25 +118,29 @@ void GraphViewDate::refresh()
                 //brushColor.setAlpha(70); //50
                 curve.mBrush.setColor(brushColor);
                 
-                curve.mFillUnder = false;//!mShowPosterior; //since 28/04/2015
+                curve.mFillUnder = false; // !mShowPosterior; //since 28/04/2015
                 
                 curve.mIsHisto = false;
                 curve.mIsRectFromZero = true; // for typo. calibs., invisible for others!
+
+                double yMax = 1.1f * map_max_value(curve.mData);
+                mGraph->setRangeY(0,  yMax);
+
                 mGraph->addCurve(curve);
                 
                 //qDebug()<<"mName"<<mDate->mName;
-              
-                double yMax = 1.1f * map_max_value(curve.mData);
+
                 //qDebug()<<"yMax"<<yMax<<" mSetting.mTmin"<<mSettings.mTmin<<" mSettings.mTmin"<<mSettings.mTmax<<" mStep"<<mSettings.mStep;;
-                mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
+                //mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
+
             }
             
             if(mShowWiggle && mCurrentVariable == eTheta)
             {
                 GraphCurve curve;
                 curve.mName = mTitle+" : "+"wiggle";
-                //curve.mData = equal_areas(mDate->mWiggle.fullHisto(), 1.f);
-                curve.mData = mDate->mWiggle.fullHisto();
+                curve.mData = equal_areas(mDate->mWiggle.fullHisto(), 1.f);
+                //curve.mData = mDate->mWiggle.fullHisto();
                 
                 curve.setPen(defaultPen);
                 curve.mPen.setColor(color);
@@ -161,8 +166,8 @@ void GraphViewDate::refresh()
                     curveRaw.mName = "raw histo full";
                     curveRaw.setPen(defaultPen);
                     curveRaw.mPen.setColor(Qt::red);
-                    //curveRaw.mData = equal_areas(variable->fullRawHisto(), 1.f);
-                    curveRaw.mData = variable->fullRawHisto();
+                    curveRaw.mData = equal_areas(variable->fullRawHisto(), 1.f);
+                    //curveRaw.mData = variable->fullRawHisto();
                     curveRaw.mIsHisto = true;
 
                     mGraph->addCurve(curveRaw);
@@ -180,9 +185,9 @@ void GraphViewDate::refresh()
                     {
                         GraphCurve curveHPD;
                         curveHPD.mName = "histo HPD";
-                        //curveHPD.mData = equal_areas(variable->mHPD, mThresholdHPD/100.f);
-                        curveHPD.mData = variable->mHPD;
-                       
+                        curveHPD.mData = equal_areas(variable->mHPD, mThresholdHPD/100.f);
+                        //curveHPD.mData = variable->mHPD;
+                      // curveHPD.mData = mDate->getCalibMap();
                         HPDColor.setAlpha(255);
                         curveHPD.setPen(defaultPen);
                         curveHPD.mPen.setColor(HPDColor);
@@ -194,16 +199,16 @@ void GraphViewDate::refresh()
                         curveHPD.mIsHisto = false;
                         curveHPD.mIsRectFromZero = true;
                         mGraph->addCurve(curveHPD);
-                        //double yMax = 1.1f * map_max_value(curveHPD.mData);
-                        //mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
+                        double yMax = 1.1f * map_max_value(curveHPD.mData);
+                        mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                     }
 
                     
                     
                     GraphCurve curve;
                     curve.mName = mTitle;//+" : ""histo full";
-                    //curve.mData = equal_areas(variable->fullHisto(), 1.f);
-                    curve.mData = variable->fullHisto();
+                    curve.mData = equal_areas(variable->fullHisto(), 1.f);
+                    //curve.mData = variable->fullHisto();
                     
                     HPDColor.setAlpha(255);//HPDColor.setAlpha(50); // since 28/04/2015
                     curve.setPen(defaultPen);
@@ -240,8 +245,8 @@ void GraphViewDate::refresh()
                     
                     GraphCurve curve;
                     curve.mName = QString("histo chain " + QString::number(i));
-                    //curve.mData = equal_areas(variable->histoForChain(i), 1.f);
-                    curve.mData = variable->histoForChain(i);
+                    curve.mData = equal_areas(variable->histoForChain(i), 1.f);
+                    //curve.mData = variable->histoForChain(i);
                     curve.setPen(defaultPen);
                     curve.mPen.setColor(col);
                     curve.mIsHisto = false;
