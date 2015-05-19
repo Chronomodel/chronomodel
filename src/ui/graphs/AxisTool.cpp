@@ -181,11 +181,11 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
             p.drawPolygon(triangle);
             
         }
-        if(mMinMaxOnly) // used on posterior densities
+        if(mMinMaxOnly) // used on posterior densities Maybe change the type of the text exp ou float
         {
             QRectF tr(r.x(), r.y(), w - 8, h);
-            p.drawText(tr, Qt::AlignRight | Qt::AlignBottom, QString::number(mStartVal, 'g', 2));
-            p.drawText(tr, Qt::AlignRight | Qt::AlignTop, QString::number(mStartVal + mDeltaVal * (h/mDeltaPix), 'g', 2));
+            p.drawText(tr, Qt::AlignRight | Qt::AlignBottom, QString::number(mStartVal, 'G', 2));
+            p.drawText(tr, Qt::AlignRight | Qt::AlignTop, QString::number(mStartVal + mDeltaVal * (h/mDeltaPix), 'G', 2));
         }
         else
         {

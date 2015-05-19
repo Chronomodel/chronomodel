@@ -8,7 +8,7 @@
 #include <QtWidgets>
 
 
-PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("Gauss Prior"), parent, flags)
+PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("Gaussian measurement"), parent, flags)
 {
     mAverageLab = new Label(tr("Measure") + " :", this);
     mErrorLab = new Label(tr("Error (sd)") + " :", this);

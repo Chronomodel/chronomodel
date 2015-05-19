@@ -25,6 +25,12 @@ GraphCurve::~GraphCurve()
     
 }
 
+
+void GraphCurve::setPen(QPen pen)
+{
+    mPen = pen;
+}
+
 QVector<double> GraphCurve::getVectorDataInRange(double subMin, double subMax, double min, double max) const
 {
     QVector<double> subData;

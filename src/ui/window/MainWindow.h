@@ -1,4 +1,4 @@
-﻿#ifndef MAINWINDOW_H
+#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
@@ -61,7 +61,7 @@ public slots:
     void saveProjectAs();
     void about();
     void appSettings();
-   // void openManual();
+    void openManual();
     void openWebsite();
     void showHelp(bool);
     void mcmcFinished();
@@ -109,7 +109,7 @@ private:
     QAction* mUndoViewAction;
     
     QAction* mHelpAction;
-    //QAction* mManualAction;
+    QAction* mManualAction;
     QAction* mWebsiteAction;
     
 private:

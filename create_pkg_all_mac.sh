@@ -64,7 +64,7 @@ pkgbuild --component Release/Chronomodel.app --identifier com.chronomodel.pkg.ap
 # "productbuild" is the tool used to create product archives
 # ------------------------------------------------------
 productbuild \
---distribution ./deploy/mac/Chrono_distribution.dist \
+--distribution ./deploy/mac/resources/Chrono_distribution.dist \
 --resources ./deploy/mac/resource \
 --package-path ./deploy/mac \
  ./deploy/mac/ChronoModel_${VERSION}.pkg

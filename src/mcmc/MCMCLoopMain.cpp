@@ -1,4 +1,4 @@
-﻿#include "MCMCLoopMain.h"
+#include "MCMCLoopMain.h"
 
 #include "Model.h"
 #include "EventKnown.h"
@@ -219,8 +219,8 @@ void MCMCLoopMain::initMCMC()
                 date.mTheta.mX = tmin + idx * step;
                 
                 FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration, tmin, tmax, step));
-                //date.mTheta.mSigmaMH = data.stddev;
-                date.mTheta.mSigmaMH = abs(date.mTheta.mX-unsortedEvents[i]->mTheta.mX);
+                date.mTheta.mSigmaMH = data.stddev; // computed in RenDateModel and ChronoModel V1.1
+                //date.mTheta.mSigmaMH = fabs(date.mTheta.mX-unsortedEvents[i]->mTheta.mX);
                 date.initDelta(unsortedEvents[i]);
                 
                 s02_sum += 1.f / (data.stddev * data.stddev);
@@ -242,11 +242,9 @@ void MCMCLoopMain::initMCMC()
         {
             Date& date = events[i]->mDates[j];
             
-            //double so = date.mTheta.mX - (events[i]->mTheta.mX - date.mDelta);
             
-            date.mSigma.mX = sqrt(shrinkageUniform(events[i]->mS02));
-            //date.mSigma.mX = sqrt(shrinkageUniform(so * so));
-            //date.mSigma.mX = date.mTheta.mX - (events[i]->mTheta.mX - date.mDelta);
+           // date.mSigma.mX = sqrt(shrinkageUniform(events[i]->mS02)); // modif the 2015/05/19 with PhL
+           date.mSigma.mX = fabs(date.mTheta.mX-(events[i]->mTheta.mX-date.mDelta));
             
             date.mSigma.mSigmaMH = 1.;
         }

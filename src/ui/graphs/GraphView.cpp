@@ -592,8 +592,11 @@ void GraphView::drawCurves(QPainter& painter)
         
         QPainterPath path;
         QPen pen = curve.mPen;
+        QBrush defaultBrush ;
+        defaultBrush.setStyle(Qt::NoBrush);
         pen.setWidth(pen.width() * mThickness);
         painter.setPen(pen);
+        painter.setBrush(defaultBrush);
       // QFontMetrics fm(painter.font());
         // painter.drawText(mMarginRight + 50, mMarginTop + 5, fm.width(curve.mName), 15, Qt::AlignLeft | Qt::AlignTop, curve.mName);
         //p.drawText(r, Qt::AlignHCenter | Qt::AlignTop, QString("1"));
@@ -811,9 +814,9 @@ void GraphView::drawCurves(QPainter& painter)
                 QMap<double, double> subData = curve.getMapDataInRange(mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
                 
                 QMap<double, double> lightMap;
-                if(subData.size() > 4*mGraphWidth)
+                if(subData.size() > 2*mGraphWidth)
                 {
-                    int valuesPerPixel = subData.size() / (4*mGraphWidth);
+                    int valuesPerPixel = subData.size() / (2*mGraphWidth);
                     //qDebug() << "Graph drawing : step = " << valuesPerPixel << ", data size = " << subData.size() << ", org data size = " << curve.mData.size();
                     QMapIterator<double, double> iter(subData);
                     int index = 0;
@@ -825,6 +828,7 @@ void GraphView::drawCurves(QPainter& painter)
                         ++index;
                     }
                 }
+                
                 else
                 {
                     lightMap = subData;
@@ -842,7 +846,7 @@ void GraphView::drawCurves(QPainter& painter)
                 qreal y = getYForValue(0, false);
 
                 path.moveTo(x, y);
-                
+                iter.toFront();
                 while(iter.hasNext())
                 {
                     iter.next();
@@ -893,6 +897,8 @@ void GraphView::drawCurves(QPainter& painter)
                         //last_value_x = valueX;
                         last_value_y = valueY;
                         ++index;
+                        /*if(iter.hasNext()) iter.next();
+                        else break; */
                     }
                 }
                 if(curve.mIsRectFromZero && valueY != 0.f)

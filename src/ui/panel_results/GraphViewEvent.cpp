@@ -51,6 +51,10 @@ void GraphViewEvent::refresh()
     
     mGraph->autoAdjustYScale(mCurrentTypeGraph == eTrace);
     
+    QPen defaultPen;
+    defaultPen.setWidthF(1);
+    defaultPen.setStyle(Qt::SolidLine);
+    
     if(mEvent)
     {
         QColor color = mEvent->mColor;
@@ -85,6 +89,7 @@ void GraphViewEvent::refresh()
                     
                     GraphCurve curve;
                     curve.mName = mTitle+" : "+"Fixed Bound";
+                    curve.setPen(defaultPen);
                     curve.mPen.setColor(color);
                     curve.mIsHisto = false;
                     curve.mIsRectFromZero = true;
@@ -104,6 +109,7 @@ void GraphViewEvent::refresh()
                     {
                         GraphCurve curve;
                         curve.mName = mTitle+" : "+"Uniform Bound";
+                        curve.setPen(defaultPen);
                         curve.mPen.setColor(QColor(120, 120, 120));
                         curve.mIsHisto = true;
                         curve.mIsRectFromZero = true;
@@ -117,10 +123,12 @@ void GraphViewEvent::refresh()
                     {
                         if(mShowRawResults)
                         {
-                            GraphCurve curveRaw;
+                           GraphCurve curveRaw;
                             curveRaw.mName = "raw histo full";
+                            curveRaw.setPen(defaultPen);
                             curveRaw.mPen.setColor(Qt::red);
-                            curveRaw.mData = equal_areas(mEvent->mTheta.fullRawHisto(), 1.f);
+                            //curveRaw.mData = equal_areas(mEvent->mTheta.fullRawHisto(), 1.f);
+                            curveRaw.mData = mEvent->mTheta.fullRawHisto();
                             curveRaw.mIsHisto = true;
                             mGraph->addCurve(curveRaw);
                             
@@ -128,10 +136,12 @@ void GraphViewEvent::refresh()
                             mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax2));
                         }
                         
-                        GraphCurve curve;
+                       GraphCurve curve;
                         curve.mName = "histo full";
+                        curve.setPen(defaultPen);
                         curve.mPen.setColor(color);
-                        curve.mData = equal_areas(mEvent->mTheta.fullHisto(), 1.f);
+                        //curve.mData = equal_areas(mEvent->mTheta.fullHisto(), 1.f);
+                        curve.mData = mEvent->mTheta.fullHisto();
                         curve.mIsHisto = false;
                         mGraph->addCurve(curve);
                         
@@ -140,6 +150,7 @@ void GraphViewEvent::refresh()
                         
                         GraphCurve curveHPD;
                         curveHPD.mName = "histo HPD full";
+                        curveHPD.setPen(defaultPen);
                         curveHPD.mPen.setColor(color);
                         curveHPD.mFillUnder = true;
                         QColor HPDColor(color);
@@ -148,8 +159,9 @@ void GraphViewEvent::refresh()
                         curveHPD.mBrush.setColor(HPDColor);
                         curveHPD.mIsHisto = false;
                         curveHPD.mIsRectFromZero = true;
-                        curveHPD.mData = equal_areas(mEvent->mTheta.mHPD, mThresholdHPD/100.f);
-                        mGraph->addCurve(curveHPD);
+                        //curveHPD.mData = equal_areas(mEvent->mTheta.mHPD, mThresholdHPD/100.f);
+                        curveHPD.mData = mEvent->mTheta.mHPD;
+                       mGraph->addCurve(curveHPD);
                     }
                     for(int i=0; i<mShowChainList.size(); ++i)
                     {
@@ -159,9 +171,11 @@ void GraphViewEvent::refresh()
                             
                             GraphCurve curve;
                             curve.mName = QString("histo chain " + QString::number(i));
+                            curve.setPen(defaultPen);
                             curve.mPen.setColor(col);
                             curve.mIsHisto = false;
-                            curve.mData = equal_areas(mEvent->mTheta.histoForChain(i), 1.f);
+                            //curve.mData = equal_areas(mEvent->mTheta.histoForChain(i), 1.f);
+                            curve.mData = mEvent->mTheta.histoForChain(i);
                             mGraph->addCurve(curve);
                             
                             double yMax = 1.1f * map_max_value(curve.mData);
@@ -174,6 +188,7 @@ void GraphViewEvent::refresh()
                         curveCred.mName = "credibility full";
                         curveCred.mSections.append(mEvent->mTheta.mCredibility);
                         curveCred.mHorizontalValue = mGraph->maximumY();
+                        
                         curveCred.mPen.setColor(color);
                         curveCred.mPen.setWidth(4);
                         curveCred.mPen.setCapStyle(Qt::FlatCap);
@@ -200,9 +215,11 @@ void GraphViewEvent::refresh()
                     {
                         GraphCurve curve;
                         curve.mName = "histo full date " + QString::number(i);
+                        curve.setPen(defaultPen);
                         curve.mPen.setColor(color);
                         curve.mIsHisto = false;
-                        curve.mData = equal_areas(date.mSigma.fullHisto(), 1.f);
+                        //curve.mData = equal_areas(date.mSigma.fullHisto(), 1.f);
+                        curve.mData = date.mSigma.fullHisto();
                         mGraph->addCurve(curve);
                         
                         yMax = qMax(yMax, 1.1f * map_max_value(curve.mData));
@@ -216,9 +233,11 @@ void GraphViewEvent::refresh()
                             
                             GraphCurve curve;
                             curve.mName = QString("histo sigma data " + QString::number(i) + " for chain" + QString::number(j));
+                            curve.setPen(defaultPen);
                             curve.mPen.setColor(col);
                             curve.mIsHisto = false;
-                            curve.mData = equal_areas(date.mSigma.histoForChain(j), 1.f);
+                            //curve.mData = equal_areas(date.mSigma.histoForChain(j), 1.f);
+                            curve.mData = date.mSigma.histoForChain(j);
                             mGraph->addCurve(curve);
                             
                             yMax = 1.1f * map_max_value(curve.mData);
@@ -245,6 +264,7 @@ void GraphViewEvent::refresh()
                 curve.mUseVectorData = true;
                 curve.mName = QString("trace chain " + QString::number(chainIdx)).toUtf8();
                 curve.mDataVector = mEvent->mTheta.fullTraceForChain(mChains, chainIdx);
+                curve.setPen(defaultPen);
                 curve.mPen.setColor(Painting::chainColors[chainIdx]);
                 curve.mIsHisto = false;
                 mGraph->addCurve(curve);
@@ -255,6 +275,7 @@ void GraphViewEvent::refresh()
                 curveQ1.mIsHorizontalLine = true;
                 curveQ1.mHorizontalValue = quartiles.Q1;
                 curveQ1.mName = QString("Q1");
+                curveQ1.setPen(defaultPen);
                 curveQ1.mPen.setColor(Qt::green);
                 mGraph->addCurve(curveQ1);
                 
@@ -262,6 +283,7 @@ void GraphViewEvent::refresh()
                 curveQ2.mIsHorizontalLine = true;
                 curveQ2.mHorizontalValue = quartiles.Q2;
                 curveQ2.mName = QString("Q2");
+                curveQ2.setPen(defaultPen);
                 curveQ2.mPen.setColor(Qt::red);
                 mGraph->addCurve(curveQ2);
                 
@@ -269,6 +291,7 @@ void GraphViewEvent::refresh()
                 curveQ3.mIsHorizontalLine = true;
                 curveQ3.mHorizontalValue = quartiles.Q3;
                 curveQ3.mName = QString("Q3");
+                curveQ3.setPen(defaultPen);
                 curveQ3.mPen.setColor(Qt::green);
                 mGraph->addCurve(curveQ3);
                 
@@ -295,6 +318,7 @@ void GraphViewEvent::refresh()
                 GraphCurve curve;
                 curve.mName = QString("accept history chain " + QString::number(chainIdx));
                 curve.mDataVector = mEvent->mTheta.acceptationForChain(mChains, chainIdx);
+                curve.setPen(defaultPen);
                 curve.mPen.setColor(Painting::chainColors[chainIdx]);
                 curve.mUseVectorData = true;
                 curve.mIsHisto = false;
@@ -304,6 +328,7 @@ void GraphViewEvent::refresh()
                 curveTarget.mName = "target";
                 curveTarget.mIsHorizontalLine = true;
                 curveTarget.mHorizontalValue = 44;
+                curveTarget.setPen(defaultPen);
                 curveTarget.mPen.setStyle(Qt::DashLine);
                 curveTarget.mPen.setColor(QColor(180, 10, 20));
                 mGraph->addCurve(curveTarget);
@@ -324,6 +349,7 @@ void GraphViewEvent::refresh()
                     curve.mName = QString("correlation chain " + QString::number(chainIdx));
                     curve.mDataVector = mEvent->mTheta.correlationForChain(chainIdx);
                     curve.mUseVectorData = true;
+                    curve.setPen(defaultPen);
                     curve.mPen.setColor(Painting::chainColors[chainIdx]);
                     curve.mIsHisto = false;
                     mGraph->addCurve(curve);
@@ -340,6 +366,7 @@ void GraphViewEvent::refresh()
                     curveLimitLower.mName = QString("correlation limit lower " + QString::number(chainIdx));
                     curveLimitLower.mIsHorizontalLine = true;
                     curveLimitLower.mHorizontalValue = -limit;
+                    curveLimitLower.setPen(defaultPen);
                     curveLimitLower.mPen.setColor(Qt::red);
                     curveLimitLower.mPen.setStyle(Qt::DotLine);
                     mGraph->addCurve(curveLimitLower);
@@ -348,6 +375,7 @@ void GraphViewEvent::refresh()
                     curveLimitUpper.mName = QString("correlation limit upper " + QString::number(chainIdx));
                     curveLimitUpper.mIsHorizontalLine = true;
                     curveLimitUpper.mHorizontalValue = limit;
+                    curveLimitUpper.setPen(defaultPen);
                     curveLimitUpper.mPen.setColor(Qt::red);
                     curveLimitUpper.mPen.setStyle(Qt::DotLine);
                     mGraph->addCurve(curveLimitUpper);

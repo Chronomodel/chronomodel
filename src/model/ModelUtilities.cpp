@@ -339,7 +339,7 @@ QVector<Event*> ModelUtilities::unsortEvents(const QList<Event*>& events)
         }
     }
     return results;
-    // PhD : Peut être juste recopier events et faire envents.size() swap d'éléménts dans le tableau copié avant de le retourner !!
+    // PhD : Peut être juste recopier events et faire envents.size() swap d'éléments dans le tableau copié avant de le retourner !!
 }
 
 QString ModelUtilities::dateResultsText(Date* d)

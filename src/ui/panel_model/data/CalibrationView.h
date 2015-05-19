@@ -39,6 +39,7 @@ private slots:
     void updateZoom();
     void updateScroll();
     void exportImage();
+    void copyText();
     
 signals:
     void closed();
@@ -63,7 +64,8 @@ public:
     Label* mHPDLab;
     LineEdit* mHPDEdit;
     QLabel* mResultsLab;
-    Button* mExportBut;
+    Button* mExportPlotBut;
+    Button* mCopyTextBut;
 };
 
 #endif

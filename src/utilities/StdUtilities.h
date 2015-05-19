@@ -116,7 +116,7 @@ T map_min_value(const QMap<U, T>& aMap)
 QVector<double> normalize_vector(const QVector<double>& aVector);
 QMap<double, double> normalize_map(const QMap<double, double>& aMap);
 QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const QMap<double, double>& mapWithTargetArea);
-QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const double targetArea);
+QMap<double, double> equal_areas_old(const QMap<double, double>& mapToModify, const double targetArea);
 QVector<double> equal_areas(const QVector<double>& data, const double step, const double area);
 QMap<double, double> vector_to_map(const QVector<double>& data, const double min, const double max, const double step);
 double vector_interpolate_idx_for_value(const double value, const QVector<double>& vector);

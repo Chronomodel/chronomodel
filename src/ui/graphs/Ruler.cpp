@@ -198,14 +198,14 @@ void Ruler::setZoom(int prop)
 
 void Ruler::updateScroll()
 {
-    qDebug()<<"Ruler::updateScroll() mCurrentMin"<< mCurrentMin<<" mCurrentMax"<<mCurrentMax;
+    //qDebug()<<"Ruler::updateScroll() mCurrentMin"<< mCurrentMin<<" mCurrentMax"<<mCurrentMax;
     //if(mZoomProp != 1)
     if( (mCurrentMax - mCurrentMin) != (mMax - mMin))
     {
         double delta = mCurrentMax - mCurrentMin;
         double deltaStart = (mMax - mMin)-delta;
         
-    qDebug()<<"Ruler::updateScroll() delta"<< delta<<" deltaStart"<<deltaStart;
+    //qDebug()<<"Ruler::updateScroll() delta"<< delta<<" deltaStart"<<deltaStart;
         
         mCurrentMin = mMin + deltaStart * ((double)mScrollBar->value() / (double)mScrollBar->maximum());
         mCurrentMin = floor( inRange(mMin, mCurrentMin, mMax) );
@@ -218,7 +218,7 @@ void Ruler::updateScroll()
         mCurrentMax = mMax;
     }
 
-    qDebug()<<"Ruler::updateScroll() mCurrentMin"<< mCurrentMin<<" "<<mCurrentMax<<" value"<<mScrollBar->value()<<" maximun"<<mScrollBar->maximum();
+    //qDebug()<<"Ruler::updateScroll() mCurrentMin"<< mCurrentMin<<" "<<mCurrentMax<<" value"<<mScrollBar->value()<<" maximun"<<mScrollBar->maximum();
     mAxisTool.updateValues(mRulerRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
     
     emit positionChanged(mCurrentMin, mCurrentMax);

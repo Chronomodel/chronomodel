@@ -18,6 +18,8 @@
 #include "QtUtilities.h"
 #include "DoubleValidator.h"
 #include <QtWidgets>
+#include <QClipboard>
+#include <QStringBuilder>
 
 
 CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
@@ -77,14 +79,15 @@ mRefGraphView(0)
     mHPDLab->raise();
     mHPDEdit->raise();
     
-    mExportBut = new Button(tr("Export Image"), this);
-    
+    mExportPlotBut = new Button(tr("Export Image"), this);
+    mCopyTextBut = new Button(tr("Copy Text"), this);
     setMouseTracking(true);
     
     connect(mZoomSlider, SIGNAL(valueChanged(int)), this, SLOT(updateZoom()));
     connect(mScrollBar, SIGNAL(valueChanged(int)), this, SLOT(updateScroll()));
     connect(mHPDEdit, SIGNAL(textEdited(const QString&)), this, SLOT(updateGraphs()));
-    connect(mExportBut, SIGNAL(clicked()), this, SLOT(exportImage()));
+    connect(mExportPlotBut, SIGNAL(clicked()), this, SLOT(exportImage()));
+    connect(mCopyTextBut, SIGNAL(clicked()), this, SLOT(copyText()));
 }
 
 CalibrationView::~CalibrationView()
@@ -201,7 +204,7 @@ void CalibrationView::updateGraphs()
             mCalibGraph->setRangeY(0, qMax(1.1f * yMax, mCalibGraph->maximumY()));
             
             double realThresh = map_area(hpd) / map_area(calibCurve.mData);
-            mResultsLab->setText(mResultsLab->text() + "HPD (" + QString::number(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.));
+            mResultsLab->setText(mResultsLab->text() % "HPD (" % QString::number(100. * realThresh, 'f', 1) + "%) : " % getHPDText(hpd, realThresh * 100.)); //  % concatenation with QStringBuilder
         }
         
         // ------------------------------------------------------------
@@ -307,31 +310,40 @@ void CalibrationView::updateScroll()
 
 void CalibrationView::exportImage()
 {
-    mExportBut->setVisible(false);
-    mZoomLab->setVisible(false);
-    mZoomSlider->setVisible(false);
-    mScrollBar->setVisible(false);
-    mHPDEdit->setVisible(false);
-    mHPDLab->setVisible(false);
-    mMarkerX->setVisible(false);
-    mMarkerY->setVisible(false);
+    mExportPlotBut -> setVisible(false);
+    mCopyTextBut   -> setVisible(false);
+    mZoomLab       -> setVisible(false);
+    mZoomSlider    -> setVisible(false);
+    mScrollBar     -> setVisible(false);
+    mHPDEdit       -> setVisible(false);
+    mHPDLab        -> setVisible(false);
+    mMarkerX       -> setVisible(false);
+    mMarkerY       -> setVisible(false);
     
     int m = 5;
     QRect r(m, m, this->width() - 2*m, this->height() - 2*m);
     AxisTool axe;
+    axe.mShowSubs = false;
     QFileInfo fileInfo = saveWidgetAsImage(this, r, tr("Save calibration image as..."),
                                            MainWindow::getInstance()->getCurrentPath(),AppSettings(),axe);
     if(fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
     
-    mExportBut->setVisible(true);
-    mZoomLab->setVisible(true);
-    mZoomSlider->setVisible(true);
-    mScrollBar->setVisible(true);
-    mHPDEdit->setVisible(true);
-    mHPDLab->setVisible(true);
-    mMarkerX->setVisible(true);
-    mMarkerY->setVisible(true);
+    mExportPlotBut -> setVisible(true);
+    mCopyTextBut   -> setVisible(true);
+    mZoomLab       -> setVisible(true);
+    mZoomSlider    -> setVisible(true);
+    mScrollBar     -> setVisible(true);
+    mHPDEdit       -> setVisible(true);
+    mHPDLab        -> setVisible(true);
+    mMarkerX       -> setVisible(true);
+    mMarkerY       -> setVisible(true);
+}
+void CalibrationView::copyText()
+{
+     QClipboard *p_Clipboard = QApplication::clipboard();
+    p_Clipboard->setText(mResultsLab->text().simplified());
+   
 }
 
 void CalibrationView::paintEvent(QPaintEvent* e)
@@ -393,7 +405,8 @@ void CalibrationView::updateLayout()
     mHPDEdit->setGeometry(width() - m2 - 10 - editW, height() - m2 - botH, editW, lineH);
     mHPDLab->setGeometry(width() - m2 - 10 - editW - checkW, height() - m2 - botH, checkW, lineH);
     
-    mExportBut->setGeometry(width() - m2 - 10 - butW, height() - m2 - botH + lineH + m1, butW, butH);
+    mExportPlotBut->setGeometry(width() - m2 - 10 - butW, height() - m2 - botH + lineH + m1, butW, butH);
+    mCopyTextBut->setGeometry(width() - m2 - 10 - 2* butW, height() - m2 - botH + lineH + m1, butW, butH);
     
     mMarkerX->setGeometry(mMarkerX->pos().x(), m1 + sbe, mMarkerX->thickness(), height() - 2*m1 - sbe - 8.f); // 8 = graph margin bottom
     mMarkerY->setGeometry(m1 + graphLeft, mMarkerY->pos().y(), width() - 2*m1 - graphLeft, mMarkerY->thickness());

@@ -70,7 +70,9 @@ void GraphViewDate::refresh()
     if(mDate)
     {
         QColor color = mColor;
-        
+        QPen defaultPen;
+        defaultPen.setWidthF(1);
+        defaultPen.setStyle(Qt::SolidLine);
         QString results = ModelUtilities::dateResultsText(mDate);
         setNumericalResults(results);
         
@@ -100,14 +102,14 @@ void GraphViewDate::refresh()
                 //curve.mData = equal_areas(mDate->getCalibMap(), 1.f);
                 
                 curve.mData = mDate->getCalibMap();
-                //curve.mData = mDate->mCalibration;
+
                 QString namePlugin = mDate->mPlugin->getName();
                 QColor dataColor   = QColor(Qt::black);//mDate->mPlugin->getColor();//QColor(120, 120, 120); ///since 28/04/2015
                 QIcon dataIcon     = mDate->mPlugin->getIcon();
                 curve.mName = "calibration : "+namePlugin;
-                
+                curve.setPen(defaultPen);
                 curve.mPen.setColor(dataColor);
-                //curve.mPen.setColor(Qt::black);
+
                 curve.mPen.setStyle(Qt::SolidLine);
                
                 curve.mBrush.setStyle(Qt::VerPattern);//Qt::LinearGradientPattern);//Qt::HorPattern);// Qt::Dense6Pattern);VerPattern
@@ -132,7 +134,10 @@ void GraphViewDate::refresh()
             {
                 GraphCurve curve;
                 curve.mName = mTitle+" : "+"wiggle";
-                curve.mData = equal_areas(mDate->mWiggle.fullHisto(), 1.f);
+                //curve.mData = equal_areas(mDate->mWiggle.fullHisto(), 1.f);
+                curve.mData = mDate->mWiggle.fullHisto();
+                
+                curve.setPen(defaultPen);
                 curve.mPen.setColor(color);
                 curve.mPen.setStyle(Qt::DashLine);
                 curve.mFillUnder = false;
@@ -153,11 +158,13 @@ void GraphViewDate::refresh()
                 if(mShowRawResults)
                 {
                     GraphCurve curveRaw;
-                    curveRaw.mName = mTitle;//"raw histo full";
+                    curveRaw.mName = "raw histo full";
+                    curveRaw.setPen(defaultPen);
                     curveRaw.mPen.setColor(Qt::red);
-                    curveRaw.mData = equal_areas(variable->fullRawHisto(), 1.f);
+                    //curveRaw.mData = equal_areas(variable->fullRawHisto(), 1.f);
+                    curveRaw.mData = variable->fullRawHisto();
                     curveRaw.mIsHisto = true;
-                    // mGraph->mZones[0].mText="curveRaw";
+
                     mGraph->addCurve(curveRaw);
                     
                     double yMax2 = 1.1f * map_max_value(curveRaw.mData);
@@ -167,10 +174,39 @@ void GraphViewDate::refresh()
                 
                 if (mShowPosterior) {
                    QColor HPDColor(color);
-                    HPDColor.setAlpha(100);//HPDColor.setAlpha(50); // since 28/04/2015
+                    
+                    
+                    if(mCurrentVariable != GraphViewResults::eSigma)
+                    {
+                        GraphCurve curveHPD;
+                        curveHPD.mName = "histo HPD";
+                        //curveHPD.mData = equal_areas(variable->mHPD, mThresholdHPD/100.f);
+                        curveHPD.mData = variable->mHPD;
+                       
+                        HPDColor.setAlpha(255);
+                        curveHPD.setPen(defaultPen);
+                        curveHPD.mPen.setColor(HPDColor);
+                        curveHPD.mFillUnder = true;
+                        curveHPD.mBrush.setStyle(Qt::SolidPattern);
+                        
+                        HPDColor.setAlpha(125);
+                        curveHPD.mBrush.setColor(HPDColor);
+                        curveHPD.mIsHisto = false;
+                        curveHPD.mIsRectFromZero = true;
+                        mGraph->addCurve(curveHPD);
+                        //double yMax = 1.1f * map_max_value(curveHPD.mData);
+                        //mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
+                    }
+
+                    
+                    
                     GraphCurve curve;
                     curve.mName = mTitle;//+" : ""histo full";
-                    curve.mData = equal_areas(variable->fullHisto(), 1.f);
+                    //curve.mData = equal_areas(variable->fullHisto(), 1.f);
+                    curve.mData = variable->fullHisto();
+                    
+                    HPDColor.setAlpha(255);//HPDColor.setAlpha(50); // since 28/04/2015
+                    curve.setPen(defaultPen);
                     curve.mPen.setColor(HPDColor);
                     curve.mIsHisto = false;
                     curve.mFillUnder = false;
@@ -188,21 +224,11 @@ void GraphViewDate::refresh()
                      mGraph->addCurve(curve);
                      */
                     
-                    if(mCurrentVariable != GraphViewResults::eSigma)
-                    {
-                        GraphCurve curveHPD;
-                        curveHPD.mName = "";//"histo HPD full";
-                        curveHPD.mData = equal_areas(variable->mHPD, mThresholdHPD/100.f);
-                        curveHPD.mPen.setColor(color);
-                        curveHPD.mFillUnder = true;
-                        curveHPD.mBrush.setStyle(Qt::SolidPattern);
-                        //QColor HPDColor(color);
-                        //HPDColor.setAlpha(50);
-                        curveHPD.mBrush.setColor(HPDColor);
-                        curveHPD.mIsHisto = false;
-                        curveHPD.mIsRectFromZero = true;
-                        mGraph->addCurve(curveHPD);
-                    }
+                    
+                    
+                    
+                    
+                    
                 }                
                 
             }
@@ -213,8 +239,10 @@ void GraphViewDate::refresh()
                     QColor col = Painting::chainColors[i];
                     
                     GraphCurve curve;
-                    curve.mName = "";//QString("histo chain " + QString::number(i));
-                    curve.mData = equal_areas(variable->histoForChain(i), 1.f);
+                    curve.mName = QString("histo chain " + QString::number(i));
+                    //curve.mData = equal_areas(variable->histoForChain(i), 1.f);
+                    curve.mData = variable->histoForChain(i);
+                    curve.setPen(defaultPen);
                     curve.mPen.setColor(col);
                     curve.mIsHisto = false;
                     mGraph->addCurve(curve);
@@ -226,11 +254,13 @@ void GraphViewDate::refresh()
             if(mShowAllChains && mShowHPD && mCurrentVariable != GraphViewResults::eSigma)
             {
                 GraphCurve curveCred;
-                curveCred.mName = "";//"credibility full";
+                curveCred.mName = "credibility full";
                 curveCred.mSections.append(variable->mCredibility);
                 curveCred.mHorizontalValue = mGraph->maximumY();
+                //curve.setPen(defaultPen);
                 curveCred.mPen.setColor(color);
                 curveCred.mPen.setWidth(3);
+                curveCred.mPen.setStyle(Qt::SolidLine);
                 curveCred.mIsHorizontalSections = true;
                 mGraph->addCurve(curveCred);
             }
@@ -260,6 +290,7 @@ void GraphViewDate::refresh()
                 curve.mUseVectorData = true;
                 curve.mName = QString("trace chain " + QString::number(chainIdx));
                 curve.mDataVector = variable->fullTraceForChain(mChains, chainIdx);
+                curve.setPen(defaultPen);
                 curve.mPen.setColor(Painting::chainColors[chainIdx]);
                 curve.mIsHisto = false;
                 mGraph->addCurve(curve);
@@ -274,6 +305,7 @@ void GraphViewDate::refresh()
                 curveQ1.mIsHorizontalLine = true;
                 curveQ1.mHorizontalValue = quartiles.Q1;
                 curveQ1.mName = QString("Q1");
+                curveQ1.setPen(defaultPen);
                 curveQ1.mPen.setColor(Qt::green);
                 mGraph->addCurve(curveQ1);
                 
@@ -281,6 +313,7 @@ void GraphViewDate::refresh()
                 curveQ2.mIsHorizontalLine = true;
                 curveQ2.mHorizontalValue = quartiles.Q2;
                 curveQ2.mName = QString("Q2");
+                curveQ2.setPen(defaultPen);
                 curveQ2.mPen.setColor(Qt::red);
                 mGraph->addCurve(curveQ2);
                 
@@ -288,6 +321,7 @@ void GraphViewDate::refresh()
                 curveQ3.mIsHorizontalLine = true;
                 curveQ3.mHorizontalValue = quartiles.Q3;
                 curveQ3.mName = QString("Q3");
+                curveQ3.setPen(defaultPen);
                 curveQ3.mPen.setColor(Qt::green);
                 mGraph->addCurve(curveQ3);
             }
@@ -319,6 +353,7 @@ void GraphViewDate::refresh()
                 GraphCurve curve;
                 curve.mName = QString("accept history chain " + QString::number(chainIdx));
                 curve.mDataVector = variable->acceptationForChain(mChains, chainIdx);
+                curve.setPen(defaultPen);
                 curve.mPen.setColor(Painting::chainColors[chainIdx]);
                 curve.mUseVectorData = true;
                 curve.mIsHisto = false;
@@ -328,6 +363,7 @@ void GraphViewDate::refresh()
                 curveTarget.mName = "target";
                 curveTarget.mIsHorizontalLine = true;
                 curveTarget.mHorizontalValue = 44;
+                curveTarget.setPen(defaultPen);
                 curveTarget.mPen.setStyle(Qt::DashLine);
                 curveTarget.mPen.setColor(QColor(180, 10, 20));
                 mGraph->addCurve(curveTarget);
@@ -353,6 +389,7 @@ void GraphViewDate::refresh()
                     curve.mName = QString("correlation chain " + QString::number(chainIdx));
                     curve.mDataVector = variable->correlationForChain(chainIdx);
                     curve.mUseVectorData = true;
+                    curve.setPen(defaultPen);
                     curve.mPen.setColor(Painting::chainColors[chainIdx]);
                     curve.mIsHisto = false;
                     mGraph->addCurve(curve);
@@ -369,6 +406,7 @@ void GraphViewDate::refresh()
                     curveLimitLower.mName = QString("correlation limit lower " + QString::number(chainIdx));
                     curveLimitLower.mIsHorizontalLine = true;
                     curveLimitLower.mHorizontalValue = -limit;
+                    curveLimitLower.setPen(defaultPen);
                     curveLimitLower.mPen.setColor(Qt::red);
                     curveLimitLower.mPen.setStyle(Qt::DotLine);
                     mGraph->addCurve(curveLimitLower);
@@ -377,6 +415,7 @@ void GraphViewDate::refresh()
                     curveLimitUpper.mName = QString("correlation limit upper " + QString::number(chainIdx));
                     curveLimitUpper.mIsHorizontalLine = true;
                     curveLimitUpper.mHorizontalValue = limit;
+                    curveLimitUpper.setPen(defaultPen);
                     curveLimitUpper.mPen.setColor(Qt::red);
                     curveLimitUpper.mPen.setStyle(Qt::DotLine);
                     mGraph->addCurve(curveLimitUpper);

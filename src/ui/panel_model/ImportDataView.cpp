@@ -73,12 +73,33 @@ void ImportDataView::browse()
                 QStringList values = line.split(csvSep);
                 if(values.size() > 0)
                 {
+                    qDebug()<<values[0]<<values[0].toUpper();
                     if(isComment(values[0]) || values[0] == "")
                     {
-                        // Comment line found : do not display it
-                        headers << "";
+                        continue;
+                    }
+                    else if(values[0].contains("title", Qt::CaseInsensitive))
+                    {
+                        headers << "Title";
+                        
+                        QStringList titleText;
                         values.push_front("");
-                        data << values;
+                        for (int i=1; i<values.size(); i++) {
+                            titleText.append(values[i]);
+                        }
+                        data << titleText;
+                        cols = (values.size() > cols) ? values.size() : cols;
+                        ++rows;
+                    }
+                    else if(values[0].contains("structure", Qt::CaseInsensitive))
+                    {
+                        headers << "Structure";
+                        QStringList titleText;
+                        values.push_front("");
+                        for (int i=1; i<values.size(); i++) {
+                            titleText.append(values[i]);
+                        }
+                        data << titleText;
                         cols = (values.size() > cols) ? values.size() : cols;
                         ++rows;
                     }
@@ -110,10 +131,13 @@ void ImportDataView::browse()
                 for(int j=0; j<d.size(); ++j)
                 {
                     // Skip the first column containing the plugin name (already used in the table line header)
+                    
                     if(j != 0)
                     {
                         QTableWidgetItem* item = new QTableWidgetItem(d[j].simplified());
+                        //if ((d[0]=="Title") || (d[0]=="Structure")) item->setBackgroundColor(Qt::red);
                         mTable->setItem(i, j-1, item);
+
                     }
                 }
             }
@@ -196,6 +220,7 @@ void ImportDataView::removeCsvRows(QList<int> rows)
             QTableWidgetItem* item = mTable->item(rows[i], c);
             if(item)
                 item->setBackgroundColor(QColor(100, 200, 100));
+            
         }
     }
 }
@@ -296,7 +321,7 @@ void ImportDataTable::updateTableHeaders()
     QStringList headers;
     int numCols = columnCount();
     
-    if(!pluginName.isEmpty())
+    if(!pluginName.isEmpty() && (pluginName!="Title")  && (pluginName!="Structure"))
     {
         //qDebug() << pluginName;
         PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
@@ -310,6 +335,14 @@ void ImportDataTable::updateTableHeaders()
         }
         while(headers.size() < numCols)
             headers << "comment";
+    }
+    else if ((pluginName=="Title")  || (pluginName=="Structure"))
+    {
+        QStringList cols;
+        cols << "Name";
+        for (int i=1; i<numCols; i++) cols<<"";
+        headers = cols;
+
     }
     else
     {

@@ -669,6 +669,7 @@ void ResultsView::updateFFTLength()
         
         updateGraphs();
     }
+    repaint();
 }
 
 void ResultsView::updateHFactor()
@@ -689,6 +690,7 @@ void ResultsView::updateHFactor()
         
         updateGraphs();
     }
+    repaint();
 }
 
 #pragma mark Display options

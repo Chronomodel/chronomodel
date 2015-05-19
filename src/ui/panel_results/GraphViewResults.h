@@ -67,8 +67,10 @@ private slots:
     
 protected:
     virtual void paintEvent(QPaintEvent* e);
+    void paintEvent2(QPaintEvent* );
     void resizeEvent(QResizeEvent* e);
     virtual void updateLayout();
+    
     
     virtual void refresh() = 0;
     

@@ -35,7 +35,7 @@ QList<QStringList> readCSV(const QString& filePath, const QString& separator)
         while(!stream.atEnd())
         {
             QString line = stream.readLine();
-            if(line.left(1) != "#")
+            if( (line.left(1) != "#") && (line.left(1) != "/") )
             {
                 QStringList values = line.split(separator);
                 data.append(values);

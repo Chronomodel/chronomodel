@@ -81,6 +81,10 @@ void GraphViewPhase::refresh()
     mGraph->autoAdjustYScale(mCurrentTypeGraph == eTrace);
 
     mDurationGraph->removeAllCurves();
+    QPen defaultPen;
+    defaultPen.setWidthF(1);
+    defaultPen.setStyle(Qt::SolidLine);
+
     
     if(mPhase)
     {
@@ -112,6 +116,7 @@ void GraphViewPhase::refresh()
                 
                 GraphCurve curveAlpha;
                 curveAlpha.mName = QString(tr("alpha full"));
+                curveAlpha.setPen(defaultPen);
                 curveAlpha.mPen.setColor(alphaCol);
                 curveAlpha.mPen.setStyle(Qt::DotLine);
                 curveAlpha.mIsHisto = false;
@@ -124,7 +129,8 @@ void GraphViewPhase::refresh()
                 }
                 else*/
                 {
-                    curveAlpha.mData = equal_areas(mPhase->mAlpha.fullHisto(), 1.f);
+                    //curveAlpha.mData = equal_areas(mPhase->mAlpha.fullHisto(), 1.f);
+                    curveAlpha.mData = mPhase->mAlpha.fullHisto();
                 }
                 mGraph->addCurve(curveAlpha);
                 
@@ -133,6 +139,7 @@ void GraphViewPhase::refresh()
                 
                 GraphCurve curveBeta;
                 curveBeta.mName = QString(tr("beta full"));
+                curveBeta.setPen(defaultPen);
                 curveBeta.mPen.setColor(betaCol);
                 curveBeta.mPen.setStyle(Qt::DashLine);
                 curveBeta.mIsHisto = false;
@@ -145,7 +152,8 @@ void GraphViewPhase::refresh()
                 }
                 else*/
                 {
-                    curveBeta.mData = equal_areas(mPhase->mBeta.fullHisto(), 1.f);
+                    //curveBeta.mData = equal_areas(mPhase->mBeta.fullHisto(), 1.f);
+                    curveBeta.mData = mPhase->mBeta.fullHisto();
                 }
                 mGraph->addCurve(curveBeta);
                 
@@ -156,39 +164,47 @@ void GraphViewPhase::refresh()
                 
                 GraphCurve curveAlphaHPD;
                 curveAlphaHPD.mName = QString(tr("alpha HPD full"));
+                curveAlphaHPD.setPen(defaultPen);
                 curveAlphaHPD.mPen.setColor(alphaCol);
                 curveAlphaHPD.mPen.setStyle(Qt::DotLine);
                 curveAlphaHPD.mFillUnder = true;
-                curveAlphaHPD.mBrush.setStyle(Qt::SolidPattern);
+                //curveAlphaHPD.mBrush.setStyle(Qt::SolidPattern);
                 QColor HPDAlphaColor(alphaCol);
-                HPDAlphaColor.setAlpha(100);
+                HPDAlphaColor.setAlpha(125);
                 curveAlphaHPD.mBrush.setColor(HPDAlphaColor);
                 curveAlphaHPD.mIsHisto = false;
                 curveAlphaHPD.mIsRectFromZero = true;
-                curveAlphaHPD.mData = equal_areas(mPhase->mAlpha.mHPD, mThresholdHPD / 100.f);
+                //curveAlphaHPD.mData = equal_areas(mPhase->mAlpha.mHPD, mThresholdHPD / 100.f);
+                curveAlphaHPD.mData =mPhase->mAlpha.mHPD;
                 mGraph->addCurve(curveAlphaHPD);
                 
                 GraphCurve curveBetaHPD;
                 curveBetaHPD.mName = QString(tr("beta HPD full"));
+                curveBetaHPD.setPen(defaultPen);
                 curveBetaHPD.mPen.setColor(betaCol);
                 curveBetaHPD.mPen.setStyle(Qt::DashLine);
                 curveBetaHPD.mFillUnder = true;
-                curveBetaHPD.mBrush.setStyle(Qt::SolidPattern);
+                
+                //curveBetaHPD.mBrush.setStyle(Qt::SolidPattern);
                 QColor HPDBetaColor(betaCol);
-                HPDBetaColor.setAlpha(0);
+                HPDBetaColor.setAlpha(125);
                 curveBetaHPD.mBrush.setColor(HPDBetaColor);
+                
                 curveBetaHPD.mIsHisto = false;
                 curveBetaHPD.mIsRectFromZero = true;
-                curveBetaHPD.mData = equal_areas(mPhase->mBeta.mHPD, mThresholdHPD / 100.f);
+                //curveBetaHPD.mData = equal_areas(mPhase->mBeta.mHPD, mThresholdHPD / 100.f);
+                curveBetaHPD.mData = mPhase->mBeta.mHPD;
                 mGraph->addCurve(curveBetaHPD);
                 
                 // Duration
                 
                 GraphCurve curveDur;
                 curveDur.mName = mTitle+" : "+QString(tr("duration"));
+                curveDur.setPen(defaultPen);
                 curveDur.mPen.setColor(betaCol);
                 curveDur.mIsHisto = false;
-                curveDur.mData = equal_areas(mPhase->mDuration.fullHisto(), 1.f);
+                //curveDur.mData = equal_areas(mPhase->mDuration.fullHisto(), 1.f);
+                curveDur.mData = mPhase->mDuration.fullHisto();
                 
                 if(!curveDur.mData.isEmpty())
                 {
@@ -203,6 +219,7 @@ void GraphViewPhase::refresh()
                     /* add curve of duration with HPD */
                     GraphCurve curveDurHPD;
                     curveDurHPD.mName = QString(tr("duration HPD"));
+                    curveDurHPD.setPen(defaultPen);
                     curveDurHPD.mPen.setColor(color);
                     curveDurHPD.mFillUnder = true;
                     QColor HPDColor(color);
@@ -211,7 +228,8 @@ void GraphViewPhase::refresh()
                     curveDurHPD.mBrush.setColor(HPDColor);
                     curveDurHPD.mIsHisto = false;
                     curveDurHPD.mIsRectFromZero = true;
-                    curveDurHPD.mData = equal_areas(mPhase->mDuration.mHPD, mThresholdHPD / 100.f);
+                    //curveDurHPD.mData = equal_areas(mPhase->mDuration.mHPD, mThresholdHPD / 100.f);
+                    curveDurHPD.mData = mPhase->mDuration.mHPD;
 
                     double max = map_max_value(curveDurHPD.mData);
 
@@ -225,7 +243,8 @@ void GraphViewPhase::refresh()
                     curveRawAlpha.mName = mTitle+" : "+QString(tr("raw"));
                     curveRawAlpha.mPen.setColor(Qt::red);
                     curveRawAlpha.mPen.setStyle(Qt::DotLine);
-                    curveRawAlpha.mData = equal_areas(mPhase->mAlpha.fullRawHisto(), 1.f);
+                    //curveRawAlpha.mData = equal_areas(mPhase->mAlpha.fullRawHisto(), 1.f);
+                    curveRawAlpha.mData = mPhase->mAlpha.fullRawHisto();
                     curveRawAlpha.mIsHisto = true;
                     mGraph->addCurve(curveRawAlpha);
                     
@@ -236,7 +255,8 @@ void GraphViewPhase::refresh()
                     curveRawBeta.mName = mTitle+" : "+QString(tr("raw beta"));
                     curveRawBeta.mPen.setColor(Qt::red);
                     curveRawBeta.mPen.setStyle(Qt::DashLine);
-                    curveRawBeta.mData = equal_areas(mPhase->mBeta.fullRawHisto(), 1.f);
+                    //curveRawBeta.mData = equal_areas(mPhase->mBeta.fullRawHisto(), 1.f);
+                    curveRawBeta.mData = mPhase->mBeta.fullRawHisto();
                     curveRawBeta.mIsHisto = true;
                     mGraph->addCurve(curveRawBeta);
                     
@@ -255,7 +275,8 @@ void GraphViewPhase::refresh()
                     curveAlphaChain.mPen.setColor(col);
                     curveAlphaChain.mPen.setStyle(Qt::DotLine);
                     curveAlphaChain.mIsHisto = false;
-                    curveAlphaChain.mData = equal_areas(mPhase->mAlpha.histoForChain(i), 1.f);
+                    //curveAlphaChain.mData = equal_areas(mPhase->mAlpha.histoForChain(i), 1.f);
+                    curveAlphaChain.mData = mPhase->mAlpha.histoForChain(i);
                     mGraph->addCurve(curveAlphaChain);
                     
                     double yMax = 1.1f * map_max_value(curveAlphaChain.mData);
@@ -266,7 +287,8 @@ void GraphViewPhase::refresh()
                     curveBetaChain.mPen.setColor(col);
                     curveBetaChain.mPen.setStyle(Qt::DashLine);
                     curveBetaChain.mIsHisto = false;
-                    curveBetaChain.mData = equal_areas(mPhase->mBeta.histoForChain(i), 1.f);
+                    //curveBetaChain.mData = equal_areas(mPhase->mBeta.histoForChain(i), 1.f);
+                    curveBetaChain.mData = mPhase->mBeta.histoForChain(i);
                     mGraph->addCurve(curveBetaChain);
                     
                     yMax = 1.1f * map_max_value(curveBetaChain.mData);
@@ -324,8 +346,8 @@ void GraphViewPhase::refresh()
 
 void GraphViewPhase::updateLayout()
 {
-    GraphViewResults::updateLayout();
-    
+   // GraphViewResults::updateLayout();
+    GraphViewResults::repaint();
     int h = height();
     int butMinH = 30;
     

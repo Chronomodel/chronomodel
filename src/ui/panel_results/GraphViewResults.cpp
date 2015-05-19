@@ -307,7 +307,8 @@ void GraphViewResults::setNumericalResults(const QString& results)
 void GraphViewResults::showNumericalResults(bool show)
 {
     mShowNumResults = show;
-    updateLayout();
+    //updateLayout();
+    repaint();
 }
 
 void GraphViewResults::setRendering(GraphView::Rendering render)
@@ -326,10 +327,12 @@ void GraphViewResults::setGraphFont(const QFont& font)
 void GraphViewResults::setGraphsThickness(int value)
 {
     mGraph->setCurvesThickness(value);
-    updateLayout();
+    //updateLayout();
+    repaint();
 }
 
-void GraphViewResults::paintEvent(QPaintEvent* )
+
+void GraphViewResults::paintEvent2(QPaintEvent* )
 {
     QPainter p(this);
     if (mButtonVisible) { // the box under the button
@@ -340,7 +343,8 @@ void GraphViewResults::paintEvent(QPaintEvent* )
  /*   p.setPen(QColor(200, 200, 200));
     p.drawLine(0, height(), width(), height());
   */  
-    updateLayout();
+    //updateLayout();
+    repaint();
     p.end();
 /*    if(height() >= mMinHeighttoDisplayTitle) // juste write mTitle
     {
@@ -358,11 +362,16 @@ void GraphViewResults::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
     updateLayout();
+    repaint();
 }
 
 #pragma mark Layout
 
 void GraphViewResults::updateLayout()
+{
+    
+}
+void GraphViewResults::paintEvent(QPaintEvent* )
 {
     int h = height();
     int butMinH = 30;
@@ -592,7 +601,7 @@ void GraphViewResults::updateLayout()
     }*/
     
     p.end();
-    refresh();
+  //  refresh();
 }
 
  void GraphViewResults::setItemColor(const QColor& itemColor)

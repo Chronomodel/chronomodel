@@ -155,10 +155,10 @@ QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const 
         iter.next();
         targetArea += iter.value();
     }
-    return equal_areas(mapToModify, targetArea);
+    return equal_areas_old(mapToModify, targetArea);
 }
 
-QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const double targetArea)
+QMap<double, double> equal_areas_old(const QMap<double, double>& mapToModify, const double targetArea)
 {
     if(mapToModify.isEmpty())
         return QMap<double, double>();
@@ -193,7 +193,7 @@ QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const 
         lastT = t;
     }
     
-    double prop = targetArea / srcArea;
+    double prop = 1;//targetArea / srcArea;
    /* qDebug() << "Equal_areas prop = " << prop;
     qDebug() << "targetArea = " << targetArea;
     qDebug() << "srcArea = " << srcArea;
