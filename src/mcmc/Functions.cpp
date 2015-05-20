@@ -65,8 +65,10 @@ FunctionAnalysis analyseFunction(const QMap<double, double>& aFunction)
         result.mean = sum / sumP;
         double variance = (sum2 / sumP) - pow(result.mean, 2);
         
-        if(variance < 0)
+        if(variance < 0) {
+            qDebug() << "WARNING : in analyseFunction() negative variance found : " << variance<<" return 0";
             variance = 0;
+        }
         
         result.stddev = sqrt(variance);
     }
@@ -100,7 +102,7 @@ double dataStd(const QVector<double>& data)
     
     if(variance < 0)
     {
-        qDebug() << "ERROR : negative variance found : " << variance;
+        qDebug() << "WARNING : in dataStd() negative variance found : " << variance<<" return 0";
         return 0.f;
     }
     return (double)sqrt(variance);
@@ -220,7 +222,9 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, double t
 
 QString intervalText(const QPair<double, QPair<double, double> >& interval)
 {
-    return "[" + QString::number(interval.second.first, 'f', 0) + "; " + QString::number(interval.second.second, 'f', 0) + "] (" + QString::number(interval.first, 'f', 1) + "%)";
+    //return "[" + QString::number(interval.second.first, 'f', 0) + "; " + QString::number(interval.second.second, 'f', 0) + "] (" + QString::number(interval.first, 'f', 1) + "%)"; // modif PhD on 2015/05/20
+    return "[" + QString::number(interval.second.first, 'f', 1) + "; " + QString::number(interval.second.second, 'f', 1) + "] (" + QString::number(interval.first, 'f', 1 ) + "%)";
+    
 }
 
 QString getHPDText(const QMap<double, double>& hpd, double thresh)
@@ -245,12 +249,17 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
     double lastKeyInInter = 0.;
     QPair<double, double> curInterval;
     
-    double areaTot = 0;
+    /* original code HL
+     double areaTot = 0;
     while(it.hasNext())
     {
         it.next();
         areaTot += it.value();
     }
+     */
+    
+    double areaTot= map_area(hpd); // modif PhD on 2015/05/20
+    double lastValueInInter = 0.;
     
     double areaCur = 0;
     it.toFront();
@@ -263,7 +272,8 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
             inInterval = true;
             curInterval.first = it.key();
             lastKeyInInter = it.key();
-            areaCur = it.value();
+            // areaCur = it.value(); // modif PhD on 2015/05/20
+            areaCur = 0.; // start, not inside
         }
         else if(inInterval)
         {
@@ -278,22 +288,29 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
                 intervals.append(inter);
                 
                 areaCur = 0;
+                //qDebug()<<" inInerval second"<<curInterval.first<<curInterval.second;
             }
             else
             {
+                
+                //areaCur += it.value(); // modif PhD on 2015/05/20
+                
+                areaCur += (lastValueInInter+it.value())/2 * (it.key()-lastKeyInInter);
+             
                 lastKeyInInter = it.key();
-                areaCur += it.value();
+                lastValueInInter = it.value();
                 
             }
         }
     }
     
-    if (inInterval) {
+    if (inInterval) { // Modif PhD correction to close unclosed interval
        
         curInterval.second = lastKeyInInter;
         QPair<double, QPair<double, double> > inter;
         inter.first = thresh * areaCur / areaTot;
         inter.second = curInterval;
+        //qDebug()<<"second"<<curInterval.first<<curInterval.second;
         intervals.append(inter);
     }
     

@@ -361,7 +361,7 @@ void EventPropertiesView::updateKnownGraph()
         
         mKnownGraph->setRangeX(tmin,tmax);
         
-        qDebug() << "EventPropertiesView::updateKnownGraph()"<<event.mValues.size();
+        //qDebug() << "EventPropertiesView::updateKnownGraph()"<<event.mValues.size();
         mKnownGraph->setCurrentX(tmin,tmax);
         
         double max = map_max_value(event.mValues);

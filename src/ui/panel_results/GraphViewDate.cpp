@@ -78,6 +78,7 @@ void GraphViewDate::refresh()
         
         if(mCurrentTypeGraph == eHisto)
         {
+            //mTitle = QString(tr("Data") + " : " + mDate->mName);
             mGraph->setRangeY(0, 0.0001f);
             
           /*  if(mCurrentVariable == eTheta)
@@ -93,19 +94,12 @@ void GraphViewDate::refresh()
             if(mShowCalib && mCurrentVariable == eTheta)
             {
                 GraphCurve curve;
-                //curve.mName = "calibration";
-                //if(mDate->mCalibration.isEmpty()) {
-                //if(mDate->mCalibration.isEmpty()) {
-                //    mDate->calibrate(mSettings);
-               //     qDebug()<<"mDate->calibrate(mSettings);";
-               // }
-                //curve.mData = equal_areas_old(mDate->getCalibMap(), 1.f);
-                //curve.mData = normalize_map(mDate->getCalibMap());
+                
                 curve.mData = equal_areas(mDate->getCalibMap(), 1.f);
                 //curve.mData = mDate->getCalibMap();
 
                 QString namePlugin = mDate->mPlugin->getName();
-                QColor dataColor   = QColor(Qt::black);//mDate->mPlugin->getColor();//QColor(120, 120, 120); ///since 28/04/2015
+                QColor dataColor   = QColor(150, 150, 150);//QColor(Qt::black);//mDate->mPlugin->getColor();//QColor(120, 120, 120); ///since 28/04/2015
                 QIcon dataIcon     = mDate->mPlugin->getIcon();
                 curve.mName = "calibration : "+namePlugin;
                 curve.setPen(defaultPen);
@@ -140,7 +134,6 @@ void GraphViewDate::refresh()
                 GraphCurve curve;
                 curve.mName = mTitle+" : "+"wiggle";
                 curve.mData = equal_areas(mDate->mWiggle.fullHisto(), 1.f);
-                //curve.mData = mDate->mWiggle.fullHisto();
                 
                 curve.setPen(defaultPen);
                 curve.mPen.setColor(color);
@@ -154,8 +147,15 @@ void GraphViewDate::refresh()
             }
             
             MHVariable* variable = &(mDate->mTheta);
-            if(mCurrentVariable == eTheta) variable = &(mDate->mTheta);
-            else if(mCurrentVariable == eSigma) variable = &(mDate->mSigma);
+            if(mCurrentVariable == eTheta) {
+                
+             variable = &(mDate->mTheta);
+                mTitle = QString(tr("Data") + " : " + mDate->mName);
+            }
+            else if(mCurrentVariable == eSigma){
+                variable = &(mDate->mSigma);
+                 mTitle = QString(tr("Std") + " : " + mDate->mName);
+            }
 
             if(mShowAllChains)
             {
@@ -167,7 +167,7 @@ void GraphViewDate::refresh()
                     curveRaw.setPen(defaultPen);
                     curveRaw.mPen.setColor(Qt::red);
                     curveRaw.mData = equal_areas(variable->fullRawHisto(), 1.f);
-                    //curveRaw.mData = variable->fullRawHisto();
+                    
                     curveRaw.mIsHisto = true;
 
                     mGraph->addCurve(curveRaw);
@@ -183,11 +183,13 @@ void GraphViewDate::refresh()
                     
                     if(mCurrentVariable != GraphViewResults::eSigma)
                     {
+                       
                         GraphCurve curveHPD;
                         curveHPD.mName = "histo HPD";
-                        curveHPD.mData = equal_areas(variable->mHPD, mThresholdHPD/100.f);
-                        //curveHPD.mData = variable->mHPD;
-                      // curveHPD.mData = mDate->getCalibMap();
+                        double realThresh = map_area(variable->mHPD) / map_area(variable->fullHisto());
+                        
+                        curveHPD.mData = equal_areas(variable->mHPD, realThresh);
+                        
                         HPDColor.setAlpha(255);
                         curveHPD.setPen(defaultPen);
                         curveHPD.mPen.setColor(HPDColor);

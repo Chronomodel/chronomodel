@@ -79,6 +79,12 @@ void GraphViewEvent::refresh()
         
         if(mCurrentTypeGraph == eHisto)
         {
+            if (mEvent->type()==Event::eKnown) {
+                mTitle = tr("Bound ") + " : " + mEvent->mName;
+            }
+            else mTitle = tr("Event") + " : " + mEvent->mName;
+            
+            mGraph->setBackgroundColor(QColor(230, 230, 230));
             if(mCurrentVariable == eTheta)
             {
                 mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
@@ -127,8 +133,8 @@ void GraphViewEvent::refresh()
                             curveRaw.mName = "raw histo full";
                             curveRaw.setPen(defaultPen);
                             curveRaw.mPen.setColor(Qt::red);
-                            //curveRaw.mData = equal_areas(mEvent->mTheta.fullRawHisto(), 1.f);
-                            curveRaw.mData = mEvent->mTheta.fullRawHisto();
+                            curveRaw.mData = equal_areas(mEvent->mTheta.fullRawHisto(), 1.f);
+                            
                             curveRaw.mIsHisto = true;
                             mGraph->addCurve(curveRaw);
                             
@@ -140,8 +146,8 @@ void GraphViewEvent::refresh()
                         curve.mName = "histo full";
                         curve.setPen(defaultPen);
                         curve.mPen.setColor(color);
-                        //curve.mData = equal_areas(mEvent->mTheta.fullHisto(), 1.f);
-                        curve.mData = mEvent->mTheta.fullHisto();
+                        curve.mData = equal_areas(mEvent->mTheta.fullHisto(), 1.f);
+                        
                         curve.mIsHisto = false;
                         mGraph->addCurve(curve);
                         
@@ -159,8 +165,10 @@ void GraphViewEvent::refresh()
                         curveHPD.mBrush.setColor(HPDColor);
                         curveHPD.mIsHisto = false;
                         curveHPD.mIsRectFromZero = true;
-                        //curveHPD.mData = equal_areas(mEvent->mTheta.mHPD, mThresholdHPD/100.f);
-                        curveHPD.mData = mEvent->mTheta.mHPD;
+                        double realThresh = map_area(mEvent->mTheta.mHPD) / map_area(mEvent->mTheta.fullHisto());
+                        
+                        curveHPD.mData = equal_areas(mEvent->mTheta.mHPD, realThresh);
+                        
                        mGraph->addCurve(curveHPD);
                     }
                     for(int i=0; i<mShowChainList.size(); ++i)
@@ -174,8 +182,8 @@ void GraphViewEvent::refresh()
                             curve.setPen(defaultPen);
                             curve.mPen.setColor(col);
                             curve.mIsHisto = false;
-                            //curve.mData = equal_areas(mEvent->mTheta.histoForChain(i), 1.f);
-                            curve.mData = mEvent->mTheta.histoForChain(i);
+                            curve.mData = equal_areas(mEvent->mTheta.histoForChain(i), 1.f);
+                            
                             mGraph->addCurve(curve);
                             
                             double yMax = 1.1f * map_max_value(curve.mData);
@@ -201,10 +209,14 @@ void GraphViewEvent::refresh()
             {
                 // On est en train de regarder les variances des data
                 // On affiche donc ici la superposition des variances (et pas le résultat de theta f)
-                
+                if (mEvent->type()==Event::eKnown) {
+                    mTitle = tr("Bound ") + " : " + mEvent->mName;
+                }
+                else mTitle = tr("Std") + " : " + mEvent->mName;
+                mGraph->setBackgroundColor(QColor(Qt::white));
                 mGraph->autoAdjustYScale(true);
                // mGraph->setCurrentX(0, mSettings.mTmax-mSettings.mTmin);
-               // mGraph->setCurrentX(, <#const double aMaxX#>)
+              
                 mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
                 double yMax = 0;
                 
@@ -218,8 +230,8 @@ void GraphViewEvent::refresh()
                         curve.setPen(defaultPen);
                         curve.mPen.setColor(color);
                         curve.mIsHisto = false;
-                        //curve.mData = equal_areas(date.mSigma.fullHisto(), 1.f);
-                        curve.mData = date.mSigma.fullHisto();
+                        curve.mData = equal_areas(date.mSigma.fullHisto(), 1.f);
+                        
                         mGraph->addCurve(curve);
                         
                         yMax = qMax(yMax, 1.1f * map_max_value(curve.mData));
@@ -236,8 +248,8 @@ void GraphViewEvent::refresh()
                             curve.setPen(defaultPen);
                             curve.mPen.setColor(col);
                             curve.mIsHisto = false;
-                            //curve.mData = equal_areas(date.mSigma.histoForChain(j), 1.f);
-                            curve.mData = date.mSigma.histoForChain(j);
+                            curve.mData = equal_areas(date.mSigma.histoForChain(j), 1.f);
+                            
                             mGraph->addCurve(curve);
                             
                             yMax = 1.1f * map_max_value(curve.mData);

@@ -319,6 +319,7 @@ void CalibrationView::exportImage()
     mHPDLab        -> setVisible(false);
     mMarkerX       -> setVisible(false);
     mMarkerY       -> setVisible(false);
+    mResultsLab    -> setVisible(false);
     
     int m = 5;
     QRect r(m, m, this->width() - 2*m, this->height() - 2*m);
@@ -338,6 +339,7 @@ void CalibrationView::exportImage()
     mHPDLab        -> setVisible(true);
     mMarkerX       -> setVisible(true);
     mMarkerY       -> setVisible(true);
+    mResultsLab    -> setVisible(true);
 }
 void CalibrationView::copyText()
 {

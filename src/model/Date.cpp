@@ -95,7 +95,7 @@ Date Date::fromJson(const QJsonObject& json)
     {
         date.mId = json[STATE_ID].toInt();
         date.mName = json[STATE_NAME].toString();
-        qDebug() <<"date.name" << date.mName;
+        //qDebug() <<"date.name" << date.mName;
         date.mData = json[STATE_DATE_DATA].toObject();
         date.mMethod = (DataMethod)json[STATE_DATE_METHOD].toInt();
         
