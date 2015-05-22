@@ -1,8 +1,9 @@
-﻿#include "MCMCLoop.h"
+#include "MCMCLoop.h"
 #include "Generator.h"
 #include "QtUtilities.h"
 #include <QDebug>
 #include <QTime>
+
 
 
 MCMCLoop::MCMCLoop():
@@ -75,8 +76,7 @@ void MCMCLoop::run()
     emit stepChanged(tr("Calibrating data..."), 0, 0);
     
     //QTime startCalibTime = QTime::currentTime();
-    
-    mAbortedReason = this->calibrate();
+       mAbortedReason = this->calibrate();
     if(!mAbortedReason.isEmpty())
     {
         return;

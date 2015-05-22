@@ -2,3 +2,15 @@ build/
 doxygen/
 # propre a chaque systeme, sur windows correspond a QtCreator
 Chronomodel.pro.user*
+
+*.dll
+
+*.pkg
+
+*.exe
+
+*.dylib
+
+*.mak
+
+*.14C

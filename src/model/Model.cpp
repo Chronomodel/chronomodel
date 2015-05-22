@@ -836,6 +836,7 @@ void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen, d
         
         if(generateEventHistos)
         {
+            
             event->mTheta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
             //qDebug() << "Trace size : " << event->mTheta.mTrace.size();
         }
@@ -1130,6 +1131,8 @@ void Model::restoreFromFile(const QString& fileName)
                     in >> mEvents[i]->mDates[j].mCalibration;
                     in >> mEvents[i]->mDates[j].mRepartition;
                     in >> mEvents[i]->mDates[j].mCalibHPD;
+                    
+                     if (mEvents[i]->mDates[j].mCalibration.isEmpty()) qDebug()<<"Model::restoreFromFile vide";
                     
                 }
             }

@@ -649,10 +649,17 @@ void ResultsView::generateHPD()
         mHPDEdit->validator()->fixup(input);
         mHPDEdit->setText(input);
         
+        //clearHisto();
+        //clearChainHistos();
+        // I don't need to clear the rawHisto
+        //clearRawHisto();
+        clearCredibilityAndHPD();
         mModel->generateNumericalResults(mChains);
         mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toDouble());
         
         updateGraphs();
+        for(int i=0; i<mByPhasesGraphs.size(); ++i) mByPhasesGraphs[i]->update();
+        for(int i=0; i<mByEventsGraphs.size(); ++i) mByEventsGraphs[i]->update();
     }
 }
 
@@ -662,14 +669,23 @@ void ResultsView::updateFFTLength()
     {
         int len = mFFTLenCombo->currentText().toInt();
         double hFactor = mHFactorEdit->text().toDouble();
-        
+        clearRawHisto();
+        clearHisto();
+        clearChainHistos();
+        clearCredibilityAndHPD();
         mModel->generatePosteriorDensities(mChains, len, hFactor);
         mModel->generateNumericalResults(mChains);
         mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toDouble());
         
         updateGraphs();
+        for(int i=0; i<mByPhasesGraphs.size(); ++i) mByPhasesGraphs[i]->update();
+        for(int i=0; i<mByEventsGraphs.size(); ++i) mByEventsGraphs[i]->update();
+        
     }
-    repaint();
+    
+    
+    // mPhasesScrollArea->repaint();
+   // mEventsScrollArea->repaint();
 }
 
 void ResultsView::updateHFactor()
@@ -683,14 +699,19 @@ void ResultsView::updateHFactor()
             hFactor = 1;
             mHFactorEdit->setText("1");
         }
-        
+        clearRawHisto();
+        clearHisto();
+        clearChainHistos();
+        clearCredibilityAndHPD();
         mModel->generatePosteriorDensities(mChains, len, hFactor);
         mModel->generateNumericalResults(mChains);
         mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toDouble());
         
         updateGraphs();
+        for(int i=0; i<mByPhasesGraphs.size(); ++i) mByPhasesGraphs[i]->update();
+        for(int i=0; i<mByEventsGraphs.size(); ++i) mByEventsGraphs[i]->update();
     }
-    repaint();
+    
 }
 
 #pragma mark Display options
@@ -709,15 +730,17 @@ void ResultsView::updateFont()
         
         for(int i=0; i<mByPhasesGraphs.size(); ++i)
         {
-            mPhasesScrollArea->setFont(mFont);
+            
             mByPhasesGraphs[i]->setGraphFont(mFont);
             
         }
+        mPhasesScrollArea->setFont(mFont);
         for(int i=0; i<mByEventsGraphs.size(); ++i)
         {
-            mEventsScrollArea->setFont(mFont);
+            
             mByEventsGraphs[i]->setGraphFont(mFont);
         }
+        mEventsScrollArea->setFont(mFont);
     }
 }
 
@@ -731,7 +754,7 @@ void ResultsView::updateThickness(int value)
     {
         mByEventsGraphs[i]->setGraphsThickness(value);
     }
-    repaint();
+   // repaint();
 }
 
 #pragma mark Update
@@ -1374,6 +1397,7 @@ void ResultsView::exportFullImage()
         axe.mShowSubSubs = true;
         axe.mShowArrow = true;
         axe.mShowText = true;
+        //axe.AxisTool::m
         //QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth ,  mMarginBottom), 5);
         axe.updateValues(r.width()-50, 40, mResultCurrentMinX, mResultCurrentMaxX);
     }
@@ -1771,4 +1795,81 @@ void ResultsView::changeTab(int index)
     updateGraphs();
     updateLayout();
     
+}
+//void clearRawHisto();
+//void clearChainHisto();
+void ResultsView::clearHisto()
+{
+    for(int i=0; i<mModel->mEvents.size(); ++i) {
+        Event* event = mModel->mEvents[i];
+        for(int j=0; j<mModel->mEvents[i]->mDates.size(); ++j) {
+            Date& date = event->mDates[j];
+            date.mTheta.mHisto.clear();
+            date.mSigma.mHisto.clear();
+        }
+        event->mTheta.mHisto.clear();
+    }
+    
+    for(int i=0; i<mModel->mPhases.size(); ++i) {
+        Phase* phase = mModel->mPhases[i];
+        phase->mAlpha.mHisto.clear();
+        phase->mBeta.mHisto.clear();
+    }
+}
+void ResultsView::clearChainHistos()
+{
+    for(int i=0; i<mModel->mEvents.size(); ++i) {
+        Event* event = mModel->mEvents[i];
+        for(int j=0; j<mModel->mEvents[i]->mDates.size(); ++j) {
+            Date& date = event->mDates[j];
+            date.mTheta.mChainsHistos.clear();
+            date.mSigma.mChainsHistos.clear();
+        }
+        event->mTheta.mChainsHistos.clear();
+    }
+    
+    for(int i=0; i<mModel->mPhases.size(); ++i) {
+        Phase* phase = mModel->mPhases[i];
+        phase->mAlpha.mHisto.clear();
+        phase->mBeta.mHisto.clear();
+    }
+}
+void ResultsView::clearRawHisto()
+{
+  
+        for(int i=0; i<mModel->mEvents.size(); ++i) {
+            Event* event = mModel->mEvents[i];
+            for(int j=0; j<mModel->mEvents[i]->mDates.size(); ++j) {
+                Date& date = event->mDates[j];
+                date.mTheta.mRawHisto.clear();
+                date.mSigma.mRawHisto.clear();
+            }
+            event->mTheta.mRawHisto.clear();
+        }
+        
+        for(int i=0; i<mModel->mPhases.size(); ++i) {
+            Phase* phase = mModel->mPhases[i];
+            phase->mAlpha.mRawHisto.clear();
+            phase->mBeta.mRawHisto.clear();
+        }
+    
+}
+void ResultsView::clearCredibilityAndHPD()
+{
+    for(int i=0; i<mModel->mEvents.size(); ++i) {
+        Event* event = mModel->mEvents[i];
+        for(int j=0; j<mModel->mEvents[i]->mDates.size(); ++j) {
+            Date& date = event->mDates[j];
+            date.mTheta.mHPD.clear();
+            date.mSigma.mHPD.clear();
+            
+        }
+        event->mTheta.mHPD.clear();
+    }
+    
+    for(int i=0; i<mModel->mPhases.size(); ++i) {
+        Phase* phase = mModel->mPhases[i];
+        phase->mAlpha.mHPD.clear();
+        phase->mBeta.mHPD.clear();
+    }
 }

@@ -49,6 +49,8 @@ QString MCMCLoopMain::calibrate()
             for(int j=0; j<num_dates; ++j)
             {
                 Date* date = &events[i]->mDates[j];
+                if (events[i]->mDates[j].mCalibration.isEmpty()) qDebug()<<"MCMCLoopMain::calibrate() vide";
+                date->mCalibration=events[i]->mDates[j].mCalibration;
                 dates.push_back(date);
             }
         }
@@ -62,8 +64,10 @@ QString MCMCLoopMain::calibrate()
                 return ABORTED_BY_USER;
             
             //QTime startTime = QTime::currentTime();
-            
-            dates[i]->calibrate(mModel->mSettings);
+            if (dates[i]->mCalibration.isEmpty()) {
+                 dates[i]->calibrate(mModel->mSettings);
+            }
+            //dates[i]->calibrate(mModel->mSettings);
             if(dates[i]->mCalibSum == 0)
             {
                 return tr("The following data cannot be nul : ") + dates[i]->mName;

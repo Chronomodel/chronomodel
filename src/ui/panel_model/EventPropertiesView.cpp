@@ -179,7 +179,7 @@ void EventPropertiesView::setEvent(const QJsonObject& event)
 void EventPropertiesView::updateEvent()
 {
     mDatesList->setEvent(mEvent);
-    qDebug()<<"EventPropertiesView::updateEvent()";
+    //qDebug()<<"EventPropertiesView::updateEvent()";
     bool empty = mEvent.isEmpty();
     
     mNameEdit   ->setEnabled(!empty);

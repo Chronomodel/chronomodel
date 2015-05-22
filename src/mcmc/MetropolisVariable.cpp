@@ -1,4 +1,4 @@
-﻿#include "MetropolisVariable.h"
+#include "MetropolisVariable.h"
 #include "StdUtilities.h"
 #include "Functions.h"
 #if USE_FFT
@@ -40,6 +40,11 @@ void MetropolisVariable::reset()
     mChainsResults.clear();
 }
 
+/**
+ @param[in] dataSrc is the trace, with for example one million of date
+ @param[in] hFactor corresponds to the bandwidth factor.
+ @remarks Produice a density with the area equale to 1. The smoothing is done with Hsilvermann computed inside
+ **/
 float* MetropolisVariable::generateBufferForHisto(const QVector<double>& dataSrc, int numPts, double hFactor)
 {
     // Work with double precision here !
@@ -49,19 +54,33 @@ float* MetropolisVariable::generateBufferForHisto(const QVector<double>& dataSrc
     if(sigma == 0)
         return 0;
     
+   
+    // double areaTot = 0.;
+    /* for(int i=0; i<dataSrc.size(); ++i) {
+         areaTot += (double)dataSrc[i];
+     }
+     
+     qDebug()<<"MetropolisVariable::generateBufferForHisto areaTot ="<<areaTot<<"size"<<dataSrc.size();
+    
+   */
+
+    
+    
+    
     double h = hFactor * 1.06 * sigma * pow(dataSrc.size(), -1./5.);
     
     double a = vector_min_value(dataSrc) - 4. * h;
     double b = vector_max_value(dataSrc) + 4. * h;
     
     double delta = (b - a) / (numPts - 1);
-    double denum = delta * delta * dataSrc.size();
+    //double denum = delta * delta * dataSrc.size();
+    double denum = dataSrc.size();
     
     float* input = (float*) fftwf_malloc(numPts * sizeof(float));
     for(int i=0; i<numPts; ++i)
         input[i]= 0.f;
     
-    for(int i=0; i<(int)dataSrc.size(); ++i)
+    for(int i=0; i<dataSrc.size(); ++i)
     {
         double t = dataSrc[i];
         
@@ -69,8 +88,8 @@ float* MetropolisVariable::generateBufferForHisto(const QVector<double>& dataSrc
         double idx_under = floor(idx);
         double idx_upper = idx_under + 1.;
         
-        double contrib_under = (idx_upper - idx) / denum;
-        double contrib_upper = (idx - idx_under) / denum;
+        float contrib_under = (idx_upper - idx) / denum;
+        float contrib_upper = (idx - idx_under) / denum;
         
         if(std::isinf(contrib_under) || std::isinf(contrib_upper))
         {
@@ -81,10 +100,18 @@ float* MetropolisVariable::generateBufferForHisto(const QVector<double>& dataSrc
             qDebug() << "FFT input : Wrong index";
         }
         if(idx_under < numPts)
-            input[(int)idx_under] += (float)contrib_under;
+            input[(int)idx_under] += contrib_under;
         if(idx_upper < numPts) // This is to handle the case when matching the last point index !
-            input[(int)idx_upper] += (float)contrib_upper;
+            input[(int)idx_upper] += contrib_upper;
     }
+    // just a check
+    /*areaTot = 0.;
+    for(int i=0; i<numPts; ++i) {
+        areaTot += input[i];
+    }
+    
+    qDebug()<<"MetropolisVariable::generateBufferForHisto areaTot final ="<<areaTot;
+   */
     return input;
 }
 
@@ -115,7 +142,11 @@ QMap<double, double> MetropolisVariable::generateRawHisto(const QVector<double>&
     
     return result;
 }
-
+/**
+  @param hFactor corresponds to the bandwidth factor
+ @param dataSrc is the trace of the raw data
+ @remarks the FFTW function transform the area such that the area output is the area input multiplied by fftLen. So we have to corret it.
+ **/
 QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& dataSrc, int fftLen, double hFactor, double tmin, double tmax)
 {
     int inputSize = fftLen;
@@ -132,19 +163,24 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
     
     float* input = generateBufferForHisto(dataSrc, fftLen, hFactor);
     float* output = (float*) fftwf_malloc(outputSize * sizeof(float));
+    /*
+    double areaTot = 0.;
+    for(int i=0; i<inputSize; ++i) {
+        areaTot += input[i];
+    }
     
-
-    if(input != 0)
-    {
+        qDebug()<<"MetropolisVariable::generateHisto areaTot ="<<areaTot<<" a="<<a<<" b="<<b;
+     qDebug()<<areaTot;
+     */
+    if(input != 0) {
         // ----- FFT -----
         
         fftwf_plan plan_forward = fftwf_plan_dft_r2c_1d(inputSize, input, (fftwf_complex*)output, FFTW_ESTIMATE);
         fftwf_execute(plan_forward);
         
-        for(int i=0; i<outputSize/2; ++i)
-        {
+        for(int i=0; i<outputSize/2; ++i) {
             double s = 2.f * M_PI * i / (b-a);
-            double factor = exp(-0.5f * s * s * h * h);
+            double factor = expf(-0.5f * s * s * h * h);
             
             output[2*i] *= factor;
             output[2*i + 1] *= factor;
@@ -154,36 +190,59 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
         fftwf_execute(plan_backward);
         
         // ----- FFT Buffer to result map -----
+        /*
+        areaTot =0.;
+        for(int i=0; i<inputSize; ++i) {
+            areaTot += input[i];
+        }
         
-        for(int i=0; i<inputSize; ++i)
-        {
+        //qDebug()<<"MetropolisVariable::generateHisto areaTot ="<<areaTot<<" a="<<a<<" b="<<b;
+        //qDebug()<<areaTot/inputSize;
+        */
+        for(int i=0; i<inputSize; ++i)  {
             double t = a + (double)i * delta;
-            if(t >= tmin && t<= tmax)
-            {
+            if(t >= tmin && t<= tmax) {
                 result[t] = input[i];
             }
         }
-        
         fftwf_free(input);
         fftwf_free(output);
+        
+        result = equal_areas(result, 1.); // normalize the output area du to the fftw and the case (t >= tmin && t<= tmax)
+        
     }
     
     return result; // return a map between a and b with a step delta = (b - a) / fftLen;
 }
 
+
 void MetropolisVariable::generateHistos(const QList<Chain>& chains, int fftLen, double hFactor, double tmin, double tmax)
 {
     mChainsHistos.clear();
     
-    QVector<double> subFullTrace = fullRunTrace(chains);
-    mHisto = generateHisto(subFullTrace, fftLen, hFactor, tmin, tmax);
-    mRawHisto = generateRawHisto(subFullTrace, fftLen, tmin, tmax);
     
-    for(int i=0; i<chains.size(); ++i)
-    {
-        QVector<double> subTrace = runTraceForChain(chains, i);
-        mChainsHistos.append(generateHisto(subTrace, fftLen, hFactor, tmin, tmax));
-        mChainsRawHistos.append(generateRawHisto(subTrace, fftLen, tmin, tmax));
+    if (mHisto.isEmpty() || mRawHisto.isEmpty() ) { // when we load a project mHisto and mRawHisto exist, they are reload
+        QVector<double> subFullTrace = fullRunTrace(chains);
+        
+        if(mHisto.isEmpty()) mHisto = generateHisto(subFullTrace, fftLen, hFactor, tmin, tmax);
+        qDebug()<<"MetropolisVariable::generateHistos() mHisto empty ";
+        if(mRawHisto.isEmpty()) mRawHisto = generateRawHisto(subFullTrace, fftLen, tmin, tmax);
+        
+    }
+    //mHisto = generateHisto(subFullTrace, fftLen, hFactor, tmin, tmax);
+    //mRawHisto = generateRawHisto(subFullTrace, fftLen, tmin, tmax);
+    
+    if (mChainsHistos.isEmpty() ) {
+        for(int i=0; i<chains.size(); ++i) {
+            QVector<double> subTrace = runTraceForChain(chains, i);
+            mChainsHistos.append(generateHisto(subTrace, fftLen, hFactor, tmin, tmax));
+        }
+    }
+    if (mChainsRawHistos.isEmpty() ) {
+        for(int i=0; i<chains.size(); ++i) {
+            QVector<double> subTrace = runTraceForChain(chains, i);           
+            mChainsRawHistos.append(generateRawHisto(subTrace, fftLen, tmin, tmax));
+        }
     }
 }
 

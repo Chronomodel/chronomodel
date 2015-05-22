@@ -1,4 +1,4 @@
-﻿#include "GraphViewDate.h"
+#include "GraphViewDate.h"
 #include "GraphView.h"
 #include "Date.h"
 #include "Event.h"
@@ -95,8 +95,8 @@ void GraphViewDate::refresh()
             {
                 GraphCurve curve;
                 
-                curve.mData = equal_areas(mDate->getCalibMap(), 1.f);
-                //curve.mData = mDate->getCalibMap();
+                //curve.mData = equal_areas(mDate->getCalibMap(), 1.f);
+                curve.mData = mDate->getCalibMap();
 
                 QString namePlugin = mDate->mPlugin->getName();
                 QColor dataColor   = QColor(150, 150, 150);//QColor(Qt::black);//mDate->mPlugin->getColor();//QColor(120, 120, 120); ///since 28/04/2015
@@ -133,8 +133,8 @@ void GraphViewDate::refresh()
             {
                 GraphCurve curve;
                 curve.mName = mTitle+" : "+"wiggle";
-                curve.mData = equal_areas(mDate->mWiggle.fullHisto(), 1.f);
-                
+                //curve.mData = equal_areas(mDate->mWiggle.fullHisto(), 1.f);
+                curve.mData = mDate->mWiggle.fullHisto();
                 curve.setPen(defaultPen);
                 curve.mPen.setColor(color);
                 curve.mPen.setStyle(Qt::DashLine);
@@ -166,8 +166,8 @@ void GraphViewDate::refresh()
                     curveRaw.mName = "raw histo full";
                     curveRaw.setPen(defaultPen);
                     curveRaw.mPen.setColor(Qt::red);
-                    curveRaw.mData = equal_areas(variable->fullRawHisto(), 1.f);
-                    
+                    //curveRaw.mData = equal_areas(variable->fullRawHisto(), 1.f);
+                    curveRaw.mData = variable->fullRawHisto();
                     curveRaw.mIsHisto = true;
 
                     mGraph->addCurve(curveRaw);
@@ -186,9 +186,10 @@ void GraphViewDate::refresh()
                        
                         GraphCurve curveHPD;
                         curveHPD.mName = "histo HPD";
-                        double realThresh = map_area(variable->mHPD) / map_area(variable->fullHisto());
+                        //double realThresh = map_area(variable->mHPD) / map_area(variable->fullHisto());
                         
-                        curveHPD.mData = equal_areas(variable->mHPD, realThresh);
+                        //curveHPD.mData = equal_areas(variable->mHPD, realThresh);
+                        curveHPD.mData = variable->mHPD;
                         
                         HPDColor.setAlpha(255);
                         curveHPD.setPen(defaultPen);
@@ -208,9 +209,9 @@ void GraphViewDate::refresh()
                     
                     
                     GraphCurve curve;
-                    curve.mName = mTitle;//+" : ""histo full";
-                    curve.mData = equal_areas(variable->fullHisto(), 1.f);
-                    //curve.mData = variable->fullHisto();
+                    curve.mName = mTitle+" : ""histo full";
+                    //curve.mData = equal_areas(variable->fullHisto(), 1.f);
+                    curve.mData = variable->fullHisto();
                     
                     HPDColor.setAlpha(255);//HPDColor.setAlpha(50); // since 28/04/2015
                     curve.setPen(defaultPen);
@@ -247,8 +248,8 @@ void GraphViewDate::refresh()
                     
                     GraphCurve curve;
                     curve.mName = QString("histo chain " + QString::number(i));
-                    curve.mData = equal_areas(variable->histoForChain(i), 1.f);
-                    //curve.mData = variable->histoForChain(i);
+                    //curve.mData = equal_areas(variable->histoForChain(i), 1.f);
+                    curve.mData = variable->histoForChain(i);
                     curve.setPen(defaultPen);
                     curve.mPen.setColor(col);
                     curve.mIsHisto = false;

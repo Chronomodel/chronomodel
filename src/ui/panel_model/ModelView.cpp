@@ -183,8 +183,9 @@ mCalibVisible(false)
     qDebug()<<"ModelView::ModelView mRightWrapper->y()="<<mRightWrapper->y();
     qDebug()<<"ModelView::ModelView mRightWrapper->width()="<<mRightWrapper->width()<<"height "<<mRightWrapper->height();
   */
+    
     mEventPropertiesView = new EventPropertiesView(mRightWrapper);
-    qDebug()<<"Model::mEventPropertiesView()  new width"<<mEventPropertiesView->width()<<" ; height"<<mEventPropertiesView->height();
+    
     mEventPropertiesView->mToolbarH = this->mToolbarH;
  
     

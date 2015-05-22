@@ -105,6 +105,10 @@ private:
     void updateResultsLog();
     void memoZoom(const double& zoom);
     void restoreZoom();
+    void clearHisto();
+    void clearRawHisto();
+    void clearChainHistos();
+    void clearCredibilityAndHPD();
     
 private:
     Model* mModel;
