@@ -74,7 +74,7 @@ QVector<double> MHVariable::acceptationForChain(const QList<Chain>& chains, int 
     
     for(int i=0; i<chains.size(); ++i)
     {
-        unsigned long long chainSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + chains[i].mNumRunIter / chains[i].mThinningInterval;
+       int chainSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + chains[i].mNumRunIter / chains[i].mThinningInterval;
         
         if(i == index)
         {

@@ -158,7 +158,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
                          //   qDebug()<<"in AxisTool::paint mStartVal"<<mStartVal<<"max"<<QString::number(mStartVal + i * mDeltaVal, 'G', 5);
         }
     }
-    else // vertical axe
+    else // ______________________vertical axe______________________________________________________
     {
         double xov = r.x() + r.width()- p.pen().width();
         double yov = r.y() + r.height();
@@ -184,8 +184,13 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
         if(mMinMaxOnly) // used on posterior densities Maybe change the type of the text exp ou float
         {
             QRectF tr(r.x(), r.y(), w - 8, h);
-            p.drawText(tr, Qt::AlignRight | Qt::AlignBottom, QString::number(mStartVal, 'G', 2));
-            p.drawText(tr, Qt::AlignRight | Qt::AlignTop, QString::number(mStartVal + mDeltaVal * (h/mDeltaPix), 'G', 2));
+            QString textStarVal=QString::number(mStartVal, 'G', 2);
+            if (mStartVal==0) {
+                textStarVal ="0";
+            }
+            p.drawText(tr, Qt::AlignRight | Qt::AlignBottom, textStarVal);
+            //p.drawText(tr, Qt::AlignRight | Qt::AlignTop, QString::number(mStartVal + mDeltaVal * (h/mDeltaPix), 'G', 2));
+            p.drawText(tr, Qt::AlignRight | Qt::AlignTop, QString::number(mEndVal, 'G', 2));
         }
         else
         {

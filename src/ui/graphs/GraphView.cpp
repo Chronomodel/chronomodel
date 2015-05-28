@@ -1,4 +1,4 @@
-﻿#include "GraphView.h"
+#include "GraphView.h"
 #include "Ruler.h"
 #include "StdUtilities.h"
 #include "Painting.h"
@@ -508,10 +508,10 @@ void GraphView::paintToDevice(QPaintDevice* device)
     
     if(mXAxisMode != eHidden)
     {
-        mAxisToolX.mShowText = true;
-        mAxisToolX.mShowSubs = true;
+        mAxisToolX.mShowText    = true;
+        mAxisToolX.mShowSubs    = true;
         mAxisToolX.mShowSubSubs = true;
-        mAxisToolX.mShowArrow = true;
+        mAxisToolX.mShowArrow   = true;
        //QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth ,  mMarginBottom), 5);
         mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
         QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 7);
@@ -544,7 +544,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolY.mShowSubs = true;
         mAxisToolY.mShowSubSubs = true;
         mAxisToolY.mShowArrow = true;
-        
+        mAxisToolY.updateValues(mGraphWidth, mStepMinWidth, mMinY, mMaxY);
         QVector<qreal> linesYPos = mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), 5);
         
         if(mShowHorizGrid)

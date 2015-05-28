@@ -69,6 +69,55 @@ void GraphViewPhase::paintEvent(QPaintEvent* e)
         this->setItemTitle(mTitle);
         
     }
+    
+    
+    int h = height();
+    int butMinH = 30;
+    
+    QRect graphRect(mGraphLeft, 0, width() - mGraphLeft, height()-1);
+    
+    if(h <= mLineH + butMinH)
+    {
+        mDurationGraph->setYAxisMode(GraphView::eHidden);
+    }
+    else
+    {
+        mDurationGraph->setYAxisMode(GraphView::eMinMax);
+    }
+    
+    if(height() >= mMinHeighttoDisplayTitle)
+    {
+        graphRect.adjust(0, 20, 0, 0);
+        mDurationGraph->setXAxisMode(GraphView::eAllTicks);
+        mDurationGraph->setMarginBottom(mGraph->font().pointSizeF() + 10);
+    }
+    else
+    {
+        mDurationGraph->setXAxisMode(GraphView::eHidden);
+        mDurationGraph->setMarginBottom(0);
+    }
+    
+    if(mShowNumResults && height() >= 100)
+    {
+        mDurationGraph->setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
+    }
+    else
+    {
+        mDurationGraph->setGeometry(graphRect);
+    }
+    
+    
+    int butInlineMaxH = 50;
+    int bh = height() - mLineH;
+    bh = qMin(bh, butInlineMaxH);
+    
+    this->mShowDuration->setVisible(this->GraphViewResults::mButtonVisible);
+    mShowDuration->setGeometry(0, mLineH + bh, mGraphLeft, bh);
+    
+    
+    
+    
+    
 }
 
 void GraphViewPhase::refresh()
@@ -134,7 +183,8 @@ void GraphViewPhase::refresh()
                 // }
                 mGraph->addCurve(curveAlpha);
                 
-                double yMax = 1.1f * map_max_value(curveAlpha.mData);
+//                double yMax = 1.1f * map_max_value(curveAlpha.mData);
+                double yMax = map_max_value(curveAlpha.mData);
                 mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                 
                 GraphCurve curveBeta;
@@ -158,7 +208,8 @@ void GraphViewPhase::refresh()
                // }
                 mGraph->addCurve(curveBeta);
                 
-                yMax = 1.1f * map_max_value(curveBeta.mData);
+//                yMax = 1.1f * map_max_value(curveBeta.mData);
+                yMax = map_max_value(curveBeta.mData);
                 mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                 
                 // HPD
@@ -355,8 +406,8 @@ void GraphViewPhase::refresh()
 void GraphViewPhase::updateLayout()
 {
    // GraphViewResults::updateLayout();
-    GraphViewResults::repaint();
-    int h = height();
+   // GraphViewResults::repaint();
+ /*   int h = height();
     int butMinH = 30;
     
     QRect graphRect(mGraphLeft, 0, width() - mGraphLeft, height()-1);
@@ -398,7 +449,7 @@ void GraphViewPhase::updateLayout()
     
     this->mShowDuration->setVisible(this->GraphViewResults::mButtonVisible);
     mShowDuration->setGeometry(0, mLineH + bh, mGraphLeft, bh);
-    
+  */  
     
 }
 
