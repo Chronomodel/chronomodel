@@ -180,7 +180,7 @@ private:
     Label* mPostDistOptsTitle;
     QWidget* mPostDistGroup;
     Label* mThreshLab;
-    CheckBox* mHPDCheck;
+    CheckBox* mCredibilityCheck;
     LineEdit* mHPDEdit;
     CheckBox* mRawCheck;
     Label* mFFTLenLab;

@@ -277,14 +277,16 @@ mZoomCorrel(0)
     mDataSigmaRadio = new RadioButton(tr("Individual std. deviations"), mResultsGroup);
     
    // mDataPosteriorCheck       = new CheckBox(tr("Distrib. of post. dates"), mResultsGroup); // new PhD suppr le 28/04/2015
-    mDataCalibCheck           = new CheckBox(tr("Individual calib. dates"), mResultsGroup);
     mShowDataUnderPhasesCheck = new CheckBox(tr("Unfold data under Event"),mResultsGroup);
+    mDataCalibCheck           = new CheckBox(tr("Individual calib. dates"), mResultsGroup);
+
     mWiggleCheck              = new CheckBox(tr("Wiggle shifted"), mResultsGroup);
     mDataThetaRadio           -> setChecked(true);
    // mDataPosteriorCheck       -> setChecked(true); //suppr le 28/04/2015
     mDataCalibCheck           -> setChecked(true);
     mShowDataUnderPhasesCheck -> setChecked(false);
-    
+  //  mResultsGroup->setFixedHeight(mResultsTitle->height()+mDataThetaRadio->QPaintDevice::height()+mDataSigmaRadio->height()+mShowDataUnderPhasesCheck->height()+
+    //                              mDataCalibCheck->QPaintDevice::height()+mWiggleCheck->height()+100);
     connect(mShowDataUnderPhasesCheck, SIGNAL(toggled(bool)), this, SLOT(updateResults()));
     
     connect(mDataThetaRadio,     SIGNAL(clicked()), this, SLOT(updateResults()));
@@ -307,12 +309,14 @@ mZoomCorrel(0)
     mPostDistOptsTitle->setIsTitle(true);
     mPostDistGroup = new QWidget();
     
-    mHPDCheck = new CheckBox(tr("Show credibility"), mPostDistGroup);
-    mHPDCheck->setChecked(true);
+    mCredibilityCheck = new CheckBox(tr("Show credibility"), mPostDistGroup);
+    mCredibilityCheck->setChecked(true);
+    mCredibilityCheck->setVisible(true);
     mThreshLab = new Label(tr("HPD / Credibility (%)") + " :", mPostDistGroup);
     mThreshLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mHPDEdit = new LineEdit(mPostDistGroup);
     mHPDEdit->setText("95");
+    mHPDEdit->setVisible(true);
     
     DoubleValidator* percentValidator = new DoubleValidator();
     percentValidator -> setBottom(0.);
@@ -320,9 +324,11 @@ mZoomCorrel(0)
     percentValidator -> setDecimals(1);
     mHPDEdit->setValidator(percentValidator);
     
-    connect(mHPDEdit,  SIGNAL(textEdited(const QString&)),  this, SLOT(generateHPD()));
-    connect(mHPDCheck, SIGNAL(clicked()),                   this, SLOT(updateGraphs()));
-    connect(mHPDEdit,  SIGNAL(textChanged(const QString&)), this, SLOT(updateGraphs()));
+    //connect(mHPDEdit,  SIGNAL(textEdited(const QString&)),  this, SLOT(generateHPD()));
+    
+    connect(mCredibilityCheck, SIGNAL(clicked()),                   this, SLOT(updateGraphs()));
+    //connect(mHPDEdit,  SIGNAL(textChanged(const QString&)), this, SLOT(updateGraphs()));
+    connect(mHPDEdit,  SIGNAL(returnPressed()), this, SLOT(generateHPD()));
     
     mRawCheck = new CheckBox(tr("Raw results"), mPostDistGroup);
     mRawCheck -> setChecked(false);
@@ -344,6 +350,7 @@ mZoomCorrel(0)
     mFFTLenCombo->addItem("8192");
     mFFTLenCombo->addItem("16384");
     mFFTLenCombo->setCurrentText("1024");
+    mFFTLenCombo->setVisible(true);
     
     mComboH = mFFTLenCombo->sizeHint().height();
     mTabsH = mComboH + 2*mMargin;
@@ -354,6 +361,7 @@ mZoomCorrel(0)
     mHFactorLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mHFactorEdit = new LineEdit(mPostDistGroup);
     mHFactorEdit->setText("1");
+    mHFactorEdit->setVisible(true);
     
     connect(mHFactorEdit, SIGNAL(returnPressed()), this, SLOT(updateHFactor()));
     
@@ -380,6 +388,7 @@ mZoomCorrel(0)
     // -------------------------
     
     mMarker->raise();
+    
 }
 
 ResultsView::~ResultsView()
@@ -421,6 +430,7 @@ void ResultsView::paintEvent(QPaintEvent* )
   //  Q_UNUSED(e);
     QPainter p(this);
     p.fillRect(width() - mOptionsW, 0, mOptionsW, height(), QColor(220, 220, 220));
+    //updateLayout(); infinite loop
 }
 
 void ResultsView::resizeEvent(QResizeEvent* e)
@@ -496,8 +506,9 @@ void ResultsView::updateLayout()
     mStack  -> setGeometry(0, mTabsH + mRulerH, width() - mOptionsW, height() - mRulerH - mTabsH);
     mMarker -> setGeometry(mMarker->pos().x(), mTabsH + mRulerH, mMarker->thickness(), height() - mRulerH - mTabsH);
     
-    if(QWidget* wid = mEventsScrollArea->widget())
-    {
+
+    if(mByEventsBut->isChecked()){
+        QWidget* wid = mEventsScrollArea->widget();
         QList<QRect> geometries = getGeometries(mByEventsGraphs, mUnfoldBut->isChecked(), false);
         int h = 0;
         for(int i=0; i<mByEventsGraphs.size(); ++i)
@@ -509,8 +520,9 @@ void ResultsView::updateLayout()
         
     }
     
-    if(QWidget* wid = mPhasesScrollArea->widget())
-    {
+
+    if(mByPhasesBut->isChecked()){
+        QWidget* wid = mPhasesScrollArea->widget();
         QList<QRect> geometries = getGeometries(mByPhasesGraphs, mUnfoldBut->isChecked(), true);
         int h = 0;
         for(int i=0; i<mByPhasesGraphs.size(); ++i)
@@ -551,16 +563,21 @@ void ResultsView::updateLayout()
     
     int y = m;
     //mDataThetaRadio->setGeometry(m, y, (int)(mResultsGroup->width() - 2*m), mLineH);
-    mShowDataUnderPhasesCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
+
     if(mTabs->currentIndex() == 0) // // it's mean posterior distribution
     {
-        //mShowDataUnderPhasesCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
-      //  mDataPosteriorCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
+       
         mDataCalibCheck -> setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
         mWiggleCheck    -> setGeometry(m + dx, y += (m + mLineH),(int)( mResultsGroup->width() - 2*m - dx), mLineH);
     }
+    if (mShowDataUnderPhasesCheck->isVisible()) {
+        mShowDataUnderPhasesCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
+    }
+    
+    
     mDataSigmaRadio -> setGeometry(m, y += (m + mLineH), mResultsGroup->width()-2*m, mLineH);
     mResultsGroup   -> setFixedHeight(y += (m + mLineH));
+   // mResultsGroup   -> setFixedHeight(y += (m + mLineH));
     
     y = m;
     int sw = (mPostDistGroup->width() - 3*m) * 0.5;
@@ -568,10 +585,10 @@ void ResultsView::updateLayout()
     int w2 = (mPostDistGroup->width() - 3*m) * 0.3;
    // mScaleGroup->setGeometry(m, y, mPostDistGroup->width() - 2*m, mLineH);
     
-    mHPDCheck  -> setGeometry(m, y, mPostDistGroup->width() - 2*m, mLineH);
+    mCredibilityCheck  -> setGeometry(m, y, mPostDistGroup->width() - 2*m, mLineH);
     mThreshLab -> setGeometry(m, y += (m + mLineH), w1, mLineH);
     mHPDEdit   -> setGeometry(2*m + w1, y, w2, mLineH);
-
+//mHPDEdit   -> setGeometry(2*m + sw, y, w2, mLineH);
     mFFTLenLab     -> setGeometry(m, y += (m + mLineH), sw, mComboH);
     mFFTLenCombo   -> setGeometry(2*m + sw, y, sw, mComboH);
     mHFactorLab    -> setGeometry(m, y += (m + mComboH), w1, mLineH);
@@ -1111,7 +1128,7 @@ void ResultsView::updateGraphs()
         for(int i=0; i<mChainRadios.size(); ++i)
             showChainList.append(mChainRadios[i]->isChecked());
     }
-    bool showHpd = mHPDCheck->isChecked();
+    bool showHpd = mCredibilityCheck->isChecked();
     /*float hpdThreshold = mHPDEdit->text().toFloat();//.toDouble();
     hpdThreshold = qMin(100, hpdThreshold);
     hpdThreshold = qMax(0, hpdThreshold);*/
@@ -1126,17 +1143,20 @@ void ResultsView::updateGraphs()
     bool showWiggle = mWiggleCheck->isChecked();
     
     // --------------------------- mCurrentTypeGraph = GraphViewResults::TypeGraph(
-    
-    for(int i=0; i<mByPhasesGraphs.size(); ++i)
-    {
-        
-        mByPhasesGraphs[i]->setResultToShow(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable, showAllChains, showChainList, showHpd, hpdThreshold, showCalib,showPosterior, showWiggle, showRaw);
+   // if(QWidget* wid = mPhasesScrollArea->widget())
+    if(mByPhasesBut->isChecked()) {
+        for(int i=0; i<mByPhasesGraphs.size(); ++i){
+            mByPhasesGraphs[i]->setResultToShow(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable, showAllChains, showChainList, showHpd, hpdThreshold, showCalib,showPosterior, showWiggle, showRaw);
+            mByPhasesGraphs[i]->repaint();
+        }
     }
-    for(int i=0; i<mByEventsGraphs.size(); ++i)
-    {
-        mByEventsGraphs[i]->setResultToShow(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable, showAllChains, showChainList, showHpd, hpdThreshold, showCalib,showPosterior, showWiggle, showRaw);
-    }
-    
+    //if(QWidget* wid = mEventsScrollArea->widget())
+    if(mByEventsBut->isChecked()){
+        for(int i=0; i<mByEventsGraphs.size(); ++i){
+            mByEventsGraphs[i]->setResultToShow(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable, showAllChains, showChainList, showHpd, hpdThreshold, showCalib,showPosterior, showWiggle, showRaw);
+            mByEventsGraphs[i]->repaint();
+       }
+ }
     // Restore current zoom
     restoreZoom();
     
@@ -1691,12 +1711,16 @@ void ResultsView::showByPhases(bool)
 {
     mStack->setCurrentWidget(mPhasesScrollArea);
     mShowDataUnderPhasesCheck->setVisible(true);
+    updateGraphs();
+    updateLayout();
 }
 
 void ResultsView::showByEvents(bool)
 {
     mStack->setCurrentWidget(mEventsScrollArea);
     mShowDataUnderPhasesCheck->setVisible(false);
+    updateGraphs();
+    updateLayout();
 }
 
 void ResultsView::changeTab(int index)

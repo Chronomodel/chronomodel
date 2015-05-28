@@ -2,6 +2,7 @@
 #
 # Created by Helori LANOS
 # March 14th, 2014
+# and Philippe Dufresne
 # Chronomodel
 #
 #-------------------------------------------------
@@ -48,7 +49,8 @@ message("RCC_DIR : $$RCC_DIR")
 QT += core gui widgets svg
 
 # Resource file (for images)
-RESOURCES = $$PRO_PATH/Chronomodel.qrc
+#RESOURCES = $$PRO_PATH/Chronomodel.qrc
+RESOURCES = Chronomodel.qrc
 
 # Resource file (Windows only)
 win32{
@@ -145,10 +147,10 @@ macx{
 #QMAKE_LFLAGS += -Wl,-rpath,@loader_path/../Lib
 DEPENDPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac/
 
-        INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW
-        #ne pas mettre le le lib devant le nom du fichier, ni le .dylib d'extension
-#LIBS += -L/lib/FFTW/mac -lfftw3f
-        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
+INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW
+        #ne pas mettre le lib devant le nom du fichier, ni le .dylib d'extension
+    #LIBS += -L/lib/FFTW/mac -lfftw3f
+LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
         message("macx->FFTW $$LIBS ")
 
 
