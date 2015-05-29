@@ -1474,6 +1474,7 @@ void ResultsView::exportFullImage()
     
     if (mStack->currentWidget() == mPhasesScrollArea) {
         curWid = mPhasesScrollArea->widget();
+        curWid->setFont(mByPhasesGraphs[0]->font());
         witchScroll = eScrollPhases;
         printAxis = (mByPhasesGraphs[0]->mGraph->getXAxisMode()== GraphView::eHidden);
         //  hide all buttons in the both scrollAreaWidget
@@ -1486,6 +1487,7 @@ void ResultsView::exportFullImage()
     //else if (mStack->currentWidget() == mEventsScrollArea) {
     else  {
         curWid = mEventsScrollArea->widget();
+        curWid->setFont(mByEventsGraphs[0]->font());
         witchScroll = eScrollEvents;
         printAxis = (mByEventsGraphs[0]->mGraph->getXAxisMode() == GraphView::eHidden);
         //  hide all buttons in the both scrollAreaWidget
@@ -1509,7 +1511,7 @@ void ResultsView::exportFullImage()
     
     // boolprintAxis=  (mStack->currentWidget() == mPhasesScrollArea) ? (mByPhasesGraphs[0]->mGraph->getXAxisMode()!= GraphView::eHidden) : (mByEventsGraphs[0]->mGraph->getXAxisMode() != GraphView::eHidden);
   
-    qDebug()<<"printAxis"<<printAxis;
+    //qDebug()<<"printAxis"<<printAxis;
     //qDebug()<<"printAxis"<<mByPhasesGraphs[0]->mGraph->getXAxisMode();
     QRect r(0, 0, curWid->width() , curWid->height());
     //mPhasesScrollArea->
@@ -1521,6 +1523,7 @@ void ResultsView::exportFullImage()
         axe.mShowSubSubs = true;
         axe.mShowArrow = true;
         axe.mShowText = true;
+        
         //axe.AxisTool::m
         //QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth ,  mMarginBottom), 5);
         axe.updateValues(r.width()-50, 40, mResultCurrentMinX, mResultCurrentMaxX);

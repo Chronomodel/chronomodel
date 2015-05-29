@@ -27,6 +27,7 @@ public:
     double mEndVal;
     double mStartPix;
     double mPixelsPerUnit;
+    QFont    mfont;
     
     QColor mAxisColor;
 };

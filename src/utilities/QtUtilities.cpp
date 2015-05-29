@@ -156,8 +156,11 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
         //QString fileExtension = fileName.(".svg");
        // bool asSvg = fileName.endsWith(".svg");
        // if(asSvg)
-        int heightAxe = 0;
-        if (Axe.mShowSubs) heightAxe = 30;
+        QFontMetrics fm((scene ? qApp->font() : widget->font()) );
+        
+        int heightText= fm.height()+10;
+        int heightAxe = (Axe.mShowSubs ? fm.height() + 10 : 0);
+        
         
         
         if (fileExtension == "svg") {
@@ -190,7 +193,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
         else
         { // save PNG
             
-            int versionHeight = 20;
+            //int versionHeight = 20;
             //qreal pr = 1;//qApp->devicePixelRatio();
            /* qreal prh=  32000. / ( r.height() + versionHeight) ; // QImage axes are limited to 32767x32767 pixels
            
@@ -199,14 +202,16 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 pr=4;
             }
             */
-          
+            
             short pr =  appSetting.mPixelRatio;// 4.;//0.005;
             //qDebug()<<" pr="<<pr;
             if(widget)
             {
                 //QSize wSize = widget->size();
-                
-                QImage image(r.width() * pr, (r.height() + versionHeight + heightAxe+10 +20) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
+                if (Axe.mShowSubs){
+                    heightAxe = heightText;
+                }
+                QImage image(r.width() * pr, (r.height() + heightText + heightAxe +20) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
               //  QImage image(int(r.width() * pr), int((r.height() + versionHeight) * pr), QImage::Format_ARGB32_Premultiplied);
                 //QImage image(wSize, QImage::Format_ARGB32_Premultiplied);
                // qDebug()<<"r.width() * pr"<< (r.width() * pr)<<" (r.height() + versionHeight) * pr"<<(r.height() + versionHeight) * pr;
@@ -221,8 +226,9 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 //widget->font();
                 
                 QPainter p;
-                p.setFont(widget->font());
                 p.begin(&image);
+                p.setFont(widget->font());
+                
                 p.setRenderHint(QPainter::Antialiasing);
                 //QRectF tgtRect = image.rect();
              //   tgtRect.adjust(0, 0, 0, -versionHeight * pr);
@@ -235,20 +241,28 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 if (Axe.mShowSubs){
                     
                     //Axe.updateValues(r.width()-10-50 , Axe.mDeltaPix, Axe.mStartVal, Axe.mEndVal);
+                    
                     Axe.updateValues(r.width()-10-50 , 50, Axe.mStartVal, Axe.mEndVal);
                     Axe.mMinMaxOnly = false;
                     Axe.mShowSubs = true;
                     Axe.mShowSubSubs = true;
                     Axe.mShowText = true;
+                    
+                    //Axe.paint(p, QRectF(50, r.height()+10, r.width()-10-50 ,  heightAxe), 7);
                     Axe.paint(p, QRectF(50, r.height()+10, r.width()-10-50 ,  heightAxe), 7);
-                    heightAxe += 7;
+                     //7
                 }
                 
                 p.setPen(Qt::black);
-                p.drawText(0, r.height()+heightAxe+ 10, r.width(), versionHeight,
+                //versionHeight=heightAxe;
+                
+                p.setFont(widget->font());
+                //p.drawText(0, r.height()+heightAxe+ 10+100, r.width(), versionHeight+100,
+                  //         Qt::AlignCenter,
+                    //       qApp->applicationName() + " " + qApp->applicationVersion());
+                p.drawText(0, r.height() + heightAxe+10, r.width(), heightText,
                            Qt::AlignCenter,
                            qApp->applicationName() + " " + qApp->applicationVersion());
-                
                 //mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth ,  mMarginBottom), 5);
               
                 p.end();
@@ -316,10 +330,15 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
 
 bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName,AxisTool& Axe)
 {
+    QFontMetrics fm(widget->font());
     
-    int versionHeight = 20;
-    int heightAxe = 0;
-    if (Axe.mDeltaPix>0) heightAxe = 20;
+    int heightText= fm.height()+10;
+    int heightAxe = (Axe.mShowSubs ? fm.height()+10 : 0);
+    
+
+    //int versionHeight = 20;
+    //int heightAxe = 0;
+    //if (Axe.mShowSubs) heightAxe = 20;
     
     
     QSvgGenerator svgGenFile;
@@ -329,7 +348,8 @@ bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName,Ax
     
     QPainter p;
     p.begin(&svgGenFile);
-    widget->render(&p);//, QPoint(0, 0), QRegion(r));
+    p.setFont(widget->font());
+    widget->render(&p);
   
     if (Axe.mDeltaPix>0){
         
@@ -339,14 +359,17 @@ bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName,Ax
         Axe.mShowSubs = true;
         Axe.mShowSubSubs = true;
         Axe.mShowText = true;
-        Axe.paint(p, QRectF(50, r.height()+heightAxe, r.width()-10-50 ,  heightAxe), 7);
+        //Axe.paint(p, QRectF(50, r.height()+heightAxe, r.width()-10-50 ,  heightAxe), 7);
+        Axe.paint(p, QRectF(50, r.height()+10, r.width()-10-50 ,  heightAxe), 7);
     }
     p.setPen(Qt::black);
    
-    p.drawText(0, r.height()+heightAxe+versionHeight, r.width(), versionHeight,
+    //p.drawText(0, r.height()+heightAxe+versionHeight, r.width(), versionHeight,
+    //           Qt::AlignCenter,
+    //           qApp->applicationName() + " " + qApp->applicationVersion());
+    p.drawText(0, r.height() + heightAxe+10, r.width(), heightText,
                Qt::AlignCenter,
                qApp->applicationName() + " " + qApp->applicationVersion());
-    
     p.end();
     
    

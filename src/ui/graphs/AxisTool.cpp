@@ -83,7 +83,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
     QPen memoPen(p.pen());
     QBrush memoBrush(p.brush());
     QVector<qreal> linesPos;
-    QPen pen(mAxisColor, 1, Qt::SolidLine);
+    QPen pen=QPen(mAxisColor, 1, Qt::SolidLine);
     
     p.setPen(pen);
     
@@ -93,7 +93,9 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
     qreal yo = r.y();
     qreal w = r.width();
     qreal h = r.height();
-    if (heightText<h/3) heightText=trunc(h/3);
+    //qreal h = heightText +5 ;//+ heigthSize;
+   // if (heightText<h/3) heightText=trunc(h/3);
+    
     
     if(mIsHorizontal)
     {
