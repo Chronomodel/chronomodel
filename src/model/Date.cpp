@@ -1,4 +1,4 @@
-﻿#include "Date.h"
+#include "Date.h"
 #include "Event.h"
 #include "Generator.h"
 #include "StdUtilities.h"
@@ -12,6 +12,8 @@
 
 Date::Date()
 {
+    mTheta.mIsDate = true;
+    mSigma.mIsDate = false;
     init();
 }
 

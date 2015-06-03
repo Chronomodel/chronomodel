@@ -20,7 +20,9 @@ mIsCurrent(false),
 mLevel(0)
 {
     mColor = randomColor();
-    
+    mAlpha.mIsDate = true;
+    mBeta.mIsDate = true;
+    mDuration.mIsDate = false;
     // Item initial position :
     //int posDelta = 100;
     mItemX = 0;//rand() % posDelta - posDelta/2;

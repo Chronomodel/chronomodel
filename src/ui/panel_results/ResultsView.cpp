@@ -177,6 +177,7 @@ mZoomCorrel(0)
     connect(mCurrentXMaxEdit, SIGNAL(textEdited(QString)), this, SLOT(editCurrentMaxX(QString)) );
     
     
+    
     mXScaleLab = new Label(tr("Zoom X :"),mDisplayGroup);
     mYScaleLab = new Label(tr("Zoom Y :"),mDisplayGroup);
     
@@ -438,12 +439,16 @@ void ResultsView::paintEvent(QPaintEvent* )
     p.fillRect(width() - mOptionsW, 0, mOptionsW, height(), QColor(220, 220, 220));
     //updateLayout(); infinite loop
     
+    mCurrentXMinEdit->setText( doubleInStrDate(mResultCurrentMinX) );
+    mCurrentXMaxEdit->setText( doubleInStrDate(mResultCurrentMaxX) );
     
     //qDebug()<<"ResultsView::updateLayout()";
     int m = mMargin;
     int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     int dx = mLineH + m;
     int graphYAxis = 50;
+    
+   
     
     mByPhasesBut -> setGeometry(0, 0, (int)(mGraphLeft/2), mRulerH);
     mByEventsBut -> setGeometry(mGraphLeft/2, 0, (int)(mGraphLeft/2), mRulerH);
@@ -453,7 +458,8 @@ void ResultsView::paintEvent(QPaintEvent* )
     mStack  -> setGeometry(0, mTabsH + mRulerH, width() - mOptionsW, height() - mRulerH - mTabsH);
     mMarker -> setGeometry(mMarker->pos().x(), mTabsH + mRulerH, mMarker->thickness(), height() - mRulerH - mTabsH);
     
-
+ //    setUpdatesEnabled(false); // prevent from recursive repaint, when setGeometry
+    
     if(mByEventsBut->isChecked()){
         QWidget* wid = mEventsScrollArea->widget();
         QList<QRect> geometries = getGeometries(mByEventsGraphs, mUnfoldBut->isChecked(), false);
@@ -477,16 +483,18 @@ void ResultsView::paintEvent(QPaintEvent* )
         for(int i=0; i<mByPhasesGraphs.size(); ++i)
         {
             QWidget* widPhase = mByPhasesGraphs[i];
-            
+            //setUpdatesEnabled(false);
             //mByPhasesGraphs[i]->setGeometry(geometries[i]);
             widPhase->setGeometry(geometries[i]);
+            //setUpdatesEnabled(true);
             h += geometries[i].height();
         }
        // mPhasesScrollArea->repaint();
         wid->setFixedSize(width() - sbe - mOptionsW, h);
         
     }
- 
+    
+   // setUpdatesEnabled(true);
 
     mOptionsWidget->setGeometry(width() - mOptionsW, 0, mOptionsW, height());
     mDisplayGroup->setGeometry(0, mDisplayTitle->y()+ mDisplayTitle->height(), mOptionsW, mDisplayGroup->height());
@@ -549,17 +557,18 @@ void ResultsView::paintEvent(QPaintEvent* )
     mHFactorEdit   -> setGeometry(2*m + w1, y, w2, mLineH);
     mPostDistGroup -> setFixedHeight(y += (m + mLineH));
     
-
+    
     
 }
 
-/*void ResultsView::resizeEvent(QResizeEvent* e)
+void ResultsView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
+    update();
     //updateLayout();
     //repaint();
 }
-*/
+
 QList<QRect> ResultsView::getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases)
 {
     QList<QRect> rects;
@@ -730,6 +739,7 @@ void ResultsView::updateAllZoom()
     for(int i=0; i<mByPhasesGraphs.size(); ++i){
         mByPhasesGraphs[i]->zoom(mResultCurrentMinX, mResultCurrentMaxX);
         mByPhasesGraphs[i]->repaint() ;
+        //mByPhasesGraphs[i]->update() ;
     }
    
    // if(mCurrentResult == eHisto && mCurrentVariable == eTheta)
@@ -998,9 +1008,12 @@ void ResultsView::updateResults(Model* model)
     mRuler->setRange(mResultMinX, mResultMaxX);
     mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
     updateRulerAreas();
-    
+    /*
     mCurrentXMinEdit->setText( QString::number(mResultMinX) );
     mCurrentXMaxEdit->setText( QString::number(mResultMaxX) );
+    */
+    mCurrentXMinEdit->setText( doubleInStrDate(mResultMinX) );
+    mCurrentXMaxEdit->setText( doubleInStrDate(mResultMaxX) );
     
     mHasPhases = (mModel->mPhases.size() > 0);
     
@@ -1562,7 +1575,7 @@ void ResultsView::exportFullImage()
     
 }
 
-// connected to the XSlider
+// connected to the XSlider zoom
 void ResultsView::withSlider()
 {
     
@@ -1588,8 +1601,12 @@ void ResultsView::withSlider()
     mResultCurrentMaxX = floor(CurMax);
     
     // update Current Min Max lineEdit
+    /*
     mCurrentXMinEdit->setText(QString::number(mResultCurrentMinX));
     mCurrentXMaxEdit->setText(QString::number(mResultCurrentMaxX));
+    */
+    mCurrentXMinEdit->setText(doubleInStrDate(mResultCurrentMinX));
+    mCurrentXMaxEdit->setText(doubleInStrDate(mResultCurrentMaxX));
     
     // change Ruler
     
@@ -1643,8 +1660,12 @@ void ResultsView::updateScroll(const double min, const double max)
     mResultCurrentMaxX = max;
     
     // update Current Min Max lineEdit
+    /*
     mCurrentXMinEdit->setText(QString::number(mResultCurrentMinX));
     mCurrentXMaxEdit->setText(QString::number(mResultCurrentMaxX));
+    */
+    mCurrentXMinEdit->setText(doubleInStrDate(mResultCurrentMinX));
+    mCurrentXMaxEdit->setText(doubleInStrDate(mResultCurrentMaxX));
     
     // Don't need to change XSlider
     
@@ -1678,36 +1699,33 @@ void ResultsView::updateScaleY(int value)
 }
 void ResultsView::editCurrentMinX(QString str)
 {
-bool isNumber;
-double value = str.toDouble(&isNumber);
-if (isNumber) {
-    double current = inRange(mResultMinX, value, mResultCurrentMaxX);
-    if (current == mResultCurrentMaxX) {
-        return;
-    }
-    mResultCurrentMinX = current;
+    bool isNumber;
+    double value = str.toDouble(&isNumber);
+    value = dateInDouble(value);
+    if (isNumber) {
+        double current = inRange(mResultMinX, value, mResultCurrentMaxX);
+        if (current == mResultCurrentMaxX) {
+            return;
+        }
+        mResultCurrentMinX = current;
     
     
-    mResultZoomX =(mResultCurrentMaxX - mResultCurrentMinX)/ (mResultMaxX - mResultMinX) * 100;
+        mResultZoomX =(mResultCurrentMaxX - mResultCurrentMinX)/ (mResultMaxX - mResultMinX) * 100;
     
-    // move XSlider position
-    int zoom = int(100-mResultZoomX);
-    mXSlider->setValue(zoom);
+        // move XSlider position
+        int zoom = int(100-mResultZoomX);
+        mXSlider->setValue(zoom);
+        
     
-    //mXSlider->setTracking(false);
-    //mXSlider->setSliderPosition(zoom);// setSliderPosition function don'tnotify the valueChanged signal when tracking=false
-    //mXSlider->setTracking(true);
+        // change Ruler
     
+        mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
     
-    // change Ruler
-    
-    mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
-    
-    // update graphes
+        // update graphes
    
-    updateAllZoom();
+        updateAllZoom();
     
- }
+    }
 }
 
 void ResultsView::setCurrentMinX()
@@ -1745,6 +1763,9 @@ void ResultsView::editCurrentMaxX(QString str)
 {
     bool isNumber;
     double value = str.toDouble(&isNumber);
+    
+    value = dateInDouble(value);
+    
     if (isNumber) {
         double current = inRange(mResultCurrentMinX, value, mResultMaxX);
         if (current == mResultCurrentMinX) {
@@ -1759,10 +1780,6 @@ void ResultsView::editCurrentMaxX(QString str)
         
         mXSlider->setValue(zoom);
       
-        /* mXSlider->setTracking(false);
-         mXSlider->setSliderPosition(zoom);
-         mXSlider->setTracking(true); */
-        
         // change Ruler
         
         mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);

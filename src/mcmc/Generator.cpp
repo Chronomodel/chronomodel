@@ -1,4 +1,4 @@
-﻿#include "Generator.h"
+#include "Generator.h"
 #include <cmath>
 #include <errno.h>
 #include <fenv.h>
@@ -160,7 +160,7 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
         }
         else
         {
-            rap = expl(-0.5 * x * x + abs(x)) / sqrt_e;
+            rap = expl(-0.5 * x * x + std::fabs(x)) / sqrt_e;
         }
         
         ++trials;

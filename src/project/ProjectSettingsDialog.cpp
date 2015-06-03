@@ -71,6 +71,7 @@ ProjectSettings ProjectSettingsDialog::getSettings()
     ProjectSettings settings;
     settings.mTmin = mMinEdit->text().toInt();
     settings.mTmax = mMaxEdit->text().toInt();
+
     return settings;
 }
 

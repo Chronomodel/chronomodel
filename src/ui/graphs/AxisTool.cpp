@@ -1,5 +1,7 @@
 #include "AxisTool.h"
 #include "Painting.h"
+#include "StdUtilities.h";
+
 #include <QtWidgets>
 #include <iostream>
 
@@ -117,8 +119,12 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
         
         if(mMinMaxOnly) {
             QRectF tr(xo, yo, w, h);
+            /*
             p.drawText(tr, Qt::AlignLeft | Qt::AlignVCenter, QString::number(mStartVal, 'G', 5));
             p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, QString::number(mStartVal + mDeltaVal * (w/mDeltaPix), 'G', 5));
+            */
+            p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, doubleInStrDate(mStartVal));
+            p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, doubleInStrDate(mStartVal + mDeltaVal * (w/mDeltaPix)));
         }
         else {
             int i = 0;
@@ -137,11 +143,17 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
                     }
                     
                     if (mShowText) {
-                        QString text;
-                        if (fabs((x-xo)/mPixelsPerUnit + mStartVal)<1E-6) {
+                        /*
+                         QString text;
+                        
+                         if (fabs((x-xo)/mPixelsPerUnit + mStartVal)<1E-6) {
                             text = "0";
                         }
-                        else text = QString::number((x-xo)/mPixelsPerUnit + mStartVal, 'G', 5);
+                        
+                        //else text = QString::number((x-xo)/mPixelsPerUnit + mStartVal, 'G', 5);
+                        else
+                        */
+                        QString text = doubleInStrDate((x-xo)/mPixelsPerUnit + mStartVal);
                         
                         int textWidth =  fm.width(text) ;
                         qreal tx = x - textWidth/2;

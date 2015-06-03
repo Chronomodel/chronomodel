@@ -23,6 +23,7 @@ mInitialized(false),
 mLevel(0)
 {
     mColor = randomColor();
+    mTheta.mIsDate = true;
     
     // Item initial position :
     //int posDelta = 100;

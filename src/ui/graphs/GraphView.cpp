@@ -44,7 +44,6 @@ mUseTip(true)
     setMouseTracking(true);
     setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
     
-    //setRangeX(mCurrentMinX, mCurrentMaxX);
     setRangeY(0.f, 1.f);
     this->mAxisToolX.updateValues(width(), mStepMinWidth, mCurrentMinX, mCurrentMaxX);
     resetNothingMessage();
@@ -337,7 +336,7 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
         mTipRect.setWidth(mTipWidth);
         mTipRect.setHeight(mTipHeight);
         
-        mTipX = getValueForX(e->x()-0.5 );
+        mTipX = doubleInDate(getValueForX(  e->x()-0.5 ));
         mTipY = getValueForY(e->y()+0,5);
         
         update(old_rect.adjusted(-30, -30, 30, 30).toRect());
@@ -838,6 +837,10 @@ void GraphView::drawCurves(QPainter& painter)
 
                 QMapIterator<double, double> iter(lightMap);
                 iter.toFront();
+                if (!iter.hasNext()) {
+                    return;
+                }
+                
                 iter.next();
                 double valueX = iter.key();
                 double valueY = iter.value();

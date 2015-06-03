@@ -50,6 +50,7 @@ void ProjectSettings::copyFrom(const ProjectSettings& s)
     mTmax = s.mTmax;
     mStep = s.mStep;
     mStepForced = s.mStepForced;
+
 }
 
 ProjectSettings::~ProjectSettings()
@@ -75,6 +76,7 @@ QJsonObject ProjectSettings::toJson() const
     settings[STATE_SETTINGS_TMAX] = mTmax;
     settings[STATE_SETTINGS_STEP] = mStep;
     settings[STATE_SETTINGS_STEP_FORCED] = mStepForced;
+
     return settings;
 }
 

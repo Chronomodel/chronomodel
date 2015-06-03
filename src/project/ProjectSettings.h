@@ -32,7 +32,7 @@ public:
     int mTmin;
     int mTmax;
     double mStep;
-    bool mStepForced;
+    bool mStepForced;   
 };
 
 #endif

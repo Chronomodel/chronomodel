@@ -58,7 +58,7 @@ public:
 protected:
     void paintEvent(QPaintEvent* );
     void mouseMoveEvent(QMouseEvent* e);
-    //void resizeEvent(QResizeEvent* e);
+    void resizeEvent(QResizeEvent* e);
     //void updateLayout(); // disable in 2015/05/28 all was transfer in paintEvent
     
 public slots:

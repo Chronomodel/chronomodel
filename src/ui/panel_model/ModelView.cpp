@@ -32,7 +32,10 @@ mButtonWidth(80),
 mSplitProp(0.6f),
 mHandlerW(15),
 mIsSplitting(false),
-mCalibVisible(false)
+mTmin(0),
+mCalibVisible(false),
+
+mTmax(2000)
 
 {
     setMouseTracking(true);
@@ -173,7 +176,7 @@ mCalibVisible(false)
     
     // -------- Windows Event propreties -----------------------
     
-    mStudyLab = new Label(tr("STUDY PERIOD"), mRightWrapper);
+    mStudyLab = new Label(tr("STUDY PERIOD") + " "+dateFormat(), mRightWrapper);
     mMinLab = new Label(tr("Start") + " :", mRightWrapper);
     mMaxLab = new Label(tr("End") + " :", mRightWrapper);
     //mStepLab = new Label(tr("Step") + " :", mRightWrapper);
@@ -213,11 +216,13 @@ mCalibVisible(false)
     mMinEdit = new LineEdit(mRightWrapper);
     mMinEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mMinEdit->setAlignment(Qt::AlignHCenter);
+    mMinEdit->setText(doubleInStrDate(mTmin));
     //mMinEdit->setFont(font.style(),font.pointSize(),QFont::Bold,font);
     
     mMaxEdit = new LineEdit(mRightWrapper);
     mMaxEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mMaxEdit->setAlignment(Qt::AlignHCenter);
+    mMaxEdit->setText(doubleInStrDate(mTmax));
     //mStepEdit = new LineEdit(mRightWrapper);
     
     mButApply = new Button(tr("Apply"), mRightWrapper);
@@ -338,9 +343,12 @@ void ModelView::updateProject()
     Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
     ProjectSettings settings = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
-    
-    mMinEdit->setText(QString::number(settings.mTmin));
-    mMaxEdit->setText(QString::number(settings.mTmax));
+    /*
+    mMinEdit->setText(doubleInStrDate(settings.mTmin));
+    mMaxEdit->setText(doubleInStrDate(settings.mTmax));
+    */
+    mTmin = settings.mTmin;
+    mTmax = settings.mTmax;
     //mStepEdit->setText(QString::number(settings.mStep));
     
     
@@ -387,8 +395,11 @@ void ModelView::applySettings()
     ProjectSettings s = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
     ProjectSettings oldSettings = s;
     
-    s.mTmin = mMinEdit->text().toInt();
-    s.mTmax = mMaxEdit->text().toInt();
+    mTmax = dateInDouble(mMaxEdit->text().toDouble());
+    mTmin = dateInDouble(mMinEdit->text().toDouble());
+    
+    s.mTmin = (int) mTmin;//(int)dateInDouble(mMinEdit->text().toInt());
+    s.mTmax = (int) mTmax;//(int)dateInDouble(mMaxEdit->text().toInt());
     if(!s.mStepForced)
         s.mStep = ProjectSettings::getStep(s.mTmin, s.mTmax);
     
@@ -396,9 +407,12 @@ void ModelView::applySettings()
     {
         // Min and max are not consistents :
         // go back to previous values
-        
-        mMinEdit->setText(QString::number(oldSettings.mTmin));
-        mMaxEdit->setText(QString::number(oldSettings.mTmax));
+        /*
+        mMinEdit->setText(doubleInStrDate(oldSettings.mTmin));
+        mMaxEdit->setText(doubleInStrDate(oldSettings.mTmax));
+        */
+        mTmin = oldSettings.mTmin;
+        mTmax = oldSettings.mTmax;
         
         if(oldSettings.mTmin < oldSettings.mTmax)
         {
@@ -579,6 +593,10 @@ void ModelView::paintEvent(QPaintEvent* e)
     QPainter p(this);
     p.fillRect(mHandlerRect, QColor(50, 50, 50));
     p.fillRect(mRightRect, QColor(50, 50, 50));
+    mStudyLab -> setText(tr("STUDY PERIOD") + " "+dateFormat() );
+    mMinEdit  -> setText(doubleInStrDate(mTmin));
+    mMaxEdit  -> setText(doubleInStrDate(mTmax));
+    
 }
 
 #pragma mark Layout
@@ -589,6 +607,13 @@ void ModelView::resizeEvent(QResizeEvent* e)
 }
 void ModelView::updateLayout()
 {
+    //Project* project = MainWindow::getInstance()->getProject();
+    //QJsonObject state = project->state();
+    //ProjectSettings s = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
+
+    //mMinEdit->setText(doubleInStrDate(s.mTmin));
+    //mMaxEdit->setText(doubleInStrDate(s.mTmax));
+    
     //qreal m = mMargin;
     // mToolbarH, correspond à la hauteur de la barre avec study period
     qreal x = width() * mSplitProp;

@@ -1,4 +1,4 @@
-﻿#ifndef STDUTILITIES_H
+#ifndef STDUTILITIES_H
 #define STDUTILITIES_H
 
 #include <vector>
@@ -18,10 +18,17 @@
 #include <iostream>
 #endif
 #ifndef M_PI
-#define M_PI 3.14159265358979323846 //utile pour PhD
+#define M_PI 3.14159265358979323846 //usefull to Windows
 #endif
 
+
 int compareStrings(const std::string &s1, const std::string &s2);
+
+QString doubleInStrDate(double date);
+QString dateFormat();
+double dateInDouble(double date);
+double doubleInDate(double value);
+
 
 double safeExp(const double& x, int n = 10);
 double safeLog(const double& x, int n = 5);

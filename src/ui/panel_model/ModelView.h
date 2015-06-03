@@ -139,6 +139,8 @@ private:
     
     LineEdit* mMinEdit;
     LineEdit* mMaxEdit;
+    double mTmin;
+    double mTmax;
     //LineEdit* mStepEdit;
     
     Button* mButApply;

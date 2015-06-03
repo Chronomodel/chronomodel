@@ -414,7 +414,8 @@ void MainWindow::appSettings()
 
 void MainWindow::openManual()
 {
-    QDesktopServices::openUrl(QUrl("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf", QUrl::TolerantMode));
+    //QDesktopServices::openUrl(QUrl("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf", QUrl::TolerantMode));//http://www.chronomodel.fr/#/documentation
+    QDesktopServices::openUrl(QUrl("http://www.chronomodel.fr/#/documentation", QUrl::TolerantMode));
  /*   QString path = qApp->applicationDirPath();
 #ifdef Q_OS_MAC
     QDir dir(path);
@@ -500,6 +501,7 @@ void MainWindow::writeSettings()
     settings.setValue(APP_SETTINGS_STR_CELL_SEP, mAppSettings.mCSVCellSeparator);
     settings.setValue(APP_SETTINGS_STR_DEC_SEP, mAppSettings.mCSVDecSeparator);
     settings.setValue(APP_SETTINGS_STR_OPEN_PROJ, mAppSettings.mOpenLastProjectAtLaunch);
+    settings.setValue(APP_SETTINGS_DEFAULT_FORMATDATE, mAppSettings.mFormatDate);
     settings.endGroup();
     
     settings.endGroup();
@@ -520,6 +522,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     mAppSettings.mCSVCellSeparator = settings.value(APP_SETTINGS_STR_CELL_SEP, APP_SETTINGS_DEFAULT_CELL_SEP).toString();
     mAppSettings.mCSVDecSeparator = settings.value(APP_SETTINGS_STR_DEC_SEP, APP_SETTINGS_DEFAULT_DEC_SEP).toString();
     mAppSettings.mOpenLastProjectAtLaunch = settings.value(APP_SETTINGS_STR_OPEN_PROJ, APP_SETTINGS_DEFAULT_OPEN_PROJ).toBool();
+    mAppSettings.mFormatDate = settings.value(APP_SETTINGS_DEFAULT_FORMATDATE,APP_SETTINGS_DEFAULT_FORMATDATE).toString();
     settings.endGroup();
     
     mProjectView->showHelp(mAppSettings.mShowHelp);

@@ -6,6 +6,7 @@
 #include "Painting.h"
 #include <QtWidgets>
 
+#include "AppSettings.h"
 
 AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags):
 QDialog(parent, flags)
@@ -44,6 +45,20 @@ QDialog(parent, flags)
     
     mOkBut->setAutoDefault(true);
     
+    
+    mFormatDateLab = new Label(tr("Date Format") + " :", this);
+    mFormatDateLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mFormatDate = new QComboBox(this);
+    mFormatDate->addItem("BC/AD");
+    mFormatDate->addItem("Cal BP");
+    mFormatDate->addItem("Cal B2K");
+    mFormatDate->setCurrentText("BC/AC");
+    mFormatDate->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+    mFormatDate->setVisible(true);
+    
+    
+    
+    
     connect(mAutoSaveCheck, SIGNAL(toggled(bool)), mAutoSaveDelayEdit, SLOT(setEnabled(bool)));
     connect(mOkBut, SIGNAL(clicked()), this, SLOT(accept()));
     connect(mCancelBut, SIGNAL(clicked()), this, SLOT(reject()));
@@ -69,6 +84,9 @@ void AppSettingsDialog::setSettings(const AppSettings& settings)
     mOpenLastProjectCheck->setChecked(settings.mOpenLastProjectAtLaunch);
     
     mPixelRatio->setValue(settings.mPixelRatio);
+    mFormatDate->setCurrentText(settings.mFormatDate);
+    g_FormatDate = settings.mFormatDate;
+    qDebug()<<"AppSettingsDialog::setSettings gformat"<<g_FormatDate;
 }
 
 AppSettings AppSettingsDialog::getSettings()
@@ -80,6 +98,8 @@ AppSettings AppSettingsDialog::getSettings()
     settings.mCSVDecSeparator = mCSVDecSepEdit->text();
     settings.mOpenLastProjectAtLaunch = mOpenLastProjectCheck->isChecked();
     settings.mPixelRatio = mPixelRatio->value();
+    g_FormatDate = mFormatDate->currentText();
+    settings.mFormatDate = g_FormatDate;
     return settings;
 }
 
@@ -95,6 +115,9 @@ void AppSettingsDialog::reset()
     mOpenLastProjectCheck->setChecked(true);
     
     mPixelRatio->setValue(1);
+    g_FormatDate = APP_SETTINGS_DEFAULT_FORMATDATE;
+    mFormatDate->setCurrentText(g_FormatDate);
+    
 }
 
 void AppSettingsDialog::resizeEvent(QResizeEvent* e)

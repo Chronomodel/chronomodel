@@ -10,7 +10,7 @@ class Label;
 class LineEdit;
 class Button;
 class QSpinBox;
-
+class QComboBox;
 
 class AppSettingsDialog: public QDialog
 {
@@ -52,6 +52,9 @@ private:
     Button* mResetBut;
     Button* mOkBut;
     Button* mCancelBut;
+    
+    Label* mFormatDateLab;
+    QComboBox* mFormatDate;
 };
 
 #endif

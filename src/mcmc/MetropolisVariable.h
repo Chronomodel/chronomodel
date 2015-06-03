@@ -85,6 +85,7 @@ public:
     
     DensityAnalysis mResults;
     QList<DensityAnalysis> mChainsResults;
+    bool mIsDate;
 };
 
 #endif

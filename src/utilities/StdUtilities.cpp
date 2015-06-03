@@ -9,6 +9,8 @@
 
 #include <fenv.h>
 
+#include "AppSettings.h"
+
 using namespace std;
 
 // http://openclassrooms.com/forum/sujet/algorithme-de-levenshtein-50070
@@ -429,10 +431,58 @@ double map_area(const QMap<double, double>& map)
         lastT = t;
         
     }
-    
-   
+       
     return srcArea;
 }
 
+QString doubleInStrDate(double date)
+{
+    char format = 'f';
+    int precision = 0;
+    if (date>250000){
+        format = 'G';
+    }
+    
+    date = doubleInDate(date);
+    if (date<1E-6) {
+        return "0";
+    }
+    else return QString::number(date,format,precision);
+        
+   /*     if (g_FormatDate=="BC/AD") {
+        return QString::number(date,format,precision);
+    }
+    else if (g_FormatDate=="Cal BP"){
+        return QString::number(1950.-date,format,precision);
+    }
+    else if (g_FormatDate=="Cal B2K"){
+        return QString::number(2000.-date,format,precision);
+    }
+    else  return QString::number(date,format,precision);
+*/
+    
+}
+QString dateFormat()
+{
+    return g_FormatDate;
+}
 
-
+double dateInDouble(double date)
+{
+    if (g_FormatDate=="BC/AD") {
+        return date;
+    }
+    else if (g_FormatDate=="Cal BP"){
+        return (1950.-date);
+    }
+    else if (g_FormatDate=="Cal B2K"){
+        return (2000.-date);
+    }
+    else  return date;
+    
+    
+}
+double doubleInDate(double value)
+{
+    return dateInDouble(value);
+}

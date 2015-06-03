@@ -18,6 +18,7 @@
 #define STATE_SETTINGS_TMAX "tmax"
 #define STATE_SETTINGS_STEP "step"
 #define STATE_SETTINGS_STEP_FORCED "step_forced"
+#define STATE_SETTINGS_FORMAT_DATE "format_date"
 
 #define STATE_ID "id"
 #define STATE_NAME "name"
