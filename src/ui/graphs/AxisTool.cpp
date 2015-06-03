@@ -95,15 +95,11 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
     qreal yo = r.y();
     qreal w = r.width();
     qreal h = r.height();
-    //qreal h = heightText +5 ;//+ heigthSize;
-   // if (heightText<h/3) heightText=trunc(h/3);
     
     
     if(mIsHorizontal)
     {
-       // qreal yoText = (mShowText ? yo : yo - heigthSize );
-        
-        if (mShowArrow) { // the arrow is over the rectangle of heigthSize
+       if (mShowArrow) { // the arrow is over the rectangle of heigthSize
             QPainterPath arrowRight;
             
             QPolygonF triangle;
@@ -111,20 +107,26 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
           
             p.setBrush(mAxisColor);
             p.drawPolygon(triangle);
-            
         }
         
-        p.drawLine(xo, yo, xo + w, yo);
-       
+        p.drawLine(xo, yo, xo + w, yo);       
+        
+        
+        
         
         if(mMinMaxOnly) {
             QRectF tr(xo, yo, w, h);
-            /*
-            p.drawText(tr, Qt::AlignLeft | Qt::AlignVCenter, QString::number(mStartVal, 'G', 5));
-            p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, QString::number(mStartVal + mDeltaVal * (w/mDeltaPix), 'G', 5));
-            */
-            p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, doubleInStrDate(mStartVal));
-            p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, doubleInStrDate(mStartVal + mDeltaVal * (w/mDeltaPix)));
+            
+            if (mShowDate) {
+                p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, doubleInStrDate(mStartVal));
+                p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, doubleInStrDate(mStartVal + mDeltaVal * (w/mDeltaPix)));
+            }
+            else {
+                p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, QString::number(mStartVal, 'G', 5));
+                p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, QString::number(mStartVal + mDeltaVal * (w/mDeltaPix), 'G', 5));
+                
+            }
+            
         }
         else {
             int i = 0;
@@ -153,7 +155,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
                         //else text = QString::number((x-xo)/mPixelsPerUnit + mStartVal, 'G', 5);
                         else
                         */
-                        QString text = doubleInStrDate((x-xo)/mPixelsPerUnit + mStartVal);
+                        QString text = (mShowDate ? doubleInStrDate((x-xo)/mPixelsPerUnit + mStartVal) : QString::number(((x-xo)/mPixelsPerUnit + mStartVal)) );
                         
                         int textWidth =  fm.width(text) ;
                         qreal tx = x - textWidth/2;

@@ -94,7 +94,7 @@ void GraphViewDate::refresh()
             if(mShowCalib && mCurrentVariable == eTheta)
             {
                 GraphCurve curve;
-                
+                mGraph->setXHasDate(true);
                 //curve.mData = equal_areas(mDate->getCalibMap(), 1.f);
                 curve.mData = mDate->getCalibMap();
 
@@ -131,6 +131,7 @@ void GraphViewDate::refresh()
             
             if(mShowWiggle && mCurrentVariable == eTheta)
             {
+                
                 GraphCurve curve;
                 curve.mName = mTitle+" : "+"wiggle";
                 //curve.mData = equal_areas(mDate->mWiggle.fullHisto(), 1.f);
@@ -141,6 +142,7 @@ void GraphViewDate::refresh()
                 curve.mFillUnder = false;
                 curve.mIsHisto = false;
                 mGraph->addCurve(curve);
+                mGraph->setXHasDate(true);
                 
                 double yMax = 1.1f * map_max_value(curve.mData);
                 mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
@@ -151,10 +153,12 @@ void GraphViewDate::refresh()
                 
              variable = &(mDate->mTheta);
                 mTitle = QString(tr("Data") + " : " + mDate->mName);
+                mGraph->setXHasDate(true);
             }
             else if(mCurrentVariable == eSigma){
                 variable = &(mDate->mSigma);
                  mTitle = QString(tr("Std") + " : " + mDate->mName);
+                mGraph->setXHasDate(false);
             }
 
             if(mShowAllChains)
@@ -171,6 +175,7 @@ void GraphViewDate::refresh()
                     curveRaw.mIsHisto = true;
 
                     mGraph->addCurve(curveRaw);
+                    mGraph->setXHasDate(true);
                     
                     double yMax2 = 1.1f * map_max_value(curveRaw.mData);
                     mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax2));
@@ -183,7 +188,7 @@ void GraphViewDate::refresh()
                     
                     if(mCurrentVariable != GraphViewResults::eSigma)
                     {
-                       
+                        mGraph->setXHasDate(true);
                         GraphCurve curveHPD;
                         curveHPD.mName = "histo HPD";
                         //double realThresh = map_area(variable->mHPD) / map_area(variable->fullHisto());
@@ -202,6 +207,8 @@ void GraphViewDate::refresh()
                         curveHPD.mIsHisto = false;
                         curveHPD.mIsRectFromZero = true;
                         mGraph->addCurve(curveHPD);
+                        
+                        
                         double yMax = 1.1f * map_max_value(curveHPD.mData);
                         mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                     }
@@ -219,6 +226,8 @@ void GraphViewDate::refresh()
                     curve.mIsHisto = false;
                     curve.mFillUnder = false;
                     mGraph->addCurve(curve);
+                    mGraph->setXHasDate(true);
+                    
                     double yMax = 1.1f * map_max_value(curve.mData);
                     mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                     
@@ -254,6 +263,7 @@ void GraphViewDate::refresh()
                     curve.mPen.setColor(col);
                     curve.mIsHisto = false;
                     mGraph->addCurve(curve);
+                    mGraph->setXHasDate(true);
                     
                     double yMax = 1.1f * map_max_value(curve.mData);
                     mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
@@ -271,14 +281,18 @@ void GraphViewDate::refresh()
                 curveCred.mPen.setStyle(Qt::SolidLine);
                 curveCred.mIsHorizontalSections = true;
                 mGraph->addCurve(curveCred);
+                mGraph->setXHasDate(true);
             }
             if(mCurrentVariable == GraphViewResults::eSigma)
             {
                 mGraph->autoAdjustYScale(true);
+                mGraph->setXHasDate(false);
             }
         }
         if(mCurrentTypeGraph == eTrace)
         {
+            mGraph->setXHasDate(false);
+            
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
                 if(mShowChainList[i])
@@ -291,8 +305,12 @@ void GraphViewDate::refresh()
                 mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
                 
                 MHVariable* variable = &(mDate->mTheta);
-                if(mCurrentVariable == eTheta) variable = &(mDate->mTheta);
-                else if(mCurrentVariable == eSigma) variable = &(mDate->mSigma);
+                if(mCurrentVariable == eTheta) {
+                     variable = &(mDate->mTheta);
+                }
+                else if(mCurrentVariable == eSigma) {
+                     variable = &(mDate->mSigma);
+                }
                 
                 GraphCurve curve;
                 curve.mUseVectorData = true;
@@ -302,6 +320,7 @@ void GraphViewDate::refresh()
                 curve.mPen.setColor(Painting::chainColors[chainIdx]);
                 curve.mIsHisto = false;
                 mGraph->addCurve(curve);
+                
                 
                 double min = vector_min_value(curve.mDataVector);
                 double max = vector_max_value(curve.mDataVector);
@@ -317,6 +336,7 @@ void GraphViewDate::refresh()
                 curveQ1.mPen.setColor(Qt::green);
                 mGraph->addCurve(curveQ1);
                 
+                
                 GraphCurve curveQ2;
                 curveQ2.mIsHorizontalLine = true;
                 curveQ2.mHorizontalValue = quartiles.Q2;
@@ -324,6 +344,7 @@ void GraphViewDate::refresh()
                 curveQ2.setPen(defaultPen);
                 curveQ2.mPen.setColor(Qt::red);
                 mGraph->addCurve(curveQ2);
+                
                 
                 GraphCurve curveQ3;
                 curveQ3.mIsHorizontalLine = true;
@@ -336,6 +357,7 @@ void GraphViewDate::refresh()
         }
         else if(mCurrentTypeGraph == eAccept)
         {
+            mGraph->setXHasDate(false);
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
                 if(mShowChainList[i])
@@ -380,6 +402,7 @@ void GraphViewDate::refresh()
         }
         else if(mCurrentTypeGraph == eCorrel)
         {
+            mGraph->setXHasDate(false);
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
                 if(mShowChainList[i])

@@ -474,18 +474,6 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     p.setPen(Qt::black);
     p.setFont(this->font());
     
- /*   QRect graphRect(leftShift, topShift, this->width() - leftShift, height()-1-topShift);
-    if(mShowNumResults && height() >= mMinHeighttoDisplayTitle/2)//100)
-    {
-        mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
-        mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
-        mTextArea -> setVisible(true);
-    }
-    else
-    {
-        mGraph    -> setGeometry(graphRect);
-        mTextArea -> setVisible(false);
-    }*/
     // write mTitle under the curve field
     QFontMetrics fm = this->fontMetrics();
     
@@ -555,53 +543,10 @@ void GraphViewResults::paintEvent(QPaintEvent* )
 
         mGraph -> setMarginBottom(10);
         
-        //QRect graphRect(leftShift, topShift, this->width() - leftShift, height()-1-topShift);
-       /* if(mShowNumResults) {
-            
-            mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
-            mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
-            mTextArea -> setVisible(true);
-        }
-        else {
-            mGraph    -> setGeometry(graphRect);
-            mTextArea -> setVisible(false);
-        }
-       */
-      /*  QRectF textRect(leftShift, 0, this->width()-leftShift,mLineH);
-        p.fillRect(textRect, mGraph->getBackgroundColor());
-        
-        p.drawText(textRect.adjusted(50, 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
-       */
-        
-     /*   QFontMetrics fm(this->font());
-        qreal textWidth = fm.width(mTitle);
-        //QRectF textRect(leftShift+100, mLineH, this->width()-leftShift,mLineH);
-        QRectF textRect(leftShift+100, this->height()/2, this->width()-leftShift,mLineH);
-        //p.fillRect(textRect, mGraph->getBackgroundColor());
-       // p.setBrush(QBrush(Qt::NoBrush));
-      //  p.drawText(textRect.adjusted(50, mLineH, this->width()-50-textWidth, 0), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
-        qDebug()<<"GraphViewResults::updateLayout() inside mTitle "<<mTitle;
-         p.drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft, mTitle);
-        p.setBrush(QBrush(Qt::SolidPattern));
-      */
+     
     }
-    
-    
-   /* QRect graphRect(leftShift, topShift, this->width() - leftShift, height()-1-topShift);
-    if(mShowNumResults)// && height() >= 100)
-    {
-        mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
-        mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
-        mTextArea -> setVisible(true);
-    }
-    else
-    {
-        mGraph    -> setGeometry(graphRect);
-        mTextArea -> setVisible(false);
-    }*/
-    
     p.end();
-  //  refresh();
+
 }
 
  void GraphViewResults::setItemColor(const QColor& itemColor)

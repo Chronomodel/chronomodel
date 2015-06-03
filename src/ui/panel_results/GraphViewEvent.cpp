@@ -87,6 +87,7 @@ void GraphViewEvent::refresh()
             mGraph->setBackgroundColor(QColor(230, 230, 230));
             if(mCurrentVariable == eTheta)
             {
+                mGraph->setXHasDate(true);
                 mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
                 
                 if(isFixedBound)
@@ -121,7 +122,7 @@ void GraphViewEvent::refresh()
                         curve.mIsRectFromZero = true;
                         curve.mData = bound->mValues;
                         mGraph->addCurve(curve);
-                        
+                        mGraph->setXHasDate(true);
                         double yMax = 1.1f * map_max_value(curve.mData);
                         mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                     }
@@ -186,6 +187,7 @@ void GraphViewEvent::refresh()
                             //curve.mData = equal_areas(mEvent->mTheta.histoForChain(i), 1.f);
                             curve.mData = mEvent->mTheta.histoForChain(i);
                             mGraph->addCurve(curve);
+                            mGraph->setXHasDate(false);
                             
                             double yMax = 1.1f * map_max_value(curve.mData);
                             mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
@@ -208,6 +210,7 @@ void GraphViewEvent::refresh()
             }
             else if(mCurrentVariable == eSigma)
             {
+                mGraph->setXHasDate(false);
                 // On est en train de regarder les variances des data
                 // On affiche donc ici la superposition des variances (et pas le résultat de theta f)
                 if (mEvent->type()==Event::eKnown) {
@@ -262,6 +265,7 @@ void GraphViewEvent::refresh()
         }
         else if(mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta)
         {
+            mGraph->setXHasDate(false);
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
                 if(mShowChainList[i])
@@ -315,6 +319,7 @@ void GraphViewEvent::refresh()
         }
         else if(mCurrentTypeGraph == eAccept && mCurrentVariable == eTheta && mEvent->mMethod == Event::eMHAdaptGauss)
         {
+            mGraph->setXHasDate(false);
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
                 if(mShowChainList[i])
@@ -349,6 +354,7 @@ void GraphViewEvent::refresh()
         }
         else if(mCurrentTypeGraph == eCorrel && mCurrentVariable == eTheta && !isFixedBound)
         {
+            mGraph->setXHasDate(false);
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
                 if(mShowChainList[i])

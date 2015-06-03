@@ -142,6 +142,7 @@ void GraphViewPhase::refresh()
         /* Dessine une densité*/
         if(mCurrentTypeGraph == eHisto && mCurrentVariable == eTheta)
         {
+            mGraph->setXHasDate(true);
             mShowDuration->setVisible(true);
             /*
              mShowDuration->setChecked(false);
@@ -294,6 +295,7 @@ void GraphViewPhase::refresh()
 
                     mDurationGraph->setRangeY(0, max);
                     mDurationGraph->addCurve(curveDurHPD);
+                    mDurationGraph->setXHasDate(false);
                 }
                 /* Draw alpha and beta without smoothing*/
                 if(mShowRawResults)
@@ -328,7 +330,7 @@ void GraphViewPhase::refresh()
                 if(mShowChainList[i])
                 {
                     QColor col = Painting::chainColors[i];
-                    
+                    mGraph->setXHasDate(true);
                     GraphCurve curveAlphaChain;
                     curveAlphaChain.mName = mTitle+" : "+QString(tr("alpha chain ") + QString::number(i));
                     curveAlphaChain.mPen.setColor(col);
@@ -359,6 +361,7 @@ void GraphViewPhase::refresh()
         /* Dessine une trace*/
         else if(mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta)
         {
+            mGraph->setXHasDate(false);
             mShowDuration->setVisible(false);
             mShowDuration->setChecked(false);
             showDuration(false);

@@ -25,18 +25,17 @@
 
 #pragma mark constructor
 ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
+
 mCurrentRightWidget(0),
+mTmin(0),
+mTmax(2000),
 mMargin(5),
 mToolbarH(60),
 mButtonWidth(80),
 mSplitProp(0.6f),
 mHandlerW(15),
 mIsSplitting(false),
-mTmin(0),
-mCalibVisible(false),
-
-mTmax(2000)
-
+mCalibVisible(false)
 {
     setMouseTracking(true);
    // this->setGeometry(parentWidget()->rect());

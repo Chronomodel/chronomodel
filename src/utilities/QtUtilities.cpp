@@ -1,4 +1,5 @@
 #include "QtUtilities.h"
+#include "StdUtilities.h"
 #include "StateKeys.h"
 #include <QtWidgets>
 #include <QtSvg>
@@ -250,6 +251,12 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                     
                     //Axe.paint(p, QRectF(50, r.height()+10, r.width()-10-50 ,  heightAxe), 7);
                     Axe.paint(p, QRectF(50, r.height()+10, r.width()-10-50 ,  heightAxe), 7);
+                    if (Axe.mShowDate) {
+                        QRectF tr(0, r.height()+10, 50, heightAxe);
+                        p.setPen(Qt::black);
+                        p.drawText( tr, Qt::AlignCenter  | Qt::AlignTop, dateFormat() );
+                        
+                    }
                      //7
                 }
                 

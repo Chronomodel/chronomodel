@@ -204,7 +204,7 @@ void CalibrationView::updateGraphs()
             mCalibGraph->setRangeY(0, qMax(1.1f * yMax, mCalibGraph->maximumY()));
             
             double realThresh = map_area(hpd) / map_area(calibCurve.mData);
-            mResultsLab->setText(mResultsLab->text() % "HPD (" % QString::number(100. * realThresh, 'f', 1) + "%) : " % getHPDText(hpd, realThresh * 100.,true) + " " +dateFormat()); //  % concatenation with QStringBuilder
+            mResultsLab->setText(mResultsLab->text() % "HPD (" % QString::number(100. * realThresh, 'f', 1) + "%) : " % getHPDText(hpd, realThresh * 100.,true)); //  % concatenation with QStringBuilder
         }
         
         // ------------------------------------------------------------

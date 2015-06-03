@@ -20,6 +20,7 @@ public:
     bool mShowText;
     bool mMinMaxOnly;
     bool mShowArrow;
+    bool mShowDate;
     
     double mDeltaVal;
     double mDeltaPix;

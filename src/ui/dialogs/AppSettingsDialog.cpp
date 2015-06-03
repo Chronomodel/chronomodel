@@ -29,9 +29,11 @@ QDialog(parent, flags)
     mPixelRatio = new QSpinBox(this);
     mPixelRatio->setRange(1, 5);
     mPixelRatio->setSingleStep(1);
+    mPixelRatio->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     
     mCSVCellSepLab = new Label(tr("CSV cell separator") + " : ", this);
     mCSVCellSepEdit = new LineEdit(this);
+    mCSVCellSepEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     
     mCSVDecSepLab = new Label(tr("CSV decimal separator") + " : ", this);
     mCSVDecSepEdit = new LineEdit(this);
@@ -47,7 +49,7 @@ QDialog(parent, flags)
     
     
     mFormatDateLab = new Label(tr("Date Format") + " :", this);
-    mFormatDateLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mFormatDateLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mFormatDate = new QComboBox(this);
     mFormatDate->addItem("BC/AD");
     mFormatDate->addItem("Cal BP");
@@ -64,7 +66,7 @@ QDialog(parent, flags)
     connect(mCancelBut, SIGNAL(clicked()), this, SLOT(reject()));
     connect(mResetBut, SIGNAL(clicked()), this, SLOT(reset()));
     
-    setFixedSize(500, 250);
+    setFixedSize(350, 250);
 }
 
 AppSettingsDialog::~AppSettingsDialog()
@@ -152,6 +154,10 @@ void AppSettingsDialog::resizeEvent(QResizeEvent* e)
     
     mPixelRatioLab->setGeometry(m, y += (lineH + m), w1, lineH);
     mPixelRatio->setGeometry(2*m + w1, y, w2, lineH);
+    
+    mFormatDateLab->setGeometry(m, y += (lineH + m), w1, lineH);
+    mFormatDate->setGeometry(2*m + w1, y, w2, lineH);
+    
     
     mResetBut->setGeometry(width() - 3*m - 3*butW, height() - m - butH, butW, butH);
     mOkBut->setGeometry(width() - 2*m - 2*butW, height() - m - butH, butW, butH);

@@ -373,8 +373,9 @@ void GraphView::updateGraphSize(int w, int h)
 {
     mGraphWidth = w - mMarginLeft - mMarginRight;
     mGraphHeight = h - mMarginTop - mMarginBottom;
-  
+    mAxisToolX.mShowDate = XIsDate();
     mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
+    mAxisToolY.mShowDate = false;
     mAxisToolY.updateValues(mGraphHeight, 12, mMinY, mMaxY);
 }
 
@@ -504,14 +505,24 @@ void GraphView::paintToDevice(QPaintDevice* device)
     // ----------------------------------------------------
     
     
+    mAxisToolX.mShowDate = XIsDate();
+    
+    
     
     if(mXAxisMode != eHidden)
     {
+        if (XIsDate()) {
+            QRectF tr(0, mGraphHeight, mMarginLeft, mMarginBottom);
+            p.setPen(Qt::black);
+            p.drawText( tr, Qt::AlignCenter  | Qt::AlignTop, dateFormat() );
+            
+        }
+        
         mAxisToolX.mShowText    = true;
         mAxisToolX.mShowSubs    = true;
         mAxisToolX.mShowSubSubs = true;
         mAxisToolX.mShowArrow   = true;
-       //QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth ,  mMarginBottom), 5);
+        
         mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
         QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 7);
         
@@ -531,12 +542,12 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolX.mShowSubSubs = false;
         mAxisToolX.mShowArrow = true;
         mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 7);
-        //QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 5);
     }
    
     // ----------------------------------------------------
     //  Horizontal Grid
     // ----------------------------------------------------
+    mAxisToolY.mShowDate = false;
     if(mYAxisMode != eHidden)
     {
         mAxisToolY.mShowText = true;
