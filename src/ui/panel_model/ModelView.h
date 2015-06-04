@@ -39,6 +39,8 @@ public:
     void resetInterface();
     void showHelp(bool show);
     
+    void updateFormatDate();
+    
     void readSettings();
     void writeSettings();
     
@@ -46,7 +48,9 @@ public slots:
     void updateProject();
     void applySettings();
     void adjustStep();
-    void studyPeriodChanging();
+    //void studyPeriodChanging();
+    void MinEditChanging();
+    void MaxEditChanging();
     
 protected:
     void paintEvent(QPaintEvent* e);

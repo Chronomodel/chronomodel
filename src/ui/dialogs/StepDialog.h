@@ -5,7 +5,8 @@
 
 class CheckBox;
 class Label;
-class QSpinBox;
+//class QSpinBox;
+class QDoubleSpinBox;
 class Button;
 
 
@@ -16,8 +17,8 @@ public:
     StepDialog(QWidget* parent = 0, Qt::WindowFlags flags = 0);
     virtual ~StepDialog();
 
-    void setStep(int step, bool forced, double suggested);
-    int step() const;
+    void setStep(double step, bool forced, double suggested);
+    double step() const;
     bool forced() const;
     
 protected:
@@ -29,8 +30,8 @@ private:
     Label* mForcedLab;
     CheckBox* mForcedCheck;
     Label* mStepLab;
-    QSpinBox* mStepSpin;
-    
+    //QSpinBox* mStepSpin;
+    QDoubleSpinBox* mStepSpin;
     Button* mOkBut;
     Button* mCancelBut;
 };

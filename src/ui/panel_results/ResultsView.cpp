@@ -93,15 +93,18 @@ mZoomCorrel(0)
     QWidget* PhaseEvent(this);
     mByPhasesBut = new Button(tr("Phases"), PhaseEvent);
     mByPhasesBut->setCheckable(true);
-    mByPhasesBut->setChecked(true);
+    mByPhasesBut->setChecked(mHasPhases);
     mByPhasesBut->setAutoExclusive(true);
     mByPhasesBut->setFlatHorizontal();
     
     mByEventsBut = new Button(tr("Events"), PhaseEvent);
     mByEventsBut->setCheckable(true);
-    mByEventsBut->setChecked(false);
+    mByEventsBut->setChecked(!mHasPhases);
     mByEventsBut->setAutoExclusive(true);
     mByEventsBut->setFlatHorizontal();
+    
+    mByEventsBut->setVisible(mHasPhases);
+    mByPhasesBut->setVisible(mHasPhases);
     
     //connect(mByPhasesBut, SIGNAL(toggled(bool)), this, SLOT(showByPhases(bool)));//clicked
     //connect(mByEventsBut, SIGNAL(toggled(bool)), this, SLOT(showByEvents(bool)));
@@ -436,6 +439,16 @@ void ResultsView::restoreZoom()
 void ResultsView::paintEvent(QPaintEvent* )
 {
   //  Q_UNUSED(e);
+    /*
+    mByPhasesBut -> setAutoExclusive(true);
+    
+    mByPhasesBut -> setChecked( mHasPhases);
+    mByEventsBut -> setChecked(!mHasPhases);
+    
+    mByEventsBut -> setVisible(mHasPhases);
+    mByPhasesBut -> setVisible(mHasPhases);
+    */
+    
     int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     int graphYAxis = 50;
     int m = mMargin;
@@ -836,71 +849,20 @@ void ResultsView::updateResults(Model* model)
     mSettings = mModel->mSettings;
     mMCMCSettings = mModel->mMCMCSettings;
     
-    
-/*
-    if(mTabs->currentIndex() == 0){
-        
-        mCurrentTypeGraph = ResultsView::TypeGraph(GraphViewResults::eHisto);
-        if(mDataThetaRadio->isChecked()) {
-            mResultCurrentMinX = mSettings.mTmin;
-            mResultMinX = mSettings.mTmin;
-            mResultCurrentMaxX = mSettings.mTmax;
-            mResultMaxX = mSettings.mTmax;
-        }
-        else if(mDataSigmaRadio->isChecked())  {
-            mResultCurrentMinX = 0;
-            mResultMinX = 0;
-            mResultCurrentMaxX = mSettings.mTmax - mSettings.mTmin;
-            mResultMaxX = mSettings.mTmax - mSettings.mTmin;
-        }
-    }
-    else if(mTabs->currentIndex() == 1) {
-        mResultCurrentMinX = mSettings.mTmin;
-        mResultMinX = mSettings.mTmin;
-        mResultCurrentMaxX = mSettings.mTmax;
-        mResultMaxX = mSettings.mTmax;
-         mCurrentTypeGraph = ResultsView::TypeGraph(GraphViewResults::eTrace);
-    }
-    else if(mTabs->currentIndex() == 2) {
-        int curChainIdx = -1;
-        for(int i=0; i<mChainRadios.size(); ++i)
-            if(mChainRadios[i]->isChecked())
-                curChainIdx = i;
-        
-        if(curChainIdx != -1)  {
-            mResultCurrentMinX = 0;
-            mResultMinX = 0;
-            mResultCurrentMaxX = mChains[curChainIdx].mNumBurnIter + (mChains[curChainIdx].mBatchIndex * mChains[curChainIdx].mNumBatchIter) + mChains[curChainIdx].mNumRunIter / mChains[curChainIdx].mThinningInterval;
-            mResultMaxX = mResultCurrentMaxX;
-        }
-         mCurrentTypeGraph = ResultsView::TypeGraph(GraphViewResults::eAccept);
-    }
-    else if(mTabs->currentIndex() == 3) {
-        
-        mResultCurrentMinX = 0;
-        mResultMinX = 0;
-        mResultCurrentMaxX = 100;
-        mResultMaxX = 100;
-         mCurrentTypeGraph = ResultsView::TypeGraph(GraphViewResults::eCorrel);
-    }
-
- */
-    
-    
-
     mResultZoomX     = 1;
     
-    mRuler->setRange(mResultMinX, mResultMaxX);
-    mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
+    mRuler -> setRange(mResultMinX, mResultMaxX);
+    mRuler -> setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
     updateRulerAreas();
-    /*
-    mCurrentXMinEdit->setText( QString::number(mResultMinX) );
-    mCurrentXMaxEdit->setText( QString::number(mResultMaxX) );
-    */
-    mCurrentXMinEdit->setText( doubleInStrDate(mResultMinX) );
-    mCurrentXMaxEdit->setText( doubleInStrDate(mResultMaxX) );
+    
+    mCurrentXMinEdit -> setText( doubleInStrDate(mResultMinX) );
+    mCurrentXMaxEdit -> setText( doubleInStrDate(mResultMaxX) );
     
     mHasPhases = (mModel->mPhases.size() > 0);
+    mByPhasesBut -> setAutoExclusive(true);
+    
+    mByPhasesBut -> setChecked( mHasPhases);
+    mByEventsBut -> setChecked(!mHasPhases);
     
     mByEventsBut->setVisible(mHasPhases);
     mByPhasesBut->setVisible(mHasPhases);
@@ -1013,8 +975,6 @@ void ResultsView::updateResults(Model* model)
             graphDate->setSettings(mModel->mSettings);
             graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
             graphDate->setDate(&date);
-            //QColor dataPluginColor = date.mPlugin->getColor();
-            //graphDate->setColor(dataPluginColor);
             graphDate->setColor(event->mColor);
             graphDate->setGraphFont(mFont);
             graphDate->setGraphsThickness(mThicknessSpin->value());

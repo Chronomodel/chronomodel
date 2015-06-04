@@ -1,10 +1,11 @@
 #include "StepDialog.h"
+
 #include "Button.h"
 #include "Label.h"
 #include "CheckBox.h"
 #include "Painting.h"
 #include <QtWidgets>
-
+#include <QDoubleSpinBox>
 
 StepDialog::StepDialog(QWidget* parent, Qt::WindowFlags flags):
 QDialog(parent, flags)
@@ -12,19 +13,21 @@ QDialog(parent, flags)
     setWindowTitle(tr("Calibration resolution"));
     
     mTitleLab = new Label(tr("Calibration resolution"), this);
-    mTitleLab->setIsTitle(true);
+    mTitleLab -> setIsTitle(true);
     
-    mForcedLab = new Label(tr("Force calib. resolution") + " : ", this);
+    mForcedLab   = new Label(tr("Force calib. resolution") + " : ", this);
     mForcedCheck = new CheckBox(this);
-    mStepLab = new Label(tr("Resolution in years") + " : ", this);
+    mStepLab     = new Label(tr("Resolution in years") + " : ", this);
     
-    mStepSpin = new QSpinBox(this);
-    mStepSpin->setRange(1, 10000);
-    mStepSpin->setSingleStep(1);
+    //mStepSpin = new QSpinBox(this);//QDoubleSpinBox
+    mStepSpin = new QDoubleSpinBox(this);//QDoubleSpinBox
+    mStepSpin -> setRange(0.1, 10000);
+    mStepSpin -> setSingleStep(0.1);
+    mStepSpin -> setDecimals(1);
     
-    mOkBut = new Button(tr("OK"), this);
+    mOkBut     = new Button(tr("OK"), this);
     mCancelBut = new Button(tr("Cancel"), this);
-    mOkBut->setAutoDefault(true);
+    mOkBut -> setAutoDefault(true);
     
     connect(mOkBut, SIGNAL(clicked()), this, SLOT(accept()));
     connect(mCancelBut, SIGNAL(clicked()), this, SLOT(reject()));
@@ -38,22 +41,22 @@ StepDialog::~StepDialog()
 
 }
 
-void StepDialog::setStep(int step, bool forced, double suggested)
+void StepDialog::setStep(double step, bool forced, double suggested)
 {
-    mForcedCheck->setText("(" + tr("suggested/default value : ") + QString::number(suggested) + ")");
-    mForcedCheck->setChecked(forced);
-    mStepSpin->setEnabled(forced);
-    mStepSpin->setValue(step);
+    mForcedCheck -> setText("(" + tr("suggested/default value : ") + QString::number(suggested) + ")");
+    mForcedCheck -> setChecked(forced);
+    mStepSpin    -> setEnabled(forced);
+    mStepSpin    -> setValue(step);
 }
 
-int StepDialog::step() const
+double StepDialog::step() const
 {
-    return mStepSpin->value();
+    return mStepSpin -> value();
 }
 
 bool StepDialog::forced() const
 {
-    return mForcedCheck->isChecked();
+    return mForcedCheck -> isChecked();
 }
 
 void StepDialog::resizeEvent(QResizeEvent* e)
@@ -69,16 +72,16 @@ void StepDialog::resizeEvent(QResizeEvent* e)
     
     int y = -lineH;
     
-    mTitleLab->setGeometry(m, y += (lineH + m), width() - 2*m, lineH);
+    mTitleLab    -> setGeometry(m, y += (lineH + m), width() - 2*m, lineH);
     
-    mForcedLab->setGeometry(m, y += (lineH + m), w1, lineH);
-    mForcedCheck->setGeometry(2*m + w1, y, w2, lineH);
+    mForcedLab   -> setGeometry(m, y += (lineH + m), w1, lineH);
+    mForcedCheck -> setGeometry(2*m + w1, y, w2, lineH);
     
-    mStepLab->setGeometry(m, y += (lineH + m), w1, lineH);
-    mStepSpin->setGeometry(2*m + w1, y, 120, lineH);
+    mStepLab     -> setGeometry(m, y += (lineH + m), w1, lineH);
+    mStepSpin    -> setGeometry(2*m + w1, y, 120, lineH);
     
-    mOkBut->setGeometry(width() - 2*m - 2*butW, height() - m - butH, butW, butH);
-    mCancelBut->setGeometry(width() - m - butW, height() - m - butH, butW, butH);
+    mOkBut       -> setGeometry(width() - 2*m - 2*butW, height() - m - butH, butW, butH);
+    mCancelBut   -> setGeometry(width() - m - butW, height() - m - butH, butW, butH);
 }
 
 void StepDialog::paintEvent(QPaintEvent* e)

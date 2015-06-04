@@ -177,7 +177,7 @@ mCalibVisible(false)
     
     mStudyLab = new Label(tr("STUDY PERIOD") + " "+dateFormat(), mRightWrapper);
     mMinLab = new Label(tr("Start") + " :", mRightWrapper);
-    mMaxLab = new Label(tr("End") + " :", mRightWrapper);
+    mMaxLab = new Label(tr("End")   + " :", mRightWrapper);
     //mStepLab = new Label(tr("Step") + " :", mRightWrapper);
     
    // qreal butW = 80;
@@ -229,12 +229,15 @@ mCalibVisible(false)
     
     mButStep = new Button(tr("Calib. Resol."), mRightWrapper);
     
-    connect(mMinEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));
-    connect(mMaxEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));
+    //connect(mMinEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));//MaxEditChanging
+    //connect(mMaxEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));
     //connect(mStepEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));
     
+    connect(mMinEdit, SIGNAL(textChanged(const QString&)), this, SLOT(MinEditChanging()));
+    connect(mMaxEdit, SIGNAL(textChanged(const QString&)), this, SLOT(MaxEditChanging()));
+    
     connect(mButApply, SIGNAL(clicked()), this, SLOT(applySettings()));
-    connect(mButStep, SIGNAL(clicked()), this, SLOT(adjustStep()));
+    connect(mButStep,  SIGNAL(clicked()), this, SLOT(adjustStep()));
     
     // --------
     
@@ -342,29 +345,27 @@ void ModelView::updateProject()
     Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
     ProjectSettings settings = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
-    /*
-    mMinEdit->setText(doubleInStrDate(settings.mTmin));
-    mMaxEdit->setText(doubleInStrDate(settings.mTmax));
-    */
+   
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
     //mStepEdit->setText(QString::number(settings.mStep));
+    mMinEdit->setText(doubleInStrDate(settings.mTmin));
+    mMaxEdit->setText(doubleInStrDate(settings.mTmax));
     
-    
-    if(settings.mStep < 1 || settings.mTmin >= settings.mTmax)
+    /*if(settings.mStep < 0.1 || settings.mTmin >= settings.mTmax)
         setSettingsValid(false);
-    else
+    else */
         setSettingsValid(true);
     
-    mEventsScene->updateProject();
-    mPhasesScene->updateProject();
+    mEventsScene -> updateProject();
+    mPhasesScene -> updateProject();
     
     // Les sélections dans les scènes doivent être mises à jour après que
     // LES 2 SCENES aient été updatées
     // false : ne pas envoyer de notification pour updater l'état du projet,
     // puisque c'est justement ce que l'on fait ici!
-    mEventsScene->updateSelection(false);
-    mPhasesScene->updateSelection(false);
+    mEventsScene -> updateSelection(false);
+    mPhasesScene -> updateSelection(false);
     
     // TODO : refresh current date !!
     //mCalibrationView->setDate();
@@ -396,6 +397,7 @@ void ModelView::applySettings()
     
     mTmax = dateInDouble(mMaxEdit->text().toDouble());
     mTmin = dateInDouble(mMinEdit->text().toDouble());
+    qDebug()<<"ModelView::applySettings()"<<mTmin<<mTmax;
     
     s.mTmin = (int) mTmin;//(int)dateInDouble(mMinEdit->text().toInt());
     s.mTmax = (int) mTmax;//(int)dateInDouble(mMaxEdit->text().toInt());
@@ -448,10 +450,32 @@ void ModelView::adjustStep()
     }
 }
 
+/* Original code by HL ignore in 2015/06/04
 void ModelView::studyPeriodChanging()
 {
+    qDebug()<<"ModelView::studyPeriodChanging() avant"<<g_FormatDate<<mTmin<<mTmax;
+    mTmin = dateInDouble( mMinEdit->text().toDouble() );
+    mTmax = dateInDouble( mMaxEdit->text().toDouble() );
     setSettingsValid(false);
     mEventPropertiesView->hideCalibration();
+    qDebug()<<"ModelView::studyPeriodChanging() apres"<<g_FormatDate<<mTmin<<mTmax;
+}
+*/
+void ModelView::MinEditChanging()
+{
+    qDebug()<<"ModelView::MinEditChanging() avant"<<g_FormatDate<<mTmin<<mTmax;
+    mTmin = dateInDouble( mMinEdit->text().toDouble() );
+    setSettingsValid(false);
+    mEventPropertiesView->hideCalibration();
+    qDebug()<<"ModelView::MinEditChanging() apres"<<g_FormatDate<<mTmin<<mTmax;
+}
+void ModelView::MaxEditChanging()
+{
+    qDebug()<<"ModelView::MaxEditChanging() avant"<<g_FormatDate<<mTmin<<mTmax;
+    mTmax = dateInDouble( mMaxEdit->text().toDouble() );
+    setSettingsValid(false);
+    mEventPropertiesView->hideCalibration();
+    qDebug()<<"ModelView::MaxEditChanging() apres"<<g_FormatDate<<mTmin<<mTmax;
 }
 
 void ModelView::setSettingsValid(bool valid)
@@ -499,10 +523,10 @@ void ModelView::searchEvent()
 #pragma mark Right animation
 void ModelView::showProperties()
 {
-    mButProperties->setChecked(true);
-    mButImport->setChecked(false);
-    mButPhasesModel->setChecked(false);
-    mPhasesScene->clearSelection();
+    mButProperties  -> setChecked(true);
+    mButImport      -> setChecked(false);
+    mButPhasesModel -> setChecked(false);
+    mPhasesScene    -> clearSelection();
     slideRightPanel();
 }
 void ModelView::showImport()
@@ -510,19 +534,19 @@ void ModelView::showImport()
     Project* project = MainWindow::getInstance()->getProject();
     if(project->studyPeriodIsValid())
     {
-        mEventPropertiesView->hideCalibration();
+        mEventPropertiesView -> hideCalibration();
         
-        mButProperties->setChecked(false);
-        mButImport->setChecked(true);
-        mButPhasesModel->setChecked(false);
-        mPhasesScene->clearSelection();
+        mButProperties  -> setChecked(false);
+        mButImport      -> setChecked(true);
+        mButPhasesModel -> setChecked(false);
+        mPhasesScene    -> clearSelection();
         slideRightPanel();
     }
     else
     {
-        mButProperties->setChecked(true);
-        mButImport->setChecked(false);
-        mButPhasesModel->setChecked(false);
+        mButProperties  -> setChecked(true);
+        mButImport      -> setChecked(false);
+        mButPhasesModel -> setChecked(false);
     }
 }
 void ModelView::showPhases()
@@ -593,11 +617,18 @@ void ModelView::paintEvent(QPaintEvent* e)
     p.fillRect(mHandlerRect, QColor(50, 50, 50));
     p.fillRect(mRightRect, QColor(50, 50, 50));
     mStudyLab -> setText(tr("STUDY PERIOD") + " "+dateFormat() );
-    mMinEdit  -> setText(doubleInStrDate(mTmin));
-    mMaxEdit  -> setText(doubleInStrDate(mTmax));
+    
     
 }
-
+void ModelView::updateFormatDate()
+{
+    mMinEdit  -> setText(doubleInStrDate(mTmin));
+    mMaxEdit  -> setText(doubleInStrDate(mTmax));
+    mMinEdit->update();
+    
+    setSettingsValid(Button::eReady);
+    
+}
 #pragma mark Layout
 void ModelView::resizeEvent(QResizeEvent* e)
 {

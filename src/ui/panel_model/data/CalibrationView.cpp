@@ -175,6 +175,7 @@ void CalibrationView::updateGraphs()
         mCalibGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
         
         mCalibGraph->addCurve(calibCurve);
+        mCalibGraph->setXHasDate(true);
         mCalibGraph->setVisible(true);
         
         if(!isTypo) // mHPDCheck->isChecked() &&
@@ -280,10 +281,10 @@ void CalibrationView::updateZoom()
 
 void CalibrationView::updateScroll()
 {
-    float min = mCalibGraph->minimumX();
-    float max = mCalibGraph->maximumX();
-    float minProp = 5 / (max - min);
-    float prop = (100. - mZoomSlider->value()) / 100.;
+    double min = mCalibGraph->minimumX();
+    double max = mCalibGraph->maximumX();
+    double minProp = 5 / (max - min);
+    double prop = (100. - mZoomSlider->value()) / 100.;
     if(prop < minProp) prop = minProp;
     
     if(prop != 1)

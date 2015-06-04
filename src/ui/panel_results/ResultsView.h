@@ -49,7 +49,10 @@ public:
     double mResultCurrentMaxX;
     double mResultMinX;
     double mResultMaxX;
+    bool mHasPhases;
+    
     void doProjectConnections(Project* project);
+    
     void updateAllZoom();
     TypeGraph mCurrentTypeGraph;
     
@@ -138,7 +141,7 @@ private:
     
     Button* mByPhasesBut;
     Button* mByEventsBut;
-    bool mHasPhases;
+    
     
     QWidget* mOptionsWidget;
     

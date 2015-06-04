@@ -56,13 +56,22 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     connect(mResetMCMCAction, SIGNAL(triggered()), mProject, SLOT(resetMCMC()));
     connect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
     connect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));
-    connect(mProject, SIGNAL(mcmcFinished(Model*)), this, SLOT(mcmcFinished()));
+    
+    
     
     connect(mProject, SIGNAL(projectStateChanged()), mProjectView, SLOT(updateProject()));
     connect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
-    connect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
+    
     connect(mViewLogAction, SIGNAL(triggered()), mProjectView, SLOT(showLog()));
+    
+    connect(mProject, SIGNAL(mcmcFinished(Model*)), this, SLOT(mcmcFinished()));
+    connect(mProject, SIGNAL(mcmcFinished(Model*)), mProjectView, SLOT(updateResults(Model*)));
     connect(mProject, SIGNAL(mcmcFinished(Model*)), mProjectView, SLOT(updateLog(Model*)));
+    connect(mProject, SIGNAL(mcmcFinished(Model*)), this, SLOT(mcmcFinished()));
+    
+    connect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
+    
+    
     
     mProjectView->doProjectConnections(mProject);
     
@@ -409,6 +418,7 @@ void MainWindow::appSettings()
     {
         mAppSettings = dialog.getSettings();
         mProject->setAppSettings(mAppSettings);
+        updateFormatDate();
     }
 }
 
@@ -523,6 +533,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     mAppSettings.mCSVDecSeparator = settings.value(APP_SETTINGS_STR_DEC_SEP, APP_SETTINGS_DEFAULT_DEC_SEP).toString();
     mAppSettings.mOpenLastProjectAtLaunch = settings.value(APP_SETTINGS_STR_OPEN_PROJ, APP_SETTINGS_DEFAULT_OPEN_PROJ).toBool();
     mAppSettings.mFormatDate = settings.value(APP_SETTINGS_DEFAULT_FORMATDATE,APP_SETTINGS_DEFAULT_FORMATDATE).toString();
+    g_FormatDate = mAppSettings.mFormatDate;
     settings.endGroup();
     
     mProjectView->showHelp(mAppSettings.mShowHelp);
@@ -574,6 +585,7 @@ void MainWindow::resetInterface()
 void MainWindow::activateInterface(bool activate)
 {
     mProjectView->setVisible(activate);
+    
     mProjectSaveAction->setEnabled(activate);
     mProjectSaveAsAction->setEnabled(activate);
     mProjectExportAction->setEnabled(activate);
@@ -604,7 +616,16 @@ void MainWindow::setLogEnabled(bool enabled)
 
 void MainWindow::mcmcFinished()
 {
-    mViewLogAction->setEnabled(true);
-    mViewResultsAction->setEnabled(true);
-    mViewResultsAction->trigger();
+    mViewLogAction -> setEnabled(true);
+    mViewResultsAction -> setEnabled(true);
+    mViewResultsAction -> setChecked(true); // Just checheck the Result Button after computation and mResultsView is show after
+    //mViewResultsAction->trigger();
+}
+void MainWindow::updateFormatDate()
+{
+    mProjectView -> updateFormatDate();
+    if (mViewResultsAction -> isEnabled()) {
+        mProjectView -> updateLog(mProject -> mModel);
+    }
+    
 }

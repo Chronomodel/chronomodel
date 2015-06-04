@@ -44,9 +44,9 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     // ----------------------------------------------
     //  Recreate thumb
     // ----------------------------------------------
-    int tmin = settings[STATE_SETTINGS_TMIN].toDouble();
-    int tmax = settings[STATE_SETTINGS_TMAX].toDouble();
-    int step = settings[STATE_SETTINGS_STEP].toDouble();
+    double tmin = settings[STATE_SETTINGS_TMIN].toDouble();
+    double tmax = settings[STATE_SETTINGS_TMAX].toDouble();
+    double step = settings[STATE_SETTINGS_STEP].toDouble();
     
     EventKnown bound = EventKnown::fromJson(event);
     bound.updateValues(tmin, tmax, step);
@@ -79,6 +79,7 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     curve.mIsRectFromZero = true;
     curve.mIsHisto = (bound.knownType() == EventKnown::eUniform);
     graph->addCurve(curve);
+    graph->setXHasDate(true);
     
     mThumb = QPixmap(graph->size());
     graph->render(&mThumb);

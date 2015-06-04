@@ -38,6 +38,8 @@ public:
     void activateInterface(bool activate);
     void setRunEnabled(bool enabled);
     void setLogEnabled(bool enabled);
+    
+    void updateFormatDate();
 
 protected:
     void closeEvent(QCloseEvent* e);

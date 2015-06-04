@@ -48,7 +48,7 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
         curve.mName = "Reference";
         curve.mPen.setColor(Qt::blue);
         curve.mIsHisto = false;
-        for(int t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep)
+        for(double t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep)
             curve.mData[t] = a * t * t + b * t + c;
         mGraph->addCurve(curve);
         

@@ -92,7 +92,7 @@ void EventKnown::updateValues(double tmin, double tmax, double step)
     {
         case eFixed:
         {
-            for(int t=tmin; t<=tmax; t+=step)
+            for(double t=tmin; t<=tmax; t+=step)
                 mValues[t] = 0.f;
             mValues[mFixed] = 1.f;
             break;
@@ -101,7 +101,7 @@ void EventKnown::updateValues(double tmin, double tmax, double step)
         {
             if(mUniformStart < mUniformEnd)
             {
-                for(int t=tmin; t<=tmax; t+=step)
+                for(double t=tmin; t<=tmax; t+=step)
                 {
                     double v = (t > mUniformStart && t <= mUniformEnd) ? 1 / (mUniformEnd - mUniformStart) : 0;
                     mValues[t] = v;
@@ -114,7 +114,7 @@ void EventKnown::updateValues(double tmin, double tmax, double step)
     }
     if(mValues.size() == 0)
     {
-        for(int t=tmin; t<=tmax; t+=step)
+        for(double t=tmin; t<=tmax; t+=step)
             mValues[t] = 0.f;
     }
 }

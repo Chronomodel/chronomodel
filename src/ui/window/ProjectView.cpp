@@ -1,4 +1,4 @@
-﻿#include "ProjectView.h"
+#include "ProjectView.h"
 #include "ModelView.h"
 #include "ResultsView.h"
 #include "Painting.h"
@@ -41,8 +41,8 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     mLogResultsEdit->setFont(font);
     
     mLogTabs = new QTabWidget();
-    mLogTabs->addTab(mLogModelEdit, tr("Model"));
-    mLogTabs->addTab(mLogMCMCEdit, tr("MCMC"));
+    mLogTabs->addTab(mLogModelEdit,   tr("Model"));
+    mLogTabs->addTab(mLogMCMCEdit,    tr("MCMC"));
     mLogTabs->addTab(mLogResultsEdit, tr("Results"));
     mLogTabs->setContentsMargins(15, 15, 15, 15);
     
@@ -72,31 +72,54 @@ ProjectView::~ProjectView()
 
 void ProjectView::doProjectConnections(Project* project)
 {
-    mModelView->doProjectConnections(project);
-    mResultsView->doProjectConnections(project);
+    mModelView   -> doProjectConnections(project);
+    mResultsView -> doProjectConnections(project);
 }
 
 void ProjectView::resetInterface()
 {
     showModel();
-    mModelView->resetInterface();
-    mResultsView->clearResults();
+    mModelView   -> resetInterface();
+    mResultsView -> clearResults();
 }
 
 void ProjectView::updateProject()
 {
     mModelView->updateProject();
-    //mResultsView->updateResults();
 }
 
 void ProjectView::showModel()
 {
+    
     mStack->setCurrentIndex(0);
+}
+
+void ProjectView::updateResults(Model* model)
+{
+    if(model)
+    {
+        mResultsView -> mHasPhases = (model->mPhases.size() > 0);
+        mResultsView -> updateResults(model);
+        
+        model->mLogModel=model->modelLog();
+        mLogModelEdit->setText(model->mLogModel);
+        
+        mLogMCMCEdit->setText(model->mLogMCMC);
+        
+        model->mLogResults=model->resultsLog();
+        mLogResultsEdit->setText(model->mLogResults);
+
+        
+        showResults();
+        //mStack->setCurrentIndex(1);
+    }
 }
 
 void ProjectView::showResults()
 {
+    //mStack -> setCurrentWidget(mResultsView);
     mStack->setCurrentIndex(1);
+    mStack->update();
 }
 
 void ProjectView::showLog()
@@ -107,13 +130,16 @@ void ProjectView::showLog()
 void ProjectView::showHelp(bool show)
 {
     mModelView->showHelp(show);
-    //mResultsView->showHelp(show);
 }
 
 void ProjectView::updateLog(Model* model)
 {
     if(model)
     {
+        
+        mResultsView->updateResults(model);
+        mResultsView->updateGraphs();
+        
         model->mLogModel=model->modelLog();
         mLogModelEdit->setText(model->mLogModel);
 
@@ -121,6 +147,8 @@ void ProjectView::updateLog(Model* model)
 
         model->mLogResults=model->resultsLog();
         mLogResultsEdit->setText(model->mLogResults);
+        
+        showResults();
     }
 }
 void ProjectView::updateResultsLog(const QString& log)
@@ -137,4 +165,9 @@ void ProjectView::writeSettings()
 void ProjectView::readSettings()
 {
     mModelView->readSettings();
+}
+void ProjectView::updateFormatDate()
+{
+    mModelView->updateFormatDate();
+    
 }

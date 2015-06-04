@@ -11,7 +11,7 @@ class ProjectSettings;
 #pragma mark Constructor / Destructor
 
 GraphView::GraphView(QWidget *parent):QWidget(parent),
-mStepMinWidth(30), // define secondary scale on axis
+mStepMinWidth(50), // define secondary scale on axis
 mRendering(eSD),
 mShowAxisArrows(true),
 mShowAxisLines(true),
@@ -512,9 +512,11 @@ void GraphView::paintToDevice(QPaintDevice* device)
     if(mXAxisMode != eHidden)
     {
         if (XIsDate()) {
-            QRectF tr(0, mGraphHeight, mMarginLeft, mMarginBottom);
+            //QRectF tr(0, mGraphHeight, mMarginLeft, mMarginBottom);
+            
+            QRectF tr(mMarginLeft, mGraphHeight- mMarginBottom, mGraphWidth, mMarginBottom);
             p.setPen(Qt::black);
-            p.drawText( tr, Qt::AlignCenter  | Qt::AlignTop, dateFormat() );
+            p.drawText( tr, Qt::AlignRight  | Qt::AlignTop, dateFormat() );
             
         }
         

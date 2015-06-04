@@ -24,6 +24,8 @@ public:
     void doProjectConnections(Project* project);
     void resetInterface();
     
+    void updateFormatDate();
+    
     void readSettings();
     void writeSettings();
     
@@ -33,7 +35,9 @@ public slots:
     void showResults();
     void showLog();
     void showHelp(bool show);
+    
     void updateLog(Model*);
+    void updateResults(Model*);
     void updateResultsLog(const QString& log);
     
 private:

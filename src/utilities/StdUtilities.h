@@ -24,10 +24,10 @@
 
 int compareStrings(const std::string &s1, const std::string &s2);
 
-QString doubleInStrDate(double date);
+QString doubleInStrDate(const double date);
 QString dateFormat();
-double dateInDouble(double date);
-double doubleInDate(double value);
+double dateInDouble(const double date);
+double doubleInDate(const double value);
 
 
 double safeExp(const double& x, int n = 10);

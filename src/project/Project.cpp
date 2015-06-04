@@ -443,12 +443,12 @@ bool Project::setSettings(const ProjectSettings& settings)
         message.exec();
         return false;
     }
-    else if(settings.mStep < 1)
+   /* else if(settings.mStep < 0.1)
     {
-        QMessageBox message(QMessageBox::Critical, tr("Inconsistent values"), tr("Step must be >= 1 !"), QMessageBox::Ok, qApp->activeWindow(), Qt::Sheet);
+        QMessageBox message(QMessageBox::Critical, tr("Inconsistent values"), tr("Step must be >= 0.1 !"), QMessageBox::Ok, qApp->activeWindow(), Qt::Sheet);
         message.exec();
         return false;
-    }
+    } */
     else
     {
         QJsonObject stateNext = mState;
