@@ -58,7 +58,7 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         double yMin = curves["G95Inf"][mSettings.mTmin];
         double yMax = curves["G95Sup"][mSettings.mTmin];
         
-        for(int t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep) {
+        for(double t=mSettings.mTmin; t<=mSettings.mTmax; ++t) { //t+=mSettings.mStep) {
             curveG[t] = curves["G"][t];
             curveG95Sup[t] = curves["G95Sup"][t];
             curveG95Inf[t] = curves["G95Inf"][t];

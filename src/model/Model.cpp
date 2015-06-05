@@ -65,6 +65,9 @@ void Model::clear()
     mLogModel.clear();
     mLogMCMC.clear();
     mLogResults.clear();
+    
+    
+    
 }
 
 /*Model* Model::fromJson(const QJsonObject& json)

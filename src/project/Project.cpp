@@ -227,6 +227,19 @@ void Project::sendPhasesSelectionChanged()
 
 bool Project::load(const QString& path)
 {
+    QFileInfo checkFile(path);
+    if (!checkFile.exists() || !checkFile.isFile()) {
+        QMessageBox message(QMessageBox::Critical,
+                            tr("Error loading project file"),
+                            tr("The project file could not be loaded.") + "\n" +
+                            path  +
+                            tr("Could not be find"),
+                            QMessageBox::Ok,
+                            qApp->activeWindow(),
+                            Qt::Sheet);
+        message.exec();
+        return false;
+    }
     QFile file(path);
 
     qDebug() << "in Project::load Loading project file : " << path;
@@ -423,10 +436,19 @@ bool Project::saveProjectToFile()
         qDebug() << "Nothing new to save in project model";
 #endif
     }
-    if(mModel)
+    if(!mModel->mChains.isEmpty())
     {
       //  qDebug() << "Saving project results";
         mModel->saveToFile(mProjectFileDir + "/" + mProjectFileName + ".dat");
+    }
+    else {
+        QFileInfo checkFile(mProjectFileDir + "/" + mProjectFileName + ".dat");
+        if (checkFile.exists() && checkFile.isFile()) {
+            QFile(mProjectFileDir + "/" + mProjectFileName + ".dat").remove();
+        }
+        /* else {
+            return true;
+        } */
     }
     return true;
 }
@@ -656,6 +678,10 @@ void Project::deleteSelectedEvents()
     stateNext[STATE_EVENTS_TRASH] = events_trash;
     
     pushProjectState(stateNext, tr("Event(s) deleted"), true);
+    
+    clearModel();
+    MainWindow::getInstance() -> setResultsEnabled(false);
+    MainWindow::getInstance() -> setLogEnabled(false);
 }
 
 void Project::deleteSelectedTrashedEvents(const QList<int>& ids)
@@ -955,6 +981,9 @@ void Project::deleteDates(int eventId, const QList<int>& dateIndexes)
             break;
         }
     }
+    clearModel();
+    MainWindow::getInstance() -> setResultsEnabled(false);
+    MainWindow::getInstance() -> setLogEnabled(false); 
 }
 
 void Project::deleteSelectedTrashedDates(const QList<int>& ids)
@@ -1163,6 +1192,10 @@ void Project::deleteSelectedPhases()
     stateNext[STATE_EVENTS] = events;
     
     pushProjectState(stateNext, tr("Phase(s) deleted"), true);
+    
+    clearModel();
+    MainWindow::getInstance() -> setResultsEnabled(false);
+    MainWindow::getInstance() -> setLogEnabled(false);
 }
 
 int Project::getUnusedPhaseId(const QJsonArray& phases)

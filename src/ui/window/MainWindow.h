@@ -38,6 +38,7 @@ public:
     void activateInterface(bool activate);
     void setRunEnabled(bool enabled);
     void setLogEnabled(bool enabled);
+    void setResultsEnabled(bool enabled);
     
     void updateFormatDate();
 

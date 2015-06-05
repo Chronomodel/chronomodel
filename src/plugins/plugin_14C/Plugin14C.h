@@ -38,7 +38,7 @@ public:
     // ---------------------
     
     QString getRefsPath() const;
-    void loadRefDatas();
+    void loadRefDatas();//const ProjectSettings& settings);
     QStringList getRefsNames() const;
     const QMap<QString, QMap<double, double> >& getRefData(const QString& name);
     

@@ -609,6 +609,11 @@ void MainWindow::setRunEnabled(bool enabled)
     mRunAction->setEnabled(enabled);
 }
 
+void MainWindow::setResultsEnabled(bool enabled)
+{
+    mViewResultsAction->setEnabled(enabled);
+}
+
 void MainWindow::setLogEnabled(bool enabled)
 {
     mViewLogAction->setEnabled(enabled);
@@ -621,6 +626,7 @@ void MainWindow::mcmcFinished()
     mViewResultsAction -> setChecked(true); // Just checheck the Result Button after computation and mResultsView is show after
     //mViewResultsAction->trigger();
 }
+
 void MainWindow::updateFormatDate()
 {
     mProjectView -> updateFormatDate();

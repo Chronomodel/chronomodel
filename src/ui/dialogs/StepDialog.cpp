@@ -21,11 +21,11 @@ QDialog(parent, flags)
     
     //mStepSpin = new QSpinBox(this);//QDoubleSpinBox
     mStepSpin = new QDoubleSpinBox(this);//QDoubleSpinBox
-    mStepSpin -> setRange(0.1, 10000);
-    mStepSpin -> setSingleStep(0.1);
-    mStepSpin -> setDecimals(1);
+    mStepSpin -> setRange(0.01, 10000);
+    mStepSpin -> setSingleStep(0.01);
+    mStepSpin -> setDecimals(2);
     
-    mOkBut     = new Button(tr("OK"), this);
+    mOkBut     = new Button(tr("Apply"), this);
     mCancelBut = new Button(tr("Cancel"), this);
     mOkBut -> setAutoDefault(true);
     

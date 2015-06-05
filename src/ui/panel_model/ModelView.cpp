@@ -38,18 +38,11 @@ mIsSplitting(false),
 mCalibVisible(false)
 {
     setMouseTracking(true);
-   // this->setGeometry(parentWidget()->rect());
-    // --------
- //   qreal x = width() * mSplitProp;
- //   qreal editH = (mToolbarH - 3*mMargin) / 2;
-    
-   //QRectF mEventPropWrapperRectF(x+(mHandlerW)/2,mButPhasesModel->y()+mButPhasesModel->height(), width()-x-mHandlerW/2-mButPhasesModel->x()-mButPhasesModel->width(), height()-mMargin);
     
     mLeftWrapper = new QWidget(this);
     mLeftWrapper->setGeometry(0,0, round((this->width()-mHandlerW)/2), this->height());
     
     mRightWrapper = new QWidget(this);
-    //QRectF mRightWrapperRectF(5, 25, 50, 30);
     QRectF mRightWrapperRectF((this->width()-mHandlerW)/2,0, (this->width()-mHandlerW)/2, this->height());
     mRightWrapper->setGeometry(mRightWrapperRectF.toRect());
     
@@ -58,7 +51,6 @@ mCalibVisible(false)
    
     
     // ---- Windows on the left hand Event scene --------------
-   //  qDebug()<<"ModelView::ModelView mLeftWrapper "<<mLeftWrapper->rect();
     mEventsView = new QGraphicsView(mLeftWrapper);
     mEventsScene = new EventsScene(mEventsView);
     mEventsView->setScene(mEventsScene);
@@ -446,7 +438,9 @@ void ModelView::adjustStep()
         else
             s.mStep = defaultVal;
         
-        project->setSettings(s);
+        project -> setSettings(s);
+        MainWindow::getInstance() -> setResultsEnabled(false);
+        MainWindow::getInstance() -> setLogEnabled(false);
     }
 }
 

@@ -48,7 +48,7 @@ void PluginTLRefView::setDate(const Date& d, const ProjectSettings& settings)
         curve.mPen.setColor(Qt::blue);
         curve.mIsHisto = false;
         
-        for(int t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep)
+        for(double t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep)
             curve.mData[t] = ref_year - t;
         mGraph->addCurve(curve);
         

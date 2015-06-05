@@ -59,7 +59,7 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         
         //qDebug() << curves["G"][0];
         
-        for(int t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep)
+        for(double t=mSettings.mTmin; t<=mSettings.mTmax; ++t) //t+=mSettings.mStep)
         {
             // La courbe de référence n'est peut-être pas définie sur toute la plage d'étude !
             if(curves["G"].find(t) != curves["G"].end())

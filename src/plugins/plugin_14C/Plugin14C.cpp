@@ -168,7 +168,7 @@ QString Plugin14C::getRefsPath() const
     return calibPath;
 }
 
-void Plugin14C::loadRefDatas()
+void Plugin14C::loadRefDatas()//const ProjectSettings& settings)
 {
     QString calibPath = getRefsPath();
     QDir calibDir(calibPath);
@@ -217,7 +217,7 @@ void Plugin14C::loadRefDatas()
                 double tmin = curveG.firstKey();
                 double tmax = curveG.lastKey();
                 
-                for(double t=tmin; t<tmax; ++t)
+                for(double t=tmin; t<tmax; ++t)//t+=settings.mStep)//++t)
                 {
                     if(curveG.find(t) == curveG.end())
                     {
