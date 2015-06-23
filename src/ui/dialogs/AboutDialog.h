@@ -4,7 +4,6 @@
 #include <QDialog>
 
 class QLabel;
-class Button;
 
 
 class AboutDialog: public QDialog
@@ -13,16 +12,12 @@ class AboutDialog: public QDialog
 public:
     AboutDialog(QWidget* parent = 0, Qt::WindowFlags flags = 0);
     ~AboutDialog();
-    
-private slots:
-    void showLicense();
-    
+  
 protected:
     void paintEvent(QPaintEvent* e);
     
 public:
     QLabel* mLabel;
-    Button* mLicenseBut;
 };
 
 #endif

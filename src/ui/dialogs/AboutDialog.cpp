@@ -1,5 +1,4 @@
 #include "AboutDialog.h"
-#include "Button.h"
 #include "Painting.h"
 #include <QtWidgets>
 
@@ -12,33 +11,30 @@ AboutDialog::AboutDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
     
     mLabel = new QLabel();
     mLabel->setTextFormat(Qt::RichText);
+    mLabel->setOpenExternalLinks(true);
+    mLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
     mLabel->setWordWrap(true);
  
     QString text = "<b>" + qApp->applicationName() + " " + qApp->applicationVersion() + "</b><br><br>";
     text += "<a href=\"http://www.chronomodel.com\">http://www.chronomodel.com</a><br><br>";
     text += "Copyright © CNRS<br>";
+    
     text += "Published in 2015<br><br>";
     text += "<b>Project director</b> : Philippe LANOS<br>";
-    text += "<a href=\"mailto:philippe.lanos@univ-rennes1.fr\">philippe.lanos@univ-rennes1.fr</a><br><br>";
-    text += "<b>Project co-director</b> : Anne PHILIPPE<br>";
-    text += "<a href=\"mailto:anne.philippe@univ-nantes.fr\">anne.philippe@univ-nantes.fr</a><br><br>";
-    text += "<b>Authors</b> :<br>";
-    text += "Helori LANOS<br>";
-    text += "<a href=\"mailto:helori.lanos@gmail.com\">helori.lanos@gmail.com</a><br><br>";
-    text += "Philippe DUFRESNE<br>";
-    text += "<a href=\"mailto:philippe.dufresne@univ-rennes1.fr\">philippe.dufresne@univ-rennes1.fr</a><br><br>";
+    text += "<b>Project co-director</b> : Anne PHILIPPE<br><br>";
+
+    text += "<b>Authors</b> : Helori LANOS, Philippe DUFRESNE<br><br>";
+    
+    text += "<b>Contact</b> :<br>";
+    text += "<a href=\"mailto:contact@chronomodel.fr\">contact@chronomodel.fr</a><br><br>";
+    
+    text += "<b>License</b> :<br>";
+    text += "Chronomodel is released under the <a href=\"http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html\">CeCILL License V2.1</a><br><br>";
     
     mLabel->setText(text);
     
-    mLicenseBut = new Button(tr("Open Licence File"));
-    QFont font = mLicenseBut->font();
-    font.setPointSizeF(pointSize(12));
-    mLicenseBut->setFont(font);
-    connect(mLicenseBut, SIGNAL(clicked()), this, SLOT(showLicense()));
-    
     QVBoxLayout* layout = new QVBoxLayout();
     layout->addWidget(mLabel);
-    layout->addWidget(mLicenseBut);
     setLayout(layout);
     
     setMinimumWidth(600);
@@ -47,18 +43,6 @@ AboutDialog::AboutDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
 AboutDialog::~AboutDialog()
 {
     
-}
-
-void AboutDialog::showLicense()
-{
-    QString path = qApp->applicationDirPath();
-#ifdef Q_OS_MAC
-    QDir dir(path);
-    dir.cdUp();
-    path = dir.absolutePath() + "/Resources";
-#endif
-    path += "/License.txt";
-    QDesktopServices::openUrl(QUrl("file:///" + path, QUrl::TolerantMode));
 }
 
 void AboutDialog::paintEvent(QPaintEvent* e)

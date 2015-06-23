@@ -203,7 +203,7 @@ void MainWindow::createActions()
     mHelpAction->setCheckable(true);
     connect(mHelpAction, SIGNAL(toggled(bool)), this, SLOT(showHelp(bool)));
     
-    mManualAction = new QAction(QIcon(":pdf_p.png"), tr("Manual on line"), this);
+    mManualAction = new QAction(QIcon(":pdf_p.png"), tr("Manual online"), this);
     connect(mManualAction, SIGNAL(triggered()), this, SLOT(openManual()));
     
     mWebsiteAction = new QAction(QIcon(":web_p.png"), tr("Website"), this);
@@ -406,7 +406,7 @@ void MainWindow::updateWindowTitle()
 #pragma mark Settings & About
 void MainWindow::about()
 {
-    AboutDialog dialog(qApp->activeWindow(), Qt::Sheet);
+    AboutDialog dialog(qApp->activeWindow());//, Qt::Sheet);
     dialog.exec();
 }
 
