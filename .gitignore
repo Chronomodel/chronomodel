@@ -2,9 +2,11 @@ build/
 doxygen/
 # propre a chaque systeme, sur windows correspond a QtCreator
 Chronomodel.pro.user*
-
+*.xcodeproj/*
 *.dll
-
+Debug/*
+*.plist
+.qmake.stash
 *.pkg
 
 *.exe
@@ -14,3 +16,5 @@ Chronomodel.pro.user*
 *.mak
 
 *.14C
+
+Info.plist

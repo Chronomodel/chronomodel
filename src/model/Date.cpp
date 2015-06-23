@@ -367,7 +367,7 @@ void Date::updateTheta(Event* event)
     }
 }
 
-void Date::initDelta(Event* event)
+void Date::initDelta(Event*)
 {
     switch(mDeltaType)
     {
@@ -378,7 +378,11 @@ void Date::initDelta(Event* event)
         }
         case eDeltaGaussian:
         {
-            mDelta = event->mTheta.mX - mTheta.mX;
+            // change init of Delta in case of gaussian function since 2015/06 with PhL
+            //mDelta = event->mTheta.mX - mTheta.mX;
+            double tmin = mSettings.mTmin;
+            double tmax = mSettings.mTmax;
+            mDelta = Generator::gaussByDoubleExp(mDeltaAverage,mDeltaError,tmin, tmax);
             break;
         }
         case eDeltaFixed:
