@@ -424,8 +424,9 @@ void MainWindow::appSettings()
 
 void MainWindow::openManual()
 {
-    //QDesktopServices::openUrl(QUrl("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf", QUrl::TolerantMode));//http://www.chronomodel.fr/#/documentation
-    QDesktopServices::openUrl(QUrl("http://www.chronomodel.fr/#/documentation", QUrl::TolerantMode));
+    QDesktopServices::openUrl(QUrl("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf", QUrl::TolerantMode));
+  
+
  /*   QString path = qApp->applicationDirPath();
 #ifdef Q_OS_MAC
     QDir dir(path);
@@ -541,11 +542,11 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     
     bool fileOpened = false;
     //defaultFilePath="";
-    qDebug() << defaultFilePath;
+    //qDebug() << defaultFilePath;
     //mAppSettings.mOpenLastProjectAtLaunch=false;
     if(!defaultFilePath.isEmpty())
     {
-        qDebug() << defaultFilePath;
+        //qDebug() << defaultFilePath;
         QFileInfo fileInfo(defaultFilePath);
         if(fileInfo.isFile())
         {
