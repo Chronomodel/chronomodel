@@ -207,12 +207,14 @@ void EventsScene::updateHelp()
     if(mItems.size() == 0)
     {
         text = tr("Define a study period on the right panel, apply it, and start creating your model by clicking on \"New Event...\".");
+            mHelpView->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=24"); // chapter
     }
     else if(selected.count() == 0)
     {
         text = tr("Select an event or a bound by clicking on it.");
         if(mConstraintItems.size() != 0)
             text += tr("\nYou can also edit constraints by double clicking on the arrow");
+            mHelpView->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=24"); // Chapter
     }
     else if(selected.count() == 1)
     {
@@ -221,14 +223,17 @@ void EventsScene::updateHelp()
         if(mAltIsDown)
         {
             text = tr("Mouve your mouse and click on another element to create a constraint.");
+                mHelpView->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=24");
         }
         else if(mShiftIsDown && !isBound)
         {
             text = tr("Drag the event onto another one to merge them together.");
+                mHelpView->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=24");
         }
         else
         {
-            text = tr("You have selected an element. You can now:\n- Edit its properties from the right panel.\n- Create a constraint by holding the \"Option\" key down and clicking on another element.");
+            text = tr("You have selected an element. You can now:\n- Edit its properties from the right panel.\n- Create a constraint by holding the \"Alt\" key down and clicking on another element.");
+                mHelpView->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=24");
             if(!isBound)
                 text += tr("\n- Merge it with another element by holding the \"Shift\" key down and dragging the selected element onto another one.");
         }
