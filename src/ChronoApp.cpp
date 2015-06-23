@@ -1,4 +1,5 @@
 #include "ChronoApp.h"
+#include "MainWindow.h"
 #include <QtWidgets>
 
 ChronoApp::ChronoApp(int& argc, char** argv):QApplication(argc, argv)
@@ -23,9 +24,14 @@ bool ChronoApp::event(QEvent* e)
     }*/
     if(e->type() == QEvent::FileOpen)
     {
-        QMessageBox box;
+        QString path = static_cast<QFileOpenEvent*>(e)->file();
+        
+        MainWindow* w = MainWindow::getInstance();
+        w->readSettings(path);
+        
+        /*QMessageBox box;
         box.setText(static_cast<QFileOpenEvent*>(e)->file());
-        box.exec();
+        box.exec();*/
     }
     return QApplication::event(e);
 }

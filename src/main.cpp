@@ -1,4 +1,4 @@
-﻿#include "ChronoApp.h"
+#include "ChronoApp.h"
 #include <QtWidgets>
 #include "DarkBlueStyle.h"
 #include "MainController.h"
