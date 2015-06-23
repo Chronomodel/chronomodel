@@ -95,14 +95,17 @@ void MCMCLoopMain::initVariablesForChain()
     {
         Event* event = events[i];
         event->mTheta.mLastAccepts.clear();
+        event->mTheta.mLastAccepts.reserve(acceptBufferLen);
         event->mTheta.mLastAcceptsLength = acceptBufferLen;
         
         for(int j=0; j<event->mDates.size(); ++j)
         {
             Date& date = event->mDates[j];
             date.mTheta.mLastAccepts.clear();
+            date.mTheta.mLastAccepts.reserve(acceptBufferLen);
             date.mTheta.mLastAcceptsLength = acceptBufferLen;
             date.mSigma.mLastAccepts.clear();
+            date.mSigma.mLastAccepts.reserve(acceptBufferLen);
             date.mSigma.mLastAcceptsLength = acceptBufferLen;
         }
     }
@@ -240,6 +243,8 @@ void MCMCLoopMain::initMCMC()
     //  Init sigma i
     // ----------------------------------------------------------------
     emit stepChanged(tr("Initializing variances..."), 0, events.size());
+    QString log;
+    
     for(int i=0; i<events.size(); ++i)
     {
         for(int j=0; j<events[i]->mDates.size(); ++j)
@@ -249,7 +254,11 @@ void MCMCLoopMain::initMCMC()
             
            // date.mSigma.mX = sqrt(shrinkageUniform(events[i]->mS02)); // modif the 2015/05/19 with PhL
            date.mSigma.mX = fabs(date.mTheta.mX-(events[i]->mTheta.mX-date.mDelta));
-            
+           
+            if(date.mSigma.mX<=1E-6){
+               date.mSigma.mX=1E-6; // Add control the 2015/06/15 with PhL
+               log += line(date.mName + textBold("Sigma indiv. <=1E-6 set to 1E-6"));
+            }
             date.mSigma.mSigmaMH = 1.;
         }
         emit stepProgressed(i);
@@ -268,7 +277,7 @@ void MCMCLoopMain::initMCMC()
     // ----------------------------------------------------------------
     //  Log Init
     // ----------------------------------------------------------------
-    QString log;
+    
     
     log += line(textBold("Events Initialisation (with their data)"));
     log += "<br>";

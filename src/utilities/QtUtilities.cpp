@@ -257,7 +257,6 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                         p.drawText( tr, Qt::AlignCenter  | Qt::AlignTop, dateFormat() );
                         
                     }
-                     //7
                 }
                 
                 p.setPen(Qt::black);

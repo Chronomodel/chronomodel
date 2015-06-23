@@ -23,8 +23,8 @@ public:
     void generateNumericalResults(const QList<Chain>& chains);
     QString resultsText(const QString& noResultMessage = QObject::tr("No result to display")) const;
 
-    void saveToStream(QDataStream *out); // ajout PhD
-    void loadFromStream(QDataStream *in); // ajout PhD
+    void saveToStream(QDataStream *out); // added by PhD
+    void loadFromStream(QDataStream *in); // added by PhD
     
 public:
     double mSigmaMH;
@@ -32,10 +32,11 @@ public:
     // Buffer glissant de la taille d'un batch pour calculer la courbe d'évolution
     // du taux d'acceptation chaine par chaine
     
-    QVector<bool> mLastAccepts;//par HL
-    //std::vector<bool> mLastAccepts; // PhD
+    QVector<bool> mLastAccepts;//by HL
+    //std::vector<bool> mLastAccepts; //by PhD
     
     int mLastAcceptsLength;
+    //int mIndexInBatch; // PhD Since 2015/06/15 not use just to compare method
     
     // Buffer contenant toutes les acceptations cumulées pour toutes les chaines
     // sur les parties acquisition uniquement.

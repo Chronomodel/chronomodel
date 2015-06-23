@@ -4,15 +4,18 @@
 #include <QDebug>
 
 
-MHVariable::MHVariable():mLastAcceptsLength(0){}
+MHVariable::MHVariable():
+mLastAcceptsLength(0)
+//,mIndexInBatch(0)
+{}
+
 MHVariable::~MHVariable(){}
 
 bool MHVariable::tryUpdate(const double x, const double rapport)
 {
-   /* if(mLastAccepts.length() >= mLastAcceptsLength)
-        mLastAccepts.removeAt(0);*/
-    if(mLastAccepts.size() >= mLastAcceptsLength)
-     mLastAccepts.erase(mLastAccepts.begin(), mLastAccepts.end());
+   // Original code by HL, it's a moving average
+    if(mLastAccepts.length() >= mLastAcceptsLength)  mLastAccepts.removeAt(0);
+    
     bool accepted = false;
     
     if(rapport >= 1)
@@ -27,12 +30,55 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
     
     if(accepted)
         mX = x;
+     
+    mLastAccepts.append(accepted);
+    mAllAccepts.append(accepted);
     
-    /*mLastAccepts.append(accepted);
-    mAllAccepts.append(accepted);*/
-    mLastAccepts.push_back(accepted); //PhD
+    
+    return accepted;
+    
+    
+    
+    /* PhD version with use of new variable mIndexInBatch */
+    
+   /* bool accepted = false;
+    
+    if(rapport >= 1)
+    {
+        accepted = true;
+    }
+    else
+    {
+        double uniform = Generator::randomUniform();
+        accepted = (rapport >= uniform);
+    }
+    
+    if(accepted)
+        mX = x;
+    
+    // memo
+    if(mIndexInBatch< mLastAcceptsLength-1 ) {
+       mIndexInBatch++;
+    }
+    else {
+        mIndexInBatch=0;
+    }
+    // replace un old value from the Batch before // see maybe : void QVector::prepend(const T & value)
+    mLastAccepts.replace(mIndexInBatch, accepted);
+    
+     qDebug() << "MHVariable::tryUpdate mX " << mX <<"inde"<<mIndexInBatch;
+     for(int i=0; i<mLastAccepts.size(); ++i) {
+     
+     //qDebug() << "MHVariable::getCurrentAcceptRate mLastAccepts[i]" << mLastAccepts[i] ;
+     
+     qDebug() << "Last accept on " << i << " /length" << mLastAccepts.length() << " values"<< mLastAccepts[i];
+     }
+    
+  
     mAllAccepts.push_back(accepted);
     return accepted;
+    */
+     
 }
 
 void MHVariable::reset()
@@ -53,10 +99,11 @@ double MHVariable::getCurrentAcceptRate()
     
     return sum / (double)mLastAccepts.length();*/
     
-    for(int i=0; i<mLastAccepts.size(); ++i)
+    for(int i=0; i<mLastAccepts.size(); ++i) {
         sum += mLastAccepts[i] ? 1.f : 0.f;
-    
-    //qDebug() << "Last accept on " << sum << " / " << mLastAccepts.length() << " values";
+    //qDebug() << "MHVariable::getCurrentAcceptRate mLastAccepts[i]" << mLastAccepts[i] ;
+    //qDebug() << "Last accept on " << i << " / " << mLastAccepts.length() << " values";
+    }
     
     return sum / (double)mLastAccepts.size();
 }
@@ -70,16 +117,17 @@ void MHVariable::saveCurrentAcceptRate()
 QVector<double> MHVariable::acceptationForChain(const QList<Chain>& chains, int index)
 {
     QVector<double> accept;
-    unsigned long long shift = 0;
+     int shift = 0;
     
     for(int i=0; i<chains.size(); ++i)
     {
-       int chainSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + chains[i].mNumRunIter / chains[i].mThinningInterval;
+        int chainSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter) + chains[i].mNumRunIter / chains[i].mThinningInterval;
         
         if(i == index)
         {
-            for(int j=0; j<chainSize; ++j)
+            for(int j=0; j<chainSize; ++j) {
                 accept.append(mHistoryAcceptRateMH[shift + j]);
+            }
             break;
         }
         else
@@ -136,7 +184,7 @@ void MHVariable::saveToStream(QDataStream *out) // ajout PhD
     
     //*out << QVector<bool>::fromStdVector(this->mAllAccepts);
     
-     *out << this->mGlobalAcceptation;
+    *out << this->mGlobalAcceptation;
     *out << this->mHistoryAcceptRateMH;
     *out << this->mLastAccepts;
     
