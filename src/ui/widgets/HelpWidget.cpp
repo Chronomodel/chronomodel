@@ -5,8 +5,26 @@
 
 HelpWidget::HelpWidget(QWidget* parent):QWidget(parent)
 {
+    construct();
+}
+
+HelpWidget::HelpWidget(const QString& text, QWidget* parent):QWidget(parent)
+{
+    construct();
+    setText(text);
+}
+
+void HelpWidget::construct()
+{
     mFont = font();
     mFont.setPointSize(pointSize(11));
+    
+    mHyperLink = new QLabel(this);
+    mHyperLink->setTextFormat(Qt::RichText);
+    mHyperLink->setFont(mFont);
+    mHyperLink->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
+    mHyperLink->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    mHyperLink->setOpenExternalLinks(true);
     
     // Not yet supported with retina display in Qt 5.3
 #ifndef Q_OS_MAC
@@ -16,13 +34,6 @@ HelpWidget::HelpWidget(QWidget* parent):QWidget(parent)
     shadow->setOffset(1, 1);
     setGraphicsEffect(shadow);
 #endif
-}
-
-HelpWidget::HelpWidget(const QString& text, QWidget* parent):QWidget(parent),
-mText(text)
-{
-    mFont = font();
-    mFont.setPointSize(pointSize(11));
 }
 
 HelpWidget::~HelpWidget()
@@ -35,6 +46,10 @@ void HelpWidget::setText(const QString& text)
     mText = text;
     update();
 }
+void HelpWidget::setLink(const QString& url)
+{
+    mHyperLink->setText("<a href=\"" + url + "\">More...</a>");
+}
 
 int HelpWidget::heightForWidth(int w) const
 {
@@ -42,7 +57,7 @@ int HelpWidget::heightForWidth(int w) const
     QRect rect = metrics.boundingRect(QRect(0, 0, w - 10, 1000),
                                       Qt::TextWordWrap | Qt::AlignVCenter | Qt::AlignLeft,
                                       mText);
-    return rect.height() + 10;
+    return rect.height() + 10 + 5 + 15; // 15 is the height of the link, and 5 its margin
 }
 
 void HelpWidget::paintEvent(QPaintEvent* e)
@@ -63,4 +78,9 @@ void HelpWidget::paintEvent(QPaintEvent* e)
     options.setWrapMode(QTextOption::WordWrap);
     options.setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     p.drawText(rect().adjusted(5, 5, -5, -5), mText, options);
+}
+
+void HelpWidget::resizeEvent(QResizeEvent*)
+{
+    mHyperLink->setGeometry(5, height() - 20, width() - 10, 15);
 }

@@ -37,9 +37,9 @@ mButH(25)
     // ----------
     
     mMethodCombo = new QComboBox(mAdvancedWidget);
-    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHIndependant));
-    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eInversion));
-    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
+    mMethodCombo -> addItem(ModelUtilities::getDataMethodText(Date::eMHIndependant));
+    mMethodCombo -> addItem(ModelUtilities::getDataMethodText(Date::eInversion));
+    mMethodCombo -> addItem(ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
     
     mComboH = mMethodCombo->sizeHint().height();
     
@@ -49,19 +49,21 @@ mButH(25)
     mDeltaRangeRadio = new RadioButton(tr("Wiggle Matching : Range"), mAdvancedWidget);
     mDeltaGaussRadio = new RadioButton(tr("Wiggle Matching : Gaussian"), mAdvancedWidget);
     
-    mMethodLab = new Label(tr("Method") + " :", mAdvancedWidget);
-    mDeltaHelp = new HelpWidget(tr("Wiggle Sign : \"+\" if data ≤ event, \"-\" if data ≥ event"), mAdvancedWidget);
-    mDeltaFixedLab = new Label(tr("Value") + " :", mAdvancedWidget);
-    mDeltaMinLab = new Label(tr("Min") + " :", mAdvancedWidget);
-    mDeltaMaxLab = new Label(tr("Max") + " :", mAdvancedWidget);
-    mDeltaAverageLab = new Label(tr("Mean") + " :", mAdvancedWidget);
-    mDeltaErrorLab = new Label(tr("Error (sd)") + " :", mAdvancedWidget);
+    mMethodLab       = new Label(tr("Method") + " :", mAdvancedWidget);
+    mDeltaHelp       = new HelpWidget(tr("Wiggle Sign : \"+\" if data ≤ event, \"-\" if data ≥ event"), mAdvancedWidget);
+    mDeltaHelp->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=11");
     
-    mDeltaFixedEdit = new LineEdit(mAdvancedWidget);
-    mDeltaMinEdit = new LineEdit(mAdvancedWidget);
-    mDeltaMaxEdit = new LineEdit(mAdvancedWidget);
+    mDeltaFixedLab   = new Label(tr("Value") + " :", mAdvancedWidget);
+    mDeltaMinLab     = new Label(tr("Min") + " :", mAdvancedWidget);
+    mDeltaMaxLab     = new Label(tr("Max") + " :", mAdvancedWidget);
+    mDeltaAverageLab = new Label(tr("Mean") + " :", mAdvancedWidget);
+    mDeltaErrorLab   = new Label(tr("Error (sd)") + " :", mAdvancedWidget);
+    
+    mDeltaFixedEdit   = new LineEdit(mAdvancedWidget);
+    mDeltaMinEdit     = new LineEdit(mAdvancedWidget);
+    mDeltaMaxEdit     = new LineEdit(mAdvancedWidget);
     mDeltaAverageEdit = new LineEdit(mAdvancedWidget);
-    mDeltaErrorEdit = new LineEdit(mAdvancedWidget);
+    mDeltaErrorEdit   = new LineEdit(mAdvancedWidget);
     
     // ----------
     
@@ -80,8 +82,8 @@ mButH(25)
     
     // ----------
     
-    mDeltaFixedRadio->setChecked(true);
-    mDeltaFixedEdit->setText(QString::number(0));
+    mDeltaFixedRadio -> setChecked(true);
+    mDeltaFixedEdit  -> setText(QString::number(0));
     
     adaptSize();
 }

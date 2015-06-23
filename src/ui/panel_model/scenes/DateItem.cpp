@@ -99,7 +99,7 @@ void DateItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
     parentItem()->setZValue(2.);
     EventItem* eventItem = dynamic_cast<EventItem*>(parentItem());
-    if(eventItem)
+    if(eventItem)// && e->button() == Qt::LeftButton)
     {
         eventItem->setSelected(true);
         mEventsScene->itemClicked(eventItem, e);

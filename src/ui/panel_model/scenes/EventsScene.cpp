@@ -18,6 +18,7 @@
 EventsScene::EventsScene(QGraphicsView* view, QObject* parent):AbstractScene(view, parent)
 {
     mHelpView = new HelpWidget(view);
+    mHelpView->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=9");
     mHelpTimer = new QTimer(this);
     
     mDatesAnimTimer = new QTimeLine(100);
