@@ -457,19 +457,15 @@ void ModelView::studyPeriodChanging()
 */
 void ModelView::MinEditChanging()
 {
-    qDebug()<<"ModelView::MinEditChanging() avant"<<g_FormatDate<<mTmin<<mTmax;
     mTmin = dateInDouble( mMinEdit->text().toDouble() );
     setSettingsValid(false);
     mEventPropertiesView->hideCalibration();
-    qDebug()<<"ModelView::MinEditChanging() apres"<<g_FormatDate<<mTmin<<mTmax;
 }
 void ModelView::MaxEditChanging()
 {
-    qDebug()<<"ModelView::MaxEditChanging() avant"<<g_FormatDate<<mTmin<<mTmax;
     mTmax = dateInDouble( mMaxEdit->text().toDouble() );
     setSettingsValid(false);
     mEventPropertiesView->hideCalibration();
-    qDebug()<<"ModelView::MaxEditChanging() apres"<<g_FormatDate<<mTmin<<mTmax;
 }
 
 void ModelView::setSettingsValid(bool valid)
@@ -510,7 +506,7 @@ void ModelView::searchEvent()
         }
         ++counter;
     }
-    qDebug() << "Names tried : " << counter << ", bestScore : " << bestScore;
+    //qDebug() << "Names tried : " << counter << ", bestScore : " << bestScore;
     mEventsScene->centerOnEvent(foundId);
 }
 
