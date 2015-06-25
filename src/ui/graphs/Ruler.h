@@ -36,6 +36,9 @@ public:
     double mMax;
     double mZoomProp;
     
+    int mMarginLeft;
+    int mMarginRight;
+    
     AxisTool mAxisTool;
     
 protected:

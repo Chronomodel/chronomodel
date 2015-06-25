@@ -2,6 +2,7 @@
 #include "Painting.h"
 #include "AxisTool.h"
 #include "StdUtilities.h"
+#include "DateUtils.h"
 #include <QtWidgets>
 #include <iostream>
 
@@ -12,6 +13,8 @@ mCurrentMax(1000),
 mMin(0),
 mMax(1000),
 mZoomProp(1.),
+mMarginLeft(20),
+mMarginRight(20),
 mStepMinWidth(50),//define secondary scale
 mStepWidth(100)
 {
@@ -257,8 +260,8 @@ void Ruler::layout()
     int w = width();
     int h = height();
     
-    mScrollBar->setGeometry(0, 0, w, mScrollBarHeight);
-    mRulerRect = QRectF(0, mScrollBarHeight, w, h - mScrollBarHeight);
+    mScrollBar->setGeometry(mMarginLeft, 0, w - mMarginLeft - mMarginRight, mScrollBarHeight);
+    mRulerRect = QRectF(mMarginLeft, mScrollBarHeight, w - mMarginLeft - mMarginRight, h - mScrollBarHeight);
     
     mAxisTool.updateValues(mRulerRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
     update();
@@ -279,10 +282,10 @@ void Ruler::paintEvent(QPaintEvent* e)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     
-    painter.fillRect(mRulerRect, Qt::white);
+    //painter.fillRect(mRulerRect, Qt::white);
     
     // ----------------------------------------------
-    //  Areas
+    //  Areas (used to display green, orange, and red areas)
     // ----------------------------------------------
     
     for(int i=0; i<mAreas.size(); ++i)
@@ -311,7 +314,6 @@ void Ruler::paintEvent(QPaintEvent* e)
     painter.setFont(font);
     
     //mAxisTool.paint(painter, mRulerRect, mStepMinWidth);
-    mAxisTool.paint(painter, mRulerRect, 10);
-    
+    mAxisTool.paint(painter, mRulerRect, 10, DateUtils::convertToAppSettingsFormatStr);
 }
 
