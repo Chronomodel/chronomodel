@@ -1,6 +1,6 @@
 #include "AxisTool.h"
 #include "Painting.h"
-#include "StdUtilities.h";
+#include "StdUtilities.h"
 
 #include <QtWidgets>
 #include <iostream>
@@ -80,7 +80,7 @@ void AxisTool::updateValues(double totalPix, double minDeltaPix, double minVal, 
      qDebug() << "mDeltaPix = " << mDeltaPix;*/
 }
 
-QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
+QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, QString (*valueFormatFunc)(double))
 {
     QPen memoPen(p.pen());
     QBrush memoBrush(p.brush());
@@ -117,9 +117,9 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
         if(mMinMaxOnly) {
             QRectF tr(xo, yo, w, h);
             
-            if (mShowDate) {
-                p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, doubleInStrDate(mStartVal));
-                p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, doubleInStrDate(mStartVal + mDeltaVal * (w/mDeltaPix)));
+            if (valueFormatFunc != 0) {
+                p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, valueFormatFunc(mStartVal));
+                p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, valueFormatFunc(mStartVal + mDeltaVal * (w/mDeltaPix)));
             }
             else {
                 p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, QString::number(mStartVal, 'G', 5));
@@ -130,7 +130,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
         }
         else {
             int i = 0;
-            for(double x = xo + mStartPix - mDeltaPix; x < xo + w; x += mDeltaPix)
+            for(double x = xo + mStartPix - mDeltaPix; x <= xo + mStartPix + w + mDeltaPix; x += mDeltaPix)
             {
                 if((x >= xo)) {
                     if(mShowSubSubs){
@@ -155,7 +155,12 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
                         //else text = QString::number((x-xo)/mPixelsPerUnit + mStartVal, 'G', 5);
                         else
                         */
-                        QString text = (mShowDate ? doubleInStrDate((x-xo)/mPixelsPerUnit + mStartVal) : QString::number(((x-xo)/mPixelsPerUnit + mStartVal)) );
+                        qDebug() << "width : ";
+                        qDebug() << w;
+                        qDebug() << "x : ";
+                        qDebug() << x;
+                        
+                        QString text = (valueFormatFunc ? valueFormatFunc((x-xo)/mPixelsPerUnit + mStartVal) : QString::number(((x-xo)/mPixelsPerUnit + mStartVal)) );
                         
                         int textWidth =  fm.width(text) ;
                         qreal tx = x - textWidth/2;
@@ -258,4 +263,19 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize)
     p.setPen(memoPen);
     p.setBrush(memoBrush);
     return linesPos;
+}
+
+
+
+
+AxisWidget::AxisWidget(FormatFunc funct, QWidget* parent):QWidget(parent),
+mMarginLeft(0),
+mMarginRight(0)
+{
+    mFormatFunct = funct;
+}
+
+void AxisWidget::paintEvent(QPaintEvent*){
+    QPainter p(this);
+    paint(p, QRect(mMarginLeft, 0, width() - mMarginLeft - mMarginRight, height()), 7, mFormatFunct);
 }

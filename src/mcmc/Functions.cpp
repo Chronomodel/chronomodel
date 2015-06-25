@@ -220,10 +220,10 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, double t
     return credibility;
 }
 
-QString intervalText(const QPair<double, QPair<double, double> >& interval, bool isDate)
+QString intervalText(const QPair<double, QPair<double, double> >& interval, FormatFunc formatFunc)
 {    
-    if(isDate){
-        return "[" + doubleInStrDate(interval.second.first) + "; " + doubleInStrDate(interval.second.second) + "] (" + QString::number(interval.first, 'f', 1 ) + "%)";
+    if(formatFunc){
+        return "[" + formatFunc(interval.second.first) + "; " + formatFunc(interval.second.second) + "] (" + QString::number(interval.first, 'f', 1 ) + "%)";
     }
     else {
         return "[" + QString::number(interval.second.first, 'f', 1) + "; " + QString::number(interval.second.second, 'f', 1) + "] (" + QString::number(interval.first, 'f', 1 ) + "%)";
@@ -231,18 +231,18 @@ QString intervalText(const QPair<double, QPair<double, double> >& interval, bool
     
 }
 
-QString getHPDText(const QMap<double, double>& hpd, double thresh, bool isDate)
+QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString& unit, FormatFunc formatFunc)
 {
     QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(hpd, thresh);
     
     QStringList results;
     for(int i=0; i<intervals.size(); ++i)
     {
-        results << intervalText(intervals[i],isDate);
+        results << intervalText(intervals[i], formatFunc);
     }
     QString result = results.join(", ");
-    if (isDate) {
-        result += " "+dateFormat();
+    if(!unit.isEmpty()) {
+        result += " " + unit;
     }
     return result;
 }

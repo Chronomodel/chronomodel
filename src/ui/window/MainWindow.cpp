@@ -418,7 +418,11 @@ void MainWindow::appSettings()
     {
         mAppSettings = dialog.getSettings();
         mProject->setAppSettings(mAppSettings);
-        updateFormatDate();
+        
+        mProjectView->updateFormatDate();
+        if (mViewResultsAction->isEnabled()) {
+            mProjectView->updateLog(mProject->mModel);
+        }
     }
 }
 
@@ -512,7 +516,11 @@ void MainWindow::writeSettings()
     settings.setValue(APP_SETTINGS_STR_CELL_SEP, mAppSettings.mCSVCellSeparator);
     settings.setValue(APP_SETTINGS_STR_DEC_SEP, mAppSettings.mCSVDecSeparator);
     settings.setValue(APP_SETTINGS_STR_OPEN_PROJ, mAppSettings.mOpenLastProjectAtLaunch);
-    settings.setValue(APP_SETTINGS_DEFAULT_FORMATDATE, mAppSettings.mFormatDate);
+    settings.setValue(APP_SETTINGS_STR_PIXELRATIO, mAppSettings.mPixelRatio);
+    settings.setValue(APP_SETTINGS_STR_DPM, mAppSettings.mDpm);
+    settings.setValue(APP_SETTINGS_STR_IMAGE_QUALITY, mAppSettings.mImageQuality);
+    settings.setValue(APP_SETTINGS_STR_FORMATDATE, mAppSettings.mFormatDate);
+    settings.setValue(APP_SETTINGS_STR_PRECISION, mAppSettings.mPrecision);
     settings.endGroup();
     
     settings.endGroup();
@@ -533,8 +541,11 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     mAppSettings.mCSVCellSeparator = settings.value(APP_SETTINGS_STR_CELL_SEP, APP_SETTINGS_DEFAULT_CELL_SEP).toString();
     mAppSettings.mCSVDecSeparator = settings.value(APP_SETTINGS_STR_DEC_SEP, APP_SETTINGS_DEFAULT_DEC_SEP).toString();
     mAppSettings.mOpenLastProjectAtLaunch = settings.value(APP_SETTINGS_STR_OPEN_PROJ, APP_SETTINGS_DEFAULT_OPEN_PROJ).toBool();
-    mAppSettings.mFormatDate = settings.value(APP_SETTINGS_DEFAULT_FORMATDATE,APP_SETTINGS_DEFAULT_FORMATDATE).toString();
-    g_FormatDate = mAppSettings.mFormatDate;
+    mAppSettings.mPixelRatio = settings.value(APP_SETTINGS_STR_PIXELRATIO, APP_SETTINGS_DEFAULT_PIXELRATIO).toInt();
+    mAppSettings.mDpm = settings.value(APP_SETTINGS_STR_DPM, APP_SETTINGS_DEFAULT_DPM).toInt();
+    mAppSettings.mImageQuality = settings.value(APP_SETTINGS_STR_IMAGE_QUALITY, APP_SETTINGS_DEFAULT_IMAGE_QUALITY).toInt();
+    mAppSettings.mFormatDate = (DateUtils::FormatDate)settings.value(APP_SETTINGS_STR_FORMATDATE, APP_SETTINGS_DEFAULT_FORMATDATE).toInt();
+    mAppSettings.mPrecision = settings.value(APP_SETTINGS_STR_FORMATDATE, APP_SETTINGS_DEFAULT_FORMATDATE).toInt();
     settings.endGroup();
     
     mProjectView->showHelp(mAppSettings.mShowHelp);
@@ -626,13 +637,4 @@ void MainWindow::mcmcFinished()
     mViewResultsAction -> setEnabled(true);
     mViewResultsAction -> setChecked(true); // Just checheck the Result Button after computation and mResultsView is show after
     //mViewResultsAction->trigger();
-}
-
-void MainWindow::updateFormatDate()
-{
-    mProjectView -> updateFormatDate();
-    if (mViewResultsAction -> isEnabled()) {
-        mProjectView -> updateLog(mProject -> mModel);
-    }
-    
 }

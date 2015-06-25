@@ -128,7 +128,7 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
 
 void Project::sendUpdateState(const QJsonObject& state, const QString& reason, bool notify)
 {
-#if DEBUG
+#ifdef DEBUG
     qDebug() << " +++  Sending : " << reason;
 #endif
     StateEvent* event = new StateEvent(state, reason, notify);
@@ -148,7 +148,7 @@ bool Project::event(QEvent* e)
     }
     else if(e->type() == 1001)
     {
-#if DEBUG
+#ifdef DEBUG
         qDebug() << "(---) Receiving events selection : adapt checked phases";
 #endif
         emit selectedEventsChanged();
@@ -156,7 +156,7 @@ bool Project::event(QEvent* e)
     }
     else if(e->type() == 1002)
     {
-#if DEBUG
+#ifdef DEBUG
         qDebug() << "(---) Receiving phases selection : adapt selected events";
 #endif
         emit selectedPhasesChanged();
@@ -205,7 +205,7 @@ void Project::updateState(const QJsonObject& state, const QString& reason, bool 
 
 void Project::sendEventsSelectionChanged()
 {
-#if DEBUG
+#ifdef DEBUG
     qDebug() << "(+++) Sending events selection : use marked events";
 #endif
     QEvent* e = new QEvent((QEvent::Type)1001);
@@ -214,7 +214,7 @@ void Project::sendEventsSelectionChanged()
 
 void Project::sendPhasesSelectionChanged()
 {
-#if DEBUG
+#ifdef DEBUG
     qDebug() << "(+++) Sending phases selection : use marked phases";
 #endif
     QEvent* e = new QEvent((QEvent::Type)1002);
@@ -413,7 +413,7 @@ bool Project::saveProjectToFile()
         QFile file(path);
         if(file.open(QIODevice::ReadWrite | QIODevice::Text))
         {
-#if DEBUG
+#ifdef DEBUG
             qDebug() << "Project saved to : " << path;
 #endif
             mLastSavedState = mState;
@@ -432,7 +432,7 @@ bool Project::saveProjectToFile()
     }
     else
     {
-#if DEBUG
+#ifdef DEBUG
         qDebug() << "Nothing new to save in project model";
 #endif
     }

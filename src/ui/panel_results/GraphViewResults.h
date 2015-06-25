@@ -34,7 +34,7 @@ public:
     explicit GraphViewResults(QWidget *parent = 0);
     virtual ~GraphViewResults();
     
-    void setResultToShow(TypeGraph typGraph, Variable variablee, bool showAllChains, const QList<bool>& showChainList, bool showHpd, float threshold, bool showCalib, bool showPosterior, bool showWiggle, bool showRawResults);
+    void setResultToShow(TypeGraph typGraph, Variable variablee, bool showAllChains, const QList<bool>& showChainList, bool showCredibility, float threshold, bool showCalib, bool showWiggle, bool showRawResults);
     
     void setSettings(const ProjectSettings& settings);
     void setMCMCSettings(const MCMCSettings& mcmc, const QList<Chain>& chains);
@@ -93,11 +93,10 @@ protected:
     
     bool mShowAllChains;
     QList<bool> mShowChainList;
-    bool mShowHPD;
+    bool mShowCredibility;
     //int mThresholdHPD;
     float mThresholdHPD;
     
-    bool mShowPosterior;
     bool mShowCalib;
     bool mShowWiggle;
     bool mShowRawResults;

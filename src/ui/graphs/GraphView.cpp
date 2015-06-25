@@ -20,6 +20,8 @@ mShowHorizGrid(true),
 mXAxisMode(eAllTicks),
 mYAxisMode(eAllTicks),
 mAutoAdjustYScale(false),
+mFormatFuncX(0),
+mFormatFuncY(0),
 mShowInfos(false),
 mBackgroundColor(Qt::white),
 mThickness(1),
@@ -234,6 +236,14 @@ void GraphView::setCurvesThickness(int value)
     repaintGraph(true);
 }
 
+void GraphView::setFormatFunctX(FormatFunc f){
+    mFormatFuncX = f;
+}
+
+void GraphView::setFormatFunctY(FormatFunc f){
+    mFormatFuncY = f;
+}
+
 /* ------------------------------------------------------
  Curves & Zones
  ------------------------------------------------------ */
@@ -336,8 +346,13 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
         mTipRect.setWidth(mTipWidth);
         mTipRect.setHeight(mTipHeight);
         
-        mTipX = doubleInDate(getValueForX(  e->x()-0.5 ));
-        mTipY = getValueForY(e->y()+0,5);
+        mTipX = getValueForX(e->x()-0.5);
+        if(mFormatFuncX)
+            mTipX = mFormatFuncX(mTipX).toDouble();
+        
+        mTipY = getValueForY(e->y()+0.5);
+        if(mFormatFuncY)
+            mTipY = mFormatFuncY(mTipY).toDouble();
         
         update(old_rect.adjusted(-30, -30, 30, 30).toRect());
     }
@@ -373,9 +388,7 @@ void GraphView::updateGraphSize(int w, int h)
 {
     mGraphWidth = w - mMarginLeft - mMarginRight;
     mGraphHeight = h - mMarginTop - mMarginBottom;
-    mAxisToolX.mShowDate = XIsDate();
     mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
-    mAxisToolY.mShowDate = false;
     mAxisToolY.updateValues(mGraphHeight, 12, mMinY, mMaxY);
 }
 
@@ -476,7 +489,7 @@ void GraphView::paintEvent(QPaintEvent* )
 
 
 /**
- * @brief draw graphics with axis
+ * @brief draw graphics
  */
 void GraphView::paintToDevice(QPaintDevice* device)
 {
@@ -500,24 +513,18 @@ void GraphView::paintToDevice(QPaintDevice* device)
     //  Curves
     // ----------------------------------------------------
     drawCurves(p);
+    
     // ----------------------------------------------------
     //  Vertical Grid
     // ----------------------------------------------------
-    
-    
-    mAxisToolX.mShowDate = XIsDate();
-    
-    
-    
     if(mXAxisMode != eHidden)
     {
-        if (XIsDate()) {
+        if(!mLegendX.isEmpty()) {
             //QRectF tr(0, mGraphHeight, mMarginLeft, mMarginBottom);
             
             QRectF tr(mMarginLeft, mGraphHeight- mMarginBottom, mGraphWidth, mMarginBottom);
             p.setPen(Qt::black);
-            p.drawText( tr, Qt::AlignRight  | Qt::AlignTop, dateFormat() );
-            
+            p.drawText(tr, Qt::AlignRight | Qt::AlignTop, mLegendX);
         }
         
         mAxisToolX.mShowText    = true;
@@ -526,7 +533,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolX.mShowArrow   = true;
         
         mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
-        QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 7);
+        QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 7, mFormatFuncX);
         
         if(mShowVertGrid)
         {
@@ -543,13 +550,12 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolX.mShowSubs = true;
         mAxisToolX.mShowSubSubs = false;
         mAxisToolX.mShowArrow = true;
-        mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 7);
+        mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 7, mFormatFuncX);
     }
    
     // ----------------------------------------------------
     //  Horizontal Grid
     // ----------------------------------------------------
-    mAxisToolY.mShowDate = false;
     if(mYAxisMode != eHidden)
     {
         mAxisToolY.mShowText = true;
@@ -557,7 +563,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolY.mShowSubSubs = true;
         mAxisToolY.mShowArrow = true;
         mAxisToolY.updateValues(mGraphWidth, mStepMinWidth, mMinY, mMaxY);
-        QVector<qreal> linesYPos = mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), 5);
+        QVector<qreal> linesYPos = mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), 5, mFormatFuncY);
         
         if(mShowHorizGrid)
         {

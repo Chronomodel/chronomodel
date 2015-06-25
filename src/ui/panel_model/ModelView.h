@@ -49,8 +49,8 @@ public slots:
     void applySettings();
     void adjustStep();
     //void studyPeriodChanging();
-    void MinEditChanging();
-    void MaxEditChanging();
+    void minEditChanging();
+    void maxEditChanging();
     
 protected:
     void paintEvent(QPaintEvent* e);

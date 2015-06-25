@@ -175,7 +175,6 @@ void CalibrationView::updateGraphs()
         mCalibGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
         
         mCalibGraph->addCurve(calibCurve);
-        mCalibGraph->setXHasDate(true);
         mCalibGraph->setVisible(true);
         
         if(!isTypo) // mHPDCheck->isChecked() &&
@@ -205,7 +204,7 @@ void CalibrationView::updateGraphs()
             mCalibGraph->setRangeY(0, qMax(1.1f * yMax, mCalibGraph->maximumY()));
             
             double realThresh = map_area(hpd) / map_area(calibCurve.mData);
-            mResultsLab->setText(mResultsLab->text() % "HPD (" % QString::number(100. * realThresh, 'f', 1) + "%) : " % getHPDText(hpd, realThresh * 100.,true)); //  % concatenation with QStringBuilder
+            mResultsLab->setText(mResultsLab->text() % "HPD (" % QString::number(100. * realThresh, 'f', 1) + "%) : " % getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr)); //  % concatenation with QStringBuilder
         }
         
         // ------------------------------------------------------------
@@ -324,10 +323,9 @@ void CalibrationView::exportImage()
     
     int m = 5;
     QRect r(m, m, this->width() - 2*m, this->height() - 2*m);
-    AxisTool axe;
-    axe.mShowSubs = false;
+    
     QFileInfo fileInfo = saveWidgetAsImage(this, r, tr("Save calibration image as..."),
-                                           MainWindow::getInstance()->getCurrentPath(),AppSettings(),axe);
+                                           MainWindow::getInstance()->getCurrentPath(), MainWindow::getInstance()->getAppSettings());
     if(fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
     

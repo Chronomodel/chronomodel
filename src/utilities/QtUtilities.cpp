@@ -129,7 +129,7 @@ QString intListToString(const QList<int>& intList, const QString& separator)
 }
 # pragma mark Save Widget
 
-QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogTitle, const QString& defaultPath, const AppSettings & appSetting, AxisTool& Axe)
+QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogTitle, const QString& defaultPath, const AppSettings & appSetting)
 {
     QFileInfo fileInfo;
     
@@ -157,16 +157,13 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
         //QString fileExtension = fileName.(".svg");
        // bool asSvg = fileName.endsWith(".svg");
        // if(asSvg)
-        QFontMetrics fm((scene ? qApp->font() : widget->font()) );
+        QFontMetrics fm((scene ? qApp->font() : widget->font()));
         
-        int heightText= fm.height()+10;
-        int heightAxe = (Axe.mShowSubs ? fm.height() + 10 : 0);
+        int heightText = fm.height() + 30;
         
-        
-        
-        if (fileExtension == "svg") {
-           
-           if(mGraph)
+        if(fileExtension == "svg")
+        {
+            if(mGraph)
             {
                 mGraph->saveAsSVG(fileName, "Title", "Description",true);
             }
@@ -185,11 +182,9 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 p.end();
             }
             else if(widget)
-            {;
-                saveWidgetAsSVG(widget, r, fileName, Axe);
-                
+            {
+                saveWidgetAsSVG(widget, r, fileName);
             }
-           
         }
         else
         { // save PNG
@@ -204,129 +199,90 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             }
             */
             
-            short pr =  appSetting.mPixelRatio;// 4.;//0.005;
-            //qDebug()<<" pr="<<pr;
-            if(widget)
-            {
-                //QSize wSize = widget->size();
-                if (Axe.mShowSubs){
-                    heightAxe = heightText;
-                }
-                QImage image(r.width() * pr, (r.height() + heightText + heightAxe +20) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
-              //  QImage image(int(r.width() * pr), int((r.height() + versionHeight) * pr), QImage::Format_ARGB32_Premultiplied);
-                //QImage image(wSize, QImage::Format_ARGB32_Premultiplied);
-               // qDebug()<<"r.width() * pr"<< (r.width() * pr)<<" (r.height() + versionHeight) * pr"<<(r.height() + versionHeight) * pr;
-                //qDebug()<<" wSize.width()"<< wSize.width()<<" wSize.height()"<<wSize.height();
-                if (image.isNull() ) {
-                    qDebug()<< " image width = 0";
-                    return fileInfo;
-                }
-                image.setDevicePixelRatio(pr);
-                image.fill(Qt::transparent);
-                
-                //widget->font();
-                
-                QPainter p;
-                p.begin(&image);
-                p.setFont(widget->font());
-                
-                p.setRenderHint(QPainter::Antialiasing);
-                //QRectF tgtRect = image.rect();
-             //   tgtRect.adjust(0, 0, 0, -versionHeight * pr);
-                widget->render(&p, QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), r.height()));
-                //widget->render(&p,QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), r.height()/2));
-                //widget->render(&p,QPoint(0, r.height()/2), QRegion(r.x(), r.y()+r.height()/2, r.width(), r.height()));
-               
-                //Keep it in memory : mMarginLeft(50), mMarginRight(10), mMarginTop(5), mMarginBottom(15), in graphViewAbstract
-               
-                if (Axe.mShowSubs){
-                    
-                    //Axe.updateValues(r.width()-10-50 , Axe.mDeltaPix, Axe.mStartVal, Axe.mEndVal);
-                    
-                    Axe.updateValues(r.width()-10-50 , 50, Axe.mStartVal, Axe.mEndVal);
-                    Axe.mMinMaxOnly = false;
-                    Axe.mShowSubs = true;
-                    Axe.mShowSubSubs = true;
-                    Axe.mShowText = true;
-                    
-                    //Axe.paint(p, QRectF(50, r.height()+10, r.width()-10-50 ,  heightAxe), 7);
-                    Axe.paint(p, QRectF(50, r.height()+10, r.width()-10-50 ,  heightAxe), 7);
-                    if (Axe.mShowDate) {
-                        QRectF tr(0, r.height()+10, 50, heightAxe);
-                        p.setPen(Qt::black);
-                        p.drawText( tr, Qt::AlignCenter  | Qt::AlignTop, dateFormat() );
-                        
-                    }
-                }
-                
-                p.setPen(Qt::black);
-                //versionHeight=heightAxe;
-                
-                p.setFont(widget->font());
-                //p.drawText(0, r.height()+heightAxe+ 10+100, r.width(), versionHeight+100,
-                  //         Qt::AlignCenter,
-                    //       qApp->applicationName() + " " + qApp->applicationVersion());
-                p.drawText(0, r.height() + heightAxe+10, r.width(), heightText,
-                           Qt::AlignCenter,
-                           qApp->applicationName() + " " + qApp->applicationVersion());
-                //mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth ,  mMarginBottom), 5);
-              
-                p.end();
-                //image.save(fileName, "PNG");
-               // char formatExt[];
-                if (fileExtension=="png") {
-                 //   formatExt[] = "png";
-                     image.save(fileName, "png");
-                }
-                else if (fileExtension == "jpg") {
-                    //formatExt[5] = "jpg";
-                     image.save(fileName, "jpg",50);
-                }
-                else if (fileExtension == "bmp") {
-                   
-                    image.save(fileName, "bmp");
-                }
-                    
-                //image.save(fileName, formatExt);
-                /*QImageWriter writer;
-                writer.setFormat("jpg");
-                writer.setQuality(100);
-                writer.setFileName(fileName+"_jpg");
-                writer.write(image);*/
-               
+            // -------------------------------
+            //  Get preferences
+            // -------------------------------
+            short pr = appSetting.mPixelRatio;
+            short dpm = appSetting.mDpm;
+            short quality = appSetting.mImageQuality;
+            
+            // -------------------------------
+            //  Create the image
+            // -------------------------------
+            QImage image(r.width() * pr, (r.height() + heightText) * pr , QImage::Format_ARGB32_Premultiplied);
+            if(image.isNull()){
+                qDebug() << "Cannot export null image!";
+                return fileInfo;
             }
-            else if(scene)
-            {
-                int versionHeight = 20;
-                
-                //qreal pr = 4;//qApp->devicePixelRatio();
-                //qDebug() << "Saving PNG with pixel ratio : " << pr;
-                QImage image(r.width() * pr, (r.height() + versionHeight) * pr, QImage::Format_ARGB32);
-                image.setDevicePixelRatio(pr);
+            
+            // -------------------------------
+            //  Set image properties
+            // -------------------------------
+            image.setDotsPerMeterX(dpm * 11811.024 / 300.);
+            image.setDotsPerMeterY(dpm * 11811.024 / 300.);
+            image.setDevicePixelRatio(pr);
+            
+            // -------------------------------
+            //  Fill background
+            // -------------------------------
+            if (fileExtension == "jpg") {
+                image.fill(Qt::white);
+            }
+            else {
                 image.fill(Qt::transparent);
-                
-                QPainter p;
-                p.begin(&image);
-                p.setRenderHint(QPainter::Antialiasing);
-                
+            }
+            
+            // -------------------------------
+            //  Create painter
+            // -------------------------------
+            QPainter p;
+            p.begin(&image);
+            p.setRenderHint(QPainter::Antialiasing);
+            
+            // -------------------------------
+            //  If widget, draw with or without axis
+            // -------------------------------
+            if(widget){
+                p.setFont(widget->font());
+                widget->render(&p, QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), r.height()));
+            }
+            
+            // -------------------------------
+            //  If scene...
+            // -------------------------------
+            else if(scene){
                 QRectF srcRect = r;
                 srcRect.setX(r.x());
                 srcRect.setY(r.y());
                 srcRect.setWidth(r.width() * pr);
                 srcRect.setHeight(r.height() * pr);
-               
+                
                 QRectF tgtRect = image.rect();
-                tgtRect.adjust(0, 0, 0, -versionHeight * pr);
+                tgtRect.adjust(0, 0, 0, -heightText * pr);
                 
                 scene->render(&p, tgtRect, srcRect);
-                p.setPen(Qt::black);
-                p.drawText(0, r.height(), r.width(), versionHeight,
-                           Qt::AlignCenter,
-                           qApp->applicationName() + " " + qApp->applicationVersion());
-                p.end();
-               image.save(fileName, "PNG");
             }
-           
+            
+            // -------------------------------
+            //  Write application and version
+            // -------------------------------
+            p.setPen(Qt::black);
+            p.drawText(0, r.height(), r.width(), heightText,
+                       Qt::AlignCenter,
+                       qApp->applicationName() + " " + qApp->applicationVersion());
+            p.end();
+            
+            // -------------------------------
+            //  Save file
+            // -------------------------------
+            image.save(fileName, fileExtension.toUtf8(), quality);
+            
+            //image.save(fileName, formatExt);
+            /*QImageWriter writer;
+             writer.setFormat("jpg");
+             writer.setQuality(100);
+             writer.setFileName(fileName+"_jpg");
+             writer.write(image);*/
         }
     }
    // qDebug()<<"QFileInfo saveWidgetAsImage image.save"<<fileName;
@@ -334,12 +290,11 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
     return fileInfo;
 }
 
-bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName,AxisTool& Axe)
+bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName)
 {
     QFontMetrics fm(widget->font());
     
     int heightText= fm.height()+10;
-    int heightAxe = (Axe.mShowSubs ? fm.height()+10 : 0);
     
 
     //int versionHeight = 20;
@@ -357,23 +312,12 @@ bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName,Ax
     p.setFont(widget->font());
     widget->render(&p);
   
-    if (Axe.mDeltaPix>0){
-        
-        //Axe.updateValues(r.width()-10-50 , Axe.mDeltaPix, Axe.mStartVal, Axe.mEndVal);
-        Axe.updateValues(r.width()-10-50 , 50, Axe.mStartVal, Axe.mEndVal);
-        Axe.mMinMaxOnly = false;
-        Axe.mShowSubs = true;
-        Axe.mShowSubSubs = true;
-        Axe.mShowText = true;
-        //Axe.paint(p, QRectF(50, r.height()+heightAxe, r.width()-10-50 ,  heightAxe), 7);
-        Axe.paint(p, QRectF(50, r.height()+10, r.width()-10-50 ,  heightAxe), 7);
-    }
     p.setPen(Qt::black);
    
     //p.drawText(0, r.height()+heightAxe+versionHeight, r.width(), versionHeight,
     //           Qt::AlignCenter,
     //           qApp->applicationName() + " " + qApp->applicationVersion());
-    p.drawText(0, r.height() + heightAxe+10, r.width(), heightText,
+    p.drawText(0, r.height() + 10, r.width(), heightText,
                Qt::AlignCenter,
                qApp->applicationName() + " " + qApp->applicationVersion());
     p.end();

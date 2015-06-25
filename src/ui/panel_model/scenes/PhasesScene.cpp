@@ -132,7 +132,7 @@ void PhasesScene::updateProject()
         
         if(!phases_ids.contains(phase[STATE_ID].toInt()))
         {
-#if DEBUG
+#ifdef DEBUG
             qDebug() << "=> Phase item deleted : " << phase[STATE_ID].toInt();
 #endif
             mItems.removeAt(i);
@@ -165,7 +165,7 @@ void PhasesScene::updateProject()
                 if(phase != itemPhase)
                 {
                     // UPDATE ITEM
-#if DEBUG
+#ifdef DEBUG
                     qDebug() << "Phase item updated : id = " << phase[STATE_ID].toInt();
 #endif
                     item->setPhase(phase);
@@ -200,7 +200,7 @@ void PhasesScene::updateProject()
             }
             
             hasCreated = true;
-#if DEBUG
+#ifdef DEBUG
             qDebug() << "Phase item created : id = " << phase[STATE_ID].toInt();
 #endif
         }
@@ -216,7 +216,7 @@ void PhasesScene::updateProject()
         
         if(!constraints_ids.contains(constraint[STATE_ID].toInt()))
         {
-#if DEBUG
+#ifdef DEBUG
             qDebug() << "Phase Constraint deleted : " << constraint[STATE_ID].toInt();
 #endif
             removeItem(constraintItem);
@@ -242,7 +242,7 @@ void PhasesScene::updateProject()
                 if(constraint != constraintItem)
                 {
                     // UPDATE ITEM
-#if DEBUG
+#ifdef DEBUG
                     qDebug() << "Constraint updated : id = " << constraint[STATE_ID].toInt();
 #endif
                     mConstraintItems[j]->setData(constraint);
@@ -255,7 +255,7 @@ void PhasesScene::updateProject()
             ArrowItem* constraintItem = new ArrowItem(this, ArrowItem::ePhase, constraint);
             mConstraintItems.append(constraintItem);
             addItem(constraintItem);
-#if DEBUG
+#ifdef DEBUG
             qDebug() << "Constraint created : id = " << constraint[STATE_ID].toInt();
 #endif
         }
@@ -284,11 +284,6 @@ void PhasesScene::clean()
     for(int i=mItems.size()-1; i>=0; --i)
     {
         PhaseItem* item = (PhaseItem*)mItems[i];
-        
-#if DEBUG
-        QJsonObject& phase = item->phase();
-        qDebug() << "=> Phase item deleted : " << phase[STATE_ID].toInt();
-#endif
         mItems.removeAt(i);
         
         // ????? This breaks the program!!! Delete abose does the jobs but is it safe?
@@ -304,7 +299,7 @@ void PhasesScene::clean()
     for(int i=mConstraintItems.size()-1; i>=0; --i)
     {
         ArrowItem* constraintItem = mConstraintItems[i];
-#if DEBUG
+#ifdef DEBUG
         QJsonObject& constraint = constraintItem->data();
         qDebug() << "Phase Constraint deleted : " << constraint[STATE_ID].toInt();
 #endif

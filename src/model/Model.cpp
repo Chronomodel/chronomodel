@@ -1045,7 +1045,7 @@ void Model::restoreFromFile(const QString& fileName)
 
         QByteArray uncompresedData = qUncompress(compressedData);
 
-/* #if DEBUG
+/* #ifdef DEBUG
         qDebug() << "Lecture fichier :"<< fileName;
         qDebug() << "TAILLE compressedData :" << compressedData.size();
         qDebug() << "TAILLE uncompresedData :" << uncompresedData.size();

@@ -17,7 +17,7 @@ mCurrentTypeGraph(eHisto),
 mCurrentVariable(eTheta),
 mMinHeighttoDisplayTitle(100),
 mShowAllChains(true),
-mShowHPD(false),
+mShowCredibility(false),
 mThresholdHPD(95),
 mShowCalib(false),
 mShowWiggle(false),
@@ -112,15 +112,14 @@ GraphViewResults::~GraphViewResults()
     
 }
 
-void GraphViewResults::setResultToShow(TypeGraph typGraph, Variable variable, bool showAllChains, const QList<bool>& showChainList, bool showHpd, float threshold, bool showCalib, bool showPosterior, bool showWiggle, bool showRawResults)
+void GraphViewResults::setResultToShow(TypeGraph typGraph, Variable variable, bool showAllChains, const QList<bool>& showChainList, bool showCredibility, float threshold, bool showCalib, bool showWiggle, bool showRawResults)
 {
     mCurrentTypeGraph = typGraph;
     mCurrentVariable = variable;
     mShowAllChains = showAllChains;
     mShowChainList = showChainList;
-    mShowHPD = showHpd;
+    mShowCredibility = showCredibility;
     mThresholdHPD = threshold;
-    mShowPosterior = showPosterior;
     mShowCalib = showCalib;
     mShowWiggle = showWiggle;
     mShowRawResults = showRawResults;

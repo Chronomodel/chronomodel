@@ -44,6 +44,9 @@ void GraphViewEvent::setEvent(Event* event)
 
 void GraphViewEvent::refresh()
 {
+    // ------------------------------------------------
+    //  Reset the graph object settings
+    // ------------------------------------------------
     mGraph->removeAllCurves();
     mGraph->removeAllZones();
     mGraph->clearInfos();
@@ -77,8 +80,14 @@ void GraphViewEvent::refresh()
         QString results = ModelUtilities::eventResultsText(mEvent, false);
         setNumericalResults(results);
         
+        // ------------------------------------------------
+        //  first tab : Posterior distrib
+        // ------------------------------------------------
         if(mCurrentTypeGraph == eHisto)
         {
+            mGraph->mLegendX = DateUtils::getAppSettingsFormat();
+            mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
+            
             if (mEvent->type()==Event::eKnown) {
                 mTitle = tr("Bound ") + " : " + mEvent->mName;
             }
@@ -87,7 +96,6 @@ void GraphViewEvent::refresh()
             mGraph->setBackgroundColor(QColor(230, 230, 230));
             if(mCurrentVariable == eTheta)
             {
-                mGraph->setXHasDate(true);
                 mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
                 
                 if(isFixedBound)
@@ -122,7 +130,6 @@ void GraphViewEvent::refresh()
                         curve.mIsRectFromZero = true;
                         curve.mData = bound->mValues;
                         mGraph->addCurve(curve);
-                        mGraph->setXHasDate(true);
                         double yMax = 1.1f * map_max_value(curve.mData);
                         mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                     }
@@ -187,13 +194,12 @@ void GraphViewEvent::refresh()
                             //curve.mData = equal_areas(mEvent->mTheta.histoForChain(i), 1.f);
                             curve.mData = mEvent->mTheta.histoForChain(i);
                             mGraph->addCurve(curve);
-                            mGraph->setXHasDate(false);
                             
                             double yMax = 1.1f * map_max_value(curve.mData);
                             mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                         }
                     }
-                    if(mShowAllChains && mShowHPD)
+                    if(mShowAllChains && mShowCredibility)
                     {
                         GraphCurve curveCred;
                         curveCred.mName = "credibility full";
@@ -208,19 +214,22 @@ void GraphViewEvent::refresh()
                     }
                 }
             }
+            // ------------------------------------------------
+            //  Events don't have std dev BUT we can visualize
+            //  an overlay of all dates std dev instead.
+            // ------------------------------------------------
             else if(mCurrentVariable == eSigma)
             {
-                mGraph->setXHasDate(false);
-                // On est en train de regarder les variances des data
-                // On affiche donc ici la superposition des variances (et pas le résultat de theta f)
+                mGraph->mLegendX = "";
+                mGraph->setFormatFunctX(0);
+                
                 if (mEvent->type()==Event::eKnown) {
                     mTitle = tr("Bound ") + " : " + mEvent->mName;
                 }
                 else mTitle = tr("Std") + " : " + mEvent->mName;
                 mGraph->setBackgroundColor(QColor(Qt::white));
                 mGraph->autoAdjustYScale(true);
-               // mGraph->setCurrentX(0, mSettings.mTmax-mSettings.mTmin);
-              
+                // mGraph->setCurrentX(0, mSettings.mTmax-mSettings.mTmin);
                 mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
                 double yMax = 0;
                 
@@ -234,7 +243,6 @@ void GraphViewEvent::refresh()
                         curve.setPen(defaultPen);
                         curve.mPen.setColor(color);
                         curve.mIsHisto = false;
-                        //curve.mData = equal_areas(date.mSigma.fullHisto(), 1.f);
                         curve.mData = date.mSigma.fullHisto();
                         mGraph->addCurve(curve);
                         
@@ -252,7 +260,6 @@ void GraphViewEvent::refresh()
                             curve.setPen(defaultPen);
                             curve.mPen.setColor(col);
                             curve.mIsHisto = false;
-                            //curve.mData = equal_areas(date.mSigma.histoForChain(j), 1.f);
                             curve.mData = date.mSigma.histoForChain(j);
                             mGraph->addCurve(curve);
                             
@@ -263,9 +270,14 @@ void GraphViewEvent::refresh()
                 }
             }
         }
+        // ------------------------------------------------
+        //  second tab : History plots
+        // ------------------------------------------------
         else if(mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta)
         {
-            mGraph->setXHasDate(false);
+            mGraph->mLegendX = "iterations";
+            mGraph->setFormatFunctX(0);
+            
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
                 if(mShowChainList[i])
@@ -317,9 +329,14 @@ void GraphViewEvent::refresh()
                 mGraph->setRangeY(floor(min), ceil(max));
             }
         }
+        // ------------------------------------------------
+        //  third tab : Acception rate
+        // ------------------------------------------------
         else if(mCurrentTypeGraph == eAccept && mCurrentVariable == eTheta && mEvent->mMethod == Event::eMHAdaptGauss)
         {
-            mGraph->setXHasDate(false);
+            mGraph->mLegendX = "iterations";
+            mGraph->setFormatFunctX(0);
+            
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
                 if(mShowChainList[i])
@@ -352,9 +369,14 @@ void GraphViewEvent::refresh()
                 mGraph->addCurve(curveTarget);
             }
         }
+        // ------------------------------------------------
+        //  fourth tab : Autocorrelation
+        // ------------------------------------------------
         else if(mCurrentTypeGraph == eCorrel && mCurrentVariable == eTheta && !isFixedBound)
         {
-            mGraph->setXHasDate(false);
+            mGraph->mLegendX = "";
+            mGraph->setFormatFunctX(0);
+            
             int chainIdx = -1;
             for(int i=0; i<mShowChainList.size(); ++i)
                 if(mShowChainList[i])

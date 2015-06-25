@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include "MCMCLoopMain.h"
+#include "AxisTool.h"
 
 class QStackedWidget;
 class QScrollArea;
@@ -164,7 +165,6 @@ private:
     Label* mRenderLab;
     QComboBox* mRenderCombo;
     
-       
     Label* mChainsTitle;
     QWidget* mChainsGroup;
     CheckBox* mAllChainsCheck;
@@ -175,7 +175,6 @@ private:
     QWidget* mResultsGroup;
     RadioButton* mDataThetaRadio;
     
-    //CheckBox* mDataPosteriorCheck; // new PhD //suppr le 28/04/2015
     CheckBox* mDataCalibCheck;
     CheckBox* mWiggleCheck;
     RadioButton* mDataSigmaRadio;

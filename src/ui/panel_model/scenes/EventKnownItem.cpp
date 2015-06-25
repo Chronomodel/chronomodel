@@ -79,7 +79,8 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     curve.mIsRectFromZero = true;
     curve.mIsHisto = (bound.knownType() == EventKnown::eUniform);
     graph->addCurve(curve);
-    graph->setXHasDate(true);
+    graph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
+    graph->mLegendX = DateUtils::getAppSettingsFormat();
     
     mThumb = QPixmap(graph->size());
     graph->render(&mThumb);

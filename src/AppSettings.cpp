@@ -1,8 +1,6 @@
 #include "AppSettings.h"
 #include <QString>
 
-QString g_FormatDate(APP_SETTINGS_DEFAULT_FORMATDATE);
-
 AppSettings::AppSettings():
 mAutoSave(APP_SETTINGS_DEFAULT_AUTO_SAVE),
 mAutoSaveDelay(APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC),
@@ -11,7 +9,10 @@ mCSVCellSeparator(APP_SETTINGS_DEFAULT_CELL_SEP),
 mCSVDecSeparator(APP_SETTINGS_DEFAULT_DEC_SEP),
 mOpenLastProjectAtLaunch(APP_SETTINGS_DEFAULT_OPEN_PROJ),
 mPixelRatio(APP_SETTINGS_DEFAULT_PIXELRATIO),
-mFormatDate(g_FormatDate)
+mDpm(APP_SETTINGS_DEFAULT_DPM),
+mImageQuality(APP_SETTINGS_DEFAULT_IMAGE_QUALITY),
+mFormatDate(APP_SETTINGS_DEFAULT_FORMATDATE),
+mPrecision(APP_SETTINGS_DEFAULT_PRECISION)
 {
     
 }
@@ -36,7 +37,10 @@ void AppSettings::copyFrom(const AppSettings& s)
     mCSVDecSeparator = s.mCSVDecSeparator;
     mOpenLastProjectAtLaunch = s.mOpenLastProjectAtLaunch;
     mPixelRatio = s.mPixelRatio;
+    mDpm = s.mDpm;
+    mImageQuality = s.mImageQuality;
     mFormatDate = s.mFormatDate;
+    mPrecision = s.mPrecision;
 }
 AppSettings::~AppSettings()
 {

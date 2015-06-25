@@ -4,6 +4,8 @@
 #include <QVector>
 #include <QPainter>
 #include <QRectF>
+#include <QWidget>
+#include "StdUtilities.h"
 
 
 class AxisTool
@@ -11,7 +13,7 @@ class AxisTool
 public:
     AxisTool();
     void updateValues(double totalPix, double minDeltaPix, double minVal, double maxVal);
-    QVector<qreal> paint(QPainter& p, const QRectF& r, qreal heigthSize);
+    QVector<qreal> paint(QPainter& p, const QRectF& r, qreal heigthSize, QString (*valueFormatFunc)(double) = 0);
     
 public:
     bool mIsHorizontal;
@@ -20,7 +22,6 @@ public:
     bool mShowText;
     bool mMinMaxOnly;
     bool mShowArrow;
-    bool mShowDate;
     
     double mDeltaVal;
     double mDeltaPix;
@@ -31,6 +32,22 @@ public:
     QFont    mfont;
     
     QColor mAxisColor;
+    QString mLegend;
+};
+
+class AxisWidget: public QWidget, public AxisTool{
+public:
+    AxisWidget(FormatFunc funct = 0, QWidget* parent = 0);
+    
+protected:
+    void paintEvent(QPaintEvent* e);
+    
+private:
+    FormatFunc mFormatFunct;
+    
+public:
+    int mMarginLeft;
+    int mMarginRight;
 };
 
 #endif

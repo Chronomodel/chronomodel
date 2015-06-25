@@ -25,12 +25,6 @@ QDialog(parent, flags)
     positiveValidator->setBottom(1);
     mAutoSaveDelayEdit->setValidator(positiveValidator);
     
-    mPixelRatioLab = new Label(tr("Pixel Ratio") + ": ", this);
-    mPixelRatio = new QSpinBox(this);
-    mPixelRatio->setRange(1, 5);
-    mPixelRatio->setSingleStep(1);
-    mPixelRatio->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
-    
     mCSVCellSepLab = new Label(tr("CSV cell separator") + " : ", this);
     mCSVCellSepEdit = new LineEdit(this);
     mCSVCellSepEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
@@ -41,22 +35,40 @@ QDialog(parent, flags)
     mOpenLastProjectLab = new Label(tr("Open last project at launch") + " : ", this);
     mOpenLastProjectCheck = new CheckBox(this);
     
+    mPixelRatioLab = new Label(tr("Pixel Ratio") + ": ", this);
+    mPixelRatio = new QSpinBox(this);
+    mPixelRatio->setRange(1, 5);
+    mPixelRatio->setSingleStep(1);
+    
+    mDpmLab = new Label(tr("Images export DPM") + ": ", this);
+    mDpm = new QComboBox(this);
+    mDpm->addItems(QStringList() << "72" << "96" << "100" << "150" << "200" << "300");
+    
+    mImageQualityLab = new Label(tr("Image export quality (0 to 100)") + ": ", this);
+    mImageQuality = new QSpinBox(this);
+    mImageQuality->setRange(1, 100);
+    mImageQuality->setSingleStep(1);
+    
+    mFormatDateLab = new Label(tr("Date Format") + " :", this);
+    mFormatDateLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    mFormatDate = new QComboBox(this);
+    for(int i=0; i<3; ++i){
+        mFormatDate->addItem(DateUtils::formatString((DateUtils::FormatDate)i));
+    }
+    mFormatDate->setCurrentIndex(0);
+    mFormatDate->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+    mFormatDate->setVisible(true);
+    
+    mPrecisionLab = new Label(tr("Date Precision") + " :", this);
+    mPrecision = new QSpinBox(this);
+    mPrecision->setRange(1, 5);
+    mPrecision->setSingleStep(1);
+    
     mOkBut = new Button(tr("OK"), this);
     mCancelBut = new Button(tr("Cancel"), this);
     mResetBut = new Button(tr("Reset"), this);
     
     mOkBut->setAutoDefault(true);
-    
-    
-    mFormatDateLab = new Label(tr("Date Format") + " :", this);
-    mFormatDateLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    mFormatDate = new QComboBox(this);
-    mFormatDate->addItem("BC/AD");
-    mFormatDate->addItem("Cal BP");
-    mFormatDate->addItem("Cal B2K");
-    mFormatDate->setCurrentText("BC/AC");
-    mFormatDate->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
-    mFormatDate->setVisible(true);
     
     
     
@@ -66,7 +78,7 @@ QDialog(parent, flags)
     connect(mCancelBut, SIGNAL(clicked()), this, SLOT(reject()));
     connect(mResetBut, SIGNAL(clicked()), this, SLOT(reset()));
     
-    setFixedSize(350, 250);
+    setFixedSize(350, 325);
 }
 
 AppSettingsDialog::~AppSettingsDialog()
@@ -86,9 +98,10 @@ void AppSettingsDialog::setSettings(const AppSettings& settings)
     mOpenLastProjectCheck->setChecked(settings.mOpenLastProjectAtLaunch);
     
     mPixelRatio->setValue(settings.mPixelRatio);
-    mFormatDate->setCurrentText(settings.mFormatDate);
-    g_FormatDate = settings.mFormatDate;
-    qDebug()<<"AppSettingsDialog::setSettings gformat"<<g_FormatDate;
+    mDpm->setCurrentText(QString(settings.mDpm));
+    mImageQuality->setValue(settings.mImageQuality);
+    mFormatDate->setCurrentIndex((int)settings.mFormatDate);
+    mPrecision->setValue(settings.mPrecision);
 }
 
 AppSettings AppSettingsDialog::getSettings()
@@ -100,26 +113,29 @@ AppSettings AppSettingsDialog::getSettings()
     settings.mCSVDecSeparator = mCSVDecSepEdit->text();
     settings.mOpenLastProjectAtLaunch = mOpenLastProjectCheck->isChecked();
     settings.mPixelRatio = mPixelRatio->value();
-    g_FormatDate = mFormatDate->currentText();
-    settings.mFormatDate = g_FormatDate;
+    settings.mDpm = mDpm->currentText().toShort();
+    settings.mImageQuality = mImageQuality->value();
+    settings.mFormatDate = (DateUtils::FormatDate)mFormatDate->currentIndex();
+    settings.mPrecision = mPrecision->value();
     return settings;
 }
 
 void AppSettingsDialog::reset()
 {
-    mAutoSaveCheck->setChecked(true);
-    mAutoSaveDelayEdit->setText("5");
+    mAutoSaveCheck->setChecked(APP_SETTINGS_DEFAULT_AUTO_SAVE);
+    mAutoSaveDelayEdit->setText(QString(APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC / 60));
     mAutoSaveDelayEdit->setEnabled(true);
     
-    mCSVCellSepEdit->setText(",");
-    mCSVDecSepEdit->setText(".");
+    mCSVCellSepEdit->setText(APP_SETTINGS_DEFAULT_CELL_SEP);
+    mCSVDecSepEdit->setText(APP_SETTINGS_DEFAULT_DEC_SEP);
     
-    mOpenLastProjectCheck->setChecked(true);
+    mOpenLastProjectCheck->setChecked(APP_SETTINGS_DEFAULT_OPEN_PROJ);
     
-    mPixelRatio->setValue(1);
-    g_FormatDate = APP_SETTINGS_DEFAULT_FORMATDATE;
-    mFormatDate->setCurrentText(g_FormatDate);
-    
+    mPixelRatio->setValue(APP_SETTINGS_DEFAULT_PIXELRATIO);
+    mDpm->setCurrentText(QString(APP_SETTINGS_DEFAULT_DPM));
+    mImageQuality->setValue(APP_SETTINGS_DEFAULT_IMAGE_QUALITY);
+    mFormatDate->setCurrentIndex((int)APP_SETTINGS_DEFAULT_FORMATDATE);
+    mPrecision->setValue(APP_SETTINGS_DEFAULT_PRECISION);
 }
 
 void AppSettingsDialog::resizeEvent(QResizeEvent* e)
@@ -155,8 +171,17 @@ void AppSettingsDialog::resizeEvent(QResizeEvent* e)
     mPixelRatioLab->setGeometry(m, y += (lineH + m), w1, lineH);
     mPixelRatio->setGeometry(2*m + w1, y, w2, lineH);
     
+    mDpmLab->setGeometry(m, y += (lineH + m), w1, lineH);
+    mDpm->setGeometry(2*m + w1, y, w2, lineH);
+    
+    mImageQualityLab->setGeometry(m, y += (lineH + m), w1, lineH);
+    mImageQuality->setGeometry(2*m + w1, y, w2, lineH);
+    
     mFormatDateLab->setGeometry(m, y += (lineH + m), w1, lineH);
     mFormatDate->setGeometry(2*m + w1, y, w2, lineH);
+    
+    mPrecisionLab->setGeometry(m, y += (lineH + m), w1, lineH);
+    mPrecision->setGeometry(2*m + w1, y, w2, lineH);
     
     
     mResetBut->setGeometry(width() - 3*m - 3*butW, height() - m - butH, butW, butH);

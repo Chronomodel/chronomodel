@@ -449,7 +449,7 @@ QVector<double> MetropolisVariable::correlationForChain(int index)
 
 
 
-QString MetropolisVariable::resultsText(const QString& noResultMessage) const
+QString MetropolisVariable::resultsText(const QString& noResultMessage, const QString& unit, FormatFunc formatFunc) const
 {
     if(mHisto.isEmpty())
         return noResultMessage;
@@ -458,9 +458,9 @@ QString MetropolisVariable::resultsText(const QString& noResultMessage) const
     
     int precision = 1;
     
-    result += "HPD Region (" + QString::number(mThreshold, 'f', 1) + "%) : " + getHPDText(mHPD, mThreshold,mIsDate) + "<br>";
-    if (mIsDate) {
-        result += "Credibility Interval (" + QString::number(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + doubleInStrDate(mCredibility.first) + ", " + doubleInStrDate(mCredibility.second) + "] "+dateFormat();
+    result += "HPD Region (" + QString::number(mThreshold, 'f', 1) + "%) : " + getHPDText(mHPD, mThreshold, unit, formatFunc) + "<br>";
+    if (formatFunc) {
+        result += "Credibility Interval (" + QString::number(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + formatFunc(mCredibility.first) + ", " + formatFunc(mCredibility.second) + "] " + unit;
     }
     else {
         result += "Credibility Interval (" + QString::number(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + QString::number(mCredibility.first, 'f', precision) + ", " + QString::number(mCredibility.second, 'f', precision) + "]";

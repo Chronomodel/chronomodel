@@ -23,11 +23,6 @@ GraphViewAbstract::~GraphViewAbstract(){}
 double GraphViewAbstract::rangeX() const {return mMaxX - mMinX;}
 double GraphViewAbstract::rangeY() const {return mMaxY - mMinY;}
 
-bool GraphViewAbstract::XIsDate() const
-{
-    return mXIsDate;
-}
-
 double GraphViewAbstract::getCurrentMaxX() const {return mCurrentMaxX;}
 double GraphViewAbstract::getCurrentMinX() const {return mCurrentMinX;}
 
@@ -51,8 +46,7 @@ void GraphViewAbstract::setRangeX(const double aMinX, const double aMaxX)
     mMaxX = aMaxX;
     //mCurrentMinX = aMinX;
     //mCurrentMaxX = aMaxX;
-   // repaintGraph(true);
-    
+    //repaintGraph(true);
 }
 
 void GraphViewAbstract::setCurrentX(const double aMinX, const double aMaxX)
@@ -144,9 +138,4 @@ double GraphViewAbstract::valueForProportion(const double value, const double va
         v2 = inRange(Pmin,v2,Pmax);
 	}
 	return v2;
-}
-
-void GraphViewAbstract::setXHasDate(const bool aIsDate)
-{
-    mXIsDate = aIsDate;
 }

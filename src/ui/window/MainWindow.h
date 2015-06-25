@@ -39,8 +39,6 @@ public:
     void setRunEnabled(bool enabled);
     void setLogEnabled(bool enabled);
     void setResultsEnabled(bool enabled);
-    
-    void updateFormatDate();
 
 protected:
     void closeEvent(QCloseEvent* e);

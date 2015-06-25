@@ -437,44 +437,4 @@ double map_area(const QMap<double, double>& map)
     return srcArea;
 }
 
-QString doubleInStrDate(const double date)
-{
-    char format = 'f';
-    int precision = 0;
-    if (date>250000){
-        format = 'G';
-    }
-    
-    double dateInFormat = doubleInDate(date);
-    if (fabs(dateInFormat)<1E-6) {
-        return "0";
-    }
-    else return QString::number(dateInFormat,format,precision);
-        
-      
-}
-QString dateFormat()
-{
-    return g_FormatDate;
-}
 
-double dateInDouble(const double date)
-{
-    //double dateInFormat = 0;
-    if (g_FormatDate=="BC/AD") {
-        return  date;
-    }
-    else if (g_FormatDate=="Cal BP"){
-        return (1950.-date);
-    }
-    else if (g_FormatDate=="Cal B2K"){
-        return (2000.-date);
-    }
-    else  return date;
-   //return dateInFormat;
-    
-}
-double doubleInDate(const double value)
-{
-    return dateInDouble(value);
-}

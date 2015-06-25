@@ -22,8 +22,6 @@ public:
     double minimumY() const;
     double maximumY() const;
     
-    bool XIsDate() const;
-    
     int marginLeft() const;
     int marginRight() const;
     int marginTop() const;
@@ -39,8 +37,6 @@ public:
 	void setMaximumX(const double aMaxX);
 	void setMinimumY(const double aMinY);
     void setMaximumY(const double aMaxY);
-    
-    void setXHasDate(const bool aIsDate);
     
     void setMarginLeft(const int aMarginLeft);
 	void setMarginRight(const int aMarginRight);
@@ -74,7 +70,5 @@ protected:
     
     double   mCurrentMinX;
     double   mCurrentMaxX;
-    
-    bool mXIsDate;
 };
 

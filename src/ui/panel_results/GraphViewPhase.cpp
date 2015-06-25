@@ -22,7 +22,8 @@ mPhase(0)
     mDurationGraph = new GraphView(this);
     mDurationGraph -> setBackgroundColor(QColor(230, 230, 230));
     mDurationGraph -> addInfo(tr("WARNING : this graph scale is NOT the study period!"));
-    
+    mDurationGraph -> mLegendX = "";
+    mDurationGraph -> setFormatFunctX(0);
     mDurationGraph -> showHorizGrid(false);
     mDurationGraph -> setXAxisMode(GraphView::eAllTicks);
     mDurationGraph -> setYAxisMode(GraphView::eMinMax);
@@ -139,10 +140,14 @@ void GraphViewPhase::refresh()
     {
         QColor color = mPhase->mColor;
 
-        /* Dessine une densité*/
+        // ------------------------------------------------
+        //  first tab : posterior distrib
+        // ------------------------------------------------
         if(mCurrentTypeGraph == eHisto && mCurrentVariable == eTheta)
         {
-            mGraph->setXHasDate(true);
+            mGraph->mLegendX = DateUtils::getAppSettingsFormat();
+            mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
+            
             mShowDuration->setVisible(true);
             /*
              mShowDuration->setChecked(false);
@@ -227,9 +232,6 @@ void GraphViewPhase::refresh()
                 curveAlphaHPD.mBrush.setColor(HPDAlphaColor);
                 curveAlphaHPD.mIsHisto = false;
                 curveAlphaHPD.mIsRectFromZero = true;
-                //double realThresh = map_area(mPhase->mAlpha.mHPD) / map_area(mPhase->mAlpha.fullHisto());
-                //qDebug()<<"alpha"<<realThresh;
-                //curveAlphaHPD.mData = equal_areas(mPhase->mAlpha.mHPD, realThresh);
                 curveAlphaHPD.mData = mPhase->mAlpha.mHPD;
                 
                 mGraph->addCurve(curveAlphaHPD);
@@ -248,9 +250,6 @@ void GraphViewPhase::refresh()
                 
                 curveBetaHPD.mIsHisto = false;
                 curveBetaHPD.mIsRectFromZero = true;
-                //realThresh = map_area(mPhase->mBeta.mHPD) / map_area(mPhase->mBeta.fullHisto());
-                //qDebug()<<"beta"<<realThresh;
-                //curveBetaHPD.mData = equal_areas(mPhase->mBeta.mHPD, realThresh);
                 curveBetaHPD.mData = mPhase->mBeta.mHPD;
                 mGraph->addCurve(curveBetaHPD);
                 
@@ -295,7 +294,6 @@ void GraphViewPhase::refresh()
 
                     mDurationGraph->setRangeY(0, max);
                     mDurationGraph->addCurve(curveDurHPD);
-                    mDurationGraph->setXHasDate(false);
                 }
                 /* Draw alpha and beta without smoothing*/
                 if(mShowRawResults)
@@ -330,7 +328,6 @@ void GraphViewPhase::refresh()
                 if(mShowChainList[i])
                 {
                     QColor col = Painting::chainColors[i];
-                    mGraph->setXHasDate(true);
                     GraphCurve curveAlphaChain;
                     curveAlphaChain.mName = mTitle+" : "+QString(tr("alpha chain ") + QString::number(i));
                     curveAlphaChain.mPen.setColor(col);
@@ -358,10 +355,14 @@ void GraphViewPhase::refresh()
             }
         }
 
-        /* Dessine une trace*/
+        // ------------------------------------------------
+        //  second tab : history plot
+        // ------------------------------------------------
         else if(mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta)
         {
-            mGraph->setXHasDate(false);
+            mGraph->mLegendX = "Iterations";
+            mGraph->setFormatFunctX(0);
+            
             mShowDuration->setVisible(false);
             mShowDuration->setChecked(false);
             showDuration(false);

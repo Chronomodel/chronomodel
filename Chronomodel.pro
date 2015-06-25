@@ -329,6 +329,7 @@ HEADERS += src/utilities/Singleton.h
 HEADERS += src/utilities/StdUtilities.h
 HEADERS += src/utilities/QtUtilities.h
 HEADERS += src/utilities/DoubleValidator.h
+HEADERS += src/utilities/DateUtils.h
 
 
 #########################################
@@ -459,6 +460,7 @@ SOURCES += src/ui/window/ProjectView.cpp
 SOURCES += src/utilities/StdUtilities.cpp
 SOURCES += src/utilities/QtUtilities.cpp
 SOURCES += src/utilities/DoubleValidator.cpp
+SOURCES += src/utilities/DateUtils.cpp
 
 
 message("-------------------------------------------")

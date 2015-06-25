@@ -49,12 +49,21 @@ private:
     Label* mPixelRatioLab;
     QSpinBox* mPixelRatio;
     
-    Button* mResetBut;
-    Button* mOkBut;
-    Button* mCancelBut;
+    Label* mDpmLab;
+    QComboBox* mDpm;
+    
+    Label* mImageQualityLab;
+    QSpinBox* mImageQuality;
     
     Label* mFormatDateLab;
     QComboBox* mFormatDate;
+    
+    Label* mPrecisionLab;
+    QSpinBox* mPrecision;
+    
+    Button* mResetBut;
+    Button* mOkBut;
+    Button* mCancelBut;
 };
 
 #endif

@@ -150,6 +150,9 @@ mZoomCorrel(0)
         //connect(mRuler, SIGNAL(valueChanged(int)), this, SLOT(updateRuler(int)));
     connect(mRuler, SIGNAL(positionChanged(double, double)), this, SLOT(updateScroll(double, double)));
         // connect(mRuler, SIGNAL(positionChanged(double, double)), this, SLOT(currentChanged(double, double)));
+    mRuler->mMarginLeft = 50;
+    mRuler->mMarginRight = 10;
+    
     mRuler->mMax = mSettings.mTmax;
     mRuler->mMin = mSettings.mTmin;
     mRuler->mCurrentMax = mSettings.mTmax;
@@ -284,13 +287,11 @@ mZoomCorrel(0)
     mDataThetaRadio = new RadioButton(tr("Calendar dates"), mResultsGroup);
     mDataSigmaRadio = new RadioButton(tr("Individual std. deviations"), mResultsGroup);
     
-        // mDataPosteriorCheck       = new CheckBox(tr("Distrib. of post. dates"), mResultsGroup); // new PhD suppr le 28/04/2015
     mShowDataUnderPhasesCheck = new CheckBox(tr("Unfold data under Event"),mResultsGroup);
     mDataCalibCheck           = new CheckBox(tr("Individual calib. dates"), mResultsGroup);
 
     mWiggleCheck              = new CheckBox(tr("Wiggle shifted"), mResultsGroup);
     mDataThetaRadio           -> setChecked(true);
-        // mDataPosteriorCheck       -> setChecked(true); //suppr le 28/04/2015
     mDataCalibCheck           -> setChecked(true);
     mShowDataUnderPhasesCheck -> setChecked(false);
         //  mResultsGroup->setFixedHeight(mResultsTitle->height()+mDataThetaRadio->QPaintDevice::height()+mDataSigmaRadio->height()+mShowDataUnderPhasesCheck->height()+
@@ -298,7 +299,6 @@ mZoomCorrel(0)
     connect(mShowDataUnderPhasesCheck, SIGNAL(toggled(bool)), this, SLOT(updateResults()));
     
     connect(mDataThetaRadio,     SIGNAL(clicked()), this, SLOT(updateResults()));
-        //  connect(mDataPosteriorCheck, SIGNAL(clicked()), this, SLOT(updateResults())); //suppr le 28/04/2015
     connect(mDataCalibCheck,     SIGNAL(clicked()), this, SLOT(updateResults()));
     connect(mWiggleCheck,        SIGNAL(clicked()), this, SLOT(updateResults()));
     connect(mDataSigmaRadio,     SIGNAL(clicked()), this, SLOT(updateResults()));
@@ -438,102 +438,8 @@ void ResultsView::restoreZoom()
 #pragma mark Layout & Paint
 void ResultsView::paintEvent(QPaintEvent* )
 {
-  //  Q_UNUSED(e);
-    /*
-    mByPhasesBut -> setAutoExclusive(true);
-    
-    mByPhasesBut -> setChecked( mHasPhases);
-    mByEventsBut -> setChecked(!mHasPhases);
-    
-    mByEventsBut -> setVisible(mHasPhases);
-    mByPhasesBut -> setVisible(mHasPhases);
-    */
-    
-    int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
-    int graphYAxis = 50;
-    int m = mMargin;
-    int dx = mLineH + mMargin;//m;
-    
     QPainter p(this);
     p.fillRect(width() - mOptionsW, 0, mOptionsW, height(), QColor(220, 220, 220));
-    //updateLayout(); infinite loop in PaintEvent
-    if(mTabs->currentIndex() == 0) // // it's mean posterior distribution
-    {
-        mCurrentXMinEdit->setText( doubleInStrDate(mResultCurrentMinX) );
-        mCurrentXMaxEdit->setText( doubleInStrDate(mResultCurrentMaxX) );
-    }
-    else {
-        mCurrentXMinEdit->setText( QString::number(mResultCurrentMinX) );
-        mCurrentXMaxEdit->setText( QString::number(mResultCurrentMaxX) );
-    }
-    
-    mByPhasesBut -> setGeometry(0, 0, (int)(mGraphLeft/2), mRulerH);
-    mByEventsBut -> setGeometry(mGraphLeft/2, 0, (int)(mGraphLeft/2), mRulerH);
-
-    mTabs   -> setGeometry(mGraphLeft + graphYAxis, 0, width() - mGraphLeft - mOptionsW - sbe - graphYAxis, mTabsH);
-    mRuler  -> setGeometry(mGraphLeft + graphYAxis, mTabsH, width() - mGraphLeft - graphYAxis - mOptionsW - sbe - 10, mRulerH);
-    mStack  -> setGeometry(0, mTabsH + mRulerH, width() - mOptionsW, height() - mRulerH - mTabsH);
-    mMarker -> setGeometry(mMarker->pos().x(), mTabsH + mRulerH, mMarker->thickness(), height() - mRulerH - mTabsH);
-   
-    mOptionsWidget -> setGeometry(this->width() - mOptionsW, 0, mOptionsW, this->height());
-    mDisplayGroup  -> setGeometry(0, mDisplayTitle->y()+ mDisplayTitle->height(), mOptionsW, mDisplayGroup->height());
-    
-    //   mOptionsWidget->move(width() - mOptionsW, 0);
-    int numChains = mCheckChainChecks.size();
-    if(mTabs->currentIndex() == 0) // it's mean posterior distribution
-    {
-        mChainsGroup->setFixedHeight(m + (numChains+1) * (mLineH + m));
-        mAllChainsCheck->setGeometry(m, m, (int)(mChainsGroup->width()-2*m), mLineH);
-        for(int i=0; i<numChains; ++i)
-        {
-            QRect geometry(m, m + (i+1) * (mLineH + m), (int)(mChainsGroup->width()-2*m), mLineH);
-            mCheckChainChecks[i]->setGeometry(geometry);
-            mChainRadios[i]->setGeometry(geometry);
-        }
-    }
-    else
-    {
-        mChainsGroup->setFixedHeight(m + numChains * (mLineH + m));
-        for(int i=0; i<numChains; ++i)
-        {
-            QRect geometry(m, (int)(m + i * (mLineH + m)), (int)(mChainsGroup->width()-2*m), mLineH);
-            mCheckChainChecks[i] -> setGeometry(geometry);
-            mChainRadios[i]      -> setGeometry(geometry);
-        }
-    }
-    
-    int y = m;
-    mDataThetaRadio->setGeometry(m, y, (int)(mResultsGroup->width() - 2*m), mLineH);
-    
-    if(mTabs->currentIndex() == 0) // // it's mean posterior distribution
-    {
-        
-        mDataCalibCheck -> setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
-        mWiggleCheck    -> setGeometry(m + dx, y += (m + mLineH),(int)( mResultsGroup->width() - 2*m - dx), mLineH);
-    }
-    if (mShowDataUnderPhasesCheck->isVisible()) {
-        mShowDataUnderPhasesCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
-    }
-    
-    
-    mDataSigmaRadio -> setGeometry(m, y += (m + mLineH), mResultsGroup->width()-2*m, mLineH);
-    mResultsGroup   -> setFixedHeight(y += (m + mLineH));
-    
-    y = m;
-    int sw = (mPostDistGroup->width() - 3*m) * 0.5;
-    int w1 = (mPostDistGroup->width() - 3*m) * 0.7;
-    int w2 = (mPostDistGroup->width() - 3*m) * 0.3;
-    
-    mCredibilityCheck  -> setGeometry(m, y, mPostDistGroup->width() - 2*m, mLineH);
-    mThreshLab -> setGeometry(m, y += (m + mLineH), w1, mLineH);
-    mHPDEdit   -> setGeometry(2*m + w1, y, w2, mLineH);
-    mFFTLenLab     -> setGeometry(m, y += (m + mLineH), sw, mComboH);
-    mFFTLenCombo   -> setGeometry(2*m + sw, y, sw, mComboH);
-    mHFactorLab    -> setGeometry(m, y += (m + mComboH), w1, mLineH);
-    mHFactorEdit   -> setGeometry(2*m + w1, y, w2, mLineH);
-    mPostDistGroup -> setFixedHeight(y += (m + mLineH));
-    
-    
 }
 
 void ResultsView::resizeEvent(QResizeEvent* e)
@@ -595,7 +501,92 @@ void ResultsView::updateScrollHeights()
 
  void ResultsView::updateLayout()
 {
-   int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
+    int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
+    int graphYAxis = 50;
+    int m = mMargin;
+    int dx = mLineH + mMargin;//m;
+    
+    //updateLayout(); infinite loop in PaintEvent
+    if(mTabs->currentIndex() == 0) // // it's mean posterior distribution
+    {
+        mCurrentXMinEdit->setText( DateUtils::convertToAppSettingsFormatStr(mResultCurrentMinX) );
+        mCurrentXMaxEdit->setText( DateUtils::convertToAppSettingsFormatStr(mResultCurrentMaxX) );
+    }
+    else {
+        mCurrentXMinEdit->setText( QString::number(mResultCurrentMinX) );
+        mCurrentXMaxEdit->setText( QString::number(mResultCurrentMaxX) );
+    }
+    
+    mByPhasesBut -> setGeometry(0, 0, (int)(mGraphLeft/2), mRulerH);
+    mByEventsBut -> setGeometry(mGraphLeft/2, 0, (int)(mGraphLeft/2), mRulerH);
+    
+    mTabs   -> setGeometry(mGraphLeft + graphYAxis, 0, width() - mGraphLeft - mOptionsW - sbe - graphYAxis, mTabsH);
+    mRuler  -> setGeometry(mGraphLeft, mTabsH, width() - mGraphLeft - mOptionsW - sbe, mRulerH);
+    mStack  -> setGeometry(0, mTabsH + mRulerH, width() - mOptionsW, height() - mRulerH - mTabsH);
+    mMarker -> setGeometry(mMarker->pos().x(), mTabsH + mRulerH, mMarker->thickness(), height() - mRulerH - mTabsH);
+    
+    mOptionsWidget -> setGeometry(this->width() - mOptionsW, 0, mOptionsW, this->height());
+    mDisplayGroup  -> setGeometry(0, mDisplayTitle->y()+ mDisplayTitle->height(), mOptionsW, mDisplayGroup->height());
+    
+    //   mOptionsWidget->move(width() - mOptionsW, 0);
+    int numChains = mCheckChainChecks.size();
+    if(mTabs->currentIndex() == 0) // it's mean posterior distribution
+    {
+        mChainsGroup->setFixedHeight(m + (numChains+1) * (mLineH + m));
+        mAllChainsCheck->setGeometry(m, m, (int)(mChainsGroup->width()-2*m), mLineH);
+        for(int i=0; i<numChains; ++i)
+        {
+            QRect geometry(m, m + (i+1) * (mLineH + m), (int)(mChainsGroup->width()-2*m), mLineH);
+            mCheckChainChecks[i]->setGeometry(geometry);
+            mChainRadios[i]->setGeometry(geometry);
+        }
+    }
+    else
+    {
+        mChainsGroup->setFixedHeight(m + numChains * (mLineH + m));
+        for(int i=0; i<numChains; ++i)
+        {
+            QRect geometry(m, (int)(m + i * (mLineH + m)), (int)(mChainsGroup->width()-2*m), mLineH);
+            mCheckChainChecks[i] -> setGeometry(geometry);
+            mChainRadios[i]      -> setGeometry(geometry);
+        }
+    }
+    
+    int y = m;
+    mDataThetaRadio->setGeometry(m, y, (int)(mResultsGroup->width() - 2*m), mLineH);
+    
+    if(mTabs->currentIndex() == 0) // // it's mean posterior distribution
+    {
+        
+        mDataCalibCheck -> setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
+        mWiggleCheck    -> setGeometry(m + dx, y += (m + mLineH),(int)( mResultsGroup->width() - 2*m - dx), mLineH);
+    }
+    if (mShowDataUnderPhasesCheck->isVisible()) {
+        mShowDataUnderPhasesCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
+    }
+    
+    
+    mDataSigmaRadio -> setGeometry(m, y += (m + mLineH), mResultsGroup->width()-2*m, mLineH);
+    mResultsGroup   -> setFixedHeight(y += (m + mLineH));
+    
+    y = m;
+    int sw = (mPostDistGroup->width() - 3*m) * 0.5;
+    int w1 = (mPostDistGroup->width() - 3*m) * 0.7;
+    int w2 = (mPostDistGroup->width() - 3*m) * 0.3;
+    
+    mCredibilityCheck  -> setGeometry(m, y, mPostDistGroup->width() - 2*m, mLineH);
+    mThreshLab -> setGeometry(m, y += (m + mLineH), w1, mLineH);
+    mHPDEdit   -> setGeometry(2*m + w1, y, w2, mLineH);
+    mFFTLenLab     -> setGeometry(m, y += (m + mLineH), sw, mComboH);
+    mFFTLenCombo   -> setGeometry(2*m + sw, y, sw, mComboH);
+    mHFactorLab    -> setGeometry(m, y += (m + mComboH), w1, mLineH);
+    mHFactorEdit   -> setGeometry(2*m + w1, y, w2, mLineH);
+    mPostDistGroup -> setFixedHeight(y += (m + mLineH));
+    
+    
+    
+    
+    
   
     //    setUpdatesEnabled(false); // prevent from recursive repaint, when setGeometry
     
@@ -855,8 +846,8 @@ void ResultsView::updateResults(Model* model)
     mRuler -> setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
     updateRulerAreas();
     
-    mCurrentXMinEdit -> setText( doubleInStrDate(mResultMinX) );
-    mCurrentXMaxEdit -> setText( doubleInStrDate(mResultMaxX) );
+    mCurrentXMinEdit -> setText( DateUtils::convertToAppSettingsFormatStr(mResultMinX) );
+    mCurrentXMaxEdit -> setText( DateUtils::convertToAppSettingsFormatStr(mResultMaxX) );
     
     mHasPhases = (mModel->mPhases.size() > 0);
     mByPhasesBut -> setAutoExclusive(true);
@@ -980,6 +971,7 @@ void ResultsView::updateResults(Model* model)
             graphDate->setGraphsThickness(mThicknessSpin->value());
             mByEventsGraphs.append(graphDate);
         }
+        
     }
     mEventsScrollArea->setWidget(eventsWidget);
     
@@ -1021,7 +1013,7 @@ void ResultsView::updateGraphs()
         for(int i=0; i<mChainRadios.size(); ++i)
             showChainList.append(mChainRadios[i]->isChecked());
     }
-    bool showHpd = mCredibilityCheck->isChecked();
+    bool showCredibility = mCredibilityCheck->isChecked();
     
     
     float hpdThreshold = inRange<float>(mHPDEdit->text().toFloat(),0.0 ,100.0);
@@ -1030,21 +1022,20 @@ void ResultsView::updateGraphs()
     bool showRaw = mRawCheck->isChecked();
     
     bool showCalib = mDataCalibCheck->isChecked();
-    bool showPosterior = true; //mDataPosteriorCheck->isChecked();
     bool showWiggle = mWiggleCheck->isChecked();
     
     // --------------------------- mCurrentTypeGraph = GraphViewResults::TypeGraph(
    // if(QWidget* wid = mPhasesScrollArea->widget())
     if(mByPhasesBut->isChecked()) {
         for(int i=0; i<mByPhasesGraphs.size(); ++i){
-            mByPhasesGraphs[i]->setResultToShow(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable, showAllChains, showChainList, showHpd, hpdThreshold, showCalib,showPosterior, showWiggle, showRaw);
+            mByPhasesGraphs[i]->setResultToShow(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable, showAllChains, showChainList, showCredibility, hpdThreshold, showCalib, showWiggle, showRaw);
             mByPhasesGraphs[i]->update();
         }
     }
     //if(QWidget* wid = mEventsScrollArea->widget())
     if(mByEventsBut->isChecked()){
         for(int i=0; i<mByEventsGraphs.size(); ++i){
-            mByEventsGraphs[i]->setResultToShow(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable, showAllChains, showChainList, showHpd, hpdThreshold, showCalib,showPosterior, showWiggle, showRaw);
+            mByEventsGraphs[i]->setResultToShow(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable, showAllChains, showChainList, showCredibility, hpdThreshold, showCalib, showWiggle, showRaw);
             mByEventsGraphs[i]->update();
        }
  }
@@ -1272,13 +1263,12 @@ void ResultsView::exportFullImage()
         curWid = mPhasesScrollArea->widget();
         curWid->setFont(mByPhasesGraphs[0]->font());
         witchScroll = eScrollPhases;
-        printAxis = (mByPhasesGraphs[0]->mGraph->getXAxisMode()== GraphView::eHidden);
+        printAxis = (mByPhasesGraphs[0]->mGraph->getXAxisMode() == GraphView::eHidden);
         //  hide all buttons in the both scrollAreaWidget
         for(int i=0; i<mByPhasesGraphs.size(); ++i){
             mByPhasesGraphs[i]->mButtonVisible = false;
             mByPhasesGraphs[i]->update();
-            }
-   
+        }
     }
     //else if (mStack->currentWidget() == mEventsScrollArea) {
     else  {
@@ -1288,11 +1278,9 @@ void ResultsView::exportFullImage()
         printAxis = (mByEventsGraphs[0]->mGraph->getXAxisMode() == GraphView::eHidden);
         //  hide all buttons in the both scrollAreaWidget
         for(int i=0; i<mByEventsGraphs.size(); ++i) {
-        mByEventsGraphs[i]->mButtonVisible = false;
-        mByEventsGraphs[i]->update();
+            mByEventsGraphs[i]->mButtonVisible = false;
+            mByEventsGraphs[i]->update();
         }
-
-    
     }
 
 
@@ -1309,30 +1297,62 @@ void ResultsView::exportFullImage()
   
     //qDebug()<<"printAxis"<<printAxis;
     //qDebug()<<"printAxis"<<mByPhasesGraphs[0]->mGraph->getXAxisMode();
-    QRect r(0, 0, curWid->width() , curWid->height());
     //mPhasesScrollArea->
-    AxisTool axe;
+    
+    AxisWidget* axisWidget = 0;
+    QLabel* axisLegend = 0;
+    int axeHeight = 20;
+    int legendHeight = 20;
     
     if (printAxis) {
-        axe.mShowText = true;
-        axe.mShowSubs = true;
-        axe.mShowSubSubs = true;
-        axe.mShowArrow = true;
-        axe.mShowText = true;
-        axe.mShowDate =( witchScroll == eScrollPhases ? mByPhasesGraphs[0]->mGraph->XIsDate() : mByEventsGraphs[0]->mGraph->XIsDate() );
-        //axe.AxisTool::m
-        //QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth ,  mMarginBottom), 5);
-        axe.updateValues(r.width()-50, 40, mResultCurrentMinX, mResultCurrentMaxX);
+        curWid->setFixedHeight(curWid->height() + axeHeight + legendHeight);
         
-    }
-    else {
-        axe.mShowSubs = false;
+        FormatFunc f = 0;
+        if(mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked())
+            f = DateUtils::convertToAppSettingsFormatStr;
+        
+        axisWidget = new AxisWidget(f, curWid);
+        axisWidget->mMarginLeft = 50;
+        axisWidget->mMarginRight = 10;
+        axisWidget->setGeometry(0, curWid->height() - axeHeight, curWid->width(), axeHeight);
+        axisWidget->mShowText = true;
+        axisWidget->setAutoFillBackground(true);
+        axisWidget->mShowSubs = true;
+        axisWidget->mShowSubSubs = true;
+        axisWidget->mShowArrow = true;
+        axisWidget->mShowText = true;
+        axisWidget->updateValues(curWid->width() - axisWidget->mMarginLeft - axisWidget->mMarginRight, axeHeight, mResultCurrentMinX, mResultCurrentMaxX);
+        axisWidget->raise();
+        axisWidget->setVisible(true);
+        
+        axisLegend = new QLabel(DateUtils::getAppSettingsFormat(), curWid);
+        axisLegend->setGeometry(0, curWid->height() - axeHeight - legendHeight, curWid->width(), legendHeight);
+        axisLegend->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        axisLegend->raise();
+        axisLegend->setVisible(true);
     }
     
-    
-    QFileInfo fileInfo = saveWidgetAsImage(curWid, r,
+    QFileInfo fileInfo = saveWidgetAsImage(curWid,
+                                           QRect(0, 0, curWid->width() , curWid->height()),
                                            tr("Save graph image as..."),
-                                           MainWindow::getInstance()->getCurrentPath(),MainWindow::getInstance()->getAppSettings(),axe);
+                                           MainWindow::getInstance()->getCurrentPath(), MainWindow::getInstance()->getAppSettings());
+    
+    // Delete additional widgets if necessary :
+    if (printAxis) {
+        if (axisWidget) {
+            axisWidget->setParent(0);
+            delete axisWidget;
+        }
+        if (axisLegend) {
+            axisLegend->setParent(0);
+            delete axisLegend;
+        }
+        curWid->setFixedHeight(curWid->height() - axeHeight - legendHeight);
+    }
+    
+    
+    // Revert to default display :
+    
     if(fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
     
@@ -1340,23 +1360,19 @@ void ResultsView::exportFullImage()
     updateRendering(rendering);
 
     //  show all buttons
-    if (witchScroll == eScrollPhases) {
+    if (mByPhasesBut->isChecked()) {
         for(int i=0; i<mByPhasesGraphs.size(); ++i) {
             mByPhasesGraphs[i]->mButtonVisible = true;
             mByPhasesGraphs[i]->update();
         }
         
     }
-    if (witchScroll == eScrollEvents) {
+    else {
         for(int i=0; i<mByEventsGraphs.size(); ++i) {
             mByEventsGraphs[i]->mButtonVisible = true;
             mByEventsGraphs[i]->update();
         }
     }
-    //for(int i=0; i<mByEventsGraphs.size(); ++i)         mByEventsGraphs[i]->mButtonVisible = true;
-    
-    
-    
 }
 
 // connected to the XSlider zoom
@@ -1389,8 +1405,8 @@ void ResultsView::withSlider()
     mCurrentXMinEdit->setText(QString::number(mResultCurrentMinX));
     mCurrentXMaxEdit->setText(QString::number(mResultCurrentMaxX));
     */
-    mCurrentXMinEdit->setText(doubleInStrDate(mResultCurrentMinX));
-    mCurrentXMaxEdit->setText(doubleInStrDate(mResultCurrentMaxX));
+    mCurrentXMinEdit->setText(DateUtils::convertToAppSettingsFormatStr(mResultCurrentMinX));
+    mCurrentXMaxEdit->setText(DateUtils::convertToAppSettingsFormatStr(mResultCurrentMaxX));
     
     // change Ruler
     
@@ -1448,8 +1464,8 @@ void ResultsView::updateScroll(const double min, const double max)
     mCurrentXMinEdit->setText(QString::number(mResultCurrentMinX));
     mCurrentXMaxEdit->setText(QString::number(mResultCurrentMaxX));
     */
-    mCurrentXMinEdit->setText(doubleInStrDate(mResultCurrentMinX));
-    mCurrentXMaxEdit->setText(doubleInStrDate(mResultCurrentMaxX));
+    mCurrentXMinEdit->setText(DateUtils::convertToAppSettingsFormatStr(mResultCurrentMinX));
+    mCurrentXMaxEdit->setText(DateUtils::convertToAppSettingsFormatStr(mResultCurrentMaxX));
     
     // Don't need to change XSlider
     
@@ -1485,15 +1501,16 @@ void ResultsView::editCurrentMinX(QString str)
 {
     bool isNumber;
     double value = str.toDouble(&isNumber);
-    value = dateInDouble(value);
     if (isNumber) {
+        if(mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked()){
+            value = DateUtils::convertFromAppSettingsFormat(value);
+        }
         double current = inRange(mResultMinX, value, mResultCurrentMaxX);
         if (current == mResultCurrentMaxX) {
             return;
         }
         mResultCurrentMinX = current;
-    
-    
+        
         mResultZoomX =(mResultCurrentMaxX - mResultCurrentMinX)/ (mResultMaxX - mResultMinX) * 100;
     
         // move XSlider position
@@ -1548,9 +1565,10 @@ void ResultsView::editCurrentMaxX(QString str)
     bool isNumber;
     double value = str.toDouble(&isNumber);
     
-    value = dateInDouble(value);
-    
     if (isNumber) {
+        if(mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked()){
+            value = DateUtils::convertFromAppSettingsFormat(value);
+        }
         double current = inRange(mResultCurrentMinX, value, mResultMaxX);
         if (current == mResultCurrentMinX) {
             return;

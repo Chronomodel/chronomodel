@@ -330,7 +330,7 @@ void EventsScene::updateProject()
                     delete dateItems[j];
                 }
             }
-#if DEBUG
+#ifdef DEBUG
             qDebug() << "Event deleted : " << event[STATE_ID].toInt();
 #endif
             mItems.removeAt(i);
@@ -362,7 +362,7 @@ void EventsScene::updateProject()
                 if(event != itemEvent || settingsChanged)
                 {
                     // UPDATE ITEM
-#if DEBUG
+#ifdef DEBUG
                     qDebug() << "Event updated : id = " << event[STATE_ID].toInt();
 #endif
                     item->setEvent(event, settings);
@@ -403,7 +403,7 @@ void EventsScene::updateProject()
             }
             
             hasCreated = true;
-#if DEBUG
+#ifdef DEBUG
             qDebug() << "Event created : id = " << event[STATE_ID].toInt() << ", type : " << type;
 #endif
         }
@@ -419,7 +419,7 @@ void EventsScene::updateProject()
         
         if(!constraints_ids.contains(constraint[STATE_ID].toInt()))
         {
-#if DEBUG
+#ifdef DEBUG
             qDebug() << "Event Constraint deleted : " << constraint[STATE_ID].toInt();
 #endif
             removeItem(constraintItem);
@@ -445,7 +445,7 @@ void EventsScene::updateProject()
                 if(constraint != constraintItem)
                 {
                     // UPDATE ITEM
-#if DEBUG
+#ifdef DEBUG
                     qDebug() << "Constraint updated : id = " << constraint[STATE_ID].toInt();
 #endif
                     mConstraintItems[j]->setData(constraint);
@@ -458,7 +458,7 @@ void EventsScene::updateProject()
             ArrowItem* constraintItem = new ArrowItem(this, ArrowItem::eEvent, constraint);
             mConstraintItems.append(constraintItem);
             addItem(constraintItem);
-#if DEBUG
+#ifdef DEBUG
             qDebug() << "Constraint created : id = " << constraint[STATE_ID].toInt();
 #endif
         }
@@ -497,7 +497,7 @@ void EventsScene::clean()
                 delete dateItems[j];
             }
         }
-#if DEBUG
+#ifdef DEBUG
         qDebug() << "Event deleted : " << event[STATE_ID].toInt();
 #endif
         mItems.removeAt(i);
@@ -514,7 +514,7 @@ void EventsScene::clean()
     for(int i=mConstraintItems.size()-1; i>=0; --i)
     {
         ArrowItem* constraintItem = mConstraintItems[i];
-#if DEBUG
+#ifdef DEBUG
         QJsonObject& constraint = constraintItem->data();
         qDebug() << "Event Constraint deleted : " << constraint[STATE_ID].toInt();
 #endif

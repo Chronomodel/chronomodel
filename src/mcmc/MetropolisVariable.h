@@ -53,8 +53,9 @@ public:
     
     // -----
     
-    virtual QString resultsText(const QString& noResultMessage = QObject::tr("No result to display")) const;
-    
+    virtual QString resultsText(const QString& noResultMessage = QObject::tr("No result to display"),
+                                const QString& unit = QString(),
+                                FormatFunc formatFunc = 0) const;
     // -----
     
 private:

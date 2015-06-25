@@ -18,6 +18,7 @@
 #include "QtUtilities.h"
 #include "StdUtilities.h"
 #include "StepDialog.h"
+#include "DateUtils.h"
 #include <QtWidgets>
 #include <QtSvg>
 #include <QPropertyAnimation>
@@ -167,7 +168,7 @@ mCalibVisible(false)
     
     // -------- Windows Event propreties -----------------------
     
-    mStudyLab = new Label(tr("STUDY PERIOD") + " "+dateFormat(), mRightWrapper);
+    mStudyLab = new Label(mRightWrapper);
     mMinLab = new Label(tr("Start") + " :", mRightWrapper);
     mMaxLab = new Label(tr("End")   + " :", mRightWrapper);
     //mStepLab = new Label(tr("Step") + " :", mRightWrapper);
@@ -207,13 +208,11 @@ mCalibVisible(false)
     mMinEdit = new LineEdit(mRightWrapper);
     mMinEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mMinEdit->setAlignment(Qt::AlignHCenter);
-    mMinEdit->setText(doubleInStrDate(mTmin));
     //mMinEdit->setFont(font.style(),font.pointSize(),QFont::Bold,font);
     
     mMaxEdit = new LineEdit(mRightWrapper);
     mMaxEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mMaxEdit->setAlignment(Qt::AlignHCenter);
-    mMaxEdit->setText(doubleInStrDate(mTmax));
     //mStepEdit = new LineEdit(mRightWrapper);
     
     mButApply = new Button(tr("Apply"), mRightWrapper);
@@ -225,8 +224,8 @@ mCalibVisible(false)
     //connect(mMaxEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));
     //connect(mStepEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));
     
-    connect(mMinEdit, SIGNAL(textChanged(const QString&)), this, SLOT(MinEditChanging()));
-    connect(mMaxEdit, SIGNAL(textChanged(const QString&)), this, SLOT(MaxEditChanging()));
+    connect(mMinEdit, SIGNAL(textChanged(const QString&)), this, SLOT(minEditChanging()));
+    connect(mMaxEdit, SIGNAL(textChanged(const QString&)), this, SLOT(maxEditChanging()));
     
     connect(mButApply, SIGNAL(clicked()), this, SLOT(applySettings()));
     connect(mButStep,  SIGNAL(clicked()), this, SLOT(adjustStep()));
@@ -322,6 +321,7 @@ void ModelView::doProjectConnections(Project* project)
 
 void ModelView::resetInterface()
 {
+    mStudyLab->setText(tr("STUDY PERIOD") + " " + DateUtils::getAppSettingsFormat());
     mEventsScene->clean();
     mPhasesScene->clean();
     mCalibrationView->setDate(QJsonObject());
@@ -341,8 +341,8 @@ void ModelView::updateProject()
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
     //mStepEdit->setText(QString::number(settings.mStep));
-    mMinEdit->setText(doubleInStrDate(settings.mTmin));
-    mMaxEdit->setText(doubleInStrDate(settings.mTmax));
+    mMinEdit->setText(DateUtils::convertToAppSettingsFormatStr(settings.mTmin));
+    mMaxEdit->setText(DateUtils::convertToAppSettingsFormatStr(settings.mTmax));
     
     /*if(settings.mStep < 0.1 || settings.mTmin >= settings.mTmax)
         setSettingsValid(false);
@@ -387,8 +387,8 @@ void ModelView::applySettings()
     ProjectSettings s = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
     ProjectSettings oldSettings = s;
     
-    mTmax = dateInDouble(mMaxEdit->text().toDouble());
-    mTmin = dateInDouble(mMinEdit->text().toDouble());
+    mTmax = DateUtils::convertFromAppSettingsFormat(mMaxEdit->text().toDouble());
+    mTmin = DateUtils::convertFromAppSettingsFormat(mMinEdit->text().toDouble());
     qDebug()<<"ModelView::applySettings()"<<mTmin<<mTmax;
     
     s.mTmin = (int) mTmin;//(int)dateInDouble(mMinEdit->text().toInt());
@@ -455,15 +455,15 @@ void ModelView::studyPeriodChanging()
     qDebug()<<"ModelView::studyPeriodChanging() apres"<<g_FormatDate<<mTmin<<mTmax;
 }
 */
-void ModelView::MinEditChanging()
+void ModelView::minEditChanging()
 {
-    mTmin = dateInDouble( mMinEdit->text().toDouble() );
+    mTmin = DateUtils::convertFromAppSettingsFormat(mMinEdit->text().toDouble());
     setSettingsValid(false);
     mEventPropertiesView->hideCalibration();
 }
-void ModelView::MaxEditChanging()
+void ModelView::maxEditChanging()
 {
-    mTmax = dateInDouble( mMaxEdit->text().toDouble() );
+    mTmax = DateUtils::convertFromAppSettingsFormat(mMaxEdit->text().toDouble());
     setSettingsValid(false);
     mEventPropertiesView->hideCalibration();
 }
@@ -606,14 +606,12 @@ void ModelView::paintEvent(QPaintEvent* e)
     QPainter p(this);
     p.fillRect(mHandlerRect, QColor(50, 50, 50));
     p.fillRect(mRightRect, QColor(50, 50, 50));
-    mStudyLab -> setText(tr("STUDY PERIOD") + " "+dateFormat() );
-    
-    
+    mStudyLab -> setText(tr("STUDY PERIOD") + " " + DateUtils::getAppSettingsFormat());
 }
 void ModelView::updateFormatDate()
 {
-    mMinEdit  -> setText(doubleInStrDate(mTmin));
-    mMaxEdit  -> setText(doubleInStrDate(mTmax));
+    mMinEdit  -> setText(DateUtils::convertToAppSettingsFormatStr(mTmin));
+    mMaxEdit  -> setText(DateUtils::convertToAppSettingsFormatStr(mTmax));
     mMinEdit->update();
     
     setSettingsValid(Button::eReady);
@@ -785,10 +783,9 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
     //scene->clearSelection();
     scene->setSceneRect(scene->itemsBoundingRect());
     QRect r = scene->sceneRect().toRect();
-    AxisTool axe;
     QFileInfo fileInfo = saveWidgetAsImage(scene, r,
                                            tr("Save model image as..."),
-                                           MainWindow::getInstance()->getCurrentPath(),MainWindow::getInstance()->getAppSettings(),axe);//AppSettings());
+                                           MainWindow::getInstance()->getCurrentPath(),MainWindow::getInstance()->getAppSettings());
     if(fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
 }

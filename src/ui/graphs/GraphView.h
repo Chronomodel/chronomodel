@@ -72,10 +72,13 @@ public:
     void addZone(const GraphZone& zone);
     void removeAllZones();
     
+    // Set value formatting functions
+    void setFormatFunctX(FormatFunc f);
+    void setFormatFunctY(FormatFunc f);
+    
     // Paint
     
-    void paintToDevice(QPaintDevice* device);//, QPaintEvent* e);// HL
-
+    void paintToDevice(QPaintDevice* device);
  
     // Save
     
@@ -115,6 +118,9 @@ protected:
     AxisMode mYAxisMode;
     bool mAutoAdjustYScale;
     
+    FormatFunc mFormatFuncX;
+    FormatFunc mFormatFuncY;
+    
     bool mShowInfos;
     QStringList mInfos;
     
@@ -134,6 +140,10 @@ protected:
     int mCurveMaxResolution;
     QList<GraphCurve> mCurves;
     QList<GraphZone> mZones;
+    
+public:
+    QString mLegendX;
+    QString mLegendY;
 };
 
 #endif
