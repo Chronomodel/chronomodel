@@ -98,7 +98,7 @@ void AppSettingsDialog::setSettings(const AppSettings& settings)
     mOpenLastProjectCheck->setChecked(settings.mOpenLastProjectAtLaunch);
     
     mPixelRatio->setValue(settings.mPixelRatio);
-    mDpm->setCurrentText(QString(settings.mDpm));
+    mDpm->setCurrentText(QString::number(settings.mDpm));
     mImageQuality->setValue(settings.mImageQuality);
     mFormatDate->setCurrentIndex((int)settings.mFormatDate);
     mPrecision->setValue(settings.mPrecision);
