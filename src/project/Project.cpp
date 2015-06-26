@@ -274,6 +274,10 @@ bool Project::load(const QString& path)
         {
             mState = jsonDoc.object();
             
+            // TODO : iterate over mState to check all data integrity !!!
+            //
+            checkDatesIntegrity();
+            
             if(!mState.contains(STATE_APP_VERSION))
                 mState[STATE_APP_VERSION] = qApp->applicationVersion();
             
@@ -884,6 +888,33 @@ void Project::addDate(int eventId, QJsonObject date)
             break;
         }
     }
+}
+
+void Project::checkDatesIntegrity()
+{
+    QJsonObject state = mState;
+    QJsonArray events = mState[STATE_EVENTS].toArray();
+    
+    for(int i=0; i<events.size(); ++i)
+    {
+        QJsonObject event = events[i].toObject();
+        QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+        for(int j=0; j<dates.size(); ++j)
+        {
+            QJsonObject date = dates[j].toObject();
+            
+            QString pluginId = date[STATE_DATE_PLUGIN_ID].toString();
+            PluginAbstract* plugin = PluginManager::getPluginFromId(pluginId);
+            
+            date[STATE_DATE_DATA] = plugin->checkValuesIntegrity(date[STATE_DATE_DATA].toObject());
+            
+            dates[j] = date;
+            event[STATE_EVENT_DATES] = dates;
+            events[i] = event;
+            state[STATE_EVENTS] = events;
+        }
+    }
+    mState = state;
 }
 
 void Project::updateDate(int eventId, int dateIndex)

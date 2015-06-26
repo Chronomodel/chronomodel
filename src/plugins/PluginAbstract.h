@@ -10,12 +10,14 @@
 #include <QJsonObject>
 #include <QDir>
 #include <QString>
+#include <QColor>
 #include <QTextStream>
 
 class ParamMCMC;
 class GraphView;
 class PluginFormAbstract;
 class GraphViewRefAbstract;
+class PluginSettingsViewAbstract;
 
 
 class PluginAbstract: public QObject
@@ -29,7 +31,6 @@ public:
 
     virtual QString getName() const = 0;
     virtual QIcon getIcon() const = 0;
-    virtual QColor getColor() const = 0;
     virtual bool doesCalibration() const = 0;
     virtual bool wiggleAllowed() const {return true;}
     virtual Date::DataMethod getDataMethod() const = 0;
@@ -41,16 +42,25 @@ public:
     virtual QStringList toCSV(const QJsonObject& data) = 0;
     virtual QString getDateDesc(const Date* date) const = 0;
     
+    QColor getColor() const{
+        return mColor;
+    }
     QString getId() const{
         QString name = getName().simplified().toLower();
         name = name.replace(" ", "_");
         return name;
     }
     
+    // Function to check if data values are ok : depending on the application version, plugin data values may change.
+    // eg. : a new parameter may be added to 14C plugin, ...
+    virtual QJsonObject checkValuesIntegrity(const QJsonObject& values){return values;}
+    
     virtual PluginFormAbstract* getForm() = 0;
     virtual GraphViewRefAbstract* getGraphViewRef() = 0;
+    virtual PluginSettingsViewAbstract* getSettingsView() = 0;
     
     GraphViewRefAbstract* mRefGraph;
+    QColor mColor;
 };
 
 //----------------------------------------------------

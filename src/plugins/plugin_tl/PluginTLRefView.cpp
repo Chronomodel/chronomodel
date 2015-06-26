@@ -31,8 +31,11 @@ void PluginTLRefView::setDate(const Date& d, const ProjectSettings& settings)
     Date date = d;
     
     mGraph->removeAllCurves();
+    mGraph->clearInfos();
+    mGraph->showInfos(true);
     mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
     mGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
+    
     if(!date.isNull())
     {
         double age = date.mData.value(DATE_TL_AGE_STR).toDouble();
@@ -87,6 +90,9 @@ void PluginTLRefView::setDate(const Date& d, const ProjectSettings& settings)
         }
         curveMeasure.mData = normalize_map(curveMeasure.mData);
         mGraph->addCurve(curveMeasure);
+        
+        // Write measure value :
+        mGraph->addInfo(tr("Age : ") + QString::number(age) + " ± " + QString::number(error) + "(" + tr("Ref year") + " : " + ref_year + ")");
         
         // ----------------------------------------------
         //  Error on measure

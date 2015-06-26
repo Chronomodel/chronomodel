@@ -62,6 +62,7 @@ public slots:
     void saveProjectAs();
     void about();
     void appSettings();
+    void pluginSettings();
     void openManual();
     void openWebsite();
     void showHelp(bool);
@@ -83,6 +84,7 @@ private:
     QMenu* mMCMCMenu;
     QMenu* mViewMenu;
     QMenu* mHelpMenu;
+    QMenu* mPluginsMenu;
 
     QAction* mAppSettingsAction;
     QAction* mAboutAct;
@@ -108,6 +110,8 @@ private:
     QAction* mUndoAction;
     QAction* mRedoAction;
     QAction* mUndoViewAction;
+    
+    QList<QAction*> mPluginsActions;
     
     QAction* mHelpAction;
     QAction* mManualAction;

@@ -27,7 +27,6 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     
     mRefCombo = new QComboBox(this);
     QStringList refCurves = plugin14C->getRefsNames();
-    mRefCombo->addItem("");
     for(int i = 0; i<refCurves.size(); ++i)
     {
         mRefCombo->addItem(refCurves[i]);

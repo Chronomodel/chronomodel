@@ -21,7 +21,6 @@ public:
     
     QString getName() const;
     QIcon getIcon() const;
-    QColor getColor() const;
     bool doesCalibration() const;
     bool wiggleAllowed() const;
     Date::DataMethod getDataMethod() const;
@@ -33,6 +32,7 @@ public:
     
     PluginFormAbstract* getForm();
     GraphViewRefAbstract* getGraphViewRef();
+    PluginSettingsViewAbstract* getSettingsView();
 };
 
 #endif

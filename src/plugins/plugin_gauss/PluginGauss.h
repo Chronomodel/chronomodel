@@ -10,6 +10,11 @@
 #define DATE_GAUSS_A_STR "a"
 #define DATE_GAUSS_B_STR "b"
 #define DATE_GAUSS_C_STR "c"
+#define DATE_GAUSS_MODE_STR "mode"
+#define DATE_GAUSS_CURVE_STR "curve"
+
+#define DATE_GAUSS_MODE_CURVE "curve"
+#define DATE_GAUSS_MODE_EQ "eq"
 
 
 class DATATION_SHARED_EXPORT PluginGauss : public PluginAbstract
@@ -24,7 +29,6 @@ public:
     
     QString getName() const;
     QIcon getIcon() const;
-    QColor getColor() const;
     bool doesCalibration() const;
     bool wiggleAllowed() const;
     Date::DataMethod getDataMethod() const;
@@ -37,6 +41,18 @@ public:
     
     PluginFormAbstract* getForm();
     GraphViewRefAbstract* getGraphViewRef();
+    PluginSettingsViewAbstract* getSettingsView();
+    
+    QJsonObject checkValuesIntegrity(const QJsonObject& values);
+    
+    // ---------------------
+    
+    QString getRefsPath() const;
+    void loadRefDatas();//const ProjectSettings& settings);
+    QStringList getRefsNames() const;
+    const QMap<QString, QMap<double, double> >& getRefData(const QString& name);
+    
+    QMap< QString, QMap<QString, QMap<double, double> > > mRefDatas;
 };
 
 #endif

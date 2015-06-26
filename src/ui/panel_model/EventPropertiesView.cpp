@@ -29,13 +29,12 @@ mToolbarH(60)
 
     // ------------- commun with defautlt Event and Bound ----------
     mNameLab = new Label(tr("Name") + " :", this);
-    mColorLab = new Label(tr("Color") + " :", this);
-    
     
     mNameEdit = new LineEdit(this);
     mNameEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
     mNameEdit->setAlignment(Qt::AlignHCenter);
     
+    mColorLab = new Label(tr("Color") + " :", this);
     mColorPicker = new ColorPicker(Qt::black, this);
     //mColorPicker ->  QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     

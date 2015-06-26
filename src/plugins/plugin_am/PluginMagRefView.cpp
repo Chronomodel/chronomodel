@@ -29,6 +29,8 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
     Date date = d;
     
     mGraph->removeAllCurves();
+    mGraph->clearInfos();
+    mGraph->showInfos(true);
     mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
     mGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
     
@@ -92,6 +94,9 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         graphCurveG95Inf.mPen.setColor(QColor(180, 180, 180));
         graphCurveG95Inf.mIsHisto = false;
         mGraph->addCurve(graphCurveG95Inf);
+        
+        // Display reference curve name
+        mGraph->addInfo(tr("Ref : ") + ref_curve);
         
         // ----------------------------------------------
         
@@ -161,6 +166,20 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         }
         curveMeasure.mData = normalize_map(curveMeasure.mData);
         mGraph->addCurve(curveMeasure);
+        
+        // Write measure values :
+        if(is_inc)
+        {
+            mGraph->addInfo(tr("Inclination : ") + QString::number(inc) + ", α : " + QString::number(alpha));
+        }
+        else if(is_dec)
+        {
+            mGraph->addInfo(tr("Declination : ") + QString::number(dec) + ", α : " + QString::number(alpha) + tr(", Inclination : ") + QString::number(inc));
+        }
+        else if(is_int)
+        {
+            mGraph->addInfo(tr("Intensity : ") + QString::number(intensity) + " ± : " + QString::number(alpha));
+        }
         
         // ----------------------------------------------
         //  Error on measure

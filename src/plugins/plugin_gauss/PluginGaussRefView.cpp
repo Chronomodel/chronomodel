@@ -30,8 +30,11 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
     Date date = d;
     
     mGraph->removeAllCurves();
+    mGraph->clearInfos();
+    mGraph->showInfos(true);
     mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
     mGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
+    
     if(!date.isNull())
     {
         double age = date.mData.value(DATE_GAUSS_AGE_STR).toDouble();
@@ -39,6 +42,8 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
         double a = date.mData.value(DATE_GAUSS_A_STR).toDouble();
         double b = date.mData.value(DATE_GAUSS_B_STR).toDouble();
         double c = date.mData.value(DATE_GAUSS_C_STR).toDouble();
+        QString mode = date.mData.value(DATE_GAUSS_MODE_STR).toString();
+        QString ref_curve = date.mData.value(DATE_GAUSS_CURVE_STR).toString();
         
         // ----------------------------------------------
         //  Reference curve
@@ -48,19 +53,82 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
         curve.mName = "Reference";
         curve.mPen.setColor(Qt::blue);
         curve.mIsHisto = false;
-        for(double t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep)
-            curve.mData[t] = a * t * t + b * t + c;
-        mGraph->addCurve(curve);
         
-        // ----------------------------------------------
+        double yMin;
+        double yMax;
         
-        double yMin = map_min_value(curve.mData);
-        double yMax = map_max_value(curve.mData);
-        
-        yMin = qMin(yMin, age);
-        yMax = qMax(yMax, age);
-        
-        mGraph->setRangeY(yMin, yMax);
+        if(mode == DATE_GAUSS_MODE_EQ)
+        {
+            for(double t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep)
+                curve.mData[t] = a * t * t + b * t + c;
+            mGraph->addCurve(curve);
+            
+            // Adjust scale :
+            yMin = map_min_value(curve.mData);
+            yMax = map_max_value(curve.mData);
+            
+            yMin = qMin(yMin, age);
+            yMax = qMax(yMax, age);
+            
+            mGraph->setRangeY(yMin, yMax);
+        }
+        else// if(mode == DATE_GAUSS_MODE_CURVE)
+        {
+            PluginGauss* plugin = (PluginGauss*)date.mPlugin;
+            
+            const QMap<QString, QMap<double, double> >& curves = plugin->getRefData(ref_curve);
+            
+            
+            QMap<double, double> curveG;
+            QMap<double, double> curveG95Sup;
+            QMap<double, double> curveG95Inf;
+            
+            //qDebug() << curves["G"][0];
+            yMin = curves["G95Inf"][mSettings.mTmin];
+            yMax = curves["G95Sup"][mSettings.mTmin];
+            
+            for(double t=mSettings.mTmin; t<=mSettings.mTmax; ++t) { //t+=mSettings.mStep) {
+                curveG[t] = curves["G"][t];
+                curveG95Sup[t] = curves["G95Sup"][t];
+                curveG95Inf[t] = curves["G95Inf"][t];
+                
+                yMin = qMin(yMin, curveG95Inf[t]);
+                yMax = qMax(yMax, curveG95Sup[t]);
+            }
+            
+            GraphCurve graphCurveG;
+            graphCurveG.mName = "G";
+            graphCurveG.mData = curveG;
+            graphCurveG.mPen.setColor(Qt::blue);
+            graphCurveG.mIsHisto = false;
+            mGraph->addCurve(graphCurveG);
+            
+            GraphCurve graphCurveG95Sup;
+            graphCurveG95Sup.mName = "G95Sup";
+            graphCurveG95Sup.mData = curveG95Sup;
+            graphCurveG95Sup.mPen.setColor(QColor(180, 180, 180));
+            graphCurveG95Sup.mIsHisto = false;
+            mGraph->addCurve(graphCurveG95Sup);
+            
+            GraphCurve graphCurveG95Inf;
+            graphCurveG95Inf.mName = "G95Inf";
+            graphCurveG95Inf.mData = curveG95Inf;
+            graphCurveG95Inf.mPen.setColor(QColor(180, 180, 180));
+            graphCurveG95Inf.mIsHisto = false;
+            mGraph->addCurve(graphCurveG95Inf);
+            
+            // Display reference curve name
+            mGraph->addInfo(tr("Ref : ") + ref_curve);
+            
+            // Adjust scale :
+            yMin = qMin(yMin, age);
+            yMin = floor(yMin/10)*10;
+            
+            yMax = qMax(yMax, age);
+            yMax = ceil(yMax/10)*10;
+            
+            mGraph->setRangeY(yMin, yMax);
+        }
         
         // ----------------------------------------------
         //  Measure curve
@@ -89,6 +157,9 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
         }
         curveMeasure.mData = normalize_map(curveMeasure.mData);
         mGraph->addCurve(curveMeasure);
+        
+        // Write measure value :
+        mGraph->addInfo(tr("Measure : ") + QString::number(age) + " ± " + QString::number(error));
         
         // ----------------------------------------------
         //  Error on measure

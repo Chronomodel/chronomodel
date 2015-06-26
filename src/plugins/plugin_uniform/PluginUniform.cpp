@@ -10,7 +10,7 @@
 
 PluginUniform::PluginUniform()
 {
-    
+    mColor = QColor(220,204,173);
 }
 
 double PluginUniform::getLikelyhood(const double& t, const QJsonObject& data)
@@ -28,11 +28,6 @@ QString PluginUniform::getName() const
 QIcon PluginUniform::getIcon() const
 {
     return QIcon(":/uniform_w.png");
-}
-
-QColor PluginUniform::getColor() const
-{
-    return QColor(220,204,173);//Qt::black;
 }
 
 bool PluginUniform::doesCalibration() const
@@ -103,6 +98,11 @@ QString PluginUniform::getDateDesc(const Date* date) const
 // ------------------------------------------------------------------
 
 GraphViewRefAbstract* PluginUniform::getGraphViewRef()
+{
+    return 0;
+}
+
+PluginSettingsViewAbstract* PluginUniform::getSettingsView()
 {
     return 0;
 }

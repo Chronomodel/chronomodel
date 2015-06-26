@@ -98,7 +98,10 @@ Date Date::fromJson(const QJsonObject& json)
         date.mId = json[STATE_ID].toInt();
         date.mName = json[STATE_NAME].toString();
         //qDebug() <<"date.name" << date.mName;
+        
+        // Copy plugin specific values for this data :
         date.mData = json[STATE_DATE_DATA].toObject();
+        
         date.mMethod = (DataMethod)json[STATE_DATE_METHOD].toInt();
         
         date.mDeltaType = (Date::DeltaType)json[STATE_DATE_DELTA_TYPE].toInt();
@@ -114,6 +117,7 @@ Date Date::fromJson(const QJsonObject& json)
         {
             throw QObject::tr("Data could not be loaded : invalid plugin : ") + pluginId;
         }
+        
         date.mTheta.mProposal = ModelUtilities::getDataMethodText(date.mMethod);
         date.mSigma.mProposal = ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt);
     }

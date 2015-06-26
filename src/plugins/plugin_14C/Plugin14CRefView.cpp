@@ -16,7 +16,6 @@ mGraph(0)
     mGraph->setYAxisMode(GraphView::eAllTicks);
     mGraph->setRendering(GraphView::eHD);
     mGraph->autoAdjustYScale(true);
-    mMeasureColor=QColor(56, 120, 50);
 }
 
 Plugin14CRefView::~Plugin14CRefView()
@@ -30,6 +29,8 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
     Date date = d;
     
     mGraph->removeAllCurves();
+    mGraph->clearInfos();
+    mGraph->showInfos(true);
     mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
     mGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
     
@@ -88,6 +89,9 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         graphCurveG95Inf.mIsHisto = false;
         mGraph->addCurve(graphCurveG95Inf);
         
+        // Display reference curve name
+        mGraph->addInfo(tr("Ref : ") + ref_curve);
+        
         // ----------------------------------------------
         
        // double yMin = map_min_value(curveG95Inf);
@@ -102,6 +106,7 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         mGraph->setRangeY(yMin, yMax);
        // qDebug()<<"Plugin14CRefView::setDate yMin"<<yMin;
        // qDebug()<<"Plugin14CRefView::setDate yMax"<<yMax;
+        
         // ----------------------------------------------
         //  Measure curve
         // ----------------------------------------------
@@ -127,6 +132,9 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         }
         curveMeasure.mData = normalize_map(curveMeasure.mData);
         mGraph->addCurve(curveMeasure);
+        
+        // Write measure value :
+        mGraph->addInfo(tr("Age BP : ") + QString::number(age) + " ± " + QString::number(error));
         
         // ----------------------------------------------
         //  Error on measure

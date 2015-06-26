@@ -5,6 +5,7 @@
 #include "StdUtilities.h"
 #include "Plugin14CForm.h"
 #include "Plugin14CRefView.h"
+#include "Plugin14CSettingsView.h"
 #include <cstdlib>
 #include <iostream>
 #include <QJsonObject>
@@ -13,6 +14,7 @@
 
 Plugin14C::Plugin14C()
 {
+    mColor = QColor(47,46,68);
     loadRefDatas();
 }
 
@@ -66,10 +68,6 @@ QString Plugin14C::getName() const
 QIcon Plugin14C::getIcon() const
 {
     return QIcon(":/14C_w.png");
-}
-QColor Plugin14C::getColor() const
-{
-    return QColor(47,46,68);//Qt::black;
 }
 bool Plugin14C::doesCalibration() const
 {
@@ -170,6 +168,8 @@ QString Plugin14C::getRefsPath() const
 
 void Plugin14C::loadRefDatas()//const ProjectSettings& settings)
 {
+    mRefDatas.clear();
+    
     QString calibPath = getRefsPath();
     QDir calibDir(calibPath);
     
@@ -274,6 +274,12 @@ void Plugin14C::loadRefDatas()//const ProjectSettings& settings)
     }
 }
 
+const QMap<QString, QMap<double, double> >& Plugin14C::getRefData(const QString& name)
+{
+    return mRefDatas[name.toLower()];
+}
+
+// ------------------------------------------------------------------
 GraphViewRefAbstract* Plugin14C::getGraphViewRef()
 {
     if(!mRefGraph)
@@ -281,9 +287,9 @@ GraphViewRefAbstract* Plugin14C::getGraphViewRef()
     return mRefGraph;
 }
 
-const QMap<QString, QMap<double, double> >& Plugin14C::getRefData(const QString& name)
+PluginSettingsViewAbstract* Plugin14C::getSettingsView()
 {
-    return mRefDatas[name.toLower()];
+    return new Plugin14CSettingsView(this);
 }
 
 #endif

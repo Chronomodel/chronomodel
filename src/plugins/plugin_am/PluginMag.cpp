@@ -13,6 +13,7 @@
 
 PluginMag::PluginMag()
 {
+    mColor = QColor(198,79,32);
     loadRefDatas();
 }
 
@@ -79,10 +80,6 @@ QString PluginMag::getName() const
 QIcon PluginMag::getIcon() const
 {
     return QIcon(":/AM_w.png");
-}
-QColor PluginMag::getColor() const
-{
-    return QColor(198,79,32);//Qt::red; //243, 92, 26
 }
 bool PluginMag::doesCalibration() const
 {
@@ -340,6 +337,11 @@ GraphViewRefAbstract* PluginMag::getGraphViewRef()
 const QMap<QString, QMap<double, double> >& PluginMag::getRefData(const QString& name)
 {
     return mRefDatas[name.toLower()];
+}
+
+PluginSettingsViewAbstract* PluginMag::getSettingsView()
+{
+    return 0;
 }
 
 #endif

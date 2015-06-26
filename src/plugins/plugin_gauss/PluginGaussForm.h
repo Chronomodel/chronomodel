@@ -8,6 +8,8 @@
 class PluginGauss;
 class LineEdit;
 class Label;
+class RadioButton;
+class QComboBox;
 
 
 class PluginGaussForm: public PluginFormAbstract
@@ -24,6 +26,9 @@ public:
     
 protected:
     void resizeEvent(QResizeEvent* e);
+    
+protected slots:
+    void updateVisibleElements();
 
 private:
     Label* mAverageLab;
@@ -39,6 +44,12 @@ private:
     LineEdit* mAEdit;
     LineEdit* mBEdit;
     LineEdit* mCEdit;
+    
+    RadioButton* mCurveRadio;
+    RadioButton* mEquationRadio;
+    
+    QComboBox* mCurveCombo;
+    int mComboH;
 };
 
 #endif

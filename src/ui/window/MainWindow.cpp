@@ -4,6 +4,8 @@
 #include "../PluginAbstract.h"
 #include "AboutDialog.h"
 #include "AppSettingsDialog.h"
+#include "PluginsSettingsDialog.h"
+#include "PluginManager.h"
 #include <QtWidgets>
 
 
@@ -191,6 +193,22 @@ void MainWindow::createActions()
     mViewModelAction->setChecked(true);
     
     //-----------------------------------------------------------------
+    //  Plugins Settings Actions
+    //-----------------------------------------------------------------
+    const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
+    for(int i=0; i<plugins.size(); ++i){
+        // Create the plugin settings action only if the settings is view is available
+        PluginSettingsViewAbstract* view = plugins[i]->getSettingsView();
+        if(view){
+            QString name = plugins[i]->getName() + " " + tr("settings");
+            QAction* act = new QAction(name, this);
+            act->setObjectName(name);
+            connect(act, SIGNAL(triggered()), this, SLOT(pluginSettings()));
+            mPluginsActions.append(act);
+        }
+    }
+    
+    //-----------------------------------------------------------------
     // Help/About Menu
     //-----------------------------------------------------------------
     mAboutAct = new QAction(QIcon(":light.png"), tr("About"), this);
@@ -263,6 +281,14 @@ void MainWindow::createMenus()
     mHelpMenu = menuBar()->addMenu(tr("&Help"));
     mHelpMenu->addAction(mAboutAct);
     mHelpMenu->addAction(mAboutQtAct);
+    
+    //-----------------------------------------------------------------
+    // Plugins Menu
+    //-----------------------------------------------------------------
+    mPluginsMenu = menuBar()->addMenu(tr("Data Types"));
+    for(int i=0; i<mPluginsActions.size(); ++i){
+        mPluginsMenu->addAction(mPluginsActions[i]);
+    }
 }
 
 void MainWindow::createToolBars()
@@ -422,6 +448,23 @@ void MainWindow::appSettings()
         mProjectView->updateFormatDate();
         if (mViewResultsAction->isEnabled()) {
             mProjectView->updateLog(mProject->mModel);
+        }
+    }
+}
+
+void MainWindow::pluginSettings()
+{
+    QString actName = sender()->objectName();
+    
+    const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
+    for(int i=0; i<plugins.size(); ++i){
+        QString name = plugins[i]->getName() + " " + tr("settings");
+        if(name == actName){
+            PluginsSettingsDialog dialog(plugins[i], qApp->activeWindow(), Qt::Sheet);
+            if(dialog.exec() == QDialog::Accepted)
+            {
+                // Is there anything to do ?
+            }
         }
     }
 }

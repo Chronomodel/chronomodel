@@ -12,7 +12,7 @@
 
 PluginTL::PluginTL()
 {
-    
+    mColor = QColor(216,207,52);
 }
 
 double PluginTL::getLikelyhood(const double& t, const QJsonObject& data)
@@ -33,10 +33,6 @@ QString PluginTL::getName() const
 QIcon PluginTL::getIcon() const
 {
     return QIcon(":/TL_w.png");
-}
-QColor PluginTL::getColor() const
-{
-    return QColor(216,207,52);//Qt::red;
 }
 bool PluginTL::doesCalibration() const
 {
@@ -114,6 +110,11 @@ GraphViewRefAbstract* PluginTL::getGraphViewRef()
     if(!mRefGraph)
         mRefGraph = new PluginTLRefView();
     return mRefGraph;
+}
+
+PluginSettingsViewAbstract* PluginTL::getSettingsView()
+{
+    return 0;
 }
 
 #endif

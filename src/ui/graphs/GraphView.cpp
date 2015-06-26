@@ -562,7 +562,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolY.mShowSubs = true;
         mAxisToolY.mShowSubSubs = true;
         mAxisToolY.mShowArrow = true;
-        mAxisToolY.updateValues(mGraphWidth, mStepMinWidth, mMinY, mMaxY);
+        mAxisToolY.updateValues(mGraphHeight, mStepMinWidth, mMinY, mMaxY);
         QVector<qreal> linesYPos = mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), 5, mFormatFuncY);
         
         if(mShowHorizGrid)
@@ -582,17 +582,18 @@ void GraphView::paintToDevice(QPaintDevice* device)
     
     
     // ----------------------------------------------------
-    //  Infos, since v 1.2.6 infos are transfered to the title panel in GraphViewResult
+    //  Graph specific infos at the top right
     // ----------------------------------------------------
-    /*
-     if(mShowInfos)
+    if(mShowInfos)
     {
-        QString infos = mInfos.join(" | ");
         p.setPen(QColor(50, 50, 50));
-        p.drawText(mMarginLeft + 5, mMarginTop + 5, mGraphWidth - 10, 15, Qt::AlignRight | Qt::AlignTop, infos);
+        int y = 0;
+        int lineH = 16;
+        for(int i=0; i<mInfos.size(); ++i){
+            p.drawText(mMarginLeft + 5, mMarginTop + 5 + y, mGraphWidth - 10, lineH, Qt::AlignRight | Qt::AlignTop, mInfos[i]);
+            y += lineH;
+        }
     }
-     */
-    
 }
 
 void GraphView::drawCurves(QPainter& painter)

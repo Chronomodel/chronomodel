@@ -88,6 +88,7 @@ public:
     void deleteDates(int eventId, const QList<int>& dateIndexes);
     void recycleDates(int eventId);
     void deleteSelectedTrashedDates(const QList<int>& ids);
+    void checkDatesIntegrity();
     
     // TODO : Should be in Plugin14C but how ??
     void updateAll14CData(const QString& refCurve);

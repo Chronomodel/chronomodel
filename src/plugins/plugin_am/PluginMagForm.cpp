@@ -39,7 +39,6 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     
     mRefCombo = new QComboBox(this);
     QStringList refCurves = pluginMag->getRefsNames();
-    mRefCombo->addItem("");
     for(int i = 0; i<refCurves.size(); ++i)
         mRefCombo->addItem(refCurves[i]);
     mComboH = mRefCombo->sizeHint().height();
