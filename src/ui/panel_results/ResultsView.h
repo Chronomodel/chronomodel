@@ -74,16 +74,15 @@ public slots:
     
 private slots:
     void updateScaleY(int value);
-    void updateZoomX(int value);
-    void withSlider();
+    void updateZoomX();
     
     void updateScroll(const double min, const double max);
     void updateRuler(int value);
     
     void setCurrentMinX();
-    void editCurrentMinX(QString str);
+    void editCurrentMinX();
     void setCurrentMaxX();
-    void editCurrentMaxX(QString str);
+    void editCurrentMaxX();
     
     void updateRendering(int index);
     void showByPhases(bool show);

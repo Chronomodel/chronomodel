@@ -145,21 +145,6 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
                     }
                     
                     if (mShowText) {
-                        /*
-                         QString text;
-                        
-                         if (fabs((x-xo)/mPixelsPerUnit + mStartVal)<1E-6) {
-                            text = "0";
-                        }
-                        
-                        //else text = QString::number((x-xo)/mPixelsPerUnit + mStartVal, 'G', 5);
-                        else
-                        */
-                        qDebug() << "width : ";
-                        qDebug() << w;
-                        qDebug() << "x : ";
-                        qDebug() << x;
-                        
                         QString text = (valueFormatFunc ? valueFormatFunc((x-xo)/mPixelsPerUnit + mStartVal) : QString::number(((x-xo)/mPixelsPerUnit + mStartVal)) );
                         
                         int textWidth =  fm.width(text) ;
@@ -169,14 +154,10 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
                         p.drawText(textRect,Qt::AlignCenter ,text);
                     }
                 }
-                
-                
                 if (mShowText || mShowSubs) {
                     ++i;
                 }
-
             }
-                         //   qDebug()<<"in AxisTool::paint mStartVal"<<mStartVal<<"max"<<QString::number(mStartVal + i * mDeltaVal, 'G', 5);
         }
     }
     else // ______________________vertical axe______________________________________________________

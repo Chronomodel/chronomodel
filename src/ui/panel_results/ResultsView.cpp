@@ -169,9 +169,9 @@ mZoomCorrel(0)
     mCurrentXMinEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mCurrentXMinEdit->setAlignment(Qt::AlignHCenter);
     mCurrentXMinEdit->setFixedSize(45, 15);
-    mCurrentXMinEdit->setValidator(new QDoubleValidator(-99999.0, 99999.0, 1, mCurrentXMinEdit));
+    //mCurrentXMinEdit->setValidator(new QDoubleValidator(-99999.0, 99999.0, 1, mCurrentXMinEdit));
         //connect(mCurrentXMinEdit, SIGNAL(editingFinished()), this, SLOT(setCurrentMinX()) ); // textEdited
-    connect(mCurrentXMinEdit, SIGNAL(textEdited(QString)), this, SLOT(editCurrentMinX(QString)) );
+    connect(mCurrentXMinEdit, SIGNAL(editingFinished()), this, SLOT(editCurrentMinX()) );
 
     
     mCurrentXMaxEdit = new LineEdit(mDisplayGroup);
@@ -179,9 +179,9 @@ mZoomCorrel(0)
     mCurrentXMaxEdit->setAlignment(Qt::AlignHCenter);
     mCurrentXMaxEdit->setFixedSize(45, 15);
         // mCurrentXMaxEdit->setGeometry(0, 5, 50, 20);
-    mCurrentXMaxEdit->setValidator(new QDoubleValidator(-99999.0, 99999.0, 1, mCurrentXMaxEdit));
+    //mCurrentXMaxEdit->setValidator(new QDoubleValidator(-99999.0, 99999.0, 1, mCurrentXMaxEdit));
         //connect(mCurrentXMaxEdit, SIGNAL(editingFinished()), this, SLOT(setCurrentMaxX()) ); //editCurrentMaxX
-    connect(mCurrentXMaxEdit, SIGNAL(textEdited(QString)), this, SLOT(editCurrentMaxX(QString)) );
+    connect(mCurrentXMaxEdit, SIGNAL(editingFinished()), this, SLOT(editCurrentMaxX()) );
     
     
     
@@ -200,8 +200,8 @@ mZoomCorrel(0)
     mYSlider->setTickInterval(1);
     mYSlider->setValue(13);
     
-        //connect(mXSlider, SIGNAL(valueChanged(int)), this, SLOT(updateZoomX(int))); //sliderPressed()
-    connect(mXSlider, SIGNAL(sliderPressed()), this, SLOT(withSlider())); //sliderPressed()
+    connect(mXSlider, SIGNAL(sliderMoved(int)), this, SLOT(updateZoomX())); //sliderPressed()
+    connect(mXSlider, SIGNAL(sliderPressed()), this, SLOT(updateZoomX())); //sliderPressed()
     
     connect(mYSlider, SIGNAL(valueChanged(int)), this, SLOT(updateScaleY(int)));
     
@@ -1375,74 +1375,49 @@ void ResultsView::exportFullImage()
     }
 }
 
-// connected to the XSlider zoom
-void ResultsView::withSlider()
+void ResultsView::updateZoomX()
 {
-    
     int zoom = mXSlider->value();
-    mResultZoomX = double(zoom);
-    if (zoom>90) {
-        return;
-    }
+    
+    // Ici, 10 correspond à la différence minimale de valeur (quand le zoom est le plus fort)
+    double minProp = 10 / (mResultMaxX - mResultMinX);
+    double zoomProp = (100. - zoom) / 100.;
+    if(zoomProp < minProp)
+        zoomProp = minProp;
+    zoom = 100 * (1 - zoomProp);
+    
+    mResultZoomX = (double)zoom;
     double span = (mResultMaxX - mResultMinX)* (100-mResultZoomX)/100;
-    double mid = (mResultMaxX + mResultMinX)/2;
-    double CurMin = mid - span/2;
-    double CurMax = mid + span/2;
-    if (CurMin < mResultMinX) {
-        CurMin = mResultMinX;
-        CurMax = CurMin + span;
+    double mid = (mResultCurrentMaxX + mResultCurrentMinX)/2;
+    double curMin = mid - span/2;
+    double curMax = mid + span/2;
+    if (curMin < mResultMinX) {
+        curMin = mResultMinX;
+        curMax = curMin + span;
     }
-    if (CurMax> mResultMaxX) {
-        CurMax = mResultMaxX;
-        CurMin = CurMax - span;
+    if (curMax> mResultMaxX) {
+        curMax = mResultMaxX;
+        curMin = curMax - span;
     }
     
-    mResultCurrentMinX = ceil(CurMin);
-    mResultCurrentMaxX = floor(CurMax);
+    mResultCurrentMinX = ceil(curMin);
+    mResultCurrentMaxX = floor(curMax);
+    
+    if(zoom == 0){
+        mResultCurrentMinX = mResultMinX;
+        mResultCurrentMaxX = mResultMaxX;
+    }
+    
     
     // update Current Min Max lineEdit
-    /*
-    mCurrentXMinEdit->setText(QString::number(mResultCurrentMinX));
-    mCurrentXMaxEdit->setText(QString::number(mResultCurrentMaxX));
-    */
-    mCurrentXMinEdit->setText(DateUtils::convertToAppSettingsFormatStr(mResultCurrentMinX));
-    mCurrentXMaxEdit->setText(DateUtils::convertToAppSettingsFormatStr(mResultCurrentMaxX));
-    
-    // change Ruler
-    
-    mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
-    
-    
-    // update graphes
-    updateAllZoom();
-}
-void ResultsView::updateZoomX(int zoom) // unused obsolete
-{
-   
-    //int zoom = mXSlider->value();
-    mResultZoomX = double(zoom);
-    if (zoom>90) {
-        return;
-    }
-    double span = (mResultMaxX - mResultMinX)* (100-mResultZoomX)/100;
-    double mid = (mResultMaxX + mResultMinX)/2;
-    double CurMin = mid - span/2;
-    double CurMax = mid + span/2;
-    if (CurMin < mResultMinX) {
-        CurMin = mResultMinX;
-        CurMax = CurMin + span;
-    }
-    if (CurMax> mResultMaxX) {
-        CurMax = mResultMaxX;
-        CurMin = CurMax - span;
+    if(mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked()){
+        mCurrentXMinEdit->setText(DateUtils::convertToAppSettingsFormatStr(mResultCurrentMinX));
+        mCurrentXMaxEdit->setText(DateUtils::convertToAppSettingsFormatStr(mResultCurrentMaxX));
+    }else{
+        mCurrentXMinEdit->setText(QString::number(mResultCurrentMinX));
+        mCurrentXMaxEdit->setText(QString::number(mResultCurrentMaxX));
     }
     
-    mResultCurrentMinX = ceil(CurMin);
-    mResultCurrentMaxX = floor(CurMax);
-    
-    // update Current Min Max lineEdit
-    mCurrentXMinEdit->setText(QString::number(mResultCurrentMinX));
-    mCurrentXMaxEdit->setText(QString::number(mResultCurrentMaxX));
     
     // change Ruler
     
@@ -1497,19 +1472,29 @@ void ResultsView::updateScaleY(int value)
    // repaint();
     updateAllZoom();
 }
-void ResultsView::editCurrentMinX(QString str)
+void ResultsView::editCurrentMinX()
 {
+    QString str = mCurrentXMinEdit->text();
     bool isNumber;
     double value = str.toDouble(&isNumber);
     if (isNumber) {
-        if(mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked()){
+        bool isDate = mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked();
+        if(isDate){
             value = DateUtils::convertFromAppSettingsFormat(value);
         }
+        
         double current = inRange(mResultMinX, value, mResultCurrentMaxX);
-        if (current == mResultCurrentMaxX) {
+        /*if (current == mResultCurrentMaxX) {
             return;
-        }
+        }*/
+        
+        
         mResultCurrentMinX = current;
+        if(isDate){
+            mCurrentXMinEdit->setText(DateUtils::convertToAppSettingsFormatStr(mResultCurrentMinX));
+        }else{
+            mCurrentXMinEdit->setText(QString::number(mResultCurrentMinX));
+        }
         
         mResultZoomX =(mResultCurrentMaxX - mResultCurrentMinX)/ (mResultMaxX - mResultMinX) * 100;
     
@@ -1560,13 +1545,15 @@ void ResultsView::setCurrentMinX()
    }
 }
 
-void ResultsView::editCurrentMaxX(QString str)
+void ResultsView::editCurrentMaxX()
 {
+    QString str = mCurrentXMaxEdit->text();
     bool isNumber;
     double value = str.toDouble(&isNumber);
     
     if (isNumber) {
-        if(mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked()){
+        bool isDate = mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked();
+        if(isDate){
             value = DateUtils::convertFromAppSettingsFormat(value);
         }
         double current = inRange(mResultCurrentMinX, value, mResultMaxX);
@@ -1574,6 +1561,12 @@ void ResultsView::editCurrentMaxX(QString str)
             return;
         }
         mResultCurrentMaxX = current;
+        
+        if(isDate){
+            mCurrentXMaxEdit->setText(DateUtils::convertToAppSettingsFormatStr(mResultCurrentMaxX));
+        }else{
+            mCurrentXMaxEdit->setText(QString::number(mResultCurrentMaxX));
+        }
         
         mResultZoomX =(mResultCurrentMaxX - mResultCurrentMinX)/ (mResultMaxX - mResultMinX)* 100;
         

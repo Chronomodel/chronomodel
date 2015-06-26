@@ -26,9 +26,9 @@ mStepWidth(100)
     mScrollBar->setRange(0, 0);
     mScrollBar->setSingleStep(1);
     mScrollBar->setPageStep(10000);
-    mScrollBar->setTracking(true);
+    //mScrollBar->setTracking(true);
     
-    connect(mScrollBar, SIGNAL(valueChanged(int)), this, SLOT(updateScroll()));
+    connect(mScrollBar, SIGNAL(sliderMoved(int)), this, SLOT(updateScroll()));
     //connect(mScrollBar, SIGNAL(valueChanged(int)), this, SLOT(scrollValueChanged(int)));
     
     mAxisTool.mIsHorizontal = true;
@@ -103,17 +103,47 @@ void Ruler::setCurrent(const double min, const double max)
     
     mCurrentMin = min;
     mCurrentMax = max;
- 
-    int fullScrollSteps = 1000;
-    mScrollBar->setRange(0, fullScrollSteps);
     
-    double position = mCurrentMin;
-    position = (position - mMin) / (mMax-mMin) * double (mScrollBar->maximum());
+    // ---------------------------------------------------
+    //  No zoom ! scrollbar range is max => no scrollbar shown
+    // ---------------------------------------------------
+    if(mCurrentMin == mMin && mCurrentMax == mMax){
+        mScrollBar->setRange(0, 0);
+        return;
+    }
+    // ---------------------------------------------------
+    //  There is a zoom => we pick a scrollSteps
+    //  1000 seems fine so that dragging the scrollbar is smooth.
+    //  (small value here : only allows few dicrete positions)
+    // ---------------------------------------------------
+    
+    // Remember old scroll position
+    /*double posProp = 0;
+    double rangeBefore = (double)mScrollBar->maximum();
+    if(rangeBefore > 0)
+        posProp = (double)mScrollBar->value() / rangeBefore;*/
+    
+    int fullScrollSteps = 1000;
+    mScrollBar->setPageStep(fullScrollSteps);
+    mScrollBar->setRange(0, fullScrollSteps * (1. - (mCurrentMax - mCurrentMin) / (mMax - mMin)));
+    mScrollBar->setValue(mScrollBar->maximum() * ( ((mCurrentMax + mCurrentMin)/2)  - mMin )  / (mMax - mMin));
+    
+    // Set scroll to correct position
+    /*double pos = 0;
+    double rangeAfter = (double)mScrollBar->maximum();
+    if(rangeAfter > 0)
+        pos = floor(posProp * rangeAfter);
+    mScrollBar->setValue(pos);*/
+    
+    // ---------------------------------------------------
+    //
+    // ---------------------------------------------------
+    /*double position = mCurrentMin;
+    position = (position - mMin) / (mMax-mMin) * (double) mScrollBar->maximum();
     mScrollBar->setTracking(false);
     mScrollBar->setSliderPosition(floor(position));//  setValue(floor(position));
-    mScrollBar->setTracking(true);
+    mScrollBar->setTracking(true);*/
     
-  //
     mAxisTool.updateValues(mRulerRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
    // qDebug()<<" Ruler::setCurrent mCurrentMin 3" << mCurrentMin<<" "<< mCurrentMax<<" position"<<position;
 
