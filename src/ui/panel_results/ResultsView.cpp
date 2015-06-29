@@ -601,13 +601,12 @@ void ResultsView::updateScrollHeights()
             
             h += geometries[i].height();
         }
-        wid->setFixedSize(width() - sbe - mOptionsW, h);
+        if(h>0) wid->setFixedSize(width() - sbe - mOptionsW, h);
         
     }
     
     
     if(mByPhasesBut->isChecked()){
-        // qDebug()<<"phase is checked";
         QWidget* wid = mPhasesScrollArea->widget();
         QList<QRect> geometries = getGeometries(mByPhasesGraphs, mUnfoldBut->isChecked(), true);
         int h = 0;
@@ -617,9 +616,8 @@ void ResultsView::updateScrollHeights()
            
             h += geometries[i].height();
         }
-        // mPhasesScrollArea->repaint();
-        wid->setFixedSize(width() - sbe - mOptionsW, h);
-        //mPhasesScrollArea->setFixedSize(width() - sbe - mOptionsW, h);
+
+        if(h>0) wid->setFixedSize(width() - sbe - mOptionsW, h);
     }
     
     // setUpdatesEnabled(true);

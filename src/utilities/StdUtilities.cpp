@@ -302,21 +302,15 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double t
     
         QMultiMap<double, double> inverted;
         QMapIterator<double, double> iter(aMap);
-        //double areaTot = 0.f;
-        //double areaTot = map_area(aMap);
-        //qDebug()<<"create_HPD areaTot ="<<areaTot<<" a="<<aMap.constBegin().key()<<" b="<<(aMap.constEnd()-1).key();
-        //qDebug()<<areaTot*((aMap.constEnd()-1).key()-aMap.constBegin().key())/1024;
-    
+
         while(iter.hasNext()) {
-            //iter.next();
-            /*  original code HL
+            iter.next();
+            //  original code HL from v1.1
              double t = iter.key();
              double v = iter.value();
-        
-             areaTot += v;
+
              inverted.insertMulti(v, t);
-            */
-            inverted.insertMulti(iter.next().value(), iter.key()); //Returns the next item and advances the iterator by one position.
+
         }
     
         double areaSearched = areaTot * threshold / 100.;
@@ -325,10 +319,10 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double t
         QMapIterator<double, double> iterInverted(inverted);
         iterInverted.toBack();
     
-        double area = 0.;
-        bool areaFound = false;
-        bool symetryTested = false;
-        double lastV = 0.;
+        double area         = 0.;
+        bool areaFound      = false;
+        bool symetryTested  = false;
+        double lastV        = 0.;
     
         while(iterInverted.hasPrevious()) {
             iterInverted.previous();
@@ -338,8 +332,8 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double t
             QMap<double, double> ::const_iterator iterMap = aMap.constFind(t);
         
             /*
-                This part of code fixe the case of irregular QMap when the step between keys are not the same
-             and fixe the calculus of the area on the extremum
+                This part of code fix the case of irregular QMap when the step between keys are not the same
+             and fix the calculus of the area on the extremum
              modif PhL 2015/05/20
              */
             if (iterMap.key() == t) { // it's mean : consFind(t) find the good key else iterMap = constEnd()
@@ -367,7 +361,7 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double t
                 }
        
             }
-            //area += v; // original code HL
+            //area += v; // original code HL from v1.1
         
             if(area < areaSearched) {
                 result[t] = v;
@@ -397,7 +391,7 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double t
 
 double map_area(const QMap<double, double>& map)
 {
-    /* original code HL
+    /* original code HL from v1.1
      QMapIterator<double, double> iter(map);
     double area = 0.;
     while(iter.hasNext())

@@ -54,7 +54,9 @@ RESOURCES = Chronomodel.qrc
 
 # Resource file (Windows only)
 win32{
-    RC_FILE = $$PRO_PATH/Chronomodel.rc
+  # RC_FILE = $$PRO_PATH/Chronomodel.rc
+ #RC_FILE = Chronomodel.rc
+message("LabeRC_FILE : $$RC_FILE")
 }
 #########################################
 # C++ 11
