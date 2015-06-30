@@ -9,8 +9,9 @@
 
 
 PluginGaussSettingsView::PluginGaussSettingsView(PluginGauss* plugin, QWidget* parent, Qt::WindowFlags flags):PluginSettingsViewAbstract(plugin, parent, flags){
-    
-    mRefCurvesLab = new Label(tr("Reference curves") + " :", this);
+    // Store the list ofe existing files
+    QString calibPath = ((PluginGauss*)mPlugin)->getRefsPath();
+    mRefCurvesLab = new Label(tr("Reference curves") + " :" , this);
     mRefCurvesLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mRefCurvesList = new QListWidget(this);
     mRefCurvesList->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -23,7 +24,7 @@ PluginGaussSettingsView::PluginGaussSettingsView(PluginGauss* plugin, QWidget* p
     connect(mDeleteRefCurveBut, SIGNAL(clicked()), this, SLOT(deleteRefCurve()));
     
     // Store the list ofe existing files
-    QString calibPath = ((PluginGauss*)mPlugin)->getRefsPath();
+   // QString calibPath = ((PluginGauss*)mPlugin)->getRefsPath();
     QDir calibDir(calibPath);
     QFileInfoList files = calibDir.entryInfoList(QStringList(), QDir::Files);
     for(int i=0; i<files.size(); ++i){
@@ -52,7 +53,7 @@ void PluginGaussSettingsView::updateRefsList(){
 void PluginGaussSettingsView::onAccepted()
 {
     QString calibPath = ((PluginGauss*)mPlugin)->getRefsPath();
-    
+   // QMessageBox::information(qApp->activeWindow(), tr("Warning getRefsPath : "),calibPath);
     // Delete removed curves
     QMapIterator<QString, QString> iter(mFilesOrg);
     iter = QMapIterator<QString, QString>(mFilesOrg);
@@ -61,7 +62,8 @@ void PluginGaussSettingsView::onAccepted()
         if(!mFilesNew.contains(iter.key())){
             if(QMessageBox::question(qApp->activeWindow(), tr("Warning"), tr("You are about to delete a reference curve : ") + " " + iter.key() + ". All data using this curve (in all your projects) will be invalid until you specify another curve for each one. Do you really want to delete this curve?") == QMessageBox::Yes){
                 if(QFile::remove(iter.value())){
-                    qDebug() << "deleted : " << iter.value();
+                   // qDebug() << "deleted : " << iter.value();
+                   // QMessageBox::information(qApp->activeWindow(), tr("Warning delete : "),iter.value());
                 }
             }
         }
@@ -75,7 +77,8 @@ void PluginGaussSettingsView::onAccepted()
             if(QMessageBox::question(qApp->activeWindow(), tr("Warning"), tr("Do you really want to replace existing") + " " + iter.key()) == QMessageBox::Yes){
                 QString filepath = calibPath + "/" + iter.key();
                 if(QFile::remove(filepath) && QFile::copy(iter.value(), filepath)){
-                    qDebug() << "overwritted : " << filepath;
+                  //  qDebug() << "overwritted : " << filepath;
+                  //  QMessageBox::information(qApp->activeWindow(), tr("Warning overwritted to : "),filepath);
                 }
             }
         }
@@ -83,7 +86,8 @@ void PluginGaussSettingsView::onAccepted()
         if(!mFilesOrg.contains(iter.key())){
             QString filepath = calibPath + "/" + iter.key();
             if(QFile::copy(iter.value(), filepath)){
-                qDebug() << "copied : " << filepath;
+                //qDebug() << "copied : " << filepath;
+                //QMessageBox::information(qApp->activeWindow(), tr("Warning copy to : "),filepath);
             }
         }
     }
