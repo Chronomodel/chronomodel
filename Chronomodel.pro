@@ -42,8 +42,6 @@ message("OBJECTS_DIR : $$OBJECTS_DIR")
 message("MOC_DIR : $$MOC_DIR")
 message("RCC_DIR : $$RCC_DIR")
 
-# Icon file
-#ICON = $$PRO_PATH/icon/Chronomodel.icns
 
 # Qt modules (must be deployed along with the application
 QT += core gui widgets svg
@@ -53,11 +51,7 @@ QT += core gui widgets svg
 RESOURCES = Chronomodel.qrc
 
 # Resource file (Windows only)
-win32{
-  # RC_FILE = $$PRO_PATH/Chronomodel.rc
- #RC_FILE = Chronomodel.rc
-message("LabeRC_FILE : $$RC_FILE")
-}
+
 #########################################
 # C++ 11
 # Config must use C++ 11 for random number generator
@@ -94,14 +88,25 @@ macx{
 	RESOURCES_FILES.path = Contents/Resources
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
 #RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
-	RESOURCES_FILES.files += $$PRO_PATH/deploy/License.txt
-	RESOURCES_FILES.files += $$PRO_PATH/deploy/mac/resources/readme.rtf
+        #RESOURCES_FILES.files += $$PRO_PATH/deploy/License.txt
+        #RESOURCES_FILES.files += $$PRO_PATH/deploy/mac/resources/readme.rtf
 
 #RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel_User_Manual.pdf
 
 	QMAKE_BUNDLE_DATA += RESOURCES_FILES
 }
+win32{
+     RC_FILE+ = Chronomodel.rc
+#    message("RC_FILE : $$RC_FILE")
 
+# Icon file in Qt 5
+
+# RC_ICONS +=  $$PRO_PATH/icon/Chronomodel.ico
+#message("RC_ICONS : $$RC_ICONS")
+RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
+#RESOURCES_FILES.files += $$PRO_PATH/icon
+
+}
 
 #########################################
 # DEFINES
@@ -477,3 +482,6 @@ SOURCES += src/utilities/DateUtils.cpp
 
 
 message("-------------------------------------------")
+
+DISTFILES += \
+    icon/Chronomodel.ico
