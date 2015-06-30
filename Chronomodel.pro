@@ -97,6 +97,10 @@ macx{
 }
 win32{
      RC_FILE+ = Chronomodel.rc
+
+DISTFILES += \
+icon/Chronomodel.ico
+
 #    message("RC_FILE : $$RC_FILE")
 
 # Icon file in Qt 5
@@ -483,5 +487,4 @@ SOURCES += src/utilities/DateUtils.cpp
 
 message("-------------------------------------------")
 
-DISTFILES += \
-    icon/Chronomodel.ico
+
