@@ -692,7 +692,7 @@ int DarkBlueStyle::pixelMetric(PixelMetric m, const QStyleOption* opt, const QWi
             break;*/
         default:
             return mStyle->pixelMetric(m, opt, widget);
-            ret = 0;
+            //ret = 0;
             break;
     }
     

@@ -187,7 +187,7 @@ double Generator::boxMuller()
     double rand1 = randomUniform();
     double rand2 = randomUniform();
     return sqrt(-2. * log(rand1)) * cos(2. * M_PI * rand2);
-    checkFloatingPointException("boxMuller");
+    //checkFloatingPointException("boxMuller");
 }
 
 double Generator::gaussByBoxMuller(const double mean, const double sigma)

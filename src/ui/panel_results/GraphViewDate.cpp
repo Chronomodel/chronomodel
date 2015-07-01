@@ -405,7 +405,7 @@ void GraphViewDate::refresh()
             
             if(chainIdx != -1 && chainIdx < mChains.size())
             {
-                if(true)//mChains[chainIdx].mThinningInterval == 1)
+                //if(true)//mChains[chainIdx].mThinningInterval == 1)
                 {
                     GraphCurve curve;
                     curve.mName = QString("correlation chain " + QString::number(chainIdx));
@@ -442,7 +442,8 @@ void GraphViewDate::refresh()
                     curveLimitUpper.mPen.setStyle(Qt::DotLine);
                     mGraph->addCurve(curveLimitUpper);
                 }
-                else
+                /* 
+                 else
                 {
                     // -----------------------------------------------
                     //  Important : auto-correlation must be calculated on ALL TRACE VALUES !!
@@ -453,6 +454,7 @@ void GraphViewDate::refresh()
                     
                     mGraph->setNothingMessage(tr("The thinning interval must be 1 to display this curve."));
                 }
+                */
             }
             
             /*mGraph->setRangeY(0, 1);

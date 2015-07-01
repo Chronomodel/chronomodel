@@ -6,7 +6,7 @@
 # Chronomodel
 #
 #-------------------------------------------------
-
+VERSION = 1.2.11
 PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_
 
@@ -80,7 +80,9 @@ QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas
 macx{
 
 # Icon file
-    ICON = $$PRO_PATH/icon/Chronomodel.icns
+    ICON = $$PRO_PATH/icon/ChronoModelIcon.icns
+#  QMAKE_BUNDLE_DATA += icons
+
 
 	QMAKE_MAC_SDK = macosx10.10
 	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
@@ -94,6 +96,9 @@ macx{
 #RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel_User_Manual.pdf
 
 	QMAKE_BUNDLE_DATA += RESOURCES_FILES
+
+
+
 }
 win32{
      RC_FILE+ = Chronomodel.rc
@@ -155,7 +160,9 @@ macx{
 ## change son nom dans l'application
 #QMAKE_POST_LINK += install_name_tool -change ./libfftw3.dylib @loader_path/../Librairies/libfftw3.dylib $${APP_DESTDIR}/$${TARGET};
 
+
 #QMAKE_LFLAGS += -Wl,-rpath,@loader_path/../Lib
+
 DEPENDPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac/
 
 INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW
@@ -163,6 +170,16 @@ INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW
     #LIBS += -L/lib/FFTW/mac -lfftw3f
 LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
         message("macx->FFTW $$LIBS ")
+
+
+#http://www.qtcentre.org/archive/index.php/t-8092.html
+# install into app bundle
+
+FFTW_FILES.path = Contents/Resources
+FFTW_FILES.files += $$PRO_PATH/deploy/mac/FFTW
+
+message("FFTW_FILES.files->FFTW $$_PRO_FILE_PWD_/lib/FFTW/macs ")
+QMAKE_BUNDLE_DATA += FFTW_FILES
 
 
 }

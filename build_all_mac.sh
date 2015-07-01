@@ -19,7 +19,7 @@ fi
 #	Create useful variables for the paths
 # -------------------------------------------------------
 ROOT_PATH=$(dirname $0)
-BUNDLE_PATH=Release/Chronomodel.app
+BUNDLE_PATH=Release/ChronoModel.app
 QT_BIN_PATH=$2
 VERSION=$1
 
@@ -51,7 +51,7 @@ ${QT_BIN_PATH}/macdeployqt $BUNDLE_PATH
 # -------------------------------------------------------
 #	Create the package for installation
 # ------------------------------------------------------
-pkgbuild --component Release/Chronomodel.app --identifier com.chronomodel.pkg.app --version ${VERSION} --install-location /Applications ./deploy/mac/Chronomodel.pkg
+pkgbuild --component Release/ChronoModel.app --identifier com.chronomodel.pkg.app --version ${VERSION} --install-location /Applications ./deploy/mac/Chronomodel.pkg
 
 # -------------------------------------------------------
 #	Create the installer using the package and a distribution file (.dist)

@@ -384,7 +384,7 @@ void GraphViewEvent::refresh()
             
             if(chainIdx != -1 && chainIdx < mChains.size())
             {
-                if(true)//mChains[chainIdx].mThinningInterval == 1)
+                //if(true)//mChains[chainIdx].mThinningInterval == 1)
                 {
                     GraphCurve curve;
                     curve.mName = QString("correlation chain " + QString::number(chainIdx));
@@ -421,6 +421,7 @@ void GraphViewEvent::refresh()
                     curveLimitUpper.mPen.setStyle(Qt::DotLine);
                     mGraph->addCurve(curveLimitUpper);
                 }
+                /*
                 else
                 {
                     // -----------------------------------------------
@@ -432,6 +433,7 @@ void GraphViewEvent::refresh()
                     
                     mGraph->setNothingMessage(tr("The thinning interval must be 1 to display this curve."));
                 }
+                */
             }
         }
     }

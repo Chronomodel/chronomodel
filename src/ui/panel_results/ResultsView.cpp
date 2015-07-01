@@ -37,6 +37,7 @@
 
 #pragma mark Constructor & Destructor
 ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
+mHasPhases(false),
 mModel(0),
 mMargin(5),
 mOptionsW(200),
@@ -45,7 +46,6 @@ mGraphLeft(130),
 mRulerH(40),
 mTabsH(30),
 mGraphsH(130),
-mHasPhases(false),
 mZoomDensity(0),
 mZoomTrace(0),
 mZoomAccept(0),
