@@ -37,7 +37,7 @@ public:
     QLabel* mLabel2;
     QProgressBar* mProgressBar1;
     QProgressBar* mProgressBar2;
-    QPushButton* mOKBut;
+   // QPushButton* mOKBut;
     QPushButton* mCancelBut;
 };
 

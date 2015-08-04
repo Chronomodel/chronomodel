@@ -24,9 +24,9 @@ mLoop(loop)
     // ----------
     
     QDialogButtonBox* buttonBox = new QDialogButtonBox();
-    mOKBut = buttonBox->addButton(tr("OK"), QDialogButtonBox::AcceptRole);
+    // mOKBut = buttonBox->addButton(tr("OK"), QDialogButtonBox::AcceptRole);
     mCancelBut = buttonBox->addButton(tr("Cancel"), QDialogButtonBox::RejectRole);
-    mOKBut->setEnabled(false);
+    // mOKBut->setEnabled(false);
     
     connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
     connect(mCancelBut, SIGNAL(clicked()), this, SLOT(cancelMCMC()));
@@ -100,7 +100,7 @@ void MCMCProgressDialog::setProgress2(int value)
 
 void MCMCProgressDialog::setFinishedState()
 {
-    mOKBut->setEnabled(true);
+   // mOKBut->setEnabled(true);
     mCancelBut->setEnabled(false);
 }
 
