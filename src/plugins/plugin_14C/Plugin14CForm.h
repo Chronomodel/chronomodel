@@ -29,11 +29,15 @@ protected:
 private:
     Label* mAverageLab;
     Label* mErrorLab;
+    Label* mRLab;
+    Label* mRErrorLab;
     Label* mRefLab;
-    Label* mRefPathLab;
+    //Label* mRefPathLab;
     
     LineEdit* mAverageEdit;
     LineEdit* mErrorEdit;
+    LineEdit* mREdit;
+    LineEdit* mRErrorEdit;
     QComboBox* mRefCombo;
     
     static QString mSelectedRefCurve;

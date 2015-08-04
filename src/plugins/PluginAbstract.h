@@ -37,7 +37,7 @@ public:
     virtual QList<Date::DataMethod> allowedDataMethods() const = 0;
     virtual QString csvHelp() const{return QString();}
     virtual QStringList csvColumns() const{return QStringList();}
-    int csvMinColumns() const {return csvColumns().size();}
+    virtual int csvMinColumns() const {return csvColumns().size();}
     virtual QJsonObject fromCSV(const QStringList& list) = 0;
     virtual QStringList toCSV(const QJsonObject& data) = 0;
     virtual QString getDateDesc(const Date* date) const = 0;

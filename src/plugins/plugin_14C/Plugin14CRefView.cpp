@@ -38,6 +38,8 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
     {
         double age = date.mData.value(DATE_14C_AGE_STR).toDouble();
         double error = date.mData.value(DATE_14C_ERROR_STR).toDouble();
+        double delta_r = date.mData.value(DATE_14C_DELTA_R_STR).toDouble();
+        double delta_r_error = date.mData.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
         QString ref_curve = date.mData.value(DATE_14C_REF_CURVE_STR).toString().toLower();
         
         // ----------------------------------------------
@@ -113,10 +115,21 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         
         GraphCurve curveMeasure;
         curveMeasure.mName = "Measure";
-        curveMeasure.mPen.setColor(mMeasureColor);
-        QColor curveColor(mMeasureColor);
-        curveColor.setAlpha(50);
-        curveMeasure.mBrush.setColor(curveColor);
+        
+        QColor penColor(mMeasureColor);
+        QColor brushColor(mMeasureColor);
+        
+        // Lower opacity in case of delta r not null
+        if(delta_r != 0 && delta_r_error != 0){
+            penColor.setAlpha(100);
+            brushColor.setAlpha(15);
+        }else{
+            penColor.setAlpha(255);
+            brushColor.setAlpha(50);
+        }
+        curveMeasure.mPen.setColor(penColor);
+        curveMeasure.mBrush.setColor(brushColor);
+        
         curveMeasure.mFillUnder = true;
         curveMeasure.mIsVertical = true;
         curveMeasure.mIsHisto = false;
@@ -133,11 +146,54 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         curveMeasure.mData = normalize_map(curveMeasure.mData);
         mGraph->addCurve(curveMeasure);
         
-        // Write measure value :
-        mGraph->addInfo(tr("Age BP : ") + QString::number(age) + " ± " + QString::number(error));
+        // Infos to write :
+        QString info = tr("Age BP : ") + QString::number(age) + " ± " + QString::number(error);
         
         // ----------------------------------------------
-        //  Error on measure
+        //  Delta R curve
+        // ----------------------------------------------
+        if(delta_r != 0 && delta_r_error != 0)
+        {
+            // Apply reservoir effect
+            age = (age - delta_r);
+            error = sqrt(error * error + delta_r_error * delta_r_error);
+            
+            GraphCurve curveDeltaR;
+            curveDeltaR.mName = "Delta R";
+            
+            penColor = mMeasureColor;
+            brushColor = mMeasureColor;
+            brushColor.setAlpha(50);
+            
+            curveDeltaR.mPen.setColor(penColor);
+            curveDeltaR.mBrush.setColor(brushColor);
+            curveDeltaR.mFillUnder = true;
+            curveDeltaR.mIsVertical = true;
+            curveDeltaR.mIsHisto = false;
+            
+            // 5000 pts are used on vertical measure
+            // because the y scale auto adjusts depending on x zoom.
+            // => the visible part of the measure may be very reduced !
+            step = (yMax - yMin) / 5000.;
+            for(double t=yMin; t<yMax; t += step)
+            {
+                double v = exp(-0.5 * pow((age - t) / error, 2));
+                curveDeltaR.mData[t] = v;
+            }
+            curveDeltaR.mData = normalize_map(curveDeltaR.mData);
+            mGraph->addCurve(curveDeltaR);
+            
+            info += tr(", ΔR : ") + QString::number(delta_r) + " ± " + QString::number(delta_r_error);
+        }
+
+        // ----------------------------------------------
+        //  Textual info
+        // ----------------------------------------------
+        
+        mGraph->addInfo(info);
+        
+        // ----------------------------------------------
+        //  Error on measure (horizontal lines)
         // ----------------------------------------------
         
         GraphCurve curveMeasureAvg;

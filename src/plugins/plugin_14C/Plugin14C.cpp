@@ -22,7 +22,13 @@ double Plugin14C::getLikelyhood(const double& t, const QJsonObject& data)
 {
     double age = data[DATE_14C_AGE_STR].toDouble();
     double error = data[DATE_14C_ERROR_STR].toDouble();
+    double delta_r = data[DATE_14C_DELTA_R_STR].toDouble();
+    double delta_r_error = data[DATE_14C_DELTA_R_ERROR_STR].toDouble();
     QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString().toLower();
+    
+    // Apply reservoir effect
+    age = (age - delta_r);
+    error = sqrt(error * error + delta_r_error * delta_r_error);
     
     double result = 0;
     
@@ -92,10 +98,12 @@ QList<Date::DataMethod> Plugin14C::allowedDataMethods() const
 QStringList Plugin14C::csvColumns() const
 {
     QStringList cols;
-    cols << "Name" << "Age" << "Error (sd)" << "Reference curve";
+    cols << "Name" << "Age" << "Error (sd)" << "Reference curve" << "ΔR" << "ΔR Error";
     return cols;
 }
-
+int Plugin14C::csvMinColumns() const{
+    return csvColumns().count() - 2;
+}
 
 PluginFormAbstract* Plugin14C::getForm()
 {
@@ -112,8 +120,12 @@ QJsonObject Plugin14C::fromCSV(const QStringList& list)
         json.insert(DATE_14C_ERROR_STR, list[2].toDouble());
         json.insert(DATE_14C_REF_CURVE_STR, list[3].toLower());
         
-        qDebug() << list;
-        qDebug() << json;
+        // These columns are nor mandatory in the CSV file so check if they exist :
+        json.insert(DATE_14C_DELTA_R_STR, (list.size() > 4) ? list[4].toDouble() : 0);
+        json.insert(DATE_14C_DELTA_R_ERROR_STR, (list.size() > 5) ? list[5].toDouble() : 0);
+        
+        //qDebug() << list;
+        //qDebug() << json;
     }
     return json;
 }
@@ -124,6 +136,8 @@ QStringList Plugin14C::toCSV(const QJsonObject& data)
     list << QString::number(data[DATE_14C_AGE_STR].toDouble());
     list << QString::number(data[DATE_14C_ERROR_STR].toDouble());
     list << data[DATE_14C_REF_CURVE_STR].toString();
+    list << QString::number(data[DATE_14C_DELTA_R_STR].toDouble());
+    list << QString::number(data[DATE_14C_DELTA_R_ERROR_STR].toDouble());
     return list;
 }
 
@@ -133,9 +147,20 @@ QString Plugin14C::getDateDesc(const Date* date) const
     if(date)
     {
         QJsonObject data = date->mData;
-        result += QObject::tr("Age") + " : " + QString::number(data[DATE_14C_AGE_STR].toDouble());
-        result += " ± " + QString::number(data[DATE_14C_ERROR_STR].toDouble());
-        result += ", " + QObject::tr("Ref. curve") + " : " + data[DATE_14C_REF_CURVE_STR].toString().toLower();
+        
+        double age = data[DATE_14C_AGE_STR].toDouble();
+        double error = data[DATE_14C_ERROR_STR].toDouble();
+        double delta_r = data[DATE_14C_DELTA_R_STR].toDouble();
+        double delta_r_error = data[DATE_14C_DELTA_R_ERROR_STR].toDouble();
+        QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString().toLower();
+        
+        result += QObject::tr("Age") + " : " + QString::number(age);
+        result += " ± " + QString::number(error);
+        if(delta_r != 0 && delta_r_error != 0){
+            result += ", " + QObject::tr("ΔR") + " : " + QString::number(delta_r);
+            result += " ± " + QString::number(delta_r_error);
+        }
+        result += ", " + QObject::tr("Ref. curve") + " : " + ref_curve;
     }
     return result;
 }
@@ -294,7 +319,13 @@ PluginSettingsViewAbstract* Plugin14C::getSettingsView()
 
 QJsonObject Plugin14C::checkValuesCompatibility(const QJsonObject& values){
     QJsonObject result = values;
-   
+
+    if(result.find(DATE_14C_DELTA_R_STR) == result.end())
+        result[DATE_14C_DELTA_R_STR] = 0;
+    
+    if(result.find(DATE_14C_DELTA_R_ERROR_STR) == result.end())
+        result[DATE_14C_DELTA_R_ERROR_STR] = 0;
+    
     return result;
 }
 
@@ -302,8 +333,14 @@ bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& sett
     
     double age = data[DATE_14C_AGE_STR].toDouble();
     double error = data[DATE_14C_ERROR_STR].toDouble();
-  
+    double delta_r = data[DATE_14C_DELTA_R_STR].toDouble();
+    double delta_r_error = data[DATE_14C_DELTA_R_ERROR_STR].toDouble();
     QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString();
+    
+    // Apply reservoir effect
+    age = (age - delta_r);
+    error = sqrt(error * error + delta_r_error * delta_r_error);
+    
     const QMap<double, double>& curveG95Inf = mRefDatas[ref_curve]["G95Inf"];
     const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
     

@@ -7,6 +7,8 @@
 
 #define DATE_14C_AGE_STR "age"
 #define DATE_14C_ERROR_STR "error"
+#define DATE_14C_DELTA_R_STR "delta_r"
+#define DATE_14C_DELTA_R_ERROR_STR "delta_r_error"
 #define DATE_14C_REF_CURVE_STR "ref_curve"
 
 
@@ -27,6 +29,7 @@ public:
     Date::DataMethod getDataMethod() const;
     QList<Date::DataMethod> allowedDataMethods() const;
     QStringList csvColumns() const;
+    int csvMinColumns() const;
     QJsonObject fromCSV(const QStringList& list);
     QStringList toCSV(const QJsonObject& data);
     QString getDateDesc(const Date* date) const;
