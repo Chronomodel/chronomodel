@@ -83,9 +83,15 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     painter->setPen(Qt::black);
     painter->drawText(r.adjusted(0, 0, 0, -r.height()/2), Qt::AlignCenter, mDate[STATE_NAME].toString());
     
-    painter->drawPixmap(r.adjusted(0, r.height()/2, 0, 0),
-                        mCalibThumb,
-                        mCalibThumb.rect());
+    if(!mCalibThumb.isNull()){
+        painter->drawPixmap(r.adjusted(0, r.height()/2, 0, 0),
+                            mCalibThumb,
+                            mCalibThumb.rect());
+    }else{
+        painter->setPen(Qt::red);
+        painter->drawText(r.adjusted(0, r.height()/2, 0, 0), Qt::AlignCenter, tr("Invalid"));
+    }
+
     
     /*if(mGreyedOut)
     {

@@ -54,12 +54,18 @@ public:
         QString pluginId = index.model()->data(index, 0x0102).toString();
         QString delta = index.model()->data(index, 0x0105).toString();
         QString dateMethodStr = index.model()->data(index, 0x0106).toString();
+        bool isValid = index.model()->data(index, 0x0107).toBool();
         
         
         PluginAbstract* plugin = PluginManager::getPluginFromId(pluginId);
         
         if(plugin)
         {
+            if(!isValid){
+                painter->setBrush(QColor(255, 240, 240));
+                painter->drawRect(option.rect);
+            }
+            
             QIcon icon = plugin->getIcon();
             QPixmap pixmap = icon.pixmap(iconS, iconS);
             painter->drawPixmap(x + (iconW - iconS)/2, y + (h - iconS)/2, iconS, iconS, pixmap, 0, 0, pixmap.width(), pixmap.height());

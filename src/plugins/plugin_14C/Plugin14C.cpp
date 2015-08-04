@@ -292,4 +292,41 @@ PluginSettingsViewAbstract* Plugin14C::getSettingsView()
     return new Plugin14CSettingsView(this);
 }
 
+QJsonObject Plugin14C::checkValuesCompatibility(const QJsonObject& values){
+    QJsonObject result = values;
+   
+    return result;
+}
+
+bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& settings){
+    
+    double age = data[DATE_14C_AGE_STR].toDouble();
+    double error = data[DATE_14C_ERROR_STR].toDouble();
+  
+    QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString();
+    const QMap<double, double>& curveG95Inf = mRefDatas[ref_curve]["G95Inf"];
+    const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
+    
+    QMap<double, double>::const_iterator iter = curveG95Sup.constFind(settings.mTmin);
+    if(iter != curveG95Sup.constEnd()){
+        double max = iter.value();
+        while(iter != curveG95Sup.constEnd() && iter.key() <= settings.mTmax){
+            max = qMax(max, iter.value());
+            ++iter;
+        }
+        
+        iter = curveG95Inf.constFind(settings.mTmin);
+        if(iter != curveG95Inf.constEnd()){
+            double min = iter.value();
+            while(iter != curveG95Inf.constEnd() && iter.key() <= settings.mTmax){
+                min = qMin(min, iter.value());
+                ++iter;
+            }
+            return ((age - error < max) && (age + error > min));
+        }
+    }
+    
+    return false;
+}
+
 #endif

@@ -25,15 +25,15 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     
     mLastPath = QDir::homePath();
     
-    mUndoStack = new QUndoStack();
-    mUndoStack->setUndoLimit(1000);
-    
     mProject = new Project();
     mProject->setAppSettings(mAppSettings);
 
     mProjectView = new ProjectView();
     setCentralWidget(mProjectView);
 
+    mUndoStack = new QUndoStack();
+    mUndoStack->setUndoLimit(1000);
+    
     mUndoView = new QUndoView(mUndoStack);
     mUndoView->setEmptyLabel(tr("Initial state"));
     mUndoDock = new QDockWidget(this);
@@ -61,7 +61,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     
     
     
-    connect(mProject, SIGNAL(projectStateChanged()), mProjectView, SLOT(updateProject()));
+    connect(mProject, SIGNAL(projectStateChanged()), this, SLOT(updateProject()));
     connect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
     
     connect(mViewLogAction, SIGNAL(triggered()), mProjectView, SLOT(showLog()));
@@ -427,6 +427,12 @@ void MainWindow::saveProjectAs()
 void MainWindow::updateWindowTitle()
 {
     setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + (!(mProject->mProjectFileName.isEmpty()) ? QString(" - ") + mProject->mProjectFileName : ""));
+}
+
+void MainWindow::updateProject(){
+    bool valid = mProject->isValid();
+    mRunAction->setEnabled(valid);
+    mProjectView->updateProject();
 }
 
 #pragma mark Settings & About

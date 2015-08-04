@@ -54,7 +54,7 @@ mProjectFileName(QObject::tr("Untitled"))
     mAutoSaveTimer = new QTimer(this);
     connect(mAutoSaveTimer, SIGNAL(timeout()), this, SLOT(save()));
     mAutoSaveTimer->start(3000);
-    mModel =new Model();
+    mModel = new Model();
 }
 
 Project::~Project()
@@ -174,11 +174,11 @@ void Project::updateState(const QJsonObject& state, const QString& reason, bool 
     mState = state;
     if(notify)
     {
-        QProgressDialog progress(qApp->activeWindow(), Qt::Sheet);
+        /*QProgressDialog progress(qApp->activeWindow(), Qt::Sheet);
         progress.setLabelText(tr("Loading..."));
         progress.setRange(0, 0);
         progress.setModal(true);
-        progress.setCancelButton(0);
+        progress.setCancelButton(0);*/
         
         if(reason == PROJECT_LOADED_REASON)
         {
@@ -198,7 +198,6 @@ void Project::updateState(const QJsonObject& state, const QString& reason, bool 
         {
             showStudyPeriodWarning();
         }
-        
         emit projectStateChanged();
     }
 }
@@ -221,6 +220,23 @@ void Project::sendPhasesSelectionChanged()
     QCoreApplication::postEvent(this, e, Qt::NormalEventPriority);
 }
 
+
+
+bool Project::isValid(){
+    QJsonArray events = mState[STATE_EVENTS].toArray();
+    for(int i=0; i<events.size(); ++i)
+    {
+        QJsonObject event = events[i].toObject();
+        QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+        for(int j=0; j<dates.size(); ++j)
+        {
+            QJsonObject date = dates[j].toObject();
+            if(!date[STATE_DATE_VALID].toBool())
+                return false;
+        }
+    }
+    return true;
+}
 
 
 #pragma mark Project File Management
@@ -274,14 +290,19 @@ bool Project::load(const QString& path)
         {
             mState = jsonDoc.object();
             
-            // TODO : iterate over mState to check all data integrity !!!
-            //
-            checkDatesIntegrity();
+            //  Ask all plugins if dates are corrects.
+            //  If not, it may be an incompatibility between plugins versions (new parameter added for example...)
+            //  This function gives a chance to plugins to modify dates saved with old versions in order to use them with the new version.
+            checkDatesCompatibility();
+            
+            //  Check if dates are valid on the current study period
+            mState = checkValidDates(mState);
             
             if(!mState.contains(STATE_APP_VERSION))
                 mState[STATE_APP_VERSION] = qApp->applicationVersion();
             
             mLastSavedState = mState;
+            
             
             pushProjectState(mState, PROJECT_LOADED_REASON, true, true);
             
@@ -478,8 +499,15 @@ bool Project::setSettings(const ProjectSettings& settings)
     else
     {
         QJsonObject stateNext = mState;
+        
+        // Set the new srudy period in the new state
         stateNext[STATE_SETTINGS] = settings.toJson();
-        return pushProjectState(stateNext, tr("Settings updated"), true);
+        
+        // Check if dates are still valid on the new study period
+        stateNext = checkValidDates(stateNext);
+        
+        //  Push the new state having a new study period with dates' "valid flag" updated!
+        return pushProjectState(stateNext, tr("Settings updated"), true, true);
     }
 }
 
@@ -581,6 +609,7 @@ void Project::showStudyPeriodWarning()
                         Qt::Sheet);
     message.exec();
 }
+
 
 // --------------------------------------------------------------------
 //     Events
@@ -871,6 +900,15 @@ Date Project::createDateFromPlugin(PluginAbstract* plugin)
 void Project::addDate(int eventId, QJsonObject date)
 {
     QJsonObject stateNext = mState;
+    
+    // Validate the date before addig it to the correct event and pushing the state
+    QJsonObject settingsJson = stateNext[STATE_SETTINGS].toObject();
+    ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
+    PluginAbstract* plugin = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
+    bool valid = plugin->isDateValid(date[STATE_DATE_DATA].toObject(), settings);
+    date[STATE_DATE_VALID] = valid;
+    
+    // Add the date
     QJsonArray events = mState[STATE_EVENTS].toArray();
     for(int i=0; i<events.size(); ++i)
     {
@@ -890,7 +928,7 @@ void Project::addDate(int eventId, QJsonObject date)
     }
 }
 
-void Project::checkDatesIntegrity()
+void Project::checkDatesCompatibility()
 {
     QJsonObject state = mState;
     QJsonArray events = mState[STATE_EVENTS].toArray();
@@ -906,7 +944,7 @@ void Project::checkDatesIntegrity()
             QString pluginId = date[STATE_DATE_PLUGIN_ID].toString();
             PluginAbstract* plugin = PluginManager::getPluginFromId(pluginId);
             
-            date[STATE_DATE_DATA] = plugin->checkValuesIntegrity(date[STATE_DATE_DATA].toObject());
+            date[STATE_DATE_DATA] = plugin->checkValuesCompatibility(date[STATE_DATE_DATA].toObject());
             
             dates[j] = date;
             event[STATE_EVENT_DATES] = dates;
@@ -920,6 +958,10 @@ void Project::checkDatesIntegrity()
 void Project::updateDate(int eventId, int dateIndex)
 {
     QJsonObject state = mState;
+    
+    QJsonObject settingsJson = state[STATE_SETTINGS].toObject();
+    ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
+    
     QJsonArray events = mState[STATE_EVENTS].toArray();
     
     for(int i=0; i<events.size(); ++i)
@@ -954,6 +996,10 @@ void Project::updateDate(int eventId, int dateIndex)
                         date[STATE_DATE_DELTA_MAX] = dialog.getDeltaMax();
                         date[STATE_DATE_DELTA_AVERAGE] = dialog.getDeltaAverage();
                         date[STATE_DATE_DELTA_ERROR] = dialog.getDeltaError();
+                        
+                        PluginAbstract* plugin = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
+                        bool valid = plugin->isDateValid(date[STATE_DATE_DATA].toObject(), settings);
+                        date[STATE_DATE_VALID] = valid;
                         
                         dates[dateIndex] = date;
                         event[STATE_EVENT_DATES] = dates;
@@ -1105,6 +1151,33 @@ void Project::recycleDates(int eventId)
             }
         }
     }
+}
+
+QJsonObject Project::checkValidDates(const QJsonObject& stateToCheck)
+{
+    QJsonObject state = stateToCheck;
+    
+    QJsonObject settingsJson = state[STATE_SETTINGS].toObject();
+    ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
+    
+    QJsonArray events = state[STATE_EVENTS].toArray();
+    for(int i=0; i<events.size(); ++i){
+        QJsonObject event = events[i].toObject();
+        QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+        for(int j=0; j<dates.size(); ++j){
+            QJsonObject date = dates[j].toObject();
+            
+            PluginAbstract* plugin = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
+            bool valid = plugin->isDateValid(date[STATE_DATE_DATA].toObject(), settings);
+            date[STATE_DATE_VALID] = valid;
+            
+            dates[j] = date;
+        }
+        event[STATE_EVENT_DATES] = dates;
+        events[i] = event;
+    }
+    state[STATE_EVENTS] = events;
+    return state;
 }
 
 #pragma mark Phases
@@ -1961,6 +2034,7 @@ void Project::run()
     emit mcmcStarted();
     
     clearModel();
+    
     //mModel = Model::fromJson(mState);
     mModel->fromJson(mState);
     bool modelOk = false;

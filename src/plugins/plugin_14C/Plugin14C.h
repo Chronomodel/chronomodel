@@ -35,6 +35,9 @@ public:
     GraphViewRefAbstract* getGraphViewRef();
     PluginSettingsViewAbstract* getSettingsView();
     
+    QJsonObject checkValuesCompatibility(const QJsonObject& values);
+    bool isDateValid(const QJsonObject& data, const ProjectSettings& settings);
+    
     // ---------------------
     
     QString getRefsPath() const;

@@ -53,7 +53,8 @@ public:
     
     // Function to check if data values are ok : depending on the application version, plugin data values may change.
     // eg. : a new parameter may be added to 14C plugin, ...
-    virtual QJsonObject checkValuesIntegrity(const QJsonObject& values){return values;}
+    virtual QJsonObject checkValuesCompatibility(const QJsonObject& values){return values;}
+    virtual bool isDateValid(const QJsonObject& data, const ProjectSettings& settings){return true;}
     
     virtual PluginFormAbstract* getForm() = 0;
     virtual GraphViewRefAbstract* getGraphViewRef() = 0;

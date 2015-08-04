@@ -64,6 +64,7 @@ void DatesList::setEvent(const QJsonObject& event)
                     item->setData(0x0104, d.mId);
                     item->setData(0x0105, ModelUtilities::getDeltaText(d));
                     item->setData(0x0106, ModelUtilities::getDataMethodText(d.mMethod));
+                    item->setData(0x0107, d.mIsValid);
                     
                     addItem(item);
                 }

@@ -1,4 +1,4 @@
-﻿#ifndef PROJECT_H
+#ifndef PROJECT_H
 #define PROJECT_H
 
 #include "AppSettings.h"
@@ -72,6 +72,8 @@ public:
     bool studyPeriodIsValid();
     void showStudyPeriodWarning();
     
+    bool isValid();
+    
     // ---------------------------
     
     void addEvent(QJsonObject event, const QString& reason);
@@ -88,7 +90,8 @@ public:
     void deleteDates(int eventId, const QList<int>& dateIndexes);
     void recycleDates(int eventId);
     void deleteSelectedTrashedDates(const QList<int>& ids);
-    void checkDatesIntegrity();
+    void checkDatesCompatibility();
+    QJsonObject checkValidDates(const QJsonObject& state);
     
     // TODO : Should be in Plugin14C but how ??
     void updateAll14CData(const QString& refCurve);

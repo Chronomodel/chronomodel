@@ -352,12 +352,60 @@ PluginSettingsViewAbstract* PluginGauss::getSettingsView()
 
 // ------------------------------------------------------------------
 
-QJsonObject PluginGauss::checkValuesIntegrity(const QJsonObject& values){
+QJsonObject PluginGauss::checkValuesCompatibility(const QJsonObject& values){
     QJsonObject result = values;
     if(!values.contains(DATE_GAUSS_MODE_STR)){
         result.insert(DATE_GAUSS_MODE_STR, DATE_GAUSS_MODE_EQ);
     }
     return result;
+}
+
+bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& settings){
+    
+    double age = data[DATE_GAUSS_AGE_STR].toDouble();
+    double error = data[DATE_GAUSS_ERROR_STR].toDouble();
+    
+    QString mode = data[DATE_GAUSS_MODE_STR].toString();
+    
+    if(mode == DATE_GAUSS_MODE_EQ){
+        double a = data[DATE_GAUSS_A_STR].toDouble();
+        double b = data[DATE_GAUSS_B_STR].toDouble();
+        double c = data[DATE_GAUSS_C_STR].toDouble();
+        
+        QVector<double> refValues;
+        for(double t=settings.mTmin; t<=settings.mTmax; t+=settings.mStep)
+            refValues.push_back(a * t * t + b * t + c);
+        
+        double min = vector_min_value(refValues);
+        double max = vector_max_value(refValues);
+        
+        return ((age - error < max) && (age + error > min));
+    }
+    else if(mode == DATE_GAUSS_MODE_CURVE){
+        QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
+        const QMap<double, double>& curveG95Inf = mRefDatas[ref_curve]["G95Inf"];
+        const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
+        
+        QMap<double, double>::const_iterator iter = curveG95Sup.constFind(settings.mTmin);
+        if(iter != curveG95Sup.constEnd()){
+            double max = iter.value();
+            while(iter != curveG95Sup.constEnd() && iter.key() <= settings.mTmax){
+                max = qMax(max, iter.value());
+                ++iter;
+            }
+            
+            iter = curveG95Inf.constFind(settings.mTmin);
+            if(iter != curveG95Inf.constEnd()){
+                double min = iter.value();
+                while(iter != curveG95Inf.constEnd() && iter.key() <= settings.mTmax){
+                    min = qMin(min, iter.value());
+                    ++iter;
+                }
+                return ((age - error < max) && (age + error > min));
+            }
+        }
+    }
+    return false;
 }
 
 #endif

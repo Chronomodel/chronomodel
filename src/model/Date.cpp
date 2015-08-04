@@ -27,6 +27,7 @@ void Date::init()
 {
     mId = 0;
     mMethod = eMHIndependant;
+    mIsValid = true;
     mDelta = 0;
     mDeltaType = eDeltaFixed;
     mDeltaFixed = 0;
@@ -61,6 +62,7 @@ void Date::copyFrom(const Date& date)
     mData = date.mData;
     mPlugin = date.mPlugin;
     mMethod = date.mMethod;
+    mIsValid = date.mIsValid;
     
     mDeltaType = date.mDeltaType;
     mDeltaFixed = date.mDeltaFixed;
@@ -103,6 +105,7 @@ Date Date::fromJson(const QJsonObject& json)
         date.mData = json[STATE_DATE_DATA].toObject();
         
         date.mMethod = (DataMethod)json[STATE_DATE_METHOD].toInt();
+        date.mIsValid = json[STATE_DATE_VALID].toBool();
         
         date.mDeltaType = (Date::DeltaType)json[STATE_DATE_DELTA_TYPE].toInt();
         date.mDeltaFixed = json[STATE_DATE_DELTA_FIXED].toDouble();
@@ -133,6 +136,7 @@ QJsonObject Date::toJson() const
     date[STATE_DATE_DATA] = mData;
     date[STATE_DATE_PLUGIN_ID] = mPlugin->getId();
     date[STATE_DATE_METHOD] = mMethod;
+    date[STATE_DATE_VALID] = mIsValid;
     
     date[STATE_DATE_DELTA_TYPE] = mDeltaType;
     date[STATE_DATE_DELTA_FIXED] = mDeltaFixed;
@@ -247,51 +251,65 @@ QMap<double, double> Date::getCalibMap() const
 
 QPixmap Date::generateCalibThumb()
 {
-    double tmin = mSettings.mTmin;
-    double tmax = mSettings.mTmax;
-   // qDebug()<<" Date::generateCalibThumb"<<tmin<<tmax<<mSettings.mStep;
-    GraphView* graph = new GraphView();
-    graph->setFixedSize(200, 30);
-    graph->setMargins(0, 0, 0, 0);
+    if(mIsValid){
+        //  No need to draw the graph on a large size
+        //  These values are arbitary
+        QSize size(200, 30);
+        QPixmap thumb(size);
+        
+        QPainter p;
+        p.begin(&thumb);
+        p.setRenderHint(QPainter::Antialiasing);
+        
+        double tmin = mSettings.mTmin;
+        double tmax = mSettings.mTmax;
+        // qDebug()<<" Date::generateCalibThumb"<<tmin<<tmax<<mSettings.mStep;
+        GraphView graph;
+        graph.setFixedSize(size);
+        graph.setMargins(0, 0, 0, 0);
+        
+        graph.setRangeX(tmin, tmax);
+        graph.setCurrentX(tmin, tmax);
+        graph.setRangeY(0, 1.1f);
+        
+        graph.showAxisArrows(false);
+        graph.showAxisLines(false);
+        graph.setXAxisMode(GraphView::eHidden);
+        graph.setYAxisMode(GraphView::eHidden);
+        
+        QColor color = mPlugin->getColor();//  Painting::mainColorLight;
+        QColor HPDColor(color);
+        //HPDColor.setAlpha(100);
+        
+        GraphCurve curve;
+        //QMap<double, double> mDataCalib;
+        // mDataCalib  = getCalibMap();
+        curve.mData = normalize_map(getCalibMap());
+        
+        curve.mName = "Calibration";
+        curve.mPen.setColor(color);
+        curve.mPen.setWidthF(2.f);
+        curve.mBrush.setColor(HPDColor);
+        curve.mFillUnder = true;
+        curve.mIsHisto = false;
+        curve.mIsRectFromZero = true; // For Typo !!
+        
+        graph.addCurve(curve);
+        graph.repaint();
+        
+        graph.render(&p);
+        p.end();
+        
+        return thumb;
+    }
+    else{
+        // If date is invalid, return a null pixmap!
+        return QPixmap();
+    }
     
-    graph->setRangeX(tmin, tmax);
-    graph->setCurrentX(tmin, tmax);
-    graph->setRangeY(0, 1.1f);
-    
-    graph->showAxisArrows(false);
-    graph->showAxisLines(false);
-    graph->setXAxisMode(GraphView::eHidden);
-    graph->setYAxisMode(GraphView::eHidden);
-    
-    QColor color = mPlugin->getColor();//  Painting::mainColorLight;
-    QColor HPDColor(color);
-    //HPDColor.setAlpha(100);
-    
-    GraphCurve curve;
-    //QMap<double, double> mDataCalib;
-   // mDataCalib  = getCalibMap();
-    curve.mData = normalize_map(getCalibMap());
-    
-    curve.mName = "Calibration";
-    curve.mPen.setColor(color);
-    curve.mPen.setWidthF(2.f);
-    curve.mBrush.setColor(HPDColor);
-    curve.mFillUnder = true;
-    curve.mIsHisto = false;
-    curve.mIsRectFromZero = true; // For Typo !!
-    
-    graph->addCurve(curve);
-    graph->repaint();
-    QPixmap thumb(graph->size());
-    QPainter p;
-    p.begin(&thumb);
-    graph->render(&p);
-    p.end();
-   // delete graph;
-    
-    return thumb;
     //thumb.save("test.png");
     //thumb = graph.grab();
+    
 }
 
 double Date::getLikelyhoodFromCalib(const double t)

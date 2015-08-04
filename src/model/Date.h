@@ -72,6 +72,7 @@ public:
     QJsonObject mData;
     PluginAbstract* mPlugin;
     DataMethod mMethod;
+    bool mIsValid;
 
     DeltaType mDeltaType;
     double mDeltaFixed;

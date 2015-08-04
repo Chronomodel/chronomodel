@@ -19,6 +19,7 @@
 #include "StdUtilities.h"
 #include "StepDialog.h"
 #include "DateUtils.h"
+#include "PluginManager.h"
 #include <QtWidgets>
 #include <QtSvg>
 #include <QPropertyAnimation>
@@ -224,8 +225,8 @@ mCalibVisible(false)
     //connect(mMaxEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));
     //connect(mStepEdit, SIGNAL(textChanged(const QString&)), this, SLOT(studyPeriodChanging()));
     
-    connect(mMinEdit, SIGNAL(textChanged(const QString&)), this, SLOT(minEditChanging()));
-    connect(mMaxEdit, SIGNAL(textChanged(const QString&)), this, SLOT(maxEditChanging()));
+    connect(mMinEdit, SIGNAL(textEdited(const QString&)), this, SLOT(minEditChanging()));
+    connect(mMaxEdit, SIGNAL(textEdited(const QString&)), this, SLOT(maxEditChanging()));
     
     connect(mButApply, SIGNAL(clicked()), this, SLOT(applySettings()));
     connect(mButStep,  SIGNAL(clicked()), this, SLOT(adjustStep()));
@@ -347,7 +348,8 @@ void ModelView::updateProject()
     /*if(settings.mStep < 0.1 || settings.mTmin >= settings.mTmax)
         setSettingsValid(false);
     else */
-        setSettingsValid(true);
+    
+    setSettingsValid(true);
     
     mEventsScene -> updateProject();
     mPhasesScene -> updateProject();
@@ -391,8 +393,8 @@ void ModelView::applySettings()
     mTmin = DateUtils::convertFromAppSettingsFormat(mMinEdit->text().toDouble());
     qDebug()<<"ModelView::applySettings()"<<mTmin<<mTmax;
     
-    s.mTmin = (int) mTmin;//(int)dateInDouble(mMinEdit->text().toInt());
-    s.mTmax = (int) mTmax;//(int)dateInDouble(mMaxEdit->text().toInt());
+    s.mTmin = (int) mTmin;
+    s.mTmax = (int) mTmax;
     if(!s.mStepForced)
         s.mStep = ProjectSettings::getStep(s.mTmin, s.mTmax);
     
@@ -400,10 +402,7 @@ void ModelView::applySettings()
     {
         // Min and max are not consistents :
         // go back to previous values
-        /*
-        mMinEdit->setText(doubleInStrDate(oldSettings.mTmin));
-        mMaxEdit->setText(doubleInStrDate(oldSettings.mTmax));
-        */
+        
         mTmin = oldSettings.mTmin;
         mTmax = oldSettings.mTmax;
         
@@ -411,11 +410,6 @@ void ModelView::applySettings()
         {
             setSettingsValid(true);
         }
-    }
-    else
-    {
-        // Mark button as ready
-        setSettingsValid(true);
     }
 }
 
@@ -471,7 +465,12 @@ void ModelView::maxEditChanging()
 void ModelView::setSettingsValid(bool valid)
 {
     mButApply->setColorState(valid ? Button::eReady : Button::eWarning);
-    MainWindow::getInstance()->setRunEnabled(valid);
+    
+    // Important : just disable "run" when typing in tmin and tmax edit boxes
+    // Run will be enabled again when validating all dates in the next valid study period
+    if(!valid){
+        MainWindow::getInstance()->setRunEnabled(false);
+    }
 }
 
 void ModelView::showHelp(bool show)
