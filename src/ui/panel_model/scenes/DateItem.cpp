@@ -89,7 +89,7 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
                             mCalibThumb.rect());
     }else{
         painter->setPen(Qt::red);
-        painter->drawText(r.adjusted(0, r.height()/2, 0, 0), Qt::AlignCenter, tr("Invalid"));
+        painter->drawText(r.adjusted(0, r.height()/2, 0, 0), Qt::AlignCenter, tr("Not in study period"));
     }
 
     
