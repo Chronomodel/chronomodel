@@ -27,7 +27,7 @@
 
 #pragma mark constructor
 ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-
+mCurSearchIdx(0),
 mCurrentRightWidget(0),
 mTmin(0),
 mTmax(2000),
@@ -65,6 +65,7 @@ mCalibVisible(false)
     
     mEventsSearchEdit = new LineEdit(mEventsView);
     mEventsSearchEdit->setPlaceholderText(tr("Search event name..."));
+    mEventsSearchEdit->setVisible(false);
     
     mButNewEvent = new Button(tr("New Event"), mLeftWrapper);
     mButNewEvent->setIcon(QIcon(":new_event.png"));
@@ -103,6 +104,7 @@ mCalibVisible(false)
     // just to refresh when selection changes :
     connect(mEventsScene, SIGNAL(selectionChanged()), mEventsGlobalView, SLOT(update()));
     connect(mButEventsOverview, SIGNAL(toggled(bool)), mEventsGlobalView, SLOT(setVisible(bool)));
+    connect(mButEventsOverview, SIGNAL(toggled(bool)), mEventsSearchEdit, SLOT(setVisible(bool)));
     
     connect(mEventsSearchEdit, SIGNAL(returnPressed()), this, SLOT(searchEvent()));
     connect(mEventsGlobalZoom, SIGNAL(valueChanged(double)), this, SLOT(updateEventsZoom(double)));
@@ -481,6 +483,41 @@ void ModelView::showHelp(bool show)
 void ModelView::searchEvent()
 {
     QString search = mEventsSearchEdit->text();
+    
+    if(search.isEmpty())
+        return;
+        
+    // Search text has changed : regenerate corresponding events list
+    if(search != mLastSearch){
+        mLastSearch = search;
+        mSearchIds.clear();
+        
+        QJsonObject state = MainWindow::getInstance()->getProject()->state();
+        QJsonArray events = state[STATE_EVENTS].toArray();
+        
+        for(int i=0; i<events.size(); ++i)
+        {
+            QJsonObject event = events[i].toObject();
+            int id = event[STATE_ID].toInt();
+            QString name = event[STATE_NAME].toString();
+            
+            if(name.contains(search, Qt::CaseInsensitive)){
+                mSearchIds.push_back(id);
+            }
+        }
+        mCurSearchIdx = 0;
+    }
+    else if(mSearchIds.size() > 0){
+        mCurSearchIdx += 1;
+        if(mCurSearchIdx >= mSearchIds.size())
+            mCurSearchIdx = 0;
+    }
+    
+    if(mCurSearchIdx < mSearchIds.size())
+        mEventsScene->centerOnEvent(mSearchIds[mCurSearchIdx]);
+    
+    
+    /*QString search = mEventsSearchEdit->text();
     QJsonObject state = MainWindow::getInstance()->getProject()->state();
     QJsonArray events = state[STATE_EVENTS].toArray();
 
@@ -501,12 +538,12 @@ void ModelView::searchEvent()
             bestScore = abs(score);
             foundId = id;
             bestName = name;
-            qDebug() << name;
+            //qDebug() << name;
         }
         ++counter;
     }
     //qDebug() << "Names tried : " << counter << ", bestScore : " << bestScore;
-    mEventsScene->centerOnEvent(foundId);
+    mEventsScene->centerOnEvent(foundId);*/
 }
 
 #pragma mark Right animation

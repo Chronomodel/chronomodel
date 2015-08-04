@@ -97,6 +97,9 @@ private:
     ScrollCompressor* mEventsGlobalZoom;
     
     LineEdit* mEventsSearchEdit;
+    QString mLastSearch;
+    QVector<int> mSearchIds;
+    int mCurSearchIdx;
     
     Button* mButNewEvent;
     Button* mButNewEventKnown;
