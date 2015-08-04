@@ -901,7 +901,7 @@ void Project::addDate(int eventId, QJsonObject date)
 {
     QJsonObject stateNext = mState;
     
-    // Validate the date before addig it to the correct event and pushing the state
+    // Validate the date before adding it to the correct event and pushing the state
     QJsonObject settingsJson = stateNext[STATE_SETTINGS].toObject();
     ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
     PluginAbstract* plugin = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
@@ -941,10 +941,37 @@ void Project::checkDatesCompatibility()
         {
             QJsonObject date = dates[j].toObject();
             
+            // -----------------------------------------------------------
+            //  Check the date compatibility with the plugin version
+            // -----------------------------------------------------------
+            if(date.find(STATE_DATE_SUB_DATES) == date.end())
+                date[STATE_DATE_SUB_DATES] = QJsonArray();
+            
+            if(date.find(STATE_DATE_VALID) == date.end())
+                date[STATE_DATE_VALID] = true;
+            
+            // etc...
+            // Here, we could control if all date fields are present, and add them if not.
+            
+            // -----------------------------------------------------------
+            //  Check the date compatibility with the plugin version
+            //  Only the STATE_DATE_DATA is to be checked
+            // -----------------------------------------------------------
             QString pluginId = date[STATE_DATE_PLUGIN_ID].toString();
             PluginAbstract* plugin = PluginManager::getPluginFromId(pluginId);
-            
             date[STATE_DATE_DATA] = plugin->checkValuesCompatibility(date[STATE_DATE_DATA].toObject());
+            
+            // -----------------------------------------------------------
+            //  Check subdates compatibility with the plugin version
+            // -----------------------------------------------------------
+            QJsonArray subdates = date[STATE_DATE_SUB_DATES].toArray();
+            for(int k=0; k<subdates.size(); ++k){
+                QJsonObject subdate = subdates[k].toObject();
+                subdate[STATE_DATE_DATA] = plugin->checkValuesCompatibility(subdate[STATE_DATE_DATA].toObject());
+                subdates[k] = subdate;
+            }
+            date[STATE_DATE_SUB_DATES] = subdates;
+            // -----------------------------------------------------------
             
             dates[j] = date;
             event[STATE_EVENT_DATES] = dates;
@@ -1178,6 +1205,116 @@ QJsonObject Project::checkValidDates(const QJsonObject& stateToCheck)
     }
     state[STATE_EVENTS] = events;
     return state;
+}
+
+void Project::mergeDates(const int eventId, const QList<int>& dateIds)
+{
+    QJsonObject stateNext = mState;
+    QJsonObject settingsJson = stateNext[STATE_SETTINGS].toObject();
+    ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
+    QJsonArray events = mState[STATE_EVENTS].toArray();
+    
+    for(int i=0; i<events.size(); ++i)
+    {
+        QJsonObject event = events[i].toObject();
+        if(event[STATE_ID].toInt() == eventId)
+        {
+            // All event dates :
+            QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+            
+            // event dates to be merged :
+            QJsonArray datesToMerge;
+            for(int j=0; j<dates.size(); ++j)
+            {
+                QJsonObject date = dates[j].toObject();
+                if(dateIds.contains(date[STATE_ID].toInt())){
+                    datesToMerge.push_back(date);
+                }
+            }
+            
+            // merge !
+            if(datesToMerge.size() > 0){
+                PluginAbstract* plugin = PluginManager::getPluginFromId(datesToMerge[0].toObject()[STATE_DATE_PLUGIN_ID].toString());
+                if(plugin){
+                    
+                    // add the new combination
+                    QJsonObject mergedDate = plugin->mergeDates(datesToMerge);
+                    if(mergedDate.find("error") != mergedDate.end()){
+                        QMessageBox message(QMessageBox::Critical,
+                                            tr("Cannot combine"),
+                                            mergedDate["error"].toString(),
+                                            QMessageBox::Ok,
+                                            qApp->activeWindow(),
+                                            Qt::Sheet);
+                        message.exec();
+                    }else{
+                        // remove merged dates
+                        for(int j=dates.size()-1; j>=0; --j)
+                        {
+                            QJsonObject date = dates[j].toObject();
+                            if(dateIds.contains(date[STATE_ID].toInt())){
+                                dates.removeAt(j);
+                            }
+                        }
+                        
+                        // Validate the date before adding it to the correct event and pushing the state
+                        bool valid = plugin->isDateValid(mergedDate[STATE_DATE_DATA].toObject(), settings);
+                        mergedDate[STATE_DATE_VALID] = valid;
+                        
+                        dates.push_back(mergedDate);
+                    }
+                }
+            }
+            
+            event[STATE_EVENT_DATES] = dates;
+            events[i] = event;
+            stateNext[STATE_EVENTS] = events;
+            
+            pushProjectState(stateNext, tr("Dates combined"), true);
+            
+            break;
+        }
+    }
+}
+
+void Project::splitDate(const int eventId, const int dateId)
+{
+    QJsonObject stateNext = mState;
+    QJsonObject settingsJson = stateNext[STATE_SETTINGS].toObject();
+    ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
+    QJsonArray events = mState[STATE_EVENTS].toArray();
+    
+    for(int i=0; i<events.size(); ++i)
+    {
+        QJsonObject event = events[i].toObject();
+        if(event[STATE_ID].toInt() == eventId)
+        {
+            QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+            for(int j=0; j<dates.size(); ++j)
+            {
+                QJsonObject date = dates[j].toObject();
+                if(date[STATE_ID].toInt() == dateId){
+                    
+                    // We have found the date to split !
+                    QJsonArray subdates = date[STATE_DATE_SUB_DATES].toArray();
+                    PluginAbstract* plugin = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
+                    
+                    for(int k=0; k<subdates.size(); ++k){
+                        QJsonObject sd = subdates[k].toObject();
+                        bool valid = plugin->isDateValid(sd[STATE_DATE_DATA].toObject(), settings);
+                        sd[STATE_DATE_VALID] = valid;
+                        dates.push_back(sd);
+                    }
+                    dates.removeAt(j);
+                    break;
+                }
+            }
+            event[STATE_EVENT_DATES] = dates;
+        }
+        events[i] = event;
+    }
+    stateNext[STATE_EVENTS] = events;
+    pushProjectState(stateNext, tr("Dates splitted"), true);
 }
 
 #pragma mark Phases

@@ -166,7 +166,7 @@ void DateDialog::setDate(const QJsonObject& date)
     
     if(mForm)
     {
-        mForm->setData(date[STATE_DATE_DATA].toObject());
+        mForm->setData(date[STATE_DATE_DATA].toObject(), date[STATE_DATE_SUB_DATES].toArray().size() > 0);
     }
 }
 

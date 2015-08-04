@@ -55,22 +55,43 @@ public:
         QString delta = index.model()->data(index, 0x0105).toString();
         QString dateMethodStr = index.model()->data(index, 0x0106).toString();
         bool isValid = index.model()->data(index, 0x0107).toBool();
+        bool isCombined = index.model()->data(index, 0x0108).toBool();
         
         
         PluginAbstract* plugin = PluginManager::getPluginFromId(pluginId);
         
         if(plugin)
         {
+            int im = 5;
+            int is = (h - 3*im)/2;
+            int ix = x + w - im - is;
+            int iy = y + im;
+            
+            painter->save();
+            QFont font = option.font;
+            font.setPointSizeF(pointSize(16));
+            painter->setFont(font);
             if(!isValid){
-                painter->setBrush(QColor(255, 240, 240));
-                painter->drawRect(option.rect);
+                painter->setBrush(Qt::red);
+                painter->setPen(Qt::red);
+                painter->drawEllipse(ix, iy, is, is);
+                painter->setPen(Qt::white);
+                painter->drawText(ix, iy, is, is, Qt::AlignCenter, "X");
             }
+            if(isCombined){
+                painter->setBrush(Painting::mainColorDark);
+                painter->setPen(Painting::mainColorDark);
+                painter->drawEllipse(ix, iy + is + im, is, is);
+                painter->setPen(Qt::white);
+                painter->drawText(ix, iy + is + im, is, is, Qt::AlignCenter, "C");
+            }
+            painter->restore();
             
             QIcon icon = plugin->getIcon();
             QPixmap pixmap = icon.pixmap(iconS, iconS);
             painter->drawPixmap(x + (iconW - iconS)/2, y + (h - iconS)/2, iconS, iconS, pixmap, 0, 0, pixmap.width(), pixmap.height());
             
-            QFont font = option.font;
+            font = option.font;
             font.setPointSizeF(pointSize(11));
             painter->setFont(font);
             QFontMetrics metrics(font);

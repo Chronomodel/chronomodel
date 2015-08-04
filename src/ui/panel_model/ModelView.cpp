@@ -318,6 +318,8 @@ void ModelView::doProjectConnections(Project* project)
     connect(project, SIGNAL(selectedPhasesChanged()), mEventsScene, SLOT(updateSelectedEventsFromPhases()));
     
     connect(project, SIGNAL(currentEventChanged(const QJsonObject&)), mEventPropertiesView, SLOT(setEvent(const QJsonObject&)));
+    connect(mEventPropertiesView, SIGNAL(mergeDatesRequested(const int, const QList<int>&)), project, SLOT(mergeDates(const int, const QList<int>&)));
+    connect(mEventPropertiesView, SIGNAL(splitDateRequested(const int, const int)), project, SLOT(splitDate(const int, const int)));
     
     connect(project, SIGNAL(eyedPhasesModified(const QMap<int, bool>&)), mEventsScene, SLOT(updateGreyedOutEvents(const QMap<int, bool>&)));
 }

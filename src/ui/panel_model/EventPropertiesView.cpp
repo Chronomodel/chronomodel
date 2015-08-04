@@ -107,13 +107,13 @@ mToolbarH(60)
     mMergeBut = new Button(tr("Combine"), mEventView);
     mMergeBut->setFlatVertical();
     mMergeBut->setEnabled(false);
-    mMergeBut->setVisible(false);
+    //mMergeBut->setVisible(false);
     minimumHeight+=mMergeBut->height();
     
     mSplitBut = new Button(tr("Split"), mEventView);
     mSplitBut->setFlatVertical();
     mSplitBut->setEnabled(false);
-    mSplitBut->setVisible(false);
+    //mSplitBut->setVisible(false);
     minimumHeight+=mSplitBut->height();
     
     connect(mCalibBut, SIGNAL(toggled(bool)), this, SIGNAL(showCalibRequested(bool)));
@@ -151,6 +151,7 @@ mToolbarH(60)
     mKnownGraph->setXAxisMode(GraphView::eMinMax);
     mKnownGraph->setYAxisMode(GraphView::eMinMax);
     
+    connect(mDatesList, SIGNAL(itemSelectionChanged()), this, SLOT(updateCombineAvailability()));
     connect(mKnownFixedEdit, SIGNAL(textEdited(const QString&)), this, SLOT(updateKnownFixed(const QString&)));
     connect(mKnownStartEdit, SIGNAL(textEdited(const QString&)), this, SLOT(updateKnownUnifStart()));
     connect(mKnownEndEdit, SIGNAL(textEdited(const QString&)), this, SLOT(updateKnownUnifEnd()));
@@ -453,51 +454,71 @@ void EventPropertiesView::recycleDates()
 }
 
 #pragma mark Merge / Split
-void EventPropertiesView::updateDatesSelection()
+void EventPropertiesView::updateCombineAvailability()
 {
-    /*QList<Date*> selectedDates;
-    QString pluginName;
-    bool mergeable = true;
+    bool mergeable = false;
     bool splittable = false;
-    for(int i=0; i<mEvent->mDates.size(); ++i)
-    {
-        if(mEvent->mDates[i]->mIsSelected)
-        {
-            selectedDates.append(mEvent->mDates[i]);
-            
-            QString plgName = mEvent->mDates[i]->mPlugin->getName();
-            if(pluginName.isEmpty())
-                pluginName = plgName;
-            if(plgName != pluginName)
-                mergeable = false;
-            
-            if(mEvent->mDates[i]->mSubDates.size() > 0)
-            {
-                mergeable = false;
-                splittable = true;
+    
+    QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+    QList<QListWidgetItem*> items = mDatesList->selectedItems();
+    
+    if(items.size() == 1){
+        // Split?
+        int idx = mDatesList->row(items[0]);
+        QJsonObject date = dates[idx].toObject();
+        if(date[STATE_DATE_SUB_DATES].toArray().size() > 0){
+            splittable = true;
+        }
+    }else if(items.size() > 1 && dates.size() > 1){
+        // Combine?
+        mergeable = true;
+        PluginAbstract* plugin = 0;
+        
+        for(int i=0; i<items.size(); ++i){
+            int idx = mDatesList->row(items[i]);
+            if(idx < dates.size()){
+                QJsonObject date = dates[idx].toObject();
+                PluginAbstract* plg = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
+                if(plugin == 0)
+                    plugin = plg;
+                else if(plg != plugin){
+                    mergeable = false;
+                }
             }
         }
     }
-    mDeleteBut->setEnabled(selectedDates.size() > 0);
-    mMergeBut->setEnabled(selectedDates.size() >= 2 && mergeable);
-    mSplitBut->setEnabled(selectedDates.size() == 1 && splittable);*/
+    mMergeBut->setEnabled(mergeable);
+    mSplitBut->setEnabled(splittable);
 }
 
 void EventPropertiesView::sendMergeSelectedDates()
 {
-    //emit mergeSelectedDates(mEvent);
+    QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+    QList<QListWidgetItem*> items = mDatesList->selectedItems();
+    QList<int> dateIds;
+    
+    for(int i=0; i<items.size(); ++i){
+        int idx = mDatesList->row(items[i]);
+        if(idx < dates.size()){
+            QJsonObject date = dates[idx].toObject();
+            dateIds.push_back(date[STATE_ID].toInt());
+        }
+    }
+    emit mergeDatesRequested(mEvent[STATE_ID].toInt(), dateIds);
 }
 
 void EventPropertiesView::sendSplitDate()
 {
-    /*for(int i=0; i<mEvent->mDates.size(); ++i)
-    {
-        if(mEvent->mDates[i]->mIsSelected)
-        {
-            emit splitDate(mEvent->mDates[i]);
-            return;
+    QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+    QList<QListWidgetItem*> items = mDatesList->selectedItems();
+    if(items.size() > 0){
+        int idx = mDatesList->row(items[0]);
+        if(idx < dates.size()){
+            QJsonObject date = dates[idx].toObject();
+            int dateId = date[STATE_ID].toInt();
+            emit splitDateRequested(mEvent[STATE_ID].toInt(), dateId);
         }
-    }*/
+    }
 }
 
 
@@ -550,17 +571,17 @@ void EventPropertiesView::updateLayout()
   
     this->setGeometry(0, mToolbarH, this->parentWidget()->width(),this->parentWidget()->height()-mToolbarH);
     
-    int mTalonLabel = 7;
-    int mTalonBox = 80;
+    int talonLabel = 7;
+    int talonBox = 80;
     
     int mLabelWidth = 50;
     
     int butPluginWidth = 80;
     int butPluginHeigth = 50;
     
-    int mBoxWidth = this->width() - butPluginWidth-int(floor(2*mTalonLabel));
+    int boxWidth = this->width() - butPluginWidth-int(floor(2*talonLabel));
     
-    int mBoxHeigth = int(floor( (mToolbarH-3*mTalonLabel) /2 ));//20;
+    int boxHeigth = int(floor( (mToolbarH-3*talonLabel) /2 ));//20;
     
 
     
@@ -573,15 +594,15 @@ void EventPropertiesView::updateLayout()
     
     // place the QLabel
     // mNameLab, mColorLab, mMethodLab, belong to mEventView
-    int y = mTalonLabel;
-    mNameLab  -> setGeometry(mTalonLabel, y, mLabelWidth, mBoxHeigth);
-    mNameEdit -> setGeometry(mTalonBox, y, mBoxWidth, mBoxHeigth);
-    y += mNameEdit -> height() + mTalonLabel;
+    int y = talonLabel;
+    mNameLab  -> setGeometry(talonLabel, y, mLabelWidth, boxHeigth);
+    mNameEdit -> setGeometry(talonBox, y, boxWidth, boxHeigth);
+    y += mNameEdit -> height() + talonLabel;
     
-    mColorLab    -> setGeometry(mTalonLabel, y, mLabelWidth, mBoxHeigth);
-    mColorPicker -> setGeometry(mTalonBox, 2*mTalonLabel + mBoxHeigth, mBoxWidth, mBoxHeigth);
-    //mColorPicker->etGeometry(mTalonBox, 2*mTalonLabel + mBoxHeigth, mBoxWidth, mBoxHeigth);
-    y += mColorPicker -> height() + mTalonLabel;
+    mColorLab    -> setGeometry(talonLabel, y, mLabelWidth, boxHeigth);
+    mColorPicker -> setGeometry(talonBox, 2*talonLabel + boxHeigth, boxWidth, boxHeigth);
+    //mColorPicker->etGeometry(talonBox, 2*talonLabel + boxHeigth, boxWidth, boxHeigth);
+    y += mColorPicker -> height() + talonLabel;
     
     mEventView->setGeometry(0, y, this->width(), this->height()-y);
     mBoundView->setGeometry(0, y, this->width(), this->height()-y);
@@ -589,11 +610,11 @@ void EventPropertiesView::updateLayout()
     // Event properties view :
     y = 0;
     
-    mMethodLab   -> setGeometry(mTalonLabel, y  , mLabelWidth, mBoxHeigth);
-    mMethodCombo -> setGeometry(mTalonBox-4, y-4, mBoxWidth+8, mBoxHeigth+8);
-    y += mMethodCombo->height() + mTalonLabel;
+    mMethodLab   -> setGeometry(talonLabel, y  , mLabelWidth, boxHeigth);
+    mMethodCombo -> setGeometry(talonBox-4, y-4, boxWidth+8, boxHeigth+8);
+    y += mMethodCombo->height() + talonLabel;
     
-    QRect listRect(0, y, mEventView->width() - butPluginWidth, mEventView->height() - y);
+    QRect listRect(0, y, mEventView->width() - butPluginWidth, mEventView->height() - y - butPluginHeigth);
     
     mDatesList->setGeometry(listRect);
     
@@ -613,20 +634,23 @@ void EventPropertiesView::updateLayout()
         y += butPluginHeigth;
     }
     
-    y +=mTalonBox;
-    mCalibBut  ->setGeometry(x, mEventView->height() -4*butPluginHeigth, butPluginWidth,butPluginHeigth);
-    y += butPluginHeigth;
-    mOptsBut   ->setGeometry(x, mEventView->height() -3*butPluginHeigth, butPluginWidth,butPluginHeigth);
-    y += butPluginHeigth;
-    mDeleteBut ->setGeometry(x, mEventView->height() -2*butPluginHeigth, butPluginWidth,butPluginHeigth);
-    y += butPluginHeigth;
-    mRecycleBut->setGeometry(x, mEventView->height() - 0-butPluginHeigth  , butPluginWidth, butPluginHeigth);
+    x = listRect.x();
+    y = listRect.y() + listRect.height();
+    int w = listRect.width() / 6;
+    int h = butPluginHeigth;
+
+    mCalibBut->setGeometry(x, y, w, h);
+    mOptsBut->setGeometry(x + w, y, w, h);
+    mDeleteBut ->setGeometry(x + 2*w, y, w, h);
+    mRecycleBut->setGeometry(x + 3*w, y, w, h);
+    mMergeBut->setGeometry(x + 4*w, y, w, h);
+    mSplitBut->setGeometry(x + 5*w, y, w, h);
  
     // Known view : Used with Bound
     
-    y = 0;//mMethodCombo->y() + mTalonLabel;;
+    y = 0;//mMethodCombo->y() + talonLabel;;
     QRect r = this->rect();
-    int m = mTalonLabel;//5;
+    int m = talonLabel;//5;
     int w1 = 80;
     int lineH = 20;
     int w2 = r.width() - w1 - 3*m;

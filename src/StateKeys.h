@@ -40,6 +40,7 @@
 #define STATE_DATE_DELTA_MAX "delta_max"
 #define STATE_DATE_DELTA_AVERAGE "delta_average"
 #define STATE_DATE_DELTA_ERROR "delta_error"
+#define STATE_DATE_SUB_DATES "subdates"
 
 #define STATE_EVENT_TYPE "type"
 #define STATE_EVENT_METHOD "method"

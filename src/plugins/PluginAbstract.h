@@ -41,6 +41,7 @@ public:
     virtual QJsonObject fromCSV(const QStringList& list) = 0;
     virtual QStringList toCSV(const QJsonObject& data) = 0;
     virtual QString getDateDesc(const Date* date) const = 0;
+    virtual QJsonObject mergeDates(const QJsonArray& dates) {QJsonObject ret; ret["error"] = tr("Cannot combine dates of type ") + getName(); return ret;}
     
     QColor getColor() const{
         return mColor;

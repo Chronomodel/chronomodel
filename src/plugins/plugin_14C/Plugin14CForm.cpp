@@ -56,7 +56,7 @@ Plugin14CForm::~Plugin14CForm()
 
 }
 
-void Plugin14CForm::setData(const QJsonObject& data)
+void Plugin14CForm::setData(const QJsonObject& data, bool isCombined)
 {
     double a = data.value(DATE_14C_AGE_STR).toDouble();
     double e = data.value(DATE_14C_ERROR_STR).toDouble();
@@ -69,6 +69,12 @@ void Plugin14CForm::setData(const QJsonObject& data)
     mREdit->setText(QString::number(r));
     mRErrorEdit->setText(QString::number(re));
     mRefCombo->setCurrentText(c);
+    
+    mAverageEdit->setEnabled(!isCombined);
+    mErrorEdit->setEnabled(!isCombined);
+    mREdit->setEnabled(!isCombined);
+    mRErrorEdit->setEnabled(!isCombined);
+    mRefCombo->setEnabled(!isCombined);
 }
 
 QJsonObject Plugin14CForm::getData()

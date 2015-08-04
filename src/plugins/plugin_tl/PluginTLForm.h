@@ -17,7 +17,7 @@ public:
     PluginTLForm(PluginTL* plugin, QWidget* parent = 0, Qt::WindowFlags flags = 0);
     virtual ~PluginTLForm();
     
-    virtual void setData(const QJsonObject& data);
+    virtual void setData(const QJsonObject& data, bool isCombined);
     virtual QJsonObject getData();
     
     bool isValid();

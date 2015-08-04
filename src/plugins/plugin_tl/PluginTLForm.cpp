@@ -31,7 +31,7 @@ PluginTLForm::~PluginTLForm()
 
 }
 
-void PluginTLForm::setData(const QJsonObject& data)
+void PluginTLForm::setData(const QJsonObject& data, bool isCombined)
 {
     double a = data.value(DATE_TL_AGE_STR).toDouble();
     double e = data.value(DATE_TL_ERROR_STR).toDouble();

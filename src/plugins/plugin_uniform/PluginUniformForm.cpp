@@ -27,7 +27,7 @@ PluginUniformForm::~PluginUniformForm()
 
 }
 
-void PluginUniformForm::setData(const QJsonObject& data)
+void PluginUniformForm::setData(const QJsonObject& data, bool isCombined)
 {
     double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
     double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();

@@ -366,4 +366,60 @@ bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& sett
     return false;
 }
 
+QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
+{
+    QJsonObject result;
+    if(dates.size() > 1){
+        // Verify all dates have the same ref curve :
+        QString curve = dates[0].toObject()[DATE_14C_REF_CURVE_STR].toString();
+        for(int i=1; i<dates.size(); ++i){
+            if(curve != dates[i].toObject()[DATE_14C_REF_CURVE_STR].toString()){
+                result["error"] = tr("All combine data must use the same reference curve !");
+                return result;
+            }
+        }
+        
+        double sum_vi = 0;
+        double sum_mi_vi = 0;
+        double sum_1_vi = 0;
+        double sum_mi_2 = 0;
+        
+        for(int i=0; i<dates.size(); ++i){
+            QJsonObject date = dates[i].toObject();
+            QJsonObject data = date[STATE_DATE_DATA].toObject();
+            
+            double a = data[DATE_14C_AGE_STR].toDouble();
+            double e = data[DATE_14C_ERROR_STR].toDouble();
+            double r = data[DATE_14C_DELTA_R_STR].toDouble();
+            double re = data[DATE_14C_DELTA_R_ERROR_STR].toDouble();
+            
+            // Reservoir effet
+            double m = a - r;
+            double v = e * e + re * re;
+            
+            sum_vi += v;
+            sum_mi_vi += m*m/v;
+            sum_1_vi += 1/v;
+            sum_mi_2 += m*m;
+        }
+        
+        result = dates[0].toObject();
+        
+        QJsonObject mergedData = result[STATE_DATE_DATA].toObject();
+        mergedData[DATE_14C_AGE_STR] = sqrt(sum_mi_2 / dates.size());
+        mergedData[DATE_14C_ERROR_STR] = sqrt(1 / sum_1_vi);
+        mergedData[DATE_14C_DELTA_R_STR] = 0;
+        mergedData[DATE_14C_DELTA_R_ERROR_STR] = 0;
+        
+        qDebug() << mergedData;
+        
+        result[STATE_DATE_DATA] = mergedData;
+        result[STATE_DATE_SUB_DATES] = dates;
+    }else{
+        result["error"] = tr("Combine needs at least 2 data !");
+    }
+    return result;
+    
+}
+
 #endif

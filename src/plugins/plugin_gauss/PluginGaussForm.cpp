@@ -61,7 +61,7 @@ PluginGaussForm::~PluginGaussForm()
 
 }
 
-void PluginGaussForm::setData(const QJsonObject& data)
+void PluginGaussForm::setData(const QJsonObject& data, bool isCombined)
 {
     double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
     double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();

@@ -41,6 +41,8 @@ public:
     QJsonObject checkValuesCompatibility(const QJsonObject& values);
     bool isDateValid(const QJsonObject& data, const ProjectSettings& settings);
     
+    QJsonObject mergeDates(const QJsonArray& dates);
+    
     // ---------------------
     
     QString getRefsPath() const;

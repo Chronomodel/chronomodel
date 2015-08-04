@@ -17,7 +17,7 @@ public:
     
     virtual ~PluginFormAbstract(){}
     
-    virtual void setData(const QJsonObject& data) = 0;
+    virtual void setData(const QJsonObject& data, bool isCombined) = 0;
     virtual QJsonObject getData() = 0;
     
     virtual bool isValid() = 0;

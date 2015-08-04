@@ -44,11 +44,12 @@ private slots:
     void createDate();
     void deleteSelectedDates();
     void recycleDates();
-    void updateDatesSelection();
     
-    void showDatesOptions();
+    void updateCombineAvailability();
     void sendMergeSelectedDates();
     void sendSplitDate();
+    
+    void showDatesOptions();
     
     void updateKnownType();
     void updateKnownFixed(const QString& text);
@@ -63,8 +64,8 @@ public slots:
     void hideCalibration();
     
 signals:
-    void mergeSelectedDates(Event* event);
-    void splitDate(Date* date);
+    void mergeDatesRequested(const int eventId, const QList<int>& dateIds);
+    void splitDateRequested(const int eventId, const int dateId);
     
     void updateCalibRequested(const QJsonObject& date);
     void showCalibRequested(bool show);

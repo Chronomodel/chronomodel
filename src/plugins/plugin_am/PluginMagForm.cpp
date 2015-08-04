@@ -61,7 +61,7 @@ PluginMagForm::~PluginMagForm()
 
 }
 
-void PluginMagForm::setData(const QJsonObject& data)
+void PluginMagForm::setData(const QJsonObject& data, bool isCombined)
 {
     bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
     bool is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();

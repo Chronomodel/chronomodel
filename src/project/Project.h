@@ -133,6 +133,9 @@ public slots:
     void createPhase();
     void deleteSelectedPhases();
     
+    void mergeDates(const int eventId, const QList<int>& dateIds);
+    void splitDate(const int eventId, const int dateId);
+    
 signals:
     void projectStateChanged();
     void currentEventChanged(const QJsonObject& event);
