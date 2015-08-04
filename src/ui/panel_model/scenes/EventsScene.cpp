@@ -834,6 +834,10 @@ void EventsScene::dragMoveEvent(QGraphicsSceneDragDropEvent* e)
 
 void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
 {
+    // ------------------------------------------------------------------
+    //  Check if data have been dropped on an existing event.
+    //  If so, QGraphicsScene::dropEvent(e) will pass the event to the corresponding item
+    // ------------------------------------------------------------------
     for(int i=0; i<mItems.size(); ++i)
     {
         QRectF r = mItems[i]->boundingRect();
@@ -845,6 +849,10 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
         }
     }
     
+    // ------------------------------------------------------------------
+    //  The data have been dropped on the scene background,
+    //  so create one event per data!
+    // ------------------------------------------------------------------
     e->accept();
     
     Project* project = MainWindow::getInstance()->getProject();
@@ -854,6 +862,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
     QList<Date> dates = decodeDataDrop(e);
     
     // Create one event per data
+    int deltaY = 100;
     for(int i=0; i<dates.size(); ++i)
     {
         Event event;
@@ -861,6 +870,8 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
         event.mId = project->getUnusedEventId(events);
         dates[i].mId = 0;
         event.mDates.append(dates[i]);
+        event.mItemX = e->scenePos().x();
+        event.mItemY = e->scenePos().y() + i * deltaY;
         events.append(event.toJson());
     }
     state[STATE_EVENTS] = events;
