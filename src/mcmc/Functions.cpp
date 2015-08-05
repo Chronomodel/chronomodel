@@ -13,6 +13,15 @@
 
 FunctionAnalysis analyseFunction(const QMap<double, double>& aFunction)
 {
+    FunctionAnalysis result;
+    if(aFunction.isEmpty()){
+        result.max = 0;
+        result.mode = 0;
+        result.mean = 0;
+        result.stddev = -1;
+        qDebug() << "WARNING : in analyseFunction() aFunction isEmpty !! ";
+        return result;
+    }
     typename QMap<double, double>::const_iterator it;
     
     double max = 0;
@@ -54,7 +63,7 @@ FunctionAnalysis analyseFunction(const QMap<double, double>& aFunction)
         prevY = y;
     }
     
-    FunctionAnalysis result;
+    //FunctionAnalysis result;
     result.max = max;
     result.mode = mode;
     result.mean = 0;
@@ -117,31 +126,46 @@ double shrinkageUniform(double so2)
 QString functionAnalysisToString(const FunctionAnalysis& analysis)
 {
     QString result;
-    int precision = 0;
-    
-    result += "MAP : " + QString::number(analysis.mode, 'f', precision) + "   ";
-    result += "Mean : " + QString::number(analysis.mean, 'f', precision) + "   ";
-    result += "Std deviation : " + QString::number(analysis.stddev, 'f', precision) + "<br>";
+    int precision = 0; //TODO Get the precision from the pref.
+
+    if(analysis.stddev<0.){
+       result = "No data";
+    }
+    else {
+        result += "MAP : " + QString::number(analysis.mode, 'f', precision) + "   ";
+        result += "Mean : " + QString::number(analysis.mean, 'f', precision) + "   ";
+        result += "Std deviation : " + QString::number(analysis.stddev, 'f', precision) + "<br>";
+    }
+
     
     return result;
 }
 
 QString densityAnalysisToString(const DensityAnalysis& analysis)
 {
-    QString result = functionAnalysisToString(analysis.analysis);
-    int precision = 2;
+    QString result = "No data";
+    if(analysis.analysis.stddev>=0.){
+        result = functionAnalysisToString(analysis.analysis);
+        int precision = 2; //TODO Get the precision from the pref.
     
-    result += "Q1 : " + QString::number(analysis.quartiles.Q1, 'f', precision) + "   ";
-    result += "Q2 (Median) : " + QString::number(analysis.quartiles.Q2, 'f', precision) + "   ";
-    result += "Q3 : " + QString::number(analysis.quartiles.Q3, 'f', precision) + "<br>";
-    
+        result += "Q1 : " + QString::number(analysis.quartiles.Q1, 'f', precision) + "   ";
+        result += "Q2 (Median) : " + QString::number(analysis.quartiles.Q2, 'f', precision) + "   ";
+        result += "Q3 : " + QString::number(analysis.quartiles.Q3, 'f', precision) + "<br>";
+    }
     return result;
 }
 
 Quartiles quartilesForTrace(const QVector<double>& trace)
 {
+
+
     Quartiles quartiles;
-    
+    if(trace.size()<5){
+        quartiles.Q1 = 0.;
+        quartiles.Q2 = 0.;
+        quartiles.Q3 = 0.;
+        return quartiles;
+    }
     QVector<double> sorted = trace;
     qSort(sorted);
     
@@ -169,7 +193,12 @@ Quartiles quartilesForTrace(const QVector<double>& trace)
 Quartiles quartilesForRepartition(const QVector<double>& repartition, double tmin, double step)
 {
     Quartiles quartiles;
-    
+    if(repartition.size()<5){
+        quartiles.Q1 = 0.;
+        quartiles.Q2 = 0.;
+        quartiles.Q3 = 0.;
+        return quartiles;
+    }
     double q1index = vector_interpolate_idx_for_value(0.25, repartition);
     double q2index = vector_interpolate_idx_for_value(0.5, repartition);
     double q3index = vector_interpolate_idx_for_value(0.75, repartition);

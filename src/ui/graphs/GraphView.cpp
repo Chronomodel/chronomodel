@@ -429,6 +429,10 @@ void GraphView::paintEvent(QPaintEvent* )
     {
         mBufferBack = QPixmap(width(), height());
         paintToDevice(&mBufferBack);
+        if (mBufferBack.isNull() ) {
+            qDebug()<< "mBufferBack.isNull()";
+
+        }
     }
     // ----------------------------------------------------
     //  HD : draw directly on widget
@@ -594,6 +598,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
             y += lineH;
         }
     }
+
 }
 
 void GraphView::drawCurves(QPainter& painter)

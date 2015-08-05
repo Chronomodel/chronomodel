@@ -16,3 +16,11 @@ In your Terminal, go to the project path and then type :
 sh build_all_mac.sh 1.2 /your/absolute/path/to/Qt/5.4/clang_64/bin/
 Note : 1.2 is the version number. We use it when releasing official versions.
 You may choose what you want instead when building by yourself.
+
+——————————————————
+ADDITIONNAL NOTES
+——————————————————
+Generate a MAC icon :
+Use command line tool in the « icon » folder:
+iconutil -c icns Chronomodel.iconset
+https://developer.apple.com/library/mac/documentation/GraphicsAnimation/Conceptual/HighResolutionOSX/Optimizing/Optimizing.html#//apple_ref/doc/uid/TP40012302-CH7-SW3
