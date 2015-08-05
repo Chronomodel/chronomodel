@@ -51,6 +51,10 @@ public:
     const QMap<QString, QMap<double, double> >& getRefData(const QString& name);
     
     QMap< QString, QMap<QString, QMap<double, double> > > mRefDatas;
+    
+    // Used to store ref curves min and max values on a given study period.
+    // This is only used in isDateValid() and prevents going through all ref curves points each time we check a date validity!!
+    QMap<QString, QPair< QPair<double, double>, QPair<double, double> > > mLastRefsMinMax;
 };
 
 #endif

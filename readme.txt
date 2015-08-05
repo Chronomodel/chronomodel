@@ -24,3 +24,14 @@ Generate a MAC icon :
 Use command line tool in the « icon » folder:
 iconutil -c icns Chronomodel.iconset
 https://developer.apple.com/library/mac/documentation/GraphicsAnimation/Conceptual/HighResolutionOSX/Optimizing/Optimizing.html#//apple_ref/doc/uid/TP40012302-CH7-SW3
+
+
+Windows compilation notes:
+When compiling on Windows, if you get a message like :
+'<UNC path>' is an invalid current directory path. 
+Then refer to this documentation to solve the problem :
+https://support.microsoft.com/en-us/kb/156276
+It will guide you through adding a new register key.
+Without it, Qt may fail to compile the resource file Chronomodel.rc
+
+

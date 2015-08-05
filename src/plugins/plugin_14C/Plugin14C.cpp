@@ -156,7 +156,7 @@ QString Plugin14C::getDateDesc(const Date* date) const
         
         result += QObject::tr("Age") + " : " + QString::number(age);
         result += " ± " + QString::number(error);
-        if(delta_r != 0 && delta_r_error != 0){
+        if(delta_r != 0 || delta_r_error != 0){
             result += ", " + QObject::tr("ΔR") + " : " + QString::number(delta_r);
             result += " ± " + QString::number(delta_r_error);
         }
@@ -252,7 +252,7 @@ void Plugin14C::loadRefDatas()//const ProjectSettings& settings)
                         {
                             double t_upper = iter.key();
                             --iter;
-                            if(iter != curveG.begin())
+                            //if(iter != curveG.begin())
                             {
                                 double t_under = iter.key();
                                 
@@ -271,18 +271,18 @@ void Plugin14C::loadRefDatas()//const ProjectSettings& settings)
                                 curveG95Sup[t] = interpolate(t, t_under, t_upper, gsup_under, gsup_upper);
                                 curveG95Inf[t] = interpolate(t, t_under, t_upper, ginf_under, ginf_upper);
                             }
-                            else
+                            /*else
                             {
                                 curveG[t] = 0;
                                 curveG95Sup[t] = 0;
                                 curveG95Inf[t] = 0;
-                            }
+                            }*/
                         }
                         else
                         {
-                            curveG[t] = 0;
+                            /*curveG[t] = 0;
                             curveG95Sup[t] = 0;
-                            curveG95Inf[t] = 0;
+                            curveG95Inf[t] = 0;*/
                         }
                     }
                 }
@@ -326,6 +326,9 @@ QJsonObject Plugin14C::checkValuesCompatibility(const QJsonObject& values){
     if(result.find(DATE_14C_DELTA_R_ERROR_STR) == result.end())
         result[DATE_14C_DELTA_R_ERROR_STR] = 0;
     
+    // Force curve name to lower case :
+    result[DATE_14C_REF_CURVE_STR] = result[DATE_14C_REF_CURVE_STR].toString().toLower();
+    
     return result;
 }
 
@@ -341,29 +344,60 @@ bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& sett
     age = (age - delta_r);
     error = sqrt(error * error + delta_r_error * delta_r_error);
     
-    const QMap<double, double>& curveG95Inf = mRefDatas[ref_curve]["G95Inf"];
-    const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
+    double min = 0;
+    double max = 0;
     
-    QMap<double, double>::const_iterator iter = curveG95Sup.constFind(settings.mTmin);
-    if(iter != curveG95Sup.constEnd()){
-        double max = iter.value();
-        while(iter != curveG95Sup.constEnd() && iter.key() <= settings.mTmax){
-            max = qMax(max, iter.value());
-            ++iter;
+    if(mLastRefsMinMax.find(ref_curve) != mLastRefsMinMax.end() &&
+       mLastRefsMinMax[ref_curve].first.first == settings.mTmin &&
+       mLastRefsMinMax[ref_curve].first.second == settings.mTmax)
+    {
+        min = mLastRefsMinMax[ref_curve].second.first;
+        max = mLastRefsMinMax[ref_curve].second.second;
+    }
+    else
+    {
+        const QMap<double, double>& curveG95Inf = mRefDatas[ref_curve]["G95Inf"];
+        const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
+        
+        // Find max
+        QMap<double, double>::const_iterator iter = curveG95Sup.constFind(settings.mTmin);
+        if(iter == curveG95Sup.constEnd()){
+            double t1 = curveG95Sup.firstKey();
+            if(t1 < settings.mTmax){
+                iter = curveG95Sup.constBegin();
+            }
+        }
+        if(iter != curveG95Sup.constEnd()){
+            max = iter.value();
+            while(iter != curveG95Sup.constEnd() && iter.key() <= settings.mTmax){
+                max = qMax(max, iter.value());
+                ++iter;
+            }
         }
         
+        // Find min
         iter = curveG95Inf.constFind(settings.mTmin);
+        if(iter == curveG95Inf.constEnd()){
+            double t1 = curveG95Inf.firstKey();
+            if(t1 < settings.mTmax){
+                iter = curveG95Inf.constBegin();
+            }
+        }
         if(iter != curveG95Inf.constEnd()){
-            double min = iter.value();
+            min = iter.value();
             while(iter != curveG95Inf.constEnd() && iter.key() <= settings.mTmax){
                 min = qMin(min, iter.value());
                 ++iter;
             }
-            return ((age - error < max) && (age + error > min));
         }
+        
+        // Store min & max
+        mLastRefsMinMax[ref_curve].first.first = settings.mTmin;
+        mLastRefsMinMax[ref_curve].first.second = settings.mTmax;
+        mLastRefsMinMax[ref_curve].second.first = min;
+        mLastRefsMinMax[ref_curve].second.second = max;
     }
-    
-    return false;
+    return !(min == 0 && max == 0) && ((age - error < max) && (age + error > min));
 }
 
 QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
