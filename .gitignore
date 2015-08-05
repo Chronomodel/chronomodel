@@ -5,6 +5,7 @@ Chronomodel.pro.user*
 *.xcodeproj/*
 *.dll
 Debug/*
+Release/*
 *.plist
 .qmake.stash
 *.pkg
@@ -15,3 +16,4 @@ Debug/*
 
 Info.plist
 resources/Thumbs.db
+
