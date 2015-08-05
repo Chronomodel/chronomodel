@@ -890,6 +890,7 @@ void Model::generateNumericalResults(const QList<Chain>& chains)
         phase->mBeta.generateNumericalResults(chains);
         phase->mDuration.generateNumericalResults(chains);
     }
+    qDebug()<<"Model::generateNumericalResults finish";
 }
 
 void Model::generateCredibilityAndHPD(const QList<Chain>& chains, double thresh)

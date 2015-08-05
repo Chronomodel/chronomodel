@@ -224,6 +224,7 @@ void GraphViewResults::saveAsImage()
                 qDebug()<< " image width = 0";
                 
             }
+
             
             image.setDevicePixelRatio(pr);
             image.fill(Qt::transparent);
@@ -242,6 +243,7 @@ void GraphViewResults::saveAsImage()
                        qApp->applicationName() + " " + qApp->applicationVersion());
             
             p.end();
+
             //image.save(fileName, "PNG");
             // char formatExt[];
             if (fileExtension=="png") {
