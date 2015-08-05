@@ -7,7 +7,7 @@
 #
 #-------------------------------------------------
 VERSION = 1.2.11
-PRO_PATH=$$PWD
+#PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_
 
 message("-------------------------------------------")
@@ -50,71 +50,39 @@ QT += core gui widgets svg
 #RESOURCES = $$PRO_PATH/Chronomodel.qrc
 RESOURCES = Chronomodel.qrc
 
-# Resource file (Windows only)
+# Compilation warning flags
+QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas
 
 #########################################
 # C++ 11
 # Config must use C++ 11 for random number generator
+# This works for Windows, Linux & Mac 10.7 and +
 #########################################
 CONFIG += C++11
-macx{
-	# This is a custom build of the C++11 library on mac for 10.6 compatibility !!!
-	# Must be built on a 10.6 mac...
-	#QMAKE_CXXFLAGS += -std=c++0x
-	
-	#INCLUDEPATH += lib/stdlib/libcxxabi/include
-	#LIBS +=  -lc++abi -Llib/stdlib/libcxxabi/lib
-	
-	#INCLUDEPATH += lib/stdlib/libcxx/include
-	#LIBS +=  -lc++ -Llib/stdlib/libcxx/lib
-	
-}else{
-	# This works for Windows, Linux & Mac 10.7 and +
-	#CONFIG += c++11
-}
+
 #########################################
-
-# Compilation warning flags
-QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas
-
+# MAC specific settings
+#########################################
 macx{
+	# Icon file
+    ICON = $$PRO_PATH/icon/Chronomodel.icns
 
-# Icon file
-    ICON = $$PRO_PATH/icon/ChronoModelIcon.icns
-#  QMAKE_BUNDLE_DATA += icons
-
-
+	# This is the SDK used to compile : change it to whatever latest version of mac you are using.
 	QMAKE_MAC_SDK = macosx10.10
+	
+	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
 	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
 
+	# Define a set of resources to deploy inside the bundle :
 	RESOURCES_FILES.path = Contents/Resources
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
-#RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
-        #RESOURCES_FILES.files += $$PRO_PATH/deploy/License.txt
-        #RESOURCES_FILES.files += $$PRO_PATH/deploy/mac/resources/readme.rtf
-
-#RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel_User_Manual.pdf
-
+	#RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
 	QMAKE_BUNDLE_DATA += RESOURCES_FILES
-
-
-
 }
 win32{
-     RC_FILE+ = Chronomodel.rc
-
-DISTFILES += \
-icon/Chronomodel.ico
-
-#    message("RC_FILE : $$RC_FILE")
-
-# Icon file in Qt 5
-
-# RC_ICONS +=  $$PRO_PATH/icon/Chronomodel.ico
-#message("RC_ICONS : $$RC_ICONS")
-RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
-#RESOURCES_FILES.files += $$PRO_PATH/icon
-
+	# Resource file (Windows only)
+	#RC_FILE += Chronomodel.rc
+	RC_ICONS += $$PRO_PATH/icon/Chronomodel.ico
 }
 
 #########################################
@@ -147,52 +115,39 @@ DEFINES += "USE_PLUGIN_AM=$${USE_PLUGIN_AM}"
 #########################################
 
 macx{
-#http://openclassrooms.com/forum/sujet/qt-creator-mac-fmodex-probleme-lancement-appli-48210
-#
-#APP_DESTDIR = $${TARGET}.app/Contents/MacOS/
-# cree le répertoire pour y mettre le .dylib
-#APP_DESTLIB = $${APP_DESTLIB}/lib
-#QMAKE_POST_LINK += mkdir -p $${APP_DESTLIB} ;
-# copie le .dylib
-#QMAKE_POST_LINK += cp $$INCLUDEPATH/libfftw3.dylib $${APP_DESTLIB} ;
-# change son nom (pas sûr que ce soit nécessaire en fait)
-#QMAKE_POST_LINK += install_name_tool -id @loader_path/$$INCLUDEPATH/libfftw3.dylib $${APP_DESTLIB}/libfftw3.dylib ;
-## change son nom dans l'application
-#QMAKE_POST_LINK += install_name_tool -change ./libfftw3.dylib @loader_path/../Librairies/libfftw3.dylib $${APP_DESTDIR}/$${TARGET};
-
-
-#QMAKE_LFLAGS += -Wl,-rpath,@loader_path/../Lib
-
-DEPENDPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac/
-
-INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW
-        #ne pas mettre le lib devant le nom du fichier, ni le .dylib d'extension
-    #LIBS += -L/lib/FFTW/mac -lfftw3f
-LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
-        message("macx->FFTW $$LIBS ")
-
-
-#http://www.qtcentre.org/archive/index.php/t-8092.html
-# install into app bundle
-
-FFTW_FILES.path = Contents/Resources
-FFTW_FILES.files += $$PRO_PATH/deploy/mac/FFTW
-
-message("FFTW_FILES.files->FFTW $$_PRO_FILE_PWD_/lib/FFTW/macs ")
-QMAKE_BUNDLE_DATA += FFTW_FILES
-
-
+	# IMPORTANT NOTE :
+	# We use FFTW 3.2.2 on Mac to support Mac OS X versions from 10.7.
+	# (Using FFTW 3.3.4 is available for mac 10.9+)
+	# We provide FFTW.3.2.2.dmg if you want to install it on your system, but this is not necessary!
+	# The generated XCode project will locate FFTW files in the project directory and statically link against it.
+	
+	# this is to include fftw.h in the code :
+	INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac
+	
+	# Link the application with FFTW library
+	# If no dylib are present, static libs (.a) are used => that's why we moved .dylib files in a "dylib" folder.
+	LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
+	
+	# If we were deploying FFTW as a dynamic library, we should :
+	# - Move all files from "lib/FFTW/mac/dylib" to "lib/FFTW/mac"
+	# - Uncomment the lines below to copy dylib files to the bundle
+	# - We may also need to call install_name_tool on both dylib and chronomodel executable.
+	#	This has not been tested, so use otool -L path/to/dylib/files to check dependencies
+	
+	#FFTW_FILES.path = Contents/Frameworks
+	#FFTW_FILES.files += $$PRO_PATH/deploy/mac/FFTW/libfftw3f.dylib
+	#QMAKE_BUNDLE_DATA += FFTW_FILES
+	#QMAKE_POST_LINK += install_name_tool -id @executable_path/../Frameworks/libfftw3f.dylib $$PRO_PATH/deploy/mac/FFTW/libfftw3f.dylib
+	#QMAKE_POST_LINK += install_name_tool -change old/path @executable_path/../Frameworks/libfftw3f.3.dylib $$PRO_PATH/Release/Chronomodel.app/Contents/MacOS/Chronomodel;
 }
 win32{
-        INCLUDEPATH += lib/FFTW
-        INCLUDEPATH += PWD
-        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
-        message("win32->FFTW")
-}
-unix:!macx{ #linux
 	INCLUDEPATH += lib/FFTW
-        LIBS += -lfftw3f
-        message("linux->FFTW")
+	LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
+}
+#linux :
+unix:!macx{ 
+	INCLUDEPATH += lib/FFTW
+	LIBS += -lfftw3f
 }
 
 #########################################
