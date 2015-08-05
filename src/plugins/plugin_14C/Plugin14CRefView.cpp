@@ -112,7 +112,6 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         // ----------------------------------------------
         //  Measure curve
         // ----------------------------------------------
-        
         GraphCurve curveMeasure;
         curveMeasure.mName = "Measure";
         
@@ -184,6 +183,50 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
             mGraph->addCurve(curveDeltaR);
             
             info += tr(", ΔR : ") + QString::number(delta_r) + " ± " + QString::number(delta_r_error);
+        }
+        
+        // ----------------------------------------------
+        //  Sub-dates curves (combination)
+        // ----------------------------------------------
+        for(int i=0; i<date.mSubDates.size(); ++i){
+            const Date& d = date.mSubDates[i];
+            
+            GraphCurve curveSubMeasure;
+            curveSubMeasure.mName = "Sub-Measure " + QString::number(i);
+            
+            QColor penColor = QColor(167, 126, 73);
+            QColor brushColor = QColor(167, 126, 73);
+            
+            double sub_age = d.mData.value(DATE_14C_AGE_STR).toDouble();
+            double sub_error = d.mData.value(DATE_14C_ERROR_STR).toDouble();
+            double sub_delta_r = d.mData.value(DATE_14C_DELTA_R_STR).toDouble();
+            double sub_delta_r_error = d.mData.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
+            
+            // Apply reservoir effect
+            sub_age = (sub_age - sub_delta_r);
+            sub_error = sqrt(sub_error * sub_error + sub_delta_r_error * sub_delta_r_error);
+            
+            penColor.setAlpha(255);
+            brushColor.setAlpha(50);
+            
+            curveSubMeasure.mPen.setColor(penColor);
+            curveSubMeasure.mBrush.setColor(brushColor);
+            
+            curveSubMeasure.mFillUnder = true;
+            curveSubMeasure.mIsVertical = true;
+            curveSubMeasure.mIsHisto = false;
+            
+            // 5000 pts are used on vertical measure
+            // because the y scale auto adjusts depending on x zoom.
+            // => the visible part of the measure may be very reduced !
+            double step = (yMax - yMin) / 5000.;
+            for(double t=yMin; t<yMax; t += step)
+            {
+                double v = exp(-0.5 * pow((sub_age - t) / sub_error, 2));
+                curveSubMeasure.mData[t] = v;
+            }
+            curveSubMeasure.mData = normalize_map(curveSubMeasure.mData);
+            mGraph->addCurve(curveSubMeasure);
         }
 
         // ----------------------------------------------

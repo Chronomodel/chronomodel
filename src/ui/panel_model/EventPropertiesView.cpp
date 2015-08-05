@@ -478,11 +478,18 @@ void EventPropertiesView::updateCombineAvailability()
             int idx = mDatesList->row(items[i]);
             if(idx < dates.size()){
                 QJsonObject date = dates[idx].toObject();
+                // If selected date already has subdates, it cannot be combined :
+                if(date[STATE_DATE_SUB_DATES].toArray().size() > 0){
+                    mergeable = false;
+                    break;
+                }
+                // If selected dates have different plugins, they cannot be combined :
                 PluginAbstract* plg = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
                 if(plugin == 0)
                     plugin = plg;
                 else if(plg != plugin){
                     mergeable = false;
+                    break;
                 }
             }
         }

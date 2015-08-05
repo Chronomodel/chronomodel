@@ -38,6 +38,7 @@ void Date::init()
     mIsCurrent = false;
     mIsSelected = false;
     mCalibSum = 0;
+    mSubDates.clear();
 }
 
 Date::Date(const Date& date)
@@ -121,6 +122,13 @@ Date Date::fromJson(const QJsonObject& json)
             throw QObject::tr("Data could not be loaded : invalid plugin : ") + pluginId;
         }
         
+        date.mSubDates.clear();
+        QJsonArray subdates = json[STATE_DATE_SUB_DATES].toArray();
+        for(int i=0; i<subdates.size(); ++i){
+            QJsonObject d = subdates[i].toObject();
+            date.mSubDates.push_back(Date::fromJson(d));
+        }
+        
         date.mTheta.mProposal = ModelUtilities::getDataMethodText(date.mMethod);
         date.mSigma.mProposal = ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt);
     }
@@ -144,6 +152,13 @@ QJsonObject Date::toJson() const
     date[STATE_DATE_DELTA_MAX] = mDeltaMax;
     date[STATE_DATE_DELTA_AVERAGE] = mDeltaAverage;
     date[STATE_DATE_DELTA_ERROR] = mDeltaError;
+    
+    QJsonArray subdates;
+    for(int i=0; i<mSubDates.size(); ++i){
+        QJsonObject d = mSubDates[i].toJson();
+        subdates.push_back(d);
+    }
+    date[STATE_DATE_SUB_DATES] = subdates;
     
     return date;
 }
@@ -203,7 +218,8 @@ void Date::calibrate(const ProjectSettings& settings)
     double step = mSettings.mStep;
     double nbPts = 1 + round((tmax - tmin) / step);
   //  qDebug()<<" Date::calibrate"<<tmin<<tmax<<step<<nbPts<<"size"<<mCalibration.size();
-    if(mSubDates.size() == 0) // not a combination !
+    
+    if(true) //mSubDates.size() == 0) // not a combination !
     {
         double v = getLikelyhood(tmin);
         double lastRepVal = v;

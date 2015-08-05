@@ -382,7 +382,7 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
         double sum_vi = 0;
         double sum_mi_vi = 0;
         double sum_1_vi = 0;
-        double sum_mi_2 = 0;
+      //  double sum_mi_2 = 0;
         
         for(int i=0; i<dates.size(); ++i){
             QJsonObject date = dates[i].toObject();
@@ -398,15 +398,15 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
             double v = e * e + re * re;
             
             sum_vi += v;
-            sum_mi_vi += m*m/v;
+            sum_mi_vi += m/v;
             sum_1_vi += 1/v;
-            sum_mi_2 += m*m;
+         //   sum_mi_2 += m*m;
         }
         
         result = dates[0].toObject();
         
         QJsonObject mergedData = result[STATE_DATE_DATA].toObject();
-        mergedData[DATE_14C_AGE_STR] = sqrt(sum_mi_2 / dates.size());
+        mergedData[DATE_14C_AGE_STR] = sum_mi_vi / sum_1_vi;
         mergedData[DATE_14C_ERROR_STR] = sqrt(1 / sum_1_vi);
         mergedData[DATE_14C_DELTA_R_STR] = 0;
         mergedData[DATE_14C_DELTA_R_ERROR_STR] = 0;

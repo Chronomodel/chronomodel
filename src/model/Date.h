@@ -90,7 +90,7 @@ public:
     QMap<double, double> mCalibHPD;
     ProjectSettings mSettings;
     
-    QList<Date*> mSubDates;
+    QList<Date> mSubDates;
 };
 
 #endif
