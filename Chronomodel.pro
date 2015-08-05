@@ -51,7 +51,7 @@ QT += core gui widgets svg
 RESOURCES = Chronomodel.qrc
 
 # Compilation warning flags
-QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas
+QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter
 
 #########################################
 # C++ 11
