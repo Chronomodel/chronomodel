@@ -124,6 +124,7 @@ macx{
 	# this is to include fftw.h in the code :
 	INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac
 	
+	
 	# Link the application with FFTW library
 	# If no dylib are present, static libs (.a) are used => that's why we moved .dylib files in a "dylib" folder.
 	LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
