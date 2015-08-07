@@ -143,8 +143,12 @@ void MCMCLoopMain::initMCMC()
     
     // ----------------------------------------------------------------
     //  Init Bounds
+    // - Définir des niveaux pour les faits
+    // - Initialiser les bornes (uniquement, pas les faits) par niveaux croissants
+    // => Init borne :
+    //  - si valeur fixe, facile!
+    //  - si intervalle : random uniform sur l'intervalle (vérifier si min < max pour l'intervalle qui a été modifié par la validation du modèle)
     // ----------------------------------------------------------------
-    
     QVector<Event*> eventsByLevel = ModelUtilities::sortEventsByLevel(mModel->mEvents);
     int curLevel = 0;
     double curLevelMaxValue = mModel->mSettings.mTmin;
@@ -179,11 +183,6 @@ void MCMCLoopMain::initMCMC()
             }
         }
     }
-    // - Définir des niveaux pour les faits
-    // - Initialiser les bornes (uniquement, pas les faits) par niveaux croissants
-    // => Init borne :
-    //  - si valeur fixe, facile!
-    //  - si intervalle : random uniform sur l'intervalle (vérifier si min < max pour l'intervalle qui a été modifié par la validation du modèle)
     
     // ----------------------------------------------------------------
     //  Init theta f, ti, ...

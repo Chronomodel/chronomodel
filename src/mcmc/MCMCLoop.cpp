@@ -95,7 +95,7 @@ void MCMCLoop::run()
     for(mChainIndex = 0; mChainIndex < mChains.size(); ++mChainIndex)
     {        
         log += line("--------------------------");
-        log += line("Chain : " + QString::number(mChainIndex + 1));
+        log += line("Chain : " + QString::number(mChainIndex + 1) + "/" + QString::number(mChains.size()));
         
 
         
@@ -109,7 +109,7 @@ void MCMCLoop::run()
         
         //----------------------- Initializing --------------------------------------
         
-        emit stepChanged("Chain " + QString::number(mChainIndex+1) + " : " + tr("Initializing MCMC"), 0, 0);
+        emit stepChanged("Chain " + QString::number(mChainIndex+1) + "/" + QString::number(mChains.size()) + " : " + tr("Initializing MCMC"), 0, 0);
         
         //QTime startInitTime = QTime::currentTime();
         
@@ -129,7 +129,7 @@ void MCMCLoop::run()
         
         //----------------------- Burning --------------------------------------
         
-        emit stepChanged("Chain " + QString::number(mChainIndex+1) + " : " + tr("Burning"), 0, chain.mNumBurnIter);
+        emit stepChanged("Chain " + QString::number(mChainIndex+1) + "/" + QString::number(mChains.size()) + " : " + tr("Burning"), 0, chain.mNumBurnIter);
         mState = eBurning;
         
         //QTime startBurnTime = QTime::currentTime();
@@ -164,7 +164,7 @@ void MCMCLoop::run()
         
         //----------------------- Adapting --------------------------------------
         
-        emit stepChanged("Chain " + QString::number(mChainIndex+1) + " : " + tr("Adapting"), 0, chain.mMaxBatchs * chain.mNumBatchIter);
+        emit stepChanged("Chain " + QString::number(mChainIndex+1) + "/" + QString::number(mChains.size()) + " : " + tr("Adapting"), 0, chain.mMaxBatchs * chain.mNumBatchIter);
         mState = eAdapting;
         
         //QTime startAdaptTime = QTime::currentTime();
@@ -215,7 +215,7 @@ void MCMCLoop::run()
         
         //----------------------- Running --------------------------------------
         
-        emit stepChanged("Chain " + QString::number(mChainIndex+1) + " : " + tr("Running"), 0, chain.mNumRunIter);
+        emit stepChanged("Chain " + QString::number(mChainIndex+1) + "/" + QString::number(mChains.size()) + " : " + tr("Running"), 0, chain.mNumRunIter);
         mState = eRunning;
         
         //QTime startRunTime = QTime::currentTime();
