@@ -24,8 +24,6 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 mToolbarH(60)
 {
     minimumHeight =0;
-    
-    
 
     // ------------- commun with defautlt Event and Bound ----------
     mNameLab = new Label(tr("Name") + " :", this);
@@ -38,7 +36,7 @@ mToolbarH(60)
     mColorPicker = new ColorPicker(Qt::black, this);
     //mColorPicker ->  QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     
-    connect(mNameEdit, SIGNAL(textEdited(const QString&)), this, SLOT(updateEventName(const QString&)));
+    connect(mNameEdit, SIGNAL(editingFinished()), this, SLOT(updateEventName()));
     connect(mColorPicker, SIGNAL(colorChanged(QColor)), this, SLOT(updateEventColor(QColor)));
     
     // Event default propreties Window mEventView
@@ -246,10 +244,10 @@ const QJsonObject& EventPropertiesView::getEvent() const
 }
 
 #pragma mark Event Properties
-void EventPropertiesView::updateEventName(const QString& name)
+void EventPropertiesView::updateEventName()
 {
     QJsonObject event = mEvent;
-    event[STATE_NAME] = name;
+    event[STATE_NAME] = mNameEdit->text();
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event name updated"));
 }
 

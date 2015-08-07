@@ -37,7 +37,7 @@ protected:
     
 private slots:
     
-    void updateEventName(const QString& name);
+    void updateEventName();
     void updateEventColor(QColor color);
     void updateEventMethod(int index);
     
