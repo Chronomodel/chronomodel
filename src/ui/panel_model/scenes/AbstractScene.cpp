@@ -177,17 +177,13 @@ void AbstractScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
            
             mTempArrow->setLocked(true);
             qDebug() << "AbstractScene::itemEntered constraintAllowed==true";
-            
-            
         }
         else {
             mTempArrow->setState(ArrowTmpItem::eForbidden);
             
             mTempArrow->setLocked(false);
             qDebug() << "AbstractScene::itemEntered constraintAllowed==false";
-            
         }
-        
     }
     
     //--------------

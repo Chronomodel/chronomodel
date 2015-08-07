@@ -365,35 +365,26 @@ QColor randomColor()
                   rand() % 255);
 }
 
-bool constraintIsCircular( QJsonArray constraints, const int FromId, const int ToId)
+bool constraintIsCircular(QJsonArray constraints, const int fromId, const int toId)
 {    
-    /*bool isCircular = false;
-   qDebug() << "entre dans constraintIsCircular true FromId="<< FromId <<"  ToId="<<ToId ;*/
-    
     for(int i=0; i<constraints.size(); ++i)
     {
         QJsonObject constraint = constraints[i].toObject();
         
-      /* qDebug() << "------------------------------";
-       qDebug() << "comparaison constraint[STATE_CONSTRAINT_BWD_ID].toInt()=="<< constraint[STATE_CONSTRAINT_BWD_ID].toInt()<<"  constraint[STATE_CONSTRAINT_FWD_ID].toInt()=="<<constraint[STATE_CONSTRAINT_FWD_ID].toInt() ;*/
-        
-        //Interdit l'inversion
-        if(constraint[STATE_CONSTRAINT_BWD_ID].toInt() == ToId && constraint[STATE_CONSTRAINT_FWD_ID].toInt() == FromId)
+        // Detect circularity
+        if(constraint[STATE_CONSTRAINT_BWD_ID].toInt() == toId && constraint[STATE_CONSTRAINT_FWD_ID].toInt() == fromId)
         {
-            /*isCircular = true;
-            qDebug() << "constraintIsCircular true" ;*/
             return true;
         }
-        else if (constraint[STATE_CONSTRAINT_BWD_ID].toInt() == ToId) {
-                int ToIdFellower =  constraint[STATE_CONSTRAINT_FWD_ID].toInt();
-                if(constraintIsCircular(constraints, FromId ,ToIdFellower))
-                {
-                   /* isCircular = true;
-                    qDebug() << "constraintIsCircular true" ;*/
-                    return true;
-                };
-            }
+        // If the constraint follows the one we are trying to create,
+        // follow it to check the circularity !
+        else if(constraint[STATE_CONSTRAINT_BWD_ID].toInt() == toId){
+            int nextToId =  constraint[STATE_CONSTRAINT_FWD_ID].toInt();
+            if(constraintIsCircular(constraints, fromId, nextToId))
+            {
+                return true;
+            };
+        }
     }
-    
-    return false;//isCircular;
+    return false;
 }

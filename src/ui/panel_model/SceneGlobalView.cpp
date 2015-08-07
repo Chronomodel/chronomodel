@@ -75,15 +75,15 @@ void SceneGlobalView::paintEvent(QPaintEvent* e)
         p.setBrush(Qt::NoBrush);
         p.drawRect(targetVisibleRect);
         
-        /*
-        qDebug() << "-----";
-        qDebug() << targetRect;
-        qDebug() << visibleTargetRect;*/
+     
+        //qDebug() << "-----";
+        //qDebug() << targetRect;
+        //qDebug() << visibleTargetRect;
         
-        /*qDebug() << sceneRect;
-        qDebug() << visibleRect;
-        qDebug() << propX << ", " << propY << ", " << propW << ", " << propH;
-        qDebug() << "-----------";*/
+        //qDebug() << sceneRect;
+        //qDebug() << visibleRect;
+        //qDebug() << propX << ", " << propY << ", " << propW << ", " << propH;
+        //qDebug() << "-----------";
     }
 }
 

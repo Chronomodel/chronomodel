@@ -180,7 +180,6 @@ double Event::getThetaMinRecursive(double defaultValue,
     // ------------------------------------------------------------------
     //  Déterminer la borne min courante pour le tirage de theta
     // ------------------------------------------------------------------
-    
     double min1 = defaultValue;
     
     // Max des thetas des faits en contrainte directe antérieure
