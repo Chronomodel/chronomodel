@@ -162,7 +162,11 @@ void PhasesScene::updateProject()
             if(itemPhase[STATE_ID].toInt() == phase[STATE_ID].toInt())
             {
                 itemExists = true;
-                if(phase != itemPhase)
+                
+                // When assigning events to a phase by clicking on the checkbox of the phase item,
+                // the information is saved in the event, not in the phase!
+                // So apparently, the phase hasn't changed, but we need to redraw its item to show the modified events inside it.
+                //if(phase != itemPhase)
                 {
                     // UPDATE ITEM
 #ifdef DEBUG
