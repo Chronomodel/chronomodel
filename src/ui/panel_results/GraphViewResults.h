@@ -34,7 +34,7 @@ public:
     explicit GraphViewResults(QWidget *parent = 0);
     virtual ~GraphViewResults();
     
-    void setResultToShow(TypeGraph typGraph, Variable variablee, bool showAllChains, const QList<bool>& showChainList, bool showCredibility, float threshold, bool showCalib, bool showWiggle, bool showRawResults);
+    void setResultToShow(TypeGraph typeGraph, Variable variable, bool showAllChains, const QList<bool>& showChainList, bool showCredibility, float threshold, bool showCalib, bool showWiggle, bool showRawResults);
     
     void setSettings(const ProjectSettings& settings);
     void setMCMCSettings(const MCMCSettings& mcmc, const QList<Chain>& chains);
@@ -48,10 +48,10 @@ public:
     
     void setItemColor(const QColor& itemColor);
     void setItemTitle(const QString& itemTitle);
-
+    
+    void forceHideButtons(const bool hide);
     
     GraphView* mGraph;
-    bool mButtonVisible = true;
     
 public slots:
     void setRange(double min, double max);
@@ -66,12 +66,16 @@ private slots:
     void saveGraphData() const;
     
 protected:
+    // These methods are from QWidget and we want to modify their behavior
     virtual void paintEvent(QPaintEvent* e);
-    void paintEvent2(QPaintEvent* );
-    void resizeEvent(QResizeEvent* e);
+    virtual void resizeEvent(QResizeEvent* e);
+    
+    // This is not from QWidget : we create this function to update the layout from different places (eg: in resizeEvent()).
+    // It is vitual beacause we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
     virtual void updateLayout();
     
-    
+    // This method is used to recreate all curves in mGraph.
+    // It is vitual beacause we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
     virtual void refresh() = 0;
     
 signals:
@@ -85,7 +89,6 @@ protected:
     Variable mCurrentVariable;
     
     QString mTitle;
-    int mMinHeighttoDisplayTitle;
     
     QString mResults;
     QColor mItemColor;
@@ -118,6 +121,11 @@ protected:
     int mMargin;
     int mLineH;
     int mGraphLeft;
+    int mTopShift;
+    
+    bool mButtonVisible;
+    bool mForceHideButtons;
+    int mMinHeightForButtonsVisible;
     
     QPropertyAnimation* mAnimation;
 };

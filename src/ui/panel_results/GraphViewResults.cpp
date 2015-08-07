@@ -12,10 +12,8 @@
 #pragma mark Constructor / Destructor
 
 GraphViewResults::GraphViewResults(QWidget *parent):QWidget(parent),
-mButtonVisible(true),
 mCurrentTypeGraph(eHisto),
 mCurrentVariable(eTheta),
-mMinHeighttoDisplayTitle(100),
 mShowAllChains(true),
 mShowCredibility(false),
 mThresholdHPD(95),
@@ -26,7 +24,11 @@ mShowNumResults(false),
 mMainColor(QColor(50, 50, 50)),
 mMargin(5),
 mLineH(20),
-mGraphLeft(128)
+mGraphLeft(128),
+mTopShift(0),
+mButtonVisible(true),
+mForceHideButtons(false),
+mMinHeightForButtonsVisible(50)
 {
     setMouseTracking(true);
     
@@ -112,9 +114,9 @@ GraphViewResults::~GraphViewResults()
     
 }
 
-void GraphViewResults::setResultToShow(TypeGraph typGraph, Variable variable, bool showAllChains, const QList<bool>& showChainList, bool showCredibility, float threshold, bool showCalib, bool showWiggle, bool showRawResults)
+void GraphViewResults::setResultToShow(TypeGraph typeGraph, Variable variable, bool showAllChains, const QList<bool>& showChainList, bool showCredibility, float threshold, bool showCalib, bool showWiggle, bool showRawResults)
 {
-    mCurrentTypeGraph = typGraph;
+    mCurrentTypeGraph = typeGraph;
     mCurrentVariable = variable;
     mShowAllChains = showAllChains;
     mShowChainList = showChainList;
@@ -308,8 +310,7 @@ void GraphViewResults::setNumericalResults(const QString& results)
 void GraphViewResults::showNumericalResults(bool show)
 {
     mShowNumResults = show;
-    //updateLayout();
-    repaint();
+    updateLayout();
 }
 
 void GraphViewResults::setRendering(GraphView::Rendering render)
@@ -322,104 +323,97 @@ void GraphViewResults::setGraphFont(const QFont& font)
     setFont(font);
     mGraph->setGraphFont(font);
     mGraph->setMarginBottom(font.pointSizeF() + 10);
-   // updateLayout();
+   
+    // Recalculte mTopShift based on the new font, and position the graph accordingly :
+    updateLayout();
 }
 
 void GraphViewResults::setGraphsThickness(int value)
 {
     mGraph->setCurvesThickness(value);
-    //updateLayout();
-    repaint();
-}
-
-
-void GraphViewResults::paintEvent2(QPaintEvent* )
-{
-    QPainter p(this);
-    if (mButtonVisible) { // the box under the button
-        p.fillRect(0, 0, mGraphLeft, height(), mMainColor);
-    }
-
-    // draw a horizontal ligne
- /*   p.setPen(QColor(200, 200, 200));
-    p.drawLine(0, height(), width(), height());
-  */  
-    //updateLayout();
-    repaint();
-    p.end();
-/*    if(height() >= mMinHeighttoDisplayTitle) // juste write mTitle
-    {
-        QRectF textRect(mGraphLeft, 0, mGraph->width(), 25);
-        p.fillRect(textRect, mGraph->getBackgroundColor());
-        
-        p.setPen(Qt::black);
-        p.setFont(this->font());
-        
-        p.drawText(textRect.adjusted(mGraph->marginLeft(), 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
-    }*/
 }
 
 void GraphViewResults::resizeEvent(QResizeEvent* e)
 {
-    Q_UNUSED(e);
     updateLayout();
-    repaint();
 }
 
 #pragma mark Layout
 
 void GraphViewResults::updateLayout()
 {
+    int h = height();
+    int butInlineMaxH = 50;
     
+    mButtonVisible = (h > mMinHeightForButtonsVisible) && !mForceHideButtons;
+    
+    mImageSaveBut   -> setVisible(mButtonVisible);
+    mDataSaveBut    -> setVisible(mButtonVisible);
+    mImageClipBut   -> setVisible(mButtonVisible);
+    mResultsClipBut -> setVisible(mButtonVisible);
+    
+    if(mButtonVisible)
+    {
+        qreal bw = mGraphLeft / 4;
+        int bh = height() - mLineH;
+        bh = std::min(bh, butInlineMaxH);
+        
+        mImageSaveBut   -> setGeometry(0, mLineH, bw, bh);
+        mDataSaveBut    -> setGeometry(bw, mLineH, bw, bh);
+        mImageClipBut   -> setGeometry(2*bw, mLineH, bw, bh);
+        mResultsClipBut -> setGeometry(mGraphLeft-bw, mLineH, bw, bh);
+        
+        mGraph->setYAxisMode(GraphView::eMinMax);
+        mGraph->setXAxisMode(GraphView::eAllTicks);
+        mGraph->setMarginBottom(mGraph->font().pointSizeF() + 10);
+    }
+    else {
+        mGraph->setYAxisMode(GraphView::eHidden);
+        mGraph->setXAxisMode(GraphView::eHidden);
+        mGraph->setMarginBottom(10);
+    }
+    
+    QFont fontTitle(this->font());
+    fontTitle.setPointSizeF(this->font().pointSizeF()*1.1);
+    QFontMetrics fmTitle(fontTitle);
+    mTopShift = fmTitle.height()+4+1;
+    
+    int leftShift = mForceHideButtons ? 0 : mGraphLeft;
+    QRect graphRect(leftShift, mTopShift, this->width() - leftShift, height()-mTopShift);
+    
+    if(mShowNumResults) {
+        mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
+        mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
+        mTextArea -> setVisible(true);
+    }
+    else {
+        mGraph    -> setGeometry(graphRect);
+        mTextArea -> setVisible(false);
+    }
+    update();
 }
 void GraphViewResults::paintEvent(QPaintEvent* )
 {
     int h = height();
     int butMinH = 30;
-    int butInlineMaxH = 50;
-    //int bh = (height() - mLineH) / 2;
-    //bh = qMin(bh, 100);
+    int leftShift = mForceHideButtons ? 0 : mGraphLeft;
+    
     QPainter p;
     p.begin(this);
     
-    int leftShift = 0;
-   // int topShift = 0;
-    
-   // if(height() >= mMinHeighttoDisplayTitle) {
-   //     topShift = mLineH;
-   // }
-   
-    
-    if (mButtonVisible) {
-        
+    // Left part of the view (title, buttons, ...)
+    if(mButtonVisible)
+    {
         bool showButs = (h >= mLineH + butMinH);
-        //showButs = false;
-        leftShift = mGraphLeft ;
-     
-        mImageSaveBut   -> setVisible(showButs);
-        mDataSaveBut    -> setVisible(showButs);
-        mImageClipBut   -> setVisible(showButs);
-        mResultsClipBut -> setVisible(showButs);
-        
         
         QColor backCol = mItemColor;
-
         QColor foreCol = getContrastedColor(backCol);
         
-    
-        if(showButs)  {
-            qreal bw = mGraphLeft / 4;
-            int bh = height() - mLineH;
-            bh = std::min(bh, butInlineMaxH);
-        
-            mImageSaveBut   -> setGeometry(0, mLineH, bw, bh);
-            mDataSaveBut    -> setGeometry(bw, mLineH, bw, bh);
-            mImageClipBut   -> setGeometry(2*bw, mLineH, bw, bh);
-            mResultsClipBut -> setGeometry(mGraphLeft-bw, mLineH, bw, bh);
-            
+        if(showButs)
+        {
             // affiche le texte dans la boite de droite avec les boutons
             QRectF topRect(0, 1, mGraphLeft-p.pen().widthF(), mLineH-p.pen().widthF() - 1);
-           
+            
             p.setPen(backCol);
             p.setBrush(backCol);
             p.drawRect(topRect);
@@ -429,123 +423,29 @@ void GraphViewResults::paintEvent(QPaintEvent* )
             font.setPointSizeF(pointSize(11));
             p.setFont(font);
             
-            
             p.drawText(QRectF(0, 1, mGraphLeft-p.pen().widthF(), mLineH-p.pen().widthF()-1),
                        Qt::AlignVCenter | Qt::AlignCenter,
                        mItemTitle);
-            
         }
-    
-        
-    
-    /*    QColor backCol = mItemColor;
-        QColor foreCol = getContrastedColor(backCol);
-    
-//      QRect topRect(0, 0, mGraphLeft, mLineH);
-        QRect topRect(0, 0, mGraphLeft, mLineH);
-        p.setPen(backCol);
-        p.setBrush(backCol);
-        p.drawRect(topRect);
-   */
-       // p.setPen(Qt::black);
-       // p.drawLine(0, height(), mGraphLeft, height());
-    
-        
-        //qDebug()<<"GraphViewResults::updateLayout() mItemTitle "<<mItemTitle;
-        
-    }
-    else {
-        leftShift = 0;
-        mImageSaveBut   -> setVisible(false);
-        mDataSaveBut    -> setVisible(false);
-        mImageClipBut   -> setVisible(false);
-        mResultsClipBut -> setVisible(false);
-    }
-   
-    if(h <= mLineH + butMinH)
-    {
-        mGraph -> setYAxisMode(GraphView::eHidden);
-    }
-    else
-    {
-        mGraph->setYAxisMode(GraphView::eMinMax);
     }
     
+    // Right part of the view (graph, title, ...)
     
-    p.setPen(Qt::black);
-    p.setFont(this->font());
-    
-    // write mTitle under the curve field
-    QFontMetrics fm = this->fontMetrics();
-    
+    // write mTitle above the graph
     QFont fontTitle(this->font());
     fontTitle.setPointSizeF(this->font().pointSizeF()*1.1);
     QFontMetrics fmTitle(fontTitle);
     
-    int topShift = fmTitle.height()+4+1;
-    
-    //leftShift = mGraphLeft+p.pen().widthF();
-    //leftShift = leftShift+p.pen().widthF();
-    QRectF textRect(leftShift, 1, this->width()-leftShift,topShift-1);
+    QRectF textRect(leftShift, 1, this->width()-leftShift, mTopShift-1);
     p.fillRect(textRect, mGraph->getBackgroundColor());
     
-
     p.setFont(fontTitle);
+    p.setPen(Qt::black);
     
-    p.drawText(QRect(leftShift + 50, 3, fmTitle.width(mTitle), topShift - 1), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
+    p.drawText(QRect(leftShift + 50, 3, fmTitle.width(mTitle), mTopShift - 1), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
     
+    p.drawText(QRect(width() - fmTitle.width(mGraph->getInfo()), 3, fmTitle.width(mGraph->getInfo()), mTopShift-1), Qt::AlignVCenter | Qt::AlignLeft, mGraph->getInfo());
     
-    p.drawText(QRect(leftShift + this->width() - fmTitle.width(mGraph->getInfo()) - 150 ,3 ,fmTitle.width(mGraph->getInfo()), topShift-1), Qt::AlignVCenter | Qt::AlignLeft, mGraph->getInfo());
-    
-    
-    QRect graphRect(leftShift, topShift, this->width() - leftShift, height()-topShift);
- 
-    if(mShowNumResults) {
-        
-        mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
-        mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
-        mTextArea -> setVisible(true);
-    }
-    else {
-        mGraph    -> setGeometry(graphRect);
-        mTextArea -> setVisible(false);
-    }
-    
-    if(height() >= mMinHeighttoDisplayTitle)  {
-        mGraph -> setXAxisMode(GraphView::eAllTicks);
-        mGraph -> setMarginBottom(mGraph->font().pointSizeF() + 10);
-        
-        //QRect graphRect(leftShift, topShift, this->width() - leftShift, height()-1-topShift);
-       /* if(mShowNumResults) {
-            
-            mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
-            mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
-            mTextArea -> setVisible(true);
-        }
-        else {
-            mGraph    -> setGeometry(graphRect);
-            mTextArea -> setVisible(false);
-        }
-        */
-        
-        
-        
-        // write mTitle under the curve field
-      /*  QRectF textRect(leftShift, 0, this->width()-leftShift,mLineH);
-        p.fillRect(textRect, mGraph->getBackgroundColor());
-        
-        p.drawText(textRect.adjusted(50, 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
-      */  
-        
-    }
-    else
-    {
-        mGraph -> setXAxisMode(GraphView::eHidden);
-
-        mGraph -> setMarginBottom(10);
-        
-     
-    }
     p.end();
 
 }
@@ -555,7 +455,15 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     mItemColor = itemColor;
 }
 
-void GraphViewResults::setItemTitle(const QString& ItemTitle)
+void GraphViewResults::setItemTitle(const QString& itemTitle)
 {
-    mItemTitle = ItemTitle;
+    mItemTitle = itemTitle;
+}
+
+void GraphViewResults::forceHideButtons(const bool hide)
+{
+    if(hide != mForceHideButtons){
+        mForceHideButtons = hide;
+        updateLayout();
+    }
 }

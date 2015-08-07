@@ -337,7 +337,7 @@ mZoomCorrel(0)
     
     connect(mCredibilityCheck, SIGNAL(clicked()),                   this, SLOT(updateGraphs()));
     //connect(mHPDEdit,  SIGNAL(textChanged(const QString&)), this, SLOT(updateGraphs()));
-    connect(mHPDEdit,  SIGNAL(returnPressed()), this, SLOT(generateHPD()));
+    connect(mHPDEdit,  SIGNAL(editingFinished()), this, SLOT(generateHPD()));
     
     mRawCheck = new CheckBox(tr("Raw results"), mPostDistGroup);
     mRawCheck -> setChecked(false);
@@ -815,16 +815,16 @@ void ResultsView::clearResults()
         delete phasesWidget;
 }
 
+/*
+ * @brief : Cette fonction est appelée seulement après un "Run"
+ *
+ */
 void ResultsView::updateResults(Model* model)
 {
-    // ------------------------------------------------
-    //  Cette fonction est appelée seulement après un "Run"
-    // ------------------------------------------------
-    
     clearResults();
     
-    // On force les valeurs par défaut ici puisque
-    // les résultats on été calculés avec les valeurs par défaut
+    // Force default values in text boxes because results are generated using these default values in MCMCLoopMain::finalize().
+    // Should we calculate HPD results now and not in MCMCLoopMain::finalize() to preserve current FFT length and others??
     mFFTLenCombo->setCurrentText("1024");
     mHFactorEdit->setText("1");
     
@@ -848,14 +848,17 @@ void ResultsView::updateResults(Model* model)
     mCurrentXMaxEdit -> setText( DateUtils::convertToAppSettingsFormatStr(mResultMaxX) );
     
     mHasPhases = (mModel->mPhases.size() > 0);
-    mByPhasesBut -> setAutoExclusive(true);
+    mByPhasesBut->setAutoExclusive(true);
     
-    mByPhasesBut -> setChecked( mHasPhases);
-    mByEventsBut -> setChecked(!mHasPhases);
+    mByPhasesBut->setChecked( mHasPhases);
+    mByEventsBut->setChecked(!mHasPhases);
     
-    mByEventsBut->setVisible(mHasPhases);
-    mByPhasesBut->setVisible(mHasPhases);
+    mByEventsBut->setEnabled(mHasPhases);
+    mByPhasesBut->setEnabled(mHasPhases);
     
+    // ----------------------------------------------------
+    //  Create Chains option controls (radio and checkboxes under "MCMC Chains")
+    // ----------------------------------------------------
     for(int i=0; i<mChains.size(); ++i)
     {
         CheckBox* check = new CheckBox(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
@@ -879,12 +882,15 @@ void ResultsView::updateResults(Model* model)
     // ----------------------------------------------------
     //  Phases View
     // ----------------------------------------------------
-    
     QWidget* phasesWidget = new QWidget();
     phasesWidget->setMouseTracking(true);
     
     for(int p=0; p<(int)mModel->mPhases.size(); ++p)
     {
+        // ----------------------------------------------------
+        //  This just creates the view for the phase.
+        //  It triggers an update()
+        // ----------------------------------------------------
         Phase* phase = mModel->mPhases[p];
         GraphViewPhase* graphPhase = new GraphViewPhase(phasesWidget);
         graphPhase->setSettings(mModel->mSettings);
@@ -1027,14 +1033,14 @@ void ResultsView::updateGraphs()
     if(mByPhasesBut->isChecked()) {
         for(int i=0; i<mByPhasesGraphs.size(); ++i){
             mByPhasesGraphs[i]->setResultToShow(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable, showAllChains, showChainList, showCredibility, hpdThreshold, showCalib, showWiggle, showRaw);
-            mByPhasesGraphs[i]->update();
+            //mByPhasesGraphs[i]->update();
         }
     }
     //if(QWidget* wid = mEventsScrollArea->widget())
     if(mByEventsBut->isChecked()){
         for(int i=0; i<mByEventsGraphs.size(); ++i){
             mByEventsGraphs[i]->setResultToShow(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable, showAllChains, showChainList, showCredibility, hpdThreshold, showCalib, showWiggle, showRaw);
-            mByEventsGraphs[i]->update();
+            //mByEventsGraphs[i]->update();
        }
  }
     // Restore current zoom
@@ -1264,8 +1270,7 @@ void ResultsView::exportFullImage()
         printAxis = (mByPhasesGraphs[0]->mGraph->getXAxisMode() == GraphView::eHidden);
         //  hide all buttons in the both scrollAreaWidget
         for(int i=0; i<mByPhasesGraphs.size(); ++i){
-            mByPhasesGraphs[i]->mButtonVisible = false;
-            mByPhasesGraphs[i]->update();
+            mByPhasesGraphs[i]->forceHideButtons(true);
         }
     }
     //else if (mStack->currentWidget() == mEventsScrollArea) {
@@ -1276,8 +1281,7 @@ void ResultsView::exportFullImage()
         printAxis = (mByEventsGraphs[0]->mGraph->getXAxisMode() == GraphView::eHidden);
         //  hide all buttons in the both scrollAreaWidget
         for(int i=0; i<mByEventsGraphs.size(); ++i) {
-            mByEventsGraphs[i]->mButtonVisible = false;
-            mByEventsGraphs[i]->update();
+            mByEventsGraphs[i]->forceHideButtons(true);
         }
     }
 
@@ -1360,15 +1364,13 @@ void ResultsView::exportFullImage()
     //  show all buttons
     if (mByPhasesBut->isChecked()) {
         for(int i=0; i<mByPhasesGraphs.size(); ++i) {
-            mByPhasesGraphs[i]->mButtonVisible = true;
-            mByPhasesGraphs[i]->update();
+            mByPhasesGraphs[i]->forceHideButtons(false);
         }
         
     }
     else {
         for(int i=0; i<mByEventsGraphs.size(); ++i) {
-            mByEventsGraphs[i]->mButtonVisible = true;
-            mByEventsGraphs[i]->update();
+            mByEventsGraphs[i]->forceHideButtons(false);
         }
     }
 }

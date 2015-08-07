@@ -37,7 +37,8 @@ void GraphViewDate::setDate(Date* date)
     if(date)
     {
         mDate = date;
-        mTitle = QString(tr("Data") + " : " + mDate->mName);
+        setItemTitle(QString(tr("Data") + " : " + mDate->mName));
+        setItemColor(mColor);
     }
     update();
 }
@@ -50,12 +51,7 @@ void GraphViewDate::setColor(const QColor& color)
 
 void GraphViewDate::paintEvent(QPaintEvent* e)
 {
-    if(mDate)
-    {
-        this->setItemColor(mColor);
-        this->setItemTitle(tr("Data") + " : " + mDate->mName);
-    }
-  GraphViewResults::paintEvent(e);
+    GraphViewResults::paintEvent(e);
 }
 
 void GraphViewDate::refresh()
@@ -172,7 +168,7 @@ void GraphViewDate::refresh()
                 // ------------------------------------------------
                 //  Not used anymore
                 // ------------------------------------------------
-                if(mShowRawResults)
+                /*if(mShowRawResults)
                 {
                     GraphCurve curveRaw;
                     curveRaw.mName = "raw histo full";
@@ -188,7 +184,7 @@ void GraphViewDate::refresh()
                     
                     double yMax2 = 1.1f * map_max_value(curveRaw.mData);
                     mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax2));
-                }
+                }*/
 
                 // ------------------------------------------------
                 //  Show HPD only if watching calendar dates (not std. deviation)

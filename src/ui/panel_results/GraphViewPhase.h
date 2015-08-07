@@ -21,6 +21,7 @@ public:
     
     GraphView* mDurationGraph;
     Phase* mPhase;
+    
 protected:
     void paintEvent(QPaintEvent* e);
     void refresh();

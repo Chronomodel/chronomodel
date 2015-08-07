@@ -34,12 +34,16 @@ void GraphViewEvent::setEvent(Event* event)
     if(event)
     {
         mEvent = event;
-        if (mEvent->type()==Event::eKnown) {
-            mTitle = tr("Bound ") + " : " + mEvent->mName;
-        }
-        else mTitle = tr("Event") + " : " + mEvent->mName;
+        QString eventTitle = ( (mEvent->mType == Event::eDefault) ? tr("Event") : tr("Bound") ) ;
+        this->setItemTitle(eventTitle + " : " + mEvent->mName);
+        setItemColor(mEvent->mColor);
     }
     update();
+}
+
+void GraphViewEvent::paintEvent(QPaintEvent* e)
+{
+    GraphViewResults::paintEvent(e);
 }
 
 void GraphViewEvent::refresh()
@@ -437,44 +441,4 @@ void GraphViewEvent::refresh()
             }
         }
     }
-}
-
-void GraphViewEvent::paintEvent(QPaintEvent* e)
-{
-   
-    //QPainter p(this);
-    
-    
-    if(mEvent)
-    {
-        
-        this->setItemColor(mEvent->mColor);
-        
-        QString evenTitle = ( (mEvent->mType == Event::eDefault) ? tr("Event") : tr("Bound") ) ;
-        this->setItemTitle(evenTitle + " : " + mEvent->mName);
-       /* QColor backCol = mEvent->mColor;
-        QColor foreCol = getContrastedColor(backCol);
-        
-        QRect topRect(0, 0, mGraphLeft, mLineH);
-        p.setPen(backCol);
-        p.setBrush(backCol);
-        p.drawRect(topRect);
-        
-        p.setPen(Qt::black);
-        p.drawLine(0, height(), mGraphLeft, height());
-        
-        p.setPen(foreCol);
-        QFont font;
-        font.setPointSizeF(pointSize(11));
-        p.setFont(font);
-        
-        QString type = (mEvent->mType == Event::eDefault) ? tr("Event") : tr("Bound");
-        p.drawText(topRect.adjusted(mMargin, 0, -mMargin, 0),
-                   Qt::AlignVCenter | Qt::AlignLeft,
-                   type + " : " + mEvent->mName);
-       */ 
-       
-    }
-     GraphViewResults::paintEvent(e);
-     //p.end();
 }

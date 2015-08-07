@@ -15,6 +15,8 @@
 GraphViewPhase::GraphViewPhase(QWidget *parent):GraphViewResults(parent),
 mPhase(0)
 {
+    mMinHeightForButtonsVisible = 80;
+    
     setMainColor(QColor(50, 50, 50));
     mGraph->setBackgroundColor(QColor(210, 210, 210));
     //mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax); // it's done in GraphViewResults
@@ -56,69 +58,44 @@ void GraphViewPhase::setPhase(Phase* phase)
     if(phase)
     {
         mPhase = phase;
-        mTitle = tr("Phase") + " : " + mPhase->mName;
+        setItemTitle(tr("Phase") + " : " + mPhase->mName);
+        setItemColor(mPhase->mColor);
     }
     update();
 }
 
-void GraphViewPhase::paintEvent(QPaintEvent* e)
+void GraphViewPhase::updateLayout()
 {
-    GraphViewResults::paintEvent(e);
+    GraphViewResults::updateLayout();
     
-    if(mPhase)  {
-        this->setItemColor(mPhase->mColor);
-        this->setItemTitle(mTitle);
+    mShowDuration->setVisible(mButtonVisible);
+    
+    int leftShift = mForceHideButtons ? 0 : mGraphLeft;
+    QRect graphRect(leftShift, mTopShift, this->width() - leftShift, height()-mTopShift);
+    
+    if(mButtonVisible)
+    {
+        int butInlineMaxH = 50;
+        int bh = (height() - mLineH) / 2;
+        bh = qMin(bh, butInlineMaxH);
+        mShowDuration->setGeometry(0, mLineH + bh, mGraphLeft, bh);
         
-    }
-    
-    
-    int h = height();
-    int butMinH = 30;
-    
-    QRect graphRect(mGraphLeft, 0, width() - mGraphLeft, height()-1);
-    
-    if(h <= mLineH + butMinH)
-    {
-        mDurationGraph->setYAxisMode(GraphView::eHidden);
-    }
-    else
-    {
         mDurationGraph->setYAxisMode(GraphView::eMinMax);
-    }
-    
-    if(height() >= mMinHeighttoDisplayTitle)
-    {
-        graphRect.adjust(0, 20, 0, 0);
         mDurationGraph->setXAxisMode(GraphView::eAllTicks);
         mDurationGraph->setMarginBottom(mGraph->font().pointSizeF() + 10);
     }
     else
     {
+        mDurationGraph->setYAxisMode(GraphView::eHidden);
         mDurationGraph->setXAxisMode(GraphView::eHidden);
         mDurationGraph->setMarginBottom(0);
     }
-    
-    if(mShowNumResults && height() >= 100)
-    {
-        mDurationGraph->setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
-    }
-    else
-    {
-        mDurationGraph->setGeometry(graphRect);
-    }
-    
-    
-    int butInlineMaxH = 50;
-    int bh = height() - mLineH;
-    bh = qMin(bh, butInlineMaxH);
-    
-    this->mShowDuration->setVisible(this->GraphViewResults::mButtonVisible);
-    mShowDuration->setGeometry(0, mLineH + bh, mGraphLeft, bh);
-    
-    
-    
-    
-    
+    mDurationGraph->setGeometry(graphRect.adjusted(0, 0, 0, mShowNumResults ? -graphRect.height()/2 : 0));
+}
+
+void GraphViewPhase::paintEvent(QPaintEvent* e)
+{
+    GraphViewResults::paintEvent(e);
 }
 
 void GraphViewPhase::refresh()
@@ -405,56 +382,6 @@ void GraphViewPhase::refresh()
             }
         }
     }
-}
-
-void GraphViewPhase::updateLayout()
-{
-   // GraphViewResults::updateLayout();
-   // GraphViewResults::repaint();
- /*   int h = height();
-    int butMinH = 30;
-    
-    QRect graphRect(mGraphLeft, 0, width() - mGraphLeft, height()-1);
-
-    if(h <= mLineH + butMinH)
-    {
-        mDurationGraph->setYAxisMode(GraphView::eHidden);
-    }
-    else
-    {
-        mDurationGraph->setYAxisMode(GraphView::eMinMax);
-    }
-
-    if(height() >= mMinHeighttoDisplayTitle)
-    {
-        graphRect.adjust(0, 20, 0, 0);
-        mDurationGraph->setXAxisMode(GraphView::eAllTicks);
-        mDurationGraph->setMarginBottom(mGraph->font().pointSizeF() + 10);
-    }
-    else
-    {
-        mDurationGraph->setXAxisMode(GraphView::eHidden);
-        mDurationGraph->setMarginBottom(0);
-    }
-    
-    if(mShowNumResults && height() >= 100)
-    {
-        mDurationGraph->setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
-    }
-    else
-    {
-        mDurationGraph->setGeometry(graphRect);
-    }
-    
-    
-    int butInlineMaxH = 50;
-    int bh = height() - mLineH;
-    bh = qMin(bh, butInlineMaxH);
-    
-    this->mShowDuration->setVisible(this->GraphViewResults::mButtonVisible);
-    mShowDuration->setGeometry(0, mLineH + bh, mGraphLeft, bh);
-  */  
-    
 }
 
 void GraphViewPhase::showDuration(bool show)
