@@ -38,6 +38,42 @@ void PhaseItem::setPhase(const QJsonObject& phase)
     setPos(mData[STATE_ITEM_X].toDouble(),
            mData[STATE_ITEM_Y].toDouble());
     
+    // ----------------------------------------------------
+    //  Calculate item size
+    // ----------------------------------------------------
+    qreal w = 150;
+    qreal h = mTitleHeight + 2*mBorderWidth + 2*mEltsMargin;
+    
+    QJsonArray events = getEvents();
+    if(events.size() > 0)
+        h += events.size() * (mEltsHeight + mEltsMargin) - mEltsMargin;
+    
+    QString tauStr = getTauString();
+    if(!tauStr.isEmpty())
+        h += mEltsMargin + mEltsHeight;
+    
+    QFont font = qApp->font();
+    QString name = mData[STATE_NAME].toString();
+    QFontMetrics metrics(font);
+    int nw = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin + 2*mTitleHeight;
+    w = (nw > w) ? nw : w;
+    
+    font.setPointSizeF(pointSize(11.f));
+    metrics = QFontMetrics(font);
+    
+    nw = metrics.width(tauStr) + 2*mBorderWidth + 4*mEltsMargin;
+    w = (nw > w) ? nw : w;
+    
+    for(int i=0; i<events.size(); ++i)
+    {
+        QJsonObject event = events[i].toObject();
+        name = event[STATE_NAME].toString();
+        nw = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin;
+        w = (nw > w) ? nw : w;
+    }
+    
+    mSize = QSize(w, h);
+    
     update();
 }
 
@@ -69,9 +105,9 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
         
         MainWindow::getInstance()->getProject()->updatePhaseEvents(mData[STATE_ID].toInt(), mState);
         
-        update();
-        if(scene())
-            scene()->update();
+        //update();
+        //if(scene())
+          //  scene()->update();
     }
     else if(mControlsVisible && eyeRect().contains(e->pos()))
     {
@@ -101,37 +137,7 @@ void PhaseItem::updateItemPosition(const QPointF& pos)
 
 QRectF PhaseItem::boundingRect() const
 {
-    qreal w = 150;
-    qreal h = mTitleHeight + 2*mBorderWidth + 2*mEltsMargin;
-    
-    QJsonArray events = getEvents();
-    if(events.size() > 0)
-        h += events.size() * (mEltsHeight + mEltsMargin) - mEltsMargin;
-    
-    QString tauStr = getTauString();
-    if(!tauStr.isEmpty())
-        h += mEltsMargin + mEltsHeight;
-    
-    QFont font = qApp->font();
-    QString name = mData[STATE_NAME].toString();
-    QFontMetrics metrics(font);
-    int nw = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin + 2*mTitleHeight;
-    w = (nw > w) ? nw : w;
-    
-    font.setPointSizeF(pointSize(11.f));
-    metrics = QFontMetrics(font);
-    
-    nw = metrics.width(tauStr) + 2*mBorderWidth + 4*mEltsMargin;
-    w = (nw > w) ? nw : w;
-    
-    for(int i=0; i<events.size(); ++i)
-    {
-        QJsonObject event = events[i].toObject();
-        name = event[STATE_NAME].toString();
-        nw = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin;
-        w = (nw > w) ? nw : w;
-    }
-    return QRectF(-w/2, -h/2, w, h);
+    return QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
 }
 
 

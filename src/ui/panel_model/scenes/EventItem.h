@@ -30,6 +30,9 @@ protected:
     virtual void dropEvent(QGraphicsSceneDragDropEvent* e);
     
     void updateGreyedOut();
+    
+    QSize mSize;
+    QJsonObject mSettings;
 };
 
 #endif

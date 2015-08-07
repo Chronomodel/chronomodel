@@ -36,6 +36,8 @@ public:
     Qt::CheckState mState;
     bool mEyeActivated;
     bool mControlsVisible;
+    
+    QSize mSize;
 };
 
 #endif

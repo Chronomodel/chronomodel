@@ -31,14 +31,12 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
 {
     prepareGeometryChange();
     
-    mData = event;
-    
     // ----------------------------------------------
     //  Update item position and selection
     // ----------------------------------------------
-    setSelected(mData[STATE_IS_SELECTED].toBool());
-    setPos(mData[STATE_ITEM_X].toDouble(),
-           mData[STATE_ITEM_Y].toDouble());
+    setSelected(event[STATE_IS_SELECTED].toBool());
+    setPos(event[STATE_ITEM_X].toDouble(),
+           event[STATE_ITEM_Y].toDouble());
     
     // ----------------------------------------------
     //  Check if item should be greyed out
@@ -46,51 +44,88 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     //updateGreyedOut();
     
     // ----------------------------------------------
-    //  Delete Date Items
+    //  Calculate item size
     // ----------------------------------------------
-    QList<QGraphicsItem*> dateItems = childItems();
-    for(int i=0; i<dateItems.size(); ++i)
-    {
-        mScene->removeItem(dateItems[i]);
-        delete dateItems[i];
-    }
+    qreal w = 150.;
+    double h = mTitleHeight + mPhasesHeight + 2*mBorderWidth + 2*mEltsMargin;
     
-    // ----------------------------------------------
-    //  Re-create Date Items
-    // ----------------------------------------------
-    QJsonArray dates = mData[STATE_EVENT_DATES].toArray();
-    for(int i=0; i<dates.size(); ++i)
+    QString name = event[STATE_NAME].toString();
+    QFont font = qApp->font();
+    QFontMetrics metrics(font);
+    w = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin + 2*mTitleHeight;
+    
+    QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+    
+    int count = dates.size();
+    if(count > 0)
+        h += count * (mEltsHeight + mEltsMargin);
+    else
+        h += mEltsMargin + mEltsHeight;
+    
+    font.setPointSizeF(pointSize(11));
+    metrics = QFontMetrics(font);
+    for(int i=0; i<count; ++i)
     {
         QJsonObject date = dates[i].toObject();
-        QColor color(mData[STATE_COLOR_RED].toInt(),
-                     mData[STATE_COLOR_GREEN].toInt(),
-                     mData[STATE_COLOR_BLUE].toInt());
-        
-        try{
-            DateItem* dateItem = new DateItem((EventsScene*)mScene, date, color, settings);
-            dateItem->setParentItem(this);
-            dateItem->setGreyedOut(mGreyedOut);
-            
-            QPointF pos(0,
-                        boundingRect().y() +
-                        mTitleHeight +
-                        mBorderWidth +
-                        2*mEltsMargin +
-                        i * (mEltsHeight + mEltsMargin));
-            dateItem->setPos(pos);
-            dateItem->setOriginalPos(pos);
+        name = date[STATE_NAME].toString();
+        int nw = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin;
+        w = (nw > w) ? nw : w;
+    }
+    w = (w < 150) ? 150 : w;
+    
+    mSize = QSize(w, h);
+    
+    if(event[STATE_EVENT_DATES].toArray() != mData[STATE_EVENT_DATES].toArray() || mSettings != settings)
+    {
+        // ----------------------------------------------
+        //  Delete Date Items
+        // ----------------------------------------------
+        QList<QGraphicsItem*> dateItems = childItems();
+        for(int i=0; i<dateItems.size(); ++i)
+        {
+            mScene->removeItem(dateItems[i]);
+            delete dateItems[i];
         }
-        catch(QString error){
-            QMessageBox message(QMessageBox::Critical,
-                                qApp->applicationName() + " " + qApp->applicationVersion(),
-                                tr("Error : ") + error,
-                                QMessageBox::Ok,
-                                qApp->activeWindow(),
-                                Qt::Sheet);
-            message.exec();
+        
+        // ----------------------------------------------
+        //  Re-create Date Items
+        // ----------------------------------------------
+        for(int i=0; i<dates.size(); ++i)
+        {
+            QJsonObject date = dates[i].toObject();
+            QColor color(event[STATE_COLOR_RED].toInt(),
+                         event[STATE_COLOR_GREEN].toInt(),
+                         event[STATE_COLOR_BLUE].toInt());
+            
+            try{
+                DateItem* dateItem = new DateItem((EventsScene*)mScene, date, color, settings);
+                dateItem->setParentItem(this);
+                dateItem->setGreyedOut(mGreyedOut);
+                
+                QPointF pos(0,
+                            boundingRect().y() +
+                            mTitleHeight +
+                            mBorderWidth +
+                            2*mEltsMargin +
+                            i * (mEltsHeight + mEltsMargin));
+                dateItem->setPos(pos);
+                dateItem->setOriginalPos(pos);
+            }
+            catch(QString error){
+                QMessageBox message(QMessageBox::Critical,
+                                    qApp->applicationName() + " " + qApp->applicationVersion(),
+                                    tr("Error : ") + error,
+                                    QMessageBox::Ok,
+                                    qApp->activeWindow(),
+                                    Qt::Sheet);
+                message.exec();
+            }
         }
     }
     
+    mData = event;
+    mSettings = settings;
+
     // ----------------------------------------------
     //  Repaint based on mEvent
     // ----------------------------------------------
@@ -303,35 +338,5 @@ QJsonArray EventItem::getPhases() const
 #pragma mark Geometry
 QRectF EventItem::boundingRect() const
 {
-    qreal penWidth = 1;
-    qreal w = 100.;
-    
-    double h = mTitleHeight + mPhasesHeight + 2*mBorderWidth + 2*mEltsMargin;
-
-    QString name = mData[STATE_NAME].toString();
-    QJsonArray dates = mData[STATE_EVENT_DATES].toArray();
-    
-    QFont font = qApp->font();
-    QFontMetrics metrics(font);
-    w = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin + 2*mTitleHeight;
-    
-    int count = dates.size();
-    
-    if(count > 0)
-        h += count * (mEltsHeight + mEltsMargin);
-    else
-        h += mEltsMargin + mEltsHeight;
-    
-    font.setPointSizeF(pointSize(11));
-    metrics = QFontMetrics(font);
-    for(int i=0; i<count; ++i)
-    {
-        QJsonObject date = dates[i].toObject();
-        name = date[STATE_NAME].toString();
-        int nw = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin;
-        w = (nw > w) ? nw : w;
-    }
-    w = (w < 150) ? 150 : w;
-    
-    return QRectF(-(w+penWidth)/2, -(h+penWidth)/2, w + penWidth, h + penWidth);
+    return QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
 }
