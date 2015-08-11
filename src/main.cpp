@@ -64,32 +64,9 @@ int main(int argc, char *argv[])
     
     ChronoApp a(argc, argv);
     
-    /*QScrollBar* bar = new QScrollBar(Qt::Horizontal);
-    bar->setFixedSize(1000, 50);
-    bar->setSingleStep(1);
-
-    double min = -1000;
-    double max = 1000;
-    double curMin = -750;
-    double curMax = 1000;
-    
-    double range = 1000;
-    double pageStep = range * (curMax - curMin) / (max - min);
-    double scrollRange = range - pageStep;
-    
-    double curMinAtMaxScroll = max - (max - min) * (pageStep / range);
-    double value = scrollRange * (curMin - min) / (curMinAtMaxScroll - min);
-    
-    bar->setPageStep(pageStep);
-    bar->setRange(0, scrollRange);
-    bar->setValue(value);
-    bar->show();
-    */
-    
-    
     a.setApplicationName("ChronoModel");
     a.setApplicationDisplayName("ChronoModel");
-    a.setApplicationVersion("1.2.11");
+    a.setApplicationVersion("1.3");
     a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));
