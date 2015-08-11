@@ -1,4 +1,4 @@
-﻿#ifndef MODEL_H
+#ifndef MODEL_H
 #define MODEL_H
 
 #include "ProjectSettings.h"
@@ -18,8 +18,14 @@ class Model: public QObject
 public:
     Model();
     QJsonObject toJson() const;
-    QString modelLog() const;
-    QString resultsLog() const;
+    
+    void generateModelLog();
+    QString getModelLog() const;
+    
+    void generateResultsLog();
+    QString getResultsLog() const;
+    
+    QString getMCMCLog() const;
 
     virtual ~Model();
 
@@ -42,8 +48,8 @@ public:
     // Trace and Posterior density needed for this :
     void generateNumericalResults(const QList<Chain>& chains);
     
-    
-
+    void clearPosteriorDensities();
+    void clearCredibilityAndHPD();
     
 public:
     ProjectSettings mSettings;
