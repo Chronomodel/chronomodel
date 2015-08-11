@@ -12,6 +12,7 @@
 #include <QtWidgets>
 
 
+#pragma mark Constructor...
 Model::Model():QObject()
 {
     
@@ -65,9 +66,6 @@ void Model::clear()
     mLogModel.clear();
     mLogMCMC.clear();
     mLogResults.clear();
-    
-    
-    
 }
 
 /*Model* Model::fromJson(const QJsonObject& json)
@@ -213,6 +211,8 @@ void Model::clear()
     }
     return model;
 }*/
+
+#pragma mark JSON conversion
 void Model::fromJson(const QJsonObject& json)
 {
     //Model* model = new Model();
@@ -385,11 +385,21 @@ QJsonObject Model::toJson() const
     
     return json;
 }
+
+#pragma mark Logs
+QString Model::getMCMCLog() const{
+    return mLogMCMC;
+}
+
+QString Model::getModelLog() const{
+    return mLogModel;
+}
+
 /**
- * @brief Model::modelLog
+ * @brief Model::generateModelLog
  * @return Return a QString with the recall of the Model with the data MCMC Methode, and constraint
  */
-QString Model::modelLog() const
+void Model::generateModelLog()
 {
     QString log;
     
@@ -442,7 +452,7 @@ QString Model::modelLog() const
             log += line(textBlue("Event : " + mPhases[i]->mEvents[j]->mName));
         }
     }
-    return log;
+    mLogModel = log;
     
     
     /*qDebug() << "=> Phases : " << model->mPhases.size();
@@ -469,25 +479,27 @@ QString Model::modelLog() const
      qDebug() << "===========================================";*/
 }
 
-QString Model::resultsLog()const
+QString Model::getResultsLog() const{
+    return mLogResults;
+}
+
+void Model::generateResultsLog()
 {
     QString log;
-
     for(int i=0; i<mEvents.size(); ++i)
     {
         Event* event = mEvents[i];
         log += ModelUtilities::eventResultsText(event, true);
     }
-
     for(int i=0; i<mPhases.size(); ++i)
     {
         Phase* phase = mPhases[i];
         log += ModelUtilities::phaseResultsText(phase);
     }
-
-    return log;
+    mLogResults = log;
 }
 
+#pragma mark Model validity
 bool Model::isValid()
 {
     // 1 - Au moins 1 fait dans le modèle
@@ -787,8 +799,11 @@ bool Model::isValid()
     return true;
 }
 
+#pragma mark Generate model data
 void Model::generateCorrelations(const QList<Chain>& chains)
 {
+    QTime t = QTime::currentTime();
+    
     for(int i=0; i<mEvents.size(); ++i)
     {
         Event* event = mEvents[i];
@@ -808,10 +823,16 @@ void Model::generateCorrelations(const QList<Chain>& chains)
         mPhases[i]->mAlpha.generateCorrelations(chains);
         mPhases[i]->mBeta.generateCorrelations(chains);
     }
+    
+    QTime t2 = QTime::currentTime();
+    qint64 timeDiff = t.msecsTo(t2);
+    qDebug() <<  "=> Model::generateCorrelations done in " + QString::number(timeDiff) + " ms";
 }
 
 void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen, double hFactor)
 {
+    QTime t = QTime::currentTime();
+    
     double tmin = mSettings.mTmin;
     double tmax = mSettings.mTmax;
     
@@ -819,36 +840,26 @@ void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen, d
     {
         Event* event = mEvents[i];
         
+        // Generate event histos for all events and all bounds except for bounds of type "fixed"
         bool generateEventHistos = true;
         if(event->type() == Event::eKnown)
         {
             EventKnown* ek = dynamic_cast<EventKnown*>(event);
-            if(ek && ek->knownType() == EventKnown::eFixed)
+            if(ek && (ek->knownType() == EventKnown::eFixed))
             {
+                // "Nothing todo : this is just a Dirac !";
                 generateEventHistos = false;
-                //qDebug() << "Nothing todo : this is just a Dirac !";
-            }
-            {
-                //qDebug() << "=> Generating post. density for bound " << i << "/" << mEvents.size() << " : " << event->mName;
             }
         }
-        else
-        {
-            //qDebug() << "=> Generating post. density for event " << i << "/" << mEvents.size() << " : " << event->mName;
-        }
-        
         if(generateEventHistos)
         {
-            
             event->mTheta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
-            //qDebug() << "Trace size : " << event->mTheta.mTrace.size();
         }
         
+        // Generate dates histos
         for(int j=0; j<event->mDates.size(); ++j)
         {
             Date& date = event->mDates[j];
-            
-            //qDebug() << " -> Generate post. density for date " << j << "/" << event->mDates.size() << " : " << date.mName;
             
             date.mTheta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
             date.mSigma.generateHistos(chains, fftLen, hFactor, 0, tmax - tmin);
@@ -866,10 +877,16 @@ void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen, d
         phase->mBeta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
         phase->mDuration.generateHistos(chains, fftLen, hFactor, 0, tmax - tmin);
     }
+    
+    QTime t2 = QTime::currentTime();
+    qint64 timeDiff = t.msecsTo(t2);
+    qDebug() <<  "=> Model::generatePosteriorDensities done in " + QString::number(timeDiff) + " ms";
 }
 
 void Model::generateNumericalResults(const QList<Chain>& chains)
 {
+    QTime t = QTime::currentTime();
+    
     for(int i=0; i<mEvents.size(); ++i)
     {
         Event* event = mEvents[i];
@@ -890,11 +907,16 @@ void Model::generateNumericalResults(const QList<Chain>& chains)
         phase->mBeta.generateNumericalResults(chains);
         phase->mDuration.generateNumericalResults(chains);
     }
-    qDebug()<<"Model::generateNumericalResults finish";
+    
+    QTime t2 = QTime::currentTime();
+    qint64 timeDiff = t.msecsTo(t2);
+    qDebug() <<  "=> Model::generateNumericalResults done in " + QString::number(timeDiff) + " ms";
 }
 
 void Model::generateCredibilityAndHPD(const QList<Chain>& chains, double thresh)
 {
+    QTime t = QTime::currentTime();
+    
     /* double threshold = thresh;
     threshold = std::min(100.0, threshold);
     threshold = std::max(0.0, threshold); */
@@ -941,7 +963,60 @@ void Model::generateCredibilityAndHPD(const QList<Chain>& chains, double thresh)
         phase->mBeta.generateCredibility(chains, threshold);
         phase->mDuration.generateCredibility(chains, threshold);
     }
+    
+    QTime t2 = QTime::currentTime();
+    qint64 timeDiff = t.msecsTo(t2);
+    qDebug() <<  "=> Model::generateCredibilityAndHPD done in " + QString::number(timeDiff) + " ms";
 }
+
+#pragma mark Clear model data
+void Model::clearPosteriorDensities()
+{
+    for(int i=0; i<mEvents.size(); ++i) {
+        Event* event = mEvents[i];
+        for(int j=0; j<mEvents[i]->mDates.size(); ++j) {
+            Date& date = event->mDates[j];
+            date.mTheta.mHisto.clear();
+            date.mSigma.mHisto.clear();
+            date.mTheta.mChainsHistos.clear();
+            date.mSigma.mChainsHistos.clear();
+        }
+        event->mTheta.mHisto.clear();
+        event->mTheta.mChainsHistos.clear();
+    }
+    
+    for(int i=0; i<mPhases.size(); ++i) {
+        Phase* phase = mPhases[i];
+        phase->mAlpha.mHisto.clear();
+        phase->mBeta.mHisto.clear();
+        phase->mAlpha.mChainsHistos.clear();
+        phase->mBeta.mChainsHistos.clear();
+        
+    }
+}
+void Model::clearCredibilityAndHPD()
+{
+    for(int i=0; i<mEvents.size(); ++i) {
+        Event* event = mEvents[i];
+        for(int j=0; j<mEvents[i]->mDates.size(); ++j) {
+            Date& date = event->mDates[j];
+            date.mTheta.mHPD.clear();
+            date.mSigma.mHPD.clear();
+            
+        }
+        event->mTheta.mHPD.clear();
+    }
+    for(int i=0; i<mPhases.size(); ++i) {
+        Phase* phase = mPhases[i];
+        phase->mAlpha.mHPD.clear();
+        phase->mBeta.mHPD.clear();
+    }
+}
+
+
+
+
+#pragma mark Dat files read / write
 /** @Brief Save .dat file, the result of computation and compress it
  *
  * */
