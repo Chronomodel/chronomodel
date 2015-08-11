@@ -37,9 +37,7 @@ public:
     // -----
     
     const QMap<double, double>& fullHisto() const;
-    const QMap<double, double>& fullRawHisto() const;
     const QMap<double, double>& histoForChain(int index) const;
-    const QMap<double, double>& rawHistoForChain(int index) const;
     
     // Full trace for the chain (burn + adapt + run)
     QVector<double> fullTraceForChain(const QList<Chain>& chains, int index);
@@ -59,23 +57,24 @@ public:
     // -----
     
 private:
-    float* generateBufferForHisto(const QVector<double>& dataSrc, int numPts, double hFactor);
+    float* generateBufferForHisto(QVector<double>& dataSrc, int numPts, double hFactor);
     QMap<double, double> bufferToMap(const double* buffer);
-    QMap<double, double> generateRawHisto(const QVector<double>& data, int fftLen, double tmin, double tmax);
-    QMap<double, double> generateHisto(const QVector<double>& data, int fftLen, double hFactor, double tmin, double tmax);
+    QMap<double, double> generateHisto(QVector<double>& data, int fftLen, double hFactor, double tmin, double tmax);
     
 public:
     double mX;
     QVector<double> mTrace;
-    //std::vector<double> mTrace; // todo PhD
-  
+    
+    // Posterior density results.
+    // mHisto is calcuated using all run parts of all chains traces.
+    // mChainsHistos constains posterior densities for each chain, computed using only the "run" part of the trace.
+    // This needs to be re-calculated each time we change fftLength or HFactor.
+    // See generateHistos() for more.
     QMap<double, double> mHisto;
-
     QList<QMap<double, double> > mChainsHistos;
     
-    QMap<double, double> mRawHisto;
-    QList<QMap<double, double> > mChainsRawHistos;
-    
+    // List of correlations for each chain.
+    // They are calculated once, when the MCMC is ready, from the run part of the trace.
     QList<QVector<double> > mCorrelations;
     
     QMap<double, double> mHPD;

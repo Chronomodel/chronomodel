@@ -31,7 +31,7 @@ QString functionAnalysisToString(const FunctionAnalysis& analysis);
 QString densityAnalysisToString(const DensityAnalysis& analysis);
 
 // Standard Deviation (= écart type) of a vector of data
-double dataStd(const QVector<double>& data);
+double dataStd(QVector<double>& data);
 
 double shrinkageUniform(double so2);
 

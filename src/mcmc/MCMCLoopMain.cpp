@@ -503,11 +503,25 @@ bool MCMCLoopMain::adapt()
 
 void MCMCLoopMain::finalize()
 {
+    // This is not a copy od data!
+    // Chains only contain description of what happened in the chain (numIter, numBatch adapt, ...)
+    // Real data are inside mModel members (mEvents, mPhases, ...)
     mModel->mChains = mChains;
     
+    // This is called here because it is calculated only once and will never change afterwards
+    // This is very slow : it is for this reason that the results display may be long to appear at the end of MCMC calculation.
+    // TODO : find a way to make it faster !
     mModel->generateCorrelations(mChains);
-    mModel->generatePosteriorDensities(mChains, 1024, 1);
-    mModel->generateNumericalResults(mChains);
+    
+    // This should not be done here because it uses resultsView parameters
+    // ResultView will trigger it again when loading the model
+    //mModel->generatePosteriorDensities(mChains, 1024, 1);
+    
+    // Generate numerical results of :
+    // - MHVariables (global acceptation)
+    // - MetropolisVariable : analysis of Posterior densities and quartiles from traces.
+    // This also should be done in results view...
+    //mModel->generateNumericalResults(mChains);
 }
 
 

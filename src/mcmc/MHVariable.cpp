@@ -14,7 +14,8 @@ MHVariable::~MHVariable(){}
 bool MHVariable::tryUpdate(const double x, const double rapport)
 {
    // Original code by HL, it's a moving average
-    if(mLastAccepts.length() >= mLastAcceptsLength)  mLastAccepts.removeAt(0);
+    if(mLastAccepts.length() >= mLastAcceptsLength)
+        mLastAccepts.removeAt(0);
     
     bool accepted = false;
     
@@ -33,7 +34,6 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
      
     mLastAccepts.append(accepted);
     mAllAccepts.append(accepted);
-    
     
     return accepted;
     

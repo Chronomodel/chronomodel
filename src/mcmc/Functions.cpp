@@ -85,22 +85,25 @@ FunctionAnalysis analyseFunction(const QMap<double, double>& aFunction)
     return result;
 }
 
-double dataStd(const QVector<double>& data)
+double dataStd(QVector<double>& data)
 {
     // Work with double precision here because sum2 might be big !
     
-    double sum = 0.;
-    double sum2 = 0.;
+    double s = sum<double>(data);
+    double s2 = sum2<double>(data);
+    double mean = s / data.size();
+    double variance = s2 / data.size() - mean * mean;
     
+    /*double sum = 0;
+    double sum2 = 0;
     for(int i=0; i<data.size(); ++i)
     {
         double x = (double)data[i];
         sum += x;
         sum2 += x * x;
     }
-    
     double mean = sum / data.size();
-    double variance = sum2 / data.size() - mean * mean;
+    double variance = sum2 / data.size() - mean * mean;*/
     
     /*qDebug() << "sum : " << sum;
     qDebug() << "sum2 : " << sum2;
@@ -157,8 +160,6 @@ QString densityAnalysisToString(const DensityAnalysis& analysis)
 
 Quartiles quartilesForTrace(const QVector<double>& trace)
 {
-
-
     Quartiles quartiles;
     if(trace.size()<5){
         quartiles.Q1 = 0.;
