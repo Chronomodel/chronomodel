@@ -119,6 +119,44 @@ T map_min_value(const QMap<U, T>& aMap)
     return min;
 }
 
+// --------------------------------
+template<typename T>
+T sum(QVector<T>& vector){
+    T s = 0;
+    std::for_each(vector.begin(), vector.end(), [&s](T& v){
+        s += v;
+    });
+    return s;
+}
+
+template<typename T>
+T sum2(QVector<T>& vector){
+    T sum = 0;
+    std::for_each(vector.begin(), vector.end(), [&sum](T& v){
+        sum += v * v;
+    });
+    return sum;
+}
+
+template<typename T>
+T sumShifted(QVector<T>& vector, const T& shift){
+    T sum = 0;
+    std::for_each(vector.begin(), vector.end(), [&sum, &shift](T& v){
+        sum += v + shift;
+    });
+    return sum;
+}
+
+template<typename T>
+T sum2Shifted(QVector<T>& vector, const T& shift){
+    T sum = 0;
+    std::for_each(vector.begin(), vector.end(), [&sum, &shift](T& v){
+        sum += (v + shift) * (v + shift);
+    });
+    return sum;
+}
+// --------------------------------
+
 QVector<double> normalize_vector(const QVector<double>& aVector);
 QMap<double, double> normalize_map(const QMap<double, double>& aMap);
 QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const QMap<double, double>& mapWithTargetArea);
