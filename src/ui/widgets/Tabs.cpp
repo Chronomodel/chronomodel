@@ -26,10 +26,11 @@ int Tabs::currentIndex() const
     return mCurrentIndex;
 }
 
-void Tabs::setTab(int i)
+void Tabs::setTab(int i, bool notify)
 {
     mCurrentIndex = i;
-    emit tabClicked(i);
+    if(notify)
+        emit tabClicked(i);
     update();
 }
 
@@ -75,7 +76,7 @@ void Tabs::mousePressEvent(QMouseEvent* e)
     {
         if(i != mCurrentIndex && mTabRects[i].contains(e->pos()))
         {
-            setTab(i);
+            setTab(i, true);
         }
     }
 }

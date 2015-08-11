@@ -147,24 +147,20 @@ void CalibrationView::updateGraphs()
         // ------------------------------------------------------------
         //  Calibration curve
         // ------------------------------------------------------------
-        
-        QColor color = Painting::mainColorLight;
-        QColor HPDColor(mDate.mPlugin->getColor());//color);
-        HPDColor.setAlpha(255);
+        QColor penColor = Qt::black; //Painting::mainColorLight;
+        QColor brushColor = Qt::black; //mDate.mPlugin->getColor();
         
         GraphCurve calibCurve;
         calibCurve.mName = "Calibration";
-        calibCurve.mPen.setColor(color);
-        
+        calibCurve.mPen.setColor(penColor);
         calibCurve.mIsHisto = false;
         calibCurve.mData = mDate.getCalibMap();
-        calibCurve.mBrush.setColor(HPDColor);
-        calibCurve.mPen.setColor(Qt::black);
         
-        // TODO : looks like an ugly hack...
+        // Fill under distrib.of calibrated date only if typo ref :
         bool isTypo = (mDate.mPlugin->getName() == "Typo Ref.");
         calibCurve.mIsRectFromZero = isTypo;
-        calibCurve.mFillUnder = isTypo;//false;
+        calibCurve.mBrush = isTypo ? QBrush(brushColor) : QBrush(Qt::NoBrush);
+        
         mHPDLab->setVisible(!isTypo);
         mHPDEdit->setVisible(!isTypo);
         
@@ -177,7 +173,8 @@ void CalibrationView::updateGraphs()
         mCalibGraph->addCurve(calibCurve);
         mCalibGraph->setVisible(true);
         
-        if(!isTypo) // mHPDCheck->isChecked() &&
+        // Fill HPD only if not typo ref. :
+        if(!isTypo)
         {
             QString input = mHPDEdit->text();
             mHPDEdit->validator()->fixup(input);
@@ -191,10 +188,8 @@ void CalibrationView::updateGraphs()
             
             GraphCurve hpdCurve;
             hpdCurve.mName = "Calibration HPD";
-            //QColor HPDColor(color);
-            //HPDColor.setAlpha(50);
-            hpdCurve.mBrush.setColor(HPDColor);
-            hpdCurve.mFillUnder = true;
+            hpdCurve.mPen = penColor;
+            hpdCurve.mBrush = brushColor;
             hpdCurve.mIsHisto = false;
             hpdCurve.mIsRectFromZero = true;
             hpdCurve.mData = hpd;

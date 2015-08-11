@@ -3,6 +3,7 @@
 #include "Painting.h"
 #include "QtUtilities.h"
 #include "MainWindow.h"
+#include "MHVariable.h"
 #include <QtWidgets>
 #include <QtSvg>
 
@@ -12,14 +13,12 @@
 #pragma mark Constructor / Destructor
 
 GraphViewResults::GraphViewResults(QWidget *parent):QWidget(parent),
-mCurrentTypeGraph(eHisto),
+mCurrentTypeGraph(ePostDistrib),
 mCurrentVariable(eTheta),
 mShowAllChains(true),
 mShowCredibility(false),
-mThresholdHPD(95),
 mShowCalib(false),
 mShowWiggle(false),
-mShowRawResults(false),
 mShowNumResults(false),
 mMainColor(QColor(50, 50, 50)),
 mMargin(5),
@@ -93,7 +92,7 @@ mMinHeightForButtonsVisible(50)
         mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
     }
     
-    if(mCurrentTypeGraph == eHisto)
+    if(mCurrentTypeGraph == ePostDistrib)
     {
         if(mCurrentVariable == eTheta)
         {
@@ -114,26 +113,25 @@ GraphViewResults::~GraphViewResults()
     
 }
 
-void GraphViewResults::setResultToShow(TypeGraph typeGraph, Variable variable, bool showAllChains, const QList<bool>& showChainList, bool showCredibility, float threshold, bool showCalib, bool showWiggle, bool showRawResults)
+void GraphViewResults::generateCurves(TypeGraph typeGraph, Variable variable)
 {
     mCurrentTypeGraph = typeGraph;
     mCurrentVariable = variable;
+}
+
+void GraphViewResults::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle)
+{
     mShowAllChains = showAllChains;
     mShowChainList = showChainList;
     mShowCredibility = showCredibility;
-    mThresholdHPD = threshold;
     mShowCalib = showCalib;
     mShowWiggle = showWiggle;
-    mShowRawResults = showRawResults;
-    refresh();
 }
 
 void GraphViewResults::toggle(const QRect& targetGeometry)
 {
     if(geometry() != targetGeometry)
     {
-        //qDebug() << "Graph From : " << geometry() << ", To : " << targetGeometry;
-        
         mAnimation->setStartValue(geometry());
         mAnimation->setEndValue(targetGeometry);
         mAnimation->start();
@@ -157,6 +155,10 @@ void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc, const QList<Cha
 void GraphViewResults::setRange(double min, double max)
 {
     mGraph->setRangeX(min, max);
+}
+void GraphViewResults::setCurrentX(double min, double max)
+{
+    mGraph->setCurrentX(min, max);
 }
 
 void GraphViewResults::zoom(double min, double max)
@@ -465,5 +467,147 @@ void GraphViewResults::forceHideButtons(const bool hide)
     if(hide != mForceHideButtons){
         mForceHideButtons = hide;
         updateLayout();
+    }
+}
+
+#pragma mark Generate Typical curves for Chronomodel
+GraphCurve GraphViewResults::generateDensityCurve(const QMap<double, double>& data,
+                                                  const QString& name,
+                                                  const QColor& lineColor,
+                                                  const Qt::PenStyle penStyle,
+                                                  const QBrush& brush) const{
+    GraphCurve curve;
+    curve.mData = data;
+    curve.mName = name;
+    curve.mPen = QPen(lineColor, 1, penStyle);
+    curve.mBrush = brush;
+    curve.mIsHisto = false;
+    curve.mIsRectFromZero = true; // for typo. calibs., invisible for others!
+    return curve;
+}
+
+GraphCurve GraphViewResults::generateHPDCurve(const QMap<double, double>& data,
+                                              const QString& name,
+                                              const QColor& color) const{
+    GraphCurve curve;
+    curve.mName = name;
+    curve.mData = data;
+    curve.mPen = color;
+    QColor fillColor = color;
+    fillColor.setAlpha(125);
+    curve.mBrush = fillColor;
+    curve.mIsHisto = false;
+    curve.mIsRectFromZero = true;
+    
+    return curve;
+}
+
+GraphCurve GraphViewResults::generateCredibilityCurve(const QPair<double, double>& section,
+                                                      const QString& name,
+                                                      const QColor& color) const{
+    GraphCurve curve;
+    curve.mName = name;
+    curve.mSections.append(section);
+    curve.mPen.setColor(color);
+    curve.mPen.setWidth(3);
+    curve.mPen.setStyle(Qt::SolidLine);
+    curve.mIsHorizontalSections = true;
+    
+    return curve;
+}
+
+GraphCurve GraphViewResults::generateHorizontalLine(const double yValue,
+                                                    const QString& name,
+                                                    const QColor& color,
+                                                    const Qt::PenStyle penStyle) const
+{
+    GraphCurve curve;
+    curve.mName = name;
+    curve.mIsHorizontalLine = true;
+    curve.mHorizontalValue = yValue;
+    curve.mPen.setStyle(penStyle);
+    curve.mPen.setColor(color);
+    return curve;
+}
+
+void GraphViewResults::generateTraceCurves(const QList<Chain>& chains,
+                                           MetropolisVariable* variable,
+                                           const QString& name)
+{
+    QString prefix = name.isEmpty() ? name : name + " ";
+    
+    for(int i=0; i<chains.size(); ++i)
+    {
+        //const Chain& chain = chains[i];
+        //mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
+        
+        GraphCurve curve;
+        curve.mUseVectorData = true;
+        curve.mName = prefix + "Trace " + QString::number(i);
+        curve.mDataVector = variable->fullTraceForChain(chains, i);
+        curve.mPen.setColor(Painting::chainColors[i]);
+        curve.mIsHisto = false;
+        mGraph->addCurve(curve);
+        
+        double min = vector_min_value(curve.mDataVector);
+        double max = vector_max_value(curve.mDataVector);
+        mGraph->setRangeY(floor(min), ceil(max));
+        
+        const Quartiles& quartiles = variable->mChainsResults[i].quartiles;
+        
+        GraphCurve curveQ1 = generateHorizontalLine(quartiles.Q1, prefix + "Q1 " + QString::number(i), Qt::green);
+        mGraph->addCurve(curveQ1);
+        
+        GraphCurve curveQ2 = generateHorizontalLine(quartiles.Q2, prefix + "Q2 " + QString::number(i), Qt::red);
+        mGraph->addCurve(curveQ2);
+        
+        GraphCurve curveQ3 = generateHorizontalLine(quartiles.Q3, prefix + "Q3 " + QString::number(i), Qt::green);
+        mGraph->addCurve(curveQ3);
+    }
+}
+
+
+void GraphViewResults::generateAcceptCurves(const QList<Chain>& chains,
+                                            MHVariable* variable){
+    for(int i=0; i<chains.size(); ++i)
+    {
+        //Chain& chain = mChains[i];
+        //mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
+        
+        GraphCurve curve;
+        curve.mName = QString("Accept " + QString::number(i));
+        curve.mDataVector = variable->acceptationForChain(chains, i);
+        curve.mPen.setColor(Painting::chainColors[i]);
+        curve.mUseVectorData = true;
+        curve.mIsHisto = false;
+        mGraph->addCurve(curve);
+    }
+}
+
+void GraphViewResults::generateCorrelCurves(const QList<Chain>& chains,
+                                            MHVariable* variable){
+    for(int i=0; i<chains.size(); ++i)
+    {
+        GraphCurve curve;
+        curve.mName = QString("Correl " + QString::number(i));
+        curve.mDataVector = variable->correlationForChain(i);
+        curve.mUseVectorData = true;
+        curve.mPen.setColor(Painting::chainColors[i]);
+        curve.mIsHisto = false;
+        mGraph->addCurve(curve);
+        
+        double n = variable->runTraceForChain(mChains, i).size();
+        double limit = 1.96f / sqrt(n);
+        
+        GraphCurve curveLimitLower = generateHorizontalLine(-limit,
+                                                            "Correl Limit Lower " + QString::number(i),
+                                                            Qt::red,
+                                                            Qt::DotLine);
+        GraphCurve curveLimitUpper = generateHorizontalLine(limit,
+                                                            "Correl Limit Upper " + QString::number(i),
+                                                            Qt::red,
+                                                            Qt::DotLine);
+        mGraph->addCurve(curveLimitLower);
+        mGraph->addCurve(curveLimitUpper);
     }
 }

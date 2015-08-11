@@ -4,6 +4,7 @@
 #include <QWidget>
 #include "MCMCLoopMain.h"
 #include "AxisTool.h"
+#include "GraphViewResults.h"
 
 class QStackedWidget;
 class QScrollArea;
@@ -18,7 +19,6 @@ class Model;
 class Tabs;
 class Ruler;
 class GraphView;
-class GraphViewResults;
 class GraphViewPhase;
 class GraphViewEvent;
 class GraphViewDate;
@@ -38,13 +38,6 @@ public:
     ResultsView(QWidget* parent = 0, Qt::WindowFlags flags = 0);
     ~ResultsView();
     
-    enum TypeGraph{
-        eHisto = 0,
-        eTrace = 1,
-        eAccept = 2,
-        eCorrel = 3
-    };
-    
     double mResultZoomX;
     double mResultCurrentMinX;
     double mResultCurrentMaxX;
@@ -54,72 +47,67 @@ public:
     
     void doProjectConnections(Project* project);
     
-    void updateAllZoom();
-    TypeGraph mCurrentTypeGraph;
-    
-    Ruler* mRuler;
-    
 protected:
     void paintEvent(QPaintEvent* );
     void mouseMoveEvent(QMouseEvent* e);
     void resizeEvent(QResizeEvent* e);
-    void updateLayout(); // disable in 2015/05/28 all was transfer in paintEvent
     
 public slots:
+    void updateLayout();
+    void updateGraphsLayout();
+    
     void clearResults();
     void updateResults(Model* model = 0);
-    void updateGraphs();
-    void updateRulerAreas();
+    
+    void generatePosteriorDistribs();
+    void generateCredibilityAndHPD();
+    void generateCurves();
+    void updateCurvesToShow();
+    
+    void updateControls();
+    void updateScales();
+    
     void updateModel();
     
 private slots:
+    void updateZoomX(); // Connected to slider signals
+    void updateScroll(const double min, const double max); // Connected to ruler signals
+    void editCurrentMinX(); // Connected to min edit signals
+    void editCurrentMaxX(); // Connected to max edit signals
+    void updateZoomEdit();
+    void updateGraphsZoomX();
+    
     void updateScaleY(int value);
-    void updateZoomX();
-    
-    void updateScroll(const double min, const double max);
-    void updateRuler(int value);
-    
-    void setCurrentMinX();
-    void editCurrentMinX();
-    void setCurrentMaxX();
-    void editCurrentMaxX();
-    
-    void updateRendering(int index);
-    void showByPhases(bool show);
-    void showByEvents(bool show);
-    void changeTab(int index);
-    void unfoldResults(bool);
-    void updateScrollHeights();
-    void showInfos(bool);
-    void exportFullImage();
-    void generateHPD();
-    void updateFFTLength();
-    void updateHFactor();
     
     void updateFont();
     void updateThickness(int value);
+    void updateRendering(int index);
+    void showInfos(bool);
+    void exportFullImage();
     
 signals:
+    void posteriorDistribGenerated();
+    void credibilityAndHPDGenerated();
+    void curvesGenerated();
+    
+    void controlsUpdated();
     void resultsLogUpdated(const QString& log);
     
 private:
     QList<QRect> getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases);
     
     void updateResultsLog();
-    void memoZoom(const double& zoom);
-    void restoreZoom();
     void clearHisto();
-    void clearRawHisto();
     void clearChainHistos();
-    void clearCredibilityAndHPD();
     
 private:
+    GraphViewResults::TypeGraph mCurrentTypeGraph;
+    Ruler* mRuler;
+    
     Model* mModel;
     ProjectSettings mSettings;
     MCMCSettings mMCMCSettings;
-    QList<Chain> mChains;
-    
-    
+    QList<Chain> mChains;    
     
     int mMargin;
     int mOptionsW;
@@ -183,7 +171,6 @@ private:
     Label* mThreshLab;
     CheckBox* mCredibilityCheck;
     LineEdit* mHPDEdit;
-    CheckBox* mRawCheck;
     Label* mFFTLenLab;
     QComboBox* mFFTLenCombo;
     Label* mHFactorLab;
@@ -198,12 +185,7 @@ private:
     
     int mComboH;
     
-    QTimer* mTimer;
-    
-    double mZoomDensity;
-    double mZoomTrace;
-    double mZoomAccept;
-    double mZoomCorrel;
+    QMap<int, QPair<double, double>> mZooms;
 };
 
 #endif

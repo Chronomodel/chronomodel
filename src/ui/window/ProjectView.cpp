@@ -4,7 +4,7 @@
 #include "Painting.h"
 #include <QtWidgets>
 
-
+#pragma mark Constructor / Destructor / Init
 ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
 {
     mModelView = new ModelView();
@@ -76,87 +76,71 @@ void ProjectView::doProjectConnections(Project* project)
     mResultsView -> doProjectConnections(project);
 }
 
+#pragma mark Interface
 void ProjectView::resetInterface()
 {
     showModel();
     mModelView   -> resetInterface();
     mResultsView -> clearResults();
 }
-
-void ProjectView::updateProject()
-{
-    mModelView->updateProject();
-}
-
-void ProjectView::showModel()
-{
-    
-    mStack->setCurrentIndex(0);
-}
-
-void ProjectView::updateResults(Model* model)
-{
-    if(model)
-    {
-        mResultsView -> mHasPhases = (model->mPhases.size() > 0);
-        mResultsView -> updateResults(model);
-        
-        model->mLogModel=model->modelLog();
-        mLogModelEdit->setText(model->mLogModel);
-        
-        mLogMCMCEdit->setText(model->mLogMCMC);
-        
-        model->mLogResults=model->resultsLog();
-        mLogResultsEdit->setText(model->mLogResults);
-
-        
-        showResults();
-        //mStack->setCurrentIndex(1);
-    }
-}
-
-void ProjectView::showResults()
-{
-    //mStack -> setCurrentWidget(mResultsView);
-    mStack->setCurrentIndex(1);
-    mStack->update();
-}
-
-void ProjectView::showLog()
-{
-    mStack->setCurrentIndex(2);
-}
-
 void ProjectView::showHelp(bool show)
 {
     mModelView->showHelp(show);
 }
 
-void ProjectView::updateLog(Model* model)
+#pragma mark View Switch
+void ProjectView::showModel()
+{
+    mStack->setCurrentIndex(0);
+}
+void ProjectView::showResults()
+{
+    mStack->setCurrentIndex(1);
+}
+void ProjectView::showLog()
+{
+    mStack->setCurrentIndex(2);
+}
+
+#pragma mark Update Model
+/**
+ * @brief : Update All model views (Scenes, ...) after pushing state
+ */
+void ProjectView::updateProject()
+{
+    mModelView->updateProject();
+}
+void ProjectView::updateFormatDate()
+{
+    mModelView->updateFormatDate();
+}
+
+#pragma mark Update Results
+void ProjectView::updateResults(Model* model)
 {
     if(model)
     {
+        showResults();
         
         mResultsView->updateResults(model);
-        mResultsView->updateGraphs();
         
-        model->mLogModel=model->modelLog();
-        mLogModelEdit->setText(model->mLogModel);
-
-        mLogMCMCEdit->setText(model->mLogMCMC);
-
-        model->mLogResults=model->resultsLog();
-        mLogResultsEdit->setText(model->mLogResults);
+        model->generateModelLog();
+        mLogModelEdit->setText(model->getModelLog());
         
-        showResults();
+        mLogMCMCEdit->setText(model->getMCMCLog());
+        
+        model->generateResultsLog();
+        mLogResultsEdit->setText(model->getResultsLog());
     }
 }
+
 void ProjectView::updateResultsLog(const QString& log)
 {
     mLogResultsEdit->setText(log);
 }
 
 
+#pragma mark Read/Write settings
 void ProjectView::writeSettings()
 {
     mModelView->writeSettings();
@@ -165,9 +149,4 @@ void ProjectView::writeSettings()
 void ProjectView::readSettings()
 {
     mModelView->readSettings();
-}
-void ProjectView::updateFormatDate()
-{
-    mModelView->updateFormatDate();
-    
 }

@@ -375,8 +375,9 @@ void EventPropertiesView::updateKnownGraph()
         curve.mName = "Known";
         curve.mData = event.mValues;
         
-        curve.mPen.setColor(Painting::mainColorLight);
-        curve.mFillUnder = true;
+        curve.mPen = Painting::mainColorLight;
+        curve.mBrush = Painting::mainColorLight;
+        
         if(event.knownType() == EventKnown::eUniform)
         {
             curve.mIsHisto = true;

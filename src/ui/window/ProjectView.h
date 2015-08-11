@@ -1,4 +1,4 @@
-﻿#ifndef ProjectView_H
+#ifndef ProjectView_H
 #define ProjectView_H
 
 #include <QWidget>
@@ -36,7 +36,6 @@ public slots:
     void showLog();
     void showHelp(bool show);
     
-    void updateLog(Model*);
     void updateResults(Model*);
     void updateResultsLog(const QString& log);
     

@@ -66,10 +66,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     
     connect(mViewLogAction, SIGNAL(triggered()), mProjectView, SLOT(showLog()));
     
-    connect(mProject, SIGNAL(mcmcFinished(Model*)), this, SLOT(mcmcFinished()));
-    connect(mProject, SIGNAL(mcmcFinished(Model*)), mProjectView, SLOT(updateResults(Model*)));
-    connect(mProject, SIGNAL(mcmcFinished(Model*)), mProjectView, SLOT(updateLog(Model*)));
-    connect(mProject, SIGNAL(mcmcFinished(Model*)), this, SLOT(mcmcFinished()));
+    connect(mProject, SIGNAL(mcmcFinished(Model*)), this, SLOT(mcmcFinished(Model*)));
     
     connect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
     
@@ -453,7 +450,7 @@ void MainWindow::appSettings()
         
         mProjectView->updateFormatDate();
         if (mViewResultsAction->isEnabled()) {
-            mProjectView->updateLog(mProject->mModel);
+            mProjectView->updateResults(mProject->mModel);
         }
     }
 }
@@ -680,10 +677,12 @@ void MainWindow::setLogEnabled(bool enabled)
     mViewLogAction->setEnabled(enabled);
 }
 
-void MainWindow::mcmcFinished()
+void MainWindow::mcmcFinished(Model* model)
 {
     mViewLogAction -> setEnabled(true);
     mViewResultsAction -> setEnabled(true);
     mViewResultsAction -> setChecked(true); // Just checheck the Result Button after computation and mResultsView is show after
     //mViewResultsAction->trigger();
+    
+    mProjectView->updateResults(model);
 }

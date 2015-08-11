@@ -16,9 +16,11 @@ public:
     void setDate(Date* date);
     void setColor(const QColor& color);
     
+    void generateCurves(TypeGraph typeGraph, Variable variable);
+    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
+    
 protected:
     void paintEvent(QPaintEvent* e);
-    void refresh();
     
 private:
     Date* mDate;

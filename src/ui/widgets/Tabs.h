@@ -13,7 +13,7 @@ public:
     
     void addTab(const QString& name);
     int currentIndex() const;
-    void setTab(int index);
+    void setTab(int index, bool notify);
     
 signals:
     void tabClicked(int index);

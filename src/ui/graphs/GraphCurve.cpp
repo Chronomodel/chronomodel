@@ -4,8 +4,7 @@
 
 GraphCurve::GraphCurve():
 mPen(Qt::black),
-mBrush(Qt::black),
-mFillUnder(false),
+mBrush(Qt::NoBrush),
 mIsHisto(true),
 mIsRectFromZero(false),
 mUseVectorData(false),

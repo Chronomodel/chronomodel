@@ -109,47 +109,27 @@ void Ruler::setCurrent(const double min, const double max)
     // ---------------------------------------------------
     if(mCurrentMin == mMin && mCurrentMax == mMax){
         mScrollBar->setRange(0, 0);
-        return;
     }
     // ---------------------------------------------------
     //  There is a zoom => we pick a scrollSteps
     //  1000 seems fine so that dragging the scrollbar is smooth.
-    //  (small value here : only allows few dicrete positions)
+    //  (small value here : only allows few discrete positions)
     // ---------------------------------------------------
-    
-    // Remember old scroll position
-    /*double posProp = 0;
-    double rangeBefore = (double)mScrollBar->maximum();
-    if(rangeBefore > 0)
-        posProp = (double)mScrollBar->value() / rangeBefore;*/
-    
-    int fullScrollSteps = 1000;
-    mScrollBar->setPageStep(fullScrollSteps);
-    mScrollBar->setRange(0, fullScrollSteps * (1. - (mCurrentMax - mCurrentMin) / (mMax - mMin)));
-    mScrollBar->setValue(mScrollBar->maximum() * ( ((mCurrentMax + mCurrentMin)/2)  - mMin )  / (mMax - mMin));
-    
-    // Set scroll to correct position
-    /*double pos = 0;
-    double rangeAfter = (double)mScrollBar->maximum();
-    if(rangeAfter > 0)
-        pos = floor(posProp * rangeAfter);
-    mScrollBar->setValue(pos);*/
-    
-    // ---------------------------------------------------
-    //
-    // ---------------------------------------------------
-    /*double position = mCurrentMin;
-    position = (position - mMin) / (mMax-mMin) * (double) mScrollBar->maximum();
-    mScrollBar->setTracking(false);
-    mScrollBar->setSliderPosition(floor(position));//  setValue(floor(position));
-    mScrollBar->setTracking(true);*/
+    else{
+        double range = 1000;
+        double pageStep = range * (mCurrentMax - mCurrentMin) / (mMax - mMin);
+        double scrollRange = range - pageStep;
+        
+        double curMinAtMaxScroll = mMax - (mMax - mMin) * (pageStep / range);
+        double value = scrollRange * (mCurrentMin - mMin) / (curMinAtMaxScroll - mMin);
+        
+        mScrollBar->setPageStep(pageStep);
+        mScrollBar->setRange(0, scrollRange);
+        mScrollBar->setValue(value);
+    }
     
     mAxisTool.updateValues(mRulerRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
-   // qDebug()<<" Ruler::setCurrent mCurrentMin 3" << mCurrentMin<<" "<< mCurrentMax<<" position"<<position;
-
-    
     update();
-
 }
 void Ruler::currentChanged(const double min, const double max)
 {    
@@ -323,6 +303,7 @@ void Ruler::paintEvent(QPaintEvent* e)
         if(mAreas[i].mStart < mCurrentMax && mAreas[i].mStop > mCurrentMin)
         {
             double x1 = w * (mAreas[i].mStart - mCurrentMin) / (mCurrentMax - mCurrentMin);
+            x1 = (x1 < 0) ? 0 : x1;
             double x2 = w;
             if(mAreas[i].mStop < mCurrentMax)
                 x2 = w * (mAreas[i].mStop - mCurrentMin) / (mCurrentMax - mCurrentMin);

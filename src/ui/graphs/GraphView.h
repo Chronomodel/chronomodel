@@ -57,6 +57,7 @@ public:
     bool getXAxisMode();
     void setYAxisMode(AxisMode mode);
     void autoAdjustYScale(bool active);
+    void adjustYToMaxValue();
     
     void setGraphFont(const QFont& font);
     void setCurvesThickness(int value);
@@ -66,7 +67,9 @@ public:
     void addCurve(const GraphCurve& curve);
     void removeCurve(const QString& name);
     void removeAllCurves();
+    void setCurveVisible(const QString& name, const bool visible);
     GraphCurve* getCurve(const QString& name);
+    const QList<GraphCurve>& getCurves() const;
     int numCurves() const;
     
     void addZone(const GraphZone& zone);

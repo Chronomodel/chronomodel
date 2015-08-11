@@ -224,6 +224,26 @@ void GraphView::autoAdjustYScale(bool active)
     repaintGraph(true);
 }
 
+void GraphView::adjustYToMaxValue()
+{
+    double yMax = 0;
+    for(int i=0; i<mCurves.size(); ++i){
+        if(mCurves[i].mVisible)
+        {
+            if(!mCurves[i].mUseVectorData &&
+               !mCurves[i].mIsHorizontalLine &&
+               !mCurves[i].mIsHorizontalSections &&
+               !mCurves[i].mIsVerticalLine &&
+               !mCurves[i].mIsVertical){
+                yMax = qMax(yMax, map_max_value(mCurves[i].mData));
+            }else if(mCurves[i].mUseVectorData){
+                yMax = qMax(yMax, vector_max_value(mCurves[i].mDataVector));
+            }
+        }
+    }
+    setRangeY(0, yMax);
+}
+
 void GraphView::setGraphFont(const QFont& font)
 {
     setFont(font);
@@ -274,6 +294,22 @@ void GraphView::removeAllCurves()
     repaintGraph(false);
 }
 
+void GraphView::setCurveVisible(const QString& name, const bool visible)
+{
+    bool modified = false;
+    for(int i=0; i<mCurves.size(); ++i)
+    {
+        if(mCurves[i].mName == name && mCurves[i].mVisible != visible){
+            mCurves[i].mVisible = visible;
+            modified = true;
+            break;
+        }
+    }
+    if(modified){
+        repaintGraph(false);
+    }
+}
+
 GraphCurve* GraphView::getCurve(const QString& name)
 {
     for(int i=0; i<mCurves.size(); ++i)
@@ -282,6 +318,10 @@ GraphCurve* GraphView::getCurve(const QString& name)
             return &mCurves[i];
     }
     return 0;
+}
+
+const QList<GraphCurve>& GraphView::getCurves() const{
+    return mCurves;
 }
 
 int GraphView::numCurves() const
@@ -398,6 +438,7 @@ void GraphView::repaintGraph(const bool aAlsoPaintBackground)
     {
         mBufferBack = QPixmap();
     }
+    update();
 }
     
 void GraphView::paintEvent(QPaintEvent* )
@@ -419,7 +460,6 @@ void GraphView::paintEvent(QPaintEvent* )
         p.drawText(0, 0, width(), height(), Qt::AlignCenter, mNothingMessage);
         
         return;
-       
     }
     
     // ----------------------------------------------------
@@ -484,7 +524,6 @@ void GraphView::paintEvent(QPaintEvent* )
         p.drawText(mTipRect.adjusted(0, (int)(mTipRect.height()/2), 0, 0), Qt::AlignCenter, QString("y : ") + QString::number(mTipY));
        
     }
-    //never update in paintEvent
 }
 
 
@@ -610,354 +649,345 @@ void GraphView::drawCurves(QPainter& painter)
     for(int curveIndex=0; curveIndex<mCurves.size(); ++curveIndex)
     {
         const GraphCurve& curve = mCurves[curveIndex];
-        
-        if(!curve.mVisible)
-            continue;
-        
-        QPainterPath path;
-        QPen pen = curve.mPen;
-        QBrush defaultBrush ;
-        defaultBrush.setStyle(Qt::NoBrush);
-        pen.setWidth(pen.width() * mThickness);
-        painter.setPen(pen);
-        painter.setBrush(defaultBrush);
-      // QFontMetrics fm(painter.font());
-        // painter.drawText(mMarginRight + 50, mMarginTop + 5, fm.width(curve.mName), 15, Qt::AlignLeft | Qt::AlignTop, curve.mName);
-        //p.drawText(r, Qt::AlignHCenter | Qt::AlignTop, QString("1"));
-        
-        if(curve.mIsHorizontalLine)
+        if(curve.mVisible)
         {
-            qreal y = getYForValue(curve.mHorizontalValue);
-            path.moveTo(mMarginLeft, y);
-            path.lineTo(mMarginLeft + mGraphWidth, y);
-            painter.strokePath(path, curve.mPen);
-        }
-        else if(curve.mIsVerticalLine)
-        {
-            qreal x = getXForValue(curve.mVerticalValue);
-            path.moveTo(x, mMarginTop + mGraphHeight);
-            path.lineTo(x, mMarginTop);
-            painter.strokePath(path, curve.mPen);
-        }
-        else if(curve.mIsHorizontalSections)
-        {
-            qreal y = getYForValue(curve.mHorizontalValue);
-            path.moveTo(mMarginLeft, y);
-            for(int i=0; i<curve.mSections.size(); ++i)
+            QPainterPath path;
+            
+            QPen pen = curve.mPen;
+            pen.setWidth(pen.width() * mThickness);
+            painter.setPen(pen);
+            
+            painter.setBrush(curve.mBrush);
+            
+            if(curve.mIsHorizontalLine)
             {
-                qreal x1 = getXForValue(curve.mSections[i].first);
-                x1 = qMax(x1, mMarginLeft);
-                x1 = qMin(x1,mMarginLeft + mGraphWidth);
-                
-                qreal x2 = getXForValue(curve.mSections[i].second);
-                x2 = qMax(x2,mMarginLeft);
-                x2 = qMin(x2, mMarginLeft + mGraphWidth);
-                
-                path.moveTo(x1, y);
-                path.lineTo(x2, y);
+                qreal y = getYForValue(curve.mHorizontalValue);
+                path.moveTo(mMarginLeft, y);
+                path.lineTo(mMarginLeft + mGraphWidth, y);
+                painter.strokePath(path, curve.mPen);
             }
-            path.moveTo(mMarginLeft + mGraphWidth, y);
-            painter.strokePath(path, curve.mPen);
-        }
-        else if(curve.mIsVertical)
-        {
-            path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
-            
-            int index = 0;
-            //double last_x = 0;
-            qreal last_y = 0;
-            
-            QMapIterator<double, double> iter(curve.mData);
-            while(iter.hasNext())
+            else if(curve.mIsVerticalLine)
             {
-                iter.next();
-                
-                qreal valueX = iter.value();
-                qreal valueY = iter.key();
-                
-                // vertical curves must be normalized (values from 0 to 1)
-                // They are drawn using a 100px width
-                qreal x = mMarginLeft + valueX * 100;
-                qreal y = getYForValue(valueY, false);
-                y = qMin(y, mMarginTop + mGraphHeight);
-                y = qMax(y, mMarginTop);
-                
-                //qDebug() << valueY << ", " << valueX << " => " << y << ", " << x;
-                
-                if(index == 0)
-                {
-                    path.moveTo(x, y);
-                }
-                else
-                {
-                    if(curve.mIsHisto)
-                        path.lineTo(x, last_y);
-                    path.lineTo(x, y);
-                }
-                //last_x = x;
-                last_y = y;
-                ++index;
+                qreal x = getXForValue(curve.mVerticalValue);
+                path.moveTo(x, mMarginTop + mGraphHeight);
+                path.lineTo(x, mMarginTop);
+                painter.strokePath(path, curve.mPen);
             }
-            painter.drawPath(path);
-        }
-        else
-        {
-            path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
-            
-            int index = 0;
-            qreal last_x = 0;
-            qreal last_y = 0;
-            qreal last_value_y = 0;
-            //double last_value_x = 0;
-            
-            if(curve.mUseVectorData)
+            else if(curve.mIsHorizontalSections)
             {
-                /*for(int x=0; x<curve.mDataVector.size(); ++x)
+                qreal y = mMarginTop;
+                path.moveTo(mMarginLeft, y);
+                for(int i=0; i<curve.mSections.size(); ++i)
                 {
-                    double valueX = x;
-                    double valueY = curve.mDataVector[x];
+                    qreal x1 = getXForValue(curve.mSections[i].first);
+                    x1 = qMax(x1, mMarginLeft);
+                    x1 = qMin(x1,mMarginLeft + mGraphWidth);
                     
-                    if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
-                    {
-                        double x = getXForValue(valueX, false);
-                        double y = getYForValue(valueY, false);
-                        
-                        if(index == 0)
-                        {
-                            path.moveTo(x, y);
-                        }
-                        else
-                        {
-                            if(curve.mIsHisto)
-                                path.lineTo(x, last_y);
-                            path.lineTo(x, y);
-                        }
-                        last_x = x;
-                        last_y = y;
-                        last_value_x = valueX;
-                        last_value_y = valueY;
-                        ++index;
-                    }
-                }*/
-                
-                // Down sample vector
-               
-                QVector<double> subData = curve.getVectorDataInRange(mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
-                
-                QVector<double> lightData;
-                double dataStep = (double)subData.size() / (double)(2.*mGraphWidth);
-                if(dataStep > 1)
-                {
-                    for(int i=0; i<2*mGraphWidth; ++i)
-                    {
-
-                       /* double dataMean=0;
-                        for(int j=i*dataStep; (j<(i+1)*dataStep) and (j<subData.size());j++)
-                        {
-                          dataMean+=subData[j];
-                        }
-                        dataMean=dataMean/dataStep;
-                        lightData.append(dataMean);*/
-                        int idx = (int)round(i * dataStep);
-                        lightData.append(subData[idx]);
-                    }
-                }
-                else
-                {
-                    lightData = subData;
-                }
-                /*qDebug() << "-----------------------";
-                qDebug() << "dataStep : " << dataStep;
-                qDebug() << "data : " << curve.mDataVector.size();
-                qDebug() << "subData : " << subData.size();
-                qDebug() << "lightData : " << lightData.size();*/
-                
-                
-                for(int i=0; i<lightData.size(); ++i)
-                {
-                    // Use "dataStep" only if lightData is different of subData !
-                    double valueX = mCurrentMinX + ((dataStep > 1) ? i * dataStep : i);
-                    double valueY = lightData[i];
+                    qreal x2 = getXForValue(curve.mSections[i].second);
+                    x2 = qMax(x2,mMarginLeft);
+                    x2 = qMin(x2, mMarginLeft + mGraphWidth);
                     
-                    if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
-                    {
-                        qreal x = getXForValue(valueX, false);
-                        qreal y = getYForValue(valueY, false);
-                        
-                        if(index == 0)
-                        {
-                            path.moveTo(x, y);
-                        }
-                        else
-                        {
-                            if(curve.mIsHisto)
-                                path.lineTo(x, last_y);
-                            path.lineTo(x, y);
-                        }
-                        last_x = x;
-                        last_y = y;
-                        //last_value_x = valueX;
-                        last_value_y = valueY;
-                        ++index;
-                    }
-                    
+                    path.moveTo(x1, y);
+                    path.lineTo(x2, y);
                 }
+                path.moveTo(mMarginLeft + mGraphWidth, y);
+                painter.strokePath(path, curve.mPen);
+            }
+            else if(curve.mIsVertical)
+            {
+                path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
+                
+                int index = 0;
+                //double last_x = 0;
+                qreal last_y = 0;
+                
+                QMapIterator<double, double> iter(curve.mData);
+                while(iter.hasNext())
+                {
+                    iter.next();
+                    
+                    qreal valueX = iter.value();
+                    qreal valueY = iter.key();
+                    
+                    // vertical curves must be normalized (values from 0 to 1)
+                    // They are drawn using a 100px width
+                    qreal x = mMarginLeft + valueX * 100;
+                    qreal y = getYForValue(valueY, false);
+                    y = qMin(y, mMarginTop + mGraphHeight);
+                    y = qMax(y, mMarginTop);
+                    
+                    //qDebug() << valueY << ", " << valueX << " => " << y << ", " << x;
+                    
+                    if(index == 0)
+                    {
+                        path.moveTo(x, y);
+                    }
+                    else
+                    {
+                        if(curve.mIsHisto)
+                            path.lineTo(x, last_y);
+                        path.lineTo(x, y);
+                    }
+                    //last_x = x;
+                    last_y = y;
+                    ++index;
+                }
+                painter.drawPath(path);
             }
             else
             {
-                /*QMapIterator<double, double> iter(curve.mData);
-                while(iter.hasNext())
+                path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
+                
+                int index = 0;
+                qreal last_x = 0;
+                qreal last_y = 0;
+                qreal last_value_y = 0;
+                //double last_value_x = 0;
+                
+                if(curve.mUseVectorData)
                 {
+                    /*for(int x=0; x<curve.mDataVector.size(); ++x)
+                     {
+                     double valueX = x;
+                     double valueY = curve.mDataVector[x];
+                     
+                     if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
+                     {
+                     double x = getXForValue(valueX, false);
+                     double y = getYForValue(valueY, false);
+                     
+                     if(index == 0)
+                     {
+                     path.moveTo(x, y);
+                     }
+                     else
+                     {
+                     if(curve.mIsHisto)
+                     path.lineTo(x, last_y);
+                     path.lineTo(x, y);
+                     }
+                     last_x = x;
+                     last_y = y;
+                     last_value_x = valueX;
+                     last_value_y = valueY;
+                     ++index;
+                     }
+                     }*/
+                    
+                    // Down sample vector
+                    
+                    QVector<double> subData = curve.getVectorDataInRange(mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
+                    
+                    QVector<double> lightData;
+                    double dataStep = (double)subData.size() / (double)(2.*mGraphWidth);
+                    if(dataStep > 1)
+                    {
+                        for(int i=0; i<2*mGraphWidth; ++i)
+                        {
+                            
+                            /* double dataMean=0;
+                             for(int j=i*dataStep; (j<(i+1)*dataStep) and (j<subData.size());j++)
+                             {
+                             dataMean+=subData[j];
+                             }
+                             dataMean=dataMean/dataStep;
+                             lightData.append(dataMean);*/
+                            int idx = (int)round(i * dataStep);
+                            lightData.append(subData[idx]);
+                        }
+                    }
+                    else
+                    {
+                        lightData = subData;
+                    }
+                    /*qDebug() << "-----------------------";
+                     qDebug() << "dataStep : " << dataStep;
+                     qDebug() << "data : " << curve.mDataVector.size();
+                     qDebug() << "subData : " << subData.size();
+                     qDebug() << "lightData : " << lightData.size();*/
+                    
+                    
+                    for(int i=0; i<lightData.size(); ++i)
+                    {
+                        // Use "dataStep" only if lightData is different of subData !
+                        double valueX = mCurrentMinX + ((dataStep > 1) ? i * dataStep : i);
+                        double valueY = lightData[i];
+                        
+                        if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
+                        {
+                            qreal x = getXForValue(valueX, false);
+                            qreal y = getYForValue(valueY, false);
+                            
+                            if(index == 0)
+                            {
+                                path.moveTo(x, y);
+                            }
+                            else
+                            {
+                                if(curve.mIsHisto)
+                                    path.lineTo(x, last_y);
+                                path.lineTo(x, y);
+                            }
+                            last_x = x;
+                            last_y = y;
+                            //last_value_x = valueX;
+                            last_value_y = valueY;
+                            ++index;
+                        }
+                        
+                    }
+                }
+                else
+                {
+                    /*QMapIterator<double, double> iter(curve.mData);
+                     while(iter.hasNext())
+                     {
+                     iter.next();
+                     double valueX = iter.key();
+                     double valueY = iter.value();
+                     
+                     if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
+                     {
+                     double x = getXForValue(valueX, false);
+                     double y = getYForValue(valueY, false);
+                     
+                     if(index == 0)
+                     {
+                     path.moveTo(x, y);
+                     }
+                     else
+                     {
+                     if(curve.mIsHisto)
+                     path.lineTo(x, last_y);
+                     path.lineTo(x, y);
+                     }
+                     last_x = x;
+                     last_y = y;
+                     ++index;
+                     }
+                     }*/
+                    
+                    // Down sample curve for better performances
+                    
+                    QMap<double, double> subData = curve.getMapDataInRange(mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
+                    
+                    QMap<double, double> lightMap;
+                    if(subData.size() > 2*mGraphWidth)
+                    {
+                        int valuesPerPixel = subData.size() / (2*mGraphWidth);
+                        //qDebug() << "Graph drawing : step = " << valuesPerPixel << ", data size = " << subData.size() << ", org data size = " << curve.mData.size();
+                        QMapIterator<double, double> iter(subData);
+                        int index = 0;
+                        while(iter.hasNext())
+                        {
+                            iter.next();
+                            if(index % valuesPerPixel == 0)
+                                lightMap[iter.key()] = iter.value();
+                            ++index;
+                        }
+                    }
+                    
+                    else
+                    {
+                        lightMap = subData;
+                    }
+                    
+                    // Draw
+                    
+                    QMapIterator<double, double> iter(lightMap);
+                    iter.toFront();
+                    if (!iter.hasNext()) {
+                        continue;
+                    }
+                    
                     iter.next();
                     double valueX = iter.key();
                     double valueY = iter.value();
                     
-                    if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
-                    {
-                        double x = getXForValue(valueX, false);
-                        double y = getYForValue(valueY, false);
-                        
-                        if(index == 0)
-                        {
-                            path.moveTo(x, y);
-                        }
-                        else
-                        {
-                            if(curve.mIsHisto)
-                                path.lineTo(x, last_y);
-                            path.lineTo(x, y);
-                        }
-                        last_x = x;
-                        last_y = y;
-                        ++index;
-                    }
-                }*/
-                
-                // Down sample curve for better performances
-                
-                QMap<double, double> subData = curve.getMapDataInRange(mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
-                
-                QMap<double, double> lightMap;
-                if(subData.size() > 2*mGraphWidth)
-                {
-                    int valuesPerPixel = subData.size() / (2*mGraphWidth);
-                    //qDebug() << "Graph drawing : step = " << valuesPerPixel << ", data size = " << subData.size() << ", org data size = " << curve.mData.size();
-                    QMapIterator<double, double> iter(subData);
-                    int index = 0;
+                    qreal x = getXForValue(mCurrentMinX, false);
+                    qreal y = getYForValue(0, false);
+                    
+                    path.moveTo(x, y);
+                    iter.toFront();
                     while(iter.hasNext())
                     {
                         iter.next();
-                        if(index % valuesPerPixel == 0)
-                            lightMap[iter.key()] = iter.value();
-                        ++index;
-                    }
-                }
-                
-                else
-                {
-                    lightMap = subData;
-                }
-                
-                // Draw
-
-                QMapIterator<double, double> iter(lightMap);
-                iter.toFront();
-                if (!iter.hasNext()) {
-                    return;
-                }
-                
-                iter.next();
-                double valueX = iter.key();
-                double valueY = iter.value();
-                
-                qreal x = getXForValue(mCurrentMinX, false);
-                qreal y = getYForValue(0, false);
-
-                path.moveTo(x, y);
-                iter.toFront();
-                while(iter.hasNext())
-                {
-                    iter.next();
-                    valueX = iter.key();
-                    valueY = iter.value();
-                    
-                   /* if(curve.mName == "G")
-                    {
-                        //qDebug() << valueX << " : " << valueY;
-                    }*/
-                    if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
-                    {
-                         x = getXForValue(valueX, false);
-                         y = getYForValue(valueY, false);
+                        valueX = iter.key();
+                        valueY = iter.value();
                         
-                        if(index == 0)
+                        /* if(curve.mName == "G")
+                         {
+                         //qDebug() << valueX << " : " << valueY;
+                         }*/
+                        if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
                         {
-                            //path.moveTo(x, y);
-                            path.lineTo(x, y);
-                        }
-                        else
-                        {
-                            if(curve.mIsHisto) // a revoir
+                            x = getXForValue(valueX, false);
+                            y = getYForValue(valueY, false);
+                            
+                            if(index == 0)
                             {
-                                // histo bars must be centered around x value :
-                                qreal dx2 = (x - last_x)/2.f;
-                                path.lineTo(x - dx2, last_y);
-                                path.lineTo(x - dx2, y);
-                                //qDebug() << "y = " << valueY << ", last_y = " << last_value_y;
-                            }
-                            else if(curve.mIsRectFromZero && last_value_y == 0.f && valueY != 0.f)
-                            {
-                                path.lineTo(x, last_y);
-                                path.lineTo(x, y);
-                            }
-                            else if(curve.mIsRectFromZero && last_value_y != 0.f && valueY == 0.f)
-                            {
-                                path.lineTo(last_x, y);
+                                //path.moveTo(x, y);
                                 path.lineTo(x, y);
                             }
                             else
                             {
-                                path.lineTo(x, y);
+                                if(curve.mIsHisto) // a revoir
+                                {
+                                    // histo bars must be centered around x value :
+                                    qreal dx2 = (x - last_x)/2.f;
+                                    path.lineTo(x - dx2, last_y);
+                                    path.lineTo(x - dx2, y);
+                                    //qDebug() << "y = " << valueY << ", last_y = " << last_value_y;
+                                }
+                                else if(curve.mIsRectFromZero && last_value_y == 0.f && valueY != 0.f)
+                                {
+                                    path.lineTo(x, last_y);
+                                    path.lineTo(x, y);
+                                }
+                                else if(curve.mIsRectFromZero && last_value_y != 0.f && valueY == 0.f)
+                                {
+                                    path.lineTo(last_x, y);
+                                    path.lineTo(x, y);
+                                }
+                                else
+                                {
+                                    path.lineTo(x, y);
+                                }
                             }
+                            last_x = x;
+                            last_y = y;
+                            //last_value_x = valueX;
+                            last_value_y = valueY;
+                            ++index;
+                            /*if(iter.hasNext()) iter.next();
+                             else break; */
                         }
-                        last_x = x;
-                        last_y = y;
-                        //last_value_x = valueX;
-                        last_value_y = valueY;
-                        ++index;
-                        /*if(iter.hasNext()) iter.next();
-                        else break; */
                     }
-                }
-                if(curve.mIsRectFromZero && valueY != 0.f)
-                {
-                    //iter.toBack();
-                    x = getXForValue(mCurrentMaxX, false);
-                    y = getYForValue(0, false);
-                    path.lineTo(x, y);
+                    if(curve.mIsRectFromZero && valueY != 0.f)
+                    {
+                        //iter.toBack();
+                        x = getXForValue(mCurrentMaxX, false);
+                        y = getYForValue(0, false);
+                        path.lineTo(x, y);
+                        
+                    }
                     
                 }
-
+                painter.drawPath(path);
             }
-            painter.drawPath(path);
-        }
-        
-        if(curve.mFillUnder)
-        {
-            // Close the path
-            if(curve.mIsVertical)
-                path.lineTo(mMarginLeft, mMarginTop);
-            else
-                path.lineTo(mMarginLeft + mGraphWidth, mMarginTop + mGraphHeight);
-            //path.lineTo( mGraphWidth - 10, mMarginTop + mGraphHeight);
             
-            path.lineTo(mMarginLeft, mMarginTop + mGraphHeight);
-            
-            //QColor c = curve.mPen.color();
-            //c.setAlpha(50);
-            painter.setPen(curve.mPen);
-            painter.setBrush(curve.mBrush);
-            painter.fillPath(path, curve.mBrush);
+            if(curve.mBrush != Qt::NoBrush)
+            {
+                // Close the path
+                if(curve.mIsVertical)
+                    path.lineTo(mMarginLeft, mMarginTop);
+                else
+                    path.lineTo(mMarginLeft + mGraphWidth, mMarginTop + mGraphHeight);
+                path.lineTo(mMarginLeft, mMarginTop + mGraphHeight);
+                
+                painter.setPen(curve.mPen);
+                painter.fillPath(path, curve.mBrush);
+            }
         }
     }
 }

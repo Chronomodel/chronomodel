@@ -22,9 +22,11 @@ public:
     GraphView* mDurationGraph;
     Phase* mPhase;
     
+    void generateCurves(TypeGraph typeGraph, Variable variable);
+    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
+    
 protected:
     void paintEvent(QPaintEvent* e);
-    void refresh();
     void updateLayout();
     
 protected slots:

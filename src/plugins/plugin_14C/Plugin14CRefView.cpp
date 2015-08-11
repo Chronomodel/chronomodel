@@ -126,10 +126,9 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
             penColor.setAlpha(255);
             brushColor.setAlpha(50);
         }
-        curveMeasure.mPen.setColor(penColor);
-        curveMeasure.mBrush.setColor(brushColor);
+        curveMeasure.mPen = penColor;
+        curveMeasure.mBrush = brushColor;
         
-        curveMeasure.mFillUnder = true;
         curveMeasure.mIsVertical = true;
         curveMeasure.mIsHisto = false;
         
@@ -164,9 +163,9 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
             brushColor = mMeasureColor;
             brushColor.setAlpha(50);
             
-            curveDeltaR.mPen.setColor(penColor);
-            curveDeltaR.mBrush.setColor(brushColor);
-            curveDeltaR.mFillUnder = true;
+            curveDeltaR.mPen = penColor;
+            curveDeltaR.mBrush = brushColor;
+            
             curveDeltaR.mIsVertical = true;
             curveDeltaR.mIsHisto = false;
             
@@ -209,10 +208,9 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
             penColor.setAlpha(255);
             brushColor.setAlpha(50);
             
-            curveSubMeasure.mPen.setColor(penColor);
-            curveSubMeasure.mBrush.setColor(brushColor);
+            curveSubMeasure.mPen = penColor;
+            curveSubMeasure.mBrush = brushColor;
             
-            curveSubMeasure.mFillUnder = true;
             curveSubMeasure.mIsVertical = true;
             curveSubMeasure.mIsHisto = false;
             

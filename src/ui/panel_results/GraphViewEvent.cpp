@@ -46,8 +46,10 @@ void GraphViewEvent::paintEvent(QPaintEvent* e)
     GraphViewResults::paintEvent(e);
 }
 
-void GraphViewEvent::refresh()
+void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
 {
+    GraphViewResults::generateCurves(typeGraph, variable);
+    
     // ------------------------------------------------
     //  Reset the graph object settings
     // ------------------------------------------------
@@ -85,142 +87,97 @@ void GraphViewEvent::refresh()
         setNumericalResults(results);
         
         // ------------------------------------------------
-        //  first tab : Posterior distrib
+        //  First tab : Posterior distrib
         // ------------------------------------------------
-        if(mCurrentTypeGraph == eHisto)
+        if(mCurrentTypeGraph == ePostDistrib)
         {
             mGraph->mLegendX = DateUtils::getAppSettingsFormat();
             mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
-            
-            if (mEvent->type()==Event::eKnown) {
-                mTitle = tr("Bound ") + " : " + mEvent->mName;
-            }
-            else mTitle = tr("Event") + " : " + mEvent->mName;
-            
             mGraph->setBackgroundColor(QColor(230, 230, 230));
+            
+            mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->mName;
+            
+            // ------------------------------------------------
+            //  Possible curves :
+            //  - Post Distrib All Chains
+            //  - HPD All Chains
+            //  - Credibility All Chains
+            //  - Post Distrib Chain i
+            // ------------------------------------------------
             if(mCurrentVariable == eTheta)
             {
                 mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
                 
+                // ------------------------------------
+                //  Post Distrib All Chains
+                // ------------------------------------
+                GraphCurve curvePostDistrib;
+                curvePostDistrib.mName = "Post Distrib All Chains";
+                curvePostDistrib.mPen.setColor(color);
+                
                 if(isFixedBound)
                 {
-                    mGraph->setRangeY(0, 1.f);
-                    
-                    GraphCurve curve;
-                    curve.mName = mTitle+" : "+"Fixed Bound";
-                    curve.setPen(defaultPen);
-                    curve.mPen.setColor(color);
-                    curve.mIsHisto = false;
-                    curve.mIsRectFromZero = true;
-                    
+                    curvePostDistrib.mIsHisto = false;
+                    curvePostDistrib.mIsRectFromZero = true;
                     for(int t=mSettings.mTmin; t< mSettings.mTmax; ++t)
-                        curve.mData[t] = 0.f;
-                    curve.mData[floor(bound->fixedValue())] = 1.f;
-                    
-                    mGraph->addCurve(curve);
+                        curvePostDistrib.mData[t] = 0.f;
+                    curvePostDistrib.mData[floor(bound->fixedValue())] = 1.f;
+                }
+                else if(isUnifBound)
+                {
+                    curvePostDistrib.mIsHisto = true;
+                    curvePostDistrib.mIsRectFromZero = true;
+                    curvePostDistrib.mData = bound->mValues;
                 }
                 else
                 {
-                    mGraph->setRangeY(0, 0.00001f);
-                    //setNumericalResults(mTitle + "\n" + mEvent->mTheta.resultsText());
-                    
-                    if(isUnifBound && mShowCalib)
-                    {
-                        GraphCurve curve;
-                        curve.mName = mTitle+" : "+"Uniform Bound";
-                        curve.setPen(defaultPen);
-                        curve.mPen.setColor(QColor(120, 120, 120));
-                        curve.mIsHisto = true;
-                        curve.mIsRectFromZero = true;
-                        curve.mData = bound->mValues;
-                        mGraph->addCurve(curve);
-                        double yMax = 1.1f * map_max_value(curve.mData);
-                        mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
-                    }
-                    if(mShowAllChains)
-                    {
-                        if(mShowRawResults)
-                        {
-                           GraphCurve curveRaw;
-                            curveRaw.mName = "raw histo full";
-                            curveRaw.setPen(defaultPen);
-                            curveRaw.mPen.setColor(Qt::red);
-                            //curveRaw.mData = equal_areas(mEvent->mTheta.fullRawHisto(), 1.f);
-                            curveRaw.mData = mEvent->mTheta.fullRawHisto();
-                            curveRaw.mIsHisto = true;
-                            mGraph->addCurve(curveRaw);
-                            
-                            double yMax2 = 1.1f * map_max_value(curveRaw.mData);
-                            mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax2));
-                        }
-                        
-                       GraphCurve curve;
-                        curve.mName = "histo full";
-                        curve.setPen(defaultPen);
-                        curve.mPen.setColor(color);
-                        //curve.mData = equal_areas(mEvent->mTheta.fullHisto(), 1.f);
-                        curve.mData = mEvent->mTheta.fullHisto();
-                        curve.mIsHisto = false;
-                        mGraph->addCurve(curve);
-                        
-                        double yMax = 1.1f * map_max_value(curve.mData);
-                        mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
-                        
-                        GraphCurve curveHPD;
-                        curveHPD.mName = "histo HPD full";
-                        curveHPD.setPen(defaultPen);
-                        curveHPD.mPen.setColor(color);
-                        curveHPD.mFillUnder = true;
-                        QColor HPDColor(color);
-                        HPDColor.setAlpha(100);
-                        curveHPD.mBrush.setStyle(Qt::SolidPattern);
-                        curveHPD.mBrush.setColor(HPDColor);
-                        curveHPD.mIsHisto = false;
-                        curveHPD.mIsRectFromZero = true;
-                        //double realThresh = map_area(mEvent->mTheta.mHPD) / map_area(mEvent->mTheta.fullHisto());
-                        
-                        //curveHPD.mData = equal_areas(mEvent->mTheta.mHPD, realThresh);
-                        curveHPD.mData = mEvent->mTheta.mHPD;
-                        
-                       mGraph->addCurve(curveHPD);
-                    }
-                    for(int i=0; i<mShowChainList.size(); ++i)
-                    {
-                        if(mShowChainList[i])
-                        {
-                            QColor col = Painting::chainColors[i];
-                            
-                            GraphCurve curve;
-                            curve.mName = QString("histo chain " + QString::number(i));
-                            curve.setPen(defaultPen);
-                            curve.mPen.setColor(col);
-                            curve.mIsHisto = false;
-                            //curve.mData = equal_areas(mEvent->mTheta.histoForChain(i), 1.f);
-                            curve.mData = mEvent->mTheta.histoForChain(i);
-                            mGraph->addCurve(curve);
-                            
-                            double yMax = 1.1f * map_max_value(curve.mData);
-                            mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
-                        }
-                    }
-                    if(mShowAllChains && mShowCredibility)
-                    {
-                        GraphCurve curveCred;
-                        curveCred.mName = "credibility full";
-                        curveCred.mSections.append(mEvent->mTheta.mCredibility);
-                        curveCred.mHorizontalValue = mGraph->maximumY();
-                        
-                        curveCred.mPen.setColor(color);
-                        curveCred.mPen.setWidth(4);
-                        curveCred.mPen.setCapStyle(Qt::FlatCap);
-                        curveCred.mIsHorizontalSections = true;
-                        mGraph->addCurve(curveCred);
-                    }
+                    curvePostDistrib = generateDensityCurve(mEvent->mTheta.fullHisto(),
+                                                                       "Post Distrib All Chains",
+                                                                       color);
                 }
+                mGraph->addCurve(curvePostDistrib);
+                
+                // ------------------------------------
+                //  HPD All Chains
+                // ------------------------------------
+                if(!isFixedBound)
+                {
+                    // HPD All Chains
+                    GraphCurve curveHPD = generateHPDCurve(mEvent->mTheta.mHPD,
+                                                           "HPD All Chains",
+                                                           color);
+                    mGraph->addCurve(curveHPD);
+                }
+                
+                // ------------------------------------
+                //  Post Distrib Chain i
+                // ------------------------------------
+                for(int i=0; i<mShowChainList.size(); ++i)
+                {
+                    GraphCurve curvePostDistribChain = generateDensityCurve(mEvent->mTheta.histoForChain(i),
+                                                                            "Post Distrib Chain " + QString::number(i),
+                                                                            Painting::chainColors[i],
+                                                                            Qt::SolidLine,
+                                                                            Qt::NoBrush);
+                    mGraph->addCurve(curvePostDistribChain);
+                }
+                
+                // ------------------------------------
+                //  Theta Credibility
+                // ------------------------------------
+                GraphCurve curveCred = generateCredibilityCurve(mEvent->mTheta.mCredibility,
+                                                                "Credibility All Chains",
+                                                                color);
+                mGraph->addCurve(curveCred);
             }
+            
+            
             // ------------------------------------------------
             //  Events don't have std dev BUT we can visualize
             //  an overlay of all dates std dev instead.
+            //  Possible curves, FOR ALL DATES :
+            //  - Sigma Date i All Chains
+            //  - Sigma Date i Chain j
             // ------------------------------------------------
             else if(mCurrentVariable == eSigma)
             {
@@ -230,214 +187,189 @@ void GraphViewEvent::refresh()
                 if (mEvent->type()==Event::eKnown) {
                     mTitle = tr("Bound ") + " : " + mEvent->mName;
                 }
-                else mTitle = tr("Std") + " : " + mEvent->mName;
+                else
+                    mTitle = tr("Std") + " : " + mEvent->mName;
+                
                 mGraph->setBackgroundColor(QColor(Qt::white));
                 mGraph->autoAdjustYScale(true);
                 // mGraph->setCurrentX(0, mSettings.mTmax-mSettings.mTmin);
                 mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
-                double yMax = 0;
                 
                 for(int i=0; i<mEvent->mDates.size(); ++i)
                 {
                     Date& date = mEvent->mDates[i];
-                    if(mShowAllChains)
-                    {
-                        GraphCurve curve;
-                        curve.mName = "histo full date " + QString::number(i);
-                        curve.setPen(defaultPen);
-                        curve.mPen.setColor(color);
-                        curve.mIsHisto = false;
-                        curve.mData = date.mSigma.fullHisto();
-                        mGraph->addCurve(curve);
-                        
-                        yMax = qMax(yMax, 1.1f * map_max_value(curve.mData));
-                        mGraph->setRangeY(0, yMax);
-                    }
+                    
+                    GraphCurve curve = generateDensityCurve(date.mSigma.fullHisto(),
+                                                            "Sigma Date " + QString::number(i) + " All Chains",
+                                                            color);
+                    
+                    mGraph->addCurve(curve);
+                    
                     for(int j=0; j<mShowChainList.size(); ++j)
                     {
-                        if(mShowChainList[j])
-                        {
-                            QColor col = Painting::chainColors[j];
-                            
-                            GraphCurve curve;
-                            curve.mName = QString("histo sigma data " + QString::number(i) + " for chain" + QString::number(j));
-                            curve.setPen(defaultPen);
-                            curve.mPen.setColor(col);
-                            curve.mIsHisto = false;
-                            curve.mData = date.mSigma.histoForChain(j);
-                            mGraph->addCurve(curve);
-                            
-                            yMax = 1.1f * map_max_value(curve.mData);
-                            mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
-                        }
+                        GraphCurve curveChain = generateDensityCurve(date.mSigma.histoForChain(j),
+                                                                     "Sigma Date " + QString::number(i) + " Chain " + QString::number(j),
+                                                                     Painting::chainColors[j]);
+                        mGraph->addCurve(curveChain);
                     }
                 }
             }
         }
         // ------------------------------------------------
         //  second tab : History plots
+        //  - Trace i
+        //  - Q1 i
+        //  - Q2 i
+        //  - Q3 i
         // ------------------------------------------------
         else if(mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta)
         {
-            mGraph->mLegendX = "iterations";
+            mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
             
-            int chainIdx = -1;
-            for(int i=0; i<mShowChainList.size(); ++i)
-                if(mShowChainList[i])
-                    chainIdx = i;
-            
-            if(chainIdx != -1)
-            {
-                Chain& chain = mChains[chainIdx];
-                //mGraph->setCurrentX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
-                mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
-                
-                GraphCurve curve;
-                curve.mUseVectorData = true;
-                curve.mName = QString("trace chain " + QString::number(chainIdx)).toUtf8();
-                curve.mDataVector = mEvent->mTheta.fullTraceForChain(mChains, chainIdx);
-                curve.setPen(defaultPen);
-                curve.mPen.setColor(Painting::chainColors[chainIdx]);
-                curve.mIsHisto = false;
-                mGraph->addCurve(curve);
-                
-                const Quartiles& quartiles = mEvent->mTheta.mResults.quartiles;
-                
-                GraphCurve curveQ1;
-                curveQ1.mIsHorizontalLine = true;
-                curveQ1.mHorizontalValue = quartiles.Q1;
-                curveQ1.mName = QString("Q1");
-                curveQ1.setPen(defaultPen);
-                curveQ1.mPen.setColor(Qt::green);
-                mGraph->addCurve(curveQ1);
-                
-                GraphCurve curveQ2;
-                curveQ2.mIsHorizontalLine = true;
-                curveQ2.mHorizontalValue = quartiles.Q2;
-                curveQ2.mName = QString("Q2");
-                curveQ2.setPen(defaultPen);
-                curveQ2.mPen.setColor(Qt::red);
-                mGraph->addCurve(curveQ2);
-                
-                GraphCurve curveQ3;
-                curveQ3.mIsHorizontalLine = true;
-                curveQ3.mHorizontalValue = quartiles.Q3;
-                curveQ3.mName = QString("Q3");
-                curveQ3.setPen(defaultPen);
-                curveQ3.mPen.setColor(Qt::green);
-                mGraph->addCurve(curveQ3);
-                
-                double min = vector_min_value(curve.mDataVector);
-                double max = vector_max_value(curve.mDataVector);
-                mGraph->setRangeY(floor(min), ceil(max));
-            }
+            generateTraceCurves(mChains, &(mEvent->mTheta));
         }
         // ------------------------------------------------
         //  third tab : Acception rate
+        //  - Accept i
+        //  - Accept Target
         // ------------------------------------------------
         else if(mCurrentTypeGraph == eAccept && mCurrentVariable == eTheta && mEvent->mMethod == Event::eMHAdaptGauss)
         {
-            mGraph->mLegendX = "iterations";
+            mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
+            mGraph->setRangeY(0, 100);
             
-            int chainIdx = -1;
-            for(int i=0; i<mShowChainList.size(); ++i)
-                if(mShowChainList[i])
-                    chainIdx = i;
-            
-            if(chainIdx != -1)
-            {
-                Chain& chain = mChains[chainIdx];
-                //mGraph->setCurrentX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
-                mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
-              
-               mGraph->setRangeY(0, 100);
-                
-                GraphCurve curve;
-                curve.mName = QString("accept history chain " + QString::number(chainIdx));
-                curve.mDataVector = mEvent->mTheta.acceptationForChain(mChains, chainIdx);
-                curve.setPen(defaultPen);
-                curve.mPen.setColor(Painting::chainColors[chainIdx]);
-                curve.mUseVectorData = true;
-                curve.mIsHisto = false;
-                mGraph->addCurve(curve);
-                
-                GraphCurve curveTarget;
-                curveTarget.mName = "target";
-                curveTarget.mIsHorizontalLine = true;
-                curveTarget.mHorizontalValue = 44;
-                curveTarget.setPen(defaultPen);
-                curveTarget.mPen.setStyle(Qt::DashLine);
-                curveTarget.mPen.setColor(QColor(180, 10, 20));
-                mGraph->addCurve(curveTarget);
-            }
+            generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine);
+            generateAcceptCurves(mChains, &(mEvent->mTheta));
         }
         // ------------------------------------------------
         //  fourth tab : Autocorrelation
+        //  - Correl i
+        //  - Correl Limit Lower i
+        //  - Correl Limit Upper i
         // ------------------------------------------------
         else if(mCurrentTypeGraph == eCorrel && mCurrentVariable == eTheta && !isFixedBound)
         {
             mGraph->mLegendX = "";
             mGraph->setFormatFunctX(0);
+            mGraph->setRangeX(0, 100);
+            mGraph->setRangeY(-1, 1);
             
-            int chainIdx = -1;
-            for(int i=0; i<mShowChainList.size(); ++i)
-                if(mShowChainList[i])
-                    chainIdx = i;
-            
-            if(chainIdx != -1 && chainIdx < mChains.size())
+            generateCorrelCurves(mChains, &(mEvent->mTheta));
+        }
+    }
+}
+
+void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle)
+{
+    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
+    
+    if(mEvent)
+    {
+        bool isFixedBound = false;
+        bool isUnifBound = false;
+        EventKnown* bound = 0;
+        if(mEvent->type() == Event::eKnown)
+        {
+            bound = dynamic_cast<EventKnown*>(mEvent);
+            if(bound)
             {
-                //if(true)//mChains[chainIdx].mThinningInterval == 1)
-                {
-                    GraphCurve curve;
-                    curve.mName = QString("correlation chain " + QString::number(chainIdx));
-                    curve.mDataVector = mEvent->mTheta.correlationForChain(chainIdx);
-                    curve.mUseVectorData = true;
-                    curve.setPen(defaultPen);
-                    curve.mPen.setColor(Painting::chainColors[chainIdx]);
-                    curve.mIsHisto = false;
-                    mGraph->addCurve(curve);
-                    
-                    mGraph->setRangeX(0, 100);
-                    mGraph->setRangeY(-1, 1);
-                    
-                    double n = mEvent->mTheta.runTraceForChain(mChains, chainIdx).size();
-                    double limit = 1.96f / sqrt(n);
-                    
-                    //qDebug() << n << ", " <<limit;
-                    
-                    GraphCurve curveLimitLower;
-                    curveLimitLower.mName = QString("correlation limit lower " + QString::number(chainIdx));
-                    curveLimitLower.mIsHorizontalLine = true;
-                    curveLimitLower.mHorizontalValue = -limit;
-                    curveLimitLower.setPen(defaultPen);
-                    curveLimitLower.mPen.setColor(Qt::red);
-                    curveLimitLower.mPen.setStyle(Qt::DotLine);
-                    mGraph->addCurve(curveLimitLower);
-                    
-                    GraphCurve curveLimitUpper;
-                    curveLimitUpper.mName = QString("correlation limit upper " + QString::number(chainIdx));
-                    curveLimitUpper.mIsHorizontalLine = true;
-                    curveLimitUpper.mHorizontalValue = limit;
-                    curveLimitUpper.setPen(defaultPen);
-                    curveLimitUpper.mPen.setColor(Qt::red);
-                    curveLimitUpper.mPen.setStyle(Qt::DotLine);
-                    mGraph->addCurve(curveLimitUpper);
+                if(bound->knownType() == EventKnown::eFixed)
+                    isFixedBound = true;
+                else if(bound->knownType() == EventKnown::eUniform)
+                    isUnifBound = true;
+            }
+        }
+        
+        // ------------------------------------------------
+        //  first tab : Posterior distrib
+        // ------------------------------------------------
+        if(mCurrentTypeGraph == ePostDistrib)
+        {
+            // ------------------------------------------------
+            //  Possible curves :
+            //  - Post Distrib All Chains
+            //  - HPD All Chains
+            //  - Credibility All Chains
+            //  - Post Distrib Chain i
+            // ------------------------------------------------
+            if(mCurrentVariable == eTheta)
+            {
+                mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
+                mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
+                mGraph->setCurveVisible("Credibility All Chains", mShowCredibility && mShowAllChains);
+                
+                for(int i=0; i<mShowChainList.size(); ++i){
+                    mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
                 }
-                /*
-                else
+            }
+            // ------------------------------------------------
+            //  Events don't have std dev BUT we can visualize
+            //  an overlay of all dates std dev instead.
+            //  Possible curves, FOR ALL DATES :
+            //  - Sigma Date i All Chains
+            //  - Sigma Date i Chain j
+            // ------------------------------------------------
+            else if(mCurrentVariable == eSigma)
+            {
+                for(int i=0; i<mEvent->mDates.size(); ++i)
                 {
-                    // -----------------------------------------------
-                    //  Important : auto-correlation must be calculated on  ALL TRACE VALUES !!
-                    //  Otherwise, it is false. => The thinning must be 1!
-                    //  TODO : find a solution to calculate auto-correlation on all trace points
-                    //  without having to store all trace points (with thinning > 1)
-                    // -----------------------------------------------
+                    mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " All Chains", mShowAllChains);
                     
-                    mGraph->setNothingMessage(tr("The thinning interval must be 1 to display this curve."));
+                    for(int j=0; j<mShowChainList.size(); ++j)
+                    {
+                        mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " Chain " + QString::number(j), mShowChainList[j]);
+                    }
                 }
-                */
+            }
+            mGraph->adjustYToMaxValue();
+        }
+        // ------------------------------------------------
+        //  Second tab : History plots
+        //  Possible curves :
+        //  - Trace i
+        //  - Q1 i
+        //  - Q2 i
+        //  - Q3 i
+        // ------------------------------------------------
+        else if(mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta)
+        {
+            // We visualize only one chain (radio button)
+            for(int i=0; i<mShowChainList.size(); ++i){
+                mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList[i]);
+                mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList[i]);
+                mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList[i]);
+                mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList[i]);
+            }
+        }
+        
+        // ------------------------------------------------
+        //  Third tab : Acception rate
+        //  Possible curves :
+        //  - Accept i
+        //  - Accept Target
+        // ------------------------------------------------
+        else if(mCurrentTypeGraph == eAccept && mCurrentVariable == eTheta && mEvent->mMethod == Event::eMHAdaptGauss)
+        {
+            mGraph->setCurveVisible("Accept Target", true);
+            for(int i=0; i<mShowChainList.size(); ++i){
+                mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList[i]);
+            }
+        }
+        // ------------------------------------------------
+        //  fourth tab : Autocorrelation
+        //  Possible curves :
+        //  - Correl i
+        //  - Correl Limit Lower i
+        //  - Correl Limit Upper i
+        // ------------------------------------------------
+        else if(mCurrentTypeGraph == eCorrel && mCurrentVariable == eTheta && !isFixedBound)
+        {
+            for(int i=0; i<mShowChainList.size(); ++i){
+                mGraph->setCurveVisible("Correl " + QString::number(i), mShowChainList[i]);
+                mGraph->setCurveVisible("Correl Limit Lower " + QString::number(i), mShowChainList[i]);
+                mGraph->setCurveVisible("Correl Limit Upper " + QString::number(i), mShowChainList[i]);
             }
         }
     }

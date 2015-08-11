@@ -73,11 +73,13 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     GraphCurve curve;
     curve.mData = normalize_map(bound.mValues);
     curve.mName = "Bound";
-    curve.mPen.setColor(Painting::mainColorLight);
-    curve.mPen.setWidthF(2.f);
-    curve.mFillUnder = true;
+    
+    curve.mPen = QPen(Painting::mainColorLight, 2.f);
+    curve.mBrush = Painting::mainColorLight;
+    
     curve.mIsRectFromZero = true;
     curve.mIsHisto = (bound.knownType() == EventKnown::eUniform);
+    
     graph->addCurve(curve);
     graph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
     graph->mLegendX = DateUtils::getAppSettingsFormat();

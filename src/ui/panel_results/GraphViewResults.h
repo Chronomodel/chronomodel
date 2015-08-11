@@ -9,10 +9,13 @@
 #include <QWidget>
 #include <QList>
 #include <QColor>
+#include <QBrush>
 
 class Button;
 class QPropertyAnimation;
 class QTextEdit;
+class MHVariable;
+class MetropolisVariable;
 
 
 class GraphViewResults: public QWidget
@@ -20,7 +23,7 @@ class GraphViewResults: public QWidget
     Q_OBJECT
 public:
     enum TypeGraph{
-        eHisto = 0,
+        ePostDistrib = 0,
         eTrace = 1,
         eAccept = 2,
         eCorrel = 3
@@ -30,11 +33,8 @@ public:
         eSigma = 1
     };
     
-    
     explicit GraphViewResults(QWidget *parent = 0);
     virtual ~GraphViewResults();
-    
-    void setResultToShow(TypeGraph typeGraph, Variable variable, bool showAllChains, const QList<bool>& showChainList, bool showCredibility, float threshold, bool showCalib, bool showWiggle, bool showRawResults);
     
     void setSettings(const ProjectSettings& settings);
     void setMCMCSettings(const MCMCSettings& mcmc, const QList<Chain>& chains);
@@ -53,8 +53,39 @@ public:
     
     GraphView* mGraph;
     
+    GraphCurve generateDensityCurve(const QMap<double, double>& data,
+                                    const QString& name,
+                                    const QColor& lineColor,
+                                    const Qt::PenStyle penStyle = Qt::SolidLine,
+                                    const QBrush& brush = Qt::NoBrush) const;
+    
+    GraphCurve generateHPDCurve(const QMap<double, double>& data,
+                                const QString& name,
+                                const QColor& color) const;
+    
+    GraphCurve generateCredibilityCurve(const QPair<double, double>& section,
+                                        const QString& name,
+                                        const QColor& color) const;
+    
+    GraphCurve generateHorizontalLine(const double yValue,
+                                      const QString& name,
+                                      const QColor& color,
+                                      const Qt::PenStyle penStyle = Qt::SolidLine) const;
+    
+    void generateTraceCurves(const QList<Chain>& chains,
+                             MetropolisVariable* variable,
+                             const QString& name = QString());
+    
+    void generateAcceptCurves(const QList<Chain>& chains,
+                              MHVariable* variable);
+    
+    void generateCorrelCurves(const QList<Chain>& chains,
+                              MHVariable* variable);
+    
 public slots:
     void setRange(double min, double max);
+    void setCurrentX(double min, double max);
+    
     void zoom(double min, double max);
     void showNumericalResults(bool show);
     void setNumericalResults(const QString& results);
@@ -74,9 +105,15 @@ protected:
     // It is vitual beacause we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
     virtual void updateLayout();
     
+public:
     // This method is used to recreate all curves in mGraph.
-    // It is vitual beacause we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
-    virtual void refresh() = 0;
+    // It is vitual because we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
+    virtual void generateCurves(TypeGraph typeGraph, Variable variable);
+    
+    // This method is used to update visible existing curves in mGraph.
+    // It is vitual because we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
+    virtual void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
+    
     
 signals:
     void unfoldToggled(bool toggled);
@@ -97,12 +134,9 @@ protected:
     bool mShowAllChains;
     QList<bool> mShowChainList;
     bool mShowCredibility;
-    //int mThresholdHPD;
-    float mThresholdHPD;
     
     bool mShowCalib;
     bool mShowWiggle;
-    bool mShowRawResults;
     bool mShowNumResults;
     
     ProjectSettings mSettings;

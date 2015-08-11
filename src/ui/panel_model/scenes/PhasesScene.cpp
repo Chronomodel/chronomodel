@@ -133,7 +133,7 @@ void PhasesScene::updateProject()
         if(!phases_ids.contains(phase[STATE_ID].toInt()))
         {
 #ifdef DEBUG
-            qDebug() << "=> Phase item deleted : " << phase[STATE_ID].toInt();
+            //qDebug() << "=> Phase item deleted : " << phase[STATE_ID].toInt();
 #endif
             mItems.removeAt(i);
             hasDeleted = true;
@@ -170,7 +170,7 @@ void PhasesScene::updateProject()
                 {
                     // UPDATE ITEM
 #ifdef DEBUG
-                    qDebug() << "Phase item updated : id = " << phase[STATE_ID].toInt();
+                    //qDebug() << "Phase item updated : id = " << phase[STATE_ID].toInt();
 #endif
                     item->setPhase(phase);
                 }
@@ -205,7 +205,7 @@ void PhasesScene::updateProject()
             
             hasCreated = true;
 #ifdef DEBUG
-            qDebug() << "Phase item created : id = " << phase[STATE_ID].toInt();
+            //qDebug() << "Phase item created : id = " << phase[STATE_ID].toInt();
 #endif
         }
     }
@@ -221,7 +221,7 @@ void PhasesScene::updateProject()
         if(!constraints_ids.contains(constraint[STATE_ID].toInt()))
         {
 #ifdef DEBUG
-            qDebug() << "Phase Constraint deleted : " << constraint[STATE_ID].toInt();
+            //qDebug() << "Phase Constraint deleted : " << constraint[STATE_ID].toInt();
 #endif
             removeItem(constraintItem);
             mConstraintItems.removeOne(constraintItem);
@@ -247,7 +247,7 @@ void PhasesScene::updateProject()
                 {
                     // UPDATE ITEM
 #ifdef DEBUG
-                    qDebug() << "Constraint updated : id = " << constraint[STATE_ID].toInt();
+                    //qDebug() << "Constraint updated : id = " << constraint[STATE_ID].toInt();
 #endif
                     mConstraintItems[j]->setData(constraint);
                 }
@@ -260,7 +260,7 @@ void PhasesScene::updateProject()
             mConstraintItems.append(constraintItem);
             addItem(constraintItem);
 #ifdef DEBUG
-            qDebug() << "Constraint created : id = " << constraint[STATE_ID].toInt();
+            //qDebug() << "Constraint created : id = " << constraint[STATE_ID].toInt();
 #endif
         }
     }

@@ -294,19 +294,12 @@ QPixmap Date::generateCalibThumb()
         graph.setYAxisMode(GraphView::eHidden);
         
         QColor color = mPlugin->getColor();//  Painting::mainColorLight;
-        QColor HPDColor(color);
-        //HPDColor.setAlpha(100);
         
         GraphCurve curve;
-        //QMap<double, double> mDataCalib;
-        // mDataCalib  = getCalibMap();
         curve.mData = normalize_map(getCalibMap());
-        
         curve.mName = "Calibration";
-        curve.mPen.setColor(color);
-        curve.mPen.setWidthF(2.f);
-        curve.mBrush.setColor(HPDColor);
-        curve.mFillUnder = true;
+        curve.mPen = QPen(color, 2.f);
+        curve.mBrush = color;
         curve.mIsHisto = false;
         curve.mIsRectFromZero = true; // For Typo !!
         

@@ -16,6 +16,7 @@ class QDockWidget;
 class ProjectView;
 class Project;
 class Event;
+class Model;
 
 
 class MainWindow : public QMainWindow, public Singleton<MainWindow>
@@ -66,7 +67,7 @@ public slots:
     void openManual();
     void openWebsite();
     void showHelp(bool);
-    void mcmcFinished();
+    void mcmcFinished(Model*);
     void updateProject();
     
 private:
