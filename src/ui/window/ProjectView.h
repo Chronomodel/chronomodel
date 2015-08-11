@@ -32,7 +32,7 @@ public:
 public slots:
     void updateProject();
     void showModel();
-    void showResults();
+    void showResults(bool updateModel = true);
     void showLog();
     void showHelp(bool show);
     

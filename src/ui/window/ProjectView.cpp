@@ -93,9 +93,13 @@ void ProjectView::showModel()
 {
     mStack->setCurrentIndex(0);
 }
-void ProjectView::showResults()
+void ProjectView::showResults(bool updateModel)
 {
     mStack->setCurrentIndex(1);
+    
+    // TODO : check if this work fine....
+    //if(updateModel)
+    //    mResultsView->updateModel();
 }
 void ProjectView::showLog()
 {
@@ -120,7 +124,7 @@ void ProjectView::updateResults(Model* model)
 {
     if(model)
     {
-        showResults();
+        showResults(false);
         
         mResultsView->updateResults(model);
         
