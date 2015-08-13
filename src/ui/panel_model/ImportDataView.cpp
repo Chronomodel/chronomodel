@@ -17,7 +17,7 @@ ImportDataView::ImportDataView(QWidget* parent, Qt::WindowFlags flags):QWidget(p
     mHelp = new HelpWidget(this);
     mHelp->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=29"); //chapter 3.4.2.1 Radiocarbon dating (14C)
     
-    mHelp->setText(tr("Your CSV file must contain 1 data per row. Each row must start with the datation method to use. Allowed datation methods are : 14C, AM, Gauss, Typo, TL/OSL.\nComments are allowed in your CSV. They must start with  # or // and can be placed at the end of a data row. When placed at the begining of a row, the whole row is ignored."));
+    mHelp->setText(tr("Your CSV file must contain 1 data per row. Each row must start with the datation method to use. Allowed datation methods are : 14C, AM, Gauss, Typo, TL/OSL.\nComments are allowed in your CSV. They must start with  # or // and can be placed at the end of a data row. When placed at the begining of a row, the whole row is ignored.\n You can insert information in the table, you can use two keywords: Title and Structure before info."));
     
     mTable = new ImportDataTable(this, this);
     mTable->setAlternatingRowColors(true);
@@ -34,7 +34,17 @@ ImportDataView::~ImportDataView()
 {
     
 }
-
+/**
+ * @brief : Import data from a CSV file in the table
+ Title; toy csv file
+ Structure; Terrestrial
+ // just comment
+ 14C;onshore;1200;30;intcal13.14c;
+ Structure; Event : Oceanic
+ 14C;shell;2900;36;marine04.14c;-150;20
+ 14C;oyster;3000;30;marine13.14c;200;10
+ @todo File encoding must be UTF8, Unix LF !!
+ */
 void ImportDataView::browse()
 {
     QString currentDir = MainWindow::getInstance()->getCurrentPath();
@@ -169,14 +179,14 @@ void ImportDataView::exportDates()
             
             Project* project = MainWindow::getInstance()->getProject();
             QJsonArray events = project->mState[STATE_EVENTS].toArray();
-            
+            stream << "Title"<< sep << project->mProjectFileName<< "\n";
             for(int i=0; i<events.size(); ++i)
             {
                 QJsonObject event = events[i].toObject();
                 QJsonArray dates = event[STATE_EVENT_DATES].toArray();
                 
                 int type = event[STATE_EVENT_TYPE].toInt();
-                stream << "// " << ((type == Event::eKnown) ? tr("Bound") : tr("Event")) << " : ";
+                stream << "Structure"<< sep << ((type == Event::eKnown) ? tr("Bound") : tr("Event")) << " : ";
                 stream << event[STATE_NAME].toString() << "\n";
                 
                 for(int j=0; j<dates.size(); ++j)

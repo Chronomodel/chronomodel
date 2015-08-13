@@ -14,7 +14,7 @@ ChronoApp::~ChronoApp()
 
 bool ChronoApp::event(QEvent* e)
 {
-    // TODO : handle file drag directly onto the application icon on Mac
+    // @todo : handle file drag directly onto the application icon on Mac
     
     /*QFileOpenEvent* foe = dynamic_cast<QFileOpenEvent*>(e);
     if(foe)
