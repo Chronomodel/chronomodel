@@ -972,13 +972,17 @@ void ResultsView::updateCurvesToShow()
     updateResultsLog();
     updateScales();
 }
-
+/**
+  * @brief: restore zoom according to mTabs
+ * @todo memory must containt mDataSigmaRadio state
+ */
 void ResultsView::updateScales()
 {
     qDebug() << "ResultsView::updateScales";
     
     int tabIdx = mTabs->currentIndex();
     ProjectSettings s = mSettings;
+    
     
     // ------------------------------------------
     //  Get X Range based on current options
@@ -1007,18 +1011,29 @@ void ResultsView::updateScales()
         mResultMinX = 0;
         mResultMaxX = 100;
     }
-    
+   
     // ------------------------------------------
     //  Restore last zoom values
     // ------------------------------------------
     if(mZooms.find(tabIdx) != mZooms.end()){
         mResultCurrentMinX = mZooms[tabIdx].first;
         mResultCurrentMaxX = mZooms[tabIdx].second;
+        // controle if the current value is in rigth range depending to mDataThetaRadio and mDataSigmaRadio
+        mResultCurrentMinX = inRange(mResultMinX, mResultCurrentMinX, mResultMaxX);
+        mResultCurrentMaxX = inRange(mResultCurrentMinX, mResultCurrentMaxX, mResultMaxX);
     }else{
+        
         mResultCurrentMinX = mResultMinX;
         mResultCurrentMaxX = mResultMaxX;
     }
+    
+    
+    
+    
+    
     mResultZoomX = (mResultCurrentMaxX - mResultCurrentMinX) / (mResultMaxX - mResultMinX) * 100;
+    
+    
     
     // -----------------------------------------------
     //  Set All Graphs Ranges (This is not done by generateCurves !)
