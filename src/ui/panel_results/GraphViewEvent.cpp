@@ -89,7 +89,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         // ------------------------------------------------
         //  First tab : Posterior distrib
         // ------------------------------------------------
-        if(mCurrentTypeGraph == ePostDistrib)
+        if(typeGraph == ePostDistrib)
         {
             mGraph->mLegendX = DateUtils::getAppSettingsFormat();
             mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
@@ -104,7 +104,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             //  - Credibility All Chains
             //  - Post Distrib Chain i
             // ------------------------------------------------
-            if(mCurrentVariable == eTheta)
+            if(variable == eTheta)
             {
                 mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
                 
@@ -179,11 +179,11 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             //  - Sigma Date i All Chains
             //  - Sigma Date i Chain j
             // ------------------------------------------------
-            else if(mCurrentVariable == eSigma)
+            else if(variable == eSigma)
             {
                 mGraph->mLegendX = "";
                 mGraph->setFormatFunctX(0);
-                
+                //mGraph->setRangeX(0,mSettings.mTmin + mSettings.mTmax);
                 if (mEvent->type()==Event::eKnown) {
                     mTitle = tr("Bound ") + " : " + mEvent->mName;
                 }
@@ -192,8 +192,9 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                 
                 mGraph->setBackgroundColor(QColor(Qt::white));
                 mGraph->autoAdjustYScale(true);
-                // mGraph->setCurrentX(0, mSettings.mTmax-mSettings.mTmin);
+
                 mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
+
                 
                 for(int i=0; i<mEvent->mDates.size(); ++i)
                 {
@@ -222,7 +223,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - Q2 i
         //  - Q3 i
         // ------------------------------------------------
-        else if(mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta)
+        else if(typeGraph == eTrace && variable == eTheta)
         {
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
@@ -234,7 +235,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - Accept i
         //  - Accept Target
         // ------------------------------------------------
-        else if(mCurrentTypeGraph == eAccept && mCurrentVariable == eTheta && mEvent->mMethod == Event::eMHAdaptGauss)
+        else if(typeGraph == eAccept && variable == eTheta && mEvent->mMethod == Event::eMHAdaptGauss)
         {
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
@@ -249,7 +250,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - Correl Limit Lower i
         //  - Correl Limit Upper i
         // ------------------------------------------------
-        else if(mCurrentTypeGraph == eCorrel && mCurrentVariable == eTheta && !isFixedBound)
+        else if(typeGraph == eCorrel && variable == eTheta && !isFixedBound)
         {
             mGraph->mLegendX = "";
             mGraph->setFormatFunctX(0);

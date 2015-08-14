@@ -107,7 +107,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
     
-    mGraph->autoAdjustYScale(mCurrentTypeGraph == eTrace);
+    mGraph->autoAdjustYScale(typeGraph == eTrace);
     
     mDurationGraph->removeAllCurves();
     QPen defaultPen;
@@ -131,7 +131,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - Post Distrib Alpha i
         //  - Post Distrib Beta i
         // ------------------------------------------------
-        if(mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eTheta)
+        if(typeGraph == ePostDistrib && variable == eTheta)
         {
             mGraph->mLegendX = DateUtils::getAppSettingsFormat();
             mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
@@ -173,7 +173,6 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
             double max = qMax(map_max_value(curveAlpha.mData), map_max_value(curveBeta.mData));
            
             
-            double maxDuration = map_max_value(curveDuration.mData);
             
             if(!curveDuration.mData.isEmpty())
             {
@@ -182,11 +181,8 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                                                                color);
                 mDurationGraph->addCurve(curveDurationHPD);
 
-                maxDuration = qMax(maxDuration, map_max_value(curveDurationHPD.mData));
-            }
+             }
             
-            
-            mDurationGraph->setRangeY(0, maxDuration);
             
             for(int i=0; i<mShowChainList.size(); ++i)
             {
@@ -220,7 +216,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - Q2 Beta i
         //  - Q3 Beta i
         // ------------------------------------------------
-        else if(mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta)
+        else if(typeGraph == eTrace && variable == eTheta)
         {
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
@@ -305,6 +301,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 mGraph->setCurveVisible("Post Distrib Beta " + QString::number(i), mShowChainList[i]);
             }
             mGraph->adjustYToMaxValue();
+            mDurationGraph->adjustYToMaxValue();
         }
         
         // ------------------------------------------------
