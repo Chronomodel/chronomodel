@@ -168,8 +168,12 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->addCurve(curveAlpha);
             mGraph->addCurve(curveAlphaHPD);
             mGraph->addCurve(curveBetaHPD);
-            
             mDurationGraph->addCurve(curveDuration);
+            
+            double max = qMax(map_max_value(curveAlpha.mData), map_max_value(curveBeta.mData));
+           
+            
+            double maxDuration = map_max_value(curveDuration.mData);
             
             if(!curveDuration.mData.isEmpty())
             {
@@ -177,7 +181,12 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                                                                "HPD Duration",
                                                                color);
                 mDurationGraph->addCurve(curveDurationHPD);
+
+                maxDuration = qMax(maxDuration, map_max_value(curveDurationHPD.mData));
             }
+            
+            
+            mDurationGraph->setRangeY(0, maxDuration);
             
             for(int i=0; i<mShowChainList.size(); ++i)
             {
@@ -190,7 +199,13 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                                                             color, Qt::DashLine);
                 mGraph->addCurve(curveAlpha);
                 mGraph->addCurve(curveBeta);
+                
+                max = qMax(max, map_min_value(curveBeta.mData));
+                max = qMax(max, map_max_value(curveAlpha.mData));
+                
             }
+           
+            mGraph->setRangeY(0, max);
         }
         
     
@@ -281,8 +296,8 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setCurveVisible("Post Distrib Beta All Chains", mShowAllChains);
             mGraph->setCurveVisible("HPD Alpha All Chains", mShowAllChains);
             mGraph->setCurveVisible("HPD Beta All Chains", mShowAllChains);
-            mGraph->setCurveVisible("Duration", mShowAllChains);
-            mGraph->setCurveVisible("HPD Duration", mShowAllChains);
+            mDurationGraph->setCurveVisible("Duration", mShowAllChains);
+            mDurationGraph->setCurveVisible("HPD Duration", mShowAllChains);
             
             for(int i=0; i<mShowChainList.size(); ++i)
             {
