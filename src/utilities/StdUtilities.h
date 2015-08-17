@@ -40,6 +40,38 @@ T interpolate(const T& x, const T& x1, const T& x2, const T& y1, const T& y2)
     return (y1 + (y2 - y1) * (x - x1) / (x2 - x1));
 }
 
+template <typename T, typename U>
+T interpolateValueInQMap(const U& key, const QMap<U, T>& map)
+{
+    auto lIter = map.lowerBound(key);
+    T valueUpper = lIter.value();
+    T keyUpper = lIter.key();
+    
+    if (key<=keyUpper) {
+        return valueUpper;
+    }
+    
+    else if (lIter!=map.end()) {
+        T valueUnder = (lIter - 1).value();
+        T keyUnder =(lIter - 1).key();
+        
+        return interpolate(key, keyUnder, keyUpper, valueUnder, valueUpper);
+    }
+    else {
+        return map.last();
+    }
+    
+   
+}
+
+
+
+
+
+
+
+
+
 template <class T>
 T vector_max_value(const QList<T>& aVector)
 {
