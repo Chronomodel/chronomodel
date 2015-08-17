@@ -183,6 +183,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             {
                 mGraph->mLegendX = "";
                 mGraph->setFormatFunctX(0);
+                
                 //mGraph->setRangeX(0,mSettings.mTmin + mSettings.mTmax);
                 if (mEvent->type()==Event::eKnown) {
                     mTitle = tr("Bound ") + " : " + mEvent->mName;

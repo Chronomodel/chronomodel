@@ -915,8 +915,8 @@ void ResultsView::generateCredibilityAndHPD()
 }
 
 /**
- * @brief: re-generate all curves in graph views form model data.
- * Each curve is given a name. This name will be used by updateCurvesToShow() to decide whether the curve is visible or not.
+ *  @brief re-generate all curves in graph views form model data.
+ *  @brief Each curve is given a name. This name will be used by updateCurvesToShow() to decide whether the curve is visible or not.
  */
 void ResultsView::generateCurves()
 {
@@ -936,8 +936,8 @@ void ResultsView::generateCurves()
 }
 
 /**
- * @brief: Decide which curve graphs must show, based on currently selected options.
- * This function does NOT remove or create any curve in graphs! It only checks if existing curves should be visible or not.
+ *  @brief Decide which curve graphs must show, based on currently selected options.
+ *  @brief This function does NOT remove or create any curve in graphs! It only checks if existing curves should be visible or not.
  */
 void ResultsView::updateCurvesToShow()
 {
@@ -973,8 +973,8 @@ void ResultsView::updateCurvesToShow()
     updateScales();
 }
 /**
-  * @brief: restore zoom according to mTabs
- * @todo memory must containt mDataSigmaRadio state
+ *   @brief Restore zoom according to mTabs
+ *   @todo Memory must containt mDataSigmaRadio state
  */
 void ResultsView::updateScales()
 {

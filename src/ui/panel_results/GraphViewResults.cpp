@@ -298,9 +298,38 @@ void GraphViewResults::saveGraphData() const
         {
             offset = mChains[chainIdx].mNumBurnIter + mChains[chainIdx].mBatchIndex * mChains[chainIdx].mNumBatchIter;
         }
+         mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvSep, false, offset);
+    }
+    if(mCurrentTypeGraph == eCorrel)
+    {
+        int chainIdx = -1;
+        for(int i=0; i<mShowChainList.size(); ++i)
+            if(mShowChainList[i])
+                chainIdx = i;
+        if(chainIdx != -1)
+        {
+            offset = mChains[chainIdx].mNumBurnIter + mChains[chainIdx].mBatchIndex * mChains[chainIdx].mNumBatchIter;
+        }
+        mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvSep, false, offset);
+    }
+    if(mCurrentTypeGraph == eAccept)
+    {
+        int chainIdx = -1;
+        for(int i=0; i<mShowChainList.size(); ++i)
+            if(mShowChainList[i])
+                chainIdx = i;
+        if(chainIdx != -1)
+        {
+            offset = mChains[chainIdx].mNumBurnIter + mChains[chainIdx].mBatchIndex * mChains[chainIdx].mNumBatchIter;
+        }
+        mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvSep, false, offset);
+    }
+    else if(mCurrentTypeGraph == ePostDistrib) {
+
+            mGraph->exportCurrentDensityCurves(MainWindow::getInstance()->getCurrentPath(), csvSep,  mSettings.mStep);
+       
     }
     
-    mGraph->exportCurrentCurves(MainWindow::getInstance()->getCurrentPath(), csvSep, false, offset);
 }
 
 void GraphViewResults::setNumericalResults(const QString& results)
