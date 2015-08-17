@@ -125,11 +125,13 @@ double shrinkageUniform(double so2)
     double u = Generator::randomUniform();
     return (so2 * (1. - u) / u);
 }
-
+/**
+ * @todo Get the precision from the pref.
+ */
 QString functionAnalysisToString(const FunctionAnalysis& analysis)
 {
     QString result;
-    int precision = 0; //TODO Get the precision from the pref.
+    int precision = 0; 
 
     if(analysis.stddev<0.){
        result = "No data";
@@ -144,12 +146,15 @@ QString functionAnalysisToString(const FunctionAnalysis& analysis)
     return result;
 }
 
+/**
+ * @todo Get the precision from the pref.
+ */
 QString densityAnalysisToString(const DensityAnalysis& analysis)
 {
     QString result = "No data";
     if(analysis.analysis.stddev>=0.){
         result = functionAnalysisToString(analysis.analysis);
-        int precision = 2; //TODO Get the precision from the pref.
+        int precision = 2;
     
         result += "Q1 : " + QString::number(analysis.quartiles.Q1, 'f', precision) + "   ";
         result += "Q2 (Median) : " + QString::number(analysis.quartiles.Q2, 'f', precision) + "   ";
