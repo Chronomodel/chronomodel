@@ -89,7 +89,10 @@ public:
     
 public slots:
     void zoomX(const double min, const double max);
-    void exportCurrentCurves(const QString& defaultPath, const QString& csvSep, bool writeInRows, int offset = 0) const;
+    void exportCurrentDensityCurves(const QString& defaultPath, const QString& csvSep, double step = 1.) const;
+
+    void exportCurrentVectorCurves(const QString& defaultPath, const QString& csvSep, bool writeInRows, int offset = 0) const;
+    void exportCurrentCurves_old(const QString& defaultPath, const QString& csvSep, bool writeInRows, int offset = 0) const;
     
 protected:
     void adaptMarginBottom();

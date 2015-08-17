@@ -17,3 +17,5 @@ Release/*
 Info.plist
 resources/Thumbs.db
 
+
+Makefile
