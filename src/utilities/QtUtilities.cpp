@@ -388,3 +388,20 @@ bool constraintIsCircular(QJsonArray constraints, const int fromId, const int to
     }
     return false;
 }
+/**
+ * @todo add a precision in the preferences setting
+ */
+QString formatValueToAppSettingsPrecision(const double valueToFormat)
+{
+    //const AppSettings& s = MainWindow::getInstance()->getAppSettings();
+    //int precision=3;
+    char fmt = 'f';
+    if (std::fabs(valueToFormat)>250000){
+        fmt = 'G';
+    }
+    if (std::fabs(valueToFormat)<1E-6) {
+        return "0";
+    }
+    else
+        return QString::number(valueToFormat, fmt, 3);;
+}

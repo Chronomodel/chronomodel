@@ -35,5 +35,7 @@ QColor randomColor();
 
 bool constraintIsCircular( QJsonArray constraints, const int FromId, const int ToId);
 
+QString formatValueToAppSettingsPrecision(const double valueToFormat);
+
 
 #endif
