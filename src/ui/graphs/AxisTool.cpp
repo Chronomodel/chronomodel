@@ -79,7 +79,10 @@ void AxisTool::updateValues(double totalPix, double minDeltaPix, double minVal, 
      qDebug() << "mDeltaVal = " << mDeltaVal;
      qDebug() << "mDeltaPix = " << mDeltaPix;*/
 }
-
+/**
+ * @brief Draw axis on a QPainter, if there is no valueFormatFunc, all number is converted in QString with precision 0, it's mean only integer
+ *
+ */
 QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, QString (*valueFormatFunc)(double))
 {
     QPen memoPen(p.pen());
@@ -122,8 +125,8 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
                 p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, valueFormatFunc(mStartVal + mDeltaVal * (w/mDeltaPix)));
             }
             else {
-                p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, QString::number(mStartVal, 'G', 5));
-                p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, QString::number(mStartVal + mDeltaVal * (w/mDeltaPix), 'G', 5));
+                p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, QString::number(mStartVal, 'f', 0));
+                p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, QString::number(mStartVal + mDeltaVal * (w/mDeltaPix), 'f', 0));
                 
             }
             
@@ -145,7 +148,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
                     }
                     
                     if (mShowText) {
-                        QString text = (valueFormatFunc ? valueFormatFunc((x-xo)/mPixelsPerUnit + mStartVal) : QString::number(((x-xo)/mPixelsPerUnit + mStartVal)) );
+                        QString text = (valueFormatFunc ? valueFormatFunc((x-xo)/mPixelsPerUnit + mStartVal) : QString::number(((x-xo)/mPixelsPerUnit + mStartVal),'f',0) );
                         
                         int textWidth =  fm.width(text) ;
                         qreal tx = x - textWidth/2;
@@ -164,13 +167,8 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
     {
         double xov = r.x() + r.width()- p.pen().width();
         double yov = r.y() + r.height();
-       /* double w = r.width();
-        double h = r.height();
-        
-        QVector<qreal> linesYPos = mAxisToolY.paint(p, QRectF(0, mMarginTop+ mGraphHeight, mMarginLeft, mGraphHeight- mMarginTop - mMarginBottom), 5);
-      */
+       
         p.drawLine(xov, yov, xov, yov - h );
-       // tr(xo - w, ty, w - 8, heightText);
         
         if (mShowArrow) { // the arrow is over the rectangle of heigthSize
             
@@ -186,13 +184,13 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
         if(mMinMaxOnly) // used on posterior densities Maybe change the type of the text exp ou float
         {
             QRectF tr(r.x(), r.y(), w - 8, h);
-            QString textStarVal=QString::number(mStartVal, 'G', 2);
-            if (mStartVal==0) {
-                textStarVal ="0";
-            }
+            QString textStarVal = (valueFormatFunc ? valueFormatFunc(mStartVal) : QString::number(mStartVal,'f', 0) );
+            //if (!valueFormatFunc && mStartVal==0) {
+            //    textStarVal ="0";
+            //}
             p.drawText(tr, Qt::AlignRight | Qt::AlignBottom, textStarVal);
-            //p.drawText(tr, Qt::AlignRight | Qt::AlignTop, QString::number(mStartVal + mDeltaVal * (h/mDeltaPix), 'G', 2));
-            p.drawText(tr, Qt::AlignRight | Qt::AlignTop, QString::number(mEndVal, 'G', 2));
+            QString textEndVal = (valueFormatFunc ? valueFormatFunc(mEndVal) : QString::number(mEndVal,'f',0) );
+            p.drawText(tr, Qt::AlignRight | Qt::AlignTop, textEndVal);
         }
         else
         {
@@ -213,24 +211,10 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
                     p.drawLine(QLineF(xov, y, xov - 6, y));
                     
                     int align = (Qt::AlignRight | Qt::AlignVCenter);
-                    QString text = QString::number(mStartVal + i * mDeltaVal, 'g', 5);
-                    //qDebug()<<"Axistool::paint mSartVal"<<mStartVal<<" endvalue"<<mEndVal;
-                    //QString text = QString::number((-y+yov)/mPixelsPerUnit + mStartVal, 'g', 5);
-                    
-                    
-                   // int textWidth = fm.width(text);
-                   // double ty = y - textS/2;
+                    QString text = (valueFormatFunc ? valueFormatFunc(mStartVal + i * mDeltaVal) : QString::number(mStartVal + i * mDeltaVal, 'f', 0) );
+
                     qreal ty = y - heightText/2;
-                    /*if(ty + textS > yo)
-                     {
-                     ty = yo - textS;
-                     align = (Qt::AlignRight | Qt::AlignBottom);
-                     }
-                     else if(ty < yo - h)
-                     {
-                     ty = yo - h;
-                     align = (Qt::AlignRight | Qt::AlignTop);
-                     }*/
+                   
                     QRectF tr(xov - w, ty, w - 8, heightText);
                     p.drawText(tr, align, text);
                     
