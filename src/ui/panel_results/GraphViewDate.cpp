@@ -103,10 +103,9 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             if(variable == eTheta)
             {
                 mTitle = QString(tr("Data") + " : " + mDate->mName);
-                //mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
+
                 mGraph->mLegendX = DateUtils::getAppSettingsFormat();
                 mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
-                
                 
                 //  Post Distrib All Chains
                 GraphCurve curvePostDistrib = generateDensityCurve(variableDate->fullHisto(),
@@ -117,7 +116,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 mGraph->addCurve(curvePostDistrib);
                 
                 // Post Distrib Chain i
-                for(int i=0; i<mShowChainList.size(); ++i)
+                for(int i=0; i<mChains.size(); ++i)
                 {
                     GraphCurve curvePostDistribChain = generateDensityCurve(variableDate->histoForChain(i),
                                                                        "Post Distrib Chain " + QString::number(i),
@@ -164,9 +163,10 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             // ------------------------------------------------
             else if(variable == eSigma){
                 mTitle = QString(tr("Std") + " : " + mDate->mName);
-                //mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
+
                 mGraph->mLegendX = "";
                 mGraph->setFormatFunctX(0);
+                mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
                 
                 //  Post Distrib All Chains
                 GraphCurve curvePostDistrib = generateDensityCurve(variableDate->fullHisto(),
@@ -179,7 +179,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 
                 
                 // Post Distrib Chain i
-                for(int i=0; i<mShowChainList.size(); ++i)
+                for(int i=0; i<mChains.size(); ++i)
                 {
                     GraphCurve curvePostDistribChain = generateDensityCurve(variableDate->histoForChain(i),
                                                                             "Post Distrib Chain " + QString::number(i),
@@ -207,6 +207,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         {
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
+            mGraph->setFormatFunctY(DateUtils::convertToAppSettingsFormatStr);
             
             generateTraceCurves(mChains, variableDate);
         }
@@ -220,13 +221,8 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         {
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
+            mGraph->setFormatFunctY(0);
             mGraph->setRangeY(0, 100);
-            
-            /*if(mCurrentVariable == eTheta)
-                mGraph->addInfo(ModelUtilities::getDataMethodText(mDate->mMethod));
-            else if(mCurrentVariable == eSigma)
-                mGraph->addInfo(ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
-            mGraph->showInfos(true);*/
             
             generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine);
             generateAcceptCurves(mChains, variableDate);
@@ -243,7 +239,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         {
             mGraph->mLegendX = "";
             mGraph->setFormatFunctX(0);
-            //mGraph->setRangeX(0, 100);
+            mGraph->setFormatFunctY(0);
             mGraph->setRangeY(-1, 1);
             
             generateCorrelCurves(mChains, variableDate);
@@ -312,6 +308,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
             mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList[i]);
             mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList[i]);
         }
+        mGraph->adjustYToMinMaxValue();
     }
     // ------------------------------------------------
     //  Third tab : Acceptation rate.

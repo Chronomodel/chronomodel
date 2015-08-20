@@ -16,12 +16,8 @@
 GraphViewEvent::GraphViewEvent(QWidget *parent):GraphViewResults(parent),
 mEvent(0)
 {
-    //setMainColor(QColor(100, 100, 120));
     setMainColor(QColor(100, 100, 100));
     mGraph->setBackgroundColor(QColor(230, 230, 230));
-
-    
-    
 }
 
 GraphViewEvent::~GraphViewEvent()
@@ -93,6 +89,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         {
             mGraph->mLegendX = DateUtils::getAppSettingsFormat();
             mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
+            mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
             mGraph->setBackgroundColor(QColor(230, 230, 230));
             
             mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->mName;
@@ -152,7 +149,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                 // ------------------------------------
                 //  Post Distrib Chain i
                 // ------------------------------------
-                for(int i=0; i<mShowChainList.size(); ++i)
+                for(int i=0; i<mChains.size(); ++i)
                 {
                     GraphCurve curvePostDistribChain = generateDensityCurve(mEvent->mTheta.histoForChain(i),
                                                                             "Post Distrib Chain " + QString::number(i),
@@ -183,6 +180,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             {
                 mGraph->mLegendX = "";
                 mGraph->setFormatFunctX(0);
+                mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
                 
                 //mGraph->setRangeX(0,mSettings.mTmin + mSettings.mTmax);
                 if (mEvent->type()==Event::eKnown) {
@@ -207,7 +205,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                     
                     mGraph->addCurve(curve);
                     
-                    for(int j=0; j<mShowChainList.size(); ++j)
+                    for(int j=0; j<mChains.size(); ++j)
                     {
                         GraphCurve curveChain = generateDensityCurve(date.mSigma.histoForChain(j),
                                                                      "Sigma Date " + QString::number(i) + " Chain " + QString::number(j),
@@ -228,6 +226,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         {
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
+            mGraph->setFormatFunctY(DateUtils::convertToAppSettingsFormatStr);
             
             generateTraceCurves(mChains, &(mEvent->mTheta));
         }
@@ -240,6 +239,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         {
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
+            mGraph->setFormatFunctY(0);
             mGraph->setRangeY(0, 100);
             
             generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine);
@@ -255,6 +255,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         {
             mGraph->mLegendX = "";
             mGraph->setFormatFunctX(0);
+            mGraph->setFormatFunctY(0);
             mGraph->setRangeX(0, 100);
             mGraph->setRangeY(-1, 1);
             
@@ -344,6 +345,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList[i]);
                 mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList[i]);
             }
+            mGraph->adjustYToMinMaxValue();
         }
         
         // ------------------------------------------------

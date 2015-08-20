@@ -94,9 +94,13 @@ private slots:
     void saveAsImage();
     void imageToClipboard();
     void resultsToClipboard();
-    void saveGraphData() const;
+    
+    
+protected slots:
+    virtual void saveGraphData() const; // must be accessible to modifie by GraphViewPhase
     
 protected:
+    
     // These methods are from QWidget and we want to modify their behavior
     virtual void paintEvent(QPaintEvent* e);
     virtual void resizeEvent(QResizeEvent* e);
