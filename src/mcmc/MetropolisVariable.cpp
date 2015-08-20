@@ -354,15 +354,14 @@ QVector<double> MetropolisVariable::fullTraceForChain(const QList<Chain>& chains
         
         if(i == index)
         {
-            trace.reserve(traceSize);
+            /*trace.reserve(traceSize);
             
             QVector<double>::const_iterator iter = mTrace.begin() + shift;
             for(;iter != mTrace.begin() + shift + traceSize; ++iter){
                 trace.append(*iter);
-            }
+            }*/
             
-            /*for(unsigned int j=shift; j<shift + traceSize; ++j)
-                trace.append(mTrace[j]);*/
+            trace=mTrace.mid(shift , traceSize);
             
             break;
         }
@@ -383,15 +382,13 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<Chain>& chains)
         unsigned long traceSize = burnAdaptSize + chain.mNumRunIter / chain.mThinningInterval;
         
         unsigned long runSize = traceSize - burnAdaptSize;
-        trace.reserve(trace.size() + runSize);
+        //trace.reserve(trace.size() + runSize);
         
-        QVector<double>::const_iterator iter = mTrace.begin() + shift + burnAdaptSize;
+        /*QVector<double>::const_iterator iter = mTrace.begin() + shift + burnAdaptSize;
         for(;iter != mTrace.begin() + shift + traceSize; ++iter){
             trace.append(*iter);
-        }
-        
-        /*for(int j=(int)(shift + burnAdaptSize); j<(int)(shift + traceSize); ++j)
-            trace.append(mTrace[j]); // j must be integer type while mTrace is QVector*/
+        }*/
+        trace=mTrace.mid(shift + burnAdaptSize, traceSize - burnAdaptSize);
         
         shift += traceSize;
     }
@@ -425,15 +422,14 @@ QVector<double> MetropolisVariable::runTraceForChain(const QList<Chain>& chains,
             if(i == index)
             {
                 unsigned long runSize = traceSize - burnAdaptSize;
-                trace.reserve(runSize);
+                //trace.reserve(runSize);
                 
-                QVector<double>::const_iterator iter = mTrace.begin() + shift + burnAdaptSize;
+                /*QVector<double>::const_iterator iter = mTrace.begin() + shift + burnAdaptSize;
                 for(;iter != mTrace.begin() + shift + traceSize; ++iter){
                     trace.append(*iter);
-                }
+                }*/
+                trace=mTrace.mid(shift + burnAdaptSize, traceSize - burnAdaptSize);
                 
-                /*for(int j=(int)(shift + burnAdaptSize); (j<(int)(shift + traceSize)) && (j<mTrace.length()); ++j)
-                    trace.append(mTrace[j]);*/
                 
                 break;
             }
