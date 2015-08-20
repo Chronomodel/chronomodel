@@ -65,13 +65,6 @@ T interpolateValueInQMap(const U& key, const QMap<U, T>& map)
 }
 
 
-
-
-
-
-
-
-
 template <class T>
 T vector_max_value(const QList<T>& aVector)
 {
@@ -118,13 +111,9 @@ T vector_min_value(const QVector<T>& aVector)
 template <class U, class T>
 T map_max_value(const QMap<U, T>& aMap)
 {
-    QMapIterator<double, double> iter(aMap);
-    double max = 0.f;
-    if(iter.hasNext())
-    {
-        iter.next();
-        max = iter.value();
-    }
+    QMapIterator<U, T> iter(aMap);
+    T max = iter.hasNext() ?  iter.next().value()  :   0 ;
+    
     while(iter.hasNext())
     {
         iter.next();
@@ -136,13 +125,9 @@ T map_max_value(const QMap<U, T>& aMap)
 template <class U, class T>
 T map_min_value(const QMap<U, T>& aMap)
 {
-    QMapIterator<double, double> iter(aMap);
-    double min = 0.f;
-    if(iter.hasNext())
-    {
-        iter.next();
-        min = iter.value();
-    }
+    QMapIterator<U, T> iter(aMap);
+    T min = iter.hasNext() ?  iter.next().value()  :   0 ;
+   
     while(iter.hasNext())
     {
         iter.next();
