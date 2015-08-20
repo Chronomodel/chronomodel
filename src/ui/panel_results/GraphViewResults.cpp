@@ -6,6 +6,7 @@
 #include "MHVariable.h"
 #include <QtWidgets>
 #include <QtSvg>
+#include <QMessageBox>
 
 
 
@@ -281,53 +282,50 @@ void GraphViewResults::resultsToClipboard()
     QClipboard* clipboard = QApplication::clipboard();
     clipboard->setText(mResults);
 }
-
+/**
+ * @brief Export data from the visible curves, there is two kinds of data in a graphView: mData, QMap type and mDataVector, QVector type
+ * @brief So there is two export functon exportCurrentVectorCurves and exportCurrentDensityCurves.
+ * @brief In the Posterior Density tab, the Credibility bar is not save 
+ */
 void GraphViewResults::saveGraphData() const
 {
     AppSettings settings = MainWindow::getInstance()->getAppSettings();
     QString csvSep = settings.mCSVCellSeparator;
     
     int offset = 0;
-    if(mCurrentTypeGraph == eTrace)
+    
+    if(mCurrentTypeGraph == eTrace || mCurrentTypeGraph == eAccept)
     {
-        int chainIdx = -1;
-        for(int i=0; i<mShowChainList.size(); ++i)
-            if(mShowChainList[i])
-                chainIdx = i;
-        if(chainIdx != -1)
-        {
-            offset = mChains[chainIdx].mNumBurnIter + mChains[chainIdx].mBatchIndex * mChains[chainIdx].mNumBatchIter;
+        QMessageBox messageBox;
+        messageBox.setWindowTitle(tr("Save all trace"));
+        messageBox.setText(tr("Do you want the entire trace from the beginning of the process or only the aquisition part"));
+        QAbstractButton *allTraceButton = messageBox.addButton(tr("All trace"), QMessageBox::YesRole);
+        QAbstractButton *acquireTraceButton = messageBox.addButton(tr("Only acquired part"), QMessageBox::NoRole);
+        
+        messageBox.exec();
+        if (messageBox.clickedButton() == allTraceButton)  {
+            mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvSep, false, 0);
         }
-         mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvSep, false, offset);
-    }
-    if(mCurrentTypeGraph == eCorrel)
-    {
-        int chainIdx = -1;
-        for(int i=0; i<mShowChainList.size(); ++i)
-            if(mShowChainList[i])
-                chainIdx = i;
-        if(chainIdx != -1)
-        {
-            offset = mChains[chainIdx].mNumBurnIter + mChains[chainIdx].mBatchIndex * mChains[chainIdx].mNumBatchIter;
+        else if (messageBox.clickedButton() == acquireTraceButton) {
+                int chainIdx = -1;
+                for(int i=0; i<mShowChainList.size(); ++i)
+                    if(mShowChainList[i]) chainIdx = i;
+                if(chainIdx != -1) {
+                    offset = mChains[chainIdx].mNumBurnIter + mChains[chainIdx].mBatchIndex * mChains[chainIdx].mNumBatchIter;
+                }
+                mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvSep, false, offset);
         }
-        mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvSep, false, offset);
+        else return;
     }
-    if(mCurrentTypeGraph == eAccept)
-    {
-        int chainIdx = -1;
-        for(int i=0; i<mShowChainList.size(); ++i)
-            if(mShowChainList[i])
-                chainIdx = i;
-        if(chainIdx != -1)
-        {
-            offset = mChains[chainIdx].mNumBurnIter + mChains[chainIdx].mBatchIndex * mChains[chainIdx].mNumBatchIter;
-        }
-        mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvSep, false, offset);
+    
+    else if(mCurrentTypeGraph == eCorrel) {
+        mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvSep, false, 0);
     }
+    
+    // All visible curves are saved in the same file, the credibility bar is not save
+   
     else if(mCurrentTypeGraph == ePostDistrib) {
-
             mGraph->exportCurrentDensityCurves(MainWindow::getInstance()->getCurrentPath(), csvSep,  mSettings.mStep);
-       
     }
     
 }
