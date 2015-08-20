@@ -56,8 +56,10 @@ public:
     void setXAxisMode(AxisMode mode);
     bool getXAxisMode();
     void setYAxisMode(AxisMode mode);
+    
     void autoAdjustYScale(bool active);
     void adjustYToMaxValue();
+    void adjustYToMinMaxValue();
     
     void setGraphFont(const QFont& font);
     void setCurvesThickness(int value);
@@ -122,7 +124,7 @@ protected:
     bool mShowHorizGrid;
     AxisMode mXAxisMode;
     AxisMode mYAxisMode;
-    bool mAutoAdjustYScale;
+    bool mAutoAdjustYScale; 
     
     FormatFunc mFormatFuncX;
     FormatFunc mFormatFuncY;

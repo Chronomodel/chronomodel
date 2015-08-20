@@ -218,13 +218,18 @@ void GraphView::setYAxisMode(AxisMode mode)
         repaintGraph(true);
     }
 }
-
+/**
+ * @brief If active is true, the current view automaticaly adjust Y axis to the curent view.
+ * @brief it's a dynamic adjustment
+ */
 void GraphView::autoAdjustYScale(bool active)
 {
     mAutoAdjustYScale = active;
     repaintGraph(true);
 }
-
+/**
+ * @brief Adjust the Y axis with 0 for the minimun and find the Maximum value in the visible curve
+ */
 void GraphView::adjustYToMaxValue()
 {
     double yMax = 0;
@@ -243,6 +248,51 @@ void GraphView::adjustYToMaxValue()
         }
     }
     setRangeY(0, yMax);
+}
+void GraphView::adjustYToMinMaxValue()
+{
+    auto iterBegin =mCurves.cbegin();
+    auto iter = iterBegin;
+    // jump unvisible curve
+    while (!iter->mVisible && iter!=mCurves.cend() ) {
+        ++iter;
+    }
+    double yMin=0;
+    double yMax=0;
+    // init with the first visible curve
+    if (iter->mUseVectorData) {
+        yMin = vector_min_value(iter->mDataVector);
+        yMax = vector_max_value(iter->mDataVector);
+    }
+    else if(!iter->mUseVectorData &&
+           !iter->mIsHorizontalLine &&
+           !iter->mIsHorizontalSections &&
+           !iter->mIsVerticalLine &&
+           !iter->mIsVertical){
+            yMax = qMax(yMax, map_max_value(iter->mData));
+            yMin = qMin(yMin, map_min_value(iter->mData));
+    }
+    
+    ++iter;
+    // compare with the other visible curve
+    while (iter!=mCurves.cend()) {
+        if (iter->mVisible) {
+            if(!iter->mUseVectorData &&
+               !iter->mIsHorizontalLine &&
+               !iter->mIsHorizontalSections &&
+               !iter->mIsVerticalLine &&
+               !iter->mIsVertical){
+                        yMax = qMax(yMax, map_max_value(iter->mData));
+                        yMin = qMin(yMin, map_min_value(iter->mData));
+            }else if(iter->mUseVectorData){
+                        yMax = qMax(yMax, vector_max_value(iter->mDataVector));
+                        yMin = qMin(yMin, vector_min_value(iter->mDataVector));
+            }
+        }
+        ++iter;
+    }
+    setRangeY(yMin, yMax);
+
 }
 
 void GraphView::setGraphFont(const QFont& font)
@@ -408,16 +458,7 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
 }
 
 #pragma mark Resize & Paint
-/* void GraphView::repaintGraph(const bool aAlsoPaintBackground)
-{
-    if(aAlsoPaintBackground)
-    {
-        mBufferBack = QPixmap();
-    }
-        if (mCurrentMaxX!= 1000) qDebug()<<"in GraphView::repaintGraph mCurrentMaxX"<<mCurrentMaxX;
-    //update();
-   
-} */
+
 
 void GraphView::resizeEvent(QResizeEvent* event)
 {
