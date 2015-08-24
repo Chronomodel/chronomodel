@@ -291,6 +291,9 @@ void GraphViewResults::saveGraphData() const
 {
     AppSettings settings = MainWindow::getInstance()->getAppSettings();
     QString csvSep = settings.mCSVCellSeparator;
+
+    QLocale csvLocal = settings.mCSVCellSeparator == "." ? QLocale::English : QLocale::French;
+    csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
     
     int offset = 0;
     
@@ -304,7 +307,7 @@ void GraphViewResults::saveGraphData() const
         
         messageBox.exec();
         if (messageBox.clickedButton() == allTraceButton)  {
-            mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvSep, false, 0);
+            mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
         }
         else if (messageBox.clickedButton() == acquireTraceButton) {
                 int chainIdx = -1;
@@ -313,21 +316,21 @@ void GraphViewResults::saveGraphData() const
                 if(chainIdx != -1) {
                     offset = mChains[chainIdx].mNumBurnIter + mChains[chainIdx].mBatchIndex * mChains[chainIdx].mNumBatchIter;
                 }
-                mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvSep, false, offset);
+                mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, offset);
         }
         else return;
     }
     
     else if(mCurrentTypeGraph == eCorrel) {
-        mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvSep, false, 0);
+        mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
     }
     
     // All visible curves are saved in the same file, the credibility bar is not save
    
     else if(mCurrentTypeGraph == ePostDistrib) {
-            mGraph->exportCurrentDensityCurves(MainWindow::getInstance()->getCurrentPath(), csvSep,  mSettings.mStep);
+            mGraph->exportCurrentDensityCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
     }
-    
+
 }
 
 void GraphViewResults::setNumericalResults(const QString& results)

@@ -455,13 +455,16 @@ void ModelView::studyPeriodChanging()
 */
 void ModelView::minEditChanging()
 {
-    mTmin = DateUtils::convertFromAppSettingsFormat(mMinEdit->text().toDouble());
+    QLocale locale =QLocale();
+    mTmin = DateUtils::convertFromAppSettingsFormat(locale.toDouble(mMinEdit->text()));
     setSettingsValid(false);
     mEventPropertiesView->hideCalibration();
 }
+
 void ModelView::maxEditChanging()
 {
-    mTmax = DateUtils::convertFromAppSettingsFormat(mMaxEdit->text().toDouble());
+    QLocale locale =QLocale();
+    mTmax = DateUtils::convertFromAppSettingsFormat(locale.toDouble(mMaxEdit->text()));
     setSettingsValid(false);
     mEventPropertiesView->hideCalibration();
 }

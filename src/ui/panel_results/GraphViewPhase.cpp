@@ -314,6 +314,9 @@ void GraphViewPhase::saveGraphData() const
         AppSettings settings = MainWindow::getInstance()->getAppSettings();
         QString currentPath = MainWindow::getInstance()->getCurrentPath();
         QString csvSep = settings.mCSVCellSeparator;
+
+        QLocale csvLocal = settings.mCSVCellSeparator == "." ? QLocale::English : QLocale::French;
+        csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
         
         int offset = 0;
         
@@ -327,7 +330,7 @@ void GraphViewPhase::saveGraphData() const
             
             messageBox.exec();
             if (messageBox.clickedButton() == allTraceButton)  {
-                mDurationGraph->exportCurrentVectorCurves(currentPath, csvSep, false, 0);
+                mDurationGraph->exportCurrentVectorCurves(currentPath, csvLocal, csvSep, false, 0);
             }
             else if (messageBox.clickedButton() == acquireTraceButton) {
                 int chainIdx = -1;
@@ -336,19 +339,19 @@ void GraphViewPhase::saveGraphData() const
                 if(chainIdx != -1) {
                     offset = mChains[chainIdx].mNumBurnIter + mChains[chainIdx].mBatchIndex * mChains[chainIdx].mNumBatchIter;
                 }
-                mDurationGraph->exportCurrentVectorCurves(currentPath, csvSep, false, offset);
+                mDurationGraph->exportCurrentVectorCurves(currentPath, csvLocal, csvSep, false, offset);
             }
             else return;
         }
         
         else if(mCurrentTypeGraph == eCorrel) {
-            mDurationGraph->exportCurrentVectorCurves(currentPath, csvSep, false, 0);
+            mDurationGraph->exportCurrentVectorCurves(currentPath, csvLocal, csvSep, false, 0);
         }
         
         // All visible curves are saved in the same file, the credibility bar is not save
         
         else if(mCurrentTypeGraph == ePostDistrib) {
-            mDurationGraph->exportCurrentDensityCurves(currentPath, csvSep,  mSettings.mStep);
+            mDurationGraph->exportCurrentDensityCurves(currentPath, csvLocal, csvSep,  mSettings.mStep);
         }
     }
     else {

@@ -1,6 +1,7 @@
 #include "DateUtils.h"
 #include "MainWindow.h"
 #include <cmath>
+#include <QLocale>
 
 
 double DateUtils::convertToFormat(const double valueToFormat, const FormatDate format){
@@ -50,6 +51,8 @@ QString DateUtils::formatString(const FormatDate format){
 
 
 QString DateUtils::dateToString(const double date, const int precision){
+    QLocale locale = MainWindow::getInstance()->getAppSettings().mCSVCellSeparator == "." ? QLocale::English : QLocale::French;
+    locale.setNumberOptions(QLocale::OmitGroupSeparator);
     char fmt = 'f';
     if (date>250000){
         fmt = 'G';
@@ -58,7 +61,8 @@ QString DateUtils::dateToString(const double date, const int precision){
         return "0";
     }
     else
-        return QString::number(date, fmt, precision);
+        //return QString::number(date, fmt, precision);
+        return locale.toString(date, fmt, precision);
 }
 QString DateUtils::getAppSettingsFormat(){
     return formatString(MainWindow::getInstance()->getAppSettings().mFormatDate);

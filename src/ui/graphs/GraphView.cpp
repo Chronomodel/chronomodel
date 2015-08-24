@@ -6,6 +6,7 @@
 #include <QtWidgets>
 #include <algorithm>
 #include <QtSvg>
+#include <QLocale>
 
 class ProjectSettings;
 
@@ -779,35 +780,7 @@ void GraphView::drawCurves(QPainter& painter)
                 qreal last_value_y = 0;
                 
                 if(curve.mUseVectorData)
-                {
-                    /*for(int x=0; x<curve.mDataVector.size(); ++x)
-                     {
-                     double valueX = x;
-                     double valueY = curve.mDataVector[x];
-                     
-                     if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
-                     {
-                     double x = getXForValue(valueX, false);
-                     double y = getYForValue(valueY, false);
-                     
-                     if(index == 0)
-                     {
-                     path.moveTo(x, y);
-                     }
-                     else
-                     {
-                     if(curve.mIsHisto)
-                     path.lineTo(x, last_y);
-                     path.lineTo(x, y);
-                     }
-                     last_x = x;
-                     last_y = y;
-                     last_value_x = valueX;
-                     last_value_y = valueY;
-                     ++index;
-                     }
-                     }*/
-                    
+                {   
                     // Down sample vector
                     
                     QVector<double> subData = curve.getVectorDataInRange(mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
@@ -934,10 +907,6 @@ void GraphView::drawCurves(QPainter& painter)
                         valueX = iter.key();
                         valueY = iter.value();
                         
-                        /* if(curve.mName == "G")
-                         {
-                         //qDebug() << valueX << " : " << valueY;
-                         }*/
                         if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
                         {
                             x = getXForValue(valueX, false);
@@ -1008,10 +977,13 @@ void GraphView::drawCurves(QPainter& painter)
 }
 
 #pragma mark Save & Export
-void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QString& csvSep, double step) const
+
+/**
+ * @brief Export a density with locale setting and separator and specific step
+ * @todo may be we can use QString QLocale::createSeparatedList(const QStringList & list) const
+ */
+void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step) const
 {
-    qDebug()<<"GraphView::exportCurrentDensityCurves";
-    //int nbStep=500;
     if (step<=0) step=1;
     QString filter = tr("CSV (*.csv)");
     QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
@@ -1072,7 +1044,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QSt
                     iter->mVisible) {
                     
                     double xi = interpolateValueInQMap(x, iter->mData);
-                    list<<QString::number(xi);
+                    list<<locale.toString(xi);
                 }
                 else continue;
                 
@@ -1092,120 +1064,8 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QSt
     
 }
 
-void GraphView::exportCurrentCurves_old(const QString& defaultPath, const QString& csvSep, bool writeInRows, int offset) const
-{
-    Q_UNUSED(writeInRows);
-    qDebug()<<"GraphView::exportCurrentCurves";
-    QString filter = tr("CSV (*.csv)");
-    QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
-                                                    tr("Save graph data as..."),
-                                                    defaultPath,
-                                                    filter);
-    QFile file(filename);
-    if(file.open(QFile::WriteOnly | QFile::Truncate))
-    {
-        bool abscissesWritten = false;
-        QList<QStringList> rows;
-        //rows.append(QStringList(""));
-        rows.append(QStringList("X Axis"));
-        QMap<double, QVector<double> > rowsData;
-        
-        int colInx = 0;
-        qDebug()<<"GraphView::exportCurrentCurves"<<" nbCurve to export"<<mCurves.size();
-        for(int i=0; i<mCurves.size(); ++i)
-        {
-            colInx++;
-            
-            if(!mCurves[i].mIsHorizontalLine &&
-               !mCurves[i].mIsVerticalLine &&
-               !mCurves[i].mIsVertical &&
-               !mCurves[i].mIsHorizontalSections &&
-               !mCurves[i].mUseVectorData)
-            {
-                const QMap<double, double>& data = mCurves[i].mData;
-                
-                QMapIterator<double, double> iter(data);
-                rows[0] << mCurves[i].mName;
-                qDebug()<<" pdf to export : "<< mCurves[i].mName;
-                int sht = 0;
-                while(iter.hasNext() && sht<offset)
-                {
-                    ++sht;
-                    iter.next();
-                }
-                
-                while(iter.hasNext())
-                {
-                    iter.next();
-                    
-                    // Find a new X value
-                    if(rowsData.constFind(iter.key()) == rowsData.constEnd())
-                    {
-                        QVector<double> rowData(mCurves.size());
-                        rowData[i]=iter.value();
-                        rowsData.insert(iter.key(), rowData);
-                        qDebug()<<"adding key"<<iter.key();
-                    }
-                    else
-                    {
-                        rowsData[iter.key()].append(iter.value());
-                        qDebug()<<"copying key"<<iter.key();
-                    }
-                }
-            }
-            else if(mCurves[i].mUseVectorData)
-            {
-                const QVector<double>& data = mCurves[i].mDataVector;
-                if(!abscissesWritten)
-                {
-                    abscissesWritten = true;
-                    
-                    //rows.append(QStringList(""));
-                    for(int i=offset; i<data.size(); ++i)
-                    {
-                        rows.append(QStringList(QString::number(i-offset+1)));
-                    }
-                }
-                if(abscissesWritten)
-                {
-                    rows[0] << mCurves[i].mName;
-                    for(int i=offset; i<data.size(); ++i)
-                    {
-                        rows[i-offset+1] << QString::number(data[i]);
-                    }
-                }
-            }
-        }
-        
-        QMapIterator<double, QVector<double> > iter2(rowsData);
-        while(iter2.hasNext())
-        {
-            iter2.next();
-            QStringList list;
-            
-            if(mFormatFuncX) {
-                list << mFormatFuncX(iter2.key());
-            }
-            else list << QString::number(iter2.key());
-            
-            for(int i=0; i<iter2.value().size(); ++i)
-                if(mFormatFuncX) {
-                    list << mFormatFuncY(iter2.value()[i]);
-                }
-                else list << QString::number(iter2.value()[i]);
-            rows.append(list);
-        }
-        
-        QTextStream output(&file);
-        for(int i=0; i<rows.size(); ++i)
-        {
-            output << rows[i].join(csvSep);
-            output << "\n";
-        }
-        file.close();
-    }
-}
-void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QString& csvSep, bool writeInRows, int offset) const
+
+void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, bool writeInRows, int offset) const
 {
     Q_UNUSED(writeInRows);
     qDebug()<<"GraphView::exportCurrentVectorCurves";
@@ -1241,7 +1101,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QStr
             
             if (!abscissesWritten) {
                 for(int i=offset+rowsCount; i<data.size()+1; ++i) {
-                    rows.append(QStringList(QString::number(i-rowsCount))+emptyColumn);
+                    rows.append(QStringList(locale.toString(i-rowsCount))+emptyColumn);
                    
                 }
                 abscissesWritten = true;
@@ -1253,7 +1113,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QStr
             if(abscissesWritten) {
                     rows[0] << mCurves[idCurve].mName;
                     for(int i=offset; i<data.size(); ++i) {
-                        rows[i-offset+1]<< QString::number(data[i]);
+                        rows[i-offset+1]<< locale.toString(data[i]);
                     }
             }
             
@@ -1268,13 +1128,13 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QStr
             if(mFormatFuncX) {
                 list << mFormatFuncX(iter2.key());
             }
-            else list << QString::number(iter2.key());
+            else list << locale.toString(iter2.key());
             
             for(int i=0; i<iter2.value().size(); ++i)
                 if(mFormatFuncX) {
                     list << mFormatFuncY(iter2.value()[i]);
                 }
-                else list << QString::number(iter2.value()[i]);
+                else list << locale.toString(iter2.value()[i]);
             rows.append(list);
         }
         
