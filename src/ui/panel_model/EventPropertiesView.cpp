@@ -529,25 +529,15 @@ void EventPropertiesView::sendSplitDate()
 
 
 #pragma mark Dates Options
+
+/**
+ * @brief Special function only for 14C plugin, set all data with the same reference curve
+ * @todo Each plugin should return (or not) a view with a set of options that can be applied to all dates of this type. For now, we just use a simple temporary dialog
+ */
 void EventPropertiesView::showDatesOptions()
 {
-    // ---------------------------------------------------------
-    //  TODO : each plugin should return (or not) a view with
-    //  a set of options that can be applied to all dates of this type.
-    //  For now, we just use a simple temporary dialog
-    // ---------------------------------------------------------
-    
     PluginOptionsDialog dialog(qApp->activeWindow(), Qt::Sheet);
     
-    /*const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
-    for(int i=0; i<plugins.size(); ++i)
-    {
-        QWidget* plgOptsView = plugins[i]->optionsView();
-        if(plgOptsView)
-        {
-            dialog.addOptions(plugins[i]->getName(), plgOptsView);
-        }
-    }*/
     
     if(dialog.exec() == QDialog::Accepted)
     {

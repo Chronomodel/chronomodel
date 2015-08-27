@@ -510,7 +510,8 @@ void MCMCLoopMain::finalize()
     
     // This is called here because it is calculated only once and will never change afterwards
     // This is very slow : it is for this reason that the results display may be long to appear at the end of MCMC calculation.
-    // TODO : find a way to make it faster !
+    /** @todo Find a way to make it faster !
+     */
     mModel->generateCorrelations(mChains);
     
     // This should not be done here because it uses resultsView parameters

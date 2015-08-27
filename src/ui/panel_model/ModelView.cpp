@@ -365,7 +365,8 @@ void ModelView::updateProject()
     mEventsScene -> updateSelection(false);
     mPhasesScene -> updateSelection(false);
     
-    // TODO : refresh current date !!
+    /** @todo Refresh current date !! */
+    
     //mCalibrationView->setDate();
     
     const QJsonObject& event = mEventPropertiesView->getEvent();

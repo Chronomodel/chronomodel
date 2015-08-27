@@ -780,7 +780,7 @@ void GraphView::drawCurves(QPainter& painter)
                 qreal last_value_y = 0;
                 
                 if(curve.mUseVectorData)
-                {   
+                {
                     // Down sample vector
                     
                     QVector<double> subData = curve.getVectorDataInRange(mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
@@ -980,7 +980,7 @@ void GraphView::drawCurves(QPainter& painter)
 
 /**
  * @brief Export a density with locale setting and separator and specific step
- * @todo may be we can use QString QLocale::createSeparatedList(const QStringList & list) const
+ * @todo May be we can use QString QLocale::createSeparatedList(const QStringList & list) const
  */
 void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step) const
 {

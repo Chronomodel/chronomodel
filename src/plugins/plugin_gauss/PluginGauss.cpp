@@ -114,7 +114,7 @@ PluginFormAbstract* PluginGauss::getForm()
 }
 
 /**
- @todo: for now, CSV imported data are only of equation type !
+  * @todo for now, CSV imported data are only of equation type !
  We need to define a CSV format to allow curve mode.
 */
 QJsonObject PluginGauss::fromCSV(const QStringList& list)

@@ -34,16 +34,17 @@ ImportDataView::~ImportDataView()
 {
     
 }
+
 /**
- * @brief : Import data from a CSV file in the table
- Title; toy csv file
- Structure; Terrestrial
- // just comment
- 14C;onshore;1200;30;intcal13.14c;
- Structure; Event : Oceanic
- 14C;shell;2900;36;marine04.14c;-150;20
- 14C;oyster;3000;30;marine13.14c;200;10
- @todo File encoding must be UTF8, Unix LF !!
+ * @brief Import data from a CSV file in the table
+ * @todo File encoding must be UTF8, Unix LF !!
+ * Title; toy csv file
+ *  Structure; Terrestrial
+ *  // just comment
+ *  14C;onshore;1200;30;intcal13.14c;
+ *  Structure; Event : Oceanic
+ *  14C;shell;2900;36;marine04.14c;-150;20
+ *  14C;oyster;3000;30;marine13.14c;200;10
  */
 void ImportDataView::browse()
 {
@@ -65,7 +66,9 @@ void ImportDataView::browse()
             QTextStream stream(&file);
             QList<QStringList> data;
             
-            // TODO : File encoding must be UTF8, Unix LF !!
+           /**
+            * @todo File encoding must be UTF8, Unix LF !!
+            */
             //QTextCodec* codec = stream.codec();
             
             int rows = 0;

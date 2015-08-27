@@ -9,8 +9,10 @@
 //  sum2 = Sum (pi * xi^2)
 // -----------------------------------------------------------------
 
-// TODO : handle empty function case and null density case (pi = 0)
-
+/**
+ * @brief Product a FunctionAnalysis from a QMap
+ * @todo Handle empty function case and null density case (pi = 0)
+*/
 FunctionAnalysis analyseFunction(const QMap<double, double>& aFunction)
 {
     FunctionAnalysis result;
@@ -125,7 +127,9 @@ double shrinkageUniform(double so2)
     double u = Generator::randomUniform();
     return (so2 * (1. - u) / u);
 }
+
 /**
+ * @brief Return a text from a FunctionAnalysis @see FunctionAnalysis
  * @todo Get the precision from the pref.
  */
 QString functionAnalysisToString(const FunctionAnalysis& analysis)
@@ -147,6 +151,8 @@ QString functionAnalysisToString(const FunctionAnalysis& analysis)
 }
 
 /**
+ * @brief Return a text with the value of th Quartiles Q1, Q2 and Q3
+ * @see DensityAnalysis
  * @todo Get the precision from the pref.
  */
 QString densityAnalysisToString(const DensityAnalysis& analysis)
