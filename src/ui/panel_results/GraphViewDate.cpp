@@ -106,6 +106,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
 
                 mGraph->mLegendX = DateUtils::getAppSettingsFormat();
                 mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
+                mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
                 
                 //  Post Distrib All Chains
                 GraphCurve curvePostDistrib = generateDensityCurve(variableDate->fullHisto(),
