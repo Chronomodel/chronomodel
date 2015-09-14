@@ -252,18 +252,7 @@ mGraphsH(130)
     mDataThetaRadio           -> setChecked(true);
     mDataCalibCheck           -> setChecked(true);
     mShowDataUnderPhasesCheck -> setChecked(false);
-    
-        //  mResultsGroup->setFixedHeight(mResultsTitle->height()+mDataThetaRadio->QPaintDevice::height()+mDataSigmaRadio->height()+mShowDataUnderPhasesCheck->height()+
-        //                              mDataCalibCheck->QPaintDevice::height()+mWiggleCheck->height()+100);
-    
-    //connect(mDataGroup,     SIGNAL(clicked()), this, SLOT(updateResults()));// Unusefull
-  /*  QVBoxLayout* mResultsLayout = new QVBoxLayout();
-    mResultsLayout->addWidget(mShowDataUnderPhasesCheck);
-    mResultsLayout->addWidget(mDataThetaRadio);
-        mResultsLayout->addWidget(mDataSigmaRadio);
-        mResultsLayout->addWidget(mDataThetaRadio);
-    mResultsGroup->setLayout(mResultsLayout);
-   */
+   
     /* -------------------------------------- mPostDistGroup ---------------------------------------------------*/
     
     mPostDistOptsTitle = new Label(tr("Post. distrib. options"));
@@ -525,7 +514,7 @@ void ResultsView::updateLayout()
     
     int tabIdx = mTabs->currentIndex();
     
-    if(tabIdx == 0) // // it's mean posterior distribution
+    if( (tabIdx == 0) and  !(mDataSigmaRadio->isChecked()) ) // // it's mean posterior distribution and not a value of sigma
     {
         mCurrentXMinEdit->setText( DateUtils::convertToAppSettingsFormatStr(mResultCurrentMinX) );
         mCurrentXMaxEdit->setText( DateUtils::convertToAppSettingsFormatStr(mResultCurrentMaxX) );
@@ -1062,6 +1051,12 @@ void ResultsView::updateScales()
     // ------------------------------------------
     //  Set Ruler Range
     // ------------------------------------------
+    if( (tabIdx == 0) and (mDataThetaRadio->isChecked()) ){
+            mRuler->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
+    }
+    else {
+        mRuler->setFormatFunctX(0);
+    }
     mRuler->setRange(mResultMinX, mResultMaxX);
     mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
     
