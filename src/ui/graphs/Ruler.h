@@ -28,6 +28,8 @@ public:
     
     void clearAreas();
     void addArea(double start, double end, const QColor& color);
+    // Set value formatting functions
+    void setFormatFunctX(FormatFunc f);
     
     double realPosition;
     double mCurrentMin;
@@ -46,9 +48,10 @@ protected:
     void resizeEvent(QResizeEvent* e);
     void paintEvent(QPaintEvent* e);
     
+    FormatFunc mFormatFuncX;
+    
 public slots:
-    void setZoom(int prop);// HL
-//    double setZoom(const double prop); //PhD
+    void setZoom(int prop);
     void updateScroll();
     void scrollValueChanged(int value);
     
@@ -61,17 +64,10 @@ private:
     qreal mScrollBarHeight;
     
     QRectF mRulerRect;
-    
-    //double mMin;
-    //double mMax;
-    //double mCurrentMin;
-    //double mCurrentMax;
-    //double mZoomProp;
-    
+        
     qreal mStepMinWidth;
     qreal mStepWidth;
-    
-    //AxisTool mAxisTool;
+
     
     QVector<RulerArea> mAreas;
 };

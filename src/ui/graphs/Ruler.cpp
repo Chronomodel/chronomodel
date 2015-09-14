@@ -218,7 +218,6 @@ void Ruler::updateScroll()
         double delta = mCurrentMax - mCurrentMin;
         double deltaStart = (mMax - mMin)-delta;
         
-    //qDebug()<<"Ruler::updateScroll() delta"<< delta<<" deltaStart"<<deltaStart;
         
         mCurrentMin = mMin + deltaStart * ((double)mScrollBar->value() / (double)mScrollBar->maximum());
         mCurrentMin = floor( inRange(mMin, mCurrentMin, mMax) );
@@ -231,40 +230,22 @@ void Ruler::updateScroll()
         mCurrentMax = mMax;
     }
 
-    //qDebug()<<"Ruler::updateScroll() mCurrentMin"<< mCurrentMin<<" "<<mCurrentMax<<" value"<<mScrollBar->value()<<" maximun"<<mScrollBar->maximum();
     mAxisTool.updateValues(mRulerRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
     
     emit positionChanged(mCurrentMin, mCurrentMax);
     
     update();
     
-    /* original code by HL
-     void Ruler::updateScroll()
-     {
-     if(mZoomProp != 1)
-     {
-     double delta = mZoomProp * (mMax - mMin);
-     double deltaStart = (mMax - mMin) - delta;
-     
-     mCurrentMin = mMin + deltaStart * ((double)mScrollBar->value() / (double)mScrollBar->maximum());
-     mCurrentMax = mCurrentMin + delta;
-     }
-     else
-     {
-     mCurrentMin = mMin;
-     mCurrentMax = mMax;
-     }
-     mAxisTool.updateValues(mRulerRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
-     
-     emit positionChanged(mCurrentMin, mCurrentMax);
-     
-     update();
-     }
-     */
-    
-}
+ }
 
 #pragma mark Layout & Paint
+/**
+ * @brief Set value formatting functions
+ */
+void Ruler::setFormatFunctX(FormatFunc f){
+    mFormatFuncX = f;
+}
+
 void Ruler::layout()
 {
     int w = width();
@@ -291,9 +272,7 @@ void Ruler::paintEvent(QPaintEvent* e)
     
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
-    
-    //painter.fillRect(mRulerRect, Qt::white);
-    
+      
     // ----------------------------------------------
     //  Areas (used to display green, orange, and red areas)
     // ----------------------------------------------
@@ -324,7 +303,6 @@ void Ruler::paintEvent(QPaintEvent* e)
     font.setPointSizeF(pointSize(9.));
     painter.setFont(font);
     
-    //mAxisTool.paint(painter, mRulerRect, mStepMinWidth);
-    mAxisTool.paint(painter, mRulerRect, 10, DateUtils::convertToAppSettingsFormatStr);
+    mAxisTool.paint(painter, mRulerRect, 10, mFormatFuncX);
 }
 
