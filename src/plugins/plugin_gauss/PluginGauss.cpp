@@ -130,8 +130,8 @@ QJsonObject PluginGauss::fromCSV(const QStringList& list)
         
         // TODO : for now, CSV imported data are only of equation type !
         // We need to define a CSV format to allow curve mode.
-        json.insert(DATE_GAUSS_MODE_STR, DATE_GAUSS_MODE_EQ);
-        json.insert(DATE_GAUSS_CURVE_STR, "");
+        json.insert(DATE_GAUSS_MODE_STR, QString(DATE_GAUSS_MODE_EQ));
+        json.insert(DATE_GAUSS_CURVE_STR, QString(""));
     }
     return json;
 }
@@ -359,7 +359,7 @@ PluginSettingsViewAbstract* PluginGauss::getSettingsView()
 QJsonObject PluginGauss::checkValuesCompatibility(const QJsonObject& values){
     QJsonObject result = values;
     if(!values.contains(DATE_GAUSS_MODE_STR)){
-        result.insert(DATE_GAUSS_MODE_STR, DATE_GAUSS_MODE_EQ);
+        result.insert(DATE_GAUSS_MODE_STR, QString(DATE_GAUSS_MODE_EQ));
     }
     return result;
 }
