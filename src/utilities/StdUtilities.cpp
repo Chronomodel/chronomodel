@@ -162,33 +162,21 @@ QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const 
     return equal_areas(mapToModify, targetArea);
 }
 
-QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const double targetArea)
+/*QMap<double, double> equal_areas_old(const QMap<double, double>& mapToModify, const double targetArea)
 {
+    qDebug()<<"StdUtilities equal_areas begin"<<mapToModify.size();
     if(mapToModify.isEmpty())
         return QMap<double, double>();
-        
+ 
     QMapIterator<double, double> iter(mapToModify);
-    
     iter.next();
     double lastT = iter.key();
     double lastV = iter.value();
     double srcArea = 0.f;
-    
-    //qDebug() << "------";
-    
-   /* while(iter.hasNext()) // original code HL
-    {
-        iter.next();
-        double t = iter.key();
-        double v = iter.value() * (t - lastT);
-        qDebug() << t << ", " << v;
-        srcArea += v;
-        lastT = t;
-    } */
     while(iter.hasNext())   {
         iter.next();
         double t = iter.key();
-        double v = iter.value();// * (t - lastT);
+        double v = iter.value();
         if (lastV>0 && v>0) {
             srcArea += (lastV+v)/2 * (t - lastT);
         }
@@ -198,18 +186,55 @@ QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const 
     }
     
     double prop = targetArea / srcArea;
-   /* qDebug() << "Equal_areas prop = " << prop;
-    qDebug() << "targetArea = " << targetArea;
-    qDebug() << "srcArea = " << srcArea;
-    */
     
     QMap<double, double> result;
     QMapIterator<double, double> iter2(mapToModify);
+    iter2.next();
     while(iter2.hasNext())
     {
         iter2.next();
         result[iter2.key()] = iter2.value() * prop;
     }
+    
+    
+    return result;
+}
+ */
+
+QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const double targetArea)
+{
+    if(mapToModify.isEmpty())
+        return QMap<double, double>();
+    
+    QMap<double, double> result(mapToModify);
+    
+    QMap<double, double>::Iterator iter = result.begin();
+    double t = iter.key();
+    double v = iter.value();
+    double lastT = t;
+    double lastV = v;
+    double srcArea = 0.f;
+    // The map was sort with > by insertion
+    while(iter!=result.end() )  {
+        t = iter.key();
+        v = iter.value();
+        if (lastV>0 && v>0) {
+            srcArea += (lastV+v)/2 * (t - lastT);
+        }
+        //qDebug() << t << ", " << v;
+        lastV = v;
+        lastT = t;
+        ++iter;
+    }
+    double prop = targetArea / srcArea;
+    
+    iter = result.begin();
+    while(iter!=result.end() ) {
+        iter.value()= iter.value() * prop;
+        
+        ++iter;
+    }
+    
     return result;
 }
 
