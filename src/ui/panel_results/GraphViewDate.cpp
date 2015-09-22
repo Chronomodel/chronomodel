@@ -7,8 +7,8 @@
 #include "QtUtilities.h"
 #include "ModelUtilities.h"
 #include <QtWidgets>
-#include "PluginAbstract.h"
-#include "GraphViewRefAbstract.h"
+#include "../PluginAbstract.h"
+#include "../GraphViewRefAbstract.h"
 
 
 

@@ -3,7 +3,7 @@
 
 #if USE_PLUGIN_TL
 
-#include "PluginSettingsViewAbstract.h"
+#include "../PluginSettingsViewAbstract.h"
 
 class PluginTL;
 

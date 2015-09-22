@@ -3,8 +3,8 @@
 #include "Button.h"
 #include "ColorPicker.h"
 #include "PluginManager.h"
-#include "PluginAbstract.h"
-#include "PluginSettingsViewAbstract.h"
+#include "../PluginAbstract.h"
+#include "../PluginSettingsViewAbstract.h"
 #include <QtWidgets>
 
 
