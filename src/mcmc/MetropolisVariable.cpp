@@ -8,6 +8,7 @@
 #include <algorithm>
 
 
+
 MetropolisVariable::MetropolisVariable():
 mX(0)
 {

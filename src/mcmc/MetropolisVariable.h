@@ -7,7 +7,7 @@
 #include "MCMCLoop.h"
 #include "Functions.h"
 #include "ProjectSettings.h"
-
+#include <QDataStream>
 
 class MetropolisVariable
 {
