@@ -198,6 +198,10 @@ void CalibrationView::updateGraphs()
             yMax = map_max_value(hpdCurve.mData);
             mCalibGraph->setRangeY(0, qMax(1.1f * yMax, mCalibGraph->maximumY()));
             
+            mCalibGraph->mLegendX = DateUtils::getAppSettingsFormat();
+            mCalibGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
+            mCalibGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
+            
             double realThresh = map_area(hpd) / map_area(calibCurve.mData);
             mResultsLab->setText(mResultsLab->text() % "HPD (" % QString::number(100. * realThresh, 'f', 1) + "%) : " % getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr)); //  % concatenation with QStringBuilder
         }
@@ -211,6 +215,9 @@ void CalibrationView::updateGraphs()
         if(mRefGraphView)
         {
             mRefGraphView->setDate(mDate, mSettings);
+            mRefGraphView->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
+
+            
             mRefGraphView->setParent(this);
             mRefGraphView->setVisible(true);
         }
