@@ -33,6 +33,7 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
     mGraph->showInfos(true);
     mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
     mGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
+    mGraph->setFormatFunctX(mFormatFuncX);
     
     if(!date.isNull())
     {
