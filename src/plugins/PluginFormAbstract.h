@@ -19,12 +19,14 @@ public:
     
     virtual void setData(const QJsonObject& data, bool isCombined) = 0;
     virtual QJsonObject getData() = 0;
-    
+
     virtual bool isValid() = 0;
     
 public:
     PluginAbstract* mPlugin;
     QString mError;
+protected:
+  //  FormatFunc mFormatFuncX;
 };
 
 #endif

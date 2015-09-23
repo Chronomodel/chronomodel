@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include "ProjectSettings.h"
+#include "StdUtilities.h"
 
 class GraphView;
 class Date;
@@ -23,6 +24,10 @@ public:
         Q_UNUSED(date);
         mSettings = settings;
     }
+    void setFormatFunctX(FormatFunc f){
+        mFormatFuncX = f;
+    }
+    
     
 public slots:
     virtual void zoomX(double min, double max)
@@ -34,6 +39,7 @@ public slots:
 protected:
     ProjectSettings mSettings;
     QColor mMeasureColor;
+   FormatFunc mFormatFuncX;
 };
 
 #endif
