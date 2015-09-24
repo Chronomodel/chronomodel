@@ -133,7 +133,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
         }
         else {
             int i = 0;
-            for(double x = xo + mStartPix - mDeltaPix; x <= xo + mStartPix + w + mDeltaPix; x += mDeltaPix)
+            for(double x = xo + mStartPix - mDeltaPix; x <= xo + w ; x += mDeltaPix)
             {
                 if((x >= xo)) {
                     if(mShowSubSubs){
@@ -148,7 +148,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
                     }
                     
                     if (mShowText) {
-                        QString text = (valueFormatFunc ? valueFormatFunc((x-xo)/mPixelsPerUnit + mStartVal) : QString::number(((x-xo)/mPixelsPerUnit + mStartVal),'f',0) );
+                        QString text =(valueFormatFunc!=0 ? valueFormatFunc((x-xo)/mPixelsPerUnit + mStartVal) : QString::number(((x-xo)/mPixelsPerUnit + mStartVal),'f',0) );
                         
                         int textWidth =  fm.width(text) ;
                         qreal tx = x - textWidth/2;
