@@ -1604,1155 +1604,1155 @@
 					);
 			};
 		};
-		9C2C8D578EE744BED57428BD = {
+		C0231854C2F1CA5295F1230A = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/rcc/qrc_Chronomodel.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/rcc/qrc_Chronomodel.cpp";
 			name = "qrc_Chronomodel.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		50E0A6143F4576C52AC33B35 = {
-			fileRef = "9C2C8D578EE744BED57428BD";
+		1E8887CE02F81D8A067BB371 = {
+			fileRef = "C0231854C2F1CA5295F1230A";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		CDAD341AA2CBE7A4B0F85901 = {
+		412AA50BF75DF86B8D4BCE5E = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_MCMCLoop.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_MCMCLoop.cpp";
 			name = "moc_MCMCLoop.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		9F3B98792CAD3B934D29B3BB = {
-			fileRef = "CDAD341AA2CBE7A4B0F85901";
+		1E07212EC4A1ACD7177DF323 = {
+			fileRef = "412AA50BF75DF86B8D4BCE5E";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		5C8EF1B2A94D79AA764EE403 = {
+		E2DD31DFF90EE4A2B0D9F98C = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_MCMCLoopMain.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_MCMCLoopMain.cpp";
 			name = "moc_MCMCLoopMain.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		BE2C6D01BFD9D0F4FF33B8A4 = {
-			fileRef = "5C8EF1B2A94D79AA764EE403";
+		AF5970EC2DC33DF72AB25EFC = {
+			fileRef = "E2DD31DFF90EE4A2B0D9F98C";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		86EFB0953799FA03780A19C7 = {
+		5BA8FCE18074374F667195A7 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_Model.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_Model.cpp";
 			name = "moc_Model.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		BC612BFCDD64729FA5EC8468 = {
-			fileRef = "86EFB0953799FA03780A19C7";
+		E5109F51CE9E45C6167CB715 = {
+			fileRef = "5BA8FCE18074374F667195A7";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		6D71AB0DD769957D5ABD02FA = {
+		70F4142AE0D0A498A0B71379 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PluginAbstract.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PluginAbstract.cpp";
 			name = "moc_PluginAbstract.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		6FB00DF45C11C98786463FFE = {
-			fileRef = "6D71AB0DD769957D5ABD02FA";
+		A5EE2A2E0AAA04D79B92DD34 = {
+			fileRef = "70F4142AE0D0A498A0B71379";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		1FA67B4149AF515A576B1ACC = {
+		0211AEBE9790B03122D05AA9 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PluginFormAbstract.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PluginFormAbstract.cpp";
 			name = "moc_PluginFormAbstract.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		FC69C3098C7FD185ACFDFA3F = {
-			fileRef = "1FA67B4149AF515A576B1ACC";
+		CF5305D45E23F6F107FC9EA2 = {
+			fileRef = "0211AEBE9790B03122D05AA9";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		8228C41B2C07A2164CA2819C = {
+		739730F39D247E3A34B59309 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_GraphViewRefAbstract.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_GraphViewRefAbstract.cpp";
 			name = "moc_GraphViewRefAbstract.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		3C5F259796B5AEA245D9BD7D = {
-			fileRef = "8228C41B2C07A2164CA2819C";
+		2FCB3136BD6BAF403F8705FB = {
+			fileRef = "739730F39D247E3A34B59309";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		7D30DB5FBD022D667B911E0C = {
+		DE0B95CB1858E9E38921F088 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PluginSettingsViewAbstract.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PluginSettingsViewAbstract.cpp";
 			name = "moc_PluginSettingsViewAbstract.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		06A00D60006D8E57A6403756 = {
-			fileRef = "7D30DB5FBD022D667B911E0C";
+		1AF09747DE75989EE2BAAFDF = {
+			fileRef = "DE0B95CB1858E9E38921F088";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		69BB5867E615EA04535AF367 = {
+		C1E23BD5B7863CBAA453FCAC = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PluginTL.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PluginTL.cpp";
 			name = "moc_PluginTL.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		1D759C202D7D6DE0040CC4B5 = {
-			fileRef = "69BB5867E615EA04535AF367";
+		B42D3FCBA79FE30A25DC03FF = {
+			fileRef = "C1E23BD5B7863CBAA453FCAC";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		6D94DF643785FCE2084E8041 = {
+		9EC7166C3E8D8461F5CC2880 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PluginTLForm.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PluginTLForm.cpp";
 			name = "moc_PluginTLForm.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		D40C34DB6030FAACCFD13789 = {
-			fileRef = "6D94DF643785FCE2084E8041";
+		263FB563720BF9F015E945EE = {
+			fileRef = "9EC7166C3E8D8461F5CC2880";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		6FE79BCFB8905CBE07FF5272 = {
+		3F437926ACFBA327F19D0941 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PluginTLRefView.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PluginTLRefView.cpp";
 			name = "moc_PluginTLRefView.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		D4D85F9503AD4011836FF421 = {
-			fileRef = "6FE79BCFB8905CBE07FF5272";
+		CE8FDE4FB489FEDF87D2EF95 = {
+			fileRef = "3F437926ACFBA327F19D0941";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		2BBC3604663146282C15014D = {
+		40424B7F59EBB1C368048212 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PluginTLSettingsView.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PluginTLSettingsView.cpp";
 			name = "moc_PluginTLSettingsView.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		7511EEC3B3F3F8B7CE211301 = {
-			fileRef = "2BBC3604663146282C15014D";
+		D670FC5DBA0305ADB68DB007 = {
+			fileRef = "40424B7F59EBB1C368048212";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		234A3EF2FDC741FDB4A183BA = {
+		07F58EFF4E7940580C61B95F = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_Plugin14C.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_Plugin14C.cpp";
 			name = "moc_Plugin14C.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		355B41270F0E3B8F1424D520 = {
-			fileRef = "234A3EF2FDC741FDB4A183BA";
+		9E7C58F295562106B7032939 = {
+			fileRef = "07F58EFF4E7940580C61B95F";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		9EB3DD2395E913C9384D0C2B = {
+		CA9E4323D03AF47F4B4A4EF6 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_Plugin14CForm.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_Plugin14CForm.cpp";
 			name = "moc_Plugin14CForm.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		32A71171001F89A7954D2279 = {
-			fileRef = "9EB3DD2395E913C9384D0C2B";
+		10FCAB26AD23D3FB02A10866 = {
+			fileRef = "CA9E4323D03AF47F4B4A4EF6";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		E859BABA023EF57B20DAC3A2 = {
+		DB829429E51425DF80CEECA7 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_Plugin14CRefView.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_Plugin14CRefView.cpp";
 			name = "moc_Plugin14CRefView.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		4DE5DA7E88CF51BD68D16D2D = {
-			fileRef = "E859BABA023EF57B20DAC3A2";
+		39AC04F86A1F18BD9638A36E = {
+			fileRef = "DB829429E51425DF80CEECA7";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		9F99E46FB732855F53372726 = {
+		0871FF37F49075A31A6CFB49 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_Plugin14CSettingsView.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_Plugin14CSettingsView.cpp";
 			name = "moc_Plugin14CSettingsView.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		314789DA16415C4319C23E8D = {
-			fileRef = "9F99E46FB732855F53372726";
+		DD7797917C0B7DFEA890CA94 = {
+			fileRef = "0871FF37F49075A31A6CFB49";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		03C7EB7D8AB3514DC8216CF3 = {
+		2D9A677CD5E353E422403396 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PluginGauss.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PluginGauss.cpp";
 			name = "moc_PluginGauss.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		2CE47917D4424FCD1F6EEB7B = {
-			fileRef = "03C7EB7D8AB3514DC8216CF3";
+		295E9D0A57BDE480696907FC = {
+			fileRef = "2D9A677CD5E353E422403396";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		80947DCA419445F4FA364BDF = {
+		06233BCB24FE8E71BAB111AD = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PluginGaussForm.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PluginGaussForm.cpp";
 			name = "moc_PluginGaussForm.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		05F495E3072C5B03B3C892FA = {
-			fileRef = "80947DCA419445F4FA364BDF";
+		92D9D509B81855C854B1162C = {
+			fileRef = "06233BCB24FE8E71BAB111AD";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		9C25D2DB5B0D0CB749E2DA56 = {
+		DD31CB70360696D1D4E0EB08 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PluginGaussRefView.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PluginGaussRefView.cpp";
 			name = "moc_PluginGaussRefView.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		342EE35E1E8643CD5E70B791 = {
-			fileRef = "9C25D2DB5B0D0CB749E2DA56";
+		975C91997D83592D2D066ACB = {
+			fileRef = "DD31CB70360696D1D4E0EB08";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		20009E0027EFE95DE7AB83B8 = {
+		0132B4AF7592AD4F78F3E34A = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PluginGaussSettingsView.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PluginGaussSettingsView.cpp";
 			name = "moc_PluginGaussSettingsView.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		F56295EA321A4719AD4C3B33 = {
-			fileRef = "20009E0027EFE95DE7AB83B8";
+		FCA1E88C8DA0B0BF89E0B2E3 = {
+			fileRef = "0132B4AF7592AD4F78F3E34A";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		D891C9E815FB641C04A9D31B = {
+		FDAEA4D8993C6EC2ED9F950A = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PluginMag.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PluginMag.cpp";
 			name = "moc_PluginMag.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		4011FBB34F2A4C817580550C = {
-			fileRef = "D891C9E815FB641C04A9D31B";
+		388BAA3C6AE0DFA9EC106987 = {
+			fileRef = "FDAEA4D8993C6EC2ED9F950A";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		DC187BC6124A327230C2C238 = {
+		6A7B0BCEEBD14733040326A2 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PluginMagForm.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PluginMagForm.cpp";
 			name = "moc_PluginMagForm.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		B700031E109CD33D2E26B8D2 = {
-			fileRef = "DC187BC6124A327230C2C238";
+		A17AC5B9D56BB27C90352B25 = {
+			fileRef = "6A7B0BCEEBD14733040326A2";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		522EA1F946C0A06DE2887ED3 = {
+		08F3D80A36BFC7D1C9B7683C = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PluginMagRefView.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PluginMagRefView.cpp";
 			name = "moc_PluginMagRefView.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		1D365AEDB9C2EC67EB81A37D = {
-			fileRef = "522EA1F946C0A06DE2887ED3";
+		7B4239C6356B83BF2D4C201F = {
+			fileRef = "08F3D80A36BFC7D1C9B7683C";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		7C35AF480E5B48635673EA73 = {
+		A81DDBB24845700ABAF1608C = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PluginMagSettingsView.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PluginMagSettingsView.cpp";
 			name = "moc_PluginMagSettingsView.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		3FC9C74E926FD4C0DE34EDB6 = {
-			fileRef = "7C35AF480E5B48635673EA73";
+		889101B2149B812B8837048F = {
+			fileRef = "A81DDBB24845700ABAF1608C";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		D9BED8EE710DA9305A3899F0 = {
+		BE8FBEFEEEA6F4C1623F3F74 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PluginUniform.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PluginUniform.cpp";
 			name = "moc_PluginUniform.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		2F9560DC5A265AEF9087FE99 = {
-			fileRef = "D9BED8EE710DA9305A3899F0";
+		4A689AC775CB4B6ED595BC9B = {
+			fileRef = "BE8FBEFEEEA6F4C1623F3F74";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		934143F84DD72522FA29FEF9 = {
+		36581305CA4599370E31059B = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PluginUniformForm.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PluginUniformForm.cpp";
 			name = "moc_PluginUniformForm.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		3611D6EEC983E28FEAC43C3E = {
-			fileRef = "934143F84DD72522FA29FEF9";
+		EF61208B0C2F673947211202 = {
+			fileRef = "36581305CA4599370E31059B";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		55969421A105CD35C9B1C7E1 = {
+		1C37A52FED720B23332E40BB = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_Project.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_Project.cpp";
 			name = "moc_Project.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		F270526766FB9FE2041A6564 = {
-			fileRef = "55969421A105CD35C9B1C7E1";
+		3A5E40D933EBAB2F96892361 = {
+			fileRef = "1C37A52FED720B23332E40BB";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		7C27ACEB6774ED4068671BAB = {
+		2C62819A74E23E663D06F33B = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_ProjectSettingsDialog.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_ProjectSettingsDialog.cpp";
 			name = "moc_ProjectSettingsDialog.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		01A3EF09E6B13F8A57C05B80 = {
-			fileRef = "7C27ACEB6774ED4068671BAB";
+		12AC7BE88AFAB0D19DC783B8 = {
+			fileRef = "2C62819A74E23E663D06F33B";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		337C33A951B57E1200EC4756 = {
+		4B0134589E2ED0880E83F5E5 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_AboutDialog.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_AboutDialog.cpp";
 			name = "moc_AboutDialog.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		15301120DBEC3C75E8F84040 = {
-			fileRef = "337C33A951B57E1200EC4756";
+		EAA757A83BBB395BFB1AC62D = {
+			fileRef = "4B0134589E2ED0880E83F5E5";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		08766108D5C758B9A8ED484A = {
+		4D4817DB4A9B5E4F948B415A = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_MCMCProgressDialog.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_MCMCProgressDialog.cpp";
 			name = "moc_MCMCProgressDialog.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		4BC2507DB1B72C338B00EF9C = {
-			fileRef = "08766108D5C758B9A8ED484A";
+		BF4E9F6AFC8316A8F4E88B7E = {
+			fileRef = "4D4817DB4A9B5E4F948B415A";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		B669DB8EE7A43FAFCF1F49AF = {
+		ACB041CE4F5F2B236F7F9CC3 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_MCMCSettingsDialog.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_MCMCSettingsDialog.cpp";
 			name = "moc_MCMCSettingsDialog.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		0243793BCD7BB6D3BB7B8F3A = {
-			fileRef = "B669DB8EE7A43FAFCF1F49AF";
+		5C35AAB6620601CFA586CAF8 = {
+			fileRef = "ACB041CE4F5F2B236F7F9CC3";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		C4F8738BE62AE2C1D3347959 = {
+		A81E9A8158040E0CB3040F04 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_AppSettingsDialog.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_AppSettingsDialog.cpp";
 			name = "moc_AppSettingsDialog.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		A3CDD5F6DBAAD6A1419B1FC4 = {
-			fileRef = "C4F8738BE62AE2C1D3347959";
+		C2EEBDCFB27D88499B8B7999 = {
+			fileRef = "A81E9A8158040E0CB3040F04";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		2DD53CE760AE80A3BC745820 = {
+		4EE26790C8D2DB42C0C347C7 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_EventDialog.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_EventDialog.cpp";
 			name = "moc_EventDialog.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		F5DC7DF677B2E5A83B9C2E6F = {
-			fileRef = "2DD53CE760AE80A3BC745820";
+		EE88AD435CB130F3D5F7DB03 = {
+			fileRef = "4EE26790C8D2DB42C0C347C7";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		23246C6A83E274417B3FBCC3 = {
+		F8C035461699ADADBEC5F4DE = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_ConstraintDialog.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_ConstraintDialog.cpp";
 			name = "moc_ConstraintDialog.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		69B1D863E0EE9D2C33EE4F36 = {
-			fileRef = "23246C6A83E274417B3FBCC3";
+		F2090A173E9910EA0FD2A8E4 = {
+			fileRef = "F8C035461699ADADBEC5F4DE";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		052B79488A6001C4E58691DA = {
+		38BB96FB372D345CC2A1D528 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PhaseDialog.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PhaseDialog.cpp";
 			name = "moc_PhaseDialog.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		D3B1FC73C5E91D8CF91CD83A = {
-			fileRef = "052B79488A6001C4E58691DA";
+		D4B3DAD0EA21EA533A4C3AFE = {
+			fileRef = "38BB96FB372D345CC2A1D528";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		14F58EAD752ADA4E550A6CA4 = {
+		FAA5EA203F28C4917AFF82E9 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_DateDialog.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_DateDialog.cpp";
 			name = "moc_DateDialog.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		F8747AB98A28F960EAAEE38F = {
-			fileRef = "14F58EAD752ADA4E550A6CA4";
+		8B0D7CC0605E70F643C60A6D = {
+			fileRef = "FAA5EA203F28C4917AFF82E9";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		0E33AE3B8D14BFABC2A41123 = {
+		ADA1405ED2AB265E9EC49DCB = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_TrashDialog.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_TrashDialog.cpp";
 			name = "moc_TrashDialog.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		5FB8598D22B5A8F304F95D8E = {
-			fileRef = "0E33AE3B8D14BFABC2A41123";
+		7C7F43E6203F179AC3B8BD48 = {
+			fileRef = "ADA1405ED2AB265E9EC49DCB";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		CFAFEDD587BE3A9B1EF9E540 = {
+		48CF5C4840A3F401B84148EC = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_StepDialog.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_StepDialog.cpp";
 			name = "moc_StepDialog.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		4ACB1FCF3718ED4DCC50B3C9 = {
-			fileRef = "CFAFEDD587BE3A9B1EF9E540";
+		FAE3A286A95AFF241F62EAF7 = {
+			fileRef = "48CF5C4840A3F401B84148EC";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		AE61A4D217397D8B97FC02BA = {
+		36ED9BE318F162D08E46E53C = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PluginOptionsDialog.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PluginOptionsDialog.cpp";
 			name = "moc_PluginOptionsDialog.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		DDE167F8C59B0086298EE7B5 = {
-			fileRef = "AE61A4D217397D8B97FC02BA";
+		76250DED6078E59CDCC06AC8 = {
+			fileRef = "36ED9BE318F162D08E46E53C";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		4ECD20F9D7D9DB4EAA04B0E8 = {
+		F6621E49202605D2E34163D7 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PluginsSettingsDialog.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PluginsSettingsDialog.cpp";
 			name = "moc_PluginsSettingsDialog.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		BEB619D724CFD03066CCC8C7 = {
-			fileRef = "4ECD20F9D7D9DB4EAA04B0E8";
+		68EA428E8735293A547824E3 = {
+			fileRef = "F6621E49202605D2E34163D7";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		75A6DB0771E353F80FE6D9D9 = {
+		3B1EEAAF1F45BE65640FDD1B = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_GraphView.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_GraphView.cpp";
 			name = "moc_GraphView.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		B87AB47B4A56C8AE188DDCFF = {
-			fileRef = "75A6DB0771E353F80FE6D9D9";
+		DA0F9805F5BFC65AF0605F3A = {
+			fileRef = "3B1EEAAF1F45BE65640FDD1B";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		9BEC60EF550CCADFFAE47F0E = {
+		EC1B75868D4BBC5D13BB4D00 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_Ruler.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_Ruler.cpp";
 			name = "moc_Ruler.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		15FE8AA246D906D3ABC20FD0 = {
-			fileRef = "9BEC60EF550CCADFFAE47F0E";
+		EDF14FF4F02E9C7B4036710C = {
+			fileRef = "EC1B75868D4BBC5D13BB4D00";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		C87D4D448FD7533B022DDAFC = {
+		C096AEBD137C583CF974DE75 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_DarkBlueStyle.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_DarkBlueStyle.cpp";
 			name = "moc_DarkBlueStyle.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		3EC5B8E010CF59124EF2B177 = {
-			fileRef = "C87D4D448FD7533B022DDAFC";
+		554A21D2479CD3789D7F37A2 = {
+			fileRef = "C096AEBD137C583CF974DE75";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		69D50A0A5CACEBACCBD1D49F = {
+		5BFC8989515BB588708BBBCE = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_ModelView.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_ModelView.cpp";
 			name = "moc_ModelView.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		C1F94726FBB5D0D56DCB71F8 = {
-			fileRef = "69D50A0A5CACEBACCBD1D49F";
+		00BF62FB026C27A9FE5E83CF = {
+			fileRef = "5BFC8989515BB588708BBBCE";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		4FAEE0C4DEB5031836289020 = {
+		FE2BFC48C3BBA7B89D9E04E4 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_ImportDataView.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_ImportDataView.cpp";
 			name = "moc_ImportDataView.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		3A8A9E0721847F719361B7AB = {
-			fileRef = "4FAEE0C4DEB5031836289020";
+		D101C39443483BE975AC0E68 = {
+			fileRef = "FE2BFC48C3BBA7B89D9E04E4";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		F4447E8FCA343BCCBE850AC1 = {
+		6071EA58B7EF406D84D7938F = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_EventPropertiesView.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_EventPropertiesView.cpp";
 			name = "moc_EventPropertiesView.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		DC231F56BAAC3220692F324B = {
-			fileRef = "F4447E8FCA343BCCBE850AC1";
+		C2764CCB4371DD4D08B56791 = {
+			fileRef = "6071EA58B7EF406D84D7938F";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		C7B570E590DFDFF97F924DD6 = {
+		5DE2EA5EB69F07C91BAC211F = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_SceneGlobalView.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_SceneGlobalView.cpp";
 			name = "moc_SceneGlobalView.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		CFD42F7AAB449EF539FBC5F6 = {
-			fileRef = "C7B570E590DFDFF97F924DD6";
+		2C5AA9C693A702F7B525C43C = {
+			fileRef = "5DE2EA5EB69F07C91BAC211F";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		096DBB9247AE8BBE9F7B520B = {
+		6DF91CE42332CF4BA7E4DAB5 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_EventsListItemDelegate.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_EventsListItemDelegate.cpp";
 			name = "moc_EventsListItemDelegate.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		2CA2BEB782F9A5CBFA1FF925 = {
-			fileRef = "096DBB9247AE8BBE9F7B520B";
+		D42C6CB67B7DA6623163EE43 = {
+			fileRef = "6DF91CE42332CF4BA7E4DAB5";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		CEAC68AFCCC1F246B73FC34D = {
+		62DF23093013A65D48EAF4B6 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_DatesList.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_DatesList.cpp";
 			name = "moc_DatesList.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		B872071DDD4BE9DA84CBF5A5 = {
-			fileRef = "CEAC68AFCCC1F246B73FC34D";
+		9C8B0B7C04B5BF933827B7CC = {
+			fileRef = "62DF23093013A65D48EAF4B6";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		0B1D2907A308CBF99733ECF2 = {
+		6845927FA433ED9E9778641C = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_DatesListItemDelegate.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_DatesListItemDelegate.cpp";
 			name = "moc_DatesListItemDelegate.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		B5D813F7BF73A1D96E7689A6 = {
-			fileRef = "0B1D2907A308CBF99733ECF2";
+		567D08DB31703012F914FE3F = {
+			fileRef = "6845927FA433ED9E9778641C";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		003C5070C74949BCB86B16C0 = {
+		AB58CA3E5ABF6285F8042046 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_CalibrationView.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_CalibrationView.cpp";
 			name = "moc_CalibrationView.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		BD16E4308CE33F69985F7F4D = {
-			fileRef = "003C5070C74949BCB86B16C0";
+		D90D0D11E892285F1CBE10E8 = {
+			fileRef = "AB58CA3E5ABF6285F8042046";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		08D73538704DB7D42E8B8407 = {
+		EBDE65EB8379E0F9DAC3328D = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_AbstractScene.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_AbstractScene.cpp";
 			name = "moc_AbstractScene.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		CA77CC2B0443477E700ED934 = {
-			fileRef = "08D73538704DB7D42E8B8407";
+		12ACBF00F7DF69C5AA37E85A = {
+			fileRef = "EBDE65EB8379E0F9DAC3328D";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		F95C2560881A97A032413A9D = {
+		2CEE659304F83BC50727801A = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_EventsScene.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_EventsScene.cpp";
 			name = "moc_EventsScene.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		3EBF19348E1AC6B3FC405ADA = {
-			fileRef = "F95C2560881A97A032413A9D";
+		02530E5BFFEEF84028ADD8C6 = {
+			fileRef = "2CEE659304F83BC50727801A";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		F1AD8FBA87C5AB7ADD29960E = {
+		F7FDB7870206428DF3A84DA9 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PhasesScene.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PhasesScene.cpp";
 			name = "moc_PhasesScene.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		E9789473DC10F0B071AA14BA = {
-			fileRef = "F1AD8FBA87C5AB7ADD29960E";
+		AD1C19AC133F19DA2A73EF72 = {
+			fileRef = "F7FDB7870206428DF3A84DA9";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		DAE02BFF687D8E06CD4E5868 = {
+		44FC81C1132C5200D17384BF = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_DateItem.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_DateItem.cpp";
 			name = "moc_DateItem.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		05E4C73A0B9631978100966A = {
-			fileRef = "DAE02BFF687D8E06CD4E5868";
+		8831018B8292854152E7A288 = {
+			fileRef = "44FC81C1132C5200D17384BF";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		E8D30EE46D4B59EA088FC613 = {
+		1659EF1C6AE7C198BA07BBAC = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_PhaseItem.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_PhaseItem.cpp";
 			name = "moc_PhaseItem.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		113DA58293973A669CECC94A = {
-			fileRef = "E8D30EE46D4B59EA088FC613";
+		29E9B33CE74144A4FCB98292 = {
+			fileRef = "1659EF1C6AE7C198BA07BBAC";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		5AE21D5C0C9C37234C85DB59 = {
+		533ABF60425CD4ADB66DCBB1 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_ResultsView.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_ResultsView.cpp";
 			name = "moc_ResultsView.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		574EB9E5052BDF8BA6C99060 = {
-			fileRef = "5AE21D5C0C9C37234C85DB59";
+		0C8E6606E5E7233F47851D67 = {
+			fileRef = "533ABF60425CD4ADB66DCBB1";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		7354217822E7BA4559FC2895 = {
+		4B5CFF4D945DBE7FE1BFC2CA = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_GraphViewResults.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_GraphViewResults.cpp";
 			name = "moc_GraphViewResults.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		E36546555AC53F4064F768C9 = {
-			fileRef = "7354217822E7BA4559FC2895";
+		7DF769F610CB9F994919F85A = {
+			fileRef = "4B5CFF4D945DBE7FE1BFC2CA";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		2624BA38E7DEE14DCF89814C = {
+		01B798EE0565594EAEDDD0B4 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_GraphViewDate.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_GraphViewDate.cpp";
 			name = "moc_GraphViewDate.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		EE9F275B27A87C6514C16F23 = {
-			fileRef = "2624BA38E7DEE14DCF89814C";
+		5EC7D8218C4AACA34F5C53F5 = {
+			fileRef = "01B798EE0565594EAEDDD0B4";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		5E12596F4929AF5903D41ADF = {
+		4F3A3B979A7A63FF954AC165 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_GraphViewEvent.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_GraphViewEvent.cpp";
 			name = "moc_GraphViewEvent.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		C17000730FE8C14C9AD455FE = {
-			fileRef = "5E12596F4929AF5903D41ADF";
+		9C5F0D77AC49D588FCF86C86 = {
+			fileRef = "4F3A3B979A7A63FF954AC165";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		4E30F04F6069AB12509413B2 = {
+		FB8A6CCDF34BFC34579EC7B0 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_GraphViewPhase.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_GraphViewPhase.cpp";
 			name = "moc_GraphViewPhase.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		1FDF185ACEB7998EDD3D9F10 = {
-			fileRef = "4E30F04F6069AB12509413B2";
+		1EA6EBF1A500EC0D101B6AD2 = {
+			fileRef = "FB8A6CCDF34BFC34579EC7B0";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		E1331C64BDB73F39C67E28FE = {
+		973D52E24FB231E688B149F7 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_MCMCView.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_MCMCView.cpp";
 			name = "moc_MCMCView.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		0E4B395A74B71F86B5A0D1F3 = {
-			fileRef = "E1331C64BDB73F39C67E28FE";
+		7F501BF43840947C38C21561 = {
+			fileRef = "973D52E24FB231E688B149F7";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		33BBC60857385212B0D01874 = {
+		8E62AC93C72D2B3F97108AF4 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_ColorPicker.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_ColorPicker.cpp";
 			name = "moc_ColorPicker.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		5D0B85516E98F71BAE95B3B3 = {
-			fileRef = "33BBC60857385212B0D01874";
+		40126D2DF2C10C5EE1DD8B63 = {
+			fileRef = "8E62AC93C72D2B3F97108AF4";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		D4A068D32B36EB9A7446557B = {
+		3B8D955171E38FC160D12F39 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_ZoomControls.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_ZoomControls.cpp";
 			name = "moc_ZoomControls.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		C224ECCE812F51F760DE0949 = {
-			fileRef = "D4A068D32B36EB9A7446557B";
+		F4129378D338F14405FC607D = {
+			fileRef = "3B8D955171E38FC160D12F39";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		1A66061506376235A53AAB26 = {
+		53D31DDB8E8A1B3EE8DF05EC = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_Collapsible.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_Collapsible.cpp";
 			name = "moc_Collapsible.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		6BD5A7AA61EDE37F8D3382BC = {
-			fileRef = "1A66061506376235A53AAB26";
+		ED2D6015039C2E3017381EFB = {
+			fileRef = "53D31DDB8E8A1B3EE8DF05EC";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		DFC74DC4DEDA597D6D26032E = {
+		E51B9C978552C471E627ECCB = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_ScrollCompressor.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_ScrollCompressor.cpp";
 			name = "moc_ScrollCompressor.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		15619029D19A72C14ED854DF = {
-			fileRef = "DFC74DC4DEDA597D6D26032E";
+		B20D75769511417CD5D940A3 = {
+			fileRef = "E51B9C978552C471E627ECCB";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		56480D2DF368EFBD8153543E = {
+		7A5C86369140179C0832DBB9 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_Button.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_Button.cpp";
 			name = "moc_Button.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		AA9461B4D3B189472EA200FD = {
-			fileRef = "56480D2DF368EFBD8153543E";
+		75E4FDBA36F4C6CD9A18F879 = {
+			fileRef = "7A5C86369140179C0832DBB9";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		F053DFEFAA26695155FC3710 = {
+		0FAC388158A677644E5E2B80 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_CheckBox.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_CheckBox.cpp";
 			name = "moc_CheckBox.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		E56A334B8F4BD83714C1D9DA = {
-			fileRef = "F053DFEFAA26695155FC3710";
+		C1749EF611038ABBFEBA4C3B = {
+			fileRef = "0FAC388158A677644E5E2B80";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		8FC51B4D12E78147A9A198BF = {
+		7560F1DD9359912F205097C1 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_RadioButton.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_RadioButton.cpp";
 			name = "moc_RadioButton.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		9A097FAD31115106A259B032 = {
-			fileRef = "8FC51B4D12E78147A9A198BF";
+		FEC58910655186D3C34D795C = {
+			fileRef = "7560F1DD9359912F205097C1";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		B139D3133FDA00A23832B1C3 = {
+		EF09E1705D89D4E403D87B33 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_Label.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_Label.cpp";
 			name = "moc_Label.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		AA35211444223625F0AF917D = {
-			fileRef = "B139D3133FDA00A23832B1C3";
+		1F72A4753688D1CE12F0B3ED = {
+			fileRef = "EF09E1705D89D4E403D87B33";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		DDA604B48DC2C9CBCC27093C = {
+		24D5A7BE26D1E5A020087929 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_LineEdit.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_LineEdit.cpp";
 			name = "moc_LineEdit.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		BC2F85549AFD3C298A3AC59F = {
-			fileRef = "DDA604B48DC2C9CBCC27093C";
+		DAA442857B4B5B3BF6FF7AD4 = {
+			fileRef = "24D5A7BE26D1E5A020087929";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		369317071247BE8A2897813C = {
+		E81AEFE64ABEB141DF103B50 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_GroupBox.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_GroupBox.cpp";
 			name = "moc_GroupBox.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		F506975ECAC0A4384093E658 = {
-			fileRef = "369317071247BE8A2897813C";
+		C6504615B02A5D098791E98B = {
+			fileRef = "E81AEFE64ABEB141DF103B50";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		095ADC97CA8996158F203A75 = {
+		12FEB72E45BB098851415DDD = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_HelpWidget.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_HelpWidget.cpp";
 			name = "moc_HelpWidget.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		9C556EBE9C5676368AFF5C43 = {
-			fileRef = "095ADC97CA8996158F203A75";
+		D7681BE710880FC1A51B7A4B = {
+			fileRef = "12FEB72E45BB098851415DDD";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		D704E9E8E75C86FA6988739A = {
+		4B29AC98B5D212D5738EA0F7 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_Tabs.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_Tabs.cpp";
 			name = "moc_Tabs.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		7FFF7EE1ECCBA9E8BEFCD480 = {
-			fileRef = "D704E9E8E75C86FA6988739A";
+		8A63FF01F28BE2F6464CCDA5 = {
+			fileRef = "4B29AC98B5D212D5738EA0F7";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		EB983FFAE1034925FCB661DB = {
+		01012AECB366F1E398B52193 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_Marker.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_Marker.cpp";
 			name = "moc_Marker.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		04D00A326CED735A2D2ECFA4 = {
-			fileRef = "EB983FFAE1034925FCB661DB";
+		E1329ACF5D34B94CB7C515E8 = {
+			fileRef = "01012AECB366F1E398B52193";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		E2AF2A835F19B19A6051E66D = {
+		5461C1AD0BE94F5B75E32084 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_MainWindow.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_MainWindow.cpp";
 			name = "moc_MainWindow.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		FED36FC0D113EB688D12C859 = {
-			fileRef = "E2AF2A835F19B19A6051E66D";
+		67C56E0824A100ADB0CB558C = {
+			fileRef = "5461C1AD0BE94F5B75E32084";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					);
 			};
 		};
-		8D185E2AA4B142AFEF46718A = {
+		3EEDA8B9E3ED74C1179A2C72 = {
 			isa = PBXFileReference;
-			path = "/Users/dufresne/ChronoModel-SoftWare/build/release/moc/moc_ProjectView.cpp";
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_ProjectView.cpp";
 			name = "moc_ProjectView.cpp";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
-		F7BC5849652E48E0ED3C0F6B = {
-			fileRef = "8D185E2AA4B142AFEF46718A";
+		CB4BF169BBA4E0CFB9EEF034 = {
+			fileRef = "3EEDA8B9E3ED74C1179A2C72";
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
@@ -4369,104 +4369,104 @@
 		C5C31264768DCC05446CDDCF = {
 			isa = PBXGroup;
 			children = (
-				"7EDAA542C0DA8AF43BB8F4E0");
+				"23062349A80594D4E6EF6F4A");
 			name = "build";
 			sourceTree = "<Group>";
 		};
-		7EDAA542C0DA8AF43BB8F4E0 = {
+		23062349A80594D4E6EF6F4A = {
 			isa = PBXGroup;
 			children = (
-				"B20C8DE18705EE90FFD41BDB",
-				"72A1D157FD96123884404A6F");
-			name = "release";
+				"1B7A77BA53CE1DBA6FC907A2",
+				"0CE6343DB80AD21A3AD84681");
+			name = "debug";
 			sourceTree = "<Group>";
 		};
-		72A1D157FD96123884404A6F = {
+		0CE6343DB80AD21A3AD84681 = {
 			isa = PBXGroup;
 			children = (
-				"CDAD341AA2CBE7A4B0F85901",
-				"5C8EF1B2A94D79AA764EE403",
-				"86EFB0953799FA03780A19C7",
-				"6D71AB0DD769957D5ABD02FA",
-				"1FA67B4149AF515A576B1ACC",
-				"8228C41B2C07A2164CA2819C",
-				"7D30DB5FBD022D667B911E0C",
-				"69BB5867E615EA04535AF367",
-				"6D94DF643785FCE2084E8041",
-				"6FE79BCFB8905CBE07FF5272",
-				"2BBC3604663146282C15014D",
-				"234A3EF2FDC741FDB4A183BA",
-				"9EB3DD2395E913C9384D0C2B",
-				"E859BABA023EF57B20DAC3A2",
-				"9F99E46FB732855F53372726",
-				"03C7EB7D8AB3514DC8216CF3",
-				"80947DCA419445F4FA364BDF",
-				"9C25D2DB5B0D0CB749E2DA56",
-				"20009E0027EFE95DE7AB83B8",
-				"D891C9E815FB641C04A9D31B",
-				"DC187BC6124A327230C2C238",
-				"522EA1F946C0A06DE2887ED3",
-				"7C35AF480E5B48635673EA73",
-				"D9BED8EE710DA9305A3899F0",
-				"934143F84DD72522FA29FEF9",
-				"55969421A105CD35C9B1C7E1",
-				"7C27ACEB6774ED4068671BAB",
-				"337C33A951B57E1200EC4756",
-				"08766108D5C758B9A8ED484A",
-				"B669DB8EE7A43FAFCF1F49AF",
-				"C4F8738BE62AE2C1D3347959",
-				"2DD53CE760AE80A3BC745820",
-				"23246C6A83E274417B3FBCC3",
-				"052B79488A6001C4E58691DA",
-				"14F58EAD752ADA4E550A6CA4",
-				"0E33AE3B8D14BFABC2A41123",
-				"CFAFEDD587BE3A9B1EF9E540",
-				"AE61A4D217397D8B97FC02BA",
-				"4ECD20F9D7D9DB4EAA04B0E8",
-				"75A6DB0771E353F80FE6D9D9",
-				"9BEC60EF550CCADFFAE47F0E",
-				"C87D4D448FD7533B022DDAFC",
-				"69D50A0A5CACEBACCBD1D49F",
-				"4FAEE0C4DEB5031836289020",
-				"F4447E8FCA343BCCBE850AC1",
-				"C7B570E590DFDFF97F924DD6",
-				"096DBB9247AE8BBE9F7B520B",
-				"CEAC68AFCCC1F246B73FC34D",
-				"0B1D2907A308CBF99733ECF2",
-				"003C5070C74949BCB86B16C0",
-				"08D73538704DB7D42E8B8407",
-				"F95C2560881A97A032413A9D",
-				"F1AD8FBA87C5AB7ADD29960E",
-				"DAE02BFF687D8E06CD4E5868",
-				"E8D30EE46D4B59EA088FC613",
-				"5AE21D5C0C9C37234C85DB59",
-				"7354217822E7BA4559FC2895",
-				"2624BA38E7DEE14DCF89814C",
-				"5E12596F4929AF5903D41ADF",
-				"4E30F04F6069AB12509413B2",
-				"E1331C64BDB73F39C67E28FE",
-				"33BBC60857385212B0D01874",
-				"D4A068D32B36EB9A7446557B",
-				"1A66061506376235A53AAB26",
-				"DFC74DC4DEDA597D6D26032E",
-				"56480D2DF368EFBD8153543E",
-				"F053DFEFAA26695155FC3710",
-				"8FC51B4D12E78147A9A198BF",
-				"B139D3133FDA00A23832B1C3",
-				"DDA604B48DC2C9CBCC27093C",
-				"369317071247BE8A2897813C",
-				"095ADC97CA8996158F203A75",
-				"D704E9E8E75C86FA6988739A",
-				"EB983FFAE1034925FCB661DB",
-				"E2AF2A835F19B19A6051E66D",
-				"8D185E2AA4B142AFEF46718A");
+				"412AA50BF75DF86B8D4BCE5E",
+				"E2DD31DFF90EE4A2B0D9F98C",
+				"5BA8FCE18074374F667195A7",
+				"70F4142AE0D0A498A0B71379",
+				"0211AEBE9790B03122D05AA9",
+				"739730F39D247E3A34B59309",
+				"DE0B95CB1858E9E38921F088",
+				"C1E23BD5B7863CBAA453FCAC",
+				"9EC7166C3E8D8461F5CC2880",
+				"3F437926ACFBA327F19D0941",
+				"40424B7F59EBB1C368048212",
+				"07F58EFF4E7940580C61B95F",
+				"CA9E4323D03AF47F4B4A4EF6",
+				"DB829429E51425DF80CEECA7",
+				"0871FF37F49075A31A6CFB49",
+				"2D9A677CD5E353E422403396",
+				"06233BCB24FE8E71BAB111AD",
+				"DD31CB70360696D1D4E0EB08",
+				"0132B4AF7592AD4F78F3E34A",
+				"FDAEA4D8993C6EC2ED9F950A",
+				"6A7B0BCEEBD14733040326A2",
+				"08F3D80A36BFC7D1C9B7683C",
+				"A81DDBB24845700ABAF1608C",
+				"BE8FBEFEEEA6F4C1623F3F74",
+				"36581305CA4599370E31059B",
+				"1C37A52FED720B23332E40BB",
+				"2C62819A74E23E663D06F33B",
+				"4B0134589E2ED0880E83F5E5",
+				"4D4817DB4A9B5E4F948B415A",
+				"ACB041CE4F5F2B236F7F9CC3",
+				"A81E9A8158040E0CB3040F04",
+				"4EE26790C8D2DB42C0C347C7",
+				"F8C035461699ADADBEC5F4DE",
+				"38BB96FB372D345CC2A1D528",
+				"FAA5EA203F28C4917AFF82E9",
+				"ADA1405ED2AB265E9EC49DCB",
+				"48CF5C4840A3F401B84148EC",
+				"36ED9BE318F162D08E46E53C",
+				"F6621E49202605D2E34163D7",
+				"3B1EEAAF1F45BE65640FDD1B",
+				"EC1B75868D4BBC5D13BB4D00",
+				"C096AEBD137C583CF974DE75",
+				"5BFC8989515BB588708BBBCE",
+				"FE2BFC48C3BBA7B89D9E04E4",
+				"6071EA58B7EF406D84D7938F",
+				"5DE2EA5EB69F07C91BAC211F",
+				"6DF91CE42332CF4BA7E4DAB5",
+				"62DF23093013A65D48EAF4B6",
+				"6845927FA433ED9E9778641C",
+				"AB58CA3E5ABF6285F8042046",
+				"EBDE65EB8379E0F9DAC3328D",
+				"2CEE659304F83BC50727801A",
+				"F7FDB7870206428DF3A84DA9",
+				"44FC81C1132C5200D17384BF",
+				"1659EF1C6AE7C198BA07BBAC",
+				"533ABF60425CD4ADB66DCBB1",
+				"4B5CFF4D945DBE7FE1BFC2CA",
+				"01B798EE0565594EAEDDD0B4",
+				"4F3A3B979A7A63FF954AC165",
+				"FB8A6CCDF34BFC34579EC7B0",
+				"973D52E24FB231E688B149F7",
+				"8E62AC93C72D2B3F97108AF4",
+				"3B8D955171E38FC160D12F39",
+				"53D31DDB8E8A1B3EE8DF05EC",
+				"E51B9C978552C471E627ECCB",
+				"7A5C86369140179C0832DBB9",
+				"0FAC388158A677644E5E2B80",
+				"7560F1DD9359912F205097C1",
+				"EF09E1705D89D4E403D87B33",
+				"24D5A7BE26D1E5A020087929",
+				"E81AEFE64ABEB141DF103B50",
+				"12FEB72E45BB098851415DDD",
+				"4B29AC98B5D212D5738EA0F7",
+				"01012AECB366F1E398B52193",
+				"5461C1AD0BE94F5B75E32084",
+				"3EEDA8B9E3ED74C1179A2C72");
 			name = "moc";
 			sourceTree = "<Group>";
 		};
-		B20C8DE18705EE90FFD41BDB = {
+		1B7A77BA53CE1DBA6FC907A2 = {
 			isa = PBXGroup;
 			children = (
-				"9C2C8D578EE744BED57428BD");
+				"C0231854C2F1CA5295F1230A");
 			name = "rcc";
 			sourceTree = "<Group>";
 		};
@@ -5119,152 +5119,152 @@
 				"6204A90492D13A264FC168A4",
 				"5597D5FE79008BCD487452A4",
 				"5E5B9A089646056BAE8FAF3E",
-				"50E0A6143F4576C52AC33B35",
-				"9F3B98792CAD3B934D29B3BB",
-				"BE2C6D01BFD9D0F4FF33B8A4",
-				"BC612BFCDD64729FA5EC8468",
-				"6FB00DF45C11C98786463FFE",
-				"FC69C3098C7FD185ACFDFA3F",
-				"3C5F259796B5AEA245D9BD7D",
-				"06A00D60006D8E57A6403756",
-				"1D759C202D7D6DE0040CC4B5",
-				"D40C34DB6030FAACCFD13789",
-				"D4D85F9503AD4011836FF421",
-				"7511EEC3B3F3F8B7CE211301",
-				"355B41270F0E3B8F1424D520",
-				"32A71171001F89A7954D2279",
-				"4DE5DA7E88CF51BD68D16D2D",
-				"314789DA16415C4319C23E8D",
-				"2CE47917D4424FCD1F6EEB7B",
-				"05F495E3072C5B03B3C892FA",
-				"342EE35E1E8643CD5E70B791",
-				"F56295EA321A4719AD4C3B33",
-				"4011FBB34F2A4C817580550C",
-				"B700031E109CD33D2E26B8D2",
-				"1D365AEDB9C2EC67EB81A37D",
-				"3FC9C74E926FD4C0DE34EDB6",
-				"2F9560DC5A265AEF9087FE99",
-				"3611D6EEC983E28FEAC43C3E",
-				"F270526766FB9FE2041A6564",
-				"01A3EF09E6B13F8A57C05B80",
-				"15301120DBEC3C75E8F84040",
-				"4BC2507DB1B72C338B00EF9C",
-				"0243793BCD7BB6D3BB7B8F3A",
-				"A3CDD5F6DBAAD6A1419B1FC4",
-				"F5DC7DF677B2E5A83B9C2E6F",
-				"69B1D863E0EE9D2C33EE4F36",
-				"D3B1FC73C5E91D8CF91CD83A",
-				"F8747AB98A28F960EAAEE38F",
-				"5FB8598D22B5A8F304F95D8E",
-				"4ACB1FCF3718ED4DCC50B3C9",
-				"DDE167F8C59B0086298EE7B5",
-				"BEB619D724CFD03066CCC8C7",
-				"B87AB47B4A56C8AE188DDCFF",
-				"15FE8AA246D906D3ABC20FD0",
-				"3EC5B8E010CF59124EF2B177",
-				"C1F94726FBB5D0D56DCB71F8",
-				"3A8A9E0721847F719361B7AB",
-				"DC231F56BAAC3220692F324B",
-				"CFD42F7AAB449EF539FBC5F6",
-				"2CA2BEB782F9A5CBFA1FF925",
-				"B872071DDD4BE9DA84CBF5A5",
-				"B5D813F7BF73A1D96E7689A6",
-				"BD16E4308CE33F69985F7F4D",
-				"CA77CC2B0443477E700ED934",
-				"3EBF19348E1AC6B3FC405ADA",
-				"E9789473DC10F0B071AA14BA",
-				"05E4C73A0B9631978100966A",
-				"113DA58293973A669CECC94A",
-				"574EB9E5052BDF8BA6C99060",
-				"E36546555AC53F4064F768C9",
-				"EE9F275B27A87C6514C16F23",
-				"C17000730FE8C14C9AD455FE",
-				"1FDF185ACEB7998EDD3D9F10",
-				"0E4B395A74B71F86B5A0D1F3",
-				"5D0B85516E98F71BAE95B3B3",
-				"C224ECCE812F51F760DE0949",
-				"6BD5A7AA61EDE37F8D3382BC",
-				"15619029D19A72C14ED854DF",
-				"AA9461B4D3B189472EA200FD",
-				"E56A334B8F4BD83714C1D9DA",
-				"9A097FAD31115106A259B032",
-				"AA35211444223625F0AF917D",
-				"BC2F85549AFD3C298A3AC59F",
-				"F506975ECAC0A4384093E658",
-				"9C556EBE9C5676368AFF5C43",
-				"7FFF7EE1ECCBA9E8BEFCD480",
-				"04D00A326CED735A2D2ECFA4",
-				"FED36FC0D113EB688D12C859",
-				"F7BC5849652E48E0ED3C0F6B");
+				"1E8887CE02F81D8A067BB371",
+				"1E07212EC4A1ACD7177DF323",
+				"AF5970EC2DC33DF72AB25EFC",
+				"E5109F51CE9E45C6167CB715",
+				"A5EE2A2E0AAA04D79B92DD34",
+				"CF5305D45E23F6F107FC9EA2",
+				"2FCB3136BD6BAF403F8705FB",
+				"1AF09747DE75989EE2BAAFDF",
+				"B42D3FCBA79FE30A25DC03FF",
+				"263FB563720BF9F015E945EE",
+				"CE8FDE4FB489FEDF87D2EF95",
+				"D670FC5DBA0305ADB68DB007",
+				"9E7C58F295562106B7032939",
+				"10FCAB26AD23D3FB02A10866",
+				"39AC04F86A1F18BD9638A36E",
+				"DD7797917C0B7DFEA890CA94",
+				"295E9D0A57BDE480696907FC",
+				"92D9D509B81855C854B1162C",
+				"975C91997D83592D2D066ACB",
+				"FCA1E88C8DA0B0BF89E0B2E3",
+				"388BAA3C6AE0DFA9EC106987",
+				"A17AC5B9D56BB27C90352B25",
+				"7B4239C6356B83BF2D4C201F",
+				"889101B2149B812B8837048F",
+				"4A689AC775CB4B6ED595BC9B",
+				"EF61208B0C2F673947211202",
+				"3A5E40D933EBAB2F96892361",
+				"12AC7BE88AFAB0D19DC783B8",
+				"EAA757A83BBB395BFB1AC62D",
+				"BF4E9F6AFC8316A8F4E88B7E",
+				"5C35AAB6620601CFA586CAF8",
+				"C2EEBDCFB27D88499B8B7999",
+				"EE88AD435CB130F3D5F7DB03",
+				"F2090A173E9910EA0FD2A8E4",
+				"D4B3DAD0EA21EA533A4C3AFE",
+				"8B0D7CC0605E70F643C60A6D",
+				"7C7F43E6203F179AC3B8BD48",
+				"FAE3A286A95AFF241F62EAF7",
+				"76250DED6078E59CDCC06AC8",
+				"68EA428E8735293A547824E3",
+				"DA0F9805F5BFC65AF0605F3A",
+				"EDF14FF4F02E9C7B4036710C",
+				"554A21D2479CD3789D7F37A2",
+				"00BF62FB026C27A9FE5E83CF",
+				"D101C39443483BE975AC0E68",
+				"C2764CCB4371DD4D08B56791",
+				"2C5AA9C693A702F7B525C43C",
+				"D42C6CB67B7DA6623163EE43",
+				"9C8B0B7C04B5BF933827B7CC",
+				"567D08DB31703012F914FE3F",
+				"D90D0D11E892285F1CBE10E8",
+				"12ACBF00F7DF69C5AA37E85A",
+				"02530E5BFFEEF84028ADD8C6",
+				"AD1C19AC133F19DA2A73EF72",
+				"8831018B8292854152E7A288",
+				"29E9B33CE74144A4FCB98292",
+				"0C8E6606E5E7233F47851D67",
+				"7DF769F610CB9F994919F85A",
+				"5EC7D8218C4AACA34F5C53F5",
+				"9C5F0D77AC49D588FCF86C86",
+				"1EA6EBF1A500EC0D101B6AD2",
+				"7F501BF43840947C38C21561",
+				"40126D2DF2C10C5EE1DD8B63",
+				"F4129378D338F14405FC607D",
+				"ED2D6015039C2E3017381EFB",
+				"B20D75769511417CD5D940A3",
+				"75E4FDBA36F4C6CD9A18F879",
+				"C1749EF611038ABBFEBA4C3B",
+				"FEC58910655186D3C34D795C",
+				"1F72A4753688D1CE12F0B3ED",
+				"DAA442857B4B5B3BF6FF7AD4",
+				"C6504615B02A5D098791E98B",
+				"D7681BE710880FC1A51B7A4B",
+				"8A63FF01F28BE2F6464CCDA5",
+				"E1329ACF5D34B94CB7C515E8",
+				"67C56E0824A100ADB0CB558C",
+				"CB4BF169BBA4E0CFB9EEF034");
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
 			name = "Compile Sources";
 		};
-		F535B6B4D4A49B61BF5BEEEB = {
+		5B0DC7BC9745740E16D9F58C = {
 			isa = PBXFileReference;
 			name = "fftw3f";
-			path = "chronomodel/lib/FFTW/mac/libfftw3f.a";
-			refType = 4;
+			path = "/Users/dufresne/ChronoModel-SoftWare/chronomodel/lib/FFTW/mac/libfftw3f.a";
+			refType = 0;
 			sourceTree = "<absolute>";
 		};
-		12464D1013C77734EA92207E = {
-			fileRef = "F535B6B4D4A49B61BF5BEEEB";
+		1F3083E69C0891B042CBEE96 = {
+			fileRef = "5B0DC7BC9745740E16D9F58C";
 			isa = PBXBuildFile;
 			settings = {
 			};
 		};
-		036EC1FDB532ABD3076E55EE = {
+		2DE6DB1E2F97C2F623A77872 = {
 			isa = PBXFileReference;
 			name = "QtSvg.framework";
-			path = "../Qt/5.4/clang_64/lib/QtSvg.framework";
-			refType = 4;
+			path = "/Users/dufresne/Qt/5.4/clang_64/lib/QtSvg.framework";
+			refType = 0;
 			sourceTree = "<absolute>";
 			lastKnownFileType = "wrapper.framework";
 		};
-		D79B7EF6D25775C21EB8F0BA = {
-			fileRef = "036EC1FDB532ABD3076E55EE";
+		C212D895D643065BF15603F6 = {
+			fileRef = "2DE6DB1E2F97C2F623A77872";
 			isa = PBXBuildFile;
 			settings = {
 			};
 		};
-		7103C2285AB3EB24DB450FC5 = {
+		4BB651CC18415954B690C57B = {
 			isa = PBXFileReference;
 			name = "QtWidgets.framework";
-			path = "../Qt/5.4/clang_64/lib/QtWidgets.framework";
-			refType = 4;
+			path = "/Users/dufresne/Qt/5.4/clang_64/lib/QtWidgets.framework";
+			refType = 0;
 			sourceTree = "<absolute>";
 			lastKnownFileType = "wrapper.framework";
 		};
-		A16113D32C1339AADE199BF2 = {
-			fileRef = "7103C2285AB3EB24DB450FC5";
+		0421018B7E84C7EAE59B196A = {
+			fileRef = "4BB651CC18415954B690C57B";
 			isa = PBXBuildFile;
 			settings = {
 			};
 		};
-		647BE783D113B685D73A777A = {
+		6FC80FE280FA15B01673C269 = {
 			isa = PBXFileReference;
 			name = "QtGui.framework";
-			path = "../Qt/5.4/clang_64/lib/QtGui.framework";
-			refType = 4;
+			path = "/Users/dufresne/Qt/5.4/clang_64/lib/QtGui.framework";
+			refType = 0;
 			sourceTree = "<absolute>";
 			lastKnownFileType = "wrapper.framework";
 		};
-		F9ACC37ACE1F5B930ECA1973 = {
-			fileRef = "647BE783D113B685D73A777A";
+		0334AE80C27E42973CAB54DA = {
+			fileRef = "6FC80FE280FA15B01673C269";
 			isa = PBXBuildFile;
 			settings = {
 			};
 		};
-		EB4984151939A898EAA67229 = {
+		DB7175EE7AD012BFF62CC955 = {
 			isa = PBXFileReference;
 			name = "QtCore.framework";
-			path = "../Qt/5.4/clang_64/lib/QtCore.framework";
-			refType = 4;
+			path = "/Users/dufresne/Qt/5.4/clang_64/lib/QtCore.framework";
+			refType = 0;
 			sourceTree = "<absolute>";
 			lastKnownFileType = "wrapper.framework";
 		};
-		8CB1432F610D024046B86A8F = {
-			fileRef = "EB4984151939A898EAA67229";
+		6AE2C580CFD9E49DB296BD26 = {
+			fileRef = "DB7175EE7AD012BFF62CC955";
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -5327,11 +5327,11 @@
 		};
 		AF39DD055C3EF8226FBE929D = {
 			children = (
-				"F535B6B4D4A49B61BF5BEEEB",
-				"036EC1FDB532ABD3076E55EE",
-				"7103C2285AB3EB24DB450FC5",
-				"647BE783D113B685D73A777A",
-				"EB4984151939A898EAA67229",
+				"5B0DC7BC9745740E16D9F58C",
+				"2DE6DB1E2F97C2F623A77872",
+				"4BB651CC18415954B690C57B",
+				"6FC80FE280FA15B01673C269",
+				"DB7175EE7AD012BFF62CC955",
 				"2B774D8E4178765CE52EAAF5",
 				"A1A67BEAA744704B29168D39",
 				"D4B32C2222F82AC56BADEB21",
@@ -5343,11 +5343,11 @@
 		D1C883685E82D5676953459A = {
 			buildActionMask = 2147483647;
 			files = (
-				"12464D1013C77734EA92207E",
-				"D79B7EF6D25775C21EB8F0BA",
-				"A16113D32C1339AADE199BF2",
-				"F9ACC37ACE1F5B930ECA1973",
-				"8CB1432F610D024046B86A8F",
+				"1F3083E69C0891B042CBEE96",
+				"C212D895D643065BF15603F6",
+				"0421018B7E84C7EAE59B196A",
+				"0334AE80C27E42973CAB54DA",
+				"6AE2C580CFD9E49DB296BD26",
 				"A99B2AA0F9CBBDD12BA126A4",
 				"8D267F2E4776F0ECA2F49DC8",
 				"8771A8C96E9C391044035D99",
@@ -5368,7 +5368,7 @@
 				);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = "/bin/sh";
-			shellScript = "cp -r $BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME /Users/dufresne/ChronoModel-SoftWare/build/release";
+			shellScript = "cp -r $BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME /Users/dufresne/ChronoModel-SoftWare/build/debug";
 		};
 		84C67617F410E0FE7BFBF55C = {
 			isa = PBXFileReference;
@@ -5456,7 +5456,7 @@
 			productType = "com.apple.product-type.application";
 			name = "Chronomodel";
 			productName = "Chronomodel";
-			productInstallPath = "build/release/";
+			productInstallPath = "build/debug/";
 		};
 		3AA6C32AC930069E80220CF1 = {
 			isa = XCBuildConfiguration;
@@ -5472,7 +5472,7 @@
 				LDPLUSPLUS = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++";
 				INFOPLIST_FILE = "Info.plist";
 				SYMROOT = "/Users/dufresne/ChronoModel-SoftWare";
-				INSTALL_DIR = "/Users/dufresne/ChronoModel-SoftWare/build/release/";
+				INSTALL_DIR = "/Users/dufresne/ChronoModel-SoftWare/build/debug/";
 				DYLIB_CURRENT_VERSION = "1.2.11";
 				DYLIB_COMPATIBILITY_VERSION = "1.2";
 				MACOSX_DEPLOYMENT_TARGET = "10.7";
@@ -5505,9 +5505,9 @@
 					"../../Qt/5.4/clang_64/lib/QtWidgets.framework/Versions/5/Headers",
 					"../../Qt/5.4/clang_64/lib/QtGui.framework/Versions/5/Headers",
 					"../../Qt/5.4/clang_64/lib/QtCore.framework/Versions/5/Headers",
-					"build/release/moc",
-					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/OpenGL.framework/Versions/A/Headers",
-					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/AGL.framework/Headers",
+					"build/debug/moc",
+					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/OpenGL.framework/Headers",
+					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/AGL.framework/Headers/",
 					"../../Qt/5.4/clang_64/mkspecs/macx-clang");
 				LIBRARY_SEARCH_PATHS = (
 					"/Users/dufresne/ChronoModel-SoftWare/chronomodel/lib/FFTW/mac",
@@ -5518,10 +5518,10 @@
 					"/Users/dufresne/Qt/5.4/clang_64/lib");
 				OTHER_CFLAGS = (
 					"-pipe",
-					"-O2",
+					"-g",
 					"-Wall",
 					"-W",
-					"-fPIE",
+					"-fPIC",
 					"-D_USE_MATH_DEFINES",
 					"-DUSE_FFT=1",
 					"-DUSE_PLUGIN_UNIFORM=1",
@@ -5529,21 +5529,20 @@
 					"-DUSE_PLUGIN_14C=1",
 					"-DUSE_PLUGIN_TL=1",
 					"-DUSE_PLUGIN_AM=1",
-					"-DQT_NO_DEBUG",
 					"-DQT_SVG_LIB",
 					"-DQT_WIDGETS_LIB",
 					"-DQT_GUI_LIB",
 					"-DQT_CORE_LIB");
 				OTHER_CPLUSPLUSFLAGS = (
 					"-pipe",
-					"-O2",
+					"-g",
 					"-std=c++11",
 					"-stdlib=libc++",
 					"-Wall",
 					"-W",
 					"-Wno-unknown-pragmas",
 					"-Wno-unused-parameter",
-					"-fPIE",
+					"-fPIC",
 					"-D_USE_MATH_DEFINES",
 					"-DUSE_FFT=1",
 					"-DUSE_PLUGIN_UNIFORM=1",
@@ -5551,7 +5550,6 @@
 					"-DUSE_PLUGIN_14C=1",
 					"-DUSE_PLUGIN_TL=1",
 					"-DUSE_PLUGIN_AM=1",
-					"-DQT_NO_DEBUG",
 					"-DQT_SVG_LIB",
 					"-DQT_WIDGETS_LIB",
 					"-DQT_GUI_LIB",
@@ -5563,7 +5561,7 @@
 						"-F/Users/dufresne/Qt/5.4/clang_64/lib",
 						"-L/Users/dufresne/ChronoModel-SoftWare/chronomodel/lib/FFTW/mac");
 				ARCHS = "x86_64";
-				OBJROOT = "build/release/obj/";
+				OBJROOT = "build/debug/obj/";
 			};
 			name = "Debug";
 		};
@@ -5593,7 +5591,7 @@
 				LDPLUSPLUS = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++";
 				INFOPLIST_FILE = "Info.plist";
 				SYMROOT = "/Users/dufresne/ChronoModel-SoftWare";
-				INSTALL_DIR = "/Users/dufresne/ChronoModel-SoftWare/build/release/";
+				INSTALL_DIR = "/Users/dufresne/ChronoModel-SoftWare/build/debug/";
 				DYLIB_CURRENT_VERSION = "1.2.11";
 				DYLIB_COMPATIBILITY_VERSION = "1.2";
 				MACOSX_DEPLOYMENT_TARGET = "10.7";
@@ -5626,9 +5624,9 @@
 					"../../Qt/5.4/clang_64/lib/QtWidgets.framework/Versions/5/Headers",
 					"../../Qt/5.4/clang_64/lib/QtGui.framework/Versions/5/Headers",
 					"../../Qt/5.4/clang_64/lib/QtCore.framework/Versions/5/Headers",
-					"build/release/moc",
-					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/OpenGL.framework/Versions/A/Headers",
-					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/AGL.framework/Headers",
+					"build/debug/moc",
+					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/OpenGL.framework/Headers",
+					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/AGL.framework/Headers/",
 					"../../Qt/5.4/clang_64/mkspecs/macx-clang");
 				LIBRARY_SEARCH_PATHS = (
 					"/Users/dufresne/ChronoModel-SoftWare/chronomodel/lib/FFTW/mac",
@@ -5639,10 +5637,10 @@
 					"/Users/dufresne/Qt/5.4/clang_64/lib");
 				OTHER_CFLAGS = (
 					"-pipe",
-					"-O2",
+					"-g",
 					"-Wall",
 					"-W",
-					"-fPIE",
+					"-fPIC",
 					"-D_USE_MATH_DEFINES",
 					"-DUSE_FFT=1",
 					"-DUSE_PLUGIN_UNIFORM=1",
@@ -5650,21 +5648,20 @@
 					"-DUSE_PLUGIN_14C=1",
 					"-DUSE_PLUGIN_TL=1",
 					"-DUSE_PLUGIN_AM=1",
-					"-DQT_NO_DEBUG",
 					"-DQT_SVG_LIB",
 					"-DQT_WIDGETS_LIB",
 					"-DQT_GUI_LIB",
 					"-DQT_CORE_LIB");
 				OTHER_CPLUSPLUSFLAGS = (
 					"-pipe",
-					"-O2",
+					"-g",
 					"-std=c++11",
 					"-stdlib=libc++",
 					"-Wall",
 					"-W",
 					"-Wno-unknown-pragmas",
 					"-Wno-unused-parameter",
-					"-fPIE",
+					"-fPIC",
 					"-D_USE_MATH_DEFINES",
 					"-DUSE_FFT=1",
 					"-DUSE_PLUGIN_UNIFORM=1",
@@ -5672,7 +5669,6 @@
 					"-DUSE_PLUGIN_14C=1",
 					"-DUSE_PLUGIN_TL=1",
 					"-DUSE_PLUGIN_AM=1",
-					"-DQT_NO_DEBUG",
 					"-DQT_SVG_LIB",
 					"-DQT_WIDGETS_LIB",
 					"-DQT_GUI_LIB",
@@ -5684,7 +5680,7 @@
 						"-F/Users/dufresne/Qt/5.4/clang_64/lib",
 						"-L/Users/dufresne/ChronoModel-SoftWare/chronomodel/lib/FFTW/mac");
 				ARCHS = "x86_64";
-				OBJROOT = "build/release/obj/";
+				OBJROOT = "build/debug/obj/";
 			};
 			name = "Release";
 		};
@@ -5706,7 +5702,7 @@
 				"3AA6C32AC930069E80220CF1",
 				"339EE1B2CC4FC24589A0EA95");
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = "Release";
+			defaultConfigurationName = "Debug";
 		};
 		6CC3B5D2136C7CD6A5CF5A59 = {
 			isa = XCConfigurationList;
@@ -5714,7 +5710,7 @@
 				"77418F46922677BB04ED38DD",
 				"6666AA5E688052234F6758D8");
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = "Release";
+			defaultConfigurationName = "Debug";
 		};
 		6DB9C3763D02B1415CD9D565 = {
 			hasScannedForEncodings = 1;

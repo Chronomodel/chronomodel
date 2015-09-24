@@ -54,6 +54,27 @@ void GraphViewDate::paintEvent(QPaintEvent* e)
     GraphViewResults::paintEvent(e);
 }
 
+QColor GraphViewDate::getEventColor()
+{
+    if(mDate->mJson==NULL){
+        return randomColor();
+    }
+    else {
+        QJsonObject ja = *(mDate->mJson);
+        QJsonObject js = ja[STATE_EVENTS].toArray().at(mDate->mJsonEventIdx).toObject();
+        if(js.isEmpty()){
+            return randomColor();
+        }
+        else {
+            int R=js[STATE_COLOR_RED].toInt();
+            int G=js[STATE_COLOR_GREEN].toInt();
+            int B=js[STATE_COLOR_BLUE].toInt();
+            
+            return QColor(R,G,B);
+        }
+    }
+}
+
 void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
 {
     GraphViewResults::generateCurves(typeGraph, variable);
@@ -69,7 +90,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
     
     if(mDate)
     {
-        QColor color = mColor;
+        QColor color = getEventColor();//  mColor;
         QPen defaultPen;
         defaultPen.setWidthF(1);
         defaultPen.setStyle(Qt::SolidLine);
@@ -111,7 +132,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 //  Post Distrib All Chains
                 GraphCurve curvePostDistrib = generateDensityCurve(variableDate->fullHisto(),
                                                              "Post Distrib All Chains",
-                                                             mColor,
+                                                             color,
                                                              Qt::SolidLine,
                                                              Qt::NoBrush);
                 mGraph->addCurve(curvePostDistrib);
@@ -130,7 +151,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 // HPD All Chains
                 GraphCurve curveHPD = generateHPDCurve(variableDate->mHPD,
                                                        "HPD All Chains",
-                                                        mColor);
+                                                        color);
                 mGraph->addCurve(curveHPD);
                 
                 
@@ -153,7 +174,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 // Credibility (must be the last created curve because uses yMax!
                 GraphCurve curveCred = generateCredibilityCurve(variableDate->mCredibility,
                                                                 "Credibility All Chains",
-                                                                mColor);
+                                                                color);
                 mGraph->addCurve(curveCred);
             }
             

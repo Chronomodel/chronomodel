@@ -11,7 +11,7 @@
 #include <QJsonArray>
 #include <QObject>
 #include <QDebug>
-
+#include <QJsonObject>
 
 Event::Event():
 mType(eDefault),
@@ -20,9 +20,9 @@ mMethod(Event::eDoubleExp),
 mIsCurrent(false),
 mIsSelected(false),
 mInitialized(false),
-mLevel(0)
+mLevel(0),
+mJson(NULL)
 {
-    mColor = randomColor();
     mTheta.mIsDate = true;
     
     // Item initial position :
@@ -34,7 +34,8 @@ mLevel(0)
     // Thus the scene will move it randomly around the currently viewed center point.
 }
 
-Event::Event(const Event& event)
+Event::Event(const Event& event):
+mJson(event.mJson)
 {
     copyFrom(event);
 }
@@ -44,14 +45,16 @@ Event& Event::operator=(const Event& event)
     copyFrom(event);
     return *this;
 }
-
+/**
+ * @todo Check the copy of the color if mJson is not set
+ */
 void Event::copyFrom(const Event& event)
 {
     mType = event.mType;
     mId = event.mId;
-    mName = event.mName;
+    //mName = event.mName;
     mMethod = event.mMethod;
-    mColor = event.mColor;
+    //mColor = event.mColor;
     
     mDates = event.mDates;
     mPhases = event.mPhases;
@@ -84,15 +87,28 @@ Event::~Event()
 
 }
 
+
 #pragma mark JSON
+
+void Event::setJson(QJsonObject & iJson, const int idxEvent)
+{
+    mJson=&iJson;
+    mJsonEventIdx=idxEvent;
+}
+
+QJsonObject & Event::getJson()
+{
+    return (*mJson);
+}
+
 Event Event::fromJson(const QJsonObject& json)
 {
     Event event;
     
     event.mType = (Type)json[STATE_EVENT_TYPE].toInt();
     event.mId = json[STATE_ID].toInt();
-    event.mName = json[STATE_NAME].toString();
-    event.mColor = QColor(json[STATE_COLOR_RED].toInt(),
+    event.mInitName = json[STATE_NAME].toString();
+    event.mInitColor = QColor(json[STATE_COLOR_RED].toInt(),
                           json[STATE_COLOR_GREEN].toInt(),
                           json[STATE_COLOR_BLUE].toInt());
     event.mMethod = (Method)(json[STATE_EVENT_METHOD].toInt());
@@ -123,13 +139,26 @@ Event Event::fromJson(const QJsonObject& json)
     return event;
 }
 
+/**
+ * @todo would be replace by getJsonIterator()
+ */
 QJsonObject Event::toJson() const
 {
     QJsonObject event;
     
     event[STATE_EVENT_TYPE] = mType;
     event[STATE_ID] = mId;
-    event[STATE_NAME] = mName;
+    QColor mColor;
+    if (mJson==NULL) {
+        event[STATE_NAME] = mInitName;
+        mColor= mInitColor;
+    }
+    else {
+        event[STATE_NAME] = getName();
+        mColor=getColor();
+    }
+    
+   // const QColor mColor= mJson==NULL ? randomColor(): this->getColor();
     event[STATE_COLOR_RED] = mColor.red();
     event[STATE_COLOR_GREEN] = mColor.green();
     event[STATE_COLOR_BLUE] = mColor.blue();
@@ -161,6 +190,34 @@ QJsonObject Event::toJson() const
 }
 
 #pragma mark Properties
+QColor Event::getColor() const
+{
+    if(mJson==NULL){
+        return randomColor();
+    }
+    else {
+    
+        QJsonObject js = (*mJson)[STATE_EVENTS].toArray().at(mJsonEventIdx).toObject();
+        if(js.isEmpty()){
+            return randomColor();
+        }
+        else {
+            int R=js[STATE_COLOR_RED].toInt();
+            int G=js[STATE_COLOR_GREEN].toInt();
+            int B=js[STATE_COLOR_BLUE].toInt();
+        
+            return QColor(R,G,B);
+        }
+    }
+ 
+}
+QString Event::getName() const
+{
+    QJsonObject js = (*mJson)[STATE_EVENTS].toArray().at(mJsonEventIdx).toObject();
+    
+    return js[STATE_NAME].toString();
+}
+
 Event::Type Event::type() const
 {
     return mType;
@@ -486,7 +543,7 @@ void Event::updateTheta(double tmin, double tmax)
     
     if(min >= max)
     {
-        throw QObject::tr("Error for event : ") + mName + " : min = " + QString::number(min) + " : max = " + QString::number(max);
+        throw QObject::tr("Error for event : ") + getName() + " : min = " + QString::number(min) + " : max = " + QString::number(max);
     }
     
     //qDebug() << "[" << min << ", " << max << "]";
@@ -518,7 +575,7 @@ void Event::updateTheta(double tmin, double tmax)
                 mTheta.tryUpdate(theta, 1);
             }
             catch(QString error){
-                throw QObject::tr("Error for event : ") + mName + " : " + error;
+                throw QObject::tr("Error for event : ") + getName() + " : " + error;
             }
             break;
         }
@@ -531,7 +588,7 @@ void Event::updateTheta(double tmin, double tmax)
                 ++counter;
                 if(counter == 100000000)
                 {
-                    throw QObject::tr("No MCMC solution could be found using event method ") + ModelUtilities::getEventMethodText(mMethod) + " for event named " + mName + ". (" + QString::number(counter) + " trials done)";
+                    throw QObject::tr("No MCMC solution could be found using event method ") + ModelUtilities::getEventMethodText(mMethod) + " for event named " + getName() + ". (" + QString::number(counter) + " trials done)";
                 }
             }while(theta < min || theta > max);
             

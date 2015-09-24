@@ -32,6 +32,7 @@ public:
     
     virtual void updateTheta(double min, double max);
     
+    
 public:
     KnownType mKnownType;
     

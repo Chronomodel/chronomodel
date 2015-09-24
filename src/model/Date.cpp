@@ -10,14 +10,17 @@
 #include <QDebug>
 
 
-Date::Date()
+Date::Date():
+mColor(Qt::blue),
+mJson(Date::mJson)
 {
     mTheta.mIsDate = true;
     mSigma.mIsDate = false;
     init();
 }
 
-Date::Date(PluginAbstract* plugin)
+Date::Date(PluginAbstract* plugin):
+mJson(Date::mJson)
 {
     init();
     mPlugin = plugin;
@@ -41,7 +44,9 @@ void Date::init()
     mSubDates.clear();
 }
 
-Date::Date(const Date& date)
+Date::Date(const Date& date):
+mJson(date.mJson)
+
 {
     copyFrom(date);
 }
@@ -80,6 +85,8 @@ void Date::copyFrom(const Date& date)
     mCalibHPD = date.mCalibHPD;
     
     mSubDates = date.mSubDates;
+    
+    mColor = date.getColor();
 }
 
 Date::~Date()
@@ -90,6 +97,19 @@ Date::~Date()
 bool Date::isNull()
 {
     return mData.isEmpty() || (mPlugin == 0);
+}
+#pragma mark Properties
+QColor Date::getColor() const
+{
+    return mColor;
+}
+
+QString Date::getName() const
+{
+
+    QJsonObject jsEvent = (*mJson)[STATE_EVENTS].toArray().at(mJsonEventIdx).toObject();
+    QJsonObject jsDate=jsEvent[STATE_EVENT_DATES].toArray().at(mJsonDateIdx).toObject();
+    return jsDate[STATE_NAME].toString();
 }
 
 Date Date::fromJson(const QJsonObject& json)
@@ -135,6 +155,12 @@ Date Date::fromJson(const QJsonObject& json)
     
     return date;
 }
+void Date::setJson(QJsonObject & json, const int idxEvent, const int idxDate)
+{
+    mJson = &json;
+    mJsonEventIdx = idxEvent;
+    mJsonDateIdx = idxDate;
+}
 
 QJsonObject Date::toJson() const
 {
@@ -152,6 +178,11 @@ QJsonObject Date::toJson() const
     date[STATE_DATE_DELTA_MAX] = mDeltaMax;
     date[STATE_DATE_DELTA_AVERAGE] = mDeltaAverage;
     date[STATE_DATE_DELTA_ERROR] = mDeltaError;
+    
+    const QColor mCol= this->getColor();
+    date[STATE_COLOR_RED] = mCol.red();
+    date[STATE_COLOR_GREEN] = mCol.green();
+    date[STATE_COLOR_BLUE] = mCol.blue();
     
     QJsonArray subdates;
     for(int i=0; i<mSubDates.size(); ++i){

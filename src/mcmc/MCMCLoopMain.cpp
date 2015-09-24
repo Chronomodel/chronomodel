@@ -292,7 +292,7 @@ void MCMCLoopMain::initMCMC()
             EventKnown* bound = dynamic_cast<EventKnown*>(event);
             if(bound)
             {
-                log += line(textRed("Bound (" + QString::number(i+1) + "/" + QString::number(events.size()) + ") : " + bound->mName));
+                log += line(textRed("Bound (" + QString::number(i+1) + "/" + QString::number(events.size()) + ") : " + bound->getName()));
                 log += line(textRed(" - theta (value) : " + QString::number(bound->mTheta.mX)));
                 log += line(textRed(" - theta (sigma MH) : " + QString::number(bound->mTheta.mSigmaMH)));
                 log += line(textRed("--------"));
@@ -300,7 +300,7 @@ void MCMCLoopMain::initMCMC()
         }
         else
         {
-            log += line(textBlue("Event (" + QString::number(i+1) + "/" + QString::number(events.size()) + ") : " + event->mName));
+            log += line(textBlue("Event (" + QString::number(i+1) + "/" + QString::number(events.size()) + ") : " + event->getName()));
             log += line(textBlue(" - theta (value) : " + QString::number(event->mTheta.mX)));
             log += line(textBlue(" - theta (sigma MH) : " + QString::number(event->mTheta.mSigmaMH)));
             log += line(textBlue(" - SO2 : " + QString::number(event->mS02)));

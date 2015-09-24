@@ -27,7 +27,12 @@ public:
     void copyFrom(const Phase& phase);
     virtual ~Phase();
     
+    //Added by PhD
+    void setJson(QJsonObject & iJson, const int idxPhase);
+    QJsonObject & getJson();
+    
     static Phase fromJson(const QJsonObject& json);
+    
     QJsonObject toJson() const;
     
     double getMaxThetaEvents(double tmax);
@@ -41,6 +46,8 @@ public:
     
     void initTau();
     void updateTau();
+    
+    QColor getColor() const;
     
 public:
     int mId;
@@ -75,6 +82,10 @@ public:
     bool mIsCurrent;
     
     int mLevel;
+    
+private:
+    QJsonObject * mJson;
+    int mJsonPhaseIdx;
 };
 
 #endif

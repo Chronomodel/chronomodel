@@ -107,8 +107,8 @@ QVector<QVector<Event*> > ModelUtilities::getNextBranches(const QVector<Event*>&
             {
                 QStringList evtNames;
                 for(int j=0; j<branch.size(); ++j)
-                    evtNames << branch[j]->mName;
-                evtNames << newNode->mName;
+                    evtNames << branch[j]->getName();
+                evtNames << newNode->getName();
                 
                 throw QObject::tr("Circularity found in events model !\nPlease correct this branch :\n") + evtNames.join(" -> ");
             }
@@ -366,13 +366,13 @@ QString ModelUtilities::eventResultsText(Event* e, bool withDates)
     {
         if(e->mType == Event::eKnown)
         {
-            text += line(textBold(textRed("Bound : " + e->mName))) + "<br>";
+            text += line(textBold(textRed("Bound : " + e->getName()))) + "<br>";
             text += line(textRed(e->mTheta.resultsText()));
             text += line(textRed("----------------------"));
         }
         else
         {
-            text += line(textBold(textBlue("Event : " + e->mName))) + "<br>";
+            text += line(textBold(textBlue("Event : " + e->getName()))) + "<br>";
             text += line(textBlue(e->mTheta.resultsText()));
             text += line(textBlue("----------------------"));
             if(withDates)

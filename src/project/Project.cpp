@@ -330,6 +330,7 @@ bool Project::load(const QString& path)
       
                 try{
                     //mModel = Model::fromJson(mState);
+                    mModel->setJson(mState);
                     mModel->fromJson(mState);
 
                 }
@@ -641,8 +642,8 @@ void Project::createEvent()
         if(dialog.exec() == QDialog::Accepted)
         {
             Event event;
-            event.mName = dialog.getName();
-            event.mColor = dialog.getColor();
+            event.mInitName = dialog.getName();
+            event.mInitColor= dialog.getColor();
             
             addEvent(event.toJson(), tr("Event created"));
         }
@@ -657,8 +658,8 @@ void Project::createEventKnown()
         if(dialog.exec() == QDialog::Accepted)
         {
             EventKnown event;
-            event.mName = dialog.getName();
-            event.mColor = dialog.getColor();
+            event.mInitName = dialog.getName();
+            event.mInitColor= dialog.getColor();
             
             addEvent(event.toJson(), tr("Bound created"));
         }
@@ -2173,6 +2174,7 @@ void Project::run()
     clearModel();
     
     //mModel = Model::fromJson(mState);
+    mModel->setJson(mState);
     mModel->fromJson(mState);
     bool modelOk = false;
     try

@@ -32,7 +32,13 @@ public:
     //static fromJson(const QJsonObject& json);
 
 
-    void fromJson(const QJsonObject& json);
+    void fromJson( QJsonObject& json);
+    
+    void setJson( QJsonObject & json);
+    QJsonObject & getJson();
+  
+        
+    
     bool isValid();
     void clear();
 
@@ -65,6 +71,8 @@ public:
     QString mLogModel;
     QString mLogMCMC;
     QString mLogResults;
+private:
+    QJsonObject * mJson;
 };
 
 #endif

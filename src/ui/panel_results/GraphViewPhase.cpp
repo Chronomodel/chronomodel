@@ -62,7 +62,7 @@ void GraphViewPhase::setPhase(Phase* phase)
     {
         mPhase = phase;
         setItemTitle(tr("Phase") + " : " + mPhase->mName);
-        setItemColor(mPhase->mColor);
+        setItemColor(mPhase->getColor());
     }
     update();
 }
@@ -120,7 +120,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
     
     if(mPhase)
     {
-        QColor color = mPhase->mColor;
+        const QColor color = mPhase->getColor();
         
         // ------------------------------------------------
         //  first tab : posterior distrib

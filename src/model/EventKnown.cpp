@@ -18,6 +18,7 @@ EventKnown::~EventKnown()
 {
 
 }
+#pragma mark JSON
 
 EventKnown EventKnown::fromJson(const QJsonObject& json)
 {
@@ -25,10 +26,10 @@ EventKnown EventKnown::fromJson(const QJsonObject& json)
     
     event.mType = (Type)json[STATE_EVENT_TYPE].toInt();
     event.mId = json[STATE_ID].toInt();
-    event.mName = json[STATE_NAME].toString();
+    /*event.mName =  json[STATE_NAME].toString();
     event.mColor = QColor(json[STATE_COLOR_RED].toInt(),
                            json[STATE_COLOR_GREEN].toInt(),
-                           json[STATE_COLOR_BLUE].toInt());
+                           json[STATE_COLOR_BLUE].toInt());*/
     event.mMethod = (Method)json[STATE_EVENT_METHOD].toInt();
     event.mItemX = json[STATE_ITEM_X].toDouble();
     event.mItemY = json[STATE_ITEM_Y].toDouble();
@@ -57,10 +58,13 @@ QJsonObject EventKnown::toJson() const
     
     event[STATE_EVENT_TYPE] = mType;
     event[STATE_ID] = mId;
-    event[STATE_NAME] = mName;
+    event[STATE_NAME] = getName();
+    
+    const QColor mColor= this->getColor();
     event[STATE_COLOR_RED] = mColor.red();
     event[STATE_COLOR_GREEN] = mColor.green();
     event[STATE_COLOR_BLUE] = mColor.blue();
+    
     event[STATE_EVENT_METHOD] = mMethod;
     event[STATE_ITEM_X] = mItemX;
     event[STATE_ITEM_Y] = mItemY;

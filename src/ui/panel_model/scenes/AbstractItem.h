@@ -20,7 +20,7 @@ protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent* e);
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent* e);
     virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e);
-    //virtual void mouseClickEvent(QGraphicsSceneMouseEvent* e);//Add by PhD
+    //virtual void mouseClickEvent(QGraphicsSceneMouseEvent* e);//Added by PhD
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* e);
     virtual void hoverEnterEvent(QGraphicsSceneHoverEvent* e);
     virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent* e);
@@ -28,6 +28,7 @@ protected:
     
 public:
     QJsonObject mData;
+
     AbstractScene* mScene;
     
     double mBorderWidth;
@@ -40,6 +41,8 @@ public:
     bool mMoving;
     bool mMergeable;
     bool mGreyedOut;
+
+
 };
 
 #endif

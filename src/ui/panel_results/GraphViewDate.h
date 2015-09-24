@@ -15,6 +15,7 @@ public:
     
     void setDate(Date* date);
     void setColor(const QColor& color);
+    QColor getEventColor();
     
     void generateCurves(TypeGraph typeGraph, Variable variable);
     void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);

@@ -40,6 +40,7 @@ public:
     bool isNull();
     
     static Date fromJson(const QJsonObject& json);
+    void setJson(QJsonObject& json, const int idxEvent, const int idxDate);
     QJsonObject toJson() const;
     
     static Date fromCSV(QStringList dataStr);
@@ -60,6 +61,9 @@ public:
     void updateDelta(Event* event);
     void updateSigma(Event* event);
     void updateWiggle();
+    
+    QColor getColor() const;
+    QString getName() const;
     
 public:
     MHVariable mTheta; // theta i de la date
@@ -91,6 +95,13 @@ public:
     ProjectSettings mSettings;
     
     QList<Date> mSubDates;
+    
+    QJsonObject * mJson;
+    int mJsonEventIdx;
+    int mJsonDateIdx;
+private:
+    
+    QColor mColor;
 };
 
 #endif

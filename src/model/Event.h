@@ -7,6 +7,7 @@
 
 #include <QMap>
 #include <QColor>
+#include <QJsonObject>
 
 class Phase;
 class EventConstraint;
@@ -30,6 +31,10 @@ public:
     Event& operator=(const Event& event);
     void copyFrom(const Event& event);
     virtual ~Event();
+    
+    //Added by PhD
+    void setJson( QJsonObject & iJson, const int idxEvent);
+    QJsonObject & getJson();
     
     static Event fromJson(const QJsonObject& json);
     virtual QJsonObject toJson() const;
@@ -55,12 +60,15 @@ public:
     
     virtual void updateTheta(double min, double max);
     
+    QColor getColor() const;
+    QString getName() const;
+    
 public:
     Type mType;
     int mId;
-    QString mName;
+    QString mInitName;
     Method mMethod;
-    QColor mColor;
+    QColor mInitColor;
     
     double mItemX;
     double mItemY;
@@ -84,6 +92,10 @@ public:
     bool mInitialized;
     
     int mLevel; // used to init mcmc
+
+private:
+    QJsonObject * mJson;
+    int mJsonEventIdx;
 };
 
 #endif

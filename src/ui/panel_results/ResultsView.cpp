@@ -789,7 +789,7 @@ void ResultsView::updateResults(Model* model)
                 graphDate->setGraphFont(mFont);
                 graphDate->setGraphsThickness(mThicknessSpin->value());
                 
-                graphDate->setColor(event->mColor);
+                graphDate->setColor(event->getColor());
                 mByPhasesGraphs.append(graphDate);
             }
         }
@@ -825,7 +825,7 @@ void ResultsView::updateResults(Model* model)
         for(int j=0; j<(int)event->mDates.size(); ++j)
         {
             Date& date = event->mDates[j];
-            
+            date.setJson(event->getJson(), i, j);
             // ----------------------------------------------------
             //  This just creates the view for the date.
             //  It sets the Date which triggers an update() to repaint the view.
@@ -835,7 +835,9 @@ void ResultsView::updateResults(Model* model)
             graphDate->setSettings(mModel->mSettings);
             graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
             graphDate->setDate(&date);
-            graphDate->setColor(event->mColor);
+            //graphDate->setColor(event->getColor());
+            //graphDate->mDate->setJson(event->getJson(), i, j);
+            
             graphDate->setGraphFont(mFont);
             graphDate->setGraphsThickness(mThicknessSpin->value());
             mByEventsGraphs.append(graphDate);
@@ -1481,12 +1483,14 @@ void ResultsView::updateModel()
             Event* e = mModel->mEvents[j];
             if(e->mId == eventId)
             {
-                e->mName  = event[STATE_NAME].toString();
+               // e->setJson(& MainWindow::getInstance()->getProject()->state(), j);
+                e->mInitName  = event[STATE_NAME].toString();
                 e->mItemX = event[STATE_ITEM_X].toDouble();
                 e->mItemY = event[STATE_ITEM_Y].toDouble();
-                e->mColor = QColor(event[STATE_COLOR_RED].toInt(),
+                e->mInitColor = QColor(event[STATE_COLOR_RED].toInt(),
                                    event[STATE_COLOR_GREEN].toInt(),
                                    event[STATE_COLOR_BLUE].toInt());
+               
                 
                 for(int k=0; k<e->mDates.size(); ++k)
                 {
@@ -1500,6 +1504,7 @@ void ResultsView::updateModel()
                         if(dateId == d.mId)
                         {
                             d.mName = date[STATE_NAME].toString();
+
                             break;
                         }
                     }
@@ -1521,9 +1526,10 @@ void ResultsView::updateModel()
                 p->mName = phase[STATE_NAME].toString();
                 p->mItemX = phase[STATE_ITEM_X].toDouble();
                 p->mItemY = phase[STATE_ITEM_Y].toDouble();
-                p->mColor = QColor(phase[STATE_COLOR_RED].toInt(),
+               /* p->mColor = QColor(phase[STATE_COLOR_RED].toInt(),
                                    phase[STATE_COLOR_GREEN].toInt(),
-                                   phase[STATE_COLOR_BLUE].toInt());
+                                   phase[STATE_COLOR_BLUE].toInt());*/
+               // p->setJson(MainWindow::getInstance()->getProject()->state(), j);
                 break;
             }
         }
