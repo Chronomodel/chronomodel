@@ -84,11 +84,13 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
             QMap<double, double> curveG95Sup;
             QMap<double, double> curveG95Inf;
             
-            //qDebug() << curves["G"][0];
             yMin = curves["G95Inf"][mSettings.mTmin];
             yMax = curves["G95Sup"][mSettings.mTmin];
             
-            for(double t=mSettings.mTmin; t<=mSettings.mTmax; ++t) { //t+=mSettings.mStep) {
+            double tMinGraph=curves["G"].firstKey()>mSettings.mTmin ? curves["G"].firstKey(): mSettings.mTmin;
+            double tMaxGraph=curves["G"].lastKey()<mSettings.mTmax  ? curves["G"].lastKey() : mSettings.mTmax;
+            
+            for(double t=tMinGraph; t<=tMaxGraph; ++t) {
                 curveG[t] = curves["G"][t];
                 curveG95Sup[t] = curves["G95Sup"][t];
                 curveG95Inf[t] = curves["G95Inf"][t];
