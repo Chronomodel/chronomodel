@@ -148,7 +148,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
                     }
                     
                     if (mShowText) {
-                        QString text =(valueFormatFunc!=0 ? valueFormatFunc((x-xo)/mPixelsPerUnit + mStartVal) : QString::number(((x-xo)/mPixelsPerUnit + mStartVal),'f',0) );
+                        QString text =(valueFormatFunc ? valueFormatFunc((x-xo)/mPixelsPerUnit + mStartVal) : QString::number(((x-xo)/mPixelsPerUnit + mStartVal),'f',0) );
                         
                         int textWidth =  fm.width(text) ;
                         qreal tx = x - textWidth/2;
@@ -185,9 +185,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
         {
             QRectF tr(r.x(), r.y(), w - 8, h);
             QString textStarVal = (valueFormatFunc ? valueFormatFunc(mStartVal) : QString::number(mStartVal,'f', 0) );
-            //if (!valueFormatFunc && mStartVal==0) {
-            //    textStarVal ="0";
-            //}
+            
             p.drawText(tr, Qt::AlignRight | Qt::AlignBottom, textStarVal);
             QString textEndVal = (valueFormatFunc ? valueFormatFunc(mEndVal) : QString::number(mEndVal,'f',0) );
             p.drawText(tr, Qt::AlignRight | Qt::AlignTop, textEndVal);

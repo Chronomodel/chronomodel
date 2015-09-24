@@ -757,7 +757,7 @@ void GraphView::drawCurves(QPainter& painter)
                     
                     if(index == 0)
                     {
-                        path.moveTo(x, y);
+                        path.lineTo(x, y);
                     }
                     else
                     {
@@ -768,6 +768,7 @@ void GraphView::drawCurves(QPainter& painter)
                     last_y = y;
                     ++index;
                 }
+                path.lineTo(mMarginLeft, mMarginTop);
                 painter.drawPath(path);
             }
             else
@@ -799,7 +800,7 @@ void GraphView::drawCurves(QPainter& painter)
                     {
                         lightData = subData;
                     }
-                    
+
                     for(int i=0; i<lightData.size(); ++i)
                     {
                         // Use "dataStep" only if lightData is different of subData !
@@ -811,7 +812,7 @@ void GraphView::drawCurves(QPainter& painter)
                             qreal x = getXForValue(valueX, false);
                             qreal y = getYForValue(valueY, false);
                             
-                            if(index == 0)
+                             if(index == 0)
                             {
                                 path.moveTo(x, y);
                             }
@@ -899,8 +900,8 @@ void GraphView::drawCurves(QPainter& painter)
                     qreal x = getXForValue(mCurrentMinX, false);
                     qreal y = getYForValue(0, false);
                     
-                    path.moveTo(x, y);
                     iter.toFront();
+                    bool isFirst=true;
                     while(iter.hasNext())
                     {
                         iter.next();
@@ -912,9 +913,10 @@ void GraphView::drawCurves(QPainter& painter)
                             x = getXForValue(valueX, false);
                             y = getYForValue(valueY, false);
                             
-                            if(index == 0)
+                            if(isFirst)
                             {
-                                path.lineTo(x, y);
+                                path.moveTo(x, y);
+                                isFirst=false;
                             }
                             else
                             {
@@ -939,12 +941,13 @@ void GraphView::drawCurves(QPainter& painter)
                                 {
                                     path.lineTo(x, y);
                                 }
+                                
                             }
                             last_x = x;
                             last_y = y;
 
                             last_value_y = valueY;
-                            ++index;
+                          //  ++index;
 
                         }
                     }
