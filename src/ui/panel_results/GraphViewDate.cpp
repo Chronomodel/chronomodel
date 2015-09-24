@@ -246,7 +246,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->setFormatFunctY(0);
             mGraph->setRangeY(0, 100);
             
-            generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine);
+            mGraph->addCurve( generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine) );
             generateAcceptCurves(mChains, variableDate);
         }
         
