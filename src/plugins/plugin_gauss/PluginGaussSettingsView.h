@@ -3,7 +3,7 @@
 
 #if USE_PLUGIN_GAUSS
 
-#include "PluginSettingsViewAbstract.h"
+#include "../PluginSettingsViewAbstract.h"
 #include <QMap>
 
 class PluginGauss;

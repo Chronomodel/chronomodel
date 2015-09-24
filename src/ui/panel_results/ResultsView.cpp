@@ -29,7 +29,7 @@
 #include "ModelUtilities.h"
 #include "DoubleValidator.h"
 
-#include "PluginAbstract.h"
+#include "../PluginAbstract.h"
 
 #include <QtWidgets>
 #include <iostream>

@@ -3,7 +3,7 @@
 
 #if USE_PLUGIN_14C
 
-#include "PluginSettingsViewAbstract.h"
+#include "../PluginSettingsViewAbstract.h"
 #include <QMap>
 
 class Plugin14C;
