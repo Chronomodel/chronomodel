@@ -214,9 +214,8 @@ void CalibrationView::updateGraphs()
         mRefGraphView = mDate.mPlugin->getGraphViewRef();
         if(mRefGraphView)
         {
+            mRefGraphView->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr); // must be before setDate, because setDate use it
             mRefGraphView->setDate(mDate, mSettings);
-            mRefGraphView->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
-
             
             mRefGraphView->setParent(this);
             mRefGraphView->setVisible(true);
