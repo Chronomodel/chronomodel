@@ -2,9 +2,6 @@
 #if USE_PLUGIN_AM
 
 #include "PluginMag.h"
-#include "Label.h"
-#include "LineEdit.h"
-#include "RadioButton.h"
 #include <QJsonObject>
 #include <QtWidgets>
 
@@ -13,35 +10,31 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
 {
     PluginMag* pluginMag = (PluginMag*)mPlugin;
     
-    mIncRadio = new RadioButton(this);
-    mDecRadio = new RadioButton(this);
-    mIntensityRadio = new RadioButton(this);
+    mIncRadio = new QRadioButton(tr("Inclination"));
+    mDecRadio = new QRadioButton(tr("Declination"));
+    mIntensityRadio = new QRadioButton(tr("Intensity"));
     
     connect(mIncRadio, SIGNAL(clicked()), this, SLOT(updateOptions()));
     connect(mDecRadio, SIGNAL(clicked()), this, SLOT(updateOptions()));
     connect(mIntensityRadio, SIGNAL(clicked()), this, SLOT(updateOptions()));
     
-    mIncLab = new Label(tr("Inclination") + " :", this);
-    mDecLab = new Label(tr("Declination") + " :", this);
-    mDecIncLab = new Label(tr("Inclination") + " :", this);
-    mIntensityLab = new Label(tr("Intensity") + " :", this);
-    mAlpha95Lab = new Label(tr("Alpha 95") + " :", this);
-    mRefLab = new Label(tr("Reference") + " :", this);
-    mRefPathLab = new Label(tr("Folder") + " : " + pluginMag->getRefsPath(), this);
-    mRefPathLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    mRefPathLab->setWordWrap(true);
+    mIncLab = new QLabel(tr("Inclination") + " :", this);
+    mDecLab = new QLabel(tr("Declination") + " :", this);
+    mDecIncLab = new QLabel(tr("Inclination") + " :", this);
+    mIntensityLab = new QLabel(tr("Intensity") + " :", this);
+    mAlpha95Lab = new QLabel(tr("Alpha 95") + " :", this);
+    mRefLab = new QLabel(tr("Reference") + " :", this);
     
-    mIncEdit = new LineEdit(this);
-    mDecEdit = new LineEdit(this);
-    mDecIncEdit = new LineEdit(this);
-    mIntensityEdit = new LineEdit(this);
-    mAlpha95Edit = new LineEdit(this);
+    mIncEdit = new QLineEdit(this);
+    mDecEdit = new QLineEdit(this);
+    mDecIncEdit = new QLineEdit(this);
+    mIntensityEdit = new QLineEdit(this);
+    mAlpha95Edit = new QLineEdit(this);
     
     mRefCombo = new QComboBox(this);
     QStringList refCurves = pluginMag->getRefsNames();
     for(int i = 0; i<refCurves.size(); ++i)
         mRefCombo->addItem(refCurves[i]);
-    mComboH = mRefCombo->sizeHint().height();
     
     mIncEdit->setText("60");
     mDecEdit->setText("0");
@@ -51,7 +44,35 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     
     mIncRadio->setChecked(true);
     
-    setFixedHeight(sTitleHeight + 6*mLineH + mComboH + 7*mMargin);
+    
+    QGridLayout* grid = new QGridLayout();
+    grid->setContentsMargins(0, 0, 0, 0);
+    
+    grid->addWidget(mIncRadio, 0, 1);
+    grid->addWidget(mDecRadio, 1, 1);
+    grid->addWidget(mIntensityRadio, 2, 1);
+    
+    grid->addWidget(mIncLab, 3, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mIncEdit, 3, 1);
+    
+    grid->addWidget(mDecLab, 4, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mDecEdit, 4, 1);
+    
+    grid->addWidget(mDecIncLab, 3, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mDecIncEdit, 3, 1);
+    
+    grid->addWidget(mIntensityLab, 3, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mIntensityEdit, 3, 1);
+    
+    grid->addWidget(mAlpha95Lab, 5, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mAlpha95Edit, 5, 1);
+    
+    grid->addWidget(mRefLab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mRefCombo, 6, 1);
+    
+    setLayout(grid);
+    
+    
     
     updateOptions();
 }
@@ -124,43 +145,19 @@ bool PluginMagForm::isValid()
     return !refCurve.isEmpty();
 }
 
-void PluginMagForm::resizeEvent(QResizeEvent* e)
-{
-    Q_UNUSED(e);
-    
-    int m = mMargin;
-    int w = width();
-    int r = mLineH;
-    int w1 = (w - 5*m) / 4;
-    int w2 = w1 - m - r;
-    int w3 = w - 3*m - w1;
-    
-    mIncRadio->setGeometry(m, sTitleHeight + m, r, mLineH);
-    mDecRadio->setGeometry(m, sTitleHeight + 2*m + mLineH, r, mLineH);
-    mIntensityRadio->setGeometry(m, sTitleHeight + 3*m + 2*mLineH, r, mLineH);
-    
-    mIncLab->setGeometry(2*m + r, sTitleHeight + m, w2, mLineH);
-    mDecLab->setGeometry(2*m + r, sTitleHeight + 2*m + mLineH, w2, mLineH);
-    mDecIncLab->setGeometry(3*m + 2*w1, sTitleHeight + 2*m + mLineH, w1, mLineH);
-    mIntensityLab->setGeometry(2*m + r, sTitleHeight + 3*m + 2*mLineH, w2, mLineH);
-    mAlpha95Lab->setGeometry(m, sTitleHeight + 4*m + 3*mLineH, w1, mLineH);
-    mRefLab->setGeometry(m, sTitleHeight + 5*m + 4*mLineH, w1, mComboH);
-    
-    mIncEdit->setGeometry(2*m + w1, sTitleHeight + m, w3, mLineH);
-    mDecEdit->setGeometry(2*m + w1, sTitleHeight + 2*m + mLineH, w1, mLineH);
-    mDecIncEdit->setGeometry(4*m + 3*w1, sTitleHeight + 2*m + mLineH, w1, mLineH);
-    mIntensityEdit->setGeometry(2*m + w1, sTitleHeight + 3*m + 2*mLineH, w3, mLineH);
-    mAlpha95Edit->setGeometry(2*m + w1, sTitleHeight + 4*m + 3*mLineH, w3, mLineH);
-    mRefCombo->setGeometry(2*m + w1, sTitleHeight + 5*m + 4*mLineH, w3, mComboH);
-    mRefPathLab->setGeometry(2*m + w1, sTitleHeight + 6*m + 4*mLineH + mComboH, w3, 2*mLineH);
-}
-
 void PluginMagForm::updateOptions()
 {
-    mIncEdit->setEnabled(mIncRadio->isChecked());
-    mDecEdit->setEnabled(mDecRadio->isChecked());
-    mDecIncEdit->setEnabled(mDecRadio->isChecked());
-    mIntensityEdit->setEnabled(mIntensityRadio->isChecked());
+    mIncEdit->setVisible(mIncRadio->isChecked());
+    mIncLab->setVisible(mIncRadio->isChecked());
+    
+    mDecEdit->setVisible(mDecRadio->isChecked());
+    mDecLab->setVisible(mDecRadio->isChecked());
+    
+    mDecIncEdit->setVisible(mDecRadio->isChecked());
+    mDecIncLab->setVisible(mDecRadio->isChecked());
+    
+    mIntensityEdit->setVisible(mIntensityRadio->isChecked());
+    mIntensityLab->setVisible(mIntensityRadio->isChecked());
     
     if(mIntensityRadio->isChecked())
         mAlpha95Lab->setText(tr("Error (sd)") + " :");

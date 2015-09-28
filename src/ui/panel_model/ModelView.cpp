@@ -326,7 +326,7 @@ void ModelView::doProjectConnections(Project* project)
 
 void ModelView::resetInterface()
 {
-    mStudyLab->setText(tr("STUDY PERIOD") + " " + DateUtils::getAppSettingsFormat());
+    mStudyLab->setText(tr("STUDY PERIOD (BC/AD)"));// + " " + DateUtils::getAppSettingsFormat());
     mEventsScene->clean();
     mPhasesScene->clean();
     mCalibrationView->setDate(QJsonObject());
@@ -346,14 +346,15 @@ void ModelView::updateProject()
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
     //mStepEdit->setText(QString::number(settings.mStep));
-    mMinEdit->setText(DateUtils::convertToAppSettingsFormatStr(settings.mTmin));
-    mMaxEdit->setText(DateUtils::convertToAppSettingsFormatStr(settings.mTmax));
     
-    /*if(settings.mStep < 0.1 || settings.mTmin >= settings.mTmax)
-        setSettingsValid(false);
-    else */
+    // This was used to display study period using the date format defined in application settings :
+    //mMinEdit->setText(DateUtils::convertToAppSettingsFormatStr(settings.mTmin));
+    //mMaxEdit->setText(DateUtils::convertToAppSettingsFormatStr(settings.mTmax));
     
-    setSettingsValid(true);
+    mMinEdit->setText(QString::number(settings.mTmin));
+    mMaxEdit->setText(QString::number(settings.mTmax));
+    
+    setSettingsValid(settings.mTmin < settings.mTmax);
     
     mEventsScene -> updateProject();
     mPhasesScene -> updateProject();
@@ -394,8 +395,13 @@ void ModelView::applySettings()
     ProjectSettings s = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
     ProjectSettings oldSettings = s;
     
-    mTmax = DateUtils::convertFromAppSettingsFormat(mMaxEdit->text().toDouble());
-    mTmin = DateUtils::convertFromAppSettingsFormat(mMinEdit->text().toDouble());
+    // This was used to display study period using the date format defined in application settings :
+    //mTmax = DateUtils::convertFromAppSettingsFormat(mMaxEdit->text().toDouble());
+    //mTmin = DateUtils::convertFromAppSettingsFormat(mMinEdit->text().toDouble());
+    
+    mTmax = mMaxEdit->text().toDouble();
+    mTmin = mMinEdit->text().toDouble();
+    
     qDebug()<<"ModelView::applySettings()"<<mTmin<<mTmax;
     
     s.mTmin = (int) mTmin;
@@ -410,6 +416,9 @@ void ModelView::applySettings()
         
         mTmin = oldSettings.mTmin;
         mTmax = oldSettings.mTmax;
+        
+        mMinEdit->setText(QString::number(mTmin));
+        mMaxEdit->setText(QString::number(mTmax));
         
         if(oldSettings.mTmin < oldSettings.mTmax)
         {
@@ -456,16 +465,20 @@ void ModelView::studyPeriodChanging()
 */
 void ModelView::minEditChanging()
 {
-    QLocale locale =QLocale();
-    mTmin = DateUtils::convertFromAppSettingsFormat(locale.toDouble(mMinEdit->text()));
+    //QLocale locale = QLocale();
+    //mTmin = DateUtils::convertFromAppSettingsFormat(locale.toDouble(mMinEdit->text()));
+    
+    mTmin = mMinEdit->text().toDouble();
     setSettingsValid(false);
     mEventPropertiesView->hideCalibration();
 }
 
 void ModelView::maxEditChanging()
 {
-    QLocale locale =QLocale();
-    mTmax = DateUtils::convertFromAppSettingsFormat(locale.toDouble(mMaxEdit->text()));
+    //QLocale locale =QLocale();
+    //mTmax = DateUtils::convertFromAppSettingsFormat(locale.toDouble(mMaxEdit->text()));
+    
+    mTmax = mMaxEdit->text().toDouble();
     setSettingsValid(false);
     mEventPropertiesView->hideCalibration();
 }
@@ -648,17 +661,8 @@ void ModelView::paintEvent(QPaintEvent* e)
     QPainter p(this);
     p.fillRect(mHandlerRect, QColor(50, 50, 50));
     p.fillRect(mRightRect, QColor(50, 50, 50));
-    mStudyLab -> setText(tr("STUDY PERIOD") + " " + DateUtils::getAppSettingsFormat());
 }
-void ModelView::updateFormatDate()
-{
-    mMinEdit  -> setText(DateUtils::convertToAppSettingsFormatStr(mTmin));
-    mMaxEdit  -> setText(DateUtils::convertToAppSettingsFormatStr(mTmax));
-    mMinEdit->update();
-    
-    setSettingsValid(Button::eReady);
-    
-}
+
 #pragma mark Layout
 void ModelView::resizeEvent(QResizeEvent* e)
 {
@@ -667,40 +671,22 @@ void ModelView::resizeEvent(QResizeEvent* e)
 }
 void ModelView::updateLayout()
 {
-    //Project* project = MainWindow::getInstance()->getProject();
-    //QJsonObject state = project->state();
-    //ProjectSettings s = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
-
-    //mMinEdit->setText(doubleInStrDate(s.mTmin));
-    //mMaxEdit->setText(doubleInStrDate(s.mTmax));
-    
-    //qreal m = mMargin;
-    // mToolbarH, correspond à la hauteur de la barre avec study period
     qreal x = width() * mSplitProp;
 
     qreal minLeft = 200;
     qreal minRight = 580 + mHandlerW/2;
     x = (x < minLeft) ? minLeft : x;
     x = (x > width() - minRight) ? width() - minRight : x;
-
-    
     
     QRectF mEventPropWrapperRectF(x+(mHandlerW)/2,mToolbarH, width()-x-mHandlerW/2, height()-mToolbarH);
-
-
-    
     mHandlerRect = QRect(x - mHandlerW/2, 0, mHandlerW, height());
-    
-    
     
     // ----------
     mLeftRect = QRect(0, 0, x - mHandlerW/2, height());
     mLeftHiddenRect = mLeftRect.adjusted(-mLeftRect.width(), 0, -mLeftRect.width(), 0);
     mLeftWrapper->setGeometry(mLeftRect);
 
- 
     mRightRect = QRect(x + mHandlerW/2, 0, this->width() - x - mHandlerW/2, this->height());
-    
     mRightWrapper->setGeometry(mRightRect);
   
     // ----------

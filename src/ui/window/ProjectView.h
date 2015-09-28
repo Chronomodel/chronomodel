@@ -24,8 +24,6 @@ public:
     void doProjectConnections(Project* project);
     void resetInterface();
     
-    void updateFormatDate();
-    
     void readSettings();
     void writeSettings();
     

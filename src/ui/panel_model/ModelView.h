@@ -39,8 +39,6 @@ public:
     void resetInterface();
     void showHelp(bool show);
     
-    void updateFormatDate();
-    
     void readSettings();
     void writeSettings();
     

@@ -6,9 +6,9 @@
 #include "../PluginFormAbstract.h"
 
 class PluginGauss;
-class LineEdit;
-class Label;
-class RadioButton;
+class QLineEdit;
+class QLabel;
+class QRadioButton;
 class QComboBox;
 
 
@@ -24,29 +24,28 @@ public:
     
     bool isValid();
     
-protected:
-    void resizeEvent(QResizeEvent* e);
-    
 protected slots:
     void updateVisibleElements();
 
 private:
-    Label* mAverageLab;
-    Label* mErrorLab;
+    QLabel* mAverageLab;
+    QLabel* mErrorLab;
+    QLabel* mCalibLab;
     
-    LineEdit* mAverageEdit;
-    LineEdit* mErrorEdit;
+    QLineEdit* mAverageEdit;
+    QLineEdit* mErrorEdit;
     
-    Label* mEq1Lab;
-    Label* mEq2Lab;
-    Label* mEq3Lab;
+    QWidget* mEqWidget;
+    QLabel* mEq1Lab;
+    QLabel* mEq2Lab;
+    QLabel* mEq3Lab;
+    QLineEdit* mAEdit;
+    QLineEdit* mBEdit;
+    QLineEdit* mCEdit;
     
-    LineEdit* mAEdit;
-    LineEdit* mBEdit;
-    LineEdit* mCEdit;
-    
-    RadioButton* mCurveRadio;
-    RadioButton* mEquationRadio;
+    QRadioButton* mEquationRadio;
+    QRadioButton* mCurveRadio;
+    QRadioButton* mNoneRadio;
     
     QComboBox* mCurveCombo;
     int mComboH;

@@ -2,6 +2,8 @@
 #include <QString>
 
 AppSettings::AppSettings():
+mLanguage(APP_SETTINGS_DEFAULT_LANGUAGE),
+mCountry(APP_SETTINGS_DEFAULT_COUNTRY),
 mAutoSave(APP_SETTINGS_DEFAULT_AUTO_SAVE),
 mAutoSaveDelay(APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC),
 mShowHelp(APP_SETTINGS_DEFAULT_SHOW_HELP),
@@ -30,6 +32,8 @@ AppSettings& AppSettings::operator=(const AppSettings& s)
 
 void AppSettings::copyFrom(const AppSettings& s)
 {
+    mLanguage = s.mLanguage;
+    mCountry = s.mCountry;
     mAutoSave = s.mAutoSave;
     mAutoSaveDelay = s.mAutoSaveDelay;
     mShowHelp = s.mShowHelp;

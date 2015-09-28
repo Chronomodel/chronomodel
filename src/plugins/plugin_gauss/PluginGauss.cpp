@@ -28,8 +28,14 @@ double PluginGauss::getLikelyhood(const double& t, const QJsonObject& data)
     QString mode = data[DATE_GAUSS_MODE_STR].toString();
     QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
     
+    if(mode == DATE_GAUSS_MODE_NONE){
+        a = 0;
+        b = 1;
+        c = 0;
+    }
+    
     double result = 0;
-    if(mode == DATE_GAUSS_MODE_EQ){
+    if(mode == DATE_GAUSS_MODE_EQ || mode == DATE_GAUSS_MODE_NONE){
         result = exp(-0.5f * pow((age - (a * t * t + b * t + c)) / error, 2.f)) / error; //  * sqrt(2.f * M_PI)
     }
     else if(mode == DATE_GAUSS_MODE_CURVE){
@@ -163,6 +169,10 @@ QString PluginGauss::getDateDesc(const Date* date) const
         result += QObject::tr("Age") + " : " + QString::number(data[DATE_GAUSS_AGE_STR].toDouble());
         result += " ± " + QString::number(data[DATE_GAUSS_ERROR_STR].toDouble());
         
+        if(mode == DATE_GAUSS_MODE_NONE)
+        {
+            result += " (No calibration)";
+        }
         if(mode == DATE_GAUSS_MODE_EQ)
         {
             QString aStr;
@@ -371,7 +381,10 @@ bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& se
     
     QString mode = data[DATE_GAUSS_MODE_STR].toString();
     
-    if(mode == DATE_GAUSS_MODE_EQ){
+    if(mode == DATE_GAUSS_MODE_NONE){
+        return ((age - error < settings.mTmax) && (age + error > settings.mTmin));
+    }
+    else if(mode == DATE_GAUSS_MODE_EQ){
         double a = data[DATE_GAUSS_A_STR].toDouble();
         double b = data[DATE_GAUSS_B_STR].toDouble();
         double c = data[DATE_GAUSS_C_STR].toDouble();

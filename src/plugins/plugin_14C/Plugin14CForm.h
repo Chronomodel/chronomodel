@@ -6,9 +6,9 @@
 #include "../PluginFormAbstract.h"
 
 class Plugin14C;
-class LineEdit;
+class QLineEdit;
 class QComboBox;
-class Label;
+class QLabel;
 
 
 class Plugin14CForm: public PluginFormAbstract
@@ -22,27 +22,21 @@ public:
     QJsonObject getData();
     
     bool isValid();
-
-protected:
-    void resizeEvent(QResizeEvent* e);
     
 private:
-    Label* mAverageLab;
-    Label* mErrorLab;
-    Label* mRLab;
-    Label* mRErrorLab;
-    Label* mRefLab;
-    //Label* mRefPathLab;
+    QLabel* mAverageLab;
+    QLabel* mErrorLab;
+    QLabel* mRLab;
+    QLabel* mRErrorLab;
+    QLabel* mRefLab;
     
-    LineEdit* mAverageEdit;
-    LineEdit* mErrorEdit;
-    LineEdit* mREdit;
-    LineEdit* mRErrorEdit;
+    QLineEdit* mAverageEdit;
+    QLineEdit* mErrorEdit;
+    QLineEdit* mREdit;
+    QLineEdit* mRErrorEdit;
     QComboBox* mRefCombo;
     
     static QString mSelectedRefCurve;
-    
-    int mComboH;
 };
 
 #endif

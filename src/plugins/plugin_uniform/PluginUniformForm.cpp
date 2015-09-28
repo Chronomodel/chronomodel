@@ -2,24 +2,31 @@
 #if USE_PLUGIN_UNIFORM
 
 #include "PluginUniform.h"
-#include "Label.h"
-#include "LineEdit.h"
 #include <QJsonObject>
 #include <QtWidgets>
 
 
 PluginUniformForm::PluginUniformForm(PluginUniform* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("Uniform Prior"), parent, flags)
 {
-    mMinLab = new Label(tr("Lower date") + " :", this);
-    mMaxLab = new Label(tr("Upper date") + " :", this);
+    mMinLab = new QLabel(tr("Lower date") + " :", this);
+    mMaxLab = new QLabel(tr("Upper date") + " :", this);
     
-    mMinEdit = new LineEdit(this);
+    mMinEdit = new QLineEdit(this);
     mMinEdit->setText("0");
     
-    mMaxEdit = new LineEdit(this);
+    mMaxEdit = new QLineEdit(this);
     mMaxEdit->setText("100");
     
-    setFixedHeight(sTitleHeight + 3*mMargin + 2*mLineH);
+    QGridLayout* grid = new QGridLayout();
+    grid->setContentsMargins(0, 0, 0, 0);
+    
+    grid->addWidget(mMinLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mMinEdit, 0, 1);
+    
+    grid->addWidget(mMaxLab, 1, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mMaxEdit, 1, 1);
+    
+    setLayout(grid);
 }
 
 PluginUniformForm::~PluginUniformForm()
@@ -54,24 +61,8 @@ bool PluginUniformForm::isValid()
     double min = round(mMinEdit->text().toDouble());
     double max = round(mMaxEdit->text().toDouble());
     if(min >= max)
-        mError = tr("Forbidden : min >= max");
+        mError = tr("Forbidden : lower date must be > upper date");
     return min < max;
-}
-
-void PluginUniformForm::resizeEvent(QResizeEvent* e)
-{
-    Q_UNUSED(e);
-    
-    int m = mMargin;
-    int w = width();
-    int w1 = 100;
-    int w2 = w - 3*m - w1;
-    
-    mMinLab->setGeometry(m, sTitleHeight + m, w1, mLineH);
-    mMaxLab->setGeometry(m, sTitleHeight + 2*m + mLineH, w1, mLineH);
-    
-    mMinEdit->setGeometry(2*m + w1, sTitleHeight + m, w2, mLineH);
-    mMaxEdit->setGeometry(2*m + w1, sTitleHeight + 2*m + mLineH, w2, mLineH);
 }
 
 #endif

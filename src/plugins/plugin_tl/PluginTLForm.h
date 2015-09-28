@@ -6,8 +6,8 @@
 #include "../PluginFormAbstract.h"
 
 class PluginTL;
-class Label;
-class LineEdit;
+class QLabel;
+class QLineEdit;
 
 
 class PluginTLForm: public PluginFormAbstract
@@ -21,18 +21,15 @@ public:
     virtual QJsonObject getData();
     
     bool isValid();
-    
-protected:
-    void resizeEvent(QResizeEvent* e);
 
 private:
-    Label* mAverageLab;
-    Label* mErrorLab;
-    Label* mYearLab;
+    QLabel* mAverageLab;
+    QLabel* mErrorLab;
+    QLabel* mYearLab;
     
-    LineEdit* mAverageEdit;
-    LineEdit* mErrorEdit;
-    LineEdit* mYearEdit;
+    QLineEdit* mAverageEdit;
+    QLineEdit* mErrorEdit;
+    QLineEdit* mYearEdit;
 };
 
 #endif

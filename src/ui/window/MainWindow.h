@@ -63,6 +63,7 @@ public slots:
     void saveProjectAs();
     void about();
     void appSettings();
+    void setAppSettings(const AppSettings& s);
     void pluginSettings();
     void openManual();
     void openWebsite();

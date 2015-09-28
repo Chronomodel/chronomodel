@@ -6,10 +6,10 @@
 #include "../PluginFormAbstract.h"
 
 class PluginMag;
-class LineEdit;
+class QLineEdit;
 class QComboBox;
-class Label;
-class RadioButton;
+class QLabel;
+class QRadioButton;
 
 
 class PluginMagForm: public PluginFormAbstract
@@ -24,34 +24,28 @@ public:
     
     bool isValid();
     
-protected:
-    void resizeEvent(QResizeEvent* e);
-    
 private slots:
     void updateOptions();
 
 private:
-    RadioButton* mIncRadio;
-    RadioButton* mDecRadio;
-    RadioButton* mIntensityRadio;
+    QRadioButton* mIncRadio;
+    QRadioButton* mDecRadio;
+    QRadioButton* mIntensityRadio;
     
-    Label* mIncLab;
-    Label* mDecLab;
-    Label* mDecIncLab;
-    Label* mIntensityLab;
-    Label* mAlpha95Lab;
-    Label* mRefLab;
-    Label* mRefPathLab;
+    QLabel* mIncLab;
+    QLabel* mDecLab;
+    QLabel* mDecIncLab;
+    QLabel* mIntensityLab;
+    QLabel* mAlpha95Lab;
+    QLabel* mRefLab;
     
-    LineEdit* mIncEdit;
-    LineEdit* mDecEdit;
-    LineEdit* mDecIncEdit;
-    LineEdit* mIntensityEdit;
-    LineEdit* mAlpha95Edit;
+    QLineEdit* mIncEdit;
+    QLineEdit* mDecEdit;
+    QLineEdit* mDecIncEdit;
+    QLineEdit* mIntensityEdit;
+    QLineEdit* mAlpha95Edit;
     
     QComboBox* mRefCombo;
-    
-    int mComboH;
 };
 
 #endif

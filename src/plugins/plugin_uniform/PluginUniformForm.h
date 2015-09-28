@@ -6,8 +6,8 @@
 #include "../PluginFormAbstract.h"
 
 class PluginUniform;
-class LineEdit;
-class Label;
+class QLabel;
+class QLineEdit;
 
 
 class PluginUniformForm: public PluginFormAbstract
@@ -21,16 +21,13 @@ public:
     QJsonObject getData();
     
     bool isValid();
-    
-protected:
-    void resizeEvent(QResizeEvent* e);
 
 private:
-    Label* mMinLab;
-    Label* mMaxLab;
+    QLabel* mMinLab;
+    QLabel* mMaxLab;
     
-    LineEdit* mMinEdit;
-    LineEdit* mMaxEdit;
+    QLineEdit* mMinEdit;
+    QLineEdit* mMaxEdit;
 };
 
 #endif

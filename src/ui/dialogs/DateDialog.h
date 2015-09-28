@@ -5,15 +5,18 @@
 #include <QJsonObject>
 #include "Date.h"
 
-class LineEdit;
+class QLineEdit;
 class QComboBox;
 class QVBoxLayout;
+class QGroupBox;
+class QCheckBox;
+class QDialogButtonBox;
 
 class PluginFormAbstract;
 class Collapsible;
-class RadioButton;
+class QRadioButton;
 class Button;
-class Label;
+class QLabel;
 class HelpWidget;
 
 
@@ -37,45 +40,49 @@ public:
     double getDeltaAverage() const;
     double getDeltaError() const;
     
+    void setWiggleEnabled(bool enabled);
+    
 protected:
-    void paintEvent(QPaintEvent* e);
-    void resizeEvent(QResizeEvent* e);
+    //void paintEvent(QPaintEvent* e);
+    //void resizeEvent(QResizeEvent* e);
     
 protected slots:
-    void updateLayout();
-    void adaptSize();
+    void setAdvancedVisible(bool visible);
+    void updateVisibleControls();
+    //void updateLayout();
+    //void adaptSize();
     
 public:
     PluginFormAbstract* mForm;
     
-    Label* mNameLab;
-    LineEdit* mNameEdit;
+    QLabel* mNameLab;
+    QLineEdit* mNameEdit;
     
     Collapsible* mAdvanced;
-    QWidget* mAdvancedWidget;
     
-    Label* mMethodLab;
+    QCheckBox* mAdvancedCheck;
+    QGroupBox* mAdvancedWidget;
+    
+    QLabel* mMethodLab;
+    QLabel* mWiggleLab;
     QComboBox* mMethodCombo;
     
-    RadioButton* mDeltaFixedRadio;
-    RadioButton* mDeltaRangeRadio;
-    RadioButton* mDeltaGaussRadio;
+    QRadioButton* mDeltaFixedRadio;
+    QRadioButton* mDeltaRangeRadio;
+    QRadioButton* mDeltaGaussRadio;
     
     HelpWidget* mDeltaHelp;
-    Label* mDeltaFixedLab;
-    Label* mDeltaMinLab;
-    Label* mDeltaMaxLab;
-    Label* mDeltaAverageLab;
-    Label* mDeltaErrorLab;
+    QLabel* mDeltaFixedLab;
+    QLabel* mDeltaMinLab;
+    QLabel* mDeltaMaxLab;
+    QLabel* mDeltaAverageLab;
+    QLabel* mDeltaErrorLab;
     
-    LineEdit* mDeltaFixedEdit;
-    LineEdit* mDeltaMinEdit;
-    LineEdit* mDeltaMaxEdit;
-    LineEdit* mDeltaAverageEdit;
-    LineEdit* mDeltaErrorEdit;
-    
-    Button* mOkBut;
-    Button* mCancelBut;
+    QLineEdit* mDeltaFixedEdit;
+    QLineEdit* mDeltaMinEdit;
+    QLineEdit* mDeltaMaxEdit;
+    QLineEdit* mDeltaAverageEdit;
+    QLineEdit* mDeltaErrorEdit;
     
     int mWidth;
     int mMargin;
@@ -83,6 +90,11 @@ public:
     int mButW;
     int mButH;
     int mComboH;
+    
+    bool mWiggleEnabled;
+    
+    QVBoxLayout* mLayout;
+    QDialogButtonBox* mButtonBox;
 };
 
 #endif

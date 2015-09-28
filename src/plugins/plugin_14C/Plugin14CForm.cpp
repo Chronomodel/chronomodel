@@ -2,8 +2,6 @@
 #if USE_PLUGIN_14C
 
 #include "Plugin14C.h"
-#include "Label.h"
-#include "LineEdit.h"
 #include <QJsonObject>
 #include <QtWidgets>
 
@@ -13,25 +11,22 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
 {
     Plugin14C* plugin14C = (Plugin14C*)mPlugin;
     
-    mAverageLab = new Label(tr("Age") + " :", this);
-    mErrorLab = new Label(tr("Error (sd)") + " :", this);
-    mRLab = new Label(tr("ΔR") + " :", this);
-    mRErrorLab = new Label(tr("ΔR Error") + " :", this);
-    mRefLab = new Label(tr("Reference curve") + " :", this);
+    mAverageLab = new QLabel(tr("Age") + " :", this);
+    mErrorLab = new QLabel(tr("Error (sd)") + " :", this);
+    mRLab = new QLabel(tr("Reservoir Effect (ΔR)") + " :", this);
+    mRErrorLab = new QLabel(tr("ΔR Error") + " :", this);
+    mRefLab = new QLabel(tr("Reference curve") + " :", this);
     
-    /*mRefPathLab = new Label(tr("Folder") + " : " + plugin14C->getRefsPath(), this);
-    mRefPathLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);*/
-    
-    mAverageEdit = new LineEdit(this);
+    mAverageEdit = new QLineEdit(this);
     mAverageEdit->setText("0");
     
-    mErrorEdit = new LineEdit(this);
+    mErrorEdit = new QLineEdit(this);
     mErrorEdit->setText("50");
     
-    mREdit = new LineEdit(this);
+    mREdit = new QLineEdit(this);
     mREdit->setText("0");
     
-    mRErrorEdit = new LineEdit(this);
+    mRErrorEdit = new QLineEdit(this);
     mRErrorEdit->setText("0");
     
     mRefCombo = new QComboBox(this);
@@ -46,9 +41,26 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
         
     mRefCombo->setCurrentText(mSelectedRefCurve);
     
-    mComboH = mRefCombo->sizeHint().height();
     
-    setFixedHeight(sTitleHeight + 4*mLineH + mComboH + 6*mMargin);
+    QGridLayout* grid = new QGridLayout();
+    grid->setContentsMargins(0, 0, 0, 0);
+    
+    grid->addWidget(mAverageLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mAverageEdit, 0, 1);
+    
+    grid->addWidget(mErrorLab, 1, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mErrorEdit, 1, 1);
+    
+    grid->addWidget(mRLab, 2, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mREdit, 2, 1);
+    
+    grid->addWidget(mRErrorLab, 3, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mRErrorEdit, 3, 1);
+    
+    grid->addWidget(mRefLab, 4, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mRefCombo, 4, 1);
+    
+    setLayout(grid);
 }
 
 Plugin14CForm::~Plugin14CForm()
@@ -104,28 +116,6 @@ bool Plugin14CForm::isValid()
     if(refCurve.isEmpty())
         mError = tr("Ref. curve is empty!");
     return !refCurve.isEmpty();
-}
-
-void Plugin14CForm::resizeEvent(QResizeEvent* e)
-{
-    Q_UNUSED(e);
-    
-    int m = mMargin;
-    int w = width();
-    int w1 = 100;
-    int w2 = w - 3*m - w1;
-    
-    mAverageLab->setGeometry(m, sTitleHeight + m, w1, mLineH);
-    mErrorLab->setGeometry(m, sTitleHeight + 2*m + mLineH, w1, mLineH);
-    mRLab->setGeometry(m, sTitleHeight + 3*m + 2*mLineH, w1, mComboH);
-    mRErrorLab->setGeometry(m, sTitleHeight + 4*m + 3*mLineH, w1, mComboH);
-    mRefLab->setGeometry(m, sTitleHeight + 5*m + 4*mLineH, w1, mComboH);
-    
-    mAverageEdit->setGeometry(2*m + w1, sTitleHeight + m, w2, mLineH);
-    mErrorEdit->setGeometry(2*m + w1, sTitleHeight + 2*m + mLineH, w2, mLineH);
-    mREdit->setGeometry(2*m + w1, sTitleHeight + 3*m + 2*mLineH, w2, mLineH);
-    mRErrorEdit->setGeometry(2*m + w1, sTitleHeight + 4*m + 3*mLineH, w2, mLineH);
-    mRefCombo->setGeometry(2*m + w1, sTitleHeight + 5*m + 4*mLineH, w2, mComboH);
 }
 
 #endif

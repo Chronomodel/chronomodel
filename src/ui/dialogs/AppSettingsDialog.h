@@ -5,12 +5,20 @@
 #include "AppSettings.h"
 
 
+class QCheckBox;
+class QLabel;
+class QLineEdit;
+class QPushButton;
+class QSpinBox;
+class QComboBox;
+class QAbstractButton;
+class QDialogButtonBox;
+
 class CheckBox;
 class Label;
 class LineEdit;
 class Button;
-class QSpinBox;
-class QComboBox;
+
 
 class AppSettingsDialog: public QDialog
 {
@@ -23,47 +31,51 @@ public:
     AppSettings getSettings();
     
 protected:
-    void paintEvent(QPaintEvent* e);
-    void resizeEvent(QResizeEvent* e);
+    //void paintEvent(QPaintEvent* e);
+    //void resizeEvent(QResizeEvent* e);
     
 private slots:
-    void reset();
+    void buttonClicked(QAbstractButton*);
     
 private:
-    Label* mTitleLab;
+    QLabel* mLangHelpLab;
     
-    Label* mAutoSaveLab;
-    CheckBox* mAutoSaveCheck;
-    Label* mAutoSaveDelayLab;
-    LineEdit* mAutoSaveDelayEdit;
+    QLabel* mLanguageLab;
+    QComboBox* mLanguageCombo;
     
-    Label* mCSVCellSepLab;
-    LineEdit* mCSVCellSepEdit;
+    QLabel* mCountryLab;
+    QComboBox* mCountryCombo;
     
-    Label* mCSVDecSepLab;
-    LineEdit* mCSVDecSepEdit;
+    QLabel* mAutoSaveLab;
+    QCheckBox* mAutoSaveCheck;
+    QLabel* mAutoSaveDelayLab;
+    QLineEdit* mAutoSaveDelayEdit;
     
-    Label* mOpenLastProjectLab;
-    CheckBox* mOpenLastProjectCheck;
+    QLabel* mCSVCellSepLab;
+    QLineEdit* mCSVCellSepEdit;
     
-    Label* mPixelRatioLab;
+    QLabel* mCSVDecSepLab;
+    QComboBox* mCSVDecSepCombo;
+    
+    QLabel* mOpenLastProjectLab;
+    QCheckBox* mOpenLastProjectCheck;
+    
+    QLabel* mPixelRatioLab;
     QSpinBox* mPixelRatio;
     
-    Label* mDpmLab;
+    QLabel* mDpmLab;
     QComboBox* mDpm;
     
-    Label* mImageQualityLab;
+    QLabel* mImageQualityLab;
     QSpinBox* mImageQuality;
     
-    Label* mFormatDateLab;
+    QLabel* mFormatDateLab;
     QComboBox* mFormatDate;
     
-    Label* mPrecisionLab;
+    QLabel* mPrecisionLab;
     QSpinBox* mPrecision;
     
-    Button* mResetBut;
-    Button* mOkBut;
-    Button* mCancelBut;
+    QDialogButtonBox* mButtonBox;
 };
 
 #endif

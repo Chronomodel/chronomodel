@@ -58,7 +58,22 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
         double yMin;
         double yMax;
         
-        if(mode == DATE_GAUSS_MODE_EQ)
+        if(mode == DATE_GAUSS_MODE_NONE)
+        {
+            for(double t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep)
+                curve.mData[t] = t;
+            mGraph->addCurve(curve);
+            
+            // Adjust scale :
+            yMin = mSettings.mTmin;
+            yMax = mSettings.mTmax;
+            
+            yMin = qMin(yMin, age);
+            yMax = qMax(yMax, age);
+            
+            mGraph->setRangeY(yMin, yMax);
+        }
+        else if(mode == DATE_GAUSS_MODE_EQ)
         {
             for(double t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep)
                 curve.mData[t] = a * t * t + b * t + c;
@@ -73,7 +88,7 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
             
             mGraph->setRangeY(yMin, yMax);
         }
-        else// if(mode == DATE_GAUSS_MODE_CURVE)
+        else if(mode == DATE_GAUSS_MODE_CURVE)
         {
             PluginGauss* plugin = (PluginGauss*)date.mPlugin;
             

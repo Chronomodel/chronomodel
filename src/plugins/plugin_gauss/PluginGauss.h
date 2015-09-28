@@ -15,6 +15,7 @@
 
 #define DATE_GAUSS_MODE_CURVE "curve"
 #define DATE_GAUSS_MODE_EQ "eq"
+#define DATE_GAUSS_MODE_NONE "none"
 
 
 class DATATION_SHARED_EXPORT PluginGauss : public PluginAbstract

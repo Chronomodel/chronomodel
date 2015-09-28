@@ -26,7 +26,6 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     mLastPath = QDir::homePath();
     
     mProject = new Project();
-    mProject->setAppSettings(mAppSettings);
 
     mProjectView = new ProjectView();
     setCentralWidget(mProjectView);
@@ -441,17 +440,25 @@ void MainWindow::about()
 
 void MainWindow::appSettings()
 {
-    AppSettingsDialog dialog(qApp->activeWindow(), Qt::Sheet);
+    AppSettingsDialog dialog(qApp->activeWindow());
     dialog.setSettings(mAppSettings);
     if(dialog.exec() == QDialog::Accepted)
     {
-        mAppSettings = dialog.getSettings();
-        mProject->setAppSettings(mAppSettings);
-        
-        mProjectView->updateFormatDate();
-        if (mViewResultsAction->isEnabled()) {
-            mProjectView->updateResults(mProject->mModel);
-        }
+        setAppSettings(dialog.getSettings());
+    }
+}
+
+void MainWindow::setAppSettings(const AppSettings& s)
+{
+    mAppSettings = s;
+    
+    QLocale::setDefault(QLocale(s.mLanguage, s.mCountry));
+    statusBar()->showMessage(tr("Language") + " : " + QLocale::languageToString(QLocale().language()));
+    
+    mProject->setAppSettings(mAppSettings);
+    
+    if(mViewResultsAction->isEnabled()) {
+        mProjectView->updateResults(mProject->mModel);
     }
 }
 
@@ -581,6 +588,8 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     move(settings.value("pos", QPoint(200, 200)).toPoint());
     
     settings.beginGroup("AppSettings");
+    mAppSettings.mLanguage = (QLocale::Language) settings.value(APP_SETTINGS_STR_LANGUAGE, APP_SETTINGS_DEFAULT_LANGUAGE).toInt();
+    mAppSettings.mCountry = (QLocale::Country) settings.value(APP_SETTINGS_STR_COUNTRY, APP_SETTINGS_DEFAULT_COUNTRY).toInt();
     mAppSettings.mAutoSave = settings.value(APP_SETTINGS_STR_AUTO_SAVE, APP_SETTINGS_DEFAULT_AUTO_SAVE).toBool();
     mAppSettings.mAutoSaveDelay = settings.value(APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC, APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC).toInt();
     mAppSettings.mShowHelp = settings.value(APP_SETTINGS_STR_SHOW_HELP, APP_SETTINGS_DEFAULT_SHOW_HELP).toBool();
@@ -594,23 +603,21 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     mAppSettings.mPrecision = settings.value(APP_SETTINGS_STR_FORMATDATE, APP_SETTINGS_DEFAULT_FORMATDATE).toInt();
     settings.endGroup();
     
+    QLocale::setDefault(QLocale(mAppSettings.mLanguage, mAppSettings.mCountry));
     mProjectView->showHelp(mAppSettings.mShowHelp);
     mHelpAction->setChecked(mAppSettings.mShowHelp);
     
     bool fileOpened = false;
-    //defaultFilePath="";
-    //qDebug() << defaultFilePath;
-    //mAppSettings.mOpenLastProjectAtLaunch=false;
     if(!defaultFilePath.isEmpty())
     {
-        //qDebug() << defaultFilePath;
         QFileInfo fileInfo(defaultFilePath);
         if(fileInfo.isFile())
         {
-            mProject->load(defaultFilePath);
-            activateInterface(true);
-            updateWindowTitle();
-            fileOpened = true;
+            if(mProject->load(defaultFilePath)){
+                activateInterface(true);
+                updateWindowTitle();
+                fileOpened = true;
+            }
         }
     }
     
@@ -632,6 +639,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     
     settings.endGroup();
     
+    setAppSettings(mAppSettings);
     mProjectView->readSettings();
 }
 

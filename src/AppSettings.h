@@ -2,8 +2,11 @@
 #define APPSETTINGS_H
 
 #include <QString>
+#include <QLocale>
 #include "DateUtils.h"
 
+#define APP_SETTINGS_DEFAULT_LANGUAGE QLocale::English
+#define APP_SETTINGS_DEFAULT_COUNTRY QLocale::UnitedKingdom
 #define APP_SETTINGS_DEFAULT_AUTO_SAVE false
 #define APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC 300
 #define APP_SETTINGS_DEFAULT_SHOW_HELP true
@@ -16,6 +19,8 @@
 #define APP_SETTINGS_DEFAULT_FORMATDATE DateUtils::eBCAD
 #define APP_SETTINGS_DEFAULT_PRECISION 0
 
+#define APP_SETTINGS_STR_LANGUAGE "language"
+#define APP_SETTINGS_STR_COUNTRY "country"
 #define APP_SETTINGS_STR_AUTO_SAVE "auto_save_enabled"
 #define APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC "auto_save_delay"
 #define APP_SETTINGS_STR_SHOW_HELP "show_help"
@@ -39,6 +44,8 @@ public:
     virtual ~AppSettings();
 
 public:
+    QLocale::Language mLanguage;
+    QLocale::Country mCountry;
     bool mAutoSave;
     int mAutoSaveDelay;
     bool mShowHelp;

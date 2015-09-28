@@ -19,73 +19,123 @@ mWidth(600),
 mMargin(5),
 mLineH(20),
 mButW(80),
-mButH(25)
+mButH(25),
+mWiggleEnabled(false)
 {
     setWindowTitle(tr("Create / Modify Data"));
+    setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
     
     // -----------
     
-    mNameLab = new Label(tr("Name") + " :", this);
-    
-    mNameEdit = new LineEdit(this);
+    mNameLab = new QLabel(tr("Name") + " :", this);
+    mNameEdit = new QLineEdit(this);
     mNameEdit->setText("<New Date>");
     mNameEdit->selectAll();
     mNameEdit->setFocus();
     
-    mAdvancedWidget = new QWidget();
+    QGridLayout* grid = new QGridLayout();
+    grid->setContentsMargins(0, 0, 0, 0);
+    grid->addWidget(mNameLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mNameEdit, 0, 1);
     
     // ----------
     
+    mAdvancedCheck = new QCheckBox(tr("Advanced"));
+    mAdvancedWidget = new QGroupBox();
+    mAdvancedWidget->setCheckable(false);
+    mAdvancedWidget->setVisible(false);
+    mAdvancedWidget->setFlat(true);
+    connect(mAdvancedCheck, SIGNAL(toggled(bool)), this, SLOT(setAdvancedVisible(bool)));
+    
+    mMethodLab = new QLabel(tr("Method") + " :", mAdvancedWidget);
     mMethodCombo = new QComboBox(mAdvancedWidget);
-    mMethodCombo -> addItem(ModelUtilities::getDataMethodText(Date::eMHIndependant));
-    mMethodCombo -> addItem(ModelUtilities::getDataMethodText(Date::eInversion));
-    mMethodCombo -> addItem(ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
+    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHIndependant));
+    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eInversion));
+    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
     
-    mComboH = mMethodCombo->sizeHint().height();
+    mWiggleLab = new QLabel(tr("Wiggle Matching") + " :", mAdvancedWidget);
     
-    // ----------
+    mDeltaFixedRadio = new QRadioButton(tr("Fixed"), mAdvancedWidget);
+    mDeltaRangeRadio = new QRadioButton(tr("Range"), mAdvancedWidget);
+    mDeltaGaussRadio = new QRadioButton(tr("Gaussian"), mAdvancedWidget);
+    mDeltaFixedRadio->setChecked(true);
     
-    mDeltaFixedRadio = new RadioButton(tr("Wiggle Matching : Fixed"), mAdvancedWidget);
-    mDeltaRangeRadio = new RadioButton(tr("Wiggle Matching : Range"), mAdvancedWidget);
-    mDeltaGaussRadio = new RadioButton(tr("Wiggle Matching : Gaussian"), mAdvancedWidget);
+    connect(mDeltaFixedRadio, SIGNAL(toggled(bool)), this, SLOT(updateVisibleControls()));
+    connect(mDeltaRangeRadio, SIGNAL(toggled(bool)), this, SLOT(updateVisibleControls()));
+    connect(mDeltaGaussRadio, SIGNAL(toggled(bool)), this, SLOT(updateVisibleControls()));
     
-    mMethodLab       = new Label(tr("Method") + " :", mAdvancedWidget);
-    mDeltaHelp       = new HelpWidget(tr("Wiggle Sign : \"+\" if data ≤ event, \"-\" if data ≥ event"), mAdvancedWidget);
+    mDeltaHelp = new HelpWidget(tr("Wiggle Sign : \"+\" if data ≤ event, \"-\" if data ≥ event"), mAdvancedWidget);
+    mDeltaHelp->setFixedHeight(35);
     mDeltaHelp->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=11");
     
-    mDeltaFixedLab   = new Label(tr("Value") + " :", mAdvancedWidget);
-    mDeltaMinLab     = new Label(tr("Min") + " :", mAdvancedWidget);
-    mDeltaMaxLab     = new Label(tr("Max") + " :", mAdvancedWidget);
-    mDeltaAverageLab = new Label(tr("Mean") + " :", mAdvancedWidget);
-    mDeltaErrorLab   = new Label(tr("Error (sd)") + " :", mAdvancedWidget);
+    mDeltaFixedLab   = new QLabel(tr("Value") + " :", mAdvancedWidget);
+    mDeltaMinLab     = new QLabel(tr("Min") + " :", mAdvancedWidget);
+    mDeltaMaxLab     = new QLabel(tr("Max") + " :", mAdvancedWidget);
+    mDeltaAverageLab = new QLabel(tr("Mean") + " :", mAdvancedWidget);
+    mDeltaErrorLab   = new QLabel(tr("Error (sd)") + " :", mAdvancedWidget);
     
-    mDeltaFixedEdit   = new LineEdit(mAdvancedWidget);
-    mDeltaMinEdit     = new LineEdit(mAdvancedWidget);
-    mDeltaMaxEdit     = new LineEdit(mAdvancedWidget);
-    mDeltaAverageEdit = new LineEdit(mAdvancedWidget);
-    mDeltaErrorEdit   = new LineEdit(mAdvancedWidget);
+    mDeltaFixedEdit   = new QLineEdit(mAdvancedWidget);
+    mDeltaMinEdit     = new QLineEdit(mAdvancedWidget);
+    mDeltaMaxEdit     = new QLineEdit(mAdvancedWidget);
+    mDeltaAverageEdit = new QLineEdit(mAdvancedWidget);
+    mDeltaErrorEdit   = new QLineEdit(mAdvancedWidget);
+    
+    mDeltaFixedEdit->setText(QString::number(0));
+    
+    
+    QGridLayout* advGrid = new QGridLayout();
+    advGrid->setContentsMargins(0, 0, 0, 0);
+    advGrid->addWidget(mMethodLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
+    advGrid->addWidget(mMethodCombo, 0, 1);
+    advGrid->addWidget(mWiggleLab, 1, 0, Qt::AlignRight | Qt::AlignVCenter);
+    advGrid->addWidget(mDeltaFixedRadio, 1, 1);
+    advGrid->addWidget(mDeltaRangeRadio, 2, 1);
+    advGrid->addWidget(mDeltaGaussRadio, 3, 1);
+    advGrid->addWidget(mDeltaHelp, 4, 1);
+    
+    advGrid->addWidget(mDeltaFixedLab, 5, 0, Qt::AlignRight | Qt::AlignVCenter);
+    advGrid->addWidget(mDeltaFixedEdit, 5, 1);
+    advGrid->addWidget(mDeltaMinLab, 5, 0, Qt::AlignRight | Qt::AlignVCenter);
+    advGrid->addWidget(mDeltaMinEdit, 5, 1);
+    advGrid->addWidget(mDeltaMaxLab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
+    advGrid->addWidget(mDeltaMaxEdit, 6, 1);
+    advGrid->addWidget(mDeltaAverageLab, 5, 0, Qt::AlignRight | Qt::AlignVCenter);
+    advGrid->addWidget(mDeltaAverageEdit, 5, 1);
+    advGrid->addWidget(mDeltaErrorLab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
+    advGrid->addWidget(mDeltaErrorEdit, 6, 1);
+
+    mAdvancedWidget->setLayout(advGrid);
     
     // ----------
     
-    mAdvanced = new Collapsible(tr("Advanced"), this);
-    mAdvanced->setWidget(mAdvancedWidget, 11*mMargin + 8*mLineH + mComboH + mDeltaHelp->heightForWidth(mWidth - 4*mMargin));
+    mButtonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    connect(mButtonBox, SIGNAL(accepted()), this, SLOT(accept()));
+    connect(mButtonBox, SIGNAL(rejected()), this, SLOT(reject()));
     
-    connect(mAdvanced, SIGNAL(collapsing(int)), this, SLOT(adaptSize()));
+    mLayout = new QVBoxLayout();
+    mLayout->addLayout(grid);
     
-    // ----------
+    QFrame* line1 = new QFrame();
+    line1->setFrameShape(QFrame::HLine);
+    line1->setFrameShadow(QFrame::Sunken);
+    mLayout->addWidget(line1);
     
-    mOkBut = new Button(tr("OK"), this);
-    mCancelBut = new Button(tr("Cancel"), this);
+    // Plugin form will be put here when ready!
     
-    connect(mOkBut, SIGNAL(clicked()), this, SLOT(accept()));
-    connect(mCancelBut, SIGNAL(clicked()), this, SLOT(reject()));
+    QFrame* line2 = new QFrame();
+    line2->setFrameShape(QFrame::HLine);
+    line2->setFrameShadow(QFrame::Sunken);
+    mLayout->addWidget(line2);
     
-    // ----------
+    mLayout->addWidget(mAdvancedCheck);
+    mLayout->addWidget(mAdvancedWidget);
+    mLayout->addWidget(mButtonBox);
+    mLayout->addStretch();
+    setLayout(mLayout);
     
-    mDeltaFixedRadio -> setChecked(true);
-    mDeltaFixedEdit  -> setText(QString::number(0));
+    setFixedWidth(600);
     
-    adaptSize();
+    updateVisibleControls();
 }
 
 DateDialog::~DateDialog()
@@ -103,24 +153,13 @@ void DateDialog::setForm(PluginFormAbstract* form)
     if(form)
     {
         mForm = form;
-        mForm->setParent(this);
-        mForm->setVisible(true);
+        mLayout->insertWidget(2, mForm);
+        PluginAbstract* plugin = form->mPlugin;
         
         // Check if wiggle is allowed by plugin
-        
-        PluginAbstract* plugin = form->mPlugin;
-        if(plugin->wiggleAllowed())
-        {
-            mAdvanced->setWidget(mAdvancedWidget, 11*mMargin + 8*mLineH + mComboH + mDeltaHelp->heightForWidth(mWidth - 4*mMargin));
-        }
-        else
-        {
-            mAdvanced->setWidget(mAdvancedWidget, 2*mMargin + mComboH);
-        }
-        
+        setWiggleEnabled(plugin->wiggleAllowed());
         
         // Disable methods forbidden by plugin
-        
         const QStandardItemModel* model = qobject_cast<const QStandardItemModel*>(mMethodCombo->model());
         for(int i=0; i<mMethodCombo->count(); ++i)
         {
@@ -134,9 +173,60 @@ void DateDialog::setForm(PluginFormAbstract* form)
                           : QVariant(), // clear item data in order to use default color
                           Qt::TextColorRole);
         }
-        
-        adaptSize();
     }
+}
+
+void DateDialog::setWiggleEnabled(bool enabled)
+{
+    mWiggleEnabled = enabled;
+    
+    mWiggleLab->setVisible(enabled);
+    mDeltaHelp->setVisible(enabled);
+    
+    mDeltaFixedRadio->setVisible(enabled);
+    mDeltaRangeRadio->setVisible(enabled);
+    mDeltaGaussRadio->setVisible(enabled);
+    
+    mDeltaFixedLab->setVisible(enabled);
+    mDeltaMinLab->setVisible(enabled);
+    mDeltaMaxLab->setVisible(enabled);
+    mDeltaAverageLab->setVisible(enabled);
+    mDeltaErrorLab->setVisible(enabled);
+    
+    mDeltaFixedEdit->setVisible(enabled);
+    mDeltaMinEdit->setVisible(enabled);
+    mDeltaMaxEdit->setVisible(enabled);
+    mDeltaAverageEdit->setVisible(enabled);
+    mDeltaErrorEdit->setVisible(enabled);
+    
+    adjustSize();
+}
+
+void DateDialog::updateVisibleControls()
+{
+    mDeltaFixedLab->setVisible(mWiggleEnabled && mDeltaFixedRadio->isChecked());
+    mDeltaFixedEdit->setVisible(mWiggleEnabled && mDeltaFixedRadio->isChecked());
+    
+    mDeltaMinLab->setVisible(mWiggleEnabled && mDeltaRangeRadio->isChecked());
+    mDeltaMinEdit->setVisible(mWiggleEnabled && mDeltaRangeRadio->isChecked());
+    mDeltaMaxLab->setVisible(mWiggleEnabled && mDeltaRangeRadio->isChecked());
+    mDeltaMaxEdit->setVisible(mWiggleEnabled && mDeltaRangeRadio->isChecked());
+    
+    mDeltaAverageLab->setVisible(mWiggleEnabled && mDeltaGaussRadio->isChecked());
+    mDeltaAverageEdit->setVisible(mWiggleEnabled && mDeltaGaussRadio->isChecked());
+    mDeltaErrorLab->setVisible(mWiggleEnabled && mDeltaGaussRadio->isChecked());
+    mDeltaErrorEdit->setVisible(mWiggleEnabled && mDeltaGaussRadio->isChecked());
+    
+    adjustSize();
+}
+
+void DateDialog::setAdvancedVisible(bool visible)
+{
+    mAdvancedWidget->setVisible(visible);
+    if(visible)
+        updateVisibleControls();
+    else
+        adjustSize();
 }
 
 void DateDialog::setDataMethod(Date::DataMethod method)
@@ -197,15 +287,15 @@ Date::DeltaType DateDialog::getDeltaType() const
     return type;
 }
 
-void DateDialog::paintEvent(QPaintEvent* e)
+/*void DateDialog::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
     
     QPainter p(this);
     p.fillRect(rect(), QColor(180, 180, 180));
-}
+}*/
 
-void DateDialog::resizeEvent(QResizeEvent* e)
+/*void DateDialog::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
     updateLayout();
@@ -252,9 +342,9 @@ void DateDialog::updateLayout()
     mDeltaGaussRadio->setGeometry(m, 3*m + mComboH + mDeltaHelp->height() + i * (m + mLineH), w - 4*m, mLineH); ++i;
     mDeltaAverageEdit->setGeometry(2*m + w1, 3*m + mComboH + mDeltaHelp->height() + i * (m + mLineH), w2, mLineH); ++i;
     mDeltaErrorEdit->setGeometry(2*m + w1, 3*m + mComboH + mDeltaHelp->height() + i * (m + mLineH), w2, mLineH); ++i;
-}
+}*/
 
-void DateDialog::adaptSize()
+/*void DateDialog::adaptSize()
 {
     QSize s(mWidth, 4*mMargin + 1*mLineH + mButH + mAdvanced->height());
     if(mForm)
@@ -263,4 +353,4 @@ void DateDialog::adaptSize()
     }
     resize(s);
     setFixedHeight(s.height());
-}
+}*/

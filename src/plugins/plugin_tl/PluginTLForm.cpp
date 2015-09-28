@@ -2,28 +2,38 @@
 #if USE_PLUGIN_TL
 
 #include "PluginTL.h"
-#include "Label.h"
-#include "LineEdit.h"
 #include <QJsonObject>
 #include <QtWidgets>
 
 
 PluginTLForm::PluginTLForm(PluginTL* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("TL Measurements"), parent, flags)
 {
-    mAverageLab = new Label(tr("Age") + " :", this);
-    mErrorLab = new Label(tr("Error (sd)") + " :", this);
-    mYearLab = new Label(tr("Ref. year") + " :", this);
+    mAverageLab = new QLabel(tr("Age") + " :", this);
+    mErrorLab = new QLabel(tr("Error (sd)") + " :", this);
+    mYearLab = new QLabel(tr("Ref. year") + " :", this);
     
-    mAverageEdit = new LineEdit(this);
+    mAverageEdit = new QLineEdit(this);
     mAverageEdit->setText("0");
     
-    mErrorEdit = new LineEdit(this);
+    mErrorEdit = new QLineEdit(this);
     mErrorEdit->setText("30");
     
-    mYearEdit = new LineEdit(this);
+    mYearEdit = new QLineEdit(this);
     mYearEdit->setText(QString::number(QDate::currentDate().year()));
     
-    setFixedHeight(sTitleHeight + 4*mMargin + 3*mLineH);
+    QGridLayout* grid = new QGridLayout();
+    grid->setContentsMargins(0, 0, 0, 0);
+    
+    grid->addWidget(mAverageLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mAverageEdit, 0, 1);
+    
+    grid->addWidget(mErrorLab, 1, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mErrorEdit, 1, 1);
+    
+    grid->addWidget(mYearLab, 2, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mYearEdit, 2, 1);
+    
+    setLayout(grid);
 }
 
 PluginTLForm::~PluginTLForm()
@@ -61,23 +71,4 @@ bool PluginTLForm::isValid()
 {
     return true;
 }
-
-void PluginTLForm::resizeEvent(QResizeEvent* e)
-{
-    Q_UNUSED(e);
-    
-    int m = mMargin;
-    int w = width();
-    int w1 = 100;
-    int w2 = w - 3*m - w1;
-    
-    mAverageLab->setGeometry(m, sTitleHeight + m, w1, mLineH);
-    mErrorLab->setGeometry(m, sTitleHeight + 2*m + mLineH, w1, mLineH);
-    mYearLab->setGeometry(m, sTitleHeight + 3*m + 2*mLineH, w1, mLineH);
-    
-    mAverageEdit->setGeometry(2*m + w1, sTitleHeight + m, w2, mLineH);
-    mErrorEdit->setGeometry(2*m + w1, sTitleHeight + 2*m + mLineH, w2, mLineH);
-    mYearEdit->setGeometry(2*m + w1, sTitleHeight + 3*m + 2*mLineH, w2, mLineH);
-}
-
 #endif

@@ -114,10 +114,6 @@ void ProjectView::updateProject()
 {
     mModelView->updateProject();
 }
-void ProjectView::updateFormatDate()
-{
-    mModelView->updateFormatDate();
-}
 
 #pragma mark Update Results
 void ProjectView::updateResults(Model* model)

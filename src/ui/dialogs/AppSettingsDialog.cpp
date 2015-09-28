@@ -1,8 +1,4 @@
 #include "AppSettingsDialog.h"
-#include "Button.h"
-#include "LineEdit.h"
-#include "Label.h"
-#include "CheckBox.h"
 #include "Painting.h"
 #include <QtWidgets>
 
@@ -11,45 +7,65 @@
 AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags):
 QDialog(parent, flags)
 {
-    setWindowTitle(tr("Settings"));
+    setWindowTitle(tr("Application Settings"));
     
-    mTitleLab = new Label(tr("Application Settings"), this);
-    mTitleLab->setIsTitle(true);
+    mLangHelpLab = new QLabel(tr("Language & Country are used to define how number input should be typed (using comma or dot as decimal separator). This is not related to the application translation which is not available yet!"), this);
+    QFont f;
+    f.setPointSize(pointSize(11));
+    mLangHelpLab->setFont(f);
+    mLangHelpLab->setAlignment(Qt::AlignCenter);
+    mLangHelpLab->setWordWrap(true);
     
-    mAutoSaveLab = new Label(tr("Auto save project") + " : ", this);
-    mAutoSaveCheck = new CheckBox(this);
-    mAutoSaveDelayLab = new Label(tr("Auto save interval (in minutes)") + " : ", this);
-    mAutoSaveDelayEdit = new LineEdit(this);
+    mLanguageLab = new QLabel(tr("Language") + " : ", this);
+    mLanguageCombo = new QComboBox(this);
+    mLanguageCombo->addItem(QLocale::languageToString(QLocale::French), QVariant(QLocale::French));
+    mLanguageCombo->addItem(QLocale::languageToString(QLocale::English), QVariant(QLocale::English));
+    mLanguageCombo->addItem(QLocale::languageToString(QLocale::German), QVariant(QLocale::German));
+    mLanguageCombo->addItem(QLocale::languageToString(QLocale::Spanish), QVariant(QLocale::Spanish));
+    
+    mCountryLab = new QLabel(tr("Country") + " : ", this);
+    mCountryCombo = new QComboBox(this);
+    mCountryCombo->addItem(QLocale::countryToString(QLocale::France), QVariant(QLocale::France));
+    mCountryCombo->addItem(QLocale::countryToString(QLocale::UnitedKingdom), QVariant(QLocale::UnitedKingdom));
+    mCountryCombo->addItem(QLocale::countryToString(QLocale::Germany), QVariant(QLocale::Germany));
+    mCountryCombo->addItem(QLocale::countryToString(QLocale::Spain), QVariant(QLocale::Spain));
+    
+    mAutoSaveLab = new QLabel(tr("Auto save project") + " : ", this);
+    mAutoSaveCheck = new QCheckBox(this);
+    mAutoSaveDelayLab = new QLabel(tr("Auto save interval (in minutes)") + " : ", this);
+    mAutoSaveDelayEdit = new QLineEdit(this);
     
     QIntValidator* positiveValidator = new QIntValidator();
     positiveValidator->setBottom(1);
     mAutoSaveDelayEdit->setValidator(positiveValidator);
     
-    mCSVCellSepLab = new Label(tr("CSV cell separator") + " : ", this);
-    mCSVCellSepEdit = new LineEdit(this);
+    mCSVCellSepLab = new QLabel(tr("CSV cell separator") + " : ", this);
+    mCSVCellSepEdit = new QLineEdit(this);
     mCSVCellSepEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     
-    mCSVDecSepLab = new Label(tr("CSV decimal separator") + " : ", this);
-    mCSVDecSepEdit = new LineEdit(this);
+    mCSVDecSepLab = new QLabel(tr("CSV decimal separator") + " : ", this);
+    mCSVDecSepCombo = new QComboBox(this);
+    mCSVDecSepCombo->addItem(", (comma)", QVariant(","));
+    mCSVDecSepCombo->addItem(". (dot)", QVariant("."));
     
-    mOpenLastProjectLab = new Label(tr("Open last project at launch") + " : ", this);
-    mOpenLastProjectCheck = new CheckBox(this);
+    mOpenLastProjectLab = new QLabel(tr("Open last project at launch") + " : ", this);
+    mOpenLastProjectCheck = new QCheckBox(this);
     
-    mPixelRatioLab = new Label(tr("Pixel Ratio") + ": ", this);
+    mPixelRatioLab = new QLabel(tr("Images export pixel ratio") + " : ", this);
     mPixelRatio = new QSpinBox(this);
     mPixelRatio->setRange(1, 5);
     mPixelRatio->setSingleStep(1);
     
-    mDpmLab = new Label(tr("Images export DPM") + ": ", this);
+    mDpmLab = new QLabel(tr("Image export DPM") + " : ", this);
     mDpm = new QComboBox(this);
     mDpm->addItems(QStringList() << "72" << "96" << "100" << "150" << "200" << "300");
     
-    mImageQualityLab = new Label(tr("Image export quality (0 to 100)") + ": ", this);
+    mImageQualityLab = new QLabel(tr("Image export quality (0 to 100)") + ": ", this);
     mImageQuality = new QSpinBox(this);
     mImageQuality->setRange(1, 100);
     mImageQuality->setSingleStep(1);
     
-    mFormatDateLab = new Label(tr("Date Format") + " :", this);
+    mFormatDateLab = new QLabel(tr("Graph display date format") + " : ", this);
     mFormatDateLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mFormatDate = new QComboBox(this);
     for(int i=0; i<3; ++i){
@@ -59,26 +75,76 @@ QDialog(parent, flags)
     mFormatDate->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mFormatDate->setVisible(true);
     
-    mPrecisionLab = new Label(tr("Date Precision") + " :", this);
+    mPrecisionLab = new QLabel(tr("Graph display date precision") + " : ", this);
     mPrecision = new QSpinBox(this);
     mPrecision->setRange(1, 5);
     mPrecision->setSingleStep(1);
     
-    mOkBut = new Button(tr("OK"), this);
-    mCancelBut = new Button(tr("Cancel"), this);
-    mResetBut = new Button(tr("Reset"), this);
-    
-    mOkBut->setAutoDefault(true);
-    
-    
-    
     
     connect(mAutoSaveCheck, SIGNAL(toggled(bool)), mAutoSaveDelayEdit, SLOT(setEnabled(bool)));
-    connect(mOkBut, SIGNAL(clicked()), this, SLOT(accept()));
-    connect(mCancelBut, SIGNAL(clicked()), this, SLOT(reject()));
-    connect(mResetBut, SIGNAL(clicked()), this, SLOT(reset()));
     
-    setFixedSize(350, 325);
+    mButtonBox = new QDialogButtonBox(QDialogButtonBox::Reset | QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    connect(mButtonBox, SIGNAL(accepted()), this, SLOT(accept()));
+    connect(mButtonBox, SIGNAL(rejected()), this, SLOT(reject()));
+    connect(mButtonBox, SIGNAL(clicked(QAbstractButton*)), this, SLOT(buttonClicked(QAbstractButton*)));
+    
+    QGridLayout* grid = new QGridLayout();
+    grid->setContentsMargins(0, 0, 0, 0);
+    int row = -1;
+    grid->addWidget(mLanguageLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mLanguageCombo, row, 1);
+    grid->addWidget(mCountryLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mCountryCombo, row, 1);
+    grid->addWidget(mLangHelpLab, ++row, 0, 1, 2);
+    
+    QFrame* line1 = new QFrame();
+    line1->setFrameShape(QFrame::HLine);
+    line1->setFrameShadow(QFrame::Sunken);
+    grid->addWidget(line1, ++row, 0, 1, 2);
+    
+    grid->addWidget(mAutoSaveLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mAutoSaveCheck, row, 1);
+    grid->addWidget(mAutoSaveDelayLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mAutoSaveDelayEdit, row, 1);
+    grid->addWidget(mOpenLastProjectLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mOpenLastProjectCheck, row, 1);
+    
+    QFrame* line2 = new QFrame();
+    line2->setFrameShape(QFrame::HLine);
+    line2->setFrameShadow(QFrame::Sunken);
+    grid->addWidget(line2, ++row, 0, 1, 2);
+    
+    grid->addWidget(mCSVCellSepLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mCSVCellSepEdit, row, 1);
+    grid->addWidget(mCSVDecSepLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mCSVDecSepCombo, row, 1);
+    
+    QFrame* line3 = new QFrame();
+    line3->setFrameShape(QFrame::HLine);
+    line3->setFrameShadow(QFrame::Sunken);
+    grid->addWidget(line3, ++row, 0, 1, 2);
+    
+    grid->addWidget(mPixelRatioLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mPixelRatio, row, 1);
+    grid->addWidget(mDpmLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mDpm, row, 1);
+    grid->addWidget(mImageQualityLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mImageQuality, row, 1);
+    
+    QFrame* line4 = new QFrame();
+    line4->setFrameShape(QFrame::HLine);
+    line4->setFrameShadow(QFrame::Sunken);
+    grid->addWidget(line4, ++row, 0, 1, 2);
+    
+    grid->addWidget(mFormatDateLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mFormatDate, row, 1);
+    grid->addWidget(mPrecisionLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mPrecision, row, 1);
+    
+    QVBoxLayout* mainLayout = new QVBoxLayout();
+    mainLayout->addLayout(grid);
+    mainLayout->addWidget(mButtonBox);
+    setLayout(mainLayout);
 }
 
 AppSettingsDialog::~AppSettingsDialog()
@@ -88,12 +154,15 @@ AppSettingsDialog::~AppSettingsDialog()
 
 void AppSettingsDialog::setSettings(const AppSettings& settings)
 {
+    mLanguageCombo->setCurrentText(QLocale::languageToString(settings.mLanguage));
+    mCountryCombo->setCurrentText(QLocale::countryToString(settings.mCountry));
+    
     mAutoSaveCheck->setChecked(settings.mAutoSave);
     mAutoSaveDelayEdit->setText(QString::number(settings.mAutoSaveDelay / 60));
     mAutoSaveDelayEdit->setEnabled(settings.mAutoSave);
     
     mCSVCellSepEdit->setText(settings.mCSVCellSeparator);
-    mCSVDecSepEdit->setText(settings.mCSVDecSeparator);
+    mCSVDecSepCombo->setCurrentText(settings.mCSVDecSeparator);
     
     mOpenLastProjectCheck->setChecked(settings.mOpenLastProjectAtLaunch);
     
@@ -107,10 +176,12 @@ void AppSettingsDialog::setSettings(const AppSettings& settings)
 AppSettings AppSettingsDialog::getSettings()
 {
     AppSettings settings;
+    settings.mLanguage = (QLocale::Language)mLanguageCombo->currentData().toInt();
+    settings.mCountry = (QLocale::Country)mCountryCombo->currentData().toInt();
     settings.mAutoSave = mAutoSaveCheck->isChecked();
     settings.mAutoSaveDelay = mAutoSaveDelayEdit->text().toInt() * 60;
     settings.mCSVCellSeparator = mCSVCellSepEdit->text();
-    settings.mCSVDecSeparator = mCSVDecSepEdit->text();
+    settings.mCSVDecSeparator = mCSVDecSepCombo->currentData().toString();
     settings.mOpenLastProjectAtLaunch = mOpenLastProjectCheck->isChecked();
     settings.mPixelRatio = mPixelRatio->value();
     settings.mDpm = mDpm->currentText().toShort();
@@ -120,79 +191,26 @@ AppSettings AppSettingsDialog::getSettings()
     return settings;
 }
 
-void AppSettingsDialog::reset()
+void AppSettingsDialog::buttonClicked(QAbstractButton* button)
 {
-    mAutoSaveCheck->setChecked(APP_SETTINGS_DEFAULT_AUTO_SAVE);
-    mAutoSaveDelayEdit->setText(QString(APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC / 60));
-    mAutoSaveDelayEdit->setEnabled(true);
-    
-    mCSVCellSepEdit->setText(APP_SETTINGS_DEFAULT_CELL_SEP);
-    mCSVDecSepEdit->setText(APP_SETTINGS_DEFAULT_DEC_SEP);
-    
-    mOpenLastProjectCheck->setChecked(APP_SETTINGS_DEFAULT_OPEN_PROJ);
-    
-    mPixelRatio->setValue(APP_SETTINGS_DEFAULT_PIXELRATIO);
-    mDpm->setCurrentText(QString(APP_SETTINGS_DEFAULT_DPM));
-    mImageQuality->setValue(APP_SETTINGS_DEFAULT_IMAGE_QUALITY);
-    mFormatDate->setCurrentIndex((int)APP_SETTINGS_DEFAULT_FORMATDATE);
-    mPrecision->setValue(APP_SETTINGS_DEFAULT_PRECISION);
+    if(mButtonBox->buttonRole(button) == QDialogButtonBox::ResetRole)
+    {
+        mLanguageCombo->setCurrentText(QLocale::languageToString(APP_SETTINGS_DEFAULT_LANGUAGE));
+        mCountryCombo->setCurrentText(QLocale::countryToString(APP_SETTINGS_DEFAULT_COUNTRY));
+        
+        mAutoSaveCheck->setChecked(APP_SETTINGS_DEFAULT_AUTO_SAVE);
+        mAutoSaveDelayEdit->setText(QString(APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC / 60));
+        mAutoSaveDelayEdit->setEnabled(true);
+        
+        mCSVCellSepEdit->setText(APP_SETTINGS_DEFAULT_CELL_SEP);
+        mCSVDecSepCombo->setCurrentText(APP_SETTINGS_DEFAULT_DEC_SEP);
+        
+        mOpenLastProjectCheck->setChecked(APP_SETTINGS_DEFAULT_OPEN_PROJ);
+        
+        mPixelRatio->setValue(APP_SETTINGS_DEFAULT_PIXELRATIO);
+        mDpm->setCurrentText(QString(APP_SETTINGS_DEFAULT_DPM));
+        mImageQuality->setValue(APP_SETTINGS_DEFAULT_IMAGE_QUALITY);
+        mFormatDate->setCurrentIndex((int)APP_SETTINGS_DEFAULT_FORMATDATE);
+        mPrecision->setValue(APP_SETTINGS_DEFAULT_PRECISION);
+    }
 }
-
-void AppSettingsDialog::resizeEvent(QResizeEvent* e)
-{
-    Q_UNUSED(e);
-    
-    int m = 5;
-    int lineH = 20;
-    int w1 = 200;
-    int w2 = width() - 3*m - w1;
-    int butW = 80;
-    int butH = 25;
-    
-    int y = -lineH;
-    
-    mTitleLab->setGeometry(m, y += (lineH + m), width() - 2*m, lineH);
-    
-    mAutoSaveLab->setGeometry(m, y += (lineH + m), w1, lineH);
-    mAutoSaveCheck->setGeometry(2*m + w1, y, w2, lineH);
-    
-    mAutoSaveDelayLab->setGeometry(m, y += (lineH + m), w1, lineH);
-    mAutoSaveDelayEdit->setGeometry(2*m + w1, y, w2, lineH);
-    
-    mCSVCellSepLab->setGeometry(m, y += (lineH + m), w1, lineH);
-    mCSVCellSepEdit->setGeometry(2*m + w1, y, w2, lineH);
-    
-    mCSVDecSepLab->setGeometry(m, y += (lineH + m), w1, lineH);
-    mCSVDecSepEdit->setGeometry(2*m + w1, y, w2, lineH);
-    
-    mOpenLastProjectLab->setGeometry(m, y += (lineH + m), w1, lineH);
-    mOpenLastProjectCheck->setGeometry(2*m + w1, y, w2, lineH);
-    
-    mPixelRatioLab->setGeometry(m, y += (lineH + m), w1, lineH);
-    mPixelRatio->setGeometry(2*m + w1, y, w2, lineH);
-    
-    mDpmLab->setGeometry(m, y += (lineH + m), w1, lineH);
-    mDpm->setGeometry(2*m + w1, y, w2, lineH);
-    
-    mImageQualityLab->setGeometry(m, y += (lineH + m), w1, lineH);
-    mImageQuality->setGeometry(2*m + w1, y, w2, lineH);
-    
-    mFormatDateLab->setGeometry(m, y += (lineH + m), w1, lineH);
-    mFormatDate->setGeometry(2*m + w1, y, w2, lineH);
-    
-    mPrecisionLab->setGeometry(m, y += (lineH + m), w1, lineH);
-    mPrecision->setGeometry(2*m + w1, y, w2, lineH);
-    
-    
-    mResetBut->setGeometry(width() - 3*m - 3*butW, height() - m - butH, butW, butH);
-    mOkBut->setGeometry(width() - 2*m - 2*butW, height() - m - butH, butW, butH);
-    mCancelBut->setGeometry(width() - m - butW, height() - m - butH, butW, butH);
-}
-
-void AppSettingsDialog::paintEvent(QPaintEvent* e)
-{
-    Q_UNUSED(e);
-    QPainter p(this);
-    p.fillRect(rect(), QColor(180, 180, 180));
-}
-
