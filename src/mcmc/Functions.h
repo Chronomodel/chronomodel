@@ -28,7 +28,7 @@ struct DensityAnalysis
 
 FunctionAnalysis analyseFunction(const QMap<double, double>& aFunction);
 QString functionAnalysisToString(const FunctionAnalysis& analysis);
-QString densityAnalysisToString(const DensityAnalysis& analysis);
+QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& nl = "<br>");
 
 // Standard Deviation (= écart type) of a vector of data
 double dataStd(QVector<double>& data);

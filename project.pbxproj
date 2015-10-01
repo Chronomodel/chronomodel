@@ -2084,6 +2084,21 @@
 					);
 			};
 		};
+		65ABBD3FF30EEC92742FEA4D = {
+			isa = PBXFileReference;
+			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_AppSettingsDialogItemDelegate.cpp";
+			name = "moc_AppSettingsDialogItemDelegate.cpp";
+			sourceTree = "<absolute>";
+			lastKnownFileType = "sourcecode.cpp.cpp";
+		};
+		0ECAC2BDB0DA6FD7D020213D = {
+			fileRef = "65ABBD3FF30EEC92742FEA4D";
+			isa = PBXBuildFile;
+			settings = {
+				ATTRIBUTES = (
+					);
+			};
+		};
 		4EE26790C8D2DB42C0C347C7 = {
 			isa = PBXFileReference;
 			path = "/Users/dufresne/ChronoModel-SoftWare/build/debug/moc/moc_EventDialog.cpp";
@@ -3120,6 +3135,13 @@
 			isa = PBXFileReference;
 			path = "/Users/dufresne/ChronoModel-SoftWare/src/ui/dialogs/AppSettingsDialog.h";
 			name = "AppSettingsDialog.h";
+			sourceTree = "<absolute>";
+			lastKnownFileType = "sourcecode.c.h";
+		};
+		C8F51B5BD477E30D78A2ADE4 = {
+			isa = PBXFileReference;
+			path = "/Users/dufresne/ChronoModel-SoftWare/src/ui/dialogs/AppSettingsDialogItemDelegate.h";
+			name = "AppSettingsDialogItemDelegate.h";
 			sourceTree = "<absolute>";
 			lastKnownFileType = "sourcecode.c.h";
 		};
@@ -4415,6 +4437,7 @@
 				"4D4817DB4A9B5E4F948B415A",
 				"ACB041CE4F5F2B236F7F9CC3",
 				"A81E9A8158040E0CB3040F04",
+				"65ABBD3FF30EEC92742FEA4D",
 				"4EE26790C8D2DB42C0C347C7",
 				"F8C035461699ADADBEC5F4DE",
 				"38BB96FB372D345CC2A1D528",
@@ -4673,6 +4696,7 @@
 				"BE0CA8D3E4747184E7217049",
 				"6A472D4C47EEC230AD876580",
 				"36A6E9043AA5780D9298FE42",
+				"C8F51B5BD477E30D78A2ADE4",
 				"EB5AA6147F83C27F759BE252",
 				"903E2509D181329B27E9FA1F",
 				"3DD3E5604C788CEC33E8B10A",
@@ -5151,6 +5175,7 @@
 				"BF4E9F6AFC8316A8F4E88B7E",
 				"5C35AAB6620601CFA586CAF8",
 				"C2EEBDCFB27D88499B8B7999",
+				"0ECAC2BDB0DA6FD7D020213D",
 				"EE88AD435CB130F3D5F7DB03",
 				"F2090A173E9910EA0FD2A8E4",
 				"D4B3DAD0EA21EA533A4C3AFE",
@@ -5466,7 +5491,7 @@
 				GCC_OPTIMIZATION_LEVEL = "0";
 				PRODUCT_NAME = "Chronomodel";
 				QT_LIBRARY_SUFFIX = "_debug";
-				SDKROOT = "macosx10.10";
+				SDKROOT = "macosx10.11";
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				CC = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang";
 				LDPLUSPLUS = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++";
@@ -5506,8 +5531,8 @@
 					"../../Qt/5.4/clang_64/lib/QtGui.framework/Versions/5/Headers",
 					"../../Qt/5.4/clang_64/lib/QtCore.framework/Versions/5/Headers",
 					"build/debug/moc",
-					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/OpenGL.framework/Headers",
-					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/AGL.framework/Headers/",
+					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/System/Library/Frameworks/OpenGL.framework/Versions/A/Headers",
+					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/System/Library/Frameworks/AGL.framework/Headers",
 					"../../Qt/5.4/clang_64/mkspecs/macx-clang");
 				LIBRARY_SEARCH_PATHS = (
 					"/Users/dufresne/ChronoModel-SoftWare/chronomodel/lib/FFTW/mac",
@@ -5573,7 +5598,7 @@
 				GCC_OPTIMIZATION_LEVEL = "0";
 				PRODUCT_NAME = "Chronomodel";
 				QT_LIBRARY_SUFFIX = "_debug";
-				SDKROOT = "macosx10.10";
+				SDKROOT = "macosx10.11";
 				PRODUCT_NAME = "Chronomodel";
 			};
 			name = "Debug";
@@ -5585,7 +5610,7 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = "NO";
 				PRODUCT_NAME = "Chronomodel";
 				QT_LIBRARY_SUFFIX = "";
-				SDKROOT = "macosx10.10";
+				SDKROOT = "macosx10.11";
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				CC = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang";
 				LDPLUSPLUS = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++";
@@ -5625,8 +5650,8 @@
 					"../../Qt/5.4/clang_64/lib/QtGui.framework/Versions/5/Headers",
 					"../../Qt/5.4/clang_64/lib/QtCore.framework/Versions/5/Headers",
 					"build/debug/moc",
-					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/OpenGL.framework/Headers",
-					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/AGL.framework/Headers/",
+					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/System/Library/Frameworks/OpenGL.framework/Versions/A/Headers",
+					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/System/Library/Frameworks/AGL.framework/Headers",
 					"../../Qt/5.4/clang_64/mkspecs/macx-clang");
 				LIBRARY_SEARCH_PATHS = (
 					"/Users/dufresne/ChronoModel-SoftWare/chronomodel/lib/FFTW/mac",
@@ -5691,7 +5716,7 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = "NO";
 				PRODUCT_NAME = "Chronomodel";
 				QT_LIBRARY_SUFFIX = "";
-				SDKROOT = "macosx10.10";
+				SDKROOT = "macosx10.11";
 				PRODUCT_NAME = "Chronomodel";
 			};
 			name = "Release";

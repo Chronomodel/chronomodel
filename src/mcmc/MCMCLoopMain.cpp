@@ -70,7 +70,7 @@ QString MCMCLoopMain::calibrate()
             //dates[i]->calibrate(mModel->mSettings);
             if(dates[i]->mCalibSum == 0)
             {
-                return tr("The following data cannot be nul : ") + dates[i]->mName;
+                return tr("The following data cannot be nul : ") + dates[i]->getName();
             }
             
             emit stepProgressed(i);
@@ -241,8 +241,8 @@ void MCMCLoopMain::initMCMC()
     // ----------------------------------------------------------------
     //  Init sigma i
     // ----------------------------------------------------------------
-    emit stepChanged(tr("Initializing variances..."), 0, events.size());
     QString log;
+    emit stepChanged(tr("Initializing variances..."), 0, events.size());
     
     for(int i=0; i<events.size(); ++i)
     {
@@ -256,7 +256,7 @@ void MCMCLoopMain::initMCMC()
            
             if(date.mSigma.mX<=1E-6){
                date.mSigma.mX=1E-6; // Add control the 2015/06/15 with PhL
-               log += line(date.mName + textBold("Sigma indiv. <=1E-6 set to 1E-6"));
+               log += line(date.getName() + textBold("Sigma indiv. <=1E-6 set to 1E-6"));
             }
             date.mSigma.mSigmaMH = 1.;
         }
@@ -276,16 +276,13 @@ void MCMCLoopMain::initMCMC()
     // ----------------------------------------------------------------
     //  Log Init
     // ----------------------------------------------------------------
-    
-    
-    log += line(textBold("Events Initialisation (with their data)"));
-    log += "<br>";
+    log += "<hr>";
+    log += textBold("Events Initialisation (with their data)");
     
     for(int i=0; i<events.size(); ++i)
     {
         Event* event = events[i];
-        
-        log += line("--------");
+        log += "<hr><br>";
         
         if(event->type() == Event::eKnown)
         {
@@ -295,68 +292,76 @@ void MCMCLoopMain::initMCMC()
                 log += line(textRed("Bound (" + QString::number(i+1) + "/" + QString::number(events.size()) + ") : " + bound->getName()));
                 log += line(textRed(" - theta (value) : " + QString::number(bound->mTheta.mX)));
                 log += line(textRed(" - theta (sigma MH) : " + QString::number(bound->mTheta.mSigmaMH)));
-                log += line(textRed("--------"));
             }
         }
         else
         {
             log += line(textBlue("Event (" + QString::number(i+1) + "/" + QString::number(events.size()) + ") : " + event->getName()));
+            qDebug()<<"textBlue"<<event->getName();
             log += line(textBlue(" - theta (value) : " + QString::number(event->mTheta.mX)));
             log += line(textBlue(" - theta (sigma MH) : " + QString::number(event->mTheta.mSigmaMH)));
             log += line(textBlue(" - SO2 : " + QString::number(event->mS02)));
-            log += line(textBlue("--------"));
         }
+        
         
         for(int j=0; j<event->mDates.size(); ++j)
         {
+            log += "<br>";
             Date& date = event->mDates[j];
-            
-            log += line(textGreen("Data (" + QString::number(j+1) + "/" + QString::number(event->mDates.size()) + ") : " + date.mName));
+            qDebug()<<"textGreen"<<mModel->mEvents[i]->getName();
+            for(int k=0; k<mModel->mEvents[i]->mDates.size(); ++k)
+            {
+                qDebug()<<mModel->mEvents[i]->mDates[k].getColor();
+                qDebug()<<mModel->mEvents[i]->mDates[k].getName();
+            }
+            log += line(textGreen("Data (" + QString::number(j+1) + "/" + QString::number(event->mDates.size()) + ") : " + event->mDates[j].getName()));
             log += line(textGreen(" - ti (value) : " + QString::number(date.mTheta.mX)));
-            log += line(textGreen(" - ti (sigma MH) : " + QString::number(date.mTheta.mSigmaMH)));
+            if(date.mMethod == Date::eMHSymGaussAdapt){
+                log += line(textGreen(" - ti (sigma MH) : " + QString::number(date.mTheta.mSigmaMH)));
+            }
             log += line(textGreen(" - sigmai (value) : " + QString::number(date.mSigma.mX)));
             log += line(textGreen(" - sigmai (sigma MH) : " + QString::number(date.mSigma.mSigmaMH)));
             log += line(textGreen(" - deltai (value) : " + QString::number(date.mDelta)));
-            log += line(textGreen("--------"));
         }
     }
     
     if(phases.size() > 0)
     {
-        log += "<br>";
-        log += line(textBold("Phases Initialisation"));
-        log += "<br>";
+        log += "<hr>";
+        log += textBold("Phases Initialisation");
+        log += "<hr>";
         
         for(int i=0; i<phases.size(); ++i)
         {
             Phase* phase = phases[i];
             
-            log += line(textPurple("Phase (" + QString::number(i+1) + "/" + QString::number(phases.size()) + ") : " + phase->mName));
+            log += "<br>";
+            log += line(textPurple("Phase (" + QString::number(i+1) + "/" + QString::number(phases.size()) + ") : " + phase->getName()));
             log += line(textPurple(" - alpha : " + QString::number(phase->mAlpha.mX)));
             log += line(textPurple(" - beta : " + QString::number(phase->mBeta.mX)));
             log += line(textPurple(" - tau : " + QString::number(phase->mTau)));
-            log += line(textPurple("--------"));
         }
     }
     
     if(phasesConstraints.size() > 0)
     {
-        log += "<br>";
-        log += line(textBold("Phases Constraints Initialisation"));
-        log += "<br>";
+        log += "<hr>";
+        log += textBold("Phases Constraints Initialisation");
+        log += "<hr>";
         
         for(int i=0; i<phasesConstraints.size(); ++i)
         {
             PhaseConstraint* constraint = phasesConstraints[i];
             
+            log += "<br>";
             log += line("PhaseConstraint (" + QString::number(i+1) + "/" + QString::number(phasesConstraints.size()) + ") : " + QString::number(constraint->mId));
             log += line(" - gamma : " + QString::number(constraint->mGamma));
         }
     }
     
-    mInitLog += line(textBold("------------------------------------"));
-    mInitLog += line(textBold("Init Chain " + QString::number(mChainIndex+1)));
-    mInitLog += line(textBold("------------------------------------"));
+    mInitLog += "<hr>";
+    mInitLog += textBold("INIT CHAIN " + QString::number(mChainIndex+1));
+    mInitLog += "<hr>";
     mInitLog += log;
     
     //qDebug() << log;

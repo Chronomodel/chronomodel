@@ -1,4 +1,6 @@
 #include "AppSettingsDialog.h"
+#include "AppSettingsDialogItemDelegate.h"
+#include "PluginSettingsViewAbstract.h"
 #include "Painting.h"
 #include <QtWidgets>
 
@@ -8,6 +10,11 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags):
 QDialog(parent, flags)
 {
     setWindowTitle(tr("Application Settings"));
+
+    // -----------------------------
+    //  General View
+    // -----------------------------
+    mGeneralView = new QWidget();
     
     mLangHelpLab = new QLabel(tr("Language & Country are used to define how number input should be typed (using comma or dot as decimal separator). This is not related to the application translation which is not available yet!"), this);
     QFont f;
@@ -34,6 +41,7 @@ QDialog(parent, flags)
     mAutoSaveCheck = new QCheckBox(this);
     mAutoSaveDelayLab = new QLabel(tr("Auto save interval (in minutes)") + " : ", this);
     mAutoSaveDelayEdit = new QLineEdit(this);
+    mAutoSaveDelayEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
     
     QIntValidator* positiveValidator = new QIntValidator();
     positiveValidator->setBottom(1);
@@ -41,7 +49,7 @@ QDialog(parent, flags)
     
     mCSVCellSepLab = new QLabel(tr("CSV cell separator") + " : ", this);
     mCSVCellSepEdit = new QLineEdit(this);
-    mCSVCellSepEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+    mCSVCellSepEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
     
     mCSVDecSepLab = new QLabel(tr("CSV decimal separator") + " : ", this);
     mCSVDecSepCombo = new QComboBox(this);
@@ -55,6 +63,7 @@ QDialog(parent, flags)
     mPixelRatio = new QSpinBox(this);
     mPixelRatio->setRange(1, 5);
     mPixelRatio->setSingleStep(1);
+    mPixelRatio->setStyleSheet("QLineEdit { border-radius: 5px; }");
     
     mDpmLab = new QLabel(tr("Image export DPM") + " : ", this);
     mDpm = new QComboBox(this);
@@ -64,6 +73,7 @@ QDialog(parent, flags)
     mImageQuality = new QSpinBox(this);
     mImageQuality->setRange(1, 100);
     mImageQuality->setSingleStep(1);
+    mImageQuality->setStyleSheet("QLineEdit { border-radius: 5px; }");
     
     mFormatDateLab = new QLabel(tr("Graph display date format") + " : ", this);
     mFormatDateLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -72,20 +82,21 @@ QDialog(parent, flags)
         mFormatDate->addItem(DateUtils::formatString((DateUtils::FormatDate)i));
     }
     mFormatDate->setCurrentIndex(0);
-    mFormatDate->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+    mFormatDate->setStyleSheet("QLineEdit { border-radius: 5px; }");
     mFormatDate->setVisible(true);
     
     mPrecisionLab = new QLabel(tr("Graph display date precision") + " : ", this);
     mPrecision = new QSpinBox(this);
     mPrecision->setRange(1, 5);
     mPrecision->setSingleStep(1);
+    mPrecision->setStyleSheet("QLineEdit { border-radius: 5px; }");
     
     
     connect(mAutoSaveCheck, SIGNAL(toggled(bool)), mAutoSaveDelayEdit, SLOT(setEnabled(bool)));
     
-    mButtonBox = new QDialogButtonBox(QDialogButtonBox::Reset | QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-    connect(mButtonBox, SIGNAL(accepted()), this, SLOT(accept()));
-    connect(mButtonBox, SIGNAL(rejected()), this, SLOT(reject()));
+    mButtonBox = new QDialogButtonBox(QDialogButtonBox::Reset/* | QDialogButtonBox::Ok | QDialogButtonBox::Cancel*/);
+    //connect(mButtonBox, SIGNAL(accepted()), this, SLOT(accept()));
+    //connect(mButtonBox, SIGNAL(rejected()), this, SLOT(reject()));
     connect(mButtonBox, SIGNAL(clicked(QAbstractButton*)), this, SLOT(buttonClicked(QAbstractButton*)));
     
     QGridLayout* grid = new QGridLayout();
@@ -144,7 +155,68 @@ QDialog(parent, flags)
     QVBoxLayout* mainLayout = new QVBoxLayout();
     mainLayout->addLayout(grid);
     mainLayout->addWidget(mButtonBox);
-    setLayout(mainLayout);
+    mGeneralView->setLayout(mainLayout);
+    
+    connect(mLanguageCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(changeSettings()));
+    connect(mCountryCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(changeSettings()));
+    connect(mAutoSaveCheck, SIGNAL(toggled(bool)), this, SLOT(changeSettings()));
+    connect(mAutoSaveDelayEdit, SIGNAL(editingFinished()), this, SLOT(changeSettings()));
+    connect(mOpenLastProjectCheck, SIGNAL(toggled(bool)), this, SLOT(changeSettings()));
+    connect(mCSVCellSepEdit, SIGNAL(editingFinished()), this, SLOT(changeSettings()));
+    connect(mCSVDecSepCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(changeSettings()));
+    connect(mImageQuality, SIGNAL(valueChanged(int)), this, SLOT(changeSettings()));
+    connect(mPixelRatio, SIGNAL(valueChanged(int)), this, SLOT(changeSettings()));
+    connect(mDpm, SIGNAL(currentIndexChanged(int)), this, SLOT(changeSettings()));
+    connect(mFormatDate, SIGNAL(currentIndexChanged(int)), this, SLOT(changeSettings()));
+    connect(mPrecision, SIGNAL(valueChanged(int)), this, SLOT(changeSettings()));
+    
+    // -----------------------------
+    //  List & Stack
+    // -----------------------------
+    mList = new QListWidget();
+    AppSettingsDialogItemDelegate* delegate = new AppSettingsDialogItemDelegate();
+    mList->setItemDelegate(delegate);
+    mList->setFixedWidth(180);
+    
+    mStack = new QStackedWidget();
+    
+    // General settings
+    QListWidgetItem* item = new QListWidgetItem();
+    item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemNeverHasChildren);
+    item->setText(tr("General"));
+    item->setData(0x0101, tr("General"));
+    mList->addItem(item);
+    mStack->addWidget(mGeneralView);
+    
+    // Plugins specific settings
+    const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
+    for(int i=0; i<plugins.size(); ++i)
+    {
+        PluginSettingsViewAbstract* view = plugins[i]->getSettingsView();
+        if(view){
+            QListWidgetItem* item = new QListWidgetItem();
+            item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemNeverHasChildren);
+            item->setText(plugins[i]->getName());
+            item->setData(0x0101, plugins[i]->getName());
+            item->setData(0x0102, plugins[i]->getId());
+            mList->addItem(item);
+            mStack->addWidget(view);
+        }
+    }
+    
+    QHBoxLayout* layout = new QHBoxLayout();
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+    layout->addWidget(mList);
+    layout->addWidget(mStack);
+    setLayout(layout);
+    
+    connect(mList, SIGNAL(currentRowChanged(int)), mStack, SLOT(setCurrentIndex(int)));
+    
+    mList->setCurrentRow(0);
+    mStack->setCurrentIndex(0);
+    
+    setFixedWidth(700);
 }
 
 AppSettingsDialog::~AppSettingsDialog()
@@ -191,6 +263,12 @@ AppSettings AppSettingsDialog::getSettings()
     return settings;
 }
 
+void AppSettingsDialog::changeSettings()
+{
+    AppSettings s = getSettings();
+    emit settingsChanged(s);
+}
+
 void AppSettingsDialog::buttonClicked(QAbstractButton* button)
 {
     if(mButtonBox->buttonRole(button) == QDialogButtonBox::ResetRole)
@@ -212,5 +290,8 @@ void AppSettingsDialog::buttonClicked(QAbstractButton* button)
         mImageQuality->setValue(APP_SETTINGS_DEFAULT_IMAGE_QUALITY);
         mFormatDate->setCurrentIndex((int)APP_SETTINGS_DEFAULT_FORMATDATE);
         mPrecision->setValue(APP_SETTINGS_DEFAULT_PRECISION);
+        
+        AppSettings s = getSettings();
+        emit settingsChanged(s);
     }
 }

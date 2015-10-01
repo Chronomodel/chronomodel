@@ -166,11 +166,11 @@ void MHVariable::generateNumericalResults(const QList<Chain>& chains)
     generateGlobalRunAcceptation(chains);
 }
 
-QString MHVariable::resultsText(const QString& noResultMessage, const QString& unit, FormatFunc formatFunc) const
+QString MHVariable::resultsString(const QString& nl, const QString& noResultMessage, const QString& unit, FormatFunc formatFunc) const
 {
-    QString result = MetropolisVariable::resultsText(noResultMessage, unit, formatFunc);
+    QString result = MetropolisVariable::resultsString(nl, noResultMessage, unit, formatFunc);
     if(!mProposal.isEmpty())
-        result += "<br>Acceptation rate (all acquire iterations) : " + QString::number(mGlobalAcceptation*100, 'f', 1) + "% ("+mProposal+")";
+        result += nl + "Acceptation rate (all acquire iterations) : " + QString::number(mGlobalAcceptation*100, 'f', 1) + "% ("+mProposal+")";
     return result;
 }
 

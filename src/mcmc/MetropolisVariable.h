@@ -51,9 +51,12 @@ public:
     
     // -----
     
-    virtual QString resultsText(const QString& noResultMessage = QObject::tr("No result to display"),
-                                const QString& unit = QString(),
-                                FormatFunc formatFunc = 0) const;
+    virtual QString resultsString(const QString& nl = "<br>",
+                                  const QString& noResultMessage = QObject::tr("No result to display"),
+                                  const QString& unit = QString(),
+                                  FormatFunc formatFunc = 0) const;
+    
+    QStringList getResultsList();
     // -----
     
 private:

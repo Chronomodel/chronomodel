@@ -1,6 +1,7 @@
 #include "QtUtilities.h"
 #include "StdUtilities.h"
 #include "StateKeys.h"
+#include "MainWindow.h"
 #include <QtWidgets>
 #include <QtSvg>
 
@@ -243,7 +244,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             //  If widget, draw with or without axis
             // -------------------------------
             if(widget){
-                p.setFont(widget->font());
+                //p.setFont(widget->font());
                 widget->render(&p, QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), r.height()));
             }
             
@@ -347,7 +348,7 @@ QString textRed(const QString& str)
 }
 QString textGreen(const QString& str)
 {
-    return "<span style=\"color: green;\">" + str + "</span>";
+    return "<span style=\"color: #000000;\">" + str + "</span>";
 }
 QString textBlue(const QString& str)
 {
@@ -355,7 +356,7 @@ QString textBlue(const QString& str)
 }
 QString textPurple(const QString& str)
 {
-    return "<span style=\"color: #8E60AB;\">" + str + "</span>";
+    return "<span style=\"color: #C95805;\">" + str + "</span>";
 }
 
 QColor randomColor()
@@ -404,4 +405,48 @@ QString formatValueToAppSettingsPrecision(const double valueToFormat)
     }
     else
         return QString::number(valueToFormat, fmt, 3);;
+}
+
+#pragma mark CSV File
+bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep)
+{
+    QFile file(filePath);
+    if(file.open(QFile::WriteOnly | QFile::Truncate))
+    {
+        QTextStream output(&file);
+        for(int i=0; i<data.size(); ++i)
+        {
+            output << data[i].join(csvSep);
+            output << "\n";
+        }
+        file.close();
+        return true;
+    }
+    return false;
+}
+
+bool saveAsCsv(const QList<QStringList>& data, const QString& title)
+{
+    AppSettings settings = MainWindow::getInstance()->getAppSettings();
+    QString csvSep = settings.mCSVCellSeparator;
+    
+    QString currentPath = MainWindow::getInstance()->getCurrentPath();
+    QString filter = QObject::tr("CSV (*.csv)");
+    QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                    title,
+                                                    currentPath,
+                                                    filter);
+    QFile file(filename);
+    if(file.open(QFile::WriteOnly | QFile::Truncate))
+    {
+        QTextStream output(&file);
+        for(int i=0; i<data.size(); ++i)
+        {
+            output << data[i].join(csvSep);
+            output << "\n";
+        }
+        file.close();
+        return true;
+    }
+    return false;
 }

@@ -50,9 +50,11 @@ QString DateUtils::formatString(const FormatDate format){
 }
 
 
-QString DateUtils::dateToString(const double date, const int precision){
-    QLocale locale = MainWindow::getInstance()->getAppSettings().mCSVCellSeparator == "." ? QLocale::English : QLocale::French;
+QString DateUtils::dateToString(const double date, int precision){
+    QLocale locale;// = MainWindow::getInstance()->getAppSettings().mCSVCellSeparator == "." ? QLocale::English : QLocale::French;
     locale.setNumberOptions(QLocale::OmitGroupSeparator);
+    if(precision == -1)
+        precision = MainWindow::getInstance()->getAppSettings().mPrecision;
     char fmt = 'f';
     if (date>250000){
         fmt = 'G';

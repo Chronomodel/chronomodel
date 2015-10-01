@@ -13,6 +13,13 @@ mLineH(20),
 mButH(25),
 mButW(80)
 {
+    QPalette Pal(palette());
+    
+    // set black background
+    Pal.setColor(QPalette::Background, Qt::gray);
+    this->setAutoFillBackground(true);
+    this->setPalette(Pal);
+    
     setWindowTitle(tr("Create / Modify phase"));
     
     mNameLab = new Label(tr("Phase name") + " :", this);
@@ -23,6 +30,8 @@ mButW(80)
     mTauMaxLab = new Label(tr("Upper date") + " :", this);
     
     mNameEdit = new LineEdit(this);
+    mNameEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
+    
     mColorPicker = new ColorPicker(QColor(), this);
     
     mTauTypeCombo = new QComboBox(this);

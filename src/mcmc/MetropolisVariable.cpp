@@ -1,6 +1,7 @@
 #include "MetropolisVariable.h"
 #include "StdUtilities.h"
 #include "Functions.h"
+#include "DateUtils.h"
 #if USE_FFT
 #include "fftw3.h"
 #endif
@@ -250,7 +251,7 @@ void MetropolisVariable::generateCredibility(const QList<Chain>& chains, double 
 
 void MetropolisVariable::generateCorrelations(const QList<Chain>& chains)
 {
-    int hmax = 100;
+    int hmax = 40;
     
     for(int c=0; c<chains.size(); ++c)
     {
@@ -448,24 +449,47 @@ QVector<double> MetropolisVariable::correlationForChain(int index)
 }
 
 
-QString MetropolisVariable::resultsText(const QString& noResultMessage, const QString& unit, FormatFunc formatFunc) const
+QString MetropolisVariable::resultsString(const QString& nl, const QString& noResultMessage, const QString& unit, FormatFunc formatFunc) const
 {
     if(mHisto.isEmpty())
         return noResultMessage;
     
-    QString result = densityAnalysisToString(mResults);
+    QLocale locale;
+    QString result = densityAnalysisToString(mResults, nl) + nl;
     
-    int precision = 1;
-    
-    result += "HPD Region (" + QString::number(mThreshold, 'f', 1) + "%) : " + getHPDText(mHPD, mThreshold, unit, formatFunc) + "<br>";
+    result += "HPD Region (" + locale.toString(mThreshold, 'f', 1) + "%) : " + getHPDText(mHPD, mThreshold, unit, formatFunc) + nl;
     if (formatFunc) {
-        result += "Credibility Interval (" + QString::number(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + formatFunc(mCredibility.first) + ", " + formatFunc(mCredibility.second) + "] " + unit;
+        result += "Credibility Interval (" + locale.toString(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + formatFunc(mCredibility.first) + ", " + formatFunc(mCredibility.second) + "] " + unit;
     }
     else {
-        result += "Credibility Interval (" + QString::number(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + QString::number(mCredibility.first, 'f', precision) + ", " + QString::number(mCredibility.second, 'f', precision) + "]";
+        result += "Credibility Interval (" + locale.toString(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + DateUtils::dateToString(mCredibility.first) + ", " + DateUtils::dateToString(mCredibility.second) + "]";
     }
     
     return result;
+}
+
+QStringList MetropolisVariable::getResultsList()
+{
+    QStringList list;
+    list << DateUtils::convertToAppSettingsFormatStr(mResults.analysis.mode);
+    list << DateUtils::convertToAppSettingsFormatStr(mResults.analysis.mean);
+    list << DateUtils::dateToString(mResults.analysis.stddev);
+    list << DateUtils::convertToAppSettingsFormatStr(mResults.quartiles.Q1);
+    list << DateUtils::convertToAppSettingsFormatStr(mResults.quartiles.Q2);
+    list << DateUtils::convertToAppSettingsFormatStr(mResults.quartiles.Q3);
+    list << QLocale().toString(mExactCredibilityThreshold * 100.f, 'f', 1);
+    list << DateUtils::convertToAppSettingsFormatStr(mCredibility.first);
+    list << DateUtils::convertToAppSettingsFormatStr(mCredibility.second);
+    
+    QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThreshold);
+    QStringList results;
+    for(int i=0; i<intervals.size(); ++i)
+    {
+        list << QLocale().toString(intervals[i].first, 'f', 1);
+        list << DateUtils::convertToAppSettingsFormatStr(intervals[i].second.first);
+        list << DateUtils::convertToAppSettingsFormatStr(intervals[i].second.second);
+    }
+    return list;
 }
 
 void MetropolisVariable::saveToStream(QDataStream* out) // ajout PhD

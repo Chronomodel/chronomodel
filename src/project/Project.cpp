@@ -523,7 +523,7 @@ void Project::setAppSettings(const AppSettings& settings)
 
 void Project::mcmcSettings()
 {
-    MCMCSettingsDialog dialog(qApp->activeWindow(), Qt::Sheet);
+    MCMCSettingsDialog dialog(qApp->activeWindow());
     MCMCSettings settings = MCMCSettings::fromJson(mState[STATE_MCMC].toObject());
     dialog.setSettings(settings);
     dialog.setModal(true);
@@ -563,6 +563,8 @@ void Project::resetMCMC()
                 
                 try{
                     Date d = Date::fromJson(date);
+                    d.setEventJson(events[i].toObject());
+                    d.setIdxInEventArray(j);
                     if(!d.isNull())
                     {
                         date[STATE_DATE_METHOD] = (int)d.mPlugin->getDataMethod();
@@ -834,6 +836,69 @@ void Project::mergeEvents(int eventFromId, int eventToId)
     pushProjectState(stateNext, tr("Events merged"), true);
 }
 
+#pragma mark Grouped actions on events
+void Project::updateSelectedEventsColor(const QColor& color)
+{
+    QJsonObject stateNext = mState;
+    QJsonArray events = mState[STATE_EVENTS].toArray();
+    for(int i=0; i<events.size(); ++i)
+    {
+        QJsonObject evt = events[i].toObject();
+        if(evt[STATE_IS_SELECTED].toBool())
+        {
+            evt[STATE_COLOR_RED] = color.red();
+            evt[STATE_COLOR_GREEN] = color.green();
+            evt[STATE_COLOR_BLUE] = color.blue();
+            events[i] = evt;
+        }
+    }
+    stateNext[STATE_EVENTS] = events;
+    pushProjectState(stateNext, tr("Update selected events color"), true);
+}
+
+void Project::updateSelectedEventsMethod(Event::Method method)
+{
+    QJsonObject stateNext = mState;
+    QJsonArray events = mState[STATE_EVENTS].toArray();
+    for(int i=0; i<events.size(); ++i)
+    {
+        QJsonObject evt = events[i].toObject();
+        if(evt[STATE_IS_SELECTED].toBool())
+        {
+            evt[STATE_EVENT_METHOD] = method;
+            events[i] = evt;
+        }
+    }
+    stateNext[STATE_EVENTS] = events;
+    pushProjectState(stateNext, tr("Update selected events method"), true);
+}
+
+void Project::updateSelectedEventsDataMethod(Date::DataMethod method, const QString& pluginId)
+{
+    QJsonObject stateNext = mState;
+    QJsonArray events = mState[STATE_EVENTS].toArray();
+    for(int i=0; i<events.size(); ++i)
+    {
+        QJsonObject evt = events[i].toObject();
+        if(evt[STATE_IS_SELECTED].toBool())
+        {
+            QJsonArray dates = evt[STATE_EVENT_DATES].toArray();
+            for(int j=0; j<dates.size(); ++j)
+            {
+                QJsonObject date = dates[j].toObject();
+                if(date[STATE_DATE_PLUGIN_ID].toString() == pluginId){
+                    date[STATE_DATE_METHOD] = method;
+                    dates[j] = date;
+                }
+            }
+            evt[STATE_EVENT_DATES] = dates;
+            events[i] = evt;
+        }
+    }
+    stateNext[STATE_EVENTS] = events;
+    pushProjectState(stateNext, tr("Update selected events method"), true);
+}
+
 
 // --------------------------------------------------------------------
 //     Dates
@@ -862,7 +927,7 @@ Date Project::createDateFromPlugin(PluginAbstract* plugin)
     Date date;
     if(plugin)
     {
-        DateDialog dialog(qApp->activeWindow(), Qt::Sheet);
+        DateDialog dialog(qApp->activeWindow());
         PluginFormAbstract* form = plugin->getForm();
         dialog.setForm(form);
         dialog.setDataMethod(plugin->getDataMethod());
@@ -874,7 +939,7 @@ Date Project::createDateFromPlugin(PluginAbstract* plugin)
                 date.mPlugin = plugin;
                 date.mData = form->getData();
                 
-                date.mName = dialog.getName();
+                date.mInitName = dialog.getName();
                 date.mMethod = dialog.getMethod();
                 date.mDeltaType = dialog.getDeltaType();
                 date.mDeltaFixed = dialog.getDeltaFixed();
@@ -1112,41 +1177,9 @@ void Project::deleteSelectedTrashedDates(const QList<int>& ids)
     pushProjectState(stateNext, tr("Trashed data deleted"), true);
 }
 
-// TODO : Should be in Plugin14C but how ??
-void Project::updateAll14CData(const QString& refCurve)
-{
-    QJsonObject stateNext = mState;
-    QJsonArray events = mState[STATE_EVENTS].toArray();
-    
-    for(int i=0; i<events.size(); ++i)
-    {
-        QJsonObject event = events[i].toObject();
-        if(event[STATE_EVENT_TYPE].toInt() == Event::eDefault)
-        {
-            QJsonArray dates = event[STATE_EVENT_DATES].toArray();
-            for(int j=0; j<dates.size(); ++j)
-            {
-                QJsonObject date = dates[j].toObject();
-                if(date[STATE_DATE_PLUGIN_ID].toString() == "14c")
-                {
-                    QJsonObject data = date[STATE_DATE_DATA].toObject();
-                    data[DATE_14C_REF_CURVE_STR] = refCurve;
-                    date[STATE_DATE_DATA] = data;
-                    dates[j] = date;
-                }
-            }
-            event[STATE_EVENT_DATES] = dates;
-            events[i] = event;
-        }
-    }
-    stateNext[STATE_EVENTS] = events;
-    
-    pushProjectState(stateNext, tr("C14 Refs modified"), true);
-}
-
 void Project::recycleDates(int eventId)
 {
-    TrashDialog dialog(TrashDialog::eDate, qApp->activeWindow(), Qt::Sheet);
+    TrashDialog dialog(TrashDialog::eDate, qApp->activeWindow());
     if(dialog.exec() == QDialog::Accepted)
     {
         QList<int> indexes = dialog.getSelectedIndexes();
@@ -1316,6 +1349,39 @@ void Project::splitDate(const int eventId, const int dateId)
     }
     stateNext[STATE_EVENTS] = events;
     pushProjectState(stateNext, tr("Dates splitted"), true);
+}
+
+#pragma mark Grouped actions on dates
+void Project::updateAllDataInSelectedEvents(const QHash<QString, QVariant>& groupedAction)
+{
+    QJsonObject stateNext = mState;
+    QJsonArray events = mState[STATE_EVENTS].toArray();
+    
+    for(int i=0; i<events.size(); ++i)
+    {
+        QJsonObject event = events[i].toObject();
+        if((event[STATE_EVENT_TYPE].toInt() == Event::eDefault) &&  // Not a bound
+           (event[STATE_IS_SELECTED].toBool())) // Event is selected
+        {
+            QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+            for(int j=0; j<dates.size(); ++j)
+            {
+                QJsonObject date = dates[j].toObject();
+                if(date[STATE_DATE_PLUGIN_ID].toString() == groupedAction["pluginId"].toString())
+                {
+                    QJsonObject data = date[STATE_DATE_DATA].toObject();
+                    data[groupedAction["valueKey"].toString()] = groupedAction["value"].toString();
+                    date[STATE_DATE_DATA] = data;
+                    dates[j] = date;
+                }
+            }
+            event[STATE_EVENT_DATES] = dates;
+            events[i] = event;
+        }
+    }
+    stateNext[STATE_EVENTS] = events;
+    
+    pushProjectState(stateNext, tr("Grouped action applied : ") + groupedAction["title"].toString(), true);
 }
 
 #pragma mark Phases
@@ -2200,7 +2266,7 @@ void Project::run()
             if(loop.mAbortedReason.isEmpty())
             {
                 //Memo of the init varaible state to show in Log view
-                mModel->mLogMCMC = loop.getChainsLog() + "<br><br>" + loop.getInitLog();
+                mModel->mLogMCMC = loop.getChainsLog() + loop.getInitLog();
                 emit mcmcFinished(mModel);
             }
             else

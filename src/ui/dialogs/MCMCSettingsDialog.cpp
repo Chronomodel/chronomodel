@@ -54,7 +54,7 @@ QDialog(parent, flags)
     connect(mOkBut, SIGNAL(clicked()), this, SLOT(accept()));
     connect(mCancelBut, SIGNAL(clicked()), this, SLOT(reject()));
     
-    setFixedSize(600, 300);
+    setFixedSize(600, 320);
 }
 
 MCMCSettingsDialog::~MCMCSettingsDialog()

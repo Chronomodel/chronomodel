@@ -49,16 +49,23 @@ public:
     void setRendering(Rendering render);
     Rendering getRendering();
     
-    void showAxisArrows(bool show);
-    void showAxisLines(bool show);
-    void showVertGrid(bool show);
-    void showHorizGrid(bool show);
+    void showXAxisLine(bool show);
+    void showXAxisArrow(bool show);
+    void showXAxisTicks(bool show);
+    void showXAxisSubTicks(bool show);
+    void showXAxisValues(bool show);
+    
+    void showYAxisLine(bool show);
+    void showYAxisArrow(bool show);
+    void showYAxisTicks(bool show);
+    void showYAxisSubTicks(bool show);
+    void showYAxisValues(bool show);
+    
     void setXAxisMode(AxisMode mode);
-    bool getXAxisMode();
     void setYAxisMode(AxisMode mode);
     
     void autoAdjustYScale(bool active);
-    void adjustYToMaxValue();
+    void adjustYToMaxValue(const double& marginProp = 0.1);
     void adjustYToMinMaxValue();
     
     void setGraphFont(const QFont& font);
@@ -87,7 +94,12 @@ public:
  
     // Save
     
-    bool saveAsSVG(const QString& fileName, const QString svgTitle, const QString svgDescrition, const bool withVersion, int const versionHeight=20);
+    bool saveAsSVG(const QString& fileName, const QString& svgTitle, const QString& svgDescrition, const bool withVersion, const int versionHeight=20);
+    
+    // ToolTips
+    
+    void setTipXLab(const QString& lab);
+    void setTipYLab(const QString& lab);
     
 public slots:
     void zoomX(const double min, const double max);
@@ -117,13 +129,23 @@ protected:
     AxisTool mAxisToolY;
     qreal mStepMinWidth;
     
-    Rendering mRendering;
-    bool mShowAxisArrows;
-    bool mShowAxisLines;
-    bool mShowVertGrid;
-    bool mShowHorizGrid;
+    bool mXAxisLine;
+    bool mXAxisArrow;
+    bool mXAxisTicks;
+    bool mXAxisSubTicks;
+    bool mXAxisValues;
+    
+    bool mYAxisLine;
+    bool mYAxisArrow;
+    bool mYAxisTicks;
+    bool mYAxisSubTicks;
+    bool mYAxisValues;
+    
     AxisMode mXAxisMode;
     AxisMode mYAxisMode;
+    
+    Rendering mRendering;
+    
     bool mAutoAdjustYScale; 
     
     FormatFunc mFormatFuncX;
@@ -140,6 +162,8 @@ protected:
     QRectF  mTipRect;
     double  mTipX;
     double  mTipY;
+    QString  mTipXLab;
+    QString  mTipYLab;
     double  mTipWidth;
     double  mTipHeight;
     double  mTipVisible;

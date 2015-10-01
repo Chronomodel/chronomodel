@@ -64,9 +64,9 @@ public:
     QGroupBox* mAdvancedWidget;
     
     QLabel* mMethodLab;
-    QLabel* mWiggleLab;
     QComboBox* mMethodCombo;
     
+    QLabel* mWiggleLab;
     QRadioButton* mDeltaFixedRadio;
     QRadioButton* mDeltaRangeRadio;
     QRadioButton* mDeltaGaussRadio;

@@ -14,8 +14,8 @@ public:
     virtual ~GraphViewPhase();
     
     void setPhase(Phase* phase);
-    
     void setGraphFont(const QFont& font);
+    virtual void setButtonsVisible(const bool visible);
     
     //double getMaxDuration();
     

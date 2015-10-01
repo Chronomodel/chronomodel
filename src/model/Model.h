@@ -26,16 +26,21 @@ public:
     QString getResultsLog() const;
     
     QString getMCMCLog() const;
-
+    
+    QList<QStringList> getStats();
+    QList<QStringList> getPhasesTraces();
+    QList<QStringList> getPhaseTrace(int phaseIdx);
+    QList<QStringList> getEventsTraces();
+    
     virtual ~Model();
 
     //static fromJson(const QJsonObject& json);
 
 
-    void fromJson( QJsonObject& json);
+    void fromJson( const QJsonObject& json);
     
-    void setJson( QJsonObject & json);
-    QJsonObject & getJson();
+    void setJson( const QJsonObject & json);
+    const QJsonObject & getJson();
   
         
     
@@ -72,7 +77,7 @@ public:
     QString mLogMCMC;
     QString mLogResults;
 private:
-    QJsonObject * mJson;
+    const QJsonObject * mJson;
 };
 
 #endif

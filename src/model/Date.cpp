@@ -12,7 +12,9 @@
 
 Date::Date():
 mColor(Qt::blue),
-mJson(Date::mJson)
+mInitName("No Date Name"),
+mJsonDate(NULL),
+mJsonEvent(NULL)
 {
     mTheta.mIsDate = true;
     mSigma.mIsDate = false;
@@ -20,7 +22,9 @@ mJson(Date::mJson)
 }
 
 Date::Date(PluginAbstract* plugin):
-mJson(Date::mJson)
+mInitName("No Date Name"),
+mJsonDate(NULL),
+mJsonEvent(NULL)
 {
     init();
     mPlugin = plugin;
@@ -45,8 +49,9 @@ void Date::init()
 }
 
 Date::Date(const Date& date):
-mJson(date.mJson)
-
+mJsonDate(date.mJsonDate),
+mJsonEvent(date.mJsonEvent),
+mIdxInEventArray(date.mIdxInEventArray)
 {
     copyFrom(date);
 }
@@ -59,12 +64,15 @@ Date& Date::operator=(const Date& date)
 
 void Date::copyFrom(const Date& date)
 {
+    mJsonDate=date.mJsonDate;
+    mJsonEvent=date.mJsonEvent;
+    mIdxInEventArray=date.mIdxInEventArray;
     mTheta = date.mTheta;
     mSigma = date.mSigma;
     mDelta = date.mDelta;
     
     mId = date.mId;
-    mName = date.mName;
+    mInitName = date.getName();
     mData = date.mData;
     mPlugin = date.mPlugin;
     mMethod = date.mMethod;
@@ -106,20 +114,36 @@ QColor Date::getColor() const
 
 QString Date::getName() const
 {
+    return mInitName;
+    /*if(mJsonDate==NULL){
+        return mInitName;
+    }
+    else{
+        QJsonObject js = *mJsonDate;
+        if(js.isEmpty()){
+            return "JsonDate without Name";
+        }
+        else {
+            return (*mJsonDate)[STATE_NAME].toString();
+        }
+    }
+    QJsonObject js =(*mJsonDate)[STATE_EVENTS].toArray().at(mEventIdx).toObject();
 
-    QJsonObject jsEvent = (*mJson)[STATE_EVENTS].toArray().at(mJsonEventIdx).toObject();
-    QJsonObject jsDate=jsEvent[STATE_EVENT_DATES].toArray().at(mJsonDateIdx).toObject();
-    return jsDate[STATE_NAME].toString();
+    QJsonObject jd = js[STATE_EVENT_DATES].toArray().at(mIdxInEventArray).toObject();
+    
+    return js[STATE_NAME].toString();
+    }*/
 }
-
+#pragma mark JSON
 Date Date::fromJson(const QJsonObject& json)
 {
     Date date;
     
     if(!json.isEmpty())
     {
+        date.mJsonDate = &json;
         date.mId = json[STATE_ID].toInt();
-        date.mName = json[STATE_NAME].toString();
+        date.mInitName = json[STATE_NAME].toString();
         //qDebug() <<"date.name" << date.mName;
         
         // Copy plugin specific values for this data :
@@ -155,18 +179,33 @@ Date Date::fromJson(const QJsonObject& json)
     
     return date;
 }
-void Date::setJson(QJsonObject & json, const int idxEvent, const int idxDate)
+
+
+void Date::setEventJson(const QJsonObject& jsonEvent)
 {
-    mJson = &json;
-    mJsonEventIdx = idxEvent;
-    mJsonDateIdx = idxDate;
+    mJsonEvent = &jsonEvent;
+    //qDebug()<<"Date::setEventJson"<<(*mJsonEvent)[STATE_NAME].toString();
+    mEventIdx = (*mJsonEvent)[STATE_ID].toInt();
+}
+void Date::setIdxInEventArray(int j)
+{
+    mIdxInEventArray = j;
+}
+
+void Date::setJson(const QJsonObject & json, const int eventIdx, const int dateIdx)
+{
+    mJsonDate = &json;
+    mIdxInEventArray=dateIdx;
+    mEventIdx=eventIdx;
+    //qDebug()<<"Date::setJson"<<(*mJsonDate)[STATE_NAME].toString();
+    mId = (*mJsonDate)[STATE_ID].toInt();
 }
 
 QJsonObject Date::toJson() const
 {
     QJsonObject date;
     date[STATE_ID] = mId;
-    date[STATE_NAME] = mName;
+    date[STATE_NAME] = getName();
     date[STATE_DATE_DATA] = mData;
     date[STATE_DATE_PLUGIN_ID] = mPlugin->getId();
     date[STATE_DATE_METHOD] = mMethod;
@@ -319,8 +358,16 @@ QPixmap Date::generateCalibThumb()
         graph.setCurrentX(tmin, tmax);
         graph.setRangeY(0, 1.1f);
         
-        graph.showAxisArrows(false);
-        graph.showAxisLines(false);
+        graph.showXAxisArrow(false);
+        graph.showXAxisTicks(false);
+        graph.showXAxisSubTicks(false);
+        graph.showXAxisValues(false);
+        
+        graph.showYAxisArrow(false);
+        graph.showYAxisTicks(false);
+        graph.showYAxisSubTicks(false);
+        graph.showYAxisValues(false);
+        
         graph.setXAxisMode(GraphView::eHidden);
         graph.setYAxisMode(GraphView::eHidden);
         
@@ -536,7 +583,7 @@ Date Date::fromCSV(QStringList dataStr)
     PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
     if(plugin)
     {
-        date.mName = dataStr[0];
+        date.mInitName = dataStr[0];
         date.mPlugin = plugin;
         date.mMethod = plugin->getDataMethod();
         date.mData = plugin->fromCSV(dataStr);
@@ -580,7 +627,7 @@ QStringList Date::toCSV() const
     QStringList csv;
     
     csv << mPlugin->getName();
-    csv << mName;
+    csv << getName();
     csv << mPlugin->toCSV(mData);
     
     if(mDeltaType == Date::eDeltaFixed)

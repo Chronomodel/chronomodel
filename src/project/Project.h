@@ -93,8 +93,10 @@ public:
     void checkDatesCompatibility();
     QJsonObject checkValidDates(const QJsonObject& state);
     
-    // TODO : Should be in Plugin14C but how ??
-    void updateAll14CData(const QString& refCurve);
+    void updateSelectedEventsColor(const QColor& color);
+    void updateSelectedEventsMethod(Event::Method);
+    void updateSelectedEventsDataMethod(Date::DataMethod method, const QString& pluginId);
+    void updateAllDataInSelectedEvents(const QHash<QString, QVariant>& groupedAction);
     
     void updatePhase(const QJsonObject& phaseIn);
     int getUnusedPhaseId(const QJsonArray& phases);

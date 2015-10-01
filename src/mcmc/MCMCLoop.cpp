@@ -64,8 +64,7 @@ void MCMCLoop::run()
     QString mDate =QDateTime::currentDateTime().toString("dddd dd MMMM yyyy");
     QTime startChainTime = QTime::currentTime();
     QString mTime = startChainTime.toString("hh:mm:ss.zzz");
-    QString log= line("Start " +mDate+" ->>> " +mTime);
-    log += line(textBold("MCMC Chains Log"));
+    QString log= "Start " +mDate+" ->>> " +mTime;
     
     //int timeDiff = 0;
     
@@ -94,7 +93,7 @@ void MCMCLoop::run()
     
     for(mChainIndex = 0; mChainIndex < mChains.size(); ++mChainIndex)
     {        
-        log += line("--------------------------");
+        log += "<hr>";
         log += line("Chain : " + QString::number(mChainIndex + 1) + "/" + QString::number(mChains.size()));
         
 
@@ -254,8 +253,7 @@ void MCMCLoop::run()
         log += "=> Chain done in " + QString::number(timeDiff) + " ms\n";*/
     }
     
-    log += line("--------------------------");
-    log += line("All Seeds (to be used in MCMC Settings dialog) :<br>" + seeds.join(";"));
+    log += line("List of used chains seeds (to be copied for re-use in MCMC Settings) :<br>" + seeds.join(";"));
     
     
     /*QTime endTotalTime = QTime::currentTime();

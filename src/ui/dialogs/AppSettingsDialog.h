@@ -13,6 +13,8 @@ class QSpinBox;
 class QComboBox;
 class QAbstractButton;
 class QDialogButtonBox;
+class QListWidget;
+class QStackedWidget;
 
 class CheckBox;
 class Label;
@@ -35,9 +37,18 @@ protected:
     //void resizeEvent(QResizeEvent* e);
     
 private slots:
+    void changeSettings();
     void buttonClicked(QAbstractButton*);
     
+signals:
+    void settingsChanged(const AppSettings&);
+    
 private:
+    QListWidget* mList;
+    QStackedWidget* mStack;
+    
+    QWidget* mGeneralView;
+    
     QLabel* mLangHelpLab;
     
     QLabel* mLanguageLab;

@@ -198,6 +198,8 @@ void ImportDataView::exportDates()
                     
                     try{
                         Date d = Date::fromJson(date);
+                        d.setEventJson(events[i].toObject());
+                        d.setIdxInEventArray(j);
                         if(!d.isNull())
                         {
                             QStringList dateCsv = d.toCSV();

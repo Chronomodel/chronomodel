@@ -79,8 +79,9 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             }
         }
         
-        QString results = ModelUtilities::eventResultsText(mEvent, false);
-        setNumericalResults(results);
+        QString resultsText = ModelUtilities::eventResultsText(mEvent, false);
+        QString resultsHTML = ModelUtilities::eventResultsHTML(mEvent, false);
+        setNumericalResults(resultsHTML, resultsText);
         
         // ------------------------------------------------
         //  First tab : Posterior distrib
@@ -256,7 +257,6 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->mLegendX = "";
             mGraph->setFormatFunctX(0);
             mGraph->setFormatFunctY(0);
-            mGraph->setRangeX(0, 100);
             mGraph->setRangeY(-1, 1);
             
             generateCorrelCurves(mChains, &(mEvent->mTheta));
@@ -306,6 +306,8 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 for(int i=0; i<mShowChainList.size(); ++i){
                     mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
                 }
+                mGraph->setTipXLab("t");
+                mGraph->setYAxisMode(GraphView::eHidden);
             }
             // ------------------------------------------------
             //  Events don't have std dev BUT we can visualize
@@ -325,6 +327,8 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                         mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " Chain " + QString::number(j), mShowChainList[j]);
                     }
                 }
+                mGraph->setTipXLab("duration");
+                mGraph->setYAxisMode(GraphView::eHidden);
             }
             mGraph->adjustYToMaxValue();
         }
@@ -346,6 +350,9 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList[i]);
             }
             mGraph->adjustYToMinMaxValue();
+            mGraph->setTipXLab("iteration");
+            mGraph->setTipYLab("t");
+            mGraph->setYAxisMode(GraphView::eMinMax);
         }
         
         // ------------------------------------------------
@@ -360,6 +367,9 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             for(int i=0; i<mShowChainList.size(); ++i){
                 mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList[i]);
             }
+            mGraph->setTipXLab("iteration");
+            mGraph->setTipYLab("rate");
+            mGraph->setYAxisMode(GraphView::eMinMax);
         }
         // ------------------------------------------------
         //  fourth tab : Autocorrelation
@@ -375,6 +385,9 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 mGraph->setCurveVisible("Correl Limit Lower " + QString::number(i), mShowChainList[i]);
                 mGraph->setCurveVisible("Correl Limit Upper " + QString::number(i), mShowChainList[i]);
             }
+            mGraph->setTipXLab("h");
+            mGraph->setTipYLab("value");
+            mGraph->setYAxisMode(GraphView::eMinMax);
         }
     }
 }

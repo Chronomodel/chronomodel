@@ -6,9 +6,38 @@
 #include <QObject>
 #include <QString>
 
+#define MHAdaptGaussStr QObject::tr("MH : proposal = adapt. Gaussian random walk")
+#define BoxMullerStr QObject::tr("AR : proposal = Gaussian")
+#define DoubleExpStr QObject::tr("AR : proposal = Double-Exponential")
+
+#define MHIndependantStr QObject::tr("MH : proposal = prior distribution")
+#define InversionStr QObject::tr("MH : proposal = distribution of calibrated date")
+#define MHSymGaussAdaptStr QObject::tr("MH : proposal = adapt. Gaussian random walk")
+
 
 bool sortEvents(Event* e1, Event* e2){return (e1->mItemY < e2->mItemY);}
 bool sortPhases(Phase* p1, Phase* p2){return (p1->mItemY < p2->mItemY);}
+
+Event::Method ModelUtilities::getEventMethodFromText(const QString& text)
+{
+    if(text == MHAdaptGaussStr)
+    {
+        return Event::eMHAdaptGauss;
+    }
+    else if(text == BoxMullerStr)
+    {
+        return Event::eBoxMuller;
+    }
+    else if(text == DoubleExpStr)
+    {
+        return Event::eDoubleExp;
+    }
+    else
+    {
+        // ouch... what to do ???
+        //return Event::eDoubleExp;
+    }
+}
 
 QString ModelUtilities::getEventMethodText(Event::Method method)
 {
@@ -16,20 +45,41 @@ QString ModelUtilities::getEventMethodText(Event::Method method)
     {
         case Event::eMHAdaptGauss:
         {
-            return QObject::tr("MH : proposal = adapt. Gaussian random walk");
+            return MHAdaptGaussStr;
         }
         case Event::eBoxMuller:
         {
-            return QObject::tr("AR : proposal = Gaussian");
+            return BoxMullerStr;
         }
         case Event::eDoubleExp:
         {
-            return QObject::tr("AR : proposal = Double-Exponential");
+            return DoubleExpStr;
         }
         default:
         {
             return QObject::tr("Unknown");
         }
+    }
+}
+
+Date::DataMethod ModelUtilities::getDataMethodFromText(const QString& text)
+{
+    if(text == MHIndependantStr)
+    {
+        return Date::eMHIndependant;
+    }
+    else if(text == InversionStr)
+    {
+        return Date::eInversion;
+    }
+    else if(text == MHSymGaussAdaptStr)
+    {
+        return Date::eMHSymGaussAdapt;
+    }
+    else
+    {
+        // ouch... what to do ???
+        //return Event::eDoubleExp;
     }
 }
 
@@ -39,15 +89,15 @@ QString ModelUtilities::getDataMethodText(Date::DataMethod method)
     {
         case Date::eMHIndependant:
         {
-            return QObject::tr("MH : proposal = prior distribution");
+            return MHIndependantStr;
         }
         case Date::eInversion:
         {
-            return QObject::tr("MH : proposal = distribution of calibrated date");
+            return InversionStr;
         }
         case Date::eMHSymGaussAdapt:
         {
-            return QObject::tr("MH : proposal = adapt. Gaussian random walk");
+            return MHSymGaussAdaptStr;
         }
         default:
         {
@@ -211,8 +261,8 @@ QVector<QVector<Phase*> > ModelUtilities::getNextBranches(const QVector<Phase*>&
                 {
                     QStringList names;
                     for(int j=0; j<branch.size(); ++j)
-                        names << branch[j]->mName;
-                    names << newNode->mName;
+                        names << branch[j]->getName();
+                    names << newNode->getName();
                     
                     throw QObject::tr("Circularity found in phases model !\nPlease correct this branch :\n") + names.join(" -> ");
                 }
@@ -221,8 +271,8 @@ QVector<QVector<Phase*> > ModelUtilities::getNextBranches(const QVector<Phase*>&
             {
                 QStringList names;
                 for(int j=0; j<curBranch.size(); ++j)
-                    names << curBranch[j]->mName;
-                names << newNode->mName;
+                    names << curBranch[j]->getName();
+                names << newNode->getName();
                 throw QObject::tr("Phases branch too long :\n") + names.join(" -> ");
             }
         }
@@ -345,16 +395,14 @@ QVector<Event*> ModelUtilities::unsortEvents(const QList<Event*>& events)
 QString ModelUtilities::dateResultsText(Date* d)
 {
     QString text;
+    QString nl = "\n";
     if(d)
     {
-        text += line(textBold(textGreen("Data : " + d->mName)));
-        text += "<br>";
-        text += line(textBold(textGreen("Date :")));
-        text += line(textGreen(d->mTheta.resultsText()));
-        text += "<br>";
-        text += line(textBold(textGreen("Std. Deviation :")));
-        text += line(textGreen(d->mSigma.resultsText()));
-        text += line(textGreen("----------------------"));
+        text += "Data : " + d->getName() + nl + nl;
+        text += "Date :" + nl;
+        text += d->mTheta.resultsString(nl) + nl + nl;
+        text += "Std. Deviation :" + nl;
+        text += d->mSigma.resultsString(nl);
     }
     return text;
 }
@@ -362,24 +410,25 @@ QString ModelUtilities::dateResultsText(Date* d)
 QString ModelUtilities::eventResultsText(Event* e, bool withDates)
 {
     QString text;
+    QString nl = "\n";
     if(e)
     {
         if(e->mType == Event::eKnown)
         {
-            text += line(textBold(textRed("Bound : " + e->getName()))) + "<br>";
-            text += line(textRed(e->mTheta.resultsText()));
-            text += line(textRed("----------------------"));
+            text += "Bound : " + e->getName() + nl;
+            text += e->mTheta.resultsString(nl);
         }
         else
         {
-            text += line(textBold(textBlue("Event : " + e->getName()))) + "<br>";
-            text += line(textBlue(e->mTheta.resultsText()));
-            text += line(textBlue("----------------------"));
+            text += "Event : " + e->getName() + nl;
+            text += e->mTheta.resultsString(nl);
             if(withDates)
             {
+                text += nl + nl;
+                text += "----------------------";
                 for(int i=0; i<e->mDates.size(); ++i)
                 {
-                    text += dateResultsText(&(e->mDates[i]));
+                    text += dateResultsText(&(e->mDates[i])) + nl + nl;
                 }
             }
         }
@@ -390,23 +439,88 @@ QString ModelUtilities::eventResultsText(Event* e, bool withDates)
 QString ModelUtilities::phaseResultsText(Phase* p)
 {
     QString text;
+    QString nl = "\n";
     if(p)
     {
-        text += line(textBold(textPurple("Phase : " + p->mName)));
+        text += "Phase : " + p->getName() + nl + nl;
+        
+        text += "Duration : " + nl;
+        text += p->mDuration.resultsString(nl, QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"));
+        
+        text += nl + nl;
+        text += "Begin : " + nl;
+        text += p->mAlpha.resultsString(nl);
+        
+        text += nl + nl;
+        text += "End : " + nl;
+        text += p->mBeta.resultsString(nl);
+    }
+    return text;
+}
+
+
+
+
+QString ModelUtilities::dateResultsHTML(Date* d)
+{
+    QString text;
+    if(d)
+    {
+        text += line(textBold(textGreen("Data : " + d->getName()))) + "<br>";
+        text += line(textBold(textGreen("Posterior distrib. :")));
+        text += line(textGreen(d->mTheta.resultsString())) + "<br>";
+        text += line(textBold(textGreen("Std. Deviation :")));
+        text += line(textGreen(d->mSigma.resultsString()));
+    }
+    return text;
+}
+
+QString ModelUtilities::eventResultsHTML(Event* e, bool withDates)
+{
+    QString text;
+    if(e)
+    {
+        if(e->mType == Event::eKnown)
+        {
+            text += line(textBold(textRed("Bound : " + e->getName()))) + "<br>";
+            text += line(textBold(textRed("Posterior distrib. :")));
+            text += line(textRed(e->mTheta.resultsString()));
+        }
+        else
+        {
+            text += line(textBold(textBlue("Event : " + e->getName()))) + "<br>";
+            text += line(textBold(textBlue("Posterior distrib. :")));
+            text += line(textBlue(e->mTheta.resultsString()));
+            if(withDates)
+            {
+                for(int i=0; i<e->mDates.size(); ++i)
+                {
+                    text += "<br><br>" + dateResultsHTML(&(e->mDates[i]));
+                }
+            }
+        }
+    }
+    return text;
+}
+
+QString ModelUtilities::phaseResultsHTML(Phase* p)
+{
+    QString text;
+    if(p)
+    {
+        text += line(textBold(textPurple("Phase : " + p->getName())));
         
         text += "<br>";
-        text += line(textBold(textPurple("Duration : ")));
-        text += line(textPurple(p->mDuration.resultsText(QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"))));
+        text += line(textBold(textPurple("Duration (posterior distrib.) : ")));
+        text += line(textPurple(p->mDuration.resultsString("<br>", QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"))));
         
         text += "<br>";
-        text += line(textBold(textPurple("Begin : ")));
-        text += line(textPurple(p->mAlpha.resultsText()));
+        text += line(textBold(textPurple("Begin (posterior distrib.) : ")));
+        text += line(textPurple(p->mAlpha.resultsString()));
         
         text += "<br>";
-        text += line(textBold(textPurple("End : ")));
-        text += line(textPurple(p->mBeta.resultsText()));
-        
-        text += line(textPurple("----------------------"));
+        text += line(textBold(textPurple("End (posterior distrib.) : ")));
+        text += line(textPurple(p->mBeta.resultsString()));
     }
     return text;
 }

@@ -37,7 +37,7 @@ void GraphViewDate::setDate(Date* date)
     if(date)
     {
         mDate = date;
-        setItemTitle(QString(tr("Data") + " : " + mDate->mName));
+        setItemTitle(QString(tr("Data") + " : " + mDate->getName()));
         setItemColor(mColor);
     }
     update();
@@ -56,12 +56,14 @@ void GraphViewDate::paintEvent(QPaintEvent* e)
 
 QColor GraphViewDate::getEventColor()
 {
-    if(mDate->mJson==NULL){
+    return randomColor();
+    /*if(mDate->mJsonEvent==NULL){
         return randomColor();
     }
     else {
-        QJsonObject ja = *(mDate->mJson);
-        QJsonObject js = ja[STATE_EVENTS].toArray().at(mDate->mJsonEventIdx).toObject();
+        //QJsonObject ja = *(mDate->mJsonDate);
+        //QJsonObject js = (*(mDate->mJsonDate))[STATE_EVENTS].toArray().at(mDate->mJsonEventIdx).toObject();
+        QJsonObject js = *(mDate->mJsonEvent);
         if(js.isEmpty()){
             return randomColor();
         }
@@ -72,7 +74,7 @@ QColor GraphViewDate::getEventColor()
             
             return QColor(R,G,B);
         }
-    }
+    }*/
 }
 
 void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
@@ -94,8 +96,9 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         QPen defaultPen;
         defaultPen.setWidthF(1);
         defaultPen.setStyle(Qt::SolidLine);
-        QString results = ModelUtilities::dateResultsText(mDate);
-        setNumericalResults(results);
+        QString resultsText = ModelUtilities::dateResultsText(mDate);
+        QString resultsHTML = ModelUtilities::dateResultsHTML(mDate);
+        setNumericalResults(resultsHTML, resultsText);
         
         // ------------------------------------------------
         //  Are we working on calendar date or std dev ?
@@ -123,7 +126,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             // ------------------------------------------------
             if(variable == eTheta)
             {
-                mTitle = QString(tr("Data") + " : " + mDate->mName);
+                mTitle = QString(tr("Data") + " : " + mDate->getName());
 
                 mGraph->mLegendX = DateUtils::getAppSettingsFormat();
                 mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
@@ -184,7 +187,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             //  - Sigma Chain i
             // ------------------------------------------------
             else if(variable == eSigma){
-                mTitle = QString(tr("Std") + " : " + mDate->mName);
+                mTitle = QString(tr("Std") + " : " + mDate->getName());
 
                 mGraph->mLegendX = "";
                 mGraph->setFormatFunctX(0);
@@ -299,6 +302,8 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
                 mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
             }
             mGraph->adjustYToMaxValue();
+            mGraph->setTipXLab("t");
+            mGraph->setYAxisMode(GraphView::eHidden);
         }
         // ------------------------------------------------
         //  Possible Curves :
@@ -311,6 +316,8 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
             {
                 mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
             }
+            mGraph->setTipXLab("duration");
+            mGraph->setYAxisMode(GraphView::eHidden);
         }
     }
     // ------------------------------------------------
@@ -331,6 +338,9 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
             mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList[i]);
         }
         mGraph->adjustYToMinMaxValue();
+        mGraph->setTipXLab("iterations");
+        mGraph->setTipYLab("t");
+        mGraph->setYAxisMode(GraphView::eMinMax);
     }
     // ------------------------------------------------
     //  Third tab : Acceptation rate.
@@ -344,6 +354,9 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
         for(int i=0; i<mShowChainList.size(); ++i){
             mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList[i]);
         }
+        mGraph->setTipXLab("iterations");
+        mGraph->setTipYLab("rate");
+        mGraph->setYAxisMode(GraphView::eMinMax);
     }
     
     // ------------------------------------------------
@@ -360,6 +373,9 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
             mGraph->setCurveVisible("Correl Limit Lower " + QString::number(i), mShowChainList[i]);
             mGraph->setCurveVisible("Correl Limit Upper " + QString::number(i), mShowChainList[i]);
         }
+        mGraph->setTipXLab("h");
+        mGraph->setTipYLab("value");
+        mGraph->setYAxisMode(GraphView::eMinMax);
     }
 }
 

@@ -2,22 +2,20 @@
 #if USE_PLUGIN_14C
 
 #include "Plugin14C.h"
-#include "Label.h"
 #include "ColorPicker.h"
-#include "Button.h"
 #include <QtWidgets>
 
 
 Plugin14CSettingsView::Plugin14CSettingsView(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags flags):PluginSettingsViewAbstract(plugin, parent, flags){
     
-    mRefCurvesLab = new Label(tr("Reference curves") + " :", this);
+    mRefCurvesLab = new QLabel(tr("Available reference curves") + " :", this);
     mRefCurvesLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mRefCurvesList = new QListWidget(this);
     mRefCurvesList->setSelectionBehavior(QAbstractItemView::SelectRows);
     mRefCurvesList->setSelectionMode(QAbstractItemView::ExtendedSelection);
     mRefCurvesList->setAlternatingRowColors(true);
-    mAddRefCurveBut = new Button(tr("Add"), this);
-    mDeleteRefCurveBut = new Button(tr("Delete"), this);
+    mAddRefCurveBut = new QPushButton(tr("Add"), this);
+    mDeleteRefCurveBut = new QPushButton(tr("Delete"), this);
     
     connect(mAddRefCurveBut, SIGNAL(clicked()), this, SLOT(addRefCurve()));
     connect(mDeleteRefCurveBut, SIGNAL(clicked()), this, SLOT(deleteRefCurve()));
@@ -34,6 +32,13 @@ Plugin14CSettingsView::Plugin14CSettingsView(Plugin14C* plugin, QWidget* parent,
     }
     mFilesNew = mFilesOrg;
     updateRefsList();
+    
+    QGridLayout* layout = new QGridLayout();
+    layout->addWidget(mRefCurvesLab, 0, 0, 1, 2);
+    layout->addWidget(mRefCurvesList, 1, 0, 1, 2);
+    layout->addWidget(mAddRefCurveBut, 2, 0);
+    layout->addWidget(mDeleteRefCurveBut, 2, 1);
+    setLayout(layout);
 }
 
 Plugin14CSettingsView::~Plugin14CSettingsView(){
@@ -112,22 +117,6 @@ void Plugin14CSettingsView::deleteRefCurve(){
         mFilesNew.remove(filename);
     }
     updateRefsList();
-}
-
-void Plugin14CSettingsView::resizeEvent(QResizeEvent*)
-{
-    int y = 0;
-    int m = 5;
-    int w = width();
-    int lineH = 16;
-    int butH = 25;
-    int butW = (w - m) / 2;
-    int listH = height() - 2*m - lineH - butH;
-    
-    mRefCurvesLab->setGeometry(0, y, w, lineH);
-    mRefCurvesList->setGeometry(0, y += lineH + m, w, listH);
-    mAddRefCurveBut->setGeometry(0, y += listH + m, butW, butH);
-    mDeleteRefCurveBut->setGeometry(m + butW, y, butW, butH);
 }
 
 #endif

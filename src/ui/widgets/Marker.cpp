@@ -4,7 +4,8 @@
 
 Marker::Marker(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
 {
-    setMouseTracking(true);
+    setMouseTracking(false);
+    setAttribute(Qt::WA_TransparentForMouseEvents);
 }
 
 Marker::~Marker()

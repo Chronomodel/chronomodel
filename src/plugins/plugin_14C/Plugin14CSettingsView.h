@@ -7,9 +7,9 @@
 #include <QMap>
 
 class Plugin14C;
-class Label;
+class QLabel;
 class QListWidget;
-class Button;
+class QPushButton;
 
 
 class Plugin14CSettingsView: public PluginSettingsViewAbstract
@@ -26,14 +26,11 @@ protected slots:
     void deleteRefCurve();
     void onAccepted();
     
-protected:
-    void resizeEvent(QResizeEvent*);
-    
 private:
-    Label* mRefCurvesLab;
+    QLabel* mRefCurvesLab;
     QListWidget* mRefCurvesList;
-    Button* mAddRefCurveBut;
-    Button* mDeleteRefCurveBut;
+    QPushButton* mAddRefCurveBut;
+    QPushButton* mDeleteRefCurveBut;
     
     QMap<QString, QString> mFilesOrg;
     QMap<QString, QString> mFilesNew;

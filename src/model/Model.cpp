@@ -7,6 +7,8 @@
 #include "ModelUtilities.h"
 #include "QtUtilities.h"
 #include "StdUtilities.h"
+#include "DateUtils.h"
+#include "MainWindow.h"
 #include "../PluginAbstract.h"
 #include <QJsonArray>
 #include <QtWidgets>
@@ -213,15 +215,15 @@ void Model::clear()
 }*/
 
 #pragma mark JSON conversion
-void Model::setJson( QJsonObject & json)
+void Model::setJson( const QJsonObject & json)
 {
     mJson = &json;
 }
-QJsonObject &  Model::getJson()
+const QJsonObject &  Model::getJson()
 {
     return (*mJson) ;
 }
-void Model::fromJson( QJsonObject& json)
+void Model::fromJson(const QJsonObject& json)
 {
     //Model* model = new Model();
 
@@ -263,7 +265,8 @@ void Model::fromJson( QJsonObject& json)
             {
                 try{
                     Event* e = new Event(Event::fromJson(event));
-                    e->setJson(json,i);
+                   // Event* e = new Event(Event::fromJson(json[STATE_EVENTS].toArray().at(i).toObject(),i));
+                    e->setJson(getJson(),i);
                     mEvents.append(e);
                 }
                 catch(QString error){
@@ -275,12 +278,14 @@ void Model::fromJson( QJsonObject& json)
                                         Qt::Sheet);
                     message.exec();
                 }
+                
+                
             }
             else
             {
                 EventKnown* e = new EventKnown(EventKnown::fromJson(event));
                 e->updateValues(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
-                e->setJson(json,i);
+                e->setJson(getJson(),i);
                 mEvents.append(e);
             }
             
@@ -288,8 +293,41 @@ void Model::fromJson( QJsonObject& json)
         }
     }
 
+    
+    //----test entree
+    
+    for(int i=0; i<mEvents.size(); ++i)
+    {
+        Event* event = mEvents[i];
+        
+        for(int j=0; j<event->mDates.size(); ++j)
+                {
+                    Date date = event->mDates.at(j);
+                   
+                    qDebug()<<"Model:: fromJson test entree date->setJson( date->getName()"<<i<<j<<mEvents[i]->mDates.at(0).getName();
+                    
+                }
+      
+    }
+    
+    
     // Sort events based on items y position
     std::sort(mEvents.begin(), mEvents.end(), sortEvents);
+    //----test sortie
+    
+    for(int i=0; i<mEvents.size(); ++i)
+    {
+        Event* event = mEvents[i];
+        
+        for(int j=0; j<event->mDates.size(); ++j)
+        {
+            Date date = event->mDates[j];
+            
+            qDebug()<<"Model:: fromJson test sortie date->setJson( date->getName()"<<date.getName();
+            
+        }
+        
+    }
 
     if(json.contains(STATE_EVENTS_CONSTRAINTS))
     {
@@ -416,9 +454,6 @@ void Model::generateModelLog()
 {
     QString log;
     
-    log += line(textBold(QString::number(mEvents.size()) + " events"));
-    log += "<br>";
-    
     for(int i=0; i<mEvents.size(); ++i)
     {
         QString objType = "Event";
@@ -428,7 +463,6 @@ void Model::generateModelLog()
                                  QString::number(mEvents[i]->mPhases.size()) + " phases, " +
                                  QString::number(mEvents[i]->mConstraintsBwd.size()) + " const. back., " +
                                  QString::number(mEvents[i]->mConstraintsFwd.size()) + " const. fwd.)"));
-            log += line(textRed("--------"));
         }
         else
         {
@@ -437,33 +471,31 @@ void Model::generateModelLog()
                                  QString::number(mEvents[i]->mPhases.size()) + " phases, " +
                                  QString::number(mEvents[i]->mConstraintsBwd.size()) + " const. back., " +
                                  QString::number(mEvents[i]->mConstraintsFwd.size()) + " const. fwd.)"));
-            log += line(textBlue("--------"));
         }
         
         for(int j=0; j<mEvents[i]->mDates.size(); ++j)
         {
-            log += line(textGreen("Data (" + QString::number(j+1) + "/" + QString::number(mEvents[i]->mDates.size()) + ") : " + mEvents[i]->mDates[j].mName +
+            log += "<br>";
+            log += line(textGreen("Data (" + QString::number(j+1) + "/" + QString::number(mEvents[i]->mDates.size()) + ") : " + mEvents[i]->mDates[j].getName() +
                                   "<br>- Type : " + mEvents[i]->mDates[j].mPlugin->getName() +
                                   "<br>- Method : " + ModelUtilities::getDataMethodText(mEvents[i]->mDates[j].mMethod) +
                                   "<br>- Params : " + mEvents[i]->mDates[j].getDesc()));
-            log += line(textGreen("--------"));
         }
+        log += "<hr>";
         log += "<br>";
     }
     
-    log += "<br>";
-    log += line(textBold(QString::number(mPhases.size()) + " phases"));
-    log += "<br>";
-    
     for(int i=0; i<mPhases.size(); ++i)
     {
-        log += line(textPurple("Phase (" + QString::number(i+1) + "/" + QString::number(mPhases.size()) + ") : " + mPhases[i]->mName + " (" + QString::number(mPhases[i]->mEvents.size()) + ")"));
-        log += line(textPurple("--------"));
+        log += line(textPurple("Phase (" + QString::number(i+1) + "/" + QString::number(mPhases.size()) + ") : " + mPhases[i]->getName() + " (" + QString::number(mPhases[i]->mEvents.size()) + " events)"));
+        log += "<br>";
         
         for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
         {
             log += line(textBlue("Event : " + mPhases[i]->mEvents[j]->getName()));
         }
+        log += "<hr>";
+        log += "<br>";
     }
     mLogModel = log;
     
@@ -502,14 +534,216 @@ void Model::generateResultsLog()
     for(int i=0; i<mEvents.size(); ++i)
     {
         Event* event = mEvents[i];
-        log += ModelUtilities::eventResultsText(event, true);
+        log += ModelUtilities::eventResultsHTML(event, true);
+        log += "<hr>";
     }
     for(int i=0; i<mPhases.size(); ++i)
     {
         Phase* phase = mPhases[i];
-        log += ModelUtilities::phaseResultsText(phase);
+        log += ModelUtilities::phaseResultsHTML(phase);
+        log += "<hr>";
     }
     mLogResults = log;
+}
+
+#pragma mark Results CSV
+QList<QStringList> Model::getStats()
+{
+    QList<QStringList> rows;
+    QLocale locale;
+    
+    int maxHpd = 0;
+    
+    // Phases
+    for(int i=0; i<mPhases.size(); ++i)
+    {
+        Phase* phase = mPhases[i];
+        
+        QStringList l = phase->mAlpha.getResultsList();
+        maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
+        l.prepend(phase->getName() + " alpha");
+        rows << l;
+        
+        l = phase->mBeta.getResultsList();
+        maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
+        l.prepend(phase->getName() + " beta");
+        rows << l;
+    }
+    
+    // Events
+    rows << QStringList();
+    for(int i=0; i<mEvents.size(); ++i)
+    {
+        Event* event = mEvents[i];
+        
+        QStringList l = event->mTheta.getResultsList();
+        maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
+        l.prepend(event->getName());
+        rows << l;
+    }
+    
+    // Dates
+    rows << QStringList();
+    for(int i=0; i<mEvents.size(); ++i)
+    {
+        Event* event = mEvents[i];
+        for(int j=0; j<event->mDates.size(); ++j)
+        {
+            Date& date = event->mDates[j];
+            
+            QStringList l = date.mTheta.getResultsList();
+            maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
+            l.prepend(date.getName());
+            rows << l;
+        }
+    }
+    
+    // Headers
+    QStringList list;
+    list << "" << "MAP" << "Mean" << "Std dev" << "Q1" << "Q2" << "Q3" << "Credibility %" << "Credibility start" << "Credibility end";
+    for(int i=0; i<maxHpd; ++i){
+        list << "HPD" + QString::number(i + 1) + " %";
+        list << "HPD" + QString::number(i + 1) + " start";
+        list << "HPD" + QString::number(i + 1) + " end";
+    }
+    rows.prepend(list);
+    
+    return rows;
+}
+    
+QList<QStringList> Model::getPhasesTraces()
+{
+    QList<QStringList> rows;
+    QLocale locale;
+    
+    int runSize = 0;
+    for(int i=0; i<mChains.size(); ++i){
+        runSize += mChains[i].mNumRunIter / mChains[i].mThinningInterval;
+    }
+    
+    QStringList headers;
+    headers << "";
+    for(int j=0; j<mPhases.size(); ++j)
+    {
+        Phase* phase = mPhases[j];
+        headers << "" << mPhases[j]->getName() + " alpha" << mPhases[j]->getName() + " beta";
+    }
+    rows << headers;
+    
+    int shift = 0;
+    for(int i=0; i<mChains.size(); ++i)
+    {
+        unsigned int burnAdaptSize = mChains[i].mNumBurnIter + (mChains[i].mBatchIndex * mChains[i].mNumBatchIter);
+        unsigned int runSize = mChains[i].mNumRunIter / mChains[i].mThinningInterval;
+        
+        for(int j=burnAdaptSize; j<burnAdaptSize + runSize; ++j)
+        {
+            QStringList l;
+            l << QString::number(shift + j);
+            for(int k=0; k<mPhases.size(); ++k)
+            {
+                Phase* phase = mPhases[k];
+                l << "";
+                l << DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mTrace.at(shift + j));
+                l << DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mTrace.at(shift + j));
+            }
+            rows << l;
+        }
+        shift += burnAdaptSize + runSize;
+    }
+    return rows;
+}
+
+QList<QStringList> Model::getPhaseTrace(int phaseIdx)
+{
+    QList<QStringList> rows;
+    QLocale locale;
+    
+    Phase* phase = 0;
+    if(phaseIdx >= 0 && phaseIdx < mPhases.size()){
+        phase = mPhases[phaseIdx];
+    }else{
+        return QList<QStringList>();
+    }
+    
+    int runSize = 0;
+    for(int i=0; i<mChains.size(); ++i){
+        runSize += mChains[i].mNumRunIter / mChains[i].mThinningInterval;
+    }
+    
+    QStringList headers;
+    headers << "" << "" << phase->getName() + " alpha" << phase->getName() + " beta" << "";
+    for(int i=0; i<phase->mEvents.size(); ++i)
+    {
+        Event* event = phase->mEvents[i];
+        headers << event->getName();
+    }
+    rows << headers;
+    
+    int shift = 0;
+    for(int i=0; i<mChains.size(); ++i)
+    {
+        unsigned int burnAdaptSize = mChains[i].mNumBurnIter + (mChains[i].mBatchIndex * mChains[i].mNumBatchIter);
+        unsigned int runSize = mChains[i].mNumRunIter / mChains[i].mThinningInterval;
+        
+        for(int j=burnAdaptSize; j<burnAdaptSize + runSize; ++j)
+        {
+            QStringList l;
+            l << QString::number(shift + j) << "";
+            l << DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mTrace.at(shift + j));
+            l << DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mTrace.at(shift + j));
+            l << "";
+            for(int k=0; k<phase->mEvents.size(); ++k)
+            {
+                Event* event = phase->mEvents[k];
+                l << DateUtils::convertToAppSettingsFormatStr(event->mTheta.mTrace.at(shift + j));
+            }
+            rows << l;
+        }
+        shift += burnAdaptSize + runSize;
+    }
+    return rows;
+}
+
+QList<QStringList> Model::getEventsTraces()
+{
+    QList<QStringList> rows;
+    QLocale locale;
+    
+    int runSize = 0;
+    for(int i=0; i<mChains.size(); ++i){
+        runSize += mChains[i].mNumRunIter / mChains[i].mThinningInterval;
+    }
+    
+    QStringList headers;
+    headers << "" << "";
+    for(int i=0; i<mEvents.size(); ++i)
+    {
+        Event* event = mEvents[i];
+        headers << event->getName();
+    }
+    rows << headers;
+    
+    int shift = 0;
+    for(int i=0; i<mChains.size(); ++i)
+    {
+        unsigned int burnAdaptSize = mChains[i].mNumBurnIter + (mChains[i].mBatchIndex * mChains[i].mNumBatchIter);
+        unsigned int runSize = mChains[i].mNumRunIter / mChains[i].mThinningInterval;
+        
+        for(int j=burnAdaptSize; j<burnAdaptSize + runSize; ++j)
+        {
+            QStringList l;
+            l << QString::number(shift + j) << "";
+            for(int k=0; k<mEvents.size(); ++k)
+            {
+                Event* event = mEvents[k];
+                l << DateUtils::convertToAppSettingsFormatStr(event->mTheta.mTrace.at(shift + j));
+            }
+            rows << l;
+        }
+        shift += burnAdaptSize + runSize;
+    }
+    return rows;
 }
 
 #pragma mark Model validity
@@ -533,7 +767,7 @@ bool Model::isValid()
     for(int i=0; i<mPhases.size(); ++i)
     {
         if(mPhases[i]->mEvents.size() == 0)
-            throw tr("The phase") + " \"" + mPhases[i]->mName + "\" " + tr("must contain at least 1 event");
+            throw tr("The phase") + " \"" + mPhases[i]->getName() + "\" " + tr("must contain at least 1 event");
     }
     
     // 4 - Pas de circularité sur les contraintes de faits
@@ -684,7 +918,7 @@ bool Model::isValid()
         }
         if(gammaMin >= (upper - lower))
         {
-            throw QString("The constraint between phases \"" + phaseFrom->mName + "\" and \"" + phaseTo->mName + "\" is not consistent with the bounds they contain!");
+            throw QString("The constraint between phases \"" + phaseFrom->getName() + "\" and \"" + phaseTo->getName() + "\" is not consistent with the bounds they contain!");
         }
     }
     
@@ -730,7 +964,7 @@ bool Model::isValid()
             {
                 if(tauMax < (max - min))
                 {
-                    throw QString("The phase \"" + mPhases[i]->mName + "\" has a duration inconsistent with the bounds it contains!");
+                    throw QString("The phase \"" + mPhases[i]->getName() + "\" has a duration inconsistent with the bounds it contains!");
                 }
                 // Modify bounds intervals to match max phase duration
                 for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
@@ -788,7 +1022,7 @@ bool Model::isValid()
                                 {
                                     if(e->mConstraintsBwd[n]->mEventFrom == event)
                                     {
-                                        throw "The event " + event->getName() + " (in phase " + phase->mName + ") is before the event " + e->getName() + " (in phase " + p->mName + "), BUT the phase " + phase->mName + " is after the phase " + p->mName + ".\n=> Contradiction !";
+                                        throw "The event " + event->getName() + " (in phase " + phase->getName() + ") is before the event " + e->getName() + " (in phase " + p->getName() + "), BUT the phase " + phase->getName() + " is after the phase " + p->getName() + ".\n=> Contradiction !";
                                     }
                                 }
                             }
@@ -798,7 +1032,7 @@ bool Model::isValid()
                                 {
                                     if(e->mConstraintsFwd[n]->mEventTo == event)
                                     {
-                                        throw "The event " + event->getName() + " (in phase " + phase->mName + ") is after the event " + e->getName() + " (in phase " + p->mName + "), BUT the phase " + phase->mName + " is before the phase " + p->mName + ".\n=> Contradiction !";
+                                        throw "The event " + event->getName() + " (in phase " + phase->getName() + ") is after the event " + e->getName() + " (in phase " + p->getName() + "), BUT the phase " + phase->getName() + " is before the phase " + p->getName() + ".\n=> Contradiction !";
                                     }
                                 }
                             }
@@ -1029,7 +1263,7 @@ void Model::clearCredibilityAndHPD()
 
 
 
-#pragma mark Dat files read / write
+#pragma mark Date files read / write
 /** @Brief Save .dat file, the result of computation and compress it
  *
  * */

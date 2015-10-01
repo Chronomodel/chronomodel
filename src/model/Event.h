@@ -33,9 +33,11 @@ public:
     virtual ~Event();
     
     //Added by PhD
-    void setJson( QJsonObject & iJson, const int idxEvent);
-    QJsonObject & getJson();
+    //void setJson(const  QJsonObject & iJson);
+    void setJson(const QJsonObject & iJson, const int idxEvent);
+    const QJsonObject & getJson();
     
+    static Event fromJson(const QJsonObject& json, const int EventIdx);
     static Event fromJson(const QJsonObject& json);
     virtual QJsonObject toJson() const;
     
@@ -94,7 +96,7 @@ public:
     int mLevel; // used to init mcmc
 
 private:
-    QJsonObject * mJson;
+    const QJsonObject * mJson;
     int mJsonEventIdx;
 };
 

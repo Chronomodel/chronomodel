@@ -15,10 +15,6 @@ class ProjectSettings;
 GraphView::GraphView(QWidget *parent):QWidget(parent),
 mStepMinWidth(50), // define secondary scale on axis
 mRendering(eSD),
-mShowAxisArrows(true),
-mShowAxisLines(true),
-mShowVertGrid(true),
-mShowHorizGrid(true),
 mXAxisMode(eAllTicks),
 mYAxisMode(eAllTicks),
 mAutoAdjustYScale(false),
@@ -29,10 +25,20 @@ mBackgroundColor(Qt::white),
 mThickness(1),
 mTipX(0.),
 mTipY(0.),
-mTipWidth(100.),
+mTipWidth(110.),
 mTipHeight(40.),
 mTipVisible(false),
-mUseTip(true)
+mUseTip(true),
+mXAxisLine(true),
+mXAxisArrow(true),
+mXAxisTicks(true),
+mXAxisSubTicks(true),
+mXAxisValues(true),
+mYAxisLine(true),
+mYAxisArrow(true),
+mYAxisTicks(true),
+mYAxisSubTicks(true),
+mYAxisValues(true)
 {
     mAxisToolX.mIsHorizontal = true;
     mAxisToolX.mShowArrow = true;
@@ -163,49 +169,24 @@ GraphView::Rendering GraphView::getRendering()
     return mRendering;
 }
 
+void GraphView::showXAxisLine(bool show)     {if(mXAxisLine != show){mXAxisLine = show; repaintGraph(true);} }
+void GraphView::showXAxisArrow(bool show)    {if(mXAxisArrow != show){mXAxisArrow = show; repaintGraph(true);} }
+void GraphView::showXAxisTicks(bool show)    {if(mXAxisTicks != show){mXAxisTicks = show; repaintGraph(true);} }
+void GraphView::showXAxisSubTicks(bool show) {if(mXAxisSubTicks != show){mXAxisSubTicks = show; repaintGraph(true);} }
+void GraphView::showXAxisValues(bool show)   {if(mXAxisValues != show){mXAxisValues = show; repaintGraph(true);} }
 
-void GraphView::showAxisArrows(bool show)
-{
-    if(mShowAxisArrows != show)
-    {
-        mShowAxisArrows = show;
-        repaintGraph(true);
-    }
-}
+void GraphView::showYAxisLine(bool show)     {if(mYAxisLine != show){mYAxisLine = show; repaintGraph(true);} }
+void GraphView::showYAxisArrow(bool show)    {if(mYAxisArrow != show){mYAxisArrow = show; repaintGraph(true);} }
+void GraphView::showYAxisTicks(bool show)    {if(mYAxisTicks != show){mYAxisTicks = show; repaintGraph(true);} }
+void GraphView::showYAxisSubTicks(bool show) {if(mYAxisSubTicks != show){mYAxisSubTicks = show; repaintGraph(true);} }
+void GraphView::showYAxisValues(bool show)   {if(mYAxisValues != show){mYAxisValues = show; repaintGraph(true);} }
 
-void GraphView::showAxisLines(bool show)
-{
-    if(mShowAxisLines != show)
-    {
-        mShowAxisLines = show;
-        repaintGraph(true);
-    }
-}
-
-void GraphView::showVertGrid(bool show)
-{
-    if(mShowVertGrid != show)
-    {
-        mShowVertGrid = show;
-        repaintGraph(true);
-    }
-}
-
-void GraphView::showHorizGrid(bool show)
-{
-    if(mShowHorizGrid != show)
-    {
-        mShowHorizGrid = show;
-        repaintGraph(true);
-    }
-}
 
 void GraphView::setXAxisMode(AxisMode mode)
 {
     if(mXAxisMode != mode)
     {
         mXAxisMode = mode;
-        mAxisToolX.mMinMaxOnly = (mXAxisMode == eMinMax);
         repaintGraph(true);
     }
 }
@@ -219,6 +200,7 @@ void GraphView::setYAxisMode(AxisMode mode)
         repaintGraph(true);
     }
 }
+
 /**
  * @brief If active is true, the current view automaticaly adjust Y axis to the curent view.
  * @brief it's a dynamic adjustment
@@ -231,7 +213,7 @@ void GraphView::autoAdjustYScale(bool active)
 /**
  * @brief Adjust the Y axis with 0 for the minimun and find the Maximum value in the visible curve
  */
-void GraphView::adjustYToMaxValue()
+void GraphView::adjustYToMaxValue(const double& marginProp)
 {
     double yMax = 0;
     for(int i=0; i<mCurves.size(); ++i){
@@ -248,47 +230,30 @@ void GraphView::adjustYToMaxValue()
             }
         }
     }
-    setRangeY(0, yMax);
+    setRangeY(0, yMax * (1. + marginProp));
 }
 void GraphView::adjustYToMinMaxValue()
 {
-    auto iterBegin =mCurves.cbegin();
-    auto iter = iterBegin;
-    // jump unvisible curve
-    while (!iter->mVisible && iter!=mCurves.cend() ) {
-        ++iter;
-    }
-    double yMin=0;
-    double yMax=0;
-    // init with the first visible curve
-    if (iter->mUseVectorData) {
-        yMin = vector_min_value(iter->mDataVector);
-        yMax = vector_max_value(iter->mDataVector);
-    }
-    else if(!iter->mUseVectorData &&
-           !iter->mIsHorizontalLine &&
-           !iter->mIsHorizontalSections &&
-           !iter->mIsVerticalLine &&
-           !iter->mIsVertical){
-            yMax = qMax(yMax, map_max_value(iter->mData));
-            yMin = qMin(yMin, map_min_value(iter->mData));
-    }
-    
-    ++iter;
-    // compare with the other visible curve
-    while (iter!=mCurves.cend()) {
-        if (iter->mVisible) {
-            if(!iter->mUseVectorData &&
-               !iter->mIsHorizontalLine &&
-               !iter->mIsHorizontalSections &&
-               !iter->mIsVerticalLine &&
-               !iter->mIsVertical){
-                        yMax = qMax(yMax, map_max_value(iter->mData));
-                        yMin = qMin(yMin, map_min_value(iter->mData));
-            }else if(iter->mUseVectorData){
-                        yMax = qMax(yMax, vector_max_value(iter->mDataVector));
-                        yMin = qMin(yMin, vector_min_value(iter->mDataVector));
+    double yMin = 0;
+    double yMax = 0;
+
+    QList<GraphCurve>::const_iterator iter = mCurves.cbegin();
+    bool firstFound = false;
+    while(iter != mCurves.cend()){
+        if(iter->mVisible){
+            if(iter->mUseVectorData){
+                yMin = firstFound ? qMin(yMin, vector_min_value(iter->mDataVector)) : vector_min_value(iter->mDataVector);
+                yMax = firstFound ? qMax(yMax, vector_max_value(iter->mDataVector)) : vector_max_value(iter->mDataVector);
             }
+            else if(!iter->mUseVectorData &&
+                    !iter->mIsHorizontalLine &&
+                    !iter->mIsHorizontalSections &&
+                    !iter->mIsVerticalLine &&
+                    !iter->mIsVertical){
+                yMin = firstFound ? qMin(yMin, map_min_value(iter->mData)) : map_min_value(iter->mData);
+                yMax = firstFound ? qMax(yMax, map_max_value(iter->mData)) : map_max_value(iter->mData);
+            }
+            firstFound = true;
         }
         ++iter;
     }
@@ -418,6 +383,7 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
     {
         mTipVisible = true;
         QRectF old_rect = mTipRect;
+        QLocale locale;
         
         int cursorW = 15;
         int cursorH = 15;
@@ -440,11 +406,11 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
         
         mTipX = getValueForX(e->x()-0.5);
         if(mFormatFuncX)
-            mTipX = mFormatFuncX(mTipX).toDouble();
+            mTipX = locale.toDouble(mFormatFuncX(mTipX));
         
         mTipY = getValueForY(e->y()+0.5);
         if(mFormatFuncY)
-            mTipY = mFormatFuncY(mTipY).toDouble();
+            mTipY = locale.toDouble(mFormatFuncY(mTipY));
         
         update(old_rect.adjusted(-30, -30, 30, 30).toRect());
     }
@@ -458,9 +424,16 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
     e->ignore();
 }
 
+void GraphView::setTipXLab(const QString& lab)
+{
+    mTipXLab = lab + " = ";
+}
+void GraphView::setTipYLab(const QString& lab)
+{
+    mTipYLab = lab + " = ";
+}
+
 #pragma mark Resize & Paint
-
-
 void GraphView::resizeEvent(QResizeEvent* event)
 {
     Q_UNUSED(event);
@@ -514,7 +487,6 @@ void GraphView::paintEvent(QPaintEvent* )
         paintToDevice(&mBufferBack);
         if (mBufferBack.isNull() ) {
             qDebug()<< "mBufferBack.isNull()";
-
         }
     }
     // ----------------------------------------------------
@@ -532,13 +504,12 @@ void GraphView::paintEvent(QPaintEvent* )
         QPainter p(this);
         p.setRenderHints(QPainter::Antialiasing);
         p.drawPixmap(mBufferBack.rect(), mBufferBack, rect());
-        
     }
     
     // ----------------------------------------------------
     //  Tool Tip (above all) Draw horizontal and vertical red line
     // ----------------------------------------------------
-    if(mTipVisible)
+    if(mTipVisible && (!mTipXLab.isEmpty() || !mTipYLab.isEmpty()))
     {
         QPainterPath tipPath;
         if (mTipRect.width()<2) {
@@ -554,17 +525,26 @@ void GraphView::paintEvent(QPaintEvent* )
         
         
         QFont font;
-        font.setPointSizeF(pointSize(9));
+        font.setPointSizeF(pointSize(10));
         
         QPainter p(this);
+        p.setRenderHints(QPainter::Antialiasing);
         p.setFont(font);
         
         p.fillPath(tipPath, QColor(0, 0, 0, 180));
         p.setPen(Qt::black);
         p.drawPath(tipPath);
         p.setPen(Qt::white);
-        p.drawText(mTipRect.adjusted(0, 0, 0, (int)(-mTipRect.height()/2) ), Qt::AlignCenter, QString("x : ") + QString::number(mTipX,'f',3) );
-        p.drawText(mTipRect.adjusted(0, (int)(mTipRect.height()/2), 0, 0), Qt::AlignCenter, QString("y : ") + QString::number(mTipY));
+        if(!mTipXLab.isEmpty() && !mTipYLab.isEmpty()){
+            p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + DateUtils::dateToString(mTipX));
+            p.drawText(mTipRect.adjusted(0, (int)(mTipRect.height()/2), 0, 0), Qt::AlignCenter, mTipYLab + DateUtils::dateToString(mTipY));
+        }
+        else if(!mTipXLab.isEmpty()){
+            p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + DateUtils::dateToString(mTipX));
+        }
+        else if(!mTipYLab.isEmpty()){
+            p.drawText(mTipRect, Qt::AlignCenter, mTipYLab + DateUtils::dateToString(mTipY));
+        }
        
     }
 }
@@ -603,65 +583,50 @@ void GraphView::paintToDevice(QPaintDevice* device)
     // ----------------------------------------------------
     //  Vertical Grid
     // ----------------------------------------------------
-    if(mXAxisMode != eHidden)
-    {
-        if(!mLegendX.isEmpty()) {
-            QRectF tr(mMarginLeft, mGraphHeight- mMarginBottom, mGraphWidth, mMarginBottom);
-            p.setPen(Qt::black);
-            p.drawText(tr, Qt::AlignRight | Qt::AlignTop, mLegendX);
-        }
-        
-        mAxisToolX.mShowText    = true;
-        mAxisToolX.mShowSubs    = true;
-        mAxisToolX.mShowSubSubs = true;
-        mAxisToolX.mShowArrow   = true;
-        
-        mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
-        QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 7, mFormatFuncX);
-        
-        if(mShowVertGrid)
-        {
-            p.setPen(QColor(0, 0, 0, 20));
-            for(int i=0; i<linesXPos.size(); ++i)
-            {
-                qreal x = linesXPos[i];
-                p.drawLine(x, mMarginTop, x, mMarginTop + mGraphHeight);
-            }
-        }
+    if(!mLegendX.isEmpty()) {
+        QRectF tr(mMarginLeft, mGraphHeight- mMarginBottom, mGraphWidth, mMarginBottom);
+        p.setPen(Qt::black);
+        p.drawText(tr, Qt::AlignRight | Qt::AlignTop, mLegendX);
     }
-    else {
-        mAxisToolX.mShowText = false;
-        mAxisToolX.mShowSubs = true;
-        mAxisToolX.mShowSubSubs = false;
-        mAxisToolX.mShowArrow = true;
-        mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 7, mFormatFuncX);
-    }
+    
+    mAxisToolX.mShowArrow = mXAxisArrow;
+    mAxisToolX.mShowSubs = mXAxisTicks;
+    mAxisToolX.mShowSubSubs = mXAxisSubTicks;
+    mAxisToolX.mShowText = mXAxisValues;
+    
+    mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
+    QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 7, mFormatFuncX);
+    
+    /*if(mShowVertGrid)
+     {
+     p.setPen(QColor(0, 0, 0, 20));
+     for(int i=0; i<linesXPos.size(); ++i)
+     {
+     qreal x = linesXPos[i];
+     p.drawLine(x, mMarginTop, x, mMarginTop + mGraphHeight);
+     }
+     }*/
    
     // ----------------------------------------------------
     //  Horizontal Grid
     // ----------------------------------------------------
-    if(mYAxisMode != eHidden)
-    {
-        mAxisToolY.mShowText = true;
-        mAxisToolY.mShowSubs = true;
-        mAxisToolY.mShowSubSubs = true;
-        mAxisToolY.mShowArrow = true;
-        mAxisToolY.updateValues(mGraphHeight, mStepMinWidth, mMinY, mMaxY);
-        QVector<qreal> linesYPos = mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), 5, mFormatFuncY);
-        
-        if(mShowHorizGrid)
-        {
-            p.setPen(QColor(0, 0, 0, 20));
-            for(int i=0; i<linesYPos.size(); ++i)
-            {
-                double y = linesYPos[i];
-                p.drawLine(mMarginLeft, y, mMarginLeft + mGraphWidth, y);
-            }
-        }
-    }
+    mAxisToolY.mShowArrow = mYAxisArrow;
+    mAxisToolY.mShowSubs = mYAxisTicks;
+    mAxisToolY.mShowSubSubs = mYAxisSubTicks;
+    mAxisToolY.mShowText = mYAxisValues;
+
+    mAxisToolY.updateValues(mGraphHeight, mStepMinWidth, mMinY, mMaxY);
+    QVector<qreal> linesYPos = mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), 5, mFormatFuncY);
     
-    font.setPointSizeF(font.pointSizeF() + 2.);
-    p.setFont(font);
+    /*if(mShowHorizGrid)
+     {
+     p.setPen(QColor(0, 0, 0, 20));
+     for(int i=0; i<linesYPos.size(); ++i)
+     {
+     double y = linesYPos[i];
+     p.drawLine(mMarginLeft, y, mMarginLeft + mGraphWidth, y);
+     }
+     }*/
     
     
     
@@ -670,6 +635,8 @@ void GraphView::paintToDevice(QPaintDevice* device)
     // ----------------------------------------------------
     if(mShowInfos)
     {
+        font.setPointSizeF(font.pointSizeF() + 2.);
+        p.setFont(font);
         p.setPen(QColor(50, 50, 50));
         int y = 0;
         int lineH = 16;
@@ -983,7 +950,7 @@ void GraphView::drawCurves(QPainter& painter)
 
 /**
  * @brief Export a density with locale setting and separator and specific step
- * @todo May be we can use QString QLocale::createSeparatedList(const QStringList & list) const
+ * @todo Maybe we can use QString QLocale::createSeparatedList(const QStringList & list) const
  */
 void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step) const
 {
@@ -1151,7 +1118,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
     }
 }
 
-bool GraphView::saveAsSVG(const QString& fileName, const QString graphTitle, const QString svgDescrition, const bool withVersion, int const versionHeight)
+bool GraphView::saveAsSVG(const QString& fileName, const QString& graphTitle, const QString& svgDescrition, const bool withVersion, const int versionHeight)
 {
     if(fileName.isEmpty())
     {
@@ -1209,7 +1176,4 @@ bool GraphView::isShow()
 {
     return mShowInfos;
 }
-bool GraphView::getXAxisMode()
-{
-    return mXAxisMode;
-}
+

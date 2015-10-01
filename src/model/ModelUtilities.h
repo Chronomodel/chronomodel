@@ -16,6 +16,9 @@ public:
     static QString getDataMethodText(Date::DataMethod method);
     static QString getDeltaText(const Date& date);
     
+    static Event::Method getEventMethodFromText(const QString& text);
+    static Date::DataMethod getDataMethodFromText(const QString& text);
+    
     static QVector<QVector<Event*> > getNextBranches(const QVector<Event*>& curBranch, Event* lastNode);
     static QVector<QVector<Event*> > getBranchesFromEvent(Event* start);
     static QVector<QVector<Event*> > getAllEventsBranches(const QList<Event*>& events);
@@ -32,6 +35,10 @@ public:
     static QString dateResultsText(Date* d);
     static QString eventResultsText(Event* e, bool withDates);
     static QString phaseResultsText(Phase* p);
+    
+    static QString dateResultsHTML(Date* d);
+    static QString eventResultsHTML(Event* e, bool withDates);
+    static QString phaseResultsHTML(Phase* p);
 };
 
 // These 2 global functions are used to sort events and phases lists in result view

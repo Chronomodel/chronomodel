@@ -84,6 +84,7 @@ private slots:
     void updateRendering(int index);
     void showInfos(bool);
     void exportFullImage();
+    void exportResults();
     
 signals:
     void posteriorDistribGenerated();
@@ -137,6 +138,7 @@ private:
     Button* mUnfoldBut;
     Button* mInfosBut;
     Button* mExportImgBut;
+    Button* mExportResults;
     CheckBox* mShowDataUnderPhasesCheck;
     
     // ------ mDisplayGroup -----

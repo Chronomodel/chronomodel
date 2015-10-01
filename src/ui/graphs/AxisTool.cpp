@@ -118,18 +118,18 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
         
         
         if(mMinMaxOnly) {
-            QRectF tr(xo, yo, w, h);
-            
-            if (valueFormatFunc != 0) {
-                p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, valueFormatFunc(mStartVal));
-                p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, valueFormatFunc(mStartVal + mDeltaVal * (w/mDeltaPix)));
-            }
-            else {
-                p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, QString::number(mStartVal, 'f', 0));
-                p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, QString::number(mStartVal + mDeltaVal * (w/mDeltaPix), 'f', 0));
+            if(mShowText){
+                QRectF tr(xo, yo, w, h);
                 
+                if (valueFormatFunc != 0) {
+                    p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, valueFormatFunc(mStartVal));
+                    p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, valueFormatFunc(mStartVal + mDeltaVal * (w/mDeltaPix)));
+                }
+                else {
+                    p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, QString::number(mStartVal, 'f', 0));
+                    p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, QString::number(mStartVal + mDeltaVal * (w/mDeltaPix), 'f', 0));
+                }
             }
-            
         }
         else {
             int i = 0;
@@ -181,14 +181,19 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
             p.drawPolygon(triangle);
             
         }
-        if(mMinMaxOnly) // used on posterior densities Maybe change the type of the text exp ou float
+        if(!mShowText){
+            // Nothing else to draw !
+        }
+        else if(mMinMaxOnly) // used on posterior densities Maybe change the type of the text exp ou float
         {
-            QRectF tr(r.x(), r.y(), w - 8, h);
-            QString textStarVal = (valueFormatFunc ? valueFormatFunc(mStartVal) : QString::number(mStartVal,'f', 0) );
-            
-            p.drawText(tr, Qt::AlignRight | Qt::AlignBottom, textStarVal);
-            QString textEndVal = (valueFormatFunc ? valueFormatFunc(mEndVal) : QString::number(mEndVal,'f',0) );
-            p.drawText(tr, Qt::AlignRight | Qt::AlignTop, textEndVal);
+            if(mShowText){
+                QRectF tr(r.x(), r.y(), w - 8, h);
+                QString textStarVal = (valueFormatFunc ? valueFormatFunc(mStartVal) : QString::number(mStartVal,'f', 0) );
+                
+                p.drawText(tr, Qt::AlignRight | Qt::AlignBottom, textStarVal);
+                QString textEndVal = (valueFormatFunc ? valueFormatFunc(mEndVal) : QString::number(mEndVal,'f',0) );
+                p.drawText(tr, Qt::AlignRight | Qt::AlignTop, textEndVal);
+            }
         }
         else
         {
@@ -240,5 +245,6 @@ mMarginRight(0)
 
 void AxisWidget::paintEvent(QPaintEvent*){
     QPainter p(this);
+    //updateValues(width() - mMarginLeft - mMarginRight, 50, mStartVal, mEndVal);
     paint(p, QRect(mMarginLeft, 0, width() - mMarginLeft - mMarginRight, height()), 7, mFormatFunct);
 }

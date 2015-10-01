@@ -79,27 +79,28 @@ mGraphsH(130)
     mStack->setMouseTracking(true);
     
     // ----------
-    QWidget* PhaseEvent(this);
-    mByPhasesBut = new Button(tr("Phases"), PhaseEvent);
+    mByPhasesBut = new Button(tr("Phases"), this);
     mByPhasesBut->setCheckable(true);
-    mByPhasesBut->setChecked(false);
-    mByPhasesBut->setAutoExclusive(true);
+    //mByPhasesBut->setChecked(false);
     mByPhasesBut->setFlatHorizontal();
     
-    mByEventsBut = new Button(tr("Events"), PhaseEvent);
+    mByEventsBut = new Button(tr("Events"), this);
     mByEventsBut->setCheckable(true);
-    mByEventsBut->setChecked(true);
-    mByEventsBut->setAutoExclusive(true);
+    //mByEventsBut->setChecked(true);
     mByEventsBut->setFlatHorizontal();
+    
+    QButtonGroup* butGroup = new QButtonGroup(this);
+    butGroup->addButton(mByPhasesBut);
+    butGroup->addButton(mByEventsBut);
+    butGroup->setExclusive(true);
     
     // -------------------------
     
     
-    mUnfoldBut = new Button(tr("Unfold"));
+    mUnfoldBut = new Button(tr("Unfold"), this);
     mUnfoldBut->setCheckable(true);
     mUnfoldBut->setFlatHorizontal();
     mUnfoldBut->setIcon(QIcon(":unfold.png"));
-    mUnfoldBut->setFixedHeight(50);
     mUnfoldBut->setToolTip(tr("Display event's data or phase's events, depending on the chosen layout."));
     
     mInfosBut = new Button(tr("Stats"));
@@ -108,9 +109,14 @@ mGraphsH(130)
     mInfosBut->setIcon(QIcon(":stats_w.png"));
     mInfosBut->setFixedHeight(50);
     mInfosBut->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
+    
+    mExportResults = new Button(tr("Results"));
+    mExportResults->setFlatHorizontal();
+    mExportResults->setIcon(QIcon(":csv.png"));
+    mExportResults->setFixedHeight(50);
 
     
-    mExportImgBut = new Button(tr("Save"));
+    mExportImgBut = new Button(tr("Capture"));
     mExportImgBut->setFlatHorizontal();
     mExportImgBut->setIcon(QIcon(":picture_save.png"));
     mExportImgBut->setFixedHeight(50);
@@ -119,9 +125,9 @@ mGraphsH(130)
     QHBoxLayout* displayButsLayout = new QHBoxLayout();
     displayButsLayout->setContentsMargins(0, 0, 0, 0);
     displayButsLayout->setSpacing(0);
-    displayButsLayout->addWidget(mUnfoldBut);
     displayButsLayout->addWidget(mInfosBut);
     displayButsLayout->addWidget(mExportImgBut);
+    displayButsLayout->addWidget(mExportResults);
     
     
     mRuler = new Ruler(this);
@@ -372,6 +378,7 @@ mGraphsH(130)
     connect(mRenderCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(updateRendering(int)));
     connect(mInfosBut, SIGNAL(toggled(bool)), this, SLOT(showInfos(bool)));
     connect(mExportImgBut, SIGNAL(clicked()), this, SLOT(exportFullImage()));
+    connect(mExportResults, SIGNAL(clicked()), this, SLOT(exportResults()));
     
     mMarker->raise();
 }
@@ -527,8 +534,9 @@ void ResultsView::updateLayout()
     // ----------------------------------------------------------
     //  Main layout
     // ----------------------------------------------------------
-    mByPhasesBut -> setGeometry(0, 0, (int)(mGraphLeft/2), mRulerH);
-    mByEventsBut -> setGeometry(mGraphLeft/2, 0, (int)(mGraphLeft/2), mRulerH);
+    mByPhasesBut->setGeometry(0, 0, (int)(mGraphLeft/2), mTabsH);
+    mByEventsBut->setGeometry(mGraphLeft/2, 0, (int)(mGraphLeft/2), mTabsH);
+    mUnfoldBut->setGeometry(0, mTabsH, mGraphLeft, mRulerH);
     
     mTabs   -> setGeometry(mGraphLeft + graphYAxis, 0, width() - mGraphLeft - mOptionsW - sbe - graphYAxis, mTabsH);
     mRuler  -> setGeometry(mGraphLeft, mTabsH, width() - mGraphLeft - mOptionsW - sbe, mRulerH);
@@ -714,7 +722,6 @@ void ResultsView::updateResults(Model* model)
     mMCMCSettings = mModel->mMCMCSettings;
     
     mHasPhases = (mModel->mPhases.size() > 0);
-    mByPhasesBut->setAutoExclusive(true);
     
     mByPhasesBut->setChecked(mHasPhases);
     mByEventsBut->setChecked(!mHasPhases);
@@ -789,7 +796,7 @@ void ResultsView::updateResults(Model* model)
                 graphDate->setGraphFont(mFont);
                 graphDate->setGraphsThickness(mThicknessSpin->value());
                 
-                graphDate->setColor(event->getColor());
+               // graphDate->setColor(event->getColor());
                 mByPhasesGraphs.append(graphDate);
             }
         }
@@ -825,7 +832,7 @@ void ResultsView::updateResults(Model* model)
         for(int j=0; j<(int)event->mDates.size(); ++j)
         {
             Date& date = event->mDates[j];
-            date.setJson(event->getJson(), i, j);
+            //date.setJson(mModel->getJson(), i, j);
             // ----------------------------------------------------
             //  This just creates the view for the date.
             //  It sets the Date which triggers an update() to repaint the view.
@@ -974,7 +981,6 @@ void ResultsView::updateScales()
     int tabIdx = mTabs->currentIndex();
     ProjectSettings s = mSettings;
     
-    
     // ------------------------------------------
     //  Get X Range based on current options
     // ------------------------------------------
@@ -1000,7 +1006,7 @@ void ResultsView::updateScales()
     }
     else if(tabIdx == 3) {
         mResultMinX = 0;
-        mResultMaxX = 100;
+        mResultMaxX = 40;
     }
    
     // ------------------------------------------
@@ -1106,7 +1112,9 @@ void ResultsView::updateResultsLog()
 #pragma mark Mouse & Marker
 void ResultsView::mouseMoveEvent(QMouseEvent* e)
 {
-    int x = e->pos().x() - 5;
+    int shiftX = 0;
+    
+    int x = e->pos().x() - shiftX;
     x = (x >= mGraphLeft) ? x : mGraphLeft;
     x = (x <= width() - mOptionsW) ? x : width() - mOptionsW;
     mMarker->setGeometry(x, mMarker->pos().y(), mMarker->width(), mMarker->height());
@@ -1270,8 +1278,8 @@ void ResultsView::updateGraphsZoomX()
 #pragma mark Zoom Y
 void ResultsView::updateScaleY(int value)
 {
-    double min = 20;
-    double max = 1020;
+    double min = 70;
+    double max = 1070;
     double prop = value / 100.f;
     mGraphsH = min + prop * (max - min);
     
@@ -1336,6 +1344,48 @@ void ResultsView::showInfos(bool show)
         mByPhasesGraphs[i]->showNumericalResults(show);
 }
 
+void ResultsView::exportResults()
+{
+    if(mModel){
+        AppSettings settings = MainWindow::getInstance()->getAppSettings();
+        QString csvSep = settings.mCSVCellSeparator;
+        
+        QString currentPath = MainWindow::getInstance()->getCurrentPath();
+        QString dirPath = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                        tr("Export to directory..."),
+                                                        currentPath,
+                                                       tr("Directory"));
+        
+        if(!dirPath.isEmpty())
+        {
+            QDir dir(dirPath);
+            if(dir.exists()){
+                /*if(QMessageBox::question(qApp->activeWindow(), tr("Are you sure?"), tr("This directory already exists and all its content will be deleted. Do you really want to replace it?")) == QMessageBox::No){
+                    return;
+                }*/
+                dir.removeRecursively();
+            }
+            dir.mkpath(".");
+            
+            QList<QStringList> stats = mModel->getStats();
+            saveCsvTo(stats, dirPath + "/stats.csv", csvSep);
+            
+            if(mModel->mPhases.size() > 0){
+                QList<QStringList> phasesTraces = mModel->getPhasesTraces();
+                saveCsvTo(phasesTraces, dirPath + "/phases.csv", csvSep);
+                
+                for(int i=0; i<mModel->mPhases.size(); ++i){
+                    QList<QStringList> phaseTrace = mModel->getPhaseTrace(i);
+                    QString name = mModel->mPhases[i]->getName().toLower().simplified().replace(" ", "_");
+                    saveCsvTo(phaseTrace, dirPath + "/phase_" + name + ".csv", csvSep);
+                }
+            }
+            QList<QStringList> eventsTraces = mModel->getEventsTraces();
+            saveCsvTo(eventsTraces, dirPath + "/events.csv", csvSep);
+        }
+    }
+}
+
 void ResultsView::exportFullImage()
 {
     //  define ScrollArea
@@ -1345,7 +1395,7 @@ void ResultsView::exportFullImage()
     };
     
     ScrollArrea witchScroll;
-    bool printAxis = false;
+    bool printAxis = true;
     
     QWidget* curWid;
     
@@ -1353,10 +1403,9 @@ void ResultsView::exportFullImage()
         curWid = mPhasesScrollArea->widget();
         curWid->setFont(mByPhasesGraphs[0]->font());
         witchScroll = eScrollPhases;
-        printAxis = (mByPhasesGraphs[0]->mGraph->getXAxisMode() == GraphView::eHidden);
         //  hide all buttons in the both scrollAreaWidget
         for(int i=0; i<mByPhasesGraphs.size(); ++i){
-            mByPhasesGraphs[i]->forceHideButtons(true);
+            mByPhasesGraphs[i]->setButtonsVisible(false);
         }
     }
     //else if (mStack->currentWidget() == mEventsScrollArea) {
@@ -1364,14 +1413,11 @@ void ResultsView::exportFullImage()
         curWid = mEventsScrollArea->widget();
         curWid->setFont(mByEventsGraphs[0]->font());
         witchScroll = eScrollEvents;
-        printAxis = (mByEventsGraphs[0]->mGraph->getXAxisMode() == GraphView::eHidden);
         //  hide all buttons in the both scrollAreaWidget
         for(int i=0; i<mByEventsGraphs.size(); ++i) {
-            mByEventsGraphs[i]->forceHideButtons(true);
+            mByEventsGraphs[i]->setButtonsVisible(false);
         }
     }
-    
-    
     
     
     // --------------------------------------------------------------------
@@ -1409,12 +1455,12 @@ void ResultsView::exportFullImage()
         axisWidget->mShowSubSubs = true;
         axisWidget->mShowArrow = true;
         axisWidget->mShowText = true;
-        axisWidget->updateValues(curWid->width() - axisWidget->mMarginLeft - axisWidget->mMarginRight, axeHeight, mResultCurrentMinX, mResultCurrentMaxX);
+        axisWidget->updateValues(curWid->width() - axisWidget->mMarginLeft - axisWidget->mMarginRight, 50, mResultCurrentMinX, mResultCurrentMaxX);
         axisWidget->raise();
         axisWidget->setVisible(true);
         
         axisLegend = new QLabel(DateUtils::getAppSettingsFormat(), curWid);
-        axisLegend->setGeometry(0, curWid->height() - axeHeight - legendHeight, curWid->width(), legendHeight);
+        axisLegend->setGeometry(0, curWid->height() - axeHeight - legendHeight, curWid->width() - 10, legendHeight);
         axisLegend->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
         axisLegend->raise();
         axisLegend->setVisible(true);
@@ -1450,13 +1496,13 @@ void ResultsView::exportFullImage()
     //  show all buttons
     if (mByPhasesBut->isChecked()) {
         for(int i=0; i<mByPhasesGraphs.size(); ++i) {
-            mByPhasesGraphs[i]->forceHideButtons(false);
+            mByPhasesGraphs[i]->setButtonsVisible(true);
         }
         
     }
     else {
         for(int i=0; i<mByEventsGraphs.size(); ++i) {
-            mByEventsGraphs[i]->forceHideButtons(false);
+            mByEventsGraphs[i]->setButtonsVisible(true);
         }
     }
 }
@@ -1503,7 +1549,7 @@ void ResultsView::updateModel()
                         
                         if(dateId == d.mId)
                         {
-                            d.mName = date[STATE_NAME].toString();
+                            d.mInitName = date[STATE_NAME].toString();
 
                             break;
                         }
@@ -1523,12 +1569,12 @@ void ResultsView::updateModel()
             Phase* p = mModel->mPhases[j];
             if(p->mId == phaseId)
             {
-                p->mName = phase[STATE_NAME].toString();
+                p->mInitName = phase[STATE_NAME].toString();
                 p->mItemX = phase[STATE_ITEM_X].toDouble();
                 p->mItemY = phase[STATE_ITEM_Y].toDouble();
-               /* p->mColor = QColor(phase[STATE_COLOR_RED].toInt(),
+                p->mInitColor = QColor(phase[STATE_COLOR_RED].toInt(),
                                    phase[STATE_COLOR_GREEN].toInt(),
-                                   phase[STATE_COLOR_BLUE].toInt());*/
+                                   phase[STATE_COLOR_BLUE].toInt());
                // p->setJson(MainWindow::getInstance()->getProject()->state(), j);
                 break;
             }

@@ -65,8 +65,16 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     graph->setCurrentX(tmin, tmax);
     graph->setRangeY(0, 1.1f);
     
-    graph->showAxisArrows(false);
-    graph->showAxisLines(false);
+    graph->showXAxisArrow(false);
+    graph->showXAxisTicks(false);
+    graph->showXAxisSubTicks(false);
+    graph->showXAxisValues(false);
+    
+    graph->showYAxisArrow(false);
+    graph->showYAxisTicks(false);
+    graph->showYAxisSubTicks(false);
+    graph->showYAxisValues(false);
+    
     graph->setXAxisMode(GraphView::eHidden);
     graph->setYAxisMode(GraphView::eHidden);
     

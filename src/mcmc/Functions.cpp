@@ -1,6 +1,7 @@
 #include "Functions.h"
 #include "Generator.h"
 #include "StdUtilities.h"
+#include "DateUtils.h"
 #include <QDebug>
 
 // -----------------------------------------------------------------
@@ -141,12 +142,10 @@ QString functionAnalysisToString(const FunctionAnalysis& analysis)
        result = "No data";
     }
     else {
-        result += "MAP : " + QString::number(analysis.mode, 'f', precision) + "   ";
-        result += "Mean : " + QString::number(analysis.mean, 'f', precision) + "   ";
-        result += "Std deviation : " + QString::number(analysis.stddev, 'f', precision) + "<br>";
+        result += "MAP : " + DateUtils::convertToAppSettingsFormatStr(analysis.mode) + "   ";
+        result += "Mean : " + DateUtils::convertToAppSettingsFormatStr(analysis.mean) + "   ";
+        result += "Std deviation : " + QString::number(analysis.stddev, 'f', precision);
     }
-
-    
     return result;
 }
 
@@ -155,19 +154,18 @@ QString functionAnalysisToString(const FunctionAnalysis& analysis)
  * @see DensityAnalysis
  * @todo Get the precision from the pref.
  */
-QString densityAnalysisToString(const DensityAnalysis& analysis)
+QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& nl)
 {
     QString result = "No data";
     if(analysis.analysis.stddev>=0.){
-        result = functionAnalysisToString(analysis.analysis);
-        int precision = 2;
-    
-        result += "Q1 : " + QString::number(analysis.quartiles.Q1, 'f', precision) + "   ";
-        result += "Q2 (Median) : " + QString::number(analysis.quartiles.Q2, 'f', precision) + "   ";
-        result += "Q3 : " + QString::number(analysis.quartiles.Q3, 'f', precision) + "<br>";
+        result = functionAnalysisToString(analysis.analysis) + nl;
+        result += "Q1 : " + DateUtils::convertToAppSettingsFormatStr(analysis.quartiles.Q1) + "   ";
+        result += "Q2 (Median) : " + DateUtils::convertToAppSettingsFormatStr(analysis.quartiles.Q2) + "   ";
+        result += "Q3 : " + DateUtils::convertToAppSettingsFormatStr(analysis.quartiles.Q3);
     }
     return result;
 }
+
 
 Quartiles quartilesForTrace(const QVector<double>& trace)
 {
@@ -262,14 +260,14 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, double t
 }
 
 QString intervalText(const QPair<double, QPair<double, double> >& interval, FormatFunc formatFunc)
-{    
+{
+    QLocale locale;
     if(formatFunc){
-        return "[" + formatFunc(interval.second.first) + "; " + formatFunc(interval.second.second) + "] (" + QString::number(interval.first, 'f', 1 ) + "%)";
+        return "[" + formatFunc(interval.second.first) + "; " + formatFunc(interval.second.second) + "] (" + locale.toString(interval.first, 'f', 1) + "%)";
     }
     else {
-        return "[" + QString::number(interval.second.first, 'f', 1) + "; " + QString::number(interval.second.second, 'f', 1) + "] (" + QString::number(interval.first, 'f', 1 ) + "%)";
+        return "[" + DateUtils::dateToString(interval.second.first) + "; " + DateUtils::dateToString(interval.second.second) + "] (" + locale.toString(interval.first, 'f', 1) + "%)";
     }
-    
 }
 
 QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString& unit, FormatFunc formatFunc)

@@ -64,12 +64,16 @@ public slots:
     void about();
     void appSettings();
     void setAppSettings(const AppSettings& s);
-    void pluginSettings();
     void openManual();
     void openWebsite();
     void showHelp(bool);
     void mcmcFinished(Model*);
     void updateProject();
+    
+    void changeEventsColor();
+    void changeEventsMethod();
+    void changeDatesMethod();
+    void doGroupedAction();
     
 private:
     QStackedWidget* mCentralStack;
@@ -114,7 +118,10 @@ private:
     QAction* mRedoAction;
     QAction* mUndoViewAction;
     
-    QList<QAction*> mPluginsActions;
+    QAction* mEventsColorAction;
+    QAction* mEventsMethodAction;
+    QAction* mDatesMethodAction;
+    QList<QAction*> mDatesActions;
     
     QAction* mHelpAction;
     QAction* mManualAction;

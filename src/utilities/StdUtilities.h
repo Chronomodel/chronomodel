@@ -68,8 +68,8 @@ T interpolateValueInQMap(const U& key, const QMap<U, T>& map)
 template <class T>
 T vector_max_value(const QList<T>& aVector)
 {
-    typename QList<T>::const_iterator it = std::max_element(aVector.begin(), aVector.end());
-    if(it != aVector.end())
+    typename QList<T>::const_iterator it = std::max_element(aVector.cbegin(), aVector.cend());
+    if(it != aVector.cend())
         return *it;
     return 0;
 }
@@ -77,8 +77,8 @@ T vector_max_value(const QList<T>& aVector)
 template <class T>
 T vector_min_value(const QList<T>& aVector)
 {
-    typename QList<T>::const_iterator it = std::min_element(aVector.begin(), aVector.end());
-    if(it != aVector.end())
+    typename QList<T>::const_iterator it = std::min_element(aVector.cbegin(), aVector.cend());
+    if(it != aVector.cend())
         return *it;
     return 0;
 }
@@ -86,8 +86,8 @@ T vector_min_value(const QList<T>& aVector)
 template <class T>
 T vector_max_value(const QVector<T>& aVector)
 {
-    typename QVector<T>::const_iterator it = std::max_element(aVector.begin(), aVector.end());
-    if(it != aVector.end())
+    typename QVector<T>::const_iterator it = std::max_element(aVector.cbegin(), aVector.cend());
+    if(it != aVector.cend())
         return *it;
     return 0;
 }
@@ -95,8 +95,8 @@ T vector_max_value(const QVector<T>& aVector)
 template <class T>
 T vector_min_value(const QVector<T>& aVector)
 {
-    typename QVector<T>::const_iterator it = std::min_element(aVector.begin(), aVector.end());
-    if(it != aVector.end())
+    typename QVector<T>::const_iterator it = std::min_element(aVector.cbegin(), aVector.cend());
+    if(it != aVector.cend())
         return *it;
     return 0;
 }

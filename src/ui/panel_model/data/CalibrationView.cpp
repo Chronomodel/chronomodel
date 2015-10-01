@@ -19,7 +19,7 @@
 #include "DoubleValidator.h"
 #include <QtWidgets>
 #include <QClipboard>
-#include <QStringBuilder>
+//#include <QStringBuilder>
 
 
 CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
@@ -29,7 +29,7 @@ mRefGraphView(0)
     mCalibGraph = new GraphView(this);
     
     mCalibGraph->setRendering(GraphView::eHD);
-    mCalibGraph->setYAxisMode(GraphView::eMinMax);
+    mCalibGraph->setYAxisMode(GraphView::eHidden);
     mCalibGraph->setXAxisMode(GraphView::eAllTicks);
     
     mMarkerX = new Marker(this);
@@ -107,7 +107,7 @@ void CalibrationView::setDate(const QJsonObject& date)
         if(!mDate.isNull())
         {
             mDate.calibrate(mSettings);
-            mTopLab->setText(mDate.mName + " (" + mDate.mPlugin->getName() + ")");
+            mTopLab->setText(mDate.getName() + " (" + mDate.mPlugin->getName() + ")");
             mCalibGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
             mCalibGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
             mZoomSlider->setValue(0);
@@ -128,6 +128,7 @@ void CalibrationView::setDate(const QJsonObject& date)
 void CalibrationView::updateGraphs()
 {
     mCalibGraph->removeAllCurves();
+    QLocale locale;
     
     // The current ref graph belongs to a plugin
     // So, we simply remove it without deleting it, for further use
@@ -147,8 +148,8 @@ void CalibrationView::updateGraphs()
         // ------------------------------------------------------------
         //  Calibration curve
         // ------------------------------------------------------------
-        QColor penColor = Qt::black; //Painting::mainColorLight;
-        QColor brushColor = Qt::black; //mDate.mPlugin->getColor();
+        QColor penColor = Painting::mainColorDark; //Painting::mainColorLight;
+        QColor brushColor = Painting::mainColorLight; //mDate.mPlugin->getColor();
         
         GraphCurve calibCurve;
         calibCurve.mName = "Calibration";
@@ -203,7 +204,9 @@ void CalibrationView::updateGraphs()
             mCalibGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
             
             double realThresh = map_area(hpd) / map_area(calibCurve.mData);
-            mResultsLab->setText(mResultsLab->text() % "HPD (" % QString::number(100. * realThresh, 'f', 1) + "%) : " % getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr)); //  % concatenation with QStringBuilder
+            //mResultsLab->setText(mResultsLab->text() % "HPD (" % locale.toString(100. * realThresh, 'f', 1) + "%) : " % getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr)); //  % concatenation with QStringBuilder
+            
+            mResultsLab->setText(mResultsLab->text() + "HPD (" + locale.toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr));
         }
         
         // ------------------------------------------------------------
@@ -391,6 +394,9 @@ void CalibrationView::updateLayout()
     int butW = 100;
     int butH = 25;
     
+    mExportPlotBut->setGeometry(width() - m2 - butW, m1 + (topH - butH)/2, butW, butH);
+    mCopyTextBut->setGeometry(width() - m2 - 10 - 2* butW, m1 + (topH - butH)/2, butW, butH);
+    
     mTopLab->setGeometry(m2, m1, w, topH);
     mScrollBar->setGeometry(m2 + graphLeft, m1 + topH, w - graphLeft - zoomLabW - sliderW - m1, sbe);
     mZoomLab->setGeometry(width() - m2 - sliderW - m1 - zoomLabW, m1 + topH, zoomLabW, lineH);
@@ -406,9 +412,6 @@ void CalibrationView::updateLayout()
     
     mHPDEdit->setGeometry(width() - m2 - 10 - editW, height() - m2 - botH, editW, lineH);
     mHPDLab->setGeometry(width() - m2 - 10 - editW - checkW, height() - m2 - botH, checkW, lineH);
-    
-    mExportPlotBut->setGeometry(width() - m2 - 10 - butW, height() - m2 - botH + lineH + m1, butW, butH);
-    mCopyTextBut->setGeometry(width() - m2 - 10 - 2* butW, height() - m2 - botH + lineH + m1, butW, butH);
     
     mMarkerX->setGeometry(mMarkerX->pos().x(), m1 + sbe, mMarkerX->thickness(), height() - 2*m1 - sbe - 8.f); // 8 = graph margin bottom
     mMarkerY->setGeometry(m1 + graphLeft, mMarkerY->pos().y(), width() - 2*m1 - graphLeft, mMarkerY->thickness());

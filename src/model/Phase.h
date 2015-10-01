@@ -28,8 +28,8 @@ public:
     virtual ~Phase();
     
     //Added by PhD
-    void setJson(QJsonObject & iJson, const int idxPhase);
-    QJsonObject & getJson();
+    void setJson(const QJsonObject & iJson, const int idxPhase);
+    const QJsonObject & getJson();
     
     static Phase fromJson(const QJsonObject& json);
     
@@ -48,10 +48,12 @@ public:
     void updateTau();
     
     QColor getColor() const;
+    QString getName() const;
     
 public:
     int mId;
-    QString mName;
+    QString mInitName;
+    QColor mInitColor;
     
     QList<Event*> mEvents;
     QList<PhaseConstraint*> mConstraintsFwd;
@@ -73,7 +75,7 @@ public:
     double mTauMin;
     double mTauMax;
     
-    QColor mColor;
+    
     
     double mItemX;
     double mItemY;
@@ -84,7 +86,7 @@ public:
     int mLevel;
     
 private:
-    QJsonObject * mJson;
+    const QJsonObject * mJson;
     int mJsonPhaseIdx;
 };
 

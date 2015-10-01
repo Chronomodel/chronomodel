@@ -6,6 +6,7 @@
 #include "AppSettingsDialog.h"
 #include "PluginsSettingsDialog.h"
 #include "PluginManager.h"
+#include "ModelUtilities.h"
 #include <QtWidgets>
 
 
@@ -189,20 +190,31 @@ void MainWindow::createActions()
     mViewModelAction->setChecked(true);
     
     //-----------------------------------------------------------------
-    //  Plugins Settings Actions
+    //  Dates Actions (Plugins specific)
     //-----------------------------------------------------------------
     const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
     for(int i=0; i<plugins.size(); ++i){
-        // Create the plugin settings action only if the settings is view is available
-        PluginSettingsViewAbstract* view = plugins[i]->getSettingsView();
-        if(view){
-            QString name = plugins[i]->getName() + " " + tr("settings");
-            QAction* act = new QAction(name, this);
-            act->setObjectName(name);
-            connect(act, SIGNAL(triggered()), this, SLOT(pluginSettings()));
-            mPluginsActions.append(act);
+        QString name = plugins[i]->getName();
+        QList<QHash<QString, QVariant>> groupedActions = plugins[i]->getGroupedActions();
+        for(int j=0; j<groupedActions.size(); ++j){
+            QAction* act = new QAction(groupedActions[j]["title"].toString(), this);
+            act->setData(QVariant(groupedActions[j]));
+            connect(act, SIGNAL(triggered()), this, SLOT(doGroupedAction()));
+            mDatesActions.append(act);
         }
     }
+
+    //-----------------------------------------------------------------
+    //  Grouped actions
+    //-----------------------------------------------------------------
+    mEventsColorAction = new QAction(tr("Change selected events color"), this);
+    connect(mEventsColorAction, SIGNAL(triggered()), this, SLOT(changeEventsColor()));
+    
+    mEventsMethodAction = new QAction(tr("Change selected events method"), this);
+    connect(mEventsMethodAction, SIGNAL(triggered()), this, SLOT(changeEventsMethod()));
+    
+    mDatesMethodAction = new QAction(tr("Change selected events data method"), this);
+    connect(mDatesMethodAction, SIGNAL(triggered()), this, SLOT(changeDatesMethod()));
     
     //-----------------------------------------------------------------
     // Help/About Menu
@@ -279,11 +291,16 @@ void MainWindow::createMenus()
     mHelpMenu->addAction(mAboutQtAct);
     
     //-----------------------------------------------------------------
-    // Plugins Menu
+    // Grouped Actions Menu
     //-----------------------------------------------------------------
-    mPluginsMenu = menuBar()->addMenu(tr("Data Types"));
-    for(int i=0; i<mPluginsActions.size(); ++i){
-        mPluginsMenu->addAction(mPluginsActions[i]);
+    mPluginsMenu = menuBar()->addMenu(tr("Actions"));
+    mPluginsMenu->addAction(mEventsColorAction);
+    mPluginsMenu->addAction(mEventsMethodAction);
+    mPluginsMenu->addAction(mDatesMethodAction);
+    mPluginsMenu->addSeparator();
+    
+    for(int i=0; i<mDatesActions.size(); ++i){
+        mPluginsMenu->addAction(mDatesActions[i]);
     }
 }
 
@@ -442,9 +459,10 @@ void MainWindow::appSettings()
 {
     AppSettingsDialog dialog(qApp->activeWindow());
     dialog.setSettings(mAppSettings);
+    connect(&dialog, SIGNAL(settingsChanged(const AppSettings&)), this, SLOT(setAppSettings(const AppSettings&)));
     if(dialog.exec() == QDialog::Accepted)
     {
-        setAppSettings(dialog.getSettings());
+        //setAppSettings(dialog.getSettings());
     }
 }
 
@@ -459,23 +477,6 @@ void MainWindow::setAppSettings(const AppSettings& s)
     
     if(mViewResultsAction->isEnabled()) {
         mProjectView->updateResults(mProject->mModel);
-    }
-}
-
-void MainWindow::pluginSettings()
-{
-    QString actName = sender()->objectName();
-    
-    const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
-    for(int i=0; i<plugins.size(); ++i){
-        QString name = plugins[i]->getName() + " " + tr("settings");
-        if(name == actName){
-            PluginsSettingsDialog dialog(plugins[i], qApp->activeWindow(), Qt::Sheet);
-            if(dialog.exec() == QDialog::Accepted)
-            {
-                // Is there anything to do ?
-            }
-        }
     }
 }
 
@@ -504,6 +505,95 @@ void MainWindow::showHelp(bool show)
 void MainWindow::openWebsite()
 {
     QDesktopServices::openUrl(QUrl("http://www.chronomodel.fr", QUrl::TolerantMode));
+}
+
+#pragma mark Grouped Actions
+/*void MainWindow::datesActions()
+{
+    QString pluginName = sender()->objectName();
+    
+    const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
+    for(int i=0; i<plugins.size(); ++i){
+        if(plugins[i]->getName() == pluginName){
+            PluginsSettingsDialog dialog(plugins[i], qApp->activeWindow());
+            if(dialog.exec() == QDialog::Accepted)
+            {
+                // Is there anything to do ?
+            }
+        }
+    }
+}*/
+
+void MainWindow::changeEventsColor()
+{
+    QColor color = QColorDialog::getColor(Qt::blue, qApp->activeWindow(), tr("Change selected events color"));
+    if(color.isValid()){
+        mProject->updateSelectedEventsColor(color);
+    }
+}
+void MainWindow::changeEventsMethod()
+{
+    QStringList opts;
+    opts.append(ModelUtilities::getEventMethodText(Event::eMHAdaptGauss));
+    opts.append(ModelUtilities::getEventMethodText(Event::eBoxMuller));
+    opts.append(ModelUtilities::getEventMethodText(Event::eDoubleExp));
+    
+    bool ok;
+    QString methodStr = QInputDialog::getItem(qApp->activeWindow(),
+                                          tr("Change events method"),
+                                          tr("Change selected events MCMC method :"),
+                                          opts, 0, false, &ok);
+    if(ok && !methodStr.isEmpty()){
+        Event::Method method = ModelUtilities::getEventMethodFromText(methodStr);
+        mProject->updateSelectedEventsMethod(method);
+    }
+}
+void MainWindow::changeDatesMethod()
+{
+    QStringList opts;
+    const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
+    for(int i=0; i<plugins.size(); ++i){
+        opts.append(plugins[i]->getId());
+    }
+    bool ok;
+    QString pluginId = QInputDialog::getItem(qApp->activeWindow(),
+                                             tr("Change data method"),
+                                             tr("For what type of data do you want to change the method ?"),
+                                             opts, 0, false, &ok);
+    if(ok){
+        opts.clear();
+        opts.append(ModelUtilities::getDataMethodText(Date::eMHIndependant));
+        opts.append(ModelUtilities::getDataMethodText(Date::eInversion));
+        opts.append(ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
+        
+        QString methodStr = QInputDialog::getItem(qApp->activeWindow(),
+                                                  tr("Change data method"),
+                                                  tr("Change MCMC method of data in selected events :"),
+                                                  opts, 0, false, &ok);
+        if(ok && !methodStr.isEmpty()){
+            Date::DataMethod method = ModelUtilities::getDataMethodFromText(methodStr);
+            mProject->updateSelectedEventsDataMethod(method, pluginId);
+        }
+    }
+}
+void MainWindow::doGroupedAction()
+{
+    QAction* act = qobject_cast<QAction*>(sender());
+    QVariant groupedActionVariant = act->data();
+    QHash<QString, QVariant> groupedAction = groupedActionVariant.toHash();
+    
+    if(groupedAction["inputType"] == "combo"){
+        bool ok;
+        QString curve = QInputDialog::getItem(qApp->activeWindow(),
+                                               groupedAction["title"].toString(),
+                                               groupedAction["label"].toString(),
+                                               groupedAction["items"].toStringList(),
+                                               0, false, &ok);
+        if(ok && !curve.isEmpty()){
+            groupedAction["value"] = curve;
+            mProject->updateAllDataInSelectedEvents(groupedAction);
+        }
+    }
 }
 
 #pragma mark Events
@@ -668,6 +758,7 @@ void MainWindow::activateInterface(bool activate)
         mViewResultsAction->setEnabled(activate);
         mViewLogAction->setEnabled(activate);
     }
+    
 }
 
 void MainWindow::setRunEnabled(bool enabled)

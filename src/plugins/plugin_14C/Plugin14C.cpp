@@ -317,6 +317,22 @@ PluginSettingsViewAbstract* Plugin14C::getSettingsView()
     return new Plugin14CSettingsView(this);
 }
 
+QList<QHash<QString, QVariant>> Plugin14C::getGroupedActions()
+{
+    QList<QHash<QString, QVariant>> result;
+    
+    QHash<QString, QVariant> groupedAction;
+    groupedAction.insert("pluginId", getId());
+    groupedAction.insert("title", tr("Change selected events 14C Ref. Curves"));
+    groupedAction.insert("label", tr("Change 14C Ref. Curves for all 14C data in selected events :"));
+    groupedAction.insert("inputType", "combo");
+    groupedAction.insert("items", getRefsNames());
+    groupedAction.insert("valueKey", DATE_14C_REF_CURVE_STR);
+    
+    result.append(groupedAction);
+    return result;
+}
+
 QJsonObject Plugin14C::checkValuesCompatibility(const QJsonObject& values){
     QJsonObject result = values;
 
@@ -400,14 +416,37 @@ bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& sett
     return !(min == 0 && max == 0) && ((age - error < max) && (age + error > min));
 }
 
+bool Plugin14C::areDatesMergeable(const QJsonArray& dates)
+{
+    QString refCurve;
+    for(int i=0; i<dates.size(); ++i)
+    {
+        QJsonObject date = dates[i].toObject();
+        QJsonObject data = date[STATE_DATE_DATA].toObject();
+        QString curve = data[DATE_14C_REF_CURVE_STR].toString();
+        
+        if(refCurve.isEmpty())
+            refCurve = curve;
+        else if(refCurve != curve)
+            return false;
+    }
+    return true;
+}
+
 QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
 {
     QJsonObject result;
     if(dates.size() > 1){
         // Verify all dates have the same ref curve :
-        QString curve = dates[0].toObject()[DATE_14C_REF_CURVE_STR].toString();
+        QJsonObject firstDate = dates[0].toObject();
+        QJsonObject firstDateData = firstDate[STATE_DATE_DATA].toObject();
+        QString firstCurve = firstDateData[DATE_14C_REF_CURVE_STR].toString();
+        
         for(int i=1; i<dates.size(); ++i){
-            if(curve != dates[i].toObject()[DATE_14C_REF_CURVE_STR].toString()){
+            QJsonObject date = dates[i].toObject();
+            QJsonObject dateData = date[STATE_DATE_DATA].toObject();
+            QString curve = dateData[DATE_14C_REF_CURVE_STR].toString();
+            if(firstCurve != curve){
                 result["error"] = tr("All combine data must use the same reference curve !");
                 return result;
             }
@@ -417,11 +456,13 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
         double sum_mi_vi = 0;
         double sum_1_vi = 0;
       //  double sum_mi_2 = 0;
+        QStringList names;
         
         for(int i=0; i<dates.size(); ++i){
             QJsonObject date = dates[i].toObject();
             QJsonObject data = date[STATE_DATE_DATA].toObject();
             
+            names.append(date[STATE_NAME].toString());
             double a = data[DATE_14C_AGE_STR].toDouble();
             double e = data[DATE_14C_ERROR_STR].toDouble();
             double r = data[DATE_14C_DELTA_R_STR].toDouble();
@@ -438,6 +479,7 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
         }
         
         result = dates[0].toObject();
+        result[STATE_NAME] = "Combined (" + names.join(" | ") + ")";
         
         QJsonObject mergedData = result[STATE_DATE_DATA].toObject();
         mergedData[DATE_14C_AGE_STR] = sum_mi_vi / sum_1_vi;

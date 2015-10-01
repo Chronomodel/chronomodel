@@ -26,20 +26,29 @@ mMargin(5),
 mLineH(20),
 mGraphLeft(128),
 mTopShift(0),
-mButtonVisible(true),
-mForceHideButtons(false),
-mMinHeightForButtonsVisible(50)
+mButtonsVisible(true),
+mHeightForVisibleAxis(100)
 {
     setMouseTracking(true);
     
     mGraph = new GraphView(this);
     
-    mGraph->showHorizGrid(false);
+    mGraph->showXAxisArrow(true);
+    mGraph->showXAxisTicks(true);
+    mGraph->showXAxisSubTicks(true);
+    mGraph->showXAxisValues(true);
+    
+    mGraph->showYAxisArrow(true);
+    mGraph->showYAxisTicks(true);
+    mGraph->showYAxisSubTicks(true);
+    mGraph->showYAxisValues(true);
+    
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eMinMax);
     
     mGraph->setMargins(50, 10, 5, 30);
     mGraph->setRangeY(0, 1);
+    mGraph->setMarginBottom(mGraph->font().pointSizeF() + 10);
     
     mTextArea = new QTextEdit(this);
     mTextArea->setFrameStyle(QFrame::HLine);
@@ -88,7 +97,7 @@ mMinHeightForButtonsVisible(50)
     setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
     
     
-    if(mCurrentTypeGraph == eAccept || mCurrentTypeGraph == eTrace ) {
+    /*if(mCurrentTypeGraph == eAccept || mCurrentTypeGraph == eTrace ) {
         Chain& chain = mChains[0];
         mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
     }
@@ -104,8 +113,8 @@ mMinHeightForButtonsVisible(50)
         }
     }
     if(mCurrentTypeGraph == eCorrel){
-        mGraph->setRangeX(0, 100);
-    }
+        mGraph->setRangeX(0, 40);
+    }*/
     
 }
 
@@ -280,7 +289,7 @@ void GraphViewResults::imageToClipboard()
 void GraphViewResults::resultsToClipboard()
 {
     QClipboard* clipboard = QApplication::clipboard();
-    clipboard->setText(mResults);
+    clipboard->setText(mResultsText);
 }
 /**
  * @brief Export data from the visible curves, there is two kinds of data in a graphView: mData, QMap type and mDataVector, QVector type
@@ -326,22 +335,22 @@ void GraphViewResults::saveGraphData() const
     }
     
     // All visible curves are saved in the same file, the credibility bar is not save
-   
     else if(mCurrentTypeGraph == ePostDistrib) {
-            mGraph->exportCurrentDensityCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
+        mGraph->exportCurrentDensityCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
     }
 
 }
 
-void GraphViewResults::setNumericalResults(const QString& results)
+void GraphViewResults::setNumericalResults(const QString& resultsHTML, const QString& resultsText)
 {
-    mResults = results;
-    mTextArea->setText(mResults);
+    mResultsText = resultsText;
+    mTextArea->setText(resultsHTML);
 }
 
 void GraphViewResults::showNumericalResults(bool show)
 {
     mShowNumResults = show;
+    mTextArea->setVisible(show);
     updateLayout();
 }
 
@@ -354,7 +363,7 @@ void GraphViewResults::setGraphFont(const QFont& font)
 {
     setFont(font);
     mGraph->setGraphFont(font);
-    mGraph->setMarginBottom(font.pointSizeF() + 10);
+    mGraph->setMarginBottom(mGraph->font().pointSizeF() + 10);
    
     // Recalculte mTopShift based on the new font, and position the graph accordingly :
     updateLayout();
@@ -377,14 +386,11 @@ void GraphViewResults::updateLayout()
     int h = height();
     int butInlineMaxH = 50;
     
-    mButtonVisible = (h > mMinHeightForButtonsVisible) && !mForceHideButtons;
+    bool axisVisible = (h > mHeightForVisibleAxis);
+    mGraph->showXAxisValues(axisVisible);
+    mGraph->setMarginBottom(axisVisible ? mGraph->font().pointSizeF() + 10 : 10);
     
-    mImageSaveBut   -> setVisible(mButtonVisible);
-    mDataSaveBut    -> setVisible(mButtonVisible);
-    mImageClipBut   -> setVisible(mButtonVisible);
-    mResultsClipBut -> setVisible(mButtonVisible);
-    
-    if(mButtonVisible)
+    if(mButtonsVisible)
     {
         qreal bw = mGraphLeft / 4;
         int bh = height() - mLineH;
@@ -394,15 +400,6 @@ void GraphViewResults::updateLayout()
         mDataSaveBut    -> setGeometry(bw, mLineH, bw, bh);
         mImageClipBut   -> setGeometry(2*bw, mLineH, bw, bh);
         mResultsClipBut -> setGeometry(mGraphLeft-bw, mLineH, bw, bh);
-        
-        mGraph->setYAxisMode(GraphView::eMinMax);
-        mGraph->setXAxisMode(GraphView::eAllTicks);
-        mGraph->setMarginBottom(mGraph->font().pointSizeF() + 10);
-    }
-    else {
-        mGraph->setYAxisMode(GraphView::eHidden);
-        mGraph->setXAxisMode(GraphView::eHidden);
-        mGraph->setMarginBottom(10);
     }
     
     QFont fontTitle(this->font());
@@ -410,55 +407,47 @@ void GraphViewResults::updateLayout()
     QFontMetrics fmTitle(fontTitle);
     mTopShift = fmTitle.height()+4+1;
     
-    int leftShift = mForceHideButtons ? 0 : mGraphLeft;
+    int leftShift = mButtonsVisible ? mGraphLeft : 0;
     QRect graphRect(leftShift, mTopShift, this->width() - leftShift, height()-mTopShift);
     
     if(mShowNumResults) {
         mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
         mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
-        mTextArea -> setVisible(true);
     }
     else {
-        mGraph    -> setGeometry(graphRect);
-        mTextArea -> setVisible(false);
+        mGraph->setGeometry(graphRect);
     }
     update();
 }
 void GraphViewResults::paintEvent(QPaintEvent* )
 {
     int h = height();
-    int butMinH = 30;
-    int leftShift = mForceHideButtons ? 0 : mGraphLeft;
+    int leftShift = mButtonsVisible ? mGraphLeft : 0;
     
     QPainter p;
     p.begin(this);
     
     // Left part of the view (title, buttons, ...)
-    if(mButtonVisible)
+    if(mButtonsVisible)
     {
-        bool showButs = (h >= mLineH + butMinH);
-        
         QColor backCol = mItemColor;
         QColor foreCol = getContrastedColor(backCol);
         
-        if(showButs)
-        {
-            // affiche le texte dans la boite de droite avec les boutons
-            QRectF topRect(0, 1, mGraphLeft-p.pen().widthF(), mLineH-p.pen().widthF() - 1);
-            
-            p.setPen(backCol);
-            p.setBrush(backCol);
-            p.drawRect(topRect);
-            
-            p.setPen(foreCol);
-            QFont font;
-            font.setPointSizeF(pointSize(11));
-            p.setFont(font);
-            
-            p.drawText(QRectF(0, 1, mGraphLeft-p.pen().widthF(), mLineH-p.pen().widthF()-1),
-                       Qt::AlignVCenter | Qt::AlignCenter,
-                       mItemTitle);
-        }
+        // affiche le texte dans la boite de droite avec les boutons
+        QRectF topRect(0, 1, mGraphLeft-p.pen().widthF(), mLineH-p.pen().widthF() - 1);
+        
+        p.setPen(backCol);
+        p.setBrush(backCol);
+        p.drawRect(topRect);
+        
+        p.setPen(foreCol);
+        QFont font;
+        font.setPointSizeF(pointSize(11));
+        p.setFont(font);
+        
+        p.drawText(QRectF(0, 1, mGraphLeft-p.pen().widthF(), mLineH-p.pen().widthF()-1),
+                   Qt::AlignVCenter | Qt::AlignCenter,
+                   mItemTitle);
     }
     
     // Right part of the view (graph, title, ...)
@@ -492,10 +481,16 @@ void GraphViewResults::setItemTitle(const QString& itemTitle)
     mItemTitle = itemTitle;
 }
 
-void GraphViewResults::forceHideButtons(const bool hide)
+void GraphViewResults::setButtonsVisible(const bool visible)
 {
-    if(hide != mForceHideButtons){
-        mForceHideButtons = hide;
+    if(mButtonsVisible != visible){
+        mButtonsVisible = visible;
+        
+        mImageSaveBut   -> setVisible(mButtonsVisible);
+        mDataSaveBut    -> setVisible(mButtonsVisible);
+        mImageClipBut   -> setVisible(mButtonsVisible);
+        mResultsClipBut -> setVisible(mButtonsVisible);
+        
         updateLayout();
     }
 }

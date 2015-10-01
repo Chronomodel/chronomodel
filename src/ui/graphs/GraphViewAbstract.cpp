@@ -82,15 +82,15 @@ void GraphViewAbstract::setRangeY(const double aMinY, const double aMaxY)
     }
 }
 
-void GraphViewAbstract::setMinimumX(const double aMinX)				{mMinX = aMinX; repaintGraph(true);}
-void GraphViewAbstract::setMaximumX(const double aMaxX)				{mMaxX = aMaxX; repaintGraph(true);}
-void GraphViewAbstract::setMinimumY(const double aMinY)				{mMinY = aMinY; repaintGraph(true);}
-void GraphViewAbstract::setMaximumY(const double aMaxY)				{mMaxY = aMaxY; repaintGraph(true);}
+void GraphViewAbstract::setMinimumX(const double aMinX)				{if(mMinX != aMinX){mMinX = aMinX; repaintGraph(true);}}
+void GraphViewAbstract::setMaximumX(const double aMaxX)				{if(mMaxX != aMaxX){mMaxX = aMaxX; repaintGraph(true);}}
+void GraphViewAbstract::setMinimumY(const double aMinY)				{if(mMinY != aMinY){mMinY = aMinY; repaintGraph(true);}}
+void GraphViewAbstract::setMaximumY(const double aMaxY)				{if(mMaxY != aMaxY){mMaxY = aMaxY; repaintGraph(true);}}
 
-void GraphViewAbstract::setMarginLeft(const int aMarginLeft)		{mMarginLeft = aMarginLeft; repaintGraph(true);}
-void GraphViewAbstract::setMarginRight(const int aMarginRight)		{mMarginRight = aMarginRight; repaintGraph(true);}
-void GraphViewAbstract::setMarginTop(const int aMarginTop)			{mMarginTop = aMarginTop; repaintGraph(true);}
-void GraphViewAbstract::setMarginBottom(const int aMarginBottom)	{mMarginBottom = aMarginBottom; repaintGraph(true);}
+void GraphViewAbstract::setMarginLeft(const int aMarginLeft)		{if(mMarginLeft != aMarginLeft){mMarginLeft = aMarginLeft; repaintGraph(true);}}
+void GraphViewAbstract::setMarginRight(const int aMarginRight)		{if(mMarginRight != aMarginRight){mMarginRight = aMarginRight; repaintGraph(true);}}
+void GraphViewAbstract::setMarginTop(const int aMarginTop)			{if(mMarginTop != aMarginTop){mMarginTop = aMarginTop; repaintGraph(true);}}
+void GraphViewAbstract::setMarginBottom(const int aMarginBottom)	{if(mMarginBottom != aMarginBottom){mMarginBottom = aMarginBottom; repaintGraph(true);}}
 void GraphViewAbstract::setMargins(const int aMarginLeft, const int aMarginRight, const int aMarginTop, const int aMarginBottom)
 {
 	mMarginLeft = aMarginLeft;

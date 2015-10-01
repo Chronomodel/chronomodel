@@ -3,6 +3,8 @@
 #include "Button.h"
 #include "ColorPicker.h"
 #include "PluginManager.h"
+#include "ModelUtilities.h"
+#include "Date.h"
 #include "../PluginAbstract.h"
 #include "../PluginSettingsViewAbstract.h"
 #include <QtWidgets>
@@ -15,68 +17,81 @@ mPlugin(plugin)
     QString title = plugin->getName() + " " + tr("Settings");
     setWindowTitle(title);
     
-    mTitleLab = new Label(title, this);
-    mTitleLab->setIsTitle(true);
+    /*mLangHelpLab = new QLabel(tr("The following parameters can "), this);
+    QFont f;
+    f.setPointSize(pointSize(11));
+    mLangHelpLab->setFont(f);
+    mLangHelpLab->setAlignment(Qt::AlignCenter);
+    mLangHelpLab->setWordWrap(true);*/
     
+    // ----------------------------------------
+    //  Common form for all plugins
+    // ----------------------------------------
     mColorLab = new Label(tr("Color") + " :", this);
     mColorPicker = new ColorPicker(mPlugin->getColor(), this);
     
+    mMethodLab = new QLabel(tr("Method") + " :", this);
+    mMethodCombo = new QComboBox(this);
+    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHIndependant));
+    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eInversion));
+    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
+    
+    
+    // ----------------------------------------
+    //  This form is plugin specific
+    // ----------------------------------------
     mView = plugin->getSettingsView();
-    mView->setParent(this);
-    mView->setVisible(true);
+    if(mView){
+        // useless using a layout below...
+        mView->setParent(this);
+        mView->setVisible(true);
+    }
     
-    mOkBut = new Button(tr("OK"), this);
-    mCancelBut = new Button(tr("Cancel"), this);
-    mOkBut->setAutoDefault(true);
-    
-    connect(mOkBut, SIGNAL(clicked()), this, SLOT(accept()));
-    connect(mCancelBut, SIGNAL(clicked()), this, SLOT(reject()));
+    // ----------------------------------------
+    //  Connections
+    // ----------------------------------------
     connect(this, SIGNAL(accepted()), mView, SLOT(onAccepted()));
     connect(mColorPicker, SIGNAL(colorChanged(QColor)), this, SLOT(updateColor(QColor)));
     
-    resize(400, 400);
+    // ----------------------------------------
+    //  Buttons
+    // ----------------------------------------
+    mButtonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    connect(mButtonBox, SIGNAL(accepted()), this, SLOT(accept()));
+    connect(mButtonBox, SIGNAL(rejected()), this, SLOT(reject()));
+    
+    // ----------------------------------------
+    //  Layout
+    // ----------------------------------------
+    QGridLayout* grid = new QGridLayout();
+    grid->setContentsMargins(0, 0, 0, 0);
+    grid->addWidget(mColorLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mColorPicker, 0, 1);
+    grid->addWidget(mMethodLab, 1, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mMethodCombo, 1, 1);
+    
+    QVBoxLayout* layout = new QVBoxLayout();
+    layout->addLayout(grid);
+    if(mView){
+        QFrame* line1 = new QFrame();
+        line1->setFrameShape(QFrame::HLine);
+        line1->setFrameShadow(QFrame::Sunken);
+        layout->addWidget(line1);
+        layout->addWidget(mView);
+    }
+    layout->addWidget(mButtonBox);
+    
+    setLayout(layout);
+    
+    setFixedWidth(450);
 }
 
 PluginsSettingsDialog::~PluginsSettingsDialog()
 {
-
+    
 }
 
 void PluginsSettingsDialog::updateColor(QColor c)
 {
     mPlugin->mColor = c;
 }
-
-void PluginsSettingsDialog::resizeEvent(QResizeEvent* e)
-{
-    Q_UNUSED(e);
-    
-    int m = 5;
-    int lineH = 20;
-    int w = width() - 2*m;
-    int w1 = 100;
-    int w2 = width() - 3*m - w1;
-    int butW = 80;
-    int butH = 25;
-    int viewH = height() - 2*lineH - butH - 5*m;
-    
-    int y = -lineH;
-    
-    mTitleLab->setGeometry(m, y += (lineH + m), width() - 2*m, lineH);
-    
-    mColorLab->setGeometry(m, y += (lineH + m), w1, lineH);
-    mColorPicker->setGeometry(2*m + w1, y, w2, lineH);
-    
-    mView->setGeometry(m, y += (lineH + m), w, viewH);
-    
-    mOkBut->setGeometry(width() - 2*m - 2*butW, height() - m - butH, butW, butH);
-    mCancelBut->setGeometry(width() - m - butW, height() - m - butH, butW, butH);
-}
-
-void PluginsSettingsDialog::paintEvent(QPaintEvent* e)
-{
-    Q_UNUSED(e);
-    QPainter p(this);
-    p.fillRect(rect(), QColor(180, 180, 180));
-}
-

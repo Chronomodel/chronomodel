@@ -49,8 +49,6 @@ private slots:
     void sendMergeSelectedDates();
     void sendSplitDate();
     
-    void showDatesOptions();
-    
     void updateKnownType();
     void updateKnownFixed(const QString& text);
     void updateKnownUnifStart();
@@ -92,7 +90,6 @@ private:
     Button* mRecycleBut;
     
     Button* mCalibBut;
-    Button* mOptsBut;
     Button* mMergeBut;
     Button* mSplitBut;
     

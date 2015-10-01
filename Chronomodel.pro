@@ -68,7 +68,7 @@ macx{
     ICON = $$PRO_PATH/icon/Chronomodel.icns
 
 	# This is the SDK used to compile : change it to whatever latest version of mac you are using.
-	QMAKE_MAC_SDK = macosx10.10
+	QMAKE_MAC_SDK = macosx10.11
 	
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
 	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
@@ -250,6 +250,7 @@ HEADERS += src/ui/dialogs/AboutDialog.h
 HEADERS += src/ui/dialogs/MCMCProgressDialog.h
 HEADERS += src/ui/dialogs/MCMCSettingsDialog.h
 HEADERS += src/ui/dialogs/AppSettingsDialog.h
+HEADERS += src/ui/dialogs/AppSettingsDialogItemDelegate.h
 HEADERS += src/ui/dialogs/EventDialog.h
 HEADERS += src/ui/dialogs/ConstraintDialog.h
 HEADERS += src/ui/dialogs/PhaseDialog.h

@@ -81,8 +81,8 @@ mType(type)
                 Date d = Date::fromJson(date);
                 if(!d.isNull())
                 {
-                    QListWidgetItem* item = new QListWidgetItem(d.mName);
-                    item->setData(0x0101, d.mName);
+                    QListWidgetItem* item = new QListWidgetItem(d.getName());
+                    item->setData(0x0101, d.getName());
                     item->setData(0x0102, d.mPlugin->getId());
                     item->setData(0x0103, d.getDesc());
                     item->setData(0x0105, d.mDeltaFixed);

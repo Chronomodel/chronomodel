@@ -40,7 +40,10 @@ public:
     bool isNull();
     
     static Date fromJson(const QJsonObject& json);
-    void setJson(QJsonObject& json, const int idxEvent, const int idxDate);
+    //void setJson(const QJsonObject& jsonDate);
+    void setJson(const QJsonObject & json, const int eventIdx, const int dateIdx);
+    void setEventJson(const QJsonObject& jsonEvent);
+    void setIdxInEventArray(int j);
     QJsonObject toJson() const;
     
     static Date fromCSV(QStringList dataStr);
@@ -72,7 +75,7 @@ public:
     double mDelta;
     
     int mId;
-    QString mName;
+    QString mInitName;
     QJsonObject mData;
     PluginAbstract* mPlugin;
     DataMethod mMethod;
@@ -96,11 +99,12 @@ public:
     
     QList<Date> mSubDates;
     
-    QJsonObject * mJson;
-    int mJsonEventIdx;
-    int mJsonDateIdx;
+    const QJsonObject * mJsonEvent;
+
 private:
-    
+    const QJsonObject * mJsonDate;
+    int mEventIdx;
+    int mIdxInEventArray;
     QColor mColor;
 };
 

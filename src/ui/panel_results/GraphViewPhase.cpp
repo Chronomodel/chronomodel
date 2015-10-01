@@ -16,8 +16,6 @@
 GraphViewPhase::GraphViewPhase(QWidget *parent):GraphViewResults(parent),
 mPhase(0)
 {
-    mMinHeightForButtonsVisible = 80;
-    
     setMainColor(QColor(50, 50, 50));
     mGraph->setBackgroundColor(QColor(210, 210, 210));
     //mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax); // it's done in GraphViewResults
@@ -27,9 +25,19 @@ mPhase(0)
     mDurationGraph -> addInfo(tr("WARNING : this graph scale is NOT the study period!"));
     mDurationGraph -> mLegendX = "";
     mDurationGraph -> setFormatFunctX(0);
-    mDurationGraph -> showHorizGrid(false);
+    
+    mDurationGraph->showXAxisArrow(true);
+    mDurationGraph->showXAxisTicks(true);
+    mDurationGraph->showXAxisSubTicks(true);
+    mDurationGraph->showXAxisValues(true);
+    
+    mDurationGraph->showYAxisArrow(true);
+    mDurationGraph->showYAxisTicks(false);
+    mDurationGraph->showYAxisSubTicks(false);
+    mDurationGraph->showYAxisValues(false);
+    
     mDurationGraph -> setXAxisMode(GraphView::eAllTicks);
-    mDurationGraph -> setYAxisMode(GraphView::eMinMax);
+    mDurationGraph -> setYAxisMode(GraphView::eHidden);
     mDurationGraph -> setBackgroundColor(QColor(210, 210, 210));
     
     mDurationGraph->setMargins(50, 10, 5, 30);
@@ -56,12 +64,18 @@ void GraphViewPhase::setGraphFont(const QFont& font)
     mDurationGraph->setGraphFont(font);
 }
 
+void GraphViewPhase::setButtonsVisible(const bool visible)
+{
+    GraphViewResults::setButtonsVisible(visible);
+    mShowDuration->setVisible(mButtonsVisible);
+}
+
 void GraphViewPhase::setPhase(Phase* phase)
 {
     if(phase)
     {
         mPhase = phase;
-        setItemTitle(tr("Phase") + " : " + mPhase->mName);
+        setItemTitle(tr("Phase") + " : " + mPhase->getName());
         setItemColor(mPhase->getColor());
     }
     update();
@@ -71,27 +85,20 @@ void GraphViewPhase::updateLayout()
 {
     GraphViewResults::updateLayout();
     
-    mShowDuration->setVisible(mButtonVisible);
-    
-    int leftShift = mForceHideButtons ? 0 : mGraphLeft;
+    int h = height();
+    int leftShift = mButtonsVisible ? mGraphLeft : 0;
     QRect graphRect(leftShift, mTopShift, this->width() - leftShift, height()-mTopShift);
     
-    if(mButtonVisible)
+    bool axisVisible = (h > mHeightForVisibleAxis);
+    mDurationGraph->showXAxisValues(axisVisible);
+    mDurationGraph->setMarginBottom(axisVisible ? mDurationGraph->font().pointSizeF() + 10 : 10);
+    
+    if(mButtonsVisible)
     {
         int butInlineMaxH = 50;
         int bh = (height() - mLineH) / 2;
         bh = qMin(bh, butInlineMaxH);
         mShowDuration->setGeometry(0, mLineH + bh, mGraphLeft, bh);
-        
-        mDurationGraph->setYAxisMode(GraphView::eMinMax);
-        mDurationGraph->setXAxisMode(GraphView::eAllTicks);
-        mDurationGraph->setMarginBottom(mGraph->font().pointSizeF() + 10);
-    }
-    else
-    {
-        mDurationGraph->setYAxisMode(GraphView::eHidden);
-        mDurationGraph->setXAxisMode(GraphView::eHidden);
-        mDurationGraph->setMarginBottom(0);
     }
     mDurationGraph->setGeometry(graphRect.adjusted(0, 0, 0, mShowNumResults ? -graphRect.height()/2 : 0));
 }
@@ -139,15 +146,16 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->mLegendX = DateUtils::getAppSettingsFormat();
             mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
             mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
+            mTitle =  tr("Phase") + " : " + mPhase->getName();
             
             mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
             
             mShowDuration->setVisible(true);
             showDuration(mShowDuration->isChecked());
             
-            QString results = ModelUtilities::phaseResultsText(mPhase);
-            setNumericalResults(results);
-            
+            QString resultsText = ModelUtilities::phaseResultsText(mPhase);
+            QString resultsHTML = ModelUtilities::phaseResultsHTML(mPhase);
+            setNumericalResults(resultsHTML, resultsText);
             
             GraphCurve curveAlpha = generateDensityCurve(mPhase->mAlpha.fullHisto(),
                                                          "Post Distrib Alpha All Chains",
@@ -268,6 +276,8 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mDurationGraph->setCurveVisible("HPD Duration", mShowAllChains);
             
             mDurationGraph->adjustYToMaxValue();
+            mGraph->setTipXLab("t");
+            mGraph->setYAxisMode(GraphView::eHidden);
         }
         
         // ------------------------------------------------
@@ -295,6 +305,9 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 mGraph->setCurveVisible("Beta Q3 " + QString::number(i), mShowChainList[i]);
             }
             mGraph->adjustYToMinMaxValue();
+            mGraph->setTipXLab("iteration");
+            mGraph->setTipYLab("t");
+            mGraph->setYAxisMode(GraphView::eMinMax);
         }
     }
 }

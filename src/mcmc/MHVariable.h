@@ -21,9 +21,10 @@ public:
     void generateGlobalRunAcceptation(const QList<Chain>& chains);
     
     void generateNumericalResults(const QList<Chain>& chains);
-    QString resultsText(const QString& noResultMessage = QObject::tr("No result to display"),
-                        const QString& unit = QString(),
-                        FormatFunc formatFunc = 0) const;
+    QString resultsString(const QString& nl = "<br>",
+                          const QString& noResultMessage = QObject::tr("No result to display"),
+                          const QString& unit = QString(),
+                          FormatFunc formatFunc = 0) const;
 
     void saveToStream(QDataStream *out); // added by PhD
     void loadFromStream(QDataStream *in); // added by PhD

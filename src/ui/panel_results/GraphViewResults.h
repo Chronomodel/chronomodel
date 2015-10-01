@@ -49,7 +49,7 @@ public:
     void setItemColor(const QColor& itemColor);
     void setItemTitle(const QString& itemTitle);
     
-    void forceHideButtons(const bool hide);
+    virtual void setButtonsVisible(const bool visible);
     
     GraphView* mGraph;
     
@@ -88,7 +88,7 @@ public slots:
     
     void zoom(double min, double max);
     void showNumericalResults(bool show);
-    void setNumericalResults(const QString& results);
+    void setNumericalResults(const QString& resultsHTML, const QString& resultsText);
     
 private slots:
     void saveAsImage();
@@ -131,7 +131,8 @@ protected:
     
     QString mTitle;
     
-    QString mResults;
+    QString mResultsText;
+    
     QColor mItemColor;
     QString mItemTitle;
     
@@ -161,9 +162,8 @@ protected:
     int mGraphLeft;
     int mTopShift;
     
-    bool mButtonVisible;
-    bool mForceHideButtons;
-    int mMinHeightForButtonsVisible;
+    bool mButtonsVisible;
+    int mHeightForVisibleAxis;
     
     QPropertyAnimation* mAnimation;
 };

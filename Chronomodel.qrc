@@ -21,6 +21,7 @@
 	<file alias="results_w.png">resources/results_w.png</file>
 	
 	<file alias="grid2.png">resources/grid2.png</file>
+    <file alias="csv.png">resources/csv.png</file>
 	<file alias="import_w.png">resources/import_w.png</file>
 	<file alias="export_w.png">resources/export_w.png</file>
 	<file alias="log.png">resources/log.png</file>

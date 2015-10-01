@@ -3,8 +3,9 @@
 
 #include <QDialog>
 
-class Button;
-class Label;
+class QLabel;
+class QComboBox;
+class QDialogButtonBox;
 class ColorPicker;
 class PluginAbstract;
 class PluginSettingsViewAbstract;
@@ -17,25 +18,21 @@ public:
     PluginsSettingsDialog(PluginAbstract* plugin, QWidget* parent = 0, Qt::WindowFlags flags = 0);
     virtual ~PluginsSettingsDialog();
     
-protected:
-    void paintEvent(QPaintEvent* e);
-    void resizeEvent(QResizeEvent* e);
-    
 protected slots:
     void updateColor(QColor c);
     
 private:
     PluginAbstract* mPlugin;
     
-    Label* mTitleLab;
-    
-    Label* mColorLab;
+    QLabel* mColorLab;
     ColorPicker* mColorPicker;
+    
+    QLabel* mMethodLab;
+    QComboBox* mMethodCombo;
     
     PluginSettingsViewAbstract* mView;
     
-    Button* mOkBut;
-    Button* mCancelBut;
+    QDialogButtonBox* mButtonBox;
 };
 
 #endif

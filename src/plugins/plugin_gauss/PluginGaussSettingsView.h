@@ -7,9 +7,9 @@
 #include <QMap>
 
 class PluginGauss;
-class Label;
+class QLabel;
 class QListWidget;
-class Button;
+class QPushButton;
 
 
 class PluginGaussSettingsView: public PluginSettingsViewAbstract
@@ -26,14 +26,11 @@ public:
     void deleteRefCurve();
     void onAccepted();
     
-protected:
-    void resizeEvent(QResizeEvent*);
-    
 private:
-    Label* mRefCurvesLab;
+    QLabel* mRefCurvesLab;
     QListWidget* mRefCurvesList;
-    Button* mAddRefCurveBut;
-    Button* mDeleteRefCurveBut;
+    QPushButton* mAddRefCurveBut;
+    QPushButton* mDeleteRefCurveBut;
     
     QMap<QString, QString> mFilesOrg;
     QMap<QString, QString> mFilesNew;

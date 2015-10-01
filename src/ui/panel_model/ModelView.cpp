@@ -171,7 +171,7 @@ mCalibVisible(false)
     
     // -------- Windows Event propreties -----------------------
     
-    mStudyLab = new Label(mRightWrapper);
+    mStudyLab = new Label(tr("STUDY PERIOD (BC/AD)"), mRightWrapper);
     mMinLab = new Label(tr("Start") + " :", mRightWrapper);
     mMaxLab = new Label(tr("End")   + " :", mRightWrapper);
     //mStepLab = new Label(tr("Step") + " :", mRightWrapper);
@@ -326,7 +326,6 @@ void ModelView::doProjectConnections(Project* project)
 
 void ModelView::resetInterface()
 {
-    mStudyLab->setText(tr("STUDY PERIOD (BC/AD)"));// + " " + DateUtils::getAppSettingsFormat());
     mEventsScene->clean();
     mPhasesScene->clean();
     mCalibrationView->setDate(QJsonObject());

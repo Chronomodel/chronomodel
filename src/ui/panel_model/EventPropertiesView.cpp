@@ -97,11 +97,6 @@ mToolbarH(60)
     mCalibBut->setCheckable(true);
     minimumHeight+=mCalibBut->height();
     
-    mOptsBut = new Button(tr("Options"), mEventView);
-    mOptsBut->setIcon(QIcon(":settings_w.png"));
-    mOptsBut->setFlatVertical();
-    minimumHeight+=mOptsBut->height();
-    
     mMergeBut = new Button(tr("Combine"), mEventView);
     mMergeBut->setFlatVertical();
     mMergeBut->setEnabled(false);
@@ -115,7 +110,6 @@ mToolbarH(60)
     minimumHeight+=mSplitBut->height();
     
     connect(mCalibBut, SIGNAL(toggled(bool)), this, SIGNAL(showCalibRequested(bool)));
-    connect(mOptsBut,  SIGNAL(clicked()), this, SLOT(showDatesOptions()));
     connect(mMergeBut, SIGNAL(clicked()), this, SLOT(sendMergeSelectedDates()));
     connect(mSplitBut, SIGNAL(clicked()), this, SLOT(sendSplitDate()));
 
@@ -144,8 +138,17 @@ mToolbarH(60)
     mKnownGraph = new GraphView(mBoundView);
     
     mKnownGraph->setRendering(GraphView::eHD);
-    mKnownGraph->showAxisArrows(true);
-    mKnownGraph->showAxisLines(true);
+    
+    mKnownGraph->showXAxisArrow(true);
+    mKnownGraph->showXAxisTicks(true);
+    mKnownGraph->showXAxisSubTicks(true);
+    mKnownGraph->showXAxisValues(true);
+    
+    mKnownGraph->showYAxisArrow(true);
+    mKnownGraph->showYAxisTicks(false);
+    mKnownGraph->showYAxisSubTicks(false);
+    mKnownGraph->showYAxisValues(false);
+    
     mKnownGraph->setXAxisMode(GraphView::eMinMax);
     mKnownGraph->setYAxisMode(GraphView::eMinMax);
     
@@ -365,10 +368,6 @@ void EventPropertiesView::updateKnownGraph()
         double max = map_max_value(event.mValues);
         max = (max == 0) ? 1 : max;
         mKnownGraph->setRangeY(0, max);
-        mKnownGraph->showAxisArrows(false);
-        mKnownGraph->showAxisLines(false);
-        mKnownGraph->setXAxisMode(GraphView::eHidden);
-        //mKnownGraph->setYAxisMode(GraphView::eHidden);
         
         // draw the calibrate curve on the rigth hand panel
         GraphCurve curve;
@@ -492,6 +491,16 @@ void EventPropertiesView::updateCombineAvailability()
                 }
             }
         }
+        // Dates are not combined yet and are from the same plugin.
+        // We should now ask the plugin if they are combinable (they use the same ref curve for example...)
+        if(mergeable && plugin != 0){
+            // This could be used instead to disable the "combine" button if dates cannot be combined.
+            // We prefer letting the user combine them and get an error message explaining why they cannot be combined!
+            // Check Plugin14C::mergeDates as example
+            //mergeable = plugin->areDatesMergeable(dates);
+            
+            mergeable = true;
+        }
     }
     mMergeBut->setEnabled(mergeable);
     mSplitBut->setEnabled(splittable);
@@ -526,27 +535,6 @@ void EventPropertiesView::sendSplitDate()
         }
     }
 }
-
-
-#pragma mark Dates Options
-
-/**
- * @brief Special function only for 14C plugin, set all data with the same reference curve
- * @todo Each plugin should return (or not) a view with a set of options that can be applied to all dates of this type. For now, we just use a simple temporary dialog
- */
-void EventPropertiesView::showDatesOptions()
-{
-    PluginOptionsDialog dialog(qApp->activeWindow(), Qt::Sheet);
-    
-    
-    if(dialog.exec() == QDialog::Accepted)
-    {
-        QString ref14C = dialog.getC14Ref();
-        Project* project = MainWindow::getInstance()->getProject();
-        project->updateAll14CData(ref14C);
-    }
-}
-
 
 #pragma mark Layout
 void EventPropertiesView::paintEvent(QPaintEvent* e)
@@ -632,15 +620,14 @@ void EventPropertiesView::updateLayout()
     
     x = listRect.x();
     y = listRect.y() + listRect.height();
-    int w = listRect.width() / 6;
+    int w = listRect.width() / 5;
     int h = butPluginHeigth;
 
     mCalibBut->setGeometry(x, y, w, h);
-    mOptsBut->setGeometry(x + w, y, w, h);
-    mDeleteBut ->setGeometry(x + 2*w, y, w, h);
-    mRecycleBut->setGeometry(x + 3*w, y, w, h);
-    mMergeBut->setGeometry(x + 4*w, y, w, h);
-    mSplitBut->setGeometry(x + 5*w, y, w, h);
+    mDeleteBut ->setGeometry(x + 1*w, y, w, h);
+    mRecycleBut->setGeometry(x + 2*w, y, w, h);
+    mMergeBut->setGeometry(x + 3*w, y, w, h);
+    mSplitBut->setGeometry(x + 4*w, y, w, h);
  
     // Known view : Used with Bound
     

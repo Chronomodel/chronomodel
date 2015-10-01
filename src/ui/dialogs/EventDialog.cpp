@@ -20,6 +20,7 @@ EventDialog::EventDialog(QWidget* parent, const QString& title, Qt::WindowFlags 
     
     mNameEdit = new LineEdit();
     mNameEdit->setText(tr("Untitled"));
+    mNameEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
     mNameEdit->selectAll();
     mNameEdit->setFocus();
     

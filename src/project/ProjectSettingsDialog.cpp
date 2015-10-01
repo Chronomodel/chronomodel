@@ -21,10 +21,12 @@ QDialog(parent, flags)
     QLabel* labelMin = new QLabel(tr("Start year") + ":");
     labelMin->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mMinEdit = new LineEdit();
+    mMinEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     
     QLabel* labelMax = new QLabel(tr("End year") + ":");
     labelMax->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mMaxEdit = new LineEdit();
+    mMaxEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     
     QDialogButtonBox* buttonBox = new QDialogButtonBox();
     buttonBox->addButton(tr("OK"), QDialogButtonBox::AcceptRole);

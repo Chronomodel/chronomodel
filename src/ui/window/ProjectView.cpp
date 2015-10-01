@@ -41,9 +41,9 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     mLogResultsEdit->setFont(font);
     
     mLogTabs = new QTabWidget();
-    mLogTabs->addTab(mLogModelEdit,   tr("Model"));
-    mLogTabs->addTab(mLogMCMCEdit,    tr("MCMC"));
-    mLogTabs->addTab(mLogResultsEdit, tr("Results"));
+    mLogTabs->addTab(mLogModelEdit,   tr("Model description"));
+    mLogTabs->addTab(mLogMCMCEdit,    tr("MCMC initialization"));
+    mLogTabs->addTab(mLogResultsEdit, tr("Posterior distrib. results"));
     mLogTabs->setContentsMargins(15, 15, 15, 15);
     
     mLogView = new QWidget();
