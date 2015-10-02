@@ -286,7 +286,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
              writer.write(image);*/
         }
     }
-   // qDebug()<<"QFileInfo saveWidgetAsImage image.save"<<fileName;
+
     
     return fileInfo;
 }
