@@ -79,7 +79,7 @@ FunctionAnalysis analyseFunction(const QMap<double, double>& aFunction)
         
         if(variance < 0) {
             qDebug() << "WARNING : in analyseFunction() negative variance found : " << variance<<" return 0";
-            variance = 0;
+            variance = -variance;
         }
         
         result.stddev = sqrt(variance);
