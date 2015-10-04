@@ -200,7 +200,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
             int i = 0;
             for(double y = yov - (mStartPix - mDeltaPix); y > yov - h; y -= mDeltaPix)
             {
-                if(mShowSubs)
+                if(mShowSubSubs)
                 {
                     for(double sy = y + mDeltaPix/10; sy > std::max(y - mDeltaPix, yov - h); sy -= mDeltaPix/10)
                     {
@@ -209,21 +209,25 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
                     }
                 }
                 
-                if(y <= yov)
-                {
-                    p.drawLine(QLineF(xov, y, xov - 6, y));
-                    
-                    int align = (Qt::AlignRight | Qt::AlignVCenter);
-                    QString text = (valueFormatFunc ? valueFormatFunc(mStartVal + i * mDeltaVal) : QString::number(mStartVal + i * mDeltaVal, 'f', 0) );
+                if(y <= yov) {
+                    if( mShowText ) {
+                        int align = (Qt::AlignRight | Qt::AlignVCenter);
+                        QString text = (valueFormatFunc ? valueFormatFunc(mStartVal + i * mDeltaVal) : QString::number(mStartVal + i * mDeltaVal, 'f', 0) );
 
-                    qreal ty = y - heightText/2;
+                        qreal ty = y - heightText/2;
                    
-                    QRectF tr(xov - w, ty, w - 8, heightText);
-                    p.drawText(tr, align, text);
+                        QRectF tr(xov - w, ty, w - 8, heightText);
+                        p.drawText(tr, align, text);
+                    }
                     
-                    linesPos.append(y);
-                    ++i;
+                    if( mShowSubs ) {
+                        p.drawLine(QLineF(xov, y, xov - 6, y));
+                        linesPos.append(y);
+                    }
+                    
                 }
+                ++i;
+                
             }
         }
     }

@@ -14,18 +14,7 @@ class ProjectSettings;
 
 GraphView::GraphView(QWidget *parent):QWidget(parent),
 mStepMinWidth(50), // define secondary scale on axis
-
-mXAxisMode(eAllTicks),
-mYAxisMode(eAllTicks),
-mRendering(eSD),
-mAutoAdjustYScale(false),
-mFormatFuncX(0),
-mFormatFuncY(0),
-mShowInfos(false),
-mBackgroundColor(Qt::white),
-
 mXAxisLine(true),
-
 mXAxisArrow(true),
 mXAxisTicks(true),
 mXAxisSubTicks(true),
@@ -35,6 +24,14 @@ mYAxisArrow(true),
 mYAxisTicks(true),
 mYAxisSubTicks(true),
 mYAxisValues(true),
+mXAxisMode(eAllTicks),
+mYAxisMode(eAllTicks),
+mRendering(eSD),
+mAutoAdjustYScale(false),
+mFormatFuncX(0),
+mFormatFuncY(0),
+mShowInfos(false),
+mBackgroundColor(Qt::white),
 mThickness(1),
 mTipX(0.),
 mTipY(0.),
@@ -190,6 +187,7 @@ void GraphView::setXAxisMode(AxisMode mode)
     if(mXAxisMode != mode)
     {
         mXAxisMode = mode;
+        mAxisToolX.mShowText = (mXAxisMode!=eHidden);
         repaintGraph(true);
     }
 }
@@ -199,7 +197,28 @@ void GraphView::setYAxisMode(AxisMode mode)
     if(mYAxisMode != mode)
     {
         mYAxisMode = mode;
+        showYAxisValues(true);
+        showYAxisTicks(true);
+        showYAxisSubTicks(true);
+        
+        if(mYAxisMode==eMinMax){
+            showYAxisValues(true);
+            showYAxisTicks(false);
+            showYAxisSubTicks(false);
+            
+        }
+
         mAxisToolY.mMinMaxOnly = (mYAxisMode == eMinMax);
+        
+        if(mYAxisMode==eHidden){
+            showYAxisValues(false);
+            showYAxisTicks(false);
+            showYAxisSubTicks(false);
+            /*mAxisToolY.mShowText = false;
+            mAxisToolY.mShowSubs=false;
+            mAxisToolY.mShowSubSubs=false;*/
+            
+        }
         repaintGraph(true);
     }
 }
