@@ -141,6 +141,11 @@ void MCMCLoopMain::initMCMC()
         emit stepProgressed(i);
     }
     
+    for(int i=0; i<mModel->mEvents.size(); ++i)
+    {
+        qDebug()<<"check"<<mModel->mEvents[i]->getName();
+
+    }
     // ----------------------------------------------------------------
     //  Init Bounds
     // - Définir des niveaux pour les faits
@@ -213,12 +218,13 @@ void MCMCLoopMain::initMCMC()
             unsortedEvents[i]->mTheta.mX = Generator::randomUniform(min, max);
             unsortedEvents[i]->mInitialized = true;
             
-            //qDebug() << "--> Event initialized : " << events[i]->mName << " : " << events[i]->mTheta.mX;
+            qDebug() << "--> Event initialized : " << unsortedEvents[i]->getName() << " : " << unsortedEvents[i]->mTheta.mX;
             
             double s02_sum = 0.f;
             for(int j=0; j<unsortedEvents[i]->mDates.size(); ++j)
             {
                 Date& date = unsortedEvents[i]->mDates[j];
+                qDebug()<<date.getName();
                 
                 // Init ti and its sigma
                 double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mRepartition);
@@ -297,7 +303,6 @@ void MCMCLoopMain::initMCMC()
         else
         {
             log += line(textBlue("Event (" + QString::number(i+1) + "/" + QString::number(events.size()) + ") : " + event->getName()));
-            qDebug()<<"textBlue"<<event->getName();
             log += line(textBlue(" - theta (value) : " + QString::number(event->mTheta.mX)));
             log += line(textBlue(" - theta (sigma MH) : " + QString::number(event->mTheta.mSigmaMH)));
             log += line(textBlue(" - SO2 : " + QString::number(event->mS02)));
@@ -364,7 +369,6 @@ void MCMCLoopMain::initMCMC()
     mInitLog += "<hr>";
     mInitLog += log;
     
-    //qDebug() << log;
 }
 
 void MCMCLoopMain::update()
@@ -380,8 +384,6 @@ void MCMCLoopMain::update()
     
     bool doMemo = (mState == eBurning) || (mState == eAdapting) || (chain.mTotalIter % chain.mThinningInterval == 0);
     
-    //qDebug() << mState << " : " << chain.mTotalIter << " : " << doMemo;
-    
     //--------------------- Update Dates -----------------------------------------
     
     int counter = 0;
@@ -396,8 +398,6 @@ void MCMCLoopMain::update()
             date.updateTheta(event);
             date.updateSigma(event);
             date.updateWiggle();
-            
-            //qDebug() << "it #" << chain.mTotalIter << " | date " << counter;
             
             if(doMemo)
             {
@@ -424,7 +424,6 @@ void MCMCLoopMain::update()
             event->mTheta.memo();
             event->mTheta.saveCurrentAcceptRate();
         }
-        //qDebug() << "it #" << chain.mTotalIter << " | event " << i;
     }
 
     //--------------------- Update Phases -----------------------------------------
