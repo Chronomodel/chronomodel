@@ -326,10 +326,9 @@ bool Project::load(const QString& path)
             if(false)//dataFile.exists())
             {
 
-                qDebug() << "Project::load Loading model file.dat : " << dataPath << " size="<< dataFile.size();
+                qDebug() << "Project::load Loading model file.dat : " << dataPath << " size=" << dataFile.size();
       
                 try{
-                    //mModel = Model::fromJson(mState);
                     mModel->setJson(mState);
                     mModel->fromJson(mState);
 
@@ -448,8 +447,6 @@ bool Project::saveProjectToFile()
             file.write(jsonDoc.toJson(QJsonDocument::Indented));
             file.resize(file.pos());
             file.close();
-            
-            //return true;
         }
         else
         {
@@ -462,7 +459,7 @@ bool Project::saveProjectToFile()
         qDebug() << "Nothing new to save in project model";
 #endif
     }
-    if(!mModel->mChains.isEmpty())
+/*    if(!mModel->mChains.isEmpty()) // keep to the future version
     {
       //  qDebug() << "Saving project results";
         mModel->saveToFile(mProjectFileDir + "/" + mProjectFileName + ".dat");
@@ -472,10 +469,12 @@ bool Project::saveProjectToFile()
         if (checkFile.exists() && checkFile.isFile()) {
             QFile(mProjectFileDir + "/" + mProjectFileName + ".dat").remove();
         }
-        /* else {
+         else {
             return true;
-        } */
-    }
+        }
+
+    } */
+
     return true;
 }
 
@@ -563,8 +562,9 @@ void Project::resetMCMC()
                 
                 try{
                     Date d = Date::fromJson(date);
-                    d.setEventJson(events[i].toObject());
-                    d.setIdxInEventArray(j);
+                    //d.setEventJson(events[i].toObject());
+                    //d.setIdxInEventArray(j);
+                    d.setModelJson(mState, i, j);
                     if(!d.isNull())
                     {
                         date[STATE_DATE_METHOD] = (int)d.mPlugin->getDataMethod();

@@ -225,8 +225,9 @@ const QJsonObject &  Model::getJson()
 }
 void Model::fromJson(const QJsonObject& json)
 {
-    //Model* model = new Model();
-
+   // Model* model = new Model();
+    qDebug()<<"Model::fromJson";
+    
     if(json.contains(STATE_SETTINGS))
     {
         QJsonObject settings = json[STATE_SETTINGS].toObject();
@@ -247,7 +248,7 @@ void Model::fromJson(const QJsonObject& json)
         {
             QJsonObject phase = phases[i].toObject();
             Phase* p = new Phase(Phase::fromJson(phase));
-            p->setJson( getJson(),i );
+            p->setModelJson( getJson(),i );
             mPhases.append(p);
         }
     }
@@ -264,9 +265,10 @@ void Model::fromJson(const QJsonObject& json)
             if(event[STATE_EVENT_TYPE].toInt() == Event::eDefault)
             {
                 try{
-                    Event* e = new Event(Event::fromJson(event));
+                    Event* e = new Event(Event::fromJson(json,i));
                    // Event* e = new Event(Event::fromJson(json[STATE_EVENTS].toArray().at(i).toObject(),i));
-                    e->setJson(getJson(),i);
+                    e->setModelJson(getJson(),i);
+                    //e->setModelJson(events[i].toObject());
                     mEvents.append(e);
                 }
                 catch(QString error){
@@ -285,7 +287,8 @@ void Model::fromJson(const QJsonObject& json)
             {
                 EventKnown* e = new EventKnown(EventKnown::fromJson(event));
                 e->updateValues(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
-                e->setJson(getJson(),i);
+                e->setModelJson(json,i);
+                //e->setJson(events[i].toObject());
                 mEvents.append(e);
             }
             
@@ -296,7 +299,7 @@ void Model::fromJson(const QJsonObject& json)
     
     //----test entree
     
-    for(int i=0; i<mEvents.size(); ++i)
+   /* for(int i=0; i<mEvents.size(); ++i)
     {
         Event* event = mEvents[i];
         
@@ -308,14 +311,14 @@ void Model::fromJson(const QJsonObject& json)
                     
                 }
       
-    }
+    }*/
     
     
     // Sort events based on items y position
     std::sort(mEvents.begin(), mEvents.end(), sortEvents);
     //----test sortie
     
-    for(int i=0; i<mEvents.size(); ++i)
+   /* for(int i=0; i<mEvents.size(); ++i)
     {
         Event* event = mEvents[i];
         
@@ -327,7 +330,7 @@ void Model::fromJson(const QJsonObject& json)
             
         }
         
-    }
+    }*/
 
     if(json.contains(STATE_EVENTS_CONSTRAINTS))
     {
@@ -625,18 +628,17 @@ QList<QStringList> Model::getPhasesTraces()
     headers << "";
     for(int j=0; j<mPhases.size(); ++j)
     {
-        Phase* phase = mPhases[j];
         headers << "" << mPhases[j]->getName() + " alpha" << mPhases[j]->getName() + " beta";
     }
     rows << headers;
     
-    int shift = 0;
+    unsigned long shift = 0;
     for(int i=0; i<mChains.size(); ++i)
     {
-        unsigned int burnAdaptSize = mChains[i].mNumBurnIter + (mChains[i].mBatchIndex * mChains[i].mNumBatchIter);
-        unsigned int runSize = mChains[i].mNumRunIter / mChains[i].mThinningInterval;
+        unsigned long burnAdaptSize = mChains[i].mNumBurnIter + (mChains[i].mBatchIndex * mChains[i].mNumBatchIter);
+        unsigned long runSize = mChains[i].mNumRunIter / mChains[i].mThinningInterval;
         
-        for(int j=burnAdaptSize; j<burnAdaptSize + runSize; ++j)
+        for(unsigned long j=burnAdaptSize; j<burnAdaptSize + runSize; ++j)
         {
             QStringList l;
             l << QString::number(shift + j);
@@ -724,13 +726,13 @@ QList<QStringList> Model::getEventsTraces()
     }
     rows << headers;
     
-    int shift = 0;
+    unsigned long shift = 0;
     for(int i=0; i<mChains.size(); ++i)
     {
-        unsigned int burnAdaptSize = mChains[i].mNumBurnIter + (mChains[i].mBatchIndex * mChains[i].mNumBatchIter);
-        unsigned int runSize = mChains[i].mNumRunIter / mChains[i].mThinningInterval;
+        unsigned long burnAdaptSize = mChains[i].mNumBurnIter + (mChains[i].mBatchIndex * mChains[i].mNumBatchIter);
+        unsigned long runSize = mChains[i].mNumRunIter / mChains[i].mThinningInterval;
         
-        for(int j=burnAdaptSize; j<burnAdaptSize + runSize; ++j)
+        for(unsigned long j=burnAdaptSize; j<burnAdaptSize + runSize; ++j)
         {
             QStringList l;
             l << QString::number(shift + j) << "";

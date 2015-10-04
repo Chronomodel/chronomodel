@@ -22,7 +22,7 @@ mIsCurrent(false),
 mIsSelected(false),
 mInitialized(false),
 mLevel(0),
-mJson(NULL)
+mModelJson(NULL)
 {
     mTheta.mIsDate = true;
     
@@ -36,7 +36,7 @@ mJson(NULL)
 }
 
 Event::Event(const Event& event):
-mJson(event.mJson)
+mModelJson(event.mModelJson)
 {
     copyFrom(event);
 }
@@ -53,9 +53,10 @@ void Event::copyFrom(const Event& event)
 {
     mType = event.mType;
     mId = event.mId;
-    //mName = event.mName;
+    mInitName = event.mInitName;
     mMethod = event.mMethod;
-    //mColor = event.mColor;
+    mInitColor = event.mInitColor;
+    mModelJson=event.mModelJson;
     
     mDates = event.mDates;
     mPhases = event.mPhases;
@@ -91,54 +92,47 @@ Event::~Event()
 
 #pragma mark JSON
 
-/*void Event::setJson(const QJsonObject & iJson)
+void Event::setModelJson(const QJsonObject & iModelJson, const int idxEvent)
 {
-    mJson=&iJson;
-}*/
-void Event::setJson(const QJsonObject & iJson, const int idxEvent)
-{
-    mJson = &iJson;
+    mModelJson = &iModelJson;
     mJsonEventIdx=idxEvent;
+    QJsonObject jEvent =(*mModelJson)[STATE_EVENTS].toArray().at(mJsonEventIdx).toObject();
+    qDebug()<<"Event::setModelJson"<<jEvent[STATE_NAME].toString();
 }
 
-const QJsonObject & Event::getJson()
+const QJsonObject * Event::getModelJson()
 {
-    return (*mJson);
+    return mModelJson;
 }
-
 Event Event::fromJson(const QJsonObject& json, const int EventIdx)
 {
-    QJsonObject js =json[STATE_EVENTS].toArray().at(EventIdx).toObject();
-    Event event;
+    QJsonObject jEvent =json[STATE_EVENTS].toArray().at(EventIdx).toObject();
     
-    event.mType = (Type)js[STATE_EVENT_TYPE].toInt();
-    event.mId = js[STATE_ID].toInt();
-    event.mInitName = js[STATE_NAME].toString();
-    event.mInitColor = QColor(js[STATE_COLOR_RED].toInt(),
-                              js[STATE_COLOR_GREEN].toInt(),
-                              js[STATE_COLOR_BLUE].toInt());
-    event.mMethod = (Method)(js[STATE_EVENT_METHOD].toInt());
-    event.mItemX = js[STATE_ITEM_X].toDouble();
-    event.mItemY = js[STATE_ITEM_Y].toDouble();
-    event.mIsSelected = js[STATE_IS_SELECTED].toBool();
-    event.mIsCurrent = js[STATE_IS_CURRENT].toBool();
+    Event event;
+    event.setModelJson(json,EventIdx);
+    event.mType = (Type)jEvent[STATE_EVENT_TYPE].toInt();
+    event.mId = jEvent[STATE_ID].toInt();
+    event.mInitName = jEvent[STATE_NAME].toString();
+    event.mInitColor = QColor(jEvent[STATE_COLOR_RED].toInt(),
+                              jEvent[STATE_COLOR_GREEN].toInt(),
+                              jEvent[STATE_COLOR_BLUE].toInt());
+    event.mMethod = (Method)(jEvent[STATE_EVENT_METHOD].toInt());
+    event.mItemX = jEvent[STATE_ITEM_X].toDouble();
+    event.mItemY = jEvent[STATE_ITEM_Y].toDouble();
+    event.mIsSelected = jEvent[STATE_IS_SELECTED].toBool();
+    event.mIsCurrent = jEvent[STATE_IS_CURRENT].toBool();
     
     event.mTheta.mProposal = ModelUtilities::getEventMethodText(event.mMethod);
     
-    event.mPhasesIds = stringListToIntList(js[STATE_EVENT_PHASE_IDS].toString());
+    event.mPhasesIds = stringListToIntList(jEvent[STATE_EVENT_PHASE_IDS].toString());
     
-    QJsonArray dates = js[STATE_EVENT_DATES].toArray();
+    QJsonArray dates = jEvent[STATE_EVENT_DATES].toArray();
     for(int j=0; j<dates.size(); ++j)
     {
-        QJsonObject date = dates[j].toObject();
+        QJsonObject jdate = dates[j].toObject();
         
-        Date d = Date::fromJson(date);
-        
-        d.setJson(json,EventIdx,j);
-       // d.setIdxInEventArray(j);
-        //qDebug()<<"Model:: fromJson date->setJson( date->getName()"<<date->getName();
-        //d.setEventJson(json);
-        //date->setIdxInEventArray(j);
+        Date d = Date::fromJson(jdate);
+        d.setModelJson(json,EventIdx,j);
         
         if(!d.isNull())
         {
@@ -146,60 +140,12 @@ Event Event::fromJson(const QJsonObject& json, const int EventIdx)
         }
         else
         {
-            throw QObject::tr("ERROR : data could not be created with plugin ") + date[STATE_DATE_PLUGIN_ID].toString();
+            throw QObject::tr("ERROR : data could not be created with plugin ") + jdate[STATE_DATE_PLUGIN_ID].toString();
         }
     }
     return event;
 }
 
-Event Event::fromJson(const QJsonObject& json)
-{
-    Event event;
-    
-    event.mType = (Type)json[STATE_EVENT_TYPE].toInt();
-    event.mId = json[STATE_ID].toInt();
-    event.mInitName = json[STATE_NAME].toString();
-    event.mInitColor = QColor(json[STATE_COLOR_RED].toInt(),
-                          json[STATE_COLOR_GREEN].toInt(),
-                          json[STATE_COLOR_BLUE].toInt());
-    event.mMethod = (Method)(json[STATE_EVENT_METHOD].toInt());
-    event.mItemX = json[STATE_ITEM_X].toDouble();
-    event.mItemY = json[STATE_ITEM_Y].toDouble();
-    event.mIsSelected = json[STATE_IS_SELECTED].toBool();
-    event.mIsCurrent = json[STATE_IS_CURRENT].toBool();
-    
-    event.mTheta.mProposal = ModelUtilities::getEventMethodText(event.mMethod);
-    
-    event.mPhasesIds = stringListToIntList(json[STATE_EVENT_PHASE_IDS].toString());
-    
-    QJsonArray dates = json[STATE_EVENT_DATES].toArray();
-    for(int j=0; j<dates.size(); ++j)
-    {
-        QJsonObject date = dates[j].toObject();
-        
-        Date d = Date::fromJson(date);
-        
-       // d.setJson(json[STATE_EVENT_DATES].toArray().at(j).toObject());
-        //d.setIdxInEventArray(j);
-        //qDebug()<<"Model:: fromJson date->setJson( date->getName()"<<date->getName();
-       // d.setEventJson(json);
-        //date->setIdxInEventArray(j);
-        
-        if(!d.isNull())
-        {
-            event.mDates.append(d);
-        }
-        else
-        {
-            throw QObject::tr("ERROR : data could not be created with plugin ") + date[STATE_DATE_PLUGIN_ID].toString();
-        }
-    }
-    return event;
-}
-
-/**
- * @todo would be replace by getJsonIterator()
- */
 QJsonObject Event::toJson() const
 {
     QJsonObject event;
@@ -207,7 +153,7 @@ QJsonObject Event::toJson() const
     event[STATE_EVENT_TYPE] = mType;
     event[STATE_ID] = mId;
     QColor mColor;
-    if (mJson==NULL) {
+    if (mModelJson==NULL) {
         event[STATE_NAME] = mInitName;
         mColor= mInitColor;
     }
@@ -249,20 +195,20 @@ QJsonObject Event::toJson() const
 #pragma mark Properties
 QColor Event::getColor() const
 {
-    if(mJson==NULL){
+    if(mModelJson==NULL){
         return randomColor();
     }
     else {
     
-        QJsonObject js = (*mJson)[STATE_EVENTS].toArray().at(mJsonEventIdx).toObject();
-        //QJsonObject js = (*mJson);
-        if(js.isEmpty()){
+        QJsonObject jEvent = (*mModelJson)[STATE_EVENTS].toArray().at(mJsonEventIdx).toObject();
+        //QJsonObject js = (*mModelJson);
+        if(jEvent.isEmpty()){
             return mInitColor;
         }
         else {
-            int R=js[STATE_COLOR_RED].toInt();
-            int G=js[STATE_COLOR_GREEN].toInt();
-            int B=js[STATE_COLOR_BLUE].toInt();
+            int R=jEvent[STATE_COLOR_RED].toInt();
+            int G=jEvent[STATE_COLOR_GREEN].toInt();
+            int B=jEvent[STATE_COLOR_BLUE].toInt();
         
             return QColor(R,G,B);
         }
@@ -274,14 +220,14 @@ QColor Event::getColor() const
 
 QString Event::getName() const
 {
-    if(mJson==NULL){
+    if(mModelJson==NULL){
         return mInitName+"?";
     }
     else {
-        QJsonObject js = (*mJson)[STATE_EVENTS].toArray().at(mJsonEventIdx).toObject();
-       // QJsonObject js = (*mJson);
+        QJsonObject jEvent = (*mModelJson)[STATE_EVENTS].toArray().at(mJsonEventIdx).toObject();
+       //QJsonObject js = (*mModelJson);
     
-        return js[STATE_NAME].toString();
+        return jEvent[STATE_NAME].toString();
     }
 }
 

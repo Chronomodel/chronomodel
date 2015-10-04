@@ -95,11 +95,9 @@ void ProjectView::showModel()
 }
 void ProjectView::showResults(bool updateModel)
 {
+    mResultsView->updateResults();
     mStack->setCurrentIndex(1);
-    
-    // TODO : check if this work fine....
-    //if(updateModel)
-    //    mResultsView->updateModel();
+    // come from mViewResultsAction and  updateResults send repaint on mStack
 }
 void ProjectView::showLog()
 {

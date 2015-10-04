@@ -11,20 +11,20 @@
 
 
 Date::Date():
-mColor(Qt::blue),
-mInitName("No Date Name"),
-mJsonDate(NULL),
-mJsonEvent(NULL)
+mInitName("No Named Date"),
+mJsonEvent(NULL),
+mModelJsonDate(NULL)
 {
+    mInitColor=Qt::blue;
     mTheta.mIsDate = true;
     mSigma.mIsDate = false;
     init();
 }
 
 Date::Date(PluginAbstract* plugin):
-mInitName("No Date Name"),
-mJsonDate(NULL),
-mJsonEvent(NULL)
+mInitName("No Named Date"),
+mJsonEvent(NULL),
+mModelJsonDate(NULL)
 {
     init();
     mPlugin = plugin;
@@ -48,10 +48,7 @@ void Date::init()
     mSubDates.clear();
 }
 
-Date::Date(const Date& date):
-mJsonDate(date.mJsonDate),
-mJsonEvent(date.mJsonEvent),
-mIdxInEventArray(date.mIdxInEventArray)
+Date::Date(const Date& date)
 {
     copyFrom(date);
 }
@@ -64,15 +61,19 @@ Date& Date::operator=(const Date& date)
 
 void Date::copyFrom(const Date& date)
 {
-    mJsonDate=date.mJsonDate;
+    mModelJsonDate=date.mModelJsonDate;
     mJsonEvent=date.mJsonEvent;
+    mJsonEventIdx=date.mJsonEventIdx;
     mIdxInEventArray=date.mIdxInEventArray;
+    
     mTheta = date.mTheta;
     mSigma = date.mSigma;
     mDelta = date.mDelta;
     
     mId = date.mId;
     mInitName = date.getName();
+    mInitColor = date.getColor();
+    
     mData = date.mData;
     mPlugin = date.mPlugin;
     mMethod = date.mMethod;
@@ -94,7 +95,7 @@ void Date::copyFrom(const Date& date)
     
     mSubDates = date.mSubDates;
     
-    mColor = date.getColor();
+
 }
 
 Date::~Date()
@@ -109,30 +110,49 @@ bool Date::isNull()
 #pragma mark Properties
 QColor Date::getColor() const
 {
-    return mColor;
+    return mInitColor;
 }
 
+QColor Date::getEventColor() const
+{
+    if(mModelJsonDate==NULL){
+        return randomColor();
+    }
+    else {
+
+        QJsonObject jEvent =(*mModelJsonDate)[STATE_EVENTS].toArray().at(mJsonEventIdx).toObject();
+        if(jEvent.isEmpty()){
+            return randomColor();
+        }
+        else {
+            int R=jEvent[STATE_COLOR_RED].toInt();
+            int G=jEvent[STATE_COLOR_GREEN].toInt();
+            int B=jEvent[STATE_COLOR_BLUE].toInt();
+            
+            return QColor(R,G,B);
+        }
+    }
+
+}
 QString Date::getName() const
 {
-    return mInitName;
-    /*if(mJsonDate==NULL){
+    if(mModelJsonDate==NULL){
         return mInitName;
     }
     else{
-        QJsonObject js = *mJsonDate;
-        if(js.isEmpty()){
+        QJsonObject jEvent =(*mModelJsonDate)[STATE_EVENTS].toArray().at(mJsonEventIdx).toObject();
+        
+        QJsonObject jDate = jEvent[STATE_EVENT_DATES].toArray().at(mIdxInEventArray).toObject();
+        
+        if(jDate.isEmpty()){
             return "JsonDate without Name";
         }
         else {
-            return (*mJsonDate)[STATE_NAME].toString();
+            return jDate[STATE_NAME].toString();
         }
     }
-    QJsonObject js =(*mJsonDate)[STATE_EVENTS].toArray().at(mEventIdx).toObject();
 
-    QJsonObject jd = js[STATE_EVENT_DATES].toArray().at(mIdxInEventArray).toObject();
     
-    return js[STATE_NAME].toString();
-    }*/
 }
 #pragma mark JSON
 Date Date::fromJson(const QJsonObject& json)
@@ -141,10 +161,8 @@ Date Date::fromJson(const QJsonObject& json)
     
     if(!json.isEmpty())
     {
-        date.mJsonDate = &json;
         date.mId = json[STATE_ID].toInt();
         date.mInitName = json[STATE_NAME].toString();
-        //qDebug() <<"date.name" << date.mName;
         
         // Copy plugin specific values for this data :
         date.mData = json[STATE_DATE_DATA].toObject();
@@ -181,24 +199,11 @@ Date Date::fromJson(const QJsonObject& json)
 }
 
 
-void Date::setEventJson(const QJsonObject& jsonEvent)
+void Date::setModelJson(const QJsonObject & iModelJson, const int eventIdx, const int dateIdx)
 {
-    mJsonEvent = &jsonEvent;
-    //qDebug()<<"Date::setEventJson"<<(*mJsonEvent)[STATE_NAME].toString();
-    mEventIdx = (*mJsonEvent)[STATE_ID].toInt();
-}
-void Date::setIdxInEventArray(int j)
-{
-    mIdxInEventArray = j;
-}
-
-void Date::setJson(const QJsonObject & json, const int eventIdx, const int dateIdx)
-{
-    mJsonDate = &json;
+    mModelJsonDate = &iModelJson;
     mIdxInEventArray=dateIdx;
-    mEventIdx=eventIdx;
-    //qDebug()<<"Date::setJson"<<(*mJsonDate)[STATE_NAME].toString();
-    mId = (*mJsonDate)[STATE_ID].toInt();
+    mJsonEventIdx=eventIdx;
 }
 
 QJsonObject Date::toJson() const

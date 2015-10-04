@@ -14,22 +14,18 @@ class ProjectSettings;
 
 GraphView::GraphView(QWidget *parent):QWidget(parent),
 mStepMinWidth(50), // define secondary scale on axis
-mRendering(eSD),
+
 mXAxisMode(eAllTicks),
 mYAxisMode(eAllTicks),
+mRendering(eSD),
 mAutoAdjustYScale(false),
 mFormatFuncX(0),
 mFormatFuncY(0),
 mShowInfos(false),
 mBackgroundColor(Qt::white),
-mThickness(1),
-mTipX(0.),
-mTipY(0.),
-mTipWidth(110.),
-mTipHeight(40.),
-mTipVisible(false),
-mUseTip(true),
+
 mXAxisLine(true),
+
 mXAxisArrow(true),
 mXAxisTicks(true),
 mXAxisSubTicks(true),
@@ -38,7 +34,14 @@ mYAxisLine(true),
 mYAxisArrow(true),
 mYAxisTicks(true),
 mYAxisSubTicks(true),
-mYAxisValues(true)
+mYAxisValues(true),
+mThickness(1),
+mTipX(0.),
+mTipY(0.),
+mTipWidth(110.),
+mTipHeight(40.),
+mTipVisible(false),
+mUseTip(true)
 {
     mAxisToolX.mIsHorizontal = true;
     mAxisToolX.mShowArrow = true;

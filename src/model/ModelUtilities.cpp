@@ -35,7 +35,7 @@ Event::Method ModelUtilities::getEventMethodFromText(const QString& text)
     else
     {
         // ouch... what to do ???
-        //return Event::eDoubleExp;
+        return Event::eDoubleExp;
     }
 }
 
@@ -79,7 +79,7 @@ Date::DataMethod ModelUtilities::getDataMethodFromText(const QString& text)
     else
     {
         // ouch... what to do ???
-        //return Event::eDoubleExp;
+        return Date::eMHSymGaussAdapt;
     }
 }
 

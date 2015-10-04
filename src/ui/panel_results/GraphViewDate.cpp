@@ -38,7 +38,7 @@ void GraphViewDate::setDate(Date* date)
     {
         mDate = date;
         setItemTitle(QString(tr("Data") + " : " + mDate->getName()));
-        setItemColor(mColor);
+        setItemColor(date->getEventColor());
     }
     update();
 }
@@ -56,25 +56,7 @@ void GraphViewDate::paintEvent(QPaintEvent* e)
 
 QColor GraphViewDate::getEventColor()
 {
-    return randomColor();
-    /*if(mDate->mJsonEvent==NULL){
-        return randomColor();
-    }
-    else {
-        //QJsonObject ja = *(mDate->mJsonDate);
-        //QJsonObject js = (*(mDate->mJsonDate))[STATE_EVENTS].toArray().at(mDate->mJsonEventIdx).toObject();
-        QJsonObject js = *(mDate->mJsonEvent);
-        if(js.isEmpty()){
-            return randomColor();
-        }
-        else {
-            int R=js[STATE_COLOR_RED].toInt();
-            int G=js[STATE_COLOR_GREEN].toInt();
-            int B=js[STATE_COLOR_BLUE].toInt();
-            
-            return QColor(R,G,B);
-        }
-    }*/
+    return mDate->getEventColor();
 }
 
 void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
@@ -92,7 +74,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
     
     if(mDate)
     {
-        QColor color = getEventColor();//  mColor;
+        QColor color = getEventColor();
         QPen defaultPen;
         defaultPen.setWidthF(1);
         defaultPen.setStyle(Qt::SolidLine);
@@ -103,7 +85,6 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         // ------------------------------------------------
         //  Are we working on calendar date or std dev ?
         // ------------------------------------------------
-       // MHVariable* variable = &(mDate->mTheta);
         MHVariable* variableDate = &(mDate->mTheta);
         if(variable == eTheta) variableDate = &(mDate->mTheta);
         else if(variable == eSigma) variableDate = &(mDate->mSigma);

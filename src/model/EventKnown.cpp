@@ -26,10 +26,10 @@ EventKnown EventKnown::fromJson(const QJsonObject& json)
     
     event.mType = (Type)json[STATE_EVENT_TYPE].toInt();
     event.mId = json[STATE_ID].toInt();
-    /*event.mName =  json[STATE_NAME].toString();
-    event.mColor = QColor(json[STATE_COLOR_RED].toInt(),
+    event.mInitName =  json[STATE_NAME].toString();
+    event.mInitColor = QColor(json[STATE_COLOR_RED].toInt(),
                            json[STATE_COLOR_GREEN].toInt(),
-                           json[STATE_COLOR_BLUE].toInt());*/
+                           json[STATE_COLOR_BLUE].toInt());
     event.mMethod = (Method)json[STATE_EVENT_METHOD].toInt();
     event.mItemX = json[STATE_ITEM_X].toDouble();
     event.mItemY = json[STATE_ITEM_Y].toDouble();

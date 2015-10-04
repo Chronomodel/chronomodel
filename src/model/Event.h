@@ -33,12 +33,10 @@ public:
     virtual ~Event();
     
     //Added by PhD
-    //void setJson(const  QJsonObject & iJson);
-    void setJson(const QJsonObject & iJson, const int idxEvent);
-    const QJsonObject & getJson();
+    void setModelJson(const QJsonObject & iModelJson, const int idxEvent);
+    const QJsonObject* getModelJson();
     
     static Event fromJson(const QJsonObject& json, const int EventIdx);
-    static Event fromJson(const QJsonObject& json);
     virtual QJsonObject toJson() const;
     
     Type type() const;
@@ -68,9 +66,11 @@ public:
 public:
     Type mType;
     int mId;
-    QString mInitName;
-    Method mMethod;
+    
+    QString mInitName; //must be public, to be setting by dialogbox
     QColor mInitColor;
+
+    Method mMethod;
     
     double mItemX;
     double mItemY;
@@ -95,8 +95,10 @@ public:
     
     int mLevel; // used to init mcmc
 
-private:
-    const QJsonObject * mJson;
+protected:
+    
+    
+    const QJsonObject * mModelJson;
     int mJsonEventIdx;
 };
 

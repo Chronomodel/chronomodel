@@ -780,7 +780,7 @@ void MainWindow::mcmcFinished(Model* model)
 {
     mViewLogAction -> setEnabled(true);
     mViewResultsAction -> setEnabled(true);
-    mViewResultsAction -> setChecked(true); // Just checheck the Result Button after computation and mResultsView is show after
+    mViewResultsAction -> setChecked(true); // Just check the Result Button after computation and mResultsView is show after
     //mViewResultsAction->trigger();
     
     mProjectView->updateResults(model);

@@ -28,8 +28,8 @@ public:
     virtual ~Phase();
     
     //Added by PhD
-    void setJson(const QJsonObject & iJson, const int idxPhase);
-    const QJsonObject & getJson();
+    void setModelJson(const QJsonObject & iJson, const int idxPhase);
+    const QJsonObject & getModelJson();
     
     static Phase fromJson(const QJsonObject& json);
     
@@ -52,7 +52,8 @@ public:
     
 public:
     int mId;
-    QString mInitName;
+
+    QString mInitName; //must be public, to be setting by dialogbox
     QColor mInitColor;
     
     QList<Event*> mEvents;
@@ -86,7 +87,7 @@ public:
     int mLevel;
     
 private:
-    const QJsonObject * mJson;
+    const QJsonObject * mModelJson;
     int mJsonPhaseIdx;
 };
 

@@ -40,9 +40,9 @@ public:
     bool isNull();
     
     static Date fromJson(const QJsonObject& json);
-    //void setJson(const QJsonObject& jsonDate);
-    void setJson(const QJsonObject & json, const int eventIdx, const int dateIdx);
-    void setEventJson(const QJsonObject& jsonEvent);
+
+    void setModelJson(const QJsonObject & json, const int eventIdx, const int dateIdx);
+    //void setEventJson(const QJsonObject& jsonEvent);
     void setIdxInEventArray(int j);
     QJsonObject toJson() const;
     
@@ -66,6 +66,7 @@ public:
     void updateWiggle();
     
     QColor getColor() const;
+    QColor getEventColor() const;
     QString getName() const;
     
 public:
@@ -75,7 +76,10 @@ public:
     double mDelta;
     
     int mId;
-    QString mInitName;
+    
+    QString mInitName; //must be public, to be setting by dialogbox
+    QColor mInitColor;
+
     QJsonObject mData;
     PluginAbstract* mPlugin;
     DataMethod mMethod;
@@ -101,11 +105,12 @@ public:
     
     const QJsonObject * mJsonEvent;
 
-private:
-    const QJsonObject * mJsonDate;
-    int mEventIdx;
+protected:
+    
+    const QJsonObject * mModelJsonDate;
+    int mJsonEventIdx;
     int mIdxInEventArray;
-    QColor mColor;
+
 };
 
 #endif

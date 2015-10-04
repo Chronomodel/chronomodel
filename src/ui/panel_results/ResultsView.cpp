@@ -81,12 +81,10 @@ mGraphsH(130)
     // ----------
     mByPhasesBut = new Button(tr("Phases"), this);
     mByPhasesBut->setCheckable(true);
-    //mByPhasesBut->setChecked(false);
     mByPhasesBut->setFlatHorizontal();
     
     mByEventsBut = new Button(tr("Events"), this);
     mByEventsBut->setCheckable(true);
-    //mByEventsBut->setChecked(true);
     mByEventsBut->setFlatHorizontal();
     
     QButtonGroup* butGroup = new QButtonGroup(this);
@@ -395,6 +393,7 @@ void ResultsView::doProjectConnections(Project* project)
     // If the process is canceled, we only have unfinished data in storage.
     // => The previous nor the new results can be displayed so we must start by clearing the results view!
     connect(project, SIGNAL(mcmcStarted()), this, SLOT(clearResults()));
+    
 }
 
 #pragma mark Paint & Resize
@@ -702,7 +701,7 @@ void ResultsView::clearResults()
 }
 
 /*
- * @brief : Cette fonction est appelée seulement après un "Run"
+ * @brief : This function is call after "Run" and after click on "Results", when switching from Model panel to Result panel
  *
  */
 void ResultsView::updateResults(Model* model)
@@ -796,7 +795,7 @@ void ResultsView::updateResults(Model* model)
                 graphDate->setGraphFont(mFont);
                 graphDate->setGraphsThickness(mThicknessSpin->value());
                 
-               // graphDate->setColor(event->getColor());
+                graphDate->setColor(event->getColor());
                 mByPhasesGraphs.append(graphDate);
             }
         }
@@ -832,7 +831,6 @@ void ResultsView::updateResults(Model* model)
         for(int j=0; j<(int)event->mDates.size(); ++j)
         {
             Date& date = event->mDates[j];
-            //date.setJson(mModel->getJson(), i, j);
             // ----------------------------------------------------
             //  This just creates the view for the date.
             //  It sets the Date which triggers an update() to repaint the view.
@@ -842,8 +840,7 @@ void ResultsView::updateResults(Model* model)
             graphDate->setSettings(mModel->mSettings);
             graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
             graphDate->setDate(&date);
-            //graphDate->setColor(event->getColor());
-            //graphDate->mDate->setJson(event->getJson(), i, j);
+            graphDate->setColor(date.getEventColor());//  event->getColor());
             
             graphDate->setGraphFont(mFont);
             graphDate->setGraphsThickness(mThicknessSpin->value());
@@ -924,11 +921,15 @@ void ResultsView::generateCurves()
     if(mDataThetaRadio->isChecked()) variable = GraphViewResults::eTheta;
     else if(mDataSigmaRadio->isChecked()) variable = GraphViewResults::eSigma;
     
-    for(int i=0; i<mByPhasesGraphs.size(); ++i){
-        mByPhasesGraphs[i]->generateCurves(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable);
+    if (mByPhasesBut->isChecked()) {
+        for(int i=0; i<mByPhasesGraphs.size(); ++i){
+            mByPhasesGraphs[i]->generateCurves(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable);
+        }
     }
-    for(int i=0; i<mByEventsGraphs.size(); ++i){
-        mByEventsGraphs[i]->generateCurves(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable);
+    else {
+        for(int i=0; i<mByEventsGraphs.size(); ++i){
+            mByEventsGraphs[i]->generateCurves(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable);
+        }
     }
     emit curvesGenerated();
 }
@@ -1077,8 +1078,8 @@ void ResultsView::updateScales()
         {
             if(mChainRadios[i]->isChecked()){
                 const Chain& chain = mChains[i];
-                int adaptSize = chain.mBatchIndex * chain.mNumBatchIter;
-                int runSize = chain.mNumRunIter / chain.mThinningInterval;
+                unsigned long adaptSize = chain.mBatchIndex * chain.mNumBatchIter;
+                unsigned long runSize = chain.mNumRunIter / chain.mThinningInterval;
                 
                 mRuler->addArea(0, chain.mNumBurnIter, QColor(235, 115, 100));
                 mRuler->addArea(chain.mNumBurnIter, chain.mNumBurnIter + adaptSize, QColor(250, 180, 90));
