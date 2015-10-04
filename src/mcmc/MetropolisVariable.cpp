@@ -241,11 +241,6 @@ void MetropolisVariable::generateCredibility(const QList<Chain>& chains, double 
     {
         mThreshold = threshold;
         mCredibility = credibilityForTrace(fullRunTrace(chains), threshold, mExactCredibilityThreshold);
-        
-        // No need to have HPD for al chains !
-        //mChainsHPD.clear();
-        //for(int i=0; i<mChainsHistos.size(); ++i)
-        //  mChainsHPD.append(create_HPD(mChainsHistos[i], threshold));
     }
 }
 
@@ -255,7 +250,7 @@ void MetropolisVariable::generateCorrelations(const QList<Chain>& chains)
     
     for(int c=0; c<chains.size(); ++c)
     {
-        // Retourne la trace de la partie "acquisition" de la chaine :
+        // Return the acquisition part of the trace
         QVector<double> trace = runTraceForChain(chains, c);
         
         int n = trace.size();
