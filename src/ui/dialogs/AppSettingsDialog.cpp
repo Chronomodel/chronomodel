@@ -104,8 +104,8 @@ QDialog(parent, flags)
     int row = -1;
     grid->addWidget(mLanguageLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mLanguageCombo, row, 1);
-    grid->addWidget(mCountryLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mCountryCombo, row, 1);
+    //grid->addWidget(mCountryLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    //grid->addWidget(mCountryCombo, row, 1);
     grid->addWidget(mLangHelpLab, ++row, 0, 1, 2);
     
     QFrame* line1 = new QFrame();
@@ -158,7 +158,7 @@ QDialog(parent, flags)
     mGeneralView->setLayout(mainLayout);
     
     connect(mLanguageCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(changeSettings()));
-    connect(mCountryCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(changeSettings()));
+    //connect(mCountryCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(changeSettings()));
     connect(mAutoSaveCheck, SIGNAL(toggled(bool)), this, SLOT(changeSettings()));
     connect(mAutoSaveDelayEdit, SIGNAL(editingFinished()), this, SLOT(changeSettings()));
     connect(mOpenLastProjectCheck, SIGNAL(toggled(bool)), this, SLOT(changeSettings()));
