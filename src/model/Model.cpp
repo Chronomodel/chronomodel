@@ -550,10 +550,9 @@ void Model::generateResultsLog()
 }
 
 #pragma mark Results CSV
-QList<QStringList> Model::getStats()
+QList<QStringList> Model::getStats(const QLocale locale)
 {
     QList<QStringList> rows;
-    QLocale locale;
     
     int maxHpd = 0;
     
@@ -562,12 +561,12 @@ QList<QStringList> Model::getStats()
     {
         Phase* phase = mPhases[i];
         
-        QStringList l = phase->mAlpha.getResultsList();
+        QStringList l = phase->mAlpha.getResultsList(locale);
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
         l.prepend(phase->getName() + " alpha");
         rows << l;
         
-        l = phase->mBeta.getResultsList();
+        l = phase->mBeta.getResultsList(locale);
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
         l.prepend(phase->getName() + " beta");
         rows << l;
@@ -579,7 +578,7 @@ QList<QStringList> Model::getStats()
     {
         Event* event = mEvents[i];
         
-        QStringList l = event->mTheta.getResultsList();
+        QStringList l = event->mTheta.getResultsList(locale);
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
         l.prepend(event->getName());
         rows << l;
@@ -594,7 +593,7 @@ QList<QStringList> Model::getStats()
         {
             Date& date = event->mDates[j];
             
-            QStringList l = date.mTheta.getResultsList();
+            QStringList l = date.mTheta.getResultsList(locale);
             maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
             l.prepend(date.getName());
             rows << l;
@@ -614,10 +613,9 @@ QList<QStringList> Model::getStats()
     return rows;
 }
     
-QList<QStringList> Model::getPhasesTraces()
+QList<QStringList> Model::getPhasesTraces(const QLocale locale)
 {
     QList<QStringList> rows;
-    QLocale locale;
     
     int runSize = 0;
     for(int i=0; i<mChains.size(); ++i){
@@ -646,8 +644,8 @@ QList<QStringList> Model::getPhasesTraces()
             {
                 Phase* phase = mPhases[k];
                 l << "";
-                l << DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mTrace.at(shift + j));
-                l << DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mTrace.at(shift + j));
+                l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mAlpha.mTrace.at(shift + j)));
+                l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mBeta.mTrace.at(shift + j)));
             }
             rows << l;
         }
@@ -656,10 +654,9 @@ QList<QStringList> Model::getPhasesTraces()
     return rows;
 }
 
-QList<QStringList> Model::getPhaseTrace(int phaseIdx)
+QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale)
 {
     QList<QStringList> rows;
-    QLocale locale;
     
     Phase* phase = 0;
     if(phaseIdx >= 0 && phaseIdx < mPhases.size()){
@@ -685,20 +682,20 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx)
     int shift = 0;
     for(int i=0; i<mChains.size(); ++i)
     {
-        unsigned int burnAdaptSize = mChains[i].mNumBurnIter + (mChains[i].mBatchIndex * mChains[i].mNumBatchIter);
-        unsigned int runSize = mChains[i].mNumRunIter / mChains[i].mThinningInterval;
+        unsigned long burnAdaptSize = mChains[i].mNumBurnIter + (mChains[i].mBatchIndex * mChains[i].mNumBatchIter);
+        unsigned long runSize = mChains[i].mNumRunIter / mChains[i].mThinningInterval;
         
-        for(int j=burnAdaptSize; j<burnAdaptSize + runSize; ++j)
+        for(unsigned long j=burnAdaptSize; j<burnAdaptSize + runSize; ++j)
         {
             QStringList l;
             l << QString::number(shift + j) << "";
-            l << DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mTrace.at(shift + j));
-            l << DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mTrace.at(shift + j));
+            l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mAlpha.mTrace.at(shift + j)));
+            l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mBeta.mTrace.at(shift + j)));
             l << "";
             for(int k=0; k<phase->mEvents.size(); ++k)
             {
                 Event* event = phase->mEvents[k];
-                l << DateUtils::convertToAppSettingsFormatStr(event->mTheta.mTrace.at(shift + j));
+                l << locale.toString(DateUtils::convertToAppSettingsFormat(event->mTheta.mTrace.at(shift + j)));
             }
             rows << l;
         }
@@ -707,10 +704,10 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx)
     return rows;
 }
 
-QList<QStringList> Model::getEventsTraces()
+QList<QStringList> Model::getEventsTraces(QLocale locale)
 {
     QList<QStringList> rows;
-    QLocale locale;
+    
     
     int runSize = 0;
     for(int i=0; i<mChains.size(); ++i){
@@ -739,7 +736,7 @@ QList<QStringList> Model::getEventsTraces()
             for(int k=0; k<mEvents.size(); ++k)
             {
                 Event* event = mEvents[k];
-                l << DateUtils::convertToAppSettingsFormatStr(event->mTheta.mTrace.at(shift + j));
+                l << locale.toString(DateUtils::convertToAppSettingsFormat(event->mTheta.mTrace.at(shift + j)));
             }
             rows << l;
         }

@@ -66,7 +66,7 @@ Date::DataMethod ModelUtilities::getDataMethodFromText(const QString& text)
 {
     if(text == MHIndependantStr)
     {
-        return Date::eMHIndependant;
+        return Date::eMHSymetric;
     }
     else if(text == InversionStr)
     {
@@ -87,7 +87,7 @@ QString ModelUtilities::getDataMethodText(Date::DataMethod method)
 {
     switch(method)
     {
-        case Date::eMHIndependant:
+        case Date::eMHSymetric:
         {
             return MHIndependantStr;
         }

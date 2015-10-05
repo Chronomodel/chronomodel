@@ -49,7 +49,7 @@ Date::DataMethod PluginTL::getDataMethod() const
 QList<Date::DataMethod> PluginTL::allowedDataMethods() const
 {
     QList<Date::DataMethod> methods;
-    methods.append(Date::eMHIndependant);
+    methods.append(Date::eMHSymetric);
     methods.append(Date::eInversion);
     methods.append(Date::eMHSymGaussAdapt);
     return methods;

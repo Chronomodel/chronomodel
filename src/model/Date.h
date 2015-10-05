@@ -18,7 +18,7 @@ class Date
 {
 public:
     enum DataMethod{
-        eMHIndependant = 0,
+        eMHSymetric = 0,
         eInversion = 1,
         eMHSymGaussAdapt = 2
     };

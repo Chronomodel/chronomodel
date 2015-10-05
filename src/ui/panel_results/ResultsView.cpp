@@ -1351,6 +1351,10 @@ void ResultsView::exportResults()
         AppSettings settings = MainWindow::getInstance()->getAppSettings();
         QString csvSep = settings.mCSVCellSeparator;
         
+        QLocale csvLocal = settings.mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+        qDebug()<<"mCSVDecSeparator"<<settings.mCSVDecSeparator<<"mCSVCellSeparator"<<settings.mCSVCellSeparator;
+        csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
+        
         QString currentPath = MainWindow::getInstance()->getCurrentPath();
         QString dirPath = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                         tr("Export to directory..."),
@@ -1368,20 +1372,20 @@ void ResultsView::exportResults()
             }
             dir.mkpath(".");
             
-            QList<QStringList> stats = mModel->getStats();
+            QList<QStringList> stats = mModel->getStats(csvLocal);
             saveCsvTo(stats, dirPath + "/stats.csv", csvSep);
             
             if(mModel->mPhases.size() > 0){
-                QList<QStringList> phasesTraces = mModel->getPhasesTraces();
+                QList<QStringList> phasesTraces = mModel->getPhasesTraces(csvLocal);
                 saveCsvTo(phasesTraces, dirPath + "/phases.csv", csvSep);
                 
                 for(int i=0; i<mModel->mPhases.size(); ++i){
-                    QList<QStringList> phaseTrace = mModel->getPhaseTrace(i);
+                    QList<QStringList> phaseTrace = mModel->getPhaseTrace(i,csvLocal);
                     QString name = mModel->mPhases[i]->getName().toLower().simplified().replace(" ", "_");
                     saveCsvTo(phaseTrace, dirPath + "/phase_" + name + ".csv", csvSep);
                 }
             }
-            QList<QStringList> eventsTraces = mModel->getEventsTraces();
+            QList<QStringList> eventsTraces = mModel->getEventsTraces(csvLocal);
             saveCsvTo(eventsTraces, dirPath + "/events.csv", csvSep);
         }
     }

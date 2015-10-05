@@ -96,7 +96,7 @@ Date::DataMethod PluginMag::getDataMethod() const
 QList<Date::DataMethod> PluginMag::allowedDataMethods() const
 {
     QList<Date::DataMethod> methods;
-    methods.append(Date::eMHIndependant);
+    methods.append(Date::eMHSymetric);
     methods.append(Date::eInversion);
     methods.append(Date::eMHSymGaussAdapt);
     return methods;

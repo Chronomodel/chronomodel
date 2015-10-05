@@ -32,7 +32,7 @@ mPlugin(plugin)
     
     mMethodLab = new QLabel(tr("Method") + " :", this);
     mMethodCombo = new QComboBox(this);
-    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHIndependant));
+    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHSymetric));
     mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eInversion));
     mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
     

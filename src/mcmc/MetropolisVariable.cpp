@@ -401,7 +401,7 @@ QVector<double> MetropolisVariable::runTraceForChain(const QList<Chain>& chains,
 {
     QVector<double> trace(0);
     if (mTrace.empty()) {
-        qDebug() << "mtrace vide";
+        qDebug() << "mTrace empty";
         return trace ;
     }
     else
@@ -418,7 +418,7 @@ QVector<double> MetropolisVariable::runTraceForChain(const QList<Chain>& chains,
             
             if(i == index)
             {
-                unsigned long runSize = traceSize - burnAdaptSize;
+                //unsigned long runSize = traceSize - burnAdaptSize;
                 //trace.reserve(runSize);
                 
                 /*QVector<double>::const_iterator iter = mTrace.begin() + shift + burnAdaptSize;
@@ -463,26 +463,26 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
     return result;
 }
 
-QStringList MetropolisVariable::getResultsList()
+QStringList MetropolisVariable::getResultsList(const QLocale locale)
 {
     QStringList list;
-    list << DateUtils::convertToAppSettingsFormatStr(mResults.analysis.mode);
-    list << DateUtils::convertToAppSettingsFormatStr(mResults.analysis.mean);
+    list << locale.toString(DateUtils::convertToAppSettingsFormat(mResults.analysis.mode));
+    list << locale.toString(DateUtils::convertToAppSettingsFormat(mResults.analysis.mean));
     list << DateUtils::dateToString(mResults.analysis.stddev);
-    list << DateUtils::convertToAppSettingsFormatStr(mResults.quartiles.Q1);
-    list << DateUtils::convertToAppSettingsFormatStr(mResults.quartiles.Q2);
-    list << DateUtils::convertToAppSettingsFormatStr(mResults.quartiles.Q3);
-    list << QLocale().toString(mExactCredibilityThreshold * 100.f, 'f', 1);
-    list << DateUtils::convertToAppSettingsFormatStr(mCredibility.first);
-    list << DateUtils::convertToAppSettingsFormatStr(mCredibility.second);
+    list << locale.toString(DateUtils::convertToAppSettingsFormat(mResults.quartiles.Q1));
+    list << locale.toString(DateUtils::convertToAppSettingsFormat(mResults.quartiles.Q2));
+    list << locale.toString(DateUtils::convertToAppSettingsFormat(mResults.quartiles.Q3));
+    list << locale.toString(mExactCredibilityThreshold * 100.f, 'f', 1);
+    list << locale.toString(DateUtils::convertToAppSettingsFormat(mCredibility.first));
+    list << locale.toString(DateUtils::convertToAppSettingsFormat(mCredibility.second));
     
     QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThreshold);
     QStringList results;
     for(int i=0; i<intervals.size(); ++i)
     {
-        list << QLocale().toString(intervals[i].first, 'f', 1);
-        list << DateUtils::convertToAppSettingsFormatStr(intervals[i].second.first);
-        list << DateUtils::convertToAppSettingsFormatStr(intervals[i].second.second);
+        list << locale.toString(intervals[i].first, 'f', 1);
+        list << locale.toString(DateUtils::convertToAppSettingsFormat(intervals[i].second.first));
+        list << locale.toString(DateUtils::convertToAppSettingsFormat(intervals[i].second.second));
     }
     return list;
 }

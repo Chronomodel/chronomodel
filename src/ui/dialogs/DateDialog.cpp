@@ -50,7 +50,7 @@ mWiggleEnabled(false)
     
     mMethodLab = new QLabel(tr("Method") + " :", mAdvancedWidget);
     mMethodCombo = new QComboBox(mAdvancedWidget);
-    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHIndependant));
+    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHSymetric));
     mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eInversion));
     mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
     
@@ -270,7 +270,7 @@ double DateDialog::getDeltaError() const {return mDeltaErrorEdit->text().toDoubl
 
 Date::DataMethod DateDialog::getMethod() const
 {
-    Date::DataMethod method = Date::eMHIndependant;
+    Date::DataMethod method = Date::eMHSymetric;
     if(mMethodCombo->currentIndex() == 1)
         method = Date::eInversion;
     else if(mMethodCombo->currentIndex() == 2)

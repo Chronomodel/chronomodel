@@ -40,12 +40,12 @@ bool PluginUniform::wiggleAllowed() const
 }
 Date::DataMethod PluginUniform::getDataMethod() const
 {
-    return Date::eMHIndependant;
+    return Date::eMHSymetric;
 }
 QList<Date::DataMethod> PluginUniform::allowedDataMethods() const
 {
     QList<Date::DataMethod> methods;
-    methods.append(Date::eMHIndependant);
+    methods.append(Date::eMHSymetric);
     methods.append(Date::eMHSymGaussAdapt);
     return methods;
 }

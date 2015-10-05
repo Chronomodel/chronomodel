@@ -451,7 +451,7 @@ void MainWindow::updateProject(){
 #pragma mark Settings & About
 void MainWindow::about()
 {
-    AboutDialog dialog(qApp->activeWindow());//, Qt::Sheet);
+    AboutDialog dialog(qApp->activeWindow());
     dialog.exec();
 }
 
@@ -562,7 +562,7 @@ void MainWindow::changeDatesMethod()
                                              opts, 0, false, &ok);
     if(ok){
         opts.clear();
-        opts.append(ModelUtilities::getDataMethodText(Date::eMHIndependant));
+        opts.append(ModelUtilities::getDataMethodText(Date::eMHSymetric));
         opts.append(ModelUtilities::getDataMethodText(Date::eInversion));
         opts.append(ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
         

@@ -56,7 +56,7 @@ public:
                                   const QString& unit = QString(),
                                   FormatFunc formatFunc = 0) const;
     
-    QStringList getResultsList();
+    QStringList getResultsList(const QLocale locale);
     // -----
     
 private:

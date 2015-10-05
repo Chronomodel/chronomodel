@@ -33,7 +33,7 @@ mModelJsonDate(NULL)
 void Date::init()
 {
     mId = 0;
-    mMethod = eMHIndependant;
+    mMethod = eMHSymetric;
     mIsValid = true;
     mDelta = 0;
     mDeltaType = eDeltaFixed;
@@ -433,7 +433,7 @@ void Date::updateTheta(Event* event)
     
     switch(mMethod)
     {
-        case eMHIndependant:
+        case eMHSymetric:
         {
             // Ici, le marcheur est forcément gaussien avec H(theta i) : double_exp (gaussien tronqué)
             double theta = Generator::gaussByDoubleExp(event->mTheta.mX - mDelta, mSigma.mX, tmin, tmax);
