@@ -562,9 +562,6 @@ void Project::resetMCMC()
                 
                 try{
                     Date d = Date::fromJson(date);
-                    //d.setEventJson(events[i].toObject());
-                    //d.setIdxInEventArray(j);
-                    d.setModelJson(mState, i, j);
                     if(!d.isNull())
                     {
                         date[STATE_DATE_METHOD] = (int)d.mPlugin->getDataMethod();

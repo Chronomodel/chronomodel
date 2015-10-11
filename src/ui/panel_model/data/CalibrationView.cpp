@@ -104,6 +104,7 @@ void CalibrationView::setDate(const QJsonObject& date)
     
     try{
         mDate = Date::fromJson(date);
+        mDate.autoSetTiSampler(false);
         if(!mDate.isNull())
         {
             mDate.calibrate(mSettings);

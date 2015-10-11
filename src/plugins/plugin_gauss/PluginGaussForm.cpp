@@ -11,6 +11,8 @@
 
 PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("Gaussian measurement"), parent, flags)
 {
+    PluginGauss* pluginGauss = (PluginGauss*)mPlugin;
+    
     mAverageLab = new QLabel(tr("Measure") + " :", this);
     mErrorLab = new QLabel(tr("Error (sd)") + " :", this);
     mCalibLab = new QLabel(tr("Calibration") + " :", this);
@@ -91,6 +93,7 @@ PluginGaussForm::~PluginGaussForm()
 
 void PluginGaussForm::setData(const QJsonObject& data, bool isCombined)
 {
+    QLocale locale=QLocale();
     double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
     double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
     double a = data.value(DATE_GAUSS_A_STR).toDouble();
@@ -99,11 +102,11 @@ void PluginGaussForm::setData(const QJsonObject& data, bool isCombined)
     QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
     QString curve = data.value(DATE_GAUSS_CURVE_STR).toString();
     
-    mAverageEdit->setText(QString::number(age));
-    mErrorEdit->setText(QString::number(error));
-    mAEdit->setText(QString::number(a));
-    mBEdit->setText(QString::number(b));
-    mCEdit->setText(QString::number(c));
+    mAverageEdit->setText(locale.toString(age));
+    mErrorEdit->setText(locale.toString(error));
+    mAEdit->setText(locale.toString(a));
+    mBEdit->setText(locale.toString(b));
+    mCEdit->setText(locale.toString(c));
     
     mCurveRadio->setChecked(mode == DATE_GAUSS_MODE_CURVE);
     mEquationRadio->setChecked(mode == DATE_GAUSS_MODE_EQ);
@@ -123,12 +126,13 @@ void PluginGaussForm::updateVisibleElements()
 QJsonObject PluginGaussForm::getData()
 {
     QJsonObject data;
+    QLocale locale=QLocale();
     
-    double age = mAverageEdit->text().toDouble();
-    double error = mErrorEdit->text().toDouble();
-    double a = mAEdit->text().toDouble();
-    double b = mBEdit->text().toDouble();
-    double c = mCEdit->text().toDouble();
+    double age = locale.toDouble(mAverageEdit->text());
+    double error = locale.toDouble(mErrorEdit->text());
+    double a = locale.toDouble(mAEdit->text());
+    double b = locale.toDouble(mBEdit->text());
+    double c = locale.toDouble(mCEdit->text());
     
     QString mode = "";
     if(mCurveRadio->isChecked()) mode = DATE_GAUSS_MODE_CURVE;

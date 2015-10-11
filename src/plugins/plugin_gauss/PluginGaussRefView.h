@@ -5,6 +5,7 @@
 
 #include "../GraphViewRefAbstract.h"
 
+class PluginGauss;
 class GraphView;
 class QVBoxLayout;
 

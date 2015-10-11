@@ -5,7 +5,9 @@
 
 #include "../GraphViewRefAbstract.h"
 
+class PluginMag;
 class GraphView;
+class QLocale;
 
 
 class PluginMagRefView: public GraphViewRefAbstract

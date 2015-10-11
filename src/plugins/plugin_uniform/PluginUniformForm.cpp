@@ -8,6 +8,8 @@
 
 PluginUniformForm::PluginUniformForm(PluginUniform* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("Uniform Prior"), parent, flags)
 {
+    //PluginUniform* pluginUnif = (PluginUniform*)mPlugin;
+    
     mMinLab = new QLabel(tr("Lower date") + " :", this);
     mMaxLab = new QLabel(tr("Upper date") + " :", this);
     
@@ -36,19 +38,21 @@ PluginUniformForm::~PluginUniformForm()
 
 void PluginUniformForm::setData(const QJsonObject& data, bool isCombined)
 {
+    QLocale locale=QLocale();
     double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
     double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
     
-    mMinEdit->setText(QString::number(min));
-    mMaxEdit->setText(QString::number(max));
+    mMinEdit->setText(locale.toString(min));
+    mMaxEdit->setText(locale.toString(max));
 }
 
 QJsonObject PluginUniformForm::getData()
 {
     QJsonObject data;
+    QLocale locale=QLocale();
     
-    double min = round(mMinEdit->text().toDouble());
-    double max = round(mMaxEdit->text().toDouble());
+    double min = round(locale.toDouble(mMinEdit->text()));
+    double max = round(locale.toDouble(mMaxEdit->text()));
     
     data.insert(DATE_UNIFORM_MIN_STR, min);
     data.insert(DATE_UNIFORM_MAX_STR, max);
@@ -58,8 +62,9 @@ QJsonObject PluginUniformForm::getData()
 
 bool PluginUniformForm::isValid()
 {
-    double min = round(mMinEdit->text().toDouble());
-    double max = round(mMaxEdit->text().toDouble());
+    QLocale locale=QLocale();
+    double min = round(locale.toDouble(mMinEdit->text()));
+    double max = round(locale.toDouble(mMaxEdit->text()));
     if(min >= max)
         mError = tr("Forbidden : lower date must be > upper date");
     return min < max;

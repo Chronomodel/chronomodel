@@ -27,7 +27,9 @@ PluginTLRefView::~PluginTLRefView()
 
 void PluginTLRefView::setDate(const Date& d, const ProjectSettings& settings)
 {
+    QLocale locale=QLocale();
     GraphViewRefAbstract::setDate(d, settings);
+    
     Date date = d;
     
     mGraph->removeAllCurves();
@@ -94,7 +96,7 @@ void PluginTLRefView::setDate(const Date& d, const ProjectSettings& settings)
         mGraph->addCurve(curveMeasure);
         
         // Write measure value :
-        mGraph->addInfo(tr("Age : ") + QString::number(age) + " ± " + QString::number(error) + "(" + tr("Ref year") + " : " + ref_year + ")");
+        mGraph->addInfo(tr("Age : ") + locale.toString(age) + " ± " + locale.toString(error) + " ( " + tr("Ref year") + " : " + locale.toString(ref_year) + ")");
         
         // ----------------------------------------------
         //  Error on measure

@@ -71,14 +71,17 @@ QString Plugin14C::getName() const
 {
     return QString("14C");
 }
+
 QIcon Plugin14C::getIcon() const
 {
     return QIcon(":/14C_w.png");
 }
+
 bool Plugin14C::doesCalibration() const
 {
     return true;
 }
+
 bool Plugin14C::wiggleAllowed() const
 {
     return true;
@@ -95,12 +98,14 @@ QList<Date::DataMethod> Plugin14C::allowedDataMethods() const
     methods.append(Date::eMHSymGaussAdapt);
     return methods;
 }
+
 QStringList Plugin14C::csvColumns() const
 {
     QStringList cols;
     cols << "Name" << "Age" << "Error (sd)" << "Reference curve" << "ΔR" << "ΔR Error";
     return cols;
 }
+
 int Plugin14C::csvMinColumns() const{
     return csvColumns().count() - 2;
 }
@@ -143,6 +148,7 @@ QStringList Plugin14C::toCSV(const QJsonObject& data)
 
 QString Plugin14C::getDateDesc(const Date* date) const
 {
+    QLocale locale=QLocale();    
     QString result;
     if(date)
     {
@@ -154,11 +160,11 @@ QString Plugin14C::getDateDesc(const Date* date) const
         double delta_r_error = data[DATE_14C_DELTA_R_ERROR_STR].toDouble();
         QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString().toLower();
         
-        result += QObject::tr("Age") + " : " + QString::number(age);
-        result += " ± " + QString::number(error);
+        result += QObject::tr("Age") + " : " + locale.toString(age);
+        result += " ± " + locale.toString(error);
         if(delta_r != 0 || delta_r_error != 0){
-            result += ", " + QObject::tr("ΔR") + " : " + QString::number(delta_r);
-            result += " ± " + QString::number(delta_r_error);
+            result += ", " + QObject::tr("ΔR") + " : " + locale.toString(delta_r);
+            result += " ± " +locale.toString(delta_r_error);
         }
         result += ", " + QObject::tr("Ref. curve") + " : " + ref_curve;
     }
@@ -307,8 +313,11 @@ const QMap<QString, QMap<double, double> >& Plugin14C::getRefData(const QString&
 // ------------------------------------------------------------------
 GraphViewRefAbstract* Plugin14C::getGraphViewRef()
 {
-    if(!mRefGraph)
-        mRefGraph = new Plugin14CRefView();
+    //if(!mRefGraph) mRefGraph = new Plugin14CRefView();
+    
+    if(mRefGraph) delete mRefGraph;
+    mRefGraph = new Plugin14CRefView();
+    
     return mRefGraph;
 }
 
@@ -447,7 +456,7 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
             QJsonObject dateData = date[STATE_DATE_DATA].toObject();
             QString curve = dateData[DATE_14C_REF_CURVE_STR].toString();
             if(firstCurve != curve){
-                result["error"] = tr("All combine data must use the same reference curve !");
+                result["error"] = tr("All combined data must use the same reference curve !");
                 return result;
             }
         }

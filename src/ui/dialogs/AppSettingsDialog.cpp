@@ -87,14 +87,14 @@ QDialog(parent, flags)
     
     mPrecisionLab = new QLabel(tr("Graph display date precision") + " : ", this);
     mPrecision = new QSpinBox(this);
-    mPrecision->setRange(1, 5);
+    mPrecision->setRange(0, 5);
     mPrecision->setSingleStep(1);
     mPrecision->setStyleSheet("QLineEdit { border-radius: 5px; }");
     
     
     connect(mAutoSaveCheck, SIGNAL(toggled(bool)), mAutoSaveDelayEdit, SLOT(setEnabled(bool)));
     
-    mButtonBox = new QDialogButtonBox(QDialogButtonBox::Reset/* | QDialogButtonBox::Ok | QDialogButtonBox::Cancel*/);
+    mButtonBox = new QDialogButtonBox(QDialogButtonBox::Reset);
     //connect(mButtonBox, SIGNAL(accepted()), this, SLOT(accept()));
     //connect(mButtonBox, SIGNAL(rejected()), this, SLOT(reject()));
     connect(mButtonBox, SIGNAL(clicked(QAbstractButton*)), this, SLOT(buttonClicked(QAbstractButton*)));
@@ -260,12 +260,21 @@ AppSettings AppSettingsDialog::getSettings()
     settings.mImageQuality = mImageQuality->value();
     settings.mFormatDate = (DateUtils::FormatDate)mFormatDate->currentIndex();
     settings.mPrecision = mPrecision->value();
+  
     return settings;
 }
 
 void AppSettingsDialog::changeSettings()
 {
     AppSettings s = getSettings();
+    
+    QLocale::Language newLanguage = s.mLanguage;
+    QLocale::Country newCountry= s.mCountry;
+    
+    QLocale newLoc = QLocale(newLanguage,newCountry);
+    newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
+    QLocale::setDefault(newLoc);
+    
     emit settingsChanged(s);
 }
 
@@ -273,8 +282,8 @@ void AppSettingsDialog::buttonClicked(QAbstractButton* button)
 {
     if(mButtonBox->buttonRole(button) == QDialogButtonBox::ResetRole)
     {
-        mLanguageCombo->setCurrentText(QLocale::languageToString(APP_SETTINGS_DEFAULT_LANGUAGE));
-        mCountryCombo->setCurrentText(QLocale::countryToString(APP_SETTINGS_DEFAULT_COUNTRY));
+        mLanguageCombo->setCurrentText(QLocale::languageToString(QLocale::system().language()));
+        mCountryCombo->setCurrentText(QLocale::countryToString(QLocale::system().country()));
         
         mAutoSaveCheck->setChecked(APP_SETTINGS_DEFAULT_AUTO_SAVE);
         mAutoSaveDelayEdit->setText(QString(APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC / 60));

@@ -75,4 +75,6 @@
 #define STATE_MCMC_CALIB_STEP "calib_step"
 #define STATE_MCMC_SEEDS "seeds"
 
+#define STATE_MCMC_MIXING "mixing_level"
+
 #endif

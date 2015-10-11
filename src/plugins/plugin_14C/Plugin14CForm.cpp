@@ -70,16 +70,17 @@ Plugin14CForm::~Plugin14CForm()
 
 void Plugin14CForm::setData(const QJsonObject& data, bool isCombined)
 {
+    QLocale locale=QLocale();
     double a = data.value(DATE_14C_AGE_STR).toDouble();
     double e = data.value(DATE_14C_ERROR_STR).toDouble();
     double r = data.value(DATE_14C_DELTA_R_STR).toDouble();
     double re = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
     QString c = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
     
-    mAverageEdit->setText(QString::number(a));
-    mErrorEdit->setText(QString::number(e));
-    mREdit->setText(QString::number(r));
-    mRErrorEdit->setText(QString::number(re));
+    mAverageEdit->setText(locale.toString(a));
+    mErrorEdit->setText(locale.toString(e));
+    mREdit->setText(locale.toString(r));
+    mRErrorEdit->setText(locale.toString(re));
     mRefCombo->setCurrentText(c);
     
     mAverageEdit->setEnabled(!isCombined);

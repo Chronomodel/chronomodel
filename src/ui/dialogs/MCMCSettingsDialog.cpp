@@ -64,17 +64,21 @@ MCMCSettingsDialog::~MCMCSettingsDialog()
 
 void MCMCSettingsDialog::setSettings(const MCMCSettings& settings)
 {
-    mNumProcEdit->setText(QString::number(settings.mNumChains));
-    mNumIterEdit->setText(QString::number(settings.mNumRunIter));
-    mNumBurnEdit->setText(QString::number(settings.mNumBurnIter));
-    mMaxBatchesEdit->setText(QString::number(settings.mMaxBatches));
+    QLocale mLoc=QLocale();
+    mNumProcEdit->setText(mLoc.toString(settings.mNumChains));
+    mNumIterEdit->setText(mLoc.toString(settings.mNumRunIter));
+    mNumBurnEdit->setText(mLoc.toString(settings.mNumBurnIter));
+    mMaxBatchesEdit->setText(mLoc.toString(settings.mMaxBatches));
     mIterPerBatchSpin->setValue(settings.mNumBatchIter);
-    mDownSamplingEdit->setText(QString::number(settings.mThinningInterval));
+    mDownSamplingEdit->setText(mLoc.toString(settings.mThinningInterval));
     mSeedsEdit->setText(intListToString(settings.mSeeds, ";"));
+    
+    mLevelEdit->setText(mLoc.toString(settings.mMixingLevel));
 }
 
 MCMCSettings MCMCSettingsDialog::getSettings()
 {
+    QLocale mLoc=QLocale();
     MCMCSettings settings;
     settings.mNumChains = mNumProcEdit->text().toLongLong();
     settings.mNumRunIter = mNumIterEdit->text().toLongLong();

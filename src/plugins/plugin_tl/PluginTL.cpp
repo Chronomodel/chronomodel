@@ -91,13 +91,14 @@ QStringList PluginTL::toCSV(const QJsonObject& data)
 
 QString PluginTL::getDateDesc(const Date* date) const
 {
+    QLocale locale=QLocale();
     QString result;
     if(date)
     {
         QJsonObject data = date->mData;
-        result += QObject::tr("Age") + " : " + QString::number(data[DATE_TL_AGE_STR].toDouble());
-        result += " ± " + QString::number(data[DATE_TL_ERROR_STR].toDouble());
-        result += ", " + QObject::tr("Ref. year") + " : " + QString::number(data[DATE_TL_REF_YEAR_STR].toDouble());
+        result += QObject::tr("Age") + " : " + locale.toString(data[DATE_TL_AGE_STR].toDouble());
+        result += " ± " + locale.toString(data[DATE_TL_ERROR_STR].toDouble());
+        result += ", " + QObject::tr("Ref. year") + " : " + locale.toString(data[DATE_TL_REF_YEAR_STR].toDouble());
     }
     return result;
 }
@@ -107,8 +108,10 @@ QString PluginTL::getDateDesc(const Date* date) const
 
 GraphViewRefAbstract* PluginTL::getGraphViewRef()
 {
-    if(!mRefGraph)
-        mRefGraph = new PluginTLRefView();
+    //if(!mRefGraph) mRefGraph = new PluginTLRefView();
+    
+    if(mRefGraph) delete mRefGraph;
+    mRefGraph = new PluginTLRefView();
     return mRefGraph;
 }
 

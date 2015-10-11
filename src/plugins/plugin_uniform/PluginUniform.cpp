@@ -84,12 +84,13 @@ QStringList PluginUniform::toCSV(const QJsonObject& data)
 
 QString PluginUniform::getDateDesc(const Date* date) const
 {
+    QLocale locale=QLocale();
     QString result;
     if(date)
     {
         QJsonObject data = date->mData;
-        result += QObject::tr("Interval") + " : [" + QString::number(data[DATE_UNIFORM_MIN_STR].toDouble()) + "; " +
-            QString::number(data[DATE_UNIFORM_MAX_STR].toDouble()) + "]";
+        result += QObject::tr("Interval") + " : [" + locale.toString(data[DATE_UNIFORM_MIN_STR].toDouble()) + "; " +
+                locale.toString(data[DATE_UNIFORM_MAX_STR].toDouble()) + "]";
     }
     return result;
 }

@@ -116,7 +116,7 @@ void checkFloatingPointException(const QString& infos)
     feclearexcept (FE_ALL_EXCEPT);
 }
 /**
- @brief this function transform a Qvector, than the maximum value is 1
+ @brief this function transform a QVector, than the maximum value is 1
  **/
 QVector<double> normalize_vector(const QVector<double>& aVector)
 {

@@ -8,7 +8,6 @@
 
 PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("AM Measurements"), parent, flags)
 {
-    PluginMag* pluginMag = (PluginMag*)mPlugin;
     
     mIncRadio = new QRadioButton(tr("Inclination"));
     mDecRadio = new QRadioButton(tr("Declination"));
@@ -32,7 +31,7 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     mAlpha95Edit = new QLineEdit(this);
     
     mRefCombo = new QComboBox(this);
-    QStringList refCurves = pluginMag->getRefsNames();
+    QStringList refCurves = plugin->getRefsNames();
     for(int i = 0; i<refCurves.size(); ++i)
         mRefCombo->addItem(refCurves[i]);
     
@@ -84,6 +83,7 @@ PluginMagForm::~PluginMagForm()
 
 void PluginMagForm::setData(const QJsonObject& data, bool isCombined)
 {
+    QLocale locale=QLocale();
     bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
     bool is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
     bool is_int = data.value(DATE_AM_IS_INT_STR).toBool();
@@ -98,11 +98,12 @@ void PluginMagForm::setData(const QJsonObject& data, bool isCombined)
     mDecRadio->setChecked(is_dec);
     mIntensityRadio->setChecked(is_int);
     
-    mIncEdit->setText(QString::number(inc));
-    mDecEdit->setText(QString::number(dec));
-    mDecIncEdit->setText(QString::number(inc));
-    mIntensityEdit->setText(QString::number(intensity));
-    mAlpha95Edit->setText(QString::number(error));
+    mIncEdit->setText(locale.toString(inc));
+    mDecEdit->setText(locale.toString(dec));
+    mDecIncEdit->setText(locale.toString(inc));
+    mIntensityEdit->setText(locale.toString(intensity));
+    mAlpha95Edit->setText(locale.toString(error));
+    
     mRefCombo->setCurrentText(ref_curve);
     
     updateOptions();
@@ -111,17 +112,19 @@ void PluginMagForm::setData(const QJsonObject& data, bool isCombined)
 QJsonObject PluginMagForm::getData()
 {
     QJsonObject data;
+    QLocale locale=QLocale();
     
     bool is_inc = mIncRadio->isChecked();
     bool is_dec = mDecRadio->isChecked();
     bool is_int = mIntensityRadio->isChecked();
     
-    double inc = mIncEdit->text().toDouble();
-    double dec = mDecEdit->text().toDouble();
+    double inc = locale.toDouble(mIncEdit->text());
+    double dec = locale.toDouble(mDecEdit->text());
     if(is_dec)
-        inc = mDecIncEdit->text().toDouble();
-    double intensity = mIntensityEdit->text().toDouble();
-    double error = mAlpha95Edit->text().toDouble();
+        inc = locale.toDouble(mDecIncEdit->text());
+    double intensity = locale.toDouble(mIntensityEdit->text());
+    double error = locale.toDouble(mAlpha95Edit->text());
+    
     QString ref_curve = mRefCombo->currentText();
     
     data.insert(DATE_AM_IS_INC_STR, is_inc);

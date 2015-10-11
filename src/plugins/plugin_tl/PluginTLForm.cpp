@@ -8,6 +8,8 @@
 
 PluginTLForm::PluginTLForm(PluginTL* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("TL Measurements"), parent, flags)
 {
+    PluginTL* pluginTL = (PluginTL*)mPlugin;
+    
     mAverageLab = new QLabel(tr("Age") + " :", this);
     mErrorLab = new QLabel(tr("Error (sd)") + " :", this);
     mYearLab = new QLabel(tr("Ref. year") + " :", this);
@@ -43,22 +45,24 @@ PluginTLForm::~PluginTLForm()
 
 void PluginTLForm::setData(const QJsonObject& data, bool isCombined)
 {
+    QLocale locale=QLocale();
     double a = data.value(DATE_TL_AGE_STR).toDouble();
     double e = data.value(DATE_TL_ERROR_STR).toDouble();
     double y = data.value(DATE_TL_REF_YEAR_STR).toDouble();
     
-    mAverageEdit->setText(QString::number(a));
-    mErrorEdit->setText(QString::number(e));
-    mYearEdit->setText(QString::number(y));
+    mAverageEdit->setText(locale.toString(a));
+    mErrorEdit->setText(locale.toString(e));
+    mYearEdit->setText(locale.toString(y));
 }
 
 QJsonObject PluginTLForm::getData()
 {
     QJsonObject data;
+    QLocale locale=QLocale();
     
-    double a = mAverageEdit->text().toDouble();
-    double e = mErrorEdit->text().toDouble();
-    double y = mYearEdit->text().toDouble();
+    double a = locale.toDouble(mAverageEdit->text());
+    double e = locale.toDouble(mErrorEdit->text());
+    double y = locale.toDouble(mYearEdit->text());
     
     data.insert(DATE_TL_AGE_STR, a);
     data.insert(DATE_TL_ERROR_STR, e);

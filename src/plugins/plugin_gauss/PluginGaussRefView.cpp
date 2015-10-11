@@ -26,7 +26,9 @@ PluginGaussRefView::~PluginGaussRefView()
 
 void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
 {
+    QLocale locale=QLocale();
     GraphViewRefAbstract::setDate(d, settings);
+    
     Date date = d;
     
     mGraph->removeAllCurves();
@@ -176,7 +178,7 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
         mGraph->addCurve(curveMeasure);
         
         // Write measure value :
-        mGraph->addInfo(tr("Measure : ") + QString::number(age) + " ± " + QString::number(error));
+        mGraph->addInfo(tr("Measure : ") + locale.toString(age) + " ± " + locale.toString(error));
         
         // ----------------------------------------------
         //  Error on measure

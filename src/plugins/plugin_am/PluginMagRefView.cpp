@@ -16,6 +16,7 @@ PluginMagRefView::PluginMagRefView(QWidget* parent):GraphViewRefAbstract(parent)
     mGraph->setRendering(GraphView::eHD);
     mGraph->autoAdjustYScale(true);
     mMeasureColor=QColor(56, 120, 50);
+    
 }
 
 PluginMagRefView::~PluginMagRefView()
@@ -25,6 +26,7 @@ PluginMagRefView::~PluginMagRefView()
 
 void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
 {
+    QLocale locale=QLocale();
     GraphViewRefAbstract::setDate(d, settings);
     Date date = d;
     
@@ -165,15 +167,15 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         // Write measure values :
         if(is_inc)
         {
-            mGraph->addInfo(tr("Inclination : ") + QString::number(inc) + ", α : " + QString::number(alpha));
+            mGraph->addInfo(tr("Inclination : ") + locale.toString(inc) + ", α : " + locale.toString(alpha));
         }
         else if(is_dec)
         {
-            mGraph->addInfo(tr("Declination : ") + QString::number(dec) + ", α : " + QString::number(alpha) + tr(", Inclination : ") + QString::number(inc));
+            mGraph->addInfo(tr("Declination : ") + locale.toString(dec) + ", α : " + locale.toString(alpha) + tr(", Inclination : ") + locale.toString(inc));
         }
         else if(is_int)
         {
-            mGraph->addInfo(tr("Intensity : ") + QString::number(intensity) + " ± : " + QString::number(alpha));
+            mGraph->addInfo(tr("Intensity : ") + locale.toString(intensity) + " ± : " + locale.toString(alpha));
         }
         
         // ----------------------------------------------
@@ -202,9 +204,12 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         curveMeasureSup.mHorizontalValue = avg + error;
         curveMeasureInf.mHorizontalValue = avg - error;
         
+        qDebug()<<"PluginMagRefView::setDate"<<yMin<<yMax;
+        mGraph->setRangeY(yMin, yMax);
         mGraph->addCurve(curveMeasureAvg);
         mGraph->addCurve(curveMeasureSup);
         mGraph->addCurve(curveMeasureInf);
+        mGraph->setFormatFunctY(0);
     }
 }
 

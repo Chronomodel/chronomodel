@@ -6,6 +6,7 @@
 #include <QString>
 #include <QGroupBox>
 
+
 class PluginAbstract;
 
 
@@ -16,6 +17,7 @@ public:
     PluginFormAbstract(PluginAbstract* plugin, const QString& title, QWidget* parent = 0, Qt::WindowFlags flags = 0):QGroupBox(/*title, */parent),
     mPlugin(plugin){
         setFlat(true);
+
     }
     
     virtual ~PluginFormAbstract(){}
@@ -25,11 +27,14 @@ public:
 
     virtual bool isValid() = 0;
     
+
+    
 public:
     PluginAbstract* mPlugin;
     QString mError;
-protected:
-  //  FormatFunc mFormatFuncX;
+    
+    
+
 };
 
 #endif

@@ -13,6 +13,9 @@
 #include <QColor>
 #include <QList>
 #include <QTextStream>
+#include <QPair>
+
+#include <QLocale>
 
 class ParamMCMC;
 class GraphView;
@@ -41,6 +44,8 @@ public:
     virtual ~PluginAbstract(){}
     
     virtual double getLikelyhood(const double& t, const QJsonObject& data) = 0;
+    virtual QPair<double, double > getLikelyhoodArg(const double& t, const QJsonObject& data){return QPair<double, double>();}
+    virtual bool withLikelyhoodArg() {return false;}
 
     virtual QString getName() const = 0;
     virtual QIcon getIcon() const = 0;
@@ -53,6 +58,10 @@ public:
     virtual int csvMinColumns() const {return csvColumns().size();}
     virtual QJsonObject fromCSV(const QStringList& list) = 0;
     virtual QStringList toCSV(const QJsonObject& data) = 0;
+    
+    /**
+     * @brief getDateDesc is the description of the Data showing in the properties of Event, in the list of data
+     */
     virtual QString getDateDesc(const Date* date) const = 0;
     virtual bool areDatesMergeable(const QJsonArray& dates) {return false;}
     virtual QJsonObject mergeDates(const QJsonArray& dates) {QJsonObject ret; ret["error"] = tr("Cannot combine dates of type ") + getName(); return ret;}
@@ -78,6 +87,8 @@ public:
     
     GraphViewRefAbstract* mRefGraph;
     QColor mColor;
+    
+
 };
 
 //----------------------------------------------------

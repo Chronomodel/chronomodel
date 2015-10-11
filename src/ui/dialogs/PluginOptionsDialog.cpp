@@ -8,7 +8,9 @@
 #include "Plugin14C.h"
 #include <QtWidgets>
 
-
+/**
+ * @todo transform this dialog with autocharging plugin
+ */
 PluginOptionsDialog::PluginOptionsDialog(QWidget* parent, Qt::WindowFlags flags):
 QDialog(parent, flags)
 {

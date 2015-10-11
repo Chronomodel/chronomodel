@@ -16,7 +16,6 @@ PluginMag::PluginMag()
     mColor = QColor(198,79,32);
     loadRefDatas();
 }
-
 double PluginMag::getLikelyhood(const double& t, const QJsonObject& data)
 {
     double is_inc = data[DATE_AM_IS_INC_STR].toBool();
@@ -152,6 +151,7 @@ QStringList PluginMag::toCSV(const QJsonObject& data)
 
 QString PluginMag::getDateDesc(const Date* date) const
 {
+    QLocale locale=QLocale();
     QString result;
     if(date)
     {
@@ -168,19 +168,19 @@ QString PluginMag::getDateDesc(const Date* date) const
         
         if(is_inc)
         {
-            result += QObject::tr("Inclination") + " : " + QString::number(inc);
-            result += ", " + QObject::tr("Alpha95") + " : " + QString::number(alpha);
+            result += QObject::tr("Inclination") + " : " + locale.toString(inc);
+            result += ", " + QObject::tr("Alpha95") + " : " + locale.toString(alpha);
         }
         else if(is_dec)
         {
-            result += QObject::tr("Declination") + " : " + QString::number(dec);
-            result += ", " + QObject::tr("Inclination") + " : " + QString::number(inc);
-            result += ", " + QObject::tr("Alpha95") + " : " + QString::number(alpha);
+            result += QObject::tr("Declination") + " : " + locale.toString(dec);
+            result += ", " + QObject::tr("Inclination") + " : " + locale.toString(inc);
+            result += ", " + QObject::tr("Alpha95") + " : " + locale.toString(alpha);
         }
         else if(is_int)
         {
-            result += QObject::tr("Intensity") + " : " + QString::number(intensity);
-            result += ", " + QObject::tr("Error") + " : " + QString::number(alpha);
+            result += QObject::tr("Intensity") + " : " + locale.toString(intensity);
+            result += ", " + QObject::tr("Error") + " : " + locale.toString(alpha);
         }
         result += ", " + QObject::tr("Ref. curve") + " : " + ref_curve;
     }
@@ -329,8 +329,12 @@ void PluginMag::loadRefDatas()
 
 GraphViewRefAbstract* PluginMag::getGraphViewRef()
 {
-    if(!mRefGraph)
-        mRefGraph = new PluginMagRefView();
+    /*if(!mRefGraph)
+        mRefGraph = new PluginMagRefView(mLanguage);
+    */
+    if(mRefGraph) delete mRefGraph;
+    mRefGraph = new PluginMagRefView();
+    
     return mRefGraph;
 }
 

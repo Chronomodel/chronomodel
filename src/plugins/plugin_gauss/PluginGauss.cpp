@@ -155,6 +155,7 @@ QStringList PluginGauss::toCSV(const QJsonObject& data)
 
 QString PluginGauss::getDateDesc(const Date* date) const
 {
+    QLocale locale=QLocale();    
     QString result;
     if(date)
     {
@@ -166,8 +167,8 @@ QString PluginGauss::getDateDesc(const Date* date) const
         QString mode = data[DATE_GAUSS_MODE_STR].toString();
         QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
         
-        result += QObject::tr("Age") + " : " + QString::number(data[DATE_GAUSS_AGE_STR].toDouble());
-        result += " ± " + QString::number(data[DATE_GAUSS_ERROR_STR].toDouble());
+        result += QObject::tr("Age") + " : " + locale.toString(data[DATE_GAUSS_AGE_STR].toDouble());
+        result += " ± " + locale.toString(data[DATE_GAUSS_ERROR_STR].toDouble());
         
         if(mode == DATE_GAUSS_MODE_NONE)
         {
@@ -179,20 +180,20 @@ QString PluginGauss::getDateDesc(const Date* date) const
             if(a != 0.f)
             {
                 if(a == -1.f) aStr += "-";
-                else if(a != 1.f) aStr += QString::number(a);
+                else if(a != 1.f) aStr += locale.toString(a);
                 aStr += "t²";
             }
             QString bStr;
             if(b != 0.f)
             {
                 if(b == -1.f) bStr += "-";
-                else if(b != 1.f) bStr += QString::number(b);
+                else if(b != 1.f) bStr += locale.toString(b);
                 bStr += "t";
             }
             QString cStr;
             if(c != 0.f)
             {
-                cStr += QString::number(c);
+                cStr +=locale.toString(c);
             }
             QString eq = aStr;
             if(!eq.isEmpty() && !bStr.isEmpty())
@@ -354,8 +355,11 @@ const QMap<QString, QMap<double, double> >& PluginGauss::getRefData(const QStrin
 
 GraphViewRefAbstract* PluginGauss::getGraphViewRef()
 {
-    if(!mRefGraph)
-        mRefGraph = new PluginGaussRefView();
+    //if(!mRefGraph) mRefGraph = new PluginGaussRefView(mLanguage);
+
+    if(mRefGraph) delete mRefGraph;
+    mRefGraph = new PluginGaussRefView();
+    
     return mRefGraph;
 }
 

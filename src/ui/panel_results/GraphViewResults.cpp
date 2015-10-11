@@ -226,13 +226,10 @@ void GraphViewResults::saveAsImage()
             //---
             GraphView::Rendering memoRendering= mGraph->getRendering();
             setRendering(GraphView::eHD);
-            short pr = MainWindow::getInstance()->getAppSettings().mPixelRatio;// 4.;//0.005;
-            //qDebug()<<"GraphViewResults::saveAsImage() pr="<<pr;
+            short pr = MainWindow::getInstance()->getAppSettings().mPixelRatio;
             int versionHeight = 20;
             //QSize wSize = widget->size();
             QImage image(mGraph->width() * pr, (mGraph->height() + versionHeight) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
-        
-            //    qDebug()<<"r.width() * pr"<< (r.width() * pr)<<" (r.height() + versionHeight) * pr"<<(r.height() + versionHeight) * pr;
 
             if (image.isNull() ) {
                 qDebug()<< " image width = 0";
@@ -246,9 +243,7 @@ void GraphViewResults::saveAsImage()
             QPainter p;
             p.begin(&image);
             p.setRenderHint(QPainter::Antialiasing);
-            //QRectF tgtRect = image.rect();
-
-//            mGraph->render(&p, QPoint(0, 0), QRegion(mGraph->x(), mGraph->y(), mGraph->width(), mGraph->height()));
+            
             mGraph->render(&p, QPoint(0, 0), QRegion(0, 0, mGraph->width(), mGraph->height()));
         
             p.setPen(Qt::black);

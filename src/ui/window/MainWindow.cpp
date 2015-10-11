@@ -469,8 +469,13 @@ void MainWindow::appSettings()
 void MainWindow::setAppSettings(const AppSettings& s)
 {
     mAppSettings = s;
+    QLocale::Language newLanguage = s.mLanguage;
+    QLocale::Country newCountry= s.mCountry;
     
-    QLocale::setDefault(QLocale(s.mLanguage, s.mCountry));
+    QLocale newLoc = QLocale(newLanguage,newCountry);
+    newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
+    QLocale::setDefault(newLoc);
+    
     statusBar()->showMessage(tr("Language") + " : " + QLocale::languageToString(QLocale().language()));
     
     mProject->setAppSettings(mAppSettings);
@@ -553,7 +558,8 @@ void MainWindow::changeDatesMethod()
     QStringList opts;
     const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
     for(int i=0; i<plugins.size(); ++i){
-        opts.append(plugins[i]->getId());
+        //opts.append(plugins[i]->getId());
+        opts.append(plugins[i]->getName());
     }
     bool ok;
     QString pluginId = QInputDialog::getItem(qApp->activeWindow(),
@@ -678,8 +684,8 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     move(settings.value("pos", QPoint(200, 200)).toPoint());
     
     settings.beginGroup("AppSettings");
-    mAppSettings.mLanguage = (QLocale::Language) settings.value(APP_SETTINGS_STR_LANGUAGE, APP_SETTINGS_DEFAULT_LANGUAGE).toInt();
-    mAppSettings.mCountry = (QLocale::Country) settings.value(APP_SETTINGS_STR_COUNTRY, APP_SETTINGS_DEFAULT_COUNTRY).toInt();
+    mAppSettings.mLanguage = (QLocale::Language) settings.value(APP_SETTINGS_STR_LANGUAGE, QLocale::system().language()).toInt();
+    mAppSettings.mCountry = (QLocale::Country) settings.value(APP_SETTINGS_STR_COUNTRY, QLocale::system().language()).toInt();
     mAppSettings.mAutoSave = settings.value(APP_SETTINGS_STR_AUTO_SAVE, APP_SETTINGS_DEFAULT_AUTO_SAVE).toBool();
     mAppSettings.mAutoSaveDelay = settings.value(APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC, APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC).toInt();
     mAppSettings.mShowHelp = settings.value(APP_SETTINGS_STR_SHOW_HELP, APP_SETTINGS_DEFAULT_SHOW_HELP).toBool();
@@ -693,7 +699,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     mAppSettings.mPrecision = settings.value(APP_SETTINGS_STR_FORMATDATE, APP_SETTINGS_DEFAULT_FORMATDATE).toInt();
     settings.endGroup();
     
-    QLocale::setDefault(QLocale(mAppSettings.mLanguage, mAppSettings.mCountry));
+
     mProjectView->showHelp(mAppSettings.mShowHelp);
     mHelpAction->setChecked(mAppSettings.mShowHelp);
     
