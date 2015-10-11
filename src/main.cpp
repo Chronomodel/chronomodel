@@ -82,8 +82,12 @@ int main(int argc, char *argv[])
             filePath = arg;
         }
     }
+    QLocale::Language newLanguage = QLocale::system().language();
+    QLocale::Country newCountry= QLocale::system().country();
     
-    QLocale::setDefault(QLocale(QLocale::English, QLocale::UnitedStates));
+    QLocale newLoc = QLocale(newLanguage,newCountry);
+    newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
+    QLocale::setDefault(newLoc);
     
     //if(argv)
     //QString filePath(argv[1]);

@@ -1,9 +1,8 @@
 #include "AppSettings.h"
 #include <QString>
+#include <QLocale>
 
 AppSettings::AppSettings():
-mLanguage(APP_SETTINGS_DEFAULT_LANGUAGE),
-mCountry(APP_SETTINGS_DEFAULT_COUNTRY),
 mAutoSave(APP_SETTINGS_DEFAULT_AUTO_SAVE),
 mAutoSaveDelay(APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC),
 mShowHelp(APP_SETTINGS_DEFAULT_SHOW_HELP),
@@ -16,7 +15,11 @@ mImageQuality(APP_SETTINGS_DEFAULT_IMAGE_QUALITY),
 mFormatDate(APP_SETTINGS_DEFAULT_FORMATDATE),
 mPrecision(APP_SETTINGS_DEFAULT_PRECISION)
 {
-    
+    mLanguage = QLocale::system().language();
+    mCountry = QLocale::system().country();
+    QLocale newLoc = QLocale(mLanguage,mCountry);
+    newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
+    QLocale::setDefault(newLoc);
 }
 AppSettings::AppSettings(const AppSettings& s)
 {

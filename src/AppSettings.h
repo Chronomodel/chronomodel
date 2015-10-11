@@ -5,8 +5,8 @@
 #include <QLocale>
 #include "DateUtils.h"
 
-#define APP_SETTINGS_DEFAULT_LANGUAGE QLocale::English
-#define APP_SETTINGS_DEFAULT_COUNTRY QLocale::UnitedKingdom
+//#define APP_SETTINGS_DEFAULT_LANGUAGE QLocale::English
+//#define APP_SETTINGS_DEFAULT_COUNTRY QLocale::UnitedKingdom
 #define APP_SETTINGS_DEFAULT_AUTO_SAVE false
 #define APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC 300
 #define APP_SETTINGS_DEFAULT_SHOW_HELP true

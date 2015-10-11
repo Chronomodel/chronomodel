@@ -26,6 +26,7 @@ Plugin14CRefView::~Plugin14CRefView()
 
 void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
 {
+    QLocale locale=QLocale();
     GraphViewRefAbstract::setDate(d, settings);
     Date date = d;
     
@@ -98,10 +99,7 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         // Display reference curve name
         mGraph->addInfo(tr("Ref : ") + ref_curve);
         
-        // ----------------------------------------------
-        
-       // double yMin = map_min_value(curveG95Inf);
-       // double yMax = map_max_value(curveG95Sup);
+        // -------------------------------------------
         
         yMin = qMin(yMin, age);
         yMin = floor(yMin/10)*10;
@@ -110,8 +108,6 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         yMax = ceil(yMax/10)*10;
         
         mGraph->setRangeY(yMin, yMax);
-       // qDebug()<<"Plugin14CRefView::setDate yMin"<<yMin;
-       // qDebug()<<"Plugin14CRefView::setDate yMax"<<yMax;
         
         // ----------------------------------------------
         //  Measure curve
@@ -185,7 +181,7 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
             curveDeltaR.mData = normalize_map(curveDeltaR.mData);
             mGraph->addCurve(curveDeltaR);
             
-            info += tr(", ΔR : ") + QString::number(delta_r) + " ± " + QString::number(delta_r_error);
+            info += tr(", ΔR : ") + locale.toString(delta_r) + " ± " + locale.toString(delta_r_error);
         }
         
         // ----------------------------------------------

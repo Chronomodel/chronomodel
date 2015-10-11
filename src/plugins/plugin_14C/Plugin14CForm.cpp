@@ -93,11 +93,11 @@ void Plugin14CForm::setData(const QJsonObject& data, bool isCombined)
 QJsonObject Plugin14CForm::getData()
 {
     QJsonObject data;
-    
-    double a = mAverageEdit->text().toDouble();
-    double e = mErrorEdit->text().toDouble();
-    double r = mREdit->text().toDouble();
-    double re = mRErrorEdit->text().toDouble();
+    QLocale locale=QLocale();    
+    double a = locale.toDouble(mAverageEdit->text());
+    double e = locale.toDouble(mErrorEdit->text());
+    double r = locale.toDouble(mREdit->text());
+    double re = locale.toDouble(mRErrorEdit->text());
     QString c = mRefCombo->currentText();
     
     data.insert(DATE_14C_AGE_STR, a);
