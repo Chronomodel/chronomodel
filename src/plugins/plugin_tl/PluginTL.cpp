@@ -22,8 +22,21 @@ double PluginTL::getLikelyhood(const double& t, const QJsonObject& data)
     double ref_year = data[DATE_TL_REF_YEAR_STR].toDouble();
     
     // gaussienne TL
-    double v = exp(-0.5f * pow((age - (ref_year - t)) / error, 2.f)) / error; //  * sqrt(2.f * M_PI)
+    double v = exp(-0.5f * pow((age - (ref_year - t)) / error, 2.f)) / error;
     return v;
+}
+
+QPair<double, double > PluginTL::getLikelyhoodArg(const double& t, const QJsonObject& data)
+{
+    QPair<double, double> result;
+    double age = data[DATE_TL_AGE_STR].toDouble();
+    double error = data[DATE_TL_ERROR_STR].toDouble();
+    double ref_year = data[DATE_TL_REF_YEAR_STR].toDouble();
+    
+    // gaussienne TL
+    result= QPair<double,double>(1/(error*error), (-0.5f * pow((age - (ref_year - t)) / error, 2.f))) ;
+    
+    return result;
 }
 
 QString PluginTL::getName() const

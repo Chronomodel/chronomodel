@@ -20,6 +20,14 @@ PluginGauss::PluginGauss()
 
 double PluginGauss::getLikelyhood(const double& t, const QJsonObject& data)
 {
+    QPair<double, double > result = getLikelyhoodArg(t, data);
+    
+    return exp(result.second) / sqrt(result.first);
+}
+
+QPair<double, double > PluginGauss::getLikelyhoodArg(const double& t, const QJsonObject& data)
+{
+    
     double age = data[DATE_GAUSS_AGE_STR].toDouble();
     double error = data[DATE_GAUSS_ERROR_STR].toDouble();
     double a = data[DATE_GAUSS_A_STR].toDouble();
@@ -28,15 +36,20 @@ double PluginGauss::getLikelyhood(const double& t, const QJsonObject& data)
     QString mode = data[DATE_GAUSS_MODE_STR].toString();
     QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
     
+    double variance;
+    double exponent;
+    
     if(mode == DATE_GAUSS_MODE_NONE){
         a = 0;
         b = 1;
         c = 0;
     }
     
-    double result = 0;
+
     if(mode == DATE_GAUSS_MODE_EQ || mode == DATE_GAUSS_MODE_NONE){
-        result = exp(-0.5f * pow((age - (a * t * t + b * t + c)) / error, 2.f)) / error; //  * sqrt(2.f * M_PI)
+        variance=sqrt(error);
+        exponent=-0.5f * pow((age - (a * t * t + b * t + c)) / error, 2.f);
+        
     }
     else if(mode == DATE_GAUSS_MODE_CURVE){
         // Check if calib curve exists !
@@ -45,33 +58,47 @@ double PluginGauss::getLikelyhood(const double& t, const QJsonObject& data)
             const QMap<double, double>& curveG = mRefDatas[ref_curve]["G"];
             const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
             
-            double t_under = floor(t);
-            double t_upper = t_under + 1;
+            double tMinDef=curveG.firstKey();
+            double tMaxDef=curveG.lastKey();
+            double g;
             
-            if(curveG.find(t_under) != curveG.end() &&
-               curveG.find(t_upper) != curveG.end())
-            {
-                double g_under = curveG[t_under];
-                double g_upper = curveG[t_upper];
-                double g = interpolate(t, t_under, t_upper, g_under, g_upper);
-                
-                double g_sup_under = curveG95Sup[t_under];
-                double g_sup_upper = curveG95Sup[t_upper];
-                double g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
-                
-                double e = (g_sup - g) / 1.96f;
-                double variance = e * e + error * error;
-                
-                result = exp(-0.5f * pow(g - age, 2.f) / variance) / sqrt(variance);
+            if(t>tMaxDef){
+                g= curveG[tMaxDef];
+                variance=10E6;
+                exponent=-0.5f * pow(g - age, 2.f) / variance;
             }
-            else
-            {
-                //qDebug() << "failed";
+            else if (t<tMinDef){
+                g= curveG[tMinDef];
+                variance=10E6;
+                exponent=-0.5f * pow(g - age, 2.f) / variance;
+            }
+            else {
+                double t_under = floor(t);
+                double t_upper = t_under + 1;
+            
+                if(curveG.find(t_under) != curveG.end() &&
+                   curveG.find(t_upper) != curveG.end())
+                {
+                    double g_under = curveG[t_under];
+                    double g_upper = curveG[t_upper];
+                    g = interpolate(t, t_under, t_upper, g_under, g_upper);
+                
+                    double g_sup_under = curveG95Sup[t_under];
+                    double g_sup_upper = curveG95Sup[t_upper];
+                    double g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
+                
+                    double e = (g_sup - g) / 1.96f;
+                    variance = e * e + error * error;
+                    exponent=-0.5f * pow(g - age, 2.f) / variance;
+                }
+            
             }
         }
+        
     }
-    return result;
+    return qMakePair(variance, exponent);
 }
+
 
 QString PluginGauss::getName() const
 {

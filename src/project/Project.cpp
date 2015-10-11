@@ -582,6 +582,7 @@ void Project::resetMCMC()
             events[i] = event;
         }
         stateNext[STATE_EVENTS] = events;
+        stateNext[STATE_MCMC_MIXING] = MCMC_MIXING_DEFAULT;
         pushProjectState(stateNext, tr("MCMC methods reset"), true);
     }
 }

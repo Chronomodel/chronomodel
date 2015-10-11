@@ -18,6 +18,83 @@ Plugin14C::Plugin14C()
     loadRefDatas();
 }
 
+QPair<double, double > Plugin14C::getLikelyhoodArg(const double& t, const QJsonObject& data)
+{
+    double age = data[DATE_14C_AGE_STR].toDouble();
+    double error = data[DATE_14C_ERROR_STR].toDouble();
+    double delta_r = data[DATE_14C_DELTA_R_STR].toDouble();
+    double delta_r_error = data[DATE_14C_DELTA_R_ERROR_STR].toDouble();
+    QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString().toLower();
+    //qDebug()<<"Plugin14C::getLikelyhoodArg"<<ref_curve;
+    // Apply reservoir effect
+    age = (age - delta_r);
+    error = sqrt(error * error + delta_r_error * delta_r_error);
+    
+    
+    
+    
+    // Check if calib curve exists !
+    if(mRefDatas.find(ref_curve) != mRefDatas.end())
+    {
+        double variance;
+        double exponent;
+        
+        const QMap<double, double>& curveG = mRefDatas[ref_curve]["G"];
+        const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
+        
+        double tMinDef=curveG.firstKey();
+        double tMaxDef=curveG.lastKey();
+        double g;
+        double g_sup;
+        double e;
+        
+        if(t>tMaxDef){
+            g=interpolate(t, tMinDef, tMaxDef, curveG[tMinDef], curveG[tMaxDef]);
+            e = (curveG95Sup[tMaxDef] - curveG[tMaxDef]) / 1.96f;
+            variance = e * e + error * error;
+        }
+        else if (t<tMinDef){
+            g=interpolate(t, tMinDef, tMaxDef, curveG[tMinDef], curveG[tMaxDef]);
+            e = (curveG95Sup[tMinDef] - curveG[tMinDef]) / 1.96f;
+            variance = e * e + error * error;
+        }
+        else {
+            
+            double t_under = floor(t);
+            double t_upper = t_under + 1;
+            if(curveG.find(t_under) != curveG.end() &&
+               curveG.find(t_upper) != curveG.end())
+            {
+                double g_under = curveG[t_under];
+                double g_upper = curveG[t_upper];
+                g = interpolate(t, t_under, t_upper, g_under, g_upper);
+            
+                double g_sup_under = curveG95Sup[t_under];
+                double g_sup_upper = curveG95Sup[t_upper];
+                 g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
+            
+                e = (g_sup - g) / 1.96f;
+                variance = e * e + error * error;
+            }
+        }
+        exponent = -0.5f * pow(g - age, 2.f) / variance;
+        return qMakePair(variance,exponent);
+        
+    }
+    else {
+        return QPair<double,double>();
+    }
+}
+
+double Plugin14C::getLikelyhood(const double& t, const QJsonObject& data)
+{
+    QPair<double, double > result = getLikelyhoodArg(t, data);
+    double back = exp(result.second) / sqrt(result.first) ;
+    return back;
+
+}
+
+/*
 double Plugin14C::getLikelyhood(const double& t, const QJsonObject& data)
 {
     double age = data[DATE_14C_AGE_STR].toDouble();
@@ -33,38 +110,62 @@ double Plugin14C::getLikelyhood(const double& t, const QJsonObject& data)
     double result = 0;
     
     // Check if calib curve exists !
+    
+    
     if(mRefDatas.find(ref_curve) != mRefDatas.end())
     {
         const QMap<double, double>& curveG = mRefDatas[ref_curve]["G"];
         const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
         
-        double t_under = floor(t);
-        double t_upper = t_under + 1;
         
-        if(curveG.find(t_under) != curveG.end() &&
-           curveG.find(t_upper) != curveG.end())
-        {
-            double g_under = curveG[t_under];
-            double g_upper = curveG[t_upper];
-            double g = interpolate(t, t_under, t_upper, g_under, g_upper);
-            
-            double g_sup_under = curveG95Sup[t_under];
-            double g_sup_upper = curveG95Sup[t_upper];
-            double g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
-            
-            double e = (g_sup - g) / 1.96f;
-            double variance = e * e + error * error;
-            
-            result = exp(-0.5f * pow(g - age, 2.f) / variance) / sqrt(variance);
+        double tMinDef=curveG.firstKey();
+        double tMaxDef=curveG.lastKey();
+        double g;
+        double variance;
+        double exponent;
+        
+        if(t>tMaxDef){
+            g= curveG[tMaxDef];
+            variance=10E6;
+            exponent = -0.5f * pow(g - age, 2.f) / variance;
+            result = exp(exponent) / sqrt(variance);
         }
-        else
-        {
-            //qDebug() << "failed";
+        else if (t<tMinDef){
+            g= curveG[tMinDef];
+            variance=10E6;
+            exponent = -0.5f * pow(g - age, 2.f) / variance;
+            result = exp(exponent) / sqrt(variance);
+        }
+        else {
+        
+            double t_under = floor(t);
+            double t_upper = t_under + 1;
+        
+            if(curveG.find(t_under) != curveG.end() &&
+                curveG.find(t_upper) != curveG.end())
+            {
+                double g_under = curveG[t_under];
+                double g_upper = curveG[t_upper];
+                g = interpolate(t, t_under, t_upper, g_under, g_upper);
+            
+                double g_sup_under = curveG95Sup[t_under];
+                double g_sup_upper = curveG95Sup[t_upper];
+                double g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
+            
+                double e = (g_sup - g) / 1.96f;
+                variance = e * e + error * error;
+            
+                result = exp(-0.5f * pow(g - age, 2.f) / variance) / sqrt(variance);
+            }
+            else
+            {
+                //qDebug() << "failed";
+            }
         }
     }
-    
     return result;
 }
+*/
 
 
 QString Plugin14C::getName() const

@@ -139,6 +139,7 @@ void CalibrationView::updateGraphs()
         mRefGraphView->setVisible(false);
     }
     
+    
     if(!mDate.isNull())
     {
         DensityAnalysis results;
@@ -206,8 +207,8 @@ void CalibrationView::updateGraphs()
             
             double realThresh = map_area(hpd) / map_area(calibCurve.mData);
             //mResultsLab->setText(mResultsLab->text() % "HPD (" % locale.toString(100. * realThresh, 'f', 1) + "%) : " % getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr)); //  % concatenation with QStringBuilder
-            
-            mResultsLab->setText(mResultsLab->text() + "HPD (" + locale.toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr));
+            mResultsLab->setWordWrap(true);
+            mResultsLab->setText(mResultsLab->text() + "\n HPD (" + locale.toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr));
         }
         
         // ------------------------------------------------------------

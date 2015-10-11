@@ -760,7 +760,7 @@ void GraphView::drawCurves(QPainter& painter)
                 path.lineTo(mMarginLeft, mMarginTop);
                 painter.drawPath(path);
             }
-            else
+            else // it's horizontal curve
             {
                 path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
                 
@@ -789,7 +789,9 @@ void GraphView::drawCurves(QPainter& painter)
                     {
                         lightData = subData;
                     }
-
+                    //bool isFirst=true;
+                    
+                    path.moveTo(getXForValue(mCurrentMinX, false), getYForValue(0, false));
                     for(int i=0; i<lightData.size(); ++i)
                     {
                         // Use "dataStep" only if lightData is different of subData !
@@ -801,54 +803,29 @@ void GraphView::drawCurves(QPainter& painter)
                             qreal x = getXForValue(valueX, false);
                             qreal y = getYForValue(valueY, false);
                             
-                             if(index == 0)
+                            /* if(isFirst)
                             {
-                                path.moveTo(x, y);
+                                path.moveTo(x, getYForValue(0, false));
+                                path.lineTo(x, y);
+                                isFirst=false;
                             }
                             else
-                            {
+                            {*/
                                 if(curve.mIsHisto)
                                     path.lineTo(x, last_y);
                                 path.lineTo(x, y);
-                            }
+                            //}
                             last_x = x;
                             last_y = y;
                             last_value_y = valueY;
-                            ++index;
+                            //++index;
                         }
                         
                     }
+                    path.lineTo(getXForValue(mCurrentMaxX, false), getYForValue(0, false));
                 }
                 else
                 {
-                    /*QMapIterator<double, double> iter(curve.mData);
-                     while(iter.hasNext())
-                     {
-                     iter.next();
-                     double valueX = iter.key();
-                     double valueY = iter.value();
-                     
-                     if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
-                     {
-                     double x = getXForValue(valueX, false);
-                     double y = getYForValue(valueY, false);
-                     
-                     if(index == 0)
-                     {
-                     path.moveTo(x, y);
-                     }
-                     else
-                     {
-                     if(curve.mIsHisto)
-                     path.lineTo(x, last_y);
-                     path.lineTo(x, y);
-                     }
-                     last_x = x;
-                     last_y = y;
-                     ++index;
-                     }
-                     }*/
-                    
                     // Down sample curve for better performances
                     
                     QMap<double, double> subData = curve.getMapDataInRange(mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
@@ -891,6 +868,12 @@ void GraphView::drawCurves(QPainter& painter)
                     
                     iter.toFront();
                     bool isFirst=true;
+                    
+                    if(curve.mBrush != Qt::NoBrush) {
+                        isFirst=false;
+                        last_x= getXForValue(valueX, false);
+                        last_y = y;
+                    }
                     while(iter.hasNext())
                     {
                         iter.next();
@@ -936,13 +919,13 @@ void GraphView::drawCurves(QPainter& painter)
                             last_y = y;
 
                             last_value_y = valueY;
-                          //  ++index;
-
                         }
                     }
+                    
+                    
                     if(curve.mIsRectFromZero && valueY != 0.f)
                     {
-                        x = getXForValue(mCurrentMaxX, false);
+                        x = last_x;
                         y = getYForValue(0, false);
                         path.lineTo(x, y);
                         
@@ -950,20 +933,23 @@ void GraphView::drawCurves(QPainter& painter)
                     
                 }
                 painter.drawPath(path);
+                if(curve.mBrush != Qt::NoBrush)
+                {
+                    // Close the path
+                   /* if(curve.mIsVertical)
+                     path.lineTo(mMarginLeft, mMarginTop);
+                     else
+                     path.lineTo(mMarginLeft + mGraphWidth, mMarginTop + mGraphHeight);
+                     path.lineTo(mMarginLeft, mMarginTop + mGraphHeight);
+                    */
+                    path.lineTo(last_x, getYForValue(0, false));
+                    
+                    painter.setPen(curve.mPen);
+                    painter.fillPath(path, curve.mBrush);
+                }
             }
             
-            if(curve.mBrush != Qt::NoBrush)
-            {
-                // Close the path
-                if(curve.mIsVertical)
-                    path.lineTo(mMarginLeft, mMarginTop);
-                else
-                    path.lineTo(mMarginLeft + mGraphWidth, mMarginTop + mGraphHeight);
-                path.lineTo(mMarginLeft, mMarginTop + mGraphHeight);
-                
-                painter.setPen(curve.mPen);
-                painter.fillPath(path, curve.mBrush);
-            }
+            
         }
     }
 }

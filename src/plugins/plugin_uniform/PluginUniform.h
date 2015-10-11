@@ -18,6 +18,7 @@ public:
     PluginUniform();
     
     double getLikelyhood(const double& t, const QJsonObject& data);
+    bool withLikelyhoodArg() {return false; };
     
     QString getName() const;
     QIcon getIcon() const;

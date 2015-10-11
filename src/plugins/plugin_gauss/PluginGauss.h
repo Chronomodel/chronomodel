@@ -27,6 +27,8 @@ public:
     PluginGauss();
     
     double getLikelyhood(const double& t, const QJsonObject& data);
+    bool withLikelyhoodArg() {return true; };
+    QPair<double, double > getLikelyhoodArg(const double& t, const QJsonObject& data);
     
     QString getName() const;
     QIcon getIcon() const;

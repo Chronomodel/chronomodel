@@ -47,6 +47,8 @@ QDialog(parent, flags)
     mNumBurnEdit->setAlignment(Qt::AlignCenter);
     mMaxBatchesEdit->setAlignment(Qt::AlignCenter);
     mDownSamplingEdit->setAlignment(Qt::AlignCenter);
+    
+    mLevelEdit = new LineEdit(this);
 
     mOkBut = new Button(tr("OK"), this);
     mCancelBut = new Button(tr("Cancel"), this);
@@ -86,6 +88,9 @@ MCMCSettings MCMCSettingsDialog::getSettings()
     settings.mMaxBatches = mMaxBatchesEdit->text().toLongLong();
     settings.mNumBatchIter = mIterPerBatchSpin->value();
     settings.mThinningInterval = mDownSamplingEdit->text().toLong();
+    
+    settings.mMixingLevel = mLoc.toDouble(mLevelEdit->text());
+    
     settings.mSeeds = stringListToIntList(mSeedsEdit->text(), ";");
     
     return settings;
@@ -183,8 +188,10 @@ void MCMCSettingsDialog::updateLayout()
                        width() - 2*m,
                        mHelp->heightForWidth(width() - 2*m));
     
-    mSeedsLab->setGeometry(width()/2 - m/2 - 200, height() - 2*m - butH - lineH, 200, lineH);
-    mSeedsEdit->setGeometry(width()/2 + m/2, height() - 2*m - butH - lineH, editW, lineH);
+    mSeedsLab->setGeometry(width()/2 - m/2 - 300, height() - 2*m - butH - lineH, 200, lineH);
+    mSeedsEdit->setGeometry(width()/2 + m/2-100, height() - 2*m - butH - lineH, editW, lineH);
+    
+    mLevelEdit->setGeometry(width()/2 + m/2+100, height() - 2*m - butH - lineH, editW, lineH);
     
     mOkBut->setGeometry(width() - 2*m - 2*butW, height() - m - butH, butW, butH);
     mCancelBut->setGeometry(width() - m - butW, height() - m - butH, butW, butH);

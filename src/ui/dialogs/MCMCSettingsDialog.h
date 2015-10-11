@@ -38,6 +38,8 @@ private:
     LineEdit* mSeedsEdit;
     HelpWidget* mHelp;
     
+    LineEdit* mLevelEdit;
+    
     Button* mOkBut;
     Button* mCancelBut;
     

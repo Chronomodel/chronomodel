@@ -266,9 +266,13 @@ void Model::fromJson(const QJsonObject& json)
             {
                 try{
                     Event* e = new Event(Event::fromJson(json,i));
-                   // Event* e = new Event(Event::fromJson(json[STATE_EVENTS].toArray().at(i).toObject(),i));
                     e->setModelJson(getJson(),i);
-                    //e->setModelJson(events[i].toObject());
+                    e->mMixingLevel=mMCMCSettings.mMixingLevel;
+
+                    for(int j=0; j<e->mDates.size(); ++j)
+                    {
+                        e->mDates[j].mMixingLevel=e->mMixingLevel;
+                    }
                     mEvents.append(e);
                 }
                 catch(QString error){

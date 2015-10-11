@@ -18,6 +18,12 @@ PluginMag::PluginMag()
 }
 double PluginMag::getLikelyhood(const double& t, const QJsonObject& data)
 {
+    QPair<double, double > result = getLikelyhoodArg(t, data);
+    return exp(result.second) / sqrt(result.first);
+}
+
+QPair<double, double > PluginMag::getLikelyhoodArg(const double& t, const QJsonObject& data)
+{
     double is_inc = data[DATE_AM_IS_INC_STR].toBool();
     double is_dec = data[DATE_AM_IS_DEC_STR].toBool();
     double is_int = data[DATE_AM_IS_INT_STR].toBool();
@@ -27,50 +33,80 @@ double PluginMag::getLikelyhood(const double& t, const QJsonObject& data)
     double intensity = data[DATE_AM_INTENSITY_STR].toDouble();
     QString ref_curve = data[DATE_AM_REF_CURVE_STR].toString().toLower();
     
-    double result = 0.f;
+    double variance;
+    double exponent;
+    double mesure;
+    double error;
+    
+    if(is_inc)
+    {
+        error = alpha / 2.448f;
+        mesure = inc;
+    }
+    else if(is_dec)
+    {
+        error = alpha / (2.448f * cos(inc * M_PI / 180.f));
+        mesure = dec;
+    }
+    else if(is_int)
+    {
+        error = alpha;
+        mesure = intensity;
+    }
+    
+    
+    
     
     if(mRefDatas.find(ref_curve) != mRefDatas.end())
     {
         const QMap<double, double>& curveG = mRefDatas[ref_curve]["G"];
         const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
         
-        double t_under = floor(t);
-        double t_upper = t_under + 1;
         
-        if(curveG.find(t_under) != curveG.end() &&
-           curveG.find(t_upper) != curveG.end())
-        {
-            double g_under = curveG[t_under];
-            double g_upper = curveG[t_upper];
-            double g = interpolate(t, t_under, t_upper, g_under, g_upper);
+        double tMinDef=curveG.firstKey();
+        double tMaxDef=curveG.lastKey();
+        double g;
+        
+        if(t>tMaxDef){
+            g= curveG[tMaxDef];
+            variance=10E4;
+            //variance=curveG95Sup[tMaxDef]-curveG[tMaxDef];
+        }
+        else if (t<tMinDef){
+            g= curveG[tMinDef];
+            variance=10E4;
+            //variance=curveG95Sup[tMinDef]-curveG[tMinDef];
+        }
+        else {
+            double t_under = floor(t);
+            double t_upper = t_under + 1;
+        
+            if(curveG.find(t_under) != curveG.end() &&
+               curveG.find(t_upper) != curveG.end()) {
+                
+                double g_under = curveG[t_under];
+                double g_upper = curveG[t_upper];
+                g = interpolate(t, t_under, t_upper, g_under, g_upper);
             
-            double g_sup_under = curveG95Sup[t_under];
-            double g_sup_upper = curveG95Sup[t_upper];
-            double g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
+                double g_sup_under = curveG95Sup[t_under];
+                double g_sup_upper = curveG95Sup[t_upper];
+                double g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
             
-            double e = (g_sup - g) / 1.96f;
+                double e = (g_sup - g) / 1.96f;
             
-            // pour la combinaison, il faut multiplier les 2 cas suivants :
-            if(is_inc)
-            {
-                double variance = (e * e) + (alpha * alpha) / (2.448f * 2.448f);
-                result = exp(-0.5f * pow(g - inc, 2.f) / variance) / sqrt(variance);
-            }
-            else if(is_dec)
-            {
-                double variance = e * e + pow(alpha / (2.448f * cos(inc * M_PI / 180.f)), 2.f);
-                result = exp(-0.5f * pow(g - dec, 2.f) / variance) / sqrt(variance);
-            }
-            else if(is_int)
-            {
-                double error = alpha;
-                double variance = e * e + error * error;
-                result = exp(-0.5f * pow(g - intensity, 2.f) / variance) / sqrt(variance);
+                variance = e * e + error * error;
+
             }
         }
+        exponent=-0.5f * pow(g - mesure, 2.f) / variance;
+        return qMakePair(variance, exponent);
     }
-    return result;
+    else {
+        return QPair<double,double>();
+    }
+    
 }
+
 
 QString PluginMag::getName() const
 {

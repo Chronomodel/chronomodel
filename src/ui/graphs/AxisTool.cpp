@@ -215,7 +215,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
                         QString text = (valueFormatFunc ? valueFormatFunc(mStartVal + i * mDeltaVal) : QString::number(mStartVal + i * mDeltaVal, 'f', 0) );
 
                         qreal ty = y - heightText/2;
-                   
+                        qDebug()<<"AxisTool:Paint text "<<text;
                         QRectF tr(xov - w, ty, w - 8, heightText);
                         p.drawText(tr, align, text);
                     }

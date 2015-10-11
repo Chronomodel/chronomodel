@@ -12,6 +12,20 @@
 
 class Event;
 class PluginAbstract;
+class Date;
+
+typedef void (*samplingFunction)(Date* date, Event* event);
+
+void fMHSymetric(Date* date, Event* event);
+void fInversion(Date* date, Event* event);
+void fMHSymGaussAdapt(Date* date,Event* event);
+
+void fMHSymetricWithArg(Date* date, Event* event);
+void fMHSymGaussAdaptWithArg(Date* date, Event* event);
+void fInversionWithArg(Date* date, Event* event);
+
+double fProposalDensity(const double t,Date* date);
+
 
 
 class Date
@@ -42,7 +56,6 @@ public:
     static Date fromJson(const QJsonObject& json);
 
     void setModelJson(const QJsonObject & json, const int eventIdx, const int dateIdx);
-    //void setEventJson(const QJsonObject& jsonEvent);
     void setIdxInEventArray(int j);
     QJsonObject toJson() const;
     
@@ -50,6 +63,7 @@ public:
     QStringList toCSV() const;
     
     double getLikelyhood(const double& t);
+    QPair<double, double > getLikelyhoodArg(const double& t);
     QString getDesc() const;
     
     void reset();
@@ -61,6 +75,8 @@ public:
     void initDelta(Event* event);
     
     void updateTheta(Event* event);
+    void autoSetTiSampler(const bool bSet);
+    
     void updateDelta(Event* event);
     void updateSigma(Event* event);
     void updateWiggle();
@@ -104,8 +120,12 @@ public:
     QList<Date> mSubDates;
     
     const QJsonObject * mJsonEvent;
-
+    double mMixingLevel;
 protected:
+    
+    samplingFunction updateti;
+    
+    
     
     const QJsonObject * mModelJsonDate;
     int mJsonEventIdx;

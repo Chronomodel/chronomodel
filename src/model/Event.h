@@ -94,6 +94,8 @@ public:
     bool mInitialized;
     
     int mLevel; // used to init mcmc
+    
+    double mMixingLevel;
 
 protected:
     

@@ -82,6 +82,8 @@ void Event::copyFrom(const Event& event)
     mPhases = event.mPhases;
     mConstraintsFwd = event.mConstraintsFwd;
     mConstraintsBwd = event.mConstraintsBwd;
+    
+    mMixingLevel = event.mMixingLevel;
 }
 
 Event::~Event()
@@ -97,7 +99,7 @@ void Event::setModelJson(const QJsonObject & iModelJson, const int idxEvent)
     mModelJson = &iModelJson;
     mJsonEventIdx=idxEvent;
     QJsonObject jEvent =(*mModelJson)[STATE_EVENTS].toArray().at(mJsonEventIdx).toObject();
-    qDebug()<<"Event::setModelJson"<<jEvent[STATE_NAME].toString();
+    //qDebug()<<"Event::setModelJson"<<jEvent[STATE_NAME].toString();
 }
 
 const QJsonObject * Event::getModelJson()
@@ -126,6 +128,7 @@ Event Event::fromJson(const QJsonObject& json, const int EventIdx)
     
     event.mPhasesIds = stringListToIntList(jEvent[STATE_EVENT_PHASE_IDS].toString());
     
+    
     QJsonArray dates = jEvent[STATE_EVENT_DATES].toArray();
     for(int j=0; j<dates.size(); ++j)
     {
@@ -133,6 +136,8 @@ Event Event::fromJson(const QJsonObject& json, const int EventIdx)
         
         Date d = Date::fromJson(jdate);
         d.setModelJson(json,EventIdx,j);
+        d.autoSetTiSampler(true);
+        d.mMixingLevel=event.mMixingLevel;
         
         if(!d.isNull())
         {
@@ -199,9 +204,7 @@ QColor Event::getColor() const
         return randomColor();
     }
     else {
-    
         QJsonObject jEvent = (*mModelJson)[STATE_EVENTS].toArray().at(mJsonEventIdx).toObject();
-        //QJsonObject js = (*mModelJson);
         if(jEvent.isEmpty()){
             return mInitColor;
         }
@@ -221,12 +224,10 @@ QColor Event::getColor() const
 QString Event::getName() const
 {
     if(mModelJson==NULL){
-        return mInitName+"?";
+        return mInitName;
     }
     else {
         QJsonObject jEvent = (*mModelJson)[STATE_EVENTS].toArray().at(mJsonEventIdx).toObject();
-       //QJsonObject js = (*mModelJson);
-    
         return jEvent[STATE_NAME].toString();
     }
 }

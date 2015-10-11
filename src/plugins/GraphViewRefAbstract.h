@@ -39,7 +39,7 @@ public slots:
 protected:
     ProjectSettings mSettings;
     QColor mMeasureColor;
-   FormatFunc mFormatFuncX;
+    FormatFunc mFormatFuncX;
 };
 
 #endif

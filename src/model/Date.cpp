@@ -99,6 +99,9 @@ void Date::copyFrom(const Date& date)
     
     mSubDates = date.mSubDates;
     
+    updateti = date.updateti;
+    
+    mMixingLevel = date.mMixingLevel;
 
 }
 
@@ -197,6 +200,9 @@ Date Date::fromJson(const QJsonObject& json)
         
         date.mTheta.mProposal = ModelUtilities::getDataMethodText(date.mMethod);
         date.mSigma.mProposal = ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt);
+        
+        
+        
     }
     
     return date;
@@ -250,6 +256,13 @@ double Date::getLikelyhood(const double& t)
     return result;
 }
 
+QPair<double, double > Date::getLikelyhoodArg(const double& t)
+{
+    if(mPlugin)   return mPlugin->getLikelyhoodArg(t,mData);
+    else return QPair<double, double>();
+
+}
+
 QString Date::getDesc() const
 {
     if(mPlugin)
@@ -297,6 +310,8 @@ void Date::calibrate(const ProjectSettings& settings)
     double step = mSettings.mStep;
     double nbPts = 1 + round((tmax - tmin) / step);
   //  qDebug()<<" Date::calibrate"<<tmin<<tmax<<step<<nbPts<<"size"<<mCalibration.size();
+    mCalibration.reserve(nbPts);
+    mRepartition.reserve(nbPts);
     
     if(true) //mSubDates.size() == 0) // not a combination !
     {
@@ -429,53 +444,32 @@ double Date::getLikelyhoodFromCalib(const double t)
     return v;
 }
 
+
+
+
 void Date::updateTheta(Event* event)
 {
-    double tmin = mSettings.mTmin;
-    double tmax = mSettings.mTmax;
-    double step = mSettings.mStep;
-    
+    updateti(this,event);
+    /*
     switch(mMethod)
     {
         case eMHSymetric:
         {
-            // Ici, le marcheur est forcément gaussien avec H(theta i) : double_exp (gaussien tronqué)
-            double theta = Generator::gaussByDoubleExp(event->mTheta.mX - mDelta, mSigma.mX, tmin, tmax);
+            fMHSymetric(event);
             
-            // rapport = G(theta_new) / G(theta_old)
-            double rapport = getLikelyhoodFromCalib(theta) / getLikelyhoodFromCalib(mTheta.mX);
-            
-            mTheta.tryUpdate(theta, rapport);
             break;
         }
         case eInversion:
         {
-            // 3eme méthode : marche aléatoire G(theta i),
-            // utilisation de la courbe cumulative avec interpolation linéaire
-            double u = Generator::randomUniform();
-            double idx = vector_interpolate_idx_for_value(u, mRepartition);
-            double theta = tmin + idx * step;
+            fInversion(event);
             
-            // rapport = H(theta_new) / H(theta_old)
-            double rapport = exp((-0.5/(mSigma.mX * mSigma.mX)) * (pow(theta - (event->mTheta.mX - mDelta), 2) - pow(mTheta.mX - (event->mTheta.mX - mDelta), 2)));
-            
-            mTheta.tryUpdate(theta, rapport);
             break;
         }
             // Seul cas où le taux d'acceptation a du sens car on utilise sigmaMH :
         case eMHSymGaussAdapt:
         {
-            double theta = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
-            
-            double rapport = 0;
-            if(theta >= tmin && theta <= tmax)
-            {
-                // rapport = (G(theta_new) / G(theta_old)) * (H(theta_new) / H(theta_old))
-                rapport = getLikelyhoodFromCalib(theta) / getLikelyhoodFromCalib(mTheta.mX); // rapport des G(theta i)
-                rapport *= exp((-0.5/(mSigma.mX * mSigma.mX)) * (pow(theta - (event->mTheta.mX - mDelta), 2) - pow(mTheta.mX - (event->mTheta.mX - mDelta), 2)));
-            }
-            
-            mTheta.tryUpdate(theta, rapport);
+            fMHSymGaussAdapt(event);
+           
             break;
         }
         default:
@@ -483,6 +477,7 @@ void Date::updateTheta(Event* event)
             break;
         }
     }
+    */
 }
 
 void Date::initDelta(Event*)
@@ -661,4 +656,313 @@ QStringList Date::toCSV() const
     }
     
     return csv;
+}
+
+#pragma mark sampling ti function
+void Date::autoSetTiSampler(const bool bSet)
+{
+    // define sampling function
+    // select if using getLikelyhooArg is possible, it's a faster way
+    
+    if (bSet && mPlugin!= 0 && mPlugin->withLikelyhoodArg()) {
+         //   if (false) {
+        switch(mMethod)
+        {
+            case eMHSymetric:
+            {
+                updateti = fMHSymetricWithArg;
+                
+                break;
+            }
+            case eInversion:
+            {
+                updateti = fInversionWithArg;
+                
+                break;
+            }
+                // Seul cas où le taux d'acceptation a du sens car on utilise sigmaMH :
+            case eMHSymGaussAdapt:
+            {
+                updateti = fMHSymGaussAdaptWithArg;
+                
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+       // qDebug()<<"Date::autoSetTiSampler()"<<this->mInitName<<"with getLikelyhoodArg";
+    }
+    else {
+        switch(mMethod)
+        {
+            case eMHSymetric:
+            {
+                updateti = fMHSymetric;
+                
+                break;
+            }
+            case eInversion:
+            {
+                updateti =fInversion;
+                
+                break;
+            }
+                // Seul cas où le taux d'acceptation a du sens car on utilise sigmaMH :
+            case eMHSymGaussAdapt:
+            {
+                updateti =fMHSymGaussAdapt;
+                
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+        //qDebug()<<"Date::autoSetTiSampler()"<<this->mInitName<<"with getLikelyhood";
+        
+    }
+  
+}
+
+/*
+ * @brief MH proposal = prior distribution
+ *
+ */
+void fMHSymetric(Date* date,Event* event)
+{
+//eMHSymetric:
+
+        // Ici, le marcheur est forcément gaussien avec H(theta i) : double_exp (gaussien tronqué)
+      /*   double tmin = date->mSettings.mTmin;
+        double tmax = date->mSettings.mTmax;
+         double theta = Generator::gaussByDoubleExp(event->mTheta.mX - date->mDelta, date->mSigma.mX, tmin, tmax);
+         //rapport = G(theta_new) / G(theta_old)
+         double rapport = date->getLikelyhoodFromCalib(theta) / date->getLikelyhoodFromCalib(date->mTheta.mX);
+         date->mTheta.tryUpdate(theta, rapport);
+    */
+   
+        double tiNew = Generator::gaussByBoxMuller(event->mTheta.mX - date->mDelta, date->mSigma.mX);
+        double rapport = date->getLikelyhood(tiNew) / date->getLikelyhood(date->mTheta.mX);
+        
+        date->mTheta.tryUpdate(tiNew, rapport);
+     
+
+}
+/*
+ * @brief MH proposal = prior distribution
+ * @brief identic as fMHSymetric but use getLikelyhoodArg, when plugin offer it
+ *
+ */
+void fMHSymetricWithArg(Date* date,Event* event)
+{
+    
+    double tiNew = Generator::gaussByBoxMuller(event->mTheta.mX - date->mDelta, date->mSigma.mX);
+    
+    QPair<double, double> argOld, argNew;
+    
+    argOld=date->getLikelyhoodArg(date->mTheta.mX);
+    argNew=date->getLikelyhoodArg(tiNew);
+    
+    double rapport=sqrt(argOld.first/argNew.first)*exp(argNew.second-argOld.second);
+    
+    date->mTheta.tryUpdate(tiNew, rapport);
+    
+}
+
+/**
+ *  @brief Calculation of proposal density for time value t
+ *
+ */
+double fProposalDensity(const double t, Date* date)
+{
+    double tmin = date->mSettings.mTmin;
+    double tmax = date->mSettings.mTmax;
+    double level = date->mMixingLevel;
+    qDebug()<<"mixing"<<level;
+    double q1= 0;
+
+    /// ----q1------Defined only on study period-----
+    if (t>tmin && t<tmax) {
+      
+        double prop = (t - tmin) / (tmax - tmin);
+        double idx = prop * (date->mRepartition.size() - 1);
+        int idxUnder = (int)floor(idx);
+        
+        double step =(tmax-tmin+1)/date->mRepartition.size();
+        
+        q1= (date->mRepartition[idxUnder+1]-date->mRepartition[idxUnder])/step;
+    }
+    /// ----q2 shrinkage-----------
+    /*double t0 =(tmax+tmin)/2;
+    double s = (tmax-tmin)/2;
+    double q2= s / ( 2* pow((s+fabs(t-t0)), 2) );
+     */
+        
+    /// ----q2 gaussian-----------
+    double t0 =(tmax+tmin)/2;
+    double sigma = (tmax-tmin)/2;
+    double q2= exp(-0.5* pow((t-t0)/ sigma, 2))  / (sigma*sqrt(2*M_PI));
+     
+        
+    return (level*q1 + (1-level)*q2);
+
+}
+
+/**
+ *  @brief MH proposal = Distribution of Calibrated date, ti is defined on set R (real numbers)
+ *  @brief simulation according to uniform shrinkage with s parameter
+ */
+void fInversion(Date* date, Event* event)
+{
+    double u1 = Generator::randomUniform();
+    double level=date->mMixingLevel;
+    double tiNew;
+    double tmin = date->mSettings.mTmin;
+    double tmax = date->mSettings.mTmax;
+    
+    
+    
+    if (u1<level) { // tiNew always in the study period
+        double idx = vector_interpolate_idx_for_value(u1, date->mRepartition);
+        double step =(tmax-tmin+1)/date->mRepartition.size();
+        tiNew = tmin + idx * step;
+    }
+    else {
+        // -- gaussian
+        double t0 =(tmax+tmin)/2;
+        double s = (tmax-tmin)/2;
+        
+        tiNew=Generator::gaussByBoxMuller(t0, s);
+        /*
+        // -- double shrinkage
+        double u2 = Generator::randomUniform();
+        double t0 =(tmax+tmin)/2;
+        double s = (tmax-tmin)/2;
+        
+        double tPrim= s* ( (1-u2)/u2 ); // simulation according to uniform shrinkage with s parameter
+        
+        double u3 = Generator::randomUniform();
+        if (u3<0.5f) {
+            tiNew= t0 + tPrim;
+        }
+        else {
+            tiNew= t0 - tPrim;
+        }
+        */
+    }
+             
+    double rapport1 = date->getLikelyhood(tiNew) / date->getLikelyhood(date->mTheta.mX);
+    
+    double rapport2= exp((-0.5/(date->mSigma.mX * date->mSigma.mX)) * (   pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
+                                                                  - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
+                                                                ));
+    
+    double rapport3= fProposalDensity(date->mTheta.mX,date) / fProposalDensity(tiNew,date);
+    
+    date->mTheta.tryUpdate(tiNew, rapport1*rapport2*rapport3);
+}
+void fInversionWithArg(Date* date, Event* event)
+{
+    double u1 = Generator::randomUniform();
+    double level=date->mMixingLevel;
+    double tiNew;
+    double tmin = date->mSettings.mTmin;
+    double tmax = date->mSettings.mTmax;
+    
+    //qDebug()<<"fInversionWithArg level"<<level;
+    
+    if (u1<level) { // tiNew always in the study period
+        double idx = vector_interpolate_idx_for_value(u1, date->mRepartition);
+        double step =(tmax-tmin+1)/date->mRepartition.size();
+        tiNew = tmin + idx * step;
+    }
+    else {
+        // -- gaussian
+        double t0 =(tmax+tmin)/2;
+        double s = (tmax-tmin)/2;
+        
+        tiNew=Generator::gaussByBoxMuller(t0, s);
+        /*
+         // -- double shrinkage
+         double u2 = Generator::randomUniform();
+         double t0 =(tmax+tmin)/2;
+         double s = (tmax-tmin)/2;
+         
+         double tPrim= s* ( (1-u2)/u2 ); // simulation according to uniform shrinkage with s parameter
+         
+         double u3 = Generator::randomUniform();
+         if (u3<0.5f) {
+         tiNew= t0 + tPrim;
+         }
+         else {
+         tiNew= t0 - tPrim;
+         }
+         */
+    }
+    
+    
+    QPair<double, double> argOld, argNew;
+    
+    argOld=date->getLikelyhoodArg(date->mTheta.mX);
+    argNew=date->getLikelyhoodArg(tiNew);
+    
+    double logGRapport= argNew.second-argOld.second;
+    double logHRapport= (-0.5/(date->mSigma.mX * date->mSigma.mX)) * (  pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
+                                                                      - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
+                                                                      );
+    
+    double rapport=sqrt(argOld.first/argNew.first)*exp(logGRapport+logHRapport);
+    double rapportPD= fProposalDensity(date->mTheta.mX,date) / fProposalDensity(tiNew,date);
+    
+    date->mTheta.tryUpdate(tiNew, rapport * rapportPD);
+    
+}
+/*
+ * @brief MH proposal = adaptatif Gaussian random walk, ti is defined on set R (real numbers)
+ *
+ */
+void fMHSymGaussAdapt(Date* date, Event* event)
+{
+    /* double rapport = 0;
+    // if(theta >= tmin && theta <= tmax)
+    // {
+    // rapport = (G(theta_new) / G(theta_old)) * (H(theta_new) / H(theta_old))
+    //rapport = getLikelyhoodFromCalib(theta) / getLikelyhoodFromCalib(mTheta.mX); // rapport des G(theta i)
+    */
+    
+    double tiNew = Generator::gaussByBoxMuller(date->mTheta.mX, date->mTheta.mSigmaMH);
+    double rapport = date->getLikelyhood(tiNew) / date->getLikelyhood(date->mTheta.mX);
+    rapport *= exp((-0.5/(date->mSigma.mX * date->mSigma.mX)) * (   pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
+                                                                  - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
+                                                                 ));
+    
+    date->mTheta.tryUpdate(tiNew, rapport);
+}
+
+
+/*
+ * @brief MH proposal = adaptatif Gaussian random walk, ti is not constraint being on the study period
+ *
+ * @brief identic as fMHSymGaussAdapt but use getLikelyhoodArg, when plugin offer it
+ */
+void fMHSymGaussAdaptWithArg(Date* date, Event* event)
+{
+    double tiNew = Generator::gaussByBoxMuller(date->mTheta.mX, date->mTheta.mSigmaMH);
+    
+    QPair<double, double> argOld, argNew;
+    
+    argOld=date->getLikelyhoodArg(date->mTheta.mX);
+    argNew=date->getLikelyhoodArg(tiNew);
+    
+    double logGRapport= argNew.second-argOld.second;
+    double logHRapport= (-0.5/(date->mSigma.mX * date->mSigma.mX)) * (  pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
+                                                                      - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
+                                                                      );
+    
+    double rapport=sqrt(argOld.first/argNew.first)*exp(logGRapport+logHRapport);
+    
+    date->mTheta.tryUpdate(tiNew, rapport);
 }

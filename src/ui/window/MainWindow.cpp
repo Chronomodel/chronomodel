@@ -562,7 +562,7 @@ void MainWindow::changeDatesMethod()
         opts.append(plugins[i]->getName());
     }
     bool ok;
-    QString pluginId = QInputDialog::getItem(qApp->activeWindow(),
+    QString pluginName = QInputDialog::getItem(qApp->activeWindow(),
                                              tr("Change data method"),
                                              tr("For what type of data do you want to change the method ?"),
                                              opts, 0, false, &ok);
@@ -578,6 +578,8 @@ void MainWindow::changeDatesMethod()
                                                   opts, 0, false, &ok);
         if(ok && !methodStr.isEmpty()){
             Date::DataMethod method = ModelUtilities::getDataMethodFromText(methodStr);
+            PluginAbstract* plugin =PluginManager::getPluginFromName(pluginName);
+            QString pluginId = plugin->getId();
             mProject->updateSelectedEventsDataMethod(method, pluginId);
         }
     }
