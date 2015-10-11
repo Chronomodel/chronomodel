@@ -145,7 +145,7 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         mGraph->addCurve(curveMeasure);
         
         // Infos to write :
-        QString info = tr("Age BP : ") + QString::number(age) + " ± " + QString::number(error);
+        QString info = tr("Age BP : ") + locale.toString(age) + " ± " + locale.toString(error);
         
         // ----------------------------------------------
         //  Delta R curve
