@@ -12,6 +12,9 @@
 #define MCMC_ITER_PER_BATCH_DEFAULT 500
 #define MCMC_THINNING_INTERVAL_DEFAULT 10
 
+#define MCMC_MIXING_DEFAULT 0.99f
+
+
 struct Chain
 {
     int mSeed;
@@ -51,6 +54,7 @@ public:
     QList<int> mSeeds;
     
     unsigned int mFinalBatchIndex;
+    double mMixingLevel;
 };
 
 #endif

@@ -313,7 +313,7 @@ void MCMCLoopMain::initMCMC()
         {
             log += "<br>";
             Date& date = event->mDates[j];
-            qDebug()<<"textGreen"<<mModel->mEvents[i]->getName();
+           // qDebug()<<"textGreen"<<mModel->mEvents[i]->getName();
             for(int k=0; k<mModel->mEvents[i]->mDates.size(); ++k)
             {
                 qDebug()<<mModel->mEvents[i]->mDates[k].getColor();

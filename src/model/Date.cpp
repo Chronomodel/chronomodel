@@ -19,6 +19,7 @@ mModelJsonDate(NULL)
     mTheta.mIsDate = true;
     mSigma.mIsDate = false;
     init();
+    
 }
 
 Date::Date(PluginAbstract* plugin):
@@ -34,6 +35,8 @@ void Date::init()
 {
     mId = 0;
     mMethod = eMHSymetric;
+    updateti = fMHSymetric;
+    
     mIsValid = true;
     mDelta = 0;
     mDeltaType = eDeltaFixed;
@@ -46,6 +49,7 @@ void Date::init()
     mIsSelected = false;
     mCalibSum = 0;
     mSubDates.clear();
+
 }
 
 Date::Date(const Date& date)

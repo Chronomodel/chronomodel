@@ -194,11 +194,5 @@ double Generator::gaussByBoxMuller(const double mean, const double sigma)
 {
     return mean + boxMuller() * sigma;
     
-    /*double x;
-    do
-    {
-        x = mean + boxMuller() * sigma;
-    }while(x < min || x > max);
-    return x;*/
 }
 

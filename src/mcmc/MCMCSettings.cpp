@@ -11,7 +11,8 @@ mNumBurnIter(MCMC_NUM_BURN_DEFAULT),
 mMaxBatches(MCMC_MAX_ADAPT_BATCHES_DEFAULT),
 mNumBatchIter(MCMC_ITER_PER_BATCH_DEFAULT),
 mThinningInterval(MCMC_THINNING_INTERVAL_DEFAULT),
-mFinalBatchIndex(0)
+mFinalBatchIndex(0),
+mMixingLevel(MCMC_MIXING_DEFAULT)
 {
     
 }
@@ -37,6 +38,8 @@ void MCMCSettings::copyFrom(const MCMCSettings& s)
     mSeeds = s.mSeeds;
     mThinningInterval = s.mThinningInterval;
     mFinalBatchIndex = s.mFinalBatchIndex;
+    
+    mMixingLevel = s.mMixingLevel;
 }
 
 MCMCSettings::~MCMCSettings()
@@ -53,7 +56,7 @@ MCMCSettings MCMCSettings::fromJson(const QJsonObject& json)
     settings.mMaxBatches = json.contains(STATE_MCMC_MAX_ADAPT_BATCHES) ? json[STATE_MCMC_MAX_ADAPT_BATCHES].toInt() : MCMC_MAX_ADAPT_BATCHES_DEFAULT;
     settings.mNumBatchIter = json.contains(STATE_MCMC_ITER_PER_BATCH) ? json[STATE_MCMC_ITER_PER_BATCH].toInt() : MCMC_ITER_PER_BATCH_DEFAULT;
     settings.mThinningInterval = json.contains(STATE_MCMC_THINNING_INTERVAL) ? json[STATE_MCMC_THINNING_INTERVAL].toInt() : MCMC_THINNING_INTERVAL_DEFAULT;
-    
+    settings.mMixingLevel = json.contains(STATE_MCMC_MIXING) ? json[STATE_MCMC_MIXING].toDouble() : MCMC_MIXING_DEFAULT;
     QJsonArray seeds = json[STATE_MCMC_SEEDS].toArray();
     for(int i=0; i<seeds.size(); ++i)
         settings.mSeeds.append(seeds[i].toInt());
@@ -70,6 +73,8 @@ QJsonObject MCMCSettings::toJson() const
     mcmc[STATE_MCMC_MAX_ADAPT_BATCHES] = QJsonValue::fromVariant(mMaxBatches);
     mcmc[STATE_MCMC_ITER_PER_BATCH] = QJsonValue::fromVariant(mNumBatchIter);
     mcmc[STATE_MCMC_THINNING_INTERVAL] = QJsonValue::fromVariant(mThinningInterval);
+    
+    mcmc[STATE_MCMC_MIXING] = QJsonValue::fromVariant(mMixingLevel);
     
     QJsonArray seeds;
     for(int i=0; i<mSeeds.size(); ++i)
