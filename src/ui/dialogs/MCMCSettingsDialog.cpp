@@ -48,6 +48,7 @@ QDialog(parent, flags)
     mMaxBatchesEdit->setAlignment(Qt::AlignCenter);
     mDownSamplingEdit->setAlignment(Qt::AlignCenter);
     
+    mLabelLevel = new Label(tr("Mixing level"),this);
     mLevelEdit = new LineEdit(this);
 
     mOkBut = new Button(tr("OK"), this);
@@ -190,8 +191,9 @@ void MCMCSettingsDialog::updateLayout()
     
     mSeedsLab->setGeometry(width()/2 - m/2 - 300, height() - 2*m - butH - lineH, 200, lineH);
     mSeedsEdit->setGeometry(width()/2 + m/2-100, height() - 2*m - butH - lineH, editW, lineH);
-    
-    mLevelEdit->setGeometry(width()/2 + m/2+100, height() - 2*m - butH - lineH, editW, lineH);
+
+    mLabelLevel->setGeometry(width()/2 + m/2+10, height() - 2*m - butH - lineH, editW, lineH);
+    mLevelEdit->setGeometry(width()/2 + m/2+120, height() - 2*m - butH - lineH, 50, lineH);
     
     mOkBut->setGeometry(width() - 2*m - 2*butW, height() - m - butH, butW, butH);
     mCancelBut->setGeometry(width() - m - butW, height() - m - butH, butW, butH);

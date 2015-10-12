@@ -158,10 +158,12 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
         //QString fileExtension = fileName.(".svg");
        // bool asSvg = fileName.endsWith(".svg");
        // if(asSvg)
-        QFontMetrics fm((scene ? qApp->font() : widget->font()));
+        //QFontMetrics fm((scene ? qApp->font() : widget->font()));
         
-        int heightText = fm.height() + 30;
-        
+        float heightText = r.height()/50; //fm.height() + 30;
+        /*if (heightText<10) {
+            heightText = 10;
+        }*/
         if(fileExtension == "svg")
         {
             if(mGraph)
@@ -267,7 +269,12 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             // -------------------------------
             //  Write application and version
             // -------------------------------
+            QFont ft = scene ? qApp->font() : widget->font();
+            ft.setPixelSize(heightText);
+            
+            p.setFont(ft);
             p.setPen(Qt::black);
+            
             p.drawText(0, r.height(), r.width(), heightText,
                        Qt::AlignCenter,
                        qApp->applicationName() + " " + qApp->applicationVersion());

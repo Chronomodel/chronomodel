@@ -781,7 +781,6 @@ double fProposalDensity(const double t, Date* date)
     double tmin = date->mSettings.mTmin;
     double tmax = date->mSettings.mTmax;
     double level = date->mMixingLevel;
-    qDebug()<<"mixing"<<level;
     double q1= 0;
 
     /// ----q1------Defined only on study period-----
@@ -792,7 +791,6 @@ double fProposalDensity(const double t, Date* date)
         int idxUnder = (int)floor(idx);
         
         double step =(tmax-tmin+1)/date->mRepartition.size();
-        
         q1= (date->mRepartition[idxUnder+1]-date->mRepartition[idxUnder])/step;
     }
     /// ----q2 shrinkage-----------
@@ -822,8 +820,6 @@ void fInversion(Date* date, Event* event)
     double tiNew;
     double tmin = date->mSettings.mTmin;
     double tmax = date->mSettings.mTmax;
-    
-    
     
     if (u1<level) { // tiNew always in the study period
         double idx = vector_interpolate_idx_for_value(u1, date->mRepartition);
@@ -872,10 +868,9 @@ void fInversionWithArg(Date* date, Event* event)
     double tmin = date->mSettings.mTmin;
     double tmax = date->mSettings.mTmax;
     
-    //qDebug()<<"fInversionWithArg level"<<level;
-    
     if (u1<level) { // tiNew always in the study period
-        double idx = vector_interpolate_idx_for_value(u1, date->mRepartition);
+        double u2 = Generator::randomUniform();
+        double idx = vector_interpolate_idx_for_value(u2, date->mRepartition);
         double step =(tmax-tmin+1)/date->mRepartition.size();
         tiNew = tmin + idx * step;
     }
@@ -914,10 +909,12 @@ void fInversionWithArg(Date* date, Event* event)
                                                                       - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
                                                                       );
     
-    double rapport=sqrt(argOld.first/argNew.first)*exp(logGRapport+logHRapport);
+    double rapport = sqrt(argOld.first/argNew.first)*exp(logGRapport+logHRapport);
     double rapportPD= fProposalDensity(date->mTheta.mX,date) / fProposalDensity(tiNew,date);
     
     date->mTheta.tryUpdate(tiNew, rapport * rapportPD);
+    
+    //date->mTheta.tryUpdate(tiNew, exp(logHRapport));
     
 }
 /*

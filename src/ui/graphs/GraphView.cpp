@@ -619,16 +619,6 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
     QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 7, mFormatFuncX);
     
-    /*if(mShowVertGrid)
-     {
-     p.setPen(QColor(0, 0, 0, 20));
-     for(int i=0; i<linesXPos.size(); ++i)
-     {
-     qreal x = linesXPos[i];
-     p.drawLine(x, mMarginTop, x, mMarginTop + mGraphHeight);
-     }
-     }*/
-   
     // ----------------------------------------------------
     //  Horizontal Grid
     // ----------------------------------------------------
@@ -639,17 +629,6 @@ void GraphView::paintToDevice(QPaintDevice* device)
 
     mAxisToolY.updateValues(mGraphHeight, mStepMinWidth, mMinY, mMaxY);
     QVector<qreal> linesYPos = mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), 5, mFormatFuncY);
-    
-    /*if(mShowHorizGrid)
-     {
-     p.setPen(QColor(0, 0, 0, 20));
-     for(int i=0; i<linesYPos.size(); ++i)
-     {
-     double y = linesYPos[i];
-     p.drawLine(mMarginLeft, y, mMarginLeft + mGraphWidth, y);
-     }
-     }*/
-    
     
     
     // ----------------------------------------------------
