@@ -145,8 +145,8 @@ void CalibrationView::updateGraphs()
         DensityAnalysis results;
         results.analysis = analyseFunction(mDate.getCalibMap());
         results.quartiles = quartilesForRepartition(mDate.mRepartition, mSettings.mTmin, mSettings.mStep);
-        mResultsLab->setText(densityAnalysisToString(results));
-        
+        //mResultsLab->setText(densityAnalysisToString(results));
+        QString resultsStr = densityAnalysisToString(results);
         // ------------------------------------------------------------
         //  Calibration curve
         // ------------------------------------------------------------
@@ -207,8 +207,12 @@ void CalibrationView::updateGraphs()
             
             double realThresh = map_area(hpd) / map_area(calibCurve.mData);
             //mResultsLab->setText(mResultsLab->text() % "HPD (" % locale.toString(100. * realThresh, 'f', 1) + "%) : " % getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr)); //  % concatenation with QStringBuilder
+            resultsStr += + "<br> HPD (" + locale.toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr);
             mResultsLab->setWordWrap(true);
-            mResultsLab->setText(mResultsLab->text() + "\n HPD (" + locale.toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr));
+            mResultsLab->setText(resultsStr);
+            
+            
+            //mResultsLab->setText(mResultsLab->text() + "\n HPD (" + locale.toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr));
         }
         
         // ------------------------------------------------------------
@@ -349,7 +353,13 @@ void CalibrationView::exportImage()
 void CalibrationView::copyText()
 {
      QClipboard *p_Clipboard = QApplication::clipboard();
-    p_Clipboard->setText(mResultsLab->text().simplified());
+    //str.remove(QRegExp("<[^>]*>"));
+    //p_Clipboard->setText(mResultsLab->text().simplified());
+    /*QTextDocument doc;
+    doc.setHtml( mResultsLab->text() );
+    p_Clipboard->setText(doc.toPlainText());
+     */
+    p_Clipboard->setText(mResultsLab->text().replace("<br>", "\n"));
    
 }
 
