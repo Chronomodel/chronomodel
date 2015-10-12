@@ -207,13 +207,13 @@ void MainWindow::createActions()
     //-----------------------------------------------------------------
     //  Grouped actions
     //-----------------------------------------------------------------
-    mEventsColorAction = new QAction(tr("Change selected events color"), this);
+    mEventsColorAction = new QAction(tr("Selected events: change color"), this);
     connect(mEventsColorAction, SIGNAL(triggered()), this, SLOT(changeEventsColor()));
     
-    mEventsMethodAction = new QAction(tr("Change selected events method"), this);
+    mEventsMethodAction = new QAction(tr("Selected events: change method"), this);
     connect(mEventsMethodAction, SIGNAL(triggered()), this, SLOT(changeEventsMethod()));
     
-    mDatesMethodAction = new QAction(tr("Change selected events data method"), this);
+    mDatesMethodAction = new QAction(tr("Selected events: change data method"), this);
     connect(mDatesMethodAction, SIGNAL(triggered()), this, SLOT(changeDatesMethod()));
     
     //-----------------------------------------------------------------

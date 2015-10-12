@@ -433,7 +433,7 @@ QList<QHash<QString, QVariant>> Plugin14C::getGroupedActions()
     
     QHash<QString, QVariant> groupedAction;
     groupedAction.insert("pluginId", getId());
-    groupedAction.insert("title", tr("Change selected events 14C Ref. Curves"));
+    groupedAction.insert("title", tr("Selected events with 14C: change Ref. Curves"));
     groupedAction.insert("label", tr("Change 14C Ref. Curves for all 14C data in selected events :"));
     groupedAction.insert("inputType", "combo");
     groupedAction.insert("items", getRefsNames());
