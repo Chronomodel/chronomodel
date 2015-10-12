@@ -203,9 +203,9 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         curveMeasureAvg.mHorizontalValue = avg;
         curveMeasureSup.mHorizontalValue = avg + error;
         curveMeasureInf.mHorizontalValue = avg - error;
-        
-        qDebug()<<"PluginMagRefView::setDate"<<yMin<<yMax;
-        mGraph->setRangeY(yMin, yMax);
+    
+        qDebug()<<"PluginMagRefView::setDate"<<floor(yMin)<<floor(yMax);
+        mGraph->setRangeY(floor(yMin), floor(yMax));
         mGraph->addCurve(curveMeasureAvg);
         mGraph->addCurve(curveMeasureSup);
         mGraph->addCurve(curveMeasureInf);
