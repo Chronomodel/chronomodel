@@ -212,11 +212,16 @@ void MetropolisVariable::generateHPD(double threshold)
 {
     if(!mHisto.isEmpty())
     {
-        
-        //threshold = qMin(threshold, 100);
-        //threshold = qMax(threshold, 0);
-        threshold =  (threshold > 100 ? threshold = 100.0 : threshold);
+        threshold = (threshold > 100 ? threshold = 100.0 : threshold);
+        if (threshold==100.) {
+             mHPD = mHisto;
+            return;
+        }
         threshold = (threshold < 0 ? threshold = 0.0 : threshold);
+        if (threshold==0.) {
+            mHPD.clear();
+            return;
+        }
         mThreshold = threshold;
         mHPD = create_HPD(mHisto, threshold);
         
