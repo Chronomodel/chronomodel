@@ -174,7 +174,11 @@ void ImportDataView::exportDates()
         MainWindow::getInstance()->setCurrentPath(mPath);
         
         QString sep = MainWindow::getInstance()->getAppSettings().mCSVCellSeparator;
-        
+        QLocale csvLocal = MainWindow::getInstance()->getAppSettings().mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+        csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
+
+
+
         QFile file(path);
         if(file.open(QIODevice::WriteOnly | QIODevice::Text))
         {
@@ -200,7 +204,7 @@ void ImportDataView::exportDates()
                         Date d = Date::fromJson(date);
                         if(!d.isNull())
                         {
-                            QStringList dateCsv = d.toCSV();
+                            QStringList dateCsv = d.toCSV(csvLocal);
                             stream << dateCsv.join(sep) << "\n";
                         }
                     }
