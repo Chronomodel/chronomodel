@@ -97,6 +97,8 @@ void MCMCLoopMain::initVariablesForChain()
         event->mTheta.mLastAccepts.clear();
         event->mTheta.mLastAccepts.reserve(acceptBufferLen);
         event->mTheta.mLastAcceptsLength = acceptBufferLen;
+
+        //event->mTheta.mAllAccepts.clear(); //don't clean, avalable for cumulate chain
         
         for(int j=0; j<event->mDates.size(); ++j)
         {

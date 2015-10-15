@@ -497,13 +497,15 @@ GraphCurve GraphViewResults::generateDensityCurve(const QMap<double, double>& da
                                                   const Qt::PenStyle penStyle,
                                                   const QBrush& brush) const{
     GraphCurve curve;
-    curve.mData = data;
-    curve.mName = name;
-    curve.mPen = QPen(lineColor, 1, penStyle);
-    curve.mBrush = brush;
-    curve.mIsHisto = false;
-    curve.mIsRectFromZero = true; // for typo. calibs., invisible for others!
-    return curve;
+    if(!data.isEmpty()) {
+        curve.mData = data;
+        curve.mName = name;
+        curve.mPen = QPen(lineColor, 1, penStyle);
+        curve.mBrush = brush;
+        curve.mIsHisto = false;
+        curve.mIsRectFromZero = true; // for typo. calibs., invisible for others!
+   }
+     return curve;
 }
 
 GraphCurve GraphViewResults::generateHPDCurve(const QMap<double, double>& data,

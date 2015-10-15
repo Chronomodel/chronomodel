@@ -34,50 +34,9 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
      
     mLastAccepts.append(accepted);
     mAllAccepts.append(accepted);
-    
+
     return accepted;
-    
-    
-    
-    /* PhD version with use of new variable mIndexInBatch */
-    
-   /* bool accepted = false;
-    
-    if(rapport >= 1)
-    {
-        accepted = true;
-    }
-    else
-    {
-        double uniform = Generator::randomUniform();
-        accepted = (rapport >= uniform);
-    }
-    
-    if(accepted)
-        mX = x;
-    
-    // memo
-    if(mIndexInBatch< mLastAcceptsLength-1 ) {
-       mIndexInBatch++;
-    }
-    else {
-        mIndexInBatch=0;
-    }
-    // replace un old value from the Batch before // see maybe : void QVector::prepend(const T & value)
-    mLastAccepts.replace(mIndexInBatch, accepted);
-    
-     qDebug() << "MHVariable::tryUpdate mX " << mX <<"inde"<<mIndexInBatch;
-     for(int i=0; i<mLastAccepts.size(); ++i) {
-     
-     //qDebug() << "MHVariable::getCurrentAcceptRate mLastAccepts[i]" << mLastAccepts[i] ;
-     
-     qDebug() << "Last accept on " << i << " /length" << mLastAccepts.length() << " values"<< mLastAccepts[i];
-     }
-    
-  
-    mAllAccepts.push_back(accepted);
-    return accepted;
-    */
+
      
 }
 
@@ -140,16 +99,14 @@ void MHVariable::generateGlobalRunAcceptation(const QList<Chain>& chains)
 {
     double accepted = 0;
     double acceptsLength = 0;
-    int shift = 0;
-    
+    unsigned long shift = 0;
+
     for(int i=0; i<chains.size(); ++i)
     {
-        int burnAdaptSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter);
-        int runSize = chains[i].mNumRunIter;
-        
+        unsigned long burnAdaptSize = chains[i].mNumBurnIter + (chains[i].mBatchIndex * chains[i].mNumBatchIter);
+        unsigned long runSize = chains[i].mNumRunIter;
         shift += burnAdaptSize;
-        
-        for(int j=shift; j<shift + runSize; ++j)
+        for(unsigned long j=shift; j<shift + runSize; ++j)
         {
             if(mAllAccepts[j])
                 ++accepted;
@@ -157,6 +114,9 @@ void MHVariable::generateGlobalRunAcceptation(const QList<Chain>& chains)
         shift += runSize;
         acceptsLength += runSize;
     }
+
+
+
     mGlobalAcceptation = accepted / acceptsLength;
 }
 

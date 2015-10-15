@@ -113,7 +113,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                 curvePostDistrib.mName = "Post Distrib All Chains";
                 curvePostDistrib.mPen.setColor(color);
                 
-                if(isFixedBound)
+                /*if(isFixedBound)
                 {
                     curvePostDistrib.mIsHisto = false;
                     curvePostDistrib.mIsRectFromZero = true;
@@ -126,13 +126,13 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                     curvePostDistrib.mIsHisto = true;
                     curvePostDistrib.mIsRectFromZero = true;
                     curvePostDistrib.mData = bound->mValues;
-                }
-                else
-                {
+                }*/
+               // else
+               // {
                     curvePostDistrib = generateDensityCurve(mEvent->mTheta.fullHisto(),
                                                                        "Post Distrib All Chains",
                                                                        color);
-                }
+               // }
                 mGraph->addCurve(curvePostDistrib);
                 
                 // ------------------------------------

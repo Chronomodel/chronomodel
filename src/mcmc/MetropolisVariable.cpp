@@ -132,7 +132,10 @@ QMap<double, double> MetropolisVariable::generateHisto(QVector<double>& dataSrc,
     
     double sigma = dataStd(dataSrc);
     QMap<double, double> result;
-    if (sigma==0) return result;
+    if (sigma==0) {
+        qDebug()<<"MetropolisVariable::generateHisto sigma=0";
+        return result;
+    }
 
     double h = hFactor * 1.06 * sigma * pow(dataSrc.size(), -1.f/5.f);
     double a = vector_min_value(dataSrc) - 4.f * h;
@@ -200,12 +203,12 @@ void MetropolisVariable::generateHistos(const QList<Chain>& chains, int fftLen, 
     mHisto = generateHisto(subFullTrace, fftLen, hFactor, tmin, tmax);
  
     mChainsHistos.clear();
-    if (mChainsHistos.isEmpty() ) {
+ //   if (mChainsHistos.isEmpty() ) {
         for(int i=0; i<chains.size(); ++i) {
             QVector<double> subTrace = runTraceForChain(chains, i);
             mChainsHistos.append(generateHisto(subTrace, fftLen, hFactor, tmin, tmax));
         }
-    }
+//    }
 }
 
 void MetropolisVariable::generateHPD(double threshold)
@@ -336,7 +339,11 @@ const QMap<double, double>& MetropolisVariable::fullHisto() const
 
 const QMap<double, double>& MetropolisVariable::histoForChain(int index) const
 {
-    return mChainsHistos[index];
+    if(index>=mChainsHistos.size()) {
+        qDebug()<<"MetropolisVariable::histoForChain index> mChainHisto"<<index;
+        return QMap<double,double>();
+    }
+    else  return mChainsHistos[index];
 }
 
 /**
@@ -384,12 +391,7 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<Chain>& chains)
         unsigned long traceSize = burnAdaptSize + chain.mNumRunIter / chain.mThinningInterval;
         
         unsigned long runSize = traceSize - burnAdaptSize;
-        //trace.reserve(trace.size() + runSize);
-        
-        /*QVector<double>::const_iterator iter = mTrace.begin() + shift + burnAdaptSize;
-        for(;iter != mTrace.begin() + shift + traceSize; ++iter){
-            trace.append(*iter);
-        }*/
+
         trace=mTrace.mid(shift + burnAdaptSize, traceSize - burnAdaptSize);
         
         shift += traceSize;
