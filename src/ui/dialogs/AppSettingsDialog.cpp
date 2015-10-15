@@ -234,7 +234,10 @@ void AppSettingsDialog::setSettings(const AppSettings& settings)
     mAutoSaveDelayEdit->setEnabled(settings.mAutoSave);
     
     mCSVCellSepEdit->setText(settings.mCSVCellSeparator);
-    mCSVDecSepCombo->setCurrentText(settings.mCSVDecSeparator);
+    if(settings.mCSVDecSeparator==","){
+      mCSVDecSepCombo->setCurrentText(", (comma)");
+    }
+    else mCSVDecSepCombo->setCurrentText(". (dot)");
     
     mOpenLastProjectCheck->setChecked(settings.mOpenLastProjectAtLaunch);
     
