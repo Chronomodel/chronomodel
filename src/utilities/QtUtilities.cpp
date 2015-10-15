@@ -403,6 +403,7 @@ QString formatValueToAppSettingsPrecision(const double valueToFormat)
 {
     //const AppSettings& s = MainWindow::getInstance()->getAppSettings();
     //int precision=3;
+    int precision = MainWindow::getInstance()->getAppSettings().mPrecision;
     char fmt = 'f';
     if (std::fabs(valueToFormat)>250000){
         fmt = 'G';
@@ -411,7 +412,7 @@ QString formatValueToAppSettingsPrecision(const double valueToFormat)
         return "0";
     }
     else
-        return QString::number(valueToFormat, fmt, 3);;
+        return QString::number(valueToFormat, fmt, precision);;
 }
 
 #pragma mark CSV File
