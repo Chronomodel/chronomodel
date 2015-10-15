@@ -400,7 +400,7 @@ QString ModelUtilities::dateResultsText(Date* d)
     {
         text += "Data : " + d->getName() + nl + nl;
         text += "Date :" + nl;
-        text += d->mTheta.resultsString(nl) + nl + nl;
+        text += d->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr) + nl + nl;
         text += "Std. Deviation :" + nl;
         text += d->mSigma.resultsString(nl);
     }
@@ -416,12 +416,12 @@ QString ModelUtilities::eventResultsText(Event* e, bool withDates)
         if(e->mType == Event::eKnown)
         {
             text += "Bound : " + e->getName() + nl;
-            text += e->mTheta.resultsString(nl);
+            text += e->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr);
         }
         else
         {
             text += "Event : " + e->getName() + nl;
-            text += e->mTheta.resultsString(nl);
+            text += e->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr);
             if(withDates)
             {
                 text += nl + nl;
@@ -449,11 +449,11 @@ QString ModelUtilities::phaseResultsText(Phase* p)
         
         text += nl + nl;
         text += "Begin : " + nl;
-        text += p->mAlpha.resultsString(nl);
+        text += p->mAlpha.resultsString(nl,"",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr);
         
         text += nl + nl;
         text += "End : " + nl;
-        text += p->mBeta.resultsString(nl);
+        text += p->mBeta.resultsString(nl, "",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr);
     }
     return text;
 }
@@ -468,7 +468,7 @@ QString ModelUtilities::dateResultsHTML(Date* d)
     {
         text += line(textBold(textGreen("Data : " + d->getName()))) + "<br>";
         text += line(textBold(textGreen("Posterior distrib. :")));
-        text += line(textGreen(d->mTheta.resultsString())) + "<br>";
+        text += line(textGreen(d->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr))) + "<br>";
         text += line(textBold(textGreen("Std. Deviation :")));
         text += line(textGreen(d->mSigma.resultsString()));
     }
@@ -484,13 +484,13 @@ QString ModelUtilities::eventResultsHTML(Event* e, bool withDates)
         {
             text += line(textBold(textRed("Bound : " + e->getName()))) + "<br>";
             text += line(textBold(textRed("Posterior distrib. :")));
-            text += line(textRed(e->mTheta.resultsString()));
+            text += line(textRed(e->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr)));
         }
         else
         {
             text += line(textBold(textBlue("Event : " + e->getName()))) + "<br>";
             text += line(textBold(textBlue("Posterior distrib. :")));
-            text += line(textBlue(e->mTheta.resultsString()));
+            text += line(textBlue(e->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr)));
             if(withDates)
             {
                 for(int i=0; i<e->mDates.size(); ++i)
@@ -516,11 +516,11 @@ QString ModelUtilities::phaseResultsHTML(Phase* p)
         
         text += "<br>";
         text += line(textBold(textPurple("Begin (posterior distrib.) : ")));
-        text += line(textPurple(p->mAlpha.resultsString()));
+        text += line(textPurple(p->mAlpha.resultsString("<br>", "",DateUtils::getAppSettingsFormat())));
         
         text += "<br>";
         text += line(textBold(textPurple("End (posterior distrib.) : ")));
-        text += line(textPurple(p->mBeta.resultsString()));
+        text += line(textPurple(p->mBeta.resultsString("<br>", "",DateUtils::getAppSettingsFormat())));
     }
     return text;
 }
