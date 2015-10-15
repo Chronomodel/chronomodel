@@ -768,9 +768,9 @@ void GraphView::drawCurves(QPainter& painter)
                     {
                         lightData = subData;
                     }
-                    //bool isFirst=true;
+                    bool isFirst=true;
                     
-                    path.moveTo(getXForValue(mCurrentMinX, false), getYForValue(0, false));
+                    //path.moveTo(getXForValue(mCurrentMinX, false), getYForValue(0, false));
                     for(int i=0; i<lightData.size(); ++i)
                     {
                         // Use "dataStep" only if lightData is different of subData !
@@ -782,18 +782,18 @@ void GraphView::drawCurves(QPainter& painter)
                             qreal x = getXForValue(valueX, false);
                             qreal y = getYForValue(valueY, false);
                             
-                            /* if(isFirst)
+                             if(isFirst)
                             {
-                                path.moveTo(x, getYForValue(0, false));
-                                path.lineTo(x, y);
+                                path.moveTo(x, y);
+                                //path.lineTo(x, y);
                                 isFirst=false;
                             }
                             else
-                            {*/
+                            {
                                 if(curve.mIsHisto)
                                     path.lineTo(x, last_y);
                                 path.lineTo(x, y);
-                            //}
+                            }
                             last_x = x;
                             last_y = y;
                             last_value_y = valueY;
@@ -801,7 +801,7 @@ void GraphView::drawCurves(QPainter& painter)
                         }
                         
                     }
-                    path.lineTo(getXForValue(mCurrentMaxX, false), getYForValue(0, false));
+                   // path.lineTo(last_x, last_value_y);
                 }
                 else
                 {
