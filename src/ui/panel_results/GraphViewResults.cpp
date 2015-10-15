@@ -76,7 +76,7 @@ mHeightForVisibleAxis(100)
     mResultsClipBut = new Button(tr("Copy"), this);
     mResultsClipBut->setIcon(QIcon(":text.png"));
     mResultsClipBut->setFlatVertical();
-    mImageClipBut->setToolTip(tr("Copy text results to clipboard"));
+    mResultsClipBut->setToolTip(tr("Copy text results to clipboard"));
     
     mDataSaveBut = new Button(tr("Save"), this);
     mDataSaveBut->setIcon(QIcon(":data.png"));
@@ -95,27 +95,7 @@ mHeightForVisibleAxis(100)
     connect(mDataSaveBut, SIGNAL(clicked()), this, SLOT(saveGraphData()));
     
     setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
-    
-    
-    /*if(mCurrentTypeGraph == eAccept || mCurrentTypeGraph == eTrace ) {
-        Chain& chain = mChains[0];
-        mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
-    }
-    
-    if(mCurrentTypeGraph == ePostDistrib)
-    {
-        if(mCurrentVariable == eTheta)
-        {
-            mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
-        }
-        if(mCurrentVariable == eSigma){
-            mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
-        }
-    }
-    if(mCurrentTypeGraph == eCorrel){
-        mGraph->setRangeX(0, 40);
-    }*/
-    
+        
 }
 
 GraphViewResults::~GraphViewResults()
