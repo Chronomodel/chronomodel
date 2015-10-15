@@ -101,6 +101,7 @@ void ProjectView::showResults(bool updateModel)
 }
 void ProjectView::showLog()
 {
+    mResultsView->updateResultsLog();
     mStack->setCurrentIndex(2);
 }
 
