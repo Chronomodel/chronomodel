@@ -16,6 +16,8 @@ mGraph(0)
     mGraph->setYAxisMode(GraphView::eAllTicks);
     mGraph->setRendering(GraphView::eHD);
     mGraph->autoAdjustYScale(true);
+    mGraph->setTipXLab("t");
+    mGraph->setTipYLab("x");
     mMeasureColor=QColor(56, 120, 50);
 }
 

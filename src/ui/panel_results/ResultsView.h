@@ -52,6 +52,9 @@ protected:
     void mouseMoveEvent(QMouseEvent* e);
     void resizeEvent(QResizeEvent* e);
     
+    void createEventsScrollArea();
+    void createPhasesScrollArea();
+
 public slots:
     void updateLayout();
     void updateGraphsLayout();
@@ -68,8 +71,10 @@ public slots:
     void updateScales();
     
     void updateModel();
-    
+    void updateResultsLog();
 private slots:
+
+    void settingChange();
     void updateZoomX(); // Connected to slider signals
     void updateScroll(const double min, const double max); // Connected to ruler signals
     void editCurrentMinX(); // Connected to min edit signals
@@ -97,7 +102,7 @@ signals:
 private:
     QList<QRect> getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases);
     
-    void updateResultsLog();
+
     void clearHisto();
     void clearChainHistos();
     

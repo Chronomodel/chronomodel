@@ -15,6 +15,8 @@ PluginMagRefView::PluginMagRefView(QWidget* parent):GraphViewRefAbstract(parent)
     mGraph->setYAxisMode(GraphView::eAllTicks);
     mGraph->setRendering(GraphView::eHD);
     mGraph->autoAdjustYScale(true);
+    mGraph->setTipXLab("t");
+    mGraph->setTipYLab("value");
     mMeasureColor=QColor(56, 120, 50);
     
 }

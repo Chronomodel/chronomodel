@@ -176,6 +176,9 @@ void CalibrationView::updateGraphs()
         mCalibGraph->addCurve(calibCurve);
         mCalibGraph->setVisible(true);
         
+        mCalibGraph->setTipXLab("t");
+        //mCalibGraph->setTipYLab("value");
+
         // Fill HPD only if not typo ref. :
         if(!isTypo)
         {

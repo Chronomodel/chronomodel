@@ -15,6 +15,8 @@ mGraph(0)
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eAllTicks);
     mGraph->setRendering(GraphView::eHD);
+    mGraph->setTipXLab("t");
+    mGraph->setTipYLab("age");
     mGraph->autoAdjustYScale(true);
     
     mMeasureColor=QColor(56, 120, 50);

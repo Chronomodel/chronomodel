@@ -4,6 +4,7 @@
 #include "Painting.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
+#include "DateUtils.h"
 #include "ModelUtilities.h"
 #include "MainWindow.h"
 #include "Button.h"
@@ -24,7 +25,7 @@ mPhase(0)
     mDurationGraph -> setBackgroundColor(QColor(230, 230, 230));
     mDurationGraph -> addInfo(tr("WARNING : this graph scale is NOT the study period!"));
     mDurationGraph -> mLegendX = "";
-    mDurationGraph -> setFormatFunctX(0);
+    mDurationGraph -> setFormatFunctX(formatValueToAppSettingsPrecision);
     
     mDurationGraph->showXAxisArrow(true);
     mDurationGraph->showXAxisTicks(true);

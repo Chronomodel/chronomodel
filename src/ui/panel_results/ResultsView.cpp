@@ -357,9 +357,10 @@ mGraphsH(130)
     connect(mCredibilityCheck,   SIGNAL(clicked()), this, SLOT(updateCurvesToShow()));
     
     // -------------------------
-    
+    connect(mUnfoldBut, SIGNAL(toggled(bool)), this, SLOT(createEventsScrollArea()));
     connect(mUnfoldBut, SIGNAL(toggled(bool)), this, SLOT(updateGraphsLayout()));
     connect(mShowDataUnderPhasesCheck, SIGNAL(toggled(bool)), this, SLOT(updateGraphsLayout()));
+    //connect(mShowDataUnderPhasesCheck, SIGNAL(toggled(bool)), this, SLOT(updateResults(Model*))()));
     
     // -------------------------
     
@@ -751,6 +752,7 @@ void ResultsView::updateResults(Model* model)
     //  No posterior density has been computed yet!
     //  Graphs are empty at the moment
     // ----------------------------------------------------
+    /*
     QWidget* phasesWidget = new QWidget();
     phasesWidget->setMouseTracking(true);
     
@@ -801,13 +803,15 @@ void ResultsView::updateResults(Model* model)
         }
     }
     mPhasesScrollArea->setWidget(phasesWidget);
-    
+    */
+    createPhasesScrollArea();
+
     // ----------------------------------------------------
     //  Events Views : generate all phases graph
     //  No posterior density has been computed yet!
     //  Graphs are empty at the moment
     // ----------------------------------------------------
-    
+    /*
     QWidget* eventsWidget = new QWidget();
     eventsWidget->setMouseTracking(true);
     
@@ -827,27 +831,29 @@ void ResultsView::updateResults(Model* model)
         graphEvent->setGraphFont(mFont);
         graphEvent->setGraphsThickness(mThicknessSpin->value());
         mByEventsGraphs.append(graphEvent);
-        
-        for(int j=0; j<(int)event->mDates.size(); ++j)
-        {
-            Date& date = event->mDates[j];
-            // ----------------------------------------------------
-            //  This just creates the view for the date.
-            //  It sets the Date which triggers an update() to repaint the view.
-            //  The refresh() function which actually creates the graph curves will be called later.
-            // ----------------------------------------------------
-            GraphViewDate* graphDate = new GraphViewDate(eventsWidget);
-            graphDate->setSettings(mModel->mSettings);
-            graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
-            graphDate->setDate(&date);
-            graphDate->setColor(date.getEventColor());//  event->getColor());
-            
-            graphDate->setGraphFont(mFont);
-            graphDate->setGraphsThickness(mThicknessSpin->value());
-            mByEventsGraphs.append(graphDate);
+        if(mShowDataUnderPhasesCheck->isChecked()) {
+            for(int j=0; j<(int)event->mDates.size(); ++j) {
+                Date& date = event->mDates[j];
+                // ----------------------------------------------------
+                //  This just creates the view for the date.
+                //  It sets the Date which triggers an update() to repaint the view.
+                //  The refresh() function which actually creates the graph curves will be called later.
+                // ----------------------------------------------------
+                GraphViewDate* graphDate = new GraphViewDate(eventsWidget);
+                graphDate->setSettings(mModel->mSettings);
+                graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
+                graphDate->setDate(&date);
+                graphDate->setColor(date.getEventColor());//  event->getColor());
+
+                graphDate->setGraphFont(mFont);
+                graphDate->setGraphsThickness(mThicknessSpin->value());
+                mByEventsGraphs.append(graphDate);
+            }
         }
     }
     mEventsScrollArea->setWidget(eventsWidget);
+    */
+    createEventsScrollArea();
     // ------------------------------------------------------------
     
     showInfos(mInfosBut->isChecked());
@@ -868,6 +874,107 @@ void ResultsView::updateResults(Model* model)
     //  - updateCurvesToShow
     // ------------------------------------------------------------
     generatePosteriorDistribs();
+}
+
+void ResultsView::createEventsScrollArea()
+{
+     //int tabIdx = mTabs->currentIndex();
+    //if(mTabs->currentIndex()==0) return; // this is a phase view
+    QWidget* eventsWidget = new QWidget();
+    eventsWidget->setMouseTracking(true);
+
+    for(int i=0; i<(int)mModel->mEvents.size(); ++i)
+    {
+        Event* event = mModel->mEvents[i];
+        GraphViewEvent* graphEvent = new GraphViewEvent(eventsWidget);
+
+        // ----------------------------------------------------
+        //  This just creates the view for the event.
+        //  It sets the Event which triggers an update() to repaint the view.
+        //  The refresh() function which actually creates the graph curves will be called later.
+        // ----------------------------------------------------
+        graphEvent->setSettings(mModel->mSettings);
+        graphEvent->setMCMCSettings(mModel->mMCMCSettings, mChains);
+        graphEvent->setEvent(event);
+        graphEvent->setGraphFont(mFont);
+        graphEvent->setGraphsThickness(mThicknessSpin->value());
+        mByEventsGraphs.append(graphEvent);
+       // if(mUnfoldBut->isChecked()) {
+            for(int j=0; j<(int)event->mDates.size(); ++j) {
+                Date& date = event->mDates[j];
+                // ----------------------------------------------------
+                //  This just creates the view for the date.
+                //  It sets the Date which triggers an update() to repaint the view.
+                //  The refresh() function which actually creates the graph curves will be called later.
+                // ----------------------------------------------------
+                GraphViewDate* graphDate = new GraphViewDate(eventsWidget);
+                graphDate->setSettings(mModel->mSettings);
+                graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
+                graphDate->setDate(&date);
+                graphDate->setColor(date.getEventColor());//  event->getColor());
+
+                graphDate->setGraphFont(mFont);
+                graphDate->setGraphsThickness(mThicknessSpin->value());
+                mByEventsGraphs.append(graphDate);
+            }
+       // }
+    }
+    mEventsScrollArea->setWidget(eventsWidget);
+}
+
+void ResultsView::createPhasesScrollArea()
+{
+    QWidget* phasesWidget = new QWidget();
+    phasesWidget->setMouseTracking(true);
+
+    for(int p=0; p<(int)mModel->mPhases.size(); ++p)
+    {
+        // ----------------------------------------------------
+        //  This just creates the GraphView for the phase (no curve yet)
+        // ----------------------------------------------------
+        Phase* phase = mModel->mPhases[p];
+        GraphViewPhase* graphPhase = new GraphViewPhase(phasesWidget);
+        graphPhase->setSettings(mModel->mSettings);
+        graphPhase->setMCMCSettings(mModel->mMCMCSettings, mChains);
+        graphPhase->setPhase(phase);
+        graphPhase->setGraphFont(mFont);
+        graphPhase->setGraphsThickness(mThicknessSpin->value());
+        mByPhasesGraphs.append(graphPhase);
+
+        for(int i=0; i<(int)phase->mEvents.size(); ++i)
+        {
+            // ----------------------------------------------------
+            //  This just creates the GraphView for the event (no curve yet)
+            // ----------------------------------------------------
+            Event* event = phase->mEvents[i];
+            GraphViewEvent* graphEvent = new GraphViewEvent(phasesWidget);
+            graphEvent->setSettings(mModel->mSettings);
+            graphEvent->setMCMCSettings(mModel->mMCMCSettings, mChains);
+            graphEvent->setEvent(event);
+            graphEvent->setGraphFont(mFont);
+            graphEvent->setGraphsThickness(mThicknessSpin->value());
+            mByPhasesGraphs.append(graphEvent);
+
+            // --------------------------------------------------
+            //  This just creates the GraphView for the date (no curve yet)
+            // --------------------------------------------------
+            for(int j=0; j<(int)event->mDates.size(); ++j)
+            {
+                Date& date = event->mDates[j];
+                GraphViewDate* graphDate = new GraphViewDate(phasesWidget);
+                graphDate->setSettings(mModel->mSettings);
+                graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
+                graphDate->setDate(&date);
+                graphDate->setGraphFont(mFont);
+                graphDate->setGraphsThickness(mThicknessSpin->value());
+
+                graphDate->setColor(event->getColor());
+                mByPhasesGraphs.append(graphDate);
+            }
+        }
+    }
+    mPhasesScrollArea->setWidget(phasesWidget);
+
 }
 
 void ResultsView::generatePosteriorDistribs()
@@ -1092,6 +1199,14 @@ void ResultsView::updateScales()
 }
 
 #pragma mark Log results
+void ResultsView::settingChange()
+{
+    if(mModel){
+        updateResults();
+        updateResultsLog();
+    }
+}
+
 void ResultsView::updateResultsLog()
 {
     QString log;
