@@ -221,7 +221,9 @@ QDialog(parent, flags)
 
 AppSettingsDialog::~AppSettingsDialog()
 {
-
+    qDebug()<<"fin AppSettingsDialog::~AppSettingsDialog()";
+    AppSettings s = getSettings();
+    emit settingsChanged(s);
 }
 
 void AppSettingsDialog::setSettings(const AppSettings& settings)
@@ -278,7 +280,7 @@ void AppSettingsDialog::changeSettings()
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
     
-    emit settingsChanged(s);
+   // emit settingsChanged(s);
 }
 
 void AppSettingsDialog::buttonClicked(QAbstractButton* button)
