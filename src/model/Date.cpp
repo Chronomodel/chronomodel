@@ -626,33 +626,33 @@ Date Date::fromCSV(QStringList dataStr)
     return date;
 }
 
-QStringList Date::toCSV() const
+QStringList Date::toCSV(QLocale csvLocale) const
 {
     QStringList csv;
     
     csv << mPlugin->getName();
     csv << getName();
-    csv << mPlugin->toCSV(mData);
+    csv << mPlugin->toCSV(mData,csvLocale );
     
     if(mDeltaType == Date::eDeltaFixed)
     {
         if(mDeltaFixed != 0)
         {
             csv << "fixed";
-            csv << QString::number(mDeltaFixed);
+            csv << csvLocale.toString(mDeltaFixed);
         }
     }
     else if(mDeltaType == Date::eDeltaRange)
     {
         csv << "range";
-        csv << QString::number(mDeltaMin);
-        csv << QString::number(mDeltaMax);
+        csv << csvLocale.toString(mDeltaMin);
+        csv << csvLocale.toString(mDeltaMax);
     }
     else if(mDeltaType == Date::eDeltaGaussian)
     {
         csv << "gaussian";
-        csv << QString::number(mDeltaAverage);
-        csv << QString::number(mDeltaError);
+        csv << csvLocale.toString(mDeltaAverage);
+        csv << csvLocale.toString(mDeltaError);
     }
     
     return csv;

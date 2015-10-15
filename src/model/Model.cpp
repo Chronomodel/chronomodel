@@ -630,7 +630,7 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale)
     headers << "";
     for(int j=0; j<mPhases.size(); ++j)
     {
-        headers << "" << mPhases[j]->getName() + " alpha" << mPhases[j]->getName() + " beta";
+        headers << mPhases[j]->getName() + " alpha" << mPhases[j]->getName() + " beta";
     }
     rows << headers;
     
@@ -646,8 +646,7 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale)
             l << QString::number(shift + j);
             for(int k=0; k<mPhases.size(); ++k)
             {
-                Phase* phase = mPhases[k];
-                l << "";
+                Phase* phase = mPhases[k];                
                 l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mAlpha.mTrace.at(shift + j)));
                 l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mBeta.mTrace.at(shift + j)));
             }
@@ -719,7 +718,7 @@ QList<QStringList> Model::getEventsTraces(QLocale locale)
     }
     
     QStringList headers;
-    headers << "" << "";
+    headers << "";
     for(int i=0; i<mEvents.size(); ++i)
     {
         Event* event = mEvents[i];
@@ -736,7 +735,7 @@ QList<QStringList> Model::getEventsTraces(QLocale locale)
         for(unsigned long j=burnAdaptSize; j<burnAdaptSize + runSize; ++j)
         {
             QStringList l;
-            l << QString::number(shift + j) << "";
+            l << QString::number(shift + j) ;//<< "";
             for(int k=0; k<mEvents.size(); ++k)
             {
                 Event* event = mEvents[k];
@@ -1091,17 +1090,18 @@ void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen, d
         Event* event = mEvents[i];
         
         // Generate event histos for all events and all bounds except for bounds of type "fixed"
-        bool generateEventHistos = true;
+        bool notEventKnownFixed = true;
         if(event->type() == Event::eKnown)
         {
             EventKnown* ek = dynamic_cast<EventKnown*>(event);
             if(ek && (ek->knownType() == EventKnown::eFixed))
             {
                 // "Nothing todo : this is just a Dirac !";
-                generateEventHistos = false;
+                ek->generateHistos(chains, fftLen, hFactor, tmin, tmax);
+                notEventKnownFixed = false;
             }
         }
-        if(generateEventHistos)
+        if(notEventKnownFixed)
         {
             event->mTheta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
         }

@@ -93,12 +93,12 @@ QJsonObject PluginTL::fromCSV(const QStringList& list)
     return json;
 }
 
-QStringList PluginTL::toCSV(const QJsonObject& data)
+QStringList PluginTL::toCSV(const QJsonObject& data, const QLocale& csvLocale)
 {
     QStringList list;
-    list << QString::number(data[DATE_TL_AGE_STR].toDouble());
-    list << QString::number(data[DATE_TL_ERROR_STR].toDouble());
-    list << QString::number(data[DATE_TL_REF_YEAR_STR].toDouble());
+    list << csvLocale.toString(data[DATE_TL_AGE_STR].toDouble());
+    list << csvLocale.toString(data[DATE_TL_ERROR_STR].toDouble());
+    list << csvLocale.toString(data[DATE_TL_REF_YEAR_STR].toDouble());
     return list;
 }
 

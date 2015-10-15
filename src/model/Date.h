@@ -60,7 +60,7 @@ public:
     QJsonObject toJson() const;
     
     static Date fromCSV(QStringList dataStr);
-    QStringList toCSV() const;
+    QStringList toCSV(QLocale csvLocale) const;
     
     double getLikelyhood(const double& t);
     QPair<double, double > getLikelyhoodArg(const double& t);

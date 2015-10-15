@@ -173,14 +173,14 @@ QJsonObject PluginMag::fromCSV(const QStringList& list)
     return json;
 }
 
-QStringList PluginMag::toCSV(const QJsonObject& data)
+QStringList PluginMag::toCSV(const QJsonObject& data, const QLocale& csvLocale)
 {
     QStringList list;
     list << (data[DATE_AM_IS_INC_STR].toBool() ? "inclination" : (data[DATE_AM_IS_DEC_STR].toBool() ? "declination" : "intensity"));
-    list << QString::number(data[DATE_AM_INC_STR].toDouble());
-    list << QString::number(data[DATE_AM_DEC_STR].toDouble());
-    list << QString::number(data[DATE_AM_INTENSITY_STR].toDouble());
-    list << QString::number(data[DATE_AM_ERROR_STR].toDouble());
+    list << csvLocale.toString(data[DATE_AM_INC_STR].toDouble());
+    list << csvLocale.toString(data[DATE_AM_DEC_STR].toDouble());
+    list << csvLocale.toString(data[DATE_AM_INTENSITY_STR].toDouble());
+    list << csvLocale.toString(data[DATE_AM_ERROR_STR].toDouble());
     list << data[DATE_AM_REF_CURVE_STR].toString();
     return list;
 }

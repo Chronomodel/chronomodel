@@ -37,25 +37,23 @@ QPair<double, double > Plugin14C::getLikelyhoodArg(const double& t, const QJsonO
     if(mRefDatas.find(ref_curve) != mRefDatas.end())
     {
         double variance;
-        double exponent;
+
         
         const QMap<double, double>& curveG = mRefDatas[ref_curve]["G"];
         const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
         
         double tMinDef=curveG.firstKey();
         double tMaxDef=curveG.lastKey();
-        double g;
-        double g_sup;
-        double e;
+        double g;                
         
         if(t>tMaxDef){
             g=interpolate(t, tMinDef, tMaxDef, curveG[tMinDef], curveG[tMaxDef]);
-            e = (curveG95Sup[tMaxDef] - curveG[tMaxDef]) / 1.96f;
+            double e = (curveG95Sup[tMaxDef] - curveG[tMaxDef]) / 1.96f;
             variance = e * e + error * error;
         }
         else if (t<tMinDef){
             g=interpolate(t, tMinDef, tMaxDef, curveG[tMinDef], curveG[tMaxDef]);
-            e = (curveG95Sup[tMinDef] - curveG[tMinDef]) / 1.96f;
+            double e = (curveG95Sup[tMinDef] - curveG[tMinDef]) / 1.96f;
             variance = e * e + error * error;
         }
         else {
@@ -71,13 +69,18 @@ QPair<double, double > Plugin14C::getLikelyhoodArg(const double& t, const QJsonO
             
                 double g_sup_under = curveG95Sup[t_under];
                 double g_sup_upper = curveG95Sup[t_upper];
-                 g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
+                double g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
             
-                e = (g_sup - g) / 1.96f;
+                double e = (g_sup - g) / 1.96f;
                 variance = e * e + error * error;
             }
+            else { // would never happen!
+                g=0;
+                variance=error*error;
+                qDebug()<<"trouble in Plugin14C::getLikelyhoodArg";
+            }
         }
-        exponent = -0.5f * pow(g - age, 2.f) / variance;
+        double exponent = -0.5f * pow(g - age, 2.f) / variance;
         return qMakePair(variance,exponent);
         
     }
@@ -236,14 +239,14 @@ QJsonObject Plugin14C::fromCSV(const QStringList& list)
     return json;
 }
 
-QStringList Plugin14C::toCSV(const QJsonObject& data)
+QStringList Plugin14C::toCSV(const QJsonObject& data, const QLocale& csvLocale)
 {
     QStringList list;
-    list << QString::number(data[DATE_14C_AGE_STR].toDouble());
-    list << QString::number(data[DATE_14C_ERROR_STR].toDouble());
+    list << csvLocale.toString(data[DATE_14C_AGE_STR].toDouble());
+    list << csvLocale.toString(data[DATE_14C_ERROR_STR].toDouble());
     list << data[DATE_14C_REF_CURVE_STR].toString();
-    list << QString::number(data[DATE_14C_DELTA_R_STR].toDouble());
-    list << QString::number(data[DATE_14C_DELTA_R_ERROR_STR].toDouble());
+    list << csvLocale.toString(data[DATE_14C_DELTA_R_STR].toDouble());
+    list << csvLocale.toString(data[DATE_14C_DELTA_R_ERROR_STR].toDouble());
     return list;
 }
 

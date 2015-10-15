@@ -40,4 +40,5 @@ QString formatValueToAppSettingsPrecision(const double valueToFormat);
 bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep);
 bool saveAsCsv(const QList<QStringList>& data, const QString& title = QObject::tr("Save as..."));
 
+
 #endif

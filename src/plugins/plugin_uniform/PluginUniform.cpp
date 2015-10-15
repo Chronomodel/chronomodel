@@ -74,11 +74,11 @@ QJsonObject PluginUniform::fromCSV(const QStringList& list)
     return json;
 }
 
-QStringList PluginUniform::toCSV(const QJsonObject& data)
+QStringList PluginUniform::toCSV(const QJsonObject& data, const QLocale& csvLocale)
 {
     QStringList list;
-    list << QString::number(data[DATE_UNIFORM_MIN_STR].toDouble());
-    list << QString::number(data[DATE_UNIFORM_MAX_STR].toDouble());
+    list << csvLocale.toString(data[DATE_UNIFORM_MIN_STR].toDouble());
+    list << csvLocale.toString(data[DATE_UNIFORM_MAX_STR].toDouble());
     return list;
 }
 

@@ -169,14 +169,14 @@ QJsonObject PluginGauss::fromCSV(const QStringList& list)
     return json;
 }
 
-QStringList PluginGauss::toCSV(const QJsonObject& data)
+QStringList PluginGauss::toCSV(const QJsonObject& data, const QLocale& csvLocale)
 {
     QStringList list;
-    list << QString::number(data[DATE_GAUSS_AGE_STR].toDouble());
-    list << QString::number(data[DATE_GAUSS_ERROR_STR].toDouble());
-    list << QString::number(data[DATE_GAUSS_A_STR].toDouble());
-    list << QString::number(data[DATE_GAUSS_B_STR].toDouble());
-    list << QString::number(data[DATE_GAUSS_C_STR].toDouble());
+    list << csvLocale.toString(data[DATE_GAUSS_AGE_STR].toDouble());
+    list << csvLocale.toString(data[DATE_GAUSS_ERROR_STR].toDouble());
+    list << csvLocale.toString(data[DATE_GAUSS_A_STR].toDouble());
+    list << csvLocale.toString(data[DATE_GAUSS_B_STR].toDouble());
+    list << csvLocale.toString(data[DATE_GAUSS_C_STR].toDouble());
     return list;
 }
 
