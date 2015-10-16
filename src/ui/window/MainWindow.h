@@ -41,6 +41,7 @@ public:
     void setLogEnabled(bool enabled);
     void setResultsEnabled(bool enabled);
 
+
 protected:
     void closeEvent(QCloseEvent* e);
     void keyPressEvent(QKeyEvent* e);

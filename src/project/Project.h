@@ -67,7 +67,7 @@ public:
     bool saveProjectToFile();
     
     bool setSettings(const ProjectSettings& settings);
-    void setAppSettings(const AppSettings& settings);
+    //void setAppSettings(const AppSettings& settings);
     
     bool studyPeriodIsValid();
     void showStudyPeriodWarning();
@@ -127,6 +127,8 @@ public slots:
     void run();
     void exportAsText();
     
+    void setAppSettings(const AppSettings& s);
+
     void createEvent();
     void createEventKnown();
     void deleteSelectedEvents();

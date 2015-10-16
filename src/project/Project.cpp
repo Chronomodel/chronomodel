@@ -520,6 +520,7 @@ void Project::setAppSettings(const AppSettings& settings)
         mAutoSaveTimer->start();
 }
 
+
 void Project::mcmcSettings()
 {
     MCMCSettingsDialog dialog(qApp->activeWindow());

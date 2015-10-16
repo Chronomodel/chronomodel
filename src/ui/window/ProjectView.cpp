@@ -91,17 +91,17 @@ void ProjectView::showHelp(bool show)
 #pragma mark View Switch
 void ProjectView::showModel()
 {
+
     mStack->setCurrentIndex(0);
 }
 void ProjectView::showResults(bool updateModel)
 {
-    mResultsView->updateResults();
     mStack->setCurrentIndex(1);
     // come from mViewResultsAction and  updateResults send repaint on mStack
 }
 void ProjectView::showLog()
 {
-    mResultsView->updateResultsLog();
+
     mStack->setCurrentIndex(2);
 }
 
@@ -115,6 +115,23 @@ void ProjectView::updateProject()
 }
 
 #pragma mark Update Results
+
+void ProjectView:: ApplySettings(Model* model)
+{
+    if(model)
+    {
+        mResultsView->updateResults(model);
+
+        model->generateModelLog();
+        mLogModelEdit->setText(model->getModelLog());
+
+        mLogMCMCEdit->setText(model->getMCMCLog());
+
+        model->generateResultsLog();
+        updateResultsLog(model->getResultsLog());
+    }
+}
+
 void ProjectView::updateResults(Model* model)
 {
     if(model)
@@ -132,6 +149,8 @@ void ProjectView::updateResults(Model* model)
         mLogResultsEdit->setText(model->getResultsLog());
     }
 }
+
+
 
 void ProjectView::updateResultsLog(const QString& log)
 {

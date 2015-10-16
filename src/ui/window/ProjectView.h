@@ -34,6 +34,8 @@ public slots:
     void showLog();
     void showHelp(bool show);
     
+    void ApplySettings(Model*);
+
     void updateResults(Model*);
     void updateResultsLog(const QString& log);
     

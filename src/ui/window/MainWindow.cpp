@@ -70,7 +70,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     
     connect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
     
-    
+
     
     mProjectView->doProjectConnections(mProject);
     
@@ -478,9 +478,10 @@ void MainWindow::appSettings()
     AppSettingsDialog dialog(qApp->activeWindow());
     dialog.setSettings(mAppSettings);
     connect(&dialog, SIGNAL(settingsChanged(const AppSettings&)), this, SLOT(setAppSettings(const AppSettings&)));
+    connect(&dialog, SIGNAL(settingsChanged(const AppSettings&)), mProjectView, SLOT(setAppSettings(const AppSettings&)));
     if(dialog.exec() == QDialog::Accepted)
     {
-        //setAppSettings(dialog.getSettings());
+        setAppSettings(dialog.getSettings());
     }
 }
 
@@ -499,7 +500,8 @@ void MainWindow::setAppSettings(const AppSettings& s)
     mProject->setAppSettings(mAppSettings);
     
     if(mViewResultsAction->isEnabled()) {
-        mProjectView->updateResults(mProject->mModel);
+        //mProjectView->updateResults(mProject->mModel);
+        mProjectView->ApplySettings(mProject->mModel);
     }
 }
 

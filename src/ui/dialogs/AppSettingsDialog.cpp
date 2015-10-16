@@ -105,7 +105,7 @@ QDialog(parent, flags)
     
     connect(mAutoSaveCheck, SIGNAL(toggled(bool)), mAutoSaveDelayEdit, SLOT(setEnabled(bool)));
     
-    mButtonBox = new QDialogButtonBox(QDialogButtonBox::Reset);
+    mButtonBox = new QDialogButtonBox(QDialogButtonBox::RestoreDefaults);// QDialogButtonBox::Reset);
     //connect(mButtonBox, SIGNAL(accepted()), this, SLOT(accept()));
     //connect(mButtonBox, SIGNAL(rejected()), this, SLOT(reject()));
     connect(mButtonBox, SIGNAL(clicked(QAbstractButton*)), this, SLOT(buttonClicked(QAbstractButton*)));
@@ -297,18 +297,25 @@ void AppSettingsDialog::changeSettings()
 
 void AppSettingsDialog::buttonClicked(QAbstractButton* button)
 {
-    if(mButtonBox->buttonRole(button) == QDialogButtonBox::ResetRole)
+   // if(mButtonBox->buttonRole(button) == QDialogButtonBox::RestoreDefaults)
     {
         mLanguageCombo->setCurrentText(QLocale::languageToString(QLocale::system().language()));
         mCountryCombo->setCurrentText(QLocale::countryToString(QLocale::system().country()));
         
         mAutoSaveCheck->setChecked(APP_SETTINGS_DEFAULT_AUTO_SAVE);
-        mAutoSaveDelayEdit->setText(QString(APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC / 60));
+        mAutoSaveDelayEdit->setText(locale().toString(APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC / 60));
         mAutoSaveDelayEdit->setEnabled(true);
         
-        mCSVCellSepEdit->setText(APP_SETTINGS_DEFAULT_CELL_SEP);
-        mCSVDecSepCombo->setCurrentText(APP_SETTINGS_DEFAULT_DEC_SEP);
-        
+        //mCSVCellSepEdit->setText(APP_SETTINGS_DEFAULT_CELL_SEP);
+        //mCSVDecSepCombo->setCurrentText(APP_SETTINGS_DEFAULT_DEC_SEP);
+        if(QLocale::system().language()==QLocale::French) {
+            mCSVCellSepEdit->setText(";");
+            mCSVDecSepCombo->setCurrentIndex(0);//setCurrentText(",");
+        }
+        else {
+            mCSVCellSepEdit->setText(",");
+            mCSVDecSepCombo->setCurrentIndex(1);//setCurrentText(".");
+        }
         mOpenLastProjectCheck->setChecked(APP_SETTINGS_DEFAULT_OPEN_PROJ);
         
         mPixelRatio->setValue(APP_SETTINGS_DEFAULT_PIXELRATIO);
