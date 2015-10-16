@@ -31,6 +31,8 @@ public:
     QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale);
     QString getDateDesc(const Date* date) const;
     
+    bool isDateValid(const QJsonObject& data, const ProjectSettings& settings);
+
     PluginFormAbstract* getForm();
     GraphViewRefAbstract* getGraphViewRef();
     PluginSettingsViewAbstract* getSettingsView();

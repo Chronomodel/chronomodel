@@ -526,7 +526,7 @@ bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& sett
         mLastRefsMinMax[ref_curve].second.first = min;
         mLastRefsMinMax[ref_curve].second.second = max;
     }
-    return !(min == 0 && max == 0) && ((age - error < max) && (age + error > min));
+    return !(min == 0 && max == 0) && ((age - 1.96f*error < max) && (age + 1.96f*error > min));
 }
 
 bool Plugin14C::areDatesMergeable(const QJsonArray& dates)

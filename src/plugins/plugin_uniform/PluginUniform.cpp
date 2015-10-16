@@ -95,7 +95,13 @@ QString PluginUniform::getDateDesc(const Date* date) const
     return result;
 }
 
+bool PluginUniform::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
+{
+    double bmin = data[DATE_UNIFORM_MIN_STR].toDouble();
+    double bmax = data[DATE_UNIFORM_MAX_STR].toDouble();
 
+    return (bmax > settings.mTmin && bmin < settings.mTmax) ? true : false;
+ }
 // ------------------------------------------------------------------
 
 GraphViewRefAbstract* PluginUniform::getGraphViewRef()

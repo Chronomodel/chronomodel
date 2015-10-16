@@ -63,14 +63,14 @@ QPair<double, double > PluginGauss::getLikelyhoodArg(const double& t, const QJso
             double g;
             
             if(t>tMaxDef){
-                g= curveG[tMaxDef];
-                variance=10E6;
-                exponent=-0.5f * pow(g - age, 2.f) / variance;
+                g=interpolate(t, tMinDef, tMaxDef, curveG[tMinDef], curveG[tMaxDef]);
+                double e = (curveG95Sup[tMaxDef] - curveG[tMaxDef]) / 1.96f;
+                variance = e * e + error * error;
             }
             else if (t<tMinDef){
-                g= curveG[tMinDef];
-                variance=10E6;
-                exponent=-0.5f * pow(g - age, 2.f) / variance;
+                g=interpolate(t, tMinDef, tMaxDef, curveG[tMinDef], curveG[tMaxDef]);
+                double e = (curveG95Sup[tMinDef] - curveG[tMinDef]) / 1.96f;
+                variance = e * e + error * error;
             }
             else {
                 double t_under = floor(t);
@@ -89,10 +89,11 @@ QPair<double, double > PluginGauss::getLikelyhoodArg(const double& t, const QJso
                 
                     double e = (g_sup - g) / 1.96f;
                     variance = e * e + error * error;
-                    exponent=-0.5f * pow(g - age, 2.f) / variance;
                 }
             
             }
+            double exponent = -0.5f * pow(g - age, 2.f) / variance;
+            return qMakePair(variance,exponent);
         }
         
     }
@@ -449,7 +450,7 @@ bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& se
                     min = qMin(min, iter.value());
                     ++iter;
                 }
-                return ((age - error < max) && (age + error > min));
+                return ((age - 1.96*error < max) && (age + 1.96*error > min));
             }
         }
     }
