@@ -6,7 +6,7 @@
 # Chronomodel
 #
 #-------------------------------------------------
-VERSION = 1.3.2
+VERSION = 1.3.3 # check in file main.pro
 #PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_
 
