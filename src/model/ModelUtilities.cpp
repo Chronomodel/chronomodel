@@ -417,6 +417,7 @@ QString ModelUtilities::eventResultsText(Event* e, bool withDates)
         {
             text += "Bound : " + e->getName() + nl;
             text += e->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr);
+            text += nl+"----------------------"+nl;
         }
         else
         {
@@ -425,7 +426,7 @@ QString ModelUtilities::eventResultsText(Event* e, bool withDates)
             if(withDates)
             {
                 text += nl + nl;
-                text += "----------------------";
+                text += "----------------------"+nl;
                 for(int i=0; i<e->mDates.size(); ++i)
                 {
                     text += dateResultsText(&(e->mDates[i])) + nl + nl;
@@ -480,6 +481,7 @@ QString ModelUtilities::eventResultsHTML(Event* e, bool withDates)
     QString text;
     if(e)
     {
+        text += "<hr>";
         if(e->mType == Event::eKnown)
         {
             text += line(textBold(textRed("Bound : " + e->getName()))) + "<br>";
@@ -495,6 +497,7 @@ QString ModelUtilities::eventResultsHTML(Event* e, bool withDates)
             {
                 for(int i=0; i<e->mDates.size(); ++i)
                 {
+                    //text += "<hr>";
                     text += "<br><br>" + dateResultsHTML(&(e->mDates[i]));
                 }
             }
@@ -508,6 +511,7 @@ QString ModelUtilities::phaseResultsHTML(Phase* p)
     QString text;
     if(p)
     {
+        text += "<hr>";
         text += line(textBold(textPurple("Phase : " + p->getName())));
         
         text += "<br>";

@@ -70,7 +70,7 @@ QString MCMCLoopMain::calibrate()
             //dates[i]->calibrate(mModel->mSettings);
             if(dates[i]->mCalibSum == 0)
             {
-                return tr("The following data cannot be nul : ") + dates[i]->getName();
+                return tr("The date density is nul for: ") + dates[i]->getName();
             }
             
             emit stepProgressed(i);

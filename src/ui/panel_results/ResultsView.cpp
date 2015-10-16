@@ -1210,17 +1210,17 @@ void ResultsView::settingChange()
 void ResultsView::updateResultsLog()
 {
     QString log;
-    
     for(int i=0; i<mModel->mEvents.size(); ++i)
     {
         Event* event = mModel->mEvents[i];
-        log += ModelUtilities::eventResultsText(event, true);
+        //log += ModelUtilities::eventResultsText(event, true);
+        log += ModelUtilities::eventResultsHTML(event, true);
     }
-    
     for(int i=0; i<mModel->mPhases.size(); ++i)
     {
         Phase* phase = mModel->mPhases[i];
-        log += ModelUtilities::phaseResultsText(phase);
+        //log += ModelUtilities::phaseResultsText(phase);
+        log += ModelUtilities::phaseResultsHTML(phase);
     }
     emit resultsLogUpdated(log);
 }

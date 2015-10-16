@@ -355,7 +355,16 @@ void Date::calibrate(const ProjectSettings& settings)
 
 QMap<double, double> Date::getCalibMap() const
 {
- 
+   /* QMap<double, double> map;
+    if(mPlugin) {
+        for(double t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep) {
+            double value = mPlugin->getLikelyhood(t, mData);
+            map.insert(t,value );
+        }
+    }
+    return map;
+
+    */
     return vector_to_map(mCalibration, mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
 }
 
@@ -513,28 +522,16 @@ void Date::updateDelta(Event* event)
     {
         case eDeltaRange:
         {
-           /* double delta;
-            double lambdai = event->mTheta.mX - mTheta.mX;
-            do
-            {
-                double x = Generator::gaussByBoxMuller(0, 1);
-
-                double lambdai = event->mTheta.mX - mTheta.mX;
-                delta = mSigma.mX * x + lambdai;
-            }while(delta < mDeltaMin || delta > mDeltaMax);
-
-            mDelta = delta;*/
-
-            double lambdai = event->mTheta.mX - mTheta.mX;
+           double lambdai = event->mTheta.mX - mTheta.mX;
 
             mDelta = Generator::gaussByDoubleExp(lambdai,mSigma.mX,mDeltaMin, mDeltaMax);
             break;
         }
         case eDeltaGaussian:
         {
-            double lambda = event->mTheta.mX - mTheta.mX;
+            double lambdai = event->mTheta.mX - mTheta.mX;
             double w = (1/(mSigma.mX * mSigma.mX)) + (1/(mDeltaError * mDeltaError));
-            double deltaAvg = (lambda / (mSigma.mX * mSigma.mX) + mDeltaAverage / (mDeltaError * mDeltaError)) / w;
+            double deltaAvg = (lambdai / (mSigma.mX * mSigma.mX) + mDeltaAverage / (mDeltaError * mDeltaError)) / w;
             double x = Generator::gaussByBoxMuller(0, 1);
             double delta = deltaAvg + x / sqrt(w);
             
