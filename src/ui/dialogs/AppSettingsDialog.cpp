@@ -27,15 +27,17 @@ QDialog(parent, flags)
     mLanguageCombo = new QComboBox(this);
     mLanguageCombo->addItem(QLocale::languageToString(QLocale::French), QVariant(QLocale::French));
     mLanguageCombo->addItem(QLocale::languageToString(QLocale::English), QVariant(QLocale::English));
-    mLanguageCombo->addItem(QLocale::languageToString(QLocale::German), QVariant(QLocale::German));
-    mLanguageCombo->addItem(QLocale::languageToString(QLocale::Spanish), QVariant(QLocale::Spanish));
-    
+    //mLanguageCombo->addItem(QLocale::languageToString(QLocale::German), QVariant(QLocale::German));
+    //mLanguageCombo->addItem(QLocale::languageToString(QLocale::Spanish), QVariant(QLocale::Spanish));
+
+
+
     mCountryLab = new QLabel(tr("Country") + " : ", this);
     mCountryCombo = new QComboBox(this);
     mCountryCombo->addItem(QLocale::countryToString(QLocale::France), QVariant(QLocale::France));
     mCountryCombo->addItem(QLocale::countryToString(QLocale::UnitedKingdom), QVariant(QLocale::UnitedKingdom));
-    mCountryCombo->addItem(QLocale::countryToString(QLocale::Germany), QVariant(QLocale::Germany));
-    mCountryCombo->addItem(QLocale::countryToString(QLocale::Spain), QVariant(QLocale::Spain));
+    //mCountryCombo->addItem(QLocale::countryToString(QLocale::Germany), QVariant(QLocale::Germany));
+    //mCountryCombo->addItem(QLocale::countryToString(QLocale::Spain), QVariant(QLocale::Spain));
     
     mAutoSaveLab = new QLabel(tr("Auto save project") + " : ", this);
     mAutoSaveCheck = new QCheckBox(this);
@@ -55,7 +57,16 @@ QDialog(parent, flags)
     mCSVDecSepCombo = new QComboBox(this);
     mCSVDecSepCombo->addItem(", (comma)", QVariant(","));
     mCSVDecSepCombo->addItem(". (dot)", QVariant("."));
-    
+    if(QLocale::system().language()==QLocale::French) {
+        mCSVCellSepEdit->setText(";");
+        mCSVDecSepCombo->setCurrentIndex(0);//setCurrentText(",");
+    }
+    else {
+        mCSVCellSepEdit->setText(",");
+        mCSVDecSepCombo->setCurrentIndex(1);//setCurrentText(".");
+    }
+
+
     mOpenLastProjectLab = new QLabel(tr("Open last project at launch") + " : ", this);
     mOpenLastProjectCheck = new QCheckBox(this);
     
@@ -236,11 +247,12 @@ void AppSettingsDialog::setSettings(const AppSettings& settings)
     mAutoSaveDelayEdit->setEnabled(settings.mAutoSave);
     
     mCSVCellSepEdit->setText(settings.mCSVCellSeparator);
-    if(settings.mCSVDecSeparator==","){
-      mCSVDecSepCombo->setCurrentText(", (comma)");
+    //mCSVDecSepCombo->setCurrentText(settings.mCSVDecSeparator);
+    if(settings.mCSVDecSeparator==",") {
+        mCSVDecSepCombo->setCurrentIndex(0);
     }
-    else mCSVDecSepCombo->setCurrentText(". (dot)");
-    
+    else mCSVDecSepCombo->setCurrentIndex(1);
+
     mOpenLastProjectCheck->setChecked(settings.mOpenLastProjectAtLaunch);
     
     mPixelRatio->setValue(settings.mPixelRatio);

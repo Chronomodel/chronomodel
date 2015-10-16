@@ -74,6 +74,24 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     
     mProjectView->doProjectConnections(mProject);
     
+
+    QLocale newLoc(QLocale::system());
+    mAppSettings.mLanguage = newLoc.language();
+    mAppSettings.mCountry = newLoc.country();
+    //QLocale newLoc = QLocale(mLanguage,mCountry);
+    newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
+    QLocale::setDefault(newLoc);
+    //if(mLanguage==QLocale::French) {
+    if(newLoc.decimalPoint()==',') {
+        mAppSettings.mCSVCellSeparator=";";
+        mAppSettings.mCSVDecSeparator=",";
+    }
+    else {
+        mAppSettings.mCSVCellSeparator=",";
+        mAppSettings.mCSVDecSeparator=".";
+    }
+
+
     activateInterface(false);
 }
 
