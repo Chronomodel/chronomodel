@@ -306,15 +306,13 @@ void AppSettingsDialog::buttonClicked(QAbstractButton* button)
         mAutoSaveDelayEdit->setText(locale().toString(APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC / 60));
         mAutoSaveDelayEdit->setEnabled(true);
         
-        //mCSVCellSepEdit->setText(APP_SETTINGS_DEFAULT_CELL_SEP);
-        //mCSVDecSepCombo->setCurrentText(APP_SETTINGS_DEFAULT_DEC_SEP);
         if(QLocale::system().language()==QLocale::French) {
             mCSVCellSepEdit->setText(";");
-            mCSVDecSepCombo->setCurrentIndex(0);//setCurrentText(",");
+            mCSVDecSepCombo->setCurrentIndex(0);
         }
         else {
             mCSVCellSepEdit->setText(",");
-            mCSVDecSepCombo->setCurrentIndex(1);//setCurrentText(".");
+            mCSVDecSepCombo->setCurrentIndex(1);
         }
         mOpenLastProjectCheck->setChecked(APP_SETTINGS_DEFAULT_OPEN_PROJ);
         
