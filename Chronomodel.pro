@@ -128,6 +128,7 @@ macx{
 	# Link the application with FFTW library
 	# If no dylib are present, static libs (.a) are used => that's why we moved .dylib files in a "dylib" folder.
 	LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
+        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
 	
 	# If we were deploying FFTW as a dynamic library, we should :
 	# - Move all files from "lib/FFTW/mac/dylib" to "lib/FFTW/mac"
@@ -459,6 +460,9 @@ SOURCES += src/utilities/DoubleValidator.cpp
 SOURCES += src/utilities/DateUtils.cpp
 
 
+message("--------------------TRANSLATIONS-----------------------")
+TRANSLATIONS +=\
+chrono_fr.ts
+chron_en.ts
 message("-------------------------------------------")
-
 
