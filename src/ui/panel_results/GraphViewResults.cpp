@@ -396,7 +396,7 @@ void GraphViewResults::updateLayout()
 }
 void GraphViewResults::paintEvent(QPaintEvent* )
 {
-    int h = height();
+    //int h = height();
     int leftShift = mButtonsVisible ? mGraphLeft : 0;
     
     QPainter p;

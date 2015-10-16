@@ -1,5 +1,5 @@
 #include "PluginTLRefView.h"
-#if USE_PLUGIN_14C
+#if USE_PLUGIN_TL
 
 #include "PluginTL.h"
 #include "GraphView.h"

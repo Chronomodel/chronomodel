@@ -44,7 +44,7 @@ QPair<double, double > Plugin14C::getLikelyhoodArg(const double& t, const QJsonO
         
         double tMinDef=curveG.firstKey();
         double tMaxDef=curveG.lastKey();
-        double g;                
+        double g=0;
         
         if(t>tMaxDef){
             g=interpolate(t, tMinDef, tMaxDef, curveG[tMinDef], curveG[tMaxDef]);

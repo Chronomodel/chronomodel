@@ -20,7 +20,7 @@ Plugin14CSettingsView::Plugin14CSettingsView(Plugin14C* plugin, QWidget* parent,
     connect(mAddRefCurveBut, SIGNAL(clicked()), this, SLOT(addRefCurve()));
     connect(mDeleteRefCurveBut, SIGNAL(clicked()), this, SLOT(deleteRefCurve()));
     
-    // Store the list ofe existing files
+    // Store the list of existing files
     QString calibPath = ((Plugin14C*)mPlugin)->getRefsPath();
     QDir calibDir(calibPath);
     QFileInfoList files = calibDir.entryInfoList(QStringList(), QDir::Files);

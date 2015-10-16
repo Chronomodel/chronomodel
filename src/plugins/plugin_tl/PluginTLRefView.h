@@ -1,7 +1,7 @@
 #ifndef PluginTLRefView_H
 #define PluginTLRefView_H
 
-#if USE_PLUGIN_14C
+#if USE_PLUGIN_TL
 
 #include "../GraphViewRefAbstract.h"
 

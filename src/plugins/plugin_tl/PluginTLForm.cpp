@@ -8,7 +8,7 @@
 
 PluginTLForm::PluginTLForm(PluginTL* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("TL Measurements"), parent, flags)
 {
-    PluginTL* pluginTL = (PluginTL*)mPlugin;
+   // PluginTL* pluginTL = (PluginTL*)mPlugin;
     
     mAverageLab = new QLabel(tr("Age") + " :", this);
     mErrorLab = new QLabel(tr("Error (sd)") + " :", this);

@@ -60,7 +60,7 @@ QPair<double, double > PluginGauss::getLikelyhoodArg(const double& t, const QJso
             
             double tMinDef=curveG.firstKey();
             double tMaxDef=curveG.lastKey();
-            double g;
+            double g=0;
             
             if(t>tMaxDef){
                 g=interpolate(t, tMinDef, tMaxDef, curveG[tMinDef], curveG[tMaxDef]);
@@ -75,7 +75,7 @@ QPair<double, double > PluginGauss::getLikelyhoodArg(const double& t, const QJso
             else {
                 double t_under = floor(t);
                 double t_upper = t_under + 1;
-            
+                variance=10E4;
                 if(curveG.find(t_under) != curveG.end() &&
                    curveG.find(t_upper) != curveG.end())
                 {

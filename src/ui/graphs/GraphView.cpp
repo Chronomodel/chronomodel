@@ -743,7 +743,7 @@ void GraphView::drawCurves(QPainter& painter)
             {
                 path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
                 
-                int index = 0;
+                //int index = 0;
                 qreal last_x = 0;
                 qreal last_y = 0;
                 qreal last_value_y = 0;

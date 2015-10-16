@@ -1,5 +1,5 @@
-#ifndef PluginGauss_H
-#define PluginGauss_H
+#ifndef PLUGINGAUSS_H
+#define PLUGINGAUSS_H
 
 #if USE_PLUGIN_GAUSS
 

@@ -5,6 +5,7 @@
 #include "QtUtilities.h"
 #include "PluginMagForm.h"
 #include "PluginMagRefView.h"
+#include "PluginMagSettingsView.h"
 #include <cstdlib>
 #include <iostream>
 #include <QJsonObject>
@@ -65,7 +66,7 @@ QPair<double, double > PluginMag::getLikelyhoodArg(const double& t, const QJsonO
         
         double tMinDef=curveG.firstKey();
         double tMaxDef=curveG.lastKey();
-        double g;
+        double g=0;
         
         if(t>tMaxDef){
             g= curveG[tMaxDef];
@@ -80,7 +81,7 @@ QPair<double, double > PluginMag::getLikelyhoodArg(const double& t, const QJsonO
         else {
             double t_under = floor(t);
             double t_upper = t_under + 1;
-        
+            variance=10E4;
             if(curveG.find(t_under) != curveG.end() &&
                curveG.find(t_upper) != curveG.end()) {
                 
@@ -468,7 +469,7 @@ const QMap<QString, QMap<double, double> >& PluginMag::getRefData(const QString&
 
 PluginSettingsViewAbstract* PluginMag::getSettingsView()
 {
-    return 0;
+    return new PluginMagSettingsView(this);
 }
 
 #endif

@@ -247,7 +247,7 @@ void AppSettingsDialog::setSettings(const AppSettings& settings)
     mAutoSaveDelayEdit->setEnabled(settings.mAutoSave);
     
     mCSVCellSepEdit->setText(settings.mCSVCellSeparator);
-    //mCSVDecSepCombo->setCurrentText(settings.mCSVDecSeparator);
+
     if(settings.mCSVDecSeparator==",") {
         mCSVDecSepCombo->setCurrentIndex(0);
     }

@@ -6,7 +6,7 @@
 # Chronomodel
 #
 #-------------------------------------------------
-VERSION = 1.3.3 # check in file main.pro
+VERSION = 1.3.4 # check in file main.pro
 #PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_
 
@@ -221,19 +221,19 @@ equals(USE_PLUGIN_14C, 1){
 	HEADERS += src/plugins/plugin_14C/Plugin14C.h
 	HEADERS += src/plugins/plugin_14C/Plugin14CForm.h
 	HEADERS += src/plugins/plugin_14C/Plugin14CRefView.h
-    HEADERS += src/plugins/plugin_14C/Plugin14CSettingsView.h
+        HEADERS += src/plugins/plugin_14C/Plugin14CSettingsView.h
 }
 equals(USE_PLUGIN_GAUSS, 1){
 	HEADERS += src/plugins/plugin_gauss/PluginGauss.h
 	HEADERS += src/plugins/plugin_gauss/PluginGaussForm.h
 	HEADERS += src/plugins/plugin_gauss/PluginGaussRefView.h
-    HEADERS += src/plugins/plugin_gauss/PluginGaussSettingsView.h
+        HEADERS += src/plugins/plugin_gauss/PluginGaussSettingsView.h
 }
 equals(USE_PLUGIN_AM, 1){
 	HEADERS += src/plugins/plugin_am/PluginMag.h
 	HEADERS += src/plugins/plugin_am/PluginMagForm.h
 	HEADERS += src/plugins/plugin_am/PluginMagRefView.h
-    HEADERS += src/plugins/plugin_am/PluginMagSettingsView.h
+        HEADERS += src/plugins/plugin_am/PluginMagSettingsView.h
 }
 equals(USE_PLUGIN_UNIFORM, 1){
 	HEADERS += src/plugins/plugin_uniform/PluginUniform.h
@@ -361,19 +361,19 @@ equals(USE_PLUGIN_14C, 1){
 	SOURCES += src/plugins/plugin_14C/Plugin14C.cpp
 	SOURCES += src/plugins/plugin_14C/Plugin14CForm.cpp
 	SOURCES += src/plugins/plugin_14C/Plugin14CRefView.cpp
-    SOURCES += src/plugins/plugin_14C/Plugin14CSettingsView.cpp
+        SOURCES += src/plugins/plugin_14C/Plugin14CSettingsView.cpp
 }
 equals(USE_PLUGIN_GAUSS, 1){
 	SOURCES += src/plugins/plugin_gauss/PluginGauss.cpp
 	SOURCES += src/plugins/plugin_gauss/PluginGaussForm.cpp
 	SOURCES += src/plugins/plugin_gauss/PluginGaussRefView.cpp
-    SOURCES += src/plugins/plugin_gauss/PluginGaussSettingsView.cpp
+        SOURCES += src/plugins/plugin_gauss/PluginGaussSettingsView.cpp
 }
 equals(USE_PLUGIN_AM, 1){
 	SOURCES += src/plugins/plugin_am/PluginMag.cpp
 	SOURCES += src/plugins/plugin_am/PluginMagForm.cpp
 	SOURCES += src/plugins/plugin_am/PluginMagRefView.cpp
-    SOURCES += src/plugins/plugin_am/PluginMagSettingsView.cpp
+        SOURCES += src/plugins/plugin_am/PluginMagSettingsView.cpp
 }
 equals(USE_PLUGIN_UNIFORM, 1){
 	SOURCES += src/plugins/plugin_uniform/PluginUniform.cpp
