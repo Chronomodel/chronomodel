@@ -74,6 +74,7 @@ void ProjectView::doProjectConnections(Project* project)
 {
     mModelView   -> doProjectConnections(project);
     mResultsView -> doProjectConnections(project);
+    //connect(*project, SIGNAL(designChanged(bool)), this, SLOT(changeDesign(bool)));
 }
 
 #pragma mark Interface
@@ -94,8 +95,22 @@ void ProjectView::showModel()
 
     mStack->setCurrentIndex(0);
 }
-void ProjectView::showResults(bool updateModel)
+
+/**
+ * @brief ProjectView::changeDesign solt connected to Project::projectDesignChange() in MainWindows
+ * @param refresh
+ */
+void ProjectView::changeDesign(bool refresh)
 {
+  mRefreshResults = refresh;
+}
+
+void ProjectView::showResults()
+{
+    if(mRefreshResults)  {
+        mResultsView->updateResults();
+        mRefreshResults=false;
+    }
     mStack->setCurrentIndex(1);
     // come from mViewResultsAction and  updateResults send repaint on mStack
 }
@@ -107,7 +122,7 @@ void ProjectView::showLog()
 
 #pragma mark Update Model
 /**
- * @brief : Update All model views (Scenes, ...) after pushing state
+ * @brief Update All model views (Scenes, ...) after pushing state
  */
 void ProjectView::updateProject()
 {
@@ -136,7 +151,7 @@ void ProjectView::updateResults(Model* model)
 {
     if(model)
     {
-        showResults(false);
+        showResults();//false);
         
         mResultsView->updateResults(model);
         

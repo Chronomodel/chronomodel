@@ -708,7 +708,7 @@ void ResultsView::clearResults()
 void ResultsView::updateResults(Model* model)
 {
     clearResults();
-    
+
     qDebug() << "ResultsView::updateResults";
     
     if(!mModel && !model)

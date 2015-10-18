@@ -40,7 +40,7 @@ public:
     // An undo command is created and a StateEvent is fired asynchronously.
     // The project state will be modified and the view notified (if required)
     bool pushProjectState(const QJsonObject& state, const QString& reason, bool notify, bool force = false);
-    
+    bool checkRefreshResults(const QJsonObject& stateNew,const QJsonObject& stateOld);
     // Sends a StateEvent asynchronously.
     // Called by "SetProjectState" undo/redo commands.
     void sendUpdateState(const QJsonObject& state, const QString& reason, bool notify);
@@ -73,6 +73,7 @@ public:
     void showStudyPeriodWarning();
     
     bool isValid();
+    bool mRefreshResults;
     
     // ---------------------------
     
@@ -150,6 +151,8 @@ signals:
     
     void mcmcStarted();
     void mcmcFinished(Model* model);
+
+    void projectDesignChanged(bool designChanged);
     
 public:
     QJsonObject mState;

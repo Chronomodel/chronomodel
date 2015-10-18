@@ -69,7 +69,8 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     connect(mProject, SIGNAL(mcmcFinished(Model*)), this, SLOT(mcmcFinished(Model*)));
     
     connect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
-    
+
+    connect(mProject, &Project::projectDesignChanged, mProjectView, &ProjectView::changeDesign);
 
     
     mProjectView->doProjectConnections(mProject);
@@ -78,10 +79,8 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     QLocale newLoc(QLocale::system());
     mAppSettings.mLanguage = newLoc.language();
     mAppSettings.mCountry = newLoc.country();
-    //QLocale newLoc = QLocale(mLanguage,mCountry);
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
-    //if(mLanguage==QLocale::French) {
     if(newLoc.decimalPoint()==',') {
         mAppSettings.mCSVCellSeparator=";";
         mAppSettings.mCSVDecSeparator=",";

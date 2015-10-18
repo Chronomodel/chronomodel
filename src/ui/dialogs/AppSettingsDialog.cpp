@@ -25,12 +25,18 @@ QDialog(parent, flags)
     
     mLanguageLab = new QLabel(tr("Language") + " : ", this);
     mLanguageCombo = new QComboBox(this);
-    mLanguageCombo->addItem(QLocale::languageToString(QLocale::French), QVariant(QLocale::French));
-    mLanguageCombo->addItem(QLocale::languageToString(QLocale::English), QVariant(QLocale::English));
+    //mLanguageCombo->addItem(QLocale::languageToString(QLocale::French), QVariant(QLocale::French));
+    //mLanguageCombo->addItem(QLocale::languageToString(QLocale::English), QVariant(QLocale::English));
     //mLanguageCombo->addItem(QLocale::languageToString(QLocale::German), QVariant(QLocale::German));
     //mLanguageCombo->addItem(QLocale::languageToString(QLocale::Spanish), QVariant(QLocale::Spanish));
+    QList<QLocale> allLocales = QLocale::matchingLocales(QLocale::AnyLanguage, QLocale::AnyScript, QLocale::AnyCountry);
 
-
+    /*for(int i=0; i<allLocales.size(); i++) {
+        mLanguageCombo->addItem(QLocale::languageToString(allLocales[i].language()),QVariant(allLocales[i].language()));
+    }*/
+    for(int i=0; i<339; i++) {
+        mLanguageCombo->addItem(QLocale::languageToString((QLocale::Language)i),QVariant((QLocale::Language)i));
+    }
 
     mCountryLab = new QLabel(tr("Country") + " : ", this);
     mCountryCombo = new QComboBox(this);
@@ -306,9 +312,10 @@ void AppSettingsDialog::buttonClicked(QAbstractButton* button)
         mAutoSaveDelayEdit->setText(locale().toString(APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC / 60));
         mAutoSaveDelayEdit->setEnabled(true);
         
-        if(QLocale::system().language()==QLocale::French) {
+        //if(QLocale::system().language()==QLocale::French) {
+        if(QLocale::system().decimalPoint()==',') {
             mCSVCellSepEdit->setText(";");
-            mCSVDecSepCombo->setCurrentIndex(0);
+            mCSVDecSepCombo->setCurrentIndex(0);                      
         }
         else {
             mCSVCellSepEdit->setText(",");

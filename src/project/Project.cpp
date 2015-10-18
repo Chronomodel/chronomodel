@@ -46,7 +46,7 @@ Project::Project():
 mName(tr("Chronomodel Project")),
 mProjectFileDir(""),
 mProjectFileName(QObject::tr("Untitled"))
-//,mModel(0)
+
 {
     mState = emptyState();
     mLastSavedState = mState;
@@ -55,6 +55,7 @@ mProjectFileName(QObject::tr("Untitled"))
     connect(mAutoSaveTimer, SIGNAL(timeout()), this, SLOT(save()));
     mAutoSaveTimer->start(3000);
     mModel = new Model();
+    mRefreshResults =true;
 }
 
 Project::~Project()
@@ -119,12 +120,20 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
 {
     if(mState != state || force)
     {
+        if(!mState.isEmpty()) mRefreshResults = checkRefreshResults(state,mState);
+        else mRefreshResults=true;
+
         SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
         MainWindow::getInstance()->getUndoStack()->push(command);
+
+        if(mRefreshResults) {
+            emit projectDesignChanged(mRefreshResults);
+        }
         return true;
     }
     return false;
 }
+
 
 void Project::sendUpdateState(const QJsonObject& state, const QString& reason, bool notify)
 {
@@ -134,6 +143,109 @@ void Project::sendUpdateState(const QJsonObject& state, const QString& reason, b
     StateEvent* event = new StateEvent(state, reason, notify);
     QCoreApplication::postEvent(this, event, Qt::NormalEventPriority);
 }
+
+bool Project::checkRefreshResults(const QJsonObject& stateNew,const QJsonObject& stateOld)
+{
+    bool refresh=false;
+
+    if(stateOld.isEmpty())  {
+        refresh=true;
+        return refresh;
+    }
+    else {
+
+        // Check phase design modification
+        QJsonArray phaseNew = stateNew[STATE_PHASES].toArray();
+        QJsonArray phaseOld = stateOld[STATE_PHASES].toArray();
+        if( phaseNew.size()!=phaseOld.size()) {
+            refresh=true;
+            return refresh;
+        }
+        else {
+            for(int i=0; i<phaseNew.size(); ++i){
+               // Check name of Phases
+               if(phaseNew[i].toObject()[STATE_NAME] != phaseOld[i].toObject()[STATE_NAME]) {
+                   refresh=true;
+                   return refresh;
+               }
+               // Check color of Phases
+               QColor newPhaseColor=QColor(phaseNew[i].toObject()[STATE_COLOR_RED].toInt(),phaseNew[i].toObject()[STATE_COLOR_GREEN].toInt(),phaseNew[i].toObject()[STATE_COLOR_BLUE ].toInt());
+               QColor oldPhaseColor=QColor(phaseOld[i].toObject()[STATE_COLOR_RED].toInt(),phaseOld[i].toObject()[STATE_COLOR_GREEN].toInt(),phaseOld[i].toObject()[STATE_COLOR_BLUE ].toInt());
+               if(newPhaseColor != oldPhaseColor) {
+                   refresh=true;
+                   return refresh;
+               }
+            }
+
+
+
+        }
+         // Check Event and date design modification
+        QJsonArray eventNew = stateNew[STATE_EVENTS].toArray();
+        QJsonArray eventOld = stateOld[STATE_EVENTS].toArray();
+        if( eventNew.size()!=eventOld.size()) {
+            refresh=true;
+            return refresh;
+        }
+        else {
+            for(int i=0; i<eventNew.size(); ++i){
+               // Check name of Event
+               if(eventNew[i].toObject()[STATE_NAME] != eventOld[i].toObject()[STATE_NAME]) {
+                   refresh=true;
+                   return refresh;
+               }
+               // Check color of Event
+               QColor newEventColor=QColor(eventNew[i].toObject()[STATE_COLOR_RED].toInt(),eventNew[i].toObject()[STATE_COLOR_GREEN].toInt(),eventNew[i].toObject()[STATE_COLOR_BLUE ].toInt());
+               QColor oldEventColor=QColor(eventOld[i].toObject()[STATE_COLOR_RED].toInt(),eventOld[i].toObject()[STATE_COLOR_GREEN].toInt(),eventOld[i].toObject()[STATE_COLOR_BLUE ].toInt());
+               if(newEventColor != oldEventColor) {
+                   refresh=true;
+                   return refresh;
+               }
+               // Check date inside Event
+
+
+               QJsonArray datesNew = eventNew[i].toObject()[STATE_EVENT_DATES].toArray();
+               QJsonArray datesOld = eventOld[i].toObject()[STATE_EVENT_DATES].toArray();
+               if( datesNew.size()!=datesOld.size()) {
+                   refresh=true;
+                   return refresh;
+               }
+
+               else {
+                   for(int j=0; j<datesNew.size(); ++j){
+                        // Check name of Event
+                        if(datesNew[j].toObject()[STATE_NAME] != datesOld[j].toObject()[STATE_NAME]) {
+                            refresh=true;
+                            return refresh;
+                        }
+                        // No color in date JSON
+                        /*QColor newDateColor=QColor(eventNew[i].toObject()[STATE_COLOR_RED].toInt(),eventNew[i].toObject()[STATE_COLOR_GREEN].toInt(),eventNew[i].toObject()[STATE_COLOR_BLUE ].toInt());
+                        QColor oldDateColor=QColor(eventOld[i].toObject()[STATE_COLOR_RED].toInt(),eventOld[i].toObject()[STATE_COLOR_GREEN].toInt(),eventOld[i].toObject()[STATE_COLOR_BLUE ].toInt());
+                        if(newDateColor != oldDateColor) {
+                            refresh=true;
+                            return refresh;
+                        }
+                        */
+                     }
+                }
+               qDebug()<<"Check date";
+
+
+
+
+
+
+            }
+
+        }
+      }
+
+    return refresh;
+
+
+
+}
+
 
 bool Project::event(QEvent* e)
 {

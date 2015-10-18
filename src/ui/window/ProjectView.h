@@ -21,6 +21,8 @@ public:
     ProjectView(QWidget* parent = 0, Qt::WindowFlags flags = 0);
     ~ProjectView();
     
+    bool mRefreshResults;
+
     void doProjectConnections(Project* project);
     void resetInterface();
     
@@ -30,7 +32,9 @@ public:
 public slots:
     void updateProject();
     void showModel();
-    void showResults(bool updateModel = true);
+    void showResults();
+
+    void changeDesign(bool refresh);
     void showLog();
     void showHelp(bool show);
     
