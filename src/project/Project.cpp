@@ -35,6 +35,7 @@
 #include <QtWidgets>
 #include <QThread>
 #include <QJsonObject>
+#include <QFile>
 
 
 // Temporary

@@ -413,8 +413,10 @@ void MainWindow::openProject()
             activateInterface(true);
             
             mUndoStack->clear();
-            mProject->load(path);
-            
+           if(! mProject->load(path) ){
+               qDebug()<<"MainWindow::openProject() fail";
+               return;
+            }
             updateWindowTitle();
         }
     }

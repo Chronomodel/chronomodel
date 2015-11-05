@@ -431,7 +431,13 @@ bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& se
         return ((age - error < max) && (age + error > min));
     }
     else if(mode == DATE_GAUSS_MODE_CURVE){
-        QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
+       // QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
+        // check valid curve
+        QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString().toLower();
+        if(mRefDatas.find(ref_curve) == mRefDatas.end()) {
+            qDebug()<<"in PluginGauss::isDateValid() unkowned curve"<<ref_curve;
+            return false;
+        }
         const QMap<double, double>& curveG95Inf = mRefDatas[ref_curve]["G95Inf"];
         const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
         
