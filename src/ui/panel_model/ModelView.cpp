@@ -820,7 +820,7 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
 #pragma mark Toggle Calibration
 void ModelView::updateCalibration(const QJsonObject& date)
 {
-    if(!date.isEmpty())
+    if(!date.isEmpty() && date[STATE_DATE_VALID].toBool()==true)
     {
         mCalibrationView->setDate(date);
     }
