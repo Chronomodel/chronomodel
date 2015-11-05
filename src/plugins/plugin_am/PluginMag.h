@@ -26,7 +26,7 @@ public:
     PluginMag();
     
     double getLikelyhood(const double& t, const QJsonObject& data);
-    bool withLikelyhoodArg() {return true; };
+    bool withLikelyhoodArg() {return true; }
     QPair<double, double > getLikelyhoodArg(const double& t, const QJsonObject& data);
     
     QString getName() const;
@@ -49,6 +49,7 @@ public:
     
     QString getRefsPath() const;
     void loadRefDatas();
+    QMap<QString, QMap<double, double> > loadRefFile(QFileInfo refFile);
     QStringList getRefsNames() const;
     const QMap<QString, QMap<double, double> >& getRefData(const QString& name);
     

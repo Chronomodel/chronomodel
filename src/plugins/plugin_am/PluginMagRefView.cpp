@@ -60,6 +60,11 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         PluginMag* plugin = (PluginMag*)date.mPlugin;
         const QMap<QString, QMap<double, double> >& curves = plugin->getRefData(ref_curve);
         
+        if(curves.isEmpty()) {
+            qDebug()<<"in PluginMagRefView invalid ref curve"<<ref_curve;
+            return;
+        }
+
         QMap<double, double> curveG;
         QMap<double, double> curveG95Sup;
         QMap<double, double> curveG95Inf;

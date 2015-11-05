@@ -13,11 +13,11 @@ PluginMagSettingsView::PluginMagSettingsView(PluginMag* plugin, QWidget* parent,
     mRefCurvesList->setSelectionBehavior(QAbstractItemView::SelectRows);
     mRefCurvesList->setSelectionMode(QAbstractItemView::ExtendedSelection);
     mRefCurvesList->setAlternatingRowColors(true);
-    mAddRefCurveBut = new QPushButton(tr("Add"), this);
-    mDeleteRefCurveBut = new QPushButton(tr("Delete"), this);
+    mAddRefCurveBut = new QPushButton(tr("Add file"), this);
+    //mDeleteRefCurveBut = new QPushButton(tr("Delete"), this);
 
-    connect(mAddRefCurveBut, SIGNAL(clicked()), this, SLOT(addRefCurve()));
-    connect(mDeleteRefCurveBut, SIGNAL(clicked()), this, SLOT(deleteRefCurve()));
+    QObject::connect(mAddRefCurveBut, &QPushButton::clicked, this, &PluginMagSettingsView::addRefCurve);
+    //connect(mDeleteRefCurveBut, SIGNAL(clicked()), this, SLOT(deleteRefCurve()));
 
     // Store the list of existing files
     QString calibPath = ((PluginMag*)mPlugin)->getRefsPath();
@@ -35,8 +35,8 @@ PluginMagSettingsView::PluginMagSettingsView(PluginMag* plugin, QWidget* parent,
     QGridLayout* layout = new QGridLayout();
     layout->addWidget(mRefCurvesLab, 0, 0, 1, 2);
     layout->addWidget(mRefCurvesList, 1, 0, 1, 2);
-    layout->addWidget(mAddRefCurveBut, 2, 0);
-    layout->addWidget(mDeleteRefCurveBut, 2, 1);
+    layout->addWidget(mAddRefCurveBut, 2, 0,1,2);
+    //layout->addWidget(mDeleteRefCurveBut, 2, 1);
     setLayout(layout);
 
 }
@@ -52,11 +52,16 @@ void PluginMagSettingsView::updateRefsList()
     QMapIterator<QString, QString> iter(mFilesNew);
     while(iter.hasNext()){
         iter.next();
-        mRefCurvesList->addItem(iter.key());
+        if(((PluginMag*)mPlugin)->mRefDatas.contains(iter.key().toLower())) {
+           mRefCurvesList->addItem(iter.key());
+        }
+        else mRefCurvesList->addItem( iter.key()+" --> IS NOT A VALID FILE" );
+
     }
 }
 
-void PluginMagSettingsView::onAccepted()
+//void PluginMagSettingsView::onAccepted()
+void PluginMagSettingsView::updateFloder()
 {
     QString calibPath = ((PluginMag*)mPlugin)->getRefsPath();
 
@@ -111,6 +116,7 @@ void PluginMagSettingsView::addRefCurve()
         mFilesNew.insert(fileInfo.fileName(), fileInfo.absoluteFilePath());
         updateRefsList();
     }
+    updateFloder();
 }
 
 void PluginMagSettingsView::deleteRefCurve()

@@ -18,11 +18,12 @@ public:
     PluginMagSettingsView(PluginMag* plugin, QWidget* parent = 0, Qt::WindowFlags flags = 0);
     virtual ~PluginMagSettingsView();
     void updateRefsList();
+    void updateFloder();
 
 protected slots:
     void addRefCurve();
     void deleteRefCurve();
-    void onAccepted();
+    //void onAccepted();
 
 private:
     QLabel* mRefCurvesLab;

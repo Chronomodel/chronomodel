@@ -111,7 +111,7 @@ QPair<double, double > PluginMag::getLikelyhoodArg(const double& t, const QJsonO
 bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& settings){
     // check valid curve
     QString ref_curve = data[DATE_AM_REF_CURVE_STR].toString().toLower();
-    if(mRefDatas.find(ref_curve) == mRefDatas.end()) {
+    if(mRefDatas.find(ref_curve) == mRefDatas.end() && mRefDatas.end().key()!=ref_curve) {
         qDebug()<<"in PluginMag::isDateValid() unkowned curve"<<ref_curve;
         return false;
     }
@@ -346,6 +346,119 @@ QString PluginMag::getRefsPath() const
     return calibPath;
 }
 
+QMap<QString, QMap<double, double> > PluginMag::loadRefFile(QFileInfo refFile)
+{
+    QFile file(refFile.absoluteFilePath());
+    QMap<QString, QMap<double, double> > curves;
+    if(file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+
+
+        QMap<double, double> curveG;
+        QMap<double, double> curveG95Sup;
+        QMap<double, double> curveG95Inf;
+
+        QTextStream stream(&file);
+        while(!stream.atEnd()) {
+            QString line = stream.readLine();
+
+            if(line.contains("reference", Qt::CaseInsensitive) && line.contains("point", Qt::CaseInsensitive))
+            {
+                // TODO : start loading points
+                break;
+            }
+            bool ok;
+            if(!isComment(line))
+            {
+                QStringList values = line.split(",");
+                if(values.size() >= 3)
+                {
+                    int t = values[0].toInt();
+
+                    double g = values[1].toDouble(&ok);
+                    if(!ok) {
+                        qDebug()<<"in PluginMag::loadRefDatas() g unvalid value";
+                        continue;
+                    }
+                    double gSup = g + 1.96f * values[2].toDouble(&ok);
+                    if(!ok) {
+                        qDebug()<<"in PluginMag::loadRefDatas() gSup unvalid value";
+                        continue;
+                    }
+                    double gInf = g - 1.96f * values[2].toDouble(&ok);
+                    if(!ok) {
+                        qDebug()<<"in PluginMag::loadRefDatas() gInf unvalid value";
+                        continue;
+                    }
+                    curveG[t] = g;
+                    curveG95Sup[t] = gSup;
+                    curveG95Inf[t] = gInf;
+                }
+            }
+        }
+        file.close();
+
+        // The curves do not have 1-year precision!
+        // We have to interpolate in the blanks
+        if(!curveG.isEmpty()) {
+            double tmin = curveG.firstKey();
+            double tmax = curveG.lastKey();
+
+            for(double t=tmin; t<tmax; ++t)
+            {
+                if(curveG.find(t) == curveG.end())
+                {
+                    // This actually return the iterator with the nearest greater key !!!
+                    QMap<double, double>::const_iterator iter = curveG.lowerBound(t);
+                    if(iter != curveG.end())
+                    {
+                        double t_upper = iter.key();
+                        --iter;
+                        if(iter != curveG.begin())
+                        {
+                            double t_under = iter.key();
+
+                            //qDebug() << t_under << " < " << t << " < " << t_upper;
+
+                            double g_under = curveG[t_under];
+                            double g_upper = curveG[t_upper];
+
+                            double gsup_under = curveG95Sup[t_under];
+                            double gsup_upper = curveG95Sup[t_upper];
+
+                            double ginf_under = curveG95Inf[t_under];
+                            double ginf_upper = curveG95Inf[t_upper];
+
+                            curveG[t] = interpolate(t, t_under, t_upper, g_under, g_upper);
+                            curveG95Sup[t] = interpolate(t, t_under, t_upper, gsup_under, gsup_upper);
+                            curveG95Inf[t] = interpolate(t, t_under, t_upper, ginf_under, ginf_upper);
+                        }
+                        else
+                        {
+                            curveG[t] = 0;
+                            curveG95Sup[t] = 0;
+                            curveG95Inf[t] = 0;
+                        }
+                    }
+                    else
+                    {
+                        curveG[t] = 0;
+                        curveG95Sup[t] = 0;
+                        curveG95Inf[t] = 0;
+                    }
+                }
+            }
+
+            // Store the resulting curves :
+
+            curves["G"] = curveG;
+            curves["G95Sup"] = curveG95Sup;
+            curves["G95Inf"] = curveG95Inf;
+        }
+    }
+    return curves;
+}
+
+
 void PluginMag::loadRefDatas()
 {
     QString path = QDir::currentPath();
@@ -354,11 +467,10 @@ void PluginMag::loadRefDatas()
     QDir calibDir(calibPath);
     
     QFileInfoList files = calibDir.entryInfoList(QStringList(), QDir::Files);
-    for(int i=0; i<files.size(); ++i)
-    {
+    for(int i=0; i<files.size(); ++i) {
         if(files[i].suffix().toLower() == "ref")
         {
-            QFile file(files[i].absoluteFilePath());
+          /*  QFile file(files[i].absoluteFilePath());
             if(file.open(QIODevice::ReadOnly | QIODevice::Text))
             {
                 QMap<QString, QMap<double, double> > curves;
@@ -377,7 +489,7 @@ void PluginMag::loadRefDatas()
                         // TODO : start loading points
                         break;
                     }
-                    
+                    bool ok;
                     if(!isComment(line))
                     {
                         QStringList values = line.split(",");
@@ -385,10 +497,21 @@ void PluginMag::loadRefDatas()
                         {
                             int t = values[0].toInt();
                             
-                            double g = values[1].toDouble();
-                            double gSup = g + 1.96f * values[2].toDouble();
-                            double gInf = g - 1.96f * values[2].toDouble();
-                            
+                            double g = values[1].toDouble(&ok);
+                            if(!ok) {
+                                qDebug()<<"in PluginMag::loadRefDatas() g unvalid value";
+                                continue;
+                            }
+                            double gSup = g + 1.96f * values[2].toDouble(&ok);
+                            if(!ok) {
+                                qDebug()<<"in PluginMag::loadRefDatas() gSup unvalid value";
+                                continue;
+                            }
+                            double gInf = g - 1.96f * values[2].toDouble(&ok);
+                            if(!ok) {
+                                qDebug()<<"in PluginMag::loadRefDatas() gInf unvalid value";
+                                continue;
+                            }
                             curveG[t] = g;
                             curveG95Sup[t] = gSup;
                             curveG95Inf[t] = gInf;
@@ -399,7 +522,7 @@ void PluginMag::loadRefDatas()
                 
                 // The curves do not have 1-year precision!
                 // We have to interpolate in the blanks
-                
+                if(curveG.isEmpty()) continue;
                 double tmin = curveG.firstKey();
                 double tmax = curveG.lastKey();
                 
@@ -453,9 +576,14 @@ void PluginMag::loadRefDatas()
                 curves["G"] = curveG;
                 curves["G95Sup"] = curveG95Sup;
                 curves["G95Inf"] = curveG95Inf;
-                
+
                 mRefDatas[files[i].fileName().toLower()] = curves;
-            }
+              */
+                QMap<QString, QMap<double, double> > curves = loadRefFile(files[i].absoluteFilePath());
+                if(!curves.isEmpty()) {
+                   mRefDatas[files[i].fileName().toLower()] = curves;
+                }
+           // }
         }
     }
 }
