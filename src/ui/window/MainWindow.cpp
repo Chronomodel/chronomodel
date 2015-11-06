@@ -495,7 +495,6 @@ void MainWindow::setAppSettings(const AppSettings& s)
     QLocale newLoc = QLocale(newLanguage,newCountry);
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
-    
     statusBar()->showMessage(tr("Language") + " : " + QLocale::languageToString(QLocale().language()));
     
     mProject->setAppSettings(mAppSettings);

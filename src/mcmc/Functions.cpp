@@ -130,21 +130,20 @@ double shrinkageUniform(double so2)
 }
 
 /**
- * @brief Return a text from a FunctionAnalysis @see FunctionAnalysis
- * @todo Get the precision from the pref.
+ * @brief Return a text from a FunctionAnalysis
+ * @see FunctionAnalysis
  */
 QString functionAnalysisToString(const FunctionAnalysis& analysis)
 {
     QString result;
-    int precision = 0; 
 
     if(analysis.stddev<0.){
        result = "No data";
     }
     else {
         result += "MAP : " + DateUtils::convertToAppSettingsFormatStr(analysis.mode) + "   ";
-        result += "Mean : " + DateUtils::convertToAppSettingsFormatStr(analysis.mean) + "   ";
-        result += "Std deviation : " + QString::number(analysis.stddev, 'f', precision);
+        result += "Mean : " + DateUtils::convertToAppSettingsFormatStr(analysis.mean) + "   ";        
+        result += "Std deviation : " +DateUtils::dateToString(analysis.stddev);
     }
     return result;
 }
@@ -152,7 +151,6 @@ QString functionAnalysisToString(const FunctionAnalysis& analysis)
 /**
  * @brief Return a text with the value of th Quartiles Q1, Q2 and Q3
  * @see DensityAnalysis
- * @todo Get the precision from the pref.
  */
 QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& nl)
 {
