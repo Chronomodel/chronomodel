@@ -16,7 +16,7 @@ QDialog(parent, flags)
     // -----------------------------
     mGeneralView = new QWidget();
     
-    mLangHelpLab = new QLabel(tr("Language & Country are used to define how number input should be typed (using comma or dot as decimal separator). This is not related to the application translation which is not available yet!"), this);
+    mLangHelpLab = new QLabel(tr("Language are used to define how number input should be typed (using comma or dot as decimal separator). This is not related to the application translation which is not available yet!"), this);
     QFont f;
     f.setPointSize(pointSize(11));
     mLangHelpLab->setFont(f);
