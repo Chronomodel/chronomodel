@@ -262,6 +262,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
     // ------------------------------------------------
     if(mCurrentTypeGraph == ePostDistrib)
     {
+        mGraph->setTipYLab("");
         // ------------------------------------------------
         //  Possible Curves :
         //  - Post Distrib All Chains
@@ -284,6 +285,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
             }
             mGraph->adjustYToMaxValue();
             mGraph->setTipXLab("t");
+
             mGraph->setYAxisMode(GraphView::eHidden);
         }
         // ------------------------------------------------

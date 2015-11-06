@@ -145,6 +145,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         if(typeGraph == ePostDistrib && variable == eTheta)
         {
             mGraph->mLegendX = DateUtils::getAppSettingsFormat();
+            mGraph->mLegendY = "";
             mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
             mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
             mTitle =  tr("Phase") + " : " + mPhase->getName();
@@ -261,6 +262,8 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         // ------------------------------------------------
         if(mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eTheta)
         {
+            mGraph->setTipYLab("");
+
             mGraph->setCurveVisible("Post Distrib Alpha All Chains", mShowAllChains);
             mGraph->setCurveVisible("Post Distrib Beta All Chains", mShowAllChains);
             mGraph->setCurveVisible("HPD Alpha All Chains", mShowAllChains);

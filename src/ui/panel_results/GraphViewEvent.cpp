@@ -290,6 +290,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         // ------------------------------------------------
         if(mCurrentTypeGraph == ePostDistrib)
         {
+            mGraph->setTipYLab("");
             // ------------------------------------------------
             //  Possible curves :
             //  - Post Distrib All Chains

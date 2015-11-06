@@ -448,11 +448,11 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
 
 void GraphView::setTipXLab(const QString& lab)
 {
-    mTipXLab = lab + " = ";
+    mTipXLab = lab =="" ? "":  lab + " = ";
 }
 void GraphView::setTipYLab(const QString& lab)
 {
-    mTipYLab = lab + " = ";
+    mTipYLab = lab =="" ? "":  lab + " = ";
 }
 
 #pragma mark Resize & Paint
