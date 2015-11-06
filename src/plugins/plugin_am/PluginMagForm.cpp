@@ -42,7 +42,7 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     mAlpha95Edit->setText("1");
     
     mIncRadio->setChecked(true);
-    
+    mRefCombo->setCurrentIndex(mRefCombo->findText("i.ref",Qt::MatchEndsWith));
     
     QGridLayout* grid = new QGridLayout();
     grid->setContentsMargins(0, 0, 0, 0);
@@ -152,20 +152,24 @@ void PluginMagForm::updateOptions()
 {
     mIncEdit->setVisible(mIncRadio->isChecked());
     mIncLab->setVisible(mIncRadio->isChecked());
+    if(mIncRadio->isChecked())    mRefCombo->setCurrentIndex(mRefCombo->findText("i.ref",Qt::MatchEndsWith));
     
     mDecEdit->setVisible(mDecRadio->isChecked());
     mDecLab->setVisible(mDecRadio->isChecked());
-    
+    if(mDecRadio->isChecked())    mRefCombo->setCurrentIndex(mRefCombo->findText("d.ref",Qt::MatchEndsWith));
+
     mDecIncEdit->setVisible(mDecRadio->isChecked());
     mDecIncLab->setVisible(mDecRadio->isChecked());
     
     mIntensityEdit->setVisible(mIntensityRadio->isChecked());
     mIntensityLab->setVisible(mIntensityRadio->isChecked());
-    
+    if(mIntensityRadio->isChecked())    mRefCombo->setCurrentIndex(mRefCombo->findText("f.ref",Qt::MatchEndsWith));
+
     if(mIntensityRadio->isChecked())
         mAlpha95Lab->setText(tr("Error (sd)") + " :");
     else
         mAlpha95Lab->setText(tr("Alpha 95") + " :");
+
 }
 
 #endif
