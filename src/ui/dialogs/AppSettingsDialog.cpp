@@ -16,7 +16,7 @@ QDialog(parent, flags)
     // -----------------------------
     mGeneralView = new QWidget();
     
-    mLangHelpLab = new QLabel(tr("Language are used to define how number input should be typed (using comma or dot as decimal separator). This is not related to the application translation which is not available yet!"), this);
+    mLangHelpLab = new QLabel(tr("Language is used to define how number input should be typed (using comma or dot as decimal separator). This is not related to the application translation which is not available yet!"), this);
     QFont f;
     f.setPointSize(pointSize(11));
     mLangHelpLab->setFont(f);
@@ -25,26 +25,19 @@ QDialog(parent, flags)
     
     mLanguageLab = new QLabel(tr("Language") + " : ", this);
     mLanguageCombo = new QComboBox(this);
-    //mLanguageCombo->addItem(QLocale::languageToString(QLocale::French), QVariant(QLocale::French));
-    //mLanguageCombo->addItem(QLocale::languageToString(QLocale::English), QVariant(QLocale::English));
-    //mLanguageCombo->addItem(QLocale::languageToString(QLocale::German), QVariant(QLocale::German));
-    //mLanguageCombo->addItem(QLocale::languageToString(QLocale::Spanish), QVariant(QLocale::Spanish));
     QList<QLocale> allLocales = QLocale::matchingLocales(QLocale::AnyLanguage, QLocale::AnyScript, QLocale::AnyCountry);
 
-    /*for(int i=0; i<allLocales.size(); i++) {
-        mLanguageCombo->addItem(QLocale::languageToString(allLocales[i].language()),QVariant(allLocales[i].language()));
-    }*/
     for(int i=0; i<339; i++) {
         mLanguageCombo->addItem(QLocale::languageToString((QLocale::Language)i),QVariant((QLocale::Language)i));
     }
 
+    /*
     mCountryLab = new QLabel(tr("Country") + " : ", this);
     mCountryCombo = new QComboBox(this);
     mCountryCombo->addItem(QLocale::countryToString(QLocale::France), QVariant(QLocale::France));
     mCountryCombo->addItem(QLocale::countryToString(QLocale::UnitedKingdom), QVariant(QLocale::UnitedKingdom));
-    //mCountryCombo->addItem(QLocale::countryToString(QLocale::Germany), QVariant(QLocale::Germany));
-    //mCountryCombo->addItem(QLocale::countryToString(QLocale::Spain), QVariant(QLocale::Spain));
-    
+    */
+
     mAutoSaveLab = new QLabel(tr("Auto save project") + " : ", this);
     mAutoSaveCheck = new QCheckBox(this);
     mAutoSaveDelayLab = new QLabel(tr("Auto save interval (in minutes)") + " : ", this);
@@ -65,11 +58,11 @@ QDialog(parent, flags)
     mCSVDecSepCombo->addItem(". (dot)", QVariant("."));
     if(QLocale::system().language()==QLocale::French) {
         mCSVCellSepEdit->setText(";");
-        mCSVDecSepCombo->setCurrentIndex(0);//setCurrentText(",");
+        mCSVDecSepCombo->setCurrentIndex(0);
     }
     else {
         mCSVCellSepEdit->setText(",");
-        mCSVDecSepCombo->setCurrentIndex(1);//setCurrentText(".");
+        mCSVDecSepCombo->setCurrentIndex(1);
     }
 
 
@@ -246,7 +239,7 @@ AppSettingsDialog::~AppSettingsDialog()
 void AppSettingsDialog::setSettings(const AppSettings& settings)
 {
     mLanguageCombo->setCurrentText(QLocale::languageToString(settings.mLanguage));
-    mCountryCombo->setCurrentText(QLocale::countryToString(settings.mCountry));
+    //mCountryCombo->setCurrentText(QLocale::countryToString(settings.mCountry));
     
     mAutoSaveCheck->setChecked(settings.mAutoSave);
     mAutoSaveDelayEdit->setText(QString::number(settings.mAutoSaveDelay / 60));
@@ -272,7 +265,7 @@ AppSettings AppSettingsDialog::getSettings()
 {
     AppSettings settings;
     settings.mLanguage = (QLocale::Language)mLanguageCombo->currentData().toInt();
-    settings.mCountry = (QLocale::Country)mCountryCombo->currentData().toInt();
+    settings.mCountry = locale().country();//QLocale::Country)mCountryCombo->currentData().toInt();
     settings.mAutoSave = mAutoSaveCheck->isChecked();
     settings.mAutoSaveDelay = mAutoSaveDelayEdit->text().toInt() * 60;
     settings.mCSVCellSeparator = mCSVCellSepEdit->text();
@@ -306,13 +299,12 @@ void AppSettingsDialog::buttonClicked(QAbstractButton* button)
    // if(mButtonBox->buttonRole(button) == QDialogButtonBox::RestoreDefaults)
     {
         mLanguageCombo->setCurrentText(QLocale::languageToString(QLocale::system().language()));
-        mCountryCombo->setCurrentText(QLocale::countryToString(QLocale::system().country()));
+        //mCountryCombo->setCurrentText(QLocale::countryToString(QLocale::system().country()));
         
         mAutoSaveCheck->setChecked(APP_SETTINGS_DEFAULT_AUTO_SAVE);
         mAutoSaveDelayEdit->setText(locale().toString(APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC / 60));
         mAutoSaveDelayEdit->setEnabled(true);
-        
-        //if(QLocale::system().language()==QLocale::French) {
+                
         if(QLocale::system().decimalPoint()==',') {
             mCSVCellSepEdit->setText(";");
             mCSVDecSepCombo->setCurrentIndex(0);                      

@@ -54,8 +54,8 @@ private:
     QLabel* mLanguageLab;
     QComboBox* mLanguageCombo;
     
-    QLabel* mCountryLab;
-    QComboBox* mCountryCombo;
+   // QLabel* mCountryLab;
+   // QComboBox* mCountryCombo;
     
     QLabel* mAutoSaveLab;
     QCheckBox* mAutoSaveCheck;
