@@ -117,7 +117,6 @@ public:
     void updatePhaseConstraint(int constraintId);
     int getUnusedPhaseConstraintId(const QJsonArray& constraints);
     
-    //void deleteModel();
     void clearModel();
     
 public slots:
@@ -142,6 +141,7 @@ public slots:
     void splitDate(const int eventId, const int dateId);
     
 signals:
+    void noResult();
     void projectStateChanged();
     void currentEventChanged(const QJsonObject& event);
     void currentPhaseChanged(const QJsonObject& phase);

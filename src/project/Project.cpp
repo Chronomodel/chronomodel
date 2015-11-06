@@ -2403,21 +2403,9 @@ void Project::run()
     }
 }
 
-/*void Project::deleteModel()
-{
-    if(mModel)
-    {
-        mModel->clear();
-        //delete mModel;
-
-        // Very important!
-        // ResultsView uses a pointer to the model and will use it if it is not set to 0 !!
-      //  mModel = 0;
-
-    }
-}*/
 
 void Project::clearModel()
 {
      mModel->clear();
+     emit noResult();
 }

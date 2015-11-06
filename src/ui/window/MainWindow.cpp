@@ -59,7 +59,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     connect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
     connect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));
     
-    
+    connect(mProject, &Project::noResult, this, &MainWindow::noResult);
     
     connect(mProject, SIGNAL(projectStateChanged()), this, SLOT(updateProject()));
     connect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
@@ -806,6 +806,7 @@ void MainWindow::setLogEnabled(bool enabled)
 
 void MainWindow::mcmcFinished(Model* model)
 {
+    if(!model) return;
     mViewLogAction -> setEnabled(true);
     mViewResultsAction -> setEnabled(true);
     mViewResultsAction -> setChecked(true); // Just check the Result Button after computation and mResultsView is show after
@@ -813,3 +814,12 @@ void MainWindow::mcmcFinished(Model* model)
     
     mProjectView->updateResults(model);
 }
+ void MainWindow::noResult()
+ {
+     mViewLogAction -> setEnabled(false);
+     mViewResultsAction -> setEnabled(false);
+     mViewResultsAction -> setChecked(false);
+
+     mViewModelAction->trigger();
+
+ }

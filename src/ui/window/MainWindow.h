@@ -57,6 +57,7 @@ private:
     void createToolBars();
 
 public slots:
+
     void newProject();
     void openProject();
     void closeProject();
@@ -69,6 +70,7 @@ public slots:
     void openWebsite();
     void showHelp(bool);
     void mcmcFinished(Model*);
+    void noResult();
     void updateProject();
     
     void changeEventsColor();

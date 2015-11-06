@@ -70,8 +70,6 @@ QString DateUtils::getAppSettingsFormat(){
 }
 
 
-
-
 QString DateUtils::convertToAppSettingsFormatStr(const double valueToFormat){
     return dateToString(convertToAppSettingsFormat(valueToFormat));
 }
