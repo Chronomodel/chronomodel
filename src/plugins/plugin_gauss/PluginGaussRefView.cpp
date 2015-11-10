@@ -64,7 +64,7 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
         
         if(mode == DATE_GAUSS_MODE_NONE)
         {
-            for(double t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep)
+            /*for(double t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep)
                 curve.mData[t] = t;
             mGraph->addCurve(curve);
             
@@ -76,6 +76,7 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
             yMax = qMax(yMax, age);
             
             mGraph->setRangeY(yMin, yMax);
+            */
         }
         else if(mode == DATE_GAUSS_MODE_EQ)
         {
@@ -152,65 +153,68 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
             mGraph->setRangeY(yMin, yMax);
         }
         
-        // ----------------------------------------------
-        //  Measure curve
-        // ----------------------------------------------
-        
-        GraphCurve curveMeasure;
-        curveMeasure.mName = "Measure";
-        
-        curveMeasure.mPen.setColor(mMeasureColor);
-        QColor curveColor(mMeasureColor);
-        curveColor.setAlpha(50);
-        curveMeasure.mBrush = curveColor;
-        
-        curveMeasure.mIsVertical = true;
-        curveMeasure.mIsHisto = false;
-        
-        // 5000 pts are used on vertical measure
-        // because the y scale auto adjusts depending on x zoom.
-        // => the visible part of the measure may be very reduced !
-        double step = (yMax - yMin) / 5000.;
-        for(double t=yMin; t<yMax; t += step)
+        if(mode != DATE_GAUSS_MODE_NONE)
         {
-            double v = exp(-0.5 * pow((t - age) / error, 2));
-            curveMeasure.mData[t] = v;
+            // ----------------------------------------------
+            //  Measure curve
+            // ----------------------------------------------
+
+            GraphCurve curveMeasure;
+            curveMeasure.mName = "Measure";
+
+            curveMeasure.mPen.setColor(mMeasureColor);
+            QColor curveColor(mMeasureColor);
+            curveColor.setAlpha(50);
+            curveMeasure.mBrush = curveColor;
+
+            curveMeasure.mIsVertical = true;
+            curveMeasure.mIsHisto = false;
+
+            // 5000 pts are used on vertical measure
+            // because the y scale auto adjusts depending on x zoom.
+            // => the visible part of the measure may be very reduced !
+            double step = (yMax - yMin) / 5000.;
+            for(double t=yMin; t<yMax; t += step)
+            {
+                double v = exp(-0.5 * pow((t - age) / error, 2));
+                curveMeasure.mData[t] = v;
+            }
+            curveMeasure.mData = normalize_map(curveMeasure.mData);
+            mGraph->addCurve(curveMeasure);
+
+            // Write measure value :
+            mGraph->addInfo(tr("Measure : ") + locale.toString(age) + " ± " + locale.toString(error));
+
+            // ----------------------------------------------
+            //  Error on measure
+            // ----------------------------------------------
+
+            GraphCurve curveMeasureAvg;
+            curveMeasureAvg.mName = "MeasureAvg";
+            curveMeasureAvg.mPen.setColor(mMeasureColor);
+            curveMeasureAvg.mPen.setStyle(Qt::SolidLine);
+            curveMeasureAvg.mIsHorizontalLine = true;
+
+            GraphCurve curveMeasureSup;
+            curveMeasureSup.mName = "MeasureSup";
+            curveMeasureSup.mPen.setColor(mMeasureColor);
+            curveMeasureSup.mPen.setStyle(Qt::DashLine);
+            curveMeasureSup.mIsHorizontalLine = true;
+
+            GraphCurve curveMeasureInf;
+            curveMeasureInf.mName = "MeasureInf";
+            curveMeasureInf.mPen.setColor(mMeasureColor);
+            curveMeasureInf.mPen.setStyle(Qt::DashLine);
+            curveMeasureInf.mIsHorizontalLine = true;
+
+            curveMeasureAvg.mHorizontalValue = age;
+            curveMeasureSup.mHorizontalValue = age + error;
+            curveMeasureInf.mHorizontalValue = age - error;
+
+            mGraph->addCurve(curveMeasureAvg);
+            mGraph->addCurve(curveMeasureSup);
+            mGraph->addCurve(curveMeasureInf);
         }
-        curveMeasure.mData = normalize_map(curveMeasure.mData);
-        mGraph->addCurve(curveMeasure);
-        
-        // Write measure value :
-        mGraph->addInfo(tr("Measure : ") + locale.toString(age) + " ± " + locale.toString(error));
-        
-        // ----------------------------------------------
-        //  Error on measure
-        // ----------------------------------------------
-        
-        GraphCurve curveMeasureAvg;
-        curveMeasureAvg.mName = "MeasureAvg";
-        curveMeasureAvg.mPen.setColor(mMeasureColor);
-        curveMeasureAvg.mPen.setStyle(Qt::SolidLine);
-        curveMeasureAvg.mIsHorizontalLine = true;
-        
-        GraphCurve curveMeasureSup;
-        curveMeasureSup.mName = "MeasureSup";
-        curveMeasureSup.mPen.setColor(mMeasureColor);
-        curveMeasureSup.mPen.setStyle(Qt::DashLine);
-        curveMeasureSup.mIsHorizontalLine = true;
-        
-        GraphCurve curveMeasureInf;
-        curveMeasureInf.mName = "MeasureInf";
-        curveMeasureInf.mPen.setColor(mMeasureColor);
-        curveMeasureInf.mPen.setStyle(Qt::DashLine);
-        curveMeasureInf.mIsHorizontalLine = true;
-        
-        curveMeasureAvg.mHorizontalValue = age;
-        curveMeasureSup.mHorizontalValue = age + error;
-        curveMeasureInf.mHorizontalValue = age - error;
-        
-        mGraph->addCurve(curveMeasureAvg);
-        mGraph->addCurve(curveMeasureSup);
-        mGraph->addCurve(curveMeasureInf);
     }
 }
 
