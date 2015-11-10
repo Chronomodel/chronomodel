@@ -162,9 +162,14 @@ QDialog(parent, flags)
     grid->addWidget(mPrecisionLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mPrecision, row, 1);
     
+   // QSpacerItem* vertSpacer =new QSpacerItem(10,50);
+
     QVBoxLayout* mainLayout = new QVBoxLayout();
-    mainLayout->addLayout(grid);
+
     mainLayout->addWidget(mButtonBox);
+    mainLayout->addLayout(grid);
+    mainLayout->addSpacing(20);
+
     mGeneralView->setLayout(mainLayout);
     
     connect(mLanguageCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(changeSettings()));
