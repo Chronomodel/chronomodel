@@ -15,10 +15,10 @@ Plugin14CSettingsView::Plugin14CSettingsView(Plugin14C* plugin, QWidget* parent,
     mRefCurvesList->setSelectionMode(QAbstractItemView::ExtendedSelection);
     mRefCurvesList->setAlternatingRowColors(true);
     mAddRefCurveBut = new QPushButton(tr("Add"), this);
-    mDeleteRefCurveBut = new QPushButton(tr("Delete"), this);
+   // mDeleteRefCurveBut = new QPushButton(tr("Delete"), this);
     
     connect(mAddRefCurveBut, SIGNAL(clicked()), this, SLOT(addRefCurve()));
-    connect(mDeleteRefCurveBut, SIGNAL(clicked()), this, SLOT(deleteRefCurve()));
+    //connect(mDeleteRefCurveBut, SIGNAL(clicked()), this, SLOT(deleteRefCurve()));
     
     // Store the list of existing files
     QString calibPath = ((Plugin14C*)mPlugin)->getRefsPath();
@@ -37,7 +37,7 @@ Plugin14CSettingsView::Plugin14CSettingsView(Plugin14C* plugin, QWidget* parent,
     layout->addWidget(mRefCurvesLab, 0, 0, 1, 2);
     layout->addWidget(mRefCurvesList, 1, 0, 1, 2);
     layout->addWidget(mAddRefCurveBut, 2, 0);
-    layout->addWidget(mDeleteRefCurveBut, 2, 1);
+    //layout->addWidget(mDeleteRefCurveBut, 2, 1);
     setLayout(layout);
 }
 
