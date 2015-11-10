@@ -276,7 +276,7 @@ void GraphViewResults::saveGraphData() const
     AppSettings settings = MainWindow::getInstance()->getAppSettings();
     QString csvSep = settings.mCSVCellSeparator;
 
-    QLocale csvLocal = settings.mCSVCellSeparator == "." ? QLocale::English : QLocale::French;
+    QLocale csvLocal = settings.mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
     csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
     
     int offset = 0;
