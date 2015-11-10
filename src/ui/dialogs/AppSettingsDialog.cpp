@@ -161,8 +161,6 @@ QDialog(parent, flags)
     grid->addWidget(mFormatDate, row, 1);
     grid->addWidget(mPrecisionLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mPrecision, row, 1);
-    
-   // QSpacerItem* vertSpacer =new QSpacerItem(10,50);
 
     QVBoxLayout* mainLayout = new QVBoxLayout();
 
