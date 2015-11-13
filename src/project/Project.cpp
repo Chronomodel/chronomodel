@@ -654,7 +654,7 @@ void Project::mcmcSettings()
 void Project::resetMCMC()
 {
     QMessageBox message(QMessageBox::Warning,
-                        tr("Reset MCMC options"),
+                        tr("Reset MCMC methods"),
                         tr("All event's and data's MCMC methods will be reset to their default value.\nDo you really want to do this ?"),
                         QMessageBox::Yes | QMessageBox::No,
                         qApp->activeWindow(),

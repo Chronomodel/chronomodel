@@ -184,7 +184,7 @@ void MainWindow::createActions()
     mRunAction->setIconVisibleInMenu(true);
     mRunAction->setToolTip(tr("Run Model"));
     
-    mResetMCMCAction = new QAction(tr("Reset MCMC Options"), this);
+    mResetMCMCAction = new QAction(tr("Reset MCMC methods"), this);
     
     //-----------------------------------------------------------------
     // View Actions
