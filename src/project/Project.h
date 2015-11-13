@@ -66,7 +66,7 @@ public:
     bool askToSave(const QString& saveDialogTitle);
     bool saveProjectToFile();
     
-    bool setSettings(const ProjectSettings& settings);
+    bool setSettings(const ProjectSettings& settings);    
     //void setAppSettings(const AppSettings& settings);
     
     bool studyPeriodIsValid();
@@ -76,6 +76,8 @@ public:
     bool mRefreshResults;
     
     // ---------------------------
+    void restoreMCMCSettings();
+
     
     void addEvent(QJsonObject event, const QString& reason);
     int getUnusedEventId(const QJsonArray& events);

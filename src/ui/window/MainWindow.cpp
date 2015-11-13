@@ -382,14 +382,14 @@ void MainWindow::newProject()
             
             resetInterface();
             activateInterface(true);
-            
-            // Reset the project state and send a notification to update the views :
+
+            // Reset the project state and the MCMC Setting to the default value
+            // and then send a notification to update the views :
             mProject->initState(NEW_PROJECT_REASON);
         }
         
         mViewModelAction->trigger();
-        //mProjectView->showModel();
-        
+
         mViewResultsAction->setEnabled(false);
         updateWindowTitle();
     }

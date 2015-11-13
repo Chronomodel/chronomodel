@@ -41,6 +41,7 @@ public:
     ~MCMCSettings();
     
     static MCMCSettings fromJson(const QJsonObject& json);
+    void restoreDefault();
     QJsonObject toJson() const;
     
     QList<Chain> getChains() const;

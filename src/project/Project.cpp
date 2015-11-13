@@ -74,7 +74,9 @@ void Project::initState(const QString& reason)
     // Do no call pushProjectState here because we don't want to store this state in the UndoStack
     // This is called when closing a project or openning a new one,
     // so the undoStack has just been cleared and we want to keep it empty at project start!
+    mState=state;
     sendUpdateState(state, reason, true);
+
 }
 
 QJsonObject Project::emptyState() const
@@ -88,7 +90,9 @@ QJsonObject Project::emptyState() const
     state[STATE_SETTINGS] = settings;
     
     MCMCSettings mcmcSettings;
+    mcmcSettings.restoreDefault();
     QJsonObject mcmc = mcmcSettings.toJson();
+
     state[STATE_MCMC] = mcmc;
     
     QJsonArray events;
@@ -633,11 +637,25 @@ void Project::setAppSettings(const AppSettings& settings)
         mAutoSaveTimer->start();
 }
 
+/**
+ * @brief Project::restoreMCMCSettings not used
+ */
+void Project::restoreMCMCSettings()
+{
+    MCMCSettings settings;
+    settings.restoreDefault();
+
+    QJsonObject stateNext = mState;
+    stateNext[STATE_MCMC] = settings.toJson();
+    pushProjectState(stateNext, tr("MCMC Settings restore default"), true);
+
+}
 
 void Project::mcmcSettings()
 {
     MCMCSettingsDialog dialog(qApp->activeWindow());
     MCMCSettings settings = MCMCSettings::fromJson(mState[STATE_MCMC].toObject());
+    //settings.fromJson(mState[STATE_MCMC].toObject());
     dialog.setSettings(settings);
     dialog.setModal(true);
     
@@ -650,7 +668,9 @@ void Project::mcmcSettings()
         pushProjectState(stateNext, tr("MCMC Settings updated"), true);
     }
 }
-
+/**
+ * @brief Project::resetMCMC Restore default samplinf methods on each ti and theta
+ */
 void Project::resetMCMC()
 {
     QMessageBox message(QMessageBox::Warning,

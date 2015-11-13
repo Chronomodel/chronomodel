@@ -47,6 +47,20 @@ MCMCSettings::~MCMCSettings()
     
 }
 
+void MCMCSettings::restoreDefault()
+{
+    mNumChains = MCMC_NUM_CHAINS_DEFAULT;
+    mNumRunIter =  MCMC_NUM_RUN_DEFAULT;
+    mNumBurnIter =  MCMC_NUM_BURN_DEFAULT;
+    mMaxBatches =  MCMC_MAX_ADAPT_BATCHES_DEFAULT;
+    mNumBatchIter = MCMC_ITER_PER_BATCH_DEFAULT;
+    mThinningInterval =  MCMC_THINNING_INTERVAL_DEFAULT;
+    mMixingLevel =  MCMC_MIXING_DEFAULT;
+    mFinalBatchIndex= 0;
+
+}
+
+
 MCMCSettings MCMCSettings::fromJson(const QJsonObject& json)
 {
     MCMCSettings settings;
