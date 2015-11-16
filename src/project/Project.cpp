@@ -233,7 +233,7 @@ bool Project::checkRefreshResults(const QJsonObject& stateNew,const QJsonObject&
                         */
                      }
                 }
-               qDebug()<<"Check date";
+              // qDebug()<<"Check date";
 
 
 
@@ -760,7 +760,7 @@ int Project::getUnusedEventId(const QJsonArray& events)
         idIsFree = true;
         for(int i=0; i<events.size(); ++i)
         {
-            QJsonObject event = events[i].toObject();
+            QJsonObject event = events.at(i).toObject();
             if(event[STATE_ID].toInt() == id)
                 idIsFree = false;
         }
@@ -926,7 +926,7 @@ void Project::mergeEvents(int eventFromId, int eventToId)
     
     for(int i=events.size()-1; i>=0; --i)
     {
-        QJsonObject evt = events[i].toObject();
+        QJsonObject evt = events.at(i).toObject();
         int id = evt[STATE_ID].toInt();
         if(id == eventFromId)
         {
@@ -941,8 +941,11 @@ void Project::mergeEvents(int eventFromId, int eventToId)
     }
     QJsonArray datesFrom = eventFrom[STATE_EVENT_DATES].toArray();
     QJsonArray datesTo = eventTo[STATE_EVENT_DATES].toArray();
-    for(int i=0; i<datesFrom.size(); ++i)
-        datesTo.append(datesFrom[i].toObject());
+    for(int i=0; i<datesFrom.size(); ++i){
+        QJsonObject dateFrom = datesFrom.at(i).toObject();
+        dateFrom[STATE_ID] = getUnusedDateId(datesTo);
+        datesTo.append(dateFrom);
+    }
     eventTo[STATE_EVENT_DATES] = datesTo;
     
     events[toIndex] = eventTo;
@@ -953,7 +956,7 @@ void Project::mergeEvents(int eventFromId, int eventToId)
     QJsonArray constraints = stateNext[STATE_EVENTS_CONSTRAINTS].toArray();
     for(int i=constraints.size()-1; i>=0; --i)
     {
-        QJsonObject c = constraints[i].toObject();
+        QJsonObject c = constraints.at(i).toObject();
         int fromId = c[STATE_CONSTRAINT_BWD_ID].toInt();
         int toId = c[STATE_CONSTRAINT_FWD_ID].toInt();
         if(eventFromId == fromId || eventFromId == toId)
@@ -1046,7 +1049,7 @@ int Project::getUnusedDateId(const QJsonArray& dates)
         idIsFree = true;
         for(int i=0; i<dates.size(); ++i)
         {
-            QJsonObject date = dates[i].toObject();
+            QJsonObject date = dates.at(i).toObject();
             if(date[STATE_ID].toInt() == id)
                 idIsFree = false;
         }
