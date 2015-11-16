@@ -714,10 +714,11 @@ void EventsScene::dateReleased(DateItem* dateItem, QGraphicsSceneMouseEvent* e)
         
         if(hoveredEventItem && prevEventItem && (hoveredEventItem != prevEventItem))
         {
-            const QJsonObject& prevEvent = prevEventItem->getEvent();
-            const QJsonObject& nextEvent = hoveredEventItem->getEvent();
-            const QJsonObject& dateMoving = dateItem->date();
-            
+            QJsonObject prevEvent = prevEventItem->getEvent();
+            QJsonObject nextEvent = hoveredEventItem->getEvent();
+            QJsonObject dateToRemove = dateItem->date();
+            QJsonObject dateToAdd = dateItem->date();
+
             if(nextEvent[STATE_EVENT_TYPE].toInt() == Event::eDefault)
             {
                 // Move the date to another event :
@@ -725,33 +726,35 @@ void EventsScene::dateReleased(DateItem* dateItem, QGraphicsSceneMouseEvent* e)
                 Project* project = MainWindow::getInstance()->getProject();
                 QJsonObject state = project->state();
                 QJsonArray events = state[STATE_EVENTS].toArray();
-                
-                for(int i=0; i<events.size(); ++i)
+                bool isRemove = false;
+                bool isAdd = false;
+                for(int i=0; !(isRemove && isAdd) && (i<events.size()) ; ++i)
                 {
-                    QJsonObject event = events[i].toObject();
+                    QJsonObject event = events.at(i).toObject();
                     
-                    // remove date from previous event :
+                    // remove dateToRemove from previous event :
                     if(event[STATE_ID].toInt() == prevEvent[STATE_ID].toInt())
                     {
                         QJsonArray dates = event[STATE_EVENT_DATES].toArray();
                         for(int j=0; j<dates.size(); ++j)
                         {
-                            QJsonObject date = dates[j].toObject();
-                            if(date[STATE_ID].toInt() == dateMoving[STATE_ID].toInt())
+                            if(dates.at(j).toObject() == dateToRemove)
                             {
                                 dates.removeAt(j);
+                                isRemove=true;
                                 break;
                             }
                         }
                         event[STATE_EVENT_DATES] = dates;
                     }
-                    // add date to next event :
+                    // add dateToAdd to next event :
                     else if(event[STATE_ID].toInt() == nextEvent[STATE_ID].toInt())
                     {
                         QJsonArray dates = event[STATE_EVENT_DATES].toArray();
-                        dateMoving[STATE_ID] = project->getUnusedDateId(dates);
-                        dates.append(dateMoving);
+                        dateToAdd[STATE_ID] = project->getUnusedDateId(dates);
+                        dates.append(dateToAdd);
                         event[STATE_EVENT_DATES] = dates;
+                        isAdd=true;
                     }
                     events[i] = event;
                 }
