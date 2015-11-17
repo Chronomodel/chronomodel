@@ -914,7 +914,11 @@ void Project::updateEvent(const QJsonObject& event, const QString& reason)
     stateNext[STATE_EVENTS] = events;
     pushProjectState(stateNext, reason, true);
 }
-
+/**
+ * @brief Project::mergeEvents Offer to insert all the dates of an event inside an other event
+ * @param eventFromId
+ * @param eventToId
+ */
 void Project::mergeEvents(int eventFromId, int eventToId)
 {
     QJsonObject stateNext = mState;

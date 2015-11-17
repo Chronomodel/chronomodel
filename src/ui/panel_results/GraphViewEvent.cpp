@@ -104,42 +104,53 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             // ------------------------------------------------
             if(variable == eTheta)
             {
-                mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
+                mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);                                
                 
-                // ------------------------------------
-                //  Post Distrib All Chains
-                // ------------------------------------
-                GraphCurve curvePostDistrib;
-                curvePostDistrib.mName = "Post Distrib All Chains";
-                curvePostDistrib.mPen.setColor(color);
-                
-                /*if(isFixedBound)
-                {
-                    curvePostDistrib.mIsHisto = false;
-                    curvePostDistrib.mIsRectFromZero = true;
-                    for(int t=mSettings.mTmin; t< mSettings.mTmax; ++t)
-                        curvePostDistrib.mData[t] = 0.f;
-                    curvePostDistrib.mData[floor(bound->fixedValue())] = 1.f;
+                if(isFixedBound)
+                {                   
+                    GraphCurve curveLineBound;
+                    curveLineBound.mName = "Post Distrib All Chains";
+                    curveLineBound.mPen.setColor(color);
+                    curveLineBound.mIsVerticalLine = true;
+                    curveLineBound.mVerticalValue = bound->fixedValue();
+                    mGraph->addCurve(curveLineBound);
                 }
                 else if(isUnifBound)
-                {
-                    curvePostDistrib.mIsHisto = true;
-                    curvePostDistrib.mIsRectFromZero = true;
-                    curvePostDistrib.mData = bound->mValues;
-                }*/
-               // else
-               // {
-                    curvePostDistrib = generateDensityCurve(mEvent->mTheta.fullHisto(),
-                                                                       "Post Distrib All Chains",
-                                                                       color);
-               // }
-                mGraph->addCurve(curvePostDistrib);
-                
+                {                   
+                    GraphCurve curveLineStart;
+                    curveLineStart.mName = "Post Distrib All Chains";
+                    curveLineStart.mPen.setColor(color);
+                    curveLineStart.mIsVerticalLine = true;
+                    curveLineStart.mVerticalValue = bound->uniformStart();
+                    mGraph->addCurve(curveLineStart);
+
+                    GraphCurve curveLineEnd;
+                    curveLineEnd.mName = "Post Distrib All Chains";
+                    curveLineEnd.mPen.setColor(color);
+                    curveLineEnd.mIsVerticalLine = true;
+                    curveLineEnd.mVerticalValue = bound->uniformEnd();
+                    mGraph->addCurve(curveLineEnd);
+                }
+
+
                 // ------------------------------------
                 //  HPD All Chains
                 // ------------------------------------
                 if(!isFixedBound)
                 {
+                    // ------------------------------------
+                    //  Post Distrib All Chains
+                    // ------------------------------------
+                    GraphCurve curvePostDistrib;
+                    curvePostDistrib.mName = "Post Distrib All Chains";
+                    curvePostDistrib.mPen.setColor(color);
+
+                    curvePostDistrib = generateDensityCurve(mEvent->mTheta.fullHisto(),
+                                                                           "Post Distrib All Chains",
+                                                                           color);
+                    mGraph->addCurve(curvePostDistrib);
+
+
                     // HPD All Chains
                     GraphCurve curveHPD = generateHPDCurve(mEvent->mTheta.mHPD,
                                                            "HPD All Chains",
