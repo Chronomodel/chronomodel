@@ -240,7 +240,7 @@ void MCMCLoopMain::initMCMC()
                 s02_sum += 1.f / (data.stddev * data.stddev);
             }
             unsortedEvents[i]->mS02 = unsortedEvents[i]->mDates.size() / s02_sum;
-            unsortedEvents[i]->mTheta.mSigmaMH = unsortedEvents[i]->mS02;
+            unsortedEvents[i]->mTheta.mSigmaMH = sqrt(unsortedEvents[i]->mS02);
             unsortedEvents[i]->mAShrinkage = 1.;
         }
         emit stepProgressed(i);
