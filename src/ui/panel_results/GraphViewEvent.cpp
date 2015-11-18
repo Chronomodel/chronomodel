@@ -194,7 +194,6 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                 mGraph->setFormatFunctX(0);
                 mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
                 
-                //mGraph->setRangeX(0,mSettings.mTmin + mSettings.mTmax);
                 if (mEvent->type()==Event::eKnown) {
                     mTitle = tr("Bound ") + " : " + mEvent->getName();
                 }
