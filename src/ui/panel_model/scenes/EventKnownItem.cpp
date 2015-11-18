@@ -50,14 +50,8 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     
     EventKnown bound = EventKnown::fromJson(event);
     bound.updateValues(tmin, tmax, step);
-    
-    /*QRectF rect = boundingRect();
-    double side = 40.f;
-    double top = 25.f;
-    QRectF thumbRect(rect.x() + side, rect.y() + top + mEltsMargin + mTitleHeight, rect.width() - 2*side, mThumbH);*/
-    
+        
     GraphView* graph = new GraphView();
-    //graph->setFixedSize(thumbRect.width(), thumbRect.height());
     graph->setFixedSize(200, 50);
     graph->setMargins(0, 0, 0, 0);
     
@@ -78,7 +72,8 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     graph->setXAxisMode(GraphView::eHidden);
     graph->setYAxisMode(GraphView::eHidden);
     
-    GraphCurve curve;
+    /*GraphCurve curve;
+
     curve.mData = normalize_map(bound.mValues);
     curve.mName = "Bound";
     
@@ -90,9 +85,36 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     
     graph->addCurve(curve);
     graph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
-    graph->mLegendX = DateUtils::getAppSettingsFormat();
+    graph->mLegendX = DateUtils::getAppSettingsFormat();*/
+
+    //---------------------
+
+    GraphCurve curve;
+    curve.mName = "Bound";
+    curve.mBrush = Painting::mainColorLight;
+
+    curve.mPen = QPen(Painting::mainColorLight, 2.f);
+
+    curve.mIsVerticalLine = false;
+    curve.mIsHorizontalSections = true;
+    qreal tLower;
+    qreal tUpper;
+    if(mData[STATE_EVENT_KNOWN_TYPE].toInt()==0) { // it's mean Fixed Bound
+        tLower = mData[STATE_EVENT_KNOWN_FIXED].toDouble();
+        tUpper = tLower;
+
+    }
+    else {
+        tLower = mData[STATE_EVENT_KNOWN_START].toDouble();
+        tUpper = mData[STATE_EVENT_KNOWN_END].toDouble();;
+    }
+
+    curve.mSections.append(qMakePair(tLower,tUpper));
+    graph->addCurve(curve);
+    //---------------------
     
-    mThumb = QPixmap(graph->size());
+    //mThumb = QPixmap(graph->size());
+    mThumb = QImage(graph->size(),QImage::Format_ARGB32_Premultiplied);
     graph->render(&mThumb);
     delete graph;
     
@@ -166,8 +188,8 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     
     // Thumb
     
-    painter->drawPixmap(thumbRect, mThumb, mThumb.rect());
-    
+    //painter->drawPixmap(thumbRect, mThumb, mThumb.rect());
+    painter->drawImage(thumbRect, mThumb, mThumb.rect());
     // Phases
     
     QJsonArray phases = getPhases();
@@ -199,12 +221,6 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     painter->setBrush(Qt::NoBrush);
     painter->drawRect(phasesRect);
     
-    /*if(mGreyedOut)
-    {
-        painter->setPen(Painting::greyedOut);
-        painter->setBrush(Painting::greyedOut);
-        painter->drawEllipse(boundingRect());
-    }*/
     
     // Border
     painter->setBrush(Qt::NoBrush);

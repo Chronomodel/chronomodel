@@ -156,28 +156,29 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                                                            "HPD All Chains",
                                                            color);
                     mGraph->addCurve(curveHPD);
-                }
+
                 
-                // ------------------------------------
-                //  Post Distrib Chain i
-                // ------------------------------------
-                for(int i=0; i<mChains.size(); ++i)
-                {
-                    GraphCurve curvePostDistribChain = generateDensityCurve(mEvent->mTheta.histoForChain(i),
-                                                                            "Post Distrib Chain " + QString::number(i),
-                                                                            Painting::chainColors[i],
-                                                                            Qt::SolidLine,
-                                                                            Qt::NoBrush);
-                    mGraph->addCurve(curvePostDistribChain);
+                    // ------------------------------------
+                    //  Post Distrib Chain i
+                    // ------------------------------------
+                    for(int i=0; i<mChains.size(); ++i)
+                    {
+                        GraphCurve curvePostDistribChain = generateDensityCurve(mEvent->mTheta.histoForChain(i),
+                                                                                "Post Distrib Chain " + QString::number(i),
+                                                                                Painting::chainColors[i],
+                                                                                Qt::SolidLine,
+                                                                                Qt::NoBrush);
+                        mGraph->addCurve(curvePostDistribChain);
+                    }
+
+                    // ------------------------------------
+                    //  Theta Credibility
+                    // ------------------------------------
+                    GraphCurve curveCred = generateCredibilityCurve(mEvent->mTheta.mCredibility,
+                                                                    "Credibility All Chains",
+                                                                    color);
+                    mGraph->addCurve(curveCred);
                 }
-                
-                // ------------------------------------
-                //  Theta Credibility
-                // ------------------------------------
-                GraphCurve curveCred = generateCredibilityCurve(mEvent->mTheta.mCredibility,
-                                                                "Credibility All Chains",
-                                                                color);
-                mGraph->addCurve(curveCred);
             }
             
             

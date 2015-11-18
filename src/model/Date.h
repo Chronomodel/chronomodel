@@ -71,6 +71,7 @@ public:
     double getLikelyhoodFromCalib(const double t);
     QMap<double, double> getCalibMap() const;
     QPixmap generateCalibThumb();
+    QPixmap generateTypoThumb();
     
     void initDelta(Event* event);
     

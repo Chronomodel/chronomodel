@@ -35,6 +35,7 @@ public:
     double mVerticalValue;
     
     bool mIsHorizontalSections;
+    bool mIsTopLineSections;
     QList<QPair<double, double> > mSections;
     
     bool mIsVertical;

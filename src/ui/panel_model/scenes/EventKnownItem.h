@@ -21,7 +21,8 @@ protected:
     virtual QRectF toggleRect() const;
     
 private:
-    QPixmap mThumb;
+    //QPixmap mThumb;
+    QImage mThumb;
     int mThumbH;
 };
 
