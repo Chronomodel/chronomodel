@@ -180,6 +180,7 @@ void CalibrationView::updateGraphs()
         //mCalibGraph->setTipYLab("value");
 
         // Fill HPD only if not typo ref. :
+        mResultsLab->clear();
         if(!isTypo)
         {
             QString input = mHPDEdit->text();
