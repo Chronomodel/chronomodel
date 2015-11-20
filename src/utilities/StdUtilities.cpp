@@ -324,31 +324,24 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double t
         return result;
     }
     else {
-    
         QMultiMap<double, double> inverted;
         QMapIterator<double, double> iter(aMap);
 
         while(iter.hasNext()) {
-            iter.next();
-            //  original code HL from v1.1
+             iter.next();
              double t = iter.key();
              double v = iter.value();
-
+             result[t] = 0; // important to init all the possible value
              inverted.insertMulti(v, t);
-
         }
-    
-        double areaSearched = areaTot * threshold / 100.;
-    
-    
+
         QMapIterator<double, double> iterInverted(inverted);
+
+        double area         = 0.f;
+        double areaSearched = areaTot * threshold / 100.;
+
         iterInverted.toBack();
-    
-        double area         = 0.;
-        bool areaFound      = false;
-        bool symetryTested  = false;
-        double lastV        = 0.;
-    
+    //--------------------
         while(iterInverted.hasPrevious()) {
             iterInverted.previous();
             double t = iterInverted.value();
@@ -358,56 +351,39 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double t
         
             /*
                 This part of code fix the case of irregular QMap when the step between keys are not the same
-             and fix the calculus of the area on the extremum
-             modif PhL 2015/05/20
              */
             if (iterMap.key() == t) { // it's mean : consFind(t) find the good key else iterMap = constEnd()
-            
-                double tPrev = 0.;
-                double vPrev = 0.;
-            
+
                 if ( iterMap != aMap.constBegin() ) { // it's mean : iterMap is not the first item
-                    tPrev = (iterMap-1).key();
-                    vPrev = (iterMap-1).value();
+                    double vPrev = (iterMap-1).value();
+                    if (vPrev>=v) {
+                        double tPrev = (iterMap-1).key();
+                        area   +=(v + vPrev)/2*(t - tPrev);
+                    }
                 }
-                if (vPrev>v) {
-                    area   +=(v + vPrev)/2*(t - tPrev);
-                }
-        
-                double tNext = 0.;
-                double vNext = 0.;
+
                 if (iterMap != aMap.constEnd() ) {
-                    tNext = (iterMap+1).key();
-                    vNext = (iterMap+1).value();
+                    double vNext = (iterMap+1).value();
+                    if (vNext>v) {
+                        double tNext = (iterMap+1).key();
+                        area   +=(v + vNext)/2*(tNext - t);
+                    }
                 }
-     
-                if (vNext>v) {
-                    area   +=(v + vNext)/2*(tNext - t);
-                }
-       
+
             }
-            //area += v; // original code HL from v1.1
         
-            if(area < areaSearched) {
+            if(iterInverted.hasPrevious() &&  (iterInverted.peekPrevious().key()==v) ) {
                 result[t] = v;
             }
-            else if(area > areaSearched) {
-                    if(!areaFound) {
-                        areaFound = true;
-                        result[t] = v;
-                    }
-                    else  if(!symetryTested) {
-                             symetryTested = true;
-                             if(v == lastV) {
-                                 result[t] = v;
-                               }
-                             else result[t] = 0;
-                          }
-                          else {
-                              result[t] = 0;
-                          }
+             else {
+                if(area < areaSearched) {
+                    result[t] = v;
                 }
-            lastV = v;
+                else if(area > areaSearched) {
+                        qDebug()<<"in StdUtilities create_HPD area areaSearched areaTo"<<area<<areaSearched<<areaTot;
+                        return result;
+                    }
+            }
         }
 
         return result;
@@ -416,18 +392,6 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double t
 
 double map_area(const QMap<double, double>& map)
 {
-    /* original code HL from v1.1
-     QMapIterator<double, double> iter(map);
-    double area = 0.;
-    while(iter.hasNext())
-    {
-        iter.next();
-        area += iter.value();
-    }
-    return area;
-     */
-    
-    // Modif PhD  on 2015/05/20
     if(map.isEmpty())
         return 0;
     
