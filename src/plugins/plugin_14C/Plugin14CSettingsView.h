@@ -7,10 +7,7 @@
 #include <QMap>
 
 class Plugin14C;
-class QLabel;
-class QListWidget;
-class QPushButton;
-
+class PluginRefCurveSettingsView;
 
 class Plugin14CSettingsView: public PluginSettingsViewAbstract
 {
@@ -19,21 +16,8 @@ public:
     Plugin14CSettingsView(Plugin14C* plugin, QWidget* parent = 0, Qt::WindowFlags flags = 0);
     virtual ~Plugin14CSettingsView();
     
-    void updateRefsList();
-    
-protected slots:
-    void addRefCurve();
-    void deleteRefCurve();
-    void onAccepted();
-    
 private:
-    QLabel* mRefCurvesLab;
-    QListWidget* mRefCurvesList;
-    QPushButton* mAddRefCurveBut;
-    QPushButton* mDeleteRefCurveBut;
-    
-    QMap<QString, QString> mFilesOrg;
-    QMap<QString, QString> mFilesNew;
+    PluginRefCurveSettingsView* mRefView;
 };
 
 #endif

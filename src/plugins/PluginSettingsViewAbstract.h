@@ -15,10 +15,6 @@ public:
     
     virtual ~PluginSettingsViewAbstract(){}
     
-protected slots:
-    virtual void onAccepted(){}
-    virtual void onRejected(){}
-    
 public:
     PluginAbstract* mPlugin;
 };

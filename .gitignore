@@ -19,3 +19,11 @@ resources/Thumbs.db
 
 
 Makefile
+
+*.pbxproj
+
+*.xcsettings
+
+*.pbxproj
+
+*.xcscheme

@@ -6,11 +6,8 @@
 #include "../PluginSettingsViewAbstract.h"
 #include <QMap>
 
+class PluginRefCurveSettingsView;
 class PluginGauss;
-class QLabel;
-class QListWidget;
-class QPushButton;
-
 
 class PluginGaussSettingsView: public PluginSettingsViewAbstract
 {
@@ -19,21 +16,8 @@ public:
     PluginGaussSettingsView(PluginGauss* plugin, QWidget* parent = 0, Qt::WindowFlags flags = 0);
     virtual ~PluginGaussSettingsView();
     
-    void updateRefsList();
-    
-    protected slots:
-    void addRefCurve();
-    void deleteRefCurve();
-    void onAccepted();
-    
-private:
-    QLabel* mRefCurvesLab;
-    QListWidget* mRefCurvesList;
-    QPushButton* mAddRefCurveBut;
-    QPushButton* mDeleteRefCurveBut;
-    
-    QMap<QString, QString> mFilesOrg;
-    QMap<QString, QString> mFilesNew;
+protected:
+    PluginRefCurveSettingsView* mRefView;
 };
 
 #endif

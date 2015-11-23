@@ -85,6 +85,45 @@ public:
     virtual PluginSettingsViewAbstract* getSettingsView() = 0;
     virtual QList<QHash<QString, QVariant>> getGroupedActions() {return QList<QHash<QString, QVariant>>();}
     
+    // -------------------------------
+    // The following is for plugins using ref curves :
+    // -------------------------------
+    virtual QString getRefExt() const {return "";}
+    virtual QString getRefsPath() const {return "";}
+    virtual QMap<QString, QMap<double, double> > loadRefFile(QFileInfo refFile){return QMap<QString, QMap<double, double> >();}
+    
+    void loadRefDatas(){
+        QString path = QDir::currentPath();
+        QString calibPath = getRefsPath();
+        
+        QDir calibDir(calibPath);
+        
+        QFileInfoList files = calibDir.entryInfoList(QStringList(), QDir::Files);
+        for(int i=0; i<files.size(); ++i)
+        {
+            if(files[i].suffix().toLower() == getRefExt())
+            {
+                QMap<QString, QMap<double, double> > curves = loadRefFile(files[i].absoluteFilePath());
+                mRefDatas[files[i].fileName().toLower()] = curves;
+            }
+        }
+    }
+    QStringList getRefsNames() const{
+        QStringList refNames;
+        typename QMap< QString, QMap<QString, QMap<double, double> > >::const_iterator it = mRefDatas.begin();
+        while(it != mRefDatas.end())
+        {
+            refNames.push_back(it.key());
+            ++it;
+        }
+        return refNames;
+    }
+    const QMap<QString, QMap<double, double> >& getRefData(const QString& name) {
+        return mRefDatas[name.toLower()];
+    }
+    QMap< QString, QMap<QString, QMap<double, double> > > mRefDatas;
+    // -------------------------------
+    
     GraphViewRefAbstract* mRefGraph;
     QColor mColor;
     
