@@ -118,7 +118,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                                                              "Post Distrib All Chains",
                                                              color,
                                                              Qt::SolidLine,
-                                                             Qt::NoBrush);
+                                                             Qt::NoBrush);                
                 mGraph->addCurve(curvePostDistrib);
                 
                 // Post Distrib Chain i

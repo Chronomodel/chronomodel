@@ -3,6 +3,7 @@
 #include "Generator.h"
 #include "StdUtilities.h"
 #include "PluginManager.h"
+#include "PluginUniform.h"
 #include "../PluginAbstract.h"
 #include "Painting.h"
 #include "QtUtilities.h"
@@ -368,6 +369,83 @@ QMap<double, double> Date::getCalibMap() const
     return vector_to_map(mCalibration, mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
 }
 
+QPixmap Date::generateTypoThumb()
+{
+    if(mIsValid){
+        //  No need to draw the graph on a large size
+        //  These values are arbitary
+        QSize size(200, 30);
+        QPixmap thumb(size);
+
+        double tLower = mData[DATE_UNIFORM_MIN_STR].toDouble();
+        double tUpper = mData[DATE_UNIFORM_MAX_STR].toDouble();
+
+       // bool isFixed = (tLower == tUpper);
+
+        QPainter p;
+        p.begin(&thumb);
+        p.setRenderHint(QPainter::Antialiasing);
+
+        double tmin = mSettings.mTmin;
+        double tmax = mSettings.mTmax;
+        // qDebug()<<" Date::generateCalibThumb"<<tmin<<tmax<<mSettings.mStep;
+
+        GraphView graph;
+        graph.setFixedSize(size);
+        graph.setMargins(0, 0, 0, 0);
+
+        graph.setRangeX(tmin, tmax);
+        graph.setCurrentX(tmin, tmax);
+        graph.setRangeY(0, 1.0f);
+
+        graph.showXAxisArrow(false);
+        graph.showXAxisTicks(false);
+        graph.showXAxisSubTicks(false);
+        graph.showXAxisValues(false);
+
+        graph.showYAxisArrow(false);
+        graph.showYAxisTicks(false);
+        graph.showYAxisSubTicks(false);
+        graph.showYAxisValues(false);
+
+        graph.setXAxisMode(GraphView::eHidden);
+        graph.setYAxisMode(GraphView::eHidden);
+
+        QColor color = mPlugin->getColor();
+
+        GraphCurve curve;
+        curve.mBrush = color;
+
+        curve.mPen = QPen(color, 2.f);
+
+        curve.mIsVerticalLine = false;
+        curve.mIsHorizontalSections = true;
+
+        curve.mSections.append(qMakePair(tLower,tUpper));
+        graph.addCurve(curve);
+
+        curve.mName = "Calibration";
+
+        graph.repaint();
+
+        graph.render(&p);
+        p.end();
+
+        return thumb;
+    }
+    else{
+        // If date is invalid, return a null pixmap!
+        return QPixmap();
+    }
+
+    //thumb.save("test.png");
+    //thumb = graph.grab();
+
+}
+
+
+
+
 QPixmap Date::generateCalibThumb()
 {
     if(mIsValid){
@@ -427,10 +505,9 @@ QPixmap Date::generateCalibThumb()
         return QPixmap();
     }
     
-    //thumb.save("test.png");
-    //thumb = graph.grab();
-    
 }
+
+
 
 double Date::getLikelyhoodFromCalib(const double t)
 {

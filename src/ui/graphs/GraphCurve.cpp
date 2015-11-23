@@ -13,6 +13,7 @@ mHorizontalValue(0),
 mIsVerticalLine(false),
 mVerticalValue(0),
 mIsHorizontalSections(false),
+mIsTopLineSections(false),
 mIsVertical(false),
 mVisible(true)
 {

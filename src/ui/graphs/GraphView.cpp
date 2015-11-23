@@ -683,24 +683,53 @@ void GraphView::drawCurves(QPainter& painter)
             }
             else if(curve.mIsHorizontalSections)
             {
-                qreal y = mMarginTop;
-                path.moveTo(mMarginLeft, y);
+                qreal y1 = mMarginTop;
+                qreal y0 = mMarginTop + mGraphHeight;
+                path.moveTo(mMarginLeft, y0);
                 for(int i=0; i<curve.mSections.size(); ++i)
                 {
                     qreal x1 = getXForValue(curve.mSections[i].first);
                     x1 = qMax(x1, mMarginLeft);
-                    x1 = qMin(x1,mMarginLeft + mGraphWidth);
-                    
+                    x1 = qMin(x1, mMarginLeft + mGraphWidth);
+                    path.lineTo(x1, y0);
+                    path.lineTo(x1, y1);
+
                     qreal x2 = getXForValue(curve.mSections[i].second);
-                    x2 = qMax(x2,mMarginLeft);
+                    x2 = qMax(x2, mMarginLeft);
                     x2 = qMin(x2, mMarginLeft + mGraphWidth);
-                    
-                    path.moveTo(x1, y);
-                    path.lineTo(x2, y);
+                    path.lineTo(x2, y1);
+                    path.lineTo(x2, y0);
                 }
-                path.moveTo(mMarginLeft + mGraphWidth, y);
+                path.lineTo(mMarginLeft + mGraphWidth,y0 );
+                painter.fillPath(path, curve.mBrush);
                 painter.strokePath(path, curve.mPen);
+
             }
+            if(curve.mIsTopLineSections)
+                        {
+                            qreal y1 = mMarginTop;
+                            //qreal y0 = mMarginTop + mGraphHeight;
+                            //path.moveTo(mMarginLeft, y0);
+                            painter.setPen(curve.mPen);
+                            for(int i=0; i<curve.mSections.size(); ++i)
+                            {
+                                qreal x1 = getXForValue(curve.mSections[i].first);
+                                x1 = qMax(x1, mMarginLeft);
+                                x1 = qMin(x1, mMarginLeft + mGraphWidth);
+                                //path.moveTo(x1, y1);
+
+                                qreal x2 = getXForValue(curve.mSections[i].second);
+                                x2 = qMax(x2, mMarginLeft);
+                                x2 = qMin(x2, mMarginLeft + mGraphWidth);
+                                //path.lineTo(x2, y1);
+                                painter.drawLine(QPointF(x1,y1),QPointF(x2,y1));
+                            }
+                            //path.lineTo(mMarginLeft + mGraphWidth,y0 );
+                            //painter.fillPath(path, curve.mBrush);
+                            //painter.strokePath(path, curve.mPen);
+                            //painter.drawPath(path, curve.mPen);
+
+                        }
             else if(curve.mIsVertical)
             {
                 path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);

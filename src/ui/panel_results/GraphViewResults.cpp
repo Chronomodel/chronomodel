@@ -1,4 +1,4 @@
-#include "GraphViewResults.h"
+ #include "GraphViewResults.h"
 #include "Button.h"
 #include "Painting.h"
 #include "QtUtilities.h"
@@ -484,6 +484,7 @@ GraphCurve GraphViewResults::generateDensityCurve(const QMap<double, double>& da
         curve.mBrush = brush;
         curve.mIsHisto = false;
         curve.mIsRectFromZero = true; // for typo. calibs., invisible for others!
+        curve.mIsHorizontalSections = false;
    }
      return curve;
 }
@@ -500,6 +501,7 @@ GraphCurve GraphViewResults::generateHPDCurve(const QMap<double, double>& data,
     curve.mBrush = fillColor;
     curve.mIsHisto = false;
     curve.mIsRectFromZero = true;
+    curve.mIsHorizontalSections = false;
     
     return curve;
 }
@@ -513,7 +515,8 @@ GraphCurve GraphViewResults::generateCredibilityCurve(const QPair<double, double
     curve.mPen.setColor(color);
     curve.mPen.setWidth(3);
     curve.mPen.setStyle(Qt::SolidLine);
-    curve.mIsHorizontalSections = true;
+    curve.mIsTopLineSections = true;
+    curve.mIsHorizontalSections = false;
     
     return curve;
 }

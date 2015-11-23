@@ -3,6 +3,7 @@
 #include "Painting.h"
 #include "EventItem.h"
 #include "Project.h"
+#include "PluginAbstract.h"
 #include <QtWidgets>
 
 
@@ -23,9 +24,15 @@ mGreyedOut(false)
     d.mSettings.mTmin = s.mTmin;
     d.mSettings.mTmax = s.mTmax;
     d.mSettings.mStep = s.mStep;
-    d.calibrate(s);
-    //    qDebug()<<" DateItem::DateItem"<<d.mSettings.mTmin<<d.mSettings.mTmax<<d.mSettings.mStep;
-    mCalibThumb = d.generateCalibThumb();
+    if(d.mPlugin!=NULL) {
+        if(d.mPlugin->getName() !="Typo Ref.") {
+            d.calibrate(s);
+            mCalibThumb = d.generateCalibThumb();
+        }
+        else {
+            mCalibThumb = d.generateTypoThumb();
+        }
+    }
 }
 
 const QJsonObject& DateItem::date() const
@@ -83,22 +90,17 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     painter->setPen(Qt::black);
     painter->drawText(r.adjusted(0, 0, 0, -r.height()/2), Qt::AlignCenter, mDate[STATE_NAME].toString());
     
-    if(!mCalibThumb.isNull()){
-        painter->drawPixmap(r.adjusted(0, r.height()/2, 0, 0),
+    if(!mCalibThumb.isNull()) {
+       painter->drawPixmap(r.adjusted(0, r.height()/2, 0, 0),
                             mCalibThumb,
                             mCalibThumb.rect());
-    }else{
+    }
+    else {
         painter->setPen(Qt::red);
         painter->drawText(r.adjusted(0, r.height()/2, 0, 0), Qt::AlignCenter, tr("Not in study period"));
     }
 
-    
-    /*if(mGreyedOut)
-    {
-        painter->setPen(Painting::greyedOut);
-        painter->setBrush(Painting::greyedOut);
-        painter->drawRect(boundingRect());
-    }*/
+
 }
 
 void DateItem::mousePressEvent(QGraphicsSceneMouseEvent* e)

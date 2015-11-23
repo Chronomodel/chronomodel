@@ -370,7 +370,7 @@ void EventPropertiesView::updateKnownGraph()
         mKnownGraph->setRangeY(0, max);
         
         // draw the calibrate curve on the rigth hand panel
-        GraphCurve curve;
+       /* GraphCurve curve;
         curve.mName = "Known";
         curve.mData = event.mValues;
         
@@ -387,7 +387,36 @@ void EventPropertiesView::updateKnownGraph()
             curve.mIsHisto = false;
             curve.mIsRectFromZero = true;
         }
+        mKnownGraph->addCurve(curve);*/
+        //---------------------
+
+        GraphCurve curve;
+        curve.mName = "Bound";
+        curve.mBrush = Painting::mainColorLight;
+
+        curve.mPen = QPen(Painting::mainColorLight, 2.f);
+
+        curve.mIsVerticalLine = false;
+        curve.mIsHorizontalSections = true;
+        qreal tLower;
+        qreal tUpper;
+        if(event.knownType() == EventKnown::eFixed) {
+            tLower = event.fixedValue();
+            tUpper = tLower;
+
+        }
+        else {
+            tLower = event.uniformStart();
+            tUpper = event.uniformEnd();
+        }
+
+        curve.mSections.append(qMakePair(tLower,tUpper));
         mKnownGraph->addCurve(curve);
+        //---------------------
+
+
+
+
     }
 }
 
