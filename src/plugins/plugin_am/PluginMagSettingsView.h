@@ -7,9 +7,7 @@
 #include <QMap>
 
 class PluginMag;
-class QLabel;
-class QListWidget;
-class QPushButton;
+class PluginRefCurveSettingsView;
 
 class PluginMagSettingsView: public PluginSettingsViewAbstract
 {
@@ -17,23 +15,9 @@ class PluginMagSettingsView: public PluginSettingsViewAbstract
 public:
     PluginMagSettingsView(PluginMag* plugin, QWidget* parent = 0, Qt::WindowFlags flags = 0);
     virtual ~PluginMagSettingsView();
-    void updateRefsList();
-    void updateFloder();
-
-protected slots:
-    void addRefCurve();
-    void deleteRefCurve();
-    //void onAccepted();
-
+    
 private:
-    QLabel* mRefCurvesLab;
-    QListWidget* mRefCurvesList;
-    QPushButton* mAddRefCurveBut;
-    QPushButton* mDeleteRefCurveBut;
-
-    QMap<QString, QString> mFilesOrg;
-    QMap<QString, QString> mFilesNew;
-
+    PluginRefCurveSettingsView* mRefView;
 };
 
 #endif

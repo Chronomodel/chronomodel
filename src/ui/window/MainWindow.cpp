@@ -4,7 +4,6 @@
 #include "../PluginAbstract.h"
 #include "AboutDialog.h"
 #include "AppSettingsDialog.h"
-#include "PluginsSettingsDialog.h"
 #include "PluginManager.h"
 #include "ModelUtilities.h"
 #include <QtWidgets>
@@ -533,22 +532,6 @@ void MainWindow::openWebsite()
 }
 
 #pragma mark Grouped Actions
-/*void MainWindow::datesActions()
-{
-    QString pluginName = sender()->objectName();
-    
-    const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
-    for(int i=0; i<plugins.size(); ++i){
-        if(plugins[i]->getName() == pluginName){
-            PluginsSettingsDialog dialog(plugins[i], qApp->activeWindow());
-            if(dialog.exec() == QDialog::Accepted)
-            {
-                // Is there anything to do ?
-            }
-        }
-    }
-}*/
-
 void MainWindow::changeEventsColor()
 {
     QColor color = QColorDialog::getColor(Qt::blue, qApp->activeWindow(), tr("Change selected events color"));

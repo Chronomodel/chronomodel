@@ -51,12 +51,10 @@ public:
     
     // ---------------------
     
+    QString getRefExt() const;
     QString getRefsPath() const;
-    void loadRefDatas();//const ProjectSettings& settings);
-    QStringList getRefsNames() const;
-    const QMap<QString, QMap<double, double> >& getRefData(const QString& name);
+    QMap<QString, QMap<double, double> > loadRefFile(QFileInfo refFile);
     
-    QMap< QString, QMap<QString, QMap<double, double> > > mRefDatas;
 };
 
 #endif
