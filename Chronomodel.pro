@@ -68,7 +68,7 @@ macx{
     ICON = $$PRO_PATH/icon/Chronomodel.icns
 
 	# This is the SDK used to compile : change it to whatever latest version of mac you are using.
-	QMAKE_MAC_SDK = macosx10.11
+	QMAKE_MAC_SDK = macosx10.10
 	
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
 	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
@@ -156,28 +156,7 @@ unix:!macx{
 # INCLUDES
 #########################################
 
-INCLUDEPATH += src/
-INCLUDEPATH += src/mcmc/
-INCLUDEPATH += src/model/
-INCLUDEPATH += src/plugins/
-INCLUDEPATH += src/plugins/plugin_14C/
-INCLUDEPATH += src/plugins/plugin_am/
-INCLUDEPATH += src/plugins/plugin_gauss/
-INCLUDEPATH += src/plugins/plugin_tl/
-INCLUDEPATH += src/plugins/plugin_uniform/
-INCLUDEPATH += src/project/
-INCLUDEPATH += src/ui/
-INCLUDEPATH += src/ui/dialogs/
-INCLUDEPATH += src/ui/graphs/
-INCLUDEPATH += src/ui/lookandfeel/
-INCLUDEPATH += src/ui/panel_model/
-INCLUDEPATH += src/ui/panel_model/data/
-INCLUDEPATH += src/ui/panel_model/scenes/
-INCLUDEPATH += src/ui/panel_results/
-INCLUDEPATH += src/ui/panel_mcmc/
-INCLUDEPATH += src/ui/widgets/
-INCLUDEPATH += src/ui/window/
-INCLUDEPATH += src/utilities/
+INCLUDEPATH += src/**
 
 #########################################
 # HEADERS
