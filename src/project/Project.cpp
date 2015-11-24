@@ -410,6 +410,44 @@ bool Project::load(const QString& path)
         {
             mState = jsonDoc.object();
             
+            if(mState.contains(STATE_APP_VERSION))
+            {
+                QString projectVersionStr = mState[STATE_APP_VERSION].toString();
+                QStringList projectVersionList = projectVersionStr.split(".");
+                
+                QString appVersionStr = QApplication::applicationVersion();
+                QStringList appVersionList = appVersionStr.split(".");
+                
+                if(projectVersionList.size() == 3 && appVersionList.size() == 3)
+                {
+                    bool newerProject = false;
+                    if(projectVersionList[0].toInt() > appVersionList[0].toInt()){
+                        newerProject = true;
+                    }
+                    else if(projectVersionList[0].toInt() == appVersionList[0].toInt()){
+                        if(projectVersionList[1].toInt() > appVersionList[1].toInt()){
+                            newerProject = true;
+                        }
+                        else if(projectVersionList[1].toInt() == appVersionList[1].toInt()){
+                            if(projectVersionList[2].toInt() > appVersionList[2].toInt()){
+                                newerProject = true;
+                            }
+                        }
+                    }
+                    if(newerProject){
+                        QMessageBox message(QMessageBox::Warning,
+                                            tr("Project version doesn't match"),
+                                            "This project has been saved with a newer version of ChronoModel :\n\n- Project version : " + projectVersionStr + "\n- Current version : " + appVersionStr + "\n\nSome incompatible data may be missing and you may encounter problems running the model.\n\nLoading the project will update and overwrite the existing file. Do you really want to continue ?",
+                                            QMessageBox::Yes | QMessageBox::No,
+                                            qApp->activeWindow(),
+                                            Qt::Sheet);
+                        if(message.exec() == QMessageBox::No){
+                            return false;
+                        }
+                    }
+                }
+            }
+            
             //  Ask all plugins if dates are corrects.
             //  If not, it may be an incompatibility between plugins versions (new parameter added for example...)
             //  This function gives a chance to plugins to modify dates saved with old versions in order to use them with the new version.
@@ -418,13 +456,14 @@ bool Project::load(const QString& path)
             //  Check if dates are valid on the current study period
             mState = checkValidDates(mState);
             
-            if(!mState.contains(STATE_APP_VERSION))
-                mState[STATE_APP_VERSION] = qApp->applicationVersion();
-            
+            // When openning a project, it is maked as saved : mState == mLastSavedState
             mLastSavedState = mState;
             
+            // If a version update is to be done :
+            QJsonObject state = mState;
+            state[STATE_APP_VERSION] = qApp->applicationVersion();
             
-            pushProjectState(mState, PROJECT_LOADED_REASON, true, true);
+            pushProjectState(state, PROJECT_LOADED_REASON, true, true);
             
             file.close();
             
@@ -2395,6 +2434,11 @@ void Project::run()
         return;
     }
     
+    // Save the project before running MCMC :
+    AppSettings s = MainWindow::getInstance()->getAppSettings();
+    if(s.mAutoSave){
+        save();
+    }
     
     // This is the occasion to clean EVERYTHING using the previous model before deleting it!
     // e.g. : clean the result view with any graphs, ...
