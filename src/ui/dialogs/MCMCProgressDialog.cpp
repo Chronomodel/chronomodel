@@ -29,7 +29,8 @@ mLoop(loop)
     // mOKBut->setEnabled(false);
     
     connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
-    connect(mCancelBut, SIGNAL(clicked()), this, SLOT(cancelMCMC()));
+    connect(mCancelBut, &QPushButton::clicked, this, &MCMCProgressDialog::reject);
+    connect(this, &MCMCProgressDialog::rejected, this, &MCMCProgressDialog::cancelMCMC);
     
     // ----------
     
