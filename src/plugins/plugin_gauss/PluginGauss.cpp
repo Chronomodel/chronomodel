@@ -45,12 +45,11 @@ QPair<double, double > PluginGauss::getLikelyhoodArg(const double& t, const QJso
         c = 0;
     }
     
-
     if(mode == DATE_GAUSS_MODE_EQ || mode == DATE_GAUSS_MODE_NONE){
         variance=sqrt(error);
         exponent=-0.5f * pow((age - (a * t * t + b * t + c)) / error, 2.f);
-        
     }
+    
     else if(mode == DATE_GAUSS_MODE_CURVE){
         // Check if calib curve exists !
         if(mRefDatas.find(ref_curve) != mRefDatas.end())
@@ -404,37 +403,70 @@ bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& se
         
         return ((age - error < max) && (age + error > min));
     }
-    else if(mode == DATE_GAUSS_MODE_CURVE){
-       // QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
-        // check valid curve
+    else if(mode == DATE_GAUSS_MODE_CURVE)
+    {
         QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString().toLower();
         if(mRefDatas.find(ref_curve) == mRefDatas.end()) {
             qDebug()<<"in PluginGauss::isDateValid() unkowned curve"<<ref_curve;
             return false;
         }
-        const QMap<double, double>& curveG95Inf = mRefDatas[ref_curve]["G95Inf"];
-        const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
+        double min = 0;
+        double max = 0;
         
-        QMap<double, double>::const_iterator iter = curveG95Sup.constFind(settings.mTmin);
-        if(iter != curveG95Sup.constEnd()){
-            double max = iter.value();
-            while(iter != curveG95Sup.constEnd() && iter.key() <= settings.mTmax){
-                max = qMax(max, iter.value());
-                ++iter;
+        if(mLastRefsMinMax.find(ref_curve) != mLastRefsMinMax.end() &&
+           mLastRefsMinMax[ref_curve].first.first == settings.mTmin &&
+           mLastRefsMinMax[ref_curve].first.second == settings.mTmax)
+        {
+            min = mLastRefsMinMax[ref_curve].second.first;
+            max = mLastRefsMinMax[ref_curve].second.second;
+        }
+        else
+        {
+            const QMap<double, double>& curveG95Inf = mRefDatas[ref_curve]["G95Inf"];
+            const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
+            
+            QMap<double, double>::const_iterator iter = curveG95Sup.constFind(settings.mTmin);
+            if(iter == curveG95Sup.constEnd()){
+                double t1 = curveG95Sup.firstKey();
+                if(t1 < settings.mTmax){
+                    iter = curveG95Sup.constBegin();
+                }
+            }
+            if(iter != curveG95Sup.constEnd()){
+                max = iter.value();
+                while(iter != curveG95Sup.constEnd() && iter.key() <= settings.mTmax){
+                    max = qMax(max, iter.value());
+                    ++iter;
+                }
             }
             
+            // Find min
             iter = curveG95Inf.constFind(settings.mTmin);
+            if(iter == curveG95Inf.constEnd()){
+                double t1 = curveG95Inf.firstKey();
+                if(t1 < settings.mTmax){
+                    iter = curveG95Inf.constBegin();
+                }
+            }
             if(iter != curveG95Inf.constEnd()){
-                double min = iter.value();
+                min = iter.value();
                 while(iter != curveG95Inf.constEnd() && iter.key() <= settings.mTmax){
                     min = qMin(min, iter.value());
                     ++iter;
                 }
-                return ((age - 1.96*error < max) && (age + 1.96*error > min));
             }
+            // Store min & max
+            mLastRefsMinMax[ref_curve].first.first = settings.mTmin;
+            mLastRefsMinMax[ref_curve].first.second = settings.mTmax;
+            mLastRefsMinMax[ref_curve].second.first = min;
+            mLastRefsMinMax[ref_curve].second.second = max;
         }
+        return ((age - 1.96*error < max) && (age + 1.96*error > min));
     }
-    return false;
+    else
+    {
+        return false;
+    }
 }
 
 #endif

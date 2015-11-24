@@ -55,6 +55,9 @@ public:
     QString getRefsPath() const;
     QMap<QString, QMap<double, double> > loadRefFile(QFileInfo refFile);
     
+    // Used to store ref curves min and max values on a given study period.
+    // This is only used in isDateValid() and prevents going through all ref curves points each time we check a date validity!!
+    QMap<QString, QPair< QPair<double, double>, QPair<double, double> > > mLastRefsMinMax;
 };
 
 #endif
