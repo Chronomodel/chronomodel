@@ -1150,7 +1150,8 @@ void Project::checkDatesCompatibility()
             QJsonObject date = dates[j].toObject();
             
             // -----------------------------------------------------------
-            //  Check the date compatibility with the plugin version
+            //  Check the date compatibility with the plugin version.
+            //  Here, we can control if all date fields are present, and add them if not.
             // -----------------------------------------------------------
             if(date.find(STATE_DATE_SUB_DATES) == date.end())
                 date[STATE_DATE_SUB_DATES] = QJsonArray();
@@ -1158,8 +1159,10 @@ void Project::checkDatesCompatibility()
             if(date.find(STATE_DATE_VALID) == date.end())
                 date[STATE_DATE_VALID] = true;
             
+            if(date[STATE_DATE_PLUGIN_ID].toString() == "typo_ref.")
+                date[STATE_DATE_PLUGIN_ID] = "typo";
+            
             // etc...
-            // Here, we could control if all date fields are present, and add them if not.
             
             // -----------------------------------------------------------
             //  Check the date compatibility with the plugin version

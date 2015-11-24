@@ -25,7 +25,7 @@ mGreyedOut(false)
     d.mSettings.mTmax = s.mTmax;
     d.mSettings.mStep = s.mStep;
     if(d.mPlugin!=NULL) {
-        if(d.mPlugin->getName() !="Typo Ref.") {
+        if(d.mPlugin->getName() != "Typo") {
             d.calibrate(s);
             mCalibThumb = d.generateCalibThumb();
         }
