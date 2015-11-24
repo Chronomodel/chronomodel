@@ -135,10 +135,13 @@ QString PluginGauss::csvHelp() const
 QStringList PluginGauss::csvColumns() const
 {
     QStringList cols;
-    cols << "Name" << "Age" << "Error (sd)" << "a" << "b" << "c";
+    cols << "Name" << "Measure" << "Error (sd)" << "Ref. Curve" << "a" << "b" << "c";
     return cols;
 }
 
+int PluginGauss::csvMinColumns() const{
+    return csvColumns().count() - 3;
+}
 
 PluginFormAbstract* PluginGauss::getForm()
 {
@@ -157,14 +160,23 @@ QJsonObject PluginGauss::fromCSV(const QStringList& list)
     {
         json.insert(DATE_GAUSS_AGE_STR, list[1].toDouble());
         json.insert(DATE_GAUSS_ERROR_STR, list[2].toDouble());
-        json.insert(DATE_GAUSS_A_STR, list[3].toDouble());
-        json.insert(DATE_GAUSS_B_STR, list[4].toDouble());
-        json.insert(DATE_GAUSS_C_STR, list[5].toDouble());
         
-        // TODO : for now, CSV imported data are only of equation type !
-        // We need to define a CSV format to allow curve mode.
-        json.insert(DATE_GAUSS_MODE_STR, QString(DATE_GAUSS_MODE_EQ));
-        json.insert(DATE_GAUSS_CURVE_STR, QString(""));
+        if(list[3] == "equation" && list.size() >= csvMinColumns() + 3)
+        {
+            json.insert(DATE_GAUSS_MODE_STR, QString(DATE_GAUSS_MODE_EQ));
+            json.insert(DATE_GAUSS_A_STR, list[4].toDouble());
+            json.insert(DATE_GAUSS_B_STR, list[5].toDouble());
+            json.insert(DATE_GAUSS_C_STR, list[6].toDouble());
+        }
+        else if(list[3] == "none" || list[3] == "")
+        {
+            json.insert(DATE_GAUSS_MODE_STR, QString(DATE_GAUSS_MODE_NONE));
+        }
+        else
+        {
+            json.insert(DATE_GAUSS_MODE_STR, QString(DATE_GAUSS_MODE_CURVE));
+            json.insert(DATE_GAUSS_CURVE_STR, list[3]);
+        }
     }
     return json;
 }
@@ -174,9 +186,19 @@ QStringList PluginGauss::toCSV(const QJsonObject& data, const QLocale& csvLocale
     QStringList list;
     list << csvLocale.toString(data[DATE_GAUSS_AGE_STR].toDouble());
     list << csvLocale.toString(data[DATE_GAUSS_ERROR_STR].toDouble());
-    list << csvLocale.toString(data[DATE_GAUSS_A_STR].toDouble());
-    list << csvLocale.toString(data[DATE_GAUSS_B_STR].toDouble());
-    list << csvLocale.toString(data[DATE_GAUSS_C_STR].toDouble());
+    
+    if(data[DATE_GAUSS_MODE_STR].toString() == DATE_GAUSS_MODE_NONE){
+        list << "none";
+    }
+    else if(data[DATE_GAUSS_MODE_STR].toString() == DATE_GAUSS_MODE_EQ){
+        list << "equation";
+        list << csvLocale.toString(data[DATE_GAUSS_A_STR].toDouble());
+        list << csvLocale.toString(data[DATE_GAUSS_B_STR].toDouble());
+        list << csvLocale.toString(data[DATE_GAUSS_C_STR].toDouble());
+    }
+    else if(data[DATE_GAUSS_MODE_STR].toString() == DATE_GAUSS_MODE_CURVE){
+        list << data[DATE_GAUSS_CURVE_STR].toString();
+    }
     return list;
 }
 
