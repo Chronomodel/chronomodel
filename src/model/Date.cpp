@@ -418,7 +418,6 @@ QPixmap Date::generateTypoThumb()
 
         curve.mPen = QPen(color, 2.f);
 
-        curve.mIsVerticalLine = false;
         curve.mIsHorizontalSections = true;
 
         curve.mSections.append(qMakePair(tLower,tUpper));

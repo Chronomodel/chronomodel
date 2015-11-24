@@ -152,6 +152,7 @@ void CalibrationView::updateGraphs()
         // ------------------------------------------------------------
         QColor penColor = Painting::mainColorDark; //Painting::mainColorLight;
         QColor brushColor = Painting::mainColorLight; //mDate.mPlugin->getColor();
+        brushColor.setAlpha(100);
         
         GraphCurve calibCurve;
         calibCurve.mName = "Calibration";
