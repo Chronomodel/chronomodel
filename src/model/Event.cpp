@@ -157,19 +157,19 @@ QJsonObject Event::toJson() const
     
     event[STATE_EVENT_TYPE] = mType;
     event[STATE_ID] = mId;
-    QColor mColor;
-    if (mModelJson==NULL) {
+    QColor color;
+    if (mModelJson == NULL) {
         event[STATE_NAME] = mInitName;
-        mColor= mInitColor;
+        color = mInitColor;
     }
     else {
         event[STATE_NAME] = getName();
-        mColor=getColor();
+        color = getColor();
     }
     
-    event[STATE_COLOR_RED] = mColor.red();
-    event[STATE_COLOR_GREEN] = mColor.green();
-    event[STATE_COLOR_BLUE] = mColor.blue();
+    event[STATE_COLOR_RED] = color.red();
+    event[STATE_COLOR_GREEN] = color.green();
+    event[STATE_COLOR_BLUE] = color.blue();
     event[STATE_EVENT_METHOD] = mMethod;
     event[STATE_ITEM_X] = mItemX;
     event[STATE_ITEM_Y] = mItemY;
