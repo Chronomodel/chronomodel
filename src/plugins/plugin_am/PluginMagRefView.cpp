@@ -4,6 +4,7 @@
 #include "PluginMag.h"
 #include "GraphView.h"
 #include "StdUtilities.h"
+#include "Painting.h"
 #include <QtWidgets>
 
 
@@ -17,8 +18,7 @@ PluginMagRefView::PluginMagRefView(QWidget* parent):GraphViewRefAbstract(parent)
     mGraph->autoAdjustYScale(true);
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("value");
-    mMeasureColor=QColor(56, 120, 50);
-    
+    mMeasureColor = QColor(56, 120, 50);
 }
 
 PluginMagRefView::~PluginMagRefView()
@@ -81,7 +81,7 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         GraphCurve graphCurveG;
         graphCurveG.mName = "G";
         graphCurveG.mData = curveG;
-        graphCurveG.mPen.setColor(Qt::blue);
+        graphCurveG.mPen.setColor(Painting::mainColorDark);
         graphCurveG.mIsHisto = false;
         mGraph->addCurve(graphCurveG);
         

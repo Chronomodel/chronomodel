@@ -4,6 +4,7 @@
 #include "PluginGauss.h"
 #include "GraphView.h"
 #include "StdUtilities.h"
+#include "Painting.h"
 #include <QtWidgets>
 
 
@@ -56,7 +57,7 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
         
         GraphCurve curve;
         curve.mName = "Reference";
-        curve.mPen.setColor(Qt::blue);
+        curve.mPen.setColor(Painting::mainColorDark);
         curve.mIsHisto = false;
         
         double yMin;
