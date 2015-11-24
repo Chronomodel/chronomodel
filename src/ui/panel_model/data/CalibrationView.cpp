@@ -147,6 +147,7 @@ void CalibrationView::updateGraphs()
         results.quartiles = quartilesForRepartition(mDate.mRepartition, mSettings.mTmin, mSettings.mStep);
         //mResultsLab->setText(densityAnalysisToString(results));
         QString resultsStr = densityAnalysisToString(results);
+        
         // ------------------------------------------------------------
         //  Calibration curve
         // ------------------------------------------------------------
@@ -160,8 +161,8 @@ void CalibrationView::updateGraphs()
         calibCurve.mIsHisto = false;
         calibCurve.mData = mDate.getCalibMap();
         
-        // Fill under distrib.of calibrated date only if typo ref :
-        bool isTypo = (mDate.mPlugin->getName() == "Typo Ref.");
+        // Fill under distrib. of calibrated date only if typo :
+        bool isTypo = (mDate.mPlugin->getName() == "Typo");
         calibCurve.mIsRectFromZero = isTypo;
         calibCurve.mBrush = isTypo ? QBrush(brushColor) : QBrush(Qt::NoBrush);
         
@@ -179,7 +180,7 @@ void CalibrationView::updateGraphs()
         
         mCalibGraph->setTipXLab("t");        
 
-        // Fill HPD only if not typo ref. :
+        // Fill HPD only if not typo :
         mResultsLab->clear();
         if(!isTypo)
         {

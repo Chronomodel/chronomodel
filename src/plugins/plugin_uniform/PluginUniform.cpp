@@ -23,7 +23,7 @@ double PluginUniform::getLikelyhood(const double& t, const QJsonObject& data)
 
 QString PluginUniform::getName() const
 {
-    return QString("Typo Ref.");
+    return QString("Typo");
 }
 QIcon PluginUniform::getIcon() const
 {
