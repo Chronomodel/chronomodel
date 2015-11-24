@@ -4,6 +4,7 @@
 #include "Plugin14C.h"
 #include "GraphView.h"
 #include "StdUtilities.h"
+#include "Painting.h"
 #include <QtWidgets>
 
 
@@ -80,7 +81,7 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         GraphCurve graphCurveG;
         graphCurveG.mName = "G";
         graphCurveG.mData = curveG;
-        graphCurveG.mPen.setColor(Qt::blue);
+        graphCurveG.mPen.setColor(Painting::mainColorDark);
         graphCurveG.mIsHisto = false;
         mGraph->addCurve(graphCurveG);
         

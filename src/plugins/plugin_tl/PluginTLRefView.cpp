@@ -3,6 +3,7 @@
 
 #include "PluginTL.h"
 #include "GraphView.h"
+#include "Painting.h"
 #include "StdUtilities.h"
 #include <QtWidgets>
 
@@ -53,7 +54,7 @@ void PluginTLRefView::setDate(const Date& d, const ProjectSettings& settings)
         
         GraphCurve curve;
         curve.mName = "Reference";
-        curve.mPen.setColor(Qt::blue);
+        curve.mPen.setColor(Painting::mainColorDark);
         curve.mIsHisto = false;
         
         for(double t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep)
