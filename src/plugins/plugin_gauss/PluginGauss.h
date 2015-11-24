@@ -38,6 +38,7 @@ public:
     QList<Date::DataMethod> allowedDataMethods() const;
     QString csvHelp() const;
     QStringList csvColumns() const;
+    int csvMinColumns() const;
     QJsonObject fromCSV(const QStringList& list);
     QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale);
     QString getDateDesc(const Date* date) const;

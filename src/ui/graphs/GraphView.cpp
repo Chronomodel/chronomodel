@@ -13,7 +13,7 @@ class ProjectSettings;
 #pragma mark Constructor / Destructor
 
 GraphView::GraphView(QWidget *parent):QWidget(parent),
-mStepMinWidth(50), // define secondary scale on axis
+mStepMinWidth(100), // define secondary scale on axis
 mXAxisLine(true),
 mXAxisArrow(true),
 mXAxisTicks(true),
