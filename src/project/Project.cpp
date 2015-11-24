@@ -339,8 +339,9 @@ void Project::sendPhasesSelectionChanged()
 
 
 
-bool Project::isValid(){
+QJsonArray Project::getInvalidDates(){
     QJsonArray events = mState[STATE_EVENTS].toArray();
+    QJsonArray invalidDates;
     for(int i=0; i<events.size(); ++i)
     {
         QJsonObject event = events[i].toObject();
@@ -348,11 +349,13 @@ bool Project::isValid(){
         for(int j=0; j<dates.size(); ++j)
         {
             QJsonObject date = dates[j].toObject();
-            if(!date[STATE_DATE_VALID].toBool())
-                return false;
+            if(!date[STATE_DATE_VALID].toBool()){
+                date["event_name"] = event[STATE_NAME];
+                invalidDates.push_back(date);
+            }
         }
     }
-    return true;
+    return invalidDates;
 }
 
 
@@ -2372,6 +2375,24 @@ void Project::exportAsText()
 #pragma mark Run Project
 void Project::run()
 {
+    // Check if project contains invalid dates
+    QJsonArray invalidDates = getInvalidDates();
+    if(invalidDates.size() > 0){
+        QString message = tr("The model contains invalid dates : their calibrations are outside study period. \n\nYou can either extend the study period or modify the concerned dates :\n\n");
+        for(int i=0; i<invalidDates.size(); ++i){
+            message += "- event: \"" + invalidDates[i].toObject()["event_name"].toString() + "\" (date: \"" + invalidDates[i].toObject()[STATE_NAME].toString() + "\")\n";
+        }
+        QMessageBox messageBox(QMessageBox::Warning,
+                            tr("Your model is not valid"),
+                            message,
+                            QMessageBox::Ok,
+                            qApp->activeWindow(),
+                            Qt::Sheet);
+        messageBox.exec();
+        return;
+    }
+    
+    
     // This is the occasion to clean EVERYTHING using the previous model before deleting it!
     // e.g. : clean the result view with any graphs, ...
     emit mcmcStarted();
@@ -2384,6 +2405,7 @@ void Project::run()
     bool modelOk = false;
     try
     {
+        // Check if model structure is valid
         modelOk = mModel->isValid();
     }
     catch(QString error)

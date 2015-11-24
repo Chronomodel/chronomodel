@@ -10,12 +10,12 @@
 StepDialog::StepDialog(QWidget* parent, Qt::WindowFlags flags):
 QDialog(parent, flags)
 {
-    setWindowTitle(tr("Calibration resolution"));
+    setWindowTitle(tr("Resolution of distribution of calibrated date"));
     
-    mTitleLab = new Label(tr("Calibration resolution"), this);
+    mTitleLab = new Label(tr("Resolution of distribution of calibrated date"), this);
     mTitleLab -> setIsTitle(true);
     
-    mForcedLab   = new Label(tr("Force calib. resolution") + " : ", this);
+    mForcedLab   = new Label(tr("Force resolution") + " : ", this);
     mForcedCheck = new CheckBox(this);
     mStepLab     = new Label(tr("Resolution in years") + " : ", this);
     
