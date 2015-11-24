@@ -116,6 +116,11 @@ void GraphViewResults::updateCurvesToShow(bool showAllChains, const QList<bool>&
     mShowCredibility = showCredibility;
     mShowCalib = showCalib;
     mShowWiggle = showWiggle;
+    
+    // Repaint the title area above the graph :
+    int leftShift = mButtonsVisible ? mGraphLeft : 0;
+    QRectF textRect(leftShift, 1, this->width()-leftShift, mTopShift-1);
+    update(textRect.toRect());
 }
 
 void GraphViewResults::toggle(const QRect& targetGeometry)
