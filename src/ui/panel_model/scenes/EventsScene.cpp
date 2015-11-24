@@ -875,6 +875,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
         event.mDates.append(dates[i]);
         event.mItemX = e->scenePos().x();
         event.mItemY = e->scenePos().y() + i * deltaY;
+        event.mInitColor = randomColor();
         events.append(event.toJson());
     }
     state[STATE_EVENTS] = events;
