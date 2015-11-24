@@ -395,8 +395,7 @@ void EventPropertiesView::updateKnownGraph()
         curve.mBrush = Painting::mainColorLight;
 
         curve.mPen = QPen(Painting::mainColorLight, 2.f);
-
-        curve.mIsVerticalLine = false;
+        
         curve.mIsHorizontalSections = true;
         qreal tLower;
         qreal tUpper;
@@ -413,10 +412,6 @@ void EventPropertiesView::updateKnownGraph()
         curve.mSections.append(qMakePair(tLower,tUpper));
         mKnownGraph->addCurve(curve);
         //---------------------
-
-
-
-
     }
 }
 
