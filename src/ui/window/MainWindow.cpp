@@ -409,14 +409,12 @@ void MainWindow::openProject()
             setCurrentPath(info.absolutePath());
             
             resetInterface();
-            activateInterface(true);
             
             mUndoStack->clear();
-           if(! mProject->load(path) ){
-               qDebug()<<"MainWindow::openProject() fail";
-               return;
+            if(mProject->load(path)){
+                activateInterface(true);
+                updateWindowTitle();
             }
-            updateWindowTitle();
         }
     }
 }
@@ -732,9 +730,10 @@ void MainWindow::readSettings(const QString& defaultFilePath)
         
         if(fileInfo.isFile())
         {
-            mProject->load(path);
-            activateInterface(true);
-            updateWindowTitle();
+            if(mProject->load(path)){
+                activateInterface(true);
+                updateWindowTitle();
+            }
         }
     }
     
