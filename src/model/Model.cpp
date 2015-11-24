@@ -477,7 +477,8 @@ void Model::generateModelLog()
                                  QString::number(mEvents[i]->mDates.size()) + " data, " +
                                  QString::number(mEvents[i]->mPhases.size()) + " phases, " +
                                  QString::number(mEvents[i]->mConstraintsBwd.size()) + " const. back., " +
-                                 QString::number(mEvents[i]->mConstraintsFwd.size()) + " const. fwd.)"));
+                                 QString::number(mEvents[i]->mConstraintsFwd.size()) + " const. fwd.)" +
+                                 "<br>- Method : " + ModelUtilities::getEventMethodText(mEvents[i]->mMethod)));
         }
         
         for(int j=0; j<mEvents[i]->mDates.size(); ++j)
