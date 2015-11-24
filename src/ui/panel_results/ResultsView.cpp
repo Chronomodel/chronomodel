@@ -174,7 +174,7 @@ mGraphsH(130)
     mRenderLab = new Label(tr("Rendering :"),mDisplayGroup);
     mRenderCombo = new QComboBox(mDisplayGroup);
     mRenderCombo->addItem(tr("Standard (faster)"));
-    mRenderCombo->addItem(tr("High (slower)"));
+    mRenderCombo->addItem(tr("Retina (slower)"));
     
     
     

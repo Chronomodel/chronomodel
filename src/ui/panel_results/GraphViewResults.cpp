@@ -489,7 +489,6 @@ GraphCurve GraphViewResults::generateDensityCurve(const QMap<double, double>& da
         curve.mBrush = brush;
         curve.mIsHisto = false;
         curve.mIsRectFromZero = true; // for typo. calibs., invisible for others!
-        curve.mIsHorizontalSections = false;
    }
      return curve;
 }
@@ -502,11 +501,10 @@ GraphCurve GraphViewResults::generateHPDCurve(const QMap<double, double>& data,
     curve.mData = data;
     curve.mPen = color;
     QColor fillColor = color;
-    fillColor.setAlpha(125);
+    fillColor.setAlpha(100);
     curve.mBrush = fillColor;
     curve.mIsHisto = false;
     curve.mIsRectFromZero = true;
-    curve.mIsHorizontalSections = false;
     
     return curve;
 }
@@ -521,7 +519,6 @@ GraphCurve GraphViewResults::generateCredibilityCurve(const QPair<double, double
     curve.mPen.setWidth(3);
     curve.mPen.setStyle(Qt::SolidLine);
     curve.mIsTopLineSections = true;
-    curve.mIsHorizontalSections = false;
     
     return curve;
 }
