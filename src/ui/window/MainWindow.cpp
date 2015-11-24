@@ -461,8 +461,8 @@ void MainWindow::updateWindowTitle()
 }
 
 void MainWindow::updateProject(){
-    bool valid = mProject->isValid();
-    mRunAction->setEnabled(valid);
+    //bool valid = mProject->isValid();
+    //mRunAction->setEnabled(valid);
     mProjectView->updateProject();
 }
 
@@ -763,9 +763,11 @@ void MainWindow::activateInterface(bool activate)
     
     // Les actions suivantes doivent être désactivées si on ferme le projet.
     // Par contre, elles ne doivent pas être ré-activée dès l'ouverture d'un projet
+    mRunAction->setEnabled(activate);
+    
     if(!activate)
     {
-        mRunAction->setEnabled(activate);
+        //mRunAction->setEnabled(activate);
         mViewResultsAction->setEnabled(activate);
         mViewLogAction->setEnabled(activate);
     }

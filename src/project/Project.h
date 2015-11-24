@@ -72,7 +72,7 @@ public:
     bool studyPeriodIsValid();
     void showStudyPeriodWarning();
     
-    bool isValid();
+    QJsonArray getInvalidDates();
     bool mRefreshResults;
     
     // ---------------------------
