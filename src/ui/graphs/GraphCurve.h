@@ -25,17 +25,17 @@ public:
     bool mIsHisto;
     bool mIsRectFromZero; // draw a vertical line when graph value leaves 0 : usefull for HPD and Typo!
     
-    bool mUseVectorData;
+    bool mUseVectorData; // Used for traces, correlations and acceptations.
     QVector<double> mDataVector;
     
-    bool mIsHorizontalLine;
+    bool mIsHorizontalLine; // Used for calib measures, 44% targets, quartiles, ...
     double mHorizontalValue;
     
-    bool mIsVerticalLine;
+    bool mIsVerticalLine; // Used for bounds (in results view)
     double mVerticalValue;
     
-    bool mIsHorizontalSections;
-    bool mIsTopLineSections;
+    bool mIsHorizontalSections; // Used for bounds (in scene and property views) and typo (scene view)
+    bool mIsTopLineSections; // Used for credibilities (and "one day" for phases alpha/beta interval??)
     QList<QPair<double, double> > mSections;
     
     bool mIsVertical;

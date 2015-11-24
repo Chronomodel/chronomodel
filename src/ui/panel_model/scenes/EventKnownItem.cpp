@@ -92,17 +92,14 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     GraphCurve curve;
     curve.mName = "Bound";
     curve.mBrush = Painting::mainColorLight;
-
     curve.mPen = QPen(Painting::mainColorLight, 2.f);
-
-    curve.mIsVerticalLine = false;
+    
     curve.mIsHorizontalSections = true;
     qreal tLower;
     qreal tUpper;
     if(mData[STATE_EVENT_KNOWN_TYPE].toInt()==0) { // it's mean Fixed Bound
         tLower = mData[STATE_EVENT_KNOWN_FIXED].toDouble();
         tUpper = tLower;
-
     }
     else {
         tLower = mData[STATE_EVENT_KNOWN_START].toDouble();
