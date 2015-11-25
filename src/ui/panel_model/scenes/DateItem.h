@@ -8,6 +8,7 @@
 #include "EventsScene.h"
 #include "ProjectSettings.h"
 
+
 class DateItem : public QGraphicsObject
 {
     Q_OBJECT

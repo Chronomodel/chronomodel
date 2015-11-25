@@ -24,6 +24,7 @@ mGreyedOut(false)
     d.mSettings.mTmin = s.mTmin;
     d.mSettings.mTmax = s.mTmax;
     d.mSettings.mStep = s.mStep;
+    
     if(d.mPlugin!=NULL) {
         if(d.mPlugin->getName() != "Typo") {
             d.calibrate(s);
@@ -99,8 +100,6 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
         painter->setPen(Qt::red);
         painter->drawText(r.adjusted(0, r.height()/2, 0, 0), Qt::AlignCenter, tr("Not in study period"));
     }
-
-
 }
 
 void DateItem::mousePressEvent(QGraphicsSceneMouseEvent* e)

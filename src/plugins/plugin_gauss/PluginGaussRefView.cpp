@@ -8,8 +8,7 @@
 #include <QtWidgets>
 
 
-PluginGaussRefView::PluginGaussRefView(QWidget* parent):GraphViewRefAbstract(parent),
-mGraph(0)
+PluginGaussRefView::PluginGaussRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
     mGraph = new GraphView(this);
     

@@ -623,7 +623,6 @@ void ResultsView::updateLayout()
 
 void ResultsView::updateGraphsLayout()
 {
-    qDebug() << "ResultsView::updateGraphsLayout";
     int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     
     // ----------------------------------------------------------

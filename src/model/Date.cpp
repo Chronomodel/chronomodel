@@ -447,15 +447,11 @@ QPixmap Date::generateTypoThumb()
 
 QPixmap Date::generateCalibThumb()
 {
-    if(mIsValid){
+    if(mIsValid)
+    {
         //  No need to draw the graph on a large size
         //  These values are arbitary
         QSize size(200, 30);
-        QPixmap thumb(size);
-        
-        QPainter p;
-        p.begin(&thumb);
-        p.setRenderHint(QPainter::Antialiasing);
         
         double tmin = mSettings.mTmin;
         double tmax = mSettings.mTmax;
@@ -492,11 +488,28 @@ QPixmap Date::generateCalibThumb()
         curve.mIsRectFromZero = true; // For Typo !!
         
         graph.addCurve(curve);
-        graph.repaint();
         
-        graph.render(&p);
-        p.end();
-        
+        QPixmap thumb(size);
+        if(graph.inherits("QOpenGLWidget"))
+        {
+            // Does not work if the graph has not been rendered before
+            // (calling repaint() has no direct effect on QOpenGLWidget...)
+            //graph.repaint();
+            //QImage image = graph.grabFramebuffer();
+            //thumb = QPixmap::fromImage(image);
+            
+            // This works but there are some drawing region issues...
+            graph.setRendering(GraphView::eHD);
+            graph.paintToDevice(&thumb);
+        }
+        else{
+            QPainter p;
+            p.begin(&thumb);
+            p.setRenderHint(QPainter::Antialiasing);
+            graph.repaint();
+            graph.render(&p);
+            p.end();
+        }
         return thumb;
     }
     else{
