@@ -12,7 +12,11 @@ class ProjectSettings;
 
 #pragma mark Constructor / Destructor
 
+#if GRAPH_OPENGL
 GraphView::GraphView(QWidget *parent):QOpenGLWidget(parent),
+#else
+GraphView::GraphView(QWidget *parent):QWidget(parent),
+#endif
 mStepMinWidth(100), // define secondary scale on axis
 mXAxisLine(true),
 mXAxisArrow(true),
