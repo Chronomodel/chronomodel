@@ -1,19 +1,24 @@
 #ifndef GRAPHVIEW_H
 #define GRAPHVIEW_H
 
+#define GRAPH_OPENGL 0
+
 #include "GraphViewAbstract.h"
 #include "GraphCurve.h"
 #include "GraphZone.h"
 #include "Ruler.h"
 
+#if GRAPH_OPENGL
 #include <QOpenGLWidget>
+#else
+#include <QWidget>
+#endif
+
 #include <QString>
 #include <QFont>
 #include <QColor>
 #include <QPixmap>
 #include <QFileInfo>
-
-#define GRAPH_OPENGL 1
 
 #if GRAPH_OPENGL
 class GraphView: public QOpenGLWidget, public GraphViewAbstract

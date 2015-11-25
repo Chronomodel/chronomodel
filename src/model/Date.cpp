@@ -455,7 +455,7 @@ QPixmap Date::generateCalibThumb()
         
         double tmin = mSettings.mTmin;
         double tmax = mSettings.mTmax;
-        // qDebug()<<" Date::generateCalibThumb"<<tmin<<tmax<<mSettings.mStep;
+        
         GraphView graph;
         graph.setFixedSize(size);
         graph.setMargins(0, 0, 0, 0);
@@ -502,7 +502,8 @@ QPixmap Date::generateCalibThumb()
             graph.setRendering(GraphView::eHD);
             graph.paintToDevice(&thumb);
         }
-        else{
+        else
+        {
             QPainter p;
             p.begin(&thumb);
             p.setRenderHint(QPainter::Antialiasing);
