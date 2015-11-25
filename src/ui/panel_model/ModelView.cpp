@@ -183,8 +183,6 @@ mCalibVisible(false)
   */
     
     mEventPropertiesView = new EventPropertiesView(mRightWrapper);
-    
-    mEventPropertiesView->mToolbarH = this->mToolbarH;
  
     
     connect(mEventPropertiesView, SIGNAL(updateCalibRequested(const QJsonObject&)), this, SLOT(updateCalibration(const QJsonObject&)));

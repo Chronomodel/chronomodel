@@ -8,7 +8,11 @@ class Event;
 class Date;
 class Label;
 class LineEdit;
+
+class QLabel;
+class QLineEdit;
 class QComboBox;
+
 class ColorPicker;
 class DatesList;
 class Button;
@@ -72,14 +76,15 @@ private:
     int minimumHeight;
     QJsonObject mEvent;
     
+    QWidget* mTopView;
     QWidget* mEventView;
     QWidget* mBoundView;
     
-    Label* mNameLab;
-    Label* mColorLab;
-    Label* mMethodLab;
+    QLabel* mNameLab;
+    QLabel* mColorLab;
+    QLabel* mMethodLab;
     
-    LineEdit* mNameEdit;
+    QLineEdit* mNameEdit;
     ColorPicker* mColorPicker;
     QComboBox* mMethodCombo;
     
@@ -96,13 +101,13 @@ private:
     RadioButton* mKnownFixedRadio;
     RadioButton* mKnownUniformRadio;
     
-    Label* mKnownFixedLab;
-    Label* mKnownStartLab;
-    Label* mKnownEndLab;
+    QLabel* mKnownFixedLab;
+    QLabel* mKnownStartLab;
+    QLabel* mKnownEndLab;
     
-    LineEdit* mKnownFixedEdit;
-    LineEdit* mKnownStartEdit;
-    LineEdit* mKnownEndEdit;
+    QLineEdit* mKnownFixedEdit;
+    QLineEdit* mKnownStartEdit;
+    QLineEdit* mKnownEndEdit;
     
     GraphView* mKnownGraph;
 };

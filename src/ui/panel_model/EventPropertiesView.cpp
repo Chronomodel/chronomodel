@@ -4,8 +4,6 @@
 #include "EventKnown.h"
 #include "DatesList.h"
 #include "Button.h"
-#include "Label.h"
-#include "LineEdit.h"
 #include "RadioButton.h"
 #include "GraphView.h"
 #include "Painting.h"
@@ -21,35 +19,53 @@
 
 
 EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-mToolbarH(60)
+mToolbarH(100)
 {
     minimumHeight =0;
 
     // ------------- commun with defautlt Event and Bound ----------
-    mNameLab = new Label(tr("Name") + " :", this);
+    mNameLab = new QLabel(tr("Name") + " :");
     
-    mNameEdit = new LineEdit(this);
+    mNameEdit = new QLineEdit();
     mNameEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
     mNameEdit->setAlignment(Qt::AlignHCenter);
     
-    mColorLab = new Label(tr("Color") + " :", this);
-    mColorPicker = new ColorPicker(Qt::black, this);
-    //mColorPicker ->  QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+    mColorLab = new QLabel(tr("Color") + " :");
+    mColorPicker = new ColorPicker(Qt::black);
     
-    connect(mNameEdit, SIGNAL(editingFinished()), this, SLOT(updateEventName()));
-    connect(mColorPicker, SIGNAL(colorChanged(QColor)), this, SLOT(updateEventColor(QColor)));
-    
-    // Event default propreties Window mEventView
-    mEventView = new QWidget(this);
-    mMethodLab = new Label(tr("Method") + " :", mEventView);
-    mMethodCombo = new QComboBox(mEventView);
+    mMethodLab = new QLabel(tr("Method") + " :");
+    mMethodCombo = new QComboBox();
     
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eDoubleExp));
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eBoxMuller));
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eMHAdaptGauss));
     
-   
+    connect(mNameEdit, SIGNAL(editingFinished()), this, SLOT(updateEventName()));
+    connect(mColorPicker, SIGNAL(colorChanged(QColor)), this, SLOT(updateEventColor(QColor)));
     connect(mMethodCombo, SIGNAL(activated(int)), this, SLOT(updateEventMethod(int)));
+    
+    QGridLayout* grid = new QGridLayout();
+    grid->setSpacing(6);
+    grid->setContentsMargins(0, 0, 0, 0);
+    grid->addWidget(mNameLab, 0, 0);
+    grid->addWidget(mNameEdit, 0, 1);
+    grid->addWidget(mColorLab, 1, 0);
+    grid->addWidget(mColorPicker, 1, 1);
+    grid->addWidget(mMethodLab, 2, 0);
+    grid->addWidget(mMethodCombo, 2, 1);
+    
+    QVBoxLayout* topLayout = new QVBoxLayout();
+    topLayout->setContentsMargins(10, 6, 10, 6);
+    topLayout->addLayout(grid);
+    topLayout->addStretch();
+    
+    mTopView = new QWidget(this);
+    mTopView->setLayout(topLayout);
+    mTopView->setFixedHeight(mToolbarH);
+    
+    
+    // Event default propreties Window mEventView
+    mEventView = new QWidget(this);
     
     minimumHeight += mEventView->height();
     // -------------
@@ -117,9 +133,9 @@ mToolbarH(60)
     
     mBoundView = new QWidget(this);
     
-    mKnownFixedLab = new Label(tr("Value") + " :", mBoundView);
-    mKnownStartLab = new Label(tr("Start") + " :", mBoundView);
-    mKnownEndLab   = new Label(tr("End")   + " :", mBoundView);
+    mKnownFixedLab = new QLabel(tr("Value") + " :", mBoundView);
+    mKnownStartLab = new QLabel(tr("Start") + " :", mBoundView);
+    mKnownEndLab   = new QLabel(tr("End")   + " :", mBoundView);
     
     mKnownFixedRadio   = new RadioButton(tr("Fixed")   + " :", mBoundView);
     mKnownUniformRadio = new RadioButton(tr("Uniform") + " :", mBoundView);
@@ -127,9 +143,9 @@ mToolbarH(60)
     connect(mKnownFixedRadio, SIGNAL(clicked())  , this, SLOT(updateKnownType()));
     connect(mKnownUniformRadio, SIGNAL(clicked()), this, SLOT(updateKnownType()));
     
-    mKnownFixedEdit = new LineEdit(mBoundView);
-    mKnownStartEdit = new LineEdit(mBoundView);
-    mKnownEndEdit   = new LineEdit(mBoundView);
+    mKnownFixedEdit = new QLineEdit(mBoundView);
+    mKnownStartEdit = new QLineEdit(mBoundView);
+    mKnownEndEdit   = new QLineEdit(mBoundView);
     
     QDoubleValidator* doubleValidator = new QDoubleValidator();
     doubleValidator->setDecimals(2);
@@ -217,6 +233,9 @@ void EventPropertiesView::updateEvent()
         
         mEventView->setVisible(type == Event::eDefault);
         mBoundView->setVisible(type == Event::eKnown);
+        
+        mMethodLab->setVisible(type == Event::eDefault);
+        mMethodCombo->setVisible(type == Event::eDefault);
         
         if(type == Event::eDefault)
         {
@@ -576,58 +595,19 @@ void EventPropertiesView::resizeEvent(QResizeEvent* e)
 
 void EventPropertiesView::updateLayout()
 {
-  
-    this->setGeometry(0, mToolbarH, this->parentWidget()->width(),this->parentWidget()->height()-mToolbarH);
-    
-    int talonLabel = 7;
-    int talonBox = 80;
-    
-    int mLabelWidth = 50;
-    
+    mTopView->setGeometry(0, 0, width(), mToolbarH);
+ 
     int butPluginWidth = 80;
     int butPluginHeigth = 50;
     
-    int boxWidth = this->width() - butPluginWidth-int(floor(2*talonLabel));
+    mEventView->setGeometry(0, mToolbarH, width(), height()-mToolbarH);
+    mBoundView->setGeometry(0, mToolbarH, width(), height()-mToolbarH);
     
-    int boxHeigth = int(floor( (mToolbarH-3*talonLabel) /2 ));//20;
-    
-
-    
-    if(width() < 100)
-    {
-        butPluginWidth = 0;
-    }
-    
-    
-    
-    // place the QLabel
-    // mNameLab, mColorLab, mMethodLab, belong to mEventView
-    int y = talonLabel;
-    mNameLab  -> setGeometry(talonLabel, y, mLabelWidth, boxHeigth);
-    mNameEdit -> setGeometry(talonBox, y, boxWidth, boxHeigth);
-    y += mNameEdit -> height() + talonLabel;
-    
-    mColorLab    -> setGeometry(talonLabel, y, mLabelWidth, boxHeigth);
-    mColorPicker -> setGeometry(talonBox, 2*talonLabel + boxHeigth, boxWidth, boxHeigth);
-    //mColorPicker->etGeometry(talonBox, 2*talonLabel + boxHeigth, boxWidth, boxHeigth);
-    y += mColorPicker -> height() + talonLabel;
-    
-    mEventView->setGeometry(0, y, this->width(), this->height()-y);
-    mBoundView->setGeometry(0, y, this->width(), this->height()-y);
-    
-    // Event properties view :
-    y = 0;
-    
-    mMethodLab   -> setGeometry(talonLabel, y  , mLabelWidth, boxHeigth);
-    mMethodCombo -> setGeometry(talonBox-4, y-4, boxWidth+8, boxHeigth+8);
-    y += mMethodCombo->height() + talonLabel;
-    
-    QRect listRect(0, y, mEventView->width() - butPluginWidth, mEventView->height() - y - butPluginHeigth);
-    
+    QRect listRect(0, 0, mEventView->width() - butPluginWidth, mEventView->height() - butPluginHeigth);
     mDatesList->setGeometry(listRect);
     
     int x = listRect.width();
-    //int y = listRect.y();
+    int y = listRect.y();
     
     for(int i=0; i<mPluginButs1.size(); ++i)
     {
@@ -657,7 +637,7 @@ void EventPropertiesView::updateLayout()
     
     y = 0;//mMethodCombo->y() + talonLabel;;
     QRect r = this->rect();
-    int m = talonLabel;//5;
+    int m = 5;
     int w1 = 80;
     int lineH = 20;
     int w2 = r.width() - w1 - 3*m;
