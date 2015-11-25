@@ -606,6 +606,9 @@ void MainWindow::doGroupedAction()
 }
 
 #pragma mark Events
+/**
+ * @todo Fix app close event called twice when updating with Qt >= 5.6
+ */
 void MainWindow::closeEvent(QCloseEvent* e)
 {
     QMessageBox message(QMessageBox::Question,
@@ -621,6 +624,10 @@ void MainWindow::closeEvent(QCloseEvent* e)
         {
             writeSettings();
             e->accept();
+            
+            // This is a temporary Qt bug fix (should be corrected by Qt 5.6 when released)
+            // The close event is called twice on Mac when closing with "cmd + Q" key or with the "Quit Chronomodel" menu.
+            QCoreApplication::exit(0);
         }
         else
         {

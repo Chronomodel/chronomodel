@@ -41,10 +41,9 @@ public:
     void setLogEnabled(bool enabled);
     void setResultsEnabled(bool enabled);
 
-
 protected:
-    void closeEvent(QCloseEvent* e);
-    void keyPressEvent(QKeyEvent* e);
+    void closeEvent(QCloseEvent* e) Q_DECL_OVERRIDE;
+    void keyPressEvent(QKeyEvent* e) Q_DECL_OVERRIDE;
 
 public:
     void readSettings(const QString& defaultFilePath);
