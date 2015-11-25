@@ -62,6 +62,17 @@ int main(int argc, char *argv[])
     }
 #endif
     
+    // --------------------------------------
+    //  OpenGL specific settings
+    // --------------------------------------
+    QSurfaceFormat format;
+    format.setRenderableType(QSurfaceFormat::OpenGL);
+    format.setProfile(QSurfaceFormat::CoreProfile);
+    format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
+    format.setSamples(4);
+    QSurfaceFormat::setDefaultFormat(format);
+    // --------------------------------------
+    
     ChronoApp a(argc, argv);
     
     a.setApplicationName("ChronoModel");

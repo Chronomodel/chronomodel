@@ -12,7 +12,7 @@ class ProjectSettings;
 
 #pragma mark Constructor / Destructor
 
-GraphView::GraphView(QWidget *parent):QWidget(parent),
+GraphView::GraphView(QWidget *parent):QOpenGLWidget(parent),
 mStepMinWidth(100), // define secondary scale on axis
 mXAxisLine(true),
 mXAxisArrow(true),
@@ -456,11 +456,24 @@ void GraphView::setTipYLab(const QString& lab)
 }
 
 #pragma mark Resize & Paint
+
+#if GRAPH_OPENGL
+void GraphView::initializeGL()
+{
+    //QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
+    //f->glEnable(GL_MULTISAMPLE_ARB);
+}
+void GraphView::resizeGL(int w, int h)
+{
+    repaintGraph(true);
+}
+#else
 void GraphView::resizeEvent(QResizeEvent* event)
 {
     Q_UNUSED(event);
     repaintGraph(true);
 }
+#endif
 
 void GraphView::updateGraphSize(int w, int h)
 {
@@ -581,10 +594,9 @@ void GraphView::paintEvent(QPaintEvent* )
  */
 void GraphView::paintToDevice(QPaintDevice* device)
 {
-    
     QPainter p(device);    
     p.setFont(font());
-
+    
     p.setRenderHints(QPainter::Antialiasing);
     
     // ----------------------------------------------------
@@ -592,11 +604,10 @@ void GraphView::paintToDevice(QPaintDevice* device)
     // ----------------------------------------------------
     p.fillRect(rect(), mBackgroundColor);
     
-       
     QFont font = p.font();
     font.setPointSizeF(font.pointSizeF() - 2.);
     p.setFont(font);
-   
+    
     // ----------------------------------------------------
     //  Curves
     // ----------------------------------------------------
@@ -646,7 +657,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
             y += lineH;
         }
     }
-
+    p.end();
 }
 
 void GraphView::drawCurves(QPainter& painter)
@@ -1155,6 +1166,7 @@ bool GraphView::saveAsSVG(const QString& fileName, const QString& graphTitle, co
         QPainter painter;
         painter.begin(&svgGen);
         font().wordSpacing();
+        
         render(&painter, QPoint(), QRegion(rGraph, QRegion::Rectangle));
         
         QFontMetrics fm(painter.font());
