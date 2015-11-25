@@ -4,7 +4,7 @@
 #include "EventKnown.h"
 #include "DatesList.h"
 #include "Button.h"
-#include "RadioButton.h"
+//#include "RadioButton.h"
 #include "GraphView.h"
 #include "Painting.h"
 #include "MainWindow.h"
@@ -133,12 +133,8 @@ mToolbarH(100)
     
     mBoundView = new QWidget(this);
     
-    mKnownFixedLab = new QLabel(tr("Value") + " :", mBoundView);
-    mKnownStartLab = new QLabel(tr("Start") + " :", mBoundView);
-    mKnownEndLab   = new QLabel(tr("End")   + " :", mBoundView);
-    
-    mKnownFixedRadio   = new RadioButton(tr("Fixed")   + " :", mBoundView);
-    mKnownUniformRadio = new RadioButton(tr("Uniform") + " :", mBoundView);
+    mKnownFixedRadio   = new QRadioButton(tr("Fixed")   + " :", mBoundView);
+    mKnownUniformRadio = new QRadioButton(tr("Uniform") + " :", mBoundView);
     
     connect(mKnownFixedRadio, SIGNAL(clicked())  , this, SLOT(updateKnownType()));
     connect(mKnownUniformRadio, SIGNAL(clicked()), this, SLOT(updateKnownType()));
@@ -152,6 +148,7 @@ mToolbarH(100)
     //mKnownFixedEdit->setValidator(doubleValidator);
     
     mKnownGraph = new GraphView(mBoundView);
+    mKnownGraph->setMinimumHeight(250);
     
     mKnownGraph->setRendering(GraphView::eHD);
     
@@ -172,6 +169,29 @@ mToolbarH(100)
     connect(mKnownFixedEdit, SIGNAL(textEdited(const QString&)), this, SLOT(updateKnownFixed(const QString&)));
     connect(mKnownStartEdit, SIGNAL(textEdited(const QString&)), this, SLOT(updateKnownUnifStart()));
     connect(mKnownEndEdit, SIGNAL(textEdited(const QString&)), this, SLOT(updateKnownUnifEnd()));
+    
+    QFormLayout* fixedLayout = new QFormLayout();
+    fixedLayout->addRow(tr("Value :"), mKnownFixedEdit);
+    mFixedGroup = new QGroupBox();
+    mFixedGroup->setLayout(fixedLayout);
+    
+    QFormLayout* uniformLayout = new QFormLayout();
+    uniformLayout->addRow(tr("Start :"), mKnownStartEdit);
+    uniformLayout->addRow(tr("End :"), mKnownEndEdit);
+    mUniformGroup = new QGroupBox();
+    mUniformGroup->setLayout(uniformLayout);
+    
+    
+    QVBoxLayout* boundLayout = new QVBoxLayout();
+    boundLayout->setContentsMargins(10, 6, 15, 6);
+    boundLayout->setSpacing(10);
+    boundLayout->addWidget(mKnownFixedRadio);
+    boundLayout->addWidget(mFixedGroup);
+    boundLayout->addWidget(mKnownUniformRadio);
+    boundLayout->addWidget(mUniformGroup);
+    boundLayout->addWidget(mKnownGraph);
+    boundLayout->addStretch();
+    mBoundView->setLayout(boundLayout);
     
     setEvent(QJsonObject());
     
@@ -436,7 +456,10 @@ void EventPropertiesView::updateKnownGraph()
 
 void EventPropertiesView::updateKnownControls()
 {
-    if(mKnownFixedRadio->isChecked())
+    mFixedGroup->setVisible(mKnownFixedRadio->isChecked());
+    mUniformGroup->setVisible(mKnownUniformRadio->isChecked());
+    
+    /*if(mKnownFixedRadio->isChecked())
     {
         mKnownFixedEdit->setEnabled(true);
         mKnownStartEdit->setEnabled(false);
@@ -447,7 +470,7 @@ void EventPropertiesView::updateKnownControls()
         mKnownFixedEdit->setEnabled(false);
         mKnownStartEdit->setEnabled(true);
         mKnownEndEdit->setEnabled(true);
-    }
+    }*/
 }
 
 void EventPropertiesView::hideCalibration()
@@ -583,8 +606,10 @@ void EventPropertiesView::sendSplitDate()
 void EventPropertiesView::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
+    QWidget::paintEvent(e);
     QPainter p(this);
-    p.fillRect(rect(), QColor(200, 200, 200));
+    p.fillRect(rect(), palette().color(QPalette::Background));
+    p.fillRect(QRect(0, 0, width(), mToolbarH), QColor(200, 200, 200));
 }
 
 void EventPropertiesView::resizeEvent(QResizeEvent* e)
@@ -635,7 +660,7 @@ void EventPropertiesView::updateLayout()
  
     // Known view : Used with Bound
     
-    y = 0;//mMethodCombo->y() + talonLabel;;
+    /*y = 0;//mMethodCombo->y() + talonLabel;;
     QRect r = this->rect();
     int m = 5;
     int w1 = 80;
@@ -651,7 +676,9 @@ void EventPropertiesView::updateLayout()
     mKnownEndLab->setGeometry(m, y += (lineH + m), w1, lineH);
     mKnownEndEdit->setGeometry(w1 + 2*m, y, w2, lineH);
     
-    mKnownGraph->setGeometry(m, y += (lineH + m), r.width() - 2*m, 100);
+    mKnownGraph->setGeometry(m, y += (lineH + m), r.width() - 2*m, 100);*/
+    
+    
 /* qDebug()<<"EventPropertiesView::sortie update width"<<width()<<" ; height"<<height();
      qDebug()<<"EventPropertiesView::sortie constructeur mEventView width"<<mEventView-> width()<<" ; height"<<mEventView-> height();
    // update(); */

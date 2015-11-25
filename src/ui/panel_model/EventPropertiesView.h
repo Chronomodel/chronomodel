@@ -12,6 +12,8 @@ class LineEdit;
 class QLabel;
 class QLineEdit;
 class QComboBox;
+class QGroupBox;
+class QRadioButton;
 
 class ColorPicker;
 class DatesList;
@@ -98,18 +100,17 @@ private:
     Button* mMergeBut;
     Button* mSplitBut;
     
-    RadioButton* mKnownFixedRadio;
-    RadioButton* mKnownUniformRadio;
-    
-    QLabel* mKnownFixedLab;
-    QLabel* mKnownStartLab;
-    QLabel* mKnownEndLab;
+    QRadioButton* mKnownFixedRadio;
+    QRadioButton* mKnownUniformRadio;
     
     QLineEdit* mKnownFixedEdit;
     QLineEdit* mKnownStartEdit;
     QLineEdit* mKnownEndEdit;
     
     GraphView* mKnownGraph;
+    
+    QGroupBox* mFixedGroup;
+    QGroupBox* mUniformGroup;
 };
 
 #endif
