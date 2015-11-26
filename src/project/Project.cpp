@@ -338,27 +338,6 @@ void Project::sendPhasesSelectionChanged()
 }
 
 
-
-QJsonArray Project::getInvalidDates(){
-    QJsonArray events = mState[STATE_EVENTS].toArray();
-    QJsonArray invalidDates;
-    for(int i=0; i<events.size(); ++i)
-    {
-        QJsonObject event = events[i].toObject();
-        QJsonArray dates = event[STATE_EVENT_DATES].toArray();
-        for(int j=0; j<dates.size(); ++j)
-        {
-            QJsonObject date = dates[j].toObject();
-            if(!date[STATE_DATE_VALID].toBool()){
-                date["event_name"] = event[STATE_NAME];
-                invalidDates.push_back(date);
-            }
-        }
-    }
-    return invalidDates;
-}
-
-
 #pragma mark Project File Management
 
 bool Project::load(const QString& path)
@@ -1423,6 +1402,25 @@ QJsonObject Project::checkValidDates(const QJsonObject& stateToCheck)
     }
     state[STATE_EVENTS] = events;
     return state;
+}
+
+QJsonArray Project::getInvalidDates(){
+    QJsonArray events = mState[STATE_EVENTS].toArray();
+    QJsonArray invalidDates;
+    for(int i=0; i<events.size(); ++i)
+    {
+        QJsonObject event = events[i].toObject();
+        QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+        for(int j=0; j<dates.size(); ++j)
+        {
+            QJsonObject date = dates[j].toObject();
+            if(!date[STATE_DATE_VALID].toBool()){
+                date["event_name"] = event[STATE_NAME];
+                invalidDates.push_back(date);
+            }
+        }
+    }
+    return invalidDates;
 }
 
 void Project::mergeDates(const int eventId, const QList<int>& dateIds)
