@@ -23,21 +23,85 @@ double PluginMag::getLikelyhood(const double& t, const QJsonObject& data)
     return exp(result.second) / sqrt(result.first);
 }
 
-QPair<double, double > PluginMag::getLikelyhoodArg(const double& t, const QJsonObject& data)
+
+double PluginMag::getRefValueAt(const QJsonObject& data, const double& t)
 {
-    double is_inc = data[DATE_AM_IS_INC_STR].toBool();
-    double is_dec = data[DATE_AM_IS_DEC_STR].toBool();
-    double is_int = data[DATE_AM_IS_INT_STR].toBool();
+    QString ref_curve = data[DATE_AM_REF_CURVE_STR].toString().toLower();
+    double g = 0;
+    if(mRefDatas.find(ref_curve) != mRefDatas.end())
+    {
+        const QMap<double, double>& curve = mRefDatas[ref_curve]["G"];
+        
+        double tMinDef = curve.firstKey();
+        double tMaxDef = curve.lastKey();
+        
+        if(t >= tMaxDef){
+            g = curve[tMaxDef];
+        }
+        else if(t <= tMinDef){
+            g = curve[tMinDef];
+        }
+        else
+        {
+            double t_under = floor(t);
+            double t_upper = t_under + 1;
+            double g_under = curve[t_under];
+            double g_upper = curve[t_upper];
+            g = interpolate(t, t_under, t_upper, g_under, g_upper);
+        }
+    }
+    return g;
+}
+
+double PluginMag::getRefErrorAt(const QJsonObject& data, const double& t)
+{
+    QString ref_curve = data[DATE_AM_REF_CURVE_STR].toString().toLower();
+    double error = 0;
+    if(mRefDatas.find(ref_curve) != mRefDatas.end())
+    {
+        const QMap<double, double>& curve = mRefDatas[ref_curve]["G"];
+        const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
+        
+        double tMinDef = curve.firstKey();
+        double tMaxDef = curve.lastKey();
+        
+        if(t > tMaxDef || t < tMinDef){
+            error = 100;
+        }
+        else if(t == tMaxDef || t == tMinDef){
+            error = (curveG95Sup[t] - curve[t]) / 1.96f;
+        }
+        else
+        {
+            double t_under = floor(t);
+            double t_upper = t_under + 1;
+            double g_under = curve[t_under];
+            double g_upper = curve[t_upper];
+            double g = interpolate(t, t_under, t_upper, g_under, g_upper);
+            
+            double g_sup_under = curveG95Sup[t_under];
+            double g_sup_upper = curveG95Sup[t_upper];
+            double g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
+            
+            error = (g_sup - g) / 1.96f;
+        }
+    }
+    return error;
+}
+
+QPair<double, double> PluginMag::getLikelyhoodArg(const double& t, const QJsonObject& data)
+{
+    bool is_inc = data[DATE_AM_IS_INC_STR].toBool();
+    bool is_dec = data[DATE_AM_IS_DEC_STR].toBool();
+    bool is_int = data[DATE_AM_IS_INT_STR].toBool();
     double alpha = data[DATE_AM_ERROR_STR].toDouble();
     double inc = data[DATE_AM_INC_STR].toDouble();
     double dec = data[DATE_AM_DEC_STR].toDouble();
     double intensity = data[DATE_AM_INTENSITY_STR].toDouble();
     QString ref_curve = data[DATE_AM_REF_CURVE_STR].toString().toLower();
     
-    double variance;
-    double exponent;
-    double mesure;
-    double error;
+    double mesure = 0;
+    double error = 0;
     
     if(is_inc)
     {
@@ -55,57 +119,13 @@ QPair<double, double > PluginMag::getLikelyhoodArg(const double& t, const QJsonO
         mesure = intensity;
     }
     
+    double refValue = getRefValueAt(data, t);
+    double refError = getRefErrorAt(data, t);
     
+    double variance = refError * refError + error * error;
+    double exponent = -0.5f * pow((mesure - refValue), 2.f) / variance;
     
-    
-    if(mRefDatas.find(ref_curve) != mRefDatas.end())
-    {
-        const QMap<double, double>& curveG = mRefDatas[ref_curve]["G"];
-        const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
-        
-        
-        double tMinDef=curveG.firstKey();
-        double tMaxDef=curveG.lastKey();
-        double g=0;
-        
-        if(t>tMaxDef){
-            g= curveG[tMaxDef];
-            variance=10E4;
-            //variance=curveG95Sup[tMaxDef]-curveG[tMaxDef];
-        }
-        else if (t<tMinDef){
-            g= curveG[tMinDef];
-            variance=10E4;
-            //variance=curveG95Sup[tMinDef]-curveG[tMinDef];
-        }
-        else {
-            double t_under = floor(t);
-            double t_upper = t_under + 1;
-            variance=10E4;
-            if(curveG.find(t_under) != curveG.end() &&
-               curveG.find(t_upper) != curveG.end()) {
-                
-                double g_under = curveG[t_under];
-                double g_upper = curveG[t_upper];
-                g = interpolate(t, t_under, t_upper, g_under, g_upper);
-            
-                double g_sup_under = curveG95Sup[t_under];
-                double g_sup_upper = curveG95Sup[t_upper];
-                double g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
-            
-                double e = (g_sup - g) / 1.96f;
-            
-                variance = e * e + error * error;
-
-            }
-        }
-        exponent=-0.5f * pow(g - mesure, 2.f) / variance;
-        return qMakePair(variance, exponent);
-    }
-    else {
-        return QPair<double,double>();
-    }
-    
+    return qMakePair(variance, exponent);
 }
 
 bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& settings){

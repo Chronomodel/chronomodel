@@ -50,6 +50,8 @@ public:
     QString getRefExt() const;
     QString getRefsPath() const;
     QMap<QString, QMap<double, double> > loadRefFile(QFileInfo refFile);
+    double getRefValueAt(const QJsonObject& data, const double& t);
+    double getRefErrorAt(const QJsonObject& data, const double& t);
     
     // --------------------------
     // Used to store ref curves min and max values on a given study period.
