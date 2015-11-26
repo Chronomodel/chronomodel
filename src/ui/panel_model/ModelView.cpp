@@ -334,7 +334,7 @@ void ModelView::resetInterface()
 
 void ModelView::updateProject()
 {
-    mEventPropertiesView->hideCalibration();
+    showCalibration(false);
     
     Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
@@ -385,7 +385,7 @@ void ModelView::updateProject()
 
 void ModelView::applySettings()
 {
-    mEventPropertiesView->hideCalibration();
+    showCalibration(false);
     
     Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
@@ -456,7 +456,7 @@ void ModelView::studyPeriodChanging()
     mTmin = dateInDouble( mMinEdit->text().toDouble() );
     mTmax = dateInDouble( mMaxEdit->text().toDouble() );
     setSettingsValid(false);
-    mEventPropertiesView->hideCalibration();
+    showCalibration(false);
     qDebug()<<"ModelView::studyPeriodChanging() apres"<<g_FormatDate<<mTmin<<mTmax;
 }
 */
@@ -467,7 +467,7 @@ void ModelView::minEditChanging()
     
     mTmin = mMinEdit->text().toDouble();
     setSettingsValid(false);
-    mEventPropertiesView->hideCalibration();
+    showCalibration(false);
 }
 
 void ModelView::maxEditChanging()
@@ -477,7 +477,7 @@ void ModelView::maxEditChanging()
     
     mTmax = mMaxEdit->text().toDouble();
     setSettingsValid(false);
-    mEventPropertiesView->hideCalibration();
+    showCalibration(false);
 }
 
 void ModelView::setSettingsValid(bool valid)
@@ -576,7 +576,7 @@ void ModelView::showImport()
     Project* project = MainWindow::getInstance()->getProject();
     if(project->studyPeriodIsValid())
     {
-        mEventPropertiesView -> hideCalibration();
+        showCalibration(false);
         
         mButProperties  -> setChecked(false);
         mButImport      -> setChecked(true);
@@ -596,7 +596,7 @@ void ModelView::showPhases()
     Project* project = MainWindow::getInstance()->getProject();
     if(project->studyPeriodIsValid())
     {
-        mEventPropertiesView->hideCalibration();
+        showCalibration(false);
         
         mButProperties->setChecked(false);
         mButImport->setChecked(false);
@@ -711,18 +711,7 @@ void ModelView::updateLayout()
     
  
     // ----------
-    //mRightSubRect = mRightWrapper->rect().adjusted(0, mButPhasesModel->y()+mButPhasesModel->height(), 0, mRightWrapper->rect().height()-mButPhasesModel->y()-mButPhasesModel->height());
-    
-    //mRightSubRect=QRect(0, mButPhasesModel->y()+mButPhasesModel->height(), 0, mRightWrapper->rect().height()-mButPhasesModel->y()-mButPhasesModel->height());
-    //qDebug() << "ModelView::updateLayout() mRightSubRect"  << mRightSubRect;
-    
-    
-    //mRightWrapper->setGeometry(mEventPropWrapperRectF.toRect());
-    
-    
-   //mEventPropertiesView->setGeometry(mButProperties->isChecked() ? mEventPropWrapperRectF.toRect() : mRightSubHiddenRect);
-    
-    mRightSubRect=QRect(0, mToolbarH, this->width()-x, this->height()-mToolbarH);
+    mRightSubRect = QRect(0, mToolbarH, this->width() - x, this->height() - mToolbarH);
     mRightSubHiddenRect = mRightSubRect.adjusted(mRightSubRect.width() + 2*mMargin, 0, mRightSubRect.width() + 2*mMargin, 0);
    
     mEventPropertiesView->setGeometry(mButProperties->isChecked() ? mRightSubRect : mRightSubHiddenRect);
@@ -826,6 +815,7 @@ void ModelView::updateCalibration(const QJsonObject& date)
 
 void ModelView::showCalibration(bool show)
 {
+    mEventPropertiesView->setCalibChecked(show);
     if(mCalibVisible != show)
     {
         mCalibVisible = show;
@@ -834,7 +824,6 @@ void ModelView::showCalibration(bool show)
             mCalibrationView->raise();
             mAnimationCalib->setStartValue(mLeftHiddenRect);
             mAnimationCalib->setEndValue(mLeftRect);
-            
         }
         else
         {
@@ -867,12 +856,12 @@ void ModelView::mouseMoveEvent(QMouseEvent* e)
 
 void ModelView::keyPressEvent(QKeyEvent* event)
 {
-    if(event->key() == Qt::Key_Escape)
-    {
-        mEventPropertiesView->hideCalibration();
+    if(event->key() == Qt::Key_Escape){
+        showCalibration(false);
     }
-    else
-        event->ignore();
+    else{
+        QWidget::keyPressEvent(event);
+    }
 }
 
 

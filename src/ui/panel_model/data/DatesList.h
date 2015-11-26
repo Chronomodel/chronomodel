@@ -22,6 +22,8 @@ protected slots:
     void handleItemClicked(QListWidgetItem* item);
     void handleItemDoubleClicked(QListWidgetItem* item);
     
+    void forceAtLeastOneSelected();
+    
 signals:
     void calibRequested(const QJsonObject& date);
     
@@ -30,6 +32,8 @@ protected:
     
 private:
     QJsonObject mEvent;
+    QList<QListWidgetItem*> mSelectedItems;
+    bool mUpdatingSelection;
 };
 
 #endif
