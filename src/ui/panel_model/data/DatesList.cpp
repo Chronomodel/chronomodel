@@ -11,21 +11,22 @@
 #include <QtWidgets>
 
 
-DatesList::DatesList(QWidget* parent):QListWidget(parent)
+DatesList::DatesList(QWidget* parent):QListWidget(parent),
+mUpdatingSelection(false)
 {
     setDragDropMode(QAbstractItemView::InternalMove);
     //setDefaultDropAction(Qt::MoveAction);
     setSelectionMode(QAbstractItemView::ExtendedSelection);
     setSortingEnabled(false);
     
-    
     DatesListItemDelegate* delegate = new DatesListItemDelegate();
     setItemDelegate(delegate);
     
     // ----------
     
-    connect(this, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(handleItemClicked(QListWidgetItem*)));
-    connect(this, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(handleItemDoubleClicked(QListWidgetItem*)));
+    connect(this, &DatesList::itemClicked, this, &DatesList::handleItemClicked);
+    connect(this, &DatesList::itemDoubleClicked, this, &DatesList::handleItemDoubleClicked);
+    connect(this, &DatesList::itemSelectionChanged, this, &DatesList::forceAtLeastOneSelected);
 }
 
 DatesList::~DatesList()
@@ -80,53 +81,17 @@ void DatesList::setEvent(const QJsonObject& event)
                 message.exec();
             }
         }
+        if(dates.size() > 0){
+            // Select first date by default :
+            setCurrentRow(0);
+            // Prepare calib window :
+            handleItemClicked(item(0));
+        }
     }
 }
 
 void DatesList::handleItemClicked(QListWidgetItem* item)
 {
-    /*QFont font;
-    font.setPointSizeF(pointSize(11));
-    QFontMetrics metrics(font);
-    int mm = 2;
-    int mh = metrics.height();
-    int butW = 60;
-    int butH = 20;
-    int iconW = 30;
-    int rowH = 4*mh + 6*mm + butH;
-    
-    QPoint pos = mapFromGlobal(QCursor::pos());
-    int scrollOffset = verticalScrollBar()->value() * rowH;
-    pos.setY(pos.y() + scrollOffset);
-    
-    int index = row(item);
-    int yOffset = index * rowH;
-    
-    QRect updateRect(iconW, yOffset + rowH - mm - butH, butW, butH);
-    QRect calibRect(iconW + butW + 2*mm, yOffset + rowH - mm - butH, butW, butH);
-    
-    //qDebug() << "----";
-    //qDebug() << "index : " << index << ", y dans [" << (index * rowH) << ", " << ((index+1) * rowH) << "]";
-    //qDebug() << "scroll offset : " << scrollOffset;
-    //qDebug() << "position in scrolled widget : " << pos;
-    
-    if(updateRect.contains(pos))
-    {
-        //qDebug() << "update clicked for item at : " << index;
-        MainWindow::getInstance()->getProject()->updateDate(mEvent[STATE_ID].toInt(), index);
-    }
-    else if(calibRect.contains(pos))
-    {
-        //qDebug() << "calib clicked for item at : " << index;
-        QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
-        if(index < dates.size())
-        {
-            QJsonObject date = dates[index].toObject();
-            emit calibRequested(date);
-        }
-    }*/
-    
-    
     int index = row(item);
     QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
     if(index < dates.size())
@@ -138,7 +103,6 @@ void DatesList::handleItemClicked(QListWidgetItem* item)
 
 void DatesList::handleItemDoubleClicked(QListWidgetItem* item)
 {
-    //Q_UNUSED(item);
     if(!mEvent.isEmpty())
     {
         MainWindow::getInstance()->getProject()->updateDate(mEvent[STATE_ID].toInt(), row(item));
@@ -177,5 +141,17 @@ void DatesList::dropEvent(QDropEvent* e)
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Dates order changed"));
 }
 
-
-
+void DatesList::forceAtLeastOneSelected()
+{
+    if(selectedItems().size() > 0){
+        if(!mUpdatingSelection)
+            mSelectedItems = selectedItems();
+    }
+    else{
+        mUpdatingSelection = true;
+        for(int i=0; i<mSelectedItems.size(); ++i){
+            mSelectedItems[i]->setSelected(true);
+        }
+        mUpdatingSelection = false;
+    }
+}

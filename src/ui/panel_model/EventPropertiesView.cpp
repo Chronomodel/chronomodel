@@ -125,7 +125,7 @@ mToolbarH(100)
     //mSplitBut->setVisible(false);
     minimumHeight+=mSplitBut->height();
     
-    connect(mCalibBut, SIGNAL(toggled(bool)), this, SIGNAL(showCalibRequested(bool)));
+    connect(mCalibBut, SIGNAL(clicked(bool)), this, SIGNAL(showCalibRequested(bool)));
     connect(mMergeBut, SIGNAL(clicked()), this, SLOT(sendMergeSelectedDates()));
     connect(mSplitBut, SIGNAL(clicked()), this, SLOT(sendSplitDate()));
 
@@ -181,7 +181,6 @@ mToolbarH(100)
     mUniformGroup = new QGroupBox();
     mUniformGroup->setLayout(uniformLayout);
     
-    
     QVBoxLayout* boundLayout = new QVBoxLayout();
     boundLayout->setContentsMargins(10, 6, 15, 6);
     boundLayout->setSpacing(10);
@@ -194,10 +193,6 @@ mToolbarH(100)
     mBoundView->setLayout(boundLayout);
     
     setEvent(QJsonObject());
-    
-/*    qDebug()<<"minimumHeight"<<minimumHeight;
-    qDebug()<<"EventPropertiesView::sortie constructeur width"<<width()<<" ; height"<<height();
-*/    updateLayout();
 }
 
 EventPropertiesView::~EventPropertiesView()
@@ -208,36 +203,17 @@ EventPropertiesView::~EventPropertiesView()
 #pragma mark Event Managment
 void EventPropertiesView::setEvent(const QJsonObject& event)
 {
-    //qDebug() << "Event Property view updated";
     mEvent = event;
     updateEvent();
 }
 
 void EventPropertiesView::updateEvent()
 {
-    mDatesList->setEvent(mEvent);
-    //qDebug()<<"EventPropertiesView::updateEvent()";
-    bool empty = mEvent.isEmpty();
-    
-    mNameEdit   ->setEnabled(!empty);
-    mColorPicker->setEnabled(!empty);
-    mMethodCombo->setEnabled(!empty);
-/*    mDeleteBut->setEnabled(!empty);
-    mRecycleBut->setEnabled(!empty);
-    mCalibBut->setEnabled(!empty);
-*/    
-    for(int i=0; i<mPluginButs1.size(); ++i)
-        mPluginButs1[i]->setEnabled(!empty);
-    
-    for(int i=0; i<mPluginButs2.size(); ++i)
-        mPluginButs2[i]->setEnabled(!empty);
-    
-    if(empty)
+    if(mEvent.isEmpty())
     {
-        mEventView->setVisible(true);
+        mTopView->setVisible(false);
+        mEventView->setVisible(false);
         mBoundView->setVisible(false);
-        mNameEdit->setText("");
-        mMethodCombo->setCurrentIndex(0);
     }
     else
     {
@@ -251,15 +227,24 @@ void EventPropertiesView::updateEvent()
             mNameEdit->setText(name);
         mColorPicker->setColor(color);
         
-        mEventView->setVisible(type == Event::eDefault);
-        mBoundView->setVisible(type == Event::eKnown);
-        
         mMethodLab->setVisible(type == Event::eDefault);
         mMethodCombo->setVisible(type == Event::eDefault);
+        
+        mTopView->setVisible(true);
+        mEventView->setVisible(type == Event::eDefault);
+        mBoundView->setVisible(type == Event::eKnown);
         
         if(type == Event::eDefault)
         {
             mMethodCombo->setCurrentIndex(mEvent[STATE_EVENT_METHOD].toInt());
+            mDatesList->setEvent(mEvent);
+            
+            QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+            bool hasDates = (dates.size() > 0);
+            
+            mCalibBut->setEnabled(hasDates);
+            mDeleteBut->setEnabled(hasDates);
+            mRecycleBut->setEnabled(hasDates);
         }
         else if(type == Event::eKnown)
         {
@@ -458,24 +443,6 @@ void EventPropertiesView::updateKnownControls()
 {
     mFixedGroup->setVisible(mKnownFixedRadio->isChecked());
     mUniformGroup->setVisible(mKnownUniformRadio->isChecked());
-    
-    /*if(mKnownFixedRadio->isChecked())
-    {
-        mKnownFixedEdit->setEnabled(true);
-        mKnownStartEdit->setEnabled(false);
-        mKnownEndEdit->setEnabled(false);
-    }
-    else if(mKnownUniformRadio->isChecked())
-    {
-        mKnownFixedEdit->setEnabled(false);
-        mKnownStartEdit->setEnabled(true);
-        mKnownEndEdit->setEnabled(true);
-    }*/
-}
-
-void EventPropertiesView::hideCalibration()
-{
-//    mCalibBut->setChecked(false);
 }
 
 #pragma mark Event Data
@@ -609,7 +576,18 @@ void EventPropertiesView::paintEvent(QPaintEvent* e)
     QWidget::paintEvent(e);
     QPainter p(this);
     p.fillRect(rect(), palette().color(QPalette::Background));
-    p.fillRect(QRect(0, 0, width(), mToolbarH), QColor(200, 200, 200));
+    
+    if(mEvent.isEmpty()){
+        QFont font = p.font();
+        font.setBold(true);
+        font.setPointSize(20);
+        p.setFont(font);
+        p.setPen(QColor(150, 150, 150));
+        p.drawText(rect(), Qt::AlignCenter, tr("No event selected !"));
+    }
+    else{
+        p.fillRect(QRect(0, 0, width(), mToolbarH), QColor(200, 200, 200));
+    }
 }
 
 void EventPropertiesView::resizeEvent(QResizeEvent* e)
@@ -640,7 +618,6 @@ void EventPropertiesView::updateLayout()
         y += butPluginHeigth;
     }
     
-    
     for(int i=0; i<mPluginButs2.size(); ++i)
     {
         mPluginButs2[i]->setGeometry(x, y, butPluginWidth, butPluginHeigth);
@@ -657,30 +634,10 @@ void EventPropertiesView::updateLayout()
     mRecycleBut->setGeometry(x + 2*w, y, w, h);
     mMergeBut->setGeometry(x + 3*w, y, w, h);
     mSplitBut->setGeometry(x + 4*w, y, w, h);
- 
-    // Known view : Used with Bound
-    
-    /*y = 0;//mMethodCombo->y() + talonLabel;;
-    QRect r = this->rect();
-    int m = 5;
-    int w1 = 80;
-    int lineH = 20;
-    int w2 = r.width() - w1 - 3*m;
-    mKnownFixedRadio->setGeometry(m, y, r.width() - 2*m, lineH);
-    mKnownFixedLab  ->setGeometry(m, y += (lineH + m), w1, lineH);
-    mKnownFixedEdit ->setGeometry(w1 + 2*m, y, w2, lineH);
-    
-    mKnownUniformRadio->setGeometry(m, y += (lineH + m), r.width() - 2*m, lineH);
-    mKnownStartLab->setGeometry(m, y += (lineH + m), w1, lineH);
-    mKnownStartEdit->setGeometry(w1 + 2*m, y, w2, lineH);
-    mKnownEndLab->setGeometry(m, y += (lineH + m), w1, lineH);
-    mKnownEndEdit->setGeometry(w1 + 2*m, y, w2, lineH);
-    
-    mKnownGraph->setGeometry(m, y += (lineH + m), r.width() - 2*m, 100);*/
-    
-    
-/* qDebug()<<"EventPropertiesView::sortie update width"<<width()<<" ; height"<<height();
-     qDebug()<<"EventPropertiesView::sortie constructeur mEventView width"<<mEventView-> width()<<" ; height"<<mEventView-> height();
-   // update(); */
+}
+
+void EventPropertiesView::setCalibChecked(bool checked)
+{
+    mCalibBut->setChecked(checked);
 }
 

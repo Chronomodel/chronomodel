@@ -380,9 +380,8 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double t
                     result[t] = v;
                 }
                 else if(area > areaSearched) {
-                        qDebug()<<"in StdUtilities create_HPD area areaSearched areaTo"<<area<<areaSearched<<areaTot;
-                        return result;
-                    }
+                    return result;
+                }
             }
         }
 

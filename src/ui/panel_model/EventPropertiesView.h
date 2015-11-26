@@ -31,7 +31,8 @@ public:
     
     void updateEvent();
     const QJsonObject& getEvent() const;
-    int mToolbarH;
+    
+    void setCalibChecked(bool checked);
     
 public slots:
     void setEvent(const QJsonObject& event);
@@ -63,9 +64,6 @@ private slots:
     
     void updateKnownGraph();
     void updateKnownControls();
-    
-public slots:
-    void hideCalibration();
     
 signals:
     void mergeDatesRequested(const int eventId, const QList<int>& dateIds);
@@ -111,6 +109,8 @@ private:
     
     QGroupBox* mFixedGroup;
     QGroupBox* mUniformGroup;
+    
+    int mToolbarH;
 };
 
 #endif
