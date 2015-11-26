@@ -25,77 +25,107 @@ double PluginGauss::getLikelyhood(const double& t, const QJsonObject& data)
     return exp(result.second) / sqrt(result.first);
 }
 
-QPair<double, double > PluginGauss::getLikelyhoodArg(const double& t, const QJsonObject& data)
+double PluginGauss::getRefValueAt(const QJsonObject& data, const double& t)
 {
-    
-    double age = data[DATE_GAUSS_AGE_STR].toDouble();
-    double error = data[DATE_GAUSS_ERROR_STR].toDouble();
     double a = data[DATE_GAUSS_A_STR].toDouble();
     double b = data[DATE_GAUSS_B_STR].toDouble();
     double c = data[DATE_GAUSS_C_STR].toDouble();
     QString mode = data[DATE_GAUSS_MODE_STR].toString();
     QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
     
-    double variance;
-    double exponent;
-    
     if(mode == DATE_GAUSS_MODE_NONE){
         a = 0;
         b = 1;
         c = 0;
     }
-    
-    if(mode == DATE_GAUSS_MODE_EQ || mode == DATE_GAUSS_MODE_NONE){
-        variance=sqrt(error);
-        exponent=-0.5f * pow((age - (a * t * t + b * t + c)) / error, 2.f);
+    if(mode == DATE_GAUSS_MODE_EQ || mode == DATE_GAUSS_MODE_NONE)
+    {
+        return a * t * t + b * t + c;
     }
-    
-    else if(mode == DATE_GAUSS_MODE_CURVE){
+    else if(mode == DATE_GAUSS_MODE_CURVE)
+    {
         // Check if calib curve exists !
+        double g = 0;
         if(mRefDatas.find(ref_curve) != mRefDatas.end())
         {
-            const QMap<double, double>& curveG = mRefDatas[ref_curve]["G"];
-            const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
+            const QMap<double, double>& curve = mRefDatas[ref_curve]["G"];
             
-            double tMinDef=curveG.firstKey();
-            double tMaxDef=curveG.lastKey();
-            double g=0;
+            double tMinDef = curve.firstKey();
+            double tMaxDef = curve.lastKey();
             
-            if(t>tMaxDef){
-                g=interpolate(t, tMinDef, tMaxDef, curveG[tMinDef], curveG[tMaxDef]);
-                double e = (curveG95Sup[tMaxDef] - curveG[tMaxDef]) / 1.96f;
-                variance = e * e + error * error;
+            if(t >= tMaxDef){
+                g = interpolate(t, tMinDef, tMaxDef, curve[tMinDef], curve[tMaxDef]);
             }
-            else if (t<tMinDef){
-                g=interpolate(t, tMinDef, tMaxDef, curveG[tMinDef], curveG[tMaxDef]);
-                double e = (curveG95Sup[tMinDef] - curveG[tMinDef]) / 1.96f;
-                variance = e * e + error * error;
+            else if(t <= tMinDef){
+                g = interpolate(t, tMinDef, tMaxDef, curve[tMinDef], curve[tMaxDef]);
             }
-            else {
+            else
+            {
                 double t_under = floor(t);
                 double t_upper = t_under + 1;
-                variance=10E4;
-                if(curveG.find(t_under) != curveG.end() &&
-                   curveG.find(t_upper) != curveG.end())
-                {
-                    double g_under = curveG[t_under];
-                    double g_upper = curveG[t_upper];
-                    g = interpolate(t, t_under, t_upper, g_under, g_upper);
-                
-                    double g_sup_under = curveG95Sup[t_under];
-                    double g_sup_upper = curveG95Sup[t_upper];
-                    double g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
-                
-                    double e = (g_sup - g) / 1.96f;
-                    variance = e * e + error * error;
-                }
-            
+                double g_under = curve[t_under];
+                double g_upper = curve[t_upper];
+                g = interpolate(t, t_under, t_upper, g_under, g_upper);
             }
-            double exponent = -0.5f * pow(g - age, 2.f) / variance;
-            return qMakePair(variance,exponent);
         }
-        
+        return g;
     }
+    else
+    {
+        return 0;
+    }
+}
+
+double PluginGauss::getRefErrorAt(const QJsonObject& data, const double& t)
+{
+    QString mode = data[DATE_GAUSS_MODE_STR].toString();
+    QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
+    
+    double error = 0;
+    
+    if(mode == DATE_GAUSS_MODE_CURVE && mRefDatas.find(ref_curve) != mRefDatas.end())
+    {
+        const QMap<double, double>& curve = mRefDatas[ref_curve]["G"];
+        const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
+        
+        double tMinDef = curve.firstKey();
+        double tMaxDef = curve.lastKey();
+        
+        if(t >= tMaxDef){
+            error = (curveG95Sup[tMaxDef] - curve[tMaxDef]) / 1.96f;
+        }
+        else if(t <= tMinDef){
+            error = (curveG95Sup[tMinDef] - curve[tMinDef]) / 1.96f;
+        }
+        else
+        {
+            double t_under = floor(t);
+            double t_upper = t_under + 1;
+            double g_under = curve[t_under];
+            double g_upper = curve[t_upper];
+            double g = interpolate(t, t_under, t_upper, g_under, g_upper);
+            
+            double g_sup_under = curveG95Sup[t_under];
+            double g_sup_upper = curveG95Sup[t_upper];
+            double g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
+            
+            error = (g_sup - g) / 1.96f;
+        }
+    }
+    return error;
+}
+
+QPair<double, double> PluginGauss::getLikelyhoodArg(const double& t, const QJsonObject& data)
+{
+    double age = data[DATE_GAUSS_AGE_STR].toDouble();
+    double error = data[DATE_GAUSS_ERROR_STR].toDouble();
+    
+    double refValue = getRefValueAt(data, t);
+    double refError = getRefErrorAt(data, t);
+    
+    double variance = refError * refError + error * error;
+    double exponent = -0.5f * pow((age - refValue), 2.f) / variance;
+    
     return qMakePair(variance, exponent);
 }
 
@@ -329,9 +359,9 @@ QMap<QString, QMap<double, double> > PluginGauss::loadRefFile(QFileInfo refFile)
                 if(iter != curveG.end())
                 {
                     double t_upper = iter.key();
-                    --iter;
                     if(iter != curveG.begin())
                     {
+                        --iter;
                         double t_under = iter.key();
                         
                         //qDebug() << t_under << " < " << t << " < " << t_upper;

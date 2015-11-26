@@ -155,8 +155,8 @@ mGraphsH(130)
     mCurrentXMaxEdit->setFixedSize(45, 15);
     
     
-    mXScaleLab = new Label(tr("Zoom X"),mDisplayGroup);
-    mYScaleLab = new Label(tr("Zoom Y"),mDisplayGroup);
+    mXScaleLab = new Label(tr("Zoom X"), mDisplayGroup);
+    mYScaleLab = new Label(tr("Zoom Y"), mDisplayGroup);
     
     mXScaleLab->setAlignment(Qt::AlignCenter);
     mYScaleLab->setAlignment(Qt::AlignCenter);

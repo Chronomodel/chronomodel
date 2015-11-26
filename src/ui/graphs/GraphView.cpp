@@ -626,6 +626,16 @@ void GraphView::paintToDevice(QPaintDevice* device)
     p.setFont(font);
     
     // ----------------------------------------------------
+    //  Zones
+    // ----------------------------------------------------
+    for(int i=0; i<mZones.size(); ++i)
+    {
+        p.fillRect(getXForValue(mZones[i].mXStart), mMarginTop,
+                   getXForValue(mZones[i].mXEnd) - getXForValue(mZones[i].mXStart),
+                   mGraphHeight, mZones[i].mColor);
+    }
+    
+    // ----------------------------------------------------
     //  Curves
     // ----------------------------------------------------
     drawCurves(p);

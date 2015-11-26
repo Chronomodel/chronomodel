@@ -69,13 +69,26 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         QMap<double, double> curveG95Sup;
         QMap<double, double> curveG95Inf;
         
-        double tMinGraph=curves["G"].firstKey()>mSettings.mTmin ? curves["G"].firstKey(): mSettings.mTmin;
-        double tMaxGraph=curves["G"].lastKey()<mSettings.mTmax  ? curves["G"].lastKey() : mSettings.mTmax;
+        double tMinGraph = qMax(curves["G"].firstKey(), (double)mSettings.mTmin);
+        double tMaxGraph = qMin(curves["G"].lastKey(), (double)mSettings.mTmax);
         
-        for(double t=tMinGraph; t<=tMaxGraph; ++t) {
-            curveG[t] = curves["G"][t];
-            curveG95Sup[t] = curves["G95Sup"][t];
-            curveG95Inf[t] = curves["G95Inf"][t];
+        double yMin = plugin->getRefValueAt(date.mData, mSettings.mTmin);
+        double yMax = plugin->getRefValueAt(date.mData, mSettings.mTmin);
+        
+        if(tMinGraph < tMaxGraph)
+        {
+            for(double t=tMinGraph; t<=tMaxGraph; ++t)
+            {
+                double value = plugin->getRefValueAt(date.mData, t);
+                double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
+                
+                curveG[t] = value;
+                curveG95Sup[t] = value + error;
+                curveG95Inf[t] = value - error;
+                
+                yMin = qMin(yMin, curveG95Inf[t]);
+                yMax = qMax(yMax, curveG95Sup[t]);
+            }
         }
         
         GraphCurve graphCurveG;
@@ -102,13 +115,113 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         // Display reference curve name
         mGraph->addInfo(tr("Ref : ") + ref_curve);
         
-        // ----------------------------------------------
         
-        double yMin = map_min_value(curveG95Inf);
-        double yMax = map_max_value(curveG95Sup);
+        // ----------------------------------------------------
+        //  Draw ref curve extensions if not defined everywhere on study period
+        // ----------------------------------------------------
+        
+        // Extend left
+        if(tMinGraph > mSettings.mTmin)
+        {
+            QMap<double, double> curveGExt;
+            QMap<double, double> curveGSupExt;
+            QMap<double, double> curveGInfExt;
+            
+            for(double t=mSettings.mTmin; t<=tMinGraph; t += mSettings.mStep)
+            {
+                double value = plugin->getRefValueAt(date.mData, t);
+                double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
+                
+                curveGExt.insert(t, value);
+                curveGSupExt.insert(t, value + error);
+                curveGInfExt.insert(t, value - error);
+                
+                yMin = qMin(yMin, curveGInfExt[t]);
+                yMax = qMax(yMax, curveGSupExt[t]);
+            }
+            
+            GraphCurve graphCurveGSupExt;
+            graphCurveGSupExt.mName = "G-ext-left-sup";
+            graphCurveGSupExt.mData = curveGSupExt;
+            graphCurveGSupExt.mPen.setColor(QColor(180, 180, 180));
+            graphCurveGSupExt.mIsHisto = false;
+            mGraph->addCurve(graphCurveGSupExt);
+            
+            GraphCurve graphCurveGInfExt;
+            graphCurveGInfExt.mName = "G-ext-left-inf";
+            graphCurveGInfExt.mData = curveGInfExt;
+            graphCurveGInfExt.mPen.setColor(QColor(180, 180, 180));
+            graphCurveGInfExt.mIsHisto = false;
+            mGraph->addCurve(graphCurveGInfExt);
+            
+            GraphCurve graphCurveGExt;
+            graphCurveGExt.mName = "G-ext-left";
+            graphCurveGExt.mData = curveGExt;
+            graphCurveGExt.mPen.setColor(Painting::mainColorDark);
+            graphCurveGExt.mIsHisto = false;
+            mGraph->addCurve(graphCurveGExt);
+            
+            GraphZone zone;
+            zone.mXStart = mSettings.mTmin;
+            zone.mXEnd = tMinGraph;
+            zone.mColor = Qt::red;
+            zone.mColor.setAlpha(20);
+            mGraph->addZone(zone);
+        }
+        
+        // Extend right
+        if(tMaxGraph < mSettings.mTmax)
+        {
+            QMap<double, double> curveGExt;
+            QMap<double, double> curveGSupExt;
+            QMap<double, double> curveGInfExt;
+            
+            for(double t=tMaxGraph; t<=mSettings.mTmax; t += mSettings.mStep)
+            {
+                double value = plugin->getRefValueAt(date.mData, t);
+                double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
+                
+                curveGExt.insert(t, value);
+                curveGSupExt.insert(t, value + error);
+                curveGInfExt.insert(t, value - error);
+                
+                yMin = qMin(yMin, curveGInfExt[t]);
+                yMax = qMax(yMax, curveGSupExt[t]);
+            }
+            
+            GraphCurve graphCurveGSupExt;
+            graphCurveGSupExt.mName = "G-ext-right-sup";
+            graphCurveGSupExt.mData = curveGSupExt;
+            graphCurveGSupExt.mPen.setColor(QColor(180, 180, 180));
+            graphCurveGSupExt.mIsHisto = false;
+            mGraph->addCurve(graphCurveGSupExt);
+            
+            GraphCurve graphCurveGInfExt;
+            graphCurveGInfExt.mName = "G-ext-right-inf";
+            graphCurveGInfExt.mData = curveGInfExt;
+            graphCurveGInfExt.mPen.setColor(QColor(180, 180, 180));
+            graphCurveGInfExt.mIsHisto = false;
+            mGraph->addCurve(graphCurveGInfExt);
+            
+            GraphCurve graphCurveGExt;
+            graphCurveGExt.mName = "G-ext-right";
+            graphCurveGExt.mData = curveGExt;
+            graphCurveGExt.mPen.setColor(Painting::mainColorDark);
+            graphCurveGExt.mIsHisto = false;
+            mGraph->addCurve(graphCurveGExt);
+            
+            GraphZone zone;
+            zone.mXStart = tMaxGraph;
+            zone.mXEnd = mSettings.mTmax;
+            zone.mColor = Qt::red;
+            zone.mColor.setAlpha(20);
+            mGraph->addZone(zone);
+        }
+        
+        // ----------------------------------------------------
+        
         double error = 0.f;
         double avg = 0.f;
-        
         if(is_inc)
         {
             avg = inc;
