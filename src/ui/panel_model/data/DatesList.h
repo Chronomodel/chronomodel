@@ -29,6 +29,7 @@ signals:
     
 protected:
     void dropEvent(QDropEvent* e);
+    void keyPressEvent(QKeyEvent* e);
     
 private:
     QJsonObject mEvent;
