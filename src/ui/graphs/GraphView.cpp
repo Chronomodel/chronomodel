@@ -37,6 +37,8 @@ mFormatFuncY(0),
 mShowInfos(false),
 mBackgroundColor(Qt::white),
 mThickness(1),
+mOpacity(100),
+mCanControlOpacity(false),
 mTipX(0.),
 mTipY(0.),
 mTipWidth(110.),
@@ -297,6 +299,17 @@ void GraphView::setCurvesThickness(int value)
 {
     mThickness = value;
     repaintGraph(true);
+}
+
+void GraphView::setCurvesOpacity(int value)
+{
+    mOpacity = value;
+    repaintGraph(true);
+}
+
+void GraphView::setCanControlOpacity(bool can)
+{
+    mCanControlOpacity = can;
 }
 
 void GraphView::setFormatFunctX(FormatFunc f){
@@ -684,7 +697,13 @@ void GraphView::drawCurves(QPainter& painter)
             pen.setWidth(pen.width() * mThickness);
             painter.setPen(pen);
             
-            painter.setBrush(curve.mBrush);
+            QBrush brush = curve.mBrush;
+            if(mCanControlOpacity){
+                QColor c = brush.color();
+                c.setAlpha(mOpacity * 255 / 100);
+                brush.setColor(c);
+            }
+            painter.setBrush(brush);
             
             if(curve.mIsHorizontalLine)
             {
@@ -725,7 +744,7 @@ void GraphView::drawCurves(QPainter& painter)
                 path.lineTo(mMarginLeft + mGraphWidth, y0);
                 
                 painter.setClipRect(mMarginLeft, mMarginTop, mGraphWidth, mGraphHeight);
-                painter.fillPath(path, curve.mBrush);
+                painter.fillPath(path, brush);
                 painter.strokePath(path, curve.mPen);
             }
             else if(curve.mIsTopLineSections)
@@ -963,7 +982,7 @@ void GraphView::drawCurves(QPainter& painter)
                     path.lineTo(last_x, getYForValue(0, false));
                     
                     painter.setPen(curve.mPen);
-                    painter.fillPath(path, curve.mBrush);
+                    painter.fillPath(path, brush);
                 }
             }
         }

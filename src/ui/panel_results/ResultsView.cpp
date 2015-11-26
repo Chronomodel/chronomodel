@@ -155,11 +155,11 @@ mGraphsH(130)
     mCurrentXMaxEdit->setFixedSize(45, 15);
     
     
-    mXScaleLab = new Label(tr("Zoom X :"),mDisplayGroup);
-    mYScaleLab = new Label(tr("Zoom Y :"),mDisplayGroup);
+    mXScaleLab = new Label(tr("Zoom X"),mDisplayGroup);
+    mYScaleLab = new Label(tr("Zoom Y"),mDisplayGroup);
     
-    mXScaleLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    mYScaleLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mXScaleLab->setAlignment(Qt::AlignCenter);
+    mYScaleLab->setAlignment(Qt::AlignCenter);
     
     mXSlider = new QSlider(Qt::Horizontal,mDisplayGroup);
     mXSlider->setRange(0, 100);
@@ -171,61 +171,70 @@ mGraphsH(130)
     mYSlider->setValue(13);
     
     
-    mRenderLab = new Label(tr("Rendering :"),mDisplayGroup);
-    mRenderCombo = new QComboBox(mDisplayGroup);
-    mRenderCombo->addItem(tr("Standard (faster)"));
-    mRenderCombo->addItem(tr("Retina (slower)"));
-    
-    
-    
-    
-   /*  keep in memory
+       /*  keep in memory
     mUpdateDisplay = new Button(tr("Update display"),mScaleGroup);
     mUpdateDisplay->mUseMargin = true;
     
     connect(mUpdateDisplay, SIGNAL(clicked()), this, SLOT(updateModel()));
    */
-    
-    
+
+    mRenderCombo = new QComboBox();
+    mRenderCombo->addItem(tr("Standard (faster)"));
+    mRenderCombo->addItem(tr("Retina (slower)"));
     
     mFont.setPointSize(pointSize(11.));
-    mFontBut = new Button(mFont.family() + ", " + QString::number(mFont.pointSizeF()),mDisplayGroup);
-    mFontBut->mUseMargin = true;
-    
-    mThicknessLab = new Label(tr("Graph thichness : "),mDisplayGroup);
-    mThicknessSpin = new QSpinBox();
-    mThicknessSpin->setRange(1, 5);
+    mFontBut = new QPushButton(mFont.family());
     connect(mFontBut, SIGNAL(clicked()), this, SLOT(updateFont()));
+    
+    mThicknessSpin = new QSpinBox();
+    mThicknessSpin->setRange(1, 10);
+    mThicknessSpin->setSuffix(" px");
     connect(mThicknessSpin, SIGNAL(valueChanged(int)), this, SLOT(updateThickness(int)));
     
+    mOpacitySpin = new QSpinBox();
+    mOpacitySpin->setRange(0, 100);
+    mOpacitySpin->setValue(30);
+    mOpacitySpin->setSuffix(" %");
+    connect(mOpacitySpin, SIGNAL(valueChanged(int)), this, SLOT(updateOpacity(int)));
     
-    QGridLayout* displayLayout = new QGridLayout(mDisplayGroup);
-    displayLayout->setContentsMargins(3, 3, 3, 3);
-    displayLayout->setSpacing(3);
-
+    // Grid : 8 columns
+    QGridLayout* displayLayout = new QGridLayout();
+    displayLayout->setContentsMargins(0, 0, 0, 0);
+    displayLayout->setSpacing(6);
+    displayLayout->addWidget(mCurrentXMinEdit,0,0,1,2);
+    displayLayout->addWidget(mCurrentXMaxEdit,0,6,1,2);
+    displayLayout->addWidget(mXScaleLab,0,2,1,4);
+    displayLayout->addWidget(mXSlider,1,0,1,8);
+    displayLayout->addWidget(mYScaleLab,2,0,1,8);
+    displayLayout->addWidget(mYSlider,3,0,1,8);
     
-    displayLayout->addWidget(mCurrentXMinEdit,1,0,1,2);
-    displayLayout->addWidget(mXScaleLab,1,3,1,2);
-    displayLayout->addWidget(mCurrentXMaxEdit,1,6,1,2);
+    QLabel* labFont = new QLabel(tr("Font :"));
+    QLabel* labThickness = new QLabel(tr("Thickness :"));
+    QLabel* labOpacity = new QLabel(tr("Fill Opacity :"));
+    QLabel* labRendering = new QLabel(tr("Rendering :"));
     
-    displayLayout->addWidget(mXSlider,2,0,1,8);
+    labFont->setFont(mFont);
+    labThickness->setFont(mFont);
+    labOpacity->setFont(mFont);
+    labRendering->setFont(mFont);
     
-    displayLayout->addWidget(mYScaleLab,3,3,1,2);
+    QFormLayout* displayForm = new QFormLayout();
+    displayForm->setContentsMargins(0, 0, 0, 0);
+    displayForm->setSpacing(6);
+    displayForm->addRow(labFont, mFontBut);
+    displayForm->addRow(labThickness, mThicknessSpin);
+    displayForm->addRow(labOpacity, mOpacitySpin);
+    displayForm->addRow(labRendering, mRenderCombo);
     
-    displayLayout->addWidget(mYSlider,4,0,1,8);
+    QVBoxLayout* displayLayoutWrapper = new QVBoxLayout();
+    displayLayoutWrapper->setContentsMargins(6, 6, 6, 6);
+    displayForm->setSpacing(0);
+    displayLayoutWrapper->addLayout(displayLayout);
+    displayLayoutWrapper->addLayout(displayForm);
+    displayLayoutWrapper->addStretch();
     
-    displayLayout->addWidget(mRenderLab,5,0,1,3);
-    displayLayout->addWidget(mRenderCombo,5,3,1,5);
-    
-    //displayLayout->addWidget(mUpdateDisplay,6,0);
-    
-    displayLayout->addWidget(mFontBut,6,0,1,8);
-    
-    displayLayout->addWidget(mThicknessLab,7,0,1,5);
-    displayLayout->addWidget(mThicknessSpin,7,5,1,2);
-    
-    mDisplayGroup->setLayout(displayLayout);
-    mDisplayGroup->setFixedHeight(140);
+    mDisplayGroup->setLayout(displayLayoutWrapper);
+    mDisplayGroup->setFixedHeight(200);
 
     
     /* -------------------------------------- mChainsGroup---------------------------------------------------*/
@@ -1438,6 +1447,18 @@ void ResultsView::updateThickness(int value)
     for(int i=0; i<mByEventsGraphs.size(); ++i)
     {
         mByEventsGraphs[i]->setGraphsThickness(value);
+    }
+}
+
+void ResultsView::updateOpacity(int value)
+{
+    for(int i=0; i<mByPhasesGraphs.size(); ++i)
+    {
+        mByPhasesGraphs[i]->setGraphsOpacity(value);
+    }
+    for(int i=0; i<mByEventsGraphs.size(); ++i)
+    {
+        mByEventsGraphs[i]->setGraphsOpacity(value);
     }
 }
 

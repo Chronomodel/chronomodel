@@ -33,6 +33,9 @@ mHeightForVisibleAxis(100)
     
     mGraph = new GraphView(this);
     
+    mGraph->setCanControlOpacity(true);
+    mGraph->setCurvesOpacity(30);
+    
     mGraph->showXAxisArrow(true);
     mGraph->showXAxisTicks(true);
     mGraph->showXAxisSubTicks(true);
@@ -352,6 +355,11 @@ void GraphViewResults::setGraphFont(const QFont& font)
 void GraphViewResults::setGraphsThickness(int value)
 {
     mGraph->setCurvesThickness(value);
+}
+
+void GraphViewResults::setGraphsOpacity(int value)
+{
+    mGraph->setCurvesOpacity(value);
 }
 
 void GraphViewResults::resizeEvent(QResizeEvent* e)
