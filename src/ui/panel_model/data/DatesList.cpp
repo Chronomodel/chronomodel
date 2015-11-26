@@ -103,7 +103,7 @@ void DatesList::handleItemClicked(QListWidgetItem* item)
 
 void DatesList::handleItemDoubleClicked(QListWidgetItem* item)
 {
-    if(!mEvent.isEmpty())
+    if(!mEvent.isEmpty() && item)
     {
         MainWindow::getInstance()->getProject()->updateDate(mEvent[STATE_ID].toInt(), row(item));
     }
@@ -139,6 +139,15 @@ void DatesList::dropEvent(QDropEvent* e)
     }
     event[STATE_EVENT_DATES] = datesOrdered;
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Dates order changed"));
+}
+
+void DatesList::keyPressEvent(QKeyEvent* e)
+{
+    if(e->key() == Qt::Key_Return){
+        handleItemDoubleClicked(currentItem());
+    }else{
+        QListWidget::keyPressEvent(e);
+    }
 }
 
 void DatesList::forceAtLeastOneSelected()
