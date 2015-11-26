@@ -80,6 +80,8 @@ public:
     
     void setGraphFont(const QFont& font);
     void setCurvesThickness(int value);
+    void setCurvesOpacity(int value);
+    void setCanControlOpacity(bool can);
     
     // Manage Curves
     
@@ -174,6 +176,8 @@ protected:
     
     QColor	mBackgroundColor;
     int mThickness;
+    int mOpacity;
+    bool mCanControlOpacity;
     
     QRectF  mTipRect;
     double  mTipX;

@@ -13,6 +13,7 @@ class QComboBox;
 class QSlider;
 class QScrollBar;
 class QSpinBox;
+class QPushButton;
 
 class Project;
 class Model;
@@ -86,6 +87,7 @@ private slots:
     
     void updateFont();
     void updateThickness(int value);
+    void updateOpacity(int value);
     void updateRendering(int index);
     void showInfos(bool);
     void exportFullImage();
@@ -156,8 +158,13 @@ private:
     QSlider* mYSlider;
     LineEdit* mCurrentXMinEdit;
     LineEdit* mCurrentXMaxEdit;
-    Label* mRenderLab;
+    
+    QFont mFont;
+    QPushButton* mFontBut;
+    QSpinBox* mThicknessSpin;
+    QSpinBox* mOpacitySpin;
     QComboBox* mRenderCombo;
+    
     
     Label* mChainsTitle;
     QWidget* mChainsGroup;
@@ -183,12 +190,6 @@ private:
     Label* mHFactorLab;
     LineEdit* mHFactorEdit;
     Button* mUpdateDisplay;
-    
-    Button* mFontBut;
-    QFont mFont;
-    
-    Label* mThicknessLab;
-    QSpinBox* mThicknessSpin;
     
     int mComboH;
     

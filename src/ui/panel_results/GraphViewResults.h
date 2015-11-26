@@ -45,6 +45,7 @@ public:
     void setRendering(GraphView::Rendering render);
     virtual void setGraphFont(const QFont& font);
     void setGraphsThickness(int value);
+    void setGraphsOpacity(int value);
     
     void setItemColor(const QColor& itemColor);
     void setItemTitle(const QString& itemTitle);
