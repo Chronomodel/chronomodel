@@ -49,29 +49,27 @@ QString MCMCLoopMain::calibrate()
             for(int j=0; j<num_dates; ++j)
             {
                 Date* date = &events[i]->mDates[j];
-                if (events[i]->mDates[j].mCalibration.isEmpty()) qDebug()<<"MCMCLoopMain::calibrate() vide";
                 date->mCalibration=events[i]->mDates[j].mCalibration;
                 dates.push_back(date);
             }
         }
         
+        if(isInterruptionRequested())
+            return ABORTED_BY_USER;
+        
         emit stepChanged(tr("Calibrating..."), 0, dates.size());
         
-//        for(int i=0; i<dates.size(); ++i) // if dates[i] type is std::vector
-        for(int i=0; i<dates.length(); ++i)
+        for(int i=0; i<dates.size(); ++i)
         {
-            if(isInterruptionRequested())
-                return ABORTED_BY_USER;
-            
             //QTime startTime = QTime::currentTime();
-            if (dates[i]->mCalibration.isEmpty()) {
-                 dates[i]->calibrate(mModel->mSettings);
-            }
-            //dates[i]->calibrate(mModel->mSettings);
+            dates[i]->calibrate(mModel->mSettings);
             if(dates[i]->mCalibSum == 0)
             {
                 return tr("The date density is nul for: ") + dates[i]->getName();
             }
+         
+            if(isInterruptionRequested())
+                return ABORTED_BY_USER;
             
             emit stepProgressed(i);
             
@@ -113,7 +111,7 @@ void MCMCLoopMain::initVariablesForChain()
     }
 }
 
-void MCMCLoopMain::initMCMC()
+QString MCMCLoopMain::initMCMC()
 {
     QList<Event*>& events = mModel->mEvents;
     QList<Phase*>& phases = mModel->mPhases;
@@ -123,6 +121,9 @@ void MCMCLoopMain::initMCMC()
     double tmax = mModel->mSettings.mTmax;
     double step = mModel->mSettings.mStep;
     
+    if(isInterruptionRequested())
+        return ABORTED_BY_USER;
+    
     // ----------------------------------------------------------------
     //  Init gamma
     // ----------------------------------------------------------------
@@ -130,6 +131,10 @@ void MCMCLoopMain::initMCMC()
     for(int i=0; i<phasesConstraints.size(); ++i)
     {
         phasesConstraints[i]->initGamma();
+        
+        if(isInterruptionRequested())
+            return ABORTED_BY_USER;
+        
         emit stepProgressed(i);
     }
     
@@ -140,14 +145,13 @@ void MCMCLoopMain::initMCMC()
     for(int i=0; i<phases.size(); ++i)
     {
         phases[i]->initTau();
+        
+        if(isInterruptionRequested())
+            return ABORTED_BY_USER;
+        
         emit stepProgressed(i);
     }
     
-    for(int i=0; i<mModel->mEvents.size(); ++i)
-    {
-        qDebug()<<"check"<<mModel->mEvents[i]->getName();
-
-    }
     // ----------------------------------------------------------------
     //  Init Bounds
     // - Définir des niveaux pour les faits
@@ -220,13 +224,12 @@ void MCMCLoopMain::initMCMC()
             unsortedEvents[i]->mTheta.mX = Generator::randomUniform(min, max);
             unsortedEvents[i]->mInitialized = true;
             
-            qDebug() << "--> Event initialized : " << unsortedEvents[i]->getName() << " : " << unsortedEvents[i]->mTheta.mX;
+            //qDebug() << "--> Event initialized : " << unsortedEvents[i]->getName() << " : " << unsortedEvents[i]->mTheta.mX;
             
             double s02_sum = 0.f;
             for(int j=0; j<unsortedEvents[i]->mDates.size(); ++j)
             {
                 Date& date = unsortedEvents[i]->mDates[j];
-                qDebug()<<date.getName();
                 
                 // Init ti and its sigma
                 double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mRepartition);
@@ -243,6 +246,10 @@ void MCMCLoopMain::initMCMC()
             unsortedEvents[i]->mTheta.mSigmaMH = sqrt(unsortedEvents[i]->mS02);
             unsortedEvents[i]->mAShrinkage = 1.;
         }
+        
+        if(isInterruptionRequested())
+            return ABORTED_BY_USER;
+        
         emit stepProgressed(i);
     }
     
@@ -268,6 +275,9 @@ void MCMCLoopMain::initMCMC()
             }
             date.mSigma.mSigmaMH = 1.;
         }
+        if(isInterruptionRequested())
+            return ABORTED_BY_USER;
+        
         emit stepProgressed(i);
     }
     // ----------------------------------------------------------------
@@ -278,6 +288,10 @@ void MCMCLoopMain::initMCMC()
     {
         Phase* phase = phases[i];
         phase->updateAll(tmin, tmax);
+        
+        if(isInterruptionRequested())
+            return ABORTED_BY_USER;
+        
         emit stepProgressed(i);
     }
     
@@ -315,12 +329,7 @@ void MCMCLoopMain::initMCMC()
         {
             log += "<br>";
             Date& date = event->mDates[j];
-           // qDebug()<<"textGreen"<<mModel->mEvents[i]->getName();
-            for(int k=0; k<mModel->mEvents[i]->mDates.size(); ++k)
-            {
-                qDebug()<<mModel->mEvents[i]->mDates[k].getColor();
-                qDebug()<<mModel->mEvents[i]->mDates[k].getName();
-            }
+            
             log += line(textGreen("Data (" + QString::number(j+1) + "/" + QString::number(event->mDates.size()) + ") : " + event->mDates[j].getName()));
             log += line(textGreen(" - ti (value) : " + QString::number(date.mTheta.mX)));
             if(date.mMethod == Date::eMHSymGaussAdapt){
@@ -370,7 +379,8 @@ void MCMCLoopMain::initMCMC()
     mInitLog += textBold("INIT CHAIN " + QString::number(mChainIndex+1));
     mInitLog += "<hr>";
     mInitLog += log;
-    
+ 
+    return QString();
 }
 
 void MCMCLoopMain::update()

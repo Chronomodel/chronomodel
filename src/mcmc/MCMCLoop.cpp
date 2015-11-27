@@ -75,7 +75,7 @@ void MCMCLoop::run()
     emit stepChanged(tr("Calibrating data..."), 0, 0);
     
     //QTime startCalibTime = QTime::currentTime();
-       mAbortedReason = this->calibrate();
+    mAbortedReason = this->calibrate();
     if(!mAbortedReason.isEmpty())
     {
         return;
@@ -108,16 +108,18 @@ void MCMCLoop::run()
         
         //----------------------- Initializing --------------------------------------
         
+        if(isInterruptionRequested()){
+            mAbortedReason = ABORTED_BY_USER;
+            return;
+        }
+        
         emit stepChanged("Chain " + QString::number(mChainIndex+1) + "/" + QString::number(mChains.size()) + " : " + tr("Initializing MCMC"), 0, 0);
         
         //QTime startInitTime = QTime::currentTime();
         
-        try{
-            this->initMCMC();
-        }
-        catch(QString error)
+        mAbortedReason = this->initMCMC();
+        if(!mAbortedReason.isEmpty())
         {
-            mAbortedReason = error;
             return;
         }
         

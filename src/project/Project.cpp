@@ -594,7 +594,7 @@ bool Project::saveProjectToFile()
     else
     {
 #ifdef DEBUG
-        qDebug() << "Nothing new to save in project model";
+        //qDebug() << "Nothing new to save in project model";
 #endif
     }
 /*    if(!mModel->mChains.isEmpty()) // keep to the future version
@@ -2467,6 +2467,22 @@ void Project::run()
     {
         MCMCLoopMain loop(mModel);
         MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::Sheet);
+        
+        // --------------------------------------------------------------------
+        //  The dialog startMCMC() method starts the loop and the dialog.
+        //  When the loop emits "finished", the dialog will be "accepted"
+        //  This "finished" signal can be the results of :
+        //  - MCMC ran all the way to the end => mAbortedReason is empty and "run" returns.
+        //  - User clicked "Cancel" :
+        //      - an interruption request is sent to the loop
+        //      - The loop catches the interruption request with "isInterruptionRequested"
+        //      - the loop "run" function returns after setting mAbortedReason = ABORTED_BY_USER
+        //  - An error occured :
+        //      - The loop sets mAbortedReason to the correct error message
+        //      - The run function returns
+        //  => THE DIALOG IS NEVER REJECTED ! (Escape key also disabled to prevent default behavior)
+        // --------------------------------------------------------------------
+        
         if(dialog.startMCMC() == QDialog::Accepted)
         {
             if(loop.mAbortedReason.isEmpty())
@@ -2490,8 +2506,10 @@ void Project::run()
                 clearModel();
             }
         }
+        // Dialog is never "rejected", so this should never happen :
         else
         {
+            qDebug() << "ERROR : MCMCProgressDialog::rejected : Should NEVER happen !";
             clearModel();
         }
     }

@@ -56,8 +56,6 @@ Model::~Model()
 
 void Model::clear()
 {
-    qDebug() << "Clear model";
-
     mEvents.clear();
     mPhases.clear();
 
@@ -225,13 +223,10 @@ const QJsonObject &  Model::getJson()
 }
 void Model::fromJson(const QJsonObject& json)
 {
-   // Model* model = new Model();
-    qDebug()<<"Model::fromJson";
-    
     if(json.contains(STATE_SETTINGS))
     {
         QJsonObject settings = json[STATE_SETTINGS].toObject();
-       mSettings = ProjectSettings::fromJson(settings);
+        mSettings = ProjectSettings::fromJson(settings);
     }
 
     if(json.contains(STATE_MCMC))

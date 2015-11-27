@@ -31,6 +31,9 @@ public slots:
     
     void setFinishedState();
     
+protected:
+    void keyPressEvent(QKeyEvent* e);
+    
 public:
     MCMCLoopMain* mLoop;
     QLabel* mLabel1;

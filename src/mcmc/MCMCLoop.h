@@ -35,7 +35,7 @@ signals:
 protected:
     virtual QString calibrate() = 0;
     virtual void initVariablesForChain() = 0;
-    virtual void initMCMC() = 0;
+    virtual QString initMCMC() = 0;
     virtual void update() = 0;
     virtual void finalize() = 0;
     virtual bool adapt() = 0;
