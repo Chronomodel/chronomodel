@@ -92,10 +92,12 @@ double PluginGauss::getRefErrorAt(const QJsonObject& data, const double& t)
         double tMaxDef = curve.lastKey();
         
         if(t >= tMaxDef){
-            error = (curveG95Sup[tMaxDef] - curve[tMaxDef]) / 1.96f;
+            error = 100;
+            //error = (curveG95Sup[tMaxDef] - curve[tMaxDef]) / 1.96f;
         }
         else if(t <= tMinDef){
-            error = (curveG95Sup[tMinDef] - curve[tMinDef]) / 1.96f;
+            error = 100;
+            //error = (curveG95Sup[tMinDef] - curve[tMinDef]) / 1.96f;
         }
         else
         {

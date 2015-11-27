@@ -24,7 +24,7 @@ void fMHSymetricWithArg(Date* date, Event* event);
 void fMHSymGaussAdaptWithArg(Date* date, Event* event);
 void fInversionWithArg(Date* date, Event* event);
 
-double fProposalDensity(const double t,Date* date);
+double fProposalDensity(const double t, const double t0, Date* date);
 
 
 
@@ -122,11 +122,9 @@ public:
     
     const QJsonObject * mJsonEvent;
     double mMixingLevel;
+    
 protected:
-    
     samplingFunction updateti;
-    
-    
     
     const QJsonObject * mModelJsonDate;
     int mJsonEventIdx;

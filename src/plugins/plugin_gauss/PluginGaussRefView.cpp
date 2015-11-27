@@ -125,13 +125,6 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
                 }
             }
             
-            GraphCurve graphCurveG;
-            graphCurveG.mName = "G";
-            graphCurveG.mData = curveG;
-            graphCurveG.mPen.setColor(Qt::blue);
-            graphCurveG.mIsHisto = false;
-            mGraph->addCurve(graphCurveG);
-            
             GraphCurve graphCurveG95Sup;
             graphCurveG95Sup.mName = "G95Sup";
             graphCurveG95Sup.mData = curveG95Sup;
@@ -145,6 +138,13 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
             graphCurveG95Inf.mPen.setColor(QColor(180, 180, 180));
             graphCurveG95Inf.mIsHisto = false;
             mGraph->addCurve(graphCurveG95Inf);
+            
+            GraphCurve graphCurveG;
+            graphCurveG.mName = "G";
+            graphCurveG.mData = curveG;
+            graphCurveG.mPen.setColor(Qt::blue);
+            graphCurveG.mIsHisto = false;
+            mGraph->addCurve(graphCurveG);
             
             // Display reference curve name
             mGraph->addInfo(tr("Ref : ") + ref_curve);

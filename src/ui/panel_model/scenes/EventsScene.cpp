@@ -404,7 +404,7 @@ void EventsScene::updateProject()
             
             hasCreated = true;
 #ifdef DEBUG
-            qDebug() << "Event created : id = " << event[STATE_ID].toInt() << ", type : " << type;
+            //qDebug() << "Event created : id = " << event[STATE_ID].toInt() << ", type : " << type;
 #endif
         }
     }
