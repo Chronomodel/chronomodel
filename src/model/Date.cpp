@@ -792,14 +792,14 @@ void Date::autoSetTiSampler(const bool bSet)
             }
             case eInversion:
             {
-                updateti =fInversion;
+                updateti = fInversion;
                 
                 break;
             }
                 // Seul cas où le taux d'acceptation a du sens car on utilise sigmaMH :
             case eMHSymGaussAdapt:
             {
-                updateti =fMHSymGaussAdapt;
+                updateti = fMHSymGaussAdapt;
                 
                 break;
             }
@@ -863,22 +863,22 @@ void fMHSymetricWithArg(Date* date,Event* event)
  *  @brief Calculation of proposal density for time value t
  *
  */
-double fProposalDensity(const double t, Date* date)
+double fProposalDensity(const double t, const double t0, Date* date)
 {
     double tmin = date->mSettings.mTmin;
     double tmax = date->mSettings.mTmax;
     double level = date->mMixingLevel;
-    double q1= 0;
+    double q1 = 0;
 
     /// ----q1------Defined only on study period-----
-    if (t>tmin && t<tmax) {
+    if(t > tmin && t < tmax){
       
         double prop = (t - tmin) / (tmax - tmin);
         double idx = prop * (date->mRepartition.size() - 1);
         int idxUnder = (int)floor(idx);
         
         double step =(tmax-tmin+1)/date->mRepartition.size();
-        q1= (date->mRepartition[idxUnder+1]-date->mRepartition[idxUnder])/step;
+        q1 = (date->mRepartition[idxUnder+1]-date->mRepartition[idxUnder])/step;
     }
     /// ----q2 shrinkage-----------
     /*double t0 =(tmax+tmin)/2;
@@ -887,13 +887,11 @@ double fProposalDensity(const double t, Date* date)
      */
         
     /// ----q2 gaussian-----------
-    double t0 =(tmax+tmin)/2;
+    //double t0 = (tmax+tmin)/2;
     double sigma = (tmax-tmin)/2;
-    double q2= exp(-0.5* pow((t-t0)/ sigma, 2))  / (sigma*sqrt(2*M_PI));
-     
-        
-    return (level*q1 + (1-level)*q2);
-
+    double q2 = exp(-0.5* pow((t-t0)/ sigma, 2)) / (sigma*sqrt(2*M_PI));
+    
+    return (level * q1 + (1 - level) * q2);
 }
 
 /**
@@ -915,7 +913,7 @@ void fInversion(Date* date, Event* event)
     }
     else {
         // -- gaussian
-        double t0 =(tmax+tmin)/2;
+        double t0 = date->mTheta.mX; //(tmax+tmin)/2;
         double s = (tmax-tmin)/2;
         
         tiNew=Generator::gaussByBoxMuller(t0, s);
@@ -939,14 +937,17 @@ void fInversion(Date* date, Event* event)
              
     double rapport1 = date->getLikelyhood(tiNew) / date->getLikelyhood(date->mTheta.mX);
     
-    double rapport2= exp((-0.5/(date->mSigma.mX * date->mSigma.mX)) * (   pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
-                                                                  - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
-                                                                ));
+    double rapport2 = exp((-0.5 / (date->mSigma.mX * date->mSigma.mX)) *
+                          (pow(tiNew - (event->mTheta.mX - date->mDelta), 2) -
+                           pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2))
+                          );
     
-    double rapport3= fProposalDensity(date->mTheta.mX,date) / fProposalDensity(tiNew,date);
+    double rapport3 = fProposalDensity(date->mTheta.mX, tiNew, date) /
+                        fProposalDensity(tiNew, date->mTheta.mX, date);
     
-    date->mTheta.tryUpdate(tiNew, rapport1*rapport2*rapport3);
+    date->mTheta.tryUpdate(tiNew, rapport1 * rapport2 * rapport3);
 }
+
 void fInversionWithArg(Date* date, Event* event)
 {
     double u1 = Generator::randomUniform();
@@ -992,21 +993,23 @@ void fInversionWithArg(Date* date, Event* event)
     argNew=date->getLikelyhoodArg(tiNew);
     
     double logGRapport= argNew.second-argOld.second;
-    double logHRapport= (-0.5/(date->mSigma.mX * date->mSigma.mX)) * (  pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
+    double logHRapport= (-0.5/(date->mSigma.mX * date->mSigma.mX)) * (pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
                                                                       - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
                                                                       );
     
-    double rapport = sqrt(argOld.first/argNew.first)*exp(logGRapport+logHRapport);
-    double rapportPD= fProposalDensity(date->mTheta.mX,date) / fProposalDensity(tiNew,date);
+    double rapport = sqrt(argOld.first/argNew.first) * exp(logGRapport+logHRapport);
+    
+    double rapportPD = fProposalDensity(date->mTheta.mX, tiNew, date) / fProposalDensity(tiNew, date->mTheta.mX, date);
     
     date->mTheta.tryUpdate(tiNew, rapport * rapportPD);
     
     //date->mTheta.tryUpdate(tiNew, exp(logHRapport));
     
 }
+
+
 /*
  * @brief MH proposal = adaptatif Gaussian random walk, ti is defined on set R (real numbers)
- *
  */
 void fMHSymGaussAdapt(Date* date, Event* event)
 {
