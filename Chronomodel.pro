@@ -6,7 +6,7 @@
 # Chronomodel
 #
 #-------------------------------------------------
-VERSION = 1.3.6 # check in file main.pro
+VERSION = 1.3.7 # check in file main.pro
 #PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_
 
@@ -66,7 +66,7 @@ CONFIG += C++11
 macx{
 	# Icon file
     ICON = $$PRO_PATH/icon/Chronomodel.icns
-
+    
 	# This is the SDK used to compile : change it to whatever latest version of mac you are using.
 	QMAKE_MAC_SDK = macosx10.10
 	

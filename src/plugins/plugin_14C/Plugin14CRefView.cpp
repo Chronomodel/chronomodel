@@ -29,7 +29,7 @@ Plugin14CRefView::~Plugin14CRefView()
 
 void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
 {
-    QLocale locale=QLocale();
+    QLocale locale = QLocale();
     GraphViewRefAbstract::setDate(d, settings);
     Date date = d;
     
