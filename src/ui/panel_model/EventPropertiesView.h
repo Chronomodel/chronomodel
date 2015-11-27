@@ -33,6 +33,8 @@ public:
     const QJsonObject& getEvent() const;
     
     void setCalibChecked(bool checked);
+    bool hasEvent() const;
+    bool hasBound() const;
     
 public slots:
     void setEvent(const QJsonObject& event);

@@ -641,3 +641,22 @@ void EventPropertiesView::setCalibChecked(bool checked)
     mCalibBut->setChecked(checked);
 }
 
+bool EventPropertiesView::hasEvent() const
+{
+    if(!mEvent.isEmpty()){
+        Event::Type type = (Event::Type)mEvent[STATE_EVENT_TYPE].toInt();
+        return (type == Event::eDefault);
+    }
+    return false;
+}
+
+bool EventPropertiesView::hasBound() const
+{
+    if(!mEvent.isEmpty()){
+        Event::Type type = (Event::Type)mEvent[STATE_EVENT_TYPE].toInt();
+        return (type == Event::eKnown);
+    }
+    return false;
+}
+
+

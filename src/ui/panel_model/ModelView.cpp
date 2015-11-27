@@ -815,22 +815,25 @@ void ModelView::updateCalibration(const QJsonObject& date)
 
 void ModelView::showCalibration(bool show)
 {
-    mEventPropertiesView->setCalibChecked(show);
-    if(mCalibVisible != show)
+    if(mEventPropertiesView->hasEvent())
     {
-        mCalibVisible = show;
-        if(mCalibVisible)
+        mEventPropertiesView->setCalibChecked(show);
+        if(mCalibVisible != show)
         {
-            mCalibrationView->raise();
-            mAnimationCalib->setStartValue(mLeftHiddenRect);
-            mAnimationCalib->setEndValue(mLeftRect);
+            mCalibVisible = show;
+            if(mCalibVisible)
+            {
+                mCalibrationView->raise();
+                mAnimationCalib->setStartValue(mLeftHiddenRect);
+                mAnimationCalib->setEndValue(mLeftRect);
+            }
+            else
+            {
+                mAnimationCalib->setStartValue(mLeftRect);
+                mAnimationCalib->setEndValue(mLeftHiddenRect);
+            }
+            mAnimationCalib->start();
         }
-        else
-        {
-            mAnimationCalib->setStartValue(mLeftRect);
-            mAnimationCalib->setEndValue(mLeftHiddenRect);
-        }
-        mAnimationCalib->start();
     }
 }
 
@@ -858,6 +861,9 @@ void ModelView::keyPressEvent(QKeyEvent* event)
 {
     if(event->key() == Qt::Key_Escape){
         showCalibration(false);
+    }
+    else if(event->key() == Qt::Key_C){
+        showCalibration(!mCalibVisible);
     }
     else{
         QWidget::keyPressEvent(event);
