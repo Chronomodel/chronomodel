@@ -313,6 +313,18 @@ QString PluginGauss::getRefsPath() const
     return calibPath;
 }
 
+/**
+ * @brief PluginGauss::loadRefFile the reference curve must be in english CSV mode_t
+ * it's mean decimal separator is dot and value separator is coma
+ * example file.csv
+ * -1500,10,5
+ * -1000,1500,10
+ * -0,1500,10
+ * 500,-1500,8
+ * 1500,20,2
+ * @param refFile
+ * @return
+ */
 QMap<QString, QMap<double, double> > PluginGauss::loadRefFile(QFileInfo refFile)
 {
     QFile file(refFile.absoluteFilePath());
@@ -323,6 +335,8 @@ QMap<QString, QMap<double, double> > PluginGauss::loadRefFile(QFileInfo refFile)
         QMap<double, double> curveG95Sup;
         QMap<double, double> curveG95Inf;
         
+        QLocale locale = QLocale(QLocale::English);
+
         QTextStream stream(&file);
         while(!stream.atEnd())
         {
@@ -332,11 +346,11 @@ QMap<QString, QMap<double, double> > PluginGauss::loadRefFile(QFileInfo refFile)
                 QStringList values = line.split(",");
                 if(values.size() >= 3)
                 {
-                    double t = values[0].toDouble();
+                    double t = locale.toDouble(values[0]);
                     
-                    double g = values[1].toDouble();
-                    double gSup = g + 1.96 * values[2].toDouble();
-                    double gInf = g - 1.96 * values[2].toDouble();
+                    double g = locale.toDouble(values[1]);
+                    double gSup = g + 1.96 * locale.toDouble(values[2]);
+                    double gInf = g - 1.96 * locale.toDouble(values[2]);
                     
                     curveG[t] = g;
                     curveG95Sup[t] = gSup;
@@ -345,7 +359,8 @@ QMap<QString, QMap<double, double> > PluginGauss::loadRefFile(QFileInfo refFile)
             }
         }
         file.close();
-        
+        // it is not a valid file
+        if(curveG.isEmpty()) return curves;
         // The curves do not have 1-year precision!
         // We have to interpolate in the blanks
         

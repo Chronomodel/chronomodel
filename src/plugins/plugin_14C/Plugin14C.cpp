@@ -245,7 +245,8 @@ QMap<QString, QMap<double, double> > Plugin14C::loadRefFile(QFileInfo refFile)
         QMap<double, double> curveG;
         QMap<double, double> curveG95Sup;
         QMap<double, double> curveG95Inf;
-        
+        QLocale locale = QLocale(QLocale::English);
+
         QTextStream stream(&file);
         while(!stream.atEnd())
         {
@@ -255,11 +256,11 @@ QMap<QString, QMap<double, double> > Plugin14C::loadRefFile(QFileInfo refFile)
                 QStringList values = line.split(",");
                 if(values.size() >= 3)
                 {
-                    int t = 1950 - values[0].toInt();
+                    int t = 1950 - locale.toInt(values[0]);
                     
                     double g = values[1].toDouble();
-                    double gSup = g + 1.96f * values[2].toDouble();
-                    double gInf = g - 1.96f * values[2].toDouble();
+                    double gSup = g + 1.96f * locale.toInt(values[2]);
+                    double gInf = g - 1.96f * locale.toInt(values[2]);
                     
                     curveG[t] = g;
                     
@@ -269,7 +270,9 @@ QMap<QString, QMap<double, double> > Plugin14C::loadRefFile(QFileInfo refFile)
             }
         }
         file.close();
-        
+        // it is not a valid file
+        if(curveG.isEmpty()) return curves;
+
         // The curves do not have 1-year precision!
         // We have to interpolate in the blanks
         

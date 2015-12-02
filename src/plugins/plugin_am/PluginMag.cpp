@@ -407,47 +407,43 @@ QMap<QString, QMap<double, double> > PluginMag::loadRefFile(QFileInfo refFile)
         }
         file.close();
 
+        // it is not a valid file
+        if(curveG.isEmpty()) return curves;
+
         // The curves do not have 1-year precision!
         // We have to interpolate in the blanks
-        if(!curveG.isEmpty()) {
-            double tmin = curveG.firstKey();
-            double tmax = curveG.lastKey();
 
-            for(double t=tmin; t<tmax; ++t)
+        double tmin = curveG.firstKey();
+        double tmax = curveG.lastKey();
+
+        for(double t=tmin; t<tmax; ++t)
+        {
+            if(curveG.find(t) == curveG.end())
             {
-                if(curveG.find(t) == curveG.end())
+                // This actually return the iterator with the nearest greater key !!!
+                QMap<double, double>::const_iterator iter = curveG.lowerBound(t);
+                if(iter != curveG.end())
                 {
-                    // This actually return the iterator with the nearest greater key !!!
-                    QMap<double, double>::const_iterator iter = curveG.lowerBound(t);
-                    if(iter != curveG.end())
+                    double t_upper = iter.key();
+                    --iter;
+                    if(iter != curveG.begin())
                     {
-                        double t_upper = iter.key();
-                        --iter;
-                        if(iter != curveG.begin())
-                        {
-                            double t_under = iter.key();
+                        double t_under = iter.key();
 
-                            //qDebug() << t_under << " < " << t << " < " << t_upper;
+                        //qDebug() << t_under << " < " << t << " < " << t_upper;
 
-                            double g_under = curveG[t_under];
-                            double g_upper = curveG[t_upper];
+                        double g_under = curveG[t_under];
+                        double g_upper = curveG[t_upper];
 
-                            double gsup_under = curveG95Sup[t_under];
-                            double gsup_upper = curveG95Sup[t_upper];
+                        double gsup_under = curveG95Sup[t_under];
+                        double gsup_upper = curveG95Sup[t_upper];
 
-                            double ginf_under = curveG95Inf[t_under];
-                            double ginf_upper = curveG95Inf[t_upper];
+                        double ginf_under = curveG95Inf[t_under];
+                        double ginf_upper = curveG95Inf[t_upper];
 
-                            curveG[t] = interpolate(t, t_under, t_upper, g_under, g_upper);
-                            curveG95Sup[t] = interpolate(t, t_under, t_upper, gsup_under, gsup_upper);
-                            curveG95Inf[t] = interpolate(t, t_under, t_upper, ginf_under, ginf_upper);
-                        }
-                        else
-                        {
-                            curveG[t] = 0;
-                            curveG95Sup[t] = 0;
-                            curveG95Inf[t] = 0;
-                        }
+                        curveG[t] = interpolate(t, t_under, t_upper, g_under, g_upper);
+                        curveG95Sup[t] = interpolate(t, t_under, t_upper, gsup_under, gsup_upper);
+                        curveG95Inf[t] = interpolate(t, t_under, t_upper, ginf_under, ginf_upper);
                     }
                     else
                     {
@@ -456,14 +452,21 @@ QMap<QString, QMap<double, double> > PluginMag::loadRefFile(QFileInfo refFile)
                         curveG95Inf[t] = 0;
                     }
                 }
+                else
+                {
+                    curveG[t] = 0;
+                    curveG95Sup[t] = 0;
+                    curveG95Inf[t] = 0;
+                }
             }
-
-            // Store the resulting curves :
-
-            curves["G"] = curveG;
-            curves["G95Sup"] = curveG95Sup;
-            curves["G95Inf"] = curveG95Inf;
         }
+
+        // Store the resulting curves :
+
+        curves["G"] = curveG;
+        curves["G95Sup"] = curveG95Sup;
+        curves["G95Inf"] = curveG95Inf;
+
     }
     return curves;
 }

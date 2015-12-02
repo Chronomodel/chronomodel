@@ -113,7 +113,9 @@ public:
         typename QMap< QString, QMap<QString, QMap<double, double> > >::const_iterator it = mRefDatas.begin();
         while(it != mRefDatas.end())
         {
-            refNames.push_back(it.key());
+           QMap<QString, QMap<double, double> > curve = mRefDatas[it.key()];
+           // return only valid curve
+           if (! curve["G"].isEmpty())  refNames.push_back(it.key());
             ++it;
         }
         return refNames;

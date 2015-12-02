@@ -11,7 +11,7 @@
 
 PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("Gaussian measurement"), parent, flags)
 {
-    PluginGauss* pluginGauss = (PluginGauss*)mPlugin;
+    //PluginGauss* pluginGauss = (PluginGauss*)mPlugin;
     
     mAverageLab = new QLabel(tr("Measure") + " :", this);
     mErrorLab = new QLabel(tr("Error (sd)") + " :", this);
@@ -58,7 +58,7 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
     mCurveCombo = new QComboBox(this);
     QStringList refCurves = plugin->getRefsNames();
     for(int i = 0; i<refCurves.size(); ++i){
-        mCurveCombo->addItem(refCurves[i]);
+         mCurveCombo->addItem(refCurves[i]);
     }
     
     connect(mEquationRadio, SIGNAL(toggled(bool)), this, SLOT(updateVisibleElements()));
