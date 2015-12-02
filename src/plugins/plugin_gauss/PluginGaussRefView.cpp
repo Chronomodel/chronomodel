@@ -64,19 +64,7 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
         
         if(mode == DATE_GAUSS_MODE_NONE)
         {
-            /*for(double t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep)
-                curve.mData[t] = t;
-            mGraph->addCurve(curve);
-            
-            // Adjust scale :
-            yMin = mSettings.mTmin;
-            yMax = mSettings.mTmax;
-            
-            yMin = qMin(yMin, age);
-            yMax = qMax(yMax, age);
-            
-            mGraph->setRangeY(yMin, yMax);
-            */
+          // nothing to do
         }
         else if(mode == DATE_GAUSS_MODE_EQ)
         {
@@ -152,105 +140,18 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
             // ----------------------------------------------------
             //  Draw ref curve extensions if not defined everywhere on study period
             // ----------------------------------------------------
-            
-            // Extend left
-            if(tMinGraph > mSettings.mTmin)
-            {
-                QMap<double, double> curveGExt;
-                QMap<double, double> curveGSupExt;
-                QMap<double, double> curveGInfExt;
-                
-                for(double t=mSettings.mTmin; t<=tMinGraph; t += mSettings.mStep)
-                {
-                    double value = plugin->getRefValueAt(date.mData, t);
-                    double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
-                    
-                    curveGExt.insert(t, value);
-                    curveGSupExt.insert(t, value + error);
-                    curveGInfExt.insert(t, value - error);
-                    
-                    yMin = qMin(yMin, curveGInfExt[t]);
-                    yMax = qMax(yMax, curveGSupExt[t]);
-                }
-                
-                GraphCurve graphCurveGSupExt;
-                graphCurveGSupExt.mName = "G-ext-left-sup";
-                graphCurveGSupExt.mData = curveGSupExt;
-                graphCurveGSupExt.mPen.setColor(QColor(180, 180, 180));
-                graphCurveGSupExt.mIsHisto = false;
-                mGraph->addCurve(graphCurveGSupExt);
-                
-                GraphCurve graphCurveGInfExt;
-                graphCurveGInfExt.mName = "G-ext-left-inf";
-                graphCurveGInfExt.mData = curveGInfExt;
-                graphCurveGInfExt.mPen.setColor(QColor(180, 180, 180));
-                graphCurveGInfExt.mIsHisto = false;
-                mGraph->addCurve(graphCurveGInfExt);
-                
-                GraphCurve graphCurveGExt;
-                graphCurveGExt.mName = "G-ext-left";
-                graphCurveGExt.mData = curveGExt;
-                graphCurveGExt.mPen.setColor(Painting::mainColorDark);
-                graphCurveGExt.mIsHisto = false;
-                mGraph->addCurve(graphCurveGExt);
-                
-                GraphZone zone;
-                zone.mXStart = mSettings.mTmin;
-                zone.mXEnd = tMinGraph;
-                zone.mColor = Qt::red;
-                zone.mColor.setAlpha(20);
-                mGraph->addZone(zone);
-            }
-            
-            // Extend right
-            if(tMaxGraph < mSettings.mTmax)
-            {
-                QMap<double, double> curveGExt;
-                QMap<double, double> curveGSupExt;
-                QMap<double, double> curveGInfExt;
-                
-                for(double t=tMaxGraph; t<=mSettings.mTmax; t += mSettings.mStep)
-                {
-                    double value = plugin->getRefValueAt(date.mData, t);
-                    double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
-                    
-                    curveGExt.insert(t, value);
-                    curveGSupExt.insert(t, value + error);
-                    curveGInfExt.insert(t, value - error);
-                    
-                    yMin = qMin(yMin, curveGInfExt[t]);
-                    yMax = qMax(yMax, curveGSupExt[t]);
-                }
-                
-                GraphCurve graphCurveGSupExt;
-                graphCurveGSupExt.mName = "G-ext-right-sup";
-                graphCurveGSupExt.mData = curveGSupExt;
-                graphCurveGSupExt.mPen.setColor(QColor(180, 180, 180));
-                graphCurveGSupExt.mIsHisto = false;
-                mGraph->addCurve(graphCurveGSupExt);
-                
-                GraphCurve graphCurveGInfExt;
-                graphCurveGInfExt.mName = "G-ext-right-inf";
-                graphCurveGInfExt.mData = curveGInfExt;
-                graphCurveGInfExt.mPen.setColor(QColor(180, 180, 180));
-                graphCurveGInfExt.mIsHisto = false;
-                mGraph->addCurve(graphCurveGInfExt);
-                
-                GraphCurve graphCurveGExt;
-                graphCurveGExt.mName = "G-ext-right";
-                graphCurveGExt.mData = curveGExt;
-                graphCurveGExt.mPen.setColor(Painting::mainColorDark);
-                graphCurveGExt.mIsHisto = false;
-                mGraph->addCurve(graphCurveGExt);
-                
-                GraphZone zone;
-                zone.mXStart = tMaxGraph;
-                zone.mXEnd = mSettings.mTmax;
-                zone.mColor = Qt::red;
-                zone.mColor.setAlpha(20);
-                mGraph->addZone(zone);
-            }
-            
+            GraphZone zone;
+            zone.mColor = Qt::red;
+            zone.mColor.setAlpha(20);
+
+            zone.mXStart = mSettings.mTmin;
+            zone.mXEnd = tMinGraph;
+            mGraph->addZone(zone);
+
+            zone.mXStart = tMaxGraph;
+            zone.mXEnd = mSettings.mTmax;
+            mGraph->addZone(zone);
+
             // ----------------------------------------------------
             
             // Adjust scale :

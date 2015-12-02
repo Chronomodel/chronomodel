@@ -91,7 +91,8 @@ public:
     virtual QString getRefExt() const {return "";}
     virtual QString getRefsPath() const {return "";}
     virtual QMap<QString, QMap<double, double> > loadRefFile(QFileInfo refFile){return QMap<QString, QMap<double, double> >();}
-    
+    virtual QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const {return qMakePair<double,double>(0,0);}
+
     void loadRefDatas(){
         QString path = QDir::currentPath();
         QString calibPath = getRefsPath();

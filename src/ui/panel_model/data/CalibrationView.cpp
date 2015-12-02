@@ -101,7 +101,7 @@ void CalibrationView::setDate(const QJsonObject& date)
     QJsonObject state = project->state();
     QJsonObject settings = state[STATE_SETTINGS].toObject();
     mSettings = ProjectSettings::fromJson(settings);
-    
+
     try{
         mDate = Date::fromJson(date);
         mDate.autoSetTiSampler(false);

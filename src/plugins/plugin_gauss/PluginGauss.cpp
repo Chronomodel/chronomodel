@@ -421,6 +421,20 @@ QMap<QString, QMap<double, double> > PluginGauss::loadRefFile(QFileInfo refFile)
     return curves;
 }
 
+QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) const
+{
+    double tmin=0;
+    double tmax=0;
+    if(data[DATE_GAUSS_MODE_STR].toString()==DATE_GAUSS_MODE_CURVE){
+        QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString().toLower();
+        if(mRefDatas.constFind(ref_curve) != mRefDatas.constEnd() ) {
+           tmin= mRefDatas[ref_curve]["G"].firstKey();
+           tmax= mRefDatas[ref_curve]["G"].lastKey();
+        }
+    }
+    return qMakePair<double,double>(tmin,tmax);
+}
+
 // ------------------------------------------------------------------
 
 GraphViewRefAbstract* PluginGauss::getGraphViewRef()

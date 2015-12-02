@@ -471,6 +471,18 @@ QMap<QString, QMap<double, double> > PluginMag::loadRefFile(QFileInfo refFile)
     return curves;
 }
 
+QPair<double,double> PluginMag::getTminTmaxRefsCurve(const QJsonObject& data) const
+{
+    double tmin = 0;
+    double tmax = 0;
+    QString ref_curve = data[DATE_AM_REF_CURVE_STR].toString().toLower();
+    if(mRefDatas.constFind(ref_curve) != mRefDatas.constEnd() ) {
+       tmin= mRefDatas[ref_curve]["G"].firstKey();
+       tmax= mRefDatas[ref_curve]["G"].lastKey();
+    }
+    return qMakePair<double,double>(tmin,tmax);
+}
+
 GraphViewRefAbstract* PluginMag::getGraphViewRef()
 {
     if(mRefGraph) delete mRefGraph;

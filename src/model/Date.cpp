@@ -51,6 +51,9 @@ void Date::init()
     mCalibSum = 0;
     mSubDates.clear();
 
+    mTminRefCurve = 0;
+    mTmaxRefCurve = 0;
+
 }
 
 Date::Date(const Date& date)
@@ -97,6 +100,8 @@ void Date::copyFrom(const Date& date)
     mCalibration = date.mCalibration;
     mRepartition = date.mRepartition;
     mCalibHPD = date.mCalibHPD;
+    mTminRefCurve = date.mTminRefCurve;
+    mTmaxRefCurve = date.mTmaxRefCurve;
     
     mSubDates = date.mSubDates;
     
@@ -163,7 +168,7 @@ QString Date::getName() const
     
 }
 #pragma mark JSON
-Date Date::fromJson(const QJsonObject& json)
+Date Date:: fromJson(const QJsonObject& json)
 {
     Date date;
     
@@ -191,7 +196,10 @@ Date Date::fromJson(const QJsonObject& json)
         {
             throw QObject::tr("Data could not be loaded : invalid plugin : ") + pluginId;
         }
-        
+        QPair<double,double> tminTmax = date.mPlugin->getTminTmaxRefsCurve(date.mData);
+        date.mTminRefCurve = tminTmax.first;
+        date.mTmaxRefCurve = tminTmax.second;
+
         date.mSubDates.clear();
         QJsonArray subdates = json[STATE_DATE_SUB_DATES].toArray();
         for(int i=0; i<subdates.size(); ++i){
@@ -201,8 +209,6 @@ Date Date::fromJson(const QJsonObject& json)
         
         date.mTheta.mProposal = ModelUtilities::getDataMethodText(date.mMethod);
         date.mSigma.mProposal = ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt);
-        
-        
         
     }
     
@@ -313,45 +319,45 @@ void Date::calibrate(const ProjectSettings& settings)
   //  qDebug()<<" Date::calibrate"<<tmin<<tmax<<step<<nbPts<<"size"<<mCalibration.size();
     mCalibration.reserve(nbPts);
     mRepartition.reserve(nbPts);
-    
-    if(true) //mSubDates.size() == 0) // not a combination !
+
+    double v = getLikelyhood(tmin);
+    double lastRepVal = v;
+
+    //mCalibration.append(v);
+    //mRepartition.append(0);
+    mCalibSum += v;
+
+
+    for(int i = 0; i < nbPts; ++i)
     {
-        double v = getLikelyhood(tmin);
-        double lastRepVal = v;
-        
-        mCalibration.append(v);
-        mRepartition.append(0);
-        mCalibSum += v;
-        
-        for(int i = 1; i < nbPts; ++i)
-        {
-            double t = tmin + (double)i * step;
-            
-            float lastV = v;
+        double t = tmin + (double)i * step;
+        float lastV = v;
+
+        if(t>=mTminRefCurve && t<=mTmaxRefCurve){
             v = getLikelyhood(t);
-            mCalibration.append(v);
-            mCalibSum += v;
-            
-            double rep = lastRepVal;
-            if(v != 0 && lastV != 0)
-            {
-                rep = lastRepVal + step * (lastV + v) / 2.;
-            }
-            mRepartition.append(rep);
-            lastRepVal = rep;
         }
-        
-        // La courbe de répartition est transformée de sorte que sa valeur maximale soit 1
-        mRepartition = normalize_vector(mRepartition);
-        
-        // La courbe de calibration est transformée de sorte que l'aire sous la courbe soit 1
-        mCalibration = equal_areas(mCalibration, step, 1.);
-          //  qDebug()<<" Date::calibrate end"<<tmin<<tmax<<step<<nbPts<<"size"<<mCalibration.size();
+        else {
+            v = 0;
+        }
+        mCalibration.append(v);
+        mCalibSum += v;
+        double rep = lastRepVal;
+        if(v != 0 && lastV != 0)
+        {
+            rep = lastRepVal + step * (lastV + v) / 2.;
+        }
+        mRepartition.append(rep);
+        lastRepVal = rep;
+
     }
-    else
-    {
-        // TODO : combination
-    }
+
+    // La courbe de répartition est transformée de sorte que sa valeur maximale soit 1
+    mRepartition = normalize_vector(mRepartition);
+
+    // La courbe de calibration est transformée de sorte que l'aire sous la courbe soit 1
+    mCalibration = equal_areas(mCalibration, step, 1.);
+      //  qDebug()<<" Date::calibrate end"<<tmin<<tmax<<step<<nbPts<<"size"<<mCalibration.size();
+
 }
 
 QMap<double, double> Date::getCalibMap() const

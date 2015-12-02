@@ -333,6 +333,18 @@ QMap<QString, QMap<double, double> > Plugin14C::loadRefFile(QFileInfo refFile)
     return curves;
 }
 
+QPair<double,double> Plugin14C::getTminTmaxRefsCurve(const QJsonObject& data) const
+{
+    double tmin = 0;
+    double tmax = 0;
+    QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString().toLower();
+    if(mRefDatas.constFind(ref_curve) != mRefDatas. constEnd()) {
+       tmin = mRefDatas[ref_curve]["G"].firstKey();
+       tmax = mRefDatas[ref_curve]["G"].lastKey();
+    }
+    return qMakePair<double,double>(tmin,tmax);
+}
+
 // ------------------------------------------------------------------
 GraphViewRefAbstract* Plugin14C::getGraphViewRef()
 {

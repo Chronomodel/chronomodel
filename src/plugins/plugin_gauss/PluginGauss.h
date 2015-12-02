@@ -55,6 +55,8 @@ public:
     QString getRefExt() const;
     QString getRefsPath() const;
     QMap<QString, QMap<double, double> > loadRefFile(QFileInfo refFile);
+    QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
+
     double getRefValueAt(const QJsonObject& data, const double& t);
     double getRefErrorAt(const QJsonObject& data, const double& t);
     
