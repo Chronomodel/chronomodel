@@ -86,8 +86,8 @@ public:
     QColor getEventColor() const;
     QString getName() const;
 
-    double getTminRefCurve() const {return mTminRefCurve;};
-    double getTmaxRefCurve() const {return mTmaxRefCurve;};
+    double getTminRefCurve() const {return mTminRefCurve;}
+    double getTmaxRefCurve() const {return mTmaxRefCurve;}
     
 public:
     MHVariable mTheta; // theta i de la date
