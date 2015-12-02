@@ -183,8 +183,7 @@ mCalibVisible(false)
   */
     
     mEventPropertiesView = new EventPropertiesView(mRightWrapper);
- 
-    
+
     connect(mEventPropertiesView, SIGNAL(updateCalibRequested(const QJsonObject&)), this, SLOT(updateCalibration(const QJsonObject&)));
     
     connect(mEventPropertiesView, SIGNAL(showCalibRequested(bool)), this, SLOT(showCalibration(bool)));
@@ -532,34 +531,7 @@ void ModelView::searchEvent()
     if(mCurSearchIdx < mSearchIds.size())
         mEventsScene->centerOnEvent(mSearchIds[mCurSearchIdx]);
     
-    
-    /*QString search = mEventsSearchEdit->text();
-    QJsonObject state = MainWindow::getInstance()->getProject()->state();
-    QJsonArray events = state[STATE_EVENTS].toArray();
 
-    int foundId;
-    QString bestName;
-    int bestScore = 99999999;
-    
-    int counter = 0;
-    for(int i=0; i<events.size(); ++i)
-    {
-        QJsonObject event = events[i].toObject();
-        int id = event[STATE_ID].toInt();
-        QString name = event[STATE_NAME].toString();
-        
-        int score = compareStrings(std::string(name.toUtf8()), std::string(search.toUtf8()));
-        if(abs(score) < bestScore)
-        {
-            bestScore = abs(score);
-            foundId = id;
-            bestName = name;
-            //qDebug() << name;
-        }
-        ++counter;
-    }
-    //qDebug() << "Names tried : " << counter << ", bestScore : " << bestScore;
-    mEventsScene->centerOnEvent(foundId);*/
 }
 
 #pragma mark Right animation
@@ -692,7 +664,6 @@ void ModelView::updateLayout()
     qreal editW = 100;
     qreal editH = (mToolbarH - 3*mMargin) / 2;
 
-    //qreal butW = mButtonWidth;
     qreal butW2 = 85;
    
     qreal y = 2*mMargin + editH;
@@ -715,8 +686,7 @@ void ModelView::updateLayout()
     mRightSubHiddenRect = mRightSubRect.adjusted(mRightSubRect.width() + 2*mMargin, 0, mRightSubRect.width() + 2*mMargin, 0);
    
     mEventPropertiesView->setGeometry(mButProperties->isChecked() ? mRightSubRect : mRightSubHiddenRect);
-   
-    
+    mEventPropertiesView->setMinimumHeight(mButProperties->isChecked() ? mRightSubRect.height() : mRightSubHiddenRect.height());
 
     mPhasesWrapper  ->setGeometry(mButPhasesModel->isChecked() ? mRightSubRect : mRightSubHiddenRect);
     mImportDataView ->setGeometry(mButImport     ->isChecked() ? mRightSubRect : mRightSubHiddenRect);

@@ -22,7 +22,6 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 mToolbarH(100)
 {
     minimumHeight =0;
-
     // ------------- commun with defautlt Event and Bound ----------
     mNameLab = new QLabel(tr("Name") + " :");
     
@@ -85,7 +84,7 @@ mToolbarH(100)
         button->setFlatVertical();
         connect(button, SIGNAL(clicked()), this, SLOT(createDate()));
         
-        //minimumHeight+=button->height();
+        minimumHeight+=button->height();
         
         
         if(plugins[i]->doesCalibration())
@@ -104,26 +103,26 @@ mToolbarH(100)
     mRecycleBut->setIcon(QIcon(":restore.png"));
     mRecycleBut->setFlatVertical();
     connect(mRecycleBut, SIGNAL(clicked()), this, SLOT(recycleDates()));
-    minimumHeight+=mRecycleBut->height();
+  //  minimumHeight+=mRecycleBut->height();
     // ---------------
     
     mCalibBut = new Button(tr("Calibrate"), mEventView);
     mCalibBut->setIcon(QIcon(":results_w.png"));
     mCalibBut->setFlatVertical();
     mCalibBut->setCheckable(true);
-    minimumHeight+=mCalibBut->height();
+ //   minimumHeight+=mCalibBut->height();
     
     mMergeBut = new Button(tr("Combine"), mEventView);
     mMergeBut->setFlatVertical();
     mMergeBut->setEnabled(false);
     //mMergeBut->setVisible(false);
-    minimumHeight+=mMergeBut->height();
+ //   minimumHeight+=mMergeBut->height();
     
     mSplitBut = new Button(tr("Split"), mEventView);
     mSplitBut->setFlatVertical();
     mSplitBut->setEnabled(false);
     //mSplitBut->setVisible(false);
-    minimumHeight+=mSplitBut->height();
+  //  minimumHeight+=mSplitBut->height();
     
     connect(mCalibBut, SIGNAL(clicked(bool)), this, SIGNAL(showCalibRequested(bool)));
     connect(mMergeBut, SIGNAL(clicked()), this, SLOT(sendMergeSelectedDates()));
@@ -193,6 +192,8 @@ mToolbarH(100)
     mBoundView->setLayout(boundLayout);
     
     setEvent(QJsonObject());
+
+    qDebug()<<" fin EventPropertiesView::EventPropertiesView() height"<<height();
 }
 
 EventPropertiesView::~EventPropertiesView()
@@ -599,7 +600,7 @@ void EventPropertiesView::resizeEvent(QResizeEvent* e)
 void EventPropertiesView::updateLayout()
 {
     mTopView->setGeometry(0, 0, width(), mToolbarH);
- 
+
     int butPluginWidth = 80;
     int butPluginHeigth = 50;
     
