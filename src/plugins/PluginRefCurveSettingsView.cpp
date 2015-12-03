@@ -48,7 +48,7 @@ mPlugin(plugin)
 }
 
 PluginRefCurveSettingsView::~PluginRefCurveSettingsView(){
-    
+
 }
 
 void PluginRefCurveSettingsView::updateRefsList(){

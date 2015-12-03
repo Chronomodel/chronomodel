@@ -224,21 +224,9 @@ bool Project::checkRefreshResults(const QJsonObject& stateNew,const QJsonObject&
                             return refresh;
                         }
                         // No color in date JSON
-                        /*QColor newDateColor=QColor(eventNew[i].toObject()[STATE_COLOR_RED].toInt(),eventNew[i].toObject()[STATE_COLOR_GREEN].toInt(),eventNew[i].toObject()[STATE_COLOR_BLUE ].toInt());
-                        QColor oldDateColor=QColor(eventOld[i].toObject()[STATE_COLOR_RED].toInt(),eventOld[i].toObject()[STATE_COLOR_GREEN].toInt(),eventOld[i].toObject()[STATE_COLOR_BLUE ].toInt());
-                        if(newDateColor != oldDateColor) {
-                            refresh=true;
-                            return refresh;
-                        }
-                        */
+
                      }
                 }
-              // qDebug()<<"Check date";
-
-
-
-
-
 
             }
 

@@ -306,12 +306,15 @@ void Date::reset()
 
 void Date::calibrate(const ProjectSettings& settings)
 {
+
     mCalibration.clear();
     mRepartition.clear();
     mCalibHPD.clear();
+
+
     mSettings = settings;
     mCalibSum = 0;
-   // mCalibration.erase(mCalibration.begin(), mCalibration.end());
+
     double tmin = mSettings.mTmin;
     double tmax = mSettings.mTmax;
     double step = mSettings.mStep;
@@ -563,34 +566,7 @@ double Date::getLikelyhoodFromCalib(const double t)
 void Date::updateTheta(Event* event)
 {
     updateti(this,event);
-    /*
-    switch(mMethod)
-    {
-        case eMHSymetric:
-        {
-            fMHSymetric(event);
-            
-            break;
-        }
-        case eInversion:
-        {
-            fInversion(event);
-            
-            break;
-        }
-            // Seul cas où le taux d'acceptation a du sens car on utilise sigmaMH :
-        case eMHSymGaussAdapt:
-        {
-            fMHSymGaussAdapt(event);
-           
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }
-    */
+
 }
 
 void Date::initDelta(Event*)
