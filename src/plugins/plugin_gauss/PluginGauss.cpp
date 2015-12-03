@@ -40,7 +40,7 @@ double PluginGauss::getRefValueAt(const QJsonObject& data, const double& t)
         QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
         // Check if calib curve exists !
         double g = 0;
-        if(mRefDatas.find(ref_curve) != mRefDatas.end())
+        if(mRefDatas.contains(ref_curve))
         {
             const QMap<double, double>& curve = mRefDatas[ref_curve]["G"];
             
@@ -77,7 +77,7 @@ double PluginGauss::getRefErrorAt(const QJsonObject& data, const double& t)
     
     double error = 0;
     
-    if(mode == DATE_GAUSS_MODE_CURVE && mRefDatas.find(ref_curve) != mRefDatas.end())
+    if(mode == DATE_GAUSS_MODE_CURVE && mRefDatas.contains(ref_curve))
     {
         const QMap<double, double>& curve = mRefDatas[ref_curve]["G"];
         const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
@@ -87,11 +87,9 @@ double PluginGauss::getRefErrorAt(const QJsonObject& data, const double& t)
         
         if(t >= tMaxDef){
             error = 100;
-            //error = (curveG95Sup[tMaxDef] - curve[tMaxDef]) / 1.96f;
         }
         else if(t <= tMinDef){
             error = 100;
-            //error = (curveG95Sup[tMinDef] - curve[tMinDef]) / 1.96f;
         }
         else
         {
@@ -144,6 +142,7 @@ QIcon PluginGauss::getIcon() const
 bool PluginGauss::doesCalibration() const
 {
     return true;
+
 }
 bool PluginGauss::wiggleAllowed() const
 {
@@ -432,9 +431,13 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
     double tmax=0;
     if(data[DATE_GAUSS_MODE_STR].toString()==DATE_GAUSS_MODE_CURVE){
         QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString().toLower();
-        if(mRefDatas.constFind(ref_curve) != mRefDatas.constEnd() ) {
+        if( mRefDatas.contains(ref_curve)  && !mRefDatas[ref_curve].isEmpty() ) {
+
            tmin= mRefDatas[ref_curve]["G"].firstKey();
            tmax= mRefDatas[ref_curve]["G"].lastKey();
+        }
+        else{
+            qDebug()<<"PluginGauss::getTminTmaxRefsCurve no ref curve";
         }
     }
     return qMakePair<double,double>(tmin,tmax);
@@ -494,16 +497,17 @@ bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& se
     else if(mode == DATE_GAUSS_MODE_CURVE)
     {
         QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString().toLower();
-        if(mRefDatas.find(ref_curve) == mRefDatas.end()) {
+        if(!mRefDatas.contains(ref_curve)) {
             qDebug()<<"in PluginGauss::isDateValid() unkowned curve"<<ref_curve;
+            QMessageBox::warning(qApp->activeWindow(),tr("Curve error"),"in PluginGauss unkowned curve : "+ref_curve);
             return false;
         }
         double min = 0;
         double max = 0;
         
-        if(mLastRefsMinMax.find(ref_curve) != mLastRefsMinMax.end() &&
-           mLastRefsMinMax[ref_curve].first.first == settings.mTmin &&
-           mLastRefsMinMax[ref_curve].first.second == settings.mTmax)
+        if(mLastRefsMinMax.contains(ref_curve)
+           && mLastRefsMinMax[ref_curve].first.first == settings.mTmin
+           && mLastRefsMinMax[ref_curve].first.second == settings.mTmax)
         {
             min = mLastRefsMinMax[ref_curve].second.first;
             max = mLastRefsMinMax[ref_curve].second.second;

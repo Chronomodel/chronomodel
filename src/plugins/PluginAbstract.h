@@ -96,7 +96,7 @@ public:
     void loadRefDatas(){
         QString path = QDir::currentPath();
         QString calibPath = getRefsPath();
-        
+        mRefDatas.clear();
         QDir calibDir(calibPath);
         
         QFileInfoList files = calibDir.entryInfoList(QStringList(), QDir::Files);

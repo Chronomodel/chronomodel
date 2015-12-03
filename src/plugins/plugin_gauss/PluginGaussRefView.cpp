@@ -86,11 +86,23 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
             PluginGauss* plugin = (PluginGauss*)date.mPlugin;
             
             const QMap<QString, QMap<double, double> >& curves = plugin->getRefData(ref_curve);
-            
+
+            if(curves.isEmpty() || curves["G"].isEmpty()) {
+                GraphZone zone;
+                zone.mColor = Qt::red;
+                zone.mColor.setAlpha(20);
+
+                zone.mXStart = mSettings.mTmin;
+                zone.mXEnd = mSettings.mTmax;
+                mGraph->addZone(zone);
+                return;
+            }
+
             QMap<double, double> curveG;
             QMap<double, double> curveG95Sup;
             QMap<double, double> curveG95Inf;
             
+
             double tMinGraph = qMax(curves["G"].firstKey(), (double)mSettings.mTmin);
             double tMaxGraph = qMin(curves["G"].lastKey(), (double)mSettings.mTmax);
             

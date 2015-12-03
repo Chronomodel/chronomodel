@@ -131,10 +131,14 @@ QPair<double, double> PluginMag::getLikelyhoodArg(const double& t, const QJsonOb
 bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& settings){
     // check valid curve
     QString ref_curve = data[DATE_AM_REF_CURVE_STR].toString().toLower();
-    if(mRefDatas.find(ref_curve) == mRefDatas.end() && mRefDatas.end().key().toLower()!=ref_curve) {
+    if(!mRefDatas.contains(ref_curve)) {
+        QMessageBox::warning(qApp->activeWindow(),tr("Curve error"),tr("in PluginMag unkowned curve : ")+ref_curve);
         qDebug()<<"in PluginMag::isDateValid() unkowned curve"<<ref_curve;
         return false;
     }
+
+
+
 
     double is_inc = data[DATE_AM_IS_INC_STR].toBool();
     double is_dec = data[DATE_AM_IS_DEC_STR].toBool();
@@ -477,7 +481,8 @@ QPair<double,double> PluginMag::getTminTmaxRefsCurve(const QJsonObject& data) co
     double tmin = 0;
     double tmax = 0;
     QString ref_curve = data[DATE_AM_REF_CURVE_STR].toString().toLower();
-    if(mRefDatas.constFind(ref_curve) != mRefDatas.constEnd() ) {
+    if( mRefDatas.contains(ref_curve)  && !mRefDatas[ref_curve].isEmpty() ) {
+
        tmin= mRefDatas[ref_curve]["G"].firstKey();
        tmax= mRefDatas[ref_curve]["G"].lastKey();
     }

@@ -27,8 +27,14 @@ mGreyedOut(false)
     
     if(d.mPlugin!=NULL) {
         if(d.mPlugin->getName() != "Typo") {
+           if(!d.mIsValid) {
+               mCalibThumb = QPixmap();
+           }
+           else {
             d.calibrate(s);
             mCalibThumb = d.generateCalibThumb();
+           }
+
         }
         else {
             mCalibThumb = d.generateTypoThumb();
