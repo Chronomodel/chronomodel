@@ -366,6 +366,7 @@ QMap<QString, QMap<double, double> > PluginMag::loadRefFile(QFileInfo refFile)
         QMap<double, double> curveG;
         QMap<double, double> curveG95Sup;
         QMap<double, double> curveG95Inf;
+        QLocale locale = QLocale(QLocale::English);
 
         QTextStream stream(&file);
         while(!stream.atEnd()) {
@@ -382,19 +383,19 @@ QMap<QString, QMap<double, double> > PluginMag::loadRefFile(QFileInfo refFile)
                 QStringList values = line.split(",");
                 if(values.size() >= 3)
                 {
-                    int t = values[0].toInt();
+                    int t = locale.toInt(values[0],&ok);
 
-                    double g = values[1].toDouble(&ok);
+                    double g = locale.toDouble(values[1],&ok);
                     if(!ok) {
                         qDebug()<<"in PluginMag::loadRefDatas() g unvalid value";
                         continue;
                     }
-                    double gSup = g + 1.96f * values[2].toDouble(&ok);
+                    double gSup = g + 1.96f * locale.toDouble(values[2],&ok);
                     if(!ok) {
                         qDebug()<<"in PluginMag::loadRefDatas() gSup unvalid value";
                         continue;
                     }
-                    double gInf = g - 1.96f * values[2].toDouble(&ok);
+                    double gInf = g - 1.96f *locale.toDouble( values[2],&ok);
                     if(!ok) {
                         qDebug()<<"in PluginMag::loadRefDatas() gInf unvalid value";
                         continue;

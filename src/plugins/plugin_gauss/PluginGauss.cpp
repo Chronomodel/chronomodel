@@ -18,12 +18,7 @@ PluginGauss::PluginGauss()
     loadRefDatas();
 }
 
-double PluginGauss::getLikelyhood(const double& t, const QJsonObject& data)
-{
-    QPair<double, double > result = getLikelyhoodArg(t, data);
-    
-    return exp(result.second) / sqrt(result.first);
-}
+
 
 double PluginGauss::getRefValueAt(const QJsonObject& data, const double& t)
 {
@@ -31,19 +26,18 @@ double PluginGauss::getRefValueAt(const QJsonObject& data, const double& t)
     double b = data[DATE_GAUSS_B_STR].toDouble();
     double c = data[DATE_GAUSS_C_STR].toDouble();
     QString mode = data[DATE_GAUSS_MODE_STR].toString();
-    QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
+
     
     if(mode == DATE_GAUSS_MODE_NONE){
-        a = 0;
-        b = 1;
-        c = 0;
+        return t;
     }
-    if(mode == DATE_GAUSS_MODE_EQ || mode == DATE_GAUSS_MODE_NONE)
+    else if(mode == DATE_GAUSS_MODE_EQ)
     {
         return a * t * t + b * t + c;
     }
     else if(mode == DATE_GAUSS_MODE_CURVE)
     {
+        QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
         // Check if calib curve exists !
         double g = 0;
         if(mRefDatas.find(ref_curve) != mRefDatas.end())
@@ -115,6 +109,13 @@ double PluginGauss::getRefErrorAt(const QJsonObject& data, const double& t)
         }
     }
     return error;
+}
+
+double PluginGauss::getLikelyhood(const double& t, const QJsonObject& data)
+{
+    QPair<double, double > result = getLikelyhoodArg(t, data);
+
+    return exp(result.second) / sqrt(result.first);
 }
 
 QPair<double, double> PluginGauss::getLikelyhoodArg(const double& t, const QJsonObject& data)
@@ -346,11 +347,15 @@ QMap<QString, QMap<double, double> > PluginGauss::loadRefFile(QFileInfo refFile)
                 QStringList values = line.split(",");
                 if(values.size() >= 3)
                 {
-                    double t = locale.toDouble(values[0]);
-                    
-                    double g = locale.toDouble(values[1]);
-                    double gSup = g + 1.96 * locale.toDouble(values[2]);
-                    double gInf = g - 1.96 * locale.toDouble(values[2]);
+                    bool ok = true;
+                    double t = locale.toDouble(values[0],&ok);
+                    if(!ok) continue;
+                    double g = locale.toDouble(values[1],&ok);
+                    if(!ok) continue;
+                    double gSup = g + 1.96 * locale.toDouble(values[2],&ok);
+                    if(!ok) continue;
+                    double gInf = g - 1.96 * locale.toDouble(values[2],&ok);
+                    if(!ok) continue;
                     
                     curveG[t] = g;
                     curveG95Sup[t] = gSup;

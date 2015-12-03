@@ -256,11 +256,15 @@ QMap<QString, QMap<double, double> > Plugin14C::loadRefFile(QFileInfo refFile)
                 QStringList values = line.split(",");
                 if(values.size() >= 3)
                 {
-                    int t = 1950 - locale.toInt(values[0]);
-                    
-                    double g = values[1].toDouble();
-                    double gSup = g + 1.96f * locale.toInt(values[2]);
-                    double gInf = g - 1.96f * locale.toInt(values[2]);
+                    bool ok = true;
+                    int t = 1950 - locale.toInt(values[0],&ok);
+                    if(!ok) continue;
+                    double g = locale.toDouble(values[1],&ok);
+                    if(!ok) continue;
+                    double gSup = g + 1.96f * locale.toDouble(values[2],&ok);
+                    if(!ok) continue;
+                    double gInf = g - 1.96f * locale.toDouble(values[2],&ok);
+                    if(!ok) continue;
                     
                     curveG[t] = g;
                     

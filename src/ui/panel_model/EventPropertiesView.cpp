@@ -193,7 +193,6 @@ mToolbarH(100)
     
     setEvent(QJsonObject());
 
-    qDebug()<<" fin EventPropertiesView::EventPropertiesView() height"<<height();
 }
 
 EventPropertiesView::~EventPropertiesView()
