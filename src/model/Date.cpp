@@ -323,17 +323,25 @@ void Date::calibrate(const ProjectSettings& settings)
     double v = getLikelyhood(tmin);
     double lastRepVal = v;
 
-    //mCalibration.append(v);
-    //mRepartition.append(0);
     mCalibSum += v;
 
-
+    double tminRef;
+    double tmaxRef;
+    // if no reference curve mTminRefCurve=mTmaxRefCurve
+    if(mTminRefCurve==mTmaxRefCurve){
+        tminRef = mSettings.mTmin;
+        tmaxRef = mSettings.mTmax;
+    }
+    else{
+        tminRef = mTminRefCurve;
+        tmaxRef = mTmaxRefCurve;
+    }
     for(int i = 0; i < nbPts; ++i)
     {
         double t = tmin + (double)i * step;
         float lastV = v;
 
-        if(t>=mTminRefCurve && t<=mTmaxRefCurve){
+        if(t>=tminRef && t<=tmaxRef){
             v = getLikelyhood(t);
         }
         else {
