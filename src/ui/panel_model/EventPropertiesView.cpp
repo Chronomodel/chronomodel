@@ -164,10 +164,10 @@ mToolbarH(100)
     mKnownGraph->setXAxisMode(GraphView::eMinMax);
     mKnownGraph->setYAxisMode(GraphView::eMinMax);
     
-    connect(mDatesList, SIGNAL(itemSelectionChanged()), this, SLOT(updateCombineAvailability()));
-    connect(mKnownFixedEdit, SIGNAL(textEdited(const QString&)), this, SLOT(updateKnownFixed(const QString&)));
-    connect(mKnownStartEdit, SIGNAL(textEdited(const QString&)), this, SLOT(updateKnownUnifStart()));
-    connect(mKnownEndEdit, SIGNAL(textEdited(const QString&)), this, SLOT(updateKnownUnifEnd()));
+    connect(mDatesList, &DatesList::itemSelectionChanged, this, &EventPropertiesView::updateCombineAvailability);
+    connect(mKnownFixedEdit, &QLineEdit::textEdited, this, &EventPropertiesView::updateKnownFixed);
+    connect(mKnownStartEdit, &QLineEdit::textEdited, this, &EventPropertiesView::updateKnownUnifStart);
+    connect(mKnownEndEdit, &QLineEdit::textEdited, this, &EventPropertiesView::updateKnownUnifEnd);
     
     QFormLayout* fixedLayout = new QFormLayout();
     fixedLayout->addRow(tr("Value :"), mKnownFixedEdit);
@@ -297,13 +297,13 @@ void EventPropertiesView::updateEventMethod(int index)
 #pragma mark Event Known Properties
 void EventPropertiesView::updateKnownType()
 {
-    if(mEvent[STATE_EVENT_TYPE].toInt() == Event::eKnown)
+    if((Event::Type)mEvent[STATE_EVENT_TYPE].toInt() == Event::eKnown)
     {
         EventKnown::KnownType type = EventKnown::eFixed;
         if(mKnownUniformRadio->isChecked())
             type = EventKnown::eUniform;
         
-        if(mEvent[STATE_EVENT_KNOWN_TYPE].toInt() != type)
+        if((EventKnown::KnownType)mEvent[STATE_EVENT_KNOWN_TYPE].toInt() != type)
         {
             QJsonObject event = mEvent;
             event[STATE_EVENT_KNOWN_TYPE] = type;
@@ -318,63 +318,31 @@ void EventPropertiesView::updateKnownFixed(const QString& text)
     event[STATE_EVENT_KNOWN_FIXED] = round(text.toDouble());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound fixed value updated"));
 }
-void EventPropertiesView::updateKnownUnifStart()
+void EventPropertiesView::updateKnownUnifStart(const QString& text)
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_KNOWN_START] = round(mKnownStartEdit->text().toDouble());
+    event[STATE_EVENT_KNOWN_START] = round(text.toDouble());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound min updated"));
 }
 
-void EventPropertiesView::updateKnownUnifEnd()
+void EventPropertiesView::updateKnownUnifEnd(const QString& text)
 {
     QJsonObject event = mEvent;
-    event[STATE_EVENT_KNOWN_END] = round(mKnownEndEdit->text().toDouble());
+    event[STATE_EVENT_KNOWN_END] = round(text.toDouble());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound max updated"));
 }
 
-void EventPropertiesView::loadKnownCsv()
+/*void EventPropertiesView::loadKnownCsv()
 {
-    /*if(mEvent)
-     {
-     QString currentDir = MainWindow::getInstance()->getCurrentPath();
-     QString path = QFileDialog::getOpenFileName(qApp->activeWindow(), tr("Open CSV File"), currentDir, tr("CSV File (*.csv)"));
-     
-     if(!path.isEmpty())
-     {
-     QFileInfo info(path);
-     QString dirPath = info.absolutePath();
-     MainWindow::getInstance()->setCurrentPath(dirPath);
-     
-     QList<QStringList> csv = readCSV(path, ";");
-     qDebug() << csv;
-     qDebug() << path;
-     qDebug() << csv.size();
-     
-     EventKnown* e = dynamic_cast<EventKnown*>(mEvent);
-     if(e)
-     {
-     for(int i=0; i<csv.size(); ++i)
-     {
-     double x = csv[i][0].replace(",", ".").toDouble();
-     double y = csv[i][1].replace(",", ".").toDouble();
-     e->mValues[x] = y;
-     }
-     e->mValues = normalize_map(e->mValues);
-     
-     Project* project = MainWindow::getInstance()->getProject();
-     e->updateValues(project->mSettings.mTmin, project->mSettings.mTmax, project->mSettings.mStep);
-     updateKnownGraph();
-     }
-     }
-     }*/
-}
+
+}*/
 
 void EventPropertiesView::updateKnownGraph()
 {
     mKnownGraph->removeAllCurves();
     
-    if(mEvent[STATE_EVENT_TYPE].toInt() == Event::eKnown)
-    {
+    //if((Event::Type)mEvent[STATE_EVENT_TYPE].toInt() == Event::eKnown)
+    //{
         Project* project = MainWindow::getInstance()->getProject();
         QJsonObject state = project->state();
         QJsonObject settings = state[STATE_SETTINGS].toObject();
@@ -382,6 +350,14 @@ void EventPropertiesView::updateKnownGraph()
         double tmax = settings[STATE_SETTINGS_TMAX].toDouble();
         double step = settings[STATE_SETTINGS_STEP].toDouble();
         EventKnown event = EventKnown::fromJson(mEvent);
+
+        if(  ( (event.mKnownType==EventKnown::eFixed) && ((tmin>event.mFixed) || (event.mFixed>tmax)) )
+          || ( (event.mKnownType==EventKnown::eUniform) && (event.mUniformStart>event.mUniformEnd)  ) )
+        {
+
+            return;
+        }
+
         event.updateValues(tmin, tmax,step );
         
         mKnownGraph->setRangeX(tmin,tmax);
@@ -393,25 +369,7 @@ void EventPropertiesView::updateKnownGraph()
         max = (max == 0) ? 1 : max;
         mKnownGraph->setRangeY(0, max);
         
-        // draw the calibrate curve on the rigth hand panel
-       /* GraphCurve curve;
-        curve.mName = "Known";
-        curve.mData = event.mValues;
-        
-        curve.mPen = Painting::mainColorLight;
-        curve.mBrush = Painting::mainColorLight;
-        
-        if(event.knownType() == EventKnown::eUniform)
-        {
-            curve.mIsHisto = true;
-            curve.mIsRectFromZero = true;
-        }
-        else if(event.knownType() == EventKnown::eFixed)
-        {
-            curve.mIsHisto = false;
-            curve.mIsRectFromZero = true;
-        }
-        mKnownGraph->addCurve(curve);*/
+
         //---------------------
 
         GraphCurve curve;
@@ -423,7 +381,7 @@ void EventPropertiesView::updateKnownGraph()
         curve.mIsHorizontalSections = true;
         qreal tLower;
         qreal tUpper;
-        if(event.knownType() == EventKnown::eFixed) {
+        if(event.mKnownType == EventKnown::eFixed) {
             tLower = event.fixedValue();
             tUpper = tLower;
 
@@ -436,7 +394,7 @@ void EventPropertiesView::updateKnownGraph()
         curve.mSections.append(qMakePair(tLower,tUpper));
         mKnownGraph->addCurve(curve);
         //---------------------
-    }
+    //}
 }
 
 void EventPropertiesView::updateKnownControls()

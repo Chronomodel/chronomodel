@@ -355,6 +355,7 @@ void EventsScene::updateProject()
         for(int j=0; j<mItems.size(); ++j)
         {
             EventItem* item = (EventItem*)mItems[j];
+
             QJsonObject itemEvent = item->getEvent();
             if(itemEvent[STATE_ID].toInt() == event[STATE_ID].toInt())
             {
@@ -368,6 +369,8 @@ void EventsScene::updateProject()
                     item->setEvent(event, settings);
                 }
             }
+
+
         }
         if(!itemExists)
         {

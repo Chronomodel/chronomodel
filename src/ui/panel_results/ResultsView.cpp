@@ -366,10 +366,9 @@ mGraphsH(130)
     connect(mCredibilityCheck,   SIGNAL(clicked()), this, SLOT(updateCurvesToShow()));
     
     // -------------------------
-    connect(mUnfoldBut, SIGNAL(toggled(bool)), this, SLOT(createEventsScrollArea()));
-    connect(mUnfoldBut, SIGNAL(toggled(bool)), this, SLOT(updateGraphsLayout()));
-    connect(mShowDataUnderPhasesCheck, SIGNAL(toggled(bool)), this, SLOT(updateGraphsLayout()));
-    //connect(mShowDataUnderPhasesCheck, SIGNAL(toggled(bool)), this, SLOT(updateResults(Model*))()));
+    //connect(mUnfoldBut, &Button::toggled, this, &ResultsView::createEventsScrollArea);
+    connect(mUnfoldBut, &Button::toggled, this, &ResultsView::updateGraphsLayout);
+    connect(mShowDataUnderPhasesCheck, &CheckBox::toggled, this, &ResultsView::updateGraphsLayout);
     
     // -------------------------
     
@@ -908,6 +907,7 @@ void ResultsView::createEventsScrollArea()
         graphEvent->setGraphsThickness(mThicknessSpin->value());
         mByEventsGraphs.append(graphEvent);
        // if(mUnfoldBut->isChecked()) {
+        if(event->mType != Event::eKnown) {
             for(int j=0; j<(int)event->mDates.size(); ++j) {
                 Date& date = event->mDates[j];
                 // ----------------------------------------------------
@@ -925,7 +925,7 @@ void ResultsView::createEventsScrollArea()
                 graphDate->setGraphsThickness(mThicknessSpin->value());
                 mByEventsGraphs.append(graphDate);
             }
-       // }
+       }
     }
     mEventsScrollArea->setWidget(eventsWidget);
 }

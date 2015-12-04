@@ -60,9 +60,9 @@ private slots:
     
     void updateKnownType();
     void updateKnownFixed(const QString& text);
-    void updateKnownUnifStart();
-    void updateKnownUnifEnd();
-    void loadKnownCsv();
+    void updateKnownUnifStart(const QString& text);
+    void updateKnownUnifEnd(const QString& text);
+   // void loadKnownCsv();
     
     void updateKnownGraph();
     void updateKnownControls();
