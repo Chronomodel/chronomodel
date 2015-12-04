@@ -284,16 +284,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     
     QColor frontColor = getContrastedColor(eventColor);
     painter->setPen(frontColor);
-    painter->drawText(tr, Qt::AlignCenter, name);
-    //painter->drawText(tr, Qt::AlignCenter, QString::number(scenePos().x()) + ", " + QString::number(scenePos().y()));
-    
-    
-    /*if(mGreyedOut)
-    {
-        painter->setPen(Painting::greyedOut);
-        painter->setBrush(Painting::greyedOut);
-        painter->drawRect(boundingRect());
-    }*/
+    painter->drawText(tr, Qt::AlignCenter, name);    
     
     // Border
     painter->setBrush(Qt::NoBrush);
