@@ -51,8 +51,8 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     EventKnown bound = EventKnown::fromJson(event);
     // if Fixed Bound with fixed value in study period or uniform Bound with bound.mUniformStart<bound.mUniformEnd
     if(  ( (bound.mKnownType==EventKnown::eFixed) && (tmin<=bound.mFixed) && (bound.mFixed<=tmax) )
-      || ( (bound.mKnownType==EventKnown::eUniform) && (bound.mUniformStart<bound.mUniformEnd)    )
-      || ( (bound.mKnownType==EventKnown::eUniform) && ( (bound.mUniformStart> tmax) ||(bound.mUniformEnd<tmin) )    ))
+      || ( (bound.mKnownType==EventKnown::eUniform) &&
+           (bound.mUniformStart<bound.mUniformEnd)  && (bound.mUniformStart< tmax) && (bound.mUniformEnd>tmin)     ))
     {
         bound.updateValues(tmin, tmax, step);
 

@@ -352,7 +352,9 @@ void EventPropertiesView::updateKnownGraph()
         EventKnown event = EventKnown::fromJson(mEvent);
 
         if(  ( (event.mKnownType==EventKnown::eFixed) && ((tmin>event.mFixed) || (event.mFixed>tmax)) )
-          || ( (event.mKnownType==EventKnown::eUniform) && (event.mUniformStart>event.mUniformEnd)  ) )
+          || ( (event.mKnownType==EventKnown::eUniform) && (event.mUniformStart>event.mUniformEnd)  )
+          || ( (event.mKnownType==EventKnown::eUniform) && (event.mUniformStart>tmax)  )
+          || ( (event.mKnownType==EventKnown::eUniform) && (event.mUniformEnd<tmin)  ))
         {
 
             return;
