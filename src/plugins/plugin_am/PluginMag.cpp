@@ -337,7 +337,12 @@ QString PluginMag::getDateDesc(const Date* date) const
             result += QObject::tr("Intensity") + " : " + locale.toString(intensity);
             result += ", " + QObject::tr("Error") + " : " + locale.toString(alpha);
         }
-        result += ", " + QObject::tr("Ref. curve") + " : " + ref_curve;
+        if(mRefDatas.contains(ref_curve) && !mRefDatas[ref_curve].isEmpty()) {
+            result += ", " + tr("Ref. curve") + " : " + ref_curve;
+        }
+        else {
+            result += ", " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
+        }
     }
     return result;
 }

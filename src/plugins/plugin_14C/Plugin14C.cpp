@@ -203,15 +203,20 @@ QString Plugin14C::getDateDesc(const Date* date) const
         double error = data[DATE_14C_ERROR_STR].toDouble();
         double delta_r = data[DATE_14C_DELTA_R_STR].toDouble();
         double delta_r_error = data[DATE_14C_DELTA_R_ERROR_STR].toDouble();
-        QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString().toLower();
-        
+        QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString().toLower();        
+
         result += QObject::tr("Age") + " : " + locale.toString(age);
         result += " ± " + locale.toString(error);
         if(delta_r != 0 || delta_r_error != 0){
             result += ", " + QObject::tr("ΔR") + " : " + locale.toString(delta_r);
             result += " ± " +locale.toString(delta_r_error);
         }
-        result += ", " + QObject::tr("Ref. curve") + " : " + ref_curve;
+        if(mRefDatas.contains(ref_curve) && !mRefDatas[ref_curve].isEmpty()) {
+            result += ", " + tr("Ref. curve") + " : " + ref_curve;
+        }
+        else {
+            result += ", " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
+        }
     }
     return result;
 }

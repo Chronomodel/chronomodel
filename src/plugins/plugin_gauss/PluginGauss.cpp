@@ -287,8 +287,13 @@ QString PluginGauss::getDateDesc(const Date* date) const
             result += ", " + QObject::tr("Ref. curve") + " : g(t) = " + eq;
         }
         else if(mode == DATE_GAUSS_MODE_CURVE)
-        {
-            result += ", " + QObject::tr("Ref. curve") + " : " + ref_curve;
+        {            
+            if(mRefDatas.contains(ref_curve) && !mRefDatas[ref_curve].isEmpty()) {
+                result += ", " + tr("Ref. curve") + " : " + ref_curve;
+            }
+            else {
+                result += ", " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
+            }
         }
     }
     return result;
