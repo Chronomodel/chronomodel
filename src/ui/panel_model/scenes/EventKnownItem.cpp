@@ -14,7 +14,7 @@
 EventKnownItem::EventKnownItem(EventsScene* eventsScene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):EventItem(eventsScene, event, settings, parent)
 {
     mThumbH = 20;
-    
+    mThumbVisible = true;
     setEvent(event, settings);
 }
 
@@ -138,6 +138,11 @@ QRectF EventKnownItem::boundingRect() const
     return QRectF(-w/2, -h/2, w, h);
 }
 
+void EventKnownItem::setDatesVisible(bool visible)
+{
+    mThumbVisible = visible;
+}
+
 void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
     Q_UNUSED(option);
@@ -185,8 +190,8 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     
     // Thumb
     
-    //painter->drawPixmap(thumbRect, mThumb, mThumb.rect());
-    painter->drawImage(thumbRect, mThumb, mThumb.rect());
+     if(mThumbVisible) painter->drawImage(thumbRect, mThumb, mThumb.rect());
+
     // Phases
     
     QJsonArray phases = getPhases();

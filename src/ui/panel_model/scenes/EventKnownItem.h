@@ -13,6 +13,7 @@ public:
     virtual QRectF boundingRect() const;
     
     void setEvent(const QJsonObject& event, const QJsonObject& settings);
+    void setDatesVisible(bool visible);
     
 protected:
     virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
@@ -21,9 +22,9 @@ protected:
     virtual QRectF toggleRect() const;
     
 private:
-    //QPixmap mThumb;
     QImage mThumb;
     int mThumbH;
+    bool mThumbVisible;
 };
 
 #endif

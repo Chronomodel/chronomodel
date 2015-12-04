@@ -622,7 +622,10 @@ void EventsScene::adaptItemsForZoom(double prop)
     for(int i=0; i<mItems.size(); ++i)
     {
         EventItem* item = (EventItem*)mItems[i];
-        item->setDatesVisible(mZoom > 0.6);
+        if(item) item->setDatesVisible(mZoom > 0.6);
+
+        EventKnownItem* knownItem = (EventKnownItem*)mItems[i];
+        if(knownItem) knownItem->setDatesVisible(mZoom > 0.6);
     }
 }
 
