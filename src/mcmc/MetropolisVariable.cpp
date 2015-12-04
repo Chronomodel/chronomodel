@@ -390,7 +390,7 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<Chain>& chains)
         unsigned long burnAdaptSize = chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);
         unsigned long traceSize = burnAdaptSize + chain.mNumRunIter / chain.mThinningInterval;
         
-        unsigned long runSize = traceSize - burnAdaptSize;
+        //unsigned long runSize = traceSize - burnAdaptSize;
 
         trace=mTrace.mid(shift + burnAdaptSize, traceSize - burnAdaptSize);
         
