@@ -26,18 +26,25 @@ PluginGaussRefView::~PluginGaussRefView()
     
 }
 
-void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
+void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settings)
 {
     QLocale locale = QLocale();
-    GraphViewRefAbstract::setDate(d, settings);
+    GraphViewRefAbstract::setDate(date, settings);
     
-    Date date = d;
+    //Date date = d;
+    
+    double tminCalib = date.getTminCalib();
+    double tmaxCalib = date.getTmaxCalib();
+    
+    double tminDisplay = qMin(tminCalib, (double)mSettings.mTmin);
+    double tmaxDisplay = qMax(tmaxCalib, (double)mSettings.mTmax);
+    
+    mGraph->setRangeX(tminDisplay, tmaxDisplay);
+    mGraph->setCurrentX(tminDisplay, tmaxDisplay);
     
     mGraph->removeAllCurves();
     mGraph->clearInfos();
     mGraph->showInfos(true);
-    mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
-    mGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
     mGraph->setFormatFunctX(mFormatFuncX);
     
     if(!date.isNull())
@@ -68,7 +75,7 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
         }
         else if(mode == DATE_GAUSS_MODE_EQ)
         {
-            for(double t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep)
+            for(double t=tminDisplay; t<=tmaxDisplay; t+=mSettings.mStep)
                 curve.mData[t] = a * t * t + b * t + c;
             mGraph->addCurve(curve);
             
@@ -91,7 +98,6 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
                 GraphZone zone;
                 zone.mColor = Qt::red;
                 zone.mColor.setAlpha(20);
-
                 zone.mXStart = mSettings.mTmin;
                 zone.mXEnd = mSettings.mTmax;
                 mGraph->addZone(zone);
@@ -102,16 +108,15 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
             QMap<double, double> curveG95Sup;
             QMap<double, double> curveG95Inf;
             
-
-            double tMinGraph = qMax(curves["G"].firstKey(), (double)mSettings.mTmin);
-            double tMaxGraph = qMin(curves["G"].lastKey(), (double)mSettings.mTmax);
+            double tMinRef = qMax(date.getTminRefCurve(), (double)mSettings.mTmin);
+            double tMaxRef = qMin(date.getTmaxRefCurve(), (double)mSettings.mTmax);
             
             yMin = plugin->getRefValueAt(date.mData, mSettings.mTmin);
             yMax = plugin->getRefValueAt(date.mData, mSettings.mTmin);
             
-            if(tMinGraph < tMaxGraph)
+            if(tMinRef < tMaxRef)
             {
-                for(double t=tMinGraph; t<=tMaxGraph; ++t)
+                for(double t=tMinRef; t<=tMaxRef; ++t)
                 {
                     double value = plugin->getRefValueAt(date.mData, t);
                     double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
@@ -152,17 +157,24 @@ void PluginGaussRefView::setDate(const Date& d, const ProjectSettings& settings)
             // ----------------------------------------------------
             //  Draw ref curve extensions if not defined everywhere on study period
             // ----------------------------------------------------
-            GraphZone zone;
-            zone.mColor = Qt::red;
-            zone.mColor.setAlpha(20);
-
-            zone.mXStart = mSettings.mTmin;
-            zone.mXEnd = tMinGraph;
-            mGraph->addZone(zone);
-
-            zone.mXStart = tMaxGraph;
-            zone.mXEnd = mSettings.mTmax;
-            mGraph->addZone(zone);
+            if(tminDisplay < tMinRef)
+            {
+                GraphZone zone;
+                zone.mColor = Qt::red;
+                zone.mColor.setAlpha(20);
+                zone.mXStart = tminDisplay;
+                zone.mXEnd = tMinRef;
+                mGraph->addZone(zone);
+            }
+            if(tmaxDisplay > tMaxRef)
+            {
+                GraphZone zone;
+                zone.mColor = Qt::red;
+                zone.mColor.setAlpha(20);
+                zone.mXStart = tMaxRef;
+                zone.mXEnd = tmaxDisplay;
+                mGraph->addZone(zone);
+            }
 
             // ----------------------------------------------------
             

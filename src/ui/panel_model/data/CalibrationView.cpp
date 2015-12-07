@@ -105,12 +105,10 @@ void CalibrationView::setDate(const QJsonObject& date)
     try{
         mDate = Date::fromJson(date);
         mDate.autoSetTiSampler(false);
-        if(!mDate.isNull() && mDate.mIsValid) {
+        if(!mDate.isNull() && mDate.mIsValid)
+        {
             mDate.calibrate(mSettings);
             mTopLab->setText(mDate.getName() + " (" + mDate.mPlugin->getName() + ")");
-            mCalibGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
-            mCalibGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
-            mZoomSlider->setValue(0);
         }
         updateGraphs();
     }
@@ -128,6 +126,8 @@ void CalibrationView::setDate(const QJsonObject& date)
 void CalibrationView::updateGraphs()
 {
     mCalibGraph->removeAllCurves();
+    mCalibGraph->removeAllZones();
+    
     QLocale locale;
     
     // The current ref graph belongs to a plugin
@@ -141,10 +141,43 @@ void CalibrationView::updateGraphs()
     
     if(!mDate.isNull())
     {
+        double tminCalib = mDate.getTminCalib();
+        double tmaxCalib = mDate.getTmaxCalib();
+        
+        double tminDisplay = qMin(tminCalib, (double)mSettings.mTmin);
+        double tmaxDisplay = qMax(tmaxCalib, (double)mSettings.mTmax);
+        
+        mCalibGraph->setRangeX(tminDisplay, tmaxDisplay);
+        mCalibGraph->setCurrentX(tminDisplay, tmaxDisplay);
+        
+        mZoomSlider->setValue(0);
+        
+        // ------------------------------------------------------------
+        //  Show zones if calibrated data are outside study period
+        // ------------------------------------------------------------
+        if(tminDisplay < mSettings.mTmin){
+            GraphZone zone;
+            zone.mXStart = tminDisplay;
+            zone.mXEnd = mSettings.mTmin;
+            zone.mColor = QColor(255, 240, 240);
+            zone.mText = tr("Outside study period");
+            mCalibGraph->addZone(zone);
+        }
+        if(tmaxDisplay > mSettings.mTmax){
+            GraphZone zone;
+            zone.mXStart = mSettings.mTmax;
+            zone.mXEnd = tmaxDisplay;
+            zone.mColor = QColor(255, 240, 240);
+            zone.mText = tr("Outside study period");
+            mCalibGraph->addZone(zone);
+        }
+        
+        // ------------------------------------------------------------
+        //  Display numerical results
+        // ------------------------------------------------------------
         DensityAnalysis results;
         results.analysis = analyseFunction(mDate.getCalibMap());
-        results.quartiles = quartilesForRepartition(mDate.mRepartition, mSettings.mTmin, mSettings.mStep);
-        //mResultsLab->setText(densityAnalysisToString(results));
+        results.quartiles = quartilesForRepartition(mDate.mRepartition, tminCalib, mSettings.mStep);
         QString resultsStr = densityAnalysisToString(results);
         
         // ------------------------------------------------------------
@@ -171,8 +204,6 @@ void CalibrationView::updateGraphs()
         double yMax = map_max_value(calibCurve.mData);
         yMax = (yMax > 0) ? yMax : 1;
         mCalibGraph->setRangeY(0, 1.1f * yMax);
-        mCalibGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
-        mCalibGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
         
         mCalibGraph->addCurve(calibCurve);
         mCalibGraph->setVisible(true);

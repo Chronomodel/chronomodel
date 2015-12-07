@@ -33,6 +33,8 @@ public:
     QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale);
     QString getDateDesc(const Date* date) const;
     
+    QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
+    
     PluginFormAbstract* getForm();
     GraphViewRefAbstract* getGraphViewRef();
     PluginSettingsViewAbstract* getSettingsView();

@@ -51,7 +51,7 @@ public:
     virtual ~Date();
     
     void init();
-    bool isNull();
+    bool isNull() const;
     
     static Date fromJson(const QJsonObject& json);
 
@@ -89,6 +89,9 @@ public:
     double getTminRefCurve() const {return mTminRefCurve;}
     double getTmaxRefCurve() const {return mTmaxRefCurve;}
     
+    double getTminCalib() const {return mTminCalib;}
+    double getTmaxCalib() const {return mTmaxCalib;}
+    
 public:
     MHVariable mTheta; // theta i de la date
     MHVariable mSigma; // sigma i de la date (par rapport au fait)
@@ -116,7 +119,6 @@ public:
     bool mIsSelected;
     
     QVector<double> mCalibration;
-    double mCalibSum;
     QVector<double> mRepartition;
     QMap<double, double> mCalibHPD;
     ProjectSettings mSettings;
@@ -132,9 +134,12 @@ protected:
     const QJsonObject * mModelJsonDate;
     int mJsonEventIdx;
     int mIdxInEventArray;
+    
     double mTminRefCurve;
     double mTmaxRefCurve;
 
+    double mTminCalib;
+    double mTmaxCalib;
 };
 
 #endif

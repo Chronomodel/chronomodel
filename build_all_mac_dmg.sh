@@ -34,30 +34,68 @@ cd $ROOT_PATH
 # -------------------------------------------------------
 #	Create XCode project in Release mode (.pro file is in debug mode by default)
 # -------------------------------------------------------
-${QT_BIN_PATH}/qmake -spec macx-xcode "CONFIG+=release" $ROOT_PATH/Chronomodel.pro
+#${QT_BIN_PATH}/qmake -spec macx-xcode "CONFIG+=release" $ROOT_PATH/Chronomodel.pro
 
 # -------------------------------------------------------
 #	Compile XCode project
 #	Important note : important post-compilation steps are defined in the .pro file:
 #	copying resource files as license, icons...
 # ------------------------------------------------------
-xcodebuild -configuration Release ONLY_ACTIVE_ARCH=NO | grep -A 5 error
+#xcodebuild -configuration Release ONLY_ACTIVE_ARCH=NO | grep -A 5 error
 
 # -------------------------------------------------------
 #	Qt utility "macdeployqt" : deploy Chronomodel's Qt dependencies inside the bundle
 # ------------------------------------------------------
-${QT_BIN_PATH}/macdeployqt $BUNDLE_PATH
+#${QT_BIN_PATH}/macdeployqt $BUNDLE_PATH
 
 # -------------------------------------------------------
-#	Create the package for installation
+#	Create DMG
 # ------------------------------------------------------
-pkgbuild --component ${BUNDLE_PATH} --identifier com.chronomodel.pkg.app --version ${VERSION} --install-location /Applications ./deploy/mac/Chronomodel.pkg
+#ln -s /Applications ./Release/Applications
+#mkdir ./Release/.background
+#cp deploy/mac/dmg_back.png ./Release/.background/background.png
+#hdiutil create -volname Chronomodel -srcfolder ./Release/ -ov -format UDZO Chronomodel.dmg
+hdiutil attach Chronomodel.dmg
+echo '
+   tell application "Finder"
+     tell disk "Chronomodel"
+           open
+           
+           	set theXOrigin to 100
+			set theYOrigin to 100
+			set theWidth to 512
+			set theHeight to 512
+			
+			set theBottomRightX to (theXOrigin + theWidth)
+			set theBottomRightY to (theYOrigin + theHeight)
+			
+			tell container window
+				set current view to icon view
+				set toolbar visible to false
+				set statusbar visible to false
+				set the bounds to {theXOrigin, theYOrigin, theBottomRightX, theBottomRightY}
+				set statusbar visible to false
+			end tell
+           
+			set opts to the icon view options of container window
+			tell opts
+				set icon size to 72
+				set arrangement to not arranged
 
-# -------------------------------------------------------
-#	Create the installer using the package and a distribution file (.dist)
-# ------------------------------------------------------
-productbuild --distribution deploy/mac/distribution.dist --package-path deploy/mac --resources deploy/mac/resources deploy/mac/chronomodel_mac_${VERSION}.pkg
-#rm -rf ./deploy/mac/Chronomodel.pkg
+			end tell
+
+			set background picture of opts to file ".background:background.png"
+
+           set file_list to every file
+           set position of item "Chronomodel.app" of container window to {160, 100}
+           set position of item "Applications" of container window to {360, 100}
+           
+           update without registering applications
+           delay 2
+     end tell
+   end tell
+' | osascript
+
 
 
 exit 0

@@ -48,7 +48,6 @@ void Date::init()
     mDeltaError = 0;
     mIsCurrent = false;
     mIsSelected = false;
-    mCalibSum = 0;
     mSubDates.clear();
 
     mTminRefCurve = 0;
@@ -116,7 +115,7 @@ Date::~Date()
     
 }
 
-bool Date::isNull()
+bool Date::isNull() const
 {
     return mData.isEmpty() || (mPlugin == 0);
 }
@@ -168,7 +167,7 @@ QString Date::getName() const
     
 }
 #pragma mark JSON
-Date Date:: fromJson(const QJsonObject& json)
+Date Date::fromJson(const QJsonObject& json)
 {
     Date date;
     
@@ -209,7 +208,6 @@ Date Date:: fromJson(const QJsonObject& json)
         
         date.mTheta.mProposal = ModelUtilities::getDataMethodText(date.mMethod);
         date.mSigma.mProposal = ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt);
-        
     }
     
     return date;
@@ -306,30 +304,84 @@ void Date::reset()
 
 void Date::calibrate(const ProjectSettings& settings)
 {
-
     mCalibration.clear();
     mRepartition.clear();
     mCalibHPD.clear();
 
-
     mSettings = settings;
-    mCalibSum = 0;
+    
+    // --------------------------------------------------
+    //  Calibrate on the whole calibration period (= ref curve definition domain)
+    // --------------------------------------------------
+    if(mTmaxRefCurve > mTminRefCurve)
+    {
+        double nbRefPts = 1 + round((mTmaxRefCurve - mTminRefCurve) / mSettings.mStep);
+        double v = getLikelyhood(mTminRefCurve);
+        double lastRepVal = v;
+        
+        QVector<double> calibrationTemp;
+        QVector<double> repartitionTemp;
+        
+        for(int i = 0; i < nbRefPts; ++i)
+        {
+            double t = mTminRefCurve + (double)i * mSettings.mStep;
+            float lastV = v;
+            v = getLikelyhood(t);
+            
+            calibrationTemp.append(v);
+            double rep = lastRepVal;
+            if(v != 0 && lastV != 0)
+            {
+                rep = lastRepVal + mSettings.mStep * (lastV + v) / 2.;
+            }
+            repartitionTemp.append(rep);
+            lastRepVal = rep;
+        }
+        
+        // ------------------------------------------------------------------
+        //  Restrict the calib and repartition vectors to where data are
+        // ------------------------------------------------------------------
+        double threshold = 0.005;
+        int minIdx = (int)ceil(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp));
+        int maxIdx = (int)floor(vector_interpolate_idx_for_value((1 - threshold) * lastRepVal, repartitionTemp));
+        
+        mTminCalib = mTminRefCurve + minIdx * mSettings.mStep;
+        mTmaxCalib = mTminRefCurve + maxIdx * mSettings.mStep;
+        
+        qDebug() << mInitName << " [" << mTminCalib << ", " << mTmaxCalib << "], [" << mTminRefCurve << ", " << mTmaxRefCurve << "], " << lastRepVal;
+        
+        mCalibration = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
+        mRepartition = repartitionTemp.mid(minIdx, (maxIdx - minIdx) + 1);
+        
+        // La courbe de répartition est transformée de sorte que sa valeur maximale soit 1
+        mRepartition = normalize_vector(mRepartition);
+        
+        // La courbe de calibration est transformée de sorte que l'aire sous la courbe soit 1
+        mCalibration = equal_areas(mCalibration, mSettings.mStep, 1.);
+    }
+    else
+    {
+        // Impossible to calibrate because the plugin could not return any calib curve definition period.
+        // This may be due to invalid ref curve files or to polynomial equations with only imaginary solutions (See Gauss Plugin...)
+    }
+    
+    
+    
 
-    double tmin = mSettings.mTmin;
+    /*double tmin = mSettings.mTmin;
     double tmax = mSettings.mTmax;
     double step = mSettings.mStep;
     double nbPts = 1 + round((tmax - tmin) / step);
-  //  qDebug()<<" Date::calibrate"<<tmin<<tmax<<step<<nbPts<<"size"<<mCalibration.size();
+    
     mCalibration.reserve(nbPts);
     mRepartition.reserve(nbPts);
 
     double v = getLikelyhood(tmin);
     double lastRepVal = v;
 
-    mCalibSum += v;
-
     double tminRef;
     double tmaxRef;
+    
     // if no reference curve mTminRefCurve=mTmaxRefCurve
     if(mTminRefCurve==mTmaxRefCurve){
         tminRef = mSettings.mTmin;
@@ -351,7 +403,6 @@ void Date::calibrate(const ProjectSettings& settings)
             v = 0;
         }
         mCalibration.append(v);
-        mCalibSum += v;
         double rep = lastRepVal;
         if(v != 0 && lastV != 0)
         {
@@ -359,7 +410,6 @@ void Date::calibrate(const ProjectSettings& settings)
         }
         mRepartition.append(rep);
         lastRepVal = rep;
-
     }
 
     // La courbe de répartition est transformée de sorte que sa valeur maximale soit 1
@@ -368,22 +418,12 @@ void Date::calibrate(const ProjectSettings& settings)
     // La courbe de calibration est transformée de sorte que l'aire sous la courbe soit 1
     mCalibration = equal_areas(mCalibration, step, 1.);
       //  qDebug()<<" Date::calibrate end"<<tmin<<tmax<<step<<nbPts<<"size"<<mCalibration.size();
-
+     */
 }
 
 QMap<double, double> Date::getCalibMap() const
 {
-   /* QMap<double, double> map;
-    if(mPlugin) {
-        for(double t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep) {
-            double value = mPlugin->getLikelyhood(t, mData);
-            map.insert(t,value );
-        }
-    }
-    return map;
-
-    */
-    return vector_to_map(mCalibration, mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
+    return vector_to_map(mCalibration, mTminCalib, mTmaxCalib, mSettings.mStep);
 }
 
 QPixmap Date::generateTypoThumb()

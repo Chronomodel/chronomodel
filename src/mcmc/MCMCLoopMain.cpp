@@ -63,10 +63,6 @@ QString MCMCLoopMain::calibrate()
         {
             //QTime startTime = QTime::currentTime();
             dates[i]->calibrate(mModel->mSettings);
-            if(dates[i]->mCalibSum == 0)
-            {
-                return tr("The date density is nul for: ") + dates[i]->getName();
-            }
          
             if(isInterruptionRequested())
                 return ABORTED_BY_USER;
