@@ -9,7 +9,7 @@ Release/*
 *.plist
 .qmake.stash
 *.pkg
-
+*.aux
 *.exe
 
 *.mak

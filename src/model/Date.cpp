@@ -341,7 +341,7 @@ void Date::calibrate(const ProjectSettings& settings)
         // ------------------------------------------------------------------
         //  Restrict the calib and repartition vectors to where data are
         // ------------------------------------------------------------------
-        double threshold = 0.005;
+        double threshold = 0.00005;
         int minIdx = (int)ceil(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp));
         int maxIdx = (int)floor(vector_interpolate_idx_for_value((1 - threshold) * lastRepVal, repartitionTemp));
         
@@ -365,60 +365,7 @@ void Date::calibrate(const ProjectSettings& settings)
         // This may be due to invalid ref curve files or to polynomial equations with only imaginary solutions (See Gauss Plugin...)
     }
     
-    
-    
 
-    /*double tmin = mSettings.mTmin;
-    double tmax = mSettings.mTmax;
-    double step = mSettings.mStep;
-    double nbPts = 1 + round((tmax - tmin) / step);
-    
-    mCalibration.reserve(nbPts);
-    mRepartition.reserve(nbPts);
-
-    double v = getLikelyhood(tmin);
-    double lastRepVal = v;
-
-    double tminRef;
-    double tmaxRef;
-    
-    // if no reference curve mTminRefCurve=mTmaxRefCurve
-    if(mTminRefCurve==mTmaxRefCurve){
-        tminRef = mSettings.mTmin;
-        tmaxRef = mSettings.mTmax;
-    }
-    else{
-        tminRef = mTminRefCurve;
-        tmaxRef = mTmaxRefCurve;
-    }
-    for(int i = 0; i < nbPts; ++i)
-    {
-        double t = tmin + (double)i * step;
-        float lastV = v;
-
-        if(t>=tminRef && t<=tmaxRef){
-            v = getLikelyhood(t);
-        }
-        else {
-            v = 0;
-        }
-        mCalibration.append(v);
-        double rep = lastRepVal;
-        if(v != 0 && lastV != 0)
-        {
-            rep = lastRepVal + step * (lastV + v) / 2.;
-        }
-        mRepartition.append(rep);
-        lastRepVal = rep;
-    }
-
-    // La courbe de répartition est transformée de sorte que sa valeur maximale soit 1
-    mRepartition = normalize_vector(mRepartition);
-
-    // La courbe de calibration est transformée de sorte que l'aire sous la courbe soit 1
-    mCalibration = equal_areas(mCalibration, step, 1.);
-      //  qDebug()<<" Date::calibrate end"<<tmin<<tmax<<step<<nbPts<<"size"<<mCalibration.size();
-     */
 }
 
 QMap<double, double> Date::getCalibMap() const
@@ -900,14 +847,19 @@ double fProposalDensity(const double t, const double t0, Date* date)
     double level = date->mMixingLevel;
     double q1 = 0;
 
-    /// ----q1------Defined only on study period-----
-    if(t > tmin && t < tmax){
-      
-        double prop = (t - tmin) / (tmax - tmin);
+    double tminCalib = date->getTminCalib();
+    double tmaxCalib = date->getTmaxCalib();
+
+    /// ----q1------Defined only on Calibration range-----
+    if(t > tminCalib && t < tmaxCalib){
+        //double prop = (t - tmin) / (tmax - tmin);
+        double prop = (t - tminCalib) / (tmaxCalib - tminCalib);
         double idx = prop * (date->mRepartition.size() - 1);
         int idxUnder = (int)floor(idx);
         
-        double step =(tmax-tmin+1)/date->mRepartition.size();
+        //double step =(tmax-tmin+1)/date->mRepartition.size();
+        double step =date->mSettings.mStep;
+
         q1 = (date->mRepartition[idxUnder+1]-date->mRepartition[idxUnder])/step;
     }
     /// ----q2 shrinkage-----------
@@ -935,15 +887,16 @@ void fInversion(Date* date, Event* event)
     double tiNew;
     double tmin = date->mSettings.mTmin;
     double tmax = date->mSettings.mTmax;
+
+    double tminCalib = date->getTminCalib();
     
     if (u1<level) { // tiNew always in the study period
         double idx = vector_interpolate_idx_for_value(u1, date->mRepartition);
-        double step =(tmax-tmin+1)/date->mRepartition.size();
-        tiNew = tmin + idx * step;
+        tiNew = tminCalib + idx *date->mSettings.mStep;
     }
     else {
         // -- gaussian
-        double t0 = date->mTheta.mX; //(tmax+tmin)/2;
+        double t0 = date->mTheta.mX;
         double s = (tmax-tmin)/2;
         
         tiNew=Generator::gaussByBoxMuller(t0, s);
@@ -985,12 +938,13 @@ void fInversionWithArg(Date* date, Event* event)
     double tiNew;
     double tmin = date->mSettings.mTmin;
     double tmax = date->mSettings.mTmax;
+
+    double tminCalib = date->getTminCalib();
     
     if (u1<level) { // tiNew always in the study period
         double u2 = Generator::randomUniform();
         double idx = vector_interpolate_idx_for_value(u2, date->mRepartition);
-        double step =(tmax-tmin+1)/date->mRepartition.size();
-        tiNew = tmin + idx * step;
+        tiNew = tminCalib + idx *date->mSettings.mStep;
     }
     else {
         // -- gaussian
