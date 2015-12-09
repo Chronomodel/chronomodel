@@ -1252,7 +1252,6 @@ void Project::updateDate(int eventId, int dateIndex)
                         
                         pushProjectState(state, tr("Date updated"), true);
                         
-                        //date->calibrate(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
                     }
                     else
                     {
