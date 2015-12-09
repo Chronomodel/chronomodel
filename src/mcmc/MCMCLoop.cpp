@@ -62,9 +62,10 @@ const QString& MCMCLoop::getInitLog() const
 void MCMCLoop::run()
 {    
     QString mDate =QDateTime::currentDateTime().toString("dddd dd MMMM yyyy");
-    QTime startChainTime = QTime::currentTime();
-    QString mTime = startChainTime.toString("hh:mm:ss.zzz");
-    QString log= "Start " +mDate+" ->>> " +mTime;
+    QTime startTime = QTime::currentTime();
+    startTime.start();
+    //QString mTime = startTime.toString("hh:mm:ss.zzz");
+    QString log= "Start " +mDate+" ->>> " +startTime.toString("hh:mm:ss.zzz");
     
     //int timeDiff = 0;
     
@@ -255,7 +256,7 @@ void MCMCLoop::run()
         log += "=> Chain done in " + QString::number(timeDiff) + " ms\n";*/
     }
     
-    log += line("List of used chains seeds (to be copied for re-use in MCMC Settings) :<br>" + seeds.join(";"));
+    log += line(tr("List of used chains seeds (to be copied for re-use in MCMC Settings) : ") + seeds.join(";"));
     
     
     /*QTime endTotalTime = QTime::currentTime();
@@ -277,12 +278,16 @@ void MCMCLoop::run()
         return;
     }
 
-   /* QTime endFinalizeTime = QTime::currentTime();
-    timeDiff = startFinalizeTime.msecsTo(endFinalizeTime);
-    log += "=> Histos and results computed in " + QString::number(timeDiff) + " ms\n";
-    
-    log += "End time : " + endFinalizeTime.toString() + "\n";
-    */
+    QTime endTime = QTime::currentTime();
+
+    QTime timeDiff(0,0,0,1);
+    timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
+
+    log += line(tr("Model computed") );
+    log += line(tr("finish at ") + endTime.toString("hh:mm:ss.zzz") );
+    log += line(tr("time elapsed ")+QString::number(timeDiff.hour())+"h "+QString::number(timeDiff.minute())+"m "+QString::number(timeDiff.second())+"s "+QString::number(timeDiff.msec())+"ms" );
+
+
     //-----------------------------------------------------------------------
     
     mChainsLog = log;
