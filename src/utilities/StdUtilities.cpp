@@ -280,17 +280,21 @@ QMap<double, double> vector_to_map(const QVector<double>& data, const double min
 
 double vector_interpolate_idx_for_value(const double value, const QVector<double>& vector)
 {
-    // Dichotomie
-    
+
     int idxInf = 0;
     int idxSup = vector.size() - 1;
+
+    if(value<vector.first()) return (double)idxInf;
+    if(value>vector.last()) return (double)idxSup;
+
+    // Dichotomie, we can't use indexOf because we don't know the step between each value in the Qvector
     
     if(idxSup > idxInf)
     {
         do
         {
             int idxMid = idxInf + floor((idxSup - idxInf) / 2.f);
-            double valueMid = vector[idxMid];
+            double valueMid = vector.at(idxMid);
             
             if(value < valueMid)
                 idxSup = idxMid;
@@ -301,13 +305,15 @@ double vector_interpolate_idx_for_value(const double value, const QVector<double
             
         }while(idxSup - idxInf > 1);
         
-        double valueInf = vector[idxInf];
-        double valueSup = vector[idxSup];
+        double valueInf = vector.at(idxInf);
+        double valueSup = vector.at(idxSup);
         double prop = (value - valueInf) / (valueSup - valueInf);
         double idx = (double)idxInf + prop;
         
         return idx;
     }
+
+
     return 0;
 }
 /**
