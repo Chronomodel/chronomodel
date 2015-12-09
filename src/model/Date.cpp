@@ -53,6 +53,9 @@ void Date::init()
     mTminRefCurve = 0;
     mTmaxRefCurve = 0;
 
+    mTminCalib = 0;
+    mTmaxCalib = 0;
+
 }
 
 Date::Date(const Date& date)
@@ -101,7 +104,10 @@ void Date::copyFrom(const Date& date)
     mCalibHPD = date.mCalibHPD;
     mTminRefCurve = date.mTminRefCurve;
     mTmaxRefCurve = date.mTmaxRefCurve;
-    
+
+    mTminCalib = date.mTminCalib;
+    mTmaxCalib = date.mTmaxCalib;
+
     mSubDates = date.mSubDates;
     
     updateti = date.updateti;
@@ -195,9 +201,17 @@ Date Date::fromJson(const QJsonObject& json)
         {
             throw QObject::tr("Data could not be loaded : invalid plugin : ") + pluginId;
         }
-        QPair<double,double> tminTmax = date.mPlugin->getTminTmaxRefsCurve(date.mData);
-        date.mTminRefCurve = tminTmax.first;
-        date.mTmaxRefCurve = tminTmax.second;
+        else if(date.mPlugin->getName() == "Typo"){
+            date.mTminCalib = date.mData[DATE_UNIFORM_MIN_STR].toDouble();
+            date.mTmaxCalib = date.mData[DATE_UNIFORM_MAX_STR].toDouble();
+            date.mTminRefCurve = date.mTminCalib ;
+            date.mTmaxRefCurve = date.mTmaxCalib ;
+        }
+        else{
+            QPair<double,double> tminTmax = date.mPlugin->getTminTmaxRefsCurve(date.mData);
+            date.mTminRefCurve = tminTmax.first;
+            date.mTmaxRefCurve = tminTmax.second;
+        }
 
         date.mSubDates.clear();
         QJsonArray subdates = json[STATE_DATE_SUB_DATES].toArray();
@@ -304,6 +318,10 @@ void Date::reset()
 
 void Date::calibrate(const ProjectSettings& settings)
 {
+    // we need to calculate a new mCalibration only, if mStep change or if there is no mCalibration
+   /* if(mSettings.mStep == settings.mStep && !mCalibration.isEmpty()){
+        return;
+    }*/
     mCalibration.clear();
     mRepartition.clear();
     mCalibHPD.clear();
@@ -342,8 +360,8 @@ void Date::calibrate(const ProjectSettings& settings)
         //  Restrict the calib and repartition vectors to where data are
         // ------------------------------------------------------------------
         double threshold = 0.00005;
-        int minIdx = (int)ceil(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp));
-        int maxIdx = (int)floor(vector_interpolate_idx_for_value((1 - threshold) * lastRepVal, repartitionTemp));
+        int minIdx = (int)floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp));
+        int maxIdx = (int)ceil(vector_interpolate_idx_for_value((1 - threshold) * lastRepVal, repartitionTemp));
         
         mTminCalib = mTminRefCurve + minIdx * mSettings.mStep;
         mTmaxCalib = mTminRefCurve + maxIdx * mSettings.mStep;

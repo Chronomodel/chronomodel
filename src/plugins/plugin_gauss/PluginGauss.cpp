@@ -465,20 +465,20 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
         double b = data[DATE_GAUSS_B_STR].toDouble();
         double c = data[DATE_GAUSS_C_STR].toDouble();
         
+        double v1 = age - k * error;
+        double v2 = age + k * error;
+
         if(a == 0){
             if(b == 0){
                 // Error!
             }else{
-                double t1 = (c - (age - k * error)) / b;
-                double t2 = (c - (age + k * error)) / b;
+                double t1 = (v1 - c) / b;
+                double t2 = (v2 - c) / b;
                 tmin = qMin(t1, t2);
                 tmax = qMax(t1, t2);
             }
         }
         else{
-            double v1 = age - k * error;
-            double v2 = age + k * error;
-            
             double delta1 = b*b - 4*a*(c - v1);
             double delta2 = b*b - 4*a*(c - v2);
             

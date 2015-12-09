@@ -27,17 +27,16 @@ Plugin14CRefView::~Plugin14CRefView()
     
 }
 
-void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
+void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings)
 {
     QLocale locale = QLocale();
-    GraphViewRefAbstract::setDate(d, settings);
-    Date date = d;
+    GraphViewRefAbstract::setDate(date, settings);
+   // Date date = d;
     
     mGraph->removeAllCurves();
     mGraph->clearInfos();
     mGraph->showInfos(true);
-    mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
-    mGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
+
     mGraph->setFormatFunctX(mFormatFuncX);
     
     if(!date.isNull())
@@ -60,8 +59,8 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         
         if(curves.isEmpty() || curves["G"].isEmpty()) {
             GraphZone zone;
-            zone.mColor = Qt::red;
-            zone.mColor.setAlpha(20);
+            zone.mColor = Qt::gray;
+            zone.mColor.setAlpha(25);
 
             zone.mXStart = mSettings.mTmin;
             zone.mXEnd = mSettings.mTmax;
@@ -73,29 +72,74 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         QMap<double, double> curveG;
         QMap<double, double> curveG95Sup;
         QMap<double, double> curveG95Inf;
-        
-        double tMinGraph = qMax(curves["G"].firstKey(), (double)mSettings.mTmin);
-        double tMaxGraph = qMin(curves["G"].lastKey(), (double)mSettings.mTmax);
-        
-        double yMin = plugin->getRefValueAt(date.mData, mSettings.mTmin);
-        double yMax = plugin->getRefValueAt(date.mData, mSettings.mTmin);
-        
-        if(tMinGraph < tMaxGraph)
+              
+
+        double tminCalib = date.getTminCalib();
+        double tmaxCalib = date.getTmaxCalib();
+
+        double tminCurve = date.getTminRefCurve();
+        double tmaxCurve = date.getTmaxRefCurve();
+
+        double tminDisplay;
+        double tmaxDisplay;
+
+
+        if(mSettings.mTmin<tminCalib){
+           tminDisplay = mSettings.mTmin;
+        }
+        else {
+            tminDisplay = tminCalib;
+        }
+
+        if(tmaxCalib<mSettings.mTmax){
+               tmaxDisplay = mSettings.mTmax;
+        }
+        else {
+            tmaxDisplay = tmaxCalib;
+        }
+
+        if(tminDisplay<tminCurve){
+            GraphZone zone;
+            zone.mColor = Qt::gray;
+            zone.mColor.setAlpha(35);
+
+            zone.mXStart = tminDisplay;
+            zone.mXEnd = tminCurve;
+            mGraph->addZone(zone);
+        }
+
+        if(tmaxCurve<tmaxDisplay){
+            GraphZone zone;
+            zone.mColor = Qt::gray;
+            zone.mColor.setAlpha(35);
+
+            zone.mXStart = tmaxCurve;
+            zone.mXEnd = tmaxDisplay;
+            mGraph->addZone(zone);
+        }
+
+        double yMin = plugin->getRefValueAt(date.mData, qMax(tminDisplay,tminCurve));
+        double yMax = plugin->getRefValueAt(date.mData, qMin(tmaxDisplay,tmaxCurve));
+
+
+        for(double t=tminDisplay; t<=tmaxDisplay; ++t)
         {
-            for(double t=tMinGraph; t<=tMaxGraph; ++t)
-            {
+            if(t>tminCurve && t<tmaxCurve) {
                 double value = plugin->getRefValueAt(date.mData, t);
                 double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
-                
+
                 curveG[t] = value;
                 curveG95Sup[t] = value + error;
                 curveG95Inf[t] = value - error;
-                
+
                 yMin = qMin(yMin, curveG95Inf[t]);
                 yMax = qMax(yMax, curveG95Sup[t]);
             }
         }
-        
+
+        mGraph->setRangeX(tminDisplay,tmaxDisplay);
+        mGraph->setCurrentX(tminDisplay, tmaxDisplay);
+
         GraphCurve graphCurveG;
         graphCurveG.mName = "G";
         graphCurveG.mData = curveG;
@@ -119,22 +163,7 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         
         // Display reference curve name
         mGraph->addInfo(tr("Ref : ") + ref_curve);
-        
-        // ----------------------------------------------------
-        //  Draw ref curve extensions if not defined everywhere on study period
-        // ----------------------------------------------------
-        GraphZone zone;
-        zone.mColor = Qt::red;
-        zone.mColor.setAlpha(20);
-
-        zone.mXStart = mSettings.mTmin;
-        zone.mXEnd = tMinGraph;
-        mGraph->addZone(zone);
-
-        zone.mXStart = tMaxGraph;
-        zone.mXEnd = mSettings.mTmax;
-        mGraph->addZone(zone);
-
+                
         // ----------------------------------------------------
         
         yMin = qMin(yMin, age);
