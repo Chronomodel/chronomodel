@@ -1120,12 +1120,12 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
             if (data.size()>rowsCount-2) {
                 abscissesWritten=false;
                 rowsCount = rows.count();
-                qDebug()<<"rowscount="<<rowsCount<<data.size();
             }
             
             if (!abscissesWritten) {
                 for(int i=offset+rowsCount; i<data.size()+1; ++i) {
-                    rows.append(QStringList(locale.toString(i-rowsCount))+emptyColumn);
+                    // we add 1 to the line number, because the index of vector start to 0
+                    rows.append(QStringList(locale.toString(i-rowsCount+1))+emptyColumn);
                    
                 }
                 abscissesWritten = true;
