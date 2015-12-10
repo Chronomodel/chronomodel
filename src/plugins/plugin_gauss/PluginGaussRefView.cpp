@@ -31,16 +31,8 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
     QLocale locale = QLocale();
     GraphViewRefAbstract::setDate(date, settings);
     
-    //Date date = d;
-    
-    double tminCalib = date.getTminCalib();
-    double tmaxCalib = date.getTmaxCalib();
-    
-    double tminDisplay = qMin(tminCalib, (double)mSettings.mTmin);
-    double tmaxDisplay = qMax(tmaxCalib, (double)mSettings.mTmax);
-    
-    mGraph->setRangeX(tminDisplay, tmaxDisplay);
-    mGraph->setCurrentX(tminDisplay, tmaxDisplay);
+    mGraph->setRangeX(mTminDisplay, mTmaxDisplay);
+    mGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
     
     mGraph->removeAllCurves();
     mGraph->clearInfos();
@@ -75,7 +67,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
         }
         else if(mode == DATE_GAUSS_MODE_EQ)
         {
-            for(double t=tminDisplay; t<=tmaxDisplay; t+=mSettings.mStep)
+            for(double t=mTminDisplay; t<=mTmaxDisplay; t+=mSettings.mStep)
                 curve.mData[t] = a * t * t + b * t + c;
             mGraph->addCurve(curve);
             
@@ -83,8 +75,8 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             yMin = map_min_value(curve.mData);
             yMax = map_max_value(curve.mData);
             
-            yMin = qMin(yMin, age);
-            yMax = qMax(yMax, age);
+            yMin = qMin(yMin, age - error * 1.96);
+            yMax = qMax(yMax, age + error * 1.96);
             
             mGraph->setRangeY(yMin, yMax);
         }
@@ -104,63 +96,37 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                 return;
             }
 
-
             QMap<double, double> curveG;
             QMap<double, double> curveG95Sup;
             QMap<double, double> curveG95Inf;
 
-
-            double tminCalib = date.getTminCalib();
-            double tmaxCalib = date.getTmaxCalib();
-
-            double tminCurve = date.getTminRefCurve();
-            double tmaxCurve = date.getTmaxRefCurve();
-
-            double tminDisplay;
-            double tmaxDisplay;
-
-
-            if(mSettings.mTmin<tminCalib){
-               tminDisplay = mSettings.mTmin;
-            }
-            else {
-                tminDisplay = tminCalib;
-            }
-
-            if(tmaxCalib<mSettings.mTmax){
-                   tmaxDisplay = mSettings.mTmax;
-            }
-            else {
-                tmaxDisplay = tmaxCalib;
-            }
-
-            if(tminDisplay<tminCurve){
+            if(mTminDisplay < mTminRef){
                 GraphZone zone;
                 zone.mColor = Qt::gray;
                 zone.mColor.setAlpha(35);
-
-                zone.mXStart = tminDisplay;
-                zone.mXEnd = tminCurve;
+                zone.mXStart = mTminDisplay;
+                zone.mXEnd = mTminRef;
                 mGraph->addZone(zone);
             }
 
-            if(tmaxCurve<tmaxDisplay){
+            if(mTmaxRef < mTmaxDisplay){
                 GraphZone zone;
                 zone.mColor = Qt::gray;
                 zone.mColor.setAlpha(35);
-
-                zone.mXStart = tmaxCurve;
-                zone.mXEnd = tmaxDisplay;
+                zone.mXStart = mTmaxRef;
+                zone.mXEnd = mTmaxDisplay;
                 mGraph->addZone(zone);
             }
 
-            double yMin = plugin->getRefValueAt(date.mData, qMax(tminDisplay,tminCurve));
-            double yMax = plugin->getRefValueAt(date.mData, qMin(tmaxDisplay,tmaxCurve));
+            // Just to start from somewhere on the curve...
+            // Will be corrected anyway in the following loop!
+            yMin = plugin->getRefValueAt(date.mData, qMax(mTminDisplay, mTminRef));
+            yMax = yMin;
 
-
-            for(double t=tminDisplay; t<=tmaxDisplay; ++t)
+            for(double t=mTminDisplay; t<=mTmaxDisplay; ++t)
             {
-                if(t>tminCurve && t<tmaxCurve) {
+                if(t > mTminRef && t < mTmaxRef)
+                {
                     double value = plugin->getRefValueAt(date.mData, t);
                     double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
 
@@ -172,10 +138,6 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                     yMax = qMax(yMax, curveG95Sup[t]);
                 }
             }
-
-            mGraph->setRangeX(tminDisplay,tmaxDisplay);
-            mGraph->setCurrentX(tminDisplay, tmaxDisplay);
-
 
             //---
             GraphCurve graphCurveG95Sup;
@@ -222,12 +184,10 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
 
             GraphCurve curveMeasure;
             curveMeasure.mName = "Measure";
-
             curveMeasure.mPen.setColor(mMeasureColor);
             QColor curveColor(mMeasureColor);
             curveColor.setAlpha(50);
             curveMeasure.mBrush = curveColor;
-
             curveMeasure.mIsVertical = true;
             curveMeasure.mIsHisto = false;
 
@@ -241,11 +201,12 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                 curveMeasure.mData[t] = v;
             }
             curveMeasure.mData = normalize_map(curveMeasure.mData);
+            
             mGraph->addCurve(curveMeasure);
 
             // Write measure value :
             mGraph->addInfo(tr("Measure : ") + locale.toString(age) + " ± " + locale.toString(error));
-
+            
             // ----------------------------------------------
             //  Error on measure
             // ----------------------------------------------

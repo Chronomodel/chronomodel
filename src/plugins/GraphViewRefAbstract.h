@@ -4,9 +4,9 @@
 #include <QWidget>
 #include "ProjectSettings.h"
 #include "StdUtilities.h"
+#include "Date.h"
 
 class GraphView;
-class Date;
 
 
 class GraphViewRefAbstract: public QWidget
@@ -21,10 +21,20 @@ public:
 
     virtual void setDate(const Date& date, const ProjectSettings& settings)
     {
-        Q_UNUSED(date);
         mSettings = settings;
+        
+        mTminCalib = date.getTminCalib();
+        mTmaxCalib = date.getTmaxCalib();
+        
+        mTminDisplay = qMin(mTminCalib, (double)mSettings.mTmin);
+        mTmaxDisplay = qMax(mTmaxCalib, (double)mSettings.mTmax);
+        
+        mTminRef = date.getTminRefCurve();
+        mTmaxRef = date.getTmaxRefCurve();
     }
-    void setFormatFunctX(FormatFunc f){
+    
+    void setFormatFunctX(FormatFunc f)
+    {
         mFormatFuncX = f;
     }
     
@@ -40,6 +50,15 @@ protected:
     ProjectSettings mSettings;
     QColor mMeasureColor;
     FormatFunc mFormatFuncX;
+    
+    double mTminCalib;
+    double mTmaxCalib;
+    
+    double mTminRef;
+    double mTmaxRef;
+    
+    double mTminDisplay;
+    double mTmaxDisplay;
 };
 
 #endif

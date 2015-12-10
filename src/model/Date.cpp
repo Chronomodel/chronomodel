@@ -102,6 +102,7 @@ void Date::copyFrom(const Date& date)
     mCalibration = date.mCalibration;
     mRepartition = date.mRepartition;
     mCalibHPD = date.mCalibHPD;
+    
     mTminRefCurve = date.mTminRefCurve;
     mTmaxRefCurve = date.mTmaxRefCurve;
 
@@ -113,7 +114,6 @@ void Date::copyFrom(const Date& date)
     updateti = date.updateti;
     
     mMixingLevel = date.mMixingLevel;
-
 }
 
 Date::~Date()
@@ -204,11 +204,11 @@ Date Date::fromJson(const QJsonObject& json)
         else if(date.mPlugin->getName() == "Typo"){
             date.mTminCalib = date.mData[DATE_UNIFORM_MIN_STR].toDouble();
             date.mTmaxCalib = date.mData[DATE_UNIFORM_MAX_STR].toDouble();
-            date.mTminRefCurve = date.mTminCalib ;
-            date.mTmaxRefCurve = date.mTmaxCalib ;
+            date.mTminRefCurve = date.mTminCalib;
+            date.mTmaxRefCurve = date.mTmaxCalib;
         }
         else{
-            QPair<double,double> tminTmax = date.mPlugin->getTminTmaxRefsCurve(date.mData);
+            QPair<double, double> tminTmax = date.mPlugin->getTminTmaxRefsCurve(date.mData);
             date.mTminRefCurve = tminTmax.first;
             date.mTmaxRefCurve = tminTmax.second;
         }
@@ -359,22 +359,27 @@ void Date::calibrate(const ProjectSettings& settings)
         // ------------------------------------------------------------------
         //  Restrict the calib and repartition vectors to where data are
         // ------------------------------------------------------------------
-        double threshold = 0.00005;
-        int minIdx = (int)floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp));
-        int maxIdx = (int)ceil(vector_interpolate_idx_for_value((1 - threshold) * lastRepVal, repartitionTemp));
+        const double threshold = 0.00005;
+        const int minIdx = (int)floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp));
+        const int maxIdx = (int)ceil(vector_interpolate_idx_for_value((1 - threshold) * lastRepVal, repartitionTemp));
         
         mTminCalib = mTminRefCurve + minIdx * mSettings.mStep;
         mTmaxCalib = mTminRefCurve + maxIdx * mSettings.mStep;
         
-        qDebug() << mInitName << " [" << mTminCalib << ", " << mTmaxCalib << "], [" << mTminRefCurve << ", " << mTmaxRefCurve << "], " << lastRepVal;
-        
+        // Truncate both functions where data live
         mCalibration = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
         mRepartition = repartitionTemp.mid(minIdx, (maxIdx - minIdx) + 1);
         
-        // La courbe de répartition est transformée de sorte que sa valeur maximale soit 1
-        mRepartition = normalize_vector(mRepartition);
+        // NOTE ABOUT THIS APPROMIATION :
+        // By truncating the calib and repartition, the calib density's area is not 1 anymore!
+        // It is now 1 - 2*threshold = 0,99999... We consider it to be 1 anyway!
+        // By doing this, calib and repartition are stored on a restricted number of data
+        // instead of storing them on the whole reference curve's period (as done for calibrationTemp & repartitionTemp above).
         
-        // La courbe de calibration est transformée de sorte que l'aire sous la courbe soit 1
+        // Stretch repartition curve so it goes from 0 to 1
+        mRepartition = stretch_vector(mRepartition, 0, 1);
+        
+        // Approximation : even if the calib has been truncated, we consider its area to be = 1
         mCalibration = equal_areas(mCalibration, mSettings.mStep, 1.);
     }
     else

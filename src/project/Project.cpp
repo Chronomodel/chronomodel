@@ -143,7 +143,7 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
 void Project::sendUpdateState(const QJsonObject& state, const QString& reason, bool notify)
 {
 #ifdef DEBUG
-    qDebug() << " +++  Sending : " << reason;
+    //qDebug() << " +++  Sending : " << reason;
 #endif
     StateEvent* event = new StateEvent(state, reason, notify);
     QCoreApplication::postEvent(this, event, Qt::NormalEventPriority);
@@ -254,7 +254,7 @@ bool Project::event(QEvent* e)
     else if(e->type() == 1001)
     {
 #ifdef DEBUG
-        qDebug() << "(---) Receiving events selection : adapt checked phases";
+        //qDebug() << "(---) Receiving events selection : adapt checked phases";
 #endif
         emit selectedEventsChanged();
         return true;
@@ -262,7 +262,7 @@ bool Project::event(QEvent* e)
     else if(e->type() == 1002)
     {
 #ifdef DEBUG
-        qDebug() << "(---) Receiving phases selection : adapt selected events";
+        //qDebug() << "(---) Receiving phases selection : adapt selected events";
 #endif
         emit selectedPhasesChanged();
         return true;
@@ -310,7 +310,7 @@ void Project::updateState(const QJsonObject& state, const QString& reason, bool 
 void Project::sendEventsSelectionChanged()
 {
 #ifdef DEBUG
-    qDebug() << "(+++) Sending events selection : use marked events";
+    //qDebug() << "(+++) Sending events selection : use marked events";
 #endif
     QEvent* e = new QEvent((QEvent::Type)1001);
     QCoreApplication::postEvent(this, e, Qt::NormalEventPriority);
@@ -319,7 +319,7 @@ void Project::sendEventsSelectionChanged()
 void Project::sendPhasesSelectionChanged()
 {
 #ifdef DEBUG
-    qDebug() << "(+++) Sending phases selection : use marked phases";
+    //qDebug() << "(+++) Sending phases selection : use marked phases";
 #endif
     QEvent* e = new QEvent((QEvent::Type)1002);
     QCoreApplication::postEvent(this, e, Qt::NormalEventPriority);
