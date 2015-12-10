@@ -520,6 +520,7 @@ void ResultsView::updateControls()
 
 void ResultsView::updateLayout()
 {
+    if(!mModel) return;
     qDebug() << "ResultsView::updateLayout";
     
     int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
