@@ -519,7 +519,7 @@ void GraphView::paintEvent(QPaintEvent* )
     // ----------------------------------------------------
     //  Nothing to draw !
     // ----------------------------------------------------
-    if(mCurves.size() == 0)
+    if(mCurves.size() == 0 && mZones.size() == 0)
     {
         QPainter p(this);
         p.setFont(font());

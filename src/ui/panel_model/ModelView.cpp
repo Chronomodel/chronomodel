@@ -27,7 +27,9 @@
 
 #pragma mark constructor
 ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
+mEventsScene(0),
 mCurSearchIdx(0),
+mPhasesScene(0),
 mCurrentRightWidget(0),
 mTmin(0),
 mTmax(2000),
@@ -341,11 +343,6 @@ void ModelView::updateProject()
    
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
-    //mStepEdit->setText(QString::number(settings.mStep));
-    
-    // This was used to display study period using the date format defined in application settings :
-    //mMinEdit->setText(DateUtils::convertToAppSettingsFormatStr(settings.mTmin));
-    //mMaxEdit->setText(DateUtils::convertToAppSettingsFormatStr(settings.mTmax));
     
     mMinEdit->setText(QString::number(settings.mTmin));
     mMaxEdit->setText(QString::number(settings.mTmax));
@@ -359,8 +356,9 @@ void ModelView::updateProject()
     // LES 2 SCENES aient été updatées
     // false : ne pas envoyer de notification pour updater l'état du projet,
     // puisque c'est justement ce que l'on fait ici!
-    mEventsScene -> updateSelection(false);
-    mPhasesScene -> updateSelection(false);
+     // DONE BY UPDATEPROJECT ????
+    //mEventsScene -> updateSelection(false);
+    //mPhasesScene -> updateSelection(false);
     
     /** @todo Refresh current date !! */
     
@@ -774,9 +772,10 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
 }
 
-#pragma mark Toggle Calibration
+#pragma mark Calibration
 void ModelView::updateCalibration(const QJsonObject& date)
 {
+    // A date has been double-clicked => update CalibrationView only if the date is not null
     if(!date.isEmpty())// && date[STATE_DATE_VALID].toBool()==true)
     {
         mCalibrationView->setDate(date);

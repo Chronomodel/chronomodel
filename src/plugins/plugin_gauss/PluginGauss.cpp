@@ -434,18 +434,19 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
 {
     double tmin = 0;
     double tmax = 0;
-    
     double k = 5;
     
     if(data[DATE_GAUSS_MODE_STR].toString() == DATE_GAUSS_MODE_CURVE)
     {
         QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString().toLower();
-        if( mRefDatas.contains(ref_curve)  && !mRefDatas[ref_curve].isEmpty() ) {
-           tmin= mRefDatas[ref_curve]["G"].firstKey();
-           tmax= mRefDatas[ref_curve]["G"].lastKey();
+        if(mRefDatas.contains(ref_curve) && !mRefDatas[ref_curve].isEmpty())
+        {
+           tmin = mRefDatas[ref_curve]["G"].firstKey();
+           tmax = mRefDatas[ref_curve]["G"].lastKey();
         }
-        else{
-            qDebug()<<"PluginGauss::getTminTmaxRefsCurve no ref curve";
+        else
+        {
+            qDebug() << "PluginGauss::getTminTmaxRefsCurve no ref curve";
         }
     }
     else if(data[DATE_GAUSS_MODE_STR].toString() == DATE_GAUSS_MODE_NONE)
@@ -510,7 +511,7 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
             }
         }
     }
-    return qMakePair<double,double>(tmin, tmax);
+    return QPair<double,double>(tmin, tmax);
 }
 
 // ------------------------------------------------------------------

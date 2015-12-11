@@ -201,18 +201,19 @@ Date Date::fromJson(const QJsonObject& json)
         {
             throw QObject::tr("Data could not be loaded : invalid plugin : ") + pluginId;
         }
-        else if(date.mPlugin->getName() == "Typo"){
+        /*else if(date.mPlugin->getName() == "Typo"){
             date.mTminCalib = date.mData[DATE_UNIFORM_MIN_STR].toDouble();
             date.mTmaxCalib = date.mData[DATE_UNIFORM_MAX_STR].toDouble();
             date.mTminRefCurve = date.mTminCalib;
             date.mTmaxRefCurve = date.mTmaxCalib;
-        }
-        else{
+        }*/
+        else
+        {
             QPair<double, double> tminTmax = date.mPlugin->getTminTmaxRefsCurve(date.mData);
             date.mTminRefCurve = tminTmax.first;
             date.mTmaxRefCurve = tminTmax.second;
         }
-
+        
         date.mSubDates.clear();
         QJsonArray subdates = json[STATE_DATE_SUB_DATES].toArray();
         for(int i=0; i<subdates.size(); ++i){
@@ -319,9 +320,10 @@ void Date::reset()
 void Date::calibrate(const ProjectSettings& settings)
 {
     // we need to calculate a new mCalibration only, if mStep change or if there is no mCalibration
-   /* if(mSettings.mStep == settings.mStep && !mCalibration.isEmpty()){
+    /* if(mSettings.mStep == settings.mStep && !mCalibration.isEmpty()){
         return;
     }*/
+    
     mCalibration.clear();
     mRepartition.clear();
     mCalibHPD.clear();
@@ -359,36 +361,48 @@ void Date::calibrate(const ProjectSettings& settings)
         // ------------------------------------------------------------------
         //  Restrict the calib and repartition vectors to where data are
         // ------------------------------------------------------------------
-        const double threshold = 0.00005;
-        const int minIdx = (int)floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp));
-        const int maxIdx = (int)ceil(vector_interpolate_idx_for_value((1 - threshold) * lastRepVal, repartitionTemp));
-        
-        mTminCalib = mTminRefCurve + minIdx * mSettings.mStep;
-        mTmaxCalib = mTminRefCurve + maxIdx * mSettings.mStep;
-        
-        // Truncate both functions where data live
-        mCalibration = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
-        mRepartition = repartitionTemp.mid(minIdx, (maxIdx - minIdx) + 1);
-        
-        // NOTE ABOUT THIS APPROMIATION :
-        // By truncating the calib and repartition, the calib density's area is not 1 anymore!
-        // It is now 1 - 2*threshold = 0,99999... We consider it to be 1 anyway!
-        // By doing this, calib and repartition are stored on a restricted number of data
-        // instead of storing them on the whole reference curve's period (as done for calibrationTemp & repartitionTemp above).
-        
-        // Stretch repartition curve so it goes from 0 to 1
-        mRepartition = stretch_vector(mRepartition, 0, 1);
-        
-        // Approximation : even if the calib has been truncated, we consider its area to be = 1
-        mCalibration = equal_areas(mCalibration, mSettings.mStep, 1.);
+        if(lastRepVal > 0)
+        {
+            const double threshold = 0.00005;
+            const int minIdx = (int)floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp));
+            const int maxIdx = (int)ceil(vector_interpolate_idx_for_value((1 - threshold) * lastRepVal, repartitionTemp));
+            
+            mTminCalib = mTminRefCurve + minIdx * mSettings.mStep;
+            mTmaxCalib = mTminRefCurve + maxIdx * mSettings.mStep;
+            
+            // Truncate both functions where data live
+            mCalibration = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
+            mRepartition = repartitionTemp.mid(minIdx, (maxIdx - minIdx) + 1);
+            
+            // NOTE ABOUT THIS APPROMIATION :
+            // By truncating the calib and repartition, the calib density's area is not 1 anymore!
+            // It is now 1 - 2*threshold = 0,99999... We consider it to be 1 anyway!
+            // By doing this, calib and repartition are stored on a restricted number of data
+            // instead of storing them on the whole reference curve's period (as done for calibrationTemp & repartitionTemp above).
+            
+            // Stretch repartition curve so it goes from 0 to 1
+            mRepartition = stretch_vector(mRepartition, 0, 1);
+            
+            // Approximation : even if the calib has been truncated, we consider its area to be = 1
+            mCalibration = equal_areas(mCalibration, mSettings.mStep, 1.);
+        }
+        // ------------------------------------------------------------------
+        //  Measure is very far from Ref curve on the whole ref curve preriod!
+        //  => Calib values are very small, considered as being 0 even using "double" !
+        //  => lastRepVal = 0, and impossible to truncate using it....
+        //  => So,
+        // ------------------------------------------------------------------
+        else
+        {
+            mTminCalib = mTminRefCurve;
+            mTmaxCalib = mTmaxRefCurve;
+        }
     }
     else
     {
         // Impossible to calibrate because the plugin could not return any calib curve definition period.
         // This may be due to invalid ref curve files or to polynomial equations with only imaginary solutions (See Gauss Plugin...)
     }
-    
-
 }
 
 QMap<double, double> Date::getCalibMap() const

@@ -79,8 +79,6 @@ bool EventsScene::constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo
         qDebug() << "EventsScene::constraintAllowed: not Allowed Circular" ;
     }
     return constraintAllowed;
-    
-    
 }
 
 void EventsScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
@@ -651,18 +649,12 @@ void EventsScene::centerOnEvent(int eventId)
 #pragma mark Utilities
 AbstractItem* EventsScene::currentItem()
 {
-    QList<QGraphicsItem*> items = selectedItems();
-   /* if(items.size() > 0)
+    QList<QGraphicsItem*> selItems = selectedItems();
+    qDebug() << "selected items : " << selItems.size();
+    
+    if(!selItems.isEmpty())
     {
-        EventItem* evtItem = dynamic_cast<EventItem*>(items[0]);
-        if(evtItem)
-            return evtItem;
-    }
-    return 0;*/
-
-    if(!items.isEmpty())
-    {
-        EventItem* evtItem = dynamic_cast<EventItem*>(items.first());
+        EventItem* evtItem = dynamic_cast<EventItem*>(selItems.first());
         return evtItem;
     }
     else

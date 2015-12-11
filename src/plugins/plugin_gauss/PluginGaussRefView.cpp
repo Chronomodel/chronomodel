@@ -74,11 +74,6 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             // Adjust scale :
             yMin = map_min_value(curve.mData);
             yMax = map_max_value(curve.mData);
-            
-            yMin = qMin(yMin, age - error * 1.96);
-            yMax = qMax(yMax, age + error * 1.96);
-            
-            mGraph->setRangeY(yMin, yMax);
         }
         else if(mode == DATE_GAUSS_MODE_CURVE)
         {
@@ -163,21 +158,17 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             
             // Display reference curve name
             mGraph->addInfo(tr("Ref : ") + ref_curve);
-                     
-            // ----------------------------------------------------
-            
-            // Adjust scale :
-            yMin = qMin(yMin, age);
-            yMin = floor(yMin/10)*10;
-            
-            yMax = qMax(yMax, age);
-            yMax = ceil(yMax/10)*10;
-            
-            mGraph->setRangeY(yMin, yMax);
         }
         
         if(mode != DATE_GAUSS_MODE_NONE)
         {
+            yMin = qMin(yMin, age - error * 1.96);
+            yMax = qMax(yMax, age + error * 1.96);
+            
+            //qDebug() << "ymin : " << yMin << ", ymax : " << yMax;
+            
+            mGraph->setRangeY(yMin, yMax);
+            
             // ----------------------------------------------
             //  Measure curve
             // ----------------------------------------------

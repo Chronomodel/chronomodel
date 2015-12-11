@@ -88,10 +88,14 @@ public:
     // -------------------------------
     // The following is for plugins using ref curves :
     // -------------------------------
+    virtual QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const = 0;
+    
     virtual QString getRefExt() const {return "";}
     virtual QString getRefsPath() const {return "";}
-    virtual QMap<QString, QMap<double, double> > loadRefFile(QFileInfo refFile){return QMap<QString, QMap<double, double> >();}
-    virtual QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const {return qMakePair<double,double>(0,0);}
+    virtual QMap<QString, QMap<double, double> > loadRefFile(QFileInfo refFile)
+    {
+        return QMap<QString, QMap<double, double> >();
+    }
 
     void loadRefDatas(){
         QString path = QDir::currentPath();
@@ -129,8 +133,6 @@ public:
     
     GraphViewRefAbstract* mRefGraph;
     QColor mColor;
-    
-
 };
 
 //----------------------------------------------------

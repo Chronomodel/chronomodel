@@ -150,6 +150,8 @@ void CalibrationView::updateGraphs()
         mCalibGraph->setRangeX(tminDisplay, tmaxDisplay);
         mCalibGraph->setCurrentX(tminDisplay, tmaxDisplay);
         
+        qDebug() << "tmin : " << tminDisplay << ", tmax: " << tmaxDisplay;
+        
         mZoomSlider->setValue(0);
         
         // ------------------------------------------------------------
@@ -173,7 +175,7 @@ void CalibrationView::updateGraphs()
             zone.mText = tr("Outside study period");
             mCalibGraph->addZone(zone);
         }
-
+        
         // ------------------------------------------------------------
         //  Calibration curve
         // ------------------------------------------------------------
@@ -188,21 +190,25 @@ void CalibrationView::updateGraphs()
 
         // Fill HPD only if not typo :
         mResultsLab->clear();
-        if(!isTypo)
+        //if(!isTypo)
         {
+            const QMap<double, double> calibMap = mDate.getCalibMap();
+            
             // ------------------------------------------------------------
             //  Display numerical results
             // ------------------------------------------------------------
+            QString resultsStr;
+            
             DensityAnalysis results;
-            results.analysis = analyseFunction(mDate.getCalibMap());
+            results.analysis = analyseFunction(calibMap);
             results.quartiles = quartilesForRepartition(mDate.mRepartition, tminCalib, mSettings.mStep);
-            QString resultsStr = densityAnalysisToString(results);
-
+            resultsStr = densityAnalysisToString(results);
+            
             GraphCurve calibCurve;
             calibCurve.mName = "Calibration";
             calibCurve.mPen.setColor(penColor);
             calibCurve.mIsHisto = false;
-            calibCurve.mData = mDate.getCalibMap();
+            calibCurve.mData = calibMap;
             calibCurve.mIsRectFromZero = isTypo;
             calibCurve.mBrush = isTypo ? QBrush(brushColor) : QBrush(Qt::NoBrush);
 
@@ -242,15 +248,18 @@ void CalibrationView::updateGraphs()
             mCalibGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
             
             double realThresh = map_area(hpd) / map_area(calibCurve.mData);
+            
             //mResultsLab->setText(mResultsLab->text() % "HPD (" % locale.toString(100. * realThresh, 'f', 1) + "%) : " % getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr)); //  % concatenation with QStringBuilder
+            
             resultsStr += + "<br> HPD (" + locale.toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr);
+            
             mResultsLab->setWordWrap(true);
             mResultsLab->setText(resultsStr);
             
             
             //mResultsLab->setText(mResultsLab->text() + "\n HPD (" + locale.toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr));
         }
-        else
+        /*else
         {
             GraphCurve curve;
             curve.mName = "Bound";
@@ -259,7 +268,7 @@ void CalibrationView::updateGraphs()
             curve.mIsHorizontalSections = true;
             curve.mSections.append(qMakePair(tminCalib,tmaxCalib));
             mCalibGraph->addCurve(curve);
-        }
+        }*/
         
         
         // ------------------------------------------------------------
