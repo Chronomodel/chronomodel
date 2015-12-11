@@ -157,8 +157,8 @@ QVector<QVector<Event*> > ModelUtilities::getNextBranches(const QVector<Event*>&
             {
                 QStringList evtNames;
                 for(int j=0; j<branch.size(); ++j)
-                    evtNames << branch[j]->getName();
-                evtNames << newNode->getName();
+                    evtNames << branch[j]->mName;
+                evtNames << newNode->mName;
                 
                 throw QObject::tr("Circularity found in events model !\nPlease correct this branch :\n") + evtNames.join(" -> ");
             }
@@ -261,8 +261,8 @@ QVector<QVector<Phase*> > ModelUtilities::getNextBranches(const QVector<Phase*>&
                 {
                     QStringList names;
                     for(int j=0; j<branch.size(); ++j)
-                        names << branch[j]->getName();
-                    names << newNode->getName();
+                        names << branch[j]->mName;
+                    names << newNode->mName;
                     
                     throw QObject::tr("Circularity found in phases model !\nPlease correct this branch :\n") + names.join(" -> ");
                 }
@@ -271,8 +271,8 @@ QVector<QVector<Phase*> > ModelUtilities::getNextBranches(const QVector<Phase*>&
             {
                 QStringList names;
                 for(int j=0; j<curBranch.size(); ++j)
-                    names << curBranch[j]->getName();
-                names << newNode->getName();
+                    names << curBranch[j]->mName;
+                names << newNode->mName;
                 throw QObject::tr("Phases branch too long :\n") + names.join(" -> ");
             }
         }
@@ -398,7 +398,7 @@ QString ModelUtilities::dateResultsText(Date* d)
     QString nl = "\n";
     if(d)
     {
-        text += "Data : " + d->getName() + nl + nl;
+        text += "Data : " + d->mName + nl + nl;
         text += "Date :" + nl;
         text += d->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr) + nl + nl;
         text += "Std. Deviation :" + nl;
@@ -415,13 +415,13 @@ QString ModelUtilities::eventResultsText(Event* e, bool withDates)
     {
         if(e->mType == Event::eKnown)
         {
-            text += "Bound : " + e->getName() + nl;
+            text += "Bound : " + e->mName + nl;
             text += e->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr);
             text += nl+"----------------------"+nl;
         }
         else
         {
-            text += "Event : " + e->getName() + nl;
+            text += "Event : " + e->mName + nl;
             text += e->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr);
             if(withDates)
             {
@@ -443,7 +443,7 @@ QString ModelUtilities::phaseResultsText(Phase* p)
     QString nl = "\n";
     if(p)
     {
-        text += "Phase : " + p->getName() + nl + nl;
+        text += "Phase : " + p->mName + nl + nl;
         
         text += "Duration : " + nl;
         text += p->mDuration.resultsString(nl, QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"));
@@ -467,7 +467,7 @@ QString ModelUtilities::dateResultsHTML(Date* d)
     QString text;
     if(d)
     {
-        text += line(textBold(textGreen("Data : " + d->getName()))) + "<br>";
+        text += line(textBold(textGreen("Data : " + d->mName))) + "<br>";
         text += line(textBold(textGreen("Posterior distrib. :")));
         text += line(textGreen(d->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr))) + "<br>";
         text += line(textBold(textGreen("Std. Deviation :")));
@@ -484,13 +484,13 @@ QString ModelUtilities::eventResultsHTML(Event* e, bool withDates)
         text += "<hr>";
         if(e->mType == Event::eKnown)
         {
-            text += line(textBold(textRed("Bound : " + e->getName()))) + "<br>";
+            text += line(textBold(textRed("Bound : " + e->mName))) + "<br>";
             text += line(textBold(textRed("Posterior distrib. :")));
             text += line(textRed(e->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr)));
         }
         else
         {
-            text += line(textBold(textBlue("Event : " + e->getName()))) + "<br>";
+            text += line(textBold(textBlue("Event : " + e->mName))) + "<br>";
             text += line(textBold(textBlue("Posterior distrib. :")));
             text += line(textBlue(e->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr)));
             if(withDates)
@@ -512,7 +512,7 @@ QString ModelUtilities::phaseResultsHTML(Phase* p)
     if(p)
     {
         text += "<hr>";
-        text += line(textBold(textPurple("Phase : " + p->getName())));
+        text += line(textBold(textPurple("Phase : " + p->mName)));
         
         text += "<br>";
         text += line(textBold(textPurple("Duration (posterior distrib.) : ")));

@@ -37,7 +37,7 @@ void GraphViewDate::setDate(Date* date)
     if(date)
     {
         mDate = date;
-        setItemTitle(QString(tr("Data") + " : " + mDate->getName()));
+        setItemTitle(QString(tr("Data") + " : " + mDate->mName));
         setItemColor(date->getEventColor());
     }
     update();
@@ -107,7 +107,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             // ------------------------------------------------
             if(variable == eTheta)
             {
-                mTitle = QString(tr("Data") + " : " + mDate->getName());
+                mTitle = QString(tr("Data") + " : " + mDate->mName);
 
                 mGraph->mLegendX = DateUtils::getAppSettingsFormat();
                 mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
@@ -168,7 +168,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             //  - Sigma Chain i
             // ------------------------------------------------
             else if(variable == eSigma){
-                mTitle = QString(tr("Std") + " : " + mDate->getName());
+                mTitle = QString(tr("Std") + " : " + mDate->mName);
 
                 mGraph->mLegendX = "";
                 mGraph->setFormatFunctX(0);

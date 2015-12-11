@@ -12,11 +12,9 @@
 
 
 Date::Date():
-mInitName("No Named Date"),
-mJsonEvent(NULL),
-mModelJsonDate(NULL)
+mName("No Named Date")
 {
-    mInitColor=Qt::blue;
+    mColor=Qt::blue;
     mTheta.mIsDate = true;
     mSigma.mIsDate = false;
     init();
@@ -24,9 +22,7 @@ mModelJsonDate(NULL)
 }
 
 Date::Date(PluginAbstract* plugin):
-mInitName("No Named Date"),
-mJsonEvent(NULL),
-mModelJsonDate(NULL)
+mName("No Named Date")
 {
     init();
     mPlugin = plugin;
@@ -71,18 +67,13 @@ Date& Date::operator=(const Date& date)
 
 void Date::copyFrom(const Date& date)
 {
-    mModelJsonDate=date.mModelJsonDate;
-    mJsonEvent=date.mJsonEvent;
-    mJsonEventIdx=date.mJsonEventIdx;
-    mIdxInEventArray=date.mIdxInEventArray;
-    
     mTheta = date.mTheta;
     mSigma = date.mSigma;
     mDelta = date.mDelta;
     
     mId = date.mId;
-    mInitName = date.getName();
-    mInitColor = date.getColor();
+    mName = date.mName;
+    mColor = date.mColor;
     
     mData = date.mData;
     mPlugin = date.mPlugin;
@@ -126,52 +117,11 @@ bool Date::isNull() const
     return mData.isEmpty() || (mPlugin == 0);
 }
 #pragma mark Properties
-QColor Date::getColor() const
-{
-    return mInitColor;
-}
-
 QColor Date::getEventColor() const
 {
-    if(mModelJsonDate==NULL){
-        return randomColor();
-    }
-    else {
-
-        QJsonObject jEvent =(*mModelJsonDate)[STATE_EVENTS].toArray().at(mJsonEventIdx).toObject();
-        if(jEvent.isEmpty()){
-            return randomColor();
-        }
-        else {
-            int R=jEvent[STATE_COLOR_RED].toInt();
-            int G=jEvent[STATE_COLOR_GREEN].toInt();
-            int B=jEvent[STATE_COLOR_BLUE].toInt();
-            
-            return QColor(R,G,B);
-        }
-    }
-
+    return randomColor();
 }
-QString Date::getName() const
-{
-    if(mModelJsonDate==NULL){
-        return mInitName;
-    }
-    else{
-        QJsonObject jEvent =(*mModelJsonDate)[STATE_EVENTS].toArray().at(mJsonEventIdx).toObject();
-        
-        QJsonObject jDate = jEvent[STATE_EVENT_DATES].toArray().at(mIdxInEventArray).toObject();
-        
-        if(jDate.isEmpty()){
-            return "JsonDate without Name";
-        }
-        else {
-            return jDate[STATE_NAME].toString();
-        }
-    }
 
-    
-}
 #pragma mark JSON
 Date Date::fromJson(const QJsonObject& json)
 {
@@ -180,7 +130,7 @@ Date Date::fromJson(const QJsonObject& json)
     if(!json.isEmpty())
     {
         date.mId = json[STATE_ID].toInt();
-        date.mInitName = json[STATE_NAME].toString();
+        date.mName = json[STATE_NAME].toString();
         
         // Copy plugin specific values for this data :
         date.mData = json[STATE_DATE_DATA].toObject();
@@ -228,19 +178,11 @@ Date Date::fromJson(const QJsonObject& json)
     return date;
 }
 
-
-void Date::setModelJson(const QJsonObject & iModelJson, const int eventIdx, const int dateIdx)
-{
-    mModelJsonDate = &iModelJson;
-    mIdxInEventArray=dateIdx;
-    mJsonEventIdx=eventIdx;
-}
-
 QJsonObject Date::toJson() const
 {
     QJsonObject date;
     date[STATE_ID] = mId;
-    date[STATE_NAME] = getName();
+    date[STATE_NAME] = mName;
     date[STATE_DATE_DATA] = mData;
     date[STATE_DATE_PLUGIN_ID] = mPlugin->getId();
     date[STATE_DATE_METHOD] = mMethod;
@@ -253,10 +195,9 @@ QJsonObject Date::toJson() const
     date[STATE_DATE_DELTA_AVERAGE] = mDeltaAverage;
     date[STATE_DATE_DELTA_ERROR] = mDeltaError;
     
-    const QColor mCol= this->getColor();
-    date[STATE_COLOR_RED] = mCol.red();
-    date[STATE_COLOR_GREEN] = mCol.green();
-    date[STATE_COLOR_BLUE] = mCol.blue();
+    date[STATE_COLOR_RED] = mColor.red();
+    date[STATE_COLOR_GREEN] = mColor.green();
+    date[STATE_COLOR_BLUE] = mColor.blue();
     
     QJsonArray subdates;
     for(int i=0; i<mSubDates.size(); ++i){
@@ -688,7 +629,7 @@ Date Date::fromCSV(QStringList dataStr)
     PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
     if(plugin)
     {
-        date.mInitName = dataStr[0];
+        date.mName = dataStr[0];
         date.mPlugin = plugin;
         date.mMethod = plugin->getDataMethod();
         date.mData = plugin->fromCSV(dataStr);
@@ -732,7 +673,7 @@ QStringList Date::toCSV(QLocale csvLocale) const
     QStringList csv;
     
     csv << mPlugin->getName();
-    csv << getName();
+    csv << mName;
     csv << mPlugin->toCSV(mData,csvLocale );
     
     if(mDeltaType == Date::eDeltaFixed)
@@ -793,7 +734,7 @@ void Date::autoSetTiSampler(const bool bSet)
                 break;
             }
         }
-       // qDebug()<<"Date::autoSetTiSampler()"<<this->mInitName<<"with getLikelyhoodArg";
+       // qDebug()<<"Date::autoSetTiSampler()"<<this->mName<<"with getLikelyhoodArg";
     }
     else {
         switch(mMethod)
@@ -822,7 +763,7 @@ void Date::autoSetTiSampler(const bool bSet)
                 break;
             }
         }
-        //qDebug()<<"Date::autoSetTiSampler()"<<this->mInitName<<"with getLikelyhood";
+        //qDebug()<<"Date::autoSetTiSampler()"<<this->mName<<"with getLikelyhood";
         
     }
   

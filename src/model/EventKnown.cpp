@@ -26,8 +26,8 @@ EventKnown EventKnown::fromJson(const QJsonObject& json)
     
     event.mType = (Type)json[STATE_EVENT_TYPE].toInt();
     event.mId = json[STATE_ID].toInt();
-    event.mInitName =  json[STATE_NAME].toString();
-    event.mInitColor = QColor(json[STATE_COLOR_RED].toInt(),
+    event.mName =  json[STATE_NAME].toString();
+    event.mColor = QColor(json[STATE_COLOR_RED].toInt(),
                            json[STATE_COLOR_GREEN].toInt(),
                            json[STATE_COLOR_BLUE].toInt());
     event.mMethod = (Method)json[STATE_EVENT_METHOD].toInt();
@@ -58,16 +58,8 @@ QJsonObject EventKnown::toJson() const
 
     event[STATE_EVENT_TYPE] = mType;
     event[STATE_ID] = mId;
-
-    QColor mColor;
-    if (mModelJson==NULL) {
-        event[STATE_NAME] = mInitName;
-        mColor= mInitColor;
-    }
-    else {
-        event[STATE_NAME] = getName();
-        mColor=getColor();
-    }
+    
+    event[STATE_NAME] = mName;
 
     event[STATE_COLOR_RED] = mColor.red();
     event[STATE_COLOR_GREEN] = mColor.green();

@@ -267,7 +267,7 @@ QString MCMCLoopMain::initMCMC()
            
             if(date.mSigma.mX<=1E-6){
                date.mSigma.mX=1E-6; // Add control the 2015/06/15 with PhL
-               log += line(date.getName() + textBold("Sigma indiv. <=1E-6 set to 1E-6"));
+               log += line(date.mName + textBold("Sigma indiv. <=1E-6 set to 1E-6"));
             }
             date.mSigma.mSigmaMH = 1.;
         }
@@ -307,14 +307,14 @@ QString MCMCLoopMain::initMCMC()
             EventKnown* bound = dynamic_cast<EventKnown*>(event);
             if(bound)
             {
-                log += line(textRed("Bound (" + QString::number(i+1) + "/" + QString::number(events.size()) + ") : " + bound->getName()));
+                log += line(textRed("Bound (" + QString::number(i+1) + "/" + QString::number(events.size()) + ") : " + bound->mName));
                 log += line(textRed(" - theta (value) : " + QString::number(bound->mTheta.mX)));
                 log += line(textRed(" - theta (sigma MH) : " + QString::number(bound->mTheta.mSigmaMH)));
             }
         }
         else
         {
-            log += line(textBlue("Event (" + QString::number(i+1) + "/" + QString::number(events.size()) + ") : " + event->getName()));
+            log += line(textBlue("Event (" + QString::number(i+1) + "/" + QString::number(events.size()) + ") : " + event->mName));
             log += line(textBlue(" - theta (value) : " + QString::number(event->mTheta.mX)));
             log += line(textBlue(" - theta (sigma MH) : " + QString::number(event->mTheta.mSigmaMH)));
             log += line(textBlue(" - SO2 : " + QString::number(event->mS02)));
@@ -326,7 +326,7 @@ QString MCMCLoopMain::initMCMC()
             log += "<br>";
             Date& date = event->mDates[j];
             
-            log += line(textGreen("Data (" + QString::number(j+1) + "/" + QString::number(event->mDates.size()) + ") : " + event->mDates[j].getName()));
+            log += line(textGreen("Data (" + QString::number(j+1) + "/" + QString::number(event->mDates.size()) + ") : " + event->mDates[j].mName));
             log += line(textGreen(" - ti (value) : " + QString::number(date.mTheta.mX)));
             if(date.mMethod == Date::eMHSymGaussAdapt){
                 log += line(textGreen(" - ti (sigma MH) : " + QString::number(date.mTheta.mSigmaMH)));
@@ -348,7 +348,7 @@ QString MCMCLoopMain::initMCMC()
             Phase* phase = phases[i];
             
             log += "<br>";
-            log += line(textPurple("Phase (" + QString::number(i+1) + "/" + QString::number(phases.size()) + ") : " + phase->getName()));
+            log += line(textPurple("Phase (" + QString::number(i+1) + "/" + QString::number(phases.size()) + ") : " + phase->mName));
             log += line(textPurple(" - alpha : " + QString::number(phase->mAlpha.mX)));
             log += line(textPurple(" - beta : " + QString::number(phase->mBeta.mX)));
             log += line(textPurple(" - tau : " + QString::number(phase->mTau)));

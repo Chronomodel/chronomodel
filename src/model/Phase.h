@@ -27,12 +27,7 @@ public:
     void copyFrom(const Phase& phase);
     virtual ~Phase();
     
-    //Added by PhD
-    void setModelJson(const QJsonObject & iJson, const int idxPhase);
-    const QJsonObject & getModelJson();
-    
     static Phase fromJson(const QJsonObject& json);
-    
     QJsonObject toJson() const;
     
     double getMaxThetaEvents(double tmax);
@@ -47,14 +42,11 @@ public:
     void initTau();
     void updateTau();
     
-    QColor getColor() const;
-    QString getName() const;
-    
 public:
     int mId;
 
-    QString mInitName; //must be public, to be setting by dialogbox
-    QColor mInitColor;
+    QString mName; //must be public, to be setting by dialogbox
+    QColor mColor;
     
     QList<Event*> mEvents;
     QList<PhaseConstraint*> mConstraintsFwd;
@@ -76,8 +68,6 @@ public:
     double mTauMin;
     double mTauMax;
     
-    
-    
     double mItemX;
     double mItemY;
     
@@ -85,10 +75,6 @@ public:
     bool mIsCurrent;
     
     int mLevel;
-    
-private:
-    const QJsonObject * mModelJson;
-    int mJsonPhaseIdx;
 };
 
 #endif

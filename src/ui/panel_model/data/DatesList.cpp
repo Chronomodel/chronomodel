@@ -58,8 +58,8 @@ void DatesList::setEvent(const QJsonObject& event)
                                    | Qt::ItemIsEnabled
                                    | Qt::ItemNeverHasChildren);
                     
-                    item->setText(d.getName());
-                    item->setData(0x0101, d.getName());
+                    item->setText(d.mName);
+                    item->setData(0x0101, d.mName);
                     item->setData(0x0102, d.mPlugin->getId());
                     item->setData(0x0103, d.getDesc());
                     item->setData(0x0104, d.mId);

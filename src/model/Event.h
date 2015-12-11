@@ -32,11 +32,7 @@ public:
     void copyFrom(const Event& event);
     virtual ~Event();
     
-    //Added by PhD
-    void setModelJson(const QJsonObject & iModelJson, const int idxEvent);
-    const QJsonObject* getModelJson();
-    
-    static Event fromJson(const QJsonObject& json, const int EventIdx);
+    static Event fromJson(const QJsonObject& json);
     virtual QJsonObject toJson() const;
     
     Type type() const;
@@ -60,15 +56,12 @@ public:
     
     virtual void updateTheta(double min, double max);
     
-    QColor getColor() const;
-    QString getName() const;
-    
 public:
     Type mType;
     int mId;
     
-    QString mInitName; //must be public, to be setting by dialogbox
-    QColor mInitColor;
+    QString mName; //must be public, to be setting by dialogbox
+    QColor mColor;
 
     Method mMethod;
     
@@ -96,12 +89,6 @@ public:
     int mLevel; // used to init mcmc
     
     double mMixingLevel;
-
-protected:
-    
-    
-    const QJsonObject * mModelJson;
-    int mJsonEventIdx;
 };
 
 #endif

@@ -108,7 +108,7 @@ void CalibrationView::setDate(const QJsonObject& date)
         if(!mDate.isNull() )//&& mDate.mIsValid)
         {
             mDate.calibrate(mSettings);
-            mTopLab->setText(mDate.getName() + " (" + mDate.mPlugin->getName() + ")");
+            mTopLab->setText(mDate.mName + " (" + mDate.mPlugin->getName() + ")");
         }
         updateGraphs();
     }

@@ -785,8 +785,8 @@ void Project::createEvent()
         if(dialog.exec() == QDialog::Accepted)
         {
             Event event;
-            event.mInitName = dialog.getName();
-            event.mInitColor= dialog.getColor();
+            event.mName = dialog.getName();
+            event.mColor= dialog.getColor();
             
             addEvent(event.toJson(), tr("Event created"));
         }
@@ -801,8 +801,8 @@ void Project::createEventKnown()
         if(dialog.exec() == QDialog::Accepted)
         {
             EventKnown event;
-            event.mInitName = dialog.getName();
-            event.mInitColor= dialog.getColor();
+            event.mName = dialog.getName();
+            event.mColor= dialog.getColor();
             
             addEvent(event.toJson(), tr("Bound created"));
         }
@@ -1087,7 +1087,7 @@ Date Project::createDateFromPlugin(PluginAbstract* plugin)
                 date.mPlugin = plugin;
                 date.mData = form->getData();
                 
-                date.mInitName = dialog.getName();
+                date.mName = dialog.getName();
                 date.mMethod = dialog.getMethod();
                 date.mDeltaType = dialog.getDeltaType();
                 date.mDeltaFixed = dialog.getDeltaFixed();

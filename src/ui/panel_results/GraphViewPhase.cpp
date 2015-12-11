@@ -76,8 +76,8 @@ void GraphViewPhase::setPhase(Phase* phase)
     if(phase)
     {
         mPhase = phase;
-        setItemTitle(tr("Phase") + " : " + mPhase->getName());
-        setItemColor(mPhase->getColor());
+        setItemTitle(tr("Phase") + " : " + mPhase->mName);
+        setItemColor(mPhase->mColor);
     }
     update();
 }
@@ -128,7 +128,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
     
     if(mPhase)
     {
-        const QColor color = mPhase->getColor();
+        const QColor color = mPhase->mColor;
         
         // ------------------------------------------------
         //  first tab : posterior distrib
@@ -148,7 +148,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->mLegendY = "";
             mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
             mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
-            mTitle =  tr("Phase") + " : " + mPhase->getName();
+            mTitle =  tr("Phase") + " : " + mPhase->mName;
             
             mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
             

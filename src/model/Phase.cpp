@@ -8,7 +8,7 @@
 
 Phase::Phase():
 mId(0),
-mInitName("no Phase Name"),
+mName("no Phase Name"),
 mTau(0.),
 mIsAlphaFixed(true),
 mIsBetaFixed(true),
@@ -18,10 +18,9 @@ mTauMin(0),
 mTauMax(0),
 mIsSelected(false),
 mIsCurrent(false),
-mLevel(0),
-mModelJson(NULL)
+mLevel(0)
 {
-    mInitColor = randomColor();
+    mColor = randomColor();
     mAlpha.mIsDate = true;
     mBeta.mIsDate = true;
     mDuration.mIsDate = false;
@@ -43,10 +42,9 @@ Phase& Phase::operator=(const Phase& phase)
 
 void Phase::copyFrom(const Phase& phase)
 {
-    mModelJson= phase.mModelJson;
     mId = phase.mId;
-    mInitName = phase.getName();
-    mInitColor = phase.getColor();
+    mName = phase.mName;
+    mColor = phase.mColor;
     
     mAlpha = phase.mAlpha;
     mBeta = phase.mBeta;
@@ -56,8 +54,6 @@ void Phase::copyFrom(const Phase& phase)
     mTauFixed = phase.mTauFixed;
     mTauMin = phase.mTauMin;
     mTauMax = phase.mTauMax;
-    
-    mInitColor = phase.getColor();
     
     mItemX = phase.mItemX;
     mItemY = phase.mItemY;
@@ -76,50 +72,7 @@ Phase::~Phase()
 }
 
 #pragma mark Properties
-QColor Phase::getColor() const
-{
-    if(mModelJson==NULL){
-        return randomColor();
-    }
-    else {
-        
-        QJsonObject js = (*mModelJson)[STATE_PHASES].toArray().at(mJsonPhaseIdx).toObject();
-        if(js.isEmpty()){
-            return mInitColor;
-        }
-        else {
-            int R=js[STATE_COLOR_RED].toInt();
-            int G=js[STATE_COLOR_GREEN].toInt();
-            int B=js[STATE_COLOR_BLUE].toInt();
-            
-            return QColor(R,G,B);
-        }
-    }
-}
 
-QString Phase::getName() const
-{
-    if(mModelJson==NULL){
-        return mInitName;
-    }
-    else {
-        QJsonObject js = (*mModelJson)[STATE_PHASES].toArray().at(mJsonPhaseIdx).toObject();
-    
-        return js[STATE_NAME].toString();
-    }
-}
-
-#pragma mark JSON
-void Phase::setModelJson(const QJsonObject & iJson, const int idxPhase)
-{
-    mModelJson = &iJson;
-    mJsonPhaseIdx=idxPhase;
-}
-
-const QJsonObject & Phase::getModelJson()
-{
-    return (*mModelJson);
-}
 /**
  * @todo Check the copy of the color if mJson is not set
  */
@@ -127,8 +80,8 @@ Phase Phase::fromJson(const QJsonObject& json)
 {
     Phase p;
     p.mId = json[STATE_ID].toInt();
-    p.mInitName = json[STATE_NAME].toString();
-    p.mInitColor = QColor(json[STATE_COLOR_RED].toInt(), json[STATE_COLOR_GREEN].toInt(), json[STATE_COLOR_BLUE].toInt());
+    p.mName = json[STATE_NAME].toString();
+    p.mColor = QColor(json[STATE_COLOR_RED].toInt(), json[STATE_COLOR_GREEN].toInt(), json[STATE_COLOR_BLUE].toInt());
     
     p.mItemX = json[STATE_ITEM_X].toDouble();
     p.mItemY = json[STATE_ITEM_Y].toDouble();
@@ -147,17 +100,7 @@ QJsonObject Phase::toJson() const
     QJsonObject phase;
     
     phase[STATE_ID] = mId;
-    
-    QColor mColor;
-    if (mModelJson==NULL) {
-        phase[STATE_NAME] = mInitName;
-        mColor= mInitColor;
-    }
-    else {
-        phase[STATE_NAME] = getName();
-        mColor=getColor();
-    }
-    
+    phase[STATE_NAME] = mName;
     phase[STATE_COLOR_RED] = mColor.red();
     phase[STATE_COLOR_GREEN] = mColor.green();
     phase[STATE_COLOR_BLUE] = mColor.blue();
