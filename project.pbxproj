@@ -4584,14 +4584,14 @@
 				GCC_OPTIMIZATION_LEVEL = "0";
 				PRODUCT_NAME = "Chronomodel";
 				QT_LIBRARY_SUFFIX = "_debug";
-				SDKROOT = "macosx10.10";
+				SDKROOT = "macosx10.11";
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				CC = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang";
 				LDPLUSPLUS = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++";
 				INFOPLIST_FILE = "Info.plist";
 				SYMROOT = "/Users/helori/Workspace/chronomodel";
 				INSTALL_DIR = "/Users/helori/Workspace/chronomodel/build/debug/";
-				DYLIB_CURRENT_VERSION = "1.3.6";
+				DYLIB_CURRENT_VERSION = "1.3.7";
 				DYLIB_COMPATIBILITY_VERSION = "1.3";
 				MACOSX_DEPLOYMENT_TARGET = "10.7";
 				HEADER_SEARCH_PATHS = (
@@ -4624,8 +4624,8 @@
 					"../../Qt5.5.1/5.5/clang_64/lib/QtGui.framework/Headers",
 					"../../Qt5.5.1/5.5/clang_64/lib/QtCore.framework/Headers",
 					"build/debug/moc",
-					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/OpenGL.framework/Headers",
-					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/AGL.framework/Headers",
+					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/System/Library/Frameworks/OpenGL.framework/Headers",
+					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/System/Library/Frameworks/AGL.framework/Headers",
 					"../../Qt5.5.1/5.5/clang_64/mkspecs/macx-clang");
 				LIBRARY_SEARCH_PATHS = (
 					"/Users/helori/Workspace/chronomodel/lib/FFTW/mac",
@@ -4692,7 +4692,7 @@
 				GCC_OPTIMIZATION_LEVEL = "0";
 				PRODUCT_NAME = "Chronomodel";
 				QT_LIBRARY_SUFFIX = "_debug";
-				SDKROOT = "macosx10.10";
+				SDKROOT = "macosx10.11";
 				PRODUCT_NAME = "Chronomodel";
 			};
 			name = "Debug";
@@ -4705,14 +4705,14 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = "NO";
 				PRODUCT_NAME = "Chronomodel";
 				QT_LIBRARY_SUFFIX = "";
-				SDKROOT = "macosx10.10";
+				SDKROOT = "macosx10.11";
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				CC = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang";
 				LDPLUSPLUS = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++";
 				INFOPLIST_FILE = "Info.plist";
 				SYMROOT = "/Users/helori/Workspace/chronomodel";
 				INSTALL_DIR = "/Users/helori/Workspace/chronomodel/build/debug/";
-				DYLIB_CURRENT_VERSION = "1.3.6";
+				DYLIB_CURRENT_VERSION = "1.3.7";
 				DYLIB_COMPATIBILITY_VERSION = "1.3";
 				MACOSX_DEPLOYMENT_TARGET = "10.7";
 				HEADER_SEARCH_PATHS = (
@@ -4745,8 +4745,8 @@
 					"../../Qt5.5.1/5.5/clang_64/lib/QtGui.framework/Headers",
 					"../../Qt5.5.1/5.5/clang_64/lib/QtCore.framework/Headers",
 					"build/debug/moc",
-					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/OpenGL.framework/Headers",
-					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/AGL.framework/Headers",
+					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/System/Library/Frameworks/OpenGL.framework/Headers",
+					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/System/Library/Frameworks/AGL.framework/Headers",
 					"../../Qt5.5.1/5.5/clang_64/mkspecs/macx-clang");
 				LIBRARY_SEARCH_PATHS = (
 					"/Users/helori/Workspace/chronomodel/lib/FFTW/mac",
@@ -4812,7 +4812,7 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = "NO";
 				PRODUCT_NAME = "Chronomodel";
 				QT_LIBRARY_SUFFIX = "";
-				SDKROOT = "macosx10.10";
+				SDKROOT = "macosx10.11";
 				PRODUCT_NAME = "Chronomodel";
 			};
 			name = "Release";
