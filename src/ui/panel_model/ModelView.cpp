@@ -785,7 +785,7 @@ void ModelView::updateCalibration(const QJsonObject& date)
 
 void ModelView::showCalibration(bool show)
 {
-    if(mEventPropertiesView->hasEvent())
+    if((show && mEventPropertiesView->hasEventWithDates()) || !show)
     {
         mEventPropertiesView->setCalibChecked(show);
         if(mCalibVisible != show)

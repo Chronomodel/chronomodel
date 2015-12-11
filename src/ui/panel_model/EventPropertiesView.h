@@ -35,6 +35,7 @@ public:
     void setCalibChecked(bool checked);
     bool hasEvent() const;
     bool hasBound() const;
+    bool hasEventWithDates() const;
     
 public slots:
     void setEvent(const QJsonObject& event);

@@ -619,4 +619,14 @@ bool EventPropertiesView::hasBound() const
     return false;
 }
 
-
+bool EventPropertiesView::hasEventWithDates() const
+{
+    if(!mEvent.isEmpty()){
+        Event::Type type = (Event::Type)mEvent[STATE_EVENT_TYPE].toInt();
+        if(type == Event::eDefault){
+            const QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+            return (dates.size() > 0);
+        }
+    }
+    return false;
+}
