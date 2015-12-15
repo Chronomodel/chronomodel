@@ -31,8 +31,8 @@ void GraphViewEvent::setEvent(Event* event)
     {
         mEvent = event;
         QString eventTitle = ( (mEvent->mType == Event::eDefault) ? tr("Event") : tr("Bound") ) ;
-        this->setItemTitle(eventTitle + " : " + mEvent->getName());
-        setItemColor(mEvent->getColor());
+        this->setItemTitle(eventTitle + " : " + mEvent->mName);
+        setItemColor(mEvent->mColor);
     }
     update();
 }
@@ -62,7 +62,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     
     if(mEvent)
     {
-        QColor color = mEvent->getColor();
+        QColor color = mEvent->mColor;
         
         bool isFixedBound = false;
         bool isUnifBound = false;
@@ -93,7 +93,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
             mGraph->setBackgroundColor(QColor(230, 230, 230));
             
-            mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->getName();
+            mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->mName;
             
             // ------------------------------------------------
             //  Possible curves :
@@ -196,10 +196,10 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                 mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
                 
                 if (mEvent->type()==Event::eKnown) {
-                    mTitle = tr("Bound ") + " : " + mEvent->getName();
+                    mTitle = tr("Bound ") + " : " + mEvent->mName;
                 }
                 else
-                    mTitle = tr("Std") + " : " + mEvent->getName();
+                    mTitle = tr("Std") + " : " + mEvent->mName;
                 
                 mGraph->setBackgroundColor(QColor(Qt::white));
                 mGraph->autoAdjustYScale(true);

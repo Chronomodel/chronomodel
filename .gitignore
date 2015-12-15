@@ -9,7 +9,7 @@ Release/*
 *.plist
 .qmake.stash
 *.pkg
-
+*.aux
 *.exe
 
 *.mak
@@ -27,3 +27,5 @@ Makefile
 *.pbxproj
 
 *.xcscheme
+
+*.pbxproj

@@ -175,6 +175,7 @@ T sum2Shifted(QVector<T>& vector, const T& shift){
 // --------------------------------
 
 QVector<double> normalize_vector(const QVector<double>& aVector);
+QVector<double> stretch_vector(const QVector<double>& aVector, const double from, const double to);
 QMap<double, double> normalize_map(const QMap<double, double>& aMap);
 QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const QMap<double, double>& mapWithTargetArea);
 QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const double targetArea);

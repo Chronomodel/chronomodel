@@ -47,9 +47,7 @@ protected:
     virtual void keyReleaseEvent(QKeyEvent* keyEvent);
     
     virtual AbstractItem* currentItem() = 0;
-
     virtual AbstractItem* collidingItem(QGraphicsItem* item) = 0;
-    
     virtual void deleteSelectedItems() = 0;
     
     virtual bool constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo) = 0;

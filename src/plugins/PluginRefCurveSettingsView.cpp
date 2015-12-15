@@ -29,8 +29,7 @@ mPlugin(plugin)
     layout->addWidget(mAddRefCurveBut, 2, 0);
     layout->addWidget(mDeleteRefCurveBut, 2, 1);
     layout->addWidget(mOpenBut, 2, 2);
-    setLayout(layout);
-    
+    setLayout(layout);    
     
     // Store the list of existing files
     QString calibPath = mPlugin->getRefsPath();
@@ -39,7 +38,6 @@ mPlugin(plugin)
     for(int i=0; i<files.size(); ++i){
         if(files[i].suffix().toLower() == mPlugin->getRefExt()){
             mFilesOrg.insert(files[i].fileName(), files[i].absoluteFilePath());
-            //mRefCurvesList->addItem(files[i].fileName());
         }
     }
     mFilesNew = mFilesOrg;
@@ -67,17 +65,16 @@ void PluginRefCurveSettingsView::updateRefsList(){
 void PluginRefCurveSettingsView::updateFilesInFolder()
 {
     QString calibPath = mPlugin->getRefsPath();
-   // QMessageBox::information(qApp->activeWindow(), tr("Warning getRefsPath : "),calibPath);
-    // Delete removed curves
+   // Delete removed curves
     QMapIterator<QString, QString> iter(mFilesOrg);
     iter = QMapIterator<QString, QString>(mFilesOrg);
     while(iter.hasNext()){
         iter.next();
         if(!mFilesNew.contains(iter.key())){
             if(QMessageBox::question(qApp->activeWindow(), tr("Warning"), tr("You are about to delete a reference curve : ") + " " + iter.key() + ". All data using this curve (in all your projects) will be invalid until you specify another curve for each one. Do you really want to delete this curve?") == QMessageBox::Yes){
-                if(QFile::remove(iter.value())){
-                   // qDebug() << "deleted : " << iter.value();
-                   // QMessageBox::information(qApp->activeWindow(), tr("Warning delete : "),iter.value());
+               QString filepath = calibPath + "/" + iter.key();
+                if(QFile::remove(filepath)){
+                   mFilesOrg.remove(iter.key());
                 }
             }
         }
@@ -91,8 +88,6 @@ void PluginRefCurveSettingsView::updateFilesInFolder()
             if(QMessageBox::question(qApp->activeWindow(), tr("Warning"), tr("Do you really want to replace existing") + " " + iter.key()) == QMessageBox::Yes){
                 QString filepath = calibPath + "/" + iter.key();
                 if(QFile::remove(filepath) && QFile::copy(iter.value(), filepath)){
-                  //  qDebug() << "overwritted : " << filepath;
-                  //  QMessageBox::information(qApp->activeWindow(), tr("Warning overwritted to : "),filepath);
                 }
             }
         }
@@ -100,8 +95,7 @@ void PluginRefCurveSettingsView::updateFilesInFolder()
         if(!mFilesOrg.contains(iter.key())){
             QString filepath = calibPath + "/" + iter.key();
             if(QFile::copy(iter.value(), filepath)){
-                //qDebug() << "copied : " << filepath;
-                //QMessageBox::information(qApp->activeWindow(), tr("Warning copy to : "),filepath);
+                mFilesOrg.insert(iter.key(),iter.value());
             }
         }
     }

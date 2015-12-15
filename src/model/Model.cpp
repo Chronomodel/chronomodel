@@ -243,7 +243,6 @@ void Model::fromJson(const QJsonObject& json)
         {
             QJsonObject phase = phases[i].toObject();
             Phase* p = new Phase(Phase::fromJson(phase));
-            p->setModelJson( getJson(),i );
             mPhases.append(p);
         }
     }
@@ -260,9 +259,8 @@ void Model::fromJson(const QJsonObject& json)
             if(event[STATE_EVENT_TYPE].toInt() == Event::eDefault)
             {
                 try{
-                    Event* e = new Event(Event::fromJson(json,i));
-                    e->setModelJson(getJson(),i);
-                    e->mMixingLevel=mMCMCSettings.mMixingLevel;
+                    Event* e = new Event(Event::fromJson(event));
+                    e->mMixingLevel = mMCMCSettings.mMixingLevel;
 
                     for(int j=0; j<e->mDates.size(); ++j)
                     {
@@ -279,19 +277,13 @@ void Model::fromJson(const QJsonObject& json)
                                         Qt::Sheet);
                     message.exec();
                 }
-                
-                
             }
             else
             {
                 EventKnown* e = new EventKnown(EventKnown::fromJson(event));
                 e->updateValues(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
-                e->setModelJson(json,i);
-                //e->setJson(events[i].toObject());
                 mEvents.append(e);
             }
-            
-            
         }
     }
 
@@ -461,14 +453,14 @@ void Model::generateModelLog()
         QString objType = "Event";
         if(mEvents[i]->type() == Event::eKnown)
         {
-            log += line(textRed("Bound (" + QString::number(i+1) + "/" + QString::number(mEvents.size()) + ") : " + mEvents[i]->getName() + " (" +
+            log += line(textRed("Bound (" + QString::number(i+1) + "/" + QString::number(mEvents.size()) + ") : " + mEvents[i]->mName + " (" +
                                  QString::number(mEvents[i]->mPhases.size()) + " phases, " +
                                  QString::number(mEvents[i]->mConstraintsBwd.size()) + " const. back., " +
                                  QString::number(mEvents[i]->mConstraintsFwd.size()) + " const. fwd.)"));
         }
         else
         {
-            log += line(textBlue("Event (" + QString::number(i+1) + "/" + QString::number(mEvents.size()) + ") : " + mEvents[i]->getName() + " (" +
+            log += line(textBlue("Event (" + QString::number(i+1) + "/" + QString::number(mEvents.size()) + ") : " + mEvents[i]->mName + " (" +
                                  QString::number(mEvents[i]->mDates.size()) + " data, " +
                                  QString::number(mEvents[i]->mPhases.size()) + " phases, " +
                                  QString::number(mEvents[i]->mConstraintsBwd.size()) + " const. back., " +
@@ -479,7 +471,7 @@ void Model::generateModelLog()
         for(int j=0; j<mEvents[i]->mDates.size(); ++j)
         {
             log += "<br>";
-            log += line(textGreen("Data (" + QString::number(j+1) + "/" + QString::number(mEvents[i]->mDates.size()) + ") : " + mEvents[i]->mDates[j].getName() +
+            log += line(textGreen("Data (" + QString::number(j+1) + "/" + QString::number(mEvents[i]->mDates.size()) + ") : " + mEvents[i]->mDates[j].mName +
                                   "<br>- Type : " + mEvents[i]->mDates[j].mPlugin->getName() +
                                   "<br>- Method : " + ModelUtilities::getDataMethodText(mEvents[i]->mDates[j].mMethod) +
                                   "<br>- Params : " + mEvents[i]->mDates[j].getDesc()));
@@ -490,12 +482,12 @@ void Model::generateModelLog()
     
     for(int i=0; i<mPhases.size(); ++i)
     {
-        log += line(textPurple("Phase (" + QString::number(i+1) + "/" + QString::number(mPhases.size()) + ") : " + mPhases[i]->getName() + " (" + QString::number(mPhases[i]->mEvents.size()) + " events)"));
+        log += line(textPurple("Phase (" + QString::number(i+1) + "/" + QString::number(mPhases.size()) + ") : " + mPhases[i]->mName + " (" + QString::number(mPhases[i]->mEvents.size()) + " events)"));
         log += "<br>";
         
         for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
         {
-            log += line(textBlue("Event : " + mPhases[i]->mEvents[j]->getName()));
+            log += line(textBlue("Event : " + mPhases[i]->mEvents[j]->mName));
         }
         log += "<hr>";
         log += "<br>";
@@ -563,12 +555,12 @@ QList<QStringList> Model::getStats(const QLocale locale)
         
         QStringList l = phase->mAlpha.getResultsList(locale);
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
-        l.prepend(phase->getName() + " alpha");
+        l.prepend(phase->mName + " alpha");
         rows << l;
         
         l = phase->mBeta.getResultsList(locale);
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
-        l.prepend(phase->getName() + " beta");
+        l.prepend(phase->mName + " beta");
         rows << l;
     }
     
@@ -580,7 +572,7 @@ QList<QStringList> Model::getStats(const QLocale locale)
         
         QStringList l = event->mTheta.getResultsList(locale);
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
-        l.prepend(event->getName());
+        l.prepend(event->mName);
         rows << l;
     }
     
@@ -595,7 +587,7 @@ QList<QStringList> Model::getStats(const QLocale locale)
             
             QStringList l = date.mTheta.getResultsList(locale);
             maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
-            l.prepend(date.getName());
+            l.prepend(date.mName);
             rows << l;
         }
     }
@@ -626,7 +618,7 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale)
     headers << "";
     for(int j=0; j<mPhases.size(); ++j)
     {
-        headers << mPhases[j]->getName() + " alpha" << mPhases[j]->getName() + " beta";
+        headers << mPhases[j]->mName + " alpha" << mPhases[j]->mName + " beta";
     }
     rows << headers;
     
@@ -670,11 +662,11 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale)
     }
     
     QStringList headers;
-    headers << "" << "" << phase->getName() + " alpha" << phase->getName() + " beta" << "";
+    headers << "" << "" << phase->mName + " alpha" << phase->mName + " beta" << "";
     for(int i=0; i<phase->mEvents.size(); ++i)
     {
         Event* event = phase->mEvents[i];
-        headers << event->getName();
+        headers << event->mName;
     }
     rows << headers;
     
@@ -718,7 +710,7 @@ QList<QStringList> Model::getEventsTraces(QLocale locale)
     for(int i=0; i<mEvents.size(); ++i)
     {
         Event* event = mEvents[i];
-        headers << event->getName();
+        headers << event->mName;
     }
     rows << headers;
     
@@ -757,7 +749,7 @@ bool Model::isValid()
         if(mEvents[i]->type() == Event::eDefault)
         {
             if(mEvents[i]->mDates.size() == 0)
-                throw tr(" The event") + " \"" + mEvents[i]->getName() + "\" " + tr("must contain at least 1 data");
+                throw tr(" The event") + " \"" + mEvents[i]->mName + "\" " + tr("must contain at least 1 data");
         }
     }
     
@@ -765,7 +757,7 @@ bool Model::isValid()
     for(int i=0; i<mPhases.size(); ++i)
     {
         if(mPhases[i]->mEvents.size() == 0)
-            throw tr("The phase") + " \"" + mPhases[i]->getName() + "\" " + tr("must contain at least 1 event");
+            throw tr("The phase") + " \"" + mPhases[i]->mName + "\" " + tr("must contain at least 1 event");
     }
     
     // 4 - Pas de circularité sur les contraintes de faits
@@ -800,7 +792,7 @@ bool Model::isValid()
                     //qDebug() << phase->mEvents[k]->mName << " in " << phase->mName;
                 }
                 else
-                    throw QString("The event \"" + phase->mEvents[k]->getName() + "\" cannot belong to several phases in a same branch!");
+                    throw QString("The event \"" + phase->mEvents[k]->mName + "\" cannot belong to several phases in a same branch!");
             }
         }
     }
@@ -838,7 +830,7 @@ bool Model::isValid()
                 // Update bound interval
                 if(bound->mKnownType == EventKnown::eFixed && bound->mFixed < lower)
                 {
-                    throw QString("The bound \"" + bound->getName() + "\" has a fixed value inconsistent with previous bounds in chain!");
+                    throw QString("The bound \"" + bound->mName + "\" has a fixed value inconsistent with previous bounds in chain!");
                 }
                 else if(bound->mKnownType == EventKnown::eUniform)
                 {
@@ -864,14 +856,14 @@ bool Model::isValid()
                 // Update bound interval
                 if(bound->mKnownType == EventKnown::eFixed && bound->mFixed > upper)
                 {
-                    throw QString("The bound \"" + bound->getName() + "\" has a fixed value inconsistent with next bounds in chain!");
+                    throw QString("The bound \"" + bound->mName + "\" has a fixed value inconsistent with next bounds in chain!");
                 }
                 else if(bound->mKnownType == EventKnown::eUniform)
                 {
                     bound->mUniformEnd = qMin(bound->mUniformEnd, upper);
                     if(bound->mUniformStart >= bound->mUniformEnd)
                     {
-                        throw QString("The bound \"" + bound->getName() + "\" has an inconsistent range with other related bounds!");
+                        throw QString("The bound \"" + bound->mName + "\" has an inconsistent range with other related bounds!");
                     }
                 }
             }
@@ -916,7 +908,7 @@ bool Model::isValid()
         }
         if(gammaMin >= (upper - lower))
         {
-            throw QString("The constraint between phases \"" + phaseFrom->getName() + "\" and \"" + phaseTo->getName() + "\" is not consistent with the bounds they contain!");
+            throw QString("The constraint between phases \"" + phaseFrom->mName + "\" and \"" + phaseTo->mName + "\" is not consistent with the bounds they contain!");
         }
     }
     
@@ -962,7 +954,7 @@ bool Model::isValid()
             {
                 if(tauMax < (max - min))
                 {
-                    throw QString("The phase \"" + mPhases[i]->getName() + "\" has a duration inconsistent with the bounds it contains!");
+                    throw QString("The phase \"" + mPhases[i]->mName + "\" has a duration inconsistent with the bounds it contains!");
                 }
                 // Modify bounds intervals to match max phase duration
                 for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
@@ -1020,7 +1012,7 @@ bool Model::isValid()
                                 {
                                     if(e->mConstraintsBwd[n]->mEventFrom == event)
                                     {
-                                        throw "The event " + event->getName() + " (in phase " + phase->getName() + ") is before the event " + e->getName() + " (in phase " + p->getName() + "), BUT the phase " + phase->getName() + " is after the phase " + p->getName() + ".\n=> Contradiction !";
+                                        throw "The event " + event->mName + " (in phase " + phase->mName + ") is before the event " + e->mName + " (in phase " + p->mName + "), BUT the phase " + phase->mName + " is after the phase " + p->mName + ".\n=> Contradiction !";
                                     }
                                 }
                             }
@@ -1030,7 +1022,7 @@ bool Model::isValid()
                                 {
                                     if(e->mConstraintsFwd[n]->mEventTo == event)
                                     {
-                                        throw "The event " + event->getName() + " (in phase " + phase->getName() + ") is after the event " + e->getName() + " (in phase " + p->getName() + "), BUT the phase " + phase->getName() + " is before the phase " + p->getName() + ".\n=> Contradiction !";
+                                        throw "The event " + event->mName + " (in phase " + phase->mName + ") is after the event " + e->mName + " (in phase " + p->mName + "), BUT the phase " + phase->mName + " is before the phase " + p->mName + ".\n=> Contradiction !";
                                     }
                                 }
                             }

@@ -125,15 +125,15 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
 {
     if(mState != state || force)
     {
-        if(!mState.isEmpty()) mRefreshResults = checkRefreshResults(state,mState);
-        else mRefreshResults=true;
-
         SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
         MainWindow::getInstance()->getUndoStack()->push(command);
-
+        
+        /*if(!mState.isEmpty()) mRefreshResults = checkRefreshResults(state,mState);
+        else mRefreshResults=true;
         if(mRefreshResults) {
             emit projectDesignChanged(mRefreshResults);
-        }
+        }*/
+        
         return true;
     }
     return false;
@@ -143,7 +143,7 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
 void Project::sendUpdateState(const QJsonObject& state, const QString& reason, bool notify)
 {
 #ifdef DEBUG
-    qDebug() << " +++  Sending : " << reason;
+    //qDebug() << " +++  Sending : " << reason;
 #endif
     StateEvent* event = new StateEvent(state, reason, notify);
     QCoreApplication::postEvent(this, event, Qt::NormalEventPriority);
@@ -254,7 +254,7 @@ bool Project::event(QEvent* e)
     else if(e->type() == 1001)
     {
 #ifdef DEBUG
-        qDebug() << "(---) Receiving events selection : adapt checked phases";
+        //qDebug() << "(---) Receiving events selection : adapt checked phases";
 #endif
         emit selectedEventsChanged();
         return true;
@@ -262,7 +262,7 @@ bool Project::event(QEvent* e)
     else if(e->type() == 1002)
     {
 #ifdef DEBUG
-        qDebug() << "(---) Receiving phases selection : adapt selected events";
+        //qDebug() << "(---) Receiving phases selection : adapt selected events";
 #endif
         emit selectedPhasesChanged();
         return true;
@@ -310,7 +310,7 @@ void Project::updateState(const QJsonObject& state, const QString& reason, bool 
 void Project::sendEventsSelectionChanged()
 {
 #ifdef DEBUG
-    qDebug() << "(+++) Sending events selection : use marked events";
+    //qDebug() << "(+++) Sending events selection : use marked events";
 #endif
     QEvent* e = new QEvent((QEvent::Type)1001);
     QCoreApplication::postEvent(this, e, Qt::NormalEventPriority);
@@ -319,7 +319,7 @@ void Project::sendEventsSelectionChanged()
 void Project::sendPhasesSelectionChanged()
 {
 #ifdef DEBUG
-    qDebug() << "(+++) Sending phases selection : use marked phases";
+    //qDebug() << "(+++) Sending phases selection : use marked phases";
 #endif
     QEvent* e = new QEvent((QEvent::Type)1002);
     QCoreApplication::postEvent(this, e, Qt::NormalEventPriority);
@@ -785,8 +785,8 @@ void Project::createEvent()
         if(dialog.exec() == QDialog::Accepted)
         {
             Event event;
-            event.mInitName = dialog.getName();
-            event.mInitColor= dialog.getColor();
+            event.mName = dialog.getName();
+            event.mColor= dialog.getColor();
             
             addEvent(event.toJson(), tr("Event created"));
         }
@@ -801,8 +801,8 @@ void Project::createEventKnown()
         if(dialog.exec() == QDialog::Accepted)
         {
             EventKnown event;
-            event.mInitName = dialog.getName();
-            event.mInitColor= dialog.getColor();
+            event.mName = dialog.getName();
+            event.mColor= dialog.getColor();
             
             addEvent(event.toJson(), tr("Bound created"));
         }
@@ -1087,7 +1087,7 @@ Date Project::createDateFromPlugin(PluginAbstract* plugin)
                 date.mPlugin = plugin;
                 date.mData = form->getData();
                 
-                date.mInitName = dialog.getName();
+                date.mName = dialog.getName();
                 date.mMethod = dialog.getMethod();
                 date.mDeltaType = dialog.getDeltaType();
                 date.mDeltaFixed = dialog.getDeltaFixed();
@@ -1252,7 +1252,6 @@ void Project::updateDate(int eventId, int dateIndex)
                         
                         pushProjectState(state, tr("Date updated"), true);
                         
-                        //date->calibrate(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
                     }
                     else
                     {

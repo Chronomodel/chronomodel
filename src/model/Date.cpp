@@ -12,11 +12,9 @@
 
 
 Date::Date():
-mInitName("No Named Date"),
-mJsonEvent(NULL),
-mModelJsonDate(NULL)
+mName("No Named Date")
 {
-    mInitColor=Qt::blue;
+    mColor=Qt::blue;
     mTheta.mIsDate = true;
     mSigma.mIsDate = false;
     init();
@@ -24,9 +22,7 @@ mModelJsonDate(NULL)
 }
 
 Date::Date(PluginAbstract* plugin):
-mInitName("No Named Date"),
-mJsonEvent(NULL),
-mModelJsonDate(NULL)
+mName("No Named Date")
 {
     init();
     mPlugin = plugin;
@@ -48,11 +44,13 @@ void Date::init()
     mDeltaError = 0;
     mIsCurrent = false;
     mIsSelected = false;
-    mCalibSum = 0;
     mSubDates.clear();
 
     mTminRefCurve = 0;
     mTmaxRefCurve = 0;
+
+    mTminCalib = 0;
+    mTmaxCalib = 0;
 
 }
 
@@ -69,18 +67,13 @@ Date& Date::operator=(const Date& date)
 
 void Date::copyFrom(const Date& date)
 {
-    mModelJsonDate=date.mModelJsonDate;
-    mJsonEvent=date.mJsonEvent;
-    mJsonEventIdx=date.mJsonEventIdx;
-    mIdxInEventArray=date.mIdxInEventArray;
-    
     mTheta = date.mTheta;
     mSigma = date.mSigma;
     mDelta = date.mDelta;
     
     mId = date.mId;
-    mInitName = date.getName();
-    mInitColor = date.getColor();
+    mName = date.mName;
+    mColor = date.mColor;
     
     mData = date.mData;
     mPlugin = date.mPlugin;
@@ -100,15 +93,18 @@ void Date::copyFrom(const Date& date)
     mCalibration = date.mCalibration;
     mRepartition = date.mRepartition;
     mCalibHPD = date.mCalibHPD;
+    
     mTminRefCurve = date.mTminRefCurve;
     mTmaxRefCurve = date.mTmaxRefCurve;
-    
+
+    mTminCalib = date.mTminCalib;
+    mTmaxCalib = date.mTmaxCalib;
+
     mSubDates = date.mSubDates;
     
     updateti = date.updateti;
     
     mMixingLevel = date.mMixingLevel;
-
 }
 
 Date::~Date()
@@ -116,66 +112,25 @@ Date::~Date()
     
 }
 
-bool Date::isNull()
+bool Date::isNull() const
 {
     return mData.isEmpty() || (mPlugin == 0);
 }
 #pragma mark Properties
-QColor Date::getColor() const
-{
-    return mInitColor;
-}
-
 QColor Date::getEventColor() const
 {
-    if(mModelJsonDate==NULL){
-        return randomColor();
-    }
-    else {
-
-        QJsonObject jEvent =(*mModelJsonDate)[STATE_EVENTS].toArray().at(mJsonEventIdx).toObject();
-        if(jEvent.isEmpty()){
-            return randomColor();
-        }
-        else {
-            int R=jEvent[STATE_COLOR_RED].toInt();
-            int G=jEvent[STATE_COLOR_GREEN].toInt();
-            int B=jEvent[STATE_COLOR_BLUE].toInt();
-            
-            return QColor(R,G,B);
-        }
-    }
-
+    return randomColor();
 }
-QString Date::getName() const
-{
-    if(mModelJsonDate==NULL){
-        return mInitName;
-    }
-    else{
-        QJsonObject jEvent =(*mModelJsonDate)[STATE_EVENTS].toArray().at(mJsonEventIdx).toObject();
-        
-        QJsonObject jDate = jEvent[STATE_EVENT_DATES].toArray().at(mIdxInEventArray).toObject();
-        
-        if(jDate.isEmpty()){
-            return "JsonDate without Name";
-        }
-        else {
-            return jDate[STATE_NAME].toString();
-        }
-    }
 
-    
-}
 #pragma mark JSON
-Date Date:: fromJson(const QJsonObject& json)
+Date Date::fromJson(const QJsonObject& json)
 {
     Date date;
     
     if(!json.isEmpty())
     {
         date.mId = json[STATE_ID].toInt();
-        date.mInitName = json[STATE_NAME].toString();
+        date.mName = json[STATE_NAME].toString();
         
         // Copy plugin specific values for this data :
         date.mData = json[STATE_DATE_DATA].toObject();
@@ -196,10 +151,19 @@ Date Date:: fromJson(const QJsonObject& json)
         {
             throw QObject::tr("Data could not be loaded : invalid plugin : ") + pluginId;
         }
-        QPair<double,double> tminTmax = date.mPlugin->getTminTmaxRefsCurve(date.mData);
-        date.mTminRefCurve = tminTmax.first;
-        date.mTmaxRefCurve = tminTmax.second;
-
+        /*else if(date.mPlugin->getName() == "Typo"){
+            date.mTminCalib = date.mData[DATE_UNIFORM_MIN_STR].toDouble();
+            date.mTmaxCalib = date.mData[DATE_UNIFORM_MAX_STR].toDouble();
+            date.mTminRefCurve = date.mTminCalib;
+            date.mTmaxRefCurve = date.mTmaxCalib;
+        }*/
+        else
+        {
+            QPair<double, double> tminTmax = date.mPlugin->getTminTmaxRefsCurve(date.mData);
+            date.mTminRefCurve = tminTmax.first;
+            date.mTmaxRefCurve = tminTmax.second;
+        }
+        
         date.mSubDates.clear();
         QJsonArray subdates = json[STATE_DATE_SUB_DATES].toArray();
         for(int i=0; i<subdates.size(); ++i){
@@ -209,25 +173,16 @@ Date Date:: fromJson(const QJsonObject& json)
         
         date.mTheta.mProposal = ModelUtilities::getDataMethodText(date.mMethod);
         date.mSigma.mProposal = ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt);
-        
     }
     
     return date;
-}
-
-
-void Date::setModelJson(const QJsonObject & iModelJson, const int eventIdx, const int dateIdx)
-{
-    mModelJsonDate = &iModelJson;
-    mIdxInEventArray=dateIdx;
-    mJsonEventIdx=eventIdx;
 }
 
 QJsonObject Date::toJson() const
 {
     QJsonObject date;
     date[STATE_ID] = mId;
-    date[STATE_NAME] = getName();
+    date[STATE_NAME] = mName;
     date[STATE_DATE_DATA] = mData;
     date[STATE_DATE_PLUGIN_ID] = mPlugin->getId();
     date[STATE_DATE_METHOD] = mMethod;
@@ -240,10 +195,9 @@ QJsonObject Date::toJson() const
     date[STATE_DATE_DELTA_AVERAGE] = mDeltaAverage;
     date[STATE_DATE_DELTA_ERROR] = mDeltaError;
     
-    const QColor mCol= this->getColor();
-    date[STATE_COLOR_RED] = mCol.red();
-    date[STATE_COLOR_GREEN] = mCol.green();
-    date[STATE_COLOR_BLUE] = mCol.blue();
+    date[STATE_COLOR_RED] = mColor.red();
+    date[STATE_COLOR_GREEN] = mColor.green();
+    date[STATE_COLOR_BLUE] = mColor.blue();
     
     QJsonArray subdates;
     for(int i=0; i<mSubDates.size(); ++i){
@@ -306,84 +260,95 @@ void Date::reset()
 
 void Date::calibrate(const ProjectSettings& settings)
 {
-
+    // we need to calculate a new mCalibration only, if mStep change or if there is no mCalibration
+    /* if(mSettings.mStep == settings.mStep && !mCalibration.isEmpty()){
+        return;
+    }*/
+    
     mCalibration.clear();
     mRepartition.clear();
     mCalibHPD.clear();
 
-
     mSettings = settings;
-    mCalibSum = 0;
-
-    double tmin = mSettings.mTmin;
-    double tmax = mSettings.mTmax;
-    double step = mSettings.mStep;
-    double nbPts = 1 + round((tmax - tmin) / step);
-  //  qDebug()<<" Date::calibrate"<<tmin<<tmax<<step<<nbPts<<"size"<<mCalibration.size();
-    mCalibration.reserve(nbPts);
-    mRepartition.reserve(nbPts);
-
-    double v = getLikelyhood(tmin);
-    double lastRepVal = v;
-
-    mCalibSum += v;
-
-    double tminRef;
-    double tmaxRef;
-    // if no reference curve mTminRefCurve=mTmaxRefCurve
-    if(mTminRefCurve==mTmaxRefCurve){
-        tminRef = mSettings.mTmin;
-        tmaxRef = mSettings.mTmax;
-    }
-    else{
-        tminRef = mTminRefCurve;
-        tmaxRef = mTmaxRefCurve;
-    }
-    for(int i = 0; i < nbPts; ++i)
+    
+    // --------------------------------------------------
+    //  Calibrate on the whole calibration period (= ref curve definition domain)
+    // --------------------------------------------------
+    if(mTmaxRefCurve > mTminRefCurve)
     {
-        double t = tmin + (double)i * step;
-        float lastV = v;
-
-        if(t>=tminRef && t<=tmaxRef){
-            v = getLikelyhood(t);
-        }
-        else {
-            v = 0;
-        }
-        mCalibration.append(v);
-        mCalibSum += v;
-        double rep = lastRepVal;
-        if(v != 0 && lastV != 0)
+        double nbRefPts = 1 + round((mTmaxRefCurve - mTminRefCurve) / mSettings.mStep);
+        double v = getLikelyhood(mTminRefCurve);
+        double lastRepVal = v;
+        
+        QVector<double> calibrationTemp;
+        QVector<double> repartitionTemp;
+        
+        for(int i = 0; i < nbRefPts; ++i)
         {
-            rep = lastRepVal + step * (lastV + v) / 2.;
+            double t = mTminRefCurve + (double)i * mSettings.mStep;
+            float lastV = v;
+            v = getLikelyhood(t);
+            
+            calibrationTemp.append(v);
+            double rep = lastRepVal;
+            if(v != 0 && lastV != 0)
+            {
+                rep = lastRepVal + mSettings.mStep * (lastV + v) / 2.;
+            }
+            repartitionTemp.append(rep);
+            lastRepVal = rep;
         }
-        mRepartition.append(rep);
-        lastRepVal = rep;
-
+        
+        // ------------------------------------------------------------------
+        //  Restrict the calib and repartition vectors to where data are
+        // ------------------------------------------------------------------
+        if(lastRepVal > 0)
+        {
+            const double threshold = 0.00005;
+            const int minIdx = (int)floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp));
+            const int maxIdx = (int)ceil(vector_interpolate_idx_for_value((1 - threshold) * lastRepVal, repartitionTemp));
+            
+            mTminCalib = mTminRefCurve + minIdx * mSettings.mStep;
+            mTmaxCalib = mTminRefCurve + maxIdx * mSettings.mStep;
+            
+            // Truncate both functions where data live
+            mCalibration = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
+            mRepartition = repartitionTemp.mid(minIdx, (maxIdx - minIdx) + 1);
+            
+            // NOTE ABOUT THIS APPROMIATION :
+            // By truncating the calib and repartition, the calib density's area is not 1 anymore!
+            // It is now 1 - 2*threshold = 0,99999... We consider it to be 1 anyway!
+            // By doing this, calib and repartition are stored on a restricted number of data
+            // instead of storing them on the whole reference curve's period (as done for calibrationTemp & repartitionTemp above).
+            
+            // Stretch repartition curve so it goes from 0 to 1
+            mRepartition = stretch_vector(mRepartition, 0, 1);
+            
+            // Approximation : even if the calib has been truncated, we consider its area to be = 1
+            mCalibration = equal_areas(mCalibration, mSettings.mStep, 1.);
+        }
+        // ------------------------------------------------------------------
+        //  Measure is very far from Ref curve on the whole ref curve preriod!
+        //  => Calib values are very small, considered as being 0 even using "double" !
+        //  => lastRepVal = 0, and impossible to truncate using it....
+        //  => So,
+        // ------------------------------------------------------------------
+        else
+        {
+            mTminCalib = mTminRefCurve;
+            mTmaxCalib = mTmaxRefCurve;
+        }
     }
-
-    // La courbe de répartition est transformée de sorte que sa valeur maximale soit 1
-    mRepartition = normalize_vector(mRepartition);
-
-    // La courbe de calibration est transformée de sorte que l'aire sous la courbe soit 1
-    mCalibration = equal_areas(mCalibration, step, 1.);
-      //  qDebug()<<" Date::calibrate end"<<tmin<<tmax<<step<<nbPts<<"size"<<mCalibration.size();
-
+    else
+    {
+        // Impossible to calibrate because the plugin could not return any calib curve definition period.
+        // This may be due to invalid ref curve files or to polynomial equations with only imaginary solutions (See Gauss Plugin...)
+    }
 }
 
 QMap<double, double> Date::getCalibMap() const
 {
-   /* QMap<double, double> map;
-    if(mPlugin) {
-        for(double t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep) {
-            double value = mPlugin->getLikelyhood(t, mData);
-            map.insert(t,value );
-        }
-    }
-    return map;
-
-    */
-    return vector_to_map(mCalibration, mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
+    return vector_to_map(mCalibration, mTminCalib, mTmaxCalib, mSettings.mStep);
 }
 
 QPixmap Date::generateTypoThumb()
@@ -664,7 +629,7 @@ Date Date::fromCSV(QStringList dataStr)
     PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
     if(plugin)
     {
-        date.mInitName = dataStr[0];
+        date.mName = dataStr[0];
         date.mPlugin = plugin;
         date.mMethod = plugin->getDataMethod();
         date.mData = plugin->fromCSV(dataStr);
@@ -708,7 +673,7 @@ QStringList Date::toCSV(QLocale csvLocale) const
     QStringList csv;
     
     csv << mPlugin->getName();
-    csv << getName();
+    csv << mName;
     csv << mPlugin->toCSV(mData,csvLocale );
     
     if(mDeltaType == Date::eDeltaFixed)
@@ -769,7 +734,7 @@ void Date::autoSetTiSampler(const bool bSet)
                 break;
             }
         }
-       // qDebug()<<"Date::autoSetTiSampler()"<<this->mInitName<<"with getLikelyhoodArg";
+       // qDebug()<<"Date::autoSetTiSampler()"<<this->mName<<"with getLikelyhoodArg";
     }
     else {
         switch(mMethod)
@@ -798,7 +763,7 @@ void Date::autoSetTiSampler(const bool bSet)
                 break;
             }
         }
-        //qDebug()<<"Date::autoSetTiSampler()"<<this->mInitName<<"with getLikelyhood";
+        //qDebug()<<"Date::autoSetTiSampler()"<<this->mName<<"with getLikelyhood";
         
     }
   
@@ -860,14 +825,19 @@ double fProposalDensity(const double t, const double t0, Date* date)
     double level = date->mMixingLevel;
     double q1 = 0;
 
-    /// ----q1------Defined only on study period-----
-    if(t > tmin && t < tmax){
-      
-        double prop = (t - tmin) / (tmax - tmin);
+    double tminCalib = date->getTminCalib();
+    double tmaxCalib = date->getTmaxCalib();
+
+    /// ----q1------Defined only on Calibration range-----
+    if(t > tminCalib && t < tmaxCalib){
+        //double prop = (t - tmin) / (tmax - tmin);
+        double prop = (t - tminCalib) / (tmaxCalib - tminCalib);
         double idx = prop * (date->mRepartition.size() - 1);
         int idxUnder = (int)floor(idx);
         
-        double step =(tmax-tmin+1)/date->mRepartition.size();
+        //double step =(tmax-tmin+1)/date->mRepartition.size();
+        double step =date->mSettings.mStep;
+
         q1 = (date->mRepartition[idxUnder+1]-date->mRepartition[idxUnder])/step;
     }
     /// ----q2 shrinkage-----------
@@ -895,15 +865,16 @@ void fInversion(Date* date, Event* event)
     double tiNew;
     double tmin = date->mSettings.mTmin;
     double tmax = date->mSettings.mTmax;
+
+    double tminCalib = date->getTminCalib();
     
     if (u1<level) { // tiNew always in the study period
         double idx = vector_interpolate_idx_for_value(u1, date->mRepartition);
-        double step =(tmax-tmin+1)/date->mRepartition.size();
-        tiNew = tmin + idx * step;
+        tiNew = tminCalib + idx *date->mSettings.mStep;
     }
     else {
         // -- gaussian
-        double t0 = date->mTheta.mX; //(tmax+tmin)/2;
+        double t0 = date->mTheta.mX;
         double s = (tmax-tmin)/2;
         
         tiNew=Generator::gaussByBoxMuller(t0, s);
@@ -945,12 +916,13 @@ void fInversionWithArg(Date* date, Event* event)
     double tiNew;
     double tmin = date->mSettings.mTmin;
     double tmax = date->mSettings.mTmax;
+
+    double tminCalib = date->getTminCalib();
     
     if (u1<level) { // tiNew always in the study period
         double u2 = Generator::randomUniform();
         double idx = vector_interpolate_idx_for_value(u2, date->mRepartition);
-        double step =(tmax-tmin+1)/date->mRepartition.size();
-        tiNew = tmin + idx * step;
+        tiNew = tminCalib + idx *date->mSettings.mStep;
     }
     else {
         // -- gaussian

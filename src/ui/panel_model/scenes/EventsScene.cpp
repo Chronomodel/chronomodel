@@ -79,8 +79,6 @@ bool EventsScene::constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo
         qDebug() << "EventsScene::constraintAllowed: not Allowed Circular" ;
     }
     return constraintAllowed;
-    
-    
 }
 
 void EventsScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
@@ -355,6 +353,7 @@ void EventsScene::updateProject()
         for(int j=0; j<mItems.size(); ++j)
         {
             EventItem* item = (EventItem*)mItems[j];
+
             QJsonObject itemEvent = item->getEvent();
             if(itemEvent[STATE_ID].toInt() == event[STATE_ID].toInt())
             {
@@ -368,6 +367,8 @@ void EventsScene::updateProject()
                     item->setEvent(event, settings);
                 }
             }
+
+
         }
         if(!itemExists)
         {
@@ -645,18 +646,12 @@ void EventsScene::centerOnEvent(int eventId)
 #pragma mark Utilities
 AbstractItem* EventsScene::currentItem()
 {
-    QList<QGraphicsItem*> items = selectedItems();
-   /* if(items.size() > 0)
+    QList<QGraphicsItem*> selItems = selectedItems();
+    qDebug() << "selected items : " << selItems.size();
+    
+    if(!selItems.isEmpty())
     {
-        EventItem* evtItem = dynamic_cast<EventItem*>(items[0]);
-        if(evtItem)
-            return evtItem;
-    }
-    return 0;*/
-
-    if(!items.isEmpty())
-    {
-        EventItem* evtItem = dynamic_cast<EventItem*>(items.first());
+        EventItem* evtItem = dynamic_cast<EventItem*>(selItems.first());
         return evtItem;
     }
     else
@@ -869,13 +864,13 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
     for(int i=0; i<dates.size(); ++i)
     {
         Event event;
-        event.mInitName = dates[i].getName();
+        event.mName = dates[i].mName;
         event.mId = project->getUnusedEventId(events);
         dates[i].mId = 0;
         event.mDates.append(dates[i]);
         event.mItemX = e->scenePos().x();
         event.mItemY = e->scenePos().y() + i * deltaY;
-        event.mInitColor = randomColor();
+        event.mColor = randomColor();
         events.append(event.toJson());
     }
     state[STATE_EVENTS] = events;

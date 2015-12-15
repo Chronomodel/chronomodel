@@ -35,6 +35,7 @@ public:
     void setCalibChecked(bool checked);
     bool hasEvent() const;
     bool hasBound() const;
+    bool hasEventWithDates() const;
     
 public slots:
     void setEvent(const QJsonObject& event);
@@ -60,9 +61,9 @@ private slots:
     
     void updateKnownType();
     void updateKnownFixed(const QString& text);
-    void updateKnownUnifStart();
-    void updateKnownUnifEnd();
-    void loadKnownCsv();
+    void updateKnownUnifStart(const QString& text);
+    void updateKnownUnifEnd(const QString& text);
+   // void loadKnownCsv();
     
     void updateKnownGraph();
     void updateKnownControls();

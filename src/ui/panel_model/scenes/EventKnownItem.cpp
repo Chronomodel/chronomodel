@@ -49,76 +49,68 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     double step = settings[STATE_SETTINGS_STEP].toDouble();
     
     EventKnown bound = EventKnown::fromJson(event);
-    bound.updateValues(tmin, tmax, step);
-        
-    GraphView* graph = new GraphView();
-    graph->setFixedSize(200, 50);
-    graph->setMargins(0, 0, 0, 0);
-    
-    graph->setRangeX(tmin, tmax);
-    graph->setCurrentX(tmin, tmax);
-    graph->setRangeY(0, 1.1f);
-    
-    graph->showXAxisArrow(false);
-    graph->showXAxisTicks(false);
-    graph->showXAxisSubTicks(false);
-    graph->showXAxisValues(false);
-    
-    graph->showYAxisArrow(false);
-    graph->showYAxisTicks(false);
-    graph->showYAxisSubTicks(false);
-    graph->showYAxisValues(false);
-    
-    graph->setXAxisMode(GraphView::eHidden);
-    graph->setYAxisMode(GraphView::eHidden);
-    
-    /*GraphCurve curve;
+    // if Fixed Bound with fixed value in study period or uniform Bound with bound.mUniformStart<bound.mUniformEnd
+    if(  ( (bound.mKnownType==EventKnown::eFixed) && (tmin<=bound.mFixed) && (bound.mFixed<=tmax) )
+      || ( (bound.mKnownType==EventKnown::eUniform) &&
+           (bound.mUniformStart<bound.mUniformEnd)  && (bound.mUniformStart< tmax) && (bound.mUniformEnd>tmin)     ))
+    {
+        bound.updateValues(tmin, tmax, step);
 
-    curve.mData = normalize_map(bound.mValues);
-    curve.mName = "Bound";
-    
-    curve.mPen = QPen(Painting::mainColorLight, 2.f);
-    curve.mBrush = Painting::mainColorLight;
-    
-    curve.mIsRectFromZero = true;
-    curve.mIsHisto = (bound.knownType() == EventKnown::eUniform);
-    
-    graph->addCurve(curve);
-    graph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
-    graph->mLegendX = DateUtils::getAppSettingsFormat();*/
+        GraphView* graph = new GraphView();
+        graph->setFixedSize(200, 50);
+        graph->setMargins(0, 0, 0, 0);
 
-    //---------------------
+        graph->setRangeX(tmin, tmax);
+        graph->setCurrentX(tmin, tmax);
+        graph->setRangeY(0, 1.1f);
 
-    GraphCurve curve;
-    curve.mName = "Bound";
-    curve.mBrush = Painting::mainColorLight;
-    curve.mPen = QPen(Painting::mainColorLight, 2.f);
-    
-    curve.mIsHorizontalSections = true;
-    qreal tLower;
-    qreal tUpper;
-    if(mData[STATE_EVENT_KNOWN_TYPE].toInt()==0) { // it's mean Fixed Bound
-        tLower = mData[STATE_EVENT_KNOWN_FIXED].toDouble();
-        tUpper = tLower;
+        graph->showXAxisArrow(false);
+        graph->showXAxisTicks(false);
+        graph->showXAxisSubTicks(false);
+        graph->showXAxisValues(false);
+
+        graph->showYAxisArrow(false);
+        graph->showYAxisTicks(false);
+        graph->showYAxisSubTicks(false);
+        graph->showYAxisValues(false);
+
+        graph->setXAxisMode(GraphView::eHidden);
+        graph->setYAxisMode(GraphView::eHidden);
+
+        //---------------------
+
+        GraphCurve curve;
+        curve.mName = "Bound";
+        curve.mBrush = Painting::mainColorLight;
+        curve.mPen = QPen(Painting::mainColorLight, 2.f);
+
+        curve.mIsHorizontalSections = true;
+        qreal tLower;
+        qreal tUpper;
+        if(bound.mKnownType==EventKnown::eFixed) {
+            tLower = bound.mFixed;
+            tUpper = tLower;
+        }
+        else {
+            tLower = bound.mUniformStart;
+            tUpper = bound.mUniformEnd;
+        }
+
+        curve.mSections.append(qMakePair(tLower,tUpper));
+        graph->addCurve(curve);
+        //---------------------
+
+        mThumb = QImage(graph->size(),QImage::Format_ARGB32_Premultiplied);
+        graph->render(&mThumb);
+        delete graph;
     }
     else {
-        tLower = mData[STATE_EVENT_KNOWN_START].toDouble();
-        tUpper = mData[STATE_EVENT_KNOWN_END].toDouble();;
+        mThumb = QImage();
     }
-
-    curve.mSections.append(qMakePair(tLower,tUpper));
-    graph->addCurve(curve);
-    //---------------------
-    
-    //mThumb = QPixmap(graph->size());
-    mThumb = QImage(graph->size(),QImage::Format_ARGB32_Premultiplied);
-    graph->render(&mThumb);
-    delete graph;
-    
     // ----------------------------------------------
     //  Repaint based on mEvent
     // ----------------------------------------------
-    update();
+    //update(); Done by prepareGeometryChange() at the function start
 }
 
 QRectF EventKnownItem::boundingRect() const
@@ -188,10 +180,14 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     painter->setPen(frontColor);
     painter->drawText(nameRect, Qt::AlignCenter, name);
     
-    // Thumb
-    
-    if(mThumbVisible)
+    if(mThumb.isNull()) {
+        painter->fillRect(thumbRect, Qt::white);
+        painter->setPen(Qt::red);
+        painter->drawText(thumbRect, Qt::AlignCenter, tr("Invalid bound"));
+    }
+    else if(mThumbVisible) {
         painter->drawImage(thumbRect, mThumb, mThumb.rect());
+    }
 
     // Phases
     

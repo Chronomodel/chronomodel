@@ -116,6 +116,22 @@ QString PluginTL::getDateDesc(const Date* date) const
     return result;
 }
 
+QPair<double,double> PluginTL::getTminTmaxRefsCurve(const QJsonObject& data) const
+{
+    double age = data[DATE_TL_AGE_STR].toDouble();
+    double error = data[DATE_TL_ERROR_STR].toDouble();
+    double ref_year = data[DATE_TL_REF_YEAR_STR].toDouble();
+    
+    double k = 5;
+    
+    double tmin = ref_year - age - k * error;
+    double tmax = ref_year - age + k * error;
+    
+    return qMakePair<double,double>(tmin, tmax);
+}
+
+
+
 
 // ------------------------------------------------------------------
 

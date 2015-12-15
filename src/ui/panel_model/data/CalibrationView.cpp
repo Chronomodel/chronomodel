@@ -105,12 +105,10 @@ void CalibrationView::setDate(const QJsonObject& date)
     try{
         mDate = Date::fromJson(date);
         mDate.autoSetTiSampler(false);
-        if(!mDate.isNull() && mDate.mIsValid) {
+        if(!mDate.isNull() )//&& mDate.mIsValid)
+        {
             mDate.calibrate(mSettings);
-            mTopLab->setText(mDate.getName() + " (" + mDate.mPlugin->getName() + ")");
-            mCalibGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
-            mCalibGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
-            mZoomSlider->setValue(0);
+            mTopLab->setText(mDate.mName + " (" + mDate.mPlugin->getName() + ")");
         }
         updateGraphs();
     }
@@ -128,9 +126,11 @@ void CalibrationView::setDate(const QJsonObject& date)
 void CalibrationView::updateGraphs()
 {
     mCalibGraph->removeAllCurves();
+    mCalibGraph->removeAllZones();
+    
     QLocale locale;
     
-    // The current ref graph belongs to a plugin
+    // The current ref graph belongs in memory to a plugin
     // So, we simply remove it without deleting it, for further use
     if(mRefGraphView)
     {
@@ -141,11 +141,40 @@ void CalibrationView::updateGraphs()
     
     if(!mDate.isNull())
     {
-        DensityAnalysis results;
-        results.analysis = analyseFunction(mDate.getCalibMap());
-        results.quartiles = quartilesForRepartition(mDate.mRepartition, mSettings.mTmin, mSettings.mStep);
-        //mResultsLab->setText(densityAnalysisToString(results));
-        QString resultsStr = densityAnalysisToString(results);
+        double tminCalib = mDate.getTminCalib();
+        double tmaxCalib = mDate.getTmaxCalib();        
+
+        double tminDisplay = qMin(tminCalib, (double)mSettings.mTmin);
+        double tmaxDisplay = qMax(tmaxCalib, (double)mSettings.mTmax);
+
+        mCalibGraph->setRangeX(tminDisplay, tmaxDisplay);
+        mCalibGraph->setCurrentX(tminDisplay, tmaxDisplay);
+        
+        qDebug() << "tmin : " << tminDisplay << ", tmax: " << tmaxDisplay;
+        
+        mZoomSlider->setValue(0);
+        
+        // ------------------------------------------------------------
+        //  Show zones if calibrated data are outside study period
+        // ------------------------------------------------------------
+        if(tminDisplay < mSettings.mTmin){
+            GraphZone zone;
+            zone.mXStart = tminDisplay;
+            zone.mXEnd = mSettings.mTmin;            
+            zone.mColor = Qt::red;
+            zone.mColor.setAlpha(25);
+            zone.mText = tr("Outside study period");
+            mCalibGraph->addZone(zone);
+        }
+        if(tmaxDisplay > mSettings.mTmax){
+            GraphZone zone;
+            zone.mXStart = mSettings.mTmax;
+            zone.mXEnd = tmaxDisplay;
+            zone.mColor = Qt::red;
+            zone.mColor.setAlpha(25);
+            zone.mText = tr("Outside study period");
+            mCalibGraph->addZone(zone);
+        }
         
         // ------------------------------------------------------------
         //  Calibration curve
@@ -153,36 +182,45 @@ void CalibrationView::updateGraphs()
         QColor penColor = Painting::mainColorDark; //Painting::mainColorLight;
         QColor brushColor = Painting::mainColorLight; //mDate.mPlugin->getColor();
         brushColor.setAlpha(100);
-        
-        GraphCurve calibCurve;
-        calibCurve.mName = "Calibration";
-        calibCurve.mPen.setColor(penColor);
-        calibCurve.mIsHisto = false;
-        calibCurve.mData = mDate.getCalibMap();
-        
+
         // Fill under distrib. of calibrated date only if typo :
         bool isTypo = (mDate.mPlugin->getName() == "Typo");
-        calibCurve.mIsRectFromZero = isTypo;
-        calibCurve.mBrush = isTypo ? QBrush(brushColor) : QBrush(Qt::NoBrush);
-        
         mHPDLab->setVisible(!isTypo);
         mHPDEdit->setVisible(!isTypo);
-        
-        double yMax = map_max_value(calibCurve.mData);
-        yMax = (yMax > 0) ? yMax : 1;
-        mCalibGraph->setRangeY(0, 1.1f * yMax);
-        mCalibGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
-        mCalibGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
-        
-        mCalibGraph->addCurve(calibCurve);
-        mCalibGraph->setVisible(true);
-        
-        mCalibGraph->setTipXLab("t");        
 
         // Fill HPD only if not typo :
         mResultsLab->clear();
-        if(!isTypo)
+        //if(!isTypo)
         {
+            const QMap<double, double> calibMap = mDate.getCalibMap();
+            
+            // ------------------------------------------------------------
+            //  Display numerical results
+            // ------------------------------------------------------------
+            QString resultsStr;
+            
+            DensityAnalysis results;
+            results.analysis = analyseFunction(calibMap);
+            results.quartiles = quartilesForRepartition(mDate.mRepartition, tminCalib, mSettings.mStep);
+            resultsStr = densityAnalysisToString(results);
+            
+            GraphCurve calibCurve;
+            calibCurve.mName = "Calibration";
+            calibCurve.mPen.setColor(penColor);
+            calibCurve.mIsHisto = false;
+            calibCurve.mData = calibMap;
+            calibCurve.mIsRectFromZero = isTypo;
+            calibCurve.mBrush = isTypo ? QBrush(brushColor) : QBrush(Qt::NoBrush);
+
+            double yMax = map_max_value(calibCurve.mData);
+            yMax = (yMax > 0) ? yMax : 1;
+            mCalibGraph->setRangeY(0, 1.1f * yMax);
+
+            mCalibGraph->addCurve(calibCurve);
+            mCalibGraph->setVisible(true);
+
+            mCalibGraph->setTipXLab("t");
+
             QString input = mHPDEdit->text();
             mHPDEdit->validator()->fixup(input);
             mHPDEdit->setText(input);
@@ -210,14 +248,28 @@ void CalibrationView::updateGraphs()
             mCalibGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
             
             double realThresh = map_area(hpd) / map_area(calibCurve.mData);
+            
             //mResultsLab->setText(mResultsLab->text() % "HPD (" % locale.toString(100. * realThresh, 'f', 1) + "%) : " % getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr)); //  % concatenation with QStringBuilder
+            
             resultsStr += + "<br> HPD (" + locale.toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr);
+            
             mResultsLab->setWordWrap(true);
             mResultsLab->setText(resultsStr);
             
             
             //mResultsLab->setText(mResultsLab->text() + "\n HPD (" + locale.toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr));
         }
+        /*else
+        {
+            GraphCurve curve;
+            curve.mName = "Bound";
+            curve.mBrush = brushColor;
+            curve.mPen = penColor;
+            curve.mIsHorizontalSections = true;
+            curve.mSections.append(qMakePair(tminCalib,tmaxCalib));
+            mCalibGraph->addCurve(curve);
+        }*/
+        
         
         // ------------------------------------------------------------
         //  Reference curve from plugin

@@ -28,18 +28,17 @@ PluginTLRefView::~PluginTLRefView()
     
 }
 
-void PluginTLRefView::setDate(const Date& d, const ProjectSettings& settings)
+void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
 {
     QLocale locale=QLocale();
-    GraphViewRefAbstract::setDate(d, settings);
+    GraphViewRefAbstract::setDate(date, settings);
     
-    Date date = d;
+    mGraph->setRangeX(mTminDisplay, mTmaxDisplay);
+    mGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
     
     mGraph->removeAllCurves();
     mGraph->clearInfos();
     mGraph->showInfos(true);
-    mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
-    mGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
     mGraph->setFormatFunctX(mFormatFuncX);
     
     if(!date.isNull())
@@ -51,13 +50,12 @@ void PluginTLRefView::setDate(const Date& d, const ProjectSettings& settings)
         // ----------------------------------------------
         //  Reference curve
         // ----------------------------------------------
-        
         GraphCurve curve;
         curve.mName = "Reference";
         curve.mPen.setColor(Painting::mainColorDark);
         curve.mIsHisto = false;
         
-        for(double t=mSettings.mTmin; t<=mSettings.mTmax; t+=mSettings.mStep)
+        for(double t=mTminDisplay; t<=mTmaxDisplay; t+=mSettings.mStep)
             curve.mData[t] = ref_year - t;
         mGraph->addCurve(curve);
         
@@ -66,8 +64,8 @@ void PluginTLRefView::setDate(const Date& d, const ProjectSettings& settings)
         double yMin = map_min_value(curve.mData);
         double yMax = map_max_value(curve.mData);
         
-        yMin = qMin(yMin, age);       
-        yMax = qMax(yMax, age);
+        yMin = qMin(yMin, age - error * 1.96);
+        yMax = qMax(yMax, age + error * 1.96);
         
         mGraph->setRangeY(yMin, yMax);
         

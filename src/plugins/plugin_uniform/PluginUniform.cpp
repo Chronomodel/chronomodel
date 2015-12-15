@@ -97,10 +97,11 @@ QString PluginUniform::getDateDesc(const Date* date) const
 
 bool PluginUniform::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
 {
-    double bmin = data[DATE_UNIFORM_MIN_STR].toDouble();
+    /*double bmin = data[DATE_UNIFORM_MIN_STR].toDouble();
     double bmax = data[DATE_UNIFORM_MAX_STR].toDouble();
-
-    return (bmax > settings.mTmin && bmin < settings.mTmax) ? true : false;
+    return (bmax > settings.mTmin && bmin < settings.mTmax) ? true : false;*/
+    
+    return true;
  }
 // ------------------------------------------------------------------
 
@@ -112,6 +113,14 @@ GraphViewRefAbstract* PluginUniform::getGraphViewRef()
 PluginSettingsViewAbstract* PluginUniform::getSettingsView()
 {
     return 0;
+}
+
+
+QPair<double,double> PluginUniform::getTminTmaxRefsCurve(const QJsonObject& data) const
+{
+    double min = data[DATE_UNIFORM_MIN_STR].toDouble();
+    double max = data[DATE_UNIFORM_MAX_STR].toDouble();
+    return QPair<double, double>(min, max);
 }
 
 #endif

@@ -11,8 +11,8 @@ public:
     AbstractItem(AbstractScene* scene, QGraphicsItem* parent = 0);
     virtual ~AbstractItem();
 
-    void setMergeable(bool mergeable);
-    virtual void setGreyedOut(bool greyedOut);
+    void setMergeable(bool mergeable, bool shouldRepaint = true);
+    virtual void setGreyedOut(bool greyedOut, bool shouldRepaint = true);
     
     virtual void updateItemPosition(const QPointF& pos) = 0;
     

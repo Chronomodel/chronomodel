@@ -366,10 +366,9 @@ mGraphsH(130)
     connect(mCredibilityCheck,   SIGNAL(clicked()), this, SLOT(updateCurvesToShow()));
     
     // -------------------------
-    connect(mUnfoldBut, SIGNAL(toggled(bool)), this, SLOT(createEventsScrollArea()));
-    connect(mUnfoldBut, SIGNAL(toggled(bool)), this, SLOT(updateGraphsLayout()));
-    connect(mShowDataUnderPhasesCheck, SIGNAL(toggled(bool)), this, SLOT(updateGraphsLayout()));
-    //connect(mShowDataUnderPhasesCheck, SIGNAL(toggled(bool)), this, SLOT(updateResults(Model*))()));
+    //connect(mUnfoldBut, &Button::toggled, this, &ResultsView::createEventsScrollArea);
+    connect(mUnfoldBut, &Button::toggled, this, &ResultsView::updateGraphsLayout);
+    connect(mShowDataUnderPhasesCheck, &CheckBox::toggled, this, &ResultsView::updateGraphsLayout);
     
     // -------------------------
     
@@ -521,6 +520,7 @@ void ResultsView::updateControls()
 
 void ResultsView::updateLayout()
 {
+    if(!mModel) return;
     qDebug() << "ResultsView::updateLayout";
     
     int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
@@ -908,6 +908,7 @@ void ResultsView::createEventsScrollArea()
         graphEvent->setGraphsThickness(mThicknessSpin->value());
         mByEventsGraphs.append(graphEvent);
        // if(mUnfoldBut->isChecked()) {
+        if(event->mType != Event::eKnown) {
             for(int j=0; j<(int)event->mDates.size(); ++j) {
                 Date& date = event->mDates[j];
                 // ----------------------------------------------------
@@ -925,7 +926,7 @@ void ResultsView::createEventsScrollArea()
                 graphDate->setGraphsThickness(mThicknessSpin->value());
                 mByEventsGraphs.append(graphDate);
             }
-       // }
+       }
     }
     mEventsScrollArea->setWidget(eventsWidget);
 }
@@ -976,7 +977,7 @@ void ResultsView::createPhasesScrollArea()
                 graphDate->setGraphFont(mFont);
                 graphDate->setGraphsThickness(mThicknessSpin->value());
 
-                graphDate->setColor(event->getColor());
+                graphDate->setColor(event->mColor);
                 mByPhasesGraphs.append(graphDate);
             }
         }
@@ -1516,7 +1517,7 @@ void ResultsView::exportResults()
                 
                 for(int i=0; i<mModel->mPhases.size(); ++i){
                     QList<QStringList> phaseTrace = mModel->getPhaseTrace(i,csvLocal);
-                    QString name = mModel->mPhases[i]->getName().toLower().simplified().replace(" ", "_");
+                    QString name = mModel->mPhases[i]->mName.toLower().simplified().replace(" ", "_");
                     saveCsvTo(phaseTrace, dirPath + "/phase_" + name + ".csv", csvSep);
                 }
             }
@@ -1670,10 +1671,10 @@ void ResultsView::updateModel()
             if(e->mId == eventId)
             {
                // e->setJson(& MainWindow::getInstance()->getProject()->state(), j);
-                e->mInitName  = event[STATE_NAME].toString();
+                e->mName  = event[STATE_NAME].toString();
                 e->mItemX = event[STATE_ITEM_X].toDouble();
                 e->mItemY = event[STATE_ITEM_Y].toDouble();
-                e->mInitColor = QColor(event[STATE_COLOR_RED].toInt(),
+                e->mColor = QColor(event[STATE_COLOR_RED].toInt(),
                                    event[STATE_COLOR_GREEN].toInt(),
                                    event[STATE_COLOR_BLUE].toInt());
                
@@ -1689,7 +1690,7 @@ void ResultsView::updateModel()
                         
                         if(dateId == d.mId)
                         {
-                            d.mInitName = date[STATE_NAME].toString();
+                            d.mName = date[STATE_NAME].toString();
 
                             break;
                         }
@@ -1709,10 +1710,10 @@ void ResultsView::updateModel()
             Phase* p = mModel->mPhases[j];
             if(p->mId == phaseId)
             {
-                p->mInitName = phase[STATE_NAME].toString();
+                p->mName = phase[STATE_NAME].toString();
                 p->mItemX = phase[STATE_ITEM_X].toDouble();
                 p->mItemY = phase[STATE_ITEM_Y].toDouble();
-                p->mInitColor = QColor(phase[STATE_COLOR_RED].toInt(),
+                p->mColor = QColor(phase[STATE_COLOR_RED].toInt(),
                                    phase[STATE_COLOR_GREEN].toInt(),
                                    phase[STATE_COLOR_BLUE].toInt());
                // p->setJson(MainWindow::getInstance()->getProject()->state(), j);

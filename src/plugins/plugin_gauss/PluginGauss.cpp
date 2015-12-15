@@ -432,20 +432,86 @@ QMap<QString, QMap<double, double> > PluginGauss::loadRefFile(QFileInfo refFile)
 
 QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) const
 {
-    double tmin=0;
-    double tmax=0;
-    if(data[DATE_GAUSS_MODE_STR].toString()==DATE_GAUSS_MODE_CURVE){
+    double tmin = 0;
+    double tmax = 0;
+    double k = 5;
+    
+    if(data[DATE_GAUSS_MODE_STR].toString() == DATE_GAUSS_MODE_CURVE)
+    {
         QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString().toLower();
-        if( mRefDatas.contains(ref_curve)  && !mRefDatas[ref_curve].isEmpty() ) {
-
-           tmin= mRefDatas[ref_curve]["G"].firstKey();
-           tmax= mRefDatas[ref_curve]["G"].lastKey();
+        if(mRefDatas.contains(ref_curve) && !mRefDatas[ref_curve].isEmpty())
+        {
+           tmin = mRefDatas[ref_curve]["G"].firstKey();
+           tmax = mRefDatas[ref_curve]["G"].lastKey();
         }
-        else{
-            qDebug()<<"PluginGauss::getTminTmaxRefsCurve no ref curve";
+        else
+        {
+            qDebug() << "PluginGauss::getTminTmaxRefsCurve no ref curve";
         }
     }
-    return qMakePair<double,double>(tmin,tmax);
+    else if(data[DATE_GAUSS_MODE_STR].toString() == DATE_GAUSS_MODE_NONE)
+    {
+        double age = data[DATE_GAUSS_AGE_STR].toDouble();
+        double error = data[DATE_GAUSS_ERROR_STR].toDouble();
+        
+        tmin = age - k * error;
+        tmax = age + k * error;
+    }
+    else if(data[DATE_GAUSS_MODE_STR].toString() == DATE_GAUSS_MODE_EQ)
+    {
+        double age = data[DATE_GAUSS_AGE_STR].toDouble();
+        double error = data[DATE_GAUSS_ERROR_STR].toDouble();
+        
+        double a = data[DATE_GAUSS_A_STR].toDouble();
+        double b = data[DATE_GAUSS_B_STR].toDouble();
+        double c = data[DATE_GAUSS_C_STR].toDouble();
+        
+        double v1 = age - k * error;
+        double v2 = age + k * error;
+
+        if(a == 0){
+            if(b == 0){
+                // Error!
+            }else{
+                double t1 = (v1 - c) / b;
+                double t2 = (v2 - c) / b;
+                tmin = qMin(t1, t2);
+                tmax = qMax(t1, t2);
+            }
+        }
+        else{
+            double delta1 = b*b - 4*a*(c - v1);
+            double delta2 = b*b - 4*a*(c - v2);
+            
+            bool hasDelta1 = false;
+            
+            if(delta1 > 0)
+            {
+                hasDelta1 = true;
+                
+                double t11 = (- b - sqrt(delta1)) / (2 * a);
+                double t12 = (- b + sqrt(delta1)) / (2 * a);
+                
+                tmin = qMin(t11, t12);
+                tmax = qMax(t11, t12);
+            }
+            if(delta2 > 0)
+            {
+                double t21 = (- b - sqrt(delta2)) / (2 * a);
+                double t22 = (- b + sqrt(delta2)) / (2 * a);
+                
+                if(hasDelta1){
+                    tmin = qMin(qMin(t21, t22), tmin);
+                    tmax = qMax(qMax(t21, t22), tmax);
+                }
+                else{
+                    tmin = qMin(t21, t22);
+                    tmax = qMax(t21, t22);
+                }
+            }
+        }
+    }
+    return QPair<double,double>(tmin, tmax);
 }
 
 // ------------------------------------------------------------------

@@ -405,9 +405,10 @@ QJsonObject Plugin14C::checkValuesCompatibility(const QJsonObject& values){
 bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& settings){
     
     QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString().toLower();
-    if( !mRefDatas.contains(ref_curve)) {
+    if(!mRefDatas.contains(ref_curve))
+    {
         qDebug()<<"in Plugin14C::isDateValid() unkowned curve"<<ref_curve;
-        QMessageBox::warning(qApp->activeWindow(),tr("Curve error"),tr("in Plugin14C unkowned curve : ")+ref_curve);
+        //QMessageBox::warning(qApp->activeWindow(),tr("Curve error"),tr("in Plugin14C unkowned curve : ")+ref_curve);
         return false;
     }
     double age = data[DATE_14C_AGE_STR].toDouble();

@@ -39,16 +39,18 @@ AbstractItem::~AbstractItem()
     
 }
 
-void AbstractItem::setMergeable(bool mergeable)
+void AbstractItem::setMergeable(bool mergeable, bool shouldRepaint)
 {
     mMergeable = mergeable;
-    update();
+    if(shouldRepaint)
+        update();
 }
 
-void AbstractItem::setGreyedOut(bool greyedOut)
+void AbstractItem::setGreyedOut(bool greyedOut, bool shouldRepaint)
 {
     mGreyedOut = greyedOut;
-    update();
+    if(shouldRepaint)
+        update();
 }
 
 #pragma mark Events

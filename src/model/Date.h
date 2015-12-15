@@ -51,12 +51,9 @@ public:
     virtual ~Date();
     
     void init();
-    bool isNull();
+    bool isNull() const;
     
     static Date fromJson(const QJsonObject& json);
-
-    void setModelJson(const QJsonObject & json, const int eventIdx, const int dateIdx);
-    void setIdxInEventArray(int j);
     QJsonObject toJson() const;
     
     static Date fromCSV(QStringList dataStr);
@@ -82,12 +79,13 @@ public:
     void updateSigma(Event* event);
     void updateWiggle();
     
-    QColor getColor() const;
     QColor getEventColor() const;
-    QString getName() const;
 
     double getTminRefCurve() const {return mTminRefCurve;}
     double getTmaxRefCurve() const {return mTmaxRefCurve;}
+    
+    double getTminCalib() const {return mTminCalib;}
+    double getTmaxCalib() const {return mTmaxCalib;}
     
 public:
     MHVariable mTheta; // theta i de la date
@@ -97,8 +95,8 @@ public:
     
     int mId;
     
-    QString mInitName; //must be public, to be setting by dialogbox
-    QColor mInitColor;
+    QString mName; // must be public, to be setting by dialogbox
+    QColor mColor;
 
     QJsonObject mData;
     PluginAbstract* mPlugin;
@@ -116,7 +114,6 @@ public:
     bool mIsSelected;
     
     QVector<double> mCalibration;
-    double mCalibSum;
     QVector<double> mRepartition;
     QMap<double, double> mCalibHPD;
     ProjectSettings mSettings;
@@ -129,12 +126,11 @@ public:
 protected:
     samplingFunction updateti;
     
-    const QJsonObject * mModelJsonDate;
-    int mJsonEventIdx;
-    int mIdxInEventArray;
     double mTminRefCurve;
     double mTmaxRefCurve;
 
+    double mTminCalib;
+    double mTmaxCalib;
 };
 
 #endif

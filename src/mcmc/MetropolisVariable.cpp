@@ -41,13 +41,13 @@ void MetropolisVariable::reset()
 }
 
 /**
- @param[in] dataSrc is the trace, with for example one million of date
+ @param[in] dataSrc is the trace, with for example one million data
  @param[in] hFactor corresponds to the bandwidth factor.
- @remarks Produice a density with the area equale to 1. The smoothing is done with Hsilvermann computed inside
+ @remarks Produce a density with the area equal to 1. The smoothing is done with Hsilvermann method.
  **/
 float* MetropolisVariable::generateBufferForHisto(QVector<double>& dataSrc, int numPts, double hFactor)
 {
-    // Work with double precision here !
+    // Work with "double" precision here !
     // Otherwise, "denum" can be very large and lead to infinity contribs!
     
     double sigma = dataStd(dataSrc);
@@ -153,7 +153,8 @@ QMap<double, double> MetropolisVariable::generateHisto(QVector<double>& dataSrc,
         qDebug()<<"MetropolisVariable::generateHisto areaTot ="<<areaTot<<" a="<<a<<" b="<<b;
      qDebug()<<areaTot;
      */
-    if(input != 0) {
+    if(input != 0)
+    {
         // ----- FFT -----
         
         fftwf_plan plan_forward = fftwf_plan_dft_r2c_1d(inputSize, input, (fftwf_complex*)output, FFTW_ESTIMATE);
@@ -180,9 +181,11 @@ QMap<double, double> MetropolisVariable::generateHisto(QVector<double>& dataSrc,
         //qDebug()<<"MetropolisVariable::generateHisto areaTot ="<<areaTot<<" a="<<a<<" b="<<b;
         //qDebug()<<areaTot/inputSize;
         */
+        
         for(int i=0; i<inputSize; ++i)  {
             double t = a + (double)i * delta;
-            if(t >= tmin && t<= tmax) {
+            if(t >= tmin && t<= tmax)
+            {
                 result[t] = input[i];
             }
         }

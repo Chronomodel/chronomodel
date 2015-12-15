@@ -116,7 +116,7 @@ void checkFloatingPointException(const QString& infos)
     feclearexcept (FE_ALL_EXCEPT);
 }
 /**
- @brief this function transform a QVector, than the maximum value is 1
+ @brief This function transforms a QVector turning its maximum value is 1 and adjusting other values accordingly
  **/
 QVector<double> normalize_vector(const QVector<double>& aVector)
 {
@@ -129,6 +129,34 @@ QVector<double> normalize_vector(const QVector<double>& aVector)
         for(QVector<double>::const_iterator it = aVector.begin(); it != aVector.end(); ++it)
         {
             histo.push_back((*it)/max_value);
+        }
+    }
+    return histo;
+}
+
+/**
+ @brief This function transforms a QVector turning its minimum value to "from" and its maximum value is "to" and adjusting other values accordingly
+ **/
+QVector<double> stretch_vector(const QVector<double>& aVector, const double from, const double to)
+{
+    QVector<double> histo;
+    QVector<double>::const_iterator it = aVector.constBegin();
+    if(it != aVector.constEnd())
+    {
+        const double min = *(min_element(aVector.constBegin(), aVector.constEnd()));
+        const double max = *(max_element(aVector.constBegin(), aVector.constEnd()));
+        
+        if(min < max)
+        {
+            for(QVector<double>::const_iterator it = aVector.constBegin(); it != aVector.constEnd(); ++it)
+            {
+                histo.push_back(from + (to - from) * (*it - min) / (max - min));
+            }
+        }
+        else
+        {
+            // Just 1 value... set it to "from" (setting it to "to" could also be done though...)
+            histo.push_back(to);
         }
     }
     return histo;
@@ -278,19 +306,26 @@ QMap<double, double> vector_to_map(const QVector<double>& data, const double min
     return map;
 }
 
+/**
+ * @brief This works only for strictly increasing functions!
+ * @return interpolated index for a the given value. If value is lower than all vestor values, then 0 is returned. If value is upper than all vector values, then (vector.size() - 1) is returned.
+ */
 double vector_interpolate_idx_for_value(const double value, const QVector<double>& vector)
 {
-    // Dichotomie
-    
     int idxInf = 0;
     int idxSup = vector.size() - 1;
+
+    if(value<vector.first()) return (double)idxInf;
+    if(value>vector.last()) return (double)idxSup;
+
+    // Dichotomie, we can't use indexOf because we don't know the step between each value in the Qvector
     
     if(idxSup > idxInf)
     {
         do
         {
             int idxMid = idxInf + floor((idxSup - idxInf) / 2.f);
-            double valueMid = vector[idxMid];
+            double valueMid = vector.at(idxMid);
             
             if(value < valueMid)
                 idxSup = idxMid;
@@ -301,13 +336,16 @@ double vector_interpolate_idx_for_value(const double value, const QVector<double
             
         }while(idxSup - idxInf > 1);
         
-        double valueInf = vector[idxInf];
-        double valueSup = vector[idxSup];
+        double valueInf = vector.at(idxInf);
+        double valueSup = vector.at(idxSup);
+        
         double prop = (value - valueInf) / (valueSup - valueInf);
         double idx = (double)idxInf + prop;
         
         return idx;
     }
+
+
     return 0;
 }
 /**

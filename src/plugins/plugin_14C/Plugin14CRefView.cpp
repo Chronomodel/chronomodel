@@ -27,17 +27,17 @@ Plugin14CRefView::~Plugin14CRefView()
     
 }
 
-void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
+void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings)
 {
     QLocale locale = QLocale();
-    GraphViewRefAbstract::setDate(d, settings);
-    Date date = d;
+    GraphViewRefAbstract::setDate(date, settings);
+    
+    mGraph->setRangeX(mTminDisplay, mTmaxDisplay);
+    mGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
     
     mGraph->removeAllCurves();
     mGraph->clearInfos();
     mGraph->showInfos(true);
-    mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
-    mGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
     mGraph->setFormatFunctX(mFormatFuncX);
     
     if(!date.isNull())
@@ -60,42 +60,55 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         
         if(curves.isEmpty() || curves["G"].isEmpty()) {
             GraphZone zone;
-            zone.mColor = Qt::red;
-            zone.mColor.setAlpha(20);
-
-            zone.mXStart = mSettings.mTmin;
-            zone.mXEnd = mSettings.mTmax;
+            zone.mColor = Qt::gray;
+            zone.mColor.setAlpha(25);
+            zone.mXStart = mTminDisplay;
+            zone.mXEnd = mTmaxDisplay;
             mGraph->addZone(zone);
             return;
         }
 
-
         QMap<double, double> curveG;
         QMap<double, double> curveG95Sup;
         QMap<double, double> curveG95Inf;
-        
-        double tMinGraph = qMax(curves["G"].firstKey(), (double)mSettings.mTmin);
-        double tMaxGraph = qMin(curves["G"].lastKey(), (double)mSettings.mTmax);
-        
-        double yMin = plugin->getRefValueAt(date.mData, mSettings.mTmin);
-        double yMax = plugin->getRefValueAt(date.mData, mSettings.mTmin);
-        
-        if(tMinGraph < tMaxGraph)
+
+        if(mTminDisplay < mTminRef){
+            GraphZone zone;
+            zone.mColor = Qt::gray;
+            zone.mColor.setAlpha(35);
+            zone.mXStart = mTminDisplay;
+            zone.mXEnd = mTminRef;
+            mGraph->addZone(zone);
+        }
+
+        if(mTmaxRef < mTmaxDisplay){
+            GraphZone zone;
+            zone.mColor = Qt::gray;
+            zone.mColor.setAlpha(35);
+            zone.mXStart = mTmaxRef;
+            zone.mXEnd = mTmaxDisplay;
+            mGraph->addZone(zone);
+        }
+
+        double yMin = plugin->getRefValueAt(date.mData, qMax(mTminDisplay, mTminRef));
+        double yMax = yMin;
+
+
+        for(double t=mTminDisplay; t<=mTmaxDisplay; ++t)
         {
-            for(double t=tMinGraph; t<=tMaxGraph; ++t)
-            {
+            if(t>mTminRef && t<mTmaxRef) {
                 double value = plugin->getRefValueAt(date.mData, t);
                 double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
-                
+
                 curveG[t] = value;
                 curveG95Sup[t] = value + error;
                 curveG95Inf[t] = value - error;
-                
+
                 yMin = qMin(yMin, curveG95Inf[t]);
                 yMax = qMax(yMax, curveG95Sup[t]);
             }
         }
-        
+
         GraphCurve graphCurveG;
         graphCurveG.mName = "G";
         graphCurveG.mData = curveG;
@@ -119,35 +132,13 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         
         // Display reference curve name
         mGraph->addInfo(tr("Ref : ") + ref_curve);
-        
-        // ----------------------------------------------------
-        //  Draw ref curve extensions if not defined everywhere on study period
-        // ----------------------------------------------------
-        GraphZone zone;
-        zone.mColor = Qt::red;
-        zone.mColor.setAlpha(20);
-
-        zone.mXStart = mSettings.mTmin;
-        zone.mXEnd = tMinGraph;
-        mGraph->addZone(zone);
-
-        zone.mXStart = tMaxGraph;
-        zone.mXEnd = mSettings.mTmax;
-        mGraph->addZone(zone);
-
-        // ----------------------------------------------------
-        
-        yMin = qMin(yMin, age);
-        yMin = floor(yMin/10)*10;
-        
-        yMax = qMax(yMax, age);
-        yMax = ceil(yMax/10)*10;
-        
-        mGraph->setRangeY(yMin, yMax);
-        
+                
         // ----------------------------------------------
         //  Measure curve
         // ----------------------------------------------
+        yMin = qMin(yMin, age - error * 1.96);
+        yMax = qMax(yMax, age + error * 1.96);
+        
         GraphCurve curveMeasure;
         curveMeasure.mName = "Measure";
         
@@ -164,7 +155,6 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         }
         curveMeasure.mPen = penColor;
         curveMeasure.mBrush = brushColor;
-        
         curveMeasure.mIsVertical = true;
         curveMeasure.mIsHisto = false;
         
@@ -191,6 +181,9 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
             // Apply reservoir effect
             age = (age - delta_r);
             error = sqrt(error * error + delta_r_error * delta_r_error);
+            
+            yMin = qMin(yMin, age - error * 1.96);
+            yMax = qMax(yMax, age + error * 1.96);
             
             GraphCurve curveDeltaR;
             curveDeltaR.mName = "Delta R";
@@ -229,9 +222,6 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
             GraphCurve curveSubMeasure;
             curveSubMeasure.mName = "Sub-Measure " + QString::number(i);
             
-            QColor penColor = QColor(167, 126, 73);
-            QColor brushColor = QColor(167, 126, 73);
-            
             double sub_age = d.mData.value(DATE_14C_AGE_STR).toDouble();
             double sub_error = d.mData.value(DATE_14C_ERROR_STR).toDouble();
             double sub_delta_r = d.mData.value(DATE_14C_DELTA_R_STR).toDouble();
@@ -241,12 +231,16 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
             sub_age = (sub_age - sub_delta_r);
             sub_error = sqrt(sub_error * sub_error + sub_delta_r_error * sub_delta_r_error);
             
+            yMin = qMin(yMin, sub_age - sub_error * 1.96);
+            yMax = qMax(yMax, sub_age + sub_error * 1.96);
+            
+            QColor penColor = QColor(167, 126, 73);
+            QColor brushColor = QColor(167, 126, 73);
             penColor.setAlpha(255);
             brushColor.setAlpha(50);
             
             curveSubMeasure.mPen = penColor;
             curveSubMeasure.mBrush = brushColor;
-            
             curveSubMeasure.mIsVertical = true;
             curveSubMeasure.mIsHisto = false;
             
@@ -298,6 +292,9 @@ void Plugin14CRefView::setDate(const Date& d, const ProjectSettings& settings)
         mGraph->addCurve(curveMeasureAvg);
         mGraph->addCurve(curveMeasureSup);
         mGraph->addCurve(curveMeasureInf);
+        
+        // ----------------------------------------------
+        mGraph->setRangeY(yMin, yMax);
     }
 }
 
