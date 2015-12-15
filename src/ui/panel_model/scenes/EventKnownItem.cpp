@@ -11,10 +11,10 @@
 #include <QtWidgets>
 
 
-EventKnownItem::EventKnownItem(EventsScene* eventsScene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):EventItem(eventsScene, event, settings, parent)
+EventKnownItem::EventKnownItem(EventsScene* eventsScene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):EventItem(eventsScene, event, settings, parent),
+mThumbH(20),
+mThumbVisible(true)
 {
-    mThumbH = 20;
-    mThumbVisible = true;
     setEvent(event, settings);
 }
 
@@ -190,7 +190,8 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     
     // Thumb
     
-     if(mThumbVisible) painter->drawImage(thumbRect, mThumb, mThumb.rect());
+    if(mThumbVisible)
+        painter->drawImage(thumbRect, mThumb, mThumb.rect());
 
     // Phases
     

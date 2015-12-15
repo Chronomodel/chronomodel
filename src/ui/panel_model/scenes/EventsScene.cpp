@@ -621,11 +621,8 @@ void EventsScene::adaptItemsForZoom(double prop)
     mZoom = prop;
     for(int i=0; i<mItems.size(); ++i)
     {
-        EventItem* item = (EventItem*)mItems[i];
-        if(item) item->setDatesVisible(mZoom > 0.6);
-
-        EventKnownItem* knownItem = (EventKnownItem*)mItems[i];
-        if(knownItem) knownItem->setDatesVisible(mZoom > 0.6);
+        EventItem* item = dynamic_cast<EventItem*>(mItems[i]);
+        item->setDatesVisible(mZoom > 0.6);
     }
 }
 
@@ -633,7 +630,7 @@ void EventsScene::centerOnEvent(int eventId)
 {
     for(int i=0; i<mItems.size(); ++i)
     {
-        EventItem* item = (EventItem*)mItems[i];
+        EventItem* item = dynamic_cast<EventItem*>(mItems[i]);
         QJsonObject& event = item->getEvent();
         if(event[STATE_ID].toInt() == eventId && views().size() > 0)
         {
@@ -712,8 +709,8 @@ void EventsScene::dateReleased(DateItem* dateItem, QGraphicsSceneMouseEvent* e)
     Q_UNUSED(e);
     if(dateItem)
     {
-        EventItem* hoveredEventItem = (EventItem*)collidingItem(dateItem);
-        EventItem* prevEventItem = (EventItem*)dateItem->parentItem();
+        EventItem* hoveredEventItem = dynamic_cast<EventItem*>(collidingItem(dateItem));
+        EventItem* prevEventItem = dynamic_cast<EventItem*>(dateItem->parentItem());
         
         if(hoveredEventItem && prevEventItem && (hoveredEventItem != prevEventItem))
         {
