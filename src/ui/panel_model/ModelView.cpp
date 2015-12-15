@@ -349,16 +349,17 @@ void ModelView::updateProject()
     
     setSettingsValid(settings.mTmin < settings.mTmax);
     
-    mEventsScene -> updateProject();
-    mPhasesScene -> updateProject();
+    mEventsScene->updateProject();
+    mPhasesScene->updateProject();
     
     // Les sélections dans les scènes doivent être mises à jour après que
     // LES 2 SCENES aient été updatées
     // false : ne pas envoyer de notification pour updater l'état du projet,
     // puisque c'est justement ce que l'on fait ici!
      // DONE BY UPDATEPROJECT ????
-    //mEventsScene -> updateSelection(false);
-    //mPhasesScene -> updateSelection(false);
+    
+    //mEventsScene->updateSelection(false);
+    //mPhasesScene->updateSelection(false);
     
     /** @todo Refresh current date !! */
     

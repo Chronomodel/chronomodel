@@ -191,8 +191,10 @@ mToolbarH(100)
     boundLayout->addStretch();
     mBoundView->setLayout(boundLayout);
     
-    setEvent(QJsonObject());
-
+    mEvent = QJsonObject();
+    mTopView->setVisible(false);
+    mEventView->setVisible(false);
+    mBoundView->setVisible(false);
 }
 
 EventPropertiesView::~EventPropertiesView()
