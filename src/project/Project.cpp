@@ -125,15 +125,15 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
 {
     if(mState != state || force)
     {
-        if(!mState.isEmpty()) mRefreshResults = checkRefreshResults(state,mState);
-        else mRefreshResults=true;
-
         SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
         MainWindow::getInstance()->getUndoStack()->push(command);
-
+        
+        /*if(!mState.isEmpty()) mRefreshResults = checkRefreshResults(state,mState);
+        else mRefreshResults=true;
         if(mRefreshResults) {
             emit projectDesignChanged(mRefreshResults);
-        }
+        }*/
+        
         return true;
     }
     return false;

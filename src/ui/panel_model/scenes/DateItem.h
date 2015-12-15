@@ -18,7 +18,7 @@ public:
     const QJsonObject& date() const;
     void setOriginalPos(const QPointF pos);
     
-    void setGreyedOut(bool greyedOut);
+    void setGreyedOut(bool greyedOut, bool shouldRepaint = true);
     
     QRectF boundingRect() const;
     

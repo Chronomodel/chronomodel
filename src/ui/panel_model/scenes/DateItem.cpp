@@ -71,10 +71,11 @@ QRectF DateItem::boundingRect() const
     return QRectF(0, 0, 100, 30);
 }
 
-void DateItem::setGreyedOut(bool greyedOut)
+void DateItem::setGreyedOut(bool greyedOut, bool shouldRepaint)
 {
     mGreyedOut = greyedOut;
-    update();
+    if(shouldRepaint)
+        update();
 }
 
 void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)

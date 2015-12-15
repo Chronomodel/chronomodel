@@ -110,7 +110,7 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     // ----------------------------------------------
     //  Repaint based on mEvent
     // ----------------------------------------------
-    update();
+    //update(); Done by prepareGeometryChange() at the function start
 }
 
 QRectF EventKnownItem::boundingRect() const

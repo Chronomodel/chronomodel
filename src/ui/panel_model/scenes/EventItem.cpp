@@ -100,7 +100,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
             try{
                 DateItem* dateItem = new DateItem((EventsScene*)mScene, date, color, settings);
                 dateItem->setParentItem(this);
-                dateItem->setGreyedOut(mGreyedOut);
+                dateItem->setGreyedOut(mGreyedOut, false);
                 
                 QPointF pos(0,
                             boundingRect().y() +
@@ -129,7 +129,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     // ----------------------------------------------
     //  Repaint based on mEvent
     // ----------------------------------------------
-    update();
+    //update(); Done by prepareGeometryChange() at the function start
 }
 
 void EventItem::setGreyedOut(bool greyedOut)
