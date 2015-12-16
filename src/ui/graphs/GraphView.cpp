@@ -640,10 +640,10 @@ void GraphView::paintToDevice(QPaintDevice* device)
         
         p.fillRect(r, mZones[i].mColor);
         p.setPen(mZones[i].mColor.darker());
-        QFont font = p.font();
-        font.setWeight(600);
-        font.setPointSizeF(pointSize(20));
-        p.setFont(font);
+        QFont fontZone = p.font();
+        fontZone.setWeight(QFont::Black);
+        fontZone.setPointSizeF(pointSize(20));
+        p.setFont(fontZone);
         p.drawText(r, Qt::AlignCenter | Qt::TextWordWrap, mZones[i].mText);
         p.restore();
     }
