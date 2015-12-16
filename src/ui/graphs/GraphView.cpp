@@ -630,9 +630,22 @@ void GraphView::paintToDevice(QPaintDevice* device)
     // ----------------------------------------------------
     for(int i=0; i<mZones.size(); ++i)
     {
-        p.fillRect(getXForValue(mZones[i].mXStart), mMarginTop,
-                   getXForValue(mZones[i].mXEnd) - getXForValue(mZones[i].mXStart),
-                   mGraphHeight, mZones[i].mColor);
+        QRect r(getXForValue(mZones[i].mXStart),
+                mMarginTop,
+                getXForValue(mZones[i].mXEnd) - getXForValue(mZones[i].mXStart),
+                mGraphHeight);
+        
+        p.save();
+        p.setClipRect(r);
+        
+        p.fillRect(r, mZones[i].mColor);
+        p.setPen(mZones[i].mColor.darker());
+        QFont font = p.font();
+        font.setWeight(600);
+        font.setPointSizeF(pointSize(20));
+        p.setFont(font);
+        p.drawText(r, Qt::AlignCenter | Qt::TextWordWrap, mZones[i].mText);
+        p.restore();
     }
     
     // ----------------------------------------------------
