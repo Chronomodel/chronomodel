@@ -30,6 +30,12 @@ rm -rf ${BUNDLE_PATH}
 
 cd $ROOT_PATH
 
+# -------------------------------------------------------
+#	Create translations
+# ------------------------------------------------------
+${QT_BIN_PATH}/lupdate $ROOT_PATH/Chronomodel.pro
+${QT_BIN_PATH}/linguist $ROOT_PATH/translations/Chronomodel_en.ts $ROOT_PATH/translations/Chronomodel_fr.ts
+${QT_BIN_PATH}/lrelease $ROOT_PATH/Chronomodel.pro
 
 # -------------------------------------------------------
 #	Create XCode project in Release mode (.pro file is in debug mode by default)

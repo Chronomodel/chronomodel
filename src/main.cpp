@@ -1,7 +1,7 @@
 #include "ChronoApp.h"
 #include <QtWidgets>
-#include "DarkBlueStyle.h"
 #include "MainController.h"
+#include "StdUtilities.h"
 
 #include "fftw3.h"
 
@@ -10,7 +10,6 @@
 #include <errno.h>
 #include <fenv.h>
 
-#include "StdUtilities.h"
 
 #pragma STDC FENV_ACCESS on
 
@@ -23,7 +22,7 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
     QString dt = QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss");
     QString txt = QString("[%1] ").arg(dt);
     
-    switch (type)
+    switch((int)type)
     {
         case QtDebugMsg:
             txt += QString("{Debug} \t\t %1").arg(msg);
@@ -93,20 +92,26 @@ int main(int argc, char *argv[])
             filePath = arg;
         }
     }
+    
     QLocale::Language newLanguage = QLocale::system().language();
     QLocale::Country newCountry= QLocale::system().country();
+    QLocale locale = QLocale(newLanguage, newCountry);
+    //QLocale locale("en");
     
-    QLocale newLoc = QLocale(newLanguage,newCountry);
-    newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
-    QLocale::setDefault(newLoc);
+    locale.setNumberOptions(QLocale::OmitGroupSeparator);
+    QLocale::setDefault(locale);
     
-    //if(argv)
-    //QString filePath(argv[1]);
+    /*QTranslator qtTranslator;
+    qtTranslator.load("qt_" + QLocale::system().name(), QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+    a.installTranslator(&qtTranslator);
     
+    QTranslator translator;
+    if(translator.load(locale, ":/Chronomodel", "_")){
+        qDebug() << "Locale set to : " << QLocale::languageToString(locale.language());
+        a.installTranslator(&translator);
+    }*/
     
     //qInstallMessageHandler(customMessageHandler);
-    
-    //QApplication::setStyle(new DarkBlueStyle());
     
     MainController* c = new MainController(filePath);
     (void) c;

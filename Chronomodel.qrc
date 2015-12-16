@@ -1,6 +1,9 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
 
+	<file alias="Chronomodel_fr.qm">translations/Chronomodel_fr.qm</file>
+	<file alias="Chronomodel_en.qm">translations/Chronomodel_en.qm</file>
+	
 	<file alias="chronomodel.png">resources/chronomodel.png</file>
 	
 	<file alias="grid.png">resources/grid.png</file>

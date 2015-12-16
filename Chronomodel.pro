@@ -153,6 +153,15 @@ unix:!macx{
 }
 
 #########################################
+# TRANSLATIONS
+#########################################
+TRANSLATIONS = translations/Chronomodel_fr.ts \
+				translations/Chronomodel_en.ts
+				
+# For Microsoft Visual Studio only
+CODECFORSRC = UTF-8
+
+#########################################
 # INCLUDES
 #########################################
 
@@ -211,6 +220,7 @@ HEADERS += src/plugins/PluginFormAbstract.h
 HEADERS += src/plugins/GraphViewRefAbstract.h
 HEADERS += src/plugins/PluginSettingsViewAbstract.h
 HEADERS += src/plugins/PluginRefCurveSettingsView.h
+HEADERS += src/plugins/RefCurve.h
 
 equals(USE_PLUGIN_TL, 1){
 	HEADERS += src/plugins/plugin_tl/PluginTL.h
@@ -269,7 +279,6 @@ HEADERS += src/ui/graphs/AxisTool.h
 HEADERS += src/ui/graphs/Ruler.h
 
 HEADERS += src/ui/lookandfeel/Painting.h
-HEADERS += src/ui/lookandfeel/DarkBlueStyle.h
 
 HEADERS += src/ui/panel_model/ModelView.h
 HEADERS += src/ui/panel_model/ImportDataView.h
@@ -352,6 +361,7 @@ SOURCES += src/model/PhaseConstraint.cpp
 SOURCES += src/model/ModelUtilities.cpp
 
 SOURCES += src/plugins/PluginRefCurveSettingsView.cpp
+SOURCES += src/plugins/RefCurve.cpp
 
 equals(USE_PLUGIN_TL, 1){
 	SOURCES += src/plugins/plugin_tl/PluginTL.cpp
@@ -409,7 +419,6 @@ SOURCES += src/ui/graphs/AxisTool.cpp
 SOURCES += src/ui/graphs/Ruler.cpp
 
 SOURCES += src/ui/lookandfeel/Painting.cpp
-SOURCES += src/ui/lookandfeel/DarkBlueStyle.cpp
 
 SOURCES += src/ui/panel_model/ModelView.cpp
 SOURCES += src/ui/panel_model/ImportDataView.cpp
@@ -459,11 +468,3 @@ SOURCES += src/utilities/StdUtilities.cpp
 SOURCES += src/utilities/QtUtilities.cpp
 SOURCES += src/utilities/DoubleValidator.cpp
 SOURCES += src/utilities/DateUtils.cpp
-
-
-message("--------------------TRANSLATIONS-----------------------")
-TRANSLATIONS +=\
-chrono_fr.ts
-chron_en.ts
-message("-------------------------------------------")
-
