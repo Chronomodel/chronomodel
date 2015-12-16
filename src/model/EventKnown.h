@@ -31,8 +31,6 @@ public:
     void updateValues(double tmin, double tmax, double step);
     
     virtual void updateTheta(double min, double max);
-
-    void generateHistos(const QList<Chain>& chains, int fftLen, double hFactor, double tmin, double tmax);
     
     
 public:

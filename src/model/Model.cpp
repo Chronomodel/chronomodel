@@ -1078,18 +1078,18 @@ void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen, d
         Event* event = mEvents[i];
         
         // Generate event histos for all events and all bounds except for bounds of type "fixed"
-        bool notEventKnownFixed = true;
-        if(event->type() == Event::eKnown)
+        EventKnown* ek = dynamic_cast<EventKnown*>(event);
+        if(event->type() == Event::eKnown && ek && (ek->knownType() == EventKnown::eFixed))
         {
-            EventKnown* ek = dynamic_cast<EventKnown*>(event);
-            if(ek && (ek->knownType() == EventKnown::eFixed))
-            {
-                // "Nothing todo : this is just a Dirac !";
-                ek->generateHistos(chains, fftLen, hFactor, tmin, tmax);
-                notEventKnownFixed = false;
-            }
+            // Nothing todo : this is just a Dirac !
+            ek->mTheta.mHisto.clear();
+            ek->mTheta.mChainsHistos.clear();
+            
+            ek->mTheta.mHisto.insert(ek->mFixed,1);
+            for(int i=0; i<chains.size(); ++i)
+                ek->mTheta.mChainsHistos.append(ek->mTheta.mHisto);
         }
-        if(notEventKnownFixed)
+        else
         {
             event->mTheta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
         }
