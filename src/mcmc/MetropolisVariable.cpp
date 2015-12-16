@@ -54,19 +54,6 @@ float* MetropolisVariable::generateBufferForHisto(QVector<double>& dataSrc, int 
     if(sigma == 0)
         return 0;
     
-   
-    // double areaTot = 0.;
-    /* for(int i=0; i<dataSrc.size(); ++i) {
-         areaTot += (double)dataSrc[i];
-     }
-     
-     qDebug()<<"MetropolisVariable::generateBufferForHisto areaTot ="<<areaTot<<"size"<<dataSrc.size();
-    
-   */
-
-    
-    
-    
     double h = hFactor * 1.06 * sigma * pow(dataSrc.size(), -1./5.);
     
     double a = vector_min_value(dataSrc) - 4. * h;
@@ -109,14 +96,6 @@ float* MetropolisVariable::generateBufferForHisto(QVector<double>& dataSrc, int 
         if(idx_upper < numPts) // This is to handle the case when matching the last point index !
             input[(int)idx_upper] += contrib_upper;
     }
-    // just a check
-    /*areaTot = 0.;
-    for(int i=0; i<numPts; ++i) {
-        areaTot += input[i];
-    }
-    
-    qDebug()<<"MetropolisVariable::generateBufferForHisto areaTot final ="<<areaTot;
-   */
     return input;
 }
 
@@ -144,15 +123,7 @@ QMap<double, double> MetropolisVariable::generateHisto(QVector<double>& dataSrc,
     
     float* input = generateBufferForHisto(dataSrc, fftLen, hFactor);
     float* output = (float*) fftwf_malloc(outputSize * sizeof(float));
-    /*
-    double areaTot = 0.;
-    for(int i=0; i<inputSize; ++i) {
-        areaTot += input[i];
-    }
     
-        qDebug()<<"MetropolisVariable::generateHisto areaTot ="<<areaTot<<" a="<<a<<" b="<<b;
-     qDebug()<<areaTot;
-     */
     if(input != 0)
     {
         // ----- FFT -----
@@ -172,30 +143,16 @@ QMap<double, double> MetropolisVariable::generateHisto(QVector<double>& dataSrc,
         fftwf_execute(plan_backward);
         
         // ----- FFT Buffer to result map -----
-        /*
-        areaTot =0.;
-        for(int i=0; i<inputSize; ++i) {
-            areaTot += input[i];
-        }
-        
-        //qDebug()<<"MetropolisVariable::generateHisto areaTot ="<<areaTot<<" a="<<a<<" b="<<b;
-        //qDebug()<<areaTot/inputSize;
-        */
-        
-        for(int i=0; i<inputSize; ++i)  {
+        for(int i=0; i<inputSize; ++i)
+        {
             double t = a + (double)i * delta;
-            if(t >= tmin && t<= tmax)
-            {
-                result[t] = input[i];
-            }
+            result[t] = input[i];
         }
         fftwf_free(input);
         fftwf_free(output);
         
         result = equal_areas(result, 1.); // normalize the output area du to the fftw and the case (t >= tmin && t<= tmax)
-        
     }
-    
     return result; // return a map between a and b with a step delta = (b - a) / fftLen;
 }
 
@@ -206,12 +163,11 @@ void MetropolisVariable::generateHistos(const QList<Chain>& chains, int fftLen, 
     mHisto = generateHisto(subFullTrace, fftLen, hFactor, tmin, tmax);
  
     mChainsHistos.clear();
- //   if (mChainsHistos.isEmpty() ) {
-        for(int i=0; i<chains.size(); ++i) {
-            QVector<double> subTrace = runTraceForChain(chains, i);
-            mChainsHistos.append(generateHisto(subTrace, fftLen, hFactor, tmin, tmax));
-        }
-//    }
+    for(int i=0; i<chains.size(); ++i)
+    {
+        QVector<double> subTrace = runTraceForChain(chains, i);
+        mChainsHistos.append(generateHisto(subTrace, fftLen, hFactor, tmin, tmax));
+    }
 }
 
 void MetropolisVariable::generateHPD(double threshold)
@@ -220,7 +176,7 @@ void MetropolisVariable::generateHPD(double threshold)
     {
         threshold = (threshold > 100 ? threshold = 100.0 : threshold);
         if (threshold==100.) {
-             mHPD = mHisto;
+            mHPD = mHisto;
             return;
         }
         threshold = (threshold < 0 ? threshold = 0.0 : threshold);
