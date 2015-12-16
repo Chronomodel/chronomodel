@@ -44,6 +44,7 @@ public:
 protected:
     void closeEvent(QCloseEvent* e) Q_DECL_OVERRIDE;
     void keyPressEvent(QKeyEvent* e) Q_DECL_OVERRIDE;
+    void changeEvent(QEvent* event) Q_DECL_OVERRIDE;
 
 public:
     void readSettings(const QString& defaultFilePath);
@@ -68,6 +69,7 @@ public slots:
     void openManual();
     void openWebsite();
     void showHelp(bool);
+    void setLanguage(QAction* action);
     void mcmcFinished(Model*);
     void noResult();
     void updateProject();
@@ -94,10 +96,15 @@ private:
     QMenu* mViewMenu;
     QMenu* mHelpMenu;
     QMenu* mPluginsMenu;
+    QMenu* mLanguageMenu;
 
     QAction* mAppSettingsAction;
     QAction* mAboutAct;
     QAction* mAboutQtAct;
+    
+    QActionGroup* mLangGroup;
+    QAction* mTranslateEnglishAct;
+    QAction* mTranslateFrenchAct;
     
     QAction* mNewProjectAction;
     QAction* mOpenProjectAction;

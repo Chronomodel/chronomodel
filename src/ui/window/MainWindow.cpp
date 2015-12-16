@@ -250,6 +250,23 @@ void MainWindow::createActions()
     
     mWebsiteAction = new QAction(QIcon(":web_p.png"), tr("Website"), this);
     connect(mWebsiteAction, SIGNAL(triggered()), this, SLOT(openWebsite()));
+    
+    //-----------------------------------------------------------------
+    // Translation Menu
+    //-----------------------------------------------------------------
+    mTranslateEnglishAct = new QAction(tr("English"), this);
+    mTranslateEnglishAct->setCheckable(true);
+    mTranslateEnglishAct->setData("en");
+    
+    mTranslateFrenchAct = new QAction(tr("French"), this);
+    mTranslateFrenchAct->setCheckable(true);
+    mTranslateFrenchAct->setData("fr");
+    
+    mLangGroup = new QActionGroup(this);
+    mLangGroup->addAction(mTranslateEnglishAct);
+    mLangGroup->addAction(mTranslateFrenchAct);
+    mTranslateEnglishAct->setChecked(true);
+    connect(mLangGroup, &QActionGroup::triggered, this, &MainWindow::setLanguage);
 }
 
 void MainWindow::createMenus()
@@ -300,9 +317,17 @@ void MainWindow::createMenus()
     mViewMenu->addAction(mViewLogAction);
     
     //-----------------------------------------------------------------
+    // Language menu
+    //-----------------------------------------------------------------
+    /*mLanguageMenu = menuBar()->addMenu(tr("Language"));
+    mLanguageMenu->addAction(mTranslateEnglishAct);
+    mLanguageMenu->addAction(mTranslateFrenchAct);*/
+    
+    //-----------------------------------------------------------------
     // Help/About Menu
     //-----------------------------------------------------------------
-    mHelpMenu = menuBar()->addMenu(tr("&Help"));
+    mHelpMenu = menuBar()->addMenu(tr("Help"));
+    mHelpMenu->menuAction()->setShortcut(Qt::Key_Question);
     mHelpMenu->addAction(mAboutAct);
     mHelpMenu->addAction(mAboutQtAct);
     
@@ -492,7 +517,7 @@ void MainWindow::setAppSettings(const AppSettings& s)
     QLocale newLoc = QLocale(newLanguage,newCountry);
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
-    statusBar()->showMessage(tr("Language") + " : " + QLocale::languageToString(QLocale().language()));
+    //statusBar()->showMessage(tr("Language") + " : " + QLocale::languageToString(QLocale().language()));
     
     mProject->setAppSettings(mAppSettings);
     
@@ -527,6 +552,24 @@ void MainWindow::showHelp(bool show)
 void MainWindow::openWebsite()
 {
     QDesktopServices::openUrl(QUrl("http://www.chronomodel.fr", QUrl::TolerantMode));
+}
+
+#pragma mark Language
+void MainWindow::setLanguage(QAction* action)
+{
+    QString lang = action->data().toString();
+    QLocale locale = QLocale(lang);
+    QLocale::setDefault(locale);
+    
+    QTranslator qtTranslator;
+    qtTranslator.load("qt_" + locale.name(), QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+    qApp->installTranslator(&qtTranslator);
+    
+    QTranslator translator;
+    if(translator.load(locale, ":/Chronomodel", "_")){
+        qDebug() << "-> Locale set to : " << QLocale::languageToString(locale.language()) << "(" << locale.name() << ")";
+        qApp->installTranslator(&translator);
+    }
 }
 
 #pragma mark Grouped Actions
@@ -651,6 +694,20 @@ void MainWindow::keyPressEvent(QKeyEvent* keyEvent)
         mUndoStack->redo();
     }
     QMainWindow::keyPressEvent(keyEvent);
+}
+
+void MainWindow::changeEvent(QEvent* event)
+{
+    if(event->type() == QEvent::LanguageChange)
+    {
+        // TODO : set every text that needs translation !!!
+        qDebug() << "--> MainWindow language updated";
+        mNewProjectAction->setText(tr("&New"));
+    }
+    else
+    {
+        QMainWindow::changeEvent(event);
+    }
 }
 
 #pragma mark Settings
