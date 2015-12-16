@@ -58,23 +58,19 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         QColor color2(150, 150, 150);
         
         PluginMag* plugin = (PluginMag*)date.mPlugin;
-        const QMap<QString, QMap<double, double> >& curves = plugin->getRefData(ref_curve);
-
-        if(curves.isEmpty() || curves["G"].isEmpty()) {
+        const RefCurve& curve = plugin->mRefCurves[ref_curve];
+        
+        if(curve.mDataMean.isEmpty())
+        {
             GraphZone zone;
             zone.mColor = Qt::red;
             zone.mColor.setAlpha(20);
-
             zone.mXStart = mSettings.mTmin;
             zone.mXEnd = mSettings.mTmax;
+            zone.mText = tr("No reference data");
             mGraph->addZone(zone);
             return;
         }
-
-        QMap<double, double> curveG;
-        QMap<double, double> curveG95Sup;
-        QMap<double, double> curveG95Inf;
-
 
         double tminCalib = date.getTminCalib();
         double tmaxCalib = date.getTmaxCalib();
@@ -102,27 +98,30 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
 
         if(tminDisplay<tminCurve){
             GraphZone zone;
-            zone.mColor = Qt::gray;
+            zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(35);
-
             zone.mXStart = tminDisplay;
             zone.mXEnd = tminCurve;
+            zone.mText = tr("Outside reference area");
             mGraph->addZone(zone);
         }
 
         if(tmaxCurve<tmaxDisplay){
             GraphZone zone;
-            zone.mColor = Qt::gray;
+            zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(35);
-
             zone.mXStart = tmaxCurve;
             zone.mXEnd = tmaxDisplay;
+            zone.mText = tr("Outside reference area");
             mGraph->addZone(zone);
         }
 
         double yMin = plugin->getRefValueAt(date.mData, qMax(tminDisplay,tminCurve));
         double yMax = plugin->getRefValueAt(date.mData, qMin(tmaxDisplay,tmaxCurve));
 
+        QMap<double, double> curveG;
+        QMap<double, double> curveG95Sup;
+        QMap<double, double> curveG95Inf;
 
         for(double t=tminDisplay; t<=tmaxDisplay; ++t)
         {

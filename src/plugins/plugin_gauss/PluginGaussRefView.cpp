@@ -79,37 +79,37 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
         {
             PluginGauss* plugin = (PluginGauss*)date.mPlugin;
             
-            const QMap<QString, QMap<double, double> >& curves = plugin->getRefData(ref_curve);
-
-            if(curves.isEmpty() || curves["G"].isEmpty()) {
+            const RefCurve& curve = plugin->mRefCurves[ref_curve];
+            
+            if(curve.mDataMean.isEmpty())
+            {
                 GraphZone zone;
                 zone.mColor = Qt::gray;
                 zone.mColor.setAlpha(25);
                 zone.mXStart = mSettings.mTmin;
                 zone.mXEnd = mSettings.mTmax;
+                zone.mText = tr("No reference data");
                 mGraph->addZone(zone);
                 return;
             }
 
-            QMap<double, double> curveG;
-            QMap<double, double> curveG95Sup;
-            QMap<double, double> curveG95Inf;
-
             if(mTminDisplay < mTminRef){
                 GraphZone zone;
-                zone.mColor = Qt::gray;
+                zone.mColor = QColor(217, 163, 69);
                 zone.mColor.setAlpha(35);
                 zone.mXStart = mTminDisplay;
                 zone.mXEnd = mTminRef;
+                zone.mText = tr("Outside reference area");
                 mGraph->addZone(zone);
             }
 
             if(mTmaxRef < mTmaxDisplay){
                 GraphZone zone;
-                zone.mColor = Qt::gray;
+                zone.mColor = QColor(217, 163, 69);
                 zone.mColor.setAlpha(35);
                 zone.mXStart = mTmaxRef;
                 zone.mXEnd = mTmaxDisplay;
+                zone.mText = tr("Outside reference area");
                 mGraph->addZone(zone);
             }
 
@@ -118,6 +118,10 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             yMin = plugin->getRefValueAt(date.mData, qMax(mTminDisplay, mTminRef));
             yMax = yMin;
 
+            QMap<double, double> curveG;
+            QMap<double, double> curveG95Sup;
+            QMap<double, double> curveG95Inf;
+            
             for(double t=mTminDisplay; t<=mTmaxDisplay; ++t)
             {
                 if(t > mTminRef && t < mTmaxRef)

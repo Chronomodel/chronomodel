@@ -56,50 +56,54 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         
         Plugin14C* plugin = (Plugin14C*)date.mPlugin;
 
-        const QMap<QString, QMap<double, double> >& curves = plugin->getRefData(ref_curve);
+        const RefCurve& curve = plugin->mRefCurves[ref_curve];
         
-        if(curves.isEmpty() || curves["G"].isEmpty()) {
+        if(curve.mDataMean.isEmpty())
+        {
             GraphZone zone;
             zone.mColor = Qt::gray;
             zone.mColor.setAlpha(25);
             zone.mXStart = mTminDisplay;
             zone.mXEnd = mTmaxDisplay;
+            zone.mText = tr("No reference data");
             mGraph->addZone(zone);
             return;
         }
 
-        QMap<double, double> curveG;
-        QMap<double, double> curveG95Sup;
-        QMap<double, double> curveG95Inf;
-
         if(mTminDisplay < mTminRef){
             GraphZone zone;
-            zone.mColor = Qt::gray;
+            zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(35);
             zone.mXStart = mTminDisplay;
             zone.mXEnd = mTminRef;
+            zone.mText = tr("Outside reference area");
             mGraph->addZone(zone);
         }
 
         if(mTmaxRef < mTmaxDisplay){
             GraphZone zone;
-            zone.mColor = Qt::gray;
+            zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(35);
             zone.mXStart = mTmaxRef;
             zone.mXEnd = mTmaxDisplay;
+            zone.mText = tr("Outside reference area");
             mGraph->addZone(zone);
         }
 
         double yMin = plugin->getRefValueAt(date.mData, qMax(mTminDisplay, mTminRef));
         double yMax = yMin;
 
+        QMap<double, double> curveG;
+        QMap<double, double> curveG95Sup;
+        QMap<double, double> curveG95Inf;
 
         for(double t=mTminDisplay; t<=mTmaxDisplay; ++t)
         {
-            if(t>mTminRef && t<mTmaxRef) {
+            if(t>mTminRef && t<mTmaxRef)
+            {
                 double value = plugin->getRefValueAt(date.mData, t);
                 double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
-
+                
                 curveG[t] = value;
                 curveG95Sup[t] = value + error;
                 curveG95Inf[t] = value - error;

@@ -4,6 +4,7 @@
 #include "Date.h"
 #include "GraphView.h"
 #include "ProjectSettings.h"
+#include "RefCurve.h"
 
 //#include <QtPlugin>
 #include <QObject>
@@ -92,15 +93,17 @@ public:
     
     virtual QString getRefExt() const {return "";}
     virtual QString getRefsPath() const {return "";}
-    virtual QMap<QString, QMap<double, double> > loadRefFile(QFileInfo refFile)
+    virtual RefCurve loadRefFile(QFileInfo refFile)
     {
-        return QMap<QString, QMap<double, double> >();
+        RefCurve curve;
+        return curve;
     }
 
-    void loadRefDatas(){
+    void loadRefDatas()
+    {
         QString path = QDir::currentPath();
         QString calibPath = getRefsPath();
-        mRefDatas.clear();
+        mRefCurves.clear();
         QDir calibDir(calibPath);
         
         QFileInfoList files = calibDir.entryInfoList(QStringList(), QDir::Files);
@@ -108,29 +111,101 @@ public:
         {
             if(files[i].suffix().toLower() == getRefExt())
             {
-                QMap<QString, QMap<double, double> > curves = loadRefFile(files[i].absoluteFilePath());
-                mRefDatas[files[i].fileName().toLower()] = curves;
+                RefCurve curve = loadRefFile(files[i]);
+                mRefCurves.insert(files[i].fileName().toLower(), curve);
             }
         }
     }
-    QStringList getRefsNames() const{
+    
+    QStringList getRefsNames() const
+    {
         QStringList refNames;
-        typename QMap< QString, QMap<QString, QMap<double, double> > >::const_iterator it = mRefDatas.begin();
-        while(it != mRefDatas.end())
+        QHash<QString, RefCurve>::const_iterator it = mRefCurves.constBegin();
+        while(it != mRefCurves.constEnd())
         {
-           QMap<QString, QMap<double, double> > curve = mRefDatas[it.key()];
+           const RefCurve& curve = mRefCurves[it.key()];
            // return only valid curve
-           if (! curve["G"].isEmpty())  refNames.push_back(it.key());
+           if(!curve.mDataMean.isEmpty())
+               refNames.push_back(it.key());
             ++it;
         }
         return refNames;
     }
-    const QMap<QString, QMap<double, double> >& getRefData(const QString& name) {
-        return mRefDatas[name.toLower()];
-    }
-    QMap< QString, QMap<QString, QMap<double, double> > > mRefDatas;
-    // -------------------------------
     
+    double getRefCurveValueAt(const QString& curveName, const double& t)
+    {
+        double value = 0;
+        if(mRefCurves.find(curveName) != mRefCurves.constEnd())
+        {
+            const RefCurve& curve = mRefCurves[curveName];
+            
+            if(curve.mDataMean.find(t) != curve.mDataMean.constEnd())
+            {
+                value = curve.mDataMean[t];
+            }
+            else if(t < curve.mTmin || t > curve.mTmax){
+                value = interpolate(t, curve.mTmin, curve.mTmax, curve.mDataMean[curve.mTmin], curve.mDataMean[curve.mTmax]);
+            }
+            else
+            {
+                // This actually return the iterator with the nearest greater key !!!
+                QMap<double, double>::const_iterator iter = curve.mDataMean.lowerBound(t);
+                if(iter != curve.mDataMean.end())
+                {
+                    double t_upper = iter.key();
+                    --iter;
+                    double t_under = iter.key();
+                    
+                    double v_under = curve.mDataMean[t_under];
+                    double v_upper = curve.mDataMean[t_upper];
+                    
+                    value = interpolate(t, t_under, t_upper, v_under, v_upper);
+                }
+            }
+        }
+        return value;
+    }
+    
+    double getRefCurveErrorAt(const QString& curveName, const double& t)
+    {
+        double error = 0;
+        if(mRefCurves.find(curveName) != mRefCurves.constEnd())
+        {
+            const RefCurve& curve = mRefCurves[curveName];
+            
+            if(curve.mDataError.find(t) != curve.mDataError.constEnd())
+            {
+                error = curve.mDataError[t];
+            }
+            else if(t < curve.mTmin || t > curve.mTmax){
+                error = 1.0e+100 * (curve.mDataSupMax - curve.mDataInfMin);
+            }
+            else
+            {
+                // This actually return the iterator with the nearest greater key !!!
+                QMap<double, double>::const_iterator iter = curve.mDataMean.lowerBound(t);
+                if(iter != curve.mDataMean.end())
+                {
+                    double t_upper = iter.key();
+                    --iter;
+                    double t_under = iter.key();
+                    
+                    double v_under = curve.mDataError[t_under];
+                    double v_upper = curve.mDataError[t_upper];
+                    
+                    error = interpolate(t, t_under, t_upper, v_under, v_upper);
+                }
+            }
+        }
+        return error;
+    }
+    
+    const RefCurve& getRefCurve(const QString& name)
+    {
+        return mRefCurves[name.toLower()];
+    }
+    
+    QHash<QString, RefCurve> mRefCurves;
     GraphViewRefAbstract* mRefGraph;
     QColor mColor;
 };

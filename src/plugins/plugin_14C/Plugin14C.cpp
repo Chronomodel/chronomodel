@@ -18,73 +18,7 @@ Plugin14C::Plugin14C()
     loadRefDatas();
 }
 
-double Plugin14C::getRefValueAt(const QJsonObject& data, const double& t)
-{
-    QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString();
-    double g = 0;
-    if(mRefDatas.find(ref_curve) != mRefDatas.end())
-    {
-        const QMap<double, double>& curve = mRefDatas[ref_curve]["G"];
-        
-        double tMinDef = curve.firstKey();
-        double tMaxDef = curve.lastKey();
-        
-        if(t >= tMaxDef){
-            g = interpolate(t, tMinDef, tMaxDef, curve[tMinDef], curve[tMaxDef]);
-        }
-        else if(t <= tMinDef){
-            g = interpolate(t, tMinDef, tMaxDef, curve[tMinDef], curve[tMaxDef]);
-        }
-        else
-        {
-            double t_under = floor(t);
-            double t_upper = t_under + 1;
-            double g_under = curve[t_under];
-            double g_upper = curve[t_upper];
-            g = interpolate(t, t_under, t_upper, g_under, g_upper);
-        }
-    }
-    return g;
-}
-
-double Plugin14C::getRefErrorAt(const QJsonObject& data, const double& t)
-{
-    QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString();
-    
-    double error = 0;
-    
-    if(mRefDatas.find(ref_curve) != mRefDatas.end())
-    {
-        const QMap<double, double>& curve = mRefDatas[ref_curve]["G"];
-        const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
-        
-        double tMinDef = curve.firstKey();
-        double tMaxDef = curve.lastKey();
-        
-        if(t >= tMaxDef){
-            error = (curveG95Sup[tMaxDef] - curve[tMaxDef]) / 1.96f;
-        }
-        else if(t <= tMinDef){
-            error = (curveG95Sup[tMinDef] - curve[tMinDef]) / 1.96f;
-        }
-        else
-        {
-            double t_under = floor(t);
-            double t_upper = t_under + 1;
-            double g_under = curve[t_under];
-            double g_upper = curve[t_upper];
-            double g = interpolate(t, t_under, t_upper, g_under, g_upper);
-            
-            double g_sup_under = curveG95Sup[t_under];
-            double g_sup_upper = curveG95Sup[t_upper];
-            double g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
-            
-            error = (g_sup - g) / 1.96f;
-        }
-    }
-    return error;
-}
-
+#pragma mark Likelihood
 QPair<double, double> Plugin14C::getLikelyhoodArg(const double& t, const QJsonObject& data)
 {
     double age = data[DATE_14C_AGE_STR].toDouble();
@@ -112,6 +46,7 @@ double Plugin14C::getLikelyhood(const double& t, const QJsonObject& data)
     return back;
 }
 
+#pragma mark Properties
 QString Plugin14C::getName() const
 {
     return QString("14C");
@@ -144,6 +79,37 @@ QList<Date::DataMethod> Plugin14C::allowedDataMethods() const
     return methods;
 }
 
+QString Plugin14C::getDateDesc(const Date* date) const
+{
+    QLocale locale=QLocale();
+    QString result;
+    if(date)
+    {
+        QJsonObject data = date->mData;
+        
+        double age = data[DATE_14C_AGE_STR].toDouble();
+        double error = data[DATE_14C_ERROR_STR].toDouble();
+        double delta_r = data[DATE_14C_DELTA_R_STR].toDouble();
+        double delta_r_error = data[DATE_14C_DELTA_R_ERROR_STR].toDouble();
+        QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString().toLower();
+        
+        result += QObject::tr("Age") + " : " + locale.toString(age);
+        result += " ± " + locale.toString(error);
+        if(delta_r != 0 || delta_r_error != 0){
+            result += ", " + QObject::tr("ΔR") + " : " + locale.toString(delta_r);
+            result += " ± " +locale.toString(delta_r_error);
+        }
+        if(mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
+            result += ", " + tr("Ref. curve") + " : " + ref_curve;
+        }
+        else {
+            result += ", " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
+        }
+    }
+    return result;
+}
+
+#pragma mark CSV
 QStringList Plugin14C::csvColumns() const
 {
     QStringList cols;
@@ -153,12 +119,6 @@ QStringList Plugin14C::csvColumns() const
 
 int Plugin14C::csvMinColumns() const{
     return csvColumns().count() - 2;
-}
-
-PluginFormAbstract* Plugin14C::getForm()
-{
-    Plugin14CForm* form = new Plugin14CForm(this);
-    return form;
 }
 
 QJsonObject Plugin14C::fromCSV(const QStringList& list)
@@ -191,39 +151,9 @@ QStringList Plugin14C::toCSV(const QJsonObject& data, const QLocale& csvLocale)
     return list;
 }
 
-QString Plugin14C::getDateDesc(const Date* date) const
-{
-    QLocale locale=QLocale();    
-    QString result;
-    if(date)
-    {
-        QJsonObject data = date->mData;
-        
-        double age = data[DATE_14C_AGE_STR].toDouble();
-        double error = data[DATE_14C_ERROR_STR].toDouble();
-        double delta_r = data[DATE_14C_DELTA_R_STR].toDouble();
-        double delta_r_error = data[DATE_14C_DELTA_R_ERROR_STR].toDouble();
-        QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString().toLower();        
-
-        result += QObject::tr("Age") + " : " + locale.toString(age);
-        result += " ± " + locale.toString(error);
-        if(delta_r != 0 || delta_r_error != 0){
-            result += ", " + QObject::tr("ΔR") + " : " + locale.toString(delta_r);
-            result += " ± " +locale.toString(delta_r_error);
-        }
-        if(mRefDatas.contains(ref_curve) && !mRefDatas[ref_curve].isEmpty()) {
-            result += ", " + tr("Ref. curve") + " : " + ref_curve;
-        }
-        else {
-            result += ", " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
-        }
-    }
-    return result;
-}
-
 // ------------------------------------------------------------------
 
-
+#pragma mark Ref curves (files)
 QString Plugin14C::getRefExt() const
 {
     return "14c";
@@ -241,18 +171,17 @@ QString Plugin14C::getRefsPath() const
     return calibPath;
 }
 
-QMap<QString, QMap<double, double> > Plugin14C::loadRefFile(QFileInfo refFile)
+RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
 {
+    RefCurve curve;
+    curve.mName = refFile.fileName().toLower();
+    
     QFile file(refFile.absoluteFilePath());
-    QMap<QString, QMap<double, double> > curves;
     if(file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        QMap<double, double> curveG;
-        QMap<double, double> curveG95Sup;
-        QMap<double, double> curveG95Inf;
         QLocale locale = QLocale(QLocale::English);
-
         QTextStream stream(&file);
+        bool firstLine = true;
         while(!stream.atEnd())
         {
             QString line = stream.readLine();
@@ -262,84 +191,79 @@ QMap<QString, QMap<double, double> > Plugin14C::loadRefFile(QFileInfo refFile)
                 if(values.size() >= 3)
                 {
                     bool ok = true;
+                    
                     int t = 1950 - locale.toInt(values[0],&ok);
                     if(!ok) continue;
                     double g = locale.toDouble(values[1],&ok);
                     if(!ok) continue;
-                    double gSup = g + 1.96f * locale.toDouble(values[2],&ok);
-                    if(!ok) continue;
-                    double gInf = g - 1.96f * locale.toDouble(values[2],&ok);
+                    double e = locale.toDouble(values[2],&ok);
                     if(!ok) continue;
                     
-                    curveG[t] = g;
+                    double gSup = g + 1.96f * e;
+                    if(!ok) continue;
+                    double gInf = g - 1.96f * e;
+                    if(!ok) continue;
                     
-                    curveG95Sup[t] = gSup;
-                    curveG95Inf[t] = gInf;
+                    curve.mDataMean[t] = g;
+                    curve.mDataError[t] = e;
+                    curve.mDataSup[t] = gSup;
+                    curve.mDataInf[t] = gInf;
+                    
+                    if(firstLine)
+                    {
+                        curve.mDataMeanMin = g;
+                        curve.mDataMeanMax = g;
+                        
+                        curve.mDataErrorMin = e;
+                        curve.mDataErrorMax = e;
+                        
+                        curve.mDataSupMin = gSup;
+                        curve.mDataSupMax = gSup;
+                        
+                        curve.mDataInfMin = gInf;
+                        curve.mDataInfMax = gInf;
+                    }
+                    else
+                    {
+                        curve.mDataMeanMin = qMin(curve.mDataMeanMin, g);
+                        curve.mDataMeanMax = qMax(curve.mDataMeanMax, g);
+                        
+                        curve.mDataErrorMin = qMin(curve.mDataErrorMin, e);
+                        curve.mDataErrorMax = qMax(curve.mDataErrorMax, e);
+                        
+                        curve.mDataSupMin = qMin(curve.mDataSupMin, gSup);
+                        curve.mDataSupMax = qMax(curve.mDataSupMax, gSup);
+                        
+                        curve.mDataInfMin = qMin(curve.mDataInfMin, gInf);
+                        curve.mDataInfMax = qMax(curve.mDataInfMax, gInf);
+                    }
+                    firstLine = false;
                 }
             }
         }
         file.close();
-        // it is not a valid file
-        if(curveG.isEmpty()) return curves;
-
-        // The curves do not have 1-year precision!
-        // We have to interpolate in the blanks
         
-        double tmin = curveG.firstKey();
-        double tmax = curveG.lastKey();
-        
-        for(double t=tmin; t<tmax; ++t)//t+=settings.mStep)//++t)
+        // invalid file ?
+        if(!curve.mDataMean.isEmpty())
         {
-            if(curveG.find(t) == curveG.end())
-            {
-                // This actually return the iterator with the nearest greater key !!!
-                QMap<double, double>::const_iterator iter = curveG.lowerBound(t);
-                if(iter != curveG.end())
-                {
-                    double t_upper = iter.key();
-                    --iter;
-                    //if(iter != curveG.begin())
-                    {
-                        double t_under = iter.key();
-                        
-                        //qDebug() << t_under << " < " << t << " < " << t_upper;
-                        
-                        double g_under = curveG[t_under];
-                        double g_upper = curveG[t_upper];
-                        
-                        double gsup_under = curveG95Sup[t_under];
-                        double gsup_upper = curveG95Sup[t_upper];
-                        
-                        double ginf_under = curveG95Inf[t_under];
-                        double ginf_upper = curveG95Inf[t_upper];
-                        
-                        curveG[t] = interpolate(t, t_under, t_upper, g_under, g_upper);
-                        curveG95Sup[t] = interpolate(t, t_under, t_upper, gsup_under, gsup_upper);
-                        curveG95Inf[t] = interpolate(t, t_under, t_upper, ginf_under, ginf_upper);
-                    }
-                    /*else
-                     {
-                     curveG[t] = 0;
-                     curveG95Sup[t] = 0;
-                     curveG95Inf[t] = 0;
-                     }*/
-                }
-                else
-                {
-                    /*curveG[t] = 0;
-                     curveG95Sup[t] = 0;
-                     curveG95Inf[t] = 0;*/
-                }
-            }
+            curve.mTmin = curve.mDataMean.firstKey();
+            curve.mTmax = curve.mDataMean.lastKey();
         }
-        
-        // Store the resulting curves :
-        
-        curves["G"] = curveG;
-        curves["G95Sup"] = curveG95Sup;
-        curves["G95Inf"] = curveG95Inf;
     }
-    return curves;
+    return curve;
+}
+
+#pragma mark References Values & Errors
+double Plugin14C::getRefValueAt(const QJsonObject& data, const double& t)
+{
+    QString curveName = data[DATE_14C_REF_CURVE_STR].toString();
+    return getRefCurveValueAt(curveName, t);
+}
+
+double Plugin14C::getRefErrorAt(const QJsonObject& data, const double& t)
+{
+    QString curveName = data[DATE_14C_REF_CURVE_STR].toString();
+    return getRefCurveErrorAt(curveName, t);
 }
 
 QPair<double,double> Plugin14C::getTminTmaxRefsCurve(const QJsonObject& data) const
@@ -348,14 +272,15 @@ QPair<double,double> Plugin14C::getTminTmaxRefsCurve(const QJsonObject& data) co
     double tmax = 0;
     QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString().toLower();
 
-    if( mRefDatas.contains(ref_curve)  && !mRefDatas[ref_curve].isEmpty() ) {
-       tmin = mRefDatas[ref_curve]["G"].firstKey();
-       tmax = mRefDatas[ref_curve]["G"].lastKey();
+    if(mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty())
+    {
+       tmin = mRefCurves[ref_curve].mTmin;
+       tmax = mRefCurves[ref_curve].mTmax;
     }
     return qMakePair<double,double>(tmin,tmax);
 }
 
-// ------------------------------------------------------------------
+#pragma mark Settings / Input Form / RefView
 GraphViewRefAbstract* Plugin14C::getGraphViewRef()
 {
     //if(!mRefGraph) mRefGraph = new Plugin14CRefView();
@@ -371,6 +296,53 @@ PluginSettingsViewAbstract* Plugin14C::getSettingsView()
     return new Plugin14CSettingsView(this);
 }
 
+PluginFormAbstract* Plugin14C::getForm()
+{
+    Plugin14CForm* form = new Plugin14CForm(this);
+    return form;
+}
+
+#pragma mark Convert old project versions
+QJsonObject Plugin14C::checkValuesCompatibility(const QJsonObject& values)
+{
+    QJsonObject result = values;
+
+    if(result.find(DATE_14C_DELTA_R_STR) == result.end())
+        result[DATE_14C_DELTA_R_STR] = 0;
+    
+    if(result.find(DATE_14C_DELTA_R_ERROR_STR) == result.end())
+        result[DATE_14C_DELTA_R_ERROR_STR] = 0;
+    
+    // Force curve name to lower case :
+    result[DATE_14C_REF_CURVE_STR] = result[DATE_14C_REF_CURVE_STR].toString().toLower();
+    
+    return result;
+}
+
+#pragma mark Date Validity
+bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& settings){
+    
+    QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString().toLower();
+    if(!mRefCurves.contains(ref_curve))
+    {
+        qDebug()<<"in Plugin14C::isDateValid() unkowned curve"<<ref_curve;
+        //QMessageBox::warning(qApp->activeWindow(),tr("Curve error"),tr("in Plugin14C unkowned curve : ")+ref_curve);
+        return false;
+    }
+    double age = data[DATE_14C_AGE_STR].toDouble();
+    double error = data[DATE_14C_ERROR_STR].toDouble();
+    double delta_r = data[DATE_14C_DELTA_R_STR].toDouble();
+    double delta_r_error = data[DATE_14C_DELTA_R_ERROR_STR].toDouble();
+    
+    // Apply reservoir effect
+    age = (age - delta_r);
+    error = sqrt(error * error + delta_r_error * delta_r_error);
+    
+    const RefCurve& curve = mRefCurves[ref_curve];
+    return ((age - 1.96 * error < curve.mDataSupMax) && (age + 1.96 * error > curve.mDataInfMin));
+}
+
+#pragma mark Grouped Actions
 QList<QHash<QString, QVariant>> Plugin14C::getGroupedActions()
 {
     QList<QHash<QString, QVariant>> result;
@@ -387,95 +359,7 @@ QList<QHash<QString, QVariant>> Plugin14C::getGroupedActions()
     return result;
 }
 
-QJsonObject Plugin14C::checkValuesCompatibility(const QJsonObject& values){
-    QJsonObject result = values;
-
-    if(result.find(DATE_14C_DELTA_R_STR) == result.end())
-        result[DATE_14C_DELTA_R_STR] = 0;
-    
-    if(result.find(DATE_14C_DELTA_R_ERROR_STR) == result.end())
-        result[DATE_14C_DELTA_R_ERROR_STR] = 0;
-    
-    // Force curve name to lower case :
-    result[DATE_14C_REF_CURVE_STR] = result[DATE_14C_REF_CURVE_STR].toString().toLower();
-    
-    return result;
-}
-
-bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& settings){
-    
-    QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString().toLower();
-    if(!mRefDatas.contains(ref_curve))
-    {
-        qDebug()<<"in Plugin14C::isDateValid() unkowned curve"<<ref_curve;
-        //QMessageBox::warning(qApp->activeWindow(),tr("Curve error"),tr("in Plugin14C unkowned curve : ")+ref_curve);
-        return false;
-    }
-    double age = data[DATE_14C_AGE_STR].toDouble();
-    double error = data[DATE_14C_ERROR_STR].toDouble();
-    double delta_r = data[DATE_14C_DELTA_R_STR].toDouble();
-    double delta_r_error = data[DATE_14C_DELTA_R_ERROR_STR].toDouble();
-    
-    // Apply reservoir effect
-    age = (age - delta_r);
-    error = sqrt(error * error + delta_r_error * delta_r_error);
-    
-    double min = 0;
-    double max = 0;
-    
-    if(mLastRefsMinMax.find(ref_curve) != mLastRefsMinMax.end() &&
-       mLastRefsMinMax[ref_curve].first.first == settings.mTmin &&
-       mLastRefsMinMax[ref_curve].first.second == settings.mTmax)
-    {
-        min = mLastRefsMinMax[ref_curve].second.first;
-        max = mLastRefsMinMax[ref_curve].second.second;
-    }
-    else
-    {
-        const QMap<double, double>& curveG95Inf = mRefDatas[ref_curve]["G95Inf"];
-        const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
-        
-        // Find max
-        QMap<double, double>::const_iterator iter = curveG95Sup.constFind(settings.mTmin);
-        if(iter == curveG95Sup.constEnd()){
-            double t1 = curveG95Sup.firstKey();
-            if(t1 < settings.mTmax){
-                iter = curveG95Sup.constBegin();
-            }
-        }
-        if(iter != curveG95Sup.constEnd()){
-            max = iter.value();
-            while(iter != curveG95Sup.constEnd() && iter.key() <= settings.mTmax){
-                max = qMax(max, iter.value());
-                ++iter;
-            }
-        }
-        
-        // Find min
-        iter = curveG95Inf.constFind(settings.mTmin);
-        if(iter == curveG95Inf.constEnd()){
-            double t1 = curveG95Inf.firstKey();
-            if(t1 < settings.mTmax){
-                iter = curveG95Inf.constBegin();
-            }
-        }
-        if(iter != curveG95Inf.constEnd()){
-            min = iter.value();
-            while(iter != curveG95Inf.constEnd() && iter.key() <= settings.mTmax){
-                min = qMin(min, iter.value());
-                ++iter;
-            }
-        }
-        
-        // Store min & max
-        mLastRefsMinMax[ref_curve].first.first = settings.mTmin;
-        mLastRefsMinMax[ref_curve].first.second = settings.mTmax;
-        mLastRefsMinMax[ref_curve].second.first = min;
-        mLastRefsMinMax[ref_curve].second.second = max;
-    }
-    return !(min == 0 && max == 0) && ((age - 1.96f*error < max) && (age + 1.96f*error > min));
-}
-
+#pragma mark Combine / Split
 bool Plugin14C::areDatesMergeable(const QJsonArray& dates)
 {
     QString refCurve;

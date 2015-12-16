@@ -18,97 +18,7 @@ PluginGauss::PluginGauss()
     loadRefDatas();
 }
 
-
-
-double PluginGauss::getRefValueAt(const QJsonObject& data, const double& t)
-{
-    double a = data[DATE_GAUSS_A_STR].toDouble();
-    double b = data[DATE_GAUSS_B_STR].toDouble();
-    double c = data[DATE_GAUSS_C_STR].toDouble();
-    QString mode = data[DATE_GAUSS_MODE_STR].toString();
-
-    
-    if(mode == DATE_GAUSS_MODE_NONE){
-        return t;
-    }
-    else if(mode == DATE_GAUSS_MODE_EQ)
-    {
-        return a * t * t + b * t + c;
-    }
-    else if(mode == DATE_GAUSS_MODE_CURVE)
-    {
-        QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
-        // Check if calib curve exists !
-        double g = 0;
-        if(mRefDatas.contains(ref_curve))
-        {
-            const QMap<double, double>& curve = mRefDatas[ref_curve]["G"];
-            
-            double tMinDef = curve.firstKey();
-            double tMaxDef = curve.lastKey();
-            
-            if(t >= tMaxDef){
-                g = interpolate(t, tMinDef, tMaxDef, curve[tMinDef], curve[tMaxDef]);
-            }
-            else if(t <= tMinDef){
-                g = interpolate(t, tMinDef, tMaxDef, curve[tMinDef], curve[tMaxDef]);
-            }
-            else
-            {
-                double t_under = floor(t);
-                double t_upper = t_under + 1;
-                double g_under = curve[t_under];
-                double g_upper = curve[t_upper];
-                g = interpolate(t, t_under, t_upper, g_under, g_upper);
-            }
-        }
-        return g;
-    }
-    else
-    {
-        return 0;
-    }
-}
-
-double PluginGauss::getRefErrorAt(const QJsonObject& data, const double& t)
-{
-    QString mode = data[DATE_GAUSS_MODE_STR].toString();
-    QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
-    
-    double error = 0;
-    
-    if(mode == DATE_GAUSS_MODE_CURVE && mRefDatas.contains(ref_curve))
-    {
-        const QMap<double, double>& curve = mRefDatas[ref_curve]["G"];
-        const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
-        
-        double tMinDef = curve.firstKey();
-        double tMaxDef = curve.lastKey();
-        
-        if(t >= tMaxDef){
-            error = 100;
-        }
-        else if(t <= tMinDef){
-            error = 100;
-        }
-        else
-        {
-            double t_under = floor(t);
-            double t_upper = t_under + 1;
-            double g_under = curve[t_under];
-            double g_upper = curve[t_upper];
-            double g = interpolate(t, t_under, t_upper, g_under, g_upper);
-            
-            double g_sup_under = curveG95Sup[t_under];
-            double g_sup_upper = curveG95Sup[t_upper];
-            double g_sup = interpolate(t, t_under, t_upper, g_sup_under, g_sup_upper);
-            
-            error = (g_sup - g) / 1.96f;
-        }
-    }
-    return error;
-}
-
+#pragma mark Likelyhood
 double PluginGauss::getLikelyhood(const double& t, const QJsonObject& data)
 {
     QPair<double, double > result = getLikelyhoodArg(t, data);
@@ -130,7 +40,7 @@ QPair<double, double> PluginGauss::getLikelyhoodArg(const double& t, const QJson
     return qMakePair(variance, exponent);
 }
 
-
+#pragma mark Properties
 QString PluginGauss::getName() const
 {
     return QString("Gauss");
@@ -160,10 +70,78 @@ QList<Date::DataMethod> PluginGauss::allowedDataMethods() const
     methods.append(Date::eMHSymGaussAdapt);
     return methods;
 }
+
+QString PluginGauss::getDateDesc(const Date* date) const
+{
+    QLocale locale=QLocale();
+    QString result;
+    if(date)
+    {
+        QJsonObject data = date->mData;
+        
+        double a = data[DATE_GAUSS_A_STR].toDouble();
+        double b = data[DATE_GAUSS_B_STR].toDouble();
+        double c = data[DATE_GAUSS_C_STR].toDouble();
+        QString mode = data[DATE_GAUSS_MODE_STR].toString();
+        QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
+        
+        result += QObject::tr("Age") + " : " + locale.toString(data[DATE_GAUSS_AGE_STR].toDouble());
+        result += " ± " + locale.toString(data[DATE_GAUSS_ERROR_STR].toDouble());
+        
+        if(mode == DATE_GAUSS_MODE_NONE)
+        {
+            result += " (No calibration)";
+        }
+        if(mode == DATE_GAUSS_MODE_EQ)
+        {
+            QString aStr;
+            if(a != 0.f)
+            {
+                if(a == -1.f) aStr += "-";
+                else if(a != 1.f) aStr += locale.toString(a);
+                aStr += "t²";
+            }
+            QString bStr;
+            if(b != 0.f)
+            {
+                if(b == -1.f) bStr += "-";
+                else if(b != 1.f) bStr += locale.toString(b);
+                bStr += "t";
+            }
+            QString cStr;
+            if(c != 0.f)
+            {
+                cStr +=locale.toString(c);
+            }
+            QString eq = aStr;
+            if(!eq.isEmpty() && !bStr.isEmpty())
+                eq += " + ";
+            eq += bStr;
+            if(!eq.isEmpty() && !cStr.isEmpty())
+                eq += " + ";
+            eq += cStr;
+            
+            result += ", " + QObject::tr("Ref. curve") + " : g(t) = " + eq;
+        }
+        else if(mode == DATE_GAUSS_MODE_CURVE)
+        {
+            if(mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
+                result += ", " + tr("Ref. curve") + " : " + ref_curve;
+            }
+            else {
+                result += ", " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
+            }
+        }
+    }
+    return result;
+}
+
+#pragma mark CSV
 QString PluginGauss::csvHelp() const
 {
     return "Calibration : g(t) = at^2 + bt + c\n";
 }
+
 QStringList PluginGauss::csvColumns() const
 {
     QStringList cols;
@@ -173,12 +151,6 @@ QStringList PluginGauss::csvColumns() const
 
 int PluginGauss::csvMinColumns() const{
     return csvColumns().count() - 3;
-}
-
-PluginFormAbstract* PluginGauss::getForm()
-{
-    PluginGaussForm* form = new PluginGaussForm(this);
-    return form;
 }
 
 /**
@@ -234,73 +206,9 @@ QStringList PluginGauss::toCSV(const QJsonObject& data, const QLocale& csvLocale
     return list;
 }
 
-QString PluginGauss::getDateDesc(const Date* date) const
-{
-    QLocale locale=QLocale();    
-    QString result;
-    if(date)
-    {
-        QJsonObject data = date->mData;
-        
-        double a = data[DATE_GAUSS_A_STR].toDouble();
-        double b = data[DATE_GAUSS_B_STR].toDouble();
-        double c = data[DATE_GAUSS_C_STR].toDouble();
-        QString mode = data[DATE_GAUSS_MODE_STR].toString();
-        QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
-        
-        result += QObject::tr("Age") + " : " + locale.toString(data[DATE_GAUSS_AGE_STR].toDouble());
-        result += " ± " + locale.toString(data[DATE_GAUSS_ERROR_STR].toDouble());
-        
-        if(mode == DATE_GAUSS_MODE_NONE)
-        {
-            result += " (No calibration)";
-        }
-        if(mode == DATE_GAUSS_MODE_EQ)
-        {
-            QString aStr;
-            if(a != 0.f)
-            {
-                if(a == -1.f) aStr += "-";
-                else if(a != 1.f) aStr += locale.toString(a);
-                aStr += "t²";
-            }
-            QString bStr;
-            if(b != 0.f)
-            {
-                if(b == -1.f) bStr += "-";
-                else if(b != 1.f) bStr += locale.toString(b);
-                bStr += "t";
-            }
-            QString cStr;
-            if(c != 0.f)
-            {
-                cStr +=locale.toString(c);
-            }
-            QString eq = aStr;
-            if(!eq.isEmpty() && !bStr.isEmpty())
-                eq += " + ";
-            eq += bStr;
-            if(!eq.isEmpty() && !cStr.isEmpty())
-                eq += " + ";
-            eq += cStr;
-            
-            result += ", " + QObject::tr("Ref. curve") + " : g(t) = " + eq;
-        }
-        else if(mode == DATE_GAUSS_MODE_CURVE)
-        {            
-            if(mRefDatas.contains(ref_curve) && !mRefDatas[ref_curve].isEmpty()) {
-                result += ", " + tr("Ref. curve") + " : " + ref_curve;
-            }
-            else {
-                result += ", " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
-            }
-        }
-    }
-    return result;
-}
-
 // ------------------------------------------------------------------
 
+#pragma mark Reference Curves (files)
 QString PluginGauss::getRefExt() const
 {
     return "csv";
@@ -330,19 +238,17 @@ QString PluginGauss::getRefsPath() const
  * @param refFile
  * @return
  */
-QMap<QString, QMap<double, double> > PluginGauss::loadRefFile(QFileInfo refFile)
+RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
 {
+    RefCurve curve;
+    curve.mName = refFile.fileName().toLower();
+    
     QFile file(refFile.absoluteFilePath());
-    QMap<QString, QMap<double, double> > curves;
     if(file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        QMap<double, double> curveG;
-        QMap<double, double> curveG95Sup;
-        QMap<double, double> curveG95Inf;
-        
         QLocale locale = QLocale(QLocale::English);
-
         QTextStream stream(&file);
+        bool firstLine = true;
         while(!stream.atEnd())
         {
             QString line = stream.readLine();
@@ -356,93 +262,115 @@ QMap<QString, QMap<double, double> > PluginGauss::loadRefFile(QFileInfo refFile)
                     if(!ok) continue;
                     double g = locale.toDouble(values[1],&ok);
                     if(!ok) continue;
-                    double gSup = g + 1.96 * locale.toDouble(values[2],&ok);
-                    if(!ok) continue;
-                    double gInf = g - 1.96 * locale.toDouble(values[2],&ok);
+                    double e = locale.toDouble(values[2],&ok);
                     if(!ok) continue;
                     
-                    curveG[t] = g;
-                    curveG95Sup[t] = gSup;
-                    curveG95Inf[t] = gInf;
+                    double gSup = g + 1.96 * e;
+                    if(!ok) continue;
+                    double gInf = g - 1.96 * e;
+                    if(!ok) continue;
+                    
+                    curve.mDataMean[t] = g;
+                    curve.mDataError[t] = e;
+                    curve.mDataSup[t] = gSup;
+                    curve.mDataInf[t] = gInf;
+                    
+                    if(firstLine)
+                    {
+                        curve.mDataMeanMin = g;
+                        curve.mDataMeanMax = g;
+                        
+                        curve.mDataErrorMin = e;
+                        curve.mDataErrorMax = e;
+                        
+                        curve.mDataSupMin = gSup;
+                        curve.mDataSupMax = gSup;
+                        
+                        curve.mDataInfMin = gInf;
+                        curve.mDataInfMax = gInf;
+                    }
+                    else
+                    {
+                        curve.mDataMeanMin = qMin(curve.mDataMeanMin, g);
+                        curve.mDataMeanMax = qMax(curve.mDataMeanMax, g);
+                        
+                        curve.mDataErrorMin = qMin(curve.mDataErrorMin, e);
+                        curve.mDataErrorMax = qMax(curve.mDataErrorMax, e);
+                        
+                        curve.mDataSupMin = qMin(curve.mDataSupMin, gSup);
+                        curve.mDataSupMax = qMax(curve.mDataSupMax, gSup);
+                        
+                        curve.mDataInfMin = qMin(curve.mDataInfMin, gInf);
+                        curve.mDataInfMax = qMax(curve.mDataInfMax, gInf);
+                    }
+                    firstLine = false;
                 }
             }
         }
         file.close();
-        // it is not a valid file
-        if(curveG.isEmpty()) return curves;
-        // The curves do not have 1-year precision!
-        // We have to interpolate in the blanks
         
-        double tmin = curveG.firstKey();
-        double tmax = curveG.lastKey();
-        
-        for(double t=tmin; t<tmax; ++t)//t+=settings.mStep)//++t)
+        // invalid file ?
+        if(!curve.mDataMean.isEmpty())
         {
-            if(curveG.find(t) == curveG.end())
-            {
-                // This actually return the iterator with the nearest greater key !!!
-                QMap<double, double>::const_iterator iter = curveG.lowerBound(t);
-                if(iter != curveG.end())
-                {
-                    double t_upper = iter.key();
-                    if(iter != curveG.begin())
-                    {
-                        --iter;
-                        double t_under = iter.key();
-                        
-                        //qDebug() << t_under << " < " << t << " < " << t_upper;
-                        
-                        double g_under = curveG[t_under];
-                        double g_upper = curveG[t_upper];
-                        
-                        double gsup_under = curveG95Sup[t_under];
-                        double gsup_upper = curveG95Sup[t_upper];
-                        
-                        double ginf_under = curveG95Inf[t_under];
-                        double ginf_upper = curveG95Inf[t_upper];
-                        
-                        curveG[t] = interpolate(t, t_under, t_upper, g_under, g_upper);
-                        curveG95Sup[t] = interpolate(t, t_under, t_upper, gsup_under, gsup_upper);
-                        curveG95Inf[t] = interpolate(t, t_under, t_upper, ginf_under, ginf_upper);
-                    }
-                    else
-                    {
-                        curveG[t] = 0;
-                        curveG95Sup[t] = 0;
-                        curveG95Inf[t] = 0;
-                    }
-                }
-                else
-                {
-                    curveG[t] = 0;
-                    curveG95Sup[t] = 0;
-                    curveG95Inf[t] = 0;
-                }
-            }
+            curve.mTmin = curve.mDataMean.firstKey();
+            curve.mTmax = curve.mDataMean.lastKey();
         }
-        
-        // Store the resulting curves :
-        
-        curves["G"] = curveG;
-        curves["G95Sup"] = curveG95Sup;
-        curves["G95Inf"] = curveG95Inf;
     }
-    return curves;
+    return curve;
+}
+
+#pragma mark Reference Values & Errors
+double PluginGauss::getRefValueAt(const QJsonObject& data, const double& t)
+{
+    QString mode = data[DATE_GAUSS_MODE_STR].toString();
+    double v = 0;
+    
+    if(mode == DATE_GAUSS_MODE_NONE)
+    {
+        v = t;
+    }
+    else if(mode == DATE_GAUSS_MODE_EQ)
+    {
+        double a = data[DATE_GAUSS_A_STR].toDouble();
+        double b = data[DATE_GAUSS_B_STR].toDouble();
+        double c = data[DATE_GAUSS_C_STR].toDouble();
+        
+        v = a * t * t + b * t + c;
+    }
+    else if(mode == DATE_GAUSS_MODE_CURVE)
+    {
+        QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
+        v = getRefCurveValueAt(ref_curve, t);
+    }
+    return v;
+}
+
+double PluginGauss::getRefErrorAt(const QJsonObject& data, const double& t)
+{
+    QString mode = data[DATE_GAUSS_MODE_STR].toString();
+    double e = 0;
+    
+    if(mode == DATE_GAUSS_MODE_CURVE)
+    {
+        QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
+        e = getRefCurveErrorAt(ref_curve, t);
+    }
+    return e;
 }
 
 QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) const
 {
     double tmin = 0;
     double tmax = 0;
-    double k = 5;
+    const double k = 5;
     
     if(data[DATE_GAUSS_MODE_STR].toString() == DATE_GAUSS_MODE_CURVE)
     {
         QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString().toLower();
-        if(mRefDatas.contains(ref_curve) && !mRefDatas[ref_curve].isEmpty())
+        if(mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty())
         {
-           tmin = mRefDatas[ref_curve]["G"].firstKey();
-           tmax = mRefDatas[ref_curve]["G"].lastKey();
+           tmin = mRefCurves[ref_curve].mTmin;
+           tmax = mRefCurves[ref_curve].mTmax;
         }
         else
         {
@@ -516,6 +444,7 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
 
 // ------------------------------------------------------------------
 
+#pragma mark Settings / Input Form / RefView
 GraphViewRefAbstract* PluginGauss::getGraphViewRef()
 {
     //if(!mRefGraph) mRefGraph = new PluginGaussRefView(mLanguage);
@@ -531,9 +460,17 @@ PluginSettingsViewAbstract* PluginGauss::getSettingsView()
     return new PluginGaussSettingsView(this);
 }
 
+PluginFormAbstract* PluginGauss::getForm()
+{
+    PluginGaussForm* form = new PluginGaussForm(this);
+    return form;
+}
+
 // ------------------------------------------------------------------
 
-QJsonObject PluginGauss::checkValuesCompatibility(const QJsonObject& values){
+#pragma mark Convert old project versions
+QJsonObject PluginGauss::checkValuesCompatibility(const QJsonObject& values)
+{
     QJsonObject result = values;
     if(!values.contains(DATE_GAUSS_MODE_STR)){
         result.insert(DATE_GAUSS_MODE_STR, QString(DATE_GAUSS_MODE_EQ));
@@ -541,95 +478,22 @@ QJsonObject PluginGauss::checkValuesCompatibility(const QJsonObject& values){
     return result;
 }
 
-bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& settings){
-    
-    double age = data[DATE_GAUSS_AGE_STR].toDouble();
-    double error = data[DATE_GAUSS_ERROR_STR].toDouble();
-    
+#pragma mark Date Validity
+bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
+{
     QString mode = data[DATE_GAUSS_MODE_STR].toString();
+    bool valid = true;
     
-    if(mode == DATE_GAUSS_MODE_NONE){
-        return ((age - error < settings.mTmax) && (age + error > settings.mTmin));
-    }
-    else if(mode == DATE_GAUSS_MODE_EQ){
-        double a = data[DATE_GAUSS_A_STR].toDouble();
-        double b = data[DATE_GAUSS_B_STR].toDouble();
-        double c = data[DATE_GAUSS_C_STR].toDouble();
-        
-        QVector<double> refValues;
-        for(double t=settings.mTmin; t<=settings.mTmax; t+=settings.mStep)
-            refValues.push_back(a * t * t + b * t + c);
-        
-        double min = vector_min_value(refValues);
-        double max = vector_max_value(refValues);
-        
-        return ((age - error < max) && (age + error > min));
-    }
-    else if(mode == DATE_GAUSS_MODE_CURVE)
+    if(mode == DATE_GAUSS_MODE_CURVE)
     {
+        double age = data[DATE_GAUSS_AGE_STR].toDouble();
+        double error = data[DATE_GAUSS_ERROR_STR].toDouble();
         QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString().toLower();
-        if(!mRefDatas.contains(ref_curve)) {
-            qDebug()<<"in PluginGauss::isDateValid() unkowned curve"<<ref_curve;
-            QMessageBox::warning(qApp->activeWindow(),tr("Curve error"),"in PluginGauss unkowned curve : "+ref_curve);
-            return false;
-        }
-        double min = 0;
-        double max = 0;
+        const RefCurve& curve = mRefCurves[ref_curve];
         
-        if(mLastRefsMinMax.contains(ref_curve)
-           && mLastRefsMinMax[ref_curve].first.first == settings.mTmin
-           && mLastRefsMinMax[ref_curve].first.second == settings.mTmax)
-        {
-            min = mLastRefsMinMax[ref_curve].second.first;
-            max = mLastRefsMinMax[ref_curve].second.second;
-        }
-        else
-        {
-            const QMap<double, double>& curveG95Inf = mRefDatas[ref_curve]["G95Inf"];
-            const QMap<double, double>& curveG95Sup = mRefDatas[ref_curve]["G95Sup"];
-            
-            QMap<double, double>::const_iterator iter = curveG95Sup.constFind(settings.mTmin);
-            if(iter == curveG95Sup.constEnd()){
-                double t1 = curveG95Sup.firstKey();
-                if(t1 < settings.mTmax){
-                    iter = curveG95Sup.constBegin();
-                }
-            }
-            if(iter != curveG95Sup.constEnd()){
-                max = iter.value();
-                while(iter != curveG95Sup.constEnd() && iter.key() <= settings.mTmax){
-                    max = qMax(max, iter.value());
-                    ++iter;
-                }
-            }
-            
-            // Find min
-            iter = curveG95Inf.constFind(settings.mTmin);
-            if(iter == curveG95Inf.constEnd()){
-                double t1 = curveG95Inf.firstKey();
-                if(t1 < settings.mTmax){
-                    iter = curveG95Inf.constBegin();
-                }
-            }
-            if(iter != curveG95Inf.constEnd()){
-                min = iter.value();
-                while(iter != curveG95Inf.constEnd() && iter.key() <= settings.mTmax){
-                    min = qMin(min, iter.value());
-                    ++iter;
-                }
-            }
-            // Store min & max
-            mLastRefsMinMax[ref_curve].first.first = settings.mTmin;
-            mLastRefsMinMax[ref_curve].first.second = settings.mTmax;
-            mLastRefsMinMax[ref_curve].second.first = min;
-            mLastRefsMinMax[ref_curve].second.second = max;
-        }
-        return ((age - 1.96*error < max) && (age + 1.96*error > min));
+        valid = ((age - 1.96 * error < curve.mDataSupMax) && (age + 1.96 * error > curve.mDataInfMin));
     }
-    else
-    {
-        return false;
-    }
+    return valid;
 }
 
 #endif
