@@ -151,12 +151,6 @@ Date Date::fromJson(const QJsonObject& json)
         {
             throw QObject::tr("Data could not be loaded : invalid plugin : ") + pluginId;
         }
-        /*else if(date.mPlugin->getName() == "Typo"){
-            date.mTminCalib = date.mData[DATE_UNIFORM_MIN_STR].toDouble();
-            date.mTmaxCalib = date.mData[DATE_UNIFORM_MAX_STR].toDouble();
-            date.mTminRefCurve = date.mTminCalib;
-            date.mTmaxRefCurve = date.mTmaxCalib;
-        }*/
         else
         {
             QPair<double, double> tminTmax = date.mPlugin->getTminTmaxRefsCurve(date.mData);
@@ -848,7 +842,7 @@ double fProposalDensity(const double t, const double t0, Date* date)
         
     /// ----q2 gaussian-----------
     //double t0 = (tmax+tmin)/2;
-    double sigma = (tmax-tmin)/2;
+    double sigma = qMax(tmax - tmin, tmaxCalib - tminCalib) / 2;
     double q2 = exp(-0.5* pow((t-t0)/ sigma, 2)) / (sigma*sqrt(2*M_PI));
     
     return (level * q1 + (1 - level) * q2);
