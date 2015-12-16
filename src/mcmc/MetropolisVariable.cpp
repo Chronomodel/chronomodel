@@ -298,11 +298,8 @@ const QMap<double, double>& MetropolisVariable::fullHisto() const
 
 const QMap<double, double>& MetropolisVariable::histoForChain(int index) const
 {
-    if(index>=mChainsHistos.size()) {
-        qDebug()<<"MetropolisVariable::histoForChain index> mChainHisto"<<index;
-        return QMap<double,double>();
-    }
-    else  return mChainsHistos[index];
+    Q_ASSERT(index < mChainsHistos.size());
+    return mChainsHistos[index];
 }
 
 /**

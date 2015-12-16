@@ -346,8 +346,8 @@ bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& sett
     double dec = data[DATE_AM_DEC_STR].toDouble();
     double intensity = data[DATE_AM_INTENSITY_STR].toDouble();
     
-    double mesure;
-    double error;
+    double mesure = 0;
+    double error = 0;
     
     if(is_inc)
     {

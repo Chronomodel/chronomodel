@@ -12,7 +12,7 @@ public:
     EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent = 0);
     virtual ~EventItem();
 
-    virtual void setGreyedOut(bool greyedOut);
+    virtual void setGreyedOut(bool greyedOut, bool shouldRepaint = true);
     
     QJsonObject& getEvent();
     virtual void setEvent(const QJsonObject& event, const QJsonObject& settings);
