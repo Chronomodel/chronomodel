@@ -17,6 +17,7 @@ mPlugin(plugin)
     mAddRefCurveBut = new QPushButton(tr("Add"), this);
     mDeleteRefCurveBut = new QPushButton(tr("Delete"), this);
     mOpenBut = new QPushButton(tr("Open"), this);
+    mOpenBut->setVisible(false);
     
     connect(mAddRefCurveBut, &QPushButton::clicked, this, &PluginRefCurveSettingsView::addRefCurve);
     connect(mDeleteRefCurveBut, &QPushButton::clicked, this, &PluginRefCurveSettingsView::deleteRefCurve);
@@ -24,11 +25,11 @@ mPlugin(plugin)
     connect(mRefCurvesList, &QListWidget::itemSelectionChanged, this, &PluginRefCurveSettingsView::updateSelection);
     
     QGridLayout* layout = new QGridLayout();
-    layout->addWidget(mRefCurvesLab, 0, 0, 1, 3);
-    layout->addWidget(mRefCurvesList, 1, 0, 1, 3);
+    layout->addWidget(mRefCurvesLab, 0, 0, 1, 2);
+    layout->addWidget(mRefCurvesList, 1, 0, 1, 2);
     layout->addWidget(mAddRefCurveBut, 2, 0);
     layout->addWidget(mDeleteRefCurveBut, 2, 1);
-    layout->addWidget(mOpenBut, 2, 2);
+    //layout->addWidget(mOpenBut, 2, 2);
     setLayout(layout);    
     
     // Store the list of existing files
@@ -49,13 +50,16 @@ PluginRefCurveSettingsView::~PluginRefCurveSettingsView(){
 
 }
 
-void PluginRefCurveSettingsView::updateRefsList(){
+void PluginRefCurveSettingsView::updateRefsList()
+{
     mRefCurvesList->clear();
     QMapIterator<QString, QString> iter(mFilesNew);
-    while(iter.hasNext()){
+    while(iter.hasNext())
+    {
         iter.next();
         QListWidgetItem* item = new QListWidgetItem(iter.key());
-        if(mPlugin->getRefData(iter.key().toLower())["G"].isEmpty()){
+        const RefCurve& curve = mPlugin->mRefCurves[iter.key().toLower()];
+        if(curve.mDataMean.isEmpty()){
             item->setForeground(Qt::red);
         }
         mRefCurvesList->addItem(item);
