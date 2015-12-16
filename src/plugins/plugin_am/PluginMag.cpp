@@ -296,13 +296,13 @@ RefCurve PluginMag::loadRefFile(QFileInfo refFile)
 #pragma mark Reference Values & Errors
 double PluginMag::getRefValueAt(const QJsonObject& data, const double& t)
 {
-    QString curveName = data[DATE_AM_REF_CURVE_STR].toString();
+    QString curveName = data[DATE_AM_REF_CURVE_STR].toString().toLower();
     return getRefCurveValueAt(curveName, t);
 }
 
 double PluginMag::getRefErrorAt(const QJsonObject& data, const double& t)
 {
-    QString curveName = data[DATE_AM_REF_CURVE_STR].toString();
+    QString curveName = data[DATE_AM_REF_CURVE_STR].toString().toLower();
     return getRefCurveErrorAt(curveName, t);
 }
 

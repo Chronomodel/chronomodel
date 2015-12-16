@@ -132,6 +132,7 @@ public:
         return refNames;
     }
     
+    // curveName must be in lower Case
     double getRefCurveValueAt(const QString& curveName, const double& t)
     {
         double value = 0;

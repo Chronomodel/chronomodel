@@ -339,7 +339,7 @@ double PluginGauss::getRefValueAt(const QJsonObject& data, const double& t)
     }
     else if(mode == DATE_GAUSS_MODE_CURVE)
     {
-        QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
+        QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString().toLower();
         v = getRefCurveValueAt(ref_curve, t);
     }
     return v;
@@ -352,7 +352,7 @@ double PluginGauss::getRefErrorAt(const QJsonObject& data, const double& t)
     
     if(mode == DATE_GAUSS_MODE_CURVE)
     {
-        QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
+        QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString().toLower();
         e = getRefCurveErrorAt(ref_curve, t);
     }
     return e;
