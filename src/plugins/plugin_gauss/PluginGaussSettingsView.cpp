@@ -16,7 +16,8 @@ PluginGaussSettingsView::PluginGaussSettingsView(PluginGauss* plugin, QWidget* p
     setLayout(layout);
 }
 
-PluginGaussSettingsView::~PluginGaussSettingsView(){
+PluginGaussSettingsView::~PluginGaussSettingsView()
+{
     
 }
 

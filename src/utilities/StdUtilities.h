@@ -60,8 +60,6 @@ T interpolateValueInQMap(const U& key, const QMap<U, T>& map)
     else {
         return map.last();
     }
-    
-   
 }
 
 

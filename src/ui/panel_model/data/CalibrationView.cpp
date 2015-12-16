@@ -161,8 +161,8 @@ void CalibrationView::updateGraphs()
             GraphZone zone;
             zone.mXStart = tminDisplay;
             zone.mXEnd = mSettings.mTmin;            
-            zone.mColor = Qt::red;
-            zone.mColor.setAlpha(25);
+            zone.mColor = QColor(217, 163, 69);
+            zone.mColor.setAlpha(35);
             zone.mText = tr("Outside study period");
             mCalibGraph->addZone(zone);
         }
@@ -170,8 +170,8 @@ void CalibrationView::updateGraphs()
             GraphZone zone;
             zone.mXStart = mSettings.mTmax;
             zone.mXEnd = tmaxDisplay;
-            zone.mColor = Qt::red;
-            zone.mColor.setAlpha(25);
+            zone.mColor = QColor(217, 163, 69);
+            zone.mColor.setAlpha(35);
             zone.mText = tr("Outside study period");
             mCalibGraph->addZone(zone);
         }

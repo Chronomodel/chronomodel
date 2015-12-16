@@ -390,9 +390,9 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double t
             /*
                 This part of code fix the case of irregular QMap when the step between keys are not the same
              */
-            if (iterMap.key() == t) { // it's mean : consFind(t) find the good key else iterMap = constEnd()
+            if (iterMap.key() == t) { // meaning : constFind(t) find the good key else iterMap = constEnd()
 
-                if ( iterMap != aMap.constBegin() ) { // it's mean : iterMap is not the first item
+                if ( iterMap != aMap.constBegin() ) { // meaning : iterMap is not the first item
                     double vPrev = (iterMap-1).value();
                     if (vPrev>=v) {
                         double tPrev = (iterMap-1).key();
