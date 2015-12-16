@@ -458,10 +458,12 @@ void EventPropertiesView::updateCombineAvailability()
     if(items.size() == 1){
         // Split?
         int idx = mDatesList->row(items[0]);
-        QJsonObject date = dates[idx].toObject();
-        if(date[STATE_DATE_SUB_DATES].toArray().size() > 0){
-            splittable = true;
-        }
+        if(dates.size()>idx ) {
+            QJsonObject date = dates[idx].toObject();
+            if(date[STATE_DATE_SUB_DATES].toArray().size() > 0){
+                splittable = true;
+            }
+         }
     }else if(items.size() > 1 && dates.size() > 1){
         // Combine?
         mergeable = true;
