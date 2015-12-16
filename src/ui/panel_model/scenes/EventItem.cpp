@@ -132,9 +132,9 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     //update(); Done by prepareGeometryChange() at the function start
 }
 
-void EventItem::setGreyedOut(bool greyedOut)
+void EventItem::setGreyedOut(bool greyedOut, bool shouldRepaint)
 {
-    AbstractItem::setGreyedOut(greyedOut);
+    AbstractItem::setGreyedOut(greyedOut, shouldRepaint);
     
     QList<QGraphicsItem*> children = childItems();
     for(int i=0; i<children.size(); ++i)

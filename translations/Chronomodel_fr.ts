@@ -566,14 +566,14 @@ You can also edit constraints by double clicking on the arrow</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/graphs/GraphView.cpp" line="1012"/>
-        <location filename="../src/ui/graphs/GraphView.cpp" line="1096"/>
+        <location filename="../src/ui/graphs/GraphView.cpp" line="1025"/>
+        <location filename="../src/ui/graphs/GraphView.cpp" line="1109"/>
         <source>CSV (*.csv)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/graphs/GraphView.cpp" line="1014"/>
-        <location filename="../src/ui/graphs/GraphView.cpp" line="1098"/>
+        <location filename="../src/ui/graphs/GraphView.cpp" line="1027"/>
+        <location filename="../src/ui/graphs/GraphView.cpp" line="1111"/>
         <source>Save graph data as...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -985,6 +985,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     </message>
     <message>
         <location filename="../src/ui/window/MainWindow.cpp" line="142"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="705"/>
         <source>&amp;New</source>
         <translation>&amp;Nouveau</translation>
     </message>
@@ -1171,48 +1172,47 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
         <translation>Projet Chronomodel (*.chr)</translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="322"/>
         <source>Language</source>
-        <translation>Langue</translation>
+        <translation type="vanished">Langue</translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="574"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="578"/>
         <source>Change selected events color</source>
         <translation>Changer la couleur des faits sélectionnés</translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="588"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="592"/>
         <source>Change events method</source>
         <translation>Changer la méthode des faits</translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="589"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="593"/>
         <source>Change selected events MCMC method :</source>
         <translation>Changer la méthode MCMC des faits sélectionnés :</translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="606"/>
-        <location filename="../src/ui/window/MainWindow.cpp" line="616"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="610"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="620"/>
         <source>Change data method</source>
         <translation>Changer la méthode des dates</translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="607"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="611"/>
         <source>For what type of data do you want to change the method ?</source>
         <translation>Pour quel type de données voulez-vous changer de méthode ?</translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="617"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="621"/>
         <source>Change MCMC method of data in selected events :</source>
         <translation>Changer la méthode MCMC des données du fait sélectionné :</translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="655"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="659"/>
         <source>Do you really want to quit ChronoModel ?</source>
         <translation>Voulez-vous vraiment quitter Chronomodel ?</translation>
     </message>
     <message>
-        <location filename="../src/ui/window/MainWindow.cpp" line="662"/>
+        <location filename="../src/ui/window/MainWindow.cpp" line="666"/>
         <source>Save project before quitting?</source>
         <translation>Enregistrer le projet avant de quitter ?</translation>
     </message>
@@ -1454,33 +1454,33 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
 <context>
     <name>Plugin14C</name>
     <message>
-        <location filename="../src/plugins/plugin_14C/Plugin14C.cpp" line="215"/>
-        <location filename="../src/plugins/plugin_14C/Plugin14C.cpp" line="218"/>
+        <location filename="../src/plugins/plugin_14C/Plugin14C.cpp" line="103"/>
+        <location filename="../src/plugins/plugin_14C/Plugin14C.cpp" line="106"/>
         <source>Ref. curve</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_14C/Plugin14C.cpp" line="218"/>
+        <location filename="../src/plugins/plugin_14C/Plugin14C.cpp" line="106"/>
         <source>ERROR</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_14C/Plugin14C.cpp" line="380"/>
+        <location filename="../src/plugins/plugin_14C/Plugin14C.cpp" line="352"/>
         <source>Selected events with 14C: change Ref. Curves</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_14C/Plugin14C.cpp" line="381"/>
+        <location filename="../src/plugins/plugin_14C/Plugin14C.cpp" line="353"/>
         <source>Change 14C Ref. Curves for all 14C data in selected events :</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_14C/Plugin14C.cpp" line="510"/>
+        <location filename="../src/plugins/plugin_14C/Plugin14C.cpp" line="394"/>
         <source>All combined data must use the same reference curve !</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_14C/Plugin14C.cpp" line="555"/>
+        <location filename="../src/plugins/plugin_14C/Plugin14C.cpp" line="439"/>
         <source>Combine needs at least 2 data !</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1526,17 +1526,28 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
 <context>
     <name>Plugin14CRefView</name>
     <message>
-        <location filename="../src/plugins/plugin_14C/Plugin14CRefView.cpp" line="134"/>
+        <location filename="../src/plugins/plugin_14C/Plugin14CRefView.cpp" line="68"/>
+        <source>No reference data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/plugins/plugin_14C/Plugin14CRefView.cpp" line="79"/>
+        <location filename="../src/plugins/plugin_14C/Plugin14CRefView.cpp" line="89"/>
+        <source>Outside reference area</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/plugins/plugin_14C/Plugin14CRefView.cpp" line="138"/>
         <source>Ref : </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_14C/Plugin14CRefView.cpp" line="174"/>
+        <location filename="../src/plugins/plugin_14C/Plugin14CRefView.cpp" line="178"/>
         <source>Age BP : </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_14C/Plugin14CRefView.cpp" line="213"/>
+        <location filename="../src/plugins/plugin_14C/Plugin14CRefView.cpp" line="217"/>
         <source>, ΔR : </source>
         <translation type="unfinished"></translation>
     </message>
@@ -1544,7 +1555,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
 <context>
     <name>PluginAbstract</name>
     <message>
-        <location filename="../src/plugins/PluginAbstract.h" line="67"/>
+        <location filename="../src/plugins/PluginAbstract.h" line="68"/>
         <source>Cannot combine dates of type </source>
         <translation type="unfinished"></translation>
     </message>
@@ -1552,19 +1563,14 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
 <context>
     <name>PluginGauss</name>
     <message>
-        <location filename="../src/plugins/plugin_gauss/PluginGauss.cpp" line="292"/>
-        <location filename="../src/plugins/plugin_gauss/PluginGauss.cpp" line="295"/>
+        <location filename="../src/plugins/plugin_gauss/PluginGauss.cpp" line="129"/>
+        <location filename="../src/plugins/plugin_gauss/PluginGauss.cpp" line="132"/>
         <source>Ref. curve</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_gauss/PluginGauss.cpp" line="295"/>
+        <location filename="../src/plugins/plugin_gauss/PluginGauss.cpp" line="132"/>
         <source>ERROR</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/plugins/plugin_gauss/PluginGauss.cpp" line="573"/>
-        <source>Curve error</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1609,12 +1615,23 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
 <context>
     <name>PluginGaussRefView</name>
     <message>
-        <location filename="../src/plugins/plugin_gauss/PluginGaussRefView.cpp" line="160"/>
+        <location filename="../src/plugins/plugin_gauss/PluginGaussRefView.cpp" line="91"/>
+        <source>No reference data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/plugins/plugin_gauss/PluginGaussRefView.cpp" line="102"/>
+        <location filename="../src/plugins/plugin_gauss/PluginGaussRefView.cpp" line="112"/>
+        <source>Outside reference area</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/plugins/plugin_gauss/PluginGaussRefView.cpp" line="164"/>
         <source>Ref : </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_gauss/PluginGaussRefView.cpp" line="199"/>
+        <location filename="../src/plugins/plugin_gauss/PluginGaussRefView.cpp" line="203"/>
         <source>Measure : </source>
         <translation type="unfinished"></translation>
     </message>
@@ -1622,23 +1639,13 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
 <context>
     <name>PluginMag</name>
     <message>
-        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="135"/>
-        <source>Curve error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="135"/>
-        <source>in PluginMag unkowned curve : </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="341"/>
-        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="344"/>
+        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="131"/>
+        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="134"/>
         <source>Ref. curve</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="344"/>
+        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="134"/>
         <source>ERROR</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1694,27 +1701,38 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
 <context>
     <name>PluginMagRefView</name>
     <message>
-        <location filename="../src/plugins/plugin_am/PluginMagRefView.cpp" line="168"/>
+        <location filename="../src/plugins/plugin_am/PluginMagRefView.cpp" line="70"/>
+        <source>No reference data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/plugins/plugin_am/PluginMagRefView.cpp" line="105"/>
+        <location filename="../src/plugins/plugin_am/PluginMagRefView.cpp" line="115"/>
+        <source>Outside reference area</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/plugins/plugin_am/PluginMagRefView.cpp" line="167"/>
         <source>Ref : </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_am/PluginMagRefView.cpp" line="255"/>
+        <location filename="../src/plugins/plugin_am/PluginMagRefView.cpp" line="254"/>
         <source>Inclination : </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_am/PluginMagRefView.cpp" line="259"/>
+        <location filename="../src/plugins/plugin_am/PluginMagRefView.cpp" line="258"/>
         <source>Declination : </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_am/PluginMagRefView.cpp" line="259"/>
+        <location filename="../src/plugins/plugin_am/PluginMagRefView.cpp" line="258"/>
         <source>, Inclination : </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_am/PluginMagRefView.cpp" line="263"/>
+        <location filename="../src/plugins/plugin_am/PluginMagRefView.cpp" line="262"/>
         <source>Intensity : </source>
         <translation type="unfinished"></translation>
     </message>
@@ -1766,28 +1784,28 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
         <translation type="unfinished">Ouvrir</translation>
     </message>
     <message>
-        <location filename="../src/plugins/PluginRefCurveSettingsView.cpp" line="74"/>
-        <location filename="../src/plugins/PluginRefCurveSettingsView.cpp" line="88"/>
+        <location filename="../src/plugins/PluginRefCurveSettingsView.cpp" line="78"/>
+        <location filename="../src/plugins/PluginRefCurveSettingsView.cpp" line="92"/>
         <source>Warning</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/PluginRefCurveSettingsView.cpp" line="74"/>
+        <location filename="../src/plugins/PluginRefCurveSettingsView.cpp" line="78"/>
         <source>You are about to delete a reference curve : </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/PluginRefCurveSettingsView.cpp" line="88"/>
+        <location filename="../src/plugins/PluginRefCurveSettingsView.cpp" line="92"/>
         <source>Do you really want to replace existing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/PluginRefCurveSettingsView.cpp" line="108"/>
+        <location filename="../src/plugins/PluginRefCurveSettingsView.cpp" line="112"/>
         <source>Open File</source>
         <translation type="unfinished">Ouvrir le fichier</translation>
     </message>
     <message>
-        <location filename="../src/plugins/PluginRefCurveSettingsView.cpp" line="110"/>
+        <location filename="../src/plugins/PluginRefCurveSettingsView.cpp" line="114"/>
         <source>Reference curve</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2248,12 +2266,12 @@ You can either extend the study period or modify the concerned dates :
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/Date.cpp" line="245"/>
+        <location filename="../src/model/Date.cpp" line="239"/>
         <source>yes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/model/Date.cpp" line="245"/>
+        <location filename="../src/model/Date.cpp" line="239"/>
         <source>no</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2349,46 +2367,46 @@ Please correct this branch :
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_14C/Plugin14C.cpp" line="208"/>
-        <location filename="../src/plugins/plugin_gauss/PluginGauss.cpp" line="251"/>
+        <location filename="../src/plugins/plugin_14C/Plugin14C.cpp" line="96"/>
+        <location filename="../src/plugins/plugin_gauss/PluginGauss.cpp" line="88"/>
         <location filename="../src/plugins/plugin_tl/PluginTL.cpp" line="112"/>
         <source>Age</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_14C/Plugin14C.cpp" line="211"/>
+        <location filename="../src/plugins/plugin_14C/Plugin14C.cpp" line="99"/>
         <source>ΔR</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="326"/>
-        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="332"/>
+        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="116"/>
+        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="122"/>
         <source>Inclination</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="327"/>
-        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="333"/>
+        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="117"/>
+        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="123"/>
         <source>Alpha95</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="331"/>
+        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="121"/>
         <source>Declination</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="337"/>
+        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="127"/>
         <source>Intensity</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="338"/>
+        <location filename="../src/plugins/plugin_am/PluginMag.cpp" line="128"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/plugins/plugin_gauss/PluginGauss.cpp" line="287"/>
+        <location filename="../src/plugins/plugin_gauss/PluginGauss.cpp" line="124"/>
         <source>Ref. curve</source>
         <translation type="unfinished"></translation>
     </message>

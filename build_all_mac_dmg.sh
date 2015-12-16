@@ -11,7 +11,7 @@
 # -------------------------------------------------------
 if [ $# -lt 2 ]; then
   echo "$1: please give the version number as argument!"
-  echo "$2: please give your Qt bin path (absolute)! For example : /Users/your_name/Qt5.2.1/5.2.1/clang_64/bin"
+  echo "$2: please give your Qt bin path (absolute)! For example : /Users/your_name/Qt5.5.1/5.5.1/clang_64/bin"
   exit 2
 fi
 
@@ -26,10 +26,16 @@ VERSION=$1
 # -------------------------------------------------------
 #	Clean last compilation files
 # -------------------------------------------------------
-rm -rf ${BUNDLE_PATH}
+#rm -rf ${BUNDLE_PATH}
 
 cd $ROOT_PATH
 
+# -------------------------------------------------------
+#	Create translations
+# ------------------------------------------------------
+${QT_BIN_PATH}/lupdate $ROOT_PATH/Chronomodel.pro
+${QT_BIN_PATH}/linguist $ROOT_PATH/translations/Chronomodel_en.ts $ROOT_PATH/translations/Chronomodel_fr.ts
+${QT_BIN_PATH}/lrelease $ROOT_PATH/Chronomodel.pro
 
 # -------------------------------------------------------
 #	Create XCode project in Release mode (.pro file is in debug mode by default)
@@ -51,51 +57,20 @@ cd $ROOT_PATH
 # -------------------------------------------------------
 #	Create DMG
 # ------------------------------------------------------
-#ln -s /Applications ./Release/Applications
-#mkdir ./Release/.background
-#cp deploy/mac/dmg_back.png ./Release/.background/background.png
-#hdiutil create -volname Chronomodel -srcfolder ./Release/ -ov -format UDZO Chronomodel.dmg
-hdiutil attach Chronomodel.dmg
-echo '
-   tell application "Finder"
-     tell disk "Chronomodel"
-           open
-           
-           	set theXOrigin to 100
-			set theYOrigin to 100
-			set theWidth to 512
-			set theHeight to 512
-			
-			set theBottomRightX to (theXOrigin + theWidth)
-			set theBottomRightY to (theYOrigin + theHeight)
-			
-			tell container window
-				set current view to icon view
-				set toolbar visible to false
-				set statusbar visible to false
-				set the bounds to {theXOrigin, theYOrigin, theBottomRightX, theBottomRightY}
-				set statusbar visible to false
-			end tell
-           
-			set opts to the icon view options of container window
-			tell opts
-				set icon size to 72
-				set arrangement to not arranged
+ln -s /Applications ./Release/Applications
+mkdir ./Release/.background
+cp deploy/mac/dmg_back.png ./Release/.background/background.png
+cp deploy/mac/resources/license.rtf ./Release/license.rtf
+cp deploy/mac/resources/readme.rtf ./Release/readme.rtf
 
-			end tell
+hdiutil create -volname Chronomodel -srcfolder ./Release/ -ov -format UDZO Chronomodel.dmg
 
-			set background picture of opts to file ".background:background.png"
-
-           set file_list to every file
-           set position of item "Chronomodel.app" of container window to {160, 100}
-           set position of item "Applications" of container window to {360, 100}
-           
-           update without registering applications
-           delay 2
-     end tell
-   end tell
-' | osascript
-
-
+if true; then
+device=$(hdiutil attach Chronomodel.dmg | egrep '^/dev/' | sed 1q | awk '{print $1}')
+osascript build_dmg.scpt
+sync
+sync
+#hdiutil unmount ${device}
+fi
 
 exit 0

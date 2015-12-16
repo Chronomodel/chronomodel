@@ -31,3 +31,5 @@ Makefile
 *.pbxproj
 
 *.qm
+
+*.dmg
