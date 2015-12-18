@@ -2403,7 +2403,7 @@ void Project::exportAsText()
 void Project::run()
 {
     // Check if project contains invalid dates
-    QJsonArray invalidDates = getInvalidDates();
+ /*   QJsonArray invalidDates = getInvalidDates();
     if(invalidDates.size() > 0){
         QString message = tr("The model contains invalid dates : their calibrations are outside study period. \n\nYou can either extend the study period or modify the concerned dates :\n\n");
         for(int i=0; i<invalidDates.size(); ++i){
@@ -2418,7 +2418,7 @@ void Project::run()
         messageBox.exec();
         return;
     }
-    
+ */
     // Save the project before running MCMC :
     AppSettings s = MainWindow::getInstance()->getAppSettings();
     if(s.mAutoSave){

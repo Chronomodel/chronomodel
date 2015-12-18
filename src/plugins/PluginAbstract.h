@@ -179,7 +179,7 @@ public:
                 error = curve.mDataError[t];
             }
             else if(t < curve.mTmin || t > curve.mTmax){
-                error = 1.0e+100 * (curve.mDataSupMax - curve.mDataInfMin);
+                error = 1.0e+6 * (curve.mDataSupMax - curve.mDataInfMin);
             }
             else
             {

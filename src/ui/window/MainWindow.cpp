@@ -485,7 +485,7 @@ void MainWindow::updateWindowTitle()
 
 void MainWindow::updateProject(){
     bool valid = (mProject->getInvalidDates().size() == 0);
-    mRunAction->setEnabled(valid);
+    mRunAction->setEnabled(true);//valid);
     mProjectView->updateProject();
 }
 
