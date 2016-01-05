@@ -11,14 +11,13 @@
 
 
 MetropolisVariable::MetropolisVariable():
-mX(0)
+mX(0),
+mSupport(eR)
 {
-
 }
 
 MetropolisVariable::~MetropolisVariable()
 {
-
 }
 
 void MetropolisVariable::memo()
@@ -40,27 +39,47 @@ void MetropolisVariable::reset()
     mChainsResults.clear();
 }
 
+MetropolisVariable& MetropolisVariable::copy(MetropolisVariable const& origin)
+{
+    mX = origin.mX;
+    mTrace = origin.mTrace;
+    mSupport = origin.mSupport;
+
+    mHisto = origin.mHisto;
+    mChainsHistos = origin.mChainsHistos;
+
+    mCorrelations = origin.mCorrelations;
+
+    mHPD = origin.mHPD;
+    mCredibility = origin.mCredibility;
+    mThreshold = origin.mThreshold;
+
+    mExactCredibilityThreshold = origin.mExactCredibilityThreshold;
+
+    mResults = origin.mResults;
+    mChainsResults = origin.mChainsResults;
+    mIsDate = origin.mIsDate;
+
+    return *this;
+}
+
+MetropolisVariable& MetropolisVariable::operator=( MetropolisVariable const& origin)
+{
+    copy(origin);
+    return *this;
+}
 /**
  @param[in] dataSrc is the trace, with for example one million data
  @param[in] hFactor corresponds to the bandwidth factor.
  @remarks Produce a density with the area equal to 1. The smoothing is done with Hsilvermann method.
  **/
-float* MetropolisVariable::generateBufferForHisto(QVector<double>& dataSrc, int numPts, double hFactor)
+float* MetropolisVariable::generateBufferForHisto(QVector<double>& dataSrc, int numPts, double a, double b)
 {
     // Work with "double" precision here !
     // Otherwise, "denum" can be very large and lead to infinity contribs!
     
-    double sigma = dataStd(dataSrc);
-    if(sigma == 0)
-        return 0;
-    
-    double h = hFactor * 1.06 * sigma * pow(dataSrc.size(), -1./5.);
-    
-    double a = vector_min_value(dataSrc) - 4. * h;
-    double b = vector_max_value(dataSrc) + 4. * h;
-    
     double delta = (b - a) / (numPts - 1);
-    //double denum = delta * delta * dataSrc.size();
+
     double denum = dataSrc.size();
     
     float* input = (float*) fftwf_malloc(numPts * sizeof(float));
@@ -71,9 +90,7 @@ float* MetropolisVariable::generateBufferForHisto(QVector<double>& dataSrc, int 
     
     QVector<double>::const_iterator iter = dataSrc.begin();
     for(; iter != dataSrc.end(); ++iter)
-    //for(int i=0; i<dataSrc.size(); ++i)
     {
-        //double t = dataSrc[i];
         double t = *iter;
         
         double idx = (t - a) / delta;
@@ -102,13 +119,14 @@ float* MetropolisVariable::generateBufferForHisto(QVector<double>& dataSrc, int 
 /**
   @param hFactor corresponds to the bandwidth factor
  @param dataSrc is the trace of the raw data
- @remarks the FFTW function transform the area such that the area output is the area input multiplied by fftLen. So we have to corret it.
+ @brief the FFTW function transform the area such that the area output is the area input multiplied by fftLen. So we have to corret it.
+ The result is migth be not with regular step between value.
  **/
 QMap<double, double> MetropolisVariable::generateHisto(QVector<double>& dataSrc, int fftLen, double hFactor, double tmin, double tmax)
 {
     int inputSize = fftLen;
     int outputSize = 2 * (inputSize / 2 + 1);
-    
+
     double sigma = dataStd(dataSrc);
     QMap<double, double> result;
     if (sigma==0) {
@@ -116,12 +134,34 @@ QMap<double, double> MetropolisVariable::generateHisto(QVector<double>& dataSrc,
         return result;
     }
 
-    double h = hFactor * 1.06 * sigma * pow(dataSrc.size(), -1.f/5.f);
-    double a = vector_min_value(dataSrc) - 4.f * h;
-    double b = vector_max_value(dataSrc) + 4.f * h;
-    double delta = (b - a) / fftLen;
-    
-    float* input = generateBufferForHisto(dataSrc, fftLen, hFactor);
+     double h = hFactor * 1.06 * sigma * pow(dataSrc.size(), -1./5.);
+     double a = vector_min_value(dataSrc) - 4. * h;
+     double b = vector_max_value(dataSrc) + 4. * h;
+    /*
+     switch(mSupport)
+     {
+          case eR :// on R
+              // nothing to do already done by default
+          break;
+          case eRp : // on R+
+              a = 0;
+          break;
+          case eRm :// on R-
+              b = 0;
+          break;
+          case eRpStar : // on R+*
+              a = 0;
+          break;
+          case eRmStar :// on R-*
+              b = 0;
+          break;
+          case eBounded : // on [tmin;ytmax]
+              a = tmin;//qMax(tmin,a);
+              b = tmax;//qMin(tmax,b);
+          break;
+     }
+   */
+    float* input = generateBufferForHisto(dataSrc, fftLen, a, b);
     float* output = (float*) fftwf_malloc(outputSize * sizeof(float));
     
     if(input != 0)
@@ -143,11 +183,67 @@ QMap<double, double> MetropolisVariable::generateHisto(QVector<double>& dataSrc,
         fftwf_execute(plan_backward);
         
         // ----- FFT Buffer to result map -----
+
+
+
+     double tBegin = a;
+     double tEnd = b;
+     switch(mSupport)
+     {
+          case eR :// on R
+              // nothing to do already done by default
+          break;
+          case eRp : // on R+
+              tBegin = 0;
+          break;
+          case eRm :// on R-
+              tEnd = 0;
+          break;
+          case eRpStar : // on R+*
+              tBegin = 0;
+          break;
+          case eRmStar :// on R-*
+              tEnd = 0;
+          break;
+          case eBounded : // on [tmin;ytmax]
+              tBegin = tmin;
+              tEnd = tmax;
+          break;
+     }
+
+
+        double delta = (b - a) / fftLen;
+        double tBeforeBegin;
+        double vBeforeBegin;
+        bool pointBeforeBegin =false;
+        double tAfterEnd;
+        double vAfterEnd;
+        bool pointAfterEnd =false;
         for(int i=0; i<inputSize; ++i)
         {
             double t = a + (double)i * delta;
-            result[t] = input[i];
+            if((t >= tBegin) && (t <= tEnd)) {
+                result[t] = input[i];
+             }
+            else if(t<tBegin){
+               pointBeforeBegin =true;
+               tBeforeBegin = t;
+               vBeforeBegin = input[i];
+            }
+            else if( t>tEnd && !pointAfterEnd ){
+                pointAfterEnd =true;
+                tAfterEnd = t;
+                vAfterEnd = input[i];
+            }
         }
+        // Correct the QMap, with addition of value on the extremum tmin and tmax
+        if(result.constFind(tBegin) == result.cend()){
+            result[tBegin] = interpolate( tBegin, tBeforeBegin, result.firstKey(), vBeforeBegin, result.first() );
+        }
+        if(result.constFind(tEnd) == result.cend()){
+            result[tEnd] = interpolate( tEnd, result.lastKey(), tAfterEnd, result.last(), vAfterEnd );
+        }
+
         fftwf_free(input);
         fftwf_free(output);
         

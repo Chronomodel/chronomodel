@@ -17,7 +17,9 @@ public:
     
     void memo();
     virtual void reset();
-    
+    MetropolisVariable& copy(MetropolisVariable const& origin);
+    MetropolisVariable& operator=( MetropolisVariable const& origin);
+
     // -----
     //  These functions are time consuming!
     // -----
@@ -60,13 +62,23 @@ public:
     // -----
     
 private:
-    float* generateBufferForHisto(QVector<double>& dataSrc, int numPts, double hFactor);
+    float* generateBufferForHisto(QVector<double>& dataSrc, int numPts, double a, double b);
     QMap<double, double> bufferToMap(const double* buffer);
     QMap<double, double> generateHisto(QVector<double>& data, int fftLen, double hFactor, double tmin, double tmax);
     
 public:
+    enum Support
+    {
+        eR = 0, // on R
+        eRp = 1, // on R+
+        eRm = 2, // on R-
+        eRpStar = 3, // on R+*
+        eRmStar = 4, // on R-*
+        eBounded = 5 // on bounded support
+    };
     double mX;
     QVector<double> mTrace;
+    Support mSupport;
     
     // Posterior density results.
     // mHisto is calcuated using all run parts of all chains traces.
