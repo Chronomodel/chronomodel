@@ -11,6 +11,8 @@ public:
     virtual ~MHVariable();
     
     virtual void reset();
+    MHVariable& copy(MHVariable const& origin);
+    MHVariable& operator=( MHVariable const& origin);
     
     double getCurrentAcceptRate();
     void saveCurrentAcceptRate();

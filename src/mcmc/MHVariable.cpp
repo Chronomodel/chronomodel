@@ -48,6 +48,26 @@ void MHVariable::reset()
     mHistoryAcceptRateMH.clear();
 }
 
+MHVariable& MHVariable::copy(MHVariable const& origin)
+{
+    MetropolisVariable::copy(origin);
+    mSigmaMH = origin.mSigmaMH;
+    mLastAccepts = origin.mLastAccepts;
+    mLastAcceptsLength = origin.mLastAcceptsLength;
+    mAllAccepts = origin.mAllAccepts;
+    mGlobalAcceptation = origin.mGlobalAcceptation;
+    mHistoryAcceptRateMH = origin.mHistoryAcceptRateMH;
+    mProposal = origin.mProposal;
+
+    return *this;
+}
+
+MHVariable& MHVariable::operator=( MHVariable const& origin)
+{
+    copy(origin);
+    return *this;
+}
+
 double MHVariable::getCurrentAcceptRate()
 {
     double sum = 0.f;
