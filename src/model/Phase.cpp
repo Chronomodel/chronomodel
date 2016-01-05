@@ -22,8 +22,11 @@ mLevel(0)
 {
     mColor = randomColor();
     mAlpha.mIsDate = true;
+    mAlpha.mSupport = MetropolisVariable::eBounded;
     mBeta.mIsDate = true;
+    mBeta.mSupport = MetropolisVariable::eBounded;
     mDuration.mIsDate = false;
+    mDuration.mSupport = MetropolisVariable::eRp;
     // Item initial position :
     mItemX = 0;
     mItemY = 0;
@@ -47,7 +50,11 @@ void Phase::copyFrom(const Phase& phase)
     mColor = phase.mColor;
     
     mAlpha = phase.mAlpha;
+    //mAlpha.mSupport = phase.mAlpha.mSupport;
     mBeta = phase.mBeta;
+    //mBeta.mSupport = phase.mBeta.mSupport;
+    mDuration = phase.mDuration;
+    //mDuration.mSupport = phase.mDuration.mSupport;
     mTau = phase.mTau;
     
     mTauType = phase.mTauType;

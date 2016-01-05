@@ -17,6 +17,9 @@ mName("No Named Date")
     mColor=Qt::blue;
     mTheta.mIsDate = true;
     mSigma.mIsDate = false;
+    mTheta.mSupport = MetropolisVariable::eR;
+    mSigma.mSupport = MetropolisVariable::eRp;
+    mWiggle.mSupport = MetropolisVariable::eR;
     init();
     
 }
@@ -68,7 +71,9 @@ Date& Date::operator=(const Date& date)
 void Date::copyFrom(const Date& date)
 {
     mTheta = date.mTheta;
+    //mTheta.mSupport = date.mTheta.mSupport;
     mSigma = date.mSigma;
+    //mSigma.mSupport = date.mSigma.mSupport;
     mDelta = date.mDelta;
     
     mId = date.mId;

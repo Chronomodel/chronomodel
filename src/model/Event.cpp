@@ -24,7 +24,8 @@ mInitialized(false),
 mLevel(0)
 {
     mTheta.mIsDate = true;
-    
+    mTheta.mSupport = MetropolisVariable::eBounded;
+
     // Item initial position :
     //int posDelta = 100;
     mItemX = 0;//rand() % posDelta - posDelta/2;
@@ -61,6 +62,7 @@ void Event::copyFrom(const Event& event)
     mConstraintsBwd = event.mConstraintsBwd;
     
     mTheta = event.mTheta;
+    //mTheta.mSupport = event.mTheta.mSupport;
     mS02 = event.mS02;
     mAShrinkage = event.mAShrinkage;
     
