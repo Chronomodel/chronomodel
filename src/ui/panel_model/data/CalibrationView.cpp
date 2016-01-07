@@ -150,7 +150,7 @@ void CalibrationView::updateGraphs()
         mCalibGraph->setRangeX(tminDisplay, tmaxDisplay);
         mCalibGraph->setCurrentX(tminDisplay, tmaxDisplay);
         
-        qDebug() << "tmin : " << tminDisplay << ", tmax: " << tmaxDisplay;
+        //qDebug() << "tmin : " << tminDisplay << ", tmax: " << tmaxDisplay;
         
         mZoomSlider->setValue(0);
         
@@ -190,10 +190,10 @@ void CalibrationView::updateGraphs()
 
         // Fill HPD only if not typo :
         mResultsLab->clear();
-        //if(!isTypo)
-        {
-            const QMap<double, double> calibMap = mDate.getCalibMap();
-            
+        const QMap<double, double> calibMap = mDate.getCalibMap();
+
+        if(!calibMap.isEmpty())
+        {            
             // ------------------------------------------------------------
             //  Display numerical results
             // ------------------------------------------------------------
@@ -201,7 +201,8 @@ void CalibrationView::updateGraphs()
             
             DensityAnalysis results;
             results.analysis = analyseFunction(calibMap);
-            results.quartiles = quartilesForRepartition(mDate.mRepartition, tminCalib, mSettings.mStep);
+            //results.quartiles = quartilesForRepartition(mDate.mRepartition, tminCalib, mSettings.mStep);
+            results.quartiles = quartilesForRepartition(mDate.mRepartition, mDate.getTminRefCurve(), mSettings.mStep);
             resultsStr = densityAnalysisToString(results);
             
             GraphCurve calibCurve;
@@ -241,8 +242,9 @@ void CalibrationView::updateGraphs()
             mCalibGraph->addCurve(hpdCurve);
             
             yMax = map_max_value(hpdCurve.mData);
-            mCalibGraph->setRangeY(0, qMax(1.1f * yMax, mCalibGraph->maximumY()));
-            
+            //mCalibGraph->setRangeY(0, qMax(1.1f * yMax, mCalibGraph->maximumY()));
+            mCalibGraph->setRangeY(0, 1.1f * yMax);
+
             mCalibGraph->mLegendX = DateUtils::getAppSettingsFormat();
             mCalibGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
             mCalibGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
