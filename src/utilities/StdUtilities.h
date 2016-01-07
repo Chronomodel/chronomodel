@@ -179,7 +179,7 @@ QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const 
 QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const double targetArea);
 QVector<double> equal_areas(const QVector<double>& data, const double step, const double area);
 QMap<double, double> vector_to_map(const QVector<double>& data, const double min, const double max, const double step);
-double vector_interpolate_idx_for_value(const double value, const QVector<double>& vector);
+double vector_interpolate_idx_for_value(const double value, const QVector<double> &vector);
 
 double map_area(const QMap<double, double>& map);
 const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double threshold);

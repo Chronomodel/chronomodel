@@ -271,32 +271,30 @@ QVector<double> equal_areas(const QVector<double>& data, const double step, cons
     if(data.isEmpty())
         return QVector<double>();
     
-    double srcArea = 0.f;
-    double lastV = data[0];
-   /* for(int i=0; i<data.size(); ++i) // original code HL
-        srcArea += step * data[i];
-    */
-    
+    long double srcArea = 0;
+    long double lastV = data[0];
+
     for(int i=1; i<data.size(); ++i) {
-        double v =data[i];
+        long double v =data[i];
         
         if (lastV>0 && v>0) {
-            srcArea += (lastV+v)/2 * step;
+            srcArea += (lastV+v)/2 * (long double)step;
         }
        lastV = v;
     }
-    double prop = area / srcArea;
+   // double prop = area / srcArea;
+    long double invProp =srcArea / area;
     QVector<double> result;
     for(int i=0; i<data.size(); ++i)
-        result.append(data[i] * prop);
-    
+        //result.append(data[i] * prop);
+        result.append(data[i] / invProp);
     return result;
 }
 
 QMap<double, double> vector_to_map(const QVector<double>& data, const double min, const double max, const double step)
 {
     QMap<double, double> map;
-    int nbPts = 1 + (int)round((max - min) / step); // PhD step is not usefull, it's must be data.size/(max-min+1)
+    int nbPts = 1 + (int)round((max - min) / step); // step is not usefull, it's must be data.size/(max-min+1)
     for(int i=0; i<nbPts; ++i)
     {
         double t = min + i * step;
@@ -332,19 +330,20 @@ double vector_interpolate_idx_for_value(const double value, const QVector<double
             else
                 idxInf = idxMid;
             
-            //qDebug() << idxInf << ", " << idxSup;
-            
         }while(idxSup - idxInf > 1);
         
         double valueInf = vector.at(idxInf);
         double valueSup = vector.at(idxSup);
         
-        double prop = (value - valueInf) / (valueSup - valueInf);
+        double prop = 0;
+        // prevent valueSup=valueInf because in this case prop = NaN
+        if(valueSup>valueInf) {
+            prop = (value - valueInf) / (valueSup - valueInf);
+        }
         double idx = (double)idxInf + prop;
         
         return idx;
     }
-
 
     return 0;
 }
