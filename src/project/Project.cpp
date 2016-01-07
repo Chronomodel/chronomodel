@@ -455,7 +455,7 @@ bool Project::load(const QString& path)
                 qDebug() << "Project::load Loading model file.dat : " << dataPath << " size=" << dataFile.size();
       
                 try{
-                    mModel->setJson(mState);
+                    //mModel->setJson(mState);
                     mModel->fromJson(mState);
 
                 }
@@ -1146,7 +1146,7 @@ void Project::checkDatesCompatibility()
 {
     QJsonObject state = mState;
     QJsonArray events = mState[STATE_EVENTS].toArray();
-    
+    QJsonArray phases = mState[STATE_PHASES].toArray();
     for(int i=0; i<events.size(); ++i)
     {
         QJsonObject event = events[i].toObject();
@@ -1196,6 +1196,19 @@ void Project::checkDatesCompatibility()
             state[STATE_EVENTS] = events;
         }
     }
+    // conversion since version 1.4 test
+    bool phaseConversion = false;
+    for(int i=0;i<phases.size();i++) {
+       QJsonObject phase = phases[i].toObject();
+       if( phase[STATE_PHASE_TAU_TYPE].toInt() == Phase::eTauRange){
+           phase[STATE_PHASE_TAU_TYPE] = Phase::eTauFixed;
+           phase[STATE_PHASE_TAU_FIXED] = phase[STATE_PHASE_TAU_MAX];
+           phases[i] = phase;
+           phaseConversion = true;
+       }
+    }
+    if(phaseConversion) state[STATE_PHASES] = phases;
+
     mState = state;
 }
 
@@ -2432,7 +2445,7 @@ void Project::run()
     clearModel();
     
     //mModel = Model::fromJson(mState);
-    mModel->setJson(mState);
+    //mModel->setJson(mState);
     mModel->fromJson(mState);
     bool modelOk = false;
     try

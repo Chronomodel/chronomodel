@@ -270,10 +270,10 @@ QString PhaseItem::getTauString() const
     {
         tauStr += tr("duration") + " ≤ " + QString::number(mData[STATE_PHASE_TAU_FIXED].toDouble());
     }
-    else if(type == Phase::eTauRange)
+    /*else if(type == Phase::eTauRange)
     {
         tauStr += tr("max duration") + " ∈ [" + QString::number(mData[STATE_PHASE_TAU_MIN].toDouble()) + "; " + QString::number(mData[STATE_PHASE_TAU_MAX].toDouble()) + "]";
-    }
+    }*/
     return tauStr;
 }
 
