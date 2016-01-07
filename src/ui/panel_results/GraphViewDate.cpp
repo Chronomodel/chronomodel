@@ -38,7 +38,7 @@ void GraphViewDate::setDate(Date* date)
     {
         mDate = date;
         setItemTitle(QString(tr("Data") + " : " + mDate->mName));
-        setItemColor(date->getEventColor());
+        setItemColor(mDate->mColor);//date->getEventColor());
     }
     update();
 }
@@ -54,6 +54,7 @@ void GraphViewDate::paintEvent(QPaintEvent* e)
     GraphViewResults::paintEvent(e);
 }
 
+// not used since v1.4
 QColor GraphViewDate::getEventColor()
 {
     return mDate->getEventColor();
@@ -74,7 +75,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
     
     if(mDate)
     {
-        QColor color = getEventColor();
+        QColor color = mDate->mColor;//getEventColor();
         QPen defaultPen;
         defaultPen.setWidthF(1);
         defaultPen.setStyle(Qt::SolidLine);
