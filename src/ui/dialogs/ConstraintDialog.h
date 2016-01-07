@@ -40,13 +40,13 @@ private:
     
     Label* mTypeLab;
     Label* mFixedLab;
-    Label* mMinLab;
-    Label* mMaxLab;
+    //Label* mMinLab;
+    //Label* mMaxLab;
     
     QComboBox* mTypeCombo;
     LineEdit* mFixedEdit;
-    LineEdit* mMinEdit;
-    LineEdit* mMaxEdit;
+    //LineEdit* mMinEdit;
+    //LineEdit* mMaxEdit;
     
     Button* mOkBut;
     Button* mCancelBut;

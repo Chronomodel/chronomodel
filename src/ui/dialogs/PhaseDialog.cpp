@@ -24,10 +24,10 @@ mButW(80)
     
     mNameLab = new Label(tr("Phase name") + " :", this);
     mColorLab = new Label(tr("Phase color") + " :", this);
-    mTauTypeLab = new Label(tr("Max. duration") + " :", this);
-    mTauFixedLab = new Label(tr("Fixed duration") + " :", this);
-    mTauMinLab = new Label(tr("Lower date") + " :", this);
-    mTauMaxLab = new Label(tr("Upper date") + " :", this);
+    mTauTypeLab = new Label(tr("Duration") + " :", this);
+    mTauFixedLab = new Label(tr("Max duration") + " :", this);
+    //mTauMinLab = new Label(tr("Lower date") + " :", this);
+    //mTauMaxLab = new Label(tr("Upper date") + " :", this);
     
     mNameEdit = new LineEdit(this);
     mNameEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
@@ -36,12 +36,12 @@ mButW(80)
     
     mTauTypeCombo = new QComboBox(this);
     mTauTypeCombo->addItem(tr("Unknown"));
-    mTauTypeCombo->addItem(tr("Fixed"));
-    mTauTypeCombo->addItem(tr("Range (uniform)"));
+    mTauTypeCombo->addItem(tr("Known"));
+    //mTauTypeCombo->addItem(tr("Range (uniform)"));
     
     mTauFixedEdit = new LineEdit(this);
-    mTauMinEdit = new LineEdit(this);
-    mTauMaxEdit = new LineEdit(this);
+    //mTauMinEdit = new LineEdit(this);
+    //mTauMaxEdit = new LineEdit(this);
     
     mOkBut = new Button(tr("OK"), this);
     mCancelBut = new Button(tr("Cancel"), this);
@@ -76,10 +76,11 @@ void PhaseDialog::showAppropriateTauOptions(int typeIndex)
             mTauFixedLab->setVisible(false);
             mTauFixedEdit->setVisible(false);
             
-            mTauMinLab->setVisible(false);
+            /*mTauMinLab->setVisible(false);
             mTauMaxLab->setVisible(false);
             mTauMinEdit->setVisible(false);
             mTauMaxEdit->setVisible(false);
+            */
             
             setFixedHeight(mComboH + 2*mLineH + 5*mMargin + mButH);
             
@@ -90,16 +91,16 @@ void PhaseDialog::showAppropriateTauOptions(int typeIndex)
             mTauFixedLab->setVisible(true);
             mTauFixedEdit->setVisible(true);
             
-            mTauMinLab->setVisible(false);
+            /*mTauMinLab->setVisible(false);
             mTauMaxLab->setVisible(false);
             mTauMinEdit->setVisible(false);
             mTauMaxEdit->setVisible(false);
-            
+            */
             setFixedHeight(mComboH + 3*mLineH + 6*mMargin + mButH);
             
             break;
         }
-        case Phase::eTauRange:
+        /*case Phase::eTauRange:
         {
             mTauFixedLab->setVisible(false);
             mTauFixedEdit->setVisible(false);
@@ -112,7 +113,7 @@ void PhaseDialog::showAppropriateTauOptions(int typeIndex)
             setFixedHeight(mComboH + 4*mLineH + 7*mMargin + mButH);
             
             break;
-        }
+        }*/
         default:
             break;
     }
@@ -128,8 +129,8 @@ void PhaseDialog::setPhase(const QJsonObject& phase)
                                   mPhase[STATE_COLOR_BLUE].toInt()));
     mTauTypeCombo->setCurrentIndex(mPhase[STATE_PHASE_TAU_TYPE].toInt());
     mTauFixedEdit->setText(QString::number(mPhase[STATE_PHASE_TAU_FIXED].toDouble()));
-    mTauMinEdit->setText(QString::number(mPhase[STATE_PHASE_TAU_MIN].toDouble()));
-    mTauMaxEdit->setText(QString::number(mPhase[STATE_PHASE_TAU_MAX].toDouble()));
+    //mTauMinEdit->setText(QString::number(mPhase[STATE_PHASE_TAU_MIN].toDouble()));
+    //mTauMaxEdit->setText(QString::number(mPhase[STATE_PHASE_TAU_MAX].toDouble()));
     
     showAppropriateTauOptions(mTauTypeCombo->currentIndex());
 }
@@ -142,8 +143,8 @@ QJsonObject PhaseDialog::getPhase()
     mPhase[STATE_COLOR_BLUE] = mColorPicker->getColor().blue();
     mPhase[STATE_PHASE_TAU_TYPE] = (Phase::TauType) mTauTypeCombo->currentIndex();
     mPhase[STATE_PHASE_TAU_FIXED] = mTauFixedEdit->text().toDouble();
-    mPhase[STATE_PHASE_TAU_MIN] = mTauMinEdit->text().toDouble();
-    mPhase[STATE_PHASE_TAU_MAX] = mTauMaxEdit->text().toDouble();
+    //mPhase[STATE_PHASE_TAU_MIN] = mTauMinEdit->text().toDouble();
+    //mPhase[STATE_PHASE_TAU_MAX] = mTauMaxEdit->text().toDouble();
     return mPhase;
 }
 
@@ -158,7 +159,7 @@ bool PhaseDialog::isValid()
             return false;
         }
     }
-    else if(mTauTypeCombo->currentIndex() == 2)
+    /*else if(mTauTypeCombo->currentIndex() == 2)
     {
         int tauMin = mTauMinEdit->text().toInt();
         int tauMax = mTauMaxEdit->text().toInt();
@@ -167,7 +168,7 @@ bool PhaseDialog::isValid()
             mError = tr("Duration min must be lower than duration max !");
             return false;
         }
-    }
+    }*/
     return true;
 }
 
@@ -182,15 +183,15 @@ void PhaseDialog::resizeEvent(QResizeEvent* event)
     mColorLab->setGeometry(mMargin, 2*mMargin + mLineH, w1, mLineH);
     mTauTypeLab->setGeometry(mMargin, 3*mMargin + 2*mLineH, w1, mComboH);
     mTauFixedLab->setGeometry(mMargin, 4*mMargin + 2*mLineH + mComboH, w1, mLineH);
-    mTauMinLab->setGeometry(mMargin, 4*mMargin + 2*mLineH + mComboH, w1, mLineH);
-    mTauMaxLab->setGeometry(mMargin, 5*mMargin + 3*mLineH + mComboH, w1, mLineH);
+    //mTauMinLab->setGeometry(mMargin, 4*mMargin + 2*mLineH + mComboH, w1, mLineH);
+    //mTauMaxLab->setGeometry(mMargin, 5*mMargin + 3*mLineH + mComboH, w1, mLineH);
     
     mNameEdit->setGeometry(2*mMargin + w1, mMargin, w2, mLineH);
     mColorPicker->setGeometry(2*mMargin + w1, 2*mMargin + mLineH, w2, mLineH);
     mTauTypeCombo->setGeometry(2*mMargin + w1, 3*mMargin + 2*mLineH, w2, mComboH);
     mTauFixedEdit->setGeometry(2*mMargin + w1, 4*mMargin + 2*mLineH + mComboH, w2, mLineH);
-    mTauMinEdit->setGeometry(2*mMargin + w1, 4*mMargin + 2*mLineH + mComboH, w2, mLineH);
-    mTauMaxEdit->setGeometry(2*mMargin + w1, 5*mMargin + 3*mLineH + mComboH, w2, mLineH);
+    //mTauMinEdit->setGeometry(2*mMargin + w1, 4*mMargin + 2*mLineH + mComboH, w2, mLineH);
+    //mTauMaxEdit->setGeometry(2*mMargin + w1, 5*mMargin + 3*mLineH + mComboH, w2, mLineH);
     
     mOkBut->setGeometry(width() - 2*mMargin - 2*mButW, height() - mMargin - mButH, mButW, mButH);
     mCancelBut->setGeometry(width() - mMargin - mButW, height() - mMargin - mButH, mButW, mButH);

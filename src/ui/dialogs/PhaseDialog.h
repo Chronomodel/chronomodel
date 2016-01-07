@@ -38,15 +38,15 @@ public:
     Label* mColorLab;
     Label* mTauTypeLab;
     Label* mTauFixedLab;
-    Label* mTauMinLab;
-    Label* mTauMaxLab;
+    //Label* mTauMinLab;
+    //Label* mTauMaxLab;
     
     LineEdit* mNameEdit;
     ColorPicker* mColorPicker;
     QComboBox* mTauTypeCombo;
     LineEdit* mTauFixedEdit;
-    LineEdit* mTauMinEdit;
-    LineEdit* mTauMaxEdit;
+    //LineEdit* mTauMinEdit;
+    //LineEdit* mTauMaxEdit;
     
     Button* mOkBut;
     Button* mCancelBut;
