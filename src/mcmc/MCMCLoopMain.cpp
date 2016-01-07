@@ -123,7 +123,7 @@ QString MCMCLoopMain::initMCMC()
     // ----------------------------------------------------------------
     //  Init gamma
     // ----------------------------------------------------------------
-    emit stepChanged(tr("Initializing phases gaps..."), 0, events.size());
+    emit stepChanged(tr("Initializing phases gaps..."), 0, phasesConstraints.size());
     for(int i=0; i<phasesConstraints.size(); ++i)
     {
         phasesConstraints[i]->initGamma();
@@ -137,7 +137,7 @@ QString MCMCLoopMain::initMCMC()
     // ----------------------------------------------------------------
     //  Init tau
     // ----------------------------------------------------------------
-    emit stepChanged(tr("Initializing phases durations..."), 0, events.size());
+    emit stepChanged(tr("Initializing phases durations..."), 0, phases.size());
     for(int i=0; i<phases.size(); ++i)
     {
         phases[i]->initTau();
@@ -194,13 +194,13 @@ QString MCMCLoopMain::initMCMC()
     // ----------------------------------------------------------------
     //  Init theta f, ti, ...
     // ----------------------------------------------------------------
-    emit stepChanged(tr("Initializing events..."), 0, events.size());
+
     QVector<Event*> unsortedEvents = ModelUtilities::unsortEvents(events);
-    
     QVector<QVector<Event*> > eventBranches = ModelUtilities::getAllEventsBranches(events);
     QVector<QVector<Phase*> > phaseBranches = ModelUtilities::getAllPhasesBranches(phases, mModel->mSettings.mTmax - mModel->mSettings.mTmin);
     
     /*qDebug() << "==================";
+     *
     for(int i=0; i<phaseBranches.size(); ++i)
     {
         qDebug() << "----------- branch " << i;
@@ -209,7 +209,9 @@ QString MCMCLoopMain::initMCMC()
             qDebug() << phaseBranches[i][j]->mName << " => ";
         }
     }*/
-    
+
+    emit stepChanged(tr("Initializing events..."), 0, unsortedEvents.size());
+
     for(int i=0; i<unsortedEvents.size(); ++i)
     {
         if(unsortedEvents[i]->mType == Event::eDefault)
@@ -229,7 +231,9 @@ QString MCMCLoopMain::initMCMC()
                 
                 // Init ti and its sigma
                 double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mRepartition);
-                date.mTheta.mX = tmin + idx * step;
+
+                date.mTheta.mX = date.getTminCalib() + idx * mModel->mSettings.mStep;
+                //date.mTheta.mX = tmin + idx * step;
                 
                 FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration, tmin, tmax, step));
                 date.mTheta.mSigmaMH = data.stddev; // computed in RenDateModel and ChronoModel V1.1
@@ -279,7 +283,7 @@ QString MCMCLoopMain::initMCMC()
     // ----------------------------------------------------------------
     //  Init phases
     // ----------------------------------------------------------------
-    emit stepChanged(tr("Initializing phases..."), 0, events.size());
+    emit stepChanged(tr("Initializing phases..."), 0, phases.size());
     for(int i=0; i<phases.size(); ++i)
     {
         Phase* phase = phases[i];
@@ -308,14 +312,14 @@ QString MCMCLoopMain::initMCMC()
             if(bound)
             {
                 log += line(textRed("Bound (" + QString::number(i+1) + "/" + QString::number(events.size()) + ") : " + bound->mName));
-                log += line(textRed(" - theta (value) : " + QString::number(bound->mTheta.mX)));
+                log += line(textRed(" - theta (value) : " + DateUtils::convertToAppSettingsFormatStr(bound->mTheta.mX)+" "+ DateUtils::getAppSettingsFormat()));
                 log += line(textRed(" - theta (sigma MH) : " + QString::number(bound->mTheta.mSigmaMH)));
             }
         }
         else
         {
             log += line(textBlue("Event (" + QString::number(i+1) + "/" + QString::number(events.size()) + ") : " + event->mName));
-            log += line(textBlue(" - theta (value) : " + QString::number(event->mTheta.mX)));
+            log += line(textBlue(" - theta (value) : " + DateUtils::convertToAppSettingsFormatStr(event->mTheta.mX) +" "+ DateUtils::getAppSettingsFormat()));
             log += line(textBlue(" - theta (sigma MH) : " + QString::number(event->mTheta.mSigmaMH)));
             log += line(textBlue(" - SO2 : " + QString::number(event->mS02)));
         }
@@ -327,7 +331,7 @@ QString MCMCLoopMain::initMCMC()
             Date& date = event->mDates[j];
             
             log += line(textGreen("Data (" + QString::number(j+1) + "/" + QString::number(event->mDates.size()) + ") : " + event->mDates[j].mName));
-            log += line(textGreen(" - ti (value) : " + QString::number(date.mTheta.mX)));
+            log += line(textGreen(" - ti (value) : " + DateUtils::convertToAppSettingsFormatStr(date.mTheta.mX)+" "+ DateUtils::getAppSettingsFormat()));
             if(date.mMethod == Date::eMHSymGaussAdapt){
                 log += line(textGreen(" - ti (sigma MH) : " + QString::number(date.mTheta.mSigmaMH)));
             }
@@ -349,8 +353,8 @@ QString MCMCLoopMain::initMCMC()
             
             log += "<br>";
             log += line(textPurple("Phase (" + QString::number(i+1) + "/" + QString::number(phases.size()) + ") : " + phase->mName));
-            log += line(textPurple(" - alpha : " + QString::number(phase->mAlpha.mX)));
-            log += line(textPurple(" - beta : " + QString::number(phase->mBeta.mX)));
+            log += line(textPurple(" - alpha : " + DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mX)+" "+ DateUtils::getAppSettingsFormat()));
+            log += line(textPurple(" - beta : " + DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mX)+" "+ DateUtils::getAppSettingsFormat()));
             log += line(textPurple(" - tau : " + QString::number(phase->mTau)));
         }
     }
@@ -393,8 +397,8 @@ void MCMCLoopMain::update()
     bool doMemo = (mState == eBurning) || (mState == eAdapting) || (chain.mTotalIter % chain.mThinningInterval == 0);
     
     //--------------------- Update Dates -----------------------------------------
-    
-    int counter = 0;
+
+  //  int counter = 0;
     for(int i=0; i<events.size(); ++i)
     {
         Event* event = events[i];
@@ -406,7 +410,7 @@ void MCMCLoopMain::update()
             date.updateTheta(event);
             date.updateSigma(event);
             date.updateWiggle();
-            
+
             if(doMemo)
             {
                 date.mTheta.memo();
@@ -416,7 +420,7 @@ void MCMCLoopMain::update()
                 date.mTheta.saveCurrentAcceptRate();
                 date.mSigma.saveCurrentAcceptRate();
             }
-            ++counter;
+ //           ++counter;
         }
     }
 
@@ -425,12 +429,12 @@ void MCMCLoopMain::update()
     for(int i=0; i<events.size(); ++i)
     {
         Event* event = events[i];
-        
+
         event->updateTheta(t_min, t_max);
         if(doMemo)
         {
-            event->mTheta.memo();
-            event->mTheta.saveCurrentAcceptRate();
+           event->mTheta.memo();
+           event->mTheta.saveCurrentAcceptRate();
         }
     }
 
@@ -442,7 +446,7 @@ void MCMCLoopMain::update()
         if(doMemo)
             phases[i]->memoAll();
     }
-    
+
     //--------------------- Update Phases constraints -----------------------------------------
     
     for(int i=0; i<phasesConstraints.size(); ++i)
@@ -458,7 +462,7 @@ bool MCMCLoopMain::adapt()
     
     const double taux_min = 41.;           // taux_min minimal rate of acceptation=42
     const double taux_max = 47.;           // taux_max maximal rate of acceptation=46
-    
+
     bool allOK = true;
     
     //--------------------- Adapt -----------------------------------------
