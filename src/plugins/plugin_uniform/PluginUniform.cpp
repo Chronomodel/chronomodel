@@ -13,12 +13,12 @@ PluginUniform::PluginUniform()
     mColor = QColor(220,204,173);
 }
 
-double PluginUniform::getLikelyhood(const double& t, const QJsonObject& data)
+long double PluginUniform::getLikelihood(const double& t, const QJsonObject& data)
 {
     double min = data[DATE_UNIFORM_MIN_STR].toDouble();
     double max = data[DATE_UNIFORM_MAX_STR].toDouble();
     
-    return (t >= min && t <= max) ? 1.f / (max-min) : 0;
+    return (t >= min && t <= max) ? (long double)(1.f / (max-min)) : 0.l;
 }
 
 QString PluginUniform::getName() const

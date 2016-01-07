@@ -19,7 +19,7 @@ Plugin14C::Plugin14C()
 }
 
 #pragma mark Likelihood
-QPair<double, double> Plugin14C::getLikelyhoodArg(const double& t, const QJsonObject& data)
+QPair<long double, long double> Plugin14C::getLikelihoodArg(const double& t, const QJsonObject& data)
 {
     double age = data[DATE_14C_AGE_STR].toDouble();
     double error = data[DATE_14C_ERROR_STR].toDouble();
@@ -33,16 +33,15 @@ QPair<double, double> Plugin14C::getLikelyhoodArg(const double& t, const QJsonOb
     double refValue = getRefValueAt(data, t);
     double refError = getRefErrorAt(data, t);
     
-    double variance = refError * refError + error * error;
-    double exponent = -0.5f * pow((age - refValue), 2.f) / variance;
-    
+    long double variance = refError * refError + error * error;
+    long double exponent = -0.5f * powl((long double)(age - refValue), 2.l) / variance;
     return qMakePair(variance, exponent);
 }
 
-double Plugin14C::getLikelyhood(const double& t, const QJsonObject& data)
+long double Plugin14C::getLikelihood(const double& t, const QJsonObject& data)
 {
-    QPair<double, double > result = getLikelyhoodArg(t, data);
-    double back = exp(result.second) / sqrt(result.first) ;
+    QPair<long double, long double > result = getLikelihoodArg(t, data);
+    long double back = expl(result.second) / sqrt(result.first) ;
     return back;
 }
 
@@ -320,26 +319,41 @@ QJsonObject Plugin14C::checkValuesCompatibility(const QJsonObject& values)
 }
 
 #pragma mark Date Validity
-bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& settings){
-    
+bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
+{
     QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString().toLower();
-    if(!mRefCurves.contains(ref_curve))
-    {
+    bool valid = false;
+    if(!mRefCurves.contains(ref_curve)) {
         qDebug()<<"in Plugin14C::isDateValid() unkowned curve"<<ref_curve;
-        //QMessageBox::warning(qApp->activeWindow(),tr("Curve error"),tr("in Plugin14C unkowned curve : ")+ref_curve);
-        return false;
+        valid = false;
     }
-    double age = data[DATE_14C_AGE_STR].toDouble();
-    double error = data[DATE_14C_ERROR_STR].toDouble();
-    double delta_r = data[DATE_14C_DELTA_R_STR].toDouble();
-    double delta_r_error = data[DATE_14C_DELTA_R_ERROR_STR].toDouble();
-    
-    // Apply reservoir effect
-    age = (age - delta_r);
-    error = sqrt(error * error + delta_r_error * delta_r_error);
-    
-    const RefCurve& curve = mRefCurves[ref_curve];
-    return ((age - 1.96 * error < curve.mDataSupMax) && (age + 1.96 * error > curve.mDataInfMin));
+    else {
+        // controle valid solution (double)likelihood>0
+        // remember likelihood type is long double
+        const RefCurve& curve = mRefCurves[ref_curve];
+        valid = false;
+        double age = data[DATE_14C_AGE_STR].toDouble();
+        double error = data[DATE_14C_ERROR_STR].toDouble();
+        double delta_r = data[DATE_14C_DELTA_R_STR].toDouble();
+        double delta_r_error = data[DATE_14C_DELTA_R_ERROR_STR].toDouble();
+
+        // Apply reservoir effect
+        age = (age - delta_r);
+        error = sqrt(error * error + delta_r_error * delta_r_error);
+
+        if(age>curve.mDataInfMin && age < curve.mDataSupMax){
+            valid = true;
+        }
+        else {
+           double t = curve.mTmin;
+           while(valid==false && t<=curve.mTmax) {
+               double v = (double)getLikelihood(t,data);
+               valid = (v>0);
+               t +=settings.mStep;
+           }
+        }
+    }
+    return valid;
 }
 
 #pragma mark Grouped Actions

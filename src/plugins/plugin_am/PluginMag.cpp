@@ -19,34 +19,34 @@ PluginMag::PluginMag()
 }
 
 #pragma mark Likelihood
-double PluginMag::getLikelyhood(const double& t, const QJsonObject& data)
+long double PluginMag::getLikelihood(const double& t, const QJsonObject& data)
 {
-    QPair<double, double > result = getLikelyhoodArg(t, data);
-    return exp(result.second) / sqrt(result.first);
+    QPair<long double, long double > result = getLikelihoodArg(t, data);
+    return expl(result.second) / sqrt(result.first);
 }
 
-QPair<double, double> PluginMag::getLikelyhoodArg(const double& t, const QJsonObject& data)
+QPair<long double, long double> PluginMag::getLikelihoodArg(const double& t, const QJsonObject& data)
 {
     bool is_inc = data[DATE_AM_IS_INC_STR].toBool();
     bool is_dec = data[DATE_AM_IS_DEC_STR].toBool();
     bool is_int = data[DATE_AM_IS_INT_STR].toBool();
-    double alpha = data[DATE_AM_ERROR_STR].toDouble();
-    double inc = data[DATE_AM_INC_STR].toDouble();
-    double dec = data[DATE_AM_DEC_STR].toDouble();
-    double intensity = data[DATE_AM_INTENSITY_STR].toDouble();
+    long double alpha =(long double) data[DATE_AM_ERROR_STR].toDouble();
+    long double inc = (long double) data[DATE_AM_INC_STR].toDouble();
+    long double dec = (long double) data[DATE_AM_DEC_STR].toDouble();
+    long double intensity = (long double) data[DATE_AM_INTENSITY_STR].toDouble();
     QString ref_curve = data[DATE_AM_REF_CURVE_STR].toString().toLower();
     
-    double mesure = 0;
-    double error = 0;
+    long double mesure = 0;
+    long double error = 0;
     
     if(is_inc)
     {
-        error = alpha / 2.448f;
+        error = alpha / 2.448l;
         mesure = inc;
     }
     else if(is_dec)
     {
-        error = alpha / (2.448f * cos(inc * M_PI / 180.f));
+        error = alpha / (2.448l * cosl(inc * M_PI / 180.l));
         mesure = dec;
     }
     else if(is_int)
@@ -55,11 +55,11 @@ QPair<double, double> PluginMag::getLikelyhoodArg(const double& t, const QJsonOb
         mesure = intensity;
     }
     
-    double refValue = getRefValueAt(data, t);
-    double refError = getRefErrorAt(data, t);
+    long double refValue = (long double)getRefValueAt(data, t);
+    long double refError = (long double)getRefErrorAt(data, t);
     
-    double variance = refError * refError + error * error;
-    double exponent = -0.5f * pow((mesure - refValue), 2.f) / variance;
+    long double variance = refError * refError + error * error;
+    long double exponent = -0.5l * powl((mesure - refValue), 2.l) / variance;
     
     return qMakePair(variance, exponent);
 }
@@ -349,24 +349,38 @@ bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& sett
     double mesure = 0;
     double error = 0;
     
-    if(is_inc)
-    {
+    if(is_inc) {
         error = alpha / 2.448f;
         mesure = inc;
     }
-    else if(is_dec)
-    {
+    else if(is_dec) {
         error = alpha / (2.448f * cos(inc * M_PI / 180.f));
         mesure = dec;
     }
-    else if(is_int)
-    {
+    else if(is_int) {
         error = alpha;
         mesure = intensity;
     }
-    
+    // controle valid solution (double)likelihood>0
+    // remember likelihood type is long double
     const RefCurve& curve = mRefCurves[ref_curve];
-    return ((mesure - 1.96f * error < curve.mDataSupMax) && (mesure + 1.96f * error > curve.mDataInfMin));
+    bool valid = false;
+
+    if(mesure>curve.mDataInfMin && mesure < curve.mDataSupMax){
+        valid = true;
+    }
+    else {
+       double t = curve.mTmin;
+       while(valid==false && t<=curve.mTmax) {
+           double v = (double)getLikelihood(t,data);
+           valid = (v>0);
+           t +=settings.mStep;
+       }
+    }
+
+return valid;
+
+    //return ((mesure - 1.96f * error < curve.mDataSupMax) && (mesure + 1.96f * error > curve.mDataInfMin));
 }
 
 

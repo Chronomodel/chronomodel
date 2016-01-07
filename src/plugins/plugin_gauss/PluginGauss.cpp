@@ -19,14 +19,14 @@ PluginGauss::PluginGauss()
 }
 
 #pragma mark Likelyhood
-double PluginGauss::getLikelyhood(const double& t, const QJsonObject& data)
+long double PluginGauss::getLikelihood(const double& t, const QJsonObject& data)
 {
-    QPair<double, double > result = getLikelyhoodArg(t, data);
+    QPair<long double, long double > result = getLikelihoodArg(t, data);
 
-    return exp(result.second) / sqrt(result.first);
+    return expl(result.second) / sqrt(result.first);
 }
 
-QPair<double, double> PluginGauss::getLikelyhoodArg(const double& t, const QJsonObject& data)
+QPair<long double, long double> PluginGauss::getLikelihoodArg(const double& t, const QJsonObject& data)
 {
     double age = data[DATE_GAUSS_AGE_STR].toDouble();
     double error = data[DATE_GAUSS_ERROR_STR].toDouble();
@@ -34,8 +34,8 @@ QPair<double, double> PluginGauss::getLikelyhoodArg(const double& t, const QJson
     double refValue = getRefValueAt(data, t);
     double refError = getRefErrorAt(data, t);
     
-    double variance = refError * refError + error * error;
-    double exponent = -0.5f * pow((age - refValue), 2.f) / variance;
+    long double variance = refError * refError + error * error;
+    long double exponent = -0.5f * pow((long double)(age - refValue), 2.l) / variance;
     
     return qMakePair(variance, exponent);
 }
@@ -484,14 +484,24 @@ bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& se
     QString mode = data[DATE_GAUSS_MODE_STR].toString();
     bool valid = true;
     
-    if(mode == DATE_GAUSS_MODE_CURVE)
-    {
-        double age = data[DATE_GAUSS_AGE_STR].toDouble();
-        double error = data[DATE_GAUSS_ERROR_STR].toDouble();
+    if(mode == DATE_GAUSS_MODE_CURVE) {
+         // controle valid solution (double)likelihood>0
+        // remember likelihood type is long double
         QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString().toLower();
         const RefCurve& curve = mRefCurves[ref_curve];
-        
-        valid = ((age - 1.96 * error < curve.mDataSupMax) && (age + 1.96 * error > curve.mDataInfMin));
+        valid = false;
+        double age = data[DATE_GAUSS_AGE_STR].toDouble();
+        if(age>curve.mDataInfMin && age < curve.mDataSupMax){
+            valid = true;
+        }
+        else {
+            double t = curve.mTmin;
+            while(valid==false && t<=curve.mTmax) {
+                double v = (double)getLikelihood(t,data);
+                valid = (v>0);
+                t +=settings.mStep;
+            }
+        }
     }
     return valid;
 }

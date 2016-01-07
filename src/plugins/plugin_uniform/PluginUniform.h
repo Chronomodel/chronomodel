@@ -17,8 +17,8 @@ class DATATION_SHARED_EXPORT PluginUniform : public PluginAbstract
 public:
     PluginUniform();
     
-    double getLikelyhood(const double& t, const QJsonObject& data);
-    bool withLikelyhoodArg() {return false; };
+    long double getLikelihood(const double& t, const QJsonObject& data);
+    bool withLikelihoodArg() {return false; };
     
     QString getName() const;
     QIcon getIcon() const;

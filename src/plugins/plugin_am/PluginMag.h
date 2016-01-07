@@ -25,9 +25,9 @@ class DATATION_SHARED_EXPORT PluginMag : public PluginAbstract
 public:
     PluginMag();
     
-    double getLikelyhood(const double& t, const QJsonObject& data);
-    bool withLikelyhoodArg() {return true; }
-    QPair<double, double > getLikelyhoodArg(const double& t, const QJsonObject& data);
+    long double getLikelihood(const double& t, const QJsonObject& data);
+    bool withLikelihoodArg() {return true; }
+    QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);
     
     QString getName() const;
     QIcon getIcon() const;
