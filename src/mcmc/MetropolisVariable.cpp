@@ -68,6 +68,7 @@ MetropolisVariable& MetropolisVariable::operator=( MetropolisVariable const& ori
     copy(origin);
     return *this;
 }
+
 /**
  @param[in] dataSrc is the trace, with for example one million data
  @param[in] hFactor corresponds to the bandwidth factor.
@@ -237,10 +238,10 @@ QMap<double, double> MetropolisVariable::generateHisto(QVector<double>& dataSrc,
             }
         }
         // Correct the QMap, with addition of value on the extremum tmin and tmax
-        if(result.constFind(tBegin) == result.cend()){
+        if(pointBeforeBegin && result.constFind(tBegin) == result.cend()){
             result[tBegin] = interpolate( tBegin, tBeforeBegin, result.firstKey(), vBeforeBegin, result.first() );
         }
-        if(result.constFind(tEnd) == result.cend()){
+        if(pointAfterEnd && result.constFind(tEnd) == result.cend()){
             result[tEnd] = interpolate( tEnd, result.lastKey(), tAfterEnd, result.last(), vAfterEnd );
         }
 
@@ -548,7 +549,7 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale)
 
 void MetropolisVariable::saveToStream(QDataStream* out) // ajout PhD
 {
-     *out << this->mChainsHistos;
+    /* *out << this->mChainsHistos;
      //out << this->mChainsResults;
      *out << this->mCorrelations;
      *out << this->mCredibility;
@@ -558,10 +559,10 @@ void MetropolisVariable::saveToStream(QDataStream* out) // ajout PhD
      //out << this->mResults;
      *out << this->mThreshold;
      *out << this->mTrace;
-     *out << this->mX;
+     *out << this->mX;*/
 }
 void MetropolisVariable::loadFromStream(QDataStream *in) // ajout PhD
-{
+{/*
     *in >> this->mChainsHistos;
     //in >> this->mChainsResults;
     *in >> this->mCorrelations;
@@ -572,5 +573,5 @@ void MetropolisVariable::loadFromStream(QDataStream *in) // ajout PhD
     //in >> this->mResults;
     *in >> this->mThreshold;
     *in >> this->mTrace;
-    *in >> this->mX;
+    *in >> this->mX; */
 }
