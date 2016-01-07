@@ -14,12 +14,7 @@
 Date::Date():
 mName("No Named Date")
 {
-    mColor=Qt::blue;
-    mTheta.mIsDate = true;
-    mSigma.mIsDate = false;
-    mTheta.mSupport = MetropolisVariable::eR;
-    mSigma.mSupport = MetropolisVariable::eRp;
-    mWiggle.mSupport = MetropolisVariable::eR;
+
     init();
     
 }
@@ -33,6 +28,13 @@ mName("No Named Date")
 
 void Date::init()
 {
+    mColor=Qt::blue;
+    mTheta.mIsDate = true;
+    mSigma.mIsDate = false;
+    mTheta.mSupport = MetropolisVariable::eR;
+    mSigma.mSupport = MetropolisVariable::eRp;
+    mWiggle.mSupport = MetropolisVariable::eR;
+
     mId = 0;
     mMethod = eMHSymetric;
     updateti = fMHSymetric;
@@ -208,17 +210,17 @@ QJsonObject Date::toJson() const
     return date;
 }
 
-double Date::getLikelyhood(const double& t)
+double Date::getLikelihood(const double& t)
 {
     double result = 0.f;
     if(mPlugin)
-        result = mPlugin->getLikelyhood(t, mData);
+        result = (double)mPlugin->getLikelihood(t, mData);
     return result;
 }
 
-QPair<double, double > Date::getLikelyhoodArg(const double& t)
+QPair<long double, long double> Date::getLikelihoodArg(const double& t)
 {
-    if(mPlugin)   return mPlugin->getLikelyhoodArg(t,mData);
+    if(mPlugin)   return mPlugin->getLikelihoodArg(t,mData);
     else return QPair<double, double>();
 
 }
@@ -275,33 +277,38 @@ void Date::calibrate(const ProjectSettings& settings)
     // --------------------------------------------------
     if(mTmaxRefCurve > mTminRefCurve)
     {
-        double nbRefPts = 1 + round((mTmaxRefCurve - mTminRefCurve) / mSettings.mStep);
-        double v = getLikelyhood(mTminRefCurve);
-        double lastRepVal = v;
-        
         QVector<double> calibrationTemp;
         QVector<double> repartitionTemp;
+
+        double nbRefPts = 1 + round((mTmaxRefCurve - mTminRefCurve) / mSettings.mStep);
+        long double v = getLikelihood(mTminRefCurve);
+        calibrationTemp.append(v);
+        repartitionTemp.append(0);
+        long double lastRepVal = v;
         
-        for(int i = 0; i < nbRefPts; ++i)
+        // we use long double type because
+        // after several sums, the repartion can be in the double type range
+        for(int i = 1; i < nbRefPts; ++i)
         {
             double t = mTminRefCurve + (double)i * mSettings.mStep;
-            float lastV = v;
-            v = getLikelyhood(t);
+            long double lastV = v;
+            v = getLikelihood(t);
             
             calibrationTemp.append(v);
-            double rep = lastRepVal;
+            long double rep = lastRepVal;
             if(v != 0 && lastV != 0)
             {
-                rep = lastRepVal + mSettings.mStep * (lastV + v) / 2.;
+                rep = lastRepVal + (long double) mSettings.mStep * (lastV + v) / 2.;
             }
-            repartitionTemp.append(rep);
+            repartitionTemp.append((double)rep);
             lastRepVal = rep;
         }
         
         // ------------------------------------------------------------------
         //  Restrict the calib and repartition vectors to where data are
         // ------------------------------------------------------------------
-        if(lastRepVal > 0)
+
+        if(repartitionTemp.last() > 0)
         {
             const double threshold = 0.00005;
             const int minIdx = (int)floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp));
@@ -325,6 +332,7 @@ void Date::calibrate(const ProjectSettings& settings)
             
             // Approximation : even if the calib has been truncated, we consider its area to be = 1
             mCalibration = equal_areas(mCalibration, mSettings.mStep, 1.);
+
         }
         // ------------------------------------------------------------------
         //  Measure is very far from Ref curve on the whole ref curve preriod!
@@ -503,7 +511,7 @@ QPixmap Date::generateCalibThumb()
 
 
 
-double Date::getLikelyhoodFromCalib(const double t)
+double Date::getLikelihoodFromCalib(const double t)
 {
     double tmin = mSettings.mTmin;
     double tmax = mSettings.mTmax;
@@ -705,7 +713,7 @@ void Date::autoSetTiSampler(const bool bSet)
     // define sampling function
     // select if using getLikelyhooArg is possible, it's a faster way
     
-    if (bSet && mPlugin!= 0 && mPlugin->withLikelyhoodArg()) {
+    if (bSet && mPlugin!= 0 && mPlugin->withLikelihoodArg()) {
          //   if (false) {
         switch(mMethod)
         {
@@ -786,7 +794,7 @@ void fMHSymetric(Date* date,Event* event)
     */
    
         double tiNew = Generator::gaussByBoxMuller(event->mTheta.mX - date->mDelta, date->mSigma.mX);
-        double rapport = date->getLikelyhood(tiNew) / date->getLikelyhood(date->mTheta.mX);
+        double rapport = date->getLikelihood(tiNew) / date->getLikelihood(date->mTheta.mX);
         
         date->mTheta.tryUpdate(tiNew, rapport);
      
@@ -802,14 +810,14 @@ void fMHSymetricWithArg(Date* date,Event* event)
     
     double tiNew = Generator::gaussByBoxMuller(event->mTheta.mX - date->mDelta, date->mSigma.mX);
     
-    QPair<double, double> argOld, argNew;
+    QPair<long double, long double> argOld, argNew;
     
-    argOld=date->getLikelyhoodArg(date->mTheta.mX);
-    argNew=date->getLikelyhoodArg(tiNew);
+    argOld=date->getLikelihoodArg(date->mTheta.mX);
+    argNew=date->getLikelihoodArg(tiNew);
     
-    double rapport=sqrt(argOld.first/argNew.first)*exp(argNew.second-argOld.second);
+    long double rapport=sqrt(argOld.first/argNew.first)*exp(argNew.second-argOld.second);
     
-    date->mTheta.tryUpdate(tiNew, rapport);
+    date->mTheta.tryUpdate(tiNew, (double)rapport);
     
 }
 
@@ -895,7 +903,7 @@ void fInversion(Date* date, Event* event)
         */
     }
              
-    double rapport1 = date->getLikelyhood(tiNew) / date->getLikelyhood(date->mTheta.mX);
+    double rapport1 = date->getLikelihood(tiNew) / date->getLikelihood(date->mTheta.mX);
     
     double rapport2 = exp((-0.5 / (date->mSigma.mX * date->mSigma.mX)) *
                           (pow(tiNew - (event->mTheta.mX - date->mDelta), 2) -
@@ -948,28 +956,28 @@ void fInversionWithArg(Date* date, Event* event)
     }
     
     
-    QPair<double, double> argOld, argNew;
+    QPair<long double, long double> argOld, argNew;
     
-    argOld=date->getLikelyhoodArg(date->mTheta.mX);
-    argNew=date->getLikelyhoodArg(tiNew);
+    argOld=date->getLikelihoodArg(date->mTheta.mX);
+    argNew=date->getLikelihoodArg(tiNew);
     
-    double logGRapport= argNew.second-argOld.second;
-    double logHRapport= (-0.5/(date->mSigma.mX * date->mSigma.mX)) * (pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
+    long double logGRapport= argNew.second-argOld.second;
+    long double logHRapport= (-0.5/(date->mSigma.mX * date->mSigma.mX)) * (pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
                                                                       - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
                                                                       );
     
-    double rapport = sqrt(argOld.first/argNew.first) * exp(logGRapport+logHRapport);
+    long double rapport = sqrt(argOld.first/argNew.first) * exp(logGRapport+logHRapport);
     
-    double rapportPD = fProposalDensity(date->mTheta.mX, tiNew, date) / fProposalDensity(tiNew, date->mTheta.mX, date);
+    long double rapportPD = fProposalDensity(date->mTheta.mX, tiNew, date) / fProposalDensity(tiNew, date->mTheta.mX, date);
     
-    date->mTheta.tryUpdate(tiNew, rapport * rapportPD);
+    date->mTheta.tryUpdate(tiNew, (double)(rapport * rapportPD));
     
     //date->mTheta.tryUpdate(tiNew, exp(logHRapport));
     
 }
 
 
-/*
+/**
  * @brief MH proposal = adaptatif Gaussian random walk, ti is defined on set R (real numbers)
  */
 void fMHSymGaussAdapt(Date* date, Event* event)
@@ -982,7 +990,7 @@ void fMHSymGaussAdapt(Date* date, Event* event)
     */
     
     double tiNew = Generator::gaussByBoxMuller(date->mTheta.mX, date->mTheta.mSigmaMH);
-    double rapport = date->getLikelyhood(tiNew) / date->getLikelyhood(date->mTheta.mX);
+    double rapport = date->getLikelihood(tiNew) / date->getLikelihood(date->mTheta.mX);
     rapport *= exp((-0.5/(date->mSigma.mX * date->mSigma.mX)) * (   pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
                                                                   - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
                                                                  ));
@@ -991,7 +999,7 @@ void fMHSymGaussAdapt(Date* date, Event* event)
 }
 
 
-/*
+/**
  * @brief MH proposal = adaptatif Gaussian random walk, ti is not constraint being on the study period
  *
  * @brief identic as fMHSymGaussAdapt but use getLikelyhoodArg, when plugin offer it
@@ -1000,17 +1008,17 @@ void fMHSymGaussAdaptWithArg(Date* date, Event* event)
 {
     double tiNew = Generator::gaussByBoxMuller(date->mTheta.mX, date->mTheta.mSigmaMH);
     
-    QPair<double, double> argOld, argNew;
+    QPair<long double, long double> argOld, argNew;
     
-    argOld=date->getLikelyhoodArg(date->mTheta.mX);
-    argNew=date->getLikelyhoodArg(tiNew);
+    argOld=date->getLikelihoodArg(date->mTheta.mX);
+    argNew=date->getLikelihoodArg(tiNew);
     
-    double logGRapport= argNew.second-argOld.second;
-    double logHRapport= (-0.5/(date->mSigma.mX * date->mSigma.mX)) * (  pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
+    long double logGRapport= argNew.second-argOld.second;
+    long double logHRapport= (-0.5/(date->mSigma.mX * date->mSigma.mX)) * (  pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
                                                                       - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
                                                                       );
     
-    double rapport=sqrt(argOld.first/argNew.first)*exp(logGRapport+logHRapport);
+    long double rapport=sqrt(argOld.first/argNew.first)*exp(logGRapport+logHRapport);
     
-    date->mTheta.tryUpdate(tiNew, rapport);
+    date->mTheta.tryUpdate(tiNew, (double) rapport);
 }

@@ -59,13 +59,13 @@ public:
     static Date fromCSV(QStringList dataStr);
     QStringList toCSV(QLocale csvLocale) const;
     
-    double getLikelyhood(const double& t);
-    QPair<double, double > getLikelyhoodArg(const double& t);
+    double getLikelihood(const double& t);
+    QPair<long double, long double> getLikelihoodArg(const double& t);
     QString getDesc() const;
     
     void reset();
     void calibrate(const ProjectSettings& settings);
-    double getLikelyhoodFromCalib(const double t);
+    double getLikelihoodFromCalib(const double t);
     QMap<double, double> getCalibMap() const;
     QPixmap generateCalibThumb();
     QPixmap generateTypoThumb();
