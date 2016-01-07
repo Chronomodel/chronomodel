@@ -213,7 +213,7 @@ void Model::clear()
 }*/
 
 #pragma mark JSON conversion
-void Model::setJson( const QJsonObject & json)
+/*void Model::setJson( const QJsonObject & json)
 {
     mJson = &json;
 }
@@ -221,6 +221,7 @@ const QJsonObject &  Model::getJson()
 {
     return (*mJson) ;
 }
+*/
 void Model::fromJson(const QJsonObject& json)
 {
     if(json.contains(STATE_SETTINGS))
@@ -265,6 +266,7 @@ void Model::fromJson(const QJsonObject& json)
                     for(int j=0; j<e->mDates.size(); ++j)
                     {
                         e->mDates[j].mMixingLevel=e->mMixingLevel;
+                        e->mDates[j].mColor=e->mColor;
                     }
                     mEvents.append(e);
                 }

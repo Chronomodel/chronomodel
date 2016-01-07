@@ -39,9 +39,9 @@ public:
 
     void fromJson( const QJsonObject& json);
     
-    void setJson( const QJsonObject & json);
+  /*  void setJson( const QJsonObject & json);
     const QJsonObject & getJson();
-  
+  */
         
     
     bool isValid();
