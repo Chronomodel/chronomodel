@@ -44,9 +44,9 @@ public:
     PluginAbstract():mRefGraph(0){}
     virtual ~PluginAbstract(){}
     
-    virtual double getLikelyhood(const double& t, const QJsonObject& data) = 0;
-    virtual QPair<double, double > getLikelyhoodArg(const double& t, const QJsonObject& data){return QPair<double, double>();}
-    virtual bool withLikelyhoodArg() {return false;}
+    virtual long double getLikelihood(const double& t, const QJsonObject& data) = 0;
+    virtual QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data){return QPair<long double, long double>();}
+    virtual bool withLikelihoodArg() {return false;}
 
     virtual QString getName() const = 0;
     virtual QIcon getIcon() const = 0;
@@ -133,14 +133,14 @@ public:
     }
     
     // curveName must be in lower Case
-    double getRefCurveValueAt(const QString& curveName, const double& t)
+   double getRefCurveValueAt(const QString& curveName, const double& t)
     {
-        double value = 0;
-        if(mRefCurves.find(curveName) != mRefCurves.constEnd())
+        long double value = 0;
+        if(mRefCurves.constFind(curveName) != mRefCurves.constEnd())
         {
             const RefCurve& curve = mRefCurves[curveName];
             
-            if(curve.mDataMean.find(t) != curve.mDataMean.constEnd())
+            if(curve.mDataMean.constFind(t) != curve.mDataMean.constEnd())
             {
                 value = curve.mDataMean[t];
             }
@@ -170,11 +170,11 @@ public:
     double getRefCurveErrorAt(const QString& curveName, const double& t)
     {
         double error = 0;
-        if(mRefCurves.find(curveName) != mRefCurves.constEnd())
+        if(mRefCurves.constFind(curveName) != mRefCurves.constEnd())
         {
             const RefCurve& curve = mRefCurves[curveName];
             
-            if(curve.mDataError.find(t) != curve.mDataError.constEnd())
+            if(curve.mDataError.constFind(t) != curve.mDataError.constEnd())
             {
                 error = curve.mDataError[t];
             }
