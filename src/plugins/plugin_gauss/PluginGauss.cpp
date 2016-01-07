@@ -483,7 +483,8 @@ bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& se
 {
     QString mode = data[DATE_GAUSS_MODE_STR].toString();
     bool valid = true;
-    
+    long double v = 0;
+    long double lastV = 0;
     if(mode == DATE_GAUSS_MODE_CURVE) {
          // controle valid solution (double)likelihood>0
         // remember likelihood type is long double
@@ -496,9 +497,17 @@ bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& se
         }
         else {
             double t = curve.mTmin;
+            long double repartition = 0;
             while(valid==false && t<=curve.mTmax) {
-                double v = (double)getLikelihood(t,data);
-                valid = (v>0);
+                v = (double)getLikelihood(t,data);
+                // we have to check this calculs
+                //because the repartition can be smaller than the calibration
+                if (lastV>0 && v>0) {
+                    repartition += (long double) settings.mStep * (lastV + v) / 2.;
+                }
+                lastV = v;
+
+                valid = ( (double)repartition > 0);
                 t +=settings.mStep;
             }
         }

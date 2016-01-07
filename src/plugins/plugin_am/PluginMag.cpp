@@ -370,12 +370,22 @@ bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& sett
         valid = true;
     }
     else {
-       double t = curve.mTmin;
-       while(valid==false && t<=curve.mTmax) {
-           double v = (double)getLikelihood(t,data);
-           valid = (v>0);
-           t +=settings.mStep;
-       }
+        double t = curve.mTmin;
+        long double repartition = 0;
+        long double v = 0;
+        long double lastV = 0;
+        while(valid==false && t<=curve.mTmax) {
+            v = (double)getLikelihood(t,data);
+            // we have to check this calculs
+            //because the repartition can be smaller than the calibration
+            if (lastV>0 && v>0) {
+                repartition += (long double) settings.mStep * (lastV + v) / 2.;
+            }
+            lastV = v;
+
+            valid = ( (double)repartition > 0);
+            t +=settings.mStep;
+        }
     }
 
 return valid;
