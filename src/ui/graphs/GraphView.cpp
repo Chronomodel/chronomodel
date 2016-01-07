@@ -776,8 +776,8 @@ void GraphView::drawCurves(QPainter& painter)
                 painter.setPen(curve.mPen);
                 for(int i=0; i<curve.mSections.size(); ++i)
                 {
-                    qreal x1 = getXForValue(curve.mSections[i].first, false);
-                    qreal x2 = getXForValue(curve.mSections[i].second, false);
+                    qreal x1 = getXForValue(curve.mSections[i].first, true);
+                    qreal x2 = getXForValue(curve.mSections[i].second, true);
                     
                     painter.drawLine(QPointF(x1, y1),QPointF(x2, y1));
                 }
