@@ -38,26 +38,22 @@ mLoop(loop)
     
     // -----------
     
-    //connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
-    connect(mCancelBut, &QPushButton::clicked, this, &MCMCProgressDialog::cancelMCMC);
-    //connect(this, &MCMCProgressDialog::rejected, this, &MCMCProgressDialog::cancelMCMC);
+    connect(mCancelBut, &QPushButton::clicked, this, &MCMCProgressDialog::cancelMCMC);    
     
-    connect(mLoop, SIGNAL(finished()), this, SLOT(setFinishedState()));
-    //connect(mLoop, SIGNAL(finished()), this, SLOT(accept()));
+    connect(mLoop, &MCMCLoopMain::finished, this, &MCMCProgressDialog::setFinishedState);
     
-    connect(mLoop, SIGNAL(stepChanged(const QString&, int, int)), this, SLOT(setTitle1(const QString&, int, int)));
-    connect(mLoop, SIGNAL(stepProgressed(int)), this, SLOT(setProgress1(int)));
+    connect(mLoop, &MCMCLoopMain::stepChanged, this, &MCMCProgressDialog::setTitle1);
+    connect(mLoop, &MCMCLoopMain::stepProgressed, this, &MCMCProgressDialog::setProgress1);
 }
 
 MCMCProgressDialog::~MCMCProgressDialog()
 {
-    //mLoop->quit();
-    //mLoop->wait();
+
 }
 
 int MCMCProgressDialog::startMCMC()
 {
-    mLoop->start();
+    mLoop->start(QThread::NormalPriority);
     return exec();
 }
 
@@ -92,7 +88,6 @@ void MCMCProgressDialog::setProgress2(int value)
 
 void MCMCProgressDialog::setFinishedState()
 {
-   // mOKBut->setEnabled(true);
     mCancelBut->setEnabled(false);
     accept();
 }

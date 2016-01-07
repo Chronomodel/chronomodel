@@ -71,17 +71,9 @@ MHVariable& MHVariable::operator=( MHVariable const& origin)
 double MHVariable::getCurrentAcceptRate()
 {
     double sum = 0.f;
-   /* for(int i=0; i<mLastAccepts.length(); ++i)
-        sum += mLastAccepts[i] ? 1.f : 0.f;
-    
-    //qDebug() << "Last accept on " << sum << " / " << mLastAccepts.length() << " values";
-    
-    return sum / (double)mLastAccepts.length();*/
     
     for(int i=0; i<mLastAccepts.size(); ++i) {
         sum += mLastAccepts[i] ? 1.f : 0.f;
-    //qDebug() << "MHVariable::getCurrentAcceptRate mLastAccepts[i]" << mLastAccepts[i] ;
-    //qDebug() << "Last accept on " << i << " / " << mLastAccepts.length() << " values";
     }
     
     return sum / (double)mLastAccepts.size();

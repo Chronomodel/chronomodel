@@ -36,7 +36,7 @@ double dataStd(QVector<double>& data);
 double shrinkageUniform(double so2);
 
 Quartiles quartilesForTrace(const QVector<double>& trace);
-Quartiles quartilesForRepartition(const QVector<double>& repartition, double tmin, double step);
+Quartiles quartilesForRepartition(const QVector<double>& repartition,const double tmin,const double step);
 QPair<double, double> credibilityForTrace(const QVector<double>& trace, double thresh, double& exactThresholdResult);
 QString intervalText(const QPair<double, QPair<double, double> >& interval, FormatFunc formatFunc = 0);
 QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString& unit = QString(), FormatFunc formatFunc = 0);

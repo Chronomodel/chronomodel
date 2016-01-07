@@ -198,7 +198,7 @@ Quartiles quartilesForTrace(const QVector<double>& trace)
     return quartiles;
 }
 
-Quartiles quartilesForRepartition(const QVector<double>& repartition, double tmin, double step)
+Quartiles quartilesForRepartition(const QVector<double>& repartition, const double tmin, const double step)
 {
     Quartiles quartiles;
     if(repartition.size()<5){
@@ -227,13 +227,11 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, double t
     
     if(thresh > 0 && trace.size() > 0)
     {
-        //int threshold = qMin(thresh, 100);
         double threshold =  (thresh > 100 ? thresh = 100.0 : thresh);
         threshold = (thresh < 0 ? thresh = 0.0 : thresh);
         QVector<double> sorted = trace;
         qSort(sorted);
         
-        //int numToRemove = floor((double)sorted.size() * (1.f - (double)threshold / 100.f));
         int numToRemove = floor((double)sorted.size() * (1.f - threshold / 100.f));
         exactThresholdResult = ((double)sorted.size() - (double)numToRemove) / (double)sorted.size();
         

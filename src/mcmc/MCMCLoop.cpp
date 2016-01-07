@@ -63,29 +63,20 @@ void MCMCLoop::run()
 {    
     QString mDate =QDateTime::currentDateTime().toString("dddd dd MMMM yyyy");
     QTime startTime = QTime::currentTime();
-    startTime.start();
-    //QString mTime = startTime.toString("hh:mm:ss.zzz");
     QString log= "Start " +mDate+" ->>> " +startTime.toString("hh:mm:ss.zzz");
     
-    //int timeDiff = 0;
-    
-    //QTime startTotalTime = QTime::currentTime();
-    
+
     //----------------------- Calibrating --------------------------------------
     
     emit stepChanged(tr("Calibrating data..."), 0, 0);
     
-    //QTime startCalibTime = QTime::currentTime();
     mAbortedReason = this->calibrate();
     if(!mAbortedReason.isEmpty())
     {
         return;
     }
     
-    /*QTime endCalibTime = QTime::currentTime();
-    int timeDiff = startCalibTime.msecsTo(endCalibTime);
-    log += line("Calib done in " + QString::number(timeDiff) + " ms");*/
-    
+
     //----------------------- Chains --------------------------------------
     
     QStringList seeds;
@@ -229,7 +220,7 @@ void MCMCLoop::run()
                 mAbortedReason = ABORTED_BY_USER;
                 return;
             }
-            
+
             try{
                 this->update();
             }
@@ -241,7 +232,7 @@ void MCMCLoop::run()
             
             ++chain.mRunIterIndex;
             ++chain.mTotalIter;
-            
+
             emit stepProgressed(chain.mRunIterIndex);
         }
         

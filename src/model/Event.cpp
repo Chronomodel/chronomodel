@@ -62,7 +62,8 @@ void Event::copyFrom(const Event& event)
     mConstraintsBwd = event.mConstraintsBwd;
     
     mTheta = event.mTheta;
-    //mTheta.mSupport = event.mTheta.mSupport;
+    mTheta.mSupport = event.mTheta.mSupport;
+
     mS02 = event.mS02;
     mAShrinkage = event.mAShrinkage;
     

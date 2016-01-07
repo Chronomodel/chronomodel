@@ -12,8 +12,8 @@ public:
     
     virtual void reset();
     MHVariable& copy(MHVariable const& origin);
-    MHVariable& operator=( MHVariable const& origin);
-    
+    MHVariable& operator=(MHVariable const& origin);
+
     double getCurrentAcceptRate();
     void saveCurrentAcceptRate();
     
@@ -28,8 +28,8 @@ public:
                           const QString& unit = QString(),
                           FormatFunc formatFunc = 0) const;
 
-    void saveToStream(QDataStream *out); // added by PhD
-    void loadFromStream(QDataStream *in); // added by PhD
+    void saveToStream(QDataStream *out);
+    void loadFromStream(QDataStream *in);
     
 public:
     double mSigmaMH;
@@ -37,18 +37,15 @@ public:
     // Buffer glissant de la taille d'un batch pour calculer la courbe d'évolution
     // du taux d'acceptation chaine par chaine
     
-    QVector<bool> mLastAccepts;//by HL
-    //std::vector<bool> mLastAccepts; //by PhD
+    QVector<bool> mLastAccepts;
     
     int mLastAcceptsLength;
-    //int mIndexInBatch; // PhD Since 2015/06/15 not use just to compare method
-    
+
     // Buffer contenant toutes les acceptations cumulées pour toutes les chaines
     // sur les parties acquisition uniquement.
     // A stocker dans le fichier résultats .dat !
     
-    QVector<bool> mAllAccepts; //par HL
-    //std::vector<bool> mAllAccepts; // PhD
+    QVector<bool> mAllAccepts;
     
     // Computed at the end as numerical result :
     double mGlobalAcceptation;
@@ -57,8 +54,7 @@ public:
     // On en affiche des sous-parties (correspondant aux chaines) dans la vue des résultats
     // A stocker dans les résultats!
     
-    QVector<double> mHistoryAcceptRateMH; //par HL
-    //std::vector<double> mHistoryAcceptRateMH; // PhD
+    QVector<double> mHistoryAcceptRateMH;
     
     QString mProposal;
 };
