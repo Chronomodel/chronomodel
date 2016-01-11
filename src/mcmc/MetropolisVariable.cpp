@@ -1,5 +1,6 @@
 #include "MetropolisVariable.h"
 #include "StdUtilities.h"
+#include "QtUtilities.h"
 #include "Functions.h"
 #include "DateUtils.h"
 #if USE_FFT
@@ -165,89 +166,63 @@ QMap<double, double> MetropolisVariable::generateHisto(QVector<double>& dataSrc,
     float* input = generateBufferForHisto(dataSrc, fftLen, a, b);
     float* output = (float*) fftwf_malloc(outputSize * sizeof(float));
     
-    if(input != 0)
-    {
+    if(input != 0) {
         // ----- FFT -----
-        
+        // http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data
+        //https://jperalta.wordpress.com/2006/12/12/using-fftw3/
         fftwf_plan plan_forward = fftwf_plan_dft_r2c_1d(inputSize, input, (fftwf_complex*)output, FFTW_ESTIMATE);
         fftwf_execute(plan_forward);
-        
+
         for(int i=0; i<outputSize/2; ++i) {
             double s = 2.f * M_PI * i / (b-a);
             double factor = expf(-0.5f * s * s * h * h);
-            
+
             output[2*i] *= factor;
             output[2*i + 1] *= factor;
         }
-        
+
         fftwf_plan plan_backward = fftwf_plan_dft_c2r_1d(inputSize, (fftwf_complex*)output, input, FFTW_ESTIMATE);
         fftwf_execute(plan_backward);
-        
+
         // ----- FFT Buffer to result map -----
 
-
-
-     double tBegin = a;
-     double tEnd = b;
-     switch(mSupport)
-     {
-          case eR :// on R
-              // nothing to do already done by default
-          break;
-          case eRp : // on R+
-              tBegin = 0;
-          break;
-          case eRm :// on R-
-              tEnd = 0;
-          break;
-          case eRpStar : // on R+*
-              tBegin = 0;
-          break;
-          case eRmStar :// on R-*
-              tEnd = 0;
-          break;
-          case eBounded : // on [tmin;ytmax]
-              tBegin = tmin;
-              tEnd = tmax;
-          break;
-     }
-
-
-        double delta = (b - a) / fftLen;
-        double tBeforeBegin;
-        double vBeforeBegin;
-        bool pointBeforeBegin =false;
-        double tAfterEnd;
-        double vAfterEnd;
-        bool pointAfterEnd =false;
-        for(int i=0; i<inputSize; ++i)
+        double tBegin = a;
+        double tEnd = b;
+        switch(mSupport)
         {
-            double t = a + (double)i * delta;
-            if((t >= tBegin) && (t <= tEnd)) {
-                result[t] = input[i];
-             }
-            else if(t<tBegin){
-               pointBeforeBegin =true;
-               tBeforeBegin = t;
-               vBeforeBegin = input[i];
-            }
-            else if( t>tEnd && !pointAfterEnd ){
-                pointAfterEnd =true;
-                tAfterEnd = t;
-                vAfterEnd = input[i];
-            }
+              case eR :// on R
+                  // nothing to do already done by default
+              break;
+              case eRp : // on R+
+                  tBegin = 0;
+              break;
+              case eRm :// on R-
+                  tEnd = 0;
+              break;
+              case eRpStar : // on R+*
+                  tBegin = 0;
+              break;
+              case eRmStar :// on R-*
+                  tEnd = 0;
+              break;
+              case eBounded : // on [tmin;ytmax]
+                  tBegin = tmin;
+                  tEnd = tmax;
+              break;
         }
-        // Correct the QMap, with addition of value on the extremum tmin and tmax
-        if(pointBeforeBegin && result.constFind(tBegin) == result.cend()){
-            result[tBegin] = interpolate( tBegin, tBeforeBegin, result.firstKey(), vBeforeBegin, result.first() );
+        double delta = (b - a) / fftLen;
+        for(int i=0; i<inputSize; ++i) {
+             double t = a + (double)i * delta;
+             result[t] = input[i];
         }
-        if(pointAfterEnd && result.constFind(tEnd) == result.cend()){
-            result[tEnd] = interpolate( tEnd, result.lastKey(), tAfterEnd, result.last(), vAfterEnd );
-        }
+
+        result = getMapDataInRange(result,tBegin,tEnd);
+
 
         fftwf_free(input);
         fftwf_free(output);
-        
+        fftwf_destroy_plan(plan_forward);
+        fftwf_destroy_plan(plan_backward);
         result = equal_areas(result, 1.); // normalize the output area du to the fftw and the case (t >= tmin && t<= tmax)
     }
     return result; // return a map between a and b with a step delta = (b - a) / fftLen;
@@ -287,7 +262,7 @@ void MetropolisVariable::generateHPD(double threshold)
         // No need to have HPD for all chains !
         //mChainsHPD.clear();
         //for(int i=0; i<mChainsHistos.size(); ++i)
-          //  mChainsHPD.append(create_HPD(mChainsHistos[i], 1, threshold));
+        //  mChainsHPD.append(create_HPD(mChainsHistos[i], 1, threshold));
     }
     else
     {

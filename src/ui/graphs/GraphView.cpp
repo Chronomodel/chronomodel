@@ -1,6 +1,7 @@
 #include "GraphView.h"
 #include "Ruler.h"
 #include "StdUtilities.h"
+#include "QtUtilities.h"
 #include "DateUtils.h"
 #include "Painting.h"
 #include <QtWidgets>
@@ -94,13 +95,13 @@ void GraphView::zoomX(const double min, const double max)
                 }
                 else if(curve.mUseVectorData)
                 {
-                    QVector<double> subData = curve.getVectorDataInRange(mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
+                    QVector<double> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, min, max);
                     yMax = qMax(yMax, vector_max_value(subData));
                     yMin = qMin(yMin, vector_min_value(subData));
                 }
                 else if(!curve.mIsVertical && !curve.mIsVerticalLine && !curve.mIsHorizontalSections)
                 {
-                    QMap<double, double> subData = curve.getMapDataInRange(mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
+                    QMap<double, double> subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
                     yMax = qMax(yMax, map_max_value(subData));
                     yMin = qMin(yMin, map_min_value(subData));
                 }
@@ -751,13 +752,8 @@ void GraphView::drawCurves(QPainter& painter)
                 path.moveTo(mMarginLeft, y0);
                 for(int i=0; i<curve.mSections.size(); ++i)
                 {
-                    qreal x1 = getXForValue(curve.mSections[i].first, false);
-                    //x1 = qMax(x1, mMarginLeft);
-                    //x1 = qMin(x1, mMarginLeft + mGraphWidth);
-
+                    qreal x1 = getXForValue(curve.mSections[i].first, false);   
                     qreal x2 = getXForValue(curve.mSections[i].second, false);
-                    //x2 = qMax(x2, mMarginLeft);
-                    //x2 = qMin(x2, mMarginLeft + mGraphWidth);
                     
                     path.lineTo(x1, y0);
                     path.lineTo(x1, y1);
@@ -824,7 +820,6 @@ void GraphView::drawCurves(QPainter& painter)
             {
                 path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
                 
-                //int index = 0;
                 qreal last_x = 0;
                 qreal last_y = 0;
                 qreal last_value_y = 0;
@@ -833,7 +828,7 @@ void GraphView::drawCurves(QPainter& painter)
                 {
                     // Down sample vector
                     
-                    QVector<double> subData = curve.getVectorDataInRange(mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
+                    QVector<double> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
                     
                     QVector<double> lightData;
                     double dataStep = (double)subData.size() / (double)(2.*mGraphWidth);
@@ -887,11 +882,11 @@ void GraphView::drawCurves(QPainter& painter)
                 else
                 {
                     // Down sample curve for better performances
-                    
-                    QMap<double, double> subData = curve.getMapDataInRange(mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
+
+                    QMap<double, double> subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
                     
                     QMap<double, double> lightMap;
-                    if(subData.size() > 2*mGraphWidth)
+                    if(false)//subData.size() > 2*mGraphWidth)
                     {
                         int valuesPerPixel = subData.size() / (2*mGraphWidth);
                         
