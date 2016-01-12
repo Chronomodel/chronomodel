@@ -985,8 +985,9 @@ void fMHSymGaussAdapt(Date* date, Event* event)
     /* double rapport = 0;
     // if(theta >= tmin && theta <= tmax)
     // {
-    // rapport = (G(theta_new) / G(theta_old)) * (H(theta_new) / H(theta_old))
-    //rapport = getLikelyhoodFromCalib(theta) / getLikelyhoodFromCalib(mTheta.mX); // rapport des G(theta i)
+    //  rapport = (G(theta_new) / G(theta_old)) * (H(theta_new) / H(theta_old))
+    //  rapport = getLikelihoodFromCalib(theta) / getLikelihoodFromCalib(mTheta.mX); // rapport des G(theta i)
+    // }
     */
     
     double tiNew = Generator::gaussByBoxMuller(date->mTheta.mX, date->mTheta.mSigmaMH);

@@ -647,7 +647,7 @@ void EventsScene::centerOnEvent(int eventId)
 AbstractItem* EventsScene::currentItem()
 {
     QList<QGraphicsItem*> selItems = selectedItems();
-    qDebug() << "selected items : " << selItems.size();
+    //qDebug() << "selected items : " << selItems.size();
     
     if(!selItems.isEmpty())
     {

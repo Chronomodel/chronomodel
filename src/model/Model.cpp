@@ -741,11 +741,11 @@ QList<QStringList> Model::getEventsTraces(QLocale locale)
 #pragma mark Model validity
 bool Model::isValid()
 {
-    // 1 - Au moins 1 fait dans le modèle
+    // 1 - At least one event is required in a model
     if(mEvents.size() == 0)
         throw tr("At least one event is required");
     
-    // 2 - Au moins 1 data dans chaque event
+    // 2 - The event must contain at least 1 data
     for(int i=0; i<mEvents.size(); ++i)
     {
         if(mEvents[i]->type() == Event::eDefault)
@@ -755,7 +755,7 @@ bool Model::isValid()
         }
     }
     
-    // 3 - Au moins 1 event dans chaque phase
+    // 3 - The phase must contain at least 1 event
     for(int i=0; i<mPhases.size(); ++i)
     {
         if(mPhases[i]->mEvents.size() == 0)
