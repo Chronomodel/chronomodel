@@ -886,7 +886,7 @@ void GraphView::drawCurves(QPainter& painter)
                     QMap<double, double> subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
                     
                     QMap<double, double> lightMap;
-                    if(false)//subData.size() > 2*mGraphWidth)
+                    if(subData.size() > 2*mGraphWidth)
                     {
                         int valuesPerPixel = subData.size() / (2*mGraphWidth);
                         
@@ -937,7 +937,7 @@ void GraphView::drawCurves(QPainter& painter)
                         
                         if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
                         {
-                            x = getXForValue(valueX, false);
+                            x = getXForValue(valueX, true);
                             y = getYForValue(valueY, false);
                             
                             if(isFirst)
@@ -976,31 +976,19 @@ void GraphView::drawCurves(QPainter& painter)
                             last_value_y = valueY;
                         }
                     }
-                    
-                    
-                    if(curve.mIsRectFromZero && valueY != 0.f)
-                    {
-                        x = last_x;
-                        y = getYForValue(0, false);
-                        path.lineTo(x, y);
-                        
-                    }
-                    
+
                 }
-                painter.drawPath(path);
-                if(curve.mBrush != Qt::NoBrush)
-                {
-                    // Close the path
-                   /* if(curve.mIsVertical)
-                     path.lineTo(mMarginLeft, mMarginTop);
-                     else
-                     path.lineTo(mMarginLeft + mGraphWidth, mMarginTop + mGraphHeight);
-                     path.lineTo(mMarginLeft, mMarginTop + mGraphHeight);
-                    */
-                    path.lineTo(last_x, getYForValue(0, false));
-                    
+
+                if(curve.mIsRectFromZero && (curve.mBrush != Qt::NoBrush) ) {
+                    // Close the path on the left side
+                    path.lineTo(last_x, getYForValue(0, true));
+                    painter.drawPath(path);
+
                     painter.setPen(curve.mPen);
                     painter.fillPath(path, brush);
+                }
+                else {
+                    painter.drawPath(path);
                 }
             }
         }
