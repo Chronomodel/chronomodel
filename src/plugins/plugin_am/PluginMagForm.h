@@ -23,9 +23,13 @@ public:
     QJsonObject getData();
     
     bool isValid();
-    
-private slots:
+
+signals:
+    void OkEnabled(bool enabled = true) ;
+     
+protected slots:
     void updateOptions();
+    void errorIsValid(QString str);
 
 private:
     QRadioButton* mIncRadio;

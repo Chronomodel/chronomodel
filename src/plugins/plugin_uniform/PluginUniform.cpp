@@ -13,6 +13,11 @@ PluginUniform::PluginUniform()
     mColor = QColor(220,204,173);
 }
 
+PluginUniform::~PluginUniform()
+{
+
+}
+
 long double PluginUniform::getLikelihood(const double& t, const QJsonObject& data)
 {
     double min = data[DATE_UNIFORM_MIN_STR].toDouble();

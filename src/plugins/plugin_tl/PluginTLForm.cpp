@@ -19,6 +19,7 @@ PluginTLForm::PluginTLForm(PluginTL* plugin, QWidget* parent, Qt::WindowFlags fl
     
     mErrorEdit = new QLineEdit(this);
     mErrorEdit->setText("30");
+    connect(mErrorEdit, &QLineEdit::textChanged, this, &PluginTLForm::errorIsValid);
     
     mYearEdit = new QLineEdit(this);
     mYearEdit->setText(QString::number(QDate::currentDate().year()));
@@ -69,6 +70,16 @@ QJsonObject PluginTLForm::getData()
     data.insert(DATE_TL_REF_YEAR_STR, y);
     
     return data;
+}
+
+void PluginTLForm::errorIsValid(QString str)
+{
+    bool ok;
+    QLocale locale;
+    double value = locale.toDouble(str,&ok);
+
+    emit PluginFormAbstract::OkEnabled(ok && (value>0) );
+
 }
 
 bool PluginTLForm::isValid()

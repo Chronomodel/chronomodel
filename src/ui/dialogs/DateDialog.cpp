@@ -110,9 +110,9 @@ mWiggleEnabled(false)
     // ----------
     
     mButtonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-    connect(mButtonBox, SIGNAL(accepted()), this, SLOT(accept()));
-    connect(mButtonBox, SIGNAL(rejected()), this, SLOT(reject()));
-    
+    connect(mButtonBox, &QDialogButtonBox::accepted, this, &DateDialog::accept);
+    connect(mButtonBox, &QDialogButtonBox::rejected, this, &DateDialog::reject);
+
     mLayout = new QVBoxLayout();
     mLayout->addLayout(grid);
     
@@ -141,7 +141,8 @@ mWiggleEnabled(false)
 
 DateDialog::~DateDialog()
 {
-    
+   if(mForm)
+    disconnect(mForm, &PluginFormAbstract::OkEnabled, this, &DateDialog::setOkEnabled);
 }
 
 void DateDialog::setForm(PluginFormAbstract* form)
@@ -154,6 +155,7 @@ void DateDialog::setForm(PluginFormAbstract* form)
     if(form)
     {
         mForm = form;
+        connect(mForm, &PluginFormAbstract::OkEnabled, this, &DateDialog::setOkEnabled);
         mLayout->insertWidget(2, mForm);
         PluginAbstract* plugin = form->mPlugin;
         
@@ -175,6 +177,11 @@ void DateDialog::setForm(PluginFormAbstract* form)
                           Qt::TextColorRole);
         }
     }
+}
+
+void DateDialog::setOkEnabled(bool enabled)
+{
+    mButtonBox->button(QDialogButtonBox::Ok)->setEnabled(enabled);
 }
 
 void DateDialog::setWiggleEnabled(bool enabled)

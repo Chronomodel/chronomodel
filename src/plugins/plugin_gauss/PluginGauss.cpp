@@ -18,7 +18,11 @@ PluginGauss::PluginGauss()
     loadRefDatas();
 }
 
-#pragma mark Likelyhood
+PluginGauss::~PluginGauss()
+{
+
+}
+#pragma mark Likelihood
 long double PluginGauss::getLikelihood(const double& t, const QJsonObject& data)
 {
     QPair<long double, long double > result = getLikelihoodArg(t, data);

@@ -22,7 +22,12 @@ public:
     QJsonObject getData();
     
     bool isValid();
-    
+signals:
+    void OkEnabled(bool enabled) ;
+
+protected slots:
+    void errorIsValid(QString str);
+
 private:
     QLabel* mAverageLab;
     QLabel* mErrorLab;

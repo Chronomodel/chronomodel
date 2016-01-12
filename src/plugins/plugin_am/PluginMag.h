@@ -24,7 +24,7 @@ class DATATION_SHARED_EXPORT PluginMag : public PluginAbstract
     //Q_INTERFACES(PluginAbstract)
 public:
     PluginMag();
-    
+    virtual ~PluginMag();
     long double getLikelihood(const double& t, const QJsonObject& data);
     bool withLikelihoodArg() {return true; }
     QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);

@@ -18,6 +18,11 @@ PluginMag::PluginMag()
     loadRefDatas();
 }
 
+PluginMag::~PluginMag()
+{
+
+}
+
 #pragma mark Likelihood
 long double PluginMag::getLikelihood(const double& t, const QJsonObject& data)
 {

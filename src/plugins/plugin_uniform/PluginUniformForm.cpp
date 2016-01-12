@@ -44,6 +44,8 @@ void PluginUniformForm::setData(const QJsonObject& data, bool isCombined)
     
     mMinEdit->setText(locale.toString(min));
     mMaxEdit->setText(locale.toString(max));
+    connect(mMinEdit, &QLineEdit::textChanged, this, &PluginUniformForm::errorIsValid);
+    connect(mMaxEdit, &QLineEdit::textChanged, this, &PluginUniformForm::errorIsValid);
 }
 
 QJsonObject PluginUniformForm::getData()
@@ -58,6 +60,16 @@ QJsonObject PluginUniformForm::getData()
     data.insert(DATE_UNIFORM_MAX_STR, max);
     
     return data;
+}
+
+void PluginUniformForm::errorIsValid(QString str)
+{
+    bool oka,okb;
+    QLocale locale;
+    double a = locale.toDouble(mMinEdit->text(),&oka);
+    double b = locale.toDouble(mMaxEdit->text(),&okb);
+
+    emit PluginFormAbstract::OkEnabled(oka && okb && (a<b) );
 }
 
 bool PluginUniformForm::isValid()

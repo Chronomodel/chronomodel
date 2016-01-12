@@ -23,9 +23,15 @@ public:
     QJsonObject getData();
     
     bool isValid();
+
+signals:
+    void OkEnabled(bool enabled) ;
     
+
 protected slots:
     void updateVisibleElements();
+    void errorIsValid(QString str);
+    void equationIsValid();
 
 private:
     QLabel* mAverageLab;

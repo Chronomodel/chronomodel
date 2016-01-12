@@ -49,6 +49,7 @@ protected:
 protected slots:
     void setAdvancedVisible(bool visible);
     void updateVisibleControls();
+    void setOkEnabled(bool enabled);
     //void updateLayout();
     //void adaptSize();
     

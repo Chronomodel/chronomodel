@@ -15,6 +15,11 @@ PluginTL::PluginTL()
     mColor = QColor(216,207,52);
 }
 
+PluginTL::~PluginTL()
+{
+
+}
+
 long double PluginTL::getLikelihood(const double& t, const QJsonObject& data)
 {
     double age = data[DATE_TL_AGE_STR].toDouble();

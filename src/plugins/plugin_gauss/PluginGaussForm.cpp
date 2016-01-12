@@ -19,6 +19,7 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
     
     mAverageEdit = new QLineEdit(this);
     mErrorEdit = new QLineEdit(this);
+    connect(mErrorEdit, &QLineEdit::textChanged, this, &PluginGaussForm::errorIsValid);
     
     mAverageEdit->setText("0");
     mErrorEdit->setText("50");
@@ -38,6 +39,8 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
     mAEdit->setText("0");
     mBEdit->setText("1");
     mCEdit->setText("0");
+    connect(mAEdit, &QLineEdit::textChanged, this, &PluginGaussForm::equationIsValid);
+    connect(mBEdit, &QLineEdit::textChanged, this, &PluginGaussForm::equationIsValid);
     
     QHBoxLayout* eqLayout = new QHBoxLayout();
     eqLayout->setContentsMargins(0, 0, 0, 0);
@@ -61,10 +64,14 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
          mCurveCombo->addItem(refCurves[i]);
     }
     
-    connect(mEquationRadio, SIGNAL(toggled(bool)), this, SLOT(updateVisibleElements()));
-    connect(mNoneRadio, SIGNAL(toggled(bool)), this, SLOT(updateVisibleElements()));
-    connect(mEquationRadio, SIGNAL(toggled(bool)), this, SLOT(updateVisibleElements()));
+    connect(mEquationRadio, &QRadioButton::toggled, this, &PluginGaussForm::updateVisibleElements);
+    connect(mNoneRadio, &QRadioButton::toggled, this, &PluginGaussForm::updateVisibleElements);
+    connect(mEquationRadio, &QRadioButton::toggled, this, &PluginGaussForm::updateVisibleElements);
     
+    connect(mEquationRadio, &QRadioButton::toggled, this, &PluginGaussForm::equationIsValid);
+    connect(mNoneRadio, &QRadioButton::toggled, this, &PluginGaussForm::equationIsValid);
+    connect(mEquationRadio, &QRadioButton::toggled, this, &PluginGaussForm::equationIsValid);
+
     updateVisibleElements();
     
     QGridLayout* grid = new QGridLayout();
@@ -150,6 +157,31 @@ QJsonObject PluginGaussForm::getData()
     data.insert(DATE_GAUSS_CURVE_STR, curve);
     
     return data;
+}
+
+void PluginGaussForm::errorIsValid(QString str)
+{
+    bool ok;
+    QLocale locale;
+    double value = locale.toDouble(str,&ok);
+
+    emit PluginFormAbstract::OkEnabled(ok && (value>0) );
+}
+
+void PluginGaussForm::equationIsValid()
+{
+    if(mEquationRadio->isChecked()) {
+        bool oka,okb;
+        QLocale locale;
+        double a = locale.toDouble(mAEdit->text(),&oka);
+        if(a == 0) oka = false;
+
+        double b = locale.toDouble(mBEdit->text(),&okb);
+        if(b == 0) okb = false;
+
+        emit PluginFormAbstract::OkEnabled(oka || okb);
+    }
+    else emit PluginFormAbstract::OkEnabled(true);
 }
 
 bool PluginGaussForm::isValid()

@@ -16,9 +16,10 @@ class DATATION_SHARED_EXPORT PluginUniform : public PluginAbstract
     //Q_INTERFACES(PluginAbstract)
 public:
     PluginUniform();
-    
+    virtual ~PluginUniform();
+
     long double getLikelihood(const double& t, const QJsonObject& data);
-    bool withLikelihoodArg() {return false; };
+    bool withLikelihoodArg() {return false; }
     
     QString getName() const;
     QIcon getIcon() const;
@@ -38,6 +39,9 @@ public:
     PluginSettingsViewAbstract* getSettingsView();
     
     QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
+
+
+
 };
 
 #endif

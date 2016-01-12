@@ -29,7 +29,8 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     mDecIncEdit = new QLineEdit(this);
     mIntensityEdit = new QLineEdit(this);
     mAlpha95Edit = new QLineEdit(this);
-    
+    connect(mAlpha95Edit, &QLineEdit::textChanged, this, &PluginMagForm::errorIsValid);
+
     mRefCombo = new QComboBox(this);
     QStringList refCurves = plugin->getRefsNames();
     for(int i = 0; i<refCurves.size(); ++i)
@@ -70,9 +71,7 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     grid->addWidget(mRefCombo, 6, 1);
     
     setLayout(grid);
-    
-    
-    
+
     updateOptions();
 }
 
@@ -138,6 +137,15 @@ QJsonObject PluginMagForm::getData()
     data.insert(DATE_AM_REF_CURVE_STR, ref_curve);
     
     return data;
+}
+
+void PluginMagForm::errorIsValid(QString str)
+{
+    bool ok;
+    QLocale locale;
+    double value = locale.toDouble(str,&ok);
+
+    emit PluginFormAbstract::OkEnabled(ok && (value>0) );
 }
 
 bool PluginMagForm::isValid()

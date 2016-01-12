@@ -22,6 +22,7 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     
     mErrorEdit = new QLineEdit(this);
     mErrorEdit->setText("50");
+    connect(mErrorEdit, &QLineEdit::textChanged, this, &Plugin14CForm::errorIsValid);
     
     mREdit = new QLineEdit(this);
     mREdit->setText("0");
@@ -109,6 +110,15 @@ QJsonObject Plugin14CForm::getData()
     mSelectedRefCurve = c;
     
     return data;
+}
+
+void Plugin14CForm::errorIsValid(QString str)
+{
+    bool ok;
+    QLocale locale;
+    double value = locale.toDouble(str,&ok);
+
+    emit PluginFormAbstract::OkEnabled(ok && (value>0) );
 }
 
 bool Plugin14CForm::isValid()

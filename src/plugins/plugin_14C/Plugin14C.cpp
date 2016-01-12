@@ -18,6 +18,11 @@ Plugin14C::Plugin14C()
     loadRefDatas();
 }
 
+Plugin14C::~Plugin14C()
+{
+
+}
+
 #pragma mark Likelihood
 QPair<long double, long double> Plugin14C::getLikelihoodArg(const double& t, const QJsonObject& data)
 {

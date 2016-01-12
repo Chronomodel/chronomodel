@@ -17,7 +17,8 @@ class DATATION_SHARED_EXPORT PluginTL : public PluginAbstract
     //Q_INTERFACES(PluginAbstract)
 public:
     PluginTL();
-    
+    virtual ~PluginTL();
+
     long double getLikelihood(const double& t, const QJsonObject& data);
     bool withLikelihoodArg() {return true; }
     QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);

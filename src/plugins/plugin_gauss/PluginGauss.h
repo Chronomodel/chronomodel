@@ -25,7 +25,8 @@ class DATATION_SHARED_EXPORT PluginGauss : public PluginAbstract
     //Q_INTERFACES(PluginAbstract)
 public:
     PluginGauss();
-    
+    virtual ~PluginGauss();
+
     long double getLikelihood(const double& t, const QJsonObject& data);
     bool withLikelihoodArg() {return true; }
     QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);
@@ -60,6 +61,8 @@ public:
     double getRefErrorAt(const QJsonObject& data, const double& t);
     
     QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
+
+
 };
 
 #endif
