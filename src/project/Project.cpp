@@ -146,7 +146,7 @@ void Project::sendUpdateState(const QJsonObject& state, const QString& reason, b
     //qDebug() << " +++  Sending : " << reason;
 #endif
     StateEvent* event = new StateEvent(state, reason, notify);
-    QCoreApplication::postEvent(this, event, Qt::NormalEventPriority);
+    QCoreApplication::postEvent(this, event, Qt::HighEventPriority);//Qt::NormalEventPriority);
 }
 
 bool Project::checkRefreshResults(const QJsonObject& stateNew,const QJsonObject& stateOld)
@@ -354,13 +354,13 @@ bool Project::load(const QString& path)
         
         mProjectFileDir = info.absolutePath();
         mProjectFileName = info.fileName();
-        
+       qDebug() << "in Project::load  begin readAll";
         QByteArray saveData = file.readAll();
-        
+       qDebug() << "in Project::load  end readAll";
         QJsonParseError error;
-        
+       qDebug() << "in Project::load  begin QJsonDocument::fromJson";
         QJsonDocument jsonDoc(QJsonDocument::fromJson(saveData, &error));
-        
+       qDebug() << "in Project::load  end QJsonDocument::fromJson";
         if(error.error !=  QJsonParseError::NoError)
         {
             QMessageBox message(QMessageBox::Critical,
@@ -418,8 +418,9 @@ bool Project::load(const QString& path)
             //  Ask all plugins if dates are corrects.
             //  If not, it may be an incompatibility between plugins versions (new parameter added for example...)
             //  This function gives a chance to plugins to modify dates saved with old versions in order to use them with the new version.
+           qDebug() << "in Project::load  begin checkDatesCompatibility";
             checkDatesCompatibility();
-            
+           qDebug() << "in Project::load  end checkDatesCompatibility";
             //  Check if dates are valid on the current study period
             mState = checkValidDates(mState);
             
@@ -429,9 +430,9 @@ bool Project::load(const QString& path)
             // If a version update is to be done :
             QJsonObject state = mState;
             state[STATE_APP_VERSION] = qApp->applicationVersion();
-            
+           qDebug() << "in Project::load  Begin pushProjectState";
             pushProjectState(state, PROJECT_LOADED_REASON, true, true);
-            
+           qDebug() << "in Project::load  End pushProjectState";
             file.close();
             
             
