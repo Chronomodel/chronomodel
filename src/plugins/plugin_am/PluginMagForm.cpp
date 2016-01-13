@@ -52,15 +52,18 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     grid->addWidget(mDecRadio, 1, 1);
     grid->addWidget(mIntensityRadio, 2, 1);
     
+    // if Inclination is selected
     grid->addWidget(mIncLab, 3, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mIncEdit, 3, 1);
     
-    grid->addWidget(mDecLab, 4, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mDecEdit, 4, 1);
+    // if Declination is selected
+    grid->addWidget(mDecLab, 3, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mDecEdit, 3, 1);
     
-    grid->addWidget(mDecIncLab, 3, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mDecIncEdit, 3, 1);
+    grid->addWidget(mDecIncLab, 4, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mDecIncEdit, 4, 1);
     
+    // if Intensity is selected
     grid->addWidget(mIntensityLab, 3, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mIntensityEdit, 3, 1);
     
