@@ -18,7 +18,10 @@ PluginUniformForm::PluginUniformForm(PluginUniform* plugin, QWidget* parent, Qt:
     
     mMaxEdit = new QLineEdit(this);
     mMaxEdit->setText("100");
-    
+
+    connect(mMinEdit, &QLineEdit::textChanged, this, &PluginUniformForm::errorIsValid);
+    connect(mMaxEdit, &QLineEdit::textChanged, this, &PluginUniformForm::errorIsValid);
+
     QGridLayout* grid = new QGridLayout();
     grid->setContentsMargins(0, 0, 0, 0);
     
@@ -44,8 +47,7 @@ void PluginUniformForm::setData(const QJsonObject& data, bool isCombined)
     
     mMinEdit->setText(locale.toString(min));
     mMaxEdit->setText(locale.toString(max));
-    connect(mMinEdit, &QLineEdit::textChanged, this, &PluginUniformForm::errorIsValid);
-    connect(mMaxEdit, &QLineEdit::textChanged, this, &PluginUniformForm::errorIsValid);
+
 }
 
 QJsonObject PluginUniformForm::getData()
