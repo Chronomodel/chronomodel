@@ -230,17 +230,30 @@ QString MCMCLoopMain::initMCMC()
                 Date& date = unsortedEvents[i]->mDates[j];
                 
                 // Init ti and its sigma
-                double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mRepartition);
+                if(!date.mRepartition.isEmpty()) {
+                    double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mRepartition);
+                    date.mTheta.mX = date.getTminCalib() + idx * mModel->mSettings.mStep;
 
-                date.mTheta.mX = date.getTminCalib() + idx * mModel->mSettings.mStep;
-                //date.mTheta.mX = tmin + idx * step;
-                
-                FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration, tmin, tmax, step));
-                date.mTheta.mSigmaMH = data.stddev; // computed in RenDateModel and ChronoModel V1.1
-                //date.mTheta.mSigmaMH = fabs(date.mTheta.mX-unsortedEvents[i]->mTheta.mX);
+                    FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration, tmin, tmax, step));
+                    date.mTheta.mSigmaMH = data.stddev;
+                }
+                else { // in the case of mRepartion curve is null, we must init ti outside the study period
+                       // For instance we use a gaussian random sampling
+                    double sigma = mModel->mSettings.mTmax - mModel->mSettings.mTmin;
+                    double u = Generator::gaussByBoxMuller(0,sigma);
+                    if(u<0) {
+                        date.mTheta.mX = mModel->mSettings.mTmin + u;
+                    }
+                    else {
+                        date.mTheta.mX = mModel->mSettings.mTmax + u;
+                    }
+                    date.mTheta.mSigmaMH = sigma;
+                }
+
                 date.initDelta(unsortedEvents[i]);
-                
-                s02_sum += 1.f / (data.stddev * data.stddev);
+
+                // calculus of the harmonic average
+                s02_sum += 1.f / (date.mTheta.mSigmaMH * date.mTheta.mSigmaMH);
             }
             unsortedEvents[i]->mS02 = unsortedEvents[i]->mDates.size() / s02_sum;
             unsortedEvents[i]->mTheta.mSigmaMH = sqrt(unsortedEvents[i]->mS02);
