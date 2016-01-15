@@ -540,7 +540,9 @@ void Date::updateTheta(Event* event)
     updateti(this,event);
 
 }
-
+/**
+ * @brief Date::initDelta Init the wiggle shift
+ */
 void Date::initDelta(Event*)
 {
     switch(mDeltaType)
