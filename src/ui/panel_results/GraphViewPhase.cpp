@@ -183,8 +183,21 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->addCurve(curveAlpha);
             mGraph->addCurve(curveAlphaHPD);
             mGraph->addCurve(curveBetaHPD);
+
             mDurationGraph->addCurve(curveDuration);
-            
+            // adjust scale
+            if(!curveDuration.mData.isEmpty()) {
+                mDurationGraph->setRangeX(0,curveDuration.mData.lastKey());
+                mDurationGraph->setCurrentX(0,curveDuration.mData.lastKey());
+
+            }
+            else {
+                mDurationGraph->setRangeX(0,2000);
+                mDurationGraph->setCurrentX(0,2000);
+            }
+
+           // mDurationGraph->autoAdjustYScale(true);
+
             if(!curveDuration.mData.isEmpty())
             {
                 GraphCurve curveDurationHPD = generateHPDCurve(mPhase->mDuration.mHPD,
@@ -193,6 +206,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                 mDurationGraph->addCurve(curveDurationHPD);
                 mDurationGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
                 mDurationGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
+
 
              }
             
