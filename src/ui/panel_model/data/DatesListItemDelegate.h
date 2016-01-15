@@ -39,6 +39,10 @@ public:
         
         if(option.state & QStyle::State_Selected) {
             painter->fillRect(option.rect, QColor(230, 230, 230));
+            painter->setPen(QColor(245, 245, 245));
+            painter->drawLine(x, y, x + w, y);
+            painter->setPen(QColor(225, 225, 225));
+            painter->drawLine(x, y + h -1, x + w, y + h -1);
         }
         QString dateName = index.model()->data(index, 0x0101).toString();
         QString dateDesc = index.model()->data(index, 0x0103).toString();
@@ -103,7 +107,7 @@ public:
 
             if(!isValid){
                 painter->setPen(Qt::black);
-                QString str = tr("Individual calibration not digitally computable");
+                QString str = tr("Individual calibration not digitally computable ...");
                 painter->drawText(x + iconW, y + 4*mm + 3*mh, w - iconW, mh, Qt::AlignRight | Qt::AlignVCenter, str );
             }
             painter->setPen(QColor(200, 200, 200));
