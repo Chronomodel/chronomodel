@@ -140,29 +140,33 @@ public:
         {
             const RefCurve& curve = mRefCurves[curveName];
             
-            if(curve.mDataMean.constFind(t) != curve.mDataMean.constEnd())
-            {
+            /*if(curve.mDataMean.constFind(t) != curve.mDataMean.constEnd())
+            { //this case is rare
                 value = curve.mDataMean[t];
             }
-            else if(t < curve.mTmin || t > curve.mTmax){
-                value = interpolate(t, curve.mTmin, curve.mTmax, curve.mDataMean[curve.mTmin], curve.mDataMean[curve.mTmax]);
-            }
-            else
-            {
-                // This actually return the iterator with the nearest greater key !!!
+            else */
+            if(t >= curve.mTmin && t <= curve.mTmax){
+               // This actually return the iterator with the nearest greater key !!!
                 QMap<double, double>::const_iterator iter = curve.mDataMean.lowerBound(t);
-                if(iter != curve.mDataMean.end())
+               if(iter != curve.mDataMean.constBegin())
                 {
                     double t_upper = iter.key();
+                    double v_upper = iter.value();//curve.mDataMean[t_upper];
+
                     --iter;
                     double t_under = iter.key();
-                    
-                    double v_under = curve.mDataMean[t_under];
-                    double v_upper = curve.mDataMean[t_upper];
-                    
+                    double v_under = iter.value();//curve.mDataMean[t_under];
+
                     value = interpolate(t, t_under, t_upper, v_under, v_upper);
-                }
+               }
+               else {
+                   value = iter.value();
+               }
             }
+            else { // onExtension depreciated
+                value = interpolate(t, curve.mTmin, curve.mTmax, curve.mDataMean[curve.mTmin], curve.mDataMean[curve.mTmax]);
+            }
+
         }
         return value;
     }
@@ -174,28 +178,30 @@ public:
         {
             const RefCurve& curve = mRefCurves[curveName];
             
-            if(curve.mDataError.constFind(t) != curve.mDataError.constEnd())
-            {
-                error = curve.mDataError[t];
-            }
-            else if(t < curve.mTmin || t > curve.mTmax){
-                error = 1.0e+6 * (curve.mDataSupMax - curve.mDataInfMin);
-            }
-            else
-            {
-                // This actually return the iterator with the nearest greater key !!!
-                QMap<double, double>::const_iterator iter = curve.mDataMean.lowerBound(t);
-                if(iter != curve.mDataMean.end())
-                {
+            if(t >= curve.mTmin && t <= curve.mTmax){
+               // This actually return the iterator with the nearest greater key !!!
+                QMap<double, double>::const_iterator iter = curve.mDataError.lowerBound(t);
+                // the higher value must be mTmax.
+                if(iter != curve.mDataError.constBegin()) {
+                   /* if(iter.key() == t) { //this case is rare
+                       error = curve.mDataError[t];
+                    }
+                    else {*/
                     double t_upper = iter.key();
+                    double v_upper = iter.value();//curve.mDataError[t_upper];
                     --iter;
                     double t_under = iter.key();
-                    
-                    double v_under = curve.mDataError[t_under];
-                    double v_upper = curve.mDataError[t_upper];
-                    
+                    double v_under = iter.value();//curve.mDataError[t_under];
+
+
                     error = interpolate(t, t_under, t_upper, v_under, v_upper);
                 }
+                else {
+                    error = iter.value();
+                }
+            }
+            else { // onExtension
+                    error = 1.0e+6 * (curve.mDataSupMax - curve.mDataInfMin);
             }
         }
         return error;
