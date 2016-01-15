@@ -28,7 +28,7 @@ public:
     virtual bool isValid() = 0;
     
 signals:
-    virtual void OkEnabled(bool enabled) ;
+   void OkEnabled(bool enabled) ;
     
 public:
     PluginAbstract* mPlugin;
