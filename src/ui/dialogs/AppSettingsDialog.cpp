@@ -268,7 +268,7 @@ AppSettings AppSettingsDialog::getSettings()
 {
     AppSettings settings;
     settings.mLanguage = (QLocale::Language)mLanguageCombo->currentData().toInt();
-    settings.mCountry = locale().country();//QLocale::Country)mCountryCombo->currentData().toInt();
+    settings.mCountry = locale().country();
     settings.mAutoSave = mAutoSaveCheck->isChecked();
     settings.mAutoSaveDelay = mAutoSaveDelayEdit->text().toInt() * 60;
     settings.mCSVCellSeparator = mCSVCellSepEdit->text();
@@ -278,7 +278,7 @@ AppSettings AppSettingsDialog::getSettings()
     settings.mDpm = mDpm->currentText().toShort();
     settings.mImageQuality = mImageQuality->value();
     settings.mFormatDate = (DateUtils::FormatDate)mFormatDate->currentIndex();
-    settings.mPrecision = mPrecision->value();
+    settings.mPrecision = mPrecision->value();    
   
     return settings;
 }

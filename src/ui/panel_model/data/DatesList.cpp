@@ -15,7 +15,6 @@ DatesList::DatesList(QWidget* parent):QListWidget(parent),
 mUpdatingSelection(false)
 {
     setDragDropMode(QAbstractItemView::InternalMove);
-    //setDefaultDropAction(Qt::MoveAction);
     setSelectionMode(QAbstractItemView::ExtendedSelection);
     setSortingEnabled(false);
     

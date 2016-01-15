@@ -75,7 +75,7 @@ mToolbarH(100)
     // -------------
 
     const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
-    //int totalH=0;
+
     for(int i=0; i<plugins.size(); ++i)
     {
         
@@ -103,26 +103,21 @@ mToolbarH(100)
     mRecycleBut->setIcon(QIcon(":restore.png"));
     mRecycleBut->setFlatVertical();
     connect(mRecycleBut, SIGNAL(clicked()), this, SLOT(recycleDates()));
-  //  minimumHeight+=mRecycleBut->height();
+
     // ---------------
     
     mCalibBut = new Button(tr("Calibrate"), mEventView);
     mCalibBut->setIcon(QIcon(":results_w.png"));
     mCalibBut->setFlatVertical();
     mCalibBut->setCheckable(true);
- //   minimumHeight+=mCalibBut->height();
     
     mMergeBut = new Button(tr("Combine"), mEventView);
     mMergeBut->setFlatVertical();
     mMergeBut->setEnabled(false);
-    //mMergeBut->setVisible(false);
- //   minimumHeight+=mMergeBut->height();
-    
+
     mSplitBut = new Button(tr("Split"), mEventView);
     mSplitBut->setFlatVertical();
     mSplitBut->setEnabled(false);
-    //mSplitBut->setVisible(false);
-  //  minimumHeight+=mSplitBut->height();
     
     connect(mCalibBut, SIGNAL(clicked(bool)), this, SIGNAL(showCalibRequested(bool)));
     connect(mMergeBut, SIGNAL(clicked()), this, SLOT(sendMergeSelectedDates()));
@@ -144,7 +139,6 @@ mToolbarH(100)
     
     QDoubleValidator* doubleValidator = new QDoubleValidator();
     doubleValidator->setDecimals(2);
-    //mKnownFixedEdit->setValidator(doubleValidator);
     
     mKnownGraph = new GraphView(mBoundView);
     mKnownGraph->setMinimumHeight(250);
