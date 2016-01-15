@@ -287,7 +287,7 @@ mGraphsH(130)
     percentValidator -> setDecimals(1);
     mHPDEdit->setValidator(percentValidator);
     
-    mFFTLenLab = new Label(tr("FFT length") + " :", mPostDistGroup);
+    mFFTLenLab = new Label(tr("Grid length") + " :", mPostDistGroup);
     mFFTLenLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mFFTLenCombo = new QComboBox(mPostDistGroup);
     mFFTLenCombo->addItem("32");
@@ -306,10 +306,11 @@ mGraphsH(130)
     mComboH = mFFTLenCombo->sizeHint().height();
     mTabsH = mComboH + 2*mMargin;
     
-    mHFactorLab = new Label(tr("Bandwidth factor") + " :", mPostDistGroup);
+    mHFactorLab = new Label(tr("Bandwidth const.") + " :", mPostDistGroup);
     mHFactorLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mHFactorEdit = new LineEdit(mPostDistGroup);
-    mHFactorEdit->setText("1");
+    QLocale locale;
+    mHFactorEdit->setText(locale.toString(1.06));
     mHFactorEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     
     // -------------------------
@@ -991,12 +992,16 @@ void ResultsView::generatePosteriorDistribs()
     qDebug() << "ResultsView::generatePosteriorDistribs";
     if(mModel)
     {
+        QLocale locale;
+        bool ok;
         int len = mFFTLenCombo->currentText().toInt();
-        double hFactor = mHFactorEdit->text().toDouble();
-        if(!(hFactor > 0 && hFactor <= 100))
+        double hFactor = locale.toDouble(mHFactorEdit->text(),&ok);
+        if(!(hFactor > 0 && hFactor <= 100) || !ok)
         {
-            hFactor = 1;
-            mHFactorEdit->setText("1");
+            hFactor = 1.06;
+
+            mHFactorEdit->setText(locale.toString(hFactor));
+
         }
         mModel->clearPosteriorDensities();
         
@@ -1012,14 +1017,17 @@ void ResultsView::generateCredibilityAndHPD()
     qDebug() << "ResultsView::generateCredibilityAndHPD";
     if(mModel)
     {
+        QLocale locale;
+        bool ok;
         QString input = mHPDEdit->text();
         mHPDEdit->validator()->fixup(input);
         mHPDEdit->setText(input);
         
+        double_t hpd = locale.toDouble(mHPDEdit->text(),&ok);
         // ??? mModel->generateNumericalResults(mChains);
-        
+        if (!ok) hpd = 95;
         mModel->clearCredibilityAndHPD();
-        mModel->generateCredibilityAndHPD(mChains, mHPDEdit->text().toDouble());
+        mModel->generateCredibilityAndHPD(mChains, hpd);
         
         emit credibilityAndHPDGenerated();
     }
@@ -1133,8 +1141,8 @@ void ResultsView::updateScales()
         mResultCurrentMinX = mZooms[tabIdx].first;
         mResultCurrentMaxX = mZooms[tabIdx].second;
         // controle if the current value is in rigth range depending to mDataThetaRadio and mDataSigmaRadio
-        mResultCurrentMinX = inRange(mResultMinX, mResultCurrentMinX, mResultMaxX);
-        mResultCurrentMaxX = inRange(mResultCurrentMinX, mResultCurrentMaxX, mResultMaxX);
+        mResultCurrentMinX = qBound(mResultMinX, mResultCurrentMinX, mResultMaxX);
+        mResultCurrentMaxX = qBound(mResultCurrentMinX, mResultCurrentMaxX, mResultMaxX);
     }else{
         
         mResultCurrentMinX = mResultMinX;
@@ -1320,7 +1328,7 @@ void ResultsView::editCurrentMinX()
         if(isDate){
             value = DateUtils::convertFromAppSettingsFormat(value);
         }
-        double current = inRange(mResultMinX, value, mResultCurrentMaxX);
+        double current = qBound(mResultMinX, value, mResultCurrentMaxX);
         if (current == mResultCurrentMaxX) {
             current = mResultMinX;
         }
@@ -1354,7 +1362,7 @@ void ResultsView::editCurrentMaxX()
         if(isDate){
             value = DateUtils::convertFromAppSettingsFormat(value);
         }
-        double current = inRange(mResultCurrentMinX, value, mResultMaxX);
+        double current = qBound(mResultCurrentMinX, value, mResultMaxX);
         if (current == mResultCurrentMinX) {
             current = mResultMaxX;
         }

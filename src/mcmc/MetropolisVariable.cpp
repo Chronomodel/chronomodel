@@ -136,7 +136,8 @@ QMap<double, double> MetropolisVariable::generateHisto(QVector<double>& dataSrc,
         return result;
     }
 
-     double h = hFactor * 1.06 * sigma * pow(dataSrc.size(), -1./5.);
+     //double h = hFactor * 1.06 * sigma * pow(dataSrc.size(), -1./5.);
+     double h = hFactor * sigma * pow(dataSrc.size(), -1./5.);
      double a = vector_min_value(dataSrc) - 4. * h;
      double b = vector_max_value(dataSrc) + 4. * h;
     /*
