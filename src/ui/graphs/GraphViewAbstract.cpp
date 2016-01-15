@@ -135,7 +135,7 @@ double GraphViewAbstract::valueForProportion(const double value, const double va
 	{
 		//v2 = (v2 > v2max) ? v2max : v2;
 		//v2 = (v2 < v2min) ? v2min : v2;
-        v2 = inRange(Pmin,v2,Pmax);
+        v2 = qBound(Pmin,v2,Pmax);
 	}
 	return v2;
 }

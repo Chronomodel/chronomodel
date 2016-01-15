@@ -1160,7 +1160,7 @@ void Model::generateCredibilityAndHPD(const QList<Chain>& chains, double thresh)
     /* double threshold = thresh;
     threshold = std::min(100.0, threshold);
     threshold = std::max(0.0, threshold); */
-    double threshold = inRange(0.0,thresh,100.0);
+    double threshold = qBound(0.0,thresh,100.0);
     
     for(int i=0; i<mEvents.size(); ++i)
     {

@@ -220,7 +220,7 @@ void Ruler::updateScroll()
         
         
         mCurrentMin = mMin + deltaStart * ((double)mScrollBar->value() / (double)mScrollBar->maximum());
-        mCurrentMin = floor( inRange(mMin, mCurrentMin, mMax) );
+        mCurrentMin = floor( qBound(mMin, mCurrentMin, mMax) );
         mCurrentMax = mCurrentMin + delta;
         
     }
