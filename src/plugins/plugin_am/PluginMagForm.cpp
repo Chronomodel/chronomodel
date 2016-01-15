@@ -108,7 +108,7 @@ void PluginMagForm::setData(const QJsonObject& data, bool isCombined)
     
     mRefCombo->setCurrentText(ref_curve);
     
-  //  updateOptions();
+    updateOptions();
 }
 
 QJsonObject PluginMagForm::getData()
