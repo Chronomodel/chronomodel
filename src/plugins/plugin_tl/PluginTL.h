@@ -19,6 +19,7 @@ public:
     PluginTL();
     virtual ~PluginTL();
 
+    //virtual function
     long double getLikelihood(const double& t, const QJsonObject& data);
     bool withLikelihoodArg() {return true; }
     QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);
@@ -30,8 +31,8 @@ public:
     Date::DataMethod getDataMethod() const;
     QList<Date::DataMethod> allowedDataMethods() const;
     QStringList csvColumns() const;
-    QJsonObject fromCSV(const QStringList& list);
-    QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale);
+    QJsonObject fromCSV(const QStringList& list, const QLocale &csvLocale);
+    QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale) const;
     QString getDateDesc(const Date* date) const;
     
     QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;

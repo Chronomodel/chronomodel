@@ -28,8 +28,8 @@ public:
     Date::DataMethod getDataMethod() const;
     QList<Date::DataMethod> allowedDataMethods() const;
     QStringList csvColumns() const;
-    QJsonObject fromCSV(const QStringList& list);
-    QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale);
+    QJsonObject fromCSV(const QStringList& list, const QLocale &csvLocale);
+    QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale) const;
     QString getDateDesc(const Date* date) const;
     
     bool isDateValid(const QJsonObject& data, const ProjectSettings& settings);

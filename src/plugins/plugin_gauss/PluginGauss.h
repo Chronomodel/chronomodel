@@ -27,6 +27,7 @@ public:
     PluginGauss();
     virtual ~PluginGauss();
 
+    //virtual function
     long double getLikelihood(const double& t, const QJsonObject& data);
     bool withLikelihoodArg() {return true; }
     QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);
@@ -40,8 +41,8 @@ public:
     QString csvHelp() const;
     QStringList csvColumns() const;
     int csvMinColumns() const;
-    QJsonObject fromCSV(const QStringList& list);
-    QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale);
+    QJsonObject fromCSV(const QStringList& list, const QLocale &csvLocale);
+    QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale) const;
     QString getDateDesc(const Date* date) const;
     
     PluginFormAbstract* getForm();

@@ -68,18 +68,18 @@ PluginFormAbstract* PluginUniform::getForm()
     return form;
 }
 
-QJsonObject PluginUniform::fromCSV(const QStringList& list)
+QJsonObject PluginUniform::fromCSV(const QStringList& list, const QLocale& csvLocale)
 {
     QJsonObject json;
     if(list.size() >= csvMinColumns())
     {
-        json.insert(DATE_UNIFORM_MIN_STR, list[1].toDouble());
-        json.insert(DATE_UNIFORM_MAX_STR, list[2].toDouble());
+        json.insert(DATE_UNIFORM_MIN_STR, csvLocale.toDouble(list[1]));
+        json.insert(DATE_UNIFORM_MAX_STR, csvLocale.toDouble(list[2]));
     }
     return json;
 }
 
-QStringList PluginUniform::toCSV(const QJsonObject& data, const QLocale& csvLocale)
+QStringList PluginUniform::toCSV(const QJsonObject& data, const QLocale& csvLocale) const
 {
     QStringList list;
     list << csvLocale.toString(data[DATE_UNIFORM_MIN_STR].toDouble());

@@ -172,24 +172,20 @@ int PluginGauss::csvMinColumns() const{
     return csvColumns().count() - 3;
 }
 
-/**
-  * @todo for now, CSV imported data are only of equation type !
- We need to define a CSV format to allow curve mode.
-*/
-QJsonObject PluginGauss::fromCSV(const QStringList& list)
+QJsonObject PluginGauss::fromCSV(const QStringList& list, const QLocale& csvLocale)
 {
     QJsonObject json;
     if(list.size() >= csvMinColumns())
     {
-        json.insert(DATE_GAUSS_AGE_STR, list[1].toDouble());
-        json.insert(DATE_GAUSS_ERROR_STR, list[2].toDouble());
+        json.insert(DATE_GAUSS_AGE_STR, csvLocale.toDouble(list[1]));
+        json.insert(DATE_GAUSS_ERROR_STR, csvLocale.toDouble(list[2]));
         
         if(list[3] == "equation" && list.size() >= csvMinColumns() + 3)
         {
             json.insert(DATE_GAUSS_MODE_STR, QString(DATE_GAUSS_MODE_EQ));
-            json.insert(DATE_GAUSS_A_STR, list[4].toDouble());
-            json.insert(DATE_GAUSS_B_STR, list[5].toDouble());
-            json.insert(DATE_GAUSS_C_STR, list[6].toDouble());
+            json.insert(DATE_GAUSS_A_STR, csvLocale.toDouble(list[4]));
+            json.insert(DATE_GAUSS_B_STR, csvLocale.toDouble(list[5]));
+            json.insert(DATE_GAUSS_C_STR, csvLocale.toDouble(list[6]));
         }
         else if(list[3] == "none" || list[3] == "")
         {
@@ -204,7 +200,7 @@ QJsonObject PluginGauss::fromCSV(const QStringList& list)
     return json;
 }
 
-QStringList PluginGauss::toCSV(const QJsonObject& data, const QLocale& csvLocale)
+QStringList PluginGauss::toCSV(const QJsonObject& data, const QLocale& csvLocale) const
 {
     QStringList list;
     list << csvLocale.toString(data[DATE_GAUSS_AGE_STR].toDouble());

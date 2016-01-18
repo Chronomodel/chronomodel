@@ -42,6 +42,7 @@ ImportDataView::~ImportDataView()
  *  Structure; Terrestrial
  *  // just comment
  *  14C;onshore;1200;30;intcal13.14c;
+ *  14C;WithWiggle;50000;5;intcal13.14c;0;0;range;5;10
  *  Structure; Event : Oceanic
  *  14C;shell;2900;36;marine04.14c;-150;20
  *  14C;oyster;3000;30;marine13.14c;200;10

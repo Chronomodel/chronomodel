@@ -210,7 +210,7 @@ QJsonObject Date::toJson() const
     return date;
 }
 
-double Date::getLikelihood(const double& t)
+double Date::getLikelihood(const double& t) const
 {
     double result = 0.f;
     if(mPlugin)
@@ -218,7 +218,7 @@ double Date::getLikelihood(const double& t)
     return result;
 }
 
-QPair<long double, long double> Date::getLikelihoodArg(const double& t)
+QPair<long double, long double> Date::getLikelihoodArg(const double& t) const
 {
     if(mPlugin)   return mPlugin->getLikelihoodArg(t,mData);
     else return QPair<double, double>();
@@ -631,53 +631,60 @@ void Date::updateWiggle()
 }
 
 #pragma mark CSV dates
-Date Date::fromCSV(QStringList dataStr)
+Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
 {
     Date date;
-    QString pluginName = dataStr.takeFirst();
+    QString pluginName = dataStr.first();
     PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
-    if(plugin)
-    {
-        date.mName = dataStr[0];
+    if(plugin) {
+        QStringList dataTmp = dataStr.mid(1,dataStr.size()-1);
+        date.mName = dataTmp[0];
         date.mPlugin = plugin;
         date.mMethod = plugin->getDataMethod();
-        date.mData = plugin->fromCSV(dataStr);
-        
-        int minColNum = plugin->csvMinColumns();
-        if(dataStr.size() >= minColNum + 2)
-        {
-            QString deltaType = dataStr[minColNum];
-            QString delta1 = dataStr[minColNum + 1];
-            QString delta2 = "0";
-            if(dataStr.size() >= minColNum + 3)
-                delta2 = dataStr[minColNum + 2];
-            
-            if(!isComment(deltaType) && !isComment(delta1) && !isComment(delta2))
-            {
-                if(deltaType == "fixed")
-                {
-                    date.mDeltaType = Date::eDeltaFixed;
-                    date.mDeltaFixed = delta1.toDouble();
+        date.mData = plugin->fromCSV(dataTmp, csvLocale);
+
+        if(plugin->wiggleAllowed()) {
+            int firstColNum = plugin->csvMinColumns() + plugin->csvOptionalColumns();
+            if(dataTmp.size() >= firstColNum + 2) {
+                QString deltaType = dataTmp[firstColNum];
+                QString delta1 = dataTmp[firstColNum + 1];
+                QString delta2 = "0";
+                if(dataTmp.size() >= firstColNum + 3) {
+                    delta2 = dataTmp[firstColNum + 2];
                 }
-                else if(deltaType == "range")
+                if(!isComment(deltaType) && !isComment(delta1) && !isComment(delta2))
                 {
-                    date.mDeltaType = Date::eDeltaRange;
-                    date.mDeltaMin = delta1.toDouble();
-                    date.mDeltaMax = delta2.toDouble();
-                }
-                else if(deltaType == "gaussian")
-                {
-                    date.mDeltaType = Date::eDeltaGaussian;
-                    date.mDeltaAverage = delta1.toDouble();
-                    date.mDeltaError = delta2.toDouble();
+                    if(deltaType == "fixed")
+                    {
+                        date.mDeltaType = Date::eDeltaFixed;
+                        date.mDeltaFixed = csvLocale.toDouble(delta1);
+                    }
+                    else if(deltaType == "range")
+                    {
+                        date.mDeltaType = Date::eDeltaRange;
+                        date.mDeltaMin = csvLocale.toDouble(delta1);
+                        date.mDeltaMax = csvLocale.toDouble(delta2);
+                    }
+                    else if(deltaType == "gaussian")
+                    {
+                        date.mDeltaType = Date::eDeltaGaussian;
+                        date.mDeltaAverage = csvLocale.toDouble(delta1);
+                        date.mDeltaError = csvLocale.toDouble(delta2);
+                    }
                 }
             }
+
         }
     }
+   //QJsonObject data =date.toJson();
+    //QJsonObject ProjSet = mSettings.toJson();
+
+    //ProjectSettings pro = ProjectSettings::fromJson(ProjSet);
+    date.mIsValid = plugin->isDateValid(date.mData,date.mSettings);
     return date;
 }
 
-QStringList Date::toCSV(QLocale csvLocale) const
+QStringList Date::toCSV(const QLocale &csvLocale) const
 {
     QStringList csv;
     

@@ -85,19 +85,19 @@ PluginFormAbstract* PluginTL::getForm()
     return form;
 }
 
-QJsonObject PluginTL::fromCSV(const QStringList& list)
+QJsonObject PluginTL::fromCSV(const QStringList& list, const QLocale& csvLocale)
 {
     QJsonObject json;
     if(list.size() >= csvMinColumns())
     {
-        json.insert(DATE_TL_AGE_STR, list[1].toDouble());
-        json.insert(DATE_TL_ERROR_STR, list[2].toDouble());
-        json.insert(DATE_TL_REF_YEAR_STR, list[3].toDouble());
+        json.insert(DATE_TL_AGE_STR, csvLocale.toDouble(list[1]));
+        json.insert(DATE_TL_ERROR_STR, csvLocale.toDouble(list[2]));
+        json.insert(DATE_TL_REF_YEAR_STR, csvLocale.toDouble(list[3]));
     }
     return json;
 }
 
-QStringList PluginTL::toCSV(const QJsonObject& data, const QLocale& csvLocale)
+QStringList PluginTL::toCSV(const QJsonObject& data, const QLocale& csvLocale) const
 {
     QStringList list;
     list << csvLocale.toString(data[DATE_TL_AGE_STR].toDouble());

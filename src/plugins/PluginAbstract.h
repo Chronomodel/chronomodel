@@ -57,8 +57,9 @@ public:
     virtual QString csvHelp() const{return QString();}
     virtual QStringList csvColumns() const{return QStringList();}
     virtual int csvMinColumns() const {return csvColumns().size();}
-    virtual QJsonObject fromCSV(const QStringList& list) = 0;
-    virtual QStringList toCSV(const QJsonObject& data, const QLocale& csvLocale) = 0;
+    virtual int csvOptionalColumns() const {return 0;}
+    virtual QJsonObject fromCSV(const QStringList& list,const QLocale& csvLocale) = 0;
+    virtual QStringList toCSV(const QJsonObject& data,const QLocale& csvLocale) const = 0;
     
     /**
      * @brief getDateDesc is the description of the Data showing in the properties of Event, in the list of data

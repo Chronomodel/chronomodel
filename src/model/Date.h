@@ -56,11 +56,11 @@ public:
     static Date fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
     
-    static Date fromCSV(QStringList dataStr);
-    QStringList toCSV(QLocale csvLocale) const;
+    static Date fromCSV(const QStringList &dataStr, const QLocale& csvLocale);
+    QStringList toCSV(const QLocale& csvLocale) const;
     
-    double getLikelihood(const double& t);
-    QPair<long double, long double> getLikelihoodArg(const double& t);
+    double getLikelihood(const double& t) const;
+    QPair<long double, long double> getLikelihoodArg(const double& t) const;
     QString getDesc() const;
     
     void reset();

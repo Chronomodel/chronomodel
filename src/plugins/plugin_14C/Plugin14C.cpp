@@ -125,26 +125,24 @@ int Plugin14C::csvMinColumns() const{
     return csvColumns().count() - 2;
 }
 
-QJsonObject Plugin14C::fromCSV(const QStringList& list)
+QJsonObject Plugin14C::fromCSV(const QStringList& list, const QLocale &csvLocale)
 {
     QJsonObject json;
     if(list.size() >= csvMinColumns())
     {
-        json.insert(DATE_14C_AGE_STR, list[1].toDouble());
-        json.insert(DATE_14C_ERROR_STR, list[2].toDouble());
+        json.insert(DATE_14C_AGE_STR, csvLocale.toDouble(list[1]));
+        json.insert(DATE_14C_ERROR_STR, csvLocale.toDouble(list[2]));
         json.insert(DATE_14C_REF_CURVE_STR, list[3].toLower());
         
         // These columns are nor mandatory in the CSV file so check if they exist :
-        json.insert(DATE_14C_DELTA_R_STR, (list.size() > 4) ? list[4].toDouble() : 0);
-        json.insert(DATE_14C_DELTA_R_ERROR_STR, (list.size() > 5) ? list[5].toDouble() : 0);
-        
-        //qDebug() << list;
-        //qDebug() << json;
+        json.insert(DATE_14C_DELTA_R_STR, (list.size() > 4) ? csvLocale.toDouble(list[4]) : 0);
+        json.insert(DATE_14C_DELTA_R_ERROR_STR, (list.size() > 5) ? csvLocale.toDouble(list[5]) : 0);
+
     }
     return json;
 }
 
-QStringList Plugin14C::toCSV(const QJsonObject& data, const QLocale& csvLocale)
+QStringList Plugin14C::toCSV(const QJsonObject& data, const QLocale& csvLocale) const
 {
     QStringList list;
     list << csvLocale.toString(data[DATE_14C_AGE_STR].toDouble());

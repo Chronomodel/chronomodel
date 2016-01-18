@@ -22,9 +22,10 @@ public:
     virtual ~Plugin14C();
 
     long double getLikelihood(const double& t, const QJsonObject& data);
-    bool withLikelihoodArg() {return true; };
+    bool withLikelihoodArg() {return true; }
     QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);
     
+    // virtual function
     QString getName() const;
     QIcon getIcon() const;
     bool doesCalibration() const;
@@ -33,8 +34,9 @@ public:
     QList<Date::DataMethod> allowedDataMethods() const;
     QStringList csvColumns() const;
     int csvMinColumns() const;
-    QJsonObject fromCSV(const QStringList& list);
-    QStringList toCSV(const QJsonObject& data, const QLocale& csvLocale);
+    int csvOptionalColumns() const {return 2;} // Corresponding to  "ΔR" and "ΔR Error"
+    QJsonObject fromCSV(const QStringList& list, const QLocale& csvLocale) ;
+    QStringList toCSV(const QJsonObject& data, const QLocale& csvLocale) const;
     QString getDateDesc(const Date* date) const;
     
     PluginFormAbstract* getForm();

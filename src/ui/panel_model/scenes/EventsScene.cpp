@@ -880,31 +880,28 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
 QList<Date> EventsScene::decodeDataDrop(QGraphicsSceneDragDropEvent* e)
 {
     const QMimeData* mimeData = e->mimeData();
-    
-    //Project* project = MainWindow::getInstance()->getProject();
-    
+
     QByteArray encodedData = mimeData->data("application/chronomodel.import.data");
     QDataStream stream(&encodedData, QIODevice::ReadOnly);
     
     QList<QStringList> failed;
     QList<int> acceptedRows;
     QList<Date> dates;
-    
-    AppSettings settings = MainWindow::getInstance()->getAppSettings();
-    QString csvSep = settings.mCSVCellSeparator;
-    
+
     while(!stream.atEnd())
     {
         QString itemStr;
         stream >> itemStr;
+        AppSettings settings = MainWindow::getInstance()->getAppSettings();
+        QString csvSep = settings.mCSVCellSeparator;
         QStringList dataStr = itemStr.split(csvSep);
         
         // Remove first column corresponding to csvRow
         int csvRow = dataStr.takeFirst().toInt();
         
-        //QString pluginName = dataStr.takeFirst();
-        
-        Date date = Date::fromCSV(dataStr);// project->createDateFromData(pluginName, dataStr);
+        QLocale csvLocal = settings.mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+        Date date = Date::fromCSV(dataStr, csvLocal);
+
         if(!date.isNull())
         {
             dates << date;
@@ -915,7 +912,8 @@ QList<Date> EventsScene::decodeDataDrop(QGraphicsSceneDragDropEvent* e)
             failed.append(dataStr);
         }
     }
-    emit csvDataLineDropAccepted(acceptedRows);
+    emit csvDataLineDropAccepted(acceptedRows); //connected to slot ImportDataView::removeCsvRows
+
     return dates;
 }
 
