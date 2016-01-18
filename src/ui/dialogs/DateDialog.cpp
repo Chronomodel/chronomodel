@@ -252,13 +252,23 @@ void DateDialog::setDate(const QJsonObject& date)
     mDeltaFixedRadio->setChecked(deltaType == Date::eDeltaFixed);
     mDeltaRangeRadio->setChecked(deltaType == Date::eDeltaRange);
     mDeltaGaussRadio->setChecked(deltaType == Date::eDeltaGaussian);
-    
+
+    // by convention all delta parameter are integer, so we don't need to convert with the preference setting Decimal format
+    // with a QLocale
     mDeltaFixedEdit->setText(QString::number(date[STATE_DATE_DELTA_FIXED].toDouble()));
     mDeltaMinEdit->setText(QString::number(date[STATE_DATE_DELTA_MIN].toDouble()));
     mDeltaMaxEdit->setText(QString::number(date[STATE_DATE_DELTA_MAX].toDouble()));
     mDeltaAverageEdit->setText(QString::number(date[STATE_DATE_DELTA_AVERAGE].toDouble()));
     mDeltaErrorEdit->setText(QString::number(date[STATE_DATE_DELTA_ERROR].toDouble()));
     
+    // open the display panel if there is wiggle parameter
+    if( (mDeltaFixedRadio->isChecked() && mDeltaFixedEdit->text().toDouble() != 0) ||
+        (mDeltaRangeRadio->isChecked() && mDeltaMinEdit->text().toDouble() != 0 && mDeltaMaxEdit->text().toDouble() != 0) ||
+        (mDeltaGaussRadio->isChecked() && mDeltaAverageEdit->text().toDouble()>0 && mDeltaErrorEdit->text().toDouble()>0) ) {
+        mAdvancedCheck->setChecked(true);
+        //setAdvancedVisible(true);
+    }
+
     mNameEdit->selectAll();
     mNameEdit->setFocus();
     
