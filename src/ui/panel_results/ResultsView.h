@@ -73,6 +73,9 @@ public slots:
     
     void updateModel();
     void updateResultsLog();
+
+    void adjustDuration(bool visible);
+
 private slots:
 
     void settingChange();
@@ -100,6 +103,8 @@ signals:
     
     void controlsUpdated();
     void resultsLogUpdated(const QString& log);
+
+
     
 private:
     QList<QRect> getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases);

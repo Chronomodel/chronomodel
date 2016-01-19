@@ -944,6 +944,8 @@ void ResultsView::createPhasesScrollArea()
         // ----------------------------------------------------
         Phase* phase = mModel->mPhases[p];
         GraphViewPhase* graphPhase = new GraphViewPhase(phasesWidget);
+        connect(graphPhase, &GraphViewPhase::durationDisplay, this,&ResultsView::adjustDuration);
+
         graphPhase->setSettings(mModel->mSettings);
         graphPhase->setMCMCSettings(mModel->mMCMCSettings, mChains);
         graphPhase->setPhase(phase);
@@ -1049,6 +1051,7 @@ void ResultsView::generateCurves()
         for(int i=0; i<mByPhasesGraphs.size(); ++i){
             mByPhasesGraphs[i]->generateCurves(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable);
         }
+
     }
     else {
         for(int i=0; i<mByEventsGraphs.size(); ++i){
@@ -1736,3 +1739,37 @@ void ResultsView::updateModel()
     updateResults(mModel);
 }
 
+void ResultsView::adjustDuration(bool visible)
+{
+    int durationMax = 0;
+    // find the durationMax
+    for(int i=0; i<mByPhasesGraphs.size(); ++i){
+        GraphViewPhase* phasesGraphs = dynamic_cast<GraphViewPhase*>(mByPhasesGraphs[i]);
+        if(phasesGraphs) {
+            GraphView *durationGraph =phasesGraphs->mDurationGraph;
+
+            if(durationGraph && durationGraph->isVisible() ) {
+                GraphCurve *durationCurve = durationGraph->getCurve("Duration");
+                if( durationCurve){
+                   durationMax = qMax((int)durationCurve->mData.lastKey(),durationMax);
+                }
+             }
+         }
+    }
+    // set the same RangeX with durationMax
+    for(int i=0; i<mByPhasesGraphs.size(); ++i){
+        GraphViewPhase* phasesGraphs = dynamic_cast<GraphViewPhase*>(mByPhasesGraphs[i]);
+        if(phasesGraphs) {
+            GraphView *durationGraph =phasesGraphs->mDurationGraph;
+            if(durationGraph) {
+                GraphCurve *durationCurve = durationGraph->getCurve("Duration");
+                if(durationCurve){
+                   durationGraph->setRangeX(0, durationMax);
+                   durationGraph->setCurrentX(0, durationMax);
+                }
+             }
+         }
+
+    }
+
+}
