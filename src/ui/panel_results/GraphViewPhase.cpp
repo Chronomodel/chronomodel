@@ -49,9 +49,9 @@ mPhase(0)
     mShowDuration = new Button(tr("Show Duration"), this);
     mShowDuration->setCheckable(true);
     mShowDuration->setFlatHorizontal();
-    connect(mShowDuration, SIGNAL(toggled(bool)), this, SLOT(showDuration(bool)));
-    //disconnect(mDataSaveBut, SIGNAL(clicked()), GraphViewResults, SLOT(saveGraphData()));
-    //connect(mDataSaveBut, SIGNAL(clicked()), this, SLOT(saveGraphData()));
+    connect(mShowDuration, &Button::toggled, this, &GraphViewPhase::showDuration);
+    connect(mShowDuration, &Button::toggled, this, &GraphViewPhase::durationDisplay);
+
 }
 
 GraphViewPhase::~GraphViewPhase()
@@ -185,16 +185,17 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->addCurve(curveBetaHPD);
 
             mDurationGraph->addCurve(curveDuration);
-            // adjust scale
-            if(!curveDuration.mData.isEmpty()) {
+            // Set mMax use to adujst scale of duration in ResultView
+          /* if(!curveDuration.mData.isEmpty()) {
                 mDurationGraph->setRangeX(0,curveDuration.mData.lastKey());
-                mDurationGraph->setCurrentX(0,curveDuration.mData.lastKey());
+               // mDurationGraph->setCurrentX(0,curveDuration.mData.lastKey());
 
             }
             else {
-                mDurationGraph->setRangeX(0,2000);
-                mDurationGraph->setCurrentX(0,2000);
+                mDurationGraph->setRangeX(0,0);
+               // mDurationGraph->setCurrentX(0,2000);
             }
+*/
 
            // mDurationGraph->autoAdjustYScale(true);
 

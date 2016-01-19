@@ -24,13 +24,16 @@ public:
     
     void generateCurves(TypeGraph typeGraph, Variable variable);
     void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
-    
-    
+
+signals:
+    void durationDisplay(bool visible);
     
 protected:
     void paintEvent(QPaintEvent* e);
     void updateLayout();
     
+
+
 protected slots:
     void showDuration(bool show);
     void saveGraphData() const; 
