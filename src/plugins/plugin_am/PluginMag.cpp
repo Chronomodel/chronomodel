@@ -391,12 +391,10 @@ bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& sett
             valid = ( (double)repartition > 0);
             t +=settings.mStep;
         }
-
     }
 
 return valid;
 
-    //return ((mesure - 1.96f * error < curve.mDataSupMax) && (mesure + 1.96f * error > curve.mDataInfMin));
 }
 
 
