@@ -152,6 +152,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
 
 
                     // HPD All Chains
+                    //color.setAlpha(255);
                     GraphCurve curveHPD = generateHPDCurve(mEvent->mTheta.mHPD,
                                                            "HPD All Chains",
                                                            color);

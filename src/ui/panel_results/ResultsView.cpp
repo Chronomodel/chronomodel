@@ -193,7 +193,7 @@ mGraphsH(130)
     
     mOpacitySpin = new QSpinBox();
     mOpacitySpin->setRange(0, 100);
-    mOpacitySpin->setValue(30);
+    mOpacitySpin->setValue(50);
     mOpacitySpin->setSuffix(" %");
     connect(mOpacitySpin, SIGNAL(valueChanged(int)), this, SLOT(updateOpacity(int)));
     
@@ -1454,7 +1454,10 @@ void ResultsView::updateThickness(int value)
 {
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
     {
-        mByPhasesGraphs[i]->setGraphsThickness(value);
+        GraphViewPhase* graphPhase = dynamic_cast<GraphViewPhase*>(mByPhasesGraphs[i]);
+        if(graphPhase) {
+            graphPhase->setGraphsThickness(value);
+        }
     }
     for(int i=0; i<mByEventsGraphs.size(); ++i)
     {
@@ -1464,12 +1467,13 @@ void ResultsView::updateThickness(int value)
 
 void ResultsView::updateOpacity(int value)
 {
-    for(int i=0; i<mByPhasesGraphs.size(); ++i)
-    {
-        mByPhasesGraphs[i]->setGraphsOpacity(value);
+    for(int i=0; i<mByPhasesGraphs.size(); ++i) {
+        GraphViewPhase* graphPhase = dynamic_cast<GraphViewPhase*>(mByPhasesGraphs[i]);
+        if(graphPhase) {
+            graphPhase->setGraphsOpacity(value);
+        }
     }
-    for(int i=0; i<mByEventsGraphs.size(); ++i)
-    {
+    for(int i=0; i<mByEventsGraphs.size(); ++i) {
         mByEventsGraphs[i]->setGraphsOpacity(value);
     }
 }

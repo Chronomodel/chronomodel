@@ -22,10 +22,11 @@ mPhase(0)
     //mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax); // it's done in GraphViewResults
     
     mDurationGraph = new GraphView(this);
-    mDurationGraph -> setBackgroundColor(QColor(230, 230, 230));
-    mDurationGraph -> addInfo(tr("WARNING : this graph scale is NOT the study period!"));
-    mDurationGraph -> mLegendX = "";
-    mDurationGraph -> setFormatFunctX(formatValueToAppSettingsPrecision);
+    mDurationGraph->setBackgroundColor(QColor(230, 230, 230));
+    mDurationGraph->setCurvesOpacity(30);
+    mDurationGraph->addInfo(tr("WARNING : this graph scale is NOT the study period!"));
+    mDurationGraph->mLegendX = "";
+    mDurationGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
     
     mDurationGraph->showXAxisArrow(true);
     mDurationGraph->showXAxisTicks(true);
@@ -102,11 +103,25 @@ void GraphViewPhase::updateLayout()
         mShowDuration->setGeometry(0, mLineH + bh, mGraphLeft, bh);
     }
     mDurationGraph->setGeometry(graphRect.adjusted(0, 0, 0, mShowNumResults ? -graphRect.height()/2 : 0));
+
 }
 
 void GraphViewPhase::paintEvent(QPaintEvent* e)
 {
     GraphViewResults::paintEvent(e);
+}
+
+void GraphViewPhase::setGraphsThickness(int value)
+{
+    GraphViewResults::setGraphsThickness(value);
+    mDurationGraph->setCurvesThickness(value);
+}
+
+void GraphViewPhase::setGraphsOpacity(int value)
+{
+    GraphViewResults::setGraphsOpacity(value);
+    mDurationGraph->setCurvesOpacity(value);
+
 }
 
 void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
@@ -128,7 +143,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
     
     if(mPhase)
     {
-        const QColor color = mPhase->mColor;
+        QColor color = mPhase->mColor;
         
         // ------------------------------------------------
         //  first tab : posterior distrib
@@ -158,23 +173,24 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
             QString resultsText = ModelUtilities::phaseResultsText(mPhase);
             QString resultsHTML = ModelUtilities::phaseResultsHTML(mPhase);
             setNumericalResults(resultsHTML, resultsText);
-            
+
             GraphCurve curveAlpha = generateDensityCurve(mPhase->mAlpha.fullHisto(),
                                                          "Post Distrib Alpha All Chains",
                                                          color, Qt::DotLine);
-            
+            QColor colorBeta = mPhase->mColor.darker(170);
+
             GraphCurve curveBeta = generateDensityCurve(mPhase->mBeta.fullHisto(),
                                                          "Post Distrib Beta All Chains",
-                                                         color, Qt::DashLine);
+                                                         colorBeta, Qt::DashLine);
             
-            
+            color.setAlpha(255); // set mBrush to fill
             GraphCurve curveAlphaHPD = generateHPDCurve(mPhase->mAlpha.mHPD,
                                                          "HPD Alpha All Chains",
                                                          color);
-            
+
             GraphCurve curveBetaHPD = generateHPDCurve(mPhase->mBeta.mHPD,
                                                        "HPD Beta All Chains",
-                                                       color);
+                                                       colorBeta);
             
             GraphCurve curveDuration = generateDensityCurve(mPhase->mDuration.fullHisto(),
                                                             "Duration",
@@ -185,45 +201,29 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->addCurve(curveBetaHPD);
 
             mDurationGraph->addCurve(curveDuration);
-            // Set mMax use to adujst scale of duration in ResultView
-          /* if(!curveDuration.mData.isEmpty()) {
-                mDurationGraph->setRangeX(0,curveDuration.mData.lastKey());
-               // mDurationGraph->setCurrentX(0,curveDuration.mData.lastKey());
 
-            }
-            else {
-                mDurationGraph->setRangeX(0,0);
-               // mDurationGraph->setCurrentX(0,2000);
-            }
-*/
-
-           // mDurationGraph->autoAdjustYScale(true);
-
-            if(!curveDuration.mData.isEmpty())
-            {
+            if(!curveDuration.mData.isEmpty()) {
+                color.setAlpha(255);
                 GraphCurve curveDurationHPD = generateHPDCurve(mPhase->mDuration.mHPD,
                                                                "HPD Duration",
                                                                color);
+                mDurationGraph->setCanControlOpacity(true);
                 mDurationGraph->addCurve(curveDurationHPD);
                 mDurationGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
                 mDurationGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
-
-
-             }
+            }
             
             
-            for(int i=0; i<mChains.size(); ++i)
-            {
+            for(int i=0; i<mChains.size(); ++i) {
                 GraphCurve curveAlpha = generateDensityCurve(mPhase->mAlpha.histoForChain(i),
                                                              "Post Distrib Alpha " + QString::number(i),
                                                              color, Qt::DotLine);
                 
                 GraphCurve curveBeta = generateDensityCurve(mPhase->mBeta.histoForChain(i),
                                                             "Post Distrib Beta " + QString::number(i),
-                                                            color, Qt::DashLine);
+                                                            colorBeta, Qt::DashLine);
                 mGraph->addCurve(curveAlpha);
                 mGraph->addCurve(curveBeta);
-                
             }
            
         }

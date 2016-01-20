@@ -508,9 +508,7 @@ GraphCurve GraphViewResults::generateHPDCurve(const QMap<double, double>& data,
     curve.mName = name;
     curve.mData = data;
     curve.mPen = color;
-    QColor fillColor = color;
-    fillColor.setAlpha(100);
-    curve.mBrush = fillColor;
+    curve.mBrush = QBrush(color);
     curve.mIsHisto = false;
     curve.mIsRectFromZero = true;
     
