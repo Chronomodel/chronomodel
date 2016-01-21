@@ -52,7 +52,9 @@ template <typename T, typename V>
 QMap<T, V> getMapDataInRange(const QMap<T, V> &data, const T subMin, const  T subMax)
 {
 #ifdef DEBUG
-    if(data.size() == 0) qDebug()<<"QtUtilities::getMapDataInRange data.size() == 0";
+    if(data.size() == 0) {
+        qDebug()<<"QtUtilities::getMapDataInRange data.size() == 0";
+    }
 #endif
     if(data.size() == 0) return data;
     T tBeforeSubMin;
@@ -110,7 +112,7 @@ QVector<T> getVectorDataInRange(const QVector<T>& data, const T subMin,const T s
         subData.reserve(data.size());
         int idxStart = (int) floor(data.size() * (subMin - min) / (max - min));
         int idxEnd = (int) floor(data.size() * (subMax - min) / (max - min));
-        for(int i=idxStart; i<idxEnd; ++i)
+        for(int i=idxStart; i<=idxEnd; ++i)
         {
             if(i >= 0 && i < data.size())
                 subData.append(data[i]);
