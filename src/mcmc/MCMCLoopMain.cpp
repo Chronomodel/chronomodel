@@ -229,17 +229,18 @@ QString MCMCLoopMain::initMCMC()
             {
                 Date& date = unsortedEvents[i]->mDates[j];
                 
-                // Init ti and its sigma
+                // 1 - Init ti
+                double sigma = double();
                 if(!date.mRepartition.isEmpty()) {
                     double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mRepartition);
                     date.mTheta.mX = date.getTminCalib() + idx * mModel->mSettings.mStep;
 
                     FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration, tmin, tmax, step));
-                    date.mTheta.mSigmaMH = data.stddev;
+                    sigma = data.stddev;
                 }
                 else { // in the case of mRepartion curve is null, we must init ti outside the study period
                        // For instance we use a gaussian random sampling
-                    double sigma = mModel->mSettings.mTmax - mModel->mSettings.mTmin;
+                    sigma = mModel->mSettings.mTmax - mModel->mSettings.mTmin;
                     double u = Generator::gaussByBoxMuller(0,sigma);
                     if(u<0) {
                         date.mTheta.mX = mModel->mSettings.mTmin + u;
@@ -247,15 +248,26 @@ QString MCMCLoopMain::initMCMC()
                     else {
                         date.mTheta.mX = mModel->mSettings.mTmax + u;
                     }
-                    date.mTheta.mSigmaMH = sigma;
-                }
+                    if(date.mMethod == Date::eInversion) {
+                        qDebug()<<"Automatic sampling method exchange eInversion to eMHSymetric for"<< date.mName;
+                        date.mMethod = Date::eMHSymetric;
+                        date.autoSetTiSampler(true);
+                    }
 
+                }
+                // 2 - Init Delta Wiggle matching
                 date.initDelta(unsortedEvents[i]);
 
-                // calculus of the harmonic average
-                s02_sum += 1.f / (date.mTheta.mSigmaMH * date.mTheta.mSigmaMH);
+                // 3 - Init sigma MH adaptatif of each Data ti
+                date.mTheta.mSigmaMH = sigma;
+
+                // intermediary calculus for the harmonic average
+                s02_sum += 1.f / (sigma * sigma);
             }
+            // 4 - Init S02 of each Event
             unsortedEvents[i]->mS02 = unsortedEvents[i]->mDates.size() / s02_sum;
+
+            // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
             unsortedEvents[i]->mTheta.mSigmaMH = sqrt(unsortedEvents[i]->mS02);
             unsortedEvents[i]->mAShrinkage = 1.;
         }
@@ -267,7 +279,7 @@ QString MCMCLoopMain::initMCMC()
     }
     
     // ----------------------------------------------------------------
-    //  Init sigma i
+    //  Init sigma i and its sigma MH
     // ----------------------------------------------------------------
     QString log;
     emit stepChanged(tr("Initializing variances..."), 0, events.size());
