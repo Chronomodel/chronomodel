@@ -118,13 +118,13 @@ public slots:
     void exportCurrentDensityCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step =1.) const;
 
     void exportCurrentVectorCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, bool writeInRows, int offset = 0) const;
-    //void exportCurrentCurves_old(const QString& defaultPath, const QString& csvSep, bool writeInRows, int offset = 0) const;
-    
+
+
 protected:
     void adaptMarginBottom();
     
     void updateGraphSize(int w, int h);
-    void repaintGraph(const bool aAlsoPaintBackground);
+
     void drawCurves(QPainter& painter);
 
 #if GRAPH_OPENGL
@@ -135,7 +135,7 @@ protected:
 #endif
     
     void paintEvent(QPaintEvent*);
-   
+    void repaintGraph(const bool aAlsoPaintBackground);
     void enterEvent(QEvent* e);
     void leaveEvent(QEvent* e);
     void mouseMoveEvent(QMouseEvent* e);
