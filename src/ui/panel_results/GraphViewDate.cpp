@@ -75,7 +75,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
     
     if(mDate)
     {
-        QColor color = mDate->mColor;//getEventColor();
+        QColor color = mDate->mColor;
         QPen defaultPen;
         defaultPen.setWidthF(1);
         defaultPen.setStyle(Qt::SolidLine);
@@ -134,7 +134,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 }
                 
                 // HPD All Chains
-                //color.setAlpha(255);
+
                 GraphCurve curveHPD = generateHPDCurve(variableDate->mHPD,
                                                        "HPD All Chains",
                                                         color);
