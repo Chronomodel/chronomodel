@@ -44,6 +44,7 @@ public:
     double mResultCurrentMaxX;
     double mResultMinX;
     double mResultMaxX;
+    double mResultMaxVariance;
     bool mHasPhases;
     
     void doProjectConnections(Project* project);

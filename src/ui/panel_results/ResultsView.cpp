@@ -37,6 +37,7 @@
 
 #pragma mark Constructor & Destructor
 ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
+mResultMaxVariance(1000),
 mHasPhases(false),
 mModel(0),
 mMargin(5),
@@ -761,58 +762,7 @@ void ResultsView::updateResults(Model* model)
     //  No posterior density has been computed yet!
     //  Graphs are empty at the moment
     // ----------------------------------------------------
-    /*
-    QWidget* phasesWidget = new QWidget();
-    phasesWidget->setMouseTracking(true);
-    
-    for(int p=0; p<(int)mModel->mPhases.size(); ++p)
-    {
-        // ----------------------------------------------------
-        //  This just creates the GraphView for the phase (no curve yet)
-        // ----------------------------------------------------
-        Phase* phase = mModel->mPhases[p];
-        GraphViewPhase* graphPhase = new GraphViewPhase(phasesWidget);
-        graphPhase->setSettings(mModel->mSettings);
-        graphPhase->setMCMCSettings(mModel->mMCMCSettings, mChains);
-        graphPhase->setPhase(phase);
-        graphPhase->setGraphFont(mFont);
-        graphPhase->setGraphsThickness(mThicknessSpin->value());
-        mByPhasesGraphs.append(graphPhase);
-        
-        for(int i=0; i<(int)phase->mEvents.size(); ++i)
-        {
-            // ----------------------------------------------------
-            //  This just creates the GraphView for the event (no curve yet)
-            // ----------------------------------------------------
-            Event* event = phase->mEvents[i];
-            GraphViewEvent* graphEvent = new GraphViewEvent(phasesWidget);
-            graphEvent->setSettings(mModel->mSettings);
-            graphEvent->setMCMCSettings(mModel->mMCMCSettings, mChains);
-            graphEvent->setEvent(event);
-            graphEvent->setGraphFont(mFont);
-            graphEvent->setGraphsThickness(mThicknessSpin->value());
-            mByPhasesGraphs.append(graphEvent);
-            
-            // --------------------------------------------------
-            //  This just creates the GraphView for the date (no curve yet)
-            // --------------------------------------------------
-            for(int j=0; j<(int)event->mDates.size(); ++j)
-            {
-                Date& date = event->mDates[j];
-                GraphViewDate* graphDate = new GraphViewDate(phasesWidget);
-                graphDate->setSettings(mModel->mSettings);
-                graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
-                graphDate->setDate(&date);
-                graphDate->setGraphFont(mFont);
-                graphDate->setGraphsThickness(mThicknessSpin->value());
-                
-                graphDate->setColor(event->getColor());
-                mByPhasesGraphs.append(graphDate);
-            }
-        }
-    }
-    mPhasesScrollArea->setWidget(phasesWidget);
-    */
+
     createPhasesScrollArea();
 
     // ----------------------------------------------------
@@ -820,48 +770,7 @@ void ResultsView::updateResults(Model* model)
     //  No posterior density has been computed yet!
     //  Graphs are empty at the moment
     // ----------------------------------------------------
-    /*
-    QWidget* eventsWidget = new QWidget();
-    eventsWidget->setMouseTracking(true);
-    
-    for(int i=0; i<(int)mModel->mEvents.size(); ++i)
-    {
-        Event* event = mModel->mEvents[i];
-        GraphViewEvent* graphEvent = new GraphViewEvent(eventsWidget);
-        
-        // ----------------------------------------------------
-        //  This just creates the view for the event.
-        //  It sets the Event which triggers an update() to repaint the view.
-        //  The refresh() function which actually creates the graph curves will be called later.
-        // ----------------------------------------------------
-        graphEvent->setSettings(mModel->mSettings);
-        graphEvent->setMCMCSettings(mModel->mMCMCSettings, mChains);
-        graphEvent->setEvent(event);
-        graphEvent->setGraphFont(mFont);
-        graphEvent->setGraphsThickness(mThicknessSpin->value());
-        mByEventsGraphs.append(graphEvent);
-        if(mShowDataUnderPhasesCheck->isChecked()) {
-            for(int j=0; j<(int)event->mDates.size(); ++j) {
-                Date& date = event->mDates[j];
-                // ----------------------------------------------------
-                //  This just creates the view for the date.
-                //  It sets the Date which triggers an update() to repaint the view.
-                //  The refresh() function which actually creates the graph curves will be called later.
-                // ----------------------------------------------------
-                GraphViewDate* graphDate = new GraphViewDate(eventsWidget);
-                graphDate->setSettings(mModel->mSettings);
-                graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
-                graphDate->setDate(&date);
-                graphDate->setColor(date.getEventColor());//  event->getColor());
 
-                graphDate->setGraphFont(mFont);
-                graphDate->setGraphsThickness(mThicknessSpin->value());
-                mByEventsGraphs.append(graphDate);
-            }
-        }
-    }
-    mEventsScrollArea->setWidget(eventsWidget);
-    */
     createEventsScrollArea();
     // ------------------------------------------------------------
     
@@ -1047,16 +956,40 @@ void ResultsView::generateCurves()
     if(mDataThetaRadio->isChecked()) variable = GraphViewResults::eTheta;
     else if(mDataSigmaRadio->isChecked()) variable = GraphViewResults::eSigma;
     
-    if (mByPhasesBut->isChecked()) {
-        for(int i=0; i<mByPhasesGraphs.size(); ++i){
-            mByPhasesGraphs[i]->generateCurves(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable);
-        }
+    QList<GraphViewResults*>::iterator iter;
+    QList<GraphViewResults*>::const_iterator iterEnd;
 
+    if (mByPhasesBut->isChecked()) {
+        iter = mByPhasesGraphs.begin();
+        iterEnd = mByPhasesGraphs.constEnd();
     }
     else {
-        for(int i=0; i<mByEventsGraphs.size(); ++i){
-            mByEventsGraphs[i]->generateCurves(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable);
+        iter = mByEventsGraphs.begin();
+        iterEnd = mByEventsGraphs.constEnd();
+    }
+
+    while(iter != iterEnd) {
+        (*iter)->generateCurves(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable);
+        ++iter;
+    }
+
+    // With variable eSigma, we look for mResultMaxVariance in the curve named "Post Distrib All Chains"
+    if(variable == GraphViewResults::eSigma) {
+        mResultMaxVariance = 0;
+
+        QList<GraphViewResults*>::const_iterator constIter = mByEventsGraphs.constBegin();
+
+        while(constIter != mByEventsGraphs.constEnd()) {
+            GraphViewDate* graphDate = dynamic_cast<GraphViewDate*>(*constIter);
+            if(graphDate) {
+               GraphCurve* graphDuration = graphDate->mGraph->getCurve("Post Distrib All Chains");
+               if(graphDuration) {
+                   mResultMaxVariance = qMax(mResultMaxVariance, graphDuration->mData.lastKey());
+               }
+            }
+            ++constIter;
         }
+
     }
     emit curvesGenerated();
 }
@@ -1119,7 +1052,8 @@ void ResultsView::updateScales()
         }
         else if(mDataSigmaRadio->isChecked())  {
             mResultMinX = 0;
-            mResultMaxX = s.mTmax - s.mTmin;
+            mResultMaxX = mResultMaxVariance;//s.mTmax - s.mTmin;
+
         }
     }
     else if(tabIdx == 1 || tabIdx == 2){
@@ -1134,7 +1068,7 @@ void ResultsView::updateScales()
     }
     else if(tabIdx == 3) {
         mResultMinX = 0;
-        mResultMaxX = 40;
+        mResultMaxX = 39;
     }
    
     // ------------------------------------------
