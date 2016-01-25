@@ -4,6 +4,7 @@
 #include <QIcon>
 #include <QString>
 #include <QVector>
+#include "Model.h"
 #include "Date.h"
 #include "Event.h"
 #include "Phase.h"
@@ -32,18 +33,22 @@ public:
     
     static QVector<Event*> unsortEvents(const QList<Event*>& events);
     
-    static QString dateResultsText(Date* d);
-    static QString eventResultsText(Event* e, bool withDates);
-    static QString phaseResultsText(Phase* p);
+    static QString dateResultsText(const Date* d, const Model* model = 0);
+    static QString eventResultsText(const Event* e, bool withDates, const Model* model = 0);
+    static QString phaseResultsText(const Phase* p);
     
-    static QString dateResultsHTML(Date* d);
-    static QString eventResultsHTML(Event* e, bool withDates);
-    static QString phaseResultsHTML(Phase* p);
+    static QString dateResultsHTML(const Date* d, const Model* model = 0);
+    static QString eventResultsHTML(const Event* e,const bool withDates, const Model* model = 0);
+    static QString phaseResultsHTML(const Phase* p);
+
+    static short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const Model* model);
 };
 
 // These 2 global functions are used to sort events and phases lists in result view
 
 bool sortEvents(Event* e1, Event* e2);
 bool sortPhases(Phase* p1, Phase* p2);
+
+
 
 #endif

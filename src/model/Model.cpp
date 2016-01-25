@@ -473,7 +473,7 @@ void Model::generateModelLog()
         for(int j=0; j<mEvents[i]->mDates.size(); ++j)
         {
             log += "<br>";
-            log += line(textGreen("Data (" + QString::number(j+1) + "/" + QString::number(mEvents[i]->mDates.size()) + ") : " + mEvents[i]->mDates[j].mName +
+            log += line(textBlack("Data (" + QString::number(j+1) + "/" + QString::number(mEvents[i]->mDates.size()) + ") : " + mEvents[i]->mDates[j].mName +
                                   "<br>- Type : " + mEvents[i]->mDates[j].mPlugin->getName() +
                                   "<br>- Method : " + ModelUtilities::getDataMethodText(mEvents[i]->mDates[j].mMethod) +
                                   "<br>- Params : " + mEvents[i]->mDates[j].getDesc()));
@@ -531,7 +531,7 @@ void Model::generateResultsLog()
     for(int i=0; i<mEvents.size(); ++i)
     {
         Event* event = mEvents[i];
-        log += ModelUtilities::eventResultsHTML(event, true);
+        log += ModelUtilities::eventResultsHTML(event, true, this);
         log += "<hr>";
     }
     for(int i=0; i<mPhases.size(); ++i)

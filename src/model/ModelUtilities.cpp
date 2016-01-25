@@ -393,7 +393,7 @@ QVector<Event*> ModelUtilities::unsortEvents(const QList<Event*>& events)
     // PhD : Peut être juste recopier events et faire envents.size() swap d'éléments dans le tableau copié avant de le retourner !!
 }
 
-QString ModelUtilities::dateResultsText(Date* d)
+QString ModelUtilities::dateResultsText(const Date* d, const Model* model)
 {
     QString text;
     QString nl = "\n";
@@ -401,14 +401,32 @@ QString ModelUtilities::dateResultsText(Date* d)
     {
         text += "Data : " + d->mName + nl + nl;
         text += "Date :" + nl;
-        text += d->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr) + nl + nl;
+        text += d->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr) ;
+
+        if(model) {
+            short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTheta.mHPD,model);
+            switch (position) {
+                case -1:
+                    text += "Solution under Study period";
+                    break;
+                case +1:
+                    text += "Solution over Study period";
+                    break;
+                case +2:
+                    text += "Solution under and over Study period";
+                    break;
+                default:
+                    break;
+            }
+         }
+        text += nl + nl;
         text += "Std. Deviation :" + nl;
         text += d->mSigma.resultsString(nl);
     }
     return text;
 }
 
-QString ModelUtilities::eventResultsText(Event* e, bool withDates)
+QString ModelUtilities::eventResultsText(const Event* e, bool withDates, const Model* model)
 {
     QString text;
     QString nl = "\n";
@@ -430,7 +448,8 @@ QString ModelUtilities::eventResultsText(Event* e, bool withDates)
                 text += "----------------------"+nl;
                 for(int i=0; i<e->mDates.size(); ++i)
                 {
-                    text += dateResultsText(&(e->mDates[i])) + nl + nl;
+                    text += dateResultsText(&(e->mDates.at(i)), model) + nl + nl;
+
                 }
             }
         }
@@ -438,7 +457,7 @@ QString ModelUtilities::eventResultsText(Event* e, bool withDates)
     return text;
 }
 
-QString ModelUtilities::phaseResultsText(Phase* p)
+QString ModelUtilities::phaseResultsText(const Phase* p)
 {
     QString text;
     QString nl = "\n";
@@ -463,21 +482,42 @@ QString ModelUtilities::phaseResultsText(Phase* p)
 
 
 
-QString ModelUtilities::dateResultsHTML(Date* d)
+QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
 {
     QString text;
     if(d)
     {
-        text += line(textBold(textGreen("Data : " + d->mName))) + "<br>";
-        text += line(textBold(textGreen("Posterior distrib. :")));
-        text += line(textGreen(d->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr))) + "<br>";
-        text += line(textBold(textGreen("Std. Deviation :")));
-        text += line(textGreen(d->mSigma.resultsString()));
+        text += line(textBold(textBlack(QObject::tr("Data : ") + d->mName))) + "<br>";
+        text += line(textBold(textBlack(QObject::tr("Posterior distrib. :"))));
+
+        if(model) {
+            short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTheta.mHPD, model);
+            switch (position) {
+                case -1:
+                   text += line( textBold(textBlack(QObject::tr("Solutions exist under study period") )) ) + "<br>";
+                    break;
+                case +1:
+                    text += line( textBold(textBlack(QObject::tr("Solutions exist over study period"))) ) + "<br>";
+                    break;
+                case +2:
+                    text += line( textBold(textBlack(QObject::tr("Solutions exist under and over study period"))) ) + "<br>";
+                    break;
+                default:
+                    break;
+            }
+         }
+
+
+        text += line(textBlack(d->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr))) ;
+
+        text += line("<br>");
+        text += line(textBold(textBlack("Std. Deviation :")));
+        text += line(textBlack(d->mSigma.resultsString()));
     }
     return text;
 }
 
-QString ModelUtilities::eventResultsHTML(Event* e, bool withDates)
+QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, const Model* model)
 {
     QString text;
     if(e)
@@ -498,8 +538,8 @@ QString ModelUtilities::eventResultsHTML(Event* e, bool withDates)
             {
                 for(int i=0; i<e->mDates.size(); ++i)
                 {
-                    //text += "<hr>";
-                    text += "<br><br>" + dateResultsHTML(&(e->mDates[i]));
+                    text += "<br><br>" + dateResultsHTML(&(e->mDates.at(i)), model);
+
                 }
             }
         }
@@ -507,7 +547,7 @@ QString ModelUtilities::eventResultsHTML(Event* e, bool withDates)
     return text;
 }
 
-QString ModelUtilities::phaseResultsHTML(Phase* p)
+QString ModelUtilities::phaseResultsHTML(const Phase* p)
 {
     QString text;
     if(p)
@@ -528,4 +568,40 @@ QString ModelUtilities::phaseResultsHTML(Phase* p)
         text += line(textPurple(p->mBeta.resultsString("<br>", "",DateUtils::getAppSettingsFormat())));
     }
     return text;
+}
+
+/**
+ * @brief HPDOutsideSudyPeriod
+ * @param variable
+ * @param model
+ * @return -1 if there is solution under Study Period; 0 if all solution is inside Sudy Period;
+ *  +1 if there is solution over Study Period; +2 if there is both solution under and over the Study Period
+ */
+short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double>& hpd, const Model* model)
+{
+    QMap<double, double>::const_iterator iter(hpd.constBegin());
+    short answer = 0;
+    const double tmin = model->mSettings.mTmin;
+    const double tmax = model->mSettings.mTmax;
+    // we suppose QMap is sort <
+    while(iter != hpd.constEnd()) {
+        const double v = iter.value();
+        if(v > 0) {
+           const double t = iter.key();
+           if(t<tmin){
+               answer = -1;
+           }
+           else if(t>tmax && answer == -1) {
+              answer = 2;
+              return 2;
+           }
+           else if(t>tmax) {
+               answer = +1;
+               return 1;
+           }
+        }
+
+        ++iter;
+    }
+    return answer;
 }
