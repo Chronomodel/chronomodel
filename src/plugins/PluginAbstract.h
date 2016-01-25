@@ -110,10 +110,10 @@ public:
         QFileInfoList files = calibDir.entryInfoList(QStringList(), QDir::Files);
         for(int i=0; i<files.size(); ++i)
         {
-            if(files[i].suffix().toLower() == getRefExt())
+            if(files.at(i).suffix().toLower() == getRefExt())
             {
-                RefCurve curve = loadRefFile(files[i]);
-                mRefCurves.insert(files[i].fileName().toLower(), curve);
+                RefCurve curve = loadRefFile(files.at(i));
+                mRefCurves.insert(files.at(i).fileName().toLower(), curve);
             }
         }
     }
@@ -124,7 +124,7 @@ public:
         QHash<QString, RefCurve>::const_iterator it = mRefCurves.constBegin();
         while(it != mRefCurves.constEnd())
         {
-           const RefCurve& curve = mRefCurves[it.key()];
+           const RefCurve& curve = mRefCurves.value(it.key());
            // return only valid curve
            if(!curve.mDataMean.isEmpty())
                refNames.push_back(it.key());
@@ -139,7 +139,7 @@ public:
         long double value = 0;
         if(mRefCurves.constFind(curveName) != mRefCurves.constEnd())
         {
-            const RefCurve& curve = mRefCurves[curveName];
+            const RefCurve& curve = mRefCurves.value(curveName);
             
             //if(t >= curve.mTmin && t <= curve.mTmax){
                // This actually return the iterator with the nearest greater key !!!
@@ -172,17 +172,14 @@ public:
         double error = 0;
         if(mRefCurves.constFind(curveName) != mRefCurves.constEnd())
         {
-            const RefCurve& curve = mRefCurves[curveName];
+            const RefCurve& curve = mRefCurves.value(curveName);
             
             if(t >= curve.mTmin && t <= curve.mTmax){
                // This actually return the iterator with the nearest greater key !!!
                 QMap<double, double>::const_iterator iter = curve.mDataError.lowerBound(t);
                 // the higher value must be mTmax.
                 if(iter != curve.mDataError.constBegin()) {
-                   /* if(iter.key() == t) { //this case is rare
-                       error = curve.mDataError[t];
-                    }
-                    else {*/
+
                     double t_upper = iter.key();
                     double v_upper = iter.value();//curve.mDataError[t_upper];
                     --iter;

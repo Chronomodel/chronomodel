@@ -56,7 +56,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         
         Plugin14C* plugin = (Plugin14C*)date.mPlugin;
 
-        const RefCurve& curve = plugin->mRefCurves[ref_curve];
+        const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
         
         if(curve.mDataMean.isEmpty())
         {
@@ -108,8 +108,8 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
                 curveG95Sup[t] = value + error;
                 curveG95Inf[t] = value - error;
 
-                yMin = qMin(yMin, curveG95Inf[t]);
-                yMax = qMax(yMax, curveG95Sup[t]);
+                yMin = qMin(yMin, curveG95Inf.value(t));
+                yMax = qMax(yMax, curveG95Sup.value(t));
             }
         }
 
@@ -221,7 +221,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         //  Sub-dates curves (combination)
         // ----------------------------------------------
         for(int i=0; i<date.mSubDates.size(); ++i){
-            const Date& d = date.mSubDates[i];
+            const Date& d = date.mSubDates.at(i);
             
             GraphCurve curveSubMeasure;
             curveSubMeasure.mName = "Sub-Measure " + QString::number(i);

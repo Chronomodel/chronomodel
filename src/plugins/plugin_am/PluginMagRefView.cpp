@@ -58,7 +58,7 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         QColor color2(150, 150, 150);
         
         PluginMag* plugin = (PluginMag*)date.mPlugin;
-        const RefCurve& curve = plugin->mRefCurves[ref_curve];
+        const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
         
         if(curve.mDataMean.isEmpty())
         {
