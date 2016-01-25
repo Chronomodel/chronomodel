@@ -293,16 +293,7 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
     double lastKeyInInter = 0.;
     QPair<double, double> curInterval;
     
-    /* original code HL
-     double areaTot = 0;
-    while(it.hasNext())
-    {
-        it.next();
-        areaTot += it.value();
-    }
-     */
-    
-    double areaTot= map_area(hpd); // modif PhD on 2015/05/20
+    double areaTot= map_area(hpd);
     double lastValueInInter = 0.;
     
     double areaCur = 0;
@@ -316,7 +307,6 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
             inInterval = true;
             curInterval.first = it.key();
             lastKeyInInter = it.key();
-            // areaCur = it.value(); // modif PhD on 2015/05/20
             areaCur = 0.; // start, not inside
         }
         else if(inInterval)

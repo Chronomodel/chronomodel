@@ -178,7 +178,7 @@ void MCMCLoop::run()
                     mAbortedReason = ABORTED_BY_USER;
                     return;
                 }
-                
+
                 try{
                     this->update();
                 }

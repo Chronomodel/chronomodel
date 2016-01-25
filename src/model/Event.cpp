@@ -422,8 +422,7 @@ double Event::getThetaMin(double defaultValue)
     double maxPhasePrev = defaultValue;
     for(int i=0; i<mPhases.size(); ++i)
     {
-        double thetaMax = mPhases[i]->getMaxThetaPrevPhases(defaultValue);//HL
-        //double thetaMax = mPhases[i]->mBeta.mX;// PhD faisable uniquement quand les phases sont remises à jour après chaque tirage de theta d'une phase
+        double thetaMax = mPhases[i]->getMaxThetaPrevPhases(defaultValue);
         maxPhasePrev = std::max(maxPhasePrev, thetaMax);
     }
     
@@ -510,7 +509,7 @@ void Event::updateTheta(double tmin, double tmax)
     
     double sum_p = 0.;
     double sum_t = 0.;
-//    for(int i=0; i<mDates.size(); ++i) // if mDates is std::vector
+
     for(int i=0; i<mDates.length(); ++i)
     {
         double variance = (mDates[i].mSigma.mX * mDates[i].mSigma.mX);

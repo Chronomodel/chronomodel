@@ -141,32 +141,27 @@ public:
         {
             const RefCurve& curve = mRefCurves[curveName];
             
-            /*if(curve.mDataMean.constFind(t) != curve.mDataMean.constEnd())
-            { //this case is rare
-                value = curve.mDataMean[t];
-            }
-            else */
-            if(t >= curve.mTmin && t <= curve.mTmax){
+            //if(t >= curve.mTmin && t <= curve.mTmax){
                // This actually return the iterator with the nearest greater key !!!
                 QMap<double, double>::const_iterator iter = curve.mDataMean.lowerBound(t);
                if(iter != curve.mDataMean.constBegin())
                 {
                     double t_upper = iter.key();
-                    double v_upper = iter.value();//curve.mDataMean[t_upper];
+                    double v_upper = iter.value();
 
                     --iter;
                     double t_under = iter.key();
-                    double v_under = iter.value();//curve.mDataMean[t_under];
+                    double v_under = iter.value();
 
                     value = interpolate(t, t_under, t_upper, v_under, v_upper);
                }
                else {
                    value = iter.value();
                }
-            }
+          /*  }
             else { // onExtension depreciated
                 value = interpolate(t, curve.mTmin, curve.mTmax, curve.mDataMean[curve.mTmin], curve.mDataMean[curve.mTmax]);
-            }
+            } */
 
         }
         return value;
