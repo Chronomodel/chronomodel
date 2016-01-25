@@ -133,8 +133,8 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                     curveG95Sup[t] = value + error;
                     curveG95Inf[t] = value - error;
 
-                    yMin = qMin(yMin, curveG95Inf.at(t));
-                    yMax = qMax(yMax, curveG95Sup.at(t));
+                    yMin = qMin(yMin, curveG95Inf.value(t));
+                    yMax = qMax(yMax, curveG95Sup.value(t));
                 }
             }
 

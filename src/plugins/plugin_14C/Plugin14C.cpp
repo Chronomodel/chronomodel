@@ -26,10 +26,10 @@ Plugin14C::~Plugin14C()
 #pragma mark Likelihood
 QPair<long double, long double> Plugin14C::getLikelihoodArg(const double& t, const QJsonObject& data)
 {
-    double age = data[DATE_14C_AGE_STR].toDouble();
-    double error = data[DATE_14C_ERROR_STR].toDouble();
-    double delta_r = data[DATE_14C_DELTA_R_STR].toDouble();
-    double delta_r_error = data[DATE_14C_DELTA_R_ERROR_STR].toDouble();
+    double age = data.value(DATE_14C_AGE_STR).toDouble();
+    double error = data.value(DATE_14C_ERROR_STR).toDouble();
+    double delta_r = data.value(DATE_14C_DELTA_R_STR).toDouble();
+    double delta_r_error = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
     
     // Apply reservoir effect
     age = (age - delta_r);
@@ -91,11 +91,11 @@ QString Plugin14C::getDateDesc(const Date* date) const
     {
         QJsonObject data = date->mData;
         
-        double age = data[DATE_14C_AGE_STR].toDouble();
-        double error = data[DATE_14C_ERROR_STR].toDouble();
-        double delta_r = data[DATE_14C_DELTA_R_STR].toDouble();
-        double delta_r_error = data[DATE_14C_DELTA_R_ERROR_STR].toDouble();
-        QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString().toLower();
+        double age = data.value(DATE_14C_AGE_STR).toDouble();
+        double error = data.value(DATE_14C_ERROR_STR).toDouble();
+        double delta_r = data.value(DATE_14C_DELTA_R_STR).toDouble();
+        double delta_r_error = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
+        QString ref_curve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
         
         result += QObject::tr("Age") + " : " + locale.toString(age);
         result += " ± " + locale.toString(error);
@@ -103,7 +103,7 @@ QString Plugin14C::getDateDesc(const Date* date) const
             result += ", " + QObject::tr("ΔR") + " : " + locale.toString(delta_r);
             result += " ± " +locale.toString(delta_r_error);
         }
-        if(mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
+        if(mRefCurves.contains(ref_curve) && !mRefCurves.value(ref_curve).mDataMean.isEmpty()) {
             result += ", " + tr("Ref. curve") + " : " + ref_curve;
         }
         else {
@@ -135,8 +135,8 @@ QJsonObject Plugin14C::fromCSV(const QStringList& list, const QLocale &csvLocale
         json.insert(DATE_14C_REF_CURVE_STR, list[3].toLower());
         
         // These columns are nor mandatory in the CSV file so check if they exist :
-        json.insert(DATE_14C_DELTA_R_STR, (list.size() > 4) ? csvLocale.toDouble(list[4]) : 0);
-        json.insert(DATE_14C_DELTA_R_ERROR_STR, (list.size() > 5) ? csvLocale.toDouble(list[5]) : 0);
+        json.insert(DATE_14C_DELTA_R_STR, (list.size() > 4) ? csvLocale.toDouble(list.at(4)) : 0);
+        json.insert(DATE_14C_DELTA_R_ERROR_STR, (list.size() > 5) ? csvLocale.toDouble(list.at(5)) : 0);
 
     }
     return json;
@@ -145,11 +145,11 @@ QJsonObject Plugin14C::fromCSV(const QStringList& list, const QLocale &csvLocale
 QStringList Plugin14C::toCSV(const QJsonObject& data, const QLocale& csvLocale) const
 {
     QStringList list;
-    list << csvLocale.toString(data[DATE_14C_AGE_STR].toDouble());
-    list << csvLocale.toString(data[DATE_14C_ERROR_STR].toDouble());
-    list << data[DATE_14C_REF_CURVE_STR].toString();
-    list << csvLocale.toString(data[DATE_14C_DELTA_R_STR].toDouble());
-    list << csvLocale.toString(data[DATE_14C_DELTA_R_ERROR_STR].toDouble());
+    list << csvLocale.toString(data.value(DATE_14C_AGE_STR).toDouble());
+    list << csvLocale.toString(data.value(DATE_14C_ERROR_STR).toDouble());
+    list << data.value(DATE_14C_REF_CURVE_STR).toString();
+    list << csvLocale.toString(data.value(DATE_14C_DELTA_R_STR).toDouble());
+    list << csvLocale.toString(data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble());
     return list;
 }
 
@@ -194,11 +194,11 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
                 {
                     bool ok = true;
                     
-                    int t = 1950 - locale.toInt(values[0],&ok);
+                    int t = 1950 - locale.toInt(values.at(0),&ok);
                     if(!ok) continue;
-                    double g = locale.toDouble(values[1],&ok);
+                    double g = locale.toDouble(values.at(1),&ok);
                     if(!ok) continue;
-                    double e = locale.toDouble(values[2],&ok);
+                    double e = locale.toDouble(values.at(2),&ok);
                     if(!ok) continue;
                     
                     double gSup = g + 1.96f * e;
@@ -258,7 +258,7 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
 #pragma mark References Values & Errors
 double Plugin14C::getRefValueAt(const QJsonObject& data, const double& t)
 {
-    QString curveName = data[DATE_14C_REF_CURVE_STR].toString().toLower();
+    QString curveName = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
     return getRefCurveValueAt(curveName, t);
 }
 
@@ -272,12 +272,12 @@ QPair<double,double> Plugin14C::getTminTmaxRefsCurve(const QJsonObject& data) co
 {
     double tmin = 0;
     double tmax = 0;
-    QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString().toLower();
+    QString ref_curve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
 
     if(mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty())
     {
-       tmin = mRefCurves[ref_curve].mTmin;
-       tmax = mRefCurves[ref_curve].mTmax;
+       tmin = mRefCurves.value(ref_curve).mTmin;
+       tmax = mRefCurves.value(ref_curve).mTmax;
     }
     return qMakePair<double,double>(tmin,tmax);
 }
@@ -316,7 +316,7 @@ QJsonObject Plugin14C::checkValuesCompatibility(const QJsonObject& values)
         result[DATE_14C_DELTA_R_ERROR_STR] = 0;
     
     // Force curve name to lower case :
-    result[DATE_14C_REF_CURVE_STR] = result[DATE_14C_REF_CURVE_STR].toString().toLower();
+    result[DATE_14C_REF_CURVE_STR] = result.value(DATE_14C_REF_CURVE_STR).toString().toLower();
     
     return result;
 }
@@ -324,7 +324,7 @@ QJsonObject Plugin14C::checkValuesCompatibility(const QJsonObject& values)
 #pragma mark Date Validity
 bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
 {
-    QString ref_curve = data[DATE_14C_REF_CURVE_STR].toString().toLower();
+    QString ref_curve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
     bool valid = false;
     if(!mRefCurves.contains(ref_curve)) {
         qDebug()<<"in Plugin14C::isDateValid() unkowned curve"<<ref_curve;
@@ -333,12 +333,12 @@ bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& sett
     else {
         // controle valid solution (double)likelihood>0
         // remember likelihood type is long double
-        const RefCurve& curve = mRefCurves[ref_curve];
+        const RefCurve& curve = mRefCurves.value(ref_curve);
         valid = false;
-        double age = data[DATE_14C_AGE_STR].toDouble();
-        double error = data[DATE_14C_ERROR_STR].toDouble();
-        double delta_r = data[DATE_14C_DELTA_R_STR].toDouble();
-        double delta_r_error = data[DATE_14C_DELTA_R_ERROR_STR].toDouble();
+        double age = data.value(DATE_14C_AGE_STR).toDouble();
+        double error = data.value(DATE_14C_ERROR_STR).toDouble();
+        double delta_r = data.value(DATE_14C_DELTA_R_STR).toDouble();
+        double delta_r_error = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
 
         // Apply reservoir effect
         age = (age - delta_r);
@@ -392,9 +392,9 @@ bool Plugin14C::areDatesMergeable(const QJsonArray& dates)
     QString refCurve;
     for(int i=0; i<dates.size(); ++i)
     {
-        QJsonObject date = dates[i].toObject();
-        QJsonObject data = date[STATE_DATE_DATA].toObject();
-        QString curve = data[DATE_14C_REF_CURVE_STR].toString();
+        QJsonObject date = dates.at(i).toObject();
+        QJsonObject data = date.value(STATE_DATE_DATA).toObject();
+        QString curve = data.value(DATE_14C_REF_CURVE_STR).toString();
         
         if(refCurve.isEmpty())
             refCurve = curve;
@@ -409,14 +409,14 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
     QJsonObject result;
     if(dates.size() > 1){
         // Verify all dates have the same ref curve :
-        QJsonObject firstDate = dates[0].toObject();
-        QJsonObject firstDateData = firstDate[STATE_DATE_DATA].toObject();
-        QString firstCurve = firstDateData[DATE_14C_REF_CURVE_STR].toString();
+        QJsonObject firstDate = dates.at(0).toObject();
+        QJsonObject firstDateData = firstDate.value(STATE_DATE_DATA).toObject();
+        QString firstCurve = firstDateData.value(DATE_14C_REF_CURVE_STR).toString();
         
         for(int i=1; i<dates.size(); ++i){
-            QJsonObject date = dates[i].toObject();
-            QJsonObject dateData = date[STATE_DATE_DATA].toObject();
-            QString curve = dateData[DATE_14C_REF_CURVE_STR].toString();
+            QJsonObject date = dates.at(i).toObject();
+            QJsonObject dateData = date.value(STATE_DATE_DATA).toObject();
+            QString curve = dateData.value(DATE_14C_REF_CURVE_STR).toString();
             if(firstCurve != curve){
                 result["error"] = tr("All combined data must use the same reference curve !");
                 return result;
@@ -430,14 +430,14 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
         QStringList names;
         
         for(int i=0; i<dates.size(); ++i){
-            QJsonObject date = dates[i].toObject();
-            QJsonObject data = date[STATE_DATE_DATA].toObject();
+            QJsonObject date = dates.at(i).toObject();
+            QJsonObject data = date.value(STATE_DATE_DATA).toObject();
             
-            names.append(date[STATE_NAME].toString());
-            double a = data[DATE_14C_AGE_STR].toDouble();
-            double e = data[DATE_14C_ERROR_STR].toDouble();
-            double r = data[DATE_14C_DELTA_R_STR].toDouble();
-            double re = data[DATE_14C_DELTA_R_ERROR_STR].toDouble();
+            names.append(date.value(STATE_NAME).toString());
+            double a = data.value(DATE_14C_AGE_STR).toDouble();
+            double e = data.value(DATE_14C_ERROR_STR).toDouble();
+            double r = data.value(DATE_14C_DELTA_R_STR).toDouble();
+            double re = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
             
             // Reservoir effet
             double m = a - r;
@@ -449,10 +449,10 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
          //   sum_mi_2 += m*m;
         }
         
-        result = dates[0].toObject();
+        result = dates.at(0).toObject();
         result[STATE_NAME] = "Combined (" + names.join(" | ") + ")";
         
-        QJsonObject mergedData = result[STATE_DATE_DATA].toObject();
+        QJsonObject mergedData = result.value(STATE_DATE_DATA).toObject();
         mergedData[DATE_14C_AGE_STR] = sum_mi_vi / sum_1_vi;
         mergedData[DATE_14C_ERROR_STR] = sqrt(1 / sum_1_vi);
         mergedData[DATE_14C_DELTA_R_STR] = 0;
