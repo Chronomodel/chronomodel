@@ -28,6 +28,7 @@ QString prepareTooltipText(const QString& title, const QString& text);
 
 QString line(const QString& str);
 QString textBold(const QString& str);
+QString textBlack(const QString& str);
 QString textRed(const QString& str);
 QString textGreen(const QString& str);
 QString textBlue(const QString& str);

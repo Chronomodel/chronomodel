@@ -345,6 +345,12 @@ QString line(const QString& str)
 {
     return str + "<br>";
 }
+
+QString textBlack(const QString& str)
+{
+    return "<span style=\"color: #000000;\">" + str + "</span>";
+}
+
 QString textBold(const QString& str)
 {
     return "<b>" + str + "</b>";
@@ -355,7 +361,7 @@ QString textRed(const QString& str)
 }
 QString textGreen(const QString& str)
 {
-    return "<span style=\"color: #000000;\">" + str + "</span>";
+    return "<span style=\"color: green;\">" + str + "</span>";
 }
 QString textBlue(const QString& str)
 {
