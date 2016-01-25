@@ -1168,7 +1168,7 @@ void ResultsView::updateResultsLog()
     {
         Event* event = mModel->mEvents[i];
         //log += ModelUtilities::eventResultsText(event, true);
-        log += ModelUtilities::eventResultsHTML(event, true);
+        log += ModelUtilities::eventResultsHTML(event, true, mModel);
     }
     for(int i=0; i<mModel->mPhases.size(); ++i)
     {
