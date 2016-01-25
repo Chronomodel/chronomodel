@@ -355,14 +355,14 @@ QString MCMCLoopMain::initMCMC()
             log += "<br>";
             Date& date = event->mDates[j];
             
-            log += line(textGreen("Data (" + QString::number(j+1) + "/" + QString::number(event->mDates.size()) + ") : " + event->mDates[j].mName));
-            log += line(textGreen(" - ti (value) : " + DateUtils::convertToAppSettingsFormatStr(date.mTheta.mX)+" "+ DateUtils::getAppSettingsFormat()));
+            log += line(textBlack("Data (" + QString::number(j+1) + "/" + QString::number(event->mDates.size()) + ") : " + event->mDates[j].mName));
+            log += line(textBlack(" - ti (value) : " + DateUtils::convertToAppSettingsFormatStr(date.mTheta.mX)+" "+ DateUtils::getAppSettingsFormat()));
             if(date.mMethod == Date::eMHSymGaussAdapt){
-                log += line(textGreen(" - ti (sigma MH) : " + QString::number(date.mTheta.mSigmaMH)));
+                log += line(textBlack(" - ti (sigma MH) : " + QString::number(date.mTheta.mSigmaMH)));
             }
-            log += line(textGreen(" - sigmai (value) : " + QString::number(date.mSigma.mX)));
-            log += line(textGreen(" - sigmai (sigma MH) : " + QString::number(date.mSigma.mSigmaMH)));
-            log += line(textGreen(" - deltai (value) : " + QString::number(date.mDelta)));
+            log += line(textBlack(" - sigmai (value) : " + QString::number(date.mSigma.mX)));
+            log += line(textBlack(" - sigmai (sigma MH) : " + QString::number(date.mSigma.mSigmaMH)));
+            log += line(textBlack(" - deltai (value) : " + QString::number(date.mDelta)));
         }
     }
     
@@ -410,9 +410,9 @@ QString MCMCLoopMain::initMCMC()
 
 void MCMCLoopMain::update()
 {
-    QList<Event*>& events = mModel->mEvents;
-    QList<Phase*>& phases = mModel->mPhases;
-    QList<PhaseConstraint*>& phasesConstraints = mModel->mPhaseConstraints;
+    //QList<Event*>& events = mModel->mEvents;
+    //QList<Phase*>& phases = mModel->mPhases;
+
     
     double t_min = mModel->mSettings.mTmin;
     double t_max = mModel->mSettings.mTmax;
@@ -421,37 +421,58 @@ void MCMCLoopMain::update()
     
     bool doMemo = (mState == eBurning) || (mState == eAdapting) || (chain.mTotalIter % chain.mThinningInterval == 0);
     
-    //--------------------- Update Dates -----------------------------------------
 
-  //  int counter = 0;
-    for(int i=0; i<events.size(); ++i)
-    {
-        Event* event = events[i];
-        for(int j=0; j<event->mDates.size(); ++j)
-        {
-            Date& date = events[i]->mDates[j];
-            
-            date.updateDelta(event);
-            date.updateTheta(event);
-            date.updateSigma(event);
-            date.updateWiggle();
+    //--------------------- Update Event -----------------------------------------
+    QList<Event*>::iterator eventIter = mModel->mEvents.begin();
+
+    while(eventIter != mModel->mEvents.constEnd()) {
+        Event* event = (*eventIter);
+        QList<Date>::Iterator iterDate = event->mDates.begin();
+
+        while(iterDate != event->mDates.constEnd()) {
+             iterDate->updateDelta(event);
+             iterDate->updateTheta(event);
+             iterDate->updateSigma(event);
+             iterDate->updateWiggle();
 
             if(doMemo)
             {
-                date.mTheta.memo();
-                date.mSigma.memo();
-                date.mWiggle.memo();
-                
-                date.mTheta.saveCurrentAcceptRate();
-                date.mSigma.saveCurrentAcceptRate();
+                iterDate->mTheta.memo();
+                iterDate->mSigma.memo();
+                iterDate->mWiggle.memo();
+
+                iterDate->mTheta.saveCurrentAcceptRate();
+                iterDate->mSigma.saveCurrentAcceptRate();
             }
- //           ++counter;
+            ++iterDate;
         }
+        //--------------------- Update Events -----------------------------------------
+        event->updateTheta(t_min, t_max);
+        if(doMemo)
+        {
+           event->mTheta.memo();
+           event->mTheta.saveCurrentAcceptRate();
+        }
+
+        //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
+
+        QList<Phase*>::Iterator iterPhase = event->mPhases.begin();
+        while(iterPhase != event->mPhases.constEnd()) {
+
+            (*iterPhase)->updateAll(t_min, t_max);
+            /*if(doMemo) { No memo here
+                (*iterPhase)->memoAll();
+            }*/
+            ++iterPhase;
+        }
+
+        ++eventIter;
     }
+
 
     //--------------------- Update Events -----------------------------------------
 
-    for(int i=0; i<events.size(); ++i)
+   /* for(int i=0; i<events.size(); ++i)
     {
         Event* event = events[i];
 
@@ -462,18 +483,27 @@ void MCMCLoopMain::update()
            event->mTheta.saveCurrentAcceptRate();
         }
     }
-
+*/
     //--------------------- Update Phases -----------------------------------------
+    /*   for(int i=0; i<phases.size(); ++i)
+       {
+           phases[i]->updateAll(t_min, t_max);
+           if(doMemo)
+               phases[i]->memoAll();
+       }
+   */
 
-    for(int i=0; i<phases.size(); ++i)
-    {
-        phases[i]->updateAll(t_min, t_max);
-        if(doMemo)
-            phases[i]->memoAll();
+    //--------------------- Memo Phases -----------------------------------------
+    if(doMemo) {
+        QList<Phase*>::Iterator iterPhase = mModel->mPhases.begin();
+        while(iterPhase != mModel->mPhases.constEnd()) {
+           (*iterPhase)->memoAll();
+            ++iterPhase;
+        }
     }
 
     //--------------------- Update Phases constraints -----------------------------------------
-    
+    QList<PhaseConstraint*>& phasesConstraints = mModel->mPhaseConstraints;
     for(int i=0; i<phasesConstraints.size(); ++i)
     {
         phasesConstraints[i]->updateGamma();

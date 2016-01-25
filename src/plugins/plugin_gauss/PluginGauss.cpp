@@ -32,24 +32,42 @@ long double PluginGauss::getLikelihood(const double& t, const QJsonObject& data)
 
 QPair<long double, long double> PluginGauss::getLikelihoodArg(const double& t, const QJsonObject& data)
 {
-    double age = data[DATE_GAUSS_AGE_STR].toDouble();
-    double error = data[DATE_GAUSS_ERROR_STR].toDouble();
-    
-    bool onExtension = false;
-    QString mode = data[DATE_GAUSS_MODE_STR].toString();
+   /*  double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
+     double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
+     double refError = 0;
+     long double variance = refError * refError + error * error;
+     long double exponent = -0.5f * pow((long double)(age - t), 2.l) / variance;
+
+     QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
+     if(mode == DATE_GAUSS_MODE_CURVE) {
+        exponent = 0;
+     }
+     return qMakePair(variance, exponent);
+   // return qMakePair(variance, -0.5f * pow((long double)(age - t), 2.l) / variance);
+*/
+    const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
+    const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
+    const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
+
+    long double exponent;
+
+    double refError = getRefErrorAt(data, t, mode);
+    long double variance = refError * refError + error * error;
+
+
+
     if(mode == DATE_GAUSS_MODE_CURVE) {
-        QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString().toLower();
-        const RefCurve& curve = mRefCurves[ref_curve];
-        if(t < curve.mTmin || t > curve.mTmax) onExtension = true;
+        const QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
+        QHash<QString, RefCurve>::const_iterator curve = mRefCurves.constFind(ref_curve);
+        if(t < curve->mTmin  || t > curve->mTmax) {
+           exponent = 0;  // it means : age == refValue
+        }
+        else {
+            //double refValue = getRefValueAt(data, t);
+            double refValue = getRefCurveValueAt(ref_curve, t);
+            exponent = -0.5f * pow((long double)(age - refValue), 2.l) / variance;
+        }
       }
-   long double exponent;
-
-   double refError = getRefErrorAt(data, t);
-   long double variance = refError * refError + error * error;
-
-    if(onExtension) {
-        exponent = 0;  // it means : age == refValue
-    }
     else {
         double refValue = getRefValueAt(data, t);
         exponent = -0.5f * pow((long double)(age - refValue), 2.l) / variance;
@@ -360,9 +378,9 @@ double PluginGauss::getRefValueAt(const QJsonObject& data, const double& t)
     return v;
 }
 
-double PluginGauss::getRefErrorAt(const QJsonObject& data, const double& t)
+double PluginGauss::getRefErrorAt(const QJsonObject& data, const double& t, const QString mode)
 {
-    QString mode = data[DATE_GAUSS_MODE_STR].toString();
+    //QString mode = data[DATE_GAUSS_MODE_STR].toString();
     double e = 0;
     
     if(mode == DATE_GAUSS_MODE_CURVE)

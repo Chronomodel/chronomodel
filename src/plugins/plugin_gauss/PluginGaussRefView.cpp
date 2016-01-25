@@ -41,13 +41,13 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
     
     if(!date.isNull())
     {
-        double age = date.mData.value(DATE_GAUSS_AGE_STR).toDouble();
-        double error = date.mData.value(DATE_GAUSS_ERROR_STR).toDouble();
-        double a = date.mData.value(DATE_GAUSS_A_STR).toDouble();
-        double b = date.mData.value(DATE_GAUSS_B_STR).toDouble();
-        double c = date.mData.value(DATE_GAUSS_C_STR).toDouble();
-        QString mode = date.mData.value(DATE_GAUSS_MODE_STR).toString();
-        QString ref_curve = date.mData.value(DATE_GAUSS_CURVE_STR).toString();
+        const double age = date.mData.value(DATE_GAUSS_AGE_STR).toDouble();
+        const double error = date.mData.value(DATE_GAUSS_ERROR_STR).toDouble();
+        const double a = date.mData.value(DATE_GAUSS_A_STR).toDouble();
+        const double b = date.mData.value(DATE_GAUSS_B_STR).toDouble();
+        const double c = date.mData.value(DATE_GAUSS_C_STR).toDouble();
+        const QString mode = date.mData.value(DATE_GAUSS_MODE_STR).toString();
+        const QString ref_curve = date.mData.value(DATE_GAUSS_CURVE_STR).toString();
         
         // ----------------------------------------------
         //  Reference curve
@@ -79,7 +79,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
         {
             PluginGauss* plugin = (PluginGauss*)date.mPlugin;
             
-            const RefCurve& curve = plugin->mRefCurves[ref_curve];
+            const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
             
             if(curve.mDataMean.isEmpty())
             {
@@ -127,14 +127,14 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                 if(t > mTminRef && t < mTmaxRef)
                 {
                     double value = plugin->getRefValueAt(date.mData, t);
-                    double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
+                    double error = plugin->getRefErrorAt(date.mData, t, mode) * 1.96;
 
                     curveG[t] = value;
                     curveG95Sup[t] = value + error;
                     curveG95Inf[t] = value - error;
 
-                    yMin = qMin(yMin, curveG95Inf[t]);
-                    yMax = qMax(yMax, curveG95Sup[t]);
+                    yMin = qMin(yMin, curveG95Inf.at(t));
+                    yMax = qMax(yMax, curveG95Sup.at(t));
                 }
             }
 

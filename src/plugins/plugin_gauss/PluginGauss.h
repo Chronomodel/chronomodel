@@ -59,7 +59,7 @@ public:
     RefCurve loadRefFile(QFileInfo refFile);
     
     double getRefValueAt(const QJsonObject& data, const double& t);
-    double getRefErrorAt(const QJsonObject& data, const double& t);
+    double getRefErrorAt(const QJsonObject& data, const double& t, const QString mode);
     
     QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
 
