@@ -108,6 +108,10 @@ QJsonObject MainWindow::getState()
 {
     return mProject->mState;
 }
+QString MainWindow::getNameProject()
+{
+    return mProject->mName;
+}
 
 AppSettings MainWindow::getAppSettings() const
 {

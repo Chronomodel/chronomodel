@@ -354,6 +354,7 @@ bool Project::load(const QString& path)
         
         mProjectFileDir = info.absolutePath();
         mProjectFileName = info.fileName();
+        mName = info.fileName();
        qDebug() << "in Project::load  begin readAll";
         QByteArray saveData = file.readAll();
        qDebug() << "in Project::load  end readAll";

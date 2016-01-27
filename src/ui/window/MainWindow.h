@@ -40,6 +40,7 @@ public:
     void setRunEnabled(bool enabled);
     void setLogEnabled(bool enabled);
     void setResultsEnabled(bool enabled);
+    QString getNameProject();
 
 protected:
     void closeEvent(QCloseEvent* e) Q_DECL_OVERRIDE;
