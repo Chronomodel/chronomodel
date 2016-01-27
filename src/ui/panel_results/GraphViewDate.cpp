@@ -179,7 +179,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 //  Post Distrib All Chains
                 GraphCurve curvePostDistrib = generateDensityCurve(variableDate->fullHisto(),
                                                                    "Post Distrib All Chains",
-                                                                   mColor,
+                                                                   color,
                                                                    Qt::SolidLine,
                                                                    Qt::NoBrush);
                 mGraph->addCurve(curvePostDistrib);
