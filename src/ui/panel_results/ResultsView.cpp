@@ -984,7 +984,7 @@ void ResultsView::generateCurves()
             if(graphDate) {
                GraphCurve* graphDuration = graphDate->mGraph->getCurve("Post Distrib All Chains");
                if(graphDuration) {
-                   mResultMaxVariance = qMax(mResultMaxVariance, graphDuration->mData.lastKey());
+                   mResultMaxVariance = ceil(qMax(mResultMaxVariance, graphDuration->mData.lastKey()));
                }
             }
             ++constIter;
