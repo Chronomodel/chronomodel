@@ -27,10 +27,10 @@ public:
     
     QString getMCMCLog() const;
     
-    QList<QStringList> getStats(const QLocale locale);
-    QList<QStringList> getPhasesTraces(QLocale locale);
-    QList<QStringList> getPhaseTrace(int phaseIdx, const QLocale locale);
-    QList<QStringList> getEventsTraces(const QLocale locale);
+    QList<QStringList> getStats(const QLocale locale, const bool withDateFormat = false);
+    QList<QStringList> getPhasesTraces(QLocale locale, const bool withDateFormat = false);
+    QList<QStringList> getPhaseTrace(int phaseIdx, const QLocale locale, const bool withDateFormat = false);
+    QList<QStringList> getEventsTraces(const QLocale locale, const bool withDateFormat = false);
     
     virtual ~Model();
 

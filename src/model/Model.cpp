@@ -544,7 +544,7 @@ void Model::generateResultsLog()
 }
 
 #pragma mark Results CSV
-QList<QStringList> Model::getStats(const QLocale locale)
+QList<QStringList> Model::getStats(const QLocale locale, const bool withDateFormat)
 {
     QList<QStringList> rows;
     
@@ -607,7 +607,7 @@ QList<QStringList> Model::getStats(const QLocale locale)
     return rows;
 }
     
-QList<QStringList> Model::getPhasesTraces(const QLocale locale)
+QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withDateFormat)
 {
     QList<QStringList> rows;
     
@@ -637,8 +637,17 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale)
             for(int k=0; k<mPhases.size(); ++k)
             {
                 Phase* phase = mPhases.at(k);
-                l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mAlpha.mTrace.at(shift + j)));
-                l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mBeta.mTrace.at(shift + j)));
+                //l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mAlpha.mTrace.at(shift + j)));
+                //l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mBeta.mTrace.at(shift + j)));
+
+                double valueAlpha = phase->mAlpha.mTrace.at(shift + j);
+                if(withDateFormat) valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
+                l << locale.toString(valueAlpha);
+
+                double valueBeta = phase->mBeta.mTrace.at(shift + j);
+                if(withDateFormat) valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
+                l << locale.toString(valueBeta);
+
             }
             rows << l;
         }
@@ -647,7 +656,7 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale)
     return rows;
 }
 
-QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale)
+QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, const bool withDateFormat)
 {
     QList<QStringList> rows;
     
@@ -682,13 +691,23 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale)
         {
             QStringList l;
             l << QString::number(shift + j) << "";
-            l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mAlpha.mTrace.at(shift + j)));
-            l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mBeta.mTrace.at(shift + j)));
+            double valueAlpha = phase->mAlpha.mTrace.at(shift + j);
+            if(withDateFormat) valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
+            l << locale.toString(valueAlpha);
+            //l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mAlpha.mTrace.at(shift + j)));
+
+            double valueBeta = phase->mBeta.mTrace.at(shift + j);
+            if(withDateFormat) valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
+            l << locale.toString(valueBeta);
+            //l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mBeta.mTrace.at(shift + j)));
             l << "";
             for(int k=0; k<phase->mEvents.size(); ++k)
             {
                 Event* event = phase->mEvents.at(k);
-                l << locale.toString(DateUtils::convertToAppSettingsFormat(event->mTheta.mTrace.at(shift + j)));
+                double value = event->mTheta.mTrace.at(shift + j);
+                if(withDateFormat) value = DateUtils::convertToAppSettingsFormat(value);
+                l << locale.toString(value);
+                //l << locale.toString(DateUtils::convertToAppSettingsFormat(event->mTheta.mTrace.at(shift + j)));
             }
             rows << l;
         }
@@ -697,7 +716,7 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale)
     return rows;
 }
 
-QList<QStringList> Model::getEventsTraces(QLocale locale)
+QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateFormat)
 {
     QList<QStringList> rows;
     
@@ -729,7 +748,9 @@ QList<QStringList> Model::getEventsTraces(QLocale locale)
             for(int k=0; k<mEvents.size(); ++k)
             {
                 Event* event = mEvents.at(k);
-                l << locale.toString(DateUtils::convertToAppSettingsFormat(event->mTheta.mTrace.at(shift + j)));
+                double value = event->mTheta.mTrace.at(shift + j);
+                if(withDateFormat) value = DateUtils::convertToAppSettingsFormat(value);
+                l << locale.toString(value);
             }
             rows << l;
         }

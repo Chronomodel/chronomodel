@@ -430,8 +430,8 @@ bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QS
         output<<"# " +version+"\n";
         QString projectName = MainWindow::getInstance()->getNameProject();
 
-        output<<"# " +projectName+"\n";
-        output<<"# Date Format : "+ DateUtils::getAppSettingsFormat()+"\n";
+        output<<"# " +projectName+ "\n";
+        output<<"# Date Format : BC/AD";//+ DateUtils::getAppSettingsFormat()+"\n";
         for(int i=0; i<data.size(); ++i)
         {
             output << data.at(i).join(csvSep);
