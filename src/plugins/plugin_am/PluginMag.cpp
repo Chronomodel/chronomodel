@@ -168,13 +168,17 @@ QJsonObject PluginMag::fromCSV(const QStringList& list,const QLocale &csvLocale)
     QJsonObject json;
     if(list.size() >= csvMinColumns())
     {
+        double error = csvLocale.toDouble(list.at(5));
+        if(error == 0) return json;
+
         json.insert(DATE_AM_IS_INC_STR, list.at(1) == "inclination");
         json.insert(DATE_AM_IS_DEC_STR, list.at(1) == "declination");
         json.insert(DATE_AM_IS_INT_STR, list.at(1) == "intensity");
         json.insert(DATE_AM_INC_STR, csvLocale.toDouble(list.at(2)));
         json.insert(DATE_AM_DEC_STR, csvLocale.toDouble(list.at(3)));
         json.insert(DATE_AM_INTENSITY_STR, csvLocale.toDouble(list.at(4)));
-        json.insert(DATE_AM_ERROR_STR, csvLocale.toDouble(list.at(5)));
+
+        json.insert(DATE_AM_ERROR_STR, error);
         json.insert(DATE_AM_REF_CURVE_STR, list.at(6).toLower());
     }
     return json;
@@ -183,7 +187,7 @@ QJsonObject PluginMag::fromCSV(const QStringList& list,const QLocale &csvLocale)
 QStringList PluginMag::toCSV(const QJsonObject& data, const QLocale& csvLocale) const
 {
     QStringList list;
-    list << (data[DATE_AM_IS_INC_STR].toBool() ? "inclination" : (data.value(DATE_AM_IS_DEC_STR).toBool() ? "declination" : "intensity"));
+    list << (data.value(DATE_AM_IS_INC_STR).toBool() ? "inclination" : (data.value(DATE_AM_IS_DEC_STR).toBool() ? "declination" : "intensity"));
     list << csvLocale.toString(data.value(DATE_AM_INC_STR).toDouble());
     list << csvLocale.toString(data.value(DATE_AM_DEC_STR).toDouble());
     list << csvLocale.toString(data.value(DATE_AM_INTENSITY_STR).toDouble());

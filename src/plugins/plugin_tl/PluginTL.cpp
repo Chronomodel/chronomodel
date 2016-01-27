@@ -91,7 +91,9 @@ QJsonObject PluginTL::fromCSV(const QStringList& list, const QLocale& csvLocale)
     if(list.size() >= csvMinColumns())
     {
         json.insert(DATE_TL_AGE_STR, csvLocale.toDouble(list.at(1)));
-        json.insert(DATE_TL_ERROR_STR, csvLocale.toDouble(list.at(2)));
+        double error = csvLocale.toDouble(list.at(2));
+        if(error == 0) return QJsonObject();
+        json.insert(DATE_TL_ERROR_STR, error);
         json.insert(DATE_TL_REF_YEAR_STR, csvLocale.toDouble(list.at(3)));
     }
     return json;

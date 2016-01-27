@@ -130,9 +130,12 @@ QJsonObject Plugin14C::fromCSV(const QStringList& list, const QLocale &csvLocale
     QJsonObject json;
     if(list.size() >= csvMinColumns())
     {
-        json.insert(DATE_14C_AGE_STR, csvLocale.toDouble(list[1]));
-        json.insert(DATE_14C_ERROR_STR, csvLocale.toDouble(list[2]));
-        json.insert(DATE_14C_REF_CURVE_STR, list[3].toLower());
+        double error = csvLocale.toDouble(list.at(2));
+        if(error == 0) return json;
+
+        json.insert(DATE_14C_AGE_STR, csvLocale.toDouble(list.at(1)));
+        json.insert(DATE_14C_ERROR_STR, error);
+        json.insert(DATE_14C_REF_CURVE_STR, list.at(3).toLower());
         
         // These columns are nor mandatory in the CSV file so check if they exist :
         json.insert(DATE_14C_DELTA_R_STR, (list.size() > 4) ? csvLocale.toDouble(list.at(4)) : 0);

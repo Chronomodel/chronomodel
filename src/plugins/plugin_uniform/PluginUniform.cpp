@@ -73,8 +73,11 @@ QJsonObject PluginUniform::fromCSV(const QStringList& list, const QLocale& csvLo
     QJsonObject json;
     if(list.size() >= csvMinColumns())
     {
-        json.insert(DATE_UNIFORM_MIN_STR, csvLocale.toDouble(list.at(1)));
-        json.insert(DATE_UNIFORM_MAX_STR, csvLocale.toDouble(list.at(2)));
+        double tmin = csvLocale.toDouble(list.at(1));
+        double tmax = csvLocale.toDouble(list.at(2));
+        if(tmin >= tmax) return QJsonObject();
+        json.insert(DATE_UNIFORM_MIN_STR, tmin);
+        json.insert(DATE_UNIFORM_MAX_STR, tmax);
     }
     return json;
 }
