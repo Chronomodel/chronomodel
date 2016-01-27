@@ -85,7 +85,7 @@ QDialog(parent, flags)
     mImageQuality->setSingleStep(1);
     mImageQuality->setStyleSheet("QLineEdit { border-radius: 5px; }");
     
-    mFormatDateLab = new QLabel(tr("Graph display date format") + " : ", this);
+    mFormatDateLab = new QLabel(tr("Date format") + " : ", this);
     mFormatDateLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mFormatDate = new QComboBox(this);
     for(int i=0; i<3; ++i){
