@@ -16,8 +16,8 @@ mDeleteRequested(false)
     
     // -----------
     
-    mTypeLab = new Label(tr("Hiatus") + " :", this);
-    mFixedLab = new Label(tr("Min hiatus") + " :", this);
+    mTypeLab = new Label(tr("Min hiatus") + " :", this);
+    mFixedLab = new Label(tr("Min value") + " :", this);
     //mMinLab = new Label(tr("Lower hiatus min") + " :", this);
     //mMaxLab = new Label(tr("Upper hiatus min") + " :", this);
     
@@ -171,7 +171,7 @@ void ConstraintDialog::resizeEvent(QResizeEvent* e)
     Q_UNUSED(e);
     
     int m = 5;
-    int w1 = 100;
+    int w1 = 90;
     int w2 = width() - w1 - 3*m;
     int lineH = 20;
     int butW = 80;

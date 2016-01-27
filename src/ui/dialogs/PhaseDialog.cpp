@@ -24,8 +24,8 @@ mButW(80)
     
     mNameLab = new Label(tr("Phase name") + " :", this);
     mColorLab = new Label(tr("Phase color") + " :", this);
-    mTauTypeLab = new Label(tr("Duration") + " :", this);
-    mTauFixedLab = new Label(tr("Max duration") + " :", this);
+    mTauTypeLab = new Label(tr("Max duration") + " :", this);
+    mTauFixedLab = new Label(tr("Max duration value") + " :", this);
     //mTauMinLab = new Label(tr("Lower date") + " :", this);
     //mTauMaxLab = new Label(tr("Upper date") + " :", this);
     
@@ -176,7 +176,7 @@ void PhaseDialog::resizeEvent(QResizeEvent* event)
 {
     Q_UNUSED(event);
     
-    int w1 = 100;
+    int w1 = 105;
     int w2 = width() - w1 - 3*mMargin;
     
     mNameLab->setGeometry(mMargin, mMargin, w1, mLineH);
