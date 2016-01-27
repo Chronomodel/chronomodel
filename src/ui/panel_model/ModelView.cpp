@@ -116,7 +116,8 @@ mCalibVisible(false)
     // -------- Windows Data Importation --------------------
     
     mImportDataView = new ImportDataView(mRightWrapper);
-    connect(mEventsScene, SIGNAL(csvDataLineDropAccepted(QList<int>)), mImportDataView, SLOT(removeCsvRows(QList<int>)));
+    connect(mEventsScene, &EventsScene::csvDataLineDropAccepted, mImportDataView, &ImportDataView::removeCsvRows);
+    connect(mEventsScene, &EventsScene::csvDataLineDropRejected, mImportDataView, &ImportDataView::errorCsvRows);
     
     
     

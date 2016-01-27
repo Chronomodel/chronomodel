@@ -39,6 +39,7 @@ public:
     
 public slots:
     void removeCsvRows(QList<int> rows);
+    void errorCsvRows(QList<int> rows);
     
 private slots:
     void browse();

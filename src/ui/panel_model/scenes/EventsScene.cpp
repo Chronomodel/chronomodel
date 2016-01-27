@@ -884,8 +884,9 @@ QList<Date> EventsScene::decodeDataDrop(QGraphicsSceneDragDropEvent* e)
     QByteArray encodedData = mimeData->data("application/chronomodel.import.data");
     QDataStream stream(&encodedData, QIODevice::ReadOnly);
     
-    QList<QStringList> failed;
+   // QList<QStringList> failed;
     QList<int> acceptedRows;
+    QList<int> rejectedRows;
     QList<Date> dates;
 
     while(!stream.atEnd())
@@ -909,10 +910,12 @@ QList<Date> EventsScene::decodeDataDrop(QGraphicsSceneDragDropEvent* e)
         }
         else
         {
-            failed.append(dataStr);
+            //failed.append(dataStr);
+            rejectedRows.append(csvRow);
         }
     }
     emit csvDataLineDropAccepted(acceptedRows); //connected to slot ImportDataView::removeCsvRows
+    emit csvDataLineDropRejected(rejectedRows);
 
     return dates;
 }

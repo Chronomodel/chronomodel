@@ -63,6 +63,7 @@ protected:
     
 signals:
     void csvDataLineDropAccepted(QList<int> rows);
+    void csvDataLineDropRejected(QList<int> rows);
     void eventDoubleClicked();
     
 private:

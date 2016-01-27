@@ -236,10 +236,24 @@ void ImportDataView::removeCsvRows(QList<int> rows)
         
         for(int c=0; c<mTable->columnCount(); ++c)
         {
-            QTableWidgetItem* item = mTable->item(rows[i], c);
+            QTableWidgetItem* item = mTable->item(rows.at(i), c);
             if(item)
                 item->setBackgroundColor(QColor(100, 200, 100));
             
+        }
+    }
+}
+
+void ImportDataView::errorCsvRows(QList<int> rows)
+{
+    sortIntList(rows);
+    for(int i=rows.size()-1; i>=0; --i)
+    {
+        for(int c=0; c<mTable->columnCount(); ++c)
+        {
+            QTableWidgetItem* item = mTable->item(rows.at(i), c);
+            if(item)
+                item->setBackgroundColor(QColor(220, 110, 94));
         }
     }
 }
