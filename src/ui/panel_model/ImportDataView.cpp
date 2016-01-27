@@ -178,8 +178,6 @@ void ImportDataView::exportDates()
         QLocale csvLocal = MainWindow::getInstance()->getAppSettings().mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
         csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
 
-
-
         QFile file(path);
         if(file.open(QIODevice::WriteOnly | QIODevice::Text))
         {
@@ -356,7 +354,6 @@ void ImportDataTable::updateTableHeaders()
     
     if(!pluginName.isEmpty() && (pluginName!="Title")  && (pluginName!="Structure"))
     {
-        //qDebug() << pluginName;
         PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
         
         headers = plugin->csvColumns();
