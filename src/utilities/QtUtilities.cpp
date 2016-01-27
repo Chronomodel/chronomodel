@@ -383,17 +383,17 @@ bool constraintIsCircular(QJsonArray constraints, const int fromId, const int to
 {    
     for(int i=0; i<constraints.size(); ++i)
     {
-        QJsonObject constraint = constraints[i].toObject();
+        QJsonObject constraint = constraints.at(i).toObject();
         
         // Detect circularity
-        if(constraint[STATE_CONSTRAINT_BWD_ID].toInt() == toId && constraint[STATE_CONSTRAINT_FWD_ID].toInt() == fromId)
+        if(constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == toId && constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == fromId)
         {
             return true;
         }
         // If the constraint follows the one we are trying to create,
         // follow it to check the circularity !
-        else if(constraint[STATE_CONSTRAINT_BWD_ID].toInt() == toId){
-            int nextToId =  constraint[STATE_CONSTRAINT_FWD_ID].toInt();
+        else if(constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == toId){
+            int nextToId =  constraint.value(STATE_CONSTRAINT_FWD_ID).toInt();
             if(constraintIsCircular(constraints, fromId, nextToId))
             {
                 return true;
@@ -407,8 +407,6 @@ bool constraintIsCircular(QJsonArray constraints, const int fromId, const int to
  */
 QString formatValueToAppSettingsPrecision(const double valueToFormat)
 {
-    //const AppSettings& s = MainWindow::getInstance()->getAppSettings();
-    //int precision=3;
     int precision = MainWindow::getInstance()->getAppSettings().mPrecision;
     char fmt = 'f';
     if (std::fabs(valueToFormat)>250000){
@@ -428,9 +426,15 @@ bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QS
     if(file.open(QFile::WriteOnly | QFile::Truncate))
     {
         QTextStream output(&file);
+        QString version = qApp->applicationName() + " " + qApp->applicationVersion();
+        output<<"# " +version+"\n";
+        QString projectName = MainWindow::getInstance()->getNameProject();
+
+        output<<"# " +projectName+"\n";
+        output<<"# Date Format : "+ DateUtils::getAppSettingsFormat()+"\n";
         for(int i=0; i<data.size(); ++i)
         {
-            output << data[i].join(csvSep);
+            output << data.at(i).join(csvSep);
             output << "\n";
         }
         file.close();
@@ -445,7 +449,7 @@ bool saveAsCsv(const QList<QStringList>& data, const QString& title)
     QString csvSep = settings.mCSVCellSeparator;
     
     QString currentPath = MainWindow::getInstance()->getCurrentPath();
-    QString filter = QObject::tr("CSV (*.csv)");
+    QString filter = "CSV (*.csv)";
     QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                     title,
                                                     currentPath,
