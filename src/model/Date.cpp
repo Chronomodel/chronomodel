@@ -638,7 +638,7 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
     PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
     if(plugin) {
         QStringList dataTmp = dataStr.mid(1,dataStr.size()-1);
-        date.mName = dataTmp[0];
+        date.mName = dataTmp.at(0);
         date.mPlugin = plugin;
         date.mMethod = plugin->getDataMethod();
         date.mData = plugin->fromCSV(dataTmp, csvLocale);
@@ -646,11 +646,11 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
         if(plugin->wiggleAllowed()) {
             int firstColNum = plugin->csvMinColumns() + plugin->csvOptionalColumns();
             if(dataTmp.size() >= firstColNum + 2) {
-                QString deltaType = dataTmp[firstColNum];
-                QString delta1 = dataTmp[firstColNum + 1];
+                QString deltaType = dataTmp.at(firstColNum);
+                QString delta1 = dataTmp.at(firstColNum + 1);
                 QString delta2 = "0";
                 if(dataTmp.size() >= firstColNum + 3) {
-                    delta2 = dataTmp[firstColNum + 2];
+                    delta2 = dataTmp.at(firstColNum + 2);
                 }
                 if(!isComment(deltaType) && !isComment(delta1) && !isComment(delta2))
                 {

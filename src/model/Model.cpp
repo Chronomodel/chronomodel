@@ -530,13 +530,13 @@ void Model::generateResultsLog()
     QString log;
     for(int i=0; i<mEvents.size(); ++i)
     {
-        Event* event = mEvents[i];
+        Event* event = mEvents.at(i);
         log += ModelUtilities::eventResultsHTML(event, true, this);
         log += "<hr>";
     }
     for(int i=0; i<mPhases.size(); ++i)
     {
-        Phase* phase = mPhases[i];
+        Phase* phase = mPhases.at(i);
         log += ModelUtilities::phaseResultsHTML(phase);
         log += "<hr>";
     }
@@ -553,7 +553,7 @@ QList<QStringList> Model::getStats(const QLocale locale)
     // Phases
     for(int i=0; i<mPhases.size(); ++i)
     {
-        Phase* phase = mPhases[i];
+        Phase* phase = mPhases.at(i);
         
         QStringList l = phase->mAlpha.getResultsList(locale);
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
@@ -570,7 +570,7 @@ QList<QStringList> Model::getStats(const QLocale locale)
     rows << QStringList();
     for(int i=0; i<mEvents.size(); ++i)
     {
-        Event* event = mEvents[i];
+        Event* event = mEvents.at(i);
         
         QStringList l = event->mTheta.getResultsList(locale);
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
@@ -582,7 +582,7 @@ QList<QStringList> Model::getStats(const QLocale locale)
     rows << QStringList();
     for(int i=0; i<mEvents.size(); ++i)
     {
-        Event* event = mEvents[i];
+        Event* event = mEvents.at(i);
         for(int j=0; j<event->mDates.size(); ++j)
         {
             Date& date = event->mDates[j];
@@ -613,22 +613,22 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale)
     
     int runSize = 0;
     for(int i=0; i<mChains.size(); ++i){
-        runSize += mChains[i].mNumRunIter / mChains[i].mThinningInterval;
+        runSize += mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
     }
     
     QStringList headers;
-    headers << "";
+    headers << "iter";
     for(int j=0; j<mPhases.size(); ++j)
     {
-        headers << mPhases[j]->mName + " alpha" << mPhases[j]->mName + " beta";
+        headers << mPhases.at(j)->mName + " alpha" << mPhases.at(j)->mName + " beta";
     }
     rows << headers;
     
     unsigned long shift = 0;
     for(int i=0; i<mChains.size(); ++i)
     {
-        unsigned long burnAdaptSize = mChains[i].mNumBurnIter + (mChains[i].mBatchIndex * mChains[i].mNumBatchIter);
-        unsigned long runSize = mChains[i].mNumRunIter / mChains[i].mThinningInterval;
+        unsigned long burnAdaptSize = mChains.at(i).mNumBurnIter + (mChains.at(i).mBatchIndex * mChains.at(i).mNumBatchIter);
+        unsigned long runSize = mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
         
         for(unsigned long j=burnAdaptSize; j<burnAdaptSize + runSize; ++j)
         {
@@ -636,7 +636,7 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale)
             l << QString::number(shift + j);
             for(int k=0; k<mPhases.size(); ++k)
             {
-                Phase* phase = mPhases[k];                
+                Phase* phase = mPhases.at(k);
                 l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mAlpha.mTrace.at(shift + j)));
                 l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mBeta.mTrace.at(shift + j)));
             }
@@ -653,21 +653,21 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale)
     
     Phase* phase = 0;
     if(phaseIdx >= 0 && phaseIdx < mPhases.size()){
-        phase = mPhases[phaseIdx];
+        phase = mPhases.value(phaseIdx);
     }else{
         return QList<QStringList>();
     }
     
     int runSize = 0;
     for(int i=0; i<mChains.size(); ++i){
-        runSize += mChains[i].mNumRunIter / mChains[i].mThinningInterval;
+        runSize += mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
     }
     
     QStringList headers;
-    headers << "" << "" << phase->mName + " alpha" << phase->mName + " beta" << "";
+    headers << "iter" << "" << phase->mName + " alpha" << phase->mName + " beta" << "";
     for(int i=0; i<phase->mEvents.size(); ++i)
     {
-        Event* event = phase->mEvents[i];
+        Event* event = phase->mEvents.at(i);
         headers << event->mName;
     }
     rows << headers;
@@ -675,8 +675,8 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale)
     int shift = 0;
     for(int i=0; i<mChains.size(); ++i)
     {
-        unsigned long burnAdaptSize = mChains[i].mNumBurnIter + (mChains[i].mBatchIndex * mChains[i].mNumBatchIter);
-        unsigned long runSize = mChains[i].mNumRunIter / mChains[i].mThinningInterval;
+        unsigned long burnAdaptSize = mChains.at(i).mNumBurnIter + (mChains.at(i).mBatchIndex * mChains.at(i).mNumBatchIter);
+        unsigned long runSize = mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
         
         for(unsigned long j=burnAdaptSize; j<burnAdaptSize + runSize; ++j)
         {
@@ -687,7 +687,7 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale)
             l << "";
             for(int k=0; k<phase->mEvents.size(); ++k)
             {
-                Event* event = phase->mEvents[k];
+                Event* event = phase->mEvents.at(k);
                 l << locale.toString(DateUtils::convertToAppSettingsFormat(event->mTheta.mTrace.at(shift + j)));
             }
             rows << l;
@@ -704,14 +704,14 @@ QList<QStringList> Model::getEventsTraces(QLocale locale)
     
     int runSize = 0;
     for(int i=0; i<mChains.size(); ++i){
-        runSize += mChains[i].mNumRunIter / mChains[i].mThinningInterval;
+        runSize += mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
     }
     
     QStringList headers;
-    headers << "";
+    headers << "iter";
     for(int i=0; i<mEvents.size(); ++i)
     {
-        Event* event = mEvents[i];
+        Event* event = mEvents.at(i);
         headers << event->mName;
     }
     rows << headers;
@@ -719,16 +719,16 @@ QList<QStringList> Model::getEventsTraces(QLocale locale)
     unsigned long shift = 0;
     for(int i=0; i<mChains.size(); ++i)
     {
-        unsigned long burnAdaptSize = mChains[i].mNumBurnIter + (mChains[i].mBatchIndex * mChains[i].mNumBatchIter);
-        unsigned long runSize = mChains[i].mNumRunIter / mChains[i].mThinningInterval;
+        unsigned long burnAdaptSize = mChains.at(i).mNumBurnIter + (mChains.at(i).mBatchIndex * mChains.at(i).mNumBatchIter);
+        unsigned long runSize = mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
         
         for(unsigned long j=burnAdaptSize; j<burnAdaptSize + runSize; ++j)
         {
             QStringList l;
-            l << QString::number(shift + j) ;//<< "";
+            l << QString::number(shift + j) ;
             for(int k=0; k<mEvents.size(); ++k)
             {
-                Event* event = mEvents[k];
+                Event* event = mEvents.at(k);
                 l << locale.toString(DateUtils::convertToAppSettingsFormat(event->mTheta.mTrace.at(shift + j)));
             }
             rows << l;
@@ -748,18 +748,18 @@ bool Model::isValid()
     // 2 - The event must contain at least 1 data
     for(int i=0; i<mEvents.size(); ++i)
     {
-        if(mEvents[i]->type() == Event::eDefault)
+        if(mEvents.at(i)->type() == Event::eDefault)
         {
-            if(mEvents[i]->mDates.size() == 0)
-                throw tr(" The event") + " \"" + mEvents[i]->mName + "\" " + tr("must contain at least 1 data");
+            if(mEvents.at(i)->mDates.size() == 0)
+                throw tr(" The event") + " \"" + mEvents.at(i)->mName + "\" " + tr("must contain at least 1 data");
         }
     }
     
     // 3 - The phase must contain at least 1 event
     for(int i=0; i<mPhases.size(); ++i)
     {
-        if(mPhases[i]->mEvents.size() == 0)
-            throw tr("The phase") + " \"" + mPhases[i]->mName + "\" " + tr("must contain at least 1 event");
+        if(mPhases.at(i)->mEvents.size() == 0)
+            throw tr("The phase") + " \"" + mPhases.at(i)->mName + "\" " + tr("must contain at least 1 event");
     }
     
     // 4 - Pas de circularité sur les contraintes de faits
@@ -783,18 +783,18 @@ bool Model::isValid()
     for(int i=0; i<phaseBranches.size(); ++i)
     {
         QVector<Event*> branchEvents;
-        for(int j=0; j<phaseBranches[i].size(); ++j)
+        for(int j=0; j<phaseBranches.at(i).size(); ++j)
         {
             Phase* phase = phaseBranches[i][j];
             for(int k=0; k<phase->mEvents.size(); ++k)
             {
-                if(!branchEvents.contains(phase->mEvents[k]))
+                if(!branchEvents.contains(phase->mEvents.at(k)))
                 {
-                    branchEvents.append(phase->mEvents[k]);
+                    branchEvents.append(phase->mEvents.at(k));
                     //qDebug() << phase->mEvents[k]->mName << " in " << phase->mName;
                 }
                 else
-                    throw QString("The event \"" + phase->mEvents[k]->mName + "\" cannot belong to several phases in a same branch!");
+                    throw QString("The event \"" + phase->mEvents.at(k)->mName + "\" cannot belong to several phases in a same branch!");
             }
         }
     }
@@ -843,7 +843,7 @@ bool Model::isValid()
                 // Check bound interval upper value
                 // --------------------
                 double upper = mSettings.mTmax;
-                for(int k=j+1; k<eventBranches[i].size(); ++k)
+                for(int k=j+1; k<eventBranches.at(i).size(); ++k)
                 {
                     Event* evt = eventBranches[i][k];
                     if(evt->mType == Event::eKnown)
