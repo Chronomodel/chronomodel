@@ -673,7 +673,7 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
     }
     
     QStringList headers;
-    headers << "iter" << "" << phase->mName + " alpha" << phase->mName + " beta" << "";
+    headers << "iter" << phase->mName + " alpha" << phase->mName + " beta";
     for(int i=0; i<phase->mEvents.size(); ++i)
     {
         Event* event = phase->mEvents.at(i);
@@ -690,7 +690,7 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
         for(unsigned long j=burnAdaptSize; j<burnAdaptSize + runSize; ++j)
         {
             QStringList l;
-            l << QString::number(shift + j) << "";
+            l << QString::number(shift + j) ;
             double valueAlpha = phase->mAlpha.mTrace.at(shift + j);
             if(withDateFormat) valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
             l << locale.toString(valueAlpha);
@@ -700,7 +700,7 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
             if(withDateFormat) valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
             l << locale.toString(valueBeta);
             //l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mBeta.mTrace.at(shift + j)));
-            l << "";
+            //l << "";
             for(int k=0; k<phase->mEvents.size(); ++k)
             {
                 Event* event = phase->mEvents.at(k);
