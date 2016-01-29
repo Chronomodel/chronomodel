@@ -1457,21 +1457,21 @@ void ResultsView::exportResults()
             }
             dir.mkpath(".");
             
-            QList<QStringList> stats = mModel->getStats(csvLocal);
-            saveCsvTo(stats, dirPath + "/stats.csv", csvSep);
+            QList<QStringList> stats = mModel->getStats(csvLocal, true);
+            saveCsvTo(stats, dirPath + "/stats.csv", csvSep, true);
             
             if(mModel->mPhases.size() > 0){
-                QList<QStringList> phasesTraces = mModel->getPhasesTraces(csvLocal);
-                saveCsvTo(phasesTraces, dirPath + "/phases.csv", csvSep);
+                QList<QStringList> phasesTraces = mModel->getPhasesTraces(csvLocal, false);
+                saveCsvTo(phasesTraces, dirPath + "/phases.csv", csvSep, false);
                 
                 for(int i=0; i<mModel->mPhases.size(); ++i){
-                    QList<QStringList> phaseTrace = mModel->getPhaseTrace(i,csvLocal);
+                    QList<QStringList> phaseTrace = mModel->getPhaseTrace(i,csvLocal, false);
                     QString name = mModel->mPhases[i]->mName.toLower().simplified().replace(" ", "_");
-                    saveCsvTo(phaseTrace, dirPath + "/phase_" + name + ".csv", csvSep);
+                    saveCsvTo(phaseTrace, dirPath + "/phase_" + name + ".csv", csvSep, false);
                 }
             }
-            QList<QStringList> eventsTraces = mModel->getEventsTraces(csvLocal);
-            saveCsvTo(eventsTraces, dirPath + "/events.csv", csvSep);
+            QList<QStringList> eventsTraces = mModel->getEventsTraces(csvLocal, false);
+            saveCsvTo(eventsTraces, dirPath + "/events.csv", csvSep, false);
         }
     }
 }

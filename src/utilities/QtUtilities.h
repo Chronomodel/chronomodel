@@ -40,7 +40,7 @@ bool constraintIsCircular( QJsonArray constraints, const int FromId, const int T
 
 QString formatValueToAppSettingsPrecision(const double valueToFormat);
 
-bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep);
+bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep, const bool withDateFormat = false);
 bool saveAsCsv(const QList<QStringList>& data, const QString& title = QObject::tr("Save as..."));
 
 /**
