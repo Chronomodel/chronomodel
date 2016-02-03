@@ -33,8 +33,8 @@ mXAxisMode(eAllTicks),
 mYAxisMode(eAllTicks),
 mRendering(eSD),
 mAutoAdjustYScale(false),
-mFormatFuncX(0),
-mFormatFuncY(0),
+//mFormatFuncX(0),
+//mFormatFuncY(0),
 mShowInfos(false),
 mBackgroundColor(Qt::white),
 mThickness(1),
@@ -87,7 +87,7 @@ void GraphView::zoomX(const double min, const double max)
             double yMin =  100000000;
             for(int curveIndex=0; curveIndex<mCurves.size(); ++curveIndex)
             {
-                const GraphCurve& curve = mCurves[curveIndex];
+                const GraphCurve& curve = mCurves.at(curveIndex);
                 if(curve.mIsHorizontalLine)
                 {
                     yMax = qMax(yMax, curve.mHorizontalValue);
@@ -246,16 +246,16 @@ void GraphView::adjustYToMaxValue(const double& marginProp)
 {
     double yMax = 0;
     for(int i=0; i<mCurves.size(); ++i){
-        if(mCurves[i].mVisible)
+        if(mCurves.at(i).mVisible)
         {
-            if(!mCurves[i].mUseVectorData &&
-               !mCurves[i].mIsHorizontalLine &&
-               !mCurves[i].mIsHorizontalSections &&
-               !mCurves[i].mIsVerticalLine &&
-               !mCurves[i].mIsVertical){
-                yMax = qMax(yMax, map_max_value(mCurves[i].mData));
-            }else if(mCurves[i].mUseVectorData){
-                yMax = qMax(yMax, vector_max_value(mCurves[i].mDataVector));
+            if(!mCurves.at(i).mUseVectorData &&
+               !mCurves.at(i).mIsHorizontalLine &&
+               !mCurves.at(i).mIsHorizontalSections &&
+               !mCurves.at(i).mIsVerticalLine &&
+               !mCurves.at(i).mIsVertical){
+                yMax = qMax(yMax, map_max_value(mCurves.at(i).mData));
+            }else if(mCurves.at(i).mUseVectorData){
+                yMax = qMax(yMax, vector_max_value(mCurves.at(i).mDataVector));
             }
         }
     }
@@ -314,11 +314,11 @@ void GraphView::setCanControlOpacity(bool can)
 }
 
 void GraphView::setFormatFunctX(FormatFunc f){
-    mFormatFuncX = f;
+    //mFormatFuncX = f;
 }
 
 void GraphView::setFormatFunctY(FormatFunc f){
-    mFormatFuncY = f;
+    //mFormatFuncY = f;
 }
 
 /* ------------------------------------------------------
@@ -445,12 +445,12 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
         mTipRect.setHeight(mTipHeight);
         
         mTipX = getValueForX(e->x()-0.5);
-        if(mFormatFuncX)
-            mTipX = locale.toDouble(mFormatFuncX(mTipX));
+        //if(mFormatFuncX)
+        //    mTipX = locale.toDouble(mFormatFuncX(mTipX));
         
         mTipY = getValueForY(e->y()+0.5);
-        if(mFormatFuncY)
-            mTipY = locale.toDouble(mFormatFuncY(mTipY));
+        //if(mFormatFuncY)
+        //    mTipY = locale.toDouble(mFormatFuncY(mTipY));
         
         update(old_rect.adjusted(-30, -30, 30, 30).toRect());
     }
@@ -669,7 +669,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolX.mShowText = mXAxisValues;
     
     mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
-    QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 7, mFormatFuncX);
+    QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 7);//, mFormatFuncX);
     
     // ----------------------------------------------------
     //  Horizontal Grid
@@ -680,7 +680,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolY.mShowText = mYAxisValues;
 
     mAxisToolY.updateValues(mGraphHeight, mStepMinWidth, mMinY, mMaxY);
-    QVector<qreal> linesYPos = mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), 5, mFormatFuncY);
+    QVector<qreal> linesYPos = mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), 5);//, mFormatFuncY);
     
     
     // ----------------------------------------------------
@@ -754,8 +754,8 @@ void GraphView::drawCurves(QPainter& painter)
                 path.moveTo(mMarginLeft, y0);
                 for(int i=0; i<curve.mSections.size(); ++i)
                 {
-                    qreal x1 = getXForValue(curve.mSections[i].first, false);   
-                    qreal x2 = getXForValue(curve.mSections[i].second, false);
+                    qreal x1 = getXForValue(curve.mSections.at(i).first, false);
+                    qreal x2 = getXForValue(curve.mSections.at(i).second, false);
                     
                     path.lineTo(x1, y0);
                     path.lineTo(x1, y1);
@@ -774,8 +774,8 @@ void GraphView::drawCurves(QPainter& painter)
                 painter.setPen(curve.mPen);
                 for(int i=0; i<curve.mSections.size(); ++i)
                 {
-                    qreal x1 = getXForValue(curve.mSections[i].first, true);
-                    qreal x2 = getXForValue(curve.mSections[i].second, true);
+                    qreal x1 = getXForValue(curve.mSections.at(i).first, true);
+                    qreal x2 = getXForValue(curve.mSections.at(i).second, true);
                     
                     painter.drawLine(QPointF(x1, y1),QPointF(x2, y1));
                 }
@@ -1069,10 +1069,11 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         //  Create data in row
         for(double x= xMin; x <= xMax; x += step) {
             list.clear();
-            if(mFormatFuncX) {
+            /*if(mFormatFuncX) {
                 list << mFormatFuncX(x);
             }
-            else list << QString::number(x);
+            else */
+            list << QString::number(x);
             for(auto iter= mCurves.begin(); iter != mCurves.end(); ++iter) {
                 
                 if (!iter->mData.empty() &&
@@ -1165,23 +1166,25 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
             iter2.next();
             QStringList list;
 
-            if(mFormatFuncX) {
+            /*if(mFormatFuncX) {
                 list << mFormatFuncX(iter2.key());
             }
-            else list << locale.toString(iter2.key());
+            else*/
+            list << locale.toString(iter2.key());
             
             for(int i=0; i<iter2.value().size(); ++i)
-                if(mFormatFuncX) {
+                /*if(mFormatFuncX) {
                     list << mFormatFuncY(iter2.value()[i]);
                 }
-                else list << locale.toString(iter2.value()[i]);
+                else*/
+                list << locale.toString(iter2.value().at(i));
             rows.append(list);
         }
         
         QTextStream output(&file);
         for(int i=0; i<rows.size(); ++i)
         {
-            output << rows[i].join(csvSep);
+            output << rows.at(i).join(csvSep);
             output << "\n";
         }
         file.close();

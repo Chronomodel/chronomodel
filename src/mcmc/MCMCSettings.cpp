@@ -73,7 +73,7 @@ MCMCSettings MCMCSettings::fromJson(const QJsonObject& json)
     settings.mMixingLevel = json.contains(STATE_MCMC_MIXING) ? json[STATE_MCMC_MIXING].toDouble() : MCMC_MIXING_DEFAULT;
     QJsonArray seeds = json[STATE_MCMC_SEEDS].toArray();
     for(int i=0; i<seeds.size(); ++i)
-        settings.mSeeds.append(seeds[i].toInt());
+        settings.mSeeds.append(seeds.at(i).toInt());
     
     return settings;
 }
@@ -92,22 +92,22 @@ QJsonObject MCMCSettings::toJson() const
     
     QJsonArray seeds;
     for(int i=0; i<mSeeds.size(); ++i)
-        seeds.append(QJsonValue::fromVariant(mSeeds[i]));
+        seeds.append(QJsonValue::fromVariant(mSeeds.at(i)) );
     mcmc[STATE_MCMC_SEEDS] = seeds;
     
     return mcmc;
 }
 
-QList<Chain> MCMCSettings::getChains() const
+QList<ChainSpecs> MCMCSettings::getChains() const
 {
-    QList<Chain> chains;
+    QList<ChainSpecs> chains;
     
     for(int i=0; i<(int)mNumChains; ++i)
     {
-        Chain chain;
+        ChainSpecs chain;
         
         if(i < mSeeds.size())
-            chain.mSeed = mSeeds[i];
+            chain.mSeed = mSeeds.at(i);
         else
             chain.mSeed = Generator::createSeed();
         

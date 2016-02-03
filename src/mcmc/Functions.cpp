@@ -141,8 +141,8 @@ QString functionAnalysisToString(const FunctionAnalysis& analysis)
        result = "No data";
     }
     else {
-        result += "MAP : " + DateUtils::convertToAppSettingsFormatStr(analysis.mode) + "   ";
-        result += "Mean : " + DateUtils::convertToAppSettingsFormatStr(analysis.mean) + "   ";        
+        result += "MAP : " + DateUtils::dateToString(analysis.mode) + "   ";
+        result += "Mean : " + DateUtils::dateToString(analysis.mean) + "   ";
         result += "Std deviation : " +DateUtils::dateToString(analysis.stddev);
     }
     return result;
@@ -157,9 +157,9 @@ QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& 
     QString result = "No data";
     if(analysis.analysis.stddev>=0.){
         result = functionAnalysisToString(analysis.analysis) + nl;
-        result += "Q1 : " + DateUtils::convertToAppSettingsFormatStr(analysis.quartiles.Q1) + "   ";
-        result += "Q2 (Median) : " + DateUtils::convertToAppSettingsFormatStr(analysis.quartiles.Q2) + "   ";
-        result += "Q3 : " + DateUtils::convertToAppSettingsFormatStr(analysis.quartiles.Q3);
+        result += "Q1 : " + DateUtils::dateToString(analysis.quartiles.Q1) + "   ";
+        result += "Q2 (Median) : " + DateUtils::dateToString(analysis.quartiles.Q2) + "   ";
+        result += "Q3 : " + DateUtils::dateToString(analysis.quartiles.Q3);
     }
     return result;
 }
@@ -207,9 +207,9 @@ Quartiles quartilesForRepartition(const QVector<double>& repartition, const doub
         quartiles.Q3 = 0.;
         return quartiles;
     }
-    double q1index = vector_interpolate_idx_for_value(0.25, repartition);
-    double q2index = vector_interpolate_idx_for_value(0.5, repartition);
-    double q3index = vector_interpolate_idx_for_value(0.75, repartition);
+    const double q1index = vector_interpolate_idx_for_value(0.25, repartition);
+    const double q2index = vector_interpolate_idx_for_value(0.5, repartition);
+    const double q3index = vector_interpolate_idx_for_value(0.75, repartition);
     
     quartiles.Q1 = tmin + q1index * step;
     quartiles.Q2 = tmin + q2index * step;
@@ -322,13 +322,10 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
                 intervals.append(inter);
                 
                 areaCur = 0;
-                //qDebug()<<" inInerval second"<<curInterval.first<<curInterval.second;
+
             }
             else
             {
-                
-                //areaCur += it.value(); // modif PhD on 2015/05/20
-                
                 areaCur += (lastValueInInter+it.value())/2 * (it.key()-lastKeyInInter);
              
                 lastKeyInInter = it.key();
@@ -338,13 +335,13 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
         }
     }
     
-    if (inInterval) { // Modif PhD correction to close unclosed interval
+    if (inInterval) { // Correction to close unclosed interval
        
         curInterval.second = lastKeyInInter;
         QPair<double, QPair<double, double> > inter;
         inter.first = thresh * areaCur / areaTot;
         inter.second = curInterval;
-        //qDebug()<<"second"<<curInterval.first<<curInterval.second;
+
         intervals.append(inter);
     }
     

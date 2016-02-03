@@ -37,7 +37,7 @@ public:
     virtual ~GraphViewResults();
     
     void setSettings(const ProjectSettings& settings);
-    void setMCMCSettings(const MCMCSettings& mcmc, const QList<Chain>& chains);
+    void setMCMCSettings(const MCMCSettings& mcmc, const QList<ChainSpecs>& chains);
     
     void setMainColor(const QColor& color);
     void toggle(const QRect& geometry);
@@ -73,14 +73,14 @@ public:
                                       const QColor& color,
                                       const Qt::PenStyle penStyle = Qt::SolidLine) const;
     
-    void generateTraceCurves(const QList<Chain>& chains,
+    void generateTraceCurves(const QList<ChainSpecs>& chains,
                              MetropolisVariable* variable,
                              const QString& name = QString());
     
-    void generateAcceptCurves(const QList<Chain>& chains,
+    void generateAcceptCurves(const QList<ChainSpecs>& chains,
                               MHVariable* variable);
     
-    void generateCorrelCurves(const QList<Chain>& chains,
+    void generateCorrelCurves(const QList<ChainSpecs>& chains,
                               MHVariable* variable);
     
 public slots:
@@ -147,7 +147,7 @@ protected:
     
     ProjectSettings mSettings;
     MCMCSettings mMCMCSettings;
-    QList<Chain> mChains;
+    QList<ChainSpecs> mChains;
     
     QColor mMainColor;
     

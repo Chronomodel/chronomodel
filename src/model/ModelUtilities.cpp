@@ -401,7 +401,7 @@ QString ModelUtilities::dateResultsText(const Date* d, const Model* model)
     {
         text += "Data : " + d->mName + nl + nl;
         text += "Date :" + nl;
-        text += d->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr) ;
+        text += d->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormatStr(),DateUtils::dateToString) ;
 
         if(model) {
             short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTheta.mHPD,model);
@@ -435,13 +435,13 @@ QString ModelUtilities::eventResultsText(const Event* e, bool withDates, const M
         if(e->mType == Event::eKnown)
         {
             text += "Bound : " + e->mName + nl;
-            text += e->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr);
+            text += e->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormatStr(),DateUtils::dateToString);
             text += nl+"----------------------"+nl;
         }
         else
         {
             text += "Event : " + e->mName + nl;
-            text += e->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr);
+            text += e->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormatStr(),DateUtils::dateToString);
             if(withDates)
             {
                 text += nl + nl;
@@ -470,11 +470,11 @@ QString ModelUtilities::phaseResultsText(const Phase* p)
         
         text += nl + nl;
         text += "Begin : " + nl;
-        text += p->mAlpha.resultsString(nl,"",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr);
+        text += p->mAlpha.resultsString(nl,"",DateUtils::getAppSettingsFormatStr(),DateUtils::dateToString);
         
         text += nl + nl;
         text += "End : " + nl;
-        text += p->mBeta.resultsString(nl, "",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr);
+        text += p->mBeta.resultsString(nl, "",DateUtils::getAppSettingsFormatStr(),DateUtils::dateToString);
     }
     return text;
 }
@@ -508,7 +508,7 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
          }
 
 
-        text += line(textBlack(d->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr))) ;
+        text += line(textBlack(d->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormatStr(),DateUtils::dateToString))) ;
 
         text += line("<br>");
         text += line(textBold(textBlack("Std. Deviation :")));
@@ -527,13 +527,13 @@ QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, c
         {
             text += line(textBold(textRed("Bound : " + e->mName))) + "<br>";
             text += line(textBold(textRed("Posterior distrib. :")));
-            text += line(textRed(e->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr)));
+            text += line(textRed(e->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormatStr(),DateUtils::dateToString)));
         }
         else
         {
             text += line(textBold(textBlue("Event : " + e->mName))) + "<br>";
             text += line(textBold(textBlue("Posterior distrib. :")));
-            text += line(textBlue(e->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormat(),DateUtils::convertToAppSettingsFormatStr)));
+            text += line(textBlue(e->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormatStr(),DateUtils::dateToString)));
             if(withDates)
             {
                 for(int i=0; i<e->mDates.size(); ++i)
@@ -561,11 +561,11 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
         
         text += "<br>";
         text += line(textBold(textPurple("Begin (posterior distrib.) : ")));
-        text += line(textPurple(p->mAlpha.resultsString("<br>", "",DateUtils::getAppSettingsFormat())));
+        text += line(textPurple(p->mAlpha.resultsString("<br>", "",DateUtils::getAppSettingsFormatStr())));
         
         text += "<br>";
         text += line(textBold(textPurple("End (posterior distrib.) : ")));
-        text += line(textPurple(p->mBeta.resultsString("<br>", "",DateUtils::getAppSettingsFormat())));
+        text += line(textPurple(p->mBeta.resultsString("<br>", "",DateUtils::getAppSettingsFormatStr())));
     }
     return text;
 }

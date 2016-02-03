@@ -2,14 +2,15 @@
 #define CONSTRAINT_H
 
 #include <QJsonObject>
+#include <QObject>
 #include "StateKeys.h"
 
 
-class Constraint
+class Constraint: public QObject
 {
 public:
-    Constraint();
-    Constraint(const Constraint& ec);
+    Constraint(QObject* parent = 0);
+    Constraint(const Constraint& ec, QObject* parent = 0);
     Constraint& operator=(const Constraint& ec);
     virtual void copyFrom(const Constraint& ec);
     virtual ~Constraint();

@@ -32,14 +32,22 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
 {
     QLocale locale=QLocale();
     GraphViewRefAbstract::setDate(date, settings);
-    
-    mGraph->setRangeX(mTminDisplay, mTmaxDisplay);
-    mGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
-    
+    double tminDisplay;
+    double tmaxDisplay;
+    {
+        const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
+        const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
+        tminDisplay = qMin(t1,t2);
+        tmaxDisplay = qMax(t1,t2);
+    }
+
+    mGraph->setRangeX(tminDisplay, tmaxDisplay);
+    mGraph->setCurrentX(tminDisplay, tmaxDisplay);
+
     mGraph->removeAllCurves();
     mGraph->clearInfos();
     mGraph->showInfos(true);
-    mGraph->setFormatFunctX(mFormatFuncX);
+    mGraph->setFormatFunctX(0);
     
     if(!date.isNull())
     {
@@ -55,15 +63,17 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         curve.mPen.setColor(Painting::mainColorDark);
         curve.mIsHisto = false;
         
-        for(double t=mTminDisplay; t<=mTmaxDisplay; t+=mSettings.mStep)
-            curve.mData[t] = ref_year - t;
+        for(double t=tminDisplay; t<=tmaxDisplay; t+=mSettings.mStep) {
+            const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
+            curve.mData[t] = ref_year - tRaw;
+        }
         mGraph->addCurve(curve);
         
         // ----------------------------------------------
         
         double yMin = map_min_value(curve.mData);
         double yMax = map_max_value(curve.mData);
-        
+        //const ageFormated = DateUtils::convertFromAppSettingsFormat(ref_year) - tRaw;
         yMin = qMin(yMin, age - error * 1.96);
         yMax = qMax(yMax, age + error * 1.96);
         
@@ -87,7 +97,7 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         // 5000 pts are used on vertical measure
         // because the y scale auto adjusts depending on x zoom.
         // => the visible part of the measure may be very reduced !
-        double step = (yMax - yMin) / 5000.;
+        const double step = (yMax - yMin) / 5000.;
         for(double t=yMin; t<yMax; t += step)
         {
             double v = exp(-0.5 * pow((t - age) / error, 2));

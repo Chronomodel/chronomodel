@@ -7,6 +7,8 @@
 class DateUtils{
 public:
     enum FormatDate{
+        eUnknowed = -2,
+        eNumeric = -1,
         eBCAD = 0,
         eCalBP = 1,
         eCalB2K = 2
@@ -15,7 +17,8 @@ public:
     static double convertFromFormat(const double formattedValue, const FormatDate format);
     
     static QString formatString(const FormatDate format);
-    static QString dateToString(const double date, int precision = -1);
+    static QString dateToString(const double date);
+    static QString dateToString(const double date, int precision);
     
     /** 
      * @brief convert native values (classic BC/AD) to their prefered display date format (Cal B2k, ...)
@@ -29,7 +32,10 @@ public:
     static double convertFromAppSettingsFormat(const double formattedValue);
     static QString convertFromAppSettingsFormatStr(const double formattedValue);
     
-    static QString getAppSettingsFormat();
+
+    static FormatDate getAppSettingsFormat();
+    static QString getAppSettingsFormatStr();
+
 };
 
 #endif

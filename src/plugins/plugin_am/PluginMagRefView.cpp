@@ -26,18 +26,30 @@ PluginMagRefView::~PluginMagRefView()
     
 }
 
-void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
+void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings)
 {
     QLocale locale=QLocale();
-    GraphViewRefAbstract::setDate(d, settings);
-    Date date = d;
-    
+    GraphViewRefAbstract::setDate(date, settings);
+
+    double tminDisplay;
+    double tmaxDisplay;
+    {
+        const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
+        const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
+        const double t3 = date.getFormatedTminCalib();
+        const double t4 = date.getFormatedTmaxCalib();
+
+        tminDisplay = qMin(t1,qMin(t2,t3));
+        tmaxDisplay = qMax(t1,qMax(t2,t4));
+    }
+
+    mGraph->setRangeX(tminDisplay, tmaxDisplay);
+    mGraph->setCurrentX(tminDisplay, tmaxDisplay);
+
     mGraph->removeAllCurves();
     mGraph->clearInfos();
     mGraph->showInfos(true);
-    mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
-    mGraph->setCurrentX(mSettings.mTmin, mSettings.mTmax);
-    mGraph->setFormatFunctX(mFormatFuncX);
+    mGraph->setFormatFunctX(0);
     
     if(!date.isNull())
     {
@@ -54,7 +66,10 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         // ----------------------------------------------
         //  Reference curve
         // ----------------------------------------------
-        
+
+        double tminRef = date.getFormatedTminRefCurve();
+        double tmaxRef = date.getFormatedTmaxRefCurve();
+
         QColor color2(150, 150, 150);
         
         PluginMag* plugin = (PluginMag*)date.mPlugin;
@@ -63,61 +78,37 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         if(curve.mDataMean.isEmpty())
         {
             GraphZone zone;
-            zone.mColor = Qt::red;
-            zone.mColor.setAlpha(20);
-            zone.mXStart = mSettings.mTmin;
-            zone.mXEnd = mSettings.mTmax;
+            zone.mColor = Qt::gray;
+            zone.mColor.setAlpha(25);
+            zone.mXStart = tminDisplay;
+            zone.mXEnd = tmaxDisplay;
             zone.mText = tr("No reference data");
             mGraph->addZone(zone);
             return;
         }
 
-        double tminCalib = date.getTminCalib();
-        double tmaxCalib = date.getTmaxCalib();
-
-        double tminCurve = date.getTminRefCurve();
-        double tmaxCurve = date.getTmaxRefCurve();
-
-        double tminDisplay;
-        double tmaxDisplay;
-
-
-        if(mSettings.mTmin<tminCalib){
-           tminDisplay = mSettings.mTmin;
-        }
-        else {
-            tminDisplay = tminCalib;
-        }
-
-        if(tmaxCalib<mSettings.mTmax){
-               tmaxDisplay = mSettings.mTmax;
-        }
-        else {
-            tmaxDisplay = tmaxCalib;
-        }
-
-        if(tminDisplay<tminCurve){
+        if(tminDisplay < tminRef){
             GraphZone zone;
             zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(35);
             zone.mXStart = tminDisplay;
-            zone.mXEnd = tminCurve;
+            zone.mXEnd = tminRef;
             zone.mText = tr("Outside reference area");
             mGraph->addZone(zone);
         }
 
-        if(tmaxCurve<tmaxDisplay){
+        if(tmaxRef < tmaxDisplay){
             GraphZone zone;
             zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(35);
-            zone.mXStart = tmaxCurve;
+            zone.mXStart = tmaxRef;
             zone.mXEnd = tmaxDisplay;
             zone.mText = tr("Outside reference area");
             mGraph->addZone(zone);
         }
 
-        double yMin = plugin->getRefValueAt(date.mData, qMax(tminDisplay,tminCurve));
-        double yMax = plugin->getRefValueAt(date.mData, qMin(tmaxDisplay,tmaxCurve));
+        double yMin = plugin->getRefValueAt(date.mData, qMax(tminDisplay,tminRef));
+        double yMax = yMin;
 
         QMap<double, double> curveG;
         QMap<double, double> curveG95Sup;
@@ -125,9 +116,11 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
 
         for(double t=tminDisplay; t<=tmaxDisplay; ++t)
         {
-            if(t>tminCurve && t<tmaxCurve) {
-                double value = plugin->getRefValueAt(date.mData, t);
-                double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
+            if(t>tminRef && t<tmaxRef)
+            {
+                const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
+                const double value = plugin->getRefValueAt(date.mData, tRaw);
+                const double error = plugin->getRefErrorAt(date.mData, tRaw) * 1.96;
 
                 curveG[t] = value;
                 curveG95Sup[t] = value + error;
@@ -167,23 +160,9 @@ void PluginMagRefView::setDate(const Date& d, const ProjectSettings& settings)
         mGraph->addInfo(tr("Ref : ") + ref_curve);
 
 
-        // ----------------------------------------------------
-        //  Draw ref curve extensions if not defined everywhere on study period
-        // ----------------------------------------------------
-       /* GraphZone zone;
-        zone.mColor = Qt::red;
-        zone.mColor.setAlpha(20);
-
-        zone.mXStart = mSettings.mTmin;
-        zone.mXEnd = tMinGraph;
-        mGraph->addZone(zone);
-
-        zone.mXStart = tMaxGraph;
-        zone.mXEnd = mSettings.mTmax;
-        mGraph->addZone(zone);
-*/
-        // ----------------------------------------------------
-        
+        // ----------------------------------------------
+        //  Measure curve
+        // ----------------------------------------------
         double error = 0.f;
         double avg = 0.f;
         if(is_inc)

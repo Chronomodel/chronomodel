@@ -141,7 +141,7 @@ void GraphViewResults::setSettings(const ProjectSettings& settings)
     mSettings = settings;
 }
 
-void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc, const QList<Chain>& chains)
+void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc, const QList<ChainSpecs>& chains)
 {
     mMCMCSettings = mcmc;
     mChains = chains;
@@ -543,7 +543,7 @@ GraphCurve GraphViewResults::generateHorizontalLine(const double yValue,
     return curve;
 }
 
-void GraphViewResults::generateTraceCurves(const QList<Chain>& chains,
+void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
                                            MetropolisVariable* variable,
                                            const QString& name)
 {
@@ -551,22 +551,20 @@ void GraphViewResults::generateTraceCurves(const QList<Chain>& chains,
     
     for(int i=0; i<chains.size(); ++i)
     {
-        //const Chain& chain = chains[i];
-        //mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
-        
+
         GraphCurve curve;
         curve.mUseVectorData = true;
         curve.mName = prefix + "Trace " + QString::number(i);
         curve.mDataVector = variable->fullTraceForChain(chains, i);
-        curve.mPen.setColor(Painting::chainColors[i]);
+        curve.mPen.setColor(Painting::chainColors.at(i));
         curve.mIsHisto = false;
         mGraph->addCurve(curve);
         
-        double min = vector_min_value(curve.mDataVector);
-        double max = vector_max_value(curve.mDataVector);
+        const double min = vector_min_value(curve.mDataVector);
+        const double max = vector_max_value(curve.mDataVector);
         mGraph->setRangeY(floor(min), ceil(max));
         
-        const Quartiles& quartiles = variable->mChainsResults[i].quartiles;
+        const Quartiles& quartiles = variable->mChainsResults.at(i).quartiles;
         
         GraphCurve curveQ1 = generateHorizontalLine(quartiles.Q1, prefix + "Q1 " + QString::number(i), Qt::green);
         mGraph->addCurve(curveQ1);
@@ -580,24 +578,21 @@ void GraphViewResults::generateTraceCurves(const QList<Chain>& chains,
 }
 
 
-void GraphViewResults::generateAcceptCurves(const QList<Chain>& chains,
+void GraphViewResults::generateAcceptCurves(const QList<ChainSpecs> &chains,
                                             MHVariable* variable){
     for(int i=0; i<chains.size(); ++i)
     {
-        //Chain& chain = mChains[i];
-        //mGraph->setRangeX(0, chain.mNumBurnIter + chain.mNumBatchIter * chain.mBatchIndex + chain.mNumRunIter / chain.mThinningInterval);
-        
         GraphCurve curve;
         curve.mName = QString("Accept " + QString::number(i));
         curve.mDataVector = variable->acceptationForChain(chains, i);
-        curve.mPen.setColor(Painting::chainColors[i]);
+        curve.mPen.setColor(Painting::chainColors.at(i));
         curve.mUseVectorData = true;
         curve.mIsHisto = false;
         mGraph->addCurve(curve);
     }
 }
 
-void GraphViewResults::generateCorrelCurves(const QList<Chain>& chains,
+void GraphViewResults::generateCorrelCurves(const QList<ChainSpecs> &chains,
                                             MHVariable* variable){
     for(int i=0; i<chains.size(); ++i)
     {
@@ -605,11 +600,12 @@ void GraphViewResults::generateCorrelCurves(const QList<Chain>& chains,
         curve.mName = QString("Correl " + QString::number(i));
         curve.mDataVector = variable->correlationForChain(i);
         curve.mUseVectorData = true;
-        curve.mPen.setColor(Painting::chainColors[i]);
+        curve.mPen.setColor(Painting::chainColors.at(i));
         curve.mIsHisto = false;
         mGraph->addCurve(curve);
         
-        double n = variable->runTraceForChain(mChains, i).size();
+        //to do, we only need the totalIter number?
+        double n = variable->runRawTraceForChain(mChains, i).size();
         double limit = 1.96f / sqrt(n);
         
         GraphCurve curveLimitLower = generateHorizontalLine(-limit,

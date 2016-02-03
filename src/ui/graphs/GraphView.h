@@ -166,8 +166,8 @@ protected:
     
     bool mAutoAdjustYScale; 
     
-    FormatFunc mFormatFuncX;
-    FormatFunc mFormatFuncY;
+    //FormatFunc mFormatFuncX;
+    //FormatFunc mFormatFuncY;
     
     bool mShowInfos;
     QStringList mInfos;

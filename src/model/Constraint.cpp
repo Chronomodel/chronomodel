@@ -1,7 +1,7 @@
 #include "Constraint.h"
 
 
-Constraint::Constraint():
+Constraint::Constraint(QObject *parent): QObject( parent ),
 mId(-1),
 mFromId(0),
 mToId(0)
@@ -9,7 +9,7 @@ mToId(0)
     
 }
 
-Constraint::Constraint(const Constraint& ec)
+Constraint::Constraint(const Constraint& ec, QObject *parent): QObject( parent )
 {
     copyFrom(ec);
 }

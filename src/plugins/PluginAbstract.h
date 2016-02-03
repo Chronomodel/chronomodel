@@ -102,12 +102,12 @@ public:
 
     void loadRefDatas()
     {
-        QString path = QDir::currentPath();
-        QString calibPath = getRefsPath();
+        const QString path = QDir::currentPath();
+        const QString calibPath = getRefsPath();
         mRefCurves.clear();
         QDir calibDir(calibPath);
         
-        QFileInfoList files = calibDir.entryInfoList(QStringList(), QDir::Files);
+        const QFileInfoList files = calibDir.entryInfoList(QStringList(), QDir::Files);
         for(int i=0; i<files.size(); ++i)
         {
             if(files.at(i).suffix().toLower() == getRefExt())
@@ -141,27 +141,28 @@ public:
         {
             const RefCurve& curve = mRefCurves.value(curveName);
             
-            //if(t >= curve.mTmin && t <= curve.mTmax){
+            if(t >= curve.mTmin && t <= curve.mTmax){
                // This actually return the iterator with the nearest greater key !!!
                 QMap<double, double>::const_iterator iter = curve.mDataMean.lowerBound(t);
                if(iter != curve.mDataMean.constBegin())
                 {
-                    double t_upper = iter.key();
-                    double v_upper = iter.value();
+                    const double t_upper = iter.key();
+                    const double v_upper = iter.value();
 
                     --iter;
-                    double t_under = iter.key();
-                    double v_under = iter.value();
+                    const double t_under = iter.key();
+                    const double v_under = iter.value();
 
                     value = interpolate(t, t_under, t_upper, v_under, v_upper);
                }
                else {
                    value = iter.value();
                }
-          /*  }
+            }
             else { // onExtension depreciated
-                value = interpolate(t, curve.mTmin, curve.mTmax, curve.mDataMean[curve.mTmin], curve.mDataMean[curve.mTmax]);
-            } */
+                //value = interpolate(t, curve.mTmin, curve.mTmax, curve.mDataMean[curve.mTmin], curve.mDataMean[curve.mTmax]);
+                value = (curve.mDataMean.value(curve.mTmin) + curve.mDataMean.value(curve.mTmax) )/2;
+            }
 
         }
         return value;
@@ -180,11 +181,11 @@ public:
                 // the higher value must be mTmax.
                 if(iter != curve.mDataError.constBegin()) {
 
-                    double t_upper = iter.key();
-                    double v_upper = iter.value();//curve.mDataError[t_upper];
+                    const double t_upper = iter.key();
+                    const double v_upper = iter.value();//memo curve.mDataError[t_upper];
                     --iter;
-                    double t_under = iter.key();
-                    double v_under = iter.value();//curve.mDataError[t_under];
+                    const double t_under = iter.key();
+                    const double v_under = iter.value();//memo curve.mDataError[t_under];
 
 
                     error = interpolate(t, t_under, t_upper, v_under, v_upper);

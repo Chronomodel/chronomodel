@@ -261,7 +261,7 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
 #pragma mark References Values & Errors
 double Plugin14C::getRefValueAt(const QJsonObject& data, const double& t)
 {
-    QString curveName = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
+    const QString curveName = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
     return getRefCurveValueAt(curveName, t);
 }
 

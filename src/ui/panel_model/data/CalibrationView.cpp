@@ -83,11 +83,11 @@ mRefGraphView(0)
     mCopyTextBut = new Button(tr("Copy Text"), this);
     setMouseTracking(true);
     
-    connect(mZoomSlider, SIGNAL(valueChanged(int)), this, SLOT(updateZoom()));
-    connect(mScrollBar, SIGNAL(valueChanged(int)), this, SLOT(updateScroll()));
-    connect(mHPDEdit, SIGNAL(textEdited(const QString&)), this, SLOT(updateGraphs()));
-    connect(mExportPlotBut, SIGNAL(clicked()), this, SLOT(exportImage()));
-    connect(mCopyTextBut, SIGNAL(clicked()), this, SLOT(copyText()));
+    connect(mZoomSlider, &QSlider::valueChanged, this, &CalibrationView::updateZoom);
+    connect(mScrollBar, &QScrollBar::valueChanged, this, &CalibrationView::updateScroll);
+    connect(mHPDEdit, &LineEdit::textEdited, this, &CalibrationView::updateGraphs);
+    connect(mExportPlotBut, &Button::clicked, this, &CalibrationView::exportImage);
+    connect(mCopyTextBut, &Button::clicked, this, &CalibrationView::copyText);
 }
 
 CalibrationView::~CalibrationView()
@@ -99,13 +99,13 @@ void CalibrationView::setDate(const QJsonObject& date)
 {
     Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
-    QJsonObject settings = state[STATE_SETTINGS].toObject();
+    QJsonObject settings = state.value(STATE_SETTINGS).toObject();
     mSettings = ProjectSettings::fromJson(settings);
 
     try{
         mDate = Date::fromJson(date);
         mDate.autoSetTiSampler(false);
-        if(!mDate.isNull() )//&& mDate.mIsValid)
+        if(!mDate.isNull() )
         {
             mDate.calibrate(mSettings);
             mTopLab->setText(mDate.mName + " (" + mDate.mPlugin->getName() + ")");
@@ -141,34 +141,41 @@ void CalibrationView::updateGraphs()
     
     if(!mDate.isNull())
     {
-        double tminCalib = mDate.getTminCalib();
-        double tmaxCalib = mDate.getTmaxCalib();        
+        //double tminCalib = mDate.getTminCalib();
+        //double tmaxCalib = mDate.getTmaxCalib();
 
-        double tminDisplay = qMin(tminCalib, (double)mSettings.mTmin);
-        double tmaxDisplay = qMax(tmaxCalib, (double)mSettings.mTmax);
+        double tminDisplay;
+        double tmaxDisplay;
+        {
+            const double t1 = mSettings.getTminFormated();
+            const double t2 = mSettings.getTmaxFormated();
+            const double t3 = mDate.getFormatedTminCalib();
+            const double t4 = mDate.getFormatedTmaxCalib();
+
+            tminDisplay = qMin(t1,t3);
+            tmaxDisplay = qMax(t2,t4);
+        }
 
         mCalibGraph->setRangeX(tminDisplay, tmaxDisplay);
         mCalibGraph->setCurrentX(tminDisplay, tmaxDisplay);
-        
-        //qDebug() << "tmin : " << tminDisplay << ", tmax: " << tmaxDisplay;
         
         mZoomSlider->setValue(0);
         
         // ------------------------------------------------------------
         //  Show zones if calibrated data are outside study period
         // ------------------------------------------------------------
-        if(tminDisplay < mSettings.mTmin){
+        if(tminDisplay < mSettings.getTminFormated()){
             GraphZone zone;
             zone.mXStart = tminDisplay;
-            zone.mXEnd = mSettings.mTmin;            
+            zone.mXEnd = mSettings.getTminFormated();
             zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(35);
             zone.mText = tr("Outside study period");
             mCalibGraph->addZone(zone);
         }
-        if(tmaxDisplay > mSettings.mTmax){
+        if(tmaxDisplay > mSettings.getTmaxFormated()){
             GraphZone zone;
-            zone.mXStart = mSettings.mTmax;
+            zone.mXStart = mSettings.getTmaxFormated();
             zone.mXEnd = tmaxDisplay;
             zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(35);
@@ -179,8 +186,8 @@ void CalibrationView::updateGraphs()
         // ------------------------------------------------------------
         //  Calibration curve
         // ------------------------------------------------------------
-        QColor penColor = Painting::mainColorDark; //Painting::mainColorLight;
-        QColor brushColor = Painting::mainColorLight; //mDate.mPlugin->getColor();
+        QColor penColor = Painting::mainColorDark;
+        QColor brushColor = Painting::mainColorLight;
         brushColor.setAlpha(100);
 
         // Fill under distrib. of calibrated date only if typo :
@@ -190,7 +197,7 @@ void CalibrationView::updateGraphs()
 
         // Fill HPD only if not typo :
         mResultsLab->clear();
-        const QMap<double, double> calibMap = mDate.getCalibMap();
+        const QMap<double, double> calibMap = mDate.getFormatedCalibMap();
 
         if(!calibMap.isEmpty())
         {            
@@ -201,8 +208,10 @@ void CalibrationView::updateGraphs()
             
             DensityAnalysis results;
             results.analysis = analyseFunction(calibMap);
-            //results.quartiles = quartilesForRepartition(mDate.mRepartition, tminCalib, mSettings.mStep);
-            results.quartiles = quartilesForRepartition(mDate.mRepartition, mDate.getTminRefCurve(), mSettings.mStep);
+
+            results.quartiles = quartilesForRepartition(mDate.getFormatedRepartition(), mDate.getFormatedTminCalib(), mSettings.mStep);
+
+
             resultsStr = densityAnalysisToString(results);
             
             GraphCurve calibCurve;
@@ -226,10 +235,8 @@ void CalibrationView::updateGraphs()
             mHPDEdit->validator()->fixup(input);
             mHPDEdit->setText(input);
             
-            double thresh = mHPDEdit->text().toDouble();
-            thresh = qMin(thresh, 100.);
-            thresh = qMax(thresh, 0.);
-            
+            const double thresh = qBound(0., mHPDEdit->text().toDouble(), 100.);
+
             QMap<double, double> hpd = create_HPD(calibCurve.mData, thresh);
             
             GraphCurve hpdCurve;
@@ -242,36 +249,22 @@ void CalibrationView::updateGraphs()
             mCalibGraph->addCurve(hpdCurve);
             
             yMax = map_max_value(hpdCurve.mData);
-            //mCalibGraph->setRangeY(0, qMax(1.1f * yMax, mCalibGraph->maximumY()));
+
             mCalibGraph->setRangeY(0, 1.1f * yMax);
 
-            mCalibGraph->mLegendX = DateUtils::getAppSettingsFormat();
-            mCalibGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
+            mCalibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+            mCalibGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
             mCalibGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
             
             double realThresh = map_area(hpd) / map_area(calibCurve.mData);
             
-            //mResultsLab->setText(mResultsLab->text() % "HPD (" % locale.toString(100. * realThresh, 'f', 1) + "%) : " % getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr)); //  % concatenation with QStringBuilder
-            
-            resultsStr += + "<br> HPD (" + locale.toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr);
+            resultsStr += + "<br> HPD (" + locale.toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), DateUtils::dateToString);
             
             mResultsLab->setWordWrap(true);
             mResultsLab->setText(resultsStr);
             
-            
-            //mResultsLab->setText(mResultsLab->text() + "\n HPD (" + locale.toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormat(), DateUtils::convertToAppSettingsFormatStr));
         }
-        /*else
-        {
-            GraphCurve curve;
-            curve.mName = "Bound";
-            curve.mBrush = brushColor;
-            curve.mPen = penColor;
-            curve.mIsHorizontalSections = true;
-            curve.mSections.append(qMakePair(tminCalib,tmaxCalib));
-            mCalibGraph->addCurve(curve);
-        }*/
-        
+
         
         // ------------------------------------------------------------
         //  Reference curve from plugin
@@ -281,7 +274,7 @@ void CalibrationView::updateGraphs()
         mRefGraphView = mDate.mPlugin->getGraphViewRef();
         if(mRefGraphView)
         {
-            mRefGraphView->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr); // must be before setDate, because setDate use it
+            mRefGraphView->setFormatFunctX(DateUtils::dateToString); // must be before setDate, because setDate use it
             mRefGraphView->setDate(mDate, mSettings);
             
             mRefGraphView->setParent(this);
@@ -348,18 +341,17 @@ void CalibrationView::updateZoom()
 
 void CalibrationView::updateScroll()
 {
-    double min = mCalibGraph->minimumX();
-    double max = mCalibGraph->maximumX();
-    double minProp = 5 / (max - min);
+    const double min = mCalibGraph->minimumX();
+    const double max = mCalibGraph->maximumX();
+    const double minProp = 5 / (max - min);
     double prop = (100. - mZoomSlider->value()) / 100.;
     if(prop < minProp) prop = minProp;
     
     if(prop != 1)
     {
         // Update graphs with new zoom
-        //double delta = prop * (max - min);
-        double delta = prop * (max - min);
-        double deltaStart = (max - min) - delta;
+        const double delta = prop * (max - min);
+        const double deltaStart = (max - min) - delta;
         double start = min + deltaStart * ((double)mScrollBar->value() / (double)mScrollBar->maximum()) ;
         start = (floor(start)<min ? min : floor(start));
         double end = start + delta;
@@ -457,7 +449,7 @@ void CalibrationView::updateLayout()
     int lineH = 20;
     int editW = 30;
     int checkW = 70;
-    //int rulerH = 40;
+
     int graphLeft = 50;
     int sliderW = 100;
     int zoomLabW = 60;

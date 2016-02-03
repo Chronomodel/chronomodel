@@ -48,11 +48,16 @@ public:
     bool mHasPhases;
     
     void doProjectConnections(Project* project);
-    
+  //  void updateFormat(Model* model = 0);
+    void updateFormatSetting(Model* model, const AppSettings* appSet);
+
+
 protected:
     void paintEvent(QPaintEvent* );
     void mouseMoveEvent(QMouseEvent* e);
     void resizeEvent(QResizeEvent* e);
+
+
     
     void createEventsScrollArea();
     void createPhasesScrollArea();
@@ -63,6 +68,7 @@ public slots:
     
     void clearResults();
     void updateResults(Model* model = 0);
+
     
     void generatePosteriorDistribs();
     void generateCredibilityAndHPD();
@@ -90,8 +96,8 @@ private slots:
     void updateScaleY(int value);
     
     void updateFont();
-    void updateThickness(int value);
-    void updateOpacity(int value);
+    void updateThickness(const int value);
+    void updateOpacity(const int value);
     void updateRendering(int index);
     void showInfos(bool);
     void exportFullImage();
@@ -121,7 +127,7 @@ private:
     Model* mModel;
     ProjectSettings mSettings;
     MCMCSettings mMCMCSettings;
-    QList<Chain> mChains;    
+    QList<ChainSpecs> mChains;
     
     int mMargin;
     int mOptionsW;

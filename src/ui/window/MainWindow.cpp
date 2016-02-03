@@ -527,7 +527,7 @@ void MainWindow::setAppSettings(const AppSettings& s)
     
     if(mViewResultsAction->isEnabled()) {
         //mProjectView->updateResults(mProject->mModel);
-        mProjectView->ApplySettings(mProject->mModel);
+        mProjectView->ApplySettings(mProject->mModel, &mAppSettings);
     }
 }
 
@@ -862,7 +862,8 @@ void MainWindow::mcmcFinished(Model* model)
     mViewLogAction -> setEnabled(true);
     mViewResultsAction -> setEnabled(true);
     mViewResultsAction -> setChecked(true); // Just check the Result Button after computation and mResultsView is show after
-    
+
+    model->updateFormatSettings(&mAppSettings);
     mProjectView->updateResults(model);
 }
  void MainWindow::noResult()

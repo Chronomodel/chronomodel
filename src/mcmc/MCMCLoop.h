@@ -22,7 +22,7 @@ public:
     virtual ~MCMCLoop();
     
     void setMCMCSettings(const MCMCSettings& settings);
-    const QList<Chain>& chains();
+    const QList<ChainSpecs>& chains();
     const QString& getChainsLog() const;
     const QString& getInitLog() const;
     
@@ -41,7 +41,7 @@ protected:
     virtual bool adapt() = 0;
     
 protected:
-    QList<Chain> mChains;
+    QList<ChainSpecs> mChains;
     int mChainIndex;
     State mState;
     QString mChainsLog;

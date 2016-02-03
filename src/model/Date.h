@@ -9,6 +9,7 @@
 #include <QJsonObject>
 #include <QString>
 #include <QPixmap>
+#include <QObject>
 
 class Event;
 class PluginAbstract;
@@ -30,6 +31,7 @@ double fProposalDensity(const double t, const double t0, Date* date);
 
 class Date
 {
+
 public:
     enum DataMethod{
         eMHSymetric = 0,
@@ -66,7 +68,12 @@ public:
     void reset();
     void calibrate(const ProjectSettings& settings);
     double getLikelihoodFromCalib(const double t);
-    QMap<double, double> getCalibMap() const;
+
+    QMap<double, double> getFormatedCalibMap() const;
+    QMap<double, double> getRawCalibMap() const;
+
+    QVector<double> getFormatedRepartition() const;
+
     QPixmap generateCalibThumb();
     QPixmap generateTypoThumb();
     
@@ -86,6 +93,12 @@ public:
     
     double getTminCalib() const {return mTminCalib;}
     double getTmaxCalib() const {return mTmaxCalib;}
+
+    double getFormatedTminRefCurve() const;
+    double getFormatedTmaxRefCurve() const;
+
+    double getFormatedTminCalib() const;
+    double getFormatedTmaxCalib() const;
     
 public:
     MHVariable mTheta; // theta i de la date

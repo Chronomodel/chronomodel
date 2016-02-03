@@ -131,10 +131,12 @@ void ProjectView::updateProject()
 
 #pragma mark Update Results
 
-void ProjectView:: ApplySettings(Model* model)
+void ProjectView:: ApplySettings(Model* model,const AppSettings* appSet)
 {
     if(model)
     {
+        mResultsView->updateFormatSetting(model,appSet);
+        //mResultsView->updateFormat(model);
         mResultsView->updateResults(model);
 
         model->generateModelLog();
@@ -151,8 +153,8 @@ void ProjectView::updateResults(Model* model)
 {
     if(model)
     {
-        showResults();//false);
-        
+       // showResults();//false);
+       // mResultsView->updateFormat(model);
         mResultsView->updateResults(model);
         
         model->generateModelLog();
@@ -162,6 +164,8 @@ void ProjectView::updateResults(Model* model)
         
         model->generateResultsLog();
         mLogResultsEdit->setText(model->getResultsLog());
+
+        mStack->setCurrentIndex(1);
     }
 }
 

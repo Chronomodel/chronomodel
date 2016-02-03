@@ -432,7 +432,7 @@ bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QS
 
         output<<"# " +projectName+ "\n";
         if(withDateFormat) {
-            output<<"# Date Format : "+ DateUtils::getAppSettingsFormat() +"\n";
+            output<<"# Date Format : "+ DateUtils::getAppSettingsFormatStr() +"\n";
         }
         else {
             output<<"# Date Format : BC/AD\n";

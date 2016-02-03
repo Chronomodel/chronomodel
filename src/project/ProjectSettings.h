@@ -26,7 +26,10 @@ public:
     static ProjectSettings fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
     
-    static double getStep(double tmin, double tmax);
+    static double getStep(const double tmin, const double tmax);
+
+    double getTminFormated();
+    double getTmaxFormated();
 
 public:
     int mTmin;

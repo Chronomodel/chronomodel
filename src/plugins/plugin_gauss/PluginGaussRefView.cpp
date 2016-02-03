@@ -30,14 +30,25 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
 {
     QLocale locale = QLocale();
     GraphViewRefAbstract::setDate(date, settings);
-    
-    mGraph->setRangeX(mTminDisplay, mTmaxDisplay);
-    mGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
+    double tminDisplay;
+    double tmaxDisplay;
+    {
+        const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
+        const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
+        const double t3 = date.getFormatedTminCalib();
+        const double t4 = date.getFormatedTmaxCalib();
+
+        tminDisplay = qMin(t1,qMin(t2,t3));
+        tmaxDisplay = qMax(t1,qMax(t2,t4));
+    }
+
+    mGraph->setRangeX(tminDisplay, tmaxDisplay);
+    mGraph->setCurrentX(tminDisplay, tmaxDisplay);
     
     mGraph->removeAllCurves();
     mGraph->clearInfos();
     mGraph->showInfos(true);
-    mGraph->setFormatFunctX(mFormatFuncX);
+    mGraph->setFormatFunctX(0);
     
     if(!date.isNull())
     {
@@ -52,7 +63,10 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
         // ----------------------------------------------
         //  Reference curve
         // ----------------------------------------------
-        
+
+        const double tminRef = date.getFormatedTminRefCurve();
+        const double tmaxRef = date.getFormatedTmaxRefCurve();
+
         GraphCurve curve;
         curve.mName = "Reference";
         curve.mPen.setColor(Painting::mainColorDark);
@@ -67,8 +81,10 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
         }
         else if(mode == DATE_GAUSS_MODE_EQ)
         {
-            for(double t=mTminDisplay; t<=mTmaxDisplay; t+=mSettings.mStep)
-                curve.mData[t] = a * t * t + b * t + c;
+            for(double t=tminDisplay; t<=tmaxDisplay; t+=mSettings.mStep) {
+                const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
+                curve.mData[t] = a * tRaw * tRaw + b * tRaw + c;
+            }
             mGraph->addCurve(curve);
             
             // Adjust scale :
@@ -86,48 +102,47 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                 GraphZone zone;
                 zone.mColor = Qt::gray;
                 zone.mColor.setAlpha(25);
-                zone.mXStart = mSettings.mTmin;
-                zone.mXEnd = mSettings.mTmax;
+                zone.mXStart = tminDisplay;
+                zone.mXEnd = tmaxDisplay;
                 zone.mText = tr("No reference data");
                 mGraph->addZone(zone);
                 return;
             }
 
-            if(mTminDisplay < mTminRef){
+            if(tminDisplay < tminRef){
                 GraphZone zone;
                 zone.mColor = QColor(217, 163, 69);
                 zone.mColor.setAlpha(35);
-                zone.mXStart = mTminDisplay;
-                zone.mXEnd = mTminRef;
+                zone.mXStart = tminDisplay;
+                zone.mXEnd = tminRef;
                 zone.mText = tr("Outside reference area");
                 mGraph->addZone(zone);
             }
 
-            if(mTmaxRef < mTmaxDisplay){
+            if(tmaxRef < tmaxDisplay){
                 GraphZone zone;
                 zone.mColor = QColor(217, 163, 69);
                 zone.mColor.setAlpha(35);
-                zone.mXStart = mTmaxRef;
-                zone.mXEnd = mTmaxDisplay;
+                zone.mXStart = tmaxRef;
+                zone.mXEnd = tmaxDisplay;
                 zone.mText = tr("Outside reference area");
                 mGraph->addZone(zone);
             }
 
-            // Just to start from somewhere on the curve...
-            // Will be corrected anyway in the following loop!
-            yMin = plugin->getRefValueAt(date.mData, qMax(mTminDisplay, mTminRef));
+            yMin = plugin->getRefValueAt(date.mData, qMax(tminDisplay, tminRef));
             yMax = yMin;
 
             QMap<double, double> curveG;
             QMap<double, double> curveG95Sup;
             QMap<double, double> curveG95Inf;
             
-            for(double t=mTminDisplay; t<=mTmaxDisplay; ++t)
+            for(double t=tminDisplay; t<=tmaxDisplay; ++t)
             {
-                if(t > mTminRef && t < mTmaxRef)
+                if(t > tminRef && t < tmaxRef)
                 {
-                    double value = plugin->getRefValueAt(date.mData, t);
-                    double error = plugin->getRefErrorAt(date.mData, t, mode) * 1.96;
+                    const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
+                    const double value = plugin->getRefValueAt(date.mData, tRaw);
+                    const double error = plugin->getRefErrorAt(date.mData, tRaw, mode) * 1.96;
 
                     curveG[t] = value;
                     curveG95Sup[t] = value + error;

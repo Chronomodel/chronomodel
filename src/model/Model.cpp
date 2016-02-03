@@ -15,7 +15,7 @@
 
 
 #pragma mark Constructor...
-Model::Model():QObject()
+Model::Model()
 {
     
 }
@@ -68,178 +68,50 @@ void Model::clear()
     mLogResults.clear();
 }
 
-/*Model* Model::fromJson(const QJsonObject& json)
+/**
+ * @brief Model::updateFormatSettings, set all date format according to the Application Preference, date format
+ * @param appSet
+ */
+void Model::updateFormatSettings(const AppSettings* appSet)
 {
-    Model* model = new Model();
-    
-    if(json.contains(STATE_SETTINGS))
-    {
-        QJsonObject settings = json[STATE_SETTINGS].toObject();
-        model->mSettings = ProjectSettings::fromJson(settings);
-    }
-    
-    if(json.contains(STATE_MCMC))
-    {
-        QJsonObject mcmc = json[STATE_MCMC].toObject();
-        model->mMCMCSettings = MCMCSettings::fromJson(mcmc);
-        model->mChains = model->mMCMCSettings.getChains();
-    }
-    
-    if(json.contains(STATE_PHASES))
-    {
-        QJsonArray phases = json[STATE_PHASES].toArray();
-        for(int i=0; i<phases.size(); ++i)
-        {
-            QJsonObject phase = phases[i].toObject();
-            Phase* p = new Phase(Phase::fromJson(phase));
-            model->mPhases.append(p);
+    for(int i=0; i<this->mEvents.size(); i++) {
+        Event* event = mEvents.at(i) ;
+        event->mTheta.setFormat(appSet->mFormatDate);
+        for(int j=0; j<event->mDates.size(); j++) {
+            Date& date = event->mDates[j];
+            date.mTheta.setFormat(appSet->mFormatDate);
+            date.mSigma.setFormat(DateUtils::eNumeric);
+            date.mWiggle.setFormat(DateUtils::eNumeric);
         }
     }
-    
-    // Sort phases based on items y position
-    std::sort(model->mPhases.begin(), model->mPhases.end(), sortPhases);
-    
-    if(json.contains(STATE_EVENTS))
-    {
-        QJsonArray events = json[STATE_EVENTS].toArray();
-        for(int i=0; i<events.size(); ++i)
-        {
-            QJsonObject event = events[i].toObject();
-            if(event[STATE_EVENT_TYPE].toInt() == Event::eDefault)
-            {
-                try{
-                    Event* e = new Event(Event::fromJson(event));
-                    model->mEvents.append(e);
-                }
-                catch(QString error){
-                    QMessageBox message(QMessageBox::Critical,
-                                        qApp->applicationName() + " " + qApp->applicationVersion(),
-                                        tr("Error : ") + error,
-                                        QMessageBox::Ok,
-                                        qApp->activeWindow(),
-                                        Qt::Sheet);
-                    message.exec();
-                }
-            }
-            else
-            {
-                EventKnown* e = new EventKnown(EventKnown::fromJson(event));
-                e->updateValues(model->mSettings.mTmin, model->mSettings.mTmax, model->mSettings.mStep);
-                model->mEvents.append(e);
-            }
-        }
+    for(int i=0; i<this->mPhases.size(); i++) {
+        Phase* phase = mPhases.at(i);
+        phase->mAlpha.setFormat(appSet->mFormatDate);
+        phase->mBeta.setFormat(appSet->mFormatDate);
+        phase->mDuration.setFormat(DateUtils::eNumeric);
     }
-    
-    // Sort events based on items y position
-    std::sort(model->mEvents.begin(), model->mEvents.end(), sortEvents);
-    
-    if(json.contains(STATE_EVENTS_CONSTRAINTS))
-    {
-        QJsonArray constraints = json[STATE_EVENTS_CONSTRAINTS].toArray();
-        for(int i=0; i<constraints.size(); ++i)
-        {
-            QJsonObject constraint = constraints[i].toObject();
-            EventConstraint* c = new EventConstraint(EventConstraint::fromJson(constraint));
-            model->mEventConstraints.append(c);
-        }
-    }
-    
-    if(json.contains(STATE_PHASES_CONSTRAINTS))
-    {
-        QJsonArray constraints = json[STATE_PHASES_CONSTRAINTS].toArray();
-        for(int i=0; i<constraints.size(); ++i)
-        {
-            QJsonObject constraint = constraints[i].toObject();
-            PhaseConstraint* c = new PhaseConstraint(PhaseConstraint::fromJson(constraint));
-            model->mPhaseConstraints.append(c);
-        }
-    }
-    
-    // ------------------------------------------------------------
-    //  Link objects to each other
-    //  Must be done here !
-    //  nb : Les data sont déjà linkées aux events à leur création
-    // ------------------------------------------------------------
-    for(int i=0; i<model->mEvents.size(); ++i)
-    {
-        int eventId = model->mEvents[i]->mId;
-        QList<int> phasesIds = model->mEvents[i]->mPhasesIds;
-        
-        // Link des events / phases
-        for(int j=0; j<model->mPhases.size(); ++j)
-        {
-            int phaseId = model->mPhases[j]->mId;
-            if(phasesIds.contains(phaseId))
-            {
-                model->mEvents[i]->mPhases.append(model->mPhases[j]);
-                model->mPhases[j]->mEvents.append(model->mEvents[i]);
-            }
-        }
-        
-        // Link des events / contraintes d'event
-        for(int j=0; j<model->mEventConstraints.size(); ++j)
-        {
-            if(model->mEventConstraints[j]->mFromId == eventId)
-            {
-                model->mEventConstraints[j]->mEventFrom = model->mEvents[i];
-                model->mEvents[i]->mConstraintsFwd.append(model->mEventConstraints[j]);
-            }
-            else if(model->mEventConstraints[j]->mToId == eventId)
-            {
-                model->mEventConstraints[j]->mEventTo = model->mEvents[i];
-                model->mEvents[i]->mConstraintsBwd.append(model->mEventConstraints[j]);
-            }
-        }
-    }
-    // Link des phases / contraintes de phase
-    for(int i=0; i<model->mPhases.size(); ++i)
-    {
-        int phaseId = model->mPhases[i]->mId;
-        for(int j=0; j<model->mPhaseConstraints.size(); ++j)
-        {
-            if(model->mPhaseConstraints[j]->mFromId == phaseId)
-            {
-                model->mPhaseConstraints[j]->mPhaseFrom = model->mPhases[i];
-                model->mPhases[i]->mConstraintsFwd.append(model->mPhaseConstraints[j]);
-            }
-            else if(model->mPhaseConstraints[j]->mToId == phaseId)
-            {
-                model->mPhaseConstraints[j]->mPhaseTo = model->mPhases[i];
-                model->mPhases[i]->mConstraintsBwd.append(model->mPhaseConstraints[j]);
-            }
-        }
-    }
-    return model;
-}*/
+}
 
 #pragma mark JSON conversion
-/*void Model::setJson( const QJsonObject & json)
-{
-    mJson = &json;
-}
-const QJsonObject &  Model::getJson()
-{
-    return (*mJson) ;
-}
-*/
+
 void Model::fromJson(const QJsonObject& json)
 {
     if(json.contains(STATE_SETTINGS))
     {
-        QJsonObject settings = json[STATE_SETTINGS].toObject();
+        QJsonObject settings = json.value(STATE_SETTINGS).toObject();
         mSettings = ProjectSettings::fromJson(settings);
     }
 
     if(json.contains(STATE_MCMC))
     {
-        QJsonObject mcmc = json[STATE_MCMC].toObject();
+        QJsonObject mcmc = json.value(STATE_MCMC).toObject();
         mMCMCSettings = MCMCSettings::fromJson(mcmc);
         mChains = mMCMCSettings.getChains();
     }
 
     if(json.contains(STATE_PHASES))
     {
-        QJsonArray phases = json[STATE_PHASES].toArray();
+        QJsonArray phases = json.value(STATE_PHASES).toArray();
         for(int i=0; i<phases.size(); ++i)
         {
             QJsonObject phase = phases[i].toObject();
@@ -273,7 +145,7 @@ void Model::fromJson(const QJsonObject& json)
                 catch(QString error){
                     QMessageBox message(QMessageBox::Critical,
                                         qApp->applicationName() + " " + qApp->applicationVersion(),
-                                        tr("Error : ") + error,
+                                        QObject::tr("Error : ") + error,
                                         QMessageBox::Ok,
                                         qApp->activeWindow(),
                                         Qt::Sheet);
@@ -640,11 +512,11 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
                 //l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mAlpha.mTrace.at(shift + j)));
                 //l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mBeta.mTrace.at(shift + j)));
 
-                double valueAlpha = phase->mAlpha.mTrace.at(shift + j);
+                double valueAlpha = phase->mAlpha.mFormatedTrace.at(shift + j);
                 if(withDateFormat) valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
                 l << locale.toString(valueAlpha);
 
-                double valueBeta = phase->mBeta.mTrace.at(shift + j);
+                double valueBeta = phase->mBeta.mFormatedTrace.at(shift + j);
                 if(withDateFormat) valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
                 l << locale.toString(valueBeta);
 
@@ -691,12 +563,12 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
         {
             QStringList l;
             l << QString::number(shift + j) ;
-            double valueAlpha = phase->mAlpha.mTrace.at(shift + j);
+            double valueAlpha = phase->mAlpha.mFormatedTrace.at(shift + j);
             if(withDateFormat) valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
             l << locale.toString(valueAlpha);
             //l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mAlpha.mTrace.at(shift + j)));
 
-            double valueBeta = phase->mBeta.mTrace.at(shift + j);
+            double valueBeta = phase->mBeta.mFormatedTrace.at(shift + j);
             if(withDateFormat) valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
             l << locale.toString(valueBeta);
             //l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mBeta.mTrace.at(shift + j)));
@@ -704,7 +576,7 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
             for(int k=0; k<phase->mEvents.size(); ++k)
             {
                 Event* event = phase->mEvents.at(k);
-                double value = event->mTheta.mTrace.at(shift + j);
+                double value = event->mTheta.mFormatedTrace.at(shift + j);
                 if(withDateFormat) value = DateUtils::convertToAppSettingsFormat(value);
                 l << locale.toString(value);
                 //l << locale.toString(DateUtils::convertToAppSettingsFormat(event->mTheta.mTrace.at(shift + j)));
@@ -748,7 +620,7 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
             for(int k=0; k<mEvents.size(); ++k)
             {
                 Event* event = mEvents.at(k);
-                double value = event->mTheta.mTrace.at(shift + j);
+                double value = event->mTheta.mFormatedTrace.at(shift + j);
                 if(withDateFormat) value = DateUtils::convertToAppSettingsFormat(value);
                 l << locale.toString(value);
             }
@@ -764,7 +636,7 @@ bool Model::isValid()
 {
     // 1 - At least one event is required in a model
     if(mEvents.size() == 0)
-        throw tr("At least one event is required");
+        throw QObject::tr("At least one event is required");
     
     // 2 - The event must contain at least 1 data
     for(int i=0; i<mEvents.size(); ++i)
@@ -772,7 +644,7 @@ bool Model::isValid()
         if(mEvents.at(i)->type() == Event::eDefault)
         {
             if(mEvents.at(i)->mDates.size() == 0)
-                throw tr(" The event") + " \"" + mEvents.at(i)->mName + "\" " + tr("must contain at least 1 data");
+                throw QObject::tr(" The event") + " \"" + mEvents.at(i)->mName + "\" " + QObject::tr("must contain at least 1 data");
         }
     }
     
@@ -780,7 +652,7 @@ bool Model::isValid()
     for(int i=0; i<mPhases.size(); ++i)
     {
         if(mPhases.at(i)->mEvents.size() == 0)
-            throw tr("The phase") + " \"" + mPhases.at(i)->mName + "\" " + tr("must contain at least 1 event");
+            throw QObject::tr("The phase") + " \"" + mPhases.at(i)->mName + "\" " + QObject::tr("must contain at least 1 event");
     }
     
     // 4 - Pas de circularité sur les contraintes de faits
@@ -827,10 +699,10 @@ bool Model::isValid()
         for(int j=0; j<eventBranches[i].size(); ++j)
         {
             Event* event = eventBranches[i][j];
-            if(event->mType == Event::eKnown)
+            if(event->type() == Event::eKnown)
             {
                 EventKnown* bound = dynamic_cast<EventKnown*>(event);
-                
+
                 // --------------------
                 // Check bound interval lower value
                 // --------------------
@@ -1060,7 +932,7 @@ bool Model::isValid()
 }
 
 #pragma mark Generate model data
-void Model::generateCorrelations(const QList<Chain>& chains)
+void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 {
     QTime t = QTime::currentTime();
     
@@ -1089,12 +961,14 @@ void Model::generateCorrelations(const QList<Chain>& chains)
     qDebug() <<  "=> Model::generateCorrelations done in " + QString::number(timeDiff) + " ms";
 }
 
-void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen, double hFactor)
+void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double hFactor)
 {
     QTime t = QTime::currentTime();
     
-    double tmin = mSettings.mTmin;
-    double tmax = mSettings.mTmax;
+    /*double tmin = mSettings.mTmin;
+    double tmax = mSettings.mTmax;*/
+    const double tmin = mSettings.getTminFormated();
+    const double tmax = mSettings.getTmaxFormated();
     
     for(int i=0; i<mEvents.size(); ++i)
     {
@@ -1109,7 +983,7 @@ void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen, d
             ek->mTheta.mChainsHistos.clear();
             
             ek->mTheta.mHisto.insert(ek->mFixed,1);
-            for(int i=0; i<chains.size(); ++i)
+            for(int i=0; i<chains.size(); ++i) //generate fictifious chains
                 ek->mTheta.mChainsHistos.append(ek->mTheta.mHisto);
         }
         else
@@ -1123,10 +997,10 @@ void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen, d
             Date& date = event->mDates[j];
             
             date.mTheta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
-            date.mSigma.generateHistos(chains, fftLen, hFactor, 0, tmax - tmin);
+            date.mSigma.generateHistos(chains, fftLen, hFactor);
             
             if(!(date.mDeltaType == Date::eDeltaFixed && date.mDeltaFixed == 0))
-                date.mWiggle.generateHistos(chains, fftLen, hFactor, tmin, tmax);
+                date.mWiggle.generateHistos(chains, fftLen, hFactor);
         }
     }
     
@@ -1136,7 +1010,7 @@ void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen, d
         
         phase->mAlpha.generateHistos(chains, fftLen, hFactor, tmin, tmax);
         phase->mBeta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
-        phase->mDuration.generateHistos(chains, fftLen, hFactor, 0, tmax - tmin);
+        phase->mDuration.generateHistos(chains, fftLen, hFactor);
     }
     
     QTime t2 = QTime::currentTime();
@@ -1144,7 +1018,7 @@ void Model::generatePosteriorDensities(const QList<Chain>& chains, int fftLen, d
     qDebug() <<  "=> Model::generatePosteriorDensities done in " + QString::number(timeDiff) + " ms";
 }
 
-void Model::generateNumericalResults(const QList<Chain>& chains)
+void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
 {
     QTime t = QTime::currentTime();
     
@@ -1174,7 +1048,7 @@ void Model::generateNumericalResults(const QList<Chain>& chains)
     qDebug() <<  "=> Model::generateNumericalResults done in " + QString::number(timeDiff) + " ms";
 }
 
-void Model::generateCredibilityAndHPD(const QList<Chain>& chains, double thresh)
+void Model::generateCredibilityAndHPD(const QList<ChainSpecs> &chains, double thresh)
 {
     QTime t = QTime::currentTime();
     

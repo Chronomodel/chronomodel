@@ -14,9 +14,7 @@
 Date::Date():
 mName("No Named Date")
 {
-
-    init();
-    
+    init();   
 }
 
 Date::Date(PluginAbstract* plugin):
@@ -29,11 +27,17 @@ mName("No Named Date")
 void Date::init()
 {
     mColor=Qt::blue;
-    mTheta.mIsDate = true;
-    mSigma.mIsDate = false;
+
+    //mTheta.mIsDate = true;
+    //mSigma.mIsDate = false;
+
     mTheta.mSupport = MetropolisVariable::eR;
     mSigma.mSupport = MetropolisVariable::eRp;
     mWiggle.mSupport = MetropolisVariable::eR;
+
+    mTheta.mFormat = DateUtils::eUnknowed;
+    mSigma.mFormat = DateUtils::eUnknowed;
+    mWiggle.mFormat = DateUtils::eUnknowed;
 
     mId = 0;
     mMethod = eMHSymetric;
@@ -280,7 +284,7 @@ void Date::calibrate(const ProjectSettings& settings)
         QVector<double> calibrationTemp;
         QVector<double> repartitionTemp;
 
-        double nbRefPts = 1 + round((mTmaxRefCurve - mTminRefCurve) / mSettings.mStep);
+        double nbRefPts = 1 + round((mTmaxRefCurve - mTminRefCurve) / settings.mStep);
         long double v = getLikelihood(mTminRefCurve);
         calibrationTemp.append(v);
         repartitionTemp.append(0);
@@ -290,7 +294,7 @@ void Date::calibrate(const ProjectSettings& settings)
         // after several sums, the repartion can be in the double type range
         for(int i = 1; i < nbRefPts; ++i)
         {
-            double t = mTminRefCurve + (double)i * mSettings.mStep;
+            double t = mTminRefCurve + (double)i * settings.mStep;
             long double lastV = v;
             v = getLikelihood(t);
             
@@ -298,7 +302,7 @@ void Date::calibrate(const ProjectSettings& settings)
             long double rep = lastRepVal;
             if(v != 0 && lastV != 0)
             {
-                rep = lastRepVal + (long double) mSettings.mStep * (lastV + v) / 2.;
+                rep = lastRepVal + (long double) settings.mStep * (lastV + v) / 2.;
             }
             repartitionTemp.append((double)rep);
             lastRepVal = rep;
@@ -314,8 +318,8 @@ void Date::calibrate(const ProjectSettings& settings)
             const int minIdx = (int)floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp));
             const int maxIdx = (int)ceil(vector_interpolate_idx_for_value((1 - threshold) * lastRepVal, repartitionTemp));
             
-            mTminCalib = mTminRefCurve + minIdx * mSettings.mStep;
-            mTmaxCalib = mTminRefCurve + maxIdx * mSettings.mStep;
+            mTminCalib = mTminRefCurve + minIdx * settings.mStep;
+            mTmaxCalib = mTminRefCurve + maxIdx * settings.mStep;
             
             // Truncate both functions where data live
             mCalibration = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
@@ -331,7 +335,7 @@ void Date::calibrate(const ProjectSettings& settings)
             mRepartition = stretch_vector(mRepartition, 0, 1);
             
             // Approximation : even if the calib has been truncated, we consider its area to be = 1
-            mCalibration = equal_areas(mCalibration, mSettings.mStep, 1.);
+            mCalibration = equal_areas(mCalibration, settings.mStep, 1.);
 
         }
         // ------------------------------------------------------------------
@@ -353,9 +357,64 @@ void Date::calibrate(const ProjectSettings& settings)
     }
 }
 
-QMap<double, double> Date::getCalibMap() const
+
+QMap<double, double> Date::getRawCalibMap() const
 {
     return vector_to_map(mCalibration, mTminCalib, mTmaxCalib, mSettings.mStep);
+}
+
+QMap<double, double> Date::getFormatedCalibMap() const
+{
+    if(mCalibration.isEmpty()) return QMap<double,double>();
+
+    QMap<double,double> calib = vector_to_map(mCalibration, mTminCalib, mTmaxCalib, mSettings.mStep);
+    QMap<double,double>::const_iterator iter = calib.cbegin();
+    QMap<double,double> formatedCalib;
+    while(iter!= calib.constEnd()){
+        formatedCalib.insert(DateUtils::convertToAppSettingsFormat(iter.key()), iter.value());
+        ++iter;
+    }
+    return formatedCalib;
+
+}
+
+QVector<double> Date::getFormatedRepartition() const
+{
+    if(DateUtils::convertToAppSettingsFormat(mTminCalib)>DateUtils::convertToAppSettingsFormat(mTmaxCalib)) {
+       // reverse the QVector and complement, we suppose it's the same step
+        QVector<double> repart;
+        double lastValue =mRepartition.last();
+        QVector<double>::const_iterator iter = mRepartition.cend()-1;
+        while(iter!=mRepartition.cbegin()-1)
+        {
+             repart.append(lastValue-(*iter));
+             --iter;
+        }
+        return repart;
+    }
+    else {
+        return mRepartition;
+    }
+
+}
+
+
+double Date::getFormatedTminRefCurve() const
+{
+    return qMin(DateUtils::convertToAppSettingsFormat(getTminRefCurve()),DateUtils::convertToAppSettingsFormat(getTmaxRefCurve()));
+}
+double Date::getFormatedTmaxRefCurve() const
+{
+    return qMax(DateUtils::convertToAppSettingsFormat(getTminRefCurve()),DateUtils::convertToAppSettingsFormat(getTmaxRefCurve()));
+}
+
+double Date::getFormatedTminCalib() const
+{
+    return qMin(DateUtils::convertToAppSettingsFormat(getTminCalib()),DateUtils::convertToAppSettingsFormat(getTmaxCalib()));
+}
+double Date::getFormatedTmaxCalib()const
+{
+    return qMax(DateUtils::convertToAppSettingsFormat(getTminCalib()),DateUtils::convertToAppSettingsFormat(getTmaxCalib()));
 }
 
 QPixmap Date::generateTypoThumb()
@@ -366,8 +425,8 @@ QPixmap Date::generateTypoThumb()
         QSize size(200, 30);
         QPixmap thumb(size);
 
-        double tLower = mData[DATE_UNIFORM_MIN_STR].toDouble();
-        double tUpper = mData[DATE_UNIFORM_MAX_STR].toDouble();
+        double tLower = mData.value(DATE_UNIFORM_MIN_STR).toDouble();
+        double tUpper = mData.value(DATE_UNIFORM_MAX_STR).toDouble();
 
        // bool isFixed = (tLower == tUpper);
 
@@ -469,7 +528,7 @@ QPixmap Date::generateCalibThumb()
         QColor color = mPlugin->getColor();//  Painting::mainColorLight;
         
         GraphCurve curve;
-        curve.mData = normalize_map(getCalibMap());
+        curve.mData = normalize_map(getRawCalibMap());
         curve.mName = "Calibration";
         curve.mPen = QPen(color, 2.f);
         curve.mBrush = color;

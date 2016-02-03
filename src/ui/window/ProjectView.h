@@ -38,7 +38,7 @@ public slots:
     void showLog();
     void showHelp(bool show);
     
-    void ApplySettings(Model*);
+    void ApplySettings(Model* model, const AppSettings* appSet);
 
     void updateResults(Model*);
     void updateResultsLog(const QString& log);

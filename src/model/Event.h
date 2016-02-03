@@ -9,6 +9,7 @@
 #include <QColor>
 #include <QJsonObject>
 
+
 class Phase;
 class EventConstraint;
 

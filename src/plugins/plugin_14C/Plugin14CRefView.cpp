@@ -31,28 +31,42 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
 {
     QLocale locale = QLocale();
     GraphViewRefAbstract::setDate(date, settings);
-    
-    mGraph->setRangeX(mTminDisplay, mTmaxDisplay);
-    mGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
+    double tminDisplay;
+    double tmaxDisplay;
+    {
+        const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
+        const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
+        const double t3 = date.getFormatedTminCalib();
+        const double t4 = date.getFormatedTmaxCalib();
+
+        tminDisplay = qMin(t1,qMin(t2,t3));
+        tmaxDisplay = qMax(t1,qMax(t2,t4));
+    }
+
+    mGraph->setRangeX(tminDisplay, tmaxDisplay);
+    mGraph->setCurrentX(tminDisplay, tmaxDisplay);
     
     mGraph->removeAllCurves();
     mGraph->clearInfos();
     mGraph->showInfos(true);
-    mGraph->setFormatFunctX(mFormatFuncX);
+    mGraph->setFormatFunctX(0);
     
     if(!date.isNull())
     {
         double age = date.mData.value(DATE_14C_AGE_STR).toDouble();
         double error = date.mData.value(DATE_14C_ERROR_STR).toDouble();
-        double delta_r = date.mData.value(DATE_14C_DELTA_R_STR).toDouble();
-        double delta_r_error = date.mData.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
-        QString ref_curve = date.mData.value(DATE_14C_REF_CURVE_STR).toString().toLower();
+        const double delta_r = date.mData.value(DATE_14C_DELTA_R_STR).toDouble();
+        const double delta_r_error = date.mData.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
+        const QString ref_curve = date.mData.value(DATE_14C_REF_CURVE_STR).toString().toLower();
         
         // ----------------------------------------------
         //  Reference curve
         // ----------------------------------------------
         
-        QColor color2(150, 150, 150);
+        const double tminRef = date.getFormatedTminRefCurve();
+        const double tmaxRef = date.getFormatedTmaxRefCurve();
+
+        const QColor color2(150, 150, 150);
         
         Plugin14C* plugin = (Plugin14C*)date.mPlugin;
 
@@ -63,46 +77,47 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             GraphZone zone;
             zone.mColor = Qt::gray;
             zone.mColor.setAlpha(25);
-            zone.mXStart = mTminDisplay;
-            zone.mXEnd = mTmaxDisplay;
+            zone.mXStart = tminDisplay;
+            zone.mXEnd = tmaxDisplay;
             zone.mText = tr("No reference data");
             mGraph->addZone(zone);
             return;
         }
 
-        if(mTminDisplay < mTminRef){
+        if(tminDisplay < tminRef){
             GraphZone zone;
             zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(35);
-            zone.mXStart = mTminDisplay;
-            zone.mXEnd = mTminRef;
+            zone.mXStart = tminDisplay;
+            zone.mXEnd = tminRef;
             zone.mText = tr("Outside reference area");
             mGraph->addZone(zone);
         }
 
-        if(mTmaxRef < mTmaxDisplay){
+        if(tmaxRef < tmaxDisplay){
             GraphZone zone;
             zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(35);
-            zone.mXStart = mTmaxRef;
-            zone.mXEnd = mTmaxDisplay;
+            zone.mXStart = tmaxRef;
+            zone.mXEnd = tmaxDisplay;
             zone.mText = tr("Outside reference area");
             mGraph->addZone(zone);
         }
 
-        double yMin = plugin->getRefValueAt(date.mData, qMax(mTminDisplay, mTminRef));
+        double yMin = plugin->getRefValueAt(date.mData, qMax(tminDisplay, tminRef));
         double yMax = yMin;
 
         QMap<double, double> curveG;
         QMap<double, double> curveG95Sup;
         QMap<double, double> curveG95Inf;
 
-        for(double t=mTminDisplay; t<=mTmaxDisplay; ++t)
+        for(double t=tminDisplay; t<=tmaxDisplay; ++t)
         {
-            if(t>mTminRef && t<mTmaxRef)
+            if(t>tminRef && t<tmaxRef)
             {
-                double value = plugin->getRefValueAt(date.mData, t);
-                double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
+                const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
+                const double value = plugin->getRefValueAt(date.mData, tRaw);
+                const double error = plugin->getRefErrorAt(date.mData, tRaw) * 1.96;
                 
                 curveG[t] = value;
                 curveG95Sup[t] = value + error;

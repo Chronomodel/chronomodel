@@ -21,12 +21,14 @@ mIsCurrent(false),
 mLevel(0)
 {
     mColor = randomColor();
-    mAlpha.mIsDate = true;
     mAlpha.mSupport = MetropolisVariable::eBounded;
-    mBeta.mIsDate = true;
+    mAlpha.mFormat = DateUtils::eUnknowed;;
+
     mBeta.mSupport = MetropolisVariable::eBounded;
-    mDuration.mIsDate = false;
+    mBeta.mFormat = DateUtils::eUnknowed;;
+
     mDuration.mSupport = MetropolisVariable::eRp;
+    mDuration.mFormat = DateUtils::eUnknowed;;
     // Item initial position :
     mItemX = 0;
     mItemY = 0;
@@ -88,18 +90,18 @@ Phase::~Phase()
 Phase Phase::fromJson(const QJsonObject& json)
 {
     Phase p;
-    p.mId = json[STATE_ID].toInt();
-    p.mName = json[STATE_NAME].toString();
-    p.mColor = QColor(json[STATE_COLOR_RED].toInt(), json[STATE_COLOR_GREEN].toInt(), json[STATE_COLOR_BLUE].toInt());
+    p.mId = json.value(STATE_ID).toInt();
+    p.mName = json.value(STATE_NAME).toString();
+    p.mColor = QColor(json.value(STATE_COLOR_RED).toInt(), json.value(STATE_COLOR_GREEN).toInt(), json.value(STATE_COLOR_BLUE).toInt());
     
-    p.mItemX = json[STATE_ITEM_X].toDouble();
-    p.mItemY = json[STATE_ITEM_Y].toDouble();
-    p.mTauType = (Phase::TauType)json[STATE_PHASE_TAU_TYPE].toInt();
-    p.mTauFixed = json[STATE_PHASE_TAU_FIXED].toDouble();
-    p.mTauMin = json[STATE_PHASE_TAU_MIN].toDouble();
-    p.mTauMax = json[STATE_PHASE_TAU_MAX].toDouble();
-    p.mIsSelected = json[STATE_IS_SELECTED].toBool();
-    p.mIsCurrent = json[STATE_IS_CURRENT].toBool();
+    p.mItemX = json.value(STATE_ITEM_X).toDouble();
+    p.mItemY = json.value(STATE_ITEM_Y).toDouble();
+    p.mTauType = (Phase::TauType)json.value(STATE_PHASE_TAU_TYPE).toInt();
+    p.mTauFixed = json.value(STATE_PHASE_TAU_FIXED).toDouble();
+    p.mTauMin = json.value(STATE_PHASE_TAU_MIN).toDouble();
+    p.mTauMax = json.value(STATE_PHASE_TAU_MAX).toDouble();
+    p.mIsSelected = json.value(STATE_IS_SELECTED).toBool();
+    p.mIsCurrent = json.value(STATE_IS_CURRENT).toBool();
     
     return p;
 }
@@ -195,10 +197,9 @@ double Phase::getMinThetaEvents(double tmin)
 
 }
 
-// On pourra regarder juste les alpha et beta qui sont déjà mémorisés
+
 double Phase::getMinThetaNextPhases(double tmax)
 {
-    //qDebug() << "=> Phase étudiée : " << mName << " : getMinThetaNextPhases";
     
     double minTheta = tmax;
     for(int i=0; i<mConstraintsFwd.size(); ++i)

@@ -45,11 +45,11 @@ QString MCMCLoopMain::calibrate()
         QList<Date*> dates;
         for(int i=0; i<events.size(); ++i)
         {
-            int num_dates = (int)events[i]->mDates.size();
+            int num_dates = (int)events.at(i)->mDates.size();
             for(int j=0; j<num_dates; ++j)
             {
-                Date* date = &events[i]->mDates[j];
-                date->mCalibration=events[i]->mDates[j].mCalibration;
+                Date* date = &events.at(i)->mDates[j];
+                date->mCalibration=events[i]->mDates.at(j).mCalibration;
                 dates.push_back(date);
             }
         }
@@ -80,14 +80,14 @@ QString MCMCLoopMain::calibrate()
 
 void MCMCLoopMain::initVariablesForChain()
 {
-    Chain& chain = mChains[mChainIndex];
+    ChainSpecs& chain = mChains[mChainIndex];
     QList<Event*>& events = mModel->mEvents;
     
     int acceptBufferLen = chain.mNumBatchIter; //chainLen / 100;
     
     for(int i=0; i<events.size(); ++i)
     {
-        Event* event = events[i];
+        Event* event = events.at(i);
         event->mTheta.mLastAccepts.clear();
         event->mTheta.mLastAccepts.reserve(acceptBufferLen);
         event->mTheta.mLastAcceptsLength = acceptBufferLen;
@@ -163,9 +163,10 @@ QString MCMCLoopMain::initMCMC()
     
     for(int i=0; i<eventsByLevel.size(); ++i)
     {
-        if(eventsByLevel[i]->mType == Event::eKnown)
+        if(eventsByLevel.at(i)->type() == Event::eKnown)
         {
             EventKnown* bound = dynamic_cast<EventKnown*>(eventsByLevel[i]);
+
             if(bound)
             {
                 if(curLevel != bound->mLevel)
@@ -417,7 +418,7 @@ void MCMCLoopMain::update()
     double t_min = mModel->mSettings.mTmin;
     double t_max = mModel->mSettings.mTmax;
     
-    Chain& chain = mChains[mChainIndex];
+    ChainSpecs& chain = mChains[mChainIndex];
     
     bool doMemo = (mState == eBurning) || (mState == eAdapting) || (chain.mTotalIter % chain.mThinningInterval == 0);
     
@@ -512,7 +513,7 @@ void MCMCLoopMain::update()
 
 bool MCMCLoopMain::adapt()
 {
-    Chain& chain = mChains[mChainIndex];
+    ChainSpecs& chain = mChains[mChainIndex];
     QList<Event*>& events = mModel->mEvents;
     
     const double taux_min = 41.;           // taux_min minimal rate of acceptation=42

@@ -6,6 +6,7 @@
 
 class MHVariable: public MetropolisVariable
 {
+   // Q_OBJECT
 public:
     MHVariable();
     virtual ~MHVariable();
@@ -19,10 +20,10 @@ public:
     
     bool tryUpdate(const double x, const double rapportToTry);
     
-    QVector<double> acceptationForChain(const QList<Chain>& chains, int index);
-    void generateGlobalRunAcceptation(const QList<Chain>& chains);
+    QVector<double> acceptationForChain(const QList<ChainSpecs>& chains, int index);
+    void generateGlobalRunAcceptation(const QList<ChainSpecs>& chains);
     
-    void generateNumericalResults(const QList<Chain>& chains);
+    void generateNumericalResults(const QList<ChainSpecs>& chains);
     QString resultsString(const QString& nl = "<br>",
                           const QString& noResultMessage = QObject::tr("No result to display"),
                           const QString& unit = QString(),

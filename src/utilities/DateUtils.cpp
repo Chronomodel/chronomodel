@@ -1,10 +1,12 @@
 #include "DateUtils.h"
 #include "MainWindow.h"
+#include "QtUtilities.h"
 #include <cmath>
 #include <QLocale>
 
 
-double DateUtils::convertToFormat(const double valueToFormat, const FormatDate format){
+double DateUtils::convertToFormat(const double valueToFormat, const FormatDate format)
+{
     switch (format) {
         case eCalBP:
             return 1950. - valueToFormat;
@@ -13,12 +15,14 @@ double DateUtils::convertToFormat(const double valueToFormat, const FormatDate f
             return 2000. - valueToFormat;
             break;
         case eBCAD:
+        case eNumeric:
         default:
             return valueToFormat;
             break;
     }
 }
-double DateUtils::convertFromFormat(const double formattedValue, const FormatDate format){
+double DateUtils::convertFromFormat(const double formattedValue, const FormatDate format)
+{
     switch (format) {
         case eCalBP:
             return 1950. - formattedValue;
@@ -27,12 +31,14 @@ double DateUtils::convertFromFormat(const double formattedValue, const FormatDat
             return 2000. - formattedValue;
             break;
         case eBCAD:
+        case eNumeric:
         default:
             return formattedValue;
             break;
     }
 }
-QString DateUtils::formatString(const FormatDate format){
+QString DateUtils::formatString(const FormatDate format)
+{
     switch (format) {
         case eCalBP:
             return "Cal BP";
@@ -43,18 +49,22 @@ QString DateUtils::formatString(const FormatDate format){
         case eBCAD:
             return "BC/AD";
             break;
+        case eNumeric:
         default:
             return "";
             break;
     }
 }
 
+QString DateUtils::dateToString(const double date)
+{
+    return formatValueToAppSettingsPrecision(date);
+}
 
-QString DateUtils::dateToString(const double date, int precision){
+QString DateUtils::dateToString(const double date, int precision)
+{
     QLocale locale;
     locale.setNumberOptions(QLocale::OmitGroupSeparator);
-    if(precision == -1)
-        precision = MainWindow::getInstance()->getAppSettings().mPrecision;
     char fmt = 'f';
     if (date>250000){
         fmt = 'G';
@@ -65,25 +75,36 @@ QString DateUtils::dateToString(const double date, int precision){
     else
         return locale.toString(date, fmt, precision);
 }
-QString DateUtils::getAppSettingsFormat(){
-    return formatString(MainWindow::getInstance()->getAppSettings().mFormatDate);
+
+DateUtils::FormatDate DateUtils::getAppSettingsFormat()
+{
+    return MainWindow::getInstance()->getAppSettings().mFormatDate;
+}
+
+QString DateUtils::getAppSettingsFormatStr()
+{
+    return formatString(getAppSettingsFormat());
 }
 
 
-QString DateUtils::convertToAppSettingsFormatStr(const double valueToFormat){
+QString DateUtils::convertToAppSettingsFormatStr(const double valueToFormat)
+{
     return dateToString(convertToAppSettingsFormat(valueToFormat));
 }
-double DateUtils::convertToAppSettingsFormat(const double valueToFormat){
-    const AppSettings& s = MainWindow::getInstance()->getAppSettings();
-    return DateUtils::convertToFormat(valueToFormat, s.mFormatDate);
+
+double DateUtils::convertToAppSettingsFormat(const double valueToFormat)
+{
+    return DateUtils::convertToFormat(valueToFormat, getAppSettingsFormat());
 }
 
-QString DateUtils::convertFromAppSettingsFormatStr(const double formattedValue){
+QString DateUtils::convertFromAppSettingsFormatStr(const double formattedValue)
+{
     return dateToString(convertFromAppSettingsFormat(formattedValue));
 }
-double DateUtils::convertFromAppSettingsFormat(const double formattedValue){
-    const AppSettings& s = MainWindow::getInstance()->getAppSettings();
-    return DateUtils::convertFromFormat(formattedValue, s.mFormatDate);
+
+double DateUtils::convertFromAppSettingsFormat(const double formattedValue)
+{
+    return DateUtils::convertFromFormat(formattedValue, getAppSettingsFormat());
 }
 
 

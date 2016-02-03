@@ -23,10 +23,10 @@ void MCMCLoop::setMCMCSettings(const MCMCSettings& s)
     mChains.clear();
     for(int i=0; i<(int)s.mNumChains; ++i)
     {
-        Chain chain;
+        ChainSpecs chain;
         
         if(i < s.mSeeds.size())
-            chain.mSeed = s.mSeeds[i];
+            chain.mSeed = s.mSeeds.at(i);
         else
             chain.mSeed = Generator::createSeed();
         
@@ -44,7 +44,7 @@ void MCMCLoop::setMCMCSettings(const MCMCSettings& s)
     }
 }
 
-const QList<Chain>& MCMCLoop::chains()
+const QList<ChainSpecs> &MCMCLoop::chains()
 {
     return mChains;
 }
@@ -90,7 +90,7 @@ void MCMCLoop::run()
         
 
         
-        Chain& chain = mChains[mChainIndex];
+        ChainSpecs& chain = mChains[mChainIndex];
         Generator::initGenerator(chain.mSeed);
         
         log += line("Seed : " + QString::number(chain.mSeed));

@@ -18,13 +18,12 @@ GraphViewDate::GraphViewDate(QWidget *parent):GraphViewResults(parent),
 mDate(0),
 mColor(Qt::blue)
 {
-    //setMainColor(QColor(150, 150, 150));
     setMainColor(QColor(155, 155, 155));
     mGraph->setBackgroundColor(Qt::white);
-    if(mCurrentVariable == eTheta)
+    /*if(mCurrentVariable == eTheta)
         mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
     else if(mCurrentVariable == eSigma)
-        mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
+        mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);*/
 }
 
 GraphViewDate::~GraphViewDate()
@@ -110,8 +109,8 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             {
                 mTitle = QString(tr("Data") + " : " + mDate->mName);
 
-                mGraph->mLegendX = DateUtils::getAppSettingsFormat();
-                mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
+                mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+                mGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
                 mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
                 
                 //  Post Distrib All Chains
@@ -127,7 +126,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 {
                     GraphCurve curvePostDistribChain = generateDensityCurve(variableDate->histoForChain(i),
                                                                        "Post Distrib Chain " + QString::number(i),
-                                                                       Painting::chainColors[i],
+                                                                       Painting::chainColors.at(i),
                                                                        Qt::SolidLine,
                                                                        Qt::NoBrush);
                     mGraph->addCurve(curvePostDistribChain);
@@ -142,7 +141,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 
                 
                 // Calibration
-                GraphCurve curveCalib = generateDensityCurve(mDate->getCalibMap(),
+                GraphCurve curveCalib = generateDensityCurve(mDate->getFormatedCalibMap(),
                                                              "Calibration",
                                                              QColor(150, 150, 150),
                                                              Qt::SolidLine,
@@ -191,7 +190,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 {
                     GraphCurve curvePostDistribChain = generateDensityCurve(variableDate->histoForChain(i),
                                                                             "Post Distrib Chain " + QString::number(i),
-                                                                            Painting::chainColors[i],
+                                                                            Painting::chainColors.at(i),
                                                                             Qt::SolidLine,
                                                                             Qt::NoBrush);
                     mGraph->addCurve(curvePostDistribChain);
@@ -247,7 +246,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         {
             mGraph->mLegendX = "";
             mGraph->setFormatFunctX(0);
-            mGraph->setFormatFunctY(0);
+            mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
             mGraph->setRangeY(-1, 1);
             
             generateCorrelCurves(mChains, variableDate);

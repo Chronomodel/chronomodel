@@ -2,19 +2,18 @@
 #define MODEL_H
 
 #include "ProjectSettings.h"
+#include "AppSettings.h"
 #include "MCMCSettings.h"
 #include "Event.h"
 #include "Phase.h"
 #include "EventConstraint.h"
 #include "PhaseConstraint.h"
 
-#include <QObject>
 #include <QJsonObject>
 
 
-class Model: public QObject
+class Model
 {
-    Q_OBJECT
 public:
     Model();
     QJsonObject toJson() const;
@@ -32,6 +31,7 @@ public:
     QList<QStringList> getPhaseTrace(int phaseIdx, const QLocale locale, const bool withDateFormat = false);
     QList<QStringList> getEventsTraces(const QLocale locale, const bool withDateFormat = false);
     
+    void updateFormatSettings(const AppSettings *appSet);
     virtual ~Model();
 
     //static fromJson(const QJsonObject& json);
@@ -51,13 +51,13 @@ public:
     void restoreFromFile(const QString& fileName);
     
     // Only trace needed for this :
-    void generateCorrelations(const QList<Chain>& chains);
+    void generateCorrelations(const QList<ChainSpecs>& chains);
     // Computed from trace using FFT :
-    void generatePosteriorDensities(const QList<Chain>& chains, int fftLen, double hFactor);
+    void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double hFactor);
     // Trace and Posterior density needed for this :
-    void generateCredibilityAndHPD(const QList<Chain>& chains, double threshold);
+    void generateCredibilityAndHPD(const QList<ChainSpecs>& chains, double threshold);
     // Trace and Posterior density needed for this :
-    void generateNumericalResults(const QList<Chain>& chains);
+    void generateNumericalResults(const QList<ChainSpecs>& chains);
     
     void clearPosteriorDensities();
     void clearCredibilityAndHPD();
@@ -71,13 +71,13 @@ public:
     QList<EventConstraint*> mEventConstraints;
     QList<PhaseConstraint*> mPhaseConstraints;
     
-    QList<Chain> mChains;
+    QList<ChainSpecs> mChains;
     
     QString mLogModel;
     QString mLogMCMC;
     QString mLogResults;
 private:
-    const QJsonObject * mJson;
+    //const QJsonObject * mJson;
 };
 
 #endif

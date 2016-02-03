@@ -15,7 +15,7 @@
 #define MCMC_MIXING_DEFAULT 0.99f
 
 
-struct Chain
+struct ChainSpecs
 {
     int mSeed;
     unsigned long mNumBurnIter;
@@ -44,7 +44,7 @@ public:
     void restoreDefault();
     QJsonObject toJson() const;
     
-    QList<Chain> getChains() const;
+    QList<ChainSpecs> getChains() const;
     
     unsigned int mNumChains;
     unsigned long long mNumRunIter;

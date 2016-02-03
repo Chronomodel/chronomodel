@@ -77,7 +77,13 @@ void GraphViewPhase::setPhase(Phase* phase)
     if(phase)
     {
         mPhase = phase;
-        setItemTitle(tr("Phase") + " : " + mPhase->mName);
+
+        if(mShowDuration->isChecked()) {
+           setItemTitle(tr("Duration") + " : " + mPhase->mName);
+        }
+        else {
+            setItemTitle(tr("Phase") + " : " + mPhase->mName);
+        }
         setItemColor(mPhase->mColor);
     }
     update();
@@ -159,14 +165,18 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         // ------------------------------------------------
         if(typeGraph == ePostDistrib && variable == eTheta)
         {
-            mGraph->mLegendX = DateUtils::getAppSettingsFormat();
+            mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             mGraph->mLegendY = "";
-            mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
+            mGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
             mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
-            mTitle =  tr("Phase") + " : " + mPhase->mName;
-            
-            mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);
-            
+            //mTitle =  tr("Phase") + " : " + mPhase->mName;
+            if(mShowDuration->isChecked()) {
+               mTitle = tr("Duration") + " : " + mPhase->mName;
+            }
+            else {
+                mTitle = tr("Phase") + " : " + mPhase->mName;
+            }
+
             mShowDuration->setVisible(true);
             showDuration(mShowDuration->isChecked());
             
@@ -286,17 +296,22 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             
             for(int i=0; i<mShowChainList.size(); ++i)
             {
-                mGraph->setCurveVisible("Post Distrib Alpha " + QString::number(i), mShowChainList[i]);
-                mGraph->setCurveVisible("Post Distrib Beta " + QString::number(i), mShowChainList[i]);
+                mGraph->setCurveVisible("Post Distrib Alpha " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Post Distrib Beta " + QString::number(i), mShowChainList.at(i));
             }
             mGraph->adjustYToMaxValue();
-            
+            mGraph->setTipXLab("t");
+            mGraph->setYAxisMode(GraphView::eHidden);
+
             mDurationGraph->setCurveVisible("Duration", mShowAllChains);
             mDurationGraph->setCurveVisible("HPD Duration", mShowAllChains);
             
             mDurationGraph->adjustYToMaxValue();
-            mGraph->setTipXLab("t");
-            mGraph->setYAxisMode(GraphView::eHidden);
+            mDurationGraph->setTipXLab("t");
+            mDurationGraph->setYAxisMode(GraphView::eHidden);
+
+
+
         }
         
         // ------------------------------------------------
@@ -313,15 +328,15 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         else if(mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta)
         {
             for(int i=0; i<mShowChainList.size(); ++i){
-                mGraph->setCurveVisible("Alpha Trace " + QString::number(i), mShowChainList[i]);
-                mGraph->setCurveVisible("Alpha Q1 " + QString::number(i), mShowChainList[i]);
-                mGraph->setCurveVisible("Alpha Q2 " + QString::number(i), mShowChainList[i]);
-                mGraph->setCurveVisible("Alpha Q3 " + QString::number(i), mShowChainList[i]);
+                mGraph->setCurveVisible("Alpha Trace " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Alpha Q1 " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Alpha Q2 " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Alpha Q3 " + QString::number(i), mShowChainList.at(i));
                 
-                mGraph->setCurveVisible("Beta Trace " + QString::number(i), mShowChainList[i]);
-                mGraph->setCurveVisible("Beta Q1 " + QString::number(i), mShowChainList[i]);
-                mGraph->setCurveVisible("Beta Q2 " + QString::number(i), mShowChainList[i]);
-                mGraph->setCurveVisible("Beta Q3 " + QString::number(i), mShowChainList[i]);
+                mGraph->setCurveVisible("Beta Trace " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Beta Q1 " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Beta Q2 " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Beta Q3 " + QString::number(i), mShowChainList.at(i));
             }
             mGraph->adjustYToMinMaxValue();
             mGraph->setTipXLab("iteration");
@@ -336,7 +351,14 @@ void GraphViewPhase::showDuration(bool show)
 {
     mDurationGraph->setVisible(show);
     mGraph->setVisible(!show);
+    if(mShowDuration->isChecked()) {
+       mTitle = tr("Duration") + " : " + mPhase->mName;
+    }
+    else {
+        mTitle = tr("Phase") + " : " + mPhase->mName;
+    }
     mShowDuration->raise();
+    update();
     
 }
 

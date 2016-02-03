@@ -64,7 +64,6 @@ mGraphsH(130)
     // -------------
     
     mStack = new QStackedWidget(this);
-    //connect(mStack, SIGNAL(clicked()), this, SLOT(updateResults()));// don't work
     
     mEventsScrollArea = new QScrollArea();
     mEventsScrollArea->setMouseTracking(true);
@@ -185,18 +184,18 @@ mGraphsH(130)
     
     mFont.setPointSize(pointSize(11.));
     mFontBut = new QPushButton(mFont.family());
-    connect(mFontBut, SIGNAL(clicked()), this, SLOT(updateFont()));
+    connect(mFontBut, &QPushButton::clicked, this, &ResultsView::updateFont);
     
     mThicknessSpin = new QSpinBox();
     mThicknessSpin->setRange(1, 10);
     mThicknessSpin->setSuffix(" px");
-    connect(mThicknessSpin, SIGNAL(valueChanged(int)), this, SLOT(updateThickness(int)));
+    connect(mThicknessSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::updateThickness);
     
     mOpacitySpin = new QSpinBox();
     mOpacitySpin->setRange(0, 100);
     mOpacitySpin->setValue(50);
     mOpacitySpin->setSuffix(" %");
-    connect(mOpacitySpin, SIGNAL(valueChanged(int)), this, SLOT(updateOpacity(int)));
+    connect(mOpacitySpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::updateOpacity);
     
     // Grid : 8 columns
     QGridLayout* displayLayout = new QGridLayout();
@@ -260,12 +259,13 @@ mGraphsH(130)
     mDataSigmaRadio = new RadioButton(tr("Individual std. deviations"), mResultsGroup);
     
     mShowDataUnderPhasesCheck = new CheckBox(tr("Unfold data under Event"), mResultsGroup);
-    mDataCalibCheck           = new CheckBox(tr("Individual calib. dates"), mResultsGroup);
+    mDataCalibCheck = new CheckBox(tr("Individual calib. dates"), mResultsGroup);
 
-    mWiggleCheck              = new CheckBox(tr("Wiggle shifted"), mResultsGroup);
-    mDataThetaRadio           -> setChecked(true);
-    mDataCalibCheck           -> setChecked(true);
-    mShowDataUnderPhasesCheck -> setChecked(false);
+    mWiggleCheck = new CheckBox(tr("Wiggle shifted"), mResultsGroup);
+    mDataThetaRadio->setChecked(true);
+    mDataCalibCheck->setChecked(true);
+    mShowDataUnderPhasesCheck->setChecked(false);
+    mShowDataUnderPhasesCheck->setVisible(false);
    
     /* -------------------------------------- mPostDistGroup ---------------------------------------------------*/
     
@@ -283,9 +283,9 @@ mGraphsH(130)
     mHPDEdit->setText("95");
     
     DoubleValidator* percentValidator = new DoubleValidator();
-    percentValidator -> setBottom(0.);
-    percentValidator -> setTop(100.);
-    percentValidator -> setDecimals(1);
+    percentValidator->setBottom(0.);
+    percentValidator->setTop(100.);
+    percentValidator->setDecimals(1);
     mHPDEdit->setValidator(percentValidator);
     
     mFFTLenLab = new Label(tr("Grid length") + " :", mPostDistGroup);
@@ -336,36 +336,36 @@ mGraphsH(130)
     
     // -------------------------
     
-    connect(this, SIGNAL(posteriorDistribGenerated()), this, SLOT(generateCredibilityAndHPD()));
-    connect(this, SIGNAL(credibilityAndHPDGenerated()), this, SLOT(generateCurves()));
-    connect(this, SIGNAL(curvesGenerated()), this, SLOT(updateCurvesToShow()));
+    connect(this, &ResultsView::posteriorDistribGenerated, this, &ResultsView::generateCredibilityAndHPD);
+    connect(this, &ResultsView::credibilityAndHPDGenerated, this, &ResultsView::generateCurves);
+    connect(this, &ResultsView::curvesGenerated, this, &ResultsView::updateCurvesToShow);
     
-    connect(this, SIGNAL(controlsUpdated()), this, SLOT(updateLayout()));
-    
-    // -------------------------
-    
-    connect(mTabs, SIGNAL(tabClicked(int)), this, SLOT(updateControls()));
-    connect(mByPhasesBut, SIGNAL(clicked()), this, SLOT(updateControls()));
-    connect(mByEventsBut, SIGNAL(clicked()), this, SLOT(updateControls()));
-    
-    connect(mTabs, SIGNAL(tabClicked(int)), this, SLOT(generateCurves()));
-    connect(mByPhasesBut, SIGNAL(clicked()), this, SLOT(generateCurves()));
-    connect(mByEventsBut, SIGNAL(clicked()), this, SLOT(generateCurves()));
+    connect(this, &ResultsView::controlsUpdated, this, &ResultsView::updateLayout);
     
     // -------------------------
     
-    connect(mFFTLenCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(generatePosteriorDistribs()));
-    connect(mHFactorEdit, SIGNAL(editingFinished()), this, SLOT(generatePosteriorDistribs()));
+    connect(mTabs, &Tabs::tabClicked, this, &ResultsView::updateControls);
+    connect(mByPhasesBut, &Button::clicked, this, &ResultsView::updateControls);
+    connect(mByEventsBut, &Button::clicked, this, &ResultsView::updateControls);
     
-    connect(mHPDEdit, SIGNAL(editingFinished()), this, SLOT(generateCredibilityAndHPD()));
+    connect(mTabs, &Tabs::tabClicked, this, &ResultsView::generateCurves);
+    connect(mByPhasesBut, &Button::clicked, this, &ResultsView::generateCurves);
+    connect(mByEventsBut, &Button::clicked, this, &ResultsView::generateCurves);
     
-    connect(mDataThetaRadio,     SIGNAL(clicked()), this, SLOT(generateCurves()));
-    connect(mDataSigmaRadio,     SIGNAL(clicked()), this, SLOT(generateCurves()));
+    // -------------------------
     
-    connect(mDataCalibCheck,     SIGNAL(clicked()), this, SLOT(updateCurvesToShow()));
-    connect(mWiggleCheck,        SIGNAL(clicked()), this, SLOT(updateCurvesToShow()));
-    connect(mAllChainsCheck,     SIGNAL(clicked()), this, SLOT(updateCurvesToShow()));
-    connect(mCredibilityCheck,   SIGNAL(clicked()), this, SLOT(updateCurvesToShow()));
+    connect(mFFTLenCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::generatePosteriorDistribs);
+    connect(mHFactorEdit, &LineEdit::editingFinished, this, &ResultsView::generatePosteriorDistribs);
+    
+    connect(mHPDEdit, &LineEdit::editingFinished, this, &ResultsView::generateCredibilityAndHPD);
+    
+    connect(mDataThetaRadio, &RadioButton::clicked, this, &ResultsView::generateCurves);
+    connect(mDataSigmaRadio, &RadioButton::clicked, this, &ResultsView::generateCurves);
+    
+    connect(mDataCalibCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mWiggleCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mAllChainsCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mCredibilityCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     
     // -------------------------
     //connect(mUnfoldBut, &Button::toggled, this, &ResultsView::createEventsScrollArea);
@@ -373,21 +373,22 @@ mGraphsH(130)
     connect(mShowDataUnderPhasesCheck, &CheckBox::toggled, this, &ResultsView::updateGraphsLayout);
     
     // -------------------------
+
+
+    connect(mXSlider, &QSlider::sliderMoved, this, &ResultsView::updateZoomX);
+    connect(mXSlider, &QSlider::sliderPressed, this, &ResultsView::updateZoomX);
+    connect(mCurrentXMinEdit, &LineEdit::editingFinished, this, &ResultsView::editCurrentMinX);
+    connect(mCurrentXMaxEdit, &LineEdit::editingFinished, this, &ResultsView::editCurrentMaxX);
+    connect(mRuler, &Ruler::positionChanged, this, &ResultsView::updateScroll);
     
-    connect(mXSlider, SIGNAL(sliderMoved(int)), this, SLOT(updateZoomX()));
-    connect(mXSlider, SIGNAL(sliderPressed()), this, SLOT(updateZoomX()));
-    connect(mCurrentXMinEdit, SIGNAL(editingFinished()), this, SLOT(editCurrentMinX()) );
-    connect(mCurrentXMaxEdit, SIGNAL(editingFinished()), this, SLOT(editCurrentMaxX()) );
-    connect(mRuler, SIGNAL(positionChanged(double, double)), this, SLOT(updateScroll(double, double)));
-    
-    connect(mYSlider, SIGNAL(valueChanged(int)), this, SLOT(updateScaleY(int)));
+    connect(mYSlider, &QSlider::valueChanged, this, &ResultsView::updateScaleY);
     
     // -------------------------
     
-    connect(mRenderCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(updateRendering(int)));
-    connect(mInfosBut, SIGNAL(toggled(bool)), this, SLOT(showInfos(bool)));
-    connect(mExportImgBut, SIGNAL(clicked()), this, SLOT(exportFullImage()));
-    connect(mExportResults, SIGNAL(clicked()), this, SLOT(exportResults()));
+    connect(mRenderCombo,static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::updateRendering);
+    connect(mInfosBut, &Button::toggled, this, &ResultsView::showInfos);
+    connect(mExportImgBut, &Button::clicked, this, &ResultsView::exportFullImage);
+    connect(mExportResults, &Button::clicked, this, &ResultsView::exportResults);
     
     mMarker->raise();
 }
@@ -403,7 +404,7 @@ void ResultsView::doProjectConnections(Project* project)
     // Then, it fills its eleme,nts (events, ...) with calculated data (trace, ...)
     // If the process is canceled, we only have unfinished data in storage.
     // => The previous nor the new results can be displayed so we must start by clearing the results view!
-    connect(project, SIGNAL(mcmcStarted()), this, SLOT(clearResults()));
+    connect(project, &Project::mcmcStarted, this, &ResultsView::clearResults);
     
 }
 
@@ -430,7 +431,7 @@ QList<QRect> ResultsView::getGeometries(const QList<GraphViewResults*>& graphs, 
     
     for(int i=0; i<graphs.size(); ++i)
     {
-        QRect rect = graphs[i]->geometry();
+        QRect rect = graphs.at(i)->geometry();
         rect.setY(y);
         rect.setWidth(width() - mOptionsW - sbe);
         
@@ -497,18 +498,18 @@ void ResultsView::updateControls()
     if(tabIdx == 0)
     {
         for(int i=0; i<mCheckChainChecks.size(); ++i)
-            mCheckChainChecks[i]->setVisible(true);
+            mCheckChainChecks.at(i)->setVisible(true);
         
         for(int i=0; i<mChainRadios.size(); ++i)
-            mChainRadios[i]->setVisible(false);
+            mChainRadios.at(i)->setVisible(false);
     }
     else
     {
         for(int i=0; i<mCheckChainChecks.size(); ++i)
-            mCheckChainChecks[i]->setVisible(false);
+            mCheckChainChecks.at(i)->setVisible(false);
         
         for(int i=0; i<mChainRadios.size(); ++i)
-            mChainRadios[i]->setVisible(true);
+            mChainRadios.at(i)->setVisible(true);
     }
     
     // -------------------------------------------------------
@@ -528,20 +529,12 @@ void ResultsView::updateLayout()
     int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     int graphYAxis = 50;
     int m = mMargin;
-    int dx = mLineH + mMargin;//m;
+    int dx = mLineH + mMargin;
     
     int tabIdx = mTabs->currentIndex();
     
-    if( (tabIdx == 0) and  !(mDataSigmaRadio->isChecked()) ) // // it's mean posterior distribution and not a value of sigma
-    {
-        mCurrentXMinEdit->setText( DateUtils::convertToAppSettingsFormatStr(mResultCurrentMinX) );
-        mCurrentXMaxEdit->setText( DateUtils::convertToAppSettingsFormatStr(mResultCurrentMaxX) );
-    }
-    else {
-        mCurrentXMinEdit->setText( QString::number(mResultCurrentMinX) );
-        mCurrentXMaxEdit->setText( QString::number(mResultCurrentMaxX) );
-    }
-    
+    mCurrentXMinEdit->setText( DateUtils::dateToString(mResultCurrentMinX) );
+    mCurrentXMaxEdit->setText( DateUtils::dateToString(mResultCurrentMaxX) );
     // ----------------------------------------------------------
     //  Main layout
     // ----------------------------------------------------------
@@ -576,8 +569,8 @@ void ResultsView::updateLayout()
         for(int i=0; i<numChains; ++i)
         {
             QRect geometry(m, m + (i+1) * (mLineH + m), (int)(mChainsGroup->width()-2*m), mLineH);
-            mCheckChainChecks[i]->setGeometry(geometry);
-            mChainRadios[i]->setGeometry(geometry);
+            mCheckChainChecks.at(i)->setGeometry(geometry);
+            mChainRadios.at(i)->setGeometry(geometry);
         }
     }
     // trace, accept or correl : chains are selectable with radio-buttons
@@ -587,8 +580,8 @@ void ResultsView::updateLayout()
         for(int i=0; i<numChains; ++i)
         {
             QRect geometry(m, (int)(m + i * (mLineH + m)), (int)(mChainsGroup->width()-2*m), mLineH);
-            mCheckChainChecks[i] -> setGeometry(geometry);
-            mChainRadios[i]      -> setGeometry(geometry);
+            mCheckChainChecks.at(i) -> setGeometry(geometry);
+            mChainRadios.at(i)     -> setGeometry(geometry);
         }
     }
     
@@ -604,7 +597,8 @@ void ResultsView::updateLayout()
         mDataCalibCheck -> setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
         mWiggleCheck    -> setGeometry(m + dx, y += (m + mLineH),(int)( mResultsGroup->width() - 2*m - dx), mLineH);
     }
-    if(mShowDataUnderPhasesCheck->isVisible()) {
+
+    if(mByPhasesBut->isChecked()) {
         mShowDataUnderPhasesCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
     }
     mDataSigmaRadio -> setGeometry(m, y += (m + mLineH), mResultsGroup->width()-2*m, mLineH);
@@ -644,8 +638,8 @@ void ResultsView::updateGraphsLayout()
     int h = 0;
     for(int i=0; i<mByEventsGraphs.size(); ++i)
     {
-        mByEventsGraphs[i]->setGeometry(geometries[i]);
-        h += geometries[i].height();
+        mByEventsGraphs.at(i)->setGeometry(geometries.at(i));
+        h += geometries.at(i).height();
     }
     if(h>0)
         wid->setFixedSize(width() - sbe - mOptionsW, h);
@@ -657,8 +651,8 @@ void ResultsView::updateGraphsLayout()
     geometries = getGeometries(mByPhasesGraphs, mUnfoldBut->isChecked(), true);
     h = 0;
     for(int i=0; i<mByPhasesGraphs.size(); ++i){
-        mByPhasesGraphs[i]->setGeometry(geometries[i]);
-        h += geometries[i].height();
+        mByPhasesGraphs.at(i)->setGeometry(geometries.at(i));
+        h += geometries.at(i).height();
     }
     if(h>0)
         wid->setFixedSize(width() - sbe - mOptionsW, h);
@@ -673,7 +667,7 @@ void ResultsView::clearResults()
     for(int i=mCheckChainChecks.size()-1; i>=0; --i)
     {
         CheckBox* check = mCheckChainChecks.takeAt(i);
-        disconnect(check, SIGNAL(clicked()), this, SLOT(updateCurvesToShow()));
+        disconnect(check, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
         check->setParent(0);
         delete check;
     }
@@ -682,7 +676,7 @@ void ResultsView::clearResults()
     for(int i=mChainRadios.size()-1; i>=0; --i)
     {
         RadioButton* but = mChainRadios.takeAt(i);
-        disconnect(but, SIGNAL(clicked()), this, SLOT(updateCurvesToShow()));
+        disconnect(but, &RadioButton::clicked, this, &ResultsView::updateCurvesToShow);
         but->setParent(0);
         delete but;
     }
@@ -690,14 +684,14 @@ void ResultsView::clearResults()
     
     for(int i=0; i<mByEventsGraphs.size(); ++i)
     {
-        mByEventsGraphs[i]->setParent(0);
+        mByEventsGraphs.at(i)->setParent(0);
         delete mByEventsGraphs[i];
     }
     mByEventsGraphs.clear();
     
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
     {
-        mByPhasesGraphs[i]->setParent(0);
+        mByPhasesGraphs.at(i)->setParent(0);
         delete mByPhasesGraphs[i];
     }
     mByPhasesGraphs.clear();
@@ -709,9 +703,27 @@ void ResultsView::clearResults()
     QWidget* phasesWidget = mPhasesScrollArea->takeWidget();
     if(phasesWidget)
         delete phasesWidget;
+
+    mResultMinX = mSettings.getTminFormated();
+    mResultMaxX = mSettings.getTmaxFormated();
+    mResultCurrentMinX = mResultMinX ;
+    mResultCurrentMaxX = mResultMaxX ;
+    mResultZoomX = 1;
+    updateZoomEdit();
 }
 
-/*
+
+void ResultsView::updateFormatSetting(Model* model, const AppSettings* appSet)
+{
+    if(!mModel && !model)
+        return;
+    if(model)
+        mModel = model;
+    mModel->updateFormatSettings(appSet);
+}
+
+
+/**
  * @brief : This function is call after "Run" and after click on "Results", when switching from Model panel to Result panel
  *
  */
@@ -742,20 +754,23 @@ void ResultsView::updateResults(Model* model)
     // ----------------------------------------------------
     //  Create Chains option controls (radio and checkboxes under "MCMC Chains")
     // ----------------------------------------------------
-    for(int i=0; i<mChains.size(); ++i)
-    {
-        CheckBox* check = new CheckBox(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
-        connect(check, SIGNAL(clicked()), this, SLOT(updateCurvesToShow()));
-        check->setVisible(true);
-        mCheckChainChecks.append(check);
-        
-        RadioButton* radio = new RadioButton(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
-        connect(radio, SIGNAL(clicked()), this, SLOT(updateCurvesToShow()));
-        radio->setVisible(true);
-        if(i == 0)
-            radio->setChecked(true);
-        mChainRadios.append(radio);
+    if(mCheckChainChecks.isEmpty()) {
+        for(int i=0; i<mChains.size(); ++i)
+        {
+            CheckBox* check = new CheckBox(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
+            connect(check, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+            check->setVisible(true);
+            mCheckChainChecks.append(check);
+
+            RadioButton* radio = new RadioButton(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
+            connect(radio, &RadioButton::clicked, this, &ResultsView::updateCurvesToShow);
+            radio->setVisible(true);
+            if(i == 0)
+                radio->setChecked(true);
+            mChainRadios.append(radio);
+        }
     }
+
     
     // ----------------------------------------------------
     //  Phases Views : generate all phases graph
@@ -1010,12 +1025,12 @@ void ResultsView::updateCurvesToShow()
     if(mTabs->currentIndex() == 0)
     {
         for(int i=0; i<mCheckChainChecks.size(); ++i)
-            showChainList.append(mCheckChainChecks[i]->isChecked());
+            showChainList.append(mCheckChainChecks.at(i)->isChecked());
     }
     else
     {
         for(int i=0; i<mChainRadios.size(); ++i)
-            showChainList.append(mChainRadios[i]->isChecked());
+            showChainList.append(mChainRadios.at(i)->isChecked());
     }
     bool showCalib = mDataCalibCheck->isChecked();
     bool showWiggle = mWiggleCheck->isChecked();
@@ -1047,20 +1062,20 @@ void ResultsView::updateScales()
     // ------------------------------------------
     if(tabIdx == 0){
         if(mDataThetaRadio->isChecked()) {
-            mResultMinX = s.mTmin;
-            mResultMaxX = s.mTmax;
+            mResultMinX = s.getTminFormated();
+            mResultMaxX = s.getTmaxFormated();
         }
         else if(mDataSigmaRadio->isChecked())  {
             mResultMinX = 0;
-            mResultMaxX = mResultMaxVariance;//s.mTmax - s.mTmin;
+            mResultMaxX = mResultMaxVariance;
 
         }
     }
     else if(tabIdx == 1 || tabIdx == 2){
         mResultMinX = 0;
         for(int i=0; i<mChainRadios.size(); ++i){
-            if(mChainRadios[i]->isChecked()){
-                const Chain& chain = mChains[i];
+            if(mChainRadios.at(i)->isChecked()){
+                const ChainSpecs& chain = mChains.at(i);
                 mResultMaxX = chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter) + chain.mNumRunIter / chain.mThinningInterval;
                 break;
             }
@@ -1121,12 +1136,8 @@ void ResultsView::updateScales()
     // ------------------------------------------
     //  Set Ruler Range
     // ------------------------------------------
-    if( (tabIdx == 0) and (mDataThetaRadio->isChecked()) ){
-            mRuler->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
-    }
-    else {
-        mRuler->setFormatFunctX(0);
-    }
+    mRuler->setFormatFunctX(0);
+
     mRuler->setRange(mResultMinX, mResultMaxX);
     mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
     
@@ -1137,8 +1148,8 @@ void ResultsView::updateScales()
     if(tabIdx == 1 || tabIdx == 2){
         for(int i=0; i<mChainRadios.size(); ++i)
         {
-            if(mChainRadios[i]->isChecked()){
-                const Chain& chain = mChains[i];
+            if(mChainRadios.at(i)->isChecked()){
+                const ChainSpecs& chain = mChains.at(i);
                 unsigned long adaptSize = chain.mBatchIndex * chain.mNumBatchIter;
                 unsigned long runSize = chain.mNumRunIter / chain.mThinningInterval;
                 
@@ -1261,10 +1272,7 @@ void ResultsView::editCurrentMinX()
     bool isNumber;
     double value = str.toDouble(&isNumber);
     if (isNumber) {
-        bool isDate = mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked();
-        if(isDate){
-            value = DateUtils::convertFromAppSettingsFormat(value);
-        }
+
         double current = qBound(mResultMinX, value, mResultCurrentMaxX);
         if (current == mResultCurrentMaxX) {
             current = mResultMinX;
@@ -1295,10 +1303,7 @@ void ResultsView::editCurrentMaxX()
     double value = str.toDouble(&isNumber);
     
     if (isNumber) {
-        bool isDate = mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked();
-        if(isDate){
-            value = DateUtils::convertFromAppSettingsFormat(value);
-        }
+
         double current = qBound(mResultCurrentMinX, value, mResultMaxX);
         if (current == mResultCurrentMinX) {
             current = mResultMaxX;
@@ -1320,22 +1325,24 @@ void ResultsView::editCurrentMaxX()
 
 void ResultsView::updateZoomEdit()
 {
-    if(mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked()){
+   /* if(mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked()){
         mCurrentXMinEdit->setText(DateUtils::convertToAppSettingsFormatStr(mResultCurrentMinX));
         mCurrentXMaxEdit->setText(DateUtils::convertToAppSettingsFormatStr(mResultCurrentMaxX));
     }else{
         mCurrentXMinEdit->setText(QString::number(mResultCurrentMinX));
         mCurrentXMaxEdit->setText(QString::number(mResultCurrentMaxX));
-    }
+    }*/
+    mCurrentXMinEdit->setText(DateUtils::dateToString(mResultCurrentMinX));
+    mCurrentXMaxEdit->setText(DateUtils::dateToString(mResultCurrentMaxX));
 }
 
 void ResultsView::updateGraphsZoomX()
 {
     for(int i=0; i<mByPhasesGraphs.size(); ++i){
-        mByPhasesGraphs[i]->zoom(mResultCurrentMinX, mResultCurrentMaxX);
+        mByPhasesGraphs.at(i)->zoom(mResultCurrentMinX, mResultCurrentMaxX);
     }
     for(int i=0; i<mByEventsGraphs.size(); ++i) {
-        mByEventsGraphs[i]->zoom(mResultCurrentMinX, mResultCurrentMaxX);
+        mByEventsGraphs.at(i)->zoom(mResultCurrentMinX, mResultCurrentMaxX);
     }
     
     // --------------------------------------------------
@@ -1348,9 +1355,9 @@ void ResultsView::updateGraphsZoomX()
 #pragma mark Zoom Y
 void ResultsView::updateScaleY(int value)
 {
-    double min = 70;
-    double max = 1070;
-    double prop = value / 100.f;
+    const double min = 70;
+    const double max = 1070;
+    const double prop = value / 100.f;
     mGraphsH = min + prop * (max - min);
     
     updateGraphsLayout();
@@ -1373,12 +1380,12 @@ void ResultsView::updateFont()
         
         for(int i=0; i<mByPhasesGraphs.size(); ++i)
         {
-            mByPhasesGraphs[i]->setGraphFont(mFont);
+            mByPhasesGraphs.at(i)->setGraphFont(mFont);
         }
         mPhasesScrollArea->setFont(mFont);
         for(int i=0; i<mByEventsGraphs.size(); ++i)
         {
-            mByEventsGraphs[i]->setGraphFont(mFont);
+            mByEventsGraphs.at(i)->setGraphFont(mFont);
         }
         mEventsScrollArea->setFont(mFont);
     }
@@ -1395,7 +1402,7 @@ void ResultsView::updateThickness(int value)
     }
     for(int i=0; i<mByEventsGraphs.size(); ++i)
     {
-        mByEventsGraphs[i]->setGraphsThickness(value);
+        mByEventsGraphs.at(i)->setGraphsThickness(value);
     }
 }
 
@@ -1408,26 +1415,26 @@ void ResultsView::updateOpacity(int value)
         }
     }
     for(int i=0; i<mByEventsGraphs.size(); ++i) {
-        mByEventsGraphs[i]->setGraphsOpacity(value);
+        mByEventsGraphs.at(i)->setGraphsOpacity(value);
     }
 }
 
 void ResultsView::updateRendering(int index)
 {
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
-        mByPhasesGraphs[i] -> setRendering((GraphView::Rendering) index);
+        mByPhasesGraphs.at(i) -> setRendering((GraphView::Rendering) index);
     
     for(int i=0; i<mByEventsGraphs.size(); ++i)
-        mByEventsGraphs[i] -> setRendering((GraphView::Rendering) index);
+        mByEventsGraphs.at(i) -> setRendering((GraphView::Rendering) index);
 }
 
 void ResultsView::showInfos(bool show)
 {
     for(int i=0; i<mByEventsGraphs.size(); ++i)
-        mByEventsGraphs[i]->showNumericalResults(show);
+        mByEventsGraphs.at(i)->showNumericalResults(show);
     
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
-        mByPhasesGraphs[i]->showNumericalResults(show);
+        mByPhasesGraphs.at(i)->showNumericalResults(show);
 }
 
 void ResultsView::exportResults()
@@ -1437,7 +1444,7 @@ void ResultsView::exportResults()
         QString csvSep = settings.mCSVCellSeparator;
         
         QLocale csvLocal = settings.mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
-        qDebug()<<"mCSVDecSeparator"<<settings.mCSVDecSeparator<<"mCSVCellSeparator"<<settings.mCSVCellSeparator;
+
         csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
         
         QString currentPath = MainWindow::getInstance()->getCurrentPath();
@@ -1466,7 +1473,7 @@ void ResultsView::exportResults()
                 
                 for(int i=0; i<mModel->mPhases.size(); ++i){
                     QList<QStringList> phaseTrace = mModel->getPhaseTrace(i,csvLocal, false);
-                    QString name = mModel->mPhases[i]->mName.toLower().simplified().replace(" ", "_");
+                    QString name = mModel->mPhases.at(i)->mName.toLower().simplified().replace(" ", "_");
                     saveCsvTo(phaseTrace, dirPath + "/phase_" + name + ".csv", csvSep, false);
                 }
             }
@@ -1491,21 +1498,21 @@ void ResultsView::exportFullImage()
     
     if (mStack->currentWidget() == mPhasesScrollArea) {
         curWid = mPhasesScrollArea->widget();
-        curWid->setFont(mByPhasesGraphs[0]->font());
+        curWid->setFont(mByPhasesGraphs.at(0)->font());
         witchScroll = eScrollPhases;
         //  hide all buttons in the both scrollAreaWidget
         for(int i=0; i<mByPhasesGraphs.size(); ++i){
-            mByPhasesGraphs[i]->setButtonsVisible(false);
+            mByPhasesGraphs.at(i)->setButtonsVisible(false);
         }
     }
     //else if (mStack->currentWidget() == mEventsScrollArea) {
     else  {
         curWid = mEventsScrollArea->widget();
-        curWid->setFont(mByEventsGraphs[0]->font());
+        curWid->setFont(mByEventsGraphs.at(0)->font());
         witchScroll = eScrollEvents;
         //  hide all buttons in the both scrollAreaWidget
         for(int i=0; i<mByEventsGraphs.size(); ++i) {
-            mByEventsGraphs[i]->setButtonsVisible(false);
+            mByEventsGraphs.at(i)->setButtonsVisible(false);
         }
     }
     
@@ -1549,7 +1556,7 @@ void ResultsView::exportFullImage()
         axisWidget->raise();
         axisWidget->setVisible(true);
         
-        axisLegend = new QLabel(DateUtils::getAppSettingsFormat(), curWid);
+        axisLegend = new QLabel(DateUtils::getAppSettingsFormatStr(), curWid);
         axisLegend->setGeometry(0, curWid->height() - axeHeight - legendHeight, curWid->width() - 10, legendHeight);
         axisLegend->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
         axisLegend->raise();

@@ -91,7 +91,7 @@ QDialog(parent, flags)
     for(int i=0; i<3; ++i){
         mFormatDate->addItem(DateUtils::formatString((DateUtils::FormatDate)i));
     }
-    mFormatDate->setCurrentIndex(0);
+    mFormatDate->setCurrentIndex(1);
     mFormatDate->setStyleSheet("QLineEdit { border-radius: 5px; }");
     mFormatDate->setVisible(true);
     

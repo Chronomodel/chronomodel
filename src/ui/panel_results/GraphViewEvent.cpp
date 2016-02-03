@@ -88,8 +88,8 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         // ------------------------------------------------
         if(typeGraph == ePostDistrib)
         {
-            mGraph->mLegendX = DateUtils::getAppSettingsFormat();
-            mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormatStr);
+            mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+            mGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
             mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
             mGraph->setBackgroundColor(QColor(230, 230, 230));
             
@@ -104,8 +104,6 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             // ------------------------------------------------
             if(variable == eTheta)
             {
-                mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax);                                
-                
                 if(isFixedBound)
                 {                   
                     GraphCurve curveLineBound;
@@ -166,7 +164,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                     {
                         GraphCurve curvePostDistribChain = generateDensityCurve(mEvent->mTheta.histoForChain(i),
                                                                                 "Post Distrib Chain " + QString::number(i),
-                                                                                Painting::chainColors[i],
+                                                                                Painting::chainColors.at(i),
                                                                                 Qt::SolidLine,
                                                                                 Qt::NoBrush);
                         mGraph->addCurve(curvePostDistribChain);
@@ -193,7 +191,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             else if(variable == eSigma)
             {
                 mGraph->mLegendX = "";
-                mGraph->setFormatFunctX(0);
+                mGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
                 mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
                 
                 if (mEvent->type()==Event::eKnown) {
@@ -205,7 +203,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                 mGraph->setBackgroundColor(QColor(Qt::white));
                 mGraph->autoAdjustYScale(true);
 
-                mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
+                //mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
 
                 
                 for(int i=0; i<mEvent->mDates.size(); ++i)
@@ -222,7 +220,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                     {
                         GraphCurve curveChain = generateDensityCurve(date.mSigma.histoForChain(j),
                                                                      "Sigma Date " + QString::number(i) + " Chain " + QString::number(j),
-                                                                     Painting::chainColors[j]);
+                                                                     Painting::chainColors.at(j));
                         mGraph->addCurve(curveChain);
                     }
                 }
@@ -252,7 +250,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         {
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
-            mGraph->setFormatFunctY(0);
+            mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
             mGraph->setRangeY(0, 100);
             
             generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine);
@@ -268,7 +266,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         {
             mGraph->mLegendX = "";
             mGraph->setFormatFunctX(0);
-            mGraph->setFormatFunctY(0);
+            mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
             mGraph->setRangeY(-1, 1);
             
             generateCorrelCurves(mChains, &(mEvent->mTheta));
