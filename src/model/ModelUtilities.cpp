@@ -109,20 +109,20 @@ QString ModelUtilities::getDataMethodText(Date::DataMethod method)
 QString ModelUtilities::getDeltaText(const Date& date)
 {
     QString result;
-    PluginAbstract* plugin = date.mPlugin;
-    QString str = QObject::tr("Wiggle");
+    const PluginAbstract* plugin = date.mPlugin;
+    const QString str = QObject::tr("Wiggle");
     if(plugin && plugin->wiggleAllowed())
     {
         switch(date.mDeltaType)
         {
             case Date::eDeltaFixed:
-                result = date.mDeltaFixed>0 ?  str + " : " + QString::number(date.mDeltaFixed) : "";
+                result = date.mDeltaFixed != 0 ?  str + " : " + QString::number(date.mDeltaFixed) : "";
                 break;
             case Date::eDeltaRange:
-                result = (date.mDeltaMin>=0 && date.mDeltaMax>0) ? str + " : [" + QString::number(date.mDeltaMin) + ", " + QString::number(date.mDeltaMax) + "]" : "";
+                result = (date.mDeltaMin !=0 && date.mDeltaMax != 0) ? str + " : [" + QString::number(date.mDeltaMin) + ", " + QString::number(date.mDeltaMax) + "]" : "";
                 break;
             case Date::eDeltaGaussian:
-                result = (date.mDeltaAverage>=0 && date.mDeltaError>0) ? str + " : " + QString::number(date.mDeltaAverage) + " ± " + QString::number(date.mDeltaError) : "";
+                result = (date.mDeltaError>0) ? str + " : " + QString::number(date.mDeltaAverage) + " ± " + QString::number(date.mDeltaError) : "";
                 break;
                 
             default:
@@ -151,14 +151,22 @@ QVector<QVector<Event*> > ModelUtilities::getNextBranches(const QVector<Event*>&
             {
                 branch.append(newNode);
                 QVector<QVector<Event*> > nextBranches = getNextBranches(branch, cts[i]->mEventTo);
-                for(int j=0; j<nextBranches.size(); ++j)
-                    branches.append(nextBranches[j]);
+
+                foreach (QVector<Event*> branch, nextBranches) {
+                    branches.append(branch);
+                }
+                //for(int j=0; j<nextBranches.size(); ++j)
+                //    branches.append(nextBranches[j]);
             }
             else
             {
                 QStringList evtNames;
-                for(int j=0; j<branch.size(); ++j)
-                    evtNames << branch[j]->mName;
+
+                foreach (Event* event, branch) {
+                    evtNames << event->mName;
+                }
+               // for(int j=0; j<branch.size(); ++j)
+               //     evtNames << branch[j]->mName;
                 evtNames << newNode->mName;
                 
                 throw QObject::tr("Circularity found in events model !\nPlease correct this branch :\n") + evtNames.join(" -> ");
