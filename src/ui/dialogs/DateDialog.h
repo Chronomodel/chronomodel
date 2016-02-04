@@ -43,15 +43,18 @@ public:
     void setWiggleEnabled(bool enabled);
     
 protected:
-    //void paintEvent(QPaintEvent* e);
-    //void resizeEvent(QResizeEvent* e);
+    bool mWiggleIsValid;
+    bool mPluginDataAreValid;
     
 protected slots:
     void setAdvancedVisible(bool visible);
     void updateVisibleControls();
-    void setOkEnabled(bool enabled);
-    //void updateLayout();
-    //void adaptSize();
+    void setOkEnabled();
+    void setPluginDataValid(bool valid);
+    void checkWiggle();
+
+signals:
+    void wiggleChange();
     
 public:
     PluginFormAbstract* mForm;
@@ -66,7 +69,8 @@ public:
     
     QLabel* mMethodLab;
     QComboBox* mMethodCombo;
-    
+
+
     QLabel* mWiggleLab;
     QRadioButton* mDeltaFixedRadio;
     QRadioButton* mDeltaRangeRadio;
