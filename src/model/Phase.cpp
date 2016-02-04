@@ -22,13 +22,13 @@ mLevel(0)
 {
     mColor = randomColor();
     mAlpha.mSupport = MetropolisVariable::eBounded;
-    mAlpha.mFormat = DateUtils::eUnknowed;;
+    mAlpha.mFormat = DateUtils::eUnknown;
 
     mBeta.mSupport = MetropolisVariable::eBounded;
-    mBeta.mFormat = DateUtils::eUnknowed;;
+    mBeta.mFormat = DateUtils::eUnknown;
 
     mDuration.mSupport = MetropolisVariable::eRp;
-    mDuration.mFormat = DateUtils::eUnknowed;;
+    mDuration.mFormat = DateUtils::eUnknown;
     // Item initial position :
     mItemX = 0;
     mItemY = 0;

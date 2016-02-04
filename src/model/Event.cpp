@@ -25,7 +25,7 @@ mLevel(0)
 {
     //mTheta.mIsDate = true;
     mTheta.mSupport = MetropolisVariable::eBounded;
-    mTheta.mFormat = DateUtils::eUnknowed;;
+    mTheta.mFormat = DateUtils::eUnknown;;
 
     // Item initial position :
     //int posDelta = 100;

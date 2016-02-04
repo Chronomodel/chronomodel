@@ -35,9 +35,9 @@ void Date::init()
     mSigma.mSupport = MetropolisVariable::eRp;
     mWiggle.mSupport = MetropolisVariable::eR;
 
-    mTheta.mFormat = DateUtils::eUnknowed;
-    mSigma.mFormat = DateUtils::eUnknowed;
-    mWiggle.mFormat = DateUtils::eUnknowed;
+    mTheta.mFormat = DateUtils::eUnknown;
+    mSigma.mFormat = DateUtils::eUnknown;
+    mWiggle.mFormat = DateUtils::eUnknown;
 
     mId = 0;
     mMethod = eMHSymetric;

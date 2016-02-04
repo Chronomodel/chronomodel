@@ -1338,13 +1338,12 @@ void ResultsView::updateZoomEdit()
 
 void ResultsView::updateGraphsZoomX()
 {
-    for(int i=0; i<mByPhasesGraphs.size(); ++i){
-        mByPhasesGraphs.at(i)->zoom(mResultCurrentMinX, mResultCurrentMaxX);
+    foreach (GraphViewResults* phaseGraph, mByPhasesGraphs) {
+        phaseGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
     }
-    for(int i=0; i<mByEventsGraphs.size(); ++i) {
-        mByEventsGraphs.at(i)->zoom(mResultCurrentMinX, mResultCurrentMaxX);
+    foreach (GraphViewResults* eventGraph, mByEventsGraphs) {
+        eventGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
     }
-    
     // --------------------------------------------------
     //  Store zoom values
     // --------------------------------------------------
@@ -1378,63 +1377,57 @@ void ResultsView::updateFont()
         mFont = font;
         mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
         
-        for(int i=0; i<mByPhasesGraphs.size(); ++i)
-        {
-            mByPhasesGraphs.at(i)->setGraphFont(mFont);
+        foreach (GraphViewResults* phaseGraph, mByPhasesGraphs) {
+            phaseGraph->setGraphFont(mFont);
         }
         mPhasesScrollArea->setFont(mFont);
-        for(int i=0; i<mByEventsGraphs.size(); ++i)
-        {
-            mByEventsGraphs.at(i)->setGraphFont(mFont);
+
+        foreach (GraphViewResults* eventGraph, mByEventsGraphs) {
+            eventGraph->setGraphFont(mFont);
         }
         mEventsScrollArea->setFont(mFont);
+
     }
 }
 
 void ResultsView::updateThickness(int value)
 {
-    for(int i=0; i<mByPhasesGraphs.size(); ++i)
-    {
-        GraphViewPhase* graphPhase = dynamic_cast<GraphViewPhase*>(mByPhasesGraphs[i]);
-        if(graphPhase) {
-            graphPhase->setGraphsThickness(value);
-        }
+    foreach (GraphViewResults* phaseGraph, mByPhasesGraphs) {
+        phaseGraph->setGraphsThickness(value);
     }
-    for(int i=0; i<mByEventsGraphs.size(); ++i)
-    {
-        mByEventsGraphs.at(i)->setGraphsThickness(value);
+    foreach (GraphViewResults* eventGraph, mByEventsGraphs) {
+        eventGraph->setGraphsThickness(value);
     }
 }
 
 void ResultsView::updateOpacity(int value)
 {
-    for(int i=0; i<mByPhasesGraphs.size(); ++i) {
-        GraphViewPhase* graphPhase = dynamic_cast<GraphViewPhase*>(mByPhasesGraphs[i]);
-        if(graphPhase) {
-            graphPhase->setGraphsOpacity(value);
-        }
+    foreach (GraphViewResults* phaseGraph, mByPhasesGraphs) {
+        phaseGraph->setGraphsOpacity(value);
     }
-    for(int i=0; i<mByEventsGraphs.size(); ++i) {
-        mByEventsGraphs.at(i)->setGraphsOpacity(value);
+    foreach (GraphViewResults* eventGraph, mByEventsGraphs) {
+        eventGraph->setGraphsOpacity(value);
     }
 }
 
 void ResultsView::updateRendering(int index)
 {
-    for(int i=0; i<mByPhasesGraphs.size(); ++i)
-        mByPhasesGraphs.at(i) -> setRendering((GraphView::Rendering) index);
-    
-    for(int i=0; i<mByEventsGraphs.size(); ++i)
-        mByEventsGraphs.at(i) -> setRendering((GraphView::Rendering) index);
+    foreach (GraphViewResults* phaseGraph, mByPhasesGraphs) {
+        phaseGraph->setRendering((GraphView::Rendering) index);
+    }
+    foreach (GraphViewResults* eventGraph, mByEventsGraphs) {
+        eventGraph->setRendering((GraphView::Rendering) index);
+    }
 }
 
 void ResultsView::showInfos(bool show)
 {
-    for(int i=0; i<mByEventsGraphs.size(); ++i)
-        mByEventsGraphs.at(i)->showNumericalResults(show);
-    
-    for(int i=0; i<mByPhasesGraphs.size(); ++i)
-        mByPhasesGraphs.at(i)->showNumericalResults(show);
+    foreach (GraphViewResults* phaseGraph, mByPhasesGraphs) {
+        phaseGraph->showNumericalResults(show);
+    }
+    foreach (GraphViewResults* eventGraph, mByEventsGraphs) {
+        eventGraph->showNumericalResults(show);
+    }
 }
 
 void ResultsView::exportResults()
