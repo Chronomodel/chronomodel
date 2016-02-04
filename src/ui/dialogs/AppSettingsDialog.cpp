@@ -88,7 +88,7 @@ QDialog(parent, flags)
     mFormatDateLab = new QLabel(tr("Date format") + " : ", this);
     mFormatDateLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mFormatDate = new QComboBox(this);
-    for(int i=0; i<3; ++i){
+    for(int i=0; i<5; ++i){
         mFormatDate->addItem(DateUtils::formatString((DateUtils::FormatDate)i));
     }
     mFormatDate->setCurrentIndex(1);
