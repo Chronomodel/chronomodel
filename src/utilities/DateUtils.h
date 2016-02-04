@@ -7,11 +7,13 @@
 class DateUtils{
 public:
     enum FormatDate{
-        eUnknowed = -2,
+        eUnknown = -2,
         eNumeric = -1,
         eBCAD = 0,
         eCalBP = 1,
-        eCalB2K = 2
+        eCalB2K = 2,
+        eDatBP = 3,
+        eDatB2K = 4,
     };
     static double convertToFormat(const double valueToFormat, const FormatDate format);
     static double convertFromFormat(const double formattedValue, const FormatDate format);

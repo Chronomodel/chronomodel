@@ -14,6 +14,12 @@ double DateUtils::convertToFormat(const double valueToFormat, const FormatDate f
         case eCalB2K:
             return 2000. - valueToFormat;
             break;
+        case eDatBP:
+            return valueToFormat - 1950.;
+            break;
+        case eDatB2K:
+            return valueToFormat - 2000.;
+            break;
         case eBCAD:
         case eNumeric:
         default:
@@ -30,6 +36,12 @@ double DateUtils::convertFromFormat(const double formattedValue, const FormatDat
         case eCalB2K:
             return 2000. - formattedValue;
             break;
+        case eDatBP:
+            return formattedValue + 1950.;
+            break;
+        case eDatB2K:
+            return formattedValue + 2000.;
+            break;
         case eBCAD:
         case eNumeric:
         default:
@@ -41,10 +53,16 @@ QString DateUtils::formatString(const FormatDate format)
 {
     switch (format) {
         case eCalBP:
-            return "Cal BP";
+            return "Age Cal. BP";
             break;
         case eCalB2K:
-            return "Cal B2K";
+            return "Age Cal. B2K";
+            break;
+        case eDatBP:
+            return "Date Cal. BP";
+            break;
+        case eDatB2K:
+            return "Date Cal. B2K";
             break;
         case eBCAD:
             return "BC/AD";
