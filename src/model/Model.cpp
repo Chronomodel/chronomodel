@@ -12,6 +12,7 @@
 #include "../PluginAbstract.h"
 #include <QJsonArray>
 #include <QtWidgets>
+#include <QtCore/QStringList>
 
 
 #pragma mark Constructor...
@@ -936,24 +937,24 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 {
     QTime t = QTime::currentTime();
     
-    for(int i=0; i<mEvents.size(); ++i)
-    {
-        Event* event = mEvents[i];
-        event->mTheta.generateCorrelations(chains);
+    QList<Event*>::iterator iterEvent = mEvents.begin();
+    while (iterEvent!=mEvents.end()) {
+        (*iterEvent)->mTheta.generateCorrelations(chains);
         
-        for(int j=0; j<event->mDates.size(); ++j)
+        for(int j=0; j<(*iterEvent)->mDates.size(); ++j)
         {
-            Date* date = &(event->mDates[j]);
-            date->mTheta.generateCorrelations(chains);
-            date->mSigma.generateCorrelations(chains);
+            Date& date = (*iterEvent)->mDates[j];
+            date.mTheta.generateCorrelations(chains);
+            date.mSigma.generateCorrelations(chains);
         }
+        ++iterEvent;
     }
     
-    for(int i=0; i<mPhases.size(); ++i)
-    {
-        //Phase* phase = mPhases[i];
-        mPhases[i]->mAlpha.generateCorrelations(chains);
-        mPhases[i]->mBeta.generateCorrelations(chains);
+    QList<Phase*>::iterator iterPhase = mPhases.begin();
+    while (iterPhase!=mPhases.end()) {
+        (*iterPhase)->mAlpha.generateCorrelations(chains);
+        (*iterPhase)->mBeta.generateCorrelations(chains);
+        ++iterPhase;
     }
     
     QTime t2 = QTime::currentTime();
@@ -965,36 +966,34 @@ void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftL
 {
     QTime t = QTime::currentTime();
     
-    /*double tmin = mSettings.mTmin;
-    double tmax = mSettings.mTmax;*/
     const double tmin = mSettings.getTminFormated();
     const double tmax = mSettings.getTmaxFormated();
     
-    for(int i=0; i<mEvents.size(); ++i)
-    {
-        Event* event = mEvents[i];
-        
+    QList<Event*>::iterator iterEvent = mEvents.begin();
+    while (iterEvent!=mEvents.end()) {
+
         // Generate event histos for all events and all bounds except for bounds of type "fixed"
-        EventKnown* ek = dynamic_cast<EventKnown*>(event);
-        if(event->type() == Event::eKnown && ek && (ek->knownType() == EventKnown::eFixed))
+        EventKnown* ek = dynamic_cast<EventKnown*>((*iterEvent));
+        if((*iterEvent)->type() == Event::eKnown && ek && (ek->knownType() == EventKnown::eFixed))
         {
             // Nothing todo : this is just a Dirac !
             ek->mTheta.mHisto.clear();
             ek->mTheta.mChainsHistos.clear();
             
             ek->mTheta.mHisto.insert(ek->mFixed,1);
-            for(int i=0; i<chains.size(); ++i) //generate fictifious chains
+            for(int i =0 ;i<chains.size(); ++i) {//generate fictifious chains
                 ek->mTheta.mChainsHistos.append(ek->mTheta.mHisto);
+            }
         }
         else
         {
-            event->mTheta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
+            (*iterEvent)->mTheta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
         }
         
         // Generate dates histos
-        for(int j=0; j<event->mDates.size(); ++j)
+        for(int j=0; j<(*iterEvent)->mDates.size(); ++j)
         {
-            Date& date = event->mDates[j];
+            Date& date = (*iterEvent)->mDates[j];
             
             date.mTheta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
             date.mSigma.generateHistos(chains, fftLen, hFactor);
@@ -1002,15 +1001,15 @@ void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftL
             if(!(date.mDeltaType == Date::eDeltaFixed && date.mDeltaFixed == 0))
                 date.mWiggle.generateHistos(chains, fftLen, hFactor);
         }
+        ++iterEvent;
     }
     
-    for(int i=0; i<mPhases.size(); ++i)
-    {
-        Phase* phase = mPhases[i];
-        
-        phase->mAlpha.generateHistos(chains, fftLen, hFactor, tmin, tmax);
-        phase->mBeta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
-        phase->mDuration.generateHistos(chains, fftLen, hFactor);
+    QList<Phase*>::iterator iterPhase = mPhases.begin();
+    while (iterPhase!=mPhases.end()) {
+        (*iterPhase)->mAlpha.generateHistos(chains, fftLen, hFactor, tmin, tmax);
+        (*iterPhase)->mBeta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
+        (*iterPhase)->mDuration.generateHistos(chains, fftLen, hFactor);
+        ++iterPhase;
     }
     
     QTime t2 = QTime::currentTime();
@@ -1022,25 +1021,25 @@ void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
 {
     QTime t = QTime::currentTime();
     
-    for(int i=0; i<mEvents.size(); ++i)
-    {
-        Event* event = mEvents[i];
-        event->mTheta.generateNumericalResults(chains);
+    QList<Event*>::iterator iterEvent = mEvents.begin();
+    while (iterEvent!=mEvents.end()) {
+        (*iterEvent)->mTheta.generateNumericalResults(chains);
         
-        for(int j=0; j<event->mDates.size(); ++j)
+        for(int j=0; j<(*iterEvent)->mDates.size(); ++j)
         {
-            Date& date = event->mDates[j];
+            Date& date = (*iterEvent)->mDates[j];
             date.mTheta.generateNumericalResults(chains);
             date.mSigma.generateNumericalResults(chains);
         }
+        ++iterEvent;
     }
     
-    for(int i=0; i<mPhases.size(); ++i)
-    {
-        Phase* phase = mPhases[i];
-        phase->mAlpha.generateNumericalResults(chains);
-        phase->mBeta.generateNumericalResults(chains);
-        phase->mDuration.generateNumericalResults(chains);
+    QList<Phase*>::iterator iterPhase = mPhases.begin();
+    while (iterPhase!=mPhases.end()) {
+        (*iterPhase)->mAlpha.generateNumericalResults(chains);
+        (*iterPhase)->mBeta.generateNumericalResults(chains);
+        (*iterPhase)->mDuration.generateNumericalResults(chains);
+        ++iterPhase;
     }
     
     QTime t2 = QTime::currentTime();
@@ -1048,55 +1047,49 @@ void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
     qDebug() <<  "=> Model::generateNumericalResults done in " + QString::number(timeDiff) + " ms";
 }
 
-void Model::generateCredibilityAndHPD(const QList<ChainSpecs> &chains, double thresh)
+void Model::generateCredibilityAndHPD(const QList<ChainSpecs> &chains,const double thresh)
 {
     QTime t = QTime::currentTime();
     
-    /* double threshold = thresh;
-    threshold = std::min(100.0, threshold);
-    threshold = std::max(0.0, threshold); */
-    double threshold = qBound(0.0,thresh,100.0);
+    const double threshold = qBound(0.0,thresh,100.0);
     
-    for(int i=0; i<mEvents.size(); ++i)
-    {
-        Event* event = mEvents[i];
-        
+    QList<Event*>::iterator iterEvent = mEvents.begin();
+    while (iterEvent!=mEvents.end()) {
         bool isFixedBound = false;
-        if(event->type() == Event::eKnown)
+        if((*iterEvent)->type() == Event::eKnown)
         {
-            EventKnown* ek = dynamic_cast<EventKnown*>(event);
+            EventKnown* ek = dynamic_cast<EventKnown*>(*iterEvent);
             if(ek->knownType() == EventKnown::eFixed)
                 isFixedBound = true;
         }
         
         if(!isFixedBound)
         {
-            event->mTheta.generateHPD(threshold);
-            event->mTheta.generateCredibility(chains, threshold);
-            QList<Date>& dates = event->mDates;
-            
-            for(int j=0; j<dates.size(); ++j)
-            {
-                Date& date = dates[j];
+            (*iterEvent)->mTheta.generateHPD(threshold);
+            (*iterEvent)->mTheta.generateCredibility(chains, threshold);
+
+            for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
+                Date& date = (*iterEvent)->mDates[j];
                 date.mTheta.generateHPD(threshold);
                 date.mSigma.generateHPD(threshold);
-                
+
                 date.mTheta.generateCredibility(chains, threshold);
                 date.mSigma.generateCredibility(chains, threshold);
             }
         }
+        ++iterEvent;
     }
-    for(int i=0; i<mPhases.size(); ++i)
-    {
-        Phase* phase = mPhases[i];
-        phase->mAlpha.generateHPD(threshold);
-        phase->mBeta.generateHPD(threshold);
+    QList<Phase*>::iterator iterPhase = mPhases.begin();
+    while (iterPhase!=mPhases.end()) {
+        (*iterPhase)->mAlpha.generateHPD(threshold);
+        (*iterPhase)->mBeta.generateHPD(threshold);
         // if there is only one Event in the phase, there is no Duration
-        phase->mDuration.generateHPD(threshold);
+        (*iterPhase)->mDuration.generateHPD(threshold);
         
-        phase->mAlpha.generateCredibility(chains, threshold);
-        phase->mBeta.generateCredibility(chains, threshold);
-        phase->mDuration.generateCredibility(chains, threshold);
+        (*iterPhase)->mAlpha.generateCredibility(chains, threshold);
+        (*iterPhase)->mBeta.generateCredibility(chains, threshold);
+        (*iterPhase)->mDuration.generateCredibility(chains, threshold);
+        ++iterPhase;
     }
     
     QTime t2 = QTime::currentTime();
@@ -1107,44 +1100,46 @@ void Model::generateCredibilityAndHPD(const QList<ChainSpecs> &chains, double th
 #pragma mark Clear model data
 void Model::clearPosteriorDensities()
 {
-    for(int i=0; i<mEvents.size(); ++i) {
-        Event* event = mEvents[i];
-        for(int j=0; j<mEvents[i]->mDates.size(); ++j) {
-            Date& date = event->mDates[j];
+    QList<Event*>::iterator iterEvent = mEvents.begin();
+    while (iterEvent!=mEvents.cend()) {
+        for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
+            Date& date = (*iterEvent)->mDates[j];
             date.mTheta.mHisto.clear();
             date.mSigma.mHisto.clear();
             date.mTheta.mChainsHistos.clear();
             date.mSigma.mChainsHistos.clear();
         }
-        event->mTheta.mHisto.clear();
-        event->mTheta.mChainsHistos.clear();
+        (*iterEvent)->mTheta.mHisto.clear();
+        (*iterEvent)->mTheta.mChainsHistos.clear();
+        ++iterEvent;
     }
-    
-    for(int i=0; i<mPhases.size(); ++i) {
-        Phase* phase = mPhases[i];
-        phase->mAlpha.mHisto.clear();
-        phase->mBeta.mHisto.clear();
-        phase->mAlpha.mChainsHistos.clear();
-        phase->mBeta.mChainsHistos.clear();
-        
+
+    QList<Phase*>::iterator iterPhase = mPhases.begin();
+    while (iterPhase!=mPhases.cend()) {
+        (*iterPhase)->mAlpha.mHisto.clear();
+        (*iterPhase)->mBeta.mHisto.clear();
+        (*iterPhase)->mAlpha.mChainsHistos.clear();
+        (*iterPhase)->mBeta.mChainsHistos.clear();
+        ++iterPhase;
     }
 }
 void Model::clearCredibilityAndHPD()
 {
-    for(int i=0; i<mEvents.size(); ++i) {
-        Event* event = mEvents[i];
-        for(int j=0; j<mEvents[i]->mDates.size(); ++j) {
-            Date& date = event->mDates[j];
+    QList<Event*>::iterator iterEvent = mEvents.begin();
+    while (iterEvent!=mEvents.cend()) {
+        foreach (Date date, (*iterEvent)->mDates) {
             date.mTheta.mHPD.clear();
             date.mSigma.mHPD.clear();
             
         }
-        event->mTheta.mHPD.clear();
+        (*iterEvent)->mTheta.mHPD.clear();
+        ++iterEvent;
     }
-    for(int i=0; i<mPhases.size(); ++i) {
-        Phase* phase = mPhases[i];
-        phase->mAlpha.mHPD.clear();
-        phase->mBeta.mHPD.clear();
+    QList<Phase*>::iterator iterPhase = mPhases.begin();
+    while (iterPhase!=mPhases.cend()) {
+        (*iterPhase)->mAlpha.mHPD.clear();
+        (*iterPhase)->mBeta.mHPD.clear();
+        ++iterPhase;
     }
 }
 
@@ -1183,21 +1178,17 @@ void Model::saveToFile(const QString& fileName)
         // -----------------------------------------------------
         //  Write phases data
         // -----------------------------------------------------
-        for(int i=0; i<mPhases.size(); ++i)
-        {
-           
-            mPhases[i]->mAlpha.saveToStream(&out);
-            mPhases[i]->mBeta.saveToStream(&out);
-            mPhases[i]->mDuration.saveToStream(&out);
+        foreach (Phase* phase, mPhases) {
+            phase->mAlpha.saveToStream(&out);
+            phase->mBeta.saveToStream(&out);
+            phase->mDuration.saveToStream(&out);
         }
 
         // -----------------------------------------------------
         //  Write events data
         // -----------------------------------------------------
-        for(int i=0; i<mEvents.size(); ++i)
-        {
-
-           mEvents[i]->mTheta.saveToStream(&out);
+        foreach (Event* event, mEvents) {
+           event->mTheta.saveToStream(&out);
         }
 
         // -----------------------------------------------------

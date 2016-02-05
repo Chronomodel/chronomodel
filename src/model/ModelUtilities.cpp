@@ -142,7 +142,7 @@ QVector<QVector<Event*> > ModelUtilities::getNextBranches(const QVector<Event*>&
         for(int i=0; i<cts.size(); ++i)
         {
             QVector<Event*> branch = curBranch;
-            Event* newNode = cts[i]->mEventTo;
+            Event* newNode = cts.at(i)->mEventTo;
             
             if(newNode->mLevel <= lastNode->mLevel)
                 newNode->mLevel = lastNode->mLevel + 1;
@@ -152,21 +152,18 @@ QVector<QVector<Event*> > ModelUtilities::getNextBranches(const QVector<Event*>&
                 branch.append(newNode);
                 QVector<QVector<Event*> > nextBranches = getNextBranches(branch, cts[i]->mEventTo);
 
-                foreach (QVector<Event*> branch, nextBranches) {
-                    branches.append(branch);
+                for(int j=0; j<nextBranches.size(); ++j) {
+                    branches.append(nextBranches.at(j));
                 }
-                //for(int j=0; j<nextBranches.size(); ++j)
-                //    branches.append(nextBranches[j]);
             }
             else
             {
                 QStringList evtNames;
 
-                foreach (Event* event, branch) {
-                    evtNames << event->mName;
-                }
-               // for(int j=0; j<branch.size(); ++j)
-               //     evtNames << branch[j]->mName;
+                 for(int j=0; j<branch.size(); ++j) {
+                     evtNames << branch.at(j)->mName;
+                 }
+
                 evtNames << newNode->mName;
                 
                 throw QObject::tr("Circularity found in events model !\nPlease correct this branch :\n") + evtNames.join(" -> ");
