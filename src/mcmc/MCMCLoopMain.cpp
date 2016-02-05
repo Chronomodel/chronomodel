@@ -62,7 +62,7 @@ QString MCMCLoopMain::calibrate()
         for(int i=0; i<dates.size(); ++i)
         {
             //QTime startTime = QTime::currentTime();
-            dates[i]->calibrate(mModel->mSettings);
+            dates.at(i)->calibrate(mModel->mSettings);
          
             if(isInterruptionRequested())
                 return ABORTED_BY_USER;

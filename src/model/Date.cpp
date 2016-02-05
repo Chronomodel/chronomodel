@@ -140,23 +140,23 @@ Date Date::fromJson(const QJsonObject& json)
     
     if(!json.isEmpty())
     {
-        date.mId = json[STATE_ID].toInt();
-        date.mName = json[STATE_NAME].toString();
+        date.mId = json.value(STATE_ID).toInt();
+        date.mName = json.value(STATE_NAME).toString();
         
         // Copy plugin specific values for this data :
-        date.mData = json[STATE_DATE_DATA].toObject();
+        date.mData = json.value(STATE_DATE_DATA).toObject();
         
-        date.mMethod = (DataMethod)json[STATE_DATE_METHOD].toInt();
-        date.mIsValid = json[STATE_DATE_VALID].toBool();
+        date.mMethod = (DataMethod)json.value(STATE_DATE_METHOD).toInt();
+        date.mIsValid = json.value(STATE_DATE_VALID).toBool();
         
-        date.mDeltaType = (Date::DeltaType)json[STATE_DATE_DELTA_TYPE].toInt();
-        date.mDeltaFixed = json[STATE_DATE_DELTA_FIXED].toDouble();
-        date.mDeltaMin = json[STATE_DATE_DELTA_MIN].toDouble();
-        date.mDeltaMax = json[STATE_DATE_DELTA_MAX].toDouble();
-        date.mDeltaAverage = json[STATE_DATE_DELTA_AVERAGE].toDouble();
-        date.mDeltaError = json[STATE_DATE_DELTA_ERROR].toDouble();
+        date.mDeltaType = (Date::DeltaType)json.value(STATE_DATE_DELTA_TYPE).toInt();
+        date.mDeltaFixed = json.value(STATE_DATE_DELTA_FIXED).toDouble();
+        date.mDeltaMin = json.value(STATE_DATE_DELTA_MIN).toDouble();
+        date.mDeltaMax = json.value(STATE_DATE_DELTA_MAX).toDouble();
+        date.mDeltaAverage = json.value(STATE_DATE_DELTA_AVERAGE).toDouble();
+        date.mDeltaError = json.value(STATE_DATE_DELTA_ERROR).toDouble();
         
-        QString pluginId = json[STATE_DATE_PLUGIN_ID].toString();
+        QString pluginId = json.value(STATE_DATE_PLUGIN_ID).toString();
         date.mPlugin = PluginManager::getPluginFromId(pluginId);
         if(date.mPlugin == 0)
         {
@@ -170,9 +170,9 @@ Date Date::fromJson(const QJsonObject& json)
         }
         
         date.mSubDates.clear();
-        QJsonArray subdates = json[STATE_DATE_SUB_DATES].toArray();
+        QJsonArray subdates = json.value(STATE_DATE_SUB_DATES).toArray();
         for(int i=0; i<subdates.size(); ++i){
-            QJsonObject d = subdates[i].toObject();
+            const QJsonObject d = subdates.at(i).toObject();
             date.mSubDates.push_back(Date::fromJson(d));
         }
         
@@ -693,7 +693,7 @@ void Date::updateWiggle()
 Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
 {
     Date date;
-    QString pluginName = dataStr.first();
+    const QString pluginName = dataStr.first();
     PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
     if(plugin) {
         QStringList dataTmp = dataStr.mid(1,dataStr.size()-1);

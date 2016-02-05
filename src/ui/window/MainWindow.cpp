@@ -214,7 +214,7 @@ void MainWindow::createActions()
     //-----------------------------------------------------------------
     const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
     for(int i=0; i<plugins.size(); ++i){
-        QString name = plugins[i]->getName();
+        QString name = plugins.at(i)->getName();
         QList<QHash<QString, QVariant>> groupedActions = plugins[i]->getGroupedActions();
         for(int j=0; j<groupedActions.size(); ++j){
             QAction* act = new QAction(groupedActions[j]["title"].toString(), this);
@@ -579,7 +579,7 @@ void MainWindow::setLanguage(QAction* action)
 #pragma mark Grouped Actions
 void MainWindow::changeEventsColor()
 {
-    QColor color = QColorDialog::getColor(Qt::blue, qApp->activeWindow(), tr("Change selected events color"));
+    const QColor color = QColorDialog::getColor(Qt::blue, qApp->activeWindow(), tr("Change selected events color"));
     if(color.isValid()){
         mProject->updateSelectedEventsColor(color);
     }

@@ -152,7 +152,7 @@ bool PhaseDialog::isValid()
 {
     if(mTauTypeCombo->currentIndex() == 1)
     {
-        int tau = mTauFixedEdit->text().toInt();
+        const int tau = mTauFixedEdit->text().toInt();
         if(tau < 1)
         {
             mError = tr("Phase fixed duration must be more than 1 !");

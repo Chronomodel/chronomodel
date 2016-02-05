@@ -327,7 +327,7 @@ QJsonObject Plugin14C::checkValuesCompatibility(const QJsonObject& values)
 #pragma mark Date Validity
 bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
 {
-    QString ref_curve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
+    const QString ref_curve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
     bool valid = false;
     if(!mRefCurves.contains(ref_curve)) {
         qDebug()<<"in Plugin14C::isDateValid() unkowned curve"<<ref_curve;
@@ -340,8 +340,8 @@ bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& sett
         valid = false;
         double age = data.value(DATE_14C_AGE_STR).toDouble();
         double error = data.value(DATE_14C_ERROR_STR).toDouble();
-        double delta_r = data.value(DATE_14C_DELTA_R_STR).toDouble();
-        double delta_r_error = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
+        const double delta_r = data.value(DATE_14C_DELTA_R_STR).toDouble();
+        const double delta_r_error = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
 
         // Apply reservoir effect
         age = (age - delta_r);
@@ -433,23 +433,23 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
         QStringList names;
         
         for(int i=0; i<dates.size(); ++i){
-            QJsonObject date = dates.at(i).toObject();
-            QJsonObject data = date.value(STATE_DATE_DATA).toObject();
+            const QJsonObject date = dates.at(i).toObject();
+            const QJsonObject data = date.value(STATE_DATE_DATA).toObject();
             
             names.append(date.value(STATE_NAME).toString());
-            double a = data.value(DATE_14C_AGE_STR).toDouble();
-            double e = data.value(DATE_14C_ERROR_STR).toDouble();
-            double r = data.value(DATE_14C_DELTA_R_STR).toDouble();
-            double re = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
+            const double a = data.value(DATE_14C_AGE_STR).toDouble();
+            const double e = data.value(DATE_14C_ERROR_STR).toDouble();
+            const double r = data.value(DATE_14C_DELTA_R_STR).toDouble();
+            const double re = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
             
             // Reservoir effet
-            double m = a - r;
-            double v = e * e + re * re;
+            const double m = a - r;
+            const double v = e * e + re * re;
             
             sum_vi += v;
             sum_mi_vi += m/v;
             sum_1_vi += 1/v;
-         //   sum_mi_2 += m*m;
+
         }
         
         result = dates.at(0).toObject();
