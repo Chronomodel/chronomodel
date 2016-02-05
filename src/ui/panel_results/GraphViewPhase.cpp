@@ -117,19 +117,6 @@ void GraphViewPhase::paintEvent(QPaintEvent* e)
     GraphViewResults::paintEvent(e);
 }
 
-void GraphViewPhase::setGraphsThickness(int value)
-{
-    GraphViewResults::setGraphsThickness(value);
-    mDurationGraph->setCurvesThickness(value);
-}
-
-void GraphViewPhase::setGraphsOpacity(int value)
-{
-    GraphViewResults::setGraphsOpacity(value);
-    mDurationGraph->setCurvesOpacity(value);
-
-}
-
 void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
 {
     GraphViewResults::generateCurves(typeGraph, variable);

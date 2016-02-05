@@ -193,10 +193,11 @@ mGraphsH(130)
     
     mOpacitySpin = new QSpinBox();
     mOpacitySpin->setRange(0, 100);
-    mOpacitySpin->setValue(50);
+    mOpacitySpin->setValue(30);
     mOpacitySpin->setSuffix(" %");
     connect(mOpacitySpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::updateOpacity);
-    
+
+
     // Grid : 8 columns
     QGridLayout* displayLayout = new QGridLayout();
     displayLayout->setContentsMargins(0, 0, 0, 0);
@@ -771,7 +772,14 @@ void ResultsView::updateResults(Model* model)
         }
     }
 
-    
+    // ----------------------------------------------------
+    //  Events Views : generate all phases graph
+    //  No posterior density has been computed yet!
+    //  Graphs are empty at the moment
+    // ----------------------------------------------------
+
+    createEventsScrollArea();
+
     // ----------------------------------------------------
     //  Phases Views : generate all phases graph
     //  No posterior density has been computed yet!
@@ -780,13 +788,7 @@ void ResultsView::updateResults(Model* model)
 
     createPhasesScrollArea();
 
-    // ----------------------------------------------------
-    //  Events Views : generate all phases graph
-    //  No posterior density has been computed yet!
-    //  Graphs are empty at the moment
-    // ----------------------------------------------------
 
-    createEventsScrollArea();
     // ------------------------------------------------------------
     
     showInfos(mInfosBut->isChecked());
@@ -816,9 +818,9 @@ void ResultsView::createEventsScrollArea()
     QWidget* eventsWidget = new QWidget();
     eventsWidget->setMouseTracking(true);
 
-    for(int i=0; i<(int)mModel->mEvents.size(); ++i)
-    {
-        Event* event = mModel->mEvents[i];
+    QList<Event*>::const_iterator iterEvent = mModel->mEvents.cbegin();
+    while (iterEvent!=mModel->mEvents.cend()) {
+
         GraphViewEvent* graphEvent = new GraphViewEvent(eventsWidget);
 
         // ----------------------------------------------------
@@ -828,14 +830,14 @@ void ResultsView::createEventsScrollArea()
         // ----------------------------------------------------
         graphEvent->setSettings(mModel->mSettings);
         graphEvent->setMCMCSettings(mModel->mMCMCSettings, mChains);
-        graphEvent->setEvent(event);
+        graphEvent->setEvent((*iterEvent));
         graphEvent->setGraphFont(mFont);
         graphEvent->setGraphsThickness(mThicknessSpin->value());
         mByEventsGraphs.append(graphEvent);
-       // if(mUnfoldBut->isChecked()) {
-        if(event->mType != Event::eKnown) {
-            for(int j=0; j<(int)event->mDates.size(); ++j) {
-                Date& date = event->mDates[j];
+
+        if((*iterEvent)->mType != Event::eKnown) {
+             for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
+                Date& date = (*iterEvent)->mDates[j];
                 // ----------------------------------------------------
                 //  This just creates the view for the date.
                 //  It sets the Date which triggers an update() to repaint the view.
@@ -845,13 +847,15 @@ void ResultsView::createEventsScrollArea()
                 graphDate->setSettings(mModel->mSettings);
                 graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
                 graphDate->setDate(&date);
-                graphDate->setColor(date.getEventColor());//  event->getColor());
+                graphDate->setColor((*iterEvent)->mColor);
 
                 graphDate->setGraphFont(mFont);
                 graphDate->setGraphsThickness(mThicknessSpin->value());
+                graphDate->setGraphsOpacity(mOpacitySpin->value());
                 mByEventsGraphs.append(graphDate);
             }
        }
+       ++iterEvent;
     }
     mEventsScrollArea->setWidget(eventsWidget);
 }
@@ -861,32 +865,35 @@ void ResultsView::createPhasesScrollArea()
     QWidget* phasesWidget = new QWidget();
     phasesWidget->setMouseTracking(true);
 
-    for(int p=0; p<(int)mModel->mPhases.size(); ++p)
-    {
+
         // ----------------------------------------------------
         //  This just creates the GraphView for the phase (no curve yet)
         // ----------------------------------------------------
-        Phase* phase = mModel->mPhases[p];
+
+    QList<Phase*>::const_iterator iterPhase = mModel->mPhases.cbegin();
+    while (iterPhase!=mModel->mPhases.cend()) {
+
         GraphViewPhase* graphPhase = new GraphViewPhase(phasesWidget);
-        connect(graphPhase, &GraphViewPhase::durationDisplay, this,&ResultsView::adjustDuration);
+        connect(graphPhase, &GraphViewPhase::durationDisplay, this, &ResultsView::adjustDuration);
 
         graphPhase->setSettings(mModel->mSettings);
         graphPhase->setMCMCSettings(mModel->mMCMCSettings, mChains);
-        graphPhase->setPhase(phase);
+        graphPhase->setPhase((*iterPhase));
         graphPhase->setGraphFont(mFont);
         graphPhase->setGraphsThickness(mThicknessSpin->value());
         mByPhasesGraphs.append(graphPhase);
 
-        for(int i=0; i<(int)phase->mEvents.size(); ++i)
-        {
-            // ----------------------------------------------------
-            //  This just creates the GraphView for the event (no curve yet)
-            // ----------------------------------------------------
-            Event* event = phase->mEvents[i];
+        // ----------------------------------------------------
+        //  This just creates the GraphView for the event (no curve yet)
+        // ----------------------------------------------------
+
+        QList<Event*>::iterator iterEvent = (*iterPhase)->mEvents.begin();
+        while (iterEvent!=(*iterPhase)->mEvents.end()) {
+
             GraphViewEvent* graphEvent = new GraphViewEvent(phasesWidget);
             graphEvent->setSettings(mModel->mSettings);
             graphEvent->setMCMCSettings(mModel->mMCMCSettings, mChains);
-            graphEvent->setEvent(event);
+            graphEvent->setEvent((*iterEvent));
             graphEvent->setGraphFont(mFont);
             graphEvent->setGraphsThickness(mThicknessSpin->value());
             mByPhasesGraphs.append(graphEvent);
@@ -894,20 +901,22 @@ void ResultsView::createPhasesScrollArea()
             // --------------------------------------------------
             //  This just creates the GraphView for the date (no curve yet)
             // --------------------------------------------------
-            for(int j=0; j<(int)event->mDates.size(); ++j)
+            for(int j=0; j<(*iterEvent)->mDates.size(); ++j)
             {
-                Date& date = event->mDates[j];
+                Date& date = (*iterEvent)->mDates[j];
                 GraphViewDate* graphDate = new GraphViewDate(phasesWidget);
                 graphDate->setSettings(mModel->mSettings);
                 graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
                 graphDate->setDate(&date);
+                graphDate->setColor((*iterEvent)->mColor);
                 graphDate->setGraphFont(mFont);
                 graphDate->setGraphsThickness(mThicknessSpin->value());
 
-                graphDate->setColor(event->mColor);
                 mByPhasesGraphs.append(graphDate);
             }
+            ++iterEvent;
         }
+        ++iterPhase;
     }
     mPhasesScrollArea->setWidget(phasesWidget);
 
@@ -943,13 +952,13 @@ void ResultsView::generateCredibilityAndHPD()
     qDebug() << "ResultsView::generateCredibilityAndHPD";
     if(mModel)
     {
-        QLocale locale;
+        const QLocale locale;
         bool ok;
         QString input = mHPDEdit->text();
         mHPDEdit->validator()->fixup(input);
         mHPDEdit->setText(input);
         
-        double_t hpd = locale.toDouble(mHPDEdit->text(),&ok);
+        double hpd = locale.toDouble(mHPDEdit->text(),&ok);
         // ??? mModel->generateNumericalResults(mChains);
         if (!ok) hpd = 95;
         mModel->clearCredibilityAndHPD();
@@ -992,14 +1001,22 @@ void ResultsView::generateCurves()
     if(variable == GraphViewResults::eSigma) {
         mResultMaxVariance = 0;
 
-        QList<GraphViewResults*>::const_iterator constIter = mByEventsGraphs.constBegin();
+        QList<GraphViewResults*>::const_iterator constIter;
+        if (mByPhasesBut->isChecked()) {
+            constIter = mByPhasesGraphs.cbegin();
+            iterEnd = mByPhasesGraphs.cend();
+        }
+        else {
+            constIter = mByEventsGraphs.cbegin();
+            iterEnd = mByEventsGraphs.cend();
+        }
 
-        while(constIter != mByEventsGraphs.constEnd()) {
+        while(constIter != iterEnd) {
             GraphViewDate* graphDate = dynamic_cast<GraphViewDate*>(*constIter);
             if(graphDate) {
-               GraphCurve* graphDuration = graphDate->mGraph->getCurve("Post Distrib All Chains");
-               if(graphDuration) {
-                   mResultMaxVariance = ceil(qMax(mResultMaxVariance, graphDuration->mData.lastKey()));
+               GraphCurve* graphVariance = graphDate->mGraph->getCurve("Post Distrib All Chains");
+               if(graphVariance) {
+                   mResultMaxVariance = ceil(qMax(mResultMaxVariance, graphVariance->mData.lastKey()));
                }
             }
             ++constIter;
@@ -1017,30 +1034,34 @@ void ResultsView::updateCurvesToShow()
 {
     qDebug() << "ResultsView::updateCurvesToShow";
     
-    ProjectSettings s = mSettings;
-    MCMCSettings mcmc = mMCMCSettings;
+    const ProjectSettings s = mSettings;
+    const MCMCSettings mcmc = mMCMCSettings;
     
-    bool showAllChains = mAllChainsCheck->isChecked();
+    const bool showAllChains = mAllChainsCheck->isChecked();
     QList<bool> showChainList;
     if(mTabs->currentIndex() == 0)
     {
-        for(int i=0; i<mCheckChainChecks.size(); ++i)
-            showChainList.append(mCheckChainChecks.at(i)->isChecked());
+        foreach (CheckBox* cbButton, mCheckChainChecks) {
+            showChainList.append(cbButton->isChecked());
+        }
     }
     else
     {
-        for(int i=0; i<mChainRadios.size(); ++i)
-            showChainList.append(mChainRadios.at(i)->isChecked());
+        foreach (RadioButton* rButton, mChainRadios) {
+            showChainList.append(rButton->isChecked());
+        }
     }
-    bool showCalib = mDataCalibCheck->isChecked();
-    bool showWiggle = mWiggleCheck->isChecked();
-    bool showCredibility = mCredibilityCheck->isChecked();
+    const bool showCalib = mDataCalibCheck->isChecked();
+    const bool showWiggle = mWiggleCheck->isChecked();
+    const bool showCredibility = mCredibilityCheck->isChecked();
     
-    for(int i=0; i<mByPhasesGraphs.size(); ++i){
-        mByPhasesGraphs[i]->updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
+
+    foreach (GraphViewResults* phaseGraph, mByPhasesGraphs) {
+         phaseGraph->updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
     }
-    for(int i=0; i<mByEventsGraphs.size(); ++i){
-        mByEventsGraphs[i]->updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
+
+    foreach (GraphViewResults* eventGraph, mByEventsGraphs) {
+         eventGraph->updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
     }
     
     updateResultsLog();
@@ -1112,17 +1133,17 @@ void ResultsView::updateScales()
     // -----------------------------------------------
     //  Set All Graphs Ranges (This is not done by generateCurves !)
     // -----------------------------------------------
-    for(int i=0; i<mByPhasesGraphs.size(); ++i)
-    {
-        mByPhasesGraphs[i]->setRange(mResultMinX, mResultMaxX);
-        mByPhasesGraphs[i]->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
+
+    foreach (GraphViewResults* phaseGraph, mByPhasesGraphs) {
+        phaseGraph->setRange(mResultMinX, mResultMaxX);
+        phaseGraph->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
     }
-    for(int i=0; i<mByEventsGraphs.size(); ++i)
-    {
-        mByEventsGraphs[i]->setRange(mResultMinX, mResultMaxX);
-        mByEventsGraphs[i]->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
+
+    foreach (GraphViewResults* eventGraph, mByEventsGraphs) {
+
+        eventGraph->setRange(mResultMinX, mResultMaxX);
+        eventGraph->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
     }
-    
     // ------------------------------------------
     //  Set Zoom Slider & Zoom Edit
     // ------------------------------------------
@@ -1178,13 +1199,11 @@ void ResultsView::updateResultsLog()
     for(int i=0; i<mModel->mEvents.size(); ++i)
     {
         Event* event = mModel->mEvents[i];
-        //log += ModelUtilities::eventResultsText(event, true);
         log += ModelUtilities::eventResultsHTML(event, true, mModel);
     }
     for(int i=0; i<mModel->mPhases.size(); ++i)
     {
         Phase* phase = mModel->mPhases[i];
-        //log += ModelUtilities::phaseResultsText(phase);
         log += ModelUtilities::phaseResultsHTML(phase);
     }
     emit resultsLogUpdated(log);
@@ -1392,41 +1411,54 @@ void ResultsView::updateFont()
 
 void ResultsView::updateThickness(int value)
 {
-    foreach (GraphViewResults* phaseGraph, mByPhasesGraphs) {
-        phaseGraph->setGraphsThickness(value);
+    foreach (GraphViewResults* allKindGraph, mByPhasesGraphs) {
+        allKindGraph->setGraphsThickness(value);
+        GraphViewPhase* phaseGraphs = dynamic_cast<GraphViewPhase*>(allKindGraph);
+        if(phaseGraphs) {
+            phaseGraphs->mDurationGraph->setGraphsThickness(value);
+        }
     }
-    foreach (GraphViewResults* eventGraph, mByEventsGraphs) {
-        eventGraph->setGraphsThickness(value);
+
+    foreach (GraphViewResults* allKindGraph, mByEventsGraphs) {
+        allKindGraph->setGraphsThickness(value);
     }
 }
 
 void ResultsView::updateOpacity(int value)
 {
-    foreach (GraphViewResults* phaseGraph, mByPhasesGraphs) {
-        phaseGraph->setGraphsOpacity(value);
+    foreach (GraphViewResults* allKindGraph, mByPhasesGraphs) {
+       allKindGraph->setGraphsOpacity(value);
+       GraphViewPhase* phaseGraphs = dynamic_cast<GraphViewPhase*>(allKindGraph);
+       if(phaseGraphs) {
+           phaseGraphs->mDurationGraph->setCurvesOpacity(value);
+       }
     }
-    foreach (GraphViewResults* eventGraph, mByEventsGraphs) {
-        eventGraph->setGraphsOpacity(value);
+    foreach (GraphViewResults* allKindGraph, mByEventsGraphs) {
+        allKindGraph->setGraphsOpacity(value);
     }
 }
 
 void ResultsView::updateRendering(int index)
 {
-    foreach (GraphViewResults* phaseGraph, mByPhasesGraphs) {
-        phaseGraph->setRendering((GraphView::Rendering) index);
+    foreach (GraphViewResults* allKindGraph, mByPhasesGraphs) {
+        allKindGraph->setRendering((GraphView::Rendering) index);
+        GraphViewPhase* phaseGraphs = dynamic_cast<GraphViewPhase*>(allKindGraph);
+        if(phaseGraphs) {
+            phaseGraphs->mDurationGraph->setRendering((GraphView::Rendering) index);
+        }
     }
-    foreach (GraphViewResults* eventGraph, mByEventsGraphs) {
-        eventGraph->setRendering((GraphView::Rendering) index);
+    foreach (GraphViewResults* allKindGraph, mByEventsGraphs) {
+        allKindGraph->setRendering((GraphView::Rendering) index);
     }
 }
 
 void ResultsView::showInfos(bool show)
 {
-    foreach (GraphViewResults* phaseGraph, mByPhasesGraphs) {
-        phaseGraph->showNumericalResults(show);
+    foreach (GraphViewResults* allKindGraph, mByPhasesGraphs) {
+        allKindGraph->showNumericalResults(show);
     }
-    foreach (GraphViewResults* eventGraph, mByEventsGraphs) {
-        eventGraph->showNumericalResults(show);
+    foreach (GraphViewResults* allKindGraph, mByEventsGraphs) {
+        allKindGraph->showNumericalResults(show);
     }
 }
 
@@ -1605,27 +1637,26 @@ void ResultsView::updateModel()
     
     QJsonObject state = MainWindow::getInstance()->getProject()->state();
     
-    QJsonArray events = state[STATE_EVENTS].toArray();
-    QJsonArray phases = state[STATE_PHASES].toArray();
+    QJsonArray events = state.value(STATE_EVENTS).toArray();
+    QJsonArray phases = state.value(STATE_PHASES).toArray();
     
     for(int i=0; i<events.size(); ++i)
     {
-        QJsonObject event = events[i].toObject();
-        int eventId = event[STATE_ID].toInt();
-        QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+        QJsonObject event = events.at(i).toObject();
+        int eventId = event.value(STATE_ID).toInt();
+        QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
         
         for(int j=0; j<mModel->mEvents.size(); ++j)
         {
             Event* e = mModel->mEvents[j];
             if(e->mId == eventId)
             {
-               // e->setJson(& MainWindow::getInstance()->getProject()->state(), j);
-                e->mName  = event[STATE_NAME].toString();
-                e->mItemX = event[STATE_ITEM_X].toDouble();
-                e->mItemY = event[STATE_ITEM_Y].toDouble();
-                e->mColor = QColor(event[STATE_COLOR_RED].toInt(),
-                                   event[STATE_COLOR_GREEN].toInt(),
-                                   event[STATE_COLOR_BLUE].toInt());
+                e->mName  = event.value(STATE_NAME).toString();
+                e->mItemX = event.value(STATE_ITEM_X).toDouble();
+                e->mItemY = event.value(STATE_ITEM_Y).toDouble();
+                e->mColor = QColor(event.value(STATE_COLOR_RED).toInt(),
+                                   event.value(STATE_COLOR_GREEN).toInt(),
+                                   event.value(STATE_COLOR_BLUE).toInt());
                
                 
                 for(int k=0; k<e->mDates.size(); ++k)
@@ -1634,12 +1665,12 @@ void ResultsView::updateModel()
                     
                     for(int l=0; l<dates.size(); ++l)
                     {
-                        QJsonObject date = dates[l].toObject();
-                        int dateId = date[STATE_ID].toInt();
+                        QJsonObject date = dates.at(l).toObject();
+                        int dateId = date.value(STATE_ID).toInt();
                         
                         if(dateId == d.mId)
                         {
-                            d.mName = date[STATE_NAME].toString();
+                            d.mName = date.value(STATE_NAME).toString();
 
                             break;
                         }
@@ -1651,21 +1682,20 @@ void ResultsView::updateModel()
     }
     for(int i=0; i<phases.size(); ++i)
     {
-        QJsonObject phase = phases[i].toObject();
-        int phaseId = phase[STATE_ID].toInt();
+        QJsonObject phase = phases.at(i).toObject();
+        int phaseId = phase.value(STATE_ID).toInt();
         
         for(int j=0; j<mModel->mPhases.size(); ++j)
         {
             Phase* p = mModel->mPhases[j];
             if(p->mId == phaseId)
             {
-                p->mName = phase[STATE_NAME].toString();
-                p->mItemX = phase[STATE_ITEM_X].toDouble();
-                p->mItemY = phase[STATE_ITEM_Y].toDouble();
-                p->mColor = QColor(phase[STATE_COLOR_RED].toInt(),
-                                   phase[STATE_COLOR_GREEN].toInt(),
-                                   phase[STATE_COLOR_BLUE].toInt());
-               // p->setJson(MainWindow::getInstance()->getProject()->state(), j);
+                p->mName = phase.value(STATE_NAME).toString();
+                p->mItemX = phase.value(STATE_ITEM_X).toDouble();
+                p->mItemY = phase.value(STATE_ITEM_Y).toDouble();
+                p->mColor = QColor(phase.value(STATE_COLOR_RED).toInt(),
+                                   phase.value(STATE_COLOR_GREEN).toInt(),
+                                   phase.value(STATE_COLOR_BLUE).toInt());
                 break;
             }
         }

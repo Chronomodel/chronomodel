@@ -64,6 +64,8 @@ mUseTip(true)
     setRangeY(0.f, 1.f);
     this->mAxisToolX.updateValues(width(), mStepMinWidth, mCurrentMinX, mCurrentMaxX);
     resetNothingMessage();
+
+    connect(this, &GraphView::signalCurvesThickness, this, &GraphView::updateCurvesThickness);
   
 }
 
@@ -295,8 +297,20 @@ void GraphView::setGraphFont(const QFont& font)
     setFont(font);
     repaintGraph(true);
 }
+/**
+ * @brief GraphView::setGraphsThickness throw signal to update thickness
+ * @param value
+ */
+void GraphView::setGraphsThickness(int value)
+{
+    emit signalCurvesThickness(value);
+}
 
-void GraphView::setCurvesThickness(int value)
+/**
+ * @brief GraphView::updateCurvesThickness slot which modify thickness
+ * @param value
+ */
+void GraphView::updateCurvesThickness(int value)
 {
     mThickness = value;
     repaintGraph(true);

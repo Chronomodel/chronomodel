@@ -45,6 +45,7 @@ void GraphViewDate::setDate(Date* date)
 void GraphViewDate::setColor(const QColor& color)
 {
     mColor = color;
+    setItemColor(mColor);
     update();
 }
 
@@ -321,6 +322,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
             mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList[i]);
             mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList[i]);
         }
+
         mGraph->adjustYToMinMaxValue();
         mGraph->setTipXLab("iterations");
         mGraph->setTipYLab("t");

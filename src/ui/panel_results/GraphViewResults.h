@@ -90,7 +90,9 @@ public slots:
     void zoom(double min, double max);
     void showNumericalResults(bool show);
     void setNumericalResults(const QString& resultsHTML, const QString& resultsText);
-    
+
+
+
 private slots:
     void saveAsImage();
     void imageToClipboard();
@@ -123,7 +125,8 @@ public:
 signals:
     void unfoldToggled(bool toggled);
     void visibilityChanged(bool visible);
-    
+
+
 protected:
     
     

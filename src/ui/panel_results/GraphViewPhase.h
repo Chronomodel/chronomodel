@@ -17,33 +17,25 @@ public:
     void setGraphFont(const QFont& font);
     virtual void setButtonsVisible(const bool visible);
     
-    //double getMaxDuration();
-    
     GraphView* mDurationGraph;
     Phase* mPhase;
     
     void generateCurves(TypeGraph typeGraph, Variable variable);
     void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
-    void setGraphsOpacity(int value);
-    void setGraphsThickness(int value);
+
 
 signals:
     void durationDisplay(bool visible);
-    
+
 protected:
     void paintEvent(QPaintEvent* e);
     void updateLayout();
     
-
-
 protected slots:
     void showDuration(bool show);
     void saveGraphData() const; 
     
 private:
-    //Phase* mPhase;
-    
-    //GraphView* mDurationGraph;
     Button* mShowDuration;
 };
 

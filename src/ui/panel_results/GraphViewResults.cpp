@@ -96,6 +96,8 @@ mHeightForVisibleAxis(100)
     connect(mImageClipBut, SIGNAL(clicked()), this, SLOT(imageToClipboard()));
     connect(mResultsClipBut, SIGNAL(clicked()), this, SLOT(resultsToClipboard()));
     connect(mDataSaveBut, SIGNAL(clicked()), this, SLOT(saveGraphData()));
+
+    connect(this, &GraphViewResults::setGraphsThickness, mGraph, &GraphView::updateCurvesThickness);
     
     setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
         
@@ -348,13 +350,13 @@ void GraphViewResults::setGraphFont(const QFont& font)
     mGraph->setGraphFont(font);
     mGraph->setMarginBottom(mGraph->font().pointSizeF() + 10);
    
-    // Recalculte mTopShift based on the new font, and position the graph accordingly :
+    // Recalcule mTopShift based on the new font, and position the graph according :
     updateLayout();
 }
 
 void GraphViewResults::setGraphsThickness(int value)
 {
-    mGraph->setCurvesThickness(value);
+    mGraph->setGraphsThickness(value);
 }
 
 void GraphViewResults::setGraphsOpacity(int value)

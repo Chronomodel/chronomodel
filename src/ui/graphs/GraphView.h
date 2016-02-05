@@ -55,10 +55,7 @@ public:
     
     void setNothingMessage(const QString& message);
     void resetNothingMessage();
-    
-    void setRendering(Rendering render);
-    Rendering getRendering();
-    
+
     void showXAxisLine(bool show);
     void showXAxisArrow(bool show);
     void showXAxisTicks(bool show);
@@ -78,8 +75,11 @@ public:
     void adjustYToMaxValue(const double& marginProp = 0.1);
     void adjustYToMinMaxValue();
     
+    void setRendering(Rendering render);
+    Rendering getRendering();
     void setGraphFont(const QFont& font);
-    void setCurvesThickness(int value);
+
+    void setGraphsThickness(int value);
     void setCurvesOpacity(int value);
     void setCanControlOpacity(bool can);
     
@@ -112,8 +112,12 @@ public:
     
     void setTipXLab(const QString& lab);
     void setTipYLab(const QString& lab);
-    
+
+signals:
+    void signalCurvesThickness(int value);
+
 public slots:
+    void updateCurvesThickness(int value);
     void zoomX(const double min, const double max);
     void exportCurrentDensityCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step =1.) const;
 
