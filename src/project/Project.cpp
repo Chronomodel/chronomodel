@@ -2417,25 +2417,27 @@ void Project::exportAsText()
 #pragma mark Run Project
 void Project::run()
 {
-    // Check if project contains invalid dates
- /*   QJsonArray invalidDates = getInvalidDates();
+    // Check if project contains invalid dates, e.g. with no computable calibration curve
+    const QJsonArray invalidDates = getInvalidDates();
     if(invalidDates.size() > 0){
-        QString message = tr("The model contains invalid dates : their calibrations are outside study period. \n\nYou can either extend the study period or modify the concerned dates :\n\n");
-        for(int i=0; i<invalidDates.size(); ++i){
-            message += "- event: \"" + invalidDates[i].toObject()["event_name"].toString() + "\" (date: \"" + invalidDates[i].toObject()[STATE_NAME].toString() + "\")\n";
-        }
-        QMessageBox messageBox(QMessageBox::Warning,
-                            tr("Your model is not valid"),
-                            message,
-                            QMessageBox::Ok,
-                            qApp->activeWindow(),
-                            Qt::Sheet);
+
+        QMessageBox messageBox;
+        messageBox.setIcon(QMessageBox::Warning);
+        //Sets the title of the message box to title. On OS X, the window title is ignored (as required by the OS X Guidelines).
+        messageBox.setWindowTitle(tr("Risk on computation"));
+        messageBox.setText(tr("The model contains invalid dates : their calibrations are not digitally computable. \n\nDo you realy want to continue ? :\n\n"));
+        QAbstractButton *IStop = messageBox.addButton(tr("Stop, I correct the model"), QMessageBox::NoRole);
+        messageBox.addButton(tr("I agree the resultats will be certainly wrong"), QMessageBox::YesRole);
+
         messageBox.exec();
-        return;
+        if (messageBox.clickedButton() == IStop)  {
+          return;
+        }
+
     }
- */
+
     // Save the project before running MCMC :
-    AppSettings s = MainWindow::getInstance()->getAppSettings();
+    const AppSettings s = MainWindow::getInstance()->getAppSettings();
     if(s.mAutoSave){
         save();
     }
@@ -2445,9 +2447,9 @@ void Project::run()
     emit mcmcStarted();
     
     clearModel();
-    
-    //mModel = Model::fromJson(mState);
-    //mModel->setJson(mState);
+
+
+
     mModel->fromJson(mState);
     bool modelOk = false;
     try
