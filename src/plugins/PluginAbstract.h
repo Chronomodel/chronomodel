@@ -161,7 +161,7 @@ public:
             }
             else { // onExtension depreciated
                 //value = interpolate(t, curve.mTmin, curve.mTmax, curve.mDataMean[curve.mTmin], curve.mDataMean[curve.mTmax]);
-                value = (curve.mDataMean.value(curve.mTmin) + curve.mDataMean.value(curve.mTmax) )/2;
+                value = (curve.mDataSupMax + curve.mDataInfMin )/2;
             }
 
         }
