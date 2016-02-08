@@ -96,7 +96,7 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     painter->setFont(font);
     
     painter->setPen(Qt::black);
-    painter->drawText(r.adjusted(0, 0, 0, -r.height()/2), Qt::AlignCenter, mDate[STATE_NAME].toString());
+    painter->drawText(r.adjusted(0, 0, 0, -r.height()/2), Qt::AlignCenter, mDate.value(STATE_NAME).toString());
     
     if(!mCalibThumb.isNull()) {
        painter->drawPixmap(r.adjusted(0, r.height()/2, 0, 0),
@@ -105,7 +105,13 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     }
     else {
         painter->setPen(Qt::red);
-        painter->drawText(r.adjusted(0, r.height()/2, 0, 0), Qt::AlignCenter, tr("Not in study period"));
+        if(mDate.value(STATE_DATE_VALID).toBool()) {
+            painter->drawText(r.adjusted(0, r.height()/2, 0, 0), Qt::AlignCenter, tr("Outside study period"));
+        }
+        else {
+            painter->drawText(r.adjusted(0, r.height()/2, 0, 0), Qt::AlignCenter, tr("Not computable"));
+        }
+
     }
 }
 

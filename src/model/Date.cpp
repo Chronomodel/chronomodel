@@ -422,71 +422,71 @@ QPixmap Date::generateTypoThumb()
     if(mIsValid){
         //  No need to draw the graph on a large size
         //  These values are arbitary
-        QSize size(200, 30);
+        const QSize size(200, 30);
         QPixmap thumb(size);
 
-        double tLower = mData.value(DATE_UNIFORM_MIN_STR).toDouble();
-        double tUpper = mData.value(DATE_UNIFORM_MAX_STR).toDouble();
+        const double tLower = mData.value(DATE_UNIFORM_MIN_STR).toDouble();
+        const double tUpper = mData.value(DATE_UNIFORM_MAX_STR).toDouble();
 
-       // bool isFixed = (tLower == tUpper);
+        const double tmin = mSettings.mTmin;
+        const double tmax = mSettings.mTmax;
 
-        QPainter p;
-        p.begin(&thumb);
-        p.setRenderHint(QPainter::Antialiasing);
+        if(tLower>tmax ||tmax<tmin) {
+            return QPixmap();
+        }
+        else {
+            QPainter p;
+            p.begin(&thumb);
+            p.setRenderHint(QPainter::Antialiasing);
 
-        double tmin = mSettings.mTmin;
-        double tmax = mSettings.mTmax;
-        // qDebug()<<" Date::generateCalibThumb"<<tmin<<tmax<<mSettings.mStep;
+            GraphView graph;
+            graph.setFixedSize(size);
+            graph.setMargins(0, 0, 0, 0);
 
-        GraphView graph;
-        graph.setFixedSize(size);
-        graph.setMargins(0, 0, 0, 0);
+            graph.setRangeX(tmin, tmax);
+            graph.setCurrentX(tmin, tmax);
+            graph.setRangeY(0, 1.0f);
 
-        graph.setRangeX(tmin, tmax);
-        graph.setCurrentX(tmin, tmax);
-        graph.setRangeY(0, 1.0f);
+            graph.showXAxisArrow(false);
+            graph.showXAxisTicks(false);
+            graph.showXAxisSubTicks(false);
+            graph.showXAxisValues(false);
 
-        graph.showXAxisArrow(false);
-        graph.showXAxisTicks(false);
-        graph.showXAxisSubTicks(false);
-        graph.showXAxisValues(false);
+            graph.showYAxisArrow(false);
+            graph.showYAxisTicks(false);
+            graph.showYAxisSubTicks(false);
+            graph.showYAxisValues(false);
 
-        graph.showYAxisArrow(false);
-        graph.showYAxisTicks(false);
-        graph.showYAxisSubTicks(false);
-        graph.showYAxisValues(false);
+            graph.setXAxisMode(GraphView::eHidden);
+            graph.setYAxisMode(GraphView::eHidden);
 
-        graph.setXAxisMode(GraphView::eHidden);
-        graph.setYAxisMode(GraphView::eHidden);
+            const QColor color = mPlugin->getColor();
 
-        QColor color = mPlugin->getColor();
+            GraphCurve curve;
+            curve.mBrush = color;
+            curve.mPen = QPen(color, 2.f);
+            curve.mIsHorizontalSections = true;
 
-        GraphCurve curve;
-        curve.mBrush = color;
+            const double tminDisplay = qBound(tmin,tLower,tmax);
+            const double tmaxDisplay = qBound(tmin,tUpper,tmax);
 
-        curve.mPen = QPen(color, 2.f);
+            curve.mSections.append(qMakePair(tminDisplay,tmaxDisplay));
+            graph.addCurve(curve);
 
-        curve.mIsHorizontalSections = true;
+            curve.mName = "Calibration";
 
-        curve.mSections.append(qMakePair(tLower,tUpper));
-        graph.addCurve(curve);
+            graph.repaint();
 
-        curve.mName = "Calibration";
+            graph.render(&p);
+            p.end();
 
-        graph.repaint();
-
-        graph.render(&p);
-        p.end();
-
-        return thumb;
+            return thumb;
+        }
     }
     else{
         // If date is invalid, return a null pixmap!
         return QPixmap();
     }
-
-    //thumb.save("test.png");
-    //thumb = graph.grab();
 
 }
 
@@ -499,12 +499,28 @@ QPixmap Date::generateCalibThumb()
     {
         //  No need to draw the graph on a large size
         //  These values are arbitary
-        QSize size(200, 30);
+        const QSize size(200, 30);
         
-        double tmin = mSettings.mTmin;
-        double tmax = mSettings.mTmax;
-        
+        const double tmin = mSettings.mTmin;
+        const double tmax = mSettings.mTmax;
+
+        GraphCurve curve;
+        curve.mData = normalize_map(getMapDataInRange(getRawCalibMap(),tmin,tmax));
+
+        if(curve.mData.isEmpty()) return QPixmap();
+
+        curve.mName = "Calibration";
+
+        const QColor color = mPlugin->getColor();
+
+        curve.mPen = QPen(color, 2.f);
+        curve.mBrush = color;
+        curve.mIsHisto = false;
+        curve.mIsRectFromZero = true; // For Typo !!
+
         GraphView graph;
+
+        graph.addCurve(curve);
         graph.setFixedSize(size);
         graph.setMargins(0, 0, 0, 0);
         
@@ -524,18 +540,7 @@ QPixmap Date::generateCalibThumb()
         
         graph.setXAxisMode(GraphView::eHidden);
         graph.setYAxisMode(GraphView::eHidden);
-        
-        QColor color = mPlugin->getColor();//  Painting::mainColorLight;
-        
-        GraphCurve curve;
-        curve.mData = normalize_map(getRawCalibMap());
-        curve.mName = "Calibration";
-        curve.mPen = QPen(color, 2.f);
-        curve.mBrush = color;
-        curve.mIsHisto = false;
-        curve.mIsRectFromZero = true; // For Typo !!
-        
-        graph.addCurve(curve);
+
         
         QPixmap thumb(size);
         if(graph.inherits("QOpenGLWidget"))
