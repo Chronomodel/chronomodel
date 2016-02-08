@@ -14,14 +14,15 @@
 
 
 DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags),
+mWiggleIsValid(false),
+mPluginDataAreValid(false),
 mForm(0),
 mWidth(600),
 mMargin(5),
 mLineH(20),
 mButW(80),
 mButH(25),
-mWiggleIsValid(false),
-mPluginDataAreValid(false),
+
 mWiggleEnabled(false)
 {
     setWindowTitle(tr("Create / Modify Data"));
@@ -66,6 +67,10 @@ mWiggleEnabled(false)
     connect(mDeltaFixedRadio, &QRadioButton::toggled, this, &DateDialog::updateVisibleControls);
     connect(mDeltaRangeRadio, &QRadioButton::toggled, this,  &DateDialog::updateVisibleControls);
     connect(mDeltaGaussRadio, &QRadioButton::toggled, this,  &DateDialog::updateVisibleControls);
+
+    connect(mDeltaFixedRadio, &QRadioButton::toggled, this, &DateDialog::checkWiggle);
+    connect(mDeltaRangeRadio, &QRadioButton::toggled, this,  &DateDialog::checkWiggle);
+    connect(mDeltaGaussRadio, &QRadioButton::toggled, this,  &DateDialog::checkWiggle);
     
     mDeltaHelp = new HelpWidget(tr("Wiggle Sign : \"+\" if data ≤ event, \"-\" if data ≥ event"), mAdvancedWidget);
     mDeltaHelp->setFixedHeight(35);
@@ -84,6 +89,10 @@ mWiggleEnabled(false)
     mDeltaErrorEdit   = new QLineEdit(mAdvancedWidget);
     
     mDeltaFixedEdit->setText(QString::number(0));
+    mDeltaMinEdit->setText(QString::number(0));
+    mDeltaMaxEdit->setText(QString::number(0));
+    mDeltaAverageEdit->setText(QString::number(0));
+    mDeltaErrorEdit->setText(QString::number(0));
     
     connect(mDeltaFixedEdit, &QLineEdit::textChanged, this, &DateDialog::checkWiggle);
     connect(mDeltaMinEdit, &QLineEdit::textChanged, this, &DateDialog::checkWiggle);
@@ -168,7 +177,16 @@ void DateDialog::setForm(PluginFormAbstract* form)
         PluginAbstract* plugin = form->mPlugin;
         
         // Check if wiggle is allowed by plugin
-        setWiggleEnabled(plugin->wiggleAllowed());
+        mWiggleIsValid = true;
+        mPluginDataAreValid = true;
+
+        if(plugin->wiggleAllowed()) {
+            setWiggleEnabled(true);
+        }
+        else {
+            setWiggleEnabled(false);
+        }
+
         
         // Disable methods forbidden by plugin
         const QStandardItemModel* model = qobject_cast<const QStandardItemModel*>(mMethodCombo->model());
@@ -183,6 +201,7 @@ void DateDialog::setForm(PluginFormAbstract* form)
             item->setData(!allowed ? mMethodCombo->palette().color(QPalette::Disabled, QPalette::Text)
                           : QVariant(), // clear item data in order to use default color
                           Qt::TextColorRole);
+
         }
     }
 }
@@ -195,11 +214,25 @@ void DateDialog::setPluginDataValid(bool valid)
 
 void DateDialog::checkWiggle()
 {
-    if( (mDeltaRangeRadio->isChecked() && mDeltaMinEdit->text().toDouble() > mDeltaMaxEdit->text().toDouble() ) ||
-        (mDeltaGaussRadio->isChecked() && mDeltaAverageEdit->text().toDouble()>0 &&mDeltaErrorEdit->text().toDouble()==0)  ||
-        (mDeltaGaussRadio->isChecked() && mDeltaAverageEdit->text().toDouble()<0) ||
-        (mDeltaGaussRadio->isChecked() && mDeltaErrorEdit->text().toDouble()<0) ) {
-        mWiggleIsValid = false;
+    if(mDeltaFixedRadio->isChecked()) {
+        bool ok1 = true;
+        mDeltaFixedEdit->text().toInt(&ok1);
+        mWiggleIsValid = ok1;
+    }
+    else if(mDeltaRangeRadio->isChecked()) {
+        bool ok1 = true;
+        bool ok2 = true;
+        const int dmin = mDeltaMinEdit->text().toInt(&ok1);
+        const int dmax = mDeltaMaxEdit->text().toInt(&ok2);
+        mWiggleIsValid = ( ok1 && ok2 && ( (dmax>dmin) || ( (dmin == 0) && (dmax == 0) ) ) );
+
+    }
+    else if(mDeltaGaussRadio->isChecked()) {
+        bool ok1 = true;
+        bool ok2 = true;
+        const double a = mDeltaAverageEdit->text().toDouble(&ok1);
+        const double e = mDeltaErrorEdit->text().toDouble(&ok2);
+        mWiggleIsValid = ( ok1 && ok2 && ( (e>0) || ( (a == 0) && (e == 0) ) ) );
     }
     else {
         mWiggleIsValid = true;
@@ -294,7 +327,6 @@ void DateDialog::setDate(const QJsonObject& date)
     mWiggleIsValid = true;
     setOkEnabled();
     // open the display panel if there is wiggle parameter
-    //checkWiggle();
     if( (mDeltaFixedRadio->isChecked() && mDeltaFixedEdit->text().toDouble() != 0) ||
         (mDeltaRangeRadio->isChecked() && (mDeltaMinEdit->text().toDouble() != 0 || mDeltaMaxEdit->text().toDouble() != 0) ) ||
         (mDeltaGaussRadio->isChecked() && mDeltaErrorEdit->text().toDouble()>0) ) {
