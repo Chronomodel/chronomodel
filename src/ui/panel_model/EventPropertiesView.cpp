@@ -414,9 +414,9 @@ void EventPropertiesView::createDate()
             
             for(int i=0; i<plugins.size(); ++i)
             {
-                if(plugins[i]->getName() == but->text())
+                if(plugins.at(i)->getName() == but->text())
                 {
-                    Date date = project->createDateFromPlugin(plugins[i]);
+                    Date date = project->createDateFromPlugin(plugins.at(i));
                     if(!date.isNull())
                         project->addDate(mEvent[STATE_ID].toInt(), date.toJson());
                 }

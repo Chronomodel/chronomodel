@@ -2423,6 +2423,7 @@ void Project::run()
 
         QMessageBox messageBox;
         messageBox.setIcon(QMessageBox::Warning);
+        //http://doc.qt.io/qt-5/qmessagebox.html#setWindowTitle
         //Sets the title of the message box to title. On OS X, the window title is ignored (as required by the OS X Guidelines).
         messageBox.setWindowTitle(tr("Risk on computation"));
         messageBox.setText(tr("The model contains invalid dates : their calibrations are not digitally computable. \n\nDo you realy want to continue ? :\n\n"));

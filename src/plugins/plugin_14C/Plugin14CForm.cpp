@@ -34,7 +34,7 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     QStringList refCurves = plugin14C->getRefsNames();
     for(int i = 0; i<refCurves.size(); ++i)
     {
-        mRefCombo->addItem(refCurves[i]);
+        mRefCombo->addItem(refCurves.at(i));
     }
     QString defCurve = QString("intcal13.14c").toLower();
     if(mSelectedRefCurve.isEmpty() && refCurves.contains(defCurve, Qt::CaseInsensitive))
@@ -71,12 +71,12 @@ Plugin14CForm::~Plugin14CForm()
 
 void Plugin14CForm::setData(const QJsonObject& data, bool isCombined)
 {
-    QLocale locale=QLocale();
-    double a = data.value(DATE_14C_AGE_STR).toDouble();
-    double e = data.value(DATE_14C_ERROR_STR).toDouble();
-    double r = data.value(DATE_14C_DELTA_R_STR).toDouble();
-    double re = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
-    QString c = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
+    const QLocale locale=QLocale();
+    const double a = data.value(DATE_14C_AGE_STR).toDouble();
+    const double e = data.value(DATE_14C_ERROR_STR).toDouble();
+    const double r = data.value(DATE_14C_DELTA_R_STR).toDouble();
+    const double re = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
+    const QString c = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
     
     mAverageEdit->setText(locale.toString(a));
     mErrorEdit->setText(locale.toString(e));
@@ -94,12 +94,12 @@ void Plugin14CForm::setData(const QJsonObject& data, bool isCombined)
 QJsonObject Plugin14CForm::getData()
 {
     QJsonObject data;
-    QLocale locale=QLocale();    
-    double a = locale.toDouble(mAverageEdit->text());
-    double e = locale.toDouble(mErrorEdit->text());
-    double r = locale.toDouble(mREdit->text());
-    double re = locale.toDouble(mRErrorEdit->text());
-    QString c = mRefCombo->currentText();
+    const QLocale locale=QLocale();
+    const double a = locale.toDouble(mAverageEdit->text());
+    const double e = locale.toDouble(mErrorEdit->text());
+    const double r = locale.toDouble(mREdit->text());
+    const double re = locale.toDouble(mRErrorEdit->text());
+    const QString c = mRefCombo->currentText();
     
     data.insert(DATE_14C_AGE_STR, a);
     data.insert(DATE_14C_ERROR_STR, e);
@@ -115,15 +115,14 @@ QJsonObject Plugin14CForm::getData()
 void Plugin14CForm::errorIsValid(QString str)
 {
     bool ok;
-    QLocale locale;
+    const QLocale locale;
     double value = locale.toDouble(str,&ok);
-
     emit PluginFormAbstract::OkEnabled(ok && (value>0) );
 }
 
 bool Plugin14CForm::isValid()
 {
-    QString refCurve = mRefCombo->currentText();
+    const QString refCurve = mRefCombo->currentText();
     if(refCurve.isEmpty())
         mError = tr("Ref. curve is empty!");
     return !refCurve.isEmpty();
