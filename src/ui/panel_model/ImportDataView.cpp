@@ -49,8 +49,8 @@ ImportDataView::~ImportDataView()
  */
 void ImportDataView::browse()
 {
-    QString currentDir = MainWindow::getInstance()->getCurrentPath();
-    QString path = QFileDialog::getOpenFileName(qApp->activeWindow(), tr("Open CSV File"), currentDir, tr("CSV File (*.csv)"));
+    const QString currentDir = MainWindow::getInstance()->getCurrentPath();
+    const QString path = QFileDialog::getOpenFileName(qApp->activeWindow(), tr("Open CSV File"), currentDir, tr("CSV File (*.csv)"));
     
     if(!path.isEmpty())
     {
@@ -76,10 +76,10 @@ void ImportDataView::browse()
             int cols = 0;
             
             QStringList headers;
-            QStringList pluginNames = PluginManager::getPluginsNames();
+            const QStringList pluginNames = PluginManager::getPluginsNames();
             
-            AppSettings settings = MainWindow::getInstance()->getAppSettings();
-            QString csvSep = settings.mCSVCellSeparator;
+            const AppSettings settings = MainWindow::getInstance()->getAppSettings();
+            const QString csvSep = settings.mCSVCellSeparator;
             
             // Read every lines of the file
             while(!stream.atEnd())
@@ -88,32 +88,33 @@ void ImportDataView::browse()
                 QStringList values = line.split(csvSep);
                 if(values.size() > 0)
                 {
-                    qDebug()<<values[0]<<values[0].toUpper();
-                    if(isComment(values[0]) || values[0] == "")
+                    qDebug()<<"ImportDataView::browse() "<<values.at(0)<<values.at(0).toUpper();
+                    if(isComment(values.at(0)) || values.at(0) == "")
                     {
                         continue;
                     }
-                    else if(values[0].contains("title", Qt::CaseInsensitive))
+                    else if(values.at(0).contains("title", Qt::CaseInsensitive))
                     {
                         headers << "Title";
                         
                         QStringList titleText;
                         values.push_front("");
-                        for (int i=1; i<values.size(); i++) {
-                            titleText.append(values[i]);
+                        foreach (const QString val, values) {
+                            titleText.append(val);
                         }
                         data << titleText;
                         cols = (values.size() > cols) ? values.size() : cols;
                         ++rows;
                     }
-                    else if(values[0].contains("structure", Qt::CaseInsensitive))
+                    else if(values.at(0).contains("structure", Qt::CaseInsensitive))
                     {
                         headers << "Structure";
                         QStringList titleText;
                         values.push_front("");
-                        for (int i=1; i<values.size(); i++) {
-                            titleText.append(values[i]);
+                        foreach (const QString val, values) {
+                            titleText.append(val);
                         }
+
                         data << titleText;
                         cols = (values.size() > cols) ? values.size() : cols;
                         ++rows;
@@ -121,7 +122,7 @@ void ImportDataView::browse()
                     else if(values.size() > 0)
                     {
                         // Display the line only if we have a plugin to import it !
-                        QString pluginName = values[0].simplified().toUpper();
+                        const QString pluginName = values.at(0).simplified().toUpper();
                         if(pluginNames.contains(pluginName, Qt::CaseInsensitive))
                         {
                             headers << pluginName;
@@ -141,7 +142,7 @@ void ImportDataView::browse()
             
             for(int i=0; i<data.size(); ++i)
             {
-                QStringList d = data[i];
+                const QStringList d = data.at(i);
                 //qDebug() << d;
                 for(int j=0; j<d.size(); ++j)
                 {
@@ -149,7 +150,7 @@ void ImportDataView::browse()
                     
                     if(j != 0)
                     {
-                        QTableWidgetItem* item = new QTableWidgetItem(d[j].simplified());
+                        QTableWidgetItem* item = new QTableWidgetItem(d.at(j).simplified());
                         //if ((d[0]=="Title") || (d[0]=="Structure")) item->setBackgroundColor(Qt::red);
                         mTable->setItem(i, j-1, item);
 
@@ -285,7 +286,7 @@ void ImportDataView::resizeEvent(QResizeEvent* e)
 ImportDataTable::ImportDataTable(ImportDataView* importView, QWidget* parent):QTableWidget(parent),
 mImportView(importView)
 {
-    connect(this, SIGNAL(itemSelectionChanged()), this, SLOT(updateTableHeaders()));
+    connect(this, &ImportDataTable::itemSelectionChanged, this, &ImportDataTable::updateTableHeaders);
 }
 
 ImportDataTable::~ImportDataTable()
@@ -303,8 +304,8 @@ QMimeData* ImportDataTable::mimeData(const QList<QTableWidgetItem*> items) const
     int row = -1;
     QStringList itemStr;
     
-    AppSettings settings = MainWindow::getInstance()->getAppSettings();
-    QString csvSep = settings.mCSVCellSeparator;
+    const AppSettings settings = MainWindow::getInstance()->getAppSettings();
+    const QString csvSep = settings.mCSVCellSeparator;
     
     foreach(QTableWidgetItem* item, items)
     {
@@ -359,7 +360,7 @@ void ImportDataTable::updateTableHeaders()
         headers = plugin->csvColumns();
         if(plugin->wiggleAllowed())
         {
-            headers << "Wiggle Type (fixed | range | gaussian)";
+            headers << "Wiggle Type (none | fixed | range | gaussian)";
             headers << "Wiggle value 1 (fixed | Lower date | Average)";
             headers << "Wiggle value 2 (Upper date | Error)";
         }

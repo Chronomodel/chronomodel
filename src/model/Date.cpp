@@ -45,7 +45,7 @@ void Date::init()
     
     mIsValid = true;
     mDelta = 0;
-    mDeltaType = eDeltaFixed;
+    mDeltaType = eDeltaNone;
     mDeltaFixed = 0;
     mDeltaMin = 0;
     mDeltaMax = 0;
@@ -104,6 +104,7 @@ void Date::copyFrom(const Date& date)
     mCalibration = date.mCalibration;
     mRepartition = date.mRepartition;
     mCalibHPD = date.mCalibHPD;
+    mWiggle = date.mWiggle;
     
     mTminRefCurve = date.mTminRefCurve;
     mTmaxRefCurve = date.mTmaxRefCurve;
@@ -611,6 +612,10 @@ void Date::initDelta(Event*)
 {
     switch(mDeltaType)
     {
+        case eDeltaNone:
+        {
+            break;
+        }
         case eDeltaRange:
         {
             mDelta = Generator::randomUniform(mDeltaMin, mDeltaMax);
@@ -620,8 +625,8 @@ void Date::initDelta(Event*)
         {
             // change init of Delta in case of gaussian function since 2015/06 with PhL
             //mDelta = event->mTheta.mX - mTheta.mX;
-            double tmin = mSettings.mTmin;
-            double tmax = mSettings.mTmax;
+            const double tmin = mSettings.mTmin;
+            const double tmax = mSettings.mTmax;
             mDelta = Generator::gaussByDoubleExp(mDeltaAverage,mDeltaError,tmin, tmax);
             break;
         }
@@ -638,20 +643,24 @@ void Date::updateDelta(Event* event)
 {
     switch(mDeltaType)
     {
+        case eDeltaNone:
+        {
+            break;
+        }
         case eDeltaRange:
         {
-           double lambdai = event->mTheta.mX - mTheta.mX;
+            const double lambdai = event->mTheta.mX - mTheta.mX;
 
             mDelta = Generator::gaussByDoubleExp(lambdai,mSigma.mX,mDeltaMin, mDeltaMax);
             break;
         }
         case eDeltaGaussian:
         {
-            double lambdai = event->mTheta.mX - mTheta.mX;
-            double w = (1/(mSigma.mX * mSigma.mX)) + (1/(mDeltaError * mDeltaError));
-            double deltaAvg = (lambdai / (mSigma.mX * mSigma.mX) + mDeltaAverage / (mDeltaError * mDeltaError)) / w;
-            double x = Generator::gaussByBoxMuller(0, 1);
-            double delta = deltaAvg + x / sqrt(w);
+            const double lambdai = event->mTheta.mX - mTheta.mX;
+            const double w = (1/(mSigma.mX * mSigma.mX)) + (1/(mDeltaError * mDeltaError));
+            const double deltaAvg = (lambdai / (mSigma.mX * mSigma.mX) + mDeltaAverage / (mDeltaError * mDeltaError)) / w;
+            const double x = Generator::gaussByBoxMuller(0, 1);
+            const double delta = deltaAvg + x / sqrt(w);
             
             mDelta = delta;
             break;
@@ -670,20 +679,20 @@ void Date::updateSigma(Event* event)
     // ------------------------------------------------------------------------------------------
     //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
     // ------------------------------------------------------------------------------------------
-    double lambda = pow(mTheta.mX - (event->mTheta.mX - mDelta), 2) / 2.;
+    const double lambda = pow(mTheta.mX - (event->mTheta.mX - mDelta), 2) / 2.;
     
     const int logVMin = -6;
     const int logVMax = 100;
     
-    double V1 = mSigma.mX * mSigma.mX;
-    double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigma.mSigmaMH);
-    double V2 = pow(10, logV2);
+    const double V1 = mSigma.mX * mSigma.mX;
+    const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigma.mSigmaMH);
+    const double V2 = pow(10, logV2);
     
     double rapport = 0;
     if(logV2 >= logVMin && logV2 <= logVMax)
     {
-        double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
-        double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1);
+        const double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
+        const double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1);
         rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1; // (V2 / V1) est le jacobien!
     }
     mSigma.tryUpdate(sqrt(V2), rapport);
@@ -756,13 +765,14 @@ QStringList Date::toCSV(const QLocale &csvLocale) const
     csv << mName;
     csv << mPlugin->toCSV(mData,csvLocale );
     
-    if(mDeltaType == Date::eDeltaFixed)
+    if(mDeltaType == Date::eDeltaNone)
     {
-        if(mDeltaFixed != 0)
-        {
-            csv << "fixed";
-            csv << csvLocale.toString(mDeltaFixed);
-        }
+        csv << "none";
+    }
+    else if(mDeltaType == Date::eDeltaFixed)
+    {
+        csv << "fixed";
+        csv << csvLocale.toString(mDeltaFixed);
     }
     else if(mDeltaType == Date::eDeltaRange)
     {
@@ -866,8 +876,8 @@ void fMHSymetric(Date* date,Event* event)
          date->mTheta.tryUpdate(theta, rapport);
     */
    
-        double tiNew = Generator::gaussByBoxMuller(event->mTheta.mX - date->mDelta, date->mSigma.mX);
-        double rapport = date->getLikelihood(tiNew) / date->getLikelihood(date->mTheta.mX);
+        const double tiNew = Generator::gaussByBoxMuller(event->mTheta.mX - date->mDelta, date->mSigma.mX);
+        const double rapport = date->getLikelihood(tiNew) / date->getLikelihood(date->mTheta.mX);
         
         date->mTheta.tryUpdate(tiNew, rapport);
      
@@ -881,14 +891,14 @@ void fMHSymetric(Date* date,Event* event)
 void fMHSymetricWithArg(Date* date,Event* event)
 {
     
-    double tiNew = Generator::gaussByBoxMuller(event->mTheta.mX - date->mDelta, date->mSigma.mX);
+    const double tiNew = Generator::gaussByBoxMuller(event->mTheta.mX - date->mDelta, date->mSigma.mX);
     
     QPair<long double, long double> argOld, argNew;
     
     argOld=date->getLikelihoodArg(date->mTheta.mX);
     argNew=date->getLikelihoodArg(tiNew);
     
-    long double rapport=sqrt(argOld.first/argNew.first)*exp(argNew.second-argOld.second);
+    const long double rapport=sqrt(argOld.first/argNew.first)*exp(argNew.second-argOld.second);
     
     date->mTheta.tryUpdate(tiNew, (double)rapport);
     
@@ -900,23 +910,23 @@ void fMHSymetricWithArg(Date* date,Event* event)
  */
 double fProposalDensity(const double t, const double t0, Date* date)
 {
-    double tmin = date->mSettings.mTmin;
-    double tmax = date->mSettings.mTmax;
-    double level = date->mMixingLevel;
+    const double tmin = date->mSettings.mTmin;
+    const double tmax = date->mSettings.mTmax;
+    const double level = date->mMixingLevel;
     double q1 = 0;
 
-    double tminCalib = date->getTminCalib();
-    double tmaxCalib = date->getTmaxCalib();
+    const double tminCalib = date->getTminCalib();
+    const double tmaxCalib = date->getTmaxCalib();
 
     /// ----q1------Defined only on Calibration range-----
     if(t > tminCalib && t < tmaxCalib){
         //double prop = (t - tmin) / (tmax - tmin);
-        double prop = (t - tminCalib) / (tmaxCalib - tminCalib);
-        double idx = prop * (date->mRepartition.size() - 1);
-        int idxUnder = (int)floor(idx);
+        const double prop = (t - tminCalib) / (tmaxCalib - tminCalib);
+        const double idx = prop * (date->mRepartition.size() - 1);
+        const int idxUnder = (int)floor(idx);
         
         //double step =(tmax-tmin+1)/date->mRepartition.size();
-        double step =date->mSettings.mStep;
+        const double step =date->mSettings.mStep;
 
         q1 = (date->mRepartition[idxUnder+1]-date->mRepartition[idxUnder])/step;
     }
@@ -928,8 +938,8 @@ double fProposalDensity(const double t, const double t0, Date* date)
         
     /// ----q2 gaussian-----------
     //double t0 = (tmax+tmin)/2;
-    double sigma = qMax(tmax - tmin, tmaxCalib - tminCalib) / 2;
-    double q2 = exp(-0.5* pow((t-t0)/ sigma, 2)) / (sigma*sqrt(2*M_PI));
+    const double sigma = qMax(tmax - tmin, tmaxCalib - tminCalib) / 2;
+    const double q2 = exp(-0.5* pow((t-t0)/ sigma, 2)) / (sigma*sqrt(2*M_PI));
     
     return (level * q1 + (1 - level) * q2);
 }
@@ -940,22 +950,22 @@ double fProposalDensity(const double t, const double t0, Date* date)
  */
 void fInversion(Date* date, Event* event)
 {
-    double u1 = Generator::randomUniform();
-    double level=date->mMixingLevel;
+    const double u1 = Generator::randomUniform();
+    const double level=date->mMixingLevel;
     double tiNew;
-    double tmin = date->mSettings.mTmin;
-    double tmax = date->mSettings.mTmax;
+    const double tmin = date->mSettings.mTmin;
+    const double tmax = date->mSettings.mTmax;
 
-    double tminCalib = date->getTminCalib();
+    const double tminCalib = date->getTminCalib();
     
     if (u1<level) { // tiNew always in the study period
-        double idx = vector_interpolate_idx_for_value(u1, date->mRepartition);
+        const double idx = vector_interpolate_idx_for_value(u1, date->mRepartition);
         tiNew = tminCalib + idx *date->mSettings.mStep;
     }
     else {
         // -- gaussian
-        double t0 = date->mTheta.mX;
-        double s = (tmax-tmin)/2;
+        const double t0 = date->mTheta.mX;
+        const double s = (tmax-tmin)/2;
         
         tiNew=Generator::gaussByBoxMuller(t0, s);
         /*
@@ -976,14 +986,14 @@ void fInversion(Date* date, Event* event)
         */
     }
              
-    double rapport1 = date->getLikelihood(tiNew) / date->getLikelihood(date->mTheta.mX);
+    const double rapport1 = date->getLikelihood(tiNew) / date->getLikelihood(date->mTheta.mX);
     
-    double rapport2 = exp((-0.5 / (date->mSigma.mX * date->mSigma.mX)) *
+    const double rapport2 = exp((-0.5 / (date->mSigma.mX * date->mSigma.mX)) *
                           (pow(tiNew - (event->mTheta.mX - date->mDelta), 2) -
                            pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2))
                           );
     
-    double rapport3 = fProposalDensity(date->mTheta.mX, tiNew, date) /
+    const double rapport3 = fProposalDensity(date->mTheta.mX, tiNew, date) /
                         fProposalDensity(tiNew, date->mTheta.mX, date);
     
     date->mTheta.tryUpdate(tiNew, rapport1 * rapport2 * rapport3);
@@ -991,23 +1001,23 @@ void fInversion(Date* date, Event* event)
 
 void fInversionWithArg(Date* date, Event* event)
 {
-    double u1 = Generator::randomUniform();
-    double level=date->mMixingLevel;
+    const double u1 = Generator::randomUniform();
+    const double level=date->mMixingLevel;
     double tiNew;
-    double tmin = date->mSettings.mTmin;
-    double tmax = date->mSettings.mTmax;
+    const double tmin = date->mSettings.mTmin;
+    const double tmax = date->mSettings.mTmax;
 
-    double tminCalib = date->getTminCalib();
+    const double tminCalib = date->getTminCalib();
     
     if (u1<level) { // tiNew always in the study period
-        double u2 = Generator::randomUniform();
-        double idx = vector_interpolate_idx_for_value(u2, date->mRepartition);
+        const double u2 = Generator::randomUniform();
+        const double idx = vector_interpolate_idx_for_value(u2, date->mRepartition);
         tiNew = tminCalib + idx *date->mSettings.mStep;
     }
     else {
         // -- gaussian
-        double t0 =(tmax+tmin)/2;
-        double s = (tmax-tmin)/2;
+        const double t0 =(tmax+tmin)/2;
+        const double s = (tmax-tmin)/2;
         
         tiNew=Generator::gaussByBoxMuller(t0, s);
         /*
@@ -1034,14 +1044,14 @@ void fInversionWithArg(Date* date, Event* event)
     argOld=date->getLikelihoodArg(date->mTheta.mX);
     argNew=date->getLikelihoodArg(tiNew);
     
-    long double logGRapport= argNew.second-argOld.second;
-    long double logHRapport= (-0.5/(date->mSigma.mX * date->mSigma.mX)) * (pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
+    const long double logGRapport= argNew.second-argOld.second;
+    const long double logHRapport= (-0.5/(date->mSigma.mX * date->mSigma.mX)) * (pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
                                                                       - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
                                                                       );
     
-    long double rapport = sqrt(argOld.first/argNew.first) * exp(logGRapport+logHRapport);
+    const long double rapport = sqrt(argOld.first/argNew.first) * exp(logGRapport+logHRapport);
     
-    long double rapportPD = fProposalDensity(date->mTheta.mX, tiNew, date) / fProposalDensity(tiNew, date->mTheta.mX, date);
+    const long double rapportPD = fProposalDensity(date->mTheta.mX, tiNew, date) / fProposalDensity(tiNew, date->mTheta.mX, date);
     
     date->mTheta.tryUpdate(tiNew, (double)(rapport * rapportPD));
     
@@ -1063,7 +1073,7 @@ void fMHSymGaussAdapt(Date* date, Event* event)
     // }
     */
     
-    double tiNew = Generator::gaussByBoxMuller(date->mTheta.mX, date->mTheta.mSigmaMH);
+    const double tiNew = Generator::gaussByBoxMuller(date->mTheta.mX, date->mTheta.mSigmaMH);
     double rapport = date->getLikelihood(tiNew) / date->getLikelihood(date->mTheta.mX);
     rapport *= exp((-0.5/(date->mSigma.mX * date->mSigma.mX)) * (   pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
                                                                   - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
@@ -1080,19 +1090,19 @@ void fMHSymGaussAdapt(Date* date, Event* event)
  */
 void fMHSymGaussAdaptWithArg(Date* date, Event* event)
 {
-    double tiNew = Generator::gaussByBoxMuller(date->mTheta.mX, date->mTheta.mSigmaMH);
+    const double tiNew = Generator::gaussByBoxMuller(date->mTheta.mX, date->mTheta.mSigmaMH);
     
     QPair<long double, long double> argOld, argNew;
     
     argOld=date->getLikelihoodArg(date->mTheta.mX);
     argNew=date->getLikelihoodArg(tiNew);
     
-    long double logGRapport= argNew.second-argOld.second;
-    long double logHRapport= (-0.5/(date->mSigma.mX * date->mSigma.mX)) * (  pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
+    const long double logGRapport= argNew.second-argOld.second;
+    const long double logHRapport= (-0.5/(date->mSigma.mX * date->mSigma.mX)) * (  pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
                                                                       - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
                                                                       );
     
-    long double rapport=sqrt(argOld.first/argNew.first)*exp(logGRapport+logHRapport);
+    const long double rapport=sqrt(argOld.first/argNew.first)*exp(logGRapport+logHRapport);
     
     date->mTheta.tryUpdate(tiNew, (double) rapport);
 }

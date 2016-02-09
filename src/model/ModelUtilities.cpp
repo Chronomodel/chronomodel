@@ -124,7 +124,7 @@ QString ModelUtilities::getDeltaText(const Date& date)
             case Date::eDeltaGaussian:
                 result = (date.mDeltaError>0) ? str + " : " + QString::number(date.mDeltaAverage) + " ± " + QString::number(date.mDeltaError) : "";
                 break;
-                
+            case Date::eDeltaNone:
             default:
                 break;
         }

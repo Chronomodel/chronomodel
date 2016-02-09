@@ -82,7 +82,7 @@ void Model::updateFormatSettings(const AppSettings* appSet)
             Date& date = event->mDates[j];
             date.mTheta.setFormat(appSet->mFormatDate);
             date.mSigma.setFormat(DateUtils::eNumeric);
-            date.mWiggle.setFormat(DateUtils::eNumeric);
+            date.mWiggle.setFormat(appSet->mFormatDate);
         }
     }
     for(int i=0; i<this->mPhases.size(); i++) {
@@ -998,7 +998,7 @@ void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftL
             date.mTheta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
             date.mSigma.generateHistos(chains, fftLen, hFactor);
             
-            if(!(date.mDeltaType == Date::eDeltaFixed && date.mDeltaFixed == 0))
+            if( !( date.mDeltaType == Date::eDeltaNone ) )
                 date.mWiggle.generateHistos(chains, fftLen, hFactor);
         }
         ++iterEvent;

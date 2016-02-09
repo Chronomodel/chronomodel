@@ -22,7 +22,6 @@ mMargin(5),
 mLineH(20),
 mButW(80),
 mButH(25),
-
 mWiggleEnabled(false)
 {
     setWindowTitle(tr("Create / Modify Data"));
@@ -322,6 +321,10 @@ void DateDialog::setDate(const QJsonObject& date)
     mDeltaAverageEdit->setText(QString::number(date.value(STATE_DATE_DELTA_AVERAGE).toDouble()));
     mDeltaErrorEdit->setText(QString::number(date.value(STATE_DATE_DELTA_ERROR).toDouble()));
 
+    if(deltaType == Date::eDeltaNone) {
+        mDeltaFixedRadio->setChecked(deltaType == Date::eDeltaFixed);
+        mDeltaFixedEdit->setText(QString::number(0));
+    }
     // if data are in the JSON they must be valid
     mPluginDataAreValid = true;
     mWiggleIsValid = true;
@@ -363,8 +366,10 @@ Date::DataMethod DateDialog::getMethod() const
 
 Date::DeltaType DateDialog::getDeltaType() const
 {
-    Date::DeltaType type = Date::eDeltaFixed;
-    if(mDeltaRangeRadio->isChecked())
+    Date::DeltaType type = Date::eDeltaNone;
+    if(mDeltaFixedRadio->isChecked() && mDeltaFixedEdit->text().toDouble() !=0 )
+        type = Date::eDeltaFixed;
+    else if(mDeltaRangeRadio->isChecked())
         type = Date::eDeltaRange;
     else if(mDeltaGaussRadio->isChecked())
         type = Date::eDeltaGaussian;

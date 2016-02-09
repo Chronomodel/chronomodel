@@ -40,6 +40,7 @@ public:
     };
     
     enum DeltaType{
+        eDeltaNone = -1,
         eDeltaFixed = 0,
         eDeltaGaussian = 1,
         eDeltaRange = 2
