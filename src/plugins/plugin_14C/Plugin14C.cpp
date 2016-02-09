@@ -184,7 +184,7 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
     QFile file(refFile.absoluteFilePath());
     if(file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        QLocale locale = QLocale(QLocale::English);
+        const QLocale locale = QLocale(QLocale::English);
         QTextStream stream(&file);
         bool firstLine = true;
         while(!stream.atEnd())
@@ -197,16 +197,16 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
                 {
                     bool ok = true;
                     
-                    int t = 1950 - locale.toInt(values.at(0),&ok);
+                    const int t = 1950 - locale.toInt(values.at(0),&ok);
                     if(!ok) continue;
-                    double g = locale.toDouble(values.at(1),&ok);
+                    const double g = locale.toDouble(values.at(1),&ok);
                     if(!ok) continue;
-                    double e = locale.toDouble(values.at(2),&ok);
+                    const double e = locale.toDouble(values.at(2),&ok);
                     if(!ok) continue;
                     
-                    double gSup = g + 1.96f * e;
+                    const double gSup = g + 1.96f * e;
                     if(!ok) continue;
-                    double gInf = g - 1.96f * e;
+                    const double gInf = g - 1.96f * e;
                     if(!ok) continue;
                     
                     curve.mDataMean[t] = g;
@@ -267,7 +267,7 @@ double Plugin14C::getRefValueAt(const QJsonObject& data, const double& t)
 
 double Plugin14C::getRefErrorAt(const QJsonObject& data, const double& t)
 {
-    QString curveName = data[DATE_14C_REF_CURVE_STR].toString().toLower();
+    const QString curveName = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
     return getRefCurveErrorAt(curveName, t);
 }
 
@@ -275,7 +275,7 @@ QPair<double,double> Plugin14C::getTminTmaxRefsCurve(const QJsonObject& data) co
 {
     double tmin = 0;
     double tmax = 0;
-    QString ref_curve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
+    const QString ref_curve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
 
     if(mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty())
     {
@@ -412,14 +412,14 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
     QJsonObject result;
     if(dates.size() > 1){
         // Verify all dates have the same ref curve :
-        QJsonObject firstDate = dates.at(0).toObject();
-        QJsonObject firstDateData = firstDate.value(STATE_DATE_DATA).toObject();
+        const QJsonObject firstDate = dates.at(0).toObject();
+        const  QJsonObject firstDateData = firstDate.value(STATE_DATE_DATA).toObject();
         QString firstCurve = firstDateData.value(DATE_14C_REF_CURVE_STR).toString();
         
         for(int i=1; i<dates.size(); ++i){
             QJsonObject date = dates.at(i).toObject();
-            QJsonObject dateData = date.value(STATE_DATE_DATA).toObject();
-            QString curve = dateData.value(DATE_14C_REF_CURVE_STR).toString();
+            const QJsonObject dateData = date.value(STATE_DATE_DATA).toObject();
+            const QString curve = dateData.value(DATE_14C_REF_CURVE_STR).toString();
             if(firstCurve != curve){
                 result["error"] = tr("All combined data must use the same reference curve !");
                 return result;
@@ -455,7 +455,7 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
         result = dates.at(0).toObject();
         result[STATE_NAME] = "Combined (" + names.join(" | ") + ")";
         
-        QJsonObject mergedData = result.value(STATE_DATE_DATA).toObject();
+        const QJsonObject mergedData = result.value(STATE_DATE_DATA).toObject();
         mergedData[DATE_14C_AGE_STR] = sum_mi_vi / sum_1_vi;
         mergedData[DATE_14C_ERROR_STR] = sqrt(1 / sum_1_vi);
         mergedData[DATE_14C_DELTA_R_STR] = 0;

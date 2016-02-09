@@ -492,9 +492,9 @@ GraphCurve GraphViewResults::generateDensityCurve(const QMap<double, double>& da
                                                   const Qt::PenStyle penStyle,
                                                   const QBrush& brush) const{
     GraphCurve curve;
+    curve.mName = name;
     if(!data.isEmpty()) {
         curve.mData = data;
-        curve.mName = name;
         curve.mPen = QPen(lineColor, 1, penStyle);
         curve.mBrush = brush;
         curve.mIsHisto = false;

@@ -113,9 +113,9 @@ QString MCMCLoopMain::initMCMC()
     QList<Phase*>& phases = mModel->mPhases;
     QList<PhaseConstraint*>& phasesConstraints = mModel->mPhaseConstraints;
     
-    double tmin = mModel->mSettings.mTmin;
-    double tmax = mModel->mSettings.mTmax;
-    double step = mModel->mSettings.mStep;
+    const double tmin = mModel->mSettings.mTmin;
+    const double tmax = mModel->mSettings.mTmax;
+    const double step = mModel->mSettings.mStep;
     
     if(isInterruptionRequested())
         return ABORTED_BY_USER;
@@ -126,7 +126,7 @@ QString MCMCLoopMain::initMCMC()
     emit stepChanged(tr("Initializing phases gaps..."), 0, phasesConstraints.size());
     for(int i=0; i<phasesConstraints.size(); ++i)
     {
-        phasesConstraints[i]->initGamma();
+        phasesConstraints.at(i)->initGamma();
         
         if(isInterruptionRequested())
             return ABORTED_BY_USER;
@@ -140,7 +140,7 @@ QString MCMCLoopMain::initMCMC()
     emit stepChanged(tr("Initializing phases durations..."), 0, phases.size());
     for(int i=0; i<phases.size(); ++i)
     {
-        phases[i]->initTau();
+        phases.at(i)->initTau();
         
         if(isInterruptionRequested())
             return ABORTED_BY_USER;
@@ -199,41 +199,31 @@ QString MCMCLoopMain::initMCMC()
     QVector<Event*> unsortedEvents = ModelUtilities::unsortEvents(events);
     QVector<QVector<Event*> > eventBranches = ModelUtilities::getAllEventsBranches(events);
     QVector<QVector<Phase*> > phaseBranches = ModelUtilities::getAllPhasesBranches(phases, mModel->mSettings.mTmax - mModel->mSettings.mTmin);
-    
-    /*qDebug() << "==================";
-     *
-    for(int i=0; i<phaseBranches.size(); ++i)
-    {
-        qDebug() << "----------- branch " << i;
-        for(int j=0; j<phaseBranches[i].size(); ++j)
-        {
-            qDebug() << phaseBranches[i][j]->mName << " => ";
-        }
-    }*/
+       
 
     emit stepChanged(tr("Initializing events..."), 0, unsortedEvents.size());
 
     for(int i=0; i<unsortedEvents.size(); ++i)
     {
-        if(unsortedEvents[i]->mType == Event::eDefault)
+        if(unsortedEvents.at(i)->mType == Event::eDefault)
         {
-            double min = unsortedEvents[i]->getThetaMinRecursive(tmin, eventBranches, phaseBranches);
-            double max = unsortedEvents[i]->getThetaMaxRecursive(tmax, eventBranches, phaseBranches);
+            const double min = unsortedEvents.at(i)->getThetaMinRecursive(tmin, eventBranches, phaseBranches);
+            const double max = unsortedEvents.at(i)->getThetaMaxRecursive(tmax, eventBranches, phaseBranches);
             
-            unsortedEvents[i]->mTheta.mX = Generator::randomUniform(min, max);
-            unsortedEvents[i]->mInitialized = true;
+            unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
+            unsortedEvents.at(i)->mInitialized = true;
             
             //qDebug() << "--> Event initialized : " << unsortedEvents[i]->getName() << " : " << unsortedEvents[i]->mTheta.mX;
             
             double s02_sum = 0.f;
-            for(int j=0; j<unsortedEvents[i]->mDates.size(); ++j)
+            for(int j=0; j<unsortedEvents.at(i)->mDates.size(); ++j)
             {
-                Date& date = unsortedEvents[i]->mDates[j];
+                Date& date = unsortedEvents.at(i)->mDates[j];
                 
                 // 1 - Init ti
                 double sigma = double();
                 if(!date.mRepartition.isEmpty()) {
-                    double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mRepartition);
+                    const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mRepartition);
                     date.mTheta.mX = date.getTminCalib() + idx * mModel->mSettings.mStep;
 
                     FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration, tmin, tmax, step));
@@ -242,7 +232,7 @@ QString MCMCLoopMain::initMCMC()
                 else { // in the case of mRepartion curve is null, we must init ti outside the study period
                        // For instance we use a gaussian random sampling
                     sigma = mModel->mSettings.mTmax - mModel->mSettings.mTmin;
-                    double u = Generator::gaussByBoxMuller(0,sigma);
+                    const double u = Generator::gaussByBoxMuller(0,sigma);
                     if(u<0) {
                         date.mTheta.mX = mModel->mSettings.mTmin + u;
                     }
@@ -257,7 +247,7 @@ QString MCMCLoopMain::initMCMC()
 
                 }
                 // 2 - Init Delta Wiggle matching
-                date.initDelta(unsortedEvents[i]);
+                date.initDelta(unsortedEvents.at(i));
 
                 // 3 - Init sigma MH adaptatif of each Data ti
                 date.mTheta.mSigmaMH = sigma;
@@ -266,11 +256,11 @@ QString MCMCLoopMain::initMCMC()
                 s02_sum += 1.f / (sigma * sigma);
             }
             // 4 - Init S02 of each Event
-            unsortedEvents[i]->mS02 = unsortedEvents[i]->mDates.size() / s02_sum;
+            unsortedEvents.at(i)->mS02 = unsortedEvents.at(i)->mDates.size() / s02_sum;
 
             // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
-            unsortedEvents[i]->mTheta.mSigmaMH = sqrt(unsortedEvents[i]->mS02);
-            unsortedEvents[i]->mAShrinkage = 1.;
+            unsortedEvents.at(i)->mTheta.mSigmaMH = sqrt(unsortedEvents.at(i)->mS02);
+            unsortedEvents.at(i)->mAShrinkage = 1.;
         }
         
         if(isInterruptionRequested())
@@ -287,13 +277,13 @@ QString MCMCLoopMain::initMCMC()
     
     for(int i=0; i<events.size(); ++i)
     {
-        for(int j=0; j<events[i]->mDates.size(); ++j)
+        for(int j=0; j<events.at(i)->mDates.size(); ++j)
         {
-            Date& date = events[i]->mDates[j];
+            Date& date = events.at(i)->mDates[j];
             
             
            // date.mSigma.mX = sqrt(shrinkageUniform(events[i]->mS02)); // modif the 2015/05/19 with PhL
-           date.mSigma.mX = fabs(date.mTheta.mX-(events[i]->mTheta.mX-date.mDelta));
+           date.mSigma.mX = fabs(date.mTheta.mX-(events.at(i)->mTheta.mX-date.mDelta));
            
             if(date.mSigma.mX<=1E-6){
                date.mSigma.mX=1E-6; // Add control the 2015/06/15 with PhL
@@ -313,6 +303,7 @@ QString MCMCLoopMain::initMCMC()
     for(int i=0; i<phases.size(); ++i)
     {
         Phase* phase = phases[i];
+
         phase->updateAll(tmin, tmax);
         
         if(isInterruptionRequested())
@@ -327,58 +318,60 @@ QString MCMCLoopMain::initMCMC()
     log += "<hr>";
     log += textBold("Events Initialisation (with their data)");
     
-    for(int i=0; i<events.size(); ++i)
-    {
-        Event* event = events[i];
+    int i = 0;
+    foreach (const Event* event, events) {
+        ++i;
         log += "<hr><br>";
         
         if(event->type() == Event::eKnown)
         {
-            EventKnown* bound = dynamic_cast<EventKnown*>(event);
+             const EventKnown* bound = dynamic_cast<const EventKnown*>(event);
             if(bound)
             {
-                log += line(textRed("Bound (" + QString::number(i+1) + "/" + QString::number(events.size()) + ") : " + bound->mName));
+                log += line(textRed("Bound (" + QString::number(i) + "/" + QString::number(events.size()) + ") : " + bound->mName));
                 log += line(textRed(" - theta (value) : " + DateUtils::convertToAppSettingsFormatStr(bound->mTheta.mX)+" "+ DateUtils::getAppSettingsFormat()));
                 log += line(textRed(" - theta (sigma MH) : " + QString::number(bound->mTheta.mSigmaMH)));
             }
         }
         else
         {
-            log += line(textBlue("Event (" + QString::number(i+1) + "/" + QString::number(events.size()) + ") : " + event->mName));
+            log += line(textBlue("Event (" + QString::number(i) + "/" + QString::number(events.size()) + ") : " + event->mName));
             log += line(textBlue(" - theta (value) : " + DateUtils::convertToAppSettingsFormatStr(event->mTheta.mX) +" "+ DateUtils::getAppSettingsFormat()));
             log += line(textBlue(" - theta (sigma MH) : " + QString::number(event->mTheta.mSigmaMH)));
             log += line(textBlue(" - SO2 : " + QString::number(event->mS02)));
         }
         
         
-        for(int j=0; j<event->mDates.size(); ++j)
-        {
+        int j = 0;
+        foreach (const Date date, event->mDates) {
+            ++j;
             log += "<br>";
-            Date& date = event->mDates[j];
+           // Date& date = event->mDates[j];
             
-            log += line(textBlack("Data (" + QString::number(j+1) + "/" + QString::number(event->mDates.size()) + ") : " + event->mDates[j].mName));
+            log += line(textBlack("Data (" + QString::number(j) + "/" + QString::number(event->mDates.size()) + ") : " + date.mName));
             log += line(textBlack(" - ti (value) : " + DateUtils::convertToAppSettingsFormatStr(date.mTheta.mX)+" "+ DateUtils::getAppSettingsFormat()));
             if(date.mMethod == Date::eMHSymGaussAdapt){
                 log += line(textBlack(" - ti (sigma MH) : " + QString::number(date.mTheta.mSigmaMH)));
             }
             log += line(textBlack(" - sigmai (value) : " + QString::number(date.mSigma.mX)));
             log += line(textBlack(" - sigmai (sigma MH) : " + QString::number(date.mSigma.mSigmaMH)));
-            log += line(textBlack(" - deltai (value) : " + QString::number(date.mDelta)));
+            if(date.mDeltaType != Date::eDeltaNone) {
+                log += line(textBlack(" - deltai (value) : " + QString::number(date.mDelta)));
+            }
         }
     }
     
     if(phases.size() > 0)
     {
         log += "<hr>";
-        log += textBold("Phases Initialisation");
+        log += textBold(tr("Phases Initialisation"));
         log += "<hr>";
-        
-        for(int i=0; i<phases.size(); ++i)
-        {
-            Phase* phase = phases[i];
-            
+
+        int i = 0;
+        foreach (const Phase * phase, phases) {
+            ++i;
             log += "<br>";
-            log += line(textPurple("Phase (" + QString::number(i+1) + "/" + QString::number(phases.size()) + ") : " + phase->mName));
+            log += line(textPurple("Phase (" + QString::number(i) + "/" + QString::number(phases.size()) + ") : " + phase->mName));
             log += line(textPurple(" - alpha : " + DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mX)+" "+ DateUtils::getAppSettingsFormat()));
             log += line(textPurple(" - beta : " + DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mX)+" "+ DateUtils::getAppSettingsFormat()));
             log += line(textPurple(" - tau : " + QString::number(phase->mTau)));
@@ -387,16 +380,16 @@ QString MCMCLoopMain::initMCMC()
     
     if(phasesConstraints.size() > 0)
     {
+
         log += "<hr>";
-        log += textBold("Phases Constraints Initialisation");
+        log += textBold(tr("Phases Constraints Initialisation"));
         log += "<hr>";
         
-        for(int i=0; i<phasesConstraints.size(); ++i)
-        {
-            PhaseConstraint* constraint = phasesConstraints[i];
-            
+        int i = 0;
+        foreach (const PhaseConstraint* constraint, phasesConstraints) {
+            ++i;
             log += "<br>";
-            log += line("PhaseConstraint (" + QString::number(i+1) + "/" + QString::number(phasesConstraints.size()) + ") : " + QString::number(constraint->mId));
+            log += line("PhaseConstraint (" + QString::number(i) + "/" + QString::number(phasesConstraints.size()) + ") : " + QString::number(constraint->mId));
             log += line(" - gamma : " + QString::number(constraint->mGamma));
         }
     }
@@ -411,29 +404,25 @@ QString MCMCLoopMain::initMCMC()
 
 void MCMCLoopMain::update()
 {
-    //QList<Event*>& events = mModel->mEvents;
-    //QList<Phase*>& phases = mModel->mPhases;
-
-    
-    double t_min = mModel->mSettings.mTmin;
-    double t_max = mModel->mSettings.mTmax;
+    const double t_min = mModel->mSettings.mTmin;
+    const double t_max = mModel->mSettings.mTmax;
     
     ChainSpecs& chain = mChains[mChainIndex];
     
-    bool doMemo = (mState == eBurning) || (mState == eAdapting) || (chain.mTotalIter % chain.mThinningInterval == 0);
+    const bool doMemo = (mState == eBurning) || (mState == eAdapting) || (chain.mTotalIter % chain.mThinningInterval == 0);
     
 
     //--------------------- Update Event -----------------------------------------
-    QList<Event*>::iterator eventIter = mModel->mEvents.begin();
+    QList<Event*>::const_iterator eventIter = mModel->mEvents.cbegin();
 
     while(eventIter != mModel->mEvents.constEnd()) {
-        Event* event = (*eventIter);
-        QList<Date>::Iterator iterDate = event->mDates.begin();
+        //Event* event = (*eventIter);
+        QList<Date>::Iterator iterDate = (*eventIter)->mDates.begin();
 
-        while(iterDate != event->mDates.constEnd()) {
-             iterDate->updateDelta(event);
-             iterDate->updateTheta(event);
-             iterDate->updateSigma(event);
+        while(iterDate != (*eventIter)->mDates.constEnd()) {
+             iterDate->updateDelta(*eventIter);
+             iterDate->updateTheta(*eventIter);
+             iterDate->updateSigma(*eventIter);
              iterDate->updateWiggle();
 
             if(doMemo)
@@ -448,17 +437,17 @@ void MCMCLoopMain::update()
             ++iterDate;
         }
         //--------------------- Update Events -----------------------------------------
-        event->updateTheta(t_min, t_max);
+        (*eventIter)->updateTheta(t_min, t_max);
         if(doMemo)
         {
-           event->mTheta.memo();
-           event->mTheta.saveCurrentAcceptRate();
+           (*eventIter)->mTheta.memo();
+           (*eventIter)->mTheta.saveCurrentAcceptRate();
         }
 
         //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
 
-        QList<Phase*>::Iterator iterPhase = event->mPhases.begin();
-        while(iterPhase != event->mPhases.constEnd()) {
+        QList<Phase*>::const_iterator iterPhase = (*eventIter)->mPhases.cbegin();
+        while(iterPhase != (*eventIter)->mPhases.constEnd()) {
 
             (*iterPhase)->updateAll(t_min, t_max);
             /*if(doMemo) { No memo here
@@ -496,7 +485,7 @@ void MCMCLoopMain::update()
 
     //--------------------- Memo Phases -----------------------------------------
     if(doMemo) {
-        QList<Phase*>::Iterator iterPhase = mModel->mPhases.begin();
+        QList<Phase*>::const_iterator iterPhase = mModel->mPhases.cbegin();
         while(iterPhase != mModel->mPhases.constEnd()) {
            (*iterPhase)->memoAll();
             ++iterPhase;

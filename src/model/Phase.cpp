@@ -234,7 +234,7 @@ double Phase::getMaxThetaPrevPhases(double tmin)
 
 // --------------------------------------------------------------------------------
 
-void Phase::updateAll(double tmin, double tmax)
+void Phase::updateAll(const double tmin, const double tmax)
 {
     static bool initalized = false;
     

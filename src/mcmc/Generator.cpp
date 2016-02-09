@@ -37,7 +37,7 @@ int Generator::createSeed()
 }
 
 
-double Generator::randomUniform(double min, double max)
+double Generator::randomUniform(const double min, const double max)
 {
     return min + sDistribution(sGenerator) * (max - min);
 }
@@ -45,32 +45,29 @@ double Generator::randomUniform(double min, double max)
 double Generator::gaussByDoubleExp(const double mean, const double sigma, const double min, const double max)
 {
     errno=0;
-    if(min >= max)
+    if((min >= max) || (sigma == 0))
     {
         if(min == max)
             qDebug() << "DOUBLE EXP WARNING : min == max";
         else
             throw QObject::tr("DOUBLE EXP ERROR : min = ") + QString::number(min) + ", max = " + QString::number(max);
+
+        if(sigma == 0)
+            qDebug() << "DOUBLE EXP WARNING : sigma == 0";
+        else
+            throw QObject::tr("DOUBLE EXP ERROR : sigma == 0, mman = ") + QString::number(mean) ;
+
         return min;
     }
-    
+
     const long double x_min = (min - mean) / sigma;
     const long double x_max = (max - mean) / sigma;
     
-  //  QString info = "DoubleExp : x_min = " + QString::number(x_min) + ", x_max = " + QString::number(x_max);
-
-    /*if(abs(x_max - x_min) < 1E-20)
-    {
-        return randomUniform(min, max);
-    }*/
-    
     long double x = (x_max + x_min) / 2.0;// initialisation arbitraire, valeur ecrasée ensuite
-    const long double sqrt_e = sqrtl(expl(1.0));
-    
+    //const long double sqrt_e = sqrtl(expl(1.0));
+    const long double sqrt_e = 1.64872127070012814689;
     feclearexcept(FE_ALL_EXCEPT);
     
-
-    //qDebug() << "DOUBLE EXP DoubleExp : errno avant = "<<strerror(errno);
     long double exp_x_min = 0.0;
     long double exp_x_max = 0.0;
     long double exp_minus_x_min = 0.0;
@@ -114,11 +111,11 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     long double rap = 0.0;
     
     int trials = 0;
-    int limit = 100000;
+    const int limit = 100000;
     
     while(rap < ur && trials < limit)
     {
-        long double u = (long double)randomUniform();
+        const long double u = (long double)randomUniform();
         
         if(x_min < 0. && x_max > 0.)
         {
@@ -184,8 +181,8 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
 // Simulation d'une loi gaussienne centrée réduite
 double Generator::boxMuller()
 {
-    double rand1 = randomUniform();
-    double rand2 = randomUniform();
+    const double rand1 = randomUniform();
+    const double rand2 = randomUniform();
     return sqrt(-2. * log(rand1)) * cos(2. * M_PI * rand2);
     //checkFloatingPointException("boxMuller");
 }

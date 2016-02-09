@@ -28,7 +28,7 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
     }
     else
     {
-        double uniform = Generator::randomUniform();
+        const double uniform = Generator::randomUniform();
         accepted = (rapport >= uniform);
     }
     
@@ -84,7 +84,7 @@ double MHVariable::getCurrentAcceptRate()
 
 void MHVariable::saveCurrentAcceptRate()
 {
-    double rate = 100.f * getCurrentAcceptRate();
+    const double rate = 100.f * getCurrentAcceptRate();
     mHistoryAcceptRateMH.push_back(rate);
 }
 

@@ -185,7 +185,7 @@ void Event::reset()
     mInitialized = false;
 }
 
-double Event::getThetaMinRecursive(double defaultValue,
+double Event::getThetaMinRecursive(const double defaultValue,
                                    const QVector<QVector<Event*> >& eventBranches,
                                    const QVector<QVector<Phase*> >& phaseBranches)
 {
@@ -198,11 +198,11 @@ double Event::getThetaMinRecursive(double defaultValue,
     double min2 = defaultValue;
     for(int i=0; i<eventBranches.size(); ++i)
     {
-        const QVector<Event*>& branch = eventBranches[i];
+        const QVector<Event*>& branch = eventBranches.at(i);
         double branchMin = defaultValue;
         for(int j=0; j<branch.size(); ++j)
         {
-            const Event* event = branch[j];
+            const Event* event = branch.at(j);
             if(event == this)
             {
                 min2 = qMax(min2, branchMin);
@@ -220,18 +220,18 @@ double Event::getThetaMinRecursive(double defaultValue,
     double min3 = defaultValue;
     for(int i=0; i<mPhases.size(); ++i)
     {
-        if(mPhases[i]->mTauType != Phase::eTauUnknown)
+        if(mPhases.at(i)->mTauType != Phase::eTauUnknown)
         {
             double thetaMax = defaultValue;
-            for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
+            for(int j=0; j<mPhases.at(i)->mEvents.size(); ++j)
             {
-                const Event* event = mPhases[i]->mEvents[j];
+                const Event* event = mPhases.at(i)->mEvents.at(j);
                 if(event != this && event->mInitialized)
                 {
                     thetaMax = qMax(event->mTheta.mX, thetaMax);
                 }
             }
-            min3 = qMax(min3, thetaMax - mPhases[i]->mTau);
+            min3 = qMax(min3, thetaMax - mPhases.at(i)->mTau);
         }
     }
     
@@ -239,11 +239,11 @@ double Event::getThetaMinRecursive(double defaultValue,
     double min4 = defaultValue;
     for(int i=0; i<phaseBranches.size(); ++i)
     {
-        const QVector<Phase*>& branch = phaseBranches[i];
+        const QVector<Phase*>& branch = phaseBranches.at(i);
         double branchMin = defaultValue;
         for(int j=0; j<branch.size(); ++j)
         {
-            const Phase* phase = branch[j];
+            const Phase* phase = branch.at(j);
             if(phase->mEvents.contains(this))
             {
                 min4 = qMax(min4, branchMin);
@@ -252,17 +252,17 @@ double Event::getThetaMinRecursive(double defaultValue,
             double theta = defaultValue;
             for(int k=0; k<phase->mEvents.size(); ++k)
             {
-                if(phase->mEvents[k]->mInitialized)
+                if(phase->mEvents.at(k)->mInitialized)
                 {
-                    theta = std::max(theta, phase->mEvents[k]->mTheta.mX);
+                    theta = std::max(theta, phase->mEvents.at(k)->mTheta.mX);
                 }
             }
             const PhaseConstraint* c = 0;
             for(int k=0; k<phase->mConstraintsFwd.size(); ++k)
             {
-                if(branch.contains(phase->mConstraintsFwd[k]->mPhaseTo))
+                if(branch.contains(phase->mConstraintsFwd.at(k)->mPhaseTo))
                 {
-                    c = phase->mConstraintsFwd[k];
+                    c = phase->mConstraintsFwd.at(k);
                     break;
                 }
             }
@@ -274,14 +274,14 @@ double Event::getThetaMinRecursive(double defaultValue,
     }
         
     // Synthesize all
-    double min_tmp1 = qMax(min1, min2);
-    double min_tmp2 = qMax(min3, min4);
-    double min = qMax(min_tmp1, min_tmp2);
+    const double min_tmp1 = qMax(min1, min2);
+    const double min_tmp2 = qMax(min3, min4);
+    const double min = qMax(min_tmp1, min_tmp2);
     
     return min;
 }
 
-double Event::getThetaMaxRecursive(double defaultValue,
+double Event::getThetaMaxRecursive(const double defaultValue,
                                    const QVector<QVector<Event*> >& eventBranches,
                                    const QVector<QVector<Phase*> >& phaseBranches)
 {
@@ -490,10 +490,10 @@ double Event::getThetaMax(double defaultValue)
     return max;
 }
 
-void Event::updateTheta(double tmin, double tmax)
+void Event::updateTheta(const double tmin, const double tmax)
 {
-    double min = getThetaMin(tmin);
-    double max = getThetaMax(tmax);
+    const double min = getThetaMin(tmin);
+    const double max = getThetaMax(tmax);
     
     if(min >= max)
     {
@@ -511,10 +511,17 @@ void Event::updateTheta(double tmin, double tmax)
     double sum_p = 0.;
     double sum_t = 0.;
 
-    for(int i=0; i<mDates.length(); ++i)
+    /*for(int i=0; i<mDates.length(); ++i)
     {
         double variance = (mDates[i].mSigma.mX * mDates[i].mSigma.mX);
         sum_t += (mDates[i].mTheta.mX + mDates[i].mDelta) / variance;
+        sum_p += 1.f / variance;
+    }*/
+
+    // with const type variable foreeach is speed
+    foreach (const Date date, mDates) {
+        const double variance = (date.mSigma.mX * date.mSigma.mX);
+        sum_t += (date.mTheta.mX + date.mDelta) / variance;
         sum_p += 1.f / variance;
     }
     double theta_avg = sum_t / sum_p;
@@ -553,7 +560,7 @@ void Event::updateTheta(double tmin, double tmax)
         case eMHAdaptGauss:
         {
             // MH : Seul cas où le taux d'acceptation a du sens car on utilise sigma MH :
-            double theta = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
+            const double theta = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
             
             double rapport = 0;
             if(theta >= min && theta <= max)

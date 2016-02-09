@@ -385,13 +385,14 @@ GraphCurve* GraphView::getCurve(const QString& name)
 {
     for(int i=0; i<mCurves.size(); ++i)
     {
-        if(mCurves[i].mName == name)
+        if(mCurves.at(i).mName == name)
             return &mCurves[i];
     }
     return 0;
 }
 
-const QList<GraphCurve>& GraphView::getCurves() const{
+const QList<GraphCurve>& GraphView::getCurves() const
+{
     return mCurves;
 }
 

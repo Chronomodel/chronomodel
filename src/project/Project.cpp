@@ -1256,8 +1256,8 @@ void Project::updateDate(int eventId, int dateIndex)
                         date[STATE_DATE_DELTA_AVERAGE] = dialog.getDeltaAverage();
                         date[STATE_DATE_DELTA_ERROR] = dialog.getDeltaError();
                         
-                        PluginAbstract* plugin = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
-                        bool valid = plugin->isDateValid(date[STATE_DATE_DATA].toObject(), settings);
+                        PluginAbstract* plugin = PluginManager::getPluginFromId(date.value(STATE_DATE_PLUGIN_ID).toString());
+                        bool valid = plugin->isDateValid(date.value(STATE_DATE_DATA).toObject(), settings);
                         date[STATE_DATE_VALID] = valid;
                         
                         dates[dateIndex] = date;

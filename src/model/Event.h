@@ -47,15 +47,15 @@ public:
     
     
     // 2 fonctions utilisées pour l'init du MCMC :
-    double getThetaMinRecursive(double defaultValue,
+    double getThetaMinRecursive(const double defaultValue,
                                 const QVector<QVector<Event*> >& eventBranches,
                                 const QVector<QVector<Phase*> >& phaseBranches);
 
-    double getThetaMaxRecursive(double defaultValue,
+    double getThetaMaxRecursive(const double defaultValue,
                                 const QVector<QVector<Event*> >& eventBranches,
                                 const QVector<QVector<Phase*> >& phaseBranches);
     
-    virtual void updateTheta(double min, double max);
+    virtual void updateTheta(const double min, const double max);
     
 public:
     Type mType;

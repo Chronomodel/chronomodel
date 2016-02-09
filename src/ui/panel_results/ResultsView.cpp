@@ -1012,9 +1012,9 @@ void ResultsView::generateCurves()
         }
 
         while(constIter != iterEnd) {
-            GraphViewDate* graphDate = dynamic_cast<GraphViewDate*>(*constIter);
+            const GraphViewDate* graphDate = dynamic_cast<const GraphViewDate*>(*constIter);
             if(graphDate) {
-               GraphCurve* graphVariance = graphDate->mGraph->getCurve("Post Distrib All Chains");
+               const GraphCurve* graphVariance = graphDate->mGraph->getCurve("Post Distrib All Chains");
                if(graphVariance) {
                    mResultMaxVariance = ceil(qMax(mResultMaxVariance, graphVariance->mData.lastKey()));
                }
@@ -1711,27 +1711,27 @@ void ResultsView::adjustDuration(bool visible)
 {
     int durationMax = 0;
     // find the durationMax
-    for(int i=0; i<mByPhasesGraphs.size(); ++i){
-        GraphViewPhase* phasesGraphs = dynamic_cast<GraphViewPhase*>(mByPhasesGraphs[i]);
-        if(phasesGraphs) {
-            GraphView *durationGraph =phasesGraphs->mDurationGraph;
+    foreach (const GraphViewResults* allGraphs, mByPhasesGraphs) {
+        const GraphViewPhase* phaseGraph = dynamic_cast<const GraphViewPhase*>(allGraphs);
+        if(phaseGraph) {
+            GraphView *durationGraph =phaseGraph->mDurationGraph;
 
             if(durationGraph && durationGraph->isVisible() ) {
                 GraphCurve *durationCurve = durationGraph->getCurve("Duration");
-                if( durationCurve){
+                if(durationCurve && !durationCurve->mData.isEmpty()){
                    durationMax = qMax((int)durationCurve->mData.lastKey(),durationMax);
                 }
              }
          }
     }
     // set the same RangeX with durationMax
-    for(int i=0; i<mByPhasesGraphs.size(); ++i){
-        GraphViewPhase* phasesGraphs = dynamic_cast<GraphViewPhase*>(mByPhasesGraphs[i]);
-        if(phasesGraphs) {
-            GraphView *durationGraph =phasesGraphs->mDurationGraph;
+   foreach (const GraphViewResults* allGraphs, mByPhasesGraphs) {
+        const GraphViewPhase* phaseGraph = dynamic_cast<const GraphViewPhase*>(allGraphs);
+        if(phaseGraph) {
+            GraphView *durationGraph =phaseGraph->mDurationGraph;
             if(durationGraph) {
                 GraphCurve *durationCurve = durationGraph->getCurve("Duration");
-                if(durationCurve){
+                if(durationCurve && !durationCurve->mData.isEmpty()){
                    durationGraph->setRangeX(0, durationMax);
                    durationGraph->setCurrentX(0, durationMax);
                 }

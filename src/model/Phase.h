@@ -36,7 +36,7 @@ public:
     double getMinThetaNextPhases(double tmax);
     double getMaxThetaPrevPhases(double tmin);
     
-    void updateAll(double tmin, double tmax);
+    void updateAll(const double tmin, const double tmax);
     void memoAll();
     
     void initTau();

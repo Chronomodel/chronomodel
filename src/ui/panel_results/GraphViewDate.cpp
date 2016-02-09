@@ -37,7 +37,7 @@ void GraphViewDate::setDate(Date* date)
     {
         mDate = date;
         setItemTitle(QString(tr("Data") + " : " + mDate->mName));
-        setItemColor(mDate->mColor);//date->getEventColor());
+        setItemColor(mDate->mColor);
     }
     update();
 }
