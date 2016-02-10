@@ -130,8 +130,6 @@ void MHVariable::generateGlobalRunAcceptation(const QList<ChainSpecs> &chains)
         acceptsLength += runSize;
     }
 
-
-
     mGlobalAcceptation = accepted / acceptsLength;
 }
 

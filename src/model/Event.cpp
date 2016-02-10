@@ -511,13 +511,6 @@ void Event::updateTheta(const double tmin, const double tmax)
     double sum_p = 0.;
     double sum_t = 0.;
 
-    /*for(int i=0; i<mDates.length(); ++i)
-    {
-        double variance = (mDates[i].mSigma.mX * mDates[i].mSigma.mX);
-        sum_t += (mDates[i].mTheta.mX + mDates[i].mDelta) / variance;
-        sum_p += 1.f / variance;
-    }*/
-
     // with const type variable foreeach is speed
     foreach (const Date date, mDates) {
         const double variance = (date.mSigma.mX * date.mSigma.mX);

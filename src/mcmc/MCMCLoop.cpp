@@ -87,9 +87,7 @@ void MCMCLoop::run()
     {        
         log += "<hr>";
         log += line("Chain : " + QString::number(mChainIndex + 1) + "/" + QString::number(mChains.size()));
-        
 
-        
         ChainSpecs& chain = mChains[mChainIndex];
         Generator::initGenerator(chain.mSeed);
         
@@ -144,7 +142,7 @@ void MCMCLoop::run()
                 return;
             }
             
-            
+
             ++chain.mBurnIterIndex;
             ++chain.mTotalIter;
             

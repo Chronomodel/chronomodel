@@ -340,7 +340,7 @@ void ModelView::updateProject()
     
     Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
-    ProjectSettings settings = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
+    ProjectSettings settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
    
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
@@ -369,11 +369,11 @@ void ModelView::updateProject()
     const QJsonObject& event = mEventPropertiesView->getEvent();
     if(!event.isEmpty())
     {
-        QJsonArray events = state[STATE_EVENTS].toArray();
+        const QJsonArray events = state.value(STATE_EVENTS).toArray();
         for(int i=0; i<events.size(); ++i)
         {
-            QJsonObject evt = events[i].toObject();
-            if(evt[STATE_ID].toInt() == event[STATE_ID].toInt())
+            const QJsonObject evt = events.at(i).toObject();
+            if(evt.value(STATE_ID).toInt() == event.value(STATE_ID).toInt())
             {
                 if(evt != event)
                     mEventPropertiesView->setEvent(evt);
@@ -448,17 +448,6 @@ void ModelView::adjustStep()
     }
 }
 
-/* Original code by HL ignore in 2015/06/04
-void ModelView::studyPeriodChanging()
-{
-    qDebug()<<"ModelView::studyPeriodChanging() avant"<<g_FormatDate<<mTmin<<mTmax;
-    mTmin = dateInDouble( mMinEdit->text().toDouble() );
-    mTmax = dateInDouble( mMaxEdit->text().toDouble() );
-    setSettingsValid(false);
-    showCalibration(false);
-    qDebug()<<"ModelView::studyPeriodChanging() apres"<<g_FormatDate<<mTmin<<mTmax;
-}
-*/
 void ModelView::minEditChanging()
 {
     //QLocale locale = QLocale();

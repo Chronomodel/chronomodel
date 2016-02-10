@@ -83,7 +83,7 @@ void MCMCLoopMain::initVariablesForChain()
     ChainSpecs& chain = mChains[mChainIndex];
     QList<Event*>& events = mModel->mEvents;
     
-    int acceptBufferLen = chain.mNumBatchIter; //chainLen / 100;
+    const int acceptBufferLen = chain.mNumBatchIter;
     
     for(int i=0; i<events.size(); ++i)
     {
@@ -406,7 +406,7 @@ void MCMCLoopMain::update()
 {
     const double t_min = mModel->mSettings.mTmin;
     const double t_max = mModel->mSettings.mTmax;
-    
+
     ChainSpecs& chain = mChains[mChainIndex];
     
     const bool doMemo = (mState == eBurning) || (mState == eAdapting) || (chain.mTotalIter % chain.mThinningInterval == 0);
@@ -446,6 +446,7 @@ void MCMCLoopMain::update()
 
         //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
 
+
         QList<Phase*>::const_iterator iterPhase = (*eventIter)->mPhases.cbegin();
         while(iterPhase != (*eventIter)->mPhases.constEnd()) {
 
@@ -459,29 +460,6 @@ void MCMCLoopMain::update()
         ++eventIter;
     }
 
-
-    //--------------------- Update Events -----------------------------------------
-
-   /* for(int i=0; i<events.size(); ++i)
-    {
-        Event* event = events[i];
-
-        event->updateTheta(t_min, t_max);
-        if(doMemo)
-        {
-           event->mTheta.memo();
-           event->mTheta.saveCurrentAcceptRate();
-        }
-    }
-*/
-    //--------------------- Update Phases -----------------------------------------
-    /*   for(int i=0; i<phases.size(); ++i)
-       {
-           phases[i]->updateAll(t_min, t_max);
-           if(doMemo)
-               phases[i]->memoAll();
-       }
-   */
 
     //--------------------- Memo Phases -----------------------------------------
     if(doMemo) {

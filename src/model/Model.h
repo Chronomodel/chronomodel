@@ -34,16 +34,9 @@ public:
     void updateFormatSettings(const AppSettings *appSet);
     virtual ~Model();
 
-    //static fromJson(const QJsonObject& json);
-
-
     void fromJson( const QJsonObject& json);
-    
-  /*  void setJson( const QJsonObject & json);
-    const QJsonObject & getJson();
-  */
-        
-    
+    void updateDesignFromJson( const QJsonObject& json);
+
     bool isValid();
     void clear();
 
