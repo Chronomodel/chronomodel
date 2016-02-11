@@ -22,9 +22,10 @@ public:
     virtual ~MCMCLoop();
     
     void setMCMCSettings(const MCMCSettings& settings);
-    const QList<ChainSpecs>& chains();
+    const QList<ChainSpecs>& chains() const;
     const QString& getChainsLog() const;
-    const QString& getInitLog() const;
+    const QString getInitLog() const;
+    const QString getMCMCSettingsLog() const ;
     
     void run();
     

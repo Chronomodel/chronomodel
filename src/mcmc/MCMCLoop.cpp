@@ -40,11 +40,12 @@ void MCMCLoop::setMCMCSettings(const MCMCSettings& s)
         chain.mRunIterIndex = 0;
         chain.mTotalIter = 0;
         chain.mThinningInterval = s.mThinningInterval;
+        chain.mMixingLevel = s.mMixingLevel;
         mChains.append(chain);
     }
 }
 
-const QList<ChainSpecs> &MCMCLoop::chains()
+const QList<ChainSpecs> &MCMCLoop::chains() const
 {
     return mChains;
 }
@@ -54,9 +55,30 @@ const QString& MCMCLoop::getChainsLog() const
     return mChainsLog;
 }
 
-const QString& MCMCLoop::getInitLog() const
+const QString MCMCLoop::getMCMCSettingsLog() const
 {
-    return mInitLog;
+    QString log;
+    int i =0;
+    foreach (const ChainSpecs chain, mChains) {
+            ++i;
+            log += "<hr>";
+            log += tr("Chain")+ " : " + QString::number(i)+"<br>";
+            log += tr("Seed")+ " : " + QString::number(chain.mSeed)+"<br>";
+            log += tr("Number of burning iterations")+ " : " + QString::number(chain.mBurnIterIndex)+"<br>";//+ " / " + QString::number(chain.mNumBurnIter)+"<br>";
+            log += tr("Number of batches")+ " : " + QString::number(chain.mBatchIndex)+ " / " + QString::number(chain.mMaxBatchs)+"<br>";
+            log += tr("Number of iterations per batches")+ " : " + QString::number(chain.mNumBatchIter)+"<br>";
+            log += tr("Number of running iterations")+ " : " + QString::number(chain.mRunIterIndex)+"<br>";//+ " / " + QString::number(chain.mNumRunIter)+"<br>";
+            log += tr("Thinning Interval")+ " : " + QString::number(chain.mThinningInterval)+"<br>";
+            log += tr("Total iterations")+ " : " + QString::number(chain.mTotalIter)+"<br>";
+            log += tr("Mixing level")+ " : " + QString::number(chain.mMixingLevel)+"<br>";
+     }
+
+    return log;
+}
+const QString MCMCLoop::getInitLog() const
+{
+    const QString log = getMCMCSettingsLog() + mInitLog;
+    return log;
 }
 
 void MCMCLoop::run()
@@ -86,13 +108,13 @@ void MCMCLoop::run()
     for(mChainIndex = 0; mChainIndex < mChains.size(); ++mChainIndex)
     {        
         log += "<hr>";
-        log += line("Chain : " + QString::number(mChainIndex + 1) + "/" + QString::number(mChains.size()));
+        //log += line("Chain : " + QString::number(mChainIndex + 1) + "/" + QString::number(mChains.size()));
 
         ChainSpecs& chain = mChains[mChainIndex];
         Generator::initGenerator(chain.mSeed);
         
-        log += line("Seed : " + QString::number(chain.mSeed));
-        seeds << QString::number(chain.mSeed);
+        //log += line("Seed : " + QString::number(chain.mSeed));
+        //seeds << QString::number(chain.mSeed);
         
         this->initVariablesForChain();
         
@@ -198,7 +220,7 @@ void MCMCLoop::run()
                 break;
             }
         }
-        log += line("Adapt OK at batch : " + QString::number(chain.mBatchIndex) + "/" + QString::number(chain.mMaxBatchs));
+        //log += line("Adapt OK at batch : " + QString::number(chain.mBatchIndex) + "/" + QString::number(chain.mMaxBatchs));
         
        /* QTime endAdaptTime = QTime::currentTime();
         timeDiff = startAdaptTime.msecsTo(endAdaptTime);

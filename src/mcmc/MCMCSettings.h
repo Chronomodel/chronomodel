@@ -28,6 +28,7 @@ struct ChainSpecs
     unsigned long mRunIterIndex;
     unsigned long mTotalIter; // burn + adapt + run
     unsigned long mThinningInterval;
+    double mMixingLevel;
 };
 
 

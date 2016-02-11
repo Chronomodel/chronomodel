@@ -64,14 +64,14 @@ void MCMCSettings::restoreDefault()
 MCMCSettings MCMCSettings::fromJson(const QJsonObject& json)
 {
     MCMCSettings settings;
-    settings.mNumChains = json.contains(STATE_MCMC_NUM_CHAINS) ? json[STATE_MCMC_NUM_CHAINS].toInt() : MCMC_NUM_CHAINS_DEFAULT;
-    settings.mNumRunIter = json.contains(STATE_MCMC_NUM_RUN_ITER) ? json[STATE_MCMC_NUM_RUN_ITER].toInt() : MCMC_NUM_RUN_DEFAULT;
-    settings.mNumBurnIter = json.contains(STATE_MCMC_NUM_BURN_ITER) ? json[STATE_MCMC_NUM_BURN_ITER].toInt() : MCMC_NUM_BURN_DEFAULT;
-    settings.mMaxBatches = json.contains(STATE_MCMC_MAX_ADAPT_BATCHES) ? json[STATE_MCMC_MAX_ADAPT_BATCHES].toInt() : MCMC_MAX_ADAPT_BATCHES_DEFAULT;
-    settings.mNumBatchIter = json.contains(STATE_MCMC_ITER_PER_BATCH) ? json[STATE_MCMC_ITER_PER_BATCH].toInt() : MCMC_ITER_PER_BATCH_DEFAULT;
-    settings.mThinningInterval = json.contains(STATE_MCMC_THINNING_INTERVAL) ? json[STATE_MCMC_THINNING_INTERVAL].toInt() : MCMC_THINNING_INTERVAL_DEFAULT;
-    settings.mMixingLevel = json.contains(STATE_MCMC_MIXING) ? json[STATE_MCMC_MIXING].toDouble() : MCMC_MIXING_DEFAULT;
-    QJsonArray seeds = json[STATE_MCMC_SEEDS].toArray();
+    settings.mNumChains = json.contains(STATE_MCMC_NUM_CHAINS) ? json.value(STATE_MCMC_NUM_CHAINS).toInt() : MCMC_NUM_CHAINS_DEFAULT;
+    settings.mNumRunIter = json.contains(STATE_MCMC_NUM_RUN_ITER) ? json.value(STATE_MCMC_NUM_RUN_ITER).toInt() : MCMC_NUM_RUN_DEFAULT;
+    settings.mNumBurnIter = json.contains(STATE_MCMC_NUM_BURN_ITER) ? json.value(STATE_MCMC_NUM_BURN_ITER).toInt() : MCMC_NUM_BURN_DEFAULT;
+    settings.mMaxBatches = json.contains(STATE_MCMC_MAX_ADAPT_BATCHES) ? json.value(STATE_MCMC_MAX_ADAPT_BATCHES).toInt() : MCMC_MAX_ADAPT_BATCHES_DEFAULT;
+    settings.mNumBatchIter = json.contains(STATE_MCMC_ITER_PER_BATCH) ? json.value(STATE_MCMC_ITER_PER_BATCH).toInt() : MCMC_ITER_PER_BATCH_DEFAULT;
+    settings.mThinningInterval = json.contains(STATE_MCMC_THINNING_INTERVAL) ? json.value(STATE_MCMC_THINNING_INTERVAL).toInt() : MCMC_THINNING_INTERVAL_DEFAULT;
+    settings.mMixingLevel = json.contains(STATE_MCMC_MIXING) ? json.value(STATE_MCMC_MIXING).toDouble() : MCMC_MIXING_DEFAULT;
+    QJsonArray seeds = json.value(STATE_MCMC_SEEDS).toArray();
     for(int i=0; i<seeds.size(); ++i)
         settings.mSeeds.append(seeds.at(i).toInt());
     
@@ -121,7 +121,7 @@ QList<ChainSpecs> MCMCSettings::getChains() const
         chain.mRunIterIndex = 0;
         chain.mTotalIter = 0;
         chain.mThinningInterval = mThinningInterval;
-        
+        chain.mMixingLevel = mMixingLevel;
         chains.append(chain);
     }
     return chains;
