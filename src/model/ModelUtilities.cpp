@@ -499,13 +499,13 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
             short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTheta.mHPD, model);
             switch (position) {
                 case -1:
-                   text += line( textBold(textBlack(QObject::tr("Solutions exist under study period") )) ) + "<br>";
+                   text += line( textBold(textBlack(QObject::tr("Solutions exist before study period") )) ) + "<br>";
                     break;
                 case +1:
-                    text += line( textBold(textBlack(QObject::tr("Solutions exist over study period"))) ) + "<br>";
+                    text += line( textBold(textBlack(QObject::tr("Solutions exist after study period"))) ) + "<br>";
                     break;
                 case +2:
-                    text += line( textBold(textBlack(QObject::tr("Solutions exist under and over study period"))) ) + "<br>";
+                    text += line( textBold(textBlack(QObject::tr("Solutions exist outside study period"))) ) + "<br>";
                     break;
                 default:
                     break;
@@ -586,8 +586,8 @@ short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double>& hpd, cons
 {
     QMap<double, double>::const_iterator iter(hpd.constBegin());
     short answer = 0;
-    const double tmin = model->mSettings.mTmin;
-    const double tmax = model->mSettings.mTmax;
+    const double tmin = model->mSettings.getTminFormated();
+    const double tmax = model->mSettings.getTmaxFormated();
     // we suppose QMap is sort <
     while(iter != hpd.constEnd()) {
         const double v = iter.value();
