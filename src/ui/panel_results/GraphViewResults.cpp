@@ -97,8 +97,8 @@ mHeightForVisibleAxis(100)
     connect(mResultsClipBut, SIGNAL(clicked()), this, SLOT(resultsToClipboard()));
     connect(mDataSaveBut, SIGNAL(clicked()), this, SLOT(saveGraphData()));
 
-    connect(this, &GraphViewResults::setGraphsThickness, mGraph, &GraphView::updateCurvesThickness);
-    
+    //connect(this, &GraphViewResults::setGraphsThickness, mGraph, &GraphView::updateCurvesThickness);
+
     setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
         
 }
