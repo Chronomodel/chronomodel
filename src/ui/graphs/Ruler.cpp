@@ -279,16 +279,16 @@ void Ruler::paintEvent(QPaintEvent* e)
     
     for(int i=0; i<mAreas.size(); ++i)
     {
-        if(mAreas[i].mStart < mCurrentMax && mAreas[i].mStop > mCurrentMin)
+        if(mAreas.at(i).mStart < mCurrentMax && mAreas.at(i).mStop > mCurrentMin)
         {
-            double x1 = w * (mAreas[i].mStart - mCurrentMin) / (mCurrentMax - mCurrentMin);
+            double x1 = w * (mAreas.at(i).mStart - mCurrentMin) / (mCurrentMax - mCurrentMin);
             x1 = (x1 < 0) ? 0 : x1;
             double x2 = w;
-            if(mAreas[i].mStop < mCurrentMax)
-                x2 = w * (mAreas[i].mStop - mCurrentMin) / (mCurrentMax - mCurrentMin);
+            if(mAreas.at(i).mStop < mCurrentMax)
+                x2 = w * (mAreas.at(i).mStop - mCurrentMin) / (mCurrentMax - mCurrentMin);
             
-            painter.setPen(mAreas[i].mColor);
-            painter.setBrush(mAreas[i].mColor);
+            painter.setPen(mAreas.at(i).mColor);
+            painter.setBrush(mAreas.at(i).mColor);
             painter.drawRect(mRulerRect.x() + x1, mRulerRect.y(), x2 - x1, mRulerRect.height());
         }
     }
