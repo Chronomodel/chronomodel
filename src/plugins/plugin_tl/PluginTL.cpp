@@ -22,23 +22,23 @@ PluginTL::~PluginTL()
 
 long double PluginTL::getLikelihood(const double& t, const QJsonObject& data)
 {
-    double age = data.value(DATE_TL_AGE_STR).toDouble();
-    long double error = (long double)data.value(DATE_TL_ERROR_STR).toDouble();
-    double ref_year = data.value(DATE_TL_REF_YEAR_STR).toDouble();
+    const double age = data.value(DATE_TL_AGE_STR).toDouble();
+    const long double error = (long double)data.value(DATE_TL_ERROR_STR).toDouble();
+    const double ref_year = data.value(DATE_TL_REF_YEAR_STR).toDouble();
     
-    // gaussienne TL
-    long double v = expl(-0.5f * powl((long double)(age - (ref_year - t)) / error, 2.l)) / error;
+    // gaussian TL
+    const long double v = expl(-0.5f * powl((long double)(age - (ref_year - t)) / error, 2.l)) / error;
     return v;
 }
 
 QPair<long double, long double> PluginTL::getLikelihoodArg(const double& t, const QJsonObject& data)
 {
     QPair<long double, long double> result;
-    double age = data.value(DATE_TL_AGE_STR).toDouble();
-    long double error = (long double)data.value(DATE_TL_ERROR_STR).toDouble();
-    double ref_year = data.value(DATE_TL_REF_YEAR_STR).toDouble();
+    const double age = data.value(DATE_TL_AGE_STR).toDouble();
+    const double error = data.value(DATE_TL_ERROR_STR).toDouble();
+    const double ref_year = data.value(DATE_TL_REF_YEAR_STR).toDouble();
     
-    // gaussienne TL
+    // gaussian TL
     result= QPair<long double,long double>(1/(error*error), (-0.5f * powl((long double)(age - (ref_year - t)) / error, 2.l))) ;
     return result;
 }
@@ -85,13 +85,25 @@ PluginFormAbstract* PluginTL::getForm()
     return form;
 }
 
+#pragma mark Convert old project versions
+QJsonObject PluginTL::checkValuesCompatibility(const QJsonObject& values)
+{
+    QJsonObject result = values;
+
+    //force type double
+    result[DATE_TL_AGE_STR] = result.value(DATE_TL_AGE_STR).toDouble();
+    result[DATE_TL_ERROR_STR] = result.value(DATE_TL_ERROR_STR).toDouble();
+    result[DATE_TL_REF_YEAR_STR] = result.value(DATE_TL_REF_YEAR_STR).toDouble();
+
+    return result;
+}
 QJsonObject PluginTL::fromCSV(const QStringList& list, const QLocale& csvLocale)
 {
     QJsonObject json;
     if(list.size() >= csvMinColumns())
     {
         json.insert(DATE_TL_AGE_STR, csvLocale.toDouble(list.at(1)));
-        double error = csvLocale.toDouble(list.at(2));
+        const double error = csvLocale.toDouble(list.at(2));
         if(error == 0) return QJsonObject();
         json.insert(DATE_TL_ERROR_STR, error);
         json.insert(DATE_TL_REF_YEAR_STR, csvLocale.toDouble(list.at(3)));
@@ -110,7 +122,7 @@ QStringList PluginTL::toCSV(const QJsonObject& data, const QLocale& csvLocale) c
 
 QString PluginTL::getDateDesc(const Date* date) const
 {
-    QLocale locale=QLocale();
+    const QLocale locale=QLocale();
     QString result;
     if(date)
     {
@@ -124,14 +136,14 @@ QString PluginTL::getDateDesc(const Date* date) const
 
 QPair<double,double> PluginTL::getTminTmaxRefsCurve(const QJsonObject& data) const
 {
-    double age = data.value(DATE_TL_AGE_STR).toDouble();
-    double error = data.value(DATE_TL_ERROR_STR).toDouble();
-    double ref_year = data.value(DATE_TL_REF_YEAR_STR).toDouble();
+    const double age = data.value(DATE_TL_AGE_STR).toDouble();
+    const double error = data.value(DATE_TL_ERROR_STR).toDouble();
+    const double ref_year = data.value(DATE_TL_REF_YEAR_STR).toDouble();
     
-    double k = 5;
+    const double k = 5;
     
-    double tmin = ref_year - age - k * error;
-    double tmax = ref_year - age + k * error;
+    const double tmin = ref_year - age - k * error;
+    const double tmax = ref_year - age + k * error;
     
     return qMakePair<double,double>(tmin, tmax);
 }

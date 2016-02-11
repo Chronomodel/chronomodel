@@ -81,15 +81,18 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
         }
         else if(mode == DATE_GAUSS_MODE_EQ)
         {
+            QMap<double,double> refCurve;
             for(double t=tminDisplay; t<=tmaxDisplay; t+=mSettings.mStep) {
                 const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
-                curve.mData[t] = a * tRaw * tRaw + b * tRaw + c;
+                refCurve[t] = a * tRaw * tRaw + b * tRaw + c;
+                //curve.mData[t] = a * tRaw * tRaw + b * tRaw + c;
             }
+            curve.mData = refCurve;
             mGraph->addCurve(curve);
             
             // Adjust scale :
-            yMin = map_min_value(curve.mData);
-            yMax = map_max_value(curve.mData);
+            yMin = map_min_value(refCurve);//curve.mData);
+            yMax = map_max_value(refCurve);//curve.mData);
         }
         else if(mode == DATE_GAUSS_MODE_CURVE)
         {
@@ -204,14 +207,17 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             // 5000 pts are used on vertical measure
             // because the y scale auto adjusts depending on x zoom.
             // => the visible part of the measure may be very reduced !
-            double step = (yMax - yMin) / 5000.;
+            const double step = (yMax - yMin) / 5000.;
+            QMap<double,double> measureCurve;
             for(double t=yMin; t<yMax; t += step)
             {
                 double v = exp(-0.5 * pow((t - age) / error, 2));
-                curveMeasure.mData[t] = v;
+                //curveMeasure.mData[t] = v;
+                measureCurve[t] = v;
             }
-            curveMeasure.mData = normalize_map(curveMeasure.mData);
-            
+            measureCurve = normalize_map(measureCurve);
+            //curveMeasure.mData = normalize_map(curveMeasure.mData);
+            curveMeasure.mData = measureCurve;
             mGraph->addCurve(curveMeasure);
 
             // Write measure value :

@@ -28,8 +28,8 @@ public:
     
     static double getStep(const double tmin, const double tmax);
 
-    double getTminFormated();
-    double getTmaxFormated();
+    double getTminFormated() const;
+    double getTmaxFormated() const ;
 
 public:
     int mTmin;

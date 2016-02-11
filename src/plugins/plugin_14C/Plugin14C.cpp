@@ -138,8 +138,8 @@ QJsonObject Plugin14C::fromCSV(const QStringList& list, const QLocale &csvLocale
         json.insert(DATE_14C_REF_CURVE_STR, list.at(3).toLower());
         
         // These columns are nor mandatory in the CSV file so check if they exist :
-        json.insert(DATE_14C_DELTA_R_STR, (list.size() > 4) ? csvLocale.toDouble(list.at(4)) : 0);
-        json.insert(DATE_14C_DELTA_R_ERROR_STR, (list.size() > 5) ? csvLocale.toDouble(list.at(5)) : 0);
+        json.insert(DATE_14C_DELTA_R_STR, (list.size() > 4) ? csvLocale.toDouble(list.at(4)) : 0.f);
+        json.insert(DATE_14C_DELTA_R_ERROR_STR, (list.size() > 5) ? csvLocale.toDouble(list.at(5)) : 0.f);
 
     }
     return json;
@@ -313,11 +313,15 @@ QJsonObject Plugin14C::checkValuesCompatibility(const QJsonObject& values)
     QJsonObject result = values;
 
     if(result.find(DATE_14C_DELTA_R_STR) == result.end())
-        result[DATE_14C_DELTA_R_STR] = 0;
+        result[DATE_14C_DELTA_R_STR] = 0.0f;
     
     if(result.find(DATE_14C_DELTA_R_ERROR_STR) == result.end())
-        result[DATE_14C_DELTA_R_ERROR_STR] = 0;
-    
+        result[DATE_14C_DELTA_R_ERROR_STR] = 0.0f;
+
+    // must be a double
+    result[DATE_14C_DELTA_R_STR] = result.value(DATE_14C_DELTA_R_STR).toDouble() ;
+    result[DATE_14C_DELTA_R_ERROR_STR] = result.value(DATE_14C_DELTA_R_ERROR_STR).toDouble() ;
+
     // Force curve name to lower case :
     result[DATE_14C_REF_CURVE_STR] = result.value(DATE_14C_REF_CURVE_STR).toString().toLower();
     
@@ -458,8 +462,8 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
         const QJsonObject mergedData = result.value(STATE_DATE_DATA).toObject();
         mergedData[DATE_14C_AGE_STR] = sum_mi_vi / sum_1_vi;
         mergedData[DATE_14C_ERROR_STR] = sqrt(1 / sum_1_vi);
-        mergedData[DATE_14C_DELTA_R_STR] = 0;
-        mergedData[DATE_14C_DELTA_R_ERROR_STR] = 0;
+        mergedData[DATE_14C_DELTA_R_STR] = 0.f;
+        mergedData[DATE_14C_DELTA_R_ERROR_STR] = 0.f;
         
         qDebug() << mergedData;
         

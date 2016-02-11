@@ -68,6 +68,8 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
     //  Reset the graph object settings
     // ------------------------------------------------
     mGraph->removeAllCurves();
+    mGraph->reserveCurves(6);
+
     mGraph->removeAllZones();
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
@@ -96,7 +98,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         if(typeGraph == ePostDistrib)
         {
             mGraph->setRangeY(0, 0.0001f);
-            
+
             // ------------------------------------------------
             //  Possible Curves :
             //  - Post Distrib All Chains
@@ -109,6 +111,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             if(variable == eTheta)
             {
                 mTitle = QString(tr("Data") + " : " + mDate->mName);
+
 
                 mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
                 mGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
@@ -142,7 +145,8 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 
                 
                 // Calibration
-                GraphCurve curveCalib = generateDensityCurve(mDate->getFormatedCalibMap(),
+                QMap<double,double> formatedCalib = mDate->getFormatedCalibMap();
+                GraphCurve curveCalib = generateDensityCurve(formatedCalib,
                                                              "Calibration",
                                                              QColor(150, 150, 150),
                                                              Qt::SolidLine,

@@ -206,7 +206,8 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         // 5000 pts are used on vertical measure
         // because the y scale auto adjusts depending on x zoom.
         // => the visible part of the measure may be very reduced !
-        double yStep = (yMax - yMin) / 5000.;
+        const double yStep = (yMax - yMin) / 5000.;
+        QMap<double,double> measureCurve;
         for(double t=yMin; t<yMax; t+=yStep)
         {
             double v = 0.f;
@@ -222,9 +223,12 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
             {
                 v = exp(-0.5f * pow((t - intensity) / error, 2));
             }
-            curveMeasure.mData[t] = v;
+            //curveMeasure.mData[t] = v;
+            measureCurve[t] = v;
         }
-        curveMeasure.mData = normalize_map(curveMeasure.mData);
+        measureCurve = normalize_map(measureCurve);
+        curveMeasure.mData = measureCurve;
+        //curveMeasure.mData = normalize_map(curveMeasure.mData);
         mGraph->addCurve(curveMeasure);
         
         // Write measure values :

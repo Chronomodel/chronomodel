@@ -340,7 +340,7 @@ void ModelView::updateProject()
     
     Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
-    ProjectSettings settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+    const ProjectSettings settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
    
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;

@@ -58,15 +58,7 @@ QPair<long double, long double> PluginGauss::getLikelihoodArg(const double& t, c
 
     if(mode == DATE_GAUSS_MODE_CURVE) {
         const QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
-        QHash<QString, RefCurve>::const_iterator curve = mRefCurves.constFind(ref_curve);
-        /*if(t < curve->mTmin  || t > curve->mTmax) {
-           exponent = 0;  // it means : age == refValue
-        }
-        else {
-            //double refValue = getRefValueAt(data, t);
-            double refValue = getRefCurveValueAt(ref_curve, t);
-            exponent = -0.5f * pow((long double)(age - refValue), 2.l) / variance;
-        }*/
+
         double refValue = getRefCurveValueAt(ref_curve, t);
         exponent = -0.5f * pow((long double)(age - refValue), 2.l) / variance;
       }
@@ -523,6 +515,14 @@ QJsonObject PluginGauss::checkValuesCompatibility(const QJsonObject& values)
     if(!values.contains(DATE_GAUSS_MODE_STR)){
         result.insert(DATE_GAUSS_MODE_STR, QString(DATE_GAUSS_MODE_EQ));
     }
+    //force type double
+    result[DATE_GAUSS_AGE_STR] = result.value(DATE_GAUSS_AGE_STR).toDouble();
+    result[DATE_GAUSS_ERROR_STR] = result.value(DATE_GAUSS_ERROR_STR).toDouble();
+
+    result[DATE_GAUSS_A_STR] = result.value(DATE_GAUSS_A_STR).toDouble();
+    result[DATE_GAUSS_B_STR] = result.value(DATE_GAUSS_B_STR).toDouble();
+    result[DATE_GAUSS_C_STR] = result.value(DATE_GAUSS_C_STR).toDouble();
+    result[DATE_GAUSS_CURVE_STR] = result.value(DATE_GAUSS_CURVE_STR).toString().toLower();
     return result;
 }
 

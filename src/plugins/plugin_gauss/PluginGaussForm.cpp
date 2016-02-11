@@ -100,14 +100,14 @@ PluginGaussForm::~PluginGaussForm()
 
 void PluginGaussForm::setData(const QJsonObject& data, bool isCombined)
 {
-    QLocale locale=QLocale();
-    double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
-    double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
-    double a = data.value(DATE_GAUSS_A_STR).toDouble();
-    double b = data.value(DATE_GAUSS_B_STR).toDouble();
-    double c = data.value(DATE_GAUSS_C_STR).toDouble();
-    QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
-    QString curve = data.value(DATE_GAUSS_CURVE_STR).toString();
+    const QLocale locale=QLocale();
+    const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
+    const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
+    const double a = data.value(DATE_GAUSS_A_STR).toDouble();
+    const double b = data.value(DATE_GAUSS_B_STR).toDouble();
+    const double c = data.value(DATE_GAUSS_C_STR).toDouble();
+    const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
+    const QString curve = data.value(DATE_GAUSS_CURVE_STR).toString();
     
     mAverageEdit->setText(locale.toString(age));
     mErrorEdit->setText(locale.toString(error));
@@ -133,20 +133,20 @@ void PluginGaussForm::updateVisibleElements()
 QJsonObject PluginGaussForm::getData()
 {
     QJsonObject data;
-    QLocale locale=QLocale();
+    const QLocale locale=QLocale();
     
-    double age = locale.toDouble(mAverageEdit->text());
-    double error = locale.toDouble(mErrorEdit->text());
-    double a = locale.toDouble(mAEdit->text());
-    double b = locale.toDouble(mBEdit->text());
-    double c = locale.toDouble(mCEdit->text());
+    const double age = locale.toDouble(mAverageEdit->text());
+    const double error = locale.toDouble(mErrorEdit->text());
+    const double a = locale.toDouble(mAEdit->text());
+    const double b = locale.toDouble(mBEdit->text());
+    const double c = locale.toDouble(mCEdit->text());
     
     QString mode = "";
     if(mCurveRadio->isChecked()) mode = DATE_GAUSS_MODE_CURVE;
     else if(mEquationRadio->isChecked()) mode = DATE_GAUSS_MODE_EQ;
     else if(mNoneRadio->isChecked()) mode = DATE_GAUSS_MODE_NONE;
     
-    QString curve = mCurveCombo->currentText();
+    const QString curve = mCurveCombo->currentText();
     
     data.insert(DATE_GAUSS_AGE_STR, age);
     data.insert(DATE_GAUSS_ERROR_STR, error);
@@ -162,8 +162,8 @@ QJsonObject PluginGaussForm::getData()
 void PluginGaussForm::errorIsValid(QString str)
 {
     bool ok;
-    QLocale locale;
-    double value = locale.toDouble(str,&ok);
+    const QLocale locale;
+    const double value = locale.toDouble(str,&ok);
 
     emit PluginFormAbstract::OkEnabled(ok && (value>0) );
 }
@@ -172,11 +172,11 @@ void PluginGaussForm::equationIsValid()
 {
     if(mEquationRadio->isChecked()) {
         bool oka,okb;
-        QLocale locale;
-        double a = locale.toDouble(mAEdit->text(),&oka);
+        const QLocale locale;
+        const double a = locale.toDouble(mAEdit->text(),&oka);
         if(a == 0) oka = false;
 
-        double b = locale.toDouble(mBEdit->text(),&okb);
+        const double b = locale.toDouble(mBEdit->text(),&okb);
         if(b == 0) okb = false;
 
         emit PluginFormAbstract::OkEnabled(oka || okb);

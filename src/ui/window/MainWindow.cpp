@@ -53,22 +53,23 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     
     connect(mProjectSaveAction, SIGNAL(triggered()), this, SLOT(saveProject()));
     connect(mProjectSaveAsAction, SIGNAL(triggered()), this, SLOT(saveProjectAs()));
+
     connect(mMCMCSettingsAction, SIGNAL(triggered()), mProject, SLOT(mcmcSettings()));
     connect(mResetMCMCAction, SIGNAL(triggered()), mProject, SLOT(resetMCMC()));
     connect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
     connect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));
     
-    connect(mProject, &Project::noResult, this, &MainWindow::noResult);
-    
-    connect(mProject, SIGNAL(projectStateChanged()), this, SLOT(updateProject()));
+
     connect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
     
     connect(mViewLogAction, SIGNAL(triggered()), mProjectView, SLOT(showLog()));
-    
-    connect(mProject, SIGNAL(mcmcFinished(Model*)), this, SLOT(mcmcFinished(Model*)));
-    
+
     connect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
 
+    connect(mProject, &Project::noResult, this, &MainWindow::noResult);
+    connect(mProject, &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
+    connect(mProject, &Project::projectStateChanged, this, &MainWindow::updateProject);
+    connect(mProject, &Project::projectStructureChanged, this, &MainWindow::noResult);
     connect(mProject, &Project::projectDesignChanged, mProjectView, &ProjectView::changeDesign);
 
     
@@ -489,7 +490,7 @@ void MainWindow::updateWindowTitle()
 
 void MainWindow::updateProject(){
     //bool valid = (mProject->getInvalidDates().size() == 0);
-    mRunAction->setEnabled(true);//valid);
+    mRunAction->setEnabled(true);
     mProjectView->updateProject();
 }
 

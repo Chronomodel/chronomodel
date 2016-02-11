@@ -44,8 +44,8 @@ public:
     // These functions do not make any calculation
     // -----
     
-    const QMap<double, double>& fullHisto() const;
-    const QMap<double, double>& histoForChain(int index) const;
+    QMap<double, double>& fullHisto();
+    QMap<double, double>& histoForChain(int index);
     
     // Full trace for the chain (burn + adapt + run)
     QVector<double> fullTraceForChain(const QList<ChainSpecs> &chains, int index);
@@ -65,7 +65,7 @@ public:
                                   const QString& unit = QString(),
                                   FormatFunc formatFunc = 0) const;
     
-    QStringList getResultsList(const QLocale locale);
+    QStringList getResultsList(const QLocale locale, const bool withDateFormat = true);
     // -----
     
 private:

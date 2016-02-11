@@ -50,6 +50,8 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     //  Reset the graph object settings
     // ------------------------------------------------
     mGraph->removeAllCurves();
+    mGraph->reserveCurves(6);
+
     mGraph->removeAllZones();
     mGraph->clearInfos();
     mGraph->resetNothingMessage();

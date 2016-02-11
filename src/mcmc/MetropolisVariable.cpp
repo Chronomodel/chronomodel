@@ -116,9 +116,9 @@ float* MetropolisVariable::generateBufferForHisto(QVector<double>& dataSrc, int 
     // Work with "double" precision here !
     // Otherwise, "denum" can be very large and lead to infinity contribs!
     
-    double delta = (b - a) / (numPts - 1);
+    const double delta = (b - a) / (numPts - 1);
 
-    double denum = dataSrc.size();
+    const double denum = dataSrc.size();
     
     float* input = (float*) fftwf_malloc(numPts * sizeof(float));
     
@@ -129,14 +129,14 @@ float* MetropolisVariable::generateBufferForHisto(QVector<double>& dataSrc, int 
     QVector<double>::const_iterator iter = dataSrc.begin();
     for(; iter != dataSrc.end(); ++iter)
     {
-        double t = *iter;
+        const double t = *iter;
         
-        double idx = (t - a) / delta;
-        double idx_under = floor(idx);
-        double idx_upper = idx_under + 1.;
+        const double idx = (t - a) / delta;
+        const double idx_under = floor(idx);
+        const double idx_upper = idx_under + 1.;
         
-        float contrib_under = (idx_upper - idx) / denum;
-        float contrib_upper = (idx - idx_under) / denum;
+        const float contrib_under = (idx_upper - idx) / denum;
+        const float contrib_upper = (idx - idx_under) / denum;
         
         if(std::isinf(contrib_under) || std::isinf(contrib_upper))
         {
@@ -246,9 +246,9 @@ QMap<double, double> MetropolisVariable::generateHisto(QVector<double>& dataSrc,
                   tEnd = tmax;
               break;
         }
-        double delta = (b - a) / fftLen;
+        const double delta = (b - a) / fftLen;
         for(int i=0; i<inputSize; ++i) {
-             double t = a + (double)i * delta;
+             const double t = a + (double)i * delta;
              result[t] = input[i];
         }
 
@@ -257,8 +257,11 @@ QMap<double, double> MetropolisVariable::generateHisto(QVector<double>& dataSrc,
 
         fftwf_free(input);
         fftwf_free(output);
+        *input = 0;
+        *output = 0;
         fftwf_destroy_plan(plan_forward);
         fftwf_destroy_plan(plan_backward);
+
         result = equal_areas(result, 1.); // normalize the output area du to the fftw and the case (t >= tmin && t<= tmax)
     }
     return result; // return a map between a and b with a step delta = (b - a) / fftLen;
@@ -269,7 +272,7 @@ void MetropolisVariable::generateHistos(const QList<ChainSpecs>& chains, const i
 {
     QVector<double> subFullTrace = fullRunTrace(chains);
     mHisto = generateHisto(subFullTrace, fftLen, hFactor, tmin, tmax);
- 
+
     mChainsHistos.clear();
     for(int i=0; i<chains.size(); ++i)
     {
@@ -323,7 +326,7 @@ void MetropolisVariable::generateCredibility(const QList<ChainSpecs> &chains, do
 void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
 {
     int hmax = 40;
-    
+    mCorrelations.clear();
     for(int c=0; c<chains.size(); ++c)
     {
         // Return the acquisition part of the trace
@@ -400,12 +403,12 @@ void MetropolisVariable::generateNumericalResults(const QList<ChainSpecs> &chain
 }
 
 #pragma mark getters (no calculs)
-const QMap<double, double>& MetropolisVariable::fullHisto() const
+QMap<double, double>& MetropolisVariable::fullHisto()
 {
     return mHisto;
 }
 
-const QMap<double, double>& MetropolisVariable::histoForChain(int index) const
+QMap<double, double>& MetropolisVariable::histoForChain(int index)
 {
     Q_ASSERT(index < mChainsHistos.size());
     return mChainsHistos[index];
@@ -540,27 +543,54 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
     return result;
 }
 
-QStringList MetropolisVariable::getResultsList(const QLocale locale)
+QStringList MetropolisVariable::getResultsList(const QLocale locale, const bool withDateFormat)
 {
     QStringList list;
-    list << locale.toString(DateUtils::convertToAppSettingsFormat(mResults.analysis.mode));
-    list << locale.toString(DateUtils::convertToAppSettingsFormat(mResults.analysis.mean));
-    list << DateUtils::dateToString(mResults.analysis.stddev);
-    list << locale.toString(DateUtils::convertToAppSettingsFormat(mResults.quartiles.Q1));
-    list << locale.toString(DateUtils::convertToAppSettingsFormat(mResults.quartiles.Q2));
-    list << locale.toString(DateUtils::convertToAppSettingsFormat(mResults.quartiles.Q3));
-    list << locale.toString(mExactCredibilityThreshold * 100.f, 'f', 1);
-    list << locale.toString(DateUtils::convertToAppSettingsFormat(mCredibility.first));
-    list << locale.toString(DateUtils::convertToAppSettingsFormat(mCredibility.second));
-    
-    QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThreshold);
-    QStringList results;
-    for(int i=0; i<intervals.size(); ++i)
-    {
-        list << locale.toString(intervals.at(i).first, 'f', 1);
-        list << locale.toString(DateUtils::convertToAppSettingsFormat(intervals.at(i).second.first));
-        list << locale.toString(DateUtils::convertToAppSettingsFormat(intervals.at(i).second.second));
+    if(withDateFormat) {
+
+        list << locale.toString(mResults.analysis.mode);
+        list << locale.toString(mResults.analysis.mean);
+        list << DateUtils::dateToString(mResults.analysis.stddev);
+        list << locale.toString(mResults.quartiles.Q1);
+        list << locale.toString(mResults.quartiles.Q2);
+        list << locale.toString(mResults.quartiles.Q3);
+        list << locale.toString(mExactCredibilityThreshold * 100.f, 'f', 1);
+        list << locale.toString(mCredibility.first);
+        list << locale.toString(mCredibility.second);
+
+        QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThreshold);
+        QStringList results;
+        for(int i=0; i<intervals.size(); ++i)
+        {
+            list << locale.toString(intervals.at(i).first, 'f', 1);
+            list << locale.toString(intervals.at(i).second.first);
+            list << locale.toString(intervals.at(i).second.second);
+        }
+
     }
+    else {
+        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.analysis.mode));
+        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.analysis.mean));
+        list << DateUtils::dateToString(mResults.analysis.stddev);
+        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.quartiles.Q1));
+        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.quartiles.Q2));
+        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.quartiles.Q3));
+        list << locale.toString(mExactCredibilityThreshold * 100.f, 'f', 1);
+        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mCredibility.first));
+        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mCredibility.second));
+
+        QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThreshold);
+        QStringList results;
+        for(int i=0; i<intervals.size(); ++i)
+        {
+            list << locale.toString(intervals.at(i).first, 'f', 1);
+            list << locale.toString(DateUtils::convertFromAppSettingsFormat(intervals.at(i).second.first));
+            list << locale.toString(DateUtils::convertFromAppSettingsFormat(intervals.at(i).second.second));
+        }
+    }
+
+
+
     return list;
 }
 

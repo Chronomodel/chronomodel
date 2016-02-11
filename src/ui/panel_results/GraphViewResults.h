@@ -54,13 +54,13 @@ public:
     
     GraphView* mGraph;
     
-    GraphCurve generateDensityCurve(const QMap<double, double>& data,
+    GraphCurve generateDensityCurve(QMap<double, double> &data,
                                     const QString& name,
                                     const QColor& lineColor,
                                     const Qt::PenStyle penStyle = Qt::SolidLine,
                                     const QBrush& brush = Qt::NoBrush) const;
     
-    GraphCurve generateHPDCurve(const QMap<double, double>& data,
+    GraphCurve generateHPDCurve(QMap<double, double>& data,
                                 const QString& name,
                                 const QColor& color) const;
     

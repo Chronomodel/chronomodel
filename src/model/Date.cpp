@@ -359,12 +359,12 @@ void Date::calibrate(const ProjectSettings& settings)
 }
 
 
-QMap<double, double> Date::getRawCalibMap() const
+const QMap<double, double> Date::getRawCalibMap() const
 {
     return vector_to_map(mCalibration, mTminCalib, mTmaxCalib, mSettings.mStep);
 }
 
-QMap<double, double> Date::getFormatedCalibMap() const
+const QMap<double, double> Date::getFormatedCalibMap() const
 {
     if(mCalibration.isEmpty()) return QMap<double,double>();
 
@@ -506,7 +506,8 @@ QPixmap Date::generateCalibThumb()
         const double tmax = mSettings.mTmax;
 
         GraphCurve curve;
-        curve.mData = normalize_map(getMapDataInRange(getRawCalibMap(),tmin,tmax));
+        QMap<double,double> calib = normalize_map(getMapDataInRange(getRawCalibMap(),tmin,tmax));
+        curve.mData = calib;
 
         if(curve.mData.isEmpty()) return QPixmap();
 

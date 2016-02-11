@@ -34,7 +34,8 @@ public:
     QJsonObject fromCSV(const QStringList& list, const QLocale &csvLocale);
     QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale) const;
     QString getDateDesc(const Date* date) const;
-    
+    QJsonObject checkValuesCompatibility(const QJsonObject& values);
+
     QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
     
     PluginFormAbstract* getForm();

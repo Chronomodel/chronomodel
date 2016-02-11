@@ -181,12 +181,16 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         // because the y scale auto adjusts depending on x zoom.
         // => the visible part of the measure may be very reduced !
         double step = (yMax - yMin) / 5000.;
+        QMap<double,double> measureCurve;
         for(double t=yMin; t<yMax; t += step)
         {
-            double v = exp(-0.5 * pow((age - t) / error, 2));
-            curveMeasure.mData[t] = v;
+            const double v = exp(-0.5 * pow((age - t) / error, 2));
+            //curveMeasure.mData[t] = v;
+            measureCurve[t] = v;
         }
-        curveMeasure.mData = normalize_map(curveMeasure.mData);
+        measureCurve = normalize_map(measureCurve);
+        //curveMeasure.mData = normalize_map(curveMeasure.mData);
+        curveMeasure.mData = measureCurve;
         mGraph->addCurve(curveMeasure);
         
         // Infos to write :
@@ -221,12 +225,16 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             // because the y scale auto adjusts depending on x zoom.
             // => the visible part of the measure may be very reduced !
             step = (yMax - yMin) / 5000.;
+            QMap<double,double> deltaRCurve;
             for(double t=yMin; t<yMax; t += step)
             {
                 double v = exp(-0.5 * pow((age - t) / error, 2));
-                curveDeltaR.mData[t] = v;
+                deltaRCurve[t] = v;
+                //curveDeltaR.mData[t] = v;
             }
-            curveDeltaR.mData = normalize_map(curveDeltaR.mData);
+            deltaRCurve = normalize_map(deltaRCurve);
+            //curveDeltaR.mData = normalize_map(curveDeltaR.mData);
+            curveDeltaR.mData = deltaRCurve;
             mGraph->addCurve(curveDeltaR);
             
             info += tr(", ΔR : ") + locale.toString(delta_r) + " ± " + locale.toString(delta_r_error);
@@ -235,6 +243,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         // ----------------------------------------------
         //  Sub-dates curves (combination)
         // ----------------------------------------------
+        QList<QMap<double,double>> subDatesCurve;
         for(int i=0; i<date.mSubDates.size(); ++i){
             const Date& d = date.mSubDates.at(i);
             
@@ -266,13 +275,16 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             // 5000 pts are used on vertical measure
             // because the y scale auto adjusts depending on x zoom.
             // => the visible part of the measure may be very reduced !
-            double step = (yMax - yMin) / 5000.;
+            const double step = (yMax - yMin) / 5000.;
+
             for(double t=yMin; t<yMax; t += step)
             {
-                double v = exp(-0.5 * pow((sub_age - t) / sub_error, 2));
-                curveSubMeasure.mData[t] = v;
+                const double v = exp(-0.5 * pow((sub_age - t) / sub_error, 2));
+                //curveSubMeasure.mData[t] = v;
+                subDatesCurve[i][t] = v;
             }
-            curveSubMeasure.mData = normalize_map(curveSubMeasure.mData);
+            subDatesCurve[i] = normalize_map(subDatesCurve[i]);
+            curveSubMeasure.mData = subDatesCurve[i];//normalize_map(curveSubMeasure.mData);
             mGraph->addCurve(curveSubMeasure);
         }
 

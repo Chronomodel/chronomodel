@@ -67,6 +67,17 @@ PluginFormAbstract* PluginUniform::getForm()
     PluginUniformForm* form = new PluginUniformForm(this);
     return form;
 }
+#pragma mark Convert old project versions
+QJsonObject PluginUniform::checkValuesCompatibility(const QJsonObject& values)
+{
+    QJsonObject result = values;
+
+    //force type double
+    result[DATE_UNIFORM_MIN_STR] = result.value(DATE_UNIFORM_MIN_STR).toDouble();
+    result[DATE_UNIFORM_MAX_STR] = result.value(DATE_UNIFORM_MAX_STR).toDouble();
+
+    return result;
+}
 
 QJsonObject PluginUniform::fromCSV(const QStringList& list, const QLocale& csvLocale)
 {

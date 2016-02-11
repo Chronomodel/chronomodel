@@ -70,8 +70,8 @@ public:
     void calibrate(const ProjectSettings& settings);
     double getLikelihoodFromCalib(const double t);
 
-    QMap<double, double> getFormatedCalibMap() const;
-    QMap<double, double> getRawCalibMap() const;
+    const QMap<double, double> getFormatedCalibMap() const;
+    const QMap<double, double> getRawCalibMap() const;
 
     QVector<double> getFormatedRepartition() const;
 

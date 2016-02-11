@@ -62,11 +62,13 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         curve.mName = "Reference";
         curve.mPen.setColor(Painting::mainColorDark);
         curve.mIsHisto = false;
-        
+        QMap<double,double> refCurve;
         for(double t=tminDisplay; t<=tmaxDisplay; t+=mSettings.mStep) {
             const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
-            curve.mData[t] = ref_year - tRaw;
+            //curve.mData[t] = ref_year - tRaw;
+            refCurve[t] = ref_year - tRaw;
         }
+        curve.mData =refCurve;
         mGraph->addCurve(curve);
         
         // ----------------------------------------------
@@ -97,13 +99,17 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         // 5000 pts are used on vertical measure
         // because the y scale auto adjusts depending on x zoom.
         // => the visible part of the measure may be very reduced !
+        QMap<double,double> measureCurve;
         const double step = (yMax - yMin) / 5000.;
         for(double t=yMin; t<yMax; t += step)
         {
             double v = exp(-0.5 * pow((t - age) / error, 2));
-            curveMeasure.mData[t] = v;
+            //curveMeasure.mData[t] = v;
+            measureCurve[t] = v;
         }
-        curveMeasure.mData = normalize_map(curveMeasure.mData);
+        measureCurve = normalize_map(measureCurve);
+        //curveMeasure.mData = normalize_map(curveMeasure.mData);
+        curveMeasure.mData = measureCurve;
         mGraph->addCurve(curveMeasure);
         
         // Write measure value :

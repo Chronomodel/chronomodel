@@ -197,7 +197,7 @@ void CalibrationView::updateGraphs()
 
         // Fill HPD only if not typo :
         mResultsLab->clear();
-        const QMap<double, double> calibMap = mDate.getFormatedCalibMap();
+        QMap<double, double> calibMap = mDate.getFormatedCalibMap();
 
         if(!calibMap.isEmpty())
         {            

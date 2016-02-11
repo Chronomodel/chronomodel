@@ -40,6 +40,7 @@ public:
     QStringList csvColumns() const;
     QJsonObject fromCSV(const QStringList& list, const QLocale &csvLocale) ;
     QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale) const;
+    QJsonObject checkValuesCompatibility(const QJsonObject& values);
 
     QString getDateDesc(const Date* date) const;
     

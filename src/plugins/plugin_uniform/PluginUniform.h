@@ -31,7 +31,7 @@ public:
     QJsonObject fromCSV(const QStringList& list, const QLocale &csvLocale);
     QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale) const;
     QString getDateDesc(const Date* date) const;
-    
+    QJsonObject checkValuesCompatibility(const QJsonObject& values);
     bool isDateValid(const QJsonObject& data, const ProjectSettings& settings);
 
     PluginFormAbstract* getForm();

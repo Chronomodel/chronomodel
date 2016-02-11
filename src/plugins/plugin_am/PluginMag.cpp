@@ -39,10 +39,10 @@ QPair<long double, long double> PluginMag::getLikelihoodArg(const double& t, con
     long double inc = (long double) data.value(DATE_AM_INC_STR).toDouble();
     long double dec = (long double) data.value(DATE_AM_DEC_STR).toDouble();
     long double intensity = (long double) data.value(DATE_AM_INTENSITY_STR).toDouble();
-    QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
+    //QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
     
-    long double mesure = 0;
-    long double error = 0;
+    long double mesure = 0.;
+    long double error = 0.;
     
     if(is_inc)
     {
@@ -59,7 +59,7 @@ QPair<long double, long double> PluginMag::getLikelihoodArg(const double& t, con
         error = alpha;
         mesure = intensity;
     }
-    
+
     long double refValue = (long double)getRefValueAt(data, t);
     long double refError = (long double)getRefErrorAt(data, t);
     
@@ -161,6 +161,20 @@ PluginFormAbstract* PluginMag::getForm()
 {
     PluginMagForm* form = new PluginMagForm(this);
     return form;
+}
+#pragma mark Convert old project versions
+QJsonObject PluginMag::checkValuesCompatibility(const QJsonObject& values)
+{
+    QJsonObject result = values;
+
+    //force type double
+    result[DATE_AM_INC_STR] = result.value(DATE_AM_INC_STR).toDouble();
+    result[DATE_AM_DEC_STR] = result.value(DATE_AM_DEC_STR).toDouble();
+    result[DATE_AM_INTENSITY_STR] = result.value(DATE_AM_INTENSITY_STR).toDouble();
+    result[DATE_AM_ERROR_STR] = result.value(DATE_AM_ERROR_STR).toDouble();
+
+    result[DATE_AM_REF_CURVE_STR] = result.value(DATE_AM_REF_CURVE_STR).toString().toLower();
+    return result;
 }
 
 QJsonObject PluginMag::fromCSV(const QStringList& list,const QLocale &csvLocale)
@@ -311,7 +325,7 @@ double PluginMag::getRefValueAt(const QJsonObject& data, const double& t)
 
 double PluginMag::getRefErrorAt(const QJsonObject& data, const double& t)
 {
-    QString curveName = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
+    const QString curveName = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
     return getRefCurveErrorAt(curveName, t);
 }
 

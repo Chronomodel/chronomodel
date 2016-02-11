@@ -426,9 +426,9 @@ bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QS
     if(file.open(QFile::WriteOnly | QFile::Truncate))
     {
         QTextStream output(&file);
-        QString version = qApp->applicationName() + " " + qApp->applicationVersion();
+        const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
         output<<"# " +version+"\n";
-        QString projectName = MainWindow::getInstance()->getNameProject();
+        const QString projectName = MainWindow::getInstance()->getNameProject();
 
         output<<"# " +projectName+ "\n";
         if(withDateFormat) {

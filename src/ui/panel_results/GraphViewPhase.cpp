@@ -122,6 +122,8 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
     GraphViewResults::generateCurves(typeGraph, variable);
     
     mGraph->removeAllCurves();
+    mGraph->reserveCurves(9);
+
     mGraph->removeAllZones();
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
@@ -129,10 +131,10 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
     mGraph->autoAdjustYScale(typeGraph == eTrace);
     
     mDurationGraph->removeAllCurves();
+    mDurationGraph->reserveCurves(2);
     QPen defaultPen;
     defaultPen.setWidthF(1);
     defaultPen.setStyle(Qt::SolidLine);
-    
     
     if(mPhase)
     {
@@ -189,17 +191,18 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                                                        "HPD Beta All Chains",
                                                        colorBeta);
             
-            GraphCurve curveDuration = generateDensityCurve(mPhase->mDuration.fullHisto(),
-                                                            "Duration",
-                                                            color);
-            mGraph->addCurve(curveBeta);
             mGraph->addCurve(curveAlpha);
+            mGraph->addCurve(curveBeta);
+
             mGraph->addCurve(curveAlphaHPD);
             mGraph->addCurve(curveBetaHPD);
 
-            mDurationGraph->addCurve(curveDuration);
+            GraphCurve curveDuration;
 
-            if(!curveDuration.mData.isEmpty()) {
+            if(! mPhase->mDuration.fullHisto().isEmpty()) {
+                curveDuration = generateDensityCurve(mPhase->mDuration.fullHisto(),
+                                                                "Duration",
+                                                                color);
                 color.setAlpha(255);
                 GraphCurve curveDurationHPD = generateHPDCurve(mPhase->mDuration.mHPD,
                                                                "HPD Duration",
@@ -209,7 +212,11 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                 mDurationGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
                 mDurationGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
             }
-            
+            else {
+                curveDuration.mName = "Duration";
+                curveDuration.mData.clear();
+            }
+            mDurationGraph->addCurve(curveDuration);
             
             for(int i=0; i<mChains.size(); ++i) {
                 GraphCurve curveAlpha = generateDensityCurve(mPhase->mAlpha.histoForChain(i),
@@ -290,12 +297,15 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setTipXLab("t");
             mGraph->setYAxisMode(GraphView::eHidden);
 
-            mDurationGraph->setCurveVisible("Duration", mShowAllChains);
-            mDurationGraph->setCurveVisible("HPD Duration", mShowAllChains);
+            if( !mDurationGraph->getCurve("Duration")->mData.isEmpty()) {
+
+                mDurationGraph->setCurveVisible("Duration", mShowAllChains);
+                mDurationGraph->setCurveVisible("HPD Duration", mShowAllChains);
             
-            mDurationGraph->adjustYToMaxValue();
-            mDurationGraph->setTipXLab("t");
-            mDurationGraph->setYAxisMode(GraphView::eHidden);
+                mDurationGraph->adjustYToMaxValue();
+                mDurationGraph->setTipXLab("t");
+                mDurationGraph->setYAxisMode(GraphView::eHidden);
+            }
 
 
 

@@ -102,9 +102,9 @@ void GraphViewAbstract::setMargins(const int aMarginLeft, const int aMarginRight
 
 #pragma mark Values utilities
 
-qreal GraphViewAbstract::getXForValue(const double aValue, const bool aConstainResult)
+double GraphViewAbstract::getXForValue(const double aValue, const bool aConstainResult)
 {
-	return (qreal)(mMarginLeft + valueForProportion(aValue, mCurrentMinX, mCurrentMaxX, 0.f, (double)mGraphWidth, aConstainResult));
+    return (double)(mMarginLeft + valueForProportion(aValue, mCurrentMinX, mCurrentMaxX, 0.f, (double)mGraphWidth, aConstainResult));
 }
 
 qreal GraphViewAbstract::getValueForX(const double x, const bool aConstainResult)
@@ -129,12 +129,8 @@ qreal GraphViewAbstract::getValueForY(const double y, const bool aConstainResult
 double GraphViewAbstract::valueForProportion(const double value, const double valMin, const double valMax, const double Pmin, const double Pmax, const bool resultInBounds)
 {
     double v2 = Pmin + (value - valMin) * (Pmax - Pmin) / (valMax - valMin);
-    //return v2;
     
-	if(resultInBounds)
-	{
-		//v2 = (v2 > v2max) ? v2max : v2;
-		//v2 = (v2 < v2min) ? v2min : v2;
+    if(resultInBounds) {
         v2 = qBound(Pmin,v2,Pmax);
 	}
 	return v2;

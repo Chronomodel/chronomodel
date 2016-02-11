@@ -88,6 +88,7 @@ public:
     void addCurve(const GraphCurve& curve);
     void removeCurve(const QString& name);
     void removeAllCurves();
+    void reserveCurves(const int size);
     void setCurveVisible(const QString& name, const bool visible);
     GraphCurve* getCurve(const QString& name);
     const QList<GraphCurve>& getCurves() const;
