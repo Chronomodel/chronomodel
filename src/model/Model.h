@@ -52,6 +52,7 @@ public:
     // Trace and Posterior density needed for this :
     void generateNumericalResults(const QList<ChainSpecs>& chains);
     
+    void clearTraces();
     void clearPosteriorDensities();
     void clearCredibilityAndHPD();
     

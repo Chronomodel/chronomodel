@@ -57,6 +57,7 @@ Model::~Model()
 
 void Model::clear()
 {
+    this->clearTraces();
     mEvents.clear();
     mPhases.clear();
 
@@ -99,23 +100,23 @@ void Model::fromJson(const QJsonObject& json)
 {
     if(json.contains(STATE_SETTINGS))
     {
-        QJsonObject settings = json.value(STATE_SETTINGS).toObject();
+        const QJsonObject settings = json.value(STATE_SETTINGS).toObject();
         mSettings = ProjectSettings::fromJson(settings);
     }
 
     if(json.contains(STATE_MCMC))
     {
-        QJsonObject mcmc = json.value(STATE_MCMC).toObject();
+        const QJsonObject mcmc = json.value(STATE_MCMC).toObject();
         mMCMCSettings = MCMCSettings::fromJson(mcmc);
         mChains = mMCMCSettings.getChains();
     }
 
     if(json.contains(STATE_PHASES))
     {
-        QJsonArray phases = json.value(STATE_PHASES).toArray();
+        const QJsonArray phases = json.value(STATE_PHASES).toArray();
         for(int i=0; i<phases.size(); ++i)
         {
-            QJsonObject phase = phases[i].toObject();
+            const QJsonObject phase = phases.at(i).toObject();
             Phase* p = new Phase(Phase::fromJson(phase));
             mPhases.append(p);
         }
@@ -126,11 +127,11 @@ void Model::fromJson(const QJsonObject& json)
 
     if(json.contains(STATE_EVENTS))
     {
-        QJsonArray events = json[STATE_EVENTS].toArray();
+        QJsonArray events = json.value(STATE_EVENTS).toArray();
         for(int i=0; i<events.size(); ++i)
         {
-            QJsonObject event = events[i].toObject();
-            if(event[STATE_EVENT_TYPE].toInt() == Event::eDefault)
+            const QJsonObject event = events.at(i).toObject();
+            if(event.value(STATE_EVENT_TYPE).toInt() == Event::eDefault)
             {
                 try{
                     Event* e = new Event(Event::fromJson(event));
@@ -163,47 +164,15 @@ void Model::fromJson(const QJsonObject& json)
     }
 
     
-    //----test entree
-    
-   /* for(int i=0; i<mEvents.size(); ++i)
-    {
-        Event* event = mEvents[i];
-        
-        for(int j=0; j<event->mDates.size(); ++j)
-                {
-                    Date date = event->mDates.at(j);
-                   
-                    qDebug()<<"Model:: fromJson test entree date->setJson( date->getName()"<<i<<j<<mEvents[i]->mDates.at(0).getName();
-                    
-                }
-      
-    }*/
-    
-    
     // Sort events based on items y position
     std::sort(mEvents.begin(), mEvents.end(), sortEvents);
-    //----test sortie
-    
-   /* for(int i=0; i<mEvents.size(); ++i)
-    {
-        Event* event = mEvents[i];
-        
-        for(int j=0; j<event->mDates.size(); ++j)
-        {
-            Date date = event->mDates[j];
-            
-            qDebug()<<"Model:: fromJson test sortie date->setJson( date->getName()"<<date.getName();
-            
-        }
-        
-    }*/
 
     if(json.contains(STATE_EVENTS_CONSTRAINTS))
     {
-        QJsonArray constraints = json[STATE_EVENTS_CONSTRAINTS].toArray();
+        const QJsonArray constraints = json.value(STATE_EVENTS_CONSTRAINTS).toArray();
         for(int i=0; i<constraints.size(); ++i)
         {
-            QJsonObject constraint = constraints[i].toObject();
+            const QJsonObject constraint = constraints.at(i).toObject();
             EventConstraint* c = new EventConstraint(EventConstraint::fromJson(constraint));
             mEventConstraints.append(c);
         }
@@ -211,10 +180,10 @@ void Model::fromJson(const QJsonObject& json)
 
     if(json.contains(STATE_PHASES_CONSTRAINTS))
     {
-        QJsonArray constraints = json[STATE_PHASES_CONSTRAINTS].toArray();
+        const QJsonArray constraints = json.value(STATE_PHASES_CONSTRAINTS).toArray();
         for(int i=0; i<constraints.size(); ++i)
         {
-            QJsonObject constraint = constraints[i].toObject();
+            const QJsonObject constraint = constraints.at(i).toObject();
             PhaseConstraint* c = new PhaseConstraint(PhaseConstraint::fromJson(constraint));
             mPhaseConstraints.append(c);
         }
@@ -276,6 +245,38 @@ void Model::fromJson(const QJsonObject& json)
     }
     //return model;
 }
+
+void Model::updateDesignFromJson(const QJsonObject& json)
+{
+    const QJsonArray phasesJSON = json.value(STATE_PHASES).toArray();
+    if(mPhases.size() != phasesJSON.size()) return;
+
+    for(int i=0; i<phasesJSON.size(); ++i)
+    {
+        const QJsonObject phaseJS = phasesJSON.at(i).toObject();
+        Phase * p = mPhases[i];
+        p->mName = phaseJS.value(STATE_NAME).toString();
+        p->mColor = QColor(phaseJS.value(STATE_COLOR_RED).toInt(),phaseJS.value(STATE_COLOR_GREEN).toInt(),phaseJS.value(STATE_COLOR_BLUE ).toInt()) ;
+    }
+
+    const QJsonArray eventsJSON = json.value(STATE_EVENTS).toArray();
+    if(mEvents.size() != eventsJSON.size()) return;
+    for(int i=0; i<eventsJSON.size(); ++i)
+    {
+        const QJsonObject eventJS = eventsJSON.at(i).toObject();
+        Event * e = mEvents[i];
+        e->mName = eventJS.value(STATE_NAME).toString();
+        e->mColor = QColor(eventJS.value(STATE_COLOR_RED).toInt(),eventJS.value(STATE_COLOR_GREEN).toInt(),eventJS.value(STATE_COLOR_BLUE ).toInt()) ;
+
+        QJsonArray datesJS = eventJS[STATE_EVENT_DATES].toArray();
+        if(e->mDates.size() != datesJS.size()) return;
+        for(int j=0; j<datesJS.size(); ++j) {
+            QJsonObject dateJS = datesJS[j].toObject();
+            e->mDates[j].mName = dateJS.value(STATE_NAME).toString();
+        }
+    }
+}
+
 QJsonObject Model::toJson() const
 {
     QJsonObject json;
@@ -285,22 +286,22 @@ QJsonObject Model::toJson() const
     
     QJsonArray events;
     for(int i=0; i<mEvents.size(); ++i)
-        events.append(mEvents[i]->toJson());
+        events.append(mEvents.at(i)->toJson());
     json["events"] = events;
     
     QJsonArray phases;
     for(int i=0; i<mPhases.size(); ++i)
-        phases.append(mPhases[i]->toJson());
+        phases.append(mPhases.at(i)->toJson());
     json["phases"] = phases;
     
     QJsonArray event_constraints;
     for(int i=0; i<mEventConstraints.size(); ++i)
-        event_constraints.append(mEventConstraints[i]->toJson());
+        event_constraints.append(mEventConstraints.at(i)->toJson());
     json["event_constraints"] = event_constraints;
     
     QJsonArray phase_constraints;
     for(int i=0; i<mPhaseConstraints.size(); ++i)
-        phase_constraints.append(mPhaseConstraints[i]->toJson());
+        phase_constraints.append(mPhaseConstraints.at(i)->toJson());
     json["phase_constraints"] = phase_constraints;
     
     return json;
@@ -360,9 +361,9 @@ void Model::generateModelLog()
         log += line(textPurple("Phase (" + QString::number(i+1) + "/" + QString::number(mPhases.size()) + ") : " + mPhases[i]->mName + " (" + QString::number(mPhases[i]->mEvents.size()) + " events)"));
         log += "<br>";
         
-        for(int j=0; j<mPhases[i]->mEvents.size(); ++j)
+        for(int j=0; j<mPhases.at(i)->mEvents.size(); ++j)
         {
-            log += line(textBlue("Event : " + mPhases[i]->mEvents[j]->mName));
+            log += line(textBlue("Event : " + mPhases.at(i)->mEvents.at(j)->mName));
         }
         log += "<hr>";
         log += "<br>";
@@ -510,14 +511,11 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
             for(int k=0; k<mPhases.size(); ++k)
             {
                 Phase* phase = mPhases.at(k);
-                //l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mAlpha.mTrace.at(shift + j)));
-                //l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mBeta.mTrace.at(shift + j)));
-
-                double valueAlpha = phase->mAlpha.mFormatedTrace.at(shift + j);
+                double valueAlpha = phase->mAlpha.mRawTrace.at(shift + j);
                 if(withDateFormat) valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
                 l << locale.toString(valueAlpha);
 
-                double valueBeta = phase->mBeta.mFormatedTrace.at(shift + j);
+                double valueBeta = phase->mBeta.mRawTrace.at(shift + j);
                 if(withDateFormat) valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
                 l << locale.toString(valueBeta);
 
@@ -564,23 +562,20 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
         {
             QStringList l;
             l << QString::number(shift + j) ;
-            double valueAlpha = phase->mAlpha.mFormatedTrace.at(shift + j);
+            double valueAlpha = phase->mAlpha.mRawTrace.at(shift + j);
             if(withDateFormat) valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
             l << locale.toString(valueAlpha);
-            //l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mAlpha.mTrace.at(shift + j)));
 
-            double valueBeta = phase->mBeta.mFormatedTrace.at(shift + j);
+            double valueBeta = phase->mBeta.mRawTrace.at(shift + j);
             if(withDateFormat) valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
             l << locale.toString(valueBeta);
-            //l << locale.toString(DateUtils::convertToAppSettingsFormat(phase->mBeta.mTrace.at(shift + j)));
-            //l << "";
+
             for(int k=0; k<phase->mEvents.size(); ++k)
             {
                 Event* event = phase->mEvents.at(k);
-                double value = event->mTheta.mFormatedTrace.at(shift + j);
+                double value = event->mTheta.mRawTrace.at(shift + j);
                 if(withDateFormat) value = DateUtils::convertToAppSettingsFormat(value);
                 l << locale.toString(value);
-                //l << locale.toString(DateUtils::convertToAppSettingsFormat(event->mTheta.mTrace.at(shift + j)));
             }
             rows << l;
         }
@@ -621,7 +616,7 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
             for(int k=0; k<mEvents.size(); ++k)
             {
                 Event* event = mEvents.at(k);
-                double value = event->mTheta.mFormatedTrace.at(shift + j);
+                double value = event->mTheta.mRawTrace.at(shift + j);
                 if(withDateFormat) value = DateUtils::convertToAppSettingsFormat(value);
                 l << locale.toString(value);
             }
@@ -1103,7 +1098,7 @@ void Model::clearPosteriorDensities()
     QList<Event*>::iterator iterEvent = mEvents.begin();
     while (iterEvent!=mEvents.cend()) {
         for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
-            Date& date = (*iterEvent)->mDates[j];
+            Date& date = (*iterEvent)->mDates[j];        
             date.mTheta.mHisto.clear();
             date.mSigma.mHisto.clear();
             date.mTheta.mChainsHistos.clear();
@@ -1111,6 +1106,7 @@ void Model::clearPosteriorDensities()
         }
         (*iterEvent)->mTheta.mHisto.clear();
         (*iterEvent)->mTheta.mChainsHistos.clear();
+
         ++iterEvent;
     }
 
@@ -1118,8 +1114,11 @@ void Model::clearPosteriorDensities()
     while (iterPhase!=mPhases.cend()) {
         (*iterPhase)->mAlpha.mHisto.clear();
         (*iterPhase)->mBeta.mHisto.clear();
+        (*iterPhase)->mDuration.mHisto.clear();
+
         (*iterPhase)->mAlpha.mChainsHistos.clear();
         (*iterPhase)->mBeta.mChainsHistos.clear();
+        (*iterPhase)->mDuration.mChainsHistos.clear();
         ++iterPhase;
     }
 }
@@ -1129,21 +1128,51 @@ void Model::clearCredibilityAndHPD()
     while (iterEvent!=mEvents.cend()) {
         foreach (Date date, (*iterEvent)->mDates) {
             date.mTheta.mHPD.clear();
+            date.mTheta.mCredibility = QPair<double,double>();
             date.mSigma.mHPD.clear();
-            
+            date.mSigma.mCredibility= QPair<double,double>();
         }
         (*iterEvent)->mTheta.mHPD.clear();
+        (*iterEvent)->mTheta.mCredibility = QPair<double,double>();
         ++iterEvent;
     }
     QList<Phase*>::iterator iterPhase = mPhases.begin();
     while (iterPhase!=mPhases.cend()) {
         (*iterPhase)->mAlpha.mHPD.clear();
+        (*iterPhase)->mAlpha.mCredibility = QPair<double,double>();
         (*iterPhase)->mBeta.mHPD.clear();
+        (*iterPhase)->mBeta.mCredibility = QPair<double,double>();
+        (*iterPhase)->mDuration.mHPD.clear();
+        (*iterPhase)->mDuration.mCredibility = QPair<double,double>();
         ++iterPhase;
     }
 }
 
-
+void Model::clearTraces()
+{
+    QList<Event*>::iterator iterEvent = mEvents.begin();
+    while (iterEvent!=mEvents.cend()) {
+        foreach (Date date, (*iterEvent)->mDates) {
+            date.mTheta.mRawTrace.clear();
+            date.mTheta.mFormatedTrace.clear();
+            date.mSigma.mRawTrace.clear();
+            date.mSigma.mFormatedTrace.clear();
+        }
+        (*iterEvent)->mTheta.mRawTrace.clear();
+        (*iterEvent)->mTheta.mFormatedTrace.clear();
+        ++iterEvent;
+    }
+    QList<Phase*>::iterator iterPhase = mPhases.begin();
+    while (iterPhase!=mPhases.cend()) {
+        (*iterPhase)->mAlpha.mRawTrace.clear();
+        (*iterPhase)->mAlpha.mFormatedTrace.clear();
+        (*iterPhase)->mBeta.mRawTrace.clear();
+        (*iterPhase)->mAlpha.mFormatedTrace.clear();
+        (*iterPhase)->mDuration.mRawTrace.clear();
+        (*iterPhase)->mDuration.mFormatedTrace.clear();
+        ++iterPhase;
+    }
+}
 
 
 #pragma mark Date files read / write

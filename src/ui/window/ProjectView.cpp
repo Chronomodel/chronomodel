@@ -97,17 +97,19 @@ void ProjectView::showModel()
 }
 
 /**
- * @brief ProjectView::changeDesign solt connected to Project::projectDesignChange() in MainWindows
+ * @brief ProjectView::changeDesign slot connected to Project::projectDesignChange() in MainWindows
  * @param refresh
  */
 void ProjectView::changeDesign(bool refresh)
 {
-  mRefreshResults = refresh;
+  mRefreshResults = true;
 }
 
 void ProjectView::showResults()
 {
     if(mRefreshResults)  {
+        mResultsView->clearResults();
+        mResultsView->updateModel(); // update Design e.g. Name and color
         mResultsView->updateResults();
         mRefreshResults=false;
     }
@@ -116,7 +118,6 @@ void ProjectView::showResults()
 }
 void ProjectView::showLog()
 {
-
     mStack->setCurrentIndex(2);
 }
 
@@ -136,7 +137,6 @@ void ProjectView:: ApplySettings(Model* model,const AppSettings* appSet)
     if(model)
     {
         mResultsView->updateFormatSetting(model,appSet);
-        //mResultsView->updateFormat(model);
         mResultsView->updateResults(model);
 
         model->generateModelLog();
@@ -154,7 +154,7 @@ void ProjectView::updateResults(Model* model)
     if(model)
     {
        // showResults();//false);
-       // mResultsView->updateFormat(model);
+        mResultsView->clearResults();
         mResultsView->updateResults(model);
         
         model->generateModelLog();

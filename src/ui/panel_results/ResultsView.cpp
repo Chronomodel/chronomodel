@@ -874,7 +874,6 @@ void ResultsView::createPhasesScrollArea()
     while (iterPhase!=mModel->mPhases.cend()) {
 
         GraphViewPhase* graphPhase = new GraphViewPhase(phasesWidget);
-        connect(graphPhase, &GraphViewPhase::durationDisplay, this, &ResultsView::adjustDuration);
 
         graphPhase->setSettings(mModel->mSettings);
         graphPhase->setMCMCSettings(mModel->mMCMCSettings, mChains);
@@ -929,7 +928,7 @@ void ResultsView::generatePosteriorDistribs()
     {
         QLocale locale;
         bool ok;
-        int len = mFFTLenCombo->currentText().toInt();
+        const int len = mFFTLenCombo->currentText().toInt();
         double hFactor = locale.toDouble(mHFactorEdit->text(),&ok);
         if(!(hFactor > 0 && hFactor <= 100) || !ok)
         {
@@ -1111,8 +1110,8 @@ void ResultsView::updateScales()
     //  Restore last zoom values
     // ------------------------------------------
     if(mZooms.find(tabIdx) != mZooms.end()){
-        mResultCurrentMinX = mZooms[tabIdx].first;
-        mResultCurrentMaxX = mZooms[tabIdx].second;
+        mResultCurrentMinX = mZooms.value(tabIdx).first;
+        mResultCurrentMaxX = mZooms.value(tabIdx).second;
         // controle if the current value is in rigth range depending to mDataThetaRadio and mDataSigmaRadio
         mResultCurrentMinX = qBound(mResultMinX, mResultCurrentMinX, mResultMaxX);
         mResultCurrentMaxX = qBound(mResultCurrentMinX, mResultCurrentMaxX, mResultMaxX);
@@ -1157,7 +1156,7 @@ void ResultsView::updateScales()
     // ------------------------------------------
     //  Set Ruler Range
     // ------------------------------------------
-    mRuler->setFormatFunctX(0);
+    mRuler->setFormatFunctX(formatValueToAppSettingsPrecision);
 
     mRuler->setRange(mResultMinX, mResultMaxX);
     mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
@@ -1466,14 +1465,14 @@ void ResultsView::exportResults()
 {
     if(mModel){
         AppSettings settings = MainWindow::getInstance()->getAppSettings();
-        QString csvSep = settings.mCSVCellSeparator;
+        const QString csvSep = settings.mCSVCellSeparator;
         
         QLocale csvLocal = settings.mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
 
         csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
         
-        QString currentPath = MainWindow::getInstance()->getCurrentPath();
-        QString dirPath = QFileDialog::getSaveFileName(qApp->activeWindow(),
+        const QString currentPath = MainWindow::getInstance()->getCurrentPath();
+        const QString dirPath = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                         tr("Export to directory..."),
                                                         currentPath,
                                                        tr("Directory"));
@@ -1488,17 +1487,54 @@ void ResultsView::exportResults()
                 dir.removeRecursively();
             }
             dir.mkpath(".");
-            
-            QList<QStringList> stats = mModel->getStats(csvLocal, true);
-            saveCsvTo(stats, dirPath + "/stats.csv", csvSep, true);
+
+            // copy tabs ------------------------------------------
+            const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
+            const QString projectName = tr("Project filename")+" : "+ MainWindow::getInstance()->getNameProject()+ "<br>";
+
+            QFile file(dirPath + "/Model_description.html");
+            if(file.open(QFile::WriteOnly | QFile::Truncate))
+            {
+                QTextStream output(&file);
+                output<<version+"<br>";
+                output<<projectName+ "<br>";
+                output<<"<hr>";
+                output<<mModel->getModelLog();
+            }
+            file.close();
+
+            file.setFileName(dirPath + "/MCMC_Initialization.html");
+            if(file.open(QFile::WriteOnly | QFile::Truncate))
+            {
+                QTextStream output(&file);
+                output<<version+"<br>";
+                output<<projectName+ "<br>";
+                output<<"<hr>";
+                output<<mModel->getMCMCLog();;
+            }
+            file.close();
+
+            file.setFileName(dirPath + "/Posterior_distrib_results.html");
+            if(file.open(QFile::WriteOnly | QFile::Truncate))
+            {
+                QTextStream output(&file);
+                output<<version+"<br>";
+                output<<projectName+ "<br>";
+                output<<"<hr>";
+                output<<mModel->getResultsLog();;
+            }
+            file.close();
+
+            const QList<QStringList> stats = mModel->getStats(csvLocal, true);
+            saveCsvTo(stats, dirPath + "/Stats_table.csv", csvSep, true);
             
             if(mModel->mPhases.size() > 0){
-                QList<QStringList> phasesTraces = mModel->getPhasesTraces(csvLocal, false);
+                const QList<QStringList> phasesTraces = mModel->getPhasesTraces(csvLocal, false);
                 saveCsvTo(phasesTraces, dirPath + "/phases.csv", csvSep, false);
                 
                 for(int i=0; i<mModel->mPhases.size(); ++i){
-                    QList<QStringList> phaseTrace = mModel->getPhaseTrace(i,csvLocal, false);
-                    QString name = mModel->mPhases.at(i)->mName.toLower().simplified().replace(" ", "_");
+                    const QList<QStringList> phaseTrace = mModel->getPhaseTrace(i,csvLocal, false);
+                    const QString name = mModel->mPhases.at(i)->mName.toLower().simplified().replace(" ", "_");
                     saveCsvTo(phaseTrace, dirPath + "/phase_" + name + ".csv", csvSep, false);
                 }
             }
@@ -1547,14 +1583,6 @@ void ResultsView::exportFullImage()
     int rendering = mRenderCombo->currentIndex();
     updateRendering(1);
     
-    //QWidget* curWid = (mStack->currentWidget() == mPhasesScrollArea) ? mPhasesScrollArea->widget() : mEventsScrollArea->widget();
-    
-    // boolprintAxis=  (mStack->currentWidget() == mPhasesScrollArea) ? (mByPhasesGraphs[0]->mGraph->getXAxisMode()!= GraphView::eHidden) : (mByEventsGraphs[0]->mGraph->getXAxisMode() != GraphView::eHidden);
-    
-    //qDebug()<<"printAxis"<<printAxis;
-    //qDebug()<<"printAxis"<<mByPhasesGraphs[0]->mGraph->getXAxisMode();
-    //mPhasesScrollArea->
-    
     AxisWidget* axisWidget = 0;
     QLabel* axisLegend = 0;
     int axeHeight = 20;
@@ -1565,7 +1593,7 @@ void ResultsView::exportFullImage()
         
         FormatFunc f = 0;
         if(mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked())
-            f = DateUtils::convertToAppSettingsFormatStr;
+            f = formatValueToAppSettingsPrecision;
         
         axisWidget = new AxisWidget(f, curWid);
         axisWidget->mMarginLeft = 50;
@@ -1618,55 +1646,58 @@ void ResultsView::exportFullImage()
     //  show all buttons
     if (mByPhasesBut->isChecked()) {
         for(int i=0; i<mByPhasesGraphs.size(); ++i) {
-            mByPhasesGraphs[i]->setButtonsVisible(true);
+            mByPhasesGraphs.at(i)->setButtonsVisible(true);
         }
         
     }
     else {
         for(int i=0; i<mByEventsGraphs.size(); ++i) {
-            mByEventsGraphs[i]->setButtonsVisible(true);
+            mByEventsGraphs.at(i)->setButtonsVisible(true);
         }
     }
 }
 
 #pragma mark Refresh All Model
+/**
+ * @brief ResultsView::updateModel Update Design
+ */
 void ResultsView::updateModel()
 {
     if(!mModel)
         return;
     
-    QJsonObject state = MainWindow::getInstance()->getProject()->state();
+    const QJsonObject state = MainWindow::getInstance()->getProject()->state();
     
-    QJsonArray events = state.value(STATE_EVENTS).toArray();
-    QJsonArray phases = state.value(STATE_PHASES).toArray();
+    const QJsonArray events = state.value(STATE_EVENTS).toArray();
+    const QJsonArray phases = state.value(STATE_PHASES).toArray();
     
-    for(int i=0; i<events.size(); ++i)
-    {
-        QJsonObject event = events.at(i).toObject();
-        int eventId = event.value(STATE_ID).toInt();
-        QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
+    QJsonArray::const_iterator iterJSONEvent = events.constBegin();
+    while (iterJSONEvent != events.constEnd()) {
+        const QJsonObject eventJSON = (*iterJSONEvent).toObject();
+        const int eventId = eventJSON.value(STATE_ID).toInt();
+        const QJsonArray dates = eventJSON.value(STATE_EVENT_DATES).toArray();
         
-        for(int j=0; j<mModel->mEvents.size(); ++j)
-        {
-            Event* e = mModel->mEvents[j];
-            if(e->mId == eventId)
+        QList<Event *>::iterator iterEvent = mModel->mEvents.begin();
+        while (iterEvent != mModel->mEvents.cend()) {
+
+            if((*iterEvent)->mId == eventId)
             {
-                e->mName  = event.value(STATE_NAME).toString();
-                e->mItemX = event.value(STATE_ITEM_X).toDouble();
-                e->mItemY = event.value(STATE_ITEM_Y).toDouble();
-                e->mColor = QColor(event.value(STATE_COLOR_RED).toInt(),
-                                   event.value(STATE_COLOR_GREEN).toInt(),
-                                   event.value(STATE_COLOR_BLUE).toInt());
+                (*iterEvent)->mName  = eventJSON.value(STATE_NAME).toString();
+                (*iterEvent)->mItemX = eventJSON.value(STATE_ITEM_X).toDouble();
+                (*iterEvent)->mItemY = eventJSON.value(STATE_ITEM_Y).toDouble();
+                (*iterEvent)->mColor = QColor(eventJSON.value(STATE_COLOR_RED).toInt(),
+                                              eventJSON.value(STATE_COLOR_GREEN).toInt(),
+                                              eventJSON.value(STATE_COLOR_BLUE).toInt());
                
                 
-                for(int k=0; k<e->mDates.size(); ++k)
+                for(int k=0; k<(*iterEvent)->mDates.size(); ++k)
                 {
-                    Date& d = e->mDates[k];
+                    Date& d = (*iterEvent)->mDates[k];
                     
-                    for(int l=0; l<dates.size(); ++l)
-                    {
-                        QJsonObject date = dates.at(l).toObject();
-                        int dateId = date.value(STATE_ID).toInt();
+                    foreach (const QJsonValue dateVal, dates) {
+
+                        const QJsonObject date = dateVal.toObject();
+                        const int dateId = date.value(STATE_ID).toInt();
                         
                         if(dateId == d.mId)
                         {
@@ -1678,27 +1709,32 @@ void ResultsView::updateModel()
                 }
                 break;
             }
+            ++iterEvent;
         }
+        ++iterJSONEvent;
     }
-    for(int i=0; i<phases.size(); ++i)
-    {
-        QJsonObject phase = phases.at(i).toObject();
-        int phaseId = phase.value(STATE_ID).toInt();
+
+    QJsonArray::const_iterator iterJSONPhase = phases.constBegin();
+    while (iterJSONPhase != phases.constEnd()) {
+
+        const QJsonObject phaseJSON = (*iterJSONPhase).toObject();
+        const int phaseId = phaseJSON.value(STATE_ID).toInt();
         
         for(int j=0; j<mModel->mPhases.size(); ++j)
         {
             Phase* p = mModel->mPhases[j];
             if(p->mId == phaseId)
             {
-                p->mName = phase.value(STATE_NAME).toString();
-                p->mItemX = phase.value(STATE_ITEM_X).toDouble();
-                p->mItemY = phase.value(STATE_ITEM_Y).toDouble();
-                p->mColor = QColor(phase.value(STATE_COLOR_RED).toInt(),
-                                   phase.value(STATE_COLOR_GREEN).toInt(),
-                                   phase.value(STATE_COLOR_BLUE).toInt());
+                p->mName = phaseJSON.value(STATE_NAME).toString();
+                p->mItemX = phaseJSON.value(STATE_ITEM_X).toDouble();
+                p->mItemY = phaseJSON.value(STATE_ITEM_Y).toDouble();
+                p->mColor = QColor(phaseJSON.value(STATE_COLOR_RED).toInt(),
+                                   phaseJSON.value(STATE_COLOR_GREEN).toInt(),
+                                   phaseJSON.value(STATE_COLOR_BLUE).toInt());
                 break;
             }
         }
+        ++iterJSONPhase;
     }
     
     std::sort(mModel->mEvents.begin(), mModel->mEvents.end(), sortEvents);
