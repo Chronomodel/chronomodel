@@ -13,7 +13,7 @@ public:
     explicit GraphViewDate(QWidget *parent = 0);
     virtual ~GraphViewDate();
     
-    void setDate(Date* date);
+    void setDate(Date *date);
     void setColor(const QColor& color);
     QColor getEventColor();
     

@@ -781,6 +781,10 @@ void MainWindow::readSettings(const QString& defaultFilePath)
         QFileInfo fileInfo(defaultFilePath);
         if(fileInfo.isFile())
         {
+            if(mProject->mModel) {
+                mProject->mModel->clear();
+                mProjectView->resetInterface();
+            }
             if(mProject->load(defaultFilePath)){
                 activateInterface(true);
                 updateWindowTitle();

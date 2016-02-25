@@ -444,11 +444,14 @@ bool Project::load(const QString& path)
         }
         else
         {
+            if(mModel) {
+                mModel->clear();
+            }
             mState = jsonDoc.object();
             
             if(mState.contains(STATE_APP_VERSION))
             {
-                QString projectVersionStr = mState[STATE_APP_VERSION].toString();
+                QString projectVersionStr = mState.value(STATE_APP_VERSION).toString();
                 QStringList projectVersionList = projectVersionStr.split(".");
                 
                 QString appVersionStr = QApplication::applicationVersion();

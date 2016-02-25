@@ -13,7 +13,7 @@ public:
     explicit GraphViewEvent(QWidget *parent = 0);
     virtual ~GraphViewEvent();
     
-    void setEvent(Event* event);
+    void setEvent(Event *event);
     
     void generateCurves(TypeGraph typeGraph, Variable variable);
     void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);

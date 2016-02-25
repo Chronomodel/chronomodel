@@ -669,8 +669,8 @@ void ResultsView::clearResults()
     {
         CheckBox* check = mCheckChainChecks.takeAt(i);
         disconnect(check, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
-        check->setParent(0);
         delete check;
+        check = 0;
     }
     mCheckChainChecks.clear();
     
@@ -678,7 +678,6 @@ void ResultsView::clearResults()
     {
         RadioButton* but = mChainRadios.takeAt(i);
         disconnect(but, &RadioButton::clicked, this, &ResultsView::updateCurvesToShow);
-        //but->setParent(0);
         delete but;
         but = 0;
     }
@@ -686,7 +685,6 @@ void ResultsView::clearResults()
     
     for(int i=0; i<mByEventsGraphs.size(); ++i)
     {
-        //mByEventsGraphs.at(i)->setParent(0);
         delete mByEventsGraphs[i];
         mByEventsGraphs[i] = 0;
     }
@@ -694,7 +692,6 @@ void ResultsView::clearResults()
     
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
     {
-        //mByPhasesGraphs.at(i)->setParent(0);
         delete mByPhasesGraphs[i];
         mByPhasesGraphs[i] = 0;
     }
@@ -823,8 +820,10 @@ void ResultsView::createEventsScrollArea()
      //int tabIdx = mTabs->currentIndex();
     //if(mTabs->currentIndex()==0) return; // this is a phase view
     QWidget* eventsWidget = new QWidget();
-    eventsWidget->setMouseTracking(true);
 
+    eventsWidget->setMouseTracking(true);
+    // In a Event at the minimum, we have one Date
+    mByEventsGraphs.reserve( (int)(2*mModel->mEvents.size()) );
     QList<Event*>::const_iterator iterEvent = mModel->mEvents.cbegin();
     while (iterEvent!=mModel->mEvents.cend()) {
 
@@ -871,7 +870,8 @@ void ResultsView::createPhasesScrollArea()
 {
     QWidget* phasesWidget = new QWidget();
     phasesWidget->setMouseTracking(true);
-
+    // In a Phases at the minimum, we have one Event with one Date
+    mByPhasesGraphs.reserve( (int)(3*mModel->mPhases.size()) );
 
         // ----------------------------------------------------
         //  This just creates the GraphView for the phase (no curve yet)
@@ -893,8 +893,8 @@ void ResultsView::createPhasesScrollArea()
         //  This just creates the GraphView for the event (no curve yet)
         // ----------------------------------------------------
 
-        QList<Event*>::iterator iterEvent = (*iterPhase)->mEvents.begin();
-        while (iterEvent!=(*iterPhase)->mEvents.end()) {
+        QList<Event*>::const_iterator iterEvent = (*iterPhase)->mEvents.cbegin();
+        while (iterEvent!=(*iterPhase)->mEvents.cend()) {
 
             GraphViewEvent* graphEvent = new GraphViewEvent(phasesWidget);
             graphEvent->setSettings(mModel->mSettings);
@@ -933,7 +933,7 @@ void ResultsView::generatePosteriorDistribs()
     qDebug() << "ResultsView::generatePosteriorDistribs";
     if(mModel)
     {
-        QLocale locale;
+        const QLocale locale;
         bool ok;
         const int len = mFFTLenCombo->currentText().toInt();
         double hFactor = locale.toDouble(mHFactorEdit->text(),&ok);

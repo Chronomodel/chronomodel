@@ -86,7 +86,7 @@ mHeightForVisibleAxis(100)
     mDataSaveBut->setFlatVertical();
     mDataSaveBut->setToolTip(tr("Save graph data to file"));
     
-    mAnimation = new QPropertyAnimation();
+    mAnimation = new QPropertyAnimation(this);
     mAnimation->setPropertyName("geometry");
     mAnimation->setDuration(200);
     mAnimation->setTargetObject(this);
