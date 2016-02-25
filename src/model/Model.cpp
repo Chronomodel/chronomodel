@@ -58,10 +58,27 @@ Model::~Model()
 void Model::clear()
 {
     this->clearTraces();
+    foreach (Event* ev, mEvents) {
+        delete ev;
+        ev = 0;
+    }
     mEvents.clear();
+    foreach (Phase* ph, mPhases) {
+        delete ph;
+        ph = 0;
+    }
     mPhases.clear();
 
+    foreach (PhaseConstraint* ph, mPhaseConstraints) {
+        delete ph;
+        ph = 0;
+    }
     mPhaseConstraints.clear();
+
+    foreach (EventConstraint* ev, mEventConstraints) {
+        delete ev;
+        ev = 0;
+    }
     mEventConstraints.clear();
 
     mChains.clear();
@@ -196,13 +213,13 @@ void Model::fromJson(const QJsonObject& json)
     // ------------------------------------------------------------
     for(int i=0; i<mEvents.size(); ++i)
     {
-        int eventId = mEvents[i]->mId;
-        QList<int> phasesIds = mEvents[i]->mPhasesIds;
+        int eventId = mEvents.at(i)->mId;
+        QList<int> phasesIds = mEvents.at(i)->mPhasesIds;
 
         // Link des events / phases
         for(int j=0; j<mPhases.size(); ++j)
         {
-            int phaseId = mPhases[j]->mId;
+            int phaseId = mPhases.at(j)->mId;
             if(phasesIds.contains(phaseId))
             {
                 mEvents[i]->mPhases.append(mPhases[j]);

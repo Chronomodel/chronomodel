@@ -31,9 +31,9 @@ QString functionAnalysisToString(const FunctionAnalysis& analysis);
 QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& nl = "<br>");
 
 // Standard Deviation (= écart type) of a vector of data
-double dataStd(QVector<double>& data);
+double dataStd(const QVector<double> &data);
 
-double shrinkageUniform(double so2);
+double shrinkageUniform(const double so2);
 
 Quartiles quartilesForTrace(const QVector<double>& trace);
 Quartiles quartilesForRepartition(const QVector<double>& repartition,const double tmin,const double step);

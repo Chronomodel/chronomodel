@@ -79,15 +79,15 @@ mToolbarH(100)
     for(int i=0; i<plugins.size(); ++i)
     {
         
-        Button* button = new Button(plugins[i]->getName(), mEventView);
-        button->setIcon(plugins[i]->getIcon());
+        Button* button = new Button(plugins.at(i)->getName(), mEventView);
+        button->setIcon(plugins.at(i)->getIcon());
         button->setFlatVertical();
         connect(button, SIGNAL(clicked()), this, SLOT(createDate()));
         
         minimumHeight+=button->height();
         
         
-        if(plugins[i]->doesCalibration())
+        if(plugins.at(i)->doesCalibration())
             mPluginButs1.append(button);
         else
             mPluginButs2.append(button);
@@ -137,7 +137,7 @@ mToolbarH(100)
     mKnownStartEdit = new QLineEdit(mBoundView);
     mKnownEndEdit   = new QLineEdit(mBoundView);
     
-    QDoubleValidator* doubleValidator = new QDoubleValidator();
+    QDoubleValidator* doubleValidator = new QDoubleValidator(this);
     doubleValidator->setDecimals(2);
     
     mKnownGraph = new GraphView(mBoundView);

@@ -173,11 +173,11 @@ void Button::paintEvent(QPaintEvent* e)
             QPixmap pixmap = ic.pixmap(iconRect.size().toSize());
             painter.drawPixmap(iconRect, pixmap, QRectF(0, 0, pixmap.width(), pixmap.height()));
         }
-        else if(!ic.isNull() && !text().isEmpty())
+        else if( !(ic.isNull()) && !(text().isEmpty()))
         {
             int textH = 22;
-            if(ic.isNull())
-                textH = height();
+            //if(ic.isNull())
+            //    textH = height();
             
             double m = 5;
             double w = r.width() - 2*m;

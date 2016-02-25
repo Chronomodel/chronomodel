@@ -678,32 +678,39 @@ void ResultsView::clearResults()
     {
         RadioButton* but = mChainRadios.takeAt(i);
         disconnect(but, &RadioButton::clicked, this, &ResultsView::updateCurvesToShow);
-        but->setParent(0);
+        //but->setParent(0);
         delete but;
+        but = 0;
     }
     mChainRadios.clear();
     
     for(int i=0; i<mByEventsGraphs.size(); ++i)
     {
-        mByEventsGraphs.at(i)->setParent(0);
+        //mByEventsGraphs.at(i)->setParent(0);
         delete mByEventsGraphs[i];
+        mByEventsGraphs[i] = 0;
     }
     mByEventsGraphs.clear();
     
     for(int i=0; i<mByPhasesGraphs.size(); ++i)
     {
-        mByPhasesGraphs.at(i)->setParent(0);
+        //mByPhasesGraphs.at(i)->setParent(0);
         delete mByPhasesGraphs[i];
+        mByPhasesGraphs[i] = 0;
     }
     mByPhasesGraphs.clear();
     
     QWidget* eventsWidget = mEventsScrollArea->takeWidget();
-    if(eventsWidget)
+    if(eventsWidget) {
         delete eventsWidget;
+        eventsWidget = 0;
+    }
     
     QWidget* phasesWidget = mPhasesScrollArea->takeWidget();
-    if(phasesWidget)
+    if(phasesWidget) {
         delete phasesWidget;
+        phasesWidget = 0;
+    }
 
     mResultMinX = mSettings.getTminFormated();
     mResultMaxX = mSettings.getTmaxFormated();

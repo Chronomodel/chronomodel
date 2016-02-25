@@ -69,9 +69,10 @@ public:
     // -----
     
 private:
-    float* generateBufferForHisto(QVector<double>& dataSrc, int numPts, double a, double b);
+    //float* generateBufferForHisto(const QVector<double>& dataSrc, int numPts, double a, double b);
+    void generateBufferForHisto(float* input, const QVector<double> &dataSrc, const int numPts, const double a, const double b);
     QMap<double, double> bufferToMap(const double* buffer);
-    QMap<double, double> generateHisto(QVector<double>& data,const int fftLen, const  double hFactor, const double tmin = 0, const double tmax = 0);
+    QMap<double, double> generateHisto(const QVector<double>& data,const int fftLen, const  double hFactor, const double tmin = 0, const double tmax = 0);
 
 protected slots:
     void updateFormatedTrace();

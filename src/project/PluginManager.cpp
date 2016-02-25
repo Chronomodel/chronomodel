@@ -12,6 +12,23 @@
 
 QList<PluginAbstract*> PluginManager::mPlugins = QList<PluginAbstract*>();
 
+PluginManager::~PluginManager()
+{
+   /* for(int i=0; i<mPlugins.size(); ++i)
+        delete mPlugins[i];
+
+    mPlugins.clear();*/
+}
+
+void PluginManager::clearPlugins()
+{
+    for(int i=0; i<mPlugins.size(); ++i) {
+        delete mPlugins[i];
+        mPlugins[i] = 0;
+    }
+    mPlugins.clear();
+}
+
 void PluginManager::loadPlugins()
 {
     /*QDir pluginsDir = QDir(qApp->applicationDirPath());
@@ -72,7 +89,7 @@ void PluginManager::loadPlugins()
 PluginAbstract* PluginManager::getPluginFromId(const QString& pluginId)
 {
     for(int i=0; i<mPlugins.size(); ++i)
-        if(mPlugins[i]->getId() == pluginId)
+        if(mPlugins.at(i)->getId() == pluginId)
             return mPlugins[i];
     return 0;
 }
@@ -80,7 +97,7 @@ PluginAbstract* PluginManager::getPluginFromName(const QString& pluginName)
 
 {
     for(int i=0; i<mPlugins.size(); ++i)
-        if(mPlugins[i]->getName().toLower() == pluginName.toLower())
+        if(mPlugins.at(i)->getName().toLower() == pluginName.toLower())
             return mPlugins[i];
     return 0;
 }
@@ -94,6 +111,6 @@ QStringList PluginManager::getPluginsNames()
 {
     QStringList names;
     for(int i=0; i<mPlugins.size(); ++i)
-        names << mPlugins[i]->getName();
+        names << mPlugins.at(i)->getName();
     return names;
 }

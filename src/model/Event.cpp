@@ -97,27 +97,27 @@ Event::~Event()
 Event Event::fromJson(const QJsonObject& json)
 {
     Event event;
-    event.mType = (Type)json[STATE_EVENT_TYPE].toInt();
-    event.mId = json[STATE_ID].toInt();
-    event.mName = json[STATE_NAME].toString();
-    event.mColor = QColor(json[STATE_COLOR_RED].toInt(),
-                          json[STATE_COLOR_GREEN].toInt(),
-                          json[STATE_COLOR_BLUE].toInt());
-    event.mMethod = (Method)(json[STATE_EVENT_METHOD].toInt());
-    event.mItemX = json[STATE_ITEM_X].toDouble();
-    event.mItemY = json[STATE_ITEM_Y].toDouble();
-    event.mIsSelected = json[STATE_IS_SELECTED].toBool();
-    event.mIsCurrent = json[STATE_IS_CURRENT].toBool();
+    event.mType = (Type)json.value(STATE_EVENT_TYPE).toInt();
+    event.mId = json.value(STATE_ID).toInt();
+    event.mName = json.value(STATE_NAME).toString();
+    event.mColor = QColor(json.value(STATE_COLOR_RED).toInt(),
+                          json.value(STATE_COLOR_GREEN).toInt(),
+                          json.value(STATE_COLOR_BLUE).toInt());
+    event.mMethod = (Method)(json.value(STATE_EVENT_METHOD).toInt());
+    event.mItemX = json.value(STATE_ITEM_X).toDouble();
+    event.mItemY = json.value(STATE_ITEM_Y).toDouble();
+    event.mIsSelected = json.value(STATE_IS_SELECTED).toBool();
+    event.mIsCurrent = json.value(STATE_IS_CURRENT).toBool();
     
     event.mTheta.mProposal = ModelUtilities::getEventMethodText(event.mMethod);
     
-    event.mPhasesIds = stringListToIntList(json[STATE_EVENT_PHASE_IDS].toString());
+    event.mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
     
     
-    QJsonArray dates = json[STATE_EVENT_DATES].toArray();
+    const QJsonArray dates = json.value(STATE_EVENT_DATES).toArray();
     for(int j=0; j<dates.size(); ++j)
     {
-        QJsonObject jdate = dates[j].toObject();
+        QJsonObject jdate = dates.at(j).toObject();
         
         Date d = Date::fromJson(jdate);
         d.autoSetTiSampler(true);

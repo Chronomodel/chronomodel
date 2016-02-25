@@ -10,16 +10,16 @@ mLoop(loop)
     
     // -----------
     
-    mLabel1 = new QLabel();
-    mLabel2 = new QLabel();
+    mLabel1 = new QLabel(this);
+    mLabel2 = new QLabel(this);
     
-    mProgressBar1 = new QProgressBar();
+    mProgressBar1 = new QProgressBar(this);
     mProgressBar1->setMinimum(0);
     mProgressBar1->setMaximum(0);
     
-    mProgressBar2 = new QProgressBar();
+    /*mProgressBar2 = new QProgressBar(this);
     mProgressBar2->setMinimum(0);
-    mProgressBar2->setMaximum(0);
+    mProgressBar2->setMaximum(0);*/
     
     // ----------
     
@@ -28,7 +28,7 @@ mLoop(loop)
     
     // ----------
     
-    QVBoxLayout* layout = new QVBoxLayout();
+    QVBoxLayout* layout = new QVBoxLayout(this);
     layout->addWidget(mLabel1);
     layout->addWidget(mProgressBar1);
     layout->addWidget(buttonBox);

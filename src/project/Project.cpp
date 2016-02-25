@@ -1236,7 +1236,7 @@ void Project::checkDatesCompatibility()
                 date[STATE_DATE_VALID] = true;
             
             if(date[STATE_DATE_PLUGIN_ID].toString() == "typo_ref.")
-                date[STATE_DATE_PLUGIN_ID] = "typo";
+                date[STATE_DATE_PLUGIN_ID] = QString("typo");
             
             // etc...
             

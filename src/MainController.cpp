@@ -12,4 +12,5 @@ MainController::MainController(const QString& filePath)
     mMainWindow = MainWindow::getInstance();
     mMainWindow->readSettings(filePath);
     mMainWindow->show();
+
 }

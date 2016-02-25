@@ -137,38 +137,51 @@ T map_min_value(const QMap<U, T>& aMap)
 
 // --------------------------------
 template<typename T>
-T sum(QVector<T>& vector){
+T sum(const QVector<T>& vector){
     T s = 0;
-    std::for_each(vector.begin(), vector.end(), [&s](T& v){
+   /* std::for_each(vector.begin(), vector.end(), [&s](T& v){
         s += v;
-    });
+    });*/
+    foreach (const T v, vector) {
+        s += v;
+    }
     return s;
 }
 
 template<typename T>
-T sum2(QVector<T>& vector){
+T sum2(const QVector<T>& vector){
     T sum = 0;
-    std::for_each(vector.begin(), vector.end(), [&sum](T& v){
+    /*std::for_each(vector.cbegin(), vector.cend(), [&sum](T& v){
         sum += v * v;
-    });
+    });*/
+    foreach (const T v, vector) {
+        sum += v * v;
+    }
     return sum;
 }
 
 template<typename T>
-T sumShifted(QVector<T>& vector, const T& shift){
+T sumShifted(const QVector<T>& vector, const T& shift){
     T sum = 0;
-    std::for_each(vector.begin(), vector.end(), [&sum, &shift](T& v){
+    /*std::for_each(vector.cbegin(), vector.cend(), [&sum, &shift](T& v){
         sum += v + shift;
-    });
+    });*/
+    foreach (const T v, vector) {
+        sum += v + shift;
+    }
     return sum;
 }
 
 template<typename T>
-T sum2Shifted(QVector<T>& vector, const T& shift){
+T sum2Shifted(const QVector<T>& vector, const T& shift){
     T sum = 0;
-    std::for_each(vector.begin(), vector.end(), [&sum, &shift](T& v){
+    /*std::for_each(vector.cbegin(), vector.cend(), [&sum, &shift](T& v){
         sum += (v + shift) * (v + shift);
-    });
+    });*/
+    foreach (const T v, vector) {
+        sum += (v + shift) * (v + shift);
+    }
+
     return sum;
 }
 // --------------------------------

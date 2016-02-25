@@ -236,30 +236,29 @@ QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const 
     
     QMap<double, double> result(mapToModify);
     
-    QMap<double, double>::Iterator iter = result.begin();
-    double t = iter.key();
-    double v = iter.value();
+    QMap<double, double>::const_iterator cIter = result.cbegin();
+    double t = cIter.key();
+    double v = cIter.value();
     double lastT = t;
     double lastV = v;
     double srcArea = 0.f;
     // The map was sort with > by insertion
-    while(iter!=result.end() )  {
-        t = iter.key();
-        v = iter.value();
+    while(cIter!=result.cend() )  {
+        t = cIter.key();
+        v = cIter.value();
         if (lastV>0 && v>0) {
             srcArea += (lastV+v)/2 * (t - lastT);
         }
         //qDebug() << t << ", " << v;
         lastV = v;
         lastT = t;
-        ++iter;
+        ++cIter;
     }
     double prop = targetArea / srcArea;
     
-    iter = result.begin();
-    while(iter!=result.end() ) {
-        iter.value()= iter.value() * prop;
-        
+    QMap<double, double>::iterator iter = result.begin();
+    while(iter!=result.cend() ) {
+        iter.value() *= prop;
         ++iter;
     }
     
@@ -272,22 +271,30 @@ QVector<double> equal_areas(const QVector<double>& data, const double step, cons
         return QVector<double>();
     
     long double srcArea = 0;
-    long double lastV = data[0];
+    long double lastV = data.at(0);
 
     for(int i=1; i<data.size(); ++i) {
-        long double v =data[i];
+        const long double v =data.at(i);
         
         if (lastV>0 && v>0) {
             srcArea += (lastV+v)/2 * (long double)step;
         }
        lastV = v;
     }
-   // double prop = area / srcArea;
-    long double invProp =srcArea / area;
+
+    const long double invProp =srcArea / area;
     QVector<double> result;
-    for(int i=0; i<data.size(); ++i)
-        //result.append(data[i] * prop);
-        result.append(data[i] / invProp);
+    //for(int i=0; i<data.size(); ++i)
+    //    result.append(data.at(i) / invProp);
+
+    QVector<double>::const_iterator cIter = data.cbegin();
+    while(cIter != data.cend() ) {
+        result.append(*cIter / invProp);
+        ++cIter;
+    }
+
+
+
     return result;
 }
 
@@ -299,7 +306,7 @@ QMap<double, double> vector_to_map(const QVector<double>& data, const double min
     {
         double t = min + i * step;
         if(i < data.size())
-            map.insert(t, data[i]);
+            map.insert(t, data.at(i));
     }
     return map;
 }

@@ -88,32 +88,14 @@ FunctionAnalysis analyseFunction(const QMap<double, double>& aFunction)
     return result;
 }
 
-double dataStd(QVector<double>& data)
+double dataStd(const QVector<double>& data)
 {
     // Work with double precision here because sum2 might be big !
     
-    double s = sum<double>(data);
-    double s2 = sum2<double>(data);
-    double mean = s / data.size();
-    double variance = s2 / data.size() - mean * mean;
-    
-    /*double sum = 0;
-    double sum2 = 0;
-    for(int i=0; i<data.size(); ++i)
-    {
-        double x = (double)data[i];
-        sum += x;
-        sum2 += x * x;
-    }
-    double mean = sum / data.size();
-    double variance = sum2 / data.size() - mean * mean;*/
-    
-    /*qDebug() << "sum : " << sum;
-    qDebug() << "sum2 : " << sum2;
-    qDebug() << "size : " << data.size();
-    qDebug() << "mean : " << mean;
-    qDebug() << "variance : " << variance;
-    qDebug() << "std : " << sqrt(variance);*/
+    const double s = sum<double>(data);
+    const double s2 = sum2<double>(data);
+    const double mean = s / data.size();
+    const double variance = s2 / data.size() - mean * mean;
     
     if(variance < 0)
     {
@@ -123,7 +105,7 @@ double dataStd(QVector<double>& data)
     return (double)sqrt(variance);
 }
 
-double shrinkageUniform(double so2)
+double shrinkageUniform(const double so2)
 {
     double u = Generator::randomUniform();
     return (so2 * (1. - u) / u);

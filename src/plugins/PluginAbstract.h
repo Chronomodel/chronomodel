@@ -113,7 +113,8 @@ public:
             if(files.at(i).suffix().toLower() == getRefExt())
             {
                 RefCurve curve = loadRefFile(files.at(i));
-                mRefCurves.insert(files.at(i).fileName().toLower(), curve);
+                const QString fileInLower = files.at(i).fileName().toLower();
+                mRefCurves.insert(fileInLower, curve);
             }
         }
     }

@@ -197,16 +197,16 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
                 {
                     bool ok = true;
                     
-                    const int t = 1950 - locale.toInt(values.at(0),&ok);
+                    int t = 1950 - locale.toInt(values.at(0),&ok);
                     if(!ok) continue;
-                    const double g = locale.toDouble(values.at(1),&ok);
+                    double g = locale.toDouble(values.at(1),&ok);
                     if(!ok) continue;
-                    const double e = locale.toDouble(values.at(2),&ok);
+                    double e = locale.toDouble(values.at(2),&ok);
                     if(!ok) continue;
                     
-                    const double gSup = g + 1.96f * e;
+                    double gSup = g + 1.96f * e;
                     if(!ok) continue;
-                    const double gInf = g - 1.96f * e;
+                    double gInf = g - 1.96f * e;
                     if(!ok) continue;
                     
                     curve.mDataMean[t] = g;

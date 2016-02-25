@@ -10,6 +10,7 @@ class PluginManager
 {
 public:
     static void loadPlugins();
+    static void clearPlugins();
     static PluginAbstract* getPluginFromId(const QString& pluginId);
     static PluginAbstract* getPluginFromName(const QString& pluginName);
     static const QList<PluginAbstract*>& getPlugins();
@@ -20,7 +21,7 @@ private:
     
 private:
     PluginManager(){}
-    ~PluginManager(){}
+    ~PluginManager();
     
     Q_DISABLE_COPY(PluginManager)
 };
