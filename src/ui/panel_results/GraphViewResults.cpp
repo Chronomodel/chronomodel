@@ -92,10 +92,10 @@ mHeightForVisibleAxis(100)
     mAnimation->setTargetObject(this);
     mAnimation->setEasingCurve(QEasingCurve::Linear);
     
-    connect(mImageSaveBut, SIGNAL(clicked()), this, SLOT(saveAsImage()));
-    connect(mImageClipBut, SIGNAL(clicked()), this, SLOT(imageToClipboard()));
-    connect(mResultsClipBut, SIGNAL(clicked()), this, SLOT(resultsToClipboard()));
-    connect(mDataSaveBut, SIGNAL(clicked()), this, SLOT(saveGraphData()));
+    connect(mImageSaveBut, &Button::clicked, this, &GraphViewResults::saveAsImage);
+    connect(mImageClipBut, &Button::clicked, this, &GraphViewResults::imageToClipboard);
+    connect(mResultsClipBut, &Button::clicked, this, &GraphViewResults::resultsToClipboard);
+    connect(mDataSaveBut, &Button::clicked, this, &GraphViewResults::saveGraphData);
 
     //connect(this, &GraphViewResults::setGraphsThickness, mGraph, &GraphView::updateCurvesThickness);
 
@@ -105,7 +105,13 @@ mHeightForVisibleAxis(100)
 
 GraphViewResults::~GraphViewResults()
 {
-    
+    mGraph = 0;
+    mImageSaveBut = 0;
+    mImageClipBut = 0;
+    mResultsClipBut = 0;
+    mDataSaveBut = 0;
+    mAnimation = 0;
+
 }
 
 void GraphViewResults::generateCurves(TypeGraph typeGraph, Variable variable)

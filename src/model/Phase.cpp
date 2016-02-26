@@ -79,7 +79,27 @@ void Phase::copyFrom(const Phase& phase)
 
 Phase::~Phase()
 {
-    
+    if(!mEvents.isEmpty()) {
+        foreach (Event* ev, mEvents) {
+            //if(ev) delete ev;
+            ev = 0;
+        }
+        mEvents.clear();
+    }
+    if(!mConstraintsFwd.isEmpty()) {
+        foreach (PhaseConstraint* pc, mConstraintsFwd) {
+            if(pc) delete pc;
+            pc = 0;
+        }
+        mConstraintsFwd.clear();
+    }
+    if(!mConstraintsBwd.isEmpty()) {
+        foreach (PhaseConstraint* pc, mConstraintsBwd) {
+            if(pc) delete pc;
+            pc = 0;
+        }
+        mConstraintsBwd.clear();
+    }
 }
 
 #pragma mark Properties

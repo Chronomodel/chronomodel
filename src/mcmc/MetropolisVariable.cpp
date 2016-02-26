@@ -92,7 +92,7 @@ void MetropolisVariable::setFormat(const DateUtils::FormatDate fm)
  */
 void MetropolisVariable::updateFormatedTrace()
 {
-    mFormatedTrace.clear();
+    if(mFormatedTrace.isEmpty()) mFormatedTrace.clear();
     mRawTrace.squeeze(); // just cleaning, must be somewhere else to optimize
     mFormatedTrace.reserve(mRawTrace.size());
     QVector<double>::const_iterator iter = mRawTrace.constBegin();
@@ -240,8 +240,8 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
         fftwf_free(output);
         input = 0;
         output = 0;
-        //fftwf_destroy_plan(plan_forward);
-        //fftwf_destroy_plan(plan_backward);
+        fftwf_destroy_plan(plan_forward);
+        fftwf_destroy_plan(plan_backward);
         //delete input;
         //delete output;
         result = equal_areas(result, 1.); // normalize the output area du to the fftw and the case (t >= tmin && t<= tmax)

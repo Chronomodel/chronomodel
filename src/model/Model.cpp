@@ -58,28 +58,37 @@ Model::~Model()
 void Model::clear()
 {
     this->clearTraces();
-    foreach (Event* ev, mEvents) {
-        delete ev;
-        ev = 0;
-    }
-    mEvents.clear();
-    foreach (Phase* ph, mPhases) {
-        delete ph;
-        ph = 0;
-    }
-    mPhases.clear();
+    if(!mEvents.isEmpty()) {
+        foreach (Event* ev, mEvents) {
+            if(ev) delete ev;
+            ev = 0;
+        }
+        mEvents.clear();
+     }
 
-    foreach (PhaseConstraint* ph, mPhaseConstraints) {
-        delete ph;
-        ph = 0;
+    if(!mPhases.isEmpty()) {
+        foreach (Phase* ph, mPhases) {
+            if(ph) delete ph;
+            ph = 0;
+        }
+        mPhases.clear();
     }
-    mPhaseConstraints.clear();
 
-    foreach (EventConstraint* ev, mEventConstraints) {
-        delete ev;
-        ev = 0;
+    if(!mPhaseConstraints.isEmpty()) {
+        foreach (PhaseConstraint* ph, mPhaseConstraints) {
+            //if(ph) delete ph;
+            ph = 0;
+        }
+        mPhaseConstraints.clear();
     }
-    mEventConstraints.clear();
+
+    if(!mEventConstraints.isEmpty()) {
+        foreach (EventConstraint* ev, mEventConstraints) {
+            //if(ev) delete ev;
+            ev = 0;
+        }
+        mEventConstraints.clear();
+    }
 
     mChains.clear();
     mLogModel.clear();
@@ -245,15 +254,15 @@ void Model::fromJson(const QJsonObject& json)
     // Link des phases / contraintes de phase
     for(int i=0; i<mPhases.size(); ++i)
     {
-        int phaseId = mPhases[i]->mId;
+        int phaseId = mPhases.at(i)->mId;
         for(int j=0; j<mPhaseConstraints.size(); ++j)
         {
-            if(mPhaseConstraints[j]->mFromId == phaseId)
+            if(mPhaseConstraints.at(j)->mFromId == phaseId)
             {
                 mPhaseConstraints[j]->mPhaseFrom = mPhases[i];
                 mPhases[i]->mConstraintsFwd.append(mPhaseConstraints[j]);
             }
-            else if(mPhaseConstraints[j]->mToId == phaseId)
+            else if(mPhaseConstraints.at(j)->mToId == phaseId)
             {
                 mPhaseConstraints[j]->mPhaseTo = mPhases[i];
                 mPhases[i]->mConstraintsBwd.append(mPhaseConstraints[j]);

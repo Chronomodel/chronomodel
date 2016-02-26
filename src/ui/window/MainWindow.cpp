@@ -58,7 +58,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     connect(mResetMCMCAction, SIGNAL(triggered()), mProject, SLOT(resetMCMC()));
     connect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
     connect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));
-    
+
 
     connect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
     
@@ -74,7 +74,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
 
     
     mProjectView->doProjectConnections(mProject);
-    
+
 
     QLocale newLoc(QLocale::system());
     mAppSettings.mLanguage = newLoc.language();
@@ -400,6 +400,9 @@ void MainWindow::newProject()
     // Return true if the project doesn't need to be saved.
     // Returns true if the user saves the project or if the user doesn't want to save it.
     // Returns false if the user cancels.
+
+    //mProject->setAppSettings(mAppSettings);
+
     if(mProject->askToSave(tr("Save current project as...")))
     {
         // Ask to save the new project.
@@ -433,6 +436,9 @@ void MainWindow::openProject()
     
     if(!path.isEmpty())
     {
+
+        //mProject->setAppSettings(mAppSettings);
+
         if(mProject->askToSave(tr("Save current project as...")))
         {
             QFileInfo info(path);
@@ -458,7 +464,6 @@ void MainWindow::closeProject()
         mProject->initState(CLOSE_PROJECT_REASON);
         mProject->mLastSavedState = mProject->emptyState();
         mProject->mProjectFileName = QString();
-        
         // Go back to model tab :
         mViewModelAction->trigger();
         mProject->clearModel();

@@ -64,6 +64,11 @@ mProjectFileName(QObject::tr("Untitled"))
 Project::~Project()
 {
     mAutoSaveTimer->stop();
+  /*  delete mModel;
+    mModel = 0;
+
+    delete mAutoSaveTimer;
+    mAutoSaveTimer = 0;*/
 }
 
 
@@ -736,7 +741,7 @@ void Project::restoreMCMCSettings()
 void Project::mcmcSettings()
 {
     MCMCSettingsDialog dialog(qApp->activeWindow());
-    MCMCSettings settings = MCMCSettings::fromJson(mState[STATE_MCMC].toObject());
+    MCMCSettings settings = MCMCSettings::fromJson(mState.value(STATE_MCMC).toObject());
     //settings.fromJson(mState[STATE_MCMC].toObject());
     dialog.setSettings(settings);
     dialog.setModal(true);
@@ -764,17 +769,17 @@ void Project::resetMCMC()
     if(message.exec() == QMessageBox::Yes)
     {
         QJsonObject stateNext = mState;
-        QJsonArray events = mState[STATE_EVENTS].toArray();
+        QJsonArray events = mState.value(STATE_EVENTS).toArray();
         
         for(int i=0; i<events.size(); ++i)
         {
-            QJsonObject event = events[i].toObject();
+            QJsonObject event = events.at(i).toObject();
             event[STATE_EVENT_METHOD] = (int)Event::eDoubleExp;
             
-            QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+            QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
             for(int j=0; j<dates.size(); ++j)
             {
-                QJsonObject date = dates[j].toObject();
+                QJsonObject date = dates.at(j).toObject();
                 
                 try{
                     Date d = Date::fromJson(date);
@@ -805,9 +810,9 @@ void Project::resetMCMC()
 
 bool Project::studyPeriodIsValid()
 {
-    QJsonObject settings = mState[STATE_SETTINGS].toObject();
-    int tmin = settings[STATE_SETTINGS_TMIN].toInt();
-    int tmax = settings[STATE_SETTINGS_TMAX].toInt();
+    const QJsonObject settings = mState.value(STATE_SETTINGS).toObject();
+    const int tmin = settings.value(STATE_SETTINGS_TMIN).toInt();
+    const int tmax = settings.value(STATE_SETTINGS_TMAX).toInt();
     if(tmin >= tmax)
     {
         showStudyPeriodWarning();
@@ -843,7 +848,7 @@ int Project::getUnusedEventId(const QJsonArray& events)
         for(int i=0; i<events.size(); ++i)
         {
             QJsonObject event = events.at(i).toObject();
-            if(event[STATE_ID].toInt() == id)
+            if(event.value(STATE_ID).toInt() == id)
                 idIsFree = false;
         }
     }
@@ -885,7 +890,7 @@ void Project::createEventKnown()
 void Project::addEvent(QJsonObject event, const QString& reason)
 {
     QJsonObject stateNext = mState;
-    QJsonArray events = stateNext[STATE_EVENTS].toArray();
+    QJsonArray events = stateNext.value(STATE_EVENTS).toArray();
     
     event[STATE_ID] = getUnusedEventId(events);
     events.append(event);
@@ -899,21 +904,21 @@ void Project::deleteSelectedEvents()
 {
     QJsonObject stateNext = mState;
     
-    QJsonArray events = mState[STATE_EVENTS].toArray();
-    QJsonArray events_constraints = mState[STATE_EVENTS_CONSTRAINTS].toArray();
-    QJsonArray events_trash = mState[STATE_EVENTS_TRASH].toArray();
+    QJsonArray events = mState.value(STATE_EVENTS).toArray();
+    QJsonArray events_constraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
+    QJsonArray events_trash = mState.value(STATE_EVENTS_TRASH).toArray();
     
     for(int i=events.size()-1; i>=0; --i)
     {
         QJsonObject event = events[i].toObject();
-        if(event[STATE_IS_SELECTED].toBool())
+        if(event.value(STATE_IS_SELECTED).toBool())
         {
             int event_id = event[STATE_ID].toInt();
             for(int j=events_constraints.size()-1; j>=0; --j)
             {
                 QJsonObject constraint = events_constraints[j].toObject();
-                int bwd_id = constraint[STATE_CONSTRAINT_BWD_ID].toInt();
-                int fwd_id = constraint[STATE_CONSTRAINT_FWD_ID].toInt();
+                int bwd_id = constraint.value(STATE_CONSTRAINT_BWD_ID).toInt();
+                int fwd_id = constraint.value(STATE_CONSTRAINT_FWD_ID).toInt();
                 if(bwd_id == event_id || fwd_id == event_id)
                 {
                     events_constraints.removeAt(j);
@@ -938,12 +943,12 @@ void Project::deleteSelectedTrashedEvents(const QList<int>& ids)
 {
     QJsonObject stateNext = mState;
     
-    QJsonArray events_trash = mState[STATE_EVENTS_TRASH].toArray();
+    QJsonArray events_trash = mState.value(STATE_EVENTS_TRASH).toArray();
     
     for(int i=events_trash.size()-1; i>=0; --i)
     {
         QJsonObject event = events_trash[i].toObject();
-        int id = event[STATE_ID].toInt();
+        int id = event.value(STATE_ID).toInt();
         
         if(ids.contains(id))
         {
@@ -964,8 +969,8 @@ void Project::recycleEvents()
         qDebug() << indexes;
         
         QJsonObject stateNext = mState;
-        QJsonArray events = mState[STATE_EVENTS].toArray();
-        QJsonArray events_trash = mState[STATE_EVENTS_TRASH].toArray();
+        QJsonArray events = mState.value(STATE_EVENTS).toArray();
+        QJsonArray events_trash = mState.value(STATE_EVENTS_TRASH).toArray();
         
         for(int i=indexes.size()-1; i>=0; --i)
         {
@@ -983,11 +988,11 @@ void Project::recycleEvents()
 void Project::updateEvent(const QJsonObject& event, const QString& reason)
 {
     QJsonObject stateNext = mState;
-    QJsonArray events = mState[STATE_EVENTS].toArray();
+    QJsonArray events = mState.value(STATE_EVENTS).toArray();
     for(int i=0; i<events.size(); ++i)
     {
         QJsonObject evt = events[i].toObject();
-        if(evt[STATE_ID].toInt() == event[STATE_ID].toInt())
+        if(evt[STATE_ID].toInt() == event.value(STATE_ID).toInt())
         {
             events[i] = event;
             break;
@@ -1004,7 +1009,7 @@ void Project::updateEvent(const QJsonObject& event, const QString& reason)
 void Project::mergeEvents(int eventFromId, int eventToId)
 {
     QJsonObject stateNext = mState;
-    QJsonArray events = mState[STATE_EVENTS].toArray();
+    QJsonArray events = mState.value(STATE_EVENTS).toArray();
     QJsonObject eventFrom;
     QJsonObject eventTo;
     int fromIndex = -1;
@@ -1013,7 +1018,7 @@ void Project::mergeEvents(int eventFromId, int eventToId)
     for(int i=events.size()-1; i>=0; --i)
     {
         QJsonObject evt = events.at(i).toObject();
-        int id = evt[STATE_ID].toInt();
+        int id = evt.value(STATE_ID).toInt();
         if(id == eventFromId)
         {
             eventFrom = evt;
@@ -1025,8 +1030,8 @@ void Project::mergeEvents(int eventFromId, int eventToId)
             toIndex = i;
         }
     }
-    QJsonArray datesFrom = eventFrom[STATE_EVENT_DATES].toArray();
-    QJsonArray datesTo = eventTo[STATE_EVENT_DATES].toArray();
+    QJsonArray datesFrom = eventFrom.value(STATE_EVENT_DATES).toArray();
+    QJsonArray datesTo = eventTo.value(STATE_EVENT_DATES).toArray();
     for(int i=0; i<datesFrom.size(); ++i){
         QJsonObject dateFrom = datesFrom.at(i).toObject();
         dateFrom[STATE_ID] = getUnusedDateId(datesTo);
@@ -1039,12 +1044,12 @@ void Project::mergeEvents(int eventFromId, int eventToId)
     stateNext[STATE_EVENTS] = events;
     
     // Delete constraints around the disappearing event
-    QJsonArray constraints = stateNext[STATE_EVENTS_CONSTRAINTS].toArray();
+    QJsonArray constraints = stateNext.value(STATE_EVENTS_CONSTRAINTS).toArray();
     for(int i=constraints.size()-1; i>=0; --i)
     {
         QJsonObject c = constraints.at(i).toObject();
-        int fromId = c[STATE_CONSTRAINT_BWD_ID].toInt();
-        int toId = c[STATE_CONSTRAINT_FWD_ID].toInt();
+        int fromId = c.value(STATE_CONSTRAINT_BWD_ID).toInt();
+        int toId = c.value(STATE_CONSTRAINT_FWD_ID).toInt();
         if(eventFromId == fromId || eventFromId == toId)
         {
             constraints.removeAt(i);
@@ -1061,11 +1066,11 @@ void Project::mergeEvents(int eventFromId, int eventToId)
 void Project::updateSelectedEventsColor(const QColor& color)
 {
     QJsonObject stateNext = mState;
-    QJsonArray events = mState[STATE_EVENTS].toArray();
+    QJsonArray events = mState.value(STATE_EVENTS).toArray();
     for(int i=0; i<events.size(); ++i)
     {
         QJsonObject evt = events[i].toObject();
-        if(evt[STATE_IS_SELECTED].toBool())
+        if(evt.value(STATE_IS_SELECTED).toBool())
         {
             evt[STATE_COLOR_RED] = color.red();
             evt[STATE_COLOR_GREEN] = color.green();
@@ -1080,11 +1085,11 @@ void Project::updateSelectedEventsColor(const QColor& color)
 void Project::updateSelectedEventsMethod(Event::Method method)
 {
     QJsonObject stateNext = mState;
-    QJsonArray events = mState[STATE_EVENTS].toArray();
+    QJsonArray events = mState.value(STATE_EVENTS).toArray();
     for(int i=0; i<events.size(); ++i)
     {
         QJsonObject evt = events[i].toObject();
-        if(evt[STATE_IS_SELECTED].toBool())
+        if(evt.value(STATE_IS_SELECTED).toBool())
         {
             evt[STATE_EVENT_METHOD] = method;
             events[i] = evt;
@@ -1097,11 +1102,11 @@ void Project::updateSelectedEventsMethod(Event::Method method)
 void Project::updateSelectedEventsDataMethod(Date::DataMethod method, const QString& pluginId)
 {
     QJsonObject stateNext = mState;
-    QJsonArray events = mState[STATE_EVENTS].toArray();
+    QJsonArray events = mState.value(STATE_EVENTS).toArray();
     for(int i=0; i<events.size(); ++i)
     {
         QJsonObject evt = events[i].toObject();
-        if(evt[STATE_IS_SELECTED].toBool())
+        if(evt.value(STATE_IS_SELECTED).toBool())
         {
             QJsonArray dates = evt[STATE_EVENT_DATES].toArray();
             for(int j=0; j<dates.size(); ++j)
@@ -1218,15 +1223,15 @@ void Project::addDate(int eventId, QJsonObject date)
 void Project::checkDatesCompatibility()
 {
     QJsonObject state = mState;
-    QJsonArray events = mState[STATE_EVENTS].toArray();
-    QJsonArray phases = mState[STATE_PHASES].toArray();
+    QJsonArray events = mState.value(STATE_EVENTS).toArray();
+    QJsonArray phases = mState.value(STATE_PHASES).toArray();
     for(int i=0; i<events.size(); ++i)
     {
-        QJsonObject event = events[i].toObject();
-        QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+        QJsonObject event = events.at(i).toObject();
+        QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
         for(int j=0; j<dates.size(); ++j)
         {
-            QJsonObject date = dates[j].toObject();
+            QJsonObject date = dates.at(j).toObject();
             
             // -----------------------------------------------------------
             //  Check the date compatibility with the plugin version.

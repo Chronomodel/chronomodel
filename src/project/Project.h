@@ -18,7 +18,6 @@
 #define CLOSE_PROJECT_REASON "close project"
 
 class Date;
-class Date;
 class Event;
 class EventKnown;
 class Phase;

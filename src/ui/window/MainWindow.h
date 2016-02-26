@@ -11,7 +11,6 @@ class QActionGroup;
 class QStackedWidget;
 class QUndoStack;
 class QUndoView;
-class QUndoView;
 class QDockWidget;
 class ProjectView;
 class Project;

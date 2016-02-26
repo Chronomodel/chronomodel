@@ -360,7 +360,7 @@ double vector_interpolate_idx_for_value(const double value, const QVector<double
  */
 const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double threshold)
 {
-    double areaTot = map_area(aMap);
+    const double areaTot = map_area(aMap);
     QMap<double, double> result;
     
     if (areaTot==threshold) {
@@ -368,69 +368,76 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double t
         return result;
     }
     else {
-        QMultiMap<double, double> inverted;
-        QMapIterator<double, double> iter(aMap);
+        try {
+            QMultiMap<double, double> inverted;
+            QMap<double, double>::const_iterator cIter = aMap.cbegin();
+            while(cIter != aMap.cend()) {
+                 const double t = cIter.key();
+                 const double v = cIter.value();
+                 result[t] = 0; // important to init all the possible value
+                 inverted.insertMulti(v, t);
+                 ++cIter;
+            }
 
-        while(iter.hasNext()) {
-             iter.next();
-             double t = iter.key();
-             double v = iter.value();
-             result[t] = 0; // important to init all the possible value
-             inverted.insertMulti(v, t);
-        }
+            QMapIterator<double, double> iterInverted(inverted);
 
-        QMapIterator<double, double> iterInverted(inverted);
+            double area         = 0.f;
+            double areaSearched = areaTot * threshold / 100.;
 
-        double area         = 0.f;
-        double areaSearched = areaTot * threshold / 100.;
+            iterInverted.toBack();
+        //--------------------
+            while(iterInverted.hasPrevious()) {
+                iterInverted.previous();
+                const double t = iterInverted.value();
+                const double v = iterInverted.key();
 
-        iterInverted.toBack();
-    //--------------------
-        while(iterInverted.hasPrevious()) {
-            iterInverted.previous();
-            double t = iterInverted.value();
-            double v = iterInverted.key();
-        
-            QMap<double, double> ::const_iterator iterMap = aMap.constFind(t);
-        
-            /*
-                This part of code fix the case of irregular QMap when the step between keys are not the same
-             */
-            if (iterMap.key() == t) { // meaning : constFind(t) find the good key else iterMap = constEnd()
+                QMap<double, double> ::const_iterator iterMap = aMap.constFind(t);
 
-                if ( iterMap != aMap.constBegin() ) { // meaning : iterMap is not the first item
-                    double vPrev = (iterMap-1).value();
-                    if (vPrev>=v) {
-                        double tPrev = (iterMap-1).key();
-                        area   +=(v + vPrev)/2*(t - tPrev);
+                /*
+                    This part of code fix the case of irregular QMap when the step between keys are not the same
+                 */
+                if (iterMap.key() == t) { // meaning : constFind(t) find the good key else iterMap = constEnd()
+
+                    if ( iterMap != aMap.constBegin() ) { // meaning : iterMap is not the first item
+                        const double vPrev = (iterMap-1).value();
+                        if (vPrev>=v) {
+                            const double tPrev = (iterMap-1).key();
+                            area   +=(v + vPrev)/2*(t - tPrev);
+                        }
                     }
+
+                    if (iterMap != aMap.constEnd() ) {
+                        const double vNext = (iterMap+1).value();
+                        if (vNext>v) {
+                            const double tNext = (iterMap+1).key();
+                            area   +=(v + vNext)/2*(tNext - t);
+                        }
+                    }
+
                 }
 
-                if (iterMap != aMap.constEnd() ) {
-                    double vNext = (iterMap+1).value();
-                    if (vNext>v) {
-                        double tNext = (iterMap+1).key();
-                        area   +=(v + vNext)/2*(tNext - t);
-                    }
-                }
-
-            }
-        
-            if(iterInverted.hasPrevious() &&  (iterInverted.peekPrevious().key()==v) ) {
-                result[t] = v;
-            }
-             else {
-                if(area < areaSearched) {
+                if(iterInverted.hasPrevious() &&  (iterInverted.peekPrevious().key()==v) ) {
                     result[t] = v;
                 }
-                else if(area > areaSearched) {
-                    return result;
+                 else {
+                    if(area < areaSearched) {
+                        result[t] = v;
+                    }
+                    else if(area > areaSearched) {
+                        return result;
+                    }
                 }
             }
-        }
 
-        return result;
-   }
+            return result;
+       }
+       catch (std::exception const & e) {
+            qDebug()<< "in stdUtilities::create_HPD() Error"<<e.what();
+            return aMap;
+       }
+
+
+    }
 }
 
 double map_area(const QMap<double, double>& map)
@@ -438,26 +445,22 @@ double map_area(const QMap<double, double>& map)
     if(map.isEmpty())
         return 0;
     
-    QMapIterator<double, double> iter(map);
+    QMap<double, double>::const_iterator cIter = map.cbegin();
     double srcArea = 0.f;
-    iter.toFront();
-    iter.next();
 
-    double lastV = iter.value();
-    double lastT = iter.key();
+    double lastV = cIter.value();
+    double lastT = cIter.key();
     
-    while(iter.hasNext())
+    while(cIter != map.cend())
     {
-        
-        iter.next();
-        double v = iter.value();
-        double t = iter.key();
+        const double v = cIter.value();
+        const double t = cIter.key();
         if (lastV>0 && v>0) {
             srcArea += (lastV+v)/2 * (t-lastT);
         }
         lastV = v;
         lastT = t;
-        
+        ++cIter;
     }
        
     return srcArea;

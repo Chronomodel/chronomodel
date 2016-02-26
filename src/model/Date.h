@@ -134,7 +134,7 @@ public:
     
     QList<Date> mSubDates;
     
-    const QJsonObject * mJsonEvent;
+    //const QJsonObject * mJsonEvent;
     double mMixingLevel;
     
 protected:

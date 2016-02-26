@@ -121,7 +121,14 @@ void Date::copyFrom(const Date& date)
 
 Date::~Date()
 {
-    
+    //delete mPlugin;
+    mPlugin = 0;
+    mCalibration.clear();
+    mRepartition.clear();
+    mCalibHPD.clear();
+
+    mSubDates.clear();
+
 }
 
 bool Date::isNull() const

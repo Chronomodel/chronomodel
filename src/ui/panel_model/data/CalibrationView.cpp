@@ -97,6 +97,7 @@ CalibrationView::~CalibrationView()
 
 void CalibrationView::setDate(const QJsonObject& date)
 {
+    if(date.isEmpty()) return;
     Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
     QJsonObject settings = state.value(STATE_SETTINGS).toObject();

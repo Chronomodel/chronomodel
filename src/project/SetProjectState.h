@@ -16,7 +16,7 @@ public:
                     const QJsonObject& nextState,
                     const QString& reason,
                     bool notify);
-    
+    virtual ~SetProjectState();
     virtual void undo();
     virtual void redo();
     

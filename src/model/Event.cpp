@@ -89,7 +89,34 @@ void Event::copyFrom(const Event& event)
 
 Event::~Event()
 {
+    /*mDates.clear();
 
+    mPhasesIds.clear();
+    mConstraintsFwdIds.clear();
+    mConstraintsBwdIds.clear();*/
+    if(!mPhases.isEmpty()) {
+        foreach (Phase* ph, mPhases) {
+            //if(ph) delete ph;
+            ph = 0;
+        }
+        mPhases.clear();
+     }
+
+    if(!mConstraintsFwd.isEmpty()) {
+      /*  foreach (EventConstraint* ec, mConstraintsFwd) {
+            if(ec) delete ec;
+            ec = 0;
+        }*/
+        mConstraintsFwd.clear();
+     }
+
+    if(!mConstraintsBwd.isEmpty()) {
+        foreach (EventConstraint* ec, mConstraintsBwd) {
+            if(ec) delete ec;
+            ec = 0;
+        }
+        mConstraintsBwd.clear();
+     }
 }
 
 

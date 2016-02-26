@@ -65,13 +65,13 @@ mGraphsH(130)
     
     mStack = new QStackedWidget(this);
     
-    mEventsScrollArea = new QScrollArea();
+    /*mEventsScrollArea = new QScrollArea();
     mEventsScrollArea->setMouseTracking(true);
     mStack->addWidget(mEventsScrollArea);
     
     mPhasesScrollArea = new QScrollArea();
     mPhasesScrollArea->setMouseTracking(true);
-    mStack->addWidget(mPhasesScrollArea);
+    mStack->addWidget(mPhasesScrollArea);*/
     
     mMarker = new Marker(this);
     
@@ -665,21 +665,18 @@ void ResultsView::clearResults()
     mByEventsBut->setEnabled(false);
     mByPhasesBut->setEnabled(false);
     
-    for(int i=mCheckChainChecks.size()-1; i>=0; --i)
+
+    for(int i=0; i<mCheckChainChecks.size(); ++i)
     {
-        CheckBox* check = mCheckChainChecks.takeAt(i);
-        disconnect(check, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
-        delete check;
-        check = 0;
+        delete mCheckChainChecks[i];
+        mCheckChainChecks[i] = 0;
     }
     mCheckChainChecks.clear();
     
-    for(int i=mChainRadios.size()-1; i>=0; --i)
+    for(int i=0; i<mChainRadios.size(); ++i)
     {
-        RadioButton* but = mChainRadios.takeAt(i);
-        disconnect(but, &RadioButton::clicked, this, &ResultsView::updateCurvesToShow);
-        delete but;
-        but = 0;
+        delete mChainRadios[i];
+        mChainRadios[i] = 0;
     }
     mChainRadios.clear();
     
@@ -696,18 +693,12 @@ void ResultsView::clearResults()
         mByPhasesGraphs[i] = 0;
     }
     mByPhasesGraphs.clear();
-    
-    QWidget* eventsWidget = mEventsScrollArea->takeWidget();
-    if(eventsWidget) {
-        delete eventsWidget;
-        eventsWidget = 0;
-    }
-    
-    QWidget* phasesWidget = mPhasesScrollArea->takeWidget();
-    if(phasesWidget) {
-        delete phasesWidget;
-        phasesWidget = 0;
-    }
+
+    delete mEventsScrollArea;
+    delete mPhasesScrollArea;
+
+    mEventsScrollArea = 0;
+    mPhasesScrollArea = 0;
 
     mResultMinX = mSettings.getTminFormated();
     mResultMaxX = mSettings.getTmaxFormated();
@@ -817,7 +808,11 @@ void ResultsView::updateResults(Model* model)
 
 void ResultsView::createEventsScrollArea()
 {
-     //int tabIdx = mTabs->currentIndex();
+    mEventsScrollArea = new QScrollArea();
+    mEventsScrollArea->setMouseTracking(true);
+    mStack->addWidget(mEventsScrollArea);
+
+    //int tabIdx = mTabs->currentIndex();
     //if(mTabs->currentIndex()==0) return; // this is a phase view
     QWidget* eventsWidget = new QWidget();
 
@@ -868,6 +863,10 @@ void ResultsView::createEventsScrollArea()
 
 void ResultsView::createPhasesScrollArea()
 {
+    mPhasesScrollArea = new QScrollArea();
+    mPhasesScrollArea->setMouseTracking(true);
+    mStack->addWidget(mPhasesScrollArea);
+
     QWidget* phasesWidget = new QWidget();
     phasesWidget->setMouseTracking(true);
     // In a Phases at the minimum, we have one Event with one Date
@@ -1202,16 +1201,24 @@ void ResultsView::settingChange()
 void ResultsView::updateResultsLog()
 {
     QString log;
-    for(int i=0; i<mModel->mEvents.size(); ++i)
-    {
-        Event* event = mModel->mEvents[i];
-        log += ModelUtilities::eventResultsHTML(event, true, mModel);
+    try {
+        for(int i=0; i<mModel->mEvents.size(); ++i)
+        {
+            Event* event = mModel->mEvents[i];
+            log += ModelUtilities::eventResultsHTML(event, true, mModel);
+        }
+        for(int i=0; i<mModel->mPhases.size(); ++i)
+        {
+            Phase* phase = mModel->mPhases[i];
+            log += ModelUtilities::phaseResultsHTML(phase);
+        }
     }
-    for(int i=0; i<mModel->mPhases.size(); ++i)
+    catch (std::exception const & e)
     {
-        Phase* phase = mModel->mPhases[i];
-        log += ModelUtilities::phaseResultsHTML(phase);
+        qDebug()<< "in ResultsView::updateResultsLog() Error"<<e.what();
+        log = tr("impossible to compute");
     }
+
     emit resultsLogUpdated(log);
 }
 

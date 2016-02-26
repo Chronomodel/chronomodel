@@ -17,6 +17,11 @@ mNotify(notify)
     // Resizing them every time... (actually, this is the only reason to disable the line below!)
     setText(mReason);
 }
+SetProjectState:: ~SetProjectState()
+{
+    //delete mProject;
+    mProject = 0;
+}
 
 void SetProjectState::undo()
 {

@@ -32,15 +32,16 @@ void EventConstraint::copyFrom(const Constraint& c)
 
 EventConstraint::~EventConstraint()
 {
-    
+    mEventFrom = 0;
+    mEventTo = 0;
 }
 
 EventConstraint EventConstraint::fromJson(const QJsonObject& json)
 {
     EventConstraint c;
-    c.mId = json[STATE_ID].toInt();
-    c.mFromId = json[STATE_CONSTRAINT_BWD_ID].toInt();
-    c.mToId = json[STATE_CONSTRAINT_FWD_ID].toInt();
+    c.mId = json.value(STATE_ID).toInt();
+    c.mFromId = json.value(STATE_CONSTRAINT_BWD_ID).toInt();
+    c.mToId = json.value(STATE_CONSTRAINT_FWD_ID).toInt();
     return c;
 }
 
