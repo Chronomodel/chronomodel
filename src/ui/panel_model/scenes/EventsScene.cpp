@@ -13,6 +13,7 @@
 #include "HelpWidget.h"
 #include "QtUtilities.h"
 #include <QtWidgets>
+#include <QProgressDialog>
 
 
 EventsScene::EventsScene(QGraphicsView* view, QObject* parent):AbstractScene(view, parent)
@@ -285,29 +286,48 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
 
 void EventsScene::updateProject()
 {
+
+#ifdef DEBUG
+   qDebug()<<"EventsScene::updateProject() begin";
+   QTime startTime = QTime::currentTime();
+#endif
     QJsonObject state = MainWindow::getInstance()->getProject()->state();
-    QJsonArray events = state[STATE_EVENTS].toArray();
-    QJsonArray constraints = state[STATE_EVENTS_CONSTRAINTS].toArray();
-    QJsonObject settings = state[STATE_SETTINGS].toObject();
-    
-    QList<int> events_ids;
-    for(int i=0; i<events.size(); ++i)
-        events_ids << events.at(i).toObject().value(STATE_ID).toInt();
+    QJsonArray eventsInNewState = state.value(STATE_EVENTS).toArray();
+    QJsonArray constraints = state.value(STATE_EVENTS_CONSTRAINTS).toArray();
+    QJsonObject settings = state.value(STATE_SETTINGS).toObject();
+
+    QProgressDialog* progress = 0;
+    bool displayProgress = false;
+    if(mItems.size() != eventsInNewState.size()) {
+        displayProgress = true;
+        progress = new QProgressDialog("Create / Update event items","Wait" , 1, eventsInNewState.size(),qApp->activeWindow());
+        progress->setWindowModality(Qt::WindowModal);
+        progress->setCancelButton(0);
+    }
+
+    QList<int> events_ids_inNewState;
+    for(int i=0; i<eventsInNewState.size(); ++i)
+        events_ids_inNewState << eventsInNewState.at(i).toObject().value(STATE_ID).toInt();
     
     QList<int> constraints_ids;
     for(int i=0; i<constraints.size(); ++i)
         constraints_ids << constraints.at(i).toObject().value(STATE_ID).toInt();
     
+    // ------------------------------------------------------
+    //  Update settings
+    // ------------------------------------------------------
     bool settingsChanged = false;
     ProjectSettings s = ProjectSettings::fromJson(settings);
     if(mSettings != s)
     {
         settingsChanged = true;
         mSettings = s;
+
     }
     
     mUpdatingItems = true;
-    
+
+    //progress->show();
     // ------------------------------------------------------
     //  Delete items not in current state
     // ------------------------------------------------------
@@ -317,7 +337,7 @@ void EventsScene::updateProject()
         EventItem* eventItem = (EventItem*)mItems[i];
         QJsonObject& event = eventItem->getEvent();
         
-        if(!events_ids.contains(event.value(STATE_ID).toInt()))
+        if(!events_ids_inNewState.contains(event.value(STATE_ID).toInt()))
         {
             if(event.value(STATE_EVENT_TYPE).toInt() == Event::eDefault)
             {
@@ -329,7 +349,7 @@ void EventsScene::updateProject()
                 }
             }
 #ifdef DEBUG
-            //qDebug() << "Event deleted : " << event[STATE_ID].toInt();
+            qDebug() << "Event deleted : " << event[STATE_ID].toInt();
 #endif
             mItems.removeAt(i);
             hasDeleted = true;
@@ -341,75 +361,79 @@ void EventsScene::updateProject()
         }
     }
     
-    // ------------------------------------------------------
+    bool hasCreated = false;
+   // ------------------------------------------------------
     //  Create / Update event items
     // ------------------------------------------------------
-    bool hasCreated = false;
-    for(int i=0; i<events.size(); ++i)
+    int i = 0;
+    if(displayProgress) progress->setLabelText(tr("Create / Update event items"));
+    for(QJsonArray::const_iterator citer = eventsInNewState.constBegin(); citer != eventsInNewState.constEnd(); ++citer)
     {
-        QJsonObject event = events.at(i).toObject();
-        
-        bool itemExists = false;
-        for(int j=0; j<mItems.size(); ++j)
-        {
-            EventItem* item = (EventItem*)mItems[j];
+        const QJsonObject event = (*citer).toObject();
+        ++i;
+        if(displayProgress) progress->setValue(i);
 
-            QJsonObject itemEvent = item->getEvent();
-            if(itemEvent.value(STATE_ID).toInt() == event.value(STATE_ID).toInt())
-            {
-                itemExists = true;
-                if(event != itemEvent || settingsChanged)
-                {
+        bool itemUnkown = true;
+        for(QList<AbstractItem*>::const_iterator cIterOld = mItems.cbegin(); cIterOld != mItems.cend() && itemUnkown; ++cIterOld) {
+            EventItem* oldItem = (EventItem*)(*cIterOld);
+
+            const QJsonObject OldItemEvent = oldItem->getEvent();
+
+            if( OldItemEvent.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
+
+                itemUnkown = false;
+                if(event != OldItemEvent || settingsChanged) {
                     // UPDATE ITEM
 #ifdef DEBUG
-                    qDebug() << "Event updated : id = " << event.value(STATE_ID).toInt();
+                    qDebug() << "Event updated : id = " << event.value(STATE_ID).toInt()<< event.value(STATE_NAME).toString();
 #endif
-                    item->setEvent(event, settings);
+                    oldItem->setEvent(event, settings);
                 }
-            }
+             }
 
-
+            oldItem = 0;
         }
-        if(!itemExists)
-        {
+        if(itemUnkown) {
             // CREATE ITEM
-            EventItem* eventItem = 0;
-            Event::Type type = (Event::Type)event.value(STATE_EVENT_TYPE).toInt();
-            if(type == Event::eDefault)
-                eventItem = new EventItem(this, event, settings);
-            else if(type == Event::eKnown)
-                eventItem = new EventKnownItem(this, event, settings);
-            
-            mItems.append(eventItem);
-            addItem(eventItem);
-            
-            // Pratique pour ajouter des dates au dernier event créé!
-            clearSelection();
-            eventItem->setSelected(true);
-            
-            // Note : setting an event in (0, 0) tells the scene that this item is new!
-            // Thus the scene will move it randomly around the currently viewed center point.
-            QPointF pos = eventItem->pos();
-            if(pos.isNull())
-            {
-                QList<QGraphicsView*> gviews = views();
-                if(gviews.size() > 0)
-                {
-                    QGraphicsView* gview = gviews[0];
-                    QPointF pt = gview->mapToScene(gview->width()/2, gview->height()/2);
-                    int posDelta = 100;
-                    eventItem->setPos(pt.x() + rand() % posDelta - posDelta/2,
-                                      pt.y() + rand() % posDelta - posDelta/2);
-                }
+                Event::Type type = (Event::Type)event.value(STATE_EVENT_TYPE).toInt();
+                EventItem* newItem = 0;
+                if(type == Event::eDefault)
+                    newItem = new EventItem(this, event, settings);
+                else //if(type == Event::eKnown)
+                    newItem = new EventKnownItem(this, event, settings);
+
+                mItems.append(newItem);
+                addItem(newItem);
+
+
+                // Usefull to add some dates to last created Event!
+                clearSelection();
+                newItem->setSelected(true);
+
+                // Note : setting an event in (0, 0) tells the scene that this item is new!
+                // Thus the scene will move it randomly around the currently viewed center point.
+                QPointF pos = newItem->pos();
+                if(pos.isNull()) {
+                    QList<QGraphicsView*> gviews = views();
+                    if(gviews.size() > 0)
+                    {
+                        QGraphicsView* gview = gviews[0];
+                        QPointF pt = gview->mapToScene(gview->width()/2, gview->height()/2);
+                        int posDelta = 100;
+                        newItem->setPos(pt.x() + rand() % posDelta - posDelta/2,
+                                          pt.y() + rand() % posDelta - posDelta/2);
+                    }
+
+                newItem = 0;
+                hasCreated = true;
+    #ifdef DEBUG
+                qDebug() << "Event created : id = " << event.value(STATE_ID).toInt() << event.value(STATE_NAME).toString()<<", type : " << type;
+    #endif
             }
-            
-            hasCreated = true;
-#ifdef DEBUG
-            //qDebug() << "Event created : id = " << event[STATE_ID].toInt() << ", type : " << type;
-#endif
+
         }
+
     }
-    
     // ------------------------------------------------------
     //  Delete constraints not in current state
     // ------------------------------------------------------
@@ -421,7 +445,7 @@ void EventsScene::updateProject()
         if(!constraints_ids.contains(constraint.value(STATE_ID).toInt()))
         {
 #ifdef DEBUG
-            //qDebug() << "Event Constraint deleted : " << constraint[STATE_ID].toInt();
+            qDebug() << "Event Constraint deleted : " << constraint.value(STATE_ID).toInt();
 #endif
             removeItem(constraintItem);
             mConstraintItems.removeOne(constraintItem);
@@ -432,10 +456,13 @@ void EventsScene::updateProject()
     // ------------------------------------------------------
     //  Create / Update constraint items
     // ------------------------------------------------------
+
+    if(displayProgress) progress->setLabelText(tr("Create / Update constraint items"));
+
     for(int i=0; i<constraints.size(); ++i)
     {
         const QJsonObject constraint = constraints.at(i).toObject();
-        
+        if(displayProgress) progress->setValue(i);
         bool itemExists = false;
         for(int j=0; j<mConstraintItems.size(); ++j)
         {
@@ -477,6 +504,18 @@ void EventsScene::updateProject()
     
     adjustSceneRect();
     adaptItemsForZoom(mZoom);
+
+   if(displayProgress) {
+       delete progress;
+       progress = 0;
+   }
+ #ifdef DEBUG
+
+    QTime timeDiff(0,0,0,1);
+    timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
+
+    qDebug()<<"EventsScene::updateProject() finish at " + timeDiff.toString("hh:mm:ss.zzz");
+ #endif
 }
 
 void EventsScene::clean()
@@ -489,7 +528,7 @@ void EventsScene::clean()
         EventItem* eventItem = (EventItem*)mItems[i];
         QJsonObject& event = eventItem->getEvent();
         
-        if(event[STATE_EVENT_TYPE].toInt() == Event::eDefault)
+        if(event.value(STATE_EVENT_TYPE).toInt() == Event::eDefault)
         {
             QList<QGraphicsItem*> dateItems = eventItem->childItems();
             for(int j=0; j<dateItems.size(); ++j)
@@ -517,7 +556,7 @@ void EventsScene::clean()
         ArrowItem* constraintItem = mConstraintItems[i];
 #ifdef DEBUG
         //QJsonObject& constraint = constraintItem->data();
-        //qDebug() << "Event Constraint deleted : " << constraint[STATE_ID].toInt();
+        //qDebug() << "Event Constraint deleted : " << constraint.value(STATE_ID).toInt();
 #endif
         removeItem(constraintItem);
         mConstraintItems.removeOne(constraintItem);

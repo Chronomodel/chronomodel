@@ -4,6 +4,7 @@
 #include "AbstractScene.h"
 #include "ProjectSettings.h"
 
+
 class QGraphicsItemAnimation;
 class QTimeLine;
 
@@ -73,6 +74,7 @@ private:
     
     QGraphicsItemAnimation* mDatesAnim;
     QTimeLine* mDatesAnimTimer;
+
 };
 
 #endif
