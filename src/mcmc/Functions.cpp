@@ -25,10 +25,10 @@ FunctionAnalysis analyseFunction(const QMap<double, double>& aFunction)
         qDebug() << "WARNING : in analyseFunction() aFunction isEmpty !! ";
         return result;
     }
-    typename QMap<double, double>::const_iterator it;
+    //typename QMap<double, double>::const_iterator it;
     
-    double max = 0;
-    double mode = 0;
+    double max = 0.;
+    double mode = 0.;
     double sum = 0.;
     double sum2 = 0.;
     double sumP = 0.;
@@ -36,13 +36,11 @@ FunctionAnalysis analyseFunction(const QMap<double, double>& aFunction)
     double prevY = 0;
     QList<double> uniformXValues;
     
-    QMapIterator<double, double> iter(aFunction);
-    while(iter.hasNext())
+    QMap<double,double>::const_iterator citer = aFunction.cbegin();
+    for(;citer != aFunction.cend(); ++citer)
     {
-        iter.next();
-        
-        double x = iter.key();
-        double y = iter.value();
+        const double x = citer.key();
+        const double y = citer.value();
         
         sumP += y;
         sum += y * x;
@@ -55,7 +53,7 @@ FunctionAnalysis analyseFunction(const QMap<double, double>& aFunction)
             {
                 uniformXValues.append(x);
                 int middleIndex = floor(uniformXValues.size()/2);
-                mode = uniformXValues[middleIndex];
+                mode = uniformXValues.at(middleIndex);
             }
             else
             {

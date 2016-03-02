@@ -89,30 +89,26 @@ void Event::copyFrom(const Event& event)
 
 Event::~Event()
 {
-    /*mDates.clear();
+    mDates.clear();
 
-    mPhasesIds.clear();
-    mConstraintsFwdIds.clear();
-    mConstraintsBwdIds.clear();*/
     if(!mPhases.isEmpty()) {
         foreach (Phase* ph, mPhases) {
-            //if(ph) delete ph;
             ph = 0;
         }
         mPhases.clear();
      }
 
     if(!mConstraintsFwd.isEmpty()) {
-      /*  foreach (EventConstraint* ec, mConstraintsFwd) {
+        foreach (EventConstraint* ec, mConstraintsFwd) {
             if(ec) delete ec;
             ec = 0;
-        }*/
+        }
         mConstraintsFwd.clear();
      }
 
     if(!mConstraintsBwd.isEmpty()) {
         foreach (EventConstraint* ec, mConstraintsBwd) {
-            if(ec) delete ec;
+            if(ec) ec->deleteLater();
             ec = 0;
         }
         mConstraintsBwd.clear();
@@ -183,7 +179,7 @@ QJsonObject Event::toJson() const
     {
         QStringList eventIds;
         for(int i=0; i<mPhasesIds.size(); ++i)
-            eventIds.append(QString::number(mPhasesIds[i]));
+            eventIds.append(QString::number(mPhasesIds.at(i)));
         eventIdsStr = eventIds.join(",");
     }
     event[STATE_EVENT_PHASE_IDS] = eventIdsStr;
@@ -191,7 +187,7 @@ QJsonObject Event::toJson() const
     QJsonArray dates;
     for(int i=0; i<mDates.size(); ++i)
     {
-        QJsonObject date = mDates[i].toJson();
+        QJsonObject date = mDates.at(i).toJson();
         dates.append(date);
     }
     event[STATE_EVENT_DATES] = dates;

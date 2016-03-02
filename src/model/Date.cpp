@@ -121,7 +121,7 @@ void Date::copyFrom(const Date& date)
 
 Date::~Date()
 {
-    //delete mPlugin;
+    //delete [] mPlugin;
     mPlugin = 0;
     mCalibration.clear();
     mRepartition.clear();
@@ -292,7 +292,7 @@ void Date::calibrate(const ProjectSettings& settings)
         QVector<double> calibrationTemp;
         QVector<double> repartitionTemp;
 
-        double nbRefPts = 1 + round((mTmaxRefCurve - mTminRefCurve) / settings.mStep);
+        const double nbRefPts = 1 + round((mTmaxRefCurve - mTminRefCurve) / settings.mStep);
         long double v = getLikelihood(mTminRefCurve);
         calibrationTemp.append(v);
         repartitionTemp.append(0);
@@ -302,7 +302,7 @@ void Date::calibrate(const ProjectSettings& settings)
         // after several sums, the repartion can be in the double type range
         for(int i = 1; i < nbRefPts; ++i)
         {
-            double t = mTminRefCurve + (double)i * settings.mStep;
+            const double t = mTminRefCurve + (double)i * settings.mStep;
             long double lastV = v;
             v = getLikelihood(t);
             
@@ -762,6 +762,7 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
 
     //ProjectSettings pro = ProjectSettings::fromJson(ProjSet);
     date.mIsValid = plugin->isDateValid(date.mData,date.mSettings);
+    plugin = 0;
     return date;
 }
 

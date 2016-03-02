@@ -31,7 +31,7 @@ mModel(model)
 
 MCMCLoopMain::~MCMCLoopMain()
 {
-
+    mModel = 0;
 }
 
 QString MCMCLoopMain::calibrate()
@@ -39,21 +39,30 @@ QString MCMCLoopMain::calibrate()
     if(mModel)
     {
         QList<Event*>& events = mModel->mEvents;
-        
+        events.reserve(mModel->mEvents.size());
         //----------------- Calibrate measures --------------------------------------
         
         QList<Date*> dates;
+        // find number of dates, to optimize memory space
+        int nbDates = 0;
+        foreach (const Event* e, events) {
+            nbDates += e->mDates.size();
+        }
+        dates.reserve(nbDates);
         for(int i=0; i<events.size(); ++i)
         {
-            int num_dates = (int)events.at(i)->mDates.size();
+            int num_dates = events.at(i)->mDates.size();
             for(int j=0; j<num_dates; ++j)
             {
                 Date* date = &events.at(i)->mDates[j];
-                date->mCalibration=events[i]->mDates.at(j).mCalibration;
+                //date->mCalibration = events.at(i)->mDates.at(j).mCalibration;
                 dates.push_back(date);
+                date = 0;
             }
+
         }
-        
+
+
         if(isInterruptionRequested())
             return ABORTED_BY_USER;
         
@@ -68,12 +77,13 @@ QString MCMCLoopMain::calibrate()
                 return ABORTED_BY_USER;
             
             emit stepProgressed(i);
-            
+            dates[i] = 0;
             //QTime endTime = QTime::currentTime();
             //int timeDiff = startTime.msecsTo(endTime);
             //mLog += "Data \"" + dates[i]->mName + "\" (" + dates[i]->mPlugin->getName() + ") calibrated in " + QString::number(timeDiff) + " ms\n";
         }
         return QString();
+        dates.clear();
     }
     return tr("Invalid model");
 }
@@ -189,6 +199,7 @@ QString MCMCLoopMain::initMCMC()
                 
                 bound->mInitialized = true;
             }
+            bound = 0;
         }
     }
     

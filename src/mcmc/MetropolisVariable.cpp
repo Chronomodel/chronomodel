@@ -242,8 +242,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
         output = 0;
         fftwf_destroy_plan(plan_forward);
         fftwf_destroy_plan(plan_backward);
-        //delete input;
-        //delete output;
+
         result = equal_areas(result, 1.); // normalize the output area du to the fftw and the case (t >= tmin && t<= tmax)
     }
     return result; // return a map between a and b with a step delta = (b - a) / fftLen;
@@ -307,63 +306,40 @@ void MetropolisVariable::generateCredibility(const QList<ChainSpecs> &chains, do
 
 void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
 {
-    int hmax = 40;
+    const int hmax = 40;
     mCorrelations.clear();
+    if(chains.size()<hmax) return;
+
     for(int c=0; c<chains.size(); ++c)
     {
         // Return the acquisition part of the trace
         QVector<double> trace = runRawTraceForChain(chains, c);
+        QVector<double> results;
+        results.reserve(hmax);
+
+        const int n = trace.size();
         
-        int n = trace.size();
-        
-        double s = sum(trace);
-        double m = s / (double)n;
-        double s2 = sum2Shifted(trace, -m);
+        const double s = sum(trace);
+        const double m = s / (double)n;
+        const double s2 = sum2Shifted(trace, -m);
         
         // Correlation pour cette chaine
-        QVector<double> results;
+
         for(int h=0; h<hmax; ++h)
         {
             double sH = 0;
-            for(QVector<double>::const_iterator iter = trace.begin(); iter != trace.begin() + (n-h); ++iter){
+            for(QVector<double>::const_iterator iter = trace.cbegin(); iter != trace.cbegin() + (n-h); ++iter){
                 sH += (*iter - m) * (*(iter + h) - m);
             }
             
-            double result = sH / s2;
+            const double result = sH / s2;
             results.append(result);
         }
         // Correlation ajoutée à la liste (une courbe de corrélation par chaine)
         mCorrelations.append(results);
         
         
-        
-        
-        // Old version, about 2.24 times slower :
-        
-        /*double sum = 0.;
-        for(int i=0; i<n; ++i)
-            sum += trace[i];
-        double m = sum / (double)n;
-        
-        double sum2 = 0;
-        for(int i=0; i<n; ++i){
-            double value = trace[i] - m;
-            sum2 += pow(value, 2);
-        }
-        
-        // Correlation pour cette chaine
-        QVector<double> results;
-        for(int h=0; h<hmax; ++h)
-        {
-            double sumH = 0;
-            for(int i=0; i<n-h; ++i)
-                sumH += (trace[i] - m) * (trace[i + h] - m);
-            
-            double result = sumH / sum2;
-            results.append(result);
-        }
-        // Correlation ajoutée à la liste (une courbe de corrélation par chaine)
-        mCorrelations.append(results);*/
+
     }
 }
 
@@ -511,7 +487,7 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
     if(mHisto.isEmpty())
         return noResultMessage;
     
-    QLocale locale;
+    const QLocale locale;
     QString result = densityAnalysisToString(mResults, nl) + nl;
     
     result += "HPD Region (" + locale.toString(mThreshold, 'f', 1) + "%) : " + getHPDText(mHPD, mThreshold, unit, formatFunc) + nl;
@@ -540,7 +516,7 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const bool 
         list << locale.toString(mCredibility.first);
         list << locale.toString(mCredibility.second);
 
-        QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThreshold);
+        const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThreshold);
         QStringList results;
         for(int i=0; i<intervals.size(); ++i)
         {
@@ -561,7 +537,7 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const bool 
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mCredibility.first));
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mCredibility.second));
 
-        QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThreshold);
+        const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThreshold);
         QStringList results;
         for(int i=0; i<intervals.size(); ++i)
         {

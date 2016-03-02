@@ -35,9 +35,9 @@ Constraint::~Constraint()
 Constraint Constraint::fromJson(const QJsonObject& json)
 {
     Constraint c;
-    c.mId = json[STATE_ID].toInt();
-    c.mFromId = json[STATE_CONSTRAINT_BWD_ID].toInt();
-    c.mToId = json[STATE_CONSTRAINT_FWD_ID].toInt();
+    c.mId = json.value(STATE_ID).toInt();
+    c.mFromId = json.value(STATE_CONSTRAINT_BWD_ID).toInt();
+    c.mToId = json.value(STATE_CONSTRAINT_FWD_ID).toInt();
     return c;
 }
 

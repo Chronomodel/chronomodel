@@ -21,7 +21,7 @@ MCMCLoop::~MCMCLoop()
 void MCMCLoop::setMCMCSettings(const MCMCSettings& s)
 {
     mChains.clear();
-    for(int i=0; i<(int)s.mNumChains; ++i)
+    for(int i=0; i<s.mNumChains; ++i)
     {
         ChainSpecs chain;
         

@@ -47,7 +47,7 @@ public:
     
     QList<ChainSpecs> getChains() const;
     
-    unsigned int mNumChains;
+    int mNumChains;
     unsigned long long mNumRunIter;
     unsigned long long mNumBurnIter;
     unsigned int mMaxBatches;
