@@ -64,6 +64,7 @@ mProjectFileName(QObject::tr("Untitled"))
 Project::~Project()
 {
     mAutoSaveTimer->stop();
+    MainWindow::getInstance()->getUndoStack()->clear();
   /*  delete mModel;
     mModel = 0;
 
@@ -135,9 +136,9 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
         SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
         MainWindow::getInstance()->getUndoStack()->push(command);
         
-        this->checkStateModification(state,mState);
+        if(!force) this->checkStateModification(state,mState);
 
-        if(mStructureIsChanged) {
+        if(mStructureIsChanged || force) {
             emit projectStructureChanged(mStructureIsChanged);
         }
         if(mDesignIsChanged) {
@@ -172,7 +173,19 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
         return;
     }
     else {
+        // Check Study Period modification
+        const double tminPeriodNew = stateNew.value(STATE_SETTINGS_TMIN).toDouble();
+        const double tmaxPeriodNew = stateNew.value(STATE_SETTINGS_TMAX).toDouble();
+        const double stepPeriodNew = stateNew.value(STATE_SETTINGS_STEP).toDouble();
 
+        const double tminPeriodOld = stateOld.value(STATE_SETTINGS_TMIN).toDouble();
+        const double tmaxPeriodOld = stateOld.value(STATE_SETTINGS_TMAX).toDouble();
+        const double stepPeriodOld = stateOld.value(STATE_SETTINGS_STEP).toDouble();
+        if((tminPeriodNew != tminPeriodOld) || (tmaxPeriodNew != tmaxPeriodOld) || (stepPeriodNew != stepPeriodOld)) {
+            mDesignIsChanged = true;
+            mStructureIsChanged = true;
+            return;
+        }
         // Check phase modification
         const QJsonArray phaseNew = stateNew.value(STATE_PHASES).toArray();
         const QJsonArray phaseOld = stateOld.value(STATE_PHASES).toArray();
@@ -195,8 +208,8 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
                    mItemsIsMoved = true;
                }
                // Check color of Phases
-               const QColor newPhaseColor=QColor(phaseNew.at(i).toObject().value(STATE_COLOR_RED).toInt(),phaseNew.at(i).toObject().value(STATE_COLOR_GREEN).toInt(),phaseNew.at(i).toObject().value(STATE_COLOR_BLUE ).toInt());
-               const QColor oldPhaseColor=QColor(phaseOld.at(i).toObject().value(STATE_COLOR_RED).toInt(),phaseOld.at(i).toObject().value(STATE_COLOR_GREEN).toInt(),phaseOld.at(i).toObject().value(STATE_COLOR_BLUE ).toInt());
+               const QColor newPhaseColor = QColor(phaseNew.at(i).toObject().value(STATE_COLOR_RED).toInt(),phaseNew.at(i).toObject().value(STATE_COLOR_GREEN).toInt(),phaseNew.at(i).toObject().value(STATE_COLOR_BLUE ).toInt());
+               const QColor oldPhaseColor = QColor(phaseOld.at(i).toObject().value(STATE_COLOR_RED).toInt(),phaseOld.at(i).toObject().value(STATE_COLOR_GREEN).toInt(),phaseOld.at(i).toObject().value(STATE_COLOR_BLUE ).toInt());
                if(newPhaseColor != oldPhaseColor) {
                    mDesignIsChanged = true;
                }
@@ -265,7 +278,7 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
                // Check dates inside Event
                QJsonArray datesNew = eventsNew.at(i).toObject().value(STATE_EVENT_DATES).toArray();
                QJsonArray datesOld = eventsOld.at(i).toObject().value(STATE_EVENT_DATES).toArray();
-               if( datesNew.size()!=datesOld.size()) {
+               if( datesNew.size() != datesOld.size()) {
                    mStructureIsChanged = true;
                    return;
                }
@@ -300,7 +313,7 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
         const QJsonArray eventsConstNew = stateNew.value(STATE_EVENTS_CONSTRAINTS).toArray();
         const QJsonArray eventsConstOld = stateOld.value(STATE_EVENTS_CONSTRAINTS).toArray();
 
-        if( eventsConstNew.size()!=eventsConstOld.size()) {
+        if( eventsConstNew.size() != eventsConstOld.size()) {
             mStructureIsChanged = true;
             return;
         }

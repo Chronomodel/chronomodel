@@ -301,7 +301,7 @@ QVector<double> equal_areas(const QVector<double>& data, const double step, cons
 QMap<double, double> vector_to_map(const QVector<double>& data, const double min, const double max, const double step)
 {
     QMap<double, double> map;
-    int nbPts = 1 + (int)round((max - min) / step); // step is not usefull, it's must be data.size/(max-min+1)
+    const int nbPts = 1 + (int)round((max - min) / step); // step is not usefull, it's must be data.size/(max-min+1)
     for(int i=0; i<nbPts; ++i)
     {
         double t = min + i * step;
@@ -329,8 +329,8 @@ double vector_interpolate_idx_for_value(const double value, const QVector<double
     {
         do
         {
-            int idxMid = idxInf + floor((idxSup - idxInf) / 2.f);
-            double valueMid = vector.at(idxMid);
+            const int idxMid = idxInf + floor((idxSup - idxInf) / 2.f);
+            const double valueMid = vector.at(idxMid);
             
             if(value < valueMid)
                 idxSup = idxMid;
@@ -339,15 +339,15 @@ double vector_interpolate_idx_for_value(const double value, const QVector<double
             
         }while(idxSup - idxInf > 1);
         
-        double valueInf = vector.at(idxInf);
-        double valueSup = vector.at(idxSup);
+        const double valueInf = vector.at(idxInf);
+        const double valueSup = vector.at(idxSup);
         
         double prop = 0;
         // prevent valueSup=valueInf because in this case prop = NaN
         if(valueSup>valueInf) {
             prop = (value - valueInf) / (valueSup - valueInf);
         }
-        double idx = (double)idxInf + prop;
+        const double idx = (double)idxInf + prop;
         
         return idx;
     }

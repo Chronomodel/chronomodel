@@ -46,7 +46,9 @@ mLineH(15),
 mGraphLeft(130),
 mRulerH(40),
 mTabsH(30),
-mGraphsH(130)
+mGraphsH(130),
+mEventsScrollArea(0),
+mPhasesScrollArea(0)
 {
     mResultMinX = mSettings.mTmin;
     mResultMaxX = mSettings.mTmax;
@@ -396,7 +398,7 @@ mGraphsH(130)
 
 ResultsView::~ResultsView()
 {
-    
+    mModel = 0;
 }
 
 void ResultsView::doProjectConnections(Project* project)
@@ -694,8 +696,8 @@ void ResultsView::clearResults()
     }
     mByPhasesGraphs.clear();
 
-    delete mEventsScrollArea;
-    delete mPhasesScrollArea;
+    if(mEventsScrollArea) delete mEventsScrollArea;
+    if(mPhasesScrollArea) delete mPhasesScrollArea;
 
     mEventsScrollArea = 0;
     mPhasesScrollArea = 0;
@@ -1474,7 +1476,10 @@ void ResultsView::showInfos(bool show)
         allKindGraph->showNumericalResults(show);
     }
 }
-
+/**
+ * @brief ResultsView::exportResults export result into several files
+ *
+ */
 void ResultsView::exportResults()
 {
     if(mModel){
@@ -1524,7 +1529,7 @@ void ResultsView::exportResults()
                 output<<version+"<br>";
                 output<<projectName+ "<br>";
                 output<<"<hr>";
-                output<<mModel->getMCMCLog();;
+                output<<mModel->getMCMCLog();
             }
             file.close();
 
@@ -1535,7 +1540,7 @@ void ResultsView::exportResults()
                 output<<version+"<br>";
                 output<<projectName+ "<br>";
                 output<<"<hr>";
-                output<<mModel->getResultsLog();;
+                output<<mModel->getResultsLog();
             }
             file.close();
 

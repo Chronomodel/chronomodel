@@ -79,13 +79,12 @@ void Phase::copyFrom(const Phase& phase)
 
 Phase::~Phase()
 {
-    if(!mEvents.isEmpty()) {
-        foreach (Event* ev, mEvents) {
-            //if(ev) delete ev;
+   foreach (Event* ev, mEvents) {
             ev = 0;
-        }
-        mEvents.clear();
-    }
+   }
+
+   mEvents.clear();
+
     if(!mConstraintsFwd.isEmpty()) {
         foreach (PhaseConstraint* pc, mConstraintsFwd) {
             if(pc) delete pc;
@@ -95,7 +94,7 @@ Phase::~Phase()
     }
     if(!mConstraintsBwd.isEmpty()) {
         foreach (PhaseConstraint* pc, mConstraintsBwd) {
-            if(pc) delete pc;
+            if(pc) pc->deleteLater();
             pc = 0;
         }
         mConstraintsBwd.clear();

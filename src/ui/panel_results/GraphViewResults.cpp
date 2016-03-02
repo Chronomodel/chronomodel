@@ -290,7 +290,7 @@ void GraphViewResults::resultsToClipboard()
 void GraphViewResults::saveGraphData() const
 {
     AppSettings settings = MainWindow::getInstance()->getAppSettings();
-    QString csvSep = settings.mCSVCellSeparator;
+    const QString csvSep = settings.mCSVCellSeparator;
 
     QLocale csvLocal = settings.mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
     csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
@@ -312,9 +312,9 @@ void GraphViewResults::saveGraphData() const
         else if (messageBox.clickedButton() == acquireTraceButton) {
                 int chainIdx = -1;
                 for(int i=0; i<mShowChainList.size(); ++i)
-                    if(mShowChainList[i]) chainIdx = i;
+                    if(mShowChainList.at(i)) chainIdx = i;
                 if(chainIdx != -1) {
-                    offset = mChains[chainIdx].mNumBurnIter + mChains[chainIdx].mBatchIndex * mChains[chainIdx].mNumBatchIter;
+                    offset = mChains.at(chainIdx).mNumBurnIter + mChains.at(chainIdx).mBatchIndex * mChains.at(chainIdx).mNumBatchIter;
                 }
                 mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, offset);
         }
@@ -613,8 +613,8 @@ void GraphViewResults::generateCorrelCurves(const QList<ChainSpecs> &chains,
         mGraph->addCurve(curve);
         
         //to do, we only need the totalIter number?
-        double n = variable->runRawTraceForChain(mChains, i).size();
-        double limit = 1.96f / sqrt(n);
+        const double n = variable->runRawTraceForChain(mChains, i).size();
+        const double limit = 1.96f / sqrt(n);
         
         GraphCurve curveLimitLower = generateHorizontalLine(-limit,
                                                             "Correl Limit Lower " + QString::number(i),

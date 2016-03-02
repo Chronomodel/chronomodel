@@ -54,7 +54,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     QFontMetrics metrics(font);
     w = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin + 2*mTitleHeight;
     
-    QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
+    const QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
     
     const int count = dates.size();
     if(count > 0)

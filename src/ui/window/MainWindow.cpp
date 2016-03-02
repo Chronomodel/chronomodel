@@ -216,7 +216,7 @@ void MainWindow::createActions()
     const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
     for(int i=0; i<plugins.size(); ++i){
         QString name = plugins.at(i)->getName();
-        QList<QHash<QString, QVariant>> groupedActions = plugins[i]->getGroupedActions();
+        QList<QHash<QString, QVariant>> groupedActions = plugins.at(i)->getGroupedActions();
         for(int j=0; j<groupedActions.size(); ++j){
             QAction* act = new QAction(groupedActions[j]["title"].toString(), this);
             act->setData(QVariant(groupedActions[j]));

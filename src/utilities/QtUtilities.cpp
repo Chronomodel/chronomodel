@@ -450,11 +450,11 @@ bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QS
 
 bool saveAsCsv(const QList<QStringList>& data, const QString& title)
 {
-    AppSettings settings = MainWindow::getInstance()->getAppSettings();
-    QString csvSep = settings.mCSVCellSeparator;
+    const AppSettings settings = MainWindow::getInstance()->getAppSettings();
+    const QString csvSep = settings.mCSVCellSeparator;
     
-    QString currentPath = MainWindow::getInstance()->getCurrentPath();
-    QString filter = "CSV (*.csv)";
+    const QString currentPath = MainWindow::getInstance()->getCurrentPath();
+    const QString filter = "CSV (*.csv)";
     QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                     title,
                                                     currentPath,
@@ -465,7 +465,7 @@ bool saveAsCsv(const QList<QStringList>& data, const QString& title)
         QTextStream output(&file);
         for(int i=0; i<data.size(); ++i)
         {
-            output << data[i].join(csvSep);
+            output << data.at(i).join(csvSep);
             output << "\n";
         }
         file.close();
