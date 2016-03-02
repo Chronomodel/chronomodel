@@ -283,7 +283,9 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
             MainWindow::getInstance()->getProject()->sendUpdateState(stateNext, reason, notify);
     }
 }
-
+/**
+ * @brief EventsScene::updateProject , it is done after each Project::pushProjectState()
+ */
 void EventsScene::updateProject()
 {
 
@@ -299,6 +301,7 @@ void EventsScene::updateProject()
     QProgressDialog* progress = 0;
     bool displayProgress = false;
     if(mItems.size() != eventsInNewState.size()) {
+        //http://doc.qt.io/qt-5/qprogressdialog.html#minimumDuration-prop
         displayProgress = true;
         progress = new QProgressDialog("Create / Update event items","Wait" , 1, eventsInNewState.size(),qApp->activeWindow());
         progress->setWindowModality(Qt::WindowModal);
