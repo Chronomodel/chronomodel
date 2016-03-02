@@ -69,7 +69,11 @@ mUseTip(true)
   
 }
 
-GraphView::~GraphView(){}
+GraphView::~GraphView()
+{
+   mCurves.clear();
+   mZones.clear();
+}
 
 // ------------------------------------------------------
 //  Zoom X
@@ -849,6 +853,8 @@ void GraphView::drawCurves(QPainter& painter)
                 if(curve.mUseVectorData)
                 {
                     // Down sample vector
+                    if(curve.mDataVector.isEmpty()) return;
+
                     QVector<double> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
                     
                     QVector<double> lightData;
@@ -857,8 +863,8 @@ void GraphView::drawCurves(QPainter& painter)
                     {
                         for(int i=0; i<2*mGraphWidth; ++i)
                         {
-                            int idx = (int)round(i * dataStep);
-                            lightData.append(subData[idx]);
+                            const int idx = (int)round(i * dataStep);
+                            lightData.append(subData.at(idx));
                         }
                     }
                     else
@@ -870,8 +876,8 @@ void GraphView::drawCurves(QPainter& painter)
                     for(int i=0; i<lightData.size(); ++i)
                     {
                         // Use "dataStep" only if lightData is different of subData !
-                        double valueX = mCurrentMinX + ((dataStep > 1) ? i * dataStep : i);
-                        double valueY = lightData.at(i);
+                        const double valueX = mCurrentMinX + ((dataStep > 1) ? i * dataStep : i);
+                        const double valueY = lightData.at(i);
                         
                         if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX)
                         {
