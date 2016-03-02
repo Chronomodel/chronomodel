@@ -308,12 +308,14 @@ void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
 {
     const int hmax = 40;
     mCorrelations.clear();
-    if(chains.size()<hmax) return;
+
+    mCorrelations.reserve(chains.size());
 
     for(int c=0; c<chains.size(); ++c)
     {
         // Return the acquisition part of the trace
-        QVector<double> trace = runRawTraceForChain(chains, c);
+        const QVector<double> trace = runRawTraceForChain(chains, c);
+        if(trace.size()<hmax) continue;
         QVector<double> results;
         results.reserve(hmax);
 
@@ -337,8 +339,6 @@ void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
         }
         // Correlation ajoutée à la liste (une courbe de corrélation par chaine)
         mCorrelations.append(results);
-        
-        
 
     }
 }
