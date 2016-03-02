@@ -347,7 +347,12 @@ void ModelView::updateProject()
     
     mMinEdit->setText(QString::number(settings.mTmin));
     mMaxEdit->setText(QString::number(settings.mTmax));
-    
+    project->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
+    project->mState[STATE_SETTINGS_TMAX] = settings.mTmax;
+    project->mState[STATE_SETTINGS_STEP] = settings.mStep;
+
+    project->mState[STATE_SETTINGS_STEP_FORCED] = settings.mStepForced;
+
     setSettingsValid(settings.mTmin < settings.mTmax);
     
     mEventsScene->updateProject();
@@ -388,7 +393,7 @@ void ModelView::applySettings()
     
     Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
-    ProjectSettings s = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
+    ProjectSettings s = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
     ProjectSettings oldSettings = s;
     
     // This was used to display study period using the date format defined in application settings :
@@ -421,13 +426,21 @@ void ModelView::applySettings()
             setSettingsValid(true);
         }
     }
+    else {
+        state[STATE_SETTINGS_TMIN] = mTmin;
+        state[STATE_SETTINGS_TMAX] = mTmax;
+       // state[STATE_SETTINGS_STEP] ;
+
+     //   project->pushProjectState(state,"Study Period Change",false,false);
+      //  emit project->projectStateChanged();
+    }
 }
 
 void ModelView::adjustStep()
 {
     Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
-    ProjectSettings s = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
+    ProjectSettings s = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
     
     double defaultVal = ProjectSettings::getStep(s.mTmin, s.mTmax);
     
@@ -467,15 +480,21 @@ void ModelView::maxEditChanging()
     setSettingsValid(false);
     showCalibration(false);
 }
-
+/**
+ * @brief ModelView::setSettingsValid
+ * Important : just disable "Run" and "Results" and "Log" when typing in tmin and tmax edit boxes
+ * Run will be enabled again when validating all dates in the next valid study period
+ * @param valid
+ * @todo controle management with project->pushProjectState()
+ */
 void ModelView::setSettingsValid(bool valid)
 {
     mButApply->setColorState(valid ? Button::eReady : Button::eWarning);
     
-    // Important : just disable "run" when typing in tmin and tmax edit boxes
-    // Run will be enabled again when validating all dates in the next valid study period
     if(!valid){
         MainWindow::getInstance()->setRunEnabled(false);
+        MainWindow::getInstance()->setResultsEnabled(false);
+        MainWindow::getInstance()->setLogEnabled(false);
     }
 }
 
@@ -551,6 +570,7 @@ void ModelView::showImport()
         mButImport      -> setChecked(false);
         mButPhasesModel -> setChecked(false);
     }
+    project = 0;
 }
 void ModelView::showPhases()
 {
@@ -570,6 +590,7 @@ void ModelView::showPhases()
         mButImport->setChecked(false);
         mButPhasesModel->setChecked(false);
     }
+    project = 0;
 }
 void ModelView::slideRightPanel()
 {
@@ -594,6 +615,7 @@ void ModelView::slideRightPanel()
         mAnimationShow->setTargetObject(target);
         mAnimationHide->start();
     }
+    target = 0;
 }
 
 void ModelView::prepareNextSlide()
@@ -610,6 +632,7 @@ void ModelView::prepareNextSlide()
     {
         mAnimationHide->setTargetObject(target);
     }
+    target = 0;
 }
 
 #pragma mark Painting

@@ -19,16 +19,17 @@ mNotify(notify)
 }
 SetProjectState:: ~SetProjectState()
 {
-    //delete mProject;
     mProject = 0;
 }
 
 void SetProjectState::undo()
 {
+    emit mProject->projectStructureChanged(true);
     mProject->sendUpdateState(mPrevState, mReason, mNotify);
 }
 
 void SetProjectState::redo()
 {
+    emit mProject->projectStructureChanged(true);
     mProject->sendUpdateState(mNextState, mReason, mNotify);
 }
