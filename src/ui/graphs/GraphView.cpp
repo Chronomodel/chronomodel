@@ -4,6 +4,7 @@
 #include "QtUtilities.h"
 #include "DateUtils.h"
 #include "Painting.h"
+#include "MainWindow.h"
 #include <QtWidgets>
 #include <algorithm>
 #include <QtSvg>
@@ -1060,10 +1061,8 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
     if(file.open(QFile::WriteOnly | QFile::Truncate))
     {
         qDebug()<<"GraphView::exportCurrentCurves"<<" nbCurve to export"<<mCurves.size();
-        
+
         QList<QStringList> rows;
-        
-        
         QStringList list;
         
         list <<"X Axis";
@@ -1126,9 +1125,15 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         
         // 4 - Save Qlist
         QTextStream output(&file);
+        const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
+        const QString projectName = tr("Project filename")+" : "+ MainWindow::getInstance()->getNameProject();
+
+        output<<version+"\n";
+        output<<projectName+ "\n";
+        output<<DateUtils::getAppSettingsFormatStr()+"\n";
         for(int i=0; i<rows.size(); ++i)
         {
-            output << rows[i].join(csvSep);
+            output << rows.at(i).join(csvSep);
             output << "\n";
         }
         file.close();
