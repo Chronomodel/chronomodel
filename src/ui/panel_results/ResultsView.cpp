@@ -718,6 +718,7 @@ void ResultsView::updateFormatSetting(Model* model, const AppSettings* appSet)
     if(model)
         mModel = model;
     mModel->updateFormatSettings(appSet);
+
 }
 
 
@@ -1366,8 +1367,8 @@ void ResultsView::updateZoomEdit()
         mCurrentXMinEdit->setText(QString::number(mResultCurrentMinX));
         mCurrentXMaxEdit->setText(QString::number(mResultCurrentMaxX));
     }*/
-    mCurrentXMinEdit->setText(DateUtils::dateToString(mResultCurrentMinX));
-    mCurrentXMaxEdit->setText(DateUtils::dateToString(mResultCurrentMaxX));
+    mCurrentXMinEdit->setText(formatValueToAppSettingsPrecision(mResultCurrentMinX));
+    mCurrentXMaxEdit->setText(formatValueToAppSettingsPrecision(mResultCurrentMaxX));
 }
 
 void ResultsView::updateGraphsZoomX()
