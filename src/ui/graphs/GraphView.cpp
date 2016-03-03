@@ -1067,10 +1067,10 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         QStringList list;
         
         list <<"X Axis";
-        double xMin = 0;
-        double xMax = 0;
-        
-        for(auto iter= mCurves.begin(); iter != mCurves.end(); ++iter) {
+        double xMin;
+        double xMax;
+        bool firstCurveVisible = true;
+        for(auto iter= mCurves.cbegin(); iter != mCurves.cend(); ++iter) {
             if (!iter->mData.empty() &&
                 !iter->mIsHorizontalLine &&
                 !iter->mIsVerticalLine &&
@@ -1082,9 +1082,14 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
                 // 1 -Create the header
                 list << iter->mName;
                 // 2 - Find x Min and x Max period, on all curve, we suppose Qmap is order
-                xMin = qMin(xMin, iter->mData.firstKey());
-                xMax = qMax(xMax, iter->mData.lastKey());
-                
+                if(firstCurveVisible) {
+                    xMin = iter->mData.firstKey();
+                    xMax = iter->mData.lastKey();
+                }
+                else {
+                    xMin = qMin(xMin, iter->mData.firstKey());
+                    xMax = qMax(xMax, iter->mData.lastKey());
+                }
             }
             else continue;
         }
@@ -1100,7 +1105,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
             }
             else */
             list << QString::number(x);
-            for(auto iter= mCurves.begin(); iter != mCurves.end(); ++iter) {
+            for(auto iter= mCurves.cbegin(); iter != mCurves.cend(); ++iter) {
                 
                 if (!iter->mData.empty() &&
                     !iter->mIsHorizontalLine &&
@@ -1110,7 +1115,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
                     !iter->mUseVectorData &&
                     iter->mVisible) {
                     
-                    double xi = interpolateValueInQMap(x, iter->mData);
+                    const double xi = interpolateValueInQMap(x, iter->mData);
                     list<<locale.toString(xi);
                 }
                 else continue;
