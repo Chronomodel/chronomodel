@@ -10,6 +10,8 @@
 class Generator
 {
 public:
+    Generator();
+    virtual ~Generator();
     static int createSeed();
     static void initGenerator(const int seed);
     
@@ -18,11 +20,13 @@ public:
     static double gaussByBoxMuller(const double mean, const double sigma) ;
     
 private:
-    Generator(){}
+
+
     static double boxMuller() ;
     
-    static std::mt19937 sGenerator;
+    static std::mt19937 sEngine;
     static std::uniform_real_distribution<double> sDistribution;
+
 };
 
 #endif

@@ -14,13 +14,17 @@
 
 //int matherr(struct exception *e);
 
-std::mt19937 Generator::sGenerator = std::mt19937(0);
+std::mt19937 Generator::sEngine = std::mt19937(0);
 std::uniform_real_distribution<double> Generator::sDistribution = std::uniform_real_distribution<double>(0, 1);
 
 void Generator::initGenerator(const int seed)
 {
-    sDistribution = std::uniform_real_distribution<double>(0, 1);
-    sGenerator = std::mt19937(seed);
+   // sDistribution = std::uniform_real_distribution<double>(0, 1);
+
+    sEngine.seed(seed);
+    sDistribution.reset();
+    qDebug()<<"initGenerator seed"<<seed;
+
 }
 
 int Generator::createSeed()
@@ -39,7 +43,10 @@ int Generator::createSeed()
 
 double Generator::randomUniform(const double min, const double max)
 {
-    return min + sDistribution(sGenerator) * (max - min);
+    const double r = min + sDistribution(sEngine) * (max - min);
+    //return min + sDistribution(sEngine) * (max - min);
+
+    return r;
 }
 
 double Generator::gaussByDoubleExp(const double mean, const double sigma, const double min, const double max)
