@@ -92,7 +92,7 @@ void MetropolisVariable::setFormat(const DateUtils::FormatDate fm)
  */
 void MetropolisVariable::updateFormatedTrace()
 {
-    if(mFormatedTrace.isEmpty()) mFormatedTrace.clear();
+    if(!mFormatedTrace.isEmpty()) mFormatedTrace.clear();
     mRawTrace.squeeze(); // just cleaning, must be somewhere else to optimize
     mFormatedTrace.reserve(mRawTrace.size());
     QVector<double>::const_iterator iter = mRawTrace.constBegin();

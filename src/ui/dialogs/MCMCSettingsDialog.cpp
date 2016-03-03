@@ -67,7 +67,7 @@ MCMCSettingsDialog::~MCMCSettingsDialog()
 
 void MCMCSettingsDialog::setSettings(const MCMCSettings& settings)
 {
-    QLocale mLoc=QLocale();
+    const QLocale mLoc=QLocale();
     mNumProcEdit->setText(mLoc.toString(settings.mNumChains));
     mNumIterEdit->setText(mLoc.toString(settings.mNumRunIter));
     mNumBurnEdit->setText(mLoc.toString(settings.mNumBurnIter));
@@ -81,16 +81,20 @@ void MCMCSettingsDialog::setSettings(const MCMCSettings& settings)
 
 MCMCSettings MCMCSettingsDialog::getSettings()
 {
-    QLocale mLoc=QLocale();
+    const QLocale mLoc = QLocale();
     MCMCSettings settings;
-    settings.mNumChains = mNumProcEdit->text().toLongLong();
-    settings.mNumRunIter = mNumIterEdit->text().toLongLong();
-    settings.mNumBurnIter = mNumBurnEdit->text().toLongLong();
-    settings.mMaxBatches = mMaxBatchesEdit->text().toLongLong();
-    settings.mNumBatchIter = mIterPerBatchSpin->value();
-    settings.mThinningInterval = mDownSamplingEdit->text().toLong();
+    const unsigned int UN = 1;
+    settings.mNumChains = qMax(UN, mNumProcEdit->text().toUInt());
+
+    settings.mNumBurnIter = qMax(UN, mNumBurnEdit->text().toUInt());
+
+    settings.mMaxBatches = qMax(UN, mMaxBatchesEdit->text().toUInt());
+    settings.mNumBatchIter = qMax(UN, (unsigned int) mIterPerBatchSpin->value());
+
+    settings.mNumRunIter = qMax((unsigned int) 10, mNumIterEdit->text().toUInt());
+    settings.mThinningInterval = qBound(UN, mDownSamplingEdit->text().toUInt(), (unsigned int)floor(settings.mNumRunIter/10) );
     
-    settings.mMixingLevel = mLoc.toDouble(mLevelEdit->text());
+    settings.mMixingLevel = qBound(0.0001, mLoc.toDouble(mLevelEdit->text()),0.9999);
     
     settings.mSeeds = stringListToIntList(mSeedsEdit->text(), ";");
     
