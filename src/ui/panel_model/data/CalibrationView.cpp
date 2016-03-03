@@ -80,7 +80,7 @@ mRefGraphView(0)
     mHPDEdit->raise();
     
     mExportPlotBut = new Button(tr("Export Image"), this);
-    mCopyTextBut = new Button(tr("Copy Text"), this);
+    mCopyTextBut = new Button(tr("Stat. to clipboard"), this);
     setMouseTracking(true);
     
     connect(mZoomSlider, &QSlider::valueChanged, this, &CalibrationView::updateZoom);
@@ -99,8 +99,8 @@ void CalibrationView::setDate(const QJsonObject& date)
 {
     if(date.isEmpty()) return;
     Project* project = MainWindow::getInstance()->getProject();
-    QJsonObject state = project->state();
-    QJsonObject settings = state.value(STATE_SETTINGS).toObject();
+    const QJsonObject state = project->state();
+    const QJsonObject settings = state.value(STATE_SETTINGS).toObject();
     mSettings = ProjectSettings::fromJson(settings);
 
     try{
@@ -129,7 +129,7 @@ void CalibrationView::updateGraphs()
     mCalibGraph->removeAllCurves();
     mCalibGraph->removeAllZones();
     
-    QLocale locale;
+    const QLocale locale;
     
     // The current ref graph belongs in memory to a plugin
     // So, we simply remove it without deleting it, for further use
@@ -192,7 +192,7 @@ void CalibrationView::updateGraphs()
         brushColor.setAlpha(100);
 
         // Fill under distrib. of calibrated date only if typo :
-        bool isTypo = (mDate.mPlugin->getName() == "Typo");
+        const bool isTypo = (mDate.mPlugin->getName() == "Typo");
         mHPDLab->setVisible(!isTypo);
         mHPDEdit->setVisible(!isTypo);
 
@@ -410,7 +410,8 @@ void CalibrationView::copyText()
     doc.setHtml( mResultsLab->text() );
     p_Clipboard->setText(doc.toPlainText());
      */
-    p_Clipboard->setText(mResultsLab->text().replace("<br>", "\n"));
+    QString text = mTopLab->text() +"<br>" + mDate.getDesc() + "<br>" + mResultsLab->text();
+    p_Clipboard->setText(text.replace("<br>", "\n"));
    
 }
 
