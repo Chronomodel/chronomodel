@@ -213,11 +213,11 @@ void EventPropertiesView::updateEvent()
     }
     else
     {
-        Event::Type type = (Event::Type)mEvent[STATE_EVENT_TYPE].toInt();
-        QString name = mEvent[STATE_NAME].toString();
-        QColor color(mEvent[STATE_COLOR_RED].toInt(),
-                     mEvent[STATE_COLOR_GREEN].toInt(),
-                     mEvent[STATE_COLOR_BLUE].toInt());
+        Event::Type type = (Event::Type)mEvent.value(STATE_EVENT_TYPE).toInt();
+        QString name = mEvent.value(STATE_NAME).toString();
+        QColor color(mEvent.value(STATE_COLOR_RED).toInt(),
+                     mEvent.value(STATE_COLOR_GREEN).toInt(),
+                     mEvent.value(STATE_COLOR_BLUE).toInt());
         
         if(name != mNameEdit->text())
             mNameEdit->setText(name);
@@ -232,10 +232,10 @@ void EventPropertiesView::updateEvent()
         
         if(type == Event::eDefault)
         {
-            mMethodCombo->setCurrentIndex(mEvent[STATE_EVENT_METHOD].toInt());
+            mMethodCombo->setCurrentIndex(mEvent.value(STATE_EVENT_METHOD).toInt());
             mDatesList->setEvent(mEvent);
             
-            QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+            QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
             bool hasDates = (dates.size() > 0);
             
             mCalibBut->setEnabled(hasDates);
@@ -244,14 +244,14 @@ void EventPropertiesView::updateEvent()
         }
         else if(type == Event::eKnown)
         {
-            EventKnown::KnownType knownType = (EventKnown::KnownType)mEvent[STATE_EVENT_KNOWN_TYPE].toInt();
+            EventKnown::KnownType knownType = (EventKnown::KnownType)mEvent.value(STATE_EVENT_KNOWN_TYPE).toInt();
             
             mKnownFixedRadio   -> setChecked(knownType == EventKnown::eFixed);
             mKnownUniformRadio -> setChecked(knownType == EventKnown::eUniform);
             
-            mKnownFixedEdit -> setText(QString::number(mEvent[STATE_EVENT_KNOWN_FIXED].toDouble()));
-            mKnownStartEdit -> setText(QString::number(mEvent[STATE_EVENT_KNOWN_START].toDouble()));
-            mKnownEndEdit   -> setText(QString::number(mEvent[STATE_EVENT_KNOWN_END].toDouble()));
+            mKnownFixedEdit -> setText(QString::number(mEvent.value(STATE_EVENT_KNOWN_FIXED).toDouble()));
+            mKnownStartEdit -> setText(QString::number(mEvent.value(STATE_EVENT_KNOWN_START).toDouble()));
+            mKnownEndEdit   -> setText(QString::number(mEvent.value(STATE_EVENT_KNOWN_END).toDouble()));
             
             updateKnownControls();
             updateKnownGraph();
@@ -293,13 +293,13 @@ void EventPropertiesView::updateEventMethod(int index)
 #pragma mark Event Known Properties
 void EventPropertiesView::updateKnownType()
 {
-    if((Event::Type)mEvent[STATE_EVENT_TYPE].toInt() == Event::eKnown)
+    if((Event::Type)mEvent.value(STATE_EVENT_TYPE).toInt() == Event::eKnown)
     {
         EventKnown::KnownType type = EventKnown::eFixed;
         if(mKnownUniformRadio->isChecked())
             type = EventKnown::eUniform;
         
-        if((EventKnown::KnownType)mEvent[STATE_EVENT_KNOWN_TYPE].toInt() != type)
+        if((EventKnown::KnownType)mEvent.value(STATE_EVENT_KNOWN_TYPE).toInt() != type)
         {
             QJsonObject event = mEvent;
             event[STATE_EVENT_KNOWN_TYPE] = type;
@@ -341,10 +341,10 @@ void EventPropertiesView::updateKnownGraph()
     //{
         Project* project = MainWindow::getInstance()->getProject();
         QJsonObject state = project->state();
-        QJsonObject settings = state[STATE_SETTINGS].toObject();
-        double tmin = settings[STATE_SETTINGS_TMIN].toDouble();
-        double tmax = settings[STATE_SETTINGS_TMAX].toDouble();
-        double step = settings[STATE_SETTINGS_STEP].toDouble();
+        QJsonObject settings = state.value(STATE_SETTINGS).toObject();
+        const double tmin = settings.value(STATE_SETTINGS_TMIN).toDouble();
+        const double tmax = settings.value(STATE_SETTINGS_TMAX).toDouble();
+        const double step = settings.value(STATE_SETTINGS_STEP).toDouble();
         EventKnown event = EventKnown::fromJson(mEvent);
 
         if(  ( (event.mKnownType==EventKnown::eFixed) && ((tmin>event.mFixed) || (event.mFixed>tmax)) )
@@ -366,7 +366,7 @@ void EventPropertiesView::updateKnownGraph()
         double max = map_max_value(event.mValues);
         max = (max == 0) ? 1 : max;
         mKnownGraph->setRangeY(0, max);
-        
+        mKnownGraph->showYAxisValues(false);
 
         //---------------------
 
@@ -418,7 +418,7 @@ void EventPropertiesView::createDate()
                 {
                     Date date = project->createDateFromPlugin(plugins.at(i));
                     if(!date.isNull())
-                        project->addDate(mEvent[STATE_ID].toInt(), date.toJson());
+                        project->addDate(mEvent.value(STATE_ID).toInt(), date.toJson());
                 }
             }
         }
@@ -432,12 +432,12 @@ void EventPropertiesView::deleteSelectedDates()
     for(int i=0; i<items.size(); ++i)
         indexes.push_back(mDatesList->row(items[i]));
     
-    MainWindow::getInstance()->getProject()->deleteDates(mEvent[STATE_ID].toInt(), indexes);
+    MainWindow::getInstance()->getProject()->deleteDates(mEvent.value(STATE_ID).toInt(), indexes);
 }
 
 void EventPropertiesView::recycleDates()
 {
-    MainWindow::getInstance()->getProject()->recycleDates(mEvent[STATE_ID].toInt());
+    MainWindow::getInstance()->getProject()->recycleDates(mEvent.value(STATE_ID).toInt());
 }
 
 #pragma mark Merge / Split
@@ -446,15 +446,15 @@ void EventPropertiesView::updateCombineAvailability()
     bool mergeable = false;
     bool splittable = false;
     
-    QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+    QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
     QList<QListWidgetItem*> items = mDatesList->selectedItems();
     
     if(items.size() == 1){
         // Split?
         int idx = mDatesList->row(items[0]);
         if(dates.size()>idx ) {
-            QJsonObject date = dates[idx].toObject();
-            if(date[STATE_DATE_SUB_DATES].toArray().size() > 0){
+            QJsonObject date = dates.at(idx).toObject();
+            if(date.value(STATE_DATE_SUB_DATES).toArray().size() > 0){
                 splittable = true;
             }
          }
@@ -466,14 +466,14 @@ void EventPropertiesView::updateCombineAvailability()
         for(int i=0; i<items.size(); ++i){
             int idx = mDatesList->row(items[i]);
             if(idx < dates.size()){
-                QJsonObject date = dates[idx].toObject();
+                QJsonObject date = dates.at(idx).toObject();
                 // If selected date already has subdates, it cannot be combined :
-                if(date[STATE_DATE_SUB_DATES].toArray().size() > 0){
+                if(date.value(STATE_DATE_SUB_DATES).toArray().size() > 0){
                     mergeable = false;
                     break;
                 }
                 // If selected dates have different plugins, they cannot be combined :
-                PluginAbstract* plg = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
+                PluginAbstract* plg = PluginManager::getPluginFromId(date.value(STATE_DATE_PLUGIN_ID).toString());
                 if(plugin == 0)
                     plugin = plg;
                 else if(plg != plugin){
@@ -499,30 +499,30 @@ void EventPropertiesView::updateCombineAvailability()
 
 void EventPropertiesView::sendMergeSelectedDates()
 {
-    QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+    QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
     QList<QListWidgetItem*> items = mDatesList->selectedItems();
     QList<int> dateIds;
     
     for(int i=0; i<items.size(); ++i){
         int idx = mDatesList->row(items[i]);
         if(idx < dates.size()){
-            QJsonObject date = dates[idx].toObject();
-            dateIds.push_back(date[STATE_ID].toInt());
+            QJsonObject date = dates.at(idx).toObject();
+            dateIds.push_back(date.value(STATE_ID).toInt());
         }
     }
-    emit mergeDatesRequested(mEvent[STATE_ID].toInt(), dateIds);
+    emit mergeDatesRequested(mEvent.value(STATE_ID).toInt(), dateIds);
 }
 
 void EventPropertiesView::sendSplitDate()
 {
-    QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+    QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
     QList<QListWidgetItem*> items = mDatesList->selectedItems();
     if(items.size() > 0){
         int idx = mDatesList->row(items[0]);
         if(idx < dates.size()){
-            QJsonObject date = dates[idx].toObject();
-            int dateId = date[STATE_ID].toInt();
-            emit splitDateRequested(mEvent[STATE_ID].toInt(), dateId);
+            QJsonObject date = dates.at(idx).toObject();
+            int dateId = date.value(STATE_ID).toInt();
+            emit splitDateRequested(mEvent.value(STATE_ID).toInt(), dateId);
         }
     }
 }
