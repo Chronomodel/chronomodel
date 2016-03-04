@@ -103,8 +103,8 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             zone.mText = tr("Outside reference area");
             mGraph->addZone(zone);
         }
-
-        double yMin = plugin->getRefValueAt(date.mData, qMax(tminDisplay, tminRef));
+        const double t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
+        double yMin = plugin->getRefValueAt(date.mData, t0);
         double yMax = yMin;
 
         QMap<double, double> curveG;
@@ -185,11 +185,9 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         for(double t=yMin; t<yMax; t += step)
         {
             const double v = exp(-0.5 * pow((age - t) / error, 2));
-            //curveMeasure.mData[t] = v;
             measureCurve[t] = v;
         }
         measureCurve = normalize_map(measureCurve);
-        //curveMeasure.mData = normalize_map(curveMeasure.mData);
         curveMeasure.mData = measureCurve;
         mGraph->addCurve(curveMeasure);
         
@@ -233,7 +231,6 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
                 //curveDeltaR.mData[t] = v;
             }
             deltaRCurve = normalize_map(deltaRCurve);
-            //curveDeltaR.mData = normalize_map(curveDeltaR.mData);
             curveDeltaR.mData = deltaRCurve;
             mGraph->addCurve(curveDeltaR);
             
@@ -280,11 +277,10 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             for(double t=yMin; t<yMax; t += step)
             {
                 const double v = exp(-0.5 * pow((sub_age - t) / sub_error, 2));
-                //curveSubMeasure.mData[t] = v;
                 subDatesCurve[i][t] = v;
             }
-            subDatesCurve[i] = normalize_map(subDatesCurve[i]);
-            curveSubMeasure.mData = subDatesCurve[i];//normalize_map(curveSubMeasure.mData);
+            subDatesCurve[i] = normalize_map(subDatesCurve.at(i));
+            curveSubMeasure.mData = subDatesCurve.at(i);
             mGraph->addCurve(curveSubMeasure);
         }
 

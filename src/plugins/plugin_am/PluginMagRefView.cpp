@@ -107,7 +107,8 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
             mGraph->addZone(zone);
         }
 
-        double yMin = plugin->getRefValueAt(date.mData, qMax(tminDisplay,tminRef));
+        const double t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
+        double yMin = plugin->getRefValueAt(date.mData, t0);
         double yMax = yMin;
 
         QMap<double, double> curveG;

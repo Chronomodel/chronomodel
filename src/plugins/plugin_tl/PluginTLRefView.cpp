@@ -65,7 +65,6 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         QMap<double,double> refCurve;
         for(double t=tminDisplay; t<=tmaxDisplay; t+=mSettings.mStep) {
             const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
-            //curve.mData[t] = ref_year - tRaw;
             refCurve[t] = ref_year - tRaw;
         }
         curve.mData =refCurve;
@@ -75,7 +74,7 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         
         double yMin = map_min_value(curve.mData);
         double yMax = map_max_value(curve.mData);
-        //const ageFormated = DateUtils::convertFromAppSettingsFormat(ref_year) - tRaw;
+
         yMin = qMin(yMin, age - error * 1.96);
         yMax = qMax(yMax, age + error * 1.96);
         
@@ -103,8 +102,7 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         const double step = (yMax - yMin) / 5000.;
         for(double t=yMin; t<yMax; t += step)
         {
-            double v = exp(-0.5 * pow((t - age) / error, 2));
-            //curveMeasure.mData[t] = v;
+            const double v = exp(-0.5 * pow((t - age) / error, 2));
             measureCurve[t] = v;
         }
         measureCurve = normalize_map(measureCurve);

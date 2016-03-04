@@ -132,7 +132,8 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                 mGraph->addZone(zone);
             }
 
-            yMin = plugin->getRefValueAt(date.mData, qMax(tminDisplay, tminRef));
+            const double t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
+            yMin = plugin->getRefValueAt(date.mData, t0);
             yMax = yMin;
 
             QMap<double, double> curveG;
