@@ -172,7 +172,7 @@ QString PluginGauss::getDateDesc(const Date* date) const
 #pragma mark CSV
 QString PluginGauss::csvHelp() const
 {
-    return "Calibration : g(t) = at^2 + bt + c\n";
+    return "Calibration : g(t) = at^2 + bt + c\r";
 }
 
 QStringList PluginGauss::csvColumns() const

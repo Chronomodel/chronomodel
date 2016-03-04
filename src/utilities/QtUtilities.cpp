@@ -145,69 +145,48 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             return fileInfo;
     }
     
-    QString filter = QObject::tr("Image (*.png);;Photo (*.jpg);; Windows Bitmap (*.bmp);;Scalable Vector Graphics (*.svg)");
-    QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
+    const QString filter = QObject::tr("Image (*.png);;Photo (*.jpg);; Windows Bitmap (*.bmp);;Scalable Vector Graphics (*.svg)");
+    const QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                     dialogTitle,
                                                     defaultPath,
                                                     filter);
     if(!fileName.isEmpty())
     {
         fileInfo = QFileInfo(fileName);
-        QString fileExtension = fileInfo.suffix();
-        
-        //QString fileExtension = fileName.(".svg");
-       // bool asSvg = fileName.endsWith(".svg");
-       // if(asSvg)
-        //QFontMetrics fm((scene ? qApp->font() : widget->font()));
-        
-        float heightText = r.height()/50; //fm.height() + 30;
-        /*if (heightText<10) {
-            heightText = 10;
-        }*/
-        if(fileExtension == "svg")
-        {
-            if(mGraph)
-            {
+        const QString fileExtension = fileInfo.suffix();
+        const float heightText = r.height()/50;
+
+        if(fileExtension == "svg") {
+            if(mGraph) {
                 mGraph->saveAsSVG(fileName, "Title", "Description",true);
             }
-            else if(scene)
-            {
+            else if(scene) {
+                const  QRect viewBox = QRect( r.x(), r.y(), r.width(), r.height() );
+
                 QSvgGenerator svgGen;
                 svgGen.setFileName(fileName);
-                svgGen.setSize(r.size());
-                svgGen.setViewBox(QRect(0, 0, r.width(), r.height()));
+
+                svgGen.setViewBox(viewBox);
                 svgGen.setDescription(QObject::tr("SVG scene drawing "));
-                //qDebug()<<"export scene as SVG";
-                
+
                 QPainter p;
                 p.begin(&svgGen);
                 scene->render(&p, r, r);
                 p.end();
             }
-            else if(widget)
-            {
+            else if(widget) { // export all resultView
                 saveWidgetAsSVG(widget, r, fileName);
             }
         }
         else
         { // save PNG
-            
-            //int versionHeight = 20;
-            //qreal pr = 1;//qApp->devicePixelRatio();
-           /* qreal prh=  32000. / ( r.height() + versionHeight) ; // QImage axes are limited to 32767x32767 pixels
-           
-            qreal prw=  32000. / r.width() ;                  qreal pr = (prh<prw)? prh : prw;
-            if (pr>4) {
-                pr=4;
-            }
-            */
-            
+
             // -------------------------------
             //  Get preferences
             // -------------------------------
-            short pr = appSetting.mPixelRatio;
-            short dpm = appSetting.mDpm;
-            short quality = appSetting.mImageQuality;
+            const short pr = appSetting.mPixelRatio;
+            const short dpm = appSetting.mDpm;
+            const short quality = appSetting.mImageQuality;
             
             // -------------------------------
             //  Create the image
@@ -300,19 +279,16 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
 
 bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName)
 {
-    QFontMetrics fm(widget->font());
+    const QFontMetrics fm(widget->font());
     
-    int heightText= fm.height()+10;
+    const int heightText= fm.height()+10;
     
 
-    //int versionHeight = 20;
-    //int heightAxe = 0;
-    //if (Axe.mShowSubs) heightAxe = 20;
-    
-    
+    const  QRect viewBox = QRect( 0, 0,r.width(), r.height() + heightText );
     QSvgGenerator svgGenFile;
     svgGenFile.setFileName(fileName);
-    svgGenFile.setViewBox(r);
+    svgGenFile.setViewBox(viewBox);
+    //svgGenFile.setSize(QSize(widget->width(),widget->height() + heightText));
     svgGenFile.setDescription(QObject::tr("SVG widget drawing "));
     
     QPainter p;
@@ -322,15 +298,10 @@ bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName)
   
     p.setPen(Qt::black);
    
-    //p.drawText(0, r.height()+heightAxe+versionHeight, r.width(), versionHeight,
-    //           Qt::AlignCenter,
-    //           qApp->applicationName() + " " + qApp->applicationVersion());
     p.drawText(0, r.height() + 10, r.width(), heightText,
                Qt::AlignCenter,
                qApp->applicationName() + " " + qApp->applicationVersion());
     p.end();
-    
-   
     
     return true;
 }
@@ -427,20 +398,20 @@ bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QS
     {
         QTextStream output(&file);
         const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
-        output<<"# " +version+"\n";
+        output<<"# " +version+"\r";
         const QString projectName = MainWindow::getInstance()->getNameProject();
 
-        output<<"# " +projectName+ "\n";
+        output<<"# " +projectName+ "\r";
         if(withDateFormat) {
-            output<<"# Date Format : "+ DateUtils::getAppSettingsFormatStr() +"\n";
+            output<<"# Date Format : "+ DateUtils::getAppSettingsFormatStr() +"\r";
         }
         else {
-            output<<"# Date Format : BC/AD\n";
+            output<<"# Date Format : BC/AD\r";
         }
         for(int i=0; i<data.size(); ++i)
         {
             output << data.at(i).join(csvSep);
-            output << "\n";
+            output << "\r";
         }
         file.close();
         return true;
@@ -466,7 +437,7 @@ bool saveAsCsv(const QList<QStringList>& data, const QString& title)
         for(int i=0; i<data.size(); ++i)
         {
             output << data.at(i).join(csvSep);
-            output << "\n";
+            output << "\r";
         }
         file.close();
         return true;

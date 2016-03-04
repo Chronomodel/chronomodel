@@ -231,10 +231,10 @@ void EventsScene::updateHelp()
         }
         else
         {
-            text = tr("You have selected an element. You can now:\n- Edit its properties from the right panel.\n- Create a constraint by holding the \"Alt\" key down and clicking on another element.");
+            text = tr("You have selected an element. You can now:\r- Edit its properties from the right panel.\r- Create a constraint by holding the \"Alt\" key down and clicking on another element.");
                 mHelpView->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=24");
             if(!isBound)
-                text += tr("\n- Merge it with another element by holding the \"Shift\" key down and dragging the selected element onto another one.\n- Delete it with the button on the left.");
+                text += tr("\r- Merge it with another element by holding the \"Shift\" key down and dragging the selected element onto another one.\r- Delete it with the button on the left.");
         }
     }
     else

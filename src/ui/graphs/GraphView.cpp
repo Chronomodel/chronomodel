@@ -1128,13 +1128,13 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
         const QString projectName = tr("Project filename")+" : "+ MainWindow::getInstance()->getNameProject();
 
-        output<<version+"\n";
-        output<<projectName+ "\n";
-        output<<DateUtils::getAppSettingsFormatStr()+"\n";
+        output<<version+"\r";
+        output<<projectName+ "\r";
+        output<<DateUtils::getAppSettingsFormatStr()+"\r";
         for(int i=0; i<rows.size(); ++i)
         {
             output << rows.at(i).join(csvSep);
-            output << "\n";
+            output << "\r";
         }
         file.close();
     }

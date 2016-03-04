@@ -166,7 +166,7 @@ QVector<QVector<Event*> > ModelUtilities::getNextBranches(const QVector<Event*>&
 
                 evtNames << newNode->mName;
                 
-                throw QObject::tr("Circularity found in events model !\nPlease correct this branch :\n") + evtNames.join(" -> ");
+                throw QObject::tr("Circularity found in events model !\rPlease correct this branch :\r") + evtNames.join(" -> ");
             }
         }
     }
@@ -270,7 +270,7 @@ QVector<QVector<Phase*> > ModelUtilities::getNextBranches(const QVector<Phase*>&
                         names << branch[j]->mName;
                     names << newNode->mName;
                     
-                    throw QObject::tr("Circularity found in phases model !\nPlease correct this branch :\n") + names.join(" -> ");
+                    throw QObject::tr("Circularity found in phases model !\rPlease correct this branch :\r") + names.join(" -> ");
                 }
             }
             else
@@ -279,7 +279,7 @@ QVector<QVector<Phase*> > ModelUtilities::getNextBranches(const QVector<Phase*>&
                 for(int j=0; j<curBranch.size(); ++j)
                     names << curBranch[j]->mName;
                 names << newNode->mName;
-                throw QObject::tr("Phases branch too long :\n") + names.join(" -> ");
+                throw QObject::tr("Phases branch too long :\r") + names.join(" -> ");
             }
         }
     }
@@ -401,7 +401,7 @@ QVector<Event*> ModelUtilities::unsortEvents(const QList<Event*>& events)
 QString ModelUtilities::dateResultsText(const Date* d, const Model* model)
 {
     QString text;
-    QString nl = "\n";
+    const QString nl = "\r";
     if(d)
     {
         text += "Data : " + d->mName + nl + nl;
@@ -434,7 +434,7 @@ QString ModelUtilities::dateResultsText(const Date* d, const Model* model)
 QString ModelUtilities::eventResultsText(const Event* e, bool withDates, const Model* model)
 {
     QString text;
-    QString nl = "\n";
+    const QString nl = "\r";
     if(e)
     {
         if(e->mType == Event::eKnown)
@@ -465,7 +465,7 @@ QString ModelUtilities::eventResultsText(const Event* e, bool withDates, const M
 QString ModelUtilities::phaseResultsText(const Phase* p)
 {
     QString text;
-    QString nl = "\n";
+    const QString nl = "\r";
     if(p)
     {
         text += "Phase : " + p->mName + nl + nl;

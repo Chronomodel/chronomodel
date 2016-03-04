@@ -950,7 +950,7 @@ bool Model::isValid()
                                 {
                                     if(e->mConstraintsBwd[n]->mEventFrom == event)
                                     {
-                                        throw "The event " + event->mName + " (in phase " + phase->mName + ") is before the event " + e->mName + " (in phase " + p->mName + "), BUT the phase " + phase->mName + " is after the phase " + p->mName + ".\n=> Contradiction !";
+                                        throw "The event " + event->mName + " (in phase " + phase->mName + ") is before the event " + e->mName + " (in phase " + p->mName + "), BUT the phase " + phase->mName + " is after the phase " + p->mName + ".\r=> Contradiction !";
                                     }
                                 }
                             }
@@ -960,7 +960,7 @@ bool Model::isValid()
                                 {
                                     if(e->mConstraintsFwd[n]->mEventTo == event)
                                     {
-                                        throw "The event " + event->mName + " (in phase " + phase->mName + ") is after the event " + e->mName + " (in phase " + p->mName + "), BUT the phase " + phase->mName + " is before the phase " + p->mName + ".\n=> Contradiction !";
+                                        throw "The event " + event->mName + " (in phase " + phase->mName + ") is after the event " + e->mName + " (in phase " + p->mName + "), BUT the phase " + phase->mName + " is before the phase " + p->mName + ".\r=> Contradiction !";
                                     }
                                 }
                             }

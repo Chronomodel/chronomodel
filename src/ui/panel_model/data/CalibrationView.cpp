@@ -411,7 +411,7 @@ void CalibrationView::copyText()
     p_Clipboard->setText(doc.toPlainText());
      */
     QString text = mTopLab->text() +"<br>" + mDate.getDesc() + "<br>" + mResultsLab->text();
-    p_Clipboard->setText(text.replace("<br>", "\n"));
+    p_Clipboard->setText(text.replace("<br>", "\r"));
    
 }
 

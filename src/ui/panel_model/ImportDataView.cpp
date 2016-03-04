@@ -186,7 +186,7 @@ void ImportDataView::exportDates()
             
             Project* project = MainWindow::getInstance()->getProject();
             QJsonArray events = project->mState[STATE_EVENTS].toArray();
-            stream << "Title"<< sep << project->mProjectFileName<< "\n";
+            stream << "Title"<< sep << project->mProjectFileName<< "\r";
             for(int i=0; i<events.size(); ++i)
             {
                 QJsonObject event = events[i].toObject();
@@ -194,7 +194,7 @@ void ImportDataView::exportDates()
                 
                 int type = event[STATE_EVENT_TYPE].toInt();
                 stream << "Structure"<< sep << ((type == Event::eKnown) ? tr("Bound") : tr("Event")) << " : ";
-                stream << event[STATE_NAME].toString() << "\n";
+                stream << event[STATE_NAME].toString() << "\r";
                 
                 for(int j=0; j<dates.size(); ++j)
                 {
@@ -205,7 +205,7 @@ void ImportDataView::exportDates()
                         if(!d.isNull())
                         {
                             QStringList dateCsv = d.toCSV(csvLocal);
-                            stream << dateCsv.join(sep) << "\n";
+                            stream << dateCsv.join(sep) << "\r";
                         }
                     }
                     catch(QString error){
@@ -218,7 +218,7 @@ void ImportDataView::exportDates()
                         message.exec();
                     }
                 }
-                stream << "\n";
+                stream << "\r";
             }
             file.close();
         }

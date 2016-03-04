@@ -448,7 +448,7 @@ bool Project::load(const QString& path)
     if (!checkFile.exists() || !checkFile.isFile()) {
         QMessageBox message(QMessageBox::Critical,
                             tr("Error loading project file"),
-                            tr("The project file could not be loaded.") + "\n" +
+                            tr("The project file could not be loaded.") + "\r" +
                             path  +
                             tr("Could not be find"),
                             QMessageBox::Ok,
@@ -480,7 +480,7 @@ bool Project::load(const QString& path)
         {
             QMessageBox message(QMessageBox::Critical,
                                 tr("Error loading project file"),
-                                tr("The project file could not be loaded.") + "\n" + 
+                                tr("The project file could not be loaded.") + "\r" +
                                 tr("Error message") + " : " + error.errorString(),
                                 QMessageBox::Ok,
                                 qApp->activeWindow(),
@@ -522,7 +522,7 @@ bool Project::load(const QString& path)
                     if(newerProject){
                         QMessageBox message(QMessageBox::Warning,
                                             tr("Project version doesn't match"),
-                                            "This project has been saved with a newer version of ChronoModel :\n\n- Project version : " + projectVersionStr + "\n- Current version : " + appVersionStr + "\n\nSome incompatible data may be missing and you may encounter problems running the model.\n\nLoading the project will update and overwrite the existing file. Do you really want to continue ?",
+                                            "This project has been saved with a newer version of ChronoModel :\r\r- Project version : " + projectVersionStr + "\r- Current version : " + appVersionStr + "\r\rSome incompatible data may be missing and you may encounter problems running the model.\r\rLoading the project will update and overwrite the existing file. Do you really want to continue ?",
                                             QMessageBox::Yes | QMessageBox::No,
                                             qApp->activeWindow(),
                                             Qt::Sheet);
@@ -581,7 +581,7 @@ bool Project::load(const QString& path)
                 catch(QString error){
                     QMessageBox message(QMessageBox::Critical,
                                         tr("Error loading project"),
-                                        tr("The project could not be loaded.") + "\n" +
+                                        tr("The project could not be loaded.") + "\r" +
                                         tr("Error message") + " : " + error,
                                         QMessageBox::Ok,
                                         qApp->activeWindow(),
@@ -599,7 +599,7 @@ bool Project::load(const QString& path)
                 }catch(QString error){
                     QMessageBox message(QMessageBox::Critical,
                                         tr("Error loading project MCMC results"),
-                                        tr("The project MCMC results could not be loaded.") + "\n" +
+                                        tr("The project MCMC results could not be loaded.") + "\r" +
                                         tr("Error message") + " : " + error,
                                         QMessageBox::Ok,
                                         qApp->activeWindow(),
@@ -803,7 +803,7 @@ void Project::resetMCMC()
 {
     QMessageBox message(QMessageBox::Warning,
                         tr("Reset MCMC methods"),
-                        tr("All event's and data's MCMC methods will be reset to their default value.\nDo you really want to do this ?"),
+                        tr("All event's and data's MCMC methods will be reset to their default value.\rDo you really want to do this ?"),
                         QMessageBox::Yes | QMessageBox::No,
                         qApp->activeWindow(),
                         Qt::Sheet);
@@ -2543,9 +2543,9 @@ void Project::run()
         //http://doc.qt.io/qt-5/qmessagebox.html#setWindowTitle
         //Sets the title of the message box to title. On OS X, the window title is ignored (as required by the OS X Guidelines).
         messageBox.setWindowTitle(tr("Risk on computation"));
-        messageBox.setText(tr("The model contains invalid dates : their calibrations are not digitally computable. \n\nDo you realy want to continue ? :\n\n"));
+        messageBox.setText(tr("The model contains invalid dates : their calibrations are not digitally computable. \r\rDo you really want to continue ? :\r\r"));
         QAbstractButton *IStop = messageBox.addButton(tr("Stop, I correct the model"), QMessageBox::NoRole);
-        messageBox.addButton(tr("I agree the resultats will be certainly wrong"), QMessageBox::YesRole);
+        messageBox.addButton(tr("I agree the results will be certainly wrong"), QMessageBox::YesRole);
 
         messageBox.exec();
         if (messageBox.clickedButton() == IStop)  {

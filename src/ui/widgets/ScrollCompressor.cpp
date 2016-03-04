@@ -91,7 +91,7 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
         
         if(mShowText)
         {
-            QString text = mText + "\n" + QString::number(qRound(mProp * 100)) + " %";
+            QString text = mText + "\r" + QString::number(qRound(mProp * 100)) + " %";
             p.setPen(QColor(200, 200, 200));
             p.drawText(r, Qt::AlignCenter, text);
         }
