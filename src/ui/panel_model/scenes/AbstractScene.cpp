@@ -287,10 +287,10 @@ QRectF AbstractScene::specialItemsBoundingRect(QRectF r) const
     QRectF rect = r;
     for(int i=0; i<mItems.size(); ++i)
     {
-        QRectF r(mItems[i]->scenePos().x() - mItems[i]->boundingRect().width()/2,
-                 mItems[i]->scenePos().y() - mItems[i]->boundingRect().height()/2,
-                 mItems[i]->boundingRect().size().width(),
-                 mItems[i]->boundingRect().size().height());
+        QRectF r(mItems.at(i)->scenePos().x() - mItems.at(i)->boundingRect().width()/2,
+                 mItems.at(i)->scenePos().y() - mItems.at(i)->boundingRect().height()/2,
+                 mItems.at(i)->boundingRect().size().width(),
+                 mItems.at(i)->boundingRect().size().height());
         rect = rect.united(r);
     }
     //QRectF rect2 = itemsBoundingRect();
