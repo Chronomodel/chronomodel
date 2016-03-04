@@ -140,8 +140,6 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
     mDesignIsChanged = false;
     mItemsIsMoved = false;
 
-
-
     if(mReasonChangeStructure.contains(reason)) {
         mStructureIsChanged = true;
     }
@@ -151,7 +149,7 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
     else if(mReasonChangePosition.contains(reason)) {
         mItemsIsMoved = true;
     }
-    else{
+    else {
         this->checkStateModification(state,mState);
     }
 
@@ -346,6 +344,15 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
 
 }
 
+bool Project::structureIsChanged()
+{
+ return mStructureIsChanged;
+}
+
+bool Project::designIsChanged()
+{
+    return mDesignIsChanged;
+}
 
 bool Project::event(QEvent* e)
 {

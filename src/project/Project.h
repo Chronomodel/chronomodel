@@ -40,6 +40,8 @@ public:
     // The project state will be modified and the view notified (if required)
     bool pushProjectState(const QJsonObject& state, const QString& reason, bool notify, bool force = false);
     void checkStateModification(const QJsonObject& stateNew,const QJsonObject& stateOld);
+    bool structureIsChanged();
+    bool designIsChanged();
     // Sends a StateEvent asynchronously.
     // Called by "SetProjectState" undo/redo commands.
     void sendUpdateState(const QJsonObject& state, const QString& reason, bool notify);
