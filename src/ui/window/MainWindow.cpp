@@ -478,7 +478,7 @@ void MainWindow::closeProject()
 
 void MainWindow::saveProject()
 {
-    mProject->save(tr("Save current project as..."));
+    mProject->save();
     updateWindowTitle();
 }
 

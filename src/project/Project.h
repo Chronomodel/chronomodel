@@ -72,9 +72,7 @@ public:
     void showStudyPeriodWarning();
     
     QJsonArray getInvalidDates();
-    bool mDesignIsChanged;
-    bool mStructureIsChanged;
-    bool mItemsIsMoved;
+
     // ---------------------------
     void restoreMCMCSettings();
 
@@ -122,7 +120,7 @@ public:
     void clearModel();
     
 public slots:
-    bool save(const QString& dialogTitle = tr("Save project as..."));
+    bool save();
     
     void mcmcSettings();
     void resetMCMC();
@@ -171,6 +169,16 @@ public:
     Model* mModel;
     
     QTimer* mAutoSaveTimer;
+
+private :
+    // used to define scene modification
+    bool mDesignIsChanged;
+    bool mStructureIsChanged;
+    bool mItemsIsMoved;
+    QSet<QString> mReasonChangeStructure;
+    QSet<QString> mReasonChangeDesign;
+    QSet<QString> mReasonChangePosition;
+
 };
 
 #endif
