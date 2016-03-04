@@ -1722,7 +1722,7 @@ void ResultsView::updateModel()
                         if(dateId == d.mId)
                         {
                             d.mName = date.value(STATE_NAME).toString();
-
+                            d.mColor = (*iterEvent)->mColor;
                             break;
                         }
                     }
