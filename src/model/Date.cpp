@@ -716,6 +716,7 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
 {
     Date date;
     const QString pluginName = dataStr.first();
+
     PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
     if(plugin) {
         QStringList dataTmp = dataStr.mid(1,dataStr.size()-1);
@@ -756,12 +757,13 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
             }
 
         }
+        date.mIsValid = plugin->isDateValid(date.mData,date.mSettings);
     }
    //QJsonObject data =date.toJson();
     //QJsonObject ProjSet = mSettings.toJson();
 
     //ProjectSettings pro = ProjectSettings::fromJson(ProjSet);
-    date.mIsValid = plugin->isDateValid(date.mData,date.mSettings);
+
     plugin = 0;
     return date;
 }
