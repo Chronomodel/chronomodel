@@ -357,8 +357,7 @@ QString MCMCLoopMain::initMCMC()
         foreach (const Date date, event->mDates) {
             ++j;
             log += "<br>";
-           // Date& date = event->mDates[j];
-            
+
             log += line(textBlack("Data (" + QString::number(j) + "/" + QString::number(event->mDates.size()) + ") : " + date.mName));
             log += line(textBlack(" - ti (value) : " + DateUtils::convertToAppSettingsFormatStr(date.mTheta.mX)+" "+ DateUtils::getAppSettingsFormat()));
             if(date.mMethod == Date::eMHSymGaussAdapt){

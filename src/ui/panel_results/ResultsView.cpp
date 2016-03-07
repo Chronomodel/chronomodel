@@ -371,10 +371,8 @@ mPhasesScrollArea(0)
     connect(mCredibilityCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     
     // -------------------------
-    //connect(mUnfoldBut, &Button::toggled, this, &ResultsView::createEventsScrollArea);
     connect(mUnfoldBut, &Button::toggled, this, &ResultsView::updateGraphsLayout);
-    //connect(mShowDataUnderPhasesCheck, &CheckBox::toggled, this, &ResultsView::updateGraphsLayout);
-    connect(mShowDataUnderPhasesCheck, &CheckBox::toggled, this, &ResultsView::generateCurves);
+    connect(mShowDataUnderPhasesCheck, &CheckBox::toggled, this, &ResultsView::updateGraphsLayout);
     
     // -------------------------
 

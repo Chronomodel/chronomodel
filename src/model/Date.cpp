@@ -214,7 +214,7 @@ QJsonObject Date::toJson() const
     
     QJsonArray subdates;
     for(int i=0; i<mSubDates.size(); ++i){
-        QJsonObject d = mSubDates[i].toJson();
+        QJsonObject d = mSubDates.at(i).toJson();
         subdates.push_back(d);
     }
     date[STATE_DATE_SUB_DATES] = subdates;
