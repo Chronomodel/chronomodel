@@ -2559,6 +2559,9 @@ void Project::run()
     if(s.mAutoSave){
         save();
     }
+    else {
+       askToSave(tr("Save current project as..."));
+    }
     
     // This is the occasion to clean EVERYTHING using the previous model before deleting it!
     // e.g. : clean the result view with any graphs, ...

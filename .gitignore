@@ -33,3 +33,5 @@ Makefile
 *.qm
 
 *.dmg
+
+Create_mac_bundle_in_Release.sh
