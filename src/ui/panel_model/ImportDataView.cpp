@@ -17,7 +17,7 @@ ImportDataView::ImportDataView(QWidget* parent, Qt::WindowFlags flags):QWidget(p
     mHelp = new HelpWidget(this);
     mHelp->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=29"); //chapter 3.4.2.1 Radiocarbon dating (14C)
     
-    mHelp->setText(tr("Your CSV file must contain 1 data per row. Each row must start with the datation method to use. Allowed datation methods are : 14C, AM, Gauss, Typo, TL/OSL.\nComments are allowed in your CSV. They must start with  # or // and can be placed at the end of a data row. When placed at the begining of a row, the whole row is ignored.\n You can insert information in the table, you can use two keywords: Title and Structure before info."));
+    mHelp->setText(tr("Your CSV file must contain 1 data per row. Each row must start with the datation method to use. Allowed datation methods are : 14C, AM, Gauss, Typo, TL/OSL.\nComments are allowed in your CSV. They must start with  # or // and can be placed at the end of a data row. When placed at the begining of a row, the whole row is ignored.\r Be careful, cell separator and decimal separator of the CSV file should be those defined in the Application Settings, otherwise the CSV file will not be opened"));
     
     mTable = new ImportDataTable(this, this);
     mTable->setAlternatingRowColors(true);
@@ -81,10 +81,57 @@ void ImportDataView::browse()
             const AppSettings settings = MainWindow::getInstance()->getAppSettings();
             const QString csvSep = settings.mCSVCellSeparator;
             
+            // endline detection, we want to find which system, OsX, Mac, Windows made this file
+           // QString line = stream.readLine();
+           /* char * pText;
+
+            stream.reset();
+
+             //FILE * pFile ;
+
+            char delim ;
+            char* c;
+            do {
+                  stream.device()->getChar(c);
+                  if(*c == 0x0A) {// LF (Line feed, '\n', 0x0A, 10 in decimal) - Linux, OS X
+                      delim = 0x0A;
+                      qDebug()<<"ENDLINE Delim LF Line feed";
+                  }
+                  if(*c == 0x0A) { //CR followed by LF (CR+LF, '\r\n', 0x0D0A) - Microsoft Windows
+                      delim = 0x0D0A;
+                      qDebug()<<"ENDLINE Delim CR+LF CR followed by LF";
+                  }
+                  if(*c == 0x0A) {// CR (Carriage return, '\r', 0x0D, 13 in decimal) - Mac OS up to version 9, and OS-9
+                      delim = 0x0D;
+                      qDebug()<<"ENDLINE Delim CR Carriage return";
+                  }
+             } while (*c != EOF);
+           // fclose (pFile);
+
+
+             * if(line.contains("\n")) {// LF (Line feed, '\n', 0x0A, 10 in decimal) - Linux, OS X
+                delim = 0x0A;
+                qDebug()<<"ENDLINE Delim LF Line feed";
+            }
+            if(line.contains("\r\n")) { //CR followed by LF (CR+LF, '\r\n', 0x0D0A) - Microsoft Windows
+                delim = 0x0D0A;
+                qDebug()<<"ENDLINE Delim CR+LF CR followed by LF";
+            }
+            if(line.contains("\r")) {// CR (Carriage return, '\r', 0x0D, 13 in decimal) - Mac OS up to version 9, and OS-9
+                delim = 0x0D;
+                qDebug()<<"ENDLINE Delim CR Carriage return";
+            }
+            std::string stdLine;
+            std::ifstream input(file.fileName().toStdString());
+
+            //http://en.cppreference.com/w/cpp/string/basic_string/getline
+            while(std::getline(input, stdLine, delim))
+
+            */
+
             // Read every lines of the file
-            while(!stream.atEnd())
-            {
-                QString line = stream.readLine();
+            while(!stream.atEnd()) {
+                const QString line = stream.readLine();
                 QStringList values = line.split(csvSep);
                 if(values.size() > 0)
                 {
@@ -136,7 +183,6 @@ void ImportDataView::browse()
                 }
             }
             file.close();
-            
             mTable->setRowCount(rows);
             mTable->setColumnCount(cols);
             
