@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "ChronoModel"
-#define MyAppVersion "1.3.7"
+#define MyAppVersion "1.5.0"
 #define MyAppPublisher "CNRS"
 #define MyAppURL "http://www.chronomodel.com"
 #define MyAppExeName "Chronomodel.exe"
@@ -27,7 +27,7 @@ AllowNoIcons=yes
 LicenseFile="license.rtf"
 InfoBeforeFile="readme.txt"
 OutputDir=.\
-OutputBaseFilename=chronomodel_win_{#MyAppVersion}
+OutputBaseFilename=ChronoModel_{#MyAppVersion}_win
 SetupIconFile="..\..\icon\Chronomodel.ico"
 Compression=lzma
 SolidCompression=yes
