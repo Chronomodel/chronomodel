@@ -96,13 +96,9 @@ void PluginMagForm::setData(const QJsonObject& data, bool isCombined)
     const double error = data.value(DATE_AM_ERROR_STR).toDouble();
     const QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
     
-    /*mIncRadio->setChecked(is_inc);
+    mIncRadio->setChecked(is_inc);
     mDecRadio->setChecked(is_dec);
-    mIntensityRadio->setChecked(is_int);*/
-    //The signals pressed() and clicked() are not emitted
-    mIncRadio->setDown(is_inc);
-    mDecRadio->setDown(is_dec);
-    mIntensityRadio->setDown(is_int);
+    mIntensityRadio->setChecked(is_int);
     
     mIncEdit->setText(locale.toString(inc));
     mDecEdit->setText(locale.toString(dec));
@@ -120,16 +116,16 @@ QJsonObject PluginMagForm::getData()
     QJsonObject data;
     const QLocale locale=QLocale();
     
-    bool is_inc = mIncRadio->isChecked();
-    bool is_dec = mDecRadio->isChecked();
-    bool is_int = mIntensityRadio->isChecked();
+    const bool is_inc = mIncRadio->isChecked();
+    const bool is_dec = mDecRadio->isChecked();
+    const bool is_int = mIntensityRadio->isChecked();
     
     double inc = locale.toDouble(mIncEdit->text());
-    double dec = locale.toDouble(mDecEdit->text());
+    const double dec = locale.toDouble(mDecEdit->text());
     if(is_dec)
         inc = locale.toDouble(mDecIncEdit->text());
-    double intensity = locale.toDouble(mIntensityEdit->text());
-    double error = locale.toDouble(mAlpha95Edit->text());
+    const double intensity = locale.toDouble(mIntensityEdit->text());
+    const double error = locale.toDouble(mAlpha95Edit->text());
     
     QString ref_curve = mRefCombo->currentText();
     
