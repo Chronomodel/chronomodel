@@ -86,19 +86,23 @@ PluginMagForm::~PluginMagForm()
 void PluginMagForm::setData(const QJsonObject& data, bool isCombined)
 {
     QLocale locale=QLocale();
-    bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
-    bool is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
-    bool is_int = data.value(DATE_AM_IS_INT_STR).toBool();
+    const bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
+    const bool is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
+    const bool is_int = data.value(DATE_AM_IS_INT_STR).toBool();
     
-    double inc = data.value(DATE_AM_INC_STR).toDouble();
-    double dec = data.value(DATE_AM_DEC_STR).toDouble();
-    double intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
-    double error = data.value(DATE_AM_ERROR_STR).toDouble();
-    QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
+    const double inc = data.value(DATE_AM_INC_STR).toDouble();
+    const double dec = data.value(DATE_AM_DEC_STR).toDouble();
+    const double intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
+    const double error = data.value(DATE_AM_ERROR_STR).toDouble();
+    const QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
     
-    mIncRadio->setChecked(is_inc);
+    /*mIncRadio->setChecked(is_inc);
     mDecRadio->setChecked(is_dec);
-    mIntensityRadio->setChecked(is_int);
+    mIntensityRadio->setChecked(is_int);*/
+    //The signals pressed() and clicked() are not emitted
+    mIncRadio->setDown(is_inc);
+    mDecRadio->setDown(is_dec);
+    mIntensityRadio->setDown(is_int);
     
     mIncEdit->setText(locale.toString(inc));
     mDecEdit->setText(locale.toString(dec));
@@ -114,7 +118,7 @@ void PluginMagForm::setData(const QJsonObject& data, bool isCombined)
 QJsonObject PluginMagForm::getData()
 {
     QJsonObject data;
-    QLocale locale=QLocale();
+    const QLocale locale=QLocale();
     
     bool is_inc = mIncRadio->isChecked();
     bool is_dec = mDecRadio->isChecked();
@@ -163,18 +167,18 @@ void PluginMagForm::updateOptions()
 {
     mIncEdit->setVisible(mIncRadio->isChecked());
     mIncLab->setVisible(mIncRadio->isChecked());
-    if(mIncRadio->isChecked())    mRefCombo->setCurrentIndex(mRefCombo->findText("i.ref",Qt::MatchEndsWith));
+    //if(mIncRadio->isChecked())    mRefCombo->setCurrentIndex(mRefCombo->findText("i.ref",Qt::MatchEndsWith));
     
     mDecEdit->setVisible(mDecRadio->isChecked());
     mDecLab->setVisible(mDecRadio->isChecked());
-    if(mDecRadio->isChecked())    mRefCombo->setCurrentIndex(mRefCombo->findText("d.ref",Qt::MatchEndsWith));
+    //if(mDecRadio->isChecked())    mRefCombo->setCurrentIndex(mRefCombo->findText("d.ref",Qt::MatchEndsWith));
 
     mDecIncEdit->setVisible(mDecRadio->isChecked());
     mDecIncLab->setVisible(mDecRadio->isChecked());
     
     mIntensityEdit->setVisible(mIntensityRadio->isChecked());
     mIntensityLab->setVisible(mIntensityRadio->isChecked());
-    if(mIntensityRadio->isChecked())    mRefCombo->setCurrentIndex(mRefCombo->findText("f.ref",Qt::MatchEndsWith));
+    //if(mIntensityRadio->isChecked())    mRefCombo->setCurrentIndex(mRefCombo->findText("f.ref",Qt::MatchEndsWith));
 
     if(mIntensityRadio->isChecked())
         mAlpha95Lab->setText(tr("Error (sd)") + " :");
