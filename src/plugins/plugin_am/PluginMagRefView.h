@@ -21,7 +21,7 @@ public:
     
 public slots:
     void zoomX(double min, double max);
-
+    void setMarginRight(const int margin);
 protected:
     void resizeEvent(QResizeEvent* e);
     

@@ -438,7 +438,14 @@ void CalibrationView::updateLayout()
 {
     int m1 = 5;
     int m2 = 10;
-    
+
+    QFontMetrics fm(qApp->font());
+
+    //const float min = mCalibGraph->minimumX();
+    const float max = mCalibGraph->maximumX();
+    //const int marginLeft = (int)floor(fm.width(locale().toString(min))/2);
+    const int marginRight = (int)floor(fm.width(locale().toString(max))/2);
+
     int w = width() - 2*m2;
     int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     
@@ -467,11 +474,14 @@ void CalibrationView::updateLayout()
     mZoomSlider->setGeometry(width() - m2 - sliderW, m1 + topH, sliderW, lineH);
     
     mProcessTitle->setGeometry(m2 + graphLeft, m1 + topH + sbe, w - graphLeft, titleH);
-    if(mRefGraphView)
+    if(mRefGraphView) {
         mRefGraphView->setGeometry(m2+1, m1 + topH + sbe + titleH, w, refH);
+        mRefGraphView->setMarginRight(marginRight);
+    }
     mDistribTitle->setGeometry(m2 + graphLeft, m1 + topH + sbe + titleH + refH, w - graphLeft, titleH);
     mCalibGraph->setGeometry(m2+1, m1 + topH + sbe + 2*titleH + refH, w, calibH);
-    
+    mCalibGraph->setMarginRight(marginRight);
+
     mResultsLab->setGeometry(m2 + graphLeft, height() - m2 - botH, w, botH);
     
     mHPDEdit->setGeometry(width() - m2 - 10 - editW, height() - m2 - botH, editW, lineH);

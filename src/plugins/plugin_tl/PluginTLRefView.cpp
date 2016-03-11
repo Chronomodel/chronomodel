@@ -149,7 +149,10 @@ void PluginTLRefView::zoomX(double min, double max)
 {
     mGraph->zoomX(min, max);
 }
-
+void PluginTLRefView::setMarginRight(const int margin)
+{
+    mGraph->setMarginRight(margin);
+}
 void PluginTLRefView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);

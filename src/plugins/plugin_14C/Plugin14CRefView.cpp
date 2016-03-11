@@ -330,6 +330,11 @@ void Plugin14CRefView::zoomX(double min, double max)
     mGraph->zoomX(min, max);
 }
 
+void Plugin14CRefView::setMarginRight(const int margin)
+{
+    mGraph->setMarginRight(margin);
+}
+
 void Plugin14CRefView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);

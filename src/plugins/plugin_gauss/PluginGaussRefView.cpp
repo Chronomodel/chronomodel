@@ -261,7 +261,10 @@ void PluginGaussRefView::zoomX(double min, double max)
 {
     mGraph->zoomX(min, max);
 }
-
+void PluginGaussRefView::setMarginRight(const int margin)
+{
+    mGraph->setMarginRight(margin);
+}
 void PluginGaussRefView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);

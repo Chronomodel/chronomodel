@@ -45,7 +45,10 @@ public slots:
         Q_UNUSED(min);
         Q_UNUSED(max);
     }
-    
+    virtual void setMarginRight(const int margin)
+    {
+        Q_UNUSED(margin);
+    }
 protected:
     ProjectSettings mSettings;
     QColor mMeasureColor;

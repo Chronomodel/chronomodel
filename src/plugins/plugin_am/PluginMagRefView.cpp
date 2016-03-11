@@ -285,7 +285,10 @@ void PluginMagRefView::zoomX(double min, double max)
 {
     mGraph->zoomX(min, max);
 }
-
+void PluginMagRefView::setMarginRight(const int margin)
+{
+    mGraph->setMarginRight(margin);
+}
 void PluginMagRefView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
