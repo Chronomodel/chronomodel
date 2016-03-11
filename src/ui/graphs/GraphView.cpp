@@ -859,10 +859,10 @@ void GraphView::drawCurves(QPainter& painter)
                     QVector<double> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
                     
                     QVector<double> lightData;
-                    const double dataStep = (double)subData.size() / (double)(2.*mGraphWidth);
+                    const double dataStep = (double)subData.size() / (double)(mGraphWidth);
                     if(dataStep > 1)
                     {
-                        for(int i=0; i<2*mGraphWidth; ++i)
+                        for(int i=0; i<mGraphWidth; ++i)
                         {
                             const int idx = (int)round(i * dataStep);
                             lightData.append(subData.at(idx));
@@ -912,10 +912,10 @@ void GraphView::drawCurves(QPainter& painter)
                     if(subData.isEmpty()) continue;
 
                     QMap<double, double> lightMap;
-                    if(subData.size() > 2*mGraphWidth)
-                    {
-                        int valuesPerPixel = subData.size() / (2*mGraphWidth);
-                        
+
+                    if(subData.size() > mGraphWidth)
+                    { //always used in the items thumbnails
+                        int valuesPerPixel = subData.size() / (mGraphWidth);
                         QMap<double, double>::const_iterator iter = subData.cbegin();
                         int index = 0;
                         while(iter != subData.cend()) {
@@ -924,6 +924,7 @@ void GraphView::drawCurves(QPainter& painter)
                             ++index;
                             ++iter;
                         }
+
                     }
                     
                     else
@@ -1011,6 +1012,13 @@ void GraphView::drawCurves(QPainter& painter)
                             last_valueY = valueY;
                         }
                     }
+
+                    if( path.elementCount()  == 1) { //there is only one value
+                        last_x = getXForValue(valueX, true);
+                        last_y = getYForValue(0, false);
+                        path.lineTo(last_x, last_y);
+                    }
+
                     // Detect square signal back-end without null value at the end of the QMap
                     // e.i calibration of typo-ref
                     if(lightMap.size()>1) {

@@ -32,7 +32,7 @@ public:
 
     void generateHistos(const QList<ChainSpecs> &chains, const int fftLen, const double hFactor, const double tmin = 0, const double tmax = 0);
     void generateCorrelations(const QList<ChainSpecs> &chains);
-    void generateHPD(double threshold);
+    void generateHPD(const double threshold);
     void generateCredibility(const QList<ChainSpecs>& chains, double threshold);
 
     void saveToStream(QDataStream *out);
@@ -56,7 +56,7 @@ public:
     QVector<double> runRawTraceForChain(const QList<ChainSpecs>& chains, int index);
     QVector<double> runFormatedTraceForChain(const QList<ChainSpecs>& chains, int index);
     
-    QVector<double> correlationForChain(int index);
+    QVector<double> correlationForChain(const int index);
     
     // -----
     

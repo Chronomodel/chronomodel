@@ -16,14 +16,17 @@
 MetropolisVariable::MetropolisVariable(QObject *parent):QObject(parent),
 mX(0),
 mSupport(eR),
-mFormat(DateUtils::eNumeric)
+mFormat(DateUtils::eNumeric),
+mExactCredibilityThreshold(0)
 {
-    QObject::connect(this,&MetropolisVariable::formatChanged, this,&MetropolisVariable::updateFormatedTrace);
+    mCredibility = QPair<double,double>();
+    mHPD = QMap<double,double>();
+    QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
 }
 
 MetropolisVariable::~MetropolisVariable()
 {
-    QObject::disconnect(this,&MetropolisVariable::formatChanged, this,&MetropolisVariable::updateFormatedTrace);
+    QObject::disconnect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
 }
 
 void MetropolisVariable::memo()
@@ -168,8 +171,14 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
 
     const double sigma = dataStd(dataSrc);
     QMap<double, double> result;
-    if (sigma==0) {
-        qDebug()<<"MetropolisVariable::generateHisto sigma=0";
+    if (sigma == 0) {
+        qDebug()<<"MetropolisVariable::generateHisto sigma == 0";
+        if(dataSrc.size()>0) {
+            // if sigma is null and there are several values, it means: this is the same
+            // value. It can appear with a bound fixed
+            result.insert(dataSrc.at(0)+tmin, 1) ;
+            qDebug()<<"MetropolisVariable::generateHisto result = "<< (dataSrc.at(0)+tmin);
+        }
         return result;
     }
 
@@ -263,22 +272,22 @@ void MetropolisVariable::generateHistos(const QList<ChainSpecs>& chains, const i
     }
 }
 
-void MetropolisVariable::generateHPD(double threshold)
+void MetropolisVariable::generateHPD(const double threshold)
 {
     if(!mHisto.isEmpty())
     {
-        threshold = (threshold > 100 ? threshold = 100.0 : threshold);
-        if (threshold==100.) {
+        const double thresh = qBound(0.0, threshold, 100.0);
+        if (thresh == 100.) {
             mHPD = mHisto;
             return;
         }
-        threshold = (threshold < 0 ? threshold = 0.0 : threshold);
-        if (threshold==0.) {
+        //threshold = (threshold < 0 ? threshold = 0.0 : threshold);
+        if (thresh == 0.) {
             mHPD.clear();
             return;
         }
-        mThreshold = threshold;
-        mHPD = create_HPD(mHisto, threshold);
+        mThreshold = thresh;
+        mHPD = create_HPD(mHisto, thresh);
         
         // No need to have HPD for all chains !
         //mChainsHPD.clear();
@@ -474,10 +483,10 @@ QVector<double> MetropolisVariable::runFormatedTraceForChain(const QList<ChainSp
 }
 
 
-QVector<double> MetropolisVariable::correlationForChain(int index)
+QVector<double> MetropolisVariable::correlationForChain(const int index)
 {
     if(index < mCorrelations.size())
-        return mCorrelations[index];
+        return mCorrelations.at(index);
     return QVector<double>();
 }
 
@@ -489,16 +498,18 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
     
     const QLocale locale;
     QString result = densityAnalysisToString(mResults, nl) + nl;
-    
-    result += "HPD Region (" + locale.toString(mThreshold, 'f', 1) + "%) : " + getHPDText(mHPD, mThreshold, unit, formatFunc) + nl;
-    if (formatFunc) {
-        result += "Credibility Interval (" + locale.toString(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + formatFunc(mCredibility.first) + ", " + formatFunc(mCredibility.second) + "] " + unit;
+    if(!mHPD.isEmpty()) {
+        result += "HPD Region (" + locale.toString(mThreshold, 'f', 1) + "%) : " + getHPDText(mHPD, mThreshold, unit, formatFunc) + nl;
     }
-    else {
-        result += "Credibility Interval (" + locale.toString(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + DateUtils::dateToString(mCredibility.first) + ", " + DateUtils::dateToString(mCredibility.second) + "]";
-    }
-    
-    return result;
+    if(mCredibility != QPair<double,double>()) {
+        if (formatFunc) {
+            result += "Credibility Interval (" + locale.toString(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + formatFunc(mCredibility.first) + ", " + formatFunc(mCredibility.second) + "] " + unit;
+        }
+        else {
+            result += "Credibility Interval (" + locale.toString(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + DateUtils::dateToString(mCredibility.first) + ", " + DateUtils::dateToString(mCredibility.second) + "]";
+        }
+   }
+   return result;
 }
 
 QStringList MetropolisVariable::getResultsList(const QLocale locale, const bool withDateFormat)

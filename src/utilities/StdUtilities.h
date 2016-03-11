@@ -196,6 +196,6 @@ QMap<double, double> vector_to_map(const QVector<double>& data, const double min
 double vector_interpolate_idx_for_value(const double value, const QVector<double> &vector);
 
 double map_area(const QMap<double, double>& map);
-const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double threshold);
+const QMap<double, double> create_HPD(const QMap<double, double>& aMap, const double threshold);
 
 #endif

@@ -356,13 +356,18 @@ double vector_interpolate_idx_for_value(const double value, const QVector<double
 }
 /**
     @brief  This function make a QMap which are a copy of the QMap aMap to obtain an percent of area
+    @brief  to define a area we need at least 2 value in the map
     @param threshold is in percent
  */
-const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double threshold)
+const QMap<double, double> create_HPD(const QMap<double, double>& aMap, const double threshold)
 {
+    QMap<double, double> result = QMap<double,double>();
+
+    if(aMap.size() < 2) { // in case of only one value (e.g. a bound fixed) or no value
+        return result;
+    }
+
     const double areaTot = map_area(aMap);
-    QMap<double, double> result;
-    
     if (areaTot==threshold) {
         result = aMap;
         return result;
@@ -442,8 +447,8 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, double t
 
 double map_area(const QMap<double, double>& map)
 {
-    if(map.isEmpty())
-        return 0;
+    if(map.size()<2)
+        return 0.0;
     
     QMap<double, double>::const_iterator cIter = map.cbegin();
     double srcArea = 0.f;
