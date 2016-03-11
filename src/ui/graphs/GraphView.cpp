@@ -770,7 +770,7 @@ void GraphView::drawCurves(QPainter& painter)
                 path.moveTo(x, mMarginTop + mGraphHeight);
                 path.lineTo(x, mMarginTop);
                 
-                painter.strokePath(path, curve.mPen);
+                painter.strokePath(path, pen);
             }
             else if(curve.mIsHorizontalSections)
             {
@@ -924,7 +924,6 @@ void GraphView::drawCurves(QPainter& painter)
                             ++index;
                             ++iter;
                         }
-
                     }
                     
                     else
@@ -946,7 +945,7 @@ void GraphView::drawCurves(QPainter& painter)
                     last_valueY = 0;
 
                     // Detect square signal front-end without null value at the begin of the QMap
-                    // e.i calibration of typo-ref
+                    // e.g calibration of typo-ref
                     if(iter.hasNext()) {
                         if(valueY == (iter.peekNext()).value()){
                             if(valueX > mCurrentMinX && valueX < mCurrentMaxX) {
