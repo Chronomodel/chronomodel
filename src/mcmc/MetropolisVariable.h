@@ -24,14 +24,17 @@ public:
     MetropolisVariable& operator=( MetropolisVariable const& origin);
 
     void setFormat(const DateUtils::FormatDate fm);
-
+    QString getName() {return mName;}
+    void setName(const QString name) {mName = name;}
     // -----
     //  These functions are time consuming!
     // -----
-
-
-    void generateHistos(const QList<ChainSpecs> &chains, const int fftLen, const double hFactor, const double tmin = 0, const double tmax = 0);
     void generateCorrelations(const QList<ChainSpecs> &chains);
+
+    void generateHistos(const QList<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin = 0, const double tmax = 0);
+    void memoHistoParameter(const int fftLen, const double bandwidth, const double tmin = 0, const double tmax = 0);
+    bool HistoWithParameter(const int fftLen, const double bandwidth, const double tmin = 0, const double tmax = 0);
+
     void generateHPD(const double threshold);
     void generateCredibility(const QList<ChainSpecs>& chains, double threshold);
 
@@ -72,7 +75,7 @@ private:
     //float* generateBufferForHisto(const QVector<double>& dataSrc, int numPts, double a, double b);
     void generateBufferForHisto(float* input, const QVector<double> &dataSrc, const int numPts, const double a, const double b);
     QMap<double, double> bufferToMap(const double* buffer);
-    QMap<double, double> generateHisto(const QVector<double>& data,const int fftLen, const  double hFactor, const double tmin = 0, const double tmax = 0);
+    QMap<double, double> generateHisto(const QVector<double>& data, const int fftLen, const  double bandwidth, const double tmin = 0, const double tmax = 0);
 
 protected slots:
     void updateFormatedTrace();
@@ -98,7 +101,7 @@ public:
     // Posterior density results.
     // mHisto is calcuated using all run parts of all chains traces.
     // mChainsHistos constains posterior densities for each chain, computed using only the "run" part of the trace.
-    // This needs to be re-calculated each time we change fftLength or HFactor.
+    // This needs to be re-calculated each time we change fftLength or bandwidth.
     // See generateHistos() for more.
     QMap<double, double> mHisto;
     QList<QMap<double, double> > mChainsHistos;
@@ -109,13 +112,25 @@ public:
     
     QMap<double, double> mHPD;
     QPair<double, double> mCredibility;
-    double mThreshold;
+    //double mThreshold;
     
     double mExactCredibilityThreshold;
     
     DensityAnalysis mResults;
     QList<DensityAnalysis> mChainsResults;
     //bool mIsDate;
+
+
+    int mfftLenUsed;
+    double mBandwidthUsed;
+    double mThresholdUsed;
+
+    double mtminUsed;
+    double mtmaxUsed;
+
+
+private:
+    QString mName;
 };
 
 #endif
