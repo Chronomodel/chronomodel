@@ -175,7 +175,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                     // ------------------------------------
                     //  Theta Credibility
                     // ------------------------------------
-                    GraphCurve curveCred = generateCredibilityCurve(mEvent->mTheta.mCredibility,
+                    GraphCurve curveCred = generateSectionCurve(mEvent->mTheta.mCredibility,
                                                                     "Credibility All Chains",
                                                                     color);
                     mGraph->addCurve(curveCred);

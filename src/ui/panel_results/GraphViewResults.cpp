@@ -523,7 +523,7 @@ GraphCurve GraphViewResults::generateHPDCurve(QMap<double, double>& data,
     return curve;
 }
 
-GraphCurve GraphViewResults::generateCredibilityCurve(const QPair<double, double>& section,
+GraphCurve GraphViewResults::generateSectionCurve(const QPair<double, double>& section,
                                                       const QString& name,
                                                       const QColor& color) const{
     GraphCurve curve;

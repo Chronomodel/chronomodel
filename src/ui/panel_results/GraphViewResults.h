@@ -64,7 +64,7 @@ public:
                                 const QString& name,
                                 const QColor& color) const;
     
-    GraphCurve generateCredibilityCurve(const QPair<double, double>& section,
+    GraphCurve generateSectionCurve(const QPair<double, double>& section,
                                         const QString& name,
                                         const QColor& color) const;
     

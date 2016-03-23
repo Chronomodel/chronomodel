@@ -119,6 +119,7 @@ void GraphViewPhase::paintEvent(QPaintEvent* e)
 
 void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
 {
+    qDebug()<<"GraphViewPhase::generateCurves()";
     GraphViewResults::generateCurves(typeGraph, variable);
     
     mGraph->removeAllCurves();
@@ -211,6 +212,12 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                 mDurationGraph->addCurve(curveDurationHPD);
                 mDurationGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
                 mDurationGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
+
+                GraphCurve curveTimeRange = generateSectionCurve(mPhase->getFormatedTimeRange(),
+                                                           "Time Range",
+                                                           color);
+                mGraph->addCurve(curveTimeRange);
+
             }
             else {
                 curveDuration.mName = "Duration";
@@ -287,6 +294,8 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setCurveVisible("Post Distrib Beta All Chains", mShowAllChains);
             mGraph->setCurveVisible("HPD Alpha All Chains", mShowAllChains);
             mGraph->setCurveVisible("HPD Beta All Chains", mShowAllChains);
+
+            mGraph->setCurveVisible("Time Range", mShowAllChains);
             
             for(int i=0; i<mShowChainList.size(); ++i)
             {
