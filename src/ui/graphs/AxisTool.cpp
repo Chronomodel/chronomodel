@@ -16,6 +16,7 @@ mDeltaVal(0),
 mDeltaPix(20),
 mStartVal(0),
 mStartPix(0),
+mPixelsPerUnit(1),
 mAxisColor(0, 0, 0)
 {
     
@@ -146,16 +147,18 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
                        p.drawLine(QLineF(x, yo, x, yo + heigthSize));
                        linesPos.append(x);
                     }
-                    
-                    if (mShowText) {
-                        QString text =(valueFormatFunc ? valueFormatFunc((x-xo)/mPixelsPerUnit + mStartVal) : QString::number(((x-xo)/mPixelsPerUnit + mStartVal),'f',0) );
-                        
-                        int textWidth =  fm.width(text) ;
-                        qreal tx = x - textWidth/2;
-                    
-                        QRectF textRect(tx, yo + h - heightText, textWidth, heightText);
-                        p.drawText(textRect,Qt::AlignCenter ,text);
-                    }
+
+                     if (mShowText && mPixelsPerUnit>0) {
+                            QString text =(valueFormatFunc ? valueFormatFunc((x-xo)/mPixelsPerUnit + mStartVal) : QString::number(((x-xo)/mPixelsPerUnit + mStartVal),'f',0) );
+
+                            int textWidth =  fm.width(text) ;
+                            qreal tx = x - textWidth/2;
+
+                            QRectF textRect(tx, yo + h - heightText, textWidth, heightText);
+                            p.drawText(textRect,Qt::AlignCenter ,text);
+
+                   }
+
                 }
                 if (mShowText || mShowSubs) {
                     ++i;
