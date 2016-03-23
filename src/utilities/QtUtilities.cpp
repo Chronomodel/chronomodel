@@ -7,6 +7,7 @@
 
 #include "GraphView.h"
 #include "AppSettings.h"
+#include <algorithm>
 
 
 bool colorIsDark(const QColor& color)
@@ -22,7 +23,8 @@ bool intLessThan(const int& v1, const int& v2)
 
 void sortIntList(QList<int>& list)
 {
-    qSort(list.begin(), list.end(), intLessThan);
+   // qSort(list.begin(), list.end(), intLessThan);// http://doc.qt.io/qt-5/qtalgorithms-obsolete.html#qSort
+    std::sort(list.begin(),list.end(),intLessThan);
 }
 
 
