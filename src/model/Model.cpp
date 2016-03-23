@@ -979,8 +979,9 @@ bool Model::isValid()
 #pragma mark Generate model data
 void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 {
+#ifdef DEBUG
     QTime t = QTime::currentTime();
-    
+#endif
     QList<Event*>::iterator iterEvent = mEvents.begin();
     while (iterEvent!=mEvents.end()) {
         (*iterEvent)->mTheta.generateCorrelations(chains);
@@ -1000,13 +1001,66 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
         (*iterPhase)->mBeta.generateCorrelations(chains);
         ++iterPhase;
     }
-    
+#ifdef DEBUG
     QTime t2 = QTime::currentTime();
     qint64 timeDiff = t.msecsTo(t2);
     qDebug() <<  "=> Model::generateCorrelations done in " + QString::number(timeDiff) + " ms";
+#endif
 }
 
-void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double hFactor)
+void Model::setBandwidth(const double bandwidth)
+{
+    qDebug()<<"Model::setBandwidth";
+    if(mBandwidth != bandwidth) {
+        mBandwidth = bandwidth;
+
+        clearPosteriorDensities();
+        generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
+        generateHPD(mThreshold);
+        generateNumericalResults(mChains);
+        emit newCalculus();
+    }
+}
+
+void Model::setFFTLength(const double FFTLength)
+{
+    qDebug()<<"Model::setFTLength";
+    if(mFFTLength != FFTLength) {
+        mFFTLength = FFTLength;
+
+        clearPosteriorDensities();
+        generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
+        generateHPD(mThreshold);
+        generateNumericalResults(mChains);
+
+        emit newCalculus();
+    }
+}
+
+/**
+ * @brief Make all densities and credibilities and time range and set mFFTLength, mBandwidth and mThreshold
+ * @param[in] fftLength
+ * @param[in] bandwidth
+ * @param[in] threshold
+ */
+void Model::initDensities(const int fftLength, const double bandwidth, const double threshold)
+{
+    qDebug()<<"Model::initDensities"<<fftLength<<bandwidth<<threshold;
+    mFFTLength = fftLength;
+    mBandwidth = bandwidth;
+    // memo the new value of the Threshold inside all the part of the model: phases, events and dates
+    initThreshold(threshold);
+    clearPosteriorDensities();
+    generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
+    generateHPD(mThreshold);
+
+    generateCredibility(mThreshold);
+    generateNumericalResults(mChains);
+    qDebug()<<"Model::initDensities";
+ //   emit newCalculus();
+}
+
+void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth)
 {
     QTime t = QTime::currentTime();
     
@@ -1018,44 +1072,42 @@ void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftL
 
         // Generate event histos for all events and all bounds except for bounds of type "fixed"
         EventKnown* ek = dynamic_cast<EventKnown*>((*iterEvent));
-        if((*iterEvent)->type() == Event::eKnown && ek && (ek->knownType() == EventKnown::eFixed))
-        {
+        if((*iterEvent)->type() == Event::eKnown && ek && (ek->knownType() == EventKnown::eFixed)) {
             // Nothing todo : this is just a Dirac !
             ek->mTheta.mHisto.clear();
             ek->mTheta.mChainsHistos.clear();
             
             ek->mTheta.mHisto.insert(ek->mFixed,1);
-            for(int i =0 ;i<chains.size(); ++i) {//generate fictifious chains
+            for(int i =0 ;i<chains.size(); ++i) {
+                //generate fictifious chains
                 ek->mTheta.mChainsHistos.append(ek->mTheta.mHisto);
             }
         }
-        else
-        {
-            (*iterEvent)->mTheta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
+        else {
+            (*iterEvent)->mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
         }
         
         // Generate dates histos
-        for(int j=0; j<(*iterEvent)->mDates.size(); ++j)
-        {
+        for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
             Date& date = (*iterEvent)->mDates[j];
             
-            date.mTheta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
-            date.mSigma.generateHistos(chains, fftLen, hFactor);
+            date.mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+            date.mSigma.generateHistos(chains, fftLen, bandwidth);
             
             if( !( date.mDeltaType == Date::eDeltaNone ) )
-                date.mWiggle.generateHistos(chains, fftLen, hFactor);
+                date.mWiggle.generateHistos(chains, fftLen, bandwidth);
         }
         ++iterEvent;
     }
     
     QList<Phase*>::iterator iterPhase = mPhases.begin();
     while (iterPhase!=mPhases.end()) {
-        (*iterPhase)->mAlpha.generateHistos(chains, fftLen, hFactor, tmin, tmax);
-        (*iterPhase)->mBeta.generateHistos(chains, fftLen, hFactor, tmin, tmax);
-        (*iterPhase)->mDuration.generateHistos(chains, fftLen, hFactor);
+        (*iterPhase)->mAlpha.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+        (*iterPhase)->mBeta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+        (*iterPhase)->mDuration.generateHistos(chains, fftLen, bandwidth);
         ++iterPhase;
     }
-    
+
     QTime t2 = QTime::currentTime();
     qint64 timeDiff = t.msecsTo(t2);
     qDebug() <<  "=> Model::generatePosteriorDensities done in " + QString::number(timeDiff) + " ms";
@@ -1091,12 +1143,108 @@ void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
     qDebug() <<  "=> Model::generateNumericalResults done in " + QString::number(timeDiff) + " ms";
 }
 
-void Model::generateCredibilityAndHPD(const QList<ChainSpecs> &chains,const double thresh)
+void Model::clearThreshold()
 {
+    mThreshold = -1;
+    QList<Event*>::iterator iterEvent = mEvents.begin();
+    while (iterEvent!=mEvents.end()) {
+        (*iterEvent)->mTheta.mThresholdUsed = -1;
+        for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
+            Date& date = (*iterEvent)->mDates[j];
+            date.mTheta.mThresholdUsed = -1;
+            date.mSigma.mThresholdUsed = -1;
+        }
+        ++iterEvent;
+    }
+
+    QList<Phase*>::iterator iterPhase = mPhases.begin();
+    while (iterPhase!=mPhases.end()) {
+        (*iterPhase)->mAlpha.mThresholdUsed = -1;
+        (*iterPhase)->mBeta.mThresholdUsed = -1;
+        (*iterPhase)->mDuration.mThresholdUsed = -1;
+        ++iterPhase;
+    }
+}
+
+void Model::initThreshold(const double threshold)
+{
+   // memo threshold used  value
+    mThreshold = threshold;
+    QList<Event*>::iterator iterEvent = mEvents.begin();
+    while (iterEvent!=mEvents.end()) {
+
+        if((*iterEvent)->type() != Event::eKnown) {
+          (*iterEvent)->mTheta.mThresholdUsed = threshold;
+
+          for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
+                Date& date = (*iterEvent)->mDates[j];
+                date.mTheta.mThresholdUsed = threshold;
+                date.mSigma.mThresholdUsed = threshold;
+            }
+
+        }
+        ++iterEvent;
+    }
+    QList<Phase*>::iterator iterPhase = mPhases.begin();
+    while (iterPhase!=mPhases.end()) {
+       (*iterPhase)->mAlpha.mThresholdUsed = threshold;
+       (*iterPhase)->mBeta.mThresholdUsed = threshold;
+       (*iterPhase)->mDuration.mThresholdUsed = threshold;
+        ++iterPhase;
+    }
+}
+
+/**
+ * @brief Model::setThreshold this is a slot
+ * @param threshold
+ */
+void Model::setThreshold(const double threshold)
+{
+    qDebug()<<"Model::setThreshold"<<threshold<<" mThreshold"<<mThreshold;
+    if( mThreshold != threshold) {
+        mThreshold = threshold;
+        generateCredibility(threshold);
+        generateHPD(threshold);
+
+        // memo threshold used  value
+
+        QList<Event*>::iterator iterEvent = mEvents.begin();
+        while (iterEvent!=mEvents.end()) {
+
+            if((*iterEvent)->type() != Event::eKnown) {
+              (*iterEvent)->mTheta.mThresholdUsed = threshold;
+
+              for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
+                    Date& date = (*iterEvent)->mDates[j];
+                    date.mTheta.mThresholdUsed = threshold;
+                    date.mSigma.mThresholdUsed = threshold;
+                }
+
+            }
+            ++iterEvent;
+        }
+        QList<Phase*>::iterator iterPhase = mPhases.begin();
+        while (iterPhase!=mPhases.end()) {
+           (*iterPhase)->mAlpha.mThresholdUsed = threshold;
+           (*iterPhase)->mBeta.mThresholdUsed = threshold;
+           (*iterPhase)->mDuration.mThresholdUsed = threshold;
+            ++iterPhase;
+        }
+
+        emit newCalculus();
+   }
+}
+
+double Model::getThreshold() const
+{
+    return mThreshold;
+}
+
+void Model::generateCredibility(const double thresh)
+{
+    qDebug()<<"Model::generateCredibility("<<thresh;
     QTime t = QTime::currentTime();
-    
-    const double threshold = qBound(0.0,thresh,100.0);
-    
+
     QList<Event*>::iterator iterEvent = mEvents.begin();
     while (iterEvent!=mEvents.end()) {
         bool isFixedBound = false;
@@ -1106,40 +1254,171 @@ void Model::generateCredibilityAndHPD(const QList<ChainSpecs> &chains,const doub
             if(ek->knownType() == EventKnown::eFixed)
                 isFixedBound = true;
         }
-        
+
         if(!isFixedBound)
         {
-            (*iterEvent)->mTheta.generateHPD(threshold);
-            (*iterEvent)->mTheta.generateCredibility(chains, threshold);
+            (*iterEvent)->mTheta.generateCredibility(mChains, thresh);
 
             for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
                 Date& date = (*iterEvent)->mDates[j];
-                date.mTheta.generateHPD(threshold);
-                date.mSigma.generateHPD(threshold);
+                date.mTheta.generateCredibility(mChains, thresh);
+                date.mSigma.generateCredibility(mChains, thresh);
 
-                date.mTheta.generateCredibility(chains, threshold);
-                date.mSigma.generateCredibility(chains, threshold);
             }
         }
         ++iterEvent;
     }
     QList<Phase*>::iterator iterPhase = mPhases.begin();
+    int compteur = 0;
     while (iterPhase!=mPhases.end()) {
-        (*iterPhase)->mAlpha.generateHPD(threshold);
-        (*iterPhase)->mBeta.generateHPD(threshold);
+   //do{
+        ++compteur;
         // if there is only one Event in the phase, there is no Duration
-        (*iterPhase)->mDuration.generateHPD(threshold);
+        (*iterPhase)->mAlpha.generateCredibility(mChains, thresh);
+        (*iterPhase)->mBeta.generateCredibility(mChains, thresh);
+
+        (*iterPhase)->mDuration.generateCredibility(mChains, thresh);
+        (*iterPhase)->mTimeRange = timeRangeFromTraces((*iterPhase)->mAlpha.runRawTraceForChain(mChains,0),
+                                                             (*iterPhase)->mBeta.runRawTraceForChain(mChains,0),thresh, "Time Range for Phase : "+(*iterPhase)->mName);
+
+        qDebug()<<compteur<<" Time Range for Phase : "<<(*iterPhase)->mName<<thresh;
+         ++iterPhase;
+    };//while (iterPhase!=mPhases.end());
+
+    QTime t2 = QTime::currentTime();
+    qint64 timeDiff = t.msecsTo(t2);
+    qDebug() <<  "=> Model::generateCredibility done in " + QString::number(timeDiff) + " ms";
+
+    //delete progress;
+}
+
+void Model::generateHPD(const double thresh)
+{
+    QTime t = QTime::currentTime();
+
+    QList<Event*>::iterator iterEvent = mEvents.begin();
+    while (iterEvent!=mEvents.end()) {
+        bool isFixedBound = false;
+
+        if((*iterEvent)->type() == Event::eKnown)
+        {
+            EventKnown* ek = dynamic_cast<EventKnown*>(*iterEvent);
+            if(ek->knownType() == EventKnown::eFixed)
+                isFixedBound = true;
+        }
+
+        if(!isFixedBound)
+        {
+            //if((*iterEvent)->mTheta.mThresholdUsed != thresh) {
+                (*iterEvent)->mTheta.generateHPD(thresh);
+
+                for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
+                    Date& date = (*iterEvent)->mDates[j];
+                    date.mTheta.generateHPD(thresh);
+                    date.mSigma.generateHPD(thresh);
+                }
+           //  }
+        }
+        ++iterEvent;
+    }
+    QList<Phase*>::iterator iterPhase = mPhases.begin();
+    while (iterPhase!=mPhases.end()) {
+       // if there is only one Event in the phase, there is no Duration
+       //if((*iterPhase)->mAlpha.mThresholdUsed != thresh) {
+            (*iterPhase)->mAlpha.generateHPD(thresh);
+        //}
+       // if((*iterPhase)->mBeta.mThresholdUsed != thresh){
+            (*iterPhase)->mBeta.generateHPD(thresh);
+       // }
+
+       //if((*iterPhase)->mDuration.mThresholdUsed != thresh) {
+            (*iterPhase)->mDuration.generateHPD(thresh);
+      // }
+
+        ++iterPhase;
+    }
+
+    QTime t2 = QTime::currentTime();
+    qint64 timeDiff = t.msecsTo(t2);
+    qDebug() <<  "=> Model::generateHPD done in " + QString::number(timeDiff) + " ms";
+
+}
+
+/*void Model::generateCredibilityAndHPD(const QList<ChainSpecs> &chains,const double thresh)
+{
+    QTime t = QTime::currentTime();
+    //const int nbElement = mEvents.size()+mPhases.size();
+   // int elementProgress = 0;
+    const double threshold = qBound(0.0,thresh,100.0);
+    
+    QList<Event*>::iterator iterEvent = mEvents.begin();
+    while (iterEvent!=mEvents.end()) {
+        bool isFixedBound = false;
+        //++elementProgress;
+        //progress->setValue(elementProgress);
+        if((*iterEvent)->type() == Event::eKnown)
+        {
+            EventKnown* ek = dynamic_cast<EventKnown*>(*iterEvent);
+            if(ek->knownType() == EventKnown::eFixed)
+                isFixedBound = true;
+        }
         
-        (*iterPhase)->mAlpha.generateCredibility(chains, threshold);
-        (*iterPhase)->mBeta.generateCredibility(chains, threshold);
-        (*iterPhase)->mDuration.generateCredibility(chains, threshold);
+        if(!isFixedBound)
+        {
+            if((*iterEvent)->mTheta.mThresholdUsed != threshold) {
+                (*iterEvent)->mTheta.generateHPD(threshold);
+                (*iterEvent)->mTheta.generateCredibility(chains, threshold);
+                (*iterEvent)->mTheta.mThresholdUsed = threshold;
+
+                for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
+                    Date& date = (*iterEvent)->mDates[j];
+                    date.mTheta.generateHPD(threshold);
+                    date.mSigma.generateHPD(threshold);
+
+                    date.mTheta.generateCredibility(chains, threshold);
+                    date.mSigma.generateCredibility(chains, threshold);
+
+                    date.mTheta.mThresholdUsed = threshold;
+                    date.mSigma.mThresholdUsed = threshold;
+                }
+             }
+        }
+        ++iterEvent;
+    }
+    QList<Phase*>::iterator iterPhase = mPhases.begin();
+    while (iterPhase!=mPhases.end()) {
+       // ++elementProgress;
+       // progress->setValue(elementProgress);
+        // if there is only one Event in the phase, there is no Duration
+       if((*iterPhase)->mAlpha.mThresholdUsed != threshold) {
+            (*iterPhase)->mAlpha.generateHPD(threshold);
+            (*iterPhase)->mAlpha.generateCredibility(chains, threshold);
+            (*iterPhase)->mAlpha.mThresholdUsed = threshold;
+        }
+        if((*iterPhase)->mBeta.mThresholdUsed != threshold){
+            (*iterPhase)->mBeta.generateHPD(threshold);
+            (*iterPhase)->mBeta.generateCredibility(chains, threshold);
+            (*iterPhase)->mBeta.mThresholdUsed = threshold;
+        }
+
+       if((*iterPhase)->mDuration.mThresholdUsed != threshold) {
+            (*iterPhase)->mDuration.generateHPD(threshold);
+            (*iterPhase)->mDuration.generateCredibility(chains, threshold);
+            (*iterPhase)->mDuration.mThresholdUsed = threshold;
+            (*iterPhase)->mTimeRange = timeRangeFromTraces((*iterPhase)->mAlpha.runRawTraceForChain(chains,0),
+                                                             (*iterPhase)->mBeta.runRawTraceForChain(chains,0),threshold, "Time Range for Phase : "+(*iterPhase)->mName);
+            //qDebug()<<"Model::generateCredibilityAndHPD() timeRange"<<(*iterPhase)->mTimeRange.first<<(*iterPhase)->mTimeRange.second;
+       }
+
         ++iterPhase;
     }
     
     QTime t2 = QTime::currentTime();
     qint64 timeDiff = t.msecsTo(t2);
     qDebug() <<  "=> Model::generateCredibilityAndHPD done in " + QString::number(timeDiff) + " ms";
-}
+
+    //delete progress;
+}*/
 
 #pragma mark Clear model data
 void Model::clearPosteriorDensities()
@@ -1189,10 +1468,16 @@ void Model::clearCredibilityAndHPD()
     while (iterPhase!=mPhases.cend()) {
         (*iterPhase)->mAlpha.mHPD.clear();
         (*iterPhase)->mAlpha.mCredibility = QPair<double,double>();
+        //(*iterPhase)->mAlpha.mThresholdOld = 0;
+
         (*iterPhase)->mBeta.mHPD.clear();
         (*iterPhase)->mBeta.mCredibility = QPair<double,double>();
+        //(*iterPhase)->mBeta.mThresholdOld = 0;
+
         (*iterPhase)->mDuration.mHPD.clear();
         (*iterPhase)->mDuration.mCredibility = QPair<double,double>();
+        //(*iterPhase)->mDuration.mThresholdOld = 0;
+        (*iterPhase)->mTimeRange = QPair<double,double>();
         ++iterPhase;
     }
 }

@@ -12,10 +12,13 @@
 #include <QJsonObject>
 
 
-class Model
+class Model:public QObject
 {
+    Q_OBJECT
 public:
     Model();
+    virtual ~Model();
+
     QJsonObject toJson() const;
     
     void generateModelLog();
@@ -32,7 +35,7 @@ public:
     QList<QStringList> getEventsTraces(const QLocale locale, const bool withDateFormat = false);
     
     void updateFormatSettings(const AppSettings *appSet);
-    virtual ~Model();
+
 
     void fromJson( const QJsonObject& json);
     void updateDesignFromJson( const QJsonObject& json);
@@ -45,16 +48,24 @@ public:
     
     // Only trace needed for this :
     void generateCorrelations(const QList<ChainSpecs>& chains);
+
+    void initThreshold(const double threshold);
+    double getThreshold() const ;
+    void initDensities(const int fftLength, const double bandwidth, const double threshold);
+
     // Computed from trace using FFT :
-    void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double hFactor);
+    void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double bandwidth);
     // Trace and Posterior density needed for this :
-    void generateCredibilityAndHPD(const QList<ChainSpecs>& chains,const double threshold);
+    //void generateCredibilityAndHPD(const QList<ChainSpecs>& chains,const double threshold);
+    void generateCredibility(const double threshold);
+    void generateHPD(const double threshold);
     // Trace and Posterior density needed for this :
     void generateNumericalResults(const QList<ChainSpecs>& chains);
     
     void clearTraces();
     void clearPosteriorDensities();
     void clearCredibilityAndHPD();
+    void clearThreshold();
     
 public:
     ProjectSettings mSettings;
@@ -70,8 +81,20 @@ public:
     QString mLogModel;
     QString mLogMCMC;
     QString mLogResults;
+
+public slots:
+    void setThreshold(const double threshold);
+    void setBandwidth(const double bandwidth);
+    void setFFTLength(const double FFTLength);
+
+signals:
+    void newCalculus();
+
 private:
     //const QJsonObject * mJson;
+     int mFFTLength;
+     double mBandwidth;
+     double mThreshold;
 };
 
 #endif
