@@ -109,8 +109,8 @@ void ProjectView::showResults()
 {
     if(mRefreshResults)  {
         mResultsView->clearResults();
-        mResultsView->updateModel(); // update Design e.g. Name and color
-        mResultsView->updateResults();
+        mResultsView->updateModel(); // update Design e.g. Name and color //updateResults() is call inside
+       // mResultsView->updateResults();
         mRefreshResults=false;
     }
     mStack->setCurrentIndex(1);
@@ -152,24 +152,45 @@ void ProjectView:: ApplySettings(Model* model,const AppSettings* appSet)
 void ProjectView::updateResults(Model* model)
 {
     if(model)
+        {
+           // showResults();//false);
+            //mResultsView->clearResults();
+            mResultsView->updateResults(model);
+
+            model->generateModelLog();
+            mLogModelEdit->setText(model->getModelLog());
+
+            mLogMCMCEdit->setText(model->getMCMCLog());
+
+            model->generateResultsLog();
+            mLogResultsEdit->setText(model->getResultsLog());
+
+            mStack->setCurrentIndex(1);
+        }
+}
+
+void ProjectView::initResults(Model* model)
+{
+    qDebug()<<"ProjectView::initResults()";
+    if(model)
     {
        // showResults();//false);
         mResultsView->clearResults();
-        mResultsView->updateResults(model);
-        
+        mResultsView->initResults(model);
+        mRefreshResults = true;
+
         model->generateModelLog();
         mLogModelEdit->setText(model->getModelLog());
-        
+
         mLogMCMCEdit->setText(model->getMCMCLog());
-        
+
         model->generateResultsLog();
         mLogResultsEdit->setText(model->getResultsLog());
 
-        mStack->setCurrentIndex(1);
+       // showResults();
+       mStack->setCurrentIndex(1);
     }
 }
-
-
 
 void ProjectView::updateResultsLog(const QString& log)
 {

@@ -47,9 +47,14 @@ public:
     double mResultMaxVariance;
     bool mHasPhases;
     
+    Model* mModel;
+
     void doProjectConnections(Project* project);
-  //  void updateFormat(Model* model = 0);
+
     void updateFormatSetting(Model* model, const AppSettings* appSet);
+    double getBandwidth() const;
+    int getFFTLength() const;
+    double getThreshold() const;
 
 
 protected:
@@ -57,8 +62,6 @@ protected:
     void mouseMoveEvent(QMouseEvent* e);
     void resizeEvent(QResizeEvent* e);
 
-
-    
     void createEventsScrollArea();
     void createPhasesScrollArea();
 
@@ -68,10 +71,12 @@ public slots:
     
     void clearResults();
     void updateResults(Model* model = 0);
-
+    void initResults(Model* model = 0);
     
-    void generatePosteriorDistribs();
-    void generateCredibilityAndHPD();
+    //void generatePosteriorDistribs();
+    //void generateCredibilityAndHPD();
+    //void generateCredibility();
+    //void generateHPD();
     void generateCurves();
     void updateCurvesToShow();
     
@@ -102,10 +107,18 @@ private slots:
     void showInfos(bool);
     void exportFullImage();
     void exportResults();
+
+    // SETTER
+    void setFFTLength();
+    void setBandwidth();
+    void setThreshold();
+
     
 signals:
-    void posteriorDistribGenerated();
-    void credibilityAndHPDGenerated();
+   // void posteriorDistribGenerated();
+
+   // void credibilityGenerated();
+    //void HPDGenerated();
     void curvesGenerated();
     
     void controlsUpdated();
@@ -119,12 +132,11 @@ private:
 
     void clearHisto();
     void clearChainHistos();
-    
-private:
+
     GraphViewResults::TypeGraph mCurrentTypeGraph;
     Ruler* mRuler;
     
-    Model* mModel;
+
     ProjectSettings mSettings;
     MCMCSettings mMCMCSettings;
     QList<ChainSpecs> mChains;
@@ -199,13 +211,17 @@ private:
     LineEdit* mHPDEdit;
     Label* mFFTLenLab;
     QComboBox* mFFTLenCombo;
-    Label* mHFactorLab;
-    LineEdit* mHFactorEdit;
+    Label* mBandwidthLab;
+    LineEdit* mBandwidthEdit;
     Button* mUpdateDisplay;
     
     int mComboH;
     
     QMap<int, QPair<double, double>> mZooms;
+
+    //member
+    double mBandwidthUsed;
+    double mThresholdUsed;
 };
 
 #endif

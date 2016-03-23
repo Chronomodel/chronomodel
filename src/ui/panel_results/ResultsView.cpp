@@ -48,7 +48,9 @@ mRulerH(40),
 mTabsH(30),
 mGraphsH(130),
 mEventsScrollArea(0),
-mPhasesScrollArea(0)
+mPhasesScrollArea(0),
+mBandwidthUsed(1.06),
+mThresholdUsed(95.0)
 {
     mResultMinX = mSettings.mTmin;
     mResultMaxX = mSettings.mTmax;
@@ -67,6 +69,7 @@ mPhasesScrollArea(0)
     
     mStack = new QStackedWidget(this);
     
+    // Make when we need it
     /*mEventsScrollArea = new QScrollArea();
     mEventsScrollArea->setMouseTracking(true);
     mStack->addWidget(mEventsScrollArea);
@@ -211,10 +214,10 @@ mPhasesScrollArea(0)
     displayLayout->addWidget(mYScaleLab,2,0,1,8);
     displayLayout->addWidget(mYSlider,3,0,1,8);
     
-    QLabel* labFont = new QLabel(tr("Font :"));
-    QLabel* labThickness = new QLabel(tr("Thickness :"));
-    QLabel* labOpacity = new QLabel(tr("Fill Opacity :"));
-    QLabel* labRendering = new QLabel(tr("Rendering :"));
+    QLabel* labFont = new QLabel(tr("Font"));
+    QLabel* labThickness = new QLabel(tr("Thickness"));
+    QLabel* labOpacity = new QLabel(tr("Fill Opacity"));
+    QLabel* labRendering = new QLabel(tr("Rendering"));
     
     labFont->setFont(mFont);
     labThickness->setFont(mFont);
@@ -278,7 +281,7 @@ mPhasesScrollArea(0)
     
     mCredibilityCheck = new CheckBox(tr("Show credibility"), mPostDistGroup);
     mCredibilityCheck->setChecked(true);
-    mThreshLab = new Label(tr("HPD / Credibility (%)") + " :", mPostDistGroup);
+    mThreshLab = new Label(tr("HPD / Credibility (%)"), mPostDistGroup);
     mThreshLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     
     mHPDEdit = new LineEdit(mPostDistGroup);
@@ -286,12 +289,12 @@ mPhasesScrollArea(0)
     mHPDEdit->setText("95");
     
     DoubleValidator* percentValidator = new DoubleValidator();
-    percentValidator->setBottom(0.);
-    percentValidator->setTop(100.);
+    percentValidator->setBottom(0.0);
+    percentValidator->setTop(100.0);
     percentValidator->setDecimals(1);
     mHPDEdit->setValidator(percentValidator);
     
-    mFFTLenLab = new Label(tr("Grid length") + " :", mPostDistGroup);
+    mFFTLenLab = new Label(tr("Grid length"), mPostDistGroup);
     mFFTLenLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mFFTLenCombo = new QComboBox(mPostDistGroup);
     mFFTLenCombo->addItem("32");
@@ -310,12 +313,12 @@ mPhasesScrollArea(0)
     mComboH = mFFTLenCombo->sizeHint().height();
     mTabsH = mComboH + 2*mMargin;
     
-    mHFactorLab = new Label(tr("Bandwidth const.") + " :", mPostDistGroup);
-    mHFactorLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    mHFactorEdit = new LineEdit(mPostDistGroup);
+    mBandwidthLab = new Label(tr("Bandwidth const."), mPostDistGroup);
+    mBandwidthLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mBandwidthEdit = new LineEdit(mPostDistGroup);
     QLocale locale;
-    mHFactorEdit->setText(locale.toString(1.06));
-    mHFactorEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+    mBandwidthEdit->setText(locale.toString(1.06));
+    mBandwidthEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     
     // -------------------------
     
@@ -339,8 +342,6 @@ mPhasesScrollArea(0)
     
     // -------------------------
     
-    connect(this, &ResultsView::posteriorDistribGenerated, this, &ResultsView::generateCredibilityAndHPD);
-    connect(this, &ResultsView::credibilityAndHPDGenerated, this, &ResultsView::generateCurves);
     connect(this, &ResultsView::curvesGenerated, this, &ResultsView::updateCurvesToShow);
     
     connect(this, &ResultsView::controlsUpdated, this, &ResultsView::updateLayout);
@@ -357,11 +358,11 @@ mPhasesScrollArea(0)
     
     // -------------------------
     
-    connect(mFFTLenCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::generatePosteriorDistribs);
-    connect(mHFactorEdit, &LineEdit::editingFinished, this, &ResultsView::generatePosteriorDistribs);
+    connect(mFFTLenCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::setFFTLength);
+    connect(mBandwidthEdit, &LineEdit::editingFinished, this, &ResultsView::setBandwidth);
     
-    connect(mHPDEdit, &LineEdit::editingFinished, this, &ResultsView::generateCredibilityAndHPD);
-    
+    connect(mHPDEdit, &LineEdit::editingFinished, this, &ResultsView::setThreshold);
+
     connect(mDataThetaRadio, &RadioButton::clicked, this, &ResultsView::generateCurves);
     connect(mDataSigmaRadio, &RadioButton::clicked, this, &ResultsView::generateCurves);
     
@@ -391,7 +392,7 @@ mPhasesScrollArea(0)
     connect(mInfosBut, &Button::toggled, this, &ResultsView::showInfos);
     connect(mExportImgBut, &Button::clicked, this, &ResultsView::exportFullImage);
     connect(mExportResults, &Button::clicked, this, &ResultsView::exportResults);
-    
+
     mMarker->raise();
 }
 
@@ -406,8 +407,11 @@ void ResultsView::doProjectConnections(Project* project)
     // Then, it fills its eleme,nts (events, ...) with calculated data (trace, ...)
     // If the process is canceled, we only have unfinished data in storage.
     // => The previous nor the new results can be displayed so we must start by clearing the results view!
+
     connect(project, &Project::mcmcStarted, this, &ResultsView::clearResults);
-    
+    mModel = project->mModel;
+    connect(mModel, &Model::newCalculus, this, &ResultsView::generateCurves);
+
 }
 
 #pragma mark Paint & Resize
@@ -519,14 +523,14 @@ void ResultsView::updateControls()
     // -------------------------------------------------------
     mStack->setCurrentWidget(byEvents ? mEventsScrollArea : mPhasesScrollArea);
     mShowDataUnderPhasesCheck->setVisible(!byEvents);
-    
+    qDebug() << "ResultsView::updateControls -> emit controlsUpdated()";
     emit controlsUpdated();
 }
 
 void ResultsView::updateLayout()
 {
     if(!mModel) return;
-    qDebug() << "ResultsView::updateLayout";
+    qDebug() << "ResultsView::updateLayout()";
     
     int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     int graphYAxis = 50;
@@ -621,8 +625,8 @@ void ResultsView::updateLayout()
     mHPDEdit   -> setGeometry(2*m + w1, y, w2, mLineH);
     mFFTLenLab     -> setGeometry(m, y += (m + mLineH), sw, mComboH);
     mFFTLenCombo   -> setGeometry(2*m + sw, y, sw, mComboH);
-    mHFactorLab    -> setGeometry(m, y += (m + mComboH), w1, mLineH);
-    mHFactorEdit   -> setGeometry(2*m + w1, y, w2, mLineH);
+    mBandwidthLab    -> setGeometry(m, y += (m + mComboH), w1, mLineH);
+    mBandwidthEdit   -> setGeometry(2*m + w1, y, w2, mLineH);
     mPostDistGroup -> setFixedHeight(y += (m + mLineH));
     
     updateGraphsLayout();
@@ -630,6 +634,7 @@ void ResultsView::updateLayout()
 
 void ResultsView::updateGraphsLayout()
 {
+    qDebug() << "ResultsView::updateGraphsLayout()";
     int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     
     // ----------------------------------------------------------
@@ -645,13 +650,13 @@ void ResultsView::updateGraphsLayout()
     }
     if(h>0)
         wid->setFixedSize(width() - sbe - mOptionsW, h);
-    
+
     // ----------------------------------------------------------
     //  Graphs by phases layout
     // ----------------------------------------------------------
-    wid = mPhasesScrollArea->widget();
-    geometries = getGeometries(mByPhasesGraphs, mUnfoldBut->isChecked(), true);
-    h = 0;
+   wid = mPhasesScrollArea->widget();
+   geometries = getGeometries(mByPhasesGraphs, mUnfoldBut->isChecked(), true);
+   h = 0;
     for(int i=0; i<mByPhasesGraphs.size(); ++i){
         mByPhasesGraphs.at(i)->setGeometry(geometries.at(i));
         h += geometries.at(i).height();
@@ -719,42 +724,39 @@ void ResultsView::updateFormatSetting(Model* model, const AppSettings* appSet)
     mModel->updateFormatSettings(appSet);
 
 }
-
-
 /**
- * @brief : This function is call after "Run" and after click on "Results", when switching from Model panel to Result panel
+ * @brief : This function is call after "Run"
  *
  */
-void ResultsView::updateResults(Model* model)
+void ResultsView::initResults(Model* model)
 {
     clearResults();
 
-    qDebug() << "ResultsView::updateResults";
-    
+    qDebug() << "ResultsView::initResults";
+
     if(!mModel && !model)
         return;
-    
+
     if(model)
         mModel = model;
-    
+
     mChains = mModel->mChains;
     mSettings = mModel->mSettings;
     mMCMCSettings = mModel->mMCMCSettings;
-    
+
     mHasPhases = (mModel->mPhases.size() > 0);
-    
+
     mByPhasesBut->setChecked(mHasPhases);
     mByEventsBut->setChecked(!mHasPhases);
-    
+
     mByEventsBut->setEnabled(mHasPhases);
     mByPhasesBut->setEnabled(mHasPhases);
-    
+
     // ----------------------------------------------------
     //  Create Chains option controls (radio and checkboxes under "MCMC Chains")
     // ----------------------------------------------------
     if(mCheckChainChecks.isEmpty()) {
-        for(int i=0; i<mChains.size(); ++i)
-        {
+        for(int i=0; i<mChains.size(); ++i) {
             CheckBox* check = new CheckBox(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
             connect(check, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
             check->setVisible(true);
@@ -787,9 +789,9 @@ void ResultsView::updateResults(Model* model)
 
 
     // ------------------------------------------------------------
-    
+
     showInfos(mInfosBut->isChecked());
-    
+
     // ------------------------------------------------------------
     //  Controls have been reset (by events, first tab to show post. distribs...) :
     //  => updateControls() will call updateLayout()
@@ -797,7 +799,7 @@ void ResultsView::updateResults(Model* model)
     //  => updateLayout() will call updateGraphsLayout()
     // ------------------------------------------------------------
     updateControls();
-    
+
     // ------------------------------------------------------------
     //  This generates post. densities, HPD and credibilities !
     //  It will then call in chain :
@@ -805,11 +807,108 @@ void ResultsView::updateResults(Model* model)
     //  - generateCurves
     //  - updateCurvesToShow
     // ------------------------------------------------------------
-    generatePosteriorDistribs();
+    mModel->initDensities(getFFTLength(), getBandwidth(), getThreshold());
+    generateCurves();
+    updateScales();
+
 }
+/**
+ * @brief This function is call after click on "Results", when switching from Model panel to Result panel
+ * @brief Currently this functoin is identical to initResults()
+ */
+void ResultsView::updateResults(Model* model)
+{
+    clearResults();
+
+        qDebug() << "ResultsView::updateResults";
+
+        if(!mModel && !model)
+            return;
+
+        if(model)
+            mModel = model;
+
+        mChains = mModel->mChains;
+        mSettings = mModel->mSettings;
+        mMCMCSettings = mModel->mMCMCSettings;
+
+        mHasPhases = (mModel->mPhases.size() > 0);
+
+        mByPhasesBut->setChecked(mHasPhases);
+        mByEventsBut->setChecked(!mHasPhases);
+
+        mByEventsBut->setEnabled(mHasPhases);
+        mByPhasesBut->setEnabled(mHasPhases);
+
+        // ----------------------------------------------------
+        //  Update Chains option controls (radio and checkboxes under "MCMC Chains")
+        // ----------------------------------------------------
+        if(mCheckChainChecks.isEmpty()) {
+            for(int i=0; i<mChains.size(); ++i) {
+                CheckBox* check = new CheckBox(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
+                connect(check, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+                check->setVisible(true);
+                mCheckChainChecks.append(check);
+
+                RadioButton* radio = new RadioButton(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
+                connect(radio, &RadioButton::clicked, this, &ResultsView::updateCurvesToShow);
+                radio->setVisible(true);
+                if(i == 0)
+                    radio->setChecked(true);
+                mChainRadios.append(radio);
+            }
+        } else {
+            for(int i=0; i<mChains.size(); ++i) {
+               mCheckChainChecks[i]->setVisible(true);
+               mChainRadios[i]->setVisible(true);
+            }
+        }
+
+        // ----------------------------------------------------
+        //  Events Views : generate all phases graph
+        //  No posterior density has been computed yet!
+        //  Graphs are empty at the moment
+        // ----------------------------------------------------
+
+        createEventsScrollArea();
+
+        // ----------------------------------------------------
+        //  Phases Views : generate all phases graph
+        //  No posterior density has been computed yet!
+        //  Graphs are empty at the moment
+        // ----------------------------------------------------
+
+        createPhasesScrollArea();
+
+
+        // ------------------------------------------------------------
+
+        showInfos(mInfosBut->isChecked());
+
+        // ------------------------------------------------------------
+        //  Controls have been reset (by events, first tab to show post. distribs...) :
+        //  => updateControls() will call updateLayout()
+        //  Graphs have been recreated :
+        //  => updateLayout() will call updateGraphsLayout()
+        // ------------------------------------------------------------
+        updateControls();
+
+        // ------------------------------------------------------------
+        //  This generates post. densities, HPD and credibilities !
+        //  It will then call in chain :
+        //  - generateCredibilityAndHPD
+        //  - generateCurves
+        //  - updateCurvesToShow
+        // ------------------------------------------------------------
+
+        mModel->initDensities(getFFTLength(), getBandwidth(), getThreshold());
+        generateCurves();
+}
+
 
 void ResultsView::createEventsScrollArea()
 {
+    qDebug()<<"ResultsView::createEventsScrollArea()";
     mEventsScrollArea = new QScrollArea();
     mEventsScrollArea->setMouseTracking(true);
     mStack->addWidget(mEventsScrollArea);
@@ -865,13 +964,14 @@ void ResultsView::createEventsScrollArea()
 
 void ResultsView::createPhasesScrollArea()
 {
+    qDebug()<<"ResultsView::createPhasesScrollArea()";
     mPhasesScrollArea = new QScrollArea();
     mPhasesScrollArea->setMouseTracking(true);
     mStack->addWidget(mPhasesScrollArea);
 
     QWidget* phasesWidget = new QWidget();
     phasesWidget->setMouseTracking(true);
-    // In a Phases at the minimum, we have one Event with one Date
+    // In a Phases at least, we have one Event with one Date
     mByPhasesGraphs.reserve( (int)(3*mModel->mPhases.size()) );
 
         // ----------------------------------------------------
@@ -929,51 +1029,57 @@ void ResultsView::createPhasesScrollArea()
 
 }
 
-void ResultsView::generatePosteriorDistribs()
+int ResultsView::getFFTLength() const
 {
-    qDebug() << "ResultsView::generatePosteriorDistribs";
-    if(mModel)
-    {
-        const QLocale locale;
-        bool ok;
-        const int len = mFFTLenCombo->currentText().toInt();
-        double hFactor = locale.toDouble(mHFactorEdit->text(),&ok);
-        if(!(hFactor > 0 && hFactor <= 100) || !ok)
-        {
-            hFactor = 1.06;
+    return mFFTLenCombo->currentText().toInt();
+}
 
-            mHFactorEdit->setText(locale.toString(hFactor));
+void ResultsView::setFFTLength()
+{
+    qDebug() << "ResultsView::setFFTLength()";
+    const int len = mFFTLenCombo->currentText().toInt();
+    mModel->setFFTLength(len);
+}
 
-        }
-        mModel->clearPosteriorDensities();
-        
-        mModel->generatePosteriorDensities(mChains, len, hFactor);
-        mModel->generateNumericalResults(mChains);
-        
-        emit posteriorDistribGenerated();
+double ResultsView::getBandwidth() const
+{
+    return mBandwidthUsed;
+}
+
+void ResultsView::setBandwidth()
+{
+    qDebug() << "ResultsView::setBandwidth()";
+    const QLocale locale;
+    bool ok;
+    const double bandwidth = locale.toDouble(mBandwidthEdit->text(),&ok);
+    if(!(bandwidth > 0 && bandwidth <= 100) || !ok) {
+        mBandwidthEdit->setText(locale.toString(bandwidth));
+    }
+    if(bandwidth != getBandwidth()) {
+        mBandwidthUsed = bandwidth;
+        mModel->setBandwidth(bandwidth);
     }
 }
 
-void ResultsView::generateCredibilityAndHPD()
+double ResultsView::getThreshold() const
 {
-    qDebug() << "ResultsView::generateCredibilityAndHPD";
-    if(mModel)
-    {
-        const QLocale locale;
-        bool ok;
-        QString input = mHPDEdit->text();
-        mHPDEdit->validator()->fixup(input);
-        mHPDEdit->setText(input);
-        
-        double hpd = locale.toDouble(mHPDEdit->text(),&ok);
-        // ??? mModel->generateNumericalResults(mChains);
-        if (!ok) hpd = 95;
-        mModel->clearCredibilityAndHPD();
-        mModel->generateCredibilityAndHPD(mChains, hpd);
-        
-        emit credibilityAndHPDGenerated();
+    return mThresholdUsed;
+}
+
+/**
+ * @brief ResultsView::setThreshold The controle of the value is done with a QValidator set in the constructor
+ */
+void ResultsView::setThreshold()
+{
+    qDebug() << "ResultsView::setThreshold()";
+    const QLocale locale;
+    const double hpd = locale.toDouble(mHPDEdit->text());
+    if(hpd != getThreshold()) {
+        mThresholdUsed = hpd;
+        mModel->setThreshold(hpd);
     }
 }
+
 
 /**
  *  @brief re-generate all curves in graph views form model data.
@@ -981,7 +1087,7 @@ void ResultsView::generateCredibilityAndHPD()
  */
 void ResultsView::generateCurves()
 {
-    qDebug() << "ResultsView::generateCurves";
+    qDebug() << "ResultsView::generateCurves()";
     
     GraphViewResults::Variable variable;
     if(mDataThetaRadio->isChecked()) variable = GraphViewResults::eTheta;
@@ -990,7 +1096,7 @@ void ResultsView::generateCurves()
     QList<GraphViewResults*>::iterator iter;
     QList<GraphViewResults*>::const_iterator iterEnd;
 
-    if (mByPhasesBut->isChecked()) {
+   if (mByPhasesBut->isChecked()) {
         iter = mByPhasesGraphs.begin();
         iterEnd = mByPhasesGraphs.constEnd();
     }
@@ -1030,6 +1136,7 @@ void ResultsView::generateCurves()
         }
 
     }
+     qDebug() << "ResultsView::generateCurves()-> emit curvesGenerated()";
     emit curvesGenerated();
 }
 
@@ -1220,7 +1327,7 @@ void ResultsView::updateResultsLog()
         qDebug()<< "in ResultsView::updateResultsLog() Error"<<e.what();
         log = tr("impossible to compute");
     }
-
+qDebug()<< "ResultsView::updateResultsLog()-> emit resultsLogUpdated(log)";
     emit resultsLogUpdated(log);
 }
 

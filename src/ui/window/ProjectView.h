@@ -40,6 +40,7 @@ public slots:
     
     void ApplySettings(Model* model, const AppSettings* appSet);
 
+    void initResults(Model*);
     void updateResults(Model*);
     void updateResultsLog(const QString& log);
     
