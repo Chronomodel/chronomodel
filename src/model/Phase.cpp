@@ -121,6 +121,10 @@ Phase Phase::fromJson(const QJsonObject& json)
     p.mTauMax = json.value(STATE_PHASE_TAU_MAX).toDouble();
     p.mIsSelected = json.value(STATE_IS_SELECTED).toBool();
     p.mIsCurrent = json.value(STATE_IS_CURRENT).toBool();
+
+    p.mAlpha.setName("Begin of Phase : "+p.mName);
+    p.mBeta.setName("End of Phase : "+p.mName);
+    p.mDuration.setName("Duration of Phase : "+p.mName);
     
     return p;
 }
@@ -147,6 +151,18 @@ QJsonObject Phase::toJson() const
 }
 
 // --------------------------------------------------------------------------------
+
+QPair<double,double> Phase::getFormatedTimeRange() const
+{
+    const double t1 = DateUtils::convertToAppSettingsFormat(mTimeRange.first);
+    const double t2 = DateUtils::convertToAppSettingsFormat(mTimeRange.second);
+    if(t1<t2) {
+        return QPair<double,double>(t1,t2);
+    }
+    else {
+        return QPair<double,double>(t2,t1);
+    }
+}
 
 double Phase::getMaxThetaEvents(double tmax)
 {

@@ -36,6 +36,8 @@ public:
     double getMinThetaNextPhases(double tmax);
     double getMaxThetaPrevPhases(double tmin);
     
+    QPair<double,double> getFormatedTimeRange() const;
+
     void updateAll(const double tmin, const double tmax);
     void memoAll();
     
@@ -55,6 +57,7 @@ public:
     MetropolisVariable mAlpha;
     MetropolisVariable mBeta;
     double mTau;
+    QPair<double,double> mTimeRange;
     
     // Used to display correctly if alpha or beta is a fixed bound
     bool mIsAlphaFixed;
