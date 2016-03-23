@@ -3,6 +3,10 @@
 #include "StdUtilities.h"
 #include "DateUtils.h"
 #include <QDebug>
+#include <QProgressDialog>
+#include <QApplication>
+#include <set>
+#include <map>
 
 // -----------------------------------------------------------------
 //  sumP = Sum (pi)
@@ -198,15 +202,22 @@ Quartiles quartilesForRepartition(const QVector<double>& repartition, const doub
     return quartiles;
 }
 
-QPair<double, double> credibilityForTrace(const QVector<double>& trace, double thresh, double& exactThresholdResult)
+QPair<double, double> credibilityForTrace(const QVector<double>& trace, double thresh, double& exactThresholdResult,const  QString description)
 {
     QPair<double, double> credibility;
     credibility.first = 0;
     credibility.second = 0;
     exactThresholdResult = 0;
-    
+    QProgressDialog *progress = new QProgressDialog(description,"Wait" , 1, 10,qApp->activeWindow());
+    progress->setWindowModality(Qt::WindowModal);
+    progress->setCancelButton(0);
+    //progress->forceShow();
+    //progress->setMinimumDuration(40);
+
     if(thresh > 0 && trace.size() > 0)
     {
+
+
         double threshold =  (thresh > 100 ? thresh = 100.0 : thresh);
         threshold = (thresh < 0 ? thresh = 0.0 : thresh);
         QVector<double> sorted = trace;
@@ -219,8 +230,11 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, double t
         const int n = sorted.size();
         double lmin = 0.f;
         int foundJ = 0;
+        progress->setMaximum(k);
+
         for(int j=0; j<=k; ++j)
         {
+            progress->setValue(k);
             const double l = sorted[(n - 1) - k + j] - sorted[j];
             if(lmin == 0.f || l < lmin)
             {
@@ -231,6 +245,9 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, double t
         credibility.first = sorted[foundJ];
         credibility.second = sorted[(n - 1) - k + foundJ];
     }
+
+    delete progress;
+
     if(credibility.first == credibility.second) {
         //It means : there is only on value
         return QPair<double, double>();
@@ -238,9 +255,135 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, double t
     else return credibility;
 }
 
+/*
+QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh)
+{
+    QPair<double, double> range;
+    range.first = 0;
+    range.second = 0;
+
+    if(thresh > 0 && trace1.size() > 0 && trace2.size()==trace1.size()) {
+        const double threshold =  qBound(0., thresh, 100.0);
+        const double gamma = 1-threshold/100;
+        const int n = trace1.size()-1; // 1<= n <= (size-1) : index shift
+        const int nGamma = (int) ceil(n*gamma);
+        double dMin = qInf();
+        std::vector<double> alpha(trace1.toStdVector());
+        std::sort(alpha.begin(),alpha.end());
+
+        for(int nEpsilon=0; nEpsilon<nGamma; ++nEpsilon) {
+            const double a = alpha.at(nEpsilon);
+            const double epsilon = (double)nEpsilon/(double)n;
+            // selection of the beta values corresponding to all couples (trace1,trace2) whose trace1>a then stack beta=trace2
+            std::vector<double> beta;
+
+            for(int i = 0; i< trace1.size(); ++i) {
+                if(trace1.at(i)>= a) beta.push_back(trace2.at(i));
+                //if( (trace1.at(i)>= a) && (trace2.at(i)<=a) ) qDebug()<<"trace1="<<trace1.at(i)<<" trace2="<<trace2.at(i);
+            }
+            //beta.shrink_to_fit();
+            const double m = beta.size()-1; // 1<= m <= (size-1) : index shift
+            std::sort(beta.begin(),beta.end());
+            // find the shortest lengt
+            const int j = (int) ceil( m*(1-gamma)/(1-epsilon) );
+            const double b = beta.at(j);
+            if((b-a)<dMin) {
+                dMin = b-a;
+                range.first = a;
+                range.second = b;
+            }
+        }
+
+    }
+
+    return range;
+}
+*/
+
+QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh, const QString description)
+{
+    QPair<double, double> range;
+    range.first = 0;
+    range.second = 0;
+
+    QProgressDialog *progress = new QProgressDialog(description,"Wait" , 1, 10, qApp->activeWindow() );
+    progress->setWindowModality(Qt::WindowModal);
+    progress->setCancelButton(0);
+    //progress->forceShow();
+    progress->setMinimumDuration(400);
+
+    if(thresh > 0 && trace1.size() > 0 && trace2.size()==trace1.size()) {
+        const double threshold =  inRange(0., thresh, 100.0);
+        const double gamma = 1-threshold/100;
+        const int n = trace1.size()-1; // 1<= n <= (size-1) : index shift
+        const int nGamma = (int) ceil(n*gamma);
+        double dMin = INFINITY;//qInf();
+        // make couple in a std::map
+        std::map<double,double> mapPair;
+        QVector<double>::const_iterator ct1 = trace1.cbegin();
+        QVector<double>::const_iterator ct2 = trace2.cbegin();
+        //prepare beta set sorted
+        std::set<double> beta; //sorted container
+
+        while (ct1 != trace1.cend() ) {
+            mapPair.insert(std::pair<double,double>(*ct1,*ct2));
+            beta.insert(*ct2);
+            ++ct1;
+            ++ct2;
+        }
+        //for debugging
+        /*for(std::map<double,double>::const_iterator p = mapPair.cbegin(); p != mapPair.cend(); ++p) {
+            qDebug()<<"a="<<(*p).first<<" b="<<p->second;
+        }*/
+
+        // we suppose there is never the several time the same value inside trace1 or inside trace2
+        // so we can juste shift the iterator
+        std::map<double,double>::const_iterator i_shift = mapPair.cbegin();
+        int j_last = 0;
+        double b = 0.;
+        progress->setMaximum(nGamma);
+        for(int nEpsilon=0; nEpsilon<nGamma; ++nEpsilon) {
+            progress->setValue(nEpsilon);
+            const double a = (*i_shift).first;//alpha.at(nEpsilon);
+            const double epsilon = (double)nEpsilon/(double)n;
+            // selection of the beta values corresponding to all couples (trace1,trace2) whose trace1>a then stack beta=trace2
+
+            const double betaToErase = (*i_shift).second;
+            beta.erase(betaToErase);//erase beta corresponding to alpha(i)=a
+            const double m = beta.size()-1; // 1<= m <= (size-1) : index shift
+
+
+            const int j = (int) ceil( m*(1-gamma)/(1-epsilon) );
+            if( !(j == j_last && betaToErase>b) ) {
+                // the b value don't change if the both rounded value of j don't change and
+                // betaToErase is greater than the older value of b.
+                std::set<double>::const_iterator j_shift = beta.cbegin();
+                for(int i=0; i<j; ++i) { // loop to move the iterator to the value number j, the SET have not a Random-acces iterato
+                    ++j_shift;
+                }
+
+                b = *j_shift;
+                j_last = j;
+            }
+
+            // find the shortest length
+            if((b-a)<dMin) {
+                dMin = b-a;
+                range.first = a;
+                range.second = b;
+            }
+        ++i_shift;
+        }
+
+    }
+    delete progress;
+    return range;
+}
+
+
 QString intervalText(const QPair<double, QPair<double, double> >& interval, FormatFunc formatFunc)
 {
-    QLocale locale;
+    const QLocale locale;
     if(formatFunc){
         return "[" + formatFunc(interval.second.first) + "; " + formatFunc(interval.second.second) + "] (" + locale.toString(interval.first, 'f', 1) + "%)";
     }

@@ -37,7 +37,8 @@ double shrinkageUniform(const double so2);
 
 Quartiles quartilesForTrace(const QVector<double>& trace);
 Quartiles quartilesForRepartition(const QVector<double>& repartition,const double tmin,const double step);
-QPair<double, double> credibilityForTrace(const QVector<double>& trace, double thresh, double& exactThresholdResult);
+QPair<double, double> credibilityForTrace(const QVector<double>& trace, double thresh, double& exactThresholdResult, const QString description = "Credibility computation");
+QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh, const QString description ="Time Range Computation");
 QString intervalText(const QPair<double, QPair<double, double> >& interval, FormatFunc formatFunc = 0);
 QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString& unit = QString(), FormatFunc formatFunc = 0);
 QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double, double>& hpd, double thresh);
