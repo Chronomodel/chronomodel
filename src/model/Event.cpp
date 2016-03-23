@@ -133,6 +133,7 @@ Event Event::fromJson(const QJsonObject& json)
     event.mIsCurrent = json.value(STATE_IS_CURRENT).toBool();
     
     event.mTheta.mProposal = ModelUtilities::getEventMethodText(event.mMethod);
+    event.mTheta.setName("Theta of Event : "+event.mName);
     
     event.mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
     

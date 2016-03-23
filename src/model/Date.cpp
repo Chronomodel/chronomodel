@@ -185,7 +185,9 @@ Date Date::fromJson(const QJsonObject& json)
         }
         
         date.mTheta.mProposal = ModelUtilities::getDataMethodText(date.mMethod);
+        date.mTheta.setName("Theta of date : "+ date.mName);
         date.mSigma.mProposal = ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt);
+        date.mSigma.setName("Sigma of date : "+ date.mName);
     }
     
     return date;
