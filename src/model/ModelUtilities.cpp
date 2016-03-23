@@ -480,6 +480,14 @@ QString ModelUtilities::phaseResultsText(const Phase* p)
         text += nl + nl;
         text += "End : " + nl;
         text += p->mBeta.resultsString(nl, "",DateUtils::getAppSettingsFormatStr(),DateUtils::dateToString);
+
+        if(p->mTimeRange != QPair<double,double>()) {
+            text += nl + nl;
+
+            const QString result = "Phase Time Range : [" + DateUtils::dateToString(p->getFormatedTimeRange().first) + ", " + DateUtils::dateToString(p->getFormatedTimeRange().second) + "]";
+            text += result + nl;
+        }
+
     }
     return text;
 }
@@ -571,6 +579,13 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
         text += "<br>";
         text += line(textBold(textPurple("End (posterior distrib.) : ")));
         text += line(textPurple(p->mBeta.resultsString("<br>", "",DateUtils::getAppSettingsFormatStr())));
+
+        if(p->mTimeRange != QPair<double,double>()) {
+            text += "<br>";
+
+            const QString result = "Phase Time Range : [" + DateUtils::dateToString(p->getFormatedTimeRange().first) + ", " + DateUtils::dateToString(p->getFormatedTimeRange().second) + "]";
+            text += line(textBold(textPurple(result + "<br>")));
+        }
     }
     return text;
 }
