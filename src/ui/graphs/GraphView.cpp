@@ -238,7 +238,7 @@ void GraphView::setYAxisMode(AxisMode mode)
 }
 
 /**
- * @brief If active is true, the current view automaticaly adjust Y axis to the curent view.
+ * @brief If active is true, the current view automaticaly adjust Y axis to the current view.
  * @brief it's a dynamic adjustment
  */
 void GraphView::autoAdjustYScale(bool active)
