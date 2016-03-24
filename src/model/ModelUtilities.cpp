@@ -1,6 +1,7 @@
 #include "ModelUtilities.h"
 #include "Date.h"
 #include "EventConstraint.h"
+#include "PhaseConstraint.h"
 #include "../PluginAbstract.h"
 #include "QtUtilities.h"
 #include <QObject>
@@ -137,27 +138,22 @@ QVector<QVector<Event*> > ModelUtilities::getNextBranches(const QVector<Event*>&
 {
     QVector<QVector<Event*> > branches;
     QList<EventConstraint*> cts = lastNode->mConstraintsFwd;
-    if(cts.size() > 0)
-    {
-        for(int i=0; i<cts.size(); ++i)
-        {
+    if (cts.size() > 0) {
+        for(int i=0; i<cts.size(); ++i) {
             QVector<Event*> branch = curBranch;
             Event* newNode = cts.at(i)->mEventTo;
             
             if(newNode->mLevel <= lastNode->mLevel)
                 newNode->mLevel = lastNode->mLevel + 1;
             
-            if(!branch.contains(newNode))
-            {
+            if(!branch.contains(newNode)) {
                 branch.append(newNode);
                 QVector<QVector<Event*> > nextBranches = getNextBranches(branch, cts[i]->mEventTo);
 
                 for(int j=0; j<nextBranches.size(); ++j) {
                     branches.append(nextBranches.at(j));
                 }
-            }
-            else
-            {
+            } else {
                 QStringList evtNames;
 
                  for(int j=0; j<branch.size(); ++j) {
@@ -169,9 +165,7 @@ QVector<QVector<Event*> > ModelUtilities::getNextBranches(const QVector<Event*>&
                 throw QObject::tr("Circularity found in events model !\rPlease correct this branch :\r") + evtNames.join(" -> ");
             }
         }
-    }
-    else
-    {
+    } else {
         branches.append(curBranch);
     }
     return branches;
@@ -238,7 +232,7 @@ QVector<QVector<Phase*> > ModelUtilities::getNextBranches(const QVector<Phase*>&
 {
     QVector<QVector<Phase*> > branches;
     QList<PhaseConstraint*> cts = lastNode->mConstraintsFwd;
-    if(cts.size() > 0)
+    if (cts.size() > 0)
     {
         for(int i=0; i<cts.size(); ++i)
         {
@@ -590,6 +584,73 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
     return text;
 }
 
+QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
+{
+    QString text;
+    if(p)
+    {
+        text += "<hr>";
+        text += line(textBold(textPurple("Gap range between Phase : " + p->mPhaseFrom->mName +" to "+ p->mPhaseTo->mName)));
+
+        switch(p->mGammaType) {
+            case PhaseConstraint::eGammaFixed :
+                text += line(textBold(textPurple( QObject::tr("Gap fixed ") + p->mGammaFixed)));
+                break;
+            case PhaseConstraint::eGammaUnknown :
+                text += line(textBold(textPurple( QObject::tr("Gap range unknown") )));
+                break;
+            case PhaseConstraint::eGammaRange :
+                 text += line(textBold(textPurple( QObject::tr("Gap range between ") + p->mGammaMin + QObject::tr(" and ") +p->mGammaMax)));
+                break;
+            default:
+
+            break;
+        }
+        if(p->mGapRange != QPair<double,double>()) {
+            text += "<br>";
+
+            const QString result = QObject::tr("Gap Range")+" : [" + DateUtils::dateToString(p->getFormatedGapRange().first) + ", " + DateUtils::dateToString(p->getFormatedGapRange().second) + "]";
+            text += line(textBold(textPurple(result + "<br>")));
+        }
+
+    }
+    return text;
+}
+
+QString ModelUtilities::constraintResultsText(const PhaseConstraint* p)
+{
+    QString text;
+    const QString nl = "\r";
+    if(p)
+    {
+        text += nl;
+        text += QObject::tr("Gap range between Phase : ") + p->mPhaseFrom->mName +QObject::tr(" to ")+ p->mPhaseTo->mName;
+
+        switch(p->mGammaType) {
+            case PhaseConstraint::eGammaFixed :
+                text += QObject::tr("Gap fixed ") + p->mGammaFixed;
+                break;
+            case PhaseConstraint::eGammaUnknown :
+                text += QObject::tr("Gap range unknown") ;
+                break;
+            case PhaseConstraint::eGammaRange :
+                 text += QObject::tr("Gap range between ") + p->mGammaMin + QObject::tr(" and ") +p->mGammaMax;
+                 break;
+            default:
+
+            break;
+        }
+
+        if(p->mGapRange != QPair<double,double>()) {
+            text += nl;
+
+            const QString result = QObject::tr("Gap Range") +" : [" + DateUtils::dateToString(p->getFormatedGapRange().first) + ", " + DateUtils::dateToString(p->getFormatedGapRange().second) + "]";
+            text += result + nl;
+        }
+    }
+    return text;
+}
+
 /**
  * @brief HPDOutsideSudyPeriod
  * @param variable
@@ -610,13 +671,11 @@ short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double>& hpd, cons
            const double t = iter.key();
            if(t<tmin){
                answer = -1;
-           }
-           else if(t>tmax && answer == -1) {
-              answer = 2;
+           } else if(t>tmax && answer == -1) {
+              //answer = 2;
               return 2;
-           }
-           else if(t>tmax) {
-               answer = +1;
+           } else if(t>tmax) {
+               //answer = +1;
                return 1;
            }
         }

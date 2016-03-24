@@ -36,10 +36,12 @@ public:
     static QString dateResultsText(const Date* d, const Model* model = 0);
     static QString eventResultsText(const Event* e, bool withDates, const Model* model = 0);
     static QString phaseResultsText(const Phase* p);
+    static QString constraintResultsText(const PhaseConstraint* p);
     
     static QString dateResultsHTML(const Date* d, const Model* model = 0);
     static QString eventResultsHTML(const Event* e,const bool withDates, const Model* model = 0);
     static QString phaseResultsHTML(const Phase* p);
+    static QString constraintResultsHTML(const PhaseConstraint* p);
 
     static short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const Model* model);
 };

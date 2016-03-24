@@ -568,7 +568,7 @@ bool Project::load(const QString& path)
             //dataFile.open(QIODevice::ReadOnly);
             //if(fi.isFile())
 
-            if(false)//dataFile.exists())
+            if(/* DISABLES CODE */ (false))//dataFile.exists())
             {
 
                 qDebug() << "Project::load Loading model file.dat : " << dataPath << " size=" << dataFile.size();

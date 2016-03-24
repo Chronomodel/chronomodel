@@ -28,10 +28,13 @@ public:
     
     void initGamma();
     void updateGamma();
+
+    QPair<double,double> getFormatedGapRange() const;
+
     
 public:
     double mGamma;
-    
+
     Phase* mPhaseFrom;
     Phase* mPhaseTo;
     
@@ -39,6 +42,9 @@ public:
     double mGammaFixed;
     double mGammaMin;
     double mGammaMax;
+
+    QPair<double,double> mGapRange;
+
 };
 
 #endif

@@ -14,7 +14,6 @@
 #include <QtWidgets>
 #include <QtCore/QStringList>
 
-
 #pragma mark Constructor...
 Model::Model()
 {
@@ -446,6 +445,13 @@ void Model::generateResultsLog()
         log += "<hr>";
         phase = 0;
     }
+    for(int i=0; i<mPhaseConstraints.size(); ++i)
+    {
+        PhaseConstraint* phaseConstraint = mPhaseConstraints.at(i);
+        log += ModelUtilities::constraintResultsHTML(phaseConstraint);
+        log += "<hr>";
+        phaseConstraint = 0;
+    }
     mLogResults = log;
 }
 
@@ -521,30 +527,27 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
     QList<QStringList> rows;
     
     int runSize = 0;
-    for(int i=0; i<mChains.size(); ++i){
+    for(int i=0; i<mChains.size(); ++i)
         runSize += mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
-    }
+    
     
     QStringList headers;
     headers << "iter";
     for(int j=0; j<mPhases.size(); ++j)
-    {
         headers << mPhases.at(j)->mName + " alpha" << mPhases.at(j)->mName + " beta";
-    }
+
     rows << headers;
     
-    unsigned long shift = 0;
+    int shift = 0;
     for(int i=0; i<mChains.size(); ++i)
     {
-        unsigned long burnAdaptSize = mChains.at(i).mNumBurnIter + (mChains.at(i).mBatchIndex * mChains.at(i).mNumBatchIter);
-        unsigned long runSize = mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
+        int burnAdaptSize = mChains.at(i).mNumBurnIter + (mChains.at(i).mBatchIndex * mChains.at(i).mNumBatchIter);
+        int runSize = mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
         
-        for(unsigned long j=burnAdaptSize; j<burnAdaptSize + runSize; ++j)
-        {
+        for(int j = burnAdaptSize; j<burnAdaptSize + runSize; ++j) {
             QStringList l;
             l << QString::number(shift + j);
-            for(int k=0; k<mPhases.size(); ++k)
-            {
+            for(int k=0; k<mPhases.size(); ++k) {
                 Phase* phase = mPhases.at(k);
                 double valueAlpha = phase->mAlpha.mRawTrace.at(shift + j);
                 if(withDateFormat) valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
@@ -570,19 +573,17 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
     Phase* phase = 0;
     if(phaseIdx >= 0 && phaseIdx < mPhases.size()){
         phase = mPhases.value(phaseIdx);
-    }else{
+    } else {
         return QList<QStringList>();
     }
     
     int runSize = 0;
-    for(int i=0; i<mChains.size(); ++i){
+    for(int i=0; i<mChains.size(); ++i)
         runSize += mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
-    }
     
     QStringList headers;
     headers << "iter" << phase->mName + " alpha" << phase->mName + " beta";
-    for(int i=0; i<phase->mEvents.size(); ++i)
-    {
+    for(int i=0; i<phase->mEvents.size(); ++i) {
         Event* event = phase->mEvents.at(i);
         headers << event->mName;
         event = 0;
@@ -590,28 +591,31 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
     rows << headers;
     
     int shift = 0;
-    for(int i=0; i<mChains.size(); ++i)
-    {
-        unsigned long burnAdaptSize = mChains.at(i).mNumBurnIter + (mChains.at(i).mBatchIndex * mChains.at(i).mNumBatchIter);
-        unsigned long runSize = mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
+    for(int i=0; i<mChains.size(); ++i) {
+        int burnAdaptSize = mChains.at(i).mNumBurnIter + (mChains.at(i).mBatchIndex * mChains.at(i).mNumBatchIter);
+        int runSize = mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
         
-        for(unsigned long j=burnAdaptSize; j<burnAdaptSize + runSize; ++j)
-        {
+        for(int j=burnAdaptSize; j<burnAdaptSize + runSize; ++j) {
             QStringList l;
             l << QString::number(shift + j) ;
             double valueAlpha = phase->mAlpha.mRawTrace.at(shift + j);
-            if(withDateFormat) valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
+            if(withDateFormat)
+                valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
+            
             l << locale.toString(valueAlpha);
 
             double valueBeta = phase->mBeta.mRawTrace.at(shift + j);
-            if(withDateFormat) valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
+            if(withDateFormat)
+                valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
+            
             l << locale.toString(valueBeta);
 
-            for(int k=0; k<phase->mEvents.size(); ++k)
-            {
+            for(int k=0; k<phase->mEvents.size(); ++k) {
                 Event* event = phase->mEvents.at(k);
                 double value = event->mTheta.mRawTrace.at(shift + j);
-                if(withDateFormat) value = DateUtils::convertToAppSettingsFormat(value);
+                if(withDateFormat)
+                    value = DateUtils::convertToAppSettingsFormat(value);
+                
                 l << locale.toString(value);
                 event = 0;
             }
@@ -628,35 +632,33 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
     
     
     int runSize = 0;
-    for(int i=0; i<mChains.size(); ++i){
+    for(int i=0; i<mChains.size(); ++i)
         runSize += mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
-    }
+    
     
     QStringList headers;
     headers << "iter";
-    for(int i=0; i<mEvents.size(); ++i)
-    {
+    for(int i=0; i<mEvents.size(); ++i) {
         Event* event = mEvents.at(i);
         headers << event->mName;
         event = 0;
     }
     rows << headers;
     
-    unsigned long shift = 0;
-    for(int i=0; i<mChains.size(); ++i)
-    {
-        unsigned long burnAdaptSize = mChains.at(i).mNumBurnIter + (mChains.at(i).mBatchIndex * mChains.at(i).mNumBatchIter);
-        unsigned long runSize = mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
+    int shift = 0;
+    for(int i=0; i<mChains.size(); ++i) {
+        const int burnAdaptSize = mChains.at(i).mNumBurnIter + (mChains.at(i).mBatchIndex * mChains.at(i).mNumBatchIter);
+        const int runSize = mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
         
-        for(unsigned long j=burnAdaptSize; j<burnAdaptSize + runSize; ++j)
-        {
+        for(int j=burnAdaptSize; j<burnAdaptSize + runSize; ++j) {
             QStringList l;
             l << QString::number(shift + j) ;
-            for(int k=0; k<mEvents.size(); ++k)
-            {
+            for(int k=0; k<mEvents.size(); ++k) {
                 Event* event = mEvents.at(k);
                 double value = event->mTheta.mRawTrace.at(shift + j);
-                if(withDateFormat) value = DateUtils::convertToAppSettingsFormat(value);
+                if(withDateFormat)
+                    value = DateUtils::convertToAppSettingsFormat(value);
+                
                 l << locale.toString(value);
                 event = 0;
             }
@@ -1268,11 +1270,9 @@ void Model::generateCredibility(const double thresh)
         }
         ++iterEvent;
     }
+
     QList<Phase*>::iterator iterPhase = mPhases.begin();
-    int compteur = 0;
     while (iterPhase!=mPhases.end()) {
-   //do{
-        ++compteur;
         // if there is only one Event in the phase, there is no Duration
         (*iterPhase)->mAlpha.generateCredibility(mChains, thresh);
         (*iterPhase)->mBeta.generateCredibility(mChains, thresh);
@@ -1281,15 +1281,25 @@ void Model::generateCredibility(const double thresh)
         (*iterPhase)->mTimeRange = timeRangeFromTraces((*iterPhase)->mAlpha.runRawTraceForChain(mChains,0),
                                                              (*iterPhase)->mBeta.runRawTraceForChain(mChains,0),thresh, "Time Range for Phase : "+(*iterPhase)->mName);
 
-        qDebug()<<compteur<<" Time Range for Phase : "<<(*iterPhase)->mName<<thresh;
+        qDebug()<<"Time Range for Phase "<<(*iterPhase)->mName<<thresh;
          ++iterPhase;
-    };//while (iterPhase!=mPhases.end());
+    };
+
+    QList<PhaseConstraint*>::iterator iterPhaseConstraint = mPhaseConstraints.begin();
+    while (iterPhaseConstraint!=mPhaseConstraints.end()) {
+        Phase* phaseFrom = (*iterPhaseConstraint)->mPhaseFrom;
+        Phase* phaseTo  = (*iterPhaseConstraint)->mPhaseTo;
+
+        (*iterPhaseConstraint)->mGapRange = gapRangeFromTraces(phaseFrom->mBeta.runRawTraceForChain(mChains,0),
+                                                             phaseTo->mAlpha.runRawTraceForChain(mChains,0), thresh, "Gap Range : "+phaseFrom->mName+ " to "+ phaseTo->mName);
+        qDebug()<<"Gap Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
+        ++iterPhaseConstraint;
+    };
 
     QTime t2 = QTime::currentTime();
     qint64 timeDiff = t.msecsTo(t2);
     qDebug() <<  "=> Model::generateCredibility done in " + QString::number(timeDiff) + " ms";
 
-    //delete progress;
 }
 
 void Model::generateHPD(const double thresh)
@@ -1300,41 +1310,29 @@ void Model::generateHPD(const double thresh)
     while (iterEvent!=mEvents.end()) {
         bool isFixedBound = false;
 
-        if((*iterEvent)->type() == Event::eKnown)
-        {
+        if((*iterEvent)->type() == Event::eKnown) {
             EventKnown* ek = dynamic_cast<EventKnown*>(*iterEvent);
             if(ek->knownType() == EventKnown::eFixed)
                 isFixedBound = true;
         }
 
-        if(!isFixedBound)
-        {
-            //if((*iterEvent)->mTheta.mThresholdUsed != thresh) {
-                (*iterEvent)->mTheta.generateHPD(thresh);
+        if(!isFixedBound) {
+            (*iterEvent)->mTheta.generateHPD(thresh);
 
-                for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
-                    Date& date = (*iterEvent)->mDates[j];
-                    date.mTheta.generateHPD(thresh);
-                    date.mSigma.generateHPD(thresh);
-                }
-           //  }
+            for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
+                Date& date = (*iterEvent)->mDates[j];
+                date.mTheta.generateHPD(thresh);
+                date.mSigma.generateHPD(thresh);
+            }
         }
         ++iterEvent;
     }
     QList<Phase*>::iterator iterPhase = mPhases.begin();
     while (iterPhase!=mPhases.end()) {
        // if there is only one Event in the phase, there is no Duration
-       //if((*iterPhase)->mAlpha.mThresholdUsed != thresh) {
-            (*iterPhase)->mAlpha.generateHPD(thresh);
-        //}
-       // if((*iterPhase)->mBeta.mThresholdUsed != thresh){
-            (*iterPhase)->mBeta.generateHPD(thresh);
-       // }
-
-       //if((*iterPhase)->mDuration.mThresholdUsed != thresh) {
-            (*iterPhase)->mDuration.generateHPD(thresh);
-      // }
-
+       (*iterPhase)->mAlpha.generateHPD(thresh);
+       (*iterPhase)->mBeta.generateHPD(thresh);
+       (*iterPhase)->mDuration.generateHPD(thresh);
         ++iterPhase;
     }
 

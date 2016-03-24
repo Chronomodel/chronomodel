@@ -114,15 +114,13 @@ void MHVariable::generateGlobalRunAcceptation(const QList<ChainSpecs> &chains)
 {
     double accepted = 0;
     double acceptsLength = 0;
-    unsigned long shift = 0;
+    int shift = 0;
 
-    for(int i=0; i<chains.size(); ++i)
-    {
-        unsigned long burnAdaptSize = chains.at(i).mNumBurnIter + (chains.at(i).mBatchIndex * chains.at(i).mNumBatchIter);
-        unsigned long runSize = chains.at(i).mNumRunIter;
+    for(int i=0; i<chains.size(); ++i) {
+        int burnAdaptSize = chains.at(i).mNumBurnIter + (chains.at(i).mBatchIndex * chains.at(i).mNumBatchIter);
+        int runSize = chains.at(i).mNumRunIter;
         shift += burnAdaptSize;
-        for(unsigned long j=shift; j<shift + runSize; ++j)
-        {
+        for(int j=shift; j<shift + runSize; ++j) {
             if(mAllAccepts.at(j))
                 ++accepted;
         }

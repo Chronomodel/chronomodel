@@ -364,24 +364,24 @@ bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& sett
     double is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
     double is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
     double is_int = data.value(DATE_AM_IS_INT_STR).toBool();
-    double alpha = data.value(DATE_AM_ERROR_STR).toDouble();
+    //double alpha = data.value(DATE_AM_ERROR_STR).toDouble();
     double inc = data.value(DATE_AM_INC_STR).toDouble();
     double dec = data.value(DATE_AM_DEC_STR).toDouble();
     double intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
     
     double mesure = 0;
-    double error = 0;
+    //double error = 0;
     
     if(is_inc) {
-        error = alpha / 2.448f;
+        //error = alpha / 2.448f;
         mesure = inc;
     }
     else if(is_dec) {
-        error = alpha / (2.448f * cos(inc * M_PI / 180.f));
+        //error = alpha / (2.448f * cos(inc * M_PI / 180.f));
         mesure = dec;
     }
     else if(is_int) {
-        error = alpha;
+        //error = alpha;
         mesure = intensity;
     }
     // controle valid solution (double)likelihood>0

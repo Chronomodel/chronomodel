@@ -1089,7 +1089,7 @@ void ResultsView::generateCurves()
 {
     qDebug() << "ResultsView::generateCurves()";
     
-    GraphViewResults::Variable variable;
+    GraphViewResults::Variable variable = GraphViewResults::eTheta;;
     if(mDataThetaRadio->isChecked()) variable = GraphViewResults::eTheta;
     else if(mDataSigmaRadio->isChecked()) variable = GraphViewResults::eSigma;
     
@@ -1311,15 +1311,23 @@ void ResultsView::updateResultsLog()
 {
     QString log;
     try {
-        for(int i=0; i<mModel->mEvents.size(); ++i)
-        {
+        for(int i=0; i<mModel->mEvents.size(); ++i) {
             Event* event = mModel->mEvents[i];
             log += ModelUtilities::eventResultsHTML(event, true, mModel);
+            event =0;
         }
-        for(int i=0; i<mModel->mPhases.size(); ++i)
-        {
+
+        for(int i=0; i<mModel->mPhases.size(); ++i) {
             Phase* phase = mModel->mPhases[i];
             log += ModelUtilities::phaseResultsHTML(phase);
+            phase = 0;
+        }
+
+        for(int i=0; i<mModel->mPhaseConstraints.size(); ++i) {
+            PhaseConstraint* phaseConstraint = mModel->mPhaseConstraints.at(i);
+            log += ModelUtilities::constraintResultsHTML(phaseConstraint);
+            log += "<hr>";
+            phaseConstraint = 0;
         }
     }
     catch (std::exception const & e)
@@ -1678,7 +1686,7 @@ void ResultsView::exportFullImage()
         eScrollEvents= 1
     };
     
-    ScrollArrea witchScroll;
+    //ScrollArrea witchScroll;
     bool printAxis = true;
     
     QWidget* curWid;
@@ -1686,7 +1694,7 @@ void ResultsView::exportFullImage()
     if (mStack->currentWidget() == mPhasesScrollArea) {
         curWid = mPhasesScrollArea->widget();
         curWid->setFont(mByPhasesGraphs.at(0)->font());
-        witchScroll = eScrollPhases;
+       // witchScroll = eScrollPhases;
         //  hide all buttons in the both scrollAreaWidget
         for(int i=0; i<mByPhasesGraphs.size(); ++i){
             mByPhasesGraphs.at(i)->setButtonsVisible(false);
@@ -1696,7 +1704,7 @@ void ResultsView::exportFullImage()
     else  {
         curWid = mEventsScrollArea->widget();
         curWid->setFont(mByEventsGraphs.at(0)->font());
-        witchScroll = eScrollEvents;
+        //witchScroll = eScrollEvents;
         //  hide all buttons in the both scrollAreaWidget
         for(int i=0; i<mByEventsGraphs.size(); ++i) {
             mByEventsGraphs.at(i)->setButtonsVisible(false);

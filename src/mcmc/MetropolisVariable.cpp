@@ -421,12 +421,10 @@ QVector<double> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs>& c
     QVector<double> trace(0);
     int shift = 0;
     
-    for(int i=0; i<chains.size(); ++i)
-    {
-        unsigned long traceSize = chains.at(i).mNumBurnIter + (chains.at(i).mBatchIndex * chains.at(i).mNumBatchIter) + chains.at(i).mNumRunIter / chains.at(i).mThinningInterval;
+    for(int i=0; i<chains.size(); ++i) {
+        const int traceSize = chains.at(i).mNumBurnIter + (chains.at(i).mBatchIndex * chains.at(i).mNumBatchIter) + chains.at(i).mNumRunIter / chains.at(i).mThinningInterval;
         //qDebug()<<traceSize << chains.at(i).mTotalIter;
-        if(i == index)
-        {
+        if (i == index) {
             trace=mFormatedTrace.mid(shift , traceSize);
             
             break;
@@ -440,14 +438,13 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<ChainSpecs>& chains
 {
     QVector<double> trace(0);
     int shift = 0;
-    for(int i=0; i<chains.size(); ++i)
-    {
+    for(int i = 0; i<chains.size(); ++i) {
         const ChainSpecs& chain = chains.at(i);
         
-        unsigned long burnAdaptSize = chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);
-        unsigned long traceSize = burnAdaptSize + chain.mNumRunIter / chain.mThinningInterval;
+        const int burnAdaptSize = chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);
+        const int traceSize = burnAdaptSize + chain.mNumRunIter / chain.mThinningInterval;
         
-        trace=mFormatedTrace.mid(shift + burnAdaptSize, traceSize - burnAdaptSize);
+        trace = mFormatedTrace.mid(shift + burnAdaptSize, traceSize - burnAdaptSize);
         
         shift += traceSize;
     }

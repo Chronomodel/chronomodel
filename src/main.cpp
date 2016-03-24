@@ -78,21 +78,18 @@ int main(int argc, char *argv[])
     
     a.setApplicationName("ChronoModel");
     a.setApplicationDisplayName("ChronoModel");
-    a.setApplicationVersion("1.5.0"); // must match value in Chronomodel.pro
+    a.setApplicationVersion("1.5.1_alpha"); // must match value in Chronomodel.pro
     a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));
     
     qApp->setAttribute(Qt::AA_UseHighDpiPixmaps);
     
-    QString filePath;
-    for(int i=0; i<argc; ++i)
-    {
+    QString filePath = "";
+    for(int i=0; i<argc; ++i) {
         QString arg(argv[i]);
         if(arg.contains(".chr", Qt::CaseInsensitive))
-        {
             filePath = arg;
-        }
     }
     
     QLocale::Language newLanguage = QLocale::system().language();
@@ -118,6 +115,10 @@ int main(int argc, char *argv[])
     MainController* c = new MainController(filePath);
     (void) c;
     
-    return a.exec();
+    a.exec();
+    
+    delete c;
+    return 0;// a.exec();
+    
 }
 

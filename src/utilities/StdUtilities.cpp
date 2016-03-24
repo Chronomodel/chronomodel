@@ -14,33 +14,41 @@
 using namespace std;
 
 // http://openclassrooms.com/forum/sujet/algorithme-de-levenshtein-50070
-int compareStrings(const string &s1, const string &s2) {
-    const size_t m = s1.size();
-    const size_t n = s2.size();
+namespace //anonyme
+{
+    struct fillrow
+    {
+        fillrow() : mVal() {}
+        int operator()() { return mVal++; }
+    protected:
+        int mVal;
+    };
+};
+int compareStrings(const string &s1, const string &s2)
+{
+    const size_t m ( s1.size());
+    const size_t n ( s2.size());
+    int*  rawPtr ( reinterpret_cast<int*>( alloca( (n+1)*2*sizeof(int))));
     
-    std::vector<int> prev(n+1);
-    std::vector<int> crt(n+1);
+    int*  prev ( rawPtr);
+    int*  crt ( rawPtr + n+1);
     
-    for(size_t j = 0; j <= n; j ++)
-        crt[j] = j;
+    std::generate( crt, crt + n+1, fillrow() );
     
-    for(size_t i = 1; i <= m; i ++) {
-        crt.swap(prev);
-        crt[0] = i; // par construction il semble inutile de procéder au moindre reset sur les autres colonnes
-        for(size_t j = 1; j <= n; j++) {
+    for (size_t i = 1; i <= m; i ++) {
+        std::swap( prev, crt);
+        crt[0] = (int)i; // par construction il semble inutile de procéder au moindre reset sur les autres colonnes
+        for (size_t j = 1; j <= n; j++) {
             const int compt = (s1[i-1] == s2[i-1]) ? 0 : 1;
             crt[j] = min(min(prev[j]+1, crt[j-1]+1),prev[j-1]+compt);
-#if 0
-            // voire même ...
-            const int compt = (s1[i-1] == s2[i-1]) ? 1 : 0;
-            crt[j] = 1 + min(min(prev[j], crt[j-1]),prev[j-1]-compt);
-            // ... qui me parait micropouillèmement plus optimisé
-#endif
         }
     }
-    
-    return crt[n];
+   return crt[n];
 }
+
+
+
+
 
 double safeExp(const double& x, int n)
 {

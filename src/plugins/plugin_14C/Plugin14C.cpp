@@ -343,13 +343,13 @@ bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& sett
         const RefCurve& curve = mRefCurves.value(ref_curve);
         valid = false;
         double age = data.value(DATE_14C_AGE_STR).toDouble();
-        double error = data.value(DATE_14C_ERROR_STR).toDouble();
+        //double error = data.value(DATE_14C_ERROR_STR).toDouble();
         const double delta_r = data.value(DATE_14C_DELTA_R_STR).toDouble();
-        const double delta_r_error = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
+        //const double delta_r_error = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
 
         // Apply reservoir effect
         age = (age - delta_r);
-        error = sqrt(error * error + delta_r_error * delta_r_error);
+       // error = sqrt(error * error + delta_r_error * delta_r_error);
 
         if(age>curve.mDataInfMin && age < curve.mDataSupMax){
             valid = true;

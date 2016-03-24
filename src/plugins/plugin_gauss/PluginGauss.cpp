@@ -49,26 +49,26 @@ QPair<long double, long double> PluginGauss::getLikelihoodArg(const double& t, c
     const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
     const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
 
-    long double exponent;
+    //long double exponent;
 
     double refError = getRefErrorAt(data, t, mode);
     long double variance = refError * refError + error * error;
 
-
+    double refValue;
 
     if(mode == DATE_GAUSS_MODE_CURVE) {
         const QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
 
-        double refValue = getRefCurveValueAt(ref_curve, t);
-        exponent = -0.5f * pow((long double)(age - refValue), 2.l) / variance;
+        refValue = getRefCurveValueAt(ref_curve, t);
+       // exponent = -0.5f * pow((long double)(age - refValue), 2.l) / variance;
       }
     else {
-        double refValue = getRefValueAt(data, t);
-        exponent = -0.5f * pow((long double)(age - refValue), 2.l) / variance;
+        refValue = getRefValueAt(data, t);
+        //exponent = -0.5f * pow((long double)(age - refValue), 2.l) / variance;
     }
 
-    double refValue = getRefValueAt(data, t);
-    exponent = -0.5f * pow((long double)(age - refValue), 2.l) / variance;
+    //double refValue = getRefValueAt(data, t);
+    const long double exponent = -0.5f * pow((long double)(age - refValue), 2.l) / variance;
 
     return qMakePair(variance, exponent);
 }

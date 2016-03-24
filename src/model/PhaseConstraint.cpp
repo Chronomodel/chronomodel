@@ -98,3 +98,14 @@ void PhaseConstraint::updateGamma()
     }
 }
 
+QPair<double,double> PhaseConstraint::getFormatedGapRange() const
+{
+    const double t1 = DateUtils::convertToAppSettingsFormat(mGapRange.first);
+    const double t2 = DateUtils::convertToAppSettingsFormat(mGapRange.second);
+    if(t1<t2) {
+        return QPair<double,double>(t1,t2);
+    }
+    else {
+        return QPair<double,double>(t2,t1);
+    }
+}

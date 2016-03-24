@@ -601,15 +601,14 @@ void ModelView::slideRightPanel()
     mAnimationHide->setEndValue(mRightSubHiddenRect);
     
     QWidget* target = 0;
-    if(mButImport->isChecked())
+    if (mButImport->isChecked())
         target = mImportDataView;
-    else if(mButPhasesModel->isChecked())
+    else if (mButPhasesModel->isChecked())
         target = mPhasesWrapper;
-    else if(mButProperties->isChecked())
+    else if (mButProperties->isChecked())
         target = mEventPropertiesView;
     
-    if(target != mCurrentRightWidget)
-    {
+    if ( target && (target != mCurrentRightWidget) ) {
         mCurrentRightWidget = target;
         target->raise();
         mAnimationShow->setTargetObject(target);

@@ -283,7 +283,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
     if(mEvent)
     {
         bool isFixedBound = false;
-        bool isUnifBound = false;
+       // bool isUnifBound = false;
         EventKnown* bound = 0;
         if(mEvent->type() == Event::eKnown)
         {
@@ -292,8 +292,8 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             {
                 if(bound->knownType() == EventKnown::eFixed)
                     isFixedBound = true;
-                else if(bound->knownType() == EventKnown::eUniform)
-                    isUnifBound = true;
+                //else if(bound->knownType() == EventKnown::eUniform)
+                  //  isUnifBound = true;
             }
         }
         

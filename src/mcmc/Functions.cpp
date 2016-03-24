@@ -218,8 +218,9 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, double t
     {
 
 
-        double threshold =  (thresh > 100 ? thresh = 100.0 : thresh);
-        threshold = (thresh < 0 ? thresh = 0.0 : thresh);
+        /*double threshold =  (thresh > 100 ? thresh = 100.0 : thresh);
+        threshold = (thresh < 0 ? thresh = 0.0 : thresh);*/
+        double threshold = inRange(0.0, thresh, 100.0);
         QVector<double> sorted = trace;
         qSort(sorted);
         
@@ -303,15 +304,17 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
 QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh, const QString description)
 {
     QPair<double, double> range;
-    range.first = 0;
-    range.second = 0;
 
+    if(thresh == 100) {
+        range.first = *(std::min_element(trace1.cbegin(),trace1.cend()));
+        range.second = *(std::max_element(trace2.cbegin(),trace2.cend()) );
+    }
     QProgressDialog *progress = new QProgressDialog(description,"Wait" , 1, 10, qApp->activeWindow() );
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(0);
     //progress->forceShow();
     progress->setMinimumDuration(400);
-
+    // if thresh is equal 0 then return an empty QPair
     if(thresh > 0 && trace1.size() > 0 && trace2.size()==trace1.size()) {
         const double threshold =  inRange(0., thresh, 100.0);
         const double gamma = 1-threshold/100;
@@ -348,16 +351,32 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
             const double epsilon = (double)nEpsilon/(double)n;
             // selection of the beta values corresponding to all couples (trace1,trace2) whose trace1>a then stack beta=trace2
 
-            const double betaToErase = (*i_shift).second;
-            beta.erase(betaToErase);//erase beta corresponding to alpha(i)=a
-            const double m = beta.size()-1; // 1<= m <= (size-1) : index shift
+            //const double betaToErase = (*i_shift).second;
+            //beta.erase(betaToErase);//erase beta corresponding to alpha(i)=a
+
+
+            std::set<double> betaUpper;
+             // find all value of alpha greater than a
+             std::map<double,double>::const_iterator iMap = mapPair.lower_bound(a);
+             while(iMap != mapPair.cend()) {
+                 // copy only value of beta greater than a
+                 //if ((*iMap).second >= a)
+                     betaUpper.insert((*iMap).second);
+                 ++iMap;
+             }
+
+
+
+
+            const double m = betaUpper.size()-1; // 1<= m <= (size-1) : index shift
 
 
             const int j = (int) ceil( m*(1-gamma)/(1-epsilon) );
-            if( !(j == j_last && betaToErase>b) ) {
+            //if( !(j == j_last && betaToErase>b) ) {
+            if( !(j == j_last ) ) {
                 // the b value don't change if the both rounded value of j don't change and
                 // betaToErase is greater than the older value of b.
-                std::set<double>::const_iterator j_shift = beta.cbegin();
+                std::set<double>::const_iterator j_shift = betaUpper.cbegin();
                 for(int i=0; i<j; ++i) { // loop to move the iterator to the value number j, the SET have not a Random-acces iterato
                     ++j_shift;
                 }
@@ -373,6 +392,98 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
                 range.second = b;
             }
         ++i_shift;
+        }
+
+    }
+    delete progress;
+    return range;
+}
+
+QPair<double, double> gapRangeFromTraces(const QVector<double>& traceBeta, const QVector<double>& traceAlpha, const double thresh, const QString description)
+{
+    QPair<double, double> range;
+
+    if(thresh == 100) {
+        range.first = *(std::min_element(traceBeta.cbegin(),traceBeta.cend()));
+        range.second = *(std::max_element(traceAlpha.cbegin(),traceAlpha.cend()) );
+    }
+    QProgressDialog *progress = new QProgressDialog(description,"Wait" , 1, 10, qApp->activeWindow() );
+    progress->setWindowModality(Qt::WindowModal);
+    progress->setCancelButton(0);
+    //progress->forceShow();
+    progress->setMinimumDuration(400);
+
+    // if thresh is equal 0 then return an empty QPair
+    if(thresh > 0 && traceBeta.size() > 0 && traceAlpha.size()==traceBeta.size()) {
+        const double threshold =  inRange(0., thresh, 100.0);
+        const double gamma = 1-threshold/100;
+        const int n = traceBeta.size()-1; // 1<= n <= (size-1) : index shift
+       // const int nGamma = (int) ceil(n*gamma);
+        const int n1_Gamma = (int) ceil(n*(1-gamma));
+
+        double dMax = 0;
+        // make inverse couple beta vs alpha in a std::map
+        std::map<double,double> mapPair;
+        QVector<double>::const_iterator ctB = traceBeta.cbegin();
+        QVector<double>::const_iterator ctA = traceAlpha.cbegin();
+        //prepare beta set sorted
+        std::set<double> alpha; //sorted container
+
+        while (ctB != traceBeta.cend() ) {
+            mapPair.insert(std::pair<double,double>(*ctB,*ctA));
+            alpha.insert(*ctA);
+            ++ctA;
+            ++ctB;
+        }
+
+        // we suppose there is never the several time the same value inside traceBeta or inside traceAlpha
+        // so we can just shift the iterator
+        std::map<double,double>::const_reverse_iterator i_shift = mapPair.rbegin();
+        int j_last = 0;
+        double b = (*i_shift).second;
+        progress->setMaximum(n);
+        progress->setMinimum(n1_Gamma);
+        for(int n1_Epsilon=n; (n1_Epsilon>n1_Gamma) && (i_shift != mapPair.rend()) ; --n1_Epsilon) {
+            progress->setValue(n1_Epsilon);
+            const double a = (*i_shift).first;//a=beta(i);
+
+            std::set<double> alphaUpper; // sorted container
+            // find all value of beta greater than a
+            std::map<double,double>::const_iterator iMap = mapPair.lower_bound(a);
+            // if beta greater than a then all value of alpha corresponding to beta must be greater than a
+            while(iMap != mapPair.cend()) {
+                // copy only value of alpha greater than a
+                //if ((*iMap).second >= a)
+                    alphaUpper.insert((*iMap).second);
+                ++iMap;
+            }
+
+           // const int distanceN = std::distance(iMap,mapPair.cend());
+
+            const double m = alphaUpper.size()-1; // 1<= m <= (size-1) : index shift
+            const double epsilon = 1-(n1_Epsilon/n);
+            const int j = (int) ceil( m*(gamma-epsilon)/(1-epsilon) );
+
+            // the b value don't change if the both rounded value of j don't change and
+            //if( !(j == j_last && alphaToErase>b) ) {
+            if( !(j == j_last) ) {
+                // alphaLimit is greater than the older value of b.
+                std::set<double>::const_iterator j_shift = alphaUpper.cbegin();
+                // loop to move the iterator to the value number j, the SET have NO Random-acces iterator
+                for(int i=0; i<j; ++i)
+                    ++j_shift;
+
+                b = *j_shift; //b=alpha(j)
+                j_last = j;
+            }
+
+            // find the shortest length
+            if((b-a)>dMax) {
+                dMax = b-a;
+                range.first = a;
+                range.second = b;
+            }
+            ++i_shift; // reverse_iterator
         }
 
     }

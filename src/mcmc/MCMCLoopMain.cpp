@@ -82,8 +82,9 @@ QString MCMCLoopMain::calibrate()
             //int timeDiff = startTime.msecsTo(endTime);
             //mLog += "Data \"" + dates[i]->mName + "\" (" + dates[i]->mPlugin->getName() + ") calibrated in " + QString::number(timeDiff) + " ms\n";
         }
-        return QString();
         dates.clear();
+        return QString();
+        
     }
     return tr("Invalid model");
 }

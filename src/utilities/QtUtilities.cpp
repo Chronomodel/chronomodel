@@ -223,10 +223,11 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             p.begin(&image);
             p.setRenderHint(QPainter::Antialiasing);
             
+            QFont ft = scene ? qApp->font() : widget->font();
             // -------------------------------
             //  If widget, draw with or without axis
             // -------------------------------
-            if(widget){
+            if(widget) {
                 //p.setFont(widget->font());
                 widget->render(&p, QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), r.height()));
             }
@@ -245,12 +246,14 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 tgtRect.adjust(0, 0, 0, -heightText * pr);
                 
                 scene->render(&p, tgtRect, srcRect);
+            } else {
+                return fileInfo;
             }
             
             // -------------------------------
             //  Write application and version
             // -------------------------------
-            QFont ft = scene ? qApp->font() : widget->font();
+            
             ft.setPixelSize(heightText);
             
             p.setFont(ft);
