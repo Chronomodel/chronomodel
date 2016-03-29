@@ -24,13 +24,13 @@ bool ChronoApp::event(QEvent* e)
         QDesktopServices::openUrl(QUrl("http://www.chronomodel.fr", QUrl::TolerantMode));
         return true;
     }*/
-    if(e->type() == QEvent::FileOpen)
-    {
+    if (e->type() == QEvent::FileOpen) {
         QString path = static_cast<QFileOpenEvent*>(e)->file();
         
         MainWindow* w = MainWindow::getInstance();
         w->readSettings(path);
         
+        w = 0;
         /*QMessageBox box;
         box.setText(static_cast<QFileOpenEvent*>(e)->file());
         box.exec();*/
