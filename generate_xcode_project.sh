@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ROOT_PATH=$(dirname $0)
-BUNDLE_PATH=Release/Chronomodel.app
+BUNDLE_PATH=release/chronomodel.app
 QT_BIN_PATH=$1
 
 cd $ROOT_PATH

@@ -309,17 +309,17 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
         range.first = *(std::min_element(trace1.cbegin(),trace1.cend()));
         range.second = *(std::max_element(trace2.cbegin(),trace2.cend()) );
     }
-    QProgressDialog *progress = new QProgressDialog(description,"Wait" , 1, 10, qApp->activeWindow() );
-    progress->setWindowModality(Qt::WindowModal);
-    progress->setCancelButton(0);
+ //   QProgressDialog *progress = new QProgressDialog(description,"Wait" , 1, 10, qApp->activeWindow() );
+ //   progress->setWindowModality(Qt::WindowModal);
+ //   progress->setCancelButton(0);
     //progress->forceShow();
-    progress->setMinimumDuration(400);
+ //   progress->setMinimumDuration(400);
     // if thresh is equal 0 then return an empty QPair
     if(thresh > 0 && trace1.size() > 0 && trace2.size()==trace1.size()) {
         const double threshold =  inRange(0., thresh, 100.0);
         const double gamma = 1-threshold/100;
-        const int n = trace1.size()-1; // 1<= n <= (size-1) : index shift
-        const int nGamma = (int) ceil(n*gamma);
+        const int n = trace1.size(); // 1<= n <= (size-1) : index shift
+        const int nGamma = (int) floor(n*gamma);
         double dMin = INFINITY;//qInf();
         // make couple in a std::map
         std::map<double,double> mapPair;
@@ -344,9 +344,9 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
         std::map<double,double>::const_iterator i_shift = mapPair.cbegin();
         int j_last = 0;
         double b = 0.;
-        progress->setMaximum(nGamma);
-        for(int nEpsilon=0; nEpsilon<nGamma; ++nEpsilon) {
-            progress->setValue(nEpsilon);
+//        progress->setMaximum(nGamma);
+        for(int nEpsilon=0; (nEpsilon<=nGamma) && (i_shift != mapPair.cend()); ++nEpsilon) {
+            //progress->setValue(nEpsilon);
             const double a = (*i_shift).first;//alpha.at(nEpsilon);
             const double epsilon = (double)nEpsilon/(double)n;
             // selection of the beta values corresponding to all couples (trace1,trace2) whose trace1>a then stack beta=trace2
@@ -357,33 +357,37 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
 
             std::set<double> betaUpper;
              // find all value of alpha greater than a
-             std::map<double,double>::const_iterator iMap = mapPair.lower_bound(a);
+             std::map<double,double>::const_iterator iMap = mapPair.find(a);//lower_bound(a);
              while(iMap != mapPair.cend()) {
                  // copy only value of beta greater than a
                  //if ((*iMap).second >= a)
                      betaUpper.insert((*iMap).second);
+                    // qDebug()<<(*iMap).first<<(*iMap).second;
                  ++iMap;
              }
 
+             /*for(std::set<double>::const_iterator p = betaUpper.cbegin(); p != betaUpper.cend(); ++p) {
+                 qDebug()<<" Beta Uppr a="<<(*p);
+             }*/
 
 
+            const double m = (const double) betaUpper.size() ; // 1<= m <= (size-1) : index shift
 
-            const double m = betaUpper.size()-1; // 1<= m <= (size-1) : index shift
 
-
-            const int j = (int) ceil( m*(1-gamma)/(1-epsilon) );
+            const int j = (int) floor( m*(n-nGamma)/(n-nEpsilon) );
             //if( !(j == j_last && betaToErase>b) ) {
-            if( !(j == j_last ) ) {
+         //   if( !(j == j_last ) ) {
                 // the b value don't change if the both rounded value of j don't change and
                 // betaToErase is greater than the older value of b.
                 std::set<double>::const_iterator j_shift = betaUpper.cbegin();
-                for(int i=0; i<j; ++i) { // loop to move the iterator to the value number j, the SET have not a Random-acces iterato
+                // I'm still n the first one
+                for(int i=1; (i<j) && (j_shift != betaUpper.cend()); ++i) { // loop to move the iterator to the value number j, the SET have not a Random-acces iterato
                     ++j_shift;
                 }
 
                 b = *j_shift;
                 j_last = j;
-            }
+          //  }
 
             // find the shortest length
             if((b-a)<dMin) {
@@ -395,7 +399,7 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
         }
 
     }
-    delete progress;
+ //   delete progress;
     return range;
 }
 
@@ -411,21 +415,22 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceBeta, const
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(0);
     //progress->forceShow();
-    progress->setMinimumDuration(400);
+    progress->setMinimumDuration(40);
 
     // if thresh is equal 0 then return an empty QPair
     if(thresh > 0 && traceBeta.size() > 0 && traceAlpha.size()==traceBeta.size()) {
         const double threshold =  inRange(0., thresh, 100.0);
         const double gamma = 1-threshold/100;
-        const int n = traceBeta.size()-1; // 1<= n <= (size-1) : index shift
-       // const int nGamma = (int) ceil(n*gamma);
-        const int n1_Gamma = (int) ceil(n*(1-gamma));
+        const int n = traceBeta.size();
 
-        double dMax = 0;
-        // make inverse couple beta vs alpha in a std::map
+        const int n1_Gamma = (int) floor(n*(1-gamma));
+
+        double dMax = 0.0;
+        // make couple beta vs alpha in a std::map
         std::map<double,double> mapPair;
         QVector<double>::const_iterator ctB = traceBeta.cbegin();
         QVector<double>::const_iterator ctA = traceAlpha.cbegin();
+
         //prepare beta set sorted
         std::set<double> alpha; //sorted container
 
@@ -443,39 +448,43 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceBeta, const
         double b = (*i_shift).second;
         progress->setMaximum(n);
         progress->setMinimum(n1_Gamma);
-        for(int n1_Epsilon=n; (n1_Epsilon>n1_Gamma) && (i_shift != mapPair.rend()) ; --n1_Epsilon) {
+        
+        for (int n1_Epsilon = n; (n1_Epsilon>=n1_Gamma) && (i_shift != mapPair.rend()); --n1_Epsilon) {
             progress->setValue(n1_Epsilon);
+            
             const double a = (*i_shift).first;//a=beta(i);
+            const double epsilon = 1-(n1_Epsilon/n);
 
             std::set<double> alphaUpper; // sorted container
             // find all value of beta greater than a
-            std::map<double,double>::const_iterator iMap = mapPair.lower_bound(a);
-            // if beta greater than a then all value of alpha corresponding to beta must be greater than a
+            std::map<double,double>::const_iterator iMap = mapPair.find(a);//lower_bound(a);
+            
+            // if beta greater than a() then all value of alpha corresponding to beta, after a() must be greater than a()
             while(iMap != mapPair.cend()) {
-                // copy only value of alpha greater than a
-                //if ((*iMap).second >= a)
-                    alphaUpper.insert((*iMap).second);
+                alphaUpper.insert((*iMap).second);
                 ++iMap;
             }
 
            // const int distanceN = std::distance(iMap,mapPair.cend());
 
-            const double m = alphaUpper.size()-1; // 1<= m <= (size-1) : index shift
-            const double epsilon = 1-(n1_Epsilon/n);
-            const int j = (int) ceil( m*(gamma-epsilon)/(1-epsilon) );
+            const double m = alphaUpper.size(); // 1<= m <= (size-1) : index shift
+
+            const int j = (const int) floor( m*(gamma-epsilon)/(1-epsilon) );
 
             // the b value don't change if the both rounded value of j don't change and
             //if( !(j == j_last && alphaToErase>b) ) {
-            if( !(j == j_last) ) {
+           // if( !(j == j_last) ) {
                 // alphaLimit is greater than the older value of b.
+            
                 std::set<double>::const_iterator j_shift = alphaUpper.cbegin();
                 // loop to move the iterator to the value number j, the SET have NO Random-acces iterator
-                for(int i=0; i<j; ++i)
+                // I'm already on the first element
+                for(int i=1; (i<j) && (j_shift != alphaUpper.cend()); ++i)
                     ++j_shift;
 
                 b = *j_shift; //b=alpha(j)
                 j_last = j;
-            }
+            //}
 
             // find the shortest length
             if((b-a)>dMax) {
