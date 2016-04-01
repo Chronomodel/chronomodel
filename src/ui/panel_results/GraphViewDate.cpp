@@ -126,15 +126,15 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 mGraph->addCurve(curvePostDistrib);
                 
                 // Post Distrib Chain i
-                for(int i=0; i<mChains.size(); ++i)
-                {
-                    GraphCurve curvePostDistribChain = generateDensityCurve(variableDate->histoForChain(i),
-                                                                       "Post Distrib Chain " + QString::number(i),
-                                                                       Painting::chainColors.at(i),
-                                                                       Qt::SolidLine,
-                                                                       Qt::NoBrush);
-                    mGraph->addCurve(curvePostDistribChain);
-                }
+                if (!variableDate->mChainsHistos.isEmpty())
+                    for(int i=0; i<mChains.size(); ++i) {
+                        GraphCurve curvePostDistribChain = generateDensityCurve(variableDate->histoForChain(i),
+                                                                                "Post Distrib Chain " + QString::number(i),
+                                                                                Painting::chainColors.at(i),
+                                                                                Qt::SolidLine,
+                                                                                Qt::NoBrush);
+                        mGraph->addCurve(curvePostDistribChain);
+                    }
                 
                 // HPD All Chains
 

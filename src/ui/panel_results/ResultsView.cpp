@@ -47,10 +47,10 @@ mGraphLeft(130),
 mRulerH(40),
 mTabsH(30),
 mGraphsH(130),
-mEventsScrollArea(0),
-mPhasesScrollArea(0),
 mTabEventsIndex(0),
 mTabPhasesIndex(0),
+mEventsScrollArea(0),
+mPhasesScrollArea(0),
 mBandwidthUsed(1.06),
 mThresholdUsed(95.0),
 mNumberOfGraph(5)
@@ -112,14 +112,14 @@ mNumberOfGraph(5)
     
     mNextSheetBut  = new Button(tr("Next"), this);
     mNextSheetBut->setFixedHeight(25);
-    mNextSheetBut->setCheckable(true);
+    mNextSheetBut->setCheckable(false);
     mNextSheetBut->setFlatHorizontal();
    // mNextSheetBut->setIcon(QIcon(":unfold.png"));
     mNextSheetBut->setToolTip(tr("Display other data"));
 
     mPreviousSheetBut  = new Button(tr("Prev."), this);
     mPreviousSheetBut->setFixedHeight(25);
-    mPreviousSheetBut->setCheckable(true);
+    mPreviousSheetBut->setCheckable(false);
     mPreviousSheetBut->setFlatHorizontal();
    // mPreviousSheetBut->setIcon(QIcon(":unfold.png"));
     mPreviousSheetBut->setToolTip(tr("Display other data"));
@@ -396,10 +396,11 @@ mNumberOfGraph(5)
     
     // -------------------------
     //connect(mUnfoldBut, &Button::toggled, this, &ResultsView::updateGraphsLayout);
-    connect(mUnfoldBut, &Button::toggled, this, &ResultsView::changeScrollArea);
+    connect(mUnfoldBut, &Button::toggled, this, &ResultsView::unfoldToggle);
     connect(mShowDataUnderPhasesCheck, &CheckBox::toggled, this, &ResultsView::updateGraphsLayout);
     
     connect(this, &ResultsView::curvesGenerated, this, &ResultsView::changeScrollArea);
+    connect(this, &ResultsView::updateScrollAreaRequested, this, &ResultsView::changeScrollArea);
     // -------------------------
 
 
@@ -452,7 +453,7 @@ void ResultsView::resizeEvent(QResizeEvent* e)
     updateLayout();
 }
 
-QList<QRect> ResultsView::getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases)
+/*QList<QRect> ResultsView::getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases)
 {
     QList<QRect> rects;
     int y = 0;
@@ -496,7 +497,7 @@ QList<QRect> ResultsView::getGeometries(const QList<GraphViewResults*>& graphs, 
         rects.append(rect);
     }
     return rects;
-}
+}*/
 
 #pragma mark Options & Layout (Chained Functions)
 
@@ -552,6 +553,9 @@ void ResultsView::updateControls()
     mStack->setCurrentWidget(byEvents ? mEventsScrollArea : mPhasesScrollArea);
     mShowDataUnderPhasesCheck->setVisible(!byEvents);
 
+    // -------------------------------------------------------
+    //  Enable or disable previous and next sheet
+    // -------------------------------------------------------
     int currentIndex = 0;
     int graphCount = 0;
     if (mStack->currentWidget() == mEventsScrollArea) {
@@ -576,7 +580,7 @@ void ResultsView::updateControls()
     else
         mPreviousSheetBut->setEnabled(true);
 
-    if ( graphCount > ((currentIndex+1)*mNumberOfGraph) )
+    if ( ((currentIndex+1)*mNumberOfGraph) < graphCount)
         mNextSheetBut->setEnabled(true);
     else
         mNextSheetBut->setEnabled(false);
@@ -731,7 +735,7 @@ void ResultsView::updateGraphsLayout()
     // ----------------------------------------------------------
     if (mPhasesScrollArea) {
        QWidget* wid = mPhasesScrollArea->widget();
-       QList<QRect> geometries = getGeometries(mByPhasesGraphs, mUnfoldBut->isChecked(), true);
+     /*  QList<QRect> geometries = getGeometries(mByPhasesGraphs, mUnfoldBut->isChecked(), true);
        int h = 0;
        for (int i=0; i<mByPhasesGraphs.size(); ++i) {
             mByPhasesGraphs.at(i)->setGeometry(geometries.at(i));
@@ -740,6 +744,7 @@ void ResultsView::updateGraphsLayout()
         if(h>0)
             wid->setFixedSize(width() - sbe - mOptionsW, h);
         wid = 0;
+      */
      }
 }
 
@@ -1015,10 +1020,10 @@ void ResultsView::createEventsScrollArea(const int idx)
     eventsWidget->setMouseTracking(true);
 
     QList<Event*>::const_iterator iterEvent = mModel->mEvents.cbegin();
-    int counter = 0;
+    int counter = 1;
 
     while (iterEvent!=mModel->mEvents.cend()) {
-        if ( (idx*mNumberOfGraph)<counter && counter < (idx+1)*mNumberOfGraph) {
+        if ( (idx*mNumberOfGraph)<counter && counter <= ((idx+1)*mNumberOfGraph) ) {
             GraphViewEvent* graphEvent = new GraphViewEvent(eventsWidget);
             // ----------------------------------------------------
             //  This just creates the view for the event.
@@ -1031,57 +1036,57 @@ void ResultsView::createEventsScrollArea(const int idx)
             graphEvent->setGraphFont(mFont);
             graphEvent->setGraphsThickness(mThicknessSpin->value());
             mByEventsGraphs.append(graphEvent);
-          //  totalHeight += graphEvent->height();
-            if (mUnfoldBut->isChecked()) {
+          }
+        ++counter; //count one event graph
+        if (mUnfoldBut->isChecked()) {
                 if((*iterEvent)->mType != Event::eKnown) {
-                 for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
-                     if ( (idx*mNumberOfGraph)<counter && counter < (idx+1)*mNumberOfGraph) {
-                        Date& date = (*iterEvent)->mDates[j];
-                        // ----------------------------------------------------
-                        //  This just creates the view for the date.
-                        //  It sets the Date which triggers an update() to repaint the view.
-                        //  The refresh() function which actually creates the graph curves will be called later.
-                        // ----------------------------------------------------
+                    for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
+                        if ( (idx*mNumberOfGraph)<counter && counter <= (idx+1)*mNumberOfGraph) {
+                            Date& date = (*iterEvent)->mDates[j];
+                            // ----------------------------------------------------
+                            //  This just creates the view for the date.
+                            //  It sets the Date which triggers an update() to repaint the view.
+                            //  The refresh() function which actually creates the graph curves will be called later.
+                            // ----------------------------------------------------
 
-                        GraphViewDate* graphDate = new GraphViewDate(eventsWidget);
-                        graphDate->setSettings(mModel->mSettings);
-                        graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
-                        graphDate->setDate(&date);
-                        graphDate->setColor((*iterEvent)->mColor);
+                            GraphViewDate* graphDate = new GraphViewDate(eventsWidget);
+                            graphDate->setSettings(mModel->mSettings);
+                            graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
+                            graphDate->setDate(&date);
+                            graphDate->setColor((*iterEvent)->mColor);
 
-                        graphDate->setGraphFont(mFont);
-                        graphDate->setGraphsThickness(mThicknessSpin->value());
-                        graphDate->setGraphsOpacity(mOpacitySpin->value());
-                        mByEventsGraphs.append(graphDate);
+                            graphDate->setGraphFont(mFont);
+                            graphDate->setGraphsThickness(mThicknessSpin->value());
+                            graphDate->setGraphsOpacity(mOpacitySpin->value());
+                            mByEventsGraphs.append(graphDate);
 
-                     }
-                     ++counter;
-                 }
-           }
+                        }
+                        ++counter;
+                    }
+                }
 
-            }
         }
-        ++counter; //add one event graph
+        
+        
         ++iterEvent;
     }
     QList<GraphViewResults*>::iterator iter = mByEventsGraphs.begin();
-    QList<GraphViewResults*>::const_iterator iterEnd = mByEventsGraphs.constEnd();
 
-    while(iter != iterEnd) {
+    while(iter != mByEventsGraphs.end()) {
         (*iter)->generateCurves(GraphViewResults::TypeGraph(mCurrentTypeGraph), variable);
         ++iter;
     }
 
-    QList<GraphViewResults*>::const_iterator constIter = mByEventsGraphs.cbegin();
-    while(constIter != iterEnd) {
-        const GraphViewDate* graphDate = dynamic_cast<const GraphViewDate*>(*constIter);
+    QList<GraphViewResults*>::const_iterator citer = mByEventsGraphs.cbegin();
+    while(citer != mByEventsGraphs.cend()) {
+        const GraphViewDate* graphDate = dynamic_cast<const GraphViewDate*>(*citer);
         if(graphDate) {
            const GraphCurve* graphVariance = graphDate->mGraph->getCurve("Post Distrib All Chains");
            if(graphVariance) {
                mResultMaxVariance = ceil(qMax(mResultMaxVariance, graphVariance->mData.lastKey()));
            }
         }
-        ++constIter;
+        ++citer;
     }
 
 
@@ -1193,6 +1198,8 @@ void ResultsView::setBandwidth()
         mBandwidthUsed = bandwidth;
         mModel->setBandwidth(bandwidth);
     }
+    
+    //emit updateScrollAreaRequested();
 }
 
 double ResultsView::getThreshold() const
@@ -1212,19 +1219,86 @@ void ResultsView::setThreshold()
         mThresholdUsed = hpd;
         mModel->setThreshold(hpd);
     }
+    //emit updateScrollAreaRequested();
 }
 
+void ResultsView::unfoldToggle()
+{
+    
+    float graphInit = 0.;
+    float graphTarget = 0.;
+    
+    if (mStack->currentWidget() == mEventsScrollArea) {
+        
+        // number of Items increase
+        if (mUnfoldBut->isChecked()) {
+            graphInit = (float) mModel->mNumberOfEvents;
+            graphTarget = (float) mModel->mNumberOfEvents + mModel->mNumberOfDates;
+            
+        } else {
+            graphInit = (float) mModel->mNumberOfEvents + mModel->mNumberOfDates;
+            graphTarget = (float) mModel->mNumberOfEvents;
+        }
+            
+        mTabEventsIndex = (int)((mTabEventsIndex*mNumberOfGraph / graphInit) * graphTarget/mNumberOfGraph);
+        
+    } else if (mStack->currentWidget() == mPhasesScrollArea) {
+        
+            // number of Items increase
+            if (mUnfoldBut->isChecked()) {
+                graphInit = (float) mModel->mNumberOfPhases;
+                // number of Items increase
+                if (mShowDataUnderPhasesCheck->isVisible() && mShowDataUnderPhasesCheck->isChecked())
+                    graphTarget = (float) (mModel->mNumberOfPhases + mModel->mNumberOfEvents + mModel->mNumberOfDates) ;
+                else
+                    graphTarget = (float) (mModel->mNumberOfPhases + mModel->mNumberOfEvents) ;
+                
+            
+            } else {
+                if (mShowDataUnderPhasesCheck->isVisible() && mShowDataUnderPhasesCheck->isChecked())
+                    graphInit = (float) (mModel->mNumberOfPhases + mModel->mNumberOfEvents + mModel->mNumberOfDates) ;
+                else
+                    graphInit = (float) (mModel->mNumberOfPhases + mModel->mNumberOfEvents) ;
+                
+                
+                graphTarget =  (float) (mModel->mNumberOfPhases);
+            }
+        
+       mTabPhasesIndex = (int)((mTabPhasesIndex*mNumberOfGraph / graphInit) * graphTarget/mNumberOfGraph);
+        
+    }
+    
+    emit updateScrollAreaRequested();
+}
 void ResultsView::nextSheet()
 {
-    if (mByEventsBut->isChecked())
-        ++mTabEventsIndex;
-    else if (mByPhasesBut->isChecked())
-        ++mTabPhasesIndex;
-
-    mNextSheetBut->setChecked(false);
-
-    updateControls();
-    updateResults(mModel);
+    
+    int* currentIndex = 0;
+    int graphCount = 0;
+    
+    if (mStack->currentWidget() == mEventsScrollArea) {
+        graphCount = mModel->mNumberOfEvents;
+        if (mUnfoldBut->isChecked())
+            graphCount += mModel->mNumberOfDates;
+        currentIndex = &mTabEventsIndex;
+    }
+    
+    else if (mStack->currentWidget() == mPhasesScrollArea) {
+        graphCount = mModel->mNumberOfPhases;
+        if (mUnfoldBut->isChecked()) {
+            graphCount += mModel->mNumberOfEvents;
+            if (mShowDataUnderPhasesCheck->isVisible() && mShowDataUnderPhasesCheck->isChecked())
+                graphCount += mModel->mNumberOfDates;
+        }
+        currentIndex = &mTabPhasesIndex;
+    }
+  
+    if ( ((*currentIndex)*mNumberOfGraph) < graphCount)
+        (*currentIndex)++;
+    
+    
+    emit updateScrollAreaRequested();
+    
 }
 
 void ResultsView::previousSheet()
@@ -1234,11 +1308,8 @@ void ResultsView::previousSheet()
 
     else if (mByPhasesBut->isChecked()&&(mTabPhasesIndex>0))
         --mTabPhasesIndex;
-
-    mPreviousSheetBut->setChecked(false);
-    changeScrollArea();
-    /*updateControls();
-    updateResults(mModel);*/
+    
+    emit updateScrollAreaRequested();
 }
 
 /**

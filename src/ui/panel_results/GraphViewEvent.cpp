@@ -156,14 +156,15 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                     // ------------------------------------
                     //  Post Distrib Chain i
                     // ------------------------------------
-                    for (int i=0; i<mChains.size(); ++i) {
-                        GraphCurve curvePostDistribChain = generateDensityCurve(mEvent->mTheta.histoForChain(i),
-                                                                                "Post Distrib Chain " + QString::number(i),
-                                                                                Painting::chainColors.at(i),
-                                                                                Qt::SolidLine,
-                                                                                Qt::NoBrush);
-                        mGraph->addCurve(curvePostDistribChain);
-                    }
+                    if (!mEvent->mTheta.mChainsHistos.isEmpty())
+                        for (int i=0; i<mChains.size(); ++i) {
+                            GraphCurve curvePostDistribChain = generateDensityCurve(mEvent->mTheta.histoForChain(i),
+                                                                                    "Post Distrib Chain " + QString::number(i),
+                                                                                    Painting::chainColors.at(i),
+                                                                                    Qt::SolidLine,
+                                                                                    Qt::NoBrush);
+                            mGraph->addCurve(curvePostDistribChain);
+                        }
 
                     // ------------------------------------
                     //  Theta Credibility
@@ -184,7 +185,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             //  - Sigma Date i All Chains
             //  - Sigma Date i Chain j
             // ------------------------------------------------
-            else if(variable == eSigma) {
+            else if (variable == eSigma) {
                 mGraph->mLegendX = "";
                 mGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
                 mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);

@@ -116,6 +116,7 @@ private slots:
 
     void previousSheet();
     void nextSheet();
+    void unfoldToggle();
 
     // SETTER
     void setFFTLength();
@@ -132,11 +133,13 @@ signals:
     
     void controlsUpdated();
     void resultsLogUpdated(const QString& log);
+    
+    void updateScrollAreaRequested();
 
 
     
 private:
-    QList<QRect> getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases);
+    //QList<QRect> getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases);
     
 
     void clearHisto();
