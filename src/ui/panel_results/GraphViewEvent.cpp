@@ -62,19 +62,16 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     defaultPen.setWidthF(1);
     defaultPen.setStyle(Qt::SolidLine);
     
-    if(mEvent)
-    {
+    if(mEvent) {
         QColor color = mEvent->mColor;
         
         bool isFixedBound = false;
         bool isUnifBound = false;
         EventKnown* bound = 0;
-        if(mEvent->type() == Event::eKnown)
-        {
+        if(mEvent->type() == Event::eKnown) {
             bound = dynamic_cast<EventKnown*>(mEvent);
-            if(bound)
-            {
-                if(bound->knownType() == EventKnown::eFixed)
+            if (bound) {
+                if (bound->knownType() == EventKnown::eFixed)
                     isFixedBound = true;
                 else if(bound->knownType() == EventKnown::eUniform)
                     isUnifBound = true;
@@ -88,12 +85,13 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         // ------------------------------------------------
         //  First tab : Posterior distrib
         // ------------------------------------------------
-        if(typeGraph == ePostDistrib)
-        {
+        if (typeGraph == ePostDistrib) {
             mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             mGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
             mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
             mGraph->setBackgroundColor(QColor(230, 230, 230));
+            //mGraph->adjustYToMaxValue();
+            //mGraph->autoAdjustYScale(true);
             
             mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->mName;
             
@@ -104,19 +102,16 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             //  - Credibility All Chains
             //  - Post Distrib Chain i
             // ------------------------------------------------
-            if(variable == eTheta)
-            {
-                if(isFixedBound)
-                {                   
+            if (variable == eTheta) {
+                if (isFixedBound) {
                     GraphCurve curveLineBound;
                     curveLineBound.mName = "Post Distrib All Chains";
                     curveLineBound.mPen.setColor(color);
                     curveLineBound.mIsVerticalLine = true;
                     curveLineBound.mVerticalValue = bound->fixedValue();
                     mGraph->addCurve(curveLineBound);
-                }
-                else if(isUnifBound)
-                {                   
+
+                } else if (isUnifBound) {
                     GraphCurve curveLineStart;
                     curveLineStart.mName = "Post Distrib All Chains";
                     curveLineStart.mPen.setColor(color);
@@ -136,8 +131,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                 // ------------------------------------
                 //  HPD All Chains
                 // ------------------------------------
-                if(!isFixedBound)
-                {
+                if (!isFixedBound) {
                     // ------------------------------------
                     //  Post Distrib All Chains
                     // ------------------------------------
@@ -162,8 +156,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                     // ------------------------------------
                     //  Post Distrib Chain i
                     // ------------------------------------
-                    for(int i=0; i<mChains.size(); ++i)
-                    {
+                    for (int i=0; i<mChains.size(); ++i) {
                         GraphCurve curvePostDistribChain = generateDensityCurve(mEvent->mTheta.histoForChain(i),
                                                                                 "Post Distrib Chain " + QString::number(i),
                                                                                 Painting::chainColors.at(i),
@@ -180,6 +173,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                                                                     color);
                     mGraph->addCurve(curveCred);
                 }
+
             }
             
             
@@ -190,15 +184,13 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             //  - Sigma Date i All Chains
             //  - Sigma Date i Chain j
             // ------------------------------------------------
-            else if(variable == eSigma)
-            {
+            else if(variable == eSigma) {
                 mGraph->mLegendX = "";
                 mGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
                 mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
                 
-                if (mEvent->type()==Event::eKnown) {
+                if (mEvent->type()==Event::eKnown)
                     mTitle = tr("Bound ") + " : " + mEvent->mName;
-                }
                 else
                     mTitle = tr("Std") + " : " + mEvent->mName;
                 
@@ -208,8 +200,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                 //mGraph->setRangeX(0, mSettings.mTmax - mSettings.mTmin);
 
                 
-                for(int i=0; i<mEvent->mDates.size(); ++i)
-                {
+                for (int i=0; i<mEvent->mDates.size(); ++i) {
                     Date& date = mEvent->mDates[i];
                     
                     GraphCurve curve = generateDensityCurve(date.mSigma.fullHisto(),
@@ -218,8 +209,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                     
                     mGraph->addCurve(curve);
                     
-                    for(int j=0; j<mChains.size(); ++j)
-                    {
+                    for (int j=0; j<mChains.size(); ++j) {
                         GraphCurve curveChain = generateDensityCurve(date.mSigma.histoForChain(j),
                                                                      "Sigma Date " + QString::number(i) + " Chain " + QString::number(j),
                                                                      Painting::chainColors.at(j));
@@ -227,6 +217,8 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                     }
                 }
             }
+
+            mGraph->adjustYToMaxValue();
         }
         // ------------------------------------------------
         //  second tab : History plots
@@ -235,8 +227,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - Q2 i
         //  - Q3 i
         // ------------------------------------------------
-        else if(typeGraph == eTrace && variable == eTheta)
-        {
+        else if(typeGraph == eTrace && variable == eTheta) {
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
             mGraph->setFormatFunctY(DateUtils::convertToAppSettingsFormatStr);

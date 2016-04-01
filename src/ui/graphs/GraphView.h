@@ -86,6 +86,7 @@ public:
     // Manage Curves
     
     void addCurve(const GraphCurve& curve);
+    bool hasCurve() {return ((mCurves.size() != 0) || (mZones.size() != 0)) ;}
     void removeCurve(const QString& name);
     void removeAllCurves();
     void reserveCurves(const int size);

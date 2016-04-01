@@ -82,6 +82,10 @@ public:
     QString mLogMCMC;
     QString mLogResults;
 
+    int mNumberOfPhases;
+    int mNumberOfEvents;
+    int mNumberOfDates;
+
 public slots:
     void setThreshold(const double threshold);
     void setBandwidth(const double bandwidth);

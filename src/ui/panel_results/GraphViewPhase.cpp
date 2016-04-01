@@ -74,19 +74,17 @@ void GraphViewPhase::setButtonsVisible(const bool visible)
 
 void GraphViewPhase::setPhase(Phase* phase)
 {
-    if(phase)
-    {
+    if (phase) {
         mPhase = phase;
 
-        if(mShowDuration->isChecked()) {
+        if(mShowDuration->isChecked())
            setItemTitle(tr("Duration") + " : " + mPhase->mName);
-        }
-        else {
+        else
             setItemTitle(tr("Phase") + " : " + mPhase->mName);
-        }
+
         setItemColor(mPhase->mColor);
     }
-    update();
+   // update();
 }
 
 void GraphViewPhase::updateLayout()
@@ -101,8 +99,7 @@ void GraphViewPhase::updateLayout()
     mDurationGraph->showXAxisValues(axisVisible);
     mDurationGraph->setMarginBottom(axisVisible ? mDurationGraph->font().pointSizeF() + 10 : 10);
     
-    if(mButtonsVisible)
-    {
+    if(mButtonsVisible) {
         int butInlineMaxH = 50;
         int bh = (height() - mLineH) / 2;
         bh = qMin(bh, butInlineMaxH);
@@ -137,8 +134,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
     defaultPen.setWidthF(1);
     defaultPen.setStyle(Qt::SolidLine);
     
-    if(mPhase)
-    {
+    if (mPhase) {
         QColor color = mPhase->mColor;
         
         // ------------------------------------------------
@@ -153,19 +149,16 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - Post Distrib Alpha i
         //  - Post Distrib Beta i
         // ------------------------------------------------
-        if(typeGraph == ePostDistrib && variable == eTheta)
-        {
+        if (typeGraph == ePostDistrib && variable == eTheta) {
             mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             mGraph->mLegendY = "";
             mGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
             mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
             //mTitle =  tr("Phase") + " : " + mPhase->mName;
-            if(mShowDuration->isChecked()) {
+            if(mShowDuration->isChecked())
                mTitle = tr("Duration") + " : " + mPhase->mName;
-            }
-            else {
+            else
                 mTitle = tr("Phase") + " : " + mPhase->mName;
-            }
 
             mShowDuration->setVisible(true);
             showDuration(mShowDuration->isChecked());
@@ -200,7 +193,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
 
             GraphCurve curveDuration;
 
-            if(! mPhase->mDuration.fullHisto().isEmpty()) {
+            if (! mPhase->mDuration.fullHisto().isEmpty()) {
                 curveDuration = generateDensityCurve(mPhase->mDuration.fullHisto(),
                                                                 "Duration",
                                                                 color);
@@ -218,8 +211,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                                                            color);
                 mGraph->addCurve(curveTimeRange);
 
-            }
-            else {
+            } else {
                 curveDuration.mName = "Duration";
                 curveDuration.mData.clear();
             }
@@ -236,7 +228,8 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                 mGraph->addCurve(curveAlpha);
                 mGraph->addCurve(curveBeta);
             }
-           
+            // must be after all curves adding
+            mGraph->adjustYToMinMaxValue();
         }
         
     

@@ -47,7 +47,7 @@ message("RCC_DIR : $$RCC_DIR")
 QT += core gui widgets svg
 
 # Resource file (for images)
-#RESOURCES = $$PRO_PATH/Chronomodel.qrc
+RESOURCES = $$PRO_PATH/Chronomodel.qrc
 RESOURCES = Chronomodel.qrc
 
 # Compilation warning flags
@@ -76,13 +76,15 @@ macx{
 	# Define a set of resources to deploy inside the bundle :
 	RESOURCES_FILES.path = Contents/Resources
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
-	#RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
+        #RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
 	QMAKE_BUNDLE_DATA += RESOURCES_FILES
 }
 win32{
 	# Resource file (Windows only)
-	#RC_FILE += Chronomodel.rc
+        RC_FILE += Chronomodel.rc
 	RC_ICONS += $$PRO_PATH/icon/Chronomodel.ico
+QT_FATAL_WARNING = 1
+
 }
 
 #########################################

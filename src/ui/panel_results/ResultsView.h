@@ -2,6 +2,7 @@
 #define ResultsWrapper_H
 
 #include <QWidget>
+#include <QVBoxLayout>
 #include "MCMCLoopMain.h"
 #include "AxisTool.h"
 #include "GraphViewResults.h"
@@ -62,16 +63,21 @@ protected:
     void mouseMoveEvent(QMouseEvent* e);
     void resizeEvent(QResizeEvent* e);
 
-    void createEventsScrollArea();
+    void createEventsScrollArea(const int idx = 0);
     void createPhasesScrollArea();
 
+
+
 public slots:
+    void updateResults(Model* model = 0);
+    void initResults(Model* model = 0);
+
+    void changeScrollArea();
     void updateLayout();
     void updateGraphsLayout();
     
     void clearResults();
-    void updateResults(Model* model = 0);
-    void initResults(Model* model = 0);
+
     
     //void generatePosteriorDistribs();
     //void generateCredibilityAndHPD();
@@ -107,6 +113,9 @@ private slots:
     void showInfos(bool);
     void exportFullImage();
     void exportResults();
+
+    void previousSheet();
+    void nextSheet();
 
     // SETTER
     void setFFTLength();
@@ -150,6 +159,8 @@ private:
     int mGraphsH;
     
     Tabs* mTabs;
+    int mTabEventsIndex;
+    int mTabPhasesIndex;
     //Ruler* mRuler;
     Marker* mMarker;
     
@@ -158,6 +169,7 @@ private:
     QScrollArea* mPhasesScrollArea;
     QList<GraphViewResults*> mByEventsGraphs;
     QList<GraphViewResults*> mByPhasesGraphs;
+
     
     Button* mByPhasesBut;
     Button* mByEventsBut;
@@ -167,10 +179,13 @@ private:
     
     
     Button* mUnfoldBut;
-    Button* mInfosBut;
+    Button* mStatsBut;
     Button* mExportImgBut;
     Button* mExportResults;
     CheckBox* mShowDataUnderPhasesCheck;
+
+    Button* mNextSheetBut;
+    Button* mPreviousSheetBut;
     
     // ------ mDisplayGroup -----
    // QWidget* mScaleGroup;
@@ -219,9 +234,10 @@ private:
     
     QMap<int, QPair<double, double>> mZooms;
 
-    //member
+    //propreties
     double mBandwidthUsed;
     double mThresholdUsed;
+    int mNumberOfGraph;
 };
 
 #endif

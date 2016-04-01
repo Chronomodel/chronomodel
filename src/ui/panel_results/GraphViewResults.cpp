@@ -29,6 +29,7 @@ mTopShift(0),
 mButtonsVisible(true),
 mHeightForVisibleAxis(100)
 {
+    setGeometry(QRect(0,0,200,100));
     setMouseTracking(true);
     
     mGraph = new GraphView(this);
@@ -297,8 +298,7 @@ void GraphViewResults::saveGraphData() const
     
     int offset = 0;
     
-    if(mCurrentTypeGraph == eTrace || mCurrentTypeGraph == eAccept)
-    {
+    if (mCurrentTypeGraph == eTrace || mCurrentTypeGraph == eAccept) {
         QMessageBox messageBox;
         messageBox.setWindowTitle(tr("Save all trace"));
         messageBox.setText(tr("Do you want the entire trace from the beginning of the process or only the aquisition part"));
@@ -306,29 +306,28 @@ void GraphViewResults::saveGraphData() const
         QAbstractButton *acquireTraceButton = messageBox.addButton(tr("Only acquired part"), QMessageBox::NoRole);
         
         messageBox.exec();
-        if (messageBox.clickedButton() == allTraceButton)  {
+        if (messageBox.clickedButton() == allTraceButton)
             mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
-        }
+
         else if (messageBox.clickedButton() == acquireTraceButton) {
                 int chainIdx = -1;
                 for(int i=0; i<mShowChainList.size(); ++i)
                     if(mShowChainList.at(i)) chainIdx = i;
-                if(chainIdx != -1) {
+                if(chainIdx != -1)
                     offset = mChains.at(chainIdx).mNumBurnIter + mChains.at(chainIdx).mBatchIndex * mChains.at(chainIdx).mNumBatchIter;
-                }
+
                 mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, offset);
         }
         else return;
     }
     
-    else if(mCurrentTypeGraph == eCorrel) {
+    else if(mCurrentTypeGraph == eCorrel)
         mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
-    }
+
     
     // All visible curves are saved in the same file, the credibility bar is not save
-    else if(mCurrentTypeGraph == ePostDistrib) {
+    else if(mCurrentTypeGraph == ePostDistrib)
         mGraph->exportCurrentDensityCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
-    }
 
 }
 
@@ -383,11 +382,8 @@ void GraphViewResults::updateLayout()
     int butInlineMaxH = 50;
     
     bool axisVisible = (h > mHeightForVisibleAxis);
-    mGraph->showXAxisValues(axisVisible);
-    mGraph->setMarginBottom(axisVisible ? mGraph->font().pointSizeF() + 10 : 10);
-    
-    if(mButtonsVisible)
-    {
+
+    if(mButtonsVisible) {
         qreal bw = mGraphLeft / 4;
         int bh = height() - mLineH;
         bh = std::min(bh, butInlineMaxH);
@@ -406,26 +402,29 @@ void GraphViewResults::updateLayout()
     int leftShift = mButtonsVisible ? mGraphLeft : 0;
     QRect graphRect(leftShift, mTopShift, this->width() - leftShift, height()-mTopShift);
     
-    if(mShowNumResults) {
-        mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
-        mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
-    }
-    else {
+    if((mGraph->hasCurve())) {
+        mGraph->showXAxisValues(axisVisible);
+        mGraph->setMarginBottom(axisVisible ? mGraph->font().pointSizeF() + 10 : 10);
+
+        if (mShowNumResults) {
+            mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
+            mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
+        } else
+            mGraph->setGeometry(graphRect);
+    } else
         mGraph->setGeometry(graphRect);
-    }
+
     update();
 }
 void GraphViewResults::paintEvent(QPaintEvent* )
 {
-    //int h = height();
     int leftShift = mButtonsVisible ? mGraphLeft : 0;
     
     QPainter p;
     p.begin(this);
     
     // Left part of the view (title, buttons, ...)
-    if(mButtonsVisible)
-    {
+    if(mButtonsVisible) {
         QColor backCol = mItemColor;
         QColor foreCol = getContrastedColor(backCol);
         

@@ -15,7 +15,10 @@
 #include <QtCore/QStringList>
 
 #pragma mark Constructor...
-Model::Model()
+Model::Model():
+mNumberOfPhases(0),
+mNumberOfEvents(0),
+mNumberOfDates(0)
 {
     
 }
@@ -59,7 +62,8 @@ void Model::clear()
     this->clearTraces();
     if(!mEvents.isEmpty()) {
         foreach (Event* ev, mEvents) {
-            if(ev) delete ev;
+            if(ev)
+                delete ev;
             ev = 0;
         }
         mEvents.clear();
@@ -67,7 +71,8 @@ void Model::clear()
 
     if(!mPhases.isEmpty()) {
         foreach (Phase* ph, mPhases) {
-            if(ph) delete ph;
+            if(ph)
+                delete ph;
             ph = 0;
         }
         mPhases.clear();
@@ -101,10 +106,11 @@ void Model::clear()
  */
 void Model::updateFormatSettings(const AppSettings* appSet)
 {
-    for(int i=0; i<this->mEvents.size(); i++) {
+    for (int i=0; i<this->mEvents.size(); i++) {
         Event* event = mEvents[i] ;
         event->mTheta.setFormat(appSet->mFormatDate);
-        for(int j=0; j<event->mDates.size(); j++) {
+
+        for (int j=0; j<event->mDates.size(); j++) {
             Date& date = event->mDates[j];
             date.mTheta.setFormat(appSet->mFormatDate);
             date.mSigma.setFormat(DateUtils::eNumeric);
@@ -112,7 +118,7 @@ void Model::updateFormatSettings(const AppSettings* appSet)
         }
         event = 0;
     }
-    for(int i=0; i<this->mPhases.size(); i++) {
+    for (int i=0; i<this->mPhases.size(); i++) {
         Phase* phase = mPhases[i] ;
         phase->mAlpha.setFormat(appSet->mFormatDate);
         phase->mBeta.setFormat(appSet->mFormatDate);
@@ -125,24 +131,22 @@ void Model::updateFormatSettings(const AppSettings* appSet)
 
 void Model::fromJson(const QJsonObject& json)
 {
-    if(json.contains(STATE_SETTINGS))
-    {
+    if (json.contains(STATE_SETTINGS)) {
         const QJsonObject settings = json.value(STATE_SETTINGS).toObject();
         mSettings = ProjectSettings::fromJson(settings);
     }
 
-    if(json.contains(STATE_MCMC))
-    {
+    if (json.contains(STATE_MCMC)) {
         const QJsonObject mcmc = json.value(STATE_MCMC).toObject();
         mMCMCSettings = MCMCSettings::fromJson(mcmc);
         mChains = mMCMCSettings.getChains();
     }
 
-    if(json.contains(STATE_PHASES))
-    {
+    if (json.contains(STATE_PHASES)) {
         const QJsonArray phases = json.value(STATE_PHASES).toArray();
-        for(int i=0; i<phases.size(); ++i)
-        {
+        mNumberOfPhases = phases.size();
+
+        for (int i=0; i<phases.size(); ++i) {
             const QJsonObject phase = phases.at(i).toObject();
             Phase* p = new Phase(Phase::fromJson(phase));
             mPhases.append(p);
@@ -153,22 +157,23 @@ void Model::fromJson(const QJsonObject& json)
     // Sort phases based on items y position
     std::sort(mPhases.begin(), mPhases.end(), sortPhases);
 
-    if(json.contains(STATE_EVENTS))
-    {
+    if (json.contains(STATE_EVENTS)) {
         QJsonArray events = json.value(STATE_EVENTS).toArray();
-        for(int i=0; i<events.size(); ++i)
-        {
+        mNumberOfEvents = events.size();
+
+        for (int i=0; i<events.size(); ++i) {
             const QJsonObject event = events.at(i).toObject();
-            if(event.value(STATE_EVENT_TYPE).toInt() == Event::eDefault)
-            {
+
+            if (event.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
                 try{
                     Event* e = new Event(Event::fromJson(event));
                     e->mMixingLevel = mMCMCSettings.mMixingLevel;
+                    mNumberOfDates += e->mDates.size();
 
-                    for(int j=0; j<e->mDates.size(); ++j)
-                    {
+                    for (int j=0; j<e->mDates.size(); ++j) {
                         e->mDates[j].mMixingLevel=e->mMixingLevel;
                         e->mDates[j].mColor=e->mColor;
+
                     }
                     mEvents.append(e);
                     e = 0;
@@ -182,9 +187,7 @@ void Model::fromJson(const QJsonObject& json)
                                         Qt::Sheet);
                     message.exec();
                 }
-            }
-            else
-            {
+            } else {
                 EventKnown* e = new EventKnown(EventKnown::fromJson(event));
                 e->updateValues(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
                 mEvents.append(e);

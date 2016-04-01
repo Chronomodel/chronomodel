@@ -98,7 +98,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         if(typeGraph == ePostDistrib)
         {
             mGraph->setRangeY(0, 0.0001f);
-
+            mGraph->adjustYToMaxValue();
             // ------------------------------------------------
             //  Possible Curves :
             //  - Post Distrib All Chains
@@ -206,6 +206,8 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 // Check if necessary ?
                 mGraph->autoAdjustYScale(true);
             }
+            // must be after all curves adding
+            mGraph->adjustYToMinMaxValue();
         }
         // ------------------------------------------------
         //  Second tab : History plots.
@@ -220,7 +222,8 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
             mGraph->setFormatFunctY(DateUtils::convertToAppSettingsFormatStr);
-            
+            mGraph->adjustYToMinMaxValue();
+            mGraph->autoAdjustYScale(true);
             generateTraceCurves(mChains, variableDate);
         }
         // ------------------------------------------------
@@ -234,8 +237,10 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
             mGraph->setFormatFunctY(0);
-            mGraph->setRangeY(0, 100);
-            
+            //mGraph->setRangeY(0, 100);
+            //mGraph->adjustYToMinMaxValue();
+            mGraph->autoAdjustYScale(true);
+
             mGraph->addCurve( generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine) );
             generateAcceptCurves(mChains, variableDate);
         }

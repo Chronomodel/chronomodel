@@ -78,6 +78,7 @@ public:
     bool mIsCurrent;
     
     int mLevel;
+
 };
 
 #endif

@@ -187,6 +187,9 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
 
     const double sigma = dataStd(dataSrc);
     QMap<double, double> result;
+
+
+
     if (sigma == 0) {
         qDebug()<<"MetropolisVariable::generateHisto sigma == 0";
         if(dataSrc.size()>0) {
@@ -197,6 +200,12 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
         }
         return result;
     }
+    // DEBUG
+   /*QVector<double> histo = vector_to_histo(dataSrc,tmin,tmax,fftLen);
+    const double step = (tmax-tmin)/fftLen;
+    result = vector_to_map(histo, tmin, tmax, step);
+    return result;
+    */// /// DEBUG
 
      const double h = bandwidth * sigma * pow(dataSrc.size(), -1./5.);
      const double a = vector_min_value(dataSrc) - 4. * h;
@@ -205,8 +214,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
      float* input = (float*) fftwf_malloc(fftLen * sizeof(float));
      generateBufferForHisto(input, dataSrc, fftLen, a, b);
 
-     //float* input = generateBufferForHisto(dataSrc, fftLen, a, b);
-    float* output = (float*) fftwf_malloc(outputSize * sizeof(float));
+     float* output = (float*) fftwf_malloc(outputSize * sizeof(float));
     
     if(input != 0) {
         // ----- FFT -----
@@ -469,8 +477,8 @@ QVector<double> MetropolisVariable::runRawTraceForChain(const QList<ChainSpecs> 
         for(int i=0; i<chains.size(); ++i) {
             const ChainSpecs& chain = chains.at(i);
             
-            unsigned int burnAdaptSize = int (chain.mNumBurnIter + chain.mBatchIndex * chain.mNumBatchIter);
-            unsigned int traceSize = int (burnAdaptSize + chain.mNumRunIter / chain.mThinningInterval);
+            const int burnAdaptSize = int (chain.mNumBurnIter + chain.mBatchIndex * chain.mNumBatchIter);
+            const int traceSize = int (burnAdaptSize + chain.mNumRunIter / chain.mThinningInterval);
             
             if(i == index) {
                 trace=mRawTrace.mid(shift + burnAdaptSize, traceSize - burnAdaptSize);

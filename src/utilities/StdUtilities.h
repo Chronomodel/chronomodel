@@ -197,5 +197,5 @@ double vector_interpolate_idx_for_value(const double value, const QVector<double
 
 double map_area(const QMap<double, double>& map);
 const QMap<double, double> create_HPD(const QMap<double, double>& aMap, const double threshold);
-
+QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmin, const double tmax, const int nbPts);
 #endif

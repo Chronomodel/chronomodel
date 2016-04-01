@@ -480,3 +480,48 @@ double map_area(const QMap<double, double>& map)
 }
 
 
+QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmin, const double tmax, const int nbPts)
+{
+
+    QVector<double> histo;
+    histo.reserve(nbPts);
+    histo.fill(0.,nbPts);
+    const double delta = (tmax - tmin) / (nbPts - 1);
+
+    const double denum = dataScr.size();
+
+    for (QVector<double>::const_iterator iter = dataScr.cbegin(); iter != dataScr.cend(); ++iter) {
+        const double t = *iter;
+        
+        const double idx = (t - tmin) / delta;
+        const double idx_under = floor(idx);
+        const double idx_upper = idx_under + 1.;
+        
+        const double contrib_under = (idx_upper - idx) / denum;
+        const double contrib_upper = (idx - idx_under) / denum;
+        
+        if(std::isinf(contrib_under) || std::isinf(contrib_upper)) {
+            qDebug() << "StdUtilities::vector_to_histo() : infinity contrib!";
+        }
+        if(idx_under < 0 || idx_under >= nbPts || idx_upper < 0 || idx_upper > nbPts) {
+            qDebug() << "StdUtilities::vector_to_histo() : Wrong index";
+        }
+
+        if(idx_under < nbPts)
+            histo[(int)idx_under] += contrib_under;
+        if(idx_upper < nbPts) // This is to handle the case when matching the last point index !
+            histo[(int)idx_upper] += contrib_upper;
+    }
+
+    bool bEmpty = true;
+    for (QVector<double>::const_iterator iter = histo.cbegin();( iter != histo.cend())&& bEmpty; ++iter) {
+         if (*iter> 0)
+             bEmpty= false;
+    }
+    if (bEmpty)
+        qDebug()<<"in vector_to_histo histo is empty !!!!";
+
+    return histo;
+}
+
+
