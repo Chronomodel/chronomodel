@@ -44,6 +44,7 @@ void GraphViewEvent::paintEvent(QPaintEvent* e)
 
 void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
 {
+    qDebug()<<"GraphViewEvent::generateCurves()";
     GraphViewResults::generateCurves(typeGraph, variable);
     
     // ------------------------------------------------
@@ -292,8 +293,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         // ------------------------------------------------
         //  first tab : Posterior distrib
         // ------------------------------------------------
-        if(mCurrentTypeGraph == ePostDistrib)
-        {
+        if(mCurrentTypeGraph == ePostDistrib) {
             mGraph->setTipYLab("");
             // ------------------------------------------------
             //  Possible curves :
@@ -302,13 +302,12 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             //  - Credibility All Chains
             //  - Post Distrib Chain i
             // ------------------------------------------------
-            if(mCurrentVariable == eTheta)
-            {
+            if (mCurrentVariable == eTheta) {
                 mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
                 mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
                 mGraph->setCurveVisible("Credibility All Chains", mShowCredibility && mShowAllChains);
                 
-                for(int i=0; i<mShowChainList.size(); ++i){
+                for (int i=0; i<mShowChainList.size(); ++i) {
                     mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
                 }
                 mGraph->setTipXLab("t");
@@ -321,14 +320,11 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             //  - Sigma Date i All Chains
             //  - Sigma Date i Chain j
             // ------------------------------------------------
-            else if(mCurrentVariable == eSigma)
-            {
-                for(int i=0; i<mEvent->mDates.size(); ++i)
-                {
+            else if(mCurrentVariable == eSigma) {
+                for (int i=0; i<mEvent->mDates.size(); ++i) {
                     mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " All Chains", mShowAllChains);
                     
-                    for(int j=0; j<mShowChainList.size(); ++j)
-                    {
+                    for (int j=0; j<mShowChainList.size(); ++j) {
                         mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " Chain " + QString::number(j), mShowChainList[j]);
                     }
                 }
@@ -345,10 +341,9 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         //  - Q2 i
         //  - Q3 i
         // ------------------------------------------------
-        else if(mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta)
-        {
+        else if(mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta) {
             // We visualize only one chain (radio button)
-            for(int i=0; i<mShowChainList.size(); ++i){
+            for (int i=0; i<mShowChainList.size(); ++i) {
                 mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList[i]);
                 mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList[i]);
                 mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList[i]);

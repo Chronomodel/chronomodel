@@ -217,7 +217,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
             }
             mDurationGraph->addCurve(curveDuration);
             
-            for(int i=0; i<mChains.size(); ++i) {
+            for (int i=0; i<mChains.size(); ++i) {
                 GraphCurve curveAlpha = generateDensityCurve(mPhase->mAlpha.histoForChain(i),
                                                              "Post Distrib Alpha " + QString::number(i),
                                                              color, Qt::DotLine);
@@ -244,8 +244,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - Q2 Beta i
         //  - Q3 Beta i
         // ------------------------------------------------
-        else if(typeGraph == eTrace && variable == eTheta)
-        {
+        else if (typeGraph == eTrace && variable == eTheta) {
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
             mGraph->setFormatFunctY(DateUtils::convertToAppSettingsFormatStr);
@@ -324,9 +323,8 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         //  - Beta Q2 i
         //  - Beta Q3 i
         // ------------------------------------------------
-        else if(mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta)
-        {
-            for(int i=0; i<mShowChainList.size(); ++i){
+        else if(mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta) {
+            for (int i=0; i<mShowChainList.size(); ++i) {
                 mGraph->setCurveVisible("Alpha Trace " + QString::number(i), mShowChainList.at(i));
                 mGraph->setCurveVisible("Alpha Q1 " + QString::number(i), mShowChainList.at(i));
                 mGraph->setCurveVisible("Alpha Q2 " + QString::number(i), mShowChainList.at(i));
@@ -343,6 +341,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setYAxisMode(GraphView::eMinMax);
         }
     }
+    
 }
 
 

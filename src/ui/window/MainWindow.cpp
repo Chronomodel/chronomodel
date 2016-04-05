@@ -838,8 +838,7 @@ void MainWindow::activateInterface(bool activate)
     // Par contre, elles ne doivent pas être ré-activée dès l'ouverture d'un projet
     mRunAction->setEnabled(activate);
     
-    if(!activate)
-    {
+    if (!activate) {
         //mRunAction->setEnabled(activate);
         mViewResultsAction->setEnabled(activate);
         mViewLogAction->setEnabled(activate);

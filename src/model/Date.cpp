@@ -427,6 +427,16 @@ double Date::getFormatedTmaxCalib()const
     return qMax(DateUtils::convertToAppSettingsFormat(getTminCalib()),DateUtils::convertToAppSettingsFormat(getTmaxCalib()));
 }
 
+void Date::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+{
+    mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+    mSigma.generateHistos(chains, fftLen, bandwidth);
+
+    if( !( mDeltaType == Date::eDeltaNone ) )
+        mWiggle.generateHistos(chains, fftLen, bandwidth);
+
+}
+
 QPixmap Date::generateTypoThumb()
 {
     if(mIsValid){

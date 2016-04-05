@@ -591,3 +591,42 @@ void Event::updateTheta(const double tmin, const double tmax)
             break;
     }
 }
+
+void Event::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+{
+
+   /* if(type() == Event::eKnown && ek && (ek->knownType() == EventKnown::eFixed)) {
+        // Nothing todo : this is just a Dirac !
+        ek->mTheta.mHisto.clear();
+        ek->mTheta.mChainsHistos.clear();
+
+        ek->mTheta.mHisto.insert(ek->mFixed,1);
+        for(int i =0 ;i<chains.size(); ++i) {
+            //generate fictifious chains
+            ek->mTheta.mChainsHistos.append(ek->mTheta.mHisto);
+        }
+    }
+    else {
+        (*iterEvent)->mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+    }
+    */
+
+    if (type() != Event::eKnown)
+        mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+
+    else {
+        EventKnown* ek = dynamic_cast<EventKnown*>(this);
+        if (ek && (ek->knownType() == EventKnown::eFixed)) {
+            // Nothing todo : this is just a Dirac !
+            ek->mTheta.mHisto.clear();
+            ek->mTheta.mChainsHistos.clear();
+
+            ek->mTheta.mHisto.insert(ek->mFixed,1);
+            //generate fictifious chains
+            for(int i =0 ;i<chains.size(); ++i)
+                ek->mTheta.mChainsHistos.append(ek->mTheta.mHisto);
+
+        }
+    }
+
+}

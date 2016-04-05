@@ -309,11 +309,11 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
         range.first = *(std::min_element(trace1.cbegin(),trace1.cend()));
         range.second = *(std::max_element(trace2.cbegin(),trace2.cend()) );
     }
- //   QProgressDialog *progress = new QProgressDialog(description,"Wait" , 1, 10, qApp->activeWindow() );
- //   progress->setWindowModality(Qt::WindowModal);
- //   progress->setCancelButton(0);
+    QProgressDialog *progress = new QProgressDialog(description,"Wait" , 1, 10, qApp->activeWindow() );
+    progress->setWindowModality(Qt::WindowModal);
+    progress->setCancelButton(0);
     //progress->forceShow();
- //   progress->setMinimumDuration(400);
+    progress->setMinimumDuration(4);
     // if thresh is equal 0 then return an empty QPair
     if(thresh > 0 && trace1.size() > 0 && trace2.size()==trace1.size()) {
         const double threshold =  inRange(0., thresh, 100.0);
@@ -344,7 +344,7 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
         std::map<double,double>::const_iterator i_shift = mapPair.cbegin();
         int j_last = 0;
         double b = 0.;
-//        progress->setMaximum(nGamma);
+        progress->setMaximum(nGamma);
         for(int nEpsilon=0; (nEpsilon<=nGamma) && (i_shift != mapPair.cend()); ++nEpsilon) {
             //progress->setValue(nEpsilon);
             const double a = (*i_shift).first;//alpha.at(nEpsilon);
@@ -399,7 +399,7 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
         }
 
     }
- //   delete progress;
+    delete progress;
     return range;
 }
 
@@ -415,7 +415,7 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceBeta, const
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(0);
     //progress->forceShow();
-    progress->setMinimumDuration(40);
+    progress->setMinimumDuration(4);
 
     // if thresh is equal 0 then return an empty QPair
     if(thresh > 0 && traceBeta.size() > 0 && traceAlpha.size()==traceBeta.size()) {

@@ -38,6 +38,8 @@ public:
     
     QPair<double,double> getFormatedTimeRange() const;
 
+    void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
+
     void updateAll(const double tmin, const double tmax);
     void memoAll();
     

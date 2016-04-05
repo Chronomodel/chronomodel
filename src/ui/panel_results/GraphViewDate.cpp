@@ -62,6 +62,7 @@ QColor GraphViewDate::getEventColor()
 
 void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
 {
+    qDebug()<<"GraphViewDate::generateCurves()";
     GraphViewResults::generateCurves(typeGraph, variable);
     
     // ------------------------------------------------
@@ -173,7 +174,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             //  - Sigma All Chains
             //  - Sigma Chain i
             // ------------------------------------------------
-            else if(variable == eSigma){
+            else if(variable == eSigma) {
                 mTitle = QString(tr("Std") + " : " + mDate->mName);
 
                 mGraph->mLegendX = "";
@@ -182,7 +183,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 
                 //  Post Distrib All Chains
                 GraphCurve curvePostDistrib = generateDensityCurve(variableDate->fullHisto(),
-                                                                   "Post Distrib All Chains",
+                                                                   "Sigma all Chains",
                                                                    color,
                                                                    Qt::SolidLine,
                                                                    Qt::NoBrush);
@@ -191,10 +192,9 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 
                 
                 // Post Distrib Chain i
-                for(int i=0; i<mChains.size(); ++i)
-                {
+                for (int i=0; i<mChains.size(); ++i) {
                     GraphCurve curvePostDistribChain = generateDensityCurve(variableDate->histoForChain(i),
-                                                                            "Post Distrib Chain " + QString::number(i),
+                                                                            "Sigma for Chain " + QString::number(i),
                                                                             Painting::chainColors.at(i),
                                                                             Qt::SolidLine,
                                                                             Qt::NoBrush);
@@ -304,13 +304,13 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
         //  - Sigma All Chains
         //  - Sigma Chain i
         // ------------------------------------------------
-        else if(mCurrentVariable == eSigma){
-            mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
-            for(int i=0; i<mShowChainList.size(); ++i)
-            {
-                mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
+        else if (mCurrentVariable == eSigma) {
+            mGraph->setCurveVisible("Sigma all Chains", mShowAllChains);
+            //mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
+            for (int i=0; i<mShowChainList.size(); ++i) {
+                mGraph->setCurveVisible("Sigma for Chain " + QString::number(i), mShowChainList[i]);
             }
-            mGraph->setTipXLab("duration");
+            mGraph->setTipXLab("sigma");
             mGraph->setYAxisMode(GraphView::eHidden);
         }
     }

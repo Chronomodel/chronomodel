@@ -64,8 +64,8 @@ protected:
     void resizeEvent(QResizeEvent* e);
 
     void createEventsScrollArea(const int idx = 0);
-    void createPhasesScrollArea();
-
+    void createPhasesScrollArea(const int idx = 0);
+    void generateCurves(const QList<GraphViewResults*>& listGraphs);
 
 
 public slots:
@@ -77,14 +77,8 @@ public slots:
     void updateGraphsLayout();
     
     void clearResults();
-
+    void updateCurves();
     
-    //void generatePosteriorDistribs();
-    //void generateCredibilityAndHPD();
-    //void generateCredibility();
-    //void generateHPD();
-    void generateCurves();
-    void updateCurvesToShow();
     
     void updateControls();
     void updateScales();
@@ -95,7 +89,9 @@ public slots:
     void adjustDuration(bool visible);
 
 private slots:
-
+    void graphTypeChange();
+    void updateCurvesToShow();
+    
     void settingChange();
     void updateZoomX(); // Connected to slider signals
     void updateScroll(const double min, const double max); // Connected to ruler signals
@@ -134,8 +130,10 @@ signals:
     void controlsUpdated();
     void resultsLogUpdated(const QString& log);
     
+    void scalesUpdated();
+    
     void updateScrollAreaRequested();
-
+    void generateCurvesRequested();
 
     
 private:
@@ -145,7 +143,7 @@ private:
     void clearHisto();
     void clearChainHistos();
 
-    GraphViewResults::TypeGraph mCurrentTypeGraph;
+    
     Ruler* mRuler;
     
 
@@ -238,6 +236,7 @@ private:
     QMap<int, QPair<double, double>> mZooms;
 
     //propreties
+    GraphViewResults::TypeGraph mCurrentTypeGraph;
     double mBandwidthUsed;
     double mThresholdUsed;
     int mNumberOfGraph;

@@ -1074,42 +1074,17 @@ void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftL
     
     QList<Event*>::iterator iterEvent = mEvents.begin();
     while (iterEvent!=mEvents.end()) {
+        (*iterEvent)->mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 
-        // Generate event histos for all events and all bounds except for bounds of type "fixed"
-        EventKnown* ek = dynamic_cast<EventKnown*>((*iterEvent));
-        if((*iterEvent)->type() == Event::eKnown && ek && (ek->knownType() == EventKnown::eFixed)) {
-            // Nothing todo : this is just a Dirac !
-            ek->mTheta.mHisto.clear();
-            ek->mTheta.mChainsHistos.clear();
-            
-            ek->mTheta.mHisto.insert(ek->mFixed,1);
-            for(int i =0 ;i<chains.size(); ++i) {
-                //generate fictifious chains
-                ek->mTheta.mChainsHistos.append(ek->mTheta.mHisto);
-            }
-        }
-        else {
-            (*iterEvent)->mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
-        }
-        
-        // Generate dates histos
-        for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
-            Date& date = (*iterEvent)->mDates[j];
-            
-            date.mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
-            date.mSigma.generateHistos(chains, fftLen, bandwidth);
-            
-            if( !( date.mDeltaType == Date::eDeltaNone ) )
-                date.mWiggle.generateHistos(chains, fftLen, bandwidth);
-        }
+        for(int j=0; j<(*iterEvent)->mDates.size(); ++j)
+            (*iterEvent)->mDates[j].generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+
         ++iterEvent;
     }
     
     QList<Phase*>::iterator iterPhase = mPhases.begin();
     while (iterPhase!=mPhases.end()) {
-        (*iterPhase)->mAlpha.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
-        (*iterPhase)->mBeta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
-        (*iterPhase)->mDuration.generateHistos(chains, fftLen, bandwidth);
+        (*iterPhase)->generateHistos(chains, fftLen, bandwidth, tmin, tmax);
         ++iterPhase;
     }
 

@@ -100,6 +100,8 @@ public:
 
     double getFormatedTminCalib() const;
     double getFormatedTmaxCalib() const;
+
+    void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
     
 public:
     MHVariable mTheta; // theta i de la date

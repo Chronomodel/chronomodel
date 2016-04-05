@@ -324,4 +324,9 @@ void Phase::memoAll()
     mDuration.memo();
 }
 
-
+void Phase::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+{
+    mAlpha.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+    mBeta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+    mDuration.generateHistos(chains, fftLen, bandwidth);
+}
