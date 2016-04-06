@@ -12,7 +12,8 @@ mPixelRatio(APP_SETTINGS_DEFAULT_PIXELRATIO),
 mDpm(APP_SETTINGS_DEFAULT_DPM),
 mImageQuality(APP_SETTINGS_DEFAULT_IMAGE_QUALITY),
 mFormatDate(APP_SETTINGS_DEFAULT_FORMATDATE),
-mPrecision(APP_SETTINGS_DEFAULT_PRECISION)
+mPrecision(APP_SETTINGS_DEFAULT_PRECISION),
+mNbSheet(APP_SETTINGS_DEFAULT_SHEET)
 {
     QLocale newLoc(QLocale::system());
     mLanguage = newLoc.language();
@@ -29,10 +30,10 @@ mPrecision(APP_SETTINGS_DEFAULT_PRECISION)
         mCSVDecSeparator=".";
     }
 }
+
 AppSettings::AppSettings(const AppSettings& s)
 {
     copyFrom(s);
-   
 }
 
 AppSettings& AppSettings::operator=(const AppSettings& s)
@@ -56,6 +57,7 @@ void AppSettings::copyFrom(const AppSettings& s)
     mImageQuality = s.mImageQuality;
     mFormatDate = s.mFormatDate;
     mPrecision = s.mPrecision;
+    mNbSheet = s.mNbSheet;
 }
 AppSettings::~AppSettings()
 {

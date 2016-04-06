@@ -31,6 +31,8 @@
 
 #include "../PluginAbstract.h"
 
+#include "AppSettings.h"
+
 #include <QtWidgets>
 #include <iostream>
 #include <QtSvg>
@@ -53,7 +55,7 @@ mEventsScrollArea(0),
 mPhasesScrollArea(0),
 mBandwidthUsed(1.06),
 mThresholdUsed(95.0),
-mNumberOfGraph(5)
+mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
 {
     mResultMinX = mSettings.mTmin;
     mResultMaxX = mSettings.mTmax;
@@ -590,6 +592,7 @@ void ResultsView::updateControls()
 
 void ResultsView::changeScrollArea()
 {
+    //mNumberOfGraph = MainWindow::getInstance()->getAppSettings().mNbSheet;
     if (mByEventsBut->isChecked())
             createEventsScrollArea(mTabEventsIndex);
     else if (mByPhasesBut->isChecked())
@@ -799,8 +802,10 @@ void ResultsView::updateFormatSetting(Model* model, const AppSettings* appSet)
     if(model)
         mModel = model;
     mModel->updateFormatSettings(appSet);
+    mNumberOfGraph = appSet->mNbSheet;
 
 }
+
 /**
  * @brief : This function is call after "Run"
  *
@@ -864,17 +869,6 @@ void ResultsView::initResults(Model* model)
 
     showInfos(mStatsBut->isChecked());
 
-    // ------------------------------------------------------------
-    //  Controls have been reset (by events, first tab to show post. distribs...) :
-    //  => updateControls() will call updateLayout()
-    //  Graphs have been recreated :
-    //  => updateLayout() will call updateGraphsLayout()
-    // ------------------------------------------------------------
-    //updateControls();
-
-
-    //generateCurves();
-   // updateScales();
 
 }
 /**
@@ -1323,16 +1317,20 @@ void ResultsView::updateCurvesToShow()
     const bool showCalib = mDataCalibCheck->isChecked();
     const bool showWiggle = mWiggleCheck->isChecked();
     const bool showCredibility = mCredibilityCheck->isChecked();
+    const bool showStat = mStatsBut->isChecked();
 
+    if (mByPhasesBut->isChecked() )
+        foreach (GraphViewResults* phaseGraph, mByPhasesGraphs) {
+                phaseGraph->updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
+                phaseGraph->setShowNumericalResults(showStat);
+        }
+    else
+        foreach (GraphViewResults* eventGraph, mByEventsGraphs) {
+            eventGraph->updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
+            eventGraph->setShowNumericalResults(showStat);
+        }
 
-    foreach (GraphViewResults* phaseGraph, mByPhasesGraphs)
-         phaseGraph->updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
-
-    foreach (GraphViewResults* eventGraph, mByEventsGraphs)
-         eventGraph->updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
-
-
-    updateResultsLog();
+   // updateResultsLog();
     updateScales();
 }
 
