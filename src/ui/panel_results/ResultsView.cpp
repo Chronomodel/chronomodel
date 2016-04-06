@@ -53,6 +53,7 @@ mTabEventsIndex(0),
 mTabPhasesIndex(0),
 mEventsScrollArea(0),
 mPhasesScrollArea(0),
+mCurrentTypeGraph(GraphViewResults::ePostDistrib), //mTabs=0
 mBandwidthUsed(1.06),
 mThresholdUsed(95.0),
 mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
@@ -453,51 +454,7 @@ void ResultsView::resizeEvent(QResizeEvent* e)
     updateLayout();
 }
 
-/*QList<QRect> ResultsView::getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases)
-{
-    QList<QRect> rects;
-    int y = 0;
-    int h = mGraphsH;
-    int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
-    bool showDates = mShowDataUnderPhasesCheck->isChecked();
-    
-    for(int i=0; i<graphs.size(); ++i) {
-        QRect rect = graphs.at(i)->geometry();
-        rect.setY(y);
-        rect.setWidth(width() - mOptionsW - sbe);
-        
-        if(byPhases) {
-            GraphViewPhase* graph = dynamic_cast<GraphViewPhase*>(graphs[i]);
-            // It is a Phase Graph :
-            if(graph)
-                rect.setHeight(h);
-            // Unfold is opened
-            else if(open) {
-                GraphViewEvent* graphEvent = dynamic_cast<GraphViewEvent*>(graphs[i]);
-                // It is an Event Graph :
-                if(graphEvent)
-                    rect.setHeight(h);
-                // It is Date Graph :
-                else if(showDates){
-                    rect.setHeight(h);
-                } else
-                    rect.setHeight(0);
-            } else
-                rect.setHeight(0);
-        } else {
-            GraphViewEvent* graph = dynamic_cast<GraphViewEvent*>(graphs[i]);
-            // It is an Event Graph :
-            if(graph) rect.setHeight(h);
-            // It is an Date Graph and unfold is opened :
-            else if(open) rect.setHeight(h);
-            // It is an Date Graph and unfold is closed :
-            else rect.setHeight(0);
-        }
-        y += rect.height();
-        rects.append(rect);
-    }
-    return rects;
-}*/
+
 
 #pragma mark Options & Layout (Chained Functions)
 
@@ -508,18 +465,8 @@ void ResultsView::updateControls()
 {
     qDebug() << "ResultsView::updateControls";
     
-   // int tabIdx = mTabs->currentIndex();
     bool byEvents = mByEventsBut->isChecked();
     
-  /*  if (tabIdx == 0)
-        mCurrentTypeGraph = GraphViewResults::ePostDistrib;
-    else if (tabIdx == 1)
-        mCurrentTypeGraph = GraphViewResults::eTrace;
-    else if (tabIdx == 2)
-        mCurrentTypeGraph = GraphViewResults::eAccept;
-    else if (tabIdx == 3)
-        mCurrentTypeGraph = GraphViewResults::eCorrel;
-    */
     // -------------------------------------------------------
     //  Activate specific controls for post. distrib. (first tab)
     // -------------------------------------------------------
@@ -712,15 +659,16 @@ void ResultsView::updateGraphsLayout()
     // ----------------------------------------------------------
     if (mByPhasesBut->isChecked()) {
         int y = 0;
-        QWidget* wid = mPhasesScrollArea->widget();
-        for (int i=0; i<mByPhasesGraphs.size(); ++i) {
-            mByPhasesGraphs.at(i)->setGeometry(0, y, width() - mOptionsW - sbe ,mGraphsH);
-            y += mByPhasesGraphs.at(i)->height();
-        }
-        if(y>0)
-            wid->setFixedSize(width() - sbe - mOptionsW, y);
-        wid = 0;
-        
+        if (mPhasesScrollArea) {
+            QWidget* wid = mPhasesScrollArea->widget();
+            for (int i=0; i<mByPhasesGraphs.size(); ++i) {
+                mByPhasesGraphs.at(i)->setGeometry(0, y, width() - mOptionsW - sbe ,mGraphsH);
+                y += mByPhasesGraphs.at(i)->height();
+            }
+            if(y>0)
+                wid->setFixedSize(width() - sbe - mOptionsW, y);
+            wid = 0;
+       }
     }
     // ----------------------------------------------------------
     //  Graphs by events layout
@@ -728,15 +676,17 @@ void ResultsView::updateGraphsLayout()
    
     else {
          int y = 0;
-        QWidget* wid = mEventsScrollArea->widget();
-      
-        for (int i=0; i<mByEventsGraphs.size(); ++i) {
-            mByEventsGraphs.at(i)->setGeometry(0, y, width() - mOptionsW - sbe ,mGraphsH);
-            y += mByEventsGraphs.at(i)->height();
-        }
-        if(y>0)
-            wid->setFixedSize(width() - sbe - mOptionsW, y);
-        wid = 0;
+         if (mEventsScrollArea) {
+            QWidget* wid = mEventsScrollArea->widget();
+
+            for (int i=0; i<mByEventsGraphs.size(); ++i) {
+                mByEventsGraphs.at(i)->setGeometry(0, y, width() - mOptionsW - sbe ,mGraphsH);
+                y += mByEventsGraphs.at(i)->height();
+            }
+            if(y>0)
+                wid->setFixedSize(width() - sbe - mOptionsW, y);
+            wid = 0;
+         }
     }
     update();
 }
@@ -941,31 +891,21 @@ void ResultsView::updateResults(Model* model)
         if (mHasPhases) createPhasesScrollArea(mTabPhasesIndex);
         else createEventsScrollArea(mTabEventsIndex);
 
-    
-
         // ------------------------------------------------------------
 
         showInfos(mStatsBut->isChecked());
-
-        // ------------------------------------------------------------
-        //  Controls have been reset (by events, first tab to show post. distribs...) :
-        //  => updateControls() will call updateLayout()
-        //  Graphs have been recreated :
-        //  => updateLayout() will call updateGraphsLayout()
-        // ------------------------------------------------------------
-        //updateControls();
 
 }
 
 
 void ResultsView::createEventsScrollArea(const int idx)
 {
-    GraphViewResults::Variable variable = GraphViewResults::eTheta;;
+   /* GraphViewResults::Variable variable = GraphViewResults::eTheta;;
     if(mDataThetaRadio->isChecked())
         variable = GraphViewResults::eTheta;
     else if(mDataSigmaRadio->isChecked())
         variable = GraphViewResults::eSigma;
-
+*/
 
     qDebug()<<"ResultsView::createEventsScrollArea()";
     if (!mEventsScrollArea) {
@@ -996,8 +936,8 @@ void ResultsView::createEventsScrollArea(const int idx)
           }
         ++counter; //count one event graph
         if (mUnfoldBut->isChecked()) {
-                if((*iterEvent)->mType != Event::eKnown) {
-                    for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
+                if ((*iterEvent)->mType != Event::eKnown) {
+                    for (int j=0; j<(*iterEvent)->mDates.size(); ++j) {
                         if ( (idx*mNumberOfGraph)<counter && counter <= (idx+1)*mNumberOfGraph) {
                             Date& date = (*iterEvent)->mDates[j];
                             // ----------------------------------------------------
@@ -1023,8 +963,7 @@ void ResultsView::createEventsScrollArea(const int idx)
                 }
 
         }
-        
-        
+
         ++iterEvent;
     }
 
@@ -1032,22 +971,22 @@ void ResultsView::createEventsScrollArea(const int idx)
     mEventsScrollArea->setWidget(eventsWidget);
 
     mEventsScrollArea->update();
-   qDebug()<<"ResultsView::createEventsScrollArea()"<<counter<<" items";
+    qDebug()<<"ResultsView::createEventsScrollArea()"<<counter<<" items";
     
     emit generateCurvesRequested();
-    //generateCurves(mByEventsGraphs);
+
 }
 
 void ResultsView::createPhasesScrollArea(const int idx)
 {
     qDebug()<<"ResultsView::createPhasesScrollArea()";
     
-    GraphViewResults::Variable variable = GraphViewResults::eTheta;;
+  /*  GraphViewResults::Variable variable = GraphViewResults::eTheta;;
     if(mDataThetaRadio->isChecked())
         variable = GraphViewResults::eTheta;
     else if(mDataSigmaRadio->isChecked())
         variable = GraphViewResults::eSigma;
-
+*/
     
     if (!mPhasesScrollArea) {
         mPhasesScrollArea = new QScrollArea(this);
@@ -1126,8 +1065,6 @@ void ResultsView::createPhasesScrollArea(const int idx)
     mPhasesScrollArea->setWidget(phasesWidget);
     mPhasesScrollArea->update();
     
-    // generateCurves need a valid mPhasesScrollArea, because: after generateCurves link to updateControls
-    //generateCurves(mByPhasesGraphs);
     qDebug()<<"ResultsView::createPhasesScrollArea()"<<counter<<" items";
     emit generateCurvesRequested();
 }
