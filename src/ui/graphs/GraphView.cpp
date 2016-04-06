@@ -257,6 +257,7 @@ void GraphView::adjustYToMaxValue(const double& marginProp)
     }
     setRangeY(0, yMax * (1. + marginProp));
 }
+
 void GraphView::adjustYToMinMaxValue()
 {
     double yMin = 0;
@@ -342,24 +343,25 @@ void GraphView::addCurve(const GraphCurve& curve)
 
 void GraphView::removeCurve(const QString& name)
 {
-    for (int i=0; i<mCurves.size(); ++i) {
+    for (int i=0; i<mCurves.size(); ++i)
         if (mCurves.at(i).mName == name) {
             mCurves.removeAt(i);
             break;
         }
-    }
+    
     repaintGraph(false);
 }
 
 void GraphView::removeAllCurves()
 {
-    mCurves.clear();    
-   // repaintGraph(false);
+    mCurves.clear();
 }
+
 void GraphView::reserveCurves(const int size)
 {
     mCurves.reserve(size);
 }
+
 void GraphView::setCurveVisible(const QString& name, const bool visible)
 {
     bool modified = false;
@@ -549,9 +551,9 @@ void GraphView::paintEvent(QPaintEvent* )
     // ----------------------------------------------------
     //  HD : draw directly on widget
     // ----------------------------------------------------
-    else if(mRendering == eHD) {
+    else if(mRendering == eHD)
         paintToDevice(this);
-    }
+    
     // ----------------------------------------------------
     //  SD rendering : draw buffer on widget !
     // ----------------------------------------------------
@@ -589,11 +591,12 @@ void GraphView::paintEvent(QPaintEvent* )
         p.setPen(Qt::black);
         p.drawPath(tipPath);
         p.setPen(Qt::white);
+        
         if (!mTipXLab.isEmpty() && !mTipYLab.isEmpty()) {
             p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + DateUtils::dateToString(mTipX));
             p.drawText(mTipRect.adjusted(0, (int)(mTipRect.height()/2), 0, 0), Qt::AlignCenter, mTipYLab + DateUtils::dateToString(mTipY));
-        }
-        else if (!mTipXLab.isEmpty())
+            
+        } else if (!mTipXLab.isEmpty())
             p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + DateUtils::dateToString(mTipX));
         
         else if (!mTipYLab.isEmpty())
@@ -630,8 +633,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     // ----------------------------------------------------
     //  Zones
     // ----------------------------------------------------
-    for(int i=0; i<mZones.size(); ++i)
-    {
+    for (int i=0; i<mZones.size(); ++i) {
         QRect r(getXForValue(mZones.at(i).mXStart),
                 mMarginTop,
                 getXForValue(mZones.at(i).mXEnd) - getXForValue(mZones.at(i).mXStart),
@@ -658,7 +660,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     // ----------------------------------------------------
     //  Vertical Grid
     // ----------------------------------------------------
-    if(!mLegendX.isEmpty()) {
+    if (!mLegendX.isEmpty()) {
         QRectF tr(mMarginLeft, mGraphHeight- mMarginBottom, mGraphWidth, mMarginBottom);
         p.setPen(Qt::black);
         p.drawText(tr, Qt::AlignRight | Qt::AlignTop, mLegendX);
@@ -687,14 +689,13 @@ void GraphView::paintToDevice(QPaintDevice* device)
     // ----------------------------------------------------
     //  Graph specific infos at the top right
     // ----------------------------------------------------
-    if(mShowInfos)
-    {
+    if (mShowInfos) {
         font.setPointSizeF(font.pointSizeF() + 2.);
         p.setFont(font);
         p.setPen(QColor(50, 50, 50));
         int y = 0;
         int lineH = 16;
-        for(int i=0; i<mInfos.size(); ++i){
+        for (int i=0; i<mInfos.size(); ++i) {
             p.drawText(mMarginLeft + 5, mMarginTop + 5 + y, mGraphWidth - 10, lineH, Qt::AlignRight | Qt::AlignTop, mInfos[i]);
             y += lineH;
         }
@@ -819,27 +820,23 @@ void GraphView::drawCurves(QPainter& painter)
                 qreal last_valueY = 0;
                 double valueY = double();
                 
-                if(curve.mUseVectorData)
-                {
+                if (curve.mUseVectorData) {
                     // Down sample vector
-                    if(curve.mDataVector.isEmpty()) return;
+                    if(curve.mDataVector.isEmpty())
+                        return;
 
                     QVector<double> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
                     
                     QVector<double> lightData;
                     const double dataStep = (double)subData.size() / (double)(mGraphWidth);
-                    if(dataStep > 1)
-                    {
-                        for(int i = 0; i<mGraphWidth; ++i)
-                        {
+                    if (dataStep > 1) {
+                        for (int i = 0; i<mGraphWidth; ++i) {
                             const int idx = (int)round(i * dataStep);
                             lightData.append(subData.at(idx));
                         }
-                    }
-                    else
-                    {
+                    } else
                         lightData = subData;
-                    }
+                    
                     bool isFirst = true;
                     
                     for (int i = 0; i<lightData.size(); ++i) {
@@ -868,11 +865,13 @@ void GraphView::drawCurves(QPainter& painter)
                     
                 } else {
                     // Down sample curve for better performances
-                    if (curve.mData.isEmpty()) continue;
+                    if (curve.mData.isEmpty())
+                        continue;
                     QMap<double, double> subData = curve.mData;
                     subData = getMapDataInRange(subData, mCurrentMinX, mCurrentMaxX);
 
-                    if (subData.isEmpty()) continue;
+                    if (subData.isEmpty())
+                        continue;
 
                     QMap<double, double> lightMap;
 
@@ -887,9 +886,9 @@ void GraphView::drawCurves(QPainter& painter)
                             ++index;
                             ++iter;
                         }
-                    } else {
+                    } else
                         lightMap = subData;
-                    }
+                    
                     
                     // Draw
                     
@@ -950,22 +949,21 @@ void GraphView::drawCurves(QPainter& painter)
                                         path.lineTo(x, y);
                                         
                                     } else if(last_valueY == 0 && valueY != 0) {
-                                        // Draw a front end and a back end of a square signal some 0 at the begin and at the end
+                                        // Draw a front end of a square signal some 0 at the begin and at the end
                                         // e.i plot the HPD surface
                                         path.lineTo(x, last_y);
                                         path.lineTo(x, y);
-                                    }
-                                    else if(last_valueY != 0 && valueY == 0) {
-                                        // Draw a front end and a back end of a square signal some 0 at the begin and at the end
+                                    } else if(last_valueY != 0 && valueY == 0) {
+                                        // Draw a back end of a square signal some 0 at the begin and at the end
                                         // e.i plot the HPD surface
                                         path.lineTo(last_x, last_y);
                                         path.lineTo(last_x, y);
                                     }
                                 
                                     
-                                } else {
+                                } else
                                     path.lineTo(x, y);
-                                }
+                                
                                 
                             }
                             last_x = x;
@@ -989,7 +987,7 @@ void GraphView::drawCurves(QPainter& painter)
                         lastIter.previous();
                         if ( lastIter.value() == lastIter.peekPrevious().value() ) {
                             double x = lastIter.key();
-                            if( x > mCurrentMinX && x < mCurrentMaxX)
+                            if ( x > mCurrentMinX && x < mCurrentMaxX)
                                 path.lineTo(getXForValue(x, true), getYForValue(0, true) );
 
                         }
@@ -1004,9 +1002,9 @@ void GraphView::drawCurves(QPainter& painter)
                     painter.setPen(curve.mPen);
                     painter.fillPath(path, brush);
                     
-                } else {
+                } else
                     painter.drawPath(path);
-                }
+                
             }
         }
     }
