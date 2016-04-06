@@ -64,7 +64,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
 {
     qDebug()<<"GraphViewDate::generateCurves()";
     GraphViewResults::generateCurves(typeGraph, variable);
-    
+   
     // ------------------------------------------------
     //  Reset the graph object settings
     // ------------------------------------------------

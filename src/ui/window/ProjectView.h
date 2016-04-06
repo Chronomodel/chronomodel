@@ -38,7 +38,7 @@ public slots:
     void showLog();
     void showHelp(bool show);
     
-    void ApplySettings(Model* model, const AppSettings* appSet);
+    void applySettings(Model* model, const AppSettings* appSet);
 
     void initResults(Model*);
     void updateResults(Model*);

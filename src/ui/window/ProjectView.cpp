@@ -132,7 +132,7 @@ void ProjectView::updateProject()
 
 #pragma mark Update Results
 
-void ProjectView:: ApplySettings(Model* model,const AppSettings* appSet)
+void ProjectView:: applySettings(Model* model,const AppSettings* appSet)
 {
     if(model)
     {
@@ -176,6 +176,7 @@ void ProjectView::initResults(Model* model)
     {
        // showResults();//false);
         mResultsView->clearResults();
+       
         mResultsView->initResults(model);
         mRefreshResults = true;
 

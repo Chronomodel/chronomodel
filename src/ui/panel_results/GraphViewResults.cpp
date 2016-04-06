@@ -344,6 +344,12 @@ void GraphViewResults::showNumericalResults(bool show)
     updateLayout();
 }
 
+void GraphViewResults::setShowNumericalResults(const bool show)
+{
+    mShowNumResults = show;
+    mTextArea->setVisible(show);
+}
+
 void GraphViewResults::setRendering(GraphView::Rendering render)
 {
     mGraph->setRendering(render);
@@ -405,14 +411,14 @@ void GraphViewResults::updateLayout()
     if((mGraph->hasCurve())) {
         mGraph->showXAxisValues(axisVisible);
         mGraph->setMarginBottom(axisVisible ? mGraph->font().pointSizeF() + 10 : 10);
-
-        if (mShowNumResults) {
-            mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
-            mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
-        } else
-            mGraph->setGeometry(graphRect);
+    }
+    if (mShowNumResults) {
+        mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
+        mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
     } else
-        mGraph->setGeometry(graphRect);
+            mGraph->setGeometry(graphRect);
+    /*} else
+        mGraph->setGeometry(graphRect);*/
 
     update();
 }

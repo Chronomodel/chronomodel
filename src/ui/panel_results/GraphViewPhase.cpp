@@ -136,6 +136,10 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
     if (mPhase) {
         QColor color = mPhase->mColor;
         
+        QString resultsText = ModelUtilities::phaseResultsText(mPhase);
+        QString resultsHTML = ModelUtilities::phaseResultsHTML(mPhase);
+        setNumericalResults(resultsHTML, resultsText);
+        
         // ------------------------------------------------
         //  first tab : posterior distrib
         //  Possible curves :
@@ -160,11 +164,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                 mTitle = tr("Phase") + " : " + mPhase->mName;
 
             mShowDuration->setVisible(true);
-            showDuration(mShowDuration->isChecked());
-            
-            QString resultsText = ModelUtilities::phaseResultsText(mPhase);
-            QString resultsHTML = ModelUtilities::phaseResultsHTML(mPhase);
-            setNumericalResults(resultsHTML, resultsText);
+            showDuration(mShowDuration->isChecked());  
 
             GraphCurve curveAlpha = generateDensityCurve(mPhase->mAlpha.fullHisto(),
                                                          "Post Distrib Alpha All Chains",

@@ -65,6 +65,9 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     
     if(mEvent) {
         QColor color = mEvent->mColor;
+        QString resultsText = ModelUtilities::eventResultsText(mEvent, false);
+         QString resultsHTML = ModelUtilities::eventResultsHTML(mEvent, false);
+         setNumericalResults(resultsHTML, resultsText);
         
         bool isFixedBound = false;
         bool isUnifBound = false;
@@ -79,9 +82,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             }
         }
         
-        QString resultsText = ModelUtilities::eventResultsText(mEvent, false);
-        QString resultsHTML = ModelUtilities::eventResultsHTML(mEvent, false);
-        setNumericalResults(resultsHTML, resultsText);
+       
         
         // ------------------------------------------------
         //  First tab : Posterior distrib

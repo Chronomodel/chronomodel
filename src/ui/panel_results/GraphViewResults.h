@@ -82,6 +82,7 @@ public:
     
     void generateCorrelCurves(const QList<ChainSpecs>& chains,
                               MHVariable* variable);
+    void setShowNumericalResults(const bool show);
     
 public slots:
     void setRange(double min, double max);
