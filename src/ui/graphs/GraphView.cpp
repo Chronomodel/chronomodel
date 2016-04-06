@@ -82,32 +82,26 @@ GraphView::~GraphView()
 #pragma mark Zoom X
 void GraphView::zoomX(const double min, const double max)
 {
-    if(mCurrentMinX != min || mCurrentMaxX || max)
-    {
+    if (mCurrentMinX != min || mCurrentMaxX || max) {
         mCurrentMinX = min;
         mCurrentMaxX = max;
         
         this->mAxisToolX.updateValues(width(), 10, min, max);
-        if(mAutoAdjustYScale)
-        {
+        if (mAutoAdjustYScale) {
             double yMax = -100000000;
             double yMin =  100000000;
-            for(int curveIndex=0; curveIndex<mCurves.size(); ++curveIndex)
-            {
+            for(int curveIndex=0; curveIndex<mCurves.size(); ++curveIndex) {
                 const GraphCurve& curve = mCurves.at(curveIndex);
-                if(curve.mIsHorizontalLine)
-                {
+                if (curve.mIsHorizontalLine) {
                     yMax = qMax(yMax, curve.mHorizontalValue);
                     yMin = qMin(yMin, curve.mHorizontalValue);
-                }
-                else if(curve.mUseVectorData)
-                {
+                    
+                } else if (curve.mUseVectorData) {
                     QVector<double> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, min, max);
                     yMax = qMax(yMax, vector_max_value(subData));
                     yMin = qMin(yMin, vector_min_value(subData));
-                }
-                else if(!curve.mIsVertical && !curve.mIsVerticalLine && !curve.mIsHorizontalSections)
-                {
+                    
+                } else if (!curve.mIsVertical && !curve.mIsVerticalLine && !curve.mIsHorizontalSections) {
                     QMap<double, double> subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
                     yMax = qMax(yMax, map_max_value(subData));
                     yMin = qMin(yMin, map_min_value(subData));
@@ -198,8 +192,7 @@ void GraphView::showYAxisValues(bool show)   {if(mYAxisValues != show){mYAxisVal
 
 void GraphView::setXAxisMode(AxisMode mode)
 {
-    if(mXAxisMode != mode)
-    {
+    if (mXAxisMode != mode) {
         mXAxisMode = mode;
         mAxisToolX.mShowText = (mXAxisMode!=eHidden);
         repaintGraph(true);
@@ -208,30 +201,24 @@ void GraphView::setXAxisMode(AxisMode mode)
 
 void GraphView::setYAxisMode(AxisMode mode)
 {
-    if(mYAxisMode != mode)
-    {
+    if (mYAxisMode != mode) {
         mYAxisMode = mode;
         showYAxisValues(true);
         showYAxisTicks(true);
         showYAxisSubTicks(true);
         
-        if(mYAxisMode==eMinMax){
+        if (mYAxisMode==eMinMax) {
             showYAxisValues(true);
             showYAxisTicks(false);
             showYAxisSubTicks(false);
-            
         }
 
         mAxisToolY.mMinMaxOnly = (mYAxisMode == eMinMax);
         
-        if(mYAxisMode==eHidden){
+        if (mYAxisMode==eHidden) {
             showYAxisValues(false);
             showYAxisTicks(false);
             showYAxisSubTicks(false);
-            /*mAxisToolY.mShowText = false;
-            mAxisToolY.mShowSubs=false;
-            mAxisToolY.mShowSubSubs=false;*/
-            
         }
         repaintGraph(true);
     }
@@ -253,19 +240,19 @@ void GraphView::adjustYToMaxValue(const double& marginProp)
 {
     double yMax = 0;
 
-    for(int i=0; i<mCurves.size(); ++i){
-        if(mCurves.at(i).mVisible)
-        {
-            if(!mCurves.at(i).mUseVectorData &&
-               !mCurves.at(i).mIsHorizontalLine &&
-               !mCurves.at(i).mIsHorizontalSections &&
-               !mCurves.at(i).mIsVerticalLine &&
-               !mCurves.at(i).mIsTopLineSections &&
-               !mCurves.at(i).mIsVertical){
+    for (int i=0; i<mCurves.size(); ++i) {
+        if (mCurves.at(i).mVisible) {
+            if (!mCurves.at(i).mUseVectorData &&
+                !mCurves.at(i).mIsHorizontalLine &&
+                !mCurves.at(i).mIsHorizontalSections &&
+                !mCurves.at(i).mIsVerticalLine &&
+                !mCurves.at(i).mIsTopLineSections &&
+                !mCurves.at(i).mIsVertical) {
                 yMax = qMax(yMax, map_max_value(mCurves.at(i).mData));
-            }else if(mCurves.at(i).mUseVectorData){
+                
+            } else if (mCurves.at(i).mUseVectorData)
                 yMax = qMax(yMax, vector_max_value(mCurves.at(i).mDataVector));
-            }
+            
         }
     }
     setRangeY(0, yMax * (1. + marginProp));
@@ -277,17 +264,17 @@ void GraphView::adjustYToMinMaxValue()
 
     QList<GraphCurve>::const_iterator iter = mCurves.cbegin();
     bool firstFound = false;
-    while(iter != mCurves.cend()){
-        if(iter->mVisible){
-            if(iter->mUseVectorData){
+    while (iter != mCurves.cend()) {
+        if (iter->mVisible) {
+            if (iter->mUseVectorData) {
                 yMin = firstFound ? qMin(yMin, vector_min_value(iter->mDataVector)) : vector_min_value(iter->mDataVector);
                 yMax = firstFound ? qMax(yMax, vector_max_value(iter->mDataVector)) : vector_max_value(iter->mDataVector);
-            }
-            else if(!iter->mUseVectorData &&
+                
+            } else if (!iter->mUseVectorData &&
                     !iter->mIsHorizontalLine &&
                     !iter->mIsHorizontalSections &&
                     !iter->mIsVerticalLine &&
-                    !iter->mIsVertical){
+                    !iter->mIsVertical) {
                 yMin = firstFound ? qMin(yMin, map_min_value(iter->mData)) : map_min_value(iter->mData);
                 yMax = firstFound ? qMax(yMax, map_max_value(iter->mData) ): map_max_value(iter->mData);
             }
@@ -355,10 +342,8 @@ void GraphView::addCurve(const GraphCurve& curve)
 
 void GraphView::removeCurve(const QString& name)
 {
-    for(int i=0; i<mCurves.size(); ++i)
-    {
-        if(mCurves.at(i).mName == name)
-        {
+    for (int i=0; i<mCurves.size(); ++i) {
+        if (mCurves.at(i).mName == name) {
             mCurves.removeAt(i);
             break;
         }
@@ -378,26 +363,24 @@ void GraphView::reserveCurves(const int size)
 void GraphView::setCurveVisible(const QString& name, const bool visible)
 {
     bool modified = false;
-    for(int i=0; i<mCurves.size(); ++i)
-    {
-        if(mCurves.at(i).mName == name && mCurves.at(i).mVisible != visible){
+    for (int i=0; i<mCurves.size(); ++i)
+        if (mCurves.at(i).mName == name && mCurves.at(i).mVisible != visible) {
             mCurves[i].mVisible = visible;
             modified = true;
             break;
         }
-    }
-    if(modified){
+    
+    if (modified)
         repaintGraph(false);
-    }
+    
 }
 
 GraphCurve* GraphView::getCurve(const QString& name)
 {
     for(int i=0; i<mCurves.size(); ++i)
-    {
         if(mCurves.at(i).mName == name)
             return &mCurves[i];
-    }
+
     return 0;
 }
 
@@ -444,8 +427,7 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
     double y = e->pos().y();
     //std::cout << y << std::endl;
     
-    if(mUseTip && x >= mMarginLeft && x <= (mMarginLeft + mGraphWidth) && y >= mMarginTop && y <= (mMarginTop + mGraphHeight))
-    {
+    if (mUseTip && x >= mMarginLeft && x <= (mMarginLeft + mGraphWidth) && y >= mMarginTop && y <= (mMarginTop + mGraphHeight))  {
         mTipVisible = true;
         QRectF old_rect = mTipRect;
         QLocale locale;
@@ -458,7 +440,7 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
         else
             x += cursorW;
         
-        if(mMarginTop + mGraphHeight - y <= (mTipHeight + cursorH))
+        if (mMarginTop + mGraphHeight - y <= (mTipHeight + cursorH))
             y -= mTipHeight;
         else
             y += cursorH;
@@ -478,11 +460,10 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
         //    mTipY = locale.toDouble(mFormatFuncY(mTipY));
         
         update(old_rect.adjusted(-30, -30, 30, 30).toRect());
-    }
-    else
-    {
+        
+    } else
         mTipVisible = false;
-    }
+    
     update(mTipRect.adjusted(-30, -30, 30, 30).toRect());
     
     // forward to parent to move a marker for example
@@ -528,10 +509,9 @@ void GraphView::updateGraphSize(int w, int h)
 
 void GraphView::repaintGraph(const bool aAlsoPaintBackground)
 {
-    if(aAlsoPaintBackground)
-    {
+    if (aAlsoPaintBackground)
         mBufferBack = QPixmap();
-    }
+
     update();
 }
     
@@ -545,8 +525,7 @@ void GraphView::paintEvent(QPaintEvent* )
     // ----------------------------------------------------
     //  Nothing to draw !
     // ----------------------------------------------------
-    if(mCurves.size() == 0 && mZones.size() == 0)
-    {
+    if (mCurves.size() == 0 && mZones.size() == 0) {
         QPainter p(this);
         p.setFont(font());
         p.fillRect(0, 0, width(), height(), QColor(200, 200, 200));
@@ -559,26 +538,24 @@ void GraphView::paintEvent(QPaintEvent* )
     // ----------------------------------------------------
     //  SD : draw on a buffer only if it has been reset
     // ----------------------------------------------------
-    if(mBufferBack.isNull() && mRendering == eSD)
-    {
+    if (mBufferBack.isNull() && mRendering == eSD) {
         mBufferBack = QPixmap(width(), height());
         paintToDevice(&mBufferBack);
-        if (mBufferBack.isNull() ) {
+        
+        if (mBufferBack.isNull() )
             qDebug()<< "mBufferBack.isNull()";
-        }
+        
     }
     // ----------------------------------------------------
     //  HD : draw directly on widget
     // ----------------------------------------------------
-    else if(mRendering == eHD)
-    {
+    else if(mRendering == eHD) {
         paintToDevice(this);
     }
     // ----------------------------------------------------
     //  SD rendering : draw buffer on widget !
     // ----------------------------------------------------
-    if(mRendering == eSD)
-    {
+    if(mRendering == eSD) {
         QPainter p(this);
         p.setRenderHints(QPainter::Antialiasing);
         p.drawPixmap(mBufferBack.rect(), mBufferBack, rect());
@@ -587,8 +564,7 @@ void GraphView::paintEvent(QPaintEvent* )
     // ----------------------------------------------------
     //  Tool Tip (above all) Draw horizontal and vertical red line
     // ----------------------------------------------------
-    if(mTipVisible && (!mTipXLab.isEmpty() || !mTipYLab.isEmpty()))
-    {
+    if (mTipVisible && (!mTipXLab.isEmpty() || !mTipYLab.isEmpty())) {
         QPainterPath tipPath;
         if (mTipRect.width()<2) {
             mTipRect.setLeft(20);
@@ -613,16 +589,16 @@ void GraphView::paintEvent(QPaintEvent* )
         p.setPen(Qt::black);
         p.drawPath(tipPath);
         p.setPen(Qt::white);
-        if(!mTipXLab.isEmpty() && !mTipYLab.isEmpty()){
+        if (!mTipXLab.isEmpty() && !mTipYLab.isEmpty()) {
             p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + DateUtils::dateToString(mTipX));
             p.drawText(mTipRect.adjusted(0, (int)(mTipRect.height()/2), 0, 0), Qt::AlignCenter, mTipYLab + DateUtils::dateToString(mTipY));
         }
-        else if(!mTipXLab.isEmpty()){
+        else if (!mTipXLab.isEmpty())
             p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + DateUtils::dateToString(mTipX));
-        }
-        else if(!mTipYLab.isEmpty()){
+        
+        else if (!mTipYLab.isEmpty())
             p.drawText(mTipRect, Qt::AlignCenter, mTipYLab + DateUtils::dateToString(mTipY));
-        }
+        
        
     }
 }
@@ -774,7 +750,7 @@ void GraphView::drawCurves(QPainter& painter)
                 const qreal y0 = mMarginTop + mGraphHeight;
                 path.moveTo(mMarginLeft, y0);
                 
-                for(int i=0; i<curve.mSections.size(); ++i) {
+                for (int i=0; i<curve.mSections.size(); ++i) {
                     qreal x1 = getXForValue(curve.mSections.at(i).first, false);
                     qreal x2 = getXForValue(curve.mSections.at(i).second, false);
                     
@@ -973,12 +949,19 @@ void GraphView::drawCurves(QPainter& painter)
                                     if(last_valueY != 0 && valueY != 0) {
                                         path.lineTo(x, y);
                                         
-                                    } else {
+                                    } else if(last_valueY == 0 && valueY != 0) {
                                         // Draw a front end and a back end of a square signal some 0 at the begin and at the end
                                         // e.i plot the HPD surface
                                         path.lineTo(x, last_y);
                                         path.lineTo(x, y);
                                     }
+                                    else if(last_valueY != 0 && valueY == 0) {
+                                        // Draw a front end and a back end of a square signal some 0 at the begin and at the end
+                                        // e.i plot the HPD surface
+                                        path.lineTo(last_x, last_y);
+                                        path.lineTo(last_x, y);
+                                    }
+                                
                                     
                                 } else {
                                     path.lineTo(x, y);
