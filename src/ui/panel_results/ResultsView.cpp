@@ -705,13 +705,27 @@ void ResultsView::updateGraphsLayout()
     const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     
     // ----------------------------------------------------------
+    //  Graphs by phases layout
+    // ----------------------------------------------------------
+    if (mByPhasesBut->isChecked()) {
+        int y = 0;
+        QWidget* wid = mPhasesScrollArea->widget();
+        for (int i=0; i<mByPhasesGraphs.size(); ++i) {
+            mByPhasesGraphs.at(i)->setGeometry(0, y, width() - mOptionsW - sbe ,mGraphsH);
+            y += mByPhasesGraphs.at(i)->height();
+        }
+        if(y>0)
+            wid->setFixedSize(width() - sbe - mOptionsW, y);
+        wid = 0;
+        
+    }
+    // ----------------------------------------------------------
     //  Graphs by events layout
     // ----------------------------------------------------------
    
-    if (mEventsScrollArea) {
+    else {
          int y = 0;
         QWidget* wid = mEventsScrollArea->widget();
-        //QRect rect(0, y ,mGraphsH, width() - mOptionsW - sbe);
       
         for (int i=0; i<mByEventsGraphs.size(); ++i) {
             mByEventsGraphs.at(i)->setGeometry(0, y, width() - mOptionsW - sbe ,mGraphsH);
@@ -721,21 +735,7 @@ void ResultsView::updateGraphsLayout()
             wid->setFixedSize(width() - sbe - mOptionsW, y);
         wid = 0;
     }
-    // ----------------------------------------------------------
-    //  Graphs by phases layout
-    // ----------------------------------------------------------
-    if (mPhasesScrollArea) {
-         int y = 0;
-       QWidget* wid = mPhasesScrollArea->widget();
-        for (int i=0; i<mByPhasesGraphs.size(); ++i) {
-            mByPhasesGraphs.at(i)->setGeometry(0, y, width() - mOptionsW - sbe ,mGraphsH);
-            y += mByPhasesGraphs.at(i)->height();
-        }
-        if(y>0)
-            wid->setFixedSize(width() - sbe - mOptionsW, y);
-        wid = 0;
-      
-     }
+    update();
 }
 
 #pragma mark Update (Chained Functions)
@@ -1464,17 +1464,16 @@ void ResultsView::updateScales()
     // -----------------------------------------------
     //  Set All Graphs Ranges (This is not done by generateCurves !)
     // -----------------------------------------------
-
-    foreach (GraphViewResults* phaseGraph, mByPhasesGraphs) {
-        phaseGraph->setRange(mResultMinX, mResultMaxX);
-        phaseGraph->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
-    }
-
-    foreach (GraphViewResults* eventGraph, mByEventsGraphs) {
-
-        eventGraph->setRange(mResultMinX, mResultMaxX);
-        eventGraph->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
-    }
+    if (mByPhasesBut->isChecked())
+        foreach (GraphViewResults* phaseGraph, mByPhasesGraphs) {
+            phaseGraph->setRange(mResultMinX, mResultMaxX);
+            phaseGraph->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
+        }
+    else
+        foreach (GraphViewResults* eventGraph, mByEventsGraphs) {
+            eventGraph->setRange(mResultMinX, mResultMaxX);
+            eventGraph->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
+        }
     // ------------------------------------------
     //  Set Zoom Slider & Zoom Edit
     // ------------------------------------------
@@ -1672,9 +1671,9 @@ void ResultsView::editCurrentMaxX()
     if (isNumber) {
 
         double current = qBound(mResultCurrentMinX, value, mResultMaxX);
-        if (current == mResultCurrentMinX) {
+        if (current == mResultCurrentMinX)
             current = mResultMaxX;
-        }
+        
         mResultCurrentMaxX = current;
         mResultZoomX = (mResultCurrentMaxX - mResultCurrentMinX)/ (mResultMaxX - mResultMinX)* 100;
         
@@ -1698,12 +1697,14 @@ void ResultsView::updateZoomEdit()
 
 void ResultsView::updateGraphsZoomX()
 {
-    foreach (GraphViewResults* phaseGraph, mByPhasesGraphs) {
-        phaseGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
-    }
-    foreach (GraphViewResults* eventGraph, mByEventsGraphs) {
-        eventGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
-    }
+    if (mByPhasesBut->isChecked())
+        foreach (GraphViewResults* phaseGraph, mByPhasesGraphs)
+            phaseGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
+    
+    else
+        foreach (GraphViewResults* eventGraph, mByEventsGraphs)
+            eventGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
+    
     // --------------------------------------------------
     //  Store zoom values
     // --------------------------------------------------
@@ -1732,19 +1733,18 @@ void ResultsView::updateFont()
     
     bool ok;
     QFont font = QFontDialog::getFont(&ok, mFont, this);
-    if(ok)
-    {
+    if (ok) {
         mFont = font;
         mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
         
-        foreach (GraphViewResults* phaseGraph, mByPhasesGraphs) {
+        foreach (GraphViewResults* phaseGraph, mByPhasesGraphs)
             phaseGraph->setGraphFont(mFont);
-        }
+        
         mPhasesScrollArea->setFont(mFont);
 
-        foreach (GraphViewResults* eventGraph, mByEventsGraphs) {
+        foreach (GraphViewResults* eventGraph, mByEventsGraphs)
             eventGraph->setGraphFont(mFont);
-        }
+        
         mEventsScrollArea->setFont(mFont);
 
     }
@@ -1755,14 +1755,15 @@ void ResultsView::updateThickness(int value)
     foreach (GraphViewResults* allKindGraph, mByPhasesGraphs) {
         allKindGraph->setGraphsThickness(value);
         GraphViewPhase* phaseGraphs = dynamic_cast<GraphViewPhase*>(allKindGraph);
-        if(phaseGraphs) {
+        
+        if (phaseGraphs)
             phaseGraphs->mDurationGraph->setGraphsThickness(value);
-        }
+        
     }
 
-    foreach (GraphViewResults* allKindGraph, mByEventsGraphs) {
+    foreach (GraphViewResults* allKindGraph, mByEventsGraphs)
         allKindGraph->setGraphsThickness(value);
-    }
+    
 }
 
 void ResultsView::updateOpacity(int value)
@@ -1770,13 +1771,14 @@ void ResultsView::updateOpacity(int value)
     foreach (GraphViewResults* allKindGraph, mByPhasesGraphs) {
        allKindGraph->setGraphsOpacity(value);
        GraphViewPhase* phaseGraphs = dynamic_cast<GraphViewPhase*>(allKindGraph);
-       if(phaseGraphs) {
+        
+       if (phaseGraphs)
            phaseGraphs->mDurationGraph->setCurvesOpacity(value);
-       }
     }
-    foreach (GraphViewResults* allKindGraph, mByEventsGraphs) {
+    
+    foreach (GraphViewResults* allKindGraph, mByEventsGraphs)
         allKindGraph->setGraphsOpacity(value);
-    }
+    
 }
 
 void ResultsView::updateRendering(int index)
@@ -1784,23 +1786,24 @@ void ResultsView::updateRendering(int index)
     foreach (GraphViewResults* allKindGraph, mByPhasesGraphs) {
         allKindGraph->setRendering((GraphView::Rendering) index);
         GraphViewPhase* phaseGraphs = dynamic_cast<GraphViewPhase*>(allKindGraph);
-        if(phaseGraphs) {
+        
+        if(phaseGraphs)
             phaseGraphs->mDurationGraph->setRendering((GraphView::Rendering) index);
-        }
     }
-    foreach (GraphViewResults* allKindGraph, mByEventsGraphs) {
+    
+    foreach (GraphViewResults* allKindGraph, mByEventsGraphs)
         allKindGraph->setRendering((GraphView::Rendering) index);
-    }
+    
 }
 
 void ResultsView::showInfos(bool show)
 {
-    foreach (GraphViewResults* allKindGraph, mByPhasesGraphs) {
+    foreach (GraphViewResults* allKindGraph, mByPhasesGraphs)
         allKindGraph->showNumericalResults(show);
-    }
-    foreach (GraphViewResults* allKindGraph, mByEventsGraphs) {
+    
+    foreach (GraphViewResults* allKindGraph, mByEventsGraphs)
         allKindGraph->showNumericalResults(show);
-    }
+    
 }
 /**
  * @brief ResultsView::exportResults export result into several files
@@ -1808,7 +1811,7 @@ void ResultsView::showInfos(bool show)
  */
 void ResultsView::exportResults()
 {
-    if(mModel){
+    if (mModel) {
         AppSettings settings = MainWindow::getInstance()->getAppSettings();
         const QString csvSep = settings.mCSVCellSeparator;
         
@@ -1822,10 +1825,9 @@ void ResultsView::exportResults()
                                                         currentPath,
                                                        tr("Directory"));
         
-        if(!dirPath.isEmpty())
-        {
+        if (!dirPath.isEmpty()) {
             QDir dir(dirPath);
-            if(dir.exists()){
+            if (dir.exists()){
                 /*if(QMessageBox::question(qApp->activeWindow(), tr("Are you sure?"), tr("This directory already exists and all its content will be deleted. Do you really want to replace it?")) == QMessageBox::No){
                     return;
                 }*/
@@ -1838,8 +1840,7 @@ void ResultsView::exportResults()
             const QString projectName = tr("Project filename")+" : "+ MainWindow::getInstance()->getNameProject()+ "<br>";
 
             QFile file(dirPath + "/Model_description.html");
-            if(file.open(QFile::WriteOnly | QFile::Truncate))
-            {
+            if (file.open(QFile::WriteOnly | QFile::Truncate)) {
                 QTextStream output(&file);
                 output<<version+"<br>";
                 output<<projectName+ "<br>";
@@ -1849,8 +1850,8 @@ void ResultsView::exportResults()
             file.close();
 
             file.setFileName(dirPath + "/MCMC_Initialization.html");
-            if(file.open(QFile::WriteOnly | QFile::Truncate))
-            {
+            
+            if(file.open(QFile::WriteOnly | QFile::Truncate)) {
                 QTextStream output(&file);
                 output<<version+"<br>";
                 output<<projectName+ "<br>";
@@ -1860,8 +1861,8 @@ void ResultsView::exportResults()
             file.close();
 
             file.setFileName(dirPath + "/Posterior_distrib_results.html");
-            if(file.open(QFile::WriteOnly | QFile::Truncate))
-            {
+            
+            if (file.open(QFile::WriteOnly | QFile::Truncate)) {
                 QTextStream output(&file);
                 output<<version+"<br>";
                 output<<projectName+ "<br>";
@@ -1873,11 +1874,11 @@ void ResultsView::exportResults()
             const QList<QStringList> stats = mModel->getStats(csvLocal, true);
             saveCsvTo(stats, dirPath + "/Stats_table.csv", csvSep, true);
             
-            if(mModel->mPhases.size() > 0){
+            if (mModel->mPhases.size() > 0) {
                 const QList<QStringList> phasesTraces = mModel->getPhasesTraces(csvLocal, false);
                 saveCsvTo(phasesTraces, dirPath + "/phases.csv", csvSep, false);
                 
-                for(int i=0; i<mModel->mPhases.size(); ++i){
+                for (int i=0; i<mModel->mPhases.size(); ++i) {
                     const QList<QStringList> phaseTrace = mModel->getPhaseTrace(i,csvLocal, false);
                     const QString name = mModel->mPhases.at(i)->mName.toLower().simplified().replace(" ", "_");
                     saveCsvTo(phaseTrace, dirPath + "/phase_" + name + ".csv", csvSep, false);
@@ -1907,19 +1908,19 @@ void ResultsView::exportFullImage()
         curWid->setFont(mByPhasesGraphs.at(0)->font());
        // witchScroll = eScrollPhases;
         //  hide all buttons in the both scrollAreaWidget
-        for(int i=0; i<mByPhasesGraphs.size(); ++i){
+        for(int i=0; i<mByPhasesGraphs.size(); ++i)
             mByPhasesGraphs.at(i)->setButtonsVisible(false);
-        }
+        
     }
-    //else if (mStack->currentWidget() == mEventsScrollArea) {
+    
     else  {
         curWid = mEventsScrollArea->widget();
         curWid->setFont(mByEventsGraphs.at(0)->font());
         //witchScroll = eScrollEvents;
         //  hide all buttons in the both scrollAreaWidget
-        for(int i=0; i<mByEventsGraphs.size(); ++i) {
+        for(int i=0; i<mByEventsGraphs.size(); ++i)
             mByEventsGraphs.at(i)->setButtonsVisible(false);
-        }
+        
     }
     
     
@@ -1937,7 +1938,7 @@ void ResultsView::exportFullImage()
         curWid->setFixedHeight(curWid->height() + axeHeight + legendHeight);
         
         FormatFunc f = 0;
-        if(mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked())
+        if (mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked())
             f = formatValueToAppSettingsPrecision;
         
         axisWidget = new AxisWidget(f, curWid);
@@ -1982,24 +1983,21 @@ void ResultsView::exportFullImage()
     
     // Revert to default display :
     
-    if(fileInfo.isFile())
+    if (fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
     
     // Reset rendering back to its current value
     updateRendering(rendering);
     
     //  show all buttons
-    if (mByPhasesBut->isChecked()) {
-        for(int i=0; i<mByPhasesGraphs.size(); ++i) {
+    if (mByPhasesBut->isChecked())
+        for(int i=0; i<mByPhasesGraphs.size(); ++i)
             mByPhasesGraphs.at(i)->setButtonsVisible(true);
-        }
-        
-    }
-    else {
-        for(int i=0; i<mByEventsGraphs.size(); ++i) {
+    
+    else
+        for(int i=0; i<mByEventsGraphs.size(); ++i)
             mByEventsGraphs.at(i)->setButtonsVisible(true);
-        }
-    }
+    
 }
 
 #pragma mark Refresh All Model
@@ -2008,7 +2006,7 @@ void ResultsView::exportFullImage()
  */
 void ResultsView::updateModel()
 {
-    if(!mModel)
+    if (!mModel)
         return;
     
     const QJsonObject state = MainWindow::getInstance()->getProject()->state();
@@ -2025,8 +2023,7 @@ void ResultsView::updateModel()
         QList<Event *>::iterator iterEvent = mModel->mEvents.begin();
         while (iterEvent != mModel->mEvents.cend()) {
 
-            if((*iterEvent)->mId == eventId)
-            {
+            if ((*iterEvent)->mId == eventId) {
                 (*iterEvent)->mName  = eventJSON.value(STATE_NAME).toString();
                 (*iterEvent)->mItemX = eventJSON.value(STATE_ITEM_X).toDouble();
                 (*iterEvent)->mItemY = eventJSON.value(STATE_ITEM_Y).toDouble();
@@ -2035,8 +2032,7 @@ void ResultsView::updateModel()
                                               eventJSON.value(STATE_COLOR_BLUE).toInt());
                
                 
-                for(int k=0; k<(*iterEvent)->mDates.size(); ++k)
-                {
+                for (int k=0; k<(*iterEvent)->mDates.size(); ++k) {
                     Date& d = (*iterEvent)->mDates[k];
                     
                     foreach (const QJsonValue dateVal, dates) {
@@ -2044,8 +2040,7 @@ void ResultsView::updateModel()
                         const QJsonObject date = dateVal.toObject();
                         const int dateId = date.value(STATE_ID).toInt();
                         
-                        if(dateId == d.mId)
-                        {
+                        if (dateId == d.mId) {
                             d.mName = date.value(STATE_NAME).toString();
                             d.mColor = (*iterEvent)->mColor;
                             break;
@@ -2065,11 +2060,9 @@ void ResultsView::updateModel()
         const QJsonObject phaseJSON = (*iterJSONPhase).toObject();
         const int phaseId = phaseJSON.value(STATE_ID).toInt();
         
-        for(int j=0; j<mModel->mPhases.size(); ++j)
-        {
+        for (int j=0; j<mModel->mPhases.size(); ++j) {
             Phase* p = mModel->mPhases[j];
-            if(p->mId == phaseId)
-            {
+            if (p->mId == phaseId) {
                 p->mName = phaseJSON.value(STATE_NAME).toString();
                 p->mItemX = phaseJSON.value(STATE_ITEM_X).toDouble();
                 p->mItemY = phaseJSON.value(STATE_ITEM_Y).toDouble();
@@ -2095,12 +2088,12 @@ void ResultsView::adjustDuration(bool visible)
     if (mByPhasesBut->isChecked()) {
     foreach (const GraphViewResults* allGraphs, mByPhasesGraphs) {
         const GraphViewPhase* phaseGraph = dynamic_cast<const GraphViewPhase*>(allGraphs);
-        if(phaseGraph) {
+        if (phaseGraph) {
             GraphView *durationGraph =phaseGraph->mDurationGraph;
 
-            if(durationGraph && durationGraph->isVisible() ) {
+            if (durationGraph && durationGraph->isVisible() ) {
                 GraphCurve *durationCurve = durationGraph->getCurve("Duration");
-                if(durationCurve && !durationCurve->mData.isEmpty()){
+                if (durationCurve && !durationCurve->mData.isEmpty()){
                    durationMax = qMax((int)durationCurve->mData.lastKey(),durationMax);
                 }
              }
@@ -2112,9 +2105,10 @@ void ResultsView::adjustDuration(bool visible)
 if (mByEventsBut->isChecked()) {
    foreach (const GraphViewResults* allGraphs, mByPhasesGraphs) {
         const GraphViewPhase* phaseGraph = dynamic_cast<const GraphViewPhase*>(allGraphs);
-        if(phaseGraph) {
+        if (phaseGraph) {
             GraphView *durationGraph =phaseGraph->mDurationGraph;
-            if(durationGraph) {
+            
+            if (durationGraph) {
                 GraphCurve *durationCurve = durationGraph->getCurve("Duration");
                 if(durationCurve && !durationCurve->mData.isEmpty()){
                    durationGraph->setRangeX(0, durationMax);

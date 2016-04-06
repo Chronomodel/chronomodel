@@ -19,7 +19,6 @@ mPhase(0)
 {
     setMainColor(QColor(50, 50, 50));
     mGraph->setBackgroundColor(QColor(210, 210, 210));
-    //mGraph->setRangeX(mSettings.mTmin, mSettings.mTmax); // it's done in GraphViewResults
     
     mDurationGraph = new GraphView(this);
     mDurationGraph->setBackgroundColor(QColor(230, 230, 230));
@@ -154,7 +153,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->mLegendY = "";
             mGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
             mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
-            //mTitle =  tr("Phase") + " : " + mPhase->mName;
+
             if(mShowDuration->isChecked())
                mTitle = tr("Duration") + " : " + mPhase->mName;
             else
@@ -264,8 +263,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 {
     GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
     
-    if(mPhase)
-    {
+    if (mPhase) {
         // ------------------------------------------------
         //  first tab : posterior distrib
         //  Possible curves :
@@ -278,8 +276,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         //  - Post Distrib Alpha i
         //  - Post Distrib Beta i
         // ------------------------------------------------
-        if(mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eTheta)
-        {
+        if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eTheta) {
             mGraph->setTipYLab("");
 
             mGraph->setCurveVisible("Post Distrib Alpha All Chains", mShowAllChains);
@@ -289,8 +286,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
             mGraph->setCurveVisible("Time Range", mShowAllChains);
             
-            for(int i=0; i<mShowChainList.size(); ++i)
-            {
+            for (int i=0; i<mShowChainList.size(); ++i) {
                 mGraph->setCurveVisible("Post Distrib Alpha " + QString::number(i), mShowChainList.at(i));
                 mGraph->setCurveVisible("Post Distrib Beta " + QString::number(i), mShowChainList.at(i));
             }
@@ -323,7 +319,8 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         //  - Beta Q2 i
         //  - Beta Q3 i
         // ------------------------------------------------
-        else if(mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta) {
+        else if (mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta) {
+            
             for (int i=0; i<mShowChainList.size(); ++i) {
                 mGraph->setCurveVisible("Alpha Trace " + QString::number(i), mShowChainList.at(i));
                 mGraph->setCurveVisible("Alpha Q1 " + QString::number(i), mShowChainList.at(i));
@@ -349,10 +346,10 @@ void GraphViewPhase::showDuration(bool show)
 {
     mDurationGraph->setVisible(show);
     mGraph->setVisible(!show);
-    if(mShowDuration->isChecked()) {
+    if (mShowDuration->isChecked()) {
        mTitle = tr("Duration") + " : " + mPhase->mName;
-    }
-    else {
+        
+    } else {
         mTitle = tr("Phase") + " : " + mPhase->mName;
     }
     mShowDuration->raise();
@@ -362,7 +359,7 @@ void GraphViewPhase::showDuration(bool show)
 
 void GraphViewPhase::saveGraphData() const
 {
-    if(mShowDuration->isChecked()) {
+    if (mShowDuration->isChecked()) {
         AppSettings settings = MainWindow::getInstance()->getAppSettings();
         QString currentPath = MainWindow::getInstance()->getCurrentPath();
         QString csvSep = settings.mCSVCellSeparator;
@@ -372,8 +369,7 @@ void GraphViewPhase::saveGraphData() const
         
         int offset = 0;
         
-        if(mCurrentTypeGraph == eTrace || mCurrentTypeGraph == eAccept)
-        {
+        if (mCurrentTypeGraph == eTrace || mCurrentTypeGraph == eAccept) {
             QMessageBox messageBox;
             messageBox.setWindowTitle(tr("Save all trace"));
             messageBox.setText(tr("Do you want the entire trace from the beginning of the process or only the aquisition part"));
@@ -381,32 +377,33 @@ void GraphViewPhase::saveGraphData() const
             QAbstractButton *acquireTraceButton = messageBox.addButton(tr("Only aquisition part"), QMessageBox::NoRole);
             
             messageBox.exec();
-            if (messageBox.clickedButton() == allTraceButton)  {
+            if (messageBox.clickedButton() == allTraceButton)
                 mDurationGraph->exportCurrentVectorCurves(currentPath, csvLocal, csvSep, false, 0);
-            }
+            
             else if (messageBox.clickedButton() == acquireTraceButton) {
                 int chainIdx = -1;
-                for(int i=0; i<mShowChainList.size(); ++i)
-                    if(mShowChainList[i]) chainIdx = i;
-                if(chainIdx != -1) {
+                
+                for (int i=0; i<mShowChainList.size(); ++i)
+                    if (mShowChainList[i]) chainIdx = i;
+                
+                if (chainIdx != -1)
                     offset = mChains[chainIdx].mNumBurnIter + mChains[chainIdx].mBatchIndex * mChains[chainIdx].mNumBatchIter;
-                }
+                
                 mDurationGraph->exportCurrentVectorCurves(currentPath, csvLocal, csvSep, false, offset);
             }
             else return;
         }
         
-        else if(mCurrentTypeGraph == eCorrel) {
+        else if (mCurrentTypeGraph == eCorrel)
             mDurationGraph->exportCurrentVectorCurves(currentPath, csvLocal, csvSep, false, 0);
-        }
         
         // All visible curves are saved in the same file, the credibility bar is not save
         
-        else if(mCurrentTypeGraph == ePostDistrib) {
+        else if (mCurrentTypeGraph == ePostDistrib)
             mDurationGraph->exportCurrentDensityCurves(currentPath, csvLocal, csvSep,  mSettings.mStep);
-        }
+        
     }
-    else {
+    else
         GraphViewResults::saveGraphData();
-    }
+    
 }

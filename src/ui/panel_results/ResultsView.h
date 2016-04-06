@@ -121,10 +121,7 @@ private slots:
 
     
 signals:
-   // void posteriorDistribGenerated();
-
-   // void credibilityGenerated();
-    //void HPDGenerated();
+   
     void curvesGenerated();
     
     void controlsUpdated();

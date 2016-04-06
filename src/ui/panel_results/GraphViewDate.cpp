@@ -74,10 +74,9 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
     mGraph->removeAllZones();
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
-    mGraph->autoAdjustYScale(typeGraph == eTrace);
+    //mGraph->autoAdjustYScale(typeGraph == eTrace);
     
-    if(mDate)
-    {
+    if (mDate) {
         QColor color = mDate->mColor;
         QPen defaultPen;
         defaultPen.setWidthF(1);
@@ -96,10 +95,9 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         // ------------------------------------------------
         //  First tab : Posterior distrib.
         // ------------------------------------------------
-        if(typeGraph == ePostDistrib)
-        {
-            mGraph->setRangeY(0, 0.0001f);
-            mGraph->adjustYToMaxValue();
+        if (typeGraph == ePostDistrib) {
+            //mGraph->setRangeY(0, 0.0001f);
+            
             // ------------------------------------------------
             //  Possible Curves :
             //  - Post Distrib All Chains
@@ -109,8 +107,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             //  - Calibration
             //  - Wiggle
             // ------------------------------------------------
-            if(variable == eTheta)
-            {
+            if (variable == eTheta) {
                 mTitle = QString(tr("Data") + " : " + mDate->mName);
 
 
@@ -174,7 +171,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             //  - Sigma All Chains
             //  - Sigma Chain i
             // ------------------------------------------------
-            else if(variable == eSigma) {
+            else if (variable == eSigma) {
                 mTitle = QString(tr("Std") + " : " + mDate->mName);
 
                 mGraph->mLegendX = "";
@@ -208,6 +205,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             }
             // must be after all curves adding
             mGraph->adjustYToMinMaxValue();
+           
         }
         // ------------------------------------------------
         //  Second tab : History plots.
@@ -217,14 +215,14 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - Q2 i
         //  - Q3 i
         // ------------------------------------------------
-        else if(typeGraph == eTrace)
-        {
+        else if (typeGraph == eTrace) {
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
             mGraph->setFormatFunctY(DateUtils::convertToAppSettingsFormatStr);
-            mGraph->adjustYToMinMaxValue();
+            //mGraph->adjustYToMinMaxValue();
             mGraph->autoAdjustYScale(true);
             generateTraceCurves(mChains, variableDate);
+            
         }
         // ------------------------------------------------
         //  Third tab : Acceptation rate.
@@ -232,17 +230,17 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - Accept i
         //  - Accept Target
         // ------------------------------------------------
-        else if(typeGraph == eAccept)
-        {
+        else if (typeGraph == eAccept) {
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
             mGraph->setFormatFunctY(0);
-            //mGraph->setRangeY(0, 100);
+            mGraph->setRangeY(0, 100);
             //mGraph->adjustYToMinMaxValue();
-            mGraph->autoAdjustYScale(true);
-
+          
             mGraph->addCurve( generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine) );
             generateAcceptCurves(mChains, variableDate);
+            // autoAgjustYScale must be done after generateAcceptCurves
+            mGraph->autoAdjustYScale(true);
         }
         
         // ------------------------------------------------
@@ -252,8 +250,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - Correl Limit Lower i
         //  - Correl Limit Upper i
         // ------------------------------------------------
-        else if(typeGraph == eCorrel)
-        {
+        else if (typeGraph == eCorrel) {
             mGraph->mLegendX = "";
             mGraph->setFormatFunctX(0);
             mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
@@ -271,8 +268,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
     // ------------------------------------------------
     //  First Tab : Posterior distrib.
     // ------------------------------------------------
-    if(mCurrentTypeGraph == ePostDistrib)
-    {
+    if (mCurrentTypeGraph == ePostDistrib) {
         mGraph->setTipYLab("");
         // ------------------------------------------------
         //  Possible Curves :
@@ -290,10 +286,9 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
             mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowCredibility);
             mGraph->setCurveVisible("Calibration", mShowCalib);
             mGraph->setCurveVisible("Wiggle", mShowWiggle);
-            for(int i=0; i<mShowChainList.size(); ++i)
-            {
+            for (int i=0; i<mShowChainList.size(); ++i)
                 mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
-            }
+            
             mGraph->adjustYToMaxValue();
             mGraph->setTipXLab("t");
 
@@ -307,9 +302,9 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
         else if (mCurrentVariable == eSigma) {
             mGraph->setCurveVisible("Sigma all Chains", mShowAllChains);
             //mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
-            for (int i=0; i<mShowChainList.size(); ++i) {
+            for (int i=0; i<mShowChainList.size(); ++i)
                 mGraph->setCurveVisible("Sigma for Chain " + QString::number(i), mShowChainList[i]);
-            }
+            
             mGraph->setTipXLab("sigma");
             mGraph->setYAxisMode(GraphView::eHidden);
         }
@@ -322,10 +317,8 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
     //  - Q2 i
     //  - Q3 i
     // ------------------------------------------------
-    else if(mCurrentTypeGraph == eTrace)
-    {
-        for(int i=0; i<mShowChainList.size(); ++i)
-        {
+    else if (mCurrentTypeGraph == eTrace) {
+        for (int i=0; i<mShowChainList.size(); ++i) {
             mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList[i]);
             mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList[i]);
             mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList[i]);
@@ -343,12 +336,11 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
     //  - Accept i
     //  - Accept Target
     // ------------------------------------------------
-    else if(mCurrentTypeGraph == eAccept)
-    {
+    else if (mCurrentTypeGraph == eAccept) {
         mGraph->setCurveVisible("Accept Target", true);
-        for(int i=0; i<mShowChainList.size(); ++i){
+        for (int i=0; i<mShowChainList.size(); ++i)
             mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList[i]);
-        }
+        
         mGraph->setTipXLab("iterations");
         mGraph->setTipYLab("rate");
         mGraph->setYAxisMode(GraphView::eMinMax);
@@ -361,9 +353,8 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
     //  - Correl Limit Lower i
     //  - Correl Limit Upper i
     // ------------------------------------------------
-    else if(mCurrentTypeGraph == eCorrel)
-    {
-        for(int i=0; i<mShowChainList.size(); ++i){
+    else if (mCurrentTypeGraph == eCorrel) {
+        for (int i=0; i<mShowChainList.size(); ++i) {
             mGraph->setCurveVisible("Correl " + QString::number(i), mShowChainList[i]);
             mGraph->setCurveVisible("Correl Limit Lower " + QString::number(i), mShowChainList[i]);
             mGraph->setCurveVisible("Correl Limit Upper " + QString::number(i), mShowChainList[i]);

@@ -241,15 +241,15 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - Accept i
         //  - Accept Target
         // ------------------------------------------------
-        else if(typeGraph == eAccept && variable == eTheta && mEvent->mMethod == Event::eMHAdaptGauss)
-        {
+        else if(typeGraph == eAccept && variable == eTheta && mEvent->mMethod == Event::eMHAdaptGauss) {
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
             mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
-            mGraph->setRangeY(0, 100);
+            //mGraph->setRangeY(0, 100);
             
             generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine);
             generateAcceptCurves(mChains, &(mEvent->mTheta));
+            mGraph->autoAdjustYScale(true);
         }
         // ------------------------------------------------
         //  fourth tab : Autocorrelation
@@ -257,8 +257,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - Correl Limit Lower i
         //  - Correl Limit Upper i
         // ------------------------------------------------
-        else if(typeGraph == eCorrel && variable == eTheta && !isFixedBound)
-        {
+        else if(typeGraph == eCorrel && variable == eTheta && !isFixedBound) {
             mGraph->mLegendX = "";
             mGraph->setFormatFunctX(0);
             mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);

@@ -379,8 +379,8 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, const do
     if (areaTot==threshold) {
         result = aMap;
         return result;
-    }
-    else {
+        
+    } else {
         try {
             QMultiMap<double, double> inverted;
             QMap<double, double>::const_iterator cIter = aMap.cbegin();
@@ -399,7 +399,7 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, const do
 
             iterInverted.toBack();
         //--------------------
-            while(iterInverted.hasPrevious()) {
+            while (iterInverted.hasPrevious()) {
                 iterInverted.previous();
                 const double t = iterInverted.value();
                 const double v = iterInverted.key();
@@ -431,14 +431,14 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, const do
 
                 if(iterInverted.hasPrevious() &&  (iterInverted.peekPrevious().key()==v) ) {
                     result[t] = v;
-                }
-                 else {
-                    if(area < areaSearched) {
+                } else {
+                    
+                    if(area < areaSearched)
                         result[t] = v;
-                    }
-                    else if(area > areaSearched) {
+                    else if(area > areaSearched)
                         return result;
-                    }
+                    
+                    
                 }
             }
 

@@ -1181,7 +1181,7 @@ void Model::initThreshold(const double threshold)
 void Model::setThreshold(const double threshold)
 {
     qDebug()<<"Model::setThreshold"<<threshold<<" mThreshold"<<mThreshold;
-    if( mThreshold != threshold) {
+    if ( mThreshold != threshold) {
         mThreshold = threshold;
         generateCredibility(threshold);
         generateHPD(threshold);
@@ -1191,10 +1191,10 @@ void Model::setThreshold(const double threshold)
         QList<Event*>::iterator iterEvent = mEvents.begin();
         while (iterEvent!=mEvents.end()) {
 
-            if((*iterEvent)->type() != Event::eKnown) {
+            if ((*iterEvent)->type() != Event::eKnown) {
               (*iterEvent)->mTheta.mThresholdUsed = threshold;
 
-              for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
+              for (int j=0; j<(*iterEvent)->mDates.size(); ++j) {
                     Date& date = (*iterEvent)->mDates[j];
                     date.mTheta.mThresholdUsed = threshold;
                     date.mSigma.mThresholdUsed = threshold;
