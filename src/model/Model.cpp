@@ -18,7 +18,9 @@
 Model::Model():
 mNumberOfPhases(0),
 mNumberOfEvents(0),
-mNumberOfDates(0)
+mNumberOfDates(0),
+mNumberOfEventsInAllPhases(0),
+mNumberOfDatesInAllPhases(0)
 {
     
 }
@@ -273,6 +275,12 @@ void Model::fromJson(const QJsonObject& json)
                 mPhaseConstraints[j]->mPhaseTo = mPhases[i];
                 mPhases[i]->mConstraintsBwd.append(mPhaseConstraints[j]);
             }
+        }
+       // int mNumberOfEventsInAllPhases;
+       // int mNumberOfDatesInAllPhases;
+        mNumberOfEventsInAllPhases += mPhases.at(i)->mEvents.size();
+        for (int k=0; k<mPhases.at(i)->mEvents.size();++k) {
+            mNumberOfDatesInAllPhases += mPhases.at(i)->mEvents.at(k)->mDates.size();
         }
     }
     //return model;

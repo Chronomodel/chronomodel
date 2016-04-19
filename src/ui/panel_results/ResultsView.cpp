@@ -515,9 +515,9 @@ void ResultsView::updateControls()
     else if (mStack->currentWidget() == mPhasesScrollArea) {
         graphCount = mModel->mNumberOfPhases;
         if (mUnfoldBut->isChecked()) {
-            graphCount += mModel->mNumberOfEvents;
+            graphCount += mModel->mNumberOfEventsInAllPhases;
             if (mShowDataUnderPhasesCheck->isVisible() && mShowDataUnderPhasesCheck->isChecked())
-                graphCount += mModel->mNumberOfDates;
+                graphCount += mModel->mNumberOfDatesInAllPhases;
         }
         currentIndex = mTabPhasesIndex;
     }
@@ -1186,6 +1186,7 @@ void ResultsView::unfoldToggle()
     
     emit updateScrollAreaRequested();
 }
+
 void ResultsView::nextSheet()
 {
     
@@ -1202,9 +1203,9 @@ void ResultsView::nextSheet()
     else if (mStack->currentWidget() == mPhasesScrollArea) {
         graphCount = mModel->mNumberOfPhases;
         if (mUnfoldBut->isChecked()) {
-            graphCount += mModel->mNumberOfEvents;
+            graphCount += mModel->mNumberOfEventsInAllPhases;
             if (mShowDataUnderPhasesCheck->isVisible() && mShowDataUnderPhasesCheck->isChecked())
-                graphCount += mModel->mNumberOfDates;
+                graphCount += mModel->mNumberOfDatesInAllPhases;
         }
         currentIndex = &mTabPhasesIndex;
     }
@@ -1219,10 +1220,10 @@ void ResultsView::nextSheet()
 
 void ResultsView::previousSheet()
 {
-    if (mByEventsBut->isChecked() &&(mTabEventsIndex>0))
+    if (mByEventsBut->isChecked() && (mTabEventsIndex>0))
         --mTabEventsIndex;
 
-    else if (mByPhasesBut->isChecked()&&(mTabPhasesIndex>0))
+    else if (mByPhasesBut->isChecked() && (mTabPhasesIndex>0))
         --mTabPhasesIndex;
     
     emit updateScrollAreaRequested();

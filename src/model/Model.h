@@ -85,6 +85,9 @@ public:
     int mNumberOfPhases;
     int mNumberOfEvents;
     int mNumberOfDates;
+    
+    int mNumberOfEventsInAllPhases;
+    int mNumberOfDatesInAllPhases;
 
 public slots:
     void setThreshold(const double threshold);
