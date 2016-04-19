@@ -28,10 +28,10 @@ public:
     ~MainWindow();
     
     Project* getProject();
-    QJsonObject getState();
+    QJsonObject getState() const;
     AppSettings getAppSettings() const;
     QUndoStack* getUndoStack();
-    QString getCurrentPath();
+    QString getCurrentPath() const;
     void setCurrentPath(const QString& path);
     
     void resetInterface();
@@ -39,7 +39,7 @@ public:
     void setRunEnabled(bool enabled);
     void setLogEnabled(bool enabled);
     void setResultsEnabled(bool enabled);
-    QString getNameProject();
+    QString getNameProject() const;
 
 protected:
     void closeEvent(QCloseEvent* e) Q_DECL_OVERRIDE;

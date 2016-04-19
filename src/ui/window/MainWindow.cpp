@@ -105,11 +105,11 @@ Project* MainWindow::getProject()
     return mProject;
 }
 
-QJsonObject MainWindow::getState()
+QJsonObject MainWindow::getState() const
 {
     return mProject->mState;
 }
-QString MainWindow::getNameProject()
+QString MainWindow::getNameProject() const
 {
     return mProject->mName;
 }
@@ -124,7 +124,7 @@ QUndoStack* MainWindow::getUndoStack()
     return mUndoStack;
 }
 
-QString MainWindow::getCurrentPath()
+QString MainWindow::getCurrentPath() const
 {
     return mLastPath;
 }
@@ -427,17 +427,16 @@ void MainWindow::newProject()
 
 void MainWindow::openProject()
 {
-    QString path = QFileDialog::getOpenFileName(qApp->activeWindow(),
-                                                tr("Open File"),
-                                                getCurrentPath(),
-                                                tr("Chronomodel Project (*.chr)"));
+    const QString currentPath = getCurrentPath();
+    QString path = QFileDialog::getOpenFileName(this,
+                                                      tr("Open File"),
+                                                      currentPath,
+                                                      tr("Chronomodel Project (*.chr)"));
     
     if (!path.isEmpty()) {
 
-        //mProject->setAppSettings(mAppSettings);
-
         if (mProject->askToSave(tr("Save current project as..."))) {
-            QFileInfo info(path);
+            const QFileInfo info(path);
             setCurrentPath(info.absolutePath());
             
             resetInterface();
