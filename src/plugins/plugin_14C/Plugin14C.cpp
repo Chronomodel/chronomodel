@@ -456,10 +456,7 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
 
         }
         
-        result = dates.at(0).toObject();
-        result[STATE_NAME] = "Combined (" + names.join(" | ") + ")";
-        
-        const QJsonObject mergedData = result.value(STATE_DATE_DATA).toObject();
+        QJsonObject mergedData;
         mergedData[DATE_14C_AGE_STR] = sum_mi_vi / sum_1_vi;
         mergedData[DATE_14C_ERROR_STR] = sqrt(1 / sum_1_vi);
         mergedData[DATE_14C_DELTA_R_STR] = 0.f;
