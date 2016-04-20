@@ -182,40 +182,40 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
     curve.mName = refFile.fileName().toLower();
     
     QFile file(refFile.absoluteFilePath());
-    if(file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         const QLocale locale = QLocale(QLocale::English);
         QTextStream stream(&file);
         bool firstLine = true;
-        while(!stream.atEnd())
-        {
+        
+        while (!stream.atEnd()) {
             QString line = stream.readLine();
-            if(!isComment(line))
-            {
+            if (!isComment(line)) {
                 QStringList values = line.split(",");
-                if(values.size() >= 3)
-                {
+                if (values.size() >= 3) {
                     bool ok = true;
                     
                     int t = 1950 - locale.toInt(values.at(0),&ok);
-                    if(!ok) continue;
+                    if(!ok)
+                        continue;
                     double g = locale.toDouble(values.at(1),&ok);
                     if(!ok) continue;
                     double e = locale.toDouble(values.at(2),&ok);
-                    if(!ok) continue;
+                    if(!ok)
+                        continue;
                     
                     double gSup = g + 1.96f * e;
-                    if(!ok) continue;
+                    if(!ok)
+                        continue;
                     double gInf = g - 1.96f * e;
-                    if(!ok) continue;
+                    if(!ok)
+                        continue;
                     
                     curve.mDataMean[t] = g;
                     curve.mDataError[t] = e;
                     curve.mDataSup[t] = gSup;
                     curve.mDataInf[t] = gInf;
                     
-                    if(firstLine)
-                    {
+                    if (firstLine) {
                         curve.mDataMeanMin = g;
                         curve.mDataMeanMax = g;
                         
@@ -227,9 +227,8 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
                         
                         curve.mDataInfMin = gInf;
                         curve.mDataInfMax = gInf;
-                    }
-                    else
-                    {
+                        
+                    } else {
                         curve.mDataMeanMin = qMin(curve.mDataMeanMin, g);
                         curve.mDataMeanMax = qMax(curve.mDataMeanMax, g);
                         
@@ -249,8 +248,7 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
         file.close();
         
         // invalid file ?
-        if(!curve.mDataMean.isEmpty())
-        {
+        if (!curve.mDataMean.isEmpty()) {
             curve.mTmin = curve.mDataMean.firstKey();
             curve.mTmax = curve.mDataMean.lastKey();
         }
@@ -277,8 +275,7 @@ QPair<double,double> Plugin14C::getTminTmaxRefsCurve(const QJsonObject& data) co
     double tmax = 0;
     const QString ref_curve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
 
-    if(mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty())
-    {
+    if (mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
        tmin = mRefCurves.value(ref_curve).mTmin;
        tmax = mRefCurves.value(ref_curve).mTmax;
     }
@@ -333,39 +330,35 @@ bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& sett
 {
     const QString ref_curve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
     bool valid = false;
-    if(!mRefCurves.contains(ref_curve)) {
+    if (!mRefCurves.contains(ref_curve)) {
         qDebug()<<"in Plugin14C::isDateValid() unkowned curve"<<ref_curve;
         valid = false;
-    }
-    else {
+    } else {
         // controle valid solution (double)likelihood>0
         // remember likelihood type is long double
         const RefCurve& curve = mRefCurves.value(ref_curve);
         valid = false;
         double age = data.value(DATE_14C_AGE_STR).toDouble();
-        //double error = data.value(DATE_14C_ERROR_STR).toDouble();
         const double delta_r = data.value(DATE_14C_DELTA_R_STR).toDouble();
-        //const double delta_r_error = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
-
+        
         // Apply reservoir effect
         age = (age - delta_r);
-       // error = sqrt(error * error + delta_r_error * delta_r_error);
 
-        if(age>curve.mDataInfMin && age < curve.mDataSupMax){
+        if (age>curve.mDataInfMin && age < curve.mDataSupMax)
             valid = true;
-        }
+        
         else {
             double t = curve.mTmin;
             long double repartition = 0;
             long double v = 0;
             long double lastV = 0;
-            while(valid==false && t<=curve.mTmax) {
+            while (valid==false && t<=curve.mTmax) {
                 v = (double)getLikelihood(t,data);
                 // we have to check this calculs
                 //because the repartition can be smaller than the calibration
-                if (lastV>0 && v>0) {
+                if (lastV>0 && v>0)
                     repartition += (long double) settings.mStep * (lastV + v) / 2.;
-                }
+                
                 lastV = v;
 
                 valid = ( (double)repartition > 0);
@@ -397,8 +390,7 @@ QList<QHash<QString, QVariant>> Plugin14C::getGroupedActions()
 bool Plugin14C::areDatesMergeable(const QJsonArray& dates)
 {
     QString refCurve;
-    for(int i=0; i<dates.size(); ++i)
-    {
+    for (int i=0; i<dates.size(); ++i) {
         QJsonObject date = dates.at(i).toObject();
         QJsonObject data = date.value(STATE_DATE_DATA).toObject();
         QString curve = data.value(DATE_14C_REF_CURVE_STR).toString();
@@ -411,32 +403,36 @@ bool Plugin14C::areDatesMergeable(const QJsonArray& dates)
     return true;
 }
 
+/**
+ * @brief Combine several 14C Age
+ **/
 QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
 {
     QJsonObject result;
-    if(dates.size() > 1){
+    if (dates.size() > 1) {
         // Verify all dates have the same ref curve :
         const QJsonObject firstDate = dates.at(0).toObject();
         const  QJsonObject firstDateData = firstDate.value(STATE_DATE_DATA).toObject();
         QString firstCurve = firstDateData.value(DATE_14C_REF_CURVE_STR).toString();
         
-        for(int i=1; i<dates.size(); ++i){
+        for (int i=1; i<dates.size(); ++i) {
             QJsonObject date = dates.at(i).toObject();
             const QJsonObject dateData = date.value(STATE_DATE_DATA).toObject();
             const QString curve = dateData.value(DATE_14C_REF_CURVE_STR).toString();
-            if(firstCurve != curve){
+            
+            if (firstCurve != curve) {
                 result["error"] = tr("All combined data must use the same reference curve !");
                 return result;
             }
         }
         
-        double sum_vi = 0;
-        double sum_mi_vi = 0;
-        double sum_1_vi = 0;
-      //  double sum_mi_2 = 0;
+        double sum_vi = 0.;
+        double sum_mi_vi = 0.;
+        double sum_1_vi = 0.;
+
         QStringList names;
         
-        for(int i=0; i<dates.size(); ++i){
+        for (int i=0; i<dates.size(); ++i) {
             const QJsonObject date = dates.at(i).toObject();
             const QJsonObject data = date.value(STATE_DATE_DATA).toObject();
             
@@ -453,7 +449,6 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
             sum_vi += v;
             sum_mi_vi += m/v;
             sum_1_vi += 1/v;
-
         }
         
         QJsonObject mergedData;
@@ -461,14 +456,17 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
         mergedData[DATE_14C_ERROR_STR] = sqrt(1 / sum_1_vi);
         mergedData[DATE_14C_DELTA_R_STR] = 0.f;
         mergedData[DATE_14C_DELTA_R_ERROR_STR] = 0.f;
+        mergedData[DATE_14C_REF_CURVE_STR] = firstCurve ;
         
-        qDebug() << mergedData;
-        
+        // inherits the first data propeties as plug-in and method...
+        result = dates.at(0).toObject();
+        result[STATE_NAME] = "Combined (" + names.join(" | ") + ")";
         result[STATE_DATE_DATA] = mergedData;
         result[STATE_DATE_SUB_DATES] = dates;
-    }else{
+        
+    } else
         result["error"] = tr("Combine needs at least 2 data !");
-    }
+    
     return result;
     
 }

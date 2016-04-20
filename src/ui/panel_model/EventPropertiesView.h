@@ -56,7 +56,7 @@ private slots:
     void recycleDates();
     
     void updateCombineAvailability();
-    void sendMergeSelectedDates();
+    void sendCombineSelectedDates();
     void sendSplitDate();
     
     void updateKnownType();
@@ -69,7 +69,7 @@ private slots:
     void updateKnownControls();
     
 signals:
-    void mergeDatesRequested(const int eventId, const QList<int>& dateIds);
+    void combineDatesRequested(const int eventId, const QList<int>& dateIds);
     void splitDateRequested(const int eventId, const int dateId);
     
     void updateCalibRequested(const QJsonObject& date);

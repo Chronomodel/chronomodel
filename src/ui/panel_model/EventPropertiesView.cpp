@@ -120,7 +120,7 @@ mToolbarH(100)
     mSplitBut->setEnabled(false);
     
     connect(mCalibBut, SIGNAL(clicked(bool)), this, SIGNAL(showCalibRequested(bool)));
-    connect(mCombineBut, SIGNAL(clicked()), this, SLOT(sendMergeSelectedDates()));
+    connect(mCombineBut, SIGNAL(clicked()), this, SLOT(sendCombineSelectedDates()));
     connect(mSplitBut, SIGNAL(clicked()), this, SLOT(sendSplitDate()));
 
     // --------------- Case of Event is a Bound -> Bound properties windows---------------------------
@@ -506,7 +506,7 @@ void EventPropertiesView::sendCombineSelectedDates()
             dateIds.push_back(date.value(STATE_ID).toInt());
         }
     }
-    emit mergeDatesRequested(mEvent.value(STATE_ID).toInt(), dateIds);
+    emit combineDatesRequested(mEvent.value(STATE_ID).toInt(), dateIds);
 }
 
 void EventPropertiesView::sendSplitDate()
