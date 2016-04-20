@@ -357,8 +357,7 @@ void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
     mCorrelations.clear();
     mCorrelations.reserve(chains.size());
 
-    for(int c=0; c<chains.size(); ++c)
-    {
+    for (int c=0; c<chains.size(); ++c) {
         // Return the acquisition part of the trace
         const QVector<double> trace = runRawTraceForChain(chains, c);
         if(trace.size()<hmax) continue;
@@ -373,10 +372,9 @@ void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
         
         // Correlation pour cette chaine
 
-        for(int h=0; h<hmax; ++h)
-        {
+        for (int h=0; h<hmax; ++h) {
             double sH = 0;
-            for(QVector<double>::const_iterator iter = trace.cbegin(); iter != trace.cbegin() + (n-h); ++iter){
+            for (QVector<double>::const_iterator iter = trace.cbegin(); iter != trace.cbegin() + (n-h); ++iter) {
                 sH += (*iter - m) * (*(iter + h) - m);
             }
             
@@ -397,8 +395,7 @@ void MetropolisVariable::generateNumericalResults(const QList<ChainSpecs> &chain
     
     // Results for individual chains
     mChainsResults.clear();
-    for(int i = 0; i<mChainsHistos.size(); ++i)
-    {
+    for (int i = 0; i<mChainsHistos.size(); ++i) {
         DensityAnalysis result;
         result.analysis = analyseFunction(mChainsHistos.at(i));
         result.quartiles = quartilesForTrace(runFormatedTraceForChain(chains, i));
@@ -412,7 +409,7 @@ QMap<double, double>& MetropolisVariable::fullHisto()
     return mHisto;
 }
 
-QMap<double, double>& MetropolisVariable::histoForChain(int index)
+QMap<double, double>& MetropolisVariable::histoForChain(const int index)
 {
     Q_ASSERT(index < mChainsHistos.size());
     return mChainsHistos[index];
@@ -424,17 +421,16 @@ QMap<double, double>& MetropolisVariable::histoForChain(int index)
  * @param index
  * @return The complet trace (Burning, adaptation, acquire) corresponding to chain n°index
  */
-QVector<double> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs>& chains, int index)
+QVector<double> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs>& chains, const int index)
 {
     QVector<double> trace(0);
     int shift = 0;
     
-    for(int i=0; i<chains.size(); ++i) {
+    for (int i=0; i<chains.size(); ++i) {
         const int traceSize = chains.at(i).mNumBurnIter + (chains.at(i).mBatchIndex * chains.at(i).mNumBatchIter) + chains.at(i).mNumRunIter / chains.at(i).mThinningInterval;
-        //qDebug()<<traceSize << chains.at(i).mTotalIter;
+
         if (i == index) {
-            trace=mFormatedTrace.mid(shift , traceSize);
-            
+            trace = mFormatedTrace.mid(shift , traceSize);
             break;
         }
         shift += traceSize;
@@ -446,7 +442,7 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<ChainSpecs>& chains
 {
     QVector<double> trace(0);
     int shift = 0;
-    for(int i = 0; i<chains.size(); ++i) {
+    for (int i = 0; i<chains.size(); ++i) {
         const ChainSpecs& chain = chains.at(i);
         
         const int burnAdaptSize = chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);
@@ -464,23 +460,22 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<ChainSpecs>& chains
  * @param index the number of the Trace to extract
  * @return a QVector containing juste the acquisition Trace for one chaine n° index
  */
-QVector<double> MetropolisVariable::runRawTraceForChain(const QList<ChainSpecs> &chains, int index)
+QVector<double> MetropolisVariable::runRawTraceForChain(const QList<ChainSpecs> &chains, const int index)
 {
     QVector<double> trace(0);
     if (mRawTrace.empty()) {
         qDebug() << "in MetropolisVariable::runRawTraceForChain -> mRawTrace empty";
         return trace ;
-    }
-    else
-    {
+        
+    } else {
         int shift = 0;
-        for(int i=0; i<chains.size(); ++i) {
+        for (int i=0; i<chains.size(); ++i) {
             const ChainSpecs& chain = chains.at(i);
             
             const int burnAdaptSize = int (chain.mNumBurnIter + chain.mBatchIndex * chain.mNumBatchIter);
             const int traceSize = int (burnAdaptSize + chain.mNumRunIter / chain.mThinningInterval);
             
-            if(i == index) {
+            if (i == index) {
                 trace=mRawTrace.mid(shift + burnAdaptSize, traceSize - burnAdaptSize);
                 break;
             }
@@ -490,23 +485,21 @@ QVector<double> MetropolisVariable::runRawTraceForChain(const QList<ChainSpecs> 
     }
 }
 
-QVector<double> MetropolisVariable::runFormatedTraceForChain(const QList<ChainSpecs> &chains, int index)
+QVector<double> MetropolisVariable::runFormatedTraceForChain(const QList<ChainSpecs> &chains, const int index)
 {
     QVector<double> trace(0);
     if (mFormatedTrace.empty()) {
         qDebug() << "in MetropolisVariable::runFormatedTraceForChain -> mFormatedTrace empty";
         return trace ;
-    }
-    else
-    {
+    }  else  {
         int shift = 0;
-        for(int i=0; i<chains.size(); ++i)  {
+        for (int i=0; i<chains.size(); ++i)  {
             const ChainSpecs& chain = chains.at(i);
 
-            unsigned int burnAdaptSize = int (chain.mNumBurnIter + chain.mBatchIndex * chain.mNumBatchIter);
-            unsigned int traceSize = int (burnAdaptSize + chain.mNumRunIter / chain.mThinningInterval);
+            const int burnAdaptSize = int (chain.mNumBurnIter + chain.mBatchIndex * chain.mNumBatchIter);
+            const int traceSize = int (burnAdaptSize + chain.mNumRunIter / chain.mThinningInterval);
 
-            if(i == index) {
+            if (i == index) {
                 trace=mFormatedTrace.mid(shift + burnAdaptSize-1, traceSize - burnAdaptSize);
                 break;
             }
@@ -519,7 +512,7 @@ QVector<double> MetropolisVariable::runFormatedTraceForChain(const QList<ChainSp
 
 QVector<double> MetropolisVariable::correlationForChain(const int index)
 {
-    if(index < mCorrelations.size())
+    if (index < mCorrelations.size())
         return mCorrelations.at(index);
     return QVector<double>();
 }
@@ -527,19 +520,20 @@ QVector<double> MetropolisVariable::correlationForChain(const int index)
 
 QString MetropolisVariable::resultsString(const QString& nl, const QString& noResultMessage, const QString& unit, FormatFunc formatFunc) const
 {
-    if(mHisto.isEmpty())
+    if (mHisto.isEmpty())
         return noResultMessage;
     
     const QLocale locale;
     QString result = densityAnalysisToString(mResults, nl) + nl;
-    if(!mHPD.isEmpty()) {
+    
+    if (!mHPD.isEmpty()) {
         result += "HPD Region (" + locale.toString(mThresholdUsed, 'f', 1) + "%) : " + getHPDText(mHPD, mThresholdUsed, unit, formatFunc) + nl;
     }
-    if(mCredibility != QPair<double,double>()) {
+    
+    if (mCredibility != QPair<double,double>()) {
         if (formatFunc) {
             result += "Credibility Interval (" + locale.toString(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + formatFunc(mCredibility.first) + ", " + formatFunc(mCredibility.second) + "] " + unit;
-        }
-        else {
+        } else {
             result += "Credibility Interval (" + locale.toString(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + DateUtils::dateToString(mCredibility.first) + ", " + DateUtils::dateToString(mCredibility.second) + "]";
         }
    }
@@ -549,7 +543,7 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
 QStringList MetropolisVariable::getResultsList(const QLocale locale, const bool withDateFormat)
 {
     QStringList list;
-    if(withDateFormat) {
+    if (withDateFormat) {
 
         list << locale.toString(mResults.analysis.mode);
         list << locale.toString(mResults.analysis.mean);
@@ -563,15 +557,13 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const bool 
 
         const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThresholdUsed);
         QStringList results;
-        for(int i=0; i<intervals.size(); ++i)
-        {
+        for (int i=0; i<intervals.size(); ++i) {
             list << locale.toString(intervals.at(i).first, 'f', 1);
             list << locale.toString(intervals.at(i).second.first);
             list << locale.toString(intervals.at(i).second.second);
         }
 
-    }
-    else {
+    } else {
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.analysis.mode));
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.analysis.mean));
         list << DateUtils::dateToString(mResults.analysis.stddev);
@@ -584,8 +576,7 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const bool 
 
         const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThresholdUsed);
         QStringList results;
-        for(int i=0; i<intervals.size(); ++i)
-        {
+        for (int i=0; i<intervals.size(); ++i)  {
             list << locale.toString(intervals.at(i).first, 'f', 1);
             list << locale.toString(DateUtils::convertFromAppSettingsFormat(intervals.at(i).second.first));
             list << locale.toString(DateUtils::convertFromAppSettingsFormat(intervals.at(i).second.second));

@@ -63,7 +63,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     defaultPen.setWidthF(1);
     defaultPen.setStyle(Qt::SolidLine);
     
-    if(mEvent) {
+    if (mEvent) {
         QColor color = mEvent->mColor;
         QString resultsText = ModelUtilities::eventResultsText(mEvent, false);
          QString resultsHTML = ModelUtilities::eventResultsHTML(mEvent, false);
@@ -72,7 +72,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         bool isFixedBound = false;
         bool isUnifBound = false;
         EventKnown* bound = 0;
-        if(mEvent->type() == Event::eKnown) {
+        if (mEvent->type() == Event::eKnown) {
             bound = dynamic_cast<EventKnown*>(mEvent);
             if (bound) {
                 if (bound->knownType() == EventKnown::eFixed)

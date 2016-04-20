@@ -48,16 +48,16 @@ public:
     // -----
     
     QMap<double, double>& fullHisto();
-    QMap<double, double>& histoForChain(int index);
+    QMap<double, double>& histoForChain(const int index);
     
     // Full trace for the chain (burn + adapt + run)
-    QVector<double> fullTraceForChain(const QList<ChainSpecs> &chains, int index);
+    QVector<double> fullTraceForChain(const QList<ChainSpecs> &chains,const int index);
     
     // Trace for run part as a vector
     QVector<double> fullRunTrace(const QList<ChainSpecs>& chains);
     // Trace for run part of the chain as a vector
-    QVector<double> runRawTraceForChain(const QList<ChainSpecs>& chains, int index);
-    QVector<double> runFormatedTraceForChain(const QList<ChainSpecs>& chains, int index);
+    QVector<double> runRawTraceForChain(const QList<ChainSpecs>& chains, const int index);
+    QVector<double> runFormatedTraceForChain(const QList<ChainSpecs>& chains, const int index);
     
     QVector<double> correlationForChain(const int index);
     
