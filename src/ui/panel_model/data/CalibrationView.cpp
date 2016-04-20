@@ -57,7 +57,7 @@ mRefGraphView(0)
     font.setPointSizeF(pointSize(12.));
     mResultsLab->setFont(font);
     
-    mZoomLab = new Label(tr("Scale") + " : ", this);
+    mZoomLab = new Label(tr("Scale"), this);
     mZoomSlider = new QSlider(Qt::Horizontal, this);
     mZoomSlider->setRange(0, 100);
     mZoomSlider->setValue(0);
@@ -66,7 +66,7 @@ mRefGraphView(0)
     mScrollBar = new QScrollBar(Qt::Horizontal, this);
     mScrollBar->setRange(0, 0);
     
-    mHPDLab = new Label(tr("HPD (%) : "), this);
+    mHPDLab = new Label(tr("HPD (%)"), this);
     mHPDEdit = new LineEdit(this);
     mHPDEdit->setText("95");
     
@@ -97,23 +97,23 @@ CalibrationView::~CalibrationView()
 
 void CalibrationView::setDate(const QJsonObject& date)
 {
-    if(date.isEmpty()) return;
+    if(date.isEmpty())
+        return;
     Project* project = MainWindow::getInstance()->getProject();
     const QJsonObject state = project->state();
     const QJsonObject settings = state.value(STATE_SETTINGS).toObject();
     mSettings = ProjectSettings::fromJson(settings);
 
-    try{
+    try {
         mDate = Date::fromJson(date);
         mDate.autoSetTiSampler(false);
-        if(!mDate.isNull() )
-        {
+        if (!mDate.isNull() ) {
             mDate.calibrate(mSettings);
             mTopLab->setText(mDate.mName + " (" + mDate.mPlugin->getName() + ")");
         }
         updateGraphs();
     }
-    catch(QString error){
+    catch(QString error) {
         QMessageBox message(QMessageBox::Critical,
                             qApp->applicationName() + " " + qApp->applicationVersion(),
                             tr("Error : ") + error,
@@ -133,29 +133,27 @@ void CalibrationView::updateGraphs()
     
     // The current ref graph belongs in memory to a plugin
     // So, we simply remove it without deleting it, for further use
-    if(mRefGraphView)
-    {
+    if (mRefGraphView) {
         mRefGraphView->setParent(0);
         mRefGraphView->setVisible(false);
     }
     
     
-    if(!mDate.isNull())
-    {
+    if (!mDate.isNull()) {
         //double tminCalib = mDate.getTminCalib();
         //double tmaxCalib = mDate.getTmaxCalib();
 
-        double tminDisplay;
-        double tmaxDisplay;
-        {
-            const double t1 = mSettings.getTminFormated();
-            const double t2 = mSettings.getTmaxFormated();
-            const double t3 = mDate.getFormatedTminCalib();
-            const double t4 = mDate.getFormatedTmaxCalib();
+        double tminDisplay = double();
+        double tmaxDisplay = double();
+        
+        const double t1 = mSettings.getTminFormated();
+        const double t2 = mSettings.getTmaxFormated();
+        const double t3 = mDate.getFormatedTminCalib();
+        const double t4 = mDate.getFormatedTmaxCalib();
 
-            tminDisplay = qMin(t1,t3);
-            tmaxDisplay = qMax(t2,t4);
-        }
+        tminDisplay = qMin(t1,t3);
+        tmaxDisplay = qMax(t2,t4);
+       
 
         mCalibGraph->setRangeX(tminDisplay, tmaxDisplay);
         mCalibGraph->setCurrentX(tminDisplay, tmaxDisplay);
@@ -165,7 +163,7 @@ void CalibrationView::updateGraphs()
         // ------------------------------------------------------------
         //  Show zones if calibrated data are outside study period
         // ------------------------------------------------------------
-        if(tminDisplay < mSettings.getTminFormated()){
+        if (tminDisplay < mSettings.getTminFormated()) {
             GraphZone zone;
             zone.mXStart = tminDisplay;
             zone.mXEnd = mSettings.getTminFormated();
@@ -174,7 +172,7 @@ void CalibrationView::updateGraphs()
             zone.mText = tr("Outside study period");
             mCalibGraph->addZone(zone);
         }
-        if(tmaxDisplay > mSettings.getTmaxFormated()){
+        if (tmaxDisplay > mSettings.getTmaxFormated()) {
             GraphZone zone;
             zone.mXStart = mSettings.getTmaxFormated();
             zone.mXEnd = tmaxDisplay;
@@ -200,8 +198,7 @@ void CalibrationView::updateGraphs()
         mResultsLab->clear();
         QMap<double, double> calibMap = mDate.getFormatedCalibMap();
 
-        if(!calibMap.isEmpty())
-        {            
+        if (!calibMap.isEmpty()) {
             // ------------------------------------------------------------
             //  Display numerical results
             // ------------------------------------------------------------
@@ -273,8 +270,7 @@ void CalibrationView::updateGraphs()
         
         // Get the ref graph for this plugin and this date
         mRefGraphView = mDate.mPlugin->getGraphViewRef();
-        if(mRefGraphView)
-        {
+        if (mRefGraphView) {
             mRefGraphView->setFormatFunctX(DateUtils::dateToString); // must be before setDate, because setDate use it
             mRefGraphView->setDate(mDate, mSettings);
             
@@ -285,15 +281,12 @@ void CalibrationView::updateGraphs()
         // ------------------------------------------------------------
         //  Labels
         // ------------------------------------------------------------
-        if(mRefGraphView)
-        {
-            mProcessTitle->setText(tr("Calibration process") + " :");
-            mDistribTitle->setText(tr("Distribution of calibrated date") + " :");
-        }
-        else
-        {
+        if (mRefGraphView) {
+            mProcessTitle->setText(tr("Calibration process") );
+            mDistribTitle->setText(tr("Distribution of calibrated date"));
+        } else {
             mProcessTitle->setText(tr("No calibration process to display") + " !");
-            mDistribTitle->setText(tr("Typological date") + " :");
+            mDistribTitle->setText(tr("Typological date"));
         }
     }
     
@@ -312,8 +305,7 @@ void CalibrationView::updateZoom()
     float prop = (100. - mZoomSlider->value()) / 100.;
     if(prop < minProp) prop = minProp;
     
-    if(prop != 1)
-    {
+    if (prop != 1) {
         // Remember old scroll position
         double posProp = 0;
         double rangeBefore = (double)mScrollBar->maximum();
@@ -332,11 +324,10 @@ void CalibrationView::updateZoom()
         if(rangeAfter > 0)
             pos = floor(posProp * rangeAfter);
         mScrollBar->setValue(pos);
-    }
-    else
-    {
+        
+    } else
         mScrollBar->setRange(0, 0);
-    }
+    
     updateScroll();
 }
 
@@ -346,10 +337,10 @@ void CalibrationView::updateScroll()
     const double max = mCalibGraph->maximumX();
     const double minProp = 5 / (max - min);
     double prop = (100. - mZoomSlider->value()) / 100.;
-    if(prop < minProp) prop = minProp;
+    if (prop < minProp)
+        prop = minProp;
     
-    if(prop != 1)
-    {
+    if (prop != 1) {
         // Update graphs with new zoom
         const double delta = prop * (max - min);
         const double deltaStart = (max - min) - delta;
@@ -360,9 +351,8 @@ void CalibrationView::updateScroll()
         mCalibGraph->zoomX(start, end);
         if(mRefGraphView)
             mRefGraphView->zoomX(start, end);
-    }
-    else
-    {
+        
+    } else {
         mCalibGraph->zoomX(min, max);
         if(mRefGraphView)
             mRefGraphView->zoomX(min, max);
@@ -401,6 +391,7 @@ void CalibrationView::exportImage()
     mMarkerY       -> setVisible(true);
     mResultsLab    -> setVisible(true);
 }
+
 void CalibrationView::copyText()
 {
      QClipboard *p_Clipboard = QApplication::clipboard();

@@ -23,7 +23,7 @@ QDialog(parent, flags)
     mLangHelpLab->setAlignment(Qt::AlignCenter);
     mLangHelpLab->setWordWrap(true);
     
-    mLanguageLab = new QLabel(tr("Language") + " : ", this);
+    mLanguageLab = new QLabel(tr("Language"), this);
     mLanguageCombo = new QComboBox(this);
     QList<QLocale> allLocales = QLocale::matchingLocales(QLocale::AnyLanguage, QLocale::AnyScript, QLocale::AnyCountry);
 
@@ -38,9 +38,9 @@ QDialog(parent, flags)
     mCountryCombo->addItem(QLocale::countryToString(QLocale::UnitedKingdom), QVariant(QLocale::UnitedKingdom));
     */
 
-    mAutoSaveLab = new QLabel(tr("Auto save project") + " : ", this);
+    mAutoSaveLab = new QLabel(tr("Auto save project"), this);
     mAutoSaveCheck = new QCheckBox(this);
-    mAutoSaveDelayLab = new QLabel(tr("Auto save interval (in minutes)") + " : ", this);
+    mAutoSaveDelayLab = new QLabel(tr("Auto save interval (in minutes)"), this);
     mAutoSaveDelayEdit = new QLineEdit(this);
     mAutoSaveDelayEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
     
@@ -48,11 +48,11 @@ QDialog(parent, flags)
     positiveValidator->setBottom(1);
     mAutoSaveDelayEdit->setValidator(positiveValidator);
     
-    mCSVCellSepLab = new QLabel(tr("CSV cell separator") + " : ", this);
+    mCSVCellSepLab = new QLabel(tr("CSV cell separator"), this);
     mCSVCellSepEdit = new QLineEdit(this);
     mCSVCellSepEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
     
-    mCSVDecSepLab = new QLabel(tr("CSV decimal separator") + " : ", this);
+    mCSVDecSepLab = new QLabel(tr("CSV decimal separator"), this);
     mCSVDecSepCombo = new QComboBox(this);
     mCSVDecSepCombo->addItem(", (comma)", QVariant(","));
     mCSVDecSepCombo->addItem(". (dot)", QVariant("."));
