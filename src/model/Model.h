@@ -86,6 +86,10 @@ public:
     int mNumberOfEvents;
     int mNumberOfDates;
     
+    // Members used in the next-previous sheet system
+    // they count all the Events and the Dates availables to display
+    // We could have the same Event and Date in several phases,
+    // so mNumberOfEventsInAllPhases is not egual to mNumberOfEvents
     int mNumberOfEventsInAllPhases;
     int mNumberOfDatesInAllPhases;
 
