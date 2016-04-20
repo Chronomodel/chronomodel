@@ -1545,36 +1545,33 @@ QJsonArray Project::getInvalidDates(){
 void Project::mergeDates(const int eventId, const QList<int>& dateIds)
 {
     QJsonObject stateNext = mState;
-    QJsonObject settingsJson = stateNext[STATE_SETTINGS].toObject();
+    QJsonObject settingsJson = stateNext.value(STATE_SETTINGS).toObject();
     ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
-    QJsonArray events = mState[STATE_EVENTS].toArray();
+    QJsonArray events = mState.value(STATE_EVENTS).toArray();
     
-    for(int i=0; i<events.size(); ++i)
-    {
-        QJsonObject event = events[i].toObject();
-        if(event[STATE_ID].toInt() == eventId)
-        {
+    for (int i=0; i<events.size(); ++i) {
+        QJsonObject event = events.at(i).toObject();
+        if (event.value(STATE_ID).toInt() == eventId) {
             // All event dates :
-            QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+            QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
             
             // event dates to be merged :
             QJsonArray datesToMerge;
-            for(int j=0; j<dates.size(); ++j)
-            {
+            for (int j=0; j<dates.size(); ++j) {
                 QJsonObject date = dates[j].toObject();
-                if(dateIds.contains(date[STATE_ID].toInt())){
+                if (dateIds.contains(date.value(STATE_ID).toInt()))
                     datesToMerge.push_back(date);
-                }
+                
             }
             
             // merge !
-            if(datesToMerge.size() > 0){
-                PluginAbstract* plugin = PluginManager::getPluginFromId(datesToMerge[0].toObject()[STATE_DATE_PLUGIN_ID].toString());
-                if(plugin){
+            if (datesToMerge.size() > 0) {
+                PluginAbstract* plugin = PluginManager::getPluginFromId(datesToMerge[0].toObject().value(STATE_DATE_PLUGIN_ID).toString());
+                if (plugin) {
                     
                     // add the new combination
                     QJsonObject mergedDate = plugin->mergeDates(datesToMerge);
-                    if(mergedDate.find("error") != mergedDate.end()){
+                    if (mergedDate.find("error") != mergedDate.end()) {
                         QMessageBox message(QMessageBox::Critical,
                                             tr("Cannot combine"),
                                             mergedDate["error"].toString(),
@@ -1582,18 +1579,17 @@ void Project::mergeDates(const int eventId, const QList<int>& dateIds)
                                             qApp->activeWindow(),
                                             Qt::Sheet);
                         message.exec();
-                    }else{
+                    } else {
                         // remove merged dates
-                        for(int j=dates.size()-1; j>=0; --j)
-                        {
+                        for (int j=dates.size()-1; j>=0; --j) {
                             QJsonObject date = dates[j].toObject();
-                            if(dateIds.contains(date[STATE_ID].toInt())){
+                            if (dateIds.contains(date.value(STATE_ID).toInt())) {
                                 dates.removeAt(j);
                             }
                         }
                         
                         // Validate the date before adding it to the correct event and pushing the state
-                        bool valid = plugin->isDateValid(mergedDate[STATE_DATE_DATA].toObject(), settings);
+                        const bool valid = plugin->isDateValid(mergedDate.value(STATE_DATE_DATA).toObject(), settings);
                         mergedDate[STATE_DATE_VALID] = valid;
                         
                         dates.push_back(mergedDate);

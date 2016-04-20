@@ -205,21 +205,19 @@ void EventPropertiesView::setEvent(const QJsonObject& event)
 
 void EventPropertiesView::updateEvent()
 {
-    if(mEvent.isEmpty())
-    {
+    if (mEvent.isEmpty()) {
         mTopView->setVisible(false);
         mEventView->setVisible(false);
         mBoundView->setVisible(false);
-    }
-    else
-    {
+        
+    } else {
         Event::Type type = (Event::Type)mEvent.value(STATE_EVENT_TYPE).toInt();
         QString name = mEvent.value(STATE_NAME).toString();
         QColor color(mEvent.value(STATE_COLOR_RED).toInt(),
                      mEvent.value(STATE_COLOR_GREEN).toInt(),
                      mEvent.value(STATE_COLOR_BLUE).toInt());
         
-        if(name != mNameEdit->text())
+        if (name != mNameEdit->text())
             mNameEdit->setText(name);
         mColorPicker->setColor(color);
         
@@ -230,8 +228,7 @@ void EventPropertiesView::updateEvent()
         mEventView->setVisible(type == Event::eDefault);
         mBoundView->setVisible(type == Event::eKnown);
         
-        if(type == Event::eDefault)
-        {
+        if (type == Event::eDefault) {
             mMethodCombo->setCurrentIndex(mEvent.value(STATE_EVENT_METHOD).toInt());
             mDatesList->setEvent(mEvent);
             
@@ -241,9 +238,8 @@ void EventPropertiesView::updateEvent()
             mCalibBut->setEnabled(hasDates);
             mDeleteBut->setEnabled(hasDates);
             mRecycleBut->setEnabled(hasDates);
-        }
-        else if(type == Event::eKnown)
-        {
+            
+        } else if(type == Event::eKnown) {
             EventKnown::KnownType knownType = (EventKnown::KnownType)mEvent.value(STATE_EVENT_KNOWN_TYPE).toInt();
             
             mKnownFixedRadio   -> setChecked(knownType == EventKnown::eFixed);
@@ -497,14 +493,14 @@ void EventPropertiesView::updateCombineAvailability()
     mSplitBut->setEnabled(splittable);
 }
 
-void EventPropertiesView::sendMergeSelectedDates()
+void EventPropertiesView::sendCombineSelectedDates()
 {
     QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
     QList<QListWidgetItem*> items = mDatesList->selectedItems();
     QList<int> dateIds;
     
     for (int i=0; i<items.size(); ++i) {
-        int idx = mDatesList->row(items[i]);
+        const int idx = mDatesList->row(items.at(i));
         if (idx < dates.size()) {
             QJsonObject date = dates.at(idx).toObject();
             dateIds.push_back(date.value(STATE_ID).toInt());
