@@ -452,7 +452,7 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<ChainSpecs>& chains
         const int burnAdaptSize = chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);
         const int traceSize = burnAdaptSize + chain.mNumRunIter / chain.mThinningInterval;
         
-        trace = mFormatedTrace.mid(shift + burnAdaptSize, traceSize - burnAdaptSize);
+        trace += mFormatedTrace.mid(shift + burnAdaptSize, traceSize - burnAdaptSize);
         
         shift += traceSize;
     }
