@@ -111,24 +111,24 @@ mToolbarH(100)
     mCalibBut->setFlatVertical();
     mCalibBut->setCheckable(true);
     
-    mMergeBut = new Button(tr("Combine"), mEventView);
-    mMergeBut->setFlatVertical();
-    mMergeBut->setEnabled(false);
+    mCombineBut = new Button(tr("Combine"), mEventView);
+    mCombineBut->setFlatVertical();
+    mCombineBut->setEnabled(false);
 
     mSplitBut = new Button(tr("Split"), mEventView);
     mSplitBut->setFlatVertical();
     mSplitBut->setEnabled(false);
     
     connect(mCalibBut, SIGNAL(clicked(bool)), this, SIGNAL(showCalibRequested(bool)));
-    connect(mMergeBut, SIGNAL(clicked()), this, SLOT(sendMergeSelectedDates()));
+    connect(mCombineBut, SIGNAL(clicked()), this, SLOT(sendMergeSelectedDates()));
     connect(mSplitBut, SIGNAL(clicked()), this, SLOT(sendSplitDate()));
 
     // --------------- Case of Event is a Bound -> Bound properties windows---------------------------
     
     mBoundView = new QWidget(this);
     
-    mKnownFixedRadio   = new QRadioButton(tr("Fixed")   + " :", mBoundView);
-    mKnownUniformRadio = new QRadioButton(tr("Uniform") + " :", mBoundView);
+    mKnownFixedRadio   = new QRadioButton(tr("Fixed"), mBoundView);
+    mKnownUniformRadio = new QRadioButton(tr("Uniform"), mBoundView);
     
     connect(mKnownFixedRadio, SIGNAL(clicked())  , this, SLOT(updateKnownType()));
     connect(mKnownUniformRadio, SIGNAL(clicked()), this, SLOT(updateKnownType()));
@@ -164,13 +164,13 @@ mToolbarH(100)
     connect(mKnownEndEdit, &QLineEdit::textEdited, this, &EventPropertiesView::updateKnownUnifEnd);
     
     QFormLayout* fixedLayout = new QFormLayout();
-    fixedLayout->addRow(tr("Value :"), mKnownFixedEdit);
+    fixedLayout->addRow(tr("Value"), mKnownFixedEdit);
     mFixedGroup = new QGroupBox();
     mFixedGroup->setLayout(fixedLayout);
     
     QFormLayout* uniformLayout = new QFormLayout();
-    uniformLayout->addRow(tr("Start :"), mKnownStartEdit);
-    uniformLayout->addRow(tr("End :"), mKnownEndEdit);
+    uniformLayout->addRow(tr("Start"), mKnownStartEdit);
+    uniformLayout->addRow(tr("End"), mKnownEndEdit);
     mUniformGroup = new QGroupBox();
     mUniformGroup->setLayout(uniformLayout);
     
@@ -449,34 +449,34 @@ void EventPropertiesView::updateCombineAvailability()
     QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
     QList<QListWidgetItem*> items = mDatesList->selectedItems();
     
-    if(items.size() == 1){
+    if (items.size() == 1) {
         // Split?
         int idx = mDatesList->row(items[0]);
-        if(dates.size()>idx ) {
+        if (dates.size()>idx ) {
             QJsonObject date = dates.at(idx).toObject();
-            if(date.value(STATE_DATE_SUB_DATES).toArray().size() > 0){
+            if (date.value(STATE_DATE_SUB_DATES).toArray().size() > 0)
                 splittable = true;
-            }
+            
          }
-    }else if(items.size() > 1 && dates.size() > 1){
+    } else if (items.size() > 1 && dates.size() > 1) {
         // Combine?
         mergeable = true;
         PluginAbstract* plugin = 0;
         
-        for(int i=0; i<items.size(); ++i){
-            int idx = mDatesList->row(items[i]);
-            if(idx < dates.size()){
+        for (int i=0; i<items.size(); ++i) {
+            int idx = mDatesList->row(items.at(i));
+            if (idx < dates.size()) {
                 QJsonObject date = dates.at(idx).toObject();
                 // If selected date already has subdates, it cannot be combined :
-                if(date.value(STATE_DATE_SUB_DATES).toArray().size() > 0){
+                if (date.value(STATE_DATE_SUB_DATES).toArray().size() > 0) {
                     mergeable = false;
                     break;
                 }
                 // If selected dates have different plugins, they cannot be combined :
                 PluginAbstract* plg = PluginManager::getPluginFromId(date.value(STATE_DATE_PLUGIN_ID).toString());
-                if(plugin == 0)
+                if (plugin == 0)
                     plugin = plg;
-                else if(plg != plugin){
+                else if (plg != plugin) {
                     mergeable = false;
                     break;
                 }
@@ -484,7 +484,7 @@ void EventPropertiesView::updateCombineAvailability()
         }
         // Dates are not combined yet and are from the same plugin.
         // We should now ask the plugin if they are combinable (they use the same ref curve for example...)
-        if(mergeable && plugin != 0){
+        if (mergeable && plugin != 0) {
             // This could be used instead to disable the "combine" button if dates cannot be combined.
             // We prefer letting the user combine them and get an error message explaining why they cannot be combined!
             // Check Plugin14C::mergeDates as example
@@ -493,7 +493,7 @@ void EventPropertiesView::updateCombineAvailability()
             mergeable = true;
         }
     }
-    mMergeBut->setEnabled(mergeable);
+    mCombineBut->setEnabled(mergeable);
     mSplitBut->setEnabled(splittable);
 }
 
@@ -503,9 +503,9 @@ void EventPropertiesView::sendMergeSelectedDates()
     QList<QListWidgetItem*> items = mDatesList->selectedItems();
     QList<int> dateIds;
     
-    for(int i=0; i<items.size(); ++i){
+    for (int i=0; i<items.size(); ++i) {
         int idx = mDatesList->row(items[i]);
-        if(idx < dates.size()){
+        if (idx < dates.size()) {
             QJsonObject date = dates.at(idx).toObject();
             dateIds.push_back(date.value(STATE_ID).toInt());
         }
@@ -517,9 +517,9 @@ void EventPropertiesView::sendSplitDate()
 {
     QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
     QList<QListWidgetItem*> items = mDatesList->selectedItems();
-    if(items.size() > 0){
+    if (items.size() > 0) {
         int idx = mDatesList->row(items[0]);
-        if(idx < dates.size()){
+        if (idx < dates.size()) {
             QJsonObject date = dates.at(idx).toObject();
             int dateId = date.value(STATE_ID).toInt();
             emit splitDateRequested(mEvent.value(STATE_ID).toInt(), dateId);
@@ -590,7 +590,7 @@ void EventPropertiesView::updateLayout()
     mCalibBut->setGeometry(x, y, w, h);
     mDeleteBut ->setGeometry(x + 1*w, y, w, h);
     mRecycleBut->setGeometry(x + 2*w, y, w, h);
-    mMergeBut->setGeometry(x + 3*w, y, w, h);
+    mCombineBut->setGeometry(x + 3*w, y, w, h);
     mSplitBut->setGeometry(x + 4*w, y, w, h);
 }
 

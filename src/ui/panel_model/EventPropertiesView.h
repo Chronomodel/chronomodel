@@ -98,7 +98,7 @@ private:
     Button* mRecycleBut;
     
     Button* mCalibBut;
-    Button* mMergeBut;
+    Button* mCombineBut;
     Button* mSplitBut;
     
     QRadioButton* mKnownFixedRadio;
