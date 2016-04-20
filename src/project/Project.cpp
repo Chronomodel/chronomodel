@@ -1542,7 +1542,7 @@ QJsonArray Project::getInvalidDates(){
     return invalidDates;
 }
 
-void Project::mergeDates(const int eventId, const QList<int>& dateIds)
+void Project::combineDates(const int eventId, const QList<int>& dateIds)
 {
     QJsonObject stateNext = mState;
     QJsonObject settingsJson = stateNext.value(STATE_SETTINGS).toObject();

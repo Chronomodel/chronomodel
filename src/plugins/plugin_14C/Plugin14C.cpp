@@ -85,10 +85,9 @@ QList<Date::DataMethod> Plugin14C::allowedDataMethods() const
 
 QString Plugin14C::getDateDesc(const Date* date) const
 {
-    QLocale locale=QLocale();
+    QLocale locale = QLocale();
     QString result;
-    if(date)
-    {
+    if (date) {
         QJsonObject data = date->mData;
         
         double age = data.value(DATE_14C_AGE_STR).toDouble();
@@ -99,16 +98,17 @@ QString Plugin14C::getDateDesc(const Date* date) const
         
         result += QObject::tr("Age") + " : " + locale.toString(age);
         result += " ± " + locale.toString(error);
-        if(delta_r != 0 || delta_r_error != 0){
+        
+        if (delta_r != 0 || delta_r_error != 0) {
             result += ", " + QObject::tr("ΔR") + " : " + locale.toString(delta_r);
             result += " ± " +locale.toString(delta_r_error);
         }
-        if(mRefCurves.contains(ref_curve) && !mRefCurves.value(ref_curve).mDataMean.isEmpty()) {
+        
+        if (mRefCurves.contains(ref_curve) && !mRefCurves.value(ref_curve).mDataMean.isEmpty())
             result += ", " + tr("Ref. curve") + " : " + ref_curve;
-        }
-        else {
+        else
             result += ", " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
-        }
+        
     }
     return result;
 }
@@ -121,17 +121,18 @@ QStringList Plugin14C::csvColumns() const
     return cols;
 }
 
-int Plugin14C::csvMinColumns() const{
+int Plugin14C::csvMinColumns() const
+{
     return csvColumns().count() - 2;
 }
 
 QJsonObject Plugin14C::fromCSV(const QStringList& list, const QLocale &csvLocale)
 {
     QJsonObject json;
-    if(list.size() >= csvMinColumns())
-    {
+    if (list.size() >= csvMinColumns()) {
         double error = csvLocale.toDouble(list.at(2));
-        if(error == 0) return json;
+        if(error == 0)
+            return json;
 
         json.insert(DATE_14C_AGE_STR, csvLocale.toDouble(list.at(1)));
         json.insert(DATE_14C_ERROR_STR, error);
