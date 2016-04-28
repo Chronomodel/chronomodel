@@ -1128,10 +1128,10 @@ void Model::initThreshold(const double threshold)
     QList<Event*>::iterator iterEvent = mEvents.begin();
     while (iterEvent!=mEvents.end()) {
 
-        if((*iterEvent)->type() != Event::eKnown) {
+        if ((*iterEvent)->type() != Event::eKnown) {
           (*iterEvent)->mTheta.mThresholdUsed = threshold;
 
-          for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
+          for (int j = 0; j<(*iterEvent)->mDates.size(); ++j) {
                 Date& date = (*iterEvent)->mDates[j];
                 date.mTheta.mThresholdUsed = threshold;
                 date.mSigma.mThresholdUsed = threshold;

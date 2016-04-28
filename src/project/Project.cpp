@@ -186,12 +186,11 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
     mDesignIsChanged = false;
     mStructureIsChanged = false;
     mItemsIsMoved = false;
-    if(stateOld.isEmpty() && !stateNew.isEmpty())  {
+    if (stateOld.isEmpty() && !stateNew.isEmpty())  {
         mDesignIsChanged = true;
         mStructureIsChanged = true;
         return;
-    }
-    else {
+    } else {
         // Check Study Period modification
         const double tminPeriodNew = stateNew.value(STATE_SETTINGS_TMIN).toDouble();
         const double tmaxPeriodNew = stateNew.value(STATE_SETTINGS_TMAX).toDouble();
@@ -200,7 +199,7 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
         const double tminPeriodOld = stateOld.value(STATE_SETTINGS_TMIN).toDouble();
         const double tmaxPeriodOld = stateOld.value(STATE_SETTINGS_TMAX).toDouble();
         const double stepPeriodOld = stateOld.value(STATE_SETTINGS_STEP).toDouble();
-        if((tminPeriodNew != tminPeriodOld) || (tmaxPeriodNew != tmaxPeriodOld) || (stepPeriodNew != stepPeriodOld)) {
+        if ((tminPeriodNew != tminPeriodOld) || (tmaxPeriodNew != tmaxPeriodOld) || (stepPeriodNew != stepPeriodOld)) {
             mDesignIsChanged = true;
             mStructureIsChanged = true;
             return;
@@ -209,32 +208,30 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
         const QJsonArray phaseNew = stateNew.value(STATE_PHASES).toArray();
         const QJsonArray phaseOld = stateOld.value(STATE_PHASES).toArray();
 
-        if( phaseNew.size()!=phaseOld.size()) {
+        if ( phaseNew.size() != phaseOld.size()) {
             mDesignIsChanged = true;
             mStructureIsChanged = true;
             return;
-        }
-        else {
-            for(int i=0; i<phaseNew.size(); ++i){
+        } else {
+            for (int i = 0; i<phaseNew.size(); ++i) {
                // Check DESIGN
                // Check name of Phases
-               if(phaseNew.at(i).toObject().value(STATE_NAME) != phaseOld.at(i).toObject().value(STATE_NAME)) {
+               if (phaseNew.at(i).toObject().value(STATE_NAME) != phaseOld.at(i).toObject().value(STATE_NAME))
                    mDesignIsChanged = true;
 
-               }
-               if( phaseNew.at(i).toObject().value(STATE_ITEM_X) != phaseOld.at(i).toObject().value(STATE_ITEM_X) ||
+               if ( phaseNew.at(i).toObject().value(STATE_ITEM_X) != phaseOld.at(i).toObject().value(STATE_ITEM_X) ||
                    phaseNew.at(i).toObject().value(STATE_ITEM_Y) != phaseOld.at(i).toObject().value(STATE_ITEM_Y) ) {
                    mItemsIsMoved = true;
                }
                // Check color of Phases
                const QColor newPhaseColor = QColor(phaseNew.at(i).toObject().value(STATE_COLOR_RED).toInt(),phaseNew.at(i).toObject().value(STATE_COLOR_GREEN).toInt(),phaseNew.at(i).toObject().value(STATE_COLOR_BLUE ).toInt());
                const QColor oldPhaseColor = QColor(phaseOld.at(i).toObject().value(STATE_COLOR_RED).toInt(),phaseOld.at(i).toObject().value(STATE_COLOR_GREEN).toInt(),phaseOld.at(i).toObject().value(STATE_COLOR_BLUE ).toInt());
-               if(newPhaseColor != oldPhaseColor) {
+               if (newPhaseColor != oldPhaseColor)
                    mDesignIsChanged = true;
-               }
+
                // Check STRUCTURE
                // Check tau parameter
-               if( phaseNew.at(i).toObject().value(STATE_PHASE_TAU_TYPE) != phaseOld.at(i).toObject().value(STATE_PHASE_TAU_TYPE) ||
+               if ( phaseNew.at(i).toObject().value(STATE_PHASE_TAU_TYPE) != phaseOld.at(i).toObject().value(STATE_PHASE_TAU_TYPE) ||
                    phaseNew.at(i).toObject().value(STATE_PHASE_TAU_FIXED) != phaseOld.at(i).toObject().value(STATE_PHASE_TAU_FIXED) ||
                    phaseNew.at(i).toObject().value(STATE_PHASE_TAU_MIN) != phaseOld.at(i).toObject().value(STATE_PHASE_TAU_MIN) ||
                    phaseNew.at(i).toObject().value(STATE_PHASE_TAU_MAX) != phaseOld.at(i).toObject().value(STATE_PHASE_TAU_MAX) ) {
@@ -247,11 +244,10 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
         const QJsonArray phasesConstNew = stateNew.value(STATE_PHASES_CONSTRAINTS).toArray();
         const QJsonArray phasesConstOld = stateOld.value(STATE_PHASES_CONSTRAINTS).toArray();
 
-        if( phasesConstNew.size()!=phasesConstOld.size()) {
+        if ( phasesConstNew.size()!=phasesConstOld.size()) {
             mStructureIsChanged = true;
             return;
-        }
-        else if(phasesConstNew != phasesConstOld) {
+        } else if (phasesConstNew != phasesConstOld) {
                 mStructureIsChanged = true;
                 return;
         }
@@ -260,30 +256,29 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
          // Check Event and date modification
         const QJsonArray eventsNew = stateNew.value(STATE_EVENTS).toArray();
         const QJsonArray eventsOld = stateOld.value(STATE_EVENTS).toArray();
-        if( eventsNew.size()!=eventsOld.size()) {
+        if ( eventsNew.size()!=eventsOld.size()) {
             mDesignIsChanged = true;
             mStructureIsChanged = true;
             return;
-        }
-        else {
-            for(int i=0; i<eventsNew.size(); ++i){
+        } else {
+            for (int i = 0; i<eventsNew.size(); ++i){
                 // Check DESIGN
                // Check name of Event
-               if(eventsNew.at(i).toObject().value(STATE_NAME) != eventsOld.at(i).toObject().value(STATE_NAME)) {
+               if (eventsNew.at(i).toObject().value(STATE_NAME) != eventsOld.at(i).toObject().value(STATE_NAME))
                    mDesignIsChanged = true;
-               }
-               if( eventsNew.at(i).toObject().value(STATE_ITEM_X) != eventsOld.at(i).toObject().value(STATE_ITEM_X) ||
-                   eventsNew.at(i).toObject().value(STATE_ITEM_Y) != eventsOld.at(i).toObject().value(STATE_ITEM_Y) ) {
+
+               if ( eventsNew.at(i).toObject().value(STATE_ITEM_X) != eventsOld.at(i).toObject().value(STATE_ITEM_X) ||
+                    eventsNew.at(i).toObject().value(STATE_ITEM_Y) != eventsOld.at(i).toObject().value(STATE_ITEM_Y) ) {
                    mItemsIsMoved = true;
                }
                // Check color of Event
                QColor newEventsColor=QColor(eventsNew.at(i).toObject().value(STATE_COLOR_RED).toInt(),eventsNew.at(i).toObject().value(STATE_COLOR_GREEN).toInt(),eventsNew.at(i).toObject().value(STATE_COLOR_BLUE ).toInt());
                QColor oldEventsColor=QColor(eventsOld.at(i).toObject().value(STATE_COLOR_RED).toInt(),eventsOld.at(i).toObject().value(STATE_COLOR_GREEN).toInt(),eventsOld.at(i).toObject().value(STATE_COLOR_BLUE ).toInt());
-               if(newEventsColor != oldEventsColor) {
+               if (newEventsColor != oldEventsColor)
                    mDesignIsChanged = true;
-               }
+
                // Check EVENTS STRUCTURE
-               if( eventsNew.at(i).toObject().value(STATE_EVENT_TYPE) != eventsOld.at(i).toObject().value(STATE_EVENT_TYPE) ||
+               if ( eventsNew.at(i).toObject().value(STATE_EVENT_TYPE) != eventsOld.at(i).toObject().value(STATE_EVENT_TYPE) ||
                    eventsNew.at(i).toObject().value(STATE_EVENT_METHOD) != eventsOld.at(i).toObject().value(STATE_EVENT_METHOD) ||
                    eventsNew.at(i).toObject().value(STATE_EVENT_PHASE_IDS) != eventsOld.at(i).toObject().value(STATE_EVENT_PHASE_IDS) ||
                    eventsNew.at(i).toObject().value(STATE_EVENT_KNOWN_TYPE) != eventsOld.at(i).toObject().value(STATE_EVENT_KNOWN_TYPE) ||
@@ -297,19 +292,18 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
                // Check dates inside Event
                QJsonArray datesNew = eventsNew.at(i).toObject().value(STATE_EVENT_DATES).toArray();
                QJsonArray datesOld = eventsOld.at(i).toObject().value(STATE_EVENT_DATES).toArray();
-               if( datesNew.size() != datesOld.size()) {
+               if ( datesNew.size() != datesOld.size()) {
                    mStructureIsChanged = true;
                    return;
-               }
-               else {
-                   for(int j=0; j<datesNew.size(); ++j){
+               } else {
+                   for (int j = 0; j<datesNew.size(); ++j){
                         // Check name of Event
                         if(datesNew.at(j).toObject().value(STATE_NAME) != datesOld.at(j).toObject().value(STATE_NAME)) {
                             mDesignIsChanged = true;
                         }
                         // No color in date JSON
                         // Check DATES STRUCTURE
-                        if( datesNew.at(j).toObject().value(STATE_DATE_DATA) != datesOld.at(j).toObject().value(STATE_DATE_DATA) ||
+                        if ( datesNew.at(j).toObject().value(STATE_DATE_DATA) != datesOld.at(j).toObject().value(STATE_DATE_DATA) ||
                             datesNew.at(j).toObject().value(STATE_DATE_PLUGIN_ID) != datesOld.at(j).toObject().value(STATE_DATE_PLUGIN_ID) ||
                             datesNew.at(j).toObject().value(STATE_DATE_VALID) != datesOld.at(j).toObject().value(STATE_DATE_VALID) ||
                             datesNew.at(j).toObject().value(STATE_DATE_DELTA_TYPE).toInt() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_TYPE).toInt() ||
@@ -332,11 +326,10 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
         const QJsonArray eventsConstNew = stateNew.value(STATE_EVENTS_CONSTRAINTS).toArray();
         const QJsonArray eventsConstOld = stateOld.value(STATE_EVENTS_CONSTRAINTS).toArray();
 
-        if( eventsConstNew.size() != eventsConstOld.size()) {
+        if ( eventsConstNew.size() != eventsConstOld.size()) {
             mStructureIsChanged = true;
             return;
-        }
-        else if(eventsConstNew != eventsConstOld) {
+        } else if(eventsConstNew != eventsConstOld) {
                 mStructureIsChanged = true;
                 return;
         }
@@ -356,51 +349,41 @@ bool Project::designIsChanged()
 
 bool Project::event(QEvent* e)
 {
-    if(e->type() == QEvent::User)
-    {
+    if (e->type() == QEvent::User) {
         StateEvent* se = static_cast<StateEvent*>(e);
-        if(se)
-        {
+        if (se)
             updateState(se->state(), se->reason(), se->notify());
-        }
+
         return true;
-    }
-    else if(e->type() == 1001)
-    {
+    } else if (e->type() == 1001) {
 #ifdef DEBUG
         //qDebug() << "(---) Receiving events selection : adapt checked phases";
 #endif
         emit selectedEventsChanged();
         return true;
-    }
-    else if(e->type() == 1002)
-    {
+    } else if (e->type() == 1002) {
 #ifdef DEBUG
         //qDebug() << "(---) Receiving phases selection : adapt selected events";
 #endif
         emit selectedPhasesChanged();
         return true;
-    }
-    else
-    {
+    } else
         return QObject::event(e);
-    }
+
 }
 
 void Project::updateState(const QJsonObject& state, const QString& reason, bool notify)
 {
     //qDebug() << " ---  Receiving : " << reason;
     mState = state;
-    if(notify)
-    {
+    if (notify) {
         /*QProgressDialog progress(qApp->activeWindow(), Qt::Sheet);
         progress.setLabelText(tr("Loading..."));
         progress.setRange(0, 0);
         progress.setModal(true);
         progress.setCancelButton(0);*/
         
-        if(reason == PROJECT_LOADED_REASON)
-        {
+        if (reason == PROJECT_LOADED_REASON) {
             // ------------------------------------------
             //  TODO : find a way to show progress by theading the loading process
             // ------------------------------------------
@@ -413,10 +396,9 @@ void Project::updateState(const QJsonObject& state, const QString& reason, bool 
                 
             }*/
         }
-        else if(reason == NEW_PROJECT_REASON)
-        {
+        else if (reason == NEW_PROJECT_REASON)
             showStudyPeriodWarning();
-        }
+
         emit projectStateChanged();
     }
 }
@@ -461,8 +443,7 @@ bool Project::load(const QString& path)
 
     qDebug() << "in Project::load Loading project file : " << path;
 
-    if(file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QFileInfo info(path);
         MainWindow::getInstance()->setCurrentPath(info.absolutePath());
         
@@ -476,8 +457,7 @@ bool Project::load(const QString& path)
        qDebug() << "in Project::load  begin QJsonDocument::fromJson";
         QJsonDocument jsonDoc(QJsonDocument::fromJson(saveData, &error));
        qDebug() << "in Project::load  end QJsonDocument::fromJson";
-        if(error.error !=  QJsonParseError::NoError)
-        {
+        if (error.error !=  QJsonParseError::NoError) {
             QMessageBox message(QMessageBox::Critical,
                                 tr("Error loading project file"),
                                 tr("The project file could not be loaded.") + "\r" +
@@ -487,48 +467,41 @@ bool Project::load(const QString& path)
                                 Qt::Sheet);
             message.exec();
             return false;
-        }
-        else
-        {
-            if(mModel) {
+        } else {
+            if(mModel)
                 mModel->clear();
-            }
+
             mState = jsonDoc.object();
             
-            if(mState.contains(STATE_APP_VERSION))
-            {
+            if (mState.contains(STATE_APP_VERSION)) {
                 QString projectVersionStr = mState.value(STATE_APP_VERSION).toString();
                 QStringList projectVersionList = projectVersionStr.split(".");
                 
                 QString appVersionStr = QApplication::applicationVersion();
                 QStringList appVersionList = appVersionStr.split(".");
                 
-                if(projectVersionList.size() == 3 && appVersionList.size() == 3)
-                {
+                if (projectVersionList.size() == 3 && appVersionList.size() == 3) {
                     bool newerProject = false;
-                    if(projectVersionList[0].toInt() > appVersionList[0].toInt()){
+                    if (projectVersionList[0].toInt() > appVersionList[0].toInt())
                         newerProject = true;
-                    }
-                    else if(projectVersionList[0].toInt() == appVersionList[0].toInt()){
-                        if(projectVersionList[1].toInt() > appVersionList[1].toInt()){
-                            newerProject = true;
-                        }
-                        else if(projectVersionList[1].toInt() == appVersionList[1].toInt()){
-                            if(projectVersionList[2].toInt() > appVersionList[2].toInt()){
+
+                    else if (projectVersionList[0].toInt() == appVersionList[0].toInt()) {
+                            if (projectVersionList[1].toInt() > appVersionList[1].toInt())
                                 newerProject = true;
-                            }
+                        else if (projectVersionList[1].toInt() == appVersionList[1].toInt()) {
+                                if (projectVersionList[2].toInt() > appVersionList[2].toInt())
+                                    newerProject = true;
                         }
                     }
-                    if(newerProject){
+                    if (newerProject) {
                         QMessageBox message(QMessageBox::Warning,
                                             tr("Project version doesn't match"),
                                             "This project has been saved with a newer version of ChronoModel :\r\r- Project version : " + projectVersionStr + "\r- Current version : " + appVersionStr + "\r\rSome incompatible data may be missing and you may encounter problems running the model.\r\rLoading the project will update and overwrite the existing file. Do you really want to continue ?",
                                             QMessageBox::Yes | QMessageBox::No,
                                             qApp->activeWindow(),
                                             Qt::Sheet);
-                        if(message.exec() == QMessageBox::No){
+                        if (message.exec() == QMessageBox::No)
                             return false;
-                        }
                     }
                 }
             }
@@ -573,12 +546,12 @@ bool Project::load(const QString& path)
 
                 qDebug() << "Project::load Loading model file.dat : " << dataPath << " size=" << dataFile.size();
       
-                try{
+                try {
                     //mModel->setJson(mState);
                     mModel->fromJson(mState);
 
                 }
-                catch(QString error){
+                catch (QString error) {
                     QMessageBox message(QMessageBox::Critical,
                                         tr("Error loading project"),
                                         tr("The project could not be loaded.") + "\r" +
@@ -592,11 +565,11 @@ bool Project::load(const QString& path)
                 }
                 
                 
-                try{
+                try {
                     mModel->restoreFromFile(dataPath);
                     
                     emit mcmcFinished(mModel);
-                }catch(QString error){
+                } catch(QString error) {
                     QMessageBox message(QMessageBox::Critical,
                                         tr("Error loading project MCMC results"),
                                         tr("The project MCMC results could not be loaded.") + "\r" +
@@ -628,8 +601,7 @@ bool Project::saveAs(const QString& dialogTitle)
                                                 dialogTitle,
                                                 MainWindow::getInstance()->getCurrentPath(),
                                                 tr("Chronomodel Project (*.chr)"));
-    if(!path.isEmpty())
-    {
+    if (!path.isEmpty()) {
         QFileInfo info(path);
         MainWindow::getInstance()->setCurrentPath(info.absolutePath());
         
@@ -657,18 +629,13 @@ bool Project::askToSave(const QString& saveDialogTitle)
                                        tr("Do you want to save the current project ?"),
                                        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
     
-    if(result == QMessageBox::Yes)
-    {
+    if (result == QMessageBox::Yes) {
         // return true if saving is done correcty
         return save();//saveDialogTitle);
-    }
-    else if(result == QMessageBox::No)
-    {
+    } else if (result == QMessageBox::No) {
         // the user doesn't want to save : returning true to continue
         return true;
-    }
-    else if(result == QMessageBox::Cancel)
-    {
+    } else if (result == QMessageBox::Cancel) {
         // the user canceled : return false to cancel any further operations
         return false;
     }
@@ -677,12 +644,10 @@ bool Project::askToSave(const QString& saveDialogTitle)
 
 bool Project::saveProjectToFile()
 {
-    if(mLastSavedState != mState)
-    {
+    if (mLastSavedState != mState) {
         QString path = mProjectFileDir + "/" + mProjectFileName;
         QFile file(path);
-        if(file.open(QIODevice::ReadWrite | QIODevice::Text))
-        {
+        if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
 #ifdef DEBUG
             qDebug() << "Project saved to : " << path;
 #endif
@@ -692,14 +657,10 @@ bool Project::saveProjectToFile()
             file.write(jsonDoc.toJson(QJsonDocument::Indented));
             file.resize(file.pos());
             file.close();
-        }
-        else
-        {
+        } else
             return false;
-        }
-    }
-    else
-    {
+
+    } else {
 #ifdef DEBUG
         //qDebug() << "Nothing new to save in project model";
 #endif
@@ -729,8 +690,7 @@ bool Project::saveProjectToFile()
 #pragma mark Settings
 bool Project::setSettings(const ProjectSettings& settings)
 {
-    if(settings.mTmin >= settings.mTmax)
-    {
+    if (settings.mTmin >= settings.mTmax) {
         QMessageBox message(QMessageBox::Critical, tr("Inconsistent values"), tr("Start Date must be lower than End Date !"), QMessageBox::Ok, qApp->activeWindow(), Qt::Sheet);
         message.exec();
         return false;
@@ -741,8 +701,7 @@ bool Project::setSettings(const ProjectSettings& settings)
         message.exec();
         return false;
     } */
-    else
-    {
+    else {
         QJsonObject stateNext = mState;
         
         // Set the new srudy period in the new state
@@ -787,8 +746,7 @@ void Project::mcmcSettings()
     dialog.setSettings(settings);
     dialog.setModal(true);
     
-    if(dialog.exec() == QDialog::Accepted)
-    {
+    if (dialog.exec() == QDialog::Accepted) {
         MCMCSettings settings = dialog.getSettings();
         
         QJsonObject stateNext = mState;
@@ -807,30 +765,25 @@ void Project::resetMCMC()
                         QMessageBox::Yes | QMessageBox::No,
                         qApp->activeWindow(),
                         Qt::Sheet);
-    if(message.exec() == QMessageBox::Yes)
-    {
+    if (message.exec() == QMessageBox::Yes) {
         QJsonObject stateNext = mState;
         QJsonArray events = mState.value(STATE_EVENTS).toArray();
         
-        for(int i=0; i<events.size(); ++i)
-        {
+        for (int i = 0; i < events.size(); ++i) {
             QJsonObject event = events.at(i).toObject();
             event[STATE_EVENT_METHOD] = (int)Event::eDoubleExp;
             
             QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
-            for(int j=0; j<dates.size(); ++j)
-            {
+            for (int j = 0; j < dates.size(); ++j) {
                 QJsonObject date = dates.at(j).toObject();
                 
-                try{
+                try {
                     Date d = Date::fromJson(date);
-                    if(!d.isNull())
-                    {
+                    if (!d.isNull()) {
                         date[STATE_DATE_METHOD] = (int)d.mPlugin->getDataMethod();
                         dates[j] = date;
                     }
-                }
-                catch(QString error){
+                } catch(QString error) {
                     QMessageBox message(QMessageBox::Critical,
                                         qApp->applicationName() + " " + qApp->applicationVersion(),
                                         tr("Error : ") + error,
@@ -854,10 +807,9 @@ bool Project::studyPeriodIsValid()
     const QJsonObject settings = mState.value(STATE_SETTINGS).toObject();
     const int tmin = settings.value(STATE_SETTINGS_TMIN).toInt();
     const int tmax = settings.value(STATE_SETTINGS_TMAX).toInt();
-    if(tmin >= tmax)
-    {
+    if (tmin >= tmax)
         showStudyPeriodWarning();
-    }
+
     return (tmin < tmax);
 }
 
@@ -882,14 +834,12 @@ int Project::getUnusedEventId(const QJsonArray& events)
 {
     int id = -1;
     bool idIsFree = false;
-    while(!idIsFree)
-    {
+    while (!idIsFree) {
         ++id;
         idIsFree = true;
-        for(int i=0; i<events.size(); ++i)
-        {
+        for (int i = 0; i<events.size(); ++i) {
             QJsonObject event = events.at(i).toObject();
-            if(event.value(STATE_ID).toInt() == id)
+            if (event.value(STATE_ID).toInt() == id)
                 idIsFree = false;
         }
     }
@@ -898,11 +848,9 @@ int Project::getUnusedEventId(const QJsonArray& events)
 
 void Project::createEvent()
 {
-    if(studyPeriodIsValid())
-    {
+    if (studyPeriodIsValid()) {
         EventDialog dialog(qApp->activeWindow(), tr("New Event"), Qt::Sheet);
-        if(dialog.exec() == QDialog::Accepted)
-        {
+        if (dialog.exec() == QDialog::Accepted) {
             Event event;
             event.mName = dialog.getName();
             event.mColor= dialog.getColor();
@@ -914,11 +862,9 @@ void Project::createEvent()
 
 void Project::createEventKnown()
 {
-    if(studyPeriodIsValid())
-    {
+    if (studyPeriodIsValid()) {
         EventDialog dialog(qApp->activeWindow(), tr("New Bound"), Qt::Sheet);
-        if(dialog.exec() == QDialog::Accepted)
-        {
+        if (dialog.exec() == QDialog::Accepted) {
             EventKnown event;
             event.mName = dialog.getName();
             event.mColor= dialog.getColor();
@@ -949,21 +895,17 @@ void Project::deleteSelectedEvents()
     QJsonArray events_constraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
     QJsonArray events_trash = mState.value(STATE_EVENTS_TRASH).toArray();
     
-    for(int i=events.size()-1; i>=0; --i)
-    {
+    for (int i = events.size()-1; i >= 0; --i) {
         QJsonObject event = events[i].toObject();
-        if(event.value(STATE_IS_SELECTED).toBool())
-        {
+        if (event.value(STATE_IS_SELECTED).toBool()) {
             int event_id = event[STATE_ID].toInt();
-            for(int j=events_constraints.size()-1; j>=0; --j)
-            {
+            for (int j = events_constraints.size()-1; j >= 0; --j) {
                 QJsonObject constraint = events_constraints[j].toObject();
                 int bwd_id = constraint.value(STATE_CONSTRAINT_BWD_ID).toInt();
                 int fwd_id = constraint.value(STATE_CONSTRAINT_FWD_ID).toInt();
-                if(bwd_id == event_id || fwd_id == event_id)
-                {
+                if (bwd_id == event_id || fwd_id == event_id)
                     events_constraints.removeAt(j);
-                }
+
             }
             events.removeAt(i);
             events_trash.append(event);
@@ -986,15 +928,13 @@ void Project::deleteSelectedTrashedEvents(const QList<int>& ids)
     
     QJsonArray events_trash = mState.value(STATE_EVENTS_TRASH).toArray();
     
-    for(int i=events_trash.size()-1; i>=0; --i)
-    {
+    for (int i = events_trash.size()-1; i >= 0; --i) {
         QJsonObject event = events_trash[i].toObject();
         int id = event.value(STATE_ID).toInt();
         
-        if(ids.contains(id))
-        {
+        if (ids.contains(id))
             events_trash.removeAt(i);
-        }
+
     }
     stateNext[STATE_EVENTS_TRASH] = events_trash;
     
@@ -1004,8 +944,7 @@ void Project::deleteSelectedTrashedEvents(const QList<int>& ids)
 void Project::recycleEvents()
 {
     TrashDialog dialog(TrashDialog::eEvent, qApp->activeWindow(), Qt::Sheet);
-    if(dialog.exec() == QDialog::Accepted)
-    {
+    if (dialog.exec() == QDialog::Accepted) {
         QList<int> indexes = dialog.getSelectedIndexes();
         qDebug() << indexes;
         
@@ -1013,8 +952,7 @@ void Project::recycleEvents()
         QJsonArray events = mState.value(STATE_EVENTS).toArray();
         QJsonArray events_trash = mState.value(STATE_EVENTS_TRASH).toArray();
         
-        for(int i=indexes.size()-1; i>=0; --i)
-        {
+        for (int i = indexes.size()-1; i >= 0; --i) {
             QJsonObject event = events_trash.takeAt(indexes[i]).toObject();
             event[STATE_ID] = getUnusedEventId(events);
             events.append(event);
@@ -1030,11 +968,9 @@ void Project::updateEvent(const QJsonObject& event, const QString& reason)
 {
     QJsonObject stateNext = mState;
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
-    for(int i=0; i<events.size(); ++i)
-    {
+    for (int i = 0; i<events.size(); ++i) {
         QJsonObject evt = events.at(i).toObject();
-        if(evt.value(STATE_ID).toInt() == event.value(STATE_ID).toInt())
-        {
+        if (evt.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
             events[i] = event;
             break;
         }
@@ -1056,24 +992,20 @@ void Project::mergeEvents(int eventFromId, int eventToId)
     int fromIndex = -1;
     int toIndex = -1;
     
-    for(int i=events.size()-1; i>=0; --i)
-    {
+    for (int i = events.size()-1; i >= 0; --i) {
         QJsonObject evt = events.at(i).toObject();
         int id = evt.value(STATE_ID).toInt();
-        if(id == eventFromId)
-        {
+        if (id == eventFromId) {
             eventFrom = evt;
             fromIndex = i;
-        }
-        else if(id == eventToId)
-        {
+        } else if (id == eventToId) {
             eventTo = evt;
             toIndex = i;
         }
     }
     QJsonArray datesFrom = eventFrom.value(STATE_EVENT_DATES).toArray();
     QJsonArray datesTo = eventTo.value(STATE_EVENT_DATES).toArray();
-    for(int i=0; i<datesFrom.size(); ++i){
+    for (int i=0; i<datesFrom.size(); ++i) {
         QJsonObject dateFrom = datesFrom.at(i).toObject();
         dateFrom[STATE_ID] = getUnusedDateId(datesTo);
         datesTo.append(dateFrom);
@@ -1086,15 +1018,13 @@ void Project::mergeEvents(int eventFromId, int eventToId)
     
     // Delete constraints around the disappearing event
     QJsonArray constraints = stateNext.value(STATE_EVENTS_CONSTRAINTS).toArray();
-    for(int i=constraints.size()-1; i>=0; --i)
-    {
+    for (int i = constraints.size()-1; i >= 0; --i) {
         QJsonObject c = constraints.at(i).toObject();
         int fromId = c.value(STATE_CONSTRAINT_BWD_ID).toInt();
         int toId = c.value(STATE_CONSTRAINT_FWD_ID).toInt();
-        if(eventFromId == fromId || eventFromId == toId)
-        {
+        if (eventFromId == fromId || eventFromId == toId)
             constraints.removeAt(i);
-        }
+
     }
     stateNext[STATE_EVENTS_CONSTRAINTS] = constraints;
     
@@ -1108,11 +1038,9 @@ void Project::updateSelectedEventsColor(const QColor& color)
 {
     QJsonObject stateNext = mState;
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
-    for(int i=0; i<events.size(); ++i)
-    {
+    for (int i = 0; i < events.size(); ++i) {
         QJsonObject evt = events[i].toObject();
-        if(evt.value(STATE_IS_SELECTED).toBool())
-        {
+        if (evt.value(STATE_IS_SELECTED).toBool()) {
             evt[STATE_COLOR_RED] = color.red();
             evt[STATE_COLOR_GREEN] = color.green();
             evt[STATE_COLOR_BLUE] = color.blue();
@@ -1127,11 +1055,9 @@ void Project::updateSelectedEventsMethod(Event::Method method)
 {
     QJsonObject stateNext = mState;
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
-    for(int i=0; i<events.size(); ++i)
-    {
+    for (int i = 0; i<events.size(); ++i) {
         QJsonObject evt = events[i].toObject();
-        if(evt.value(STATE_IS_SELECTED).toBool())
-        {
+        if (evt.value(STATE_IS_SELECTED).toBool()) {
             evt[STATE_EVENT_METHOD] = method;
             events[i] = evt;
         }
@@ -1144,16 +1070,13 @@ void Project::updateSelectedEventsDataMethod(Date::DataMethod method, const QStr
 {
     QJsonObject stateNext = mState;
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
-    for(int i=0; i<events.size(); ++i)
-    {
+    for (int i = 0; i<events.size(); ++i) {
         QJsonObject evt = events[i].toObject();
-        if(evt.value(STATE_IS_SELECTED).toBool())
-        {
+        if (evt.value(STATE_IS_SELECTED).toBool()) {
             QJsonArray dates = evt[STATE_EVENT_DATES].toArray();
-            for(int j=0; j<dates.size(); ++j)
-            {
+            for (int j = 0; j<dates.size(); ++j) {
                 QJsonObject date = dates[j].toObject();
-                if(date[STATE_DATE_PLUGIN_ID].toString() == pluginId){
+                if (date[STATE_DATE_PLUGIN_ID].toString() == pluginId) {
                     date[STATE_DATE_METHOD] = method;
                     dates[j] = date;
                 }
@@ -1175,14 +1098,12 @@ int Project::getUnusedDateId(const QJsonArray& dates)
 {
     int id = -1;
     bool idIsFree = false;
-    while(!idIsFree)
-    {
+    while (!idIsFree) {
         ++id;
         idIsFree = true;
-        for(int i=0; i<dates.size(); ++i)
-        {
+        for (int i = 0; i < dates.size(); ++i) {
             QJsonObject date = dates.at(i).toObject();
-            if(date[STATE_ID].toInt() == id)
+            if (date[STATE_ID].toInt() == id)
                 idIsFree = false;
         }
     }
@@ -1192,17 +1113,14 @@ int Project::getUnusedDateId(const QJsonArray& dates)
 Date Project::createDateFromPlugin(PluginAbstract* plugin)
 {
     Date date;
-    if(plugin)
-    {
+    if (plugin) {
         DateDialog dialog(qApp->activeWindow());
         PluginFormAbstract* form = plugin->getForm();
         dialog.setForm(form);
         dialog.setDataMethod(plugin->getDataMethod());
         
-        if(dialog.exec() == QDialog::Accepted)
-        {
-            if(form->isValid())
-            {
+        if (dialog.exec() == QDialog::Accepted) {
+            if (form->isValid()) {
                 date.mPlugin = plugin;
                 date.mData = form->getData();
                 
@@ -1214,9 +1132,7 @@ Date Project::createDateFromPlugin(PluginAbstract* plugin)
                 date.mDeltaMax = dialog.getDeltaMax();
                 date.mDeltaAverage = dialog.getDeltaAverage();
                 date.mDeltaError = dialog.getDeltaError();
-            }
-            else
-            {
+            } else {
                 QMessageBox message(QMessageBox::Critical,
                                     tr("Invalid data"),
                                     form->mError,
@@ -1243,11 +1159,9 @@ void Project::addDate(int eventId, QJsonObject date)
     
     // Add the date
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
-    for(int i=0; i<events.size(); ++i)
-    {
+    for (int i = 0; i < events.size(); ++i) {
         QJsonObject evt = events[i].toObject();
-        if(evt.value(STATE_ID).toInt() == eventId)
-        {
+        if (evt.value(STATE_ID).toInt() == eventId) {
             date[STATE_ID] = getUnusedDateId(evt[STATE_EVENT_DATES].toArray());
             QJsonArray dates = evt[STATE_EVENT_DATES].toArray();
             dates.append(date);
@@ -1266,25 +1180,23 @@ void Project::checkDatesCompatibility()
     QJsonObject state = mState;
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
     QJsonArray phases = mState.value(STATE_PHASES).toArray();
-    for(int i=0; i<events.size(); ++i)
-    {
+    for (int i = 0; i<events.size(); ++i) {
         QJsonObject event = events.at(i).toObject();
         QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
-        for(int j=0; j<dates.size(); ++j)
-        {
+        for (int j = 0; j < dates.size(); ++j) {
             QJsonObject date = dates.at(j).toObject();
             
             // -----------------------------------------------------------
             //  Check the date compatibility with the plugin version.
             //  Here, we can control if all date fields are present, and add them if not.
             // -----------------------------------------------------------
-            if(date.find(STATE_DATE_SUB_DATES) == date.end())
+            if (date.find(STATE_DATE_SUB_DATES) == date.end())
                 date[STATE_DATE_SUB_DATES] = QJsonArray();
             
-            if(date.find(STATE_DATE_VALID) == date.end())
+            if (date.find(STATE_DATE_VALID) == date.end())
                 date[STATE_DATE_VALID] = true;
             
-            if(date[STATE_DATE_PLUGIN_ID].toString() == "typo_ref.")
+            if (date[STATE_DATE_PLUGIN_ID].toString() == "typo_ref.")
                 date[STATE_DATE_PLUGIN_ID] = QString("typo");
             
             // etc...
@@ -1301,7 +1213,7 @@ void Project::checkDatesCompatibility()
             //  Check subdates compatibility with the plugin version
             // -----------------------------------------------------------
             QJsonArray subdates = date[STATE_DATE_SUB_DATES].toArray();
-            for(int k=0; k<subdates.size(); ++k){
+            for (int k = 0; k < subdates.size(); ++k) {
                 QJsonObject subdate = subdates[k].toObject();
                 subdate[STATE_DATE_DATA] = plugin->checkValuesCompatibility(subdate[STATE_DATE_DATA].toObject());
                 subdates[k] = subdate;
@@ -1317,16 +1229,17 @@ void Project::checkDatesCompatibility()
     }
     // conversion since version 1.4 test
     bool phaseConversion = false;
-    for(int i=0;i<phases.size();i++) {
+    for (int i = 0; i < phases.size(); i++) {
        QJsonObject phase = phases[i].toObject();
-       if( phase[STATE_PHASE_TAU_TYPE].toInt() == Phase::eTauRange){
+       if ( phase[STATE_PHASE_TAU_TYPE].toInt() == Phase::eTauRange) {
            phase[STATE_PHASE_TAU_TYPE] = Phase::eTauFixed;
            phase[STATE_PHASE_TAU_FIXED] = phase[STATE_PHASE_TAU_MAX];
            phases[i] = phase;
            phaseConversion = true;
        }
     }
-    if(phaseConversion) state[STATE_PHASES] = phases;
+    if (phaseConversion)
+        state[STATE_PHASES] = phases;
 
     mState = state;
 }
@@ -1340,14 +1253,11 @@ void Project::updateDate(int eventId, int dateIndex)
     
     QJsonArray events = mState[STATE_EVENTS].toArray();
     
-    for(int i=0; i<events.size(); ++i)
-    {
+    for (int i = 0; i < events.size(); ++i) {
         QJsonObject event = events[i].toObject();
-        if(event[STATE_ID].toInt() == eventId)
-        {
+        if (event[STATE_ID].toInt() == eventId) {
             QJsonArray dates = event[STATE_EVENT_DATES].toArray();
-            if(dateIndex < dates.size())
-            {
+            if (dateIndex < dates.size()) {
                 QJsonObject date = dates[dateIndex].toObject();
                 
                 QString pluginId = date[STATE_DATE_PLUGIN_ID].toString();
@@ -1358,10 +1268,8 @@ void Project::updateDate(int eventId, int dateIndex)
                 dialog.setForm(form);
                 dialog.setDate(date);
                 
-                if(dialog.exec() == QDialog::Accepted)
-                {
-                    if(form->isValid())
-                    {
+                if (dialog.exec() == QDialog::Accepted) {
+                    if (form->isValid()) {
                         date[STATE_DATE_DATA] = form->getData();
                         date[STATE_NAME] = dialog.getName();
                         date[STATE_DATE_METHOD] = dialog.getMethod();
@@ -1384,9 +1292,7 @@ void Project::updateDate(int eventId, int dateIndex)
                         
                         pushProjectState(state, tr("Date updated"), true);
                         
-                    }
-                    else
-                    {
+                    } else {
                         QMessageBox message(QMessageBox::Critical,
                                             tr("Invalid data"),
                                             form->mError,
@@ -1407,18 +1313,14 @@ void Project::deleteDates(int eventId, const QList<int>& dateIndexes)
     QJsonObject state = mState;
     
     QJsonArray events = state[STATE_EVENTS].toArray();
-    for(int i=0; i<events.size(); ++i)
-    {
+    for (int i = 0; i < events.size(); ++i) {
         QJsonObject event = events[i].toObject();
-        if(event[STATE_ID].toInt() == eventId)
-        {
+        if (event[STATE_ID].toInt() == eventId) {
             QJsonArray dates_trash = state[STATE_DATES_TRASH].toArray();
             QJsonArray dates = event[STATE_EVENT_DATES].toArray();
             
-            for(int j=dates.size()-1; j>=0; --j)
-            {
-                if(dateIndexes.contains(j))
-                {
+            for (int j = dates.size()-1; j >= 0; --j) {
+                if (dateIndexes.contains(j)) {
                     QJsonObject date = dates.takeAt(j).toObject();
                     dates_trash.append(date);
                 }
@@ -1444,15 +1346,13 @@ void Project::deleteSelectedTrashedDates(const QList<int>& ids)
     
     QJsonArray dates_trash = mState[STATE_DATES_TRASH].toArray();
     
-    for(int i=dates_trash.size()-1; i>=0; --i)
-    {
+    for (int i = dates_trash.size()-1; i >= 0; --i) {
         QJsonObject date = dates_trash[i].toObject();
         int id = date[STATE_ID].toInt();
         
-        if(ids.contains(id))
-        {
+        if (ids.contains(id))
             dates_trash.removeAt(i);
-        }
+
     }
     stateNext[STATE_DATES_TRASH] = dates_trash;
     
@@ -1462,8 +1362,7 @@ void Project::deleteSelectedTrashedDates(const QList<int>& ids)
 void Project::recycleDates(int eventId)
 {
     TrashDialog dialog(TrashDialog::eDate, qApp->activeWindow());
-    if(dialog.exec() == QDialog::Accepted)
-    {
+    if (dialog.exec() == QDialog::Accepted) {
         QList<int> indexes = dialog.getSelectedIndexes();
         qDebug() << indexes;
         
@@ -1471,14 +1370,11 @@ void Project::recycleDates(int eventId)
         QJsonArray events = mState[STATE_EVENTS].toArray();
         QJsonArray dates_trash = mState[STATE_DATES_TRASH].toArray();
         
-        for(int i=0; i<events.size(); ++i)
-        {
+        for (int i = 0; i < events.size(); ++i) {
             QJsonObject event = events[i].toObject();
-            if(event[STATE_ID].toInt() == eventId)
-            {
+            if (event[STATE_ID].toInt() == eventId){
                 QJsonArray dates = event[STATE_EVENT_DATES].toArray();
-                for(int i=indexes.size()-1; i>=0; --i)
-                {
+                for (int i = indexes.size()-1; i >= 0; --i) {
                     QJsonObject date = dates_trash.takeAt(indexes[i]).toObject();
                     date[STATE_ID] = getUnusedDateId(dates);
                     dates.append(date);
