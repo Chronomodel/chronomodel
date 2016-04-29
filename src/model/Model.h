@@ -52,6 +52,7 @@ public:
     void initThreshold(const double threshold);
     double getThreshold() const ;
     void initDensities(const int fftLength, const double bandwidth, const double threshold);
+    void updateDensities(const int fftLength, const double bandwidth, const double threshold);
 
     // Computed from trace using FFT :
     void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double bandwidth);

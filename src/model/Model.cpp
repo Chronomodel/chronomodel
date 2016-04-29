@@ -1040,6 +1040,33 @@ void Model::initDensities(const int fftLength, const double bandwidth, const dou
  //   emit newCalculus();
 }
 
+void Model::updateDensities(const int fftLength, const double bandwidth, const double threshold)
+{
+    qDebug()<<"Model::updateDensities"<<fftLength<<bandwidth<<threshold;
+    bool newPosteriorDensities = false;
+    if ((mFFTLength != fftLength) || (mBandwidth != bandwidth)) {
+        mFFTLength = fftLength;
+        mBandwidth = bandwidth;
+
+        clearPosteriorDensities();
+        generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
+        newPosteriorDensities = true;
+    }
+    // memo the new value of the Threshold inside all the part of the model: phases, events and dates
+
+    if (mThreshold != threshold) {
+        initThreshold(threshold);
+
+        generateCredibility(mThreshold);
+    }
+
+    if (newPosteriorDensities)
+        generateHPD(mThreshold);
+
+    generateNumericalResults(mChains);
+
+}
+
 void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth)
 {
     QTime t = QTime::currentTime();
