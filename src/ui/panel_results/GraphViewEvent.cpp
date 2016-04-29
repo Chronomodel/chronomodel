@@ -77,7 +77,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             if (bound) {
                 if (bound->knownType() == EventKnown::eFixed)
                     isFixedBound = true;
-                else if(bound->knownType() == EventKnown::eUniform)
+                else if (bound->knownType() == EventKnown::eUniform)
                     isUnifBound = true;
             }
         }
@@ -90,10 +90,10 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         if (typeGraph == ePostDistrib) {
             mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             mGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
-            mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
+            mGraph->setFormatFunctY(0);//formatValueToAppSettingsPrecision);
             mGraph->setBackgroundColor(QColor(230, 230, 230));
             //mGraph->adjustYToMaxValue();
-            //mGraph->autoAdjustYScale(true);
+            mGraph->autoAdjustYScale(true);
             
             mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->mName;
             
@@ -221,7 +221,8 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                 }
             }
 
-            mGraph->adjustYToMaxValue();
+            //mGraph->adjustYToMaxValue();
+            mGraph->adjustYToMinMaxValue();
         }
         // ------------------------------------------------
         //  second tab : History plots
@@ -312,6 +313,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 }
                 mGraph->setTipXLab("t");
                 mGraph->setYAxisMode(GraphView::eHidden);
+                mGraph->autoAdjustYScale(true);
             }
             // ------------------------------------------------
             //  Events don't have std dev BUT we can visualize
@@ -330,8 +332,9 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 }
                 mGraph->setTipXLab("duration");
                 mGraph->setYAxisMode(GraphView::eHidden);
+                mGraph->adjustYToMaxValue();
             }
-            mGraph->adjustYToMaxValue();
+            
         }
         // ------------------------------------------------
         //  Second tab : History plots
@@ -349,7 +352,8 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList[i]);
                 mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList[i]);
             }
-            mGraph->adjustYToMinMaxValue();
+            //mGraph->adjustYToMinMaxValue();
+            mGraph->autoAdjustYScale(true);
             mGraph->setTipXLab("iteration");
             mGraph->setTipYLab("t");
             mGraph->setYAxisMode(GraphView::eMinMax);
@@ -370,6 +374,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setTipXLab("iteration");
             mGraph->setTipYLab("rate");
             mGraph->setYAxisMode(GraphView::eMinMax);
+            mGraph->autoAdjustYScale(true);
         }
         // ------------------------------------------------
         //  fourth tab : Autocorrelation

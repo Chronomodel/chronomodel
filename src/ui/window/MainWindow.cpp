@@ -504,8 +504,7 @@ void MainWindow::appSettings()
     AppSettingsDialog dialog(qApp->activeWindow());
     dialog.setSettings(mAppSettings);
     connect(&dialog, SIGNAL(settingsChanged(const AppSettings&)), this, SLOT(setAppSettings(const AppSettings&)));
-    if(dialog.exec() == QDialog::Accepted)
-        setAppSettings(dialog.getSettings());
+    dialog.exec();
 
 }
 
@@ -522,7 +521,7 @@ void MainWindow::setAppSettings(const AppSettings& s)
     
     mProject->setAppSettings(mAppSettings);
     
-    if(mViewResultsAction->isEnabled())
+    if (mViewResultsAction->isEnabled())
         mProjectView->applySettings(mProject->mModel, &mAppSettings);
 }
 
@@ -822,7 +821,6 @@ void MainWindow::activateInterface(bool activate)
     mRunAction->setEnabled(activate);
     
     if (!activate) {
-        //mRunAction->setEnabled(activate);
         mViewResultsAction->setEnabled(activate);
         mViewLogAction->setEnabled(activate);
     }
@@ -846,16 +844,16 @@ void MainWindow::setLogEnabled(bool enabled)
 
 void MainWindow::mcmcFinished(Model* model)
 {
-    if(!model) return;
+    if(!model)
+        return;
     mViewLogAction -> setEnabled(true);
     mViewResultsAction -> setEnabled(true);
     mViewResultsAction -> setChecked(true); // Just check the Result Button after computation and mResultsView is show after
 
     model->updateFormatSettings(&mAppSettings);
     
-    mProjectView->initResults(model);
-    //must do initResults before ApplySetting
-    mProjectView->applySettings(model, &mAppSettings);
+    mProjectView->initResults(model, &mAppSettings);
+  
 }
  void MainWindow::noResult()
  {

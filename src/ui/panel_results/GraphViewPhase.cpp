@@ -125,7 +125,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
     
-    mGraph->autoAdjustYScale(typeGraph == eTrace);
+   // mGraph->autoAdjustYScale(typeGraph == eTrace);
     
     mDurationGraph->removeAllCurves();
     mDurationGraph->reserveCurves(2);
@@ -156,9 +156,9 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             mGraph->mLegendY = "";
             mGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
-            mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
-
-            if(mShowDuration->isChecked())
+            mGraph->setFormatFunctY(0);
+        //    mGraph->autoAdjustYScale(true);
+            if (mShowDuration->isChecked())
                mTitle = tr("Duration") + " : " + mPhase->mName;
             else
                 mTitle = tr("Phase") + " : " + mPhase->mName;
@@ -290,7 +290,8 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 mGraph->setCurveVisible("Post Distrib Alpha " + QString::number(i), mShowChainList.at(i));
                 mGraph->setCurveVisible("Post Distrib Beta " + QString::number(i), mShowChainList.at(i));
             }
-            mGraph->adjustYToMaxValue();
+           // mGraph->adjustYToMaxValue();
+            mGraph->autoAdjustYScale(true);
             mGraph->setTipXLab("t");
             mGraph->setYAxisMode(GraphView::eHidden);
 

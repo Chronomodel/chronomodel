@@ -668,7 +668,9 @@ void ResultsView::updateGraphsLayout()
             if(y>0)
                 wid->setFixedSize(width() - sbe - mOptionsW, y);
             wid = 0;
+           
        }
+        
     }
     // ----------------------------------------------------------
     //  Graphs by events layout
@@ -681,14 +683,18 @@ void ResultsView::updateGraphsLayout()
 
             for (int i=0; i<mByEventsGraphs.size(); ++i) {
                 mByEventsGraphs.at(i)->setGeometry(0, y, width() - mOptionsW - sbe ,mGraphsH);
+                
                 y += mByEventsGraphs.at(i)->height();
             }
             if(y>0)
                 wid->setFixedSize(width() - sbe - mOptionsW, y);
             wid = 0;
+            
          }
+        
     }
     update();
+    
 }
 
 #pragma mark Update (Chained Functions)
@@ -698,25 +704,25 @@ void ResultsView::clearResults()
     mByPhasesBut->setEnabled(false);
     
 
-    for (int i=0; i<mCheckChainChecks.size(); ++i) {
+    for (int i = 0; i < mCheckChainChecks.size(); ++i) {
         delete mCheckChainChecks[i];
         mCheckChainChecks[i] = 0;
     }
     mCheckChainChecks.clear();
     
-    for (int i=0; i<mChainRadios.size(); ++i) {
+    for (int i = 0; i < mChainRadios.size(); ++i) {
         delete mChainRadios[i];
         mChainRadios[i] = 0;
     }
     mChainRadios.clear();
     
-    for(int i=0; i<mByEventsGraphs.size(); ++i) {
+    for(int i = 0; i < mByEventsGraphs.size(); ++i) {
         delete mByEventsGraphs[i];
         mByEventsGraphs[i] = 0;
     }
     mByEventsGraphs.clear();
     
-    for(int i=0; i<mByPhasesGraphs.size(); ++i) {
+    for(int i = 0; i < mByPhasesGraphs.size(); ++i) {
         delete mByPhasesGraphs[i];
         mByPhasesGraphs[i] = 0;
     }
@@ -725,11 +731,11 @@ void ResultsView::clearResults()
 
     mByPhasesGraphs.clear();
 
-    if(mEventsScrollArea) {
+    if (mEventsScrollArea) {
         mStack->removeWidget(mEventsScrollArea);
         delete mEventsScrollArea;
     }
-    if(mPhasesScrollArea){
+    if (mPhasesScrollArea){
         mStack->removeWidget(mPhasesScrollArea);
         delete mPhasesScrollArea;
     }
@@ -747,9 +753,9 @@ void ResultsView::clearResults()
 
 void ResultsView::updateFormatSetting(Model* model, const AppSettings* appSet)
 {
-    if(!mModel && !model)
+    if (!mModel && !model)
         return;
-    if(model)
+    if (model)
         mModel = model;
     mModel->updateFormatSettings(appSet);
     mNumberOfGraph = appSet->mNbSheet;
@@ -811,7 +817,7 @@ void ResultsView::initResults(Model* model)
     //  - updateCurvesToShow
     // ------------------------------------------------------------
     mModel->initDensities(getFFTLength(), getBandwidth(), getThreshold());
-
+   // mModel->updateDensities(getFFTLength(), getBandwidth(), getThreshold());
     if (mHasPhases) createPhasesScrollArea(0);
     else createEventsScrollArea(0);
 
@@ -827,7 +833,7 @@ void ResultsView::initResults(Model* model)
  */
 void ResultsView::updateResults(Model* model)
 {
-    clearResults();
+  //  clearResults();
 
         qDebug() << "ResultsView::updateResults";
 
@@ -852,8 +858,8 @@ void ResultsView::updateResults(Model* model)
         // ----------------------------------------------------
         //  Update Chains option controls (radio and checkboxes under "MCMC Chains")
         // ----------------------------------------------------
-        if(mCheckChainChecks.isEmpty()) {
-            for(int i=0; i<mChains.size(); ++i) {
+        if (mCheckChainChecks.isEmpty()) {
+            for (int i = 0; i<mChains.size(); ++i) {
                 CheckBox* check = new CheckBox(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
                 connect(check, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
                 check->setVisible(true);
@@ -867,7 +873,7 @@ void ResultsView::updateResults(Model* model)
                 mChainRadios.append(radio);
             }
         } else {
-            for(int i=0; i<mChains.size(); ++i) {
+            for (int i = 0; i<mChains.size(); ++i) {
                mCheckChainChecks[i]->setVisible(true);
                mChainRadios[i]->setVisible(true);
             }
@@ -881,8 +887,8 @@ void ResultsView::updateResults(Model* model)
         //  - updateCurvesToShow
         // ------------------------------------------------------------
 
-        mModel->initDensities(getFFTLength(), getBandwidth(), getThreshold());
-
+        //mModel->initDensities(getFFTLength(), getBandwidth(), getThreshold());
+        mModel->updateDensities(getFFTLength(), getBandwidth(), getThreshold());
         // ----------------------------------------------------
         //  Events Views : generate all phases graph
         //  No posterior density has been computed yet!
@@ -1352,18 +1358,18 @@ void ResultsView::updateScales()
     // ------------------------------------------
     //  Get X Range based on current options
     // ------------------------------------------
-    if(tabIdx == 0){
-        if(mDataThetaRadio->isChecked()) {
+    if (tabIdx == 0){
+        if (mDataThetaRadio->isChecked()) {
             mResultMinX = s.getTminFormated();
             mResultMaxX = s.getTmaxFormated();
-        } else if(mDataSigmaRadio->isChecked())  {
+        } else if (mDataSigmaRadio->isChecked())  {
             mResultMinX = 0;
             mResultMaxX = mResultMaxVariance;
 
         }
-    } else if(tabIdx == 1 || tabIdx == 2) {
+    } else if (tabIdx == 1 || tabIdx == 2) {
         mResultMinX = 0;
-        for (int i=0; i<mChainRadios.size(); ++i) {
+        for (int i = 0; i < mChainRadios.size(); ++i) {
             if (mChainRadios.at(i)->isChecked()) {
                 const ChainSpecs& chain = mChains.at(i);
                 mResultMaxX = chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter) + chain.mNumRunIter / chain.mThinningInterval;
@@ -1432,10 +1438,9 @@ void ResultsView::updateScales()
     //  Set Ruler Areas (Burn, Adapt, Run)
     // ------------------------------------------
     mRuler->clearAreas();
-    if(tabIdx == 1 || tabIdx == 2){
-        for(int i=0; i<mChainRadios.size(); ++i)
-        {
-            if(mChainRadios.at(i)->isChecked()){
+    if (tabIdx == 1 || tabIdx == 2) {
+        for (int i=0; i<mChainRadios.size(); ++i) {
+            if (mChainRadios.at(i)->isChecked()){
                 const ChainSpecs& chain = mChains.at(i);
                 unsigned long adaptSize = chain.mBatchIndex * chain.mNumBatchIter;
                 unsigned long runSize = chain.mNumRunIter / chain.mThinningInterval;
@@ -1454,7 +1459,7 @@ void ResultsView::updateScales()
 #pragma mark Log results
 void ResultsView::settingChange()
 {
-    if(mModel){
+    if (mModel) {
         updateResults();
         updateResultsLog();
     }
@@ -1464,27 +1469,25 @@ void ResultsView::updateResultsLog()
 {
     QString log;
     try {
-        for(int i=0; i<mModel->mEvents.size(); ++i) {
+        for (int i = 0; i<mModel->mEvents.size(); ++i) {
             Event* event = mModel->mEvents[i];
             log += ModelUtilities::eventResultsHTML(event, true, mModel);
             event =0;
         }
 
-        for(int i=0; i<mModel->mPhases.size(); ++i) {
+        for (int i = 0; i<mModel->mPhases.size(); ++i) {
             Phase* phase = mModel->mPhases[i];
             log += ModelUtilities::phaseResultsHTML(phase);
             phase = 0;
         }
 
-        for(int i=0; i<mModel->mPhaseConstraints.size(); ++i) {
+        for (int i = 0; i<mModel->mPhaseConstraints.size(); ++i) {
             PhaseConstraint* phaseConstraint = mModel->mPhaseConstraints.at(i);
             log += ModelUtilities::constraintResultsHTML(phaseConstraint);
             log += "<hr>";
             phaseConstraint = 0;
         }
-    }
-    catch (std::exception const & e)
-    {
+    } catch (std::exception const & e) {
         qDebug()<< "in ResultsView::updateResultsLog() Error"<<e.what();
         log = tr("impossible to compute");
     }

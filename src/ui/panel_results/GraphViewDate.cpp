@@ -113,8 +113,8 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
 
                 mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
                 mGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
-                mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
-                
+                mGraph->setFormatFunctY(0);
+                mGraph->autoAdjustYScale(true);
                 //  Post Distrib All Chains
                 GraphCurve curvePostDistrib = generateDensityCurve(variableDate->fullHisto(),
                                                              "Post Distrib All Chains",
@@ -199,12 +199,12 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                     yMax = qMax(yMax, 1.1f * map_max_value(curvePostDistribChain.mData));
                 }
                 
-                mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
+                //mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                 // Check if necessary ?
                 mGraph->autoAdjustYScale(true);
             }
             // must be after all curves adding
-            mGraph->adjustYToMinMaxValue();
+            //mGraph->adjustYToMinMaxValue();
            
         }
         // ------------------------------------------------
@@ -289,7 +289,8 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
             for (int i=0; i<mShowChainList.size(); ++i)
                 mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
             
-            mGraph->adjustYToMaxValue();
+            //mGraph->adjustYToMaxValue();
+            mGraph->autoAdjustYScale(true);
             mGraph->setTipXLab("t");
 
             mGraph->setYAxisMode(GraphView::eHidden);
@@ -308,6 +309,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
             mGraph->setTipXLab("sigma");
             mGraph->setYAxisMode(GraphView::eHidden);
         }
+        mGraph->adjustYToMinMaxValue();
     }
     // ------------------------------------------------
     //  Second tab : History plots.
@@ -325,7 +327,8 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
             mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList[i]);
         }
 
-        mGraph->adjustYToMinMaxValue();
+        //mGraph->adjustYToMinMaxValue();
+        mGraph->autoAdjustYScale(true);
         mGraph->setTipXLab("iterations");
         mGraph->setTipYLab("t");
         mGraph->setYAxisMode(GraphView::eMinMax);
