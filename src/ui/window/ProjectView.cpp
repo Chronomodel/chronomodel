@@ -117,6 +117,8 @@ void ProjectView::showResults()
 }
 void ProjectView::showLog()
 {
+    mResultsView->mModel->generateResultsLog();
+    updateResultsLog(mResultsView->mModel->getResultsLog());
     mStack->setCurrentIndex(2);
 }
 
