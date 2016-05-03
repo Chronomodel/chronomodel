@@ -329,9 +329,9 @@ void MainWindow::createMenus()
     mLanguageMenu->addAction(mTranslateFrenchAct);*/
     
     //-----------------------------------------------------------------
-    // Help/About Menu
+    // Help/About Menu this menu depend of the system.On MacOs it's in Chronomodel menu
     //-----------------------------------------------------------------
-    mHelpMenu = menuBar()->addMenu(tr("Help"));
+    mHelpMenu = menuBar()->addMenu(tr("About"));
     mHelpMenu->menuAction()->setShortcut(Qt::Key_Question);
     mHelpMenu->addAction(mAboutAct);
     mHelpMenu->addAction(mAboutQtAct);
