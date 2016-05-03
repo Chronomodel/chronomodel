@@ -107,21 +107,21 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
     
     
     mUnfoldBut = new Button(tr("Unfold"), this);
-    mUnfoldBut->setFixedHeight(25);
+    mUnfoldBut->setFixedHeight(int(mRulerH/2));
     mUnfoldBut->setCheckable(true);
     mUnfoldBut->setFlatHorizontal();
     mUnfoldBut->setIcon(QIcon(":unfold.png"));
     mUnfoldBut->setToolTip(tr("Display event's data or phase's events, depending on the chosen layout."));
     
     mNextSheetBut  = new Button(tr("Next"), this);
-    mNextSheetBut->setFixedHeight(25);
+    mNextSheetBut->setFixedHeight(int(mRulerH/2));
     mNextSheetBut->setCheckable(false);
     mNextSheetBut->setFlatHorizontal();
    // mNextSheetBut->setIcon(QIcon(":unfold.png"));
     mNextSheetBut->setToolTip(tr("Display other data"));
 
     mPreviousSheetBut  = new Button(tr("Prev."), this);
-    mPreviousSheetBut->setFixedHeight(25);
+    mPreviousSheetBut->setFixedHeight(int(mRulerH/2));
     mPreviousSheetBut->setCheckable(false);
     mPreviousSheetBut->setFlatHorizontal();
    // mPreviousSheetBut->setIcon(QIcon(":unfold.png"));
@@ -480,10 +480,10 @@ void ResultsView::updateControls()
     //  Switch between checkboxes or Radio-buttons for chains
     // -------------------------------------------------------
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
-        for(int i=0; i<mCheckChainChecks.size(); ++i)
+        for (int i=0; i<mCheckChainChecks.size(); ++i)
             mCheckChainChecks.at(i)->setVisible(true);
         
-        for(int i=0; i<mChainRadios.size(); ++i)
+        for (int i=0; i<mChainRadios.size(); ++i)
             mChainRadios.at(i)->setVisible(false);
 
     } else {
@@ -551,23 +551,23 @@ void ResultsView::updateLayout()
     if(!mModel) return;
     qDebug() << "ResultsView::updateLayout()";
     
-    int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
+    const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     int graphYAxis = 50;
-    int m = mMargin;
+    const int m = mMargin;
     int dx = mLineH + mMargin;
     
-    int tabIdx = mTabs->currentIndex();
+    const int tabIdx = mTabs->currentIndex();
     
     mCurrentXMinEdit->setText( DateUtils::dateToString(mResultCurrentMinX) );
     mCurrentXMaxEdit->setText( DateUtils::dateToString(mResultCurrentMaxX) );
     // ----------------------------------------------------------
     //  Main layout
     // ----------------------------------------------------------
-    mByPhasesBut->setGeometry(0, 0, (int)(mGraphLeft/2), mTabsH);
-    mByEventsBut->setGeometry((int)(mGraphLeft/2), 0, (int)(mGraphLeft/2), mTabsH);
-    mUnfoldBut->setGeometry(0, mTabsH, mGraphLeft, (int)(mRulerH/2));
-    mPreviousSheetBut->setGeometry(0, mTabsH+(int)(mRulerH/2), (int)(mGraphLeft/2), (int)(mRulerH/2) );
-    mNextSheetBut->setGeometry((int)(mGraphLeft/2),  mTabsH+(int)(mRulerH/2), (int)(mGraphLeft/2), (int)(mRulerH/2));
+    mByPhasesBut->setGeometry(0, 0, int(mGraphLeft/2), mTabsH);
+    mByEventsBut->setGeometry(int(mGraphLeft/2), 0, int(mGraphLeft/2), mTabsH);
+    mUnfoldBut->setGeometry(0, mTabsH, mGraphLeft, int(mRulerH/2));
+    mPreviousSheetBut->setGeometry(0, mTabsH+int(mRulerH/2), int(mGraphLeft/2), int(mRulerH/2) );
+    mNextSheetBut->setGeometry(int(mGraphLeft/2),  mTabsH+int(mRulerH/2), int(mGraphLeft/2), int(mRulerH/2));
     
     mTabs   -> setGeometry(mGraphLeft + graphYAxis, 0, width() - mGraphLeft - mOptionsW - sbe - graphYAxis, mTabsH);
     mRuler  -> setGeometry(mGraphLeft, mTabsH, width() - mGraphLeft - mOptionsW - sbe, mRulerH);
@@ -591,10 +591,10 @@ void ResultsView::updateLayout()
     // posterior distribution : chains are selectable with checkboxes
     if(tabIdx == 0) {
         mChainsGroup->setFixedHeight(m + (numChains+1) * (mLineH + m));
-        mAllChainsCheck->setGeometry(m, m, (int)(mChainsGroup->width()-2*m), mLineH);
+        mAllChainsCheck->setGeometry(m, m, int(mChainsGroup->width()-2*m), mLineH);
 
         for (int i=0; i<numChains; ++i) {
-            QRect geometry(m, m + (i+1) * (mLineH + m), (int)(mChainsGroup->width()-2*m), mLineH);
+            QRect geometry(m, m + (i+1) * (mLineH + m), int(mChainsGroup->width()-2*m), mLineH);
             mCheckChainChecks.at(i)->setGeometry(geometry);
             mChainRadios.at(i)->setGeometry(geometry);
         }
@@ -603,7 +603,7 @@ void ResultsView::updateLayout()
     } else {
         mChainsGroup->setFixedHeight(m + numChains * (mLineH + m));
         for (int i=0; i<numChains; ++i) {
-            QRect geometry(m, (int)(m + i * (mLineH + m)), (int)(mChainsGroup->width()-2*m), mLineH);
+            QRect geometry(m, int(m + i * (mLineH + m)), int(mChainsGroup->width()-2*m), mLineH);
             mCheckChainChecks.at(i) -> setGeometry(geometry);
             mChainRadios.at(i)     -> setGeometry(geometry);
         }
@@ -613,16 +613,16 @@ void ResultsView::updateLayout()
     //  Results options layout
     // ----------------------------------------------------------
     int y = m;
-    mDataThetaRadio->setGeometry(m, y, (int)(mResultsGroup->width() - 2*m), mLineH);
+    mDataThetaRadio->setGeometry(m, y, int(mResultsGroup->width() - 2*m), mLineH);
     
     // posterior distribution
-    if(tabIdx == 0){
-        mDataCalibCheck -> setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
-        mWiggleCheck    -> setGeometry(m + dx, y += (m + mLineH),(int)( mResultsGroup->width() - 2*m - dx), mLineH);
+    if (tabIdx == 0){
+        mDataCalibCheck -> setGeometry(m + dx, y += (m + mLineH), int(mResultsGroup->width() - 2*m - dx), mLineH);
+        mWiggleCheck    -> setGeometry(m + dx, y += (m + mLineH), int( mResultsGroup->width() - 2*m - dx), mLineH);
     }
 
-    if(mByPhasesBut->isChecked()) {
-        mShowDataUnderPhasesCheck->setGeometry(m + dx, y += (m + mLineH),(int) (mResultsGroup->width() - 2*m - dx), mLineH);
+    if (mByPhasesBut->isChecked()) {
+        mShowDataUnderPhasesCheck->setGeometry(m + dx, y += (m + mLineH), int(mResultsGroup->width() - 2*m - dx), mLineH);
     }
     mDataSigmaRadio -> setGeometry(m, y += (m + mLineH), mResultsGroup->width()-2*m, mLineH);
     mResultsGroup   -> setFixedHeight(y += (m + mLineH));
@@ -633,9 +633,9 @@ void ResultsView::updateLayout()
     mPostDistGroup->setFixedWidth(mOptionsW);
     
     y = m;
-    int sw = (mPostDistGroup->width() - 3*m) * 0.5;
-    int w1 = (mPostDistGroup->width() - 3*m) * 0.7;
-    int w2 = (mPostDistGroup->width() - 3*m) * 0.3;
+    int sw = int((mPostDistGroup->width() - 3*m) * 0.5);
+    int w1 = int((mPostDistGroup->width() - 3*m) * 0.7);
+    int w2 = int((mPostDistGroup->width() - 3*m) * 0.3);
     
     mCredibilityCheck  -> setGeometry(m, y, mPostDistGroup->width() - 2*m, mLineH);
     mThreshLab -> setGeometry(m, y += (m + mLineH), w1, mLineH);
