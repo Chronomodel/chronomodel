@@ -207,10 +207,9 @@ QDialog(parent, flags)
     
     // Plugins specific settings
     const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
-    for(int i=0; i<plugins.size(); ++i)
-    {
+    for (int i=0; i<plugins.size(); ++i) {
         PluginSettingsViewAbstract* view = plugins[i]->getSettingsView();
-        if(view){
+        if (view){
             QListWidgetItem* item = new QListWidgetItem();
             item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemNeverHasChildren);
             item->setText(plugins[i]->getName());
@@ -254,7 +253,7 @@ void AppSettingsDialog::setSettings(const AppSettings& settings)
     
     mCSVCellSepEdit->setText(settings.mCSVCellSeparator);
 
-    if(settings.mCSVDecSeparator==",")
+    if (settings.mCSVDecSeparator==",")
         mCSVDecSepCombo->setCurrentIndex(0);
     
     else mCSVDecSepCombo->setCurrentIndex(1);
@@ -313,11 +312,10 @@ void AppSettingsDialog::buttonClicked(QAbstractButton* button)
         mAutoSaveDelayEdit->setText(locale().toString(APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC / 60));
         mAutoSaveDelayEdit->setEnabled(true);
                 
-        if(QLocale::system().decimalPoint()==',') {
+        if (QLocale::system().decimalPoint()==',') {
             mCSVCellSepEdit->setText(";");
             mCSVDecSepCombo->setCurrentIndex(0);                      
-        }
-        else {
+        } else {
             mCSVCellSepEdit->setText(",");
             mCSVDecSepCombo->setCurrentIndex(1);
         }

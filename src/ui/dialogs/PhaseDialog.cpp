@@ -69,8 +69,7 @@ void PhaseDialog::showAppropriateTauOptions(int typeIndex)
 {
     Q_UNUSED(typeIndex)
     Phase::TauType type = (Phase::TauType) mTauTypeCombo->currentIndex();
-    switch(type)
-    {
+    switch (type) {
         case Phase::eTauUnknown:
         {
             mTauFixedLab->setVisible(false);
@@ -150,11 +149,9 @@ QJsonObject PhaseDialog::getPhase()
 
 bool PhaseDialog::isValid()
 {
-    if(mTauTypeCombo->currentIndex() == 1)
-    {
+    if (mTauTypeCombo->currentIndex() == 1) {
         const int tau = mTauFixedEdit->text().toInt();
-        if(tau < 1)
-        {
+        if (tau < 1) {
             mError = tr("Phase fixed duration must be more than 1 !");
             return false;
         }

@@ -67,14 +67,11 @@ void ConstraintDialog::setConstraint(const QJsonObject& constraint)
 {
     mConstraint = constraint;
     
-    if(mType == eEvent)
-    {
+    if (mType == eEvent) {
         /*mTypeCombo->setCurrentIndex(mConstraint[STATE_EVENT_CONSTRAINT_PHI_TYPE].toInt());
         mMinEdit->setText(QString::number(mConstraint[STATE_EVENT_CONSTRAINT_PHI_MIN].toDouble()));
         mMaxEdit->setText(QString::number(mConstraint[STATE_EVENT_CONSTRAINT_PHI_MAX].toDouble()));*/
-    }
-    else if(mType == ePhase)
-    {
+    } else if (mType == ePhase) {
         mTypeCombo->setCurrentIndex(mConstraint[STATE_CONSTRAINT_GAMMA_TYPE].toInt());
         mFixedEdit->setText(QString::number(mConstraint[STATE_CONSTRAINT_GAMMA_FIXED].toDouble()));
         //mMinEdit->setText(QString::number(mConstraint[STATE_CONSTRAINT_GAMMA_MIN].toDouble()));
@@ -86,14 +83,11 @@ void ConstraintDialog::setConstraint(const QJsonObject& constraint)
 QJsonObject ConstraintDialog::constraint() const
 {
     QJsonObject c = mConstraint;
-    if(mType == eEvent)
-    {
+    if (mType == eEvent) {
         /*mConstraint[STATE_EVENT_CONSTRAINT_PHI_TYPE] = mTypeCombo->currentIndex();
         mConstraint[STATE_EVENT_CONSTRAINT_PHI_MIN] = mMinEdit->text().toDouble();
         mConstraint[STATE_EVENT_CONSTRAINT_PHI_MAX] = mMaxEdit->text().toDouble();*/
-    }
-    else if(mType == ePhase)
-    {
+    } else if (mType == ePhase) {
         c[STATE_CONSTRAINT_GAMMA_TYPE] = mTypeCombo->currentIndex();
         c[STATE_CONSTRAINT_GAMMA_FIXED] = mFixedEdit->text().toDouble();
         //c[STATE_CONSTRAINT_GAMMA_MIN] = mMinEdit->text().toDouble();
@@ -119,8 +113,7 @@ void ConstraintDialog::showAppropriateOptions()
     int lineH = 20;
     int butH = 25;
     
-    if(mTypeCombo->currentIndex() == 0)
-    {
+    if (mTypeCombo->currentIndex() == 0) {
         mFixedLab->setVisible(false);
         mFixedEdit->setVisible(false);
         
@@ -131,9 +124,7 @@ void ConstraintDialog::showAppropriateOptions()
         //mMaxEdit->setVisible(false);
         
         setFixedHeight(mComboH + 3*m + butH);
-    }
-    else if(mTypeCombo->currentIndex() == 1)
-    {
+    } else if (mTypeCombo->currentIndex() == 1) {
         mFixedLab->setVisible(true);
         mFixedEdit->setVisible(true);
         

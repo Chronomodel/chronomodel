@@ -329,7 +329,7 @@ void MainWindow::createMenus()
     mLanguageMenu->addAction(mTranslateFrenchAct);*/
     
     //-----------------------------------------------------------------
-    // Help/About Menu this menu depend of the system.On MacOs it's in Chronomodel menu
+    // Help/About Menu this menu depend of the system. On MacOs it's in Chronomodel menu
     //-----------------------------------------------------------------
     mHelpMenu = menuBar()->addMenu(tr("About"));
     mHelpMenu->menuAction()->setShortcut(Qt::Key_Question);
@@ -574,7 +574,7 @@ void MainWindow::setLanguage(QAction* action)
 void MainWindow::changeEventsColor()
 {
     const QColor color = QColorDialog::getColor(Qt::blue, qApp->activeWindow(), tr("Change selected events color"));
-    if(color.isValid())
+    if (color.isValid())
         mProject->updateSelectedEventsColor(color);
     
 }
@@ -676,10 +676,10 @@ void MainWindow::closeEvent(QCloseEvent* e)
 
 void MainWindow::keyPressEvent(QKeyEvent* keyEvent)
 {
-    if(keyEvent->matches(QKeySequence::Undo))
+    if (keyEvent->matches(QKeySequence::Undo))
         mUndoStack->undo();
     
-    else if(keyEvent->matches(QKeySequence::Redo))
+    else if (keyEvent->matches(QKeySequence::Redo))
         mUndoStack->redo();
     
     QMainWindow::keyPressEvent(keyEvent);
@@ -759,16 +759,14 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     mHelpAction->setChecked(mAppSettings.mShowHelp);
     
     bool fileOpened = false;
-    if(!defaultFilePath.isEmpty())
-    {
+    if (!defaultFilePath.isEmpty()) {
         QFileInfo fileInfo(defaultFilePath);
-        if(fileInfo.isFile())
-        {
-            if(mProject->mModel) {
+        if (fileInfo.isFile()) {
+            if (mProject->mModel) {
                 mProject->mModel->clear();
                 mProjectView->resetInterface();
             }
-            if(mProject->load(defaultFilePath)){
+            if (mProject->load(defaultFilePath)) {
                 activateInterface(true);
                 updateWindowTitle();
                 fileOpened = true;
@@ -776,17 +774,15 @@ void MainWindow::readSettings(const QString& defaultFilePath)
         }
     }
     
-    if(!fileOpened && mAppSettings.mOpenLastProjectAtLaunch)
-    {
+    if (!fileOpened && mAppSettings.mOpenLastProjectAtLaunch) {
         QString dir = settings.value("last_project_dir", "").toString();
         QString filename = settings.value("last_project_filename", "").toString();
         //QString filename ="";
         QString path = dir + "/" + filename;
         QFileInfo fileInfo(path);
         
-        if(fileInfo.isFile())
-        {
-            if(mProject->load(path)){
+        if (fileInfo.isFile()) {
+            if (mProject->load(path)) {
                 activateInterface(true);
                 updateWindowTitle();
             }
@@ -844,7 +840,7 @@ void MainWindow::setLogEnabled(bool enabled)
 
 void MainWindow::mcmcFinished(Model* model)
 {
-    if(!model)
+    if (!model)
         return;
     mViewLogAction -> setEnabled(true);
     mViewResultsAction -> setEnabled(true);

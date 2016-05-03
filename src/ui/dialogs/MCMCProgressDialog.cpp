@@ -94,9 +94,9 @@ void MCMCProgressDialog::setFinishedState()
 
 void MCMCProgressDialog::keyPressEvent(QKeyEvent* e)
 {
-    if(e->key() == Qt::Key_Escape){
+    if (e->key() == Qt::Key_Escape) {
         e->ignore();
-    }else{
+    } else {
         QDialog::keyPressEvent(e);
     }
 }
