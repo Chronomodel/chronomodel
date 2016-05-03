@@ -76,30 +76,29 @@ void GraphViewPhase::setPhase(Phase* phase)
     if (phase) {
         mPhase = phase;
 
-        if(mShowDuration->isChecked())
+        if (mShowDuration->isChecked())
            setItemTitle(tr("Duration") + " : " + mPhase->mName);
         else
             setItemTitle(tr("Phase") + " : " + mPhase->mName);
 
         setItemColor(mPhase->mColor);
     }
-   // update();
 }
 
 void GraphViewPhase::updateLayout()
 {
     GraphViewResults::updateLayout();
     
-    int h = height();
-    int leftShift = mButtonsVisible ? mGraphLeft : 0;
+    const int h = height();
+    const int leftShift = mButtonsVisible ? mGraphLeft : 0;
     QRect graphRect(leftShift, mTopShift, this->width() - leftShift, height()-mTopShift);
     
-    bool axisVisible = (h > mHeightForVisibleAxis);
+    const bool axisVisible = (h > mHeightForVisibleAxis);
     mDurationGraph->showXAxisValues(axisVisible);
     mDurationGraph->setMarginBottom(axisVisible ? mDurationGraph->font().pointSizeF() + 10 : 10);
     
-    if(mButtonsVisible) {
-        int butInlineMaxH = 50;
+    if (mButtonsVisible) {
+        const int butInlineMaxH = 50;
         int bh = (height() - mLineH) / 2;
         bh = qMin(bh, butInlineMaxH);
         mShowDuration->setGeometry(0, mLineH + bh, mGraphLeft, bh);
@@ -152,7 +151,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - Post Distrib Alpha i
         //  - Post Distrib Beta i
         // ------------------------------------------------
-        if (typeGraph == ePostDistrib && variable == eTheta) {
+        if ((typeGraph == ePostDistrib) && (variable == eTheta)) {
             mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             mGraph->mLegendY = "";
             mGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
@@ -370,7 +369,7 @@ void GraphViewPhase::saveGraphData() const
         
         int offset = 0;
         
-        if (mCurrentTypeGraph == eTrace || mCurrentTypeGraph == eAccept) {
+        if ((mCurrentTypeGraph == eTrace) || (mCurrentTypeGraph == eAccept)) {
             QMessageBox messageBox;
             messageBox.setWindowTitle(tr("Save all trace"));
             messageBox.setText(tr("Do you want the entire trace from the beginning of the process or only the aquisition part"));
@@ -385,10 +384,11 @@ void GraphViewPhase::saveGraphData() const
                 int chainIdx = -1;
                 
                 for (int i=0; i<mShowChainList.size(); ++i)
-                    if (mShowChainList[i]) chainIdx = i;
+                    if (mShowChainList.at(i))
+                        chainIdx = i;
                 
                 if (chainIdx != -1)
-                    offset = mChains[chainIdx].mNumBurnIter + mChains[chainIdx].mBatchIndex * mChains[chainIdx].mNumBatchIter;
+                    offset = mChains.at(chainIdx).mNumBurnIter + mChains.at(chainIdx).mBatchIndex * mChains.at(chainIdx).mNumBatchIter;
                 
                 mDurationGraph->exportCurrentVectorCurves(currentPath, csvLocal, csvSep, false, offset);
             }

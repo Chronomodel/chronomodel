@@ -89,8 +89,10 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         //  Are we working on calendar date or std dev ?
         // ------------------------------------------------
         MHVariable* variableDate = &(mDate->mTheta);
-        if(variable == eTheta) variableDate = &(mDate->mTheta);
-        else if(variable == eSigma) variableDate = &(mDate->mSigma);
+        if (variable == eTheta)
+            variableDate = &(mDate->mTheta);
+        else if(variable == eSigma)
+            variableDate = &(mDate->mSigma);
        
         // ------------------------------------------------
         //  First tab : Posterior distrib.
@@ -342,7 +344,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
     else if (mCurrentTypeGraph == eAccept) {
         mGraph->setCurveVisible("Accept Target", true);
         for (int i=0; i<mShowChainList.size(); ++i)
-            mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList[i]);
+            mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList.at(i));
         
         mGraph->setTipXLab("iterations");
         mGraph->setTipYLab("rate");
@@ -358,9 +360,9 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
     // ------------------------------------------------
     else if (mCurrentTypeGraph == eCorrel) {
         for (int i=0; i<mShowChainList.size(); ++i) {
-            mGraph->setCurveVisible("Correl " + QString::number(i), mShowChainList[i]);
-            mGraph->setCurveVisible("Correl Limit Lower " + QString::number(i), mShowChainList[i]);
-            mGraph->setCurveVisible("Correl Limit Upper " + QString::number(i), mShowChainList[i]);
+            mGraph->setCurveVisible("Correl " + QString::number(i), mShowChainList.at(i));
+            mGraph->setCurveVisible("Correl Limit Lower " + QString::number(i), mShowChainList.at(i));
+            mGraph->setCurveVisible("Correl Limit Upper " + QString::number(i), mShowChainList.at(i));
         }
         mGraph->setTipXLab("h");
         mGraph->setTipYLab("value");

@@ -259,7 +259,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - Correl Limit Lower i
         //  - Correl Limit Upper i
         // ------------------------------------------------
-        else if(typeGraph == eCorrel && variable == eTheta && !isFixedBound) {
+        else if((typeGraph == eCorrel) && (variable == eTheta) && (!isFixedBound)) {
             mGraph->mLegendX = "";
             mGraph->setFormatFunctX(0);
             mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
@@ -274,17 +274,14 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 {
     GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
     
-    if(mEvent)
-    {
+    if (mEvent) {
         bool isFixedBound = false;
        // bool isUnifBound = false;
         EventKnown* bound = 0;
-        if(mEvent->type() == Event::eKnown)
-        {
+        if (mEvent->type() == Event::eKnown) {
             bound = dynamic_cast<EventKnown*>(mEvent);
-            if(bound)
-            {
-                if(bound->knownType() == EventKnown::eFixed)
+            if (bound) {
+                if (bound->knownType() == EventKnown::eFixed)
                     isFixedBound = true;
                 //else if(bound->knownType() == EventKnown::eUniform)
                   //  isUnifBound = true;
@@ -294,7 +291,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         // ------------------------------------------------
         //  first tab : Posterior distrib
         // ------------------------------------------------
-        if(mCurrentTypeGraph == ePostDistrib) {
+        if (mCurrentTypeGraph == ePostDistrib) {
             mGraph->setTipYLab("");
             // ------------------------------------------------
             //  Possible curves :
@@ -344,7 +341,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         //  - Q2 i
         //  - Q3 i
         // ------------------------------------------------
-        else if(mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta) {
+        else if (mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta) {
             // We visualize only one chain (radio button)
             for (int i=0; i<mShowChainList.size(); ++i) {
                 mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList[i]);
@@ -365,11 +362,10 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         //  - Accept i
         //  - Accept Target
         // ------------------------------------------------
-        else if(mCurrentTypeGraph == eAccept && mCurrentVariable == eTheta && mEvent->mMethod == Event::eMHAdaptGauss)
-        {
+        else if ((mCurrentTypeGraph == eAccept) && (mCurrentVariable == eTheta) && (mEvent->mMethod == Event::eMHAdaptGauss)) {
             mGraph->setCurveVisible("Accept Target", true);
-            for(int i=0; i<mShowChainList.size(); ++i){
-                mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList[i]);
+            for (int i=0; i<mShowChainList.size(); ++i) {
+                mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList.at(i));
             }
             mGraph->setTipXLab("iteration");
             mGraph->setTipYLab("rate");
@@ -383,12 +379,11 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         //  - Correl Limit Lower i
         //  - Correl Limit Upper i
         // ------------------------------------------------
-        else if(mCurrentTypeGraph == eCorrel && mCurrentVariable == eTheta && !isFixedBound)
-        {
-            for(int i=0; i<mShowChainList.size(); ++i){
-                mGraph->setCurveVisible("Correl " + QString::number(i), mShowChainList[i]);
-                mGraph->setCurveVisible("Correl Limit Lower " + QString::number(i), mShowChainList[i]);
-                mGraph->setCurveVisible("Correl Limit Upper " + QString::number(i), mShowChainList[i]);
+        else if (mCurrentTypeGraph == eCorrel && mCurrentVariable == eTheta && !isFixedBound) {
+            for (int i=0; i<mShowChainList.size(); ++i){
+                mGraph->setCurveVisible("Correl " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Correl Limit Lower " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Correl Limit Upper " + QString::number(i), mShowChainList.at(i));
             }
             mGraph->setTipXLab("h");
             mGraph->setTipYLab("value");
