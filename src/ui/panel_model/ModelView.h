@@ -35,7 +35,10 @@ public:
     ModelView(QWidget* parent = 0, Qt::WindowFlags flags = 0);
     ~ModelView();
     
-    void doProjectConnections(Project* project);
+    //void doProjectConnections(Project* project);
+    void setProject(Project* project);
+    Project* getProject() const;
+    
     void resetInterface();
     void showHelp(bool show);
     
@@ -161,6 +164,9 @@ private:
     QRect mRightSubRect;
     QRect mRightSubHiddenRect;
     QRect mHandlerRect;
+    
+private:
+    Project* mProject;
     
     int mMargin;
     int mToolbarH;

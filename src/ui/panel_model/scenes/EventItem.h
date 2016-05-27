@@ -25,6 +25,10 @@ public:
     
     virtual void setDatesVisible(bool visible);
     
+    bool withSelectedDate() const;
+    
+    void mousePressEvent(QGraphicsSceneMouseEvent* e);
+    
 protected:
     virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
     virtual void dropEvent(QGraphicsSceneDragDropEvent* e);

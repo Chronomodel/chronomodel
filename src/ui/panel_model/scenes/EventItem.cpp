@@ -10,6 +10,7 @@
 #include "Project.h"
 #include <QtWidgets>
 
+#include "ArrowTmpItem.h"
 
 EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):AbstractItem(scene, parent)
 {
@@ -19,6 +20,29 @@ EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonOb
 EventItem::~EventItem()
 {
     
+}
+
+/**
+ * @brief EventItem::mousePressEvent Overwrite of AbstractScene::mousePressEvent
+ * @param e
+ */
+void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
+{
+    qDebug()<<"EventItem::mousePressEvent ";
+    EventsScene* itemScene = dynamic_cast<EventsScene*>(mScene);
+    if (itemScene->selectedItems().size()<2) {
+        if ((this != itemScene->currentEvent()) && (!itemScene->mDrawingArrow)) {
+            itemScene->clearSelection();
+        }
+
+        if (!itemScene->itemClicked(this, e)) {
+            setZValue(2.);
+            QGraphicsItem::mousePressEvent(e);
+        } else
+            itemScene->mTempArrow->setFrom(pos().x(), pos().y());
+    }
+    
+    QGraphicsObject::mousePressEvent(e);
 }
 
 #pragma mark Event Managment
@@ -46,26 +70,24 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     // ----------------------------------------------
     //  Calculate item size
     // ----------------------------------------------
-    qreal w = 150.;
     double h = mTitleHeight + mPhasesHeight + 2*mBorderWidth + 2*mEltsMargin;
     
     QString name = event.value(STATE_NAME).toString();
     QFont font = qApp->font();
     QFontMetrics metrics(font);
-    w = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin + 2*mTitleHeight;
+    qreal w = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin + 2*mTitleHeight;
     
     const QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
     
     const int count = dates.size();
-    if(count > 0)
+    if (count > 0)
         h += count * (mEltsHeight + mEltsMargin);
     else
         h += mEltsMargin + mEltsHeight;
     
     font.setPointSizeF(pointSize(11));
     metrics = QFontMetrics(font);
-    for(int i=0; i<count; ++i)
-    {
+    for (int i=0; i<count; ++i) {
         const QJsonObject date = dates.at(i).toObject();
         name = date.value(STATE_NAME).toString();
         const int nw = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin;
@@ -75,14 +97,12 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     
     mSize = QSize(w, h);
     
-    if(event.value(STATE_EVENT_DATES).toArray() != mData.value(STATE_EVENT_DATES).toArray() || mSettings != settings)
-    {
+    if (event.value(STATE_EVENT_DATES).toArray() != mData.value(STATE_EVENT_DATES).toArray() || mSettings != settings) {
         // ----------------------------------------------
         //  Delete Date Items
         // ----------------------------------------------
         QList<QGraphicsItem*> dateItems = childItems();
-        for(int i=0; i<dateItems.size(); ++i)
-        {
+        for (int i=0; i<dateItems.size(); ++i) {
             mScene->removeItem(dateItems[i]);
             delete dateItems[i];
         }
@@ -90,14 +110,13 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
         // ----------------------------------------------
         //  Re-create Date Items
         // ----------------------------------------------
-        for(int i=0; i<dates.size(); ++i)
-        {
+        for (int i=0; i<dates.size(); ++i) {
             const QJsonObject date = dates.at(i).toObject();
             const QColor color(event.value(STATE_COLOR_RED).toInt(),
                          event.value(STATE_COLOR_GREEN).toInt(),
                          event.value(STATE_COLOR_BLUE).toInt());
             
-            try{
+            try {
                 DateItem* dateItem = new DateItem((EventsScene*)mScene, date, color, settings);
                 dateItem->setParentItem(this);
                 dateItem->setGreyedOut(mGreyedOut, false);
@@ -132,43 +151,51 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     //update(); Done by prepareGeometryChange() at the function start
 }
 
+/**
+ ** @brief looking for selected dateItem
+ */
+bool EventItem::withSelectedDate() const
+{
+    const QList<QGraphicsItem*> datesItemsList = childItems();
+    foreach(const QGraphicsItem* date, datesItemsList) {
+        if (date->isSelected())
+            return true;
+    }
+    return false;
+}
+
 void EventItem::setGreyedOut(bool greyedOut, bool shouldRepaint)
 {
     AbstractItem::setGreyedOut(greyedOut, shouldRepaint);
     
     QList<QGraphicsItem*> children = childItems();
-    for(int i=0; i<children.size(); ++i)
-    {
+    for (int i=0; i<children.size(); ++i)
         ((DateItem*)children[i])->setGreyedOut(greyedOut);
-    }
+    
     setOpacity(mGreyedOut ? 0.1 : 1);
 }
 
 void EventItem::updateGreyedOut()
 {
     mGreyedOut = true;
-    QJsonObject state = MainWindow::getInstance()->getProject()->state();
-    QJsonArray phases = state[STATE_PHASES].toArray();
+    QJsonObject state = mScene->getProject()->state();
+    QJsonArray phases = state.value(STATE_PHASES).toArray();
     QStringList selectedPhasesIds;
-    for(int i=0; i<phases.size(); ++i)
-    {
-        QJsonObject phase = phases[i].toObject();
+    
+    for (int i=0; i<phases.size(); ++i) {
+        QJsonObject phase = phases.at(i).toObject();
         bool isSelected = phase.value(STATE_IS_SELECTED).toBool();
-        if(isSelected)
+        if (isSelected)
             selectedPhasesIds.append(QString::number(phase.value(STATE_ID).toInt()));
     }
-    if(selectedPhasesIds.size() == 0)
-    {
+    if (selectedPhasesIds.size() == 0)
         mGreyedOut = false;
-    }
-    else
-    {
-        QString eventPhasesIdsStr = mData.value(STATE_EVENT_PHASE_IDS).toString();
-        QStringList eventPhasesIds = eventPhasesIdsStr.split(",");
-        for(int i=0; i<selectedPhasesIds.size(); ++i)
-        {
-            if(eventPhasesIds.contains(selectedPhasesIds.at(i)))
-            {
+    
+    else {
+        const QString eventPhasesIdsStr = mData.value(STATE_EVENT_PHASE_IDS).toString();
+        const QStringList eventPhasesIds = eventPhasesIdsStr.split(",");
+        for (int i=0; i<selectedPhasesIds.size(); ++i) {
+            if (eventPhasesIds.contains(selectedPhasesIds.at(i))) {
                 mGreyedOut = false;
                 break;
             }
@@ -180,10 +207,9 @@ void EventItem::updateGreyedOut()
 void EventItem::setDatesVisible(bool visible)
 {
     QList<QGraphicsItem*> dateItems = childItems();
-    for(int i=0; i<dateItems.size(); ++i)
-    {
-        dateItems[i]->setVisible(visible);
-    }
+    for (int i=0; i<dateItems.size(); ++i) 
+        dateItems.at(i)->setVisible(visible);
+    
 }
 
 #pragma mark Events
@@ -198,16 +224,20 @@ void EventItem::dropEvent(QGraphicsSceneDragDropEvent* e)
     handleDrop(e);
 }
 
+/**
+ * @brief EventItem::handleDrop this function move a dateItem from an EventItem to and an other EventItem
+ * @param e
+ */
 void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
 {
     e->acceptProposedAction();
-    Project* project = MainWindow::getInstance()->getProject();
+    //Project* project = MainWindow::getInstance()->getProject();
     QJsonObject event = mData;
-    
+    EventsScene* scene = dynamic_cast<EventsScene*>(mScene);
+    Project* project = scene->getProject();
     QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
-    QList<Date> datesDragged = ((EventsScene*)mScene)->decodeDataDrop(e);
-    for(int i=0; i<datesDragged.size(); ++i)
-    {
+    QList<Date> datesDragged = scene->decodeDataDrop(e);
+    for (int i=0; i<datesDragged.size(); ++i) {
         QJsonObject date = datesDragged.at(i).toJson();
         date[STATE_ID] = project->getUnusedDateId(dates);
         dates.append(date);
@@ -215,6 +245,8 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
     event[STATE_EVENT_DATES] = dates;
     
     project->updateEvent(event, QObject::tr("Dates added to event (CSV drag)"));
+    scene->updateSelection();
+    scene->sendUpdateProject("Item selected", true, true); //  bool notify = true, bool storeUndoCommand = true
 }
 
 
@@ -244,9 +276,8 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     int numPhases = (int)phases.size();
     double w = phasesRect.width()/numPhases;
     
-    for(int i=0; i<numPhases; ++i)
-    {
-        QJsonObject phase = phases[i].toObject();
+    for (int i=0; i<numPhases; ++i) {
+        QJsonObject phase = phases.at(i).toObject();
         QColor c(phase.value(STATE_COLOR_RED).toInt(),
                  phase.value(STATE_COLOR_GREEN).toInt(),
                  phase.value(STATE_COLOR_BLUE).toInt());
@@ -255,8 +286,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         painter->drawRect(phasesRect.x() + i*w, phasesRect.y(), w, phasesRect.height());
     }
     
-    if(numPhases == 0)
-    {
+    if (numPhases == 0) {
         QFont font = qApp->font();
         font.setPointSizeF(pointSize(11));
         painter->setFont(font);
@@ -284,20 +314,18 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     
     QColor frontColor = getContrastedColor(eventColor);
     painter->setPen(frontColor);
-    painter->drawText(tr, Qt::AlignCenter, name);    
+    painter->drawText(tr, Qt::AlignCenter, name);
+    
     
     // Border
     painter->setBrush(Qt::NoBrush);
-    if(mMergeable)
-    {
+    if (mMergeable) {
         painter->setPen(QPen(Qt::white, 5.f));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
         
         painter->setPen(QPen(Painting::mainColorLight, 3.f, Qt::DashLine));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
-    }
-    else if(isSelected())
-    {
+    } else if (isSelected() || withSelectedDate()) {
         painter->setPen(QPen(Qt::white, 5.f));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
         
@@ -316,11 +344,10 @@ QJsonArray EventItem::getPhases() const
     QString eventPhaseIdsStr = mData.value(STATE_EVENT_PHASE_IDS).toString();
     QStringList eventPhaseIds = eventPhaseIdsStr.split(",");
     
-    for(int i=0; i<allPhases.size(); ++i)
-    {
+    for (int i=0; i<allPhases.size(); ++i) {
         QJsonObject phase = allPhases.at(i).toObject();
         QString phaseId = QString::number(phase.value(STATE_ID).toInt());
-        if(eventPhaseIds.contains(phaseId))
+        if (eventPhaseIds.contains(phaseId))
             phases.append(phase);
     }
     return phases;

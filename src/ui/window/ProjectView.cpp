@@ -72,9 +72,8 @@ ProjectView::~ProjectView()
 
 void ProjectView::doProjectConnections(Project* project)
 {
-    mModelView   -> doProjectConnections(project);
+    mModelView   -> setProject(project);
     mResultsView -> doProjectConnections(project);
-    //connect(*project, SIGNAL(designChanged(bool)), this, SLOT(changeDesign(bool)));
 }
 
 #pragma mark Interface
@@ -109,7 +108,6 @@ void ProjectView::showResults()
     if (mRefreshResults) {
         mResultsView->clearResults();
         mResultsView->updateModel(); // update Design e.g. Name and color //updateResults() is call inside
-       // mResultsView->updateResults();
         mRefreshResults=false;
     }
     mStack->setCurrentIndex(1);
@@ -154,19 +152,17 @@ void ProjectView:: applySettings(Model* model,const AppSettings* appSet)
 void ProjectView::updateResults(Model* model)
 {
     if (model) {
-           // showResults();//false);
-            //mResultsView->clearResults();
-            mResultsView->updateResults(model);
+        mResultsView->updateResults(model);
 
-            model->generateModelLog();
-            mLogModelEdit->setText(model->getModelLog());
+        model->generateModelLog();
+        mLogModelEdit->setText(model->getModelLog());
 
-            mLogMCMCEdit->setText(model->getMCMCLog());
+        mLogMCMCEdit->setText(model->getMCMCLog());
 
-            model->generateResultsLog();
-            mLogResultsEdit->setText(model->getResultsLog());
+        model->generateResultsLog();
+        mLogResultsEdit->setText(model->getResultsLog());
 
-            mStack->setCurrentIndex(1);
+        mStack->setCurrentIndex(1);
     }
 }
 

@@ -445,6 +445,11 @@ void MainWindow::openProject()
             if (mProject->load(path)) {
                 activateInterface(true);
                 updateWindowTitle();
+                /*if (mProject->mModel->mPhases.isEmpty())
+                    emit mProject->sendEventsSelectionChanged();
+                else*/
+                    emit mProject->sendPhasesSelectionChanged();
+                
             }
         }
     }

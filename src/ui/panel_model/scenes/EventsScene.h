@@ -2,6 +2,7 @@
 #define EventsScene_H
 
 #include "AbstractScene.h"
+#include "EventItem.h"
 #include "ProjectSettings.h"
 
 
@@ -24,12 +25,13 @@ public:
     
     HelpWidget* getHelpView();
     void showHelp(bool show);
-    
+
 public slots:
     void clean();
     
-    void updateProject();
-    void updateSelection(bool sendNotification = true, bool force = false);
+    void updateScene();
+    //void updateSelection(bool sendNotification = true, bool force = false);
+    void updateSelection();
     void updateHelp();
     
     void updateSelectedEventsFromPhases();
@@ -37,6 +39,9 @@ public slots:
 
 public:
     void itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);
+    bool itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);
+    
+    virtual void itemEntered(AbstractItem* eventItem, QGraphicsSceneHoverEvent* e);
     void constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e);
     void constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e);
     
@@ -49,12 +54,18 @@ public:
     
     void centerOnEvent(int eventId);
     
+    EventItem* currentEvent() const;
+    
 protected:
+    virtual void keyPressEvent(QKeyEvent* keyEvent);
+    virtual void keyReleaseEvent(QKeyEvent* keyEvent);
+    
     void dropEvent(QGraphicsSceneDragDropEvent* e);
     void dragMoveEvent(QGraphicsSceneDragDropEvent* e);
     
     AbstractItem* collidingItem(QGraphicsItem* item);
-    AbstractItem* currentItem();
+    AbstractItem* currentItem() ;
+
     void setCurrentItem(QGraphicsItem* item);
     
     void deleteSelectedItems();
@@ -65,7 +76,9 @@ protected:
 signals:
     void csvDataLineDropAccepted(QList<int> rows);
     void csvDataLineDropRejected(QList<int> rows);
+    void eventClicked();
     void eventDoubleClicked();
+    void selectionChanged();
     
 private:
     HelpWidget* mHelpView;

@@ -88,7 +88,7 @@ public:
     Date createDateFromPlugin(PluginAbstract* plugin);
     Date createDateFromData(const QString& pluginName, const QStringList& dataStr);
     void addDate(int eventId, QJsonObject date);
-    int getUnusedDateId(const QJsonArray& dates);
+    int getUnusedDateId(const QJsonArray& dates) const;
     void updateDate(int eventId, int dateId);
     void deleteDates(int eventId, const QList<int>& dateIndexes);
     void recycleDates(int eventId);
@@ -107,7 +107,7 @@ public:
     void updatePhaseEvents(int phaseId, Qt::CheckState state);
     //void updatePhaseEyed(int phaseId, bool eyed);
     
-    void createEventConstraint(int eventFromId, int eventToId);
+    void createEventConstraint(const QJsonObject eventFrom, const QJsonObject eventTo);
     void deleteEventConstraint(int constraintId);
     bool isEventConstraintAllowed(const QJsonObject& eventFrom, const QJsonObject& eventTo);
     void updateEventConstraint(int constraintId);

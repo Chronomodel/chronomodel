@@ -133,7 +133,7 @@ mCalibVisible(false)
     
     // this signal has already been connected inside the EventsView constructor, to make sure events are marked as selected.
     // Thus, the following connection can make use in updateCheckedPhases of these marks.
-    connect(mEventsScene, SIGNAL(selectionChanged()), mPhasesScene, SLOT(updateCheckedPhases()));
+    connect(mEventsScene, &EventsScene::selectionChanged, mPhasesScene, &PhasesScene::updateCheckedPhases);
     
     mPhasesGlobalView = new SceneGlobalView(mPhasesScene, mPhasesView, mPhasesWrapper);
     mPhasesGlobalView->setVisible(false);
@@ -304,7 +304,34 @@ ModelView::~ModelView()
     
 }
 
-void ModelView::doProjectConnections(Project* project)
+void ModelView::setProject(Project* project)
+{
+    mProject = project;
+    mEventsScene->setProject(mProject);
+    mPhasesScene->setProject(mProject);
+    connect(mButNewEvent, &Button::clicked, mProject, &Project::createEvent);
+    connect(mButNewEventKnown, &Button::clicked, mProject, &Project::createEventKnown);
+    connect(mButDeleteEvent, &Button::clicked, mProject, &Project::deleteSelectedEvents);
+    connect(mButRecycleEvent, &Button::clicked, mProject, &Project::recycleEvents);
+    
+    connect(mButNewPhase, &Button::clicked, mProject, &Project::createPhase);
+    connect(mButDeletePhase, &Button::clicked, mProject, &Project::deleteSelectedPhases);
+    
+    connect(mProject, &Project::selectedEventsChanged, mPhasesScene, &PhasesScene::updateCheckedPhases);
+    connect(mProject, &Project::selectedPhasesChanged, mEventsScene, &EventsScene::updateSelectedEventsFromPhases);
+    
+    connect(mProject, &Project::currentEventChanged, mEventPropertiesView, &EventPropertiesView::setEvent);
+    connect(mEventPropertiesView, &EventPropertiesView::combineDatesRequested, mProject, &Project::combineDates);
+    connect(mEventPropertiesView, &EventPropertiesView::splitDateRequested, mProject, &Project::splitDate);
+    
+    connect(mProject, &Project::eyedPhasesModified, mEventsScene, &EventsScene::updateGreyedOutEvents);
+}
+
+Project* ModelView::getProject() const
+{
+   return  mProject;
+}
+/*void ModelView::doProjectConnections(Project* project)
 {
     connect(mButNewEvent, SIGNAL(clicked()), project, SLOT(createEvent()));
     connect(mButNewEventKnown, SIGNAL(clicked()), project, SLOT(createEventKnown()));
@@ -314,15 +341,15 @@ void ModelView::doProjectConnections(Project* project)
     connect(mButNewPhase, SIGNAL(clicked()), project, SLOT(createPhase()));
     connect(mButDeletePhase, SIGNAL(clicked()), project, SLOT(deleteSelectedPhases()));
 
-    connect(project, SIGNAL(selectedEventsChanged()), mPhasesScene, SLOT(updateCheckedPhases()));
-    connect(project, SIGNAL(selectedPhasesChanged()), mEventsScene, SLOT(updateSelectedEventsFromPhases()));
+    connect(project, &Project::selectedEventsChanged, mPhasesScene, &PhasesScene::updateCheckedPhases);
+    connect(project, &Project::selectedPhasesChanged, mEventsScene, &EventsScene::updateSelectedEventsFromPhases);
     
-    connect(project, SIGNAL(currentEventChanged(const QJsonObject&)), mEventPropertiesView, SLOT(setEvent(const QJsonObject&)));
+    connect(project, &Project::currentEventChanged, mEventPropertiesView, &EventPropertiesView::setEvent);
     connect(mEventPropertiesView, SIGNAL(combineDatesRequested(const int, const QList<int>&)), project, SLOT(combineDates(const int, const QList<int>&)));
     connect(mEventPropertiesView, SIGNAL(splitDateRequested(const int, const int)), project, SLOT(splitDate(const int, const int)));
     
     connect(project, SIGNAL(eyedPhasesModified(const QMap<int, bool>&)), mEventsScene, SLOT(updateGreyedOutEvents(const QMap<int, bool>&)));
-}
+}*/
 
 void ModelView::resetInterface()
 {
@@ -338,8 +365,8 @@ void ModelView::updateProject()
 {
     showCalibration(false);
     
-    Project* project = MainWindow::getInstance()->getProject();
-    QJsonObject state = project->state();
+    //Project* project = MainWindow::getInstance()->getProject();
+    QJsonObject state = mProject->state();
     const ProjectSettings settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
    
     mTmin = settings.mTmin;
@@ -347,15 +374,15 @@ void ModelView::updateProject()
     
     mMinEdit->setText(QString::number(settings.mTmin));
     mMaxEdit->setText(QString::number(settings.mTmax));
-    project->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
-    project->mState[STATE_SETTINGS_TMAX] = settings.mTmax;
-    project->mState[STATE_SETTINGS_STEP] = settings.mStep;
+    mProject->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
+    mProject->mState[STATE_SETTINGS_TMAX] = settings.mTmax;
+    mProject->mState[STATE_SETTINGS_STEP] = settings.mStep;
 
-    project->mState[STATE_SETTINGS_STEP_FORCED] = settings.mStepForced;
+    mProject->mState[STATE_SETTINGS_STEP_FORCED] = settings.mStepForced;
 
     setSettingsValid(settings.mTmin < settings.mTmax);
     
-    mEventsScene->updateProject();
+    mEventsScene->updateScene();
     mPhasesScene->updateProject();
     
     // Les sélections dans les scènes doivent être mises à jour après que
@@ -391,8 +418,8 @@ void ModelView::applySettings()
 {
     showCalibration(false);
     
-    Project* project = MainWindow::getInstance()->getProject();
-    QJsonObject state = project->state();
+    //Project* project = MainWindow::getInstance()->getProject();
+    QJsonObject state = mProject->state();
     ProjectSettings s = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
     ProjectSettings oldSettings = s;
     
@@ -410,7 +437,7 @@ void ModelView::applySettings()
     if(!s.mStepForced)
         s.mStep = ProjectSettings::getStep(s.mTmin, s.mTmax);
     
-    if(!project->setSettings(s))
+    if(!mProject->setSettings(s))
     {
         // Min and max are not consistents :
         // go back to previous values
@@ -438,8 +465,8 @@ void ModelView::applySettings()
 
 void ModelView::adjustStep()
 {
-    Project* project = MainWindow::getInstance()->getProject();
-    QJsonObject state = project->state();
+    //Project* project = MainWindow::getInstance()->getProject();
+    QJsonObject state = mProject->state();
     ProjectSettings s = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
     
     double defaultVal = ProjectSettings::getStep(s.mTmin, s.mTmax);
@@ -455,7 +482,7 @@ void ModelView::adjustStep()
         else
             s.mStep = defaultVal;
         
-        project -> setSettings(s);
+        mProject -> setSettings(s);
         MainWindow::getInstance() -> setResultsEnabled(false);
         MainWindow::getInstance() -> setLogEnabled(false);
     }
@@ -515,28 +542,28 @@ void ModelView::searchEvent()
         mLastSearch = search;
         mSearchIds.clear();
         
-        QJsonObject state = MainWindow::getInstance()->getProject()->state();
-        QJsonArray events = state[STATE_EVENTS].toArray();
+        //QJsonObject state = MainWindow::getInstance()->getProject()->state();
+        QJsonObject state = mProject->state();
+        QJsonArray events = state.value(STATE_EVENTS).toArray();
         
-        for(int i=0; i<events.size(); ++i)
-        {
+        for (int i=0; i<events.size(); ++i) {
             QJsonObject event = events[i].toObject();
-            int id = event[STATE_ID].toInt();
-            QString name = event[STATE_NAME].toString();
+            int id = event.value(STATE_ID).toInt();
+            QString name = event.value(STATE_NAME).toString();
             
-            if(name.contains(search, Qt::CaseInsensitive)){
+            if (name.contains(search, Qt::CaseInsensitive))
                 mSearchIds.push_back(id);
-            }
+
         }
         mCurSearchIdx = 0;
     }
-    else if(mSearchIds.size() > 0){
+    else if (mSearchIds.size() > 0) {
         mCurSearchIdx += 1;
-        if(mCurSearchIdx >= mSearchIds.size())
+        if (mCurSearchIdx >= mSearchIds.size())
             mCurSearchIdx = 0;
     }
     
-    if(mCurSearchIdx < mSearchIds.size())
+    if (mCurSearchIdx < mSearchIds.size())
         mEventsScene->centerOnEvent(mSearchIds[mCurSearchIdx]);
     
 
@@ -553,9 +580,8 @@ void ModelView::showProperties()
 }
 void ModelView::showImport()
 {
-    Project* project = MainWindow::getInstance()->getProject();
-    if(project->studyPeriodIsValid())
-    {
+    //Project* project = MainWindow::getInstance()->getProject();
+    if (mProject->studyPeriodIsValid()) {
         showCalibration(false);
         
         mButProperties  -> setChecked(false);
@@ -563,34 +589,29 @@ void ModelView::showImport()
         mButPhasesModel -> setChecked(false);
         mPhasesScene    -> clearSelection();
         slideRightPanel();
-    }
-    else
-    {
+    } else {
         mButProperties  -> setChecked(true);
         mButImport      -> setChecked(false);
         mButPhasesModel -> setChecked(false);
     }
-    project = 0;
+    //project = 0;
 }
 void ModelView::showPhases()
 {
-    Project* project = MainWindow::getInstance()->getProject();
-    if(project->studyPeriodIsValid())
-    {
+    //Project* project = MainWindow::getInstance()->getProject();
+    if (mProject->studyPeriodIsValid()) {
         showCalibration(false);
         
         mButProperties->setChecked(false);
         mButImport->setChecked(false);
         mButPhasesModel->setChecked(true);
         slideRightPanel();
-    }
-    else
-    {
+    } else {
         mButProperties->setChecked(true);
         mButImport->setChecked(false);
         mButPhasesModel->setChecked(false);
     }
-    project = 0;
+    //project = 0;
 }
 void ModelView::slideRightPanel()
 {
@@ -620,17 +641,16 @@ void ModelView::slideRightPanel()
 void ModelView::prepareNextSlide()
 {
     QWidget* target = 0;
-    if(mButImport->isChecked())
+    if (mButImport->isChecked())
         target = mImportDataView;
-    else if(mButPhasesModel->isChecked())
+    else if (mButPhasesModel->isChecked())
         target = mPhasesWrapper;
-    else if(mButProperties->isChecked())
+    else if (mButProperties->isChecked())
         target = mEventPropertiesView;
     
-    if(target)
-    {
+    if (target)
         mAnimationHide->setTargetObject(target);
-    }
+
     target = 0;
 }
 
@@ -781,7 +801,7 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
     QFileInfo fileInfo = saveWidgetAsImage(scene, r,
                                            tr("Save model image as..."),
                                            MainWindow::getInstance()->getCurrentPath(),MainWindow::getInstance()->getAppSettings());
-    if(fileInfo.isFile())
+    if (fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
 }
 
@@ -789,28 +809,22 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
 void ModelView::updateCalibration(const QJsonObject& date)
 {
     // A date has been double-clicked => update CalibrationView only if the date is not null
-    if(!date.isEmpty())// && date[STATE_DATE_VALID].toBool()==true)
-    {
+    if (!date.isEmpty())
         mCalibrationView->setDate(date);
-    }
+
 }
 
 void ModelView::showCalibration(bool show)
 {
-    if((show && mEventPropertiesView->hasEventWithDates()) || !show)
-    {
+    if ((show && mEventPropertiesView->hasEventWithDates()) || !show) {
         mEventPropertiesView->setCalibChecked(show);
-        if(mCalibVisible != show)
-        {
+        if (mCalibVisible != show) {
             mCalibVisible = show;
-            if(mCalibVisible)
-            {
+            if (mCalibVisible) {
                 mCalibrationView->raise();
                 mAnimationCalib->setStartValue(mLeftHiddenRect);
                 mAnimationCalib->setEndValue(mLeftRect);
-            }
-            else
-            {
+            } else {
                 mAnimationCalib->setStartValue(mLeftRect);
                 mAnimationCalib->setEndValue(mLeftHiddenRect);
             }
@@ -822,7 +836,7 @@ void ModelView::showCalibration(bool show)
 #pragma mark Mouse Events
 void ModelView::mousePressEvent(QMouseEvent* e)
 {
-    if(mHandlerRect.contains(e->pos()))
+    if (mHandlerRect.contains(e->pos()))
         mIsSplitting = true;
 }
 void ModelView::mouseReleaseEvent(QMouseEvent* e)
@@ -832,8 +846,7 @@ void ModelView::mouseReleaseEvent(QMouseEvent* e)
 }
 void ModelView::mouseMoveEvent(QMouseEvent* e)
 {
-    if(mIsSplitting)
-    {
+    if (mIsSplitting) {
         mSplitProp = (double)e->pos().x() / (double)width();
         updateLayout();
     }
@@ -841,15 +854,13 @@ void ModelView::mouseMoveEvent(QMouseEvent* e)
 
 void ModelView::keyPressEvent(QKeyEvent* event)
 {
-    if(event->key() == Qt::Key_Escape){
+    if (event->key() == Qt::Key_Escape)
         showCalibration(false);
-    }
-    else if(event->key() == Qt::Key_C){
+    else if (event->key() == Qt::Key_C)
         showCalibration(!mCalibVisible);
-    }
-    else{
+    else
         QWidget::keyPressEvent(event);
-    }
+    
 }
 
 
@@ -860,9 +871,13 @@ void ModelView::writeSettings()
     settings.beginGroup("ModelView");
     
     int panelIndex = 0;
-    if(mButProperties->isChecked()) panelIndex = 1;
-    else if(mButImport->isChecked()) panelIndex = 2;
-    else if(mButPhasesModel->isChecked()) panelIndex = 3;
+    if (mButProperties->isChecked())
+        panelIndex = 1;
+    else if (mButImport->isChecked())
+        panelIndex = 2;
+    else if(mButPhasesModel->isChecked())
+        panelIndex = 3;
+    
     settings.setValue("right_panel", panelIndex);
     
     settings.setValue("events_zoom", mEventsGlobalZoom->getProp());
@@ -878,9 +893,12 @@ void ModelView::readSettings()
     
     int panelIndex = settings.value("right_panel", 0).toInt();
     
-    if(panelIndex == 1) mButProperties->setChecked(true);
-    else if(panelIndex == 2) mButImport->setChecked(true);
-    else if(panelIndex == 3) mButPhasesModel->setChecked(true);
+    if (panelIndex == 1)
+        mButProperties->setChecked(true);
+    else if (panelIndex == 2)
+        mButImport->setChecked(true);
+    else if (panelIndex == 3)
+        mButPhasesModel->setChecked(true);
     
     mEventsGlobalZoom->setProp(settings.value("events_zoom", 1.f).toDouble(), true);
     mPhasesGlobalZoom->setProp(settings.value("phases_zoom", 1.f).toDouble(), true);
