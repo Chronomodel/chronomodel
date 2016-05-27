@@ -14,6 +14,9 @@ public:
     ~PhasesScene();
     
     void sendUpdateProject(const QString& reason, bool notify, bool async);
+
+signals:
+    void selectionChanged();
     
 public slots:
     void clean();
@@ -39,6 +42,8 @@ protected:
     bool constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo);
     void createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo);
     void mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo);
+ private:
+    Project* mProject;
 };
 
 #endif

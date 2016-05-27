@@ -1,4 +1,4 @@
-#include "EventPropertiesView.h"
+ #include "EventPropertiesView.h"
 #include "ColorPicker.h"
 #include "Event.h"
 #include "EventKnown.h"
@@ -205,6 +205,7 @@ void EventPropertiesView::setEvent(const QJsonObject& event)
 
 void EventPropertiesView::updateEvent()
 {
+    qDebug()<<"EventPropertiesView::updateEvent";
     if (mEvent.isEmpty()) {
         mTopView->setVisible(false);
         mEventView->setVisible(false);

@@ -42,29 +42,28 @@ AbstractItem::~AbstractItem()
 void AbstractItem::setMergeable(bool mergeable, bool shouldRepaint)
 {
     mMergeable = mergeable;
-    if(shouldRepaint)
+    if (shouldRepaint)
         update();
 }
 
 void AbstractItem::setGreyedOut(bool greyedOut, bool shouldRepaint)
 {
     mGreyedOut = greyedOut;
-    if(shouldRepaint)
+    if (shouldRepaint)
         update();
 }
 
 #pragma mark Events
 void AbstractItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-    if(!mScene->itemClicked(this, e))
-    {
+    qDebug()<<"AbstractItem::mousePressEvent__________??";
+        
+    if (!mScene->itemClicked(this, e)) {
         setZValue(2.);
         QGraphicsItem::mousePressEvent(e);
-    }
-    else
-    {
+    } else
         mScene->mTempArrow->setFrom(pos().x(), pos().y());
-    }
+
 }
 
 void AbstractItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
@@ -103,8 +102,7 @@ void AbstractItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* e)
 
 QVariant AbstractItem::itemChange(GraphicsItemChange change, const QVariant& value)
 {
-    if(change == ItemPositionChange && scene())
-    {
+    if (change == ItemPositionChange && scene()) {
         // value is the new position.
         QPointF newPos = value.toPointF();
 

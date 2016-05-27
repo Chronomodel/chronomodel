@@ -19,18 +19,17 @@ void ArrowTmpItem::setFrom(double x, double y)
     mYFrom = y;
     
     update();
-    if(scene())
+    if (scene())
         scene()->update();
 }
 
 void ArrowTmpItem::setTo(double x, double y)
 {
-    if(!mLocked)
-    {
+    if (!mLocked) {
         mXTo = x;
         mYTo = y;
         update();
-        if(scene())
+        if (scene())
             scene()->update();
     }
 }
@@ -68,10 +67,8 @@ void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
     
     QRectF rect = boundingRect();
     
-    //painter->fillRect(rect, QColor(255, 0, 0, 30));
-    
     painter->setRenderHint(QPainter::Antialiasing);
-    int penWidth = 2;
+    const int penWidth = 2;
     QColor color = Qt::black;
     
     switch(mState)
@@ -93,46 +90,41 @@ void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
     
     // arrows
     
-    double angle_rad = atanf(rect.width() / rect.height());
-    double angle_deg = angle_rad * 180. / M_PI;
+    const double angle_rad = atanf(rect.width() / rect.height());
+    const double angle_deg = angle_rad * 180. / M_PI;
     
     QPainterPath path;
-    int arrow_w = 10;
-    int arrow_l = 15;
+    const int arrow_w = 10;
+    const int arrow_l = 15;
     path.moveTo(-arrow_w/2, arrow_l/2);
     path.lineTo(arrow_w/2, arrow_l/2);
     path.lineTo(0, -arrow_l/2);
     path.closeSubpath();
     
-    double posX = rect.width()/2;
-    double posY = rect.height()/2;
+    const double posX = rect.width()/2;
+    const double posY = rect.height()/2;
     
-    if(mXFrom < mXTo && mYFrom > mYTo)
-    {
+    if (mXFrom < mXTo && mYFrom > mYTo) {
         painter->save();
         painter->translate(rect.x() + posX, rect.y() + posY);
         painter->rotate(angle_deg);
         painter->fillPath(path, color);
         painter->restore();
-    }
-    else if(mXFrom < mXTo && mYFrom < mYTo)
-    {
+        
+    } else if (mXFrom < mXTo && mYFrom < mYTo) {
         painter->save();
         painter->translate(rect.x() + posX, rect.y() + posY);
         painter->rotate(180 - angle_deg);
         painter->fillPath(path, color);
         painter->restore();
-    }
-    else if(mXFrom > mXTo && mYFrom < mYTo)
-    {
+        
+    } else if (mXFrom > mXTo && mYFrom < mYTo) {
         painter->save();
         painter->translate(rect.x() + posX, rect.y() + posY);
         painter->rotate(180 + angle_deg);
         painter->fillPath(path, color);
         painter->restore();
-    }
-    else if(mXFrom > mXTo && mYFrom > mYTo)
-    {
+    } else if (mXFrom > mXTo && mYFrom > mYTo) {
         painter->save();
         painter->translate(rect.x() + rect.width()/2, rect.y() + rect.height()/2);
         painter->rotate(-angle_deg);
@@ -142,10 +134,9 @@ void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
     
     // Message
     //qDebug() <<"mSate="<<QString::number(eAllowed);
-    switch(mState)
-    {
+    switch (mState) {
         
-        case eForbidden: qDebug() <<"if mSate==eForbidden";
+        case eForbidden: qDebug() <<"ArrowTmpItem::paint mSate==eForbidden";
         case eAllowed:
         {
             double w = 40;
@@ -154,13 +145,11 @@ void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
             painter->setBrush(Qt::white);
             painter->drawEllipse(r);
             
-            if(mState == eAllowed)
-            {
-                qDebug() <<"if mSate==eAllowed"<<QString::number(eAllowed);
+            if (mState == eAllowed) {
+                //qDebug() <<"ArrowTmpItem::paint mSate==eAllowed"<<QString::number(eAllowed);
                 painter->drawText(r, Qt::AlignCenter, "OK");
-            }
-            else
-            {
+                
+            } else {
                 painter->setPen(QPen(color, penWidth, Qt::SolidLine, Qt::RoundCap));
                 painter->drawLine(r.x() + r.width()/4, r.y() + r.height()/4, r.x() + 3*r.width()/4, r.y() + 3*r.height()/4);
                 painter->drawLine(r.x() + r.width()/4, r.y() + 3*r.height()/4, r.x() + 3*r.width()/4, r.y() + r.height()/4);
