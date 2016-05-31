@@ -20,15 +20,20 @@ public:
     
     virtual void updateItemPosition(const QPointF& pos);
     
-    void setControlsVisible(double visible);
+    void setControlsVisible(const bool visible);
+    void setControlsEnabled(const bool enabled);
 
 protected:
     QRectF boundingRect() const;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
     void mousePressEvent(QGraphicsSceneMouseEvent* e);
     
+    void hoverEnterEvent(QGraphicsSceneHoverEvent* e);
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent* e);
+
     QRectF checkRect() const;
     QRectF eyeRect() const;
+    QRectF extractRect() const;
     QJsonArray getEvents() const;
     QString getTauString() const;
     
@@ -36,6 +41,7 @@ public:
     Qt::CheckState mState;
     bool mEyeActivated;
     bool mControlsVisible;
+    bool mControlsEnabled;
     
     QSize mSize;
 };
