@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
     qApp->setAttribute(Qt::AA_UseHighDpiPixmaps);
     
     QString filePath = "";
-    for(int i=0; i<argc; ++i) {
+    for (int i=0; i<argc; ++i) {
         QString arg(argv[i]);
         if(arg.contains(".chr", Qt::CaseInsensitive))
             filePath = arg;

@@ -2,7 +2,6 @@
 #include "../PluginFormAbstract.h"
 #include "Collapsible.h"
 #include "RadioButton.h"
-#include "Button.h"
 #include "Label.h"
 #include "HelpWidget.h"
 #include "LineEdit.h"

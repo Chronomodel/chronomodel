@@ -8,9 +8,9 @@
 #include "Painting.h"
 #include "MainWindow.h"
 #include "Project.h"
+#include "ArrowTmpItem.h"
 #include <QtWidgets>
 
-#include "ArrowTmpItem.h"
 
 EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):AbstractItem(scene, parent)
 {

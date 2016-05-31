@@ -1676,24 +1676,20 @@ void Project::deleteSelectedPhases()
     QJsonArray phases_constraints = mState.value(STATE_PHASES_CONSTRAINTS).toArray();
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
     
-    for(int i=phases.size()-1; i>=0; --i)
-    {
+    for (int i=phases.size()-1; i>=0; --i) {
         QJsonObject phase = phases.at(i).toObject();
-        if(phase.value(STATE_IS_SELECTED).toBool())
-        {
+        if (phase.value(STATE_IS_SELECTED).toBool()) {
             int phase_id = phase.value(STATE_ID).toInt();
-            for(int j=phases_constraints.size()-1; j>=0; --j)
-            {
+            for (int j=phases_constraints.size()-1; j>=0; --j) {
                 QJsonObject constraint = phases_constraints.at(j).toObject();
                 int bwd_id = constraint.value(STATE_CONSTRAINT_BWD_ID).toInt();
                 int fwd_id = constraint.value(STATE_CONSTRAINT_FWD_ID).toInt();
-                if(bwd_id == phase_id || fwd_id == phase_id)
-                {
+
+                if (bwd_id == phase_id || fwd_id == phase_id)
                     phases_constraints.removeAt(j);
-                }
+
             }
-            for(int j=0; j<events.size(); ++j)
-            {
+            for (int j=0; j<events.size(); ++j) {
                 QJsonObject event = events.at(j).toObject();
                 QString idsStr = event.value(STATE_EVENT_PHASE_IDS).toString();
                 QStringList ids = idsStr.split(",");

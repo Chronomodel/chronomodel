@@ -307,8 +307,9 @@ ModelView::~ModelView()
 void ModelView::setProject(Project* project)
 {
     mProject = project;
-    mEventsScene->setProject(mProject);
     mPhasesScene->setProject(mProject);
+    mEventsScene->setProject(mProject);
+
     connect(mButNewEvent, &Button::clicked, mProject, &Project::createEvent);
     connect(mButNewEventKnown, &Button::clicked, mProject, &Project::createEventKnown);
     connect(mButDeleteEvent, &Button::clicked, mProject, &Project::deleteSelectedEvents);
@@ -331,25 +332,6 @@ Project* ModelView::getProject() const
 {
    return  mProject;
 }
-/*void ModelView::doProjectConnections(Project* project)
-{
-    connect(mButNewEvent, SIGNAL(clicked()), project, SLOT(createEvent()));
-    connect(mButNewEventKnown, SIGNAL(clicked()), project, SLOT(createEventKnown()));
-    connect(mButDeleteEvent, SIGNAL(clicked()), project, SLOT(deleteSelectedEvents()));
-    connect(mButRecycleEvent, SIGNAL(clicked()), project, SLOT(recycleEvents()));
-    
-    connect(mButNewPhase, SIGNAL(clicked()), project, SLOT(createPhase()));
-    connect(mButDeletePhase, SIGNAL(clicked()), project, SLOT(deleteSelectedPhases()));
-
-    connect(project, &Project::selectedEventsChanged, mPhasesScene, &PhasesScene::updateCheckedPhases);
-    connect(project, &Project::selectedPhasesChanged, mEventsScene, &EventsScene::updateSelectedEventsFromPhases);
-    
-    connect(project, &Project::currentEventChanged, mEventPropertiesView, &EventPropertiesView::setEvent);
-    connect(mEventPropertiesView, SIGNAL(combineDatesRequested(const int, const QList<int>&)), project, SLOT(combineDates(const int, const QList<int>&)));
-    connect(mEventPropertiesView, SIGNAL(splitDateRequested(const int, const int)), project, SLOT(splitDate(const int, const int)));
-    
-    connect(project, SIGNAL(eyedPhasesModified(const QMap<int, bool>&)), mEventsScene, SLOT(updateGreyedOutEvents(const QMap<int, bool>&)));
-}*/
 
 void ModelView::resetInterface()
 {
@@ -365,7 +347,6 @@ void ModelView::updateProject()
 {
     showCalibration(false);
     
-    //Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = mProject->state();
     const ProjectSettings settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
    
@@ -382,8 +363,9 @@ void ModelView::updateProject()
 
     setSettingsValid(settings.mTmin < settings.mTmax);
     
+    mPhasesScene->updateScene();
     mEventsScene->updateScene();
-    mPhasesScene->updateProject();
+
     
     // Les sélections dans les scènes doivent être mises à jour après que
     // LES 2 SCENES aient été updatées
