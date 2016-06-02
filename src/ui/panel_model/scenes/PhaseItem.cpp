@@ -263,29 +263,43 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     
     const QJsonArray events = getEvents();
     double dy = mEltsMargin + mEltsHeight;
+    PhasesScene* itemScene = dynamic_cast<PhasesScene*>(mScene);
+
+    const bool showAlldata = itemScene->showAllEvents();
     for (int i=0; i<events.size(); ++i) {
-        // Extract button
-        /*QRectF xRect = extractRect();
-        painter->setBrush(Qt::white);
-        painter->setPen(Qt::black);
-       // painter->drawRoundedRect(xRect, 15, 15);
-        //if (mEyeActivated) {
-        QPixmap xpix(":eye.png");
-        if (i > 0)
-                xRect.adjust(0, dy, 0, dy);
-        //painter->drawPixmap(xRect, xpix, xpix.rect());
-        painter->drawPixmap(xRect.x(), xRect.y(), 5, 5, xpix);
-        //}*/
+
         const QJsonObject event = events.at(i).toObject();
         const QColor eventColor(event.value(STATE_COLOR_RED).toInt(),
                           event.value(STATE_COLOR_GREEN).toInt(),
                           event.value(STATE_COLOR_BLUE).toInt());
+        const bool isSelected = ( event.value(STATE_IS_SELECTED).toBool() || event.value(STATE_IS_CURRENT).toBool() );
+
         if (i > 0)
             r.adjust(0, dy, 0, dy);
-        
-        painter->fillRect(r, eventColor);
+
         painter->setPen(getContrastedColor(eventColor));
-        painter->drawText(r, Qt::AlignCenter, event.value(STATE_NAME).toString());
+
+        // magnify and highlight selected events
+        if (isSelected) {
+            painter->setPen(QPen(fontColor, 3.f));
+            r.adjust(1, 1, -1, -1);
+            painter->drawRoundedRect(r,1,1);
+            painter->fillRect(r, eventColor);
+            painter->setPen(getContrastedColor(eventColor));
+            painter->drawText(r, Qt::AlignCenter, event.value(STATE_NAME).toString());
+            r.adjust(-1, -1, +1, +1);
+        }
+        else if (isSelected || showAlldata) {
+                painter->fillRect(r, eventColor);
+                painter->drawText(r, Qt::AlignCenter, event.value(STATE_NAME).toString());
+
+        } else {
+            painter->setOpacity(0.2);
+            painter->fillRect(r, eventColor);
+            painter->drawText(r, Qt::AlignCenter, event.value(STATE_NAME).toString());
+            painter->setOpacity(1);
+        }
+
     }
     
     // Border

@@ -14,24 +14,32 @@ public:
     ~PhasesScene();
     
     void sendUpdateProject(const QString& reason, bool notify, bool async);
-
+    PhaseItem* currentPhase() const;
 signals:
     void selectionChanged();
     
 public slots:
     void clean();
-    void updateProject();
+    void updateScene();
     void updateSelection(bool sendNotif = true, bool forced = false);
     void updateCheckedPhases();
+
+    void noHide();
+    void eventsSelected();
     
 public:
     void itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);
     void constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e);
     void constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e);
-    
+    bool itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);
+
+    void itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e);
     void updateEyedPhases();
     
     void adaptItemsForZoom(double prop);
+
+    void setShowAllEvents(const bool show) { mShowAllEvents = show;}
+    bool showAllEvents() const { return mShowAllEvents;}
     
 protected:
     AbstractItem* collidingItem(QGraphicsItem* item);
@@ -42,8 +50,10 @@ protected:
     bool constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo);
     void createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo);
     void mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo);
- private:
-    Project* mProject;
+
+private:
+    bool mShowAllEvents;
+
 };
 
 #endif

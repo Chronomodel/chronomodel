@@ -317,10 +317,15 @@ void ModelView::setProject(Project* project)
     
     connect(mButNewPhase, &Button::clicked, mProject, &Project::createPhase);
     connect(mButDeletePhase, &Button::clicked, mProject, &Project::deleteSelectedPhases);
-    
+
+    // selection management
     connect(mProject, &Project::selectedEventsChanged, mPhasesScene, &PhasesScene::updateCheckedPhases);
     connect(mProject, &Project::selectedPhasesChanged, mEventsScene, &EventsScene::updateSelectedEventsFromPhases);
-    
+
+    // when there is no Event selected we must show all data inside phases
+    connect(mEventsScene, &EventsScene::noSelection, mPhasesScene, &PhasesScene::noHide);
+    connect(mEventsScene, &EventsScene::eventsAreSelected, mPhasesScene, &PhasesScene::eventsSelected);
+
     connect(mProject, &Project::currentEventChanged, mEventPropertiesView, &EventPropertiesView::setEvent);
     connect(mEventPropertiesView, &EventPropertiesView::combineDatesRequested, mProject, &Project::combineDates);
     connect(mEventPropertiesView, &EventPropertiesView::splitDateRequested, mProject, &Project::splitDate);

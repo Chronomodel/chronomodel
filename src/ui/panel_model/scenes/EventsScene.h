@@ -79,6 +79,8 @@ signals:
     void eventClicked();
     void eventDoubleClicked();
     void selectionChanged();
+    void noSelection();
+    void eventsAreSelected();
     
 private:
     HelpWidget* mHelpView;

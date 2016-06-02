@@ -277,7 +277,7 @@ void EventsScene::updateScene()
    qDebug()<<"EventsScene::updateScene() begin";
    QTime startTime = QTime::currentTime();
 #endif
-    const QJsonObject state = mProject->state();
+    QJsonObject state = mProject->state();
     const QJsonArray eventsInNewState = state.value(STATE_EVENTS).toArray();
     const QJsonArray constraints = state.value(STATE_EVENTS_CONSTRAINTS).toArray();
     QJsonObject settings = state.value(STATE_SETTINGS).toObject();
@@ -594,11 +594,18 @@ void EventsScene::updateSelection()
            mProject->sendEventsSelectionChanged();
         }
 
-        if (selectedItems().size() != 1) {
+    if (selectedItems().size() == 0)
+        emit noSelection();
+    else
+        emit eventsAreSelected();
+
+    if (selectedItems().size() == 1)
+        emit mProject->currentEventChanged(currentEvent);
+    else {
             QJsonObject itemEmpty;
             emit mProject->currentEventChanged( itemEmpty);
-        } else
-            emit mProject->currentEventChanged(currentEvent);
+    }
+
 
     }
 }
@@ -608,12 +615,12 @@ void EventsScene::updateSelectedEventsFromPhases()
     // Do not send "selection updated" each time an item is selected in this function!
     // Do it all at once at the end.
     mUpdatingItems = true;
-    
-    QJsonObject state = MainWindow::getInstance()->getProject()->state();
+
+    QJsonObject state = mProject->state();
     QJsonArray phases = state.value(STATE_PHASES).toArray();
     
     for (int i=0; i<mItems.size(); ++i) {
-        EventItem* item = (EventItem*)mItems[i];
+        EventItem* item = static_cast<EventItem*>(mItems.at(i));
         bool mustBeSelected = false;
         QList<int> eventPhasesIds = stringListToIntList(item->mData.value(STATE_EVENT_PHASE_IDS).toString());
         
@@ -621,15 +628,40 @@ void EventsScene::updateSelectedEventsFromPhases()
             const QJsonObject phase = phases.at(i).toObject();
             const int phaseId = phase.value(STATE_ID).toInt();
             
-            if (eventPhasesIds.contains(phaseId)) {
-                if (phase.value(STATE_IS_SELECTED).toBool())
-                    mustBeSelected = true;
-            }
+            if (eventPhasesIds.contains(phaseId) && phase.value(STATE_IS_CURRENT).toBool())
+               mustBeSelected = true;
+
         }
         item->setSelected(mustBeSelected);
+
+        QList<QGraphicsItem*> dateList = item->childItems();
+        for (int i=0; i<dateList.size(); ++i)
+            dateList.at(i)->setSelected(mustBeSelected);
+
+
     }
     mUpdatingItems = false;
+
+    // update scene without call updateSelection,
+    for (int i=0; i<mItems.size(); ++i) {
+        EventItem* item = static_cast<EventItem*>(mItems.at(i));
+
+        bool selected = item->isSelected() ;
+
+        QJsonObject& event = item->getEvent();
+
+        if (event.value(STATE_IS_SELECTED).toBool() != selected ) {
+            event[STATE_IS_SELECTED] = selected;
+           // modified = true;
+        }
+
+
+     }
+    sendUpdateProject(tr("events selection : no undo, no view update!"), false, false);
+
+   /*
     updateSelection();
+    updateScene();*/
 }
 
 void EventsScene::adaptItemsForZoom(double prop)
@@ -936,11 +968,20 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
     if (keyEvent->isAutoRepeat())
         keyEvent->ignore();
     
+   if (selectedItems().count() == 0) {
+        qDebug() << "EventsScene::keyPressEvent No item selected";
+        emit noSelection();
+    } else {
+       qDebug() << "EventsScene::keyPressEvent emit selectionChanged() ";
+       emit selectionChanged();
+    }
+
     if (keyEvent->key() == Qt::Key_Delete) {
         deleteSelectedItems();
 
     // spotting the  Alt key
     } else if (keyEvent->modifiers() == Qt::AltModifier && selectedItems().count()==1) {
+
         qDebug() << "EventsScene::keyPressEvent You Press: "<< "Qt::Key_Alt";
         mAltIsDown = true;
 
