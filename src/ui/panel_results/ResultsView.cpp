@@ -1671,7 +1671,7 @@ void ResultsView::updateFont()
     dialog.setFont(mFont);
     
     bool ok;
-    QFont font = QFontDialog::getFont(&ok, mFont, this);
+    const QFont font = QFontDialog::getFont(&ok, mFont, this);
     if (ok) {
         mFont = font;
         mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
@@ -1679,12 +1679,13 @@ void ResultsView::updateFont()
         foreach (GraphViewResults* phaseGraph, mByPhasesGraphs)
             phaseGraph->setGraphFont(mFont);
         
-        mPhasesScrollArea->setFont(mFont);
+        //mPhasesScrollArea->setFont(mFont); //unnecessary
 
-        foreach (GraphViewResults* eventGraph, mByEventsGraphs)
+          foreach (GraphViewResults* eventGraph, mByEventsGraphs)
             eventGraph->setGraphFont(mFont);
         
-        mEventsScrollArea->setFont(mFont);
+        //mEventsScrollArea->setFont(mFont);//unnecessary
+
 
     }
 }
