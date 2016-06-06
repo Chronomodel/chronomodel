@@ -451,7 +451,7 @@ QPixmap Date::generateTypoThumb()
         const double tmin = mSettings.mTmin;
         const double tmax = mSettings.mTmax;
 
-        if(tLower>tmax ||tmax<tmin) {
+        if (tLower>tmax ||tmax<tmin) {
             return QPixmap();
         }
         else {
@@ -502,8 +502,7 @@ QPixmap Date::generateTypoThumb()
 
             return thumb;
         }
-    }
-    else{
+    } else {
         // If date is invalid, return a null pixmap!
         return QPixmap();
     }
@@ -515,8 +514,7 @@ QPixmap Date::generateTypoThumb()
 
 QPixmap Date::generateCalibThumb()
 {
-    if(mIsValid)
-    {
+    if (mIsValid) {
         //  No need to draw the graph on a large size
         //  These values are arbitary
         const QSize size(200, 30);
@@ -528,7 +526,8 @@ QPixmap Date::generateCalibThumb()
         QMap<double,double> calib = normalize_map(getMapDataInRange(getRawCalibMap(),tmin,tmax));
         curve.mData = calib;
 
-        if(curve.mData.isEmpty()) return QPixmap();
+        if (curve.mData.isEmpty())
+            return QPixmap();
 
         curve.mName = "Calibration";
 
@@ -564,8 +563,7 @@ QPixmap Date::generateCalibThumb()
 
         
         QPixmap thumb(size);
-        if(graph.inherits("QOpenGLWidget"))
-        {
+        if (graph.inherits("QOpenGLWidget")) {
             // Does not work if the graph has not been rendered before
             // (calling repaint() has no direct effect on QOpenGLWidget...)
             //graph.repaint();
@@ -575,19 +573,16 @@ QPixmap Date::generateCalibThumb()
             // This works but there are some drawing region issues...
             graph.setRendering(GraphView::eHD);
             graph.paintToDevice(&thumb);
-        }
-        else
-        {
+        } else {
             QPainter p;
             p.begin(&thumb);
-            p.setRenderHint(QPainter::Antialiasing);
+            //p.setRenderHint(QPainter::SmoothPixmapTransform);//don't work on pixmap
             graph.repaint();
             graph.render(&p);
             p.end();
         }
         return thumb;
-    }
-    else{
+    } else {
         // If date is invalid, return a null pixmap!
         return QPixmap();
     }
@@ -602,7 +597,7 @@ double Date::getLikelihoodFromCalib(const double t)
     double tmax = mSettings.mTmax;
     
     // We need at least two points to interpolate
-    if(mCalibration.size() < 2 || t < tmin || t > tmax)
+    if (mCalibration.size() < 2 || t < tmin || t > tmax)
         return 0;
     
     double prop = (t - tmin) / (tmax - tmin);
@@ -612,7 +607,7 @@ double Date::getLikelihoodFromCalib(const double t)
     
     // Important pour le créneau : pas d'interpolation autour des créneaux!
     double v = 0.;
-    if(mCalibration[idxUnder] != 0 && mCalibration[idxUpper] != 0)
+    if (mCalibration[idxUnder] != 0 && mCalibration[idxUpper] != 0)
         v = interpolate(idx, (double)idxUnder, (double)idxUpper, mCalibration[idxUnder], mCalibration[idxUpper]);
     return v;
 }
@@ -630,8 +625,7 @@ void Date::updateTheta(Event* event)
  */
 void Date::initDelta(Event*)
 {
-    switch(mDeltaType)
-    {
+    switch (mDeltaType) {
         case eDeltaNone:
         {
             break;
@@ -661,8 +655,7 @@ void Date::initDelta(Event*)
 
 void Date::updateDelta(Event* event)
 {
-    switch(mDeltaType)
-    {
+    switch (mDeltaType) {
         case eDeltaNone:
         {
             break;
@@ -709,8 +702,7 @@ void Date::updateSigma(Event* event)
     const double V2 = pow(10, logV2);
     
     double rapport = 0;
-    if(logV2 >= logVMin && logV2 <= logVMax)
-    {
+    if (logV2 >= logVMin && logV2 <= logVMax) {
         const double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
         const double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1);
         rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1; // (V2 / V1) est le jacobien!
@@ -730,37 +722,31 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
     const QString pluginName = dataStr.first();
 
     PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
-    if(plugin) {
+    if (plugin) {
         QStringList dataTmp = dataStr.mid(1,dataStr.size()-1);
         date.mName = dataTmp.at(0);
         date.mPlugin = plugin;
         date.mMethod = plugin->getDataMethod();
         date.mData = plugin->fromCSV(dataTmp, csvLocale);
 
-        if(plugin->wiggleAllowed()) {
+        if (plugin->wiggleAllowed()) {
             int firstColNum = plugin->csvMinColumns() + plugin->csvOptionalColumns();
-            if(dataTmp.size() >= firstColNum + 2) {
+            if (dataTmp.size() >= firstColNum + 2) {
                 QString deltaType = dataTmp.at(firstColNum);
                 QString delta1 = dataTmp.at(firstColNum + 1);
                 QString delta2 = "0";
-                if(dataTmp.size() >= firstColNum + 3) {
+                if (dataTmp.size() >= firstColNum + 3) {
                     delta2 = dataTmp.at(firstColNum + 2);
                 }
-                if(!isComment(deltaType) && !isComment(delta1) && !isComment(delta2))
-                {
-                    if(deltaType == "fixed")
-                    {
+                if (!isComment(deltaType) && !isComment(delta1) && !isComment(delta2)) {
+                    if (deltaType == "fixed") {
                         date.mDeltaType = Date::eDeltaFixed;
                         date.mDeltaFixed = csvLocale.toDouble(delta1);
-                    }
-                    else if(deltaType == "range")
-                    {
+                    } else if (deltaType == "range") {
                         date.mDeltaType = Date::eDeltaRange;
                         date.mDeltaMin = csvLocale.toDouble(delta1);
                         date.mDeltaMax = csvLocale.toDouble(delta2);
-                    }
-                    else if(deltaType == "gaussian")
-                    {
+                    } else if (deltaType == "gaussian") {
                         date.mDeltaType = Date::eDeltaGaussian;
                         date.mDeltaAverage = csvLocale.toDouble(delta1);
                         date.mDeltaError = csvLocale.toDouble(delta2);
@@ -788,23 +774,19 @@ QStringList Date::toCSV(const QLocale &csvLocale) const
     csv << mName;
     csv << mPlugin->toCSV(mData,csvLocale );
     
-    if(mDeltaType == Date::eDeltaNone)
-    {
+    if (mDeltaType == Date::eDeltaNone) {
         csv << "none";
-    }
-    else if(mDeltaType == Date::eDeltaFixed)
-    {
+
+    } else if(mDeltaType == Date::eDeltaFixed) {
         csv << "fixed";
         csv << csvLocale.toString(mDeltaFixed);
-    }
-    else if(mDeltaType == Date::eDeltaRange)
-    {
+
+    } else if (mDeltaType == Date::eDeltaRange) {
         csv << "range";
         csv << csvLocale.toString(mDeltaMin);
         csv << csvLocale.toString(mDeltaMax);
-    }
-    else if(mDeltaType == Date::eDeltaGaussian)
-    {
+
+    } else if (mDeltaType == Date::eDeltaGaussian) {
         csv << "gaussian";
         csv << csvLocale.toString(mDeltaAverage);
         csv << csvLocale.toString(mDeltaError);
@@ -821,8 +803,7 @@ void Date::autoSetTiSampler(const bool bSet)
     
     if (bSet && mPlugin!= 0 && mPlugin->withLikelihoodArg()) {
          //   if (false) {
-        switch(mMethod)
-        {
+        switch (mMethod) {
             case eMHSymetric:
             {
                 updateti = fMHSymetricWithArg;
@@ -848,10 +829,8 @@ void Date::autoSetTiSampler(const bool bSet)
             }
         }
        // qDebug()<<"Date::autoSetTiSampler()"<<this->mName<<"with getLikelyhoodArg";
-    }
-    else {
-        switch(mMethod)
-        {
+    } else {
+        switch (mMethod) {
             case eMHSymetric:
             {
                 updateti = fMHSymetric;
@@ -942,7 +921,7 @@ double fProposalDensity(const double t, const double t0, Date* date)
     const double tmaxCalib = date->getTmaxCalib();
 
     /// ----q1------Defined only on Calibration range-----
-    if(t > tminCalib && t < tmaxCalib){
+    if (t > tminCalib && t < tmaxCalib){
         //double prop = (t - tmin) / (tmax - tmin);
         const double prop = (t - tminCalib) / (tmaxCalib - tminCalib);
         const double idx = prop * (date->mRepartition.size() - 1);
@@ -984,8 +963,7 @@ void fInversion(Date* date, Event* event)
     if (u1<level) { // tiNew always in the study period
         const double idx = vector_interpolate_idx_for_value(u1, date->mRepartition);
         tiNew = tminCalib + idx *date->mSettings.mStep;
-    }
-    else {
+    } else {
         // -- gaussian
         const double t0 = date->mTheta.mX;
         const double s = (tmax-tmin)/2;
@@ -1036,8 +1014,7 @@ void fInversionWithArg(Date* date, Event* event)
         const double u2 = Generator::randomUniform();
         const double idx = vector_interpolate_idx_for_value(u2, date->mRepartition);
         tiNew = tminCalib + idx *date->mSettings.mStep;
-    }
-    else {
+    } else {
         // -- gaussian
         const double t0 =(tmax+tmin)/2;
         const double s = (tmax-tmin)/2;
