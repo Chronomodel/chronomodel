@@ -49,8 +49,8 @@ mButW(80)
     mOkBut->setAutoDefault(true);
     
     connect(mTauTypeCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(showAppropriateTauOptions(int)));
-    connect(mOkBut, SIGNAL(clicked()), this, SLOT(accept()));
-    connect(mCancelBut, SIGNAL(clicked()), this, SLOT(reject()));
+    connect(mOkBut, &Button::clicked, this, &PhaseDialog::accept);
+    connect(mCancelBut, &Button::clicked, this, &PhaseDialog::reject);
     
     mComboH = mTauTypeCombo->sizeHint().height();
     
@@ -122,12 +122,12 @@ void PhaseDialog::setPhase(const QJsonObject& phase)
 {
     mPhase = phase;
     
-    mNameEdit->setText(mPhase[STATE_NAME].toString());
-    mColorPicker->setColor(QColor(mPhase[STATE_COLOR_RED].toInt(),
-                                  mPhase[STATE_COLOR_GREEN].toInt(),
-                                  mPhase[STATE_COLOR_BLUE].toInt()));
-    mTauTypeCombo->setCurrentIndex(mPhase[STATE_PHASE_TAU_TYPE].toInt());
-    mTauFixedEdit->setText(QString::number(mPhase[STATE_PHASE_TAU_FIXED].toDouble()));
+    mNameEdit->setText(mPhase.value(STATE_NAME).toString());
+    mColorPicker->setColor(QColor(mPhase.value(STATE_COLOR_RED).toInt(),
+                                  mPhase.value(STATE_COLOR_GREEN).toInt(),
+                                  mPhase.value(STATE_COLOR_BLUE).toInt()));
+    mTauTypeCombo->setCurrentIndex(mPhase.value(STATE_PHASE_TAU_TYPE).toInt());
+    mTauFixedEdit->setText(QString::number(mPhase.value(STATE_PHASE_TAU_FIXED).toDouble()));
     //mTauMinEdit->setText(QString::number(mPhase[STATE_PHASE_TAU_MIN].toDouble()));
     //mTauMaxEdit->setText(QString::number(mPhase[STATE_PHASE_TAU_MAX].toDouble()));
     
