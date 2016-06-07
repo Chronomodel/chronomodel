@@ -28,8 +28,7 @@ void SceneGlobalView::paintEvent(QPaintEvent* e)
     p.setBrush(QColor(100, 100, 100));
     p.drawRect(r);
     
-    if(mScene)
-    {
+    if (mScene) {
         // --------------------------------------------------
         //  Target Rect
         // --------------------------------------------------
@@ -100,13 +99,10 @@ QRectF SceneGlobalView::getTargetRect()
     double sceneProp = sceneRect.width() / sceneRect.height();
     QSizeF targetSize;
     
-    if(sceneProp > w / h)
-    {
+    if (sceneProp > w / h) {
         targetSize.setWidth(w);
         targetSize.setHeight(w / sceneProp);
-    }
-    else
-    {
+    } else {
         targetSize.setHeight(h);
         targetSize.setWidth(h * sceneProp);
     }
@@ -133,18 +129,15 @@ void SceneGlobalView::mouseReleaseEvent(QMouseEvent* e)
 
 void SceneGlobalView::mouseMoveEvent(QMouseEvent* e)
 {
-    if(mIsDragging)
-    {
+    if (mIsDragging)
         setPosition(e->pos());
-    }
 }
 
 void SceneGlobalView::setPosition(const QPoint& pos)
 {
     QRectF targetRect = getTargetRect();
     
-    if(targetRect.contains(pos))
-    {
+    if (targetRect.contains(pos)) {
         double propX = (double)(pos.x() - targetRect.x()) / targetRect.width();
         double propY = (double)(pos.y() - targetRect.y()) / targetRect.height();
         
