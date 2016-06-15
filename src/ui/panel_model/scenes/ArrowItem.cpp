@@ -42,23 +42,23 @@ void ArrowItem::setData(const QJsonObject& c)
     updatePosition();
 }
 
-void ArrowItem::setFrom(double x, double y)
+void ArrowItem::setFrom(const double x, const double y)
 {
     prepareGeometryChange();
     mXStart = x;
     mYStart = y;
     update();
-    if(scene())
+    if (scene())
         scene()->update();
 }
 
-void ArrowItem::setTo(double x, double y)
+void ArrowItem::setTo(const double x, const double y)
 {
     prepareGeometryChange();
     mXEnd = x;
     mYEnd = y;
     update();
-    if(scene())
+    if (scene())
         scene()->update();
 }
 
@@ -75,47 +75,42 @@ void ArrowItem::updatePosition()
     Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = project->state();
     
-    int fromId = mData[STATE_CONSTRAINT_BWD_ID].toInt();
-    int toId = mData[STATE_CONSTRAINT_FWD_ID].toInt();
+    const int fromId = mData.value(STATE_CONSTRAINT_BWD_ID).toInt();
+    const int toId = mData.value(STATE_CONSTRAINT_FWD_ID).toInt();
     
     QJsonObject from;
     QJsonObject to;
     
-    if(mType == eEvent)
-    {
-        QJsonArray events = state[STATE_EVENTS].toArray();
-        for(int i=0; i<events.size(); ++i)
-        {
-            QJsonObject event = events[i].toObject();
-            if(event[STATE_ID].toInt() == fromId)
+    if (mType == eEvent) {
+        QJsonArray events = state.value(STATE_EVENTS).toArray();
+        for (int i=0; i<events.size(); ++i) {
+            QJsonObject event = events.at(i).toObject();
+            if (event.value(STATE_ID).toInt() == fromId)
                 from = event;
-            if(event[STATE_ID].toInt() == toId)
+            if (event.value(STATE_ID).toInt() == toId)
                 to = event;
         }
-    }
-    else
-    {
-        QJsonArray phases = state[STATE_PHASES].toArray();
-        for(int i=0; i<phases.size(); ++i)
-        {
-            QJsonObject phase = phases[i].toObject();
-            if(phase[STATE_ID].toInt() == fromId)
+    } else {
+        QJsonArray phases = state.value(STATE_PHASES).toArray();
+        for (int i=0; i<phases.size(); ++i) {
+            QJsonObject phase = phases.at(i).toObject();
+            if (phase.value(STATE_ID).toInt() == fromId)
                 from = phase;
-            if(phase[STATE_ID].toInt() == toId)
+            if (phase.value(STATE_ID).toInt() == toId)
                 to = phase;
         }
     }
 
-    mXStart = from[STATE_ITEM_X].toDouble();
-    mYStart = from[STATE_ITEM_Y].toDouble();
+    mXStart = from.value(STATE_ITEM_X).toDouble();
+    mYStart = from.value(STATE_ITEM_Y).toDouble();
     
-    mXEnd = to[STATE_ITEM_X].toDouble();
-    mYEnd = to[STATE_ITEM_Y].toDouble();
+    mXEnd = to.value(STATE_ITEM_X).toDouble();
+    mYEnd = to.value(STATE_ITEM_Y).toDouble();
     
     //qDebug() << "[" << mXStart << ", " << mYStart << "]" << " => " << "[" << mXEnd << ", " << mYEnd << "]";
     
     update();
-    if(scene())
+    if (scene())
         scene()->update();
 }
 
@@ -125,38 +120,35 @@ void ArrowItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
     QGraphicsItem::mouseDoubleClickEvent(e);
     //QRectF r = getBubbleRect();
     //if(r.contains(e->pos()))
-    {
+    //{
         mScene->constraintDoubleClicked(this, e);
-    }
+   // }
 }
 
 void ArrowItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
    //  qDebug()<<"ArrowItem::mousePressEvent";
     QGraphicsItem::mousePressEvent(e);
-    QRectF r = getBubbleRect();
-    if(r.contains(e->pos()))
-    {
+    const QRectF r = getBubbleRect();
+    if (r.contains(e->pos()))
         mScene->constraintClicked(this, e);
-    }
+
 }
 
 void ArrowItem::hoverMoveEvent(QGraphicsSceneHoverEvent* e)
 {
     QGraphicsItem::hoverMoveEvent(e);
     
-    if(mType == eEvent)
-    {
-        double hoverSide = 100;
+    if (mType == eEvent) {
+        const double hoverSide = 100;
         QRectF br = boundingRect();
         br.adjust((br.width()-hoverSide)/2,
                   (br.height()-hoverSide)/2,
                   -(br.width()-hoverSide)/2,
                   -(br.height()-hoverSide)/2);
         
-        bool shouldShowDelete = br.contains(e->pos());
-        if(shouldShowDelete != mShowDelete)
-        {
+        const bool shouldShowDelete = br.contains(e->pos());
+        if (shouldShowDelete != mShowDelete) {
             mShowDelete = shouldShowDelete;
             update();
         }
@@ -166,8 +158,7 @@ void ArrowItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* e)
 {
     QGraphicsItem::hoverLeaveEvent(e);
     
-    if(mShowDelete)
-    {
+    if (mShowDelete) {
         mShowDelete = false;
         update();
     }
@@ -175,10 +166,10 @@ void ArrowItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* e)
 
 QRectF ArrowItem::boundingRect() const
 {
-    qreal x = qMin(mXStart, mXEnd);
-    qreal y = qMin(mYStart, mYEnd);
-    qreal w = qAbs(mXEnd - mXStart);
-    qreal h = qAbs(mYEnd - mYStart);
+    const qreal x = qMin(mXStart, mXEnd);
+    const qreal y = qMin(mYStart, mYEnd);
+    const qreal w = qAbs(mXEnd - mXStart);
+    const qreal h = qAbs(mYEnd - mYStart);
 
     return QRectF(x, y, w, h);
 }
@@ -187,40 +178,31 @@ QPainterPath ArrowItem::shape() const
 {
     QPainterPath path;
     QRectF rect = boundingRect();
-    qreal shift = 15;
+    const qreal shift = 15;
     
-    if(mXStart < mXEnd && mYStart > mYEnd)
-    {
+    if (mXStart < mXEnd && mYStart > mYEnd) {
         path.moveTo(mXStart + shift, mYStart);
         path.lineTo(mXStart, mYStart - shift);
         path.lineTo(mXEnd - shift, mYEnd);
         path.lineTo(mXEnd, mYEnd + shift);
-    }
-    else if(mXStart < mXEnd && mYStart < mYEnd)
-    {
+    } else if (mXStart < mXEnd && mYStart < mYEnd) {
         path.moveTo(mXStart + shift, mYStart);
         path.lineTo(mXStart, mYStart + shift);
         path.lineTo(mXEnd - shift, mYEnd);
         path.lineTo(mXEnd, mYEnd - shift);
-    }
-    else if(mXStart > mXEnd && mYStart < mYEnd)
-    {
+    } else if (mXStart > mXEnd && mYStart < mYEnd) {
         path.moveTo(mXStart - shift, mYStart);
         path.lineTo(mXStart, mYStart + shift);
         path.lineTo(mXEnd + shift, mYEnd);
         path.lineTo(mXEnd, mYEnd - shift);
-    }
-    else if(mXStart > mXEnd && mYStart > mYEnd)
-    {
+    } else if (mXStart > mXEnd && mYStart > mYEnd) {
         path.moveTo(mXStart - shift, mYStart);
         path.lineTo(mXStart, mYStart - shift);
         path.lineTo(mXEnd + shift, mYEnd);
         path.lineTo(mXEnd, mYEnd + shift);
-    }
-    else
-    {
+    } else
         path.addRect(rect);
-    }
+
     return path;
 }
 
@@ -234,10 +216,10 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     
     int penWidth = 1;
     QColor color = mEditing ? QColor(77, 180, 62) : QColor(0, 0, 0);
-    if(mShowDelete)
+    if (mShowDelete)
         color = Qt::red;
     
-    if(mGreyedOut)
+    if (mGreyedOut)
         color.setAlphaF(0.05);
     
     painter->setPen(QPen(color, penWidth, mEditing ? Qt::DashLine : Qt::SolidLine));
@@ -248,8 +230,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     QString bubbleText = getBubbleText();
     bool showMiddleArrow = true;
     
-    if(mShowDelete)
-    {
+    if (mShowDelete) {
         showMiddleArrow = false;
         painter->setPen(Qt::red);
         painter->setBrush(Qt::red);
@@ -267,9 +248,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         painter->drawLine(-r, 0.f, r, 0.f);
         painter->drawLine(0.f, -r, 0.f, r);
         painter->restore();
-    }
-    else if(!bubbleText.isEmpty())
-    {
+    } else if (!bubbleText.isEmpty()) {
         showMiddleArrow = false;
         QRectF br = getBubbleRect(bubbleText);
         painter->setPen(Qt::black);
@@ -283,36 +262,32 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     
     // arrows
     
-    double angle_rad = atanf(rect.width() / rect.height());
-    double angle_deg = angle_rad * 180. / M_PI;
+    const double angle_rad = atanf(rect.width() / rect.height());
+    const double angle_deg = angle_rad * 180. / M_PI;
     
     QPainterPath path;
-    int arrow_w = 10;
-    int arrow_l = 15;
+    const int arrow_w = 10;
+    const int arrow_l = 15;
     path.moveTo(-arrow_w/2, arrow_l/2);
     path.lineTo(arrow_w/2, arrow_l/2);
     path.lineTo(0, -arrow_l/2);
     path.closeSubpath();
     
-    double posX = rect.width()/2;
-    double posY = rect.height()/2;
-    double posX1 = rect.width()/3;
-    double posX2 = 2*rect.width()/3;
-    double posY1 = rect.height()/3;
-    double posY2 = 2*rect.height()/3;
+    const double posX = rect.width()/2;
+    const double posY = rect.height()/2;
+    const double posX1 = rect.width()/3;
+    const double posX2 = 2*rect.width()/3;
+    const double posY1 = rect.height()/3;
+    const double posY2 = 2*rect.height()/3;
     
-    if(mXStart < mXEnd && mYStart > mYEnd)
-    {
-        if(showMiddleArrow)
-        {
+    if (mXStart < mXEnd && mYStart > mYEnd) {
+        if (showMiddleArrow) {
             painter->save();
             painter->translate(rect.x() + posX, rect.y() + posY);
             painter->rotate(angle_deg);
             painter->fillPath(path, color);
             painter->restore();
-        }
-        else
-        {
+        } else {
             painter->save();
             painter->translate(rect.x() + posX1, rect.y() + posY2);
             painter->rotate(angle_deg);
@@ -325,19 +300,14 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->fillPath(path, color);
             painter->restore();
         }
-    }
-    else if(mXStart < mXEnd && mYStart < mYEnd)
-    {
-        if(showMiddleArrow)
-        {
+    } else if (mXStart < mXEnd && mYStart < mYEnd) {
+        if (showMiddleArrow) {
             painter->save();
             painter->translate(rect.x() + posX, rect.y() + posY);
             painter->rotate(180 - angle_deg);
             painter->fillPath(path, color);
             painter->restore();
-        }
-        else
-        {
+        } else {
             painter->save();
             painter->translate(rect.x() + posX1, rect.y() + posY1);
             painter->rotate(180 - angle_deg);
@@ -350,19 +320,14 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->fillPath(path, color);
             painter->restore();
         }
-    }
-    else if(mXStart > mXEnd && mYStart < mYEnd)
-    {
-        if(showMiddleArrow)
-        {
+    } else if (mXStart > mXEnd && mYStart < mYEnd) {
+        if (showMiddleArrow) {
             painter->save();
             painter->translate(rect.x() + posX, rect.y() + posY);
             painter->rotate(180 + angle_deg);
             painter->fillPath(path, color);
             painter->restore();
-        }
-        else
-        {
+        } else {
             painter->save();
             painter->translate(rect.x() + posX2, rect.y() + posY1);
             painter->rotate(180 + angle_deg);
@@ -375,19 +340,14 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->fillPath(path, color);
             painter->restore();
         }
-    }
-    else if(mXStart > mXEnd && mYStart > mYEnd)
-    {
-        if(showMiddleArrow)
-        {
+    } else if (mXStart > mXEnd && mYStart > mYEnd) {
+        if (showMiddleArrow) {
             painter->save();
             painter->translate(rect.x() + rect.width()/2, rect.y() + rect.height()/2);
             painter->rotate(-angle_deg);
             painter->fillPath(path, color);
             painter->restore();
-        }
-        else
-        {
+        } else {
             painter->save();
             painter->translate(rect.x() + 2*rect.width()/3, rect.y() + 2*rect.height()/3);
             painter->rotate(-angle_deg);
@@ -425,12 +385,11 @@ QRectF ArrowItem::getBubbleRect(const QString& text) const
 QString ArrowItem::getBubbleText() const
 {
     QString bubbleText;
-    if(mType == ePhase)
-    {
+    if (mType == ePhase) {
         PhaseConstraint::GammaType gammaType = (PhaseConstraint::GammaType)mData[STATE_CONSTRAINT_GAMMA_TYPE].toInt();
-        if(gammaType == PhaseConstraint::eGammaFixed)
+        if (gammaType == PhaseConstraint::eGammaFixed)
             bubbleText = "hiatus ≥ " + QString::number(mData[STATE_CONSTRAINT_GAMMA_FIXED].toDouble());
-        else if(gammaType == PhaseConstraint::eGammaRange)
+        else if (gammaType == PhaseConstraint::eGammaRange)
             bubbleText = "min hiatus ∈ [" + QString::number(mData[STATE_CONSTRAINT_GAMMA_MIN].toDouble()) +
             "; " + QString::number(mData[STATE_CONSTRAINT_GAMMA_MAX].toDouble()) + "]";
     }
