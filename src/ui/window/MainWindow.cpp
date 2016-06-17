@@ -25,7 +25,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     
     mLastPath = QDir::homePath();
     
-    mProject = new Project();
+    mProject = 0; //new Project();
 
     mProjectView = new ProjectView();
     setCentralWidget(mProjectView);
@@ -54,10 +54,10 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     connect(mProjectSaveAction, SIGNAL(triggered()), this, SLOT(saveProject()));
     connect(mProjectSaveAsAction, SIGNAL(triggered()), this, SLOT(saveProjectAs()));
 
-    connect(mMCMCSettingsAction, SIGNAL(triggered()), mProject, SLOT(mcmcSettings()));
+   /* connect(mMCMCSettingsAction, SIGNAL(triggered()), mProject, SLOT(mcmcSettings()));
     connect(mResetMCMCAction, SIGNAL(triggered()), mProject, SLOT(resetMCMC()));
     connect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
-    connect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));
+    connect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));*/
 
 
     connect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
@@ -66,14 +66,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
 
     connect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
 
-    connect(mProject, &Project::noResult, this, &MainWindow::noResult);
-    connect(mProject, &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
-    connect(mProject, &Project::projectStateChanged, this, &MainWindow::updateProject);
-    connect(mProject, &Project::projectStructureChanged, this, &MainWindow::noResult);
-    connect(mProject, &Project::projectDesignChanged, mProjectView, &ProjectView::changeDesign);
 
-    
-    mProjectView->doProjectConnections(mProject);
 
 
     QLocale newLoc(QLocale::system());
@@ -402,27 +395,50 @@ void MainWindow::newProject()
     // Returns false if the user cancels.
 
     //mProject->setAppSettings(mAppSettings);
+    if (mProject)
+        (mProject->askToSave(tr("Save current project as...")));
 
-    if (mProject->askToSave(tr("Save current project as..."))) {
-        // Ask to save the new project.
-        // Returns true only if a new file is created.
-        // Note : at this point, the project state is still the previous project state.
-        if (mProject->saveAs(tr("Save new project as..."))) {
-            mUndoStack->clear();
-            
-            resetInterface();
-            activateInterface(true);
+     Project* newProject = new Project();
 
-            // Reset the project state and the MCMC Setting to the default value
-            // and then send a notification to update the views :
-            mProject->initState(NEW_PROJECT_REASON);
-        }
-        
+   // if (mProject->askToSave(tr("Save current project as..."))) {
+
+    // Ask to save the new project.
+    // Returns true only if a new file is created.
+    // Note : at this point, the project state is still the previous project state.
+    if (newProject->saveAs(tr("Save new project as..."))) {
+        mUndoStack->clear();
+
+        resetInterface();
+        activateInterface(true);
+
+        // Reset the project state and the MCMC Setting to the default value
+        // and then send a notification to update the views : send desabled
+        newProject->initState(NEW_PROJECT_REASON);
+
+
+       // activateInterface(true);
+      //  updateWindowTitle();
+       // mProjectView->doProjectConnections(mProject);
+        if (mProject)
+            disconnectProject();
+
+        mProject = newProject;
+        connectProject();
+        mProject->setAppSettings(mAppSettings);
+
+        mProjectView->createProject();
+
+       // mProject->pushProjectState(mProject->mState, NEW_PROJECT_REASON, true, true);
+
         mViewModelAction->trigger();
 
         mViewResultsAction->setEnabled(false);
-        updateWindowTitle();
-    }
+    } else
+        delete newProject;
+
+
+    updateWindowTitle();
+  //  }
 }
 
 void MainWindow::openProject()
@@ -435,24 +451,69 @@ void MainWindow::openProject()
     
     if (!path.isEmpty()) {
 
-        if (mProject->askToSave(tr("Save current project as..."))) {
-            const QFileInfo info(path);
-            setCurrentPath(info.absolutePath());
-            
+
+        if (mProject) {
+            mProject->askToSave(tr("Save current project as..."));
+            disconnectProject();
+
+            //resetInterface(): clear mEventsScene and mPhasesScene, set mProject = 0
             resetInterface();
-            
-            mUndoStack->clear();
-            if (mProject->load(path)) {
-                activateInterface(true);
-                updateWindowTitle();
-                /*if (mProject->mModel->mPhases.isEmpty())
-                    emit mProject->sendEventsSelectionChanged();
-                else*/
-                    emit mProject->sendPhasesSelectionChanged();
-                
+            delete mProject;
+        }
+
+        // assign new project
+        mProject = new Project();
+        connectProject();
+
+        //setAppSettings(): just update mAutoSaveTimer
+        mProject->setAppSettings(mAppSettings);
+        const QFileInfo info(path);
+        setCurrentPath(info.absolutePath());
+
+        mUndoStack->clear();
+        // look MainWindows::readSetting()
+        if (mProject->load(path)) {
+            activateInterface(true);
+            updateWindowTitle();
+        // Create mEventsScene and mPhasesScenes
+            mProjectView->createProject();
+
+            mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
+
             }
         }
-    }
+
+}
+
+void MainWindow::connectProject()
+{
+    connect(mProject, &Project::noResult, this, &MainWindow::noResult);
+    connect(mProject, &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
+    connect(mProject, &Project::projectStateChanged, this, &MainWindow::updateProject);
+    connect(mProject, &Project::projectStructureChanged, this, &MainWindow::noResult);
+    connect(mProject, &Project::projectDesignChanged, mProjectView, &ProjectView::changeDesign);
+
+    connect(mMCMCSettingsAction, &QAction::triggered, mProject, &Project::mcmcSettings);
+    connect(mResetMCMCAction, &QAction::triggered, mProject, &Project::resetMCMC);
+    connect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
+    connect(mRunAction, &QAction::triggered, mProject, &Project::run);
+
+    mProjectView->doProjectConnections(mProject);
+}
+
+void MainWindow::disconnectProject()
+{
+    disconnect(mProject, &Project::noResult, this, &MainWindow::noResult);
+    disconnect(mProject, &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
+    disconnect(mProject, &Project::projectStateChanged, this, &MainWindow::updateProject);
+    disconnect(mProject, &Project::projectStructureChanged, this, &MainWindow::noResult);
+    disconnect(mProject, &Project::projectDesignChanged, mProjectView, &ProjectView::changeDesign);
+
+    disconnect(mMCMCSettingsAction, &QAction::triggered, mProject, &Project::mcmcSettings);
+    disconnect(mResetMCMCAction, &QAction::triggered, mProject, &Project::resetMCMC);
+    disconnect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
+    disconnect(mRunAction, &QAction::triggered, mProject, &Project::run);
+    //mProjectView->doProjectConnections(0);
 }
 
 void MainWindow::closeProject()
@@ -466,7 +527,8 @@ void MainWindow::closeProject()
         // Go back to model tab :
         mViewModelAction->trigger();
         mProject->clearModel();
-        
+        disconnectProject();
+        delete mProject;
         resetInterface();
         activateInterface(false);
         mViewResultsAction->setEnabled(false);
@@ -524,10 +586,12 @@ void MainWindow::setAppSettings(const AppSettings& s)
     QLocale::setDefault(newLoc);
     //statusBar()->showMessage(tr("Language") + " : " + QLocale::languageToString(QLocale().language()));
     
-    mProject->setAppSettings(mAppSettings);
-    
-    if (mViewResultsAction->isEnabled())
-        mProjectView->applySettings(mProject->mModel, &mAppSettings);
+    if (mProject) {
+        mProject->setAppSettings(mAppSettings);
+
+        if (mViewResultsAction->isEnabled())
+            mProjectView->applySettings(mProject->mModel, &mAppSettings);
+    }
 }
 
 void MainWindow::openManual()
@@ -780,16 +844,23 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     }
     
     if (!fileOpened && mAppSettings.mOpenLastProjectAtLaunch) {
-        QString dir = settings.value("last_project_dir", "").toString();
-        QString filename = settings.value("last_project_filename", "").toString();
-        //QString filename ="";
-        QString path = dir + "/" + filename;
+        const QString dir = settings.value("last_project_dir", "").toString();
+        const QString filename = settings.value("last_project_filename", "").toString();
+        const QString path = dir + "/" + filename;
         QFileInfo fileInfo(path);
-        
+
+        // look MainWindows::openProject
         if (fileInfo.isFile()) {
+            mProject = new Project();
             if (mProject->load(path)) {
                 activateInterface(true);
                 updateWindowTitle();
+                connectProject();
+                mProject->setAppSettings(mAppSettings);
+
+                mProjectView->createProject();
+
+                mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
             }
         }
     }

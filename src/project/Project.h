@@ -32,6 +32,11 @@ class Project: public QObject
 public:
     Project();
     virtual ~Project();
+
+    enum ActionOnModel {
+        InsertEventsToPhase,
+        ExtractEventsFromPhase,
+    };
     
     void initState(const QString& reason);
     
@@ -56,7 +61,7 @@ public:
     
     // Special events for selection... too bad!
     void sendEventsSelectionChanged();
-    void sendPhasesSelectionChanged();
+    //void sendPhasesSelectionChanged();
     
     QJsonObject emptyState() const;
     QJsonObject state() const;
@@ -96,6 +101,7 @@ public:
     void checkDatesCompatibility();
     QJsonObject checkValidDates(const QJsonObject& state);
     
+    void unselectedAllInState();
     void updateSelectedEventsColor(const QColor& color);
     void updateSelectedEventsMethod(Event::Method);
     void updateSelectedEventsDataMethod(Date::DataMethod method, const QString& pluginId);
@@ -104,10 +110,10 @@ public:
     void updatePhase(const QJsonObject& phaseIn);
     int getUnusedPhaseId(const QJsonArray& phases);
     void mergePhases(int phaseFromId, int phaseToId);
-    void updatePhaseEvents(int phaseId, Qt::CheckState state);
+    void updatePhaseEvents(const int phaseId, ActionOnModel action);
     //void updatePhaseEyed(int phaseId, bool eyed);
     
-    void createEventConstraint(const QJsonObject eventFrom, const QJsonObject eventTo);
+    void createEventConstraint(const int idFrom, const int idTo);
     void deleteEventConstraint(int constraintId);
     bool isEventConstraintAllowed(const QJsonObject& eventFrom, const QJsonObject& eventTo);
     void updateEventConstraint(int constraintId);
@@ -116,7 +122,7 @@ public:
     void createPhaseConstraint(int phaseFromId, int phaseToId);
     void deletePhaseConstraint(int constraintId);
     bool isPhaseConstraintAllowed(const QJsonObject& phaseFrom, const QJsonObject& phaseTo);
-    void updatePhaseConstraint(int constraintId);
+    void updatePhaseConstraint(const int constraintId);
     int getUnusedPhaseConstraintId(const QJsonArray& constraints);
     
     void clearModel();
@@ -146,9 +152,9 @@ signals:
     void noResult();
     void projectStateChanged();
     void currentEventChanged(const QJsonObject& event);
-    void currentPhaseChanged(const QJsonObject& phase);
+    //void currentPhaseChanged(const QJsonObject& phase);
     void selectedEventsChanged();
-    void selectedPhasesChanged();
+    //void selectedPhasesChanged();
     void eyedPhasesModified(const QMap<int, bool>& eyedPhases);
     
     void mcmcStarted();

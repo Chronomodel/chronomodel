@@ -8,24 +8,28 @@
 
 AbstractScene::AbstractScene(QGraphicsView* view, QObject* parent):QGraphicsScene(parent),
 mDrawingArrow(false),
+mProject(0),
 mView(view),
 mUpdatingItems(false),
 mAltIsDown(false),
 mShiftIsDown(false),
 mShowGrid(false),
-mZoom(1.)
+mZoom(1.),
+mShowAllThumbs(true)
 {
     mTempArrow = new ArrowTmpItem();
     addItem(mTempArrow);
     mTempArrow->setVisible(false);
     mTempArrow->setZValue(0);
     
-    
+    //mItems = QList<AbstractItem*>();
+    //mConstraintItems = QList<ArrowItem*>() ;
+
 }
 #pragma mark Setter & Getter
 void AbstractScene::setProject(Project* project)
 {
-    mProject = project;
+    mProject = project;        
 }
 
 Project* AbstractScene::getProject() const
@@ -196,16 +200,7 @@ void AbstractScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
             qDebug() << "AbstractScene::itemEntered constraintAllowed==false";
         }
     }
-    
-    //--------------
-   /* if(mDrawingArrow)
-    {
-        
-        
-        mTempArrow->setState(ArrowTmpItem::eAllowed);
-        mTempArrow->setTo(item->pos().x(), item->pos().y());
-        mTempArrow->setLocked(true);
-    }*/
+
 }
 // Arrive lorsque la souris sort d'un Event
 /**
@@ -218,8 +213,10 @@ void AbstractScene::itemLeaved(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 {
     Q_UNUSED(item);
     Q_UNUSED(e);
-    mTempArrow->setLocked(false);
-    mTempArrow->setState(ArrowTmpItem::eNormal);
+    if (mTempArrow) {
+        mTempArrow->setLocked(false);
+        //mTempArrow->setState(ArrowTmpItem::eNormal);
+    }
 }
 
 void AbstractScene::itemMoved(AbstractItem* item, QPointF newPos, bool merging)
@@ -292,13 +289,12 @@ QRectF AbstractScene::specialItemsBoundingRect(QRectF r) const
 {
     QRectF rect = r;
     for (int i=0; i<mItems.size(); ++i) {
-        QRectF r(mItems.at(i)->scenePos().x() - mItems.at(i)->boundingRect().width()/2,
-                 mItems.at(i)->scenePos().y() - mItems.at(i)->boundingRect().height()/2,
-                 mItems.at(i)->boundingRect().size().width(),
-                 mItems.at(i)->boundingRect().size().height());
+        const QRectF bRect = mItems.at(i)->boundingRect();
+        QRectF r(mItems.at(i)->scenePos().x() - bRect.width()/2,
+                 mItems.at(i)->scenePos().y() - bRect.height()/2,
+                 bRect.size().width(), bRect.size().height());
         rect = rect.united(r);
     }
-    //QRectF rect2 = itemsBoundingRect();
     return rect;
 }
 
@@ -340,11 +336,15 @@ void AbstractScene::keyPressEvent(QKeyEvent* keyEvent)
         } else {
             mDrawingArrow = false;
             mTempArrow->setVisible(false);
+            clearSelection();
         }
     }
     //else if(keyEvent->modifiers() == Qt::ShiftModifier)
     else if (keyEvent->key() == Qt::Key_Shift)
         mShiftIsDown = true;
+  /*  else if (keyEvent->modifiers() == Qt::ControlModifier) {
+        qDebug() << "AbstractScene::keyPressEvent You Press: "<< "Qt::ControlModifier";
+    }*/
     else
         keyEvent->ignore();
     
@@ -372,15 +372,7 @@ void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
     painter->fillRect(rect, QColor(230, 230, 230));
     
     QBrush backBrush;
-    /*if(mShowGrid)
-    {
-        backBrush.setTexture(QPixmap(":grid.png"));
-        painter->setBrush(backBrush);
-    }
-    else
-    {
-        painter->setBrush(Qt::white);
-    }*/
+
     painter->setBrush(Qt::white);
     painter->setPen(Qt::NoPen);
     painter->drawRect(sceneRect());
@@ -404,3 +396,4 @@ void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
     painter->drawLine(-10, 0, 10, 0);
     painter->drawLine(0, -10, 0, 10);
 }
+

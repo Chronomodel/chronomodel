@@ -46,6 +46,9 @@ protected:
     void keyPressEvent(QKeyEvent* e) Q_DECL_OVERRIDE;
     void changeEvent(QEvent* event) Q_DECL_OVERRIDE;
 
+    void connectProject();
+    void disconnectProject();
+
 public:
     void readSettings(const QString& defaultFilePath);
     void writeSettings();

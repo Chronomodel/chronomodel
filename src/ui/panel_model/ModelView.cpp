@@ -33,6 +33,7 @@ mPhasesScene(0),
 mCurrentRightWidget(0),
 mTmin(0),
 mTmax(2000),
+mProject(0),
 mMargin(5),
 mToolbarH(60),
 mButtonWidth(80),
@@ -42,7 +43,8 @@ mIsSplitting(false),
 mCalibVisible(false)
 {
     setMouseTracking(true);
-    
+
+
     mLeftWrapper = new QWidget(this);
     mLeftWrapper->setGeometry(0,0, round((this->width()-mHandlerW)/2), this->height());
     
@@ -108,10 +110,10 @@ mCalibVisible(false)
     connect(mButEventsOverview, SIGNAL(toggled(bool)), mEventsGlobalView, SLOT(setVisible(bool)));
     connect(mButEventsOverview, SIGNAL(toggled(bool)), mEventsSearchEdit, SLOT(setVisible(bool)));
     
-    connect(mEventsSearchEdit, SIGNAL(returnPressed()), this, SLOT(searchEvent()));
-    connect(mEventsGlobalZoom, SIGNAL(valueChanged(double)), this, SLOT(updateEventsZoom(double)));
+    connect(mEventsSearchEdit, &LineEdit::returnPressed, this, &ModelView::searchEvent);
+    connect(mEventsGlobalZoom, &ScrollCompressor::valueChanged, this, &ModelView::updateEventsZoom);
     connect(mButEventsGrid, SIGNAL(toggled(bool)), mEventsScene, SLOT(showGrid(bool)));
-    connect(mButExportEvents, SIGNAL(clicked()), this, SLOT(exportEventsScene()));
+    connect(mButExportEvents, &Button::clicked, this, &ModelView::exportEventsScene);
     
     // -------- Windows Data Importation --------------------
     
@@ -130,14 +132,19 @@ mCalibVisible(false)
     mPhasesView->setScene(mPhasesScene);
     mPhasesView->setInteractive(true);
     mPhasesView->setDragMode(QGraphicsView::RubberBandDrag);
-    
+
     // this signal has already been connected inside the EventsView constructor, to make sure events are marked as selected.
     // Thus, the following connection can make use in updateCheckedPhases of these marks.
-    connect(mEventsScene, &EventsScene::selectionChanged, mPhasesScene, &PhasesScene::updateCheckedPhases);
+    // -> no more used, changed when set inser and extract button in the PhaseItem
+    //connect(mEventsScene, &EventsScene::selectionChanged, mPhasesScene, &PhasesScene::updateCheckedPhases);
     
     mPhasesGlobalView = new SceneGlobalView(mPhasesScene, mPhasesView, mPhasesWrapper);
     mPhasesGlobalView->setVisible(false);
-    
+    //connect(mPhasesScene, SIGNAL(selectionChanged()), this, SLOT(update()));
+    //connection between scene
+    //connect(mPhasesScene, SIGNAL(selectionChanged()), mEventsGlobalView, SLOT(update()));
+    //connect(mEventsScene, SIGNAL(selectionChanged()), this, SLOT(update()));
+
     mButNewPhase = new Button(tr("New Phase"), mPhasesWrapper);
     mButNewPhase->setIcon(QIcon(":new_event.png"));
     mButNewPhase->setFlatVertical();
@@ -187,9 +194,7 @@ mCalibVisible(false)
     
     mEventPropertiesView = new EventPropertiesView(mRightWrapper);
 
-    connect(mEventPropertiesView, SIGNAL(updateCalibRequested(const QJsonObject&)), this, SLOT(updateCalibration(const QJsonObject&)));
-    
-    connect(mEventPropertiesView, SIGNAL(showCalibRequested(bool)), this, SLOT(showCalibration(bool)));
+
     
     // -----------Header on mRightWrapper ------------------
     
@@ -293,7 +298,7 @@ mCalibVisible(false)
     mAnimationCalib->setTargetObject(mCalibrationView);
     mAnimationCalib->setDuration(400);
     mAnimationCalib->setEasingCurve(QEasingCurve::OutCubic);
-    
+
     // ---- update and paint
     
     updateLayout();
@@ -306,31 +311,80 @@ ModelView::~ModelView()
 
 void ModelView::setProject(Project* project)
 {
+    const bool projectExist = (mProject ? true : false);
     mProject = project;
     mPhasesScene->setProject(mProject);
     mEventsScene->setProject(mProject);
 
+    if (project && !projectExist)
+        connectScenes();
+
+    else if (projectExist && !project)
+            disconnectScenes();
+
+    // if there is no phase, we must show all events
+    const QJsonArray phases = mProject->state().value(STATE_PHASES).toArray();
+    if (phases.size() == 0 )
+        mEventsScene->setShowAllThumbs(true);
+
+}
+
+void ModelView::connectScenes()
+{
     connect(mButNewEvent, &Button::clicked, mProject, &Project::createEvent);
     connect(mButNewEventKnown, &Button::clicked, mProject, &Project::createEventKnown);
     connect(mButDeleteEvent, &Button::clicked, mProject, &Project::deleteSelectedEvents);
     connect(mButRecycleEvent, &Button::clicked, mProject, &Project::recycleEvents);
-    
-    connect(mButNewPhase, &Button::clicked, mProject, &Project::createPhase);
-    connect(mButDeletePhase, &Button::clicked, mProject, &Project::deleteSelectedPhases);
 
-    // selection management
-    connect(mProject, &Project::selectedEventsChanged, mPhasesScene, &PhasesScene::updateCheckedPhases);
-    connect(mProject, &Project::selectedPhasesChanged, mEventsScene, &EventsScene::updateSelectedEventsFromPhases);
+    connect(mButNewPhase, &Button::clicked, mProject, &Project::createPhase);
+    connect(mButDeletePhase, &Button::clicked, mPhasesScene, &PhasesScene::deleteSelectedItems);// mProject, &Project::deleteSelectedPhases);
+
 
     // when there is no Event selected we must show all data inside phases
     connect(mEventsScene, &EventsScene::noSelection, mPhasesScene, &PhasesScene::noHide);
     connect(mEventsScene, &EventsScene::eventsAreSelected, mPhasesScene, &PhasesScene::eventsSelected);
 
+    // When one or several phases are selected, we hightLigth the data inside the Event includes in the phases
+    connect(mPhasesScene, &PhasesScene::noSelection, mEventsScene, &EventsScene::noHide);
+    connect(mPhasesScene, &PhasesScene::phasesAreSelected, mEventsScene, &EventsScene::phasesSelected);
+
     connect(mProject, &Project::currentEventChanged, mEventPropertiesView, &EventPropertiesView::setEvent);
     connect(mEventPropertiesView, &EventPropertiesView::combineDatesRequested, mProject, &Project::combineDates);
     connect(mEventPropertiesView, &EventPropertiesView::splitDateRequested, mProject, &Project::splitDate);
-    
-    connect(mProject, &Project::eyedPhasesModified, mEventsScene, &EventsScene::updateGreyedOutEvents);
+
+    // Properties View
+    connect(mEventPropertiesView, &EventPropertiesView::updateCalibRequested, this, &ModelView::updateCalibration);
+    connect(mEventPropertiesView, &EventPropertiesView::showCalibRequested, this, &ModelView::showCalibration);
+
+}
+
+void ModelView::disconnectScenes()
+{
+    disconnect(mButNewEvent, SIGNAL(clicked(bool)), mProject, SLOT(createEvent()));
+    disconnect(mButNewEventKnown, &Button::clicked, mProject, &Project::createEventKnown);
+    disconnect(mButDeleteEvent, &Button::clicked, mProject, &Project::deleteSelectedEvents);
+    disconnect(mButRecycleEvent, &Button::clicked, mProject, &Project::recycleEvents);
+
+    disconnect(mButNewPhase, &Button::clicked, mProject, &Project::createPhase);
+    disconnect(mButDeletePhase, &Button::clicked, mPhasesScene, &PhasesScene::deleteSelectedItems);//deleteSelectedPhases);
+
+    // when there is no Event selected we must show all data inside phases
+    disconnect(mEventsScene, &EventsScene::noSelection, mPhasesScene, &PhasesScene::noHide);
+    disconnect(mEventsScene, &EventsScene::eventsAreSelected, mPhasesScene, &PhasesScene::eventsSelected);
+
+    // When one or several phases are selected, we hightLigth the data inside the Event includes in the phases
+    disconnect(mPhasesScene, &PhasesScene::noSelection, mEventsScene, &EventsScene::noHide);
+    disconnect(mPhasesScene, &PhasesScene::phasesAreSelected, mEventsScene, &EventsScene::phasesSelected);
+
+    disconnect(mProject, &Project::currentEventChanged, mEventPropertiesView, &EventPropertiesView::setEvent);
+    disconnect(mEventPropertiesView, &EventPropertiesView::combineDatesRequested, mProject, &Project::combineDates);
+    disconnect(mEventPropertiesView, &EventPropertiesView::splitDateRequested, mProject, &Project::splitDate);
+
+    // Properties View
+    disconnect(mEventPropertiesView, &EventPropertiesView::updateCalibRequested, this, &ModelView::updateCalibration);
+    disconnect(mEventPropertiesView, &EventPropertiesView::showCalibRequested, this, &ModelView::showCalibration);
+
+
 }
 
 Project* ModelView::getProject() const
@@ -340,12 +394,58 @@ Project* ModelView::getProject() const
 
 void ModelView::resetInterface()
 {
+    disconnectScenes();
+    mProject = 0;
     mEventsScene->clean();
     mPhasesScene->clean();
     mCalibrationView->setDate(QJsonObject());
     mEventPropertiesView->setEvent(QJsonObject());
     mButProperties->click();
     updateLayout();
+}
+
+
+void ModelView::createProject()
+{
+    showCalibration(false);
+
+    QJsonObject state = mProject->state();
+    const ProjectSettings settings = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+
+    mTmin = settings.mTmin;
+    mTmax = settings.mTmax;
+
+    mMinEdit->setText(QString::number(settings.mTmin));
+    mMaxEdit->setText(QString::number(settings.mTmax));
+    mProject->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
+    mProject->mState[STATE_SETTINGS_TMAX] = settings.mTmax;
+    mProject->mState[STATE_SETTINGS_STEP] = settings.mStep;
+
+    mProject->mState[STATE_SETTINGS_STEP_FORCED] = settings.mStepForced;
+
+    setSettingsValid(settings.mTmin < settings.mTmax);
+
+    //Unselect all Item in all scene
+    mProject->unselectedAllInState();
+
+    mEventsScene->createSceneFromState();
+    mPhasesScene->createSceneFromState();
+
+    // open and set the properties View, if there is no phase
+    const QJsonArray phases = mProject->mState.value(STATE_PHASES).toArray();
+    if (phases.isEmpty()) {
+        const QJsonObject& event = mEventPropertiesView->getEvent();
+        if (!event.isEmpty()) {
+            const QJsonArray events = state.value(STATE_EVENTS).toArray();
+            for (int i=0; i<events.size(); ++i) {
+                const QJsonObject evt = events.at(i).toObject();
+                if (evt.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
+                    if (evt != event)
+                        mEventPropertiesView->setEvent(evt);
+                }
+            }
+        }
+    }
 }
 
 void ModelView::updateProject()
@@ -368,16 +468,16 @@ void ModelView::updateProject()
 
     setSettingsValid(settings.mTmin < settings.mTmax);
     
-    mPhasesScene->updateScene();
-    mEventsScene->updateScene();
+    mEventsScene->updateSceneFromState();
 
+    mPhasesScene->updateSceneFromState();
     
     // Les sélections dans les scènes doivent être mises à jour après que
     // LES 2 SCENES aient été updatées
     // false : ne pas envoyer de notification pour updater l'état du projet,
     // puisque c'est justement ce que l'on fait ici!
      // DONE BY UPDATEPROJECT ????
-    
+
     //mEventsScene->updateSelection(false);
     //mPhasesScene->updateSelection(false);
     
@@ -386,15 +486,12 @@ void ModelView::updateProject()
     //mCalibrationView->setDate();
     
     const QJsonObject& event = mEventPropertiesView->getEvent();
-    if(!event.isEmpty())
-    {
+    if (!event.isEmpty()) {
         const QJsonArray events = state.value(STATE_EVENTS).toArray();
-        for(int i=0; i<events.size(); ++i)
-        {
+        for (int i=0; i<events.size(); ++i) {
             const QJsonObject evt = events.at(i).toObject();
-            if(evt.value(STATE_ID).toInt() == event.value(STATE_ID).toInt())
-            {
-                if(evt != event)
+            if (evt.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
+                if (evt != event)
                     mEventPropertiesView->setEvent(evt);
             }
         }
@@ -405,7 +502,6 @@ void ModelView::applySettings()
 {
     showCalibration(false);
     
-    //Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = mProject->state();
     ProjectSettings s = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
     ProjectSettings oldSettings = s;
@@ -421,11 +517,10 @@ void ModelView::applySettings()
     
     s.mTmin = (int) mTmin;
     s.mTmax = (int) mTmax;
-    if(!s.mStepForced)
+    if (!s.mStepForced)
         s.mStep = ProjectSettings::getStep(s.mTmin, s.mTmax);
     
-    if(!mProject->setSettings(s))
-    {
+    if (!mProject->setSettings(s)) {
         // Min and max are not consistents :
         // go back to previous values
         
@@ -435,12 +530,10 @@ void ModelView::applySettings()
         mMinEdit->setText(QString::number(mTmin));
         mMaxEdit->setText(QString::number(mTmax));
         
-        if(oldSettings.mTmin < oldSettings.mTmax)
-        {
+        if (oldSettings.mTmin < oldSettings.mTmax)
             setSettingsValid(true);
-        }
-    }
-    else {
+
+    } else {
         state[STATE_SETTINGS_TMIN] = mTmin;
         state[STATE_SETTINGS_TMAX] = mTmax;
        // state[STATE_SETTINGS_STEP] ;
@@ -452,7 +545,6 @@ void ModelView::applySettings()
 
 void ModelView::adjustStep()
 {
-    //Project* project = MainWindow::getInstance()->getProject();
     QJsonObject state = mProject->state();
     ProjectSettings s = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
     
@@ -461,8 +553,7 @@ void ModelView::adjustStep()
     StepDialog dialog(qApp->activeWindow(), Qt::Sheet);
     dialog.setStep(s.mStep, s.mStepForced, defaultVal);
     
-    if(dialog.exec() == QDialog::Accepted)
-    {
+    if (dialog.exec() == QDialog::Accepted) {
         s.mStepForced = dialog.forced();
         if(s.mStepForced)
             s.mStep = dialog.step();
@@ -505,7 +596,7 @@ void ModelView::setSettingsValid(bool valid)
 {
     mButApply->setColorState(valid ? Button::eReady : Button::eWarning);
     
-    if(!valid){
+    if (!valid) {
         MainWindow::getInstance()->setRunEnabled(false);
         MainWindow::getInstance()->setResultsEnabled(false);
         MainWindow::getInstance()->setLogEnabled(false);
@@ -521,20 +612,19 @@ void ModelView::searchEvent()
 {
     QString search = mEventsSearchEdit->text();
     
-    if(search.isEmpty())
+    if (search.isEmpty())
         return;
         
     // Search text has changed : regenerate corresponding events list
-    if(search != mLastSearch){
+    if (search != mLastSearch){
         mLastSearch = search;
         mSearchIds.clear();
         
-        //QJsonObject state = MainWindow::getInstance()->getProject()->state();
         QJsonObject state = mProject->state();
         QJsonArray events = state.value(STATE_EVENTS).toArray();
         
         for (int i=0; i<events.size(); ++i) {
-            QJsonObject event = events[i].toObject();
+            QJsonObject event = events.at(i).toObject();
             int id = event.value(STATE_ID).toInt();
             QString name = event.value(STATE_NAME).toString();
             
@@ -567,7 +657,6 @@ void ModelView::showProperties()
 }
 void ModelView::showImport()
 {
-    //Project* project = MainWindow::getInstance()->getProject();
     if (mProject->studyPeriodIsValid()) {
         showCalibration(false);
         
@@ -581,11 +670,9 @@ void ModelView::showImport()
         mButImport      -> setChecked(false);
         mButPhasesModel -> setChecked(false);
     }
-    //project = 0;
 }
 void ModelView::showPhases()
 {
-    //Project* project = MainWindow::getInstance()->getProject();
     if (mProject->studyPeriodIsValid()) {
         showCalibration(false);
         
@@ -593,12 +680,12 @@ void ModelView::showPhases()
         mButImport->setChecked(false);
         mButPhasesModel->setChecked(true);
         slideRightPanel();
+
     } else {
         mButProperties->setChecked(true);
         mButImport->setChecked(false);
         mButPhasesModel->setChecked(false);
     }
-    //project = 0;
 }
 void ModelView::slideRightPanel()
 {
@@ -711,10 +798,10 @@ void ModelView::updateLayout()
 
     // ----------
     
-    qreal butH = 60;
-    qreal radarW = 150;
-    qreal radarH = 200;
-    qreal searchH = 30;
+    const qreal butH = 60;
+    const qreal radarW = 150;
+    const qreal radarH = 200;
+    const qreal searchH = 30;
     
     mEventsView      ->setGeometry(mButtonWidth, 0, mLeftRect.width() - mButtonWidth, mLeftRect.height());
     mEventsSearchEdit->setGeometry(0, 0, radarW, searchH);
@@ -729,8 +816,8 @@ void ModelView::updateLayout()
     mButEventsGrid    ->setGeometry(0, 6*butH, mButtonWidth, butH);
     mEventsGlobalZoom ->setGeometry(0, 7*butH, mButtonWidth, mLeftRect.height() - 7*butH);
     
-    qreal helpW = qMin(400.0, mEventsView->width() - radarW - mMargin);
-    qreal helpH = mEventsScene->getHelpView()->heightForWidth(helpW);
+    const qreal helpW = qMin(400.0, mEventsView->width() - radarW - mMargin);
+    const qreal helpH = mEventsScene->getHelpView()->heightForWidth(helpW);
     mEventsScene->getHelpView()->setGeometry(mEventsView->width() - mMargin - helpW, mMargin, helpW, helpH);
 
     // ----------
@@ -751,18 +838,18 @@ void ModelView::updateLayout()
 }
 
 #pragma mark Zoom
-void ModelView::updateEventsZoom(double prop)
+void ModelView::updateEventsZoom(const double prop)
 {
-    qreal scale = prop;
+    const qreal scale = prop;
     QMatrix matrix;
     matrix.scale(scale, scale);
     mEventsView->setMatrix(matrix);
     mEventsScene->adaptItemsForZoom(scale);
 }
 
-void ModelView::updatePhasesZoom(double prop)
+void ModelView::updatePhasesZoom(const double prop)
 {
-    qreal scale = prop;
+    const qreal scale = prop;
     QMatrix matrix;
     matrix.scale(scale, scale);
     mPhasesView->setMatrix(matrix);

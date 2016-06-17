@@ -129,6 +129,10 @@ void ProjectView::updateProject()
     mModelView->updateProject();
 }
 
+void ProjectView::createProject()
+{
+    mModelView->createProject();
+}
 #pragma mark Update Results
 
 void ProjectView:: applySettings(Model* model,const AppSettings* appSet)

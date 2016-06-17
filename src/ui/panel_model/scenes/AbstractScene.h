@@ -21,8 +21,11 @@ public:
     bool mDrawingArrow;
     ArrowTmpItem* mTempArrow;
 
-    void setProject(Project* project);
+    void setProject(Project *project);
     Project* getProject() const;
+
+    QList<AbstractItem*> getItemsList() const  {return mItems;}
+    bool showAllThumbs() const { return mShowAllThumbs;}
 
 public slots:
     void showGrid(bool show);
@@ -74,6 +77,8 @@ protected:
     bool mShiftIsDown;
     
     bool mShowGrid;
+
+    bool mShowAllThumbs;
     
     double mZoom;
     

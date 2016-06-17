@@ -16,7 +16,7 @@ mYStart(0),
 mXEnd(0),
 mYEnd(0),
 mBubbleWidth(130.f),
-mBubbleHeight(40.f),
+mBubbleHeight(20.f),
 mEditing(false),
 mShowDelete(false),
 mGreyedOut(false)
@@ -57,9 +57,6 @@ void ArrowItem::setTo(const double x, const double y)
     prepareGeometryChange();
     mXEnd = x;
     mYEnd = y;
-    //update();
-    //if (scene())
-    //    scene()->update();
 }
 
 void ArrowItem::setGreyedOut(bool greyedOut)
@@ -108,10 +105,7 @@ void ArrowItem::updatePosition()
     mYEnd = to.value(STATE_ITEM_Y).toDouble();
     
     //qDebug() << "[" << mXStart << ", " << mYStart << "]" << " => " << "[" << mXEnd << ", " << mYEnd << "]";
-    
-    //update();
-    //if (scene())
-    //    scene()->update();
+
 }
 
 void ArrowItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
@@ -133,14 +127,16 @@ void ArrowItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 
 void ArrowItem::hoverMoveEvent(QGraphicsSceneHoverEvent* e)
 {
+    //qDebug()<<"ArrowItem::hoverMoveEvent----->";
     QGraphicsItem::hoverMoveEvent(e);
     prepareGeometryChange();
-    const double hoverSide = 100;
-    QRectF br = boundingRect();
-    br.adjust((br.width()-hoverSide)/2,
+    //const double hoverSide = 100;
+    const QRectF br = boundingRect();
+
+   /* br.adjust((br.width()-hoverSide)/2,
               (br.height()-hoverSide)/2,
               -(br.width()-hoverSide)/2,
-              -(br.height()-hoverSide)/2);
+              -(br.height()-hoverSide)/2);*/
 
     const bool shouldShowDelete = br.contains(e->pos());
     if (shouldShowDelete != mShowDelete) {
@@ -162,25 +158,26 @@ void ArrowItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* e)
 QRectF ArrowItem::boundingRect() const
 {
     const QString text = getBubbleText();
-    qreal wBubble = 0;
-    qreal hBubble = 0;
-    qreal xa = 0;
-    qreal ya = 0;
+
+    qreal x = qMin(mXStart, mXEnd);
+    qreal y = qMin(mYStart, mYEnd);
+    qreal w = qAbs(mXEnd - mXStart);
+    qreal h = qAbs(mYEnd - mYStart);
+
     if (!text.isEmpty()) {
-        hBubble = 25;
+        const qreal hBubble = mBubbleHeight;
         QFont font;
         font.setPointSizeF(11.f);
         QFontMetrics metrics(font);
-        wBubble =metrics.width(text) + 20;
-        xa = (mXStart + mXEnd- wBubble)/2;
-        ya = (mYStart + mYEnd- hBubble)/2;
+        qreal wBubble =metrics.width(text) + 20;
+        qreal xa = (mXStart + mXEnd- wBubble)/2;
+        qreal ya = (mYStart + mYEnd- hBubble)/2;
+
+        x = qMin(x, xa);
+        y = qMin(y, ya);
+        w = qMax(w, wBubble);
+        h = qMax(h, hBubble);
     }
-
-
-    const qreal x = qMin(qMin(mXStart, mXEnd), xa);
-    const qreal y = qMin(qMin(mYStart, mYEnd), ya);
-    const qreal w = qMax(qAbs(mXEnd - mXStart), wBubble);
-    const qreal h = qMax(qAbs(mYEnd - mYStart), hBubble);
 
     return QRectF(x, y, w, h);
 }
@@ -227,10 +224,14 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     
     int penWidth = 1;
     QColor color = mEditing ? QColor(77, 180, 62) : QColor(0, 0, 0);
-    if (mShowDelete)
+    //set the Arrow under the Event
+    setZValue(-1);
+
+    if (mShowDelete) {
         color = Qt::red;
-    
-    else if (mGreyedOut)
+        //set the Arrow in front of the Event, like this we can click on
+        setZValue(1);
+    } else if (mGreyedOut)
         color.setAlphaF(0.05);
     
     painter->setPen(QPen(color, penWidth, mEditing ? Qt::DashLine : Qt::SolidLine));
@@ -417,8 +418,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         }
     }
     
-    //QPainterPath sh = shape();
-    //painter->fillPath(sh, Qt::blue);
+
 }
 
 QRectF ArrowItem::getBubbleRect(const QString& text) const
@@ -427,11 +427,15 @@ QRectF ArrowItem::getBubbleRect(const QString& text) const
     qreal h = 0;
     if (!text.isEmpty()) {
         QFont font;
-        font.setPointSizeF(11.f);
+        if (mShowDelete)
+            font.setPointSizeF(18.f);
+        else
+            font.setPointSizeF(12.f);
+
         QFontMetrics metrics(font);
         qreal wm = metrics.width(text) + 20;
         w = qMax(wm, w);
-        h = 25;
+        h = mBubbleHeight;
     }
 
     

@@ -206,6 +206,9 @@ void EventPropertiesView::setEvent(const QJsonObject& event)
 void EventPropertiesView::updateEvent()
 {
     qDebug()<<"EventPropertiesView::updateEvent";
+    if (this->isVisible() == false)
+        return;
+
     if (mEvent.isEmpty()) {
         mTopView->setVisible(false);
         mEventView->setVisible(false);

@@ -28,7 +28,8 @@ public:
     
     void readSettings();
     void writeSettings();
-    
+    void createProject();
+
 public slots:
     void updateProject();
     void showModel();

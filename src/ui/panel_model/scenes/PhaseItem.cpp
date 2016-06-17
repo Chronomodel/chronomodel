@@ -11,14 +11,16 @@
 
 
 PhaseItem::PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsItem* parent):AbstractItem(scene, parent),
-mState(Qt::Unchecked),
-mEyeActivated(false),
+//mEyeActivated(false),
 mControlsVisible(false),
-mControlsEnabled(false)
+mControlsEnabled(false),
+mAtLeastOneEventSelected(false)
 {
     mBorderWidth = 10;
     mEltsHeight = 15;
     setPhase(phase);
+    inPix = new QPixmap(":insert_event.png");
+    exPix = new QPixmap(":extract_event.png");
 }
 
 PhaseItem::~PhaseItem()
@@ -36,7 +38,7 @@ void PhaseItem::setPhase(const QJsonObject& phase)
 {
     mData = phase;
     
-    setSelected(mData.value(STATE_IS_SELECTED).toBool());
+    setSelected(mData.value(STATE_IS_SELECTED).toBool() || mData.value(STATE_IS_CURRENT).toBool() );
     setPos(mData.value(STATE_ITEM_X).toDouble(),
            mData.value(STATE_ITEM_Y).toDouble());
     
@@ -81,22 +83,20 @@ void PhaseItem::setPhase(const QJsonObject& phase)
     update();
 }
 
-void PhaseItem::setState(Qt::CheckState state)
+/*void PhaseItem::setState(Qt::CheckState state)
 {
     mState = state;
     //update();
-}
+}*/
 
 void PhaseItem::setControlsEnabled(const bool enabled)
 {
     mControlsEnabled = enabled;
-   // update();
 }
 
 void PhaseItem::setControlsVisible(const bool visible)
 {
     mControlsVisible = visible;
-    //update();
 }
 
 #pragma mark Mouse events
@@ -115,56 +115,57 @@ void PhaseItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* e)
 
 void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-    if (mControlsVisible && checkRect().contains(e->pos())) {
-        //qDebug() << "-> Check clicked";
-        
-        // Do not select phase when clicking on the box
-        e->accept();
-        
-        if (mState == Qt::PartiallyChecked)
-            mState = Qt::Checked;
-        else if (mState == Qt::Checked)
-            mState = Qt::Unchecked;
-        else if (mState == Qt::Unchecked)
-            mState = Qt::Checked;
-        
-        MainWindow::getInstance()->getProject()->updatePhaseEvents(mData.value(STATE_ID).toInt(), mState);
-        
+  if (mControlsVisible) {
 
-    } else if (mControlsVisible && eyeRect().contains(e->pos())) {
-        //qDebug() << "-> Eye clicked";
-        
-        // Do not select phase when clicking on the box
-        e->accept();
-        
-        mEyeActivated = !mEyeActivated;
-        ((PhasesScene*)mScene)->updateEyedPhases();
-        
-        update();
-        if (scene())
-            scene()->update();
-    } else
-       // AbstractItem::mousePressEvent(e);
-    {
-        PhasesScene* itemScene = dynamic_cast<PhasesScene*>(mScene);
-        PhaseItem* currentPhase = itemScene->currentPhase();
+        if (insertRect().contains(e->pos())) {
+            //qDebug() << "PhaseItem::mousePressEvent-> insertRect clicked";
+            e->accept();
+            mScene->getProject()->updatePhaseEvents(mData.value(STATE_ID).toInt(), Project::InsertEventsToPhase);
+            return;
 
-
-        if (itemScene->selectedItems().size()<2) {
-            if ((this != currentPhase) && (!itemScene->mDrawingArrow)) {
-                itemScene->clearSelection();
-            }
-
-            if (!itemScene->itemClicked(this, e)) {
-                setZValue(2.);
-                QGraphicsItem::mousePressEvent(e);
-            } else
-                itemScene->mTempArrow->setFrom(pos().x(), pos().y());
+        } else if (mAtLeastOneEventSelected && extractRect().contains(e->pos())) {
+            //qDebug() << "PhaseItem::mousePressEvent-> extractRect clicked";
+            e->accept();
+            mScene->getProject()->updatePhaseEvents(mData.value(STATE_ID).toInt(), Project::ExtractEventsFromPhase);
+            return;
         }
 
-        QGraphicsObject::mousePressEvent(e);
+      /*  if (eyeRect().contains(e->pos())) {
+            //qDebug() << "PhaseItem::mousePressEvent-> Eye clicked";
+            // Do not select phase when clicking on the box
+            e->accept();
 
+            mEyeActivated = !mEyeActivated;
+            // we must update() because we don't do any PushState
+            update();
+            if (mScene) {
+                static_cast<PhasesScene*>(mScene)->updateEyedPhases();
+                //mScene->update();
+            }
+            return;
+        }*/
     }
+
+  // overwrite AbstractItem::mousePressEvent(e);
+
+    PhasesScene* itemScene = dynamic_cast<PhasesScene*>(mScene);
+    PhaseItem* currentPhase = itemScene->currentPhase();
+
+    if (itemScene->selectedItems().size()<2) {
+        if ((this != currentPhase) && (!itemScene->mDrawingArrow)) {
+            itemScene->clearSelection();
+        }
+
+        if (!itemScene->itemClicked(this, e)) {
+            setZValue(2.);
+            QGraphicsItem::mousePressEvent(e);
+        } else
+            itemScene->mTempArrow->setFrom(pos().x(), pos().y());
+    }
+
+    QGraphicsObject::mousePressEvent(e);
+
+
 
 }
 
@@ -184,8 +185,10 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 {
     Q_UNUSED(option);
     Q_UNUSED(widget);
-    
-    painter->setRenderHint(QPainter::Antialiasing);
+    // QPainter::Antialiasing is effective on native shape = circle, square, line
+
+    painter->setRenderHints(painter->renderHints() | QPainter::SmoothPixmapTransform | QPainter::Antialiasing );
+    //painter->setRenderHint(QPainter::Antialiasing);
     
     QRectF rect = boundingRect();
     int rounded = 15;
@@ -196,17 +199,99 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     const QColor fontColor = getContrastedColor(phaseColor);
     QFont font = qApp->font();
 
+    // Draw then container
     painter->setPen(Qt::NoPen);
     painter->setBrush(phaseColor);
     painter->drawRoundedRect(rect, rounded, rounded);
-    
+
+    //
+    // Events
+    QRectF r(rect.x() + mBorderWidth + mEltsMargin,
+             rect.y() + mBorderWidth + mEltsMargin + mTitleHeight + mEltsMargin,
+             rect.width() - 2 * (mEltsMargin + mBorderWidth),
+             mEltsHeight);
+
+    const QJsonArray events = getEvents();
+    double dy = mEltsMargin + mEltsHeight;
+    //PhasesScene* itemScene = dynamic_cast<PhasesScene*>(mScene);
+
+    const bool showAlldata = mScene->showAllThumbs();
+    mAtLeastOneEventSelected = false;
+    for (int i=0; i<events.size(); ++i) {
+
+        const QJsonObject event = events.at(i).toObject();
+        const QColor eventColor(event.value(STATE_COLOR_RED).toInt(),
+                          event.value(STATE_COLOR_GREEN).toInt(),
+                          event.value(STATE_COLOR_BLUE).toInt());
+        const bool isSelected = ( event.value(STATE_IS_SELECTED).toBool() || event.value(STATE_IS_CURRENT).toBool() );
+
+        if (i > 0)
+            r.adjust(0, dy, 0, dy);
+
+        painter->setPen(getContrastedColor(eventColor));
+
+        // magnify and highlight selected events
+        if (isSelected) {
+            mAtLeastOneEventSelected = true;
+
+            painter->setPen(QPen(fontColor, 3.f));
+            r.adjust(1, 1, -1, -1);
+            painter->drawRoundedRect(r, 1, 1);
+            painter->fillRect(r, eventColor);
+            painter->setPen(QPen(getContrastedColor(eventColor), 1));
+
+            painter->drawText(r, Qt::AlignCenter, event.value(STATE_NAME).toString());
+            r.adjust(-1, -1, +1, +1);
+        }
+        else if (isSelected || showAlldata) {
+                painter->fillRect(r, eventColor);
+                painter->drawText(r, Qt::AlignCenter, event.value(STATE_NAME).toString());
+
+        } else {
+            painter->setOpacity(0.2);
+            painter->fillRect(r, eventColor);
+            painter->drawText(r, Qt::AlignCenter, event.value(STATE_NAME).toString());
+            painter->setOpacity(1);
+        }
+
+    }
+
+
+
+  //
     if (mControlsVisible && mControlsEnabled) {
-        // Checked box
-        const QRectF cRect = checkRect();
-        drawCheckBoxBox(*painter, cRect, mState, Qt::white, QColor(150, 150, 150));
-        
-        // Eye
-        const QRectF eRect = eyeRect();
+        // insert button
+        const QRectF inRect = insertRect();
+        painter->drawRect(inRect);
+        painter->fillRect(inRect, Qt::black);
+
+        qreal sx = inRect.width()/inPix->width();
+        qreal sy =  inRect.height()/inPix->height();
+        QMatrix mx = QMatrix();
+        mx.scale(sx, sy);
+
+        const QPixmap inPix2 = inPix->transformed(mx, Qt::SmoothTransformation);
+
+        painter->drawPixmap(inRect.x(), inRect.y(), inPix2);
+
+        // extract button
+        const QRectF exRect = extractRect();
+        // we suppose, it is the same matrix
+        const QPixmap exPix2 = exPix->transformed(mx, Qt::SmoothTransformation);
+        painter->drawRect(exRect);
+        painter->fillRect(exRect, Qt::black);
+
+        if (mAtLeastOneEventSelected) {
+            painter->drawPixmap(exRect, exPix2, exPix2.rect());
+
+        } else {
+            painter->setOpacity(0.5);
+            painter->drawPixmap(exRect, exPix2, exPix2.rect());
+            painter->setOpacity(1);
+        }
+
+        // Eye button
+        /*const QRectF eRect = eyeRect();
         painter->drawRect(eRect);
         if (mEyeActivated) {
             QLinearGradient grad(0, 0, 0, eRect.height());
@@ -219,7 +304,8 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->fillRect(eRect, Qt::black);
 
         const QPixmap eye(":eye_w.png");
-        painter->drawPixmap(eRect, eye, eye.rect());
+        const QPixmap eye2 = eye.transformed(mx, Qt::SmoothTransformation);
+        painter->drawPixmap(eRect, eye2, eye2.rect());*/
 
 
     } else {
@@ -255,53 +341,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         painter->drawText(tpr, Qt::AlignCenter, tauStr);
     }
     
-    // Events
-    QRectF r(rect.x() + mBorderWidth + mEltsMargin,
-             rect.y() + mBorderWidth + mEltsMargin + mTitleHeight + mEltsMargin,
-             rect.width() - 2 * (mEltsMargin + mBorderWidth),
-             mEltsHeight);
-    
-    const QJsonArray events = getEvents();
-    double dy = mEltsMargin + mEltsHeight;
-    PhasesScene* itemScene = dynamic_cast<PhasesScene*>(mScene);
 
-    const bool showAlldata = itemScene->showAllEvents();
-    for (int i=0; i<events.size(); ++i) {
-
-        const QJsonObject event = events.at(i).toObject();
-        const QColor eventColor(event.value(STATE_COLOR_RED).toInt(),
-                          event.value(STATE_COLOR_GREEN).toInt(),
-                          event.value(STATE_COLOR_BLUE).toInt());
-        const bool isSelected = ( event.value(STATE_IS_SELECTED).toBool() || event.value(STATE_IS_CURRENT).toBool() );
-
-        if (i > 0)
-            r.adjust(0, dy, 0, dy);
-
-        painter->setPen(getContrastedColor(eventColor));
-
-        // magnify and highlight selected events
-        if (isSelected) {
-            painter->setPen(QPen(fontColor, 3.f));
-            r.adjust(1, 1, -1, -1);
-            painter->drawRoundedRect(r,1,1);
-            painter->fillRect(r, eventColor);
-            painter->setPen(getContrastedColor(eventColor));
-            painter->drawText(r, Qt::AlignCenter, event.value(STATE_NAME).toString());
-            r.adjust(-1, -1, +1, +1);
-        }
-        else if (isSelected || showAlldata) {
-                painter->fillRect(r, eventColor);
-                painter->drawText(r, Qt::AlignCenter, event.value(STATE_NAME).toString());
-
-        } else {
-            painter->setOpacity(0.2);
-            painter->fillRect(r, eventColor);
-            painter->drawText(r, Qt::AlignCenter, event.value(STATE_NAME).toString());
-            painter->setOpacity(1);
-        }
-
-    }
-    
     // Border
     painter->setBrush(Qt::NoBrush);
     if (isSelected()) {
@@ -353,21 +393,28 @@ QRectF PhaseItem::checkRect() const
     return r;
 }
 
-QRectF PhaseItem::eyeRect() const
+/*
+ * QRectF PhaseItem::eyeRect() const
 {
     const QRectF rect = boundingRect();
     const QRectF r(rect.x() + rect.width() - mBorderWidth - mEltsMargin - mTitleHeight,
              rect.y() + mBorderWidth + mEltsMargin,
              mTitleHeight,
              mTitleHeight);
-    /*const QRectF r(rect.x() + rect.width() - mBorderWidth - mEltsMargin - int(1.2*mTitleHeight),
-             rect.y() + mBorderWidth + mEltsMargin ,
-             int(1.2*mTitleHeight),
-             int(1.2*mTitleHeight));*/
+    return r;
+}
+*/
+QRectF PhaseItem::extractRect() const
+{
+    QRectF rect = boundingRect();
+    QRectF r(rect.x() + mBorderWidth + mEltsMargin + mEltsMargin + mTitleHeight,
+             rect.y() + mBorderWidth + mEltsMargin,
+             mTitleHeight,
+             mTitleHeight);
     return r;
 }
 
-QRectF PhaseItem::extractRect() const
+QRectF PhaseItem::insertRect() const
 {
     QRectF rect = boundingRect();
     QRectF r(rect.x() + mBorderWidth + mEltsMargin,

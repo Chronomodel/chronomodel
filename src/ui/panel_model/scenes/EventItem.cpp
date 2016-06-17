@@ -12,9 +12,12 @@
 #include <QtWidgets>
 
 
-EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):AbstractItem(scene, parent)
+EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):AbstractItem(scene, parent),
+mWithSelectedPhase(false),
+mShowAllThumbs(true)
 {
     setEvent(event, settings);
+    mScene = static_cast<AbstractScene*>(scene);
 }
 
 EventItem::~EventItem()
@@ -41,7 +44,7 @@ void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
         } else
             itemScene->mTempArrow->setFrom(pos().x(), pos().y());
     }
-    
+
     QGraphicsObject::mousePressEvent(e);
 }
 
@@ -58,15 +61,28 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     // ----------------------------------------------
     //  Update item position and selection
     // ----------------------------------------------
-    setSelected(event.value(STATE_IS_SELECTED).toBool());
+    const bool isSelected = event.value(STATE_IS_SELECTED).toBool() || event.value(STATE_IS_CURRENT).toBool();
+    setSelected(isSelected);
     setPos(event.value(STATE_ITEM_X).toDouble(),
            event.value(STATE_ITEM_Y).toDouble());
     
     // ----------------------------------------------
     //  Check if item should be greyed out
     // ----------------------------------------------
-    //updateGreyedOut();
-    
+    const QJsonArray phases = getPhases();
+    mWithSelectedPhase = false;
+
+    foreach (const QJsonValue phase, phases) {
+            if ((mWithSelectedPhase == false) && (phase.toObject().value(STATE_IS_SELECTED)==true))
+                    mWithSelectedPhase = true;
+     }
+
+    const bool noHide = dynamic_cast<EventsScene*>(mScene)->showAllThumbs();
+
+    if (mWithSelectedPhase || noHide)
+        setGreyedOut(false);
+    else
+        setGreyedOut(true);
     // ----------------------------------------------
     //  Calculate item size
     // ----------------------------------------------
@@ -119,7 +135,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
             try {
                 DateItem* dateItem = new DateItem((EventsScene*)mScene, date, color, settings);
                 dateItem->setParentItem(this);
-                dateItem->setGreyedOut(mGreyedOut, false);
+                dateItem->setGreyedOut(mGreyedOut);
                 
                 QPointF pos(0,
                             boundingRect().y() +
@@ -152,27 +168,24 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
 }
 
 /**
- ** @brief looking for selected dateItem
+ ** @brief looking for selected dateItem in the QGraphicsScene
  */
 bool EventItem::withSelectedDate() const
 {
     const QList<QGraphicsItem*> datesItemsList = childItems();
-    foreach(const QGraphicsItem* date, datesItemsList) {
+    foreach (const QGraphicsItem* date, datesItemsList) {
         if (date->isSelected())
             return true;
     }
     return false;
 }
 
-void EventItem::setGreyedOut(bool greyedOut, bool shouldRepaint)
+void EventItem::setGreyedOut(bool greyedOut)
 {
-    AbstractItem::setGreyedOut(greyedOut, shouldRepaint);
-    
+    mGreyedOut = greyedOut;
     QList<QGraphicsItem*> children = childItems();
     for (int i=0; i<children.size(); ++i)
-        ((DateItem*)children[i])->setGreyedOut(greyedOut);
-    
-    setOpacity(mGreyedOut ? 0.1 : 1);
+        static_cast<DateItem*>(children.at(i))->setGreyedOut(greyedOut);
 }
 
 void EventItem::updateGreyedOut()
@@ -231,7 +244,6 @@ void EventItem::dropEvent(QGraphicsSceneDragDropEvent* e)
 void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
 {
     e->acceptProposedAction();
-    //Project* project = MainWindow::getInstance()->getProject();
     QJsonObject event = mData;
     EventsScene* scene = dynamic_cast<EventsScene*>(mScene);
     Project* project = scene->getProject();
@@ -245,7 +257,7 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
     event[STATE_EVENT_DATES] = dates;
     
     project->updateEvent(event, QObject::tr("Dates added to event (CSV drag)"));
-    scene->updateSelection();
+    scene->updateStateSelectionFromItem();
     scene->sendUpdateProject("Item selected", true, true); //  bool notify = true, bool storeUndoCommand = true
 }
 
@@ -262,30 +274,41 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     
     QColor eventColor = QColor(mData.value(STATE_COLOR_RED).toInt(),
                                mData.value(STATE_COLOR_GREEN).toInt(),
-                               mData.value(STATE_COLOR_BLUE).toInt());
-    painter->setPen(Qt::NoPen);
-    painter->setBrush(eventColor);
-    painter->drawRect(rect);
-    
-    
+                               mData.value(STATE_COLOR_BLUE).toInt()); 
     // Phases
-    QJsonArray phases = getPhases();
+    const QJsonArray phases = getPhases();
     QRectF phasesRect(rect.x(), rect.y() + rect.height() - mPhasesHeight, rect.width(), mPhasesHeight);
     phasesRect.adjust(1, 1, -1, -1);
     
-    int numPhases = (int)phases.size();
-    double w = phasesRect.width()/numPhases;
-    
-    for (int i=0; i<numPhases; ++i) {
-        QJsonObject phase = phases.at(i).toObject();
-        QColor c(phase.value(STATE_COLOR_RED).toInt(),
-                 phase.value(STATE_COLOR_GREEN).toInt(),
-                 phase.value(STATE_COLOR_BLUE).toInt());
-        painter->setPen(c);
-        painter->setBrush(c);
-        painter->drawRect(phasesRect.x() + i*w, phasesRect.y(), w, phasesRect.height());
-    }
-    
+    const int numPhases = (const int)phases.size();
+    const double w = phasesRect.width()/numPhases;
+   /* mWithSelectedPhase = false;
+
+    foreach (const QJsonValue phase, phases) {
+            if ((mWithSelectedPhase == false) && (phase.toObject().value(STATE_IS_SELECTED)==true))
+                    mWithSelectedPhase = true;
+     }
+
+    const bool noHide = dynamic_cast<EventsScene*>(mScene)->showAllThumbs();
+
+    if (mWithSelectedPhase || noHide)
+        setGreyedOut(false);
+    else
+        setGreyedOut(true);
+*/
+    if (mGreyedOut) //setting with setGreyedOut() just above
+        painter->setOpacity(0.35f);
+    else
+        painter->setOpacity(1.f);
+
+
+
+    painter->setPen(Qt::NoPen);
+    painter->setBrush(eventColor);
+    painter->drawRect(rect);
+
+
+
     if (numPhases == 0) {
         QFont font = qApp->font();
         font.setPointSizeF(pointSize(11));
@@ -293,13 +316,25 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         painter->fillRect(phasesRect, QColor(0, 0, 0, 180));
         painter->setPen(QColor(200, 200, 200));
         painter->drawText(phasesRect, Qt::AlignCenter, tr("No Phase"));
+
+    } else {
+        for (int i =0; i<numPhases; ++i) {
+            const QJsonObject phase = phases.at(i).toObject();
+
+            const QColor c(phase.value(STATE_COLOR_RED).toInt(),
+                     phase.value(STATE_COLOR_GREEN).toInt(),
+                     phase.value(STATE_COLOR_BLUE).toInt());
+            painter->setPen(c);
+            painter->setBrush(c);
+            painter->drawRect(phasesRect.x() + i*w, phasesRect.y(), w, phasesRect.height());
+        }
     }
     
+    //item box
     painter->setPen(QColor(0, 0, 0));
     painter->setBrush(Qt::NoBrush);
     painter->drawRect(phasesRect);
-    
-    
+
     // Name
     QRectF tr(rect.x() + mBorderWidth + 2*mEltsMargin + mTitleHeight,
               rect.y() + mBorderWidth + mEltsMargin,
@@ -312,11 +347,13 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     QString name = mData.value(STATE_NAME).toString();
     name = metrics.elidedText(name, Qt::ElideRight, tr.width());
     
-    QColor frontColor = getContrastedColor(eventColor);
+    const QColor frontColor = getContrastedColor(eventColor);
     painter->setPen(frontColor);
     painter->drawText(tr, Qt::AlignCenter, name);
-    
-    
+
+    // restore Opacity from GreyedOut
+    painter->setOpacity(1.f);
+
     // Border
     painter->setBrush(Qt::NoBrush);
     if (mMergeable) {
@@ -325,6 +362,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         
         painter->setPen(QPen(Painting::mainColorLight, 3.f, Qt::DashLine));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
+
     } else if (isSelected() || withSelectedDate()) {
         painter->setPen(QPen(Qt::white, 5.f));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
@@ -338,12 +376,13 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
 QJsonArray EventItem::getPhases() const
 {
-    QJsonObject state = MainWindow::getInstance()->getProject()->state();
-    QJsonArray allPhases = state.value(STATE_PHASES).toArray();
-    QJsonArray phases;
-    QString eventPhaseIdsStr = mData.value(STATE_EVENT_PHASE_IDS).toString();
-    QStringList eventPhaseIds = eventPhaseIdsStr.split(",");
-    
+    QJsonObject state = mScene->getProject()->state();
+    const QJsonArray allPhases = state.value(STATE_PHASES).toArray();
+
+    const QString eventPhaseIdsStr = mData.value(STATE_EVENT_PHASE_IDS).toString();
+    const QStringList eventPhaseIds = eventPhaseIdsStr.split(",");
+
+    QJsonArray phases = QJsonArray();
     for (int i=0; i<allPhases.size(); ++i) {
         QJsonObject phase = allPhases.at(i).toObject();
         QString phaseId = QString::number(phase.value(STATE_ID).toInt());

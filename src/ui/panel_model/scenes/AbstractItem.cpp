@@ -1,5 +1,6 @@
 #include "AbstractItem.h"
 #include "ArrowTmpItem.h"
+#include "StateKeys.h"
 #include <QtWidgets>
 
 
@@ -46,13 +47,21 @@ void AbstractItem::setMergeable(bool mergeable, bool shouldRepaint)
         update();
 }
 
-void AbstractItem::setGreyedOut(bool greyedOut, bool shouldRepaint)
+void AbstractItem::setGreyedOut(const bool greyedOut)
 {
-    mGreyedOut = greyedOut;
-    if (shouldRepaint)
-        update();
+    if (mGreyedOut != greyedOut)
+        mGreyedOut = greyedOut;
 }
 
+void AbstractItem::setSelectedInData(const bool selected)
+{
+    mData[STATE_IS_SELECTED] = selected;
+}
+
+void AbstractItem::setCurrentInData(const bool current)
+{
+    mData[STATE_IS_CURRENT] = current;
+}
 #pragma mark Events
 void AbstractItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {

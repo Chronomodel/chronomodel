@@ -15,17 +15,22 @@ public:
     
     void sendUpdateProject(const QString& reason, bool notify, bool async);
     PhaseItem* currentPhase() const;
+     void createSceneFromState();
+
 signals:
-    void selectionChanged();
-    
+    void selectionUpdated(); // connected to evenScene to hide or show the Events' phase
+    void noSelection();
+    void phasesAreSelected();
+
 public slots:
     void clean();
-    void updateScene();
-    void updateSelection(bool sendNotif = true, bool forced = false);
-    void updateCheckedPhases();
+    void updateSceneFromState();
+    void updateStateSelectionFromItem();
 
     void noHide();
     void eventsSelected();
+
+    void deleteSelectedItems();
     
 public:
     void itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);
@@ -34,25 +39,25 @@ public:
     bool itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);
 
     void itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e);
-    void updateEyedPhases();
+    //void updateEyedPhases();
     
-    void adaptItemsForZoom(double prop);
+    void adaptItemsForZoom(const double prop);
 
-    void setShowAllEvents(const bool show) { mShowAllEvents = show;}
-    bool showAllEvents() const { return mShowAllEvents;}
+    void setShowAllEvents(const bool show);
+   // bool showAllEvents() const { return mShowAllEvents;}
     
 protected:
     AbstractItem* collidingItem(QGraphicsItem* item);
     AbstractItem* currentItem();
     void setCurrentItem(QGraphicsItem* item);
 
-    void deleteSelectedItems();
+
     bool constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo);
     void createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo);
     void mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo);
 
 private:
-    bool mShowAllEvents;
+   // bool mShowAllEvents;
 
 };
 

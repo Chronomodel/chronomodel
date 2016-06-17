@@ -16,6 +16,7 @@ Button::Button(const QString& text, QWidget* parent):QPushButton(parent)
 
 void Button::init()
 {
+    setAutoRepeat(false);
     setCursor(Qt::PointingHandCursor);
     //setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
     

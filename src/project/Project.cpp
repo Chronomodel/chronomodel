@@ -73,6 +73,7 @@ mItemsIsMoved(true)
 Project::~Project()
 {
     mAutoSaveTimer->stop();
+    disconnect(mAutoSaveTimer, &QTimer::timeout, this, &Project::save);
     MainWindow::getInstance()->getUndoStack()->clear();
     mModel = 0;
 }
@@ -88,7 +89,7 @@ void Project::initState(const QString& reason)
     // This is called when closing a project or openning a new one,
     // so the undoStack has just been cleared and we want to keep it empty at project start!
     mState = state;
-    sendUpdateState(state, reason, true);
+   // sendUpdateState(state, reason, true);
 
 }
 
@@ -166,14 +167,13 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
     else if (mDesignIsChanged)
         emit projectDesignChanged(true);
 
-    /*if(mItemsIsMoved) {
-        emit projectItemsIsMoved(true);
-    }*/
 
     if (mState != state || force)  {
         
         SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
         MainWindow::getInstance()->getUndoStack()->push(command);
+
+        updateState(state, reason, notify);
         return true;
     }
     return false;
@@ -184,6 +184,13 @@ void Project::sendUpdateState(const QJsonObject& state, const QString& reason, b
 {
 #ifdef DEBUG
     qDebug()<<"Project::sendUpdateState "<<reason<<notify;
+    //-----------------
+    QJsonArray phases = state.value(STATE_EVENTS).toArray();
+    foreach(QJsonValue phase, phases) {
+        qDebug()<<"Project sendUpdateState"<<phase.toObject().value(STATE_NAME).toString()<<phase.toObject().value(STATE_IS_SELECTED).toBool()<<phase.toObject().value(STATE_IS_CURRENT).toBool();
+    }
+
+    //-----------------
 #endif
     StateEvent* event = new StateEvent(state, reason, notify);
     QCoreApplication::postEvent(this, event, Qt::HighEventPriority);//Qt::NormalEventPriority);
@@ -345,6 +352,37 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
 
 }
 
+void Project::unselectedAllInState()
+{
+    QJsonArray phases = mState.value(STATE_PHASES).toArray();
+    for (QJsonArray::iterator iPhase = phases.begin(); iPhase != phases.end(); ++iPhase) {
+        QJsonObject p = iPhase->toObject();
+        p[STATE_IS_CURRENT] = false;
+        p[STATE_IS_SELECTED] = false;
+        *iPhase = p;
+    }
+    mState[STATE_PHASES] = phases;
+
+    QJsonArray events = mState.value(STATE_EVENTS).toArray();
+    for (QJsonArray::iterator iEvent = events.begin(); iEvent != events.end(); ++iEvent) {
+        QJsonObject e =iEvent->toObject();
+        e[STATE_IS_CURRENT] = false;
+        e[STATE_IS_SELECTED] = false;
+
+        QJsonArray dates = iEvent->toObject().value(STATE_EVENT_DATES).toArray();
+        for (QJsonArray::iterator idate = dates.begin(); idate != dates.end(); ++idate){
+            QJsonObject d = idate->toObject();
+            d[STATE_IS_SELECTED] = false;
+            *idate = d;
+        }
+        e[STATE_EVENT_DATES] = dates;
+        *iEvent = e;
+    }
+    mState[STATE_EVENTS] = events;
+qDebug()<<"Project::unselectedAllInState end";
+
+}
+
 bool Project::structureIsChanged()
 {
  return mStructureIsChanged;
@@ -363,20 +401,23 @@ bool Project::event(QEvent* e)
             updateState(se->state(), se->reason(), se->notify());
 
         return true;
-    } else if (e->type() == 1001) {
+    } /*else if (e->type() == 1001) {
 #ifdef DEBUG
         qDebug() << "(---) Receiving events selection : adapt checked phases";
 #endif
         emit selectedEventsChanged();
        
         return true;
-    } else if (e->type() == 1002) {
+    } */
+/*else if (e->type() == 1002) {
 #ifdef DEBUG
-        //qDebug() << "(---) Receiving phases selection : adapt selected events";
+        //qDebug() << "(---) Receiving phases selection : adapt selected events ?????";
 #endif
-        emit selectedPhasesChanged();
+        emit selectedPhasesChanged();//no used, previously it was used to select the Event corresponding to a selected phase
         return true;
-    } else
+    } */
+
+    else
         return QObject::event(e);
 
 }
@@ -421,6 +462,7 @@ void Project::sendEventsSelectionChanged()
     QCoreApplication::postEvent(this, e, Qt::NormalEventPriority);
 }
 
+/*
 void Project::sendPhasesSelectionChanged()
 {
 #ifdef DEBUG
@@ -429,7 +471,7 @@ void Project::sendPhasesSelectionChanged()
     QEvent* e = new QEvent((QEvent::Type)1002);
     QCoreApplication::postEvent(this, e, Qt::NormalEventPriority);
 }
-
+*/
 
 #pragma mark Project File Management
 
@@ -527,12 +569,18 @@ bool Project::load(const QString& path)
             
             // When openning a project, it is maked as saved : mState == mLastSavedState
             mLastSavedState = mState;
-            
+
+            qDebug() << "in Project::load  unselectedAllInState";
+            unselectedAllInState(); // modify mState
+
             // If a version update is to be done :
             QJsonObject state = mState;
             state[STATE_APP_VERSION] = qApp->applicationVersion();
+
+
+
            qDebug() << "in Project::load  Begin pushProjectState";
-            pushProjectState(state, PROJECT_LOADED_REASON, true, true);
+//            pushProjectState(state, PROJECT_LOADED_REASON, true, true);
            qDebug() << "in Project::load  End pushProjectState";
             file.close();
             
@@ -858,28 +906,31 @@ int Project::getUnusedEventId(const QJsonArray& events)
 void Project::createEvent()
 {
     if (studyPeriodIsValid()) {
-        EventDialog dialog(qApp->activeWindow(), tr("New Event"), Qt::Sheet);
-        if (dialog.exec() == QDialog::Accepted) {
-            Event event;
-            event.mName = dialog.getName();
-            event.mColor= dialog.getColor();
+        EventDialog* dialog = new EventDialog(qApp->activeWindow(), tr("New Event"), Qt::Sheet);
+        if (dialog->exec() == QDialog::Accepted) {
+            Event event = Event();
+            event.mName = dialog->getName();
+            event.mColor= dialog->getColor();
             
             addEvent(event.toJson(), tr("Event created"));
+
         }
+        delete dialog;
     }
 }
 
 void Project::createEventKnown()
 {
     if (studyPeriodIsValid()) {
-        EventDialog dialog(qApp->activeWindow(), tr("New Bound"), Qt::Sheet);
-        if (dialog.exec() == QDialog::Accepted) {
-            EventKnown event;
-            event.mName = dialog.getName();
-            event.mColor= dialog.getColor();
+        EventDialog* dialog = new EventDialog(qApp->activeWindow(), tr("New Bound"), Qt::Sheet);
+        if (dialog->exec() == QDialog::Accepted) {
+            EventKnown event = EventKnown();
+            event.mName = dialog->getName();
+            event.mColor= dialog->getColor();
             
             addEvent(event.toJson(), tr("Bound created"));
         }
+        delete dialog;
     }
 }
 
@@ -984,10 +1035,17 @@ void Project::updateEvent(const QJsonObject& event, const QString& reason)
 {
     QJsonObject stateNext = mState;
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
-    for (int i = 0; i<events.size(); ++i) {
+    /*for (int i = 0; i<events.size(); ++i) {
         QJsonObject evt = events.at(i).toObject();
         if (evt.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
             events[i] = event;
+            break;
+        }
+    }
+    */
+    for (QJsonArray::iterator i = events.begin(); i != events.end(); ++i) {
+        if ( i->toObject().value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
+            *i = event;
             break;
         }
     }
@@ -1596,14 +1654,11 @@ void Project::updateAllDataInSelectedEvents(const QHash<QString, QVariant>& grou
 #pragma mark Phases
 void Project::createPhase()
 {
-    if(studyPeriodIsValid())
-    {
-        PhaseDialog dialog(qApp->activeWindow(), Qt::Sheet);
-        if(dialog.exec() == QDialog::Accepted)
-        {
-            if(dialog.isValid())
-            {
-                QJsonObject phase = dialog.getPhase();
+    if (studyPeriodIsValid()) {
+        PhaseDialog* dialog = new PhaseDialog(qApp->activeWindow(), Qt::Sheet);
+        if (dialog->exec() == QDialog::Accepted) {
+            if (dialog->isValid()) {
+                QJsonObject phase = dialog->getPhase();
                 
                 QJsonObject stateNext = mState;
                 QJsonArray phases = stateNext.value(STATE_PHASES).toArray();
@@ -1613,59 +1668,56 @@ void Project::createPhase()
                 stateNext[STATE_PHASES] = phases;
                 
                 pushProjectState(stateNext, tr("Phase created"), true);
-            }
-            else
-            {
+
+            } else {
                 QMessageBox message(QMessageBox::Critical,
                                     tr("Invalid value"),
-                                    dialog.mError,
+                                    dialog->mError,
                                     QMessageBox::Ok,
                                     qApp->activeWindow(),
                                     Qt::Sheet);
                 message.exec();
                 return;
             }
+            delete dialog;
         }
     }
 }
 
 void Project::updatePhase(const QJsonObject& phaseIn)
 {
-    PhaseDialog dialog(qApp->activeWindow(), Qt::Sheet);
-    dialog.setPhase(phaseIn);
-    if(dialog.exec() == QDialog::Accepted)
-    {
-        if(dialog.isValid())
-        {
-            QJsonObject phase = dialog.getPhase();
+    PhaseDialog* dialog = new PhaseDialog(qApp->activeWindow(), Qt::Sheet);
+    dialog->setPhase(phaseIn);
+    if (dialog->exec() == QDialog::Accepted) {
+        if (dialog->isValid()) {
+            QJsonObject phase = dialog->getPhase();
             
             QJsonObject stateNext = mState;
             QJsonArray phases = stateNext.value(STATE_PHASES).toArray();
             
-            for(int i=0; i<phases.size(); ++i)
-            {
+            for (int i=0; i<phases.size(); ++i) {
                 QJsonObject p = phases.at(i).toObject();
-                if(p[STATE_ID].toInt() == phase.value(STATE_ID).toInt())
-                {
+                if (p.value(STATE_ID).toInt() == phase.value(STATE_ID).toInt()) {
                     phases[i] = phase;
                     break;
                 }
             }
             stateNext[STATE_PHASES] = phases;
             pushProjectState(stateNext, tr("Phase updated"), true);
-        }
-        else
-        {
+
+        } else {
             QMessageBox message(QMessageBox::Critical,
                                 tr("Invalid value"),
-                                dialog.mError,
+                                dialog->mError,
                                 QMessageBox::Ok,
                                 qApp->activeWindow(),
                                 Qt::Sheet);
             message.exec();
             return;
         }
+
     }
+    delete dialog;
 }
 
 void Project::deleteSelectedPhases()
@@ -1677,13 +1729,13 @@ void Project::deleteSelectedPhases()
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
     
     for (int i=phases.size()-1; i>=0; --i) {
-        QJsonObject phase = phases.at(i).toObject();
+        const QJsonObject phase = phases.at(i).toObject();
         if (phase.value(STATE_IS_SELECTED).toBool()) {
-            int phase_id = phase.value(STATE_ID).toInt();
+            const int phase_id = phase.value(STATE_ID).toInt();
             for (int j=phases_constraints.size()-1; j>=0; --j) {
                 QJsonObject constraint = phases_constraints.at(j).toObject();
-                int bwd_id = constraint.value(STATE_CONSTRAINT_BWD_ID).toInt();
-                int fwd_id = constraint.value(STATE_CONSTRAINT_FWD_ID).toInt();
+                const int bwd_id = constraint.value(STATE_CONSTRAINT_BWD_ID).toInt();
+                const int fwd_id = constraint.value(STATE_CONSTRAINT_FWD_ID).toInt();
 
                 if (bwd_id == phase_id || fwd_id == phase_id)
                     phases_constraints.removeAt(j);
@@ -1704,6 +1756,9 @@ void Project::deleteSelectedPhases()
     stateNext[STATE_PHASES_CONSTRAINTS] = phases_constraints;
     stateNext[STATE_EVENTS] = events;
     
+    /*if (phases.isEmpty())
+        send*/
+
     pushProjectState(stateNext, tr("Phase(s) deleted"), true);
     
     clearModel();
@@ -1715,14 +1770,12 @@ int Project::getUnusedPhaseId(const QJsonArray& phases)
 {
     int id = -1;
     bool idIsFree = false;
-    while(!idIsFree)
-    {
+    while (!idIsFree) {
         ++id;
         idIsFree = true;
-        for(int i=0; i<phases.size(); ++i)
-        {
+        for (int i=0; i<phases.size(); ++i) {
             const QJsonObject phase = phases.at(i).toObject();
-            if(phase.value(STATE_ID).toInt() == id)
+            if (phase.value(STATE_ID).toInt() == id)
                 idIsFree = false;
         }
     }
@@ -1737,27 +1790,22 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
     QJsonArray phases_constraints = mState.value(STATE_PHASES_CONSTRAINTS).toArray();
     
     // Delete constraints around the disappearing phase
-    for(int j=phases_constraints.size()-1; j>=0; --j)
-    {
+    for (int j=phases_constraints.size()-1; j>=0; --j) {
         QJsonObject constraint = phases_constraints.at(j).toObject();
-        int bwd_id = constraint.value(STATE_CONSTRAINT_BWD_ID).toInt();
-        int fwd_id = constraint.value(STATE_CONSTRAINT_FWD_ID).toInt();
-        if(bwd_id == phaseFromId || fwd_id == phaseFromId)
-        {
+        const int bwd_id = constraint.value(STATE_CONSTRAINT_BWD_ID).toInt();
+        const int fwd_id = constraint.value(STATE_CONSTRAINT_FWD_ID).toInt();
+        if ( (bwd_id == phaseFromId) || (fwd_id == phaseFromId))
             phases_constraints.removeAt(j);
-        }
+
     }
     
     // Change phase id in events
-    for(int j=0; j<events.size(); ++j)
-    {
+    for (int j=0; j<events.size(); ++j) {
         QJsonObject event = events.at(j).toObject();
         QString idsStr = event.value(STATE_EVENT_PHASE_IDS).toString();
         QStringList ids = idsStr.split(",");
-        if(ids.contains(QString::number(phaseFromId)))
-        {
-            for(int k=0; k<ids.size(); ++k)
-            {
+        if (ids.contains(QString::number(phaseFromId))) {
+            for (int k=0; k<ids.size(); ++k) {
                 if(ids[k] == QString::number(phaseFromId))
                     ids[k] = QString::number(phaseToId);
             }
@@ -1767,12 +1815,10 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
     }
     
     // remove disappearing phase
-    for(int i=phases.size()-1; i>=0; --i)
-    {
-        QJsonObject p = phases.at(i).toObject();
-        int id = p.value(STATE_ID).toInt();
-        if(id == phaseFromId)
-        {
+    for (int i=phases.size()-1; i>=0; --i) {
+        const QJsonObject p = phases.at(i).toObject();
+        const int id = p.value(STATE_ID).toInt();
+        if (id == phaseFromId) {
             phases.removeAt(i);
             break;
         }
@@ -1785,11 +1831,11 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
     pushProjectState(stateNext, tr("Phases merged"), true);
 }
 
-void Project::updatePhaseEvents(int phaseId, Qt::CheckState state)
+/*void Project::updatePhaseEvents(int phaseId, Qt::CheckState state)
 {
     QJsonObject stateNext = mState;
     QJsonArray events = mState[STATE_EVENTS].toArray();
-    
+
     for(int i=0; i<events.size(); ++i)
     {
         QJsonObject event = events.at(i).toObject();
@@ -1797,9 +1843,34 @@ void Project::updatePhaseEvents(int phaseId, Qt::CheckState state)
         {
             QString phaseIdsStr = event.value(STATE_EVENT_PHASE_IDS).toString();
             QStringList phaseIds = phaseIdsStr.isEmpty() ? QStringList() : phaseIdsStr.split(",");
-            
+
             phaseIds.removeAll(QString::number(phaseId));
             if(state == Qt::Checked)
+                phaseIds.append(QString::number(phaseId));
+
+            event[STATE_EVENT_PHASE_IDS] = phaseIds.join(",");
+            events[i] = event;
+        }
+    }
+    stateNext[STATE_EVENTS] = events;
+    pushProjectState(stateNext, tr("Phase's events updated"), true);
+}*/
+
+
+ void Project::updatePhaseEvents(const int phaseId, ActionOnModel action)
+{
+    QJsonObject stateNext = mState;
+    QJsonArray events = mState.value(STATE_EVENTS).toArray();
+    
+    for (int i=0; i<events.size(); ++i) {
+        QJsonObject event = events.at(i).toObject();
+
+        if (event.value(STATE_IS_SELECTED).toBool()) {
+            QString phaseIdsStr = event.value(STATE_EVENT_PHASE_IDS).toString();
+            QStringList phaseIds = phaseIdsStr.isEmpty() ? QStringList() : phaseIdsStr.split(",");
+            
+            phaseIds.removeAll(QString::number(phaseId));
+            if (action == InsertEventsToPhase)
                 phaseIds.append(QString::number(phaseId));
             
             event[STATE_EVENT_PHASE_IDS] = phaseIds.join(",");
@@ -2090,11 +2161,25 @@ bool Project::isEventConstraintAllowed(const QJsonObject& eventFrom, const QJson
     
 }
 
-void Project::createEventConstraint(const QJsonObject eventFrom, const QJsonObject eventTo)
+void Project::createEventConstraint(const int eventFromId, const int eventToId)
 {
-    QJsonObject stateNext = mState;
+    QJsonObject state = mState;
     
+    QJsonArray events = mState.value(STATE_EVENTS).toArray();
     QJsonArray constraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
+
+    QJsonObject eventFrom = QJsonObject();
+    QJsonObject eventTo = QJsonObject();
+
+    for (int i=0; i<events.size(); ++i)  {
+        QJsonObject event = events.at(i).toObject();
+        if (event.value(STATE_ID).toInt() == eventFromId)
+            eventFrom = event;
+
+        else if (event.value(STATE_ID).toInt() == eventToId)
+            eventTo = event;
+    }
+
 
     qDebug()<<"Project::createEventConstraint "<<eventFrom.value(STATE_NAME)<<eventTo.value(STATE_NAME);
     EventConstraint c;
@@ -2103,11 +2188,9 @@ void Project::createEventConstraint(const QJsonObject eventFrom, const QJsonObje
     c.mToId = eventTo.value(STATE_ID).toInt();
     QJsonObject constraint = c.toJson();
     constraints.append(constraint);
-    stateNext[STATE_EVENTS_CONSTRAINTS] = constraints;
+    state[STATE_EVENTS_CONSTRAINTS] = constraints;
 
-    updateState(stateNext, tr("Event constraint created"), true);
-
-    pushProjectState(stateNext, tr("Event constraint created"), true, false);
+    pushProjectState(state, tr("Event constraint created"), true, false);// notify=true, force=false
 
 }
 
@@ -2117,7 +2200,7 @@ void Project::deleteEventConstraint(int constraintId)
     QJsonArray constraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
     
     for (int i=0; i<constraints.size(); ++i) {
-        QJsonObject c = constraints[i].toObject();
+        QJsonObject c = constraints.at(i).toObject();
         if (c.value(STATE_ID).toInt() == constraintId) {
             constraints.removeAt(i);
             break;
@@ -2142,18 +2225,19 @@ void Project::updateEventConstraint(int constraintId)
         }
     }
     if (index != -1) {
-        ConstraintDialog dialog(qApp->activeWindow(), ConstraintDialog::eEvent, Qt::Sheet);
-        dialog.setConstraint(constraint);
-        if (dialog.exec() == QDialog::Accepted) {
-            if(dialog.deleteRequested())
+        ConstraintDialog* dialog = new ConstraintDialog(qApp->activeWindow(), ConstraintDialog::eEvent, Qt::Sheet);
+        dialog->setConstraint(constraint);
+        if (dialog->exec() == QDialog::Accepted) {
+            if (dialog->deleteRequested())
                 constraints.removeAt(index);
             else {
-                constraint = dialog.constraint();
+                constraint = dialog->constraint();
                 constraints[index] = constraint;
             }
             stateNext[STATE_EVENTS_CONSTRAINTS] = constraints;
             pushProjectState(stateNext, tr("Event constraint updated"), true);
         }
+        delete dialog;
     }
 }
 
@@ -2185,13 +2269,13 @@ bool Project::isPhaseConstraintAllowed(const QJsonObject& phaseFrom, const QJson
 
 void Project::createPhaseConstraint(int phaseFromId, int phaseToId)
 {
-    QJsonObject stateNext = mState;
+    QJsonObject state = mState;
     
-    QJsonArray phases = mState[STATE_PHASES].toArray();
-    QJsonArray constraints = mState[STATE_PHASES_CONSTRAINTS].toArray();
+    QJsonArray phases = mState.value(STATE_PHASES).toArray();
+    QJsonArray constraints = mState.value(STATE_PHASES_CONSTRAINTS).toArray();
     
-    QJsonObject phaseFrom;
-    QJsonObject phaseTo;
+    QJsonObject phaseFrom = QJsonObject();
+    QJsonObject phaseTo = QJsonObject();
     
     for (int i=0; i<phases.size(); ++i)  {
         QJsonObject phase = phases.at(i).toObject();
@@ -2205,26 +2289,25 @@ void Project::createPhaseConstraint(int phaseFromId, int phaseToId)
     if (isPhaseConstraintAllowed(phaseFrom, phaseTo)) {
         PhaseConstraint c;
         c.mId = getUnusedPhaseConstraintId(constraints);
-        c.mFromId = phaseFrom[STATE_ID].toInt();
-        c.mToId = phaseTo[STATE_ID].toInt();
+        c.mFromId = phaseFrom.value(STATE_ID).toInt();
+        c.mToId = phaseTo.value(STATE_ID).toInt();
         QJsonObject constraint = c.toJson();
         constraints.append(constraint);
-        stateNext[STATE_PHASES_CONSTRAINTS] = constraints;
-        
-        pushProjectState(stateNext, tr("Phase constraint created"), true);
+        state[STATE_PHASES_CONSTRAINTS] = constraints;
+
+        pushProjectState(state, tr("Phase constraint created"), true, false);
+
     }
 }
 
 void Project::deletePhaseConstraint(int constraintId)
 {
     QJsonObject state = mState;
-    QJsonArray constraints = mState[STATE_PHASES_CONSTRAINTS].toArray();
+    QJsonArray constraints = mState.value(STATE_PHASES_CONSTRAINTS).toArray();
     
-    for(int i=0; i<constraints.size(); ++i)
-    {
-        QJsonObject c = constraints[i].toObject();
-        if(c[STATE_ID].toInt() == constraintId)
-        {
+    for (int i=0; i<constraints.size(); ++i) {
+        QJsonObject c = constraints.at(i).toObject();
+        if (c.value(STATE_ID).toInt() == constraintId) {
             constraints.removeAt(i);
             break;
         }
@@ -2233,37 +2316,30 @@ void Project::deletePhaseConstraint(int constraintId)
     pushProjectState(state, tr("Phase constraint deleted"), true);
 }
 
-void Project::updatePhaseConstraint(int constraintId)
+void Project::updatePhaseConstraint(const int constraintId)
 {
-    QJsonObject stateNext = mState;
-    QJsonArray constraints = mState[STATE_PHASES_CONSTRAINTS].toArray();
+    QJsonObject state = mState;
+    QJsonArray constraints = mState.value(STATE_PHASES_CONSTRAINTS).toArray();
     QJsonObject constraint;
     int index = -1;
-    for(int i=0; i<constraints.size(); ++i)
-    {
-        QJsonObject c = constraints[i].toObject();
-        if(c[STATE_ID].toInt() == constraintId)
-        {
+    for (int i=0; i<constraints.size(); ++i) {
+        QJsonObject c = constraints.at(i).toObject();
+        if (c.value(STATE_ID).toInt() == constraintId) {
             constraint = c;
             index = i;
         }
     }
-    if(index != -1)
-    {
+    if (index != -1) {
         ConstraintDialog dialog(qApp->activeWindow(), ConstraintDialog::ePhase, Qt::Sheet);
         dialog.setConstraint(constraint);
-        if(dialog.exec() == QDialog::Accepted)
-        {
-            if(dialog.deleteRequested())
-            {
+        if (dialog.exec() == QDialog::Accepted) {
+            if (dialog.deleteRequested())
                 constraints.removeAt(index);
-            }
-            else
-            {
+            else {
                 constraint = dialog.constraint();
                 qDebug() << constraint;
-                if(constraint[STATE_CONSTRAINT_GAMMA_TYPE].toInt() == PhaseConstraint::eGammaFixed &&
-                   constraint[STATE_CONSTRAINT_GAMMA_FIXED].toDouble() == 0.)
+                if (constraint.value(STATE_CONSTRAINT_GAMMA_TYPE).toInt() == PhaseConstraint::eGammaFixed &&
+                   constraint.value(STATE_CONSTRAINT_GAMMA_FIXED).toDouble() == 0.)
                 {
                     QMessageBox message(QMessageBox::Critical,
                                         tr("Invalid value"),
@@ -2274,8 +2350,8 @@ void Project::updatePhaseConstraint(int constraintId)
                     message.exec();
                     return;
                 }
-                else if(constraint[STATE_CONSTRAINT_GAMMA_TYPE].toInt() == PhaseConstraint::eGammaRange &&
-                        constraint[STATE_CONSTRAINT_GAMMA_MIN].toDouble() >= constraint[STATE_CONSTRAINT_GAMMA_MAX].toDouble())
+                else if (constraint.value(STATE_CONSTRAINT_GAMMA_TYPE).toInt() == PhaseConstraint::eGammaRange &&
+                        constraint.value(STATE_CONSTRAINT_GAMMA_MIN).toDouble() >= constraint.value(STATE_CONSTRAINT_GAMMA_MAX).toDouble())
                 {
                     QMessageBox message(QMessageBox::Critical,
                                         tr("Invalid values"),
@@ -2289,8 +2365,8 @@ void Project::updatePhaseConstraint(int constraintId)
                 
                 constraints[index] = constraint;
             }
-            stateNext[STATE_PHASES_CONSTRAINTS] = constraints;
-            pushProjectState(stateNext, tr("Phase constraint updated"), true);
+            state[STATE_PHASES_CONSTRAINTS] = constraints;
+            pushProjectState(state, tr("Phase constraint updated"), true);
         }
     }
 }
@@ -2299,14 +2375,12 @@ int Project::getUnusedPhaseConstraintId(const QJsonArray& constraints)
 {
     int id = -1;
     bool idIsFree = false;
-    while(!idIsFree)
-    {
+    while (!idIsFree) {
         ++id;
         idIsFree = true;
-        for(int i=0; i<constraints.size(); ++i)
-        {
-            QJsonObject constraint = constraints[i].toObject();
-            if(constraint[STATE_ID].toInt() == id)
+        for (int i=0; i<constraints.size(); ++i) {
+            QJsonObject constraint = constraints.at(i).toObject();
+            if (constraint.value(STATE_ID).toInt() == id)
                 idIsFree = false;
         }
     }
@@ -2400,7 +2474,7 @@ void Project::run()
 {
     // Check if project contains invalid dates, e.g. with no computable calibration curve
     const QJsonArray invalidDates = getInvalidDates();
-    if(invalidDates.size() > 0){
+    if (invalidDates.size() > 0){
 
         QMessageBox messageBox;
         messageBox.setIcon(QMessageBox::Warning);
@@ -2420,12 +2494,11 @@ void Project::run()
 
     // Save the project before running MCMC :
     const AppSettings s = MainWindow::getInstance()->getAppSettings();
-    if(s.mAutoSave){
+    if (s.mAutoSave)
         save();
-    }
-    else {
+    else
        askToSave(tr("Save current project as..."));
-    }
+
     
     // This is the occasion to clean EVERYTHING using the previous model before deleting it!
     // e.g. : clean the result view with any graphs, ...
@@ -2437,13 +2510,10 @@ void Project::run()
 
     mModel->fromJson(mState);
     bool modelOk = false;
-    try
-    {
+    try {
         // Check if model structure is valid
         modelOk = mModel->isValid();
-    }
-    catch(QString error)
-    {
+    } catch(QString error) {
         QMessageBox message(QMessageBox::Warning,
                             tr("Your model is not valid"),
                             error,
@@ -2452,8 +2522,7 @@ void Project::run()
                             Qt::Sheet);
         message.exec();
     }
-    if(modelOk)
-    {
+    if (modelOk) {
         MCMCLoopMain loop(mModel);
         MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::Sheet);
         
@@ -2472,18 +2541,14 @@ void Project::run()
         //  => THE DIALOG IS NEVER REJECTED ! (Escape key also disabled to prevent default behavior)
         // --------------------------------------------------------------------
         
-        if(dialog.startMCMC() == QDialog::Accepted)
-        {
-            if(loop.mAbortedReason.isEmpty())
-            {
+        if (dialog.startMCMC() == QDialog::Accepted) {
+
+            if (loop.mAbortedReason.isEmpty()) {
                 //Memo of the init varaible state to show in Log view
                 mModel->mLogMCMC = loop.getChainsLog() + loop.getInitLog();
                 emit mcmcFinished(mModel);
-            }
-            else
-            {
-                if(loop.mAbortedReason != ABORTED_BY_USER)
-                {
+            } else {
+                if (loop.mAbortedReason != ABORTED_BY_USER) {
                     QMessageBox message(QMessageBox::Warning,
                                         tr("Error"),
                                         loop.mAbortedReason,
@@ -2496,8 +2561,7 @@ void Project::run()
             }
         }
         // Dialog is never "rejected", so this should never happen :
-        else
-        {
+        else {
             qDebug() << "ERROR : MCMCProgressDialog::rejected : Should NEVER happen !";
             clearModel();
         }
