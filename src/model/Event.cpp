@@ -92,23 +92,23 @@ Event::~Event()
     mDates.clear();
 
     if (!mPhases.isEmpty()) {
-        foreach (Phase* ph, mPhases) {
+        /*foreach (Phase* ph, mPhases) {
             delete ph;
-        }
+        }*/
         mPhases.clear();
      }
 
     if (!mConstraintsFwd.isEmpty()) {
-        foreach (EventConstraint* ec, mConstraintsFwd) {
+       /* foreach (EventConstraint* ec, mConstraintsFwd) {
             delete ec;
-        }
+        }*/
         mConstraintsFwd.clear();
      }
 
     if (!mConstraintsBwd.isEmpty()) {
-        foreach (EventConstraint* ec, mConstraintsBwd) {
+        /*foreach (EventConstraint* ec, mConstraintsBwd) {
                 delete ec;
-        }
+        }*/
         mConstraintsBwd.clear();
      }
 }
