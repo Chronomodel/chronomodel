@@ -953,7 +953,7 @@ double fProposalDensity(const double t, const double t0, Date* date)
 void fInversion(Date* date, Event* event)
 {
     const double u1 = Generator::randomUniform();
-    const double level=date->mMixingLevel;
+    const double level = date->mMixingLevel;
     double tiNew;
     const double tmin = date->mSettings.mTmin;
     const double tmax = date->mSettings.mTmax;
@@ -968,7 +968,7 @@ void fInversion(Date* date, Event* event)
         const double t0 = date->mTheta.mX;
         const double s = (tmax-tmin)/2;
         
-        tiNew=Generator::gaussByBoxMuller(t0, s);
+        tiNew = Generator::gaussByBoxMuller(t0, s);
         /*
         // -- double shrinkage
         double u2 = Generator::randomUniform();
@@ -1003,7 +1003,7 @@ void fInversion(Date* date, Event* event)
 void fInversionWithArg(Date* date, Event* event)
 {
     const double u1 = Generator::randomUniform();
-    const double level=date->mMixingLevel;
+    const double level = date->mMixingLevel;
     double tiNew;
     const double tmin = date->mSettings.mTmin;
     const double tmax = date->mSettings.mTmax;
@@ -1019,7 +1019,7 @@ void fInversionWithArg(Date* date, Event* event)
         const double t0 =(tmax+tmin)/2;
         const double s = (tmax-tmin)/2;
         
-        tiNew=Generator::gaussByBoxMuller(t0, s);
+        tiNew = Generator::gaussByBoxMuller(t0, s);
         /*
          // -- double shrinkage
          double u2 = Generator::randomUniform();
@@ -1041,11 +1041,11 @@ void fInversionWithArg(Date* date, Event* event)
     
     QPair<long double, long double> argOld, argNew;
     
-    argOld=date->getLikelihoodArg(date->mTheta.mX);
-    argNew=date->getLikelihoodArg(tiNew);
+    argOld = date->getLikelihoodArg(date->mTheta.mX);
+    argNew = date->getLikelihoodArg(tiNew);
     
-    const long double logGRapport= argNew.second-argOld.second;
-    const long double logHRapport= (-0.5/(date->mSigma.mX * date->mSigma.mX)) * (pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
+    const long double logGRapport = argNew.second-argOld.second;
+    const long double logHRapport = (-0.5/(date->mSigma.mX * date->mSigma.mX)) * (pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
                                                                       - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
                                                                       );
     
@@ -1094,15 +1094,15 @@ void fMHSymGaussAdaptWithArg(Date* date, Event* event)
     
     QPair<long double, long double> argOld, argNew;
     
-    argOld=date->getLikelihoodArg(date->mTheta.mX);
-    argNew=date->getLikelihoodArg(tiNew);
+    argOld = date->getLikelihoodArg(date->mTheta.mX);
+    argNew = date->getLikelihoodArg(tiNew);
     
-    const long double logGRapport= argNew.second-argOld.second;
-    const long double logHRapport= (-0.5/(date->mSigma.mX * date->mSigma.mX)) * (  pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
+    const long double logGRapport = argNew.second-argOld.second;
+    const long double logHRapport = (-0.5/(date->mSigma.mX * date->mSigma.mX)) * (  pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
                                                                       - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
                                                                       );
     
-    const long double rapport=sqrt(argOld.first/argNew.first)*exp(logGRapport+logHRapport);
+    const long double rapport = sqrt(argOld.first/argNew.first)*exp(logGRapport+logHRapport);
     
     date->mTheta.tryUpdate(tiNew, (double) rapport);
 }
