@@ -518,23 +518,26 @@ void MainWindow::disconnectProject()
 
 void MainWindow::closeProject()
 {
-    if (mProject->askToSave(tr("Save current project as..."))) {
-        mUndoStack->clear();
-        
-        mProject->initState(CLOSE_PROJECT_REASON);
-        mProject->mLastSavedState = mProject->emptyState();
-        mProject->mProjectFileName = QString();
-        // Go back to model tab :
-        mViewModelAction->trigger();
-        mProject->clearModel();
-        disconnectProject();
-        delete mProject;
-        resetInterface();
-        activateInterface(false);
-        mViewResultsAction->setEnabled(false);
-        
-        updateWindowTitle();
-    }
+   if(mProject) {
+        if ( mProject && mProject->askToSave(tr("Save current project as..."))) {
+            mUndoStack->clear();
+
+            mProject->initState(CLOSE_PROJECT_REASON);
+            mProject->mLastSavedState = mProject->emptyState();
+            mProject->mProjectFileName = QString();
+            // Go back to model tab :
+            mViewModelAction->trigger();
+            mProject->clearModel();
+            disconnectProject();
+            delete mProject;
+            resetInterface();
+            activateInterface(false);
+            mViewResultsAction->setEnabled(false);
+
+            updateWindowTitle();
+        }
+   } else // if there is no project, we suppose it means to close the programm
+       QApplication::exit(0);
 }
 
 void MainWindow::saveProject()
@@ -720,26 +723,34 @@ void MainWindow::doGroupedAction()
  */
 void MainWindow::closeEvent(QCloseEvent* e)
 {
-    QMessageBox message(QMessageBox::Question,
-                        QApplication::applicationName(),
-                        tr("Do you really want to quit ChronoModel ?"),
-                        QMessageBox::Yes | QMessageBox::No,
-                        qApp->activeWindow(),
-                        Qt::Sheet);
-    
-    if (message.exec() == QMessageBox::Yes) {
-        if (mProject->askToSave(tr("Save project before quitting?"))) {
-            writeSettings();
-            e->accept();
-            
-            // This is a temporary Qt bug fix (should be corrected by Qt 5.6 when released)
-            // The close event is called twice on Mac when closing with "cmd + Q" key or with the "Quit Chronomodel" menu.
-            QCoreApplication::exit(0);
+    if (mProject) {
+        QMessageBox message(QMessageBox::Question,
+                            QApplication::applicationName(),
+                            tr("Do you really want to quit ChronoModel ?"),
+                            QMessageBox::Yes | QMessageBox::No,
+                            qApp->activeWindow(),
+                            Qt::Sheet);
+
+        if (message.exec() == QMessageBox::Yes) {
+            if (mProject->askToSave(tr("Save project before quitting?"))) {
+                writeSettings();
+                e->accept();
+
+                // This is a temporary Qt bug fix (should be corrected by Qt 5.6 when released)
+                // The close event is called twice on Mac when closing with "cmd + Q" key or with the "Quit Chronomodel" menu.
+                QCoreApplication::exit(0);
+            } else
+                e->ignore();
+
         } else
             e->ignore();
-        
-    } else
-        e->ignore();
+    } else {
+        e->accept();
+
+        // This is a temporary Qt bug fix (should be corrected by Qt 5.6 when released)
+        // The close event is called twice on Mac when closing with "cmd + Q" key or with the "Quit Chronomodel" menu.
+        QCoreApplication::exit(0);
+    }
     
 }
 
