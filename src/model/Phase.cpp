@@ -87,14 +87,14 @@ Phase::~Phase()
 
     if(!mConstraintsFwd.isEmpty()) {
         foreach (PhaseConstraint* pc, mConstraintsFwd) {
-            if(pc) delete pc;
+           // if(pc) delete pc;
             pc = 0;
         }
         mConstraintsFwd.clear();
     }
     if(!mConstraintsBwd.isEmpty()) {
         foreach (PhaseConstraint* pc, mConstraintsBwd) {
-            if(pc) pc->deleteLater();
+            //if(pc) pc->deleteLater();
             pc = 0;
         }
         mConstraintsBwd.clear();
