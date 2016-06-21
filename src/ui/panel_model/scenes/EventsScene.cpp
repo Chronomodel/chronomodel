@@ -47,6 +47,7 @@ EventItem* EventsScene::findEventItemWithJsonId(const int id)
         if (evJson.value(STATE_ID)== id)
             return ev;
     }
+    return 0;
 }
 
 
@@ -331,7 +332,7 @@ void EventsScene::createSceneFromState()
     const QJsonObject settings = state.value(STATE_SETTINGS).toObject();
 
 
-    EventItem* curItem = 0;
+   // EventItem* curItem = 0;
 
      //http://doc.qt.io/qt-5/qprogressdialog.html#minimumDuration-prop
 
@@ -378,8 +379,8 @@ void EventsScene::createSceneFromState()
 
         mItems.append(newItem);
         addItem(newItem);
-        if (event.value(STATE_IS_CURRENT).toBool() == true)
-            curItem = newItem;
+        /*if (event.value(STATE_IS_CURRENT).toBool() == true)
+            curItem = newItem;*/
         }
 
 
@@ -399,9 +400,6 @@ void EventsScene::createSceneFromState()
     }
 
     mUpdatingItems = false;
-//adaptItemsForZoom(mZoom);
- //   adjustSceneRect();
-
 
     delete progress;
  #ifdef DEBUG
@@ -742,7 +740,7 @@ void EventsScene::updateStateSelectionFromItem()
 #ifdef DEBUG
             if (modified)
                 qDebug()<<"EventsScene::updateStateSelectionFromItem "<<nextEvent.value(STATE_NAME).toString()<<selected<<isCurrent;
-#endif DEBUG
+#endif
          }
        
        

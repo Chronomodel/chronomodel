@@ -1755,9 +1755,6 @@ void Project::deleteSelectedPhases()
     stateNext[STATE_PHASES] = phases;
     stateNext[STATE_PHASES_CONSTRAINTS] = phases_constraints;
     stateNext[STATE_EVENTS] = events;
-    
-    /*if (phases.isEmpty())
-        send*/
 
     pushProjectState(stateNext, tr("Phase(s) deleted"), true);
     
@@ -1831,30 +1828,6 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
     pushProjectState(stateNext, tr("Phases merged"), true);
 }
 
-/*void Project::updatePhaseEvents(int phaseId, Qt::CheckState state)
-{
-    QJsonObject stateNext = mState;
-    QJsonArray events = mState[STATE_EVENTS].toArray();
-
-    for(int i=0; i<events.size(); ++i)
-    {
-        QJsonObject event = events.at(i).toObject();
-        if(event.value(STATE_IS_SELECTED).toBool())
-        {
-            QString phaseIdsStr = event.value(STATE_EVENT_PHASE_IDS).toString();
-            QStringList phaseIds = phaseIdsStr.isEmpty() ? QStringList() : phaseIdsStr.split(",");
-
-            phaseIds.removeAll(QString::number(phaseId));
-            if(state == Qt::Checked)
-                phaseIds.append(QString::number(phaseId));
-
-            event[STATE_EVENT_PHASE_IDS] = phaseIds.join(",");
-            events[i] = event;
-        }
-    }
-    stateNext[STATE_EVENTS] = events;
-    pushProjectState(stateNext, tr("Phase's events updated"), true);
-}*/
 
 
  void Project::updatePhaseEvents(const int phaseId, ActionOnModel action)
@@ -1881,46 +1854,6 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
     pushProjectState(stateNext, tr("Phase's events updated"), true);
 }
 
-/*void Project::updatePhaseEyed(int phaseId, bool eyed)
-{
-    QJsonObject stateNext = mState;
-    QJsonArray events = mState[STATE_EVENTS].toArray();
-    QJsonArray phases = mState[STATE_PHASES].toArray();
-    
-    // Update eyed phase
-    for(int i=0; i<phases.size(); ++i)
-    {
-        QJsonObject phase = phases[i].toObject();
-        if(phase[STATE_ID].toInt() == phaseId)
-        {
-            phase[STATE_PHASE_EYED] = eyed;
-            phases[i] = phase;
-            break;
-        }
-    }
-    
-    // Update events greyed out
-    for(int i=0; i<events.size(); ++i)
-    {
-        QJsonObject event = events[i].toObject();
-        int eventId = event[STATE_ID].toInt();
-        QString eventPhasesIdsStr = event[STATE_EVENT_PHASE_IDS].toString();
-        QStringList eventPhasesIds = eventPhasesIdsStr.split(",");
-        bool mustBeGreyedOut = true;
-        
-        for(int j=0; j<phases.size(); ++j)
-        {
-            QJsonObject phase = phases[j].toObject();
-            if(phase[STATE_PHASE_EYED].toBool() && eventPhasesIds.contains(phase[STATE_ID].toString()))
-                mustBeGreyedOut = false;
-        }
-        event[STATE_EVENT_GREYED_OUT] = mustBeGreyedOut;
-        events[i] = event;
-    }
-    stateNext[STATE_EVENTS] = events;
-    stateNext[STATE_PHASES] = phases;
-    pushProjectState(stateNext, tr("Phase eyed updated"), true);
-}*/
 
 // --------------------------------------------------------------------
 //     Event Constraints authorizations
