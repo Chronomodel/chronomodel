@@ -737,17 +737,6 @@ void EventsScene::updateStateSelectionFromItem()
             if (nextEvent != prevEvent)
                 modified = true;
 
-            /* if (event.value(STATE_IS_SELECTED).toBool() != selected ) {
-                event[STATE_IS_SELECTED] = selected;
-                modified = true;
-
-
-
-            if (event.value(STATE_IS_CURRENT).toBool() != isCurrent) {
-                event[STATE_IS_CURRENT] = isCurrent;
-                modified = true;
-            }}*/
-
             if (isCurrent)
                 currentEvent = curItem->getEvent();
 #ifdef DEBUG
@@ -759,8 +748,6 @@ void EventsScene::updateStateSelectionFromItem()
        
         if (modified ) {
            sendUpdateProject(tr("events selection : no undo, no view update!"), true, true);
-           //mProject->sendEventsSelectionChanged();
-
             // refresh the show and hide Event in the phases Scenes
             if (selectedItems().size() == 0)
                 emit noSelection();

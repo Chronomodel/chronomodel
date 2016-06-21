@@ -25,7 +25,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     
     mLastPath = QDir::homePath();
     
-    mProject = 0; //new Project();
+    mProject = 0;
 
     mProjectView = new ProjectView();
     setCentralWidget(mProjectView);
@@ -393,52 +393,49 @@ void MainWindow::newProject()
     // Return true if the project doesn't need to be saved.
     // Returns true if the user saves the project or if the user doesn't want to save it.
     // Returns false if the user cancels.
+    bool yesCreate= false;
 
-    //mProject->setAppSettings(mAppSettings);
-    if (mProject)
-        (mProject->askToSave(tr("Save current project as...")));
+    if ((mProject==0) || (mProject->askToSave(tr("Save current project as...") )))
+        yesCreate= true;
 
-     Project* newProject = new Project();
+    if (yesCreate) {
+        Project* newProject = new Project();
+         // just update mAutoSaveTimer to avoid open the save() dialog box
+        newProject-> mAutoSaveTimer->stop();
 
-   // if (mProject->askToSave(tr("Save current project as..."))) {
+        // Ask to save the new project.
+        // Returns true only if a new file is created.
+        // Note : at this point, the project state is still the previous project state.
+        if (newProject->saveAs(tr("Save new project as..."))) {
+            mUndoStack->clear();
 
-    // Ask to save the new project.
-    // Returns true only if a new file is created.
-    // Note : at this point, the project state is still the previous project state.
-    if (newProject->saveAs(tr("Save new project as..."))) {
-        mUndoStack->clear();
+            // resetInterface Disconnect also the scene
+            resetInterface();
+            activateInterface(true);
 
-        resetInterface();
-        activateInterface(true);
+            // Reset the project state and the MCMC Setting to the default value
+            // and then send a notification to update the views : send desabled
+            newProject->initState(NEW_PROJECT_REASON);
 
-        // Reset the project state and the MCMC Setting to the default value
-        // and then send a notification to update the views : send desabled
-        newProject->initState(NEW_PROJECT_REASON);
+            delete mProject;
+            /*if (mProject)
+                disconnectProject();*/
 
+            mProject = newProject;
+            connectProject();
+            mProject->setAppSettings(mAppSettings);
 
-       // activateInterface(true);
-      //  updateWindowTitle();
-       // mProjectView->doProjectConnections(mProject);
-        if (mProject)
-            disconnectProject();
+            mProjectView->createProject();
 
-        mProject = newProject;
-        connectProject();
-        mProject->setAppSettings(mAppSettings);
+            mViewModelAction->trigger();
 
-        mProjectView->createProject();
-
-       // mProject->pushProjectState(mProject->mState, NEW_PROJECT_REASON, true, true);
-
-        mViewModelAction->trigger();
-
-        mViewResultsAction->setEnabled(false);
-    } else
-        delete newProject;
+            mViewResultsAction->setEnabled(false);
+        } else
+            delete newProject;
 
 
-    updateWindowTitle();
-  //  }
+        updateWindowTitle();
+    }
 }
 
 void MainWindow::openProject()
@@ -522,19 +519,23 @@ void MainWindow::closeProject()
         if ( mProject && mProject->askToSave(tr("Save current project as..."))) {
             mUndoStack->clear();
 
-            mProject->initState(CLOSE_PROJECT_REASON);
-            mProject->mLastSavedState = mProject->emptyState();
-            mProject->mProjectFileName = QString();
+           /* mProject->initState(CLOSE_PROJECT_REASON);
+            mProject->mLastSavedState = mProject->mState;//emptyState();
+            mProject->mProjectFileName = QString();*/
+
             // Go back to model tab :
             mViewModelAction->trigger();
             mProject->clearModel();
             disconnectProject();
-            delete mProject;
+
             resetInterface();
+
             activateInterface(false);
             mViewResultsAction->setEnabled(false);
 
             updateWindowTitle();
+            delete mProject;
+            mProject = 0;
         }
    } else // if there is no project, we suppose it means to close the programm
        QApplication::exit(0);

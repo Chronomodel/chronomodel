@@ -52,11 +52,7 @@ mCalibVisible(false)
     QRectF mRightWrapperRectF((this->width()-mHandlerW)/2,0, (this->width()-mHandlerW)/2, this->height());
     mRightWrapper->setGeometry(mRightWrapperRectF.toRect());
     
-   
-    // --------
-   
-    
-    // ---- Windows on the left hand Event scene --------------
+   // ---- Windows on the left hand Event scene --------------
     mEventsView = new QGraphicsView(mLeftWrapper);
     mEventsScene = new EventsScene(mEventsView);
     mEventsView->setScene(mEventsScene);
@@ -106,7 +102,7 @@ mCalibVisible(false)
     mEventsGlobalZoom->showText(tr("Zoom"), true);
     
     // just to refresh when selection changes :
-    connect(mEventsScene, SIGNAL(selectionChanged()), mEventsGlobalView, SLOT(update()));
+    //connect(mEventsScene, SIGNAL(selectionChanged()), mEventsGlobalView, SLOT(update()));
     connect(mButEventsOverview, SIGNAL(toggled(bool)), mEventsGlobalView, SLOT(setVisible(bool)));
     connect(mButEventsOverview, SIGNAL(toggled(bool)), mEventsSearchEdit, SLOT(setVisible(bool)));
     

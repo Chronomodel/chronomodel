@@ -52,6 +52,7 @@ mItemsIsMoved(true)
     mAutoSaveTimer = new QTimer(this);
     connect(mAutoSaveTimer, &QTimer::timeout, this, &Project::save);
     mAutoSaveTimer->start(3000);
+    //mAutoSaveTimer->stop();
     mModel = new Model();
 
     mReasonChangeStructure<<"project loaded";
@@ -75,7 +76,11 @@ Project::~Project()
     mAutoSaveTimer->stop();
     disconnect(mAutoSaveTimer, &QTimer::timeout, this, &Project::save);
     MainWindow::getInstance()->getUndoStack()->clear();
+    mState=QJsonObject();
+    mLastSavedState=QJsonObject();
+    delete mModel;
     mModel = 0;
+
 }
 
 
@@ -89,7 +94,8 @@ void Project::initState(const QString& reason)
     // This is called when closing a project or openning a new one,
     // so the undoStack has just been cleared and we want to keep it empty at project start!
     mState = state;
-   // sendUpdateState(state, reason, true);
+
+
 
 }
 
@@ -677,7 +683,8 @@ bool Project::saveAs(const QString& dialogTitle)
 bool Project::askToSave(const QString& saveDialogTitle)
 {
     // Check if modifs have been made
-    if(mState == mLastSavedState)
+
+    if( mState == mLastSavedState)
         return true;
     
     // We have some modifications : ask to save :
@@ -688,7 +695,7 @@ bool Project::askToSave(const QString& saveDialogTitle)
     
     if (result == QMessageBox::Yes) {
         // return true if saving is done correcty
-        return save();//saveDialogTitle);
+        return save();
     } else if (result == QMessageBox::No) {
         // the user doesn't want to save : returning true to continue
         return true;
@@ -799,7 +806,7 @@ void Project::mcmcSettings()
 {
     MCMCSettingsDialog dialog(qApp->activeWindow());
     MCMCSettings settings = MCMCSettings::fromJson(mState.value(STATE_MCMC).toObject());
-    //settings.fromJson(mState[STATE_MCMC].toObject());
+
     dialog.setSettings(settings);
     dialog.setModal(true);
     
@@ -1304,7 +1311,7 @@ void Project::checkDatesCompatibility()
     // conversion since version 1.4 test
     bool phaseConversion = false;
     for (int i = 0; i < phases.size(); i++) {
-       QJsonObject phase = phases[i].toObject();
+       QJsonObject phase = phases.at(i).toObject();
        if ( phase[STATE_PHASE_TAU_TYPE].toInt() == Phase::eTauRange) {
            phase[STATE_PHASE_TAU_TYPE] = Phase::eTauFixed;
            phase[STATE_PHASE_TAU_FIXED] = phase[STATE_PHASE_TAU_MAX];
@@ -1322,19 +1329,19 @@ void Project::updateDate(int eventId, int dateIndex)
 {
     QJsonObject state = mState;
     
-    QJsonObject settingsJson = state[STATE_SETTINGS].toObject();
+    QJsonObject settingsJson = state.value(STATE_SETTINGS).toObject();
     ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
     
-    QJsonArray events = mState[STATE_EVENTS].toArray();
+    QJsonArray events = mState.value(STATE_EVENTS).toArray();
     
     for (int i = 0; i < events.size(); ++i) {
-        QJsonObject event = events[i].toObject();
-        if (event[STATE_ID].toInt() == eventId) {
-            QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+        QJsonObject event = events.at(i).toObject();
+        if (event.value(STATE_ID).toInt() == eventId) {
+            QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
             if (dateIndex < dates.size()) {
                 QJsonObject date = dates[dateIndex].toObject();
                 
-                QString pluginId = date[STATE_DATE_PLUGIN_ID].toString();
+                QString pluginId = date.value(STATE_DATE_PLUGIN_ID).toString();
                 PluginAbstract* plugin = PluginManager::getPluginFromId(pluginId);
                 
                 DateDialog dialog(qApp->activeWindow(), Qt::Sheet);
@@ -1386,12 +1393,12 @@ void Project::deleteDates(int eventId, const QList<int>& dateIndexes)
 {
     QJsonObject state = mState;
     
-    QJsonArray events = state[STATE_EVENTS].toArray();
+    QJsonArray events = state.value(STATE_EVENTS).toArray();
     for (int i = 0; i < events.size(); ++i) {
-        QJsonObject event = events[i].toObject();
-        if (event[STATE_ID].toInt() == eventId) {
-            QJsonArray dates_trash = state[STATE_DATES_TRASH].toArray();
-            QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+        QJsonObject event = events.at(i).toObject();
+        if (event.value(STATE_ID).toInt() == eventId) {
+            QJsonArray dates_trash = state.value(STATE_DATES_TRASH).toArray();
+            QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
             
             for (int j = dates.size()-1; j >= 0; --j) {
                 if (dateIndexes.contains(j)) {
@@ -1418,11 +1425,11 @@ void Project::deleteSelectedTrashedDates(const QList<int>& ids)
 {
     QJsonObject stateNext = mState;
     
-    QJsonArray dates_trash = mState[STATE_DATES_TRASH].toArray();
+    QJsonArray dates_trash = mState.value(STATE_DATES_TRASH).toArray();
     
     for (int i = dates_trash.size()-1; i >= 0; --i) {
-        QJsonObject date = dates_trash[i].toObject();
-        int id = date[STATE_ID].toInt();
+        QJsonObject date = dates_trash.at(i).toObject();
+        int id = date.value(STATE_ID).toInt();
         
         if (ids.contains(id))
             dates_trash.removeAt(i);
@@ -1441,15 +1448,15 @@ void Project::recycleDates(int eventId)
         qDebug() << indexes;
         
         QJsonObject stateNext = mState;
-        QJsonArray events = mState[STATE_EVENTS].toArray();
-        QJsonArray dates_trash = mState[STATE_DATES_TRASH].toArray();
+        QJsonArray events = mState.value(STATE_EVENTS).toArray();
+        QJsonArray dates_trash = mState.value(STATE_DATES_TRASH).toArray();
         
         for (int i = 0; i < events.size(); ++i) {
-            QJsonObject event = events[i].toObject();
-            if (event[STATE_ID].toInt() == eventId){
-                QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+            QJsonObject event = events.at(i).toObject();
+            if (event.value(STATE_ID).toInt() == eventId){
+                QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
                 for (int i = indexes.size()-1; i >= 0; --i) {
-                    QJsonObject date = dates_trash.takeAt(indexes[i]).toObject();
+                    QJsonObject date = dates_trash.takeAt(indexes.at(i)).toObject();
                     date[STATE_ID] = getUnusedDateId(dates);
                     dates.append(date);
                 }
@@ -1470,18 +1477,18 @@ QJsonObject Project::checkValidDates(const QJsonObject& stateToCheck)
 {
     QJsonObject state = stateToCheck;
     
-    QJsonObject settingsJson = state[STATE_SETTINGS].toObject();
+    QJsonObject settingsJson = state.value(STATE_SETTINGS).toObject();
     ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
     
-    QJsonArray events = state[STATE_EVENTS].toArray();
-    for(int i=0; i<events.size(); ++i){
-        QJsonObject event = events[i].toObject();
-        QJsonArray dates = event[STATE_EVENT_DATES].toArray();
-        for(int j=0; j<dates.size(); ++j){
-            QJsonObject date = dates[j].toObject();
+    QJsonArray events = state.value(STATE_EVENTS).toArray();
+    for (int i=0; i<events.size(); ++i) {
+        QJsonObject event = events.at(i).toObject();
+        QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
+        for (int j=0; j<dates.size(); ++j) {
+            QJsonObject date = dates.at(j).toObject();
             
-            PluginAbstract* plugin = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
-            bool valid = plugin->isDateValid(date[STATE_DATE_DATA].toObject(), settings);
+            PluginAbstract* plugin = PluginManager::getPluginFromId(date.value(STATE_DATE_PLUGIN_ID).toString());
+            bool valid = plugin->isDateValid(date.value(STATE_DATE_DATA).toObject(), settings);
             date[STATE_DATE_VALID] = valid;
             
             dates[j] = date;
@@ -1494,17 +1501,15 @@ QJsonObject Project::checkValidDates(const QJsonObject& stateToCheck)
 }
 
 QJsonArray Project::getInvalidDates(){
-    QJsonArray events = mState[STATE_EVENTS].toArray();
+    QJsonArray events = mState.value(STATE_EVENTS).toArray();
     QJsonArray invalidDates;
-    for(int i=0; i<events.size(); ++i)
-    {
-        QJsonObject event = events[i].toObject();
-        QJsonArray dates = event[STATE_EVENT_DATES].toArray();
-        for(int j=0; j<dates.size(); ++j)
-        {
-            QJsonObject date = dates[j].toObject();
+    for (int i=0; i<events.size(); ++i) {
+        QJsonObject event = events.at(i).toObject();
+        QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
+        for (int j=0; j<dates.size(); ++j){
+            QJsonObject date = dates.at(j).toObject();
             if(!date[STATE_DATE_VALID].toBool()){
-                date["event_name"] = event[STATE_NAME];
+                date["event_name"] = event.value(STATE_NAME);
                 invalidDates.push_back(date);
             }
         }
@@ -1581,27 +1586,25 @@ void Project::combineDates(const int eventId, const QList<int>& dateIds)
 void Project::splitDate(const int eventId, const int dateId)
 {
     QJsonObject stateNext = mState;
-    QJsonObject settingsJson = stateNext[STATE_SETTINGS].toObject();
+    QJsonObject settingsJson = stateNext.value(STATE_SETTINGS).toObject();
     ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
-    QJsonArray events = mState[STATE_EVENTS].toArray();
+    QJsonArray events = mState.value(STATE_EVENTS).toArray();
     
     for(int i=0; i<events.size(); ++i)
     {
-        QJsonObject event = events[i].toObject();
-        if(event[STATE_ID].toInt() == eventId)
-        {
-            QJsonArray dates = event[STATE_EVENT_DATES].toArray();
-            for(int j=0; j<dates.size(); ++j)
-            {
-                QJsonObject date = dates[j].toObject();
-                if(date[STATE_ID].toInt() == dateId){
+        QJsonObject event = events.at(i).toObject();
+        if (event.value(STATE_ID).toInt() == eventId) {
+            QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
+            for (int j=0; j<dates.size(); ++j) {
+                QJsonObject date = dates.at(j).toObject();
+                if (date.value(STATE_ID).toInt() == dateId) {
                     
                     // We have found the date to split !
-                    QJsonArray subdates = date[STATE_DATE_SUB_DATES].toArray();
-                    PluginAbstract* plugin = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
+                    QJsonArray subdates = date.value(STATE_DATE_SUB_DATES).toArray();
+                    PluginAbstract* plugin = PluginManager::getPluginFromId(date.value(STATE_DATE_PLUGIN_ID).toString());
                     
-                    for(int k=0; k<subdates.size(); ++k){
-                        QJsonObject sd = subdates[k].toObject();
+                    for (int k=0; k<subdates.size(); ++k) {
+                        QJsonObject sd = subdates.at(k).toObject();
                         bool valid = plugin->isDateValid(sd[STATE_DATE_DATA].toObject(), settings);
                         sd[STATE_DATE_VALID] = valid;
                         dates.push_back(sd);
@@ -1624,18 +1627,15 @@ void Project::updateAllDataInSelectedEvents(const QHash<QString, QVariant>& grou
     QJsonObject stateNext = mState;
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
     
-    for(int i=0; i<events.size(); ++i)
-    {
+    for (int i=0; i<events.size(); ++i) {
         QJsonObject event = events.at(i).toObject();
-        if((event.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) &&  // Not a bound
+        if ((event.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) &&  // Not a bound
            (event.value(STATE_IS_SELECTED).toBool())) // Event is selected
         {
             QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
-            for(int j=0; j<dates.size(); ++j)
-            {
+            for (int j=0; j<dates.size(); ++j) {
                 QJsonObject date = dates.at(j).toObject();
-                if(date.value(STATE_DATE_PLUGIN_ID).toString() == groupedAction.value("pluginId").toString())
-                {
+                if (date.value(STATE_DATE_PLUGIN_ID).toString() == groupedAction.value("pluginId").toString()) {
                     QJsonObject data = date.value(STATE_DATE_DATA).toObject();
                     data[groupedAction["valueKey"].toString()] = groupedAction.value("value").toString();
                     date[STATE_DATE_DATA] = data;
