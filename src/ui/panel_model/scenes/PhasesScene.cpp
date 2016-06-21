@@ -383,6 +383,7 @@ void PhasesScene::updateStateSelectionFromItem()
     qDebug()<<"PhasesScene::updateStateSelectionFromItem";
     if (!mUpdatingItems) {
         bool modified = false;
+        bool oneSelection = false;
         PhaseItem* curItem = dynamic_cast<PhaseItem*>(currentItem());
 
         for (int i=0; i<mItems.size(); ++i) {           
@@ -393,6 +394,9 @@ void PhasesScene::updateStateSelectionFromItem()
 
             const bool selected = item->isSelected();
             const bool isCurrent = (curItem == item);
+
+            if (selected)
+                oneSelection = true;
 
             // update mData in AbtractItem, because item->getPhase use item.mData.value(STATE_IS_SELECTED)
             // and item.mData.value(STATE_IS_CURRENT)
@@ -406,7 +410,7 @@ void PhasesScene::updateStateSelectionFromItem()
 #ifdef DEBUG
             if (modified)
                 qDebug()<<"PhasesScene::updateStateSelectionFromItem "<<nextPhase.value(STATE_NAME).toString()<<selected<<isCurrent;
-#endif DEBUG
+#endif
 
 
         }
@@ -415,7 +419,7 @@ void PhasesScene::updateStateSelectionFromItem()
            sendUpdateProject(tr("phases selection updated : phases marked as selected"), true, true);
 
             // refresh the thumbs in the Events scene
-            if (selectedItems().size() == 0) {
+            if (!oneSelection) {// selectedItems().size() == 0) {
                 qDebug()<<"PhasesScene::updateStateSelectionFromItem emit : no phase";
                 emit noSelection();
             } else
