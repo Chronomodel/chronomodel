@@ -27,36 +27,7 @@ mNumberOfDatesInAllPhases(0)
 
 Model::~Model()
 {
-  /*  qDebug() << "Deleting old project model";
-    
-    for(int i=mEvents.size()-1; i>=0; --i)
-    {
-        Event* item = mEvents[i];
-        delete item;
-        item = 0;
-        mEvents.removeAt(i);
-    }
-    for(int i=mPhases.size()-1; i>=0; --i)
-    {
-        Phase* item = mPhases[i];
-        delete item;
-        item = 0;
-        mPhases.removeAt(i);
-    }
-    for(int i=mEventConstraints.size()-1; i>=0; --i)
-    {
-        EventConstraint* item = mEventConstraints[i];
-        delete item;
-        item = 0;
-        mEventConstraints.removeAt(i);
-    }
-    for(int i=mPhaseConstraints.size()-1; i>=0; --i)
-    {
-        PhaseConstraint* item = mPhaseConstraints[i];
-        delete item;
-        item = 0;
-        mPhaseConstraints.removeAt(i);
-    }*/
+
 }
 
 void Model::clear()
@@ -81,18 +52,18 @@ void Model::clear()
     }
 
     if(!mPhaseConstraints.isEmpty()) {
-        foreach (PhaseConstraint* ph, mPhaseConstraints) {
+        /*foreach (PhaseConstraint* ph, mPhaseConstraints) {
             //if(ph) delete ph;
             ph = 0;
-        }
+        }*/
         mPhaseConstraints.clear();
     }
 
     if(!mEventConstraints.isEmpty()) {
-        foreach (EventConstraint* ev, mEventConstraints) {
+        /*foreach (EventConstraint* ev, mEventConstraints) {
             //if(ev) delete ev;
             ev = 0;
-        }
+        }*/
         mEventConstraints.clear();
     }
 
@@ -109,7 +80,7 @@ void Model::clear()
 void Model::updateFormatSettings(const AppSettings* appSet)
 {
     for (int i=0; i<this->mEvents.size(); i++) {
-        Event* event = mEvents[i] ;
+        Event* event= mEvents[i] ;
         event->mTheta.setFormat(appSet->mFormatDate);
 
         for (int j=0; j<event->mDates.size(); j++) {
@@ -173,12 +144,12 @@ void Model::fromJson(const QJsonObject& json)
                     mNumberOfDates += e->mDates.size();
 
                     for (int j=0; j<e->mDates.size(); ++j) {
-                        e->mDates[j].mMixingLevel=e->mMixingLevel;
-                        e->mDates[j].mColor=e->mColor;
+                        e->mDates[j].mMixingLevel = e->mMixingLevel;
+                        e->mDates[j].mColor = e->mColor;
 
                     }
                     mEvents.append(e);
-                    e = 0;
+                    //e = 0;
                 }
                 catch(QString error){
                     QMessageBox message(QMessageBox::Critical,
