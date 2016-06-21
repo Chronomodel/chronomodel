@@ -186,18 +186,19 @@ void EventItem::setGreyedOut(bool greyedOut)
     QList<QGraphicsItem*> children = childItems();
     for (int i=0; i<children.size(); ++i)
         static_cast<DateItem*>(children.at(i))->setGreyedOut(greyedOut);
+    update();
 }
 
 void EventItem::updateGreyedOut()
 {
     mGreyedOut = true;
-    QJsonObject state = mScene->getProject()->state();
-    QJsonArray phases = state.value(STATE_PHASES).toArray();
+    const QJsonObject state = mScene->getProject()->state();
+    const QJsonArray phases = state.value(STATE_PHASES).toArray();
     QStringList selectedPhasesIds;
     
     for (int i=0; i<phases.size(); ++i) {
         QJsonObject phase = phases.at(i).toObject();
-        bool isSelected = phase.value(STATE_IS_SELECTED).toBool();
+        const bool isSelected = phase.value(STATE_IS_SELECTED).toBool();
         if (isSelected)
             selectedPhasesIds.append(QString::number(phase.value(STATE_ID).toInt()));
     }
@@ -282,20 +283,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     
     const int numPhases = (const int)phases.size();
     const double w = phasesRect.width()/numPhases;
-   /* mWithSelectedPhase = false;
 
-    foreach (const QJsonValue phase, phases) {
-            if ((mWithSelectedPhase == false) && (phase.toObject().value(STATE_IS_SELECTED)==true))
-                    mWithSelectedPhase = true;
-     }
-
-    const bool noHide = dynamic_cast<EventsScene*>(mScene)->showAllThumbs();
-
-    if (mWithSelectedPhase || noHide)
-        setGreyedOut(false);
-    else
-        setGreyedOut(true);
-*/
     if (mGreyedOut) //setting with setGreyedOut() just above
         painter->setOpacity(0.35f);
     else
