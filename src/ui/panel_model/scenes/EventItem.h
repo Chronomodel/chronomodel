@@ -35,7 +35,7 @@ public:
 protected:
     virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
     virtual void dropEvent(QGraphicsSceneDragDropEvent* e);
-    
+
     void updateGreyedOut();
     
     QSize mSize;

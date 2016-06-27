@@ -110,85 +110,6 @@ void EventsScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
                                               eventTo.value(STATE_ID).toInt());
 }
 
-/*
-void EventsScene::updateGreyedOutEvents(const QMap<int, bool>& eyedPhases)
-{
-    //qDebug() << "-> Update greyed out events";
-    
-    // If no phases is eyed, then no event must be greyed out!
-    bool noEyedPhases = true;
-    QMapIterator<int, bool> iter(eyedPhases);
-    while (iter.hasNext()) {
-        iter.next();
-        if (iter.value()) {
-            noEyedPhases = false;
-            break;
-        }
-    }
-    
-    // ----------------------------------------------------
-    //  Grey out events
-    // ----------------------------------------------------
-    for (int i=0; i<mItems.size(); ++i) {
-        EventItem* item = (EventItem*)mItems[i];
-        if (noEyedPhases)
-            item->setGreyedOut(false);
-        
-        else {
-            QString eventPhasesIdsStr = item->mData.value(STATE_EVENT_PHASE_IDS).toString();
-            bool mustBeGreyedOut = true;
-            if (!eventPhasesIdsStr.isEmpty()) {
-                QStringList eventPhasesIds = eventPhasesIdsStr.split(",");
-                for (int j=0; j<eventPhasesIds.size(); ++j) {
-                    if (eyedPhases.value(eventPhasesIds.at(j).toInt()))
-                        mustBeGreyedOut = false;
-                }
-            }
-            item->setGreyedOut(mustBeGreyedOut);
-        }
-    }
-    
-    // ----------------------------------------------------
-    //  Grey out constraints
-    // ----------------------------------------------------
-    for (int i=0; i<mConstraintItems.size(); ++i) {
-        ArrowItem* item = (ArrowItem*)mConstraintItems[i];
-        if (noEyedPhases) {
-            item->setGreyedOut(false);
-        } else {
-            int eventFromId = item->mData.value(STATE_CONSTRAINT_BWD_ID).toInt();
-            int eventToId = item->mData.value(STATE_CONSTRAINT_FWD_ID).toInt();
-            
-            bool eventFromIsOk = false;
-            bool eventToIsOk = false;
-            
-            const QJsonObject state = MainWindow::getInstance()->getProject()->state();
-            QJsonArray events = state.value(STATE_EVENTS).toArray();
-            
-            for (int i=0; i<events.size(); ++i) {
-                QJsonObject event = events.at(i).toObject();
-                
-                if (event.value(STATE_ID).toInt() == eventFromId) {
-                    const QString eventFromPhasesIdsStr = event.value(STATE_EVENT_PHASE_IDS).toString();
-                    QList<int> eventFromPhasesIds = stringListToIntList(eventFromPhasesIdsStr);
-                    for (int j=0; j<eventFromPhasesIds.size(); ++j) {
-                        if (eyedPhases[eventFromPhasesIds.at(j)])
-                            eventFromIsOk = true;
-                    }
-                } else if (event.value(STATE_ID).toInt() == eventToId) {
-                    const QString eventToPhasesIdsStr = event.value(STATE_EVENT_PHASE_IDS).toString();
-                    QList<int> eventToPhasesIds = stringListToIntList(eventToPhasesIdsStr);
-                    for (int j=0; j<eventToPhasesIds.size(); ++j) {
-                        if (eyedPhases[eventToPhasesIds.at(j)])
-                            eventToIsOk = true;
-                    }
-                }
-            }
-            item->setGreyedOut(!eventFromIsOk || !eventToIsOk);
-        }
-    }
-}
-*/
 
 #pragma mark Help Bubble
 void EventsScene::updateHelp()
@@ -206,7 +127,7 @@ void EventsScene::updateHelp()
             text += tr("\nYou can also edit constraints by double clicking on the arrow");
         mHelpView->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=24"); // Chapter
     } else if (selected.count() == 1) {
-        bool isBound = (dynamic_cast<EventKnownItem*>(selected[0]) != 0);
+        const bool isBound = (dynamic_cast<EventKnownItem*>(selected[0]) != 0);
         
         if (mAltIsDown) {
             text = tr("Mouve your mouse and click on another element to create a constraint.");
@@ -352,7 +273,6 @@ void EventsScene::createSceneFromState()
     mTempArrow = new ArrowTmpItem();
     addItem(mTempArrow);
     mTempArrow->setVisible(false);
-    mTempArrow->setZValue(0);
 
     clearSelection();
 
@@ -745,7 +665,7 @@ void EventsScene::updateStateSelectionFromItem()
        
        
         if (modified ) {
-           sendUpdateProject(tr("events selection : no undo, no view update!"), true, true);
+           sendUpdateProject(tr("events selection : no undo, no view update!"), true, false);//  bool notify = true, bool storeUndoCommand = false
             // refresh the show and hide Event in the phases Scenes
             if (selectedItems().size() == 0)
                 emit noSelection();
@@ -1028,10 +948,9 @@ void EventsScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 {
     Q_UNUSED(e);
     qDebug() << "EventsScene::itemEntered";
+    // the difference with the AbstractScene is here we need the curentEvent, which can be a date selected
     EventItem* current = currentEvent();
-    
 
-    
     EventItem* eventClicked = dynamic_cast< EventItem*>(item);
     
     if (mDrawingArrow && current && eventClicked && (eventClicked != current)) {
@@ -1040,9 +959,10 @@ void EventsScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
         if (constraintAllowed(current, eventClicked)) {
             mTempArrow->setState(ArrowTmpItem::eAllowed);
             mTempArrow->setLocked(true);
+
         } else {
             mTempArrow->setState(ArrowTmpItem::eForbidden);
-            mTempArrow->setLocked(false);
+            mTempArrow->setLocked(true);
         }
     }
     
@@ -1176,24 +1096,21 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
 
             }*/
 
-    else
-        keyEvent->ignore();
+   // else
+     //   keyEvent->ignore();
 
 
     
 }
 
 void EventsScene::keyReleaseEvent(QKeyEvent* keyEvent)
-{
-    if (keyEvent->isAutoRepeat() )
-        keyEvent->ignore();
-    
-    
+{   
     if (keyEvent->key() == Qt::Key_Alt) {
         qDebug() << "EventsScene::keyReleaseEvent You Released: "<<"Qt::Key_Alt";
         mDrawingArrow = false;
         mAltIsDown = false;
         //mShiftIsDown = false;
+        mTempArrow->setState(ArrowTmpItem::eNormal);
         mTempArrow->setVisible(false);
         QGraphicsScene::keyReleaseEvent(keyEvent);
     }

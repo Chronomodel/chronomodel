@@ -157,7 +157,7 @@ QRectF ArrowItem::boundingRect() const
     if (!text.isEmpty()) {
         const qreal hBubble = mBubbleHeight;
         QFont font;
-        font.setPointSizeF(11.f);
+        font.setPointSizeF(18.f);
         QFontMetrics metrics(font);
         qreal wBubble =metrics.width(text) + 20;
         qreal xa = (mXStart + mXEnd- wBubble)/2;
