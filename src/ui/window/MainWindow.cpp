@@ -295,7 +295,6 @@ void MainWindow::createMenus()
     
     mEditMenu->addAction(mUndoAction);
     mEditMenu->addAction(mRedoAction);
-    //mEditMenu->addAction(mUndoViewAction);
     
     //-----------------------------------------------------------------
     // MCMC menu
@@ -313,13 +312,6 @@ void MainWindow::createMenus()
     mViewMenu->addAction(mViewModelAction);
     mViewMenu->addAction(mViewResultsAction);
     mViewMenu->addAction(mViewLogAction);
-    
-    //-----------------------------------------------------------------
-    // Language menu
-    //-----------------------------------------------------------------
-    /*mLanguageMenu = menuBar()->addMenu(tr("Language"));
-    mLanguageMenu->addAction(mTranslateEnglishAct);
-    mLanguageMenu->addAction(mTranslateFrenchAct);*/
     
     //-----------------------------------------------------------------
     // Help/About Menu this menu depend of the system. On MacOs it's in Chronomodel menu

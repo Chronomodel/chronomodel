@@ -191,10 +191,10 @@ void Project::sendUpdateState(const QJsonObject& state, const QString& reason, b
 #ifdef DEBUG
     qDebug()<<"Project::sendUpdateState "<<reason<<notify;
     //-----------------
-    QJsonArray phases = state.value(STATE_EVENTS).toArray();
+  /*  QJsonArray phases = state.value(STATE_EVENTS).toArray();
     foreach(QJsonValue phase, phases) {
         qDebug()<<"Project sendUpdateState"<<phase.toObject().value(STATE_NAME).toString()<<phase.toObject().value(STATE_IS_SELECTED).toBool()<<phase.toObject().value(STATE_IS_CURRENT).toBool();
-    }
+    }*/
 
     //-----------------
 #endif
@@ -433,26 +433,8 @@ void Project::updateState(const QJsonObject& state, const QString& reason, bool 
     //qDebug() << " ---  Receiving : " << reason;
     mState = state;
     if (notify) {
-        /*QProgressDialog progress(qApp->activeWindow(), Qt::Sheet);
-        progress.setLabelText(tr("Loading..."));
-        progress.setRange(0, 0);
-        progress.setModal(true);
-        progress.setCancelButton(0);*/
         
-        if (reason == PROJECT_LOADED_REASON) {
-            // ------------------------------------------
-            //  TODO : find a way to show progress by theading the loading process
-            // ------------------------------------------
-            
-            /*progress.setWindowModality(Qt::WindowModal);
-            progress.show();
-            QThread::currentThread()->msleep(200);
-            if(progress.wasCanceled())
-            {
-                
-            }*/
-        }
-        else if (reason == NEW_PROJECT_REASON)
+         if (reason == NEW_PROJECT_REASON)
             showStudyPeriodWarning();
 
         emit projectStateChanged();
