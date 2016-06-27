@@ -323,18 +323,13 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     path.closeSubpath();
     
     const QRectF axeBox = QRectF(qMin(mXStart, mXEnd), qMin(mYStart, mYEnd), qAbs(mXEnd-mXStart), qAbs(mYEnd-mYStart));
-    /*const qreal posX = rect.width()/2;
-    const qreal posY = rect.height()/2;
-    const qreal posX1 = rect.width()/3;
-    const qreal posX2 = 2*rect.width()/3;
-    const qreal posY1 = rect.height()/3;
-    const qreal posY2 = 2*rect.height()/3;*/
+
     const qreal posX = axeBox.width()/2;
-        const qreal posY = axeBox.height()/2;
-        const qreal posX1 = axeBox.width()/3;
-        const qreal posX2 = 2*axeBox.width()/3;
-        const qreal posY1 = axeBox.height()/3;
-        const qreal posY2 = 2*axeBox.height()/3;
+    const qreal posY = axeBox.height()/2;
+    const qreal posX1 = axeBox.width()/3;
+    const qreal posX2 = 2*axeBox.width()/3;
+    const qreal posY1 = axeBox.height()/3;
+    const qreal posY2 = 2*axeBox.height()/3;
     
     if (mXStart < mXEnd && mYStart > mYEnd) {
         if (showMiddleArrow) {
