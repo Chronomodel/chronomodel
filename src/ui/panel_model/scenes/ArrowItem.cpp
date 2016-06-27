@@ -47,9 +47,6 @@ void ArrowItem::setFrom(const double x, const double y)
     prepareGeometryChange();
     mXStart = x;
     mYStart = y;
-    update();
-    if (scene())
-        scene()->update();
 }
 
 void ArrowItem::setTo(const double x, const double y)
@@ -103,9 +100,6 @@ void ArrowItem::updatePosition()
     
     mXEnd = to.value(STATE_ITEM_X).toDouble();
     mYEnd = to.value(STATE_ITEM_Y).toDouble();
-    
-    //qDebug() << "[" << mXStart << ", " << mYStart << "]" << " => " << "[" << mXEnd << ", " << mYEnd << "]";
-
 }
 
 void ArrowItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
@@ -130,13 +124,9 @@ void ArrowItem::hoverMoveEvent(QGraphicsSceneHoverEvent* e)
     //qDebug()<<"ArrowItem::hoverMoveEvent----->";
     QGraphicsItem::hoverMoveEvent(e);
     prepareGeometryChange();
-    //const double hoverSide = 100;
+
     const QRectF br = boundingRect();
 
-   /* br.adjust((br.width()-hoverSide)/2,
-              (br.height()-hoverSide)/2,
-              -(br.width()-hoverSide)/2,
-              -(br.height()-hoverSide)/2);*/
 
     const bool shouldShowDelete = br.contains(e->pos());
     if (shouldShowDelete != mShowDelete) {
@@ -193,21 +183,25 @@ QPainterPath ArrowItem::shape() const
         path.lineTo(mXStart, mYStart - shift);
         path.lineTo(mXEnd - shift, mYEnd);
         path.lineTo(mXEnd, mYEnd + shift);
+
     } else if (mXStart < mXEnd && mYStart < mYEnd) {
         path.moveTo(mXStart + shift, mYStart);
         path.lineTo(mXStart, mYStart + shift);
         path.lineTo(mXEnd - shift, mYEnd);
         path.lineTo(mXEnd, mYEnd - shift);
+
     } else if (mXStart > mXEnd && mYStart < mYEnd) {
         path.moveTo(mXStart - shift, mYStart);
         path.lineTo(mXStart, mYStart + shift);
         path.lineTo(mXEnd + shift, mYEnd);
         path.lineTo(mXEnd, mYEnd - shift);
+
     } else if (mXStart > mXEnd && mYStart > mYEnd) {
         path.moveTo(mXStart - shift, mYStart);
         path.lineTo(mXStart, mYStart - shift);
         path.lineTo(mXEnd + shift, mYEnd);
         path.lineTo(mXEnd, mYEnd + shift);
+
     } else
         path.addRect(rect);
 
@@ -220,7 +214,6 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     Q_UNUSED(widget);
 
     painter->setRenderHint(QPainter::Antialiasing);
-    QRectF rect = boundingRect();
     
     int penWidth = 1;
     QColor color = mEditing ? QColor(77, 180, 62) : QColor(0, 0, 0);
@@ -244,12 +237,12 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     QFont font;
 
     if (mShowDelete) {
-
         showMiddleArrow = false;
         painter->setPen(Qt::white);
         painter->setBrush(Qt::red);
         font.setBold(true);
         font.setPointSizeF(18.f);
+
     } else {
         painter->setPen(Qt::black);
         painter->setBrush(Qt::white);
@@ -264,50 +257,6 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         painter->drawEllipse(br);
         painter->drawText(br, Qt::AlignCenter, bubbleText);
      }
-
-     /*  if (mType == eEvent) {
-           painter->setPen(Qt::red);
-           painter->setBrush(Qt::red);
-           QRectF br = getBubbleRect();
-           painter->drawEllipse(br);
-           painter->save();
-           painter->translate(rect.x() + rect.width()/2, rect.y() + rect.height()/2);
-           painter->rotate(45.f);
-           QPen pen;
-           pen.setColor(Qt::white);
-           pen.setCapStyle(Qt::RoundCap);
-           pen.setWidthF(4.f);
-           painter->setPen(pen);
-           const double r = br.width()/3.f;
-           painter->drawLine(-r, 0.f, r, 0.f);
-           painter->drawLine(0.f, -r, 0.f, r);
-           painter->restore();
-        } else {
-           const QString info = QString("?");
-           const QRectF br = getBubbleRect(info);
-           painter->setPen(Qt::white);
-           painter->setBrush(Qt::red);
-           painter->drawEllipse(br);
-           QFont font = painter->font();
-           font.setBold(true);
-           font.setPointSizeF(18.f);
-           painter->setFont(font);
-           painter->drawText(br, Qt::AlignCenter, info);
-        }
-
-    } else if (!bubbleText.isEmpty()) {
-        showMiddleArrow = false;
-        QRectF br = getBubbleRect(bubbleText);
-        painter->setPen(Qt::black);
-        painter->setBrush(Qt::white);
-        painter->drawEllipse(br);
-        QFont font = painter->font();
-        font.setPointSizeF(11.f);
-        painter->setFont(font);
-        painter->drawText(br, Qt::AlignCenter, bubbleText);
-    }
-    */
-
 
     // arrows
     
@@ -449,6 +398,7 @@ QString ArrowItem::getBubbleText() const
             bubbleText = "X";
         else
             bubbleText = "?";
+
     else if (mType == ePhase) {
             PhaseConstraint::GammaType gammaType = (PhaseConstraint::GammaType)mData.value(STATE_CONSTRAINT_GAMMA_TYPE).toInt();
             if (gammaType == PhaseConstraint::eGammaFixed)
@@ -470,4 +420,5 @@ EventItem* ArrowItem::findEventItemWithJsonId(const int id)
         if (evJson.value(STATE_ID)== id)
             return ev;
     }
+    return 0;
 }
