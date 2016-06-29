@@ -20,8 +20,6 @@ mShowAllThumbs(true)
     mTempArrow = new ArrowTmpItem();
     addItem(mTempArrow);
     mTempArrow->setVisible(false);
-    // set the Arrow over all item
-    //mTempArrow->setZValue(2);
 
 }
 #pragma mark Setter & Getter
