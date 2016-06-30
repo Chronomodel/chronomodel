@@ -230,6 +230,8 @@ void MainWindow::createActions()
     mDatesMethodAction = new QAction(tr("Selected events: change data method"), this);
     connect(mDatesMethodAction, SIGNAL(triggered()), this, SLOT(changeDatesMethod()));
     
+    mSelectEventsAction = new QAction(tr("select events in selected phases"), this);
+    connect(mSelectEventsAction, SIGNAL(triggered()), this, SLOT(selectedEventInSelectedPhases()));
     //-----------------------------------------------------------------
     // Help/About Menu
     //-----------------------------------------------------------------
@@ -325,6 +327,7 @@ void MainWindow::createMenus()
     // Grouped Actions Menu
     //-----------------------------------------------------------------
     mPluginsMenu = menuBar()->addMenu(tr("Actions"));
+    mPluginsMenu->addAction(mSelectEventsAction);
     mPluginsMenu->addAction(mEventsColorAction);
     mPluginsMenu->addAction(mEventsMethodAction);
     mPluginsMenu->addAction(mDatesMethodAction);
@@ -636,6 +639,13 @@ void MainWindow::setLanguage(QAction* action)
 }
 
 #pragma mark Grouped Actions
+void MainWindow::selectedEventInSelectedPhases() {
+    if (mProject)
+        mProject->selectedEventsFromSelectedPhases();
+}
+
+
+
 void MainWindow::changeEventsColor()
 {
     const QColor color = QColorDialog::getColor(Qt::blue, qApp->activeWindow(), tr("Change selected events color"));

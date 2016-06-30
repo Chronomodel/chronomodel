@@ -80,6 +80,7 @@ public slots:
     void changeEventsColor();
     void changeEventsMethod();
     void changeDatesMethod();
+    void selectedEventInSelectedPhases();
     void doGroupedAction();
     
 private:
@@ -130,10 +131,12 @@ private:
     QAction* mRedoAction;
     QAction* mUndoViewAction;
     
+    QAction* mSelectEventsAction;
     QAction* mEventsColorAction;
     QAction* mEventsMethodAction;
     QAction* mDatesMethodAction;
     QList<QAction*> mDatesActions;
+
     
     QAction* mHelpAction;
     QAction* mManualAction;

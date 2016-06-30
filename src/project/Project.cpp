@@ -1097,12 +1097,41 @@ void Project::mergeEvents(int eventFromId, int eventToId)
 }
 
 #pragma mark Grouped actions on events
+void Project::selectedEventsFromSelectedPhases()
+{
+    const QJsonArray events = mState.value(STATE_EVENTS).toArray();
+    QJsonArray newEvents = QJsonArray();
+    for (int i = 0; i < events.size(); ++i) {
+         QJsonObject evt = events.at(i).toObject();
+         const QString idsStr = evt.value(STATE_EVENT_PHASE_IDS).toString();
+         const QStringList ids = idsStr.split(",");
+         bool willBeSelected = false;
+         foreach (const QString id, ids) {
+             // if id=="" id.toInt return 0 or it is not the number of the phase, there is no phase
+             if (id != "") {
+                 const QJsonObject pha = getPhasesWithId(id.toInt());
+                 if (pha.value(STATE_IS_SELECTED) == true) {
+                     willBeSelected = true;
+                     break;
+                 }
+             }
+         }
+         evt[STATE_IS_SELECTED] = willBeSelected;
+         newEvents.append(evt);
+
+     }
+    // create new state to push
+    QJsonObject stateNext = mState;
+    stateNext[STATE_EVENTS] = newEvents;
+    pushProjectState(stateNext, tr("Select events in selected phases"), true);
+}
+
 void Project::updateSelectedEventsColor(const QColor& color)
 {
-    QJsonObject stateNext = mState;
+
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
     for (int i = 0; i < events.size(); ++i) {
-        QJsonObject evt = events[i].toObject();
+        QJsonObject evt = events.at(i).toObject();
         if (evt.value(STATE_IS_SELECTED).toBool()) {
             evt[STATE_COLOR_RED] = color.red();
             evt[STATE_COLOR_GREEN] = color.green();
@@ -1110,6 +1139,8 @@ void Project::updateSelectedEventsColor(const QColor& color)
             events[i] = evt;
         }
     }
+
+    QJsonObject stateNext = mState;
     stateNext[STATE_EVENTS] = events;
     pushProjectState(stateNext, tr("Update selected events color"), true);
 }
@@ -1119,7 +1150,7 @@ void Project::updateSelectedEventsMethod(Event::Method method)
     QJsonObject stateNext = mState;
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
     for (int i = 0; i<events.size(); ++i) {
-        QJsonObject evt = events[i].toObject();
+        QJsonObject evt = events.at(i).toObject();
         if (evt.value(STATE_IS_SELECTED).toBool()) {
             evt[STATE_EVENT_METHOD] = method;
             events[i] = evt;
@@ -1836,6 +1867,15 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
     pushProjectState(stateNext, tr("Phase's events updated"), true);
 }
 
+QJsonObject Project::getPhasesWithId(const int id)
+{
+    const QJsonArray phases = mState.value(STATE_PHASES).toArray();
+    foreach (const QJsonValue pha, phases) {
+        if (pha.toObject().value(STATE_ID) == id)
+            return pha.toObject();
+    }
+    return QJsonObject();
+}
 
 // --------------------------------------------------------------------
 //     Event Constraints authorizations

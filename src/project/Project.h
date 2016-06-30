@@ -106,12 +106,13 @@ public:
     void updateSelectedEventsMethod(Event::Method);
     void updateSelectedEventsDataMethod(Date::DataMethod method, const QString& pluginId);
     void updateAllDataInSelectedEvents(const QHash<QString, QVariant>& groupedAction);
+    void selectedEventsFromSelectedPhases();
     
     void updatePhase(const QJsonObject& phaseIn);
     int getUnusedPhaseId(const QJsonArray& phases);
     void mergePhases(int phaseFromId, int phaseToId);
     void updatePhaseEvents(const int phaseId, ActionOnModel action);
-    //void updatePhaseEyed(int phaseId, bool eyed);
+    QJsonObject getPhasesWithId(const int id);
     
     void createEventConstraint(const int idFrom, const int idTo);
     void deleteEventConstraint(int constraintId);
