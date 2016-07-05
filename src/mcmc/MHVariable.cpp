@@ -152,15 +152,11 @@ void MHVariable::saveToStream(QDataStream *out) // ajout PhD
     this->MetropolisVariable::saveToStream(out);
      /* owned by MHVariable*/
     *out << this->mAllAccepts;
-    
-    //*out << QVector<bool>::fromStdVector(this->mAllAccepts);
-    
+
     *out << this->mGlobalAcceptation;
     *out << this->mHistoryAcceptRateMH;
     *out << this->mLastAccepts;
     
-      /**out << QVector<float>::fromStdVector(this->mHistoryAcceptRateMH);
-     *out << QVector<bool>::fromStdVector(this->mLastAccepts);*/
      *out << this->mLastAcceptsLength;
      *out << this->mProposal;
      *out << this->mSigmaMH;
@@ -168,28 +164,11 @@ void MHVariable::saveToStream(QDataStream *out) // ajout PhD
 }
 void MHVariable::loadFromStream(QDataStream *in) // ajout PhD
 {
-    
-    
     /* herited from MetropolisVariable*/
-   
-    
     this->MetropolisVariable::loadFromStream(in);
-     /* owned by MHVariable*/
-    QVector<bool> vectorOfBool;
-    QVector<float> vectorOfFoat;
-    
-     /* *in >> vectorOfBool;
-    this->mAllAccepts=vectorOfBool.toStdVector();*/
-    
     *in >> this->mAllAccepts;
     *in >> this->mGlobalAcceptation;
-    
-    /* *in >> vectorOfFoat;
-    this->mHistoryAcceptRateMH=vectorOfFoat.toStdVector();*/
     *in >> this->mHistoryAcceptRateMH;
-    
-    /* *in >> vectorOfBool;
-    this->mLastAccepts=vectorOfBool.toStdVector();*/
     *in >> this->mLastAccepts;
     
     *in >> this->mLastAcceptsLength;

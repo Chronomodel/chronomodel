@@ -55,7 +55,7 @@ public:
     // On en affiche des sous-parties (correspondant aux chaines) dans la vue des résultats
     // A stocker dans les résultats!
     
-    QVector<double> mHistoryAcceptRateMH;
+    QVector<float> mHistoryAcceptRateMH;
     
     QString mProposal;
 };

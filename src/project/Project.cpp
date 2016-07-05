@@ -44,7 +44,8 @@ mProjectFileDir(""),
 mProjectFileName(QObject::tr("Untitled")),
 mDesignIsChanged(true),
 mStructureIsChanged(true),
-mItemsIsMoved(true)
+mItemsIsMoved(true),
+mSaveData(true)
 {
     mState = emptyState();
     mLastSavedState = mState;
@@ -576,19 +577,17 @@ bool Project::load(const QString& path)
             // --------------------
             
             clearModel();
-            
-            QString dataPath = path + ".dat";
+            if (mSaveData) {
+                QString dataPath = path + ".dat";
 
-            QFile dataFile;
+                QFile dataFile;
 
-            dataFile.setFileName(dataPath);
-            
-            //QFileInfo fi(dataFile);
-            //dataFile.open(QIODevice::ReadOnly);
-            //if(fi.isFile())
+                dataFile.setFileName(dataPath);
 
-            if(/* DISABLES CODE */ (false))//dataFile.exists())
-            {
+                QFileInfo fi(dataFile);
+                dataFile.open(QIODevice::ReadOnly);
+                if (fi.isFile())
+                if (dataFile.exists()) {
 
                 qDebug() << "Project::load Loading model file.dat : " << dataPath << " size=" << dataFile.size();
       
@@ -625,7 +624,7 @@ bool Project::load(const QString& path)
                     message.exec();
                 }
             }
-            
+            }
             // --------------------
             
             return true;
@@ -711,22 +710,22 @@ bool Project::saveProjectToFile()
         //qDebug() << "Nothing new to save in project model";
 #endif
     }
-/*    if(!mModel->mChains.isEmpty()) // keep to the future version
-    {
-      //  qDebug() << "Saving project results";
-        mModel->saveToFile(mProjectFileDir + "/" + mProjectFileName + ".dat");
-    }
-    else {
+   if (mSaveData) {
+       if (!mModel->mChains.isEmpty()) // keep to the future version
+        {
+            qDebug() << "Saving project results in "<<mProjectFileDir + "/" + mProjectFileName + ".dat";
+            mModel->saveToFile(mProjectFileDir + "/" + mProjectFileName + ".dat");
+        }
+        else {
         QFileInfo checkFile(mProjectFileDir + "/" + mProjectFileName + ".dat");
         if (checkFile.exists() && checkFile.isFile()) {
             QFile(mProjectFileDir + "/" + mProjectFileName + ".dat").remove();
-        }
-         else {
+        } else {
             return true;
         }
 
-    } */
-
+    }
+    }
     return true;
 }
 
@@ -2499,7 +2498,7 @@ void Project::run()
         if (dialog.startMCMC() == QDialog::Accepted) {
 
             if (loop.mAbortedReason.isEmpty()) {
-                //Memo of the init varaible state to show in Log view
+                //Memo of the init variable state to show in Log view
                 mModel->mLogMCMC = loop.getChainsLog() + loop.getInitLog();
                 emit mcmcFinished(mModel);
             } else {

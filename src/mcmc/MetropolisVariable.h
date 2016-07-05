@@ -112,14 +112,11 @@ public:
     
     QMap<double, double> mHPD;
     QPair<double, double> mCredibility;
-    //double mThreshold;
     
     double mExactCredibilityThreshold;
     
     DensityAnalysis mResults;
     QList<DensityAnalysis> mChainsResults;
-    //bool mIsDate;
-
 
     int mfftLenUsed;
     double mBandwidthUsed;

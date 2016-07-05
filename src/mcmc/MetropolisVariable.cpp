@@ -588,31 +588,83 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const bool 
     return list;
 }
 
-void MetropolisVariable::saveToStream(QDataStream* out) // ajout PhD
+void MetropolisVariable::saveToStream(QDataStream* out)
 {
-    /* *out << this->mChainsHistos;
-     //out << this->mChainsResults;
-     *out << this->mCorrelations;
-     *out << this->mCredibility;
-     *out << this->mExactCredibilityThreshold;
-     *out << this->mHisto;
-     *out << this->mHPD;
-     //out << this->mResults;
-     *out << this->mThreshold;
-     *out << this->mTrace;
-     *out << this->mX;*/
+    switch (mSupport) {
+
+       case eR : *out << 0; // on R
+        break;
+       case eRp: *out << 1; // on R+
+          break;
+       case eRm : *out <<2; // on R-
+          break;
+       case eRpStar : *out <<3; // on R+*
+          break;
+       case eRmStar : *out << 4; // on R-*
+          break;
+       case  eBounded : *out << 5; // on bounded support
+          break;
+    };
+
+    switch (mFormat) {
+       case DateUtils::eUnknown : *out << -2;
+        break;
+       case DateUtils::eNumeric : *out << -1;
+          break;
+       case DateUtils::eBCAD : *out << 0;
+          break;
+       case DateUtils::eCalBP : *out << 1;
+          break;
+       case DateUtils::eCalB2K : *out << 2;
+          break;
+       case  DateUtils::eDatBP : *out << 3;
+          break;
+       case DateUtils::eDatB2K : *out << 4;
+          break;
+    };
+
+     *out << this->mRawTrace;
+     *out << this->mFormatedTrace;
+
 }
-void MetropolisVariable::loadFromStream(QDataStream *in) // ajout PhD
-{/*
-    *in >> this->mChainsHistos;
-    //in >> this->mChainsResults;
-    *in >> this->mCorrelations;
-    *in >> this->mCredibility;
-    *in >> this->mExactCredibilityThreshold;
-    *in >> this->mHisto;
-    *in >> this->mHPD;
-    //in >> this->mResults;
-    *in >> this->mThreshold;
-    *in >> this->mTrace;
-    *in >> this->mX; */
+void MetropolisVariable::loadFromStream(QDataStream *in)
+{
+    int support;
+    *in >> support;
+    switch (support) {
+      case 0 : mSupport = eR; // on R
+       break;
+      case 1 : mSupport = eRp; // on R+
+         break;
+      case 2 : mSupport = eRm; // on R-
+         break;
+      case 3 : mSupport = eRpStar; // on R+*
+         break;
+      case 4 : mSupport = eRmStar; // on R-*
+         break;
+      case 5 : mSupport =  eBounded; // on bounded support
+         break;
+   };
+
+    int formatDate;
+    *in >> formatDate;
+    switch (formatDate) {
+      case -2 : mFormat = DateUtils::eUnknown;
+       break;
+      case -1 : mFormat = DateUtils::eNumeric;
+         break;
+      case 0 :  mFormat = DateUtils::eBCAD;
+         break;
+      case 1 : mFormat = DateUtils::eCalBP;
+        break;
+      case 2 : mFormat = DateUtils::eCalB2K;
+        break;
+      case 3 : mFormat = DateUtils::eDatBP;
+         break;
+      case 4 :  mFormat = DateUtils::eDatB2K;
+         break;
+   };
+
+    *in >>  this->mRawTrace;
+    *in >>  this->mFormatedTrace;
 }
