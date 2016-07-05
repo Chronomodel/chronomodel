@@ -1294,82 +1294,6 @@ void Model::generateHPD(const double thresh)
 
 }
 
-/*void Model::generateCredibilityAndHPD(const QList<ChainSpecs> &chains,const double thresh)
-{
-    QTime t = QTime::currentTime();
-    //const int nbElement = mEvents.size()+mPhases.size();
-   // int elementProgress = 0;
-    const double threshold = qBound(0.0,thresh,100.0);
-    
-    QList<Event*>::iterator iterEvent = mEvents.begin();
-    while (iterEvent!=mEvents.end()) {
-        bool isFixedBound = false;
-        //++elementProgress;
-        //progress->setValue(elementProgress);
-        if((*iterEvent)->type() == Event::eKnown)
-        {
-            EventKnown* ek = dynamic_cast<EventKnown*>(*iterEvent);
-            if(ek->knownType() == EventKnown::eFixed)
-                isFixedBound = true;
-        }
-        
-        if(!isFixedBound)
-        {
-            if((*iterEvent)->mTheta.mThresholdUsed != threshold) {
-                (*iterEvent)->mTheta.generateHPD(threshold);
-                (*iterEvent)->mTheta.generateCredibility(chains, threshold);
-                (*iterEvent)->mTheta.mThresholdUsed = threshold;
-
-                for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
-                    Date& date = (*iterEvent)->mDates[j];
-                    date.mTheta.generateHPD(threshold);
-                    date.mSigma.generateHPD(threshold);
-
-                    date.mTheta.generateCredibility(chains, threshold);
-                    date.mSigma.generateCredibility(chains, threshold);
-
-                    date.mTheta.mThresholdUsed = threshold;
-                    date.mSigma.mThresholdUsed = threshold;
-                }
-             }
-        }
-        ++iterEvent;
-    }
-    QList<Phase*>::iterator iterPhase = mPhases.begin();
-    while (iterPhase!=mPhases.end()) {
-       // ++elementProgress;
-       // progress->setValue(elementProgress);
-        // if there is only one Event in the phase, there is no Duration
-       if((*iterPhase)->mAlpha.mThresholdUsed != threshold) {
-            (*iterPhase)->mAlpha.generateHPD(threshold);
-            (*iterPhase)->mAlpha.generateCredibility(chains, threshold);
-            (*iterPhase)->mAlpha.mThresholdUsed = threshold;
-        }
-        if((*iterPhase)->mBeta.mThresholdUsed != threshold){
-            (*iterPhase)->mBeta.generateHPD(threshold);
-            (*iterPhase)->mBeta.generateCredibility(chains, threshold);
-            (*iterPhase)->mBeta.mThresholdUsed = threshold;
-        }
-
-       if((*iterPhase)->mDuration.mThresholdUsed != threshold) {
-            (*iterPhase)->mDuration.generateHPD(threshold);
-            (*iterPhase)->mDuration.generateCredibility(chains, threshold);
-            (*iterPhase)->mDuration.mThresholdUsed = threshold;
-            (*iterPhase)->mTimeRange = timeRangeFromTraces((*iterPhase)->mAlpha.runRawTraceForChain(chains,0),
-                                                             (*iterPhase)->mBeta.runRawTraceForChain(chains,0),threshold, "Time Range for Phase : "+(*iterPhase)->mName);
-            //qDebug()<<"Model::generateCredibilityAndHPD() timeRange"<<(*iterPhase)->mTimeRange.first<<(*iterPhase)->mTimeRange.second;
-       }
-
-        ++iterPhase;
-    }
-    
-    QTime t2 = QTime::currentTime();
-    qint64 timeDiff = t.msecsTo(t2);
-    qDebug() <<  "=> Model::generateCredibilityAndHPD done in " + QString::number(timeDiff) + " ms";
-
-    //delete progress;
-}*/
-
 #pragma mark Clear model data
 void Model::clearPosteriorDensities()
 {
@@ -1486,7 +1410,7 @@ void Model::saveToFile(const QString& fileName)
 
         qint32 numDates = 0;
         for(int i=0; i<mEvents.size(); ++i)
-            numDates += mEvents[i]->mDates.size();
+            numDates += mEvents.at(i)->mDates.size();
         out << numDates;
         // -----------------------------------------------------
         //  Write phases data
@@ -1507,34 +1431,37 @@ void Model::saveToFile(const QString& fileName)
         // -----------------------------------------------------
         //  Write dates data
         // -----------------------------------------------------
-        for(int i=0; i<mEvents.size(); ++i)
-        {
+        for (int i=0; i<mEvents.size(); ++i) {
             Event* event = mEvents[i];
             QList<Date>& dates = event->mDates;
-            for(int j=0; j<dates.size(); ++j)
-            {
+            for (int j=0; j<dates.size(); ++j) {
 
                 dates[j].mTheta.saveToStream(&out);
                 dates[j].mSigma.saveToStream(&out);
                 dates[j].mWiggle.saveToStream(&out);
                 
                
-                out << dates[j].mDeltaFixed;
-                out << dates[j].mDeltaMin;
-                out << dates[j].mDeltaMax;
-                out << dates[j].mDeltaAverage;
-                out << dates[j].mDeltaError;
+                out << dates.at(j).mDeltaFixed;
+                out << dates.at(j).mDeltaMin;
+                out << dates.at(j).mDeltaMax;
+                out << dates.at(j).mDeltaAverage;
+                out << dates.at(j).mDeltaError;
                 
-                out << dates[j].mSettings.mTmin;
-                out << dates[j].mSettings.mTmax;
-                out << dates[j].mSettings.mStep;
-                out << dates[j].mSettings.mStepForced;
+                out << dates.at(j).mSettings.mTmin;
+                out << dates.at(j).mSettings.mTmax;
+                out << dates.at(j).mSettings.mStep;
+                out << dates.at(j).mSettings.mStepForced;
                 
               //  out << dates[j].mSubDates;
+                out << dates.at(j).getTminRefCurve();
+                out << dates.at(j).getTmaxRefCurve();
+
+                out << dates.at(j).getTminCalib();
+                out << dates.at(j).getTmaxCalib();
                 
-                out << dates[j].mCalibration;
-                out << dates[j].mRepartition;
-                out << dates[j].mCalibHPD;
+                out << dates.at(j).mCalibration;
+                out << dates.at(j).mRepartition;
+                out << dates.at(j).mCalibHPD;
 
             }
         }
@@ -1554,8 +1481,7 @@ void Model::restoreFromFile(const QString& fileName)
 {
     QFile file(fileName);
 
-    if(file.exists() && file.open(QIODevice::ReadOnly))
-    {
+    if (file.exists() && file.open(QIODevice::ReadOnly)){
         QByteArray compressedData = file.readAll();
 
         QByteArray uncompresedData = qUncompress(compressedData);
@@ -1565,8 +1491,7 @@ void Model::restoreFromFile(const QString& fileName)
         qDebug() << "TAILLE compressedData :" << compressedData.size();
         qDebug() << "TAILLE uncompresedData :" << uncompresedData.size();
 #endif */
-        if(uncompresedData.size()!=0)
-        {
+        if (uncompresedData.size()!=0) {
             QDataStream in(&uncompresedData, QIODevice::ReadOnly);
 
             // -----------------------------------------------------
@@ -1586,11 +1511,7 @@ void Model::restoreFromFile(const QString& fileName)
             //  Read phases data
             // -----------------------------------------------------
 
-            for(int i=0; i<mPhases.size(); ++i)
-            {
-                /*in >> mPhases[i]->mAlpha.mTrace;
-                in >> mPhases[i]->mBeta.mTrace;
-                in >> mPhases[i]->mDuration.mTrace;*/
+            for (int i=0; i<mPhases.size(); ++i) {
                 mPhases[i]->mAlpha.loadFromStream(&in);
                 mPhases[i]->mBeta.loadFromStream(&in);
                 mPhases[i]->mDuration.loadFromStream(&in);
@@ -1600,37 +1521,20 @@ void Model::restoreFromFile(const QString& fileName)
             //  Read events data
             // -----------------------------------------------------
 
-            for(int i=0; i<mEvents.size(); ++i)
-            {
-                /*in >> mEvents[i]->mTheta.mTrace;
-                in >> mEvents[i]->mTheta.mHistoryAcceptRateMH;
-                in >> mEvents[i]->mTheta.mAllAccepts;*/
+            for (int i=0; i<mEvents.size(); ++i)
                 mEvents[i]->mTheta.loadFromStream(&in);
-            }
+
 
             // -----------------------------------------------------
             //  Read dates data
             // -----------------------------------------------------
 
-            for(int i=0; i<mEvents.size(); ++i)
-            {
-                for(int j=0; j<mEvents[i]->mDates.size(); ++j)
-                {
-                    /*in >> mEvents[i]->mDates[j].mTheta.mTrace;
-                    in >> mEvents[i]->mDates[j].mTheta.mHistoryAcceptRateMH;
-                    in >> mEvents[i]->mDates[j].mTheta.mAllAccepts;
+            for (int i=0; i<mEvents.size(); ++i) {
+                for(int j=0; j<mEvents.at(i)->mDates.size(); ++j) {
 
-                    in >> mEvents[i]->mDates[j].mSigma.mTrace;
-                    in >> mEvents[i]->mDates[j].mSigma.mHistoryAcceptRateMH;
-                    in >> mEvents[i]->mDates[j].mSigma.mAllAccepts;
-
-                    in >> mEvents[i]->mDates[j].mWiggle.mTrace;
-                    in >> mEvents[i]->mDates[j].mWiggle.mHistoryAcceptRateMH;
-                    in >> mEvents[i]->mDates[j].mWiggle.mAllAccepts;*/
-
-                    mEvents[i]->mDates[j].mTheta.loadFromStream(&in);
-                    mEvents[i]->mDates[j].mSigma.loadFromStream(&in);
-                    mEvents[i]->mDates[j].mWiggle.loadFromStream(&in);
+                    mEvents.at(i)->mDates[j].mTheta.loadFromStream(&in);
+                    mEvents.at(i)->mDates[j].mSigma.loadFromStream(&in);
+                    mEvents.at(i)->mDates[j].mWiggle.loadFromStream(&in);
                                                             
                     
                     in >> mEvents[i]->mDates[j].mDeltaFixed;
@@ -1645,12 +1549,22 @@ void Model::restoreFromFile(const QString& fileName)
                     in >> mEvents[i]->mDates[j].mSettings.mStepForced;
                     
                    // in >> mEvents[i]->mDates[j].mSubDates;
-                    
+                    double tmp;
+                    in >> tmp;
+                    mEvents[i]->mDates[j].setTminRefCurve(tmp);
+                    in >> tmp;
+                    mEvents[i]->mDates[j].setTmaxRefCurve(tmp);
+
+                    in >> tmp;
+                    mEvents[i]->mDates[j].setTminCalib(tmp);
+                    in >>tmp;
+                    mEvents[i]->mDates[j].setTmaxCalib(tmp);
+
                     in >> mEvents[i]->mDates[j].mCalibration;
                     in >> mEvents[i]->mDates[j].mRepartition;
                     in >> mEvents[i]->mDates[j].mCalibHPD;
                     
-                     if (mEvents[i]->mDates[j].mCalibration.isEmpty()) qDebug()<<"Model::restoreFromFile vide";
+                     if (mEvents.at(i)->mDates.at(j).mCalibration.isEmpty()) qDebug()<<"Model::restoreFromFile vide";
                     
                 }
             }
@@ -1659,8 +1573,8 @@ void Model::restoreFromFile(const QString& fileName)
             in >> mLogResults;
         
             generateCorrelations(mChains);
-            generatePosteriorDensities(mChains, 1024, 1);
-            generateNumericalResults(mChains);
+           // generatePosteriorDensities(mChains, 1024, 1);
+           // generateNumericalResults(mChains);
         }
         file.close();
     }
