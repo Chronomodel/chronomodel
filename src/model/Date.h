@@ -91,9 +91,13 @@ public:
 
     double getTminRefCurve() const {return mTminRefCurve;}
     double getTmaxRefCurve() const {return mTmaxRefCurve;}
-    
+    void setTminRefCurve(const double tmin) { mTminRefCurve = tmin;}
+    void setTmaxRefCurve(const double tmax) { mTmaxRefCurve = tmax;}
+
     double getTminCalib() const {return mTminCalib;}
     double getTmaxCalib() const {return mTmaxCalib;}
+    void setTminCalib(const double tmin) { mTminCalib = tmin;}
+    void setTmaxCalib(const double tmax) { mTmaxCalib = tmax;}
 
     double getFormatedTminRefCurve() const;
     double getFormatedTmaxRefCurve() const;
