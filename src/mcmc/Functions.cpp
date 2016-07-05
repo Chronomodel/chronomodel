@@ -250,6 +250,9 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
     QPair<double, double> range;
     range.first = - INFINITY;
     range.second = + INFINITY;
+
+    // limit of precision, to accelerate the calculus
+    const float perCentStep = 0.01;
     
    /* if(thresh == 100) {
         range.first = *(std::min_element(trace1.cbegin(),trace1.cend()));
@@ -285,15 +288,20 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
             ++ct2;
         }
         
-        // we suppose there is never the several time the same value inside trace1 or inside trace2
+        // we suppose there is never the same value several time inside trace1 or inside trace2
         // so we can juste shift the iterator
         std::multimap<double,double>::const_iterator i_shift = mapPair.cbegin();
         
         progress->setMinimum(0);
         progress->setMaximum(nGamma);
-        for (int nEpsilon=0; (nEpsilon<=nGamma) && (i_shift != mapPair.cend()); ++nEpsilon) {
+        const int epsilonStep = qMax(1, int(round(nGamma*perCentStep)));
+
+        //for (int nEpsilon=0; (nEpsilon<=nGamma) && (i_shift != mapPair.cend()); ++nEpsilon) {
+        for (int nEpsilon=0; (nEpsilon<=nGamma) && (i_shift != mapPair.cend()); ) {
+            nEpsilon = nEpsilon + epsilonStep;
             progress->setValue(nEpsilon);
-            
+
+
             // memory alpha.at(nEpsilon);
             const double a = (*i_shift).first;
 
@@ -327,7 +335,8 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
                 range.first = a;
                 range.second = b;
             }
-        ++i_shift;
+            for (int j = 0; j<epsilonStep; ++j)
+                ++i_shift;
         }
 
     }
@@ -349,6 +358,8 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceBeta, const
 
     range.first = - INFINITY;
     range.second = + INFINITY;
+    // limit of precision, to accelerate the calculus
+    const float perCentStep = 0.01;
 
     QProgressDialog *progress = new QProgressDialog(description,"Wait" , 1, 10, qApp->activeWindow() );
     progress->setWindowModality(Qt::WindowModal);
@@ -383,7 +394,10 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceBeta, const
         progress->setMaximum(nGamma);
         progress->setMinimum(0);
 
-        for (int nEpsilon = 0; (nEpsilon <= nGamma ) && (i_shift != mapPair.rend()); ++nEpsilon) {
+        const int epsilonStep = qMax(1, int(round(nGamma*perCentStep)));
+
+        for (int nEpsilon = 0; (nEpsilon <= nGamma ) && (i_shift != mapPair.rend()); ) {
+            nEpsilon = nEpsilon + epsilonStep;
             progress->setValue(nEpsilon);
             
             
@@ -426,7 +440,9 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceBeta, const
                 range.first = a;
                 range.second = b;
             }
-            ++i_shift; // reverse_iterator
+            for (int j = 0; j<epsilonStep; ++j)
+                ++i_shift;// reverse_iterator
+
         }
 
     }
