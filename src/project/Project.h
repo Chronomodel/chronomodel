@@ -187,6 +187,8 @@ private :
     QSet<QString> mReasonChangeStructure;
     QSet<QString> mReasonChangeDesign;
     QSet<QString> mReasonChangePosition;
+    // used to save data in debug mode
+    bool mSaveData;
 
 };
 

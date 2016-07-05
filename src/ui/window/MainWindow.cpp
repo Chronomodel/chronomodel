@@ -471,9 +471,13 @@ void MainWindow::openProject()
             mProjectView->createProject();
 
             mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
+            if (! mProject->mModel->mChains.isEmpty())
+                emit mProject->mcmcFinished(mProject->mModel);
+         }
 
-            }
-        }
+
+
+    }
 
 }
 
@@ -514,9 +518,9 @@ void MainWindow::closeProject()
         if ( mProject && mProject->askToSave(tr("Save current project as..."))) {
             mUndoStack->clear();
 
-           /* mProject->initState(CLOSE_PROJECT_REASON);
+            mProject->initState(CLOSE_PROJECT_REASON);
             mProject->mLastSavedState = mProject->mState;//emptyState();
-            mProject->mProjectFileName = QString();*/
+            mProject->mProjectFileName = QString();
 
             // Go back to model tab :
             mViewModelAction->trigger();
@@ -531,6 +535,7 @@ void MainWindow::closeProject()
             updateWindowTitle();
             delete mProject;
             mProject = 0;
+
         }
    } else // if there is no project, we suppose it means to close the programm
        QApplication::exit(0);
@@ -870,11 +875,21 @@ void MainWindow::readSettings(const QString& defaultFilePath)
                 activateInterface(true);
                 updateWindowTitle();
                 connectProject();
+
                 mProject->setAppSettings(mAppSettings);
 
                 mProjectView->createProject();
 
                 mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
+                // to do, it'is done in project load
+                if (! mProject->mModel->mChains.isEmpty()) {
+                    mViewLogAction -> setEnabled(true);
+                    mViewResultsAction -> setEnabled(true);
+                    mViewResultsAction -> setChecked(true); // Just check the Result Button after computation and mResultsView is show after
+
+                    mProject->mModel->updateFormatSettings(&mAppSettings);
+                 }
+                  //  emit mProject->mcmcFinished(mProject->mModel);
             }
         }
     }
@@ -883,6 +898,10 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     
     setAppSettings(mAppSettings);
     mProjectView->readSettings();
+    if (! mProject->mModel->mChains.isEmpty()) {
+        mProjectView->mRefreshResults = true;
+        mProjectView->showResults();
+   }
 }
 
 void MainWindow::resetInterface()
