@@ -57,6 +57,8 @@ QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter
 # C++ 11
 # Config must use C++ 11 for random number generator
 # This works for Windows, Linux & Mac 10.7 and +
+# In the future we'll need to increase to C++17
+# which offered namespace std::experimental::parallel;
 #########################################
 CONFIG += C++11
 
@@ -78,6 +80,7 @@ macx{
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
         #RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
 	QMAKE_BUNDLE_DATA += RESOURCES_FILES
+
 }
 win32{
 	# Resource file (Windows only)
