@@ -1223,7 +1223,15 @@ void Model::generateCredibility(const double thresh)
     }
 
     QList<Phase*>::iterator iterPhase = mPhases.begin();
+    // Diplay a progressBar if long
+    QProgressDialog *progress = new QProgressDialog("Credibility generation","Wait" , 1, 10,qApp->activeWindow());
+    progress->setWindowModality(Qt::WindowModal);
+    progress->setCancelButton(0);
+    progress->setMinimumDuration(4);
+    progress->setMinimum(0);
+    progress->setMaximum(mPhases.size());
     while (iterPhase!=mPhases.end()) {
+        progress->setValue(std::distance(iterPhase, mPhases.end()));
         // if there is only one Event in the phase, there is no Duration
         (*iterPhase)->mAlpha.generateCredibility(mChains, thresh);
         (*iterPhase)->mBeta.generateCredibility(mChains, thresh);
@@ -1235,9 +1243,12 @@ void Model::generateCredibility(const double thresh)
         qDebug()<<"Time Range for Phase "<<(*iterPhase)->mName<<thresh;
          ++iterPhase;
     };
-
+    progress->setMinimum(0);
+    progress->setMaximum(mPhaseConstraints.size());
+    progress->setLabelText("Gaps and transitions generation");
     QList<PhaseConstraint*>::iterator iterPhaseConstraint = mPhaseConstraints.begin();
     while (iterPhaseConstraint!=mPhaseConstraints.end()) {
+        progress->setValue(std::distance(iterPhaseConstraint, mPhaseConstraints.end()));
         Phase* phaseFrom = (*iterPhaseConstraint)->mPhaseFrom;
         Phase* phaseTo  = (*iterPhaseConstraint)->mPhaseTo;
 
@@ -1245,9 +1256,14 @@ void Model::generateCredibility(const double thresh)
                                                              phaseTo->mAlpha.runRawTraceForChain(mChains,0), thresh, "Gap Range : "+phaseFrom->mName+ " to "+ phaseTo->mName);
 
         qDebug()<<"Gap Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
+
+        (*iterPhaseConstraint)->mTransitionRange = transitionRangeFromTraces(phaseFrom->mBeta.runRawTraceForChain(mChains,0),
+                                                             phaseTo->mAlpha.runRawTraceForChain(mChains,0), thresh, "Transition Range : "+phaseFrom->mName+ " to "+ phaseTo->mName);
+
+        qDebug()<<"Transition Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
         ++iterPhaseConstraint;
     };
-
+    delete progress;
     QTime t2 = QTime::currentTime();
     qint64 timeDiff = t.msecsTo(t2);
     qDebug() <<  "=> Model::generateCredibility done in " + QString::number(timeDiff) + " ms";
