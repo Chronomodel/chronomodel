@@ -612,7 +612,12 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
             const QString result = QObject::tr("Gap Range")+" : [" + DateUtils::dateToString(p->getFormatedGapRange().first) + ", " + DateUtils::dateToString(p->getFormatedGapRange().second) + "]";
             text += line(textBold(textPurple(result + "<br>")));
         }
+        if(p->mTransitionRange != QPair<double,double>()) {
+            text += "<br>";
 
+            const QString result = QObject::tr("Transition Range")+" : [" + DateUtils::dateToString(p->getFormatedTransitionRange().first) + ", " + DateUtils::dateToString(p->getFormatedTransitionRange().second) + "]";
+            text += line(textBold(textPurple(result + "<br>")));
+        }
     }
     return text;
 }
