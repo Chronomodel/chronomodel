@@ -889,7 +889,6 @@ void MainWindow::readSettings(const QString& defaultFilePath)
 
                     mProject->mModel->updateFormatSettings(&mAppSettings);
                  }
-                  //  emit mProject->mcmcFinished(mProject->mModel);
             }
         }
     }
@@ -898,7 +897,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     
     setAppSettings(mAppSettings);
     mProjectView->readSettings();
-    if (! mProject->mModel->mChains.isEmpty()) {
+    if ( (mProject) && (! mProject->mModel->mChains.isEmpty()) ) {
         mProjectView->mRefreshResults = true;
         mProjectView->showResults();
    }
