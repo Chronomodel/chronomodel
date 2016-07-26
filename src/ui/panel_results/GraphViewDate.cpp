@@ -191,15 +191,16 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 
                 
                 // Post Distrib Chain i
-                for (int i=0; i<mChains.size(); ++i) {
-                    GraphCurve curvePostDistribChain = generateDensityCurve(variableDate->histoForChain(i),
-                                                                            "Sigma for Chain " + QString::number(i),
-                                                                            Painting::chainColors.at(i),
-                                                                            Qt::SolidLine,
-                                                                            Qt::NoBrush);
-                    mGraph->addCurve(curvePostDistribChain);
-                    yMax = qMax(yMax, 1.1f * map_max_value(curvePostDistribChain.mData));
-                }
+                if (!variableDate->mChainsHistos.isEmpty())
+                    for (int i=0; i<mChains.size(); ++i) {
+                        GraphCurve curvePostDistribChain = generateDensityCurve(variableDate->histoForChain(i),
+                                                                                "Sigma for Chain " + QString::number(i),
+                                                                                Painting::chainColors.at(i),
+                                                                                Qt::SolidLine,
+                                                                                Qt::NoBrush);
+                        mGraph->addCurve(curvePostDistribChain);
+                        yMax = qMax(yMax, 1.1f * map_max_value(curvePostDistribChain.mData));
+                    }
                 
                 //mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                 // Check if necessary ?

@@ -211,13 +211,13 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                                                             color);
                     
                     mGraph->addCurve(curve);
-                    
-                    for (int j=0; j<mChains.size(); ++j) {
-                        GraphCurve curveChain = generateDensityCurve(date.mSigma.histoForChain(j),
-                                                                     "Sigma Date " + QString::number(i) + " Chain " + QString::number(j),
-                                                                     Painting::chainColors.at(j));
-                        mGraph->addCurve(curveChain);
-                    }
+                    if (!date.mSigma.mChainsHistos.isEmpty())
+                        for (int j=0; j<mChains.size(); ++j) {
+                            GraphCurve curveChain = generateDensityCurve(date.mSigma.histoForChain(j),
+                                                                         "Sigma Date " + QString::number(i) + " Chain " + QString::number(j),
+                                                                         Painting::chainColors.at(j));
+                            mGraph->addCurve(curveChain);
+                        }
                 }
             }
 
@@ -235,8 +235,8 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
             mGraph->setFormatFunctY(DateUtils::convertToAppSettingsFormatStr);
-            
-            generateTraceCurves(mChains, &(mEvent->mTheta));
+           // if ((mEvent->mType != Event::eKnown) || (dynamic_cast<EventKnown>(mEvent).knownType() != EventKnown::eFixed) )
+                generateTraceCurves(mChains, &(mEvent->mTheta));
         }
         // ------------------------------------------------
         //  third tab : Acception rate

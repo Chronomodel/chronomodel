@@ -562,8 +562,7 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
 {
     QString prefix = name.isEmpty() ? name : name + " ";
     
-    for(int i=0; i<chains.size(); ++i)
-    {
+    for (int i=0; i<chains.size(); ++i) {
 
         GraphCurve curve;
         curve.mUseVectorData = true;

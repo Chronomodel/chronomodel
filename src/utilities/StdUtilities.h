@@ -47,9 +47,8 @@ T interpolateValueInQMap(const U& key, const QMap<U, T>& map)
     T valueUpper = lIter.value();
     T keyUpper = lIter.key();
     
-    if (key<=keyUpper) {
+    if (key<=keyUpper)
         return valueUpper;
-    }
     
     else if (lIter!=map.end()) {
         T valueUnder = (lIter - 1).value();

@@ -79,9 +79,8 @@ void Phase::copyFrom(const Phase& phase)
 
 Phase::~Phase()
 {
-   foreach (Event* ev, mEvents) {
+   foreach (Event* ev, mEvents)
             ev = 0;
-   }
 
    mEvents.clear();
 

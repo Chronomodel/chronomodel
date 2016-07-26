@@ -53,11 +53,13 @@ template <typename T, typename V>
 QMap<T, V> getMapDataInRange(const QMap<T, V> &data, const T subMin, const  T subMax)
 {
 #ifdef DEBUG
-    if(data.size() == 0) {
+    if(data.size() == 0)
         qDebug()<<"QtUtilities::getMapDataInRange data.size() == 0";
-    }
+
 #endif
-    if(data.size() == 0) return data;
+    if(data.size() == 0)
+        return data;
+
     T tBeforeSubMin;
     V vBeforeSubMin;
     bool pointBeforeSubMin =false;

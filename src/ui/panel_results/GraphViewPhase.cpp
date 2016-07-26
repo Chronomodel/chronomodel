@@ -214,18 +214,18 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                 curveDuration.mData.clear();
             }
             mDurationGraph->addCurve(curveDuration);
-            
-            for (int i=0; i<mChains.size(); ++i) {
-                GraphCurve curveAlpha = generateDensityCurve(mPhase->mAlpha.histoForChain(i),
-                                                             "Post Distrib Alpha " + QString::number(i),
-                                                             color, Qt::DotLine);
-                
-                GraphCurve curveBeta = generateDensityCurve(mPhase->mBeta.histoForChain(i),
-                                                            "Post Distrib Beta " + QString::number(i),
-                                                            colorBeta, Qt::DashLine);
-                mGraph->addCurve(curveAlpha);
-                mGraph->addCurve(curveBeta);
-            }
+            if (!mPhase->mAlpha.mChainsHistos.isEmpty())
+                for (int i=0; i<mChains.size(); ++i) {
+                    GraphCurve curveAlpha = generateDensityCurve(mPhase->mAlpha.histoForChain(i),
+                                                                 "Post Distrib Alpha " + QString::number(i),
+                                                                 color, Qt::DotLine);
+
+                    GraphCurve curveBeta = generateDensityCurve(mPhase->mBeta.histoForChain(i),
+                                                                "Post Distrib Beta " + QString::number(i),
+                                                                colorBeta, Qt::DashLine);
+                    mGraph->addCurve(curveAlpha);
+                    mGraph->addCurve(curveBeta);
+                }
             // must be after all curves adding
             mGraph->adjustYToMinMaxValue();
         }
