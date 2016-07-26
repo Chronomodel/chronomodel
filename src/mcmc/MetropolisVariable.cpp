@@ -10,7 +10,7 @@
 
 #include <QDebug>
 #include <algorithm>
-
+#include <assert.h>
 
 
 MetropolisVariable::MetropolisVariable(QObject *parent):QObject(parent),
@@ -107,19 +107,26 @@ void MetropolisVariable::setFormat(const DateUtils::FormatDate fm)
  */
 void MetropolisVariable::updateFormatedTrace()
 {
-    if(!mFormatedTrace.isEmpty()) mFormatedTrace.clear();
+    mFormatedTrace.clear();
+    if (mRawTrace.isEmpty())
+       return;
+
     mRawTrace.squeeze(); // just cleaning, must be somewhere else to optimize
-    mFormatedTrace.reserve(mRawTrace.size());
-    QVector<double>::const_iterator iter = mRawTrace.constBegin();
-    if(mFormat == DateUtils::eNumeric) {
+
+
+    if(mFormat == DateUtils::eNumeric)
         mFormatedTrace = mRawTrace;
-    }
     else {
+        mFormatedTrace.resize(mRawTrace.size());
+        std::transform(mRawTrace.cbegin(),mRawTrace.cend(),mFormatedTrace.begin(),[this](const double i){return DateUtils::convertToFormat(i,this->mFormat);});
+       /* mFormatedTrace.reserve(mRawTrace.size());
+        QVector<double>::const_iterator iter = mRawTrace.constBegin();
         while(iter!= mRawTrace.constEnd()){
-            mFormatedTrace.append(DateUtils::convertToFormat(*iter,mFormat));
+            mFormatedTrace.append(DateUtils::convertToFormat(*iter, mFormat));
             ++iter;
-        }
+        }*/
     }
+
 }
 
 /**
@@ -284,15 +291,16 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
 
 void MetropolisVariable::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
-    const QVector<double> subFullTrace = fullRunTrace(chains);
+    const QVector<double> subFullTrace (fullRunTrace(chains));
     mHisto = generateHisto(subFullTrace, fftLen, bandwidth, tmin, tmax);
 
     mChainsHistos.clear();
-    for(int i=0; i<chains.size(); ++i)
-    {
-        const QVector<double> subTrace = runFormatedTraceForChain(chains, i);
-        const QMap<double,double> histo = generateHisto(subTrace, fftLen, bandwidth, tmin, tmax);
-        mChainsHistos.append(histo);
+    for (int i=0; i<chains.size(); ++i) {
+        const QVector<double> subTrace ( runFormatedTraceForChain(chains, i));
+        if (!subTrace.isEmpty()) {
+            const QMap<double,double> histo (generateHisto(subTrace, fftLen, bandwidth, tmin, tmax) );
+            mChainsHistos.append(histo);
+        }
     }
 }
 void MetropolisVariable::memoHistoParameter(const int fftLen, const double bandwidth, const double tmin, const double tmax)
@@ -342,13 +350,11 @@ void MetropolisVariable::generateHPD(const double threshold)
 
 void MetropolisVariable::generateCredibility(const QList<ChainSpecs> &chains, double threshold)
 {
-    if(!mHisto.isEmpty())
-    {
-       mCredibility = credibilityForTrace(fullRunTrace(chains), threshold, mExactCredibilityThreshold,"Compute credibility for "+getName());
-    }
-    else {
+    if (!mHisto.isEmpty())
+        mCredibility = credibilityForTrace(fullRunTrace(chains), threshold, mExactCredibilityThreshold,"Compute credibility for "+getName());
+    else
         mCredibility = QPair<double,double>();
-    }
+
 }
 
 void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
@@ -411,7 +417,8 @@ QMap<double, double>& MetropolisVariable::fullHisto()
 
 QMap<double, double>& MetropolisVariable::histoForChain(const int index)
 {
-    Q_ASSERT(index < mChainsHistos.size());
+
+    Q_ASSERT(index < mChainsHistos.size());    
     return mChainsHistos[index];
 }
 
@@ -424,6 +431,10 @@ QMap<double, double>& MetropolisVariable::histoForChain(const int index)
 QVector<double> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs>& chains, const int index)
 {
     QVector<double> trace(0);
+
+    const int reserveSize = (int) ceil(chains.at(index).mNumRunIter /chains.at(index).mThinningInterval );
+    trace.reserve(reserveSize);
+
     int shift = 0;
     
     for (int i=0; i<chains.size(); ++i) {
@@ -441,16 +452,24 @@ QVector<double> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs>& c
 QVector<double> MetropolisVariable::fullRunTrace(const QList<ChainSpecs>& chains)
 {
     QVector<double> trace(0);
+    // calcul reserve space
+    int reserveSize = 0;
+
+    for (const ChainSpecs& chain:chains)
+        reserveSize += chain.mNumRunIter / chain.mThinningInterval;
+
+    trace.reserve(reserveSize);
+
     int shift = 0;
     for (int i = 0; i<chains.size(); ++i) {
         const ChainSpecs& chain = chains.at(i);
         
         const int burnAdaptSize = chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);
-        const int traceSize = burnAdaptSize + chain.mNumRunIter / chain.mThinningInterval;
+        const int traceSize = chain.mNumRunIter / chain.mThinningInterval;
+
+        trace += mFormatedTrace.mid(shift + burnAdaptSize, traceSize);
         
-        trace += mFormatedTrace.mid(shift + burnAdaptSize, traceSize - burnAdaptSize);
-        
-        shift += traceSize;
+        shift += traceSize + burnAdaptSize;
     }
     return trace;
 }
@@ -469,6 +488,8 @@ QVector<double> MetropolisVariable::runRawTraceForChain(const QList<ChainSpecs> 
         
     } else {
         int shift = 0;
+        const int reserveSize = (int) ceil(chains.at(index).mNumRunIter /chains.at(index).mThinningInterval );
+        trace.reserve(reserveSize);
         for (int i=0; i<chains.size(); ++i) {
             const ChainSpecs& chain = chains.at(i);
             
@@ -476,7 +497,7 @@ QVector<double> MetropolisVariable::runRawTraceForChain(const QList<ChainSpecs> 
             const int traceSize = int (burnAdaptSize + chain.mNumRunIter / chain.mThinningInterval);
             
             if (i == index) {
-                trace=mRawTrace.mid(shift + burnAdaptSize, traceSize - burnAdaptSize);
+                trace = mRawTrace.mid(shift + burnAdaptSize, traceSize - burnAdaptSize);
                 break;
             }
             shift += traceSize;
@@ -492,18 +513,21 @@ QVector<double> MetropolisVariable::runFormatedTraceForChain(const QList<ChainSp
         qDebug() << "in MetropolisVariable::runFormatedTraceForChain -> mFormatedTrace empty";
         return trace ;
     }  else  {
+        const int reserveSize = (int) ceil(chains.at(index).mNumRunIter /chains.at(index).mThinningInterval );
+        trace.reserve(reserveSize);
+
         int shift = 0;
         for (int i=0; i<chains.size(); ++i)  {
             const ChainSpecs& chain = chains.at(i);
 
-            const int burnAdaptSize = int (chain.mNumBurnIter + chain.mBatchIndex * chain.mNumBatchIter);
-            const int traceSize = int (burnAdaptSize + chain.mNumRunIter / chain.mThinningInterval);
+            const int burnAdaptSize = (int) (chain.mNumBurnIter + chain.mBatchIndex * chain.mNumBatchIter);
+            const int traceSize = (int) (chain.mNumRunIter / chain.mThinningInterval);
 
             if (i == index) {
-                trace=mFormatedTrace.mid(shift + burnAdaptSize-1, traceSize - burnAdaptSize);
+                trace = mFormatedTrace.mid(shift + burnAdaptSize-1, traceSize);
                 break;
             }
-            shift += traceSize;
+            shift += traceSize + burnAdaptSize ;
         }
         return trace;
     }
@@ -526,16 +550,16 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
     const QLocale locale;
     QString result = densityAnalysisToString(mResults, nl) + nl;
     
-    if (!mHPD.isEmpty()) {
+    if (!mHPD.isEmpty())
         result += "HPD Region (" + locale.toString(mThresholdUsed, 'f', 1) + "%) : " + getHPDText(mHPD, mThresholdUsed, unit, formatFunc) + nl;
-    }
+
     
     if (mCredibility != QPair<double,double>()) {
-        if (formatFunc) {
+        if (formatFunc)
             result += "Credibility Interval (" + locale.toString(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + formatFunc(mCredibility.first) + ", " + formatFunc(mCredibility.second) + "] " + unit;
-        } else {
+        else
             result += "Credibility Interval (" + locale.toString(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + DateUtils::dateToString(mCredibility.first) + ", " + DateUtils::dateToString(mCredibility.second) + "]";
-        }
+
    }
    return result;
 }
@@ -587,50 +611,184 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const bool 
 
     return list;
 }
+QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
+{
+    switch (data.mSupport) {
+       case MetropolisVariable::eR : stream << (quint8)(0); // on R
+        break;
+       case MetropolisVariable::eRp: stream << (quint8)(1); // on R+
+          break;
+       case MetropolisVariable::eRm : stream << (quint8)(2); // on R-
+          break;
+       case MetropolisVariable::eRpStar : stream << (quint8)(3); // on R+*
+          break;
+       case MetropolisVariable::eRmStar : stream << (quint8)(4); // on R-*
+          break;
+       case  MetropolisVariable::eBounded : stream << (quint8)(5); // on bounded support
+          break;
+    };
 
-void MetropolisVariable::saveToStream(QDataStream* out)
+    switch (data.mFormat) {
+       case DateUtils::eUnknown : stream << (qint16)(-2);
+        break;
+       case DateUtils::eNumeric : stream << (qint16)(-1);
+          break;
+       case DateUtils::eBCAD : stream << (qint16)(0);
+          break;
+       case DateUtils::eCalBP : stream << (qint16)(1);
+          break;
+       case DateUtils::eCalB2K : stream << (qint16)(2);
+          break;
+       case  DateUtils::eDatBP : stream << (qint16)(3);
+          break;
+       case DateUtils::eDatB2K : stream << (qint16)(4);
+          break;
+    };
+
+    stream << data.mRawTrace;
+
+    qDebug()<<"&operator<<( QDataStream &stream, const MetropolisVariable &data )"<<data.mRawTrace.size();
+
+    // *out << this->mFormatedTrace; // useless
+
+    return stream;
+}
+
+QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
+{
+    quint8 support;
+    stream >> support;
+    switch ((int) support) {
+      case 0 : data.mSupport = MetropolisVariable::eR; // on R
+       break;
+      case 1 : data.mSupport = MetropolisVariable::eRp; // on R+
+         break;
+      case 2 : data.mSupport = MetropolisVariable::eRm; // on R-
+         break;
+      case 3 : data.mSupport = MetropolisVariable::eRpStar; // on R+*
+         break;
+      case 4 : data.mSupport = MetropolisVariable::eRmStar; // on R-*
+         break;
+      case 5 : data.mSupport = MetropolisVariable::eBounded; // on bounded support
+         break;
+   };
+
+    qint16 formatDate;
+    stream >> formatDate;
+    switch (formatDate) {
+      case -2 : data.mFormat = DateUtils::eUnknown;
+       break;
+      case -1 : data.mFormat = DateUtils::eNumeric;
+         break;
+      case 0 :  data.mFormat = DateUtils::eBCAD;
+         break;
+      case 1 : data.mFormat = DateUtils::eCalBP;
+        break;
+      case 2 : data.mFormat = DateUtils::eCalB2K;
+        break;
+      case 3 : data.mFormat = DateUtils::eDatBP;
+         break;
+      case 4 : data.mFormat = DateUtils::eDatB2K;
+         break;
+   };
+    stream >> data.mRawTrace;
+
+    // regeneration of this->mFormatedTrace
+    data.updateFormatedTrace();
+
+    return stream;
+
+}
+
+
+/* Obsolete function */
+void MetropolisVariable::saveToStream(QDataStream &out)
 {
     switch (mSupport) {
-
-       case eR : *out << 0; // on R
+       case eR : out << quint32(0); // on R
         break;
-       case eRp: *out << 1; // on R+
+       case eRp: out << quint32(1); // on R+
           break;
-       case eRm : *out <<2; // on R-
+       case eRm : out << quint32(2); // on R-
           break;
-       case eRpStar : *out <<3; // on R+*
+       case eRpStar : out << quint32(3); // on R+*
           break;
-       case eRmStar : *out << 4; // on R-*
+       case eRmStar : out << quint32(4); // on R-*
           break;
-       case  eBounded : *out << 5; // on bounded support
+       case  eBounded : out << quint32(5); // on bounded support
+          break;
+    };
+
+    switch (mFormat) {// error mFormat can not be quint32
+       case DateUtils::eUnknown : out << quint32(-2);
+        break;
+       case DateUtils::eNumeric : out << quint32(-1);
+          break;
+       case DateUtils::eBCAD : out << quint32(0);
+          break;
+       case DateUtils::eCalBP : out << quint32(1);
+          break;
+       case DateUtils::eCalB2K : out << quint32(2);
+          break;
+       case  DateUtils::eDatBP : out << quint32(3);
+          break;
+       case DateUtils::eDatB2K : out << quint32(4);
+          break;
+    };
+
+    out << mRawTrace;
+   // *out << this->mFormatedTrace; // useless
+}
+
+void MetropolisVariable::saveToStreamOfQByteArray(QDataStream* out)
+{
+    switch (mSupport) {
+       case eR : *out << QByteArray::number(0); // on R
+        break;
+       case eRp: *out << QByteArray::number(1); // on R+
+          break;
+       case eRm : *out << QByteArray::number(2); // on R-
+          break;
+       case eRpStar : *out << QByteArray::number(3); // on R+*
+          break;
+       case eRmStar : *out << QByteArray::number(4); // on R-*
+          break;
+       case  eBounded : *out << QByteArray::number(5); // on bounded support
           break;
     };
 
     switch (mFormat) {
-       case DateUtils::eUnknown : *out << -2;
+       case DateUtils::eUnknown : *out << QByteArray::number(-2);
         break;
-       case DateUtils::eNumeric : *out << -1;
+       case DateUtils::eNumeric : *out << QByteArray::number(-1);
           break;
-       case DateUtils::eBCAD : *out << 0;
+       case DateUtils::eBCAD : *out << QByteArray::number(0);
           break;
-       case DateUtils::eCalBP : *out << 1;
+       case DateUtils::eCalBP : *out << QByteArray::number(1);
           break;
-       case DateUtils::eCalB2K : *out << 2;
+       case DateUtils::eCalB2K : *out << QByteArray::number(2);
           break;
-       case  DateUtils::eDatBP : *out << 3;
+       case  DateUtils::eDatBP : *out << QByteArray::number(3);
           break;
-       case DateUtils::eDatB2K : *out << 4;
+       case DateUtils::eDatB2K : *out << QByteArray::number(4);
           break;
     };
 
-     *out << this->mRawTrace;
-     *out << this->mFormatedTrace;
-
+    // *out << this->mRawTrace;
+    //assert(mRawTrace.size()>0);
+    *out << QByteArray::number(mRawTrace.size());
+    qDebug()<<"MetropolisVariable::saveToStreamOfQByteArray"<<QByteArray::number(mRawTrace.size());
+    /*for (const double& d : mRawTrace)
+        *out << QByteArray::number(d);*/
+    for (int i=0; i<mRawTrace.size(); ++i)
+        *out << QByteArray::number(mRawTrace.at(i));
+    // *out << this->mFormatedTrace; // useless
 }
-void MetropolisVariable::loadFromStream(QDataStream *in)
+
+void MetropolisVariable::loadFromStream(QDataStream &in)
 {
-    int support;
-    *in >> support;
+    quint32 support;
+    in >> support;
     switch (support) {
       case 0 : mSupport = eR; // on R
        break;
@@ -646,8 +804,8 @@ void MetropolisVariable::loadFromStream(QDataStream *in)
          break;
    };
 
-    int formatDate;
-    *in >> formatDate;
+    quint32 formatDate;
+    in >> formatDate;
     switch (formatDate) {
       case -2 : mFormat = DateUtils::eUnknown;
        break;
@@ -664,7 +822,85 @@ void MetropolisVariable::loadFromStream(QDataStream *in)
       case 4 :  mFormat = DateUtils::eDatB2K;
          break;
    };
+    quint32 reserveTrace;
+    in >> reserveTrace;
 
-    *in >>  this->mRawTrace;
-    *in >>  this->mFormatedTrace;
+    mRawTrace.resize((int)reserveTrace);
+    qDebug()<<"MetropolisVariable::loadFromStream"<<quint32(mRawTrace.size());
+    int it = 0;
+    for (; it <mRawTrace.size(); ++it) {
+        qreal tmp;
+        in >> tmp;
+        mRawTrace[it]= (double) tmp;
+    }
+    qDebug()<<"MetropolisVariable::loadFromStream it="<<it;
+   // std::generate(mRawTrace.begin(),mRawTrace.end(),[in]{qreal tmp; *in >> tmp; return (double) tmp;});
+
+   // *in >>  mRawTrace;
+
+    // regeneration of this->mFormatedTrace
+    updateFormatedTrace();
+    /*
+    *in >>  this->mFormatedTrace;*/
+
+}
+
+void MetropolisVariable::loadFromStreamOfQByteArray(QDataStream *in)
+{
+    QByteArray tmpArray;
+    *in >> tmpArray;
+    switch (tmpArray.toInt()) {
+      case 0 : mSupport = eR; // on R
+       break;
+      case 1 : mSupport = eRp; // on R+
+         break;
+      case 2 : mSupport = eRm; // on R-
+         break;
+      case 3 : mSupport = eRpStar; // on R+*
+         break;
+      case 4 : mSupport = eRmStar; // on R-*
+         break;
+      case 5 : mSupport =  eBounded; // on bounded support
+         break;
+   };
+
+    *in >> tmpArray;
+    switch (tmpArray.toInt()) {
+      case -2 : mFormat = DateUtils::eUnknown;
+       break;
+      case -1 : mFormat = DateUtils::eNumeric;
+         break;
+      case 0 :  mFormat = DateUtils::eBCAD;
+         break;
+      case 1 : mFormat = DateUtils::eCalBP;
+        break;
+      case 2 : mFormat = DateUtils::eCalB2K;
+        break;
+      case 3 : mFormat = DateUtils::eDatBP;
+         break;
+      case 4 :  mFormat = DateUtils::eDatB2K;
+         break;
+   };
+    // reserveTrace;
+    *in >> tmpArray;
+
+    mRawTrace.resize(tmpArray.toInt());
+    qDebug()<<"MetropolisVariable::loadFromStreamOfQByteArray"<<mRawTrace.size();
+   /* int it = 0;
+    for (; it <mRawTrace.size(); ++it) {
+        qreal tmp;
+        *in >> tmp;
+        mRawTrace[it]= (double) tmp;
+    }
+    qDebug()<<"MetropolisVariable::loadFromStream it="<<it; */
+
+    std::generate(mRawTrace.begin(),mRawTrace.end(),[in]{QByteArray tmp; *in >> tmp; return tmp.toDouble();});
+
+   // *in >>  mRawTrace;
+
+    // regeneration of this->mFormatedTrace
+    updateFormatedTrace();
+    /*
+    *in >>  this->mFormatedTrace;*/
+
 }

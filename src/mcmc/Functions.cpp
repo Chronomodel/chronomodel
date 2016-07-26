@@ -206,23 +206,23 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, double t
         QVector<double> sorted (trace);
         std::sort(sorted.begin(),sorted.end());
         
-        int numToRemove = floor((double)n * (1.f - threshold / 100.f));
+        const int numToRemove = (int)floor((double)n * (1.f - threshold / 100.f));
         exactThresholdResult = ((double)n - (double)numToRemove) / (double)n;
         
-        const int k = numToRemove;
+       // const int k = numToRemove;
         //const int n = sorted.size();
         double lmin = 0.f;
         int foundJ = 0;
 
-        for (int j=0; j<=k; ++j) {
-            const double l = sorted.at((n - 1) - k + j) - sorted.at(j);
-            if (lmin == 0.f || l < lmin) {
+        for (int j=0; j<=numToRemove; ++j) {
+            const double l = sorted.at((n - 1) - numToRemove + j) - sorted.at(j);
+            if ((lmin == 0.f) || (l < lmin)) {
                 foundJ = j;
                 lmin = l;
             }
         }
         credibility.first = sorted.at(foundJ);
-        credibility.second = sorted.at((n - 1) - k + foundJ);
+        credibility.second = sorted.at((n - 1) - numToRemove + foundJ);
     }
 
     if (credibility.first == credibility.second) {
@@ -387,6 +387,7 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceBeta, const
 
         // make couple beta vs alpha in a std::map, it's a sorted container with ">"
         std::multimap<double,double> mapPair;
+
         QVector<double>::const_iterator ctB = traceBeta.cbegin();
         QVector<double>::const_iterator ctA = traceAlpha.cbegin();
 
@@ -405,7 +406,7 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceBeta, const
         std::multimap<double,double>::const_reverse_iterator iMapTmp = i_shift;
 
 
-        const int epsilonStep = qMax(1, (int)round(nGamma*perCentStep));
+        const int epsilonStep = qMax(1, (int)floor(nGamma*perCentStep));
 
         for (int nEpsilon = 0; (nEpsilon <= nGamma ) && (i_shift != mapPair.rend()); ) {
 
@@ -419,9 +420,10 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceBeta, const
                 alphaUnder.push_back((*iMapTmp).second);
                 ++iMapTmp;
             }
-            std::sort(alphaUnder.begin(),alphaUnder.end());
+            //std::sort(alphaUnder.begin(),alphaUnder.end());
 
             const int j = nGamma - nEpsilon;
+            std::nth_element(alphaUnder.begin(), alphaUnder.begin() + j, alphaUnder.end());
 
             const double b = alphaUnder.at(j); //b=alpha(j)
             // keep the longest length
@@ -453,7 +455,7 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceBeta, const
 QString intervalText(const QPair<double, QPair<double, double> >& interval, FormatFunc formatFunc)
 {
     const QLocale locale;
-    if(formatFunc){
+    if (formatFunc){
         return "[" + formatFunc(interval.second.first) + "; " + formatFunc(interval.second.second) + "] (" + locale.toString(interval.first, 'f', 1) + "%)";
     }
     else {
@@ -467,9 +469,8 @@ QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString
 
     QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(hpd, thresh);
     QStringList results;
-    for(int i=0; i<intervals.size(); ++i)
-    {
-        results << intervalText(intervals[i], formatFunc);
+    for(int i=0; i<intervals.size(); ++i) {
+        results << intervalText(intervals.at(i), formatFunc);
     }
     QString result = results.join(", ");
     if(!unit.isEmpty()) {
@@ -496,21 +497,16 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
     
     double areaCur = 0;
     it.toFront();
-    while(it.hasNext())
-    {
+    while(it.hasNext()) {
         it.next();
         
-        if(it.value() != 0 && !inInterval)
-        {
+        if(it.value() != 0 && !inInterval) {
             inInterval = true;
             curInterval.first = it.key();
             lastKeyInInter = it.key();
             areaCur = 0.; // start, not inside
-        }
-        else if(inInterval)
-        {
-            if((it.value() == 0) )
-            {
+        } else if(inInterval) {
+            if((it.value() == 0) ) {
                 inInterval = false;
                 curInterval.second = lastKeyInInter;
                 
@@ -521,9 +517,7 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
                 
                 areaCur = 0;
 
-            }
-            else
-            {
+            } else {
                 areaCur += (lastValueInInter+it.value())/2 * (it.key()-lastKeyInInter);
              
                 lastKeyInInter = it.key();

@@ -95,34 +95,42 @@ void MCMCLoopMain::initVariablesForChain()
     QList<Event*>& events = mModel->mEvents;
     
     const int acceptBufferLen = chain.mNumBatchIter;
-    
+    int initReserve = 0;
+    foreach (const ChainSpecs c, mChains) {
+       initReserve +=( (c.mMaxBatchs*c.mNumBatchIter) + c.mNumBurnIter + (c.mNumRunIter/c.mThinningInterval) );
+    }
+
     for(int i=0; i<events.size(); ++i)
     {
         Event* event = events.at(i);
         event->mTheta.mLastAccepts.clear();
         event->mTheta.mLastAccepts.reserve(acceptBufferLen);
         event->mTheta.mLastAcceptsLength = acceptBufferLen;
-
+        event->mTheta.mRawTrace.reserve(initReserve);
+        event->mTheta.mFormatedTrace.reserve(initReserve);
         //event->mTheta.mAllAccepts.clear(); //don't clean, avalable for cumulate chain
         
-        for(int j=0; j<event->mDates.size(); ++j)
-        {
+        for(int j=0; j<event->mDates.size(); ++j) {
             Date& date = event->mDates[j];
             date.mTheta.mLastAccepts.clear();
             date.mTheta.mLastAccepts.reserve(acceptBufferLen);
             date.mTheta.mLastAcceptsLength = acceptBufferLen;
+            date.mTheta.mRawTrace.reserve(initReserve);
+            date.mTheta.mFormatedTrace.reserve(initReserve);
+
             date.mSigma.mLastAccepts.clear();
             date.mSigma.mLastAccepts.reserve(acceptBufferLen);
             date.mSigma.mLastAcceptsLength = acceptBufferLen;
+            date.mSigma.mRawTrace.reserve(initReserve);
         }
     }
 }
 
 QString MCMCLoopMain::initMCMC()
 {
-    QList<Event*>& events = mModel->mEvents;
-    QList<Phase*>& phases = mModel->mPhases;
-    QList<PhaseConstraint*>& phasesConstraints = mModel->mPhaseConstraints;
+    QList<Event*>& events (mModel->mEvents);
+    QList<Phase*>& phases (mModel->mPhases);
+    QList<PhaseConstraint*>& phasesConstraints (mModel->mPhaseConstraints);
     
     const double tmin = mModel->mSettings.mTmin;
     const double tmax = mModel->mSettings.mTmax;

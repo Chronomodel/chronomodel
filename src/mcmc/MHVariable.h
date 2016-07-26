@@ -4,6 +4,8 @@
 #include "MetropolisVariable.h"
 
 
+
+
 class MHVariable: public MetropolisVariable
 {
    // Q_OBJECT
@@ -28,9 +30,11 @@ public:
                           const QString& noResultMessage = QObject::tr("No result to display"),
                           const QString& unit = QString(),
                           FormatFunc formatFunc = 0) const;
-
-    void saveToStream(QDataStream *out);
-    void loadFromStream(QDataStream *in);
+/* Obsolete function */
+    void saveToStream(QDataStream &out);
+    void saveToStreamOfQByteArray(QDataStream *out);
+    void loadFromStream(QDataStream &in);
+    void loadFromStreamOfQByteArray(QDataStream *in);
     
 public:
     double mSigmaMH;
@@ -59,5 +63,9 @@ public:
     
     QString mProposal;
 };
+
+QDataStream &operator<<( QDataStream &stream, const MHVariable &data );
+
+QDataStream &operator>>( QDataStream &stream, MHVariable &data );
 
 #endif

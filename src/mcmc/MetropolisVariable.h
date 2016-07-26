@@ -11,6 +11,8 @@
 #include <QDataStream>
 #include <QObject>
 
+
+
 class MetropolisVariable: public QObject
 {
     Q_OBJECT
@@ -38,8 +40,7 @@ public:
     void generateHPD(const double threshold);
     void generateCredibility(const QList<ChainSpecs>& chains, double threshold);
 
-    void saveToStream(QDataStream *out);
-    void loadFromStream(QDataStream *in);
+
     // Virtual because MHVariable subclass adds some information
     virtual void generateNumericalResults(const QList<ChainSpecs>& chains);
 
@@ -69,16 +70,28 @@ public:
                                   FormatFunc formatFunc = 0) const;
     
     QStringList getResultsList(const QLocale locale, const bool withDateFormat = true);
-    // -----
-    
+
+
+    /* obsolete change with the operator& << and >>
+     * QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data );
+     *
+     * QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data );
+    */
+        void saveToStreamOfQByteArray(QDataStream *out);
+        void saveToStream(QDataStream &out);
+
+        void loadFromStreamOfQByteArray(QDataStream *in);
+        void loadFromStream(QDataStream &in);
+
+public slots:
+      void updateFormatedTrace();
+
 private:
-    //float* generateBufferForHisto(const QVector<double>& dataSrc, int numPts, double a, double b);
     void generateBufferForHisto(float* input, const QVector<double> &dataSrc, const int numPts, const double a, const double b);
     QMap<double, double> bufferToMap(const double* buffer);
     QMap<double, double> generateHisto(const QVector<double>& data, const int fftLen, const  double bandwidth, const double tmin = 0, const double tmax = 0);
 
-protected slots:
-    void updateFormatedTrace();
+
 
 signals:
     void formatChanged();
@@ -130,4 +143,7 @@ private:
     QString mName;
 };
 
+QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data );
+
+QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data );
 #endif
