@@ -151,6 +151,7 @@ Quartiles quartilesForTrace(const QVector<double>& trace)
         quartiles.Q3 = 0.;
         return quartiles;
     }
+
     QVector<double> sorted (trace);
     std::sort(sorted.begin(),sorted.end());
     
@@ -200,8 +201,6 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, double t
     exactThresholdResult = 0.;
     const int n = trace.size();
     if (thresh > 0 && n > 0) {
-        /*double threshold =  (thresh > 100 ? thresh = 100.0 : thresh);
-        threshold = (thresh < 0 ? thresh = 0.0 : thresh);*/
         double threshold = inRange(0.0, thresh, 100.0);
         QVector<double> sorted (trace);
         std::sort(sorted.begin(),sorted.end());
@@ -209,8 +208,6 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, double t
         const int numToRemove = (int)floor((double)n * (1.f - threshold / 100.f));
         exactThresholdResult = ((double)n - (double)numToRemove) / (double)n;
         
-       // const int k = numToRemove;
-        //const int n = sorted.size();
         double lmin = 0.f;
         int foundJ = 0;
 
@@ -258,9 +255,7 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
         for(int i=0; i<trace1.size(); ++i)
             betaAlpha.insert(std::pair<double,double>(trace2.at(i),trace1.at(i)) );//std::pair<char,int>('a',100)
 
-        // std::vector<double> traceBeta2 = trace2.toStdVector();
         std::copy(trace2.begin(),trace2.end(),traceBeta.begin());
-
 
         // keep the beta trace in the same position of the Alpha, so we need to sort them with there values of alpha
         std::sort(traceBeta.begin(),traceBeta.end(),[&betaAlpha](const double i, const double j){ return betaAlpha.find(i)->second <betaAlpha.find(j)->second  ;} );
@@ -270,21 +265,11 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
         if (nTarget>= n)
             return QPair<double,double>(traceAlpha.at(0),*std::max_element(traceBeta.cbegin(),traceBeta.cend()));
 
-        // Display a progress bar
-      //  QProgressDialog *progress = new QProgressDialog(description,"Wait" , 1, 10, qApp->activeWindow() );
-      //  progress->setWindowModality(Qt::WindowModal);
-      //  progress->setCancelButton(0);
-        //progress->forceShow();
-      //  progress->setMinimumDuration(4);
-
-     //   progress->setMinimum(0);
-     //   progress->setMaximum(nGamma);
         const int epsilonStep = qMax(1, (int)floor(n*perCentStep));
 
         std::vector<double> betaUpper(n);
 
         for (int nEpsilon=0; nEpsilon<nGamma; ) {
-     //       progress->setValue(nEpsilon);
 
             const double a = traceAlpha.at(nEpsilon);
 
@@ -295,14 +280,12 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
 
             auto it = std::copy( traceBeta.begin()+ nEpsilon+1, traceBeta.end(), betaUpper.begin() );
 
-            // copy only positive numbers:
-            // auto it = std::copy_if(traceBeta.begin()+ nEpsilon+1, traceBeta.end(), betaUpper.begin(), [&a](double i){ return !(i<a);} );
-             const int betaUpperSize = std::distance(betaUpper.begin(),it);
+            const int betaUpperSize = std::distance(betaUpper.begin(),it);
 
-             betaUpper.resize(betaUpperSize);  // shrink container to new size
+            betaUpper.resize(betaUpperSize);  // shrink container to new size
 
-             // if there is Beta value under a, we could have less than nTarget-1 elements, so it's finish
-             if (betaUpperSize<(nTarget-1))
+            // if there is Beta value under a, we could have less than nTarget-1 elements, so it's finish
+            if (betaUpperSize<(nTarget-1))
                  break;
 
             /*  std::nth_element has O(N) complexity,
@@ -311,7 +294,7 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
              */
 
             std::nth_element(betaUpper.begin(), betaUpper.begin() + nTarget-1, betaUpper.end());
-//std::sort(betaUpper.begin(),  betaUpper.end());
+
 // in the future with C++17
 //std::experimental::parallel::nth_element(par,betaUpper.begin(), betaUpper.begin() + nTarget, betaUpper.end());
 
@@ -341,7 +324,6 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
 
             nEpsilon += epsilonStep;
         }
-//        delete progress;
     }
 
 
