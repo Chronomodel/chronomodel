@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "ChronoModel"
-#define MyAppVersion "1.5.3_alpha_Build2"
+#define MyAppVersion "1.5.5_alpha_Build"
 #define MyAppPublisher "CNRS"
 #define MyAppURL "http://www.chronomodel.com"
 #define MyAppExeName "Chronomodel.exe"
@@ -29,7 +29,7 @@ InfoBeforeFile="readme.txt"
 OutputDir=.\
 OutputBaseFilename=ChronoModel_v{#MyAppVersion}_win32
 SetupIconFile="..\..\icon\Chronomodel.ico"
-UninstallDisplayIcon=ChronoModel_{#MyAppVersion}_win3.exe
+UninstallDisplayIcon=ChronoModel_v{#MyAppVersion}_win32.exe
 Compression=lzma
 SolidCompression=yes
 
@@ -45,7 +45,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
                                                                               
 [Files]
-Source: "..\..\..\build-Chronomodel-Desktop_Qt_5_7_0_MinGW_32bit-Release\build\release\Chronomodel.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\..\build-Chronomodel-Desktop_Qt_5_5_1_MinGW_32bit-Release\build\release\Chronomodel.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "additionnal_files\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\Calib\*"; DestDir: "{app}\Calib\"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
