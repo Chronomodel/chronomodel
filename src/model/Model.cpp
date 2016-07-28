@@ -1415,9 +1415,10 @@ void Model::saveToFile(const QString& fileName)
     // -----------------------------------------------------
     //  Create file
     // -----------------------------------------------------
-    
+    //QFileInfo info(fileName);
+   // QFile file(info.path() + info.baseName() + ".~dat"); // when we could do a compressed file
+    //QFile file(info.path() + info.baseName() + ".dat");
     QFile file(fileName);
-    QByteArray uncompressedData;
     if(file.open(QIODevice::WriteOnly)) {
         int reserveInit = 0;
         // compute reserve to estim the size of uncompresedData and magnify
@@ -1456,9 +1457,14 @@ void Model::saveToFile(const QString& fileName)
 
              }
         }
-       // uncompressedData.reserve(reserveInit);
+        //uncompressedData.reserve(reserveInit);
+     /*   QBuffer buffer(&uncompressedData);
+            buffer.open(QIODevice::WriteOnly);
+
+            QDataStream out(&buffer);*/
+
        // QDataStream out(&uncompressedData, QIODevice::WriteOnly);
- QDataStream out(&file);
+        QDataStream out(&file);
         out.setVersion(QDataStream::Qt_5_5);
         //out << quint32(MagicNumber);// we could add software version here << quint16(out.version());
         
@@ -1469,6 +1475,21 @@ void Model::saveToFile(const QString& fileName)
         out << quint32 (mEvents.size());
         out << quint32 (numDates);
 
+        out << (quint32) mChains.size();
+        for (ChainSpecs& ch : mChains) {
+            out << (quint32) ch.mBatchIndex;
+            out << (quint32) ch.mBatchIterIndex;
+            out << (quint32)ch.mBurnIterIndex;
+            out << (quint32) ch.mMaxBatchs;
+            out << ch.mMixingLevel;
+            out << (quint32) ch.mNumBatchIter;
+            out << (quint32) ch.mNumBurnIter;
+            out << (quint32) ch.mNumRunIter;
+            out << (quint32)ch.mRunIterIndex;
+            out << (qint32) ch.mSeed;
+            out << (quint32)ch.mThinningInterval;
+            out << (quint32) ch.mTotalIter;
+        }
         // -----------------------------------------------------
         //  Write phases data
         // -----------------------------------------------------
@@ -1529,14 +1550,35 @@ void Model::saveToFile(const QString& fileName)
         out << mLogModel;
         out << mLogMCMC;
         out << mLogResults;
+
       //  QByteArray compressedData (uncompressedData);// (qCompress(uncompressedData, 2));
       //  file.write(compressedData);
 
       /*  QDataStream outComp(&file);
         outComp.setVersion(QDataStream::Qt_4_3);
         outComp << qCompress(uncompressedData, 2);*/
+
         //file.write(qCompress(uncompressedData, 2));
         file.close();
+
+        // compress file
+      //  QFile infile(fileName+"_tmp");
+
+      /*     file.open(QIODevice::ReadOnly);
+
+           QByteArray uncompressedData (file.readAll());
+           file.close();
+           file.remove();
+
+          // QByteArray compressedData (qCompress(uncompressedData, 9));
+
+           QFile fileDat(fileName);
+           fileDat.open(QIODevice::WriteOnly);
+           fileDat.write(qCompress(uncompressedData, 9));
+
+           fileDat.close();
+           uncompressedData.clear();
+        */
     }
   }
 }
@@ -1545,42 +1587,34 @@ void Model::saveToFile(const QString& fileName)
  * */
 void Model::restoreFromFile(const QString& fileName)
 {
-    QFile file(fileName);
+/*    QFile fileDat(fileName);
+    fileDat.open(QIODevice::ReadOnly);
+    QByteArray compressedData (fileDat.readAll());
+    fileDat.close();
 
+    QByteArray uncompressedData (qUncompress(compressedData));
+#ifdef DEBUG
+       qDebug() << "Lecture fichier :"<< fileName;
+       qDebug() << "TAILLE compressedData :" << compressedData.size();
+       qDebug() << "TAILLE uncompresedData :" << uncompressedData.size();
+#endif
+    compressedData.clear();
+*/
+/*    QFileInfo info(fileName);
+    QFile file(info.path() + info.baseName() + ".~dat"); // when we could compress the file
+
+    file.open(QIODevice::WriteOnly);
+    file.write(uncompressedData);
+    file.close();
+*/
+   // QFileInfo info(fileName);
+   // QFile file(info.path() + info.baseName() + ".dat");
+
+    QFile file(fileName);
     if (file.exists() && file.open(QIODevice::ReadOnly)){
 
-   /*     quint32 magic;
-        quint16 streamVersion;
-
-        QDataStream in(&file);
-        in >> magic >> streamVersion;
-
-        if (magic != MagicNumber) {
-            std::cerr << "File is not recognized by this application"
-                      << std::endl;
-        } else if (streamVersion > in.version()) {
-            std::cerr << "File is from a more recent version of the "
-                      << "application" << std::endl;
-            return false;
-        }
-
-        in.setVersion(streamVersion);*/
-   /*     QDataStream inComp(&file);
-        QByteArray compressedData;
-
-        inComp >> compressedData; */
-
-        //QByteArray compressedData (file.readAll());
-//QByteArray compressedData(0);
-  //      QByteArray uncompressedData(compressedData);// = qUncompress(compressedData);
-
-/* #ifdef DEBUG
-        qDebug() << "Lecture fichier :"<< fileName;
-        qDebug() << "TAILLE compressedData :" << compressedData.size();
-        qDebug() << "TAILLE uncompresedData :" << uncompresedData.size();
-#endif */
-        if (true /* uncompressedData.size()!=0 */ ) {
-            //QDataStream in(&uncompressedData, QIODevice::ReadOnly);
+    //    if ( file.size()!=0 /* uncompressedData.size()!=0*/ ) {
+ //           QDataStream in(&uncompressedData, QIODevice::ReadOnly);
     QDataStream in(&file);
     if (in.version()!= QDataStream::Qt_5_5)
         return;
@@ -1596,6 +1630,27 @@ void Model::restoreFromFile(const QString& fileName)
             const int numEvents = (int)tmp32;
             in >> tmp32;
             const int numdates = (int)tmp32;
+
+            in >> tmp32;
+            mChains.clear();
+            mChains.reserve((int) tmp32);
+            for (int i=0 ; i<tmp32; ++i) {
+                ChainSpecs ch;
+                in >> ch.mBatchIndex;
+                in >> ch.mBatchIterIndex;
+                in >> ch.mBurnIterIndex;
+                in >> ch.mMaxBatchs;
+                in >> ch.mMixingLevel;
+                in >> ch.mNumBatchIter;
+                in >> ch.mNumBurnIter;
+                in >> ch.mNumRunIter;
+                in >> ch.mRunIterIndex;
+                in >> ch.mSeed;
+                in >> ch.mThinningInterval;
+                in >> ch.mTotalIter;
+                mChains.append(ch);
+            }
+
             // -----------------------------------------------------
             //  Read phases data
             // -----------------------------------------------------
@@ -1666,8 +1721,10 @@ void Model::restoreFromFile(const QString& fileName)
                             in >> tmpValue;
                             d.mCalibHPD[tmpKey]= tmpValue;
                         }
-                         if (d.mCalibration.isEmpty()) qDebug()<<"Model::restoreFromFile vide";
-
+#ifdef DEBUG
+                         if (d.mCalibration.isEmpty())
+                             qDebug()<<"Model::restoreFromFile vide";
+#endif
                     }
              }
             in >> mLogModel;
@@ -1677,8 +1734,9 @@ void Model::restoreFromFile(const QString& fileName)
             generateCorrelations(mChains);
            // generatePosteriorDensities(mChains, 1024, 1);
            // generateNumericalResults(mChains);
-        }
+
         file.close();
+       // file.remove(); // delete the temporary file with uncompressed data
     }
     
 }
