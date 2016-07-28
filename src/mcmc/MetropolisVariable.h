@@ -33,12 +33,12 @@ public:
     // -----
     void generateCorrelations(const QList<ChainSpecs> &chains);
 
-    void generateHistos(const QList<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin = 0, const double tmax = 0);
-    void memoHistoParameter(const int fftLen, const double bandwidth, const double tmin = 0, const double tmax = 0);
-    bool HistoWithParameter(const int fftLen, const double bandwidth, const double tmin = 0, const double tmax = 0);
+    void generateHistos(const QList<ChainSpecs> &chains, const int fftLen = 1024, const double bandwidth = 1.06, const double tmin = 0, const double tmax = 0);
+    void memoHistoParameter(const int fftLen = 1024, const double bandwidth = 1.06, const double tmin = 0, const double tmax = 0);
+    bool HistoWithParameter(const int fftLen = 1024, const double bandwidth = 1.06, const double tmin = 0, const double tmax = 0);
 
-    void generateHPD(const double threshold);
-    void generateCredibility(const QList<ChainSpecs>& chains, double threshold);
+    void generateHPD(const double threshold = 95);
+    void generateCredibility(const QList<ChainSpecs>& chains, double threshold = 95);
 
 
     // Virtual because MHVariable subclass adds some information
@@ -108,6 +108,9 @@ public:
     };
     double mX;
     QVector<double> mRawTrace, mFormatedTrace;
+    //std::vector<double> mRawTrace, mFormatedTrace;
+    // if we use std::vector we can not use QDataStream to save,
+    //because QDataStream provides support for multi system and takes account of endians
     Support mSupport;
     DateUtils::FormatDate mFormat;
     
