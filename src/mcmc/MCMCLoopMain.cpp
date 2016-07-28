@@ -100,15 +100,14 @@ void MCMCLoopMain::initVariablesForChain()
        initReserve +=( (c.mMaxBatchs*c.mNumBatchIter) + c.mNumBurnIter + (c.mNumRunIter/c.mThinningInterval) );
     }
 
-    for(int i=0; i<events.size(); ++i)
-    {
-        Event* event = events.at(i);
+    for(int i=0; i<events.size(); ++i) {
+        Event* event = events[i];
         event->mTheta.mLastAccepts.clear();
         event->mTheta.mLastAccepts.reserve(acceptBufferLen);
         event->mTheta.mLastAcceptsLength = acceptBufferLen;
         event->mTheta.mRawTrace.reserve(initReserve);
-        event->mTheta.mFormatedTrace.reserve(initReserve);
-        //event->mTheta.mAllAccepts.clear(); //don't clean, avalable for cumulate chain
+    //    event->mTheta.mFormatedTrace.reserve(initReserve);
+        // event->mTheta.mAllAccepts.clear(); //don't clean, avalable for cumulate chain
         
         for(int j=0; j<event->mDates.size(); ++j) {
             Date& date = event->mDates[j];
@@ -116,7 +115,7 @@ void MCMCLoopMain::initVariablesForChain()
             date.mTheta.mLastAccepts.reserve(acceptBufferLen);
             date.mTheta.mLastAcceptsLength = acceptBufferLen;
             date.mTheta.mRawTrace.reserve(initReserve);
-            date.mTheta.mFormatedTrace.reserve(initReserve);
+       //     date.mTheta.mFormatedTrace.reserve(initReserve);
 
             date.mSigma.mLastAccepts.clear();
             date.mSigma.mLastAccepts.reserve(acceptBufferLen);
