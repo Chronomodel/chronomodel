@@ -415,13 +415,13 @@ QVector<float> equal_areas(const QVector<float>& data, const float step, const f
     }
 
     const long double invProp =srcArea / area;
-    QVector<double> result;
+    QVector<float> result;
     //for(int i=0; i<data.size(); ++i)
     //    result.append(data.at(i) / invProp);
 
-    QVector<double>::const_iterator cIter = data.cbegin();
+    QVector<float>::const_iterator cIter = data.cbegin();
     while(cIter != data.cend() ) {
-        result.append(*cIter / invProp);
+        result.append((float)(*cIter / invProp));
         ++cIter;
     }
 
@@ -435,8 +435,7 @@ QMap<double, double> vector_to_map(const QVector<double>& data, const double min
 {
     QMap<double, double> map;
     const int nbPts = 1 + (int)round((max - min) / step); // step is not usefull, it's must be data.size/(max-min+1)
-    for(int i=0; i<nbPts; ++i)
-    {
+    for(int i=0; i<nbPts; ++i) {
         double t = min + i * step;
         if(i < data.size())
             map.insert(t, data.at(i));
@@ -652,7 +651,31 @@ double map_area(const QMap<double, double>& map)
        
     return srcArea;
 }
+float map_area(const QMap<float, float>& map)
+{
+    if(map.size()<2)
+        return 0.0;
 
+    QMap<float, float>::const_iterator cIter = map.cbegin();
+    float srcArea = 0.f;
+
+    float lastV = cIter.value();
+    float lastT = cIter.key();
+
+    while(cIter != map.cend())
+    {
+        const float v = cIter.value();
+        const float t = cIter.key();
+        if (lastV>0 && v>0) {
+            srcArea += (lastV+v)/2 * (t-lastT);
+        }
+        lastV = v;
+        lastT = t;
+        ++cIter;
+    }
+
+    return srcArea;
+}
 
 QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmin, const double tmax, const int nbPts)
 {

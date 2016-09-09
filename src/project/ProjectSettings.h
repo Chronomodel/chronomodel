@@ -32,8 +32,8 @@ public:
     float getTmaxFormated() const ;
 
 public:
-    int mTmin;
-    int mTmax;
+    float mTmin;
+    float mTmax;
     float mStep;
     bool mStepForced;   
 };

@@ -519,11 +519,11 @@ QPixmap Date::generateCalibThumb()
         //  These values are arbitary
         const QSize size(200, 30);
         
-        const double tmin = mSettings.mTmin;
-        const double tmax = mSettings.mTmax;
+        const float tmin = mSettings.mTmin;
+        const float tmax = mSettings.mTmax;
 
         GraphCurve curve;
-        QMap<double,double> calib = normalize_map(getMapDataInRange(getRawCalibMap(),tmin,tmax));
+        QMap<float,float> calib = normalize_map(getMapDataInRange(getRawCalibMap(),tmin,tmax));
         curve.mData = calib;
 
         if (curve.mData.isEmpty())
@@ -608,7 +608,7 @@ double Date::getLikelihoodFromCalib(const double t)
     // Important pour le créneau : pas d'interpolation autour des créneaux!
     double v = 0.;
     if (mCalibration[idxUnder] != 0 && mCalibration[idxUpper] != 0)
-        v = interpolate(idx, (double)idxUnder, (double)idxUpper, mCalibration[idxUnder], mCalibration[idxUpper]);
+        v = interpolate((float) idx, (float)idxUnder, (float)idxUpper, mCalibration[idxUnder], mCalibration[idxUpper]);
     return v;
 }
 

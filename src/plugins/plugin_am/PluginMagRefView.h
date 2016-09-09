@@ -1,4 +1,4 @@
-#ifndef PluginMagRefView_H
+﻿#ifndef PluginMagRefView_H
 #define PluginMagRefView_H
 
 #if USE_PLUGIN_AM
@@ -20,7 +20,7 @@ public:
     void setDate(const Date& d, const ProjectSettings& settings);
     
 public slots:
-    void zoomX(double min, double max);
+    void zoomX(float min, float max);
     void setMarginRight(const int margin);
 protected:
     void resizeEvent(QResizeEvent* e);

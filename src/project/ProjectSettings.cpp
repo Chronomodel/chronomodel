@@ -62,8 +62,8 @@ ProjectSettings::~ProjectSettings()
 ProjectSettings ProjectSettings::fromJson(const QJsonObject& json)
 {
     ProjectSettings settings;
-    settings.mTmin = json.contains(STATE_SETTINGS_TMIN) ? json.value(STATE_SETTINGS_TMIN).toInt() : STATE_SETTINGS_TMIN_DEF;
-    settings.mTmax = json.contains(STATE_SETTINGS_TMAX) ? json.value(STATE_SETTINGS_TMAX).toInt() : STATE_SETTINGS_TMAX_DEF;
+    settings.mTmin = (float) json.contains(STATE_SETTINGS_TMIN) ? json.value(STATE_SETTINGS_TMIN).toInt() : STATE_SETTINGS_TMIN_DEF;
+    settings.mTmax = (float) json.contains(STATE_SETTINGS_TMAX) ? json.value(STATE_SETTINGS_TMAX).toInt() : STATE_SETTINGS_TMAX_DEF;
     settings.mStep = json.contains(STATE_SETTINGS_STEP) ? json.value(STATE_SETTINGS_STEP).toDouble() : STATE_SETTINGS_STEP_DEF;
     settings.mStepForced = json.contains(STATE_SETTINGS_STEP_FORCED) ? json.value(STATE_SETTINGS_STEP_FORCED).toBool() : STATE_SETTINGS_STEP_FORCED_DEF;
     
@@ -73,23 +73,22 @@ ProjectSettings ProjectSettings::fromJson(const QJsonObject& json)
 QJsonObject ProjectSettings::toJson() const
 {
     QJsonObject settings;
-    settings[STATE_SETTINGS_TMIN] = mTmin;
-    settings[STATE_SETTINGS_TMAX] = mTmax;
+    settings[STATE_SETTINGS_TMIN] = (int) floor(mTmin);
+    settings[STATE_SETTINGS_TMAX] = (int) ceil(mTmax);
     settings[STATE_SETTINGS_STEP] = mStep;
     settings[STATE_SETTINGS_STEP_FORCED] = mStepForced;
 
     return settings;
 }
 
-float ProjectSettings::getStep(const int tmin, const int tmax)
+float ProjectSettings::getStep(const float tmin, const float tmax)
 {
     const float diff = tmax - tmin;
     const float linearUntil = 10000.f;
     
     if(diff <= linearUntil)
         return 1;
-    else
-    {
+    else {
         const float maxPts = 50000.;
         const float lambda = - log((maxPts - linearUntil)/maxPts) / linearUntil;
         const float nbPts = maxPts * (1 - exp(-lambda * diff));

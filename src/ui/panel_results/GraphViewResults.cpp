@@ -1,4 +1,4 @@
- #include "GraphViewResults.h"
+﻿ #include "GraphViewResults.h"
 #include "Button.h"
 #include "Painting.h"
 #include "QtUtilities.h"
@@ -159,16 +159,16 @@ void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc, const QList<Cha
 /**
  @brief set date range on all the study
  */
-void GraphViewResults::setRange(double min, double max)
+void GraphViewResults::setRange(float min, float max)
 {
     mGraph->setRangeX(min, max);
 }
-void GraphViewResults::setCurrentX(double min, double max)
+void GraphViewResults::setCurrentX(float min, float max)
 {
     mGraph->setCurrentX(min, max);
 }
 
-void GraphViewResults::zoom(double min, double max)
+void GraphViewResults::zoom(float min, float max)
 {
    // ici ca marche qDebug()<<"avant GraphViewResults::zoom"<<mGraph->getCurrentMaxX();
     mGraph->zoomX(min, max);
@@ -497,7 +497,7 @@ void GraphViewResults::setButtonsVisible(const bool visible)
 }
 
 #pragma mark Generate Typical curves for Chronomodel
-GraphCurve GraphViewResults::generateDensityCurve(QMap<double, double>& data,
+GraphCurve GraphViewResults::generateDensityCurve(QMap<float, float>& data,
                                                   const QString& name,
                                                   const QColor& lineColor,
                                                   const Qt::PenStyle penStyle,
@@ -514,7 +514,7 @@ GraphCurve GraphViewResults::generateDensityCurve(QMap<double, double>& data,
      return curve;
 }
 
-GraphCurve GraphViewResults::generateHPDCurve(QMap<double, double>& data,
+GraphCurve GraphViewResults::generateHPDCurve(QMap<float, float>& data,
                                               const QString& name,
                                               const QColor& color) const{
     GraphCurve curve;
@@ -528,7 +528,7 @@ GraphCurve GraphViewResults::generateHPDCurve(QMap<double, double>& data,
     return curve;
 }
 
-GraphCurve GraphViewResults::generateSectionCurve(const QPair<double, double>& section,
+GraphCurve GraphViewResults::generateSectionCurve(const QPair<float, float>& section,
                                                       const QString& name,
                                                       const QColor& color) const{
     GraphCurve curve;
@@ -542,7 +542,7 @@ GraphCurve GraphViewResults::generateSectionCurve(const QPair<double, double>& s
     return curve;
 }
 
-GraphCurve GraphViewResults::generateHorizontalLine(const double yValue,
+GraphCurve GraphViewResults::generateHorizontalLine(const float yValue,
                                                     const QString& name,
                                                     const QColor& color,
                                                     const Qt::PenStyle penStyle) const
@@ -572,8 +572,8 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
         curve.mIsHisto = false;
         mGraph->addCurve(curve);
         
-        const double min = vector_min_value(curve.mDataVector);
-        const double max = vector_max_value(curve.mDataVector);
+        const float min = vector_min_value(curve.mDataVector);
+        const float max = vector_max_value(curve.mDataVector);
         mGraph->setRangeY(floor(min), ceil(max));
         
         const Quartiles& quartiles = variable->mChainsResults.at(i).quartiles;
@@ -617,8 +617,8 @@ void GraphViewResults::generateCorrelCurves(const QList<ChainSpecs> &chains,
         mGraph->addCurve(curve);
         
         //to do, we only need the totalIter number?
-        const double n = variable->runRawTraceForChain(mChains, i).size();
-        const double limit = 1.96f / sqrt(n);
+        const float n = variable->runRawTraceForChain(mChains, i).size();
+        const float limit = 1.96f / sqrt(n);
         
         GraphCurve curveLimitLower = generateHorizontalLine(-limit,
                                                             "Correl Limit Lower " + QString::number(i),

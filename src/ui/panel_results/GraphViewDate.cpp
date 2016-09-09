@@ -1,4 +1,4 @@
-#include "GraphViewDate.h"
+﻿#include "GraphViewDate.h"
 #include "GraphView.h"
 #include "Date.h"
 #include "Event.h"
@@ -145,7 +145,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 
                 
                 // Calibration
-                QMap<double,double> formatedCalib = mDate->getFormatedCalibMap();
+                QMap<float,float> formatedCalib = mDate->getFormatedCalibMap();
                 GraphCurve curveCalib = generateDensityCurve(formatedCalib,
                                                              "Calibration",
                                                              QColor(150, 150, 150),
@@ -187,7 +187,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                                                                    Qt::SolidLine,
                                                                    Qt::NoBrush);
                 mGraph->addCurve(curvePostDistrib);
-                double yMax = 1.1f * map_max_value(curvePostDistrib.mData);
+                float yMax = 1.1f * map_max_value(curvePostDistrib.mData);
                 
                 
                 // Post Distrib Chain i

@@ -1,4 +1,4 @@
-
+﻿
 #include "ResultsView.h"
 #include "GraphView.h"
 #include "GraphViewDate.h"
@@ -1087,7 +1087,7 @@ void ResultsView::setFFTLength()
     mModel->setFFTLength(len);
 }
 
-double ResultsView::getBandwidth() const
+float ResultsView::getBandwidth() const
 {
     return mBandwidthUsed;
 }
@@ -1097,7 +1097,7 @@ void ResultsView::setBandwidth()
     qDebug() << "ResultsView::setBandwidth()";
     const QLocale locale;
     bool ok;
-    const double bandwidth = locale.toDouble(mBandwidthEdit->text(), &ok);
+    const float bandwidth = locale.toFloat(mBandwidthEdit->text(), &ok);
     if (!(bandwidth > 0 && bandwidth <= 100) || !ok)
         mBandwidthEdit->setText(locale.toString(bandwidth));
     
@@ -1109,7 +1109,7 @@ void ResultsView::setBandwidth()
     //emit updateScrollAreaRequested();
 }
 
-double ResultsView::getThreshold() const
+float ResultsView::getThreshold() const
 {
     return mThresholdUsed;
 }
@@ -1136,7 +1136,7 @@ void ResultsView::setThreshold()
 {
     qDebug() << "ResultsView::setThreshold()";
     const QLocale locale;
-    const double hpd = locale.toDouble(mHPDEdit->text());
+    const float hpd = locale.toFloat(mHPDEdit->text());
     if(hpd != getThreshold()) {
         mThresholdUsed = hpd;
         mModel->setThreshold(hpd);
@@ -1515,17 +1515,17 @@ void ResultsView::updateZoomX()
     int zoom = mXSlider->value();
     
     // Ici, 10 correspond à la différence minimale de valeur (quand le zoom est le plus fort)
-    double minProp = 10 / (mResultMaxX - mResultMinX);
-    double zoomProp = (100. - zoom) / 100.;
+    float minProp = 10.f / (mResultMaxX - mResultMinX);
+    float zoomProp = (100.f - zoom) / 100.f;
     if(zoomProp < minProp)
         zoomProp = minProp;
     zoom = 100 * (1 - zoomProp);
     
-    mResultZoomX = (double)zoom;
-    double span = (mResultMaxX - mResultMinX)* (100-mResultZoomX)/100;
-    double mid = (mResultCurrentMaxX + mResultCurrentMinX)/2;
-    double curMin = mid - span/2;
-    double curMax = mid + span/2;
+    mResultZoomX = (float)zoom;
+    float span = (mResultMaxX - mResultMinX)* (100.f-mResultZoomX)/100.f;
+    float mid = (mResultCurrentMaxX + mResultCurrentMinX)/2.f;
+    float curMin = mid - span/2;
+    float curMax = mid + span/2;
     if (curMin < mResultMinX) {
         curMin = mResultMinX;
         curMax = curMin + span;
@@ -1552,7 +1552,7 @@ void ResultsView::updateZoomX()
 }
 
 // signal from the Ruler
-void ResultsView::updateScroll(const double min, const double max)
+void ResultsView::updateScroll(const float min, const float max)
 {
     // --------------------------------------------------
     //  Find new current min & max
@@ -1575,10 +1575,10 @@ void ResultsView::editCurrentMinX()
     // --------------------------------------------------
     QString str = mCurrentXMinEdit->text();
     bool isNumber;
-    double value = str.toDouble(&isNumber);
+    float value = str.toFloat(&isNumber);
     if (isNumber) {
 
-        double current = qBound(mResultMinX, value, mResultCurrentMaxX);
+        float current = qBound(mResultMinX, value, mResultCurrentMaxX);
         if (current == mResultCurrentMaxX) {
             current = mResultMinX;
         }
@@ -1605,11 +1605,11 @@ void ResultsView::editCurrentMaxX()
     // --------------------------------------------------
     QString str = mCurrentXMaxEdit->text();
     bool isNumber;
-    double value = str.toDouble(&isNumber);
+    float value = str.toFloat(&isNumber);
     
     if (isNumber) {
 
-        double current = qBound(mResultCurrentMinX, value, mResultMaxX);
+        float current = qBound(mResultCurrentMinX, value, mResultMaxX);
         if (current == mResultCurrentMinX)
             current = mResultMaxX;
         
@@ -1648,15 +1648,15 @@ void ResultsView::updateGraphsZoomX()
     //  Store zoom values
     // --------------------------------------------------
     int tabIdx = mTabs->currentIndex();
-    mZooms[tabIdx] = QPair<double, double>(mResultCurrentMinX, mResultCurrentMaxX);
+    mZooms[tabIdx] = QPair<float, float>(mResultCurrentMinX, mResultCurrentMaxX);
 }
 
 #pragma mark Zoom Y
 void ResultsView::updateScaleY(int value)
 {
-    const double min = 70;
-    const double max = 1070;
-    const double prop = value / 100.f;
+    const float min = 70;
+    const float max = 1070;
+    const float prop = value / 100.f;
     mGraphsH = min + prop * (max - min);
     
     updateGraphsLayout();

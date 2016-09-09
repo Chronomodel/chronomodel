@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <qglobal.h>
 #include <QPainterPath>
@@ -12,63 +12,64 @@ public:
     QPainterPath mPainterPath;
     // Getters
     
-    double rangeX() const;
-    double rangeY() const;
-    double getCurrentMaxX() const;
-    double getCurrentMinX() const;
+    float rangeX() const;
+    float rangeY() const;
+    float getCurrentMaxX() const;
+    float getCurrentMinX() const;
     
-    double minimumX() const;
-    double maximumX() const;
-    double minimumY() const;
-    double maximumY() const;
+    float minimumX() const;
+    float maximumX() const;
+    float minimumY() const;
+    float maximumY() const;
     
-    int marginLeft() const;
-    int marginRight() const;
-    int marginTop() const;
-    int marginBottom() const;
+    qreal marginLeft() const;
+    qreal marginRight() const;
+    qreal marginTop() const;
+    qreal marginBottom() const;
     
     // Setters
     
-    virtual void setRangeX(const double aMinX, const double aMaxX);
-    virtual void setCurrentX(const double aMinX, const double aMaxX);
-    virtual void setRangeY(const double aMinY, const double aMaxY);
+    virtual void setRangeX(const float aMinX, const float aMaxX);
+    virtual void setCurrentX(const float aMinX, const float aMaxX);
+    virtual void setRangeY(const float aMinY, const float aMaxY);
     
-	void setMinimumX(const double aMinX);
-	void setMaximumX(const double aMaxX);
-	void setMinimumY(const double aMinY);
-    void setMaximumY(const double aMaxY);
+    void setMinimumX(const float aMinX);
+    void setMaximumX(const float aMaxX);
+    void setMinimumY(const float aMinY);
+    void setMaximumY(const float aMaxY);
     
-    void setMarginLeft(const int aMarginLeft);
-	void setMarginRight(const int aMarginRight);
-	void setMarginTop(const int aMarginTop);
-	void setMarginBottom(const int aMarginBottom);
-	void setMargins(const int aMarginLeft, const int aMarginRight, const int aMarginTop, const int aMarginBottom);
+    void setMarginLeft(const qreal aMarginLeft);
+    void setMarginRight(const qreal aMarginRight);
+    void setMarginTop(const qreal aMarginTop);
+    void setMarginBottom(const qreal aMarginBottom);
+    void setMargins(const qreal aMarginLeft, const qreal aMarginRight, const qreal aMarginTop, const qreal aMarginBottom);
 	
 protected:
 	virtual void repaintGraph(const bool aAlsoPaintBackground) = 0;
 	
-    virtual double getXForValue(const double aValue, const bool aConstainResult = true);
-    virtual double getValueForX(const double x, const bool aConstainResult = true);
-    virtual double getYForValue(const double aValue, const bool aConstainResult = true);
-    virtual double getValueForY(const double y, const bool aConstainResult = true);
+    virtual qreal getXForValue(const float aValue, const bool aConstainResult = true);
+    virtual float getValueForX(const qreal x, const bool aConstainResult = true);
+    virtual qreal getYForValue(const float aValue, const bool aConstainResult = true);
+    virtual float getValueForY(const qreal y, const bool aConstainResult = true);
     
-    double valueForProportion(const double v1, const double valMin, const double valMax, const double Pmin, const double Pmax, const bool resultInBounds = true);
+    float valueForProportion(const float v1, const float valMin, const float valMax, const float Pmin, const float Pmax, const bool resultInBounds = true);
+    qreal valueForProportion(const qreal v1, const qreal valMin, const qreal valMax, const qreal Pmin, const qreal Pmax, const bool resultInBounds = true);
 	
 protected:
-	int		mGraphWidth;
-	int		mGraphHeight;
+    qreal		mGraphWidth;
+    qreal		mGraphHeight;
 	
     qreal		mMarginLeft;
     qreal		mMarginRight;
     qreal		mMarginTop;
     qreal		mMarginBottom;
     
-	double	mMinX;
-	double	mMaxX;
-	double	mMinY;
-	double	mMaxY;
+    float	mMinX;
+    float	mMaxX;
+    float	mMinY;
+    float	mMaxY;
     
-    double   mCurrentMinX;
-    double   mCurrentMaxX;
+    float   mCurrentMinX;
+    float   mCurrentMaxX;
 };
 

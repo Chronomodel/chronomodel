@@ -1,4 +1,4 @@
-#ifndef QTUTILITIES_H
+﻿#ifndef QTUTILITIES_H
 #define QTUTILITIES_H
 
 #include <QStringList>
@@ -38,7 +38,7 @@ QColor randomColor();
 
 bool constraintIsCircular( QJsonArray constraints, const int FromId, const int ToId);
 
-QString formatValueToAppSettingsPrecision(const double valueToFormat);
+QString formatValueToAppSettingsPrecision(const float valueToFormat);
 
 bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep, const bool withDateFormat = false);
 bool saveAsCsv(const QList<QStringList>& data, const QString& title = QObject::tr("Save as..."));
