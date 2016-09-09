@@ -1,4 +1,4 @@
-#ifndef PROJECTSETTINGS_H
+﻿#ifndef PROJECTSETTINGS_H
 #define PROJECTSETTINGS_H
 
 #include <QString>
@@ -26,15 +26,15 @@ public:
     static ProjectSettings fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
     
-    static double getStep(const double tmin, const double tmax);
+    static float getStep(const float tmin, const float tmax);
 
-    double getTminFormated() const;
-    double getTmaxFormated() const ;
+    float getTminFormated() const;
+    float getTmaxFormated() const ;
 
 public:
     int mTmin;
     int mTmax;
-    double mStep;
+    float mStep;
     bool mStepForced;   
 };
 

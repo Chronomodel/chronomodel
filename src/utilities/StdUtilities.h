@@ -1,4 +1,4 @@
-#ifndef STDUTILITIES_H
+﻿#ifndef STDUTILITIES_H
 #define STDUTILITIES_H
 
 #include <vector>
@@ -23,7 +23,7 @@
 #endif
 
 
-typedef QString (*FormatFunc)(const double);
+typedef QString (*FormatFunc)(const float);
 
 
 int compareStrings(const std::string &s1, const std::string &s2);
@@ -186,15 +186,28 @@ T sum2Shifted(const QVector<T>& vector, const T& shift){
 // --------------------------------
 
 QVector<double> normalize_vector(const QVector<double>& aVector);
+QVector<float> normalize_vector(const QVector<float>& aVector);
+
 QVector<double> stretch_vector(const QVector<double>& aVector, const double from, const double to);
+QVector<float> stretch_vector(const QVector<float>& aVector, const float from, const float to);
+
 QMap<double, double> normalize_map(const QMap<double, double>& aMap);
+QMap<float, float> normalize_map(const QMap<float, float>& aMap);
+
 QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const QMap<double, double>& mapWithTargetArea);
+QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const QMap<float, float>& mapWithTargetArea);
 QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const double targetArea);
+QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const float targetArea);
+
 QVector<double> equal_areas(const QVector<double>& data, const double step, const double area);
-QMap<double, double> vector_to_map(const QVector<double>& data, const double min, const double max, const double step);
+QVector<float> equal_areas(const QVector<float>& data, const float step, const float area);
+
+QMap<float, float> vector_to_map(const QVector<float>& data, const float min, const float max, const float step);
 double vector_interpolate_idx_for_value(const double value, const QVector<double> &vector);
+float vector_interpolate_idx_for_value(const float value, const QVector<float> &vector);
 
 double map_area(const QMap<double, double>& map);
-const QMap<double, double> create_HPD(const QMap<double, double>& aMap, const double threshold);
-QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmin, const double tmax, const int nbPts);
+float map_area(const QMap<float, float>& map);
+const QMap<float, float> create_HPD(const QMap<float, float>& aMap, const float threshold);
+QVector<float> vector_to_histo(const QVector<float>& dataScr, const float tmin, const float tmax, const int nbPts);
 #endif

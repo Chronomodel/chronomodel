@@ -1,4 +1,4 @@
-#include "MetropolisVariable.h"
+﻿#include "MetropolisVariable.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
 #include "Functions.h"
@@ -25,8 +25,8 @@ mtminUsed(0),
 mtmaxUsed(0)
 
 {
-    mCredibility = QPair<double,double>();
-    mHPD = QMap<double,double>();
+    mCredibility = QPair<float,float>();
+    mHPD = QMap<float,float>();
     QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
 }
 
@@ -118,7 +118,7 @@ void MetropolisVariable::updateFormatedTrace()
         mFormatedTrace = mRawTrace;
     else {
         mFormatedTrace.resize(mRawTrace.size());
-        std::transform(mRawTrace.cbegin(),mRawTrace.cend(),mFormatedTrace.begin(),[this](const double i){return DateUtils::convertToFormat(i,this->mFormat);});
+        std::transform(mRawTrace.cbegin(),mRawTrace.cend(),mFormatedTrace.begin(),[this](const float i){return DateUtils::convertToFormat(i,this->mFormat);});
        /* mFormatedTrace.reserve(mRawTrace.size());
         QVector<double>::const_iterator iter = mRawTrace.constBegin();
         while(iter!= mRawTrace.constEnd()){
@@ -133,14 +133,14 @@ void MetropolisVariable::updateFormatedTrace()
  @param[in] dataSrc is the trace, with for example one million data
  @remarks Produce a density with the area equal to 1. The smoothing is done with Hsilvermann method.
  **/
-void MetropolisVariable::generateBufferForHisto(float* input, const QVector<double> &dataSrc, const int numPts, const double a, const double b)
+void MetropolisVariable::generateBufferForHisto(float* input, const QVector<float> &dataSrc, const int numPts, const float a, const float b)
 {
     // Work with "double" precision here !
     // Otherwise, "denum" can be very large and lead to infinity contribs!
     
-    const double delta = (b - a) / (numPts - 1);
+    const float delta = (b - a) / (numPts - 1);
 
-    const double denum = dataSrc.size();
+    const float denum = dataSrc.size();
     
     //float* input = (float*) fftwf_malloc(numPts * sizeof(float));
     
@@ -148,14 +148,14 @@ void MetropolisVariable::generateBufferForHisto(float* input, const QVector<doub
     for(int i=0; i<numPts; ++i)
         input[i]= 0.f;
     
-    QVector<double>::const_iterator iter = dataSrc.cbegin();
+    QVector<float>::const_iterator iter = dataSrc.cbegin();
     for(; iter != dataSrc.cend(); ++iter)
     {
-        const double t = *iter;
+        const float t = *iter;
         
-        const double idx = (t - a) / delta;
-        const double idx_under = floor(idx);
-        const double idx_upper = idx_under + 1.;
+        const float idx = (t - a) / delta;
+        const float idx_under = floor(idx);
+        const float idx_upper = idx_under + 1.;
         
         const float contrib_under = (idx_upper - idx) / denum;
         const float contrib_upper = (idx - idx_under) / denum;
@@ -182,7 +182,7 @@ void MetropolisVariable::generateBufferForHisto(float* input, const QVector<doub
   @brief the FFTW function transform the area such that the area output is the area input multiplied by fftLen. So we have to corret it.
   The result is migth be not with regular step between value.
  **/
-QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& dataSrc, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+QMap<float, float> MetropolisVariable::generateHisto(const QVector<float>& dataSrc, const int fftLen, const float bandwidth, const float tmin, const float tmax)
 {
     mfftLenUsed = fftLen;
     mBandwidthUsed = bandwidth;
@@ -192,8 +192,8 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
     const int inputSize = fftLen;
     const int outputSize = 2 * (inputSize / 2 + 1);
 
-    const double sigma = dataStd(dataSrc);
-    QMap<double, double> result;
+    const float sigma = dataStd(dataSrc);
+    QMap<float, float> result;
 
 
 
@@ -214,9 +214,9 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
     return result;
     */// /// DEBUG
 
-     const double h = bandwidth * sigma * pow(dataSrc.size(), -1./5.);
-     const double a = vector_min_value(dataSrc) - 4. * h;
-     const double b = vector_max_value(dataSrc) + 4. * h;
+     const float h = bandwidth * sigma * pow(dataSrc.size(), -1.f/5.f);
+     const float a = vector_min_value(dataSrc) - 4.f * h;
+     const float b = vector_max_value(dataSrc) + 4.f * h;
 
      float* input = (float*) fftwf_malloc(fftLen * sizeof(float));
      generateBufferForHisto(input, dataSrc, fftLen, a, b);
@@ -231,8 +231,8 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
         fftwf_execute(plan_forward);
 
         for(int i=0; i<outputSize/2; ++i) {
-            const double s = 2.f * M_PI * i / (b-a);
-            const double factor = expf(-0.5f * s * s * h * h);
+            const float s = 2.f * M_PI * i / (b-a);
+            const float factor = expf(-0.5f * s * s * h * h);
 
             output[2*i] *= factor;
             output[2*i + 1] *= factor;
@@ -243,8 +243,8 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
 
         // ----- FFT Buffer to result map -----
 
-        double tBegin = a;
-        double tEnd = b;
+        float tBegin = a;
+        float tEnd = b;
         switch(mSupport)
         {
               case eR :// on R
@@ -267,10 +267,10 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
                   tEnd = tmax;
               break;
         }
-        const double delta = (b - a) / fftLen;
+        const float delta = (b - a) / fftLen;
 
         for(int i=0; i<inputSize; ++i) {
-             const double t = a + (double)i * delta;
+             const float t = a + (float)i * delta;
              result[t] = input[i];
         }
 
@@ -284,27 +284,27 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
         fftwf_destroy_plan(plan_forward);
         fftwf_destroy_plan(plan_backward);
 
-        result = equal_areas(result, 1.); // normalize the output area du to the fftw and the case (t >= tmin && t<= tmax)
+        result = equal_areas(result, 1.f); // normalize the output area du to the fftw and the case (t >= tmin && t<= tmax)
     }
     return result; // return a map between a and b with a step delta = (b - a) / fftLen;
 }
 
 
-void MetropolisVariable::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+void MetropolisVariable::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const float bandwidth, const float tmin, const float tmax)
 {
-    const QVector<double> subFullTrace (fullRunTrace(chains));
+    const QVector<float> subFullTrace (fullRunTrace(chains));
     mHisto = generateHisto(subFullTrace, fftLen, bandwidth, tmin, tmax);
 
     mChainsHistos.clear();
     for (int i=0; i<chains.size(); ++i) {
-        const QVector<double> subTrace ( runFormatedTraceForChain(chains, i));
+        const QVector<float> subTrace ( runFormatedTraceForChain(chains, i));
         if (!subTrace.isEmpty()) {
-            const QMap<double,double> histo (generateHisto(subTrace, fftLen, bandwidth, tmin, tmax) );
+            const QMap<float,float> histo (generateHisto(subTrace, fftLen, bandwidth, tmin, tmax) );
             mChainsHistos.append(histo);
         }
     }
 }
-void MetropolisVariable::memoHistoParameter(const int fftLen, const double bandwidth, const double tmin, const double tmax)
+void MetropolisVariable::memoHistoParameter(const int fftLen, const float bandwidth, const float tmin, const float tmax)
 {
     mfftLenUsed = fftLen;
     mBandwidthUsed = bandwidth;
@@ -312,22 +312,22 @@ void MetropolisVariable::memoHistoParameter(const int fftLen, const double bandw
     mtmaxUsed = tmax;
 }
 
-bool MetropolisVariable::HistoWithParameter(const int fftLen, const double bandwidth, const double tmin, const double tmax)
+bool MetropolisVariable::HistoWithParameter(const int fftLen, const float bandwidth, const float tmin, const float tmax)
 {
    return ((mfftLenUsed == fftLen) &&  (mBandwidthUsed == bandwidth) &&   (mtminUsed == tmin) &&  (mtmaxUsed == tmax) ? true: false);
 }
 
-void MetropolisVariable::generateHPD(const double threshold)
+void MetropolisVariable::generateHPD(const float threshold)
 {
     if(!mHisto.isEmpty())
     {
-        const double thresh = qBound(0.0, threshold, 100.0);
-        if (thresh == 100.) {
+        const float thresh = qBound(0.0f, threshold, 100.0f);
+        if (thresh == 100.f) {
             mHPD = mHisto;
             return;
         }
         //threshold = (threshold < 0 ? threshold = 0.0 : threshold);
-        if (thresh == 0.) {
+        if (thresh == 0.f) {
             mHPD.clear();
             return;
         }
@@ -343,18 +343,18 @@ void MetropolisVariable::generateHPD(const double threshold)
         // This can happen on phase duration, if only one event inside.
         // alpha = beta => duration is always null !
         // We don't display the phase duration but we print the numerical HPD result.
-        mHPD = QMap<double,double>();
+        mHPD = QMap<float,float>();
 
         qDebug() << "WARNING : Cannot generate HPD on empty histo in MetropolisVariable::generateHPD";
     }
 }
 
-void MetropolisVariable::generateCredibility(const QList<ChainSpecs> &chains, double threshold)
+void MetropolisVariable::generateCredibility(const QList<ChainSpecs> &chains, float threshold)
 {
     if (!mHisto.isEmpty())
         mCredibility = credibilityForTrace(fullRunTrace(chains), threshold, mExactCredibilityThreshold,"Compute credibility for "+getName());
     else
-        mCredibility = QPair<double,double>();
+        mCredibility = QPair<float,float>();
 
 }
 
@@ -367,27 +367,27 @@ void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
 
     for (int c=0; c<chains.size(); ++c) {
         // Return the acquisition part of the trace
-        const QVector<double> trace (runRawTraceForChain(chains, c));
+        const QVector<float> trace (runRawTraceForChain(chains, c));
         if(trace.size()<hmax)
             continue;
-        QVector<double> results;
+        QVector<float> results;
         results.reserve(hmax);
 
         const int n = trace.size();
         
-        const double s = sum(trace);
-        const double m = s / (double)n;
-        const double s2 = sum2Shifted(trace, -m);
+        const float s = sum(trace);
+        const float m = s / (float)n;
+        const float s2 = sum2Shifted(trace, -m);
         
         // Correlation pour cette chaine
 
         for (int h=0; h<hmax; ++h) {
-            double sH = 0;
-            for (QVector<double>::const_iterator iter = trace.cbegin(); iter != trace.cbegin() + (n-h); ++iter) {
+            float sH = 0;
+            for (QVector<float>::const_iterator iter = trace.cbegin(); iter != trace.cbegin() + (n-h); ++iter) {
                 sH += (*iter - m) * (*(iter + h) - m);
             }
             
-            const double result = sH / s2;
+            const float result = sH / s2;
             results.append(result);
         }
         // Correlation ajoutée à la liste (une courbe de corrélation par chaine)
@@ -413,12 +413,12 @@ void MetropolisVariable::generateNumericalResults(const QList<ChainSpecs> &chain
 }
 
 #pragma mark getters (no calculs)
-QMap<double, double>& MetropolisVariable::fullHisto()
+QMap<float, float>& MetropolisVariable::fullHisto()
 {
     return mHisto;
 }
 
-QMap<double, double>& MetropolisVariable::histoForChain(const int index)
+QMap<float, float>& MetropolisVariable::histoForChain(const int index)
 {
 
     Q_ASSERT(index < mChainsHistos.size());    
@@ -431,12 +431,12 @@ QMap<double, double>& MetropolisVariable::histoForChain(const int index)
  * @param index
  * @return The complet trace (Burning, adaptation, acquire) corresponding to chain n°index
  */
-QVector<double> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs>& chains, const int index)
+QVector<float> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs>& chains, const int index)
 {
     const int reserveSize = (int) ceil( chains.at(index).mNumBurnIter + (chains.at(index).mBatchIndex * chains.at(index).mNumBatchIter) + (chains.at(index).mNumRunIter /chains.at(index).mThinningInterval ) );
    // trace.reserve(reserveSize);
 
-    QVector<double> trace(reserveSize);
+    QVector<float> trace(reserveSize);
 
     int shift = 0;
     
@@ -453,7 +453,7 @@ QVector<double> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs>& c
     return trace;
 }
 
-QVector<double> MetropolisVariable::fullRunTrace(const QList<ChainSpecs>& chains)
+QVector<float> MetropolisVariable::fullRunTrace(const QList<ChainSpecs>& chains)
 {
 
     // calcul reserve space
@@ -464,7 +464,7 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<ChainSpecs>& chains
 
    // trace.resize(reserveSize);
    // trace.reserve(reserveSize);
-    QVector<double> trace(reserveSize);
+    QVector<float> trace(reserveSize);
 
     int shift = 0;
     int shiftTrace = 0;
@@ -490,18 +490,18 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<ChainSpecs>& chains
  * @param index the number of the Trace to extract
  * @return a QVector containing juste the acquisition Trace for one chaine n° index
  */
-QVector<double> MetropolisVariable::runRawTraceForChain(const QList<ChainSpecs> &chains, const int index)
+QVector<float> MetropolisVariable::runRawTraceForChain(const QList<ChainSpecs> &chains, const int index)
 {
 
     if (mRawTrace.empty()) {
         qDebug() << "in MetropolisVariable::runRawTraceForChain -> mRawTrace empty";
-        return QVector<double>() ;
+        return QVector<float>() ;
         
     } else {
 
         int shift = 0;
         const int reserveSize = (int) ceil(chains.at(index).mNumRunIter /chains.at(index).mThinningInterval );
-        QVector<double> trace;//(reserveSize);
+        QVector<float> trace;//(reserveSize);
 
         for (int i=0; i<chains.size(); ++i) {
             const ChainSpecs& chain = chains.at(i);
@@ -520,9 +520,9 @@ QVector<double> MetropolisVariable::runRawTraceForChain(const QList<ChainSpecs> 
     }
 }
 
-QVector<double> MetropolisVariable::runFormatedTraceForChain(const QList<ChainSpecs> &chains, const int index)
+QVector<float> MetropolisVariable::runFormatedTraceForChain(const QList<ChainSpecs> &chains, const int index)
 {
-    QVector<double> trace(0);
+    QVector<float> trace(0);
     if (mFormatedTrace.empty()) {
         qDebug() << "in MetropolisVariable::runFormatedTraceForChain -> mFormatedTrace empty";
         return trace ;
@@ -549,11 +549,11 @@ QVector<double> MetropolisVariable::runFormatedTraceForChain(const QList<ChainSp
 }
 
 
-QVector<double> MetropolisVariable::correlationForChain(const int index)
+QVector<float> MetropolisVariable::correlationForChain(const int index)
 {
     if (index < mCorrelations.size())
         return mCorrelations.at(index);
-    return QVector<double>();
+    return QVector<float>();
 }
 
 
@@ -569,7 +569,7 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
         result += "HPD Region (" + locale.toString(mThresholdUsed, 'f', 1) + "%) : " + getHPDText(mHPD, mThresholdUsed, unit, formatFunc) + nl;
 
     
-    if (mCredibility != QPair<double,double>()) {
+    if (mCredibility != QPair<float,float>()) {
         if (formatFunc)
             result += "Credibility Interval (" + locale.toString(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + formatFunc(mCredibility.first) + ", " + formatFunc(mCredibility.second) + "] " + unit;
         else
@@ -594,7 +594,7 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const bool 
         list << locale.toString(mCredibility.first);
         list << locale.toString(mCredibility.second);
 
-        const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThresholdUsed);
+        const QList<QPair<float, QPair<float, float> > > intervals = intervalsForHpd(mHPD, mThresholdUsed);
         QStringList results;
         for (int i=0; i<intervals.size(); ++i) {
             list << locale.toString(intervals.at(i).first, 'f', 1);
@@ -613,7 +613,7 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const bool 
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mCredibility.first));
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mCredibility.second));
 
-        const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThresholdUsed);
+        const QList<QPair<float, QPair<float, float> > > intervals = intervalsForHpd(mHPD, mThresholdUsed);
         QStringList results;
         for (int i=0; i<intervals.size(); ++i)  {
             list << locale.toString(intervals.at(i).first, 'f', 1);
@@ -846,7 +846,7 @@ void MetropolisVariable::loadFromStream(QDataStream &in)
     for (; it <mRawTrace.size(); ++it) {
         qreal tmp;
         in >> tmp;
-        mRawTrace[it]= (double) tmp;
+        mRawTrace[it]= (float) tmp;
     }
     qDebug()<<"MetropolisVariable::loadFromStream it="<<it;
    // std::generate(mRawTrace.begin(),mRawTrace.end(),[in]{qreal tmp; *in >> tmp; return (double) tmp;});
@@ -909,7 +909,7 @@ void MetropolisVariable::loadFromStreamOfQByteArray(QDataStream *in)
     }
     qDebug()<<"MetropolisVariable::loadFromStream it="<<it; */
 
-    std::generate(mRawTrace.begin(),mRawTrace.end(),[in]{QByteArray tmp; *in >> tmp; return tmp.toDouble();});
+    std::generate(mRawTrace.begin(),mRawTrace.end(),[in]{QByteArray tmp; *in >> tmp; return tmp.toFloat();});
 
    // *in >>  mRawTrace;
 

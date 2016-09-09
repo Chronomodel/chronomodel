@@ -1,4 +1,4 @@
-#include "Model.h"
+﻿#include "Model.h"
 #include "Date.h"
 #include "Project.h"
 #include "EventKnown.h"
@@ -501,13 +501,13 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
             l << QString::number(shift + j);
             for (int k = 0; k < mPhases.size(); ++k) {
                 Phase* phase = mPhases.at(k);
-                double valueAlpha = phase->mAlpha.mRawTrace.at(shift + j);
+                float valueAlpha = phase->mAlpha.mRawTrace.at(shift + j);
                 
                 if (withDateFormat)
                     valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
                 l << locale.toString(valueAlpha);
 
-                double valueBeta = phase->mBeta.mRawTrace.at(shift + j);
+                float valueBeta = phase->mBeta.mRawTrace.at(shift + j);
                 
                 if (withDateFormat)
                     valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
@@ -555,13 +555,13 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
         for (int j = burnAdaptSize; j < (burnAdaptSize + runSize); ++j) {
             QStringList l;
             l << QString::number(shift + j) ;
-            double valueAlpha = phase->mAlpha.mRawTrace.at(shift + j);
+            float valueAlpha = phase->mAlpha.mRawTrace.at(shift + j);
             if (withDateFormat)
                 valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
             
             l << locale.toString(valueAlpha);
 
-            double valueBeta = phase->mBeta.mRawTrace.at(shift + j);
+            float valueBeta = phase->mBeta.mRawTrace.at(shift + j);
             if (withDateFormat)
                 valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
             
@@ -569,7 +569,7 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
 
             for (int k = 0; k < phase->mEvents.size(); ++k) {
                 Event* event = phase->mEvents.at(k);
-                double value = event->mTheta.mRawTrace.at(shift + j);
+                float value = event->mTheta.mRawTrace.at(shift + j);
                 if (withDateFormat)
                     value = DateUtils::convertToAppSettingsFormat(value);
                 
@@ -612,7 +612,7 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
             l << QString::number(shift + j) ;
             for (int k = 0; k < mEvents.size(); ++k) {
                 Event* event = mEvents.at(k);
-                double value = event->mTheta.mRawTrace.at(shift + j);
+                float value = event->mTheta.mRawTrace.at(shift + j);
                 if (withDateFormat)
                     value = DateUtils::convertToAppSettingsFormat(value);
                 
@@ -697,12 +697,10 @@ bool Model::isValid()
                 
                 // On vérifie toutes les bornes avant et on prend le max
                 // de leurs valeurs fixes ou du début de leur intervalle :
-                double lower = mSettings.mTmin;
-                for(int k=0; k<j; ++k)
-                {
+                double lower = (double) mSettings.mTmin;
+                for(int k=0; k<j; ++k) {
                     Event* evt = eventBranches[i][k];
-                    if(evt->mType == Event::eKnown)
-                    {
+                    if(evt->mType == Event::eKnown) {
                         EventKnown* bd = dynamic_cast<EventKnown*>(evt);
                         if(bd->mKnownType == EventKnown::eFixed)
                             lower = qMax(lower, bd->mFixed);
@@ -716,19 +714,16 @@ bool Model::isValid()
                     throw QString("The bound \"" + bound->mName + "\" has a fixed value inconsistent with previous bounds in chain!");
                 }
                 else if(bound->mKnownType == EventKnown::eUniform)
-                {
                     bound->mUniformStart = qMax(bound->mUniformStart, lower);
-                }
+
                 
                 // --------------------
                 // Check bound interval upper value
                 // --------------------
-                double upper = mSettings.mTmax;
-                for(int k=j+1; k<eventBranches.at(i).size(); ++k)
-                {
+                double upper = (double) mSettings.mTmax;
+                for(int k=j+1; k<eventBranches.at(i).size(); ++k) {
                     Event* evt = eventBranches[i][k];
-                    if(evt->mType == Event::eKnown)
-                    {
+                    if(evt->mType == Event::eKnown){
                         EventKnown* bd = dynamic_cast<EventKnown*>(evt);
                         if(bd->mKnownType == EventKnown::eFixed)
                             upper = qMin(upper, bd->mFixed);
@@ -741,8 +736,7 @@ bool Model::isValid()
                 {
                     throw QString("The bound \"" + bound->mName + "\" has a fixed value inconsistent with next bounds in chain!");
                 }
-                else if(bound->mKnownType == EventKnown::eUniform)
-                {
+                else if(bound->mKnownType == EventKnown::eUniform) {
                     bound->mUniformEnd = qMin(bound->mUniformEnd, upper);
                     if(bound->mUniformStart >= bound->mUniformEnd)
                     {
@@ -757,33 +751,30 @@ bool Model::isValid()
     // 9 - Gamma min (ou fixe) entre 2 phases doit être inférieur à la différence entre : le min des sups des intervalles des bornes de la phase suivante ET le max des infs des intervalles des bornes de la phase précédente
     for(int i=0; i<mPhaseConstraints.size(); ++i)
     {
-        double gammaMin = 0;
+        double gammaMin = 0.;
         PhaseConstraint::GammaType gType = mPhaseConstraints.at(i)->mGammaType;
         if(gType == PhaseConstraint::eGammaFixed)
             gammaMin = mPhaseConstraints[i]->mGammaFixed;
         else if(gType == PhaseConstraint::eGammaRange)
             gammaMin = mPhaseConstraints.at(i)->mGammaMin;
         
-        double lower = mSettings.mTmin;
+        double lower = (double) mSettings.mTmin;
         Phase* phaseFrom = mPhaseConstraints.at(i)->mPhaseFrom;
         for(int j=0; j<phaseFrom->mEvents.size(); ++j)
         {
             EventKnown* bound = dynamic_cast<EventKnown*>(phaseFrom->mEvents[j]);
-            if(bound)
-            {
+            if(bound) {
                 if(bound->mKnownType == EventKnown::eFixed)
                     lower = qMax(lower, bound->mFixed);
                 else if(bound->mKnownType == EventKnown::eUniform)
                     lower = qMax(lower, bound->mUniformStart);
             }
         }
-        double upper = mSettings.mTmax;
+        double upper = (double) mSettings.mTmax;
         Phase* phaseTo = mPhaseConstraints.at(i)->mPhaseTo;
-        for(int j=0; j<phaseTo->mEvents.size(); ++j)
-        {
+        for(int j=0; j<phaseTo->mEvents.size(); ++j) {
             EventKnown* bound = dynamic_cast<EventKnown*>(phaseTo->mEvents[j]);
-            if(bound)
-            {
+            if(bound) {
                 if(bound->mKnownType == EventKnown::eFixed)
                     upper = qMin(upper, bound->mFixed);
                 else if(bound->mKnownType == EventKnown::eUniform)
@@ -816,21 +807,16 @@ bool Model::isValid()
             double max = mSettings.mTmax;
             bool boundFound = false;
             
-            for(int j=0; j<mPhases.at(i)->mEvents.size(); ++j)
-            {
-                if(mPhases.at(i)->mEvents.at(j)->mType == Event::eKnown)
-                {
+            for(int j=0; j<mPhases.at(i)->mEvents.size(); ++j) {
+                if(mPhases.at(i)->mEvents.at(j)->mType == Event::eKnown) {
                     EventKnown* bound = dynamic_cast<EventKnown*>(mPhases.at(i)->mEvents[j]);
-                    if(bound)
-                    {
+                    if(bound) {
                         boundFound = true;
-                        if(bound->mKnownType == EventKnown::eFixed)
-                        {
+                        if(bound->mKnownType == EventKnown::eFixed) {
                             min = std::max(min, bound->mFixed);
                             max = std::min(max, bound->mFixed);
                         }
-                        else if(bound->mKnownType == EventKnown::eUniform)
-                        {
+                        else if(bound->mKnownType == EventKnown::eUniform) {
                             min = std::max(min, bound->mUniformEnd);
                             max = std::min(max, bound->mUniformStart);
                         }
@@ -1539,7 +1525,7 @@ void Model::saveToFile(const QString& fileName)
 
 
                       out << (quint32)d.mCalibHPD.size();
-                      for (QMap<double,double>::const_iterator it = d.mCalibHPD.cbegin(); it!=d.mCalibHPD.cend();++it) {
+                      for (QMap<float,float>::const_iterator it = d.mCalibHPD.cbegin(); it!=d.mCalibHPD.cend();++it) {
                           out << it.key();
                           out << it.value();
                        }
@@ -1697,7 +1683,7 @@ void Model::restoreFromFile(const QString& fileName)
                         d.mSettings.mStepForced =(btmp==1);
 
                        // in >> d.mSubDates;
-                        double tmp;
+                        float tmp;
                         in >> tmp;
                         d.setTminRefCurve(tmp);
                         in >> tmp;
@@ -1715,8 +1701,8 @@ void Model::restoreFromFile(const QString& fileName)
                         in >> tmpUint32;
 
                         for (quint32 i= 0; i<tmpUint32; i++) {
-                            double tmpKey;
-                            double tmpValue;
+                            float tmpKey;
+                            float tmpValue;
                             in >> tmpKey;
                             in >> tmpValue;
                             d.mCalibHPD[tmpKey]= tmpValue;

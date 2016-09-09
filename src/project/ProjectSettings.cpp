@@ -1,4 +1,4 @@
-#include "ProjectSettings.h"
+﻿#include "ProjectSettings.h"
 #include "DateUtils.h"
 #include <QObject>
 #include <QVariant>
@@ -81,29 +81,29 @@ QJsonObject ProjectSettings::toJson() const
     return settings;
 }
 
-double ProjectSettings::getStep(const double tmin, const double tmax)
+float ProjectSettings::getStep(const int tmin, const int tmax)
 {
-    const double diff = tmax - tmin;
-    const double linearUntil = 10000;
+    const float diff = tmax - tmin;
+    const float linearUntil = 10000.f;
     
     if(diff <= linearUntil)
         return 1;
     else
     {
-        const double maxPts = 50000;
-        const double lambda = - log((maxPts - linearUntil)/maxPts) / linearUntil;
-        const double nbPts = maxPts * (1 - exp(-lambda * diff));
-        double step = diff / nbPts;
+        const float maxPts = 50000.;
+        const float lambda = - log((maxPts - linearUntil)/maxPts) / linearUntil;
+        const float nbPts = maxPts * (1 - exp(-lambda * diff));
+        float step = diff / nbPts;
         return step;
     }
 }
 
-double ProjectSettings::getTminFormated() const
+float ProjectSettings::getTminFormated() const
 {
    return qMin(DateUtils::convertToAppSettingsFormat(mTmin),DateUtils::convertToAppSettingsFormat(mTmax));
 }
 
-double ProjectSettings::getTmaxFormated() const
+float ProjectSettings::getTmaxFormated() const
 {
     return qMax(DateUtils::convertToAppSettingsFormat(mTmin),DateUtils::convertToAppSettingsFormat(mTmax));
 }

@@ -1,4 +1,4 @@
-#ifndef DATEUTILS_H
+﻿#ifndef DATEUTILS_H
 #define DATEUTILS_H
 
 #include <QString>
@@ -15,24 +15,24 @@ public:
         eDatBP = 3,
         eDatB2K = 4,
     };
-    static double convertToFormat(const double valueToFormat, const FormatDate format);
-    static double convertFromFormat(const double formattedValue, const FormatDate format);
+    static float convertToFormat(const float valueToFormat, const FormatDate format);
+    static float convertFromFormat(const float formattedValue, const FormatDate format);
     
     static QString formatString(const FormatDate format);
-    static QString dateToString(const double date);
-    static QString dateToString(const double date, int precision);
+    static QString dateToString(const float date);
+    static QString dateToString(const float date, int precision);
     
     /** 
      * @brief convert native values (classic BC/AD) to their prefered display date format (Cal B2k, ...)
      */
-    static double convertToAppSettingsFormat(const double valueToFormat);
-    static QString convertToAppSettingsFormatStr(const double valueToFormat);
+    static float convertToAppSettingsFormat(const float valueToFormat);
+    static QString convertToAppSettingsFormatStr(const float valueToFormat);
 
     /**
      * @brief convert formatted values (Cal B2k, Cal BP, ...) to native value (classic BC/AD)
      */
-    static double convertFromAppSettingsFormat(const double formattedValue);
-    static QString convertFromAppSettingsFormatStr(const double formattedValue);
+    static float convertFromAppSettingsFormat(const float formattedValue);
+    static QString convertFromAppSettingsFormatStr(const float formattedValue);
     
 
     static FormatDate getAppSettingsFormat();

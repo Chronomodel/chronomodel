@@ -1,4 +1,4 @@
-#ifndef GraphViewResults_H
+﻿#ifndef GraphViewResults_H
 #define GraphViewResults_H
 
 #include "ProjectSettings.h"
@@ -54,21 +54,21 @@ public:
     
     GraphView* mGraph;
     
-    GraphCurve generateDensityCurve(QMap<double, double> &data,
+    GraphCurve generateDensityCurve(QMap<float, float> &data,
                                     const QString& name,
                                     const QColor& lineColor,
                                     const Qt::PenStyle penStyle = Qt::SolidLine,
                                     const QBrush& brush = Qt::NoBrush) const;
     
-    GraphCurve generateHPDCurve(QMap<double, double>& data,
+    GraphCurve generateHPDCurve(QMap<float, float>& data,
                                 const QString& name,
                                 const QColor& color) const;
     
-    GraphCurve generateSectionCurve(const QPair<double, double>& section,
+    GraphCurve generateSectionCurve(const QPair<float, float>& section,
                                         const QString& name,
                                         const QColor& color) const;
     
-    GraphCurve generateHorizontalLine(const double yValue,
+    GraphCurve generateHorizontalLine(const float yValue,
                                       const QString& name,
                                       const QColor& color,
                                       const Qt::PenStyle penStyle = Qt::SolidLine) const;
@@ -85,10 +85,10 @@ public:
     void setShowNumericalResults(const bool show);
     
 public slots:
-    void setRange(double min, double max);
-    void setCurrentX(double min, double max);
+    void setRange(float min, float max);
+    void setCurrentX(float min, float max);
     
-    void zoom(double min, double max);
+    void zoom(float min, float max);
     void showNumericalResults(bool show);
     void setNumericalResults(const QString& resultsHTML, const QString& resultsText);
 

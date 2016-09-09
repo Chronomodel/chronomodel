@@ -1,4 +1,4 @@
-#ifndef MHVARIABLE_H
+﻿#ifndef MHVARIABLE_H
 #define MHVARIABLE_H
 
 #include "MetropolisVariable.h"
@@ -17,12 +17,12 @@ public:
     MHVariable& copy(MHVariable const& origin);
     MHVariable& operator=(MHVariable const& origin);
 
-    double getCurrentAcceptRate();
+    float getCurrentAcceptRate();
     void saveCurrentAcceptRate();
     
     bool tryUpdate(const double x, const double rapportToTry);
     
-    QVector<double> acceptationForChain(const QList<ChainSpecs>& chains, int index);
+    QVector<float> acceptationForChain(const QList<ChainSpecs>& chains, int index);
     void generateGlobalRunAcceptation(const QList<ChainSpecs>& chains);
     
     void generateNumericalResults(const QList<ChainSpecs>& chains);
@@ -53,7 +53,7 @@ public:
     QVector<bool> mAllAccepts;
     
     // Computed at the end as numerical result :
-    double mGlobalAcceptation;
+    float mGlobalAcceptation;
     
     // Buffer contenant tous les taux d'acceptation calculés (1 par batch)
     // On en affiche des sous-parties (correspondant aux chaines) dans la vue des résultats

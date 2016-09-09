@@ -1,4 +1,4 @@
-#include "MHVariable.h"
+﻿#include "MHVariable.h"
 #include "StdUtilities.h"
 #include "Generator.h"
 #include <QDebug>
@@ -69,26 +69,26 @@ MHVariable& MHVariable::operator=( MHVariable const& origin)
     return *this;
 }
 
-double MHVariable::getCurrentAcceptRate()
+float MHVariable::getCurrentAcceptRate()
 {
-    double sum = 0.f;
+    float sum = 0.f;
     
     for(int i=0; i<mLastAccepts.size(); ++i)
         sum += mLastAccepts.at(i) ? 1.f : 0.f;
 
     
-    return sum / (double)mLastAccepts.size();
+    return sum / (float)mLastAccepts.size();
 }
 
 void MHVariable::saveCurrentAcceptRate()
 {
-    const double rate = 100.f * getCurrentAcceptRate();
+    const float rate = 100.f * getCurrentAcceptRate();
     mHistoryAcceptRateMH.push_back(rate);
 }
 
-QVector<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains, int index)
+QVector<float> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains, int index)
 {
-    QVector<double> accept(0);
+    QVector<float> accept(0);
     int shift = 0;
     const int reserveSize = (int) ceil(chains.at(index).mNumBurnIter + (chains.at(index).mBatchIndex * chains.at(index).mNumBatchIter) + chains.at(index).mNumRunIter / chains.at(index).mThinningInterval);
 
@@ -99,7 +99,7 @@ QVector<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains,
         
         if(i == index) {
             for(int j=0; j<chainSize; ++j) {
-                accept.append((double)mHistoryAcceptRateMH.at(shift + j));
+                accept.append((float)mHistoryAcceptRateMH.at(shift + j));
             }
             break;
         }
@@ -111,8 +111,8 @@ QVector<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains,
 
 void MHVariable::generateGlobalRunAcceptation(const QList<ChainSpecs> &chains)
 {
-    double accepted = 0;
-    double acceptsLength = 0;
+    float accepted = 0;
+    float acceptsLength = 0;
     int shift = 0;
 
     for(int i=0; i<chains.size(); ++i) {
@@ -241,7 +241,7 @@ void MHVariable::loadFromStream(QDataStream &in)
     }
     qreal tmp;
     in >> tmp;
-    mGlobalAcceptation = (double) tmp;
+    mGlobalAcceptation = (float) tmp;
 
     //*in >> mHistoryAcceptRateMH;
     in >> reserveTmp;
@@ -275,7 +275,7 @@ void MHVariable::loadFromStreamOfQByteArray(QDataStream *in)
     }
 
     *in >> tmpArray;
-    mGlobalAcceptation = tmpArray.toDouble();
+    mGlobalAcceptation = tmpArray.toFloat();
 
     //*in >> mHistoryAcceptRateMH;
     *in >> tmpArray;
@@ -290,5 +290,5 @@ void MHVariable::loadFromStreamOfQByteArray(QDataStream *in)
     mLastAcceptsLength = tmpArray.toInt();
    // *in >> this->mProposal; // it's a QString, already set
     *in >> tmpArray;
-    mSigmaMH = tmpArray.toDouble();
+    mSigmaMH = tmpArray.toFloat();
 }

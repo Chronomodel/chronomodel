@@ -1,4 +1,4 @@
-#include "Date.h"
+﻿#include "Date.h"
 #include "Event.h"
 #include "Generator.h"
 #include "StdUtilities.h"
@@ -291,10 +291,10 @@ void Date::calibrate(const ProjectSettings& settings)
     // --------------------------------------------------
     if(mTmaxRefCurve > mTminRefCurve)
     {
-        QVector<double> calibrationTemp;
-        QVector<double> repartitionTemp;
+        QVector<float> calibrationTemp;
+        QVector<float> repartitionTemp;
 
-        const double nbRefPts = 1 + round((mTmaxRefCurve - mTminRefCurve) / settings.mStep);
+        const float nbRefPts = 1 + round((mTmaxRefCurve - mTminRefCurve) / settings.mStep);
         long double v = getLikelihood(mTminRefCurve);
         calibrationTemp.append(v);
         repartitionTemp.append(0);
@@ -308,13 +308,13 @@ void Date::calibrate(const ProjectSettings& settings)
             long double lastV = v;
             v = getLikelihood(t);
             
-            calibrationTemp.append(v);
+            calibrationTemp.append((float)v);
             long double rep = lastRepVal;
             if(v != 0 && lastV != 0)
             {
                 rep = lastRepVal + (long double) settings.mStep * (lastV + v) / 2.;
             }
-            repartitionTemp.append((double)rep);
+            repartitionTemp.append((float)rep);
             lastRepVal = rep;
         }
         
@@ -368,18 +368,18 @@ void Date::calibrate(const ProjectSettings& settings)
 }
 
 
-const QMap<double, double> Date::getRawCalibMap() const
+const QMap<float, float> Date::getRawCalibMap() const
 {
     return vector_to_map(mCalibration, mTminCalib, mTmaxCalib, mSettings.mStep);
 }
 
-const QMap<double, double> Date::getFormatedCalibMap() const
+const QMap<float, float> Date::getFormatedCalibMap() const
 {
-    if(mCalibration.isEmpty()) return QMap<double,double>();
+    if(mCalibration.isEmpty()) return QMap<float,float>();
 
-    QMap<double,double> calib = vector_to_map(mCalibration, mTminCalib, mTmaxCalib, mSettings.mStep);
-    QMap<double,double>::const_iterator iter = calib.cbegin();
-    QMap<double,double> formatedCalib;
+    QMap<float,float> calib = vector_to_map(mCalibration, mTminCalib, mTmaxCalib, mSettings.mStep);
+    QMap<float,float>::const_iterator iter = calib.cbegin();
+    QMap<float,float> formatedCalib;
     while(iter!= calib.constEnd()){
         formatedCalib.insert(DateUtils::convertToAppSettingsFormat(iter.key()), iter.value());
         ++iter;
@@ -388,13 +388,13 @@ const QMap<double, double> Date::getFormatedCalibMap() const
 
 }
 
-QVector<double> Date::getFormatedRepartition() const
+QVector<float> Date::getFormatedRepartition() const
 {
     if(DateUtils::convertToAppSettingsFormat(mTminCalib)>DateUtils::convertToAppSettingsFormat(mTmaxCalib)) {
        // reverse the QVector and complement, we suppose it's the same step
-        QVector<double> repart;
-        double lastValue =mRepartition.last();
-        QVector<double>::const_iterator iter = mRepartition.cend()-1;
+        QVector<float> repart;
+        float lastValue =mRepartition.last();
+        QVector<float>::const_iterator iter = mRepartition.cend()-1;
         while(iter!=mRepartition.cbegin()-1)
         {
              repart.append(lastValue-(*iter));
@@ -409,25 +409,25 @@ QVector<double> Date::getFormatedRepartition() const
 }
 
 
-double Date::getFormatedTminRefCurve() const
+float Date::getFormatedTminRefCurve() const
 {
     return qMin(DateUtils::convertToAppSettingsFormat(getTminRefCurve()),DateUtils::convertToAppSettingsFormat(getTmaxRefCurve()));
 }
-double Date::getFormatedTmaxRefCurve() const
+float Date::getFormatedTmaxRefCurve() const
 {
     return qMax(DateUtils::convertToAppSettingsFormat(getTminRefCurve()),DateUtils::convertToAppSettingsFormat(getTmaxRefCurve()));
 }
 
-double Date::getFormatedTminCalib() const
+float Date::getFormatedTminCalib() const
 {
     return qMin(DateUtils::convertToAppSettingsFormat(getTminCalib()),DateUtils::convertToAppSettingsFormat(getTmaxCalib()));
 }
-double Date::getFormatedTmaxCalib()const
+float Date::getFormatedTmaxCalib()const
 {
     return qMax(DateUtils::convertToAppSettingsFormat(getTminCalib()),DateUtils::convertToAppSettingsFormat(getTmaxCalib()));
 }
 
-void Date::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+void Date::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const float bandwidth, const float tmin, const float tmax)
 {
     mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
     mSigma.generateHistos(chains, fftLen, bandwidth);

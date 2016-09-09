@@ -1,4 +1,4 @@
-#ifndef DATE_H
+﻿#ifndef DATE_H
 #define DATE_H
 
 #include "MHVariable.h"
@@ -70,10 +70,10 @@ public:
     void calibrate(const ProjectSettings& settings);
     double getLikelihoodFromCalib(const double t);
 
-    const QMap<double, double> getFormatedCalibMap() const;
-    const QMap<double, double> getRawCalibMap() const;
+    const QMap<float, float> getFormatedCalibMap() const;
+    const QMap<float, float> getRawCalibMap() const;
 
-    QVector<double> getFormatedRepartition() const;
+    QVector<float> getFormatedRepartition() const;
 
     QPixmap generateCalibThumb();
     QPixmap generateTypoThumb();
@@ -89,23 +89,23 @@ public:
     
     QColor getEventColor() const;
 
-    double getTminRefCurve() const {return mTminRefCurve;}
-    double getTmaxRefCurve() const {return mTmaxRefCurve;}
-    void setTminRefCurve(const double tmin) { mTminRefCurve = tmin;}
-    void setTmaxRefCurve(const double tmax) { mTmaxRefCurve = tmax;}
+    float getTminRefCurve() const {return mTminRefCurve;}
+    float getTmaxRefCurve() const {return mTmaxRefCurve;}
+    void setTminRefCurve(const float tmin) { mTminRefCurve = tmin;}
+    void setTmaxRefCurve(const float tmax) { mTmaxRefCurve = tmax;}
 
-    double getTminCalib() const {return mTminCalib;}
-    double getTmaxCalib() const {return mTmaxCalib;}
-    void setTminCalib(const double tmin) { mTminCalib = tmin;}
-    void setTmaxCalib(const double tmax) { mTmaxCalib = tmax;}
+    float getTminCalib() const {return mTminCalib;}
+    float getTmaxCalib() const {return mTmaxCalib;}
+    void setTminCalib(const float tmin) { mTminCalib = tmin;}
+    void setTmaxCalib(const float tmax) { mTmaxCalib = tmax;}
 
-    double getFormatedTminRefCurve() const;
-    double getFormatedTmaxRefCurve() const;
+    float getFormatedTminRefCurve() const;
+    float getFormatedTmaxRefCurve() const;
 
-    double getFormatedTminCalib() const;
-    double getFormatedTmaxCalib() const;
+    float getFormatedTminCalib() const;
+    float getFormatedTmaxCalib() const;
 
-    void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
+    void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const float bandwidth, const float tmin, const float tmax);
     
 public:
     MHVariable mTheta; // theta i de la date
@@ -133,9 +133,9 @@ public:
     bool mIsCurrent;
     bool mIsSelected;
     
-    QVector<double> mCalibration;
-    QVector<double> mRepartition;
-    QMap<double, double> mCalibHPD;
+    QVector<float> mCalibration;
+    QVector<float> mRepartition;
+    QMap<float, float> mCalibHPD;
     ProjectSettings mSettings;
     
     QList<Date> mSubDates;
@@ -146,11 +146,11 @@ public:
 protected:
     samplingFunction updateti;
     
-    double mTminRefCurve;
-    double mTmaxRefCurve;
+    float mTminRefCurve;
+    float mTmaxRefCurve;
 
-    double mTminCalib;
-    double mTmaxCalib;
+    float mTminCalib;
+    float mTmaxCalib;
 };
 
 #endif

@@ -1,4 +1,4 @@
-#ifndef METROPOLISVARIABLE_H
+﻿#ifndef METROPOLISVARIABLE_H
 #define METROPOLISVARIABLE_H
 
 #include <QMap>
@@ -33,12 +33,12 @@ public:
     // -----
     void generateCorrelations(const QList<ChainSpecs> &chains);
 
-    void generateHistos(const QList<ChainSpecs> &chains, const int fftLen = 1024, const double bandwidth = 1.06, const double tmin = 0, const double tmax = 0);
-    void memoHistoParameter(const int fftLen = 1024, const double bandwidth = 1.06, const double tmin = 0, const double tmax = 0);
-    bool HistoWithParameter(const int fftLen = 1024, const double bandwidth = 1.06, const double tmin = 0, const double tmax = 0);
+    void generateHistos(const QList<ChainSpecs> &chains, const int fftLen = 1024, const float bandwidth = 1.06, const float tmin = 0, const float tmax = 0);
+    void memoHistoParameter(const int fftLen = 1024, const float bandwidth = 1.06, const float tmin = 0, const float tmax = 0);
+    bool HistoWithParameter(const int fftLen = 1024, const float bandwidth = 1.06, const float tmin = 0, const float tmax = 0);
 
-    void generateHPD(const double threshold = 95);
-    void generateCredibility(const QList<ChainSpecs>& chains, double threshold = 95);
+    void generateHPD(const float threshold = 95);
+    void generateCredibility(const QList<ChainSpecs>& chains, float threshold = 95);
 
 
     // Virtual because MHVariable subclass adds some information
@@ -48,19 +48,19 @@ public:
     // These functions do not make any calculation
     // -----
     
-    QMap<double, double>& fullHisto();
-    QMap<double, double>& histoForChain(const int index);
+    QMap<float, float>& fullHisto();
+    QMap<float, float>& histoForChain(const int index);
     
     // Full trace for the chain (burn + adapt + run)
-    QVector<double> fullTraceForChain(const QList<ChainSpecs> &chains,const int index);
+    QVector<float> fullTraceForChain(const QList<ChainSpecs> &chains,const int index);
     
     // Trace for run part as a vector
-    QVector<double> fullRunTrace(const QList<ChainSpecs>& chains);
+    QVector<float> fullRunTrace(const QList<ChainSpecs>& chains);
     // Trace for run part of the chain as a vector
-    QVector<double> runRawTraceForChain(const QList<ChainSpecs>& chains, const int index);
-    QVector<double> runFormatedTraceForChain(const QList<ChainSpecs>& chains, const int index);
+    QVector<float> runRawTraceForChain(const QList<ChainSpecs>& chains, const int index);
+    QVector<float> runFormatedTraceForChain(const QList<ChainSpecs>& chains, const int index);
     
-    QVector<double> correlationForChain(const int index);
+    QVector<float> correlationForChain(const int index);
     
     // -----
     
@@ -87,9 +87,9 @@ public slots:
       void updateFormatedTrace();
 
 private:
-    void generateBufferForHisto(float* input, const QVector<double> &dataSrc, const int numPts, const double a, const double b);
-    QMap<double, double> bufferToMap(const double* buffer);
-    QMap<double, double> generateHisto(const QVector<double>& data, const int fftLen, const  double bandwidth, const double tmin = 0, const double tmax = 0);
+    void generateBufferForHisto(float* input, const QVector<float> &dataSrc, const int numPts, const float a, const float b);
+    QMap<float, float> bufferToMap(const float* buffer);
+    QMap<float, float> generateHisto(const QVector<float>& data, const int fftLen, const  float bandwidth, const float tmin = 0, const float tmax = 0);
 
 
 
@@ -107,7 +107,7 @@ public:
         eBounded = 5 // on bounded support
     };
     double mX;
-    QVector<double> mRawTrace, mFormatedTrace;
+    QVector<float> mRawTrace, mFormatedTrace;
     //std::vector<double> mRawTrace, mFormatedTrace;
     // if we use std::vector we can not use QDataStream to save,
     //because QDataStream provides support for multi system and takes account of endians
@@ -119,27 +119,27 @@ public:
     // mChainsHistos constains posterior densities for each chain, computed using only the "run" part of the trace.
     // This needs to be re-calculated each time we change fftLength or bandwidth.
     // See generateHistos() for more.
-    QMap<double, double> mHisto;
-    QList<QMap<double, double> > mChainsHistos;
+    QMap<float, float> mHisto;
+    QList<QMap<float, float> > mChainsHistos;
     
     // List of correlations for each chain.
     // They are calculated once, when the MCMC is ready, from the run part of the trace.
-    QList<QVector<double> > mCorrelations;
+    QList<QVector<float> > mCorrelations;
     
-    QMap<double, double> mHPD;
-    QPair<double, double> mCredibility;
+    QMap<float, float> mHPD;
+    QPair<float, float> mCredibility;
     
-    double mExactCredibilityThreshold;
+    float mExactCredibilityThreshold;
     
     DensityAnalysis mResults;
     QList<DensityAnalysis> mChainsResults;
 
     int mfftLenUsed;
-    double mBandwidthUsed;
-    double mThresholdUsed;
+    float mBandwidthUsed;
+    float mThresholdUsed;
 
-    double mtminUsed;
-    double mtmaxUsed;
+    float mtminUsed;
+    float mtmaxUsed;
 
 
 private:
