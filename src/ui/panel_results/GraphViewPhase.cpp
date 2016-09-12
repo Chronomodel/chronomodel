@@ -1,4 +1,4 @@
-#include "GraphViewPhase.h"
+﻿#include "GraphViewPhase.h"
 #include "GraphView.h"
 #include "Phase.h"
 #include "Painting.h"
@@ -150,6 +150,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - HPD Duration
         //  - Post Distrib Alpha i
         //  - Post Distrib Beta i
+        //  - Time Range
         // ------------------------------------------------
         if ((typeGraph == ePostDistrib) && (variable == eTheta)) {
             mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();

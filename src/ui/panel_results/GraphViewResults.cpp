@@ -606,11 +606,15 @@ void GraphViewResults::generateAcceptCurves(const QList<ChainSpecs> &chains,
 
 void GraphViewResults::generateCorrelCurves(const QList<ChainSpecs> &chains,
                                             MHVariable* variable){
-    for(int i=0; i<chains.size(); ++i)
-    {
+    for(int i=0; i<chains.size(); ++i) {
         GraphCurve curve;
         curve.mName = QString("Correl " + QString::number(i));
         curve.mDataVector = variable->correlationForChain(i);
+        // if there is no data, no curve to add.
+        // It can append if there is not enought iteration, for example since a test
+        if(curve.mDataVector.isEmpty())
+            continue;
+
         curve.mUseVectorData = true;
         curve.mPen.setColor(Painting::chainColors.at(i));
         curve.mIsHisto = false;

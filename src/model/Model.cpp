@@ -923,9 +923,9 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
     while (iterEvent!=mEvents.end()) {
         (*iterEvent)->mTheta.generateCorrelations(chains);
         
-        for(int j=0; j<(*iterEvent)->mDates.size(); ++j)
-        {
-            Date& date = (*iterEvent)->mDates[j];
+        //for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
+        for( Date& date : (*iterEvent)->mDates ) {
+            //Date& date = (*iterEvent)->mDates[j];
             date.mTheta.generateCorrelations(chains);
             date.mSigma.generateCorrelations(chains);
         }
@@ -945,7 +945,7 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 #endif
 }
 
-void Model::setBandwidth(const double bandwidth)
+void Model::setBandwidth(const float bandwidth)
 {
     qDebug()<<"Model::setBandwidth";
     if (mBandwidth != bandwidth) {
@@ -959,7 +959,7 @@ void Model::setBandwidth(const double bandwidth)
     }
 }
 
-void Model::setFFTLength(const double FFTLength)
+void Model::setFFTLength(const float FFTLength)
 {
     qDebug()<<"Model::setFTLength";
     if (mFFTLength != FFTLength) {
@@ -980,7 +980,7 @@ void Model::setFFTLength(const double FFTLength)
  * @param[in] bandwidth
  * @param[in] threshold
  */
-void Model::initDensities(const int fftLength, const double bandwidth, const double threshold)
+void Model::initDensities(const int fftLength, const float bandwidth, const float threshold)
 {
     qDebug()<<"Model::initDensities"<<fftLength<<bandwidth<<threshold;
     mFFTLength = fftLength;
@@ -997,7 +997,7 @@ void Model::initDensities(const int fftLength, const double bandwidth, const dou
  //   emit newCalculus();
 }
 
-void Model::updateDensities(const int fftLength, const double bandwidth, const double threshold)
+void Model::updateDensities(const int fftLength, const float bandwidth, const float threshold)
 {
     qDebug()<<"Model::updateDensities"<<fftLength<<bandwidth<<threshold;
     bool newPosteriorDensities = false;
@@ -1024,7 +1024,7 @@ void Model::updateDensities(const int fftLength, const double bandwidth, const d
 
 }
 
-void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth)
+void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, float bandwidth)
 {
     QTime t = QTime::currentTime();
     
@@ -1060,8 +1060,7 @@ void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
     while (iterEvent!=mEvents.end()) {
         (*iterEvent)->mTheta.generateNumericalResults(chains);
         
-        for(int j=0; j<(*iterEvent)->mDates.size(); ++j)
-        {
+        for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
             Date& date = (*iterEvent)->mDates[j];
             date.mTheta.generateNumericalResults(chains);
             date.mSigma.generateNumericalResults(chains);
@@ -1105,7 +1104,7 @@ void Model::clearThreshold()
     }
 }
 
-void Model::initThreshold(const double threshold)
+void Model::initThreshold(const float threshold)
 {
    // memo threshold used  value
     mThreshold = threshold;
@@ -1137,7 +1136,7 @@ void Model::initThreshold(const double threshold)
  * @brief Model::setThreshold this is a slot
  * @param threshold
  */
-void Model::setThreshold(const double threshold)
+void Model::setThreshold(const float threshold)
 {
     qDebug()<<"Model::setThreshold"<<threshold<<" mThreshold"<<mThreshold;
     if ( mThreshold != threshold) {
@@ -1179,7 +1178,7 @@ double Model::getThreshold() const
     return mThreshold;
 }
 
-void Model::generateCredibility(const double thresh)
+void Model::generateCredibility(const float thresh)
 {
     qDebug()<<"Model::generateCredibility("<<thresh;
     QTime t = QTime::currentTime();
@@ -1187,8 +1186,7 @@ void Model::generateCredibility(const double thresh)
     QList<Event*>::iterator iterEvent = mEvents.begin();
     while (iterEvent!=mEvents.end()) {
         bool isFixedBound = false;
-        if((*iterEvent)->type() == Event::eKnown)
-        {
+        if((*iterEvent)->type() == Event::eKnown) {
             EventKnown* ek = dynamic_cast<EventKnown*>(*iterEvent);
             if(ek->knownType() == EventKnown::eFixed)
                 isFixedBound = true;
@@ -1262,7 +1260,7 @@ void Model::generateCredibility(const double thresh)
 
 }
 
-void Model::generateHPD(const double thresh)
+void Model::generateHPD(const float thresh)
 {
     QTime t = QTime::currentTime();
 
@@ -1338,12 +1336,12 @@ void Model::clearCredibilityAndHPD()
     while (iterEvent!=mEvents.cend()) {
         foreach (Date date, (*iterEvent)->mDates) {
             date.mTheta.mHPD.clear();
-            date.mTheta.mCredibility = QPair<double,double>();
+            date.mTheta.mCredibility = QPair<float,float>();
             date.mSigma.mHPD.clear();
-            date.mSigma.mCredibility= QPair<double,double>();
+            date.mSigma.mCredibility= QPair<float,float>();
         }
         (*iterEvent)->mTheta.mHPD.clear();
-        (*iterEvent)->mTheta.mCredibility = QPair<double,double>();
+        (*iterEvent)->mTheta.mCredibility = QPair<float,float>();
         ++iterEvent;
     }
     QList<Phase*>::iterator iterPhase = mPhases.begin();
@@ -1353,13 +1351,13 @@ void Model::clearCredibilityAndHPD()
         //(*iterPhase)->mAlpha.mThresholdOld = 0;
 
         (*iterPhase)->mBeta.mHPD.clear();
-        (*iterPhase)->mBeta.mCredibility = QPair<double,double>();
+        (*iterPhase)->mBeta.mCredibility = QPair<float,float>();
         //(*iterPhase)->mBeta.mThresholdOld = 0;
 
         (*iterPhase)->mDuration.mHPD.clear();
-        (*iterPhase)->mDuration.mCredibility = QPair<double,double>();
+        (*iterPhase)->mDuration.mCredibility = QPair<float,float>();
         //(*iterPhase)->mDuration.mThresholdOld = 0;
-        (*iterPhase)->mTimeRange = QPair<double,double>();
+        (*iterPhase)->mTimeRange = QPair<float,float>();
         ++iterPhase;
     }
 }

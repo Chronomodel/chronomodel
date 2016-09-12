@@ -906,7 +906,7 @@ void GraphView::drawCurves(QPainter& painter)
                     // e.g calibration of typo-ref
                     if (iter.hasNext()) {
                         if (valueY == (iter.peekNext()).value()) {
-                            if(valueX > mCurrentMinX && valueX < mCurrentMaxX) {
+                            if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX) {
                                 path.moveTo( getXForValue(valueX), getYForValue(0, true) );
                                 path.lineTo( getXForValue(valueX), getYForValue(valueY, true) );
                             }
