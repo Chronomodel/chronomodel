@@ -751,7 +751,9 @@ void MetropolisVariable::saveToStream(QDataStream &out)
           break;
     };
 
-    out << mRawTrace;
+    out << (quint32) mRawTrace.size();
+    for (float x:mRawTrace)
+        out << x;
    // *out << this->mFormatedTrace; // useless
 }
 
@@ -837,21 +839,27 @@ void MetropolisVariable::loadFromStream(QDataStream &in)
       case 4 :  mFormat = DateUtils::eDatB2K;
          break;
    };
+
+
     quint32 reserveTrace;
     in >> reserveTrace;
 
     mRawTrace.resize((int)reserveTrace);
     qDebug()<<"MetropolisVariable::loadFromStream"<<quint32(mRawTrace.size());
-    int it = 0;
+    for(float x:mRawTrace)
+        in >> x;
+  /*  int it = 0;
     for (; it <mRawTrace.size(); ++it) {
         qreal tmp;
         in >> tmp;
         mRawTrace[it]= (float) tmp;
     }
-    qDebug()<<"MetropolisVariable::loadFromStream it="<<it;
-   // std::generate(mRawTrace.begin(),mRawTrace.end(),[in]{qreal tmp; *in >> tmp; return (double) tmp;});
 
-   // *in >>  mRawTrace;
+    qDebug()<<"MetropolisVariable::loadFromStream it="<<it;
+    */
+   // std::generate(mRawTrace.begin(),mRawTrace.end(),[in]{float tmp; in >> tmp; return tmp;});
+
+  //  in >>  mRawTrace;
 
     // regeneration of this->mFormatedTrace
     updateFormatedTrace();

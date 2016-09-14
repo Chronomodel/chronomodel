@@ -186,11 +186,11 @@ void MHVariable::saveToStream(QDataStream &out)
     for ( const bool b:mAllAccepts)
         out << (b? quint8(1): quint8(0));
 
-    out << qreal(mGlobalAcceptation);
+    out << mGlobalAcceptation;
    // *out << mHistoryAcceptRateMH;
     out << quint32(mHistoryAcceptRateMH.size());
     for ( const float d : mHistoryAcceptRateMH )
-        out << qreal(d);
+        out << d;
    // *out << this->mLastAccepts;
     
      out << quint32(mLastAcceptsLength);
@@ -239,16 +239,16 @@ void MHVariable::loadFromStream(QDataStream &in)
         in >> bTmp;
         b = (bTmp==1);
     }
-    qreal tmp;
+    float tmp;
     in >> tmp;
-    mGlobalAcceptation = (float) tmp;
+    mGlobalAcceptation =  tmp;
 
     //*in >> mHistoryAcceptRateMH;
     in >> reserveTmp;
     mHistoryAcceptRateMH.resize((int)reserveTmp);
     for (float& rate : mHistoryAcceptRateMH) {
            in >> tmp;
-           rate = (float) tmp;
+           rate = tmp;
     }
 
    // *in >> this->mLastAccepts;
