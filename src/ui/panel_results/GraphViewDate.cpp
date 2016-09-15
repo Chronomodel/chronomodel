@@ -143,9 +143,9 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                                                         color);
                 mGraph->addCurve(curveHPD);
                 
-                
+                const float maxValue = map_max_value(variableDate->mHPD);
                 // Calibration
-                QMap<float,float> formatedCalib = mDate->getFormatedCalibMap();
+                QMap<float,float> formatedCalib = normalize_map(mDate->getFormatedCalibMap(), maxValue);
                 GraphCurve curveCalib = generateDensityCurve(formatedCalib,
                                                              "Calibration",
                                                              QColor(150, 150, 150),
@@ -187,7 +187,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                                                                    Qt::SolidLine,
                                                                    Qt::NoBrush);
                 mGraph->addCurve(curvePostDistrib);
-                float yMax = 1.1f * map_max_value(curvePostDistrib.mData);
+                //float yMax = 1.1f * map_max_value(curvePostDistrib.mData);
                 
                 
                 // Post Distrib Chain i
@@ -199,7 +199,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                                                                                 Qt::SolidLine,
                                                                                 Qt::NoBrush);
                         mGraph->addCurve(curvePostDistribChain);
-                        yMax = qMax(yMax, 1.1f * map_max_value(curvePostDistribChain.mData));
+                       // yMax = qMax(yMax, 1.1f * map_max_value(curvePostDistribChain.mData));
                     }
                 
                 //mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
@@ -207,7 +207,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 mGraph->autoAdjustYScale(true);
             }
             // must be after all curves adding
-            //mGraph->adjustYToMinMaxValue();
+            mGraph->adjustYToMinMaxValue();
            
         }
         // ------------------------------------------------
