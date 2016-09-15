@@ -18,7 +18,14 @@ public:
     static double randomUniform(const double min = 0., const double max = 1.) ;
     static double gaussByDoubleExp(const double mean, const double sigma, const double min, const double max) ;
     static double gaussByBoxMuller(const double mean, const double sigma) ;
-    
+
+    static double xorshift64star(void);
+    static uint64_t xorshift64starSeed;
+    static inline double to_double(uint64_t x) {
+       const union { uint64_t i; double d; } u = { .i = UINT64_C(0x3FF) << 52 | x >> 12 };
+       return u.d - 1.0;
+    }
+
 private:
 
 
@@ -26,6 +33,9 @@ private:
     
     static std::mt19937 sEngine;
     static std::uniform_real_distribution<double> sDistribution;
+
+    //https://en.wikipedia.org/wiki/Xorshift
+
 
 };
 
