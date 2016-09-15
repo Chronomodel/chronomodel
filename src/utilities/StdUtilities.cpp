@@ -146,13 +146,11 @@ QVector<float> normalize_vector(const QVector<float>& aVector)
     QVector<float> histo;
 
     QVector<float>::const_iterator it = max_element(aVector.begin(), aVector.end());
-    if(it != aVector.end())
-    {
+    if(it != aVector.end()){
         float max_value = *it;
         for(QVector<float>::const_iterator it = aVector.begin(); it != aVector.end(); ++it)
-        {
             histo.push_back((*it)/max_value);
-        }
+
     }
     return histo;
 }
@@ -204,7 +202,7 @@ QVector<float> stretch_vector(const QVector<float>& aVector, const float from, c
     return histo;
 }
 
-QMap<double, double> normalize_map(const QMap<double, double>& aMap)
+/*QMap<double, double> normalize_map(const QMap<double, double>& aMap)
 {
     double max_value = map_max_value(aMap);
     
@@ -226,7 +224,7 @@ QMap<float, float> normalize_map(const QMap<float, float>& aMap)
 
     return result;
 }
-
+*/
 QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const QMap<double, double>& mapWithTargetArea)
 {
     if(mapToModify.isEmpty())

@@ -177,13 +177,25 @@ T sum2Shifted(const QVector<T>& vector, const T& shift){
     /*std::for_each(vector.cbegin(), vector.cend(), [&sum, &shift](T& v){
         sum += (v + shift) * (v + shift);
     });*/
-    foreach (const T v, vector) {
+    foreach (const T v, vector)
         sum += (v + shift) * (v + shift);
-    }
+
 
     return sum;
 }
 // --------------------------------
+template<typename T>
+QMap<T, T> normalize_map(const QMap<T, T>& aMap, const T max = 1)
+{
+    T max_value = map_max_value(aMap);
+
+    QMap<T, T> result;
+    // can be done with std::generate !!
+    for( typename QMap<T, T>::const_iterator it = aMap.begin(); it != aMap.end(); ++it)
+        result[it.key()] = (it.value() / max_value)*max;
+
+    return result;
+}
 
 QVector<double> normalize_vector(const QVector<double>& aVector);
 QVector<float> normalize_vector(const QVector<float>& aVector);
@@ -191,8 +203,8 @@ QVector<float> normalize_vector(const QVector<float>& aVector);
 QVector<double> stretch_vector(const QVector<double>& aVector, const double from, const double to);
 QVector<float> stretch_vector(const QVector<float>& aVector, const float from, const float to);
 
-QMap<double, double> normalize_map(const QMap<double, double>& aMap);
-QMap<float, float> normalize_map(const QMap<float, float>& aMap);
+//QMap<double, double> normalize_map(const QMap<double, double>& aMap);
+//QMap<float, float> normalize_map(const QMap<float, float>& aMap);
 
 QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const QMap<double, double>& mapWithTargetArea);
 QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const QMap<float, float>& mapWithTargetArea);
