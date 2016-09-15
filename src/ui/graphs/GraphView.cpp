@@ -260,8 +260,8 @@ void GraphView::adjustYToMaxValue(const qreal& marginProp)
 
 void GraphView::adjustYToMinMaxValue()
 {
-    float yMin = 0;
-    float yMax = 0;
+    float yMin = 0.f;
+    float yMax = 0.f;
 
     QList<GraphCurve>::const_iterator iter = mCurves.cbegin();
     bool firstFound = false;

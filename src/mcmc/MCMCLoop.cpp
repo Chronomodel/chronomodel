@@ -21,8 +21,7 @@ MCMCLoop::~MCMCLoop()
 void MCMCLoop::setMCMCSettings(const MCMCSettings& s)
 {
     mChains.clear();
-    for(int i=0; i<s.mNumChains; ++i)
-    {
+    for(int i=0; i<s.mNumChains; ++i) {
         ChainSpecs chain;
         
         if(i < s.mSeeds.size())
@@ -83,7 +82,7 @@ const QString MCMCLoop::getInitLog() const
 
 void MCMCLoop::run()
 {    
-    QString mDate =QDateTime::currentDateTime().toString("dddd dd MMMM yyyy");
+    QString mDate = QDateTime::currentDateTime().toString("dddd dd MMMM yyyy");
     QTime startTime = QTime::currentTime();
     QString log= "Start " +mDate+" ->>> " +startTime.toString("hh:mm:ss.zzz");
     
@@ -94,9 +93,8 @@ void MCMCLoop::run()
     
     mAbortedReason = this->calibrate();
     if(!mAbortedReason.isEmpty())
-    {
         return;
-    }
+
     
 
     //----------------------- Chains --------------------------------------

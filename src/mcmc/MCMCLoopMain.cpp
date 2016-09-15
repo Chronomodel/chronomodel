@@ -36,8 +36,7 @@ MCMCLoopMain::~MCMCLoopMain()
 
 QString MCMCLoopMain::calibrate()
 {
-    if(mModel)
-    {
+    if(mModel) {
         QList<Event*>& events = mModel->mEvents;
         events.reserve(mModel->mEvents.size());
         //----------------- Calibrate measures --------------------------------------
@@ -45,21 +44,17 @@ QString MCMCLoopMain::calibrate()
         QList<Date*> dates;
         // find number of dates, to optimize memory space
         int nbDates = 0;
-        foreach (const Event* e, events) {
+        foreach (const Event* e, events)
             nbDates += e->mDates.size();
-        }
+
         dates.reserve(nbDates);
-        for(int i=0; i<events.size(); ++i)
-        {
+        for(int i=0; i<events.size(); ++i) {
             int num_dates = events.at(i)->mDates.size();
-            for(int j=0; j<num_dates; ++j)
-            {
+            for(int j=0; j<num_dates; ++j) {
                 Date* date = &events.at(i)->mDates[j];
-                //date->mCalibration = events.at(i)->mDates.at(j).mCalibration;
                 dates.push_back(date);
                 date = 0;
             }
-
         }
 
 
@@ -68,8 +63,7 @@ QString MCMCLoopMain::calibrate()
         
         emit stepChanged(tr("Calibrating..."), 0, dates.size());
         
-        for(int i=0; i<dates.size(); ++i)
-        {
+        for(int i=0; i<dates.size(); ++i) {
             //QTime startTime = QTime::currentTime();
             dates.at(i)->calibrate(mModel->mSettings);
          
@@ -95,10 +89,11 @@ void MCMCLoopMain::initVariablesForChain()
     QList<Event*>& events = mModel->mEvents;
     
     const int acceptBufferLen = chain.mNumBatchIter;
-    int initReserve = 0;
-    foreach (const ChainSpecs c, mChains) {
+    long int initReserve = 0;
+    foreach (const ChainSpecs c, mChains)
        initReserve +=( (c.mMaxBatchs*c.mNumBatchIter) + c.mNumBurnIter + (c.mNumRunIter/c.mThinningInterval) );
-    }
+    if (initReserve>std::numeric_limits<int>::max())
+        initReserve=std::numeric_limits<int>::max();
 
     for(int i=0; i<events.size(); ++i) {
         Event* event = events[i];
@@ -142,8 +137,7 @@ QString MCMCLoopMain::initMCMC()
     //  Init gamma
     // ----------------------------------------------------------------
     emit stepChanged(tr("Initializing phases gaps..."), 0, phasesConstraints.size());
-    for(int i=0; i<phasesConstraints.size(); ++i)
-    {
+    for(int i=0; i<phasesConstraints.size(); ++i) {
         phasesConstraints.at(i)->initGamma();
         
         if(isInterruptionRequested())
@@ -156,8 +150,7 @@ QString MCMCLoopMain::initMCMC()
     //  Init tau
     // ----------------------------------------------------------------
     emit stepChanged(tr("Initializing phases durations..."), 0, phases.size());
-    for(int i=0; i<phases.size(); ++i)
-    {
+    for(int i=0; i<phases.size(); ++i) {
         phases.at(i)->initTau();
         
         if(isInterruptionRequested())
@@ -179,27 +172,21 @@ QString MCMCLoopMain::initMCMC()
     double curLevelMaxValue = mModel->mSettings.mTmin;
     double prevLevelMaxValue = mModel->mSettings.mTmin;
     
-    for(int i=0; i<eventsByLevel.size(); ++i)
-    {
-        if(eventsByLevel.at(i)->type() == Event::eKnown)
-        {
+    for(int i=0; i<eventsByLevel.size(); ++i) {
+        if(eventsByLevel.at(i)->type() == Event::eKnown) {
             EventKnown* bound = dynamic_cast<EventKnown*>(eventsByLevel[i]);
 
-            if(bound)
-            {
-                if(curLevel != bound->mLevel)
-                {
+            if(bound) {
+                if(curLevel != bound->mLevel) {
                     curLevel = bound->mLevel;
                     prevLevelMaxValue = curLevelMaxValue;
                     curLevelMaxValue = mModel->mSettings.mTmin;
                 }
                 
-                if(bound->mKnownType == EventKnown::eFixed)
-                {
+                if(bound->mKnownType == EventKnown::eFixed) {
                     bound->mTheta.mX = bound->mFixed;
                 }
-                else if(bound->mKnownType == EventKnown::eUniform)
-                {
+                else if(bound->mKnownType == EventKnown::eUniform) {
                     bound->mTheta.mX = Generator::randomUniform(qMax(bound->mUniformStart, prevLevelMaxValue),
                                                                 bound->mUniformEnd);
                 }
@@ -222,10 +209,8 @@ QString MCMCLoopMain::initMCMC()
 
     emit stepChanged(tr("Initializing events..."), 0, unsortedEvents.size());
 
-    for(int i=0; i<unsortedEvents.size(); ++i)
-    {
-        if(unsortedEvents.at(i)->mType == Event::eDefault)
-        {
+    for(int i=0; i<unsortedEvents.size(); ++i) {
+        if(unsortedEvents.at(i)->mType == Event::eDefault) {
             const double min = unsortedEvents.at(i)->getThetaMinRecursive(tmin, eventBranches, phaseBranches);
             const double max = unsortedEvents.at(i)->getThetaMaxRecursive(tmax, eventBranches, phaseBranches);
             
@@ -235,12 +220,11 @@ QString MCMCLoopMain::initMCMC()
             //qDebug() << "--> Event initialized : " << unsortedEvents[i]->getName() << " : " << unsortedEvents[i]->mTheta.mX;
             
             double s02_sum = 0.f;
-            for(int j=0; j<unsortedEvents.at(i)->mDates.size(); ++j)
-            {
+            for(int j=0; j<unsortedEvents.at(i)->mDates.size(); ++j) {
                 Date& date = unsortedEvents.at(i)->mDates[j];
                 
                 // 1 - Init ti
-                double sigma = double();
+                double sigma;
                 if(!date.mRepartition.isEmpty()) {
                     const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mRepartition);
                     date.mTheta.mX = date.getTminCalib() + idx * mModel->mSettings.mStep;
@@ -252,12 +236,11 @@ QString MCMCLoopMain::initMCMC()
                        // For instance we use a gaussian random sampling
                     sigma = mModel->mSettings.mTmax - mModel->mSettings.mTmin;
                     const double u = Generator::gaussByBoxMuller(0,sigma);
-                    if(u<0) {
+                    if(u<0)
                         date.mTheta.mX = mModel->mSettings.mTmin + u;
-                    }
-                    else {
+                    else
                         date.mTheta.mX = mModel->mSettings.mTmax + u;
-                    }
+
                     if(date.mMethod == Date::eInversion) {
                         qDebug()<<"Automatic sampling method exchange eInversion to eMHSymetric for"<< date.mName;
                         date.mMethod = Date::eMHSymetric;
@@ -294,10 +277,8 @@ QString MCMCLoopMain::initMCMC()
     QString log;
     emit stepChanged(tr("Initializing variances..."), 0, events.size());
     
-    for(int i=0; i<events.size(); ++i)
-    {
-        for(int j=0; j<events.at(i)->mDates.size(); ++j)
-        {
+    for(int i=0; i<events.size(); ++i) {
+        for(int j=0; j<events.at(i)->mDates.size(); ++j) {
             Date& date = events.at(i)->mDates[j];
             
             
@@ -319,8 +300,7 @@ QString MCMCLoopMain::initMCMC()
     //  Init phases
     // ----------------------------------------------------------------
     emit stepChanged(tr("Initializing phases..."), 0, phases.size());
-    for(int i=0; i<phases.size(); ++i)
-    {
+    for(int i=0; i<phases.size(); ++i) {
         Phase* phase = phases[i];
 
         phase->updateAll(tmin, tmax);
@@ -342,18 +322,15 @@ QString MCMCLoopMain::initMCMC()
         ++i;
         log += "<hr><br>";
         
-        if(event->type() == Event::eKnown)
-        {
+        if(event->type() == Event::eKnown) {
              const EventKnown* bound = dynamic_cast<const EventKnown*>(event);
-            if(bound)
-            {
+            if(bound) {
                 log += line(textRed("Bound (" + QString::number(i) + "/" + QString::number(events.size()) + ") : " + bound->mName));
                 log += line(textRed(" - theta (value) : " + DateUtils::convertToAppSettingsFormatStr(bound->mTheta.mX)+" "+ DateUtils::getAppSettingsFormat()));
                 log += line(textRed(" - theta (sigma MH) : " + QString::number(bound->mTheta.mSigmaMH)));
             }
         }
-        else
-        {
+        else {
             log += line(textBlue("Event (" + QString::number(i) + "/" + QString::number(events.size()) + ") : " + event->mName));
             log += line(textBlue(" - theta (value) : " + DateUtils::convertToAppSettingsFormatStr(event->mTheta.mX) +" "+ DateUtils::getAppSettingsFormat()));
             log += line(textBlue(" - theta (sigma MH) : " + QString::number(event->mTheta.mSigmaMH)));
@@ -379,8 +356,7 @@ QString MCMCLoopMain::initMCMC()
         }
     }
     
-    if(phases.size() > 0)
-    {
+    if(phases.size() > 0) {
         log += "<hr>";
         log += textBold(tr("Phases Initialisation"));
         log += "<hr>";
@@ -396,8 +372,7 @@ QString MCMCLoopMain::initMCMC()
         }
     }
     
-    if(phasesConstraints.size() > 0)
-    {
+    if(phasesConstraints.size() > 0) {
 
         log += "<hr>";
         log += textBold(tr("Phases Constraints Initialisation"));
@@ -443,8 +418,7 @@ void MCMCLoopMain::update()
              iterDate->updateSigma(*eventIter);
              iterDate->updateWiggle();
 
-            if(doMemo)
-            {
+            if(doMemo){
                 iterDate->mTheta.memo();
                 iterDate->mSigma.memo();
                 iterDate->mWiggle.memo();
@@ -456,8 +430,7 @@ void MCMCLoopMain::update()
         }
         //--------------------- Update Events -----------------------------------------
         (*eventIter)->updateTheta(t_min, t_max);
-        if(doMemo)
-        {
+        if(doMemo) {
            (*eventIter)->mTheta.memo();
            (*eventIter)->mTheta.saveCurrentAcceptRate();
         }
@@ -491,9 +464,7 @@ void MCMCLoopMain::update()
     //--------------------- Update Phases constraints -----------------------------------------
     QList<PhaseConstraint*>& phasesConstraints = mModel->mPhaseConstraints;
     for(int i=0; i<phasesConstraints.size(); ++i)
-    {
         phasesConstraints[i]->updateGamma();
-    }
 }
 
 bool MCMCLoopMain::adapt()

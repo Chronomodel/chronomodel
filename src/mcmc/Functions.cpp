@@ -166,7 +166,8 @@ float dataStd(const QVector<float>& data)
 
 double shrinkageUniform(const double so2)
 {
-    double u = Generator::randomUniform();
+    //double u = Generator::randomUniform();
+    const double u = Generator::randomUniform(0,1);
     return (so2 * (1. - u) / u);
 }
 

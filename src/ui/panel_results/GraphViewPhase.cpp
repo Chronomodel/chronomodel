@@ -139,7 +139,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         QString resultsHTML = ModelUtilities::phaseResultsHTML(mPhase);
         setNumericalResults(resultsHTML, resultsText);
         
-        // ------------------------------------------------
+        /* ------------------------------------------------
         //  first tab : posterior distrib
         //  Possible curves :
         //  - Post Distrib Alpha All Chains
@@ -151,7 +151,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - Post Distrib Alpha i
         //  - Post Distrib Beta i
         //  - Time Range
-        // ------------------------------------------------
+        // ------------------------------------------------*/
         if ((typeGraph == ePostDistrib) && (variable == eTheta)) {
             mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             mGraph->mLegendY = "";
