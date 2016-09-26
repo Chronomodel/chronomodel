@@ -281,7 +281,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
     }
 }
 
-void PluginMagRefView::zoomX(float min, float max)
+void PluginMagRefView::zoomX(const float min, const float max)
 {
     mGraph->zoomX(min, max);
 }

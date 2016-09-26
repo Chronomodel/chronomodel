@@ -1611,16 +1611,16 @@ void Model::restoreFromFile(const QString& fileName)
 
             quint32 tmp32;
             in >> tmp32;
-            const int numPhases = (int)tmp32;
+            //const int numPhases = (int)tmp32;
             in >> tmp32;
-            const int numEvents = (int)tmp32;
+            //const int numEvents = (int)tmp32;
             in >> tmp32;
-            const int numdates = (int)tmp32;
+            //const int numdates = (int)tmp32;
 
             in >> tmp32;
             mChains.clear();
             mChains.reserve((int) tmp32);
-            for (int i=0 ; i<tmp32; ++i) {
+            for (quint32 i=0 ; i<tmp32; ++i) {
                 ChainSpecs ch;
                 in >> ch.mBatchIndex;
                 in >> ch.mBatchIterIndex;

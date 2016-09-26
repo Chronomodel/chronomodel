@@ -15,6 +15,8 @@
 
 MetropolisVariable::MetropolisVariable(QObject *parent):QObject(parent),
 mX(0),
+mRawTrace(0),
+mFormatedTrace(0),
 mSupport(eR),
 mFormat(DateUtils::eNumeric),
 mExactCredibilityThreshold(0),
@@ -22,10 +24,7 @@ mfftLenUsed(-1),
 mBandwidthUsed(-1),
 mThresholdUsed(-1),
 mtminUsed(0),
-mtmaxUsed(0),
-mRawTrace(0),
-mFormatedTrace(0)
-
+mtmaxUsed(0)
 {
     // will not throw exception,(std::nothrow) in C++ Programmin Language B. Stroustrup Section 19.4.5
    /* mRawTrace = new QVector<float>();
@@ -554,7 +553,7 @@ QVector<float> MetropolisVariable::runFormatedTraceForChain(const QList<ChainSpe
         qDebug() << "in MetropolisVariable::runFormatedTraceForChain -> mFormatedTrace empty";
         return QVector<float>(0);//trace ;
     }  else  {
-        const int reserveSize = (int) ceil(chains.at(index).mNumRunIter /chains.at(index).mThinningInterval );
+        //const int reserveSize = (int) ceil(chains.at(index).mNumRunIter /chains.at(index).mThinningInterval );
         //trace.resize(reserveSize);
 
         int shift = 0;
@@ -746,7 +745,7 @@ QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
         data.mRawTrace = new QVector<float>();
     data.mRawTrace->reserve(siz);
 
-    for(int i = 0; i < siz; ++i) {
+    for(quint32 i = 0; i < siz; ++i) {
         float v;
         stream >> v;
         data.mRawTrace->push_back(v);

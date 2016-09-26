@@ -319,7 +319,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
     }
 }
 
-void Plugin14CRefView::zoomX(float min, float max)
+void Plugin14CRefView::zoomX(const float min, const float max)
 {
     mGraph->zoomX(min, max);
 }

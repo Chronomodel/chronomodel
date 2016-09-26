@@ -26,8 +26,8 @@ private:
     QImage mThumb;
     int mThumbH;
     bool mThumbVisible;
-    bool mWithSelectedPhase;
-    bool mShowAllThumbs;
+    //bool mWithSelectedPhase;
+    //bool mShowAllThumbs;
 };
 
 #endif

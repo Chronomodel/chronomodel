@@ -145,7 +145,7 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
     }
 }
 
-void PluginTLRefView::zoomX(float min, float max)
+void PluginTLRefView::zoomX(const float min, const float max)
 {
     mGraph->zoomX(min, max);
 }

@@ -14,12 +14,12 @@
 
 EventKnownItem::EventKnownItem(EventsScene* eventsScene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):EventItem(eventsScene, event, settings, parent),
 mThumbH(20),
-mThumbVisible(true),
-mWithSelectedPhase(false),
-mShowAllThumbs(true)
+mThumbVisible(true)
+//mWithSelectedPhase(false),
+//mShowAllThumbs(true)
 {
     setEvent(event, settings);
-     mScene = static_cast<AbstractScene*>(eventsScene);
+    mScene = static_cast<AbstractScene*>(eventsScene);
 }
 
 EventKnownItem::~EventKnownItem()

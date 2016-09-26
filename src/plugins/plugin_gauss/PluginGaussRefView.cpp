@@ -247,7 +247,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
     }
 }
 
-void PluginGaussRefView::zoomX(float min, float max)
+void PluginGaussRefView::zoomX(const float min, const float max)
 {
     mGraph->zoomX(min, max);
 }
