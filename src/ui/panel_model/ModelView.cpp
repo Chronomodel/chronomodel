@@ -178,8 +178,8 @@ mCalibVisible(false)
     // -------- Windows Event propreties -----------------------
     
     mStudyLab = new Label(tr("STUDY PERIOD (BC/AD)"), mRightWrapper);
-    mMinLab = new Label(tr("Start") + " :", mRightWrapper);
-    mMaxLab = new Label(tr("End")   + " :", mRightWrapper);
+    mMinLab = new Label(tr("Start"), mRightWrapper);
+    mMaxLab = new Label(tr("End") , mRightWrapper);
     //mStepLab = new Label(tr("Step") + " :", mRightWrapper);
     
    // qreal butW = 80;
@@ -200,12 +200,15 @@ mCalibVisible(false)
     //mStepLab->setLight();
     
     mStudyLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    QFont font;
-    font.setPointSizeF(pointSize(13.f));
+    QFont font(QApplication::font());
+    //font.setPointSizeF(pointSize(13.f));
     mStudyLab->setFont(font);
     QPalette palette = mStudyLab->palette();
     palette.setColor(QPalette::WindowText, Qt::white);
     mStudyLab->setPalette(palette);
+
+    mMinLab->setFont(font);
+    mMaxLab->setFont(font);
     
     //mStepLab->setToolTip(prepareTooltipText(tr("Step :"), tr("The step is useful for large study periods.\nFor example with a step of 10 years, calibrated date's values will be stored every 10 years.\nIt lowers memory requirements and graph plots are faster.\nHowever, interpolation between these points\nleads to less precision in calculations.")));
     
@@ -218,7 +221,9 @@ mCalibVisible(false)
     mMaxEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mMaxEdit->setAlignment(Qt::AlignHCenter);
     //mStepEdit = new LineEdit(mRightWrapper);
-    
+    mMinEdit->setFont(font);
+    mMaxEdit->setFont(font);
+
     mButApply = new Button(tr("Apply"), mRightWrapper);
     mButApply->setColorState(Button::eWarning);
     

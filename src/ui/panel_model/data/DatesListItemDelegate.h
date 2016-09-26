@@ -16,8 +16,8 @@ public:
     
     inline QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex&) const
     {
-        QFont font = option.font;
-        font.setPointSizeF(pointSize(11));
+        QFont font(QApplication::font());// = option.font;
+        //font.setPointSizeF(pointSize(11));
         QFontMetrics metrics(font);
         
         int mm = 2;

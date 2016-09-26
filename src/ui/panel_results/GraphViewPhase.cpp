@@ -1,4 +1,4 @@
-#include "GraphViewPhase.h"
+﻿#include "GraphViewPhase.h"
 #include "GraphView.h"
 #include "Phase.h"
 #include "Painting.h"
@@ -139,7 +139,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         QString resultsHTML = ModelUtilities::phaseResultsHTML(mPhase);
         setNumericalResults(resultsHTML, resultsText);
         
-        // ------------------------------------------------
+        /* ------------------------------------------------
         //  first tab : posterior distrib
         //  Possible curves :
         //  - Post Distrib Alpha All Chains
@@ -150,7 +150,8 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - HPD Duration
         //  - Post Distrib Alpha i
         //  - Post Distrib Beta i
-        // ------------------------------------------------
+        //  - Time Range
+        // ------------------------------------------------*/
         if ((typeGraph == ePostDistrib) && (variable == eTheta)) {
             mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             mGraph->mLegendY = "";
@@ -214,18 +215,18 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                 curveDuration.mData.clear();
             }
             mDurationGraph->addCurve(curveDuration);
-            
-            for (int i=0; i<mChains.size(); ++i) {
-                GraphCurve curveAlpha = generateDensityCurve(mPhase->mAlpha.histoForChain(i),
-                                                             "Post Distrib Alpha " + QString::number(i),
-                                                             color, Qt::DotLine);
-                
-                GraphCurve curveBeta = generateDensityCurve(mPhase->mBeta.histoForChain(i),
-                                                            "Post Distrib Beta " + QString::number(i),
-                                                            colorBeta, Qt::DashLine);
-                mGraph->addCurve(curveAlpha);
-                mGraph->addCurve(curveBeta);
-            }
+            if (!mPhase->mAlpha.mChainsHistos.isEmpty())
+                for (int i=0; i<mChains.size(); ++i) {
+                    GraphCurve curveAlpha = generateDensityCurve(mPhase->mAlpha.histoForChain(i),
+                                                                 "Post Distrib Alpha " + QString::number(i),
+                                                                 color, Qt::DotLine);
+
+                    GraphCurve curveBeta = generateDensityCurve(mPhase->mBeta.histoForChain(i),
+                                                                "Post Distrib Beta " + QString::number(i),
+                                                                colorBeta, Qt::DashLine);
+                    mGraph->addCurve(curveAlpha);
+                    mGraph->addCurve(curveBeta);
+                }
             // must be after all curves adding
             mGraph->adjustYToMinMaxValue();
         }

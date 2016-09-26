@@ -1,4 +1,4 @@
-#include "QtUtilities.h"
+﻿#include "QtUtilities.h"
 #include "StdUtilities.h"
 #include "StateKeys.h"
 #include "MainWindow.h"
@@ -357,38 +357,34 @@ QColor randomColor()
 
 bool constraintIsCircular(QJsonArray constraints, const int fromId, const int toId)
 {    
-    for(int i=0; i<constraints.size(); ++i)
-    {
+    for(int i=0; i<constraints.size(); ++i) {
         QJsonObject constraint = constraints.at(i).toObject();
         
         // Detect circularity
         if(constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == toId && constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == fromId)
-        {
             return true;
-        }
+
         // If the constraint follows the one we are trying to create,
         // follow it to check the circularity !
         else if(constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == toId){
-            int nextToId =  constraint.value(STATE_CONSTRAINT_FWD_ID).toInt();
-            if(constraintIsCircular(constraints, fromId, nextToId))
-            {
-                return true;
-            };
+                int nextToId =  constraint.value(STATE_CONSTRAINT_FWD_ID).toInt();
+                if(constraintIsCircular(constraints, fromId, nextToId))
+                    return true;
+
         }
     }
     return false;
 }
 
-QString formatValueToAppSettingsPrecision(const double valueToFormat)
+QString formatValueToAppSettingsPrecision(const float valueToFormat)
 {
     int precision = MainWindow::getInstance()->getAppSettings().mPrecision;
     char fmt = 'f';
-    if (std::fabs(valueToFormat)>250000) {
+    if (std::fabs(valueToFormat)>250000)
         fmt = 'G';
-    }
-    if (std::fabs(valueToFormat)<1E-6) {
+
+    if (std::fabs(valueToFormat)<1E-6)
         return "0";
-    }
     else
         return QString::number(valueToFormat, fmt, precision);;
 }

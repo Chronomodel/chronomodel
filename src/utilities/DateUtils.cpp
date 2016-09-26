@@ -1,11 +1,11 @@
-#include "DateUtils.h"
+﻿#include "DateUtils.h"
 #include "MainWindow.h"
 #include "QtUtilities.h"
 #include <cmath>
 #include <QLocale>
 
 
-double DateUtils::convertToFormat(const double valueToFormat, const FormatDate format)
+float DateUtils::convertToFormat(const float valueToFormat, const FormatDate format)
 {
     switch (format) {
         case eCalBP:
@@ -27,7 +27,7 @@ double DateUtils::convertToFormat(const double valueToFormat, const FormatDate f
             break;
     }
 }
-double DateUtils::convertFromFormat(const double formattedValue, const FormatDate format)
+float DateUtils::convertFromFormat(const float formattedValue, const FormatDate format)
 {
     switch (format) {
         case eCalBP:
@@ -74,12 +74,12 @@ QString DateUtils::formatString(const FormatDate format)
     }
 }
 
-QString DateUtils::dateToString(const double date)
+QString DateUtils::dateToString(const float date)
 {
     return formatValueToAppSettingsPrecision(date);
 }
 
-QString DateUtils::dateToString(const double date, int precision)
+QString DateUtils::dateToString(const float date, int precision)
 {
     QLocale locale;
     locale.setNumberOptions(QLocale::OmitGroupSeparator);
@@ -105,22 +105,22 @@ QString DateUtils::getAppSettingsFormatStr()
 }
 
 
-QString DateUtils::convertToAppSettingsFormatStr(const double valueToFormat)
+QString DateUtils::convertToAppSettingsFormatStr(const float valueToFormat)
 {
     return dateToString(convertToAppSettingsFormat(valueToFormat));
 }
 
-double DateUtils::convertToAppSettingsFormat(const double valueToFormat)
+float DateUtils::convertToAppSettingsFormat(const float valueToFormat)
 {
     return DateUtils::convertToFormat(valueToFormat, getAppSettingsFormat());
 }
 
-QString DateUtils::convertFromAppSettingsFormatStr(const double formattedValue)
+QString DateUtils::convertFromAppSettingsFormatStr(const float formattedValue)
 {
     return dateToString(convertFromAppSettingsFormat(formattedValue));
 }
 
-double DateUtils::convertFromAppSettingsFormat(const double formattedValue)
+float DateUtils::convertFromAppSettingsFormat(const float formattedValue)
 {
     return DateUtils::convertFromFormat(formattedValue, getAppSettingsFormat());
 }

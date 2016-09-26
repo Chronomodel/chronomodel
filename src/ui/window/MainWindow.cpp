@@ -18,11 +18,13 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     tooltipPalette.setColor(QPalette::ToolTipBase, Qt::white);
     tooltipPalette.setColor(QPalette::ToolTipText, Qt::black);
     QToolTip::setPalette(tooltipPalette);
-    QFont tooltipFont;
+    QFont tooltipFont(QApplication::font());
     tooltipFont.setItalic(true);
-    tooltipFont.setPointSizeF(11.f);
+    //tooltipFont.setPointSizeF(11.f);
+
     QToolTip::setFont(tooltipFont);
-    
+
+    setFont(QApplication::font());
     mLastPath = QDir::homePath();
     
     mProject = 0;

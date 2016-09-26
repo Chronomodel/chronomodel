@@ -1,4 +1,4 @@
-#ifndef FUNCTIONS_H
+﻿#ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 
 #include <QMap>
@@ -8,16 +8,16 @@
 
 
 struct FunctionAnalysis{
-    double max = 0.f;
-    double mode = 0.f;
-    double mean = 0.f;
-    double stddev = 0.f;
+    float max = 0.f;
+    float mode = 0.f;
+    float mean = 0.f;
+    float stddev = 0.f;
 };
 
 struct Quartiles{
-    double Q1 = 0.f;
-    double Q2 = 0.f;
-    double Q3 = 0.f;
+    float Q1 = 0.f;
+    float Q2 = 0.f;
+    float Q3 = 0.f;
 };
 
 struct DensityAnalysis
@@ -27,25 +27,27 @@ struct DensityAnalysis
 };
 
 FunctionAnalysis analyseFunction(const QMap<double, double>& aFunction);
+FunctionAnalysis analyseFunction(const QMap<float, float>& aFunction);
+
 QString functionAnalysisToString(const FunctionAnalysis& analysis);
 QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& nl = "<br>");
 
 // Standard Deviation of a vector of data
-double dataStd(const QVector<double> &data);
+float dataStd(const QVector<float> &data);
 
 double shrinkageUniform(const double so2);
 
-Quartiles quartilesForTrace(const QVector<double>& trace);
-Quartiles quartilesForRepartition(const QVector<double>& repartition,const double tmin,const double step);
-QPair<double, double> credibilityForTrace(const QVector<double>& trace, double thresh, double& exactThresholdResult, const QString description = "Credibility computation");
-QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh, const QString description ="Time Range Computation");
+Quartiles quartilesForTrace(const QVector<float>& trace);
+Quartiles quartilesForRepartition(const QVector<float>& repartition,const float tmin,const float step);
+QPair<float, float> credibilityForTrace(const QVector<float>& trace, float thresh, float& exactThresholdResult, const QString description = "Credibility computation");
+QPair<float, float> timeRangeFromTraces(const QVector<float>& trace1, const QVector<float>& trace2, const float thresh, const QString description ="Time Range Computation");
 
-QPair<double, double> gapRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh, const QString description ="Gap Range Computation");
-QPair<double, double> transitionRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh, const QString description ="Gap Range Computation");
+QPair<float, float> gapRangeFromTraces(const QVector<float>& trace1, const QVector<float>& trace2, const float thresh, const QString description ="Gap Range Computation");
+QPair<float, float> transitionRangeFromTraces(const QVector<float>& trace1, const QVector<float>& trace2, const float thresh, const QString description ="Gap Range Computation");
 
-QString intervalText(const QPair<double, QPair<double, double> >& interval, FormatFunc formatFunc = 0);
-QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString& unit = QString(), FormatFunc formatFunc = 0);
-QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double, double>& hpd, double thresh);
+QString intervalText(const QPair<float, QPair<float, float> >& interval, FormatFunc formatFunc = 0);
+QString getHPDText(const QMap<float, float>& hpd, float thresh, const QString& unit = QString(), FormatFunc formatFunc = 0);
+QList<QPair<float, QPair<float, float> > > intervalsForHpd(const QMap<float, float>& hpd, float thresh);
 
 inline double rounddouble(const double f,const int prec)
 {

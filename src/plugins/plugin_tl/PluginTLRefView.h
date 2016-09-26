@@ -1,4 +1,4 @@
-#ifndef PluginTLRefView_H
+﻿#ifndef PluginTLRefView_H
 #define PluginTLRefView_H
 
 #if USE_PLUGIN_TL
@@ -20,7 +20,7 @@ public:
     void setDate(const Date& date, const ProjectSettings& settings);
     
 public slots:
-    void zoomX(double min, double max);
+    void zoomX(float min, float max);
     void setMarginRight(const int margin);
 protected:
     void resizeEvent(QResizeEvent* e);

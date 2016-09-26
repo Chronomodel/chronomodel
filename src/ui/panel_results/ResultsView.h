@@ -1,4 +1,4 @@
-#ifndef ResultsWrapper_H
+﻿#ifndef ResultsWrapper_H
 #define ResultsWrapper_H
 
 #include <QWidget>
@@ -40,12 +40,12 @@ public:
     ResultsView(QWidget* parent = 0, Qt::WindowFlags flags = 0);
     ~ResultsView();
     
-    double mResultZoomX;
-    double mResultCurrentMinX;
-    double mResultCurrentMaxX;
-    double mResultMinX;
-    double mResultMaxX;
-    double mResultMaxVariance;
+    float mResultZoomX;
+    float mResultCurrentMinX;
+    float mResultCurrentMaxX;
+    float mResultMinX;
+    float mResultMaxX;
+    float mResultMaxVariance;
     bool mHasPhases;
     
     Model* mModel;
@@ -53,9 +53,9 @@ public:
     void doProjectConnections(Project* project);
 
     void updateFormatSetting(Model* model, const AppSettings* appSet);
-    double getBandwidth() const;
+    float getBandwidth() const;
     int getFFTLength() const;
-    double getThreshold() const;
+    float getThreshold() const;
 
 
 protected:
@@ -94,7 +94,7 @@ private slots:
     
     void settingChange();
     void updateZoomX(); // Connected to slider signals
-    void updateScroll(const double min, const double max); // Connected to ruler signals
+    void updateScroll(const float min, const float max); // Connected to ruler signals
     void editCurrentMinX(); // Connected to min edit signals
     void editCurrentMaxX(); // Connected to max edit signals
     void updateZoomEdit();
@@ -228,14 +228,19 @@ private:
     LineEdit* mBandwidthEdit;
     Button* mUpdateDisplay;
     
+    Label* labFont;
+    Label* labThickness;
+    Label* labOpacity;
+    Label* labRendering;
+
     int mComboH;
     
-    QMap<int, QPair<double, double>> mZooms;
+    QMap<int, QPair<float, float>> mZooms;
 
     //propreties
     GraphViewResults::TypeGraph mCurrentTypeGraph;
-    double mBandwidthUsed;
-    double mThresholdUsed;
+    float mBandwidthUsed;
+    float mThresholdUsed;
     int mNumberOfGraph;
 };
 

@@ -12,18 +12,28 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, Qt::WindowFlags flags):
 QDialog(parent, flags)
 {
     setWindowTitle(tr("MCMC Options"));
-    
+    QFont font (QApplication::font());
     mSeedsLab = new Label(tr("Seeds (separated by \";\")") + ": ", this);
     mSeedsEdit = new LineEdit(this);
+    mSeedsLab->setFont(font);
+    mSeedsEdit->setFont(font);
+
     mHelp = new HelpWidget(tr("About seeds : each MCMC chain is different from the others because it uses a different seed. By default, seeds are picked randomly. However, you can force the chains to use specific seeds by entering them below. By doing so, you can replicate exactly the same results using the same seeds."), this);
     mHelp->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=47"); // chapter 4.2 MCMC settings
-    
+    mHelp->setFont(font);
+
     mNumProcEdit = new LineEdit(this);
     mNumBurnEdit = new LineEdit(this);
+    mNumProcEdit->setFont(font);
+    mNumBurnEdit->setFont(font);
+
     mMaxBatchesEdit = new LineEdit(this);
     mNumIterEdit = new LineEdit(this);
     mDownSamplingEdit = new LineEdit(this);
-    
+    mMaxBatchesEdit->setFont(font);
+    mNumIterEdit->setFont(font);
+    mDownSamplingEdit->setFont(font);
+
     QIntValidator* positiveValidator = new QIntValidator(this);
     positiveValidator->setBottom(1);
     
@@ -33,6 +43,7 @@ QDialog(parent, flags)
     mIterPerBatchSpin = new QSpinBox(this);
     mIterPerBatchSpin->setRange(100, 10000);
     mIterPerBatchSpin->setSingleStep(100);
+    mIterPerBatchSpin->setFont(font);
     
     mNumProcEdit->setValidator(chainsValidator);
     mNumProcEdit->setPlaceholderText(tr("From 1 to 5"));
@@ -50,6 +61,8 @@ QDialog(parent, flags)
     
     mLabelLevel = new Label(tr("Mixing level"),this);
     mLevelEdit = new LineEdit(this);
+    mLabelLevel->setFont(font);
+    mLevelEdit->setFont(font);
 
     mOkBut = new Button(tr("OK"), this);
     mCancelBut = new Button(tr("Cancel"), this);
@@ -119,7 +132,7 @@ void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
     p.drawText(0, 0, width(), 30, Qt::AlignCenter, tr("MCMC Settings"));
     
     font.setWeight(QFont::Normal);
-    font.setPointSizeF(pointSize(11));
+    //font.setPointSizeF(pointSize(11));
     p.setFont(font);
     
     p.drawText(0, 40, width()/2, lineH, Qt::AlignVCenter | Qt::AlignRight, tr("Number of chains") + " :");

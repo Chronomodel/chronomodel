@@ -1,4 +1,4 @@
-#ifndef AXISTOOL_H
+﻿#ifndef AXISTOOL_H
 #define AXISTOOL_H
 
 #include <QVector>
@@ -13,7 +13,7 @@ class AxisTool
 public:
     AxisTool();
     void updateValues(double totalPix, double minDeltaPix, double minVal, double maxVal);
-    QVector<qreal> paint(QPainter& p, const QRectF& r, qreal heigthSize, QString (*valueFormatFunc)(double) = NULL);
+    QVector<qreal> paint(QPainter& p, const QRectF& r, qreal heigthSize, QString (*valueFormatFunc)(float) = NULL);
     
 public:
     bool mIsHorizontal;

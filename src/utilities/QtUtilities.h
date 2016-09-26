@@ -1,4 +1,4 @@
-#ifndef QTUTILITIES_H
+﻿#ifndef QTUTILITIES_H
 #define QTUTILITIES_H
 
 #include <QStringList>
@@ -38,7 +38,7 @@ QColor randomColor();
 
 bool constraintIsCircular( QJsonArray constraints, const int FromId, const int ToId);
 
-QString formatValueToAppSettingsPrecision(const double valueToFormat);
+QString formatValueToAppSettingsPrecision(const float valueToFormat);
 
 bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep, const bool withDateFormat = false);
 bool saveAsCsv(const QList<QStringList>& data, const QString& title = QObject::tr("Save as..."));
@@ -53,11 +53,13 @@ template <typename T, typename V>
 QMap<T, V> getMapDataInRange(const QMap<T, V> &data, const T subMin, const  T subMax)
 {
 #ifdef DEBUG
-    if(data.size() == 0) {
+    if(data.size() == 0)
         qDebug()<<"QtUtilities::getMapDataInRange data.size() == 0";
-    }
+
 #endif
-    if(data.size() == 0) return data;
+    if(data.size() == 0)
+        return data;
+
     T tBeforeSubMin;
     V vBeforeSubMin;
     bool pointBeforeSubMin =false;
@@ -70,31 +72,33 @@ QMap<T, V> getMapDataInRange(const QMap<T, V> &data, const T subMin, const  T su
         QMap<T, V> subData;
         subData.clear();
         QMapIterator<T, V> iter(data);
-        while(iter.hasNext())
-        {
+        while(iter.hasNext()) {
             iter.next();
-            T valueX = iter.key();
-            if(valueX >= subMin && valueX <= subMax) {
-                subData.insert(valueX, iter.value());
-            }
-            else if(valueX<subMin){
-               pointBeforeSubMin =true;
-               tBeforeSubMin = valueX;
+            T valueT = iter.key();
+            if(valueT >= subMin && valueT <= subMax)
+                subData.insert(valueT, iter.value());
+
+            else if(valueT<subMin){
+               pointBeforeSubMin = true;
+               tBeforeSubMin = valueT;
                vBeforeSubMin = iter.value();
             }
-            else if( valueX>subMax && !pointAfterSubMax ){
-                pointAfterSubMax =true;
-                tAfterSubMax = valueX;
+            else if( valueT>subMax && !pointAfterSubMax ){
+                pointAfterSubMax = true;
+                tAfterSubMax = valueT;
                 vAfterSubMax = iter.value();
             }
         }
          // Correct the QMap, with addition of value on the extremum tmin and tmax
         if(subData.size() > 0) {
             if(pointBeforeSubMin && subData.constFind(subMin) == subData.cend()) {
-                subData[subMin] = interpolate( subMin, tBeforeSubMin, subData.firstKey(), vBeforeSubMin, subData.first() );
+                V subDataFirst = subData.first();
+               // subData[subMin] = interpolate( subMin, tBeforeSubMin, (T)subData.firstKey(), vBeforeSubMin, subData.first() );
+                subData[subMin] = interpolate( subMin, tBeforeSubMin, (T)subData.firstKey(), vBeforeSubMin, subDataFirst );
             }
             if(pointAfterSubMax && subData.constFind(subMax) == subData.cend()) {
-                subData[subMax] = interpolate( subMax, subData.lastKey(), tAfterSubMax, subData.last(), vAfterSubMax );
+                V subDataLast = subData.last();
+                subData[subMax] = interpolate( subMax, (T)subData.lastKey(), tAfterSubMax, subDataLast, vAfterSubMax );
             }
         }
         return subData;
@@ -113,8 +117,7 @@ QVector<T> getVectorDataInRange(const QVector<T>& data, const T subMin,const T s
         subData.reserve(data.size());
         int idxStart = (int) floor(data.size() * (subMin - min) / (max - min));
         int idxEnd = (int) floor(data.size() * (subMax - min) / (max - min));
-        for(int i=idxStart; i<=idxEnd; ++i)
-        {
+        for(int i=idxStart; i<=idxEnd; ++i)  {
             if(i >= 0 && i < data.size())
                 subData.append(data[i]);
         }

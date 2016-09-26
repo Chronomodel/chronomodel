@@ -1,4 +1,4 @@
-#include "GraphViewDate.h"
+﻿#include "GraphViewDate.h"
 #include "GraphView.h"
 #include "Date.h"
 #include "Event.h"
@@ -143,9 +143,11 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                                                         color);
                 mGraph->addCurve(curveHPD);
                 
-                
+                //const float maxValue = map_max_value(variableDate->mHPD);
                 // Calibration
-                QMap<double,double> formatedCalib = mDate->getFormatedCalibMap();
+                //QMap<float,float> formatedCalib = normalize_map(mDate->getFormatedCalibMap(), maxValue);
+                const QMap<float,float> formatedCalib = mDate->getFormatedCalibMap();
+
                 GraphCurve curveCalib = generateDensityCurve(formatedCalib,
                                                              "Calibration",
                                                              QColor(150, 150, 150),
@@ -187,26 +189,27 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                                                                    Qt::SolidLine,
                                                                    Qt::NoBrush);
                 mGraph->addCurve(curvePostDistrib);
-                double yMax = 1.1f * map_max_value(curvePostDistrib.mData);
+                //float yMax = 1.1f * map_max_value(curvePostDistrib.mData);
                 
                 
                 // Post Distrib Chain i
-                for (int i=0; i<mChains.size(); ++i) {
-                    GraphCurve curvePostDistribChain = generateDensityCurve(variableDate->histoForChain(i),
-                                                                            "Sigma for Chain " + QString::number(i),
-                                                                            Painting::chainColors.at(i),
-                                                                            Qt::SolidLine,
-                                                                            Qt::NoBrush);
-                    mGraph->addCurve(curvePostDistribChain);
-                    yMax = qMax(yMax, 1.1f * map_max_value(curvePostDistribChain.mData));
-                }
+                if (!variableDate->mChainsHistos.isEmpty())
+                    for (int i=0; i<mChains.size(); ++i) {
+                        GraphCurve curvePostDistribChain = generateDensityCurve(variableDate->histoForChain(i),
+                                                                                "Sigma for Chain " + QString::number(i),
+                                                                                Painting::chainColors.at(i),
+                                                                                Qt::SolidLine,
+                                                                                Qt::NoBrush);
+                        mGraph->addCurve(curvePostDistribChain);
+                       // yMax = qMax(yMax, 1.1f * map_max_value(curvePostDistribChain.mData));
+                    }
                 
                 //mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                 // Check if necessary ?
                 mGraph->autoAdjustYScale(true);
             }
             // must be after all curves adding
-            //mGraph->adjustYToMinMaxValue();
+            mGraph->adjustYToMinMaxValue();
            
         }
         // ------------------------------------------------

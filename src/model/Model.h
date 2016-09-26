@@ -1,4 +1,4 @@
-#ifndef MODEL_H
+﻿#ifndef MODEL_H
 #define MODEL_H
 
 #include "ProjectSettings.h"
@@ -49,17 +49,17 @@ public:
     // Only trace needed for this :
     void generateCorrelations(const QList<ChainSpecs>& chains);
 
-    void initThreshold(const double threshold);
+    void initThreshold(const float threshold);
     double getThreshold() const ;
-    void initDensities(const int fftLength, const double bandwidth, const double threshold);
-    void updateDensities(const int fftLength, const double bandwidth, const double threshold);
+    void initDensities(const int fftLength, const float bandwidth, const float threshold);
+    void updateDensities(const int fftLength, const float bandwidth, const float threshold);
 
     // Computed from trace using FFT :
-    void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double bandwidth);
+    void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, float bandwidth);
     // Trace and Posterior density needed for this :
     //void generateCredibilityAndHPD(const QList<ChainSpecs>& chains,const double threshold);
-    void generateCredibility(const double threshold);
-    void generateHPD(const double threshold);
+    void generateCredibility(const float threshold);
+    void generateHPD(const float threshold);
     // Trace and Posterior density needed for this :
     void generateNumericalResults(const QList<ChainSpecs>& chains);
     
@@ -95,18 +95,17 @@ public:
     int mNumberOfDatesInAllPhases;
 
 public slots:
-    void setThreshold(const double threshold);
-    void setBandwidth(const double bandwidth);
-    void setFFTLength(const double FFTLength);
+    void setThreshold(const float threshold);
+    void setBandwidth(const float bandwidth);
+    void setFFTLength(const float FFTLength);
 
 signals:
     void newCalculus();
 
 private:
-    //const QJsonObject * mJson;
      int mFFTLength;
-     double mBandwidth;
-     double mThreshold;
+     float mBandwidth;
+     float mThreshold;
 };
 
 #endif

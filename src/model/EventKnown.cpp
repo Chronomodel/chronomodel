@@ -123,13 +123,13 @@ void EventKnown::updateValues(double tmin, double tmax, double step)
     }
 }
 
-void EventKnown::updateTheta(double tmin, double tmax)
+void EventKnown::updateTheta(const double tmin, const double tmax)
 {
     switch(mKnownType)
     {
         case eFixed:
         {
-            mTheta.tryUpdate(mFixed, 1);
+            mTheta.tryUpdate(mFixed, 1.);
             break;
         }
         case eUniform:
@@ -141,7 +141,7 @@ void EventKnown::updateTheta(double tmin, double tmax)
             max = qMin(mUniformEnd, max);
             
             double theta = min + Generator::randomUniform() * (max - min);
-            mTheta.tryUpdate(theta, 1);
+            mTheta.tryUpdate(theta, 1.);
             break;
         }
         default:

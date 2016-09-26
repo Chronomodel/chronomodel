@@ -1,4 +1,4 @@
-#include "GraphView.h"
+﻿#include "GraphView.h"
 #include "Ruler.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
@@ -80,7 +80,7 @@ GraphView::~GraphView()
 //  Zoom X
 // ------------------------------------------------------
 #pragma mark Zoom X
-void GraphView::zoomX(const double min, const double max)
+void GraphView::zoomX(const float min, const float max)
 {
     if (mCurrentMinX != min || mCurrentMaxX || max) {
         mCurrentMinX = min;
@@ -88,8 +88,8 @@ void GraphView::zoomX(const double min, const double max)
         
         this->mAxisToolX.updateValues(width(), 10, min, max);
         if (mAutoAdjustYScale) {
-            double yMax = -100000000;
-            double yMin =  100000000;
+            float yMax = -100000000.f;
+            float yMin =  100000000.f;
             for(int curveIndex=0; curveIndex<mCurves.size(); ++curveIndex) {
                 const GraphCurve& curve = mCurves.at(curveIndex);
                 if (curve.mIsHorizontalLine) {
@@ -97,12 +97,12 @@ void GraphView::zoomX(const double min, const double max)
                     yMin = qMin(yMin, curve.mHorizontalValue);
                     
                 } else if (curve.mUseVectorData) {
-                    QVector<double> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, min, max);
+                    QVector<float> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, min, max);
                     yMax = qMax(yMax, vector_max_value(subData));
                     yMin = qMin(yMin, vector_min_value(subData));
                     
                 } else if (!curve.mIsVertical && !curve.mIsVerticalLine && !curve.mIsHorizontalSections) {
-                    QMap<double, double> subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
+                    QMap<float, float> subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
                     yMax = qMax(yMax, map_max_value(subData));
                     yMin = qMin(yMin, map_min_value(subData));
                 }
@@ -236,9 +236,9 @@ void GraphView::autoAdjustYScale(bool active)
 /**
  * @brief Adjust the Y axis with 0 for the minimun and find the Maximum value in the visible curve
  */
-void GraphView::adjustYToMaxValue(const double& marginProp)
+void GraphView::adjustYToMaxValue(const qreal& marginProp)
 {
-    double yMax = 0;
+    float yMax(0.f);
 
     for (int i=0; i<mCurves.size(); ++i) {
         if (mCurves.at(i).mVisible) {
@@ -260,8 +260,8 @@ void GraphView::adjustYToMaxValue(const double& marginProp)
 
 void GraphView::adjustYToMinMaxValue()
 {
-    double yMin = 0;
-    double yMax = 0;
+    float yMin = 0.f;
+    float yMax = 0.f;
 
     QList<GraphCurve>::const_iterator iter = mCurves.cbegin();
     bool firstFound = false;
@@ -425,14 +425,14 @@ void GraphView::leaveEvent(QEvent* e)
 
 void GraphView::mouseMoveEvent(QMouseEvent* e)
 {
-    double x = e->pos().x();
-    double y = e->pos().y();
+    qreal x = e->pos().x();
+    qreal y = e->pos().y();
     //std::cout << y << std::endl;
     
     if (mUseTip && x >= mMarginLeft && x <= (mMarginLeft + mGraphWidth) && y >= mMarginTop && y <= (mMarginTop + mGraphHeight))  {
         mTipVisible = true;
         QRectF old_rect = mTipRect;
-        QLocale locale;
+        //QLocale locale;
         
         int cursorW = 15;
         int cursorH = 15;
@@ -672,7 +672,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolX.mShowText = mXAxisValues;
     
     mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
-    QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), 7,formatValueToAppSettingsPrecision);//, mFormatFuncX);
+    QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), (qreal)7.,formatValueToAppSettingsPrecision);//, mFormatFuncX);
     
     // ----------------------------------------------------
     //  Horizontal Grid
@@ -683,7 +683,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolY.mShowText = mYAxisValues;
 
     mAxisToolY.updateValues(mGraphHeight, mStepMinWidth, mMinY, mMaxY);
-    QVector<qreal> linesYPos = mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), 5,formatValueToAppSettingsPrecision);//, mFormatFuncY);
+    QVector<qreal> linesYPos = mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), (qreal) 5.,formatValueToAppSettingsPrecision);//, mFormatFuncY);
     
     
     // ----------------------------------------------------
@@ -783,15 +783,15 @@ void GraphView::drawCurves(QPainter& painter)
                 int index = 0;
                 qreal last_y = 0;
 
-                QMap<double, double>::const_iterator iter = curve.mData.cbegin();
+                QMap<float, float>::const_iterator iter = curve.mData.cbegin();
                 
                 while (iter != curve.mData.cend()) {
-                    qreal valueX = iter.value();
-                    qreal valueY = iter.key();
+                    float valueX = iter.value();
+                    float valueY = iter.key();
                     
                     // vertical curves must be normalized (values from 0 to 1)
                     // They are drawn using a 100px width
-                    qreal x = mMarginLeft + valueX * 100;
+                    qreal x = mMarginLeft + valueX * 100.f;
                     qreal y = getYForValue(valueY, false);
                     y = qMin(y, mMarginTop + mGraphHeight);
                     y = qMax(y, mMarginTop);
@@ -818,17 +818,17 @@ void GraphView::drawCurves(QPainter& painter)
                 qreal last_x = 0;
                 qreal last_y = 0;
                 qreal last_valueY = 0;
-                double valueY = double();
+                //float valueY ;
                 
                 if (curve.mUseVectorData) {
                     // Down sample vector
                     if(curve.mDataVector.isEmpty())
                         return;
 
-                    QVector<double> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
+                    QVector<float> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
                     
-                    QVector<double> lightData;
-                    const double dataStep = (double)subData.size() / (double)(mGraphWidth);
+                    QVector<float> lightData;
+                    const float dataStep = (float)subData.size() / (float)(mGraphWidth);
                     if (dataStep > 1) {
                         for (int i = 0; i<mGraphWidth; ++i) {
                             const int idx = (int)round(i * dataStep);
@@ -841,8 +841,8 @@ void GraphView::drawCurves(QPainter& painter)
                     
                     for (int i = 0; i<lightData.size(); ++i) {
                         // Use "dataStep" only if lightData is different of subData !
-                        const double valueX = mCurrentMinX + ((dataStep > 1) ? i * dataStep : i);
-                        const double valueY = lightData.at(i);
+                        const float valueX = mCurrentMinX + ((dataStep > 1) ? i * dataStep : i);
+                        const float valueY = lightData.at(i);
                         
                         if (valueX >= mCurrentMinX && valueX <= mCurrentMaxX) {
                             qreal x = getXForValue(valueX, false);
@@ -867,17 +867,17 @@ void GraphView::drawCurves(QPainter& painter)
                     // Down sample curve for better performances
                     if (curve.mData.isEmpty())
                         continue;
-                    QMap<double, double> subData = curve.mData;
+                    QMap<float, float> subData = curve.mData;
                     subData = getMapDataInRange(subData, mCurrentMinX, mCurrentMaxX);
 
                     if (subData.isEmpty())
                         continue;
 
-                    QMap<double, double> lightMap;
+                    QMap<float, float> lightMap;
 
                     if (subData.size() > mGraphWidth) { //always used in the items thumbnails
                         int valuesPerPixel = subData.size() / (mGraphWidth);
-                        QMap<double, double>::const_iterator iter = subData.cbegin();
+                        QMap<float, float>::const_iterator iter = subData.cbegin();
                         int index = 0;
                         
                         while(iter != subData.cend()) {
@@ -892,21 +892,21 @@ void GraphView::drawCurves(QPainter& painter)
                     
                     // Draw
                     
-                    QMapIterator<double, double> iter(lightMap);
+                    QMapIterator<float, float> iter(lightMap);
                     iter.toFront();
                     if (!iter.hasNext())
                         continue;
                     
                     iter.next();
-                    double valueX = iter.key();
-                    valueY = iter.value();
+                    float valueX = iter.key();
+                    float valueY = iter.value();
                     last_valueY = 0;
 
                     // Detect square signal front-end without null value at the begin of the QMap
                     // e.g calibration of typo-ref
                     if (iter.hasNext()) {
                         if (valueY == (iter.peekNext()).value()) {
-                            if(valueX > mCurrentMinX && valueX < mCurrentMaxX) {
+                            if(valueX >= mCurrentMinX && valueX <= mCurrentMaxX) {
                                 path.moveTo( getXForValue(valueX), getYForValue(0, true) );
                                 path.lineTo( getXForValue(valueX), getYForValue(valueY, true) );
                             }
@@ -928,8 +928,8 @@ void GraphView::drawCurves(QPainter& painter)
                         valueY = iter.value();
 
                         if (valueX >= mCurrentMinX && valueX <= mCurrentMaxX) {
-                           double x = getXForValue(valueX, true);
-                           double y = getYForValue(valueY, false);
+                           qreal x = getXForValue(valueX, true);
+                           qreal y = getYForValue(valueY, false);
                             
                             if (isFirst) {
                                 path.moveTo(x, y);
@@ -982,11 +982,11 @@ void GraphView::drawCurves(QPainter& painter)
                     // Detect square signal back-end without null value at the end of the QMap
                     // e.i calibration of typo-ref
                     if (lightMap.size()>1) {
-                        QMapIterator<double, double> lastIter(lightMap);
+                        QMapIterator<float, float> lastIter(lightMap);
                         lastIter.toBack();
                         lastIter.previous();
                         if ( lastIter.value() == lastIter.peekPrevious().value() ) {
-                            double x = lastIter.key();
+                            float x = lastIter.key();
                             if ( x > mCurrentMinX && x < mCurrentMaxX)
                                 path.lineTo(getXForValue(x, true), getYForValue(0, true) );
 
@@ -1017,7 +1017,7 @@ void GraphView::drawCurves(QPainter& painter)
  * @brief Export a density with locale setting and separator and specific step
  * @todo Maybe we can use QString QLocale::createSeparatedList(const QStringList & list) const
  */
-void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step) const
+void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, float step) const
 {
     if (step<=0)
         step=1;
@@ -1035,8 +1035,8 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         QStringList list;
         
         list <<"X Axis";
-        double xMin = mCurves.cbegin()->mData.firstKey();
-        double xMax = mCurves.cbegin()->mData.lastKey();;
+        float xMin = mCurves.cbegin()->mData.firstKey();
+        float xMax = mCurves.cbegin()->mData.lastKey();;
         bool firstCurveVisible = true;
         
         for(auto iter= mCurves.cbegin(); iter != mCurves.cend(); ++iter) {
@@ -1066,7 +1066,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         
         // 3 - Create Row, with each curve
         //  Create data in row
-        for (double x= xMin; x <= xMax; x += step) {
+        for (float x= xMin; x <= xMax; x += step) {
             list.clear();
             /*if(mFormatFuncX) {
                 list << mFormatFuncX(x);
@@ -1083,7 +1083,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
                     !iter->mUseVectorData &&
                     iter->mVisible) {
                     
-                    const double xi = interpolateValueInQMap(x, iter->mData);
+                    const float xi = interpolateValueInQMap(x, iter->mData);
                     list<<locale.toString(xi);
                     
                 } else continue;
@@ -1126,7 +1126,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
         QList<QStringList> rows;
 
         rows.append(QStringList("X Axis"));
-        QMap<double, QVector<double> > rowsData;
+        QMap<float, QVector<float> > rowsData;
         
         int rowsCount = rows.count();
         QStringList emptyColumn;
@@ -1136,7 +1136,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
         {
             if ( !mCurves[idCurve].mVisible || mCurves[idCurve].mDataVector.empty() ) continue;
             
-            const QVector<double>& data = mCurves[idCurve].mDataVector;
+            const QVector<float>& data = mCurves[idCurve].mDataVector;
             // the new DataVector is longer than the last, we need to expand the size of rows
             if (data.size()>rowsCount-2) {
                 abscissesWritten=false;
@@ -1164,7 +1164,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
             
         }
         
-        QMapIterator<double, QVector<double> > iter2(rowsData);
+        QMapIterator<float, QVector<float> > iter2(rowsData);
         while(iter2.hasNext()) {
             iter2.next();
             QStringList list;

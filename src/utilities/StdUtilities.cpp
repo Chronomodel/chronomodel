@@ -1,4 +1,4 @@
-#include "StdUtilities.h"
+﻿#include "StdUtilities.h"
 #include <cmath>
 #include <ctgmath>
 #include <cstdlib>
@@ -141,6 +141,19 @@ QVector<double> normalize_vector(const QVector<double>& aVector)
     }
     return histo;
 }
+QVector<float> normalize_vector(const QVector<float>& aVector)
+{
+    QVector<float> histo;
+
+    QVector<float>::const_iterator it = max_element(aVector.begin(), aVector.end());
+    if(it != aVector.end()){
+        float max_value = *it;
+        for(QVector<float>::const_iterator it = aVector.begin(); it != aVector.end(); ++it)
+            histo.push_back((*it)/max_value);
+
+    }
+    return histo;
+}
 
 /**
  @brief This function transforms a QVector turning its minimum value to "from" and its maximum value is "to" and adjusting other values accordingly
@@ -169,20 +182,49 @@ QVector<double> stretch_vector(const QVector<double>& aVector, const double from
     }
     return histo;
 }
+QVector<float> stretch_vector(const QVector<float>& aVector, const float from, const float to)
+{
+    QVector<float> histo;
+    QVector<float>::const_iterator it = aVector.constBegin();
+    if(it != aVector.constEnd()) {
+        const float min = *(min_element(aVector.constBegin(), aVector.constEnd()));
+        const float max = *(max_element(aVector.constBegin(), aVector.constEnd()));
 
-QMap<double, double> normalize_map(const QMap<double, double>& aMap)
+        if(min < max) {
+            for(QVector<float>::const_iterator it = aVector.constBegin(); it != aVector.constEnd(); ++it)
+                histo.push_back(from + (to - from) * (*it - min) / (max - min));
+
+        } else {
+            // Just 1 value... set it to "from" (setting it to "to" could also be done though...)
+            histo.push_back(to);
+        }
+    }
+    return histo;
+}
+
+/*QMap<double, double> normalize_map(const QMap<double, double>& aMap)
 {
     double max_value = map_max_value(aMap);
     
     QMap<double, double> result;
     
     for(QMap<double, double>::const_iterator it = aMap.begin(); it != aMap.end(); ++it)
-    {
         result[it.key()] = (it.value() / max_value);
-    }
+
     return result;
 }
+QMap<float, float> normalize_map(const QMap<float, float>& aMap)
+{
+    float max_value = map_max_value(aMap);
 
+    QMap<float, float> result;
+    // can be done with std::generate !!
+    for(QMap<float, float>::const_iterator it = aMap.begin(); it != aMap.end(); ++it)
+        result[it.key()] = (it.value() / max_value);
+
+    return result;
+}
+*/
 QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const QMap<double, double>& mapWithTargetArea)
 {
     if(mapToModify.isEmpty())
@@ -197,6 +239,21 @@ QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const 
     }
     return equal_areas(mapToModify, targetArea);
 }
+QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const QMap<float, float>& mapWithTargetArea)
+{
+    if(mapToModify.isEmpty())
+        return QMap<float, float>();
+
+    QMapIterator<float, float> iter(mapWithTargetArea);
+    float targetArea = 0.f;
+    while(iter.hasNext())
+    {
+        iter.next();
+        targetArea += iter.value();
+    }
+    return equal_areas(mapToModify, targetArea);
+}
+
 
 /*QMap<double, double> equal_areas_old(const QMap<double, double>& mapToModify, const double targetArea)
 {
@@ -272,6 +329,41 @@ QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const 
     
     return result;
 }
+QMap<float, float> equal_areas(const QMap<float, float>& mapToModify, const float targetArea)
+{
+    if(mapToModify.isEmpty())
+        return QMap<float, float>();
+
+    QMap<float, float> result(mapToModify);
+
+    QMap<float, float>::const_iterator cIter = result.cbegin();
+    float t = cIter.key();
+    float v = cIter.value();
+    float lastT = t;
+    float lastV = v;
+    float srcArea = 0.f;
+    // The map was sort with > by insertion
+    while(cIter!=result.cend() )  {
+        t = cIter.key();
+        v = cIter.value();
+        if (lastV>0 && v>0) {
+            srcArea += (lastV+v)/2 * (t - lastT);
+        }
+        //qDebug() << t << ", " << v;
+        lastV = v;
+        lastT = t;
+        ++cIter;
+    }
+    float prop = targetArea / srcArea;
+
+    QMap<float, float>::iterator iter = result.begin();
+    while(iter!=result.cend() ) {
+        iter.value() *= prop;
+        ++iter;
+    }
+
+    return result;
+}
 
 QVector<double> equal_areas(const QVector<double>& data, const double step, const double area)
 {
@@ -284,9 +376,9 @@ QVector<double> equal_areas(const QVector<double>& data, const double step, cons
     for(int i=1; i<data.size(); ++i) {
         const long double v =data.at(i);
         
-        if (lastV>0 && v>0) {
+        if (lastV>0 && v>0)
             srcArea += (lastV+v)/2 * (long double)step;
-        }
+
        lastV = v;
     }
 
@@ -301,24 +393,64 @@ QVector<double> equal_areas(const QVector<double>& data, const double step, cons
         ++cIter;
     }
 
+    return result;
+}
+QVector<float> equal_areas(const QVector<float>& data, const float step, const float area)
+{
+    if(data.isEmpty())
+        return QVector<float>();
+
+    long double srcArea = 0.;
+    long double lastV = data.at(0);
+
+    for(int i=1; i<data.size(); ++i) {
+        const long double v = data.at(i);
+
+        if (lastV>0 && v>0)
+            srcArea += (lastV+v)/2 * (long double)step;
+
+       lastV = v;
+    }
+
+    const long double invProp =srcArea / area;
+    QVector<float> result;
+    //for(int i=0; i<data.size(); ++i)
+    //    result.append(data.at(i) / invProp);
+
+    QVector<float>::const_iterator cIter = data.cbegin();
+    while(cIter != data.cend() ) {
+        result.append((float)(*cIter / invProp));
+        ++cIter;
+    }
+
 
 
     return result;
 }
 
+
 QMap<double, double> vector_to_map(const QVector<double>& data, const double min, const double max, const double step)
 {
     QMap<double, double> map;
     const int nbPts = 1 + (int)round((max - min) / step); // step is not usefull, it's must be data.size/(max-min+1)
-    for(int i=0; i<nbPts; ++i)
-    {
+    for(int i=0; i<nbPts; ++i) {
         double t = min + i * step;
         if(i < data.size())
             map.insert(t, data.at(i));
     }
     return map;
 }
-
+QMap<float, float> vector_to_map(const QVector<float>& data, const float min, const float max, const float step)
+{
+    QMap<float, float> map;
+    const int nbPts = 1 + (int)round((max - min) / step); // step is not usefull, it's must be data.size/(max-min+1)
+    for(int i=0; i<nbPts; ++i) {
+        float t = min + i * step;
+        if(i < data.size())
+            map.insert(t, data.at(i));
+    }
+    return map;
+}
 /**
  * @brief This works only for strictly increasing functions!
  * @return interpolated index for a the given value. If value is lower than all vestor values, then 0 is returned. If value is upper than all vector values, then (vector.size() - 1) is returned.
@@ -362,49 +494,88 @@ double vector_interpolate_idx_for_value(const double value, const QVector<double
 
     return 0;
 }
+float vector_interpolate_idx_for_value(const float value, const QVector<float>& vector)
+{
+    int idxInf = 0;
+    int idxSup = vector.size() - 1;
+
+    if(value<vector.first()) return (float)idxInf;
+    if(value>vector.last()) return (float)idxSup;
+
+    // Dichotomie, we can't use indexOf because we don't know the step between each value in the Qvector
+
+    if(idxSup > idxInf)
+    {
+        do
+        {
+            const int idxMid = idxInf + floor((idxSup - idxInf) / 2.f);
+            const float valueMid = vector.at(idxMid);
+
+            if(value < valueMid)
+                idxSup = idxMid;
+            else
+                idxInf = idxMid;
+
+        }while(idxSup - idxInf > 1);
+
+        const float valueInf = vector.at(idxInf);
+        const float valueSup = vector.at(idxSup);
+
+        float prop = 0;
+        // prevent valueSup=valueInf because in this case prop = NaN
+        if(valueSup>valueInf) {
+            prop = (value - valueInf) / (valueSup - valueInf);
+        }
+        const float idx = (float)idxInf + prop;
+
+        return idx;
+    }
+
+    return 0;
+}
 /**
     @brief  This function make a QMap which are a copy of the QMap aMap to obtain an percent of area
     @brief  to define a area we need at least 2 value in the map
     @param threshold is in percent
  */
-const QMap<double, double> create_HPD(const QMap<double, double>& aMap, const double threshold)
+const QMap<float, float> create_HPD(const QMap<float, float>& aMap, const float threshold)
 {
-    QMap<double, double> result = QMap<double,double>();
+    QMap<float, float> result = QMap<float,float>();
 
     if(aMap.size() < 2) { // in case of only one value (e.g. a bound fixed) or no value
         return result;
     }
 
-    const double areaTot = map_area(aMap);
+    const float areaTot = map_area(aMap);
     if (areaTot==threshold) {
         result = aMap;
         return result;
         
     } else {
         try {
-            QMultiMap<double, double> inverted;
-            QMap<double, double>::const_iterator cIter = aMap.cbegin();
+            QMultiMap<float, float> inverted;
+            QMap<float, float>::const_iterator cIter = aMap.cbegin();
             while(cIter != aMap.cend()) {
-                 const double t = cIter.key();
-                 const double v = cIter.value();
+                 const float t = cIter.key();
+                 const float v = cIter.value();
                  result[t] = 0; // important to init all the possible value
                  inverted.insertMulti(v, t);
                  ++cIter;
             }
 
-            QMapIterator<double, double> iterInverted(inverted);
+            QMapIterator<float, float> iterInverted(inverted);
 
-            double area         = 0.f;
-            double areaSearched = areaTot * threshold / 100.;
+            float area         = 0.f;
+            float areaSearched = areaTot * threshold / 100.;
 
             iterInverted.toBack();
         //--------------------
             while (iterInverted.hasPrevious()) {
                 iterInverted.previous();
-                const double t = iterInverted.value();
-                const double v = iterInverted.key();
+                const float t = iterInverted.value();
+                const float v = iterInverted.key();
 
-                QMap<double, double> ::const_iterator iterMap = aMap.constFind(t);
+                QMap<float, float> ::const_iterator iterMap = aMap.constFind(t);
 
                 /*
                     This part of code fix the case of irregular QMap when the step between keys are not the same
@@ -412,17 +583,17 @@ const QMap<double, double> create_HPD(const QMap<double, double>& aMap, const do
                 if (iterMap.key() == t) { // meaning : constFind(t) find the good key else iterMap = constEnd()
 
                     if ( iterMap != aMap.constBegin() ) { // meaning : iterMap is not the first item
-                        const double vPrev = (iterMap-1).value();
+                        const float vPrev = (iterMap-1).value();
                         if (vPrev>=v) {
-                            const double tPrev = (iterMap-1).key();
+                            const float tPrev = (iterMap-1).key();
                             area   +=(v + vPrev)/2*(t - tPrev);
                         }
                     }
 
                     if (iterMap != aMap.constEnd() ) {
-                        const double vNext = (iterMap+1).value();
+                        const float vNext = (iterMap+1).value();
                         if (vNext>v) {
-                            const double tNext = (iterMap+1).key();
+                            const float tNext = (iterMap+1).key();
                             area   +=(v + vNext)/2*(tNext - t);
                         }
                     }
@@ -478,7 +649,31 @@ double map_area(const QMap<double, double>& map)
        
     return srcArea;
 }
+float map_area(const QMap<float, float>& map)
+{
+    if(map.size()<2)
+        return 0.0;
 
+    QMap<float, float>::const_iterator cIter = map.cbegin();
+    float srcArea = 0.f;
+
+    float lastV = cIter.value();
+    float lastT = cIter.key();
+
+    while(cIter != map.cend())
+    {
+        const float v = cIter.value();
+        const float t = cIter.key();
+        if (lastV>0 && v>0) {
+            srcArea += (lastV+v)/2 * (t-lastT);
+        }
+        lastV = v;
+        lastT = t;
+        ++cIter;
+    }
+
+    return srcArea;
+}
 
 QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmin, const double tmax, const int nbPts)
 {

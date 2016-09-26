@@ -1,4 +1,4 @@
-#include "CalibrationView.h"
+﻿#include "CalibrationView.h"
 #include "Ruler.h"
 #include "Date.h"
 #include "Event.h"
@@ -196,7 +196,7 @@ void CalibrationView::updateGraphs()
 
         // Fill HPD only if not typo :
         mResultsLab->clear();
-        QMap<double, double> calibMap = mDate.getFormatedCalibMap();
+        QMap<float, float> calibMap = mDate.getFormatedCalibMap();
 
         if (!calibMap.isEmpty()) {
             // ------------------------------------------------------------
@@ -220,7 +220,7 @@ void CalibrationView::updateGraphs()
             calibCurve.mIsRectFromZero = isTypo;
             calibCurve.mBrush = isTypo ? QBrush(brushColor) : QBrush(Qt::NoBrush);
 
-            double yMax = map_max_value(calibCurve.mData);
+            float yMax = map_max_value(calibCurve.mData);
             yMax = (yMax > 0) ? yMax : 1;
             mCalibGraph->setRangeY(0, 1.1f * yMax);
 
@@ -233,9 +233,9 @@ void CalibrationView::updateGraphs()
             mHPDEdit->validator()->fixup(input);
             mHPDEdit->setText(input);
             
-            const double thresh = qBound(0., mHPDEdit->text().toDouble(), 100.);
+            const float thresh = qBound(0.f, mHPDEdit->text().toFloat(), 100.f);
 
-            QMap<double, double> hpd = create_HPD(calibCurve.mData, thresh);
+            QMap<float, float> hpd = create_HPD(calibCurve.mData, thresh);
             
             GraphCurve hpdCurve;
             hpdCurve.mName = "Calibration HPD";
@@ -254,7 +254,7 @@ void CalibrationView::updateGraphs()
             mCalibGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
             mCalibGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
             
-            double realThresh = map_area(hpd) / map_area(calibCurve.mData);
+            float realThresh = map_area(hpd) / map_area(calibCurve.mData);
             
             resultsStr += + "<br> HPD (" + locale.toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), DateUtils::dateToString);
             
@@ -301,26 +301,26 @@ void CalibrationView::updateZoom()
 {
     float min = mCalibGraph->minimumX();
     float max = mCalibGraph->maximumX();
-    float minProp = 5 / (max - min);
-    float prop = (100. - mZoomSlider->value()) / 100.;
+    float minProp = 5.f / (max - min);
+    float prop = (100.f - (float)mZoomSlider->value()) / 100.f;
     if(prop < minProp) prop = minProp;
     
     if (prop != 1) {
         // Remember old scroll position
-        double posProp = 0;
-        double rangeBefore = (double)mScrollBar->maximum();
+        float posProp = 0;
+        float rangeBefore = (float)mScrollBar->maximum();
         if(rangeBefore > 0)
-            posProp = (double)mScrollBar->value() / rangeBefore;
+            posProp = (float)mScrollBar->value() / rangeBefore;
         
         // Update Scroll Range
         int fullScrollSteps = 1000;
-        int scrollSteps = (1.f - prop) * fullScrollSteps;
+        int scrollSteps = (int) ((1.f - prop)) * fullScrollSteps;
         mScrollBar->setRange(0, scrollSteps);
         mScrollBar->setPageStep(fullScrollSteps);
 
         // Set scroll to correct position
-        double pos = 0;
-        double rangeAfter = (double)mScrollBar->maximum();
+        float pos = 0.f;
+        float rangeAfter = (float)mScrollBar->maximum();
         if(rangeAfter > 0)
             pos = floor(posProp * rangeAfter);
         mScrollBar->setValue(pos);
@@ -333,20 +333,20 @@ void CalibrationView::updateZoom()
 
 void CalibrationView::updateScroll()
 {
-    const double min = mCalibGraph->minimumX();
-    const double max = mCalibGraph->maximumX();
-    const double minProp = 5 / (max - min);
-    double prop = (100. - mZoomSlider->value()) / 100.;
+    const float min = mCalibGraph->minimumX();
+    const float max = mCalibGraph->maximumX();
+    const float minProp = 5.f / (max - min);
+    float prop = (100.f - (float) mZoomSlider->value()) / 100.f;
     if (prop < minProp)
         prop = minProp;
     
     if (prop != 1) {
         // Update graphs with new zoom
-        const double delta = prop * (max - min);
-        const double deltaStart = (max - min) - delta;
-        double start = min + deltaStart * ((double)mScrollBar->value() / (double)mScrollBar->maximum()) ;
+        const float delta = prop * (max - min);
+        const float deltaStart = (max - min) - delta;
+        float start = min + deltaStart * ((float)mScrollBar->value() / (float)mScrollBar->maximum()) ;
         start = (floor(start)<min ? min : floor(start));
-        double end = start + delta;
+        float end = start + delta;
         end = (ceil(end)>max ? max : ceil(end));
         mCalibGraph->zoomX(start, end);
         if(mRefGraphView)

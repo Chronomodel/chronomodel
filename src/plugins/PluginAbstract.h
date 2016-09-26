@@ -138,15 +138,13 @@ public:
    double getRefCurveValueAt(const QString& curveName, const double& t)
     {
         long double value = 0;
-        if(mRefCurves.constFind(curveName) != mRefCurves.constEnd())
-        {
+        if (mRefCurves.constFind(curveName) != mRefCurves.constEnd()) {
             const RefCurve& curve = mRefCurves.value(curveName);
             
-            if(t >= curve.mTmin && t <= curve.mTmax){
+            if(t >= curve.mTmin && t <= curve.mTmax) {
                // This actually return the iterator with the nearest greater key !!!
                 QMap<double, double>::const_iterator iter = curve.mDataMean.lowerBound(t);
-               if(iter != curve.mDataMean.constBegin())
-                {
+               if(iter != curve.mDataMean.constBegin())  {
                     const double t_upper = iter.key();
                     const double v_upper = iter.value();
 
@@ -172,15 +170,14 @@ public:
     double getRefCurveErrorAt(const QString& curveName, const double& t)
     {
         double error = 0;
-        if(mRefCurves.constFind(curveName) != mRefCurves.constEnd())
-        {
+        if (mRefCurves.constFind(curveName) != mRefCurves.constEnd()) {
             const RefCurve& curve = mRefCurves.value(curveName);
             
-            if(t >= curve.mTmin && t <= curve.mTmax){
+            if (t >= curve.mTmin && t <= curve.mTmax) {
                // This actually return the iterator with the nearest greater key !!!
                 QMap<double, double>::const_iterator iter = curve.mDataError.lowerBound(t);
                 // the higher value must be mTmax.
-                if(iter != curve.mDataError.constBegin()) {
+                if (iter != curve.mDataError.constBegin()) {
 
                     const double t_upper = iter.key();
                     const double v_upper = iter.value();//memo curve.mDataError[t_upper];
@@ -190,8 +187,7 @@ public:
 
 
                     error = interpolate(t, t_under, t_upper, v_under, v_upper);
-                }
-                else {
+                } else {
                     error = iter.value();
                 }
             }

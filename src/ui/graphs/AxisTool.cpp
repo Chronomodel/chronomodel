@@ -1,4 +1,4 @@
-#include "AxisTool.h"
+﻿#include "AxisTool.h"
 #include "Painting.h"
 #include "StdUtilities.h"
 
@@ -84,7 +84,7 @@ void AxisTool::updateValues(double totalPix, double minDeltaPix, double minVal, 
  * @brief Draw axis on a QPainter, if there is no valueFormatFunc, all number is converted in QString with precision 0, it's mean only integer
  *
  */
-QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, QString (*valueFormatFunc)(double))
+QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, QString (*valueFormatFunc)(float))
 {
     QPen memoPen(p.pen());
     QBrush memoBrush(p.brush());
@@ -101,8 +101,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
     qreal h = r.height();
     
     
-    if(mIsHorizontal)
-    {
+    if(mIsHorizontal) {
        if (mShowArrow) { // the arrow is over the rectangle of heigthSize
             QPainterPath arrowRight;
             
@@ -134,14 +133,13 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
         }
         else {
             int i = 0;
-            for(double x = xo + mStartPix - mDeltaPix; x <= xo + w ; x += mDeltaPix)
+            for(qreal x = xo + mStartPix - mDeltaPix; x <= xo + w ; x += mDeltaPix)
             {
                 if((x >= xo)) {
                     if(mShowSubSubs){
-                        for(double sx = x + mDeltaPix/10; sx < std::min(x + mDeltaPix, xo + w); sx += mDeltaPix/10)
-                        {
+                        for(qreal sx = x + mDeltaPix/10; sx < std::min(x + mDeltaPix, xo + w); sx += mDeltaPix/10)
                             p.drawLine(QLineF(sx, yo, sx, yo + heigthSize/2));
-                        }
+
                     }
                     if( mShowSubs ) {
                        p.drawLine(QLineF(x, yo, x, yo + heigthSize));
@@ -168,8 +166,8 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
     }
     else // ______________________vertical axe______________________________________________________
     {
-        double xov = r.x() + r.width()- p.pen().width();
-        double yov = r.y() + r.height();
+        qreal xov = r.x() + r.width()- p.pen().width();
+        qreal yov = r.y() + r.height();
        
         p.drawLine(xov, yov, xov, yov - h );
         
@@ -201,11 +199,11 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
         else
         {
             int i = 0;
-            for(double y = yov - (mStartPix - mDeltaPix); y > yov - h; y -= mDeltaPix)
+            for(qreal y = yov - (mStartPix - mDeltaPix); y > yov - h; y -= mDeltaPix)
             {
                 if(mShowSubSubs)
                 {
-                    for(double sy = y + mDeltaPix/10; sy > std::max(y - mDeltaPix, yov - h); sy -= mDeltaPix/10)
+                    for(qreal sy = y + mDeltaPix/10; sy > std::max(y - mDeltaPix, yov - h); sy -= mDeltaPix/10)
                     {
                         if(sy <= yov)
                             p.drawLine(QLineF(xov, sy, xov - 3, sy));
@@ -252,5 +250,5 @@ mMarginRight(0)
 void AxisWidget::paintEvent(QPaintEvent*){
     QPainter p(this);
     //updateValues(width() - mMarginLeft - mMarginRight, 50, mStartVal, mEndVal);
-    paint(p, QRect(mMarginLeft, 0, width() - mMarginLeft - mMarginRight, height()), 7, mFormatFunct);
+    paint(p, QRect( mMarginLeft, 0, width() - mMarginLeft - mMarginRight, height()), 7, mFormatFunct);
 }

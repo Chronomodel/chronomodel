@@ -1,4 +1,4 @@
-#include "Model.h"
+﻿#include "Model.h"
 #include "Date.h"
 #include "Project.h"
 #include "EventKnown.h"
@@ -123,7 +123,7 @@ void Model::fromJson(const QJsonObject& json)
             const QJsonObject phase = phases.at(i).toObject();
             Phase* p = new Phase(Phase::fromJson(phase));
             mPhases.append(p);
-            p = 0;
+            //p = 0;
         }
     }
 
@@ -501,13 +501,13 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
             l << QString::number(shift + j);
             for (int k = 0; k < mPhases.size(); ++k) {
                 Phase* phase = mPhases.at(k);
-                double valueAlpha = phase->mAlpha.mRawTrace.at(shift + j);
+                float valueAlpha = phase->mAlpha.mRawTrace->at(shift + j);
                 
                 if (withDateFormat)
                     valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
                 l << locale.toString(valueAlpha);
 
-                double valueBeta = phase->mBeta.mRawTrace.at(shift + j);
+                float valueBeta = phase->mBeta.mRawTrace->at(shift + j);
                 
                 if (withDateFormat)
                     valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
@@ -555,13 +555,13 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
         for (int j = burnAdaptSize; j < (burnAdaptSize + runSize); ++j) {
             QStringList l;
             l << QString::number(shift + j) ;
-            double valueAlpha = phase->mAlpha.mRawTrace.at(shift + j);
+            float valueAlpha = phase->mAlpha.mRawTrace->at(shift + j);
             if (withDateFormat)
                 valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
             
             l << locale.toString(valueAlpha);
 
-            double valueBeta = phase->mBeta.mRawTrace.at(shift + j);
+            float valueBeta = phase->mBeta.mRawTrace->at(shift + j);
             if (withDateFormat)
                 valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
             
@@ -569,7 +569,7 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
 
             for (int k = 0; k < phase->mEvents.size(); ++k) {
                 Event* event = phase->mEvents.at(k);
-                double value = event->mTheta.mRawTrace.at(shift + j);
+                float value = event->mTheta.mRawTrace->at(shift + j);
                 if (withDateFormat)
                     value = DateUtils::convertToAppSettingsFormat(value);
                 
@@ -612,7 +612,7 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
             l << QString::number(shift + j) ;
             for (int k = 0; k < mEvents.size(); ++k) {
                 Event* event = mEvents.at(k);
-                double value = event->mTheta.mRawTrace.at(shift + j);
+                float value = event->mTheta.mRawTrace->at(shift + j);
                 if (withDateFormat)
                     value = DateUtils::convertToAppSettingsFormat(value);
                 
@@ -697,12 +697,10 @@ bool Model::isValid()
                 
                 // On vérifie toutes les bornes avant et on prend le max
                 // de leurs valeurs fixes ou du début de leur intervalle :
-                double lower = mSettings.mTmin;
-                for(int k=0; k<j; ++k)
-                {
+                double lower = (double) mSettings.mTmin;
+                for(int k=0; k<j; ++k) {
                     Event* evt = eventBranches[i][k];
-                    if(evt->mType == Event::eKnown)
-                    {
+                    if(evt->mType == Event::eKnown) {
                         EventKnown* bd = dynamic_cast<EventKnown*>(evt);
                         if(bd->mKnownType == EventKnown::eFixed)
                             lower = qMax(lower, bd->mFixed);
@@ -716,19 +714,16 @@ bool Model::isValid()
                     throw QString("The bound \"" + bound->mName + "\" has a fixed value inconsistent with previous bounds in chain!");
                 }
                 else if(bound->mKnownType == EventKnown::eUniform)
-                {
                     bound->mUniformStart = qMax(bound->mUniformStart, lower);
-                }
+
                 
                 // --------------------
                 // Check bound interval upper value
                 // --------------------
-                double upper = mSettings.mTmax;
-                for(int k=j+1; k<eventBranches.at(i).size(); ++k)
-                {
+                double upper = (double) mSettings.mTmax;
+                for(int k=j+1; k<eventBranches.at(i).size(); ++k) {
                     Event* evt = eventBranches[i][k];
-                    if(evt->mType == Event::eKnown)
-                    {
+                    if(evt->mType == Event::eKnown){
                         EventKnown* bd = dynamic_cast<EventKnown*>(evt);
                         if(bd->mKnownType == EventKnown::eFixed)
                             upper = qMin(upper, bd->mFixed);
@@ -741,8 +736,7 @@ bool Model::isValid()
                 {
                     throw QString("The bound \"" + bound->mName + "\" has a fixed value inconsistent with next bounds in chain!");
                 }
-                else if(bound->mKnownType == EventKnown::eUniform)
-                {
+                else if(bound->mKnownType == EventKnown::eUniform) {
                     bound->mUniformEnd = qMin(bound->mUniformEnd, upper);
                     if(bound->mUniformStart >= bound->mUniformEnd)
                     {
@@ -757,33 +751,30 @@ bool Model::isValid()
     // 9 - Gamma min (ou fixe) entre 2 phases doit être inférieur à la différence entre : le min des sups des intervalles des bornes de la phase suivante ET le max des infs des intervalles des bornes de la phase précédente
     for(int i=0; i<mPhaseConstraints.size(); ++i)
     {
-        double gammaMin = 0;
+        double gammaMin = 0.;
         PhaseConstraint::GammaType gType = mPhaseConstraints.at(i)->mGammaType;
         if(gType == PhaseConstraint::eGammaFixed)
             gammaMin = mPhaseConstraints[i]->mGammaFixed;
         else if(gType == PhaseConstraint::eGammaRange)
             gammaMin = mPhaseConstraints.at(i)->mGammaMin;
         
-        double lower = mSettings.mTmin;
+        double lower = (double) mSettings.mTmin;
         Phase* phaseFrom = mPhaseConstraints.at(i)->mPhaseFrom;
         for(int j=0; j<phaseFrom->mEvents.size(); ++j)
         {
             EventKnown* bound = dynamic_cast<EventKnown*>(phaseFrom->mEvents[j]);
-            if(bound)
-            {
+            if(bound) {
                 if(bound->mKnownType == EventKnown::eFixed)
                     lower = qMax(lower, bound->mFixed);
                 else if(bound->mKnownType == EventKnown::eUniform)
                     lower = qMax(lower, bound->mUniformStart);
             }
         }
-        double upper = mSettings.mTmax;
+        double upper = (double) mSettings.mTmax;
         Phase* phaseTo = mPhaseConstraints.at(i)->mPhaseTo;
-        for(int j=0; j<phaseTo->mEvents.size(); ++j)
-        {
+        for(int j=0; j<phaseTo->mEvents.size(); ++j) {
             EventKnown* bound = dynamic_cast<EventKnown*>(phaseTo->mEvents[j]);
-            if(bound)
-            {
+            if(bound) {
                 if(bound->mKnownType == EventKnown::eFixed)
                     upper = qMin(upper, bound->mFixed);
                 else if(bound->mKnownType == EventKnown::eUniform)
@@ -816,21 +807,16 @@ bool Model::isValid()
             double max = mSettings.mTmax;
             bool boundFound = false;
             
-            for(int j=0; j<mPhases.at(i)->mEvents.size(); ++j)
-            {
-                if(mPhases.at(i)->mEvents.at(j)->mType == Event::eKnown)
-                {
+            for(int j=0; j<mPhases.at(i)->mEvents.size(); ++j) {
+                if(mPhases.at(i)->mEvents.at(j)->mType == Event::eKnown) {
                     EventKnown* bound = dynamic_cast<EventKnown*>(mPhases.at(i)->mEvents[j]);
-                    if(bound)
-                    {
+                    if(bound) {
                         boundFound = true;
-                        if(bound->mKnownType == EventKnown::eFixed)
-                        {
+                        if(bound->mKnownType == EventKnown::eFixed) {
                             min = std::max(min, bound->mFixed);
                             max = std::min(max, bound->mFixed);
                         }
-                        else if(bound->mKnownType == EventKnown::eUniform)
-                        {
+                        else if(bound->mKnownType == EventKnown::eUniform) {
                             min = std::max(min, bound->mUniformEnd);
                             max = std::min(max, bound->mUniformStart);
                         }
@@ -937,9 +923,9 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
     while (iterEvent!=mEvents.end()) {
         (*iterEvent)->mTheta.generateCorrelations(chains);
         
-        for(int j=0; j<(*iterEvent)->mDates.size(); ++j)
-        {
-            Date& date = (*iterEvent)->mDates[j];
+        //for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
+        for( Date& date : (*iterEvent)->mDates ) {
+            //Date& date = (*iterEvent)->mDates[j];
             date.mTheta.generateCorrelations(chains);
             date.mSigma.generateCorrelations(chains);
         }
@@ -959,7 +945,7 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 #endif
 }
 
-void Model::setBandwidth(const double bandwidth)
+void Model::setBandwidth(const float bandwidth)
 {
     qDebug()<<"Model::setBandwidth";
     if (mBandwidth != bandwidth) {
@@ -973,7 +959,7 @@ void Model::setBandwidth(const double bandwidth)
     }
 }
 
-void Model::setFFTLength(const double FFTLength)
+void Model::setFFTLength(const float FFTLength)
 {
     qDebug()<<"Model::setFTLength";
     if (mFFTLength != FFTLength) {
@@ -994,7 +980,7 @@ void Model::setFFTLength(const double FFTLength)
  * @param[in] bandwidth
  * @param[in] threshold
  */
-void Model::initDensities(const int fftLength, const double bandwidth, const double threshold)
+void Model::initDensities(const int fftLength, const float bandwidth, const float threshold)
 {
     qDebug()<<"Model::initDensities"<<fftLength<<bandwidth<<threshold;
     mFFTLength = fftLength;
@@ -1011,7 +997,7 @@ void Model::initDensities(const int fftLength, const double bandwidth, const dou
  //   emit newCalculus();
 }
 
-void Model::updateDensities(const int fftLength, const double bandwidth, const double threshold)
+void Model::updateDensities(const int fftLength, const float bandwidth, const float threshold)
 {
     qDebug()<<"Model::updateDensities"<<fftLength<<bandwidth<<threshold;
     bool newPosteriorDensities = false;
@@ -1038,7 +1024,7 @@ void Model::updateDensities(const int fftLength, const double bandwidth, const d
 
 }
 
-void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth)
+void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, float bandwidth)
 {
     QTime t = QTime::currentTime();
     
@@ -1074,8 +1060,7 @@ void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
     while (iterEvent!=mEvents.end()) {
         (*iterEvent)->mTheta.generateNumericalResults(chains);
         
-        for(int j=0; j<(*iterEvent)->mDates.size(); ++j)
-        {
+        for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
             Date& date = (*iterEvent)->mDates[j];
             date.mTheta.generateNumericalResults(chains);
             date.mSigma.generateNumericalResults(chains);
@@ -1119,7 +1104,7 @@ void Model::clearThreshold()
     }
 }
 
-void Model::initThreshold(const double threshold)
+void Model::initThreshold(const float threshold)
 {
    // memo threshold used  value
     mThreshold = threshold;
@@ -1151,7 +1136,7 @@ void Model::initThreshold(const double threshold)
  * @brief Model::setThreshold this is a slot
  * @param threshold
  */
-void Model::setThreshold(const double threshold)
+void Model::setThreshold(const float threshold)
 {
     qDebug()<<"Model::setThreshold"<<threshold<<" mThreshold"<<mThreshold;
     if ( mThreshold != threshold) {
@@ -1193,7 +1178,7 @@ double Model::getThreshold() const
     return mThreshold;
 }
 
-void Model::generateCredibility(const double thresh)
+void Model::generateCredibility(const float thresh)
 {
     qDebug()<<"Model::generateCredibility("<<thresh;
     QTime t = QTime::currentTime();
@@ -1201,8 +1186,7 @@ void Model::generateCredibility(const double thresh)
     QList<Event*>::iterator iterEvent = mEvents.begin();
     while (iterEvent!=mEvents.end()) {
         bool isFixedBound = false;
-        if((*iterEvent)->type() == Event::eKnown)
-        {
+        if((*iterEvent)->type() == Event::eKnown) {
             EventKnown* ek = dynamic_cast<EventKnown*>(*iterEvent);
             if(ek->knownType() == EventKnown::eFixed)
                 isFixedBound = true;
@@ -1224,53 +1208,59 @@ void Model::generateCredibility(const double thresh)
 
     QList<Phase*>::iterator iterPhase = mPhases.begin();
     // Diplay a progressBar if long
-    QProgressDialog *progress = new QProgressDialog("Credibility generation","Wait" , 1, 10,qApp->activeWindow());
+    QProgressDialog *progress = new QProgressDialog("Time range & credibilities generation","Wait" , 1, 10,qApp->activeWindow());
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(0);
     progress->setMinimumDuration(4);
     progress->setMinimum(0);
-    progress->setMaximum(mPhases.size());
+    progress->setMaximum(mPhases.size()*4);
+    int position = 1;
     while (iterPhase!=mPhases.end()) {
-        progress->setValue(std::distance(iterPhase, mPhases.end()));
+        progress->setValue(position);
         // if there is only one Event in the phase, there is no Duration
         (*iterPhase)->mAlpha.generateCredibility(mChains, thresh);
+        ++position;
         (*iterPhase)->mBeta.generateCredibility(mChains, thresh);
-
+        ++position;
         (*iterPhase)->mDuration.generateCredibility(mChains, thresh);
+        ++position;
         (*iterPhase)->mTimeRange = timeRangeFromTraces((*iterPhase)->mAlpha.runRawTraceForChain(mChains,0),
                                                              (*iterPhase)->mBeta.runRawTraceForChain(mChains,0),thresh, "Time Range for Phase : "+(*iterPhase)->mName);
+        ++position;
+        //qDebug()<<"Time Range for Phase "<<(*iterPhase)->mName<<thresh;
+        ++iterPhase;
 
-        qDebug()<<"Time Range for Phase "<<(*iterPhase)->mName<<thresh;
-         ++iterPhase;
     };
     progress->setMinimum(0);
-    progress->setMaximum(mPhaseConstraints.size());
+    progress->setMaximum(mPhaseConstraints.size()*2);
     progress->setLabelText("Gaps and transitions generation");
     QList<PhaseConstraint*>::iterator iterPhaseConstraint = mPhaseConstraints.begin();
+    position = 1;
     while (iterPhaseConstraint!=mPhaseConstraints.end()) {
-        progress->setValue(std::distance(iterPhaseConstraint, mPhaseConstraints.end()));
+        progress->setValue(position);
         Phase* phaseFrom = (*iterPhaseConstraint)->mPhaseFrom;
         Phase* phaseTo  = (*iterPhaseConstraint)->mPhaseTo;
 
         (*iterPhaseConstraint)->mGapRange = gapRangeFromTraces(phaseFrom->mBeta.runRawTraceForChain(mChains,0),
                                                              phaseTo->mAlpha.runRawTraceForChain(mChains,0), thresh, "Gap Range : "+phaseFrom->mName+ " to "+ phaseTo->mName);
-
+        ++position;
         qDebug()<<"Gap Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
 
         (*iterPhaseConstraint)->mTransitionRange = transitionRangeFromTraces(phaseFrom->mBeta.runRawTraceForChain(mChains,0),
                                                              phaseTo->mAlpha.runRawTraceForChain(mChains,0), thresh, "Transition Range : "+phaseFrom->mName+ " to "+ phaseTo->mName);
-
+        ++position;
         qDebug()<<"Transition Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
         ++iterPhaseConstraint;
+
     };
     delete progress;
-    QTime t2 = QTime::currentTime();
+    QTime t2 (QTime::currentTime());
     qint64 timeDiff = t.msecsTo(t2);
     qDebug() <<  "=> Model::generateCredibility done in " + QString::number(timeDiff) + " ms";
 
 }
 
-void Model::generateHPD(const double thresh)
+void Model::generateHPD(const float thresh)
 {
     QTime t = QTime::currentTime();
 
@@ -1346,12 +1336,12 @@ void Model::clearCredibilityAndHPD()
     while (iterEvent!=mEvents.cend()) {
         foreach (Date date, (*iterEvent)->mDates) {
             date.mTheta.mHPD.clear();
-            date.mTheta.mCredibility = QPair<double,double>();
+            date.mTheta.mCredibility = QPair<float,float>();
             date.mSigma.mHPD.clear();
-            date.mSigma.mCredibility= QPair<double,double>();
+            date.mSigma.mCredibility= QPair<float,float>();
         }
         (*iterEvent)->mTheta.mHPD.clear();
-        (*iterEvent)->mTheta.mCredibility = QPair<double,double>();
+        (*iterEvent)->mTheta.mCredibility = QPair<float,float>();
         ++iterEvent;
     }
     QList<Phase*>::iterator iterPhase = mPhases.begin();
@@ -1361,13 +1351,13 @@ void Model::clearCredibilityAndHPD()
         //(*iterPhase)->mAlpha.mThresholdOld = 0;
 
         (*iterPhase)->mBeta.mHPD.clear();
-        (*iterPhase)->mBeta.mCredibility = QPair<double,double>();
+        (*iterPhase)->mBeta.mCredibility = QPair<float,float>();
         //(*iterPhase)->mBeta.mThresholdOld = 0;
 
         (*iterPhase)->mDuration.mHPD.clear();
-        (*iterPhase)->mDuration.mCredibility = QPair<double,double>();
+        (*iterPhase)->mDuration.mCredibility = QPair<float,float>();
         //(*iterPhase)->mDuration.mThresholdOld = 0;
-        (*iterPhase)->mTimeRange = QPair<double,double>();
+        (*iterPhase)->mTimeRange = QPair<float,float>();
         ++iterPhase;
     }
 }
@@ -1377,23 +1367,23 @@ void Model::clearTraces()
     QList<Event*>::iterator iterEvent = mEvents.begin();
     while (iterEvent!=mEvents.cend()) {
         foreach (Date date, (*iterEvent)->mDates) {
-            date.mTheta.mRawTrace.clear();
-            date.mTheta.mFormatedTrace.clear();
-            date.mSigma.mRawTrace.clear();
-            date.mSigma.mFormatedTrace.clear();
+            date.mTheta.mRawTrace->clear();
+            date.mTheta.mFormatedTrace->clear();
+            date.mSigma.mRawTrace->clear();
+            date.mSigma.mFormatedTrace->clear();
         }
-        (*iterEvent)->mTheta.mRawTrace.clear();
-        (*iterEvent)->mTheta.mFormatedTrace.clear();
+        (*iterEvent)->mTheta.mRawTrace->clear();
+        (*iterEvent)->mTheta.mFormatedTrace->clear();
         ++iterEvent;
     }
     QList<Phase*>::iterator iterPhase = mPhases.begin();
     while (iterPhase!=mPhases.cend()) {
-        (*iterPhase)->mAlpha.mRawTrace.clear();
-        (*iterPhase)->mAlpha.mFormatedTrace.clear();
-        (*iterPhase)->mBeta.mRawTrace.clear();
-        (*iterPhase)->mAlpha.mFormatedTrace.clear();
-        (*iterPhase)->mDuration.mRawTrace.clear();
-        (*iterPhase)->mDuration.mFormatedTrace.clear();
+        (*iterPhase)->mAlpha.mRawTrace->clear();
+        (*iterPhase)->mAlpha.mFormatedTrace->clear();
+        (*iterPhase)->mBeta.mRawTrace->clear();
+        (*iterPhase)->mAlpha.mFormatedTrace->clear();
+        (*iterPhase)->mDuration.mRawTrace->clear();
+        (*iterPhase)->mDuration.mFormatedTrace->clear();
         ++iterPhase;
     }
 }
@@ -1405,88 +1395,175 @@ void Model::clearTraces()
  * */
 void Model::saveToFile(const QString& fileName)
 {
-    if(!mEvents.empty())
-    //if(!mEvents[0]->mTheta.mTrace.empty())
-    {
+    if (!mEvents.empty()) {
     // -----------------------------------------------------
     //  Create file
     // -----------------------------------------------------
-    
+    //QFileInfo info(fileName);
+   // QFile file(info.path() + info.baseName() + ".~dat"); // when we could do a compressed file
+    //QFile file(info.path() + info.baseName() + ".dat");
     QFile file(fileName);
-    QByteArray uncompresedData;
-    if(file.open(QIODevice::WriteOnly))
-    {
-        QDataStream out(&uncompresedData, QIODevice::WriteOnly);
+    if(file.open(QIODevice::WriteOnly)) {
+        int reserveInit = 0;
+        // compute reserve to estim the size of uncompresedData and magnify
+        foreach (Phase* phase, mPhases) {
+            reserveInit += phase->mAlpha.mRawTrace->size();
+            reserveInit += phase->mBeta.mRawTrace->size();
+            reserveInit += phase->mDuration.mRawTrace->size();
+        }
+
+        int numDates = 0;
+        foreach (Event* event, mEvents) {
+            reserveInit += event->mTheta.mRawTrace->size();
+            reserveInit += event->mTheta.mAllAccepts->size();
+            reserveInit += event->mTheta.mHistoryAcceptRateMH->size();
+            reserveInit += 4;
+
+
+            QList<Date>& dates = event->mDates;
+            numDates += event->mDates.size();
+            for (int j=0; j<dates.size(); ++j) {
+                reserveInit += dates.at(j).mTheta.mRawTrace->size();
+                reserveInit += dates.at(j).mTheta.mAllAccepts->size();
+                reserveInit += dates.at(j).mTheta.mHistoryAcceptRateMH->size();
+                reserveInit += 4;
+
+                reserveInit += dates.at(j).mSigma.mRawTrace->size();
+                reserveInit += dates.at(j).mSigma.mAllAccepts->size();
+                reserveInit += dates.at(j).mSigma.mHistoryAcceptRateMH->size();
+                reserveInit += 4;
+
+                reserveInit += dates.at(j).mWiggle.mRawTrace->size();
+                reserveInit += dates.at(j).mWiggle.mAllAccepts->size();
+                reserveInit += dates.at(j).mWiggle.mHistoryAcceptRateMH->size();
+                reserveInit += 4;
+
+
+             }
+        }
+        //uncompressedData.reserve(reserveInit);
+     /*   QBuffer buffer(&uncompressedData);
+            buffer.open(QIODevice::WriteOnly);
+
+            QDataStream out(&buffer);*/
+
+       // QDataStream out(&uncompressedData, QIODevice::WriteOnly);
+        QDataStream out(&file);
+        out.setVersion(QDataStream::Qt_5_5);
+
+        //out << quint32(MagicNumber);// we could add software version here << quint16(out.version());
         
         // -----------------------------------------------------
         //  Write info
         // -----------------------------------------------------
-        out << (qint32)mPhases.size();
-        out << (qint32)mEvents.size();
+        out << quint32 (mPhases.size());
+        out << quint32 (mEvents.size());
+        out << quint32 (numDates);
 
-        qint32 numDates = 0;
-        for(int i=0; i<mEvents.size(); ++i)
-            numDates += mEvents.at(i)->mDates.size();
-        out << numDates;
+        out << (quint32) mChains.size();
+        for (ChainSpecs& ch : mChains) {
+            out << (quint32) ch.mBatchIndex;
+            out << (quint32) ch.mBatchIterIndex;
+            out << (quint32)ch.mBurnIterIndex;
+            out << (quint32) ch.mMaxBatchs;
+            out << ch.mMixingLevel;
+            out << (quint32) ch.mNumBatchIter;
+            out << (quint32) ch.mNumBurnIter;
+            out << (quint32) ch.mNumRunIter;
+            out << (quint32)ch.mRunIterIndex;
+            out << (qint32) ch.mSeed;
+            out << (quint32)ch.mThinningInterval;
+            out << (quint32) ch.mTotalIter;
+        }
         // -----------------------------------------------------
         //  Write phases data
         // -----------------------------------------------------
         foreach (Phase* phase, mPhases) {
-            phase->mAlpha.saveToStream(&out);
-            phase->mBeta.saveToStream(&out);
-            phase->mDuration.saveToStream(&out);
+            out << phase->mAlpha;
+            out << phase->mBeta;
+            out << phase->mDuration;
         }
-
         // -----------------------------------------------------
         //  Write events data
         // -----------------------------------------------------
-        foreach (Event* event, mEvents) {
-           event->mTheta.saveToStream(&out);
-        }
+        foreach (Event* event, mEvents)
+            out << event->mTheta;
 
         // -----------------------------------------------------
         //  Write dates data
         // -----------------------------------------------------
-        for (int i=0; i<mEvents.size(); ++i) {
-            Event* event = mEvents[i];
-            QList<Date>& dates = event->mDates;
-            for (int j=0; j<dates.size(); ++j) {
+        for (const Event* event : mEvents) {
+            if (event->mType == Event::eDefault ){
+                QList<Date> dates (event->mDates);
+                 for ( Date d : dates) {
+                     out << d.mTheta;
+                     out << d.mSigma;
+                      if (d.mDeltaType != Date::eDeltaNone)
+                          out << d.mWiggle;
 
-                dates[j].mTheta.saveToStream(&out);
-                dates[j].mSigma.saveToStream(&out);
-                dates[j].mWiggle.saveToStream(&out);
-                
-               
-                out << dates.at(j).mDeltaFixed;
-                out << dates.at(j).mDeltaMin;
-                out << dates.at(j).mDeltaMax;
-                out << dates.at(j).mDeltaAverage;
-                out << dates.at(j).mDeltaError;
-                
-                out << dates.at(j).mSettings.mTmin;
-                out << dates.at(j).mSettings.mTmax;
-                out << dates.at(j).mSettings.mStep;
-                out << dates.at(j).mSettings.mStepForced;
-                
-              //  out << dates[j].mSubDates;
-                out << dates.at(j).getTminRefCurve();
-                out << dates.at(j).getTmaxRefCurve();
+                      out << d.mDeltaFixed;
+                      out << d.mDeltaMin;
+                      out << d.mDeltaMax;
+                      out << d.mDeltaAverage;
+                      out << d.mDeltaError;
 
-                out << dates.at(j).getTminCalib();
-                out << dates.at(j).getTmaxCalib();
-                
-                out << dates.at(j).mCalibration;
-                out << dates.at(j).mRepartition;
-                out << dates.at(j).mCalibHPD;
+                      out << (qint32) d.mSettings.mTmin;
+                      out << (qint32) d.mSettings.mTmax;
+                      out <<  d.mSettings.mStep;
+                      out << (quint8)(d.mSettings.mStepForced==true? 1: 0);
+
+                    //  out << d.mSubDates;
+                      out << d.getTminRefCurve();
+                      out << d.getTmaxRefCurve();
+
+                      out << d.getTminCalib();
+                      out << d.getTmaxCalib();
+
+                      out <<d.mCalibration;
+                      out <<d.mRepartition;
+
+
+                      out << (quint32)d.mCalibHPD.size();
+                      for (QMap<float,float>::const_iterator it = d.mCalibHPD.cbegin(); it!=d.mCalibHPD.cend();++it) {
+                          out << it.key();
+                          out << it.value();
+                       }
+                    }
 
             }
         }
         out << mLogModel;
         out << mLogMCMC;
         out << mLogResults;
-        QByteArray compressedData = qCompress(uncompresedData);
-        file.write(compressedData);
+
+      //  QByteArray compressedData (uncompressedData);// (qCompress(uncompressedData, 2));
+      //  file.write(compressedData);
+
+      /*  QDataStream outComp(&file);
+        outComp.setVersion(QDataStream::Qt_4_3);
+        outComp << qCompress(uncompressedData, 2);*/
+
+        //file.write(qCompress(uncompressedData, 2));
         file.close();
+
+        // compress file
+      //  QFile infile(fileName+"_tmp");
+
+      /*     file.open(QIODevice::ReadOnly);
+
+           QByteArray uncompressedData (file.readAll());
+           file.close();
+           file.remove();
+
+          // QByteArray compressedData (qCompress(uncompressedData, 9));
+
+           QFile fileDat(fileName);
+           fileDat.open(QIODevice::WriteOnly);
+           fileDat.write(qCompress(uncompressedData, 9));
+
+           fileDat.close();
+           uncompressedData.clear();
+        */
     }
   }
 }
@@ -1495,95 +1572,147 @@ void Model::saveToFile(const QString& fileName)
  * */
 void Model::restoreFromFile(const QString& fileName)
 {
+/*    QFile fileDat(fileName);
+    fileDat.open(QIODevice::ReadOnly);
+    QByteArray compressedData (fileDat.readAll());
+    fileDat.close();
+
+    QByteArray uncompressedData (qUncompress(compressedData));
+#ifdef DEBUG
+       qDebug() << "Lecture fichier :"<< fileName;
+       qDebug() << "TAILLE compressedData :" << compressedData.size();
+       qDebug() << "TAILLE uncompresedData :" << uncompressedData.size();
+#endif
+    compressedData.clear();
+*/
+/*    QFileInfo info(fileName);
+    QFile file(info.path() + info.baseName() + ".~dat"); // when we could compress the file
+
+    file.open(QIODevice::WriteOnly);
+    file.write(uncompressedData);
+    file.close();
+*/
+   // QFileInfo info(fileName);
+   // QFile file(info.path() + info.baseName() + ".dat");
+
     QFile file(fileName);
-
     if (file.exists() && file.open(QIODevice::ReadOnly)){
-        QByteArray compressedData = file.readAll();
 
-        QByteArray uncompresedData = qUncompress(compressedData);
-
-/* #ifdef DEBUG
-        qDebug() << "Lecture fichier :"<< fileName;
-        qDebug() << "TAILLE compressedData :" << compressedData.size();
-        qDebug() << "TAILLE uncompresedData :" << uncompresedData.size();
-#endif */
-        if (uncompresedData.size()!=0) {
-            QDataStream in(&uncompresedData, QIODevice::ReadOnly);
-
+    //    if ( file.size()!=0 /* uncompressedData.size()!=0*/ ) {
+ //           QDataStream in(&uncompressedData, QIODevice::ReadOnly);
+    QDataStream in(&file);
+   /* if (in.version()!= QDataStream::Qt_5_5)
+        return;
+    in.setVersion(QDataStream::Qt_5_5);
+    */
             // -----------------------------------------------------
             //  Read info
             // -----------------------------------------------------
 
-            qint32 numPhases = 0;
-            in >> numPhases;
+            quint32 tmp32;
+            in >> tmp32;
+            const int numPhases = (int)tmp32;
+            in >> tmp32;
+            const int numEvents = (int)tmp32;
+            in >> tmp32;
+            const int numdates = (int)tmp32;
 
-            qint32 numEvents = 0;
-            in >> numEvents;
-
-            qint32 numdates = 0;
-            in >> numdates;
+            in >> tmp32;
+            mChains.clear();
+            mChains.reserve((int) tmp32);
+            for (int i=0 ; i<tmp32; ++i) {
+                ChainSpecs ch;
+                in >> ch.mBatchIndex;
+                in >> ch.mBatchIterIndex;
+                in >> ch.mBurnIterIndex;
+                in >> ch.mMaxBatchs;
+                in >> ch.mMixingLevel;
+                in >> ch.mNumBatchIter;
+                in >> ch.mNumBurnIter;
+                in >> ch.mNumRunIter;
+                in >> ch.mRunIterIndex;
+                in >> ch.mSeed;
+                in >> ch.mThinningInterval;
+                in >> ch.mTotalIter;
+                mChains.append(ch);
+            }
 
             // -----------------------------------------------------
             //  Read phases data
             // -----------------------------------------------------
 
             for (int i=0; i<mPhases.size(); ++i) {
-                mPhases[i]->mAlpha.loadFromStream(&in);
-                mPhases[i]->mBeta.loadFromStream(&in);
-                mPhases[i]->mDuration.loadFromStream(&in);
+               in >> mPhases[i]->mAlpha;
+               in >> mPhases[i]->mBeta;
+               in >> mPhases[i]->mDuration;
             }
 
             // -----------------------------------------------------
             //  Read events data
             // -----------------------------------------------------
 
-            for (int i=0; i<mEvents.size(); ++i)
-                mEvents[i]->mTheta.loadFromStream(&in);
-
+            for (Event* e:mEvents)
+                in >> e->mTheta;
 
             // -----------------------------------------------------
             //  Read dates data
             // -----------------------------------------------------
 
             for (int i=0; i<mEvents.size(); ++i) {
-                for(int j=0; j<mEvents.at(i)->mDates.size(); ++j) {
+                if (mEvents[i]->mType == Event::eDefault )
+                     for (int j=0; j<mEvents[i]->mDates.size(); ++j) {
+                        Date& d = mEvents[i]->mDates[j];
+                        in >> d.mTheta;
+                        in >> d.mSigma;
+                        if (d.mDeltaType != Date::eDeltaNone)
+                            in >> d.mWiggle;
 
-                    mEvents.at(i)->mDates[j].mTheta.loadFromStream(&in);
-                    mEvents.at(i)->mDates[j].mSigma.loadFromStream(&in);
-                    mEvents.at(i)->mDates[j].mWiggle.loadFromStream(&in);
-                                                            
-                    
-                    in >> mEvents[i]->mDates[j].mDeltaFixed;
-                    in >> mEvents[i]->mDates[j].mDeltaMin;
-                    in >> mEvents[i]->mDates[j].mDeltaMax;
-                    in >> mEvents[i]->mDates[j].mDeltaAverage;
-                    in >> mEvents[i]->mDates[j].mDeltaError;
-                    
-                    in >> mEvents[i]->mDates[j].mSettings.mTmin;
-                    in >> mEvents[i]->mDates[j].mSettings.mTmax;
-                    in >> mEvents[i]->mDates[j].mSettings.mStep;
-                    in >> mEvents[i]->mDates[j].mSettings.mStepForced;
-                    
-                   // in >> mEvents[i]->mDates[j].mSubDates;
-                    double tmp;
-                    in >> tmp;
-                    mEvents[i]->mDates[j].setTminRefCurve(tmp);
-                    in >> tmp;
-                    mEvents[i]->mDates[j].setTmaxRefCurve(tmp);
+                        in >> d.mDeltaFixed;
+                        in >> d.mDeltaMin;
+                        in >> d.mDeltaMax;
+                        in >> d.mDeltaAverage;
+                        in >> d.mDeltaError;
+                        qint32 tmpInt32;
+                        in >> tmpInt32;
+                        d.mSettings.mTmin = (int)tmpInt32;
+                        in >> tmpInt32;
+                        d.mSettings.mTmax = (int)tmpInt32;
+                        in >> d.mSettings.mStep;
+                        quint8 btmp;
+                        in >> btmp;
+                        d.mSettings.mStepForced =(btmp==1);
 
-                    in >> tmp;
-                    mEvents[i]->mDates[j].setTminCalib(tmp);
-                    in >>tmp;
-                    mEvents[i]->mDates[j].setTmaxCalib(tmp);
+                       // in >> d.mSubDates;
+                        float tmp;
+                        in >> tmp;
+                        d.setTminRefCurve(tmp);
+                        in >> tmp;
+                        d.setTmaxRefCurve(tmp);
 
-                    in >> mEvents[i]->mDates[j].mCalibration;
-                    in >> mEvents[i]->mDates[j].mRepartition;
-                    in >> mEvents[i]->mDates[j].mCalibHPD;
-                    
-                     if (mEvents.at(i)->mDates.at(j).mCalibration.isEmpty()) qDebug()<<"Model::restoreFromFile vide";
-                    
-                }
-            }
+                        in >> tmp;
+                        d.setTminCalib(tmp);
+                        in >>tmp;
+                        d.setTmaxCalib(tmp);
+
+                        quint32 tmpUint32;
+                        in >>d.mCalibration;
+                        in >>d.mRepartition;
+
+                        in >> tmpUint32;
+
+                        for (quint32 i= 0; i<tmpUint32; i++) {
+                            float tmpKey;
+                            float tmpValue;
+                            in >> tmpKey;
+                            in >> tmpValue;
+                            d.mCalibHPD[tmpKey]= tmpValue;
+                        }
+#ifdef DEBUG
+                         if (d.mCalibration.isEmpty())
+                             qDebug()<<"Model::restoreFromFile vide";
+#endif
+                    }
+             }
             in >> mLogModel;
             in >> mLogMCMC;
             in >> mLogResults;
@@ -1591,8 +1720,9 @@ void Model::restoreFromFile(const QString& fileName)
             generateCorrelations(mChains);
            // generatePosteriorDensities(mChains, 1024, 1);
            // generateNumericalResults(mChains);
-        }
+
         file.close();
+       // file.remove(); // delete the temporary file with uncompressed data
     }
     
 }
