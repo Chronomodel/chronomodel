@@ -1,5 +1,7 @@
 build/
 doxygen/
+DerivedData/
+
 # propre a chaque systeme, sur windows correspond a QtCreator
 Chronomodel.pro.user*
 *.xcodeproj/*
@@ -11,7 +13,7 @@ Release/*
 *.pkg
 *.aux
 *.exe
-
+*.DS_Store
 *.mak
 
 Info.plist
@@ -35,3 +37,9 @@ Makefile
 *.dmg
 
 Create_mac_bundle_in_Release.sh
+
+deploy/Calib/Gauss/.DS_Store
+
+deploy/mac/.DS_Store
+
+deploy/windows/.DS_Store
