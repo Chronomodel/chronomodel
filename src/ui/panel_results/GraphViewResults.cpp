@@ -1,4 +1,4 @@
-﻿ #include "GraphViewResults.h"
+#include "GraphViewResults.h"
 #include "Button.h"
 #include "Painting.h"
 #include "QtUtilities.h"

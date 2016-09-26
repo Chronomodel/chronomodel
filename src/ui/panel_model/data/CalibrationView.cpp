@@ -497,3 +497,4 @@ void CalibrationView::mouseMoveEvent(QMouseEvent* e)
     mMarkerX->setGeometry(x, mMarkerX->pos().y(), mMarkerX->width(), mMarkerX->height());
     mMarkerY->setGeometry(mMarkerY->pos().x(), y, mMarkerY->width(), mMarkerY->height());
 }
+

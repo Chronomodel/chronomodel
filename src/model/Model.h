@@ -1,4 +1,4 @@
-﻿#ifndef MODEL_H
+#ifndef MODEL_H
 #define MODEL_H
 
 #include "ProjectSettings.h"

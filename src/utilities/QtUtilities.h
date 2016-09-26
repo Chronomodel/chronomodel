@@ -1,4 +1,4 @@
-﻿#ifndef QTUTILITIES_H
+#ifndef QTUTILITIES_H
 #define QTUTILITIES_H
 
 #include <QStringList>
@@ -129,3 +129,4 @@ QVector<T> getVectorDataInRange(const QVector<T>& data, const T subMin,const T s
 }
 
 #endif
+

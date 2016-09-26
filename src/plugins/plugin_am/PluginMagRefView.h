@@ -1,4 +1,4 @@
-﻿#ifndef PluginMagRefView_H
+#ifndef PluginMagRefView_H
 #define PluginMagRefView_H
 
 #if USE_PLUGIN_AM

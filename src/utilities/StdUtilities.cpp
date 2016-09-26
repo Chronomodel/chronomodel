@@ -718,5 +718,3 @@ QVector<double> vector_to_histo(const QVector<double>& dataScr, const double tmi
 
     return histo;
 }
-
-

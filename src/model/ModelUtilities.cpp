@@ -587,32 +587,31 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
 QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
 {
     QString text;
-    if(p)
-    {
+    if (p) {
         text += "<hr>";
-        text += line(textBold(textPurple("Gap range between Phase : " + p->mPhaseFrom->mName +" to "+ p->mPhaseTo->mName)));
+        text += line(textBold(textPurple("Hiatus Phase : " + p->mPhaseFrom->mName +" to "+ p->mPhaseTo->mName)));
 
         switch(p->mGammaType) {
             case PhaseConstraint::eGammaFixed :
-                text += line(textBold(textPurple( QObject::tr("Gap fixed ") + p->mGammaFixed)));
+                text += line(textBold(textPurple( QObject::tr("Hiatus fixed ") + p->mGammaFixed)));
                 break;
             case PhaseConstraint::eGammaUnknown :
-                text += line(textBold(textPurple( QObject::tr("Gap range unknown") )));
+                text += line(textBold(textPurple( QObject::tr("Hiatus unknown") )));
                 break;
             case PhaseConstraint::eGammaRange :
-                 text += line(textBold(textPurple( QObject::tr("Gap range between ") + p->mGammaMin + QObject::tr(" and ") +p->mGammaMax)));
+                 text += line(textBold(textPurple( QObject::tr("Hiatus between ") + p->mGammaMin + QObject::tr(" and ") +p->mGammaMax)));
                 break;
             default:
 
             break;
         }
-        if(p->mGapRange != QPair<double,double>()) {
+        if (p->mGapRange != QPair<double,double>()) {
             text += "<br>";
 
             const QString result = QObject::tr("Gap Range")+" : [" + DateUtils::dateToString(p->getFormatedGapRange().first) + ", " + DateUtils::dateToString(p->getFormatedGapRange().second) + "]";
             text += line(textBold(textPurple(result + "<br>")));
         }
-        if(p->mTransitionRange != QPair<double,double>()) {
+        if (p->mTransitionRange != QPair<double,double>()) {
             text += "<br>";
 
             const QString result = QObject::tr("Transition Range")+" : [" + DateUtils::dateToString(p->getFormatedTransitionRange().first) + ", " + DateUtils::dateToString(p->getFormatedTransitionRange().second) + "]";
@@ -629,17 +628,17 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p)
     if(p)
     {
         text += nl;
-        text += QObject::tr("Gap range between Phase : ") + p->mPhaseFrom->mName +QObject::tr(" to ")+ p->mPhaseTo->mName;
+        text += QObject::tr("Hiatus Phase : ") + p->mPhaseFrom->mName +QObject::tr(" to ")+ p->mPhaseTo->mName;
 
         switch(p->mGammaType) {
             case PhaseConstraint::eGammaFixed :
-                text += QObject::tr("Gap fixed ") + p->mGammaFixed;
+                text += QObject::tr("Hiatus fixed ") + p->mGammaFixed;
                 break;
             case PhaseConstraint::eGammaUnknown :
-                text += QObject::tr("Gap range unknown") ;
+                text += QObject::tr("Hiatus unknown") ;
                 break;
             case PhaseConstraint::eGammaRange :
-                 text += QObject::tr("Gap range between ") + p->mGammaMin + QObject::tr(" and ") +p->mGammaMax;
+                 text += QObject::tr("Hiatus between ") + p->mGammaMin + QObject::tr(" and ") +p->mGammaMax;
                  break;
             default:
 
@@ -689,3 +688,4 @@ short ModelUtilities::HPDOutsideSudyPeriod(const QMap<float, float>& hpd, const 
     }
     return answer;
 }
+

@@ -1,4 +1,4 @@
-﻿#include "GraphView.h"
+#include "GraphView.h"
 #include "Ruler.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
@@ -1234,8 +1234,7 @@ bool GraphView::saveAsSVG(const QString& fileName, const QString& graphTitle, co
     
 }
 QString GraphView::getInfo()
-{
-    
+{ 
     return ( isShow() ? mInfos.join("|") : "");
 }
 

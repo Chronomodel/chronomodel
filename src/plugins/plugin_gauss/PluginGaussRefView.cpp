@@ -1,4 +1,4 @@
-﻿#include "PluginGaussRefView.h"
+#include "PluginGaussRefView.h"
 #if USE_PLUGIN_GAUSS
 
 #include "PluginGauss.h"
@@ -262,3 +262,4 @@ void PluginGaussRefView::resizeEvent(QResizeEvent* e)
 }
 
 #endif
+

@@ -1,4 +1,4 @@
-﻿#ifndef PluginTLRefView_H
+#ifndef PluginTLRefView_H
 #define PluginTLRefView_H
 
 #if USE_PLUGIN_TL
@@ -31,4 +31,3 @@ private:
 
 #endif
 #endif
-

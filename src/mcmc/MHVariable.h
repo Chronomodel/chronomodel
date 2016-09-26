@@ -65,3 +65,4 @@ QDataStream &operator<<( QDataStream &stream, const MHVariable &data );
 QDataStream &operator>>( QDataStream &stream, MHVariable &data );
 
 #endif
+

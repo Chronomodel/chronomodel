@@ -223,3 +223,4 @@ float map_area(const QMap<float, float>& map);
 const QMap<float, float> create_HPD(const QMap<float, float>& aMap, const float threshold);
 QVector<float> vector_to_histo(const QVector<float>& dataScr, const float tmin, const float tmax, const int nbPts);
 #endif
+

@@ -1097,3 +1097,4 @@ void fMHSymGaussAdaptWithArg(Date* date, Event* event)
     
     date->mTheta.tryUpdate(tiNew, (double) rapport);
 }
+

@@ -1,4 +1,4 @@
-﻿#ifndef DATEUTILS_H
+#ifndef DATEUTILS_H
 #define DATEUTILS_H
 
 #include <QString>

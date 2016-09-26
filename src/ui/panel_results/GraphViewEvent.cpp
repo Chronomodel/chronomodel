@@ -392,3 +392,4 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         }
     }
 }
+

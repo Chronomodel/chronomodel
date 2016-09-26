@@ -89,7 +89,7 @@ float ProjectSettings::getStep(const float tmin, const float tmax)
     if(diff <= linearUntil)
         return 1;
     else {
-        const float maxPts = 50000.;
+        const float maxPts = 50000.f;
         const float lambda = - log((maxPts - linearUntil)/maxPts) / linearUntil;
         const float nbPts = maxPts * (1 - exp(-lambda * diff));
         float step = diff / nbPts;

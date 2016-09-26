@@ -430,11 +430,9 @@ bool saveAsCsv(const QList<QStringList>& data, const QString& title)
                                                     currentPath,
                                                     filter);
     QFile file(filename);
-    if(file.open(QFile::WriteOnly | QFile::Truncate))
-    {
+    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
         QTextStream output(&file);
-        for(int i=0; i<data.size(); ++i)
-        {
+        for (int i=0; i<data.size(); ++i)  {
             output << data.at(i).join(csvSep);
             output << "\r";
         }

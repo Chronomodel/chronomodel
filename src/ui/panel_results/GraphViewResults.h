@@ -1,4 +1,4 @@
-﻿#ifndef GraphViewResults_H
+#ifndef GraphViewResults_H
 #define GraphViewResults_H
 
 #include "ProjectSettings.h"

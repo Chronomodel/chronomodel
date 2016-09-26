@@ -1,4 +1,4 @@
-﻿#include "GraphViewPhase.h"
+#include "GraphViewPhase.h"
 #include "GraphView.h"
 #include "Phase.h"
 #include "Painting.h"
@@ -409,3 +409,4 @@ void GraphViewPhase::saveGraphData() const
         GraphViewResults::saveGraphData();
     
 }
+

@@ -1,4 +1,4 @@
-﻿#include "AxisTool.h"
+#include "AxisTool.h"
 #include "Painting.h"
 #include "StdUtilities.h"
 
@@ -252,3 +252,4 @@ void AxisWidget::paintEvent(QPaintEvent*){
     //updateValues(width() - mMarginLeft - mMarginRight, 50, mStartVal, mEndVal);
     paint(p, QRect( mMarginLeft, 0, width() - mMarginLeft - mMarginRight, height()), 7, mFormatFunct);
 }
+

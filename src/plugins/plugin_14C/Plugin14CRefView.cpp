@@ -1,4 +1,4 @@
-﻿#include "Plugin14CRefView.h"
+#include "Plugin14CRefView.h"
 #if USE_PLUGIN_14C
 
 #include "Plugin14C.h"
@@ -336,3 +336,4 @@ void Plugin14CRefView::resizeEvent(QResizeEvent* e)
 }
 
 #endif
+

@@ -1,4 +1,4 @@
-﻿#include "GraphViewDate.h"
+#include "GraphViewDate.h"
 #include "GraphView.h"
 #include "Date.h"
 #include "Event.h"
@@ -372,6 +372,3 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
         mGraph->setYAxisMode(GraphView::eMinMax);
     }
 }
-
-
-

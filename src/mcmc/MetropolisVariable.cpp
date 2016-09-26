@@ -1,4 +1,4 @@
-﻿#include "MetropolisVariable.h"
+#include "MetropolisVariable.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
 #include "Functions.h"

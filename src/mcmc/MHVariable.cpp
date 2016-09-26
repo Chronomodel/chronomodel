@@ -90,13 +90,8 @@ MHVariable& MHVariable::operator=( MHVariable const& origin)
 float MHVariable::getCurrentAcceptRate()
 {
     float sum = 0.f;
-   /*
-     for(int i=0; i<mLastAccepts.size(); ++i)
-        sum += mLastAccepts.at(i) ? 1.f : 0.f;
-    */
 
     sum = std::accumulate(mLastAccepts.begin(), mLastAccepts.end(), sum,[](float s, bool a){return s+(a?1.:0.);}); //#include <numeric>
-
     
     return sum / (float)mLastAccepts.size();
 }

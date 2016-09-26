@@ -1,4 +1,4 @@
-﻿#include "Model.h"
+#include "Model.h"
 #include "Date.h"
 #include "Project.h"
 #include "EventKnown.h"
@@ -1726,3 +1726,4 @@ void Model::restoreFromFile(const QString& fileName)
     }
     
 }
+

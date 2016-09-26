@@ -1,4 +1,4 @@
-﻿#ifndef METROPOLISVARIABLE_H
+#ifndef METROPOLISVARIABLE_H
 #define METROPOLISVARIABLE_H
 
 #include <QMap>
@@ -154,3 +154,4 @@ QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data );
 
 QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data );
 #endif
+

@@ -1,4 +1,3 @@
-﻿
 #include "ResultsView.h"
 #include "GraphView.h"
 #include "GraphViewDate.h"
@@ -2067,3 +2066,4 @@ if (mByEventsBut->isChecked()) {
 }
 
 }
+

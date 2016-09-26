@@ -1,4 +1,4 @@
-﻿#include "DateUtils.h"
+#include "DateUtils.h"
 #include "MainWindow.h"
 #include "QtUtilities.h"
 #include <cmath>
@@ -124,6 +124,3 @@ float DateUtils::convertFromAppSettingsFormat(const float formattedValue)
 {
     return DateUtils::convertFromFormat(formattedValue, getAppSettingsFormat());
 }
-
-
-

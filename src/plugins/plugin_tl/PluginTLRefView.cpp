@@ -160,3 +160,4 @@ void PluginTLRefView::resizeEvent(QResizeEvent* e)
 }
 
 #endif
+
