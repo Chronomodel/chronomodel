@@ -43,3 +43,7 @@ deploy/Calib/Gauss/.DS_Store
 deploy/mac/.DS_Store
 
 deploy/windows/.DS_Store
+
+scan-build
+
+*.autosave
