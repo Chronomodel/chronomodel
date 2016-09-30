@@ -240,18 +240,20 @@ void GraphView::adjustYToMaxValue(const qreal& marginProp)
 {
     float yMax(0.f);
 
-    for (int i=0; i<mCurves.size(); ++i) {
-        if (mCurves.at(i).mVisible) {
-            if (!mCurves.at(i).mUseVectorData &&
-                !mCurves.at(i).mIsHorizontalLine &&
-                !mCurves.at(i).mIsHorizontalSections &&
-                !mCurves.at(i).mIsVerticalLine &&
-                !mCurves.at(i).mIsTopLineSections &&
-                !mCurves.at(i).mIsVertical) {
-                yMax = qMax(yMax, map_max_value(mCurves.at(i).mData));
-                
-            } else if (mCurves.at(i).mUseVectorData)
-                yMax = qMax(yMax, vector_max_value(mCurves.at(i).mDataVector));
+    //for (int i=0; i<mCurves.size(); ++i) {
+    for (auto c :mCurves) {
+        if (c.mVisible &&
+            !c.mIsHorizontalLine &&
+            !c.mIsHorizontalSections &&
+            !c.mIsVerticalLine &&
+            !c.mIsTopLineSections &&
+            !c.mIsVertical) {
+
+                if (!c.mUseVectorData)
+                    yMax = qMax(yMax, map_max_value(c.mData));
+
+                else if (c.mUseVectorData)
+                    yMax = qMax(yMax, vector_max_value(c.mDataVector));
             
         }
     }
@@ -1034,12 +1036,12 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         QList<QStringList> rows;
         QStringList list;
         
-        list <<"X Axis";
+        list <<"# X Axis";
         float xMin = mCurves.cbegin()->mData.firstKey();
         float xMax = mCurves.cbegin()->mData.lastKey();;
         bool firstCurveVisible = true;
         
-        for(auto iter= mCurves.cbegin(); iter != mCurves.cend(); ++iter) {
+        for (auto iter= mCurves.cbegin(); iter != mCurves.cend(); ++iter) {
             
             if (!iter->mData.empty() &&
                 !iter->mIsHorizontalLine &&
@@ -1097,9 +1099,9 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
         const QString projectName = tr("Project filename")+" : "+ MainWindow::getInstance()->getNameProject();
 
-        output<<version+"\r";
-        output<<projectName+ "\r";
-        output<<DateUtils::getAppSettingsFormatStr()+"\r";
+        output << "# "+ version + "\r";
+        output << "# "+ projectName + "\r";
+        output << "# "+ DateUtils::getAppSettingsFormatStr() + "\r";
         
         for (int i=0; i<rows.size(); ++i) {
             output << rows.at(i).join(csvSep);
@@ -1125,15 +1127,14 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
         bool abscissesWritten = false;
         QList<QStringList> rows;
 
-        rows.append(QStringList("X Axis"));
+        rows.append(QStringList("# X Axis"));
         QMap<float, QVector<float> > rowsData;
         
         int rowsCount = rows.count();
         QStringList emptyColumn;
         
         qDebug()<<"GraphView::exportCurrentVectorCurves"<<" nbCurve to export"<<mCurves.size();
-        for(int idCurve=0; idCurve<mCurves.size(); ++idCurve)
-        {
+        for (int idCurve=0; idCurve<mCurves.size(); ++idCurve) {
             if ( !mCurves[idCurve].mVisible || mCurves[idCurve].mDataVector.empty() ) continue;
             
             const QVector<float>& data = mCurves[idCurve].mDataVector;

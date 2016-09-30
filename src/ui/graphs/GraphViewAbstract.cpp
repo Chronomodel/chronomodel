@@ -113,7 +113,7 @@ qreal GraphViewAbstract::getYForValue(const float aValue, const bool aConstainRe
 {
     const float lYFromBase = valueForProportion(aValue, mMinY, mMaxY, 0.f, (float)(mGraphHeight-mMarginTop), aConstainResult);
     const qreal y = mMarginTop + mGraphHeight - (qreal)lYFromBase;
-	return y;	
+    return y;
 }
 float GraphViewAbstract::getValueForY(const qreal y, const bool aConstainResult)
 {

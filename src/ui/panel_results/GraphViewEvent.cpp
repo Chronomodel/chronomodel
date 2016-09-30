@@ -56,9 +56,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     mGraph->removeAllZones();
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
-    
-  //  mGraph->autoAdjustYScale(mCurrentTypeGraph == eTrace);
-    
+
     QPen defaultPen;
     defaultPen.setWidthF(1);
     defaultPen.setStyle(Qt::SolidLine);
@@ -66,8 +64,8 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     if (mEvent) {
         QColor color = mEvent->mColor;
         QString resultsText = ModelUtilities::eventResultsText(mEvent, false);
-         QString resultsHTML = ModelUtilities::eventResultsHTML(mEvent, false);
-         setNumericalResults(resultsHTML, resultsText);
+        QString resultsHTML = ModelUtilities::eventResultsHTML(mEvent, false);
+        setNumericalResults(resultsHTML, resultsText);
         
         bool isFixedBound = false;
         bool isUnifBound = false;
@@ -81,19 +79,15 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                     isUnifBound = true;
             }
         }
-        
-       
-        
+
         // ------------------------------------------------
         //  First tab : Posterior distrib
         // ------------------------------------------------
         if (typeGraph == ePostDistrib) {
             mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             mGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
-            mGraph->setFormatFunctY(0);//formatValueToAppSettingsPrecision);
+            mGraph->setFormatFunctY(0);
             mGraph->setBackgroundColor(QColor(230, 230, 230));
-            //mGraph->adjustYToMaxValue();
-           // mGraph->autoAdjustYScale(true);
             
             mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->mName;
             
@@ -146,14 +140,12 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                                                                            color);
                     mGraph->addCurve(curvePostDistrib);
 
-
                     // HPD All Chains
                     //color.setAlpha(255);
                     GraphCurve curveHPD = generateHPDCurve(mEvent->mTheta.mHPD,
                                                            "HPD All Chains",
                                                            color);
                     mGraph->addCurve(curveHPD);
-
                 
                     // ------------------------------------
                     //  Post Distrib Chain i
@@ -221,7 +213,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                 }
             }
 
-            mGraph->adjustYToMaxValue();
+            //mGraph->adjustYToMaxValue();
            // mGraph->adjustYToMinMaxValue();
             //mGraph->autoAdjustYScale(true);
         }
@@ -232,7 +224,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - Q2 i
         //  - Q3 i
         // ------------------------------------------------
-        else if(typeGraph == eTrace && variable == eTheta) {
+        else if (typeGraph == eTrace && variable == eTheta) {
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
             mGraph->setFormatFunctY(DateUtils::convertToAppSettingsFormatStr);
@@ -244,7 +236,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         //  - Accept i
         //  - Accept Target
         // ------------------------------------------------
-        else if(typeGraph == eAccept && variable == eTheta && mEvent->mMethod == Event::eMHAdaptGauss) {
+        else if (typeGraph == eAccept && variable == eTheta && mEvent->mMethod == Event::eMHAdaptGauss) {
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
             mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
@@ -277,16 +269,13 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
     
     if (mEvent) {
         bool isFixedBound = false;
-       // bool isUnifBound = false;
+
         EventKnown* bound = 0;
         if (mEvent->type() == Event::eKnown) {
             bound = dynamic_cast<EventKnown*>(mEvent);
-            if (bound) {
-                if (bound->knownType() == EventKnown::eFixed)
+            if (bound && bound->knownType() == EventKnown::eFixed)
                     isFixedBound = true;
-                //else if(bound->knownType() == EventKnown::eUniform)
-                  //  isUnifBound = true;
-            }
+
         }
         
         // ------------------------------------------------
@@ -306,12 +295,12 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
                 mGraph->setCurveVisible("Credibility All Chains", mShowCredibility && mShowAllChains);
                 
-                for (int i=0; i<mShowChainList.size(); ++i) {
-                    mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
-                }
+                for (int i=0; i<mShowChainList.size(); ++i)
+                    mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList.at(i));
+
                 mGraph->setTipXLab("t");
                 mGraph->setYAxisMode(GraphView::eHidden);
-                mGraph->autoAdjustYScale(true);
+
             }
             // ------------------------------------------------
             //  Events don't have std dev BUT we can visualize
@@ -324,15 +313,15 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 for (int i=0; i<mEvent->mDates.size(); ++i) {
                     mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " All Chains", mShowAllChains);
                     
-                    for (int j=0; j<mShowChainList.size(); ++j) {
-                        mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " Chain " + QString::number(j), mShowChainList[j]);
-                    }
+                    for (int j=0; j<mShowChainList.size(); ++j)
+                        mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " Chain " + QString::number(j), mShowChainList.at(j));
+
                 }
                 mGraph->setTipXLab("duration");
                 mGraph->setYAxisMode(GraphView::eHidden);
-                mGraph->adjustYToMaxValue();
+
             }
-            
+          mGraph->adjustYToMaxValue();
         }
         // ------------------------------------------------
         //  Second tab : History plots
@@ -345,13 +334,13 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         else if (mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta) {
             // We visualize only one chain (radio button)
             for (int i=0; i<mShowChainList.size(); ++i) {
-                mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList[i]);
-                mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList[i]);
-                mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList[i]);
-                mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList[i]);
+                mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList.at(i));
             }
-            //mGraph->adjustYToMinMaxValue();
-            mGraph->autoAdjustYScale(true);
+            mGraph->adjustYToMinMaxValue();
+            //mGraph->autoAdjustYScale(true);
             mGraph->setTipXLab("iteration");
             mGraph->setTipYLab("t");
             mGraph->setYAxisMode(GraphView::eMinMax);

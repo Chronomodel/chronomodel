@@ -295,7 +295,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
                 mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
             
             //mGraph->adjustYToMaxValue();
-            mGraph->autoAdjustYScale(true);
+            //mGraph->autoAdjustYScale(true);
             mGraph->setTipXLab("t");
 
             mGraph->setYAxisMode(GraphView::eHidden);
@@ -314,7 +314,8 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
             mGraph->setTipXLab("sigma");
             mGraph->setYAxisMode(GraphView::eHidden);
         }
-        mGraph->adjustYToMinMaxValue();
+        mGraph->adjustYToMaxValue();
+
     }
     // ------------------------------------------------
     //  Second tab : History plots.
@@ -326,10 +327,10 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
     // ------------------------------------------------
     else if (mCurrentTypeGraph == eTrace) {
         for (int i=0; i<mShowChainList.size(); ++i) {
-            mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList[i]);
-            mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList[i]);
-            mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList[i]);
-            mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList[i]);
+            mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList.at(i));
+            mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList.at(i));
+            mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList.at(i));
+            mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList.at(i));
         }
 
         //mGraph->adjustYToMinMaxValue();

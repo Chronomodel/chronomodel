@@ -379,7 +379,7 @@ void MetropolisVariable::generateCredibility(const QList<ChainSpecs> &chains, fl
 void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
 {
     const int hmax = 40;
-    if(!mCorrelations.isEmpty())
+    if (!mCorrelations.isEmpty())
         mCorrelations.clear();
     mCorrelations.reserve(chains.size());
 

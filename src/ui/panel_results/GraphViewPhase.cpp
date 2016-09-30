@@ -228,7 +228,8 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                     mGraph->addCurve(curveBeta);
                 }
             // must be after all curves adding
-            mGraph->adjustYToMinMaxValue();
+           // mGraph->adjustYToMinMaxValue();
+            mGraph->adjustYToMaxValue();
         }
         
     
@@ -290,12 +291,12 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 mGraph->setCurveVisible("Post Distrib Alpha " + QString::number(i), mShowChainList.at(i));
                 mGraph->setCurveVisible("Post Distrib Beta " + QString::number(i), mShowChainList.at(i));
             }
-           // mGraph->adjustYToMaxValue();
-            mGraph->autoAdjustYScale(true);
+            mGraph->adjustYToMaxValue();
+            //mGraph->autoAdjustYScale(true);
             mGraph->setTipXLab("t");
             mGraph->setYAxisMode(GraphView::eHidden);
 
-            if( !mDurationGraph->getCurve("Duration")->mData.isEmpty()) {
+            if ( !mDurationGraph->getCurve("Duration")->mData.isEmpty()) {
 
                 mDurationGraph->setCurveVisible("Duration", mShowAllChains);
                 mDurationGraph->setCurveVisible("HPD Duration", mShowAllChains);
