@@ -1192,8 +1192,7 @@ void Model::generateCredibility(const float thresh)
                 isFixedBound = true;
         }
 
-        if(!isFixedBound)
-        {
+        if(!isFixedBound) {
             (*iterEvent)->mTheta.generateCredibility(mChains, thresh);
 
             for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
@@ -1206,7 +1205,7 @@ void Model::generateCredibility(const float thresh)
         ++iterEvent;
     }
 
-    QList<Phase*>::iterator iterPhase = mPhases.begin();
+    QList<Phase*>::iterator iterPhase (mPhases.begin());
     // Diplay a progressBar if long
     QProgressDialog *progress = new QProgressDialog("Time range & credibilities generation","Wait" , 1, 10,qApp->activeWindow());
     progress->setWindowModality(Qt::WindowModal);
@@ -1214,7 +1213,7 @@ void Model::generateCredibility(const float thresh)
     progress->setMinimumDuration(4);
     progress->setMinimum(0);
     progress->setMaximum(mPhases.size()*4);
-    int position = 1;
+    int position(1);
     while (iterPhase!=mPhases.end()) {
         progress->setValue(position);
         // if there is only one Event in the phase, there is no Duration
@@ -1224,8 +1223,9 @@ void Model::generateCredibility(const float thresh)
         ++position;
         (*iterPhase)->mDuration.generateCredibility(mChains, thresh);
         ++position;
-        (*iterPhase)->mTimeRange = timeRangeFromTraces((*iterPhase)->mAlpha.runRawTraceForChain(mChains,0),
-                                                             (*iterPhase)->mBeta.runRawTraceForChain(mChains,0),thresh, "Time Range for Phase : "+(*iterPhase)->mName);
+        (*iterPhase)->mTimeRange = timeRangeFromTraces((*iterPhase)->mAlpha.fullRunTrace(mChains),
+                                                             (*iterPhase)->mBeta.fullRunTrace(mChains),thresh, "Time Range for Phase : "+(*iterPhase)->mName);
+
         ++position;
         //qDebug()<<"Time Range for Phase "<<(*iterPhase)->mName<<thresh;
         ++iterPhase;
@@ -1241,13 +1241,15 @@ void Model::generateCredibility(const float thresh)
         Phase* phaseFrom = (*iterPhaseConstraint)->mPhaseFrom;
         Phase* phaseTo  = (*iterPhaseConstraint)->mPhaseTo;
 
-        (*iterPhaseConstraint)->mGapRange = gapRangeFromTraces(phaseFrom->mBeta.runRawTraceForChain(mChains,0),
-                                                             phaseTo->mAlpha.runRawTraceForChain(mChains,0), thresh, "Gap Range : "+phaseFrom->mName+ " to "+ phaseTo->mName);
+        (*iterPhaseConstraint)->mGapRange = gapRangeFromTraces(phaseFrom->mBeta.fullRunTrace(mChains),
+                                                             phaseTo->mAlpha.fullRunTrace(mChains), thresh, "Gap Range : "+phaseFrom->mName+ " to "+ phaseTo->mName);
+
         ++position;
         qDebug()<<"Gap Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
 
-        (*iterPhaseConstraint)->mTransitionRange = transitionRangeFromTraces(phaseFrom->mBeta.runRawTraceForChain(mChains,0),
-                                                             phaseTo->mAlpha.runRawTraceForChain(mChains,0), thresh, "Transition Range : "+phaseFrom->mName+ " to "+ phaseTo->mName);
+        (*iterPhaseConstraint)->mTransitionRange = transitionRangeFromTraces(phaseFrom->mBeta.fullRunTrace(mChains),
+                                                             phaseTo->mAlpha.fullRunTrace(mChains), thresh, "Transition Range : "+phaseFrom->mName+ " to "+ phaseTo->mName);
+
         ++position;
         qDebug()<<"Transition Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
         ++iterPhaseConstraint;
