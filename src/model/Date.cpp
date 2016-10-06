@@ -608,8 +608,7 @@ double Date::getLikelihoodFromCalib(const double t)
 
 void Date::updateTheta(Event* event)
 {
-    updateti(this,event);
-
+    updateti(this, event);
 }
 /**
  * @brief Date::initDelta Init the wiggle shift
@@ -698,6 +697,7 @@ void Date::updateSigma(Event* event)
         const double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1);
         rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1; // (V2 / V1) est le jacobien!
     }
+
     mSigma.tryUpdate(sqrt(V2), rapport);
 }
 
@@ -748,10 +748,6 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
         }
         date.mIsValid = plugin->isDateValid(date.mData,date.mSettings);
     }
-   //QJsonObject data =date.toJson();
-    //QJsonObject ProjSet = mSettings.toJson();
-
-    //ProjectSettings pro = ProjectSettings::fromJson(ProjSet);
 
     plugin = 0;
     return date;
@@ -846,7 +842,7 @@ void Date::autoSetTiSampler(const bool bSet)
                 break;
             }
         }
-        //qDebug()<<"Date::autoSetTiSampler()"<<this->mName<<"with getLikelyhood";
+
         
     }
   
@@ -871,7 +867,7 @@ void fMHSymetric(Date* date,Event* event)
    
         const double tiNew = Generator::gaussByBoxMuller(event->mTheta.mX - date->mDelta, date->mSigma.mX);
         const double rapport = date->getLikelihood(tiNew) / date->getLikelihood(date->mTheta.mX);
-        
+
         date->mTheta.tryUpdate(tiNew, rapport);
      
 
@@ -892,7 +888,7 @@ void fMHSymetricWithArg(Date* date,Event* event)
     argNew=date->getLikelihoodArg(tiNew);
     
     const long double rapport=sqrt(argOld.first/argNew.first)*exp(argNew.second-argOld.second);
-    
+
     date->mTheta.tryUpdate(tiNew, (double)rapport);
     
 }
@@ -987,7 +983,8 @@ void fInversion(Date* date, Event* event)
     
     const double rapport3 = fProposalDensity(date->mTheta.mX, tiNew, date) /
                         fProposalDensity(tiNew, date->mTheta.mX, date);
-    
+
+
     date->mTheta.tryUpdate(tiNew, rapport1 * rapport2 * rapport3);
 }
 
@@ -1044,9 +1041,9 @@ void fInversionWithArg(Date* date, Event* event)
     
     const long double rapportPD = fProposalDensity(date->mTheta.mX, tiNew, date) / fProposalDensity(tiNew, date->mTheta.mX, date);
     
+
     date->mTheta.tryUpdate(tiNew, (double)(rapport * rapportPD));
-    
-    //date->mTheta.tryUpdate(tiNew, exp(logHRapport));
+
     
 }
 
@@ -1069,7 +1066,7 @@ void fMHSymGaussAdapt(Date* date, Event* event)
     rapport *= exp((-0.5/(date->mSigma.mX * date->mSigma.mX)) * (   pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
                                                                   - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
                                                                  ));
-    
+
     date->mTheta.tryUpdate(tiNew, rapport);
 }
 
@@ -1096,5 +1093,6 @@ void fMHSymGaussAdaptWithArg(Date* date, Event* event)
     const long double rapport = sqrt(argOld.first/argNew.first)*exp(logGRapport+logHRapport);
     
     date->mTheta.tryUpdate(tiNew, (double) rapport);
+
 }
 

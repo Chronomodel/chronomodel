@@ -10,9 +10,9 @@ mAllAccepts(0),
 mGlobalAcceptation(0),
 mHistoryAcceptRateMH(0)
 {
- /* mAllAccepts = new (std::nothrow) QVector<bool>();
+  mAllAccepts = new (std::nothrow) QVector<bool>();
   mHistoryAcceptRateMH = new (std::nothrow) QVector<float>();
-*/
+
 }
 
 MHVariable::~MHVariable()
@@ -22,9 +22,9 @@ MHVariable::~MHVariable()
 
 bool MHVariable::tryUpdate(const double x, const double rapport)
 {
-   if (mLastAccepts.length() >= mLastAcceptsLength)
+    if (mLastAccepts.length() >= mLastAcceptsLength)
         mLastAccepts.removeAt(0);
-    
+
     bool accepted = false;
     
     if (rapport >= 1)
@@ -34,11 +34,11 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
         const double uniform = Generator::randomUniform();
         accepted = (rapport >= uniform);
     }
-    
-    if(accepted)
+
+    if (accepted)
         mX = x;
      
-    mLastAccepts.append(accepted);
+    mLastAccepts.append(accepted);    
     mAllAccepts->append(accepted);
 
     return accepted;
@@ -49,13 +49,15 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
 void MHVariable::reset()
 {
     MetropolisVariable::reset();
-    mLastAccepts.clear();
+
+   // mLastAccepts.clear();
   //  mAllAccepts.clear();// mAllAccepts.clear(); //don't clean, avalable for cumulate chain
 
-    mAllAccepts = new (std::nothrow) QVector<bool>();
-    mHistoryAcceptRateMH = new (std::nothrow) QVector<float>();
+  //  if(!mAllAccepts)
+  //      mAllAccepts = new (std::nothrow) QVector<bool>();
+   /* mHistoryAcceptRateMH = new (std::nothrow) QVector<float>();
 
-  /*  if (!mHistoryAcceptRateMH->isEmpty())
+    if (!mHistoryAcceptRateMH->isEmpty())
         mHistoryAcceptRateMH->clear();*/
 
 }
@@ -91,9 +93,15 @@ float MHVariable::getCurrentAcceptRate()
 {
     float sum = 0.f;
 
-    sum = std::accumulate(mLastAccepts.begin(), mLastAccepts.end(), sum,[](float s, bool a){return s+(a?1.:0.);}); //#include <numeric>
-    
-    return sum / (float)mLastAccepts.size();
+    sum = std::accumulate(mLastAccepts.begin(), mLastAccepts.end(), sum,[](float s, bool a){return s+(a ? 1.f : 0.f);}); //#include <numeric>
+
+   /*for (int i=0; i<mLastAccepts.size(); ++i)
+            sum += mLastAccepts.at(i) ? 1.f : 0.f;
+    */
+
+    sum = sum / (float)mLastAccepts.size();
+
+    return sum ;
 }
 
 void MHVariable::saveCurrentAcceptRate()
@@ -119,9 +127,9 @@ QVector<float> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains, 
             //accept.resize(chainSize
             //std::copy(from_vector.begin(), from_vector.end(), to_vector.begin());
 
-            for(int j=0; j<chainSize; ++j) {
+            for(int j=0; j<chainSize; ++j)
                 accept.append((float)mHistoryAcceptRateMH->at(shift + j));
-            }
+
             break;
         }
         else

@@ -292,7 +292,129 @@ QPair<float, float> credibilityForTrace(const QVector<float>& trace, float thres
     else return credibility;
 }
 
+/**
+ * @brief timeRangeFromTraces
+ * @param trace1
+ * @param trace2
+ * @param thresh
+ * @param description  compute type 7 R quantile
+ * @return
+ */
 QPair<float, float> timeRangeFromTraces(const QVector<float>& trace1, const QVector<float>& trace2, const float thresh, const QString description)
+{
+    QPair<float, float> range(- INFINITY, +INFINITY);
+#ifdef DEBUG
+    QTime startTime (QTime::currentTime());
+#endif
+    // limit of precision, to accelerate the calculus
+    const float epsilonStep = 0.1f/100.f;
+
+    // if thresh is equal 0 then return an QPair=(-INFINITY,+INFINITY)
+
+    const int n = trace1.size();
+
+    if ( (thresh > 0) && (n > 0) && (trace2.size() == n) ) {
+
+        const float gamma = 1.f - thresh/100.f;
+
+        float dMin = INFINITY;
+
+        std::vector<float> traceAlpha (trace1.toStdVector());
+        std::vector<float> traceBeta (trace2.size());
+
+        // 1 - map with relation Beta to Alpha
+        std::multimap<float,float> betaAlpha;
+        for(int i=0; i<trace1.size(); ++i)
+            betaAlpha.insert(std::pair<float,float>(trace2.at(i),trace1.at(i)) );
+
+        std::copy(trace2.begin(),trace2.end(),traceBeta.begin());
+
+        // keep the beta trace in the same position of the Alpha, so we need to sort them with there values of alpha
+        std::sort(traceBeta.begin(),traceBeta.end(),[&betaAlpha](const float i, const float j){ return betaAlpha.find(i)->second < betaAlpha.find(j)->second  ;} );
+
+        std::sort(traceAlpha.begin(),traceAlpha.end());
+
+        //if (nTarget>= n)
+        //    return QPair<float,float>(traceAlpha.at(0),*std::max_element(traceBeta.cbegin(),traceBeta.cend()));
+
+        std::vector<float> betaUpper(n);
+
+        // 2- loop on Epsilon to look for a and b with the smallest length
+        for (float epsilon = 0.f; epsilon <= gamma; ) {
+
+            // original calcul according to the article const float ha( (traceAlpha.size()-1)*epsilon +1 );
+            // We must decrease of 1 because the array begin at 0
+            const float ha( (traceAlpha.size()-1)*epsilon);
+
+            const int haInf( floor(ha) );
+            const int haSup( ceil(ha) );
+
+            const float a = traceAlpha.at(haInf) + ( (ha-haInf)*(traceAlpha.at(haSup)-traceAlpha.at(haInf)) );
+
+            // 3 - copy only value of beta with alpha greater than a(epsilon)
+            const int alphaIdx = ha==haInf ? haInf:haSup;
+
+            const int remainingElemt =  n - alphaIdx;
+            betaUpper.resize(remainingElemt);   // allocate space
+
+            // traceBeta is sorted with the value alpha join
+            auto it = std::copy( traceBeta.begin()+ alphaIdx, traceBeta.end(), betaUpper.begin() );
+
+            const int betaUpperSize = std::distance(betaUpper.begin(),it);
+
+            betaUpper.resize(betaUpperSize);  // shrink container to new size
+
+            /*  std::nth_element has O(N) complexity,
+             *  whereas std::sort has O(Nlog(N)).
+             *  here we don't need complete sorting of the range, so it's advantageous to use it.
+             *
+             * std::nth_element(betaUpper.begin(), betaUpper.begin() + nTarget-1, betaUpper.end());
+             *
+             * in the future with C++17
+             * std::experimental::parallel::nth_element(par,betaUpper.begin(), betaUpper.begin() + nTarget, betaUpper.end());
+             *
+             */
+
+            // 4- We sort all the array
+            std::sort(betaUpper.begin(), betaUpper.end());
+
+           // 5 - Calcul b
+            const float bEpsilon( (1.-gamma)/(1.-epsilon) );
+            // original calcul according to the article const float hb( (betaUpper.size()-1)*bEpsilon +1 );
+            // We must decrease of 1 because the array begin at 0
+            const float hb( (betaUpper.size()-1)*bEpsilon);
+            const int hbInf( floor(hb) );
+            const int hbSup( ceil(hb) );
+
+            const float b = betaUpper.at(hbInf) + ( (hb-hbInf)*(betaUpper.at(hbSup)-betaUpper.at(hbInf)) );
+
+            // 6 - keep the shortest length
+
+            if ((b-a) < dMin) {
+                dMin = b - a;
+                range.first = a;
+                range.second = b;
+
+
+
+            }
+
+            epsilon += epsilonStep;
+        }
+    }
+
+
+#ifdef DEBUG
+    qDebug()<<description;
+    QTime timeDiff(0,0,0,1);
+    timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
+    qDebug()<<"timeRangeFromTraces ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
+#endif
+    return range;
+}
+
+
+QPair<float, float> timeRangeFromTraces_old(const QVector<float>& trace1, const QVector<float>& trace2, const float thresh, const QString description)
 {
     QPair<float, float> range(- INFINITY, +INFINITY);
 #ifdef DEBUG
@@ -305,7 +427,7 @@ QPair<float, float> timeRangeFromTraces(const QVector<float>& trace1, const QVec
     const int n = trace1.size();
     if ( (thresh > 0) && (n > 0) && (trace2.size() == n) ) {
 
-        const int nTarget = (const int)(ceil((float)n * thresh/100.));
+        const int nTarget = (const int)(ceil((float)n * thresh/100.f));
         const int nGamma = n - nTarget;
 
         float dMin = INFINITY;
@@ -365,10 +487,26 @@ QPair<float, float> timeRangeFromTraces(const QVector<float>& trace1, const QVec
             const float b  = betaUpper.at(nTarget-1);
 
             // keep the shortest length
+            float aInterpolate(0);
+            if ( (nEpsilon-epsilonStep+1) < traceAlpha.size() ){
+                float h = ((traceAlpha.size()-1)*nEpsilon/n)+1;
+                aInterpolate = traceAlpha.at((int)floor(h)-1) + ( (h-floor(h))*(traceAlpha.at((int)floor(h)+1-1)-traceAlpha.at((int)floor(h)-1)) );
+                // aInterpolate = interpolate(thresh/100.f, (float)(n-nEpsilon-epsilonStep)/n, (float)((n-nEpsilon)/n), traceAlpha.at(nEpsilon-epsilonStep+1), a);
+
+            } else aInterpolate =  a;
+
+            float bInterpolate(0) ;
+            if ( (nTarget-1) < betaUpper.size() ) {
+                float h = ((betaUpper.size()-1)*thresh/100.f)+1;
+                bInterpolate = betaUpper.at((int)floor(h)-1) + ( (h-floor(h))*(betaUpper.at((int)floor(h)+1-1)-betaUpper.at((int)floor(h)-1)) );
+                //   bInterpolate = interpolate(thresh/100.f, (float)(nTarget)/n, (float)((nTarget-1)/n), b, betaUpper.at(nTarget-1-1));
+
+            } else bInterpolate = b;
+
             if ((b-a) < dMin) {
                 dMin = b - a;
-                range.first = a;
-                range.second = b;
+                range.first = a;//Interpolate;
+                range.second = b;//Interpolate;
 
                 // compute type 7 R quantile
               /*

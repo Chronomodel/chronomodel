@@ -41,6 +41,8 @@ Quartiles quartilesForTrace(const QVector<float>& trace);
 Quartiles quartilesForRepartition(const QVector<float>& repartition,const float tmin,const float step);
 QPair<float, float> credibilityForTrace(const QVector<float>& trace, float thresh, float& exactThresholdResult, const QString description = "Credibility computation");
 QPair<float, float> timeRangeFromTraces(const QVector<float>& trace1, const QVector<float>& trace2, const float thresh, const QString description ="Time Range Computation");
+QPair<float, float> timeRangeFromTraces_old(const QVector<float>& trace1, const QVector<float>& trace2, const float thresh, const QString description ="Time Range Computation");
+
 
 QPair<float, float> gapRangeFromTraces(const QVector<float>& trace1, const QVector<float>& trace2, const float thresh, const QString description ="Gap Range Computation");
 QPair<float, float> transitionRangeFromTraces(const QVector<float>& trace1, const QVector<float>& trace2, const float thresh, const QString description ="Gap Range Computation");

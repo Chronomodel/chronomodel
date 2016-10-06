@@ -23,7 +23,7 @@ mIsSelected(false),
 mInitialized(false),
 mLevel(0)
 {
-    //mTheta.mIsDate = true;
+
     mTheta.mSupport = MetropolisVariable::eBounded;
     mTheta.mFormat = DateUtils::eUnknown;;
 
@@ -497,6 +497,7 @@ void Event::updateTheta(const double tmin, const double tmax)
         {
             try{
                 double theta = Generator::gaussByDoubleExp(theta_avg, sigma, min, max);
+                //qDebug() << "Event::updateTheta() case eDoubleExp rapport=1 ";
                 mTheta.tryUpdate(theta, 1);
             }
             catch(QString error){
@@ -516,7 +517,7 @@ void Event::updateTheta(const double tmin, const double tmax)
 
             } while(theta < min || theta > max);
             
-            //qDebug() << "Event update num trials : " << counter;
+            //qDebug() << "Event::updateTheta() case eBoxMuller Event update num trials : " << counter;
             mTheta.tryUpdate(theta, 1);
             break;
         }
@@ -528,7 +529,7 @@ void Event::updateTheta(const double tmin, const double tmax)
             double rapport = 0;
             if (theta >= min && theta <= max)
                 rapport = exp((-0.5/(sigma*sigma)) * (pow(theta - theta_avg, 2) - pow(mTheta.mX - theta_avg, 2)));
-
+            //qDebug() << "Event::updateTheta() case eMHAdaptGauss rapport="<<rapport;
             mTheta.tryUpdate(theta, rapport);
             break;
         }

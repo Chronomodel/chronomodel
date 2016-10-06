@@ -99,10 +99,7 @@ void MCMCLoopMain::initVariablesForChain()
     for(Event* event : mModel->mEvents) {
         event->mTheta.reset();
         event->mTheta.reserve(initReserve);
-      /*  std::vector<float>* mDeque;
-        mDeque = new std::vector<float>();
-        mDeque->resize(1 000 000 000);//initReserve); 300 000 000 pour deque
-*/
+
         event->mTheta.mLastAccepts.reserve(acceptBufferLen);
         event->mTheta.mLastAcceptsLength = acceptBufferLen;
 
@@ -135,7 +132,7 @@ void MCMCLoopMain::initVariablesForChain()
 
         phase->mAlpha.mRawTrace->reserve(initReserve);
         phase->mBeta.mRawTrace->reserve(initReserve);
-        phase->mBeta.mRawTrace->reserve(initReserve);
+        phase->mDuration.mRawTrace->reserve(initReserve);
    }
 }
 
@@ -425,22 +422,14 @@ void MCMCLoopMain::update()
     
 
     //--------------------- Update Event -----------------------------------------
-    //QList<Event*>::iterator eventIter = mModel->mEvents.begin();
 
-    //while(eventIter != mModel->mEvents.end()) {
     for (Event* event : mModel->mEvents) {
-        for ( Date date : event->mDates )   {
-#ifdef TEST
-            date.mDelta = 0.;
-            date.mTheta.mX = 0.;
-            date.mSigma.mX = 0.;
-            date.mWiggle.mX = 0.;
-#else
+        for ( Date& date : event->mDates )   {
+
              date.updateDelta(event);
              date.updateTheta(event);
              date.updateSigma(event);
              date.updateWiggle();
-#endif
 
             if (doMemo){
                 date.mTheta.memo();
@@ -519,8 +508,8 @@ bool MCMCLoopMain::adapt()
             //--------------------- Adapt Sigma MH de Theta i -----------------------------------------
             
             if (date.mMethod == Date::eMHSymGaussAdapt) {
-                const double taux = 100. * date.mTheta.getCurrentAcceptRate();
-                if(taux <= taux_min || taux >= taux_max) {
+                const float taux = 100. * date.mTheta.getCurrentAcceptRate();
+                if (taux <= taux_min || taux >= taux_max) {
                     allOK = false;
                     double sign = (taux <= taux_min) ? -1. : 1.;
                     date.mTheta.mSigmaMH *= pow(10., sign * delta);
@@ -529,7 +518,7 @@ bool MCMCLoopMain::adapt()
             
             //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
             
-            const double taux = 100. * date.mSigma.getCurrentAcceptRate();
+            const float taux = 100. * date.mSigma.getCurrentAcceptRate();
             if (taux <= taux_min || taux >= taux_max) {
                 allOK = false;
                 double sign = (taux <= taux_min) ? -1. : 1.;
@@ -540,7 +529,7 @@ bool MCMCLoopMain::adapt()
         //--------------------- Adapt Sigma MH de Theta f -----------------------------------------
         
         if (event->mMethod == Event::eMHAdaptGauss) {
-            const double taux = 100. * event->mTheta.getCurrentAcceptRate();
+            const float taux = 100. * event->mTheta.getCurrentAcceptRate();
             if (taux <= taux_min || taux >= taux_max) {
                 allOK = false;
                 double sign = (taux <= taux_min) ? -1. : 1.;
