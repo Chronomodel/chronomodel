@@ -45,6 +45,8 @@ QPair<float, float> timeRangeFromTraces_old(const QVector<float>& trace1, const 
 
 
 QPair<float, float> gapRangeFromTraces(const QVector<float>& trace1, const QVector<float>& trace2, const float thresh, const QString description ="Gap Range Computation");
+QPair<float, float> gapRangeFromTraces_old(const QVector<float>& trace1, const QVector<float>& trace2, const float thresh, const QString description ="Gap Range Computation");
+
 QPair<float, float> transitionRangeFromTraces(const QVector<float>& trace1, const QVector<float>& trace2, const float thresh, const QString description ="Gap Range Computation");
 
 QString intervalText(const QPair<float, QPair<float, float> >& interval, FormatFunc formatFunc = 0);

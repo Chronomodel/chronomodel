@@ -551,7 +551,111 @@ QPair<float, float> transitionRangeFromTraces(const QVector<float>& trace1, cons
  * @param description a simple text
  * @return
  */
-QPair<float, float> gapRangeFromTraces(const QVector<float>& traceBeta, const QVector<float>& traceAlpha, const float thresh, const QString description)
+QPair<float, float> gapRangeFromTraces(const QVector<float>& traceEnd, const QVector<float>& traceBegin, const float thresh, const QString description)
+{
+#ifdef DEBUG
+    QTime startTime = QTime::currentTime();
+#endif
+
+    QPair<float, float> range = QPair<float, float>(- INFINITY, + INFINITY);
+
+    // limit of precision, to accelerate the calculus
+    const float epsilonStep = 0.1f/100.f;
+
+    // if thresh is equal 0 then return an QPair=(-INFINITY,+INFINITY)
+
+    const int n = traceBegin.size();
+
+    if ( (thresh > 0) && (n > 0) && (traceEnd.size() == n) ) {
+
+        const double gamma = 1. - thresh/100.;
+
+        float dMax(0.f);
+
+        std::vector<float> traceBeta (traceEnd.toStdVector());
+
+        std::vector<float> traceAlpha (traceBegin.size());
+        std::copy(traceBegin.begin(),traceBegin.end(),traceAlpha.begin());
+
+        // 1 - map with relation Alpha to Beta
+        std::multimap<float,float> alphaBeta;
+        for(int i=0; i<traceBegin.size(); ++i)
+            alphaBeta.insert(std::pair<float,float>(traceAlpha.at(i),traceBeta.at(i)) );
+
+        // keep the beta trace in the same position of the Alpha, so we need to sort them with there values of alpha
+        std::sort(traceAlpha.begin(),traceAlpha.end(),[&alphaBeta](const float i, const float j){ return alphaBeta.find(i)->second < alphaBeta.find(j)->second  ;} );
+
+        std::sort(traceBeta.begin(),traceBeta.end());
+
+        std::vector<float> alphaUnder(n);
+
+        // 2- loop on Epsilon to look for a and b with the smallest length
+
+        for (float epsilon = 0.f; epsilon <= gamma; ) {
+
+            const double aEpsilon = 1. - epsilon;
+
+            // Linear intertpolation according to R quantile( type=7)
+            // We must decrease of 1 because the array begin at 0
+            const double ha( (double)(traceBeta.size()-1) * aEpsilon);
+
+            const int haInf( floor(ha) );
+            const int haSup( ceil(ha) );
+
+            const float a = traceBeta.at(haInf) + ( (ha-(double)haInf)*(traceBeta.at(haSup)-traceBeta.at(haInf)) );
+
+            // 3 - copy only value of beta with alpha smaller than a(epsilon)!
+            const int alphaIdx ( ha == haInf ? haInf : haSup );//( ha == haSup ? haSup : haInf );//
+
+            const int remainingElemt ( alphaIdx );
+            alphaUnder.resize(remainingElemt);   // allocate space
+
+            // traceAlpha is sorted with the value alpha join
+            auto it = std::copy( traceAlpha.begin(), traceAlpha.begin() + alphaIdx, alphaUnder.begin() );
+
+            const int alphaUnderSize = std::distance(alphaUnder.begin(),it);
+
+            alphaUnder.resize(alphaUnderSize);  // shrink container to new size
+
+            // 4- We sort all the array
+            std::sort(alphaUnder.begin(), alphaUnder.end());
+
+           // 5 - Calcul b
+            const double bEpsilon( (gamma-epsilon)/(1.-epsilon) );
+
+            // Linear intertpolation like in R quantile( type=7)
+
+            const double hb( (double)(alphaUnder.size()-1)* bEpsilon );
+            const int hbInf( floor(hb) );
+            const int hbSup( ceil(hb) );
+
+            if (hbSup >= alphaUnder.size())
+                break;
+
+            const float b = alphaUnder.at(hbInf) + ( (hb-(float)hbInf)*(alphaUnder.at(hbSup)-alphaUnder.at(hbInf)) );
+
+            // 6 - keep the longest length
+
+            if ((b-a) > dMax) {
+                dMax = b - a;
+                range.first = a;
+                range.second = b;
+            }
+            epsilon += epsilonStep;
+        }
+    }
+
+#ifdef DEBUG
+    qDebug()<<description;
+    QTime timeDiff(0,0,0,1);
+    timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
+    qDebug()<<"gapRangeFromTraces ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
+#endif
+
+    return range;
+}
+
+QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, const QVector<float>& traceAlpha, const float thresh, const QString description)
 {
     QPair<float, float> range = QPair<float, float>(- INFINITY, + INFINITY);
 #ifdef DEBUG
