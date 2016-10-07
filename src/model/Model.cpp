@@ -505,14 +505,14 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
                 
                 if (withDateFormat)
                     valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
-                l << locale.toString(valueAlpha);
+                l << locale.toString(valueAlpha, 'g', 10);
 
                 float valueBeta = phase->mBeta.mRawTrace->at(shift + j);
                 
                 if (withDateFormat)
                     valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
                 
-                l << locale.toString(valueBeta);
+                l << locale.toString(valueBeta, 'g', 10);
                 phase = 0;
 
             }
@@ -559,13 +559,13 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
             if (withDateFormat)
                 valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
             
-            l << locale.toString(valueAlpha);
+            l << locale.toString(valueAlpha, 'g', 10);
 
             float valueBeta = phase->mBeta.mRawTrace->at(shift + j);
             if (withDateFormat)
                 valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
             
-            l << locale.toString(valueBeta);
+            l << locale.toString(valueBeta, 'g', 10);
 
             for (int k = 0; k < phase->mEvents.size(); ++k) {
                 Event* event = phase->mEvents.at(k);
@@ -573,7 +573,7 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
                 if (withDateFormat)
                     value = DateUtils::convertToAppSettingsFormat(value);
                 
-                l << locale.toString(value);
+                l << locale.toString(value, 'g', 10);
                 event = 0;
             }
             rows << l;
@@ -616,7 +616,7 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
                 if (withDateFormat)
                     value = DateUtils::convertToAppSettingsFormat(value);
                 
-                l << locale.toString(value);
+                l << locale.toString(value, 'g', 10);
                 event = 0;
             }
             rows << l;
@@ -1435,11 +1435,12 @@ void Model::saveToFile(const QString& fileName)
                 reserveInit += dates.at(j).mSigma.mHistoryAcceptRateMH->size();
                 reserveInit += 4;
 
-                reserveInit += dates.at(j).mWiggle.mRawTrace->size();
-                reserveInit += dates.at(j).mWiggle.mAllAccepts->size();
-                reserveInit += dates.at(j).mWiggle.mHistoryAcceptRateMH->size();
-                reserveInit += 4;
-
+                if (dates.at(j).mWiggle.mRawTrace) {
+                    reserveInit += dates.at(j).mWiggle.mRawTrace->size();
+                    reserveInit += dates.at(j).mWiggle.mAllAccepts->size();
+                    reserveInit += dates.at(j).mWiggle.mHistoryAcceptRateMH->size();
+                    reserveInit += 4;
+                }
 
              }
         }
