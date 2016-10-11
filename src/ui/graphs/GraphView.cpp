@@ -1070,10 +1070,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         //  Create data in row
         for (float x= xMin; x <= xMax; x += step) {
             list.clear();
-            /*if(mFormatFuncX) {
-                list << mFormatFuncX(x);
-            }
-            else */
+
             list << QString::number(x);
             for (auto iter= mCurves.cbegin(); iter != mCurves.cend(); ++iter) {
                 
@@ -1086,7 +1083,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
                     iter->mVisible) {
                     
                     const float xi = interpolateValueInQMap(x, iter->mData);
-                    list<<locale.toString(xi);
+                    list<<locale.toString(xi, 'g', 15);
                     
                 } else continue;
                 
@@ -1158,9 +1155,9 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
             
             if (abscissesWritten) {
                     rows[0] << mCurves[idCurve].mName;
-                    for(int i=offset; i<data.size(); ++i) {
+                    for(int i=offset; i<data.size(); ++i)
                         rows[i-offset+1]<< locale.toString(data[i]);
-                    }
+
             }
             
         }
@@ -1170,10 +1167,10 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
             iter2.next();
             QStringList list;
 
-            list << locale.toString(iter2.key());
+            list << locale.toString(iter2.key(),'g', 15);
             
             for(int i=0; i<iter2.value().size(); ++i)
-                list << locale.toString(iter2.value().at(i));
+                list << locale.toString(iter2.value().at(i),'g', 15);
             rows.append(list);
         }
         

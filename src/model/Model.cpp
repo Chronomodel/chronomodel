@@ -505,14 +505,14 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
                 
                 if (withDateFormat)
                     valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
-                l << locale.toString(valueAlpha, 'g', 10);
+                l << locale.toString(valueAlpha, 'g', 15);
 
                 float valueBeta = phase->mBeta.mRawTrace->at(shift + j);
                 
                 if (withDateFormat)
                     valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
                 
-                l << locale.toString(valueBeta, 'g', 10);
+                l << locale.toString(valueBeta, 'g', 15);
                 phase = 0;
 
             }
@@ -559,13 +559,13 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
             if (withDateFormat)
                 valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
             
-            l << locale.toString(valueAlpha, 'g', 10);
+            l << locale.toString(valueAlpha, 'g', 15);
 
             float valueBeta = phase->mBeta.mRawTrace->at(shift + j);
             if (withDateFormat)
                 valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
             
-            l << locale.toString(valueBeta, 'g', 10);
+            l << locale.toString(valueBeta, 'g', 15);
 
             for (int k = 0; k < phase->mEvents.size(); ++k) {
                 Event* event = phase->mEvents.at(k);
@@ -573,7 +573,7 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
                 if (withDateFormat)
                     value = DateUtils::convertToAppSettingsFormat(value);
                 
-                l << locale.toString(value, 'g', 10);
+                l << locale.toString(value, 'g', 15);
                 event = 0;
             }
             rows << l;
