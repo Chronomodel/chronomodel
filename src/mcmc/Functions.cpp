@@ -313,7 +313,7 @@ QPair<float, float> timeRangeFromTraces(const QVector<float>& trace1, const QVec
 
     const int n = trace1.size();
 
-    if ( (thresh > 0) && (n > 0) && (trace2.size() == n) ) {
+    if ( (thresh > 0) && (n > 0) && ((int)trace2.size() == n) ) {
 
         const float gamma = 1.f - thresh/100.f;
 
@@ -333,9 +333,6 @@ QPair<float, float> timeRangeFromTraces(const QVector<float>& trace1, const QVec
         std::sort(traceBeta.begin(),traceBeta.end(),[&betaAlpha](const float i, const float j){ return betaAlpha.find(i)->second < betaAlpha.find(j)->second  ;} );
 
         std::sort(traceAlpha.begin(),traceAlpha.end());
-
-        //if (nTarget>= n)
-        //    return QPair<float,float>(traceAlpha.at(0),*std::max_element(traceBeta.cbegin(),traceBeta.cend()));
 
         std::vector<float> betaUpper(n);
 
@@ -382,7 +379,7 @@ QPair<float, float> timeRangeFromTraces(const QVector<float>& trace1, const QVec
             const float bEpsilon( (1.-gamma)/(1.-epsilon) );
             // original calcul according to the article const float hb( (betaUpper.size()-1)*bEpsilon +1 );
             // We must decrease of 1 because the array begin at 0
-            const float hb( (betaUpper.size()-1)*bEpsilon);
+            const float hb( ((float)betaUpper.size() - 1.)*bEpsilon);
             const int hbInf( floor(hb) );
             const int hbSup( ceil(hb) );
 
@@ -394,9 +391,6 @@ QPair<float, float> timeRangeFromTraces(const QVector<float>& trace1, const QVec
                 dMin = b - a;
                 range.first = a;
                 range.second = b;
-
-
-
             }
 
             epsilon += epsilonStep;
@@ -410,10 +404,18 @@ QPair<float, float> timeRangeFromTraces(const QVector<float>& trace1, const QVec
     timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
     qDebug()<<"timeRangeFromTraces ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
 #endif
+
     return range;
 }
 
-
+/**
+ * @brief timeRangeFromTraces_old
+ * @param trace1
+ * @param trace2
+ * @param thresh
+ * @param description Obsolete function keep only for memory and test
+ * @return
+ */
 QPair<float, float> timeRangeFromTraces_old(const QVector<float>& trace1, const QVector<float>& trace2, const float thresh, const QString description)
 {
     QPair<float, float> range(- INFINITY, +INFINITY);
@@ -488,7 +490,7 @@ QPair<float, float> timeRangeFromTraces_old(const QVector<float>& trace1, const 
 
             // keep the shortest length
             float aInterpolate(0);
-            if ( (nEpsilon-epsilonStep+1) < traceAlpha.size() ){
+            if ( (nEpsilon-epsilonStep+1) < (int)traceAlpha.size() ){
                 float h = ((traceAlpha.size()-1)*nEpsilon/n)+1;
                 aInterpolate = traceAlpha.at((int)floor(h)-1) + ( (h-floor(h))*(traceAlpha.at((int)floor(h)+1-1)-traceAlpha.at((int)floor(h)-1)) );
                 // aInterpolate = interpolate(thresh/100.f, (float)(n-nEpsilon-epsilonStep)/n, (float)((n-nEpsilon)/n), traceAlpha.at(nEpsilon-epsilonStep+1), a);
@@ -496,7 +498,7 @@ QPair<float, float> timeRangeFromTraces_old(const QVector<float>& trace1, const 
             } else aInterpolate =  a;
 
             float bInterpolate(0) ;
-            if ( (nTarget-1) < betaUpper.size() ) {
+            if ( (nTarget-1) < (int)betaUpper.size() ) {
                 float h = ((betaUpper.size()-1)*thresh/100.f)+1;
                 bInterpolate = betaUpper.at((int)floor(h)-1) + ( (h-floor(h))*(betaUpper.at((int)floor(h)+1-1)-betaUpper.at((int)floor(h)-1)) );
                 //   bInterpolate = interpolate(thresh/100.f, (float)(nTarget)/n, (float)((nTarget-1)/n), b, betaUpper.at(nTarget-1-1));
@@ -532,7 +534,7 @@ QPair<float, float> timeRangeFromTraces_old(const QVector<float>& trace1, const 
     qDebug()<<description;
     QTime timeDiff(0,0,0,1);
     timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
-    qDebug()<<"timeRangeFromTraces ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
+    qDebug()<<"timeRangeFromTraces_old ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
 #endif
     return range;
 }
@@ -559,53 +561,60 @@ QPair<float, float> gapRangeFromTraces(const QVector<float>& traceEnd, const QVe
 
     QPair<float, float> range = QPair<float, float>(- INFINITY, + INFINITY);
 
-    // limit of precision, to accelerate the calculus
-    const float epsilonStep = 0.1f/100.f;
-
-    // if thresh is equal 0 then return an QPair=(-INFINITY,+INFINITY)
+    // limit of precision, to accelerate the calculus, we set the same as RChronoModel
+    const double epsilonStep = 0.1f/100.f;
 
     const int n = traceBegin.size();
 
-    if ( (thresh > 0) && (n > 0) && (traceEnd.size() == n) ) {
+    if ( (thresh > 0.f) && (n > 0) && ((int)traceEnd.size() == n) ) {
 
         const double gamma = 1. - thresh/100.;
 
-        float dMax(0.f);
+        double dMax(0.);
 
-        std::vector<float> traceBeta (traceEnd.toStdVector());
+        // We must change the type (float to double) to increase the precision
+        std::vector<double> traceBeta (traceEnd.size());
+        std::copy(traceEnd.begin(), traceEnd.end(), traceBeta.begin());
 
-        std::vector<float> traceAlpha (traceBegin.size());
+        std::vector<double> traceAlpha (traceBegin.size());
         std::copy(traceBegin.begin(),traceBegin.end(),traceAlpha.begin());
 
         // 1 - map with relation Alpha to Beta
-        std::multimap<float,float> alphaBeta;
+        std::multimap<double, double> alphaBeta;
         for(int i=0; i<traceBegin.size(); ++i)
-            alphaBeta.insert(std::pair<float,float>(traceAlpha.at(i),traceBeta.at(i)) );
+            alphaBeta.insert(std::pair<double, double>(traceAlpha.at(i),traceBeta.at(i)) );
 
         // keep the beta trace in the same position of the Alpha, so we need to sort them with there values of alpha
-        std::sort(traceAlpha.begin(),traceAlpha.end(),[&alphaBeta](const float i, const float j){ return alphaBeta.find(i)->second < alphaBeta.find(j)->second  ;} );
+        std::sort(traceAlpha.begin(),traceAlpha.end(),[&alphaBeta](const double i, const double j){ return alphaBeta.find(i)->second < alphaBeta.find(j)->second  ;} );
 
         std::sort(traceBeta.begin(),traceBeta.end());
 
-        std::vector<float> alphaUnder(n);
+        std::vector<double> alphaUnder(n);
 
         // 2- loop on Epsilon to look for a and b with the smallest length
+        // with a const epsilonStep increment, we not reach exactly gamma.
+        // So we have to go hover gamma to find the value for exactly gamma
 
-        for (float epsilon = 0.f; epsilon <= gamma; ) {
+        for (double epsilon = 0.; epsilon <= gamma; ) {
 
             const double aEpsilon = 1. - epsilon;
 
             // Linear intertpolation according to R quantile( type=7)
-            // We must decrease of 1 because the array begin at 0
-            const double ha( (double)(traceBeta.size()-1) * aEpsilon);
+            // We must decrease of 1 from the original formula because the array begin at 0
+            const double ha( ((double)traceBeta.size()-1.) * aEpsilon);
 
             const int haInf( floor(ha) );
             const int haSup( ceil(ha) );
 
-            const float a = traceBeta.at(haInf) + ( (ha-(double)haInf)*(traceBeta.at(haSup)-traceBeta.at(haInf)) );
+            if ((haSup > (int)traceBeta.size()) || (haInf > (int)traceBeta.size()))
+                return range;
+            if ((haInf < 0) || (haSup < 0))
+                return range;
+
+            const double a = traceBeta.at(haInf) + ( (ha-(double)haInf)*(traceBeta.at(haSup)-traceBeta.at(haInf)) );
 
             // 3 - copy only value of beta with alpha smaller than a(epsilon)!
-            const int alphaIdx ( ha == haInf ? haInf : haSup );//( ha == haSup ? haSup : haInf );//
+            const int alphaIdx(haSup < n ? haSup : n-1 );//( ha == haInf ? haInf : haSup );//( ha == haSup ? haSup : haInf );// //
 
             const int remainingElemt ( alphaIdx );
             alphaUnder.resize(remainingElemt);   // allocate space
@@ -625,23 +634,32 @@ QPair<float, float> gapRangeFromTraces(const QVector<float>& traceEnd, const QVe
 
             // Linear intertpolation like in R quantile( type=7)
 
-            const double hb( (double)(alphaUnder.size()-1)* bEpsilon );
+            const double hb( ((double)alphaUnder.size()-1.)* bEpsilon );
             const int hbInf( floor(hb) );
             const int hbSup( ceil(hb) );
 
-            if (hbSup >= alphaUnder.size())
-                break;
+            if ((hbSup > (int)alphaUnder.size()) || (hbInf > (int)alphaUnder.size()))
+                return range;
+            if ((hbInf < 0) || (hbSup <0))
+                return range;
 
-            const float b = alphaUnder.at(hbInf) + ( (hb-(float)hbInf)*(alphaUnder.at(hbSup)-alphaUnder.at(hbInf)) );
+            const double b = alphaUnder.at(hbInf) + ( (hb-(double)hbInf)*(alphaUnder.at(hbSup)-alphaUnder.at(hbInf)) );
 
             // 6 - keep the longest length
 
-            if ((b-a) > dMax) {
+            if ((b-a) >= dMax) {
                 dMax = b - a;
-                range.first = a;
-                range.second = b;
+                range.first = (float)a;
+                range.second = (float)b;
             }
-            epsilon += epsilonStep;
+            if (epsilon< gamma) {
+                epsilon += epsilonStep;
+                if (epsilon > gamma )
+                    epsilon = gamma;
+
+            // We detect that gamma is passed. To stop the loop we add one more step to exit
+            } else if (epsilon >= gamma)
+                epsilon += epsilonStep;
         }
     }
 
@@ -655,17 +673,27 @@ QPair<float, float> gapRangeFromTraces(const QVector<float>& traceEnd, const QVe
     return range;
 }
 
+/**
+ * @brief gapRangeFromTraces_old
+ * @param traceBeta
+ * @param traceAlpha
+ * @param thresh
+ * @param description Obsolete function keep only for memory and test
+ * @return
+ */
 QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, const QVector<float>& traceAlpha, const float thresh, const QString description)
 {
-    QPair<float, float> range = QPair<float, float>(- INFINITY, + INFINITY);
+
 #ifdef DEBUG
     QTime startTime = QTime::currentTime();
 #endif
+
+    QPair<float, float> range = QPair<float, float>(- INFINITY, + INFINITY);
     // limit of precision, to accelerate the calculus
     const float perCentStep = 0.01f;
 
     const int n = traceBeta.size();
-    if ( (thresh > 0) && (n > 0) && (traceAlpha.size() == n) ) {
+    if ( (thresh > 0) && (n > 0) && ((int)traceAlpha.size() == n) ) {
 
         const int nTarget = (const int) ceil( (float)n * thresh/100.);
         const int nGamma = n - nTarget;
@@ -723,7 +751,6 @@ QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, cons
             nEpsilon = nEpsilon + epsilonStep;
             if (nEpsilon<=nGamma)
                 std::advance(i_shift,epsilonStep);// reverse_iterator
-
         }
 
     }
@@ -732,8 +759,9 @@ QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, cons
     qDebug()<<description;
     QTime timeDiff(0,0,0,1);
     timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
-    qDebug()<<"gapRangeFromTraces ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
+    qDebug()<<"gapRangeFromTraces_old ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
 #endif
+
     return range;
 }
 
