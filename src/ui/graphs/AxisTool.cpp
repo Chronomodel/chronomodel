@@ -22,15 +22,16 @@ mAxisColor(0, 0, 0)
     
 }
 
-void AxisTool::updateValues(double totalPix, double minDeltaPix, double minVal, double maxVal)
+void AxisTool::updateValues(const double totalPix, const double minDeltaPix, const double minVal, const double maxVal)
 {
-    if((minDeltaPix == 0) || (minVal==maxVal) || (totalPix == 0) || (minVal>= maxVal))
+    if ((minDeltaPix == 0) || (minVal==maxVal) || (totalPix == 0) || (minVal>= maxVal))
         return;
+
     mEndVal = maxVal;
     double w = totalPix;
-    w = (w <= 0.f) ? minDeltaPix : w;
+    w = (w <= 0.) ? minDeltaPix : w;
     double numSteps = floor(w / minDeltaPix);
-    numSteps = (numSteps <= 0) ? 1 : numSteps;
+    numSteps = (numSteps <= 0.) ? 1. : numSteps;
     
     double delta = maxVal - minVal;
     double unitsPerStep = delta / numSteps;
@@ -38,47 +39,45 @@ void AxisTool::updateValues(double totalPix, double minDeltaPix, double minVal, 
      mPixelsPerUnit = w / delta;
     //double unitsPerPixel = delta / w;
     
-    double pow10 = 0;
-    if(unitsPerStep < 1)
-    {
-        while(unitsPerStep < 1)
-        {
-            unitsPerStep *= 10;
+    double pow10 = 0.;
+    if (unitsPerStep < 1)  {
+        while (unitsPerStep < 1)  {
+            unitsPerStep *= 10.;
             pow10 -= 1;
         }
-    }
-    else
-    {
-        if(unitsPerStep < 100000){
-            while(unitsPerStep >= 10)  {
-                unitsPerStep /= 10;
-                pow10 += 1;
+    } else  {
+       // if (unitsPerStep < 100000) {
+            while (unitsPerStep >= 10.)  {
+                unitsPerStep /= 10.;
+                pow10 += 1.;
             }
-        }
+       // }
     }
     
     double factor = pow(10.f, pow10);
     
     //mDeltaVal = floor(unitsPerStep) * factor;
-    mDeltaVal = 10.f * factor;
+    mDeltaVal = 10. * factor;
     mDeltaPix = mDeltaVal * mPixelsPerUnit;
     
     mStartVal = (minVal / mDeltaVal) * mDeltaVal;
     mStartPix = (mStartVal - minVal) * mPixelsPerUnit;
     mEndVal   = mStartVal+ totalPix/ mPixelsPerUnit;
     
-/*    qDebug() << "------------";
+    qDebug() << "------------";
      qDebug() << "w = " << w;
      qDebug() << "numSteps = " << numSteps;
      qDebug() << "delta = " << delta;
      qDebug() << "unitsPerStep = " << unitsPerStep;
      qDebug() << "pixelsPerUnit = " << mPixelsPerUnit;
      qDebug() << "factor = " << factor;
+     qDebug() << " à comparer avec"<< pow(10, floor(log10(abs(maxVal-minVal))));
      qDebug() << "---";
      qDebug() << "mStartVal = " << mStartVal;
      qDebug() << "mStartPix = " << mStartPix;
      qDebug() << "mDeltaVal = " << mDeltaVal;
-     qDebug() << "mDeltaPix = " << mDeltaPix;*/
+     qDebug() << "mDeltaPix = " << mDeltaPix;
+
 }
 /**
  * @brief Draw axis on a QPainter, if there is no valueFormatFunc, all number is converted in QString with precision 0, it's mean only integer

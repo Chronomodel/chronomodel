@@ -12,7 +12,7 @@ class AxisTool
 {
 public:
     AxisTool();
-    void updateValues(double totalPix, double minDeltaPix, double minVal, double maxVal);
+    void updateValues(const double totalPix, const double minDeltaPix, const double minVal, const double maxVal);
     QVector<qreal> paint(QPainter& p, const QRectF& r, qreal heigthSize, QString (*valueFormatFunc)(float) = NULL);
     
 public:
