@@ -112,13 +112,14 @@ float GraphViewAbstract::getValueForX(const qreal x, const bool aConstainResult)
 qreal GraphViewAbstract::getYForValue(const float aValue, const bool aConstainResult)
 {
     const float lYFromBase = valueForProportion(aValue, mMinY, mMaxY, 0.f, (float)(mGraphHeight-mMarginTop), aConstainResult);
-    const qreal y = mMarginTop + mGraphHeight - (qreal)lYFromBase;
+    const qreal y = mMarginTop + 3 + mGraphHeight - (qreal)lYFromBase; // vertical shift 3 from the mMarginTop
     return y;
 }
 float GraphViewAbstract::getValueForY(const qreal y, const bool aConstainResult)
 {
 	const qreal lYFromBase = mMarginTop + mGraphHeight - y;
-    const float lValue = valueForProportion( (float)lYFromBase, 0.f, (float)(mGraphHeight-mMarginTop), mMinY, mMaxY, aConstainResult);
+    // vertical shift 3 from the mMarginTop
+    const float lValue = valueForProportion( (float)lYFromBase, 0.f, (float)(mGraphHeight-mMarginTop-3), mMinY, mMaxY, aConstainResult);
 	return lValue;
 }
 
