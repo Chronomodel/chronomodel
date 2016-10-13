@@ -64,20 +64,19 @@ void AxisTool::updateValues(const double totalPix, const double minDeltaPix, con
     mStartPix = (mStartVal - minVal) * mPixelsPerUnit;
     mEndVal   = mStartVal+ totalPix/ mPixelsPerUnit;
     
-    qDebug() << "------------";
+   /* qDebug() << "------------";
      qDebug() << "w = " << w;
      qDebug() << "numSteps = " << numSteps;
      qDebug() << "delta = " << delta;
      qDebug() << "unitsPerStep = " << unitsPerStep;
      qDebug() << "pixelsPerUnit = " << mPixelsPerUnit;
      qDebug() << "factor = " << factor;
-     qDebug() << " à comparer avec"<< pow(10, floor(log10(abs(maxVal-minVal))));
      qDebug() << "---";
      qDebug() << "mStartVal = " << mStartVal;
      qDebug() << "mStartPix = " << mStartPix;
      qDebug() << "mDeltaVal = " << mDeltaVal;
      qDebug() << "mDeltaPix = " << mDeltaPix;
-
+    */
 }
 /**
  * @brief Draw axis on a QPainter, if there is no valueFormatFunc, all number is converted in QString with precision 0, it's mean only integer
@@ -88,11 +87,14 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
     QPen memoPen(p.pen());
     QBrush memoBrush(p.brush());
     QVector<qreal> linesPos;
-    QPen pen=QPen(mAxisColor, 1, Qt::SolidLine);
+
+    QPen pen(Qt::SolidLine);
+    pen.setColor(mAxisColor);
+    pen.setWidth(1);
     
     p.setPen(pen);
     
-    QFontMetrics fm(p.font());
+    QFontMetrics fm (p.font());
     int heightText= fm.height();
     qreal xo = r.x();
     qreal yo = r.y();
@@ -100,47 +102,48 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
     qreal h = r.height();
     
     
-    if(mIsHorizontal) {
+    if (mIsHorizontal) {
        if (mShowArrow) { // the arrow is over the rectangle of heigthSize
-            QPainterPath arrowRight;
+            //QPainterPath arrowRight;
             
-            QPolygonF triangle;
-            triangle << QPointF(xo + w + heigthSize*.65, yo) << QPointF(xo + w , yo - heigthSize*.65) << QPointF(xo + w, yo + heigthSize*.65);
+            //QPolygonF triangle;
+            //triangle << QPointF(xo + w + heigthSize*.65, yo) << QPointF(xo + w , yo - heigthSize*.65) << QPointF(xo + w, yo + heigthSize*.65);
           
+            QPolygonF triangle (std::initializer_list<QPointF>({ QPointF(xo + w + heigthSize*.65, yo),
+                                                                 QPointF(xo + w , yo - heigthSize*.65),
+                                                                 QPointF(xo + w, yo + heigthSize*.65) }));
+
+
             p.setBrush(mAxisColor);
             p.drawPolygon(triangle);
         }
         
         p.drawLine(xo, yo, xo + w, yo);       
+
         
-        
-        
-        
-        if(mMinMaxOnly) {
-            if(mShowText){
+        if (mMinMaxOnly) {
+            if (mShowText){
                 QRectF tr(xo, yo, w, h);
                 
                 if (valueFormatFunc != 0) {
                     p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, valueFormatFunc(mStartVal));
                     p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, valueFormatFunc(mStartVal + mDeltaVal * (w/mDeltaPix)));
-                }
-                else {
+                } else {
                     p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, QString::number(mStartVal, 'f', 0));
                     p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, QString::number(mStartVal + mDeltaVal * (w/mDeltaPix), 'f', 0));
                 }
             }
         }
         else {
-            int i = 0;
-            for(qreal x = xo + mStartPix - mDeltaPix; x <= xo + w ; x += mDeltaPix)
-            {
-                if((x >= xo)) {
-                    if(mShowSubSubs){
-                        for(qreal sx = x + mDeltaPix/10; sx < std::min(x + mDeltaPix, xo + w); sx += mDeltaPix/10)
+            int i (0);
+            for(qreal x = xo + mStartPix - mDeltaPix; x <= xo + w ; x += mDeltaPix) {
+                if ((x >= xo)) {
+                    if (mShowSubSubs) {
+                        for (qreal sx = x + mDeltaPix/10; sx < std::min(x + mDeltaPix, xo + w); sx += mDeltaPix/10)
                             p.drawLine(QLineF(sx, yo, sx, yo + heigthSize/2));
 
                     }
-                    if( mShowSubs ) {
+                    if ( mShowSubs ) {
                        p.drawLine(QLineF(x, yo, x, yo + heigthSize));
                        linesPos.append(x);
                     }
@@ -148,8 +151,8 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
                      if (mShowText && mPixelsPerUnit>0) {
                             QString text =(valueFormatFunc ? valueFormatFunc((x-xo)/mPixelsPerUnit + mStartVal) : QString::number(((x-xo)/mPixelsPerUnit + mStartVal),'f',0) );
 
-                            int textWidth =  fm.width(text) ;
-                            qreal tx = x - textWidth/2;
+                            const int textWidth =  fm.width(text) ;
+                            const qreal tx = x - textWidth/2;
 
                             QRectF textRect(tx, yo + h - heightText, textWidth, heightText);
                             p.drawText(textRect,Qt::AlignCenter ,text);
@@ -157,65 +160,59 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, Q
                    }
 
                 }
-                if (mShowText || mShowSubs) {
+                if (mShowText || mShowSubs)
                     ++i;
-                }
+
             }
         }
     }
     else // ______________________vertical axe______________________________________________________
     {
-        qreal xov = r.x() + r.width()- p.pen().width();
-        qreal yov = r.y() + r.height();
+        const qreal xov = r.x() + r.width()- p.pen().width();
+        const qreal yov = r.y() + r.height();
        
         p.drawLine(xov, yov, xov, yov - h );
         
         if (mShowArrow) { // the arrow is over the rectangle of heigthSize
             
-            
-            QPolygonF triangle;
-            
-            triangle << QPointF(xov, yov - h) << QPointF(xov - heigthSize*.65, yov - h + heigthSize*.65) << QPointF(xov + heigthSize*.65, yov- h + heigthSize*.65);
-            
+            QPolygonF triangle (std::initializer_list<QPointF>({ QPointF(xov, yov - h),
+                                                                 QPointF(xov - heigthSize*.65, yov - h + heigthSize*.65),
+                                                                 QPointF(xov + heigthSize*.65, yov - h + heigthSize*.65) }));
+
             p.setBrush(mAxisColor);
             p.drawPolygon(triangle);
             
         }
-        if(!mShowText){
+        if (!mShowText){
             // Nothing else to draw !
         }
-        else if(mMinMaxOnly) // used on posterior densities Maybe change the type of the text exp ou float
+        else if (mMinMaxOnly) // used on posterior densities Maybe change the type of the text exp ou float
         {
-            if(mShowText){
-                QRectF tr(r.x(), r.y(), w - 8, h);
-                QString textStarVal = (valueFormatFunc ? valueFormatFunc(mStartVal) : QString::number(mStartVal,'f', 0) );
+            if (mShowText){
+                const QRectF tr(r.x(), r.y(), w - 8, h);
+                const QString textStarVal = (valueFormatFunc ? valueFormatFunc(mStartVal) : QString::number(mStartVal,'f', 0) );
                 
                 p.drawText(tr, Qt::AlignRight | Qt::AlignBottom, textStarVal);
-                QString textEndVal = (valueFormatFunc ? valueFormatFunc(mEndVal) : QString::number(mEndVal,'f',0) );
+                const QString textEndVal = (valueFormatFunc ? valueFormatFunc(mEndVal) : QString::number(mEndVal,'f',0) );
                 p.drawText(tr, Qt::AlignRight | Qt::AlignTop, textEndVal);
             }
-        }
-        else
-        {
-            int i = 0;
-            for(qreal y = yov - (mStartPix - mDeltaPix); y > yov - h; y -= mDeltaPix)
-            {
-                if(mShowSubSubs)
-                {
-                    for(qreal sy = y + mDeltaPix/10; sy > std::max(y - mDeltaPix, yov - h); sy -= mDeltaPix/10)
-                    {
-                        if(sy <= yov)
+        } else  {
+            int i(0);
+            for (qreal y = yov - (mStartPix - mDeltaPix); y > yov - h; y -= mDeltaPix) {
+                if (mShowSubSubs) {
+                    for (qreal sy = y + mDeltaPix/10; sy > std::max(y - mDeltaPix, yov - h); sy -= mDeltaPix/10) {
+                        if (sy <= yov)
                             p.drawLine(QLineF(xov, sy, xov - 3, sy));
                     }
                 }
                 
-                if(y <= yov) {
-                    if( mShowText ) {
-                        int align = (Qt::AlignRight | Qt::AlignVCenter);
-                        QString text =(valueFormatFunc ? valueFormatFunc(mEndVal-(y-yo)/mPixelsPerUnit) : QString::number((mEndVal-(y-yo)/mPixelsPerUnit ),'f',0) );
+                if (y <= yov) {
+                    if ( mShowText ) {
+                        const int align (Qt::AlignRight | Qt::AlignVCenter);
+                        const QString text =(valueFormatFunc ? valueFormatFunc(mEndVal-(y-yo)/mPixelsPerUnit) : QString::number((mEndVal-(y-yo)/mPixelsPerUnit ),'f',0) );
                         
-                        qreal ty = y - heightText/2;
-                        QRectF tr(xov - w, ty, w - 8, heightText);
+                        const qreal ty ( y - heightText/2 );
+                        const QRectF tr(xov - w, ty, w - 8, heightText);
                         p.drawText(tr, align, text);
                     }
                     
