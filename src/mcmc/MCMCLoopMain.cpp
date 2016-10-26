@@ -205,6 +205,7 @@ QString MCMCLoopMain::initMCMC()
                 else if(bound->mKnownType == EventKnown::eUniform) {
                     bound->mTheta.mX = Generator::randomUniform(qMax(bound->mUniformStart, prevLevelMaxValue),
                                                                 bound->mUniformEnd);
+                    qDebug()<<"in initMCMC(): init bound "+bound->mName+QString::number(bound->mTheta.mX);
                 }
                 curLevelMaxValue = qMax(curLevelMaxValue, bound->mTheta.mX);
                 
@@ -231,6 +232,7 @@ QString MCMCLoopMain::initMCMC()
             const double max = unsortedEvents.at(i)->getThetaMaxRecursive(tmax, eventBranches, phaseBranches);
             
             unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
+            qDebug()<<"in initMCMC(): init Event "+unsortedEvents.at(i)->mName + QString::number(unsortedEvents.at(i)->mTheta.mX);
             unsortedEvents.at(i)->mInitialized = true;
             
             //qDebug() << "--> Event initialized : " << unsortedEvents[i]->getName() << " : " << unsortedEvents[i]->mTheta.mX;

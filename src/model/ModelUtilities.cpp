@@ -4,8 +4,10 @@
 #include "PhaseConstraint.h"
 #include "../PluginAbstract.h"
 #include "QtUtilities.h"
+#include "Generator.h"
 #include <QObject>
 #include <QString>
+#include <utility>
 
 #define MHAdaptGaussStr QObject::tr("MH : proposal = adapt. Gaussian random walk")
 #define BoxMullerStr QObject::tr("AR : proposal = Gaussian")
@@ -379,15 +381,26 @@ QVector<Event*> ModelUtilities::unsortEvents(const QList<Event*>& events)
     QList<int> indexes;
     QVector<Event*> results;
     
-    while(indexes.size() < events.size())
-    {
-        int index = rand() % events.size();
-        if(!indexes.contains(index))
-        {
+   /* while (indexes.size() < events.size()) {
+        //int index = rand() % events.size(); //Generator::randomUniform(min, max)
+        int index = trunc( Generator::randomUniform( 0 , events.size()));
+        index = inRange(0,  index, events.size()-1);
+        if (!indexes.contains(index)) {
             indexes.append(index);
             results.append(events[index]);
         }
     }
+    */
+    QList<Event*> evts(events);
+    //shuffle (evts.begin(), evts.end(), Generator::sEngine);
+    for (auto i=(evts.end()-evts.begin())-1; i>0; --i) {
+        const int index = Generator::randomUniformInt(0, i);
+        std::swap (evts[i], evts[index]);
+      }
+
+    for(Event* ev : evts)
+        results.append(ev);
+
     return results;
     // PhD : Peut être juste recopier events et faire envents.size() swap d'éléments dans le tableau copié avant de le retourner !!
 }

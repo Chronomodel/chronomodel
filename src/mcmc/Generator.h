@@ -16,6 +16,8 @@ public:
     static void initGenerator(const int seed);
     
     static double randomUniform(const double min = 0., const double max = 1.) ;
+    static int randomUniformInt(const int min = 0, const int max = 1);
+
     static double gaussByDoubleExp(const double mean, const double sigma, const double min, const double max) ;
     static double gaussByBoxMuller(const double mean, const double sigma) ;
 
@@ -32,7 +34,7 @@ private:
     static double boxMuller() ;
     
     static std::mt19937 sEngine;
-    static std::uniform_real_distribution<double> sDistribution;
+    static std::uniform_real_distribution<double> sDoubleDistribution;
 
     //https://en.wikipedia.org/wiki/Xorshift
 

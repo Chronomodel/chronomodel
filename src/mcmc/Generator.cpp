@@ -15,18 +15,17 @@
 //int matherr(struct exception *e);
 
 std::mt19937 Generator::sEngine(0);
-std::uniform_real_distribution<double> Generator::sDistribution(0.0, 1.0);
+std::uniform_real_distribution<double> Generator::sDoubleDistribution(0.0, 1.0);
+
 //http://xoroshiro.di.unimi.it/
 std::uint64_t Generator::xorshift64starSeed(35);
 
 void Generator::initGenerator(const int seed)
 {
-   // sDistribution = std::uniform_real_distribution<double>(0, 1);
-
-    sEngine.seed(seed);
-    sDistribution.reset();
-    qDebug()<<"initGenerator seed"<<seed;
-    xorshift64starSeed = seed;
+   sEngine.seed(seed);
+   sDoubleDistribution.reset();
+   qDebug()<<"initGenerator seed"<<seed;
+   xorshift64starSeed = seed;
 
 }
 
@@ -46,11 +45,16 @@ int Generator::createSeed()
 
 double Generator::randomUniform(const double min, const double max)
 {
-   const double r = min + sDistribution(sEngine) * (max - min);
+    //const double r = min + sDoubleDistribution(sEngine) * (max - min);
     //const double r = min + xorshift64star() * (max - min);
-    //return min + sDistribution(sEngine) * (max - min);
 
-    return r;
+    return min + sDoubleDistribution(sEngine) * (max - min);
+    // return min + xorshift64star() * (max - min);
+}
+
+int Generator::randomUniformInt(const int min, const int max)
+{
+   return (int) round(randomUniform(min, max));
 }
 
 double Generator::gaussByDoubleExp(const double mean, const double sigma, const double min, const double max)
@@ -73,7 +77,7 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     const long double x_min = (min - mean) / sigma;
     const long double x_max = (max - mean) / sigma;
     
-    long double x = (x_max + x_min) / 2.0;// initialisation arbitraire, valeur ecrasée ensuite
+    long double x = (x_max + x_min) / 2.0;// initialisation arbitraire, valeur écrasée ensuite
     //const long double sqrt_e = sqrtl(expl(1.0));
     const long double sqrt_e = 1.64872127070012814689;
     feclearexcept(FE_ALL_EXCEPT);
