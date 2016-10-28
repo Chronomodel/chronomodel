@@ -212,7 +212,7 @@ double Phase::getMaxThetaEvents(double tmax)
  */
 double Phase::getMinThetaEvents(double tmin)
 {
-    double theta = double();
+    double theta;
     bool found = false;
     QList<Event*>::const_iterator iterEvent = mEvents.constBegin();
     while(iterEvent != mEvents.constEnd()) {
@@ -321,6 +321,10 @@ void Phase::memoAll()
     mAlpha.memo();
     mBeta.memo();
     mDuration.memo();
+#ifdef DEBUG
+    if (mBeta.mX - mAlpha.mX>0)
+        qDebug()<<"in Phase::memoAll : "<<mName<<" Warning mBeta.mX - mAlpha.mX<0";
+#endif
 }
 
 void Phase::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
