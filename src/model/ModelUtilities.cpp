@@ -376,46 +376,32 @@ QVector<Phase*> ModelUtilities::sortPhasesByLevel(const QList<Phase*>& phases)
     return results;
 }
 
+/**
+ * @brief ModelUtilities::unsortEvents We adapte The modern version of the Fisher–Yates shuffle
+ * more : https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle?oldid=636272393#Modern_method
+ * @param events
+ * @return
+ */
 QVector<Event*> ModelUtilities::unsortEvents(const QList<Event*>& events)
 {
-    QList<int> indexes;
-    QVector<Event*> results;
-    
-   /* while (indexes.size() < events.size()) {
-        //int index = rand() % events.size(); //Generator::randomUniform(min, max)
-        int index = trunc( Generator::randomUniform( 0 , events.size()));
-        index = inRange(0,  index, events.size()-1);
-        if (!indexes.contains(index)) {
-            indexes.append(index);
-            results.append(events[index]);
-        }
-    }
-    */
-    QList<Event*> evts(events);
-    //shuffle (evts.begin(), evts.end(), Generator::sEngine);
-    for (auto i=(evts.end()-evts.begin())-1; i>0; --i) {
-        const int index = Generator::randomUniformInt(0, i);
-        std::swap (evts[i], evts[index]);
-      }
+    QVector<Event*> results(events.toVector());
 
-    for(Event* ev : evts)
-        results.append(ev);
+    for (int i=results.size()-1; i>0; --i)
+        std::swap (results[i], results[Generator::randomUniformInt(0, i)]);
 
     return results;
-    // PhD : Peut être juste recopier events et faire envents.size() swap d'éléments dans le tableau copié avant de le retourner !!
 }
 
 QString ModelUtilities::dateResultsText(const Date* d, const Model* model)
 {
     QString text;
     const QString nl = "\r";
-    if(d)
-    {
+    if (d) {
         text += "Data : " + d->mName + nl + nl;
         text += "Date :" + nl;
         text += d->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormatStr(),DateUtils::dateToString) ;
 
-        if(model) {
+        if (model) {
             short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTheta.mHPD,model);
             switch (position) {
                 case -1:
@@ -442,27 +428,20 @@ QString ModelUtilities::eventResultsText(const Event* e, bool withDates, const M
 {
     QString text;
     const QString nl = "\r";
-    if(e)
-    {
-        if(e->mType == Event::eKnown)
-        {
+    if (e) {
+        if (e->mType == Event::eKnown) {
             text += "Bound : " + e->mName + nl;
             text += e->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormatStr(),DateUtils::dateToString);
             text += nl+"----------------------"+nl;
         }
-        else
-        {
+        else  {
             text += "Event : " + e->mName + nl;
             text += e->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormatStr(),DateUtils::dateToString);
-            if(withDates)
-            {
+            if (withDates) {
                 text += nl + nl;
                 text += "----------------------"+nl;
                 for(int i=0; i<e->mDates.size(); ++i)
-                {
                     text += dateResultsText(&(e->mDates.at(i)), model) + nl + nl;
-
-                }
             }
         }
     }
@@ -473,8 +452,7 @@ QString ModelUtilities::phaseResultsText(const Phase* p)
 {
     QString text;
     const QString nl = "\r";
-    if(p)
-    {
+    if (p) {
         text += "Phase : " + p->mName + nl + nl;
         
         text += "Duration : " + nl;
@@ -488,7 +466,7 @@ QString ModelUtilities::phaseResultsText(const Phase* p)
         text += "End : " + nl;
         text += p->mBeta.resultsString(nl, "",DateUtils::getAppSettingsFormatStr(),DateUtils::dateToString);
 
-        if(p->mTimeRange != QPair<double,double>()) {
+        if (p->mTimeRange != QPair<double,double>()) {
             text += nl + nl;
 
             const QString result = "Phase Time Range : [" + DateUtils::dateToString(p->getFormatedTimeRange().first) + ", " + DateUtils::dateToString(p->getFormatedTimeRange().second) + "]";
@@ -505,12 +483,11 @@ QString ModelUtilities::phaseResultsText(const Phase* p)
 QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
 {
     QString text;
-    if(d)
-    {
+    if (d) {
         text += line(textBold(textBlack(QObject::tr("Data : ") + d->mName))) + "<br>";
         text += line(textBold(textBlack(QObject::tr("Posterior distrib. :"))));
 
-        if(model) {
+        if (model) {
             short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTheta.mHPD, model);
             switch (position) {
                 case -1:
@@ -540,27 +517,20 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
 QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, const Model* model)
 {
     QString text;
-    if(e)
-    {
+    if (e) {
         text += "<hr>";
-        if(e->mType == Event::eKnown)
-        {
+        if (e->mType == Event::eKnown) {
             text += line(textBold(textRed("Bound : " + e->mName))) + "<br>";
             text += line(textBold(textRed("Posterior distrib. :")));
             text += line(textRed(e->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormatStr(),DateUtils::dateToString)));
         }
-        else
-        {
+        else {
             text += line(textBold(textBlue("Event : " + e->mName))) + "<br>";
             text += line(textBold(textBlue("Posterior distrib. :")));
             text += line(textBlue(e->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormatStr(),DateUtils::dateToString)));
-            if(withDates)
-            {
+            if (withDates){
                 for(int i=0; i<e->mDates.size(); ++i)
-                {
                     text += "<br><br>" + dateResultsHTML(&(e->mDates.at(i)), model);
-
-                }
             }
         }
     }
@@ -570,8 +540,7 @@ QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, c
 QString ModelUtilities::phaseResultsHTML(const Phase* p)
 {
     QString text;
-    if(p)
-    {
+    if (p) {
         text += "<hr>";
         text += line(textBold(textPurple("Phase : " + p->mName)));
         
@@ -587,7 +556,7 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
         text += line(textBold(textPurple("End (posterior distrib.) : ")));
         text += line(textPurple(p->mBeta.resultsString("<br>", "",DateUtils::getAppSettingsFormatStr())));
 
-        if(p->mTimeRange != QPair<double,double>()) {
+        if (p->mTimeRange != QPair<double,double>()) {
             text += "<br>";
 
             const QString result = "Phase Time Range : [" + DateUtils::dateToString(p->getFormatedTimeRange().first) + ", " + DateUtils::dateToString(p->getFormatedTimeRange().second) + "]";
@@ -638,8 +607,7 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p)
 {
     QString text;
     const QString nl = "\r";
-    if(p)
-    {
+    if (p) {
         text += nl;
         text += QObject::tr("Hiatus Phase : ") + p->mPhaseFrom->mName +QObject::tr(" to ")+ p->mPhaseTo->mName;
 
@@ -658,7 +626,7 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p)
             break;
         }
 
-        if(p->mGapRange != QPair<double,double>()) {
+        if (p->mGapRange != QPair<double,double>()) {
             text += nl;
 
             const QString result = QObject::tr("Gap Range") +" : [" + DateUtils::dateToString(p->getFormatedGapRange().first) + ", " + DateUtils::dateToString(p->getFormatedGapRange().second) + "]";
@@ -682,16 +650,16 @@ short ModelUtilities::HPDOutsideSudyPeriod(const QMap<float, float>& hpd, const 
     const float tmin = model->mSettings.getTminFormated();
     const float tmax = model->mSettings.getTmaxFormated();
     // we suppose QMap is sort <
-    while(iter != hpd.constEnd()) {
+    while (iter != hpd.constEnd()) {
         const float v = iter.value();
-        if(v > 0) {
+        if (v > 0) {
            const float t = iter.key();
-           if(t<tmin){
+           if (t<tmin){
                answer = -1;
-           } else if(t>tmax && answer == -1) {
+           } else if (t>tmax && answer == -1) {
               //answer = 2;
               return 2;
-           } else if(t>tmax) {
+           } else if (t>tmax) {
                //answer = +1;
                return 1;
            }

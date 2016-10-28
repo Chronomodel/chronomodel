@@ -148,7 +148,13 @@ QString MCMCLoopMain::initMCMC()
     
     if(isInterruptionRequested())
         return ABORTED_BY_USER;
-    
+
+    // ----------------------------------------------------------------
+    //  Reset Events
+    // ----------------------------------------------------------------
+    for (Event* ev : events)
+        ev->reset();
+
     // ----------------------------------------------------------------
     //  Init gamma
     // ----------------------------------------------------------------
@@ -232,18 +238,17 @@ QString MCMCLoopMain::initMCMC()
             const double max = unsortedEvents.at(i)->getThetaMaxRecursive(tmax, eventBranches, phaseBranches);
             
             unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
-            qDebug()<<"in initMCMC(): init Event "+unsortedEvents.at(i)->mName + QString::number(unsortedEvents.at(i)->mTheta.mX);
             unsortedEvents.at(i)->mInitialized = true;
             
-            //qDebug() << "--> Event initialized : " << unsortedEvents[i]->getName() << " : " << unsortedEvents[i]->mTheta.mX;
-            
-            double s02_sum = 0.f;
+            qDebug() << "in initMCMC(): Event initialized : " << unsortedEvents[i]->mName << " : " << unsortedEvents[i]->mTheta.mX<<" between"<<min<<max;
+
+            double s02_sum = 0.;
             for(int j=0; j<unsortedEvents.at(i)->mDates.size(); ++j) {
                 Date& date = unsortedEvents.at(i)->mDates[j];
                 
                 // 1 - Init ti
                 double sigma;
-                if(!date.mRepartition.isEmpty()) {
+                if (!date.mRepartition.isEmpty()) {
                     const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mRepartition);
                     date.mTheta.mX = date.getTminCalib() + idx * mModel->mSettings.mStep;
 
