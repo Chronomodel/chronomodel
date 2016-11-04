@@ -482,7 +482,7 @@ void Event::updateTheta(const double tmin, const double tmax)
     double sum_p = 0.;
     double sum_t = 0.;
 
-    // with const type variable foreeach is speed
+    // with const type variable foreeach is speeder
     for (const Date date: mDates) {
         const double variance = (date.mSigma.mX * date.mSigma.mX);
         sum_t += (date.mTheta.mX + date.mDelta) / variance;
@@ -525,8 +525,7 @@ void Event::updateTheta(const double tmin, const double tmax)
         {
             // MH : Seul cas où le taux d'acceptation a du sens car on utilise sigma MH :
             const double theta = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
-            
-            double rapport = 0;
+            double rapport (0.);
             if (theta >= min && theta <= max)
                 rapport = exp((-0.5/(sigma*sigma)) * (pow(theta - theta_avg, 2) - pow(mTheta.mX - theta_avg, 2)));
             //qDebug() << "Event::updateTheta() case eMHAdaptGauss rapport="<<rapport;

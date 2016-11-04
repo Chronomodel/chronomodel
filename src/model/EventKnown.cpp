@@ -12,6 +12,8 @@ mUniformStart(0),
 mUniformEnd(0)
 {
     mType = eKnown;
+    mMethod= eFixe;
+    mTheta.mSigmaMH = 0.;
 }
 
 EventKnown::~EventKnown()

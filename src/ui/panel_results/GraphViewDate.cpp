@@ -146,7 +146,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 //const float maxValue = map_max_value(variableDate->mHPD);
                 // Calibration
                 //QMap<float,float> formatedCalib = normalize_map(mDate->getFormatedCalibMap(), maxValue);
-                const QMap<float,float> formatedCalib = mDate->getFormatedCalibMap();
+                const QMap<double,double> formatedCalib = mDate->getFormatedCalibMap();
 
                 GraphCurve curveCalib = generateDensityCurve(formatedCalib,
                                                              "Calibration",

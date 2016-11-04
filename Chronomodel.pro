@@ -132,8 +132,8 @@ macx{
 	
 	# Link the application with FFTW library
 	# If no dylib are present, static libs (.a) are used => that's why we moved .dylib files in a "dylib" folder.
-	LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
-        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
+        #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
+        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3
 	
 	# If we were deploying FFTW as a dynamic library, we should :
 	# - Move all files from "lib/FFTW/mac/dylib" to "lib/FFTW/mac"
@@ -149,7 +149,8 @@ macx{
 }
 win32{
 	INCLUDEPATH += lib/FFTW
-	LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
+        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
+        #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3-3
 }
 #linux :
 unix:!macx{ 
@@ -226,6 +227,7 @@ HEADERS += src/plugins/GraphViewRefAbstract.h
 HEADERS += src/plugins/PluginSettingsViewAbstract.h
 HEADERS += src/plugins/PluginRefCurveSettingsView.h
 HEADERS += src/plugins/RefCurve.h
+HEADERS += src/plugins/CalibrationCurve.h
 
 equals(USE_PLUGIN_TL, 1){
 	HEADERS += src/plugins/plugin_tl/PluginTL.h
@@ -367,6 +369,7 @@ SOURCES += src/model/ModelUtilities.cpp
 
 SOURCES += src/plugins/PluginRefCurveSettingsView.cpp
 SOURCES += src/plugins/RefCurve.cpp
+SOURCES += src/plugins/CalibrationCurve.cpp
 
 equals(USE_PLUGIN_TL, 1){
 	SOURCES += src/plugins/plugin_tl/PluginTL.cpp

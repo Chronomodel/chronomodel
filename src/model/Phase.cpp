@@ -322,7 +322,7 @@ void Phase::memoAll()
     mBeta.memo();
     mDuration.memo();
 #ifdef DEBUG
-    if (mBeta.mX - mAlpha.mX>0)
+    if (mBeta.mX - mAlpha.mX<0)
         qDebug()<<"in Phase::memoAll : "<<mName<<" Warning mBeta.mX - mAlpha.mX<0";
 #endif
 }

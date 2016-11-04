@@ -22,24 +22,24 @@ mAxisColor(0, 0, 0)
     
 }
 
-void AxisTool::updateValues(const double totalPix, const double minDeltaPix, const double minVal, const double maxVal)
+void AxisTool::updateValues(const int totalPix, const int minDeltaPix, const qreal minVal, const qreal maxVal)
 {
     if ((minDeltaPix == 0) || (minVal==maxVal) || (totalPix == 0) || (minVal>= maxVal))
         return;
 
     mEndVal = maxVal;
-    double w = totalPix;
+    qreal w = totalPix;
     w = (w <= 0.) ? minDeltaPix : w;
-    double numSteps = floor(w / minDeltaPix);
+    qreal numSteps = floor(w / minDeltaPix);
     numSteps = (numSteps <= 0.) ? 1. : numSteps;
     
-    double delta = maxVal - minVal;
-    double unitsPerStep = delta / numSteps;
+    qreal delta = maxVal - minVal;
+    qreal unitsPerStep = delta / numSteps;
     
      mPixelsPerUnit = w / delta;
     //double unitsPerPixel = delta / w;
     
-    double pow10 = 0.;
+    qreal pow10 = 0.;
     if (unitsPerStep < 1)  {
         while (unitsPerStep < 1)  {
             unitsPerStep *= 10.;
@@ -54,7 +54,7 @@ void AxisTool::updateValues(const double totalPix, const double minDeltaPix, con
        // }
     }
     
-    double factor = pow(10.f, pow10);
+    qreal factor = pow(10.f, pow10);
     
     //mDeltaVal = floor(unitsPerStep) * factor;
     mDeltaVal = 10. * factor;
@@ -82,7 +82,7 @@ void AxisTool::updateValues(const double totalPix, const double minDeltaPix, con
  * @brief Draw axis on a QPainter, if there is no valueFormatFunc, all number is converted in QString with precision 0, it's mean only integer
  *
  */
-QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, QString (*valueFormatFunc)(float))
+QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, FormatFunc valueFormatFunc)// QString (*valueFormatFunc)(const double))
 {
     QPen memoPen(p.pen());
     QBrush memoBrush(p.brush());

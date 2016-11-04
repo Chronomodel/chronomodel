@@ -19,31 +19,31 @@
  * @brief Product a FunctionAnalysis from a QMap
  * @todo Handle empty function case and null density case (pi = 0)
 */
-FunctionAnalysis analyseFunction(const QMap<double, double>& aFunction)
+FunctionAnalysis analyseFunction(const QMap<type_data, type_data> &aFunction)
 {
     FunctionAnalysis result;
     if (aFunction.isEmpty()) {
-        result.max = 0.f;
-        result.mode = 0.f;
-        result.mean = 0.f;
-        result.stddev = -1.f;
+        result.max = (type_data)0.;
+        result.mode = (type_data)0.;
+        result.mean = (type_data)0.;
+        result.stddev = (type_data)(-1.);
         qDebug() << "WARNING : in analyseFunction() aFunction isEmpty !! ";
         return result;
     }
 
-    double max = 0.;
-    double mode = 0.;
-    double sum = 0.;
-    double sum2 = 0.;
-    double sumP = 0.;
+    type_data max (0.);
+    type_data mode (0.);
+    type_data sum (0.);
+    type_data sum2 (0.);
+    type_data sumP (0.);
 
-    float prevY = 0;
-    QList<float> uniformXValues;
+    type_data prevY (0.);
+    QList<type_data> uniformXValues;
 
-    QMap<double,double>::const_iterator citer = aFunction.cbegin();
+    QMap<type_data,type_data>::const_iterator citer = aFunction.cbegin();
     for (;citer != aFunction.cend(); ++citer) {
-        const double x = citer.key();
-        const double y = citer.value();
+        const type_data x = citer.key();
+        const type_data y = citer.value();
 
         sumP += y;
         sum += y * x;
@@ -63,105 +63,42 @@ FunctionAnalysis analyseFunction(const QMap<double, double>& aFunction)
         prevY = y;
     }
 
-    //FunctionAnalysis result;
-    result.max = (float) max;
-    result.mode = (float) mode;
-    result.mean = (float) 0.f;
-    result.stddev = (float) 0.f;
-
-    if (sumP != 0) {
-        result.mean = sum / sumP;
-        float variance = (sum2 / sumP) - pow(result.mean, 2);
-
-        if (variance < 0) {
-            qDebug() << "WARNING : in analyseFunction() negative variance found : " << variance<<" return 0";
-            variance = -variance;
-        }
-
-        result.stddev = sqrt(variance);
-    }
-
-    return result;
-}
-FunctionAnalysis analyseFunction(const QMap<float, float>& aFunction)
-{
-    FunctionAnalysis result;
-    if (aFunction.isEmpty()) {
-        result.max = 0.f;
-        result.mode = 0.f;
-        result.mean = 0.f;
-        result.stddev = -1.f;
-        qDebug() << "WARNING : in analyseFunction() aFunction isEmpty !! ";
-        return result;
-    }
-    
-    float max = 0.;
-    float mode = 0.;
-    float sum = 0.;
-    float sum2 = 0.;
-    float sumP = 0.;
-    
-    float prevY = 0;
-    QList<float> uniformXValues;
-    
-    QMap<float,float>::const_iterator citer = aFunction.cbegin();
-    for (;citer != aFunction.cend(); ++citer) {
-        const float x = citer.key();
-        const float y = citer.value();
-        
-        sumP += y;
-        sum += y * x;
-        sum2 += y * x * x;
-        
-        if (max <= y) {
-            max = y;
-            if (prevY == y) {
-                uniformXValues.append(x);
-                int middleIndex = floor(uniformXValues.size()/2);
-                mode = uniformXValues.at(middleIndex);
-            } else {
-                uniformXValues.clear();
-                mode = x;
-            }
-        }
-        prevY = y;
-    }
-    
     //FunctionAnalysis result;
     result.max = max;
     result.mode = mode;
-    result.mean = 0.f;
-    result.stddev = 0.f;
-    
+    result.mean = (type_data)0.;
+    result.stddev = (type_data)0.;
+
     if (sumP != 0) {
         result.mean = sum / sumP;
-        float variance = (sum2 / sumP) - pow(result.mean, 2);
-        
+        type_data variance = (sum2 / sumP) - pow(result.mean, 2);
+
         if (variance < 0) {
             qDebug() << "WARNING : in analyseFunction() negative variance found : " << variance<<" return 0";
             variance = -variance;
         }
-        
+
         result.stddev = sqrt(variance);
     }
-    
+
     return result;
 }
 
-float dataStd(const QVector<float>& data)
+
+type_data dataStd(const QVector<type_data> &data)
 {
     // Work with double precision here because sum2 might be big !
     
-    const float s = sum<float>(data);
-    const float s2 = sum2<float>(data);
-    const float mean = s / data.size();
-    const float variance = s2 / data.size() - mean * mean;
+    const type_data s = sum<type_data>(data);
+    const type_data s2 = sum2<type_data>(data);
+    const type_data mean = s / data.size();
+    const type_data variance = s2 / data.size() - mean * mean;
     
     if (variance < 0) {
         qDebug() << "WARNING : in dataStd() negative variance found : " << variance<<" return 0";
-        return 0.f;
+        return (type_data)0.;
     }
-    return (float)sqrt(variance);
+    return sqrt(variance);
 }
 
 double shrinkageUniform(const double so2)
@@ -206,7 +143,7 @@ QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& 
 }
 
 
-Quartiles quartilesForTrace(const QVector<float>& trace)
+Quartiles quartilesForTrace(const QVector<type_data> &trace)
 {
     Quartiles quartiles;
     const int n = trace.size();
@@ -217,11 +154,11 @@ Quartiles quartilesForTrace(const QVector<float>& trace)
         return quartiles;
     }
 
-    QVector<float> sorted (trace);
+    QVector<type_data> sorted (trace);
     std::sort(sorted.begin(),sorted.end());
     
-    const int q1index = (int) ceil((float)n * 0.25f);
-    const int q3index = (int) ceil((float)n * 0.75f);
+    const int q1index = (int) ceil(n * 0.25);
+    const int q3index = (int) ceil(n * 0.75);
     
     quartiles.Q1 = sorted.at(q1index);
     quartiles.Q3 = sorted.at(q3index);
@@ -232,13 +169,13 @@ Quartiles quartilesForTrace(const QVector<float>& trace)
         
         quartiles.Q2 = sorted.at(q2indexLow) + (sorted.at(q2indexUp) - sorted.at(q2indexLow)) / 2.f;
     } else {
-        const int q2index = (int)ceil((float)n * 0.5f);
+        const int q2index = (int)ceil(n * 0.5);
         quartiles.Q2 = sorted.at(q2index);
     }
     return quartiles;
 }
 
-Quartiles quartilesForRepartition(const QVector<float>& repartition, const float tmin, const float step)
+Quartiles quartilesForRepartition(const QVector<double>& repartition, const double tmin, const double step)
 {
     Quartiles quartiles;
     if (repartition.size()<5) {
@@ -247,9 +184,9 @@ Quartiles quartilesForRepartition(const QVector<float>& repartition, const float
         quartiles.Q3 = 0.;
         return quartiles;
     }
-    const float q1index = vector_interpolate_idx_for_value(0.25, repartition);
-    const float q2index = vector_interpolate_idx_for_value(0.5, repartition);
-    const float q3index = vector_interpolate_idx_for_value(0.75, repartition);
+    const double q1index = vector_interpolate_idx_for_value(0.25, repartition);
+    const double q2index = vector_interpolate_idx_for_value(0.5, repartition);
+    const double q3index = vector_interpolate_idx_for_value(0.75, repartition);
     
     quartiles.Q1 = tmin + q1index * step;
     quartiles.Q2 = tmin + q2index * step;
@@ -258,24 +195,24 @@ Quartiles quartilesForRepartition(const QVector<float>& repartition, const float
     return quartiles;
 }
 
-QPair<float, float> credibilityForTrace(const QVector<float>& trace, float thresh, float& exactThresholdResult,const  QString description)
+QPair<double, double> credibilityForTrace(const QVector<double>& trace, double thresh, double& exactThresholdResult,const  QString description)
 {
-    QPair<float, float> credibility(0.f,0.f);
-    exactThresholdResult = 0.f;
+    QPair<double, double> credibility(0.,0.);
+    exactThresholdResult = 0.;
     const int n = trace.size();
     if (thresh > 0 && n > 0) {
-        float threshold = inRange(0.0f, thresh, 100.0f);
-        QVector<float> sorted (trace);
+        double threshold = inRange(0.0, thresh, 100.0);
+        QVector<double> sorted (trace);
         std::sort(sorted.begin(),sorted.end());
         
-        const int numToRemove = (int)floor((float)n * (1.f - threshold / 100.f));
-        exactThresholdResult = ((float)n - (float)numToRemove) / (float)n;
+        const int numToRemove = (int)floor(n * (1. - threshold / 100.));
+        exactThresholdResult = ((double)n - (double)numToRemove) / (double)n;
         
-        float lmin = 0.f;
+        double lmin = 0.;
         int foundJ = 0;
 
         for (int j=0; j<=numToRemove; ++j) {
-            const float l = sorted.at((n - 1) - numToRemove + j) - sorted.at(j);
+            const double l = sorted.at((n - 1) - numToRemove + j) - sorted.at(j);
             if ((lmin == 0.f) || (l < lmin)) {
                 foundJ = j;
                 lmin = l;
@@ -287,7 +224,7 @@ QPair<float, float> credibilityForTrace(const QVector<float>& trace, float thres
 
     if (credibility.first == credibility.second) {
         //It means : there is only on value
-        return QPair<float, float>();
+        return QPair<double, double>();
     }
     else return credibility;
 }
@@ -300,14 +237,14 @@ QPair<float, float> credibilityForTrace(const QVector<float>& trace, float thres
  * @param description  compute type 7 R quantile
  * @return
  */
-QPair<float, float> timeRangeFromTraces(const QVector<float>& trace1, const QVector<float>& trace2, const float thresh, const QString description)
+QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh, const QString description)
 {
-    QPair<float, float> range(- INFINITY, +INFINITY);
+    QPair<double, double> range(- INFINITY, +INFINITY);
 #ifdef DEBUG
     QTime startTime (QTime::currentTime());
 #endif
     // limit of precision, to accelerate the calculus
-    const float epsilonStep = 0.1f/100.f;
+    const double epsilonStep = 0.1/100.;
 
     // if thresh is equal 0 then return an QPair=(-INFINITY,+INFINITY)
 
@@ -315,38 +252,38 @@ QPair<float, float> timeRangeFromTraces(const QVector<float>& trace1, const QVec
 
     if ( (thresh > 0) && (n > 0) && ((int)trace2.size() == n) ) {
 
-        const float gamma = 1.f - thresh/100.f;
+        const double gamma = 1. - thresh/100.;
 
-        float dMin = INFINITY;
+        double dMin = INFINITY;
 
-        std::vector<float> traceAlpha (trace1.toStdVector());
-        std::vector<float> traceBeta (trace2.size());
+        std::vector<double> traceAlpha (trace1.toStdVector());
+        std::vector<double> traceBeta (trace2.size());
 
         // 1 - map with relation Beta to Alpha
-        std::multimap<float,float> betaAlpha;
+        std::multimap<double, double> betaAlpha;
         for(int i=0; i<trace1.size(); ++i)
-            betaAlpha.insert(std::pair<float,float>(trace2.at(i),trace1.at(i)) );
+            betaAlpha.insert(std::pair<double, double>(trace2.at(i),trace1.at(i)) );
 
         std::copy(trace2.begin(),trace2.end(),traceBeta.begin());
 
         // keep the beta trace in the same position of the Alpha, so we need to sort them with there values of alpha
-        std::sort(traceBeta.begin(),traceBeta.end(),[&betaAlpha](const float i, const float j){ return betaAlpha.find(i)->second < betaAlpha.find(j)->second  ;} );
+        std::sort(traceBeta.begin(),traceBeta.end(),[&betaAlpha](const double i, const double j){ return betaAlpha.find(i)->second < betaAlpha.find(j)->second  ;} );
 
         std::sort(traceAlpha.begin(),traceAlpha.end());
 
-        std::vector<float> betaUpper(n);
+        std::vector<double> betaUpper(n);
 
         // 2- loop on Epsilon to look for a and b with the smallest length
-        for (float epsilon = 0.f; epsilon <= gamma; ) {
+        for (double epsilon = 0.; epsilon <= gamma; ) {
 
             // original calcul according to the article const float ha( (traceAlpha.size()-1)*epsilon +1 );
             // We must decrease of 1 because the array begin at 0
-            const float ha( (traceAlpha.size()-1)*epsilon);
+            const double ha( (traceAlpha.size()-1)*epsilon);
 
             const int haInf( floor(ha) );
             const int haSup( ceil(ha) );
 
-            const float a = traceAlpha.at(haInf) + ( (ha-haInf)*(traceAlpha.at(haSup)-traceAlpha.at(haInf)) );
+            const double a = traceAlpha.at(haInf) + ( (ha-haInf)*(traceAlpha.at(haSup)-traceAlpha.at(haInf)) );
 
             // 3 - copy only value of beta with alpha greater than a(epsilon)
             const int alphaIdx = ha==haInf ? haInf:haSup;
@@ -376,14 +313,14 @@ QPair<float, float> timeRangeFromTraces(const QVector<float>& trace1, const QVec
             std::sort(betaUpper.begin(), betaUpper.end());
 
            // 5 - Calcul b
-            const float bEpsilon( (1.-gamma)/(1.-epsilon) );
+            const double bEpsilon( (1.-gamma)/(1.-epsilon) );
             // original calcul according to the article const float hb( (betaUpper.size()-1)*bEpsilon +1 );
             // We must decrease of 1 because the array begin at 0
-            const float hb( ((float)betaUpper.size() - 1.)*bEpsilon);
+            const double hb( (betaUpper.size() - 1.)*bEpsilon);
             const int hbInf( floor(hb) );
             const int hbSup( ceil(hb) );
 
-            const float b = betaUpper.at(hbInf) + ( (hb-hbInf)*(betaUpper.at(hbSup)-betaUpper.at(hbInf)) );
+            const double b = betaUpper.at(hbInf) + ( (hb-hbInf)*(betaUpper.at(hbSup)-betaUpper.at(hbInf)) );
 
             // 6 - keep the shortest length
 
@@ -416,130 +353,8 @@ QPair<float, float> timeRangeFromTraces(const QVector<float>& trace1, const QVec
  * @param description Obsolete function keep only for memory and test
  * @return
  */
-QPair<float, float> timeRangeFromTraces_old(const QVector<float>& trace1, const QVector<float>& trace2, const float thresh, const QString description)
-{
-    QPair<float, float> range(- INFINITY, +INFINITY);
-#ifdef DEBUG
-    QTime startTime (QTime::currentTime());
-#endif
-    // limit of precision, to accelerate the calculus
-    const float perCentStep = 0.01f;
-    // if thresh is equal 0 then return an QPair=(-INFINITY,+INFINITY)
 
-    const int n = trace1.size();
-    if ( (thresh > 0) && (n > 0) && (trace2.size() == n) ) {
-
-        const int nTarget = (const int)(ceil((float)n * thresh/100.f));
-        const int nGamma = n - nTarget;
-
-        float dMin = INFINITY;
-
-        std::vector<float> traceAlpha (trace1.toStdVector());
-        std::vector<float> traceBeta (trace2.size());
-
-        // map with relation Beta to Alpha
-        std::multimap<float,float> betaAlpha;
-        for(int i=0; i<trace1.size(); ++i)
-            betaAlpha.insert(std::pair<float,float>(trace2.at(i),trace1.at(i)) );//std::pair<char,int>('a',100)
-
-        std::copy(trace2.begin(),trace2.end(),traceBeta.begin());
-
-        // keep the beta trace in the same position of the Alpha, so we need to sort them with there values of alpha
-        std::sort(traceBeta.begin(),traceBeta.end(),[&betaAlpha](const float i, const float j){ return betaAlpha.find(i)->second <betaAlpha.find(j)->second  ;} );
-
-        std::sort(traceAlpha.begin(),traceAlpha.end());
-
-        if (nTarget>= n)
-            return QPair<float,float>(traceAlpha.at(0),*std::max_element(traceBeta.cbegin(),traceBeta.cend()));
-
-        const int epsilonStep = qMax(1, (int)floor(n*perCentStep));
-
-        std::vector<float> betaUpper(n);
-
-        for (int nEpsilon=0; nEpsilon<nGamma; ) {
-
-            const float a = traceAlpha.at(nEpsilon);
-
-            // copy only value of beta with alpha greater than a(epsilon)
-
-            const int remainingElemt =  n - nEpsilon;
-            betaUpper.resize(remainingElemt);   // allocate space
-
-            auto it = std::copy( traceBeta.begin()+ nEpsilon+1, traceBeta.end(), betaUpper.begin() );
-
-            const int betaUpperSize = std::distance(betaUpper.begin(),it);
-
-            betaUpper.resize(betaUpperSize);  // shrink container to new size
-
-            // if there is Beta value under a, we could have less than nTarget-1 elements, so it's finish
-            if (betaUpperSize<(nTarget-1))
-                 break;
-
-            /*  std::nth_element has O(N) complexity,
-             *  whereas std::sort has O(Nlog(N)).
-             *  here we don't need complete sorting of the range, so it's advantageous to use it.
-             */
-
-            std::nth_element(betaUpper.begin(), betaUpper.begin() + nTarget-1, betaUpper.end());
-
-// in the future with C++17
-//std::experimental::parallel::nth_element(par,betaUpper.begin(), betaUpper.begin() + nTarget, betaUpper.end());
-
-            // Remember ->  m*(n-nGamma)/(n-nEpsilon) = nTarget
-            const float b  = betaUpper.at(nTarget-1);
-
-            // keep the shortest length
-            float aInterpolate(0);
-            if ( (nEpsilon-epsilonStep+1) < (int)traceAlpha.size() ){
-                float h = ((traceAlpha.size()-1)*nEpsilon/n)+1;
-                aInterpolate = traceAlpha.at((int)floor(h)-1) + ( (h-floor(h))*(traceAlpha.at((int)floor(h)+1-1)-traceAlpha.at((int)floor(h)-1)) );
-                // aInterpolate = interpolate(thresh/100.f, (float)(n-nEpsilon-epsilonStep)/n, (float)((n-nEpsilon)/n), traceAlpha.at(nEpsilon-epsilonStep+1), a);
-
-            } else aInterpolate =  a;
-
-            float bInterpolate(0) ;
-            if ( (nTarget-1) < (int)betaUpper.size() ) {
-                float h = ((betaUpper.size()-1)*thresh/100.f)+1;
-                bInterpolate = betaUpper.at((int)floor(h)-1) + ( (h-floor(h))*(betaUpper.at((int)floor(h)+1-1)-betaUpper.at((int)floor(h)-1)) );
-                //   bInterpolate = interpolate(thresh/100.f, (float)(nTarget)/n, (float)((nTarget-1)/n), b, betaUpper.at(nTarget-1-1));
-
-            } else bInterpolate = b;
-
-            if ((b-a) < dMin) {
-                dMin = b - a;
-                range.first = a;//Interpolate;
-                range.second = b;//Interpolate;
-
-                // compute type 7 R quantile
-              /*
-                const float ha = n*(thresh/100);
-                const int floorHa = qMin((int)nEpsilon,(int)(traceAlpha.size()-1-epsilonStep));//(int)floor(ha);
-
-                const double a7 = traceAlpha.at(floorHa)+((ha-floor(ha))*(traceAlpha.at(floorHa+epsilonStep)-traceAlpha.at(floorHa)));
-
-               const float hb = n*(thresh/100);//(n-1)*(nEpsilon/n)+1;
-               const int floorHb = qMin(nTarget-1,(int)(betaUpper.size()-1-epsilonStep));//(int)floor(hb);
-
-               const double b7 = betaUpper.at(floorHb)+((hb-floor(hb))*(betaUpper.at(floorHb+epsilonStep)-betaUpper.at(floorHb)));
-               range.first = a7;
-               range.second = b7;*/
-            }
-
-            nEpsilon += epsilonStep;
-        }
-    }
-
-
-#ifdef DEBUG
-    qDebug()<<description;
-    QTime timeDiff(0,0,0,1);
-    timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
-    qDebug()<<"timeRangeFromTraces_old ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
-#endif
-    return range;
-}
-
-QPair<float, float> transitionRangeFromTraces(const QVector<float>& trace1, const QVector<float>& trace2, const float thresh, const QString description)
+QPair<double, double> transitionRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh, const QString description)
 {
     return timeRangeFromTraces(trace1, trace2, thresh, description);
 }
@@ -553,16 +368,16 @@ QPair<float, float> transitionRangeFromTraces(const QVector<float>& trace1, cons
  * @param description a simple text
  * @return
  */
-QPair<float, float> gapRangeFromTraces(const QVector<float>& traceEnd, const QVector<float>& traceBegin, const float thresh, const QString description)
+QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const QVector<double>& traceBegin, const double thresh, const QString description)
 {
 #ifdef DEBUG
     QTime startTime = QTime::currentTime();
 #endif
 
-    QPair<float, float> range = QPair<float, float>(- INFINITY, + INFINITY);
+    QPair<double, double> range = QPair<double, double>(- INFINITY, + INFINITY);
 
     // limit of precision, to accelerate the calculus, we set the same as RChronoModel
-    const double epsilonStep = 0.1f/100.f;
+    const double epsilonStep = 0.1/100.;
 
     const int n = traceBegin.size();
 
@@ -649,8 +464,8 @@ QPair<float, float> gapRangeFromTraces(const QVector<float>& traceEnd, const QVe
 
             if ((b-a) >= dMax) {
                 dMax = b - a;
-                range.first = (float)a;
-                range.second = (float)b;
+                range.first = a;
+                range.second = b;
             }
             if (epsilon< gamma) {
                 epsilon += epsilonStep;
@@ -767,7 +582,7 @@ QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, cons
 
 
 
-QString intervalText(const QPair<float, QPair<float, float> >& interval, FormatFunc formatFunc)
+QString intervalText(const QPair<double, QPair<double, double> > &interval, FormatFunc formatFunc)
 {
     const QLocale locale;
     if (formatFunc){
@@ -778,11 +593,11 @@ QString intervalText(const QPair<float, QPair<float, float> >& interval, FormatF
     }
 }
 
-QString getHPDText(const QMap<float, float>& hpd, float thresh, const QString& unit, FormatFunc formatFunc)
+QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString& unit, FormatFunc formatFunc)
 {
     if(hpd.isEmpty() ) return "";
 
-    QList<QPair<float, QPair<float, float> > > intervals = intervalsForHpd(hpd, thresh);
+    QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(hpd, thresh);
     QStringList results;
     for(int i=0; i<intervals.size(); ++i) {
         results << intervalText(intervals.at(i), formatFunc);
@@ -796,21 +611,21 @@ QString getHPDText(const QMap<float, float>& hpd, float thresh, const QString& u
 /**
  * @brief Extract intervals (QPair of date) and calcul the area corresponding, from a HPD QMap maded before
  */
-QList<QPair<float, QPair<float, float> > > intervalsForHpd(const QMap<float, float>& hpd, float thresh)
+QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double, double>& hpd, double thresh)
 {
-    QList<QPair<float, QPair<float, float> >> intervals;
+    QList<QPair<double, QPair<double, double> >> intervals;
 
     if(hpd.isEmpty()) return intervals;
 
-    QMapIterator<float, float> it(hpd);
+    QMapIterator<double, double> it(hpd);
     bool inInterval = false;
-    float lastKeyInInter = 0.;
-    QPair<float, float> curInterval;
+    double lastKeyInInter = 0.;
+    QPair<double, double> curInterval;
     
-    float areaTot= map_area(hpd);
-    float lastValueInInter = 0.;
+    double areaTot= map_area(hpd);
+    double lastValueInInter = 0.;
     
-    float areaCur = 0;
+    double areaCur = 0;
     it.toFront();
     while(it.hasNext()) {
         it.next();
@@ -825,12 +640,12 @@ QList<QPair<float, QPair<float, float> > > intervalsForHpd(const QMap<float, flo
                 inInterval = false;
                 curInterval.second = lastKeyInInter;
                 
-                QPair<float, QPair<float, float> > inter;
+                QPair<double, QPair<double, double> > inter;
                 inter.first = thresh * areaCur / areaTot;
                 inter.second = curInterval;
                 intervals.append(inter);
                 
-                areaCur = 0;
+                areaCur = 0.;
 
             } else {
                 areaCur += (lastValueInInter+it.value())/2 * (it.key()-lastKeyInInter);
@@ -846,7 +661,7 @@ QList<QPair<float, QPair<float, float> > > intervalsForHpd(const QMap<float, flo
        
         curInterval.second = lastKeyInInter;
         areaCur += (lastValueInInter+it.value())/2 * (it.key()-lastKeyInInter);
-        QPair<float, QPair<float, float> > inter;
+        QPair<double, QPair<double, double> > inter;
         inter.first = thresh * areaCur / areaTot;
         inter.second = curInterval;
 

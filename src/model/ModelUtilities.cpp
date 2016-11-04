@@ -643,17 +643,17 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p)
  * @return -1 if there is solution under Study Period; 0 if all solution is inside Sudy Period;
  *  +1 if there is solution over Study Period; +2 if there is both solution under and over the Study Period
  */
-short ModelUtilities::HPDOutsideSudyPeriod(const QMap<float, float>& hpd, const Model* model)
+short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double>& hpd, const Model* model)
 {
-    QMap<float, float>::const_iterator iter(hpd.constBegin());
+    QMap<double, double>::const_iterator iter(hpd.constBegin());
     short answer = 0;
-    const float tmin = model->mSettings.getTminFormated();
-    const float tmax = model->mSettings.getTmaxFormated();
+    const double tmin = model->mSettings.getTminFormated();
+    const double tmax = model->mSettings.getTmaxFormated();
     // we suppose QMap is sort <
     while (iter != hpd.constEnd()) {
-        const float v = iter.value();
+        const double v = iter.value();
         if (v > 0) {
-           const float t = iter.key();
+           const double t = iter.key();
            if (t<tmin){
                answer = -1;
            } else if (t>tmax && answer == -1) {

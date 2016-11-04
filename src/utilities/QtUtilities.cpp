@@ -152,16 +152,15 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                                                     dialogTitle,
                                                     defaultPath,
                                                     filter);
-    if(!fileName.isEmpty())
-    {
+    if (!fileName.isEmpty()) {
         fileInfo = QFileInfo(fileName);
         const QString fileExtension = fileInfo.suffix();
-        const float heightText = r.height()/50;
+        const qreal heightText = r.height()/50.;
 
-        if(fileExtension == "svg") {
-            if(mGraph) {
+        if (fileExtension == "svg") {
+            if (mGraph)
                 mGraph->saveAsSVG(fileName, "Title", "Description",true);
-            }
+
             else if(scene) {
                 const  QRect viewBox = QRect( r.x(), r.y(), r.width(), r.height() );
 
@@ -176,12 +175,11 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 scene->render(&p, r, r);
                 p.end();
             }
-            else if(widget) { // export all resultView
+            else if(widget)  // export all resultView
                 saveWidgetAsSVG(widget, r, fileName);
-            }
+
         }
-        else
-        { // save PNG
+        else { // save PNG
 
             // -------------------------------
             //  Get preferences
@@ -194,7 +192,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             //  Create the image
             // -------------------------------
             QImage image(r.width() * pr, (r.height() + heightText) * pr , QImage::Format_ARGB32_Premultiplied);
-            if(image.isNull()){
+            if (image.isNull()) {
                 qDebug() << "Cannot export null image!";
                 return fileInfo;
             }
@@ -209,12 +207,12 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             // -------------------------------
             //  Fill background
             // -------------------------------
-            if (fileExtension == "jpg") {
+            if (fileExtension == "jpg")
                 image.fill(Qt::white);
-            }
-            else {
+
+            else
                 image.fill(Qt::transparent);
-            }
+
             
             // -------------------------------
             //  Create painter
@@ -227,15 +225,14 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             // -------------------------------
             //  If widget, draw with or without axis
             // -------------------------------
-            if(widget) {
-                //p.setFont(widget->font());
+            if (widget)
                 widget->render(&p, QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), r.height()));
-            }
+
             
             // -------------------------------
             //  If scene...
             // -------------------------------
-            else if(scene){
+            else if (scene) {
                 QRectF srcRect = r;
                 srcRect.setX(r.x());
                 srcRect.setY(r.y());
@@ -246,9 +243,10 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 tgtRect.adjust(0, 0, 0, -heightText * pr);
                 
                 scene->render(&p, tgtRect, srcRect);
-            } else {
+
+            } else
                 return fileInfo;
-            }
+
             
             // -------------------------------
             //  Write application and version
@@ -376,14 +374,14 @@ bool constraintIsCircular(QJsonArray constraints, const int fromId, const int to
     return false;
 }
 
-QString formatValueToAppSettingsPrecision(const float valueToFormat)
+QString formatValueToAppSettingsPrecision(const double valueToFormat)
 {
     int precision = MainWindow::getInstance()->getAppSettings().mPrecision;
     char fmt = 'f';
-    if (std::fabs(valueToFormat)>250000)
+    if (std::abs(valueToFormat)>250000)
         fmt = 'G';
 
-    if (std::fabs(valueToFormat)<1E-6)
+    if (std::abs(valueToFormat)<1E-6)
         return "0";
     else
         return QString::number(valueToFormat, fmt, precision);;

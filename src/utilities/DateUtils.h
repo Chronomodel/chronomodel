@@ -15,24 +15,24 @@ public:
         eDatBP = 3,
         eDatB2K = 4,
     };
-    static float convertToFormat(const float valueToFormat, const FormatDate format);
-    static float convertFromFormat(const float formattedValue, const FormatDate format);
+    static double convertToFormat(const double valueToFormat, const FormatDate format);
+    static double convertFromFormat(const double formattedValue, const FormatDate format);
     
     static QString formatString(const FormatDate format);
-    static QString dateToString(const float date);
-    static QString dateToString(const float date, int precision);
+    static QString dateToString(const double date);
+    static QString dateToString(const double date, int precision);
     
     /** 
      * @brief convert native values (classic BC/AD) to their prefered display date format (Cal B2k, ...)
      */
-    static float convertToAppSettingsFormat(const float valueToFormat);
-    static QString convertToAppSettingsFormatStr(const float valueToFormat);
+    static double convertToAppSettingsFormat(const double valueToFormat);
+    static QString convertToAppSettingsFormatStr(const double valueToFormat);
 
     /**
      * @brief convert formatted values (Cal B2k, Cal BP, ...) to native value (classic BC/AD)
      */
-    static float convertFromAppSettingsFormat(const float formattedValue);
-    static QString convertFromAppSettingsFormatStr(const float formattedValue);
+    static double convertFromAppSettingsFormat(const double formattedValue);
+    static QString convertFromAppSettingsFormatStr(const double formattedValue);
     
 
     static FormatDate getAppSettingsFormat();

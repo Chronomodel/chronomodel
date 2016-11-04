@@ -26,15 +26,15 @@ public:
     static ProjectSettings fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
     
-    static float getStep(const float tmin, const float tmax);
+    static double getStep(const double tmin, const double tmax);
 
-    float getTminFormated() const;
-    float getTmaxFormated() const ;
+    double getTminFormated() const;
+    double getTmaxFormated() const ;
 
 public:
-    float mTmin;
-    float mTmax;
-    float mStep;
+    double mTmin;
+    double mTmax;
+    double mStep;
     bool mStepForced;   
 };
 

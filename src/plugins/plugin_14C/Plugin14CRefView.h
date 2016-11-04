@@ -20,7 +20,7 @@ public:
     void setDate(const Date& date, const ProjectSettings& settings);
     
 public slots:
-    void zoomX(const float min, const float max);
+    void zoomX(const double min, const double max);
     void setMarginRight(const int margin);
 protected:
     void resizeEvent(QResizeEvent* e);

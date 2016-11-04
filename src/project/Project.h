@@ -7,11 +7,13 @@
 #include "MCMCLoopMain.h"
 #include "Model.h"
 #include "StateKeys.h"
+#include "CalibrationCurve.h"
 
 #include <QObject>
 #include <QList>
 #include <QString>
 #include <QJsonObject>
+
 
 #define PROJECT_LOADED_REASON "project loaded"
 #define NEW_PROJECT_REASON "new project"
@@ -177,6 +179,7 @@ public:
     
     Model* mModel;
     
+    QMap<QString, CalibrationCurve> mCalibCurves; // QJsonObject is date.mData
     QTimer* mAutoSaveTimer;
 
 private :

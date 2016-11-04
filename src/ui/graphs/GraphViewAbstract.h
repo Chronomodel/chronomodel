@@ -3,6 +3,8 @@
 #include <qglobal.h>
 #include <QPainterPath>
 
+typedef double type_data;
+
 class GraphViewAbstract
 {
 public:
@@ -12,15 +14,15 @@ public:
     QPainterPath mPainterPath;
     // Getters
     
-    float rangeX() const;
-    float rangeY() const;
-    float getCurrentMaxX() const;
-    float getCurrentMinX() const;
+    type_data rangeX() const;
+    type_data rangeY() const;
+    type_data getCurrentMaxX() const;
+    type_data getCurrentMinX() const;
     
-    float minimumX() const;
-    float maximumX() const;
-    float minimumY() const;
-    float maximumY() const;
+    type_data minimumX() const;
+    type_data maximumX() const;
+    type_data minimumY() const;
+    type_data maximumY() const;
     
     qreal marginLeft() const;
     qreal marginRight() const;
@@ -29,14 +31,14 @@ public:
     
     // Setters
     
-    virtual void setRangeX(const float aMinX, const float aMaxX);
-    virtual void setCurrentX(const float aMinX, const float aMaxX);
-    virtual void setRangeY(const float aMinY, const float aMaxY);
+    virtual void setRangeX(const type_data aMinX, const type_data aMaxX);
+    virtual void setCurrentX(const type_data aMinX, const type_data aMaxX);
+    virtual void setRangeY(const type_data aMinY, const type_data aMaxY);
     
-    void setMinimumX(const float aMinX);
-    void setMaximumX(const float aMaxX);
-    void setMinimumY(const float aMinY);
-    void setMaximumY(const float aMaxY);
+    void setMinimumX(const type_data aMinX);
+    void setMaximumX(const type_data aMaxX);
+    void setMinimumY(const type_data aMinY);
+    void setMaximumY(const type_data aMaxY);
     
     void setMarginLeft(const qreal aMarginLeft);
     void setMarginRight(const qreal aMarginRight);
@@ -47,14 +49,11 @@ public:
 protected:
 	virtual void repaintGraph(const bool aAlsoPaintBackground) = 0;
 	
-    virtual qreal getXForValue(const float aValue, const bool aConstainResult = true);
-    virtual float getValueForX(const qreal x, const bool aConstainResult = true);
-    virtual qreal getYForValue(const float aValue, const bool aConstainResult = true);
-    virtual float getValueForY(const qreal y, const bool aConstainResult = true);
+    virtual qreal getXForValue(const type_data aValue, const bool aConstainResult = true);
+    virtual type_data getValueForX(const qreal x, const bool aConstainResult = true);
+    virtual qreal getYForValue(const type_data aValue, const bool aConstainResult = true);
+    virtual type_data getValueForY(const qreal y, const bool aConstainResult = true);
     
-    float valueForProportion(const float v1, const float valMin, const float valMax, const float Pmin, const float Pmax, const bool resultInBounds = true);
-    qreal valueForProportion(const qreal v1, const qreal valMin, const qreal valMax, const qreal Pmin, const qreal Pmax, const bool resultInBounds = true);
-	
 protected:
     qreal		mGraphWidth;
     qreal		mGraphHeight;
@@ -64,12 +63,22 @@ protected:
     qreal		mMarginTop;
     qreal		mMarginBottom;
     
-    float	mMinX;
-    float	mMaxX;
-    float	mMinY;
-    float	mMaxY;
+    type_data	mMinX;
+    type_data	mMaxX;
+    type_data	mMinY;
+    type_data	mMaxY;
     
-    float   mCurrentMinX;
-    float   mCurrentMaxX;
+    type_data   mCurrentMinX;
+    type_data   mCurrentMaxX;
 };
 
+template <typename T>
+T valueForProportion(const T value, const T valMin, const T valMax, const T Pmin, const T Pmax, const bool resultInBounds)
+{
+    T v2 = Pmin + (value - valMin) * (Pmax - Pmin) / (valMax - valMin);
+
+    if (resultInBounds)
+        v2 = qBound(Pmin,v2,Pmax);
+
+    return v2;
+}

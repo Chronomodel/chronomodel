@@ -4,8 +4,6 @@
 #include "MetropolisVariable.h"
 
 
-
-
 class MHVariable: public MetropolisVariable
 {
    // Q_OBJECT
@@ -18,12 +16,12 @@ public:
     MHVariable& copy(MHVariable const& origin);
     MHVariable& operator=(MHVariable const& origin);
 
-    float getCurrentAcceptRate();
+    double getCurrentAcceptRate();
     void saveCurrentAcceptRate();
     
     bool tryUpdate(const double x, const double rapportToTry);
     
-    QVector<float> acceptationForChain(const QList<ChainSpecs>& chains, int index);
+    QVector<double> acceptationForChain(const QList<ChainSpecs>& chains, int index);
     void generateGlobalRunAcceptation(const QList<ChainSpecs>& chains);
     
     void generateNumericalResults(const QList<ChainSpecs>& chains);
@@ -49,13 +47,13 @@ public:
     QVector<bool>* mAllAccepts;
     
     // Computed at the end as numerical result :
-    float mGlobalAcceptation;
+    double mGlobalAcceptation;
     
     // Buffer contenant tous les taux d'acceptation calculés (1 par batch)
     // On en affiche des sous-parties (correspondant aux chaines) dans la vue des résultats
     // A stocker dans les résultats!
     
-    QVector<float>* mHistoryAcceptRateMH;
+    QVector<double>* mHistoryAcceptRateMH;
     
     QString mProposal;
 };

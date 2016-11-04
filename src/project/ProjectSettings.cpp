@@ -4,11 +4,10 @@
 #include <QVariant>
 #include <cmath>
 
-
 ProjectSettings::ProjectSettings():
-mTmin(0),
-mTmax(0),
-mStep(1),
+mTmin(0.),
+mTmax(0.),
+mStep(1.),
 mStepForced(false)
 {
 
@@ -62,11 +61,11 @@ ProjectSettings::~ProjectSettings()
 ProjectSettings ProjectSettings::fromJson(const QJsonObject& json)
 {
     ProjectSettings settings;
-    settings.mTmin = (float) json.contains(STATE_SETTINGS_TMIN) ? json.value(STATE_SETTINGS_TMIN).toInt() : STATE_SETTINGS_TMIN_DEF;
-    settings.mTmax = (float) json.contains(STATE_SETTINGS_TMAX) ? json.value(STATE_SETTINGS_TMAX).toInt() : STATE_SETTINGS_TMAX_DEF;
+    settings.mTmin = (double) json.contains(STATE_SETTINGS_TMIN) ? json.value(STATE_SETTINGS_TMIN).toInt() : STATE_SETTINGS_TMIN_DEF;
+    settings.mTmax = (double) json.contains(STATE_SETTINGS_TMAX) ? json.value(STATE_SETTINGS_TMAX).toInt() : STATE_SETTINGS_TMAX_DEF;
     settings.mStep = json.contains(STATE_SETTINGS_STEP) ? json.value(STATE_SETTINGS_STEP).toDouble() : STATE_SETTINGS_STEP_DEF;
     settings.mStepForced = json.contains(STATE_SETTINGS_STEP_FORCED) ? json.value(STATE_SETTINGS_STEP_FORCED).toBool() : STATE_SETTINGS_STEP_FORCED_DEF;
-    
+    //settings.mProject = project;
     return settings;
 }
 
@@ -81,28 +80,28 @@ QJsonObject ProjectSettings::toJson() const
     return settings;
 }
 
-float ProjectSettings::getStep(const float tmin, const float tmax)
+double ProjectSettings::getStep(const double tmin, const double tmax)
 {
-    const float diff = tmax - tmin;
-    const float linearUntil = 10000.f;
+    const double diff = tmax - tmin;
+    const double linearUntil = 10000.;
     
-    if(diff <= linearUntil)
-        return 1;
+    if (diff <= linearUntil)
+        return 1.;
     else {
-        const float maxPts = 50000.f;
-        const float lambda = - log((maxPts - linearUntil)/maxPts) / linearUntil;
-        const float nbPts = maxPts * (1 - exp(-lambda * diff));
-        float step = diff / nbPts;
+        const double maxPts = 50000.;
+        const double lambda = - log((maxPts - linearUntil)/maxPts) / linearUntil;
+        const double nbPts = maxPts * (1. - exp(-lambda * diff));
+        double step = diff / nbPts;
         return step;
     }
 }
 
-float ProjectSettings::getTminFormated() const
+double ProjectSettings::getTminFormated() const
 {
    return qMin(DateUtils::convertToAppSettingsFormat(mTmin),DateUtils::convertToAppSettingsFormat(mTmax));
 }
 
-float ProjectSettings::getTmaxFormated() const
+double ProjectSettings::getTmaxFormated() const
 {
     return qMax(DateUtils::convertToAppSettingsFormat(mTmin),DateUtils::convertToAppSettingsFormat(mTmax));
 }

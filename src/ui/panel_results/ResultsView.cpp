@@ -1092,7 +1092,7 @@ void ResultsView::setFFTLength()
     mModel->setFFTLength(len);
 }
 
-float ResultsView::getBandwidth() const
+double ResultsView::getBandwidth() const
 {
     return mBandwidthUsed;
 }
@@ -1102,7 +1102,7 @@ void ResultsView::setBandwidth()
     qDebug() << "ResultsView::setBandwidth()";
     const QLocale locale;
     bool ok;
-    const float bandwidth = locale.toFloat(mBandwidthEdit->text(), &ok);
+    const double bandwidth = locale.toDouble(mBandwidthEdit->text(), &ok);
     if (!(bandwidth > 0 && bandwidth <= 100) || !ok)
         mBandwidthEdit->setText(locale.toString(bandwidth));
     
@@ -1114,7 +1114,7 @@ void ResultsView::setBandwidth()
     //emit updateScrollAreaRequested();
 }
 
-float ResultsView::getThreshold() const
+double ResultsView::getThreshold() const
 {
     return mThresholdUsed;
 }
@@ -1141,7 +1141,7 @@ void ResultsView::setThreshold()
 {
     qDebug() << "ResultsView::setThreshold()";
     const QLocale locale;
-    const float hpd = locale.toFloat(mHPDEdit->text());
+    const double hpd = locale.toDouble(mHPDEdit->text());
     if(hpd != getThreshold()) {
         mThresholdUsed = hpd;
         mModel->setThreshold(hpd);
@@ -1152,19 +1152,19 @@ void ResultsView::setThreshold()
 void ResultsView::unfoldToggle()
 {
     
-    float graphInit = 0.;
-    float graphTarget = 0.;
+    qreal graphInit = 0.;
+    qreal graphTarget = 0.;
     
     if (mStack->currentWidget() == mEventsScrollArea) {
         
         // number of Items increase
         if (mUnfoldBut->isChecked()) {
-            graphInit = (float) mModel->mNumberOfEvents;
-            graphTarget = (float) mModel->mNumberOfEvents + mModel->mNumberOfDates;
+            graphInit = (qreal) mModel->mNumberOfEvents;
+            graphTarget = (qreal) mModel->mNumberOfEvents + mModel->mNumberOfDates;
             
         } else {
-            graphInit = (float) mModel->mNumberOfEvents + mModel->mNumberOfDates;
-            graphTarget = (float) mModel->mNumberOfEvents;
+            graphInit = (qreal) mModel->mNumberOfEvents + mModel->mNumberOfDates;
+            graphTarget = (qreal) mModel->mNumberOfEvents;
         }
             
         mTabEventsIndex = (int)((mTabEventsIndex*mNumberOfGraph / graphInit) * graphTarget/mNumberOfGraph);
@@ -1173,22 +1173,22 @@ void ResultsView::unfoldToggle()
         
             // number of Items increase
             if (mUnfoldBut->isChecked()) {
-                graphInit = (float) mModel->mNumberOfPhases;
+                graphInit = (qreal) mModel->mNumberOfPhases;
                 // number of Items increase
                 if (mShowDataUnderPhasesCheck->isVisible() && mShowDataUnderPhasesCheck->isChecked())
-                    graphTarget = (float) (mModel->mNumberOfPhases + mModel->mNumberOfEvents + mModel->mNumberOfDates) ;
+                    graphTarget = (qreal) (mModel->mNumberOfPhases + mModel->mNumberOfEvents + mModel->mNumberOfDates) ;
                 else
-                    graphTarget = (float) (mModel->mNumberOfPhases + mModel->mNumberOfEvents) ;
+                    graphTarget = (qreal) (mModel->mNumberOfPhases + mModel->mNumberOfEvents) ;
                 
             
             } else {
                 if (mShowDataUnderPhasesCheck->isVisible() && mShowDataUnderPhasesCheck->isChecked())
-                    graphInit = (float) (mModel->mNumberOfPhases + mModel->mNumberOfEvents + mModel->mNumberOfDates) ;
+                    graphInit = (qreal) (mModel->mNumberOfPhases + mModel->mNumberOfEvents + mModel->mNumberOfDates) ;
                 else
-                    graphInit = (float) (mModel->mNumberOfPhases + mModel->mNumberOfEvents) ;
+                    graphInit = (qreal) (mModel->mNumberOfPhases + mModel->mNumberOfEvents) ;
                 
                 
-                graphTarget =  (float) (mModel->mNumberOfPhases);
+                graphTarget =  (qreal) (mModel->mNumberOfPhases);
             }
         
        mTabPhasesIndex = (int)((mTabPhasesIndex*mNumberOfGraph / graphInit) * graphTarget/mNumberOfGraph);
@@ -1308,7 +1308,7 @@ void ResultsView::generateCurves(const QList<GraphViewResults*>& listGraphs)
 
     // With variable eSigma, we look for mResultMaxVariance in the curve named "Post Distrib All Chains"
     if(variable == GraphViewResults::eSigma) {
-        mResultMaxVariance = 0;
+        mResultMaxVariance = 0.;
 
         QList<GraphViewResults*>::const_iterator constIter;
         constIter = listGraphs.cbegin();
@@ -1520,17 +1520,17 @@ void ResultsView::updateZoomX()
     int zoom = mXSlider->value();
     
     // Ici, 10 correspond à la différence minimale de valeur (quand le zoom est le plus fort)
-    float minProp = 10.f / (mResultMaxX - mResultMinX);
-    float zoomProp = (100.f - zoom) / 100.f;
+    double minProp = 10. / (mResultMaxX - mResultMinX);
+    double zoomProp = (100. - zoom) / 100.;
     if(zoomProp < minProp)
         zoomProp = minProp;
     zoom = 100 * (1 - zoomProp);
     
-    mResultZoomX = (float)zoom;
-    float span = (mResultMaxX - mResultMinX)* (100.f-mResultZoomX)/100.f;
-    float mid = (mResultCurrentMaxX + mResultCurrentMinX)/2.f;
-    float curMin = mid - span/2;
-    float curMax = mid + span/2;
+    mResultZoomX = (double)zoom;
+    double span = (mResultMaxX - mResultMinX)* (100.f-mResultZoomX)/100.;
+    double mid = (mResultCurrentMaxX + mResultCurrentMinX)/2.;
+    double curMin = mid - span/2.;
+    double curMax = mid + span/2.;
     if (curMin < mResultMinX) {
         curMin = mResultMinX;
         curMax = curMin + span;
@@ -1543,7 +1543,7 @@ void ResultsView::updateZoomX()
     mResultCurrentMinX = ceil(curMin);
     mResultCurrentMaxX = floor(curMax);
     
-    if(zoom == 0){
+    if (zoom == 0) {
         mResultCurrentMinX = mResultMinX;
         mResultCurrentMaxX = mResultMaxX;
     }
@@ -1557,7 +1557,7 @@ void ResultsView::updateZoomX()
 }
 
 // signal from the Ruler
-void ResultsView::updateScroll(const float min, const float max)
+void ResultsView::updateScroll(const double min, const double max)
 {
     // --------------------------------------------------
     //  Find new current min & max
@@ -1580,15 +1580,15 @@ void ResultsView::editCurrentMinX()
     // --------------------------------------------------
     QString str = mCurrentXMinEdit->text();
     bool isNumber;
-    float value = str.toFloat(&isNumber);
+    double value = str.toDouble(&isNumber);
     if (isNumber) {
 
-        float current = qBound(mResultMinX, value, mResultCurrentMaxX);
+        double current = qBound(mResultMinX, value, mResultCurrentMaxX);
         if (current == mResultCurrentMaxX) {
             current = mResultMinX;
         }
         mResultCurrentMinX = current;
-        mResultZoomX = (mResultCurrentMaxX - mResultCurrentMinX)/ (mResultMaxX - mResultMinX) * 100;
+        mResultZoomX = (mResultCurrentMaxX - mResultCurrentMinX)/ (mResultMaxX - mResultMinX) * 100.;
         
         // --------------------------------------------------
         //  Update other elements
@@ -1610,16 +1610,16 @@ void ResultsView::editCurrentMaxX()
     // --------------------------------------------------
     QString str = mCurrentXMaxEdit->text();
     bool isNumber;
-    float value = str.toFloat(&isNumber);
+    double value = str.toDouble(&isNumber);
     
     if (isNumber) {
 
-        float current = qBound(mResultCurrentMinX, value, mResultMaxX);
+        double current = qBound(mResultCurrentMinX, value, mResultMaxX);
         if (current == mResultCurrentMinX)
             current = mResultMaxX;
         
         mResultCurrentMaxX = current;
-        mResultZoomX = (mResultCurrentMaxX - mResultCurrentMinX)/ (mResultMaxX - mResultMinX)* 100;
+        mResultZoomX = (mResultCurrentMaxX - mResultCurrentMinX)/ (mResultMaxX - mResultMinX)* 100.;
         
         // --------------------------------------------------
         //  Update other elements
@@ -1653,15 +1653,15 @@ void ResultsView::updateGraphsZoomX()
     //  Store zoom values
     // --------------------------------------------------
     int tabIdx = mTabs->currentIndex();
-    mZooms[tabIdx] = QPair<float, float>(mResultCurrentMinX, mResultCurrentMaxX);
+    mZooms[tabIdx] = QPair<double, double>(mResultCurrentMinX, mResultCurrentMaxX);
 }
 
 #pragma mark Zoom Y
 void ResultsView::updateScaleY(int value)
 {
-    const float min = 70;
-    const float max = 1070;
-    const float prop = value / 100.f;
+    const double min = 70;
+    const double max = 1070;
+    const double prop = value / 100.;
     mGraphsH = min + prop * (max - min);
     
     updateGraphsLayout();

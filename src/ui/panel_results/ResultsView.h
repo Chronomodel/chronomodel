@@ -6,6 +6,7 @@
 #include "MCMCLoopMain.h"
 #include "AxisTool.h"
 #include "GraphViewResults.h"
+#include "AppSettings.h"
 
 class QStackedWidget;
 class QScrollArea;
@@ -40,12 +41,12 @@ public:
     ResultsView(QWidget* parent = 0, Qt::WindowFlags flags = 0);
     ~ResultsView();
     
-    float mResultZoomX;
-    float mResultCurrentMinX;
-    float mResultCurrentMaxX;
-    float mResultMinX;
-    float mResultMaxX;
-    float mResultMaxVariance;
+    double mResultZoomX;
+    double mResultCurrentMinX;
+    double mResultCurrentMaxX;
+    double mResultMinX;
+    double mResultMaxX;
+    double mResultMaxVariance;
     bool mHasPhases;
     
     Model* mModel;
@@ -53,9 +54,9 @@ public:
     void doProjectConnections(Project* project);
 
     void updateFormatSetting(Model* model, const AppSettings* appSet);
-    float getBandwidth() const;
+    double getBandwidth() const;
     int getFFTLength() const;
-    float getThreshold() const;
+    double getThreshold() const;
 
 
 protected:
@@ -94,7 +95,7 @@ private slots:
     
     void settingChange();
     void updateZoomX(); // Connected to slider signals
-    void updateScroll(const float min, const float max); // Connected to ruler signals
+    void updateScroll(const double min, const double max); // Connected to ruler signals
     void editCurrentMinX(); // Connected to min edit signals
     void editCurrentMaxX(); // Connected to max edit signals
     void updateZoomEdit();
@@ -235,12 +236,12 @@ private:
 
     int mComboH;
     
-    QMap<int, QPair<float, float>> mZooms;
+    QMap<int, QPair<double, double>> mZooms;
 
     //propreties
     GraphViewResults::TypeGraph mCurrentTypeGraph;
-    float mBandwidthUsed;
-    float mThresholdUsed;
+    double mBandwidthUsed;
+    double mThresholdUsed;
     int mNumberOfGraph;
 };
 

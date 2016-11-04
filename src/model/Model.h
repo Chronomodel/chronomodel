@@ -4,12 +4,18 @@
 #include "ProjectSettings.h"
 #include "AppSettings.h"
 #include "MCMCSettings.h"
+//#include "Project.h"
+
+#include "MHVariable.h"
 #include "Event.h"
 #include "Phase.h"
 #include "EventConstraint.h"
 #include "PhaseConstraint.h"
 
+
 #include <QJsonObject>
+
+class Project;
 
 
 class Model:public QObject
@@ -19,8 +25,6 @@ public:
     Model();
     virtual ~Model();
 
-    QJsonObject toJson() const;
-    
     void generateModelLog();
     QString getModelLog() const;
     
@@ -36,8 +40,10 @@ public:
     
     void updateFormatSettings(const AppSettings *appSet);
 
-
+    QJsonObject toJson() const;
     void fromJson( const QJsonObject& json);
+    void setProject(Project *project);
+
     void updateDesignFromJson( const QJsonObject& json);
 
     bool isValid();
@@ -49,17 +55,17 @@ public:
     // Only trace needed for this :
     void generateCorrelations(const QList<ChainSpecs>& chains);
 
-    void initThreshold(const float threshold);
+    void initThreshold(const double threshold);
     double getThreshold() const ;
-    void initDensities(const int fftLength, const float bandwidth, const float threshold);
-    void updateDensities(const int fftLength, const float bandwidth, const float threshold);
+    void initDensities(const int fftLength, const double bandwidth, const double threshold);
+    void updateDensities(const int fftLength, const double bandwidth, const double threshold);
 
     // Computed from trace using FFT :
-    void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, float bandwidth);
+    void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double bandwidth);
     // Trace and Posterior density needed for this :
     //void generateCredibilityAndHPD(const QList<ChainSpecs>& chains,const double threshold);
-    void generateCredibility(const float threshold);
-    void generateHPD(const float threshold);
+    void generateCredibility(const double threshold);
+    void generateHPD(const double threshold);
     // Trace and Posterior density needed for this :
     void generateNumericalResults(const QList<ChainSpecs>& chains);
     
@@ -70,6 +76,7 @@ public:
     
 public:
     ProjectSettings mSettings;
+    Project *mProject;
     MCMCSettings mMCMCSettings;
     
     QList<Event*> mEvents;
@@ -95,17 +102,17 @@ public:
     int mNumberOfDatesInAllPhases;
 
 public slots:
-    void setThreshold(const float threshold);
-    void setBandwidth(const float bandwidth);
-    void setFFTLength(const float FFTLength);
+    void setThreshold(const double threshold);
+    void setBandwidth(const double bandwidth);
+    void setFFTLength(const int FFTLength);
 
 signals:
     void newCalculus();
 
 private:
      int mFFTLength;
-     float mBandwidth;
-     float mThreshold;
+     double mBandwidth;
+     double mThreshold;
 };
 
 #endif

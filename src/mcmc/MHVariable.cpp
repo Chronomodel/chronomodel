@@ -11,7 +11,7 @@ mGlobalAcceptation(0),
 mHistoryAcceptRateMH(0)
 {
   mAllAccepts = new (std::nothrow) QVector<bool>();
-  mHistoryAcceptRateMH = new (std::nothrow) QVector<float>();
+  mHistoryAcceptRateMH = new (std::nothrow) QVector<double>();
 
 }
 
@@ -89,30 +89,26 @@ MHVariable& MHVariable::operator=( MHVariable const& origin)
     return *this;
 }
 
-float MHVariable::getCurrentAcceptRate()
+double MHVariable::getCurrentAcceptRate()
 {
-    float sum = 0.f;
+    double sum (0.);
 
-    sum = std::accumulate(mLastAccepts.begin(), mLastAccepts.end(), sum,[](float s, bool a){return s+(a ? 1.f : 0.f);}); //#include <numeric>
+    sum = std::accumulate(mLastAccepts.begin(), mLastAccepts.end(), sum,[](double s, double a){return s+(a ? 1.f : 0.f);}); //#include <numeric>
 
-   /*for (int i=0; i<mLastAccepts.size(); ++i)
-            sum += mLastAccepts.at(i) ? 1.f : 0.f;
-    */
-
-    sum = sum / (float)mLastAccepts.size();
+    sum = sum / (double)mLastAccepts.size();
 
     return sum ;
 }
 
 void MHVariable::saveCurrentAcceptRate()
 {
-    const float rate = 100.f * getCurrentAcceptRate();
+    const double rate = 100. * getCurrentAcceptRate();
     mHistoryAcceptRateMH->push_back(rate);
 }
 
-QVector<float> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains, int index)
+QVector<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains, int index)
 {
-    QVector<float> accept(0);
+    QVector<double> accept(0);
     int shift = 0;
     const int reserveSize = (int) ceil(chains.at(index).mNumBurnIter + (chains.at(index).mBatchIndex * chains.at(index).mNumBatchIter) + chains.at(index).mNumRunIter / chains.at(index).mThinningInterval);
 
@@ -128,7 +124,7 @@ QVector<float> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains, 
             //std::copy(from_vector.begin(), from_vector.end(), to_vector.begin());
 
             for(int j=0; j<chainSize; ++j)
-                accept.append((float)mHistoryAcceptRateMH->at(shift + j));
+                accept.append(mHistoryAcceptRateMH->at(shift + j));
 
             break;
         }
@@ -140,8 +136,8 @@ QVector<float> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains, 
 
 void MHVariable::generateGlobalRunAcceptation(const QList<ChainSpecs> &chains)
 {
-    float accepted = 0;
-    float acceptsLength = 0;
+    double accepted = 0.;
+    double acceptsLength = 0.;
     int shift = 0;
 
     for(int i=0; i<chains.size(); ++i) {
@@ -200,7 +196,7 @@ QDataStream &operator>>( QDataStream &stream, MHVariable &data )
     if (data.mHistoryAcceptRateMH)
         data.mHistoryAcceptRateMH->clear();
     else
-        data.mHistoryAcceptRateMH = new QVector<float>();
+        data.mHistoryAcceptRateMH = new QVector<double>();
     stream >> *(data.mHistoryAcceptRateMH);
 
     stream >> data.mSigmaMH;

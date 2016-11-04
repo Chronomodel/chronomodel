@@ -43,7 +43,7 @@ public:
     static QString phaseResultsHTML(const Phase* p);
     static QString constraintResultsHTML(const PhaseConstraint* p);
 
-    static short HPDOutsideSudyPeriod(const QMap<float, float> &hpd, const Model* model);
+    static short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const Model* model);
 };
 
 // These 2 global functions are used to sort events and phases lists in result view

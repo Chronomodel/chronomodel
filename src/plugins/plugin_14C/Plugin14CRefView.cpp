@@ -31,13 +31,13 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
 {
     QLocale locale = QLocale();
     GraphViewRefAbstract::setDate(date, settings);
-    float tminDisplay;
-    float tmaxDisplay;
+    double tminDisplay;
+    double tmaxDisplay;
    
-    const float t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
-    const float t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
-    const float t3 = date.getFormatedTminCalib();
-    const float t4 = date.getFormatedTmaxCalib();
+    const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
+    const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
+    const double t3 = date.getFormatedTminCalib();
+    const double t4 = date.getFormatedTmaxCalib();
 
     tminDisplay = qMin(t1,qMin(t2,t3));
     tmaxDisplay = qMax(t1,qMax(t2,t4));
@@ -52,18 +52,18 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
     mGraph->setFormatFunctX(0);
     
     if (!date.isNull())  {
-        float age = date.mData.value(DATE_14C_AGE_STR).toDouble();
-        float error = date.mData.value(DATE_14C_ERROR_STR).toDouble();
-        const float delta_r = date.mData.value(DATE_14C_DELTA_R_STR).toDouble();
-        const float delta_r_error = date.mData.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
+        double age = date.mData.value(DATE_14C_AGE_STR).toDouble();
+        double error = date.mData.value(DATE_14C_ERROR_STR).toDouble();
+        const double delta_r = date.mData.value(DATE_14C_DELTA_R_STR).toDouble();
+        const double delta_r_error = date.mData.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
         const QString ref_curve = date.mData.value(DATE_14C_REF_CURVE_STR).toString().toLower();
         
         // ----------------------------------------------
         //  Reference curve
         // ----------------------------------------------
         
-        const float tminRef = date.getFormatedTminRefCurve();
-        const float tmaxRef = date.getFormatedTmaxRefCurve();
+        const double tminRef = date.getFormatedTminRefCurve();
+        const double tmaxRef = date.getFormatedTmaxRefCurve();
 
         const QColor color2(150, 150, 150);
         
@@ -101,19 +101,19 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             zone.mText = tr("Outside reference area");
             mGraph->addZone(zone);
         }
-        const float t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
-        float yMin = plugin->getRefValueAt(date.mData, t0);
-        float yMax = yMin;
+        const double t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
+        double yMin = plugin->getRefValueAt(date.mData, t0);
+        double yMax = yMin;
 
-        QMap<float, float> curveG;
-        QMap<float, float> curveG95Sup;
-        QMap<float, float> curveG95Inf;
+        QMap<double, double> curveG;
+        QMap<double, double> curveG95Sup;
+        QMap<double, double> curveG95Inf;
 
-        for (float t=tminDisplay; t<=tmaxDisplay; ++t) {
+        for (double t=tminDisplay; t<=tmaxDisplay; ++t) {
             if (t>tminRef && t<tmaxRef) {
-                const float tRaw = DateUtils::convertFromAppSettingsFormat(t);
-                const float value = plugin->getRefValueAt(date.mData, tRaw);
-                const float error = plugin->getRefErrorAt(date.mData, tRaw) * 1.96;
+                const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
+                const double value = plugin->getRefValueAt(date.mData, tRaw);
+                const double error = plugin->getRefErrorAt(date.mData, tRaw) * 1.96;
                 
                 curveG[t] = value;
                 curveG95Sup[t] = value + error;
@@ -176,10 +176,10 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         // 5000 pts are used on vertical measure
         // because the y scale auto adjusts depending on x zoom.
         // => the visible part of the measure may be very reduced !
-        float step = (yMax - yMin) / 5000.f;
-        QMap<float,float> measureCurve;
-        for (float t = yMin; t<yMax; t += step) {
-            const float v = exp(-0.5f * pow((age - t) / error, 2));
+        double step = (yMax - yMin) / 5000.;
+        QMap<double, double> measureCurve;
+        for (double t = yMin; t<yMax; t += step) {
+            const double v = exp(-0.5f * pow((age - t) / error, 2));
             measureCurve[t] = v;
         }
         measureCurve = normalize_map(measureCurve);
@@ -216,10 +216,10 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             // 5000 pts are used on vertical measure
             // because the y scale auto adjusts depending on x zoom.
             // => the visible part of the measure may be very reduced !
-            step = (yMax - yMin) / 5000.f;
-            QMap<float,float> deltaRCurve;
-            for (float t = yMin; t<yMax; t += step) {
-                const float v = exp(-0.5f * pow((age - t) / error, 2));
+            step = (yMax - yMin) / 5000.;
+            QMap<double, double> deltaRCurve;
+            for (double t = yMin; t<yMax; t += step) {
+                const double v = exp(-0.5 * pow((age - t) / error, 2));
                 deltaRCurve[t] = v;
                 //curveDeltaR.mData[t] = v;
             }
@@ -233,24 +233,24 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         // ----------------------------------------------
         //  Sub-dates curves (combination)
         // ----------------------------------------------
-        QList<QMap<float,float>> subDatesCurve;
+        QList<QMap<double, double>> subDatesCurve;
         for (int i=0; i<date.mSubDates.size(); ++i) {
             const Date& d = date.mSubDates.at(i);
             
             GraphCurve curveSubMeasure;
             curveSubMeasure.mName = "Sub-Measure " + QString::number(i);
             
-            float sub_age = d.mData.value(DATE_14C_AGE_STR).toDouble();
-            float sub_error = d.mData.value(DATE_14C_ERROR_STR).toDouble();
-            float sub_delta_r = d.mData.value(DATE_14C_DELTA_R_STR).toDouble();
-            float sub_delta_r_error = d.mData.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
+            double sub_age = d.mData.value(DATE_14C_AGE_STR).toDouble();
+            double sub_error = d.mData.value(DATE_14C_ERROR_STR).toDouble();
+            double sub_delta_r = d.mData.value(DATE_14C_DELTA_R_STR).toDouble();
+            double sub_delta_r_error = d.mData.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
     qDebug()<<"Plugin14CRefView::SetDate()"<<sub_age<<sub_error<<sub_delta_r<<sub_delta_r_error;
             // Apply reservoir effect
             sub_age = (sub_age - sub_delta_r);
             sub_error = sqrt(sub_error * sub_error + sub_delta_r_error * sub_delta_r_error);
             
-            yMin = qMin(yMin, sub_age - sub_error * 1.96f);
-            yMax = qMax(yMax, sub_age + sub_error * 1.96f);
+            yMin = qMin(yMin, sub_age - sub_error * 1.96);
+            yMax = qMax(yMax, sub_age + sub_error * 1.96);
             
             QColor penColor = QColor(167, 126, 73);
             QColor brushColor = QColor(167, 126, 73);
@@ -265,10 +265,10 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             // 5000 pts are used on vertical measure
             // because the y scale auto adjusts depending on x zoom.
             // => the visible part of the measure may be very reduced !
-            const float step = (yMax - yMin) / 1000.f;
-            QMap<float,float> subCurve;
-            for (float t = yMin; t<yMax; t += step) {
-                const float v = exp(-0.5 * pow((sub_age - t) / sub_error, 2));
+            const double step = (yMax - yMin) / 1000.;
+            QMap<double, double> subCurve;
+            for (double t = yMin; t<yMax; t += step) {
+                const double v = exp(-0.5 * pow((sub_age - t) / sub_error, 2));
                 subCurve.insert(t, v);
             }
             //subDatesCurve[i] = normalize_map(subDatesCurve.at(i));
@@ -319,7 +319,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
     }
 }
 
-void Plugin14CRefView::zoomX(const float min, const float max)
+void Plugin14CRefView::zoomX(const double min, const double max)
 {
     mGraph->zoomX(min, max);
 }

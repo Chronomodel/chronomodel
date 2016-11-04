@@ -3,6 +3,8 @@
 
 #include <QWidget>
 #include "MCMCLoopMain.h"
+#include "AppSettings.h"
+#include "Project.h"
 
 class QStackedWidget;
 class QTextEdit;
@@ -11,7 +13,7 @@ class QTabWidget;
 class ModelView;
 class ResultsView;
 class Event;
-class Project;
+//class Project;
 
 
 class ProjectView: public QWidget

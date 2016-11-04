@@ -710,9 +710,12 @@ bool Project::saveProjectToFile()
         //qDebug() << "Nothing new to save in project model";
 #endif
     }
+
+    // TODO insérer sauvegarde de  la calibration
+
    if (mSaveData) {
-       if (!mModel->mChains.isEmpty()) // keep to the future version
-        {
+       // keep to the future version
+       if (!mModel->mChains.isEmpty()) {
             qDebug() << "Saving project results in "<<mProjectFileDir + "/" + mProjectFileName + ".dat";
             mModel->saveToFile(mProjectFileDir + "/" + mProjectFileName + ".dat");
         }
@@ -2477,7 +2480,7 @@ void Project::run()
         message.exec();
     }
     if (modelOk) {
-        MCMCLoopMain loop(mModel);
+        MCMCLoopMain loop(mModel, this);
         MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::Sheet);
         
         // --------------------------------------------------------------------

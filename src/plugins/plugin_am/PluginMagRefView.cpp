@@ -31,13 +31,13 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
     QLocale locale=QLocale();
     GraphViewRefAbstract::setDate(date, settings);
 
-    float tminDisplay;
-    float tmaxDisplay;
+    double tminDisplay;
+    double tmaxDisplay;
     {
-        const float t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
-        const float t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
-        const float t3 = date.getFormatedTminCalib();
-        const float t4 = date.getFormatedTmaxCalib();
+        const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
+        const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
+        const double t3 = date.getFormatedTminCalib();
+        const double t4 = date.getFormatedTmaxCalib();
 
         tminDisplay = qMin(t1,qMin(t2,t3));
         tmaxDisplay = qMax(t1,qMax(t2,t4));
@@ -51,32 +51,30 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
     mGraph->showInfos(true);
     mGraph->setFormatFunctX(0);
     
-    if(!date.isNull())
-    {
+    if (!date.isNull()) {
         bool is_inc = date.mData.value(DATE_AM_IS_INC_STR).toBool();
         bool is_dec = date.mData.value(DATE_AM_IS_DEC_STR).toBool();
         bool is_int = date.mData.value(DATE_AM_IS_INT_STR).toBool();
         
-        float inc = date.mData.value(DATE_AM_INC_STR).toDouble();
-        float dec = date.mData.value(DATE_AM_DEC_STR).toDouble();
-        float intensity = date.mData.value(DATE_AM_INTENSITY_STR).toDouble();
-        float alpha = date.mData.value(DATE_AM_ERROR_STR).toDouble();
+        double inc = date.mData.value(DATE_AM_INC_STR).toDouble();
+        double dec = date.mData.value(DATE_AM_DEC_STR).toDouble();
+        double intensity = date.mData.value(DATE_AM_INTENSITY_STR).toDouble();
+        double alpha = date.mData.value(DATE_AM_ERROR_STR).toDouble();
         QString ref_curve = date.mData.value(DATE_AM_REF_CURVE_STR).toString().toLower();
         
         // ----------------------------------------------
         //  Reference curve
         // ----------------------------------------------
 
-        float tminRef = date.getFormatedTminRefCurve();
-        float tmaxRef = date.getFormatedTmaxRefCurve();
+        double tminRef = date.getFormatedTminRefCurve();
+        double tmaxRef = date.getFormatedTmaxRefCurve();
 
         QColor color2(150, 150, 150);
         
         PluginMag* plugin = (PluginMag*)date.mPlugin;
         const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
         
-        if(curve.mDataMean.isEmpty())
-        {
+        if (curve.mDataMean.isEmpty()) {
             GraphZone zone;
             zone.mColor = Qt::gray;
             zone.mColor.setAlpha(25);
@@ -97,7 +95,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
             mGraph->addZone(zone);
         }
 
-        if(tmaxRef < tmaxDisplay){
+        if (tmaxRef < tmaxDisplay) {
             GraphZone zone;
             zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(35);
@@ -107,21 +105,19 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
             mGraph->addZone(zone);
         }
 
-        const float t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
-        float yMin = plugin->getRefValueAt(date.mData, t0);
-        float yMax = yMin;
+        const double t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
+        double yMin = plugin->getRefValueAt(date.mData, t0);
+        double yMax = yMin;
 
-        QMap<float, float> curveG;
-        QMap<float, float> curveG95Sup;
-        QMap<float, float> curveG95Inf;
+        QMap<double, double> curveG;
+        QMap<double, double> curveG95Sup;
+        QMap<double, double> curveG95Inf;
 
-        for(float t=tminDisplay; t<=tmaxDisplay; ++t)
-        {
-            if(t>tminRef && t<tmaxRef)
-            {
-                const float tRaw = DateUtils::convertFromAppSettingsFormat(t);
-                const float value = plugin->getRefValueAt(date.mData, tRaw);
-                const float error = plugin->getRefErrorAt(date.mData, tRaw) * 1.96;
+        for (double t=tminDisplay; t<=tmaxDisplay; ++t) {
+            if (t>tminRef && t<tmaxRef)  {
+                const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
+                const double value = plugin->getRefValueAt(date.mData, tRaw);
+                const double error = plugin->getRefErrorAt(date.mData, tRaw) * 1.96;
 
                 curveG[t] = value;
                 curveG95Sup[t] = value + error;
@@ -164,8 +160,8 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         // ----------------------------------------------
         //  Measure curve
         // ----------------------------------------------
-        float error = 0.f;
-        float avg = 0.f;
+        double error = 0.;
+        double avg = 0.;
         if(is_inc)
         {
             avg = inc;
@@ -184,8 +180,8 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         
         yMin = qMin(yMin, avg - error);
         yMax = qMax(yMax, avg + error);
-        yMin = yMin - 0.05f * (yMax - yMin);
-        yMax = yMax + 0.05f * (yMax - yMin);
+        yMin = yMin - 0.05 * (yMax - yMin);
+        yMax = yMax + 0.05 * (yMax - yMin);
         
         mGraph->setRangeY(yMin, yMax);
         
@@ -207,22 +203,22 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         // 5000 pts are used on vertical measure
         // because the y scale auto adjusts depending on x zoom.
         // => the visible part of the measure may be very reduced !
-        const float yStep = (yMax - yMin) / 5000.f;
-        QMap<float,float> measureCurve;
-        for(float t=yMin; t<yMax; t+=yStep)
+        const double yStep = (yMax - yMin) / 5000.;
+        QMap<double,double> measureCurve;
+        for(double t=yMin; t<yMax; t+=yStep)
         {
-            float v = 0.f;
+            double v = 0.f;
             if(is_inc)
             {
-                v = exp(-0.5f * pow((t - inc) / error, 2.f));
+                v = exp(-0.5 * pow((t - inc) / error, 2.));
             }
             else if(is_dec)
             {
-                v = exp(-0.5f * pow((t - dec) / error, 2));
+                v = exp(-0.5 * pow((t - dec) / error, 2));
             }
             else if(is_int)
             {
-                v = exp(-0.5f * pow((t - intensity) / error, 2));
+                v = exp(-0.5 * pow((t - intensity) / error, 2));
             }
             //curveMeasure.mData[t] = v;
             measureCurve[t] = v;
@@ -281,7 +277,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
     }
 }
 
-void PluginMagRefView::zoomX(const float min, const float max)
+void PluginMagRefView::zoomX(const double min, const double max)
 {
     mGraph->zoomX(min, max);
 }

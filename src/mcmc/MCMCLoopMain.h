@@ -2,14 +2,17 @@
 #define MCMCLOOPMAIN_H
 
 #include "MCMCLoop.h"
-#include "Model.h"
+//#include "Model.h"
+//#include "Project.h"
 
+class Project;
+class Model;
 
 class MCMCLoopMain: public MCMCLoop
 {
     Q_OBJECT
 public:
-    MCMCLoopMain(Model* model);
+    MCMCLoopMain(Model* model, Project* project);
     ~MCMCLoopMain();
     
 protected:

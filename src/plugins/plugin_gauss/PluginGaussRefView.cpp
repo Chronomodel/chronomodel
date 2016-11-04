@@ -31,13 +31,13 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
     QLocale locale = QLocale();
     GraphViewRefAbstract::setDate(date, settings);
     
-    const float t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
-    const float t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
-    const float t3 = date.getFormatedTminCalib();
-    const float t4 = date.getFormatedTmaxCalib();
+    const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
+    const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
+    const double t3 = date.getFormatedTminCalib();
+    const double t4 = date.getFormatedTmaxCalib();
 
-    float  tminDisplay = qMin(t1,qMin(t2,t3));
-    float  tmaxDisplay = qMax(t1,qMax(t2,t4));
+    double  tminDisplay = qMin(t1,qMin(t2,t3));
+    double  tmaxDisplay = qMax(t1,qMax(t2,t4));
     
 
     mGraph->setRangeX(tminDisplay, tmaxDisplay);
@@ -49,11 +49,11 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
     mGraph->setFormatFunctX(0);
     
     if(!date.isNull()) {
-        const float age = date.mData.value(DATE_GAUSS_AGE_STR).toDouble();
-        const float error = date.mData.value(DATE_GAUSS_ERROR_STR).toDouble();
-        const float a = date.mData.value(DATE_GAUSS_A_STR).toDouble();
-        const float b = date.mData.value(DATE_GAUSS_B_STR).toDouble();
-        const float c = date.mData.value(DATE_GAUSS_C_STR).toDouble();
+        const double age = date.mData.value(DATE_GAUSS_AGE_STR).toDouble();
+        const double error = date.mData.value(DATE_GAUSS_ERROR_STR).toDouble();
+        const double a = date.mData.value(DATE_GAUSS_A_STR).toDouble();
+        const double b = date.mData.value(DATE_GAUSS_B_STR).toDouble();
+        const double c = date.mData.value(DATE_GAUSS_C_STR).toDouble();
         const QString mode = date.mData.value(DATE_GAUSS_MODE_STR).toString();
         const QString ref_curve = date.mData.value(DATE_GAUSS_CURVE_STR).toString();
         
@@ -61,25 +61,25 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
         //  Reference curve
         // ----------------------------------------------
 
-        const float tminRef = date.getFormatedTminRefCurve();
-        const float tmaxRef = date.getFormatedTmaxRefCurve();
+        const double tminRef = date.getFormatedTminRefCurve();
+        const double tmaxRef = date.getFormatedTmaxRefCurve();
 
         GraphCurve curve;
         curve.mName = "Reference";
         curve.mPen.setColor(Painting::mainColorDark);
         curve.mIsHisto = false;
         
-        float yMin = tminDisplay;
-        float yMax = tmaxDisplay;
+        double yMin = tminDisplay;
+        double yMax = tmaxDisplay;
         
         if(mode == DATE_GAUSS_MODE_NONE){
           // nothing to do
             
         } else if (mode == DATE_GAUSS_MODE_EQ) {
-            QMap<float,float> refCurve;
+            QMap<double,double> refCurve;
             
-            for(float t=tminDisplay; t<=tmaxDisplay; t+=mSettings.mStep) {
-                const float tRaw = DateUtils::convertFromAppSettingsFormat(t);
+            for(double t=tminDisplay; t<=tmaxDisplay; t+=mSettings.mStep) {
+                const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
                 refCurve[t] = a * tRaw * tRaw + b * tRaw + c;
             }
             curve.mData = refCurve;
@@ -125,19 +125,19 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                 mGraph->addZone(zone);
             }
 
-            const float t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
+            const double t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
             yMin = plugin->getRefValueAt(date.mData, t0);
             yMax = yMin;
 
-            QMap<float, float> curveG;
-            QMap<float, float> curveG95Sup;
-            QMap<float, float> curveG95Inf;
+            QMap<double, double> curveG;
+            QMap<double, double> curveG95Sup;
+            QMap<double, double> curveG95Inf;
             
-            for(float t=tminDisplay; t<=tmaxDisplay; ++t) {
+            for(double t=tminDisplay; t<=tmaxDisplay; ++t) {
                 if (t > tminRef && t < tmaxRef) {
-                    const float tRaw = DateUtils::convertFromAppSettingsFormat(t);
-                    const float value = plugin->getRefValueAt(date.mData, tRaw);
-                    const float error = plugin->getRefErrorAt(date.mData, tRaw, mode) * 1.96;
+                    const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
+                    const double value = plugin->getRefValueAt(date.mData, tRaw);
+                    const double error = plugin->getRefErrorAt(date.mData, tRaw, mode) * 1.96;
 
                     curveG[t] = value;
                     curveG95Sup[t] = value + error;
@@ -198,11 +198,11 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             // 5000 pts are used on vertical measure
             // because the y scale auto adjusts depending on x zoom.
             // => the visible part of the measure may be very reduced !
-            const float step = (yMax - yMin) / 5000.f;
-            QMap<float,float> measureCurve;
-            for(float t=yMin; t<yMax; t += step)
+            const double step = (yMax - yMin) / 5000.;
+            QMap<double, double> measureCurve;
+            for(double t=yMin; t<yMax; t += step)
             {
-                float v = exp(-0.5 * pow((t - age) / error, 2));
+                double v = exp(-0.5 * pow((t - age) / error, 2));
                 //curveMeasure.mData[t] = v;
                 measureCurve[t] = v;
             }
@@ -247,7 +247,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
     }
 }
 
-void PluginGaussRefView::zoomX(const float min, const float max)
+void PluginGaussRefView::zoomX(const double min, const double max)
 {
     mGraph->zoomX(min, max);
 }

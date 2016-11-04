@@ -17,7 +17,8 @@ mGreyedOut(false)
     setAcceptHoverEvents(true);
     setAcceptDrops(true);
     setFlags(ItemIsMovable | ItemIsSelectable);
-    
+    //EventsScene->mProject
+    // Date::fromJson don't create mCalibration
     Date d = Date::fromJson(date);
     ProjectSettings s = ProjectSettings::fromJson(settings);
     //qDebug()<<"setting"<< s.mTmin;
@@ -32,7 +33,9 @@ mGreyedOut(false)
                mCalibThumb = QPixmap();
            
            else {
-                d.calibrate(s);
+               if (d.mCalibration == 0)
+                    d.calibrate(s, EventsScene->getProject());
+
                 mCalibThumb = d.generateCalibThumb();
            }
 

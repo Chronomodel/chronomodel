@@ -1,5 +1,6 @@
 #include "MCMCLoopMain.h"
-#include "Model.h"
+
+//#include "Model.h"
 #include "EventKnown.h"
 #include "Functions.h"
 #include "Generator.h"
@@ -8,6 +9,7 @@
 #include "ModelUtilities.h"
 #include "QtUtilities.h"
 #include "../PluginAbstract.h"
+#include "CalibrationCurve.h"
 
 #include <vector>
 #include <cmath>
@@ -20,9 +22,14 @@
 
 #define NOTEST //TEST
 
-MCMCLoopMain::MCMCLoopMain(Model* model):MCMCLoop(),
+class Model;
+//class EventKnown;
+class Project;
+
+MCMCLoopMain::MCMCLoopMain(Model* model, Project* project):MCMCLoop(),
 mModel(model)
 {
+    MCMCLoop::mProject = project;
     if(mModel)
         setMCMCSettings(mModel->mMCMCSettings);
 }
@@ -30,11 +37,12 @@ mModel(model)
 MCMCLoopMain::~MCMCLoopMain()
 {
     mModel = 0;
+    mProject = 0;
 }
 
 QString MCMCLoopMain::calibrate()
 {
-    if(mModel) {
+    if (mModel) {
         QList<Event*>& events = mModel->mEvents;
         events.reserve(mModel->mEvents.size());
         //----------------- Calibrate measures --------------------------------------
@@ -63,7 +71,8 @@ QString MCMCLoopMain::calibrate()
         
         for(int i=0; i<dates.size(); ++i) {
             //QTime startTime = QTime::currentTime();
-            dates.at(i)->calibrate(mModel->mSettings);
+            if (dates.at(i)->mCalibration->mCurve.isEmpty())
+                dates.at(i)->calibrate(mModel->mSettings, mProject);
          
             if(isInterruptionRequested())
                 return ABORTED_BY_USER;
@@ -242,29 +251,30 @@ QString MCMCLoopMain::initMCMC()
             
             qDebug() << "in initMCMC(): Event initialized : " << unsortedEvents[i]->mName << " : " << unsortedEvents[i]->mTheta.mX<<" between"<<min<<max;
 
-            double s02_sum = 0.;
+            double s02_sum (0.);
             for(int j=0; j<unsortedEvents.at(i)->mDates.size(); ++j) {
                 Date& date = unsortedEvents.at(i)->mDates[j];
                 
                 // 1 - Init ti
                 double sigma;
-                if (!date.mRepartition.isEmpty()) {
-                    const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mRepartition);
-                    date.mTheta.mX = date.getTminCalib() + idx * mModel->mSettings.mStep;
+                if (!date.mCalibration->mRepartition.isEmpty()) {
+                    const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mCalibration->mRepartition);
+                    date.mTheta.mX = date.mCalibration->mTmin + idx *mModel->mSettings.mStep;
+                    qDebug()<<"MCMCLoopMain::Init mThe.mx="<<QString::number(date.mTheta.mX, 'g', 15);
 
-                    FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration, tmin, tmax, step));
-                    sigma = data.stddev;
+                    FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration->mCurve, tmin, tmax, step));
+                    sigma = (double) data.stddev;
                 }
                 else { // in the case of mRepartion curve is null, we must init ti outside the study period
                        // For instance we use a gaussian random sampling
-                    sigma = mModel->mSettings.mTmax - mModel->mSettings.mTmin;
-                    const double u = Generator::gaussByBoxMuller(0,sigma);
-                    if(u<0)
+                    sigma = (double) (mModel->mSettings.mTmax - mModel->mSettings.mTmin);
+                    const double u = Generator::gaussByBoxMuller(0., sigma);
+                    if (u<0)
                         date.mTheta.mX = mModel->mSettings.mTmin + u;
                     else
                         date.mTheta.mX = mModel->mSettings.mTmax + u;
 
-                    if(date.mMethod == Date::eInversion) {
+                    if (date.mMethod == Date::eInversion) {
                         qDebug()<<"Automatic sampling method exchange eInversion to eMHSymetric for"<< date.mName;
                         date.mMethod = Date::eMHSymetric;
                         date.autoSetTiSampler(true);
@@ -278,11 +288,11 @@ QString MCMCLoopMain::initMCMC()
                 date.mTheta.mSigmaMH = sigma;
 
                 // intermediary calculus for the harmonic average
-                s02_sum += 1.f / (sigma * sigma);
+                s02_sum += 1. / (sigma * sigma);
             }
             // 4 - Init S02 of each Event
             unsortedEvents.at(i)->mS02 = unsortedEvents.at(i)->mDates.size() / s02_sum;
-
+            qDebug()<<"MCMCLoopMain::Init unsortedEvents.at(i)->mS02="<<unsortedEvents.at(i)->mS02;
             // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
             unsortedEvents.at(i)->mTheta.mSigmaMH = sqrt(unsortedEvents.at(i)->mS02);
             unsortedEvents.at(i)->mAShrinkage = 1.;
@@ -515,7 +525,7 @@ bool MCMCLoopMain::adapt()
             //--------------------- Adapt Sigma MH de Theta i -----------------------------------------
             
             if (date.mMethod == Date::eMHSymGaussAdapt) {
-                const float taux = 100. * date.mTheta.getCurrentAcceptRate();
+                const double taux = 100. * date.mTheta.getCurrentAcceptRate();
                 if (taux <= taux_min || taux >= taux_max) {
                     allOK = false;
                     double sign = (taux <= taux_min) ? -1. : 1.;
@@ -525,7 +535,7 @@ bool MCMCLoopMain::adapt()
             
             //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
             
-            const float taux = 100. * date.mSigma.getCurrentAcceptRate();
+            const double taux = 100. * date.mSigma.getCurrentAcceptRate();
             if (taux <= taux_min || taux >= taux_max) {
                 allOK = false;
                 double sign = (taux <= taux_min) ? -1. : 1.;
@@ -535,12 +545,14 @@ bool MCMCLoopMain::adapt()
         
         //--------------------- Adapt Sigma MH de Theta f -----------------------------------------
         
-        if (event->mMethod == Event::eMHAdaptGauss) {
-            const float taux = 100. * event->mTheta.getCurrentAcceptRate();
+        if ((event->mType != Event::eKnown) && (event->mMethod == Event::eMHAdaptGauss) ) {
+            const double taux = 100. * event->mTheta.getCurrentAcceptRate();
+            qDebug()<<"MCMCLoopMain adapt"<< event->mTheta.mSigmaMH;
             if (taux <= taux_min || taux >= taux_max) {
                 allOK = false;
                 double sign = (taux <= taux_min) ? -1. : 1.;
                 event->mTheta.mSigmaMH *= pow(10., sign * delta);
+                qDebug()<<"MCMCLoopMain adapt"<< event->mTheta.mSigmaMH<<" delta="<<delta;
             }
         }
     }
