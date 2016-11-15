@@ -72,9 +72,8 @@ ProjectView::~ProjectView()
 
 void ProjectView::doProjectConnections(Project* project)
 {
-    mModelView   -> doProjectConnections(project);
+    mModelView   -> setProject(project);
     mResultsView -> doProjectConnections(project);
-    //connect(*project, SIGNAL(designChanged(bool)), this, SLOT(changeDesign(bool)));
 }
 
 #pragma mark Interface
@@ -92,7 +91,6 @@ void ProjectView::showHelp(bool show)
 #pragma mark View Switch
 void ProjectView::showModel()
 {
-
     mStack->setCurrentIndex(0);
 }
 
@@ -107,10 +105,9 @@ void ProjectView::changeDesign(bool refresh)
 
 void ProjectView::showResults()
 {
-    if(mRefreshResults)  {
+    if (mRefreshResults) {
         mResultsView->clearResults();
         mResultsView->updateModel(); // update Design e.g. Name and color //updateResults() is call inside
-       // mResultsView->updateResults();
         mRefreshResults=false;
     }
     mStack->setCurrentIndex(1);
@@ -118,6 +115,8 @@ void ProjectView::showResults()
 }
 void ProjectView::showLog()
 {
+    mResultsView->mModel->generateResultsLog();
+    updateResultsLog(mResultsView->mModel->getResultsLog());
     mStack->setCurrentIndex(2);
 }
 
@@ -130,14 +129,19 @@ void ProjectView::updateProject()
     mModelView->updateProject();
 }
 
+void ProjectView::createProject()
+{
+    mModelView->createProject();
+}
 #pragma mark Update Results
 
-void ProjectView:: ApplySettings(Model* model,const AppSettings* appSet)
+void ProjectView:: applySettings(Model* model,const AppSettings* appSet)
 {
-    if(model)
-    {
+    if (model) {
         mResultsView->updateFormatSetting(model,appSet);
-        mResultsView->updateResults(model);
+
+        // force to regenerate the densities
+        mResultsView->initResults(model);
 
         model->generateModelLog();
         mLogModelEdit->setText(model->getModelLog());
@@ -151,31 +155,28 @@ void ProjectView:: ApplySettings(Model* model,const AppSettings* appSet)
 
 void ProjectView::updateResults(Model* model)
 {
-    if(model)
-        {
-           // showResults();//false);
-            //mResultsView->clearResults();
-            mResultsView->updateResults(model);
+    if (model) {
+        mResultsView->updateResults(model);
 
-            model->generateModelLog();
-            mLogModelEdit->setText(model->getModelLog());
+        model->generateModelLog();
+        mLogModelEdit->setText(model->getModelLog());
 
-            mLogMCMCEdit->setText(model->getMCMCLog());
+        mLogMCMCEdit->setText(model->getMCMCLog());
 
-            model->generateResultsLog();
-            mLogResultsEdit->setText(model->getResultsLog());
+        model->generateResultsLog();
+        mLogResultsEdit->setText(model->getResultsLog());
 
-            mStack->setCurrentIndex(1);
-        }
+        mStack->setCurrentIndex(1);
+    }
 }
 
-void ProjectView::initResults(Model* model)
+void ProjectView::initResults(Model* model, const AppSettings* appSet)
 {
     qDebug()<<"ProjectView::initResults()";
-    if(model)
-    {
-       // showResults();//false);
+    if (model) {
         mResultsView->clearResults();
+        mResultsView->updateFormatSetting(model,appSet);
+        
         mResultsView->initResults(model);
         mRefreshResults = true;
 
@@ -190,6 +191,7 @@ void ProjectView::initResults(Model* model)
        // showResults();
        mStack->setCurrentIndex(1);
     }
+    
 }
 
 void ProjectView::updateResultsLog(const QString& log)

@@ -12,15 +12,17 @@ public:
     virtual ~AbstractItem();
 
     void setMergeable(bool mergeable, bool shouldRepaint = true);
-    virtual void setGreyedOut(bool greyedOut, bool shouldRepaint = true);
+    virtual void setGreyedOut(const bool greyedOut);
     
     virtual void updateItemPosition(const QPointF& pos) = 0;
+    void setSelectedInData(const bool selected);
+    void setCurrentInData(const bool current);
     
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent* e);
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent* e);
     virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e);
-    //virtual void mouseClickEvent(QGraphicsSceneMouseEvent* e);//Added by PhD
+
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* e);
     virtual void hoverEnterEvent(QGraphicsSceneHoverEvent* e);
     virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent* e);
@@ -41,6 +43,7 @@ public:
     bool mMoving;
     bool mMergeable;
     bool mGreyedOut;
+
 
 
 };

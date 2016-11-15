@@ -10,6 +10,9 @@
 #include "DateUtils.h"
 #include <QDataStream>
 #include <QObject>
+#include <deque>
+
+
 
 class MetropolisVariable: public QObject
 {
@@ -20,6 +23,7 @@ public:
     
     void memo();
     virtual void reset();
+    virtual void reserve( const int reserve);
     MetropolisVariable& copy(MetropolisVariable const& origin);
     MetropolisVariable& operator=( MetropolisVariable const& origin);
 
@@ -31,15 +35,14 @@ public:
     // -----
     void generateCorrelations(const QList<ChainSpecs> &chains);
 
-    void generateHistos(const QList<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin = 0, const double tmax = 0);
-    void memoHistoParameter(const int fftLen, const double bandwidth, const double tmin = 0, const double tmax = 0);
-    bool HistoWithParameter(const int fftLen, const double bandwidth, const double tmin = 0, const double tmax = 0);
+    void generateHistos(const QList<ChainSpecs> &chains, const int fftLen = 1024, const double bandwidth = 1.06, const double tmin = 0., const double tmax = 0.);
+    void memoHistoParameter(const int fftLen = 1024, const double bandwidth = 1.06, const double tmin = 0., const double tmax = 0.);
+    bool HistoWithParameter(const int fftLen = 1024, const double bandwidth = 1.06, const double tmin = 0., const double tmax = 0.);
 
-    void generateHPD(const double threshold);
-    void generateCredibility(const QList<ChainSpecs>& chains, double threshold);
+    void generateHPD(const double threshold = 95);
+    void generateCredibility(const QList<ChainSpecs>& chains, double threshold = 95.);
 
-    void saveToStream(QDataStream *out);
-    void loadFromStream(QDataStream *in);
+
     // Virtual because MHVariable subclass adds some information
     virtual void generateNumericalResults(const QList<ChainSpecs>& chains);
 
@@ -48,16 +51,16 @@ public:
     // -----
     
     QMap<double, double>& fullHisto();
-    QMap<double, double>& histoForChain(int index);
+    QMap<double, double>& histoForChain(const int index);
     
     // Full trace for the chain (burn + adapt + run)
-    QVector<double> fullTraceForChain(const QList<ChainSpecs> &chains, int index);
+    QVector<double> fullTraceForChain(const QList<ChainSpecs> &chains,const int index);
     
     // Trace for run part as a vector
     QVector<double> fullRunTrace(const QList<ChainSpecs>& chains);
     // Trace for run part of the chain as a vector
-    QVector<double> runRawTraceForChain(const QList<ChainSpecs>& chains, int index);
-    QVector<double> runFormatedTraceForChain(const QList<ChainSpecs>& chains, int index);
+    QVector<double> runRawTraceForChain(const QList<ChainSpecs>& chains, const int index);
+    QVector<double> runFormatedTraceForChain(const QList<ChainSpecs>& chains, const int index);
     
     QVector<double> correlationForChain(const int index);
     
@@ -69,16 +72,28 @@ public:
                                   FormatFunc formatFunc = 0) const;
     
     QStringList getResultsList(const QLocale locale, const bool withDateFormat = true);
-    // -----
-    
-private:
-    //float* generateBufferForHisto(const QVector<double>& dataSrc, int numPts, double a, double b);
-    void generateBufferForHisto(float* input, const QVector<double> &dataSrc, const int numPts, const double a, const double b);
-    QMap<double, double> bufferToMap(const double* buffer);
-    QMap<double, double> generateHisto(const QVector<double>& data, const int fftLen, const  double bandwidth, const double tmin = 0, const double tmax = 0);
 
-protected slots:
-    void updateFormatedTrace();
+
+    /* obsolete change with the operator& << and >>
+     * QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data );
+     *
+     * QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data );
+    */
+     /*   void saveToStreamOfQByteArray(QDataStream *out);
+        void saveToStream(QDataStream &out);
+
+        void loadFromStreamOfQByteArray(QDataStream *in);
+        void loadFromStream(QDataStream &in);
+*/
+public slots:
+      void updateFormatedTrace();
+
+private:
+    void generateBufferForHisto(double* input, const QVector<double> &dataSrc, const int numPts, const double a, const double b);
+    QMap<double, double> bufferToMap(const double* buffer);
+    QMap<double, double> generateHisto(const QVector<double>& data, const int fftLen, const  double bandwidth, const double tmin = 0., const double tmax = 0.);
+
+
 
 signals:
     void formatChanged();
@@ -94,7 +109,12 @@ public:
         eBounded = 5 // on bounded support
     };
     double mX;
-    QVector<double> mRawTrace, mFormatedTrace;
+    QVector<double>* mRawTrace;
+    QVector<double>* mFormatedTrace;
+
+
+    // if we use std::vector we can not use QDataStream to save,
+    //because QDataStream provides support for multi system and takes account of endians
     Support mSupport;
     DateUtils::FormatDate mFormat;
     
@@ -112,14 +132,11 @@ public:
     
     QMap<double, double> mHPD;
     QPair<double, double> mCredibility;
-    //double mThreshold;
     
     double mExactCredibilityThreshold;
     
     DensityAnalysis mResults;
     QList<DensityAnalysis> mChainsResults;
-    //bool mIsDate;
-
 
     int mfftLenUsed;
     double mBandwidthUsed;
@@ -133,4 +150,8 @@ private:
     QString mName;
 };
 
+QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data );
+
+QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data );
 #endif
+

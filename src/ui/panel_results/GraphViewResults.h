@@ -54,7 +54,7 @@ public:
     
     GraphView* mGraph;
     
-    GraphCurve generateDensityCurve(QMap<double, double> &data,
+    GraphCurve generateDensityCurve(const QMap<double, double> &data,
                                     const QString& name,
                                     const QColor& lineColor,
                                     const Qt::PenStyle penStyle = Qt::SolidLine,
@@ -82,12 +82,13 @@ public:
     
     void generateCorrelCurves(const QList<ChainSpecs>& chains,
                               MHVariable* variable);
+    void setShowNumericalResults(const bool show);
     
 public slots:
-    void setRange(double min, double max);
-    void setCurrentX(double min, double max);
+    void setRange(type_data min, type_data max);
+    void setCurrentX(type_data min, type_data max);
     
-    void zoom(double min, double max);
+    void zoom(type_data min, type_data max);
     void showNumericalResults(bool show);
     void setNumericalResults(const QString& resultsHTML, const QString& resultsText);
 

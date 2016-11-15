@@ -189,35 +189,30 @@ int PluginGauss::csvMinColumns() const{
 QJsonObject PluginGauss::fromCSV(const QStringList& list, const QLocale& csvLocale)
 {
     QJsonObject json;
-    if(list.size() >= csvMinColumns())
-    {
+    if (list.size() >= csvMinColumns()) {
         json.insert(DATE_GAUSS_AGE_STR, csvLocale.toDouble(list.at(1)));
         double error = csvLocale.toDouble(list.at(2));
-        if(error == 0) return QJsonObject();
+        if (error == 0)
+            return QJsonObject();
         json.insert(DATE_GAUSS_ERROR_STR, error);
         
-        if(list.at(3) == "equation" && list.size() >= csvMinColumns() + 3)
-        {
+        if ( (list.at(3) == "equation") && (list.size() >= csvMinColumns() + 3) ) {
             json.insert(DATE_GAUSS_MODE_STR, QString(DATE_GAUSS_MODE_EQ));
             double a = csvLocale.toDouble(list.at(4));
             double b = csvLocale.toDouble(list.at(5));
             double c = csvLocale.toDouble(list.at(6));
-            if( a==0 & b== 0) { // this solution is forbiden
+            if( (a==0) && (b== 0)) { // this solution is forbiden
                 return QJsonObject();
-            }
-            else {
+            } else {
                 json.insert(DATE_GAUSS_A_STR, a);
                 json.insert(DATE_GAUSS_B_STR, b);
                 json.insert(DATE_GAUSS_C_STR, c);
             }
 
-        }
-        else if(list.at(3) == "none" || list.at(3) == "")
-        {
+        } else if (list.at(3) == "none" || list.at(3) == "")
             json.insert(DATE_GAUSS_MODE_STR, QString(DATE_GAUSS_MODE_NONE));
-        }
-        else
-        {
+
+        else {
             json.insert(DATE_GAUSS_MODE_STR, QString(DATE_GAUSS_MODE_CURVE));
             json.insert(DATE_GAUSS_CURVE_STR, list.at(3));
         }
@@ -231,18 +226,17 @@ QStringList PluginGauss::toCSV(const QJsonObject& data, const QLocale& csvLocale
     list << csvLocale.toString(data.value(DATE_GAUSS_AGE_STR).toDouble());
     list << csvLocale.toString(data.value(DATE_GAUSS_ERROR_STR).toDouble());
     
-    if(data.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_NONE){
+    if (data.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_NONE){
         list << "none";
-    }
-    else if(data[DATE_GAUSS_MODE_STR].toString() == DATE_GAUSS_MODE_EQ){
+
+    } else if (data[DATE_GAUSS_MODE_STR].toString() == DATE_GAUSS_MODE_EQ){
         list << "equation";
         list << csvLocale.toString(data.value(DATE_GAUSS_A_STR).toDouble());
         list << csvLocale.toString(data.value(DATE_GAUSS_B_STR).toDouble());
         list << csvLocale.toString(data.value(DATE_GAUSS_C_STR).toDouble());
-    }
-    else if(data.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_CURVE){
+    }  else if (data.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_CURVE)
         list << data.value(DATE_GAUSS_CURVE_STR).toString();
-    }
+
     return list;
 }
 
@@ -284,39 +278,40 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
     curve.mName = refFile.fileName().toLower();
     
     QFile file(refFile.absoluteFilePath());
-    if(file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QLocale locale = QLocale(QLocale::English);
         QTextStream stream(&file);
         bool firstLine = true;
-        while(!stream.atEnd())
+        while (!stream.atEnd())
         {
             QString line = stream.readLine();
-            if(!isComment(line))
-            {
+            if (!isComment(line)) {
                 QStringList values = line.split(",");
-                if(values.size() >= 3)
-                {
+                if (values.size() >= 3) {
                     bool ok = true;
                     double t = locale.toDouble(values.at(0),&ok);
-                    if(!ok) continue;
+                    if(!ok)
+                        continue;
                     double g = locale.toDouble(values.at(1),&ok);
-                    if(!ok) continue;
+                    if(!ok)
+                        continue;
                     double e = locale.toDouble(values.at(2),&ok);
-                    if(!ok) continue;
+                    if(!ok)
+                        continue;
                     
                     double gSup = g + 1.96 * e;
-                    if(!ok) continue;
+                    if(!ok)
+                        continue;
                     double gInf = g - 1.96 * e;
-                    if(!ok) continue;
+                    if(!ok)
+                        continue;
                     
                     curve.mDataMean[t] = g;
                     curve.mDataError[t] = e;
                     curve.mDataSup[t] = gSup;
                     curve.mDataInf[t] = gInf;
                     
-                    if(firstLine)
-                    {
+                    if (firstLine) {
                         curve.mDataMeanMin = g;
                         curve.mDataMeanMax = g;
                         
@@ -328,9 +323,7 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
                         
                         curve.mDataInfMin = gInf;
                         curve.mDataInfMax = gInf;
-                    }
-                    else
-                    {
+                    } else {
                         curve.mDataMeanMin = qMin(curve.mDataMeanMin, g);
                         curve.mDataMeanMax = qMax(curve.mDataMeanMax, g);
                         
@@ -350,8 +343,7 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
         file.close();
         
         // invalid file ?
-        if(!curve.mDataMean.isEmpty())
-        {
+        if (!curve.mDataMean.isEmpty()) {
             curve.mTmin = curve.mDataMean.firstKey();
             curve.mTmax = curve.mDataMean.lastKey();
         }
@@ -362,24 +354,19 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
 #pragma mark Reference Values & Errors
 double PluginGauss::getRefValueAt(const QJsonObject& data, const double& t)
 {
-    QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
+    const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
     double v = 0;
     
-    if(mode == DATE_GAUSS_MODE_NONE)
-    {
+    if (mode == DATE_GAUSS_MODE_NONE)
         v = t;
-    }
-    else if(mode == DATE_GAUSS_MODE_EQ)
-    {
-        double a = data.value(DATE_GAUSS_A_STR).toDouble();
-        double b = data.value(DATE_GAUSS_B_STR).toDouble();
-        double c = data.value(DATE_GAUSS_C_STR).toDouble();
+    else if (mode == DATE_GAUSS_MODE_EQ) {
+        const double a = data.value(DATE_GAUSS_A_STR).toDouble();
+        const double b = data.value(DATE_GAUSS_B_STR).toDouble();
+        const double c = data.value(DATE_GAUSS_C_STR).toDouble();
         
         v = a * t * t + b * t + c;
-    }
-    else if(mode == DATE_GAUSS_MODE_CURVE)
-    {
-        QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
+    } else if (mode == DATE_GAUSS_MODE_CURVE) {
+        const QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
         v = getRefCurveValueAt(ref_curve, t);
     }
     return v;

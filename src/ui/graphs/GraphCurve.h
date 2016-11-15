@@ -1,10 +1,11 @@
-#ifndef GraphCurve_H
+﻿#ifndef GraphCurve_H
 #define GraphCurve_H
 
 #include <QMap>
 #include <QString>
 #include <QPen>
 
+typedef double type_data;
 
 class GraphCurve
 {
@@ -14,7 +15,7 @@ public:
     
     void setPen(QPen pen);
 
-    QMap<double, double> mData;
+    QMap<type_data, type_data> mData;
     
     QString mName;
     QPen mPen;
@@ -23,17 +24,17 @@ public:
     bool mIsRectFromZero; // draw a vertical line when graph value leaves 0 : usefull for HPD and Typo!
     
     bool mUseVectorData; // Used for traces, correlations and acceptations.
-    QVector<double> mDataVector;
+    QVector<type_data> mDataVector;
     
     bool mIsHorizontalLine; // Used for calib measures, 44% targets, quartiles, ...
-    double mHorizontalValue;
+    type_data mHorizontalValue;
     
     bool mIsVerticalLine; // Used for bounds (in results view)
-    double mVerticalValue;
+    type_data mVerticalValue;
     
     bool mIsHorizontalSections; // Used for bounds (in scene and property views) and typo (scene view)
     bool mIsTopLineSections; // Used for credibilities (and "one day" for phases alpha/beta interval??)
-    QList<QPair<double, double> > mSections;
+    QList<QPair<type_data, type_data> > mSections;
     
     bool mIsVertical;
     
@@ -41,3 +42,4 @@ public:
 };
 
 #endif
+

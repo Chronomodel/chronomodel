@@ -5,6 +5,7 @@
 #include "ProjectSettings.h"
 #include "StdUtilities.h"
 #include "Date.h"
+#include "CalibrationCurve.h"
 
 class GraphView;
 
@@ -23,8 +24,8 @@ public:
     {
         mSettings = settings;
         
-        mTminCalib = date.getTminCalib();
-        mTmaxCalib = date.getTmaxCalib();
+        mTminCalib = date.mCalibration->mTmin;
+        mTmaxCalib = date.mCalibration->mTmax;
         
         mTminDisplay = qMin(mTminCalib, (double)mSettings.mTmin);
         mTmaxDisplay = qMax(mTmaxCalib, (double)mSettings.mTmax);
@@ -40,7 +41,7 @@ public:
     
     
 public slots:
-    virtual void zoomX(double min, double max)
+    virtual void zoomX(const double min, const double max)
     {
         Q_UNUSED(min);
         Q_UNUSED(max);

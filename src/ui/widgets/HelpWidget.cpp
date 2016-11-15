@@ -17,7 +17,7 @@ HelpWidget::HelpWidget(const QString& text, QWidget* parent):QWidget(parent)
 void HelpWidget::construct()
 {
     mFont = font();
-    mFont.setPointSize(pointSize(11));
+   // mFont.setPointSize(pointSize(11));
     
     mHyperLink = new QLabel(this);
     mHyperLink->setTextFormat(Qt::RichText);

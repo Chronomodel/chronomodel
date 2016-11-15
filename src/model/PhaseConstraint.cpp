@@ -79,20 +79,23 @@ void PhaseConstraint::initGamma()
 {
     if(mGammaType == eGammaUnknown)
         mGamma = 0;
-    else if(mGammaType == eGammaFixed && mGammaFixed != 0)
+
+    else if (mGammaType == eGammaFixed && mGammaFixed != 0)
         mGamma = mGammaFixed;
-    else if(mGammaType == eGammaRange && mGammaMax > mGammaMin)
+
+    else if (mGammaType == eGammaRange && mGammaMax > mGammaMin)
         mGamma = mGammaMin;
 }
 
 void PhaseConstraint::updateGamma()
 {
-    if(mGammaType == eGammaUnknown)
+    if (mGammaType == eGammaUnknown)
         mGamma = 0;
-    else if(mGammaType == eGammaFixed && mGammaFixed != 0)
+
+    else if (mGammaType == eGammaFixed && mGammaFixed != 0)
         mGamma = mGammaFixed;
-    else if(mGammaType == eGammaRange && mGammaMax > mGammaMin)
-    {
+
+    else if (mGammaType == eGammaRange && mGammaMax > mGammaMin) {
         double max = qMin(mGammaMax, mPhaseTo->mAlpha.mX - mPhaseFrom->mBeta.mX);
         mGamma = Generator::randomUniform(mGammaMin, max);
     }
@@ -102,10 +105,22 @@ QPair<double,double> PhaseConstraint::getFormatedGapRange() const
 {
     const double t1 = DateUtils::convertToAppSettingsFormat(mGapRange.first);
     const double t2 = DateUtils::convertToAppSettingsFormat(mGapRange.second);
-    if(t1<t2) {
+
+    if(t1<t2)
         return QPair<double,double>(t1,t2);
-    }
-    else {
+    else
         return QPair<double,double>(t2,t1);
-    }
+
+}
+
+QPair<double,double> PhaseConstraint::getFormatedTransitionRange() const
+{
+    const double t1 = DateUtils::convertToAppSettingsFormat(mTransitionRange.first);
+    const double t2 = DateUtils::convertToAppSettingsFormat(mTransitionRange.second);
+
+    if (t1<t2)
+        return QPair<double,double>(t1,t2);
+    else
+        return QPair<double,double>(t2,t1);
+
 }

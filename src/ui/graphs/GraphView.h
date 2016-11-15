@@ -1,4 +1,4 @@
-#ifndef GRAPHVIEW_H
+﻿#ifndef GRAPHVIEW_H
 #define GRAPHVIEW_H
 
 #define GRAPH_OPENGL 0
@@ -72,7 +72,7 @@ public:
     void setYAxisMode(AxisMode mode);
     
     void autoAdjustYScale(bool active);
-    void adjustYToMaxValue(const double& marginProp = 0.1);
+    void adjustYToMaxValue(const qreal& marginProp = 0.);
     void adjustYToMinMaxValue();
     
     void setRendering(Rendering render);
@@ -86,6 +86,7 @@ public:
     // Manage Curves
     
     void addCurve(const GraphCurve& curve);
+    bool hasCurve() {return ((mCurves.size() != 0) || (mZones.size() != 0)) ;}
     void removeCurve(const QString& name);
     void removeAllCurves();
     void reserveCurves(const int size);
@@ -119,7 +120,7 @@ signals:
 
 public slots:
     void updateCurvesThickness(int value);
-    void zoomX(const double min, const double max);
+    void zoomX(const type_data min, const type_data max);
     void exportCurrentDensityCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step =1.) const;
 
     void exportCurrentVectorCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, bool writeInRows, int offset = 0) const;
@@ -185,14 +186,14 @@ protected:
     bool mCanControlOpacity;
     
     QRectF  mTipRect;
-    double  mTipX;
-    double  mTipY;
+    qreal  mTipX;
+    qreal  mTipY;
     QString  mTipXLab;
     QString  mTipYLab;
-    double  mTipWidth;
-    double  mTipHeight;
-    double  mTipVisible;
-    double  mUseTip;
+    qreal  mTipWidth;
+    qreal  mTipHeight;
+    qreal  mTipVisible;
+    bool  mUseTip;
     
     int mCurveMaxResolution;
     QList<GraphCurve> mCurves;
@@ -204,3 +205,4 @@ public:
 };
 
 #endif
+

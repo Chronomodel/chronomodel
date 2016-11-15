@@ -7,11 +7,13 @@
 #include "MCMCLoopMain.h"
 #include "Model.h"
 #include "StateKeys.h"
+#include "CalibrationCurve.h"
 
 #include <QObject>
 #include <QList>
 #include <QString>
 #include <QJsonObject>
+
 
 #define PROJECT_LOADED_REASON "project loaded"
 #define NEW_PROJECT_REASON "new project"
@@ -32,6 +34,11 @@ class Project: public QObject
 public:
     Project();
     virtual ~Project();
+
+    enum ActionOnModel {
+        InsertEventsToPhase,
+        ExtractEventsFromPhase,
+    };
     
     void initState(const QString& reason);
     
@@ -56,7 +63,7 @@ public:
     
     // Special events for selection... too bad!
     void sendEventsSelectionChanged();
-    void sendPhasesSelectionChanged();
+    //void sendPhasesSelectionChanged();
     
     QJsonObject emptyState() const;
     QJsonObject state() const;
@@ -88,7 +95,7 @@ public:
     Date createDateFromPlugin(PluginAbstract* plugin);
     Date createDateFromData(const QString& pluginName, const QStringList& dataStr);
     void addDate(int eventId, QJsonObject date);
-    int getUnusedDateId(const QJsonArray& dates);
+    int getUnusedDateId(const QJsonArray& dates) const;
     void updateDate(int eventId, int dateId);
     void deleteDates(int eventId, const QList<int>& dateIndexes);
     void recycleDates(int eventId);
@@ -96,18 +103,20 @@ public:
     void checkDatesCompatibility();
     QJsonObject checkValidDates(const QJsonObject& state);
     
+    void unselectedAllInState();
     void updateSelectedEventsColor(const QColor& color);
     void updateSelectedEventsMethod(Event::Method);
     void updateSelectedEventsDataMethod(Date::DataMethod method, const QString& pluginId);
     void updateAllDataInSelectedEvents(const QHash<QString, QVariant>& groupedAction);
+    void selectedEventsFromSelectedPhases();
     
     void updatePhase(const QJsonObject& phaseIn);
     int getUnusedPhaseId(const QJsonArray& phases);
     void mergePhases(int phaseFromId, int phaseToId);
-    void updatePhaseEvents(int phaseId, Qt::CheckState state);
-    //void updatePhaseEyed(int phaseId, bool eyed);
+    void updatePhaseEvents(const int phaseId, ActionOnModel action);
+    QJsonObject getPhasesWithId(const int id);
     
-    void createEventConstraint(int eventFromId, int eventToId);
+    void createEventConstraint(const int idFrom, const int idTo);
     void deleteEventConstraint(int constraintId);
     bool isEventConstraintAllowed(const QJsonObject& eventFrom, const QJsonObject& eventTo);
     void updateEventConstraint(int constraintId);
@@ -116,7 +125,7 @@ public:
     void createPhaseConstraint(int phaseFromId, int phaseToId);
     void deletePhaseConstraint(int constraintId);
     bool isPhaseConstraintAllowed(const QJsonObject& phaseFrom, const QJsonObject& phaseTo);
-    void updatePhaseConstraint(int constraintId);
+    void updatePhaseConstraint(const int constraintId);
     int getUnusedPhaseConstraintId(const QJsonArray& constraints);
     
     void clearModel();
@@ -139,16 +148,16 @@ public slots:
     void createPhase();
     void deleteSelectedPhases();
     
-    void mergeDates(const int eventId, const QList<int>& dateIds);
+    void combineDates(const int eventId, const QList<int>& dateIds);
     void splitDate(const int eventId, const int dateId);
     
 signals:
     void noResult();
     void projectStateChanged();
     void currentEventChanged(const QJsonObject& event);
-    void currentPhaseChanged(const QJsonObject& phase);
+    //void currentPhaseChanged(const QJsonObject& phase);
     void selectedEventsChanged();
-    void selectedPhasesChanged();
+    //void selectedPhasesChanged();
     void eyedPhasesModified(const QMap<int, bool>& eyedPhases);
     
     void mcmcStarted();
@@ -170,6 +179,7 @@ public:
     
     Model* mModel;
     
+    QMap<QString, CalibrationCurve> mCalibCurves; // QJsonObject is date.mData
     QTimer* mAutoSaveTimer;
 
 private :
@@ -180,6 +190,8 @@ private :
     QSet<QString> mReasonChangeStructure;
     QSet<QString> mReasonChangeDesign;
     QSet<QString> mReasonChangePosition;
+    // used to save data in debug mode
+    bool mSaveData;
 
 };
 

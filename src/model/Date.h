@@ -1,9 +1,10 @@
-#ifndef DATE_H
+﻿#ifndef DATE_H
 #define DATE_H
 
 #include "MHVariable.h"
 #include "StateKeys.h"
-#include "ProjectSettings.h"
+#include "../project/ProjectSettings.h"
+//#include "CalibrationCurve.h"
 
 #include <QMap>
 #include <QJsonObject>
@@ -14,6 +15,10 @@
 class Event;
 class PluginAbstract;
 class Date;
+class CalibrationCurve;
+
+class Project;
+//class ProjectSettings;
 
 typedef void (*samplingFunction)(Date* date, Event* event);
 
@@ -67,7 +72,7 @@ public:
     QString getDesc() const;
     
     void reset();
-    void calibrate(const ProjectSettings& settings);
+    void calibrate(const ProjectSettings & settings, Project *project);
     double getLikelihoodFromCalib(const double t);
 
     const QMap<double, double> getFormatedCalibMap() const;
@@ -91,15 +96,21 @@ public:
 
     double getTminRefCurve() const {return mTminRefCurve;}
     double getTmaxRefCurve() const {return mTmaxRefCurve;}
-    
-    double getTminCalib() const {return mTminCalib;}
-    double getTmaxCalib() const {return mTmaxCalib;}
+    void setTminRefCurve(const double tmin) { mTminRefCurve = tmin;}
+    void setTmaxRefCurve(const double tmax) { mTmaxRefCurve = tmax;}
 
+/*    double getTminCalib() const {return mCalibration->mTmin;}
+    double getTmaxCalib() const {return mCalibration->mTmax;}
+    void setTminCalib(const double tmin) { mCalibration->mTmin = tmin;}
+    void setTmaxCalib(const double tmax) { mCalibration->mTmax = tmax;}
+*/
     double getFormatedTminRefCurve() const;
     double getFormatedTmaxRefCurve() const;
 
     double getFormatedTminCalib() const;
     double getFormatedTmaxCalib() const;
+
+    void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
     
 public:
     MHVariable mTheta; // theta i de la date
@@ -127,8 +138,9 @@ public:
     bool mIsCurrent;
     bool mIsSelected;
     
-    QVector<double> mCalibration;
-    QVector<double> mRepartition;
+   // QVector<float> mCalibration;
+    CalibrationCurve* mCalibration;
+   // QVector<float> mRepartition;
     QMap<double, double> mCalibHPD;
     ProjectSettings mSettings;
     
@@ -143,8 +155,8 @@ protected:
     double mTminRefCurve;
     double mTmaxRefCurve;
 
-    double mTminCalib;
-    double mTmaxCalib;
+   // double mTminCalib;
+   // double mTmaxCalib;
 };
 
 #endif

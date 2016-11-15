@@ -1,4 +1,4 @@
-#include "PluginTLRefView.h"
+﻿#include "PluginTLRefView.h"
 #if USE_PLUGIN_TL
 
 #include "PluginTL.h"
@@ -32,14 +32,14 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
 {
     QLocale locale=QLocale();
     GraphViewRefAbstract::setDate(date, settings);
-    double tminDisplay;
-    double tmaxDisplay;
-    {
-        const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
-        const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
-        tminDisplay = qMin(t1,t2);
-        tmaxDisplay = qMax(t1,t2);
-    }
+
+
+    const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
+    const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
+
+
+    double tminDisplay ( qMin(t1,t2) );
+    double tmaxDisplay ( qMax(t1,t2) );
 
     mGraph->setRangeX(tminDisplay, tmaxDisplay);
     mGraph->setCurrentX(tminDisplay, tmaxDisplay);
@@ -49,8 +49,7 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
     mGraph->showInfos(true);
     mGraph->setFormatFunctX(0);
     
-    if(!date.isNull())
-    {
+    if (!date.isNull()) {
         double age = date.mData.value(DATE_TL_AGE_STR).toDouble();
         double error = date.mData.value(DATE_TL_ERROR_STR).toDouble();
         double ref_year = date.mData.value(DATE_TL_REF_YEAR_STR).toDouble();
@@ -62,8 +61,8 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         curve.mName = "Reference";
         curve.mPen.setColor(Painting::mainColorDark);
         curve.mIsHisto = false;
-        QMap<double,double> refCurve;
-        for(double t=tminDisplay; t<=tmaxDisplay; t+=mSettings.mStep) {
+        QMap<double, double> refCurve;
+        for (double t=tminDisplay; t<=tmaxDisplay; t+=mSettings.mStep) {
             const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
             refCurve[t] = ref_year - tRaw;
         }
@@ -72,8 +71,8 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         
         // ----------------------------------------------
         
-        double yMin = map_min_value(curve.mData);
-        double yMax = map_max_value(curve.mData);
+        double yMin ( map_min_value(curve.mData) );
+        double yMax ( map_max_value(curve.mData) );
 
         yMin = qMin(yMin, age - error * 1.96);
         yMax = qMax(yMax, age + error * 1.96);
@@ -98,10 +97,10 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         // 5000 pts are used on vertical measure
         // because the y scale auto adjusts depending on x zoom.
         // => the visible part of the measure may be very reduced !
-        QMap<double,double> measureCurve;
+        QMap<double, double> measureCurve;
         const double step = (yMax - yMin) / 5000.;
-        for(double t=yMin; t<yMax; t += step)
-        {
+
+        for (double t=yMin; t<yMax; t += step) {
             const double v = exp(-0.5 * pow((t - age) / error, 2));
             measureCurve[t] = v;
         }
@@ -145,7 +144,7 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
     }
 }
 
-void PluginTLRefView::zoomX(double min, double max)
+void PluginTLRefView::zoomX(const double min, const double max)
 {
     mGraph->zoomX(min, max);
 }
@@ -160,3 +159,4 @@ void PluginTLRefView::resizeEvent(QResizeEvent* e)
 }
 
 #endif
+

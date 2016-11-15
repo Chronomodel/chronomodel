@@ -12,8 +12,11 @@ public:
     EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent = 0);
     virtual ~EventItem();
 
-    virtual void setGreyedOut(bool greyedOut, bool shouldRepaint = true);
-    
+    virtual void setGreyedOut(bool greyedOut);
+
+    void setWithSelectedPhase(const bool selected) {mWithSelectedPhase = selected;}
+    bool withSelectedPhase() { return mWithSelectedPhase;}
+
     QJsonObject& getEvent();
     virtual void setEvent(const QJsonObject& event, const QJsonObject& settings);
     
@@ -25,14 +28,20 @@ public:
     
     virtual void setDatesVisible(bool visible);
     
+    bool withSelectedDate() const;
+    
+    void mousePressEvent(QGraphicsSceneMouseEvent* e);
+    
 protected:
     virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
     virtual void dropEvent(QGraphicsSceneDragDropEvent* e);
-    
+
     void updateGreyedOut();
     
     QSize mSize;
     QJsonObject mSettings;
+    bool mWithSelectedPhase;
+    bool mShowAllThumbs;
 };
 
 #endif

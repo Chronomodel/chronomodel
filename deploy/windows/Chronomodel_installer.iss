@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "ChronoModel"
-#define MyAppVersion "1.5.0"
+#define MyAppVersion "1.5.7_alpha_Build"
 #define MyAppPublisher "CNRS"
 #define MyAppURL "http://www.chronomodel.com"
 #define MyAppExeName "Chronomodel.exe"
@@ -27,8 +27,9 @@ AllowNoIcons=yes
 LicenseFile="license.rtf"
 InfoBeforeFile="readme.txt"
 OutputDir=.\
-OutputBaseFilename=ChronoModel_{#MyAppVersion}_win
+OutputBaseFilename=ChronoModel_v{#MyAppVersion}_win32
 SetupIconFile="..\..\icon\Chronomodel.ico"
+UninstallDisplayIcon=ChronoModel_v{#MyAppVersion}_win32.exe
 Compression=lzma
 SolidCompression=yes
 
@@ -42,16 +43,17 @@ Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
-
+                                                                              
 [Files]
-Source: "..\..\..\build-Chronomodel-Desktop_Qt_5_5_1_MinGW_32bit2-Release\build\release\Chronomodel.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\..\build-Chronomodel-Desktop_Qt_5_5_1_MinGW_32bit-Release\build\release\Chronomodel.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "additionnal_files\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\Calib\*"; DestDir: "{app}\Calib\"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
+
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
-Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
+Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{app}\{uninstallexe}"
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon
 

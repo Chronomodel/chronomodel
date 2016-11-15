@@ -27,8 +27,12 @@ void SetProjectState::undo()
     mProject->checkStateModification(mPrevState,mProject->mState);
     mProject->sendUpdateState(mPrevState, mReason, mNotify);
 
-    if(mProject->structureIsChanged() ) emit mProject->projectStructureChanged(true);
-    if(mProject->designIsChanged() )    emit mProject->projectDesignChanged(true);
+    if (mProject->structureIsChanged() )
+        emit mProject->projectStructureChanged(true);
+
+    if (mProject->designIsChanged() )
+        emit mProject->projectDesignChanged(true);
+
 }
 
 void SetProjectState::redo()
@@ -36,6 +40,6 @@ void SetProjectState::redo()
     mProject->checkStateModification(mNextState,mProject->mState);
     mProject->sendUpdateState(mNextState, mReason, mNotify);
 
-    if(mProject->structureIsChanged() ) emit mProject->projectStructureChanged(true);
-    if(mProject->designIsChanged() )    emit mProject->projectDesignChanged(true);
+    if (mProject->structureIsChanged() ) emit mProject->projectStructureChanged(true);
+    if (mProject->designIsChanged() )    emit mProject->projectDesignChanged(true);
 }

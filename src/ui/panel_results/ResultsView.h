@@ -1,10 +1,12 @@
-#ifndef ResultsWrapper_H
+﻿#ifndef ResultsWrapper_H
 #define ResultsWrapper_H
 
 #include <QWidget>
+#include <QVBoxLayout>
 #include "MCMCLoopMain.h"
 #include "AxisTool.h"
 #include "GraphViewResults.h"
+#include "AppSettings.h"
 
 class QStackedWidget;
 class QScrollArea;
@@ -62,23 +64,22 @@ protected:
     void mouseMoveEvent(QMouseEvent* e);
     void resizeEvent(QResizeEvent* e);
 
-    void createEventsScrollArea();
-    void createPhasesScrollArea();
+    void createEventsScrollArea(const int idx = 0);
+    void createPhasesScrollArea(const int idx = 0);
+    void generateCurves(const QList<GraphViewResults*>& listGraphs);
+
 
 public slots:
+    void updateResults(Model* model = 0);
+    void initResults(Model* model = 0);
+
+    void changeScrollArea();
     void updateLayout();
     void updateGraphsLayout();
     
     void clearResults();
-    void updateResults(Model* model = 0);
-    void initResults(Model* model = 0);
+    void updateCurves();
     
-    //void generatePosteriorDistribs();
-    //void generateCredibilityAndHPD();
-    //void generateCredibility();
-    //void generateHPD();
-    void generateCurves();
-    void updateCurvesToShow();
     
     void updateControls();
     void updateScales();
@@ -89,7 +90,9 @@ public slots:
     void adjustDuration(bool visible);
 
 private slots:
-
+    void graphTypeChange();
+    void updateCurvesToShow();
+    
     void settingChange();
     void updateZoomX(); // Connected to slider signals
     void updateScroll(const double min, const double max); // Connected to ruler signals
@@ -108,6 +111,10 @@ private slots:
     void exportFullImage();
     void exportResults();
 
+    void previousSheet();
+    void nextSheet();
+    void unfoldToggle();
+
     // SETTER
     void setFFTLength();
     void setBandwidth();
@@ -115,25 +122,26 @@ private slots:
 
     
 signals:
-   // void posteriorDistribGenerated();
-
-   // void credibilityGenerated();
-    //void HPDGenerated();
+   
     void curvesGenerated();
     
     void controlsUpdated();
     void resultsLogUpdated(const QString& log);
-
+    
+    void scalesUpdated();
+    
+    void updateScrollAreaRequested();
+    void generateCurvesRequested();
 
     
 private:
-    QList<QRect> getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases);
+    //QList<QRect> getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases);
     
 
     void clearHisto();
     void clearChainHistos();
 
-    GraphViewResults::TypeGraph mCurrentTypeGraph;
+    
     Ruler* mRuler;
     
 
@@ -150,6 +158,8 @@ private:
     int mGraphsH;
     
     Tabs* mTabs;
+    int mTabEventsIndex;
+    int mTabPhasesIndex;
     //Ruler* mRuler;
     Marker* mMarker;
     
@@ -158,6 +168,7 @@ private:
     QScrollArea* mPhasesScrollArea;
     QList<GraphViewResults*> mByEventsGraphs;
     QList<GraphViewResults*> mByPhasesGraphs;
+
     
     Button* mByPhasesBut;
     Button* mByEventsBut;
@@ -167,10 +178,13 @@ private:
     
     
     Button* mUnfoldBut;
-    Button* mInfosBut;
+    Button* mStatsBut;
     Button* mExportImgBut;
     Button* mExportResults;
     CheckBox* mShowDataUnderPhasesCheck;
+
+    Button* mNextSheetBut;
+    Button* mPreviousSheetBut;
     
     // ------ mDisplayGroup -----
    // QWidget* mScaleGroup;
@@ -215,13 +229,20 @@ private:
     LineEdit* mBandwidthEdit;
     Button* mUpdateDisplay;
     
+    Label* labFont;
+    Label* labThickness;
+    Label* labOpacity;
+    Label* labRendering;
+
     int mComboH;
     
     QMap<int, QPair<double, double>> mZooms;
 
-    //member
+    //propreties
+    GraphViewResults::TypeGraph mCurrentTypeGraph;
     double mBandwidthUsed;
     double mThresholdUsed;
+    int mNumberOfGraph;
 };
 
 #endif

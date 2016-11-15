@@ -24,8 +24,7 @@ QDialog(parent, flags)
     mComboH = mC14RefCombo->sizeHint().height();
     Plugin14C* plugin14C = (Plugin14C*)PluginManager::getPluginFromName("14C");
     QStringList refCurves = plugin14C->getRefsNames();
-    for(int i = 0; i<refCurves.size(); ++i)
-    {
+    for (int i = 0; i<refCurves.size(); ++i) {
         mC14RefCombo->addItem(refCurves[i]);
     }
     QString defCurve = QString("intcal13.14c").toLower();
@@ -55,12 +54,12 @@ void PluginOptionsDialog::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
     
-    int m = 5;
-    int lineH = 20;
-    int w1 = 200;
-    int w2 = width() - 3*m - w1;
-    int butW = 80;
-    int butH = 25;
+    const int m = 5;
+    const int lineH = 20;
+    const int w1 = 200;
+    const int w2 = width() - 3*m - w1;
+    const int butW = 80;
+    const int butH = 25;
     
     int y = -lineH;
     

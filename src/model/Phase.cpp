@@ -79,22 +79,21 @@ void Phase::copyFrom(const Phase& phase)
 
 Phase::~Phase()
 {
-   foreach (Event* ev, mEvents) {
+   for (Event* ev: mEvents)
             ev = 0;
-   }
 
    mEvents.clear();
 
     if(!mConstraintsFwd.isEmpty()) {
-        foreach (PhaseConstraint* pc, mConstraintsFwd) {
-            if(pc) delete pc;
+        for (PhaseConstraint* pc: mConstraintsFwd) {
+           // if(pc) delete pc;
             pc = 0;
         }
         mConstraintsFwd.clear();
     }
     if(!mConstraintsBwd.isEmpty()) {
-        foreach (PhaseConstraint* pc, mConstraintsBwd) {
-            if(pc) pc->deleteLater();
+        for (PhaseConstraint* pc: mConstraintsBwd) {
+            //if(pc) pc->deleteLater();
             pc = 0;
         }
         mConstraintsBwd.clear();
@@ -213,7 +212,7 @@ double Phase::getMaxThetaEvents(double tmax)
  */
 double Phase::getMinThetaEvents(double tmin)
 {
-    double theta = double();
+    double theta;
     bool found = false;
     QList<Event*>::const_iterator iterEvent = mEvents.constBegin();
     while(iterEvent != mEvents.constEnd()) {
@@ -322,6 +321,16 @@ void Phase::memoAll()
     mAlpha.memo();
     mBeta.memo();
     mDuration.memo();
+#ifdef DEBUG
+    if (mBeta.mX - mAlpha.mX<0)
+        qDebug()<<"in Phase::memoAll : "<<mName<<" Warning mBeta.mX - mAlpha.mX<0";
+#endif
 }
 
+void Phase::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+{
+    mAlpha.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+    mBeta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+    mDuration.generateHistos(chains, fftLen, bandwidth);
+}
 

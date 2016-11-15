@@ -18,6 +18,7 @@
 #define APP_SETTINGS_DEFAULT_IMAGE_QUALITY 100
 #define APP_SETTINGS_DEFAULT_FORMATDATE DateUtils::eBCAD
 #define APP_SETTINGS_DEFAULT_PRECISION 0
+#define APP_SETTINGS_DEFAULT_SHEET 10
 
 #define APP_SETTINGS_STR_LANGUAGE "language"
 #define APP_SETTINGS_STR_COUNTRY "country"
@@ -32,7 +33,7 @@
 #define APP_SETTINGS_STR_IMAGE_QUALITY "image_quality"
 #define APP_SETTINGS_STR_FORMATDATE "format_date"
 #define APP_SETTINGS_STR_PRECISION "precision"
-
+#define APP_SETTINGS_STR_SHEET "sheet"
 
 class AppSettings
 {
@@ -57,6 +58,7 @@ public:
     short mImageQuality;
     DateUtils::FormatDate mFormatDate;
     int mPrecision;
+    int mNbSheet;
 };
 
 #endif

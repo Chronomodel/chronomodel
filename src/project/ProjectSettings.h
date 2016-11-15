@@ -1,4 +1,4 @@
-#ifndef PROJECTSETTINGS_H
+﻿#ifndef PROJECTSETTINGS_H
 #define PROJECTSETTINGS_H
 
 #include <QString>
@@ -32,8 +32,8 @@ public:
     double getTmaxFormated() const ;
 
 public:
-    int mTmin;
-    int mTmax;
+    double mTmin;
+    double mTmax;
     double mStep;
     bool mStepForced;   
 };

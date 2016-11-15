@@ -40,8 +40,8 @@ EventDialog::EventDialog(QWidget* parent, const QString& title, Qt::WindowFlags 
     buttonBox->addButton(tr("OK"), QDialogButtonBox::AcceptRole);
     buttonBox->addButton(tr("Cancel"), QDialogButtonBox::RejectRole);
     
-    connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
-    connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+    connect(buttonBox, &QDialogButtonBox::accepted, this, &EventDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, this, &EventDialog::reject);
     
     // ----------
     

@@ -11,7 +11,7 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
 {
     Plugin14C* plugin14C = (Plugin14C*)mPlugin;
     
-    mAverageLab = new QLabel(tr("Age") + " :", this);
+    mAverageLab = new QLabel(tr("Age (BP)") + " :", this);
     mErrorLab = new QLabel(tr("Error (sd)") + " :", this);
     mRLab = new QLabel(tr("Reservoir Effect (ΔR)") + " :", this);
     mRErrorLab = new QLabel(tr("ΔR Error") + " :", this);

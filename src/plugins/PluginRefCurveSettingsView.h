@@ -22,7 +22,7 @@ public:
 protected slots:
     void addRefCurve();
     void deleteRefCurve();
-    void openSelectedFile();
+   // void openSelectedFile();
     void updateSelection();
     
 private:

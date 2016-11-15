@@ -16,11 +16,12 @@ Button::Button(const QString& text, QWidget* parent):QPushButton(parent)
 
 void Button::init()
 {
+    setAutoRepeat(false);
     setCursor(Qt::PointingHandCursor);
     //setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
     
-    QFont font;
-    font.setPointSizeF(pointSize(10));
+    QFont font(QApplication::font());
+    //font.setPointSizeF(pointSize(10));
     setFont(font);
     
     mFlatVertical = false;

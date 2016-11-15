@@ -2,7 +2,7 @@
 #define PHASE_H
 
 #include "StateKeys.h"
-#include "Event.h"
+//#include "Event.h"
 #include "PhaseConstraint.h"
 #include "MetropolisVariable.h"
 
@@ -11,6 +11,7 @@
 #include <QJsonObject>
 #include <QColor>
 
+class Event;
 
 class Phase
 {
@@ -37,6 +38,8 @@ public:
     double getMaxThetaPrevPhases(double tmin);
     
     QPair<double,double> getFormatedTimeRange() const;
+
+    void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
 
     void updateAll(const double tmin, const double tmax);
     void memoAll();
@@ -78,6 +81,7 @@ public:
     bool mIsCurrent;
     
     int mLevel;
+
 };
 
 #endif

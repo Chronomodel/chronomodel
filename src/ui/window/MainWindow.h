@@ -28,10 +28,10 @@ public:
     ~MainWindow();
     
     Project* getProject();
-    QJsonObject getState();
+    QJsonObject getState() const;
     AppSettings getAppSettings() const;
     QUndoStack* getUndoStack();
-    QString getCurrentPath();
+    QString getCurrentPath() const;
     void setCurrentPath(const QString& path);
     
     void resetInterface();
@@ -39,12 +39,15 @@ public:
     void setRunEnabled(bool enabled);
     void setLogEnabled(bool enabled);
     void setResultsEnabled(bool enabled);
-    QString getNameProject();
+    QString getNameProject() const;
 
 protected:
     void closeEvent(QCloseEvent* e) Q_DECL_OVERRIDE;
     void keyPressEvent(QKeyEvent* e) Q_DECL_OVERRIDE;
     void changeEvent(QEvent* event) Q_DECL_OVERRIDE;
+
+    void connectProject();
+    void disconnectProject();
 
 public:
     void readSettings(const QString& defaultFilePath);
@@ -77,6 +80,7 @@ public slots:
     void changeEventsColor();
     void changeEventsMethod();
     void changeDatesMethod();
+    void selectedEventInSelectedPhases();
     void doGroupedAction();
     
 private:
@@ -127,10 +131,12 @@ private:
     QAction* mRedoAction;
     QAction* mUndoViewAction;
     
+    QAction* mSelectEventsAction;
     QAction* mEventsColorAction;
     QAction* mEventsMethodAction;
     QAction* mDatesMethodAction;
     QList<QAction*> mDatesActions;
+
     
     QAction* mHelpAction;
     QAction* mManualAction;

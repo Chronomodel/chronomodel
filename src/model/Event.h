@@ -1,8 +1,9 @@
 #ifndef EVENT_H
 #define EVENT_H
 
-#include "Date.h"
 #include "MHVariable.h"
+#include "Date.h"
+
 #include "StateKeys.h"
 
 #include <QMap>
@@ -12,7 +13,7 @@
 
 class Phase;
 class EventConstraint;
-
+class Date;
 
 class Event
 {
@@ -22,9 +23,11 @@ public:
         eKnown = 1
     };
     enum Method{
+        eFixe = -1, // use with Type==eKnown
         eDoubleExp = 0,
         eBoxMuller = 1,
-        eMHAdaptGauss = 2
+        eMHAdaptGauss = 2,
+
     };
 
     Event();
@@ -56,6 +59,8 @@ public:
                                 const QVector<QVector<Phase*> >& phaseBranches);
     
     virtual void updateTheta(const double min, const double max);
+
+    void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
     
 public:
     Type mType;

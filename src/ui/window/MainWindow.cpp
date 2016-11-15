@@ -18,14 +18,16 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     tooltipPalette.setColor(QPalette::ToolTipBase, Qt::white);
     tooltipPalette.setColor(QPalette::ToolTipText, Qt::black);
     QToolTip::setPalette(tooltipPalette);
-    QFont tooltipFont;
+    QFont tooltipFont(QApplication::font());
     tooltipFont.setItalic(true);
-    tooltipFont.setPointSizeF(11.f);
+    //tooltipFont.setPointSizeF(11.f);
+
     QToolTip::setFont(tooltipFont);
-    
+
+    setFont(QApplication::font());
     mLastPath = QDir::homePath();
     
-    mProject = new Project();
+    mProject = 0;
 
     mProjectView = new ProjectView();
     setCentralWidget(mProjectView);
@@ -54,10 +56,10 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     connect(mProjectSaveAction, SIGNAL(triggered()), this, SLOT(saveProject()));
     connect(mProjectSaveAsAction, SIGNAL(triggered()), this, SLOT(saveProjectAs()));
 
-    connect(mMCMCSettingsAction, SIGNAL(triggered()), mProject, SLOT(mcmcSettings()));
+   /* connect(mMCMCSettingsAction, SIGNAL(triggered()), mProject, SLOT(mcmcSettings()));
     connect(mResetMCMCAction, SIGNAL(triggered()), mProject, SLOT(resetMCMC()));
     connect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
-    connect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));
+    connect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));*/
 
 
     connect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
@@ -66,14 +68,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
 
     connect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
 
-    connect(mProject, &Project::noResult, this, &MainWindow::noResult);
-    connect(mProject, &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
-    connect(mProject, &Project::projectStateChanged, this, &MainWindow::updateProject);
-    connect(mProject, &Project::projectStructureChanged, this, &MainWindow::noResult);
-    connect(mProject, &Project::projectDesignChanged, mProjectView, &ProjectView::changeDesign);
 
-    
-    mProjectView->doProjectConnections(mProject);
 
 
     QLocale newLoc(QLocale::system());
@@ -81,11 +76,11 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     mAppSettings.mCountry = newLoc.country();
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
-    if(newLoc.decimalPoint()==',') {
+    
+    if (newLoc.decimalPoint()==',') {
         mAppSettings.mCSVCellSeparator=";";
         mAppSettings.mCSVDecSeparator=",";
-    }
-    else {
+    } else {
         mAppSettings.mCSVCellSeparator=",";
         mAppSettings.mCSVDecSeparator=".";
     }
@@ -105,11 +100,11 @@ Project* MainWindow::getProject()
     return mProject;
 }
 
-QJsonObject MainWindow::getState()
+QJsonObject MainWindow::getState() const
 {
     return mProject->mState;
 }
-QString MainWindow::getNameProject()
+QString MainWindow::getNameProject() const
 {
     return mProject->mName;
 }
@@ -124,7 +119,7 @@ QUndoStack* MainWindow::getUndoStack()
     return mUndoStack;
 }
 
-QString MainWindow::getCurrentPath()
+QString MainWindow::getCurrentPath() const
 {
     return mLastPath;
 }
@@ -214,10 +209,10 @@ void MainWindow::createActions()
     //  Dates Actions (Plugins specific)
     //-----------------------------------------------------------------
     const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
-    for(int i=0; i<plugins.size(); ++i){
+    for (int i=0; i<plugins.size(); ++i) {
         QString name = plugins.at(i)->getName();
         QList<QHash<QString, QVariant>> groupedActions = plugins.at(i)->getGroupedActions();
-        for(int j=0; j<groupedActions.size(); ++j){
+        for (int j=0; j<groupedActions.size(); ++j) {
             QAction* act = new QAction(groupedActions[j]["title"].toString(), this);
             act->setData(QVariant(groupedActions[j]));
             connect(act, SIGNAL(triggered()), this, SLOT(doGroupedAction()));
@@ -237,6 +232,8 @@ void MainWindow::createActions()
     mDatesMethodAction = new QAction(tr("Selected events: change data method"), this);
     connect(mDatesMethodAction, SIGNAL(triggered()), this, SLOT(changeDatesMethod()));
     
+    mSelectEventsAction = new QAction(tr("select events in selected phases"), this);
+    connect(mSelectEventsAction, SIGNAL(triggered()), this, SLOT(selectedEventInSelectedPhases()));
     //-----------------------------------------------------------------
     // Help/About Menu
     //-----------------------------------------------------------------
@@ -302,7 +299,6 @@ void MainWindow::createMenus()
     
     mEditMenu->addAction(mUndoAction);
     mEditMenu->addAction(mRedoAction);
-    //mEditMenu->addAction(mUndoViewAction);
     
     //-----------------------------------------------------------------
     // MCMC menu
@@ -322,16 +318,9 @@ void MainWindow::createMenus()
     mViewMenu->addAction(mViewLogAction);
     
     //-----------------------------------------------------------------
-    // Language menu
+    // Help/About Menu this menu depend of the system. On MacOs it's in Chronomodel menu
     //-----------------------------------------------------------------
-    /*mLanguageMenu = menuBar()->addMenu(tr("Language"));
-    mLanguageMenu->addAction(mTranslateEnglishAct);
-    mLanguageMenu->addAction(mTranslateFrenchAct);*/
-    
-    //-----------------------------------------------------------------
-    // Help/About Menu
-    //-----------------------------------------------------------------
-    mHelpMenu = menuBar()->addMenu(tr("Help"));
+    mHelpMenu = menuBar()->addMenu(tr("About"));
     mHelpMenu->menuAction()->setShortcut(Qt::Key_Question);
     mHelpMenu->addAction(mAboutAct);
     mHelpMenu->addAction(mAboutQtAct);
@@ -340,14 +329,15 @@ void MainWindow::createMenus()
     // Grouped Actions Menu
     //-----------------------------------------------------------------
     mPluginsMenu = menuBar()->addMenu(tr("Actions"));
+    mPluginsMenu->addAction(mSelectEventsAction);
     mPluginsMenu->addAction(mEventsColorAction);
     mPluginsMenu->addAction(mEventsMethodAction);
     mPluginsMenu->addAction(mDatesMethodAction);
     mPluginsMenu->addSeparator();
     
-    for(int i=0; i<mDatesActions.size(); ++i){
+    for (int i=0; i<mDatesActions.size(); ++i)
         mPluginsMenu->addAction(mDatesActions[i]);
-    }
+    
 }
 
 void MainWindow::createToolBars()
@@ -400,80 +390,157 @@ void MainWindow::newProject()
     // Return true if the project doesn't need to be saved.
     // Returns true if the user saves the project or if the user doesn't want to save it.
     // Returns false if the user cancels.
+    bool yesCreate= false;
 
-    //mProject->setAppSettings(mAppSettings);
+    if ((mProject==0) || (mProject->askToSave(tr("Save current project as...") )))
+        yesCreate= true;
 
-    if(mProject->askToSave(tr("Save current project as...")))
-    {
+    if (yesCreate) {
+        Project* newProject = new Project();
+         // just update mAutoSaveTimer to avoid open the save() dialog box
+        newProject-> mAutoSaveTimer->stop();
+
         // Ask to save the new project.
         // Returns true only if a new file is created.
         // Note : at this point, the project state is still the previous project state.
-        if(mProject->saveAs(tr("Save new project as...")))
-        {
+        if (newProject->saveAs(tr("Save new project as..."))) {
             mUndoStack->clear();
-            
+
+            // resetInterface Disconnect also the scene
             resetInterface();
             activateInterface(true);
 
             // Reset the project state and the MCMC Setting to the default value
-            // and then send a notification to update the views :
-            mProject->initState(NEW_PROJECT_REASON);
-        }
-        
-        mViewModelAction->trigger();
+            // and then send a notification to update the views : send desabled
+            newProject->initState(NEW_PROJECT_REASON);
 
-        mViewResultsAction->setEnabled(false);
+            delete mProject;
+            /*if (mProject)
+                disconnectProject();*/
+
+            mProject = newProject;
+            connectProject();
+            mProject->setAppSettings(mAppSettings);
+
+            mProjectView->createProject();
+
+            mViewModelAction->trigger();
+
+            mViewResultsAction->setEnabled(false);
+        } else
+            delete newProject;
+
+
         updateWindowTitle();
     }
 }
 
 void MainWindow::openProject()
 {
-    QString path = QFileDialog::getOpenFileName(qApp->activeWindow(),
-                                                tr("Open File"),
-                                                getCurrentPath(),
-                                                tr("Chronomodel Project (*.chr)"));
+    const QString currentPath = getCurrentPath();
+    QString path = QFileDialog::getOpenFileName(this,
+                                                      tr("Open File"),
+                                                      currentPath,
+                                                      tr("Chronomodel Project (*.chr)"));
     
-    if(!path.isEmpty())
-    {
+    if (!path.isEmpty()) {
 
-        //mProject->setAppSettings(mAppSettings);
 
-        if(mProject->askToSave(tr("Save current project as...")))
-        {
-            QFileInfo info(path);
-            setCurrentPath(info.absolutePath());
-            
+        if (mProject) {
+            mProject->askToSave(tr("Save current project as..."));
+            disconnectProject();
+
+            //resetInterface(): clear mEventsScene and mPhasesScene, set mProject = 0
             resetInterface();
-            
-            mUndoStack->clear();
-            if(mProject->load(path)){
-                activateInterface(true);
-                updateWindowTitle();
-            }
+            delete mProject;
         }
+
+        // assign new project
+        mProject = new Project();
+        connectProject();
+
+        //setAppSettings(): just update mAutoSaveTimer
+        mProject->setAppSettings(mAppSettings);
+        const QFileInfo info(path);
+        setCurrentPath(info.absolutePath());
+
+        mUndoStack->clear();
+        // look MainWindows::readSetting()
+        if (mProject->load(path)) {
+            activateInterface(true);
+            updateWindowTitle();
+        // Create mEventsScene and mPhasesScenes
+            mProjectView->createProject();
+
+            mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
+            if (! mProject->mModel->mChains.isEmpty())
+                emit mProject->mcmcFinished(mProject->mModel);
+         }
+
+
+
     }
+
+}
+
+void MainWindow::connectProject()
+{
+    connect(mProject, &Project::noResult, this, &MainWindow::noResult);
+    connect(mProject, &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
+    connect(mProject, &Project::projectStateChanged, this, &MainWindow::updateProject);
+    connect(mProject, &Project::projectStructureChanged, this, &MainWindow::noResult);
+    connect(mProject, &Project::projectDesignChanged, mProjectView, &ProjectView::changeDesign);
+
+    connect(mMCMCSettingsAction, &QAction::triggered, mProject, &Project::mcmcSettings);
+    connect(mResetMCMCAction, &QAction::triggered, mProject, &Project::resetMCMC);
+    connect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
+    connect(mRunAction, &QAction::triggered, mProject, &Project::run);
+
+    mProjectView->doProjectConnections(mProject);
+}
+
+void MainWindow::disconnectProject()
+{
+    disconnect(mProject, &Project::noResult, this, &MainWindow::noResult);
+    disconnect(mProject, &Project::mcmcFinished, this, &MainWindow::mcmcFinished);
+    disconnect(mProject, &Project::projectStateChanged, this, &MainWindow::updateProject);
+    disconnect(mProject, &Project::projectStructureChanged, this, &MainWindow::noResult);
+    disconnect(mProject, &Project::projectDesignChanged, mProjectView, &ProjectView::changeDesign);
+
+    disconnect(mMCMCSettingsAction, &QAction::triggered, mProject, &Project::mcmcSettings);
+    disconnect(mResetMCMCAction, &QAction::triggered, mProject, &Project::resetMCMC);
+    disconnect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
+    disconnect(mRunAction, &QAction::triggered, mProject, &Project::run);
+    //mProjectView->doProjectConnections(0);
 }
 
 void MainWindow::closeProject()
 {
-    if(mProject->askToSave(tr("Save current project as...")))
-    {
-        mUndoStack->clear();
-        
-        mProject->initState(CLOSE_PROJECT_REASON);
-        mProject->mLastSavedState = mProject->emptyState();
-        mProject->mProjectFileName = QString();
-        // Go back to model tab :
-        mViewModelAction->trigger();
-        mProject->clearModel();
-        
-        resetInterface();
-        activateInterface(false);
-        mViewResultsAction->setEnabled(false);
-        
-        updateWindowTitle();
-    }
+   if(mProject) {
+        if ( mProject && mProject->askToSave(tr("Save current project as..."))) {
+            mUndoStack->clear();
+
+            mProject->initState(CLOSE_PROJECT_REASON);
+            mProject->mLastSavedState = mProject->mState;//emptyState();
+            mProject->mProjectFileName = QString();
+
+            // Go back to model tab :
+            mViewModelAction->trigger();
+            mProject->clearModel();
+            disconnectProject();
+
+            resetInterface();
+
+            activateInterface(false);
+            mViewResultsAction->setEnabled(false);
+
+            updateWindowTitle();
+            delete mProject;
+            mProject = 0;
+
+        }
+   } else // if there is no project, we suppose it means to close the programm
+       QApplication::exit(0);
 }
 
 void MainWindow::saveProject()
@@ -494,7 +561,6 @@ void MainWindow::updateWindowTitle()
 }
 
 void MainWindow::updateProject(){
-    //bool valid = (mProject->getInvalidDates().size() == 0);
     mRunAction->setEnabled(true);
     mProjectView->updateProject();
 }
@@ -511,8 +577,7 @@ void MainWindow::appSettings()
     AppSettingsDialog dialog(qApp->activeWindow());
     dialog.setSettings(mAppSettings);
     connect(&dialog, SIGNAL(settingsChanged(const AppSettings&)), this, SLOT(setAppSettings(const AppSettings&)));
-    if(dialog.exec() == QDialog::Accepted)
-        setAppSettings(dialog.getSettings());
+    dialog.exec();
 
 }
 
@@ -527,10 +592,12 @@ void MainWindow::setAppSettings(const AppSettings& s)
     QLocale::setDefault(newLoc);
     //statusBar()->showMessage(tr("Language") + " : " + QLocale::languageToString(QLocale().language()));
     
-    mProject->setAppSettings(mAppSettings);
-    
-    if(mViewResultsAction->isEnabled())
-        mProjectView->ApplySettings(mProject->mModel, &mAppSettings);
+    if (mProject) {
+        mProject->setAppSettings(mAppSettings);
+
+        if (mViewResultsAction->isEnabled())
+            mProjectView->applySettings(mProject->mModel, &mAppSettings);
+    }
 }
 
 void MainWindow::openManual()
@@ -572,19 +639,26 @@ void MainWindow::setLanguage(QAction* action)
     qApp->installTranslator(&qtTranslator);
     
     QTranslator translator;
-    if(translator.load(locale, ":/Chronomodel", "_")){
+    if (translator.load(locale, ":/Chronomodel", "_")) {
         qDebug() << "-> Locale set to : " << QLocale::languageToString(locale.language()) << "(" << locale.name() << ")";
         qApp->installTranslator(&translator);
     }
 }
 
 #pragma mark Grouped Actions
+void MainWindow::selectedEventInSelectedPhases() {
+    if (mProject)
+        mProject->selectedEventsFromSelectedPhases();
+}
+
+
+
 void MainWindow::changeEventsColor()
 {
     const QColor color = QColorDialog::getColor(Qt::blue, qApp->activeWindow(), tr("Change selected events color"));
-    if(color.isValid()){
+    if (color.isValid())
         mProject->updateSelectedEventsColor(color);
-    }
+    
 }
 void MainWindow::changeEventsMethod()
 {
@@ -598,7 +672,7 @@ void MainWindow::changeEventsMethod()
                                           tr("Change events method"),
                                           tr("Change selected events MCMC method :"),
                                           opts, 0, false, &ok);
-    if(ok && !methodStr.isEmpty()){
+    if (ok && !methodStr.isEmpty()) {
         Event::Method method = ModelUtilities::getEventMethodFromText(methodStr);
         mProject->updateSelectedEventsMethod(method);
     }
@@ -607,16 +681,15 @@ void MainWindow::changeDatesMethod()
 {
     QStringList opts;
     const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
-    for(int i=0; i<plugins.size(); ++i){
-        //opts.append(plugins[i]->getId());
+    for (int i=0; i<plugins.size(); ++i)
         opts.append(plugins[i]->getName());
-    }
+    
     bool ok;
     QString pluginName = QInputDialog::getItem(qApp->activeWindow(),
                                              tr("Change data method"),
                                              tr("For what type of data do you want to change the method ?"),
                                              opts, 0, false, &ok);
-    if(ok){
+    if (ok) {
         opts.clear();
         opts.append(ModelUtilities::getDataMethodText(Date::eMHSymetric));
         opts.append(ModelUtilities::getDataMethodText(Date::eInversion));
@@ -626,7 +699,7 @@ void MainWindow::changeDatesMethod()
                                                   tr("Change data method"),
                                                   tr("Change MCMC method of data in selected events :"),
                                                   opts, 0, false, &ok);
-        if(ok && !methodStr.isEmpty()){
+        if (ok && !methodStr.isEmpty()) {
             Date::DataMethod method = ModelUtilities::getDataMethodFromText(methodStr);
             PluginAbstract* plugin =PluginManager::getPluginFromName(pluginName);
             QString pluginId = plugin->getId();
@@ -640,14 +713,14 @@ void MainWindow::doGroupedAction()
     QVariant groupedActionVariant = act->data();
     QHash<QString, QVariant> groupedAction = groupedActionVariant.toHash();
     
-    if(groupedAction["inputType"] == "combo"){
+    if (groupedAction["inputType"] == "combo") {
         bool ok;
         QString curve = QInputDialog::getItem(qApp->activeWindow(),
                                                groupedAction["title"].toString(),
                                                groupedAction["label"].toString(),
                                                groupedAction["items"].toStringList(),
                                                0, false, &ok);
-        if(ok && !curve.isEmpty()){
+        if (ok && !curve.isEmpty()) {
             groupedAction["value"] = curve;
             mProject->updateAllDataInSelectedEvents(groupedAction);
         }
@@ -660,60 +733,57 @@ void MainWindow::doGroupedAction()
  */
 void MainWindow::closeEvent(QCloseEvent* e)
 {
-    QMessageBox message(QMessageBox::Question,
-                        QApplication::applicationName(),
-                        tr("Do you really want to quit ChronoModel ?"),
-                        QMessageBox::Yes | QMessageBox::No,
-                        qApp->activeWindow(),
-                        Qt::Sheet);
-    
-    if(message.exec() == QMessageBox::Yes)
-    {
-        if(mProject->askToSave(tr("Save project before quitting?")))
-        {
-            writeSettings();
-            e->accept();
-            
-            // This is a temporary Qt bug fix (should be corrected by Qt 5.6 when released)
-            // The close event is called twice on Mac when closing with "cmd + Q" key or with the "Quit Chronomodel" menu.
-            QCoreApplication::exit(0);
-        }
-        else
-        {
+    if (mProject) {
+        QMessageBox message(QMessageBox::Question,
+                            QApplication::applicationName(),
+                            tr("Do you really want to quit ChronoModel ?"),
+                            QMessageBox::Yes | QMessageBox::No,
+                            qApp->activeWindow(),
+                            Qt::Sheet);
+
+        if (message.exec() == QMessageBox::Yes) {
+            if (mProject->askToSave(tr("Save project before quitting?"))) {
+                writeSettings();
+                e->accept();
+
+                // This is a temporary Qt bug fix (should be corrected by Qt 5.6 when released)
+                // The close event is called twice on Mac when closing with "cmd + Q" key or with the "Quit Chronomodel" menu.
+                QCoreApplication::exit(0);
+            } else
+                e->ignore();
+
+        } else
             e->ignore();
-        }
+    } else {
+        e->accept();
+
+        // This is a temporary Qt bug fix (should be corrected by Qt 5.6 when released)
+        // The close event is called twice on Mac when closing with "cmd + Q" key or with the "Quit Chronomodel" menu.
+        QCoreApplication::exit(0);
     }
-    else
-    {
-        e->ignore();
-    }
+    
 }
 
 void MainWindow::keyPressEvent(QKeyEvent* keyEvent)
 {
-    if(keyEvent->matches(QKeySequence::Undo))
-    {
+    if (keyEvent->matches(QKeySequence::Undo))
         mUndoStack->undo();
-    }
-    else if(keyEvent->matches(QKeySequence::Redo))
-    {
+    
+    else if (keyEvent->matches(QKeySequence::Redo))
         mUndoStack->redo();
-    }
+    
     QMainWindow::keyPressEvent(keyEvent);
 }
 
 void MainWindow::changeEvent(QEvent* event)
 {
-    if(event->type() == QEvent::LanguageChange)
-    {
+    if (event->type() == QEvent::LanguageChange) {
         // TODO : set every text that needs translation !!!
         qDebug() << "--> MainWindow language updated";
         mNewProjectAction->setText(tr("&New"));
-    }
-    else
-    {
+    } else
         QMainWindow::changeEvent(event);
-    }
+    
 }
 
 #pragma mark Settings
@@ -743,6 +813,7 @@ void MainWindow::writeSettings()
     settings.setValue(APP_SETTINGS_STR_IMAGE_QUALITY, mAppSettings.mImageQuality);
     settings.setValue(APP_SETTINGS_STR_FORMATDATE, mAppSettings.mFormatDate);
     settings.setValue(APP_SETTINGS_STR_PRECISION, mAppSettings.mPrecision);
+    settings.setValue(APP_SETTINGS_STR_SHEET, mAppSettings.mNbSheet);
     settings.endGroup();
     
     settings.endGroup();
@@ -769,7 +840,8 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     mAppSettings.mDpm = settings.value(APP_SETTINGS_STR_DPM, APP_SETTINGS_DEFAULT_DPM).toInt();
     mAppSettings.mImageQuality = settings.value(APP_SETTINGS_STR_IMAGE_QUALITY, APP_SETTINGS_DEFAULT_IMAGE_QUALITY).toInt();
     mAppSettings.mFormatDate = (DateUtils::FormatDate)settings.value(APP_SETTINGS_STR_FORMATDATE, APP_SETTINGS_DEFAULT_FORMATDATE).toInt();
-    mAppSettings.mPrecision = settings.value(APP_SETTINGS_STR_FORMATDATE, APP_SETTINGS_DEFAULT_FORMATDATE).toInt();
+    mAppSettings.mPrecision = settings.value(APP_SETTINGS_STR_PRECISION, APP_SETTINGS_DEFAULT_PRECISION).toInt();
+    mAppSettings.mNbSheet = settings.value(APP_SETTINGS_STR_SHEET, APP_SETTINGS_DEFAULT_SHEET).toInt();
     settings.endGroup();
     
 
@@ -777,16 +849,14 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     mHelpAction->setChecked(mAppSettings.mShowHelp);
     
     bool fileOpened = false;
-    if(!defaultFilePath.isEmpty())
-    {
+    if (!defaultFilePath.isEmpty()) {
         QFileInfo fileInfo(defaultFilePath);
-        if(fileInfo.isFile())
-        {
-            if(mProject->mModel) {
+        if (fileInfo.isFile()) {
+            if (mProject->mModel) {
                 mProject->mModel->clear();
                 mProjectView->resetInterface();
             }
-            if(mProject->load(defaultFilePath)){
+            if (mProject->load(defaultFilePath)) {
                 activateInterface(true);
                 updateWindowTitle();
                 fileOpened = true;
@@ -794,19 +864,33 @@ void MainWindow::readSettings(const QString& defaultFilePath)
         }
     }
     
-    if(!fileOpened && mAppSettings.mOpenLastProjectAtLaunch)
-    {
-        QString dir = settings.value("last_project_dir", "").toString();
-        QString filename = settings.value("last_project_filename", "").toString();
-        //QString filename ="";
-        QString path = dir + "/" + filename;
+    if (!fileOpened && mAppSettings.mOpenLastProjectAtLaunch) {
+        const QString dir = settings.value("last_project_dir", "").toString();
+        const QString filename = settings.value("last_project_filename", "").toString();
+        const QString path = dir + "/" + filename;
         QFileInfo fileInfo(path);
-        
-        if(fileInfo.isFile())
-        {
-            if(mProject->load(path)){
+
+        // look MainWindows::openProject
+        if (fileInfo.isFile()) {
+            mProject = new Project();
+            if (mProject->load(path)) {
                 activateInterface(true);
                 updateWindowTitle();
+                connectProject();
+
+                mProject->setAppSettings(mAppSettings);
+
+                mProjectView->createProject();
+
+                mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
+                // to do, it'is done in project load
+                if (! mProject->mModel->mChains.isEmpty()) {
+                    mViewLogAction -> setEnabled(true);
+                    mViewResultsAction -> setEnabled(true);
+                    mViewResultsAction -> setChecked(true); // Just check the Result Button after computation and mResultsView is show after
+
+                    mProject->mModel->updateFormatSettings(&mAppSettings);
+                 }
             }
         }
     }
@@ -815,6 +899,10 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     
     setAppSettings(mAppSettings);
     mProjectView->readSettings();
+    if ( (mProject) && (! mProject->mModel->mChains.isEmpty()) ) {
+        mProjectView->mRefreshResults = true;
+        mProjectView->showResults();
+   }
 }
 
 void MainWindow::resetInterface()
@@ -838,9 +926,7 @@ void MainWindow::activateInterface(bool activate)
     // Par contre, elles ne doivent pas être ré-activée dès l'ouverture d'un projet
     mRunAction->setEnabled(activate);
     
-    if(!activate)
-    {
-        //mRunAction->setEnabled(activate);
+    if (!activate) {
         mViewResultsAction->setEnabled(activate);
         mViewLogAction->setEnabled(activate);
     }
@@ -864,13 +950,16 @@ void MainWindow::setLogEnabled(bool enabled)
 
 void MainWindow::mcmcFinished(Model* model)
 {
-    if(!model) return;
+    if (!model)
+        return;
     mViewLogAction -> setEnabled(true);
     mViewResultsAction -> setEnabled(true);
     mViewResultsAction -> setChecked(true); // Just check the Result Button after computation and mResultsView is show after
 
     model->updateFormatSettings(&mAppSettings);
-    mProjectView->initResults(model);
+    
+    mProjectView->initResults(model, &mAppSettings);
+  
 }
  void MainWindow::noResult()
  {

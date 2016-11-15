@@ -6,7 +6,7 @@
 # Chronomodel
 #
 #-------------------------------------------------
-VERSION = 1.5.1_alpha # must match value in src/main.cpp
+VERSION = 1.5.8_alpha # must match value in src/main.cpp
 #PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_
 
@@ -47,7 +47,7 @@ message("RCC_DIR : $$RCC_DIR")
 QT += core gui widgets svg
 
 # Resource file (for images)
-#RESOURCES = $$PRO_PATH/Chronomodel.qrc
+RESOURCES = $$PRO_PATH/Chronomodel.qrc
 RESOURCES = Chronomodel.qrc
 
 # Compilation warning flags
@@ -57,6 +57,8 @@ QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter
 # C++ 11
 # Config must use C++ 11 for random number generator
 # This works for Windows, Linux & Mac 10.7 and +
+# In the future we'll need to increase to C++17
+# which offered namespace std::experimental::parallel;
 #########################################
 CONFIG += C++11
 
@@ -76,13 +78,16 @@ macx{
 	# Define a set of resources to deploy inside the bundle :
 	RESOURCES_FILES.path = Contents/Resources
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
-	#RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
+        #RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
 	QMAKE_BUNDLE_DATA += RESOURCES_FILES
+
 }
 win32{
 	# Resource file (Windows only)
-	#RC_FILE += Chronomodel.rc
+        RC_FILE += Chronomodel.rc
 	RC_ICONS += $$PRO_PATH/icon/Chronomodel.ico
+QT_FATAL_WARNING = 1
+
 }
 
 #########################################
@@ -127,8 +132,8 @@ macx{
 	
 	# Link the application with FFTW library
 	# If no dylib are present, static libs (.a) are used => that's why we moved .dylib files in a "dylib" folder.
-	LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
-        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
+        #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
+        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3
 	
 	# If we were deploying FFTW as a dynamic library, we should :
 	# - Move all files from "lib/FFTW/mac/dylib" to "lib/FFTW/mac"
@@ -144,7 +149,8 @@ macx{
 }
 win32{
 	INCLUDEPATH += lib/FFTW
-	LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
+        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
+        #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3-3
 }
 #linux :
 unix:!macx{ 
@@ -221,6 +227,7 @@ HEADERS += src/plugins/GraphViewRefAbstract.h
 HEADERS += src/plugins/PluginSettingsViewAbstract.h
 HEADERS += src/plugins/PluginRefCurveSettingsView.h
 HEADERS += src/plugins/RefCurve.h
+HEADERS += src/plugins/CalibrationCurve.h
 
 equals(USE_PLUGIN_TL, 1){
 	HEADERS += src/plugins/plugin_tl/PluginTL.h
@@ -362,6 +369,7 @@ SOURCES += src/model/ModelUtilities.cpp
 
 SOURCES += src/plugins/PluginRefCurveSettingsView.cpp
 SOURCES += src/plugins/RefCurve.cpp
+SOURCES += src/plugins/CalibrationCurve.cpp
 
 equals(USE_PLUGIN_TL, 1){
 	SOURCES += src/plugins/plugin_tl/PluginTL.cpp

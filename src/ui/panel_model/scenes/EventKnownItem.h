@@ -4,6 +4,7 @@
 #include "EventItem.h"
 #include "Event.h"
 
+
 class EventKnownItem : public EventItem
 {
 public:
@@ -25,6 +26,8 @@ private:
     QImage mThumb;
     int mThumbH;
     bool mThumbVisible;
+    //bool mWithSelectedPhase;
+    //bool mShowAllThumbs;
 };
 
 #endif

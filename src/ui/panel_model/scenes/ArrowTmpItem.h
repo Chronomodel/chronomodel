@@ -24,6 +24,11 @@ public:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
     
 protected:
+
+    QString getBubbleText() const;
+
+    qreal mBubbleHeight;
+
     double mXFrom;
     double mYFrom;
     double mXTo;

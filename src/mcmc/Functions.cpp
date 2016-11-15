@@ -1,4 +1,4 @@
-#include "Functions.h"
+﻿#include "Functions.h"
 #include "Generator.h"
 #include "StdUtilities.h"
 #include "DateUtils.h"
@@ -7,6 +7,7 @@
 #include <QApplication>
 #include <set>
 #include <map>
+#include <QTime>
 
 // -----------------------------------------------------------------
 //  sumP = Sum (pi)
@@ -18,98 +19,92 @@
  * @brief Product a FunctionAnalysis from a QMap
  * @todo Handle empty function case and null density case (pi = 0)
 */
-FunctionAnalysis analyseFunction(const QMap<double, double>& aFunction)
+FunctionAnalysis analyseFunction(const QMap<type_data, type_data> &aFunction)
 {
     FunctionAnalysis result;
-    if(aFunction.isEmpty()){
-        result.max = 0;
-        result.mode = 0;
-        result.mean = 0;
-        result.stddev = -1;
+    if (aFunction.isEmpty()) {
+        result.max = (type_data)0.;
+        result.mode = (type_data)0.;
+        result.mean = (type_data)0.;
+        result.stddev = (type_data)(-1.);
         qDebug() << "WARNING : in analyseFunction() aFunction isEmpty !! ";
         return result;
     }
-    //typename QMap<double, double>::const_iterator it;
-    
-    double max = 0.;
-    double mode = 0.;
-    double sum = 0.;
-    double sum2 = 0.;
-    double sumP = 0.;
-    
-    double prevY = 0;
-    QList<double> uniformXValues;
-    
-    QMap<double,double>::const_iterator citer = aFunction.cbegin();
-    for(;citer != aFunction.cend(); ++citer)
-    {
-        const double x = citer.key();
-        const double y = citer.value();
-        
+
+    type_data max (0.);
+    type_data mode (0.);
+    type_data sum (0.);
+    type_data sum2 (0.);
+    type_data sumP (0.);
+
+    type_data prevY (0.);
+    QList<type_data> uniformXValues;
+
+    QMap<type_data,type_data>::const_iterator citer = aFunction.cbegin();
+    for (;citer != aFunction.cend(); ++citer) {
+        const type_data x = citer.key();
+        const type_data y = citer.value();
+
         sumP += y;
         sum += y * x;
         sum2 += y * x * x;
-        
-        if(max <= y)
-        {
+
+        if (max <= y) {
             max = y;
-            if(prevY == y)
-            {
+            if (prevY == y) {
                 uniformXValues.append(x);
                 int middleIndex = floor(uniformXValues.size()/2);
                 mode = uniformXValues.at(middleIndex);
-            }
-            else
-            {
+            } else {
                 uniformXValues.clear();
                 mode = x;
             }
         }
         prevY = y;
     }
-    
+
     //FunctionAnalysis result;
     result.max = max;
     result.mode = mode;
-    result.mean = 0;
-    result.stddev = 0;
-    
-    if(sumP != 0)
-    {
+    result.mean = (type_data)0.;
+    result.stddev = (type_data)0.;
+
+    if (sumP != 0) {
         result.mean = sum / sumP;
-        double variance = (sum2 / sumP) - pow(result.mean, 2);
-        
-        if(variance < 0) {
+        type_data variance = (sum2 / sumP) - pow(result.mean, 2);
+
+        if (variance < 0) {
             qDebug() << "WARNING : in analyseFunction() negative variance found : " << variance<<" return 0";
             variance = -variance;
         }
-        
+
         result.stddev = sqrt(variance);
     }
-    
+
     return result;
 }
 
-double dataStd(const QVector<double>& data)
+
+type_data dataStd(const QVector<type_data> &data)
 {
     // Work with double precision here because sum2 might be big !
     
-    const double s = sum<double>(data);
-    const double s2 = sum2<double>(data);
-    const double mean = s / data.size();
-    const double variance = s2 / data.size() - mean * mean;
+    const type_data s = sum<type_data>(data);
+    const type_data s2 = sum2<type_data>(data);
+    const type_data mean = s / data.size();
+    const type_data variance = s2 / data.size() - mean * mean;
     
-    if(variance < 0)
-    {
+    if (variance < 0) {
         qDebug() << "WARNING : in dataStd() negative variance found : " << variance<<" return 0";
-        return 0.f;
+        return (type_data)0.;
     }
-    return (double)sqrt(variance);
+    return sqrt(variance);
 }
 
 double shrinkageUniform(const double so2)
 {
-    double u = Generator::randomUniform();
+    //double u = Generator::randomUniform();
+    const double u = Generator::randomUniform(0,1);
     return (so2 * (1. - u) / u);
 }
 
@@ -121,9 +116,8 @@ QString functionAnalysisToString(const FunctionAnalysis& analysis)
 {
     QString result;
 
-    if(analysis.stddev<0.){
-       result = "No data";
-    }
+    if (analysis.stddev<0.)
+        result = QObject::tr("No data");
     else {
         result += "MAP : " + DateUtils::dateToString(analysis.mode) + "   ";
         result += "Mean : " + DateUtils::dateToString(analysis.mean) + "   ";
@@ -138,8 +132,8 @@ QString functionAnalysisToString(const FunctionAnalysis& analysis)
  */
 QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& nl)
 {
-    QString result = "No data";
-    if(analysis.analysis.stddev>=0.){
+    QString result (QObject::tr("No data"));
+    if (analysis.analysis.stddev>=0.) {
         result = functionAnalysisToString(analysis.analysis) + nl;
         result += "Q1 : " + DateUtils::dateToString(analysis.quartiles.Q1) + "   ";
         result += "Q2 (Median) : " + DateUtils::dateToString(analysis.quartiles.Q2) + "   ";
@@ -149,35 +143,34 @@ QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& 
 }
 
 
-Quartiles quartilesForTrace(const QVector<double>& trace)
+Quartiles quartilesForTrace(const QVector<type_data> &trace)
 {
     Quartiles quartiles;
-    if(trace.size()<5){
+    const int n = trace.size();
+    if (n<5) {
         quartiles.Q1 = 0.;
         quartiles.Q2 = 0.;
         quartiles.Q3 = 0.;
         return quartiles;
     }
-    QVector<double> sorted = trace;
-    qSort(sorted);
+
+    QVector<type_data> sorted (trace);
+    std::sort(sorted.begin(),sorted.end());
     
-    int q1index = ceil((double)sorted.size() * 0.25f);
-    int q3index = ceil((double)sorted.size() * 0.75f);
+    const int q1index = (int) ceil(n * 0.25);
+    const int q3index = (int) ceil(n * 0.75);
     
-    quartiles.Q1 = sorted[q1index];
-    quartiles.Q3 = sorted[q3index];
+    quartiles.Q1 = sorted.at(q1index);
+    quartiles.Q3 = sorted.at(q3index);
     
-    if(sorted.size() % 2 == 0)
-    {
-        int q2indexLow = sorted.size() / 2;
-        int q2indexUp = q2indexLow + 1;
+    if (n % 2 == 0) {
+        const int q2indexLow = n / 2;
+        const int q2indexUp = q2indexLow + 1;
         
-        quartiles.Q2 = sorted[q2indexLow] + (sorted[q2indexUp] - sorted[q2indexLow]) / 2.f;
-    }
-    else
-    {
-        int q2index = ceil((double)sorted.size() * 0.5f);
-        quartiles.Q2 = sorted[q2index];
+        quartiles.Q2 = sorted.at(q2indexLow) + (sorted.at(q2indexUp) - sorted.at(q2indexLow)) / 2.f;
+    } else {
+        const int q2index = (int)ceil(n * 0.5);
+        quartiles.Q2 = sorted.at(q2index);
     }
     return quartiles;
 }
@@ -185,7 +178,7 @@ Quartiles quartilesForTrace(const QVector<double>& trace)
 Quartiles quartilesForRepartition(const QVector<double>& repartition, const double tmin, const double step)
 {
     Quartiles quartiles;
-    if(repartition.size()<5){
+    if (repartition.size()<5) {
         quartiles.Q1 = 0.;
         quartiles.Q2 = 0.;
         quartiles.Q3 = 0.;
@@ -204,307 +197,395 @@ Quartiles quartilesForRepartition(const QVector<double>& repartition, const doub
 
 QPair<double, double> credibilityForTrace(const QVector<double>& trace, double thresh, double& exactThresholdResult,const  QString description)
 {
-    QPair<double, double> credibility;
-    credibility.first = 0;
-    credibility.second = 0;
-    exactThresholdResult = 0;
-    QProgressDialog *progress = new QProgressDialog(description,"Wait" , 1, 10,qApp->activeWindow());
-    progress->setWindowModality(Qt::WindowModal);
-    progress->setCancelButton(0);
-    //progress->forceShow();
-    //progress->setMinimumDuration(40);
-
-    if(thresh > 0 && trace.size() > 0)
-    {
-
-
-        /*double threshold =  (thresh > 100 ? thresh = 100.0 : thresh);
-        threshold = (thresh < 0 ? thresh = 0.0 : thresh);*/
+    QPair<double, double> credibility(0.,0.);
+    exactThresholdResult = 0.;
+    const int n = trace.size();
+    if (thresh > 0 && n > 0) {
         double threshold = inRange(0.0, thresh, 100.0);
-        QVector<double> sorted = trace;
-        qSort(sorted);
+        QVector<double> sorted (trace);
+        std::sort(sorted.begin(),sorted.end());
         
-        int numToRemove = floor((double)sorted.size() * (1.f - threshold / 100.f));
-        exactThresholdResult = ((double)sorted.size() - (double)numToRemove) / (double)sorted.size();
+        const int numToRemove = (int)floor(n * (1. - threshold / 100.));
+        exactThresholdResult = ((double)n - (double)numToRemove) / (double)n;
         
-        const int k = numToRemove;
-        const int n = sorted.size();
-        double lmin = 0.f;
+        double lmin = 0.;
         int foundJ = 0;
-        progress->setMaximum(k);
 
-        for(int j=0; j<=k; ++j)
-        {
-            progress->setValue(k);
-            const double l = sorted[(n - 1) - k + j] - sorted[j];
-            if(lmin == 0.f || l < lmin)
-            {
+        for (int j=0; j<=numToRemove; ++j) {
+            const double l = sorted.at((n - 1) - numToRemove + j) - sorted.at(j);
+            if ((lmin == 0.f) || (l < lmin)) {
                 foundJ = j;
                 lmin = l;
             }
         }
-        credibility.first = sorted[foundJ];
-        credibility.second = sorted[(n - 1) - k + foundJ];
+        credibility.first = sorted.at(foundJ);
+        credibility.second = sorted.at((n - 1) - numToRemove + foundJ);
     }
 
-    delete progress;
-
-    if(credibility.first == credibility.second) {
+    if (credibility.first == credibility.second) {
         //It means : there is only on value
         return QPair<double, double>();
     }
     else return credibility;
 }
 
-/*
-QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh)
-{
-    QPair<double, double> range;
-    range.first = 0;
-    range.second = 0;
-
-    if(thresh > 0 && trace1.size() > 0 && trace2.size()==trace1.size()) {
-        const double threshold =  qBound(0., thresh, 100.0);
-        const double gamma = 1-threshold/100;
-        const int n = trace1.size()-1; // 1<= n <= (size-1) : index shift
-        const int nGamma = (int) ceil(n*gamma);
-        double dMin = qInf();
-        std::vector<double> alpha(trace1.toStdVector());
-        std::sort(alpha.begin(),alpha.end());
-
-        for(int nEpsilon=0; nEpsilon<nGamma; ++nEpsilon) {
-            const double a = alpha.at(nEpsilon);
-            const double epsilon = (double)nEpsilon/(double)n;
-            // selection of the beta values corresponding to all couples (trace1,trace2) whose trace1>a then stack beta=trace2
-            std::vector<double> beta;
-
-            for(int i = 0; i< trace1.size(); ++i) {
-                if(trace1.at(i)>= a) beta.push_back(trace2.at(i));
-                //if( (trace1.at(i)>= a) && (trace2.at(i)<=a) ) qDebug()<<"trace1="<<trace1.at(i)<<" trace2="<<trace2.at(i);
-            }
-            //beta.shrink_to_fit();
-            const double m = beta.size()-1; // 1<= m <= (size-1) : index shift
-            std::sort(beta.begin(),beta.end());
-            // find the shortest lengt
-            const int j = (int) ceil( m*(1-gamma)/(1-epsilon) );
-            const double b = beta.at(j);
-            if((b-a)<dMin) {
-                dMin = b-a;
-                range.first = a;
-                range.second = b;
-            }
-        }
-
-    }
-
-    return range;
-}
-*/
-
+/**
+ * @brief timeRangeFromTraces
+ * @param trace1
+ * @param trace2
+ * @param thresh
+ * @param description  compute type 7 R quantile
+ * @return
+ */
 QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh, const QString description)
 {
-    QPair<double, double> range;
+    QPair<double, double> range(- INFINITY, +INFINITY);
+#ifdef DEBUG
+    QTime startTime (QTime::currentTime());
+#endif
+    // limit of precision, to accelerate the calculus
+    const double epsilonStep = 0.1/100.;
 
-    if(thresh == 100) {
-        range.first = *(std::min_element(trace1.cbegin(),trace1.cend()));
-        range.second = *(std::max_element(trace2.cbegin(),trace2.cend()) );
-    }
- //   QProgressDialog *progress = new QProgressDialog(description,"Wait" , 1, 10, qApp->activeWindow() );
- //   progress->setWindowModality(Qt::WindowModal);
- //   progress->setCancelButton(0);
-    //progress->forceShow();
- //   progress->setMinimumDuration(400);
-    // if thresh is equal 0 then return an empty QPair
-    if(thresh > 0 && trace1.size() > 0 && trace2.size()==trace1.size()) {
-        const double threshold =  inRange(0., thresh, 100.0);
-        const double gamma = 1-threshold/100;
-        const int n = trace1.size(); // 1<= n <= (size-1) : index shift
-        const int nGamma = (int) floor(n*gamma);
-        double dMin = INFINITY;//qInf();
-        // make couple in a std::map
-        std::map<double,double> mapPair;
-        QVector<double>::const_iterator ct1 = trace1.cbegin();
-        QVector<double>::const_iterator ct2 = trace2.cbegin();
-        //prepare beta set sorted
-        std::set<double> beta; //sorted container
+    // if thresh is equal 0 then return an QPair=(-INFINITY,+INFINITY)
 
-        while (ct1 != trace1.cend() ) {
-            mapPair.insert(std::pair<double,double>(*ct1,*ct2));
-            beta.insert(*ct2);
-            ++ct1;
-            ++ct2;
-        }
-        //for debugging
-        /*for(std::map<double,double>::const_iterator p = mapPair.cbegin(); p != mapPair.cend(); ++p) {
-            qDebug()<<"a="<<(*p).first<<" b="<<p->second;
-        }*/
+    const int n = trace1.size();
 
-        // we suppose there is never the several time the same value inside trace1 or inside trace2
-        // so we can juste shift the iterator
-        std::map<double,double>::const_iterator i_shift = mapPair.cbegin();
-        int j_last = 0;
-        double b = 0.;
-//        progress->setMaximum(nGamma);
-        for(int nEpsilon=0; (nEpsilon<=nGamma) && (i_shift != mapPair.cend()); ++nEpsilon) {
-            //progress->setValue(nEpsilon);
-            const double a = (*i_shift).first;//alpha.at(nEpsilon);
-            const double epsilon = (double)nEpsilon/(double)n;
-            // selection of the beta values corresponding to all couples (trace1,trace2) whose trace1>a then stack beta=trace2
+    if ( (thresh > 0) && (n > 0) && ((int)trace2.size() == n) ) {
 
-            //const double betaToErase = (*i_shift).second;
-            //beta.erase(betaToErase);//erase beta corresponding to alpha(i)=a
+        const double gamma = 1. - thresh/100.;
 
+        double dMin = INFINITY;
 
-            std::set<double> betaUpper;
-             // find all value of alpha greater than a
-             std::map<double,double>::const_iterator iMap = mapPair.find(a);//lower_bound(a);
-             while(iMap != mapPair.cend()) {
-                 // copy only value of beta greater than a
-                 //if ((*iMap).second >= a)
-                     betaUpper.insert((*iMap).second);
-                    // qDebug()<<(*iMap).first<<(*iMap).second;
-                 ++iMap;
-             }
+        std::vector<double> traceAlpha (trace1.toStdVector());
+        std::vector<double> traceBeta (trace2.size());
 
-             /*for(std::set<double>::const_iterator p = betaUpper.cbegin(); p != betaUpper.cend(); ++p) {
-                 qDebug()<<" Beta Uppr a="<<(*p);
-             }*/
+        // 1 - map with relation Beta to Alpha
+        std::multimap<double, double> betaAlpha;
+        for(int i=0; i<trace1.size(); ++i)
+            betaAlpha.insert(std::pair<double, double>(trace2.at(i),trace1.at(i)) );
 
+        std::copy(trace2.begin(),trace2.end(),traceBeta.begin());
 
-            const double m = (const double) betaUpper.size() ; // 1<= m <= (size-1) : index shift
+        // keep the beta trace in the same position of the Alpha, so we need to sort them with there values of alpha
+        std::sort(traceBeta.begin(),traceBeta.end(),[&betaAlpha](const double i, const double j){ return betaAlpha.find(i)->second < betaAlpha.find(j)->second  ;} );
 
+        std::sort(traceAlpha.begin(),traceAlpha.end());
 
-            const int j = (int) floor( m*(n-nGamma)/(n-nEpsilon) );
-            //if( !(j == j_last && betaToErase>b) ) {
-         //   if( !(j == j_last ) ) {
-                // the b value don't change if the both rounded value of j don't change and
-                // betaToErase is greater than the older value of b.
-                std::set<double>::const_iterator j_shift = betaUpper.cbegin();
-                // I'm still n the first one
-                for(int i=1; (i<j) && (j_shift != betaUpper.cend()); ++i) { // loop to move the iterator to the value number j, the SET have not a Random-acces iterato
-                    ++j_shift;
-                }
+        std::vector<double> betaUpper(n);
 
-                b = *j_shift;
-                j_last = j;
-          //  }
+        // 2- loop on Epsilon to look for a and b with the smallest length
+        for (double epsilon = 0.; epsilon <= gamma; ) {
 
-            // find the shortest length
-            if((b-a)<dMin) {
-                dMin = b-a;
+            // original calcul according to the article const float ha( (traceAlpha.size()-1)*epsilon +1 );
+            // We must decrease of 1 because the array begin at 0
+            const double ha( (traceAlpha.size()-1)*epsilon);
+
+            const int haInf( floor(ha) );
+            const int haSup( ceil(ha) );
+
+            const double a = traceAlpha.at(haInf) + ( (ha-haInf)*(traceAlpha.at(haSup)-traceAlpha.at(haInf)) );
+
+            // 3 - copy only value of beta with alpha greater than a(epsilon)
+            const int alphaIdx = ha==haInf ? haInf:haSup;
+
+            const int remainingElemt =  n - alphaIdx;
+            betaUpper.resize(remainingElemt);   // allocate space
+
+            // traceBeta is sorted with the value alpha join
+            auto it = std::copy( traceBeta.begin()+ alphaIdx, traceBeta.end(), betaUpper.begin() );
+
+            const int betaUpperSize = std::distance(betaUpper.begin(),it);
+
+            betaUpper.resize(betaUpperSize);  // shrink container to new size
+
+            /*  std::nth_element has O(N) complexity,
+             *  whereas std::sort has O(Nlog(N)).
+             *  here we don't need complete sorting of the range, so it's advantageous to use it.
+             *
+             * std::nth_element(betaUpper.begin(), betaUpper.begin() + nTarget-1, betaUpper.end());
+             *
+             * in the future with C++17
+             * std::experimental::parallel::nth_element(par,betaUpper.begin(), betaUpper.begin() + nTarget, betaUpper.end());
+             *
+             */
+
+            // 4- We sort all the array
+            std::sort(betaUpper.begin(), betaUpper.end());
+
+           // 5 - Calcul b
+            const double bEpsilon( (1.-gamma)/(1.-epsilon) );
+            // original calcul according to the article const float hb( (betaUpper.size()-1)*bEpsilon +1 );
+            // We must decrease of 1 because the array begin at 0
+            const double hb( (betaUpper.size() - 1.)*bEpsilon);
+            const int hbInf( floor(hb) );
+            const int hbSup( ceil(hb) );
+
+            const double b = betaUpper.at(hbInf) + ( (hb-hbInf)*(betaUpper.at(hbSup)-betaUpper.at(hbInf)) );
+
+            // 6 - keep the shortest length
+
+            if ((b-a) < dMin) {
+                dMin = b - a;
                 range.first = a;
                 range.second = b;
             }
-        ++i_shift;
-        }
 
+            epsilon += epsilonStep;
+        }
     }
- //   delete progress;
+
+
+#ifdef DEBUG
+    qDebug()<<description;
+    QTime timeDiff(0,0,0,1);
+    timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
+    qDebug()<<"timeRangeFromTraces ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
+#endif
+
     return range;
 }
 
-QPair<double, double> gapRangeFromTraces(const QVector<double>& traceBeta, const QVector<double>& traceAlpha, const double thresh, const QString description)
+/**
+ * @brief timeRangeFromTraces_old
+ * @param trace1
+ * @param trace2
+ * @param thresh
+ * @param description Obsolete function keep only for memory and test
+ * @return
+ */
+
+QPair<double, double> transitionRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh, const QString description)
 {
-    QPair<double, double> range;
+    return timeRangeFromTraces(trace1, trace2, thresh, description);
+}
 
-    if(thresh == 100) {
-        range.first = *(std::min_element(traceBeta.cbegin(),traceBeta.cend()));
-        range.second = *(std::max_element(traceAlpha.cbegin(),traceAlpha.cend()) );
+
+/**
+ * @brief gapRangeFromTraces find the gap between two traces, if there is no solution corresponding to the threshold, we return a QPair=(-INFINITY,+INFINITY)
+ * @param traceBeta QVector of double corresponding to the first trace
+ * @param traceAlpha QVector of double corresponding to the second trace
+ * @param thresh Threshold to obtain
+ * @param description a simple text
+ * @return
+ */
+QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const QVector<double>& traceBegin, const double thresh, const QString description)
+{
+#ifdef DEBUG
+    QTime startTime = QTime::currentTime();
+#endif
+
+    QPair<double, double> range = QPair<double, double>(- INFINITY, + INFINITY);
+
+    // limit of precision, to accelerate the calculus, we set the same as RChronoModel
+    const double epsilonStep = 0.1/100.;
+
+    const int n = traceBegin.size();
+
+    if ( (thresh > 0.f) && (n > 0) && ((int)traceEnd.size() == n) ) {
+
+        const double gamma = 1. - thresh/100.;
+
+        double dMax(0.);
+
+        // We must change the type (float to double) to increase the precision
+        std::vector<double> traceBeta (traceEnd.size());
+        std::copy(traceEnd.begin(), traceEnd.end(), traceBeta.begin());
+
+        std::vector<double> traceAlpha (traceBegin.size());
+        std::copy(traceBegin.begin(),traceBegin.end(),traceAlpha.begin());
+
+        // 1 - map with relation Alpha to Beta
+        std::multimap<double, double> alphaBeta;
+        for(int i=0; i<traceBegin.size(); ++i)
+            alphaBeta.insert(std::pair<double, double>(traceAlpha.at(i),traceBeta.at(i)) );
+
+        // keep the beta trace in the same position of the Alpha, so we need to sort them with there values of alpha
+        std::sort(traceAlpha.begin(),traceAlpha.end(),[&alphaBeta](const double i, const double j){ return alphaBeta.find(i)->second < alphaBeta.find(j)->second  ;} );
+
+        std::sort(traceBeta.begin(),traceBeta.end());
+
+        std::vector<double> alphaUnder(n);
+
+        // 2- loop on Epsilon to look for a and b with the smallest length
+        // with a const epsilonStep increment, we not reach exactly gamma.
+        // So we have to go hover gamma to find the value for exactly gamma
+
+        for (double epsilon = 0.; epsilon <= gamma; ) {
+
+            const double aEpsilon = 1. - epsilon;
+
+            // Linear intertpolation according to R quantile( type=7)
+            // We must decrease of 1 from the original formula because the array begin at 0
+            const double ha( ((double)traceBeta.size()-1.) * aEpsilon);
+
+            const int haInf( floor(ha) );
+            const int haSup( ceil(ha) );
+
+            if ((haSup > (int)traceBeta.size()) || (haInf > (int)traceBeta.size()))
+                return range;
+            if ((haInf < 0) || (haSup < 0))
+                return range;
+
+            const double a = traceBeta.at(haInf) + ( (ha-(double)haInf)*(traceBeta.at(haSup)-traceBeta.at(haInf)) );
+
+            // 3 - copy only value of beta with alpha smaller than a(epsilon)!
+            const int alphaIdx(haSup < n ? haSup : n-1 );//( ha == haInf ? haInf : haSup );//( ha == haSup ? haSup : haInf );// //
+
+            const int remainingElemt ( alphaIdx );
+            alphaUnder.resize(remainingElemt);   // allocate space
+
+            // traceAlpha is sorted with the value alpha join
+            auto it = std::copy( traceAlpha.begin(), traceAlpha.begin() + alphaIdx, alphaUnder.begin() );
+
+            const int alphaUnderSize = std::distance(alphaUnder.begin(),it);
+
+            alphaUnder.resize(alphaUnderSize);  // shrink container to new size
+
+            // 4- We sort all the array
+            std::sort(alphaUnder.begin(), alphaUnder.end());
+
+           // 5 - Calcul b
+            const double bEpsilon( (gamma-epsilon)/(1.-epsilon) );
+
+            // Linear intertpolation like in R quantile( type=7)
+
+            const double hb( ((double)alphaUnder.size()-1.)* bEpsilon );
+            const int hbInf( floor(hb) );
+            const int hbSup( ceil(hb) );
+
+            if ((hbSup > (int)alphaUnder.size()) || (hbInf > (int)alphaUnder.size()))
+                return range;
+            if ((hbInf < 0) || (hbSup <0))
+                return range;
+
+            const double b = alphaUnder.at(hbInf) + ( (hb-(double)hbInf)*(alphaUnder.at(hbSup)-alphaUnder.at(hbInf)) );
+
+            // 6 - keep the longest length
+
+            if ((b-a) >= dMax) {
+                dMax = b - a;
+                range.first = a;
+                range.second = b;
+            }
+            if (epsilon< gamma) {
+                epsilon += epsilonStep;
+                if (epsilon > gamma )
+                    epsilon = gamma;
+
+            // We detect that gamma is passed. To stop the loop we add one more step to exit
+            } else if (epsilon >= gamma)
+                epsilon += epsilonStep;
+        }
     }
-    QProgressDialog *progress = new QProgressDialog(description,"Wait" , 1, 10, qApp->activeWindow() );
-    progress->setWindowModality(Qt::WindowModal);
-    progress->setCancelButton(0);
-    //progress->forceShow();
-    progress->setMinimumDuration(40);
 
-    // if thresh is equal 0 then return an empty QPair
-    if(thresh > 0 && traceBeta.size() > 0 && traceAlpha.size()==traceBeta.size()) {
-        const double threshold =  inRange(0., thresh, 100.0);
-        const double gamma = 1-threshold/100;
-        const int n = traceBeta.size();
+#ifdef DEBUG
+    qDebug()<<description;
+    QTime timeDiff(0,0,0,1);
+    timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
+    qDebug()<<"gapRangeFromTraces ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
+#endif
 
-        const int n1_Gamma = (int) floor(n*(1-gamma));
+    return range;
+}
 
-        double dMax = 0.0;
-        // make couple beta vs alpha in a std::map
-        std::map<double,double> mapPair;
-        QVector<double>::const_iterator ctB = traceBeta.cbegin();
-        QVector<double>::const_iterator ctA = traceAlpha.cbegin();
+/**
+ * @brief gapRangeFromTraces_old
+ * @param traceBeta
+ * @param traceAlpha
+ * @param thresh
+ * @param description Obsolete function keep only for memory and test
+ * @return
+ */
+QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, const QVector<float>& traceAlpha, const float thresh, const QString description)
+{
 
-        //prepare beta set sorted
-        std::set<double> alpha; //sorted container
+#ifdef DEBUG
+    QTime startTime = QTime::currentTime();
+#endif
+
+    QPair<float, float> range = QPair<float, float>(- INFINITY, + INFINITY);
+    // limit of precision, to accelerate the calculus
+    const float perCentStep = 0.01f;
+
+    const int n = traceBeta.size();
+    if ( (thresh > 0) && (n > 0) && ((int)traceAlpha.size() == n) ) {
+
+        const int nTarget = (const int) ceil( (float)n * thresh/100.);
+        const int nGamma = n - nTarget;
+
+        float dMax = 0.0;
+
+        // make couple beta vs alpha in a std::map, it's a sorted container with ">"
+        std::multimap<float,float> mapPair;
+
+        QVector<float>::const_iterator ctB = traceBeta.cbegin();
+        QVector<float>::const_iterator ctA = traceAlpha.cbegin();
 
         while (ctB != traceBeta.cend() ) {
-            mapPair.insert(std::pair<double,double>(*ctB,*ctA));
-            alpha.insert(*ctA);
+            mapPair.insert(std::pair<float,float>(*ctB,*ctA));
             ++ctA;
             ++ctB;
         }
 
         // we suppose there is never the several time the same value inside traceBeta or inside traceAlpha
         // so we can just shift the iterator
-        std::map<double,double>::const_reverse_iterator i_shift = mapPair.rbegin();
-        int j_last = 0;
-        double b = (*i_shift).second;
-        progress->setMaximum(n);
-        progress->setMinimum(n1_Gamma);
-        
-        for (int n1_Epsilon = n; (n1_Epsilon>=n1_Gamma) && (i_shift != mapPair.rend()); --n1_Epsilon) {
-            progress->setValue(n1_Epsilon);
-            
-            const double a = (*i_shift).first;//a=beta(i);
-            const double epsilon = 1-(n1_Epsilon/n);
+        std::multimap<float,float>::const_reverse_iterator i_shift = mapPair.rbegin();
 
-            std::set<double> alphaUpper; // sorted container
-            // find all value of beta greater than a
-            std::map<double,double>::const_iterator iMap = mapPair.find(a);//lower_bound(a);
-            
-            // if beta greater than a() then all value of alpha corresponding to beta, after a() must be greater than a()
-            while(iMap != mapPair.cend()) {
-                alphaUpper.insert((*iMap).second);
-                ++iMap;
+        std::vector<float> alphaUnder;
+        alphaUnder.reserve(n);
+        std::multimap<float,float>::const_reverse_iterator iMapTmp = i_shift;
+
+
+        const int epsilonStep = qMax(1, (int)floor(nGamma*perCentStep));
+
+        for (int nEpsilon = 0; (nEpsilon <= nGamma ) && (i_shift != mapPair.rend()); ) {
+
+            // We use a reverse Iterator so the first is the last value in the QMap
+            const float a = (*i_shift).first;//a=beta(i)=a(epsilon);
+
+            // find position of beta egual a(epsilon)
+            iMapTmp = i_shift;
+            alphaUnder.clear();
+            while (iMapTmp != mapPair.rend()) {
+                alphaUnder.push_back((*iMapTmp).second);
+                ++iMapTmp;
             }
+            //std::sort(alphaUnder.begin(),alphaUnder.end());
 
-           // const int distanceN = std::distance(iMap,mapPair.cend());
+            const int j = nGamma - nEpsilon;
+            std::nth_element(alphaUnder.begin(), alphaUnder.begin() + j, alphaUnder.end());
 
-            const double m = alphaUpper.size(); // 1<= m <= (size-1) : index shift
-
-            const int j = (const int) floor( m*(gamma-epsilon)/(1-epsilon) );
-
-            // the b value don't change if the both rounded value of j don't change and
-            //if( !(j == j_last && alphaToErase>b) ) {
-           // if( !(j == j_last) ) {
-                // alphaLimit is greater than the older value of b.
-            
-                std::set<double>::const_iterator j_shift = alphaUpper.cbegin();
-                // loop to move the iterator to the value number j, the SET have NO Random-acces iterator
-                // I'm already on the first element
-                for(int i=1; (i<j) && (j_shift != alphaUpper.cend()); ++i)
-                    ++j_shift;
-
-                b = *j_shift; //b=alpha(j)
-                j_last = j;
-            //}
-
-            // find the shortest length
-            if((b-a)>dMax) {
+            const float b = alphaUnder.at(j); //b=alpha(j)
+            // keep the longest length
+            if ((b-a) > dMax) {
                 dMax = b-a;
                 range.first = a;
                 range.second = b;
             }
-            ++i_shift; // reverse_iterator
+
+            nEpsilon = nEpsilon + epsilonStep;
+            if (nEpsilon<=nGamma)
+                std::advance(i_shift,epsilonStep);// reverse_iterator
         }
 
     }
-    delete progress;
+
+#ifdef DEBUG
+    qDebug()<<description;
+    QTime timeDiff(0,0,0,1);
+    timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
+    qDebug()<<"gapRangeFromTraces_old ->time elapsed = "<<timeDiff.hour()<<"h "<<QString::number(timeDiff.minute())<<"m "<<QString::number(timeDiff.second())<<"s "<<QString::number(timeDiff.msec())<<"ms" ;
+#endif
+
     return range;
 }
 
 
-QString intervalText(const QPair<double, QPair<double, double> >& interval, FormatFunc formatFunc)
+
+QString intervalText(const QPair<double, QPair<double, double> > &interval, FormatFunc formatFunc)
 {
     const QLocale locale;
-    if(formatFunc){
+    if (formatFunc){
         return "[" + formatFunc(interval.second.first) + "; " + formatFunc(interval.second.second) + "] (" + locale.toString(interval.first, 'f', 1) + "%)";
     }
     else {
@@ -518,9 +599,8 @@ QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString
 
     QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(hpd, thresh);
     QStringList results;
-    for(int i=0; i<intervals.size(); ++i)
-    {
-        results << intervalText(intervals[i], formatFunc);
+    for(int i=0; i<intervals.size(); ++i) {
+        results << intervalText(intervals.at(i), formatFunc);
     }
     QString result = results.join(", ");
     if(!unit.isEmpty()) {
@@ -547,21 +627,16 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
     
     double areaCur = 0;
     it.toFront();
-    while(it.hasNext())
-    {
+    while(it.hasNext()) {
         it.next();
         
-        if(it.value() != 0 && !inInterval)
-        {
+        if(it.value() != 0 && !inInterval) {
             inInterval = true;
             curInterval.first = it.key();
             lastKeyInInter = it.key();
             areaCur = 0.; // start, not inside
-        }
-        else if(inInterval)
-        {
-            if((it.value() == 0) )
-            {
+        } else if(inInterval) {
+            if((it.value() == 0) ) {
                 inInterval = false;
                 curInterval.second = lastKeyInInter;
                 
@@ -570,11 +645,9 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
                 inter.second = curInterval;
                 intervals.append(inter);
                 
-                areaCur = 0;
+                areaCur = 0.;
 
-            }
-            else
-            {
+            } else {
                 areaCur += (lastValueInInter+it.value())/2 * (it.key()-lastKeyInInter);
              
                 lastKeyInInter = it.key();

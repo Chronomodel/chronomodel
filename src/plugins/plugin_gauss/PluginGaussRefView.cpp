@@ -175,8 +175,8 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
         }
         
         if(mode != DATE_GAUSS_MODE_NONE) {
-            yMin = qMin(yMin, age - error * 1.96);
-            yMax = qMax(yMax, age + error * 1.96);
+            yMin = qMin(yMin, age - error * 1.96f);
+            yMax = qMax(yMax, age + error * 1.96f);
             
             //qDebug() << "ymin : " << yMin << ", ymax : " << yMax;
             
@@ -199,7 +199,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             // because the y scale auto adjusts depending on x zoom.
             // => the visible part of the measure may be very reduced !
             const double step = (yMax - yMin) / 5000.;
-            QMap<double,double> measureCurve;
+            QMap<double, double> measureCurve;
             for(double t=yMin; t<yMax; t += step)
             {
                 double v = exp(-0.5 * pow((t - age) / error, 2));
@@ -247,7 +247,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
     }
 }
 
-void PluginGaussRefView::zoomX(double min, double max)
+void PluginGaussRefView::zoomX(const double min, const double max)
 {
     mGraph->zoomX(min, max);
 }
@@ -262,3 +262,4 @@ void PluginGaussRefView::resizeEvent(QResizeEvent* e)
 }
 
 #endif
+

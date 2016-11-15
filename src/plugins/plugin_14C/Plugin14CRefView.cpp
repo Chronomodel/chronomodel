@@ -33,15 +33,15 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
     GraphViewRefAbstract::setDate(date, settings);
     double tminDisplay;
     double tmaxDisplay;
-    {
-        const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
-        const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
-        const double t3 = date.getFormatedTminCalib();
-        const double t4 = date.getFormatedTmaxCalib();
+   
+    const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
+    const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
+    const double t3 = date.getFormatedTminCalib();
+    const double t4 = date.getFormatedTmaxCalib();
 
-        tminDisplay = qMin(t1,qMin(t2,t3));
-        tmaxDisplay = qMax(t1,qMax(t2,t4));
-    }
+    tminDisplay = qMin(t1,qMin(t2,t3));
+    tmaxDisplay = qMax(t1,qMax(t2,t4));
+    
 
     mGraph->setRangeX(tminDisplay, tmaxDisplay);
     mGraph->setCurrentX(tminDisplay, tmaxDisplay);
@@ -51,8 +51,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
     mGraph->showInfos(true);
     mGraph->setFormatFunctX(0);
     
-    if(!date.isNull())
-    {
+    if (!date.isNull())  {
         double age = date.mData.value(DATE_14C_AGE_STR).toDouble();
         double error = date.mData.value(DATE_14C_ERROR_STR).toDouble();
         const double delta_r = date.mData.value(DATE_14C_DELTA_R_STR).toDouble();
@@ -72,8 +71,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
 
         const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
         
-        if(curve.mDataMean.isEmpty())
-        {
+        if (curve.mDataMean.isEmpty()) {
             GraphZone zone;
             zone.mColor = Qt::gray;
             zone.mColor.setAlpha(25);
@@ -84,7 +82,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             return;
         }
 
-        if(tminDisplay < tminRef){
+        if (tminDisplay < tminRef) {
             GraphZone zone;
             zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(35);
@@ -94,7 +92,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             mGraph->addZone(zone);
         }
 
-        if(tmaxRef < tmaxDisplay){
+        if (tmaxRef < tmaxDisplay) {
             GraphZone zone;
             zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(35);
@@ -111,10 +109,8 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         QMap<double, double> curveG95Sup;
         QMap<double, double> curveG95Inf;
 
-        for(double t=tminDisplay; t<=tmaxDisplay; ++t)
-        {
-            if(t>tminRef && t<tmaxRef)
-            {
+        for (double t=tminDisplay; t<=tmaxDisplay; ++t) {
+            if (t>tminRef && t<tmaxRef) {
                 const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
                 const double value = plugin->getRefValueAt(date.mData, tRaw);
                 const double error = plugin->getRefErrorAt(date.mData, tRaw) * 1.96;
@@ -150,13 +146,13 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         mGraph->addCurve(graphCurveG95Inf);
         
         // Display reference curve name
-        mGraph->addInfo(tr("Ref : ") + ref_curve);
+        mGraph->addInfo(tr("Ref")+" : " + ref_curve);
                 
         // ----------------------------------------------
         //  Measure curve
         // ----------------------------------------------
-        yMin = qMin(yMin, age - error * 1.96);
-        yMax = qMax(yMax, age + error * 1.96);
+        yMin = qMin(yMin, age - error * 1.96f);
+        yMax = qMax(yMax, age + error * 1.96f);
         
         GraphCurve curveMeasure;
         curveMeasure.mName = "Measure";
@@ -165,10 +161,10 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         QColor brushColor(mMeasureColor);
         
         // Lower opacity in case of delta r not null
-        if(delta_r != 0 && delta_r_error != 0){
+        if (delta_r != 0 && delta_r_error != 0) {
             penColor.setAlpha(100);
             brushColor.setAlpha(15);
-        }else{
+        } else {
             penColor.setAlpha(255);
             brushColor.setAlpha(50);
         }
@@ -181,10 +177,9 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         // because the y scale auto adjusts depending on x zoom.
         // => the visible part of the measure may be very reduced !
         double step = (yMax - yMin) / 5000.;
-        QMap<double,double> measureCurve;
-        for(double t=yMin; t<yMax; t += step)
-        {
-            const double v = exp(-0.5 * pow((age - t) / error, 2));
+        QMap<double, double> measureCurve;
+        for (double t = yMin; t<yMax; t += step) {
+            const double v = exp(-0.5f * pow((age - t) / error, 2));
             measureCurve[t] = v;
         }
         measureCurve = normalize_map(measureCurve);
@@ -197,14 +192,13 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         // ----------------------------------------------
         //  Delta R curve
         // ----------------------------------------------
-        if(delta_r != 0 && delta_r_error != 0)
-        {
+        if (delta_r != 0 && delta_r_error != 0) {
             // Apply reservoir effect
             age = (age - delta_r);
             error = sqrt(error * error + delta_r_error * delta_r_error);
             
-            yMin = qMin(yMin, age - error * 1.96);
-            yMax = qMax(yMax, age + error * 1.96);
+            yMin = qMin(yMin, age - error * 1.96f);
+            yMax = qMax(yMax, age + error * 1.96f);
             
             GraphCurve curveDeltaR;
             curveDeltaR.mName = "Delta R";
@@ -223,10 +217,9 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             // because the y scale auto adjusts depending on x zoom.
             // => the visible part of the measure may be very reduced !
             step = (yMax - yMin) / 5000.;
-            QMap<double,double> deltaRCurve;
-            for(double t=yMin; t<yMax; t += step)
-            {
-                double v = exp(-0.5 * pow((age - t) / error, 2));
+            QMap<double, double> deltaRCurve;
+            for (double t = yMin; t<yMax; t += step) {
+                const double v = exp(-0.5 * pow((age - t) / error, 2));
                 deltaRCurve[t] = v;
                 //curveDeltaR.mData[t] = v;
             }
@@ -240,8 +233,8 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         // ----------------------------------------------
         //  Sub-dates curves (combination)
         // ----------------------------------------------
-        QList<QMap<double,double>> subDatesCurve;
-        for(int i=0; i<date.mSubDates.size(); ++i){
+        QList<QMap<double, double>> subDatesCurve;
+        for (int i=0; i<date.mSubDates.size(); ++i) {
             const Date& d = date.mSubDates.at(i);
             
             GraphCurve curveSubMeasure;
@@ -251,7 +244,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             double sub_error = d.mData.value(DATE_14C_ERROR_STR).toDouble();
             double sub_delta_r = d.mData.value(DATE_14C_DELTA_R_STR).toDouble();
             double sub_delta_r_error = d.mData.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
-            
+    qDebug()<<"Plugin14CRefView::SetDate()"<<sub_age<<sub_error<<sub_delta_r<<sub_delta_r_error;
             // Apply reservoir effect
             sub_age = (sub_age - sub_delta_r);
             sub_error = sqrt(sub_error * sub_error + sub_delta_r_error * sub_delta_r_error);
@@ -272,15 +265,16 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             // 5000 pts are used on vertical measure
             // because the y scale auto adjusts depending on x zoom.
             // => the visible part of the measure may be very reduced !
-            const double step = (yMax - yMin) / 5000.;
-
-            for(double t=yMin; t<yMax; t += step)
-            {
+            const double step = (yMax - yMin) / 1000.;
+            QMap<double, double> subCurve;
+            for (double t = yMin; t<yMax; t += step) {
                 const double v = exp(-0.5 * pow((sub_age - t) / sub_error, 2));
-                subDatesCurve[i][t] = v;
+                subCurve.insert(t, v);
             }
-            subDatesCurve[i] = normalize_map(subDatesCurve.at(i));
-            curveSubMeasure.mData = subDatesCurve.at(i);
+            //subDatesCurve[i] = normalize_map(subDatesCurve.at(i));
+            subCurve = normalize_map(subCurve);
+            //curveSubMeasure.mData = subDatesCurve.at(i);
+            curveSubMeasure.mData = subCurve;
             mGraph->addCurve(curveSubMeasure);
         }
 
@@ -325,7 +319,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
     }
 }
 
-void Plugin14CRefView::zoomX(double min, double max)
+void Plugin14CRefView::zoomX(const double min, const double max)
 {
     mGraph->zoomX(min, max);
 }
@@ -342,3 +336,4 @@ void Plugin14CRefView::resizeEvent(QResizeEvent* e)
 }
 
 #endif
+

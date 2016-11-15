@@ -1,4 +1,4 @@
-#ifndef ModelUtilities_H
+﻿#ifndef ModelUtilities_H
 #define ModelUtilities_H
 
 #include <QIcon>
@@ -13,8 +13,8 @@
 class ModelUtilities
 {
 public:
-    static QString getEventMethodText(Event::Method method);
-    static QString getDataMethodText(Date::DataMethod method);
+    static QString getEventMethodText(const Event::Method method);
+    static QString getDataMethodText(const Date::DataMethod method);
     static QString getDeltaText(const Date& date);
     
     static Event::Method getEventMethodFromText(const QString& text);
@@ -54,3 +54,4 @@ bool sortPhases(Phase* p1, Phase* p2);
 
 
 #endif
+

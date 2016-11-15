@@ -30,7 +30,7 @@ public:
     
     void updateValues(double tmin, double tmax, double step);
     
-    virtual void updateTheta(double min, double max);
+    virtual void updateTheta(const double min, const double max);
     
     
 public:

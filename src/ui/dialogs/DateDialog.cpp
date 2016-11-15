@@ -2,7 +2,6 @@
 #include "../PluginFormAbstract.h"
 #include "Collapsible.h"
 #include "RadioButton.h"
-#include "Button.h"
 #include "Label.h"
 #include "HelpWidget.h"
 #include "LineEdit.h"
@@ -156,19 +155,17 @@ mWiggleEnabled(false)
 
 DateDialog::~DateDialog()
 {
-   if(mForm)
+   if (mForm)
     disconnect(mForm, &PluginFormAbstract::OkEnabled, this, &DateDialog::setOkEnabled);
 }
 
 void DateDialog::setForm(PluginFormAbstract* form)
 {
-    if(mForm)
-    {
+    if (mForm) {
         mForm->setVisible(false);
         mForm->setParent(0);
     }
-    if(form)
-    {
+    if (form) {
         mForm = form;
         connect(mForm, &PluginFormAbstract::OkEnabled, this, &DateDialog::setPluginDataValid);
 
@@ -179,18 +176,15 @@ void DateDialog::setForm(PluginFormAbstract* form)
         mWiggleIsValid = true;
         mPluginDataAreValid = true;
 
-        if(plugin->wiggleAllowed()) {
+        if (plugin->wiggleAllowed()) {
             setWiggleEnabled(true);
-        }
-        else {
+        } else
             setWiggleEnabled(false);
-        }
 
         
         // Disable methods forbidden by plugin
         const QStandardItemModel* model = qobject_cast<const QStandardItemModel*>(mMethodCombo->model());
-        for(int i=0; i<mMethodCombo->count(); ++i)
-        {
+        for (int i=0; i<mMethodCombo->count(); ++i) {
             QStandardItem* item = model->item(i);
             bool allowed = plugin->allowedDataMethods().contains((Date::DataMethod)i);
             
@@ -213,29 +207,26 @@ void DateDialog::setPluginDataValid(bool valid)
 
 void DateDialog::checkWiggle()
 {
-    if(mDeltaFixedRadio->isChecked()) {
+    if (mDeltaFixedRadio->isChecked()) {
         bool ok1 = true;
         mDeltaFixedEdit->text().toInt(&ok1);
         mWiggleIsValid = ok1;
-    }
-    else if(mDeltaRangeRadio->isChecked()) {
+    } else if (mDeltaRangeRadio->isChecked()) {
         bool ok1 = true;
         bool ok2 = true;
         const int dmin = mDeltaMinEdit->text().toInt(&ok1);
         const int dmax = mDeltaMaxEdit->text().toInt(&ok2);
         mWiggleIsValid = ( ok1 && ok2 && ( (dmax>dmin) || ( (dmin == 0) && (dmax == 0) ) ) );
 
-    }
-    else if(mDeltaGaussRadio->isChecked()) {
+    } else if(mDeltaGaussRadio->isChecked()) {
         bool ok1 = true;
         bool ok2 = true;
         const double a = mDeltaAverageEdit->text().toDouble(&ok1);
         const double e = mDeltaErrorEdit->text().toDouble(&ok2);
         mWiggleIsValid = ( ok1 && ok2 && ( (e>0) || ( (a == 0) && (e == 0) ) ) );
-    }
-    else {
+    } else
         mWiggleIsValid = true;
-    }
+
     setOkEnabled();
 }
 
@@ -291,7 +282,7 @@ void DateDialog::updateVisibleControls()
 void DateDialog::setAdvancedVisible(bool visible)
 {
     mAdvancedWidget->setVisible(visible);
-    if(visible)
+    if (visible)
         updateVisibleControls();
     else
         adjustSize();
@@ -321,7 +312,7 @@ void DateDialog::setDate(const QJsonObject& date)
     mDeltaAverageEdit->setText(QString::number(date.value(STATE_DATE_DELTA_AVERAGE).toDouble()));
     mDeltaErrorEdit->setText(QString::number(date.value(STATE_DATE_DELTA_ERROR).toDouble()));
 
-    if(deltaType == Date::eDeltaNone) {
+    if (deltaType == Date::eDeltaNone) {
         mDeltaFixedRadio->setChecked(deltaType == Date::eDeltaFixed);
         mDeltaFixedEdit->setText(QString::number(0));
     }
@@ -330,7 +321,7 @@ void DateDialog::setDate(const QJsonObject& date)
     mWiggleIsValid = true;
     setOkEnabled();
     // open the display panel if there is wiggle parameter
-    if( (mDeltaFixedRadio->isChecked() && mDeltaFixedEdit->text().toDouble() != 0) ||
+    if ( (mDeltaFixedRadio->isChecked() && mDeltaFixedEdit->text().toDouble() != 0) ||
         (mDeltaRangeRadio->isChecked() && (mDeltaMinEdit->text().toDouble() != 0 || mDeltaMaxEdit->text().toDouble() != 0) ) ||
         (mDeltaGaussRadio->isChecked() && mDeltaErrorEdit->text().toDouble()>0) ) {
 
@@ -340,10 +331,8 @@ void DateDialog::setDate(const QJsonObject& date)
     mNameEdit->selectAll();
     mNameEdit->setFocus();
     
-    if(mForm)
-    {
+    if (mForm)
         mForm->setData(date.value(STATE_DATE_DATA).toObject(), date.value(STATE_DATE_SUB_DATES).toArray().size() > 0);
-    }
 
 }
 
@@ -357,9 +346,9 @@ double DateDialog::getDeltaError() const {return mDeltaErrorEdit->text().toDoubl
 Date::DataMethod DateDialog::getMethod() const
 {
     Date::DataMethod method = Date::eMHSymetric;
-    if(mMethodCombo->currentIndex() == 1)
+    if (mMethodCombo->currentIndex() == 1)
         method = Date::eInversion;
-    else if(mMethodCombo->currentIndex() == 2)
+    else if (mMethodCombo->currentIndex() == 2)
         method = Date::eMHSymGaussAdapt;
     return method;
 }
@@ -367,11 +356,11 @@ Date::DataMethod DateDialog::getMethod() const
 Date::DeltaType DateDialog::getDeltaType() const
 {
     Date::DeltaType type = Date::eDeltaNone;
-    if(mDeltaFixedRadio->isChecked() && mDeltaFixedEdit->text().toDouble() !=0 )
+    if (mDeltaFixedRadio->isChecked() && mDeltaFixedEdit->text().toDouble() !=0 )
         type = Date::eDeltaFixed;
-    else if(mDeltaRangeRadio->isChecked())
+    else if (mDeltaRangeRadio->isChecked())
         type = Date::eDeltaRange;
-    else if(mDeltaGaussRadio->isChecked())
+    else if (mDeltaGaussRadio->isChecked())
         type = Date::eDeltaGaussian;
     return type;
 }

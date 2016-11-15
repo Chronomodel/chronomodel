@@ -21,11 +21,11 @@ mType(type)
     mList->setMinimumHeight(400);
     
     QItemDelegate* delegate = 0;
-    if(mType == eDate)
+    if (mType == eDate)
         delegate = new DatesListItemDelegate();
-    else if(mType == eEvent)
+    else if (mType == eEvent)
         delegate = new EventsListItemDelegate();
-    if(delegate)
+    if (delegate)
         mList->setItemDelegate(delegate);
     
     connect(mList, SIGNAL(itemSelectionChanged()), this, SLOT(updateFromSelection()));
@@ -69,18 +69,15 @@ mType(type)
     
     Project* project = MainWindow::getInstance()->getProject();
     
-    if(mType == eDate)
-    {
+    if (mType == eDate) {
         QJsonObject state = project->state();
         QJsonArray dates = state[STATE_DATES_TRASH].toArray();
         
-        for(int i=0; i<dates.size(); ++i)
-        {
-            try{
+        for (int i=0; i<dates.size(); ++i) {
+            try {
                 QJsonObject date = dates[i].toObject();
                 Date d = Date::fromJson(date);
-                if(!d.isNull())
-                {
+                if (!d.isNull()) {
                     QListWidgetItem* item = new QListWidgetItem(d.mName);
                     item->setData(0x0101, d.mName);
                     item->setData(0x0102, d.mPlugin->getId());
@@ -100,14 +97,11 @@ mType(type)
                 message.exec();
             }
         }
-    }
-    else if(mType == eEvent)
-    {
+    } else if (mType == eEvent) {
         QJsonObject state = project->state();
         QJsonArray events = state[STATE_EVENTS_TRASH].toArray();
         
-        for(int i=0; i<events.size(); ++i)
-        {
+        for (int i=0; i<events.size(); ++i) {
             QJsonObject event = events[i].toObject();
             QListWidgetItem* item = new QListWidgetItem(event[STATE_NAME].toString());
             item->setData(0x0101, event[STATE_NAME].toString());
@@ -130,7 +124,7 @@ QList<int> TrashDialog::getSelectedIndexes()
 {
     QList<QListWidgetItem*> items = mList->selectedItems();
     QList<int> result;
-    for(int i=0; i<items.size(); ++i)
+    for (int i=0; i<items.size(); ++i)
         result.push_back(mList->row(items[i]));
     return result;
 }
@@ -147,15 +141,12 @@ void TrashDialog::deleteItems()
     QList<QListWidgetItem*> items = mList->selectedItems();
     QList<int> ids;
     
-    if(mType == eEvent)
-    {
-        for(int i=0; i<items.size(); ++i)
+    if (mType == eEvent) {
+        for (int i=0; i<items.size(); ++i)
             ids.append(items[i]->data(0x0107).toInt());
         project->deleteSelectedTrashedEvents(ids);
-    }
-    else if(mType == eDate)
-    {
-        for(int i=0; i<items.size(); ++i)
+    } else if (mType == eDate) {
+        for (int i=0; i<items.size(); ++i)
             ids.append(items[i]->data(0x0106).toInt());
         project->deleteSelectedTrashedDates(ids);
     }
@@ -163,7 +154,7 @@ void TrashDialog::deleteItems()
     // Delete items now!
     // An event has been sent to the app to destroy these items, but our dialog cannot listen to the notification that will be sent after (at least not for now...)
     // Deleting items now is thus a bit anticipated but works well!
-    for(int i=0; i<items.size(); ++i)
+    for (int i=0; i<items.size(); ++i)
         mList->takeItem(mList->row(items[i]));
     mList->update();
 }

@@ -1,4 +1,4 @@
- #include "GraphViewResults.h"
+#include "GraphViewResults.h"
 #include "Button.h"
 #include "Painting.h"
 #include "QtUtilities.h"
@@ -29,6 +29,7 @@ mTopShift(0),
 mButtonsVisible(true),
 mHeightForVisibleAxis(100)
 {
+    setGeometry(QRect(0,0,200,100));
     setMouseTracking(true);
     
     mGraph = new GraphView(this);
@@ -158,16 +159,16 @@ void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc, const QList<Cha
 /**
  @brief set date range on all the study
  */
-void GraphViewResults::setRange(double min, double max)
+void GraphViewResults::setRange(type_data min, type_data max)
 {
     mGraph->setRangeX(min, max);
 }
-void GraphViewResults::setCurrentX(double min, double max)
+void GraphViewResults::setCurrentX(type_data min, type_data max)
 {
     mGraph->setCurrentX(min, max);
 }
 
-void GraphViewResults::zoom(double min, double max)
+void GraphViewResults::zoom(type_data min, type_data max)
 {
    // ici ca marche qDebug()<<"avant GraphViewResults::zoom"<<mGraph->getCurrentMaxX();
     mGraph->zoomX(min, max);
@@ -297,8 +298,7 @@ void GraphViewResults::saveGraphData() const
     
     int offset = 0;
     
-    if(mCurrentTypeGraph == eTrace || mCurrentTypeGraph == eAccept)
-    {
+    if (mCurrentTypeGraph == eTrace || mCurrentTypeGraph == eAccept) {
         QMessageBox messageBox;
         messageBox.setWindowTitle(tr("Save all trace"));
         messageBox.setText(tr("Do you want the entire trace from the beginning of the process or only the aquisition part"));
@@ -306,29 +306,28 @@ void GraphViewResults::saveGraphData() const
         QAbstractButton *acquireTraceButton = messageBox.addButton(tr("Only acquired part"), QMessageBox::NoRole);
         
         messageBox.exec();
-        if (messageBox.clickedButton() == allTraceButton)  {
+        if (messageBox.clickedButton() == allTraceButton)
             mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
-        }
+
         else if (messageBox.clickedButton() == acquireTraceButton) {
                 int chainIdx = -1;
                 for(int i=0; i<mShowChainList.size(); ++i)
                     if(mShowChainList.at(i)) chainIdx = i;
-                if(chainIdx != -1) {
+                if(chainIdx != -1)
                     offset = mChains.at(chainIdx).mNumBurnIter + mChains.at(chainIdx).mBatchIndex * mChains.at(chainIdx).mNumBatchIter;
-                }
+
                 mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, offset);
         }
         else return;
     }
     
-    else if(mCurrentTypeGraph == eCorrel) {
+    else if(mCurrentTypeGraph == eCorrel)
         mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
-    }
+
     
     // All visible curves are saved in the same file, the credibility bar is not save
-    else if(mCurrentTypeGraph == ePostDistrib) {
+    else if(mCurrentTypeGraph == ePostDistrib)
         mGraph->exportCurrentDensityCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
-    }
 
 }
 
@@ -343,6 +342,12 @@ void GraphViewResults::showNumericalResults(bool show)
     mShowNumResults = show;
     mTextArea->setVisible(show);
     updateLayout();
+}
+
+void GraphViewResults::setShowNumericalResults(const bool show)
+{
+    mShowNumResults = show;
+    mTextArea->setVisible(show);
 }
 
 void GraphViewResults::setRendering(GraphView::Rendering render)
@@ -383,11 +388,8 @@ void GraphViewResults::updateLayout()
     int butInlineMaxH = 50;
     
     bool axisVisible = (h > mHeightForVisibleAxis);
-    mGraph->showXAxisValues(axisVisible);
-    mGraph->setMarginBottom(axisVisible ? mGraph->font().pointSizeF() + 10 : 10);
-    
-    if(mButtonsVisible)
-    {
+
+    if(mButtonsVisible) {
         qreal bw = mGraphLeft / 4;
         int bh = height() - mLineH;
         bh = std::min(bh, butInlineMaxH);
@@ -406,26 +408,29 @@ void GraphViewResults::updateLayout()
     int leftShift = mButtonsVisible ? mGraphLeft : 0;
     QRect graphRect(leftShift, mTopShift, this->width() - leftShift, height()-mTopShift);
     
-    if(mShowNumResults) {
+    if((mGraph->hasCurve())) {
+        mGraph->showXAxisValues(axisVisible);
+        mGraph->setMarginBottom(axisVisible ? mGraph->font().pointSizeF() + 10 : 10);
+    }
+    if (mShowNumResults) {
         mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
         mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
-    }
-    else {
-        mGraph->setGeometry(graphRect);
-    }
+    } else
+            mGraph->setGeometry(graphRect);
+    /*} else
+        mGraph->setGeometry(graphRect);*/
+
     update();
 }
 void GraphViewResults::paintEvent(QPaintEvent* )
 {
-    //int h = height();
     int leftShift = mButtonsVisible ? mGraphLeft : 0;
     
     QPainter p;
     p.begin(this);
     
     // Left part of the view (title, buttons, ...)
-    if(mButtonsVisible)
-    {
+    if(mButtonsVisible) {
         QColor backCol = mItemColor;
         QColor foreCol = getContrastedColor(backCol);
         
@@ -492,7 +497,7 @@ void GraphViewResults::setButtonsVisible(const bool visible)
 }
 
 #pragma mark Generate Typical curves for Chronomodel
-GraphCurve GraphViewResults::generateDensityCurve(QMap<double, double>& data,
+GraphCurve GraphViewResults::generateDensityCurve(const QMap<double, double>& data,
                                                   const QString& name,
                                                   const QColor& lineColor,
                                                   const Qt::PenStyle penStyle,
@@ -509,7 +514,7 @@ GraphCurve GraphViewResults::generateDensityCurve(QMap<double, double>& data,
      return curve;
 }
 
-GraphCurve GraphViewResults::generateHPDCurve(QMap<double, double>& data,
+GraphCurve GraphViewResults::generateHPDCurve(QMap<double, double> &data,
                                               const QString& name,
                                               const QColor& color) const{
     GraphCurve curve;
@@ -523,7 +528,7 @@ GraphCurve GraphViewResults::generateHPDCurve(QMap<double, double>& data,
     return curve;
 }
 
-GraphCurve GraphViewResults::generateSectionCurve(const QPair<double, double>& section,
+GraphCurve GraphViewResults::generateSectionCurve(const QPair<double, double> &section,
                                                       const QString& name,
                                                       const QColor& color) const{
     GraphCurve curve;
@@ -557,8 +562,7 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
 {
     QString prefix = name.isEmpty() ? name : name + " ";
     
-    for(int i=0; i<chains.size(); ++i)
-    {
+    for (int i=0; i<chains.size(); ++i) {
 
         GraphCurve curve;
         curve.mUseVectorData = true;
@@ -568,8 +572,8 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
         curve.mIsHisto = false;
         mGraph->addCurve(curve);
         
-        const double min = vector_min_value(curve.mDataVector);
-        const double max = vector_max_value(curve.mDataVector);
+        const double min ( vector_min_value(curve.mDataVector) );
+        const double max ( vector_max_value(curve.mDataVector) );
         mGraph->setRangeY(floor(min), ceil(max));
         
         const Quartiles& quartiles = variable->mChainsResults.at(i).quartiles;
@@ -588,8 +592,7 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
 
 void GraphViewResults::generateAcceptCurves(const QList<ChainSpecs> &chains,
                                             MHVariable* variable){
-    for(int i=0; i<chains.size(); ++i)
-    {
+    for (int i=0; i<chains.size(); ++i) {
         GraphCurve curve;
         curve.mName = QString("Accept " + QString::number(i));
         curve.mDataVector = variable->acceptationForChain(chains, i);
@@ -602,11 +605,15 @@ void GraphViewResults::generateAcceptCurves(const QList<ChainSpecs> &chains,
 
 void GraphViewResults::generateCorrelCurves(const QList<ChainSpecs> &chains,
                                             MHVariable* variable){
-    for(int i=0; i<chains.size(); ++i)
-    {
+    for (int i=0; i<chains.size(); ++i) {
         GraphCurve curve;
         curve.mName = QString("Correl " + QString::number(i));
         curve.mDataVector = variable->correlationForChain(i);
+        // if there is no data, no curve to add.
+        // It can append if there is not enought iteration, for example since a test
+        if (curve.mDataVector.isEmpty())
+            continue;
+
         curve.mUseVectorData = true;
         curve.mPen.setColor(Painting::chainColors.at(i));
         curve.mIsHisto = false;
@@ -614,7 +621,7 @@ void GraphViewResults::generateCorrelCurves(const QList<ChainSpecs> &chains,
         
         //to do, we only need the totalIter number?
         const double n = variable->runRawTraceForChain(mChains, i).size();
-        const double limit = 1.96f / sqrt(n);
+        const double limit = 1.96 / sqrt(n);
         
         GraphCurve curveLimitLower = generateHorizontalLine(-limit,
                                                             "Correl Limit Lower " + QString::number(i),

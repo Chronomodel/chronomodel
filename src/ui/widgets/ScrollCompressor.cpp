@@ -63,12 +63,11 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
     
-    QFont font = p.font();
-    font.setPointSizeF(pointSize(11));
+    QFont font(QApplication::font());// = p.font();
+    //font.setPointSizeF(pointSize(11));
     p.setFont(font);
     
-    if(mIsVertical)
-    {
+    if (mIsVertical) {
         QLinearGradient grad1(0, 0, width(), 0);
         grad1.setColorAt(0, QColor(60, 60, 60));
         grad1.setColorAt(1, QColor(80, 80, 80));
@@ -95,11 +94,9 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
             p.setPen(QColor(200, 200, 200));
             p.drawText(r, Qt::AlignCenter, text);
         }
-    }
-    else
-    {
-        double w = r.width() * mProp;
-        QRectF r2 = r.adjusted(0, 0, -r.width() + w, 0);
+    } else {
+        const double w = r.width() * mProp;
+        const QRectF r2 = r.adjusted(0, 0, -r.width() + w, 0);
         
         /*QLinearGradient grad1(0, 0, 0, height());
         grad1.setColorAt(0, QColor(60, 60, 60));
@@ -126,8 +123,7 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
         p.setBrush(Painting::mainGreen);
         p.drawRect(r2);
         
-        if(mShowText)
-        {
+        if(mShowText) {
             QString text = mText + " : " + QString::number(qRound(mProp * 100)) + " %";
             p.setPen(Qt::white);
             p.drawText(r, Qt::AlignCenter, text);

@@ -1,4 +1,4 @@
-#include "PluginMagRefView.h"
+﻿#include "PluginMagRefView.h"
 #if USE_PLUGIN_AM
 
 #include "PluginMag.h"
@@ -51,8 +51,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
     mGraph->showInfos(true);
     mGraph->setFormatFunctX(0);
     
-    if(!date.isNull())
-    {
+    if (!date.isNull()) {
         bool is_inc = date.mData.value(DATE_AM_IS_INC_STR).toBool();
         bool is_dec = date.mData.value(DATE_AM_IS_DEC_STR).toBool();
         bool is_int = date.mData.value(DATE_AM_IS_INT_STR).toBool();
@@ -75,8 +74,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         PluginMag* plugin = (PluginMag*)date.mPlugin;
         const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
         
-        if(curve.mDataMean.isEmpty())
-        {
+        if (curve.mDataMean.isEmpty()) {
             GraphZone zone;
             zone.mColor = Qt::gray;
             zone.mColor.setAlpha(25);
@@ -97,7 +95,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
             mGraph->addZone(zone);
         }
 
-        if(tmaxRef < tmaxDisplay){
+        if (tmaxRef < tmaxDisplay) {
             GraphZone zone;
             zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(35);
@@ -115,10 +113,8 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         QMap<double, double> curveG95Sup;
         QMap<double, double> curveG95Inf;
 
-        for(double t=tminDisplay; t<=tmaxDisplay; ++t)
-        {
-            if(t>tminRef && t<tmaxRef)
-            {
+        for (double t=tminDisplay; t<=tmaxDisplay; ++t) {
+            if (t>tminRef && t<tmaxRef)  {
                 const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
                 const double value = plugin->getRefValueAt(date.mData, tRaw);
                 const double error = plugin->getRefErrorAt(date.mData, tRaw) * 1.96;
@@ -164,8 +160,8 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         // ----------------------------------------------
         //  Measure curve
         // ----------------------------------------------
-        double error = 0.f;
-        double avg = 0.f;
+        double error = 0.;
+        double avg = 0.;
         if(is_inc)
         {
             avg = inc;
@@ -184,8 +180,8 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         
         yMin = qMin(yMin, avg - error);
         yMax = qMax(yMax, avg + error);
-        yMin = yMin - 0.05f * (yMax - yMin);
-        yMax = yMax + 0.05f * (yMax - yMin);
+        yMin = yMin - 0.05 * (yMax - yMin);
+        yMax = yMax + 0.05 * (yMax - yMin);
         
         mGraph->setRangeY(yMin, yMax);
         
@@ -214,15 +210,15 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
             double v = 0.f;
             if(is_inc)
             {
-                v = exp(-0.5f * pow((t - inc) / error, 2.f));
+                v = exp(-0.5 * pow((t - inc) / error, 2.));
             }
             else if(is_dec)
             {
-                v = exp(-0.5f * pow((t - dec) / error, 2));
+                v = exp(-0.5 * pow((t - dec) / error, 2));
             }
             else if(is_int)
             {
-                v = exp(-0.5f * pow((t - intensity) / error, 2));
+                v = exp(-0.5 * pow((t - intensity) / error, 2));
             }
             //curveMeasure.mData[t] = v;
             measureCurve[t] = v;
@@ -281,7 +277,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
     }
 }
 
-void PluginMagRefView::zoomX(double min, double max)
+void PluginMagRefView::zoomX(const double min, const double max)
 {
     mGraph->zoomX(min, max);
 }

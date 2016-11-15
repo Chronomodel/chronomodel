@@ -14,16 +14,18 @@
 
 //int matherr(struct exception *e);
 
-std::mt19937 Generator::sEngine = std::mt19937(0);
-std::uniform_real_distribution<double> Generator::sDistribution = std::uniform_real_distribution<double>(0, 1);
+std::mt19937 Generator::sEngine(0);
+std::uniform_real_distribution<double> Generator::sDoubleDistribution(0.0, 1.0);
+
+//http://xoroshiro.di.unimi.it/
+std::uint64_t Generator::xorshift64starSeed(35);
 
 void Generator::initGenerator(const int seed)
 {
-   // sDistribution = std::uniform_real_distribution<double>(0, 1);
-
-    sEngine.seed(seed);
-    sDistribution.reset();
-    qDebug()<<"initGenerator seed"<<seed;
+   sEngine.seed(seed);
+   sDoubleDistribution.reset();
+   qDebug()<<"initGenerator seed"<<seed;
+   xorshift64starSeed = seed;
 
 }
 
@@ -43,17 +45,22 @@ int Generator::createSeed()
 
 double Generator::randomUniform(const double min, const double max)
 {
-    const double r = min + sDistribution(sEngine) * (max - min);
-    //return min + sDistribution(sEngine) * (max - min);
+    //const double r = min + sDoubleDistribution(sEngine) * (max - min);
+    //const double r = min + xorshift64star() * (max - min);
 
-    return r;
+    return min + sDoubleDistribution(sEngine) * (max - min);
+    // return min + xorshift64star() * (max - min);
+}
+
+int Generator::randomUniformInt(const int min, const int max)
+{
+   return (int) round(randomUniform(min, max));
 }
 
 double Generator::gaussByDoubleExp(const double mean, const double sigma, const double min, const double max)
 {
     errno=0;
-    if((min >= max) || (sigma == 0))
-    {
+    if((min >= max) || (sigma == 0)) {
         if(min == max)
             qDebug() << "DOUBLE EXP WARNING : min == max";
         else
@@ -70,7 +77,7 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     const long double x_min = (min - mean) / sigma;
     const long double x_max = (max - mean) / sigma;
     
-    long double x = (x_max + x_min) / 2.0;// initialisation arbitraire, valeur ecrasée ensuite
+    long double x = (x_max + x_min) / 2.0;// initialisation arbitraire, valeur écrasée ensuite
     //const long double sqrt_e = sqrtl(expl(1.0));
     const long double sqrt_e = 1.64872127070012814689;
     feclearexcept(FE_ALL_EXCEPT);
@@ -82,22 +89,17 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     long double c = 0.0;
     long double f0 = 0.0;
 
-    if(x_min < 0. && x_max > 0.)
-    {
+    if(x_min < 0. && x_max > 0.) {
         exp_x_min = expl(x_min);
         exp_minus_x_max = expl(-x_max);
         c = 1. - 0.5 * (exp_x_min + exp_minus_x_max);
         f0 = 0.5 * (1. - exp_x_min) / c;
     }
-    else
-    {
-        if(x_min >= 0.)
-        {
+    else {
+        if(x_min >= 0.) {
             exp_minus_x_min = expl(-x_min);
             exp_minus_x_max = expl(-x_max);
-        }
-        else
-        {
+        } else {
             exp_x_min = expl(x_min);
             exp_x_max = expl(x_max);
         }
@@ -106,8 +108,7 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     //qDebug() <<"DoubleExp : exp_x_min = "<<exp_x_min;
     //qDebug() << "exp(10 000=="<<exp((long double)(1000));
     //qDebug() << "DOUBLE EXP DoubleExp : errno apres = "<<strerror(errno);
-    if(errno != 0)
-    {
+    if(errno != 0) {
         qDebug() << "DOUBLE EXP : errno apres exp_minus_x_max = "<<strerror(errno);
         qDebug() <<"DoubleExp : mean = "<< mean<<" min="<<min<<" max="<<max<<" sigma"<<sigma;
         qDebug() <<" x_min="<< (double)(x_min)<<" x_max="<<(double)(x_max);
@@ -117,71 +118,54 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     double ur = 1.0;
     long double rap = 0.0;
     
-    int trials = 0;
+    int trials = 0.;
     const int limit = 100000;
     
-    while(rap < ur && trials < limit)
-    {
+    while(rap < ur && trials < limit) {
         const long double u = (long double)randomUniform();
         
-        if(x_min < 0. && x_max > 0.)
-        {
+        if(x_min < 0. && x_max > 0.) {
 
             if(u <= f0)
-            {
                 x = logl(exp_x_min + 2.0 * c * u);
-            }
             else
-            {
                 x = -logl(1. - 2.0*c*(u-f0));
-            }
-        }
-        else
-        {
+
+        } else {
             if(x_min >= 0.)
-            {
                 x = -logl(exp_minus_x_min - u * (exp_minus_x_min - exp_minus_x_max));
-            }
             else
-            {
                 x = logl(exp_x_min - u * (exp_x_min - exp_x_max));
-            }
         }
-        if(errno != 0)
-        {
+
+        if(errno != 0) {
             //qDebug() << "DOUBLE EXP dans boucle = "<<strerror(errno);
             throw "DoubleExp could not find a solution after " + QString::number(limit) + " trials! This may be ue to Taylor unsufficients developpement orders. Please try to run the calculations again!";
         }
         ur = randomUniform();
         
         if(x_min >= 1.)
-        {
             rap = expl(0.5 * (x_min * x_min - x * x) + x - x_min);
-        }
+
         else if(x_max <= -1.)
-        {
             rap = expl(0.5 * (x_max * x_max - x * x) + x_max - x);
-        }
+
         else
-        {
             rap = expl(-0.5 * x * x + std::fabs(x)) / sqrt_e;
-        }
         
         ++trials;
     }
 
     if(trials == limit)
-    {
         throw "DoubleExp could not find a solution after " + QString::number(limit) + " trials! This may be ue to Taylor unsufficients developpement orders. Please try to run the calculations again!";
-    }
+#ifdef DEBUG
     if ((x<x_min) or (x>x_max)) {
-        
-    
-    qDebug() << "DOUBLE EXP DoubleExp : x = "<<(double)(x);
-    qDebug() << "DOUBLE EXP DoubleExp : (mean + (x * sigma)) = "<<(double)(mean + (x * sigma));
-    qDebug() <<" min="<< min<<" max=" <<(double)(x_max);
+        qDebug() << "DOUBLE EXP DoubleExp : x = "<<(double)(x);
+        qDebug() << "DOUBLE EXP DoubleExp : (mean + (x * sigma)) = "<<(double)(mean + (x * sigma));
+        qDebug() <<" min="<< min<<" max=" <<(double)(x_max);
         
     }
+#endif
     return (double)(mean + (x * sigma));
 }
 
@@ -200,3 +184,12 @@ double Generator::gaussByBoxMuller(const double mean, const double sigma)
     
 }
 
+//https://en.wikipedia.org/wiki/Xorshift
+//uint64_t xorshift64starSeed; /* The state must be seeded with a nonzero value. */
+
+double Generator::xorshift64star(void) {
+       Generator:: xorshift64starSeed ^= Generator::xorshift64starSeed >> 12; // a
+        Generator::xorshift64starSeed ^= Generator::xorshift64starSeed << 25; // b
+        Generator::xorshift64starSeed ^= Generator::xorshift64starSeed >> 27; // c
+        return to_double(Generator::xorshift64starSeed * UINT64_C(2685821657736338717));
+}

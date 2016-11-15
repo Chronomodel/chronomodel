@@ -3,6 +3,8 @@
 
 #include <QWidget>
 #include "MCMCLoopMain.h"
+#include "AppSettings.h"
+#include "Project.h"
 
 class QStackedWidget;
 class QTextEdit;
@@ -11,7 +13,7 @@ class QTabWidget;
 class ModelView;
 class ResultsView;
 class Event;
-class Project;
+//class Project;
 
 
 class ProjectView: public QWidget
@@ -28,7 +30,8 @@ public:
     
     void readSettings();
     void writeSettings();
-    
+    void createProject();
+
 public slots:
     void updateProject();
     void showModel();
@@ -38,9 +41,9 @@ public slots:
     void showLog();
     void showHelp(bool show);
     
-    void ApplySettings(Model* model, const AppSettings* appSet);
+    void applySettings(Model* model, const AppSettings* appSet);
 
-    void initResults(Model*);
+    void initResults(Model*, const AppSettings* appSet);
     void updateResults(Model*);
     void updateResultsLog(const QString& log);
     

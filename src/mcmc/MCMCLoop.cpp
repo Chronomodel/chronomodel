@@ -5,7 +5,6 @@
 #include <QTime>
 
 
-
 MCMCLoop::MCMCLoop():
 mChainIndex(0),
 mState(eBurning)
@@ -21,8 +20,7 @@ MCMCLoop::~MCMCLoop()
 void MCMCLoop::setMCMCSettings(const MCMCSettings& s)
 {
     mChains.clear();
-    for(int i=0; i<s.mNumChains; ++i)
-    {
+    for(int i=0; i<s.mNumChains; ++i) {
         ChainSpecs chain;
         
         if(i < s.mSeeds.size())
@@ -83,8 +81,9 @@ const QString MCMCLoop::getInitLog() const
 
 void MCMCLoop::run()
 {    
-    QString mDate =QDateTime::currentDateTime().toString("dddd dd MMMM yyyy");
+    QString mDate = QDateTime::currentDateTime().toString("dddd dd MMMM yyyy");
     QTime startTime = QTime::currentTime();
+
     QString log= "Start " +mDate+" ->>> " +startTime.toString("hh:mm:ss.zzz");
     
 
@@ -94,9 +93,8 @@ void MCMCLoop::run()
     
     mAbortedReason = this->calibrate();
     if(!mAbortedReason.isEmpty())
-    {
         return;
-    }
+
     
 
     //----------------------- Chains --------------------------------------
@@ -105,22 +103,22 @@ void MCMCLoop::run()
     
     mInitLog = QString();
     
-    for(mChainIndex = 0; mChainIndex < mChains.size(); ++mChainIndex)
-    {        
+    // initVariableForChain() reserve memory space
+    initVariablesForChain();
+
+    for (mChainIndex = 0; mChainIndex < mChains.size(); ++mChainIndex) {
         log += "<hr>";
         //log += line("Chain : " + QString::number(mChainIndex + 1) + "/" + QString::number(mChains.size()));
 
         ChainSpecs& chain = mChains[mChainIndex];
         Generator::initGenerator(chain.mSeed);
         
-        //log += line("Seed : " + QString::number(chain.mSeed));
-        //seeds << QString::number(chain.mSeed);
-        
-        this->initVariablesForChain();
+        log += line("Seed : " + QString::number(chain.mSeed));
+        seeds << QString::number(chain.mSeed);      
         
         //----------------------- Initializing --------------------------------------
         
-        if(isInterruptionRequested()){
+        if (isInterruptionRequested()) {
             mAbortedReason = ABORTED_BY_USER;
             return;
         }
@@ -131,9 +129,8 @@ void MCMCLoop::run()
         
         mAbortedReason = this->initMCMC();
         if(!mAbortedReason.isEmpty())
-        {
             return;
-        }
+        
         
         /*QTime endInitTime = QTime::currentTime();
         timeDiff = startInitTime.msecsTo(endInitTime);
@@ -147,19 +144,15 @@ void MCMCLoop::run()
         
         //QTime startBurnTime = QTime::currentTime();
         
-        while(chain.mBurnIterIndex < chain.mNumBurnIter)
-        {
-            if(isInterruptionRequested())
-            {
+        while (chain.mBurnIterIndex < chain.mNumBurnIter) {
+            if (isInterruptionRequested()) {
                 mAbortedReason = ABORTED_BY_USER;
                 return;
             }
             
-            try{
+            try {
                 this->update();
-            }
-            catch(QString error)
-            {
+            } catch (QString error) {
                 mAbortedReason = error;
                 return;
             }
@@ -182,28 +175,22 @@ void MCMCLoop::run()
         
         //QTime startAdaptTime = QTime::currentTime();
         
-        while(chain.mBatchIndex * chain.mNumBatchIter < chain.mMaxBatchs * chain.mNumBatchIter)
-        {
-            if(isInterruptionRequested())
-            {
+        while (chain.mBatchIndex * chain.mNumBatchIter < chain.mMaxBatchs * chain.mNumBatchIter) {
+            if (isInterruptionRequested()) {
                 mAbortedReason = ABORTED_BY_USER;
                 return;
             }
             
             chain.mBatchIterIndex = 0;
-            while(chain.mBatchIterIndex < chain.mNumBatchIter)
-            {
-                if(isInterruptionRequested())
-                {
+            while (chain.mBatchIterIndex < chain.mNumBatchIter) {
+                if (isInterruptionRequested()) {
                     mAbortedReason = ABORTED_BY_USER;
                     return;
                 }
 
-                try{
+                try {
                     this->update();
-                }
-                catch(QString error)
-                {
+                } catch (QString error) {
                     mAbortedReason = error;
                     return;
                 }
@@ -216,9 +203,8 @@ void MCMCLoop::run()
             ++chain.mBatchIndex;
             
             if(adapt())
-            {
                 break;
-            }
+
         }
         //log += line("Adapt OK at batch : " + QString::number(chain.mBatchIndex) + "/" + QString::number(chain.mMaxBatchs));
         
@@ -233,19 +219,15 @@ void MCMCLoop::run()
         
         //QTime startRunTime = QTime::currentTime();
         
-        while(chain.mRunIterIndex < chain.mNumRunIter)
-        {
-            if(isInterruptionRequested())
-            {
+        while (chain.mRunIterIndex < chain.mNumRunIter) {
+            if (isInterruptionRequested()) {
                 mAbortedReason = ABORTED_BY_USER;
                 return;
             }
 
-            try{
+            try {
                 this->update();
-            }
-            catch(QString error)
-            {
+            } catch (QString error) {
                 mAbortedReason = error;
                 return;
             }
@@ -280,11 +262,9 @@ void MCMCLoop::run()
 
     emit stepChanged(tr("Computing posterior distributions and numerical results (HPD, credibility, ...)"), 0, 0);
     
-    try{
+    try {
         this->finalize();
-    }
-    catch(QString error)
-    {
+    } catch (QString error) {
         mAbortedReason = error;
         return;
     }

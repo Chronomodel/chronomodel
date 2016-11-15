@@ -84,12 +84,12 @@ QString DateUtils::dateToString(const double date, int precision)
     QLocale locale;
     locale.setNumberOptions(QLocale::OmitGroupSeparator);
     char fmt = 'f';
-    if (date>250000){
+    if (date>250000)
         fmt = 'G';
-    }
-    if (std::fabs(date)<1E-10) {
+
+    if (std::abs(date)<1E-10)
         return "0";
-    }
+
     else
         return locale.toString(date, fmt, precision);
 }
@@ -124,6 +124,3 @@ double DateUtils::convertFromAppSettingsFormat(const double formattedValue)
 {
     return DateUtils::convertFromFormat(formattedValue, getAppSettingsFormat());
 }
-
-
-

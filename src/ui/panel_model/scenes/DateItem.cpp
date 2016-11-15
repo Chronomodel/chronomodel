@@ -17,7 +17,8 @@ mGreyedOut(false)
     setAcceptHoverEvents(true);
     setAcceptDrops(true);
     setFlags(ItemIsMovable | ItemIsSelectable);
-    
+    //EventsScene->mProject
+    // Date::fromJson don't create mCalibration
     Date d = Date::fromJson(date);
     ProjectSettings s = ProjectSettings::fromJson(settings);
     //qDebug()<<"setting"<< s.mTmin;
@@ -25,20 +26,23 @@ mGreyedOut(false)
     d.mSettings.mTmax = s.mTmax;
     d.mSettings.mStep = s.mStep;
     
-    if(d.mPlugin!=NULL) {
-        if(d.mPlugin->getName() != "Typo") {
-           if(!d.mIsValid) {
+    if (d.mPlugin!=NULL) {
+        if (d.mPlugin->getName() != "Typo") {
+           
+           if (!d.mIsValid)
                mCalibThumb = QPixmap();
-           }
+           
            else {
-            d.calibrate(s);
-            mCalibThumb = d.generateCalibThumb();
+               if (d.mCalibration == 0)
+                    d.calibrate(s, EventsScene->getProject());
+
+                mCalibThumb = d.generateCalibThumb();
            }
 
         }
-        else {
+        else
             mCalibThumb = d.generateTypoThumb();
-        }
+        
     }
 }
 
@@ -54,77 +58,101 @@ void DateItem::setOriginalPos(const QPointF pos)
 
 QRectF DateItem::boundingRect() const
 {
-    QGraphicsItem* parent = parentItem();
-    if(parent)
-    {
-        EventItem* eventItem = dynamic_cast<EventItem*>(parent);
-        if(eventItem)
-        {
-            QRectF pr = eventItem->boundingRect();
-            QRectF r(-pr.width()/2 + eventItem->mBorderWidth + eventItem->mEltsMargin,
-                     0,
-                     pr.width() - 2*(eventItem->mBorderWidth + eventItem->mEltsMargin),
-                     eventItem->mEltsHeight);
-            return r;
-        }
-    }
-    return QRectF(0, 0, 100, 30);
+   EventItem* eventItem = dynamic_cast<EventItem*>(parentItem());
+   if (eventItem) {
+        QRectF pr = eventItem->boundingRect();
+        QRectF r(-pr.width()/2 + eventItem->mBorderWidth + eventItem->mEltsMargin,
+                 0,
+                 pr.width() - 2*(eventItem->mBorderWidth + eventItem->mEltsMargin),
+                 eventItem->mEltsHeight);
+        return r;
+    } else
+        return QRectF(0, 0, 100, 30);
 }
 
-void DateItem::setGreyedOut(bool greyedOut, bool shouldRepaint)
+void DateItem::setGreyedOut(bool greyedOut)
 {
-    mGreyedOut = greyedOut;
-    if(shouldRepaint)
-        update();
+    if (mGreyedOut != greyedOut) {
+        mGreyedOut = greyedOut;
+       // update(); //it is time comsuming and product slowing
+   }
 }
 
 void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
     Q_UNUSED(option);
     Q_UNUSED(widget);
-    
     painter->setRenderHint(QPainter::Antialiasing);
-    
+
+    if (mGreyedOut)
+        painter->setOpacity(0.35f);
+    else
+        painter->setOpacity(1.f);
+
+    // background, it avoids small line between the box name and the thumbnail
     QRectF r = boundingRect();
-    painter->fillRect(r, mColor);
+    painter->fillRect(r, Qt::white);
     
     r.adjust(2, 2, -2, -2);
-    painter->fillRect(r, Qt::white);
+    // box name
+    const int rHeightMid =  int(r.height()/2);
+    painter->fillRect(r.adjusted(0, 0, 0, -rHeightMid), Qt::white);
     
     QFont font = qApp->font();
     font.setPointSizeF(pointSize(11));
     painter->setFont(font);
-    
-    painter->setPen(Qt::black);
-    painter->drawText(r.adjusted(0, 0, 0, -r.height()/2), Qt::AlignCenter, mDate.value(STATE_NAME).toString());
-    
-    if(!mCalibThumb.isNull()) {
-       painter->drawPixmap(r.adjusted(0, r.height()/2, 0, 0),
-                            mCalibThumb,
-                            mCalibThumb.rect());
-    }
-    else {
-        painter->setPen(Qt::red);
-        if(mDate.value(STATE_DATE_VALID).toBool()) {
-            painter->drawText(r.adjusted(0, r.height()/2, 0, 0), Qt::AlignCenter, tr("Outside study period"));
-        }
-        else {
-            painter->drawText(r.adjusted(0, r.height()/2, 0, 0), Qt::AlignCenter, tr("Not computable"));
-        }
 
+    painter->setPen(Qt::black);
+    painter->drawText(r.adjusted(0, 0, 0, -rHeightMid), Qt::AlignCenter, mDate.value(STATE_NAME).toString());
+
+    // thumbnail
+    const QRectF rct = r.adjusted(0, r.height()-rHeightMid, 0, 0);
+
+    if (!mCalibThumb.isNull()) {
+        // using matrix transformation, because antiAliasing don't work with pixmap
+        qreal sx = rct.width()/mCalibThumb.width();
+        qreal sy =  rct.height()/mCalibThumb.height();
+        QMatrix mx = QMatrix();
+        mx.scale(sx, sy);
+
+        const QPixmap ct2 = mCalibThumb.transformed(mx, Qt::SmoothTransformation);
+
+        painter->drawPixmap(rct.x(), rct.y(), ct2);
+
+    } else {
+        painter->fillRect(rct, Qt::white);
+        painter->setPen(Qt::red);
+        if (mDate.value(STATE_DATE_VALID).toBool())
+            painter->drawText(rct, Qt::AlignCenter, tr("Outside study period"));
+        else
+            painter->drawText(rct, Qt::AlignCenter, tr("Not computable"));
     }
+    // border
+    painter->setPen(mColor);
+    painter->drawRect(boundingRect());
+
+    // restore default opacity
+    painter->setOpacity(1.f);
+
+    // we don't need to refresh the Event
+
 }
 
 void DateItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-    parentItem()->setZValue(2.);
+    qDebug()<<"DateItem::mousePressEvent___________________ ";
+
     EventItem* eventItem = dynamic_cast<EventItem*>(parentItem());
-    if(eventItem)// && e->button() == Qt::LeftButton)
-    {
-        eventItem->setSelected(true);
-        mEventsScene->itemClicked(eventItem, e);
-        e->accept();
+
+    if ((!eventItem->isSelected()) && (!mEventsScene->mDrawingArrow))
+        mEventsScene->clearSelection();
+
+    if (eventItem)  {
+        eventItem->setZValue(2.);
+        eventItem->mousePressEvent(e);
+        //e->accept();
     }
+    // offers the possibility to move the item by heritage
     QGraphicsObject::mousePressEvent(e);
 }
 
@@ -137,6 +165,7 @@ void DateItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
 
 void DateItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 {
+    //setGreyedOut(false);
     mEventsScene->dateMoved(this, e);
     QGraphicsObject::mouseMoveEvent(e);
 }
@@ -144,8 +173,7 @@ void DateItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 void DateItem::dropEvent(QGraphicsSceneDragDropEvent* e)
 {
     EventItem* eventItem = dynamic_cast<EventItem*>(parentItem());
-    if(eventItem)
-    {
+    if (eventItem)
         eventItem->handleDrop(e);
-    }
+
 }

@@ -22,8 +22,7 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
     QString dt = QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss");
     QString txt = QString("[%1] ").arg(dt);
     
-    switch((int)type)
-    {
+    switch ((int)type) {
         case QtDebugMsg:
             txt += QString("{Debug} \t\t %1").arg(msg);
             break;
@@ -40,8 +39,7 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
     }
     
     QFile outFile("LogFile.log");
-    if(outFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append))
-    {
+    if (outFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
         QTextStream textStream(&outFile);
         textStream << txt << endl;
     }
@@ -50,15 +48,13 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
 int main(int argc, char *argv[])
 {
 #ifdef Q_OS_MAC
-    if(math_errhandling & MATH_ERREXCEPT)
-    {
+    if (math_errhandling & MATH_ERREXCEPT) {
         std::cout << "cmath raises exceptions" << std::endl;
         feclearexcept(FE_ALL_EXCEPT);
     }
     if(math_errhandling & MATH_ERRNO)
-    {
         std::cout << "cmath uses errno" << std::endl;
-    }
+    
 #endif
     
     // --------------------------------------
@@ -78,7 +74,7 @@ int main(int argc, char *argv[])
     
     a.setApplicationName("ChronoModel");
     a.setApplicationDisplayName("ChronoModel");
-    a.setApplicationVersion("1.5.1_alpha"); // must match value in Chronomodel.pro
+    a.setApplicationVersion("1.5.8_alpha"); // must match value in Chronomodel.pro
     a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));
@@ -86,7 +82,7 @@ int main(int argc, char *argv[])
     qApp->setAttribute(Qt::AA_UseHighDpiPixmaps);
     
     QString filePath = "";
-    for(int i=0; i<argc; ++i) {
+    for (int i=0; i<argc; ++i) {
         QString arg(argv[i]);
         if(arg.contains(".chr", Qt::CaseInsensitive))
             filePath = arg;
@@ -118,4 +114,3 @@ int main(int argc, char *argv[])
     return a.exec();
     
 }
-

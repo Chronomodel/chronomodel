@@ -74,7 +74,7 @@ void drawButton(QPainter& painter, const QRectF& rect, bool hover, bool isEnable
     int textH = 22;
     
     QFont font = painter.font();
-    font.setPointSizeF(pointSize(10.f));
+    //font.setPointSizeF(pointSize(10.f));
     painter.setFont(font);
     
     painter.setPen(QColor(200, 200, 200));
@@ -150,7 +150,7 @@ void drawButton2(QPainter& painter, const QRectF& rect, bool hover, bool isEnabl
     }
     
     QFont font = painter.font();
-    font.setPointSize(pointSize(11));
+    //font.setPointSize(pointSize(11));
     painter.setFont(font);
     
     if(!icon.isNull())
@@ -191,7 +191,7 @@ void drawBox(QPainter& painter, const QRectF& r, const QString& text)
     painter.drawRect(r.adjusted(0, 0, 0, -r.height() + 20));
     
     QFont font = painter.font();
-    font.setPointSize(pointSize(11));
+    //font.setPointSize(pointSize(11));
     painter.setFont(font);
     
     painter.setPen(Qt::white);
@@ -221,7 +221,7 @@ void drawRadio(QPainter& painter, const QRectF& rect, const QString& text, bool 
     }
     
     QFont font = painter.font();
-    font.setPointSize(pointSize(11));
+   // font.setPointSize(pointSize(11));
     painter.setFont(font);
     
     painter.setPen(Qt::black);
@@ -238,7 +238,7 @@ void drawCheckbox(QPainter& painter, const QRectF& r, const QString& text, Qt::C
     drawCheckBoxBox(painter, boxRect, state, QColor(230, 230, 230), QColor(120, 120, 120));
     
     QFont font = painter.font();
-    font.setPointSize(pointSize(11));
+    //font.setPointSize(pointSize(11));
     painter.setFont(font);
     
     painter.setPen(Qt::black);

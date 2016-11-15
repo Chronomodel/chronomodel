@@ -1,4 +1,4 @@
-#ifndef MHVARIABLE_H
+﻿#ifndef MHVARIABLE_H
 #define MHVARIABLE_H
 
 #include "MetropolisVariable.h"
@@ -12,6 +12,7 @@ public:
     virtual ~MHVariable();
     
     virtual void reset();
+    virtual void reserve( const int reserve);
     MHVariable& copy(MHVariable const& origin);
     MHVariable& operator=(MHVariable const& origin);
 
@@ -29,9 +30,6 @@ public:
                           const QString& unit = QString(),
                           FormatFunc formatFunc = 0) const;
 
-    void saveToStream(QDataStream *out);
-    void loadFromStream(QDataStream *in);
-    
 public:
     double mSigmaMH;
     
@@ -46,7 +44,7 @@ public:
     // sur les parties acquisition uniquement.
     // A stocker dans le fichier résultats .dat !
     
-    QVector<bool> mAllAccepts;
+    QVector<bool>* mAllAccepts;
     
     // Computed at the end as numerical result :
     double mGlobalAcceptation;
@@ -55,9 +53,14 @@ public:
     // On en affiche des sous-parties (correspondant aux chaines) dans la vue des résultats
     // A stocker dans les résultats!
     
-    QVector<double> mHistoryAcceptRateMH;
+    QVector<double>* mHistoryAcceptRateMH;
     
     QString mProposal;
 };
 
+QDataStream &operator<<( QDataStream &stream, const MHVariable &data );
+
+QDataStream &operator>>( QDataStream &stream, MHVariable &data );
+
 #endif
+

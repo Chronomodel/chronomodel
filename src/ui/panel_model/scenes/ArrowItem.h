@@ -7,7 +7,7 @@
 
 class AbstractScene;
 class AbstractItem;
-
+class EventItem;
 
 class ArrowItem: public QGraphicsItem
 {
@@ -20,8 +20,8 @@ public:
     ArrowItem(AbstractScene* scene, Type type, const QJsonObject& constraint, QGraphicsItem* parent = 0);
     
     void updatePosition();
-    void setFrom(double x, double y);
-    void setTo(double x, double y);
+    void setFrom(const double x, const double y);
+    void setTo(const double x, const double y);
     
     void setGreyedOut(bool greyedOut);
 
@@ -39,7 +39,9 @@ public:
     
     void setData(const QJsonObject& c);
     QJsonObject& data();
-    
+protected:
+    EventItem* findEventItemWithJsonId(const int id);
+
 public:
     Type mType;
     QJsonObject mData;

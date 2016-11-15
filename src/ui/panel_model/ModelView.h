@@ -35,12 +35,15 @@ public:
     ModelView(QWidget* parent = 0, Qt::WindowFlags flags = 0);
     ~ModelView();
     
-    void doProjectConnections(Project* project);
+    void setProject(Project* project);
+    Project* getProject() const;
+    
     void resetInterface();
     void showHelp(bool show);
     
     void readSettings();
     void writeSettings();
+    void createProject();
     
 public slots:
     void updateProject();
@@ -58,6 +61,9 @@ protected:
     void mouseReleaseEvent(QMouseEvent* e);
     void mouseMoveEvent(QMouseEvent* e);
     void keyPressEvent(QKeyEvent* event);
+
+    void connectScenes();
+    void disconnectScenes();
     
 private slots:
     void showProperties();
@@ -66,10 +72,10 @@ private slots:
     void slideRightPanel();
     void prepareNextSlide();
     
-    void updateEventsZoom(double prop);
+    void updateEventsZoom(const double prop);
     void exportEventsScene();
     
-    void updatePhasesZoom(double prop);
+    void updatePhasesZoom(const double prop);
     void exportPhasesScene();
     
     void updateCalibration(const QJsonObject& date);
@@ -161,6 +167,9 @@ private:
     QRect mRightSubRect;
     QRect mRightSubHiddenRect;
     QRect mHandlerRect;
+    
+private:
+    Project* mProject;
     
     int mMargin;
     int mToolbarH;

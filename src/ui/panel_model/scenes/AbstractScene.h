@@ -6,6 +6,7 @@
 class AbstractItem;
 class ArrowItem;
 class ArrowTmpItem;
+class Project;
 
 
 class AbstractScene: public QGraphicsScene
@@ -17,7 +18,15 @@ public:
     
     QRectF specialItemsBoundingRect(QRectF r = QRectF()) const;
     void adjustSceneRect();
-    
+    bool mDrawingArrow;
+    ArrowTmpItem* mTempArrow;
+
+    void setProject(Project *project);
+    Project* getProject() const;
+
+    QList<AbstractItem*> getItemsList() const  {return mItems;}
+    bool showAllThumbs() const { return mShowAllThumbs;}
+
 public slots:
     void showGrid(bool show);
 
@@ -38,7 +47,8 @@ public:
     
     void updateConstraintsPos(AbstractItem* movedItem, const QPointF& newPos);
 
-    void setCurrentItem(QGraphicsItem *item);
+    //void setCurrentItem(QGraphicsItem *item);
+    //void setCurrentItem(AbstractItem *item) { mCurrentItem = item;}
     
 protected:
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* e);
@@ -57,21 +67,26 @@ protected:
     void drawBackground(QPainter* painter, const QRectF& rect);
 
 protected:
+    Project* mProject;
     QGraphicsView* mView;
     QList<AbstractItem*> mItems;
     QList<ArrowItem*> mConstraintItems;
     
-    bool mDrawingArrow;
     bool mUpdatingItems;
     bool mAltIsDown;
     bool mShiftIsDown;
     
     bool mShowGrid;
+
+    bool mShowAllThumbs;
     
     double mZoom;
     
-public:
-    ArrowTmpItem* mTempArrow;
+    AbstractItem* mCurrentItem;
+
+signals:
+    void projectUpdated();
+
 };
 
 #endif
