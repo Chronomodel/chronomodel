@@ -1377,7 +1377,7 @@ void ResultsView::updateScales()
         for (int i = 0; i < mChainRadios.size(); ++i) {
             if (mChainRadios.at(i)->isChecked()) {
                 const ChainSpecs& chain = mChains.at(i);
-                mResultMaxX = chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter) + chain.mNumRunIter / chain.mThinningInterval;
+                mResultMaxX = 1+ chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter) + chain.mNumRunIter / chain.mThinningInterval;
                 break;
             }
         }
@@ -1527,7 +1527,7 @@ void ResultsView::updateZoomX()
     zoom = 100 * (1 - zoomProp);
     
     mResultZoomX = (double)zoom;
-    double span = (mResultMaxX - mResultMinX)* (100.f-mResultZoomX)/100.;
+    double span = (mResultMaxX - mResultMinX)* (100.-mResultZoomX)/100.;
     double mid = (mResultCurrentMaxX + mResultCurrentMinX)/2.;
     double curMin = mid - span/2.;
     double curMax = mid + span/2.;

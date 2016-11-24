@@ -311,10 +311,11 @@ void GraphViewResults::saveGraphData() const
 
         else if (messageBox.clickedButton() == acquireTraceButton) {
                 int chainIdx = -1;
-                for(int i=0; i<mShowChainList.size(); ++i)
-                    if(mShowChainList.at(i)) chainIdx = i;
-                if(chainIdx != -1)
-                    offset = mChains.at(chainIdx).mNumBurnIter + mChains.at(chainIdx).mBatchIndex * mChains.at(chainIdx).mNumBatchIter;
+                for (int i=0; i<mShowChainList.size(); ++i)
+                    if (mShowChainList.at(i)) chainIdx = i;
+
+                if (chainIdx != -1) // We add 1 for the init
+                    offset = 1 + mChains.at(chainIdx).mNumBurnIter + mChains.at(chainIdx).mBatchIndex * mChains.at(chainIdx).mNumBatchIter;
 
                 mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, offset);
         }
