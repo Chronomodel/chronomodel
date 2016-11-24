@@ -80,7 +80,7 @@ void PhaseConstraint::initGamma()
     if(mGammaType == eGammaUnknown)
         mGamma = 0;
 
-    else if (mGammaType == eGammaFixed && mGammaFixed != 0)
+    else if (mGammaType == eGammaFixed && mGammaFixed != 0.)
         mGamma = mGammaFixed;
 
     else if (mGammaType == eGammaRange && mGammaMax > mGammaMin)
@@ -90,9 +90,9 @@ void PhaseConstraint::initGamma()
 void PhaseConstraint::updateGamma()
 {
     if (mGammaType == eGammaUnknown)
-        mGamma = 0;
+        mGamma = 0.;
 
-    else if (mGammaType == eGammaFixed && mGammaFixed != 0)
+    else if (mGammaType == eGammaFixed && mGammaFixed != 0.)
         mGamma = mGammaFixed;
 
     else if (mGammaType == eGammaRange && mGammaMax > mGammaMin) {
