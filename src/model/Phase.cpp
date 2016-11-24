@@ -84,14 +84,14 @@ Phase::~Phase()
 
    mEvents.clear();
 
-    if(!mConstraintsFwd.isEmpty()) {
+    if (!mConstraintsFwd.isEmpty()) {
         for (PhaseConstraint* pc: mConstraintsFwd) {
            // if(pc) delete pc;
             pc = 0;
         }
         mConstraintsFwd.clear();
     }
-    if(!mConstraintsBwd.isEmpty()) {
+    if (!mConstraintsBwd.isEmpty()) {
         for (PhaseConstraint* pc: mConstraintsBwd) {
             //if(pc) pc->deleteLater();
             pc = 0;
@@ -155,28 +155,28 @@ QPair<double,double> Phase::getFormatedTimeRange() const
 {
     const double t1 = DateUtils::convertToAppSettingsFormat(mTimeRange.first);
     const double t2 = DateUtils::convertToAppSettingsFormat(mTimeRange.second);
-    if(t1<t2) {
+    if (t1<t2)
         return QPair<double,double>(t1,t2);
-    }
-    else {
+
+    else
         return QPair<double,double>(t2,t1);
-    }
+
 }
 
 double Phase::getMaxThetaEvents(double tmax)
 {
-    double theta = double();
+    double theta;
     bool found = false;
     QList<Event*>::const_iterator iterEvent = mEvents.constBegin();
-    while(iterEvent != mEvents.constEnd()) {
-        if((*iterEvent)->mInitialized)  {
-            if(!found) {
+    while (iterEvent != mEvents.constEnd()) {
+        if ((*iterEvent)->mInitialized)  {
+            if (!found) {
                 theta = (*iterEvent)->mTheta.mX;
                 found = true;
             }
-            else {
+            else
                 theta = qMax(theta, (*iterEvent)->mTheta.mX);
-            }
+
         }
         ++iterEvent;
     }
@@ -216,8 +216,8 @@ double Phase::getMinThetaEvents(double tmin)
     bool found = false;
     QList<Event*>::const_iterator iterEvent = mEvents.constBegin();
     while(iterEvent != mEvents.constEnd()) {
-        if((*iterEvent)->mInitialized)  {
-            if(!found) {
+        if ((*iterEvent)->mInitialized)  {
+            if (!found) {
                 theta = (*iterEvent)->mTheta.mX;
                 found = true;
             }
@@ -236,13 +236,12 @@ double Phase::getMinThetaNextPhases(double tmax)
 {
     
     double minTheta = tmax;
-    for(int i=0; i<mConstraintsFwd.size(); ++i)
-    {
+    for (int i=0; i<mConstraintsFwd.size(); ++i) {
         // we can juste look alpha and beta set in member mAlpha and mBeta
         //double theta= mConstraintsFwd[i]->mPhaseTo->getMinThetaEvents(tmax);
         double theta= mConstraintsFwd[i]->mPhaseTo->mAlpha.mX;
         
-        if(mConstraintsFwd[i]->mGammaType != PhaseConstraint::eGammaUnknown)
+        if (mConstraintsFwd[i]->mGammaType != PhaseConstraint::eGammaUnknown)
             minTheta = qMin(minTheta, theta - mConstraintsFwd[i]->mGamma);
         else
             minTheta = qMin(minTheta, theta);
@@ -253,12 +252,11 @@ double Phase::getMinThetaNextPhases(double tmax)
 double Phase::getMaxThetaPrevPhases(double tmin)
 {
     double maxTheta = tmin;
-    for(int i=0; i<mConstraintsBwd.size(); ++i)
-    {
+    for (int i=0; i<mConstraintsBwd.size(); ++i) {
         //double theta= mConstraintsBwd[i]->mPhaseFrom->getMaxThetaEvents(tmin);
         double theta= mConstraintsBwd[i]->mPhaseFrom->mBeta.mX;
         
-        if(mConstraintsBwd[i]->mGammaType != PhaseConstraint::eGammaUnknown)
+        if (mConstraintsBwd[i]->mGammaType != PhaseConstraint::eGammaUnknown)
             maxTheta = qMax(maxTheta, theta + mConstraintsBwd[i]->mGamma);
         else
             maxTheta = qMax(maxTheta, theta);
@@ -279,11 +277,11 @@ void Phase::updateAll(const double tmin, const double tmax)
     mBeta.mX = getMaxThetaEvents(tmax);
     mDuration.mX = mBeta.mX - mAlpha.mX;
     
-    if(initalized)
-    {
-        if(mAlpha.mX != oldAlpha)
+    if (initalized) {
+        if (mAlpha.mX != oldAlpha)
             mIsAlphaFixed = false;
-        if(mBeta.mX != oldBeta)
+
+        if (mBeta.mX != oldBeta)
             mIsAlphaFixed = false;
     }
     
@@ -294,11 +292,13 @@ void Phase::updateAll(const double tmin, const double tmax)
 
 void Phase::initTau()
 {
-    if(mTauType == eTauFixed && mTauFixed != 0)
+    if (mTauType == eTauFixed && mTauFixed != 0.)
         mTau = mTauFixed;
-    else if(mTauType == eTauRange && mTauMax > mTauMin)
+
+    else if (mTauType == eTauRange && mTauMax > mTauMin)
         mTau = mTauMax;
-    else if(mTauType == eTauUnknown)
+
+    else if (mTauType == eTauUnknown)
     {
         // nothing to do
     }
@@ -306,11 +306,13 @@ void Phase::initTau()
 
 void Phase::updateTau()
 {
-    if(mTauType == eTauFixed && mTauFixed != 0)
+    if (mTauType == eTauFixed && mTauFixed != 0.)
         mTau = mTauFixed;
-    else if(mTauType == eTauRange && mTauMax > mTauMin)
+
+    else if (mTauType == eTauRange && mTauMax > mTauMin)
         mTau = Generator::randomUniform(qMax(mTauMin, mBeta.mX - mAlpha.mX), mTauMax);
-    else if(mTauType == eTauUnknown)
+
+    else if (mTauType == eTauUnknown)
     {
         // Nothing to do!
     }
@@ -322,7 +324,7 @@ void Phase::memoAll()
     mBeta.memo();
     mDuration.memo();
 #ifdef DEBUG
-    if (mBeta.mX - mAlpha.mX<0)
+    if (mBeta.mX - mAlpha.mX < 0.)
         qDebug()<<"in Phase::memoAll : "<<mName<<" Warning mBeta.mX - mAlpha.mX<0";
 #endif
 }
