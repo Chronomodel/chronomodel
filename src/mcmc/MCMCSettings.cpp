@@ -2,6 +2,7 @@
 #include "Generator.h"
 #include <QVariant>
 #include <QJsonArray>
+#include <QDataStream>
 
 
 MCMCSettings::MCMCSettings():
@@ -72,7 +73,7 @@ MCMCSettings MCMCSettings::fromJson(const QJsonObject& json)
     settings.mThinningInterval = json.contains(STATE_MCMC_THINNING_INTERVAL) ? json.value(STATE_MCMC_THINNING_INTERVAL).toInt() : MCMC_THINNING_INTERVAL_DEFAULT;
     settings.mMixingLevel = json.contains(STATE_MCMC_MIXING) ? json.value(STATE_MCMC_MIXING).toDouble() : MCMC_MIXING_DEFAULT;
     QJsonArray seeds = json.value(STATE_MCMC_SEEDS).toArray();
-    for(int i=0; i<seeds.size(); ++i)
+    for (int i=0; i<seeds.size(); ++i)
         settings.mSeeds.append(seeds.at(i).toInt());
     
     return settings;
@@ -91,7 +92,7 @@ QJsonObject MCMCSettings::toJson() const
     mcmc[STATE_MCMC_MIXING] = QJsonValue::fromVariant(mMixingLevel);
     
     QJsonArray seeds;
-    for(int i=0; i<mSeeds.size(); ++i)
+    for (int i=0; i<mSeeds.size(); ++i)
         seeds.append(QJsonValue::fromVariant(mSeeds.at(i)) );
     mcmc[STATE_MCMC_SEEDS] = seeds;
     
@@ -102,11 +103,10 @@ QList<ChainSpecs> MCMCSettings::getChains() const
 {
     QList<ChainSpecs> chains;
     
-    for(int i=0; i<(int)mNumChains; ++i)
-    {
+    for (int i=0; i<(int)mNumChains; ++i) {
         ChainSpecs chain;
         
-        if(i < mSeeds.size())
+        if (i < mSeeds.size())
             chain.mSeed = mSeeds.at(i);
         else
             chain.mSeed = Generator::createSeed();
@@ -125,4 +125,53 @@ QList<ChainSpecs> MCMCSettings::getChains() const
         chains.append(chain);
     }
     return chains;
+}
+
+QDataStream &operator<<( QDataStream &stream, const MCMCSettings &data )
+{
+    stream << quint8 (data.mNumChains);
+    stream << (quint32) data.mNumRunIter;
+    stream << (quint32) data.mNumBurnIter;
+    stream << (quint32) data.mMaxBatches;
+    stream << (quint32) data.mNumBatchIter;
+    stream << (quint32) data.mThinningInterval;
+    stream << data.mSeeds;
+    stream << (quint32) data.mFinalBatchIndex;
+    stream << data.mMixingLevel;
+
+    return stream;
+
+}
+
+QDataStream &operator>>( QDataStream &stream, MCMCSettings &data )
+{
+    quint8 tmp8;
+    stream >> tmp8;
+    data.mNumChains = tmp8;
+
+    quint32 tmp32;
+    stream >> tmp32;
+    data.mNumRunIter = int(tmp32);
+
+    stream >> tmp32;
+    data.mNumBurnIter = int(tmp32);
+
+    stream >> tmp32;
+    data.mMaxBatches = int(tmp32);
+
+    stream >> tmp32;
+    data.mNumBatchIter = int(tmp32);
+
+    stream >> tmp32;
+    data.mThinningInterval = int(tmp32);
+
+    stream >> data.mSeeds;
+
+    stream >> tmp32;
+    data.mFinalBatchIndex = int(tmp32);
+
+    stream >> data.mMixingLevel;
+
+    return stream;
+
 }

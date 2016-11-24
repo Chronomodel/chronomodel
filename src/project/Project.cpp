@@ -610,6 +610,7 @@ bool Project::load(const QString& path)
                 
                 
                 try {
+                    mModel->setProject(this);
                     mModel->restoreFromFile(dataPath);
                     
                     emit mcmcFinished(mModel);

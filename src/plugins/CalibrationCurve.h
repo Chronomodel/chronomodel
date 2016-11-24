@@ -23,13 +23,11 @@ public:
     QString mName;
     QString mDescription;
 
-
     Method mMethod;
 
     // Parameter refere to the Method
     MCMCSettings mMCMCSetting;
-    //RefCurve mRefCurve;
-    //QJsonObject mData;
+
     PluginAbstract* mPlugin;
 
     QVector<double> mRepartition;
