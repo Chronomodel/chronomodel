@@ -56,9 +56,6 @@ void Date::init()
     mTminRefCurve = 0.;
     mTmaxRefCurve = 0.;
 
-    //mTminCalib = 0.;
-    //mTmaxCalib = 0.;
-
     mCalibration = 0;
 
 }
@@ -100,16 +97,12 @@ void Date::copyFrom(const Date& date)
     mIsCurrent = date.mIsCurrent;
     mIsSelected = date.mIsSelected;
     
-    //mCalibration = &project->mCalibCurves.value(mId);
     mCalibration = date.mCalibration;
-    //mRepartition = date.mRepartition;
+
     mCalibHPD = date.mCalibHPD;
     
     mTminRefCurve = date.mTminRefCurve;
     mTmaxRefCurve = date.mTmaxRefCurve;
-
-    //mTminCalib = date.mTminCalib;
-    //mTmaxCalib = date.mTmaxCalib;
 
     mSubDates = date.mSubDates;
     
@@ -186,11 +179,10 @@ Date Date::fromJson(const QJsonObject& json)
 
         Project* project = MainWindow::getInstance()->getProject();
 
-        QString toFind = date.getDesc();
+        QString toFind = date.mName + date.getDesc();
         QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
         if ( it!=project->mCalibCurves.end())
             date.mCalibration = & it.value();
-
 
     }
     
@@ -288,7 +280,7 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
 
     mSettings = settings;
 
-    const QString toFind (getDesc());
+    const QString toFind (mName+getDesc());
     QMap<QString, CalibrationCurve>::const_iterator it = project->mCalibCurves.find (toFind);
     if ( it==project->mCalibCurves.end())
         project->mCalibCurves.insert(toFind, CalibrationCurve());
@@ -672,6 +664,8 @@ void Date::initDelta(Event*)
             break;
         }
     }
+
+    mWiggle.mLastAccepts.clear();
 }
 
 void Date::updateDelta(Event* event)

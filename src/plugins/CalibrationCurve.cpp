@@ -1,4 +1,5 @@
 #include "CalibrationCurve.h"
+#include "PluginManager.h"
 
 CalibrationCurve::CalibrationCurve():
 mName(QString("unkown")),
@@ -7,8 +8,6 @@ mMethod(CalibrationCurve::Method::eFromRef)
 {
     // Parameter refere to the Method
     mMCMCSetting = MCMCSettings();
-    //mRefCurve();
-    //mData = QJsonObject();
     mPlugin = 0;
 
     mRepartition = QVector< double>();
@@ -21,7 +20,6 @@ CalibrationCurve::CalibrationCurve(const CalibrationCurve& other)
 {
     mName = other.mName;
     mDescription = other.mDescription;
-    //mData = other.mData;
     mMethod = other.mMethod;
     mRepartition.resize(other.mRepartition.size());
     std::copy(other.mRepartition.begin(), other.mRepartition.end(), mRepartition.begin());
@@ -35,13 +33,14 @@ CalibrationCurve::CalibrationCurve(const CalibrationCurve& other)
 CalibrationCurve::~CalibrationCurve()
 {
     mRepartition.clear();
+    mCurve.clear();
+    mPlugin = 0;
 }
 
 QDataStream &operator<<( QDataStream &stream, const CalibrationCurve &data )
 {
     stream << data.mName;
     stream << data.mDescription;
-    //stream << data.mData;
 
     switch (data.mMethod) {
        case CalibrationCurve::eFromRef : stream << (quint8)(0);
@@ -50,26 +49,24 @@ QDataStream &operator<<( QDataStream &stream, const CalibrationCurve &data )
           break;
     };
 
-     stream << data.mRepartition;
-     stream << data.mCurve;
-     stream << data.mTmin;
-     stream << data.mTmax;
-     stream << data.mStep;
+    stream << data.mRepartition;
+    stream << data.mCurve;
+    stream << data.mTmin;
+    stream << data.mTmax;
+    stream << data.mStep;
+    stream << data.mMCMCSetting;
+    stream << data.mPlugin->getId();
 
     return stream;
+
 }
 
 QDataStream &operator>>( QDataStream &stream, CalibrationCurve &data )
 {
-    //QJsonObject tmpJSON;
-
     stream >> data.mName;
     stream >> data.mDescription;
-    //stream >> tmpJSON;
 
-    //data.mData = tmpJSON;
-
-    qint8 tmp8;
+    quint8 tmp8;
     stream >> tmp8;
     switch ((int) tmp8) {
       case 0 : data.mMethod = CalibrationCurve::eFromRef;
@@ -83,16 +80,21 @@ QDataStream &operator>>( QDataStream &stream, CalibrationCurve &data )
     stream >> data.mTmin;
     stream >> data.mTmax;
     stream >> data.mStep;
+    stream >> data.mMCMCSetting;
+
+    QString pluginId;
+    stream >> pluginId;
+    data.mPlugin = PluginManager::getPluginFromId(pluginId);
+    if (data.mPlugin == 0)
+        throw QObject::tr("Calibration plugin could not be loaded : invalid plugin : ") + pluginId;
 
     return stream;
 
 }
 CalibrationCurve & CalibrationCurve::operator=(const CalibrationCurve& other)
 {
-
     mName = other.mName;
     mDescription = other.mDescription;
-    //mData = other.mData;
     mMethod = other.mMethod;
     mRepartition.resize(other.mRepartition.size());
     std::copy(other.mRepartition.begin(), other.mRepartition.end(), mRepartition.begin());
@@ -101,6 +103,9 @@ CalibrationCurve & CalibrationCurve::operator=(const CalibrationCurve& other)
     mTmin = other.mTmin;
     mTmax = other.mTmax;
     mStep = other.mStep;
+
+    mMCMCSetting = other.mMCMCSetting;
+    mPlugin = other.mPlugin;
 
     return *this;
 }

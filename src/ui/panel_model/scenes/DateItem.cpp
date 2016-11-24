@@ -17,8 +17,8 @@ mGreyedOut(false)
     setAcceptHoverEvents(true);
     setAcceptDrops(true);
     setFlags(ItemIsMovable | ItemIsSelectable);
-    //EventsScene->mProject
-    // Date::fromJson don't create mCalibration
+
+    // Date::fromJson doesn't create mCalibration
     Date d = Date::fromJson(date);
     ProjectSettings s = ProjectSettings::fromJson(settings);
     //qDebug()<<"setting"<< s.mTmin;
@@ -27,22 +27,18 @@ mGreyedOut(false)
     d.mSettings.mStep = s.mStep;
     
     if (d.mPlugin!=NULL) {
-        if (d.mPlugin->getName() != "Typo") {
-           
-           if (!d.mIsValid)
-               mCalibThumb = QPixmap();
-           
-           else {
-               if (d.mCalibration == 0)
-                    d.calibrate(s, EventsScene->getProject());
 
-                mCalibThumb = d.generateCalibThumb();
-           }
+        if (!d.mIsValid)
+            mCalibThumb = QPixmap();
+        else {
+            if (d.mCalibration == 0)
+                     d.calibrate(s, EventsScene->getProject());
 
+            if (d.mPlugin->getName() != "Typo")
+               mCalibThumb = d.generateCalibThumb();
+             else
+                mCalibThumb = d.generateTypoThumb();
         }
-        else
-            mCalibThumb = d.generateTypoThumb();
-        
     }
 }
 
@@ -85,9 +81,9 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     painter->setRenderHint(QPainter::Antialiasing);
 
     if (mGreyedOut)
-        painter->setOpacity(0.35f);
+        painter->setOpacity(qreal(0.35));
     else
-        painter->setOpacity(1.f);
+        painter->setOpacity(qreal(1.));
 
     // background, it avoids small line between the box name and the thumbnail
     QRectF r = boundingRect();

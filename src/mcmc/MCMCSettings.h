@@ -59,4 +59,7 @@ public:
     double mMixingLevel;
 };
 
-#endif
+QDataStream &operator<<( QDataStream &stream, const MCMCSettings &data );
+QDataStream &operator>>( QDataStream &stream, MCMCSettings &data );
+
+#endif // endif MCMCSettings_H

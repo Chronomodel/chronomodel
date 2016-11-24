@@ -1530,7 +1530,7 @@ void Model::saveToFile(const QString& fileName)
                       /*out << d.getTminCalib();
                       out << d.getTmaxCalib();
                       */
-                      out <<d.mCalibration;
+                      out << *d.mCalibration;
                       //out <<d.mRepartition;
 
 
@@ -1705,10 +1705,23 @@ void Model::restoreFromFile(const QString& fileName)
                         in >>tmp;
                         d.setTmaxCalib(tmp);
                        */
-                        quint32 tmpUint32;
-                        in >>*(d.mCalibration);
-                        //in >>d.mRepartition;
 
+                        /* Check if the Calibration Curve exist*/
+                        const QString toFind (d.mName+d.mPlugin->getDateDesc(&d));
+                        QMap<QString, CalibrationCurve>::const_iterator it = mProject->mCalibCurves.find (toFind);
+
+                        // if no curve Create a new instance in mProject->mCalibration
+                        if ( it == mProject->mCalibCurves.end())
+                            mProject->mCalibCurves.insert(toFind, CalibrationCurve());
+
+                        //mProject->mCalibCurves.insert(toFind, CalibrationCurve());
+                qDebug()<<"Model:restoreFromFile insert a new mCalibration "<<toFind;
+
+                        d.mCalibration = & (mProject->mCalibCurves[toFind]);
+
+                        in >>*(d.mCalibration);
+
+                        quint32 tmpUint32;
                         in >> tmpUint32;
 
                         for (quint32 i= 0; i<tmpUint32; i++) {
