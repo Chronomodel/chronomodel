@@ -1141,8 +1141,8 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
             }
             
             if (!abscissesWritten) {
-                for(int i=offset+rowsCount; i<data.size()+1; ++i) {
-                    // we add 1 to the line number, because the index of vector start to 0
+                for (int i=offset+rowsCount; i<data.size()+1; ++i) {
+                    // we add 1 to the line number, because the index of vector start to 0-> false now 0 is the init
                     rows.append(QStringList(locale.toString(i-rowsCount+1))+emptyColumn);
                    
                 }
@@ -1154,7 +1154,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
             
             if (abscissesWritten) {
                     rows[0] << mCurves[idCurve].mName;
-                    for(int i=offset; i<data.size(); ++i)
+                    for (int i=offset; i<data.size(); ++i)
                         rows[i-offset+1]<< locale.toString(data[i],'g', 15);
 
             }
@@ -1168,7 +1168,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
 
             list << locale.toString(iter2.key(),'g', 15);
             
-            for(int i=0; i<iter2.value().size(); ++i)
+            for (int i=0; i<iter2.value().size(); ++i)
                 list << locale.toString(iter2.value().at(i),'g', 15);
             rows.append(list);
         }

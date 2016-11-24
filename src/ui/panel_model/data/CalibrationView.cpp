@@ -97,7 +97,7 @@ CalibrationView::~CalibrationView()
 
 void CalibrationView::setDate(const QJsonObject& date)
 {
-    if(date.isEmpty())
+    if (date.isEmpty())
         return;
     Project* project = MainWindow::getInstance()->getProject();
     const QJsonObject state = project->state();
@@ -107,13 +107,7 @@ void CalibrationView::setDate(const QJsonObject& date)
     try {
         mDate = Date::fromJson(date);
         mDate.autoSetTiSampler(false);
-        qDebug()<<"CalibrationView::setDate "<<mDate.mCalibration->mName;
-      /*  if (!mDate.isNull() ) {
-            if (mDate.mCalibration->mCurve.isEmpty())
-                mDate.calibrate(mSettings, project);
-      */
-            mTopLab->setText(mDate.mName + " (" + mDate.mPlugin->getName() + ")");
-      //  }
+        mTopLab->setText(mDate.mName + " (" + mDate.mPlugin->getName() + ")");
         updateGraphs();
     }
     catch(QString error) {
@@ -143,9 +137,6 @@ void CalibrationView::updateGraphs()
     
     
     if (!mDate.isNull()) {
-        //double tminCalib = mDate.getTminCalib();
-        //double tmaxCalib = mDate.getTmaxCalib();
-        
         const double t1 ( mSettings.getTminFormated() );
         const double t2 ( mSettings.getTmaxFormated() );
         const double t3 ( mDate.getFormatedTminCalib() );
@@ -208,7 +199,6 @@ void CalibrationView::updateGraphs()
             results.analysis = analyseFunction(calibMap);
 
             results.quartiles = quartilesForRepartition(mDate.getFormatedRepartition(), mDate.getFormatedTminCalib(), mSettings.mStep);
-
 
             resultsStr = densityAnalysisToString(results);
             
@@ -314,7 +304,7 @@ void CalibrationView::updateZoom()
             posProp = (type_data)mScrollBar->value() / rangeBefore;
         
         // Update Scroll Range
-        int fullScrollSteps = 1000;
+        int fullScrollSteps (1000);
         int scrollSteps = (int) ((1. - prop)) * fullScrollSteps;
         mScrollBar->setRange(0, scrollSteps);
         mScrollBar->setPageStep(fullScrollSteps);
@@ -350,12 +340,12 @@ void CalibrationView::updateScroll()
         type_data end = start + delta;
         end = (ceil(end)>max ? max : ceil(end));
         mCalibGraph->zoomX(start, end);
-        if(mRefGraphView)
+        if (mRefGraphView)
             mRefGraphView->zoomX(start, end);
         
     } else {
         mCalibGraph->zoomX(min, max);
-        if(mRefGraphView)
+        if (mRefGraphView)
             mRefGraphView->zoomX(min, max);
     }
 }
@@ -378,7 +368,7 @@ void CalibrationView::exportImage()
     
     QFileInfo fileInfo = saveWidgetAsImage(this, r, tr("Save calibration image as..."),
                                            MainWindow::getInstance()->getCurrentPath(), MainWindow::getInstance()->getAppSettings());
-    if(fileInfo.isFile())
+    if (fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
     
     mExportPlotBut -> setVisible(true);
@@ -411,7 +401,7 @@ void CalibrationView::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
     
-    int m = 5;
+    int m (5);
     
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
@@ -428,15 +418,13 @@ void CalibrationView::resizeEvent(QResizeEvent* e)
 
 void CalibrationView::updateLayout()
 {
-    int m1 = 5;
-    int m2 = 10;
+    int m1 (5);
+    int m2 (10);
 
     QFontMetrics fm(qApp->font());
 
-    //const float min = mCalibGraph->minimumX();
     const type_data max = mCalibGraph->maximumX();
-    //const int marginLeft = (int)floor(fm.width(locale().toString(min))/2);
-    const int marginRight = (int)floor(fm.width(locale().toString(max))/2);
+    const int marginRight = (int) floor(fm.width(locale().toString(max))/2);
 
     int w = width() - 2*m2;
     int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
@@ -466,7 +454,7 @@ void CalibrationView::updateLayout()
     mZoomSlider->setGeometry(width() - m2 - sliderW, m1 + topH, sliderW, lineH);
     
     mProcessTitle->setGeometry(m2 + graphLeft, m1 + topH + sbe, w - graphLeft, titleH);
-    if(mRefGraphView) {
+    if (mRefGraphView) {
         mRefGraphView->setGeometry(m2+1, m1 + topH + sbe + titleH, w, refH);
         mRefGraphView->setMarginRight(marginRight);
     }

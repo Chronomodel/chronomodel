@@ -484,12 +484,12 @@ void Event::updateTheta(const double tmin, const double tmax)
 
     // with const type variable foreeach is speeder
     for (const Date date: mDates) {
-        const double variance = (date.mSigma.mX * date.mSigma.mX);
+        const double variance = date.mSigma.mX * date.mSigma.mX;
         sum_t += (date.mTheta.mX + date.mDelta) / variance;
-        sum_p += 1.f / variance;
+        sum_p += 1. / variance;
     }
-    double theta_avg = sum_t / sum_p;
-    double sigma = 1.f / sqrt(sum_p);
+    const double theta_avg = sum_t / sum_p;
+    const double sigma = 1. / sqrt(sum_p);
     
     switch(mMethod)
     {
@@ -498,7 +498,7 @@ void Event::updateTheta(const double tmin, const double tmax)
             try{
                 double theta = Generator::gaussByDoubleExp(theta_avg, sigma, min, max);
                 //qDebug() << "Event::updateTheta() case eDoubleExp rapport=1 ";
-                mTheta.tryUpdate(theta, 1);
+                mTheta.tryUpdate(theta, 1.);
             }
             catch(QString error){
                 throw QObject::tr("Error for event : ") + mName + " : " + error;
@@ -518,7 +518,7 @@ void Event::updateTheta(const double tmin, const double tmax)
             } while(theta < min || theta > max);
             
             //qDebug() << "Event::updateTheta() case eBoxMuller Event update num trials : " << counter;
-            mTheta.tryUpdate(theta, 1);
+            mTheta.tryUpdate(theta, 1.);
             break;
         }
         case eMHAdaptGauss:
@@ -527,7 +527,7 @@ void Event::updateTheta(const double tmin, const double tmax)
             const double theta = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
             double rapport (0.);
             if (theta >= min && theta <= max)
-                rapport = exp((-0.5/(sigma*sigma)) * (pow(theta - theta_avg, 2) - pow(mTheta.mX - theta_avg, 2)));
+                rapport = exp((-0.5/(sigma*sigma)) * (pow(theta - theta_avg, 2.) - pow(mTheta.mX - theta_avg, 2.)));
             //qDebug() << "Event::updateTheta() case eMHAdaptGauss rapport="<<rapport;
             mTheta.tryUpdate(theta, rapport);
             break;

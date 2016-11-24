@@ -23,7 +23,7 @@ long double PluginUniform::getLikelihood(const double& t, const QJsonObject& dat
     double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
     double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
     
-    return (t >= min && t <= max) ? (long double)(1.f / (max-min)) : 0.l;
+    return (t >= min && t <= max) ? (long double)(1. / (max-min)) : 0.;
 }
 
 QString PluginUniform::getName() const
@@ -82,11 +82,10 @@ QJsonObject PluginUniform::checkValuesCompatibility(const QJsonObject& values)
 QJsonObject PluginUniform::fromCSV(const QStringList& list, const QLocale& csvLocale)
 {
     QJsonObject json;
-    if(list.size() >= csvMinColumns())
-    {
+    if (list.size() >= csvMinColumns()) {
         double tmin = csvLocale.toDouble(list.at(1));
         double tmax = csvLocale.toDouble(list.at(2));
-        if(tmin >= tmax) return QJsonObject();
+        if (tmin >= tmax) return QJsonObject();
         json.insert(DATE_UNIFORM_MIN_STR, tmin);
         json.insert(DATE_UNIFORM_MAX_STR, tmax);
     }
@@ -105,8 +104,7 @@ QString PluginUniform::getDateDesc(const Date* date) const
 {
     QLocale locale=QLocale();
     QString result;
-    if(date)
-    {
+    if (date) {
         QJsonObject data = date->mData;
         result += QObject::tr("Interval") + " : [" + locale.toString(data.value(DATE_UNIFORM_MIN_STR).toDouble()) + "; " +
                 locale.toString(data.value(DATE_UNIFORM_MAX_STR).toDouble()) + "]";
@@ -137,8 +135,8 @@ PluginSettingsViewAbstract* PluginUniform::getSettingsView()
 
 QPair<double,double> PluginUniform::getTminTmaxRefsCurve(const QJsonObject& data) const
 {
-    double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
-    double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
+    const double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
+    const double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
     return QPair<double, double>(min, max);
 }
 

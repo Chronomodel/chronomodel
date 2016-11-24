@@ -98,18 +98,16 @@ void EventKnown::updateValues(double tmin, double tmax, double step)
     {
         case eFixed:
         {
-            for(double t=tmin; t<=tmax; t+=step)
-                mValues[t] = 0.f;
-            mValues[mFixed] = 1.f;
+            for (double t=tmin; t<=tmax; t+=step)
+                mValues[t] = 0.;
+            mValues[mFixed] = 1.;
             break;
         }
         case eUniform:
         {
-            if(mUniformStart < mUniformEnd)
-            {
-                for(double t=tmin; t<=tmax; t+=step)
-                {
-                    double v = (t > mUniformStart && t <= mUniformEnd) ? 1 / (mUniformEnd - mUniformStart) : 0;
+            if (mUniformStart < mUniformEnd) {
+                for (double t=tmin; t<=tmax; t+=step) {
+                    const double v = (t > mUniformStart && t <= mUniformEnd) ? 1 / (mUniformEnd - mUniformStart) : 0.;
                     mValues[t] = v;
                 }
             }
@@ -118,10 +116,9 @@ void EventKnown::updateValues(double tmin, double tmax, double step)
         default:
             break;
     }
-    if(mValues.size() == 0)
-    {
-        for(double t=tmin; t<=tmax; t+=step)
-            mValues[t] = 0.f;
+    if (mValues.size() == 0) {
+        for (double t=tmin; t<=tmax; t+=step)
+            mValues[t] = 0.;
     }
 }
 
@@ -144,6 +141,7 @@ void EventKnown::updateTheta(const double tmin, const double tmax)
             
             double theta = min + Generator::randomUniform() * (max - min);
             mTheta.tryUpdate(theta, 1.);
+            qDebug()<<"EventKnown updateTheta"<<min<<" "<<theta<<" "<<max<<" "<< mTheta.mX;
             break;
         }
         default:
