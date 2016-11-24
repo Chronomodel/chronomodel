@@ -138,15 +138,12 @@ public:
     bool mIsCurrent;
     bool mIsSelected;
     
-   // QVector<float> mCalibration;
     CalibrationCurve* mCalibration;
-   // QVector<float> mRepartition;
+
     QMap<double, double> mCalibHPD;
     ProjectSettings mSettings;
     
     QList<Date> mSubDates;
-    
-    //const QJsonObject * mJsonEvent;
     double mMixingLevel;
     
 protected:
@@ -155,8 +152,6 @@ protected:
     double mTminRefCurve;
     double mTmaxRefCurve;
 
-   // double mTminCalib;
-   // double mTmaxCalib;
 };
 
 #endif

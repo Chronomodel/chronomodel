@@ -27,7 +27,7 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
 
     bool accepted = false;
     
-    if (rapport >= 1)
+    if (rapport >= 1.)
         accepted = true;
 
     else {

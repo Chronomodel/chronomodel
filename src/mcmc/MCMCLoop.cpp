@@ -20,10 +20,10 @@ MCMCLoop::~MCMCLoop()
 void MCMCLoop::setMCMCSettings(const MCMCSettings& s)
 {
     mChains.clear();
-    for(int i=0; i<s.mNumChains; ++i) {
+    for (int i=0; i<s.mNumChains; ++i) {
         ChainSpecs chain;
         
-        if(i < s.mSeeds.size())
+        if (i < s.mSeeds.size())
             chain.mSeed = s.mSeeds.at(i);
         else
             chain.mSeed = Generator::createSeed();
@@ -92,7 +92,7 @@ void MCMCLoop::run()
     emit stepChanged(tr("Calibrating data..."), 0, 0);
     
     mAbortedReason = this->calibrate();
-    if(!mAbortedReason.isEmpty())
+    if (!mAbortedReason.isEmpty())
         return;
 
     
