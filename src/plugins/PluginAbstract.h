@@ -43,7 +43,7 @@ class PluginAbstract: public QObject
 public:
     PluginAbstract():mRefGraph(0){}
     virtual ~PluginAbstract(){}
-    
+
     virtual long double getLikelihood(const double& t, const QJsonObject& data) = 0;
     virtual QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data){return QPair<long double, long double>();}
     virtual bool withLikelihoodArg() {return false;}
@@ -135,7 +135,7 @@ public:
     }
     
     // curveName must be in lower Case
-   double getRefCurveValueAt(const QString& curveName, const double& t)
+    double getRefCurveValueAt(const QString& curveName, const double& t)
     {
         long double value = 0;
         if (mRefCurves.constFind(curveName) != mRefCurves.constEnd()) {
@@ -203,9 +203,21 @@ public:
         return mRefCurves[name.toLower()];
     }
     
+    PluginAbstract &operator=(const PluginAbstract& other)
+    {
+        mRefCurves = other.mRefCurves;
+        mColor = other.mColor;
+        mRefGraph = other.mRefGraph;
+
+        return *this;
+    }
+
     QHash<QString, RefCurve> mRefCurves;
     GraphViewRefAbstract* mRefGraph;
     QColor mColor;
+
+
+
 };
 
 //----------------------------------------------------
