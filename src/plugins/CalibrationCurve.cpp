@@ -8,8 +8,8 @@ mMethod(CalibrationCurve::Method::eFromRef)
 {
     // Parameter refere to the Method
     mMCMCSetting = MCMCSettings();
+    mPluginId = "";
     mPlugin = 0;
-
     mRepartition = QVector< double>();
     mCurve = QVector< double>();
     mTmin = -INFINITY;
@@ -19,6 +19,10 @@ mMethod(CalibrationCurve::Method::eFromRef)
 CalibrationCurve::CalibrationCurve(const CalibrationCurve& other)
 {
     mName = other.mName;
+    mMCMCSetting =other.mMCMCSetting;
+    mPluginId = other.mPluginId;
+    mPlugin = other.mPlugin;
+
     mDescription = other.mDescription;
     mMethod = other.mMethod;
     mRepartition.resize(other.mRepartition.size());
@@ -30,12 +34,14 @@ CalibrationCurve::CalibrationCurve(const CalibrationCurve& other)
     mStep = other.mStep;
 
 }
-CalibrationCurve::~CalibrationCurve()
+CalibrationCurve::~CalibrationCurve() noexcept
 {
     mRepartition.clear();
     mCurve.clear();
+    mPluginId.clear();
     mPlugin = 0;
 }
+
 
 QDataStream &operator<<( QDataStream &stream, const CalibrationCurve &data )
 {
@@ -55,7 +61,7 @@ QDataStream &operator<<( QDataStream &stream, const CalibrationCurve &data )
     stream << data.mTmax;
     stream << data.mStep;
     stream << data.mMCMCSetting;
-    stream << data.mPlugin->getId();
+    stream << data.mPluginId;
 
     return stream;
 
@@ -82,30 +88,13 @@ QDataStream &operator>>( QDataStream &stream, CalibrationCurve &data )
     stream >> data.mStep;
     stream >> data.mMCMCSetting;
 
-    QString pluginId;
-    stream >> pluginId;
-    data.mPlugin = PluginManager::getPluginFromId(pluginId);
+    stream >> data.mPluginId;
+
+    data.mPlugin = PluginManager::getPluginFromId(data.mPluginId);
     if (data.mPlugin == 0)
-        throw QObject::tr("Calibration plugin could not be loaded : invalid plugin : ") + pluginId;
+        throw QObject::tr("Calibration plugin could not be loaded : invalid plugin : ") + data.mPluginId;
 
     return stream;
 
 }
-CalibrationCurve & CalibrationCurve::operator=(const CalibrationCurve& other)
-{
-    mName = other.mName;
-    mDescription = other.mDescription;
-    mMethod = other.mMethod;
-    mRepartition.resize(other.mRepartition.size());
-    std::copy(other.mRepartition.begin(), other.mRepartition.end(), mRepartition.begin());
-    mCurve .resize(mCurve.size());
-    std::copy(other.mCurve.begin(), other.mCurve.end(), mCurve.begin());
-    mTmin = other.mTmin;
-    mTmax = other.mTmax;
-    mStep = other.mStep;
 
-    mMCMCSetting = other.mMCMCSetting;
-    mPlugin = other.mPlugin;
-
-    return *this;
-}
