@@ -451,17 +451,6 @@ void Project::sendEventsSelectionChanged()
     QCoreApplication::postEvent(this, e, Qt::NormalEventPriority);
 }
 
-/*
-void Project::sendPhasesSelectionChanged()
-{
-#ifdef DEBUG
-    //qDebug() << "(+++) Sending phases selection : use marked phases";
-#endif
-    QEvent* e = new QEvent((QEvent::Type)1002);
-    QCoreApplication::postEvent(this, e, Qt::NormalEventPriority);
-}
-*/
-
 #pragma mark Project File Management
 
 bool Project::load(const QString& path)
@@ -490,13 +479,9 @@ bool Project::load(const QString& path)
         mProjectFileDir = info.absolutePath();
         mProjectFileName = info.fileName();
         mName = info.fileName();
-       qDebug() << "in Project::load  begin readAll";
         QByteArray saveData = file.readAll();
-       qDebug() << "in Project::load  end readAll";
         QJsonParseError error;
-       qDebug() << "in Project::load  begin QJsonDocument::fromJson";
         QJsonDocument jsonDoc(QJsonDocument::fromJson(saveData, &error));
-       qDebug() << "in Project::load  end QJsonDocument::fromJson";
 
         if (error.error !=  QJsonParseError::NoError) {
             QMessageBox message(QMessageBox::Critical,
@@ -566,16 +551,57 @@ bool Project::load(const QString& path)
             QJsonObject state = mState;
             state[STATE_APP_VERSION] = qApp->applicationVersion();
 
-
-
            qDebug() << "in Project::load  Begin pushProjectState";
 //            pushProjectState(state, PROJECT_LOADED_REASON, true, true);
            qDebug() << "in Project::load  End pushProjectState";
             file.close();
             
-            
-            // --------------------
-            
+            // -------------------- look for the calibration file
+            QString caliPath = path + ".cal";
+            QFileInfo calfi(caliPath);
+
+            if (calfi.isFile()) {
+                // load Calibration Curve
+                QFile calFile(caliPath);
+                if (calFile.open(QIODevice::ReadOnly)) {
+
+                    if (calFile.exists()) {
+                        qDebug() << "Project::load Loading model file.cal : " << calFile.fileName() << " size =" << calFile.size();
+                        QDataStream in(&calFile);
+
+                        int QDataStreamVersion;
+                        in >> QDataStreamVersion;
+                        in.setVersion(QDataStreamVersion);
+                        if (in.version()!= QDataStream::Qt_5_5)
+                                return false;
+
+                        QString appliVersion;
+                        in >> appliVersion;
+                        // prepare the future
+                        if (appliVersion != qApp->applicationVersion())
+                            qDebug()<<calFile.fileName()<<" different version="<<appliVersion<<" actual="<<qApp->applicationVersion();
+
+                        //QStringList projectVersionList = appliVersion.split(".");
+
+                        mCalibCurves.clear();
+                        mCalibCurves = QMap<QString, CalibrationCurve>();
+                        quint32 siz;
+                        in >> siz;
+                        for (int i = 0; i < (int)siz; ++i) {
+                            QString descript;
+                            in >> descript;
+                            CalibrationCurve cal;
+                            in >> cal;
+                            mCalibCurves.insert(descript,cal);
+                        }
+                     }
+                 }
+                calFile.close();
+             }
+
+
+
+
             clearModel();
             if (mSaveData) {
                 QString dataPath = path + ".dat";
@@ -712,12 +738,30 @@ bool Project::saveProjectToFile()
 #endif
     }
 
-    // TODO insérer sauvegarde de  la calibration
+    // TODO insérer sauvegarde de la calibration
+    QFile file(mProjectFileDir + "/" + mProjectFileName + ".cal");
+    if (file.open(QIODevice::WriteOnly)) {
+
+        QDataStream out(&file);
+        out.setVersion(QDataStream::Qt_5_5);
+        out << out.version();
+
+        out << qApp->applicationVersion();
+        // save Calibration Curve
+        //int si =  mProject->mCalibCurves.size();
+        out << (quint32) mCalibCurves.size();
+        for (QMap<QString, CalibrationCurve>::const_iterator it = mCalibCurves.cbegin() ; it != mCalibCurves.cend(); ++it) {
+            out << it.key();
+            out << it.value();
+        }
+        file.close();
+     }
 
    if (mSaveData) {
        // keep to the future version
        if (!mModel->mChains.isEmpty()) {
             qDebug() << "Saving project results in "<<mProjectFileDir + "/" + mProjectFileName + ".dat";
+            mModel->setProject(this);
             mModel->saveToFile(mProjectFileDir + "/" + mProjectFileName + ".dat");
         }
         else {

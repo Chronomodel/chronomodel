@@ -1413,7 +1413,11 @@ void Model::saveToFile(const QString& fileName)
    // QFile file(info.path() + info.baseName() + ".~dat"); // when we could do a compressed file
     //QFile file(info.path() + info.baseName() + ".dat");
     QFile file(fileName);
-    if(file.open(QIODevice::WriteOnly)) {
+    if (file.open(QIODevice::WriteOnly)) {
+
+        QDataStream out(&file);
+        out.setVersion(QDataStream::Qt_5_5);
+
         int reserveInit = 0;
         // compute reserve to estim the size of uncompresedData and magnify
         foreach (Phase* phase, mPhases) {
@@ -1459,11 +1463,10 @@ void Model::saveToFile(const QString& fileName)
             QDataStream out(&buffer);*/
 
        // QDataStream out(&uncompressedData, QIODevice::WriteOnly);
-        QDataStream out(&file);
-        out.setVersion(QDataStream::Qt_5_5);
 
-        //out << quint32(MagicNumber);// we could add software version here << quint16(out.version());
-        
+
+        out << quint32(out.version());// we could add software version here << quint16(out.version());
+        out << qApp->applicationVersion();
         // -----------------------------------------------------
         //  Write info
         // -----------------------------------------------------
@@ -1523,16 +1526,11 @@ void Model::saveToFile(const QString& fileName)
                       out <<  d.mSettings.mStep;
                       out << (quint8)(d.mSettings.mStepForced==true? 1: 0);
 
-                    //  out << d.mSubDates;
+
                       out << d.getTminRefCurve();
                       out << d.getTmaxRefCurve();
 
-                      /*out << d.getTminCalib();
-                      out << d.getTmaxCalib();
-                      */
-                      out << *d.mCalibration;
-                      //out <<d.mRepartition;
-
+                      //out << *d.mCalibration;
 
                       out << (quint32)d.mCalibHPD.size();
                       for (QMap<double, double>::const_iterator it = d.mCalibHPD.cbegin(); it!=d.mCalibHPD.cend();++it) {
@@ -1612,138 +1610,150 @@ void Model::restoreFromFile(const QString& fileName)
     //    if ( file.size()!=0 /* uncompressedData.size()!=0*/ ) {
  //           QDataStream in(&uncompressedData, QIODevice::ReadOnly);
     QDataStream in(&file);
-   /* if (in.version()!= QDataStream::Qt_5_5)
-        return;
-    in.setVersion(QDataStream::Qt_5_5);
-    */
-            // -----------------------------------------------------
-            //  Read info
-            // -----------------------------------------------------
 
-            quint32 tmp32;
-            in >> tmp32;
-            //const int numPhases = (int)tmp32;
-            in >> tmp32;
-            //const int numEvents = (int)tmp32;
-            in >> tmp32;
-            //const int numdates = (int)tmp32;
+    int QDataStreamVersion;
+    in >> QDataStreamVersion;
+    in.setVersion(QDataStreamVersion);
 
-            in >> tmp32;
-            mChains.clear();
-            mChains.reserve((int) tmp32);
-            for (quint32 i=0 ; i<tmp32; ++i) {
-                ChainSpecs ch;
-                in >> ch.mBatchIndex;
-                in >> ch.mBatchIterIndex;
-                in >> ch.mBurnIterIndex;
-                in >> ch.mMaxBatchs;
-                in >> ch.mMixingLevel;
-                in >> ch.mNumBatchIter;
-                in >> ch.mNumBurnIter;
-                in >> ch.mNumRunIter;
-                in >> ch.mRunIterIndex;
-                in >> ch.mSeed;
-                in >> ch.mThinningInterval;
-                in >> ch.mTotalIter;
-                mChains.append(ch);
-            }
+    if (in.version()!= QDataStream::Qt_5_5)
+            return;
 
-            // -----------------------------------------------------
-            //  Read phases data
-            // -----------------------------------------------------
+    QString appliVersion;
+    in >> appliVersion;
+    // prepare the future
+    //QStringList projectVersionList = appliVersion.split(".");
+    if (appliVersion != qApp->applicationVersion())
+        qDebug()<<file.fileName()<<" different version="<<appliVersion<<" actual="<<qApp->applicationVersion();
 
-            for (int i=0; i<mPhases.size(); ++i) {
-               in >> mPhases[i]->mAlpha;
-               in >> mPhases[i]->mBeta;
-               in >> mPhases[i]->mDuration;
-            }
 
-            // -----------------------------------------------------
-            //  Read events data
-            // -----------------------------------------------------
+    // -----------------------------------------------------
+    //  Read info
+    // -----------------------------------------------------
 
-            for (Event* e:mEvents)
-                in >> e->mTheta;
+    quint32 tmp32;
+    in >> tmp32;
+    //const int numPhases = (int)tmp32;
+    in >> tmp32;
+    //const int numEvents = (int)tmp32;
+    in >> tmp32;
+    //const int numdates = (int)tmp32;
 
-            // -----------------------------------------------------
-            //  Read dates data
-            // -----------------------------------------------------
+    in >> tmp32;
+    mChains.clear();
+    mChains.reserve((int) tmp32);
+    for (quint32 i=0 ; i<tmp32; ++i) {
+        ChainSpecs ch;
+        in >> ch.mBatchIndex;
+        in >> ch.mBatchIterIndex;
+        in >> ch.mBurnIterIndex;
+        in >> ch.mMaxBatchs;
+        in >> ch.mMixingLevel;
+        in >> ch.mNumBatchIter;
+        in >> ch.mNumBurnIter;
+        in >> ch.mNumRunIter;
+        in >> ch.mRunIterIndex;
+        in >> ch.mSeed;
+        in >> ch.mThinningInterval;
+        in >> ch.mTotalIter;
+        mChains.append(ch);
+    }
 
-            for (int i=0; i<mEvents.size(); ++i) {
-                if (mEvents[i]->mType == Event::eDefault )
-                     for (int j=0; j<mEvents[i]->mDates.size(); ++j) {
-                        Date& d = mEvents[i]->mDates[j];
-                        in >> d.mTheta;
-                        in >> d.mSigma;
-                        if (d.mDeltaType != Date::eDeltaNone)
-                            in >> d.mWiggle;
+        // -----------------------------------------------------
+        //  Read phases data
+        // -----------------------------------------------------
 
-                        in >> d.mDeltaFixed;
-                        in >> d.mDeltaMin;
-                        in >> d.mDeltaMax;
-                        in >> d.mDeltaAverage;
-                        in >> d.mDeltaError;
-                        qint32 tmpInt32;
-                        in >> tmpInt32;
-                        d.mSettings.mTmin = (int)tmpInt32;
-                        in >> tmpInt32;
-                        d.mSettings.mTmax = (int)tmpInt32;
-                        in >> d.mSettings.mStep;
-                        quint8 btmp;
-                        in >> btmp;
-                        d.mSettings.mStepForced =(btmp==1);
+        for (int i=0; i<mPhases.size(); ++i) {
+           in >> mPhases[i]->mAlpha;
+           in >> mPhases[i]->mBeta;
+           in >> mPhases[i]->mDuration;
+        }
 
-                       // in >> d.mSubDates;
-                        double tmp;
-                        in >> tmp;
-                        d.setTminRefCurve(tmp);
-                        in >> tmp;
-                        d.setTmaxRefCurve(tmp);
+        // -----------------------------------------------------
+        //  Read events data
+        // -----------------------------------------------------
 
-                       /* in >> tmp;
-                        d.setTminCalib(tmp);
-                        in >>tmp;
-                        d.setTmaxCalib(tmp);
-                       */
+        for (Event* e:mEvents)
+            in >> e->mTheta;
 
-                        /* Check if the Calibration Curve exist*/
-                        const QString toFind (d.mName+d.mPlugin->getDateDesc(&d));
-                        QMap<QString, CalibrationCurve>::const_iterator it = mProject->mCalibCurves.find (toFind);
+        // -----------------------------------------------------
+        //  Read dates data
+        // -----------------------------------------------------
 
-                        // if no curve Create a new instance in mProject->mCalibration
-                        if ( it == mProject->mCalibCurves.end())
-                            mProject->mCalibCurves.insert(toFind, CalibrationCurve());
+        for (int i=0; i<mEvents.size(); ++i) {
+            if (mEvents[i]->mType == Event::eDefault )
+                 for (int j=0; j<mEvents[i]->mDates.size(); ++j) {
+                    Date& d = mEvents[i]->mDates[j];
+                    in >> d.mTheta;
+                    in >> d.mSigma;
+                    if (d.mDeltaType != Date::eDeltaNone)
+                        in >> d.mWiggle;
 
-                        //mProject->mCalibCurves.insert(toFind, CalibrationCurve());
-                qDebug()<<"Model:restoreFromFile insert a new mCalibration "<<toFind;
+                    in >> d.mDeltaFixed;
+                    in >> d.mDeltaMin;
+                    in >> d.mDeltaMax;
+                    in >> d.mDeltaAverage;
+                    in >> d.mDeltaError;
+                    qint32 tmpInt32;
+                    in >> tmpInt32;
+                    d.mSettings.mTmin = (int)tmpInt32;
+                    in >> tmpInt32;
+                    d.mSettings.mTmax = (int)tmpInt32;
+                    in >> d.mSettings.mStep;
+                    quint8 btmp;
+                    in >> btmp;
+                    d.mSettings.mStepForced =(btmp==1);
 
-                        d.mCalibration = & (mProject->mCalibCurves[toFind]);
+                   // in >> d.mSubDates;
+                    double tmp;
+                    in >> tmp;
+                    d.setTminRefCurve(tmp);
+                    in >> tmp;
+                    d.setTmaxRefCurve(tmp);
 
-                        in >>*(d.mCalibration);
+                   /* in >> tmp;
+                    d.setTminCalib(tmp);
+                    in >>tmp;
+                    d.setTmaxCalib(tmp);
+                   */
 
-                        quint32 tmpUint32;
-                        in >> tmpUint32;
+                    /* Check if the Calibration Curve exist*/
+                    const QString toFind (d.mName+d.mPlugin->getDateDesc(&d));
+         //           QMap<QString, CalibrationCurve>::const_iterator it = mProject->mCalibCurves.find (toFind);
 
-                        for (quint32 i= 0; i<tmpUint32; i++) {
-                            double tmpKey;
-                            double tmpValue;
-                            in >> tmpKey;
-                            in >> tmpValue;
-                            d.mCalibHPD[tmpKey]= tmpValue;
-                        }
-#ifdef DEBUG
-                         if (d.mCalibration->mCurve.isEmpty())
-                             qDebug()<<"Model::restoreFromFile vide";
-#endif
+                    // if no curve Create a new instance in mProject->mCalibration
+       //             if ( it == mProject->mCalibCurves.end())
+       //                 mProject->mCalibCurves.insert(toFind, CalibrationCurve());
+
+                    //mProject->mCalibCurves.insert(toFind, CalibrationCurve());
+       //     qDebug()<<"Model:restoreFromFile insert a new mCalibration "<<toFind;
+
+                    d.mCalibration = & (mProject->mCalibCurves[toFind]);
+
+                   // in >>*(d.mCalibration);
+
+                    quint32 tmpUint32;
+                    in >> tmpUint32;
+
+                    for (quint32 i= 0; i<tmpUint32; i++) {
+                        double tmpKey;
+                        double tmpValue;
+                        in >> tmpKey;
+                        in >> tmpValue;
+                        d.mCalibHPD[tmpKey]= tmpValue;
                     }
-             }
-            in >> mLogModel;
-            in >> mLogMCMC;
-            in >> mLogResults;
-        
-            generateCorrelations(mChains);
-           // generatePosteriorDensities(mChains, 1024, 1);
-           // generateNumericalResults(mChains);
+#ifdef DEBUG
+                     if (d.mCalibration->mCurve.isEmpty())
+                         qDebug()<<"Model::restoreFromFile vide";
+#endif
+                }
+         }
+        in >> mLogModel;
+        in >> mLogMCMC;
+        in >> mLogResults;
+
+        generateCorrelations(mChains);
+       // generatePosteriorDensities(mChains, 1024, 1);
+       // generateNumericalResults(mChains);
 
         file.close();
        // file.remove(); // delete the temporary file with uncompressed data
