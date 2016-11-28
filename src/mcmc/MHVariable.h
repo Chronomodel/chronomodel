@@ -42,7 +42,7 @@ public:
 
     // Buffer contenant toutes les acceptations cumulées pour toutes les chaines
     // sur les parties acquisition uniquement.
-    // A stocker dans le fichier résultats .dat !
+    // A stocker dans le fichier résultats .res !
     
     QVector<bool>* mAllAccepts;
     

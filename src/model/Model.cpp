@@ -1400,7 +1400,7 @@ void Model::clearTraces()
 
 
 #pragma mark Date files read / write
-/** @Brief Save .dat file, the result of computation and compress it
+/** @Brief Save .res file, the result of computation and compress it
  *
  * */
 void Model::saveToFile(const QString& fileName)
@@ -1410,8 +1410,8 @@ void Model::saveToFile(const QString& fileName)
     //  Create file
     // -----------------------------------------------------
     //QFileInfo info(fileName);
-   // QFile file(info.path() + info.baseName() + ".~dat"); // when we could do a compressed file
-    //QFile file(info.path() + info.baseName() + ".dat");
+   // QFile file(info.path() + info.baseName() + ".~res"); // when we could do a compressed file
+    //QFile file(info.path() + info.baseName() + ".res");
     QFile file(fileName);
     if (file.open(QIODevice::WriteOnly)) {
 
@@ -1576,7 +1576,7 @@ void Model::saveToFile(const QString& fileName)
     }
   }
 }
-/** @Brief Read the .dat file, it's the result of the saved computation and uncompress it
+/** @Brief Read the .res file, it's the result of the saved computation and uncompress it
  *
  * */
 void Model::restoreFromFile(const QString& fileName)
@@ -1602,7 +1602,7 @@ void Model::restoreFromFile(const QString& fileName)
     file.close();
 */
    // QFileInfo info(fileName);
-   // QFile file(info.path() + info.baseName() + ".dat");
+   // QFile file(info.path() + info.baseName() + ".res");
 
     QFile file(fileName);
     if (file.exists() && file.open(QIODevice::ReadOnly)){
