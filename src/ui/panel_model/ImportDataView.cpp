@@ -373,7 +373,7 @@ QMimeData* ImportDataTable::mimeData(const QList<QTableWidgetItem*> items) const
             itemStr << text;
         }
     }
-    if(!itemStr.empty())
+    if (!itemStr.empty())
         stream << itemStr.join(csvSep);
     
     mimeData->setData("application/chronomodel.import.data", encodedData);
@@ -384,13 +384,11 @@ void ImportDataTable::updateTableHeaders()
 {
     QList<QTableWidgetItem*> items = selectedItems();
     QString pluginName;
-    for(int i=0; i<items.size(); ++i)
-    {
+    for (int i=0; i<items.size(); ++i) {
         QString curPluginName = verticalHeaderItem(items[i]->row())->text();
-        if(pluginName.isEmpty())
+        if (pluginName.isEmpty())
             pluginName = curPluginName;
-        else if(pluginName != curPluginName)
-        {
+        else if (pluginName != curPluginName) {
             pluginName = QString();
             break;
         }
@@ -399,30 +397,27 @@ void ImportDataTable::updateTableHeaders()
     QStringList headers;
     int numCols = columnCount();
     
-    if(!pluginName.isEmpty() && (pluginName!="Title")  && (pluginName!="Structure"))
-    {
+    if (!pluginName.isEmpty() && (pluginName!="Title")  && (pluginName!="Structure")) {
         PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
         
         headers = plugin->csvColumns();
-        if(plugin->wiggleAllowed())
-        {
+        if (plugin->wiggleAllowed()) {
             headers << "Wiggle Type (none | fixed | range | gaussian)";
             headers << "Wiggle value 1 (fixed | Lower date | Average)";
             headers << "Wiggle value 2 (Upper date | Error)";
         }
-        while(headers.size() < numCols)
+        while (headers.size() < numCols)
             headers << "comment";
     }
-    else if ((pluginName=="Title")  || (pluginName=="Structure"))
-    {
+    else if ((pluginName=="Title")  || (pluginName=="Structure")) {
         QStringList cols;
         cols << "Name";
-        for (int i=1; i<numCols; i++) cols<<"";
+        for (int i=1; i<numCols; i++)
+            cols<<"";
         headers = cols;
 
     }
-    else
-    {
+    else {
         while(headers.size() < numCols)
             headers << "?";
     }

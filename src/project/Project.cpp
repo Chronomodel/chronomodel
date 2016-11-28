@@ -604,7 +604,7 @@ bool Project::load(const QString& path)
 
             clearModel();
             if (mSaveData) {
-                QString dataPath = path + ".dat";
+                QString dataPath = path + ".res";
 
                 QFile dataFile;
 
@@ -615,7 +615,7 @@ bool Project::load(const QString& path)
                 if (fi.isFile())
                 if (dataFile.exists()) {
 
-                qDebug() << "Project::load Loading model file.dat : " << dataPath << " size=" << dataFile.size();
+                qDebug() << "Project::load Loading model file.res : " << dataPath << " size=" << dataFile.size();
       
                 try {
                     mModel->fromJson(mState);
@@ -760,14 +760,14 @@ bool Project::saveProjectToFile()
    if (mSaveData) {
        // keep to the future version
        if (!mModel->mChains.isEmpty()) {
-            qDebug() << "Saving project results in "<<mProjectFileDir + "/" + mProjectFileName + ".dat";
+            qDebug() << "Saving project results in "<<mProjectFileDir + "/" + mProjectFileName + ".res";
             mModel->setProject(this);
-            mModel->saveToFile(mProjectFileDir + "/" + mProjectFileName + ".dat");
+            mModel->saveToFile(mProjectFileDir + "/" + mProjectFileName + ".res");
         }
         else {
-        QFileInfo checkFile(mProjectFileDir + "/" + mProjectFileName + ".dat");
+        QFileInfo checkFile(mProjectFileDir + "/" + mProjectFileName + ".res");
         if (checkFile.exists() && checkFile.isFile()) {
-            QFile(mProjectFileDir + "/" + mProjectFileName + ".dat").remove();
+            QFile(mProjectFileDir + "/" + mProjectFileName + ".res").remove();
         } else {
             return true;
         }
