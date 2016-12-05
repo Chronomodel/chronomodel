@@ -16,7 +16,7 @@
 
 #pragma mark Constructor...
 Model::Model():
-mProject(0),
+mProject(nullptr),
 mNumberOfPhases(0),
 mNumberOfEvents(0),
 mNumberOfDates(0),
@@ -34,25 +34,25 @@ Model::~Model()
 void Model::clear()
 {
     this->clearTraces();
-    if(!mEvents.isEmpty()) {
+    if (!mEvents.isEmpty()) {
         foreach (Event* ev, mEvents) {
-            if(ev)
+            if (ev)
                 delete ev;
-            ev = 0;
+            ev = nullptr;
         }
         mEvents.clear();
      }
 
-    if(!mPhases.isEmpty()) {
+    if (!mPhases.isEmpty()) {
         foreach (Phase* ph, mPhases) {
-            if(ph)
+            if (ph)
                 delete ph;
-            ph = 0;
+            ph = nullptr;
         }
         mPhases.clear();
     }
 
-    if(!mPhaseConstraints.isEmpty()) {
+    if (!mPhaseConstraints.isEmpty()) {
         /*foreach (PhaseConstraint* ph, mPhaseConstraints) {
             //if(ph) delete ph;
             ph = 0;

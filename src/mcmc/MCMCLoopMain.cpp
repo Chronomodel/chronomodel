@@ -30,14 +30,14 @@ MCMCLoopMain::MCMCLoopMain(Model* model, Project* project):MCMCLoop(),
 mModel(model)
 {
     MCMCLoop::mProject = project;
-    if(mModel)
+    if (mModel)
         setMCMCSettings(mModel->mMCMCSettings);
 }
 
 MCMCLoopMain::~MCMCLoopMain()
 {
-    mModel = 0;
-    mProject = 0;
+    mModel = nullptr;
+    mProject = nullptr;
 }
 
 QString MCMCLoopMain::calibrate()
@@ -59,7 +59,7 @@ QString MCMCLoopMain::calibrate()
             for (int j=0; j<num_dates; ++j) {
                 Date* date = &events.at(i)->mDates[j];
                 dates.push_back(date);
-                date = 0;
+                date = nullptr;
             }
         }
 
