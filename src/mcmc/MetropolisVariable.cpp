@@ -15,8 +15,8 @@
 
 MetropolisVariable::MetropolisVariable(QObject *parent):QObject(parent),
 mX(0.),
-mRawTrace(0),
-mFormatedTrace(0),
+mRawTrace(nullptr),
+mFormatedTrace(nullptr),
 mSupport(eR),
 mFormat(DateUtils::eNumeric),
 mExactCredibilityThreshold(0.),
@@ -37,6 +37,9 @@ mtmaxUsed(0.)
 
 MetropolisVariable::~MetropolisVariable()
 {
+    mRawTrace = nullptr;
+    mFormatedTrace = nullptr;
+
     QObject::disconnect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
 }
 
@@ -47,9 +50,15 @@ void MetropolisVariable::memo()
 
 void MetropolisVariable::reset()
 {
-    mRawTrace = new QVector<double>();
-    mFormatedTrace = new QVector<double>();
-    
+    if (mRawTrace != nullptr) {
+        mRawTrace->clear();
+        mRawTrace->squeeze();
+        mFormatedTrace->clear();
+        mFormatedTrace->squeeze();
+    } else {
+        mRawTrace = new QVector<double>();
+        mFormatedTrace = new QVector<double>();
+    }
     mHisto.clear();
     mChainsHistos.clear();
     
@@ -201,8 +210,8 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
     mtmaxUsed = tmax;
     mtminUsed = tmin;
 
-    const int inputSize (fftLen);
-    const int outputSize = 2 * (inputSize / 2 + 1);
+    const size_t inputSize (fftLen);
+    const size_t outputSize = 2 * (inputSize / 2 + 1);
 
     const double sigma = dataStd(dataSrc);
     QMap<double, double> result;
@@ -211,7 +220,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
 
     if (sigma == 0) {
         qDebug()<<"MetropolisVariable::generateHisto sigma == 0";
-        if(dataSrc.size()>0) {
+        if (dataSrc.size()>0) {
             // if sigma is null and there are several values, it means: this is the same
             // value. It can appear with a bound fixed
             result.insert(dataSrc.at(0)+tmin, 1.) ;
@@ -235,14 +244,14 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
 
      double* output = (double*) fftw_malloc(outputSize * sizeof(double));
     
-    if(input != 0) {
+    if (input != 0) {
         // ----- FFT -----
         // http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data
         //https://jperalta.wordpress.com/2006/12/12/using-fftw3/
         fftw_plan plan_forward = fftw_plan_dft_r2c_1d(inputSize, input, (fftw_complex*)output, FFTW_ESTIMATE);
         fftw_execute(plan_forward);
 
-        for(int i=0; i<outputSize/2; ++i) {
+        for (size_t i=0; i<outputSize/2; ++i) {
             const double s = 2. * M_PI * i / (b-a);
             const double factor = expf(-0.5 * s * s * h * h);
 
@@ -263,16 +272,16 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
                   // nothing to do already done by default
               break;
               case eRp : // on R+
-                  tBegin = 0;
+                  tBegin = 0.;
               break;
               case eRm :// on R-
-                  tEnd = 0;
+                  tEnd = 0;;
               break;
               case eRpStar : // on R+*
-                  tBegin = 0;
+                  tBegin = 0.;
               break;
               case eRmStar :// on R-*
-                  tEnd = 0;
+                  tEnd = 0.;
               break;
               case eBounded : // on [tmin;tmax]
                   tBegin = tmin;
@@ -281,7 +290,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
         }
         const double delta = (b - a) / fftLen;
 
-        for(int i=0; i<inputSize; ++i) {
+        for (size_t i=0; i<inputSize; ++i) {
              const double t = a + (double)i * delta;
              result[t] = input[i];
         }
@@ -593,9 +602,9 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
     
     if (mCredibility != QPair<double, double>()) {
         if (formatFunc)
-            result += "Credibility Interval (" + locale.toString(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + formatFunc(mCredibility.first) + ", " + formatFunc(mCredibility.second) + "] " + unit;
+            result += "Credibility Interval (" + locale.toString(mExactCredibilityThreshold * 100., 'f', 1) + "%) : [" + formatFunc(mCredibility.first) + ", " + formatFunc(mCredibility.second) + "] " + unit;
         else
-            result += "Credibility Interval (" + locale.toString(mExactCredibilityThreshold * 100.f, 'f', 1) + "%) : [" + DateUtils::dateToString(mCredibility.first) + ", " + DateUtils::dateToString(mCredibility.second) + "]";
+            result += "Credibility Interval (" + locale.toString(mExactCredibilityThreshold * 100., 'f', 1) + "%) : [" + DateUtils::dateToString(mCredibility.first) + ", " + DateUtils::dateToString(mCredibility.second) + "]";
 
    }
    return result;
