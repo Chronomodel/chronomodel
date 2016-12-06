@@ -24,6 +24,7 @@
 #include <QtSvg>
 #include <QPropertyAnimation>
 #include <QRectF>
+#include <assert.h>
 
 #pragma mark constructor
 ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
@@ -312,15 +313,16 @@ ModelView::~ModelView()
 
 void ModelView::setProject(Project* project)
 {
+    assert(project!= nullptr);
     const bool projectExist = (mProject ? true : false);
     mProject = project;
     mPhasesScene->setProject(mProject);
     mEventsScene->setProject(mProject);
 
-    if (project && !projectExist)
+    if (mProject && !projectExist)
         connectScenes();
 
-    else if (projectExist && !project)
+    else if (projectExist && !mProject)
             disconnectScenes();
 
     // if there is no phase, we must show all events

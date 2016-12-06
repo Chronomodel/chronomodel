@@ -355,7 +355,7 @@ void GraphView::removeCurve(const QString& name)
 
 void GraphView::removeAllCurves()
 {
-    mCurves.clear();
+  mCurves.clear();
 }
 
 void GraphView::reserveCurves(const int size)

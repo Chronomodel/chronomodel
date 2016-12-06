@@ -392,7 +392,7 @@ void MainWindow::newProject()
     // Returns false if the user cancels.
     bool yesCreate= false;
 
-    if ((mProject==0) || (mProject->askToSave(tr("Save current project as...") )))
+    if ((mProject == nullptr) || (mProject->askToSave(tr("Save current project as...") )))
         yesCreate= true;
 
     if (yesCreate) {

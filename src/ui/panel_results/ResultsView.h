@@ -70,8 +70,8 @@ protected:
 
 
 public slots:
-    void updateResults(Model* model = 0);
-    void initResults(Model* model = 0);
+    void updateResults(Model* model = nullptr);
+    void initResults(Model* model = nullptr);
 
     void changeScrollArea();
     void updateLayout();
@@ -166,6 +166,7 @@ private:
     QStackedWidget* mStack;
     QScrollArea* mEventsScrollArea;
     QScrollArea* mPhasesScrollArea;
+ //   QWidget* mEventsWidget;
     QList<GraphViewResults*> mByEventsGraphs;
     QList<GraphViewResults*> mByPhasesGraphs;
 

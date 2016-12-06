@@ -78,7 +78,7 @@ QString MCMCLoopMain::calibrate()
                 return ABORTED_BY_USER;
             
             emit stepProgressed(i);
-            dates[i] = 0;
+            dates[i] = nullptr;
             //QTime endTime = QTime::currentTime();
             //int timeDiff = startTime.msecsTo(endTime);
             //mLog += "Data \"" + dates[i]->mName + "\" (" + dates[i]->mPlugin->getName() + ") calibrated in " + QString::number(timeDiff) + " ms\n";
@@ -99,10 +99,7 @@ void MCMCLoopMain::initVariablesForChain()
     for (const ChainSpecs c: mChains)
        initReserve +=( 1 + (c.mMaxBatchs*c.mNumBatchIter) + c.mNumBurnIter + (c.mNumRunIter/c.mThinningInterval) );
 
-    if (initReserve>std::numeric_limits<int>::max())
-        initReserve=std::numeric_limits<int>::max();
-
-    for(Event* event : mModel->mEvents) {
+    for (Event* event : mModel->mEvents) {
         event->mTheta.reset();
         event->mTheta.reserve(initReserve);
 
@@ -513,6 +510,7 @@ void MCMCLoopMain::update()
     QList<PhaseConstraint*>& phasesConstraints = mModel->mPhaseConstraints;
     for (int i=0; i<phasesConstraints.size(); ++i)
         phasesConstraints[i]->updateGamma();
+
 }
 
 bool MCMCLoopMain::adapt()
