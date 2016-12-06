@@ -411,6 +411,7 @@ void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
             results.append(result);
         }
         // Correlation ajoutée à la liste (une courbe de corrélation par chaine)
+        results.squeeze();
         mCorrelations.append(results);
 
     }

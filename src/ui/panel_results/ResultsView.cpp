@@ -38,9 +38,9 @@
 
 #pragma mark Constructor & Destructor
 ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-mResultMaxVariance(1000),
+mResultMaxVariance(1000.),
 mHasPhases(false),
-mModel(0),
+mModel(nullptr),
 mMargin(5),
 mOptionsW(200),
 mLineH(15),
@@ -50,8 +50,8 @@ mTabsH(30),
 mGraphsH(130),
 mTabEventsIndex(0),
 mTabPhasesIndex(0),
-mEventsScrollArea(0),
-mPhasesScrollArea(0),
+mEventsScrollArea(nullptr),
+mPhasesScrollArea(nullptr),
 mCurrentTypeGraph(GraphViewResults::ePostDistrib), //mTabs=0
 mBandwidthUsed(1.06),
 mThresholdUsed(95.0),
@@ -61,7 +61,7 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
     mResultMaxX = mSettings.mTmax;
     mResultCurrentMinX = mResultMinX ;
     mResultCurrentMaxX = mResultMaxX ;
-    mResultZoomX = 1;
+    mResultZoomX = 1.;
     
     QFont fontTitle (QApplication::font());
     fontTitle.setPointSizeF(QApplication::font().pointSizeF()*1.);
@@ -80,11 +80,13 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
     mStack = new QStackedWidget(this);
     
     // Make when we need it, within createEventsScrollArea and within createPhasesScrollArea
-    /*mEventsScrollArea = new QScrollArea();
+ /*   mEventsScrollArea = new QScrollArea();
     mEventsScrollArea->setMouseTracking(true);
     mStack->addWidget(mEventsScrollArea);
-    
-    mPhasesScrollArea = new QScrollArea();
+    mEventsWidget = new QWidget(mEventsScrollArea);
+    mEventsWidget->setMouseTracking(true);
+  */
+   /* mPhasesScrollArea = new QScrollArea();
     mPhasesScrollArea->setMouseTracking(true);
     mStack->addWidget(mPhasesScrollArea);*/
     
@@ -430,7 +432,7 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
 
 ResultsView::~ResultsView()
 {
-    mModel = 0;
+    mModel = nullptr;
 }
 
 void ResultsView::doProjectConnections(Project* project)
@@ -707,29 +709,29 @@ void ResultsView::clearResults()
 {
     mByEventsBut->setEnabled(false);
     mByPhasesBut->setEnabled(false);
-    
+
 
     for (int i = 0; i < mCheckChainChecks.size(); ++i) {
         delete mCheckChainChecks[i];
-        mCheckChainChecks[i] = 0;
+        mCheckChainChecks[i] = nullptr;
     }
     mCheckChainChecks.clear();
     
     for (int i = 0; i < mChainRadios.size(); ++i) {
         delete mChainRadios[i];
-        mChainRadios[i] = 0;
+        mChainRadios[i] = nullptr;
     }
     mChainRadios.clear();
-    
-    for(int i = 0; i < mByEventsGraphs.size(); ++i) {
+
+    for(int i = 0; i < mByEventsGraphs.size(); ++i) {      
         delete mByEventsGraphs[i];
-        mByEventsGraphs[i] = 0;
+        mByEventsGraphs[i] = nullptr;
     }
     mByEventsGraphs.clear();
     
     for(int i = 0; i < mByPhasesGraphs.size(); ++i) {
         delete mByPhasesGraphs[i];
-        mByPhasesGraphs[i] = 0;
+        mByPhasesGraphs[i] = nullptr;
     }
 
 
@@ -738,14 +740,16 @@ void ResultsView::clearResults()
 
     if (mEventsScrollArea) {
         mStack->removeWidget(mEventsScrollArea);
+        QWidget* wid = mEventsScrollArea->widget();
+        delete wid;
         delete mEventsScrollArea;
     }
     if (mPhasesScrollArea){
         mStack->removeWidget(mPhasesScrollArea);
         delete mPhasesScrollArea;
     }
-    mEventsScrollArea = 0;
-    mPhasesScrollArea = 0;
+    mEventsScrollArea = nullptr;
+    mPhasesScrollArea = nullptr;
 
     mResultMinX = mSettings.getTminFormated();
     mResultMaxX = mSettings.getTmaxFormated();
@@ -798,7 +802,7 @@ void ResultsView::initResults(Model* model)
     // ----------------------------------------------------
     //  Create Chains option controls (radio and checkboxes under "MCMC Chains")
     // ----------------------------------------------------
-    if(mCheckChainChecks.isEmpty()) {
+    if (mCheckChainChecks.isEmpty()) {
         for(int i=0; i<mChains.size(); ++i) {
             CheckBox* check = new CheckBox(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
             connect(check, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
@@ -808,7 +812,7 @@ void ResultsView::initResults(Model* model)
             RadioButton* radio = new RadioButton(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
             connect(radio, &RadioButton::clicked, this, &ResultsView::updateCurvesToShow);
             radio->setVisible(true);
-            if(i == 0)
+            if (i == 0)
                 radio->setChecked(true);
             mChainRadios.append(radio);
         }
@@ -823,7 +827,8 @@ void ResultsView::initResults(Model* model)
     // ------------------------------------------------------------
     mModel->initDensities(getFFTLength(), getBandwidth(), getThreshold());
    // mModel->updateDensities(getFFTLength(), getBandwidth(), getThreshold());
-    if (mHasPhases) createPhasesScrollArea(0);
+    if (mHasPhases)
+        createPhasesScrollArea(0);
     else createEventsScrollArea(0);
 
     // ------------------------------------------------------------
@@ -925,8 +930,12 @@ void ResultsView::createEventsScrollArea(const int idx)
         mStack->addWidget(mEventsScrollArea);
     }
 
+    for (auto g : mByEventsGraphs)
+        delete g;
+
     mByEventsGraphs.clear();
-   
+
+
     // eventsWidget Creation in the idx limit
     QWidget* eventsWidget = new QWidget(mEventsScrollArea);
     eventsWidget->setMouseTracking(true);
@@ -1004,7 +1013,8 @@ void ResultsView::createPhasesScrollArea(const int idx)
         mPhasesScrollArea->setMouseTracking(true);
         mStack->addWidget(mPhasesScrollArea);
     }
-
+    for (auto g : mByPhasesGraphs)
+        delete g;
     mByPhasesGraphs.clear();
 
 
@@ -1201,7 +1211,7 @@ void ResultsView::unfoldToggle()
 void ResultsView::nextSheet()
 {
     
-    int* currentIndex = 0;
+    int* currentIndex = nullptr;
     int graphCount = 0;
     
     if (mStack->currentWidget() == mEventsScrollArea) {

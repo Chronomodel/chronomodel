@@ -930,9 +930,7 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
     while (iterEvent!=mEvents.end()) {
         (*iterEvent)->mTheta.generateCorrelations(chains);
         
-        //for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
         for( Date& date : (*iterEvent)->mDates ) {
-            //Date& date = (*iterEvent)->mDates[j];
             date.mTheta.generateCorrelations(chains);
             date.mSigma.generateCorrelations(chains);
         }

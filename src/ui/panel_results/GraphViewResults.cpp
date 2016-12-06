@@ -106,12 +106,12 @@ mHeightForVisibleAxis(100)
 
 GraphViewResults::~GraphViewResults()
 {
-    mGraph = 0;
-    mImageSaveBut = 0;
+    mGraph = nullptr;
+  /*  mImageSaveBut = 0;
     mImageClipBut = 0;
     mResultsClipBut = 0;
     mDataSaveBut = 0;
-    mAnimation = 0;
+    mAnimation = 0;*/
 
 }
 

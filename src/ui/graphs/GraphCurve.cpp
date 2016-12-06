@@ -22,7 +22,9 @@ mVisible(true)
 
 GraphCurve::~GraphCurve()
 {
-    
+    mData.clear();
+    mDataVector.clear();
+    mSections.clear();
 }
 
 

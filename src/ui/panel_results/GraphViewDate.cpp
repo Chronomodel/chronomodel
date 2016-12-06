@@ -28,7 +28,7 @@ mColor(Qt::blue)
 
 GraphViewDate::~GraphViewDate()
 {
-    mDate = 0;
+    mDate = nullptr;
 }
 
 void GraphViewDate::setDate(Date* date)
