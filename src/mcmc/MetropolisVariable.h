@@ -18,7 +18,7 @@ class MetropolisVariable: public QObject
 {
     Q_OBJECT
 public:
-    MetropolisVariable(QObject *parent = 0);
+    MetropolisVariable(QObject *parent = nullptr);
     virtual ~MetropolisVariable();
     
     void memo();

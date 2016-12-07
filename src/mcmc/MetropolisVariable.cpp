@@ -27,9 +27,9 @@ mtminUsed(0.),
 mtmaxUsed(0.)
 {
     // will not throw exception,(std::nothrow) in C++ Programmin Language B. Stroustrup Section 19.4.5
-   /* mRawTrace = new QVector<float>();
-    mFormatedTrace = new QVector<float>();
-*/
+    mRawTrace = new QVector<double>();
+    mFormatedTrace = new QVector<double>();
+
     mCredibility = QPair<double, double>();
     mHPD = QMap<double, double>();
     QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
@@ -37,10 +37,9 @@ mtmaxUsed(0.)
 
 MetropolisVariable::~MetropolisVariable()
 {
-    mRawTrace = nullptr;
-    mFormatedTrace = nullptr;
+    reset();
+    //QObject::disconnect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
 
-    QObject::disconnect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
 }
 
 void MetropolisVariable::memo()
@@ -78,8 +77,12 @@ void MetropolisVariable::reserve( const int reserve)
 MetropolisVariable& MetropolisVariable::copy(MetropolisVariable const& origin)
 {
     mX = origin.mX;
-    mRawTrace = origin.mRawTrace;
-    mFormatedTrace = origin.mFormatedTrace;
+    mRawTrace->resize(origin.mRawTrace->size());
+    std::copy(origin.mRawTrace->begin(),origin.mRawTrace->end(),mRawTrace->begin());
+
+    mFormatedTrace->resize(origin.mFormatedTrace->size());
+    std::copy(origin.mFormatedTrace->begin(),origin.mFormatedTrace->end(),mFormatedTrace->begin());
+
     mSupport = origin.mSupport;
     mFormat = origin.mFormat;
 
@@ -90,7 +93,6 @@ MetropolisVariable& MetropolisVariable::copy(MetropolisVariable const& origin)
 
     mHPD = origin.mHPD;
     mCredibility = origin.mCredibility;
-
 
     mExactCredibilityThreshold = origin.mExactCredibilityThreshold;
 
