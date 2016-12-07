@@ -132,13 +132,13 @@ void GraphViewResults::updateCurvesToShow(bool showAllChains, const QList<bool>&
     // Repaint the title area above the graph :
     int leftShift = mButtonsVisible ? mGraphLeft : 0;
     QRectF textRect(leftShift, 1, this->width()-leftShift, mTopShift-1);
-    update(textRect.toRect());
+   // update(textRect.toRect());
+    update();
 }
 
 void GraphViewResults::toggle(const QRect& targetGeometry)
 {
-    if(geometry() != targetGeometry)
-    {
+    if (geometry() != targetGeometry) {
         mAnimation->setStartValue(geometry());
         mAnimation->setEndValue(targetGeometry);
         mAnimation->start();
@@ -208,15 +208,13 @@ void GraphViewResults::saveAsImage()
     QFileInfo fileInfo;
     fileInfo = QFileInfo(fileName);
     QString fileExtension = fileInfo.suffix();
-    if(!fileName.isEmpty())
-    {
+    if (!fileName.isEmpty()) {
         QFileInfo fileInfo = QFileInfo(fileName);
         bool asSvg = fileName.endsWith(".svg");
-        if(asSvg) {
-            if(mGraph)
-            {
+        if (asSvg) {
+            if (mGraph)
                 mGraph->saveAsSVG(fileName, mTitle, "GraphViewResults",true);
-            }
+
         }
         else {
         
@@ -322,7 +320,7 @@ void GraphViewResults::saveGraphData() const
         else return;
     }
     
-    else if(mCurrentTypeGraph == eCorrel)
+    else if (mCurrentTypeGraph == eCorrel)
         mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
 
     
@@ -404,12 +402,12 @@ void GraphViewResults::updateLayout()
     QFont fontTitle(this->font());
     fontTitle.setPointSizeF(this->font().pointSizeF()*1.1);
     QFontMetrics fmTitle(fontTitle);
-    mTopShift = fmTitle.height()+4+1;
+    mTopShift = fmTitle.height() + 4 + 1;
     
     int leftShift = mButtonsVisible ? mGraphLeft : 0;
     QRect graphRect(leftShift, mTopShift, this->width() - leftShift, height()-mTopShift);
     
-    if((mGraph->hasCurve())) {
+    if ((mGraph->hasCurve())) {
         mGraph->showXAxisValues(axisVisible);
         mGraph->setMarginBottom(axisVisible ? mGraph->font().pointSizeF() + 10 : 10);
     }
@@ -431,7 +429,7 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     p.begin(this);
     
     // Left part of the view (title, buttons, ...)
-    if(mButtonsVisible) {
+    if (mButtonsVisible) {
         QColor backCol = mItemColor;
         QColor foreCol = getContrastedColor(backCol);
         
@@ -485,7 +483,7 @@ void GraphViewResults::setItemTitle(const QString& itemTitle)
 
 void GraphViewResults::setButtonsVisible(const bool visible)
 {
-    if(mButtonsVisible != visible){
+    if (mButtonsVisible != visible) {
         mButtonsVisible = visible;
         
         mImageSaveBut   -> setVisible(mButtonsVisible);
@@ -505,7 +503,7 @@ GraphCurve GraphViewResults::generateDensityCurve(const QMap<double, double>& da
                                                   const QBrush& brush) const{
     GraphCurve curve;
     curve.mName = name;
-    if(!data.isEmpty()) {
+    if (!data.isEmpty()) {
         curve.mData = data;
         curve.mPen = QPen(lineColor, 1, penStyle);
         curve.mBrush = brush;
