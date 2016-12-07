@@ -327,6 +327,7 @@ qDebug()<<"Date::calibrate insert mData "<<toFind;
 
             repartitionTemp.append((double)rep);
             lastRepVal = rep;
+            
         }
         
         // ------------------------------------------------------------------
