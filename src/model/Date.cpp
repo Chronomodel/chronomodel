@@ -56,7 +56,7 @@ void Date::init()
     mTminRefCurve = 0.;
     mTmaxRefCurve = 0.;
 
-    mCalibration = 0;
+    mCalibration = nullptr;
 
 }
 
@@ -113,19 +113,19 @@ void Date::copyFrom(const Date& date)
 
 Date::~Date()
 {
-    //delete [] mPlugin;
-    mPlugin = 0;
-    mCalibration = 0;
-    //mRepartition.clear();
+    reset();
+
+    mPlugin = nullptr;
+    mCalibration = nullptr;
+
     mCalibHPD.clear();
 
     mSubDates.clear();
-
 }
 
 bool Date::isNull() const
 {
-    return mData.isEmpty() || (mPlugin == 0);
+    return mData.isEmpty() || (mPlugin == nullptr);
 }
 #pragma mark Properties
 QColor Date::getEventColor() const

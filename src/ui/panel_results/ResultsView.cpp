@@ -672,7 +672,7 @@ void ResultsView::updateGraphsLayout()
                 mByPhasesGraphs.at(i)->setGeometry(0, y, width() - mOptionsW - sbe ,mGraphsH);
                 y += mByPhasesGraphs.at(i)->height();
             }
-            if(y>0)
+            if (y>0)
                 wid->setFixedSize(width() - sbe - mOptionsW, y);
             wid = 0;
            
@@ -693,7 +693,7 @@ void ResultsView::updateGraphsLayout()
                 
                 y += mByEventsGraphs.at(i)->height();
             }
-            if(y>0)
+            if (y>0)
                 wid->setFixedSize(width() - sbe - mOptionsW, y);
             wid = 0;
             
@@ -1265,11 +1265,11 @@ void ResultsView::updateCurvesToShow()
     QList<bool> showChainList;
     
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib)
-        foreach (CheckBox* cbButton, mCheckChainChecks)
+        for (CheckBox* cbButton : mCheckChainChecks)
             showChainList.append(cbButton->isChecked());
 
     else
-        foreach (RadioButton* rButton, mChainRadios)
+        for (RadioButton* rButton : mChainRadios)
             showChainList.append(rButton->isChecked());
 
 
@@ -1279,12 +1279,12 @@ void ResultsView::updateCurvesToShow()
     const bool showStat = mStatsBut->isChecked();
 
     if (mByPhasesBut->isChecked() )
-        foreach (GraphViewResults* phaseGraph, mByPhasesGraphs) {
+        for (GraphViewResults* phaseGraph : mByPhasesGraphs) {
                 phaseGraph->updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
                 phaseGraph->setShowNumericalResults(showStat);
         }
     else
-        foreach (GraphViewResults* eventGraph, mByEventsGraphs) {
+        for (GraphViewResults* eventGraph : mByEventsGraphs) {
             eventGraph->updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
             eventGraph->setShowNumericalResults(showStat);
         }
@@ -1304,8 +1304,11 @@ void ResultsView::generateCurves(const QList<GraphViewResults*>& listGraphs)
     qDebug() << "ResultsView::generateCurves()";
 
     GraphViewResults::Variable variable = GraphViewResults::eTheta;;
-    if(mDataThetaRadio->isChecked()) variable = GraphViewResults::eTheta;
-    else if(mDataSigmaRadio->isChecked()) variable = GraphViewResults::eSigma;
+    if (mDataThetaRadio->isChecked())
+        variable = GraphViewResults::eTheta;
+
+    else if (mDataSigmaRadio->isChecked())
+        variable = GraphViewResults::eSigma;
 
     QList<GraphViewResults*>::const_iterator constIter = listGraphs.cbegin();
     QList<GraphViewResults*>::const_iterator iterEnd = listGraphs.cend();
@@ -1317,7 +1320,7 @@ void ResultsView::generateCurves(const QList<GraphViewResults*>& listGraphs)
     }
 
     // With variable eSigma, we look for mResultMaxVariance in the curve named "Post Distrib All Chains"
-    if(variable == GraphViewResults::eSigma) {
+    if (variable == GraphViewResults::eSigma) {
         mResultMaxVariance = 0.;
 
         QList<GraphViewResults*>::const_iterator constIter;
