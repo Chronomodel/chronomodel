@@ -35,36 +35,42 @@ void Model::clear()
 {
     this->clearTraces();
     if (!mEvents.isEmpty()) {
-        foreach (Event* ev, mEvents) {
-            if (ev)
-                delete ev;
-            ev = nullptr;
+        for (Event* ev: mEvents) {
+            if (ev) {
+                ev->~Event();
+                ev = nullptr;
+            }
         }
         mEvents.clear();
      }
 
     if (!mPhases.isEmpty()) {
-        foreach (Phase* ph, mPhases) {
-            if (ph)
-                delete ph;
-            ph = nullptr;
+        for (Phase* ph: mPhases) {
+            if (ph) {
+                ph->~Phase();
+                ph = nullptr;
+            }
         }
         mPhases.clear();
     }
 
     if (!mPhaseConstraints.isEmpty()) {
-        /*foreach (PhaseConstraint* ph, mPhaseConstraints) {
-            //if(ph) delete ph;
-            ph = 0;
-        }*/
+        for (PhaseConstraint* pc : mPhaseConstraints) {
+            if (pc) {
+                pc->~PhaseConstraint();
+                pc = nullptr;
+            }
+        }
         mPhaseConstraints.clear();
     }
 
     if(!mEventConstraints.isEmpty()) {
-        /*foreach (EventConstraint* ev, mEventConstraints) {
-            //if(ev) delete ev;
-            ev = 0;
-        }*/
+        for (EventConstraint* ec : mEventConstraints) {
+            if (ec) {
+                ec->~EventConstraint();
+                ec = nullptr;
+            }
+        }
         mEventConstraints.clear();
     }
 
@@ -202,7 +208,7 @@ void Model::fromJson(const QJsonObject& json)
 
         // Link des events / phases
         for (int j=0; j<mPhases.size(); ++j) {
-            int phaseId = mPhases.at(j)->mId;
+            const int phaseId = mPhases.at(j)->mId;
             if (phasesIds.contains(phaseId)) {
                 mEvents[i]->mPhases.append(mPhases[j]);
                 mPhases[j]->mEvents.append(mEvents[i]);
@@ -222,7 +228,7 @@ void Model::fromJson(const QJsonObject& json)
     }
     // Link des phases / contraintes de phase
     for (int i=0; i<mPhases.size(); ++i) {
-        int phaseId = mPhases.at(i)->mId;
+        const int phaseId = mPhases.at(i)->mId;
         for (int j=0; j<mPhaseConstraints.size(); ++j) {
             if (mPhaseConstraints.at(j)->mFromId == phaseId) {
                 mPhaseConstraints[j]->mPhaseFrom = mPhases[i];
@@ -235,9 +241,9 @@ void Model::fromJson(const QJsonObject& json)
        // int mNumberOfEventsInAllPhases;
        // int mNumberOfDatesInAllPhases;
         mNumberOfEventsInAllPhases += mPhases.at(i)->mEvents.size();
-        for (int k=0; k<mPhases.at(i)->mEvents.size();++k) {
+        for (int k=0; k<mPhases.at(i)->mEvents.size();++k)
             mNumberOfDatesInAllPhases += mPhases.at(i)->mEvents.at(k)->mDates.size();
-        }
+
     }
     //return model;
 }
@@ -250,7 +256,7 @@ void Model::setProject( Project * project)
 void Model::updateDesignFromJson(const QJsonObject& json)
 {
     const QJsonArray phasesJSON = json.value(STATE_PHASES).toArray();
-    if(mPhases.size() != phasesJSON.size())
+    if (mPhases.size() != phasesJSON.size())
         return;
 
     for (int i = 0; i < phasesJSON.size(); ++i) {
@@ -261,8 +267,9 @@ void Model::updateDesignFromJson(const QJsonObject& json)
     }
 
     const QJsonArray eventsJSON = json.value(STATE_EVENTS).toArray();
-    if(mEvents.size() != eventsJSON.size())
+    if (mEvents.size() != eventsJSON.size())
         return;
+
     for (int i = 0; i < eventsJSON.size(); ++i) {
         const QJsonObject eventJS = eventsJSON.at(i).toObject();
         Event * e = mEvents[i];
@@ -272,6 +279,7 @@ void Model::updateDesignFromJson(const QJsonObject& json)
         QJsonArray datesJS = eventJS.value(STATE_EVENT_DATES).toArray();
         if (e->mDates.size() != datesJS.size())
             return;
+
         for (int j = 0; j < datesJS.size(); ++j) {
             QJsonObject dateJS = datesJS.at(j).toObject();
             e->mDates[j].mName = dateJS.value(STATE_NAME).toString();
@@ -289,21 +297,25 @@ QJsonObject Model::toJson() const
     QJsonArray events;
     for (int i = 0; i < mEvents.size(); ++i)
         events.append(mEvents.at(i)->toJson());
+
     json["events"] = events;
     
     QJsonArray phases;
     for (int i = 0; i < mPhases.size(); ++i)
         phases.append(mPhases.at(i)->toJson());
+
     json["phases"] = phases;
     
     QJsonArray event_constraints;
     for (int i = 0; i < mEventConstraints.size(); ++i)
         event_constraints.append(mEventConstraints.at(i)->toJson());
+
     json["event_constraints"] = event_constraints;
     
     QJsonArray phase_constraints;
     for (int i = 0; i < mPhaseConstraints.size(); ++i)
         phase_constraints.append(mPhaseConstraints.at(i)->toJson());
+
     json["phase_constraints"] = phase_constraints;
     
     return json;
@@ -401,19 +413,19 @@ void Model::generateResultsLog()
         Event* event = mEvents.at(i);
         log += ModelUtilities::eventResultsHTML(event, true, this);
         log += "<hr>";
-        event = 0;
+        event = nullptr;
     }
     for (int i = 0; i < mPhases.size(); ++i) {
         Phase* phase = mPhases.at(i);
         log += ModelUtilities::phaseResultsHTML(phase);
         log += "<hr>";
-        phase = 0;
+        phase = nullptr;
     }
     for (int i = 0; i < mPhaseConstraints.size(); ++i) {
         PhaseConstraint* phaseConstraint = mPhaseConstraints.at(i);
         log += ModelUtilities::constraintResultsHTML(phaseConstraint);
         log += "<hr>";
-        phaseConstraint = 0;
+        phaseConstraint = nullptr;
     }
     mLogResults = log;
 }
@@ -438,25 +450,22 @@ QList<QStringList> Model::getStats(const QLocale locale, const bool withDateForm
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
         l.prepend(phase->mName + " beta");
         rows << l;
-        phase = 0;
+        phase = nullptr;
     }
     
     // Events
     rows << QStringList();
-    for (int i = 0; i < mEvents.size(); ++i) {
-        Event* event = mEvents.at(i);
-        
+     for (Event* event : mEvents) {
         QStringList l = event->mTheta.getResultsList(locale);
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
         l.prepend(event->mName);
         rows << l;
-        event = 0;
+        event = nullptr;
     }
     
     // Dates
     rows << QStringList();
-    for (int i = 0; i < mEvents.size(); ++i) {
-        Event* event = mEvents.at(i);
+    for (Event* event : mEvents) {
         for (int j = 0; j < event->mDates.size(); ++j) {
             Date& date = event->mDates[j];
             
@@ -465,7 +474,7 @@ QList<QStringList> Model::getStats(const QLocale locale, const bool withDateForm
             l.prepend(date.mName);
             rows << l;
         }
-        event = 0;
+        event = nullptr;
     }
     
     // Headers
@@ -1372,27 +1381,20 @@ void Model::clearCredibilityAndHPD()
 
 void Model::clearTraces()
 {
-    QList<Event*>::iterator iterEvent = mEvents.begin();
-    while (iterEvent!=mEvents.cend()) {
-        foreach (Date date, (*iterEvent)->mDates) {
-            date.mTheta.mRawTrace->clear();
-            date.mTheta.mFormatedTrace->clear();
-            date.mSigma.mRawTrace->clear();
-            date.mSigma.mFormatedTrace->clear();
+   // QList<Event*>::iterator iterEvent = mEvents.begin();
+   // while (iterEvent!=mEvents.cend()) {
+    for (auto ev : mEvents) {
+        for (Date date: ev->mDates) {
+            date.reset();
         }
-        (*iterEvent)->mTheta.mRawTrace->clear();
-        (*iterEvent)->mTheta.mFormatedTrace->clear();
-        ++iterEvent;
+        ev->reset();
+
     }
-    QList<Phase*>::iterator iterPhase = mPhases.begin();
-    while (iterPhase!=mPhases.cend()) {
-        (*iterPhase)->mAlpha.mRawTrace->clear();
-        (*iterPhase)->mAlpha.mFormatedTrace->clear();
-        (*iterPhase)->mBeta.mRawTrace->clear();
-        (*iterPhase)->mAlpha.mFormatedTrace->clear();
-        (*iterPhase)->mDuration.mRawTrace->clear();
-        (*iterPhase)->mDuration.mFormatedTrace->clear();
-        ++iterPhase;
+
+    for (auto ph : mPhases) {
+        ph->mAlpha.reset();
+        ph->mBeta.reset();
+        ph->mDuration.reset();
     }
 }
 
