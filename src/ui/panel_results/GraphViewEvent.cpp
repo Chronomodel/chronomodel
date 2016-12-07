@@ -14,7 +14,7 @@
 #pragma mark Constructor / Destructor
 
 GraphViewEvent::GraphViewEvent(QWidget *parent):GraphViewResults(parent),
-mEvent(0)
+mEvent(nullptr)
 {
     setMainColor(QColor(100, 100, 100));
     mGraph->setBackgroundColor(QColor(230, 230, 230));
@@ -22,13 +22,12 @@ mEvent(0)
 
 GraphViewEvent::~GraphViewEvent()
 {
-    mEvent = 0;
+    mEvent = nullptr;
 }
 
 void GraphViewEvent::setEvent(Event* event)
 {
-    if(event)
-    {
+    if (event) {
         mEvent = event;
         QString eventTitle = ( (mEvent->mType == Event::eDefault) ? tr("Event") : tr("Bound") ) ;
         this->setItemTitle(eventTitle + " : " + mEvent->mName);
@@ -69,7 +68,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         
         bool isFixedBound = false;
         bool isUnifBound = false;
-        EventKnown* bound = 0;
+        EventKnown* bound = nullptr;
         if (mEvent->type() == Event::eKnown) {
             bound = dynamic_cast<EventKnown*>(mEvent);
             if (bound) {
@@ -228,8 +227,8 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
             mGraph->setFormatFunctY(DateUtils::convertToAppSettingsFormatStr);
-           // if ((mEvent->mType != Event::eKnown) || (dynamic_cast<EventKnown>(mEvent).knownType() != EventKnown::eFixed) )
-                generateTraceCurves(mChains, &(mEvent->mTheta));
+            mGraph->autoAdjustYScale(true);
+            generateTraceCurves(mChains, &(mEvent->mTheta));
         }
         // ------------------------------------------------
         //  third tab : Acception rate
@@ -270,7 +269,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
     if (mEvent) {
         bool isFixedBound = false;
 
-        EventKnown* bound = 0;
+        EventKnown* bound = nullptr;
         if (mEvent->type() == Event::eKnown) {
             bound = dynamic_cast<EventKnown*>(mEvent);
             if (bound && bound->knownType() == EventKnown::eFixed)
@@ -339,8 +338,8 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList.at(i));
                 mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList.at(i));
             }
-            mGraph->adjustYToMinMaxValue();
-            //mGraph->autoAdjustYScale(true);
+            //mGraph->adjustYToMinMaxValue();
+            mGraph->autoAdjustYScale(true);
             mGraph->setTipXLab("iteration");
             mGraph->setTipYLab("t");
             mGraph->setYAxisMode(GraphView::eMinMax);

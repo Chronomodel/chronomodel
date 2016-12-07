@@ -252,7 +252,8 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
             mShowDuration->setVisible(false);
             mShowDuration->setChecked(false);
             showDuration(false);
-            
+
+            mGraph->autoAdjustYScale(true);
             generateTraceCurves(mChains, &(mPhase->mAlpha), "Alpha");
             generateTraceCurves(mChains, &(mPhase->mBeta), "Beta");
             
@@ -334,7 +335,8 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 mGraph->setCurveVisible("Beta Q2 " + QString::number(i), mShowChainList.at(i));
                 mGraph->setCurveVisible("Beta Q3 " + QString::number(i), mShowChainList.at(i));
             }
-            mGraph->adjustYToMinMaxValue();
+            //mGraph->adjustYToMinMaxValue();
+            mGraph->autoAdjustYScale(true);
             mGraph->setTipXLab("iteration");
             mGraph->setTipYLab("t");
             mGraph->setYAxisMode(GraphView::eMinMax);
@@ -348,12 +350,12 @@ void GraphViewPhase::showDuration(bool show)
 {
     mDurationGraph->setVisible(show);
     mGraph->setVisible(!show);
-    if (mShowDuration->isChecked()) {
+    if (mShowDuration->isChecked())
        mTitle = tr("Duration") + " : " + mPhase->mName;
         
-    } else {
+     else
         mTitle = tr("Phase") + " : " + mPhase->mName;
-    }
+
     mShowDuration->raise();
     update();
     
