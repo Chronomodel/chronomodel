@@ -6,18 +6,23 @@
 
 MHVariable::MHVariable():
 mLastAcceptsLength(0),
-mAllAccepts(0),
+//mAllAccepts(nullptr),
 mGlobalAcceptation(0),
-mHistoryAcceptRateMH(0)
+mHistoryAcceptRateMH(nullptr)
 {
-  mAllAccepts = new (std::nothrow) QVector<bool>();
-  mHistoryAcceptRateMH = new (std::nothrow) QVector<double>();
+  /*mAllAccepts = new (std::nothrow) QVector<bool>();
+  mHistoryAcceptRateMH = new (std::nothrow) QVector<double>();*/
+  mAllAccepts = new QVector<bool>();
+  mHistoryAcceptRateMH = new QVector<double>();
 
 }
 
 MHVariable::~MHVariable()
 {
-
+   //if (mAllAccepts)
+        mAllAccepts->clear();
+   //if (mHistoryAcceptRateMH)
+       mHistoryAcceptRateMH->clear();
 }
 
 bool MHVariable::tryUpdate(const double x, const double rapport)
@@ -75,9 +80,15 @@ MHVariable& MHVariable::copy(MHVariable const& origin)
     mSigmaMH = origin.mSigmaMH;
     mLastAccepts = origin.mLastAccepts;
     mLastAcceptsLength = origin.mLastAcceptsLength;
-    mAllAccepts = origin.mAllAccepts;
+
+    mAllAccepts->resize(origin.mAllAccepts->size());
+    std::copy(origin.mAllAccepts->begin(),origin.mAllAccepts->end(),mAllAccepts->begin());
+
     mGlobalAcceptation = origin.mGlobalAcceptation;
-    mHistoryAcceptRateMH = origin.mHistoryAcceptRateMH;
+
+    mHistoryAcceptRateMH->resize(origin.mHistoryAcceptRateMH->size());
+    std::copy(origin.mHistoryAcceptRateMH->begin(),origin.mHistoryAcceptRateMH->end(),mHistoryAcceptRateMH->begin());
+
     mProposal = origin.mProposal;
 
     return *this;
