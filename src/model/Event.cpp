@@ -89,28 +89,25 @@ void Event::copyFrom(const Event& event)
 
 Event::~Event()
 {
+    for (Date date : mDates) {
+        date.mTheta.reset();
+        date.mSigma.reset();
+        date.mWiggle.reset();
+    }
+
     mDates.clear();
 
-    if (!mPhases.isEmpty()) {
-        /*foreach (Phase* ph, mPhases) {
-            delete ph;
-        }*/
+    if (!mPhases.isEmpty())
         mPhases.clear();
-     }
 
-    if (!mConstraintsFwd.isEmpty()) {
-       /* foreach (EventConstraint* ec, mConstraintsFwd) {
-            delete ec;
-        }*/
-        mConstraintsFwd.clear();
-     }
 
-    if (!mConstraintsBwd.isEmpty()) {
-        /*foreach (EventConstraint* ec, mConstraintsBwd) {
-                delete ec;
-        }*/
+    if (!mConstraintsFwd.isEmpty())
+       mConstraintsFwd.clear();
+
+
+    if (!mConstraintsBwd.isEmpty())
         mConstraintsBwd.clear();
-     }
+
 }
 
 
