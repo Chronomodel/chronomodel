@@ -80,22 +80,20 @@ void Phase::copyFrom(const Phase& phase)
 Phase::~Phase()
 {
    for (Event* ev: mEvents)
-            ev = 0;
+            ev = nullptr;
 
    mEvents.clear();
 
     if (!mConstraintsFwd.isEmpty()) {
-        for (PhaseConstraint* pc: mConstraintsFwd) {
-           // if(pc) delete pc;
-            pc = 0;
-        }
+        for (PhaseConstraint* pc : mConstraintsFwd)
+            pc = nullptr;
+
         mConstraintsFwd.clear();
     }
     if (!mConstraintsBwd.isEmpty()) {
-        for (PhaseConstraint* pc: mConstraintsBwd) {
-            //if(pc) pc->deleteLater();
-            pc = 0;
-        }
+        for (PhaseConstraint* pc : mConstraintsBwd)
+            pc = nullptr;
+
         mConstraintsBwd.clear();
     }
 }
@@ -183,26 +181,6 @@ double Phase::getMaxThetaEvents(double tmax)
 
     return found ? theta : tmax;
 
-/*    double theta = 0;
-    bool found = false;
-    for(int i=0; i<mEvents.size(); ++i)
-    {
-        if(mEvents[i]->mInitialized)
-        {
-            if(!found)
-            {
-                theta = mEvents[i]->mTheta.mX;
-                found = true;
-            }
-            else
-            {
-                theta = std::max(theta, mEvents[i]->mTheta.mX);
-            }
-        }
-    }
-
-    return found ? theta : tmax;
-*/
 }
 /**
  * @brief Phase::getMinThetaEvents
