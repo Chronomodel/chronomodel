@@ -3,7 +3,7 @@
 #include "Generator.h"
 #include <QDebug>
 
-
+/** Default constructor */
 MHVariable::MHVariable():
 mLastAcceptsLength(0),
 //mAllAccepts(nullptr),
@@ -15,6 +15,46 @@ mHistoryAcceptRateMH(nullptr)
   mAllAccepts = new QVector<bool>();
   mHistoryAcceptRateMH = new QVector<double>();
 
+}
+
+/** Copy constructor */
+MHVariable::MHVariable( const MHVariable& origin)
+{
+   // MetropolisVariable(origin);
+    mX = origin.mX;
+    mRawTrace= new QVector<double>(origin.mRawTrace->size());
+    std::copy(origin.mRawTrace->begin(),origin.mRawTrace->end(),mRawTrace->begin());
+
+    mFormatedTrace= new QVector<double>(origin.mFormatedTrace->size());
+    std::copy(origin.mFormatedTrace->begin(),origin.mFormatedTrace->end(),mFormatedTrace->begin());
+
+    mSupport = origin.mSupport;
+    mFormat = origin.mFormat;
+
+    mHisto = origin.mHisto;
+    mChainsHistos = origin.mChainsHistos;
+
+    mCorrelations = origin.mCorrelations;
+
+    mHPD = origin.mHPD;
+    mCredibility = origin.mCredibility;
+
+    mExactCredibilityThreshold = origin.mExactCredibilityThreshold;
+
+    mResults = origin.mResults;
+    mChainsResults = origin.mChainsResults;
+
+    mfftLenUsed = origin.mBandwidthUsed;
+    mBandwidthUsed = origin.mBandwidthUsed;
+    mThresholdUsed = origin.mThresholdUsed;
+
+    mtminUsed = origin.mtminUsed;
+    mtmaxUsed = origin.mtmaxUsed;
+
+
+
+    mAllAccepts= new QVector<bool>(origin.mAllAccepts->size());
+    mHistoryAcceptRateMH= new QVector<double>(origin.mHistoryAcceptRateMH->size());
 }
 
 MHVariable::~MHVariable()
@@ -55,16 +95,11 @@ void MHVariable::reset()
 {
     MetropolisVariable::reset();
 
-   // mLastAccepts.clear();
-  //  mAllAccepts.clear();// mAllAccepts.clear(); //don't clean, avalable for cumulate chain
+    mLastAccepts.clear();
+    mAllAccepts->clear();// mAllAccepts.clear(); //don't clean, avalable for cumulate chain
 
-  //  if(!mAllAccepts)
-  //      mAllAccepts = new (std::nothrow) QVector<bool>();
-   /* mHistoryAcceptRateMH = new (std::nothrow) QVector<float>();
-
-    if (!mHistoryAcceptRateMH->isEmpty())
-        mHistoryAcceptRateMH->clear();*/
-
+    mLastAccepts.squeeze();
+    mAllAccepts->squeeze();
 }
 
 void MHVariable::reserve(const int reserve)
@@ -76,7 +111,41 @@ void MHVariable::reserve(const int reserve)
 
 MHVariable& MHVariable::copy(MHVariable const& origin)
 {
-    MetropolisVariable::copy(origin);
+    //MetropolisVariable(origin);
+    mX = origin.mX;
+    mRawTrace->resize(origin.mRawTrace->size());
+    std::copy(origin.mRawTrace->begin(),origin.mRawTrace->end(),mRawTrace->begin());
+
+    mFormatedTrace->resize(origin.mFormatedTrace->size());
+    std::copy(origin.mFormatedTrace->begin(),origin.mFormatedTrace->end(),mFormatedTrace->begin());
+
+    mSupport = origin.mSupport;
+    mFormat = origin.mFormat;
+
+    mHisto = origin.mHisto;
+    mChainsHistos = origin.mChainsHistos;
+
+    mCorrelations = origin.mCorrelations;
+
+    mHPD = origin.mHPD;
+    mCredibility = origin.mCredibility;
+
+    mExactCredibilityThreshold = origin.mExactCredibilityThreshold;
+
+    mResults = origin.mResults;
+    mChainsResults = origin.mChainsResults;
+
+    mfftLenUsed = origin.mBandwidthUsed;
+    mBandwidthUsed = origin.mBandwidthUsed;
+    mThresholdUsed = origin.mThresholdUsed;
+
+    mtminUsed = origin.mtminUsed;
+    mtmaxUsed = origin.mtmaxUsed;
+
+
+
+
+
     mSigmaMH = origin.mSigmaMH;
     mLastAccepts = origin.mLastAccepts;
     mLastAcceptsLength = origin.mLastAcceptsLength;

@@ -10,7 +10,7 @@
 #include "DateUtils.h"
 #include <QDataStream>
 #include <QObject>
-#include <deque>
+//#include <deque>
 
 
 
@@ -19,13 +19,15 @@ class MetropolisVariable: public QObject
     Q_OBJECT
 public:
     MetropolisVariable(QObject *parent = nullptr);
+    MetropolisVariable (const MetropolisVariable& origin);
+    MetropolisVariable (MetropolisVariable&& origin) noexcept;
     virtual ~MetropolisVariable();
-    
+    MetropolisVariable& operator=(const MetropolisVariable & origin);
+   // MetropolisVariable& operator=(MetropolisVariable && origin);
+
     void memo();
     virtual void reset();
     virtual void reserve( const int reserve);
-    MetropolisVariable& copy(MetropolisVariable const& origin);
-    MetropolisVariable& operator=( MetropolisVariable const& origin);
 
     void setFormat(const DateUtils::FormatDate fm);
     QString getName() {return mName;}

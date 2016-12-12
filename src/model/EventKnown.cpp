@@ -20,7 +20,7 @@ EventKnown::~EventKnown()
 {
 
 }
-#pragma mark JSON
+//#pragma mark JSON
 
 EventKnown EventKnown::fromJson(const QJsonObject& json)
 {
@@ -141,7 +141,7 @@ void EventKnown::updateTheta(const double tmin, const double tmax)
             
             double theta = min + Generator::randomUniform() * (max - min);
             mTheta.tryUpdate(theta, 1.);
-            qDebug()<<"EventKnown updateTheta"<<min<<" "<<theta<<" "<<max<<" "<< mTheta.mX;
+            //qDebug()<<"EventKnown updateTheta"<<min<<" "<<theta<<" "<<max<<" "<< mTheta.mX;
             break;
         }
         default:

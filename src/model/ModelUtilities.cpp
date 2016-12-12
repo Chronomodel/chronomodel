@@ -135,7 +135,7 @@ QString ModelUtilities::getDeltaText(const Date& date)
     return result;
 }
 
-#pragma mark Events Branches
+//#pragma mark Events Branches
 QVector<QVector<Event*> > ModelUtilities::getNextBranches(const QVector<Event*>& curBranch, Event* lastNode)
 {
     QVector<QVector<Event*> > branches;
@@ -229,7 +229,7 @@ QVector<QVector<Event*> > ModelUtilities::getAllEventsBranches(const QList<Event
 
 
 
-#pragma mark Phases Branches
+//#pragma mark Phases Branches
 QVector<QVector<Phase*> > ModelUtilities::getNextBranches(const QVector<Phase*>& curBranch, Phase* lastNode, const double gammaSum, const double maxLength)
 {
     QVector<QVector<Phase*> > branches;
@@ -333,7 +333,7 @@ QVector<QVector<Phase*> > ModelUtilities::getAllPhasesBranches(const QList<Phase
 }
 
 
-#pragma mark sort events by level
+//#pragma mark sort events by level
 QVector<Event*> ModelUtilities::sortEventsByLevel(const QList<Event*>& events)
 {
     int numSorted = 0;

@@ -52,12 +52,12 @@ void Phase::copyFrom(const Phase& phase)
     mColor = phase.mColor;
     
     mAlpha = phase.mAlpha;
-    mAlpha.mSupport = phase.mAlpha.mSupport;
+    //mAlpha.mSupport = phase.mAlpha.mSupport;
 
     mBeta = phase.mBeta;
-    mBeta.mSupport = phase.mBeta.mSupport;
+    //mBeta.mSupport = phase.mBeta.mSupport;
     mDuration = phase.mDuration;
-    mDuration.mSupport = phase.mDuration.mSupport;
+   // mDuration.mSupport = phase.mDuration.mSupport;
 
     mTau = phase.mTau;
     

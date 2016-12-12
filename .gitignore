@@ -47,3 +47,5 @@ deploy/windows/.DS_Store
 scan-build
 
 *.autosave
+*.obj
+*.tlog

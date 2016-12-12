@@ -9,7 +9,7 @@ mMethod(CalibrationCurve::Method::eFromRef)
     // Parameter refere to the Method
     mMCMCSetting = MCMCSettings();
     mPluginId = "";
-    mPlugin = 0;
+    mPlugin = nullptr;
     mRepartition = QVector< double>();
     mCurve = QVector< double>();
     mTmin = -INFINITY;
@@ -39,7 +39,7 @@ CalibrationCurve::~CalibrationCurve() noexcept
     mRepartition.clear();
     mCurve.clear();
     mPluginId.clear();
-    mPlugin = 0;
+    mPlugin = nullptr;
 }
 
 

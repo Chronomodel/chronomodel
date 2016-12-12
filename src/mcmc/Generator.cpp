@@ -159,7 +159,7 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     if(trials == limit)
         throw "DoubleExp could not find a solution after " + QString::number(limit) + " trials! This may be ue to Taylor unsufficients developpement orders. Please try to run the calculations again!";
 #ifdef DEBUG
-    if ((x<x_min) or (x>x_max)) {
+    if ((x<x_min) || (x>x_max)) {
         qDebug() << "DOUBLE EXP DoubleExp : x = "<<(double)(x);
         qDebug() << "DOUBLE EXP DoubleExp : (mean + (x * sigma)) = "<<(double)(mean + (x * sigma));
         qDebug() <<" min="<< min<<" max=" <<(double)(x_max);

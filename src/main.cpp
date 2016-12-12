@@ -111,6 +111,6 @@ int main(int argc, char *argv[])
     MainController* c = new MainController(filePath);
     (void) c;
 
-    return a.exec();
+    return  a.exec();
     
 }

@@ -51,7 +51,7 @@ RESOURCES = $$PRO_PATH/Chronomodel.qrc
 RESOURCES = Chronomodel.qrc
 
 # Compilation warning flags
-QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter
+# QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter # invalid option for MSVC2015
 
 #########################################
 # C++ 11
@@ -149,13 +149,13 @@ macx{
 }
 win32{
 	INCLUDEPATH += lib/FFTW
-        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
         #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3-3
+        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win64" -lfftw3-3 # to compile with a x64 machine
 }
 #linux :
 unix:!macx{ 
 	INCLUDEPATH += lib/FFTW
-	LIBS += -lfftw3f
+        LIBS += -lfftw3
 }
 
 #########################################

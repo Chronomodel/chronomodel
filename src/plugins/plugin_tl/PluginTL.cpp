@@ -85,7 +85,7 @@ PluginFormAbstract* PluginTL::getForm()
     return form;
 }
 
-#pragma mark Convert old project versions
+//#pragma mark Convert old project versions
 QJsonObject PluginTL::checkValuesCompatibility(const QJsonObject& values)
 {
     QJsonObject result = values;
