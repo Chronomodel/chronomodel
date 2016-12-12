@@ -768,7 +768,7 @@ void ResultsView::updateFormatSetting(Model* model, const AppSettings* appSet)
         mModel = model;
     mModel->updateFormatSettings(appSet);
     mNumberOfGraph = appSet->mNbSheet;
-updateCurves();
+//updateCurves();
 }
 
 /**
@@ -1474,7 +1474,7 @@ void ResultsView::updateScales()
     emit scalesUpdated();
 }
 
-#pragma mark Log results
+//#pragma mark Log results
 void ResultsView::settingChange()
 {
     if (mModel) {
@@ -1487,23 +1487,16 @@ void ResultsView::updateResultsLog()
 {
     QString log;
     try {
-        for (int i = 0; i<mModel->mEvents.size(); ++i) {
-            Event* event = mModel->mEvents[i];
+
+        for (auto&& event : mModel->mEvents)
             log += ModelUtilities::eventResultsHTML(event, true, mModel);
-            event =0;
-        }
 
-        for (int i = 0; i<mModel->mPhases.size(); ++i) {
-            Phase* phase = mModel->mPhases[i];
+        for (auto &&phase : mModel->mPhases)
             log += ModelUtilities::phaseResultsHTML(phase);
-            phase = 0;
-        }
 
-        for (int i = 0; i<mModel->mPhaseConstraints.size(); ++i) {
-            PhaseConstraint* phaseConstraint = mModel->mPhaseConstraints.at(i);
+        for (auto&& phaseConstraint : mModel->mPhaseConstraints) {
             log += ModelUtilities::constraintResultsHTML(phaseConstraint);
             log += "<hr>";
-            phaseConstraint = 0;
         }
     } catch (std::exception const & e) {
         qDebug()<< "in ResultsView::updateResultsLog() Error"<<e.what();
@@ -1513,7 +1506,7 @@ qDebug()<< "ResultsView::updateResultsLog()-> emit resultsLogUpdated(log)";
     emit resultsLogUpdated(log);
 }
 
-#pragma mark Mouse & Marker
+//#pragma mark Mouse & Marker
 void ResultsView::mouseMoveEvent(QMouseEvent* e)
 {
     int shiftX = 0;

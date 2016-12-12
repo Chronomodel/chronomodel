@@ -14,7 +14,7 @@
 #include <QtWidgets>
 #include <QtCore/QStringList>
 
-#pragma mark Constructor...
+//#pragma mark Constructor...
 Model::Model():
 mProject(nullptr),
 mNumberOfPhases(0),
@@ -319,7 +319,7 @@ QJsonObject Model::toJson() const
     return json;
 }
 
-#pragma mark Logs
+//#pragma mark Logs
 QString Model::getMCMCLog() const{
     return mLogMCMC;
 }
