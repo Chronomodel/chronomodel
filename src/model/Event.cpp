@@ -89,7 +89,7 @@ void Event::copyFrom(const Event& event)
 
 Event::~Event()
 {
-    for (Date date : mDates) {
+    for (auto&& date : mDates) {
         date.mTheta.reset();
         date.mSigma.reset();
         date.mWiggle.reset();

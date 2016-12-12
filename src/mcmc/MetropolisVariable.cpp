@@ -72,46 +72,7 @@ MetropolisVariable::MetropolisVariable (const MetropolisVariable& origin)
 
 }
 
-/** Move constructor */
-MetropolisVariable::MetropolisVariable (MetropolisVariable&& origin) noexcept /* noexcept needed to enable optimizations in containers */
-{
-     //MetropolisVariable(origin);
-     mX = origin.mX;
-     mRawTrace = new QVector<double>(origin.mRawTrace->size());
-     std::copy(origin.mRawTrace->begin(),origin.mRawTrace->end(),mRawTrace->begin());
 
-     mFormatedTrace= new QVector<double>(origin.mFormatedTrace->size());
-     std::copy(origin.mFormatedTrace->begin(),origin.mFormatedTrace->end(),mFormatedTrace->begin());
-
-     mSupport = origin.mSupport;
-     mFormat = origin.mFormat;
-
-     mHisto = origin.mHisto;
-     mChainsHistos = origin.mChainsHistos;
-
-     mCorrelations = origin.mCorrelations;
-
-     mHPD = origin.mHPD;
-     mCredibility = origin.mCredibility;
-
-     mExactCredibilityThreshold = origin.mExactCredibilityThreshold;
-
-     mResults = origin.mResults;
-     mChainsResults = origin.mChainsResults;
-
-     mfftLenUsed = origin.mBandwidthUsed;
-     mBandwidthUsed = origin.mBandwidthUsed;
-     mThresholdUsed = origin.mThresholdUsed;
-
-     mtminUsed = origin.mtminUsed;
-     mtmaxUsed = origin.mtmaxUsed;
-
-      QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
-
-    //origin.reset();
-      QObject::disconnect(&origin, &MetropolisVariable::formatChanged, &origin, &MetropolisVariable::updateFormatedTrace);
-    origin.~MetropolisVariable();
-}
 
 
 /** Destructor */
@@ -777,11 +738,12 @@ QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
           break;
     };
 
-
+    stream << data.mRawTrace->size();
     for(QVector<double>::const_iterator v = data.mRawTrace->cbegin(); v != data.mRawTrace->cend(); ++v)
+   // for (auto& v : data.mRawTrace )
         stream << *v;
 
-    qDebug()<<"&operator<<( QDataStream &stream, const MetropolisVariable &data )"<<data.mRawTrace->size();
+   // qDebug()<<"&operator<<( QDataStream &stream, const MetropolisVariable &data )"<<data.mRawTrace->size();
 
     // *out << this->mFormatedTrace; // useless
 

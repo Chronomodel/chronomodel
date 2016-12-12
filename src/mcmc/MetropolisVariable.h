@@ -20,7 +20,7 @@ class MetropolisVariable: public QObject
 public:
     MetropolisVariable(QObject *parent = nullptr);
     MetropolisVariable (const MetropolisVariable& origin);
-    MetropolisVariable (MetropolisVariable&& origin) noexcept;
+   // MetropolisVariable (MetropolisVariable&& origin) noexcept;
     virtual ~MetropolisVariable();
     MetropolisVariable& operator=(const MetropolisVariable & origin);
    // MetropolisVariable& operator=(MetropolisVariable && origin);
