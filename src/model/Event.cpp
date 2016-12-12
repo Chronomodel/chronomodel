@@ -111,7 +111,7 @@ Event::~Event()
 }
 
 
-#pragma mark JSON
+//#pragma mark JSON
 Event Event::fromJson(const QJsonObject& json)
 {
     Event event;
@@ -185,13 +185,13 @@ QJsonObject Event::toJson() const
     return event;
 }
 
-#pragma mark Properties
+//#pragma mark Properties
 Event::Type Event::type() const
 {
     return mType;
 }
 
-#pragma mark MCMC
+//#pragma mark MCMC
 void Event::reset()
 {
     mTheta.reset();
@@ -253,18 +253,35 @@ double Event::getThetaMinRecursive(const double defaultValue,
                 break;
             }
             double theta = defaultValue;
-            for (int k=0; k<phase->mEvents.size(); ++k) {
+
+            for (QList<Event*>::const_iterator itEv = phase->mEvents.cbegin(); itEv != phase->mEvents.cend(); ++itEv) {
+                    if ((*itEv)->mInitialized)
+                        theta = std::max(theta, (*itEv)->mTheta.mX);
+
+            }
+
+
+           /* for (int k=0; k<phase->mEvents.size(); ++k) {
                 if (phase->mEvents.at(k)->mInitialized)
                     theta = std::max(theta, phase->mEvents.at(k)->mTheta.mX);
 
+            }*/
+
+            PhaseConstraint* c = nullptr;
+            for (QList<PhaseConstraint*>::const_iterator itConstFwd = phase->mConstraintsFwd.cbegin(); itConstFwd != phase->mConstraintsFwd.cend(); ++itConstFwd) {
+                if (branch.contains( (*itConstFwd)->mPhaseTo)) {
+                    c = (*itConstFwd);
+                    break;
+                }
             }
-            const PhaseConstraint* c = 0;
-            for (int k=0; k<phase->mConstraintsFwd.size(); ++k) {
+
+           /* for (int k=0; k<phase->mConstraintsFwd.size(); ++k) {
                 if (branch.contains(phase->mConstraintsFwd.at(k)->mPhaseTo)) {
                     c = phase->mConstraintsFwd.at(k);
                     break;
                 }
-            }
+            }*/
+
             if (c && c->mGammaType != PhaseConstraint::eGammaUnknown)
                 branchMin = std::max(branchMin, theta + c->mGamma);
             else
@@ -341,7 +358,7 @@ double Event::getThetaMaxRecursive(const double defaultValue,
                     theta = std::min(theta, phase->mEvents.at(k)->mTheta.mX);
 
             }
-            const PhaseConstraint* c = 0;
+            const PhaseConstraint* c = nullptr;
             for (int k=0; k<phase->mConstraintsBwd.size(); ++k) {
                 if (branch.contains(phase->mConstraintsBwd[k]->mPhaseFrom)) {
                     c = phase->mConstraintsBwd[k];
@@ -480,9 +497,10 @@ void Event::updateTheta(const double tmin, const double tmax)
     double sum_t = 0.;
 
     // with const type variable foreeach is speeder
-    for (const Date date: mDates) {
-        const double variance = date.mSigma.mX * date.mSigma.mX;
-        sum_t += (date.mTheta.mX + date.mDelta) / variance;
+  //  for (const Date date: mDates) {
+    for (QList<Date>::const_iterator date = mDates.cbegin(); date != mDates.cend(); date++) {
+        const double variance = date->mSigma.mX * date->mSigma.mX;
+        sum_t += (date->mTheta.mX + date->mDelta) / variance;
         sum_p += 1. / variance;
     }
     const double theta_avg = sum_t / sum_p;

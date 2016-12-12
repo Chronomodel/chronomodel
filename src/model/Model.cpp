@@ -96,14 +96,14 @@ void Model::updateFormatSettings(const AppSettings* appSet)
             date.mSigma.setFormat(DateUtils::eNumeric);
             date.mWiggle.setFormat(appSet->mFormatDate);
         }
-        event = 0;
+        event = nullptr;
     }
     for (int i=0; i<this->mPhases.size(); i++) {
         Phase* phase = mPhases[i] ;
         phase->mAlpha.setFormat(appSet->mFormatDate);
         phase->mBeta.setFormat(appSet->mFormatDate);
         phase->mDuration.setFormat(DateUtils::eNumeric);
-        phase = 0;
+        phase = nullptr;
     }
 }
 

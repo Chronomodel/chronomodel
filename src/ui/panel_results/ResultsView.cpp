@@ -768,7 +768,7 @@ void ResultsView::updateFormatSetting(Model* model, const AppSettings* appSet)
         mModel = model;
     mModel->updateFormatSettings(appSet);
     mNumberOfGraph = appSet->mNbSheet;
-
+updateCurves();
 }
 
 /**

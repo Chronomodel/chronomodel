@@ -22,7 +22,7 @@ PluginGauss::~PluginGauss()
 {
 
 }
-#pragma mark Likelihood
+//#pragma mark Likelihood
 long double PluginGauss::getLikelihood(const double& t, const QJsonObject& data)
 {
     QPair<long double, long double > result = getLikelihoodArg(t, data);
@@ -73,7 +73,7 @@ QPair<long double, long double> PluginGauss::getLikelihoodArg(const double& t, c
     return qMakePair(variance, exponent);
 }
 
-#pragma mark Properties
+//#pragma mark Properties
 QString PluginGauss::getName() const
 {
     return QString("Gauss");
@@ -169,7 +169,7 @@ QString PluginGauss::getDateDesc(const Date* date) const
     return result;
 }
 
-#pragma mark CSV
+//#pragma mark CSV
 QString PluginGauss::csvHelp() const
 {
     return "Calibration : g(t) = at^2 + bt + c\r";
@@ -242,7 +242,7 @@ QStringList PluginGauss::toCSV(const QJsonObject& data, const QLocale& csvLocale
 
 // ------------------------------------------------------------------
 
-#pragma mark Reference Curves (files)
+//#pragma mark Reference Curves (files)
 QString PluginGauss::getRefExt() const
 {
     return "csv";
@@ -351,7 +351,7 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
     return curve;
 }
 
-#pragma mark Reference Values & Errors
+//#pragma mark Reference Values & Errors
 double PluginGauss::getRefValueAt(const QJsonObject& data, const double& t)
 {
     const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
@@ -495,7 +495,7 @@ PluginFormAbstract* PluginGauss::getForm()
 
 // ------------------------------------------------------------------
 
-#pragma mark Convert old project versions
+//#pragma mark Convert old project versions
 QJsonObject PluginGauss::checkValuesCompatibility(const QJsonObject& values)
 {
     QJsonObject result = values;
@@ -513,7 +513,7 @@ QJsonObject PluginGauss::checkValuesCompatibility(const QJsonObject& values)
     return result;
 }
 
-#pragma mark Date Validity
+//#pragma mark Date Validity
 bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
 {
     QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
