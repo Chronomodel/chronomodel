@@ -33,8 +33,7 @@ GraphViewDate::~GraphViewDate()
 
 void GraphViewDate::setDate(Date* date)
 {
-    if(date)
-    {
+    if (date) {
         mDate = date;
         setItemTitle(QString(tr("Data") + " : " + mDate->mName));
         setItemColor(mDate->mColor);
@@ -127,7 +126,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                 
                 // Post Distrib Chain i
                 if (!variableDate->mChainsHistos.isEmpty())
-                    for(int i=0; i<mChains.size(); ++i) {
+                    for (int i=0; i<mChains.size(); ++i) {
                         GraphCurve curvePostDistribChain = generateDensityCurve(variableDate->histoForChain(i),
                                                                                 "Post Distrib Chain " + QString::number(i),
                                                                                 Painting::chainColors.at(i),
@@ -188,9 +187,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                                                                    color,
                                                                    Qt::SolidLine,
                                                                    Qt::NoBrush);
-                mGraph->addCurve(curvePostDistrib);
-                //float yMax = 1.1f * map_max_value(curvePostDistrib.mData);
-                
+                mGraph->addCurve(curvePostDistrib); 
                 
                 // Post Distrib Chain i
                 if (!variableDate->mChainsHistos.isEmpty())
@@ -201,10 +198,8 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                                                                                 Qt::SolidLine,
                                                                                 Qt::NoBrush);
                         mGraph->addCurve(curvePostDistribChain);
-                       // yMax = qMax(yMax, 1.1f * map_max_value(curvePostDistribChain.mData));
                     }
                 
-                //mGraph->setRangeY(0, qMax(mGraph->maximumY(), yMax));
                 // Check if necessary ?
                 mGraph->autoAdjustYScale(true);
             }
@@ -224,7 +219,6 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->mLegendX = "Iterations";
             mGraph->setFormatFunctX(0);
             mGraph->setFormatFunctY(DateUtils::convertToAppSettingsFormatStr);
-            //mGraph->adjustYToMinMaxValue();
             mGraph->autoAdjustYScale(true);
             generateTraceCurves(mChains, variableDate);
             

@@ -495,7 +495,8 @@ void GraphViewResults::setButtonsVisible(const bool visible)
     }
 }
 
-#pragma mark Generate Typical curves for Chronomodel
+/** Generate Typical curves for Chronomodel
+ * */
 GraphCurve GraphViewResults::generateDensityCurve(const QMap<double, double>& data,
                                                   const QString& name,
                                                   const QColor& lineColor,

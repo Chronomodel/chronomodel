@@ -21,7 +21,7 @@ mNbSheet(APP_SETTINGS_DEFAULT_SHEET)
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
 
-    if(newLoc.decimalPoint()==',') {
+    if (newLoc.decimalPoint()==',') {
         mCSVCellSeparator=";";
         mCSVDecSeparator=",";
     }

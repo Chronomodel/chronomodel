@@ -576,7 +576,7 @@ void MainWindow::appSettings()
 {
     AppSettingsDialog dialog(qApp->activeWindow());
     dialog.setSettings(mAppSettings);
-    connect(&dialog, SIGNAL(settingsChanged(const AppSettings&)), this, SLOT(setAppSettings(const AppSettings&)));
+    connect(&dialog, &AppSettingsDialog::settingsChanged, this, &MainWindow::setAppSettings);
     dialog.exec();
 
 }
