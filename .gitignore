@@ -49,3 +49,8 @@ scan-build
 *.autosave
 *.obj
 *.tlog
+x64/Debug/Chronomodel.log
+x64/Debug/Chronomodel.res
+x64/Debug/vc140.pdb
+x64/Release/Chronomodel.log
+.vs/Chronomodel/v14/.suo
