@@ -52,6 +52,7 @@ RESOURCES = Chronomodel.qrc
 
 # Compilation warning flags
 # QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter # invalid option for MSVC2015
+QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter
 
 #########################################
 # C++ 11
