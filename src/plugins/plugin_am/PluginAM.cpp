@@ -32,36 +32,51 @@ long double PluginAM::getLikelihood(const double& t, const QJsonObject& data)
 
 QPair<long double, long double> PluginAM::getLikelihoodArg(const double& t, const QJsonObject& data)
 {
-    bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
-    bool is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
-    bool is_int = data.value(DATE_AM_IS_INT_STR).toBool();
-    long double alpha =(long double) data.value(DATE_AM_ERROR_STR).toDouble();
-    long double inc = (long double) data.value(DATE_AM_INC_STR).toDouble();
-    long double dec = (long double) data.value(DATE_AM_DEC_STR).toDouble();
-    long double intensity = (long double) data.value(DATE_AM_INTENSITY_STR).toDouble();
-    //QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
+    // ----------------------------------
+    //  Read values
+    // ----------------------------------
+    QString mode = data.value(DATE_AM_MODE).toString();
     
+    long double i = (long double) data.value(DATE_AM_I).toDouble();
+    long double d = (long double) data.value(DATE_AM_D).toDouble();
+    long double f = (long double) data.value(DATE_AM_F).toDouble();
+    
+    long double alpha95 = (long double) data.value(DATE_AM_ALPHA_95).toDouble();
+    long double sigmaF = (long double) data.value(DATE_AM_SIGMA_F).toDouble();
+    
+    QString curveI = data.value(DATE_AM_CURVE_I).toString().toLower();
+    QString curveD = data.value(DATE_AM_CURVE_D).toString().toLower();
+    QString curveF = data.value(DATE_AM_CURVE_F).toString().toLower();
+
+    // ----------------------------------
+    //  Get likelihood
+    // ----------------------------------
     long double mesure = 0.;
     long double error = 0.;
+    long double refValue = 0.;
+    long double refError = 0.;
     
-    if(is_inc)
+    if(mode == DATE_AM_MODE_ID)
     {
-        error = alpha / 2.448l;
-        mesure = inc;
+        error = alpha95 / 2.448l;
+        mesure = i;
+        refValue = getRefCurveValueAt(curveI, t);
+        refError = getRefCurveErrorAt(curveI, t);
     }
-    else if(is_dec)
+    else if(mode == DATE_AM_MODE_IF)
     {
-        error = alpha / (2.448l * cosl(inc * M_PI / 180.l));
-        mesure = dec;
+        error = alpha95 / (2.448l * cosl(i * M_PI / 180.l));
+        mesure = d;
+        refValue = getRefCurveValueAt(curveD, t);
+        refError = getRefCurveErrorAt(curveD, t);
     }
-    else if(is_int)
+    else if(mode == DATE_AM_MODE_IDF)
     {
-        error = alpha;
-        mesure = intensity;
+        error = alpha95;
+        mesure = f;
+        refValue = getRefCurveValueAt(curveF, t);
+        refError = getRefCurveErrorAt(curveF, t);
     }
-
-    long double refValue = (long double)getRefValueAt(data, t);
-    long double refError = (long double)getRefErrorAt(data, t);
     
     long double variance = refError * refError + error * error;
     long double exponent = -0.5l * powl((mesure - refValue), 2.l) / variance;
@@ -101,42 +116,62 @@ QList<Date::DataMethod> PluginAM::allowedDataMethods() const
 
 QString PluginAM::getDateDesc(const Date* date) const
 {
-    QLocale locale=QLocale();
     QString result;
     if(date)
     {
         QJsonObject data = date->mData;
         
-        double is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
-        double is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
-        double is_int = data.value(DATE_AM_IS_INT_STR).toBool();
-        double alpha = data.value(DATE_AM_ERROR_STR).toDouble();
-        double inc = data.value(DATE_AM_INC_STR).toDouble();
-        double dec = data.value(DATE_AM_DEC_STR).toDouble();
-        double intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
-        QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
+        // ----------------------------------
+        //  Read values
+        // ----------------------------------
+        QString mode = data.value(DATE_AM_MODE).toString();
         
-        if(is_inc)
+        double i = data.value(DATE_AM_I).toDouble();
+        double d = data.value(DATE_AM_D).toDouble();
+        double f = data.value(DATE_AM_F).toDouble();
+        
+        double alpha95 = data.value(DATE_AM_ALPHA_95).toDouble();
+        double sigmaF = data.value(DATE_AM_SIGMA_F).toDouble();
+        
+        QString curveI = data.value(DATE_AM_CURVE_I).toString().toLower();
+        QString curveD = data.value(DATE_AM_CURVE_D).toString().toLower();
+        QString curveF = data.value(DATE_AM_CURVE_F).toString().toLower();
+        
+        // ----------------------------------
+        //  Build description string
+        // ----------------------------------
+        QLocale locale = QLocale();
+        
+        if(mode == DATE_AM_MODE_ID)
         {
-            result += QObject::tr("Inclination") + " : " + locale.toString(inc);
-            result += ", " + QObject::tr("Alpha95") + " : " + locale.toString(alpha);
+            result += QObject::tr("MODE ID");
+            result += ", I = " + locale.toString(i);
+            result += ", D = " + locale.toString(d);
+            result += ", " + QObject::tr("Alpha95") + " : " + locale.toString(alpha95);
+            result += ", " + tr("Curve I") + " : " + curveI;
+            result += ", " + tr("Curve D") + " : " + curveD;
         }
-        else if(is_dec)
+        else if(mode == DATE_AM_MODE_IF)
         {
-            result += QObject::tr("Declination") + " : " + locale.toString(dec);
-            result += ", " + QObject::tr("Inclination") + " : " + locale.toString(inc);
-            result += ", " + QObject::tr("Alpha95") + " : " + locale.toString(alpha);
+            result += QObject::tr("MODE IF");
+            result += ", I = " + locale.toString(i);
+            result += ", F = " + locale.toString(f);
+            result += ", " + QObject::tr("Alpha95") + " : " + locale.toString(alpha95);
+            result += ", " + QObject::tr("Sigma F") + " : " + locale.toString(sigmaF);
+            result += ", " + tr("Curve I") + " : " + curveI;
+            result += ", " + tr("Curve F") + " : " + curveF;
         }
-        else if(is_int)
+        else if(mode == DATE_AM_MODE_IDF)
         {
-            result += QObject::tr("Intensity") + " : " + locale.toString(intensity);
-            result += ", " + QObject::tr("Error") + " : " + locale.toString(alpha);
-        }
-        if(mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
-            result += ", " + tr("Ref. curve") + " : " + ref_curve;
-        }
-        else {
-            result += ", " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
+            result += QObject::tr("MODE IDF");
+            result += ", I = " + locale.toString(i);
+            result += ", D = " + locale.toString(d);
+            result += ", F = " + locale.toString(f);
+            result += ", " + QObject::tr("Alpha95") + " : " + locale.toString(alpha95);
+            result += ", " + QObject::tr("Sigma F") + " : " + locale.toString(sigmaF);
+            result += ", " + tr("Curve I") + " : " + curveI;
+            result += ", " + tr("Curve D") + " : " + curveD;
+            result += ", " + tr("Curve F") + " : " + curveF;
         }
     }
     return result;
@@ -147,12 +182,15 @@ QStringList PluginAM::csvColumns() const
 {
     QStringList cols;
     cols << "Name"
-        << "type (inclination | declination | intensity)"
-        << "Inclination value"
-        << "Declination value"
-        << "Intensity value"
-        << "Error (sd) or alpha 95"
-        << "Reference curve (file name)";
+        << "mode (ID | IF | IDF)"
+        << "I"
+        << "D"
+        << "F"
+        << "Alpha 95"
+        << "Sigma F"
+        << "Curve I"
+        << "Curve D"
+        << "Curve F";
     return cols;
 }
 
@@ -162,18 +200,15 @@ PluginFormAbstract* PluginAM::getForm()
     PluginAMForm* form = new PluginAMForm(this);
     return form;
 }
+
 #pragma mark Convert old project versions
 QJsonObject PluginAM::checkValuesCompatibility(const QJsonObject& values)
 {
     QJsonObject result = values;
 
-    //force type double
-    result[DATE_AM_INC_STR] = result.value(DATE_AM_INC_STR).toDouble();
-    result[DATE_AM_DEC_STR] = result.value(DATE_AM_DEC_STR).toDouble();
-    result[DATE_AM_INTENSITY_STR] = result.value(DATE_AM_INTENSITY_STR).toDouble();
-    result[DATE_AM_ERROR_STR] = result.value(DATE_AM_ERROR_STR).toDouble();
-
-    result[DATE_AM_REF_CURVE_STR] = result.value(DATE_AM_REF_CURVE_STR).toString().toLower();
+    // example :
+    // result[DATE_AM_I] = result.value(DATE_AM_I).toDouble();
+    
     return result;
 }
 
@@ -182,18 +217,15 @@ QJsonObject PluginAM::fromCSV(const QStringList& list,const QLocale &csvLocale)
     QJsonObject json;
     if(list.size() >= csvMinColumns())
     {
-        double error = csvLocale.toDouble(list.at(5));
-        if(error == 0) return json;
-
-        json.insert(DATE_AM_IS_INC_STR, list.at(1) == "inclination");
-        json.insert(DATE_AM_IS_DEC_STR, list.at(1) == "declination");
-        json.insert(DATE_AM_IS_INT_STR, list.at(1) == "intensity");
-        json.insert(DATE_AM_INC_STR, csvLocale.toDouble(list.at(2)));
-        json.insert(DATE_AM_DEC_STR, csvLocale.toDouble(list.at(3)));
-        json.insert(DATE_AM_INTENSITY_STR, csvLocale.toDouble(list.at(4)));
-
-        json.insert(DATE_AM_ERROR_STR, error);
-        json.insert(DATE_AM_REF_CURVE_STR, list.at(6).toLower());
+        json.insert(DATE_AM_MODE, list.at(1));
+        json.insert(DATE_AM_I, csvLocale.toDouble(list.at(2)));
+        json.insert(DATE_AM_D, csvLocale.toDouble(list.at(3)));
+        json.insert(DATE_AM_F, csvLocale.toDouble(list.at(4)));
+        json.insert(DATE_AM_ALPHA_95, csvLocale.toDouble(list.at(5)));
+        json.insert(DATE_AM_SIGMA_F, csvLocale.toDouble(list.at(6)));
+        json.insert(DATE_AM_CURVE_I, list.at(7));
+        json.insert(DATE_AM_CURVE_D, list.at(8));
+        json.insert(DATE_AM_CURVE_F, list.at(9));
     }
     return json;
 }
@@ -201,12 +233,15 @@ QJsonObject PluginAM::fromCSV(const QStringList& list,const QLocale &csvLocale)
 QStringList PluginAM::toCSV(const QJsonObject& data, const QLocale& csvLocale) const
 {
     QStringList list;
-    list << (data.value(DATE_AM_IS_INC_STR).toBool() ? "inclination" : (data.value(DATE_AM_IS_DEC_STR).toBool() ? "declination" : "intensity"));
-    list << csvLocale.toString(data.value(DATE_AM_INC_STR).toDouble());
-    list << csvLocale.toString(data.value(DATE_AM_DEC_STR).toDouble());
-    list << csvLocale.toString(data.value(DATE_AM_INTENSITY_STR).toDouble());
-    list << csvLocale.toString(data.value(DATE_AM_ERROR_STR).toDouble());
-    list << data.value(DATE_AM_REF_CURVE_STR).toString();
+    list << data.value(DATE_AM_MODE).toString();
+    list << csvLocale.toString(data.value(DATE_AM_I).toDouble());
+    list << csvLocale.toString(data.value(DATE_AM_D).toDouble());
+    list << csvLocale.toString(data.value(DATE_AM_F).toDouble());
+    list << csvLocale.toString(data.value(DATE_AM_ALPHA_95).toDouble());
+    list << csvLocale.toString(data.value(DATE_AM_SIGMA_F).toDouble());
+    list << data.value(DATE_AM_CURVE_I).toString();
+    list << data.value(DATE_AM_CURVE_D).toString();
+    list << data.value(DATE_AM_CURVE_F).toString();
     return list;
 }
 
@@ -317,28 +352,60 @@ RefCurve PluginAM::loadRefFile(QFileInfo refFile)
 }
 
 #pragma mark Reference Values & Errors
-double PluginAM::getRefValueAt(const QJsonObject& data, const double& t)
-{
-    QString curveName = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
-    return getRefCurveValueAt(curveName, t);
-}
-
-double PluginAM::getRefErrorAt(const QJsonObject& data, const double& t)
-{
-    const QString curveName = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
-    return getRefCurveErrorAt(curveName, t);
-}
-
 QPair<double,double> PluginAM::getTminTmaxRefsCurve(const QJsonObject& data) const
+{
+    // ----------------------------------
+    //  Quel est le sens de cette fonction dans le cas du plugin AM ??
+    //  On a 3 types des courbes de référence, pour I, D et F.
+    //  Trouver les min/max pour chaque type a du sens, mais les min/max pour tous les types confondus est absurde...
+    //  ...à moins que ce ne soit utilisé que pour l'affichage des graphs !
+    // ----------------------------------
+    
+    QPair<double,double> bounds = qMakePair<double,double>(0, 0);
+    
+    // ----------------------------------
+    //  Read values
+    // ----------------------------------
+    QString mode = data.value(DATE_AM_MODE).toString();
+    QString curveI = data.value(DATE_AM_CURVE_I).toString().toLower();
+    QString curveD = data.value(DATE_AM_CURVE_D).toString().toLower();
+    QString curveF = data.value(DATE_AM_CURVE_F).toString().toLower();
+    
+    // ----------------------------------
+    //  Read values
+    // ----------------------------------
+    if(mode == DATE_AM_MODE_ID){
+        QPair<double,double> boundsI = getTminTmaxRefCurve(curveI);
+        QPair<double,double> boundsD = getTminTmaxRefCurve(curveD);
+        bounds = qMakePair<double,double>(qMin(boundsI.first, boundsD.first),
+                                          qMax(boundsI.second, boundsD.second));
+    }
+    else if(mode == DATE_AM_MODE_IF){
+        QPair<double,double> boundsI = getTminTmaxRefCurve(curveI);
+        QPair<double,double> boundsF = getTminTmaxRefCurve(curveF);
+        bounds = qMakePair<double,double>(qMin(boundsI.first, boundsF.first),
+                                          qMax(boundsI.second, boundsF.second));
+    }
+    else if(mode == DATE_AM_MODE_IDF){
+        QPair<double,double> boundsI = getTminTmaxRefCurve(curveI);
+        QPair<double,double> boundsD = getTminTmaxRefCurve(curveD);
+        QPair<double,double> boundsF = getTminTmaxRefCurve(curveF);
+        bounds = qMakePair<double,double>(qMin(boundsI.first, qMin(boundsD.first, boundsF.first)),
+                                          qMax(boundsI.second, qMin(boundsD.second, boundsF.second)));
+    }
+    
+    return bounds;
+}
+
+QPair<double,double> PluginAM::getTminTmaxRefCurve(const QString& curveName) const
 {
     double tmin = 0;
     double tmax = 0;
-    QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
-    
-    if(mRefCurves.contains(ref_curve)  && !mRefCurves.value(ref_curve).mDataMean.isEmpty())
+
+    if(mRefCurves.contains(curveName) && !mRefCurves.value(curveName).mDataMean.isEmpty())
     {
-        tmin = mRefCurves.value(ref_curve).mTmin;
-        tmax = mRefCurves.value(ref_curve).mTmax;
+        tmin = mRefCurves.value(curveName).mTmin;
+        tmax = mRefCurves.value(curveName).mTmax;
     }
     return qMakePair<double,double>(tmin,tmax);
 }
@@ -359,37 +426,48 @@ PluginSettingsViewAbstract* PluginAM::getSettingsView()
 #pragma mark Date validity
 bool PluginAM::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
 {
-    // check valid curve
-    QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
-    double is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
-    double is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
-    double is_int = data.value(DATE_AM_IS_INT_STR).toBool();
-    //double alpha = data.value(DATE_AM_ERROR_STR).toDouble();
-    double inc = data.value(DATE_AM_INC_STR).toDouble();
-    double dec = data.value(DATE_AM_DEC_STR).toDouble();
-    double intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
+    // ----------------------------------
+    //  Read values
+    // ----------------------------------
+    QString mode = data.value(DATE_AM_MODE).toString();
     
-    double mesure = 0;
-    //double error = 0;
+    long double i = (long double) data.value(DATE_AM_I).toDouble();
+    long double d = (long double) data.value(DATE_AM_D).toDouble();
+    long double f = (long double) data.value(DATE_AM_F).toDouble();
     
-    if(is_inc) {
-        //error = alpha / 2.448f;
-        mesure = inc;
+    QString curveI = data.value(DATE_AM_CURVE_I).toString().toLower();
+    QString curveD = data.value(DATE_AM_CURVE_D).toString().toLower();
+    QString curveF = data.value(DATE_AM_CURVE_F).toString().toLower();
+    
+    // ----------------------------------
+    //  Check if valid
+    // ----------------------------------
+    bool valid = false;
+    
+    if(mode == DATE_AM_MODE_ID) {
+        valid = isCurveValid(data, curveI, i, settings.mStep) &&
+            isCurveValid(data, curveD, d, settings.mStep);
     }
-    else if(is_dec) {
-        //error = alpha / (2.448f * cos(inc * M_PI / 180.f));
-        mesure = dec;
+    else if(mode == DATE_AM_MODE_IF) {
+        valid = isCurveValid(data, curveI, i, settings.mStep) &&
+            isCurveValid(data, curveF, f, settings.mStep);
     }
-    else if(is_int) {
-        //error = alpha;
-        mesure = intensity;
+    else if(mode == DATE_AM_MODE_IDF) {
+        valid = isCurveValid(data, curveI, i, settings.mStep) &&
+            isCurveValid(data, curveD, d, settings.mStep) &&
+            isCurveValid(data, curveF, f, settings.mStep);
     }
+    return valid;
+}
+
+bool PluginAM::isCurveValid(const QJsonObject& data, const QString& curveName, const double& mesure, const double& step)
+{
     // controle valid solution (double)likelihood>0
     // remember likelihood type is long double
-    const RefCurve& curve = mRefCurves.value(ref_curve);
+    const RefCurve& curve = mRefCurves.value(curveName);
     bool valid = false;
-
-    if(mesure>curve.mDataInfMin && mesure < curve.mDataSupMax){
+    
+    if(mesure > curve.mDataInfMin && mesure < curve.mDataSupMax){
         valid = true;
     }
     else {
@@ -397,22 +475,20 @@ bool PluginAM::isDateValid(const QJsonObject& data, const ProjectSettings& setti
         long double repartition = 0;
         long double v = 0;
         long double lastV = 0;
-        while(valid==false && t<=curve.mTmax) {
-            v = (double)getLikelihood(t,data);
-            // we have to check this calculs
-            //because the repartition can be smaller than the calibration
+        
+        while(valid == false && t <= curve.mTmax){
+            v = (double)getLikelihood(t, data);
+            // we have to check this calculs because the repartition can be smaller than the calibration
             if (lastV>0 && v>0) {
-                repartition += (long double) settings.mStep * (lastV + v) / 2.;
+                repartition += (long double) step * (lastV + v) / 2.;
             }
             lastV = v;
-
+            
             valid = ( (double)repartition > 0);
-            t +=settings.mStep;
+            t += step;
         }
     }
-
-return valid;
-
+    return valid;
 }
 
 

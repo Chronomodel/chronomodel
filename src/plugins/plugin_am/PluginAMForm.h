@@ -32,24 +32,27 @@ protected slots:
     void errorIsValid(QString str);
 
 private:
-    QRadioButton* mIncRadio;
-    QRadioButton* mDecRadio;
-    QRadioButton* mIntensityRadio;
+    QRadioButton* mIDRadio;
+    QRadioButton* mIFRadio;
+    QRadioButton* mIDFRadio;
     
-    QLabel* mIncLab;
-    QLabel* mDecLab;
-    QLabel* mDecIncLab;
-    QLabel* mIntensityLab;
+    QLabel* mILab;
+    QLabel* mDLab;
+    QLabel* mFLab;
     QLabel* mAlpha95Lab;
-    QLabel* mRefLab;
+    QLabel* mSigmaFLab;
+    QLabel* mCurveILab;
+    QLabel* mCurveDLab;
+    QLabel* mCurveFLab;
     
-    QLineEdit* mIncEdit;
-    QLineEdit* mDecEdit;
-    QLineEdit* mDecIncEdit;
-    QLineEdit* mIntensityEdit;
+    QLineEdit* mIEdit;
+    QLineEdit* mDEdit;
+    QLineEdit* mFEdit;
     QLineEdit* mAlpha95Edit;
-    
-    QComboBox* mRefCombo;
+    QLineEdit* mSigmaFEdit;
+    QComboBox* mCurveICombo;
+    QComboBox* mCurveDCombo;
+    QComboBox* mCurveFCombo;
 };
 
 #endif

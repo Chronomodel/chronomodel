@@ -7,15 +7,19 @@
 
 class PluginAMRefView;
 
-#define DATE_AM_IS_INC_STR "is_inc"
-#define DATE_AM_IS_DEC_STR "is_dec"
-#define DATE_AM_IS_INT_STR "is_int"
-#define DATE_AM_ERROR_STR "error"
-#define DATE_AM_INC_STR "inc"
-#define DATE_AM_DEC_STR "dec"
-#define DATE_AM_INTENSITY_STR "intensity"
-#define DATE_AM_REF_CURVE_STR "ref_curve"
+#define DATE_AM_MODE "mode"
+#define DATE_AM_I "inclination"
+#define DATE_AM_D "declination"
+#define DATE_AM_F "intensity"
+#define DATE_AM_ALPHA_95 "alpha95"
+#define DATE_AM_SIGMA_F "sigmaF"
+#define DATE_AM_CURVE_I "curveI"
+#define DATE_AM_CURVE_D "curveD"
+#define DATE_AM_CURVE_F "curveF"
 
+#define DATE_AM_MODE_ID "ID"
+#define DATE_AM_MODE_IF "IF"
+#define DATE_AM_MODE_IDF "IDF"
 
 class DATATION_SHARED_EXPORT PluginAM : public PluginAbstract
 {
@@ -49,16 +53,15 @@ public:
     PluginSettingsViewAbstract* getSettingsView();
     
     bool isDateValid(const QJsonObject& data, const ProjectSettings& settings);
+    bool isCurveValid(const QJsonObject& data, const QString& curveName, const double& mesure, const double& step);
     
     // ---------------------
     QString getRefExt() const;
     QString getRefsPath() const;
     RefCurve loadRefFile(QFileInfo refFile);
     
-    double getRefValueAt(const QJsonObject& data, const double& t);
-    double getRefErrorAt(const QJsonObject& data, const double& t);
-    
     QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
+    QPair<double,double> getTminTmaxRefCurve(const QString& curveName) const;
 };
 
 #endif
