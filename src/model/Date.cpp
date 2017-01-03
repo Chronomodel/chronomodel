@@ -1,4 +1,4 @@
-﻿#include "Date.h"
+#include "Date.h"
 #include "Event.h"
 #include "Generator.h"
 #include "StdUtilities.h"
@@ -284,7 +284,7 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
     QMap<QString, CalibrationCurve>::const_iterator it = project->mCalibCurves.find (toFind);
     if ( it==project->mCalibCurves.end())
         project->mCalibCurves.insert(toFind, CalibrationCurve());
-qDebug()<<"Date::calibrate insert mData "<<toFind;
+    qDebug()<<"Date::calibrate insert mData "<<toFind;
 
     mCalibration = & (project->mCalibCurves[toFind]);
     mCalibration->mDescription = toFind;
