@@ -112,7 +112,7 @@ public:
     QVector<double>* mRawTrace;
     QVector<double>* mFormatedTrace;
 
-
+    
     // if we use std::vector we can not use QDataStream to save,
     //because QDataStream provides support for multi system and takes account of endians
     Support mSupport;

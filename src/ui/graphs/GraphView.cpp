@@ -812,7 +812,7 @@ void GraphView::drawCurves(QPainter& painter)
                 path.lineTo(mMarginLeft, mMarginTop);
                 painter.drawPath(path);
                 
-            } else { // it's horizontal curve
+            } else {
             
                 path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
                 
