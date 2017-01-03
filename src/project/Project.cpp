@@ -600,12 +600,6 @@ bool Project::load(const QString& path)
                 calFile.close();
              }
 
-<<<<<<< HEAD
-
-
-
-=======
->>>>>>> master
             clearModel();
 
             if (mSaveData) {

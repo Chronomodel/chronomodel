@@ -56,12 +56,7 @@ void Date::init()
     mTminRefCurve = 0.;
     mTmaxRefCurve = 0.;
 
-<<<<<<< HEAD
-    mCalibration = 0;
-=======
     mCalibration = nullptr;
->>>>>>> master
-
 }
 
 Date::Date(const Date& date)

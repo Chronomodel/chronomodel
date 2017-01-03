@@ -85,19 +85,6 @@ Phase::~Phase()
    mEvents.clear();
 
     if (!mConstraintsFwd.isEmpty()) {
-<<<<<<< HEAD
-        for (PhaseConstraint* pc: mConstraintsFwd) {
-           // if(pc) delete pc;
-            pc = 0;
-        }
-        mConstraintsFwd.clear();
-    }
-    if (!mConstraintsBwd.isEmpty()) {
-        for (PhaseConstraint* pc: mConstraintsBwd) {
-            //if(pc) pc->deleteLater();
-            pc = 0;
-        }
-=======
         for (PhaseConstraint* pc : mConstraintsFwd)
             pc = nullptr;
 
@@ -106,8 +93,7 @@ Phase::~Phase()
     if (!mConstraintsBwd.isEmpty()) {
         for (PhaseConstraint* pc : mConstraintsBwd)
             pc = nullptr;
-
->>>>>>> master
+        
         mConstraintsBwd.clear();
     }
 }

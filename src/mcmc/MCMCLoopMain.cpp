@@ -480,24 +480,8 @@ void MCMCLoopMain::update()
 
         //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
 
-
-<<<<<<< HEAD
-        QList<Phase*>::const_iterator iterPhase = event->mPhases.cbegin();
-        while (iterPhase != event->mPhases.constEnd()) {
-#ifdef TEST
-           (*iterPhase)-> mAlpha.mX = 1.;
-            (*iterPhase)->mBeta.mX = 2.;
-           (*iterPhase)-> mDuration.mX = 1.;
-#else
-            (*iterPhase)->updateAll(t_min, t_max);
-#endif
-            ++iterPhase;
-        }
-
-=======
        for (auto&& phInEv : event->mPhases)
             phInEv->updateAll(t_min, t_max);
->>>>>>> master
     }
 
 
@@ -508,14 +492,8 @@ void MCMCLoopMain::update()
     }
 
     //--------------------- Update Phases constraints -----------------------------------------
-<<<<<<< HEAD
-    QList<PhaseConstraint*>& phasesConstraints = mModel->mPhaseConstraints;
-    for (int i=0; i<phasesConstraints.size(); ++i)
-        phasesConstraints[i]->updateGamma();
-=======
-        for (auto&& phConst : mModel->mPhaseConstraints )
-           phConst->updateGamma();
->>>>>>> master
+    for (auto&& phConst : mModel->mPhaseConstraints )
+        phConst->updateGamma();
 
 }
 

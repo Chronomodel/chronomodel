@@ -141,11 +141,9 @@ void EventKnown::updateTheta(const double tmin, const double tmax)
             
             double theta = min + Generator::randomUniform() * (max - min);
             mTheta.tryUpdate(theta, 1.);
-<<<<<<< HEAD
-            qDebug()<<"EventKnown updateTheta"<<min<<" "<<theta<<" "<<max<<" "<< mTheta.mX;
-=======
+
             //qDebug()<<"EventKnown updateTheta"<<min<<" "<<theta<<" "<<max<<" "<< mTheta.mX;
->>>>>>> master
+            
             break;
         }
         default:

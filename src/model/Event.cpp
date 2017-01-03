@@ -497,16 +497,11 @@ void Event::updateTheta(const double tmin, const double tmax)
     double sum_t = 0.;
 
     // with const type variable foreeach is speeder
-<<<<<<< HEAD
-    for (const Date date: mDates) {
-        const double variance = date.mSigma.mX * date.mSigma.mX;
-        sum_t += (date.mTheta.mX + date.mDelta) / variance;
-=======
-  //  for (const Date date: mDates) {
+    
+    //  for (const Date date: mDates) {
     for (QList<Date>::const_iterator date = mDates.cbegin(); date != mDates.cend(); date++) {
         const double variance = date->mSigma.mX * date->mSigma.mX;
         sum_t += (date->mTheta.mX + date->mDelta) / variance;
->>>>>>> master
         sum_p += 1. / variance;
     }
     const double theta_avg = sum_t / sum_p;

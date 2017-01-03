@@ -38,14 +38,9 @@ mtmaxUsed(0.)
 /** Copy constructor */
 MetropolisVariable::MetropolisVariable (const MetropolisVariable& origin)
 {
-<<<<<<< HEAD
-    mRawTrace = nullptr;
-    mFormatedTrace = nullptr;
-=======
     mX = origin.mX;
     mRawTrace = new QVector<double>(origin.mRawTrace->size());
     std::copy(origin.mRawTrace->begin(),origin.mRawTrace->end(),mRawTrace->begin());
->>>>>>> master
 
     mFormatedTrace= new QVector<double>(origin.mFormatedTrace->size());
     std::copy(origin.mFormatedTrace->begin(),origin.mFormatedTrace->end(),mFormatedTrace->begin());
@@ -74,29 +69,6 @@ MetropolisVariable::MetropolisVariable (const MetropolisVariable& origin)
     mtmaxUsed = origin.mtmaxUsed;
 
      QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
-
-<<<<<<< HEAD
-void MetropolisVariable::reset()
-{
-    if (mRawTrace != nullptr) {
-        mRawTrace->clear();
-        mRawTrace->squeeze();
-        mFormatedTrace->clear();
-        mFormatedTrace->squeeze();
-    } else {
-        mRawTrace = new QVector<double>();
-        mFormatedTrace = new QVector<double>();
-    }
-    mHisto.clear();
-    mChainsHistos.clear();
-    
-    mCorrelations.clear();
-    
-    mHPD.clear();
-    
-    mChainsResults.clear();
-=======
->>>>>>> master
 }
 
 
@@ -287,14 +259,9 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
     mtmaxUsed = tmax;
     mtminUsed = tmin;
 
-<<<<<<< HEAD
-    const size_t inputSize (fftLen);
-    const size_t outputSize = 2 * (inputSize / 2 + 1);
-=======
     const int inputSize (fftLen);
     const int outputSize = 2 * (inputSize / 2 + 1);
->>>>>>> master
-
+    
     const double sigma = dataStd(dataSrc);
     QMap<double, double> result;
 
@@ -333,11 +300,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
         fftw_plan plan_forward = fftw_plan_dft_r2c_1d(inputSize, input, (fftw_complex*)output, FFTW_ESTIMATE);
         fftw_execute(plan_forward);
 
-<<<<<<< HEAD
-        for (size_t i=0; i<outputSize/2; ++i) {
-=======
         for (int i=0; i<outputSize/2; ++i) {
->>>>>>> master
             const double s = 2. * M_PI * i / (b-a);
             const double factor = expf(-0.5 * s * s * h * h);
 
@@ -376,11 +339,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
         }
         const double delta = (b - a) / fftLen;
 
-<<<<<<< HEAD
-        for (size_t i=0; i<inputSize; ++i) {
-=======
         for (int i=0; i<inputSize; ++i) {
->>>>>>> master
              const double t = a + (double)i * delta;
              result[t] = input[i];
         }
@@ -577,26 +536,14 @@ QVector<double> MetropolisVariable::fullRunTrace(const QList<ChainSpecs>& chains
 
     int shift (0);
     int shiftTrace (0);
-<<<<<<< HEAD
-    for (int i = 0; i<chains.size(); ++i) {
-        const ChainSpecs& chain = chains.at(i);
-=======
 
     for (const ChainSpecs& chain:chains) {
->>>>>>> master
         // we add 1 for the init
         const int burnAdaptSize = 1 + chain.mNumBurnIter + (int) (chain.mBatchIndex * chain.mNumBatchIter);
         const int runTraceSize = (int)(chain.mNumRunIter / chain.mThinningInterval);
         const int firstRunPosition = shift + burnAdaptSize;
         std::copy(mFormatedTrace->begin()+ firstRunPosition, mFormatedTrace->begin() + firstRunPosition + runTraceSize, trace.begin()+ shiftTrace);
 
-<<<<<<< HEAD
-        //qDebug()<<"MetropolisVariable::fullRunTrace firstRunPosition"<<firstRunPosition<< " runTraceSize"<<runTraceSize;
-        //trace += mFormatedTrace.mid(firstRunPosition, runTraceSize);
-        
-       // shift += burnAdaptSize + runTraceSize ;
-=======
->>>>>>> master
         shiftTrace += runTraceSize;
         shift = firstRunPosition +runTraceSize;
     }
@@ -624,10 +571,7 @@ QVector<double> MetropolisVariable::runRawTraceForChain(const QList<ChainSpecs> 
 
         for (int i=0; i<chains.size(); ++i) {
             const ChainSpecs& chain = chains.at(i);
-<<<<<<< HEAD
-            
-=======
->>>>>>> master
+
             // We add 1 for the init
             const int burnAdaptSize = 1 + int(chain.mNumBurnIter + chain.mBatchIndex * chain.mNumBatchIter);
             const int traceSize = int(chain.mNumRunIter / chain.mThinningInterval);
@@ -635,13 +579,6 @@ QVector<double> MetropolisVariable::runRawTraceForChain(const QList<ChainSpecs> 
             if (i == index) {
                 trace.resize(traceSize);
                 std::copy(mRawTrace->begin()+shift+ burnAdaptSize, mRawTrace->begin()+shift+ burnAdaptSize +traceSize, trace.begin());
-<<<<<<< HEAD
-
-                //qDebug()<<"MetropolisVariable::runRawTraceForChain burnAdaptSize"<<burnAdaptSize<< " traceSize"<<traceSize;// code in case of trace is QVector
-                //trace = mRawTrace.mid(shift + burnAdaptSize, traceSize );
-
-=======
->>>>>>> master
                 break;
             }
             shift += burnAdaptSize + traceSize;
@@ -671,11 +608,7 @@ QVector<double> MetropolisVariable::runFormatedTraceForChain(const QList<ChainSp
 
             if (i == index) {
                 trace.resize(traceSize);
-<<<<<<< HEAD
-                std::copy(mRawTrace->begin()+shift+ burnAdaptSize, mRawTrace->begin()+shift + burnAdaptSize +traceSize, trace.begin());
-=======
                 std::copy(mFormatedTrace->begin()+shift+ burnAdaptSize, mFormatedTrace->begin()+shift + burnAdaptSize +traceSize, trace.begin());
->>>>>>> master
                 break;
             }
             shift += traceSize + burnAdaptSize ;
@@ -730,11 +663,7 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const bool 
         list << locale.toString(mCredibility.second);
 
         const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThresholdUsed);
-<<<<<<< HEAD
-        //QStringList results;
-=======
 
->>>>>>> master
         for (int i=0; i<intervals.size(); ++i) {
             list << locale.toString(intervals.at(i).first, 'f', 1);
             list << locale.toString(intervals.at(i).second.first);
@@ -753,11 +682,7 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const bool 
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mCredibility.second));
 
         const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThresholdUsed);
-<<<<<<< HEAD
-        //QStringList results;
-=======
 
->>>>>>> master
         for (int i=0; i<intervals.size(); ++i)  {
             list << locale.toString(intervals.at(i).first, 'f', 1);
             list << locale.toString(DateUtils::convertFromAppSettingsFormat(intervals.at(i).second.first));

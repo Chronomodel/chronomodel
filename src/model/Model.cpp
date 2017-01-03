@@ -35,53 +35,32 @@ void Model::clear()
 {
     this->clearTraces();
     if (!mEvents.isEmpty()) {
-<<<<<<< HEAD
-        foreach (Event* ev, mEvents) {
-            if (ev)
-                delete ev;
-            ev = nullptr;
-=======
         for (Event* ev: mEvents) {
             if (ev) {
                 ev->~Event();
                 ev = nullptr;
             }
->>>>>>> master
         }
         mEvents.clear();
      }
 
     if (!mPhases.isEmpty()) {
-<<<<<<< HEAD
-        foreach (Phase* ph, mPhases) {
-            if (ph)
-                delete ph;
-            ph = nullptr;
-=======
         for (Phase* ph: mPhases) {
             if (ph) {
                 ph->~Phase();
                 ph = nullptr;
             }
->>>>>>> master
         }
         mPhases.clear();
     }
 
     if (!mPhaseConstraints.isEmpty()) {
-<<<<<<< HEAD
-        /*foreach (PhaseConstraint* ph, mPhaseConstraints) {
-            //if(ph) delete ph;
-            ph = 0;
-        }*/
-=======
         for (PhaseConstraint* pc : mPhaseConstraints) {
             if (pc) {
                 pc->~PhaseConstraint();
                 pc = nullptr;
             }
         }
->>>>>>> master
         mPhaseConstraints.clear();
     }
 
@@ -927,11 +906,7 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
     for (auto&& event : mEvents ) {
         event->mTheta.generateCorrelations(chains);
         
-<<<<<<< HEAD
-        for( Date& date : (*iterEvent)->mDates ) {
-=======
         for( auto&& date : event->mDates ) {
->>>>>>> master
             date.mTheta.generateCorrelations(chains);
             date.mSigma.generateCorrelations(chains);
         }
@@ -1584,67 +1559,6 @@ void Model::restoreFromFile(const QString& fileName)
     int QDataStreamVersion;
     in >> QDataStreamVersion;
     in.setVersion(QDataStreamVersion);
-<<<<<<< HEAD
-
-    if (in.version()!= QDataStream::Qt_5_5)
-            return;
-
-    QString appliVersion;
-    in >> appliVersion;
-    // prepare the future
-    //QStringList projectVersionList = appliVersion.split(".");
-    if (appliVersion != qApp->applicationVersion())
-        qDebug()<<file.fileName()<<" different version="<<appliVersion<<" actual="<<qApp->applicationVersion();
-
-
-    // -----------------------------------------------------
-    //  Read info
-    // -----------------------------------------------------
-
-    quint32 tmp32;
-    in >> tmp32;
-    //const int numPhases = (int)tmp32;
-    in >> tmp32;
-    //const int numEvents = (int)tmp32;
-    in >> tmp32;
-    //const int numdates = (int)tmp32;
-
-    in >> tmp32;
-    mChains.clear();
-    mChains.reserve((int) tmp32);
-    for (quint32 i=0 ; i<tmp32; ++i) {
-        ChainSpecs ch;
-        in >> ch.mBatchIndex;
-        in >> ch.mBatchIterIndex;
-        in >> ch.mBurnIterIndex;
-        in >> ch.mMaxBatchs;
-        in >> ch.mMixingLevel;
-        in >> ch.mNumBatchIter;
-        in >> ch.mNumBurnIter;
-        in >> ch.mNumRunIter;
-        in >> ch.mRunIterIndex;
-        in >> ch.mSeed;
-        in >> ch.mThinningInterval;
-        in >> ch.mTotalIter;
-        mChains.append(ch);
-    }
-
-        // -----------------------------------------------------
-        //  Read phases data
-        // -----------------------------------------------------
-
-        for (int i=0; i<mPhases.size(); ++i) {
-           in >> mPhases[i]->mAlpha;
-           in >> mPhases[i]->mBeta;
-           in >> mPhases[i]->mDuration;
-        }
-
-        // -----------------------------------------------------
-        //  Read events data
-        // -----------------------------------------------------
-
-        for (Event* e:mEvents)
-=======
 
     if (in.version()!= QDataStream::Qt_5_5)
             return;
@@ -1703,23 +1617,15 @@ void Model::restoreFromFile(const QString& fileName)
         // -----------------------------------------------------
 
         for (auto&& e:mEvents)
->>>>>>> master
             in >> e->mTheta;
 
         // -----------------------------------------------------
         //  Read dates data
         // -----------------------------------------------------
 
-<<<<<<< HEAD
-        for (int i=0; i<mEvents.size(); ++i) {
-            if (mEvents[i]->mType == Event::eDefault )
-                 for (int j=0; j<mEvents[i]->mDates.size(); ++j) {
-                    Date& d = mEvents[i]->mDates[j];
-=======
         for (auto && event : mEvents) {
             if (event->mType == Event::eDefault )
                  for (auto && d : event->mDates) {
->>>>>>> master
                     in >> d.mTheta;
                     in >> d.mSigma;
                     if (d.mDeltaType != Date::eDeltaNone)
@@ -1747,15 +1653,6 @@ void Model::restoreFromFile(const QString& fileName)
                     in >> tmp;
                     d.setTmaxRefCurve(tmp);
 
-<<<<<<< HEAD
-                   /* in >> tmp;
-                    d.setTminCalib(tmp);
-                    in >>tmp;
-                    d.setTmaxCalib(tmp);
-                   */
-
-=======
->>>>>>> master
                     /* Check if the Calibration Curve exist*/
                     const QString toFind (d.mName+d.mPlugin->getDateDesc(&d));
          //           QMap<QString, CalibrationCurve>::const_iterator it = mProject->mCalibCurves.find (toFind);
@@ -1768,11 +1665,6 @@ void Model::restoreFromFile(const QString& fileName)
        //     qDebug()<<"Model:restoreFromFile insert a new mCalibration "<<toFind;
 
                     d.mCalibration = & (mProject->mCalibCurves[toFind]);
-
-<<<<<<< HEAD
-                   // in >>*(d.mCalibration);
-=======
->>>>>>> master
 
                     quint32 tmpUint32;
                     in >> tmpUint32;
