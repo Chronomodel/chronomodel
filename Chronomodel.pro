@@ -254,7 +254,8 @@ equals(USE_PLUGIN_AM, 1){
 	HEADERS += src/plugins/plugin_am/PluginAM.h
 	HEADERS += src/plugins/plugin_am/PluginAMForm.h
 	HEADERS += src/plugins/plugin_am/PluginAMRefView.h
-        HEADERS += src/plugins/plugin_am/PluginAMSettingsView.h
+    HEADERS += src/plugins/plugin_am/PluginAMSettingsView.h
+    HEADERS += src/plugins/plugin_am/PluginAMLoop.h
 }
 equals(USE_PLUGIN_UNIFORM, 1){
 	HEADERS += src/plugins/plugin_uniform/PluginUniform.h
@@ -396,7 +397,8 @@ equals(USE_PLUGIN_AM, 1){
 	SOURCES += src/plugins/plugin_am/PluginAM.cpp
 	SOURCES += src/plugins/plugin_am/PluginAMForm.cpp
 	SOURCES += src/plugins/plugin_am/PluginAMRefView.cpp
-        SOURCES += src/plugins/plugin_am/PluginAMSettingsView.cpp
+    SOURCES += src/plugins/plugin_am/PluginAMSettingsView.cpp
+    SOURCES += src/plugins/plugin_am/PluginAMLoop.cpp
 }
 equals(USE_PLUGIN_UNIFORM, 1){
 	SOURCES += src/plugins/plugin_uniform/PluginUniform.cpp
