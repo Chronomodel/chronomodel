@@ -71,7 +71,7 @@ macx{
     ICON = $$PRO_PATH/icon/Chronomodel.icns
     
 	# This is the SDK used to compile : change it to whatever latest version of mac you are using.
-    QMAKE_MAC_SDK = macosx10.11
+    QMAKE_MAC_SDK = macosx10.12
 	
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
 	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
@@ -87,7 +87,7 @@ win32{
 	# Resource file (Windows only)
         RC_FILE += Chronomodel.rc
 	RC_ICONS += $$PRO_PATH/icon/Chronomodel.ico
-QT_FATAL_WARNING = 1
+	QT_FATAL_WARNING = 1
 
 }
 
@@ -251,10 +251,10 @@ equals(USE_PLUGIN_GAUSS, 1){
         HEADERS += src/plugins/plugin_gauss/PluginGaussSettingsView.h
 }
 equals(USE_PLUGIN_AM, 1){
-	HEADERS += src/plugins/plugin_am/PluginMag.h
-	HEADERS += src/plugins/plugin_am/PluginMagForm.h
-	HEADERS += src/plugins/plugin_am/PluginMagRefView.h
-        HEADERS += src/plugins/plugin_am/PluginMagSettingsView.h
+	HEADERS += src/plugins/plugin_am/PluginAM.h
+	HEADERS += src/plugins/plugin_am/PluginAMForm.h
+	HEADERS += src/plugins/plugin_am/PluginAMRefView.h
+        HEADERS += src/plugins/plugin_am/PluginAMSettingsView.h
 }
 equals(USE_PLUGIN_UNIFORM, 1){
 	HEADERS += src/plugins/plugin_uniform/PluginUniform.h
@@ -393,10 +393,10 @@ equals(USE_PLUGIN_GAUSS, 1){
         SOURCES += src/plugins/plugin_gauss/PluginGaussSettingsView.cpp
 }
 equals(USE_PLUGIN_AM, 1){
-	SOURCES += src/plugins/plugin_am/PluginMag.cpp
-	SOURCES += src/plugins/plugin_am/PluginMagForm.cpp
-	SOURCES += src/plugins/plugin_am/PluginMagRefView.cpp
-        SOURCES += src/plugins/plugin_am/PluginMagSettingsView.cpp
+	SOURCES += src/plugins/plugin_am/PluginAM.cpp
+	SOURCES += src/plugins/plugin_am/PluginAMForm.cpp
+	SOURCES += src/plugins/plugin_am/PluginAMRefView.cpp
+        SOURCES += src/plugins/plugin_am/PluginAMSettingsView.cpp
 }
 equals(USE_PLUGIN_UNIFORM, 1){
 	SOURCES += src/plugins/plugin_uniform/PluginUniform.cpp

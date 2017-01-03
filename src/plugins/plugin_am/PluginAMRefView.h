@@ -1,21 +1,21 @@
-#ifndef PluginMagRefView_H
-#define PluginMagRefView_H
+#ifndef PluginAMRefView_H
+#define PluginAMRefView_H
 
 #if USE_PLUGIN_AM
 
 #include "../GraphViewRefAbstract.h"
 
-class PluginMag;
+class PluginAM;
 class GraphView;
 class QLocale;
 
 
-class PluginMagRefView: public GraphViewRefAbstract
+class PluginAMRefView: public GraphViewRefAbstract
 {
     Q_OBJECT
 public:
-    explicit PluginMagRefView(QWidget* parent = 0);
-    virtual ~PluginMagRefView();
+    explicit PluginAMRefView(QWidget* parent = 0);
+    virtual ~PluginAMRefView();
     
     void setDate(const Date& d, const ProjectSettings& settings);
     

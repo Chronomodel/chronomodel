@@ -598,7 +598,7 @@ bool Project::load(const QString& path)
                      }
                  }
                 calFile.close();
-             }
+            }
 
             clearModel();
 

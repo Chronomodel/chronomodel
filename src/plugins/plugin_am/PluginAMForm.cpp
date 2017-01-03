@@ -1,12 +1,12 @@
-#include "PluginMagForm.h"
+#include "PluginAMForm.h"
 #if USE_PLUGIN_AM
 
-#include "PluginMag.h"
+#include "PluginAM.h"
 #include <QJsonObject>
 #include <QtWidgets>
 
 
-PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("AM Measurements"), parent, flags)
+PluginAMForm::PluginAMForm(PluginAM* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("AM Measurements"), parent, flags)
 {
     
     mIncRadio = new QRadioButton(tr("Inclination"));
@@ -29,7 +29,7 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     mDecIncEdit = new QLineEdit(this);
     mIntensityEdit = new QLineEdit(this);
     mAlpha95Edit = new QLineEdit(this);
-    connect(mAlpha95Edit, &QLineEdit::textChanged, this, &PluginMagForm::errorIsValid);
+    connect(mAlpha95Edit, &QLineEdit::textChanged, this, &PluginAMForm::errorIsValid);
 
     mRefCombo = new QComboBox(this);
     QStringList refCurves = plugin->getRefsNames();
@@ -78,12 +78,12 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     updateOptions();
 }
 
-PluginMagForm::~PluginMagForm()
+PluginAMForm::~PluginAMForm()
 {
 
 }
 
-void PluginMagForm::setData(const QJsonObject& data, bool isCombined)
+void PluginAMForm::setData(const QJsonObject& data, bool isCombined)
 {
     QLocale locale=QLocale();
     const bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
@@ -111,7 +111,7 @@ void PluginMagForm::setData(const QJsonObject& data, bool isCombined)
     updateOptions();
 }
 
-QJsonObject PluginMagForm::getData()
+QJsonObject PluginAMForm::getData()
 {
     QJsonObject data;
     const QLocale locale=QLocale();
@@ -142,7 +142,7 @@ QJsonObject PluginMagForm::getData()
     return data;
 }
 
-void PluginMagForm::errorIsValid(QString str)
+void PluginAMForm::errorIsValid(QString str)
 {
     bool ok;
     QLocale locale;
@@ -151,7 +151,7 @@ void PluginMagForm::errorIsValid(QString str)
     emit PluginFormAbstract::OkEnabled(ok && (value>0) );
 }
 
-bool PluginMagForm::isValid()
+bool PluginAMForm::isValid()
 {
     QString refCurve = mRefCombo->currentText();
     if(refCurve.isEmpty())
@@ -159,7 +159,7 @@ bool PluginMagForm::isValid()
     return !refCurve.isEmpty();
 }
 
-void PluginMagForm::updateOptions()
+void PluginAMForm::updateOptions()
 {
     mIncEdit->setVisible(mIncRadio->isChecked());
     mIncLab->setVisible(mIncRadio->isChecked());

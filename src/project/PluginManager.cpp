@@ -3,7 +3,7 @@
 #include <QDebug>
 
 // Temp:
-#include "PluginMag.h"
+#include "PluginAM.h"
 #include "PluginTL.h"
 #include "Plugin14C.h"
 #include "PluginUniform.h"
@@ -80,8 +80,8 @@ void PluginManager::loadPlugins()
     mPlugins.append(plugin14C);
 #endif
 #if USE_PLUGIN_AM
-    PluginAbstract* pluginMag = new PluginMag();
-    mPlugins.append(pluginMag);
+    PluginAbstract* pluginAM = new PluginAM();
+    mPlugins.append(pluginAM);
 #endif
 }
 

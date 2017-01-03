@@ -1,36 +1,36 @@
-#include "PluginMag.h"
+#include "PluginAM.h"
 #if USE_PLUGIN_AM
 
 #include "StdUtilities.h"
 #include "QtUtilities.h"
-#include "PluginMagForm.h"
-#include "PluginMagRefView.h"
-#include "PluginMagSettingsView.h"
+#include "PluginAMForm.h"
+#include "PluginAMRefView.h"
+#include "PluginAMSettingsView.h"
 #include <cstdlib>
 #include <iostream>
 #include <QJsonObject>
 #include <QtWidgets>
 
 
-PluginMag::PluginMag()
+PluginAM::PluginAM()
 {
     mColor = QColor(198,79,32);
     loadRefDatas();
 }
 
-PluginMag::~PluginMag()
+PluginAM::~PluginAM()
 {
 
 }
 
 #pragma mark Likelihood
-long double PluginMag::getLikelihood(const double& t, const QJsonObject& data)
+long double PluginAM::getLikelihood(const double& t, const QJsonObject& data)
 {
     QPair<long double, long double > result = getLikelihoodArg(t, data);
     return expl(result.second) / sqrt(result.first);
 }
 
-QPair<long double, long double> PluginMag::getLikelihoodArg(const double& t, const QJsonObject& data)
+QPair<long double, long double> PluginAM::getLikelihoodArg(const double& t, const QJsonObject& data)
 {
     bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
     bool is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
@@ -70,27 +70,27 @@ QPair<long double, long double> PluginMag::getLikelihoodArg(const double& t, con
 }
 
 #pragma mark Properties
-QString PluginMag::getName() const
+QString PluginAM::getName() const
 {
     return QString("AM");
 }
-QIcon PluginMag::getIcon() const
+QIcon PluginAM::getIcon() const
 {
     return QIcon(":/AM_w.png");
 }
-bool PluginMag::doesCalibration() const
+bool PluginAM::doesCalibration() const
 {
     return true;
 }
-bool PluginMag::wiggleAllowed() const
+bool PluginAM::wiggleAllowed() const
 {
     return false;
 }
-Date::DataMethod PluginMag::getDataMethod() const
+Date::DataMethod PluginAM::getDataMethod() const
 {
     return Date::eInversion;
 }
-QList<Date::DataMethod> PluginMag::allowedDataMethods() const
+QList<Date::DataMethod> PluginAM::allowedDataMethods() const
 {
     QList<Date::DataMethod> methods;
     methods.append(Date::eMHSymetric);
@@ -99,7 +99,7 @@ QList<Date::DataMethod> PluginMag::allowedDataMethods() const
     return methods;
 }
 
-QString PluginMag::getDateDesc(const Date* date) const
+QString PluginAM::getDateDesc(const Date* date) const
 {
     QLocale locale=QLocale();
     QString result;
@@ -143,7 +143,7 @@ QString PluginMag::getDateDesc(const Date* date) const
 }
 
 #pragma mark CSV
-QStringList PluginMag::csvColumns() const
+QStringList PluginAM::csvColumns() const
 {
     QStringList cols;
     cols << "Name"
@@ -157,13 +157,13 @@ QStringList PluginMag::csvColumns() const
 }
 
 
-PluginFormAbstract* PluginMag::getForm()
+PluginFormAbstract* PluginAM::getForm()
 {
-    PluginMagForm* form = new PluginMagForm(this);
+    PluginAMForm* form = new PluginAMForm(this);
     return form;
 }
 #pragma mark Convert old project versions
-QJsonObject PluginMag::checkValuesCompatibility(const QJsonObject& values)
+QJsonObject PluginAM::checkValuesCompatibility(const QJsonObject& values)
 {
     QJsonObject result = values;
 
@@ -177,7 +177,7 @@ QJsonObject PluginMag::checkValuesCompatibility(const QJsonObject& values)
     return result;
 }
 
-QJsonObject PluginMag::fromCSV(const QStringList& list,const QLocale &csvLocale)
+QJsonObject PluginAM::fromCSV(const QStringList& list,const QLocale &csvLocale)
 {
     QJsonObject json;
     if(list.size() >= csvMinColumns())
@@ -198,7 +198,7 @@ QJsonObject PluginMag::fromCSV(const QStringList& list,const QLocale &csvLocale)
     return json;
 }
 
-QStringList PluginMag::toCSV(const QJsonObject& data, const QLocale& csvLocale) const
+QStringList PluginAM::toCSV(const QJsonObject& data, const QLocale& csvLocale) const
 {
     QStringList list;
     list << (data.value(DATE_AM_IS_INC_STR).toBool() ? "inclination" : (data.value(DATE_AM_IS_DEC_STR).toBool() ? "declination" : "intensity"));
@@ -211,12 +211,12 @@ QStringList PluginMag::toCSV(const QJsonObject& data, const QLocale& csvLocale) 
 }
 
 #pragma mark Reference curves (files)
-QString PluginMag::getRefExt() const
+QString PluginAM::getRefExt() const
 {
     return "ref";
 }
 
-QString PluginMag::getRefsPath() const
+QString PluginAM::getRefsPath() const
 {
     QString path = qApp->applicationDirPath();
 #ifdef Q_OS_MAC
@@ -228,7 +228,7 @@ QString PluginMag::getRefsPath() const
     return calibPath;
 }
 
-RefCurve PluginMag::loadRefFile(QFileInfo refFile)
+RefCurve PluginAM::loadRefFile(QFileInfo refFile)
 {
     RefCurve curve;
     curve.mName = refFile.fileName().toLower();
@@ -317,19 +317,19 @@ RefCurve PluginMag::loadRefFile(QFileInfo refFile)
 }
 
 #pragma mark Reference Values & Errors
-double PluginMag::getRefValueAt(const QJsonObject& data, const double& t)
+double PluginAM::getRefValueAt(const QJsonObject& data, const double& t)
 {
     QString curveName = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
     return getRefCurveValueAt(curveName, t);
 }
 
-double PluginMag::getRefErrorAt(const QJsonObject& data, const double& t)
+double PluginAM::getRefErrorAt(const QJsonObject& data, const double& t)
 {
     const QString curveName = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
     return getRefCurveErrorAt(curveName, t);
 }
 
-QPair<double,double> PluginMag::getTminTmaxRefsCurve(const QJsonObject& data) const
+QPair<double,double> PluginAM::getTminTmaxRefsCurve(const QJsonObject& data) const
 {
     double tmin = 0;
     double tmax = 0;
@@ -344,20 +344,20 @@ QPair<double,double> PluginMag::getTminTmaxRefsCurve(const QJsonObject& data) co
 }
 
 #pragma mark Settings / Input Form / RefView
-GraphViewRefAbstract* PluginMag::getGraphViewRef()
+GraphViewRefAbstract* PluginAM::getGraphViewRef()
 {
     if(mRefGraph) delete mRefGraph;
-    mRefGraph = new PluginMagRefView();
+    mRefGraph = new PluginAMRefView();
     return mRefGraph;
 }
 
-PluginSettingsViewAbstract* PluginMag::getSettingsView()
+PluginSettingsViewAbstract* PluginAM::getSettingsView()
 {
-    return new PluginMagSettingsView(this);
+    return new PluginAMSettingsView(this);
 }
 
 #pragma mark Date validity
-bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
+bool PluginAM::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
 {
     // check valid curve
     QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();

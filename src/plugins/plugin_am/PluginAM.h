@@ -1,11 +1,11 @@
-#ifndef PluginMag_H
-#define PluginMag_H
+#ifndef PluginAM_H
+#define PluginAM_H
 
 #if USE_PLUGIN_AM
 
 #include "../PluginAbstract.h"
 
-class PluginMagRefView;
+class PluginAMRefView;
 
 #define DATE_AM_IS_INC_STR "is_inc"
 #define DATE_AM_IS_DEC_STR "is_dec"
@@ -17,14 +17,14 @@ class PluginMagRefView;
 #define DATE_AM_REF_CURVE_STR "ref_curve"
 
 
-class DATATION_SHARED_EXPORT PluginMag : public PluginAbstract
+class DATATION_SHARED_EXPORT PluginAM : public PluginAbstract
 {
     Q_OBJECT
-    //Q_PLUGIN_METADATA(IID "chronomodel.PluginAbstract.PluginMag")
+    //Q_PLUGIN_METADATA(IID "chronomodel.PluginAbstract.PluginAM")
     //Q_INTERFACES(PluginAbstract)
 public:
-    PluginMag();
-    virtual ~PluginMag();
+    PluginAM();
+    virtual ~PluginAM();
 
      // virtual function
     long double getLikelihood(const double& t, const QJsonObject& data);

@@ -1,23 +1,23 @@
-#ifndef PluginMagForm_H
-#define PluginMagForm_H
+#ifndef PluginAMForm_H
+#define PluginAMForm_H
 
 #if USE_PLUGIN_AM
 
 #include "../PluginFormAbstract.h"
 
-class PluginMag;
+class PluginAM;
 class QLineEdit;
 class QComboBox;
 class QLabel;
 class QRadioButton;
 
 
-class PluginMagForm: public PluginFormAbstract
+class PluginAMForm: public PluginFormAbstract
 {
     Q_OBJECT
 public:
-    PluginMagForm(PluginMag* plugin, QWidget* parent = 0, Qt::WindowFlags flags = 0);
-    virtual ~PluginMagForm();
+    PluginAMForm(PluginAM* plugin, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    virtual ~PluginAMForm();
     
     void setData(const QJsonObject& data, bool isCombined);
     QJsonObject getData();
@@ -25,7 +25,7 @@ public:
     bool isValid();
 
 signals:
-    void OkEnabled(bool enabled = true) ;
+    void OkEnabled(bool enabled = true);
      
 protected slots:
     void updateOptions();

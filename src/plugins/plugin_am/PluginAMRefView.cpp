@@ -1,14 +1,14 @@
-﻿#include "PluginMagRefView.h"
+﻿#include "PluginAMRefView.h"
 #if USE_PLUGIN_AM
 
-#include "PluginMag.h"
+#include "PluginAM.h"
 #include "GraphView.h"
 #include "StdUtilities.h"
 #include "Painting.h"
 #include <QtWidgets>
 
 
-PluginMagRefView::PluginMagRefView(QWidget* parent):GraphViewRefAbstract(parent)
+PluginAMRefView::PluginAMRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
     mGraph = new GraphView(this);
     
@@ -21,12 +21,12 @@ PluginMagRefView::PluginMagRefView(QWidget* parent):GraphViewRefAbstract(parent)
     mMeasureColor = QColor(56, 120, 50);
 }
 
-PluginMagRefView::~PluginMagRefView()
+PluginAMRefView::~PluginAMRefView()
 {
     
 }
 
-void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings)
+void PluginAMRefView::setDate(const Date& date, const ProjectSettings& settings)
 {
     QLocale locale=QLocale();
     GraphViewRefAbstract::setDate(date, settings);
@@ -71,7 +71,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
 
         QColor color2(150, 150, 150);
         
-        PluginMag* plugin = (PluginMag*)date.mPlugin;
+        PluginAM* plugin = (PluginAM*)date.mPlugin;
         const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
         
         if (curve.mDataMean.isEmpty()) {
@@ -268,7 +268,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         curveMeasureSup.mHorizontalValue = avg + error;
         curveMeasureInf.mHorizontalValue = avg - error;
     
-        qDebug()<<"PluginMagRefView::setDate"<<floor(yMin)<<floor(yMax);
+        qDebug()<<"PluginAMRefView::setDate"<<floor(yMin)<<floor(yMax);
         mGraph->setRangeY(floor(yMin), floor(yMax));
         mGraph->addCurve(curveMeasureAvg);
         mGraph->addCurve(curveMeasureSup);
@@ -277,15 +277,15 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
     }
 }
 
-void PluginMagRefView::zoomX(const double min, const double max)
+void PluginAMRefView::zoomX(const double min, const double max)
 {
     mGraph->zoomX(min, max);
 }
-void PluginMagRefView::setMarginRight(const int margin)
+void PluginAMRefView::setMarginRight(const int margin)
 {
     mGraph->setMarginRight(margin);
 }
-void PluginMagRefView::resizeEvent(QResizeEvent* e)
+void PluginAMRefView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
     mGraph->setGeometry(rect());

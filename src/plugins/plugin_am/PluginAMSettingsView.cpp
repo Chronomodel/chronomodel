@@ -1,12 +1,12 @@
-#include "PluginMagSettingsView.h"
+#include "PluginAMSettingsView.h"
 #if USE_PLUGIN_AM
 
-#include "PluginMag.h"
+#include "PluginAM.h"
 #include "PluginRefCurveSettingsView.h"
 #include <QtWidgets>
 
 
-PluginMagSettingsView::PluginMagSettingsView(PluginMag* plugin, QWidget* parent, Qt::WindowFlags flags):PluginSettingsViewAbstract(plugin, parent, flags)
+PluginAMSettingsView::PluginAMSettingsView(PluginAM* plugin, QWidget* parent, Qt::WindowFlags flags):PluginSettingsViewAbstract(plugin, parent, flags)
 {
     mRefView = new PluginRefCurveSettingsView(plugin);
     
@@ -16,7 +16,7 @@ PluginMagSettingsView::PluginMagSettingsView(PluginMag* plugin, QWidget* parent,
     setLayout(layout);
 }
 
-PluginMagSettingsView::~PluginMagSettingsView()
+PluginAMSettingsView::~PluginAMSettingsView()
 {
     
 }
