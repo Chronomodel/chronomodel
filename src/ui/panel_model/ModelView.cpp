@@ -34,7 +34,7 @@ mPhasesScene(0),
 mCurrentRightWidget(0),
 mTmin(0),
 mTmax(2000),
-mProject(0),
+mProject(nullptr),
 mMargin(5),
 mToolbarH(60),
 mButtonWidth(80),
@@ -398,7 +398,7 @@ Project* ModelView::getProject() const
 void ModelView::resetInterface()
 {
     disconnectScenes();
-    mProject = 0;
+    mProject = nullptr;
     mEventsScene->clean();
     mPhasesScene->clean();
     mCalibrationView->setDate(QJsonObject());

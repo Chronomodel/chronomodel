@@ -450,13 +450,12 @@ void MCMCLoopMain::update()
 
     //--------------------- Update Event -----------------------------------------
 
-    for (Event* event : mModel->mEvents) {
-        for ( Date& date : event->mDates )   {
-
-             date.updateDelta(event);
-             date.updateTheta(event);
-             date.updateSigma(event);
-             date.updateWiggle();
+    for (auto&& event : mModel->mEvents) {
+        for ( auto&& date : event->mDates )   {
+            date.updateDelta(event);
+            date.updateTheta(event);
+            date.updateSigma(event);
+            date.updateWiggle();
 
             if (doMemo) {
                 date.mTheta.memo();
@@ -465,7 +464,7 @@ void MCMCLoopMain::update()
 
                 date.mTheta.saveCurrentAcceptRate();
                 date.mSigma.saveCurrentAcceptRate();
-            }
+             }
 
         }
         //--------------------- Update Events -----------------------------------------
@@ -482,6 +481,7 @@ void MCMCLoopMain::update()
         //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
 
 
+<<<<<<< HEAD
         QList<Phase*>::const_iterator iterPhase = event->mPhases.cbegin();
         while (iterPhase != event->mPhases.constEnd()) {
 #ifdef TEST
@@ -494,29 +494,34 @@ void MCMCLoopMain::update()
             ++iterPhase;
         }
 
+=======
+       for (auto&& phInEv : event->mPhases)
+            phInEv->updateAll(t_min, t_max);
+>>>>>>> master
     }
 
 
     //--------------------- Memo Phases -----------------------------------------
     if (doMemo) {
-        QList<Phase*>::const_iterator iterPhase = mModel->mPhases.cbegin();
-        while (iterPhase != mModel->mPhases.constEnd()) {
-           (*iterPhase)->memoAll();
-            ++iterPhase;
-        }
+        for (auto&& ph : mModel->mPhases)
+            ph->memoAll();
     }
 
     //--------------------- Update Phases constraints -----------------------------------------
+<<<<<<< HEAD
     QList<PhaseConstraint*>& phasesConstraints = mModel->mPhaseConstraints;
     for (int i=0; i<phasesConstraints.size(); ++i)
         phasesConstraints[i]->updateGamma();
+=======
+        for (auto&& phConst : mModel->mPhaseConstraints )
+           phConst->updateGamma();
+>>>>>>> master
 
 }
 
 bool MCMCLoopMain::adapt()
 {
     ChainSpecs& chain = mChains[mChainIndex];
-    QList<Event*>& events = mModel->mEvents;
     
     const double taux_min = 41.;           // taux_min minimal rate of acceptation=42
     const double taux_max = 47.;           // taux_max maximal rate of acceptation=46
@@ -527,11 +532,9 @@ bool MCMCLoopMain::adapt()
     
     double delta = (chain.mBatchIndex < 10000) ? 0.01 : (1. / sqrt(chain.mBatchIndex));
     
-    for (int i=0; i<events.size(); ++i) {
-        Event* event = events[i];
+    for (auto&& event : mModel->mEvents ) {
         
-        for (int j=0; j<event->mDates.size(); ++j) {
-            Date& date = event->mDates[j];
+       for (auto&& date : event->mDates) {
             
             //--------------------- Adapt Sigma MH de Theta i -----------------------------------------
             
@@ -539,7 +542,7 @@ bool MCMCLoopMain::adapt()
                 const double taux = 100. * date.mTheta.getCurrentAcceptRate();
                 if (taux <= taux_min || taux >= taux_max) {
                     allOK = false;
-                    double sign = (taux <= taux_min) ? -1. : 1.;
+                    const double sign = (taux <= taux_min) ? -1. : 1.;
                     date.mTheta.mSigmaMH *= pow(10., sign * delta);
                 }
             }
@@ -549,21 +552,19 @@ bool MCMCLoopMain::adapt()
             const double taux = 100. * date.mSigma.getCurrentAcceptRate();
             if (taux <= taux_min || taux >= taux_max) {
                 allOK = false;
-                double sign = (taux <= taux_min) ? -1. : 1.;
+                const double sign = (taux <= taux_min) ? -1. : 1.;
                 date.mSigma.mSigmaMH *= pow(10., sign * delta);
             }
         }
         
         //--------------------- Adapt Sigma MH de Theta f -----------------------------------------
         
-        if ((event->mType != Event::eKnown) && (event->mMethod == Event::eMHAdaptGauss) ) {
+        if ((event->mType != Event::eKnown) && ( event->mMethod == Event::eMHAdaptGauss) ) {
             const double taux = 100. * event->mTheta.getCurrentAcceptRate();
-            qDebug()<<"MCMCLoopMain adapt"<< event->mTheta.mSigmaMH;
             if (taux <= taux_min || taux >= taux_max) {
                 allOK = false;
-                double sign = (taux <= taux_min) ? -1. : 1.;
+                const double sign = (taux <= taux_min) ? -1. : 1.;
                 event->mTheta.mSigmaMH *= pow(10., sign * delta);
-                qDebug()<<"MCMCLoopMain adapt"<< event->mTheta.mSigmaMH<<" delta="<<delta;
             }
         }
     }

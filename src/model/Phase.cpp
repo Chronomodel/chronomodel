@@ -52,12 +52,12 @@ void Phase::copyFrom(const Phase& phase)
     mColor = phase.mColor;
     
     mAlpha = phase.mAlpha;
-    mAlpha.mSupport = phase.mAlpha.mSupport;
+    //mAlpha.mSupport = phase.mAlpha.mSupport;
 
     mBeta = phase.mBeta;
-    mBeta.mSupport = phase.mBeta.mSupport;
+    //mBeta.mSupport = phase.mBeta.mSupport;
     mDuration = phase.mDuration;
-    mDuration.mSupport = phase.mDuration.mSupport;
+   // mDuration.mSupport = phase.mDuration.mSupport;
 
     mTau = phase.mTau;
     
@@ -80,11 +80,12 @@ void Phase::copyFrom(const Phase& phase)
 Phase::~Phase()
 {
    for (Event* ev: mEvents)
-            ev = 0;
+            ev = nullptr;
 
    mEvents.clear();
 
     if (!mConstraintsFwd.isEmpty()) {
+<<<<<<< HEAD
         for (PhaseConstraint* pc: mConstraintsFwd) {
            // if(pc) delete pc;
             pc = 0;
@@ -96,6 +97,17 @@ Phase::~Phase()
             //if(pc) pc->deleteLater();
             pc = 0;
         }
+=======
+        for (PhaseConstraint* pc : mConstraintsFwd)
+            pc = nullptr;
+
+        mConstraintsFwd.clear();
+    }
+    if (!mConstraintsBwd.isEmpty()) {
+        for (PhaseConstraint* pc : mConstraintsBwd)
+            pc = nullptr;
+
+>>>>>>> master
         mConstraintsBwd.clear();
     }
 }
@@ -183,26 +195,6 @@ double Phase::getMaxThetaEvents(double tmax)
 
     return found ? theta : tmax;
 
-/*    double theta = 0;
-    bool found = false;
-    for(int i=0; i<mEvents.size(); ++i)
-    {
-        if(mEvents[i]->mInitialized)
-        {
-            if(!found)
-            {
-                theta = mEvents[i]->mTheta.mX;
-                found = true;
-            }
-            else
-            {
-                theta = std::max(theta, mEvents[i]->mTheta.mX);
-            }
-        }
-    }
-
-    return found ? theta : tmax;
-*/
 }
 /**
  * @brief Phase::getMinThetaEvents

@@ -55,6 +55,7 @@ mSaveData(true)
     mAutoSaveTimer->start(3000);
     //mAutoSaveTimer->stop();
     mModel = new Model();
+    mModel->setProject(this);
 
     mReasonChangeStructure<<"project loaded";
     mReasonChangeStructure<<"Event constraint deleted"<<"Event constraint created"<<"Event(s) deleted";
@@ -77,10 +78,10 @@ Project::~Project()
     mAutoSaveTimer->stop();
     disconnect(mAutoSaveTimer, &QTimer::timeout, this, &Project::save);
     MainWindow::getInstance()->getUndoStack()->clear();
-    mState=QJsonObject();
-    mLastSavedState=QJsonObject();
+    mState = QJsonObject();
+    mLastSavedState = QJsonObject();
     delete mModel;
-    mModel = 0;
+    mModel = nullptr;
 
 }
 
@@ -599,10 +600,14 @@ bool Project::load(const QString& path)
                 calFile.close();
              }
 
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> master
             clearModel();
+
             if (mSaveData) {
                 QString dataPath = path + ".res";
 
@@ -2476,7 +2481,7 @@ void Project::run()
 {
     // Check if project contains invalid dates, e.g. with no computable calibration curve
     const QJsonArray invalidDates = getInvalidDates();
-    if (invalidDates.size() > 0){
+    if (invalidDates.size() > 0) {
 
         QMessageBox messageBox;
         messageBox.setIcon(QMessageBox::Warning);
@@ -2488,9 +2493,9 @@ void Project::run()
         messageBox.addButton(tr("I agree to continue"), QMessageBox::YesRole);
 
         messageBox.exec();
-        if (messageBox.clickedButton() == IStop)  {
+        if (messageBox.clickedButton() == IStop)
           return;
-        }
+
 
     }
 
@@ -2507,8 +2512,6 @@ void Project::run()
     emit mcmcStarted();
     
     clearModel();
-
-
 
     mModel->fromJson(mState);
     bool modelOk = false;
@@ -2573,6 +2576,8 @@ void Project::run()
 
 void Project::clearModel()
 {
-     mModel->clear();
+    if (mModel) {
+        mModel->clear();
+     }
      emit noResult();
 }

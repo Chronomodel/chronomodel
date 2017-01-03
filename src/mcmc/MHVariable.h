@@ -9,6 +9,7 @@ class MHVariable: public MetropolisVariable
    // Q_OBJECT
 public:
     MHVariable();
+    MHVariable(const MHVariable &origin);
     virtual ~MHVariable();
     
     virtual void reset();

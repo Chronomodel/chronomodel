@@ -12,7 +12,7 @@
 #include <algorithm>
 #include <assert.h>
 
-
+/** Default constructor */
 MetropolisVariable::MetropolisVariable(QObject *parent):QObject(parent),
 mX(0.),
 mRawTrace(nullptr),
@@ -27,21 +27,139 @@ mtminUsed(0.),
 mtmaxUsed(0.)
 {
     // will not throw exception,(std::nothrow) in C++ Programmin Language B. Stroustrup Section 19.4.5
-   /* mRawTrace = new QVector<float>();
-    mFormatedTrace = new QVector<float>();
-*/
+    mRawTrace = new QVector<double>();
+    mFormatedTrace = new QVector<double>();
+
     mCredibility = QPair<double, double>();
     mHPD = QMap<double, double>();
     QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
 }
 
-MetropolisVariable::~MetropolisVariable()
+/** Copy constructor */
+MetropolisVariable::MetropolisVariable (const MetropolisVariable& origin)
 {
+<<<<<<< HEAD
     mRawTrace = nullptr;
     mFormatedTrace = nullptr;
+=======
+    mX = origin.mX;
+    mRawTrace = new QVector<double>(origin.mRawTrace->size());
+    std::copy(origin.mRawTrace->begin(),origin.mRawTrace->end(),mRawTrace->begin());
+>>>>>>> master
 
-    QObject::disconnect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
+    mFormatedTrace= new QVector<double>(origin.mFormatedTrace->size());
+    std::copy(origin.mFormatedTrace->begin(),origin.mFormatedTrace->end(),mFormatedTrace->begin());
+
+    mSupport = origin.mSupport;
+    mFormat = origin.mFormat;
+
+    mHisto = origin.mHisto;
+    mChainsHistos = origin.mChainsHistos;
+
+    mCorrelations = origin.mCorrelations;
+
+    mHPD = origin.mHPD;
+    mCredibility = origin.mCredibility;
+
+    mExactCredibilityThreshold = origin.mExactCredibilityThreshold;
+
+    mResults = origin.mResults;
+    mChainsResults = origin.mChainsResults;
+
+    mfftLenUsed = origin.mBandwidthUsed;
+    mBandwidthUsed = origin.mBandwidthUsed;
+    mThresholdUsed = origin.mThresholdUsed;
+
+    mtminUsed = origin.mtminUsed;
+    mtmaxUsed = origin.mtmaxUsed;
+
+     QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
+
+<<<<<<< HEAD
+void MetropolisVariable::reset()
+{
+    if (mRawTrace != nullptr) {
+        mRawTrace->clear();
+        mRawTrace->squeeze();
+        mFormatedTrace->clear();
+        mFormatedTrace->squeeze();
+    } else {
+        mRawTrace = new QVector<double>();
+        mFormatedTrace = new QVector<double>();
+    }
+    mHisto.clear();
+    mChainsHistos.clear();
+    
+    mCorrelations.clear();
+    
+    mHPD.clear();
+    
+    mChainsResults.clear();
+=======
+>>>>>>> master
 }
+
+
+
+
+/** Destructor */
+MetropolisVariable::~MetropolisVariable() noexcept
+{
+    reset();
+    QObject::disconnect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
+
+}
+
+/** Copy assignment operator */
+MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable & origin)
+{
+   // MetropolisVariable tmp(origin);
+   // *this = std::move(tmp);
+
+    mX = origin.mX;
+    mRawTrace->resize(origin.mRawTrace->size());
+    std::copy(origin.mRawTrace->begin(),origin.mRawTrace->end(),mRawTrace->begin());
+
+    mFormatedTrace->resize(origin.mFormatedTrace->size());
+    std::copy(origin.mFormatedTrace->begin(),origin.mFormatedTrace->end(),mFormatedTrace->begin());
+
+    mSupport = origin.mSupport;
+    mFormat = origin.mFormat;
+
+    mHisto = origin.mHisto;
+    mChainsHistos = origin.mChainsHistos;
+
+    mCorrelations = origin.mCorrelations;
+
+    mHPD = origin.mHPD;
+    mCredibility = origin.mCredibility;
+
+    mExactCredibilityThreshold = origin.mExactCredibilityThreshold;
+
+    mResults = origin.mResults;
+    mChainsResults = origin.mChainsResults;
+
+    mfftLenUsed = origin.mBandwidthUsed;
+    mBandwidthUsed = origin.mBandwidthUsed;
+    mThresholdUsed = origin.mThresholdUsed;
+
+    mtminUsed = origin.mtminUsed;
+    mtmaxUsed = origin.mtmaxUsed;
+
+QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
+
+    return *this;
+}
+
+/** Move assignment operator */
+/*MetropolisVariable& MetropolisVariable::operator=(MetropolisVariable && origin)
+{
+    reset();
+    MetropolisVariable tmp(origin);
+    *this = std::move(tmp);
+    origin.~MetropolisVariable();
+    return *this;
+}*/
 
 void MetropolisVariable::memo()
 {
@@ -75,43 +193,9 @@ void MetropolisVariable::reserve( const int reserve)
     mFormatedTrace->reserve(reserve);
 }
 
-MetropolisVariable& MetropolisVariable::copy(MetropolisVariable const& origin)
-{
-    mX = origin.mX;
-    mRawTrace = origin.mRawTrace;
-    mFormatedTrace = origin.mFormatedTrace;
-    mSupport = origin.mSupport;
-    mFormat = origin.mFormat;
-
-    mHisto = origin.mHisto;
-    mChainsHistos = origin.mChainsHistos;
-
-    mCorrelations = origin.mCorrelations;
-
-    mHPD = origin.mHPD;
-    mCredibility = origin.mCredibility;
 
 
-    mExactCredibilityThreshold = origin.mExactCredibilityThreshold;
 
-    mResults = origin.mResults;
-    mChainsResults = origin.mChainsResults;
-
-    mfftLenUsed = origin.mBandwidthUsed;
-    mBandwidthUsed = origin.mBandwidthUsed;
-    mThresholdUsed = origin.mThresholdUsed;
-
-    mtminUsed = origin.mtminUsed;
-    mtmaxUsed = origin.mtmaxUsed;
-
-    return *this;
-}
-
-MetropolisVariable& MetropolisVariable::operator=( MetropolisVariable const& origin)
-{
-    copy(origin);
-    return *this;
-}
 
 void MetropolisVariable::setFormat(const DateUtils::FormatDate fm)
 {
@@ -134,7 +218,6 @@ void MetropolisVariable::updateFormatedTrace()
     if (mRawTrace->size()== 0)
        return;
 
-   // mRawTrace.squeeze(); // just cleaning, must be somewhere else to optimize
     mFormatedTrace->reserve(mRawTrace->size());
 
     if(mFormat == DateUtils::eNumeric)
@@ -142,12 +225,6 @@ void MetropolisVariable::updateFormatedTrace()
     else {
         mFormatedTrace->resize(mRawTrace->size());
         std::transform(mRawTrace->cbegin(),mRawTrace->cend(),mFormatedTrace->begin(),[this](const double i){return DateUtils::convertToFormat(i,this->mFormat);});
-       /* mFormatedTrace.reserve(mRawTrace.size());
-        QVector<double>::const_iterator iter = mRawTrace.constBegin();
-        while(iter!= mRawTrace.constEnd()){
-            mFormatedTrace.append(DateUtils::convertToFormat(*iter, mFormat));
-            ++iter;
-        }*/
     }
 
 }
@@ -210,8 +287,13 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
     mtmaxUsed = tmax;
     mtminUsed = tmin;
 
+<<<<<<< HEAD
     const size_t inputSize (fftLen);
     const size_t outputSize = 2 * (inputSize / 2 + 1);
+=======
+    const int inputSize (fftLen);
+    const int outputSize = 2 * (inputSize / 2 + 1);
+>>>>>>> master
 
     const double sigma = dataStd(dataSrc);
     QMap<double, double> result;
@@ -251,7 +333,11 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
         fftw_plan plan_forward = fftw_plan_dft_r2c_1d(inputSize, input, (fftw_complex*)output, FFTW_ESTIMATE);
         fftw_execute(plan_forward);
 
+<<<<<<< HEAD
         for (size_t i=0; i<outputSize/2; ++i) {
+=======
+        for (int i=0; i<outputSize/2; ++i) {
+>>>>>>> master
             const double s = 2. * M_PI * i / (b-a);
             const double factor = expf(-0.5 * s * s * h * h);
 
@@ -290,7 +376,11 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
         }
         const double delta = (b - a) / fftLen;
 
+<<<<<<< HEAD
         for (size_t i=0; i<inputSize; ++i) {
+=======
+        for (int i=0; i<inputSize; ++i) {
+>>>>>>> master
              const double t = a + (double)i * delta;
              result[t] = input[i];
         }
@@ -433,7 +523,7 @@ void MetropolisVariable::generateNumericalResults(const QList<ChainSpecs> &chain
     }
 }
 
-#pragma mark getters (no calculs)
+//#pragma mark getters (no calculs)
 QMap<double, double> &MetropolisVariable::fullHisto()
 {
     return mHisto;
@@ -477,31 +567,36 @@ QVector<double> MetropolisVariable::fullTraceForChain(const QList<ChainSpecs>& c
 
 QVector<double> MetropolisVariable::fullRunTrace(const QList<ChainSpecs>& chains)
 {
-
     // calcul reserve space
     int reserveSize (0);
 
     for (const ChainSpecs& chain:chains)
         reserveSize += (int) ceil(chain.mNumRunIter / chain.mThinningInterval);
 
-   // trace.resize(reserveSize);
-   // trace.reserve(reserveSize);
     QVector<double> trace(reserveSize);
 
     int shift (0);
     int shiftTrace (0);
+<<<<<<< HEAD
     for (int i = 0; i<chains.size(); ++i) {
         const ChainSpecs& chain = chains.at(i);
+=======
+
+    for (const ChainSpecs& chain:chains) {
+>>>>>>> master
         // we add 1 for the init
         const int burnAdaptSize = 1 + chain.mNumBurnIter + (int) (chain.mBatchIndex * chain.mNumBatchIter);
         const int runTraceSize = (int)(chain.mNumRunIter / chain.mThinningInterval);
         const int firstRunPosition = shift + burnAdaptSize;
-        std::copy(mRawTrace->begin()+ firstRunPosition, mRawTrace->begin() + firstRunPosition + runTraceSize, trace.begin()+ shiftTrace);
+        std::copy(mFormatedTrace->begin()+ firstRunPosition, mFormatedTrace->begin() + firstRunPosition + runTraceSize, trace.begin()+ shiftTrace);
 
+<<<<<<< HEAD
         //qDebug()<<"MetropolisVariable::fullRunTrace firstRunPosition"<<firstRunPosition<< " runTraceSize"<<runTraceSize;
         //trace += mFormatedTrace.mid(firstRunPosition, runTraceSize);
         
        // shift += burnAdaptSize + runTraceSize ;
+=======
+>>>>>>> master
         shiftTrace += runTraceSize;
         shift = firstRunPosition +runTraceSize;
     }
@@ -529,19 +624,24 @@ QVector<double> MetropolisVariable::runRawTraceForChain(const QList<ChainSpecs> 
 
         for (int i=0; i<chains.size(); ++i) {
             const ChainSpecs& chain = chains.at(i);
+<<<<<<< HEAD
             
+=======
+>>>>>>> master
             // We add 1 for the init
             const int burnAdaptSize = 1 + int(chain.mNumBurnIter + chain.mBatchIndex * chain.mNumBatchIter);
             const int traceSize = int(chain.mNumRunIter / chain.mThinningInterval);
 
             if (i == index) {
-                // code in case of trace is std::vector
                 trace.resize(traceSize);
                 std::copy(mRawTrace->begin()+shift+ burnAdaptSize, mRawTrace->begin()+shift+ burnAdaptSize +traceSize, trace.begin());
+<<<<<<< HEAD
 
                 //qDebug()<<"MetropolisVariable::runRawTraceForChain burnAdaptSize"<<burnAdaptSize<< " traceSize"<<traceSize;// code in case of trace is QVector
                 //trace = mRawTrace.mid(shift + burnAdaptSize, traceSize );
 
+=======
+>>>>>>> master
                 break;
             }
             shift += burnAdaptSize + traceSize;
@@ -571,7 +671,11 @@ QVector<double> MetropolisVariable::runFormatedTraceForChain(const QList<ChainSp
 
             if (i == index) {
                 trace.resize(traceSize);
+<<<<<<< HEAD
                 std::copy(mRawTrace->begin()+shift+ burnAdaptSize, mRawTrace->begin()+shift + burnAdaptSize +traceSize, trace.begin());
+=======
+                std::copy(mFormatedTrace->begin()+shift+ burnAdaptSize, mFormatedTrace->begin()+shift + burnAdaptSize +traceSize, trace.begin());
+>>>>>>> master
                 break;
             }
             shift += traceSize + burnAdaptSize ;
@@ -615,7 +719,6 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const bool 
 {
     QStringList list;
     if (withDateFormat) {
-
         list << locale.toString(mResults.analysis.mode);
         list << locale.toString(mResults.analysis.mean);
         list << DateUtils::dateToString(mResults.analysis.stddev);
@@ -627,7 +730,11 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const bool 
         list << locale.toString(mCredibility.second);
 
         const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThresholdUsed);
+<<<<<<< HEAD
         //QStringList results;
+=======
+
+>>>>>>> master
         for (int i=0; i<intervals.size(); ++i) {
             list << locale.toString(intervals.at(i).first, 'f', 1);
             list << locale.toString(intervals.at(i).second.first);
@@ -646,15 +753,17 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const bool 
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mCredibility.second));
 
         const QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(mHPD, mThresholdUsed);
+<<<<<<< HEAD
         //QStringList results;
+=======
+
+>>>>>>> master
         for (int i=0; i<intervals.size(); ++i)  {
             list << locale.toString(intervals.at(i).first, 'f', 1);
             list << locale.toString(DateUtils::convertFromAppSettingsFormat(intervals.at(i).second.first));
             list << locale.toString(DateUtils::convertFromAppSettingsFormat(intervals.at(i).second.second));
         }
     }
-
-
 
     return list;
 }
@@ -692,12 +801,11 @@ QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
           break;
     };
 
-   // stream << data.mRawTrace;
-    stream << (quint32) data.mRawTrace->size();
+    stream << data.mRawTrace->size();
     for(QVector<double>::const_iterator v = data.mRawTrace->cbegin(); v != data.mRawTrace->cend(); ++v)
         stream << *v;
 
-    qDebug()<<"&operator<<( QDataStream &stream, const MetropolisVariable &data )"<<data.mRawTrace->size();
+   // qDebug()<<"&operator<<( QDataStream &stream, const MetropolisVariable &data )"<<data.mRawTrace->size();
 
     // *out << this->mFormatedTrace; // useless
 

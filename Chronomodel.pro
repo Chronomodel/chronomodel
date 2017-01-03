@@ -51,7 +51,8 @@ RESOURCES = $$PRO_PATH/Chronomodel.qrc
 RESOURCES = Chronomodel.qrc
 
 # Compilation warning flags
-QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter
+# QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter # invalid option for MSVC2015
+
 
 #########################################
 # C++ 11
@@ -132,9 +133,9 @@ macx{
 	
 	# Link the application with FFTW library
 	# If no dylib are present, static libs (.a) are used => that's why we moved .dylib files in a "dylib" folder.
-        #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
         LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3
-	
+        message("macx->FFTW $$_PRO_FILE_PWD_/lib/FFTW/mac")
+
 	# If we were deploying FFTW as a dynamic library, we should :
 	# - Move all files from "lib/FFTW/mac/dylib" to "lib/FFTW/mac"
 	# - Uncomment the lines below to copy dylib files to the bundle
@@ -148,14 +149,16 @@ macx{
 	#QMAKE_POST_LINK += install_name_tool -change old/path @executable_path/../Frameworks/libfftw3f.3.dylib $$PRO_PATH/Release/Chronomodel.app/Contents/MacOS/Chronomodel;
 }
 win32{
-	INCLUDEPATH += lib/FFTW
-        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3f-3
-        #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3-3
+        INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW                # location of the file fftw3.h
+        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -llibfftw3-3   # location of the file libfftw3-3.lib
+        #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win64" -lfftw3-3  # to compile with a x64 machine
+        message("win32->FFTW $$_PRO_FILE_PWD_/lib/FFTW/win32")
 }
 #linux :
 unix:!macx{ 
 	INCLUDEPATH += lib/FFTW
-	LIBS += -lfftw3f
+        LIBS += -lfftw3
+        message("linux->FFTW")
 }
 
 #########################################

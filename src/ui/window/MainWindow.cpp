@@ -516,7 +516,7 @@ void MainWindow::disconnectProject()
 
 void MainWindow::closeProject()
 {
-   if(mProject) {
+   if (mProject) {
         if ( mProject && mProject->askToSave(tr("Save current project as..."))) {
             mUndoStack->clear();
 
@@ -536,7 +536,7 @@ void MainWindow::closeProject()
 
             updateWindowTitle();
             delete mProject;
-            mProject = 0;
+            mProject = nullptr;
 
         }
    } else // if there is no project, we suppose it means to close the programm
@@ -576,7 +576,7 @@ void MainWindow::appSettings()
 {
     AppSettingsDialog dialog(qApp->activeWindow());
     dialog.setSettings(mAppSettings);
-    connect(&dialog, SIGNAL(settingsChanged(const AppSettings&)), this, SLOT(setAppSettings(const AppSettings&)));
+    connect(&dialog, &AppSettingsDialog::settingsChanged, this, &MainWindow::setAppSettings);
     dialog.exec();
 
 }

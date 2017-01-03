@@ -47,3 +47,11 @@ deploy/windows/.DS_Store
 scan-build
 
 *.autosave
+*.obj
+*.tlog
+x64/*
+*.suo
+*.exe
+*.exe
+*.ilk
+moc*.*

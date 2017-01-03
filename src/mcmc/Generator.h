@@ -24,8 +24,9 @@ public:
     static double xorshift64star(void);
     static uint64_t xorshift64starSeed;
     static inline double to_double(uint64_t x) {
-       const union { uint64_t i; double d; } u = { .i = UINT64_C(0x3FF) << 52 | x >> 12 };
-       return u.d - 1.0;
+       // const union { uint64_t i; double d; } u = { .i = UINT64_C(0x3FF) << 52 | x >> 12 }; // don't work with MSVC2015
+       // return u.d - 1.0;
+        return static_cast<double>(x);
     }
 
 private:
