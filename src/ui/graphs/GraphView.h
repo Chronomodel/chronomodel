@@ -28,11 +28,13 @@ class GraphView: public QWidget, public GraphViewAbstract
 {
     Q_OBJECT
 public:
-    enum Rendering{
+    enum Rendering
+    {
         eSD = 0,
         eHD = 1
     };
-    enum AxisMode{
+    enum AxisMode
+    {
         eHidden = 0,
         eMinMax = 1,
         eMainTicksOnly = 2,
