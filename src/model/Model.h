@@ -33,7 +33,7 @@ public:
     
     QString getMCMCLog() const;
     
-    QList<QStringList> getStats(const QLocale locale, const bool withDateFormat = false);
+    QList<QStringList> getStats(const QLocale locale, const int precision, const bool withDateFormat = false);
     QList<QStringList> getPhasesTraces(QLocale locale, const bool withDateFormat = false);
     QList<QStringList> getPhaseTrace(int phaseIdx, const QLocale locale, const bool withDateFormat = false);
     QList<QStringList> getEventsTraces(const QLocale locale, const bool withDateFormat = false);
