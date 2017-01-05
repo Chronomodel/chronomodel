@@ -1765,7 +1765,7 @@ void ResultsView::exportResults()
     if (mModel) {
         AppSettings settings = MainWindow::getInstance()->getAppSettings();
         const QString csvSep = settings.mCSVCellSeparator;
-        
+        const int precision = settings.mPrecision;
         QLocale csvLocal = settings.mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
 
         csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
@@ -1802,7 +1802,7 @@ void ResultsView::exportResults()
 
             file.setFileName(dirPath + "/MCMC_Initialization.html");
             
-            if(file.open(QFile::WriteOnly | QFile::Truncate)) {
+            if (file.open(QFile::WriteOnly | QFile::Truncate)) {
                 QTextStream output(&file);
                 output<<version+"<br>";
                 output<<projectName+ "<br>";
@@ -1822,7 +1822,7 @@ void ResultsView::exportResults()
             }
             file.close();
 
-            const QList<QStringList> stats = mModel->getStats(csvLocal, true);
+            const QList<QStringList> stats = mModel->getStats(csvLocal, precision, true);
             saveCsvTo(stats, dirPath + "/Stats_table.csv", csvSep, true);
             
             if (mModel->mPhases.size() > 0) {

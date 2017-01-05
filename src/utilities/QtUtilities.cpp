@@ -355,18 +355,18 @@ QColor randomColor()
 
 bool constraintIsCircular(QJsonArray constraints, const int fromId, const int toId)
 {    
-    for(int i=0; i<constraints.size(); ++i) {
+    for (int i=0; i<constraints.size(); ++i) {
         QJsonObject constraint = constraints.at(i).toObject();
         
         // Detect circularity
-        if(constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == toId && constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == fromId)
+        if (constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == toId && constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == fromId)
             return true;
 
         // If the constraint follows the one we are trying to create,
         // follow it to check the circularity !
-        else if(constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == toId){
+        else if (constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == toId){
                 int nextToId =  constraint.value(STATE_CONSTRAINT_FWD_ID).toInt();
-                if(constraintIsCircular(constraints, fromId, nextToId))
+                if (constraintIsCircular(constraints, fromId, nextToId))
                     return true;
 
         }
@@ -374,9 +374,14 @@ bool constraintIsCircular(QJsonArray constraints, const int fromId, const int to
     return false;
 }
 
-QString formatValueToAppSettingsPrecision(const double valueToFormat)
+
+QString valueToStringWithAppSettingsForCSV(const double valueToFormat)
 {
-    int precision = MainWindow::getInstance()->getAppSettings().mPrecision;
+    AppSettings settings = MainWindow::getInstance()->getAppSettings();
+
+    QLocale local = settings.mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+    int precision = settings.mPrecision;
+
     char fmt = 'f';
     if (std::abs(valueToFormat)>250000)
         fmt = 'G';
@@ -384,29 +389,41 @@ QString formatValueToAppSettingsPrecision(const double valueToFormat)
     if (std::abs(valueToFormat)<1E-6)
         return "0";
     else
-        return QString::number(valueToFormat, fmt, precision);;
+        return local.toString(valueToFormat, fmt, precision);
+}
+
+QString formatValueToAppSettingsPrecision(const double valueToFormat)
+{
+    int precision = MainWindow::getInstance()->getAppSettings().mPrecision;
+
+    char fmt = 'f';
+    if (std::abs(valueToFormat)>250000)
+        fmt = 'G';
+
+    if (std::abs(valueToFormat)<1E-6)
+        return "0";
+    else
+        return QString::number(valueToFormat, fmt, precision);
 }
 
 #pragma mark CSV File
 bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep, const bool withDateFormat)
 {
     QFile file(filePath);
-    if(file.open(QFile::WriteOnly | QFile::Truncate))
-    {
+    if (file.open(QFile::WriteOnly | QFile::Truncate))  {
         QTextStream output(&file);
         const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
         output<<"# " +version+"\r";
         const QString projectName = MainWindow::getInstance()->getNameProject();
 
         output<<"# " +projectName+ "\r";
-        if(withDateFormat) {
+        if (withDateFormat)
             output<<"# Date Format : "+ DateUtils::getAppSettingsFormatStr() +"\r";
-        }
-        else {
+
+        else
             output<<"# Date Format : BC/AD\r";
-        }
-        for(int i=0; i<data.size(); ++i)
-        {
+
+        for (int i=0; i<data.size(); ++i)  {
             output << data.at(i).join(csvSep);
             output << "\r";
         }

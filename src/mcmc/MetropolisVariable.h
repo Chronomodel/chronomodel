@@ -60,6 +60,8 @@ public:
     
     // Trace for run part as a vector
     QVector<double> fullRunTrace(const QList<ChainSpecs>& chains);
+    QVector<double> fullRunRawTrace(const QList<ChainSpecs>& chains);
+
     // Trace for run part of the chain as a vector
     QVector<double> runRawTraceForChain(const QList<ChainSpecs>& chains, const int index);
     QVector<double> runFormatedTraceForChain(const QList<ChainSpecs>& chains, const int index);
@@ -73,7 +75,7 @@ public:
                                   const QString& unit = QString(),
                                   FormatFunc formatFunc = 0) const;
     
-    QStringList getResultsList(const QLocale locale, const bool withDateFormat = true);
+    QStringList getResultsList(const QLocale locale, const int precision = 0, const bool withDateFormat = true);
 
 
     /* obsolete change with the operator& << and >>
