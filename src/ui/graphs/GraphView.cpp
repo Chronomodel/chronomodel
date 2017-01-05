@@ -1036,9 +1036,8 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         QStringList list;
         
         list << "# X Axis";
-        type_data xMin = INFINITY; // = mCurves.cbegin()->mData.firstKey();
-        type_data xMax = INFINITY; // = mCurves.cbegin()->mData.lastKey();;
-        //bool firstCurveVisible = true;
+        type_data xMin = INFINITY;
+        type_data xMax = INFINITY;
         
         for (const auto & curve : mCurves) {
             if (!curve.mData.empty() &&
