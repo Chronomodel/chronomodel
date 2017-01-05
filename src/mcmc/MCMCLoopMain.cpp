@@ -562,7 +562,6 @@ void MCMCLoopMain::finalize()
     /** @todo Find a way to make it faster !
      */
     mModel->generateCorrelations(mChains);
-    
     // This should not be done here because it uses resultsView parameters
     // ResultView will trigger it again when loading the model
     //mModel->generatePosteriorDensities(mChains, 1024, 1);

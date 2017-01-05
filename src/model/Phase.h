@@ -63,9 +63,9 @@ public:
     QPair<double,double> mTimeRange;
     
     // Used to display correctly if alpha or beta is a fixed bound
-    bool mIsAlphaFixed;
+   /* bool mIsAlphaFixed;
     bool mIsBetaFixed;
-    
+   */
     MetropolisVariable mDuration;
     QString mDurationCredibility;
     

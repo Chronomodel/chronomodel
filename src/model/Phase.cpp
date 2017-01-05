@@ -10,8 +10,8 @@ Phase::Phase():
 mId(0),
 mName("no Phase Name"),
 mTau(0.),
-mIsAlphaFixed(true),
-mIsBetaFixed(true),
+//mIsAlphaFixed(true),
+//mIsBetaFixed(true),
 mTauType(Phase::eTauUnknown),
 mTauFixed(0),
 mTauMin(0),
@@ -153,6 +153,7 @@ QPair<double,double> Phase::getFormatedTimeRange() const
 {
     const double t1 = DateUtils::convertToAppSettingsFormat(mTimeRange.first);
     const double t2 = DateUtils::convertToAppSettingsFormat(mTimeRange.second);
+
     if (t1<t2)
         return QPair<double,double>(t1,t2);
 
@@ -248,20 +249,20 @@ void Phase::updateAll(const double tmin, const double tmax)
 {
     static bool initalized = false;
     
-    double oldAlpha = mAlpha.mX;
-    double oldBeta = mBeta.mX;
-    
     mAlpha.mX = getMinThetaEvents(tmin);
     mBeta.mX = getMaxThetaEvents(tmax);
     mDuration.mX = mBeta.mX - mAlpha.mX;
     
-    if (initalized) {
-        if (mAlpha.mX != oldAlpha)
-            mIsAlphaFixed = false;
+   /*   if (initalized) {
+            double oldAlpha = mAlpha.mX;
+            double oldBeta = mBeta.mX;
+            if (mAlpha.mX != oldAlpha)
+                mIsAlphaFixed = false;
 
-        if (mBeta.mX != oldBeta)
-            mIsAlphaFixed = false;
-    }
+            if (mBeta.mX != oldBeta)
+                mIsAlphaFixed = false;
+        }
+    */
     
     updateTau();
     
