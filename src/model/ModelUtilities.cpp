@@ -491,13 +491,13 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
             short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTheta.mHPD, model);
             switch (position) {
                 case -1:
-                   text += line( textBold(textBlack(QObject::tr("Solutions exist before study period") )) ) + "<br>";
+                   text += line( textBold(textRed(QObject::tr("Solutions exist before study period") )) ) + "<br>";
                     break;
                 case +1:
-                    text += line( textBold(textBlack(QObject::tr("Solutions exist after study period"))) ) + "<br>";
+                    text += line( textBold(textRed(QObject::tr("Solutions exist after study period"))) ) + "<br>";
                     break;
                 case +2:
-                    text += line( textBold(textBlack(QObject::tr("Solutions exist outside study period"))) ) + "<br>";
+                    text += line( textBold(textRed(QObject::tr("Solutions exist outside study period"))) ) + "<br>";
                     break;
                 default:
                     break;
@@ -638,7 +638,7 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p)
 
 /**
  * @brief HPDOutsideSudyPeriod
- * @param variable
+ * @param hpd, the hpd must be send with the good date format
  * @param model
  * @return -1 if there is solution under Study Period; 0 if all solution is inside Sudy Period;
  *  +1 if there is solution over Study Period; +2 if there is both solution under and over the Study Period
