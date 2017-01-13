@@ -23,7 +23,7 @@
 #endif
 
 
-typedef QString (*FormatFunc)(const double);
+typedef QString (*FormatFunc)(const double, const bool forCSV);
 
 
 int compareStrings(const std::string &s1, const std::string &s2);
