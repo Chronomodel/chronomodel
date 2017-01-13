@@ -73,7 +73,6 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
     mGraph->removeAllZones();
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
-    //mGraph->autoAdjustYScale(typeGraph == eTrace);
     
     if (mDate) {
         QColor color = mDate->mColor;
@@ -113,7 +112,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
 
 
                 mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
-                mGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
+                mGraph->setFormatFunctX(stringWithAppSettings);
                 mGraph->setFormatFunctY(0);
                 mGraph->autoAdjustYScale(true);
                 //  Post Distrib All Chains
@@ -179,7 +178,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
 
                 mGraph->mLegendX = "";
                 mGraph->setFormatFunctX(0);
-                mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
+                mGraph->setFormatFunctY(stringWithAppSettings);
                 
                 //  Post Distrib All Chains
                 GraphCurve curvePostDistrib = generateDensityCurve(variableDate->fullHisto(),
@@ -251,8 +250,8 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         // ------------------------------------------------
         else if (typeGraph == eCorrel) {
             mGraph->mLegendX = "";
-            mGraph->setFormatFunctX(0);
-            mGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
+            mGraph->setFormatFunctX(nullptr);
+            mGraph->setFormatFunctY(stringWithAppSettings);
             mGraph->setRangeY(-1, 1);
             
             generateCorrelCurves(mChains, variableDate);

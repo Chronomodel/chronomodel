@@ -19,14 +19,14 @@ public:
     static double convertFromFormat(const double formattedValue, const FormatDate format);
     
     static QString formatString(const FormatDate format);
-    static QString dateToString(const double date);
-    static QString dateToString(const double date, int precision);
+    //static QString dateToString(const double date);
+    //static QString dateToString(const double date, int precision);
     
     /** 
      * @brief convert native values (classic BC/AD) to their prefered display date format (Cal B2k, ...)
      */
     static double convertToAppSettingsFormat(const double valueToFormat);
-    static QString convertToAppSettingsFormatStr(const double valueToFormat);
+    static QString convertToAppSettingsFormatStr(const double valueToFormat, const bool forCSV = false);
 
     /**
      * @brief convert formatted values (Cal B2k, Cal BP, ...) to native value (classic BC/AD)

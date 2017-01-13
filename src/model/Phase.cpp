@@ -213,15 +213,15 @@ double Phase::getMinThetaEvents(double tmin)
 
 double Phase::getMinThetaNextPhases(double tmax)
 {
-    
     double minTheta = tmax;
-    for (int i=0; i<mConstraintsFwd.size(); ++i) {
+    //for (int i=0; i<mConstraintsFwd.size(); ++i) {
+    for (auto&& pConstFwd : mConstraintsFwd) {
         // we can juste look alpha and beta set in member mAlpha and mBeta
         //double theta= mConstraintsFwd[i]->mPhaseTo->getMinThetaEvents(tmax);
-        double theta= mConstraintsFwd[i]->mPhaseTo->mAlpha.mX;
+        double theta= pConstFwd->mPhaseTo->mAlpha.mX;
         
-        if (mConstraintsFwd[i]->mGammaType != PhaseConstraint::eGammaUnknown)
-            minTheta = qMin(minTheta, theta - mConstraintsFwd[i]->mGamma);
+        if (pConstFwd->mGammaType != PhaseConstraint::eGammaUnknown)
+            minTheta = qMin(minTheta, theta - pConstFwd->mGamma);
         else
             minTheta = qMin(minTheta, theta);
     }
@@ -231,12 +231,13 @@ double Phase::getMinThetaNextPhases(double tmax)
 double Phase::getMaxThetaPrevPhases(double tmin)
 {
     double maxTheta = tmin;
-    for (int i=0; i<mConstraintsBwd.size(); ++i) {
+    //for (int i=0; i<mConstraintsBwd.size(); ++i) {
+    for (auto&& pConstBwd : mConstraintsBwd) {
         //double theta= mConstraintsBwd[i]->mPhaseFrom->getMaxThetaEvents(tmin);
-        double theta= mConstraintsBwd[i]->mPhaseFrom->mBeta.mX;
+        double theta= pConstBwd->mPhaseFrom->mBeta.mX;
         
-        if (mConstraintsBwd[i]->mGammaType != PhaseConstraint::eGammaUnknown)
-            maxTheta = qMax(maxTheta, theta + mConstraintsBwd[i]->mGamma);
+        if (pConstBwd->mGammaType != PhaseConstraint::eGammaUnknown)
+            maxTheta = qMax(maxTheta, theta + pConstBwd->mGamma);
         else
             maxTheta = qMax(maxTheta, theta);
     }
@@ -247,7 +248,7 @@ double Phase::getMaxThetaPrevPhases(double tmin)
 
 void Phase::updateAll(const double tmin, const double tmax)
 {
-    static bool initalized = false;
+    static bool initalized = false; // What is it??
     
     mAlpha.mX = getMinThetaEvents(tmin);
     mBeta.mX = getMaxThetaEvents(tmax);
@@ -267,6 +268,25 @@ void Phase::updateAll(const double tmin, const double tmax)
     updateTau();
     
     initalized = true;
+}
+
+QString Phase::getTauTypeText() const
+{
+    switch (mTauType) {
+        case eTauFixed:
+                return QObject::tr("Tau Fixed = ") + QString::number(mTauFixed);
+            break;
+        case eTauRange:
+                return QObject::tr("Tau Range")+ " [ " + QString::number(mTauMin) + " ; " + QString::number(mTauMax) + " ]";
+            break;
+        case eTauUnknown:
+                return QObject::tr("Tau Unknown");
+            break;
+        default:
+                return QObject::tr("Tau Undefined->Error");
+            break;
+    }
+
 }
 
 void Phase::initTau()

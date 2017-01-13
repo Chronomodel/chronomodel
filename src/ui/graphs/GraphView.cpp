@@ -433,7 +433,6 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
     if (mUseTip && x >= mMarginLeft && x <= (mMarginLeft + mGraphWidth) && y >= mMarginTop && y <= (mMarginTop + mGraphHeight))  {
         mTipVisible = true;
         QRectF old_rect = mTipRect;
-        //QLocale locale;
         
         int cursorW = 15;
         int cursorH = 15;
@@ -455,12 +454,8 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
         mTipRect.setHeight(mTipHeight);
         
         mTipX = getValueForX(e->x()-0.5);
-        //if(mFormatFuncX)
-        //    mTipX = locale.toDouble(mFormatFuncX(mTipX));
         
         mTipY = getValueForY(e->y()+0.5);
-        //if(mFormatFuncY)
-        //    mTipY = locale.toDouble(mFormatFuncY(mTipY));
         
         update(old_rect.adjusted(-30, -30, 30, 30).toRect());
         
@@ -594,15 +589,14 @@ void GraphView::paintEvent(QPaintEvent* )
         p.setPen(Qt::white);
         
         if (!mTipXLab.isEmpty() && !mTipYLab.isEmpty()) {
-            p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + DateUtils::dateToString(mTipX));
-            p.drawText(mTipRect.adjusted(0, (int)(mTipRect.height()/2), 0, 0), Qt::AlignCenter, mTipYLab + DateUtils::dateToString(mTipY));
+            p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + stringWithAppSettings(mTipX));
+            p.drawText(mTipRect.adjusted(0, (int)(mTipRect.height()/2), 0, 0), Qt::AlignCenter, mTipYLab + stringWithAppSettings(mTipY));
             
         } else if (!mTipXLab.isEmpty())
-            p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + DateUtils::dateToString(mTipX));
+            p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + stringWithAppSettings(mTipX));
         
         else if (!mTipYLab.isEmpty())
-            p.drawText(mTipRect, Qt::AlignCenter, mTipYLab + DateUtils::dateToString(mTipY));
-        
+            p.drawText(mTipRect, Qt::AlignCenter, mTipYLab + stringWithAppSettings(mTipY));
        
     }
 }
@@ -673,7 +667,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolX.mShowText = mXAxisValues;
     
     mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
-    QVector<qreal> linesXPos = mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), (qreal)7.,formatValueToAppSettingsPrecision);//, mFormatFuncX);
+    mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), (qreal)7.,stringWithAppSettings);//, mFormatFuncX);
     
     // ----------------------------------------------------
     //  Horizontal Grid
@@ -684,7 +678,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolY.mShowText = mYAxisValues;
 
     mAxisToolY.updateValues(mGraphHeight, mStepMinWidth, mMinY, mMaxY);
-    QVector<qreal> linesYPos = mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), (qreal) 5.,formatValueToAppSettingsPrecision);//, mFormatFuncY);
+    mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), (qreal) 5.,stringWithAppSettings);//, mFormatFuncY);
     
     
     // ----------------------------------------------------
@@ -818,7 +812,6 @@ void GraphView::drawCurves(QPainter& painter)
                 qreal last_x (0.);
                 qreal last_y (0.);
                 qreal last_valueY (0.);
-                //float valueY ;
                 
                 if (curve.mUseVectorData) {
                     // Down sample vector
@@ -1072,7 +1065,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
             list.clear();
 
             list << QString::number(x);
-            for (const auto & curve : mCurves) {
+            for (auto && curve : mCurves) {
                 if (!curve.mData.empty() &&
                     !curve.mIsHorizontalLine &&
                     !curve.mIsVerticalLine &&

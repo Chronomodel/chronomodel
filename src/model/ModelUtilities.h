@@ -33,13 +33,13 @@ public:
     
     static QVector<Event*> unsortEvents(const QList<Event*>& events);
     
-    static QString dateResultsText(const Date* d, const Model* model = 0);
-    static QString eventResultsText(const Event* e, bool withDates, const Model* model = 0);
-    static QString phaseResultsText(const Phase* p);
-    static QString constraintResultsText(const PhaseConstraint* p);
+    static QString dateResultsText(const Date* d, const Model* model = nullptr, const bool forCSV = false);
+    static QString eventResultsText(const Event* e, bool withDates, const Model* model = nullptr, const bool forCSV = false);
+    static QString phaseResultsText(const Phase* p, const bool forCSV = false);
+    static QString constraintResultsText(const PhaseConstraint* p, const bool forCSV = false);
     
-    static QString dateResultsHTML(const Date* d, const Model* model = 0);
-    static QString eventResultsHTML(const Event* e,const bool withDates, const Model* model = 0);
+    static QString dateResultsHTML(const Date* d, const Model* model = nullptr);
+    static QString eventResultsHTML(const Event* e,const bool withDates, const Model* model = nullptr);
     static QString phaseResultsHTML(const Phase* p);
     static QString constraintResultsHTML(const PhaseConstraint* p);
 

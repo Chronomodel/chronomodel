@@ -375,7 +375,7 @@ bool constraintIsCircular(QJsonArray constraints, const int fromId, const int to
 }
 
 
-QString valueToStringWithAppSettingsForCSV(const double valueToFormat)
+/*QString stringWithAppSettingsForCSV(const double valueToFormat, const QLocale locale)
 {
     AppSettings settings = MainWindow::getInstance()->getAppSettings();
 
@@ -390,20 +390,27 @@ QString valueToStringWithAppSettingsForCSV(const double valueToFormat)
         return "0";
     else
         return local.toString(valueToFormat, fmt, precision);
-}
+}*/
 
-QString formatValueToAppSettingsPrecision(const double valueToFormat)
+QString stringWithAppSettings(const double valueToFormat, const bool forCSV)
 {
+    if (std::abs(valueToFormat)<1E-6)
+        return "0";
+
     int precision = MainWindow::getInstance()->getAppSettings().mPrecision;
 
     char fmt = 'f';
     if (std::abs(valueToFormat)>250000)
         fmt = 'G';
 
-    if (std::abs(valueToFormat)<1E-6)
-        return "0";
-    else
-        return QString::number(valueToFormat, fmt, precision);
+    if (forCSV) {
+        QLocale locale = MainWindow::getInstance()->getAppSettings().mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+        locale.setNumberOptions(QLocale::OmitGroupSeparator);
+        return locale.toString(valueToFormat, fmt, precision);
+    } else {
+        QLocale locale = QLocale();
+        return locale.toString(valueToFormat, fmt, precision);
+   }
 }
 
 #pragma mark CSV File

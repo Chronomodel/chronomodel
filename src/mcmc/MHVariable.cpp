@@ -1,5 +1,6 @@
 ﻿#include "MHVariable.h"
 #include "StdUtilities.h"
+#include "QtUtilities.h"
 #include "Generator.h"
 #include <QDebug>
 
@@ -142,10 +143,6 @@ MHVariable& MHVariable::copy(MHVariable const& origin)
     mtminUsed = origin.mtminUsed;
     mtmaxUsed = origin.mtmaxUsed;
 
-
-
-
-
     mSigmaMH = origin.mSigmaMH;
     mLastAccepts = origin.mLastAccepts;
     mLastAcceptsLength = origin.mLastAcceptsLength;
@@ -173,7 +170,7 @@ double MHVariable::getCurrentAcceptRate()
 {
     double sum (0.);
 
-    sum = std::accumulate(mLastAccepts.begin(), mLastAccepts.end(), sum,[](double s, double a){return s+(a ? 1.f : 0.f);}); //#include <numeric>
+    sum = std::accumulate(mLastAccepts.begin(), mLastAccepts.end(), sum,[](double s, double a){return s+(a ? 1. : 0.);}); //#include <numeric>
 
     sum = sum / (double)mLastAccepts.size();
 
@@ -194,16 +191,16 @@ QVector<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains,
 
     accept.reserve(reserveSize);
 
-    for(int i=0; i<chains.size(); ++i) {
+    for (int i=0; i<chains.size(); ++i) {
         int chainSize = chains.at(i).mNumBurnIter + (chains.at(i).mBatchIndex * chains.at(i).mNumBatchIter) + chains.at(i).mNumRunIter / chains.at(i).mThinningInterval;
         
 
-        if(i == index) {
+        if (i == index) {
             // could be done with
             //accept.resize(chainSize
             //std::copy(from_vector.begin(), from_vector.end(), to_vector.begin());
 
-            for(int j=0; j<chainSize; ++j)
+            for (int j=0; j<chainSize; ++j)
                 accept.append(mHistoryAcceptRateMH->at(shift + j));
 
             break;
@@ -220,9 +217,9 @@ void MHVariable::generateGlobalRunAcceptation(const QList<ChainSpecs> &chains)
     double acceptsLength = 0.;
     int shift = 0;
 
-    for(int i=0; i<chains.size(); ++i) {
-        int burnAdaptSize = chains.at(i).mNumBurnIter + (chains.at(i).mBatchIndex * chains.at(i).mNumBatchIter);
-        int runSize = chains.at(i).mNumRunIter;
+    for (auto&& chain : chains) {
+        int burnAdaptSize = chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);
+        int runSize = chain.mNumRunIter;
         shift += burnAdaptSize;
         for (int j=shift; (j<shift + runSize) && (j<mAllAccepts->size()); ++j) {
             if (mAllAccepts->at(j))
@@ -241,11 +238,12 @@ void MHVariable::generateNumericalResults(const QList<ChainSpecs> &chains)
     generateGlobalRunAcceptation(chains);
 }
 
-QString MHVariable::resultsString(const QString& nl, const QString& noResultMessage, const QString& unit, FormatFunc formatFunc) const
+QString MHVariable::resultsString(const QString& nl, const QString& noResultMessage, const QString& unit, FormatFunc formatFunc, const bool forCSV) const
 {
-    QString result = MetropolisVariable::resultsString(nl, noResultMessage, unit, formatFunc);
-    if(!mProposal.isEmpty())
-        result += nl + "Acceptation rate (all acquire iterations) : " + QString::number(mGlobalAcceptation*100, 'f', 1) + "% ("+mProposal+")";
+    QString result = MetropolisVariable::resultsString(nl, noResultMessage, unit, formatFunc, forCSV);
+    if (!mProposal.isEmpty())
+        result += nl + "Acceptation rate (all acquire iterations) : " + stringWithAppSettings(mGlobalAcceptation*100., forCSV) + "% ("+mProposal+")";
+
     return result;
 }
 

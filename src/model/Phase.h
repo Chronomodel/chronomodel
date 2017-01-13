@@ -44,6 +44,7 @@ public:
     void updateAll(const double tmin, const double tmax);
     void memoAll();
     
+    QString getTauTypeText() const;
     void initTau();
     void updateTau();
     

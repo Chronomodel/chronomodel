@@ -38,8 +38,8 @@ QColor randomColor();
 
 bool constraintIsCircular( QJsonArray constraints, const int FromId, const int ToId);
 
-QString formatValueToAppSettingsPrecision(const double valueToFormat);
-
+//QString formatValueToAppSettingsPrecision(const double valueToFormat);
+QString stringWithAppSettings(const double valueToFormat, const bool forCSV = false);
 bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep, const bool withDateFormat = false);
 bool saveAsCsv(const QList<QStringList>& data, const QString& title = QObject::tr("Save as..."));
 
@@ -53,11 +53,11 @@ template <typename T, typename V>
 QMap<T, V> getMapDataInRange(const QMap<T, V> &data, const T subMin, const  T subMax)
 {
 #ifdef DEBUG
-    if(data.size() == 0)
+    if (data.size() == 0)
         qDebug()<<"QtUtilities::getMapDataInRange data.size() == 0";
 
 #endif
-    if(data.size() == 0)
+    if (data.size() == 0)
         return data;
 
     T tBeforeSubMin;

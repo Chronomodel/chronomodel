@@ -13,7 +13,7 @@ class AxisTool
 public:
     AxisTool();
     void updateValues(const int totalPix, const int minDeltaPix, const qreal minVal, const qreal maxVal);
-    QVector<qreal> paint(QPainter& p, const QRectF& r, qreal heigthSize, FormatFunc valueFormatFunc = NULL);//(*FormatFunc)(const double) = NULL);
+    QVector<qreal> paint(QPainter& p, const QRectF& r, qreal heigthSize, FormatFunc valueFormatFunc = nullptr);//(*FormatFunc)(const double) = NULL);
     
 public:
     bool mIsHorizontal;

@@ -49,6 +49,7 @@ double DateUtils::convertFromFormat(const double formattedValue, const FormatDat
             break;
     }
 }
+
 QString DateUtils::formatString(const FormatDate format)
 {
     switch (format) {
@@ -74,12 +75,12 @@ QString DateUtils::formatString(const FormatDate format)
     }
 }
 
-QString DateUtils::dateToString(const double date)
+/*QString DateUtils::dateToString(const double date)
 {
     return formatValueToAppSettingsPrecision(date);
-}
+}*/
 
-QString DateUtils::dateToString(const double date, int precision)
+/*QString DateUtils::dateToString(const double date, int precision)
 {
     QLocale locale;
     locale.setNumberOptions(QLocale::OmitGroupSeparator);
@@ -92,7 +93,7 @@ QString DateUtils::dateToString(const double date, int precision)
 
     else
         return locale.toString(date, fmt, precision);
-}
+}*/
 
 DateUtils::FormatDate DateUtils::getAppSettingsFormat()
 {
@@ -105,9 +106,9 @@ QString DateUtils::getAppSettingsFormatStr()
 }
 
 
-QString DateUtils::convertToAppSettingsFormatStr(const double valueToFormat)
+QString DateUtils::convertToAppSettingsFormatStr(const double valueToFormat, const bool forCSV)
 {
-    return dateToString(convertToAppSettingsFormat(valueToFormat));
+    return stringWithAppSettings(convertToAppSettingsFormat(valueToFormat), forCSV);
 }
 
 double DateUtils::convertToAppSettingsFormat(const double valueToFormat)
@@ -117,7 +118,7 @@ double DateUtils::convertToAppSettingsFormat(const double valueToFormat)
 
 QString DateUtils::convertFromAppSettingsFormatStr(const double formattedValue)
 {
-    return dateToString(convertFromAppSettingsFormat(formattedValue));
+    return stringWithAppSettings(convertFromAppSettingsFormat(formattedValue));
 }
 
 double DateUtils::convertFromAppSettingsFormat(const double formattedValue)

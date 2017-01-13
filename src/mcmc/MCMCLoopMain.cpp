@@ -361,7 +361,7 @@ QString MCMCLoopMain::initMCMC()
     log += textBold("Events Initialisation (with their data)");
     
     int i = 0;
-    foreach (const Event* event, events) {
+    for (const Event* event : events) {
         ++i;
         log += "<hr><br>";
         
@@ -370,31 +370,31 @@ QString MCMCLoopMain::initMCMC()
             if (bound) {
                 log += line(textRed("Bound (" + QString::number(i) + "/" + QString::number(events.size()) + ") : " + bound->mName));
                 log += line(textRed(" - theta (value) : " + DateUtils::convertToAppSettingsFormatStr(bound->mTheta.mX)+" "+ DateUtils::getAppSettingsFormat()));
-                log += line(textRed(" - theta (sigma MH) : " + DateUtils::dateToString(bound->mTheta.mSigmaMH)));
+                log += line(textRed(" - theta (sigma MH) : " + stringWithAppSettings(bound->mTheta.mSigmaMH)));
             }
         }
         else {
             log += line(textBlue("Event (" + QString::number(i) + "/" + QString::number(events.size()) + ") : " + event->mName));
             log += line(textBlue(" - theta (value) : " + DateUtils::convertToAppSettingsFormatStr(event->mTheta.mX) +" "+ DateUtils::getAppSettingsFormat()));
-            log += line(textBlue(" - theta (sigma MH) : " + DateUtils::dateToString(event->mTheta.mSigmaMH)));
-            log += line(textBlue(" - SO2 : " + DateUtils::dateToString(event->mS02)));
+            log += line(textBlue(" - theta (sigma MH) : " + stringWithAppSettings(event->mTheta.mSigmaMH)));
+            log += line(textBlue(" - SO2 : " + stringWithAppSettings(event->mS02)));
         }
         
         
         int j = 0;
-        foreach (const Date date, event->mDates) {
+        for (const Date date : event->mDates) {
             ++j;
             log += "<br>";
 
             log += line(textBlack("Data (" + QString::number(j) + "/" + QString::number(event->mDates.size()) + ") : " + date.mName));
             log += line(textBlack(" - ti (value) : " + DateUtils::convertToAppSettingsFormatStr(date.mTheta.mX)+" "+ DateUtils::getAppSettingsFormat()));
             if (date.mMethod == Date::eMHSymGaussAdapt)
-                log += line(textBlack(" - ti (sigma MH) : " + DateUtils::dateToString(date.mTheta.mSigmaMH)));
+                log += line(textBlack(" - ti (sigma MH) : " + stringWithAppSettings(date.mTheta.mSigmaMH)));
 
-            log += line(textBlack(" - sigmai (value) : " + DateUtils::dateToString(date.mSigma.mX)));
-            log += line(textBlack(" - sigmai (sigma MH) : " +DateUtils::dateToString(date.mSigma.mSigmaMH)));
+            log += line(textBlack(" - sigmai (value) : " + stringWithAppSettings(date.mSigma.mX)));
+            log += line(textBlack(" - sigmai (sigma MH) : " + stringWithAppSettings(date.mSigma.mSigmaMH)));
             if (date.mDeltaType != Date::eDeltaNone)
-                log += line(textBlack(" - deltai (value) : " + DateUtils::dateToString(date.mDelta)));
+                log += line(textBlack(" - deltai (value) : " + stringWithAppSettings(date.mDelta)));
 
         }
     }
@@ -405,13 +405,13 @@ QString MCMCLoopMain::initMCMC()
         log += "<hr>";
 
         int i = 0;
-        foreach (const Phase * phase, phases) {
+        for (const Phase * phase : phases) {
             ++i;
             log += "<br>";
             log += line(textPurple("Phase (" + QString::number(i) + "/" + QString::number(phases.size()) + ") : " + phase->mName));
             log += line(textPurple(" - alpha : " + DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mX)+" "+ DateUtils::getAppSettingsFormat()));
             log += line(textPurple(" - beta : " + DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mX)+" "+ DateUtils::getAppSettingsFormat()));
-            log += line(textPurple(" - tau : " + DateUtils::dateToString(phase->mTau)));
+            log += line(textPurple(" - tau : " + stringWithAppSettings(phase->mTau)));
         }
     }
     
@@ -422,11 +422,11 @@ QString MCMCLoopMain::initMCMC()
         log += "<hr>";
         
         int i = 0;
-        foreach (const PhaseConstraint* constraint, phasesConstraints) {
+        for (const PhaseConstraint* constraint : phasesConstraints) {
             ++i;
             log += "<br>";
             log += line("PhaseConstraint (" + QString::number(i) + "/" + QString::number(phasesConstraints.size()) + ") : " + QString::number(constraint->mId));
-            log += line(" - gamma : " + DateUtils::dateToString(constraint->mGamma));
+            log += line(" - gamma : " + stringWithAppSettings(constraint->mGamma));
         }
     }
     

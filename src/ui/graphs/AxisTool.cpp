@@ -1,6 +1,7 @@
 #include "AxisTool.h"
 #include "Painting.h"
 #include "StdUtilities.h"
+#include "QtUtilities.h"
 
 #include <QtWidgets>
 #include <iostream>
@@ -125,18 +126,19 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, F
             if (mShowText){
                 QRectF tr(xo, yo, w, h);
                 
-                if (valueFormatFunc != 0) {
-                    p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, valueFormatFunc(mStartVal));
-                    p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, valueFormatFunc(mStartVal + mDeltaVal * (w/mDeltaPix)));
+               // if (valueFormatFunc != 0) {
+                if (valueFormatFunc) {
+                    p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, valueFormatFunc(mStartVal, false));
+                    p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, valueFormatFunc(mStartVal + mDeltaVal * (w/mDeltaPix), false));
                 } else {
-                    p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, QString::number(mStartVal, 'f', 0));
-                    p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, QString::number(mStartVal + mDeltaVal * (w/mDeltaPix), 'f', 0));
+                    p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, stringWithAppSettings(mStartVal, false));
+                    p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, stringWithAppSettings(mStartVal + mDeltaVal * (w/mDeltaPix), false));
                 }
             }
         }
         else {
             int i (0);
-            for(qreal x = xo + mStartPix - mDeltaPix; x <= xo + w ; x += mDeltaPix) {
+            for (qreal x = xo + mStartPix - mDeltaPix; x <= xo + w ; x += mDeltaPix) {
                 if ((x >= xo)) {
                     if (mShowSubSubs) {
                         for (qreal sx = x + mDeltaPix/10; sx < std::min(x + mDeltaPix, xo + w); sx += mDeltaPix/10)
@@ -149,7 +151,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, F
                     }
 
                      if (mShowText && mPixelsPerUnit>0) {
-                            QString text =(valueFormatFunc ? valueFormatFunc((x-xo)/mPixelsPerUnit + mStartVal) : QString::number(((x-xo)/mPixelsPerUnit + mStartVal),'f',0) );
+                            QString text =(valueFormatFunc ? valueFormatFunc((x-xo)/mPixelsPerUnit + mStartVal, false) : stringWithAppSettings(((x-xo)/mPixelsPerUnit + mStartVal), false) );
 
                             const int textWidth =  fm.width(text) ;
                             const qreal tx = x - textWidth/2;
@@ -190,10 +192,10 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, F
         {
             if (mShowText){
                 const QRectF tr(r.x(), r.y(), w - 8, h);
-                const QString textStarVal = (valueFormatFunc ? valueFormatFunc(mStartVal) : QString::number(mStartVal,'f', 0) );
+                const QString textStarVal = (valueFormatFunc ? valueFormatFunc(mStartVal, false) : QString::number(mStartVal,'f', 0) );
                 
                 p.drawText(tr, Qt::AlignRight | Qt::AlignBottom, textStarVal);
-                const QString textEndVal = (valueFormatFunc ? valueFormatFunc(mEndVal) : QString::number(mEndVal,'f',0) );
+                const QString textEndVal = (valueFormatFunc ? valueFormatFunc(mEndVal, false) : QString::number(mEndVal,'f',0) );
                 p.drawText(tr, Qt::AlignRight | Qt::AlignTop, textEndVal);
             }
         } else  {
@@ -209,14 +211,14 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, F
                 if (y <= yov) {
                     if ( mShowText ) {
                         const int align (Qt::AlignRight | Qt::AlignVCenter);
-                        const QString text =(valueFormatFunc ? valueFormatFunc(mEndVal-(y-yo)/mPixelsPerUnit) : QString::number((mEndVal-(y-yo)/mPixelsPerUnit ),'f',0) );
+                        const QString text =(valueFormatFunc ? valueFormatFunc(mEndVal-(y-yo)/mPixelsPerUnit, false) : QString::number((mEndVal-(y-yo)/mPixelsPerUnit ),'f',0) );
                         
                         const qreal ty ( y - heightText/2 );
                         const QRectF tr(xov - w, ty, w - 8, heightText);
                         p.drawText(tr, align, text);
                     }
                     
-                    if( mShowSubs ) {
+                    if ( mShowSubs ) {
                         p.drawLine(QLineF(xov, y, xov - 6, y));
                         linesPos.append(y);
                     }

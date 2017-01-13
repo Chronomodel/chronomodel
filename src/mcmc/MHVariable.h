@@ -29,7 +29,7 @@ public:
     QString resultsString(const QString& nl = "<br>",
                           const QString& noResultMessage = QObject::tr("No result to display"),
                           const QString& unit = QString(),
-                          FormatFunc formatFunc = 0) const;
+                          FormatFunc formatFunc = nullptr, const bool forCSV = false) const;
 
 public:
     double mSigmaMH;

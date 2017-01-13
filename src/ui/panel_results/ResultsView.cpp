@@ -555,7 +555,7 @@ void ResultsView::changeScrollArea()
 
 void ResultsView::updateLayout()
 {
-    if(!mModel) return;
+    if (!mModel) return;
     qDebug() << "ResultsView::updateLayout()";
     
     const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
@@ -565,8 +565,8 @@ void ResultsView::updateLayout()
     
     const int tabIdx = mTabs->currentIndex();
     
-    mCurrentXMinEdit->setText( DateUtils::dateToString(mResultCurrentMinX) );
-    mCurrentXMaxEdit->setText( DateUtils::dateToString(mResultCurrentMaxX) );
+    mCurrentXMinEdit->setText( stringWithAppSettings(mResultCurrentMinX) );
+    mCurrentXMaxEdit->setText( stringWithAppSettings(mResultCurrentMaxX) );
     // ----------------------------------------------------------
     //  Main layout
     // ----------------------------------------------------------
@@ -1447,7 +1447,7 @@ void ResultsView::updateScales()
     // ------------------------------------------
     //  Set Ruler Range
     // ------------------------------------------
-    mRuler->setFormatFunctX(formatValueToAppSettingsPrecision);
+    mRuler->setFormatFunctX(stringWithAppSettings);
 
     mRuler->setRange(mResultMinX, mResultMaxX);
     mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
@@ -1641,18 +1641,18 @@ void ResultsView::editCurrentMaxX()
 
 void ResultsView::updateZoomEdit()
 {
-    mCurrentXMinEdit->setText(formatValueToAppSettingsPrecision(mResultCurrentMinX));
-    mCurrentXMaxEdit->setText(formatValueToAppSettingsPrecision(mResultCurrentMaxX));
+    mCurrentXMinEdit->setText(stringWithAppSettings(mResultCurrentMinX));
+    mCurrentXMaxEdit->setText(stringWithAppSettings(mResultCurrentMaxX));
 }
 
 void ResultsView::updateGraphsZoomX()
 {
     if (mByPhasesBut->isChecked())
-        foreach (GraphViewResults* phaseGraph, mByPhasesGraphs)
+        for (GraphViewResults* phaseGraph : mByPhasesGraphs)
             phaseGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
     
     else
-        foreach (GraphViewResults* eventGraph, mByEventsGraphs)
+        for (GraphViewResults* eventGraph : mByEventsGraphs)
             eventGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
     
     // --------------------------------------------------
@@ -1859,7 +1859,7 @@ void ResultsView::exportFullImage()
         curWid->setFont(mByPhasesGraphs.at(0)->font());
        // witchScroll = eScrollPhases;
         //  hide all buttons in the both scrollAreaWidget
-        for(int i=0; i<mByPhasesGraphs.size(); ++i)
+        for (int i=0; i<mByPhasesGraphs.size(); ++i)
             mByPhasesGraphs.at(i)->setButtonsVisible(false);
         
     }
@@ -1869,7 +1869,7 @@ void ResultsView::exportFullImage()
         curWid->setFont(mByEventsGraphs.at(0)->font());
         //witchScroll = eScrollEvents;
         //  hide all buttons in the both scrollAreaWidget
-        for(int i=0; i<mByEventsGraphs.size(); ++i)
+        for (int i=0; i<mByEventsGraphs.size(); ++i)
             mByEventsGraphs.at(i)->setButtonsVisible(false);
         
     }
@@ -1880,8 +1880,8 @@ void ResultsView::exportFullImage()
     int rendering = mRenderCombo->currentIndex();
     updateRendering(1);
     
-    AxisWidget* axisWidget = 0;
-    QLabel* axisLegend = 0;
+    AxisWidget* axisWidget = nullptr;
+    QLabel* axisLegend = nullptr;
     int axeHeight = 20;
     int legendHeight = 20;
     
@@ -1890,7 +1890,7 @@ void ResultsView::exportFullImage()
         
         FormatFunc f = 0;
         if (mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked())
-            f = formatValueToAppSettingsPrecision;
+            f = stringWithAppSettings;
         
         axisWidget = new AxisWidget(f, curWid);
         axisWidget->mMarginLeft = 50;
@@ -1921,11 +1921,11 @@ void ResultsView::exportFullImage()
     // Delete additional widgets if necessary :
     if (printAxis) {
         if (axisWidget) {
-            axisWidget->setParent(0);
+            axisWidget->setParent(nullptr);
             delete axisWidget;
         }
         if (axisLegend) {
-            axisLegend->setParent(0);
+            axisLegend->setParent(nullptr);
             delete axisLegend;
         }
         curWid->setFixedHeight(curWid->height() - axeHeight - legendHeight);
@@ -1942,16 +1942,16 @@ void ResultsView::exportFullImage()
     
     //  show all buttons
     if (mByPhasesBut->isChecked())
-        for(int i=0; i<mByPhasesGraphs.size(); ++i)
+        for (int i=0; i<mByPhasesGraphs.size(); ++i)
             mByPhasesGraphs.at(i)->setButtonsVisible(true);
     
     else
-        for(int i=0; i<mByEventsGraphs.size(); ++i)
+        for (int i=0; i<mByEventsGraphs.size(); ++i)
             mByEventsGraphs.at(i)->setButtonsVisible(true);
     
 }
 
-#pragma mark Refresh All Model
+//#pragma mark Refresh All Model
 /**
  * @brief ResultsView::updateModel Update Design
  */
@@ -2011,8 +2011,8 @@ void ResultsView::updateModel()
         const QJsonObject phaseJSON = (*iterJSONPhase).toObject();
         const int phaseId = phaseJSON.value(STATE_ID).toInt();
         
-        for (int j=0; j<mModel->mPhases.size(); ++j) {
-            Phase* p = mModel->mPhases[j];
+        //for (int j=0; j<mModel->mPhases.size(); ++j) {
+        for ( auto&& p : mModel->mPhases ) {
             if (p->mId == phaseId) {
                 p->mName = phaseJSON.value(STATE_NAME).toString();
                 p->mItemX = phaseJSON.value(STATE_ITEM_X).toDouble();

@@ -28,8 +28,8 @@ struct DensityAnalysis
 
 FunctionAnalysis analyseFunction(const QMap<type_data, type_data>& aFunction);
 
-QString functionAnalysisToString(const FunctionAnalysis& analysis);
-QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& nl = "<br>");
+QString functionAnalysisToString(const FunctionAnalysis& analysis, const bool forCSV = false);
+QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& nl = "<br>", const bool forCSV = false);
 
 // Standard Deviation of a vector of data
 type_data dataStd(const QVector<type_data> &data);
@@ -46,8 +46,9 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& trace1, const QV
 
 QPair<double, double> transitionRangeFromTraces(const QVector<double> &trace1, const QVector<double> &trace2, const double thresh, const QString description ="Gap Range Computation");
 
-QString intervalText(const QPair<double, QPair<double, double> >& interval, FormatFunc formatFunc = 0);
-QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString& unit = QString(), FormatFunc formatFunc = 0);
+QString intervalText(const QPair<double, QPair<double, double> >& interval, FormatFunc formatFunc = nullptr, const bool forCSV = false);
+QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString& unit = QString(), FormatFunc formatFunc = nullptr, const bool forCSV =false);
+
 QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double, double> &hpd, double thresh);
 
 inline double rounddouble(const double f,const int prec)

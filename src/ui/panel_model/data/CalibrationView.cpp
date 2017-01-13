@@ -241,12 +241,12 @@ void CalibrationView::updateGraphs()
             mCalibGraph->setRangeY(0, 1.1 * yMax);
 
             mCalibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
-            mCalibGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
-            mCalibGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
+            mCalibGraph->setFormatFunctX(stringWithAppSettings);
+            mCalibGraph->setFormatFunctY(stringWithAppSettings);
             
             double realThresh = map_area(hpd) / map_area(calibCurve.mData);
             
-            resultsStr += + "<br> HPD (" + locale.toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), DateUtils::dateToString);
+            resultsStr += + "<br> HPD (" + locale.toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), stringWithAppSettings);
             
             mResultsLab->setWordWrap(true);
             mResultsLab->setText(resultsStr);
@@ -261,7 +261,7 @@ void CalibrationView::updateGraphs()
         // Get the ref graph for this plugin and this date
         mRefGraphView = mDate.mPlugin->getGraphViewRef();
         if (mRefGraphView) {
-            mRefGraphView->setFormatFunctX(DateUtils::dateToString); // must be before setDate, because setDate use it
+            mRefGraphView->setFormatFunctX(stringWithAppSettings); // must be before setDate, because setDate use it
             mRefGraphView->setDate(mDate, mSettings);
             
             mRefGraphView->setParent(this);
@@ -312,7 +312,7 @@ void CalibrationView::updateZoom()
         // Set scroll to correct position
         type_data pos (0.);
         type_data rangeAfter = (type_data)mScrollBar->maximum();
-        if(rangeAfter > 0)
+        if (rangeAfter > 0)
             pos = floor(posProp * rangeAfter);
         mScrollBar->setValue(pos);
         

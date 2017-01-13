@@ -25,7 +25,7 @@ mPhase(0)
     mDurationGraph->setCurvesOpacity(30);
     mDurationGraph->addInfo(tr("WARNING : this graph scale is NOT the study period!"));
     mDurationGraph->mLegendX = "";
-    mDurationGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
+    mDurationGraph->setFormatFunctX(stringWithAppSettings);
     
     mDurationGraph->showXAxisArrow(true);
     mDurationGraph->showXAxisTicks(true);
@@ -155,7 +155,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         if ((typeGraph == ePostDistrib) && (variable == eTheta)) {
             mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             mGraph->mLegendY = "";
-            mGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
+            mGraph->setFormatFunctX(stringWithAppSettings);
             mGraph->setFormatFunctY(0);
         //    mGraph->autoAdjustYScale(true);
             if (mShowDuration->isChecked())
@@ -202,8 +202,8 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                                                                color);
                 mDurationGraph->setCanControlOpacity(true);
                 mDurationGraph->addCurve(curveDurationHPD);
-                mDurationGraph->setFormatFunctX(formatValueToAppSettingsPrecision);
-                mDurationGraph->setFormatFunctY(formatValueToAppSettingsPrecision);
+                mDurationGraph->setFormatFunctX(stringWithAppSettings);
+                mDurationGraph->setFormatFunctY(stringWithAppSettings);
 
                 GraphCurve curveTimeRange = generateSectionCurve(mPhase->getFormatedTimeRange(),
                                                            "Time Range",

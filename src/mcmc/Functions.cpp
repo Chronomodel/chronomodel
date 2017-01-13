@@ -2,6 +2,7 @@
 #include "Generator.h"
 #include "StdUtilities.h"
 #include "DateUtils.h"
+#include "QtUtilities.h"
 #include <QDebug>
 #include <QProgressDialog>
 #include <QApplication>
@@ -112,16 +113,16 @@ double shrinkageUniform(const double so2)
  * @brief Return a text from a FunctionAnalysis
  * @see FunctionAnalysis
  */
-QString functionAnalysisToString(const FunctionAnalysis& analysis)
+QString functionAnalysisToString(const FunctionAnalysis& analysis, const bool forCSV)
 {
     QString result;
 
     if (analysis.stddev<0.)
         result = QObject::tr("No data");
     else {
-        result += "MAP : " + DateUtils::dateToString(analysis.mode) + "   ";
-        result += "Mean : " + DateUtils::dateToString(analysis.mean) + "   ";
-        result += "Std deviation : " +DateUtils::dateToString(analysis.stddev);
+        result += "MAP : " + stringWithAppSettings(analysis.mode, forCSV) + "   ";
+        result += "Mean : " + stringWithAppSettings(analysis.mean, forCSV) + "   ";
+        result += "Std deviation : " +stringWithAppSettings(analysis.stddev, forCSV);
     }
     return result;
 }
@@ -130,14 +131,14 @@ QString functionAnalysisToString(const FunctionAnalysis& analysis)
  * @brief Return a text with the value of th Quartiles Q1, Q2 and Q3
  * @see DensityAnalysis
  */
-QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& nl)
+QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& nl, const bool forCSV)
 {
     QString result (QObject::tr("No data"));
     if (analysis.analysis.stddev>=0.) {
-        result = functionAnalysisToString(analysis.analysis) + nl;
-        result += "Q1 : " + DateUtils::dateToString(analysis.quartiles.Q1) + "   ";
-        result += "Q2 (Median) : " + DateUtils::dateToString(analysis.quartiles.Q2) + "   ";
-        result += "Q3 : " + DateUtils::dateToString(analysis.quartiles.Q3);
+        result = functionAnalysisToString(analysis.analysis, forCSV) + nl;
+        result += "Q1 : " + stringWithAppSettings(analysis.quartiles.Q1, forCSV) + "   ";
+        result += "Q2 (Median) : " + stringWithAppSettings(analysis.quartiles.Q2, forCSV) + "   ";
+        result += "Q3 : " + stringWithAppSettings(analysis.quartiles.Q3, forCSV);
     }
     return result;
 }
@@ -582,30 +583,32 @@ QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, cons
 
 
 
-QString intervalText(const QPair<double, QPair<double, double> > &interval, FormatFunc formatFunc)
+QString intervalText(const QPair<double, QPair<double, double> > &interval, FormatFunc formatFunc, const bool forCSV)
 {
     const QLocale locale;
-    if (formatFunc){
-        return "[" + formatFunc(interval.second.first) + "; " + formatFunc(interval.second.second) + "] (" + locale.toString(interval.first, 'f', 1) + "%)";
-    }
-    else {
-        return "[" + DateUtils::dateToString(interval.second.first) + "; " + DateUtils::dateToString(interval.second.second) + "] (" + locale.toString(interval.first, 'f', 1) + "%)";
-    }
+    if (formatFunc)
+        return "[" + formatFunc(interval.second.first, forCSV) + " : " + formatFunc(interval.second.second, forCSV) + "] (" + stringWithAppSettings(interval.first, forCSV) + "%)";
+
+    else
+        return "[" + stringWithAppSettings(interval.second.first, forCSV) + " : " + stringWithAppSettings(interval.second.second, forCSV) + "] (" + stringWithAppSettings(interval.first,forCSV) + "%)";
+
 }
 
-QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString& unit, FormatFunc formatFunc)
+QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString& unit, FormatFunc formatFunc, const bool forCSV)
 {
-    if(hpd.isEmpty() ) return "";
+    if (hpd.isEmpty() )
+        return "";
 
     QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(hpd, thresh);
     QStringList results;
-    for(int i=0; i<intervals.size(); ++i) {
-        results << intervalText(intervals.at(i), formatFunc);
-    }
+
+    for (auto&& interval : intervals)
+        results << intervalText(interval, formatFunc, forCSV);
+
     QString result = results.join(", ");
-    if(!unit.isEmpty()) {
+    if (!unit.isEmpty())
         result += " " + unit;
-    }
+
     return result;
 }
 /**
@@ -615,28 +618,29 @@ QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double,
 {
     QList<QPair<double, QPair<double, double> >> intervals;
 
-    if(hpd.isEmpty()) return intervals;
+    if (hpd.isEmpty())
+        return intervals;
 
     QMapIterator<double, double> it(hpd);
     bool inInterval = false;
-    double lastKeyInInter = 0.;
+    double lastKeyInInter (0.);
     QPair<double, double> curInterval;
     
     double areaTot= map_area(hpd);
-    double lastValueInInter = 0.;
+    double lastValueInInter (0.);
     
-    double areaCur = 0;
+    double areaCur (0.);
     it.toFront();
-    while(it.hasNext()) {
+    while (it.hasNext()) {
         it.next();
         
-        if(it.value() != 0 && !inInterval) {
+        if (it.value() != 0. && !inInterval) {
             inInterval = true;
             curInterval.first = it.key();
             lastKeyInInter = it.key();
             areaCur = 0.; // start, not inside
-        } else if(inInterval) {
-            if((it.value() == 0) ) {
+        } else if (inInterval) {
+            if ((it.value() == 0.) ) {
                 inInterval = false;
                 curInterval.second = lastKeyInInter;
                 
