@@ -7,7 +7,6 @@
 /** Default constructor */
 MHVariable::MHVariable():
 mLastAcceptsLength(0),
-//mAllAccepts(nullptr),
 mGlobalAcceptation(0),
 mHistoryAcceptRateMH(nullptr)
 {
@@ -23,10 +22,10 @@ MHVariable::MHVariable( const MHVariable& origin)
 {
    // MetropolisVariable(origin);
     mX = origin.mX;
-    mRawTrace= new QVector<double>(origin.mRawTrace->size());
+    mRawTrace = new QVector<double>(origin.mRawTrace->size());
     std::copy(origin.mRawTrace->begin(),origin.mRawTrace->end(),mRawTrace->begin());
 
-    mFormatedTrace= new QVector<double>(origin.mFormatedTrace->size());
+    mFormatedTrace = new QVector<double>(origin.mFormatedTrace->size());
     std::copy(origin.mFormatedTrace->begin(),origin.mFormatedTrace->end(),mFormatedTrace->begin());
 
     mSupport = origin.mSupport;
@@ -52,18 +51,14 @@ MHVariable::MHVariable( const MHVariable& origin)
     mtminUsed = origin.mtminUsed;
     mtmaxUsed = origin.mtmaxUsed;
 
-
-
-    mAllAccepts= new QVector<bool>(origin.mAllAccepts->size());
-    mHistoryAcceptRateMH= new QVector<double>(origin.mHistoryAcceptRateMH->size());
+    mAllAccepts = new QVector<bool>(origin.mAllAccepts->size());
+    mHistoryAcceptRateMH = new QVector<double>(origin.mHistoryAcceptRateMH->size());
 }
 
 MHVariable::~MHVariable()
 {
-   //if (mAllAccepts)
-        mAllAccepts->clear();
-   //if (mHistoryAcceptRateMH)
-       mHistoryAcceptRateMH->clear();
+   mAllAccepts->clear();
+   mHistoryAcceptRateMH->clear();
 }
 
 bool MHVariable::tryUpdate(const double x, const double rapport)
@@ -193,7 +188,6 @@ QVector<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains,
 
     for (int i=0; i<chains.size(); ++i) {
         int chainSize = chains.at(i).mNumBurnIter + (chains.at(i).mBatchIndex * chains.at(i).mNumBatchIter) + chains.at(i).mNumRunIter / chains.at(i).mThinningInterval;
-        
 
         if (i == index) {
             // could be done with
