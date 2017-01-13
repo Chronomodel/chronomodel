@@ -191,6 +191,7 @@ void MetropolisVariable::updateFormatedTrace()
 
     if (mFormat == DateUtils::eNumeric)
         mFormatedTrace = mRawTrace;
+
     else {
         mFormatedTrace->resize(mRawTrace->size());
         std::transform(mRawTrace->cbegin(),mRawTrace->cend(),mFormatedTrace->begin(),[this](const double i){return DateUtils::convertToFormat(i,this->mFormat);});
@@ -214,11 +215,11 @@ void MetropolisVariable::generateBufferForHisto(double *input, const QVector<dou
     //float* input = (float*) fftwf_malloc(numPts * sizeof(float));
     
     //memset(input, 0.f, numPts);
-    for(int i=0; i<numPts; ++i)
+    for (int i=0; i<numPts; ++i)
         input[i]= 0.;
     
     QVector<double>::const_iterator iter = dataSrc.cbegin();
-    for(; iter != dataSrc.cend(); ++iter) {
+    for (; iter != dataSrc.cend(); ++iter) {
         const double t = *iter;
         
         const double idx = (t - a) / delta;
@@ -345,8 +346,8 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
 
         fftw_free(input);
         fftw_free(output);
-        input = 0;
-        output = 0;
+        input = nullptr;
+        output = nullptr;
         fftw_destroy_plan(plan_forward);
         fftw_destroy_plan(plan_backward);
 
@@ -449,9 +450,9 @@ void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
 
         for (int h=0; h<hmax; ++h) {
             double sH = 0.;
-            for (QVector<double>::const_iterator iter = trace.cbegin(); iter != trace.cbegin() + (n-h); ++iter) {
+            for (QVector<double>::const_iterator iter = trace.cbegin(); iter != trace.cbegin() + (n-h); ++iter)
                 sH += (*iter - m) * (*(iter + h) - m);
-            }
+
             
             const double result = sH / s2;
             results.append(result);
@@ -653,23 +654,23 @@ QVector<double> MetropolisVariable::correlationForChain(const int index)
 }
 
 
-QString MetropolisVariable::resultsString(const QString& nl, const QString& noResultMessage, const QString& unit, FormatFunc formatFunc) const
+QString MetropolisVariable::resultsString(const QString& nl, const QString& noResultMessage, const QString& unit, FormatFunc formatFunc, const bool forCSV) const
 {
     if (mHisto.isEmpty())
         return noResultMessage;
     
-    const QLocale locale;
-    QString result = densityAnalysisToString(mResults, nl) + nl;
+    //const QLocale locale;
+    QString result = densityAnalysisToString(mResults, nl, forCSV) + nl;
     
     if (!mHPD.isEmpty())
-        result += "HPD Region (" + locale.toString(mThresholdUsed, 'f', 1) + "%) : " + getHPDText(mHPD, mThresholdUsed, unit, formatFunc) + nl;
+        result += "HPD Region (" + stringWithAppSettings(mThresholdUsed, forCSV) + "%) : " + getHPDText(mHPD, mThresholdUsed, unit, formatFunc, forCSV) + nl;
 
     
     if (mCredibility != QPair<double, double>()) {
         if (formatFunc)
-            result += "Credibility Interval (" + locale.toString(mExactCredibilityThreshold * 100., 'f', 1) + "%) : [" + formatFunc(mCredibility.first) + ", " + formatFunc(mCredibility.second) + "] " + unit;
+            result += "Credibility Interval (" + stringWithAppSettings(mExactCredibilityThreshold * 100., forCSV) + "%) : [" + formatFunc(mCredibility.first, forCSV) + " : " + formatFunc(mCredibility.second, forCSV) + "] " + unit;
         else
-            result += "Credibility Interval (" + locale.toString(mExactCredibilityThreshold * 100., 'f', 1) + "%) : [" + DateUtils::dateToString(mCredibility.first) + ", " + DateUtils::dateToString(mCredibility.second) + "]";
+            result += "Credibility Interval (" + stringWithAppSettings(mExactCredibilityThreshold * 100., forCSV) + "%) : [" + stringWithAppSettings(mCredibility.first, forCSV) + " : " + stringWithAppSettings(mCredibility.second, forCSV) + "]";
 
    }
    return result;
@@ -734,7 +735,7 @@ QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
           break;
        case  MetropolisVariable::eBounded : stream << (quint8)(5); // on bounded support
           break;
-    };
+    }
 
     switch (data.mFormat) {
        case DateUtils::eUnknown : stream << (qint16)(-2);
@@ -751,7 +752,7 @@ QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
           break;
        case DateUtils::eDatB2K : stream << (qint16)(4);
           break;
-    };
+    }
 
     stream << data.mRawTrace->size();
     for (QVector<double>::const_iterator v = data.mRawTrace->cbegin(); v != data.mRawTrace->cend(); ++v)
@@ -781,7 +782,7 @@ QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
          break;
       case 5 : data.mSupport = MetropolisVariable::eBounded; // on bounded support
          break;
-   };
+   }
 
     qint16 formatDate;
     stream >> formatDate;
@@ -800,7 +801,7 @@ QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
          break;
       case 4 : data.mFormat = DateUtils::eDatB2K;
          break;
-   };
+   }
 
     quint32 siz;
     stream >> siz;

@@ -335,44 +335,78 @@ QString Model::getModelLog() const{
 void Model::generateModelLog()
 {
     QString log;
-    
-    for (int i = 0; i < mEvents.size(); ++i) {
-        QString objType = "Event";
-        if (mEvents.at(i)->type() == Event::eKnown) {
-            log += line(textRed("Bound (" + QString::number(i+1) + "/" + QString::number(mEvents.size()) + ") : " + mEvents.at(i)->mName + " (" +
-                                 QString::number(mEvents.at(i)->mPhases.size()) + " phases, " +
-                                 QString::number(mEvents.at(i)->mConstraintsBwd.size()) + " const. back., " +
-                                 QString::number(mEvents.at(i)->mConstraintsFwd.size()) + " const. fwd.)"));
+
+    int i(0);
+    for (auto&& pEvent : mEvents) {
+        if (pEvent->type() == Event::eKnown) {
+            log += line(textRed("Bound (" + QString::number(i+1) + "/" + QString::number(mEvents.size()) + ") : " + pEvent->mName + " (" +
+                                 QString::number(pEvent->mPhases.size()) + " phases, " +
+                                 QString::number(pEvent->mConstraintsBwd.size()) + " const. back., " +
+                                 QString::number(pEvent->mConstraintsFwd.size()) + " const. fwd.)"));
         } else {
-            log += line(textBlue("Event (" + QString::number(i+1) + "/" + QString::number(mEvents.size()) + ") : " + mEvents.at(i)->mName + " (" +
-                                 QString::number(mEvents.at(i)->mDates.size()) + " data, " +
-                                 QString::number(mEvents.at(i)->mPhases.size()) + " phases, " +
-                                 QString::number(mEvents.at(i)->mConstraintsBwd.size()) + " const. back., " +
-                                 QString::number(mEvents.at(i)->mConstraintsFwd.size()) + " const. fwd.)" +
-                                 "<br>- Method : " + ModelUtilities::getEventMethodText(mEvents.at(i)->mMethod)));
+            log += line(textBlue("Event (" + QString::number(i+1) + "/" + QString::number(mEvents.size()) + ") : " + pEvent->mName + " (" +
+                                 QString::number(pEvent->mDates.size()) + " data, " +
+                                 QString::number(pEvent->mPhases.size()) + " phases, " +
+                                 QString::number(pEvent->mConstraintsBwd.size()) + " const. back., " +
+                                 QString::number(pEvent->mConstraintsFwd.size()) + " const. fwd.)" +
+                                 "<br>- Method : " + ModelUtilities::getEventMethodText(pEvent->mMethod)));
         }
         
-        for (int j = 0; j < mEvents.at(i)->mDates.size(); ++j) {
+        int j(0);
+        for (auto&& date : pEvent->mDates) {
             log += "<br>";
-            log += line(textBlack("Data (" + QString::number(j+1) + "/" + QString::number(mEvents.at(i)->mDates.size()) + ") : " + mEvents.at(i)->mDates.at(j).mName +
-                                  "<br>- Type : " + mEvents.at(i)->mDates.at(j).mPlugin->getName() +
-                                  "<br>- Method : " + ModelUtilities::getDataMethodText(mEvents.at(i)->mDates.at(j).mMethod) +
-                                  "<br>- Params : " + mEvents.at(i)->mDates.at(j).getDesc()));
+            log += line(textBlack("Data (" + QString::number(j+1) + "/" + QString::number(pEvent->mDates.size()) + ") : " + date.mName +
+                                  "<br>- Type : " + date.mPlugin->getName() +
+                                  "<br>- Method : " + ModelUtilities::getDataMethodText(date.mMethod) +
+                                  "<br>- Params : " + date.getDesc()));
+            ++j;
         }
         log += "<hr>";
         log += "<br>";
+        ++i;
     }
     
-    for (int i = 0; i < mPhases.size(); ++i) {
-        log += line(textPurple("Phase (" + QString::number(i+1) + "/" + QString::number(mPhases.size()) + ") : " + mPhases[i]->mName + " (" + QString::number(mPhases[i]->mEvents.size()) + " events)"));
+    i = 0;
+    for (auto&& pPhase : mPhases) {
+        log += line(textPurple("Phase (" + QString::number(i+1) + "/" + QString::number(mPhases.size()) + ") : " + pPhase->mName + " (" +
+                               QString::number(pPhase->mEvents.size()) + " events"+
+                               QString::number(pPhase->mConstraintsBwd.size()) + " const. back., " +
+                               QString::number(pPhase->mConstraintsFwd.size()) + " const. fwd.)" +
+                               "<br>- Type : " + pPhase->getTauTypeText()));
         log += "<br>";
-        
-        for (int j=0; j<mPhases.at(i)->mEvents.size(); ++j)
-            log += line(textBlue("Event : " + mPhases.at(i)->mEvents.at(j)->mName));
+
+        for (auto&& pEvent : pPhase->mEvents)
+            log += line(textBlue("Event : " + pEvent->mName));
+
+        log += "<hr>";
+        log += "<br>";
+        ++i;
+    }
+
+    i = 0;
+    for (auto&& pPhaseConst : mPhaseConstraints) {
+        log += "<hr>";
+        log += line(textBold(textPurple("Hiatus Phase from " + pPhaseConst->mPhaseFrom->mName +" to "+ pPhaseConst->mPhaseTo->mName)));
+
+        switch(pPhaseConst->mGammaType) {
+            case PhaseConstraint::eGammaFixed :
+                log += line(textBold(textPurple( QObject::tr("Hiatus fixed = ") + pPhaseConst->mGammaFixed)));
+                break;
+            case PhaseConstraint::eGammaUnknown :
+                log += line(textBold(textPurple( QObject::tr("Hiatus unknown") )));
+                break;
+            case PhaseConstraint::eGammaRange :
+                 log += line(textBold(textPurple( QObject::tr("Hiatus between ") + pPhaseConst->mGammaMin + QObject::tr(" and ") +pPhaseConst->mGammaMax)));
+                break;
+            default:
+                log += "Hiatus undefined -> ERROR";
+            break;
+        }
 
         log += "<hr>";
         log += "<br>";
     }
+
     mLogModel = log;
     
     
@@ -1171,7 +1205,7 @@ void Model::generateCredibility(const double thresh)
 
         ++position;
 
-    };
+    }
     progress->setMinimum(0);
     progress->setMaximum(mPhaseConstraints.size()*2);
     progress->setLabelText("Gaps and transitions generation");
@@ -1195,7 +1229,7 @@ void Model::generateCredibility(const double thresh)
         ++position;
         qDebug()<<"Transition Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
 
-    };
+    }
     delete progress;
     QTime t2 (QTime::currentTime());
     qint64 timeDiff = t.msecsTo(t2);

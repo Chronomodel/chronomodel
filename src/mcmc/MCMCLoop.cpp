@@ -6,9 +6,9 @@
 
 
 MCMCLoop::MCMCLoop():
-mProject(nullptr),
 mChainIndex(0),
-mState(eBurning)
+mState(eBurning),
+mProject(nullptr)
 {
     
 }

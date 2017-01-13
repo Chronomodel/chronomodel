@@ -85,7 +85,7 @@ void PhasesScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
                                               phaseTo.value(STATE_ID).toInt());
 }
 
-#pragma SIGNALS from eventScene
+// SIGNALS from eventScene
 void PhasesScene::noHide()
 {
     setShowAllEvents(true);

@@ -53,7 +53,7 @@ QDataStream &operator<<( QDataStream &stream, const CalibrationCurve &data )
         break;
        case CalibrationCurve::eFromMCMC : stream << (quint8)(1);
           break;
-    };
+    }
 
     stream << data.mRepartition;
     stream << data.mCurve;
@@ -79,7 +79,7 @@ QDataStream &operator>>( QDataStream &stream, CalibrationCurve &data )
        break;
       case 1 : data.mMethod = CalibrationCurve::eFromMCMC;
          break;
-    };
+    }
 
     stream >> data.mRepartition;
     stream >> data.mCurve;
