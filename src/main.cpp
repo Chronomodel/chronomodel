@@ -11,7 +11,7 @@
 #include <fenv.h>
 
 
-#pragma STDC FENV_ACCESS on
+//#pragma STDC FENV_ACCESS ON // not supported with Clang
 
 #define DEBUG
 
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
         std::cout << "cmath raises exceptions" << std::endl;
         feclearexcept(FE_ALL_EXCEPT);
     }
-    if(math_errhandling & MATH_ERRNO)
+    if (math_errhandling & MATH_ERRNO)
         std::cout << "cmath uses errno" << std::endl;
     
 #endif
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
     QString filePath = "";
     for (int i=0; i<argc; ++i) {
         QString arg(argv[i]);
-        if(arg.contains(".chr", Qt::CaseInsensitive))
+        if (arg.contains(".chr", Qt::CaseInsensitive))
             filePath = arg;
     }
     
