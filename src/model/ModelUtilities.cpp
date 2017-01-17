@@ -453,19 +453,18 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p, const bo
 {
     QString text;
     const QString nl = "\r";
-//    if (p) {
         text += nl;
         text += QObject::tr("Hiatus Phase : ") + p->mPhaseFrom->mName +QObject::tr(" to ")+ p->mPhaseTo->mName;
 
         switch(p->mGammaType) {
             case PhaseConstraint::eGammaFixed :
-                text += QObject::tr("Hiatus fixed = ") + p->mGammaFixed;
+                text += QObject::tr("Min Hiatus fixed = ") + p->mGammaFixed;
                 break;
             case PhaseConstraint::eGammaUnknown :
-                text += QObject::tr("Hiatus unknown") ;
+                text += QObject::tr("Min Hiatus unknown") ;
                 break;
-            case PhaseConstraint::eGammaRange :
-                 text += QObject::tr("Hiatus between ") + p->mGammaMin + QObject::tr(" and ") +p->mGammaMax;
+            case PhaseConstraint::eGammaRange : // no more used
+                 text += QObject::tr("Min Hiatus between ") + p->mGammaMin + QObject::tr(" and ") +p->mGammaMax;
                  break;
             default:
 
@@ -480,7 +479,6 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p, const bo
 
             text += result + nl;
         }
-//    }
     return text;
 }
 
@@ -490,7 +488,6 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p, const bo
 QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
 {
     QString text;
-//    if (d) {
         text += line(textBold(textBlack(QObject::tr("Data : ") + d->mName))) + "<br>";
         text += line(textBold(textBlack(QObject::tr("Posterior distrib. :"))));
 
@@ -517,14 +514,12 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
         text += line("<br>");
         text += line(textBold(textBlack("Std. Deviation :")));
         text += line(textBlack(d->mSigma.resultsString()));
-//    }
     return text;
 }
 
 QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, const Model* model)
 {
     QString text;
-  //  if (e) {
         text += "<hr>";
         if (e->mType == Event::eKnown) {
             text += line(textBold(textRed("Bound : " + e->mName))) + "<br>";
@@ -541,14 +536,12 @@ QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, c
                     text += "<br><br>" + dateResultsHTML(&(date), model);
             }
         }
-//    }
     return text;
 }
 
 QString ModelUtilities::phaseResultsHTML(const Phase* p)
 {
     QString text;
- //   if (p) {
         text += "<hr>";
         text += line(textBold(textPurple("Phase : " + p->mName)));
         
@@ -567,25 +560,23 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
         if (p->mTimeRange != QPair<double,double>()) {
             text += "<br>";
 
-            const QString result = "Phase Time Range : [" + stringWithAppSettings(p->getFormatedTimeRange().first, false) + ", " + stringWithAppSettings(p->getFormatedTimeRange().second, false) + "] "+ DateUtils::getAppSettingsFormatStr();
+            const QString result = "Phase Time Range : [" + stringWithAppSettings(p->getFormatedTimeRange().first, false) + " : " + stringWithAppSettings(p->getFormatedTimeRange().second, false) + "] "+ DateUtils::getAppSettingsFormatStr();
             text += line(textBold(textPurple(result + "<br>")));
         }
-  //  }
     return text;
 }
 
 QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
 {
     QString text;
- //   if (p) {
         text += "<hr>";
-        text += line(textBold(textPurple("Hiatus Phase from " + p->mPhaseFrom->mName +" to "+ p->mPhaseTo->mName)));
+        text += line(textBold(textPurple("Succession Phase from " + p->mPhaseFrom->mName +" to "+ p->mPhaseTo->mName)));
 
         if (p->mTransitionRange != QPair<double,double>()) {
             text += "<br>";
 
             const QString result = QObject::tr("Transition Range") +" : [" + stringWithAppSettings(p->getFormatedTransitionRange().first, false)
-                    + ", " + stringWithAppSettings(p->getFormatedTransitionRange().second, false) + "] "
+                    + " : " + stringWithAppSettings(p->getFormatedTransitionRange().second, false) + "] "
                     + DateUtils::getAppSettingsFormatStr();
 
             text += line(textBold(textPurple(result + "<br>")));
@@ -606,7 +597,6 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
             text += line(textBold(textPurple(result + "<br>")));
         }
 
- //   }
     return text;
 }
 
