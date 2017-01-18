@@ -546,16 +546,18 @@ void ResultsView::updateControls()
 
 void ResultsView::changeScrollArea()
 {
-    //mNumberOfGraph = MainWindow::getInstance()->getAppSettings().mNbSheet;
     if (mByEventsBut->isChecked())
             createEventsScrollArea(mTabEventsIndex);
+
     else if (mByPhasesBut->isChecked())
             createPhasesScrollArea(mTabPhasesIndex);
 }
 
 void ResultsView::updateLayout()
 {
-    if (!mModel) return;
+    if (!mModel)
+        return;
+
     qDebug() << "ResultsView::updateLayout()";
     
     const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
@@ -576,18 +578,18 @@ void ResultsView::updateLayout()
     mPreviousSheetBut->setGeometry(0, mTabsH + int(mRulerH/2), int(mGraphLeft/2), int(mRulerH/2) );
     mNextSheetBut->setGeometry(int(mGraphLeft/2),  mTabsH + int(mRulerH/2), int(mGraphLeft/2), int(mRulerH/2));
     
-    mTabs   -> setGeometry(mGraphLeft + graphYAxis, 0, width() - mGraphLeft - mOptionsW - sbe - graphYAxis, mTabsH);
-    mRuler  -> setGeometry(mGraphLeft, mTabsH, width() - mGraphLeft - mOptionsW - sbe, mRulerH);
+    mTabs->setGeometry(mGraphLeft + graphYAxis, 0, width() - mGraphLeft - mOptionsW - sbe - graphYAxis, mTabsH);
+    mRuler->setGeometry(mGraphLeft, mTabsH, width() - mGraphLeft - mOptionsW - sbe, mRulerH);
 
-    mStack  -> setGeometry(0, mTabsH + mRulerH, width() - mOptionsW, height() - mRulerH - mTabsH);
-    mMarker -> setGeometry(mMarker->pos().x(), mTabsH + sbe, mMarker->thickness(), height() - sbe - mTabsH);
+    mStack->setGeometry(0, mTabsH + mRulerH, width() - mOptionsW, height() - mRulerH - mTabsH);
+    mMarker->setGeometry(mMarker->pos().x(), mTabsH + sbe, mMarker->thickness(), height() - sbe - mTabsH);
     
-    mOptionsWidget -> setGeometry(this->width() - mOptionsW, 0, mOptionsW, this->height());
+    mOptionsWidget->setGeometry(this->width() - mOptionsW, 0, mOptionsW, this->height());
     
     // ----------------------------------------------------------
     //  Display Options options layout
     // ----------------------------------------------------------
-    mDisplayGroup  -> setGeometry(0, mDisplayTitle->y()+ mDisplayTitle->height(), mOptionsW, mDisplayGroup->height());
+    mDisplayGroup->setGeometry(0, mDisplayTitle->y()+ mDisplayTitle->height(), mOptionsW, mDisplayGroup->height());
     
     
     // ----------------------------------------------------------
@@ -624,14 +626,14 @@ void ResultsView::updateLayout()
     mDataThetaRadio->setGeometry(m, y, int(mResultsGroup->width() - 2*m), mLineH);
     
     // posterior distribution
-    if (tabIdx == 0){
+    if (tabIdx == 0) {
         mDataCalibCheck -> setGeometry(m + dx, y += (m + mLineH), int(mResultsGroup->width() - 2*m - dx), mLineH);
         mWiggleCheck    -> setGeometry(m + dx, y += (m + mLineH), int( mResultsGroup->width() - 2*m - dx), mLineH);
     }
 
-    if (mByPhasesBut->isChecked()) {
+    if (mByPhasesBut->isChecked())
         mShowDataUnderPhasesCheck->setGeometry(m + dx, y += (m + mLineH), int(mResultsGroup->width() - 2*m - dx), mLineH);
-    }
+
     mDataSigmaRadio -> setGeometry(m, y += (m + mLineH), mResultsGroup->width()-2*m, mLineH);
     mResultsGroup   -> setFixedHeight(y += (m + mLineH));
     
@@ -645,14 +647,14 @@ void ResultsView::updateLayout()
     int w1 = int((mPostDistGroup->width() - 3*m) * 0.7);
     int w2 = int((mPostDistGroup->width() - 3*m) * 0.3);
     
-    mCredibilityCheck  -> setGeometry(m, y, mPostDistGroup->width() - 2*m, mLineH);
-    mThreshLab -> setGeometry(m, y += (m + mLineH), w1, mLineH);
-    mHPDEdit  -> setGeometry(2*m + w1, y, w2, mLineH);
-    mFFTLenLab -> setGeometry(m, y += (m + mLineH), sw, mComboH);
-    mFFTLenCombo -> setGeometry(2*m + sw, y, sw, mComboH);
-    mBandwidthLab -> setGeometry(m, y += (m + mComboH), w1, mLineH);
-    mBandwidthEdit -> setGeometry(2*m + w1, y, w2, mLineH);
-    mPostDistGroup -> setFixedHeight(y += (m + mLineH));
+    mCredibilityCheck->setGeometry(m, y, mPostDistGroup->width() - 2*m, mLineH);
+    mThreshLab->setGeometry(m, y += (m + mLineH), w1, mLineH);
+    mHPDEdit->setGeometry(2*m + w1, y, w2, mLineH);
+    mFFTLenLab->setGeometry(m, y += (m + mLineH), sw, mComboH);
+    mFFTLenCombo->setGeometry(2*m + sw, y, sw, mComboH);
+    mBandwidthLab->setGeometry(m, y += (m + mComboH), w1, mLineH);
+    mBandwidthEdit->setGeometry(2*m + w1, y, w2, mLineH);
+    mPostDistGroup->setFixedHeight(y += (m + mLineH));
     
     updateGraphsLayout();
 }
@@ -1687,11 +1689,9 @@ void ResultsView::updateFont()
          for (GraphViewResults* eventGraph : mByEventsGraphs)
             eventGraph->setGraphFont(mFont);
 
-         qDebug()<<"ResultsView::updateFont() mFont="<<mFont;
-        mRuler->setFont(mFont);
+         mRuler->setFont(mFont);
 
         //mEventsScrollArea->setFont(mFont);//unnecessary
-
 
     }
 }
