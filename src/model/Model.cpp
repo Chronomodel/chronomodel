@@ -390,13 +390,13 @@ void Model::generateModelLog()
 
         switch(pPhaseConst->mGammaType) {
             case PhaseConstraint::eGammaFixed :
-                log += line(textBold(textPurple( QObject::tr("Hiatus fixed = ") + pPhaseConst->mGammaFixed)));
+                log += line(textBold(textPurple( QObject::tr("Min Hiatus fixed = ") + pPhaseConst->mGammaFixed)));
                 break;
             case PhaseConstraint::eGammaUnknown :
-                log += line(textBold(textPurple( QObject::tr("Hiatus unknown") )));
+                log += line(textBold(textPurple( QObject::tr("Min Hiatus unknown") )));
                 break;
-            case PhaseConstraint::eGammaRange :
-                 log += line(textBold(textPurple( QObject::tr("Hiatus between ") + pPhaseConst->mGammaMin + QObject::tr(" and ") +pPhaseConst->mGammaMax)));
+            case PhaseConstraint::eGammaRange : //no more used
+                 log += line(textBold(textPurple( QObject::tr("Min Hiatus between ") + pPhaseConst->mGammaMin + QObject::tr(" and ") +pPhaseConst->mGammaMax)));
                 break;
             default:
                 log += "Hiatus undefined -> ERROR";
