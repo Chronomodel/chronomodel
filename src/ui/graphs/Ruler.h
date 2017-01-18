@@ -17,9 +17,10 @@ class Ruler: public QWidget
 {
     Q_OBJECT
 public:
-    Ruler(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    Ruler(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
     ~Ruler();
     
+    void setFont(const QFont &font);
     void setRange(const double min, const double max);
     void setCurrent(const double min, const double max);
     void currentChanged(const double min, const double max);
@@ -38,10 +39,11 @@ public:
     double mMax;
     double mZoomProp;
     
-    int mMarginLeft;
-    int mMarginRight;
+    qreal mMarginLeft;
+    qreal mMarginRight;
     
     AxisTool mAxisTool;
+   // QFont mFont;
     
 protected:
     void layout();
@@ -54,6 +56,7 @@ public slots:
     void setZoom(int prop);
     void updateScroll();
     void scrollValueChanged(int value);
+
     
 signals:
     void positionChanged(double min, double max);

@@ -162,13 +162,13 @@ protected:
     Button* mResultsClipBut;
     Button* mDataSaveBut;
     
-    int mMargin;
-    int mLineH;
-    int mGraphLeft;
-    int mTopShift;
+    qreal mMargin;
+    qreal mLineH;
+    qreal mGraphLeft;
+    qreal mTopShift;
     
     bool mButtonsVisible;
-    int mHeightForVisibleAxis;
+    qreal mHeightForVisibleAxis;
     
     QPropertyAnimation* mAnimation;
 };

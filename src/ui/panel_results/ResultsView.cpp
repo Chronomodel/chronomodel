@@ -573,11 +573,12 @@ void ResultsView::updateLayout()
     mByPhasesBut->setGeometry(0, 0, int(mGraphLeft/2), mTabsH);
     mByEventsBut->setGeometry(int(mGraphLeft/2), 0, int(mGraphLeft/2), mTabsH);
     mUnfoldBut->setGeometry(0, mTabsH, mGraphLeft, int(mRulerH/2));
-    mPreviousSheetBut->setGeometry(0, mTabsH+int(mRulerH/2), int(mGraphLeft/2), int(mRulerH/2) );
-    mNextSheetBut->setGeometry(int(mGraphLeft/2),  mTabsH+int(mRulerH/2), int(mGraphLeft/2), int(mRulerH/2));
+    mPreviousSheetBut->setGeometry(0, mTabsH + int(mRulerH/2), int(mGraphLeft/2), int(mRulerH/2) );
+    mNextSheetBut->setGeometry(int(mGraphLeft/2),  mTabsH + int(mRulerH/2), int(mGraphLeft/2), int(mRulerH/2));
     
     mTabs   -> setGeometry(mGraphLeft + graphYAxis, 0, width() - mGraphLeft - mOptionsW - sbe - graphYAxis, mTabsH);
     mRuler  -> setGeometry(mGraphLeft, mTabsH, width() - mGraphLeft - mOptionsW - sbe, mRulerH);
+
     mStack  -> setGeometry(0, mTabsH + mRulerH, width() - mOptionsW, height() - mRulerH - mTabsH);
     mMarker -> setGeometry(mMarker->pos().x(), mTabsH + sbe, mMarker->thickness(), height() - sbe - mTabsH);
     
@@ -596,7 +597,7 @@ void ResultsView::updateLayout()
     int numChains = mCheckChainChecks.size();
     
     // posterior distribution : chains are selectable with checkboxes
-    if(tabIdx == 0) {
+    if (tabIdx == 0) {
         mChainsGroup->setFixedHeight(m + (numChains+1) * (mLineH + m));
         mAllChainsCheck->setGeometry(m, m, int(mChainsGroup->width()-2*m), mLineH);
 
@@ -663,6 +664,7 @@ void ResultsView::updateGraphsLayout()
     
     // ----------------------------------------------------------
     //  Graphs by phases layout
+    //    mRuler  -> setGeometry(mGraphLeft, mTabsH, width() - mGraphLeft - mOptionsW - sbe, mRulerH);
     // ----------------------------------------------------------
     if (mByPhasesBut->isChecked()) {
         int y = 0;
@@ -674,8 +676,7 @@ void ResultsView::updateGraphsLayout()
             }
             if (y>0)
                 wid->setFixedSize(width() - sbe - mOptionsW, y);
-            wid = 0;
-           
+
        }
         
     }
@@ -690,13 +691,10 @@ void ResultsView::updateGraphsLayout()
 
             for (int i=0; i<mByEventsGraphs.size(); ++i) {
                 mByEventsGraphs.at(i)->setGeometry(0, y, width() - mOptionsW - sbe ,mGraphsH);
-                
                 y += mByEventsGraphs.at(i)->height();
             }
             if (y>0)
                 wid->setFixedSize(width() - sbe - mOptionsW, y);
-            wid = 0;
-            
          }
         
     }
@@ -878,7 +876,7 @@ void ResultsView::updateResults(Model* model)
                 RadioButton* radio = new RadioButton(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
                 connect(radio, &RadioButton::clicked, this, &ResultsView::updateCurvesToShow);
                 radio->setVisible(true);
-                if(i == 0)
+                if (i == 0)
                     radio->setChecked(true);
                 mChainRadios.append(radio);
             }
@@ -1024,8 +1022,6 @@ void ResultsView::createPhasesScrollArea(const int idx)
     // In a Phases at least, we have one Event with one Date
     //mByPhasesGraphs.reserve( (int)(3*mModel->mPhases.size()) );
 
-
-
     QList<Phase*>::const_iterator iterPhase = mModel->mPhases.cbegin();
     int counter = 1;
     while (iterPhase!=mModel->mPhases.cend()) {
@@ -1152,7 +1148,7 @@ void ResultsView::setThreshold()
     qDebug() << "ResultsView::setThreshold()";
     const QLocale locale;
     const double hpd = locale.toDouble(mHPDEdit->text());
-    if(hpd != getThreshold()) {
+    if (hpd != getThreshold()) {
         mThresholdUsed = hpd;
         mModel->setThreshold(hpd);
     }
@@ -1258,8 +1254,8 @@ void ResultsView::updateCurvesToShow()
 {
     qDebug() << "ResultsView::updateCurvesToShow";
 
-    const ProjectSettings s = mSettings;
-    const MCMCSettings mcmc = mMCMCSettings;
+//    const ProjectSettings s = mSettings;
+//    const MCMCSettings mcmc = mMCMCSettings;
 
     const bool showAllChains = mAllChainsCheck->isChecked();
     QList<bool> showChainList;
@@ -1381,7 +1377,7 @@ void ResultsView::updateScales()
             mResultMinX = s.getTminFormated();
             mResultMaxX = s.getTmaxFormated();
         } else if (mDataSigmaRadio->isChecked())  {
-            mResultMinX = 0;
+            mResultMinX = 0.;
             mResultMaxX = mResultMaxVariance;
 
         }
@@ -1394,9 +1390,9 @@ void ResultsView::updateScales()
                 break;
             }
         }
-    } else if(tabIdx == 3) {
-        mResultMinX = 0;
-        mResultMaxX = 39;
+    } else if (tabIdx == 3) {
+        mResultMinX = 0.;
+        mResultMaxX = 39.;
     }
    
     // ------------------------------------------
@@ -1412,12 +1408,8 @@ void ResultsView::updateScales()
         mResultCurrentMinX = mResultMinX;
         mResultCurrentMaxX = mResultMaxX;
     }
-    
-    
-    
-    
-    
-    mResultZoomX = (mResultCurrentMaxX - mResultCurrentMinX) / (mResultMaxX - mResultMinX) * 100;
+
+    mResultZoomX = (mResultCurrentMaxX - mResultCurrentMinX) / (mResultMaxX - mResultMinX) * 100.;
     
     
     
@@ -1425,12 +1417,12 @@ void ResultsView::updateScales()
     //  Set All Graphs Ranges (This is not done by generateCurves !)
     // -----------------------------------------------
     if (mByPhasesBut->isChecked())
-        foreach (GraphViewResults* phaseGraph, mByPhasesGraphs) {
+        for (GraphViewResults* phaseGraph : mByPhasesGraphs) {
             phaseGraph->setRange(mResultMinX, mResultMaxX);
             phaseGraph->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
         }
     else
-        foreach (GraphViewResults* eventGraph, mByEventsGraphs) {
+        for (GraphViewResults* eventGraph : mByEventsGraphs) {
             eventGraph->setRange(mResultMinX, mResultMaxX);
             eventGraph->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
         }
@@ -1687,14 +1679,17 @@ void ResultsView::updateFont()
         mFont = font;
         mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
         
-        foreach (GraphViewResults* phaseGraph, mByPhasesGraphs)
+        for (GraphViewResults* phaseGraph : mByPhasesGraphs)
             phaseGraph->setGraphFont(mFont);
         
         //mPhasesScrollArea->setFont(mFont); //unnecessary
 
-          foreach (GraphViewResults* eventGraph, mByEventsGraphs)
+         for (GraphViewResults* eventGraph : mByEventsGraphs)
             eventGraph->setGraphFont(mFont);
-        
+
+         qDebug()<<"ResultsView::updateFont() mFont="<<mFont;
+        mRuler->setFont(mFont);
+
         //mEventsScrollArea->setFont(mFont);//unnecessary
 
 
@@ -1703,7 +1698,7 @@ void ResultsView::updateFont()
 
 void ResultsView::updateThickness(int value)
 {
-    foreach (GraphViewResults* allKindGraph, mByPhasesGraphs) {
+    for (GraphViewResults* allKindGraph : mByPhasesGraphs) {
         allKindGraph->setGraphsThickness(value);
         GraphViewPhase* phaseGraphs = dynamic_cast<GraphViewPhase*>(allKindGraph);
         
@@ -1712,14 +1707,14 @@ void ResultsView::updateThickness(int value)
         
     }
 
-    foreach (GraphViewResults* allKindGraph, mByEventsGraphs)
+    for (GraphViewResults* allKindGraph : mByEventsGraphs)
         allKindGraph->setGraphsThickness(value);
     
 }
 
 void ResultsView::updateOpacity(int value)
 {
-    foreach (GraphViewResults* allKindGraph, mByPhasesGraphs) {
+    for (GraphViewResults* allKindGraph : mByPhasesGraphs) {
        allKindGraph->setGraphsOpacity(value);
        GraphViewPhase* phaseGraphs = dynamic_cast<GraphViewPhase*>(allKindGraph);
         
@@ -1727,14 +1722,14 @@ void ResultsView::updateOpacity(int value)
            phaseGraphs->mDurationGraph->setCurvesOpacity(value);
     }
     
-    foreach (GraphViewResults* allKindGraph, mByEventsGraphs)
+    for (GraphViewResults* allKindGraph : mByEventsGraphs)
         allKindGraph->setGraphsOpacity(value);
     
 }
 
 void ResultsView::updateRendering(int index)
 {
-    foreach (GraphViewResults* allKindGraph, mByPhasesGraphs) {
+    for (GraphViewResults* allKindGraph : mByPhasesGraphs) {
         allKindGraph->setRendering((GraphView::Rendering) index);
         GraphViewPhase* phaseGraphs = dynamic_cast<GraphViewPhase*>(allKindGraph);
         
@@ -1742,17 +1737,17 @@ void ResultsView::updateRendering(int index)
             phaseGraphs->mDurationGraph->setRendering((GraphView::Rendering) index);
     }
     
-    foreach (GraphViewResults* allKindGraph, mByEventsGraphs)
+    for (GraphViewResults* allKindGraph : mByEventsGraphs)
         allKindGraph->setRendering((GraphView::Rendering) index);
     
 }
 
 void ResultsView::showInfos(bool show)
 {
-    foreach (GraphViewResults* allKindGraph, mByPhasesGraphs)
+    for (GraphViewResults* allKindGraph : mByPhasesGraphs)
         allKindGraph->showNumericalResults(show);
     
-    foreach (GraphViewResults* allKindGraph, mByEventsGraphs)
+    for (GraphViewResults* allKindGraph : mByEventsGraphs)
         allKindGraph->showNumericalResults(show);
     
 }

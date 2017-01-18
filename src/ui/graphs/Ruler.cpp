@@ -2,16 +2,17 @@
 #include "Painting.h"
 #include "AxisTool.h"
 #include "StdUtilities.h"
+#include "QtUtilities.h"
 #include "DateUtils.h"
 #include <QtWidgets>
 #include <iostream>
 
 
 Ruler::Ruler(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-mCurrentMin(0),
-mCurrentMax(1000),
-mMin(0),
-mMax(1000),
+mCurrentMin(0.),
+mCurrentMax(1000.),
+mMin(0.),
+mMax(1000.),
 mZoomProp(1.),
 mMarginLeft(20),
 mMarginRight(20),
@@ -89,34 +90,30 @@ void Ruler::scrollValueChanged(int value)
 
 void Ruler::setRange(const double min, const double max)
 {
-    if(mMin != min || mMax || max)
-    {
+    if (mMin != min || mMax || max) {
         mMin = min;
         mMax = max;
     }
 }
 
 void Ruler::setCurrent(const double min, const double max)
-{
-    //qDebug()<<" Ruler::setCurrent mCurrentMin 0" << mCurrentMin<<" "<< mCurrentMax;
-    //qDebug()<<" Ruler::setCurrent min 1" << min<<" "<< max;
-    
+{ 
     mCurrentMin = min;
     mCurrentMax = max;
     
     // ---------------------------------------------------
     //  No zoom ! scrollbar range is max => no scrollbar shown
     // ---------------------------------------------------
-    if(mCurrentMin == mMin && mCurrentMax == mMax){
+    if (mCurrentMin == mMin && mCurrentMax == mMax)
         mScrollBar->setRange(0, 0);
-    }
+
     // ---------------------------------------------------
     //  There is a zoom => we pick a scrollSteps
     //  1000 seems fine so that dragging the scrollbar is smooth.
     //  (small value here : only allows few discrete positions)
     // ---------------------------------------------------
-    else{
-        double range = 1000;
+    else {
+        double range = 1000.;
         double pageStep = range * (mCurrentMax - mCurrentMin) / (mMax - mMin);
         double scrollRange = range - pageStep;
         
@@ -124,11 +121,11 @@ void Ruler::setCurrent(const double min, const double max)
         double value = scrollRange * (mCurrentMin - mMin) / (curMinAtMaxScroll - mMin);
         
         mScrollBar->setPageStep(pageStep);
-        mScrollBar->setRange(0, scrollRange);
+        mScrollBar->setRange(0, int(scrollRange));
         mScrollBar->setValue(value);
     }
     
-    mAxisTool.updateValues(mRulerRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
+    layout();
     update();
 }
 void Ruler::currentChanged(const double min, const double max)
@@ -136,7 +133,6 @@ void Ruler::currentChanged(const double min, const double max)
     setCurrent(min, max);
     
     emit positionChanged(mCurrentMin, mCurrentMax);
-    
     update();
     
 }
@@ -152,15 +148,15 @@ void Ruler::setZoom(int prop)
     double minProp = 1. / (mMax - mMin);   //10. / (mMax - mMin);
     
   //  mZoomProp = (100. - prop) / 100.;
-    mZoomProp = prop /100;
-    if(mZoomProp < minProp) mZoomProp = minProp;
+    mZoomProp = prop /100.;
+    if (mZoomProp < minProp)
+        mZoomProp = minProp;
     
-    if(mZoomProp != 1)
-    {
+    if (mZoomProp != 1.) {
         // Remember old scroll position
-        double posProp = 0;
+        double posProp = 0.;
         double rangeBefore = (double)mScrollBar->maximum();
-        if(rangeBefore > 0)
+        if (rangeBefore > 0)
             posProp = (double)mScrollBar->value() / rangeBefore;
         
         // Update Scroll Range
@@ -170,9 +166,9 @@ void Ruler::setZoom(int prop)
         mScrollBar->setPageStep(fullScrollSteps);
         
         // Set scroll to correct position
-        double pos = 0;
+        double pos = 0.;
         double rangeAfter = (double)mScrollBar->maximum();
-        if(rangeAfter > 0)
+        if (rangeAfter > 0.)
             pos = floor(posProp * rangeAfter);
         mScrollBar->setValue(pos);
        /* mScrollBar->setTracking(false);
@@ -180,31 +176,8 @@ void Ruler::setZoom(int prop)
         mScrollBar->setTracking(true);*/
     }
     else
-    {
         mScrollBar->setRange(0, 0);
-    }
-    //updateScroll();
-    
-    
-    
- /*   if(mZoomProp != 1)
-    {
-        double delta = mZoomProp * (mMax - mMin);
-        double deltaStart = (mMax - mMin) - delta;
-        
-        mCurrentMin = mMin + deltaStart * ((double)mScrollBar->value() / (double)mScrollBar->maximum());
-        mCurrentMax = mCurrentMin + delta;
-    }
-    else
-    {
-        mCurrentMin = mMin;
-        mCurrentMax = mMax;
-    }
-    qDebug()<<"Ruler::setZoom() mCurrentMin"<< mCurrentMin<<" "<<mCurrentMax;
-    mAxisTool.updateValues(mRulerRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
-   */
-  
-    
+
     update();
     
 }
@@ -213,19 +186,16 @@ void Ruler::updateScroll()
 {
     //qDebug()<<"Ruler::updateScroll() mCurrentMin"<< mCurrentMin<<" mCurrentMax"<<mCurrentMax;
     //if(mZoomProp != 1)
-    if( (mCurrentMax - mCurrentMin) != (mMax - mMin))
-    {
+    if ( (mCurrentMax - mCurrentMin) != (mMax - mMin)) {
         double delta = mCurrentMax - mCurrentMin;
         double deltaStart = (mMax - mMin)-delta;
-        
         
         mCurrentMin = mMin + deltaStart * ((double)mScrollBar->value() / (double)mScrollBar->maximum());
         mCurrentMin = floor( qBound(mMin, mCurrentMin, mMax) );
         mCurrentMax = mCurrentMin + delta;
         
     }
-    else
-    {
+    else {
         mCurrentMin = mMin;
         mCurrentMax = mMax;
     }
@@ -239,6 +209,12 @@ void Ruler::updateScroll()
  }
 
 #pragma mark Layout & Paint
+void Ruler::setFont(const QFont &font)
+{
+    QWidget::setFont(font);
+    layout();
+}
+
 /**
  * @brief Set value formatting functions
  */
@@ -248,13 +224,17 @@ void Ruler::setFormatFunctX(FormatFunc f){
 
 void Ruler::layout()
 {
-    int w = width();
-    int h = height();
-    
-    mScrollBar->setGeometry(mMarginLeft, 0, w - mMarginLeft - mMarginRight, mScrollBarHeight);
-    mRulerRect = QRectF(mMarginLeft, mScrollBarHeight, w - mMarginLeft - mMarginRight, h - mScrollBarHeight);
-    
+    QFont font = this->font();
+
+    QFontMetricsF fmAxe (font);
+    mMarginRight = floor( fmAxe.width(stringWithAppSettings(mMax))/2.);
+    qreal penSize = 1.;// same value as pen.width in AxisTool
+
+    mRulerRect = QRectF(mMarginLeft- penSize, mScrollBarHeight, width() - mMarginRight - mMarginLeft+ 2*penSize, height() - mScrollBarHeight);
+    mScrollBar->setGeometry(mMarginLeft - penSize, 0., mRulerRect.width()  , mScrollBarHeight);
+
     mAxisTool.updateValues(mRulerRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
+
     update();
 }
 
@@ -267,42 +247,46 @@ void Ruler::resizeEvent(QResizeEvent* e)
 void Ruler::paintEvent(QPaintEvent* e)
 {
     QWidget::paintEvent(e);
-    
     double w = mRulerRect.width();
     
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
       
-    // ----------------------------------------------
-    //  Areas (used to display green, orange, and red areas)
-    // ----------------------------------------------
-    
-    for(int i=0; i<mAreas.size(); ++i)
-    {
-        if(mAreas.at(i).mStart < mCurrentMax && mAreas.at(i).mStop > mCurrentMin)
-        {
-            double x1 = w * (mAreas.at(i).mStart - mCurrentMin) / (mCurrentMax - mCurrentMin);
-            x1 = (x1 < 0) ? 0 : x1;
+    /* ----------------------------------------------
+     *  Areas (used to display green, orange, and red areas)
+     * ----------------------------------------------
+     */
+    for ( auto && area : mAreas) {
+        if (area.mStart < mCurrentMax && area.mStop > mCurrentMin) {
+            double x1 = w * (area.mStart - mCurrentMin) / (mCurrentMax - mCurrentMin);
+            x1 = (x1 < 0.) ? 0. : x1;
             double x2 = w;
-            if(mAreas.at(i).mStop < mCurrentMax)
-                x2 = w * (mAreas.at(i).mStop - mCurrentMin) / (mCurrentMax - mCurrentMin);
+            if (area.mStop < mCurrentMax)
+                x2 = w * (area.mStop - mCurrentMin) / (mCurrentMax - mCurrentMin);
             
-            painter.setPen(mAreas.at(i).mColor);
-            painter.setBrush(mAreas.at(i).mColor);
+            painter.setPen(area.mColor);
+            painter.setBrush(area.mColor);
             painter.drawRect(mRulerRect.x() + x1, mRulerRect.y(), x2 - x1, mRulerRect.height());
         }
     }
 
     painter.setPen(Qt::black);
     
-    // ----------------------------------------------
-    //  Axis
-    // ----------------------------------------------
-    
-    QFont font = painter.font();
-    font.setPointSizeF(pointSize(9.));
+    /* ----------------------------------------------
+     *    Axis, the values inside the ruler are set in layout
+     *  and the size of mRulerRect are calucate in layout too.
+     * ----------------------------------------------
+     */
+    QFont font = this->font();
     painter.setFont(font);
-    
-    mAxisTool.paint(painter, mRulerRect, 10, mFormatFuncX);
+
+    if (font.pointSizeF() >20) {
+        font.setPointSizeF(20.);
+        painter.setFont(font);
+    }
+
+    const qreal heigthSize = 7.; // the same name in AxisTool and the same value as GraphView
+    mAxisTool.paint(painter, mRulerRect , heigthSize, mFormatFuncX);
+
 }
 

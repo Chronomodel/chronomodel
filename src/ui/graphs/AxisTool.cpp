@@ -94,14 +94,14 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, F
     pen.setWidth(1);
     
     p.setPen(pen);
-    
+
     QFontMetrics fm (p.font());
     int heightText= fm.height();
     qreal xo = r.x();
     qreal yo = r.y();
     qreal w = r.width();
     qreal h = r.height();
-    
+    qDebug()<<"Axistool::paint p.font="<<p.font();
     
     if (mIsHorizontal) {
        if (mShowArrow) { // the arrow is over the rectangle of heigthSize
@@ -126,7 +126,6 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, F
             if (mShowText){
                 QRectF tr(xo, yo, w, h);
                 
-               // if (valueFormatFunc != 0) {
                 if (valueFormatFunc) {
                     p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, valueFormatFunc(mStartVal, false));
                     p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, valueFormatFunc(mStartVal + mDeltaVal * (w/mDeltaPix), false));
@@ -185,7 +184,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, F
             p.drawPolygon(triangle);
             
         }
-        if (!mShowText){
+        if (!mShowText) {
             // Nothing else to draw !
         }
         else if (mMinMaxOnly) // used on posterior densities Maybe change the type of the text exp ou float
@@ -239,15 +238,14 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, F
 
 
 AxisWidget::AxisWidget(FormatFunc funct, QWidget* parent):QWidget(parent),
-mMarginLeft(0),
-mMarginRight(0)
+mMarginLeft(0.),
+mMarginRight(0.)
 {
     mFormatFunct = funct;
 }
 
 void AxisWidget::paintEvent(QPaintEvent*){
     QPainter p(this);
-    //updateValues(width() - mMarginLeft - mMarginRight, 50, mStartVal, mEndVal);
-    paint(p, QRect( mMarginLeft, 0, width() - mMarginLeft - mMarginRight, height()), 7, mFormatFunct);
+    paint(p, QRectF( mMarginLeft, 0, width() - mMarginLeft - mMarginRight, height()), 7., mFormatFunct);
 }
 

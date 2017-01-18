@@ -622,7 +622,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     p.fillRect(rect(), mBackgroundColor);
     
     QFont font = p.font();
-    font.setPointSizeF(font.pointSizeF() - 2.);
+    font.setPointSizeF(font.pointSizeF());// - 2.);
     p.setFont(font);
     
     // ----------------------------------------------------
@@ -665,9 +665,10 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolX.mShowSubs = mXAxisTicks;
     mAxisToolX.mShowSubSubs = mXAxisSubTicks;
     mAxisToolX.mShowText = mXAxisValues;
-    
+
+    qDebug()<<"GraphView::paintToDevice p.font"<<p.font();
     mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
-    mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), (qreal)7.,stringWithAppSettings);//, mFormatFuncX);
+    mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), (qreal)7.,stringWithAppSettings);
     
     // ----------------------------------------------------
     //  Horizontal Grid
@@ -678,7 +679,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolY.mShowText = mYAxisValues;
 
     mAxisToolY.updateValues(mGraphHeight, mStepMinWidth, mMinY, mMaxY);
-    mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), (qreal) 5.,stringWithAppSettings);//, mFormatFuncY);
+    mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), (qreal) 5.,stringWithAppSettings);
     
     
     // ----------------------------------------------------

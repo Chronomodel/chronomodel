@@ -29,7 +29,7 @@ public:
     double mEndVal;
     double mStartPix;
     double mPixelsPerUnit;
-    QFont    mfont;
+    //QFont    mFont;
     
     QColor mAxisColor;
     QString mLegend;
@@ -37,7 +37,7 @@ public:
 
 class AxisWidget: public QWidget, public AxisTool{
 public:
-    AxisWidget(FormatFunc funct = 0, QWidget* parent = 0);
+    AxisWidget(FormatFunc funct = 0, QWidget* parent = nullptr);
     
 protected:
     void paintEvent(QPaintEvent* e);
@@ -46,8 +46,8 @@ private:
     FormatFunc mFormatFunct;
     
 public:
-    int mMarginLeft;
-    int mMarginRight;
+    qreal mMarginLeft;
+    qreal mMarginRight;
 };
 
 #endif

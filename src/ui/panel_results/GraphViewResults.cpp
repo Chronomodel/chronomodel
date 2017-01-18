@@ -128,11 +128,6 @@ void GraphViewResults::updateCurvesToShow(bool showAllChains, const QList<bool>&
     mShowCredibility = showCredibility;
     mShowCalib = showCalib;
     mShowWiggle = showWiggle;
-    
-    // Repaint the title area above the graph :
-    int leftShift = mButtonsVisible ? mGraphLeft : 0;
-    QRectF textRect(leftShift, 1, this->width()-leftShift, mTopShift-1);
-   // update(textRect.toRect());
     update();
 }
 
@@ -162,6 +157,8 @@ void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc, const QList<Cha
 void GraphViewResults::setRange(type_data min, type_data max)
 {
     mGraph->setRangeX(min, max);
+    // we must update the size of the Graph if the font has changed between two toogle
+    updateLayout();
 }
 void GraphViewResults::setCurrentX(type_data min, type_data max)
 {
@@ -170,10 +167,7 @@ void GraphViewResults::setCurrentX(type_data min, type_data max)
 
 void GraphViewResults::zoom(type_data min, type_data max)
 {
-   // ici ca marche qDebug()<<"avant GraphViewResults::zoom"<<mGraph->getCurrentMaxX();
-    mGraph->zoomX(min, max);
-   // qDebug()<<"apres GraphViewResults::zoom"<<mGraph->getCurrentMaxX();
-   
+    mGraph->zoomX(min, max);  
 }
 
 void GraphViewResults::setMainColor(const QColor& color)
@@ -223,13 +217,11 @@ void GraphViewResults::saveAsImage()
             setRendering(GraphView::eHD);
             short pr = MainWindow::getInstance()->getAppSettings().mPixelRatio;
             int versionHeight = 20;
-            //QSize wSize = widget->size();
+
             QImage image(mGraph->width() * pr, (mGraph->height() + versionHeight) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
 
-            if (image.isNull() ) {
-                qDebug()<< " image width = 0";
-                
-            }
+            if (image.isNull() )
+                qDebug()<< " image width = 0";            
 
             
             image.setDevicePixelRatio(pr);
@@ -322,7 +314,6 @@ void GraphViewResults::saveGraphData() const
     
     else if (mCurrentTypeGraph == eCorrel)
         mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
-
     
     // All visible curves are saved in the same file, the credibility bar is not save
     else if(mCurrentTypeGraph == ePostDistrib)
@@ -357,9 +348,6 @@ void GraphViewResults::setRendering(GraphView::Rendering render)
 void GraphViewResults::setGraphFont(const QFont& font)
 {
     setFont(font);
-    mGraph->setGraphFont(font);
-    mGraph->setMarginBottom(mGraph->font().pointSizeF() + 10);
-   
     // Recalcule mTopShift based on the new font, and position the graph according :
     updateLayout();
 }
@@ -384,46 +372,54 @@ void GraphViewResults::resizeEvent(QResizeEvent* e)
 void GraphViewResults::updateLayout()
 {
     int h = height();
-    int butInlineMaxH = 50;
+    qreal butInlineMaxH = 50.;
     
     bool axisVisible = (h > mHeightForVisibleAxis);
 
-    if(mButtonsVisible) {
+    if (mButtonsVisible) {
         qreal bw = mGraphLeft / 4;
-        int bh = height() - mLineH;
+        qreal bh = height() - mLineH;
         bh = std::min(bh, butInlineMaxH);
         
-        mImageSaveBut   -> setGeometry(0, mLineH, bw, bh);
+        mImageSaveBut   -> setGeometry(0., mLineH, bw, bh);
         mDataSaveBut    -> setGeometry(bw, mLineH, bw, bh);
         mImageClipBut   -> setGeometry(2*bw, mLineH, bw, bh);
         mResultsClipBut -> setGeometry(mGraphLeft-bw, mLineH, bw, bh);
     }
-    
+
+     // define the rigth margin,according to the max on the scale
     QFont fontTitle(this->font());
     fontTitle.setPointSizeF(this->font().pointSizeF()*1.1);
-    QFontMetrics fmTitle(fontTitle);
-    mTopShift = fmTitle.height() + 4 + 1;
+    QFontMetricsF fmTitle(fontTitle);
+    mTopShift = fmTitle.height() + 4. + 1.;
     
-    int leftShift = mButtonsVisible ? mGraphLeft : 0;
-    QRect graphRect(leftShift, mTopShift, this->width() - leftShift, height()-mTopShift);
-    
+    qreal leftShift = mButtonsVisible ? mGraphLeft : 0.;
+    QRect graphRect(leftShift, mTopShift, width() - leftShift, height()-mTopShift);
+    qDebug()<<"graphViewResult::updateLayout font"<<this->font();
+
+    type_data max = mGraph->maximumX();
+    QFontMetricsF fmAxe (this->font());
+    qreal marginRight = floor(fmAxe.width(stringWithAppSettings(max))/2.);
+    mGraph->setMarginRight(marginRight);
+    mGraph->setFont(this->font());
+
     if ((mGraph->hasCurve())) {
         mGraph->showXAxisValues(axisVisible);
-        mGraph->setMarginBottom(axisVisible ? mGraph->font().pointSizeF() + 10 : 10);
+        mGraph->setMarginBottom(axisVisible ? mGraph->font().pointSizeF() + 10. : 10.);
     }
+
     if (mShowNumResults) {
-        mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2));
-        mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2, 0, 0));
+        mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2.));
+        mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2., 0, 0));
+
     } else
             mGraph->setGeometry(graphRect);
-    /*} else
-        mGraph->setGeometry(graphRect);*/
 
     update();
 }
 void GraphViewResults::paintEvent(QPaintEvent* )
 {
-    int leftShift = mButtonsVisible ? mGraphLeft : 0;
+    qreal leftShift = mButtonsVisible ? mGraphLeft : 0.;
     
     QPainter p;
     p.begin(this);
@@ -433,8 +429,8 @@ void GraphViewResults::paintEvent(QPaintEvent* )
         QColor backCol = mItemColor;
         QColor foreCol = getContrastedColor(backCol);
         
-        // affiche le texte dans la boite de droite avec les boutons
-        QRectF topRect(0, 1, mGraphLeft-p.pen().widthF(), mLineH-p.pen().widthF() - 1);
+        // affiche le texte dans la boite de gauche avec les boutons
+        QRectF topRect(0, 1, mGraphLeft-p.pen().widthF(), mLineH-p.pen().widthF() - 1.);
         
         p.setPen(backCol);
         p.setBrush(backCol);
@@ -445,7 +441,7 @@ void GraphViewResults::paintEvent(QPaintEvent* )
         font.setPointSizeF(pointSize(11));
         p.setFont(font);
         
-        p.drawText(QRectF(0, 1, mGraphLeft-p.pen().widthF(), mLineH-p.pen().widthF()-1),
+        p.drawText(QRectF(0., 1., mGraphLeft-p.pen().widthF(), mLineH-p.pen().widthF()-1.),
                    Qt::AlignVCenter | Qt::AlignCenter,
                    mItemTitle);
     }
@@ -457,15 +453,15 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     fontTitle.setPointSizeF(this->font().pointSizeF()*1.1);
     QFontMetrics fmTitle(fontTitle);
     
-    QRectF textRect(leftShift, 1, this->width()-leftShift, mTopShift-1);
+    QRectF textRect(leftShift, 1., this->width()-leftShift, mTopShift-1.);
     p.fillRect(textRect, mGraph->getBackgroundColor());
     
     p.setFont(fontTitle);
     p.setPen(Qt::black);
     
-    p.drawText(QRect(leftShift + 50, 3, fmTitle.width(mTitle), mTopShift - 1), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
+    p.drawText(QRectF(leftShift + 50., 3., fmTitle.width(mTitle), mTopShift - 1.), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
     
-    p.drawText(QRect(width() - fmTitle.width(mGraph->getInfo()), 3, fmTitle.width(mGraph->getInfo()), mTopShift-1), Qt::AlignVCenter | Qt::AlignLeft, mGraph->getInfo());
+    p.drawText(QRectF(width() - fmTitle.width(mGraph->getInfo()), 3., fmTitle.width(mGraph->getInfo()), mTopShift-1.), Qt::AlignVCenter | Qt::AlignLeft, mGraph->getInfo());
     
     p.end();
 
