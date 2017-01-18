@@ -304,7 +304,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             //  - Sigma Date i All Chains
             //  - Sigma Date i Chain j
             // ------------------------------------------------
-            else if(mCurrentVariable == eSigma) {
+            else if (mCurrentVariable == eSigma) {
                 for (int i=0; i<mEvent->mDates.size(); ++i) {
                     mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " All Chains", mShowAllChains);
                     

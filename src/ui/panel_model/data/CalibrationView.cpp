@@ -212,7 +212,7 @@ void CalibrationView::updateGraphs()
 
             type_data yMax = map_max_value(calibCurve.mData);
             yMax = (yMax > 0) ? yMax : 1;
-            mCalibGraph->setRangeY(0, 1.1 * yMax);
+            mCalibGraph->setRangeY(0., 1.1 * yMax);
 
             mCalibGraph->addCurve(calibCurve);
             mCalibGraph->setVisible(true);
@@ -238,7 +238,7 @@ void CalibrationView::updateGraphs()
             
             yMax = map_max_value(hpdCurve.mData);
 
-            mCalibGraph->setRangeY(0, 1.1 * yMax);
+            mCalibGraph->setRangeY(0., 1.1 * yMax);
 
             mCalibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             mCalibGraph->setFormatFunctX(stringWithAppSettings);
@@ -326,12 +326,12 @@ void CalibrationView::updateScroll()
 {
     const type_data min = mCalibGraph->minimumX();
     const type_data max = mCalibGraph->maximumX();
-    const type_data minProp = 5.f / (max - min);
+    const type_data minProp = 5. / (max - min);
     type_data prop = (100. - (type_data) mZoomSlider->value()) / 100.;
     if (prop < minProp)
         prop = minProp;
     
-    if (prop != 1) {
+    if (prop != 1.) {
         // Update graphs with new zoom
         const type_data delta = prop * (max - min);
         const type_data deltaStart = (max - min) - delta;
@@ -467,7 +467,7 @@ void CalibrationView::updateLayout()
     mHPDEdit->setGeometry(width() - m2 - 10 - editW, height() - m2 - botH, editW, lineH);
     mHPDLab->setGeometry(width() - m2 - 10 - editW - checkW, height() - m2 - botH, checkW, lineH);
     
-    mMarkerX->setGeometry(mMarkerX->pos().x(), m1 + sbe, mMarkerX->thickness(), height() - 2*m1 - sbe - 8.f); // 8 = graph margin bottom
+    mMarkerX->setGeometry(mMarkerX->pos().x(), m1 + sbe, mMarkerX->thickness(), height() - 2*m1 - sbe - 8.); // 8 = graph margin bottom
     mMarkerY->setGeometry(m1 + graphLeft, mMarkerY->pos().y(), width() - 2*m1 - graphLeft, mMarkerY->thickness());
     
     update();

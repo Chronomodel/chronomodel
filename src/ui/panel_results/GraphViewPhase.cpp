@@ -56,7 +56,7 @@ mPhase(0)
 
 GraphViewPhase::~GraphViewPhase()
 {
-    mPhase = 0;
+    mPhase = nullptr;
 }
 
 void GraphViewPhase::setGraphFont(const QFont& font)
@@ -88,7 +88,12 @@ void GraphViewPhase::setPhase(Phase* phase)
 void GraphViewPhase::updateLayout()
 {
     GraphViewResults::updateLayout();
-    
+    // define the rigth margin, according to the max on the scale of the duration
+    QFontMetrics fm(font());
+    type_data max = mDurationGraph->maximumX();
+    int marginRight = (int) floor(fm.width(stringWithAppSettings(max))/2);
+    mDurationGraph->setMarginRight(marginRight);
+
     const int h = height();
     const int leftShift = mButtonsVisible ? mGraphLeft : 0;
     QRect graphRect(leftShift, mTopShift, this->width() - leftShift, height()-mTopShift);
@@ -105,6 +110,7 @@ void GraphViewPhase::updateLayout()
     }
     mDurationGraph->setGeometry(graphRect.adjusted(0, 0, 0, mShowNumResults ? -graphRect.height()/2 : 0));
 
+
 }
 
 void GraphViewPhase::paintEvent(QPaintEvent* e)
@@ -117,17 +123,19 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
     qDebug()<<"GraphViewPhase::generateCurves()";
     GraphViewResults::generateCurves(typeGraph, variable);
     
+
     mGraph->removeAllCurves();
     mGraph->reserveCurves(9);
 
     mGraph->removeAllZones();
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
-    
+
    // mGraph->autoAdjustYScale(typeGraph == eTrace);
     
     mDurationGraph->removeAllCurves();
     mDurationGraph->reserveCurves(2);
+
     QPen defaultPen;
     defaultPen.setWidthF(1);
     defaultPen.setStyle(Qt::SolidLine);
@@ -259,6 +267,8 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
             
         }
     }
+
+
 }
 
 void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle)
