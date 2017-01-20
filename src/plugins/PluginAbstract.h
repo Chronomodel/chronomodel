@@ -77,6 +77,8 @@ public:
         return name;
     }
     
+    virtual Date::CalibrationType getDateCalibrationType(const QJsonObject& data) {return Date::eStandard;}
+    
     // Function to check if data values are ok : depending on the application version, plugin data values may change.
     // eg. : a new parameter may be added to 14C plugin, ...
     virtual QJsonObject checkValuesCompatibility(const QJsonObject& values){return values;}
@@ -192,7 +194,7 @@ public:
                 }
             }
             else { // onExtension
-                    error = 1.0e+6 * (curve.mDataSupMax - curve.mDataInfMin);
+                error = 1.0e+6 * (curve.mDataSupMax - curve.mDataInfMin);
             }
         }
         return error;

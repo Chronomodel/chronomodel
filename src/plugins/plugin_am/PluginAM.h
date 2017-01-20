@@ -45,7 +45,8 @@ public:
     QJsonObject fromCSV(const QStringList& list, const QLocale &csvLocale) ;
     QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale) const;
     QJsonObject checkValuesCompatibility(const QJsonObject& values);
-
+    
+    Date::CalibrationType getDateCalibrationType(const QJsonObject& data);
     QString getDateDesc(const Date* date) const;
     
     PluginFormAbstract* getForm();

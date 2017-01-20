@@ -34,6 +34,7 @@
 #define STATE_DATE_PLUGIN_ID "plugin_id"
 #define STATE_DATE_METHOD "method"
 #define STATE_DATE_VALID "valid"
+#define STATE_DATE_CALIBRATION_TYPE "calibration_type"
 #define STATE_DATE_DELTA_TYPE "delta_type"
 #define STATE_DATE_DELTA_FIXED "delta_fixed"
 #define STATE_DATE_DELTA_MIN "delta_min"

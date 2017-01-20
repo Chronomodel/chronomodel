@@ -326,9 +326,10 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
 
                         // No color in date JSON
                         // Check DATES STRUCTURE
-                        if ( datesNew.at(j).toObject().value(STATE_DATE_DATA) != datesOld.at(j).toObject().value(STATE_DATE_DATA) ||
+                        if (datesNew.at(j).toObject().value(STATE_DATE_DATA) != datesOld.at(j).toObject().value(STATE_DATE_DATA) ||
                             datesNew.at(j).toObject().value(STATE_DATE_PLUGIN_ID) != datesOld.at(j).toObject().value(STATE_DATE_PLUGIN_ID) ||
                             datesNew.at(j).toObject().value(STATE_DATE_VALID) != datesOld.at(j).toObject().value(STATE_DATE_VALID) ||
+                            datesNew.at(j).toObject().value(STATE_DATE_CALIBRATION_TYPE) != datesOld.at(j).toObject().value(STATE_DATE_CALIBRATION_TYPE) ||
                             datesNew.at(j).toObject().value(STATE_DATE_DELTA_TYPE).toInt() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_TYPE).toInt() ||
                             datesNew.at(j).toObject().value(STATE_DATE_DELTA_FIXED).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_FIXED).toDouble() ||
                             datesNew.at(j).toObject().value(STATE_DATE_DELTA_MIN).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_MIN).toDouble() ||
@@ -1263,6 +1264,7 @@ Date Project::createDateFromPlugin(PluginAbstract* plugin)
             if (form->isValid()) {
                 date.mPlugin = plugin;
                 date.mData = form->getData();
+                date.mCalibrationType = plugin->getDateCalibrationType(date.mData);
                 
                 date.mName = dialog.getName();
                 date.mMethod = dialog.getMethod();
@@ -1296,6 +1298,7 @@ void Project::addDate(int eventId, QJsonObject date)
     PluginAbstract* plugin = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
     bool valid = plugin->isDateValid(date[STATE_DATE_DATA].toObject(), settings);
     date[STATE_DATE_VALID] = valid;
+    date[STATE_DATE_CALIBRATION_TYPE] = plugin->getDateCalibrationType(date[STATE_DATE_DATA].toObject());
     
     // Add the date
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
@@ -1349,6 +1352,9 @@ void Project::checkDatesCompatibility()
             PluginAbstract* plugin = PluginManager::getPluginFromId(pluginId);
             date[STATE_DATE_DATA] = plugin->checkValuesCompatibility(date[STATE_DATE_DATA].toObject());
             
+            if (date.find(STATE_DATE_CALIBRATION_TYPE) == date.end())
+                date[STATE_DATE_CALIBRATION_TYPE] = plugin->getDateCalibrationType(date[STATE_DATE_DATA].toObject());
+            
             // -----------------------------------------------------------
             //  Check subdates compatibility with the plugin version
             // -----------------------------------------------------------
@@ -1356,6 +1362,10 @@ void Project::checkDatesCompatibility()
             for (int k = 0; k < subdates.size(); ++k) {
                 QJsonObject subdate = subdates[k].toObject();
                 subdate[STATE_DATE_DATA] = plugin->checkValuesCompatibility(subdate[STATE_DATE_DATA].toObject());
+                
+                if (subdate.find(STATE_DATE_CALIBRATION_TYPE) == subdate.end())
+                    subdate[STATE_DATE_CALIBRATION_TYPE] = plugin->getDateCalibrationType(subdate[STATE_DATE_DATA].toObject());
+                
                 subdates[k] = subdate;
             }
             date[STATE_DATE_SUB_DATES] = subdates;
@@ -1422,8 +1432,9 @@ void Project::updateDate(int eventId, int dateIndex)
                         date[STATE_DATE_DELTA_ERROR] = dialog.getDeltaError();
                         
                         PluginAbstract* plugin = PluginManager::getPluginFromId(date.value(STATE_DATE_PLUGIN_ID).toString());
-                        bool valid = plugin->isDateValid(date.value(STATE_DATE_DATA).toObject(), settings);
-                        date[STATE_DATE_VALID] = valid;
+                        
+                        date[STATE_DATE_VALID] = plugin->isDateValid(date.value(STATE_DATE_DATA).toObject(), settings);
+                        date[STATE_DATE_CALIBRATION_TYPE] = plugin->getDateCalibrationType(date.value(STATE_DATE_DATA).toObject());
                         
                         dates[dateIndex] = date;
                         event[STATE_EVENT_DATES] = dates;

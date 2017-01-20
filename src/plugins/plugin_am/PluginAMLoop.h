@@ -21,6 +21,8 @@ protected:
     virtual void update();
     virtual bool adapt();
     virtual void finalize();
+    
+    
 };
 
 #endif

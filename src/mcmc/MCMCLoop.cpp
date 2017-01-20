@@ -106,7 +106,7 @@ void MCMCLoop::run()
     
     // initVariableForChain() reserve memory space
     initVariablesForChain();
-
+    
     for (mChainIndex = 0; mChainIndex < mChains.size(); ++mChainIndex) {
         log += "<hr>";
         //log += line("Chain : " + QString::number(mChainIndex + 1) + "/" + QString::number(mChains.size()));

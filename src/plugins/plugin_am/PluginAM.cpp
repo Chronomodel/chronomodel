@@ -177,6 +177,18 @@ QString PluginAM::getDateDesc(const Date* date) const
     return result;
 }
 
+Date::CalibrationType PluginAM::getDateCalibrationType(const QJsonObject& data)
+{
+    QString mode = data.value(DATE_AM_MODE).toString();
+    
+    if(mode == DATE_AM_MODE_ID || mode == DATE_AM_MODE_IF || mode == DATE_AM_MODE_IDF){
+        return Date::eMCMC;
+    }
+    else{
+        return Date::eStandard;
+    }
+}
+
 #pragma mark CSV
 QStringList PluginAM::csvColumns() const
 {

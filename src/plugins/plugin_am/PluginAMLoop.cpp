@@ -41,7 +41,7 @@ QString PluginAMLoop::initMCMC()
 
 void PluginAMLoop::update()
 {
-
+    
 }
 
 bool PluginAMLoop::adapt()

@@ -13,13 +13,15 @@
 #include "MainWindow.h"
 
 Date::Date():
-mName("No Named Date")
+mName("No Name"),
+mCalibrationType(eStandard)
 {
     init();   
 }
 
 Date::Date(PluginAbstract* plugin):
-mName("No Named Date")
+mName("No Name"),
+mCalibrationType(eStandard)
 {
     init();
     mPlugin = plugin;
@@ -146,6 +148,7 @@ Date Date::fromJson(const QJsonObject& json)
         
         date.mMethod = (DataMethod)json.value(STATE_DATE_METHOD).toInt();
         date.mIsValid = json.value(STATE_DATE_VALID).toBool();
+        date.mCalibrationType = (Date::CalibrationType) json.value(STATE_DATE_CALIBRATION_TYPE).toInt();
         
         date.mDeltaType = (Date::DeltaType)json.value(STATE_DATE_DELTA_TYPE).toInt();
         date.mDeltaFixed = json.value(STATE_DATE_DELTA_FIXED).toDouble();
@@ -197,6 +200,7 @@ QJsonObject Date::toJson() const
     date[STATE_DATE_PLUGIN_ID] = mPlugin->getId();
     date[STATE_DATE_METHOD] = mMethod;
     date[STATE_DATE_VALID] = mIsValid;
+    date[STATE_DATE_CALIBRATION_TYPE] = mCalibrationType;
     
     date[STATE_DATE_DELTA_TYPE] = mDeltaType;
     date[STATE_DATE_DELTA_FIXED] = mDeltaFixed;
@@ -300,82 +304,113 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
     double tmaxCal;
     
     // --------------------------------------------------
-    //  Calibrate on the whole calibration period (= ref curve definition domain)
+    //  Standard Calibration :
+    //  calibrate on the whole calibration period
+    //  (= ref curve definition domain)
     // --------------------------------------------------
-    if (mTmaxRefCurve > mTminRefCurve) {
-        QVector<double> calibrationTemp;
-        QVector<double> repartitionTemp;
-
-        const double nbRefPts = 1. + round((mTmaxRefCurve - mTminRefCurve) / (double)settings.mStep);
-        long double v = getLikelihood(mTminRefCurve);
-        calibrationTemp.append(v);
-        repartitionTemp.append(0);
-        long double lastRepVal = v;
-        
-        // we use long double type because
-        // after several sums, the repartion can be in the double type range
-        for(int i = 1; i < nbRefPts; ++i) {
-            const double t = mTminRefCurve + (double)i * (double)settings.mStep;
-            long double lastV = v;
-            v = getLikelihood(t);
+    if(mCalibrationType == eStandard)
+    {
+        if (mTmaxRefCurve > mTminRefCurve)
+        {
+            QVector<double> calibrationTemp;
+            QVector<double> repartitionTemp;
             
+            const double nbRefPts = 1. + round((mTmaxRefCurve - mTminRefCurve) / (double)settings.mStep);
+            long double v = getLikelihood(mTminRefCurve);
             calibrationTemp.append(v);
-            long double rep = lastRepVal;
-            if(v != 0. && lastV != 0.)
-                rep = lastRepVal + (long double) settings.mStep * (lastV + v) / 2.;
-
-            repartitionTemp.append((double)rep);
-            lastRepVal = rep;
+            repartitionTemp.append(0);
+            long double lastRepVal = v;
             
+            // we use long double type because
+            // after several sums, the repartion can be in the double type range
+            for(int i = 1; i < nbRefPts; ++i) {
+                const double t = mTminRefCurve + (double)i * (double)settings.mStep;
+                long double lastV = v;
+                v = getLikelihood(t);
+                
+                calibrationTemp.append(v);
+                long double rep = lastRepVal;
+                if(v != 0. && lastV != 0.)
+                    rep = lastRepVal + (long double) settings.mStep * (lastV + v) / 2.;
+                
+                repartitionTemp.append((double)rep);
+                lastRepVal = rep;
+                
+            }
+            
+            // ------------------------------------------------------------------
+            //  Restrict the calib and repartition vectors to where data are
+            // ------------------------------------------------------------------
+            
+            if (repartitionTemp.last() > 0.) {
+                const double threshold = 0.00005;
+                const int minIdx = (int)floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp));
+                const int maxIdx = (int)ceil(vector_interpolate_idx_for_value((1 - threshold) * lastRepVal, repartitionTemp));
+                
+                tminCal = mTminRefCurve + minIdx * settings.mStep;
+                tmaxCal = mTminRefCurve + maxIdx * settings.mStep;
+                
+                // Truncate both functions where data live
+                mCalibration->mCurve = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
+                mCalibration->mRepartition = repartitionTemp.mid(minIdx, (maxIdx - minIdx) + 1);
+                
+                // NOTE ABOUT THIS APPROMIATION :
+                // By truncating the calib and repartition, the calib density's area is not 1 anymore!
+                // It is now 1 - 2*threshold = 0,99999... We consider it to be 1 anyway!
+                // By doing this, calib and repartition are stored on a restricted number of data
+                // instead of storing them on the whole reference curve's period (as done for calibrationTemp & repartitionTemp above).
+                
+                // Stretch repartition curve so it goes from 0 to 1
+                mCalibration->mRepartition = stretch_vector(mCalibration->mRepartition, 0., 1.);
+                
+                // Approximation : even if the calib has been truncated, we consider its area to be = 1
+                mCalibration->mCurve = equal_areas(mCalibration->mCurve, settings.mStep, 1.);
+                
+            }
+            // ------------------------------------------------------------------
+            //  Measure is very far from Ref curve on the whole ref curve preriod!
+            //  => Calib values are very small, considered as being 0 even using "double" !
+            //  => lastRepVal = 0, and impossible to truncate using it....
+            //  => So,
+            // ------------------------------------------------------------------
+            else  {
+                tminCal = mTminRefCurve;
+                tmaxCal = mTmaxRefCurve;
+            }
+            
+            mCalibration->mTmin = tminCal;
+            mCalibration->mTmax = tmaxCal;
+            
+        }
+        else {
+            // Impossible to calibrate because the plugin could not return any calib curve definition period.
+            // This may be due to invalid ref curve files or to polynomial equations with only imaginary solutions (See Gauss Plugin...)
+        }
+    }
+    
+    // ------------------------------------------------------------------
+    //  MCMC Calibration
+    // ------------------------------------------------------------------
+    else if(mCalibrationType == eMCMC)
+    {
+        qDebug() << "MCMC Calib...";
+
+        mCalibration->mCurve.append(0);
+        mCalibration->mRepartition.append(0);
+        
+        const double nbRefPts = 1. + round((mTmaxRefCurve - mTminRefCurve) / (double)settings.mStep);
+        
+        for(int i = 0; i < nbRefPts; ++i) {
+            mCalibration->mCurve.append(0);
+            mCalibration->mRepartition.append(0);
         }
         
-        // ------------------------------------------------------------------
-        //  Restrict the calib and repartition vectors to where data are
-        // ------------------------------------------------------------------
-
-        if (repartitionTemp.last() > 0.) {
-            const double threshold = 0.00005;
-            const int minIdx = (int)floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp));
-            const int maxIdx = (int)ceil(vector_interpolate_idx_for_value((1 - threshold) * lastRepVal, repartitionTemp));
-            
-            tminCal = mTminRefCurve + minIdx * settings.mStep;
-            tmaxCal = mTminRefCurve + maxIdx * settings.mStep;
-            
-            // Truncate both functions where data live
-            mCalibration->mCurve = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
-            mCalibration->mRepartition = repartitionTemp.mid(minIdx, (maxIdx - minIdx) + 1);
-            
-            // NOTE ABOUT THIS APPROMIATION :
-            // By truncating the calib and repartition, the calib density's area is not 1 anymore!
-            // It is now 1 - 2*threshold = 0,99999... We consider it to be 1 anyway!
-            // By doing this, calib and repartition are stored on a restricted number of data
-            // instead of storing them on the whole reference curve's period (as done for calibrationTemp & repartitionTemp above).
-            
-            // Stretch repartition curve so it goes from 0 to 1
-            mCalibration->mRepartition = stretch_vector(mCalibration->mRepartition, 0., 1.);
-            
-            // Approximation : even if the calib has been truncated, we consider its area to be = 1
-            mCalibration->mCurve = equal_areas(mCalibration->mCurve, settings.mStep, 1.);
-
-        }
-        // ------------------------------------------------------------------
-        //  Measure is very far from Ref curve on the whole ref curve preriod!
-        //  => Calib values are very small, considered as being 0 even using "double" !
-        //  => lastRepVal = 0, and impossible to truncate using it....
-        //  => So,
-        // ------------------------------------------------------------------
-        else  {
-            tminCal = mTminRefCurve;
-            tmaxCal = mTmaxRefCurve;
-        }
-
-        mCalibration->mTmin = tminCal;
-        mCalibration->mTmax = tmaxCal;
-
+        mCalibration->mTmin = mTminRefCurve;
+        mCalibration->mTmax = mTmaxRefCurve;
     }
-    else {
-        // Impossible to calibrate because the plugin could not return any calib curve definition period.
-        // This may be due to invalid ref curve files or to polynomial equations with only imaginary solutions (See Gauss Plugin...)
+    else
+    {
+        qDebug() << "Error : Unknown calibration type " << mCalibrationType << " for date " << mName;
     }
 
     qDebug()<<"Date::calibrate in project"<<project->mCalibCurves[toFind].mName;

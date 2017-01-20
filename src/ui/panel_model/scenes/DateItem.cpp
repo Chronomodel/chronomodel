@@ -32,11 +32,11 @@ mGreyedOut(false)
             mCalibThumb = QPixmap();
         else {
             if (d.mCalibration == 0)
-                     d.calibrate(s, EventsScene->getProject());
+                d.calibrate(s, EventsScene->getProject());
 
             if (d.mPlugin->getName() != "Typo")
-               mCalibThumb = d.generateCalibThumb();
-             else
+                mCalibThumb = d.generateCalibThumb();
+            else
                 mCalibThumb = d.generateTypoThumb();
         }
     }

@@ -51,6 +51,12 @@ public:
         eDeltaRange = 2
     };
     
+    
+    enum CalibrationType{
+        eStandard = 0,
+        eMCMC = 1
+    };
+    
     Date();
     Date(PluginAbstract* plugin);
     Date(const Date& date);
@@ -138,6 +144,7 @@ public:
     bool mIsCurrent;
     bool mIsSelected;
     
+    CalibrationType mCalibrationType;
     CalibrationCurve* mCalibration;
 
     QMap<double, double> mCalibHPD;
