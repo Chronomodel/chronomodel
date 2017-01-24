@@ -11,10 +11,12 @@
 #include <QDebug>
 #include "Project.h"
 #include "MainWindow.h"
+#include "MCMCProgressDialog.h"
 
 Date::Date():
 mName("No Name"),
-mCalibrationType(eStandard)
+mCalibrationType(eStandard),
+mMCMCLoop(0)
 {
     init();   
 }
@@ -395,6 +397,9 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
     {
         qDebug() << "MCMC Calib...";
 
+        // ------------------------------------------------------------------
+        //  Fake empty implementation... so we temporarily "have something"
+        // ------------------------------------------------------------------
         mCalibration->mCurve.append(0);
         mCalibration->mRepartition.append(0);
         
@@ -407,6 +412,57 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
         
         mCalibration->mTmin = mTminRefCurve;
         mCalibration->mTmax = mTmaxRefCurve;
+        
+        // ------------------------------------------------------------------
+        //  MCMC Calibration loop
+        // ------------------------------------------------------------------
+        if(!mMCMCLoop){
+            mMCMCLoop = mPlugin->createMCMCLoopForDate(this);
+        }
+        else{
+            // TODO : clean previous loop ??
+        }
+        
+        MCMCProgressDialog dialog(mMCMCLoop,
+                                  qApp->activeWindow(),
+                                  Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::Sheet);
+        
+        // --------------------------------------------------------------------
+        //  The dialog startMCMC() method starts the loop and the dialog.
+        //  When the loop emits "finished", the dialog will be "accepted"
+        //  This "finished" signal can be the results of :
+        //  - MCMC ran all the way to the end => mAbortedReason is empty and "run" returns.
+        //  - User clicked "Cancel" :
+        //      - an interruption request is sent to the loop
+        //      - The loop catches the interruption request with "isInterruptionRequested"
+        //      - the loop "run" function returns after setting mAbortedReason = ABORTED_BY_USER
+        //  - An error occured :
+        //      - The loop sets mAbortedReason to the correct error message
+        //      - The run function returns
+        //  => THE DIALOG IS NEVER REJECTED ! (Escape key also disabled to prevent default behavior)
+        // --------------------------------------------------------------------
+        
+        if (dialog.startMCMC() == QDialog::Accepted) {
+            
+            if (mMCMCLoop->mAbortedReason.isEmpty()) {
+                // emit finished
+                qDebug() << "MCMC calib finished !!!";
+            } else {
+                if (mMCMCLoop->mAbortedReason != ABORTED_BY_USER) {
+                    QMessageBox message(QMessageBox::Warning,
+                                        QObject::tr("Error"),
+                                        mMCMCLoop->mAbortedReason,
+                                        QMessageBox::Ok,
+                                        qApp->activeWindow(),
+                                        Qt::Sheet);
+                    message.exec();
+                }
+            }
+        }
+        // Dialog is never "rejected", so this should never happen :
+        else {
+            qDebug() << "MCMC rejected ???";
+        }
     }
     else
     {

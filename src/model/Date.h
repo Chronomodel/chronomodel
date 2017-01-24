@@ -1,4 +1,4 @@
-﻿#ifndef DATE_H
+#ifndef DATE_H
 #define DATE_H
 
 #include "MHVariable.h"
@@ -19,6 +19,7 @@ class CalibrationCurve;
 
 class Project;
 //class ProjectSettings;
+class MCMCLoop;
 
 typedef void (*samplingFunction)(Date* date, Event* event);
 
@@ -146,6 +147,7 @@ public:
     
     CalibrationType mCalibrationType;
     CalibrationCurve* mCalibration;
+    MCMCLoop* mMCMCLoop;
 
     QMap<double, double> mCalibHPD;
     ProjectSettings mSettings;

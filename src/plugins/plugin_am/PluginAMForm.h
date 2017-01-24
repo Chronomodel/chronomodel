@@ -32,6 +32,9 @@ protected slots:
     void errorIsValid(QString str);
 
 private:
+    QRadioButton* mIRadio;
+    QRadioButton* mDRadio;
+    QRadioButton* mFRadio;
     QRadioButton* mIDRadio;
     QRadioButton* mIFRadio;
     QRadioButton* mIDFRadio;

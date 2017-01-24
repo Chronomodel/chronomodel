@@ -86,26 +86,27 @@ void PluginAMRefView::setDate(const Date& date, const ProjectSettings& settings)
         QString curveNameD = date.mData.value(DATE_AM_CURVE_D).toString().toLower();
         QString curveNameF = date.mData.value(DATE_AM_CURVE_F).toString().toLower();
         
-        if(mode == DATE_AM_MODE_ID)
+        bool needsI = (mode == DATE_AM_MODE_I || mode == DATE_AM_MODE_ID || mode == DATE_AM_MODE_IF || mode == DATE_AM_MODE_IDF);
+        bool needsD = (mode == DATE_AM_MODE_D || mode == DATE_AM_MODE_ID || mode == DATE_AM_MODE_IDF);
+        bool needsF = (mode == DATE_AM_MODE_F || mode == DATE_AM_MODE_IF || mode == DATE_AM_MODE_IDF);
+        
+        if(needsI)
         {
             setRefCurve(date, curveNameI, "I", tminDisplay, tmaxDisplay);
+        }
+        if(needsD)
+        {
             setRefCurve(date, curveNameD, "D", tminDisplay, tmaxDisplay);
         }
-        else if(mode == DATE_AM_MODE_IF)
+        if(needsF)
         {
-            setRefCurve(date, curveNameI, "I", tminDisplay, tmaxDisplay);
-            setRefCurve(date, curveNameF, "F", tminDisplay, tmaxDisplay);
-        }
-        else if(mode == DATE_AM_MODE_IDF)
-        {
-            setRefCurve(date, curveNameI, "I", tminDisplay, tmaxDisplay);
-            setRefCurve(date, curveNameD, "D", tminDisplay, tmaxDisplay);
             setRefCurve(date, curveNameF, "F", tminDisplay, tmaxDisplay);
         }
         
         mMode = mode;
-        mGraphD->setVisible(mMode != DATE_AM_MODE_IF);
-        mGraphF->setVisible(mMode != DATE_AM_MODE_ID);
+        mGraphI->setVisible(needsI);
+        mGraphD->setVisible(needsD);
+        mGraphF->setVisible(needsF);
     }
     update();
 }
@@ -341,7 +342,22 @@ void PluginAMRefView::resizeEvent(QResizeEvent* e)
     
     int w = rect().width();
     
-    if(mMode == DATE_AM_MODE_ID)
+    if(mMode == DATE_AM_MODE_I)
+    {
+        int h = rect().height();
+        mGraphI->setGeometry(QRect(0, 0, w, h));
+    }
+    else if(mMode == DATE_AM_MODE_D)
+    {
+        int h = rect().height();
+        mGraphD->setGeometry(QRect(0, 0, w, h));
+    }
+    else if(mMode == DATE_AM_MODE_F)
+    {
+        int h = rect().height();
+        mGraphF->setGeometry(QRect(0, 0, w, h));
+    }
+    else if(mMode == DATE_AM_MODE_ID)
     {
         int h = rect().height() / 2;
         mGraphI->setGeometry(QRect(0, 0, w, h));

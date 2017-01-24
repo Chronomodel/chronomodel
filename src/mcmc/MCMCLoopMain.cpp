@@ -564,13 +564,13 @@ void MCMCLoopMain::finalize()
     
     // This should not be done here because it uses resultsView parameters
     // ResultView will trigger it again when loading the model
-    //mModel->generatePosteriorDensities(mChains, 1024, 1);
+    // mModel->generatePosteriorDensities(mChains, 1024, 1);
     
     // Generate numerical results of :
     // - MHVariables (global acceptation)
     // - MetropolisVariable : analysis of Posterior densities and quartiles from traces.
     // This also should be done in results view...
-    //mModel->generateNumericalResults(mChains);
+    // mModel->generateNumericalResults(mChains);
 }
 
 

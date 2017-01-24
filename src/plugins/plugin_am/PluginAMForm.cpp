@@ -8,13 +8,18 @@
 
 PluginAMForm::PluginAMForm(PluginAM* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("AM Measurements"), parent, flags)
 {
-    
+    mIRadio = new QRadioButton(tr("I"));
+    mDRadio = new QRadioButton(tr("D"));
+    mFRadio = new QRadioButton(tr("F"));
     mIDRadio = new QRadioButton(tr("I/D"));
     mIFRadio = new QRadioButton(tr("I/F"));
     mIDFRadio = new QRadioButton(tr("I/D/F"));
     
-    mIDRadio->setChecked(true);
+    mIRadio->setChecked(true);
     
+    connect(mIRadio, SIGNAL(clicked()), this, SLOT(updateOptions()));
+    connect(mDRadio, SIGNAL(clicked()), this, SLOT(updateOptions()));
+    connect(mFRadio, SIGNAL(clicked()), this, SLOT(updateOptions()));
     connect(mIDRadio, SIGNAL(clicked()), this, SLOT(updateOptions()));
     connect(mIFRadio, SIGNAL(clicked()), this, SLOT(updateOptions()));
     connect(mIDFRadio, SIGNAL(clicked()), this, SLOT(updateOptions()));
@@ -61,33 +66,38 @@ PluginAMForm::PluginAMForm(PluginAM* plugin, QWidget* parent, Qt::WindowFlags fl
     QGridLayout* grid = new QGridLayout();
     grid->setContentsMargins(0, 0, 0, 0);
     
-    grid->addWidget(mIDRadio, 0, 1);
-    grid->addWidget(mIFRadio, 1, 1);
-    grid->addWidget(mIDFRadio, 2, 1);
+    int row = 0;
     
-    grid->addWidget(mILab, 3, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mIEdit, 3, 1);
+    grid->addWidget(mIRadio, row, 1);
+    grid->addWidget(mDRadio, ++row, 1);
+    grid->addWidget(mFRadio, ++row, 1);
+    grid->addWidget(mIDRadio, ++row, 1);
+    grid->addWidget(mIFRadio, ++row, 1);
+    grid->addWidget(mIDFRadio, ++row, 1);
     
-    grid->addWidget(mDLab, 4, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mDEdit, 4, 1);
+    grid->addWidget(mILab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mIEdit, row, 1);
     
-    grid->addWidget(mFLab, 5, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mFEdit, 5, 1);
+    grid->addWidget(mDLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mDEdit, row, 1);
     
-    grid->addWidget(mAlpha95Lab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mAlpha95Edit, 6, 1);
+    grid->addWidget(mFLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mFEdit, row, 1);
     
-    grid->addWidget(mSigmaFLab, 7, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mSigmaFEdit, 7, 1);
+    grid->addWidget(mAlpha95Lab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mAlpha95Edit, row, 1);
     
-    grid->addWidget(mCurveILab, 8, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mCurveICombo, 8, 1);
+    grid->addWidget(mSigmaFLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mSigmaFEdit, row, 1);
     
-    grid->addWidget(mCurveDLab, 9, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mCurveDCombo, 9, 1);
+    grid->addWidget(mCurveILab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mCurveICombo, row, 1);
     
-    grid->addWidget(mCurveFLab, 10, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mCurveFCombo, 10, 1);
+    grid->addWidget(mCurveDLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mCurveDCombo, row, 1);
+    
+    grid->addWidget(mCurveFLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mCurveFCombo, row, 1);
     
     setLayout(grid);
 
@@ -120,6 +130,9 @@ void PluginAMForm::setData(const QJsonObject& data, bool isCombined)
     QString curveD = data.value(DATE_AM_CURVE_D).toString().toLower();
     QString curveF = data.value(DATE_AM_CURVE_F).toString().toLower();
     
+    mIRadio->setChecked(mode == DATE_AM_MODE_I);
+    mDRadio->setChecked(mode == DATE_AM_MODE_D);
+    mFRadio->setChecked(mode == DATE_AM_MODE_F);
     mIDRadio->setChecked(mode == DATE_AM_MODE_ID);
     mIFRadio->setChecked(mode == DATE_AM_MODE_IF);
     mIDFRadio->setChecked(mode == DATE_AM_MODE_IDF);
@@ -143,6 +156,9 @@ QJsonObject PluginAMForm::getData()
     const QLocale locale = QLocale();
     
     QString mode;
+    if(mIRadio->isChecked()) mode = DATE_AM_MODE_I;
+    if(mDRadio->isChecked()) mode = DATE_AM_MODE_D;
+    if(mFRadio->isChecked()) mode = DATE_AM_MODE_F;
     if(mIDRadio->isChecked()) mode = DATE_AM_MODE_ID;
     if(mIFRadio->isChecked()) mode = DATE_AM_MODE_IF;
     if(mIDFRadio->isChecked()) mode = DATE_AM_MODE_IDF;
@@ -155,8 +171,8 @@ QJsonObject PluginAMForm::getData()
     const double sigmaF = locale.toDouble(mSigmaFEdit->text());
     
     const QString curveI = mCurveICombo->currentText();
-    const QString curveD = mCurveICombo->currentText();
-    const QString curveF = mCurveICombo->currentText();
+    const QString curveD = mCurveDCombo->currentText();
+    const QString curveF = mCurveFCombo->currentText();
     
     data.insert(DATE_AM_MODE, mode);
     data.insert(DATE_AM_I, i);
@@ -175,13 +191,17 @@ void PluginAMForm::errorIsValid(QString str)
 {
     bool ok;
     QLocale locale;
-    double value = locale.toDouble(str,&ok);
+    double value = locale.toDouble(str, &ok);
 
-    emit PluginFormAbstract::OkEnabled(ok && (value>0) );
+    emit PluginFormAbstract::OkEnabled(ok && (value > 0));
 }
 
 bool PluginAMForm::isValid()
 {
+    const bool isI = mIRadio->isChecked();
+    const bool isD = mDRadio->isChecked();
+    const bool isF = mFRadio->isChecked();
+    
     const bool isID = mIDRadio->isChecked();
     const bool isIF = mIFRadio->isChecked();
     const bool isIDF = mIDFRadio->isChecked();
@@ -194,11 +214,17 @@ bool PluginAMForm::isValid()
     const bool isDValid = !refCurveD.isEmpty();
     const bool isFValid = !refCurveF.isEmpty();
     
-    bool valid = false;
+    bool valid = true;
     
-    if(isID) valid = isIValid && isDValid;
-    else if(isIF) valid = isIValid && isFValid;
-    else if(isIDF) valid = isIValid && isDValid && isFValid;
+    if(isI || isID || isIF || isIDF){
+        valid &= isIValid;
+    }
+    if(isD || isID || isIDF){
+        valid &= isDValid;
+    }
+    if(isF || isIF || isIDF){
+        valid &= isFValid;
+    }
     
     if(!valid)
         mError = tr("Ref. curve is empty!");
@@ -208,15 +234,24 @@ bool PluginAMForm::isValid()
 
 void PluginAMForm::updateOptions()
 {
-    bool isID = mIDRadio->isChecked();
-    bool isIF = mIFRadio->isChecked();
-    bool isIDF = mIDFRadio->isChecked();
+    const bool isI = mIRadio->isChecked();
+    const bool isD = mDRadio->isChecked();
+    const bool isF = mFRadio->isChecked();
     
-    mDEdit->setEnabled(isID || isIDF);
-    mFEdit->setEnabled(isIF || isIDF);
-    mSigmaFEdit->setEnabled(isIF || isIDF);
-    mCurveDCombo->setEnabled(isID || isIDF);
-    mCurveFCombo->setEnabled(isIF || isIDF);
+    const bool isID = mIDRadio->isChecked();
+    const bool isIF = mIFRadio->isChecked();
+    const bool isIDF = mIDFRadio->isChecked();
+    
+    mIEdit->setEnabled(isI || isD || isID || isIF || isIDF);
+    mDEdit->setEnabled(isD || isID || isIDF);
+    mFEdit->setEnabled(isF || isIF || isIDF);
+    
+    mAlpha95Edit->setEnabled(isI || isD || isID || isIF || isIDF);
+    mSigmaFEdit->setEnabled(isF || isIF || isIDF);
+    
+    mCurveICombo->setEnabled(isI || isID || isIF || isIDF);
+    mCurveDCombo->setEnabled(isD || isID || isIDF);
+    mCurveFCombo->setEnabled(isF || isIF || isIDF);
 }
 
 #endif

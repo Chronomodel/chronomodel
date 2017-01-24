@@ -6,6 +6,7 @@
 #include "PluginAMForm.h"
 #include "PluginAMRefView.h"
 #include "PluginAMSettingsView.h"
+#include "PluginAMLoop.h"
 #include <cstdlib>
 #include <iostream>
 #include <QJsonObject>
@@ -26,8 +27,142 @@ PluginAM::~PluginAM()
 #pragma mark Likelihood
 long double PluginAM::getLikelihood(const double& t, const QJsonObject& data)
 {
-    QPair<long double, long double > result = getLikelihoodArg(t, data);
-    return expl(result.second) / sqrt(result.first);
+    // ----------------------------------
+    //  Read values
+    // ----------------------------------
+    QString mode = data.value(DATE_AM_MODE).toString();
+    
+    long double i = (long double) data.value(DATE_AM_I).toDouble();
+    long double d = (long double) data.value(DATE_AM_D).toDouble();
+    long double f = (long double) data.value(DATE_AM_F).toDouble();
+    
+    long double alpha95 = (long double) data.value(DATE_AM_ALPHA_95).toDouble();
+    long double sigmaF = (long double) data.value(DATE_AM_SIGMA_F).toDouble();
+    
+    QString curveI = data.value(DATE_AM_CURVE_I).toString().toLower();
+    QString curveD = data.value(DATE_AM_CURVE_D).toString().toLower();
+    QString curveF = data.value(DATE_AM_CURVE_F).toString().toLower();
+    
+    // ---------------------------------------
+    //  Get likelihood for modes I, D, F
+    // ---------------------------------------
+    if(mode == DATE_AM_MODE_I || mode == DATE_AM_MODE_D || mode == DATE_AM_MODE_F)
+    {
+        long double m = 0;
+        long double s = 0;
+        long double g = 0;
+        long double ge = 0;
+        
+        if(mode == DATE_AM_MODE_I)
+        {
+            m = i;
+            s = alpha95 / 2.448l;
+            g = getRefCurveValueAt(curveI, t);
+            ge = getRefCurveErrorAt(curveI, t);
+            
+        }
+        else if(mode == DATE_AM_MODE_D)
+        {
+            m = d;
+            s = alpha95 / (2.448l * cosl(i * M_PI / 180.l));
+            g = getRefCurveValueAt(curveD, t);
+            ge = getRefCurveErrorAt(curveD, t);
+        }
+        else if(mode == DATE_AM_MODE_F)
+        {
+            m = f;
+            s = sigmaF;
+            g = getRefCurveValueAt(curveF, t);
+            ge = getRefCurveErrorAt(curveF, t);
+        }
+        long double v = s * s + ge * ge; // variance
+        long double w = 1 / v;
+        long double e = -0.5l * w * (m - g) * (m - g); // exponent
+        
+        return expl(e) / sqrt(v);
+    }
+    // ---------------------------------------
+    //  Get likelihood for modes ID, IF, IDF
+    // ---------------------------------------
+    else if(mode == DATE_AM_MODE_ID || mode == DATE_AM_MODE_IF || mode == DATE_AM_MODE_IDF)
+    {
+        if(mode == DATE_AM_MODE_ID)
+        {
+            long double mi = i;
+            long double si = alpha95 / 2.448l;
+            long double gi = getRefCurveValueAt(curveI, t);
+            long double gei = getRefCurveErrorAt(curveI, t);
+            long double soi = 0;
+            long double vi = si * si + gei * gei + soi * soi; // variance
+            long double wi = 1 / vi;
+            long double ei = -0.5l * wi * (mi - gi) * (mi - gi); // exponent
+            
+            long double md = d;
+            long double sd = (2.448l * cosl(i * M_PI / 180.l));
+            long double gd = getRefCurveValueAt(curveD, t);
+            long double ged = getRefCurveErrorAt(curveD, t);
+            long double sod = 0;
+            long double vd = sd * sd + ged * ged + sod * sod; // variance
+            long double wd = 1 / vd;
+            long double ed = -0.5l * wd * (md - gd) * (md - gd); // exponent
+            
+            return expl(ei) / sqrt(vi) + expl(ed) / sqrt(vd);
+        }
+        if(mode == DATE_AM_MODE_IF)
+        {
+            long double mi = i;
+            long double si = alpha95 / 2.448l;
+            long double gi = getRefCurveValueAt(curveI, t);
+            long double gei = getRefCurveErrorAt(curveI, t);
+            long double soi = 0;
+            long double vi = si * si + gei * gei + soi * soi; // variance
+            long double wi = 1 / vi;
+            long double ei = -0.5l * wi * (mi - gi) * (mi - gi); // exponent
+            
+            long double mf = f;
+            long double sf = sigmaF;
+            long double gf = getRefCurveValueAt(curveF, t);
+            long double gef = getRefCurveErrorAt(curveF, t);
+            long double sof = 0;
+            long double vf = sf * sf + gef * gef + sof * sof; // variance
+            long double wf = 1 / vf;
+            long double ef = -0.5l * wf * (mf - gf) * (mf - gf); // exponent
+            
+            return expl(ei) / sqrt(vi) + expl(ef) / sqrt(vf);
+        }
+        if(mode == DATE_AM_MODE_IDF)
+        {
+            long double mi = i;
+            long double si = alpha95 / 2.448l;
+            long double gi = getRefCurveValueAt(curveI, t);
+            long double gei = getRefCurveErrorAt(curveI, t);
+            long double soi = 0;
+            long double vi = si * si + gei * gei + soi * soi; // variance
+            long double wi = 1 / vi;
+            long double ei = -0.5l * wi * (mi - gi) * (mi - gi); // exponent
+            
+            long double md = d;
+            long double sd = (2.448l * cosl(i * M_PI / 180.l));
+            long double gd = getRefCurveValueAt(curveD, t);
+            long double ged = getRefCurveErrorAt(curveD, t);
+            long double sod = 0;
+            long double vd = sd * sd + ged * ged + sod * sod; // variance
+            long double wd = 1 / vd;
+            long double ed = -0.5l * wd * (md - gd) * (md - gd); // exponent
+            
+            long double mf = f;
+            long double sf = sigmaF;
+            long double gf = getRefCurveValueAt(curveF, t);
+            long double gef = getRefCurveErrorAt(curveF, t);
+            long double sof = 0;
+            long double vf = sf * sf + gef * gef + sof * sof; // variance
+            long double wf = 1 / vf;
+            long double ef = -0.5l * wf * (mf - gf) * (mf - gf); // exponent
+            
+            return expl(ei) / sqrt(vi) + expl(ed) / sqrt(vd) + expl(ef) / sqrt(vf);
+        }
+    }
+    return 0;
 }
 
 QPair<long double, long double> PluginAM::getLikelihoodArg(const double& t, const QJsonObject& data)
@@ -47,42 +182,53 @@ QPair<long double, long double> PluginAM::getLikelihoodArg(const double& t, cons
     QString curveI = data.value(DATE_AM_CURVE_I).toString().toLower();
     QString curveD = data.value(DATE_AM_CURVE_D).toString().toLower();
     QString curveF = data.value(DATE_AM_CURVE_F).toString().toLower();
-
-    // ----------------------------------
-    //  Get likelihood
-    // ----------------------------------
-    long double mesure = 0.;
-    long double error = 0.;
-    long double refValue = 0.;
-    long double refError = 0.;
     
-    if(mode == DATE_AM_MODE_ID)
+    // ---------------------------------------
+    //  Get likelihood for modes I, D, F
+    // ---------------------------------------
+    if(mode == DATE_AM_MODE_I || mode == DATE_AM_MODE_D || mode == DATE_AM_MODE_F)
     {
-        error = alpha95 / 2.448l;
-        mesure = i;
-        refValue = getRefCurveValueAt(curveI, t);
-        refError = getRefCurveErrorAt(curveI, t);
+        long double m = 0;
+        long double s = 0;
+        long double g = 0;
+        long double ge = 0;
+        
+        if(mode == DATE_AM_MODE_I)
+        {
+            m = i;
+            s = alpha95 / 2.448l;
+            g = getRefCurveValueAt(curveI, t);
+            ge = getRefCurveErrorAt(curveI, t);
+            
+        }
+        else if(mode == DATE_AM_MODE_D)
+        {
+            m = d;
+            s = alpha95 / (2.448l * cosl(i * M_PI / 180.l));
+            g = getRefCurveValueAt(curveD, t);
+            ge = getRefCurveErrorAt(curveD, t);
+        }
+        else if(mode == DATE_AM_MODE_F)
+        {
+            m = f;
+            s = sigmaF;
+            g = getRefCurveValueAt(curveF, t);
+            ge = getRefCurveErrorAt(curveF, t);
+        }
+        long double v = s * s + ge * ge; // variance
+        long double w = 1 / v;
+        long double e = -0.5l * w * (m - g) * (m - g); // exponent
+        
+        return QPair<long double, long double>(v, e);
     }
-    else if(mode == DATE_AM_MODE_IF)
+    else
     {
-        error = alpha95 / (2.448l * cosl(i * M_PI / 180.l));
-        mesure = d;
-        refValue = getRefCurveValueAt(curveD, t);
-        refError = getRefCurveErrorAt(curveD, t);
+        // Impossible to return a QPair when doing combinations !!
+        // The LikelihoodArg idea is to be changed in all plugins to be ready for MCMC enabled plugins.
+        return QPair<long double, long double>(0, 0);
     }
-    else if(mode == DATE_AM_MODE_IDF)
-    {
-        error = alpha95;
-        mesure = f;
-        refValue = getRefCurveValueAt(curveF, t);
-        refError = getRefCurveErrorAt(curveF, t);
-    }
-    
-    long double variance = refError * refError + error * error;
-    long double exponent = -0.5l * powl((mesure - refValue), 2.l) / variance;
-    
-    return qMakePair(variance, exponent);
 }
+
 
 #pragma mark Properties
 QString PluginAM::getName() const
@@ -142,9 +288,31 @@ QString PluginAM::getDateDesc(const Date* date) const
         // ----------------------------------
         QLocale locale = QLocale();
         
-        if(mode == DATE_AM_MODE_ID)
+        if(mode == DATE_AM_MODE_I)
         {
-            result += QObject::tr("MODE ID");
+            result += QObject::tr("mode : I");
+            result += ", I = " + locale.toString(i);
+            result += ", " + QObject::tr("Alpha95") + " : " + locale.toString(alpha95);
+            result += ", " + tr("Curve I") + " : " + curveI;
+        }
+        else if(mode == DATE_AM_MODE_D)
+        {
+            result += QObject::tr("mode : D");
+            result += ", I = " + locale.toString(i);
+            result += ", D = " + locale.toString(d);
+            result += ", " + QObject::tr("Alpha95") + " : " + locale.toString(alpha95);
+            result += ", " + tr("Curve D") + " : " + curveD;
+        }
+        else if(mode == DATE_AM_MODE_F)
+        {
+            result += QObject::tr("mode : F");
+            result += ", F = " + locale.toString(f);
+            result += ", " + QObject::tr("Sigma F") + " : " + locale.toString(sigmaF);
+            result += ", " + tr("Curve F") + " : " + curveF;
+        }
+        else if(mode == DATE_AM_MODE_ID)
+        {
+            result += QObject::tr("Mode : ID");
             result += ", I = " + locale.toString(i);
             result += ", D = " + locale.toString(d);
             result += ", " + QObject::tr("Alpha95") + " : " + locale.toString(alpha95);
@@ -153,7 +321,7 @@ QString PluginAM::getDateDesc(const Date* date) const
         }
         else if(mode == DATE_AM_MODE_IF)
         {
-            result += QObject::tr("MODE IF");
+            result += QObject::tr("Mode : IF");
             result += ", I = " + locale.toString(i);
             result += ", F = " + locale.toString(f);
             result += ", " + QObject::tr("Alpha95") + " : " + locale.toString(alpha95);
@@ -163,7 +331,7 @@ QString PluginAM::getDateDesc(const Date* date) const
         }
         else if(mode == DATE_AM_MODE_IDF)
         {
-            result += QObject::tr("MODE IDF");
+            result += QObject::tr("Mode : IDF");
             result += ", I = " + locale.toString(i);
             result += ", D = " + locale.toString(d);
             result += ", F = " + locale.toString(f);
@@ -189,12 +357,25 @@ Date::CalibrationType PluginAM::getDateCalibrationType(const QJsonObject& data)
     }
 }
 
+MCMCLoop* PluginAM::createMCMCLoopForDate(const Date* date)
+{
+    if(date)
+    {
+        QJsonObject data = date->mData;
+        QString mode = data.value(DATE_AM_MODE).toString();
+        if(mode == DATE_AM_MODE_ID || mode == DATE_AM_MODE_IF || mode == DATE_AM_MODE_IDF){
+            return new PluginAMLoop(date);
+        }
+    }
+    return 0;
+}
+
 #pragma mark CSV
 QStringList PluginAM::csvColumns() const
 {
     QStringList cols;
     cols << "Name"
-        << "mode (ID | IF | IDF)"
+        << "mode"
         << "I"
         << "D"
         << "F"
@@ -369,7 +550,7 @@ QPair<double,double> PluginAM::getTminTmaxRefsCurve(const QJsonObject& data) con
     // ----------------------------------
     //  Quel est le sens de cette fonction dans le cas du plugin AM ??
     //  On a 3 types des courbes de référence, pour I, D et F.
-    //  Trouver les min/max pour chaque type a du sens, mais les min/max pour tous les types confondus est absurde...
+    //  Trouver les min/max pour chaque type a du sens, mais les min/max pour tous les types combinés est absurde...
     //  ...à moins que ce ne soit utilisé que pour l'affichage des graphs !
     // ----------------------------------
     
@@ -386,7 +567,16 @@ QPair<double,double> PluginAM::getTminTmaxRefsCurve(const QJsonObject& data) con
     // ----------------------------------
     //  Read values
     // ----------------------------------
-    if(mode == DATE_AM_MODE_ID){
+    if(mode == DATE_AM_MODE_I){
+        bounds = getTminTmaxRefCurve(curveI);
+    }
+    else if(mode == DATE_AM_MODE_D){
+        bounds = getTminTmaxRefCurve(curveD);
+    }
+    else if(mode == DATE_AM_MODE_F){
+        bounds = getTminTmaxRefCurve(curveF);
+    }
+    else if(mode == DATE_AM_MODE_ID){
         QPair<double,double> boundsI = getTminTmaxRefCurve(curveI);
         QPair<double,double> boundsD = getTminTmaxRefCurve(curveD);
         bounds = qMakePair<double,double>(qMin(boundsI.first, boundsD.first),
@@ -454,20 +644,16 @@ bool PluginAM::isDateValid(const QJsonObject& data, const ProjectSettings& setti
     // ----------------------------------
     //  Check if valid
     // ----------------------------------
-    bool valid = false;
+    bool valid = true;
     
-    if(mode == DATE_AM_MODE_ID) {
-        valid = isCurveValid(data, curveI, i, settings.mStep) &&
-            isCurveValid(data, curveD, d, settings.mStep);
+    if(mode == DATE_AM_MODE_I || mode == DATE_AM_MODE_ID || mode == DATE_AM_MODE_IF || mode == DATE_AM_MODE_IDF) {
+        valid &= isCurveValid(data, curveI, i, settings.mStep);
     }
-    else if(mode == DATE_AM_MODE_IF) {
-        valid = isCurveValid(data, curveI, i, settings.mStep) &&
-            isCurveValid(data, curveF, f, settings.mStep);
+    if(mode == DATE_AM_MODE_D || mode == DATE_AM_MODE_ID || mode == DATE_AM_MODE_IDF) {
+        valid &= isCurveValid(data, curveD, d, settings.mStep);
     }
-    else if(mode == DATE_AM_MODE_IDF) {
-        valid = isCurveValid(data, curveI, i, settings.mStep) &&
-            isCurveValid(data, curveD, d, settings.mStep) &&
-            isCurveValid(data, curveF, f, settings.mStep);
+    if(mode == DATE_AM_MODE_F || mode == DATE_AM_MODE_IF || mode == DATE_AM_MODE_IDF) {
+        valid &= isCurveValid(data, curveF, f, settings.mStep);
     }
     return valid;
 }

@@ -3,7 +3,7 @@
 
 #include <QDialog>
 
-class MCMCLoopMain;
+class MCMCLoop;
 class QLabel;
 class QProgressBar;
 class QTextEdit;
@@ -14,7 +14,7 @@ class MCMCProgressDialog: public QDialog
 {
     Q_OBJECT
 public:
-    MCMCProgressDialog(MCMCLoopMain* loop, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    MCMCProgressDialog(MCMCLoop* loop, QWidget* parent = 0, Qt::WindowFlags flags = 0);
     ~MCMCProgressDialog();
     
     int startMCMC();
@@ -35,7 +35,7 @@ protected:
     void keyPressEvent(QKeyEvent* e);
     
 public:
-    MCMCLoopMain* mLoop;
+    MCMCLoop* mLoop;
     QLabel* mLabel1;
     QLabel* mLabel2;
     QProgressBar* mProgressBar1;

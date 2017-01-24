@@ -2,16 +2,16 @@
 #define PluginAMLoop_H
 
 #include "MCMCLoop.h"
+#include "MHVariable.h"
 
-class Project;
-class Model;
+class Date;
 
 
 class PluginAMLoop: public MCMCLoop
 {
     Q_OBJECT
 public:
-    PluginAMLoop();
+    PluginAMLoop(const Date* date);
     ~PluginAMLoop();
     
 protected:
@@ -22,7 +22,9 @@ protected:
     virtual bool adapt();
     virtual void finalize();
     
-    
+    const Date* mDate;
+    MHVariable mSigma;
+    long double mSo2;
 };
 
 #endif

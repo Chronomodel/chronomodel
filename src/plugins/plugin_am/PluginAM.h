@@ -6,6 +6,7 @@
 #include "../PluginAbstract.h"
 
 class PluginAMRefView;
+class MCMCLoop;
 
 #define DATE_AM_MODE "mode"
 #define DATE_AM_I "inclination"
@@ -17,6 +18,9 @@ class PluginAMRefView;
 #define DATE_AM_CURVE_D "curveD"
 #define DATE_AM_CURVE_F "curveF"
 
+#define DATE_AM_MODE_I "I"
+#define DATE_AM_MODE_D "D"
+#define DATE_AM_MODE_F "F"
 #define DATE_AM_MODE_ID "ID"
 #define DATE_AM_MODE_IF "IF"
 #define DATE_AM_MODE_IDF "IDF"
@@ -47,6 +51,7 @@ public:
     QJsonObject checkValuesCompatibility(const QJsonObject& values);
     
     Date::CalibrationType getDateCalibrationType(const QJsonObject& data);
+    MCMCLoop* createMCMCLoopForDate(const Date* date);
     QString getDateDesc(const Date* date) const;
     
     PluginFormAbstract* getForm();
