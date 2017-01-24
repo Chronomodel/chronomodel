@@ -3,11 +3,9 @@
 
 #include <QThread>
 #include "MCMCSettings.h"
-//#include "Project.h"
 
 #define ABORTED_BY_USER "Aborted by user"
 
-class Project;
 
 class MCMCLoop : public QThread
 {
@@ -53,7 +51,6 @@ protected:
     
 public:
     QString mAbortedReason;
-    Project* mProject;
 };
 
 #endif

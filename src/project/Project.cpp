@@ -155,7 +155,9 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
     mStructureIsChanged = false;
     mDesignIsChanged = false;
     mItemsIsMoved = false;
-    qDebug()<<"Project::pushProjectState "<<reason<<notify<<force;
+    
+    //qDebug()<<"Project::pushProjectState "<<reason<<notify<<force;
+    
     if (mReasonChangeStructure.contains(reason))
         mStructureIsChanged = true;
 
@@ -191,7 +193,7 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
 void Project::sendUpdateState(const QJsonObject& state, const QString& reason, bool notify)
 {
 #ifdef DEBUG
-    qDebug()<<"Project::sendUpdateState "<<reason<<notify;
+    //qDebug()<<"Project::sendUpdateState "<<reason<<notify;
     //-----------------
   /*  QJsonArray phases = state.value(STATE_EVENTS).toArray();
     foreach(QJsonValue phase, phases) {
@@ -388,7 +390,7 @@ void Project::unselectedAllInState()
         *iEvent = e;
     }
     mState[STATE_EVENTS] = events;
-qDebug()<<"Project::unselectedAllInState end";
+    //qDebug()<<"Project::unselectedAllInState end";
 
 }
 
@@ -472,7 +474,7 @@ bool Project::load(const QString& path)
     }
     QFile file(path);
 
-    qDebug() << "in Project::load Loading project file : " << path;
+    //qDebug() << "in Project::load Loading project file : " << path;
 
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QFileInfo info(path);
@@ -537,25 +539,27 @@ bool Project::load(const QString& path)
             //  Ask all plugins if dates are corrects.
             //  If not, it may be an incompatibility between plugins versions (new parameter added for example...)
             //  This function gives a chance to plugins to modify dates saved with old versions in order to use them with the new version.
-           qDebug() << "in Project::load  begin checkDatesCompatibility";
+            //qDebug() << "in Project::load  begin checkDatesCompatibility";
             checkDatesCompatibility();
-           qDebug() << "in Project::load  end checkDatesCompatibility";
+            
+            //qDebug() << "in Project::load  end checkDatesCompatibility";
             //  Check if dates are valid on the current study period
             mState = checkValidDates(mState);
             
             // When openning a project, it is maked as saved : mState == mLastSavedState
             mLastSavedState = mState;
 
-            qDebug() << "in Project::load  unselectedAllInState";
+            //qDebug() << "in Project::load  unselectedAllInState";
             unselectedAllInState(); // modify mState
 
             // If a version update is to be done :
             QJsonObject state = mState;
             state[STATE_APP_VERSION] = qApp->applicationVersion();
 
-           qDebug() << "in Project::load  Begin pushProjectState";
+            //qDebug() << "in Project::load  Begin pushProjectState";
 //            pushProjectState(state, PROJECT_LOADED_REASON, true, true);
-           qDebug() << "in Project::load  End pushProjectState";
+            //qDebug() << "in Project::load  End pushProjectState";
+            
             file.close();
             
             // -------------------- look for the calibration file
@@ -568,7 +572,7 @@ bool Project::load(const QString& path)
                 if (calFile.open(QIODevice::ReadOnly)) {
 
                     if (calFile.exists()) {
-                        qDebug() << "Project::load Loading model file.cal : " << calFile.fileName() << " size =" << calFile.size();
+                        //qDebug() << "Project::load Loading model file.cal : " << calFile.fileName() << " size =" << calFile.size();
                         QDataStream in(&calFile);
 
                         int QDataStreamVersion;
@@ -615,7 +619,7 @@ bool Project::load(const QString& path)
                 if (fi.isFile())
                 if (dataFile.exists()) {
 
-                qDebug() << "Project::load Loading model file.res : " << dataPath << " size=" << dataFile.size();
+                //qDebug() << "Project::load Loading model file.res : " << dataPath << " size=" << dataFile.size();
       
                 try {
                     mModel->fromJson(mState);
@@ -2533,7 +2537,7 @@ void Project::run()
         message.exec();
     }
     if (modelOk) {
-        MCMCLoopMain loop(mModel, this);
+        MCMCLoopMain loop(mModel);
         MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::Sheet);
         
         // --------------------------------------------------------------------

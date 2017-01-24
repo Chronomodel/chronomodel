@@ -20,8 +20,6 @@ public:
     CalibrationCurve (CalibrationCurve&& other) noexcept : /* noexcept needed to enable optimizations in containers */
         mName (other.mName),
         mDescription (other.mDescription),
-        mMethod (other.mMethod),
-        mMCMCSetting (other.mMCMCSetting),
         mPluginId (other.mPluginId),
 
         mPlugin (other.mPlugin),
@@ -61,12 +59,10 @@ public:
     CalibrationCurve& operator= (CalibrationCurve&& other) noexcept
     {
         mName = other.mName;
-        mMCMCSetting =other.mMCMCSetting;
         mPluginId = other.mPluginId;
         mPlugin = other.mPlugin;
 
         mDescription = other.mDescription;
-        mMethod = other.mMethod;
         mRepartition.resize(other.mRepartition.size());
         std::copy(other.mRepartition.begin(), other.mRepartition.end(), mRepartition.begin());
         mCurve .resize(other.mCurve.size());
@@ -89,26 +85,16 @@ public:
         other.mPlugin =nullptr;
         return *this;
     }
-
-    enum Method{
-        eFromRef = 0,
-        eFromMCMC = 1,
-    };
-
+    
     QString mName;
     QString mDescription;
-
-    Method mMethod;
-
-    // Parameter refere to the Method
-    MCMCSettings mMCMCSetting;
 
     QString mPluginId;
     PluginAbstract* mPlugin;
 
     QVector<double> mRepartition;
     QVector<double> mCurve;
-
+    
     double mTmin;
     double mTmax;
     double mStep;

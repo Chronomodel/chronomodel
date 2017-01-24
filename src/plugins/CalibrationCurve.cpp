@@ -3,11 +3,8 @@
 
 CalibrationCurve::CalibrationCurve():
 mName(QString("unkown")),
-mDescription(QString("undefined")),
-mMethod(CalibrationCurve::Method::eFromRef)
+mDescription(QString("undefined"))
 {
-    // Parameter refere to the Method
-    mMCMCSetting = MCMCSettings();
     mPluginId = "";
     mPlugin = nullptr;
     mRepartition = QVector< double>();
@@ -19,12 +16,10 @@ mMethod(CalibrationCurve::Method::eFromRef)
 CalibrationCurve::CalibrationCurve(const CalibrationCurve& other)
 {
     mName = other.mName;
-    mMCMCSetting =other.mMCMCSetting;
     mPluginId = other.mPluginId;
     mPlugin = other.mPlugin;
 
     mDescription = other.mDescription;
-    mMethod = other.mMethod;
     mRepartition.resize(other.mRepartition.size());
     std::copy(other.mRepartition.begin(), other.mRepartition.end(), mRepartition.begin());
     mCurve .resize(other.mCurve.size());
@@ -43,51 +38,30 @@ CalibrationCurve::~CalibrationCurve() noexcept
 }
 
 
-QDataStream &operator<<( QDataStream &stream, const CalibrationCurve &data )
+QDataStream &operator << (QDataStream &stream, const CalibrationCurve &data)
 {
     stream << data.mName;
     stream << data.mDescription;
-
-    switch (data.mMethod) {
-       case CalibrationCurve::eFromRef : stream << (quint8)(0);
-        break;
-       case CalibrationCurve::eFromMCMC : stream << (quint8)(1);
-          break;
-    };
-
     stream << data.mRepartition;
     stream << data.mCurve;
     stream << data.mTmin;
     stream << data.mTmax;
     stream << data.mStep;
-    stream << data.mMCMCSetting;
     stream << data.mPluginId;
 
     return stream;
 
 }
 
-QDataStream &operator>>( QDataStream &stream, CalibrationCurve &data )
+QDataStream &operator >> (QDataStream &stream, CalibrationCurve &data)
 {
     stream >> data.mName;
     stream >> data.mDescription;
-
-    quint8 tmp8;
-    stream >> tmp8;
-    switch ((int) tmp8) {
-      case 0 : data.mMethod = CalibrationCurve::eFromRef;
-       break;
-      case 1 : data.mMethod = CalibrationCurve::eFromMCMC;
-         break;
-    };
-
     stream >> data.mRepartition;
     stream >> data.mCurve;
     stream >> data.mTmin;
     stream >> data.mTmax;
     stream >> data.mStep;
-    stream >> data.mMCMCSetting;
-
     stream >> data.mPluginId;
 
     data.mPlugin = PluginManager::getPluginFromId(data.mPluginId);

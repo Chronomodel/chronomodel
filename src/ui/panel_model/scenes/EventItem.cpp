@@ -31,7 +31,7 @@ EventItem::~EventItem()
  */
 void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-    qDebug()<<"EventItem::mousePressEvent ";
+    //qDebug()<<"EventItem::mousePressEvent ";
     EventsScene* itemScene = dynamic_cast<EventsScene*>(mScene);
     if (itemScene->selectedItems().size()<2) {
         if ((this != itemScene->currentEvent()) && (!itemScene->mDrawingArrow)) {

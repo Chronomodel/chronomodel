@@ -68,6 +68,8 @@ public:
     
     QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
     QPair<double,double> getTminTmaxRefCurve(const QString& curveName) const;
+    
+    MCMCSettings mMCMCSettings;
 };
 
 #endif

@@ -125,7 +125,7 @@ void PhasesScene::sendUpdateProject(const QString& reason, bool notify, bool sto
 }
  void PhasesScene::createSceneFromState()
  {
-     qDebug()<<"PhasesScene::createSceneFromState()";
+     //qDebug()<<"PhasesScene::createSceneFromState()";
 
      const QJsonObject state = mProject->state();
      const QJsonArray phases = state.value(STATE_PHASES).toArray();
@@ -184,7 +184,7 @@ void PhasesScene::sendUpdateProject(const QString& reason, bool notify, bool sto
 
 void PhasesScene::updateSceneFromState()
 {
-    qDebug()<<"PhasesScene::updateSceneFromState()";
+    //qDebug() << "PhasesScene::updateSceneFromState()";
 
     const QJsonObject state = mProject->state();
     QJsonArray phases = state.value(STATE_PHASES).toArray();
@@ -475,7 +475,7 @@ AbstractItem* PhasesScene::collidingItem(QGraphicsItem* item)
 bool PhasesScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
 {
     Q_UNUSED(e);
-    qDebug() << "PhasesScene::itemClicked";
+    //qDebug() << "PhasesScene::itemClicked";
 
     PhaseItem* phaseClicked = dynamic_cast< PhaseItem*>(item);
     PhaseItem* current = dynamic_cast< PhaseItem*>(currentItem());

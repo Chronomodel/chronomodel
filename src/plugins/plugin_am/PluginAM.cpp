@@ -16,6 +16,7 @@
 PluginAM::PluginAM()
 {
     mColor = QColor(198,79,32);
+    mMCMCSettings.restoreDefault();
     loadRefDatas();
 }
 

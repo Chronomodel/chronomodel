@@ -237,7 +237,7 @@ QDialog(parent, flags)
 
 AppSettingsDialog::~AppSettingsDialog()
 {
-    qDebug()<<"fin AppSettingsDialog::~AppSettingsDialog()";
+    //qDebug()<<"fin AppSettingsDialog::~AppSettingsDialog()";
     AppSettings s = getSettings();
     emit settingsChanged(s);
 }

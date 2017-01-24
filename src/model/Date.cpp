@@ -289,12 +289,10 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
     QMap<QString, CalibrationCurve>::const_iterator it = project->mCalibCurves.find (toFind);
     if ( it==project->mCalibCurves.end())
         project->mCalibCurves.insert(toFind, CalibrationCurve());
-    qDebug()<<"Date::calibrate insert mData "<<toFind;
+    //qDebug()<<"Date::calibrate insert mData "<<toFind;
 
     mCalibration = & (project->mCalibCurves[toFind]);
     mCalibration->mDescription = toFind;
-    mCalibration->mMethod = CalibrationCurve::eFromRef;
-
     mCalibration->mStep = mSettings.mStep;
     mCalibration->mPluginId = mPlugin->getId();
     mCalibration->mPlugin = mPlugin;
@@ -395,8 +393,6 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
     // ------------------------------------------------------------------
     else if(mCalibrationType == eMCMC)
     {
-        qDebug() << "MCMC Calib...";
-
         // ------------------------------------------------------------------
         //  Fake empty implementation... so we temporarily "have something"
         // ------------------------------------------------------------------
@@ -468,8 +464,6 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
     {
         qDebug() << "Error : Unknown calibration type " << mCalibrationType << " for date " << mName;
     }
-
-    qDebug()<<"Date::calibrate in project"<<project->mCalibCurves[toFind].mName;
 }
 
 
@@ -629,7 +623,7 @@ QPixmap Date::generateCalibThumb()
 
         GraphCurve curve;
         QMap<double, double> calib = normalize_map(getMapDataInRange(getRawCalibMap(),tmin,tmax));
-        qDebug()<<"generateThumb mName"<<mCalibration->mName<<mCalibration->mCurve.size()<<calib.size();
+        //qDebug()<<"generateThumb mName"<<mCalibration->mName<<mCalibration->mCurve.size()<<calib.size();
         curve.mData = calib;
 
         if (curve.mData.isEmpty())

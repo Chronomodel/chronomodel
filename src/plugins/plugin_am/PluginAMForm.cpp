@@ -54,9 +54,12 @@ PluginAMForm::PluginAMForm(PluginAM* plugin, QWidget* parent, Qt::WindowFlags fl
     
     QStringList refCurves = plugin->getRefsNames();
     for(int i = 0; i<refCurves.size(); ++i){
-        mCurveICombo->addItem(refCurves[i]);
-        mCurveDCombo->addItem(refCurves[i]);
-        mCurveFCombo->addItem(refCurves[i]);
+        if(refCurves[i].contains("_I.ref", Qt::CaseInsensitive))
+            mCurveICombo->addItem(refCurves[i]);
+        else if(refCurves[i].contains("_D.ref", Qt::CaseInsensitive))
+            mCurveDCombo->addItem(refCurves[i]);
+        else if(refCurves[i].contains("_F.ref", Qt::CaseInsensitive))
+            mCurveFCombo->addItem(refCurves[i]);
     }
     
     mCurveICombo->setCurrentIndex(mCurveICombo->findText("i.ref", Qt::MatchEndsWith));

@@ -22,22 +22,17 @@
 
 #define NOTEST //TEST
 
-class Model;
-//class EventKnown;
-class Project;
 
-MCMCLoopMain::MCMCLoopMain(Model* model, Project* project):MCMCLoop(),
+MCMCLoopMain::MCMCLoopMain(Model* model):MCMCLoop(),
 mModel(model)
 {
-    MCMCLoop::mProject = project;
-    if (mModel)
+    if(mModel)
         setMCMCSettings(mModel->mMCMCSettings);
 }
 
 MCMCLoopMain::~MCMCLoopMain()
 {
     mModel = nullptr;
-    mProject = nullptr;
 }
 
 QString MCMCLoopMain::calibrate()
@@ -72,7 +67,7 @@ QString MCMCLoopMain::calibrate()
         for(int i=0; i<dates.size(); ++i) {
             //QTime startTime = QTime::currentTime();
             if (dates.at(i)->mCalibration->mCurve.isEmpty())
-                dates.at(i)->calibrate(mModel->mSettings, mProject);
+                dates.at(i)->calibrate(mModel->mSettings, mModel->mProject);
          
             if(isInterruptionRequested())
                 return ABORTED_BY_USER;

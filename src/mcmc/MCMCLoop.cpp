@@ -6,7 +6,6 @@
 
 
 MCMCLoop::MCMCLoop():
-mProject(nullptr),
 mChainIndex(0),
 mState(eBurning)
 {
@@ -15,7 +14,7 @@ mState(eBurning)
 
 MCMCLoop::~MCMCLoop()
 {
-    mProject = nullptr;
+    
 }
 
 void MCMCLoop::setMCMCSettings(const MCMCSettings& s)

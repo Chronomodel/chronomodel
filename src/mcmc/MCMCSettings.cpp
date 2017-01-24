@@ -3,6 +3,7 @@
 #include <QVariant>
 #include <QJsonArray>
 #include <QDataStream>
+#include <QDebug>
 
 
 MCMCSettings::MCMCSettings():
@@ -58,7 +59,6 @@ void MCMCSettings::restoreDefault()
     mThinningInterval =  MCMC_THINNING_INTERVAL_DEFAULT;
     mMixingLevel =  MCMC_MIXING_DEFAULT;
     mFinalBatchIndex= 0;
-
 }
 
 

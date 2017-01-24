@@ -24,7 +24,7 @@ void Generator::initGenerator(const int seed)
 {
    sEngine.seed(seed);
    sDoubleDistribution.reset();
-   qDebug()<<"initGenerator seed"<<seed;
+   //qDebug()<<"initGenerator seed"<<seed;
    xorshift64starSeed = seed;
 
 }

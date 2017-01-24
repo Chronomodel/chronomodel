@@ -165,7 +165,7 @@ void EventsScene::showHelp(bool show)
 #pragma mark Project Update
 void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool storeUndoCommand)
 {
-    qDebug()<<"EventsScene::sendUpdateProject";
+    //qDebug()<<"EventsScene::sendUpdateProject";
 
     QJsonObject statePrev = mProject->state();
     QJsonObject stateNext = statePrev;
@@ -180,7 +180,7 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
     stateNext[STATE_EVENTS] = events;
 
     if (statePrev != stateNext) {
-        qDebug()<<"EventsScene::sendUpdateProject stateChange";
+        //qDebug()<<"EventsScene::sendUpdateProject stateChange";
         if (storeUndoCommand)
             mProject->pushProjectState(stateNext, reason, notify, true);
         //else
@@ -242,7 +242,7 @@ void EventsScene::createSceneFromState()
 {
 
 #ifdef DEBUG
-   qDebug()<<"EventsScene::createSceneFromState()";
+   //qDebug()<<"EventsScene::createSceneFromState()";
    QTime startTime = QTime::currentTime();
 #endif
 
@@ -323,10 +323,10 @@ void EventsScene::createSceneFromState()
 
     delete progress;
  #ifdef DEBUG
-     QTime timeDiff(0,0,0,1);
-     timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
+    QTime timeDiff(0,0,0,1);
+    timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
 
-    qDebug()<<"EventsScene::createScene() finish at " + timeDiff.toString("hh:mm:ss.zzz");
+    //qDebug()<<"EventsScene::createScene() finish at " + timeDiff.toString("hh:mm:ss.zzz");
  #endif
 }
 
@@ -338,7 +338,7 @@ void EventsScene::updateSceneFromState()
 {
 
 #ifdef DEBUG
-   qDebug()<<"EventsScene::updateSceneFromState()";
+   //qDebug()<<"EventsScene::updateSceneFromState()";
    QTime startTime = QTime::currentTime();
 #endif
     QJsonObject state = mProject->state();
@@ -399,7 +399,7 @@ void EventsScene::updateSceneFromState()
                     delete dateItems[j];
                 }
             }
-            qDebug() << "EventsScene::updateScene Event deleted : " << event.value(STATE_ID).toInt();
+            //qDebug() << "EventsScene::updateScene Event deleted : " << event.value(STATE_ID).toInt();
 
             mItems.removeAt(i);
             hasDeleted = true;
@@ -436,7 +436,7 @@ void EventsScene::updateSceneFromState()
                 itemUnkown = false;
                 if (event != OldItemEvent || settingsChanged) {
                     // UPDATE ITEM
-                    qDebug() << "EventsScene::updateScene Event updated : id = " << event.value(STATE_ID).toInt()<< event.value(STATE_NAME).toString();
+                    //qDebug() << "EventsScene::updateScene Event updated : id = " << event.value(STATE_ID).toInt()<< event.value(STATE_NAME).toString();
 
                     oldItem->setEvent(event, settings);
                 }
@@ -479,7 +479,7 @@ void EventsScene::updateSceneFromState()
 
                 newItem = 0;
 
-                qDebug() << "EventsScene::updateScene Event created : id = " << event.value(STATE_ID).toInt() << event.value(STATE_NAME).toString()<<", type : " << type;
+                //qDebug() << "EventsScene::updateScene Event created : id = " << event.value(STATE_ID).toInt() << event.value(STATE_NAME).toString()<<", type : " << type;
 
             }
 
@@ -498,7 +498,7 @@ void EventsScene::updateSceneFromState()
         
         if (!constraints_ids.contains(constraint.value(STATE_ID).toInt())) {
 
-            qDebug() << "EventsScene::updateScene Event Constraint deleted : " << constraint.value(STATE_ID).toInt();
+            //qDebug() << "EventsScene::updateScene Event Constraint deleted : " << constraint.value(STATE_ID).toInt();
 
             removeItem(constraintItem);
             mConstraintItems.removeOne(constraintItem);
@@ -571,10 +571,10 @@ void EventsScene::updateSceneFromState()
    }
 
  #ifdef DEBUG
-     QTime timeDiff(0,0,0,1);
-     timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
+    QTime timeDiff(0,0,0,1);
+    timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
 
-    qDebug()<<"EventsScene::updateScene() finish at " + timeDiff.toString("hh:mm:ss.zzz");
+    //qDebug()<<"EventsScene::updateScene() finish at " + timeDiff.toString("hh:mm:ss.zzz");
  #endif
    // update();
 }
@@ -633,7 +633,7 @@ void EventsScene::clean()
  */
 void EventsScene::updateStateSelectionFromItem()
 {
-    qDebug()<<"EventsScene::updateStateSelectionFromItem";
+    //qDebug()<<"EventsScene::updateStateSelectionFromItem";
     if (!mUpdatingItems) {
         bool modified = false;
         EventItem* curItem = currentEvent();
@@ -658,8 +658,8 @@ void EventsScene::updateStateSelectionFromItem()
             if (isCurrent)
                 currentEvent = curItem->getEvent();
 #ifdef DEBUG
-            if (modified)
-                qDebug()<<"EventsScene::updateStateSelectionFromItem "<<nextEvent.value(STATE_NAME).toString()<<selected<<isCurrent;
+            //if (modified)
+              //  qDebug()<<"EventsScene::updateStateSelectionFromItem "<<nextEvent.value(STATE_NAME).toString()<<selected<<isCurrent;
 #endif
          }
        
@@ -805,7 +805,7 @@ EventItem* EventsScene::currentEvent() const
     if (cEvt) {
 #ifdef DEBUG
         QJsonObject& e = cEvt->getEvent();
-        qDebug() << "EventsScene::currentEvent() selected Event : " << e.value("name");
+        //qDebug() << "EventsScene::currentEvent() selected Event : " << e.value("name");
 #endif
         return cEvt;
     } else {
@@ -815,7 +815,7 @@ EventItem* EventsScene::currentEvent() const
                     cEvt = dynamic_cast< EventItem*>(tmpItem->parentItem());
 #ifdef DEBUG
                     QJsonObject& e = cEvt->getEvent();
-                    qDebug() << "EventsScene::currentEvent() selected Event from date : " << e.value("name");
+                    //qDebug() << "EventsScene::currentEvent() selected Event from date : " << e.value("name");
 #endif
                     return cEvt;
                 }
@@ -868,7 +868,7 @@ void EventsScene::dateReleased(DateItem* dateItem, QGraphicsSceneMouseEvent* e)
 {
     Q_UNUSED(e);
     if (dateItem) {
-        qDebug()<<"EventsScene::dateReleased";
+        //qDebug()<<"EventsScene::dateReleased";
         EventItem* hoveredEventItem = dynamic_cast<EventItem*>(collidingItem(dateItem));
         EventItem* prevEventItem = dynamic_cast<EventItem*>(dateItem->parentItem());
         if (!hoveredEventItem || !prevEventItem) {
@@ -947,7 +947,7 @@ void EventsScene::dateReleased(DateItem* dateItem, QGraphicsSceneMouseEvent* e)
 void EventsScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 {
     Q_UNUSED(e);
-    qDebug() << "EventsScene::itemEntered";
+    //qDebug() << "EventsScene::itemEntered";
     // the difference with the AbstractScene is here we need the curentEvent, which can be a date selected
     EventItem* current = currentEvent();
 
@@ -980,7 +980,7 @@ void EventsScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 bool EventsScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
 {
     Q_UNUSED(e);
-    qDebug() << "EventsScene::itemClicked";
+    //qDebug() << "EventsScene::itemClicked";
 
     EventItem* eventClicked = dynamic_cast< EventItem*>(item);
     EventItem* current = currentEvent();
@@ -1050,10 +1050,10 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
         keyEvent->ignore();
     
    if (selectedItems().count() == 0) {
-        qDebug() << "EventsScene::keyPressEvent No item selected";
+        //qDebug() << "EventsScene::keyPressEvent No item selected";
         emit noSelection();
     } else {
-       qDebug() << "EventsScene::keyPressEvent emit selectionChanged() ";
+       //qDebug() << "EventsScene::keyPressEvent emit selectionChanged() ";
        emit selectionChanged();
     }
 

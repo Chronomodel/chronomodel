@@ -20,7 +20,8 @@ PluginAMLoop::PluginAMLoop(const Date* date):MCMCLoop(),
 mDate(date),
 mSo2(0)
 {
-    
+    PluginAM* plugin = (PluginAM*) mDate->mPlugin;
+    setMCMCSettings(plugin->mMCMCSettings);
 }
 
 PluginAMLoop::~PluginAMLoop()
@@ -35,17 +36,20 @@ QString PluginAMLoop::calibrate()
 
 void PluginAMLoop::initVariablesForChain()
 {
-    const int acceptBufferLen = mChains[0].mNumBatchIter;
-    long int initReserve = 0;
-    
-    for (const ChainSpecs c: mChains){
-        initReserve +=( 1 + (c.mMaxBatchs*c.mNumBatchIter) + c.mNumBurnIter + (c.mNumRunIter/c.mThinningInterval) );
+    if(mChains.count() > 0)
+    {
+        const int acceptBufferLen = mChains[0].mNumBatchIter;
+        long int initReserve = 0;
+        
+        for (const ChainSpecs c: mChains){
+            initReserve +=( 1 + (c.mMaxBatchs*c.mNumBatchIter) + c.mNumBurnIter + (c.mNumRunIter/c.mThinningInterval) );
+        }
+        
+        mSigma.reset();
+        mSigma.reserve(initReserve);
+        mSigma.mLastAccepts.reserve(acceptBufferLen);
+        mSigma.mLastAcceptsLength = acceptBufferLen;
     }
-    
-    mSigma.reset();
-    mSigma.reserve(initReserve);
-    mSigma.mLastAccepts.reserve(acceptBufferLen);
-    mSigma.mLastAcceptsLength = acceptBufferLen;
 }
 
 QString PluginAMLoop::initMCMC()
