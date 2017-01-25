@@ -23,7 +23,14 @@ protected:
     virtual void finalize();
     
     const Date* mDate;
-    MHVariable mSigma;
+    
+    MHVariable mT;
+    MHVariable mSigma2;
+    
+    long double mSi;
+    long double mSd;
+    long double mSf;
+    
     long double mSo2;
 };
 

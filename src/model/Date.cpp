@@ -443,6 +443,8 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
             if (mMCMCLoop->mAbortedReason.isEmpty()) {
                 // emit finished
                 qDebug() << "MCMC calib finished !!!";
+                
+                
             } else {
                 if (mMCMCLoop->mAbortedReason != ABORTED_BY_USER) {
                     QMessageBox message(QMessageBox::Warning,

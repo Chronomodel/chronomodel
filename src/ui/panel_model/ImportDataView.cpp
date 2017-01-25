@@ -135,7 +135,7 @@ void ImportDataView::browse()
                 QStringList values = line.split(csvSep);
                 if(values.size() > 0)
                 {
-                    qDebug()<<"ImportDataView::browse() "<<values.at(0)<<values.at(0).toUpper();
+                    //qDebug()<<"ImportDataView::browse() "<<values.at(0)<<values.at(0).toUpper();
                     if(isComment(values.at(0)) || values.at(0) == "")
                     {
                         continue;
