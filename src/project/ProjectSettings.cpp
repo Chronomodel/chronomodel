@@ -98,10 +98,10 @@ double ProjectSettings::getStep(const double tmin, const double tmax)
 
 double ProjectSettings::getTminFormated() const
 {
-   return qMin(DateUtils::convertToAppSettingsFormat(mTmin),DateUtils::convertToAppSettingsFormat(mTmax));
+   return qMin(DateUtils::convertToAppSettingsFormat(mTmin), DateUtils::convertToAppSettingsFormat(mTmax));
 }
 
 double ProjectSettings::getTmaxFormated() const
 {
-    return qMax(DateUtils::convertToAppSettingsFormat(mTmin),DateUtils::convertToAppSettingsFormat(mTmax));
+    return qMax(DateUtils::convertToAppSettingsFormat(mTmin), DateUtils::convertToAppSettingsFormat(mTmax));
 }
