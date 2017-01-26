@@ -163,6 +163,8 @@ MHVariable& MHVariable::operator=( MHVariable const& origin)
 
 double MHVariable::getCurrentAcceptRate()
 {
+    Q_ASSERT(!mLastAccepts.isEmpty());
+
     double sum (0.);
 
     sum = std::accumulate(mLastAccepts.begin(), mLastAccepts.end(), sum,[](double s, double a){return s+(a ? 1. : 0.);}); //#include <numeric>
@@ -170,6 +172,7 @@ double MHVariable::getCurrentAcceptRate()
     sum = sum / (double)mLastAccepts.size();
 
     return sum ;
+
 }
 
 void MHVariable::saveCurrentAcceptRate()
@@ -187,7 +190,8 @@ QVector<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains,
     accept.reserve(reserveSize);
 
     for (int i=0; i<chains.size(); ++i) {
-        int chainSize = chains.at(i).mNumBurnIter + (chains.at(i).mBatchIndex * chains.at(i).mNumBatchIter) + chains.at(i).mNumRunIter / chains.at(i).mThinningInterval;
+        // We add 1 for the init
+        const int chainSize = 1 +chains.at(i).mNumBurnIter + (chains.at(i).mBatchIndex * chains.at(i).mNumBatchIter) + chains.at(i).mNumRunIter / chains.at(i).mThinningInterval;
 
         if (i == index) {
             // could be done with
