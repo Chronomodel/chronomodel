@@ -25,11 +25,12 @@ mAxisColor(0, 0, 0)
 
 void AxisTool::updateValues(const int totalPix, const int minDeltaPix, const qreal minVal, const qreal maxVal)
 {
+    const qreal rigthBlank (5.); // the same name and the same value as GraphViewAbstract::getXForValue(
     if ((minDeltaPix == 0) || (minVal==maxVal) || (totalPix == 0) || (minVal>= maxVal))
         return;
 
     mEndVal = maxVal;
-    qreal w = totalPix;
+    qreal w = mIsHorizontal ? totalPix - rigthBlank : totalPix;
     w = (w <= 0.) ? minDeltaPix : w;
     qreal numSteps = floor(w / minDeltaPix);
     numSteps = (numSteps <= 0.) ? 1. : numSteps;
@@ -38,7 +39,6 @@ void AxisTool::updateValues(const int totalPix, const int minDeltaPix, const qre
     qreal unitsPerStep = delta / numSteps;
     
      mPixelsPerUnit = w / delta;
-    //double unitsPerPixel = delta / w;
     
     qreal pow10 = 0.;
     if (unitsPerStep < 1)  {
@@ -47,17 +47,14 @@ void AxisTool::updateValues(const int totalPix, const int minDeltaPix, const qre
             pow10 -= 1;
         }
     } else  {
-       // if (unitsPerStep < 100000) {
             while (unitsPerStep >= 10.)  {
                 unitsPerStep /= 10.;
                 pow10 += 1.;
             }
-       // }
     }
     
-    qreal factor = pow(10.f, pow10);
+    const qreal factor = pow(10., pow10);
     
-    //mDeltaVal = floor(unitsPerStep) * factor;
     mDeltaVal = 10. * factor;
     mDeltaPix = mDeltaVal * mPixelsPerUnit;
     
@@ -83,7 +80,7 @@ void AxisTool::updateValues(const int totalPix, const int minDeltaPix, const qre
  * @brief Draw axis on a QPainter, if there is no valueFormatFunc, all number is converted in QString with precision 0, it's mean only integer
  *
  */
-QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, FormatFunc valueFormatFunc)// QString (*valueFormatFunc)(const double))
+QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, FormatFunc valueFormatFunc)
 {
     QPen memoPen(p.pen());
     QBrush memoBrush(p.brush());
@@ -96,12 +93,11 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, F
     p.setPen(pen);
 
     QFontMetrics fm (p.font());
-    int heightText= fm.height();
+    int heightText = fm.height();
     qreal xo = r.x();
     qreal yo = r.y();
     qreal w = r.width();
     qreal h = r.height();
-    qDebug()<<"Axistool::paint p.font="<<p.font();
     
     if (mIsHorizontal) {
        if (mShowArrow) { // the arrow is over the rectangle of heigthSize
@@ -194,7 +190,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, F
                 const QString textStarVal = (valueFormatFunc ? valueFormatFunc(mStartVal, false) : QString::number(mStartVal,'f', 0) );
                 
                 p.drawText(tr, Qt::AlignRight | Qt::AlignBottom, textStarVal);
-                const QString textEndVal = (valueFormatFunc ? valueFormatFunc(mEndVal, false) : QString::number(mEndVal,'f',0) );
+                const QString textEndVal = (valueFormatFunc ? valueFormatFunc(mEndVal, false) : QString::number(mEndVal,'f', 0) );
                 p.drawText(tr, Qt::AlignRight | Qt::AlignTop, textEndVal);
             }
         } else  {

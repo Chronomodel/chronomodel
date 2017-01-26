@@ -15,7 +15,7 @@
 #pragma mark Constructor / Destructor
 
 GraphViewPhase::GraphViewPhase(QWidget *parent):GraphViewResults(parent),
-mPhase(0)
+mPhase(nullptr)
 {
     setMainColor(QColor(50, 50, 50));
     mGraph->setBackgroundColor(QColor(210, 210, 210));
@@ -42,15 +42,31 @@ mPhase(0)
     mDurationGraph -> setBackgroundColor(QColor(210, 210, 210));
     
     mDurationGraph->setMargins(50, 10, 5, 30);
-    mDurationGraph->setRangeY(0, 1);
+    //mDurationGraph->setRangeY(0, 1);
+    mDurationGraph->autoAdjustYScale(true);
     
     mDurationGraph->setVisible(false);
+
     
     mShowDuration = new Button(tr("Show Duration"), this);
     mShowDuration->setCheckable(true);
+    mShowDuration->setChecked(false);
     mShowDuration->setFlatHorizontal();
     connect(mShowDuration, &Button::toggled, this, &GraphViewPhase::showDuration);
-    connect(mShowDuration, &Button::toggled, this, &GraphViewPhase::durationDisplay);
+  //  connect(mShowDuration, &Button::toggled, this, &GraphViewPhase::durationDisplay);
+    mButtonsVisible = true;
+    mShowDuration->setVisible(mButtonsVisible);
+
+    const qreal butInlineMaxH = 50.;
+    const qreal bw = mGraphLeft / 4;
+    const qreal bh = (height() - mLineH)< butInlineMaxH ? height() - mLineH :butInlineMaxH;
+    //bh = std::min(bh, butInlineMaxH);
+
+    mImageSaveBut->setGeometry(0., mLineH, bw, bh);
+    mDataSaveBut->setGeometry(bw, mLineH, bw, bh);
+    mImageClipBut->setGeometry(2*bw, mLineH, bw, bh);
+    mResultsClipBut->setGeometry(mGraphLeft-bw, mLineH, bw, bh);
+    mShowDuration->setGeometry(0, mLineH + bh, mGraphLeft, bh);
 
 }
 
@@ -61,8 +77,9 @@ GraphViewPhase::~GraphViewPhase()
 
 void GraphViewPhase::setGraphFont(const QFont& font)
 {
-    GraphViewResults::setGraphFont(font);
+    GraphViewResults::setFont(font);
     mDurationGraph->setGraphFont(font);
+    updateLayout();
 }
 
 void GraphViewPhase::setButtonsVisible(const bool visible)
@@ -73,65 +90,160 @@ void GraphViewPhase::setButtonsVisible(const bool visible)
 
 void GraphViewPhase::setPhase(Phase* phase)
 {
-    if (phase) {
-        mPhase = phase;
+    Q_ASSERT(phase);
 
-        if (mShowDuration->isChecked())
-           setItemTitle(tr("Duration") + " : " + mPhase->mName);
-        else
-            setItemTitle(tr("Phase") + " : " + mPhase->mName);
+    mPhase = phase;
 
-        setItemColor(mPhase->mColor);
-    }
+    if (mShowDuration->isChecked())
+       setItemTitle(tr("Duration") + " : " + mPhase->mName);
+    else
+        setItemTitle(tr("Phase") + " : " + mPhase->mName);
+
+    setItemColor(mPhase->mColor);
+
 }
 
 void GraphViewPhase::updateLayout()
 {
-    GraphViewResults::updateLayout();
-    // define the rigth margin, according to the max on the scale of the duration
-    QFontMetrics fm(font());
-    type_data max = mDurationGraph->maximumX();
-    int marginRight = (int) floor(fm.width(stringWithAppSettings(max))/2);
-    mDurationGraph->setMarginRight(marginRight);
+    //qDebug()<<"GraphViewPhase::updateLayout()";
+    if (mShowDuration->isChecked()) {
 
-    const int h = height();
-    const int leftShift = mButtonsVisible ? mGraphLeft : 0;
-    QRect graphRect(leftShift, mTopShift, this->width() - leftShift, height()-mTopShift);
-    
-    const bool axisVisible = (h > mHeightForVisibleAxis);
-    mDurationGraph->showXAxisValues(axisVisible);
-    mDurationGraph->setMarginBottom(axisVisible ? mDurationGraph->font().pointSizeF() + 10 : 10);
-    
-    if (mButtonsVisible) {
-        const int butInlineMaxH = 50;
-        int bh = (height() - mLineH) / 2;
-        bh = qMin(bh, butInlineMaxH);
-        mShowDuration->setGeometry(0, mLineH + bh, mGraphLeft, bh);
-    }
-    mDurationGraph->setGeometry(graphRect.adjusted(0, 0, 0, mShowNumResults ? -graphRect.height()/2 : 0));
+        int h = height();
+        const qreal butInlineMaxH = 50.;
 
+        const bool axisVisible = (h > mHeightForVisibleAxis);
+
+        if (mButtonsVisible) {
+            qreal bw = mGraphLeft / 4;
+            qreal bh = height() - mLineH;
+            bh = std::min(bh, butInlineMaxH);
+
+            mImageSaveBut->setGeometry(0., mLineH, bw, bh);
+            mDataSaveBut->setGeometry(bw, mLineH, bw, bh);
+            mImageClipBut->setGeometry(2*bw, mLineH, bw, bh);
+            mResultsClipBut->setGeometry(mGraphLeft-bw, mLineH, bw, bh);
+            mShowDuration->setGeometry(0, mLineH + bh, mGraphLeft, bh);
+        }
+        /*if (mButtonsVisible) {
+            const int butInlineMaxH = 50;
+            int bh = (height() - mLineH) / 2;
+            bh = qMin(bh, butInlineMaxH);
+            mShowDuration->setGeometry(0, mLineH + bh, mGraphLeft, bh);
+        }*/
+
+
+        // define the rigth margin,according to the max on the scale
+        QFont fontTitle(this->font());
+        fontTitle.setPointSizeF(this->font().pointSizeF() * 1.1);
+        QFontMetricsF fmTitle(fontTitle);
+        mTopShift = fmTitle.height() + 4. + 1.;
+
+        const qreal leftShift = mButtonsVisible ? mGraphLeft : 0.;
+        QRect graphRect(leftShift, mTopShift, width() - leftShift, height()-mTopShift);
+
+        type_data max = mGraph->maximumX();
+        QFontMetricsF fmAxe (this->font());
+        qreal marginRight = floor(fmAxe.width(stringWithAppSettings(max)) / 2.);
+        mDurationGraph->setMarginRight(marginRight);
+        mDurationGraph->setFont(this->font());
+
+        GraphCurve* duration = mDurationGraph->getCurve("Duration");
+
+        if (duration && !duration->mData.isEmpty()) {
+            mDurationGraph->showXAxisValues(axisVisible);
+            mDurationGraph->setMarginBottom(axisVisible ? mDurationGraph->font().pointSizeF() + 10. : 10.);
+
+            qreal durationMax = duration->mData.lastKey();
+
+            mDurationGraph->setRangeX(0, durationMax);
+            mDurationGraph->setCurrentX(0, durationMax);
+            mDurationGraph->zoomX(0, durationMax);
+
+        }
+
+        if (mShowNumResults) {
+            mDurationGraph->setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height() /2. ));
+            mTextArea->setGeometry(graphRect.adjusted(0, graphRect.height() /2. , 0, 0));
+
+        } else
+                mDurationGraph->setGeometry(graphRect);
+
+        update();
+    } else
+        GraphViewResults::updateLayout();
 
 }
 
 void GraphViewPhase::paintEvent(QPaintEvent* e)
 {
-    GraphViewResults::paintEvent(e);
+    //qDebug()<<"GraphViewPhase::paintEvent()";
+    if (mShowDuration->isChecked()) {
+        qreal leftShift = mButtonsVisible ? mGraphLeft : 0.;
+
+        QPainter p;
+        p.begin(this);
+
+        // Left part of the view (title, buttons, ...)
+        if (mButtonsVisible) {
+            QColor backCol = mItemColor;
+            QColor foreCol = getContrastedColor(backCol);
+
+            // display the text in the left box with the buttons
+            QRectF topRect(0., 1., mGraphLeft-p.pen().widthF(), mLineH-p.pen().widthF() - 1.);
+
+            p.setPen(backCol);
+            p.setBrush(backCol);
+            p.drawRect(topRect);
+
+            p.setPen(foreCol);
+            QFont font;
+            font.setPointSizeF(pointSize(11));
+            p.setFont(font);
+
+            p.drawText(QRectF(0., 1., mGraphLeft-p.pen().widthF(), mLineH-p.pen().widthF()-1.),
+                       Qt::AlignVCenter | Qt::AlignCenter,
+                       mItemTitle);
+        }
+
+        // Right part of the view (graph, title, ...)
+
+        // write mTitle above the graph
+        QFont fontTitle(this->font());
+        fontTitle.setPointSizeF(this->font().pointSizeF() * 1.1);
+        QFontMetrics fmTitle(fontTitle);
+
+        QRectF textRect(leftShift, 1., this->width() - leftShift, mTopShift - 1.);
+        p.fillRect(textRect, mDurationGraph->getBackgroundColor());
+
+        p.setFont(fontTitle);
+        p.setPen(Qt::black);
+
+        p.drawText(QRectF(leftShift + 50., 3., fmTitle.width(mTitle), mTopShift - 1.), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
+
+        p.drawText(QRectF(width() - fmTitle.width(mDurationGraph->getInfo()), 3., fmTitle.width(mDurationGraph->getInfo()), mTopShift-1.), Qt::AlignVCenter | Qt::AlignLeft, mDurationGraph->getInfo());
+
+        p.end();
+
+     } else
+        GraphViewResults::paintEvent(e);
+}
+
+void GraphViewPhase::resizeEvent(QResizeEvent* )
+{
+    updateLayout();
 }
 
 void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
 {
-    qDebug()<<"GraphViewPhase::generateCurves()";
+    //qDebug()<<"GraphViewPhase::generateCurves()";
     GraphViewResults::generateCurves(typeGraph, variable);
     
-
     mGraph->removeAllCurves();
     mGraph->reserveCurves(9);
 
     mGraph->removeAllZones();
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
-
-   // mGraph->autoAdjustYScale(typeGraph == eTrace);
     
     mDurationGraph->removeAllCurves();
     mDurationGraph->reserveCurves(2);
@@ -148,24 +260,25 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         setNumericalResults(resultsHTML, resultsText);
         
         /* ------------------------------------------------
-        //  first tab : posterior distrib
-        //  Possible curves :
-        //  - Post Distrib Alpha All Chains
-        //  - Post Distrib Beta All Chains
-        //  - HPD Alpha All Chains
-        //  - HPD Beta All Chains
-        //  - Duration
-        //  - HPD Duration
-        //  - Post Distrib Alpha i
-        //  - Post Distrib Beta i
-        //  - Time Range
-        // ------------------------------------------------*/
+         *  first tab : posterior distrib
+         *  Possible curves :
+         *  - Post Distrib Alpha All Chains
+         *  - Post Distrib Beta All Chains
+         *  - HPD Alpha All Chains
+         *  - HPD Beta All Chains
+         *  - Duration
+         *  - HPD Duration
+         *  - Post Distrib Alpha i
+         *  - Post Distrib Beta i
+         *  - Time Range
+         * ------------------------------------------------
+        */
         if ((typeGraph == ePostDistrib) && (variable == eTheta)) {
             mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             mGraph->mLegendY = "";
             mGraph->setFormatFunctX(stringWithAppSettings);
-            mGraph->setFormatFunctY(0);
-        //    mGraph->autoAdjustYScale(true);
+            mGraph->setFormatFunctY(nullptr);
+
             if (mShowDuration->isChecked())
                mTitle = tr("Duration") + " : " + mPhase->mName;
             else
@@ -200,10 +313,12 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
 
             GraphCurve curveDuration;
 
-            if (! mPhase->mDuration.fullHisto().isEmpty()) {
+            if (mPhase->mDuration.fullHisto().size()>1) {
                 curveDuration = generateDensityCurve(mPhase->mDuration.fullHisto(),
                                                                 "Duration",
                                                                 color);
+
+                mDurationGraph->setRangeX(0., ceil(curveDuration.mData.lastKey()));
                 color.setAlpha(255);
                 GraphCurve curveDurationHPD = generateHPDCurve(mPhase->mDuration.mHPD,
                                                                "HPD Duration",
@@ -211,18 +326,23 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                 mDurationGraph->setCanControlOpacity(true);
                 mDurationGraph->addCurve(curveDurationHPD);
                 mDurationGraph->setFormatFunctX(stringWithAppSettings);
-                mDurationGraph->setFormatFunctY(stringWithAppSettings);
+                mDurationGraph->setFormatFunctY(nullptr);
+
+                mDurationGraph->addCurve(curveDuration);
 
                 GraphCurve curveTimeRange = generateSectionCurve(mPhase->getFormatedTimeRange(),
                                                            "Time Range",
                                                            color);
                 mGraph->addCurve(curveTimeRange);
 
-            } else {
+            }
+            else
+                mDurationGraph->resetNothingMessage();
+            /* else {
                 curveDuration.mName = "Duration";
                 curveDuration.mData.clear();
-            }
-            mDurationGraph->addCurve(curveDuration);
+            } */
+
             if (!mPhase->mAlpha.mChainsHistos.isEmpty())
                 for (int i=0; i<mChains.size(); ++i) {
                     GraphCurve curveAlpha = generateDensityCurve(mPhase->mAlpha.histoForChain(i),
@@ -235,36 +355,42 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                     mGraph->addCurve(curveAlpha);
                     mGraph->addCurve(curveBeta);
                 }
-            // must be after all curves adding
-           // mGraph->adjustYToMinMaxValue();
-            mGraph->adjustYToMaxValue();
+            mGraph->autoAdjustYScale(true);
         }
         
-    
-        // ------------------------------------------------
-        //  second tab : history plot
-        //  - Trace Alpha i
-        //  - Q1 Alpha i
-        //  - Q2 Alpha i
-        //  - Q3 Alpha i
-        //  - Trace Beta i
-        //  - Q1 Beta i
-        //  - Q2 Beta i
-        //  - Q3 Beta i
-        // ------------------------------------------------
+        /* ------------------------------------------------
+         *  second tab : history plot
+         *  - Trace Alpha i
+         *  - Q1 Alpha i
+         *  - Q2 Alpha i
+         *  - Q3 Alpha i
+         *  - Trace Beta i
+         *  - Q1 Beta i
+         *  - Q2 Beta i
+         *  - Q3 Beta i
+         * ------------------------------------------------
+         */
         else if (typeGraph == eTrace && variable == eTheta) {
             mGraph->mLegendX = "Iterations";
-            mGraph->setFormatFunctX(0);
-            mGraph->setFormatFunctY(DateUtils::convertToAppSettingsFormatStr);
+            mGraph->setFormatFunctX(nullptr);
+            mGraph->setFormatFunctY(stringWithAppSettings);
             
             mShowDuration->setVisible(false);
             mShowDuration->setChecked(false);
             showDuration(false);
 
-            mGraph->autoAdjustYScale(true);
             generateTraceCurves(mChains, &(mPhase->mAlpha), "Alpha");
             generateTraceCurves(mChains, &(mPhase->mBeta), "Beta");
-            
+            mGraph->autoAdjustYScale(true);
+        }
+        /* ------------------------------------------------
+         *  third tab : Acception rate
+         *  fourth tab : Autocorrelation
+         * ------------------------------------------------ */
+        else if ((typeGraph == eAccept) || (typeGraph == eCorrel) ) {
+            mShowDuration->setVisible(false);
+            mShowDuration->setChecked(false);
+            showDuration(false);
         }
     }
 
@@ -273,21 +399,23 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
 
 void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle)
 {
+    Q_ASSERT(mPhase);
     GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
     
-    if (mPhase) {
-        // ------------------------------------------------
-        //  first tab : posterior distrib
-        //  Possible curves :
-        //  - Post Distrib Alpha All Chains
-        //  - Post Distrib Beta All Chains
-        //  - HPD Alpha All Chains
-        //  - HPD Beta All Chains
-        //  - Duration
-        //  - HPD Duration
-        //  - Post Distrib Alpha i
-        //  - Post Distrib Beta i
-        // ------------------------------------------------
+//    if (mPhase) {
+        /* ------------------------------------------------
+         *  first tab : posterior distrib
+         *  Possible curves :
+         *  - Post Distrib Alpha All Chains
+         *  - Post Distrib Beta All Chains
+         *  - HPD Alpha All Chains
+         *  - HPD Beta All Chains
+         *  - Duration
+         *  - HPD Duration
+         *  - Post Distrib Alpha i
+         *  - Post Distrib Beta i
+         * ------------------------------------------------
+         */
         if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eTheta) {
             mGraph->setTipYLab("");
 
@@ -302,36 +430,37 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 mGraph->setCurveVisible("Post Distrib Alpha " + QString::number(i), mShowChainList.at(i));
                 mGraph->setCurveVisible("Post Distrib Beta " + QString::number(i), mShowChainList.at(i));
             }
-            mGraph->adjustYToMaxValue();
-            //mGraph->autoAdjustYScale(true);
+
             mGraph->setTipXLab("t");
             mGraph->setYAxisMode(GraphView::eHidden);
+            mGraph->autoAdjustYScale(true); // do repaintGraph()
 
-            if ( !mDurationGraph->getCurve("Duration")->mData.isEmpty()) {
+            const GraphCurve* duration = mDurationGraph->getCurve("Duration");
+
+            if ( duration && !duration->mData.isEmpty()) {
 
                 mDurationGraph->setCurveVisible("Duration", mShowAllChains);
                 mDurationGraph->setCurveVisible("HPD Duration", mShowAllChains);
-            
-                mDurationGraph->adjustYToMaxValue();
+
                 mDurationGraph->setTipXLab("t");
                 mDurationGraph->setYAxisMode(GraphView::eHidden);
+                mDurationGraph->autoAdjustYScale(true);
             }
-
-
 
         }
         
-        // ------------------------------------------------
-        //  second tab : history plot
-        //  - Alpha Trace i
-        //  - Alpha Q1 i
-        //  - Alpha Q2 i
-        //  - Alpha Q3 i
-        //  - Beta Trace i
-        //  - Beta Q1 i
-        //  - Beta Q2 i
-        //  - Beta Q3 i
-        // ------------------------------------------------
+        /* ------------------------------------------------
+         *  second tab : history plot
+         *  - Alpha Trace i
+         *  - Alpha Q1 i
+         *  - Alpha Q2 i
+         *  - Alpha Q3 i
+         *  - Beta Trace i
+         *  - Beta Q1 i
+         *  - Beta Q2 i
+         *  - Beta Q3 i
+         * ------------------------------------------------
+         */
         else if (mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta) {
             
             for (int i=0; i<mShowChainList.size(); ++i) {
@@ -345,14 +474,14 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 mGraph->setCurveVisible("Beta Q2 " + QString::number(i), mShowChainList.at(i));
                 mGraph->setCurveVisible("Beta Q3 " + QString::number(i), mShowChainList.at(i));
             }
-            //mGraph->adjustYToMinMaxValue();
-            mGraph->autoAdjustYScale(true);
+
             mGraph->setTipXLab("iteration");
             mGraph->setTipYLab("t");
             mGraph->setYAxisMode(GraphView::eMinMax);
+            mGraph->autoAdjustYScale(true);
         }
-    }
-    
+ //   }
+    repaint();
 }
 
 
@@ -361,13 +490,13 @@ void GraphViewPhase::showDuration(bool show)
     mDurationGraph->setVisible(show);
     mGraph->setVisible(!show);
     if (mShowDuration->isChecked())
-       mTitle = tr("Duration") + " : " + mPhase->mName;
+        mTitle = tr("Duration") + " : " + mPhase->mName;
         
-     else
+    else
         mTitle = tr("Phase") + " : " + mPhase->mName;
 
     mShowDuration->raise();
-    update();
+    updateLayout();
     
 }
 
@@ -405,11 +534,11 @@ void GraphViewPhase::saveGraphData() const
                     offset = mChains.at(chainIdx).mNumBurnIter + mChains.at(chainIdx).mBatchIndex * mChains.at(chainIdx).mNumBatchIter;
                 
                 mDurationGraph->exportCurrentVectorCurves(currentPath, csvLocal, csvSep, false, offset);
-            }
-            else return;
-        }
-        
-        else if (mCurrentTypeGraph == eCorrel)
+
+            } else
+                return;
+
+        } else if (mCurrentTypeGraph == eCorrel)
             mDurationGraph->exportCurrentVectorCurves(currentPath, csvLocal, csvSep, false, 0);
         
         // All visible curves are saved in the same file, the credibility bar is not save
@@ -417,8 +546,7 @@ void GraphViewPhase::saveGraphData() const
         else if (mCurrentTypeGraph == ePostDistrib)
             mDurationGraph->exportCurrentDensityCurves(currentPath, csvLocal, csvSep,  mSettings.mStep);
         
-    }
-    else
+    } else
         GraphViewResults::saveGraphData();
     
 }

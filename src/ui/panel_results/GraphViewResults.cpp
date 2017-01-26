@@ -372,9 +372,9 @@ void GraphViewResults::resizeEvent(QResizeEvent* e)
 void GraphViewResults::updateLayout()
 {
     int h = height();
-    qreal butInlineMaxH = 50.;
+    const qreal butInlineMaxH = 50.;
     
-    bool axisVisible = (h > mHeightForVisibleAxis);
+    const bool axisVisible = (h > mHeightForVisibleAxis);
 
     if (mButtonsVisible) {
         qreal bw = mGraphLeft / 4;
@@ -389,17 +389,16 @@ void GraphViewResults::updateLayout()
 
      // define the rigth margin,according to the max on the scale
     QFont fontTitle(this->font());
-    fontTitle.setPointSizeF(this->font().pointSizeF()*1.1);
+    fontTitle.setPointSizeF(this->font().pointSizeF() * 1.1);
     QFontMetricsF fmTitle(fontTitle);
     mTopShift = fmTitle.height() + 4. + 1.;
     
-    qreal leftShift = mButtonsVisible ? mGraphLeft : 0.;
+    const qreal leftShift = mButtonsVisible ? mGraphLeft : 0.;
     QRect graphRect(leftShift, mTopShift, width() - leftShift, height()-mTopShift);
-    qDebug()<<"graphViewResult::updateLayout font"<<this->font();
 
     type_data max = mGraph->maximumX();
     QFontMetricsF fmAxe (this->font());
-    qreal marginRight = floor(fmAxe.width(stringWithAppSettings(max))/2.);
+    qreal marginRight = floor(fmAxe.width(stringWithAppSettings(max)) / 2.);
     mGraph->setMarginRight(marginRight);
     mGraph->setFont(this->font());
 
@@ -409,8 +408,8 @@ void GraphViewResults::updateLayout()
     }
 
     if (mShowNumResults) {
-        mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height()/2.));
-        mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height()/2., 0, 0));
+        mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height() /2. ));
+        mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height() /2. , 0, 0));
 
     } else
             mGraph->setGeometry(graphRect);
@@ -595,6 +594,7 @@ void GraphViewResults::generateAcceptCurves(const QList<ChainSpecs> &chains,
         curve.mPen.setColor(Painting::chainColors.at(i));
         curve.mUseVectorData = true;
         curve.mIsHisto = false;
+        mGraph->autoAdjustYScale(true);
         mGraph->addCurve(curve);
     }
 }

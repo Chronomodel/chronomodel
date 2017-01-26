@@ -25,10 +25,11 @@ public:
 
 
 signals:
-    void durationDisplay(bool visible);
+   // void durationDisplay(bool visible);
 
 protected:
     void paintEvent(QPaintEvent* e);
+    void resizeEvent(QResizeEvent* );
     void updateLayout();
     
 protected slots:

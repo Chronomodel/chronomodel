@@ -88,29 +88,29 @@ void GraphView::zoomX(const type_data min, const type_data max)
         
         this->mAxisToolX.updateValues(width(), 10., min, max);
         if (mAutoAdjustYScale) {
-            qreal yMax = -100000000.;
-            qreal yMin =  100000000.;
+            qreal yMax = -INFINITY;
+            qreal yMin =  INFINITY;
             for (int curveIndex=0; curveIndex<mCurves.size(); ++curveIndex) {
                 const GraphCurve& curve = mCurves.at(curveIndex);
-                if (curve.mIsHorizontalLine) {
-                    yMax = qMax(yMax, curve.mHorizontalValue);
-                    yMin = qMin(yMin, curve.mHorizontalValue);
-                    
-                } else if (curve.mUseVectorData) {
-                    QVector<qreal> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, min, max);
-                    yMax = qMax(yMax, vector_max_value(subData));
-                    yMin = qMin(yMin, vector_min_value(subData));
-                    
-                } else if (!curve.mIsVertical && !curve.mIsVerticalLine && !curve.mIsHorizontalSections) {
-                    QMap<qreal, qreal> subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
-                    yMax = qMax(yMax, map_max_value(subData));
-                    yMin = qMin(yMin, map_min_value(subData));
-                }
+                if (curve.mVisible && !curve.mIsHorizontalLine && !curve.mIsVertical && !curve.mIsVerticalLine && !curve.mIsHorizontalSections) {
+
+                    if (curve.mUseVectorData) {
+                        QVector<qreal> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, (qreal)0., (qreal)curve.mDataVector.size());
+
+                        yMax = qMax(yMax, vector_max_value(subData));
+                        yMin = qMin(yMin, vector_min_value(subData));
+
+                    } else  {
+                        QMap<qreal, qreal> subData = getMapDataInRange(curve.mData, mCurrentMinX, mCurrentMaxX);
+                        yMax = qMax(yMax, map_max_value(subData));
+                        yMin = qMin(yMin, map_min_value(subData));
+                    }
+                 }
             }
             if (yMax > yMin)
                 setRangeY(yMin, yMax);
         }
-        repaintGraph(true);
+            repaintGraph(true);
     }
       // ici ca marche  qDebug()<<"apres GraphView::zoomX"<<mCurrentMaxX<<" max"<<max;
      //if (mCurrentMaxX!= 1000) qDebug()<<"-----------in GraphView::zoomX mCurrentMaxX"<<mCurrentMaxX;
@@ -137,14 +137,14 @@ QColor GraphView::getBackgroundColor() const
 void GraphView::addInfo(const QString& info)
 {
     mInfos << info;
-    if(mShowInfos)
+    if (mShowInfos)
         repaintGraph(false);
 }
 
 void GraphView::clearInfos()
 {
     mInfos.clear();
-    if(mShowInfos)
+    if (mShowInfos)
         repaintGraph(false);
 }
 
@@ -195,7 +195,7 @@ void GraphView::setXAxisMode(AxisMode mode)
     if (mXAxisMode != mode) {
         mXAxisMode = mode;
         mAxisToolX.mShowText = (mXAxisMode!=eHidden);
-        repaintGraph(true);
+       // repaintGraph(true); //not necessary ?
     }
 }
 
@@ -220,7 +220,7 @@ void GraphView::setYAxisMode(AxisMode mode)
             showYAxisTicks(false);
             showYAxisSubTicks(false);
         }
-        repaintGraph(true);
+     //   repaintGraph(true); //not necessary ?
     }
 }
 
@@ -380,11 +380,11 @@ void GraphView::setCurveVisible(const QString& name, const bool visible)
 
 GraphCurve* GraphView::getCurve(const QString& name)
 {
-    for(int i=0; i<mCurves.size(); ++i)
-        if(mCurves.at(i).mName == name)
+    for (int i=0; i<mCurves.size(); ++i)
+        if (mCurves.at(i).mName == name)
             return &mCurves[i];
 
-    return 0;
+    return nullptr;
 }
 
 const QList<GraphCurve>& GraphView::getCurves() const
@@ -428,7 +428,6 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
 {
     qreal x = e->pos().x();
     qreal y = e->pos().y();
-    //std::cout << y << std::endl;
     
     if (mUseTip && x >= mMarginLeft && x <= (mMarginLeft + mGraphWidth) && y >= mMarginTop && y <= (mMarginTop + mGraphHeight))  {
         mTipVisible = true;
@@ -437,7 +436,7 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
         int cursorW = 15;
         int cursorH = 15;
         
-        if(mMarginLeft + mGraphWidth - x <= (mTipWidth + cursorW))
+        if (mMarginLeft + mGraphWidth - x <= (mTipWidth + cursorW))
             x -= mTipWidth;
         else
             x += cursorW;
@@ -453,7 +452,7 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
         mTipRect.setWidth(mTipWidth);
         mTipRect.setHeight(mTipHeight);
         
-        mTipX = getValueForX(e->x()-0.5);
+        mTipX = getValueForX(e->x() + 1.);
         
         mTipY = getValueForY(e->y()+0.5);
         
@@ -509,15 +508,13 @@ void GraphView::repaintGraph(const bool aAlsoPaintBackground)
 {
     if (aAlsoPaintBackground)
         mBufferBack = QPixmap();
-
     update();
 }
     
 void GraphView::paintEvent(QPaintEvent* )
 {
  //   Q_UNUSED(event);
-    
-    
+
     updateGraphSize(width(), height());
     
     // ----------------------------------------------------
@@ -547,7 +544,7 @@ void GraphView::paintEvent(QPaintEvent* )
     // ----------------------------------------------------
     //  HD : draw directly on widget
     // ----------------------------------------------------
-    else if(mRendering == eHD)
+    else if (mRendering == eHD)
         paintToDevice(this);
     
     // ----------------------------------------------------
@@ -666,9 +663,8 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolX.mShowSubSubs = mXAxisSubTicks;
     mAxisToolX.mShowText = mXAxisValues;
 
-    qDebug()<<"GraphView::paintToDevice p.font"<<p.font();
     mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
-    mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), (qreal)7.,stringWithAppSettings);
+    mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), (qreal) 7.,stringWithAppSettings);
     
     // ----------------------------------------------------
     //  Horizontal Grid
@@ -679,8 +675,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolY.mShowText = mYAxisValues;
 
     mAxisToolY.updateValues(mGraphHeight, mStepMinWidth, mMinY, mMaxY);
-    mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), (qreal) 5.,stringWithAppSettings);
-    
+    mAxisToolY.paint(p, QRectF(0., mMarginTop, mMarginLeft, mGraphHeight), (qreal) 5.,stringWithAppSettings);
     
     // ----------------------------------------------------
     //  Graph specific infos at the top right
@@ -689,11 +684,11 @@ void GraphView::paintToDevice(QPaintDevice* device)
         font.setPointSizeF(font.pointSizeF() + 2.);
         p.setFont(font);
         p.setPen(QColor(50, 50, 50));
-        int y = 0;
-        int lineH = 16;
+        int y (0);
+        int lineH (16);
 
         for (auto && info : mInfos) {
-            p.drawText(mMarginLeft + 5, mMarginTop + 5 + y, mGraphWidth - 10, lineH, Qt::AlignRight | Qt::AlignTop, info);
+            p.drawText(mMarginLeft + 5., mMarginTop + 5. + y, mGraphWidth - 10., lineH, Qt::AlignRight | Qt::AlignTop, info);
             y += lineH;
         }
     }
@@ -747,8 +742,8 @@ void GraphView::drawCurves(QPainter& painter)
                 path.moveTo(mMarginLeft, y0);
                 
                 for (const auto & section : curve.mSections ) {
-                    qreal x1 = getXForValue(section.first, false);
-                    qreal x2 = getXForValue(section.second, false);
+                    const qreal x1 = getXForValue(section.first, false);
+                    const qreal x2 = getXForValue(section.second, false);
                     
                     path.lineTo(x1, y0);
                     path.lineTo(x1, y1);
@@ -775,8 +770,8 @@ void GraphView::drawCurves(QPainter& painter)
             } else if (curve.mIsVertical) {
                 path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
                 
-                int index = 0;
-                qreal last_y = 0;
+                int index (0);
+                qreal last_y (0.);
 
                 QMap<type_data, type_data>::const_iterator iter = curve.mData.cbegin();
                 
