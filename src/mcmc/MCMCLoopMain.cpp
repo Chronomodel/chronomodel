@@ -218,9 +218,11 @@ QString MCMCLoopMain::initMCMC()
                 
                 bound->mTheta.memo();
                 bound->mTheta.mLastAccepts.clear();
+                bound->mTheta.mLastAccepts.push_back(1.);
+                bound->mTheta.saveCurrentAcceptRate();
                 bound->mInitialized = true;
             }
-            bound = 0;
+            bound = nullptr;
         }
     }
     
@@ -278,16 +280,21 @@ QString MCMCLoopMain::initMCMC()
                 // 2 - Init Delta Wiggle matching and Clear mLastAccepts array
                 date.initDelta(unsortedEvents.at(i));
                 date.mWiggle.memo();
+                date.mWiggle.mLastAccepts.push_back(1.);
                 date.mWiggle.saveCurrentAcceptRate();
+
                 // 3 - Init sigma MH adaptatif of each Data ti
                 date.mTheta.mSigmaMH = sigma;
 
-                // 4 - Clear mLastAccepts array
+                // 4 - Clear mLastAccepts array and set this init at 100%
                 date.mTheta.mLastAccepts.clear();
+                date.mTheta.mLastAccepts.push_back(1.);
 
                 // 5 - Memo
                 date.mTheta.memo();
+
                 date.mTheta.saveCurrentAcceptRate();
+
                 // intermediary calculus for the harmonic average
                 s02_sum += 1. / (sigma * sigma);
             }
@@ -299,8 +306,8 @@ QString MCMCLoopMain::initMCMC()
             unsortedEvents.at(i)->mAShrinkage = 1.;
 
             // 6- Clear mLastAccepts array
-            //unsortedEvents.at(i)->mTheta.mLastAccepts.clear();
-
+            unsortedEvents.at(i)->mTheta.mLastAccepts.clear();
+            unsortedEvents.at(i)->mTheta.mLastAccepts.push_back(1.);
             // 7 - Memo
             unsortedEvents.at(i)->mTheta.memo();
             unsortedEvents.at(i)->mTheta.saveCurrentAcceptRate();
@@ -330,6 +337,10 @@ QString MCMCLoopMain::initMCMC()
                log += line(date.mName + textBold("Sigma indiv. <=1E-6 set to 1E-6"));
             }
             date.mSigma.mSigmaMH = 1.;
+
+            date.mSigma.mLastAccepts.clear();
+            date.mSigma.mLastAccepts.push_back(1.);
+
             date.mSigma.memo();
             date.mSigma.saveCurrentAcceptRate();
 
@@ -343,14 +354,15 @@ QString MCMCLoopMain::initMCMC()
     //  Init phases
     // ----------------------------------------------------------------
     emit stepChanged(tr("Initializing phases..."), 0, phases.size());
-    for (int i=0; i<phases.size(); ++i) {
-        Phase* phase = phases[i];
-
+    int i = 0;
+    for (Phase* phase : phases ) {
         phase->updateAll(tmin, tmax);
         phase->memoAll();
+
         if (isInterruptionRequested())
             return ABORTED_BY_USER;
-        
+        ++i;
+
         emit stepProgressed(i);
     }
     
@@ -360,7 +372,7 @@ QString MCMCLoopMain::initMCMC()
     log += "<hr>";
     log += textBold("Events Initialisation (with their data)");
     
-    int i = 0;
+    i = 0;
     for (const Event* event : events) {
         ++i;
         log += "<hr><br>";
