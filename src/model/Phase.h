@@ -34,8 +34,8 @@ public:
     double getMaxThetaEvents(double tmax);
     double getMinThetaEvents(double tmin);
     
-    double getMinThetaNextPhases(double tmax);
-    double getMaxThetaPrevPhases(double tmin);
+    double getMinThetaNextPhases(const double tmax);
+    double getMaxThetaPrevPhases(const double tmin);
     
     QPair<double,double> getFormatedTimeRange() const;
 

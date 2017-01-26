@@ -64,7 +64,7 @@ void Model::clear()
         mPhaseConstraints.clear();
     }
 
-    if(!mEventConstraints.isEmpty()) {
+    if (!mEventConstraints.isEmpty()) {
         for (EventConstraint* ec : mEventConstraints) {
             if (ec) {
                 ec->~EventConstraint();
@@ -386,7 +386,7 @@ void Model::generateModelLog()
     i = 0;
     for (auto&& pPhaseConst : mPhaseConstraints) {
         log += "<hr>";
-        log += line(textBold(textPurple("Hiatus Phase from " + pPhaseConst->mPhaseFrom->mName +" to "+ pPhaseConst->mPhaseTo->mName)));
+        log += line(textBold(textPurple("Succession : from " + pPhaseConst->mPhaseFrom->mName +" to "+ pPhaseConst->mPhaseTo->mName)));
 
         switch(pPhaseConst->mGammaType) {
             case PhaseConstraint::eGammaFixed :
@@ -395,7 +395,7 @@ void Model::generateModelLog()
             case PhaseConstraint::eGammaUnknown :
                 log += line(textBold(textPurple( QObject::tr("Min Hiatus unknown") )));
                 break;
-            case PhaseConstraint::eGammaRange : //no more used
+            case PhaseConstraint::eGammaRange : //no longer used
                  log += line(textBold(textPurple( QObject::tr("Min Hiatus between ") + pPhaseConst->mGammaMin + QObject::tr(" and ") +pPhaseConst->mGammaMax)));
                 break;
             default:

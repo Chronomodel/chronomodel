@@ -454,7 +454,7 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p, const bo
     QString text;
     const QString nl = "\r";
         text += nl;
-        text += QObject::tr("Hiatus Phase : ") + p->mPhaseFrom->mName +QObject::tr(" to ")+ p->mPhaseTo->mName;
+        text += QObject::tr("Succession : from ") + p->mPhaseFrom->mName +QObject::tr(" to ")+ p->mPhaseTo->mName;
 
         switch(p->mGammaType) {
             case PhaseConstraint::eGammaFixed :
@@ -463,7 +463,7 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p, const bo
             case PhaseConstraint::eGammaUnknown :
                 text += QObject::tr("Min Hiatus unknown") ;
                 break;
-            case PhaseConstraint::eGammaRange : // no more used
+            case PhaseConstraint::eGammaRange : // no longer used
                  text += QObject::tr("Min Hiatus between ") + p->mGammaMin + QObject::tr(" and ") +p->mGammaMax;
                  break;
             default:
@@ -489,7 +489,7 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
 {
     QString text;
         text += line(textBold(textBlack(QObject::tr("Data : ") + d->mName))) + "<br>";
-        text += line(textBold(textBlack(QObject::tr("Posterior distrib. :"))));
+        text += line(textBold(textBlack(QObject::tr("Posterior calib. date :"))));
 
         if (model) {
             short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTheta.mHPD, model);
@@ -512,7 +512,7 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
         text += line(textBlack(d->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, false))) ;
 
         text += line("<br>");
-        text += line(textBold(textBlack("Std. Deviation :")));
+        text += line(textBold(textBlack("Posterior Std. Deviation :")));
         text += line(textBlack(d->mSigma.resultsString()));
     return text;
 }
@@ -523,15 +523,14 @@ QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, c
         text += "<hr>";
         if (e->mType == Event::eKnown) {
             text += line(textBold(textRed("Bound : " + e->mName))) + "<br>";
-            text += line(textBold(textRed("Posterior distrib. :")));
+            text += line(textBold(textRed("Posterior bound date. :")));
             text += line(textRed(e->mTheta.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, false)));
         }
         else {
             text += line(textBold(textBlue("Event : " + e->mName))) + "<br>";
-            text += line(textBold(textBlue("Posterior distrib. :")));
+            text += line(textBold(textBlue("Posterior event date. :")));
             text += line(textBlue(e->mTheta.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, false)));
             if (withDates){
-                //for(int i=0; i<e->mDates.size(); ++i)
                 for (auto&& date : e->mDates)
                     text += "<br><br>" + dateResultsHTML(&(date), model);
             }
@@ -570,7 +569,7 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
 {
     QString text;
         text += "<hr>";
-        text += line(textBold(textPurple("Succession Phase from " + p->mPhaseFrom->mName +" to "+ p->mPhaseTo->mName)));
+        text += line(textBold(textPurple("Succession : from " + p->mPhaseFrom->mName +" to "+ p->mPhaseTo->mName)));
 
         if (p->mTransitionRange != QPair<double,double>()) {
             text += "<br>";
@@ -579,11 +578,11 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
                     + " : " + stringWithAppSettings(p->getFormatedTransitionRange().second, false) + "] "
                     + DateUtils::getAppSettingsFormatStr();
 
-            text += line(textBold(textPurple(result + "<br>")));
+            text += line(textPurple(result));
         }
 
         if (p->mGapRange != QPair<double,double>()) {
-            text += "<br>";
+            //text += "<br>";
 
             QString result;
             if (isinf(p->getFormatedGapRange().first) || isinf(p->getFormatedGapRange().second))
@@ -594,7 +593,7 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
                         + ", " + stringWithAppSettings(p->getFormatedGapRange().second, false) + "] "
                         + DateUtils::getAppSettingsFormatStr();
 
-            text += line(textBold(textPurple(result + "<br>")));
+            text += line(textPurple(result + "<br>"));
         }
 
     return text;

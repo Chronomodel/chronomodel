@@ -211,7 +211,7 @@ double Phase::getMinThetaEvents(double tmin)
 }
 
 
-double Phase::getMinThetaNextPhases(double tmax)
+double Phase::getMinThetaNextPhases(const double tmax)
 {
     double minTheta = tmax;
     //for (int i=0; i<mConstraintsFwd.size(); ++i) {
@@ -228,12 +228,11 @@ double Phase::getMinThetaNextPhases(double tmax)
     return minTheta;
 }
 
-double Phase::getMaxThetaPrevPhases(double tmin)
+double Phase::getMaxThetaPrevPhases(const double tmin)
 {
     double maxTheta = tmin;
-    //for (int i=0; i<mConstraintsBwd.size(); ++i) {
+
     for (auto&& pConstBwd : mConstraintsBwd) {
-        //double theta= mConstraintsBwd[i]->mPhaseFrom->getMaxThetaEvents(tmin);
         double theta= pConstBwd->mPhaseFrom->mBeta.mX;
         
         if (pConstBwd->mGammaType != PhaseConstraint::eGammaUnknown)
@@ -274,14 +273,15 @@ QString Phase::getTauTypeText() const
 {
     switch (mTauType) {
         case eTauFixed:
-                return QObject::tr("Tau Fixed = ") + QString::number(mTauFixed);
-            break;
-        case eTauRange:
-                return QObject::tr("Tau Range")+ " [ " + QString::number(mTauMin) + " ; " + QString::number(mTauMax) + " ]";
+                return QObject::tr("Max duration ≤ ") + QString::number(mTauFixed);
             break;
         case eTauUnknown:
-                return QObject::tr("Tau Unknown");
+                return QObject::tr("Max duration unknown");
             break;
+
+        case eTauRange: // no longer used
+            return QObject::tr("Tau Range")+ " [ " + QString::number(mTauMin) + " ; " + QString::number(mTauMax) + " ]";
+        break;
         default:
                 return QObject::tr("Tau Undefined->Error");
             break;
@@ -294,11 +294,10 @@ void Phase::initTau()
     if (mTauType == eTauFixed && mTauFixed != 0.)
         mTau = mTauFixed;
 
-    else if (mTauType == eTauRange && mTauMax > mTauMin)
+    else if (mTauType == eTauRange && mTauMax > mTauMin) // no longer used
         mTau = mTauMax;
 
-    else if (mTauType == eTauUnknown)
-    {
+    else if (mTauType == eTauUnknown) {
         // nothing to do
     }
 }
@@ -311,8 +310,7 @@ void Phase::updateTau()
     else if (mTauType == eTauRange && mTauMax > mTauMin)
         mTau = Generator::randomUniform(qMax(mTauMin, mBeta.mX - mAlpha.mX), mTauMax);
 
-    else if (mTauType == eTauUnknown)
-    {
+    else if (mTauType == eTauUnknown) {
         // Nothing to do!
     }
 }
