@@ -38,7 +38,6 @@ QColor randomColor();
 
 bool constraintIsCircular( QJsonArray constraints, const int FromId, const int ToId);
 
-//QString formatValueToAppSettingsPrecision(const double valueToFormat);
 QString stringWithAppSettings(const double valueToFormat, const bool forCSV = false);
 bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep, const bool withDateFormat = false);
 bool saveAsCsv(const QList<QStringList>& data, const QString& title = QObject::tr("Save as..."));
@@ -93,7 +92,6 @@ QMap<T, V> getMapDataInRange(const QMap<T, V> &data, const T subMin, const  T su
         if (subData.size() > 0) {
             if (pointBeforeSubMin && subData.constFind(subMin) == subData.cend()) {
                 V subDataFirst = subData.first();
-               // subData[subMin] = interpolate( subMin, tBeforeSubMin, (T)subData.firstKey(), vBeforeSubMin, subData.first() );
                 subData[subMin] = interpolate( subMin, tBeforeSubMin, (T)subData.firstKey(), vBeforeSubMin, subDataFirst );
             }
             if (pointAfterSubMax && subData.constFind(subMax) == subData.cend()) {
@@ -112,20 +110,25 @@ template <typename T>
 QVector<T> getVectorDataInRange(const QVector<T>& data, const T subMin,const T subMax, const T min, const T max)
 {
     Q_ASSERT(!data.isEmpty());
+
     if (subMin != min || subMax != max)  {
         QVector<T> subData;
         subData.reserve(data.size());
         int idxStart = (int) floor(data.size() * (subMin - min) / (max - min));
         int idxEnd = (int) floor(data.size() * (subMax - min) / (max - min));
-        for (int i=idxStart; i<=idxEnd; ++i)  {
-            if (i >= 0 && i < data.size())
+
+        idxStart = qMax(0, idxStart);
+        idxEnd = qMin(idxEnd, data.size()-1);
+        // we can use mid()
+        for (int i=idxStart; i<=idxEnd; ++i)
                 subData.append(data[i]);
-        }
+
+        subData.squeeze();
         return subData;
     }
-    else {
+    else
         return data;
-    }
+
 }
 
 #endif

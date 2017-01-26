@@ -56,9 +56,9 @@ T interpolateValueInQMap(const U& key, const QMap<U, T>& map)
         
         return interpolate(key, keyUnder, keyUpper, valueUnder, valueUpper);
     }
-    else {
+    else
         return map.last();
-    }
+
 }
 
 
@@ -66,36 +66,36 @@ template <class T>
 T vector_max_value(const QList<T>& aVector)
 {
     typename QList<T>::const_iterator it = std::max_element(aVector.cbegin(), aVector.cend());
-    if(it != aVector.cend())
+    if (it != aVector.cend())
         return *it;
-    return 0;
+    return T(0);
 }
 
 template <class T>
 T vector_min_value(const QList<T>& aVector)
 {
     typename QList<T>::const_iterator it = std::min_element(aVector.cbegin(), aVector.cend());
-    if(it != aVector.cend())
+    if (it != aVector.cend())
         return *it;
-    return 0;
+    return T(0);
 }
 
 template <class T>
 T vector_max_value(const QVector<T>& aVector)
 {
     typename QVector<T>::const_iterator it = std::max_element(aVector.cbegin(), aVector.cend());
-    if(it != aVector.cend())
+    if (it != aVector.cend())
         return *it;
-    return 0;
+    return T(0);
 }
 
 template <class T>
 T vector_min_value(const QVector<T>& aVector)
 {
     typename QVector<T>::const_iterator it = std::min_element(aVector.cbegin(), aVector.cend());
-    if(it != aVector.cend())
+    if (it != aVector.cend())
         return *it;
-    return 0;
+    return T(0);
 }
 
  template<typename T>
@@ -108,12 +108,12 @@ T vector_min_value(const QVector<T>& aVector)
 template <class U, class T>
 T map_max_value(const QMap<U, T>& aMap)
 {
-    if(aMap.isEmpty()) return (T)0;
+    if (aMap.isEmpty())
+        return (T)0;
     QMapIterator<U, T> iter(aMap);
     T max = iter.hasNext() ?  iter.next().value()  :  (T) 0 ;
     
-    while(iter.hasNext())
-    {
+    while (iter.hasNext()) {
         iter.next();
         max = qMax(max, iter.value());
     }
@@ -126,8 +126,7 @@ T map_min_value(const QMap<U, T>& aMap)
     QMapIterator<U, T> iter(aMap);
     T min = iter.hasNext() ?  iter.next().value()  :   0 ;
    
-    while(iter.hasNext())
-    {
+    while (iter.hasNext()) {
         iter.next();
         min = qMin(min, iter.value());
     }
@@ -136,31 +135,34 @@ T map_min_value(const QMap<U, T>& aMap)
 
 // --------------------------------
 template<typename T>
-T sum(const QVector<T>& vector){
+T sum(const QVector<T>& vector)
+{
     T s = 0;
    /* std::for_each(vector.begin(), vector.end(), [&s](T& v){
         s += v;
     });*/
-    foreach (const T v, vector) {
+    for (auto&& v : vector) {
         s += v;
     }
     return s;
 }
 
 template<typename T>
-T sum2(const QVector<T>& vector){
+T sum2(const QVector<T>& vector)
+{
     T sum = 0;
     /*std::for_each(vector.cbegin(), vector.cend(), [&sum](T& v){
         sum += v * v;
     });*/
-    foreach (const T v, vector) {
+    for (auto&& v : vector) {
         sum += v * v;
     }
     return sum;
 }
 
 template<typename T>
-T sumShifted(const QVector<T>& vector, const T& shift){
+T sumShifted(const QVector<T>& vector, const T& shift)
+{
     T sum = 0;
     /*std::for_each(vector.cbegin(), vector.cend(), [&sum, &shift](T& v){
         sum += v + shift;
@@ -172,7 +174,8 @@ T sumShifted(const QVector<T>& vector, const T& shift){
 }
 
 template<typename T>
-T sum2Shifted(const QVector<T>& vector, const T& shift){
+T sum2Shifted(const QVector<T>& vector, const T& shift)
+{
     T sum = 0;
     /*std::for_each(vector.cbegin(), vector.cend(), [&sum, &shift](T& v){
         sum += (v + shift) * (v + shift);
