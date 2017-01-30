@@ -40,8 +40,14 @@ public:
         eMainTicksOnly = 2,
         eAllTicks = 3
     };
-    
-    GraphView(QWidget* parent = 0);
+    enum OverflowDataArrowMode
+    {
+        eNone = 0,
+        eBothOverflow = 1,
+        eUnderMin = 2,
+        eOverMax = 3
+    };
+    GraphView(QWidget* parent = nullptr);
     virtual ~GraphView();
     
     // Options
@@ -72,6 +78,8 @@ public:
     
     void setXAxisMode(AxisMode mode);
     void setYAxisMode(AxisMode mode);
+
+    void setOverArrow(OverflowDataArrowMode mode) { mOverflowArrowMode = mode;}
     
     void autoAdjustYScale(bool active);
     void adjustYToMaxValue(const qreal& marginProp = 0.);
@@ -169,14 +177,12 @@ protected:
     
     AxisMode mXAxisMode;
     AxisMode mYAxisMode;
-    
+    OverflowDataArrowMode mOverflowArrowMode;
+
     Rendering mRendering;
     
     bool mAutoAdjustYScale; 
-    
-    //FormatFunc mFormatFuncX;
-    //FormatFunc mFormatFuncY;
-    
+       
     bool mShowInfos;
     QStringList mInfos;
     
