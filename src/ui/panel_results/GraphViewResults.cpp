@@ -128,7 +128,7 @@ void GraphViewResults::updateCurvesToShow(bool showAllChains, const QList<bool>&
     mShowCredibility = showCredibility;
     mShowCalib = showCalib;
     mShowWiggle = showWiggle;
-    update();
+   // update();
 }
 
 void GraphViewResults::toggle(const QRect& targetGeometry)
@@ -594,7 +594,6 @@ void GraphViewResults::generateAcceptCurves(const QList<ChainSpecs> &chains,
         curve.mPen.setColor(Painting::chainColors.at(i));
         curve.mUseVectorData = true;
         curve.mIsHisto = false;
-        mGraph->autoAdjustYScale(true);
         mGraph->addCurve(curve);
     }
 }

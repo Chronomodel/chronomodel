@@ -101,11 +101,6 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, F
     
     if (mIsHorizontal) {
        if (mShowArrow) { // the arrow is over the rectangle of heigthSize
-            //QPainterPath arrowRight;
-            
-            //QPolygonF triangle;
-            //triangle << QPointF(xo + w + heigthSize*.65, yo) << QPointF(xo + w , yo - heigthSize*.65) << QPointF(xo + w, yo + heigthSize*.65);
-          
             QPolygonF triangle (std::initializer_list<QPointF>({ QPointF(xo + w + heigthSize*.65, yo),
                                                                  QPointF(xo + w , yo - heigthSize*.65),
                                                                  QPointF(xo + w, yo + heigthSize*.65) }));
