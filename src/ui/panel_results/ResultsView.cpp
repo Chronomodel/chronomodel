@@ -1342,10 +1342,14 @@ void ResultsView::generateCurves(const QList<GraphViewResults*>& listGraphs)
 
 void ResultsView::updateCurves()
 {
+     qDebug() << "ResultsView::updateCurves()";
     if (mByPhasesBut->isChecked())
         generateCurves(mByPhasesGraphs);
     else
         generateCurves(mByEventsGraphs);
+
+    qDebug() << "ResultsView::updateCurves()-> emit curvesGenerated()";
+   emit curvesGenerated();
 }
 
 /**
@@ -1389,10 +1393,16 @@ void ResultsView::updateScales()
      *  Restore last zoom values; must be stored in unformated value
      * ------------------------------------------*/
     if (mZooms.find(tabIdx) != mZooms.end()) {
-        auto currentMinMax = std::minmax(DateUtils::convertToAppSettingsFormat(mZooms.value(tabIdx).first),
-                                         DateUtils::convertToAppSettingsFormat(mZooms.value(tabIdx).second));
-        mResultCurrentMinX = currentMinMax.first;
-        mResultCurrentMaxX = currentMinMax.second;
+        if (tabIdx == 1) {
+            auto currentMinMax = std::minmax(DateUtils::convertToAppSettingsFormat(mZooms.value(tabIdx).first),
+                                             DateUtils::convertToAppSettingsFormat(mZooms.value(tabIdx).second));
+            mResultCurrentMinX = currentMinMax.first;
+            mResultCurrentMaxX = currentMinMax.second;
+        } else {
+            mResultCurrentMinX = mZooms.value(tabIdx).first;
+            mResultCurrentMaxX = mZooms.value(tabIdx).second;
+
+        }
         // controle if the current value is in rigth range depending to mDataThetaRadio and mDataSigmaRadio
         mResultCurrentMinX = qBound(mResultMinX, mResultCurrentMinX, mResultMaxX);
         mResultCurrentMaxX = qBound(mResultCurrentMinX, mResultCurrentMaxX, mResultMaxX);
@@ -1648,12 +1658,16 @@ void ResultsView::updateGraphsZoomX()
             eventGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
     
     /* --------------------------------------------------
-     * Store zoom values in an unformated value AD/BD
+     * Store zoom values in an unformated value AD/BD for Post. distrib tab
      * --------------------------------------------------*/
     int tabIdx = mTabs->currentIndex();
-    auto resultMinMax = std::minmax( DateUtils::convertFromAppSettingsFormat(mResultCurrentMinX),
-                                 DateUtils::convertFromAppSettingsFormat(mResultCurrentMaxX));
-    mZooms[tabIdx] = QPair<double, double>(resultMinMax.first, resultMinMax.second);
+    if (tabIdx == 1) {
+        auto resultMinMax = std::minmax( DateUtils::convertFromAppSettingsFormat(mResultCurrentMinX),
+                                     DateUtils::convertFromAppSettingsFormat(mResultCurrentMaxX));
+        mZooms[tabIdx] = QPair<double, double>(resultMinMax.first, resultMinMax.second);
+    } else
+        mZooms[tabIdx] = QPair<double, double>(mResultCurrentMinX, mResultCurrentMaxX);
+
 }
 
 //#pragma mark Zoom Y
