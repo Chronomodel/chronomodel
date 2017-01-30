@@ -12,7 +12,7 @@
 
 class ProjectSettings;
 
-#pragma mark Constructor / Destructor
+//pragma mark Constructor / Destructor
 
 #if GRAPH_OPENGL
 GraphView::GraphView(QWidget *parent):QOpenGLWidget(parent),
@@ -32,10 +32,9 @@ mYAxisSubTicks(true),
 mYAxisValues(true),
 mXAxisMode(eAllTicks),
 mYAxisMode(eAllTicks),
+mOverflowArrowMode(eNone),
 mRendering(eSD),
 mAutoAdjustYScale(false),
-//mFormatFuncX(0),
-//mFormatFuncY(0),
 mShowInfos(false),
 mBackgroundColor(Qt::white),
 mThickness(1),
@@ -62,7 +61,7 @@ mUseTip(true)
     setMouseTracking(true);
     setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
     
-    setRangeY(0.f, 1.f);
+    setRangeY(0., 1.);
     this->mAxisToolX.updateValues(width(), mStepMinWidth, mCurrentMinX, mCurrentMaxX);
     resetNothingMessage();
 
@@ -112,16 +111,14 @@ void GraphView::zoomX(const type_data min, const type_data max)
         }
             repaintGraph(true);
     }
-      // ici ca marche  qDebug()<<"apres GraphView::zoomX"<<mCurrentMaxX<<" max"<<max;
-     //if (mCurrentMaxX!= 1000) qDebug()<<"-----------in GraphView::zoomX mCurrentMaxX"<<mCurrentMaxX;
+
     update();
     
 }
 
-// ------------------------------------------------------
-//  Options
-// ------------------------------------------------------
-#pragma mark Options
+/* ------------------------------------------------------
+ *  Options
+ * ------------------------------------------------------*/
 
 void GraphView::setBackgroundColor(const QColor& aColor)
 {
@@ -513,8 +510,6 @@ void GraphView::repaintGraph(const bool aAlsoPaintBackground)
     
 void GraphView::paintEvent(QPaintEvent* )
 {
- //   Q_UNUSED(event);
-
     updateGraphSize(width(), height());
     
     // ----------------------------------------------------
@@ -550,7 +545,7 @@ void GraphView::paintEvent(QPaintEvent* )
     // ----------------------------------------------------
     //  SD rendering : draw buffer on widget !
     // ----------------------------------------------------
-    if(mRendering == eSD) {
+    if (mRendering == eSD) {
         QPainter p(this);
         p.setRenderHints(QPainter::Antialiasing);
         p.drawPixmap(mBufferBack.rect(), mBufferBack, rect());
@@ -613,18 +608,16 @@ void GraphView::paintToDevice(QPaintDevice* device)
     
     p.setRenderHints(QPainter::Antialiasing);
     
-    // ----------------------------------------------------
-    //  Background
-    // ----------------------------------------------------
+    /* ----------------------- Background ----------------------*/
+
     p.fillRect(rect(), mBackgroundColor);
     
     QFont font = p.font();
     font.setPointSizeF(font.pointSizeF());// - 2.);
     p.setFont(font);
     
-    // ----------------------------------------------------
-    //  Zones
-    // ----------------------------------------------------
+    /* ---------------------- Zones --------------------------*/
+
     for (auto && zone : mZones) {
         QRect r(getXForValue(zone.mXStart),
                 mMarginTop,
@@ -644,15 +637,75 @@ void GraphView::paintToDevice(QPaintDevice* device)
         p.restore();
     }
     
-    // ----------------------------------------------------
-    //  Curves
-    // ----------------------------------------------------
+    /* mOverflowArrowMode, draw a arrow on the rigth or on the left
+     * if the data are over the window (current min, current max)  */
+
+     if (mOverflowArrowMode != eNone) {
+         qreal arrowSize = 7.;
+         const qreal yo = mGraphHeight/2 ;
+         const QColor gradColDark(150, 150, 150);
+         const QColor gradColLigth(190, 190, 190);
+
+         if (mOverflowArrowMode == eBothOverflow || mOverflowArrowMode == eUnderMin) {
+
+             type_data maxData = (type_data) - INFINITY;
+             for (auto&& curve : mCurves)
+                 if (curve.mVisible && curve.mData.size()>0)
+                    maxData = std::max(maxData, curve.mData.lastKey());
+
+
+             if ( maxData <= mCurrentMinX) {
+                 const qreal xl = mMarginLeft + 2*arrowSize;
+                 const QPolygonF LeftTriangle (std::initializer_list<QPointF>({ QPointF(xl - arrowSize*1.5, yo),
+                                                                      QPointF(xl, yo - arrowSize),
+                                                                      QPointF(xl , yo + arrowSize) }));
+                 QLinearGradient linearGradientL(xl - arrowSize, yo, xl, yo);
+                         linearGradientL.setColorAt(0, gradColDark );
+                         linearGradientL.setColorAt(1, gradColLigth );
+                 p.setBrush(linearGradientL);
+                 p.setPen(Qt::NoPen);
+                 p.drawPolygon(LeftTriangle);
+             }
+
+         }
+         if (mOverflowArrowMode == eBothOverflow || mOverflowArrowMode == eOverMax) {
+             type_data minData = (type_data) INFINITY;
+
+             for (auto&& curve : mCurves)
+                 if (curve.mVisible && curve.mData.size()>0)
+                    minData = std::min(minData, curve.mData.firstKey());
+
+
+             if (mCurrentMaxX <= minData) {
+                 const qreal xr = mGraphWidth + mMarginLeft - 2*arrowSize;
+                 const QPolygonF RigthTriangle (std::initializer_list<QPointF>({ QPointF(xr + arrowSize*1.5, yo),
+                                                                      QPointF(xr, yo - arrowSize),
+                                                                      QPointF(xr , yo + arrowSize) }));
+
+                 QLinearGradient linearGradientR(xr, yo, xr+arrowSize, yo);
+                         linearGradientR.setColorAt(0, gradColLigth );
+                         linearGradientR.setColorAt(1, gradColDark);
+
+                 p.setBrush(linearGradientR);
+                 p.setPen(Qt::NoPen);
+
+                 p.drawPolygon(RigthTriangle);
+             }
+         }
+
+     }
+
+
+
+    /* ----------------------------------------------------
+     *  Curves
+     * ----------------------------------------------------*/
     drawCurves(p);
     
-    // ----------------------------------------------------
-    //  Vertical Grid
-    // ----------------------------------------------------
-    if (!mLegendX.isEmpty()) {
+    /* ----------------------------------------------------
+     *  Horizontal axis
+     * ----------------------------------------------------*/
+    if (!mLegendX.isEmpty() && mXAxisValues) {
         QRectF tr(mMarginLeft, mGraphHeight- mMarginBottom, mGraphWidth, mMarginBottom);
         p.setPen(Qt::black);
         p.drawText(tr, Qt::AlignRight | Qt::AlignTop, mLegendX);
@@ -666,9 +719,9 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
     mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), (qreal) 7.,stringWithAppSettings);
     
-    // ----------------------------------------------------
-    //  Horizontal Grid
-    // ----------------------------------------------------
+    /* ----------------------------------------------------
+     *  Vertical axis
+     * ----------------------------------------------------*/
     mAxisToolY.mShowArrow = mYAxisArrow;
     mAxisToolY.mShowSubs = mYAxisTicks;
     mAxisToolY.mShowSubSubs = mYAxisSubTicks;
@@ -677,9 +730,9 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolY.updateValues(mGraphHeight, mStepMinWidth, mMinY, mMaxY);
     mAxisToolY.paint(p, QRectF(0., mMarginTop, mMarginLeft, mGraphHeight), (qreal) 5.,stringWithAppSettings);
     
-    // ----------------------------------------------------
-    //  Graph specific infos at the top right
-    // ----------------------------------------------------
+    /* ----------------------------------------------------
+     *  Graph specific infos at the top right
+     * ----------------------------------------------------*/
     if (mShowInfos) {
         font.setPointSizeF(font.pointSizeF() + 2.);
         p.setFont(font);
@@ -697,9 +750,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
 
 void GraphView::drawCurves(QPainter& painter)
 {
-    // ---------------------------------------------------------------
-    //  Curves
-    // ---------------------------------------------------------------
+    /* -------------------------- Curves ---------------------------*/
     painter.save();
     // Draw curves inside axis only (not in margins!)
     painter.setClipRect(mMarginLeft, mMarginTop, mGraphWidth, mGraphHeight);
@@ -761,10 +812,15 @@ void GraphView::drawCurves(QPainter& painter)
                 painter.setPen(curve.mPen);
                 
                 for (const auto & section : curve.mSections ) {
-                    const qreal x1 = getXForValue(section.first, true);
-                    const qreal x2 = getXForValue(section.second, true);
-                    
-                    painter.drawLine(QPointF(x1, y1),QPointF(x2, y1));
+                    const type_data s1 = section.first;
+                    const type_data s2 = section.second;
+
+                    if (s1<mCurrentMaxX && s2>mCurrentMinX) {
+                        const qreal x1 = getXForValue(s1, true);
+                        const qreal x2 = getXForValue(s2, true);
+
+                        painter.drawLine(QPointF(x1, y1),QPointF(x2, y1));
+                    }
                 }
                 
             } else if (curve.mIsVertical) {
