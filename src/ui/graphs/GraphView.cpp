@@ -707,8 +707,10 @@ void GraphView::paintToDevice(QPaintDevice* device)
      * ----------------------------------------------------*/
     if (!mLegendX.isEmpty() && mXAxisValues) {
         QRectF tr(mMarginLeft, mGraphHeight- mMarginBottom, mGraphWidth, mMarginBottom);
+        //QRectF tr(mMarginLeft, mGraphHeight + mMarginTop- mMarginBottom, mGraphWidth, mMarginBottom);
         p.setPen(Qt::black);
-        p.drawText(tr, Qt::AlignRight | Qt::AlignTop, mLegendX);
+        //p.drawText(tr, Qt::AlignRight | Qt::AlignTop, mLegendX);
+        p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, mLegendX);
     }
     
     mAxisToolX.mShowArrow = mXAxisArrow;
