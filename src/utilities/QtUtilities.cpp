@@ -84,9 +84,8 @@ bool isComment(const QString& str)
     commentsMarkers << "//" << "#" << "/*";
     QString strClean = str.trimmed();
     
-    for(int i=0; i<commentsMarkers.size(); ++i)
-    {
-        if(strClean.startsWith(commentsMarkers[i]))
+    for (int i=0; i<commentsMarkers.size(); ++i) {
+        if (strClean.startsWith(commentsMarkers[i]))
             return true;
     }
     return false;
@@ -96,10 +95,9 @@ QColor getContrastedColor(const QColor& color)
 {
     QColor frontColor = Qt::white;
     qreal s = color.saturationF();
-    if(s < 0.4)
-    {
+    if (s < 0.4)  {
         qreal l = color.lightnessF();
-        if(l >= 0.5)
+        if (l >= 0.5)
             frontColor = Qt::black;
     }
     return frontColor;
@@ -108,11 +106,11 @@ QColor getContrastedColor(const QColor& color)
 QList<int> stringListToIntList(const QString& listStr, const QString& separator)
 {
     QList<int> result;
-    if(!listStr.isEmpty())
-    {
+    if (!listStr.isEmpty()) {
         QStringList list = listStr.split(separator);
-        for(int i=0; i<list.size(); ++i)
-            result.append(list[i].toInt());
+        for (auto str : list)
+            result.append(str.toInt());
+
     }
     return result;
 }
@@ -120,7 +118,7 @@ QList<int> stringListToIntList(const QString& listStr, const QString& separator)
 QStringList intListToStringList(const QList<int>& intList)
 {
     QStringList list;
-    for(int i=0; i<intList.size(); ++i)
+    for (int i=0; i<intList.size(); ++i)
         list.append(QString::number(intList[i]));
     return list;
 }
@@ -130,20 +128,21 @@ QString intListToString(const QList<int>& intList, const QString& separator)
     QStringList list = intListToStringList(intList);
     return list.join(separator);
 }
-# pragma mark Save Widget
+
+
+// pragma mark Save Widget
 
 QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogTitle, const QString& defaultPath, const AppSettings & appSetting)
 {
     QFileInfo fileInfo;
     
-    QGraphicsScene* scene = 0;
+    QGraphicsScene* scene = nullptr;
     QWidget* widget = dynamic_cast<QWidget*>(wid);
     GraphView* mGraph = dynamic_cast<GraphView*>(wid);
     
-    if(!mGraph && !widget)
-    {
+    if (!mGraph && !widget) {
         scene = dynamic_cast<QGraphicsScene*>(wid);
-        if(!scene)
+        if (!scene)
             return fileInfo;
     }
     
