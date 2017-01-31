@@ -698,7 +698,7 @@ bool Project::askToSave(const QString& saveDialogTitle)
     int result = QMessageBox::question(QApplication::activeWindow(),
                                        QApplication::applicationName(),
                                        tr("Do you want to save the current project ?"),
-                                       QMessageBox::Yes | QMessageBox::No);
+                                       QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
     
     if (result == QMessageBox::Yes) {
         // return true if saving is done correcty
