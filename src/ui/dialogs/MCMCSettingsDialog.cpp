@@ -67,8 +67,11 @@ QDialog(parent, flags)
     mOkBut = new Button(tr("OK"), this);
     mCancelBut = new Button(tr("Cancel"), this);
     
-    connect(mOkBut, SIGNAL(clicked()), this, SLOT(accept()));
-    connect(mCancelBut, SIGNAL(clicked()), this, SLOT(reject()));
+    //connect(mOkBut, &Button::clicked, this, &MCMCSettingsDialog::accept);
+    connect(mOkBut, &Button::clicked, this, &MCMCSettingsDialog::inputControl);
+    connect(this, &MCMCSettingsDialog::inputValided, this, &MCMCSettingsDialog::accept);
+
+    connect(mCancelBut, &Button::clicked, this, &MCMCSettingsDialog::reject);
     
     setFixedSize(600, 320);
 }
@@ -119,7 +122,7 @@ void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
     Q_UNUSED(e);
     
     int m = 5;
-    double lineH = 20;
+    qreal lineH = 20.;
     
     QPainter p(this);
     p.fillRect(rect(), QColor(220, 220, 220));
@@ -176,11 +179,11 @@ void MCMCSettingsDialog::resizeEvent(QResizeEvent* e)
 void MCMCSettingsDialog::updateLayout()
 {
     int m = 5;
-    double top = 65.f;
-    double lineH = 20;
-    double editW = 100;
-    double w = width() - 2*m;
-    double h = 115;
+    qreal top = 65.;
+    qreal lineH = 20.;
+    qreal editW = 100.;
+    qreal w = width() - 2.*m;
+    qreal h = 115.;
     int butW = 80;
     int butH = 25;
     
@@ -214,4 +217,77 @@ void MCMCSettingsDialog::updateLayout()
     
     mOkBut->setGeometry(width() - 2*m - 2*butW, height() - m - butH, butW, butH);
     mCancelBut->setGeometry(width() - m - butW, height() - m - butH, butW, butH);
+}
+
+void MCMCSettingsDialog::inputControl()
+{
+    bool isValided (true);
+    bool ok(true);
+    const QLocale mLoc = QLocale();
+    QString errorMessage;
+
+    MCMCSettings settings;
+
+    settings.mNumChains = mNumProcEdit->text().toUInt(&ok);
+    if (ok == false || settings.mNumChains < 1 ) {
+        errorMessage = QObject::tr("The number of chain must be bigger than 0");
+        isValided = false;
+    }
+
+    settings.mNumBurnIter = mNumBurnEdit->text().toUInt(&ok);
+    if (ok == false || settings.mNumBurnIter < 1 ) {
+        errorMessage = QObject::tr("The number of iteration in the burning must be bigger than 0");
+        isValided = false;
+    }
+
+    settings.mMaxBatches = mMaxBatchesEdit->text().toUInt(&ok);
+    if (ok == false || settings.mMaxBatches < 1 ) {
+        errorMessage = QObject::tr("The number of the maximun batches in the adaptation must be bigger than 0");
+        isValided = false;
+    }
+
+    settings.mNumBatchIter = (unsigned int) mIterPerBatchSpin->value();
+    if (settings.mNumBatchIter < 1) {
+        errorMessage = QObject::tr("The number of the iteration in one batch of the adaptation must be bigger than 0");
+        isValided = false;
+    }
+
+    settings.mNumRunIter = mNumIterEdit->text().toUInt(&ok);
+    if (ok == false || settings.mNumRunIter < 10) {
+        errorMessage = QObject::tr("The number of the iteration in one run must be bigger than 10");
+        isValided = false;
+    }
+
+    settings.mThinningInterval = mDownSamplingEdit->text().toUInt(&ok);
+    if (ok == false || settings.mThinningInterval < 1 || settings.mThinningInterval > (unsigned int)floor(settings.mNumRunIter/10) ) {
+        errorMessage = QObject::tr("The thinning interval in one run must be bigger than 1 and smaller than ")
+                    + mLoc.toString((unsigned int)floor(settings.mNumRunIter/10));
+        isValided = false;
+     }
+
+    settings.mMixingLevel = mLoc.toDouble(mLevelEdit->text(), &ok);
+    if (ok == false || settings.mMixingLevel < 0.0001 || settings.mMixingLevel > 0.9999 ) {
+            errorMessage = QObject::tr("The number of the iteration in one run must be bigger than ")
+                        + mLoc.toString(0.0001) + QObject::tr( "and smaller than ")
+                        + mLoc.toString(0.9999);
+            isValided = false;
+     }
+
+    settings.mSeeds = stringListToIntList(mSeedsEdit->text(), ";");
+    for (auto seed : settings.mSeeds)
+        if (isnan(seed) || seed == 0) {
+            errorMessage = QObject::tr("Each seed must be an integer, bigger than 0");
+            isValided = false;
+        }
+
+
+    if (isValided)
+        emit inputValided();
+
+    else
+        QMessageBox::warning(this, tr("Invalid input"),
+                                   errorMessage,
+                                   QMessageBox::Ok ,
+                                   QMessageBox::Ok);
+
 }

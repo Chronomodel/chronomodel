@@ -8,7 +8,7 @@ class MCMCView: public QWidget
 {
     Q_OBJECT
 public:
-    MCMCView(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    MCMCView(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
     ~MCMCView();
 };
 

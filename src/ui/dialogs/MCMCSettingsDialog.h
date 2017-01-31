@@ -15,11 +15,18 @@ class MCMCSettingsDialog: public QDialog
 {
     Q_OBJECT
 public:
-    MCMCSettingsDialog(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    MCMCSettingsDialog(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
     virtual ~MCMCSettingsDialog();
 
     void setSettings(const MCMCSettings& settings);
     MCMCSettings getSettings();
+
+protected slots:
+    void inputControl();
+
+signals:
+    void inputValided();
+    void inputRejected();
 
 protected:
     void paintEvent(QPaintEvent* e);
