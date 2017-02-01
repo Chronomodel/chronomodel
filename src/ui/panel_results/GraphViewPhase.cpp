@@ -10,9 +10,7 @@
 #include "Button.h"
 #include <QtWidgets>
 
-
-
-#pragma mark Constructor / Destructor
+//pragma mark Constructor / Destructor
 
 GraphViewPhase::GraphViewPhase(QWidget *parent):GraphViewResults(parent),
 mPhase(nullptr)
@@ -42,23 +40,22 @@ mPhase(nullptr)
     mDurationGraph -> setBackgroundColor(QColor(210, 210, 210));
     
     mDurationGraph->setMargins(50, 10, 5, 30);
-    //mDurationGraph->setRangeY(0, 1);
+
     mDurationGraph->autoAdjustYScale(true);
     
     mDurationGraph->setVisible(false);
 
-    
     mShowDuration = new Button(tr("Show Duration"), this);
     mShowDuration->setCheckable(true);
     mShowDuration->setChecked(false);
     mShowDuration->setFlatHorizontal();
     connect(mShowDuration, &Button::toggled, this, &GraphViewPhase::showDuration);
-  //  connect(mShowDuration, &Button::toggled, this, &GraphViewPhase::durationDisplay);
+
     mButtonsVisible = true;
     mShowDuration->setVisible(mButtonsVisible);
 
     const qreal butInlineMaxH = 50.;
-    const qreal bw = mGraphLeft / 4;
+    const qreal bw = mGraphLeft / 4.;
     const qreal bh = (height() - mLineH)< butInlineMaxH ? height() - mLineH :butInlineMaxH;
 
     mImageSaveBut->setGeometry(0., mLineH, bw, bh);
@@ -66,7 +63,6 @@ mPhase(nullptr)
     mImageClipBut->setGeometry(2*bw, mLineH, bw, bh);
     mResultsClipBut->setGeometry(mGraphLeft-bw, mLineH, bw, bh);
     mShowDuration->setGeometry(0, mLineH + bh, mGraphLeft, bh);
-
 }
 
 GraphViewPhase::~GraphViewPhase()
@@ -311,6 +307,29 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->addCurve(curveBetaHPD);
 
         mGraph->setOverArrow(GraphView::eBothOverflow);
+
+        // ------------------------------------------------------------
+        //  Add zones outside study period
+        // ------------------------------------------------------------
+
+        GraphZone zoneMin;
+        zoneMin.mXStart = -INFINITY;
+        zoneMin.mXEnd = mSettings.getTminFormated();
+        zoneMin.mColor = QColor(217, 163, 69);
+        zoneMin.mColor.setAlpha(35);
+        zoneMin.mText = tr("Outside study period");
+        mGraph->addZone(zoneMin);
+
+        GraphZone zoneMax;
+        zoneMax.mXStart = mSettings.getTmaxFormated();
+        zoneMax.mXEnd = INFINITY;
+        zoneMax.mColor = QColor(217, 163, 69);
+        zoneMax.mColor.setAlpha(35);
+        zoneMax.mText = tr("Outside study period");
+        mGraph->addZone(zoneMax);
+
+
+
 
         GraphCurve curveDuration;
 

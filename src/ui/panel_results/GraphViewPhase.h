@@ -10,7 +10,9 @@ class GraphViewPhase: public GraphViewResults
 {
     Q_OBJECT
 public:
-    explicit GraphViewPhase(QWidget *parent = 0);
+    Button* mShowDuration; // must be visible by ResultsView to rescale duration
+
+    explicit GraphViewPhase(QWidget *parent = nullptr);
     virtual ~GraphViewPhase();
     
     void setPhase(Phase* phase);
@@ -36,8 +38,7 @@ protected slots:
     void showDuration(bool show);
     void saveGraphData() const; 
     
-private:
-    Button* mShowDuration;
+
 };
 
 #endif

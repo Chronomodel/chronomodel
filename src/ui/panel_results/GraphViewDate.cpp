@@ -167,6 +167,25 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                                                             color);
             mGraph->addCurve(curveCred);
 
+            // ------------------------------------------------------------
+            //  Add zones outside study period
+            // ------------------------------------------------------------
+
+            GraphZone zoneMin;
+            zoneMin.mXStart = -INFINITY;
+            zoneMin.mXEnd = mSettings.getTminFormated();
+            zoneMin.mColor = QColor(217, 163, 69);
+            zoneMin.mColor.setAlpha(35);
+            zoneMin.mText = tr("Outside study period");
+            mGraph->addZone(zoneMin);
+
+            GraphZone zoneMax;
+            zoneMax.mXStart = mSettings.getTmaxFormated();
+            zoneMax.mXEnd = INFINITY;
+            zoneMax.mColor = QColor(217, 163, 69);
+            zoneMax.mColor.setAlpha(35);
+            zoneMax.mText = tr("Outside study period");
+            mGraph->addZone(zoneMax);
         }
 
         /* ------------------------------------------------
