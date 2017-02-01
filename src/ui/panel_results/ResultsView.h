@@ -38,15 +38,24 @@ class ResultsView: public QWidget
 {
     Q_OBJECT
 public:
-    ResultsView(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    ResultsView(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
     ~ResultsView();
     
     double mResultZoomX;
     double mResultCurrentMinX;
     double mResultCurrentMaxX;
+
+    // avalable for Event
     double mResultMinX;
     double mResultMaxX;
+
+    // avalable for Date
+    double mResultMinDateX;
+    double mResultMaxDateX;
+
+    // avalable for Variance
     double mResultMaxVariance;
+
     bool mHasPhases;
     
     Model* mModel;
@@ -67,7 +76,6 @@ protected:
     void createEventsScrollArea(const int idx = 0);
     void createPhasesScrollArea(const int idx = 0);
     void generateCurves(const QList<GraphViewResults*>& listGraphs);
-
 
 public slots:
     void updateResults(Model* model = nullptr);
@@ -135,12 +143,8 @@ signals:
 
     
 private:
-    //QList<QRect> getGeometries(const QList<GraphViewResults*>& graphs, bool open, bool byPhases);
-    
-
     void clearHisto();
     void clearChainHistos();
-
     
     Ruler* mRuler;
     

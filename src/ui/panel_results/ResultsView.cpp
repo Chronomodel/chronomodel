@@ -59,8 +59,13 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
 {
     mResultMinX = mSettings.mTmin;
     mResultMaxX = mSettings.mTmax;
+
+    mResultMinDateX = mResultMinX;
+    mResultMaxDateX = mResultMaxX;
+
     mResultCurrentMinX = mResultMinX ;
     mResultCurrentMaxX = mResultMaxX ;
+
     mResultZoomX = 1.;
     
     QFont fontTitle (QApplication::font());
@@ -345,7 +350,7 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
     mFFTLenCombo->setCurrentText("1024");
     mFFTLenCombo->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     
-    mComboH = fm.height()+6;  //mFFTLenCombo->sizeHint().height();
+    mComboH = fm.height() + 6;  //mFFTLenCombo->sizeHint().height();
     mTabsH = mComboH + 2*mMargin;
     
     mBandwidthLab = new Label(tr("Bandwidth const."), mPostDistGroup);
@@ -1374,15 +1379,49 @@ void ResultsView::updateScales()
     /* ------------------------------------------
      *  Get X Range based on current options
      * ------------------------------------------*/
+    bool withDate (false);
     if (tabIdx == 0) {
         if (mDataThetaRadio->isChecked()) {
             mResultMinX = s.getTminFormated();
             mResultMaxX = s.getTmaxFormated();
+            // if we show date, we increase the span to be able to see the visible date over the study period
+            if (mPhasesScrollArea && mByPhasesBut->isChecked() && mShowDataUnderPhasesCheck->isVisible() && mShowDataUnderPhasesCheck->isChecked()) {
+                mResultMinDateX = mResultMinX;
+                mResultMaxDateX = mResultMaxX;
+                for (GraphViewResults* allGraph : mByPhasesGraphs) {
+                    const QList<GraphCurve>& allCurves = allGraph->mGraph->getCurves();
+                    for (auto&& curve : allCurves)
+                        if (curve.mVisible && curve.mData.size()>0) {
+                            mResultMinDateX = std::min(mResultMinDateX, curve.mData.firstKey());
+                            mResultMaxDateX = std::max(mResultMaxDateX, curve.mData.lastKey());
+                            withDate = true;
+                        }
+
+                }
+
+            } else if (mEventsScrollArea && mEventsScrollArea->isVisible() && mUnfoldBut->isChecked()) {
+                mResultMinDateX = mResultMinX;
+                mResultMaxDateX = mResultMaxX;
+                for (GraphViewResults* allGraph : mByEventsGraphs) {
+                    const QList<GraphCurve>& allCurves = allGraph->mGraph->getCurves();
+                    for (auto&& curve : allCurves)
+                        if (curve.mVisible && curve.mData.size()>0) {
+                            mResultMinDateX = std::min(mResultMinDateX, curve.mData.firstKey());
+                            mResultMaxDateX = std::max(mResultMaxDateX, curve.mData.lastKey());
+                            withDate = true;
+                        }
+
+                }
+
+            }
+
+
         } else if (mDataSigmaRadio->isChecked())  {
             mResultMinX = 0.;
             mResultMaxX = mResultMaxVariance;
-
         }
+
+
     } else if (tabIdx == 1 || tabIdx == 2) {
         mResultMinX = 0.;
         for (int i = 0; i < mChainRadios.size(); ++i) {
@@ -1428,17 +1467,25 @@ void ResultsView::updateScales()
      *  Set All Graphs Ranges (This is not done by generateCurves !)
      * -----------------------------------------------*/
     if (mByPhasesBut->isChecked()) {
-        for (GraphViewResults* phaseGraph : mByPhasesGraphs) {
-            phaseGraph->setRange(mResultMinX, mResultMaxX);
-            phaseGraph->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
-            phaseGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
+        for (GraphViewResults* allGraph : mByPhasesGraphs) {
+            if (withDate)
+                allGraph->setRange(mResultMinDateX, mResultMaxDateX);
+            else
+                allGraph->setRange(mResultMinX, mResultMaxX);
+
+            allGraph->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
+            allGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
         }
         //adjustDuration(true);
     } else
-        for (GraphViewResults* eventGraph : mByEventsGraphs) {
-            eventGraph->setRange(mResultMinX, mResultMaxX);
-            eventGraph->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
-            eventGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
+        for (GraphViewResults* allGraph : mByEventsGraphs) {
+            if (withDate)
+                allGraph->setRange(mResultMinDateX, mResultMaxDateX);
+            else
+                allGraph->setRange(mResultMinX, mResultMaxX);
+
+            allGraph->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
+            allGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
         }
     /* ------------------------------------------
      *  Set Zoom Slider & Zoom Edit
@@ -1455,7 +1502,11 @@ void ResultsView::updateScales()
      * ------------------------------------------*/
     mRuler->setFormatFunctX(stringWithAppSettings);
 
-    mRuler->setRange(mResultMinX, mResultMaxX);
+    if (withDate)
+        mRuler->setRange(mResultMinDateX, mResultMaxDateX);
+    else
+        mRuler->setRange(mResultMinX, mResultMaxX);
+
     mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
     
     /* ------------------------------------------
