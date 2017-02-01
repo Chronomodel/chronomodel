@@ -67,6 +67,7 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
     //fontTitle.setPointSizeF(QApplication::font().pointSizeF()*1.);
 
     QFont font(QApplication::font());
+    QFontMetricsF fm(font);
 
     mTabs = new Tabs(this);
     mTabs->addTab(tr("Posterior distrib."));
@@ -179,14 +180,16 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
     mDisplayTitle->setIsTitle(true);
     
     mCurrentXMinEdit = new LineEdit(mDisplayGroup);
+    mCurrentXMinEdit->setFont(font);
     mCurrentXMinEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
-    mCurrentXMinEdit->setAlignment(Qt::AlignHCenter);
-    mCurrentXMinEdit->setFixedSize(45, 15);
+    mCurrentXMinEdit->setAlignment(Qt::AlignHCenter);   
+    mCurrentXMinEdit->setFixedSize(60, fm.height()+2);
 
     mCurrentXMaxEdit = new LineEdit(mDisplayGroup);
+    mCurrentXMaxEdit->setFont(font);
     mCurrentXMaxEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mCurrentXMaxEdit->setAlignment(Qt::AlignHCenter);
-    mCurrentXMaxEdit->setFixedSize(45, 15);
+    mCurrentXMaxEdit->setFixedSize(60, fm.height()+2);
     
     
     mXScaleLab = new Label(tr("Zoom X"), mDisplayGroup);
@@ -223,19 +226,23 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
     mThicknessSpin = new QSpinBox();
     mThicknessSpin->setRange(1, 10);
     mThicknessSpin->setSuffix(" px");
+   // mThicknessSpin->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }"); // not supported
     connect(mThicknessSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::updateThickness);
     
     mOpacitySpin = new QSpinBox();
     mOpacitySpin->setRange(0, 100);
     mOpacitySpin->setValue(30);
     mOpacitySpin->setSuffix(" %");
+    //mOpacitySpin->setStyleSheet("QLineEdit { border-radius: 5px; }"); // not supported
+
     connect(mOpacitySpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::updateOpacity);
 
 
     // Grid : 8 columns
     QGridLayout* displayLayout = new QGridLayout();
     displayLayout->setContentsMargins(0, 0, 0, 0);
-    displayLayout->setSpacing(6);
+    displayLayout->setVerticalSpacing(6);
+    displayLayout->setHorizontalSpacing(2);
     displayLayout->addWidget(mCurrentXMinEdit, 0, 0, 1, 2);
     displayLayout->addWidget(mCurrentXMaxEdit, 0, 6, 1, 2);
     displayLayout->addWidget(mXScaleLab, 0, 2, 1, 4);
@@ -248,29 +255,27 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
     labOpacity = new Label(tr("Fill Opacity"));
     labRendering = new Label(tr("Rendering"));
     
-    /*labFont->setFont(mFont);
-    labThickness->setFont(mFont);
-    labOpacity->setFont(mFont);
-    labRendering->setFont(mFont);
-    */
     QFormLayout* displayForm = new QFormLayout();
+
     displayForm->setContentsMargins(0, 0, 0, 0);
-    displayForm->setSpacing(6);
     displayForm->addRow(labFont, mFontBut);
     displayForm->addRow(labThickness, mThicknessSpin);
     displayForm->addRow(labOpacity, mOpacitySpin);
     displayForm->addRow(labRendering, mRenderCombo);
-    
+    // Spacing must be done after addRow
+    displayForm->setHorizontalSpacing(10);
+    displayForm->setVerticalSpacing(0);
+
+    //-------
+
     QVBoxLayout* displayLayoutWrapper = new QVBoxLayout();
     displayLayoutWrapper->setContentsMargins(6, 6, 6, 6);
-    displayForm->setSpacing(0);
     displayLayoutWrapper->addLayout(displayLayout);
     displayLayoutWrapper->addLayout(displayForm);
     displayLayoutWrapper->addStretch();
     
     mDisplayGroup->setLayout(displayLayoutWrapper);
     mDisplayGroup->setFixedHeight(200);
-
     
     /* -------------------------------------- mChainsGroup---------------------------------------------------*/
     mChainsGroup = new QWidget();
@@ -313,6 +318,7 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
     mThreshLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     
     mHPDEdit = new LineEdit(mPostDistGroup);
+    mHPDEdit->setFont(font);
     mHPDEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mHPDEdit->setText("95");
     
@@ -324,6 +330,7 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
     
     mFFTLenLab = new Label(tr("Grid length"), mPostDistGroup);
     mFFTLenLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+
     mFFTLenCombo = new QComboBox(mPostDistGroup);
     mFFTLenCombo->addItem("32");
     mFFTLenCombo->addItem("64");
@@ -338,12 +345,13 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
     mFFTLenCombo->setCurrentText("1024");
     mFFTLenCombo->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     
-    mComboH = mFFTLenCombo->sizeHint().height();
+    mComboH = fm.height()+6;  //mFFTLenCombo->sizeHint().height();
     mTabsH = mComboH + 2*mMargin;
     
     mBandwidthLab = new Label(tr("Bandwidth const."), mPostDistGroup);
     mBandwidthLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mBandwidthEdit = new LineEdit(mPostDistGroup);
+    mBandwidthEdit->setFont(font);
     QLocale locale;
     mBandwidthEdit->setText(locale.toString(1.06));
     mBandwidthEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
