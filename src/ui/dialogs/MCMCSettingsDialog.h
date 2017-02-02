@@ -57,6 +57,16 @@ private:
     QRectF mBatch1Rect;
     QRectF mBatchInterRect;
     QRectF mBatchNRect;
+     // dimension
+    qreal mTotalWidth;
+    int mMargin;
+    qreal top;
+    qreal lineH;
+    qreal editW;
+    qreal w ;
+    qreal h; // size of the colored box
+    int butW ;
+    int butH ; // size of the button OK and Cancel
 };
 
 #endif

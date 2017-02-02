@@ -9,7 +9,15 @@
 
 
 MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, Qt::WindowFlags flags):
-QDialog(parent, flags)
+QDialog(parent, flags),
+  mTotalWidth(600),
+  mMargin(5),
+  top(65), // y position of the colored box
+  lineH(20),
+  editW(100.),
+  h (115.), // size of the colored box
+  butW(80),
+  butH(25)
 {
     setWindowTitle(tr("MCMC Options"));
     QFont font (QApplication::font());
@@ -73,7 +81,12 @@ QDialog(parent, flags)
 
     connect(mCancelBut, &Button::clicked, this, &MCMCSettingsDialog::reject);
     
-    setFixedSize(600, 320);
+
+    w = mTotalWidth - 2.*mMargin;
+
+    int fixedHeight = mHelp->heightForWidth(mTotalWidth - 2*mMargin)  + 3*mMargin + butH + lineH + h + top;
+
+    setFixedSize(mTotalWidth, fixedHeight);
 }
 
 MCMCSettingsDialog::~MCMCSettingsDialog()
@@ -178,45 +191,37 @@ void MCMCSettingsDialog::resizeEvent(QResizeEvent* e)
 
 void MCMCSettingsDialog::updateLayout()
 {
-    int m = 5;
-    qreal top = 65.;
-    qreal lineH = 20.;
-    qreal editW = 100.;
-    qreal w = width() - 2.*m;
-    qreal h = 115.;
-    int butW = 80;
-    int butH = 25;
-    
-    mBurnRect = QRectF(m, top, w * 0.2, h);
-    mAdaptRect = QRectF(m + mBurnRect.width(), top, w * 0.4, h);
-    mAquireRect = QRectF(m + mBurnRect.width() + mAdaptRect.width(), top, w * 0.4, h);
-    mBatch1Rect = QRectF(mAdaptRect.x() + m,
+    mBurnRect = QRectF(mMargin, top, w * 0.2, h);
+    mAdaptRect = QRectF(mMargin + mBurnRect.width(), top, w * 0.4, h);
+    mAquireRect = QRectF(mMargin + mBurnRect.width() + mAdaptRect.width(), top, w * 0.4, h);
+
+    mBatch1Rect = QRectF(mAdaptRect.x() + mMargin,
                          mAdaptRect.y() + lineH,
-                         (mAdaptRect.width() - 4*m) / 3,
-                         mAdaptRect.height() - 2*lineH - 2*m);
-    mBatchInterRect = mBatch1Rect.adjusted(mBatch1Rect.width() + m, 0, mBatch1Rect.width() + m, 0);
-    mBatchNRect = mBatch1Rect.adjusted(2*mBatch1Rect.width() + 2*m, 0, 2*mBatch1Rect.width() + 2*m, 0);
+                         (mAdaptRect.width() - 4*mMargin) / 3,
+                         mAdaptRect.height() - 2*lineH - 2*mMargin);
+    mBatchInterRect = mBatch1Rect.adjusted(mBatch1Rect.width() + mMargin, 0, mBatch1Rect.width() + mMargin, 0);
+    mBatchNRect = mBatch1Rect.adjusted(2*mBatch1Rect.width() + 2*mMargin, 0, 2*mBatch1Rect.width() + 2*mMargin, 0);
     
-    mNumProcEdit->setGeometry(width()/2 + m, 40, editW, lineH);
+    mNumProcEdit->setGeometry(width()/2 + mMargin, 40, editW, lineH);
     mNumBurnEdit->setGeometry(mBurnRect.x() + (mBurnRect.width() - editW)/2, mBurnRect.y() + 2*lineH, editW, lineH);
     mNumIterEdit->setGeometry(mAquireRect.x() + (mAquireRect.width() - editW)/2, mAquireRect.y() + 2*lineH, editW, lineH);
     mDownSamplingEdit->setGeometry(mAquireRect.x() + (mAquireRect.width() - editW)/2, mAquireRect.y() + 4*lineH, editW, lineH);
-    mIterPerBatchSpin->setGeometry(mBatch1Rect.x() + m, mBatch1Rect.y() + 2*lineH, mBatch1Rect.width() - 2*m, lineH);
-    mMaxBatchesEdit->setGeometry(mAdaptRect.x() + mAdaptRect.width()/2 + m, mAdaptRect.y() + mAdaptRect.height() - m - lineH, editW, lineH);
-    
-    mHelp->setGeometry(m,
-                       height() - 3*m - butH - lineH - mHelp->heightForWidth(width() - 2*m),
-                       width() - 2*m,
-                       mHelp->heightForWidth(width() - 2*m));
-    
-    mSeedsLab->setGeometry(width()/2 - m/2 - 300, height() - 2*m - butH - lineH, 200, lineH);
-    mSeedsEdit->setGeometry(width()/2 + m/2-100, height() - 2*m - butH - lineH, editW, lineH);
+    mIterPerBatchSpin->setGeometry(mBatch1Rect.x() + mMargin, mBatch1Rect.y() + 2*lineH, mBatch1Rect.width() - 2*mMargin, lineH);
+    mMaxBatchesEdit->setGeometry(mAdaptRect.x() + mAdaptRect.width()/2 + mMargin, mAdaptRect.y() + mAdaptRect.height() - mMargin - lineH, editW, lineH);
 
-    mLabelLevel->setGeometry(width()/2 + m/2+10, height() - 2*m - butH - lineH, editW, lineH);
-    mLevelEdit->setGeometry(width()/2 + m/2+120, height() - 2*m - butH - lineH, 50, lineH);
+    mHelp->setGeometry(mMargin,
+                       height() - 3*mMargin - butH - lineH - mHelp->heightForWidth(width() - 2*mMargin),
+                       width() - 2*mMargin,
+                       mHelp->heightForWidth(width() - 2*mMargin));
+
+    mSeedsLab->setGeometry(width()/2 - mMargin/2 - 300, height() - 2*mMargin - butH - lineH, 200, lineH);
+    mSeedsEdit->setGeometry(width()/2 + mMargin/2-100, height() - 2*mMargin - butH - lineH, editW, lineH);
+
+    mLabelLevel->setGeometry(width()/2 + mMargin/2+10, height() - 2*mMargin - butH - lineH, editW, lineH);
+    mLevelEdit->setGeometry(width()/2 + mMargin/2+120, height() - 2*mMargin - butH - lineH, 50, lineH);
     
-    mOkBut->setGeometry(width() - 2*m - 2*butW, height() - m - butH, butW, butH);
-    mCancelBut->setGeometry(width() - m - butW, height() - m - butH, butW, butH);
+    mOkBut->setGeometry(width() - 2*mMargin - 2*butW, height() - mMargin - butH, butW, butH);
+    mCancelBut->setGeometry(width() - mMargin - butW, height() - mMargin - butH, butW, butH);
 }
 
 void MCMCSettingsDialog::inputControl()
@@ -253,22 +258,23 @@ void MCMCSettingsDialog::inputControl()
     }
 
     settings.mNumRunIter = mNumIterEdit->text().toUInt(&ok);
-    if (ok == false || settings.mNumRunIter < 10) {
-        errorMessage = QObject::tr("The number of the iteration in one run must be bigger than 10");
+    if (ok == false || settings.mNumRunIter < 50) {
+        errorMessage = QObject::tr("The number of the iteration in one run must be bigger than 50");
         isValided = false;
     }
 
     settings.mThinningInterval = mDownSamplingEdit->text().toUInt(&ok);
-    if (ok == false || settings.mThinningInterval < 1 || settings.mThinningInterval > (unsigned int)floor(settings.mNumRunIter/10) ) {
+    if (ok == false || settings.mThinningInterval < 1 || settings.mThinningInterval > (unsigned int)floor(settings.mNumRunIter/40) ) {
         errorMessage = QObject::tr("The thinning interval in one run must be bigger than 1 and smaller than ")
-                    + mLoc.toString((unsigned int)floor(settings.mNumRunIter/10));
+                    + mLoc.toString((unsigned int)floor(settings.mNumRunIter/40));
         isValided = false;
      }
+
 
     settings.mMixingLevel = mLoc.toDouble(mLevelEdit->text(), &ok);
     if (ok == false || settings.mMixingLevel < 0.0001 || settings.mMixingLevel > 0.9999 ) {
             errorMessage = QObject::tr("The number of the iteration in one run must be bigger than ")
-                        + mLoc.toString(0.0001) + QObject::tr( "and smaller than ")
+                        + mLoc.toString(0.0001) + QObject::tr( " and smaller than ")
                         + mLoc.toString(0.9999);
             isValided = false;
      }
