@@ -11,7 +11,7 @@ class PluginAMLoop: public MCMCLoop
 {
     Q_OBJECT
 public:
-    PluginAMLoop(const Date* date);
+    PluginAMLoop(const Date* date, const ProjectSettings& settings);
     ~PluginAMLoop();
     
 protected:
@@ -23,6 +23,7 @@ protected:
     virtual void finalize();
     
     const Date* mDate;
+    const ProjectSettings mSettings;
     
     MHVariable mT;
     MHVariable mSigma2;

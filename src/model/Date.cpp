@@ -335,7 +335,6 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
                 
                 repartitionTemp.append((double)rep);
                 lastRepVal = rep;
-                
             }
             
             // ------------------------------------------------------------------
@@ -380,7 +379,6 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
             
             mCalibration->mTmin = tminCal;
             mCalibration->mTmax = tmaxCal;
-            
         }
         else {
             // Impossible to calibrate because the plugin could not return any calib curve definition period.
@@ -413,7 +411,7 @@ void Date::calibrate(const ProjectSettings& settings, Project *project)
         //  MCMC Calibration loop
         // ------------------------------------------------------------------
         if(!mMCMCLoop){
-            mMCMCLoop = mPlugin->createMCMCLoopForDate(this);
+            mMCMCLoop = mPlugin->createMCMCLoopForDate(this, mSettings);
         }
         else{
             // TODO : clean previous loop ??

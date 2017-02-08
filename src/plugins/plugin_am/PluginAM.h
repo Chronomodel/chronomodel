@@ -39,6 +39,8 @@ public:
     bool withLikelihoodArg() {return true; }
     QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);
     
+    long double getLikelihoodForMode(const double& t, const QJsonObject& data, const QString& mode);
+    
     QString getName() const;
     QIcon getIcon() const;
     bool doesCalibration() const;
@@ -51,7 +53,7 @@ public:
     QJsonObject checkValuesCompatibility(const QJsonObject& values);
     
     Date::CalibrationType getDateCalibrationType(const QJsonObject& data);
-    MCMCLoop* createMCMCLoopForDate(const Date* date);
+    MCMCLoop* createMCMCLoopForDate(const Date* date, const ProjectSettings& settings);
     QString getDateDesc(const Date* date) const;
     
     PluginFormAbstract* getForm();

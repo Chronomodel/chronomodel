@@ -79,7 +79,7 @@ public:
     }
     
     virtual Date::CalibrationType getDateCalibrationType(const QJsonObject& data) {return Date::eStandard;}
-    virtual MCMCLoop* createMCMCLoopForDate(const Date* date) {return 0;}
+    virtual MCMCLoop* createMCMCLoopForDate(const Date* date, const ProjectSettings& settings) {return 0;}
     
     // Function to check if data values are ok : depending on the application version, plugin data values may change.
     // eg. : a new parameter may be added to 14C plugin, ...

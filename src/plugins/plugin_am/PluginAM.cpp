@@ -26,6 +26,58 @@ PluginAM::~PluginAM()
 }
 
 #pragma mark Likelihood
+long double PluginAM::getLikelihoodForMode(const double& t, const QJsonObject& data, const QString& mode)
+{
+    // ----------------------------------
+    //  Read values
+    // ----------------------------------
+    long double i = (long double) data.value(DATE_AM_I).toDouble();
+    long double d = (long double) data.value(DATE_AM_D).toDouble();
+    long double f = (long double) data.value(DATE_AM_F).toDouble();
+    
+    long double alpha95 = (long double) data.value(DATE_AM_ALPHA_95).toDouble();
+    long double sigmaF = (long double) data.value(DATE_AM_SIGMA_F).toDouble();
+    
+    QString curveI = data.value(DATE_AM_CURVE_I).toString().toLower();
+    QString curveD = data.value(DATE_AM_CURVE_D).toString().toLower();
+    QString curveF = data.value(DATE_AM_CURVE_F).toString().toLower();
+    
+    // ---------------------------------------
+    //  Get likelihood for modes I, D, F
+    // ---------------------------------------
+    long double m = 0;
+    long double s = 0;
+    long double g = 0;
+    long double ge = 0;
+  
+    if(mode == DATE_AM_MODE_I)
+    {
+        m = i;
+        s = alpha95 / 2.448l;
+        g = getRefCurveValueAt(curveI, t);
+        ge = getRefCurveErrorAt(curveI, t);
+    }
+    else if(mode == DATE_AM_MODE_D)
+    {
+        m = d;
+        s = alpha95 / (2.448l * cosl(i * M_PI / 180.l));
+        g = getRefCurveValueAt(curveD, t);
+        ge = getRefCurveErrorAt(curveD, t);
+    }
+    else if(mode == DATE_AM_MODE_F)
+    {
+        m = f;
+        s = sigmaF;
+        g = getRefCurveValueAt(curveF, t);
+        ge = getRefCurveErrorAt(curveF, t);
+    }
+    long double v = s * s + ge * ge; // variance
+    long double w = 1 / v;
+    long double e = -0.5l * w * (m - g) * (m - g); // exponent
+    
+    return expl(e) / sqrt(v);
+}
+
 long double PluginAM::getLikelihood(const double& t, const QJsonObject& data)
 {
     // ----------------------------------
@@ -49,38 +101,7 @@ long double PluginAM::getLikelihood(const double& t, const QJsonObject& data)
     // ---------------------------------------
     if(mode == DATE_AM_MODE_I || mode == DATE_AM_MODE_D || mode == DATE_AM_MODE_F)
     {
-        long double m = 0;
-        long double s = 0;
-        long double g = 0;
-        long double ge = 0;
-        
-        if(mode == DATE_AM_MODE_I)
-        {
-            m = i;
-            s = alpha95 / 2.448l;
-            g = getRefCurveValueAt(curveI, t);
-            ge = getRefCurveErrorAt(curveI, t);
-            
-        }
-        else if(mode == DATE_AM_MODE_D)
-        {
-            m = d;
-            s = alpha95 / (2.448l * cosl(i * M_PI / 180.l));
-            g = getRefCurveValueAt(curveD, t);
-            ge = getRefCurveErrorAt(curveD, t);
-        }
-        else if(mode == DATE_AM_MODE_F)
-        {
-            m = f;
-            s = sigmaF;
-            g = getRefCurveValueAt(curveF, t);
-            ge = getRefCurveErrorAt(curveF, t);
-        }
-        long double v = s * s + ge * ge; // variance
-        long double w = 1 / v;
-        long double e = -0.5l * w * (m - g) * (m - g); // exponent
-        
-        return expl(e) / sqrt(v);
+        return getLikelihoodForMode(t, data, mode);
     }
     // ---------------------------------------
     //  Get likelihood for modes ID, IF, IDF
@@ -93,7 +114,7 @@ long double PluginAM::getLikelihood(const double& t, const QJsonObject& data)
             long double si = alpha95 / 2.448l;
             long double gi = getRefCurveValueAt(curveI, t);
             long double gei = getRefCurveErrorAt(curveI, t);
-            long double soi = 0;
+            long double soi = si;
             long double vi = si * si + gei * gei + soi * soi; // variance
             long double wi = 1 / vi;
             long double ei = -0.5l * wi * (mi - gi) * (mi - gi); // exponent
@@ -358,14 +379,14 @@ Date::CalibrationType PluginAM::getDateCalibrationType(const QJsonObject& data)
     }
 }
 
-MCMCLoop* PluginAM::createMCMCLoopForDate(const Date* date)
+MCMCLoop* PluginAM::createMCMCLoopForDate(const Date* date, const ProjectSettings& settings)
 {
     if(date)
     {
         QJsonObject data = date->mData;
         QString mode = data.value(DATE_AM_MODE).toString();
         if(mode == DATE_AM_MODE_ID || mode == DATE_AM_MODE_IF || mode == DATE_AM_MODE_IDF){
-            return new PluginAMLoop(date);
+            return new PluginAMLoop(date, settings);
         }
     }
     return 0;
