@@ -928,7 +928,7 @@ double fProposalDensity(const double t, const double t0, Date* date)
     const double tmin = date->mSettings.mTmin;
     const double tmax = date->mSettings.mTmax;
     const double level = date->mMixingLevel;
-    double q1 = 0;
+    double q1 (0.);
 
     const double tminCalib = date->mCalibration->mTmin;
     const double tmaxCalib = date->mCalibration->mTmax;
@@ -943,7 +943,7 @@ double fProposalDensity(const double t, const double t0, Date* date)
         //double step =(tmax-tmin+1)/date->mRepartition.size();
         const double step = date->mSettings.mStep;
 
-        q1 = (date->mCalibration->mRepartition[idxUnder+1]-date->mCalibration->mRepartition[idxUnder])/step;
+        q1 = (date->mCalibration->mRepartition[idxUnder+1] - date->mCalibration->mRepartition[idxUnder])/step;
     }
     /// ----q2 shrinkage-----------
     /*double t0 =(tmax+tmin)/2;
