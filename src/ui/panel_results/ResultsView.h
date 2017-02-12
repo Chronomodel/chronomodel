@@ -50,8 +50,8 @@ public:
     double mResultMaxX;
 
     // avalable for Date
-    double mResultMinDateX;
-    double mResultMaxDateX;
+    //double mResultMinDateX;
+    //double mResultMaxDateX;
 
     // avalable for Variance
     double mResultMaxVariance;
@@ -106,9 +106,13 @@ private slots:
     void updateScroll(const double min, const double max); // Connected to ruler signals
     void editCurrentMinX(); // Connected to min edit signals
     void editCurrentMaxX(); // Connected to max edit signals
+    void setStudyPeriod(); // connected to study button
     void updateZoomEdit();
     void updateGraphsZoomX();
     
+    void setXScaleSpin(int); // connected to mXScaleSpin
+    void setXScaleSlide(const int);
+    void updateScaleX();
     void updateScaleY(int value);
     
     void updateFont();
@@ -128,7 +132,6 @@ private slots:
     void setBandwidth();
     void setThreshold();
 
-    
 signals:
    
     void curvesGenerated();
@@ -141,21 +144,25 @@ signals:
     void updateScrollAreaRequested();
     void generateCurvesRequested();
 
+    void xSpinUpdate(const int value);
+    void xSlideUpdate(const int value);
+
     
 private:
     void clearHisto();
     void clearChainHistos();
     
     Ruler* mRuler;
-    
 
     ProjectSettings mSettings;
     MCMCSettings mMCMCSettings;
     QList<ChainSpecs> mChains;
     
+    // used for options side
     int mMargin;
     int mOptionsW;
     int mLineH;
+    //used for graph
     int mGraphLeft;
     int mRulerH;
     int mTabsH;
@@ -164,9 +171,9 @@ private:
     Tabs* mTabs;
     int mTabEventsIndex;
     int mTabPhasesIndex;
-    //Ruler* mRuler;
+
     Marker* mMarker;
-    
+
     QStackedWidget* mStack;
     QScrollArea* mEventsScrollArea;
     QScrollArea* mPhasesScrollArea;
@@ -191,40 +198,66 @@ private:
     Button* mNextSheetBut;
     Button* mPreviousSheetBut;
     
-    // ------ mDisplayGroup -----
-   // QWidget* mScaleGroup;
-    Label* mDisplayTitle;
-    QWidget* mDisplayGroup;
-    Label* mXScaleLab;
-    Label* mYScaleLab;
-    QSlider* mXSlider;
-    QSlider* mYSlider;
+    // ------ Span Options -----
+    QWidget* mSpanGroup;
+    Label* mSpanTitle;
+
+    Button* mDisplayStudyBut;
+    Label* mSpanLab;
     LineEdit* mCurrentXMinEdit;
     LineEdit* mCurrentXMaxEdit;
-    
+
+    Label* mXScaleLab;
+    QSlider* mXSlider;
+    QSpinBox* mXScaleSpin;
+    /* used to controle the signal XScaleSpin::valueChanged () when we need to change the value
+     * xScaleChanged(int value)
+     * emit xScaleUpdate(value);
+     */
+    bool forceXSpinSetValue;
+    bool forceXSlideSetValue;
+
+    // ------ Graphic options - (old mDisplayGroup) -----
+    QWidget* mGraphicGroup;
+    Label* mGraphicTitle;
+
+    Label* mYScaleLab;
+
+    QSlider* mYSlider;
+    QSpinBox* mYScaleSpin;
+
     QFont mFont;
-    QPushButton* mFontBut;
+    Button* mFontBut;
     QSpinBox* mThicknessSpin;
     QSpinBox* mOpacitySpin;
     QComboBox* mRenderCombo;
     
-    
-    Label* mChainsTitle;
+    Label* labFont;
+    Label* labThickness;
+    Label* labOpacity;
+    Label* labRendering;
+    //------------ MCMC Chains---------
     QWidget* mChainsGroup;
+    Label* mChainsTitle;
+
     CheckBox* mAllChainsCheck;
     QList<CheckBox*> mCheckChainChecks;
     QList<RadioButton*> mChainRadios;
     
-    Label* mResultsTitle;
+    //------------ Posterior distrib.---------
     QWidget* mResultsGroup;
+    Label* mResultsTitle;
+
     RadioButton* mDataThetaRadio;
     
     CheckBox* mDataCalibCheck;
     CheckBox* mWiggleCheck;
     RadioButton* mDataSigmaRadio;
     
-    Label* mPostDistOptsTitle;
+    //--------- Post. distrib. option
     QWidget* mPostDistGroup;
+    Label* mPostDistOptsTitle;
+
     Label* mThreshLab;
     CheckBox* mCredibilityCheck;
     LineEdit* mHPDEdit;
@@ -233,11 +266,6 @@ private:
     Label* mBandwidthLab;
     LineEdit* mBandwidthEdit;
     Button* mUpdateDisplay;
-    
-    Label* labFont;
-    Label* labThickness;
-    Label* labOpacity;
-    Label* labRendering;
 
     int mComboH;
     

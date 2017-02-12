@@ -47,11 +47,13 @@ mLineH(15),
 mGraphLeft(130),
 mRulerH(40),
 mTabsH(30),
-mGraphsH(130),
+mGraphsH(150),
 mTabEventsIndex(0),
 mTabPhasesIndex(0),
 mEventsScrollArea(nullptr),
 mPhasesScrollArea(nullptr),
+forceXSpinSetValue(false),
+forceXSlideSetValue(false),
 mCurrentTypeGraph(GraphViewResults::ePostDistrib), //mTabs=0
 mBandwidthUsed(1.06),
 mThresholdUsed(95.0),
@@ -60,13 +62,10 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
     mResultMinX = mSettings.mTmin;
     mResultMaxX = mSettings.mTmax;
 
-    mResultMinDateX = mResultMinX;
-    mResultMaxDateX = mResultMaxX;
-
     mResultCurrentMinX = mResultMinX ;
     mResultCurrentMaxX = mResultMaxX ;
 
-    mResultZoomX = 1.;
+    mResultZoomX = 100.;
     
     QFont fontTitle (QApplication::font());
     //fontTitle.setPointSizeF(QApplication::font().pointSizeF()*1.);
@@ -85,16 +84,9 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
     
     mStack = new QStackedWidget(this);
     
-    // Make when we need it, within createEventsScrollArea and within createPhasesScrollArea
- /*   mEventsScrollArea = new QScrollArea();
-    mEventsScrollArea->setMouseTracking(true);
-    mStack->addWidget(mEventsScrollArea);
-    mEventsWidget = new QWidget(mEventsScrollArea);
-    mEventsWidget->setMouseTracking(true);
-  */
-   /* mPhasesScrollArea = new QScrollArea();
-    mPhasesScrollArea->setMouseTracking(true);
-    mStack->addWidget(mPhasesScrollArea);*/
+    /* mEventsScrollArea and mPhasesScrollArea are made when we need it,
+     *  within createEventsScrollArea and within createPhasesScrollArea
+     */
     
     mMarker = new Marker(this);
     
@@ -139,33 +131,27 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
    // mPreviousSheetBut->setIcon(QIcon(":unfold.png"));
     mPreviousSheetBut->setToolTip(tr("Display other data"));
 
+    mOptionsWidget = new QWidget(this); // this is the parent of group of widget on the rigth of the panel
 
-    mStatsBut = new Button(tr("Stats"));
+    mStatsBut = new Button(tr("Stats"), mOptionsWidget);
     mStatsBut->setCheckable(true);
     mStatsBut->setFlatHorizontal();
     mStatsBut->setIcon(QIcon(":stats_w.png"));
     mStatsBut->setFixedHeight(50);
     mStatsBut->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
     
-    mExportResults = new Button(tr("Results"));
+    mExportResults = new Button(tr("Results"), mOptionsWidget);
     mExportResults->setFlatHorizontal();
     mExportResults->setIcon(QIcon(":csv.png"));
     mExportResults->setFixedHeight(50);
 
     
-    mExportImgBut = new Button(tr("Capture"));
+    mExportImgBut = new Button(tr("Capture"), mOptionsWidget);
     mExportImgBut->setFlatHorizontal();
     mExportImgBut->setIcon(QIcon(":picture_save.png"));
     mExportImgBut->setFixedHeight(50);
     mExportImgBut->setToolTip(tr("Save all currently visible results as an image.<br><u>Note</u> : If you want to copy textual results, see the Log tab."));
-    
-    QHBoxLayout* displayButsLayout = new QHBoxLayout();
-    displayButsLayout->setContentsMargins(0, 0, 0, 0);
-    displayButsLayout->setSpacing(0);
-    displayButsLayout->addWidget(mStatsBut);
-    displayButsLayout->addWidget(mExportImgBut);
-    displayButsLayout->addWidget(mExportResults);
-    
+
     
     mRuler = new Ruler(this);
     mRuler->mMarginLeft = 50;
@@ -176,129 +162,183 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
     mRuler->mCurrentMax = mSettings.mTmax;
     mRuler->mCurrentMin = mSettings.mTmin;
 
-    
-    /* -------------------------------------- mDisplayGroup---------------------------------------------------*/
-    mDisplayGroup = new QWidget();
-    mDisplayGroup->setFont(font);
-    
-    mDisplayTitle = new Label(tr("Display Options"));
-    mDisplayTitle->setIsTitle(true);
-    
-    mCurrentXMinEdit = new LineEdit(mDisplayGroup);
+    /* ----------------------------------------------------------
+     *  Display Options layout
+     * ----------------------------------------------------------*/
+    const int wBut = (int)ceil(mOptionsW/3.);
+    mStatsBut->setGeometry(0, 0, wBut, mStatsBut->height());
+    mExportImgBut->setGeometry(wBut, 0, wBut, mStatsBut->height());
+    mExportResults->setGeometry(mOptionsW - wBut, 0, wBut, mStatsBut->height());
+
+    // ------ Span Options -----
+    mSpanTitle = new Label(tr("Span Options"), mOptionsWidget);
+    mSpanTitle->setIsTitle(true);
+    mSpanTitle->setFixedWidth(mOptionsW);
+
+    mSpanGroup  = new QWidget(mOptionsWidget);
+    mSpanGroup->setFont(font);
+
+    mDisplayStudyBut = new Button(tr("Study Period Display"), mSpanGroup);
+    mDisplayStudyBut->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+    mDisplayStudyBut->setFont(font);
+    mDisplayStudyBut->setFixedSize(mOptionsW, fm.height()+5);
+
+    mSpanLab = new Label(tr("Span"), mSpanGroup);
+    mSpanLab->setFixedSize(fm.width(mSpanLab->text()), fm.height()+2);
+
+    mCurrentXMinEdit = new LineEdit(mSpanGroup);
     mCurrentXMinEdit->setFont(font);
     mCurrentXMinEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
-    mCurrentXMinEdit->setAlignment(Qt::AlignHCenter);   
-    mCurrentXMinEdit->setFixedSize(60, fm.height()+2);
+    mCurrentXMinEdit->setAlignment(Qt::AlignHCenter);
+    mCurrentXMinEdit->setFixedSize(wBut, fm.height()+2);
 
-    mCurrentXMaxEdit = new LineEdit(mDisplayGroup);
+    mCurrentXMaxEdit = new LineEdit(mSpanGroup);
     mCurrentXMaxEdit->setFont(font);
     mCurrentXMaxEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mCurrentXMaxEdit->setAlignment(Qt::AlignHCenter);
-    mCurrentXMaxEdit->setFixedSize(60, fm.height()+2);
-    
-    
-    mXScaleLab = new Label(tr("Zoom X"), mDisplayGroup);
-    mYScaleLab = new Label(tr("Zoom Y"), mDisplayGroup);
-    
-    mXScaleLab->setAlignment(Qt::AlignCenter);
-    mYScaleLab->setAlignment(Qt::AlignCenter);
-    
-    mXSlider = new QSlider(Qt::Horizontal,mDisplayGroup);
-    mXSlider->setRange(0, 100);
-    mXSlider->setTickInterval(1);
-    
-    mYSlider = new QSlider(Qt::Horizontal,mDisplayGroup);
-    mYSlider->setRange(0, 100);
-    mYSlider->setTickInterval(1);
-    mYSlider->setValue(13);
-    
-    
-       /*  keep in memory
-    mUpdateDisplay = new Button(tr("Update display"),mScaleGroup);
-    mUpdateDisplay->mUseMargin = true;
-    
-    connect(mUpdateDisplay, SIGNAL(clicked()), this, SLOT(updateModel()));
-   */
+    mCurrentXMaxEdit->setFixedSize(wBut, fm.height()+2);
 
-    mRenderCombo = new QComboBox();
+    mXScaleLab = new Label(tr("X"), mSpanGroup);
+    mXScaleLab->setAlignment(Qt::AlignCenter);
+    mXScaleLab->setFixedWidth(fm.width(mXScaleLab->text()));
+
+    mXSlider = new QSlider(Qt::Horizontal, mSpanGroup);
+    mXSlider->setRange(10, 300);
+    mXSlider->setTickInterval(1);
+    mXSlider->setValue(100);
+
+    mXScaleSpin = new QSpinBox(mSpanGroup);
+    mXScaleSpin->setRange(mXSlider->minimum(), mXSlider->maximum());
+    mXScaleSpin->setSuffix(" %");
+    mXScaleSpin->setValue(mXSlider->value());
+    mXScaleSpin->setFixedSize(mCurrentXMinEdit->width(), fm.height()+ 5);
+
+
+    /* -------------------------------------- GraphicDisplay (old mDisplayGroup) ---------------------------------------------------*/
+
+    
+    mGraphicTitle = new Label(tr("Graphic Options"), mOptionsWidget);
+    mGraphicTitle->setIsTitle(true);
+    mGraphicTitle->setFixedWidth(mOptionsW);
+
+    mGraphicGroup = new QWidget(mOptionsWidget);
+    mGraphicGroup->setFont(font);
+
+    mYScaleLab = new Label(tr("Y"), mGraphicGroup);
+    mYScaleLab->setAlignment(Qt::AlignCenter);
+    mYScaleLab->setFixedWidth(fm.width(mYScaleLab->text()));
+
+    mYSlider = new QSlider(Qt::Horizontal, mGraphicGroup);
+    mYSlider->setRange(10, 300);
+    mYSlider->setTickInterval(1);
+    mYSlider->setValue(100);
+
+    
+    mYScaleSpin = new QSpinBox(mGraphicGroup);
+    mYScaleSpin->setRange(mYSlider->minimum(), mYSlider->maximum());
+    mYScaleSpin->setSuffix(" %");
+    mYScaleSpin->setValue(mYSlider->value());
+    mYScaleSpin->setFixedSize(mCurrentXMinEdit->width(), fm.height()+ 5);
+
+    labRendering = new Label(tr("Rendering"), mGraphicGroup);
+    labRendering->setFixedSize(fm.width(labRendering->text()), fm.height()+2);
+
+    mRenderCombo = new QComboBox(mGraphicGroup);
     mRenderCombo->addItem(tr("Standard (faster)"));
     mRenderCombo->addItem(tr("Retina (slower)"));
+    mRenderCombo->setFixedSize(fm.width(tr("Retina (slower)")), fm.height()+ 5);
     
+
+    labFont = new Label(tr("Font"), mGraphicGroup);
+    labFont->setFixedSize(fm.width(labFont->text()), fm.height()+2);
+
     mFont.setPointSize(QApplication::font().pointSize());
-    mFontBut = new QPushButton(mFont.family());
+    mFontBut = new Button(mFont.family(), mGraphicGroup);
+    mFontBut->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+    mFontBut->setFixedSize(mOptionsW/2 - mMargin, fm.height()+ 5);
     connect(mFontBut, &QPushButton::clicked, this, &ResultsView::updateFont);
     
-    mThicknessSpin = new QSpinBox();
+    labThickness = new Label(tr("Thickness"), mGraphicGroup);
+    labThickness->setFixedSize(fm.width(labThickness->text()), fm.height() + 5);
+
+    mThicknessSpin = new QSpinBox(mGraphicGroup);
     mThicknessSpin->setRange(1, 10);
     mThicknessSpin->setSuffix(" px");
+    mThicknessSpin->setFixedSize(wBut, fm.height() + 5 );
+
    // mThicknessSpin->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }"); // not supported
     connect(mThicknessSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::updateThickness);
     
-    mOpacitySpin = new QSpinBox();
+    labOpacity = new Label(tr("Fill Opacity"), mGraphicGroup);
+    labOpacity->setFixedSize(fm.width(labOpacity->text()), fm.height() + 5);
+
+    mOpacitySpin = new QSpinBox(mGraphicGroup);
     mOpacitySpin->setRange(0, 100);
     mOpacitySpin->setValue(30);
     mOpacitySpin->setSuffix(" %");
+    mOpacitySpin->setFixedHeight(fm.height() + 5 );
     //mOpacitySpin->setStyleSheet("QLineEdit { border-radius: 5px; }"); // not supported
 
     connect(mOpacitySpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::updateOpacity);
+    /* ------------------ Graphic option ----------------*/
+    int ySpan = mMargin ;
+    mGraphicTitle->move(0, mSpanTitle->y() + mSpanTitle->height() + mSpanGroup->height());
 
+    int heiTemp = mYScaleSpin->height();
+    ySpan = mMargin ;
+    mYScaleLab->move(mMargin, ySpan);
+    mYScaleSpin->move(mOptionsW - mYScaleSpin->width() - mMargin, ySpan);
+    const int ySliderWidth = mOptionsW - mYScaleLab->width() - mYScaleSpin->width() - 4*mMargin;
+    mYSlider->setGeometry(mXScaleLab->x() + mXScaleLab->width() + mMargin , ySpan, ySliderWidth, heiTemp );
 
-    // Grid : 8 columns
-    QGridLayout* displayLayout = new QGridLayout();
-    displayLayout->setContentsMargins(0, 0, 0, 0);
-    displayLayout->setVerticalSpacing(6);
-    displayLayout->setHorizontalSpacing(2);
-    displayLayout->addWidget(mCurrentXMinEdit, 0, 0, 1, 2);
-    displayLayout->addWidget(mCurrentXMaxEdit, 0, 6, 1, 2);
-    displayLayout->addWidget(mXScaleLab, 0, 2, 1, 4);
-    displayLayout->addWidget(mXSlider, 1, 0, 1, 8);
-    displayLayout->addWidget(mYScaleLab, 2, 0, 1, 8);
-    displayLayout->addWidget(mYSlider, 3, 0, 1, 8);
-    
-    labFont = new Label(tr("Font"));
-    labThickness = new Label(tr("Thickness"));
-    labOpacity = new Label(tr("Fill Opacity"));
-    labRendering = new Label(tr("Rendering"));
-    
-    QFormLayout* displayForm = new QFormLayout();
+    ySpan += mMargin + heiTemp;
+    labFont->move(mMargin, ySpan);
+    mFontBut->move(mOptionsW/2, ySpan );
 
-    displayForm->setContentsMargins(0, 0, 0, 0);
-    displayForm->addRow(labFont, mFontBut);
-    displayForm->addRow(labThickness, mThicknessSpin);
-    displayForm->addRow(labOpacity, mOpacitySpin);
-    displayForm->addRow(labRendering, mRenderCombo);
-    // Spacing must be done after addRow
-    displayForm->setHorizontalSpacing(10);
-    displayForm->setVerticalSpacing(0);
+    ySpan += mMargin + mFontBut->height();
+    labThickness->move(mMargin, ySpan);
+    mThicknessSpin->move(mOptionsW/2, ySpan);
 
-    //-------
+    ySpan += mMargin + mThicknessSpin->height();
+    labOpacity->move(mMargin, ySpan);
+    mOpacitySpin->setGeometry(mOptionsW/2, ySpan, mCurrentXMinEdit->width(), mOpacitySpin->height());
 
-    QVBoxLayout* displayLayoutWrapper = new QVBoxLayout();
-    displayLayoutWrapper->setContentsMargins(6, 6, 6, 6);
-    displayLayoutWrapper->addLayout(displayLayout);
-    displayLayoutWrapper->addLayout(displayForm);
-    displayLayoutWrapper->addStretch();
-    
-    mDisplayGroup->setLayout(displayLayoutWrapper);
-    mDisplayGroup->setFixedHeight(200);
+    ySpan += mMargin + mOpacitySpin->height();
+    labRendering->move(mMargin, ySpan);
+    mRenderCombo->move(mOptionsW/2, ySpan);
+
+    // fit the size and the position of the widget of the group in the mOptionsWidget coordonnate
+    ySpan += mMargin + mRenderCombo->height();
+    mGraphicGroup->setGeometry(mGraphicTitle->x(), mGraphicTitle->y()+ mGraphicTitle->height() , mOptionsW, ySpan);
+
     
     /* -------------------------------------- mChainsGroup---------------------------------------------------*/
-    mChainsGroup = new QWidget();
     
-    mChainsTitle = new Label(tr("MCMC Chains"));
+    mChainsTitle = new Label(tr("MCMC Chains"), mOptionsWidget);
     mChainsTitle->setIsTitle(true);
-    
+    mChainsTitle->setFixedWidth(mOptionsW);
+    mChainsTitle->setFixedHeight(20);
+
+    mChainsGroup = new QWidget(mOptionsWidget);
+
     mAllChainsCheck = new CheckBox(tr("Chains concatenation"), mChainsGroup);
     mAllChainsCheck->setChecked(true);
-    mChainsGroup->setFixedHeight(2*mMargin + mLineH);
+
+    /*
+     * QList<CheckBox*> mCheckChainChecks;
+     * QList<RadioButton*> mChainRadios;
+     * mCheckChainChecks and mChainRadios are created in  initResults() they are children of mChainsGroup
+    */
     
     /* -------------------------------------- mResultsGroup---------------------------------------------------*/
+    mResultsTitle = new Label(tr("Results options"), mOptionsWidget);
+    mResultsTitle->setIsTitle(true);
+    mResultsTitle->setFixedWidth(mOptionsW);
 
-    mResultsGroup = new QWidget();
+    mResultsGroup = new QWidget(mOptionsWidget);
+    //mResultsGroup->setFixedWidth(mOptionsW);
     
-    mResultsTitle = new Label(tr("Results options"));
-    mResultsTitle->setIsTitle(true); 
-    
+
     mDataThetaRadio = new RadioButton(tr("Calendar dates"), mResultsGroup);
     mDataSigmaRadio = new RadioButton(tr("Individual std. deviations"), mResultsGroup);
     
@@ -313,9 +353,11 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
    
     /* -------------------------------------- mPostDistGroup ---------------------------------------------------*/
     
-    mPostDistOptsTitle = new Label(tr("Post. distrib. options"));
+    mPostDistOptsTitle = new Label(tr("Post. distrib. options"), mOptionsWidget);
     mPostDistOptsTitle->setIsTitle(true);
-    mPostDistGroup = new QWidget();
+    mPostDistOptsTitle->setFixedWidth(mOptionsW);
+
+    mPostDistGroup = new QWidget(mOptionsWidget);
     
     mCredibilityCheck = new CheckBox(tr("Show credibility"), mPostDistGroup);
     mCredibilityCheck->setChecked(true);
@@ -361,28 +403,8 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
     mBandwidthEdit->setText(locale.toString(1.06));
     mBandwidthEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     
-    // -------------------------
-    
-    mOptionsWidget = new QWidget(this);
-    
-    QVBoxLayout* optionsLayout = new QVBoxLayout();
-    optionsLayout->setContentsMargins(0, 0, 0, 0);
-    optionsLayout->setSpacing(0);
-    optionsLayout->addLayout(displayButsLayout);
-    optionsLayout->addWidget(mDisplayTitle);
-    optionsLayout->addWidget(mDisplayGroup);
-    optionsLayout->addWidget(mChainsTitle);
-    optionsLayout->addWidget(mChainsGroup);
-    optionsLayout->addWidget(mResultsTitle);
-    optionsLayout->addWidget(mResultsGroup);
-    optionsLayout->addWidget(mPostDistOptsTitle);
-    optionsLayout->addWidget(mPostDistGroup);
-    optionsLayout->addStretch();
-    
-    mOptionsWidget->setLayout(optionsLayout);
-    
-    // -------------------------
-    
+    // ------------------------- CONNECTIONS
+
     connect(this, &ResultsView::controlsUpdated, this, &ResultsView::updateLayout);
     connect(this, &ResultsView::scalesUpdated, this, &ResultsView::updateControls);
     
@@ -423,15 +445,25 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
     connect(this, &ResultsView::generateCurvesRequested, this, &ResultsView::updateCurves);
     // -------------------------
 
-
     connect(mXSlider, &QSlider::sliderMoved, this, &ResultsView::updateZoomX);
     connect(mXSlider, &QSlider::sliderPressed, this, &ResultsView::updateZoomX);
+    //connect(mXSlider, &QSlider::valueChanged, this, &ResultsView::updateZoomX);
+
+    connect(mXScaleSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::setXScaleSpin);
+    connect(this, &ResultsView::xSpinUpdate, this, &ResultsView::setXScaleSlide);
+    connect(this, static_cast<void (ResultsView::*)(int)>(&ResultsView::xSpinUpdate), this, &ResultsView::updateZoomX);
+   // connect(mXScaleSpin, &QSpinBox::editingFinished, this, &ResultsView::updateScaleX);
+   // connect(mXScaleSpin, &QSpinBox::keypress, this, &ResultsView::updateScaleX);
+
     connect(mCurrentXMinEdit, &LineEdit::editingFinished, this, &ResultsView::editCurrentMinX);
     connect(mCurrentXMaxEdit, &LineEdit::editingFinished, this, &ResultsView::editCurrentMaxX);
+    connect(mDisplayStudyBut, &Button::clicked, this, &ResultsView::setStudyPeriod);
+
     connect(mRuler, &Ruler::positionChanged, this, &ResultsView::updateScroll);
     
     connect(mYSlider, &QSlider::valueChanged, this, &ResultsView::updateScaleY);
-    
+    connect(mYScaleSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::updateScaleY);
+    connect(mYScaleSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), mYSlider, &QSlider::setValue);
     // -------------------------
     
     connect(mRenderCombo,static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::updateRendering);
@@ -551,7 +583,6 @@ void ResultsView::updateControls()
     else
         mNextSheetBut->setEnabled(false);
 
-
     qDebug() << "ResultsView::updateControls -> emit controlsUpdated()";
     emit controlsUpdated();
 }
@@ -596,78 +627,128 @@ void ResultsView::updateLayout()
     mStack->setGeometry(0, mTabsH + mRulerH, width() - mOptionsW, height() - mRulerH - mTabsH);
     mMarker->setGeometry(mMarker->pos().x(), mTabsH + sbe, mMarker->thickness(), height() - sbe - mTabsH);
     
-    mOptionsWidget->setGeometry(this->width() - mOptionsW, 0, mOptionsW, this->height());
-    
+
+
+    /*
+     * Span Options
+     *
+     * */
+
+    mSpanTitle->move(0,  mStatsBut->height());
+
+    // coordonnate inside mSpanGroup
+    int wBut = mOptionsW/3;
+    int ySpan = mMargin ;
+    if (tabIdx == 0) {
+        mDisplayStudyBut->setVisible(true);
+        mDisplayStudyBut->move(0, ySpan );
+        ySpan += ySpan + mDisplayStudyBut->height() + mMargin;
+    }
+    else {
+        mDisplayStudyBut->setVisible(false);
+    }
+    mCurrentXMinEdit->move(mMargin, ySpan);
+
+    mCurrentXMaxEdit->move(mOptionsW - mCurrentXMinEdit->width() - mMargin, ySpan );
+    const int w = mSpanLab->width();
+    mSpanLab->setGeometry((mCurrentXMinEdit->x() + mCurrentXMinEdit->width() + mCurrentXMaxEdit->x() )/2 - (w/2), mCurrentXMinEdit->y() , w, mCurrentXMinEdit->height() );
+
+    ySpan += mMargin + mCurrentXMinEdit->height();
+    int heiTemp = mXScaleSpin->height();
+    mXScaleLab->setGeometry(mMargin, ySpan , wBut - 4*mMargin, heiTemp);
+    mXScaleSpin->move(mOptionsW - mXScaleSpin->width() - mMargin, ySpan);//, mCurrentXMinEdit->width(), heiTemp);
+    const int xSliderWidth = mOptionsW - mXScaleLab->width() - mXScaleSpin->width() - 4*mMargin;
+    mXSlider->setGeometry(mXScaleLab->x() + mXScaleLab->width() + mMargin , ySpan, xSliderWidth, heiTemp );
+    ySpan += mXScaleSpin->height() + mMargin;
+
+    // fit the size and the position of the widget of the group in the mOptionsWidget coordonnate
+    mSpanGroup->setGeometry(0, mSpanTitle->y() + mSpanTitle->height() , mOptionsW, ySpan);
+
     /* ----------------------------------------------------------
-     *  Display Options options layout
-     * ----------------------------------------------------------*/
-    mDisplayGroup->setGeometry(0, mDisplayTitle->y()+ mDisplayTitle->height(), mOptionsW, mDisplayGroup->height());
-    
-    
-    /* ----------------------------------------------------------
+       *  Graphic options
+       * ----------------------------------------------------------*/
+    mGraphicTitle->setGeometry(mGraphicTitle->x(), mSpanGroup->y()+ mSpanGroup->height() , mOptionsW, ySpan);
+    mGraphicGroup->setGeometry(mGraphicTitle->x(), mGraphicTitle->y()+ mGraphicTitle->height() , mOptionsW, ySpan);
+
+  /* ----------------------------------------------------------
      *  MCMC Chains options layout
      * ----------------------------------------------------------*/
 
+    mChainsTitle->move(0, mGraphicGroup->y() + mGraphicGroup->height() );
+
+    ySpan = mMargin ;
     int numChains = mCheckChainChecks.size();
-    
+
     // posterior distribution : chains are selectable with checkboxes
     if (tabIdx == 0) {
-        mChainsGroup->setFixedHeight(m + (numChains+1) * (mLineH + m));
-        mAllChainsCheck->setGeometry(m, m, int(mChainsGroup->width()-2*m), mLineH);
+        // inside mChainsGroup Coordonnate
+        mAllChainsCheck->setGeometry(mMargin, mMargin, int(mChainsGroup->width()-2*mMargin), mLineH);
 
         for (int i=0; i<numChains; ++i) {
-            QRect geometry(m, m + (i+1) * (mLineH + m), int(mChainsGroup->width()-2*m), mLineH);
+            QRect geometry(mMargin, mMargin + (i+1) * (mLineH + mMargin), int(mChainsGroup->width()-2*mMargin), mLineH);
             mCheckChainChecks.at(i)->setGeometry(geometry);
             mChainRadios.at(i)->setGeometry(geometry);
         }
-
+        ySpan = mMargin + (numChains+1) * (mLineH + mMargin) + mMargin;
     // trace, accept or correl : chains are selectable with radio-buttons
     } else {
-        mChainsGroup->setFixedHeight(m + numChains * (mLineH + m));
         for (int i=0; i<numChains; ++i) {
-            QRect geometry(m, int(m + i * (mLineH + m)), int(mChainsGroup->width()-2*m), mLineH);
+            QRect geometry(mMargin, int(mMargin + i * (mLineH + mMargin)), int(mChainsGroup->width()-2*mMargin), mLineH);
             mCheckChainChecks.at(i) -> setGeometry(geometry);
             mChainRadios.at(i)     -> setGeometry(geometry);
         }
+        ySpan = mMargin + numChains * (mLineH + mMargin) + mMargin;
     }
-    
+
+    mChainsGroup->setGeometry(0, mChainsTitle->y() + mChainsTitle->height(), mOptionsW, ySpan);
     /* ----------------------------------------------------------
      *  Results options layout
      * ----------------------------------------------------------*/
-    int y = m;
-    mDataThetaRadio->setGeometry(m, y, int(mResultsGroup->width() - 2*m), mLineH);
+   mResultsTitle->move(0, mChainsGroup->y() + mChainsGroup->height());
+
+    ySpan = mMargin;
+    mDataThetaRadio->setGeometry(mMargin, ySpan, int(mResultsGroup->width() - 2*mMargin), mLineH);
     
     // posterior distribution
     if (tabIdx == 0) {
-        mDataCalibCheck -> setGeometry(m + dx, y += (m + mLineH), int(mResultsGroup->width() - 2*m - dx), mLineH);
-        mWiggleCheck    -> setGeometry(m + dx, y += (m + mLineH), int( mResultsGroup->width() - 2*m - dx), mLineH);
+        mDataCalibCheck -> setGeometry(mMargin + dx, ySpan += (mMargin + mLineH), int(mResultsGroup->width() - 2*mMargin - dx), mLineH);
+        mWiggleCheck    -> setGeometry(mMargin + dx, ySpan += (mMargin + mLineH), int( mResultsGroup->width() - 2*mMargin - dx), mLineH);
     }
 
     if (mByPhasesBut->isChecked())
-        mShowDataUnderPhasesCheck->setGeometry(m + dx, y += (m + mLineH), int(mResultsGroup->width() - 2*m - dx), mLineH);
+        mShowDataUnderPhasesCheck->setGeometry(mMargin + dx, ySpan += (mMargin + mLineH), int(mResultsGroup->width() - 2*mMargin - dx), mLineH);
 
-    mDataSigmaRadio -> setGeometry(m, y += (m + mLineH), mResultsGroup->width()-2*m, mLineH);
-    mResultsGroup   -> setFixedHeight(y += (m + mLineH));
-    
+    mDataSigmaRadio -> setGeometry(mMargin, ySpan += (mMargin + mLineH), mResultsGroup->width()-2*mMargin, mLineH);
+
+    mResultsGroup   -> setGeometry(0, mResultsTitle->y() + mResultsTitle->height(), mOptionsW ,ySpan += (mMargin + mLineH));
+
     /* ----------------------------------------------------------
      *  Post. Distrib. options layout
      * ----------------------------------------------------------*/
-    mPostDistGroup->setFixedWidth(mOptionsW);
-    
-    y = m;
+
+    mPostDistOptsTitle->move(0, mResultsGroup->y() + mResultsGroup->height());
+    ySpan = mMargin;
     int sw = int((mPostDistGroup->width() - 3*m) * 0.5);
     int w1 = int((mPostDistGroup->width() - 3*m) * 0.7);
     int w2 = int((mPostDistGroup->width() - 3*m) * 0.3);
     
-    mCredibilityCheck->setGeometry(m, y, mPostDistGroup->width() - 2*m, mLineH);
-    mThreshLab->setGeometry(m, y += (m + mLineH), w1, mLineH);
-    mHPDEdit->setGeometry(2*m + w1, y, w2, mLineH);
-    mFFTLenLab->setGeometry(m, y += (m + mLineH), sw, mComboH);
-    mFFTLenCombo->setGeometry(2*m + sw, y, sw, mComboH);
-    mBandwidthLab->setGeometry(m, y += (m + mComboH), w1, mLineH);
-    mBandwidthEdit->setGeometry(2*m + w1, y, w2, mLineH);
-    mPostDistGroup->setFixedHeight(y += (m + mLineH));
-    
+    mCredibilityCheck->setGeometry(mMargin, ySpan, mPostDistGroup->width() - 2*mMargin, mLineH);
+    mThreshLab->setGeometry(mMargin, ySpan += (mMargin + mLineH), w1, mLineH);
+    mHPDEdit->setGeometry(2*mMargin + w1, ySpan, w2, mLineH);
+    mFFTLenLab->setGeometry(mMargin, ySpan += (mMargin + mLineH), sw, mComboH);
+    mFFTLenCombo->setGeometry(2*mMargin + sw, ySpan, sw, mComboH);
+    mBandwidthLab->setGeometry(mMargin, ySpan += (mMargin + mComboH), w1, mLineH);
+    mBandwidthEdit->setGeometry(2*mMargin + w1, ySpan, w2, mLineH);
+
+    mPostDistGroup->setGeometry(0, mPostDistOptsTitle->y() + mPostDistOptsTitle->height(), mOptionsW, ySpan += (mMargin + mLineH));
+
+    mOptionsWidget->move(this->width() - mOptionsW, 0);
+    mOptionsWidget->setFixedSize( mOptionsW, mStatsBut->height()
+                                            + mSpanTitle->height() + mSpanGroup->height()
+                                            + mGraphicGroup->height() + mGraphicTitle->height()
+                                            + mChainsTitle->height() + mChainsGroup->height()
+                                            + mResultsTitle->height() + mResultsGroup->height()
+                                            + mPostDistOptsTitle->height() + mPostDistGroup->height());
     updateGraphsLayout();
 }
 
@@ -685,14 +766,12 @@ void ResultsView::updateGraphsLayout()
         if (mPhasesScrollArea) {
             QWidget* wid = mPhasesScrollArea->widget();
             for (int i=0; i<mByPhasesGraphs.size(); ++i) {
-                mByPhasesGraphs.at(i)->setGeometry(0, y, width() - mOptionsW - sbe ,mGraphsH);
+                mByPhasesGraphs.at(i)->setGeometry(0, y, width() - mOptionsW - sbe, mGraphsH);
                 y += mByPhasesGraphs.at(i)->height();
             }
             if (y>0)
                 wid->setFixedSize(width() - sbe - mOptionsW, y);
-
        }
-        
     }
     /* ----------------------------------------------------------
      *  Graphs by events layout
@@ -704,7 +783,7 @@ void ResultsView::updateGraphsLayout()
             QWidget* wid = mEventsScrollArea->widget();
 
             for (int i=0; i<mByEventsGraphs.size(); ++i) {
-                mByEventsGraphs.at(i)->setGeometry(0, y, width() - mOptionsW - sbe ,mGraphsH);
+                mByEventsGraphs.at(i)->setGeometry(0, y, width() - mOptionsW - sbe, mGraphsH);
                 y += mByEventsGraphs.at(i)->height();
             }
             if (y>0)
@@ -1379,46 +1458,63 @@ void ResultsView::updateScales()
     /* ------------------------------------------
      *  Get X Range based on current options
      * ------------------------------------------*/
-    bool withDate (false);
+   // bool withDate (false);
     if (tabIdx == 0) {
+
         if (mDataThetaRadio->isChecked()) {
             mResultMinX = s.getTminFormated();
             mResultMaxX = s.getTmaxFormated();
-            // if we show date, we increase the span to be able to see the visible date over the study period
+       /*     // if we show date, we increase the span to be able to see the visible date over the study period
             if (mPhasesScrollArea && mByPhasesBut->isChecked() && mShowDataUnderPhasesCheck->isVisible() && mShowDataUnderPhasesCheck->isChecked()) {
-                mResultMinDateX = mResultMinX;
-                mResultMaxDateX = mResultMaxX;
                 for (GraphViewResults* allGraph : mByPhasesGraphs) {
                     const QList<GraphCurve>& allCurves = allGraph->mGraph->getCurves();
                     for (auto&& curve : allCurves)
-                        if (curve.mVisible && curve.mData.size()>0) {
-                            mResultMinDateX = std::min(mResultMinDateX, curve.mData.firstKey());
-                            mResultMaxDateX = std::max(mResultMaxDateX, curve.mData.lastKey());
-                            withDate = true;
+                        //if (curve.mVisible && curve.mData.size()>0) {
+                        if (curve.mData.size()>0) {
+                            mResultMinX = std::min(mResultMinX, curve.mData.firstKey());
+                            mResultMaxX = std::max(mResultMaxX, curve.mData.lastKey());
+                           // withDate = true;
                         }
 
                 }
 
             } else if (mEventsScrollArea && mEventsScrollArea->isVisible() && mUnfoldBut->isChecked()) {
-                mResultMinDateX = mResultMinX;
-                mResultMaxDateX = mResultMaxX;
                 for (GraphViewResults* allGraph : mByEventsGraphs) {
                     const QList<GraphCurve>& allCurves = allGraph->mGraph->getCurves();
                     for (auto&& curve : allCurves)
-                        if (curve.mVisible && curve.mData.size()>0) {
-                            mResultMinDateX = std::min(mResultMinDateX, curve.mData.firstKey());
-                            mResultMaxDateX = std::max(mResultMaxDateX, curve.mData.lastKey());
-                            withDate = true;
+                        //if (curve.mVisible && curve.mData.size()>0) {
+                        if (curve.mData.size()>0) {
+                            mResultMinX = std::min(mResultMinX, curve.mData.firstKey());
+                            mResultMinX = std::max(mResultMaxX, curve.mData.lastKey());
+                          //  withDate = true;
                         }
-
                 }
 
             }
+*/
+            const double tCenter = (mResultMinX + mResultMaxX) / 2;
+            const double studySpan = mResultMaxX - mResultMinX;
+
+            int rangeZoom = studySpan / 100 * 100; // we can see 100 year at the maximun of zoom
+            if (rangeZoom < 100)
+                rangeZoom = 100;
+
+            mXSlider->setRange(10, rangeZoom);
+            //mXScaleSpin->setRange(10, rangeZoom);
+
+            const double tRangeMin = tCenter - ( (studySpan/2.) * (100. / (double)mXSlider->minimum())  );
+            const double tRangeMax = tCenter + ( (studySpan/2.) * (100. / (double)mXSlider->minimum())  );
+
+            mRuler->setRange(tRangeMin, tRangeMax);
 
 
         } else if (mDataSigmaRadio->isChecked())  {
             mResultMinX = 0.;
             mResultMaxX = mResultMaxVariance;
+            mRuler->setRange(mResultMinX, mResultMaxX);
+            const int rangeZoom = mResultMaxX / 10000 * 100; // we can see 10000 years
+            mXSlider->setRange(100, rangeZoom);
+            //mXScaleSpin->setRange(100, rangeZoom);
         }
 
 
@@ -1431,9 +1527,18 @@ void ResultsView::updateScales()
                 break;
             }
         }
+        mRuler->setRange(mResultMinX, mResultMaxX);
+
+        const int rangeZoom = mResultMaxX / 100 * 100; // we can see 100 iterations as maximum
+        mXSlider->setRange(100, rangeZoom);
+        //mXScaleSpin->setRange(100, rangeZoom);
+
     } else if (tabIdx == 3) {
         mResultMinX = 0.;
         mResultMaxX = 39.;
+        mRuler->setRange(mResultMinX, mResultMaxX);
+        mXSlider->setRange(100, 500);   // we can zoom 5 time
+        //mXScaleSpin->setRange(100, 500);
     }
    
     /* ------------------------------------------
@@ -1441,10 +1546,9 @@ void ResultsView::updateScales()
      * ------------------------------------------*/
     mRuler->setFormatFunctX(stringWithAppSettings);
 
-    if (withDate)
+  /*  if (withDate)
         mRuler->setRange(mResultMinDateX, mResultMaxDateX);
-    else
-        mRuler->setRange(mResultMinX, mResultMaxX);
+    else*/
 
     mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
 
@@ -1493,7 +1597,7 @@ void ResultsView::updateScales()
         mResultCurrentMaxX = mResultMaxX;
     }
 
-    mResultZoomX = (mResultCurrentMaxX - mResultCurrentMinX) / (mRuler->mMax - mRuler->mMin) * 100.;
+    mResultZoomX = ((mResultCurrentMaxX - mResultCurrentMinX) / (mRuler->mMax - mRuler->mMin)) * (100.  ); /// (double)mXSlider->maximum()
     
     
     
@@ -1502,21 +1606,15 @@ void ResultsView::updateScales()
      * -----------------------------------------------*/
     if (mByPhasesBut->isChecked()) {
         for (GraphViewResults* allGraph : mByPhasesGraphs) {
-            if (withDate)
-                allGraph->setRange(mResultMinDateX, mResultMaxDateX);
-            else
-                allGraph->setRange(mResultMinX, mResultMaxX);
+            allGraph->setRange(mRuler->mMin, mRuler->mMax);
 
             allGraph->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
             allGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
         }
-        // adjustDuration(true);
+
     } else
         for (GraphViewResults* allGraph : mByEventsGraphs) {
-            if (withDate)
-                allGraph->setRange(mResultMinDateX, mResultMaxDateX);
-            else
-                allGraph->setRange(mResultMinX, mResultMaxX);
+            allGraph->setRange(mRuler->mMin, mRuler->mMax);
 
             allGraph->setCurrentX(mResultCurrentMinX, mResultCurrentMaxX);
             allGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
@@ -1524,8 +1622,18 @@ void ResultsView::updateScales()
     /* ------------------------------------------
      *  Set Zoom Slider & Zoom Edit
      * ------------------------------------------*/
-    int zoom = 100 - (int)mResultZoomX;
-    mXSlider->setValue(zoom);
+
+    int zoom = (int) mResultZoomX;
+
+    forceXSlideSetValue = true;
+    setXScaleSlide(zoom);//mXSlider->setValue(zoom);
+
+    forceXSpinSetValue = true;
+    setXScaleSpin(zoom);//mXScaleSpin->setValue(zoom);
+
+
+
+
     updateZoomEdit();
     
     // Already done when setting graphs new range (above)
@@ -1577,26 +1685,54 @@ void ResultsView::mouseMoveEvent(QMouseEvent* e)
     mMarker->setGeometry(x, mMarker->pos().y(), mMarker->width(), mMarker->height());
 }
 
-#pragma mark Zoom X
+//pragma mark Zoom X
+
+void ResultsView::setXScaleSpin(int value)
+{
+    mXScaleSpin->setValue(value);
+    if (!forceXSpinSetValue)
+        emit xSpinUpdate(value);
+    else
+        forceXSpinSetValue = false;
+}
+
+void ResultsView::setXScaleSlide(const int value)
+{
+    mXSlider->setValue(value);
+    if (!forceXSlideSetValue)
+        emit xSlideUpdate(value);
+    else
+        forceXSlideSetValue = false;
+}
+void ResultsView::updateScaleX()
+{
+    //const int value = mXScaleSpin->value();
+    //mXSlider->setValue(value);
+    updateZoomX();
+}
+
+/**
+ * @brief ResultsView::updateZoomX
+ * Happen when we move the mXSlider
+ */
 void ResultsView::updateZoomX()
 {
     /* --------------------------------------------------
      *  Find new current min & max, update mResultZoomX
      * --------------------------------------------------*/
     double zoom = mXSlider->value();
-    
-    // Ici, 10 correspond à la différence minimale de valeur (quand le zoom est le plus fort)
-    double minProp = 10. / (mRuler->mMax - mRuler->mMin);
-    double zoomProp = (100. - zoom) / 100.;
-    if (zoomProp < minProp)
-        zoomProp = minProp;
-    zoom = 100. * (1 - zoomProp);
-    
+    forceXSpinSetValue = true;
+    mXScaleSpin->setValue(zoom);
+    //forceXScaleSetValue = false;
+
     mResultZoomX = zoom;
-    const double span = (mRuler->mMax - mRuler->mMin)* (100.-mResultZoomX)/100.;
-    const double mid = (mResultCurrentMaxX + mResultCurrentMinX)/2.;
-    double curMin = mid - span/2.;
-    double curMax = mid + span/2.;
+
+    const double tCenter = (mResultCurrentMaxX + mResultCurrentMinX)/2.;
+    const double span = (mResultMaxX - mResultMinX)* (100./ zoom);
+
+    double curMin = tCenter - span/2.;
+    double curMax = tCenter + span/2.;
+
     if (curMin < mRuler->mMin) {
         curMin = mRuler->mMin;
         curMax = curMin + span;
@@ -1605,14 +1741,9 @@ void ResultsView::updateZoomX()
         curMax = mRuler->mMax;
         curMin = curMax - span;
     }
-    
+
     mResultCurrentMinX = ceil(curMin);
     mResultCurrentMaxX = floor(curMax);
-    
-    if (round(zoom) == 0.) {
-        mResultCurrentMinX = mRuler->mMin;
-        mResultCurrentMaxX = mRuler->mMax;
-    }
     
     /* --------------------------------------------------
      *  Update other elements
@@ -1653,22 +1784,30 @@ void ResultsView::editCurrentMinX()
     bool isNumber(true);
     double value =  locale.toDouble(&str, &isNumber);
 
-    if (isNumber) {
-        const double& minVisible = mRuler->mMin;
-        double current = qBound(minVisible, value, mResultCurrentMaxX);
-        if (current == mResultCurrentMaxX) {
+    if (isNumber && value != mResultCurrentMinX) {
+        //const double minVisible = mRuler->mMin;
+        const double minVisible = mRuler->mMin ;
+        const double current = qBound(minVisible, value, mResultCurrentMaxX);
+        /*if (current == mResultCurrentMaxX) {
             current = minVisible;
-        }
+        }*/
         mResultCurrentMinX = current;
-        mResultZoomX = (mResultCurrentMaxX - mResultCurrentMinX)/ (mRuler->mMax - mRuler->mMin) * 100.;
+       // mResultCurrentMinX = value;
+        mResultZoomX = (double)(mResultCurrentMaxX - mResultCurrentMinX)/ (double)(mResultMaxX - mResultMinX) * 100.;
         
         /* --------------------------------------------------
          *  Update other elements
          * --------------------------------------------------*/
-        int zoom = int(100-mResultZoomX);
-        mXSlider->setValue(zoom);
-        
+        int zoom = int(mResultZoomX);
+
+        forceXSlideSetValue = true;
+        setXScaleSlide(zoom);
+
+        forceXSpinSetValue = true;
+        setXScaleSpin(zoom);
+
         mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
+
         updateZoomEdit();
         updateGraphsZoomX();
     }
@@ -1685,25 +1824,51 @@ void ResultsView::editCurrentMaxX()
     bool isNumber(true);
     double value =  locale.toDouble(&str, &isNumber);
 
-    if (isNumber) {
-        const double& maxVisible = mRuler->mMax;
+    if (isNumber && value != mResultCurrentMaxX) {
+        const double maxVisible = mRuler->mMax;
         double current = qBound(mResultCurrentMinX, value, maxVisible);
-        if (current == mResultCurrentMinX)
+       /* if (current == mResultCurrentMinX)
             current = maxVisible;
-        
+        */
         mResultCurrentMaxX = current;
-        mResultZoomX = (mResultCurrentMaxX - mResultCurrentMinX)/ (mRuler->mMax - mRuler->mMin)* 100.;
+        //mResultCurrentMaxX = value;
+        mResultZoomX = (mResultCurrentMaxX - mResultCurrentMinX) / (mResultMaxX - mResultMinX)* 100.;
         
         /* --------------------------------------------------
          *  Update other elements
          * --------------------------------------------------*/
-        int zoom = int(100-mResultZoomX);
-        mXSlider->setValue(zoom);
-        
+        int zoom = int(mResultZoomX);
+        //mXSlider->setValue(zoom); // the signal valueChange() must be not connected with a slot
+
+        forceXSlideSetValue = true;
+        setXScaleSlide(zoom);
+
+        forceXSpinSetValue = true;
+        setXScaleSpin(zoom);
+
         mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
+
         updateZoomEdit();
+
         updateGraphsZoomX();
     }
+}
+
+void ResultsView:: setStudyPeriod()
+{
+    mResultCurrentMinX = mSettings.mTmin;
+    mResultCurrentMaxX = mSettings.mTmax;
+    mResultZoomX = (double)(mResultCurrentMaxX - mResultCurrentMinX)/ (double)(mResultMaxX - mResultMinX) * 100.;
+
+    forceXSlideSetValue = true;
+    setXScaleSlide(mResultZoomX);
+
+    forceXSpinSetValue = true;
+    setXScaleSpin(mResultZoomX);
+
+    mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
+    updateZoomEdit();
+    updateGraphsZoomX();
 }
 
 void ResultsView::updateZoomEdit()
@@ -1730,18 +1895,24 @@ void ResultsView::updateGraphsZoomX()
         auto resultMinMax = std::minmax( DateUtils::convertFromAppSettingsFormat(mResultCurrentMinX),
                                      DateUtils::convertFromAppSettingsFormat(mResultCurrentMaxX));
         mZooms[tabIdx] = QPair<double, double>(resultMinMax.first, resultMinMax.second);
+
     } else
         mZooms[tabIdx] = QPair<double, double>(mResultCurrentMinX, mResultCurrentMaxX);
 
 }
 
-//#pragma mark Zoom Y
+/**
+ * @brief ResultsView::updateScaleY
+ * update all graph, the maximum is controle by the range of mYSlider
+ * @param value
+ */
 void ResultsView::updateScaleY(int value)
 {
-    const double min = 70.;
-    const double max = 1070.;
-    const double prop = value / 100.;
-    mGraphsH = min + prop * (max - min);
+    mYScaleSpin->setValue(value);
+    const double min (70.);
+    const double origin (150.);
+    const double prop = (double)value / 100.;
+    mGraphsH = min + prop * (origin - min);
     
     updateGraphsLayout();
 }
