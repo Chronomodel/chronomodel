@@ -488,8 +488,6 @@ void EventsScene::updateSceneFromState()
         }
 
     }
-    /*for (QList<AbstractItem*>::iterator cIter = mItems.begin(); cIter != mItems.end(); ++cIter)
-       (*cIter)->update();*/
 
     // ------------------------------------------------------
     //  Delete constraints not in current state
@@ -499,9 +497,9 @@ void EventsScene::updateSceneFromState()
         QJsonObject& constraint = constraintItem->data();
         
         if (!constraints_ids.contains(constraint.value(STATE_ID).toInt())) {
-
+#ifdef DEBUG
             qDebug() << "EventsScene::updateScene Event Constraint deleted : " << constraint.value(STATE_ID).toInt();
-
+#endif
             removeItem(constraintItem);
             mConstraintItems.removeOne(constraintItem);
             delete constraintItem;
@@ -529,8 +527,9 @@ void EventsScene::updateSceneFromState()
                 itemExists = true;
                 if (constraint != constraintItem) {
                     // UPDATE ITEM
+#ifdef DEBUG
                     qDebug() << "EventsScene::updateScene Constraint updated : id = " << constraint.value(STATE_ID).toInt();
-
+#endif
                     mConstraintItems[j]->setData(constraint);
                 }
             }

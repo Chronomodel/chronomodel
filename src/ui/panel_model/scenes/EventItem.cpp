@@ -208,8 +208,6 @@ void EventItem::updateGreyedOut()
     else {
         const QString eventPhasesIdsStr = mData.value(STATE_EVENT_PHASE_IDS).toString();
         const QStringList eventPhasesIds = eventPhasesIdsStr.split(",");
-        //for (int i=0; i<selectedPhasesIds.size(); ++i) {
-        //    if (eventPhasesIds.contains(selectedPhasesIds.at(i))) {
         for (auto ids : selectedPhasesIds) {
             if (eventPhasesIds.contains(ids)) {
                 mGreyedOut = false;
@@ -223,8 +221,6 @@ void EventItem::updateGreyedOut()
 void EventItem::setDatesVisible(bool visible)
 {
     QList<QGraphicsItem*> dateItems = childItems();
-    /*for (int i=0; i<dateItems.size(); ++i)
-        dateItems.at(i)->setVisible(visible);*/
     for (auto item : dateItems)
         item->setVisible(visible);
     
