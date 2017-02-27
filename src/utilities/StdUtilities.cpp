@@ -47,7 +47,28 @@ int compareStrings(const string &s1, const string &s2)
    return crt[n];
 }
 
+/**
+ * @brief eraseZeroAtLeft erase useless 0 at the end of a string comming from a number
+ * @param str
+ * @return
+ */
+std::string removeZeroAtRight(std::string str)
+{
+    // controle if str has decimal
+    if (str.find('.') == 0  || str.find(',') == 0)
+        return str;
 
+    // in the declaration str is pass as "a copy" so we can modify it
+    if (str.back() == '0')
+        do {
+            str.pop_back();
+        } while (str.back() == '0');
+
+    if (str.back() == '.' ||str.back() == ',')
+        str.pop_back();
+
+    return str;
+}
 
 
 

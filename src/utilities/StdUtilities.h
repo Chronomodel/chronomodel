@@ -27,7 +27,7 @@ typedef QString (*FormatFunc)(const double, const bool forCSV);
 
 
 int compareStrings(const std::string &s1, const std::string &s2);
-
+std::string removeZeroAtRight(std::string str);
 
 double safeExp(const double& x, int n = 10);
 double safeLog(const double& x, int n = 5);
