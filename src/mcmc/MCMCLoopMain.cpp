@@ -258,7 +258,7 @@ QString MCMCLoopMain::initMCMC()
                     date.mTheta.mX = date.mCalibration->mTmin + idx *mModel->mSettings.mStep;
                     qDebug()<<"MCMCLoopMain::Init mThe.mx="<<QString::number(date.mTheta.mX, 'g', 15);
 
-                    FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration->mCurve, tmin, tmax, step));
+                    FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration->mCurve, tmin, tmax, date.mCalibration->mStep));
                     sigma = (double) data.stddev;
                 }
                 else { // in the case of mRepartion curve is null, we must init ti outside the study period

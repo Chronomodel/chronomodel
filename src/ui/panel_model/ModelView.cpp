@@ -558,9 +558,31 @@ void ModelView::adjustStep()
     
     if (dialog.exec() == QDialog::Accepted) {
         s.mStepForced = dialog.forced();
-        if(s.mStepForced)
-            s.mStep = dialog.step();
-        else
+        if (s.mStepForced) {
+            if (s.mStep != dialog.step()) {
+                s.mStep = dialog.step();
+                // rebuild all calibration
+                QList<Event*> events = mProject->mModel->mEvents;
+                for (auto && ev : events)
+                        for (auto && date : ev->mDates) {
+                            date.mCalibration->mCurve.clear();
+                            //QTime startTime = QTime::currentTime();
+                            date.calibrate(s, mProject);
+
+                            /*if(isInterruptionRequested())
+                                return ABORTED_BY_USER;
+
+                            emit stepProgressed(i);
+*/
+                            //QTime endTime = QTime::currentTime();
+                            //int timeDiff = startTime.msecsTo(endTime);
+                            //mLog += "Data \"" + dates[i]->mName + "\" (" + dates[i]->mPlugin->getName() + ") calibrated in " + QString::number(timeDiff) + " ms\n";
+                        }
+
+
+            }
+
+        } else
             s.mStep = defaultVal;
         
         mProject -> setSettings(s);
