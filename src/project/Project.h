@@ -156,7 +156,7 @@ signals:
     void projectStateChanged();
     void currentEventChanged(const QJsonObject& event);
     //void currentPhaseChanged(const QJsonObject& phase);
-    void selectedEventsChanged();
+    // void selectedEventsChanged(); // not used
     //void selectedPhasesChanged();
     void eyedPhasesModified(const QMap<int, bool>& eyedPhases);
     
