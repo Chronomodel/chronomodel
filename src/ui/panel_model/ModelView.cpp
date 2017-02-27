@@ -562,24 +562,29 @@ void ModelView::adjustStep()
             if (s.mStep != dialog.step()) {
                 s.mStep = dialog.step();
                 // rebuild all calibration
+                // TODO adding a waiting box
                 QList<Event*> events = mProject->mModel->mEvents;
+
+                QProgressDialog *progress = new QProgressDialog("Calibration curve generation","Wait" , 1, 10, qApp->activeWindow());
+                progress->setWindowModality(Qt::WindowModal);
+                progress->setCancelButton(0);
+                progress->setMinimumDuration(4);
+                progress->setMinimum(0);
+
+                int position(0);
                 for (auto && ev : events)
-                        for (auto && date : ev->mDates) {
-                            date.mCalibration->mCurve.clear();
-                            //QTime startTime = QTime::currentTime();
-                            date.calibrate(s, mProject);
+                    position += ev->mDates.size();
+                progress->setMaximum(position);
 
-                            /*if(isInterruptionRequested())
-                                return ABORTED_BY_USER;
+                position = 0;
 
-                            emit stepProgressed(i);
-*/
-                            //QTime endTime = QTime::currentTime();
-                            //int timeDiff = startTime.msecsTo(endTime);
-                            //mLog += "Data \"" + dates[i]->mName + "\" (" + dates[i]->mPlugin->getName() + ") calibrated in " + QString::number(timeDiff) + " ms\n";
-                        }
-
-
+                for (auto && ev : events)
+                    for (auto && date : ev->mDates) {
+                        date.mCalibration->mCurve.clear();
+                        date.calibrate(s, mProject);
+                        ++position;
+                        progress->setValue(position);
+                    }
             }
 
         } else
