@@ -4,9 +4,11 @@
 #include <QString>
 
 
-class DateUtils{
+class DateUtils
+{
 public:
-    enum FormatDate{
+    enum FormatDate
+    {
         eUnknown = -2,
         eNumeric = -1,
         eBCAD = 0,
