@@ -418,18 +418,14 @@ void EventsScene::updateSceneFromState()
     if (displayProgress)
         progress->setLabelText(tr("Create / Update event items"));
     
-   // for (QJsonArray::const_iterator citer = eventsInNewState.constBegin(); citer != eventsInNewState.constEnd(); ++citer) {
-   //     const QJsonObject event = (*citer).toObject();
-    for (auto citer : eventsInNewState) {
+   for (auto && citer : eventsInNewState) {
         const QJsonObject event = citer.toObject();
         ++i;
         if (displayProgress)
             progress->setValue(i);
 
         bool itemUnkown = true;
-        //for (QList<AbstractItem*>::const_iterator cIterOld = mItems.cbegin(); cIterOld != mItems.cend() && itemUnkown; ++cIterOld) {
-        //    EventItem* oldItem = (EventItem*)(*cIterOld);
-        for (auto cIterOld : mItems) {
+        for (auto && cIterOld : mItems) {
             EventItem* oldItem = (EventItem*) cIterOld;
             const QJsonObject OldItemEvent = oldItem->getEvent();
 

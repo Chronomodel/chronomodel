@@ -72,7 +72,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     const QJsonArray phases = getPhases();
     mWithSelectedPhase = false;
 
-    for (auto phase : phases) {
+    for (auto && phase : phases) {
             if ((mWithSelectedPhase == false) && (phase.toObject().value(STATE_IS_SELECTED) == true))
                     mWithSelectedPhase = true;
      }
@@ -208,7 +208,7 @@ void EventItem::updateGreyedOut()
     else {
         const QString eventPhasesIdsStr = mData.value(STATE_EVENT_PHASE_IDS).toString();
         const QStringList eventPhasesIds = eventPhasesIdsStr.split(",");
-        for (auto ids : selectedPhasesIds) {
+        for (auto && ids : selectedPhasesIds) {
             if (eventPhasesIds.contains(ids)) {
                 mGreyedOut = false;
                 break;
@@ -221,7 +221,7 @@ void EventItem::updateGreyedOut()
 void EventItem::setDatesVisible(bool visible)
 {
     QList<QGraphicsItem*> dateItems = childItems();
-    for (auto item : dateItems)
+    for (auto && item : dateItems)
         item->setVisible(visible);
     
 }
