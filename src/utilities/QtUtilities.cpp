@@ -103,6 +103,11 @@ QColor getContrastedColor(const QColor& color)
     return frontColor;
 }
 
+QString removeZeroAtRight(QString str)
+{
+    return QString::fromStdString(removeZeroAtRight(str.toStdString()));
+}
+
 QList<int> stringListToIntList(const QString& listStr, const QString& separator)
 {
     QList<int> result;
@@ -373,24 +378,6 @@ bool constraintIsCircular(QJsonArray constraints, const int fromId, const int to
     return false;
 }
 
-
-/*QString stringWithAppSettingsForCSV(const double valueToFormat, const QLocale locale)
-{
-    AppSettings settings = MainWindow::getInstance()->getAppSettings();
-
-    QLocale local = settings.mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
-    int precision = settings.mPrecision;
-
-    char fmt = 'f';
-    if (std::abs(valueToFormat)>250000)
-        fmt = 'G';
-
-    if (std::abs(valueToFormat)<1E-6)
-        return "0";
-    else
-        return local.toString(valueToFormat, fmt, precision);
-}*/
-
 QString stringWithAppSettings(const double valueToFormat, const bool forCSV)
 {
     if (std::abs(valueToFormat)<1E-6)
@@ -406,9 +393,13 @@ QString stringWithAppSettings(const double valueToFormat, const bool forCSV)
         QLocale locale = MainWindow::getInstance()->getAppSettings().mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
         locale.setNumberOptions(QLocale::OmitGroupSeparator);
         return locale.toString(valueToFormat, fmt, precision);
+
     } else {
         QLocale locale = QLocale();
-        return locale.toString(valueToFormat, fmt, precision);
+        if (precision >0)
+             return removeZeroAtRight(locale.toString(valueToFormat, fmt, precision));
+        else
+            return locale.toString(valueToFormat, fmt, precision);
    }
 }
 

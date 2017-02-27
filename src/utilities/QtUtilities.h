@@ -38,6 +38,8 @@ QColor randomColor();
 
 bool constraintIsCircular( QJsonArray constraints, const int FromId, const int ToId);
 
+
+QString removeZeroAtRight(QString str); // use StdUtilities::eraseZeroAtLeft()
 QString stringWithAppSettings(const double valueToFormat, const bool forCSV = false);
 bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep, const bool withDateFormat = false);
 bool saveAsCsv(const QList<QStringList>& data, const QString& title = QObject::tr("Save as..."));
