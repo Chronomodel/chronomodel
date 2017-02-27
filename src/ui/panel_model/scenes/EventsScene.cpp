@@ -279,7 +279,7 @@ void EventsScene::createSceneFromState()
     // ------------------------------------------------------
     //  Create event items
     // ------------------------------------------------------
-    int i = 0;
+    int i(0);
 
     progress->setLabelText(tr("Create event items"));
 
@@ -291,7 +291,7 @@ void EventsScene::createSceneFromState()
 
        // CREATE ITEM
         Event::Type type = (Event::Type)event.value(STATE_EVENT_TYPE).toInt();
-        EventItem* newItem = 0;
+        EventItem* newItem = nullptr;
         if (type == Event::eDefault)
             newItem = new EventItem(this, event, settings);
         else //if(type == Event::eKnown)
@@ -299,8 +299,7 @@ void EventsScene::createSceneFromState()
 
         mItems.append(newItem);
         addItem(newItem);
-        /*if (event.value(STATE_IS_CURRENT).toBool() == true)
-            curItem = newItem;*/
+
         }
 
 
@@ -346,7 +345,7 @@ void EventsScene::updateSceneFromState()
     const QJsonArray constraints = state.value(STATE_EVENTS_CONSTRAINTS).toArray();
     QJsonObject settings = state.value(STATE_SETTINGS).toObject();
 
-    QProgressDialog* progress = 0;
+    QProgressDialog* progress = nullptr;
     bool displayProgress = false;
 
     EventItem* curItem = currentEvent();
@@ -359,7 +358,7 @@ void EventsScene::updateSceneFromState()
         displayProgress = true;
         progress = new QProgressDialog("Create / Update event items","Wait" , 1, eventsInNewState.size(),qApp->activeWindow());
         progress->setWindowModality(Qt::WindowModal);
-        progress->setCancelButton(0);
+        progress->setCancelButton(nullptr);
     }
 
     QList<int> events_ids_inNewState;
@@ -419,16 +418,19 @@ void EventsScene::updateSceneFromState()
     if (displayProgress)
         progress->setLabelText(tr("Create / Update event items"));
     
-    for (QJsonArray::const_iterator citer = eventsInNewState.constBegin(); citer != eventsInNewState.constEnd(); ++citer) {
-        const QJsonObject event = (*citer).toObject();
+   // for (QJsonArray::const_iterator citer = eventsInNewState.constBegin(); citer != eventsInNewState.constEnd(); ++citer) {
+   //     const QJsonObject event = (*citer).toObject();
+    for (auto citer : eventsInNewState) {
+        const QJsonObject event = citer.toObject();
         ++i;
         if (displayProgress)
             progress->setValue(i);
 
         bool itemUnkown = true;
-        for (QList<AbstractItem*>::const_iterator cIterOld = mItems.cbegin(); cIterOld != mItems.cend() && itemUnkown; ++cIterOld) {
-            EventItem* oldItem = (EventItem*)(*cIterOld);
-
+        //for (QList<AbstractItem*>::const_iterator cIterOld = mItems.cbegin(); cIterOld != mItems.cend() && itemUnkown; ++cIterOld) {
+        //    EventItem* oldItem = (EventItem*)(*cIterOld);
+        for (auto cIterOld : mItems) {
+            EventItem* oldItem = (EventItem*) cIterOld;
             const QJsonObject OldItemEvent = oldItem->getEvent();
 
             if ( OldItemEvent.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
@@ -442,12 +444,12 @@ void EventsScene::updateSceneFromState()
                 }
              }
 
-            oldItem = 0;
+            oldItem = nullptr;
         }
         if (itemUnkown) {
             // CREATE ITEM
                 Event::Type type = (Event::Type)event.value(STATE_EVENT_TYPE).toInt();
-                EventItem* newItem = 0;
+                EventItem* newItem = nullptr;
                 if (type == Event::eDefault)
                     newItem = new EventItem(this, event, settings);
                 else //if(type == Event::eKnown)
@@ -477,7 +479,7 @@ void EventsScene::updateSceneFromState()
                                           pt.y() + rand() % posDelta - posDelta/2);
                     }
 
-                newItem = 0;
+                newItem = nullptr;
 
                 qDebug() << "EventsScene::updateScene Event created : id = " << event.value(STATE_ID).toInt() << event.value(STATE_NAME).toString()<<", type : " << type;
 
@@ -626,7 +628,7 @@ void EventsScene::clean()
 }
 
 
-#pragma mark Selection & Current
+//pragma mark Selection & Current
 
 /**
  * @brief EventsScene::updateStateSelectionFromItem look inside the scene which items (Widget) are selected and update the QJsonObject
@@ -673,14 +675,15 @@ void EventsScene::updateStateSelectionFromItem()
                 emit eventsAreSelected();
 
             // refresh the Event propreties view
-            if (selectedItems().size() == 1)
+            //if (selectedItems().size() == 1)
+           if (selectedItems().size() >= 1)
                 emit mProject->currentEventChanged(currentEvent);
             else {
                     QJsonObject itemEmpty;
                     emit mProject->currentEventChanged( itemEmpty);
             }
 
-}
+        }
     }
 }
 

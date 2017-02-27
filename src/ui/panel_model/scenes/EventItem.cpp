@@ -34,9 +34,9 @@ void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
     qDebug()<<"EventItem::mousePressEvent ";
     EventsScene* itemScene = dynamic_cast<EventsScene*>(mScene);
     if (itemScene->selectedItems().size()<2) {
-        if ((this != itemScene->currentEvent()) && (!itemScene->mDrawingArrow)) {
+       /* if ((this != itemScene->currentEvent()) && (!itemScene->mDrawingArrow)) {
             itemScene->clearSelection();
-        }
+        }*/
 
         if (!itemScene->itemClicked(this, e)) {
             setZValue(2.);
@@ -72,8 +72,8 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     const QJsonArray phases = getPhases();
     mWithSelectedPhase = false;
 
-    foreach (const QJsonValue phase, phases) {
-            if ((mWithSelectedPhase == false) && (phase.toObject().value(STATE_IS_SELECTED)==true))
+    for (auto phase : phases) {
+            if ((mWithSelectedPhase == false) && (phase.toObject().value(STATE_IS_SELECTED) == true))
                     mWithSelectedPhase = true;
      }
 
@@ -86,7 +86,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     // ----------------------------------------------
     //  Calculate item size
     // ----------------------------------------------
-    double h = mTitleHeight + mPhasesHeight + 2*mBorderWidth + 2*mEltsMargin;
+    qreal h = mTitleHeight + mPhasesHeight + 2*mBorderWidth + 2*mEltsMargin;
     
     QString name = event.value(STATE_NAME).toString();
     QFont font = qApp->font();
@@ -208,8 +208,10 @@ void EventItem::updateGreyedOut()
     else {
         const QString eventPhasesIdsStr = mData.value(STATE_EVENT_PHASE_IDS).toString();
         const QStringList eventPhasesIds = eventPhasesIdsStr.split(",");
-        for (int i=0; i<selectedPhasesIds.size(); ++i) {
-            if (eventPhasesIds.contains(selectedPhasesIds.at(i))) {
+        //for (int i=0; i<selectedPhasesIds.size(); ++i) {
+        //    if (eventPhasesIds.contains(selectedPhasesIds.at(i))) {
+        for (auto ids : selectedPhasesIds) {
+            if (eventPhasesIds.contains(ids)) {
                 mGreyedOut = false;
                 break;
             }
@@ -221,8 +223,10 @@ void EventItem::updateGreyedOut()
 void EventItem::setDatesVisible(bool visible)
 {
     QList<QGraphicsItem*> dateItems = childItems();
-    for (int i=0; i<dateItems.size(); ++i) 
-        dateItems.at(i)->setVisible(visible);
+    /*for (int i=0; i<dateItems.size(); ++i)
+        dateItems.at(i)->setVisible(visible);*/
+    for (auto item : dateItems)
+        item->setVisible(visible);
     
 }
 
@@ -282,12 +286,12 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     phasesRect.adjust(1, 1, -1, -1);
     
     const int numPhases = (const int)phases.size();
-    const double w = phasesRect.width()/numPhases;
+    const qreal w = phasesRect.width()/numPhases;
 
     if (mGreyedOut) //setting with setGreyedOut() just above
-        painter->setOpacity(0.35f);
+        painter->setOpacity(0.35);
     else
-        painter->setOpacity(1.f);
+        painter->setOpacity(1.);
 
 
 
@@ -345,17 +349,17 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     // Border
     painter->setBrush(Qt::NoBrush);
     if (mMergeable) {
-        painter->setPen(QPen(Qt::white, 5.f));
+        painter->setPen(QPen(Qt::white, 5.));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
         
-        painter->setPen(QPen(Painting::mainColorLight, 3.f, Qt::DashLine));
+        painter->setPen(QPen(Painting::mainColorLight, 3., Qt::DashLine));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
 
     } else if (isSelected() || withSelectedDate()) {
-        painter->setPen(QPen(Qt::white, 5.f));
+        painter->setPen(QPen(Qt::white, 5.));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
         
-        painter->setPen(QPen(Qt::red, 3.f));
+        painter->setPen(QPen(Qt::red, 3.));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
     }
     

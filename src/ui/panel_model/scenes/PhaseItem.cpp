@@ -16,8 +16,8 @@ mControlsVisible(false),
 mControlsEnabled(false),
 mAtLeastOneEventSelected(false)
 {
-    mBorderWidth = 10;
-    mEltsHeight = 15;
+    mBorderWidth = 10.;
+    mEltsHeight = 15.;
     setPhase(phase);
     inPix = new QPixmap(":insert_event.png");
     exPix = new QPixmap(":extract_event.png");
@@ -36,6 +36,7 @@ QJsonObject& PhaseItem::getPhase()
 
 void PhaseItem::setPhase(const QJsonObject& phase)
 {
+    Q_ASSERT(&phase);
     mData = phase;
     
     setSelected(mData.value(STATE_IS_SELECTED).toBool() || mData.value(STATE_IS_CURRENT).toBool() );
@@ -45,7 +46,7 @@ void PhaseItem::setPhase(const QJsonObject& phase)
     // ----------------------------------------------------
     //  Calculate item size
     // ----------------------------------------------------
-    qreal w = 150;
+    qreal w = 150.;
     qreal h = mTitleHeight + 2*mBorderWidth + 2*mEltsMargin;
     
     const QJsonArray events = getEvents();
@@ -149,12 +150,12 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
   // overwrite AbstractItem::mousePressEvent(e);
 
     PhasesScene* itemScene = dynamic_cast<PhasesScene*>(mScene);
-    PhaseItem* currentPhase = itemScene->currentPhase();
+  //  PhaseItem* currentPhase = itemScene->currentPhase();
 
     if (itemScene->selectedItems().size()<2) {
-        if ((this != currentPhase) && (!itemScene->mDrawingArrow)) {
+      /*  if ((this != currentPhase) && (!itemScene->mDrawingArrow)) {
             itemScene->clearSelection();
-        }
+        }*/
 
         if (!itemScene->itemClicked(this, e)) {
             setZValue(2.);

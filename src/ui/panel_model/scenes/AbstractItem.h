@@ -8,7 +8,7 @@
 class AbstractItem : public QGraphicsObject
 {
 public:
-    AbstractItem(AbstractScene* scene, QGraphicsItem* parent = 0);
+    AbstractItem(AbstractScene* scene, QGraphicsItem* parent = nullptr);
     virtual ~AbstractItem();
 
     void setMergeable(bool mergeable, bool shouldRepaint = true);
@@ -33,12 +33,12 @@ public:
 
     AbstractScene* mScene;
     
-    double mBorderWidth;
-    double mTitleHeight;
-    double mPhasesHeight;
-    double mEltsMargin;
-    double mEltsWidth;
-    double mEltsHeight;
+    qreal mBorderWidth;
+    qreal mTitleHeight;
+    qreal mPhasesHeight;
+    qreal mEltsMargin;
+    qreal mEltsWidth;
+    qreal mEltsHeight;
     
     bool mMoving;
     bool mMergeable;
