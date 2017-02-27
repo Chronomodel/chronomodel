@@ -15,6 +15,7 @@ class QComboBox;
 class QSlider;
 class QScrollBar;
 class QSpinBox;
+class QDoubleSpinBox;
 class QPushButton;
 
 class Project;
@@ -110,8 +111,10 @@ private slots:
     void updateZoomEdit();
     void updateGraphsZoomX();
     
-    void setXScaleSpin(int); // connected to mXScaleSpin
-    void setXScaleSlide(const int);
+    void setXScaleSpin(const double value); // connected to mXScaleSpin
+    void XScaleSpinChanged(double value);
+    void setXScaleSlide(const int value);
+    void XScaleSliderChanged( int value);
     void updateScaleX();
     void updateScaleY(int value);
     
@@ -151,7 +154,8 @@ signals:
 private:
     void clearHisto();
     void clearChainHistos();
-    
+    double sliderToZoom(const int coef);
+    int zoomToSlider(const double zoom);
     Ruler* mRuler;
 
     ProjectSettings mSettings;
@@ -209,7 +213,7 @@ private:
 
     Label* mXScaleLab;
     QSlider* mXSlider;
-    QSpinBox* mXScaleSpin;
+    QDoubleSpinBox* mXScaleSpin;
     /* used to controle the signal XScaleSpin::valueChanged () when we need to change the value
      * xScaleChanged(int value)
      * emit xScaleUpdate(value);

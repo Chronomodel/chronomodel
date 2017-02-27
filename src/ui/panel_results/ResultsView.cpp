@@ -65,7 +65,7 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
     mResultCurrentMinX = mResultMinX ;
     mResultCurrentMaxX = mResultMaxX ;
 
-    mResultZoomX = 100.;
+    mResultZoomX = 1.;
     
     QFont fontTitle (QApplication::font());
     //fontTitle.setPointSizeF(QApplication::font().pointSizeF()*1.);
@@ -154,8 +154,8 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
 
     
     mRuler = new Ruler(this);
-    mRuler->mMarginLeft = 50;
-    mRuler->mMarginRight = 10;
+    mRuler->mMarginLeft = 50.;
+    mRuler->mMarginRight = 10.;
     
     mRuler->mMax = mSettings.mTmax;
     mRuler->mMin = mSettings.mTmin;
@@ -202,15 +202,20 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
     mXScaleLab->setAlignment(Qt::AlignCenter);
     mXScaleLab->setFixedWidth(fm.width(mXScaleLab->text()));
 
-    mXSlider = new QSlider(Qt::Horizontal, mSpanGroup);
-    mXSlider->setRange(10, 300);
-    mXSlider->setTickInterval(1);
-    mXSlider->setValue(100);
 
-    mXScaleSpin = new QSpinBox(mSpanGroup);
-    mXScaleSpin->setRange(mXSlider->minimum(), mXSlider->maximum());
-    mXScaleSpin->setSuffix(" %");
-    mXScaleSpin->setValue(mXSlider->value());
+    mXSlider = new QSlider(Qt::Horizontal, mSpanGroup);
+    mXSlider->setRange(-100, 100);
+    mXSlider->setTickInterval(1);
+    forceXSlideSetValue = true;
+    mXSlider->setValue(0);
+
+    mXScaleSpin = new QDoubleSpinBox(mSpanGroup);
+    mXScaleSpin->setRange(pow(10., (double)mXSlider->minimum()/100.),pow(10., (double)mXSlider->maximum()/100.));
+    //mXScaleSpin->setSuffix("");
+    mXScaleSpin->setSingleStep(.01);
+    mXScaleSpin->setDecimals(3);
+    forceXSpinSetValue = true;
+    mXScaleSpin->setValue(sliderToZoom(mXSlider->value()));
     mXScaleSpin->setFixedSize(mCurrentXMinEdit->width(), fm.height()+ 5);
 
 
@@ -438,22 +443,20 @@ mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET)
     // -------------------------
     connect(mUnfoldBut, &Button::toggled, this, &ResultsView::unfoldToggle);
     connect(mShowDataUnderPhasesCheck, &CheckBox::toggled, this, &ResultsView::changeScrollArea);
-    
-    //connect(this, &ResultsView::curvesGenerated, this, &ResultsView::updateControls);
+
     connect(this, &ResultsView::curvesGenerated, this, &ResultsView::updateCurvesToShow);
     connect(this, &ResultsView::updateScrollAreaRequested, this, &ResultsView::changeScrollArea);
     connect(this, &ResultsView::generateCurvesRequested, this, &ResultsView::updateCurves);
     // -------------------------
 
-    connect(mXSlider, &QSlider::sliderMoved, this, &ResultsView::updateZoomX);
-    connect(mXSlider, &QSlider::sliderPressed, this, &ResultsView::updateZoomX);
-    //connect(mXSlider, &QSlider::valueChanged, this, &ResultsView::updateZoomX);
+   // connect(mXSlider, &QSlider::sliderMoved, this, &ResultsView::updateZoomX);
+   // connect(mXSlider, &QSlider::sliderPressed, this, &ResultsView::updateZoomX);
+    connect(mXSlider, &QSlider::valueChanged, this, &ResultsView::XScaleSliderChanged);
 
-    connect(mXScaleSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::setXScaleSpin);
+    connect(mXScaleSpin, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &ResultsView::XScaleSpinChanged);
+
     connect(this, &ResultsView::xSpinUpdate, this, &ResultsView::setXScaleSlide);
     connect(this, static_cast<void (ResultsView::*)(int)>(&ResultsView::xSpinUpdate), this, &ResultsView::updateZoomX);
-   // connect(mXScaleSpin, &QSpinBox::editingFinished, this, &ResultsView::updateScaleX);
-   // connect(mXScaleSpin, &QSpinBox::keypress, this, &ResultsView::updateScaleX);
 
     connect(mCurrentXMinEdit, &LineEdit::editingFinished, this, &ResultsView::editCurrentMinX);
     connect(mCurrentXMaxEdit, &LineEdit::editingFinished, this, &ResultsView::editCurrentMaxX);
@@ -1495,15 +1498,18 @@ void ResultsView::updateScales()
             const double tCenter = (mResultMinX + mResultMaxX) / 2;
             const double studySpan = mResultMaxX - mResultMinX;
 
-            int rangeZoom = studySpan / 100 * 100; // we can see 100 year at the maximun of zoom
+          /*  int rangeZoom = studySpan / 100 * 100; // we can see 100 year at the maximun of zoom
             if (rangeZoom < 100)
                 rangeZoom = 100;
+*/
+            //mXSlider->setRange(10, rangeZoom);
+            mXSlider->setRange(-100, 100);
+            mXScaleSpin->setRange(sliderToZoom(-100), sliderToZoom(100));
+            mXScaleSpin->setSingleStep(.01);
+            mXScaleSpin->setDecimals(3);
 
-            mXSlider->setRange(10, rangeZoom);
-            //mXScaleSpin->setRange(10, rangeZoom);
-
-            const double tRangeMin = tCenter - ( (studySpan/2.) * (100. / (double)mXSlider->minimum())  );
-            const double tRangeMax = tCenter + ( (studySpan/2.) * (100. / (double)mXSlider->minimum())  );
+            const double tRangeMin = tCenter - ( (studySpan/2.)  / sliderToZoom( mXSlider->minimum()));
+            const double tRangeMax = tCenter + ( (studySpan/2.)  / sliderToZoom( mXSlider->minimum()));
 
             mRuler->setRange(tRangeMin, tRangeMax);
 
@@ -1512,9 +1518,11 @@ void ResultsView::updateScales()
             mResultMinX = 0.;
             mResultMaxX = mResultMaxVariance;
             mRuler->setRange(mResultMinX, mResultMaxX);
-            const int rangeZoom = mResultMaxX / 10000 * 100; // we can see 10000 years
-            mXSlider->setRange(100, rangeZoom);
-            //mXScaleSpin->setRange(100, rangeZoom);
+            const int rangeZoom = mResultMaxX / 10000;
+            mXSlider->setRange(1, rangeZoom);
+            mXScaleSpin->setRange(1, rangeZoom);
+            mXScaleSpin->setSingleStep(1.);
+            mXScaleSpin->setDecimals(0);
         }
 
 
@@ -1529,16 +1537,19 @@ void ResultsView::updateScales()
         }
         mRuler->setRange(mResultMinX, mResultMaxX);
 
-        const int rangeZoom = mResultMaxX / 100 * 100; // we can see 100 iterations as maximum
-        mXSlider->setRange(100, rangeZoom);
-        //mXScaleSpin->setRange(100, rangeZoom);
+        const int rangeZoom = mResultMaxX / 100;
+        mXSlider->setRange(1, rangeZoom);
+        mXScaleSpin->setRange(1, rangeZoom);
+        mXScaleSpin->setSingleStep(1.);
 
     } else if (tabIdx == 3) {
         mResultMinX = 0.;
         mResultMaxX = 39.;
         mRuler->setRange(mResultMinX, mResultMaxX);
-        mXSlider->setRange(100, 500);   // we can zoom 5 time
-        //mXScaleSpin->setRange(100, 500);
+        mXSlider->setRange(1, 5);   // we can zoom 5 time
+        mXScaleSpin->setRange(1, 5);
+        mXScaleSpin->setSingleStep(1.);
+        mXScaleSpin->setDecimals(0);
     }
    
     /* ------------------------------------------
@@ -1597,7 +1608,7 @@ void ResultsView::updateScales()
         mResultCurrentMaxX = mResultMaxX;
     }
 
-    mResultZoomX = ((mResultCurrentMaxX - mResultCurrentMinX) / (mRuler->mMax - mRuler->mMin)) * (100.  ); /// (double)mXSlider->maximum()
+    mResultZoomX = ((mResultCurrentMaxX - mResultCurrentMinX) / (mRuler->mMax - mRuler->mMin));// * (100.  );
     
     
     
@@ -1626,13 +1637,10 @@ void ResultsView::updateScales()
     int zoom = (int) mResultZoomX;
 
     forceXSlideSetValue = true;
-    setXScaleSlide(zoom);//mXSlider->setValue(zoom);
+    setXScaleSlide(zoom);
 
     forceXSpinSetValue = true;
-    setXScaleSpin(zoom);//mXScaleSpin->setValue(zoom);
-
-
-
+    setXScaleSpin(zoom);
 
     updateZoomEdit();
     
@@ -1643,7 +1651,7 @@ void ResultsView::updateScales()
     emit scalesUpdated();
 }
 
-//#pragma mark Log results
+//pragma mark Log results
 void ResultsView::settingChange()
 {
     if (mModel) {
@@ -1686,8 +1694,33 @@ void ResultsView::mouseMoveEvent(QMouseEvent* e)
 }
 
 //pragma mark Zoom X
+void ResultsView::XScaleSliderChanged(int value)
+{
+    if (!forceXSlideSetValue) {
+        forceXSpinSetValue = true;
+        setXScaleSpin(sliderToZoom(value));
+        updateZoomX();
+    }
+}
+/**
+ * @brief ResultsView::XScaleSpinChanged slot connected to mXScaleSpin->setValue()
+ * @param value
+ */
+void ResultsView::XScaleSpinChanged(double value)
+{
+    if (!forceXSpinSetValue) {
+        forceXSlideSetValue = true;
+        setXScaleSlide(zoomToSlider(value));
+        updateZoomX();
+    }
+}
 
-void ResultsView::setXScaleSpin(int value)
+/**
+ * @brief ResultsView::setXScaleSpin
+ * Slot to control, if we want to force just set the value, or if we want to propagate the signal throw xSinUpdate
+ * @param value
+ */
+void ResultsView::setXScaleSpin(const double value)
 {
     mXScaleSpin->setValue(value);
     if (!forceXSpinSetValue)
@@ -1696,6 +1729,11 @@ void ResultsView::setXScaleSpin(int value)
         forceXSpinSetValue = false;
 }
 
+/**
+ * @brief ResultsView::setXScaleSlide
+ * Slot to control, if we want to force the just set the value, or if we want to propagate the signal throw xSlideUpdate
+ * @param value
+ */
 void ResultsView::setXScaleSlide(const int value)
 {
     mXSlider->setValue(value);
@@ -1704,10 +1742,27 @@ void ResultsView::setXScaleSlide(const int value)
     else
         forceXSlideSetValue = false;
 }
+
+double ResultsView::sliderToZoom(const int coef)
+{
+   // qDebug()<<"ResultsView::sliderToZoom "<<coef<<pow(10., (double)coef/100.);
+    if (mTabs->currentIndex() == 0)
+         return pow(10., (double)coef/100.);
+    else
+        return coef;
+}
+
+int ResultsView::zoomToSlider(const double zoom)
+{
+   //  qDebug()<<"ResultsView::zoomToSlider "<<zoom<< (int)round(log10(zoom) * 100.);
+   if (mTabs->currentIndex() == 0)
+        return (int)round(log10(zoom) * 100.);
+   else
+       return zoom;
+}
+
 void ResultsView::updateScaleX()
 {
-    //const int value = mXScaleSpin->value();
-    //mXSlider->setValue(value);
     updateZoomX();
 }
 
@@ -1720,15 +1775,16 @@ void ResultsView::updateZoomX()
     /* --------------------------------------------------
      *  Find new current min & max, update mResultZoomX
      * --------------------------------------------------*/
-    double zoom = mXSlider->value();
-    forceXSpinSetValue = true;
-    mXScaleSpin->setValue(zoom);
-    //forceXScaleSetValue = false;
+    //double zoom = sliderToZoom(mXSlider->value());
+    double zoom = mXScaleSpin->value();
+    //forceXSpinSetValue = true;
+    //setXScaleSpin(zoom);
+    //mXScaleSpin->setValue(zoom);
 
     mResultZoomX = zoom;
 
     const double tCenter = (mResultCurrentMaxX + mResultCurrentMinX)/2.;
-    const double span = (mResultMaxX - mResultMinX)* (100./ zoom);
+    const double span = (mResultMaxX - mResultMinX)* (1./ zoom);
 
     double curMin = tCenter - span/2.;
     double curMax = tCenter + span/2.;
@@ -1749,6 +1805,7 @@ void ResultsView::updateZoomX()
      *  Update other elements
      * --------------------------------------------------*/
     mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
+
     updateZoomEdit();
     updateGraphsZoomX();
 }
@@ -1793,18 +1850,18 @@ void ResultsView::editCurrentMinX()
         }*/
         mResultCurrentMinX = current;
        // mResultCurrentMinX = value;
-        mResultZoomX = (double)(mResultCurrentMaxX - mResultCurrentMinX)/ (double)(mResultMaxX - mResultMinX) * 100.;
+        mResultZoomX = (double)(mResultCurrentMaxX - mResultCurrentMinX)/ (double)(mResultMaxX - mResultMinX);
         
         /* --------------------------------------------------
          *  Update other elements
          * --------------------------------------------------*/
-        int zoom = int(mResultZoomX);
+       // int zoom = int(mResultZoomX);
 
         forceXSlideSetValue = true;
-        setXScaleSlide(zoom);
+        setXScaleSlide(zoomToSlider(mResultZoomX));
 
         forceXSpinSetValue = true;
-        setXScaleSpin(zoom);
+        setXScaleSpin(mResultZoomX);
 
         mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
 
@@ -1832,19 +1889,18 @@ void ResultsView::editCurrentMaxX()
         */
         mResultCurrentMaxX = current;
         //mResultCurrentMaxX = value;
-        mResultZoomX = (mResultCurrentMaxX - mResultCurrentMinX) / (mResultMaxX - mResultMinX)* 100.;
+        mResultZoomX = (mResultCurrentMaxX - mResultCurrentMinX) / (mResultMaxX - mResultMinX);
         
         /* --------------------------------------------------
          *  Update other elements
          * --------------------------------------------------*/
-        int zoom = int(mResultZoomX);
-        //mXSlider->setValue(zoom); // the signal valueChange() must be not connected with a slot
+        //int zoom = int(mResultZoomX);
 
         forceXSlideSetValue = true;
-        setXScaleSlide(zoom);
+        setXScaleSlide(zoomToSlider(mResultZoomX));// the signal valueChange() must be not connected with a slot
 
         forceXSpinSetValue = true;
-        setXScaleSpin(zoom);
+        setXScaleSpin(mResultZoomX);
 
         mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
 
@@ -1858,10 +1914,10 @@ void ResultsView:: setStudyPeriod()
 {
     mResultCurrentMinX = mSettings.mTmin;
     mResultCurrentMaxX = mSettings.mTmax;
-    mResultZoomX = (double)(mResultCurrentMaxX - mResultCurrentMinX)/ (double)(mResultMaxX - mResultMinX) * 100.;
+    mResultZoomX = (double)(mResultCurrentMaxX - mResultCurrentMinX)/ (double)(mResultMaxX - mResultMinX);// * 100.;
 
     forceXSlideSetValue = true;
-    setXScaleSlide(mResultZoomX);
+    setXScaleSlide(zoomToSlider(mResultZoomX));
 
     forceXSpinSetValue = true;
     setXScaleSpin(mResultZoomX);
@@ -1983,7 +2039,7 @@ void ResultsView::updateRendering(int index)
         allKindGraph->setRendering((GraphView::Rendering) index);
         GraphViewPhase* phaseGraphs = dynamic_cast<GraphViewPhase*>(allKindGraph);
         
-        if(phaseGraphs)
+        if (phaseGraphs)
             phaseGraphs->mDurationGraph->setRendering((GraphView::Rendering) index);
     }
     
@@ -2091,7 +2147,7 @@ void ResultsView::exportFullImage()
     //  define ScrollArea
     enum ScrollArrea{
         eScrollPhases = 0,
-        eScrollEvents= 1
+        eScrollEvents = 1
     };
     
     //ScrollArrea witchScroll;
@@ -2138,8 +2194,8 @@ void ResultsView::exportFullImage()
             f = stringWithAppSettings;
         
         axisWidget = new AxisWidget(f, curWid);
-        axisWidget->mMarginLeft = 50;
-        axisWidget->mMarginRight = 10;
+        axisWidget->mMarginLeft = 50.;
+        axisWidget->mMarginRight = 10.;
         axisWidget->setGeometry(0, curWid->height() - axeHeight, curWid->width(), axeHeight);
         axisWidget->mShowText = true;
         axisWidget->setAutoFillBackground(true);
