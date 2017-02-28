@@ -846,17 +846,17 @@ void ResultsView::clearResults()
     mByEventsBut->setEnabled(false);
     mByPhasesBut->setEnabled(false);
 
-    for (auto&& check : mCheckChainChecks )
+    for (auto && check : mCheckChainChecks )
         delete check;
 
     mCheckChainChecks.clear();
     
-    for (auto&& chain : mChainRadios)
+    for (auto && chain : mChainRadios)
         delete chain;
 
     mChainRadios.clear();
 
-    for (auto&& graph : mByEventsGraphs)
+    for (auto && graph : mByEventsGraphs)
         delete graph;
 
     mByEventsGraphs.clear();
@@ -883,14 +883,11 @@ void ResultsView::clearResults()
     mEventsScrollArea = nullptr;
     mPhasesScrollArea = nullptr;
 
-    mResultMinX = mSettings.getTminFormated();
-    mResultMaxX = mSettings.getTmaxFormated();
+    mTabEventsIndex = 0;
+    mTabPhasesIndex = 0;
 
-    mResultCurrentMinX = mResultMinX ;
-    mResultCurrentMaxX = mResultMaxX ;
-    mResultZoomX = 100.;
-    mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
-    updateZoomEdit();
+    setStudyPeriod();
+
 }
 
 
@@ -951,19 +948,19 @@ void ResultsView::initResults(Model* model)
         }
     }
 
-    // ------------------------------------------------------------
-    //  This generates post. densities, HPD and credibilities !
-    //  It will then call in chain :
-    //  - generateCredibilityAndHPD
-    //  - generateCurves
-    //  - updateCurvesToShow
-    // ------------------------------------------------------------
+    /* ------------------------------------------------------------
+    *  This generates post. densities, HPD and credibilities !
+    *  It will then call in chain :
+    *  - generateCredibilityAndHPD
+    *  - generateCurves
+    *  - updateCurvesToShow
+    * ------------------------------------------------------------ */
     mModel->initDensities(getFFTLength(), getBandwidth(), getThreshold());
 
     if (mHasPhases)
-        createPhasesScrollArea(0);
+        createPhasesScrollArea(mTabPhasesIndex);
     else
-        createEventsScrollArea(0);
+        createEventsScrollArea(mTabEventsIndex);
 
     // ------------------------------------------------------------
    // updateGraphsZoomX(); // to set the CurrentMinX value inside the graphView
@@ -1059,7 +1056,7 @@ void ResultsView::createEventsScrollArea(const int idx)
         mStack->addWidget(mEventsScrollArea);
     }
 
-    for (auto g : mByEventsGraphs)
+    for (auto && g : mByEventsGraphs)
         delete g;
 
     mByEventsGraphs.clear();
@@ -1311,27 +1308,27 @@ void ResultsView::setThreshold()
 void ResultsView::unfoldToggle()
 {
     
-    qreal graphInit = 0.;
-    qreal graphTarget = 0.;
+  //  qreal graphInit = 0.;
+  //  qreal graphTarget = 0.;
     
     if (mStack->currentWidget() == mEventsScrollArea) {
         
         // number of Items increase
-        if (mUnfoldBut->isChecked()) {
+      /*  if (mUnfoldBut->isChecked()) {
             graphInit = (qreal) mModel->mNumberOfEvents;
             graphTarget = (qreal) mModel->mNumberOfEvents + mModel->mNumberOfDates;
             
         } else {
             graphInit = (qreal) mModel->mNumberOfEvents + mModel->mNumberOfDates;
             graphTarget = (qreal) mModel->mNumberOfEvents;
-        }
+        }*/
             
-        mTabEventsIndex = (int)((mTabEventsIndex*mNumberOfGraph / graphInit) * graphTarget/mNumberOfGraph);
+        mTabEventsIndex = 0;//(int)((mTabEventsIndex*mNumberOfGraph / graphInit) * graphTarget/mNumberOfGraph);
         
     } else if (mStack->currentWidget() == mPhasesScrollArea) {
         
             // number of Items increase
-            if (mUnfoldBut->isChecked()) {
+           /* if (mUnfoldBut->isChecked()) {
                 graphInit = (qreal) mModel->mNumberOfPhases;
                 // number of Items increase
                 if (mShowDataUnderPhasesCheck->isVisible() && mShowDataUnderPhasesCheck->isChecked())
@@ -1349,8 +1346,8 @@ void ResultsView::unfoldToggle()
                 
                 graphTarget =  (qreal) (mModel->mNumberOfPhases);
             }
-        
-       mTabPhasesIndex = (int)((mTabPhasesIndex*mNumberOfGraph / graphInit) * graphTarget/mNumberOfGraph);
+        */
+       mTabPhasesIndex = 0;//(int)((mTabPhasesIndex*mNumberOfGraph / graphInit) * graphTarget/mNumberOfGraph);
         
     }
     
@@ -1358,32 +1355,16 @@ void ResultsView::unfoldToggle()
 }
 
 void ResultsView::nextSheet()
-{
-    
+{    
     int* currentIndex (nullptr);
-    //int graphCount (0);
-    
-    if (mStack->currentWidget() == mEventsScrollArea) {
-       /* graphCount = mModel->mNumberOfEvents;
-        if (mUnfoldBut->isChecked())
-            graphCount += mModel->mNumberOfDates; */
+
+    if (mStack->currentWidget() == mEventsScrollArea)
         currentIndex = &mTabEventsIndex;
-    }
-    
-    /*else if (mStack->currentWidget() == mPhasesScrollArea) {
-        graphCount = mModel->mNumberOfPhases;
-        if (mUnfoldBut->isChecked()) {
-            graphCount += mModel->mNumberOfEventsInAllPhases;
-            if (mShowDataUnderPhasesCheck->isVisible() && mShowDataUnderPhasesCheck->isChecked())
-                graphCount += mModel->mNumberOfDatesInAllPhases;
-        }*/
     else
         currentIndex = &mTabPhasesIndex;
-    //}
   
     if ( (((*currentIndex) + 1)*mNumberOfGraph) < mMaximunNumberOfVisibleGraph)
         ++(*currentIndex);
-    
     
     emit updateScrollAreaRequested();
     
@@ -1974,8 +1955,8 @@ void ResultsView::editCurrentMaxX()
 
 void ResultsView:: setStudyPeriod()
 {
-    mResultCurrentMinX = mSettings.mTmin;
-    mResultCurrentMaxX = mSettings.mTmax;
+    mResultCurrentMinX = mSettings.getTminFormated();
+    mResultCurrentMaxX = mSettings.getTmaxFormated();
     mResultZoomX = (double)(mResultCurrentMaxX - mResultCurrentMinX)/ (double)(mResultMaxX - mResultMinX);// * 100.;
 
     forceXSlideSetValue = true;
