@@ -19,9 +19,9 @@ Model::Model():
 mProject(nullptr),
 mNumberOfPhases(0),
 mNumberOfEvents(0),
-mNumberOfDates(0),
-mNumberOfEventsInAllPhases(0),
-mNumberOfDatesInAllPhases(0)
+mNumberOfDates(0)
+//mNumberOfEventsInAllPhases(0),
+//mNumberOfDatesInAllPhases(0)
 {
     
 }
@@ -56,20 +56,17 @@ void Model::clear()
 
     if (!mPhaseConstraints.isEmpty()) {
         for (PhaseConstraint* pc : mPhaseConstraints) {
-            if (pc) {
+            if (pc)
                 pc->~PhaseConstraint();
-                pc = nullptr;
-            }
+
         }
         mPhaseConstraints.clear();
     }
 
     if (!mEventConstraints.isEmpty()) {
         for (EventConstraint* ec : mEventConstraints) {
-            if (ec) {
+            if (ec)
                 ec->~EventConstraint();
-                ec = nullptr;
-            }
         }
         mEventConstraints.clear();
     }
@@ -150,10 +147,8 @@ void Model::fromJson(const QJsonObject& json)
                     for (int j=0; j<e->mDates.size(); ++j) {
                         e->mDates[j].mMixingLevel = e->mMixingLevel;
                         e->mDates[j].mColor = e->mColor;
-
                     }
                     mEvents.append(e);
-                    //e = 0;
                 }
                 catch(QString error){
                     QMessageBox message(QMessageBox::Critical,
@@ -237,9 +232,9 @@ void Model::fromJson(const QJsonObject& json)
         }
        // int mNumberOfEventsInAllPhases;
        // int mNumberOfDatesInAllPhases;
-        mNumberOfEventsInAllPhases += mPhases.at(i)->mEvents.size();
-        for (int k=0; k<mPhases.at(i)->mEvents.size();++k)
-            mNumberOfDatesInAllPhases += mPhases.at(i)->mEvents.at(k)->mDates.size();
+        //mNumberOfEventsInAllPhases += mPhases.at(i)->mEvents.size();
+        //for (int k=0; k<mPhases.at(i)->mEvents.size();++k)
+        //    mNumberOfDatesInAllPhases += mPhases.at(i)->mEvents.at(k)->mDates.size();
 
     }
     //return model;

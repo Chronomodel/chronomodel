@@ -4,7 +4,7 @@
 #include "Painting.h"
 #include <QtWidgets>
 
-#pragma mark Constructor / Destructor / Init
+// Constructor / Destructor / Init
 ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
 {
     mModelView = new ModelView();
@@ -13,7 +13,6 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     QPalette palette;
     palette.setColor(QPalette::Base, Qt::transparent);
     palette.setColor(QPalette::Text, Qt::black);
-    
     
     mLogModelEdit = new QTextEdit();
     mLogModelEdit->setReadOnly(true);
@@ -62,7 +61,7 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     layout->addWidget(mStack);
     setLayout(layout);
     
-    connect(mResultsView, SIGNAL(resultsLogUpdated(const QString&)), this, SLOT(updateResultsLog(const QString&)));
+    connect(mResultsView, &ResultsView::resultsLogUpdated, this, &ProjectView::updateResultsLog);
 }
 
 ProjectView::~ProjectView()
@@ -105,11 +104,11 @@ void ProjectView::changeDesign(bool refresh)
 
 void ProjectView::showResults()
 {
-    if (mRefreshResults) {
+   // if (mRefreshResults) {
         mResultsView->clearResults();
         mResultsView->updateModel(); // update Design e.g. Name and color //updateResults() is call inside
         mRefreshResults=false;
-    }
+   // }
     mStack->setCurrentIndex(1);
     // come from mViewResultsAction and  updateResults send repaint on mStack
 }
@@ -120,7 +119,7 @@ void ProjectView::showLog()
     mStack->setCurrentIndex(2);
 }
 
-#pragma mark Update Model
+//pragma mark Update Model
 /**
  * @brief Update All model views (Scenes, ...) after pushing state
  */

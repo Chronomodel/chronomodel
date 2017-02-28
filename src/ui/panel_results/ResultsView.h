@@ -280,6 +280,7 @@ private:
     double mBandwidthUsed;
     double mThresholdUsed;
     int mNumberOfGraph;
+    int mMaximunNumberOfVisibleGraph;
 };
 
 #endif

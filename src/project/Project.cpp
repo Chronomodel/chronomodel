@@ -60,8 +60,12 @@ mSaveData(true)
     mReasonChangeStructure<<"project loaded";
     mReasonChangeStructure<<"Event constraint deleted"<<"Event constraint created"<<"Event(s) deleted";
     mReasonChangeStructure<<"Event created"<<"Bound created"<<"Event method updated" <<"Date created";
+    mReasonChangeStructure<<"Event selected";
+
     mReasonChangeStructure<<"Date updated"<<"Phase constraint updated"<<"Phase created"<<"Phase(s) deleted";
+
     mReasonChangeStructure<<"Phase updated"<<"Phase constraint created"<<"Phase's events updated";
+    mReasonChangeStructure<<"Phase selected";
     mReasonChangeStructure.squeeze();
 
     mReasonChangeDesign<<"Event color updated"<< "Event color updated"<<"Event name updated";
@@ -170,7 +174,7 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
 
 
     if (mStructureIsChanged)
-        emit projectStructureChanged(true);
+        emit projectStructureChanged(true); // connected to MainWindows::noResults
 
     else if (mDesignIsChanged)
         emit projectDesignChanged(true);
