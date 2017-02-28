@@ -262,7 +262,7 @@ equals(USE_PLUGIN_UNIFORM, 1){
 HEADERS += src/project/Project.h
 HEADERS += src/project/PluginManager.h
 HEADERS += src/project/ProjectSettings.h
-HEADERS += src/project/ProjectSettingsDialog.h
+#HEADERS += src/project/ProjectSettingsDialog.h
 HEADERS += src/project/SetProjectState.h
 HEADERS += src/project/StateEvent.h
     
@@ -404,7 +404,7 @@ equals(USE_PLUGIN_UNIFORM, 1){
 SOURCES += src/project/Project.cpp
 SOURCES += src/project/PluginManager.cpp
 SOURCES += src/project/ProjectSettings.cpp
-SOURCES += src/project/ProjectSettingsDialog.cpp
+#SOURCES += src/project/ProjectSettingsDialog.cpp
 SOURCES += src/project/SetProjectState.cpp
 SOURCES += src/project/StateEvent.cpp
     

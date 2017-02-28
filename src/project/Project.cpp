@@ -2,7 +2,7 @@
 #include "MainWindow.h"
 #include "Model.h"
 #include "PluginManager.h"
-#include "ProjectSettingsDialog.h"
+//#include "ProjectSettingsDialog.h"
 #include "MCMCSettingsDialog.h"
 
 #include "Event.h"
