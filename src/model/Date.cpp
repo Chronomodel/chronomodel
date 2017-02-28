@@ -270,13 +270,6 @@ void Date::reset()
 
 void Date::calibrate(const ProjectSettings& settings, Project *project)
 {
-    // we need to calculate a new mCalibration only, if mStep change or if there is no mCalibration
-    /* if(mSettings.mStep == settings.mStep && !mCalibration.isEmpty()){
-        return;
-    }*/
-    
-    //mCalibration.clear();
-    //mRepartition.clear();
 
     mSettings = settings;
 
