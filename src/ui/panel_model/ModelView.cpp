@@ -562,7 +562,6 @@ void ModelView::adjustStep()
             if (s.mStep != dialog.step()) {
                 s.mStep = dialog.step();
                 // rebuild all calibration
-                // TODO adding a waiting box
                 QList<Event*> events = mProject->mModel->mEvents;
 
                 QProgressDialog *progress = new QProgressDialog("Calibration curve generation","Wait" , 1, 10, qApp->activeWindow());
