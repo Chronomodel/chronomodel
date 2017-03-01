@@ -232,7 +232,7 @@ void MainWindow::createActions()
     mDatesMethodAction = new QAction(tr("Selected events: change data method"), this);
     connect(mDatesMethodAction, SIGNAL(triggered()), this, SLOT(changeDatesMethod()));
     
-    mSelectEventsAction = new QAction(tr("select events in selected phases"), this);
+    mSelectEventsAction = new QAction(tr("Select all events of the selected phases"), this);
     connect(mSelectEventsAction, SIGNAL(triggered()), this, SLOT(selectedEventInSelectedPhases()));
     //-----------------------------------------------------------------
     // Help/About Menu
@@ -330,6 +330,7 @@ void MainWindow::createMenus()
     //-----------------------------------------------------------------
     mPluginsMenu = menuBar()->addMenu(tr("Actions"));
     mPluginsMenu->addAction(mSelectEventsAction);
+    mPluginsMenu->addSeparator();
     mPluginsMenu->addAction(mEventsColorAction);
     mPluginsMenu->addAction(mEventsMethodAction);
     mPluginsMenu->addAction(mDatesMethodAction);
