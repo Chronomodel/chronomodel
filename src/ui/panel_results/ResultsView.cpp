@@ -75,9 +75,9 @@ mMaximunNumberOfVisibleGraph(0)
     QFontMetricsF fm(font);
 
     mTabs = new Tabs(this);
-    mTabs->addTab(tr("Posterior distrib."));
-    mTabs->addTab(tr("History plots"));
-    mTabs->addTab(tr("Acceptation rate"));
+    mTabs->addTab(tr("Posterior Distrib."));
+    mTabs->addTab(tr("History Plots"));
+    mTabs->addTab(tr("Acceptance Rate"));
     mTabs->addTab(tr("Autocorrelation"));
     mTabs->setTab(0, false);
     mTabs->setFont(fontTitle);
@@ -327,7 +327,7 @@ mMaximunNumberOfVisibleGraph(0)
 
     mChainsGroup = new QWidget(mOptionsWidget);
 
-    mAllChainsCheck = new CheckBox(tr("Chains concatenation"), mChainsGroup);
+    mAllChainsCheck = new CheckBox(tr("Chains Concatenation"), mChainsGroup);
     mAllChainsCheck->setChecked(true);
 
     /*
@@ -337,7 +337,7 @@ mMaximunNumberOfVisibleGraph(0)
     */
     
     /* -------------------------------------- mResultsGroup---------------------------------------------------*/
-    mResultsTitle = new Label(tr("Results options"), mOptionsWidget);
+    mResultsTitle = new Label(tr("Results Options"), mOptionsWidget);
     mResultsTitle->setIsTitle(true);
     mResultsTitle->setFixedWidth(mOptionsW);
 
@@ -345,11 +345,11 @@ mMaximunNumberOfVisibleGraph(0)
     //mResultsGroup->setFixedWidth(mOptionsW);
     
 
-    mDataThetaRadio = new RadioButton(tr("Calendar dates"), mResultsGroup);
+    mDataThetaRadio = new RadioButton(tr("Calendar Dates"), mResultsGroup);
     mDataSigmaRadio = new RadioButton(tr("Individual std. deviations"), mResultsGroup);
     
-    mShowDataUnderPhasesCheck = new CheckBox(tr("Unfold data under Event"), mResultsGroup);
-    mDataCalibCheck = new CheckBox(tr("Individual calib. dates"), mResultsGroup);
+    mShowDataUnderPhasesCheck = new CheckBox(tr("Unfold Data under Event"), mResultsGroup);
+    mDataCalibCheck = new CheckBox(tr("Individual Calib. Dates"), mResultsGroup);
 
     mWiggleCheck = new CheckBox(tr("Wiggle shifted"), mResultsGroup);
     mDataThetaRadio->setChecked(true);
@@ -359,13 +359,13 @@ mMaximunNumberOfVisibleGraph(0)
    
     /* -------------------------------------- mPostDistGroup ---------------------------------------------------*/
     
-    mPostDistOptsTitle = new Label(tr("Post. distrib. options"), mOptionsWidget);
+    mPostDistOptsTitle = new Label(tr("Post. Distrib. Options"), mOptionsWidget);
     mPostDistOptsTitle->setIsTitle(true);
     mPostDistOptsTitle->setFixedWidth(mOptionsW);
 
     mPostDistGroup = new QWidget(mOptionsWidget);
     
-    mCredibilityCheck = new CheckBox(tr("Show credibility"), mPostDistGroup);
+    mCredibilityCheck = new CheckBox(tr("Show Credibility"), mPostDistGroup);
     mCredibilityCheck->setChecked(true);
     mThreshLab = new Label(tr("HPD / Credibility (%)"), mPostDistGroup);
     mThreshLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
@@ -401,7 +401,7 @@ mMaximunNumberOfVisibleGraph(0)
     mComboH = fm.height() + 6;  //mFFTLenCombo->sizeHint().height();
     mTabsH = mComboH + 2*mMargin;
     
-    mBandwidthLab = new Label(tr("Bandwidth const."), mPostDistGroup);
+    mBandwidthLab = new Label(tr("Bandwidth Const."), mPostDistGroup);
     mBandwidthLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mBandwidthEdit = new LineEdit(mPostDistGroup);
     mBandwidthEdit->setFont(font);

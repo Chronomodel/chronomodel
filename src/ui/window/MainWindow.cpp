@@ -223,16 +223,16 @@ void MainWindow::createActions()
     //-----------------------------------------------------------------
     //  Grouped actions
     //-----------------------------------------------------------------
-    mEventsColorAction = new QAction(tr("Selected events: change color"), this);
+    mEventsColorAction = new QAction(tr("Selected Events: Change Color"), this);
     connect(mEventsColorAction, SIGNAL(triggered()), this, SLOT(changeEventsColor()));
     
-    mEventsMethodAction = new QAction(tr("Selected events: change method"), this);
+    mEventsMethodAction = new QAction(tr("Selected Events: Change Method"), this);
     connect(mEventsMethodAction, SIGNAL(triggered()), this, SLOT(changeEventsMethod()));
     
-    mDatesMethodAction = new QAction(tr("Selected events: change data method"), this);
+    mDatesMethodAction = new QAction(tr("Selected Events: Change Data Method"), this);
     connect(mDatesMethodAction, SIGNAL(triggered()), this, SLOT(changeDatesMethod()));
     
-    mSelectEventsAction = new QAction(tr("Select all events of the selected phases"), this);
+    mSelectEventsAction = new QAction(tr("Select All Events of the Selected Phases"), this);
     connect(mSelectEventsAction, SIGNAL(triggered()), this, SLOT(selectedEventInSelectedPhases()));
     //-----------------------------------------------------------------
     // Help/About Menu
@@ -247,7 +247,7 @@ void MainWindow::createActions()
     mHelpAction->setCheckable(true);
     connect(mHelpAction, SIGNAL(toggled(bool)), this, SLOT(showHelp(bool)));
     
-    mManualAction = new QAction(QIcon(":pdf_p.png"), tr("Manual online"), this);
+    mManualAction = new QAction(QIcon(":pdf_p.png"), tr("Manual Online"), this);
     connect(mManualAction, SIGNAL(triggered()), this, SLOT(openManual()));
     
     mWebsiteAction = new QAction(QIcon(":web_p.png"), tr("Website"), this);
@@ -656,7 +656,7 @@ void MainWindow::selectedEventInSelectedPhases() {
 
 void MainWindow::changeEventsColor()
 {
-    const QColor color = QColorDialog::getColor(Qt::blue, qApp->activeWindow(), tr("Change selected events color"));
+    const QColor color = QColorDialog::getColor(Qt::blue, qApp->activeWindow(), tr("Change Selected Events Color"));
     if (color.isValid())
         mProject->updateSelectedEventsColor(color);
     
@@ -670,8 +670,8 @@ void MainWindow::changeEventsMethod()
     
     bool ok;
     QString methodStr = QInputDialog::getItem(qApp->activeWindow(),
-                                          tr("Change events method"),
-                                          tr("Change selected events MCMC method :"),
+                                          tr("Change Events Method"),
+                                          tr("Change Selected Events MCMC Method :"),
                                           opts, 0, false, &ok);
     if (ok && !methodStr.isEmpty()) {
         Event::Method method = ModelUtilities::getEventMethodFromText(methodStr);
@@ -687,7 +687,7 @@ void MainWindow::changeDatesMethod()
     
     bool ok;
     QString pluginName = QInputDialog::getItem(qApp->activeWindow(),
-                                             tr("Change data method"),
+                                             tr("Change Data Method"),
                                              tr("For what type of data do you want to change the method ?"),
                                              opts, 0, false, &ok);
     if (ok) {
@@ -697,7 +697,7 @@ void MainWindow::changeDatesMethod()
         opts.append(ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
         
         QString methodStr = QInputDialog::getItem(qApp->activeWindow(),
-                                                  tr("Change data method"),
+                                                  tr("Change Data Method"),
                                                   tr("Change MCMC method of data in selected events :"),
                                                   opts, 0, false, &ok);
         if (ok && !methodStr.isEmpty()) {
