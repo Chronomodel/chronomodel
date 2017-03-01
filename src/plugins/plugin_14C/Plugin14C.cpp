@@ -377,7 +377,7 @@ QList<QHash<QString, QVariant>> Plugin14C::getGroupedActions()
     
     QHash<QString, QVariant> groupedAction;
     groupedAction.insert("pluginId", getId());
-    groupedAction.insert("title", tr("Selected events with 14C: change Ref. Curves"));
+    groupedAction.insert("title", tr("Selected Events with 14C: Change Ref. Curves"));
     groupedAction.insert("label", tr("Change 14C Ref. Curves for all 14C data in selected events :"));
     groupedAction.insert("inputType", "combo");
     groupedAction.insert("items", getRefsNames());
@@ -396,9 +396,9 @@ bool Plugin14C::areDatesMergeable(const QJsonArray& dates)
         QJsonObject data = date.value(STATE_DATE_DATA).toObject();
         QString curve = data.value(DATE_14C_REF_CURVE_STR).toString();
         
-        if(refCurve.isEmpty())
+        if (refCurve.isEmpty())
             refCurve = curve;
-        else if(refCurve != curve)
+        else if (refCurve != curve)
             return false;
     }
     return true;
