@@ -330,6 +330,10 @@ QString Model::getModelLog() const{
 void Model::generateModelLog()
 {
     QString log;
+    // Study period
+    QLocale locale = QLocale();
+    log += line(textBold(textBlack(tr("Prior Study Period : [ ") + locale.toString(mSettings.getTminFormated()) + " : " + locale.toString(mSettings.getTmaxFormated()) + " ] " + DateUtils::getAppSettingsFormatStr() )));
+    log += "<br>";
 
     int i(0);
     for (auto&& pEvent : mEvents) {
