@@ -767,14 +767,12 @@ bool Project::saveProjectToFile()
             mModel->saveToFile(mProjectFileDir + "/" + mProjectFileName + ".res");
         }
         else {
-        QFileInfo checkFile(mProjectFileDir + "/" + mProjectFileName + ".res");
-        if (checkFile.exists() && checkFile.isFile()) {
-            QFile(mProjectFileDir + "/" + mProjectFileName + ".res").remove();
-        } else {
-            return true;
+            QFileInfo checkFile(mProjectFileDir + "/" + mProjectFileName + ".res");
+            if (checkFile.exists() && checkFile.isFile()) {
+                QFile(mProjectFileDir + "/" + mProjectFileName + ".res").remove();
+            } else
+                return true;
         }
-
-    }
     }
     return true;
 }
