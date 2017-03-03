@@ -26,7 +26,7 @@ class AppSettingsDialog: public QDialog
 {
     Q_OBJECT
 public:
-    AppSettingsDialog(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    AppSettingsDialog(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
     virtual ~AppSettingsDialog();
 
     void setSettings(const AppSettings& settings);
@@ -37,6 +37,7 @@ protected:
     //void resizeEvent(QResizeEvent* e);
     
 private slots:
+    void fontButtonClicked();
     void changeSettings();
     void buttonClicked(QAbstractButton*);
     
@@ -53,7 +54,10 @@ private:
     
     QLabel* mLanguageLab;
     QComboBox* mLanguageCombo;
-    
+
+    Label* mFontLab;
+    Button* mFontBut;
+    QFont mFont;
    // QLabel* mCountryLab;
    // QComboBox* mCountryCombo;
     

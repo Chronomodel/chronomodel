@@ -21,6 +21,8 @@ mNbSheet(APP_SETTINGS_DEFAULT_SHEET)
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
 
+    mFont = QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE);
+
     if (newLoc.decimalPoint()==',') {
         mCSVCellSeparator=";";
         mCSVDecSeparator=",";
@@ -46,6 +48,8 @@ void AppSettings::copyFrom(const AppSettings& s)
 {
     mLanguage = s.mLanguage;
     mCountry = s.mCountry;
+    mFont = s.mFont;
+
     mAutoSave = s.mAutoSave;
     mAutoSaveDelay = s.mAutoSaveDelay;
     mShowHelp = s.mShowHelp;

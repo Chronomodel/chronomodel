@@ -33,7 +33,7 @@ public:
         eSigma = 1
     };
     
-    explicit GraphViewResults(QWidget *parent = 0);
+    explicit GraphViewResults(QWidget *parent = nullptr);
     virtual ~GraphViewResults();
     
     void setSettings(const ProjectSettings& settings);

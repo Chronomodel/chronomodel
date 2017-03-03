@@ -32,7 +32,7 @@ class ModelView: public QWidget
 {
     Q_OBJECT
 public:
-    ModelView(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    ModelView(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
     ~ModelView();
     
     void setProject(Project* project);
@@ -44,6 +44,8 @@ public:
     void readSettings();
     void writeSettings();
     void createProject();
+
+    void setFont(const QFont & font);
     
 public slots:
     void updateProject();

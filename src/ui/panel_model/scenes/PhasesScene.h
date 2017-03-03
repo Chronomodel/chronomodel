@@ -10,7 +10,7 @@ class PhasesScene: public AbstractScene
 {
     Q_OBJECT
 public:
-    PhasesScene(QGraphicsView* view, QObject* parent = 0);
+    PhasesScene(QGraphicsView* view, QObject* parent = nullptr);
     ~PhasesScene();
     
     void sendUpdateProject(const QString& reason, bool notify, bool async);

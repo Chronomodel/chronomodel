@@ -20,9 +20,8 @@ void Button::init()
     setCursor(Qt::PointingHandCursor);
     //setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
     
-    QFont font(QApplication::font());
-    //font.setPointSizeF(pointSize(10));
-    setFont(font);
+   // QFont font(QApplication::font());
+   // setFont(font);
     
     mFlatVertical = false;
     mFlatHorizontal = false;
@@ -70,18 +69,14 @@ void Button::paintEvent(QPaintEvent* e)
     painter.save();
     painter.setRenderHint(QPainter::Antialiasing);
     
-    painter.setFont(font());
-    
     QRectF r = rect();
-    if(mUseMargin)
-    {
+    if (mUseMargin) {
 #ifdef Q_OS_MAC
         int m = style()->pixelMetric(QStyle::PM_ButtonMargin);
         r.adjust(m, m, -m, -m);
 #endif
     }
-    if(mIsClose)
-    {
+    if (mIsClose) {
         r.adjust(1, 1, -1, -1);
         
         painter.setPen(Qt::black);
@@ -110,25 +105,20 @@ void Button::paintEvent(QPaintEvent* e)
         painter.drawLine(-s, 0, s, 0);
         
         painter.restore();
-    }
-    else if(mFlatVertical || mFlatHorizontal)
-    {
+
+    } else if (mFlatVertical || mFlatHorizontal) {
         QColor gradColTop(40, 40, 40);
         QColor gradColBot(30, 30, 30);
         QColor gradLineLight(50, 50, 50);
         QColor gradLineDark(0, 0, 0);
         
-        if(!isEnabled())
-        {
+        if (!isEnabled()) {
             gradColTop = QColor(110, 110, 110);
             gradColBot = QColor(100, 100, 100);
             gradLineLight = QColor(120, 120, 120);
             gradLineDark = QColor(80, 80, 80);
-        }
-        else if(isDown() || isChecked())
-        {
-            //gradColTop = QColor(20, 20, 20);
-            //gradColBot = QColor(10, 10, 10);
+
+        } else if (isDown() || isChecked()) {
             gradColTop = Painting::mainColorDark;
             gradColBot = Painting::mainColorDark;
             gradLineLight = QColor(30, 30, 30);
@@ -140,15 +130,15 @@ void Button::paintEvent(QPaintEvent* e)
         painter.fillRect(r, grad);
         
         painter.setPen(gradLineLight);
-        if(mFlatVertical)
+        if (mFlatVertical)
             painter.drawLine(0, 0, r.width(), 0);
-        else if(mFlatHorizontal)
+        else if (mFlatHorizontal)
             painter.drawLine(0, 0, 0, r.height());
         
         painter.setPen(gradLineDark);
-        if(mFlatVertical)
+        if (mFlatVertical)
             painter.drawLine(0, r.height(), r.width(), r.height());
-        else if(mFlatHorizontal)
+        else if (mFlatHorizontal)
             painter.drawLine(r.width(), 0, r.width(), r.height());
         
         // ---------
@@ -158,69 +148,68 @@ void Button::paintEvent(QPaintEvent* e)
         
         bool iconOnly = !ic.isNull() && (text().isEmpty() || height() <= 45);
         bool textOnly = ic.isNull() && !text().isEmpty();
-        
-        if(textOnly)
-        {
+
+        QFont adaptedFont (font());
+        QFontMetricsF fm (adaptedFont);
+        qreal textSize = fm.width(text());
+        if (textSize > (r.width() - 10. )) {
+            const qreal fontRate = textSize / (r.width() - 10. );
+            const qreal ptSiz = adaptedFont.pointSizeF() / fontRate;
+            adaptedFont.setPointSizeF(ptSiz);
+        }
+        painter.setFont(adaptedFont);
+
+        if (textOnly) {
             painter.drawText(r, Qt::AlignCenter, text());
-        }
-        else if(iconOnly)
-        {
-            double m = 5;
-            double w = r.width() - 2*m;
-            double h = r.height() - 2*m;
-            double s = qMin(w, h);
+
+        } else if (iconOnly) {
+            const qreal m = 5.;
+            const qreal w = r.width() - 2.*m;
+            const qreal h = r.height() - 2*m;
+            const qreal s = qMin(w, h);
             
-            QRectF iconRect((r.width() - s)/2.f, m, s, s);
+            QRectF iconRect((r.width() - s)/2., m, s, s);
             QPixmap pixmap = ic.pixmap(iconRect.size().toSize());
             painter.drawPixmap(iconRect, pixmap, QRectF(0, 0, pixmap.width(), pixmap.height()));
-        }
-        else if( !(ic.isNull()) && !(text().isEmpty()))
-        {
+
+        } else if ( !(ic.isNull()) && !(text().isEmpty())) {
             int textH = 22;
-            //if(ic.isNull())
-            //    textH = height();
             
-            double m = 5;
-            double w = r.width() - 2*m;
-            double h = r.height() - m - textH;
-            double s = qMin(w, h);
+            const qreal m = 5.;
+            const qreal w = r.width() - 2*m;
+            const qreal h = r.height() - m - textH;
+            const qreal s = qMin(w, h);
             
-            painter.drawText(r.adjusted(0, r.height() - textH, 0, 0), Qt::AlignCenter, text());
-            
+            painter.drawText(r.adjusted(0, r.height() - textH, 0, 0), Qt::AlignCenter , text());
+
             QRectF iconRect((r.width() - s)/2.f, m, s, s);
             QPixmap pixmap = ic.pixmap(iconRect.size().toSize());
             painter.drawPixmap(iconRect, pixmap, QRectF(0, 0, pixmap.width(), pixmap.height()));
         }
-    }
-    else
-    {
+    } else {
         r.adjust(1, 1, -1, -1);
         
         QColor gradColTop(255, 255, 255);
         QColor gradColBot(220, 220, 220);
         QColor penCol(50, 50, 50);
         
-        if(mColorState == eReady)
-        {
+        if (mColorState == eReady) {
             gradColTop = QColor(91, 196, 98);
             gradColBot = QColor(73, 161, 90);
             penCol = Qt::white;
-        }
-        else if(mColorState == eWarning)
-        {
+
+        } else if (mColorState == eWarning) {
             gradColTop = QColor(255, 151, 123);
             gradColBot = QColor(140, 20, 20);
             penCol = Qt::white;
         }
         
         
-        if(!isEnabled())
-        {
+        if (!isEnabled()) {
             gradColTop = QColor(160, 160, 160);
             gradColBot = QColor(160, 160, 160);
-        }
-        else if(isDown() || isChecked())
-        {
+
+        } else if (isDown() || isChecked()) {
             gradColTop = QColor(200, 200, 200);
             gradColBot = QColor(220, 220, 220);
         }
@@ -236,12 +225,10 @@ void Button::paintEvent(QPaintEvent* e)
         
         painter.setPen(penCol);
         painter.drawText(r, Qt::AlignCenter, text());
-        
-        //QPushButton::paintEvent(e);
+
     }
     
     painter.restore();
-    
-    //QPushButton::paintEvent(e);
+
 }
 

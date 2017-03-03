@@ -15,8 +15,8 @@ public:
         eWarning = 2
     };
     
-    Button(QWidget* parent = 0);
-    Button(const QString& text, QWidget* parent = 0);
+    Button(QWidget* parent = nullptr);
+    Button(const QString& text, QWidget* parent = nullptr);
     ~Button();
     void init();
     

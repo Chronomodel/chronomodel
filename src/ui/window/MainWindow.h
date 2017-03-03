@@ -41,6 +41,11 @@ public:
     void setResultsEnabled(bool enabled);
     QString getNameProject() const;
 
+    void readSettings(const QString& defaultFilePath);
+    void writeSettings();
+    void updateWindowTitle();
+    void setFont(const QFont& font);
+
 protected:
     void closeEvent(QCloseEvent* e) Q_DECL_OVERRIDE;
     void keyPressEvent(QKeyEvent* e) Q_DECL_OVERRIDE;
@@ -49,18 +54,12 @@ protected:
     void connectProject();
     void disconnectProject();
 
-public:
-    void readSettings(const QString& defaultFilePath);
-    void writeSettings();
-    void updateWindowTitle();
-
 private:
     void createActions();
     void createMenus();
     void createToolBars();
 
 public slots:
-
     void newProject();
     void openProject();
     void closeProject();
@@ -84,6 +83,8 @@ public slots:
     void doGroupedAction();
     
 private:
+    QToolBar* mToolBar;
+
     QStackedWidget* mCentralStack;
     ProjectView* mProjectView;
     Project* mProject;

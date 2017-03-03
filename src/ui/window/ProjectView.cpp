@@ -102,6 +102,14 @@ void ProjectView::changeDesign(bool refresh)
   mRefreshResults = true;
 }
 
+void ProjectView::setFont(const QFont &font)
+{
+    mModelView->setFont(font);
+    mResultsView->setFont(font);
+    //mLogView>setFont(font);
+    //mLogTabs>setFont(font);
+}
+
 void ProjectView::showResults()
 {
    // if (mRefreshResults) {
@@ -136,7 +144,9 @@ void ProjectView::createProject()
 
 void ProjectView:: applySettings(Model* model,const AppSettings* appSet)
 {
+    setFont(appSet->mFont);
     if (model) {
+        mModelView->setFont(appSet->mFont);
         mResultsView->updateFormatSetting(model,appSet);
 
         // force to regenerate the densities

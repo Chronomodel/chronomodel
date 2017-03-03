@@ -13,21 +13,19 @@
 MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
 {
     setWindowTitle("ChronoModel");
-    
+
     QPalette tooltipPalette;
     tooltipPalette.setColor(QPalette::ToolTipBase, Qt::white);
     tooltipPalette.setColor(QPalette::ToolTipText, Qt::black);
     QToolTip::setPalette(tooltipPalette);
-    QFont tooltipFont(QApplication::font());
+    QFont tooltipFont(font());
     tooltipFont.setItalic(true);
-    //tooltipFont.setPointSizeF(11.f);
 
     QToolTip::setFont(tooltipFont);
 
-    setFont(QApplication::font());
     mLastPath = QDir::homePath();
     
-    mProject = 0;
+    mProject = nullptr;
 
     mProjectView = new ProjectView();
     setCentralWidget(mProjectView);
@@ -68,9 +66,6 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
 
     connect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
 
-
-
-
     QLocale newLoc(QLocale::system());
     mAppSettings.mLanguage = newLoc.language();
     mAppSettings.mCountry = newLoc.country();
@@ -84,7 +79,6 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
         mAppSettings.mCSVCellSeparator=",";
         mAppSettings.mCSVDecSeparator=".";
     }
-
 
     activateInterface(false);
 }
@@ -132,8 +126,10 @@ void MainWindow::setCurrentPath(const QString& path)
 #pragma mark Actions & Menus
 void MainWindow::createActions()
 {
+    //QWhatsThis::createAction();
+
     mAppSettingsAction = new QAction(QIcon(":settings.png"), tr("Settings"), this);
-    connect(mAppSettingsAction, SIGNAL(triggered()), this, SLOT(appSettings()));
+    connect(mAppSettingsAction, &QAction::triggered, this, &MainWindow::appSettings);
     
     //-----------------------------------------------------------------
     // Project Actions
@@ -142,23 +138,28 @@ void MainWindow::createActions()
     mNewProjectAction = new QAction(QIcon(":new_p.png"), tr("&New"), this);
     mNewProjectAction->setShortcuts(QKeySequence::New);
     mNewProjectAction->setStatusTip(tr("Create a new project"));
-    connect(mNewProjectAction, SIGNAL(triggered()), this, SLOT(newProject()));
-    
+    mNewProjectAction->setToolTip(tr("New project"));
+    mNewProjectAction->setWhatsThis(tr("What's This? :Create a new project"));
+
+    connect(mNewProjectAction, &QAction::triggered, this, &MainWindow::newProject);
+
     mOpenProjectAction = new QAction(QIcon(":open_p.png"), tr("Open"), this);
     mOpenProjectAction->setShortcuts(QKeySequence::Open);
     mOpenProjectAction->setStatusTip(tr("Open an existing project"));
-    connect(mOpenProjectAction, SIGNAL(triggered()), this, SLOT(openProject()));
-    
+    connect(mOpenProjectAction, &QAction::triggered, this, &MainWindow::openProject);
+
     mCloseProjectAction = new QAction(tr("Close"), this);
     mCloseProjectAction->setShortcuts(QKeySequence::Close);
     mCloseProjectAction->setStatusTip(tr("Open an existing project"));
-    connect(mCloseProjectAction, SIGNAL(triggered()), this, SLOT(closeProject()));
-    
+    connect(mCloseProjectAction, &QAction::triggered, this, &MainWindow::closeProject);
+
     mProjectSaveAction = new QAction(QIcon(":save_p.png"), tr("&Save"), this);
     mProjectSaveAction->setShortcuts(QKeySequence::Save);
-    
+    mProjectSaveAction->setStatusTip(tr("Save the current project in the same place with the same name"));
+
     mProjectSaveAsAction = new QAction(QIcon(":save_p.png"), tr("Save as..."), this);
-    
+    mProjectSaveAsAction->setStatusTip(tr("Change the current project on an other name or on an other place"));
+
     mProjectExportAction = new QAction(QIcon(":export.png"), tr("Export"), this);
     mProjectExportAction->setVisible(false);
     
@@ -190,6 +191,7 @@ void MainWindow::createActions()
     //-----------------------------------------------------------------
     mViewModelAction = new QAction(QIcon(":model_p.png"), tr("Model"), this);
     mViewModelAction->setCheckable(true);
+
     
     mViewResultsAction = new QAction(QIcon(":results_p.png"), tr("Results"), this);
     mViewResultsAction->setCheckable(true);
@@ -198,7 +200,7 @@ void MainWindow::createActions()
     mViewLogAction = new QAction(QIcon(":log_p.png"), tr("Log"), this);
     mViewLogAction->setCheckable(true);
     mViewLogAction->setEnabled(false);
-    
+
     mViewGroup = new QActionGroup(this);
     mViewGroup->addAction(mViewModelAction);
     mViewGroup->addAction(mViewResultsAction);
@@ -210,12 +212,11 @@ void MainWindow::createActions()
     //-----------------------------------------------------------------
     const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
     for (int i=0; i<plugins.size(); ++i) {
-        QString name = plugins.at(i)->getName();
         QList<QHash<QString, QVariant>> groupedActions = plugins.at(i)->getGroupedActions();
         for (int j=0; j<groupedActions.size(); ++j) {
             QAction* act = new QAction(groupedActions[j]["title"].toString(), this);
             act->setData(QVariant(groupedActions[j]));
-            connect(act, SIGNAL(triggered()), this, SLOT(doGroupedAction()));
+            connect(act, &QAction::triggered, this, &MainWindow::doGroupedAction);
             mDatesActions.append(act);
         }
     }
@@ -224,34 +225,34 @@ void MainWindow::createActions()
     //  Grouped actions
     //-----------------------------------------------------------------
     mEventsColorAction = new QAction(tr("Selected Events: Change Color"), this);
-    connect(mEventsColorAction, SIGNAL(triggered()), this, SLOT(changeEventsColor()));
+    connect(mEventsColorAction, &QAction::triggered, this, &MainWindow::changeEventsColor);
     
     mEventsMethodAction = new QAction(tr("Selected Events: Change Method"), this);
-    connect(mEventsMethodAction, SIGNAL(triggered()), this, SLOT(changeEventsMethod()));
+    connect(mEventsMethodAction, &QAction::triggered, this, &MainWindow::changeEventsMethod);
     
     mDatesMethodAction = new QAction(tr("Selected Events: Change Data Method"), this);
-    connect(mDatesMethodAction, SIGNAL(triggered()), this, SLOT(changeDatesMethod()));
+    connect(mDatesMethodAction, &QAction::triggered, this, &MainWindow::changeDatesMethod);
     
     mSelectEventsAction = new QAction(tr("Select All Events of the Selected Phases"), this);
-    connect(mSelectEventsAction, SIGNAL(triggered()), this, SLOT(selectedEventInSelectedPhases()));
+    connect(mSelectEventsAction, &QAction::triggered, this, &MainWindow::selectedEventInSelectedPhases);
     //-----------------------------------------------------------------
     // Help/About Menu
     //-----------------------------------------------------------------
     mAboutAct = new QAction(QIcon(":light.png"), tr("About"), this);
-    connect(mAboutAct, SIGNAL(triggered()), this, SLOT(about()));
+    connect(mAboutAct, &QAction::triggered, this, &MainWindow::about);
     
     mAboutQtAct = new QAction(QIcon(":qt.png"), tr("About Qt"), this);
-    connect(mAboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+    connect(mAboutQtAct, &QAction::triggered, qApp, QApplication::aboutQt);
     
     mHelpAction = new QAction(QIcon(":help_p.png"), tr("Help"), this);
     mHelpAction->setCheckable(true);
-    connect(mHelpAction, SIGNAL(toggled(bool)), this, SLOT(showHelp(bool)));
+    connect(mHelpAction, &QAction::triggered, this, &MainWindow::showHelp);
     
     mManualAction = new QAction(QIcon(":pdf_p.png"), tr("Manual Online"), this);
-    connect(mManualAction, SIGNAL(triggered()), this, SLOT(openManual()));
+    connect(mManualAction, &QAction::triggered, this, &MainWindow::openManual);
     
     mWebsiteAction = new QAction(QIcon(":web_p.png"), tr("Website"), this);
-    connect(mWebsiteAction, SIGNAL(triggered()), this, SLOT(openWebsite()));
+    connect(mWebsiteAction, &QAction::triggered, this, &MainWindow::openWebsite);
     
     //-----------------------------------------------------------------
     // Translation Menu
@@ -340,44 +341,52 @@ void MainWindow::createMenus()
         mPluginsMenu->addAction(mDatesActions[i]);
     
 }
-
+/**
+ * @brief MainWindow::createToolBars
+ * Create the ToolBar with the icons, under the application menu
+ */
 void MainWindow::createToolBars()
 {
     //-----------------------------------------------------------------
     // Main ToolBar
     //-----------------------------------------------------------------
-    QToolBar* toolBar = addToolBar("Main Tool Bar");
-    toolBar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-    toolBar->setMovable(false);
-    toolBar->setAllowedAreas(Qt::TopToolBarArea);
+
+    mToolBar = addToolBar("Main Tool Bar");
+
+   // toolBar->setIconSize(QSize(15,15)) ;
+
+    mToolBar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon); // offer to write the text under the icon
+    mToolBar->setMovable(false);
+    mToolBar->setAllowedAreas(Qt::TopToolBarArea);
     
-    toolBar->addAction(mNewProjectAction);
-    toolBar->addAction(mOpenProjectAction);
-    toolBar->addAction(mProjectSaveAction);
-    toolBar->addAction(mProjectExportAction);
+    mToolBar->addAction(mNewProjectAction);
+    mToolBar->addAction(mOpenProjectAction);
+    mToolBar->addAction(mProjectSaveAction);
+    mToolBar->addAction(mProjectExportAction);
     
-    toolBar->addAction(mUndoAction);
-    toolBar->addAction(mRedoAction);
+    mToolBar->addAction(mUndoAction);
+    mToolBar->addAction(mRedoAction);
     
     QWidget* separator3 = new QWidget(this);
     separator3->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    toolBar->addWidget(separator3);
+    mToolBar->addWidget(separator3);
     
-    toolBar->addAction(mViewModelAction);
-    toolBar->addAction(mMCMCSettingsAction);
-    toolBar->addAction(mRunAction);
-    toolBar->addAction(mViewResultsAction);
-    toolBar->addAction(mViewLogAction);
+    mToolBar->addAction(mViewModelAction);
+    mToolBar->addAction(mMCMCSettingsAction);
+    mToolBar->addAction(mRunAction);
+    mToolBar->addAction(mViewResultsAction);
+    mToolBar->addAction(mViewLogAction);
     
     QWidget* separator4 = new QWidget(this);
     separator4->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    toolBar->addWidget(separator4);
+    mToolBar->addWidget(separator4);
     
-    toolBar->addAction(mHelpAction);
-    toolBar->addAction(mManualAction);
-    toolBar->addAction(mWebsiteAction);
-    /*toolBar->addAction(mAboutAct);
-    toolBar->addAction(mAboutQtAct);*/
+    mToolBar->addAction(mHelpAction);
+    mToolBar->addAction(mManualAction);
+    mToolBar->addAction(mWebsiteAction);
+    /* toolBar->addAction(mAboutAct);
+    toolBar->addAction(mAboutQtAct); */
+    //toolBar->setFont(qApp->font()); // must be after all addAction
 }
 
 
@@ -446,7 +455,6 @@ void MainWindow::openProject()
     
     if (!path.isEmpty()) {
 
-
         if (mProject) {
             mProject->askToSave(tr("Save current project as..."));
             disconnectProject();
@@ -477,8 +485,6 @@ void MainWindow::openProject()
             if (! mProject->mModel->mChains.isEmpty())
                 emit mProject->mcmcFinished(mProject->mModel);
          }
-
-
 
     }
 
@@ -576,6 +582,7 @@ void MainWindow::about()
 void MainWindow::appSettings()
 {
     AppSettingsDialog dialog(qApp->activeWindow());
+
     dialog.setSettings(mAppSettings);
     connect(&dialog, &AppSettingsDialog::settingsChanged, this, &MainWindow::setAppSettings);
     dialog.exec();
@@ -585,6 +592,7 @@ void MainWindow::appSettings()
 void MainWindow::setAppSettings(const AppSettings& s)
 {
     mAppSettings = s;
+
     QLocale::Language newLanguage = s.mLanguage;
     QLocale::Country newCountry= s.mCountry;
     
@@ -592,13 +600,20 @@ void MainWindow::setAppSettings(const AppSettings& s)
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
     //statusBar()->showMessage(tr("Language") + " : " + QLocale::languageToString(QLocale().language()));
-    
+    setFont(mAppSettings.mFont);
+    qApp->setFont(mAppSettings.mFont);
+    QFont tooltipFont(font());
+    tooltipFont.setItalic(true);
+
+    QToolTip::setFont(tooltipFont);
+
     if (mProject) {
         mProject->setAppSettings(mAppSettings);
 
         if (mViewResultsAction->isEnabled())
             mProjectView->applySettings(mProject->mModel, &mAppSettings);
     }
+    writeSettings();
 }
 
 void MainWindow::openManual()
@@ -619,6 +634,10 @@ void MainWindow::openManual()
 
 void MainWindow::showHelp(bool show)
 {
+   /* if (show)
+        QWhatsThis::enterWhatsThisMode();
+    else
+        QWhatsThis::leaveWhatsThisMode();*/
     mAppSettings.mShowHelp = show;
     mProjectView->showHelp(show);
 }
@@ -626,6 +645,68 @@ void MainWindow::showHelp(bool show)
 void MainWindow::openWebsite()
 {
     QDesktopServices::openUrl(QUrl("http://www.chronomodel.fr", QUrl::TolerantMode));
+}
+
+void MainWindow::setFont(const QFont &font)
+{
+    mToolBar->setFont(font);
+    //mCentralStack->setFont(font);
+    mProjectView->setFont(font);
+    //mProject->setFont(font);
+    //mUndoStack->setFont(font);
+    mUndoView->setFont(font);
+    mUndoDock->setFont(font);
+
+    //AppSettings mAppSettings
+    //QString mLastPath;
+
+    /*mProjectMenu->setFont(font);
+    mEditMenu->setFont(font);
+    mMCMCMenu->setFont(font);
+    mViewMenu->setFont(font);
+    mHelpMenu->setFont(font);
+    mPluginsMenu->setFont(font);
+    //mLanguageMenu->setFont(font);
+
+    mAppSettingsAction->setFont(font);
+    mAboutAct->setFont(font);
+    mAboutQtAct->setFont(font);
+
+    //mLangGroup->setFont(font);
+    mTranslateEnglishAct->setFont(font);
+    mTranslateFrenchAct->setFont(font);
+
+    mNewProjectAction->setFont(font);
+    mOpenProjectAction->setFont(font);
+    mCloseProjectAction->setFont(font);
+
+    mProjectSaveAction->setFont(font);
+    mProjectSaveAsAction->setFont(font);
+    mProjectExportAction->setFont(font);
+
+    mMCMCSettingsAction->setFont(font);
+    mRunAction->setFont(font);
+    mResetMCMCAction->setFont(font);
+
+    //mViewGroup->setFont(font);
+    mViewModelAction->setFont(font);
+    mViewResultsAction->setFont(font);
+    mViewLogAction->setFont(font);
+
+    mUndoAction->setFont(font);
+    mRedoAction->setFont(font);
+    mUndoViewAction->setFont(font);
+
+    mSelectEventsAction->setFont(font);
+    mEventsColorAction->setFont(font);
+    mEventsMethodAction->setFont(font);
+    mDatesMethodAction->setFont(font);
+    //QList<QAction*> mDatesActions->setFont(font);
+
+    mHelpAction->setFont(font);
+    mManualAction->setFont(font);
+    mWebsiteAction->setFont(font);
+*/
 }
 
 #pragma mark Language
@@ -798,13 +879,16 @@ void MainWindow::writeSettings()
     
     settings.setValue("size", size());
     settings.setValue("pos", pos());
-    
-    settings.setValue("last_project_dir", mProject->mProjectFileDir);
-    settings.setValue("last_project_filename", mProject->mProjectFileName);
-    
+    if (mProject) {
+        settings.setValue("last_project_dir", mProject->mProjectFileDir);
+        settings.setValue("last_project_filename", mProject->mProjectFileName);
+    }
     settings.beginGroup("AppSettings");
     settings.setValue(APP_SETTINGS_STR_AUTO_SAVE, mAppSettings.mAutoSave);
     settings.setValue(APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC, mAppSettings.mAutoSaveDelay);
+    settings.setValue(APP_SETTINGS_STR_FONT_FAMILY, mAppSettings.mFont.family());
+    settings.setValue(APP_SETTINGS_STR_FONT_SIZE, mAppSettings.mFont.pointSizeF());
+
     settings.setValue(APP_SETTINGS_STR_SHOW_HELP, mAppSettings.mShowHelp);
     settings.setValue(APP_SETTINGS_STR_CELL_SEP, mAppSettings.mCSVCellSeparator);
     settings.setValue(APP_SETTINGS_STR_DEC_SEP, mAppSettings.mCSVDecSeparator);
@@ -815,9 +899,9 @@ void MainWindow::writeSettings()
     settings.setValue(APP_SETTINGS_STR_FORMATDATE, mAppSettings.mFormatDate);
     settings.setValue(APP_SETTINGS_STR_PRECISION, mAppSettings.mPrecision);
     settings.setValue(APP_SETTINGS_STR_SHEET, mAppSettings.mNbSheet);
-    settings.endGroup();
+   // settings.endGroup(); // Group AppSettings
     
-    settings.endGroup();
+    settings.endGroup();// Group MainWindows
 }
 
 void MainWindow::readSettings(const QString& defaultFilePath)
@@ -831,6 +915,12 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     settings.beginGroup("AppSettings");
     mAppSettings.mLanguage = (QLocale::Language) settings.value(APP_SETTINGS_STR_LANGUAGE, QLocale::system().language()).toInt();
     mAppSettings.mCountry = (QLocale::Country) settings.value(APP_SETTINGS_STR_COUNTRY, QLocale::system().language()).toInt();
+    QFont f;
+    QString fam = settings.value(APP_SETTINGS_STR_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_FAMILY).toString();
+    qreal pointF = settings.value(APP_SETTINGS_STR_FONT_SIZE, APP_SETTINGS_DEFAULT_FONT_SIZE).toDouble();
+    f.setFamily(fam);
+    f.setPointSizeF(pointF);
+    mAppSettings.mFont = f;
     mAppSettings.mAutoSave = settings.value(APP_SETTINGS_STR_AUTO_SAVE, APP_SETTINGS_DEFAULT_AUTO_SAVE).toBool();
     mAppSettings.mAutoSaveDelay = settings.value(APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC, APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC).toInt();
     mAppSettings.mShowHelp = settings.value(APP_SETTINGS_STR_SHOW_HELP, APP_SETTINGS_DEFAULT_SHOW_HELP).toBool();
@@ -845,6 +935,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     mAppSettings.mNbSheet = settings.value(APP_SETTINGS_STR_SHEET, APP_SETTINGS_DEFAULT_SHEET).toInt();
     settings.endGroup();
     
+    //settings.endGroup();
 
     mProjectView->showHelp(mAppSettings.mShowHelp);
     mHelpAction->setChecked(mAppSettings.mShowHelp);
@@ -896,7 +987,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
         }
     }
     
-    settings.endGroup();
+  //  settings.endGroup();
     
     setAppSettings(mAppSettings);
     mProjectView->readSettings();

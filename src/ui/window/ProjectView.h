@@ -20,7 +20,7 @@ class ProjectView: public QWidget
 {
     Q_OBJECT
 public:
-    ProjectView(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    ProjectView(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
     ~ProjectView();
     
     bool mRefreshResults;
@@ -31,6 +31,7 @@ public:
     void readSettings();
     void writeSettings();
     void createProject();
+    void setFont(const QFont &font);
 
 public slots:
     void updateProject();

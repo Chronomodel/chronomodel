@@ -311,6 +311,43 @@ ModelView::~ModelView()
     
 }
 
+void ModelView::setFont(const QFont & font)
+{
+  mLeftWrapper->setFont(font);
+  mButNewEvent->setFont(font);
+  mButNewEventKnown->setFont(font);
+  mButDeleteEvent->setFont(font);
+  mButRecycleEvent->setFont(font);
+  mButExportEvents->setFont(font);
+  mButEventsOverview->setFont(font);
+  mButEventsGrid->setFont(font);
+
+  mImportDataView->setFont(font);
+  mEventPropertiesView->setFont(font);
+
+  mRightWrapper->setFont(font);
+  mButNewPhase->setFont(font);
+  mButDeletePhase->setFont(font);
+  mButExportPhases->setFont(font);
+  mButPhasesOverview->setFont(font);
+  mButPhasesGrid->setFont(font);
+
+  mCalibrationView->setFont(font);
+
+  mStudyLab->setFont(font);
+  mMinLab->setFont(font);
+  mMaxLab->setFont(font);
+
+  mMinEdit->setFont(font);
+  mMaxEdit->setFont(font);
+  mButApply->setFont(font);
+  mButStep->setFont(font);
+
+  mButProperties->setFont(font);
+  mButImport->setFont(font);
+  mButPhasesModel->setFont(font);
+}
+
 void ModelView::setProject(Project* project)
 {
     assert(project!= nullptr);
@@ -1003,8 +1040,8 @@ void ModelView::readSettings()
     else if (panelIndex == 3)
         mButPhasesModel->setChecked(true);
     
-    mEventsGlobalZoom->setProp(settings.value("events_zoom", 1.f).toDouble(), true);
-    mPhasesGlobalZoom->setProp(settings.value("phases_zoom", 1.f).toDouble(), true);
+    mEventsGlobalZoom->setProp(settings.value("events_zoom", 1.).toDouble(), true);
+    mPhasesGlobalZoom->setProp(settings.value("phases_zoom", 1.).toDouble(), true);
     
     prepareNextSlide();
     updateLayout();

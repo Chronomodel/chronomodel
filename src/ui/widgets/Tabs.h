@@ -8,12 +8,13 @@ class Tabs: public QWidget
 {
     Q_OBJECT
 public:
-    Tabs(QWidget* parent = 0);
+    Tabs(QWidget* parent = nullptr);
     ~Tabs();
     
     void addTab(const QString& name);
     int currentIndex() const;
     void setTab(int index, bool notify);
+    void setFont(const QFont &font);
     
 signals:
     void tabClicked(int index);
@@ -27,7 +28,6 @@ protected:
 private:
     QStringList mTabNames;
     QList<QRectF> mTabRects;
-    QFont mFont;
     int mCurrentIndex;
 };
 

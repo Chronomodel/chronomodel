@@ -6,7 +6,7 @@
 Tabs::Tabs(QWidget* parent):QWidget(parent),
 mCurrentIndex(-1)
 {
-    mFont.setPointSizeF(pointSize(11));
+
 }
 
 Tabs::~Tabs()
@@ -17,7 +17,7 @@ Tabs::~Tabs()
 void Tabs::addTab(const QString& name)
 {
     mTabNames.append(name);
-    if(mTabNames.size() == 1)
+    if (mTabNames.size() == 1)
         mCurrentIndex = 0;
 }
 
@@ -29,9 +29,13 @@ int Tabs::currentIndex() const
 void Tabs::setTab(int i, bool notify)
 {
     mCurrentIndex = i;
-    if(notify)
+    if (notify)
         emit tabClicked(i);
     update();
+}
+void Tabs::setFont(const QFont &font)
+{
+    updateLayout();
 }
 
 void Tabs::paintEvent(QPaintEvent* e)
@@ -39,23 +43,20 @@ void Tabs::paintEvent(QPaintEvent* e)
     Q_UNUSED(e);
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
-    p.setFont(mFont);
+    p.setFont(font());
     
     p.setPen(QColor(100, 100, 100));
     p.setBrush(QColor(200, 200, 200));
     
-    for(int i=0; i<mTabNames.size(); ++i)
-    {
-        if(i != mCurrentIndex)
-        {
-            QRectF r = mTabRects[i];
+    for (int i=0; i<mTabNames.size(); ++i) {
+        if (i != mCurrentIndex) {
+            const QRectF r = mTabRects[i];
             p.drawRect(r);
             p.drawText(r, Qt::AlignCenter, mTabNames[i]);
         }
     }
     
-    if(mCurrentIndex != -1)
-    {
+    if (mCurrentIndex != -1) {
         p.setPen(Painting::mainColorLight);
         p.setBrush(Qt::white);
         
@@ -72,26 +73,23 @@ void Tabs::resizeEvent(QResizeEvent* e)
 
 void Tabs::mousePressEvent(QMouseEvent* e)
 {
-    for(int i=0; i<mTabNames.size(); ++i)
-    {
-        if(i != mCurrentIndex && mTabRects[i].contains(e->pos()))
-        {
+    for (int i=0; i<mTabNames.size(); ++i) {
+        if (i != mCurrentIndex && mTabRects[i].contains(e->pos()))
             setTab(i, true);
-        }
     }
 }
 
 void Tabs::updateLayout()
 {
-    double m = 10.f;
+    qreal m = 10.;
     mTabRects.clear();
-    double x = 1.f;
-    double h = height()-1;
-    QFontMetrics metrics(mFont);
-    
-    for(int i=0; i<mTabNames.size(); ++i)
-    {
-        double w = metrics.width(mTabNames[i]);
+    qreal x = 1.;
+    qreal h = height()-1;
+    QFontMetrics metrics(font());
+
+    for (auto && name : mTabNames) {
+        const qreal w = metrics.width(name);
+        qDebug()<<"Tabs::updateLayout()"<<w;
         mTabRects.append(QRectF(x, 1, 2*m + w, h));
         x += 2*m + w;
     }

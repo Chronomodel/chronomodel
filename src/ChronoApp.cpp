@@ -30,7 +30,7 @@ bool ChronoApp::event(QEvent* e)
         MainWindow* w = MainWindow::getInstance();
         w->readSettings(path);
         
-        w = 0;
+        w = nullptr;
         /*QMessageBox box;
         box.setText(static_cast<QFileOpenEvent*>(e)->file());
         box.exec();*/

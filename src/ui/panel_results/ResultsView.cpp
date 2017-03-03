@@ -68,11 +68,7 @@ mMaximunNumberOfVisibleGraph(0)
 
     mResultZoomX = 1.;
     
-    QFont fontTitle (QApplication::font());
-    //fontTitle.setPointSizeF(QApplication::font().pointSizeF()*1.);
-
-    QFont font(QApplication::font());
-    QFontMetricsF fm(font);
+    QFontMetricsF fm(font());
 
     mTabs = new Tabs(this);
     mTabs->addTab(tr("Posterior Distrib."));
@@ -80,7 +76,7 @@ mMaximunNumberOfVisibleGraph(0)
     mTabs->addTab(tr("Acceptance Rate"));
     mTabs->addTab(tr("Autocorrelation"));
     mTabs->setTab(0, false);
-    mTabs->setFont(fontTitle);
+
     // -------------
     
     mStack = new QStackedWidget(this);
@@ -110,7 +106,6 @@ mMaximunNumberOfVisibleGraph(0)
     
     // -------------------------
     
-    
     mUnfoldBut = new Button(tr("Unfold"), this);
     mUnfoldBut->setFixedHeight(int(mRulerH/2));
     mUnfoldBut->setCheckable(true);
@@ -122,15 +117,13 @@ mMaximunNumberOfVisibleGraph(0)
     mNextSheetBut->setFixedHeight(int(mRulerH/2));
     mNextSheetBut->setCheckable(false);
     mNextSheetBut->setFlatHorizontal();
-   // mNextSheetBut->setIcon(QIcon(":unfold.png"));
-    mNextSheetBut->setToolTip(tr("Display other data"));
+    mNextSheetBut->setToolTip(tr("Display next data"));
 
     mPreviousSheetBut  = new Button(tr("Prev."), this);
     mPreviousSheetBut->setFixedHeight(int(mRulerH/2));
     mPreviousSheetBut->setCheckable(false);
     mPreviousSheetBut->setFlatHorizontal();
-   // mPreviousSheetBut->setIcon(QIcon(":unfold.png"));
-    mPreviousSheetBut->setToolTip(tr("Display other data"));
+    mPreviousSheetBut->setToolTip(tr("Display previous data"));
 
     mOptionsWidget = new QWidget(this); // this is the parent of group of widget on the rigth of the panel
 
@@ -177,24 +170,24 @@ mMaximunNumberOfVisibleGraph(0)
     mSpanTitle->setFixedWidth(mOptionsW);
 
     mSpanGroup  = new QWidget(mOptionsWidget);
-    mSpanGroup->setFont(font);
+   // mSpanGroup->setFont(font);
 
     mDisplayStudyBut = new Button(tr("Study Period Display"), mSpanGroup);
     mDisplayStudyBut->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
-    mDisplayStudyBut->setFont(font);
+ //   mDisplayStudyBut->setFont(font);
     mDisplayStudyBut->setFixedSize(mOptionsW, fm.height()+5);
 
     mSpanLab = new Label(tr("Span"), mSpanGroup);
     mSpanLab->setFixedSize(fm.width(mSpanLab->text()), fm.height()+2);
 
     mCurrentXMinEdit = new LineEdit(mSpanGroup);
-    mCurrentXMinEdit->setFont(font);
+    //mCurrentXMinEdit->setFont(font);
     mCurrentXMinEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mCurrentXMinEdit->setAlignment(Qt::AlignHCenter);
     mCurrentXMinEdit->setFixedSize(wBut, fm.height()+2);
 
     mCurrentXMaxEdit = new LineEdit(mSpanGroup);
-    mCurrentXMaxEdit->setFont(font);
+   // mCurrentXMaxEdit->setFont(font);
     mCurrentXMaxEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mCurrentXMaxEdit->setAlignment(Qt::AlignHCenter);
     mCurrentXMaxEdit->setFixedSize(wBut, fm.height()+2);
@@ -228,7 +221,6 @@ mMaximunNumberOfVisibleGraph(0)
     mGraphicTitle->setFixedWidth(mOptionsW);
 
     mGraphicGroup = new QWidget(mOptionsWidget);
-    mGraphicGroup->setFont(font);
 
     mYScaleLab = new Label(tr("Y"), mGraphicGroup);
     mYScaleLab->setAlignment(Qt::AlignCenter);
@@ -238,7 +230,6 @@ mMaximunNumberOfVisibleGraph(0)
     mYSlider->setRange(10, 300);
     mYSlider->setTickInterval(1);
     mYSlider->setValue(100);
-
     
     mYScaleSpin = new QSpinBox(mGraphicGroup);
     mYScaleSpin->setRange(mYSlider->minimum(), mYSlider->maximum());
@@ -258,7 +249,7 @@ mMaximunNumberOfVisibleGraph(0)
     labFont = new Label(tr("Font"), mGraphicGroup);
     labFont->setFixedSize(fm.width(labFont->text()), fm.height()+2);
 
-    mFont.setPointSize(QApplication::font().pointSize());
+    mFont.setPointSize(font().pointSize());
     mFontBut = new Button(mFont.family(), mGraphicGroup);
     mFontBut->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mFontBut->setFixedSize(mOptionsW/2 - mMargin, fm.height()+ 5);
@@ -371,7 +362,7 @@ mMaximunNumberOfVisibleGraph(0)
     mThreshLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     
     mHPDEdit = new LineEdit(mPostDistGroup);
-    mHPDEdit->setFont(font);
+    //mHPDEdit->setFont(font);
     mHPDEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mHPDEdit->setText("95");
     
@@ -404,7 +395,7 @@ mMaximunNumberOfVisibleGraph(0)
     mBandwidthLab = new Label(tr("Bandwidth Const."), mPostDistGroup);
     mBandwidthLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mBandwidthEdit = new LineEdit(mPostDistGroup);
-    mBandwidthEdit->setFont(font);
+    //mBandwidthEdit->setFont(font);
     QLocale locale;
     mBandwidthEdit->setText(locale.toString(1.06));
     mBandwidthEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
@@ -501,6 +492,100 @@ void ResultsView::paintEvent(QPaintEvent* )
 {
     QPainter p(this);
     p.fillRect(width() - mOptionsW, 0, mOptionsW, height(), QColor(220, 220, 220));
+}
+
+void ResultsView::setFont(const QFont & font)
+{
+    mTabs->setFont(font);
+    /*
+     *
+     *   QScrollArea* mEventsScrollArea;
+    QScrollArea* mPhasesScrollArea;
+ //   QWidget* mEventsWidget;
+    QList<GraphViewResults*> mByEventsGraphs;
+    QList<GraphViewResults*> mByPhasesGraphs;
+
+
+    Button* mByPhasesBut;
+    Button* mByEventsBut;
+
+
+    QWidget* mOptionsWidget;
+
+
+    Button* mUnfoldBut;
+    Button* mStatsBut;
+    Button* mExportImgBut;
+    Button* mExportResults;
+    CheckBox* mShowDataUnderPhasesCheck;
+
+    Button* mNextSheetBut;
+    Button* mPreviousSheetBut;
+
+    // ------ Span Options -----
+    QWidget* mSpanGroup;
+    Label* mSpanTitle;
+
+    Button* mDisplayStudyBut;
+    Label* mSpanLab;
+    LineEdit* mCurrentXMinEdit;
+    LineEdit* mCurrentXMaxEdit;
+
+    Label* mXScaleLab;
+    QSlider* mXSlider;
+    QDoubleSpinBox* mXScaleSpin;
+
+
+
+    QWidget* mGraphicGroup;
+    Label* mGraphicTitle;
+
+    Label* mYScaleLab;
+
+    QSlider* mYSlider;
+    QSpinBox* mYScaleSpin;
+
+    QFont mFont;
+    Button* mFontBut;
+    QSpinBox* mThicknessSpin;
+    QSpinBox* mOpacitySpin;
+    QComboBox* mRenderCombo;
+
+    Label* labFont;
+    Label* labThickness;
+    Label* labOpacity;
+    Label* labRendering;
+
+    QWidget* mChainsGroup;
+    Label* mChainsTitle;
+
+    CheckBox* mAllChainsCheck;
+    QList<CheckBox*> mCheckChainChecks;
+    QList<RadioButton*> mChainRadios;
+
+
+    QWidget* mResultsGroup;
+    Label* mResultsTitle;
+
+    RadioButton* mDataThetaRadio;
+
+    CheckBox* mDataCalibCheck;
+    CheckBox* mWiggleCheck;
+    RadioButton* mDataSigmaRadio;
+
+    //--------- Post. distrib. option
+    QWidget* mPostDistGroup;
+    Label* mPostDistOptsTitle;
+
+    Label* mThreshLab;
+    CheckBox* mCredibilityCheck;
+    LineEdit* mHPDEdit;
+    Label* mFFTLenLab;
+    QComboBox* mFFTLenCombo;
+    Label* mBandwidthLab;
+    LineEdit* mBandwidthEdit;
+    Button* mUpdateDisplay;
+     */
 }
 
 void ResultsView::resizeEvent(QResizeEvent* e)
@@ -2018,6 +2103,9 @@ void ResultsView::updateScaleY(int value)
 
 
 #pragma mark Display options
+/**
+ * @brief ResultsView::updateFont only on graph
+ */
 void ResultsView::updateFont()
 {
     QFontDialog dialog;

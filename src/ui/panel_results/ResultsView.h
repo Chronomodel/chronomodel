@@ -68,6 +68,7 @@ public:
     int getFFTLength() const;
     double getThreshold() const;
 
+    void setFont(const QFont & font);
 
 protected:
     void paintEvent(QPaintEvent* );

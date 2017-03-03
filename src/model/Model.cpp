@@ -83,7 +83,6 @@ void Model::clear()
  */
 void Model::updateFormatSettings(const AppSettings* appSet)
 {
-
     for (auto&& event : mEvents) {
         event->mTheta.setFormat(appSet->mFormatDate);
 
