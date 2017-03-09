@@ -71,7 +71,9 @@ macx{
     ICON = $$PRO_PATH/icon/Chronomodel.icns
     
 	# This is the SDK used to compile : change it to whatever latest version of mac you are using.
-    QMAKE_MAC_SDK = macosx10.11
+	# to determine which version of the macOS SDK is installed with xcode? type on a terminal
+	# xcodebuild -showsdks
+    QMAKE_MAC_SDK = macosx10.12
 	
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
 	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
