@@ -17,16 +17,19 @@ class QLabel;
 class Label;
 class QSlider;
 class QScrollBar;
+class QFrame;
 
 
 class CalibrationView: public QWidget
 {
     Q_OBJECT
 public:
-    CalibrationView(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    CalibrationView(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
     ~CalibrationView();
     
     void setDate(const QJsonObject& date);
+    void setButtonWidth(const qreal& width);
+    void setFont(const QFont& font);
     
 protected:
     void paintEvent(QPaintEvent* e);
@@ -48,9 +51,21 @@ public:
     Date mDate;
     ProjectSettings mSettings;
     
+private:
     GraphView* mCalibGraph;
     GraphViewRefAbstract* mRefGraphView;
     
+    QTextEdit* mResultsText;
+    qreal mResultsHeight;
+
+    qreal mMinimalButtonWidth;
+    qreal mButtonWidth;
+    qreal mButtonHeight;
+    Button* mImageSaveBut;
+    Button* mImageClipBut;
+    Button* mResultsClipBut;
+    Button* mDataSaveBut;
+
     Marker* mMarkerX;
     Marker* mMarkerY;
     
@@ -58,14 +73,19 @@ public:
     Label* mProcessTitle;
     Label* mDistribTitle;
     
-    Label* mZoomLab;
-    QSlider* mZoomSlider;
-    QScrollBar* mScrollBar;
+    QFrame* frameSeparator;
+
     Label* mHPDLab;
     LineEdit* mHPDEdit;
-    QLabel* mResultsLab;
-    Button* mExportPlotBut;
-    Button* mCopyTextBut;
+
+    Label* mStartLab;
+    LineEdit* mStartEdit;
+
+    Label* mEndLab;
+    LineEdit* mEndEdit;
+
+    double mTminDisplay;
+    double mTmaxDisplay;
 };
 
 #endif

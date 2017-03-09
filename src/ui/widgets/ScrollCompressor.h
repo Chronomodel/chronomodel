@@ -8,7 +8,7 @@ class ScrollCompressor: public QWidget
 {
     Q_OBJECT
 public:
-    ScrollCompressor(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    ScrollCompressor(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
     ~ScrollCompressor();
     
     void setVertical(bool vertical);

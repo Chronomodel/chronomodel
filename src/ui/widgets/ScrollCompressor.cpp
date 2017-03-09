@@ -4,7 +4,7 @@
 
 
 ScrollCompressor::ScrollCompressor(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-mProp(0.5f),
+mProp(0.5),
 mIsDragging(false),
 mShowText(true),
 mIsVertical(true)
@@ -25,10 +25,11 @@ QSize ScrollCompressor::sizeHint() const
 void ScrollCompressor::setVertical(bool vertical)
 {
     mIsVertical = vertical;
-    if(mIsVertical)
+    if (mIsVertical)
         setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
     else
         setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
+
     update();
 }
 
@@ -37,7 +38,7 @@ void ScrollCompressor::setProp(const double& prop, bool sendNotification)
     mProp = prop;
     mProp = (mProp < 0) ? 0 : mProp;
     mProp = (mProp > 1) ? 1 : mProp;
-    if(sendNotification)
+    if (sendNotification)
         emit valueChanged(mProp);
     update();
 }
@@ -62,11 +63,17 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
     
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
-    
-    QFont font(QApplication::font());// = p.font();
-    //font.setPointSizeF(pointSize(11));
-    p.setFont(font);
-    
+
+    QFont adaptedFont (font());
+    QFontMetricsF fm (adaptedFont);
+    qreal textSize = fm.width(mText);
+    if (textSize > (r.width() - 2. )) {
+        const qreal fontRate = textSize / (r.width() - 2. );
+        const qreal ptSiz = adaptedFont.pointSizeF() / fontRate;
+        adaptedFont.setPointSizeF(ptSiz);
+    }
+    p.setFont(adaptedFont);
+
     if (mIsVertical) {
         QLinearGradient grad1(0, 0, width(), 0);
         grad1.setColorAt(0, QColor(60, 60, 60));
@@ -80,7 +87,7 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
         grad2.setColorAt(0, Painting::mainColorLight);
         grad2.setColorAt(1, Painting::mainColorDark);
         
-        double h = r.height() * mProp;
+        qreal h = r.height() * mProp;
         QRectF r2 = r.adjusted(0, r.height() - h, 0, 0);
         p.fillRect(r2, grad2);
         
@@ -88,14 +95,13 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
         p.setBrush(Qt::NoBrush);
         p.drawRect(r);
         
-        if(mShowText)
-        {
+        if (mShowText) {
             QString text = mText + "\r" + QString::number(qRound(mProp * 100)) + " %";
             p.setPen(QColor(200, 200, 200));
             p.drawText(r, Qt::AlignCenter, text);
         }
     } else {
-        const double w = r.width() * mProp;
+        const qreal w = r.width() * mProp;
         const QRectF r2 = r.adjusted(0, 0, -r.width() + w, 0);
         
         /*QLinearGradient grad1(0, 0, 0, height());
@@ -123,7 +129,7 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
         p.setBrush(Painting::mainGreen);
         p.drawRect(r2);
         
-        if(mShowText) {
+        if (mShowText) {
             QString text = mText + " : " + QString::number(qRound(mProp * 100)) + " %";
             p.setPen(Qt::white);
             p.drawText(r, Qt::AlignCenter, text);
@@ -145,24 +151,21 @@ void ScrollCompressor::mouseReleaseEvent(QMouseEvent* e)
 
 void ScrollCompressor::mouseMoveEvent(QMouseEvent* e)
 {
-    if(mIsDragging)
-    {
+    if (mIsDragging)
         updateProp(e);
-    }
+
 }
 
 void ScrollCompressor::updateProp(QMouseEvent* e)
 {
     QRect r = rect();
-    if(mIsVertical)
-    {
+    if (mIsVertical) {
         int y = r.height() - e->pos().y();
         y = (y < 0) ? 0 : y;
         y = (y > r.height()) ? r.height() : y;
         mProp = (double)y / (double)r.height();
-    }
-    else
-    {
+
+    } else {
         int x = e->pos().x();
         x = (x < 0) ? 0 : x;
         x = (x > r.width()) ? r.width() : x;

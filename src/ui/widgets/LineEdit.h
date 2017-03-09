@@ -8,7 +8,8 @@ class LineEdit: public QLineEdit
 {
     Q_OBJECT
 public:
-    explicit LineEdit(QWidget* parent = 0);
+    explicit LineEdit(QWidget* parent = nullptr);
+    void setFont(const QFont& font);
     ~LineEdit();
 };
 

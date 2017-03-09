@@ -11,14 +11,12 @@
 AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags):
 QDialog(parent, flags)
 {
-    setFont(qApp->font());
-
     setWindowTitle(tr("Application Settings"));
 
     // -----------------------------
     //  General View
     // -----------------------------
-    mFont = qApp->font();
+    mFont = font();
 
     mGeneralView = new QWidget();
     

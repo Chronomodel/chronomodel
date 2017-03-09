@@ -96,7 +96,7 @@ void Button::paintEvent(QPaintEvent* e)
         QPen pen;
         pen.setColor(Qt::white);
         pen.setCapStyle(Qt::RoundCap);
-        pen.setWidthF(3.f);
+        pen.setWidthF(3.);
         painter.setPen(pen);
         
         int s = r.width()/2 - m2;
