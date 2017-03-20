@@ -7,11 +7,11 @@
 #pragma mark Constructor / Destructor
 
 GraphViewAbstract::GraphViewAbstract():
-mGraphWidth(50), mGraphHeight(50),
+mGraphWidth(50.), mGraphHeight(50),
 mMarginLeft(50), mMarginRight(10), mMarginTop(5), mMarginBottom(15),
-mMinX(0), mMaxX(10),
-mMinY(0), mMaxY(10),
-mCurrentMinX(0),mCurrentMaxX(2000)
+mMinX(0.), mMaxX(10.),
+mMinY(0.), mMaxY(10.),
+mCurrentMinX(0.),mCurrentMaxX(2000.)
 {
 //qDebug()<<"contructor GraphViewAbstract::GraphViewAbstrac ";
 }
@@ -87,7 +87,6 @@ void GraphViewAbstract::setMargins(const qreal aMarginLeft, const qreal aMarginR
 	mMarginRight = aMarginRight;
 	mMarginTop = aMarginTop;
 	mMarginBottom = aMarginBottom;
-    //repaintGraph(true);
 }
 
 #pragma mark Values utilities
@@ -105,24 +104,23 @@ qreal GraphViewAbstract::getXForValue(const type_data aValue, const bool aConsta
 
 type_data GraphViewAbstract::getValueForX(const qreal x, const bool aConstainResult)
 {
-    const qreal rigthBlank (5.); // the same name and the same value as AxisTool::updateValues()
-	const qreal lXFromSide = x - mMarginLeft;
+    const qreal rigthBlank (5.); // the same name and the same value as AxisTool::updateValues() if AxisTool::mIsHorizontal
+    const qreal lXFromSide = x - mMarginLeft;
     const type_data lValue = valueForProportion((type_data)lXFromSide, (type_data)0., (type_data) (mGraphWidth - rigthBlank), mCurrentMinX, mCurrentMaxX, aConstainResult);
 	return lValue;
 }
 
 qreal GraphViewAbstract::getYForValue(const type_data aValue, const bool aConstainResult)
 {
-    const type_data lYFromBase = valueForProportion(aValue, mMinY, mMaxY, (type_data)0., (type_data)(mGraphHeight-mMarginTop), aConstainResult);
-    const qreal y = mMarginTop + 3 + mGraphHeight - (qreal)lYFromBase; // vertical shift 3 from the mMarginTop
+    const type_data lYFromBase = valueForProportion(aValue, mMinY, mMaxY, (type_data)(0.), (type_data)(mGraphHeight), aConstainResult);
+    const qreal y = mGraphHeight+ mMarginTop - (qreal)lYFromBase;
     return y;
 }
 
 type_data GraphViewAbstract::getValueForY(const qreal y, const bool aConstainResult)
 {
-	const qreal lYFromBase = mMarginTop + mGraphHeight - y;
-    // vertical shift 3 from the mMarginTop
-    const type_data lValue = valueForProportion( (type_data)lYFromBase, (type_data)0., (type_data)(mGraphHeight-mMarginTop-3), mMinY, mMaxY, aConstainResult);
-	return lValue;
+    const qreal lYFromBase = mMarginTop + mGraphHeight - y;
+    const type_data lValue = valueForProportion( (type_data)(lYFromBase), (type_data)0., (type_data)(mGraphHeight), mMinY, mMaxY, aConstainResult);
+    return lValue;
 }
 
