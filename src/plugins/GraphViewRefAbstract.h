@@ -14,7 +14,7 @@ class GraphViewRefAbstract: public QWidget
 {
     Q_OBJECT
 public:
-    explicit GraphViewRefAbstract(QWidget* parent = 0):QWidget(parent),mMeasureColor(56, 120, 50)
+    explicit GraphViewRefAbstract(QWidget* parent = nullptr):QWidget(parent),mMeasureColor(56, 120, 50)
     {
         setMouseTracking(true);
     }

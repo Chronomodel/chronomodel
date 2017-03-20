@@ -8,8 +8,8 @@ class Label: public QLabel
 {
     Q_OBJECT
 public:
-    explicit Label(QWidget* parent = 0);
-    explicit Label(const QString& text, QWidget* parent = 0);
+    explicit Label(QWidget* parent = nullptr);
+    explicit Label(const QString& text, QWidget* parent = nullptr);
     
     ~Label();
     

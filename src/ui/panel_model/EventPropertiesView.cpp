@@ -1,4 +1,6 @@
  #include "EventPropertiesView.h"
+#include "Label.h"
+#include "LineEdit.h"
 #include "ColorPicker.h"
 #include "Event.h"
 #include "EventKnown.h"
@@ -19,29 +21,29 @@
 
 
 EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-mToolbarH(100)
+mButtonWidth(50)
 {
-    minimumHeight =0;
+    QFontMetrics fm (font());
+    minimumHeight = 0;
+    mToolbarH = 5 * fm.height();
     // ------------- commun with defautlt Event and Bound ----------
-    mNameLab = new QLabel(tr("Name") + " :");
+    mNameLab = new Label(tr("Name"), this);
     
-    mNameEdit = new QLineEdit();
-    mNameEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
-    mNameEdit->setAlignment(Qt::AlignHCenter);
+    mNameEdit = new LineEdit(this);
     
-    mColorLab = new QLabel(tr("Color") + " :");
+    mColorLab = new Label(tr("Color"), this);
     mColorPicker = new ColorPicker(Qt::black);
     
-    mMethodLab = new QLabel(tr("Method") + " :");
+    mMethodLab = new Label(tr("Method"), this);
     mMethodCombo = new QComboBox();
     
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eDoubleExp));
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eBoxMuller));
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eMHAdaptGauss));
     
-    connect(mNameEdit, SIGNAL(editingFinished()), this, SLOT(updateEventName()));
-    connect(mColorPicker, SIGNAL(colorChanged(QColor)), this, SLOT(updateEventColor(QColor)));
-    connect(mMethodCombo, SIGNAL(activated(int)), this, SLOT(updateEventMethod(int)));
+    connect(mNameEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventName);
+    connect(mColorPicker, &ColorPicker::colorChanged, this, &EventPropertiesView::updateEventColor);
+    connect(mMethodCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &EventPropertiesView::updateEventMethod);
     
     QGridLayout* grid = new QGridLayout();
     grid->setSpacing(6);
@@ -61,8 +63,7 @@ mToolbarH(100)
     mTopView = new QWidget(this);
     mTopView->setLayout(topLayout);
     mTopView->setFixedHeight(mToolbarH);
-    
-    
+      
     // Event default propreties Window mEventView
     mEventView = new QWidget(this);
     
@@ -76,12 +77,13 @@ mToolbarH(100)
 
     const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
 
-    for(int i=0; i<plugins.size(); ++i)
-    {
+    for (int i=0; i<plugins.size(); ++i) {
         
         Button* button = new Button(plugins.at(i)->getName(), mEventView);
         button->setIcon(plugins.at(i)->getIcon());
         button->setFlatVertical();
+        button->setIconOnly(false);
+        button->resize(mButtonWidth, mButtonWidth);
         connect(button, SIGNAL(clicked()), this, SLOT(createDate()));
         
         minimumHeight+=button->height();
@@ -96,13 +98,13 @@ mToolbarH(100)
     mDeleteBut = new Button(tr("Delete"), mEventView);
     mDeleteBut->setIcon(QIcon(":delete.png"));
     mDeleteBut->setFlatVertical();
-    connect(mDeleteBut, SIGNAL(clicked()), this, SLOT(deleteSelectedDates()));
-    minimumHeight+=mDeleteBut->height();
+    connect(mDeleteBut, static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &EventPropertiesView::deleteSelectedDates);
+    minimumHeight += mDeleteBut->height();
     
     mRecycleBut = new Button(tr("Restore"), mEventView);
     mRecycleBut->setIcon(QIcon(":restore.png"));
     mRecycleBut->setFlatVertical();
-    connect(mRecycleBut, SIGNAL(clicked()), this, SLOT(recycleDates()));
+    connect(mRecycleBut, static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &EventPropertiesView::recycleDates);
 
     // ---------------
     
@@ -113,15 +115,17 @@ mToolbarH(100)
     
     mCombineBut = new Button(tr("Combine"), mEventView);
     mCombineBut->setFlatVertical();
+    mCombineBut->setIconOnly(false);
     mCombineBut->setEnabled(false);
 
     mSplitBut = new Button(tr("Split"), mEventView);
     mSplitBut->setFlatVertical();
+    mSplitBut->setIconOnly(false);
     mSplitBut->setEnabled(false);
     
-    connect(mCalibBut, SIGNAL(clicked(bool)), this, SIGNAL(showCalibRequested(bool)));
-    connect(mCombineBut, SIGNAL(clicked()), this, SLOT(sendCombineSelectedDates()));
-    connect(mSplitBut, SIGNAL(clicked()), this, SLOT(sendSplitDate()));
+    connect(mCalibBut, &Button::clicked, this, &EventPropertiesView::showCalibRequested);
+    connect(mCombineBut, static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &EventPropertiesView::sendCombineSelectedDates);
+    connect(mSplitBut, static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &EventPropertiesView::sendSplitDate);
 
     // --------------- Case of Event is a Bound -> Bound properties windows---------------------------
     
@@ -130,8 +134,8 @@ mToolbarH(100)
     mKnownFixedRadio   = new QRadioButton(tr("Fixed"), mBoundView);
     mKnownUniformRadio = new QRadioButton(tr("Uniform"), mBoundView);
     
-    connect(mKnownFixedRadio, SIGNAL(clicked())  , this, SLOT(updateKnownType()));
-    connect(mKnownUniformRadio, SIGNAL(clicked()), this, SLOT(updateKnownType()));
+    connect(mKnownFixedRadio, static_cast<void (QRadioButton::*)(bool)>(&QRadioButton::clicked), this, &EventPropertiesView::updateKnownType);
+    connect(mKnownUniformRadio, static_cast<void (QRadioButton::*)(bool)>(&QRadioButton::clicked), this, &EventPropertiesView::updateKnownType);
     
     mKnownFixedEdit = new QLineEdit(mBoundView);
     mKnownStartEdit = new QLineEdit(mBoundView);
@@ -274,7 +278,7 @@ void EventPropertiesView::updateEventName()
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event name updated"));
 }
 
-void EventPropertiesView::updateEventColor(QColor color)
+void EventPropertiesView::updateEventColor(const QColor &color)
 {
     QJsonObject event = mEvent;
     event[STATE_COLOR_RED] = color.red();
@@ -443,8 +447,8 @@ void EventPropertiesView::recycleDates()
 #pragma mark Merge / Split
 void EventPropertiesView::updateCombineAvailability()
 {
-    bool mergeable = false;
-    bool splittable = false;
+    bool mergeable (false);
+    bool splittable (false);
     
     QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
     QList<QListWidgetItem*> items = mDatesList->selectedItems();
@@ -461,9 +465,9 @@ void EventPropertiesView::updateCombineAvailability()
     } else if (items.size() > 1 && dates.size() > 1) {
         // Combine?
         mergeable = true;
-        PluginAbstract* plugin = 0;
+        PluginAbstract* plugin = nullptr;
         
-        for (int i=0; i<items.size(); ++i) {
+        for (int i(0); i<items.size(); ++i) {
             int idx = mDatesList->row(items.at(i));
             if (idx < dates.size()) {
                 QJsonObject date = dates.at(idx).toObject();
@@ -474,7 +478,7 @@ void EventPropertiesView::updateCombineAvailability()
                 }
                 // If selected dates have different plugins, they cannot be combined :
                 PluginAbstract* plg = PluginManager::getPluginFromId(date.value(STATE_DATE_PLUGIN_ID).toString());
-                if (plugin == 0)
+                if (plugin == nullptr)
                     plugin = plg;
                 else if (plg != plugin) {
                     mergeable = false;
@@ -484,7 +488,7 @@ void EventPropertiesView::updateCombineAvailability()
         }
         // Dates are not combined yet and are from the same plugin.
         // We should now ask the plugin if they are combinable (they use the same ref curve for example...)
-        if (mergeable && plugin != 0) {
+        if (mergeable && plugin != nullptr) {
             // This could be used instead to disable the "combine" button if dates cannot be combined.
             // We prefer letting the user combine them and get an error message explaining why they cannot be combined!
             // Check Plugin14C::mergeDates as example
@@ -527,6 +531,21 @@ void EventPropertiesView::sendSplitDate()
     }
 }
 
+/**
+ * @brief EventPropertiesView::keyPressEvent Append only when the windows has the focus
+ * @param event
+ */
+void EventPropertiesView::keyPressEvent(QKeyEvent* e)
+{
+    if ((e->key() == Qt::Key_Escape) && mCalibBut->isChecked())
+        mCalibBut->click();
+    else if ((e->key() == Qt::Key_C) && !mCalibBut->isChecked())
+        mCalibBut->click();
+
+    QWidget::keyPressEvent(e);
+
+}
+
 #pragma mark Layout
 void EventPropertiesView::paintEvent(QPaintEvent* e)
 {
@@ -535,7 +554,7 @@ void EventPropertiesView::paintEvent(QPaintEvent* e)
     QPainter p(this);
     p.fillRect(rect(), palette().color(QPalette::Background));
     
-    if(mEvent.isEmpty()) {
+    if (mEvent.isEmpty()) {
         QFont font = p.font();
         font.setBold(true);
         font.setPointSize(20);
@@ -543,9 +562,7 @@ void EventPropertiesView::paintEvent(QPaintEvent* e)
         p.setPen(QColor(150, 150, 150));
         p.drawText(rect(), Qt::AlignCenter, tr("No event selected !"));
     }
-    else{
-        p.fillRect(QRect(0, 0, width(), mToolbarH), QColor(200, 200, 200));
-    }
+
 }
 
 void EventPropertiesView::resizeEvent(QResizeEvent* e)
@@ -556,42 +573,55 @@ void EventPropertiesView::resizeEvent(QResizeEvent* e)
 
 void EventPropertiesView::updateLayout()
 {
+
     mTopView->setGeometry(0, 0, width(), mToolbarH);
 
-    int butPluginWidth = 80;
-    int butPluginHeigth = 50;
-    
-    mEventView->setGeometry(0, mToolbarH, width(), height()-mToolbarH);
-    mBoundView->setGeometry(0, mToolbarH, width(), height()-mToolbarH);
-    
-    QRect listRect(0, 0, mEventView->width() - butPluginWidth, mEventView->height() - butPluginHeigth);
-    mDatesList->setGeometry(listRect);
-    
-    int x = listRect.width();
-    int y = listRect.y();
-    
-    for(int i=0; i<mPluginButs1.size(); ++i)
-    {
-        mPluginButs1[i]->setGeometry(x, y, butPluginWidth, butPluginHeigth);
-        y += butPluginHeigth;
-    }
-    
-    for(int i=0; i<mPluginButs2.size(); ++i)
-    {
-        mPluginButs2[i]->setGeometry(x, y, butPluginWidth, butPluginHeigth);
-        y += butPluginHeigth;
-    }
-    
-    x = listRect.x();
-    y = listRect.y() + listRect.height();
-    int w = listRect.width() / 5;
-    int h = butPluginHeigth;
+    if (hasEvent()) {
+        int butPluginHeigth = mButtonWidth;
 
-    mCalibBut->setGeometry(x, y, w, h);
-    mDeleteBut ->setGeometry(x + 1*w, y, w, h);
-    mRecycleBut->setGeometry(x + 2*w, y, w, h);
-    mCombineBut->setGeometry(x + 3*w, y, w, h);
-    mSplitBut->setGeometry(x + 4*w, y, w, h);
+        // in EventPropertiesView coordinates
+        mBoundView->resize(0, 0);
+        mEventView->setGeometry(0, mTopView->height(), width(), height() - mTopView->height());
+
+
+         //in mEventView coordinates
+        QRect listRect(0, 0, mEventView->width() - mButtonWidth, mEventView->height() - butPluginHeigth);
+        mDatesList->setGeometry(listRect);
+
+        int x = listRect.width();
+        int y = 0;
+
+        // Plugin with calibration,
+        //for (int i=0; i<mPluginButs1.size(); ++i) {
+        for (auto && plugBut : mPluginButs1) {
+            plugBut->setGeometry(x, y, mButtonWidth, butPluginHeigth);
+            y += butPluginHeigth;
+        }
+
+        // plugin without calibration
+        //for (int i(0); i<mPluginButs2.size(); ++i) {
+        for (auto && plugBut : mPluginButs2) {
+            plugBut->setGeometry(x, y, mButtonWidth, butPluginHeigth);
+            y += butPluginHeigth;
+        }
+
+        x = listRect.x();
+        y = listRect.y() + listRect.height();
+        const int w = mButtonWidth; //listRect.width() / 5;
+        const int h = mButtonWidth;
+
+        mCalibBut->setGeometry(0, y, w, butPluginHeigth);
+        mDeleteBut ->setGeometry(mCalibBut->width(), y, w, h);
+        mRecycleBut->setGeometry(mDeleteBut->x() + mDeleteBut->width(), y, w, butPluginHeigth);
+        mCombineBut->setGeometry(mRecycleBut->x() + mRecycleBut->width(), y, w, butPluginHeigth);
+        mSplitBut->setGeometry(mCombineBut->x() + mCombineBut->width(), y, w, butPluginHeigth);
+    }
+    else {
+        if (hasBound()) {
+            mEventView->resize(0, 0);
+            mBoundView->setGeometry(0, mTopView->height(), width() - mButtonWidth, height() - mTopView->height());
+        }
+    }
 }
 
 void EventPropertiesView::setCalibChecked(bool checked)
@@ -599,9 +629,14 @@ void EventPropertiesView::setCalibChecked(bool checked)
     mCalibBut->setChecked(checked);
 }
 
+bool EventPropertiesView::isCalibChecked() const
+{
+    return mCalibBut->isChecked();
+}
+
 bool EventPropertiesView::hasEvent() const
 {
-    if(!mEvent.isEmpty()){
+    if (!mEvent.isEmpty()) {
         Event::Type type = (Event::Type)mEvent[STATE_EVENT_TYPE].toInt();
         return (type == Event::eDefault);
     }
@@ -610,7 +645,7 @@ bool EventPropertiesView::hasEvent() const
 
 bool EventPropertiesView::hasBound() const
 {
-    if(!mEvent.isEmpty()){
+    if (!mEvent.isEmpty()) {
         Event::Type type = (Event::Type)mEvent[STATE_EVENT_TYPE].toInt();
         return (type == Event::eKnown);
     }
@@ -619,9 +654,9 @@ bool EventPropertiesView::hasBound() const
 
 bool EventPropertiesView::hasEventWithDates() const
 {
-    if(!mEvent.isEmpty()){
+    if (!mEvent.isEmpty()) {
         Event::Type type = (Event::Type)mEvent[STATE_EVENT_TYPE].toInt();
-        if(type == Event::eDefault){
+        if (type == Event::eDefault) {
             const QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
             return (dates.size() > 0);
         }

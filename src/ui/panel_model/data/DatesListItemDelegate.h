@@ -104,7 +104,6 @@ public:
             painter->setPen(Painting::mainColorLight);
             painter->drawText(x + iconW, y + 4*mm + 3*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, deltaText);
 
-
             if(!isValid){
                 painter->setPen(Qt::black);
                 QString str = tr("Individual calibration not digitally computable ...");

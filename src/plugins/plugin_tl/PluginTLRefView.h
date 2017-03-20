@@ -14,7 +14,7 @@ class PluginTLRefView: public GraphViewRefAbstract
 {
     Q_OBJECT
 public:
-    explicit PluginTLRefView(QWidget* parent = 0);
+    explicit PluginTLRefView(QWidget* parent = nullptr);
     virtual ~PluginTLRefView();
     
     void setDate(const Date& date, const ProjectSettings& settings);

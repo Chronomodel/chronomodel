@@ -44,7 +44,10 @@ public:
             painter->fillRect(option.rect, QColor(220, 220, 220));
         }
         QString factName = index.model()->data(index, 0x0101).toString();
+        QTextDocument td;
+            td.setHtml(factName);
         int numDates = index.model()->data(index, 0x0103).toInt();
+        //QString numDates = index.model()->data(index, 0x0103).toString();
         QColor factColor = QColor(index.model()->data(index, 0x0104).toInt(),
                                   index.model()->data(index, 0x0105).toInt(),
                                   index.model()->data(index, 0x0106).toInt());
@@ -62,9 +65,13 @@ public:
         
         painter->setPen(Qt::black);
         painter->drawText(x + iconW, y, w - iconW, h/2, Qt::AlignLeft | Qt::AlignVCenter, factName);
-        
-        painter->drawText(x + iconW, y + h/2, w - iconW, h/2, Qt::AlignLeft | Qt::AlignVCenter, QString::number(numDates) + " dates");
-        
+        //painter->drawContent(x + iconW, y, w - iconW, h/2, Qt::AlignLeft | Qt::AlignVCenter, factName);
+        //QAbstractTextDocumentLayout::PaintContext ctx;
+        //    ctx.clip = QRectF( x + iconW, y, w - iconW, h/2);
+        //td.documentLayout()->draw( painter, ctx );
+        painter->drawText(x + iconW, y + h/2, w - iconW, h/2, Qt::AlignLeft | Qt::AlignVCenter, QString::number(numDates) + " dates?");
+        //painter->drawText(x + iconW, y + h/2, w - iconW, h/2, Qt::AlignLeft | Qt::AlignVCenter, numDates + "??");
+
         painter->setPen(QColor(200, 200, 200));
         painter->drawLine(x, y + h, x + w, y + h);
     }

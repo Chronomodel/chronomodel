@@ -8,19 +8,19 @@
 #include <QtWidgets>
 
 
-PluginTLRefView::PluginTLRefView(QWidget* parent):GraphViewRefAbstract(parent),
-mGraph(0)
+PluginTLRefView::PluginTLRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
+    mMeasureColor = QColor(56, 120, 50);
+
     mGraph = new GraphView(this);
-    
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eAllTicks);
     mGraph->setRendering(GraphView::eHD);
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("age");
     mGraph->autoAdjustYScale(true);
-    
-    mMeasureColor=QColor(56, 120, 50);
+    mGraph->setMarginBottom(mGraph->font().pointSizeF() + 10. );
+
 }
 
 PluginTLRefView::~PluginTLRefView()
@@ -30,7 +30,7 @@ PluginTLRefView::~PluginTLRefView()
 
 void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
 {
-    QLocale locale=QLocale();
+   // QLocale locale = QLocale();
     GraphViewRefAbstract::setDate(date, settings);
 
 
@@ -110,7 +110,7 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         mGraph->addCurve(curveMeasure);
         
         // Write measure value :
-        mGraph->addInfo(tr("Age : ") + locale.toString(age) + " ± " + locale.toString(error) + " ( " + tr("Ref year") + " : " + locale.toString(ref_year) + ")");
+        //mGraph->addInfo(tr("Age : ") + locale.toString(age) + " ± " + locale.toString(error) + " ( " + tr("Ref year") + " : " + locale.toString(ref_year) + ")");
         
         // ----------------------------------------------
         //  Error on measure

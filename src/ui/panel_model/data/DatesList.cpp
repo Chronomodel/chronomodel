@@ -18,7 +18,7 @@ mUpdatingSelection(false)
     setSelectionMode(QAbstractItemView::ExtendedSelection);
     setSortingEnabled(false);
     
-    DatesListItemDelegate* delegate = new DatesListItemDelegate();
+    DatesListItemDelegate* delegate = new DatesListItemDelegate(this);
     setItemDelegate(delegate);
     
     // ----------
@@ -39,17 +39,14 @@ void DatesList::setEvent(const QJsonObject& event)
     
     clear();
     
-    if(!mEvent.isEmpty())
-    {
+    if (!mEvent.isEmpty()) {
         QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
-        for(int i=0; i<dates.size(); ++i)
-        {
+        for (int i(0); i<dates.size(); ++i) {
             QJsonObject date = dates[i].toObject();
             
             try{
                 Date d = Date::fromJson(date);
-                if(!d.isNull())
-                {
+                if (!d.isNull()) {
                     QListWidgetItem* item = new QListWidgetItem();
                     item->setFlags(Qt::ItemIsSelectable
                                    | Qt::ItemIsDragEnabled

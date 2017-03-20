@@ -23,15 +23,24 @@ public:
     void setFlatVertical();
     void setFlatHorizontal();
     void setIsClose(bool isClose);
-    
+    void setIconOnly(bool iconOnly) { mIconOnly = iconOnly; }
+
+
+
     void setColorState(ColorState state);
     
 protected:
     void paintEvent(QPaintEvent* e);
-    
+
+    virtual void enterEvent(QEvent * e);
+    virtual void leaveEvent(QEvent *e);
+
     bool mFlatVertical;
     bool mFlatHorizontal;
     bool mIsClose;
+
+    bool mIconOnly;
+    bool mMouseOver;
     
     ColorState mColorState;
     

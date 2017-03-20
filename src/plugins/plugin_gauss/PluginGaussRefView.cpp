@@ -10,15 +10,17 @@
 
 PluginGaussRefView::PluginGaussRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
+    mMeasureColor = QColor(56, 120, 50);
+
     mGraph = new GraphView(this);
-    
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eAllTicks);
     mGraph->setRendering(GraphView::eHD);
     mGraph->autoAdjustYScale(true);
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("x");
-    mMeasureColor=QColor(56, 120, 50);
+    mGraph->setMarginBottom(mGraph->font().pointSizeF() + 10. );
+
 }
 
 PluginGaussRefView::~PluginGaussRefView()
@@ -171,12 +173,12 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             mGraph->addCurve(graphCurveG);
             
             // Display reference curve name
-            mGraph->addInfo(tr("Ref : ") + ref_curve);
+           // mGraph->addInfo(tr("Ref : ") + ref_curve);
         }
         
         if(mode != DATE_GAUSS_MODE_NONE) {
-            yMin = qMin(yMin, age - error * 1.96f);
-            yMax = qMax(yMax, age + error * 1.96f);
+            yMin = qMin(yMin, age - error * 1.96);
+            yMax = qMax(yMax, age + error * 1.96);
             
             //qDebug() << "ymin : " << yMin << ", ymax : " << yMax;
             
@@ -200,9 +202,8 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             // => the visible part of the measure may be very reduced !
             const double step = (yMax - yMin) / 5000.;
             QMap<double, double> measureCurve;
-            for(double t=yMin; t<yMax; t += step)
-            {
-                double v = exp(-0.5 * pow((t - age) / error, 2));
+            for (double t=yMin; t<yMax; t += step) {
+                double v = exp(-0.5 * pow((t - age) / error, 2.));
                 //curveMeasure.mData[t] = v;
                 measureCurve[t] = v;
             }
@@ -212,7 +213,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             mGraph->addCurve(curveMeasure);
 
             // Write measure value :
-            mGraph->addInfo(tr("Measure : ") + locale.toString(age) + " ± " + locale.toString(error));
+           // mGraph->addInfo(tr("Measure : ") + locale.toString(age) + " ± " + locale.toString(error));
             
             // ----------------------------------------------
             //  Error on measure

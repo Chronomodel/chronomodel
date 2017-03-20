@@ -18,6 +18,9 @@ class Label;
 class QSlider;
 class QScrollBar;
 class QFrame;
+class QGraphicsScene;
+class QGraphicsView;
+class CalibrationDrawing;
 
 
 class CalibrationView: public QWidget
@@ -28,12 +31,10 @@ public:
     ~CalibrationView();
     
     void setDate(const QJsonObject& date);
-    void setButtonWidth(const qreal& width);
     void setFont(const QFont& font);
     
 protected:
     void paintEvent(QPaintEvent* e);
-    void mouseMoveEvent(QMouseEvent* e);
     void resizeEvent(QResizeEvent* e);
     void updateLayout();
     
@@ -52,26 +53,21 @@ public:
     ProjectSettings mSettings;
     
 private:
+
+    CalibrationDrawing* mDrawing;
+
     GraphView* mCalibGraph;
     GraphViewRefAbstract* mRefGraphView;
     
     QTextEdit* mResultsText;
     qreal mResultsHeight;
 
-    qreal mMinimalButtonWidth;
     qreal mButtonWidth;
-    qreal mButtonHeight;
+
     Button* mImageSaveBut;
     Button* mImageClipBut;
     Button* mResultsClipBut;
     Button* mDataSaveBut;
-
-    Marker* mMarkerX;
-    Marker* mMarkerY;
-    
-    Label* mTopLab;
-    Label* mProcessTitle;
-    Label* mDistribTitle;
     
     QFrame* frameSeparator;
 

@@ -12,12 +12,13 @@
 
 PluginTL::PluginTL()
 {
-    mColor = QColor(216,207,52);
+    mColor = QColor(216, 207, 52);
 }
 
 PluginTL::~PluginTL()
 {
-
+    if (mRefGraph)
+        delete mRefGraph;
 }
 
 long double PluginTL::getLikelihood(const double& t, const QJsonObject& data)
@@ -27,7 +28,7 @@ long double PluginTL::getLikelihood(const double& t, const QJsonObject& data)
     const double ref_year = data.value(DATE_TL_REF_YEAR_STR).toDouble();
     
     // gaussian TL
-    const long double v = expl(-0.5f * powl((long double)(age - (ref_year - t)) / error, 2.l)) / error;
+    const long double v = expl(-0.5l * powl((long double)(age - (ref_year - t)) / error, 2.l)) / error;
     return v;
 }
 
@@ -47,22 +48,27 @@ QString PluginTL::getName() const
 {
     return QString("TL/OSL");
 }
+
 QIcon PluginTL::getIcon() const
 {
     return QIcon(":/TL_w.png");
 }
+
 bool PluginTL::doesCalibration() const
 {
     return true;
 }
+
 bool PluginTL::wiggleAllowed() const
 {
     return false;
 }
+
 Date::DataMethod PluginTL::getDataMethod() const
 {
     return Date::eMHSymGaussAdapt;
 }
+
 QList<Date::DataMethod> PluginTL::allowedDataMethods() const
 {
     QList<Date::DataMethod> methods;
@@ -71,13 +77,13 @@ QList<Date::DataMethod> PluginTL::allowedDataMethods() const
     methods.append(Date::eMHSymGaussAdapt);
     return methods;
 }
+
 QStringList PluginTL::csvColumns() const
 {
     QStringList cols;
     cols << "Name" << "Age" << "Error (sd)" << "Reference year";
     return cols;
 }
-
 
 PluginFormAbstract* PluginTL::getForm()
 {
@@ -100,11 +106,11 @@ QJsonObject PluginTL::checkValuesCompatibility(const QJsonObject& values)
 QJsonObject PluginTL::fromCSV(const QStringList& list, const QLocale& csvLocale)
 {
     QJsonObject json;
-    if(list.size() >= csvMinColumns())
-    {
+    if (list.size() >= csvMinColumns()) {
         json.insert(DATE_TL_AGE_STR, csvLocale.toDouble(list.at(1)));
         const double error = csvLocale.toDouble(list.at(2));
-        if(error == 0) return QJsonObject();
+        if (error == 0)
+            return QJsonObject();
         json.insert(DATE_TL_ERROR_STR, error);
         json.insert(DATE_TL_REF_YEAR_STR, csvLocale.toDouble(list.at(3)));
     }
@@ -122,14 +128,13 @@ QStringList PluginTL::toCSV(const QJsonObject& data, const QLocale& csvLocale) c
 
 QString PluginTL::getDateDesc(const Date* date) const
 {
-    const QLocale locale=QLocale();
+    const QLocale locale = QLocale();
     QString result;
-    if(date)
-    {
+    if (date) {
         QJsonObject data = date->mData;
         result += QObject::tr("Age") + " : " + locale.toString(data.value(DATE_TL_AGE_STR).toDouble());
         result += " ± " + locale.toString(data.value(DATE_TL_ERROR_STR).toDouble());
-        result += ", " + QObject::tr("Ref. year") + " : " + locale.toString(data.value(DATE_TL_REF_YEAR_STR).toDouble());
+        result += "; " + QObject::tr("Ref. year") + " : " + locale.toString(data.value(DATE_TL_REF_YEAR_STR).toDouble());
     }
     return result;
 }
@@ -140,7 +145,7 @@ QPair<double,double> PluginTL::getTminTmaxRefsCurve(const QJsonObject& data) con
     const double error = data.value(DATE_TL_ERROR_STR).toDouble();
     const double ref_year = data.value(DATE_TL_REF_YEAR_STR).toDouble();
     
-    const double k = 5;
+    const double k = 5.;
     
     const double tmin = ref_year - age - k * error;
     const double tmax = ref_year - age + k * error;
@@ -155,16 +160,16 @@ QPair<double,double> PluginTL::getTminTmaxRefsCurve(const QJsonObject& data) con
 
 GraphViewRefAbstract* PluginTL::getGraphViewRef()
 {
-    //if(!mRefGraph) mRefGraph = new PluginTLRefView();
-    
-    if(mRefGraph) delete mRefGraph;
+    if (mRefGraph)
+        delete mRefGraph;
+
     mRefGraph = new PluginTLRefView();
     return mRefGraph;
 }
 
 PluginSettingsViewAbstract* PluginTL::getSettingsView()
 {
-    return 0;
+    return nullptr;
 }
 
 #endif

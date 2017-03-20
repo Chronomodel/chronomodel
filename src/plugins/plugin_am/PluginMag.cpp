@@ -14,48 +14,46 @@
 
 PluginMag::PluginMag()
 {
-    mColor = QColor(198,79,32);
+    mColor = QColor(198, 79, 32);
     loadRefDatas();
 }
 
 PluginMag::~PluginMag()
 {
-
+    if (mRefGraph)
+        delete mRefGraph;
 }
 
 #pragma mark Likelihood
 long double PluginMag::getLikelihood(const double& t, const QJsonObject& data)
 {
     QPair<long double, long double > result = getLikelihoodArg(t, data);
-    return expl(result.second) / sqrt(result.first);
+    return expl(result.second) / sqrtl(result.first);
 }
 
 QPair<long double, long double> PluginMag::getLikelihoodArg(const double& t, const QJsonObject& data)
 {
-    bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
-    bool is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
-    bool is_int = data.value(DATE_AM_IS_INT_STR).toBool();
-    long double alpha =(long double) data.value(DATE_AM_ERROR_STR).toDouble();
-    long double inc = (long double) data.value(DATE_AM_INC_STR).toDouble();
-    long double dec = (long double) data.value(DATE_AM_DEC_STR).toDouble();
-    long double intensity = (long double) data.value(DATE_AM_INTENSITY_STR).toDouble();
+    const bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
+    const bool is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
+    const bool is_int = data.value(DATE_AM_IS_INT_STR).toBool();
+    const long double alpha =(long double) data.value(DATE_AM_ERROR_STR).toDouble();
+    const long double inc = (long double) data.value(DATE_AM_INC_STR).toDouble();
+    const long double dec = (long double) data.value(DATE_AM_DEC_STR).toDouble();
+    const long double intensity = (long double) data.value(DATE_AM_INTENSITY_STR).toDouble();
     //QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
     
-    long double mesure = 0.;
-    long double error = 0.;
+    long double mesure (0.l);
+    long double error (0.l);
     
-    if(is_inc)
-    {
+    if (is_inc) {
         error = alpha / 2.448l;
         mesure = inc;
     }
-    else if(is_dec)
-    {
+    else if (is_dec) {
         error = alpha / (2.448l * cosl(inc * M_PI / 180.l));
         mesure = dec;
     }
-    else if(is_int)
-    {
+    else if (is_int) {
         error = alpha;
         mesure = intensity;
     }
@@ -74,22 +72,27 @@ QString PluginMag::getName() const
 {
     return QString("AM");
 }
+
 QIcon PluginMag::getIcon() const
 {
     return QIcon(":/AM_w.png");
 }
+
 bool PluginMag::doesCalibration() const
 {
     return true;
 }
+
 bool PluginMag::wiggleAllowed() const
 {
     return false;
 }
+
 Date::DataMethod PluginMag::getDataMethod() const
 {
     return Date::eInversion;
 }
+
 QList<Date::DataMethod> PluginMag::allowedDataMethods() const
 {
     QList<Date::DataMethod> methods;
@@ -103,8 +106,7 @@ QString PluginMag::getDateDesc(const Date* date) const
 {
     QLocale locale=QLocale();
     QString result;
-    if(date)
-    {
+    if (date) {
         QJsonObject data = date->mData;
         
         double is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
@@ -116,28 +118,25 @@ QString PluginMag::getDateDesc(const Date* date) const
         double intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
         QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
         
-        if(is_inc)
-        {
+        if (is_inc) {
             result += QObject::tr("Inclination") + " : " + locale.toString(inc);
-            result += ", " + QObject::tr("Alpha95") + " : " + locale.toString(alpha);
-        }
-        else if(is_dec)
-        {
+            // this is the html form, but not reconized in the DatesListItemDelegate
+           // result += "; " + QString("α<SUB>95</SUB>") + " : " + locale.toString(alpha);
+             result += "; " + QObject::tr("α_95") + " : " + locale.toString(alpha);
+        } else if (is_dec) {
             result += QObject::tr("Declination") + " : " + locale.toString(dec);
-            result += ", " + QObject::tr("Inclination") + " : " + locale.toString(inc);
-            result += ", " + QObject::tr("Alpha95") + " : " + locale.toString(alpha);
-        }
-        else if(is_int)
-        {
+            result += "; " + QObject::tr("Inclination") + " : " + locale.toString(inc);
+            result += "; " + QObject::tr("α_95") + " : " + locale.toString(alpha);
+        } else if (is_int)  {
             result += QObject::tr("Intensity") + " : " + locale.toString(intensity);
-            result += ", " + QObject::tr("Error") + " : " + locale.toString(alpha);
+            result += "; " + QObject::tr("Error") + " : " + locale.toString(alpha);
         }
-        if(mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
-            result += ", " + tr("Ref. curve") + " : " + ref_curve;
-        }
-        else {
-            result += ", " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
-        }
+
+        if (mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty())
+            result += "; " + tr("Ref. curve") + " : " + ref_curve;
+        else
+            result += "; " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
+
     }
     return result;
 }
@@ -346,7 +345,9 @@ QPair<double,double> PluginMag::getTminTmaxRefsCurve(const QJsonObject& data) co
 #pragma mark Settings / Input Form / RefView
 GraphViewRefAbstract* PluginMag::getGraphViewRef()
 {
-    if(mRefGraph) delete mRefGraph;
+    if (mRefGraph)
+        delete mRefGraph;
+
     mRefGraph = new PluginMagRefView();
     return mRefGraph;
 }

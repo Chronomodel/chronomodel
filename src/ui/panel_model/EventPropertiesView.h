@@ -26,13 +26,14 @@ class EventPropertiesView: public QWidget
 {
     Q_OBJECT
 public:
-    EventPropertiesView(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    EventPropertiesView(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
     ~EventPropertiesView();
     
     void updateEvent();
     const QJsonObject& getEvent() const;
     
     void setCalibChecked(bool checked);
+    bool isCalibChecked() const;
     bool hasEvent() const;
     bool hasBound() const;
     bool hasEventWithDates() const;
@@ -43,12 +44,13 @@ public slots:
 protected:
     void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent* e);
+    void keyPressEvent(QKeyEvent* e);
     void updateLayout();
     
 private slots:
     
     void updateEventName();
-    void updateEventColor(QColor color);
+    void updateEventColor(const QColor& color);
     void updateEventMethod(int index);
     
     void createDate();
@@ -63,7 +65,6 @@ private slots:
     void updateKnownFixed(const QString& text);
     void updateKnownUnifStart(const QString& text);
     void updateKnownUnifEnd(const QString& text);
-   // void loadKnownCsv();
     
     void updateKnownGraph();
     void updateKnownControls();
@@ -114,6 +115,7 @@ private:
     QGroupBox* mUniformGroup;
     
     int mToolbarH;
+    int mButtonWidth;
 };
 
 #endif

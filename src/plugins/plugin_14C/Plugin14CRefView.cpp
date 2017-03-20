@@ -9,17 +9,19 @@
 
 
 
-Plugin14CRefView::Plugin14CRefView(QWidget* parent):GraphViewRefAbstract(parent),
-mGraph(0)
+Plugin14CRefView::Plugin14CRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
+    mMeasureColor = QColor(Qt::black);
     mGraph = new GraphView(this);
-    
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eAllTicks);
     mGraph->setRendering(GraphView::eHD);
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("age");
     mGraph->autoAdjustYScale(true);
+    mGraph->setMarginBottom(mGraph->font().pointSizeF() + 10. );
+
+
 }
 
 Plugin14CRefView::~Plugin14CRefView()
@@ -146,13 +148,13 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         mGraph->addCurve(graphCurveG95Inf);
         
         // Display reference curve name
-        mGraph->addInfo(tr("Ref")+" : " + ref_curve);
+       // mGraph->addInfo(tr("Ref")+" : " + ref_curve);
                 
         // ----------------------------------------------
         //  Measure curve
         // ----------------------------------------------
-        yMin = qMin(yMin, age - error * 1.96f);
-        yMax = qMax(yMax, age + error * 1.96f);
+        yMin = qMin(yMin, age - error * 1.96);
+        yMax = qMax(yMax, age + error * 1.96);
         
         GraphCurve curveMeasure;
         curveMeasure.mName = "Measure";
@@ -179,7 +181,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         double step = (yMax - yMin) / 5000.;
         QMap<double, double> measureCurve;
         for (double t = yMin; t<yMax; t += step) {
-            const double v = exp(-0.5f * pow((age - t) / error, 2));
+            const double v = exp(-0.5 * pow((age - t) / error, 2));
             measureCurve[t] = v;
         }
         measureCurve = normalize_map(measureCurve);
@@ -197,8 +199,8 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             age = (age - delta_r);
             error = sqrt(error * error + delta_r_error * delta_r_error);
             
-            yMin = qMin(yMin, age - error * 1.96f);
-            yMax = qMax(yMax, age + error * 1.96f);
+            yMin = qMin(yMin, age - error * 1.96);
+            yMax = qMax(yMax, age + error * 1.96);
             
             GraphCurve curveDeltaR;
             curveDeltaR.mName = "Delta R";
@@ -282,7 +284,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         //  Textual info
         // ----------------------------------------------
         
-        mGraph->addInfo(info);
+       // mGraph->addInfo(info);
         
         // ----------------------------------------------
         //  Error on measure (horizontal lines)

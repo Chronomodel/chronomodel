@@ -10,7 +10,7 @@
 
 PluginUniform::PluginUniform()
 {
-    mColor = QColor(220,204,173);
+    mColor = QColor(220, 204, 173);
 }
 
 PluginUniform::~PluginUniform()
@@ -30,6 +30,7 @@ QString PluginUniform::getName() const
 {
     return QString("Typo");
 }
+
 QIcon PluginUniform::getIcon() const
 {
     return QIcon(":/uniform_w.png");
@@ -39,14 +40,17 @@ bool PluginUniform::doesCalibration() const
 {
     return false;
 }
+
 bool PluginUniform::wiggleAllowed() const
 {
     return false;
 }
+
 Date::DataMethod PluginUniform::getDataMethod() const
 {
     return Date::eMHSymetric;
 }
+
 QList<Date::DataMethod> PluginUniform::allowedDataMethods() const
 {
     QList<Date::DataMethod> methods;
@@ -54,6 +58,7 @@ QList<Date::DataMethod> PluginUniform::allowedDataMethods() const
     methods.append(Date::eMHSymGaussAdapt);
     return methods;
 }
+
 QStringList PluginUniform::csvColumns() const
 {
     QStringList cols;
@@ -85,7 +90,9 @@ QJsonObject PluginUniform::fromCSV(const QStringList& list, const QLocale& csvLo
     if (list.size() >= csvMinColumns()) {
         double tmin = csvLocale.toDouble(list.at(1));
         double tmax = csvLocale.toDouble(list.at(2));
-        if (tmin >= tmax) return QJsonObject();
+        if (tmin >= tmax)
+            return QJsonObject();
+
         json.insert(DATE_UNIFORM_MIN_STR, tmin);
         json.insert(DATE_UNIFORM_MAX_STR, tmax);
     }
@@ -102,7 +109,7 @@ QStringList PluginUniform::toCSV(const QJsonObject& data, const QLocale& csvLoca
 
 QString PluginUniform::getDateDesc(const Date* date) const
 {
-    QLocale locale=QLocale();
+    QLocale locale = QLocale();
     QString result;
     if (date) {
         QJsonObject data = date->mData;
@@ -124,12 +131,12 @@ bool PluginUniform::isDateValid(const QJsonObject& data, const ProjectSettings& 
 
 GraphViewRefAbstract* PluginUniform::getGraphViewRef()
 {
-    return 0;
+    return nullptr;
 }
 
 PluginSettingsViewAbstract* PluginUniform::getSettingsView()
 {
-    return 0;
+    return nullptr;
 }
 
 

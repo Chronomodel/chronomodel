@@ -14,7 +14,7 @@ class Plugin14CRefView: public GraphViewRefAbstract
 {
     Q_OBJECT
 public:
-    explicit Plugin14CRefView(QWidget* parent = 0);
+    explicit Plugin14CRefView(QWidget* parent = nullptr);
     virtual ~Plugin14CRefView();
     
     void setDate(const Date& date, const ProjectSettings& settings);

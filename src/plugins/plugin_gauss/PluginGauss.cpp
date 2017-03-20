@@ -11,17 +11,18 @@
 #include <QJsonObject>
 #include <QtWidgets>
 
-
 PluginGauss::PluginGauss()
 {
-    mColor = QColor(217,37,37);
+    mColor = QColor(217, 37, 37);
     loadRefDatas();
 }
 
 PluginGauss::~PluginGauss()
 {
-
+    if (mRefGraph)
+        delete mRefGraph;
 }
+
 //#pragma mark Likelihood
 long double PluginGauss::getLikelihood(const double& t, const QJsonObject& data)
 {
@@ -68,7 +69,7 @@ QPair<long double, long double> PluginGauss::getLikelihoodArg(const double& t, c
     }
 
     //double refValue = getRefValueAt(data, t);
-    const long double exponent = -0.5f * pow((long double)(age - refValue), 2.l) / variance;
+    const long double exponent = -0.5l * pow((long double)(age - refValue), 2.l) / variance;
 
     return qMakePair(variance, exponent);
 }
@@ -78,23 +79,28 @@ QString PluginGauss::getName() const
 {
     return QString("Gauss");
 }
+
 QIcon PluginGauss::getIcon() const
 {
     return QIcon(":/gauss_w.png");
 }
+
 bool PluginGauss::doesCalibration() const
 {
     return true;
 
 }
+
 bool PluginGauss::wiggleAllowed() const
 {
     return false;
 }
+
 Date::DataMethod PluginGauss::getDataMethod() const
 {
     return Date::eMHSymGaussAdapt;
 }
+
 QList<Date::DataMethod> PluginGauss::allowedDataMethods() const
 {
     QList<Date::DataMethod> methods;
@@ -108,58 +114,59 @@ QString PluginGauss::getDateDesc(const Date* date) const
 {
     QLocale locale=QLocale();
     QString result;
-    if(date)
-    {
+    if (date) {
         QJsonObject data = date->mData;
         
-        double a = data[DATE_GAUSS_A_STR].toDouble();
-        double b = data[DATE_GAUSS_B_STR].toDouble();
-        double c = data[DATE_GAUSS_C_STR].toDouble();
-        QString mode = data[DATE_GAUSS_MODE_STR].toString();
-        QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
+        const double a = data[DATE_GAUSS_A_STR].toDouble();
+        const double b = data[DATE_GAUSS_B_STR].toDouble();
+        const double c = data[DATE_GAUSS_C_STR].toDouble();
+        const QString mode = data[DATE_GAUSS_MODE_STR].toString();
+        const QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
         
         result += QObject::tr("Age") + " : " + locale.toString(data[DATE_GAUSS_AGE_STR].toDouble());
         result += " ± " + locale.toString(data[DATE_GAUSS_ERROR_STR].toDouble());
         
-        if(mode == DATE_GAUSS_MODE_NONE)
-        {
+        if (mode == DATE_GAUSS_MODE_NONE)
             result += " (No calibration)";
-        }
-        if(mode == DATE_GAUSS_MODE_EQ)
-        {
+
+        if (mode == DATE_GAUSS_MODE_EQ) {
             QString aStr;
-            if(a != 0.f)
-            {
-                if(a == -1.f) aStr += "-";
-                else if(a != 1.f) aStr += locale.toString(a);
+            if (a != 0.) {
+                if (a == -1.)
+                    aStr += "-";
+                else if (a != 1.)
+                    aStr += locale.toString(a);
+
                 aStr += "t²";
             }
             QString bStr;
-            if(b != 0.f)
-            {
-                if(b == -1.f) bStr += "-";
-                else if(b != 1.f) bStr += locale.toString(b);
+            if (b != 0.) {
+                if (b == -1.)
+                    bStr += "-";
+                else if (b != 1.)
+                    bStr += locale.toString(b);
+
                 bStr += "t";
             }
             QString cStr;
-            if(c != 0.f)
-            {
+            if (c != 0.)
                 cStr +=locale.toString(c);
-            }
+
             QString eq = aStr;
-            if(!eq.isEmpty() && !bStr.isEmpty())
+            if (!eq.isEmpty() && !bStr.isEmpty())
                 eq += " + ";
+
             eq += bStr;
-            if(!eq.isEmpty() && !cStr.isEmpty())
+            if (!eq.isEmpty() && !cStr.isEmpty())
                 eq += " + ";
+
             eq += cStr;
             
-            result += ", " + QObject::tr("Ref. curve") + " : g(t) = " + eq;
+            result += "; " + QObject::tr("Ref. curve") + " : g(t) = " + eq;
         }
-        else if(mode == DATE_GAUSS_MODE_CURVE)
-        {
-            if(mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
-                result += ", " + tr("Ref. curve") + " : " + ref_curve;
+        else if (mode == DATE_GAUSS_MODE_CURVE) {
+            if (mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
+                result += "; " + tr("Ref. curve") + " : " + ref_curve;
             }
             else {
                 result += ", " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
@@ -474,9 +481,9 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
 #pragma mark Settings / Input Form / RefView
 GraphViewRefAbstract* PluginGauss::getGraphViewRef()
 {
-    //if(!mRefGraph) mRefGraph = new PluginGaussRefView(mLanguage);
+    if (mRefGraph)
+        delete mRefGraph;
 
-    if(mRefGraph) delete mRefGraph;
     mRefGraph = new PluginGaussRefView();
     
     return mRefGraph;

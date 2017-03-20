@@ -33,14 +33,8 @@ public:
    {
         other.mName = nullptr;
         other.mDescription = nullptr;
-        //other.mMethod=0;
         other.mRepartition.clear();
         other.mCurve.clear();
-        /*other.mTmin = nullptr;
-        other.mTmax = nullptr;
-        other.mStep = nullptr;*/
-
-        //other.mMCMCSetting;
         other.mPluginId = nullptr;
         other.mPlugin =nullptr;
 
@@ -77,14 +71,10 @@ public:
 
         other.mName = nullptr;
         other.mDescription = nullptr;
-        //other.mMethod=0;
+
         other.mRepartition.clear();
         other.mCurve.clear();
-        /*other.mTmin = nullptr;
-        other.mTmax = nullptr;
-        other.mStep = nullptr;
 
-        other.mMCMCSetting;*/
         other.mPluginId = nullptr;
         other.mPlugin =nullptr;
         return *this;

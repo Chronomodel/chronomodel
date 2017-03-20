@@ -10,15 +10,17 @@
 
 PluginMagRefView::PluginMagRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
+    mMeasureColor = QColor(56, 120, 50);
+
     mGraph = new GraphView(this);
-    
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eAllTicks);
     mGraph->setRendering(GraphView::eHD);
     mGraph->autoAdjustYScale(true);
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("value");
-    mMeasureColor = QColor(56, 120, 50);
+    mGraph->setMarginBottom(mGraph->font().pointSizeF() + 10. );
+
 }
 
 PluginMagRefView::~PluginMagRefView()
@@ -85,7 +87,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
             return;
         }
 
-        if(tminDisplay < tminRef){
+        if (tminDisplay < tminRef){
             GraphZone zone;
             zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(35);
@@ -154,7 +156,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         mGraph->addCurve(graphCurveG95Inf);
         
         // Display reference curve name
-        mGraph->addInfo(tr("Ref : ") + ref_curve);
+        //mGraph->addInfo(tr("Ref : ") + ref_curve);
 
 
         // ----------------------------------------------
@@ -162,17 +164,16 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         // ----------------------------------------------
         double error = 0.;
         double avg = 0.;
-        if(is_inc)
-        {
+        if (is_inc)  {
             avg = inc;
             error = alpha / 2.448f;
         }
         else if(is_dec)
         {
             avg = dec;
-            error = alpha / (2.448f * cosf(inc * M_PI / 180.f));
+            error = alpha / (2.448 * cosf(inc * M_PI / 180.));
         }
-        else if(is_int)
+        else if (is_int)
         {
             avg = intensity;
             error = alpha;
@@ -205,11 +206,9 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         // => the visible part of the measure may be very reduced !
         const double yStep = (yMax - yMin) / 5000.;
         QMap<double,double> measureCurve;
-        for(double t=yMin; t<yMax; t+=yStep)
-        {
-            double v = 0.f;
-            if(is_inc)
-            {
+        for (double t=yMin; t<yMax; t+=yStep) {
+            double v = 0.;
+            if (is_inc) {
                 v = exp(-0.5 * pow((t - inc) / error, 2.));
             }
             else if(is_dec)
@@ -229,7 +228,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         mGraph->addCurve(curveMeasure);
         
         // Write measure values :
-        if(is_inc)
+    /*    if(is_inc)
         {
             mGraph->addInfo(tr("Inclination : ") + locale.toString(inc) + ", α : " + locale.toString(alpha));
         }
@@ -241,7 +240,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         {
             mGraph->addInfo(tr("Intensity : ") + locale.toString(intensity) + " ± : " + locale.toString(alpha));
         }
-        
+     */
         // ----------------------------------------------
         //  Error on measure
         // ----------------------------------------------

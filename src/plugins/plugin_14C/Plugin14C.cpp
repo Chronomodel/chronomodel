@@ -14,13 +14,14 @@
 
 Plugin14C::Plugin14C()
 {
-    mColor = QColor(47,46,68);
+    mColor = QColor(47, 46, 68);
     loadRefDatas();
 }
 
 Plugin14C::~Plugin14C()
 {
-
+    if (mRefGraph)
+        delete mRefGraph;
 }
 
 //#pragma mark Likelihood
@@ -39,14 +40,14 @@ QPair<long double, long double> Plugin14C::getLikelihoodArg(const double& t, con
     double refError = getRefErrorAt(data, t);
     
     long double variance = refError * refError + error * error;
-    long double exponent = -0.5f * powl((long double)(age - refValue), 2.l) / variance;
+    long double exponent = -0.5 * powl((long double)(age - refValue), 2.l) / variance;
     return qMakePair(variance, exponent);
 }
 
 long double Plugin14C::getLikelihood(const double& t, const QJsonObject& data)
 {
     QPair<long double, long double > result = getLikelihoodArg(t, data);
-    long double back = expl(result.second) / sqrt(result.first) ;
+    long double back = expl(result.second) / sqrtl(result.first) ;
     return back;
 }
 
@@ -70,10 +71,12 @@ bool Plugin14C::wiggleAllowed() const
 {
     return true;
 }
+
 Date::DataMethod Plugin14C::getDataMethod() const
 {
     return Date::eInversion;
 }
+
 QList<Date::DataMethod> Plugin14C::allowedDataMethods() const
 {
     QList<Date::DataMethod> methods;
@@ -99,15 +102,15 @@ QString Plugin14C::getDateDesc(const Date* date) const
         result += QObject::tr("Age") + " : " + locale.toString(age);
         result += " ± " + locale.toString(error);
         
-        if (delta_r != 0 || delta_r_error != 0) {
+        if (delta_r != 0. || delta_r_error != 0.) {
             result += ", " + QObject::tr("ΔR") + " : " + locale.toString(delta_r);
             result += " ± " +locale.toString(delta_r_error);
         }
         
         if (mRefCurves.contains(ref_curve) && !mRefCurves.value(ref_curve).mDataMean.isEmpty())
-            result += ", " + tr("Ref. curve") + " : " + ref_curve;
+            result += "; " + tr("Ref. curve") + " : " + ref_curve;
         else
-            result += ", " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
+            result += "; " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
         
     }
     return result;
@@ -131,7 +134,7 @@ QJsonObject Plugin14C::fromCSV(const QStringList& list, const QLocale &csvLocale
     QJsonObject json;
     if (list.size() >= csvMinColumns()) {
         double error = csvLocale.toDouble(list.at(2));
-        if(error == 0)
+        if (error == 0.)
             return json;
 
         json.insert(DATE_14C_AGE_STR, csvLocale.toDouble(list.at(1)));
@@ -204,10 +207,10 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
                     if(!ok)
                         continue;
                     
-                    double gSup = g + 1.96f * e;
+                    double gSup = g + 1.96 * e;
                     if(!ok)
                         continue;
-                    double gInf = g - 1.96f * e;
+                    double gInf = g - 1.96 * e;
                     if(!ok)
                         continue;
                     
@@ -272,8 +275,8 @@ double Plugin14C::getRefErrorAt(const QJsonObject& data, const double& t)
 
 QPair<double,double> Plugin14C::getTminTmaxRefsCurve(const QJsonObject& data) const
 {
-    double tmin = 0;
-    double tmax = 0;
+    double tmin (-INFINITY);
+    double tmax (INFINITY);
     const QString ref_curve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
 
     if (mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
@@ -286,9 +289,9 @@ QPair<double,double> Plugin14C::getTminTmaxRefsCurve(const QJsonObject& data) co
 //#pragma mark Settings / Input Form / RefView
 GraphViewRefAbstract* Plugin14C::getGraphViewRef()
 {
-    //if(!mRefGraph) mRefGraph = new Plugin14CRefView();
-    
-    if(mRefGraph) delete mRefGraph;
+    if (mRefGraph)
+        delete mRefGraph;
+
     mRefGraph = new Plugin14CRefView();
     
     return mRefGraph;
@@ -310,11 +313,11 @@ QJsonObject Plugin14C::checkValuesCompatibility(const QJsonObject& values)
 {
     QJsonObject result = values;
 
-    if(result.find(DATE_14C_DELTA_R_STR) == result.end())
-        result[DATE_14C_DELTA_R_STR] = 0.0f;
+    if (result.find(DATE_14C_DELTA_R_STR) == result.end())
+        result[DATE_14C_DELTA_R_STR] = 0.0;
     
-    if(result.find(DATE_14C_DELTA_R_ERROR_STR) == result.end())
-        result[DATE_14C_DELTA_R_ERROR_STR] = 0.0f;
+    if (result.find(DATE_14C_DELTA_R_ERROR_STR) == result.end())
+        result[DATE_14C_DELTA_R_ERROR_STR] = 0.0;
 
     // must be a double
     result[DATE_14C_DELTA_R_STR] = result.value(DATE_14C_DELTA_R_STR).toDouble() ;

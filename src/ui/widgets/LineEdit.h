@@ -3,6 +3,7 @@
 
 #include <QLineEdit>
 
+class QFont;
 
 class LineEdit: public QLineEdit
 {
