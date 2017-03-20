@@ -476,10 +476,10 @@ double Event::getThetaMax(double defaultValue)
     return max;
 }
 
-void Event::updateTheta(const double tmin, const double tmax)
+void Event::updateTheta(const double &tmin, const double &tmax)
 {
-    const double min = getThetaMin(tmin);
-    const double max = getThetaMax(tmax);
+    const double min ( getThetaMin(tmin) );
+    const double max ( getThetaMax(tmax) );
     
     if (min >= max)
         throw QObject::tr("Error for event : ") + mName + " : min = " + QString::number(min) + " : max = " + QString::number(max);
@@ -493,10 +493,9 @@ void Event::updateTheta(const double tmin, const double tmax)
     //  On est en "wiggle" si au moins une des mesures a un delta > 0.
     // -------------------------------------------------------------------------------------------------
     
-    double sum_p = 0.;
-    double sum_t = 0.;
+    double sum_p (0.);
+    double sum_t (0.);
 
-    // with const type variable foreeach is speeder
   //  for (const Date date: mDates) {
     for (QList<Date>::const_iterator date = mDates.cbegin(); date != mDates.cend(); date++) {
         const double variance = date->mSigma.mX * date->mSigma.mX;

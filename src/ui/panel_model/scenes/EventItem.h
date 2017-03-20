@@ -9,7 +9,7 @@ class EventsScene;
 class EventItem : public AbstractItem
 {
 public:
-    EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent = 0);
+    EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent = nullptr);
     virtual ~EventItem();
 
     virtual void setGreyedOut(bool greyedOut);

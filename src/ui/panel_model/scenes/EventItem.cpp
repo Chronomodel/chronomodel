@@ -89,7 +89,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     qreal h = mTitleHeight + mPhasesHeight + 2*mBorderWidth + 2*mEltsMargin;
     
     QString name = event.value(STATE_NAME).toString();
-    QFont font = qApp->font();
+    QFont font = mScene->font();
     QFontMetrics metrics(font);
     qreal w = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin + 2*mTitleHeight;
     
@@ -101,12 +101,12 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     else
         h += mEltsMargin + mEltsHeight;
     
-    font.setPointSizeF(pointSize(11));
-    metrics = QFontMetrics(font);
+    font.setPointSizeF(11.);
+    QFontMetrics metricsName(font);
     for (int i=0; i<count; ++i) {
         const QJsonObject date = dates.at(i).toObject();
         name = date.value(STATE_NAME).toString();
-        const int nw = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin;
+        const int nw = metricsName.width(name) + 2*mBorderWidth + 4*mEltsMargin;
         w = (nw > w) ? nw : w;
     }
     w = (w < 150) ? 150 : w;

@@ -7,9 +7,9 @@
 
 EventKnown::EventKnown():Event(),
 mKnownType(eFixed),
-mFixed(0),
-mUniformStart(0),
-mUniformEnd(0)
+mFixed(0.),
+mUniformStart(0.),
+mUniformEnd(0.)
 {
     mType = eKnown;
     mMethod= eFixe;
@@ -91,7 +91,7 @@ double EventKnown::fixedValue() const {return mFixed;}
 double EventKnown::uniformStart() const {return mUniformStart;}
 double EventKnown::uniformEnd() const {return mUniformEnd;}
 
-void EventKnown::updateValues(double tmin, double tmax, double step)
+void EventKnown::updateValues(const double& tmin, const double& tmax, const double& step)
 {
     mValues.clear();
     switch(mKnownType)
@@ -107,7 +107,7 @@ void EventKnown::updateValues(double tmin, double tmax, double step)
         {
             if (mUniformStart < mUniformEnd) {
                 for (double t=tmin; t<=tmax; t+=step) {
-                    const double v = (t > mUniformStart && t <= mUniformEnd) ? 1 / (mUniformEnd - mUniformStart) : 0.;
+                    const double v = (t > mUniformStart && t <= mUniformEnd) ? 1. / (mUniformEnd - mUniformStart) : 0.;
                     mValues[t] = v;
                 }
             }
@@ -122,7 +122,7 @@ void EventKnown::updateValues(double tmin, double tmax, double step)
     }
 }
 
-void EventKnown::updateTheta(const double tmin, const double tmax)
+void EventKnown::updateTheta(const double& tmin, const double& tmax)
 {
     switch(mKnownType)
     {
@@ -138,8 +138,9 @@ void EventKnown::updateTheta(const double tmin, const double tmax)
             
             min = qMax(mUniformStart, min);
             max = qMin(mUniformEnd, max);
-            
-            double theta = min + Generator::randomUniform() * (max - min);
+
+            const double theta ( Generator::randomUniform(min, max) );
+
             mTheta.tryUpdate(theta, 1.);
             //qDebug()<<"EventKnown updateTheta"<<min<<" "<<theta<<" "<<max<<" "<< mTheta.mX;
             break;

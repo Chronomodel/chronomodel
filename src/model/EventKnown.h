@@ -28,9 +28,9 @@ public:
     double uniformStart() const;
     double uniformEnd() const;
     
-    void updateValues(double tmin, double tmax, double step);
+    void updateValues(const double &tmin, const double &tmax, const double &step);
     
-    virtual void updateTheta(const double min, const double max);
+    virtual void updateTheta(const double &min, const double &max);
     
     
 public:

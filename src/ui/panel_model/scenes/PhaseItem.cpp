@@ -57,7 +57,7 @@ void PhaseItem::setPhase(const QJsonObject& phase)
     if (!tauStr.isEmpty())
         h += mEltsMargin + mEltsHeight;
     
-    QFont font = qApp->font();
+    QFont font("Helvetica", 10);
     const QString name = mData.value(STATE_NAME).toString();
     QFontMetrics metrics(font);
 
@@ -65,16 +65,16 @@ void PhaseItem::setPhase(const QJsonObject& phase)
     int nw = metrics.width(name) + 2*mBorderWidth + 2*mEltsMargin ;
     w = (nw > w) ? nw : w;
     
-    font.setPointSizeF(pointSize(11.f));
-    metrics = QFontMetrics(font);
+    font.setPointSizeF(11.);
+    QFontMetrics metricsName(font);
     
-    nw = metrics.width(tauStr) + 2*mBorderWidth + 4*mEltsMargin;
+    nw = metricsName.width(tauStr) + 2*mBorderWidth + 4*mEltsMargin;
     w = (nw > w) ? nw : w;
     
     for (int i=0; i<events.size(); ++i) {
         const QJsonObject event = events.at(i).toObject();
         const QString eventName = event.value(STATE_NAME).toString();
-        nw = metrics.width(eventName) + 2*mBorderWidth + 4*mEltsMargin;
+        nw = metricsName.width(eventName) + 2*mBorderWidth + 4*mEltsMargin;
         w = (nw > w) ? nw : w;
     }
 

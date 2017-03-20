@@ -136,7 +136,7 @@ QColor Date::getEventColor() const
 #pragma mark JSON
 Date Date::fromJson(const QJsonObject& json)
 {
-    Date date;
+    Date date = Date();
     
     if (!json.isEmpty()) {
         date.mId = json.value(STATE_ID).toInt();
@@ -157,7 +157,7 @@ Date Date::fromJson(const QJsonObject& json)
         
         QString pluginId = json.value(STATE_DATE_PLUGIN_ID).toString();
         date.mPlugin = PluginManager::getPluginFromId(pluginId);
-        if (date.mPlugin == 0)
+        if (date.mPlugin == nullptr)
             throw QObject::tr("Data could not be loaded : invalid plugin : ") + pluginId;
         else  {
             QPair<double, double> tminTmax = date.mPlugin->getTminTmaxRefsCurve(date.mData);
@@ -222,7 +222,7 @@ QJsonObject Date::toJson() const
 
 double Date::getLikelihood(const double& t) const
 {
-    double result = 0.f;
+    double result = 0.;
     if (mPlugin)
         result = (double)mPlugin->getLikelihood(t, mData);
     return result;
@@ -263,8 +263,7 @@ void Date::reset()
 {
     mTheta.reset();
     mSigma.reset();
-    //mCalibration.clear();
-    //mRepartition.clear();
+
     mWiggle.reset();
 }
 

@@ -15,11 +15,11 @@ public:
     static int createSeed();
     static void initGenerator(const int seed);
     
-    static double randomUniform(const double min = 0., const double max = 1.) ;
-    static int randomUniformInt(const int min = 0, const int max = 1);
+    static double randomUniform(const double &min = 0., const double &max = 1.) ;
+    static int randomUniformInt(const int& min = 0, const int& max = 1);
 
     static double gaussByDoubleExp(const double mean, const double sigma, const double min, const double max) ;
-    static double gaussByBoxMuller(const double mean, const double sigma) ;
+    static double gaussByBoxMuller(const double &mean, const double &sigma) ;
 
     static double xorshift64star(void);
     static uint64_t xorshift64starSeed;

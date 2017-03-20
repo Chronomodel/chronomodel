@@ -91,6 +91,7 @@ private:
     void exportSceneImage(QGraphicsScene* scene);
     
 private:
+    QWidget* mTopWrapper;
     QWidget* mLeftWrapper;
     QWidget* mRightWrapper;
     
@@ -114,6 +115,8 @@ private:
     Button* mButExportEvents;
     Button* mButEventsOverview;
     Button* mButEventsGrid;
+    Button* mButProperties;
+    Button* mButImport;
     
     // ------
     
@@ -159,16 +162,20 @@ private:
     Button* mButApply;
     Button* mButStep;
     
-    Button* mButProperties;
-    Button* mButImport;
-    Button* mButPhasesModel;
+
+   // Button* mButPhasesModel;
     
+    QRect mTopRect;
+    QRect mHandlerRect;
+
     QRect mLeftRect;
     QRect mLeftHiddenRect;
+
     QRect mRightRect;
-    QRect mRightSubRect;
-    QRect mRightSubHiddenRect;
-    QRect mHandlerRect;
+    //QRect mRightSubRect;
+    QRect mRightHiddenRect;
+
+
     
 private:
     Project* mProject;

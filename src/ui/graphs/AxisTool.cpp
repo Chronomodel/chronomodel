@@ -31,8 +31,9 @@ void AxisTool::updateValues(const int totalPix, const int minDeltaPix, const qre
 
     mEndVal = maxVal;
     qreal w = mIsHorizontal ? totalPix - rigthBlank : totalPix;
+   // qreal w =totalPix;
     w = (w <= 0.) ? minDeltaPix : w;
-    qreal numSteps = floor(w / minDeltaPix);
+    qreal numSteps = floor(w / (double)(minDeltaPix));
     numSteps = (numSteps <= 0.) ? 1. : numSteps;
     
     qreal delta = maxVal - minVal;
@@ -56,25 +57,29 @@ void AxisTool::updateValues(const int totalPix, const int minDeltaPix, const qre
     const qreal factor = pow(10., pow10);
     
     mDeltaVal = 10. * factor;
+
     mDeltaPix = mDeltaVal * mPixelsPerUnit;
     
-    mStartVal = (minVal / mDeltaVal) * mDeltaVal;
-    mStartPix = (mStartVal - minVal) * mPixelsPerUnit;
-    mEndVal   = mStartVal+ totalPix/ mPixelsPerUnit;
+    mStartVal = minVal;
+    mStartPix = 0;//(mStartVal - minVal) * mPixelsPerUnit;
+    mEndVal   = mStartVal+ (double)(totalPix)/ mPixelsPerUnit;
     
-   /* qDebug() << "------------";
+    qDebug() << "-----------mIsHorizontal-"<<mIsHorizontal;
+    qDebug()<< "totalPix= "<<totalPix << "minDeltaPix= "<<minDeltaPix<< "  minVal "<< minVal<<"maxVal "<< maxVal;
      qDebug() << "w = " << w;
+     qDebug() << "pow10= "<<pow10;
      qDebug() << "numSteps = " << numSteps;
      qDebug() << "delta = " << delta;
-     qDebug() << "unitsPerStep = " << unitsPerStep;
-     qDebug() << "pixelsPerUnit = " << mPixelsPerUnit;
+     qDebug() << "unitsPerStep = " << unitsPerStep ;
+     qDebug() << "pixelsPerUnit = " << mPixelsPerUnit<<" pixel per year";
      qDebug() << "factor = " << factor;
      qDebug() << "---";
      qDebug() << "mStartVal = " << mStartVal;
      qDebug() << "mStartPix = " << mStartPix;
+     qDebug() << "mEndVal = " << mEndVal;
      qDebug() << "mDeltaVal = " << mDeltaVal;
-     qDebug() << "mDeltaPix = " << mDeltaPix;
-    */
+     qDebug() << "mDeltaPix = " << mDeltaPix<< "pixel between grade";
+
 }
 /**
  * @brief Draw axis on a QPainter, if there is no valueFormatFunc, all number is converted in QString with precision 0, it's mean only integer
@@ -145,6 +150,9 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, F
 
                             const int textWidth =  fm.width(text) ;
                             const qreal tx = x - textWidth/2;
+                            //mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
+                            //mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), (qreal) 7.,stringWithAppSettings);
+
 
                             QRectF textRect(tx, yo + h - heightText, textWidth, heightText);
                             p.drawText(textRect,Qt::AlignCenter ,text);
@@ -192,7 +200,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, F
             int i(0);
             for (qreal y = yov - (mStartPix - mDeltaPix); y > yov - h; y -= mDeltaPix) {
                 if (mShowSubSubs) {
-                    for (qreal sy = y + mDeltaPix/10; sy > std::max(y - mDeltaPix, yov - h); sy -= mDeltaPix/10) {
+                    for (qreal sy = y + mDeltaPix/10.; sy > std::max(y - mDeltaPix, yov - h); sy -= mDeltaPix/10.) {
                         if (sy <= yov)
                             p.drawLine(QLineF(xov, sy, xov - 3, sy));
                     }
@@ -202,7 +210,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, F
                     if ( mShowText ) {
                         const int align (Qt::AlignRight | Qt::AlignVCenter);
                         const QString text =(valueFormatFunc ? valueFormatFunc(mEndVal-(y-yo)/mPixelsPerUnit, false) : QString::number((mEndVal-(y-yo)/mPixelsPerUnit ),'f',0) );
-                        
+                        //const QString text = QString::number((mStartVal-(y-yov)/mPixelsPerUnit ),'f',0);
                         const qreal ty ( y - heightText/2 );
                         const QRectF tr(xov - w, ty, w - 8, heightText);
                         p.drawText(tr, align, text);

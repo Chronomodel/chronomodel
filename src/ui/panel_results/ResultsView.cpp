@@ -94,10 +94,14 @@ mMaximunNumberOfVisibleGraph(0)
     mByPhasesBut = new Button(tr("Phases"), this);
     mByPhasesBut->setCheckable(true);
     mByPhasesBut->setFlatHorizontal();
+    mByPhasesBut->setIconOnly(false);
+    mByPhasesBut->setToolTip(tr("Display Phases curves"));
     
     mByEventsBut = new Button(tr("Events"), this);
     mByEventsBut->setCheckable(true);
     mByEventsBut->setFlatHorizontal();
+    mByEventsBut->setIconOnly(false);
+    mByEventsBut->setToolTip(tr("Display Events curves"));
     
     QButtonGroup* butGroup = new QButtonGroup(this);
     butGroup->addButton(mByPhasesBut);
@@ -118,12 +122,14 @@ mMaximunNumberOfVisibleGraph(0)
     mNextSheetBut->setCheckable(false);
     mNextSheetBut->setFlatHorizontal();
     mNextSheetBut->setToolTip(tr("Display next data"));
+    mNextSheetBut->setIconOnly(false);
 
     mPreviousSheetBut  = new Button(tr("Prev."), this);
     mPreviousSheetBut->setFixedHeight(int(mRulerH/2));
     mPreviousSheetBut->setCheckable(false);
     mPreviousSheetBut->setFlatHorizontal();
     mPreviousSheetBut->setToolTip(tr("Display previous data"));
+    mPreviousSheetBut->setIconOnly(false);
 
     mOptionsWidget = new QWidget(this); // this is the parent of group of widget on the rigth of the panel
 
@@ -138,6 +144,7 @@ mMaximunNumberOfVisibleGraph(0)
     mExportResults->setFlatHorizontal();
     mExportResults->setIcon(QIcon(":csv.png"));
     mExportResults->setFixedHeight(50);
+    mExportResults->setToolTip(tr("Export all result in several files"));
 
     
     mExportImgBut = new Button(tr("Capture"), mOptionsWidget);
@@ -173,24 +180,19 @@ mMaximunNumberOfVisibleGraph(0)
    // mSpanGroup->setFont(font);
 
     mDisplayStudyBut = new Button(tr("Study Period Display"), mSpanGroup);
-    mDisplayStudyBut->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
- //   mDisplayStudyBut->setFont(font);
     mDisplayStudyBut->setFixedSize(mOptionsW, fm.height()+5);
+    mDisplayStudyBut->setToolTip(tr("Restore view with the study period span"));
 
     mSpanLab = new Label(tr("Span"), mSpanGroup);
     mSpanLab->setFixedSize(fm.width(mSpanLab->text()), fm.height()+2);
 
     mCurrentXMinEdit = new LineEdit(mSpanGroup);
-    //mCurrentXMinEdit->setFont(font);
-    mCurrentXMinEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
-    mCurrentXMinEdit->setAlignment(Qt::AlignHCenter);
     mCurrentXMinEdit->setFixedSize(wBut, fm.height()+2);
+    mCurrentXMinEdit->setToolTip(tr("Enter a minimal value to display the curves"));
 
     mCurrentXMaxEdit = new LineEdit(mSpanGroup);
-   // mCurrentXMaxEdit->setFont(font);
-    mCurrentXMaxEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
-    mCurrentXMaxEdit->setAlignment(Qt::AlignHCenter);
     mCurrentXMaxEdit->setFixedSize(wBut, fm.height()+2);
+    mCurrentXMaxEdit->setToolTip(tr("Enter a maximal value to display the curves"));
 
     mXScaleLab = new Label(tr("X"), mSpanGroup);
     mXScaleLab->setAlignment(Qt::AlignCenter);
@@ -211,10 +213,9 @@ mMaximunNumberOfVisibleGraph(0)
     forceXSpinSetValue = true;
     mXScaleSpin->setValue(sliderToZoom(mXSlider->value()));
     mXScaleSpin->setFixedSize(mCurrentXMinEdit->width(), fm.height()+ 5);
-
+    mXScaleSpin->setToolTip(tr("Enter zoom value to magnify the curves on X span"));
 
     /* -------------------------------------- GraphicDisplay (old mDisplayGroup) ---------------------------------------------------*/
-
     
     mGraphicTitle = new Label(tr("Graphic Options"), mOptionsWidget);
     mGraphicTitle->setIsTitle(true);
@@ -236,6 +237,7 @@ mMaximunNumberOfVisibleGraph(0)
     mYScaleSpin->setSuffix(" %");
     mYScaleSpin->setValue(mYSlider->value());
     mYScaleSpin->setFixedSize(mCurrentXMinEdit->width(), fm.height()+ 5);
+    mYScaleSpin->setToolTip(tr("Enter zoom value to magnify the curves on Y scale"));
 
     labRendering = new Label(tr("Rendering"), mGraphicGroup);
     labRendering->setFixedSize(fm.width(labRendering->text()), fm.height()+2);
@@ -251,17 +253,20 @@ mMaximunNumberOfVisibleGraph(0)
 
     mFont.setPointSize(font().pointSize());
     mFontBut = new Button(mFont.family(), mGraphicGroup);
-    mFontBut->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+   // mFontBut->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mFontBut->setFixedSize(mOptionsW/2 - mMargin, fm.height()+ 5);
+    mFontBut->setToolTip(tr("Click to change the font on the drawing"));
     connect(mFontBut, &QPushButton::clicked, this, &ResultsView::updateFont);
     
     labThickness = new Label(tr("Thickness"), mGraphicGroup);
     labThickness->setFixedSize(fm.width(labThickness->text()), fm.height() + 5);
+    labThickness->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mThicknessSpin = new QSpinBox(mGraphicGroup);
     mThicknessSpin->setRange(1, 10);
     mThicknessSpin->setSuffix(" px");
     mThicknessSpin->setFixedSize(wBut, fm.height() + 5 );
+    mThicknessSpin->setToolTip(tr("Select to change the thickness of the drawing"));
 
    // mThicknessSpin->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }"); // not supported
     connect(mThicknessSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::updateThickness);
@@ -274,6 +279,7 @@ mMaximunNumberOfVisibleGraph(0)
     mOpacitySpin->setValue(30);
     mOpacitySpin->setSuffix(" %");
     mOpacitySpin->setFixedHeight(fm.height() + 5 );
+    mOpacitySpin->setToolTip(tr("Select to change the opacity of the drawing"));
     //mOpacitySpin->setStyleSheet("QLineEdit { border-radius: 5px; }"); // not supported
 
     connect(mOpacitySpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::updateOpacity);
@@ -363,7 +369,7 @@ mMaximunNumberOfVisibleGraph(0)
     
     mHPDEdit = new LineEdit(mPostDistGroup);
     //mHPDEdit->setFont(font);
-    mHPDEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+    //mHPDEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mHPDEdit->setText("95");
     
     DoubleValidator* percentValidator = new DoubleValidator();
@@ -398,7 +404,7 @@ mMaximunNumberOfVisibleGraph(0)
     //mBandwidthEdit->setFont(font);
     QLocale locale;
     mBandwidthEdit->setText(locale.toString(1.06));
-    mBandwidthEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+    //mBandwidthEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     
     // ------------------------- CONNECTIONS
 

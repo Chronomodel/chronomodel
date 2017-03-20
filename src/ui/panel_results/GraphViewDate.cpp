@@ -30,11 +30,9 @@ GraphViewDate::~GraphViewDate()
 void GraphViewDate::setDate(Date* date)
 {
     Q_ASSERT(date);
-   // if (date) {
-        mDate = date;
-        setItemTitle(QString(tr("Data") + " : " + mDate->mName));
-        setItemColor(mDate->mColor);
-   // }
+    mDate = date;
+    setItemTitle(QString(tr("Data") + " : " + mDate->mName));
+
     update();
 }
 

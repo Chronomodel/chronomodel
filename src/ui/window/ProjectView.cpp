@@ -32,8 +32,8 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     mLogResultsEdit->setFrameStyle(QFrame::NoFrame);
     mLogResultsEdit->setPalette(palette);
     
-    QFont font = mLogMCMCEdit->font();
-    font.setPointSizeF(pointSize(11));
+    QFont font = QFont();
+    //font.setPointSizeF(pointSize(11));
     
     mLogModelEdit->setFont(font);
     mLogMCMCEdit->setFont(font);
@@ -115,7 +115,7 @@ void ProjectView::showResults()
    // if (mRefreshResults) {
         mResultsView->clearResults();
         mResultsView->updateModel(); // update Design e.g. Name and color //updateResults() is call inside
-        mRefreshResults=false;
+        mRefreshResults = false;
    // }
     mStack->setCurrentIndex(1);
     // come from mViewResultsAction and  updateResults send repaint on mStack

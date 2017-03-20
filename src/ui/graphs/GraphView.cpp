@@ -449,9 +449,9 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
         mTipRect.setWidth(mTipWidth);
         mTipRect.setHeight(mTipHeight);
         
-        mTipX = getValueForX(e->x() + 1.);
+        mTipX = getValueForX(e->x() );//+ 1.);
         
-        mTipY = getValueForY(e->y()+0.5);
+        mTipY = getValueForY(e->y());//+0.5);
         
         update(old_rect.adjusted(-30, -30, 30, 30).toRect());
         
@@ -642,7 +642,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
 
      if (mOverflowArrowMode != eNone) {
          qreal arrowSize = 7.;
-         const qreal yo = mGraphHeight/2 ;
+         const qreal yo = mGraphHeight/2. ;
          const QColor gradColDark(150, 150, 150);
          const QColor gradColLigth(190, 190, 190);
 
@@ -728,7 +728,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolY.mShowText = mYAxisValues;
 
     mAxisToolY.updateValues(mGraphHeight, mStepMinWidth, mMinY, mMaxY);
-    mAxisToolY.paint(p, QRectF(0., mMarginTop, mMarginLeft, mGraphHeight), (qreal) 5.,stringWithAppSettings);
+    mAxisToolY.paint(p, QRectF(0., mMarginTop, mMarginLeft, mGraphHeight), (qreal) 1.,stringWithAppSettings);
     
     /* ----------------------------------------------------
      *  Graph specific infos at the top right
@@ -754,8 +754,9 @@ void GraphView::drawCurves(QPainter& painter)
     painter.save();
     // Draw curves inside axis only (not in margins!)
     painter.setClipRect(mMarginLeft, mMarginTop, mGraphWidth, mGraphHeight);
+    //QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom)
     
-    for (const auto & curve : mCurves) {
+    for (auto && curve : mCurves) {
         if (curve.mVisible) {
             QPainterPath path;
             
@@ -839,9 +840,9 @@ void GraphView::drawCurves(QPainter& painter)
                     // They are drawn using a 100px width
                     qreal x = mMarginLeft + valueX * 100.;
                     qreal y = getYForValue(valueY, false);
-                    y = qMin(y, mMarginTop + mGraphHeight);
-                    y = qMax(y, mMarginTop);
-                    
+
+                    y = qBound(mMarginTop, y, mMarginTop + mGraphHeight);
+
                     if (index == 0) {
                         path.lineTo(x, y);
                         

@@ -44,12 +44,12 @@ public:
     void reset();
     
     
-    // 2 fonctions utilisées pendant le MCMC (mais pas l'init!) :
+    // 2 functions used within the MCMC process ( not in the init part!) :
     double getThetaMin(double defaultValue);
     double getThetaMax(double defaultValue);
     
     
-    // 2 fonctions utilisées pour l'init du MCMC :
+    // 2 functions used within the init MCMC process
     double getThetaMinRecursive(const double defaultValue,
                                 const QVector<QVector<Event*> >& eventBranches,
                                 const QVector<QVector<Phase*> >& phaseBranches);
@@ -58,7 +58,7 @@ public:
                                 const QVector<QVector<Event*> >& eventBranches,
                                 const QVector<QVector<Phase*> >& phaseBranches);
     
-    virtual void updateTheta(const double min, const double max);
+    virtual void updateTheta(const double& min, const double& max);
 
     void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
     

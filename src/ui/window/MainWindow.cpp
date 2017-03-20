@@ -355,7 +355,7 @@ void MainWindow::createToolBars()
 
    // toolBar->setIconSize(QSize(15,15)) ;
 
-    mToolBar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon); // offer to write the text under the icon
+    mToolBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);//ToolButtonTextUnderIcon); // offer to write the text under the icon
     mToolBar->setMovable(false);
     mToolBar->setAllowedAreas(Qt::TopToolBarArea);
     

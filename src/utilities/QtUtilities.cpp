@@ -141,7 +141,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
 {
     QFileInfo fileInfo;
     
-    QGraphicsScene* scene = nullptr;
+    QGraphicsScene* scene = nullptr;//dynamic_cast<QGraphicsScene*>(wid);
     QWidget* widget = dynamic_cast<QWidget*>(wid);
     GraphView* mGraph = dynamic_cast<GraphView*>(wid);
     
@@ -165,7 +165,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             if (mGraph)
                 mGraph->saveAsSVG(fileName, "Title", "Description",true);
 
-            else if(scene) {
+            else if (scene) {
                 const  QRect viewBox = QRect( r.x(), r.y(), r.width(), r.height() );
 
                 QSvgGenerator svgGen;
@@ -179,7 +179,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 scene->render(&p, r, r);
                 p.end();
             }
-            else if(widget)  // export all resultView
+            else if (widget)  // export all resultView
                 saveWidgetAsSVG(widget, r, fileName);
 
         }
