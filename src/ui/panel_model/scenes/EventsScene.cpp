@@ -7,7 +7,7 @@
 #include "DateItem.h"
 #include "ArrowItem.h"
 #include "ArrowTmpItem.h"
-#include "SetProjectState.h"
+//#include "SetProjectState.h"
 #include "MainWindow.h"
 #include "Project.h"
 #include "HelpWidget.h"
