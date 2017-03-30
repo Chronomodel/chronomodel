@@ -25,6 +25,9 @@ mAxisColor(0, 0, 0)
 
 void AxisTool::updateValues(const int totalPix, const int minDeltaPix, const qreal minVal, const qreal maxVal)
 {
+    if (isinf(abs(minVal)) || isinf(maxVal))
+        return;
+
     const qreal rigthBlank (5.); // the same name and the same value as GraphViewAbstract::getXForValue(
     if ((minDeltaPix == 0) || (minVal==maxVal) || (totalPix == 0) || (minVal>= maxVal))
         return;
@@ -63,7 +66,7 @@ void AxisTool::updateValues(const int totalPix, const int minDeltaPix, const qre
     mStartVal = minVal;
     mStartPix = 0;//(mStartVal - minVal) * mPixelsPerUnit;
     mEndVal   = mStartVal+ (double)(totalPix)/ mPixelsPerUnit;
-    
+/*
     qDebug() << "-----------mIsHorizontal-"<<mIsHorizontal;
     qDebug()<< "totalPix= "<<totalPix << "minDeltaPix= "<<minDeltaPix<< "  minVal "<< minVal<<"maxVal "<< maxVal;
      qDebug() << "w = " << w;
@@ -79,7 +82,7 @@ void AxisTool::updateValues(const int totalPix, const int minDeltaPix, const qre
      qDebug() << "mEndVal = " << mEndVal;
      qDebug() << "mDeltaVal = " << mDeltaVal;
      qDebug() << "mDeltaPix = " << mDeltaPix<< "pixel between grade";
-
+*/
 }
 /**
  * @brief Draw axis on a QPainter, if there is no valueFormatFunc, all number is converted in QString with precision 0, it's mean only integer

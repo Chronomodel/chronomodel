@@ -16,9 +16,11 @@ CalibrationDrawing::CalibrationDrawing(QWidget *parent) : QWidget(parent),
 
     mRefTitle = new QLabel(this);
     mRefComment = new QLabel(this);
+  //  mRefGraphView = new GraphViewRefAbstract(this);
 
     mCalibTitle = new QLabel(this);
     mCalibComment = new QLabel(this);
+  //  mCalibGraph = new GraphView(this);
 
     mMarkerX = new Marker(this);
     mMarkerY = new Marker(this);
@@ -28,35 +30,35 @@ CalibrationDrawing::CalibrationDrawing(QWidget *parent) : QWidget(parent),
 
 CalibrationDrawing::~CalibrationDrawing()
 {
-    if (mRefGraphView)
-        delete mRefGraphView;
     if (mCalibGraph)
         delete mCalibGraph;
 }
 void CalibrationDrawing::hideMarker()
 {
-    mMarkerX->hide();
-    mMarkerY->hide();
+    mMarkerX->hideMarker();
+    mMarkerY->hideMarker();
 }
 
 void CalibrationDrawing::showMarker()
 {
-    mMarkerX->show();
-    mMarkerY->show();
+    mMarkerX->resize( mMarkerX->thickness(), height());
+    mMarkerY->resize( width(), mMarkerY->thickness());
+    mMarkerX->showMarker();
+    mMarkerY->showMarker();
+    mMarkerX->raise();
+    mMarkerY->raise();
 }
 
-void CalibrationDrawing::addRefGraph(GraphViewRefAbstract* refGraph)
+void CalibrationDrawing::setRefGraph(GraphViewRefAbstract* refGraph)
 {
-    mRefGraphView = refGraph;
-    mRefGraphView->setParent(this);
-    mRefGraphView->setVisible(true);
+      mRefGraphView = refGraph;
+      mRefGraphView->setParent(this);
 }
 
-void CalibrationDrawing::addCalibGraph(GraphView* calibGraph)
+void CalibrationDrawing::setCalibGraph(GraphView* calibGraph)
 {
     mCalibGraph = calibGraph;
     mCalibGraph->setParent(this);
-    mCalibGraph->setVisible(true);
 }
 
 void CalibrationDrawing::paintEvent(QPaintEvent* e)
@@ -70,9 +72,14 @@ void CalibrationDrawing::paintEvent(QPaintEvent* e)
 
 void CalibrationDrawing::updateLayout()
 {
-    const QFontMetrics fm (mFont);
+    if (width()<0 || height()<0)
+        return;
 
-    if (!mCalibGraph || !mCalibGraph->hasCurve()) {
+    const QFontMetrics fm (mFont);
+    if (!mCalibGraph)
+        return;
+
+    if (!mCalibGraph->hasCurve()) {
         QLabel noCalib ("No Calibration", this);
         noCalib.setGeometry(0, mVerticalSpacer, fm.width(noCalib.text()), fm.height());
         return;
@@ -108,7 +115,6 @@ void CalibrationDrawing::updateLayout()
     mRefTitle->setGeometry(20,  mTitle->y() + mTitle->height() + mVerticalSpacer, fmTitle.width(mRefTitle->text()), fmTitle.height());
     mRefComment->setGeometry(30,  mRefTitle->y() + mRefTitle->height() + mVerticalSpacer, fm.width(mRefComment->text()), fm.height());
 
-
     if (mRefGraphView) {
         mRefGraphView->setGeometry(0, mRefComment->y() + mRefComment->height() + mVerticalSpacer, width(), refH);
         mRefGraphView->setMarginRight(marginRight);
@@ -123,31 +129,66 @@ void CalibrationDrawing::updateLayout()
     mCalibGraph->setGeometry(0, mCalibComment->y() + mCalibComment->height() + mVerticalSpacer, width(), calibH);
     mCalibGraph->setMarginRight(marginRight);
 
-    mMarkerX->resize( mMarkerX->thickness(), refH + calibH + 3*mVerticalSpacer + fmTitle.height() + fm.height());
-    mMarkerY->resize( width() - 2*marginRight, mMarkerY->thickness());
+    if (mMouseOverCurve) {
+        showMarker();
+        mMarkerX->resize( mMarkerX->thickness(), refH + calibH + 3*mVerticalSpacer + fmTitle.height() + fm.height());
+        mMarkerY->resize( width() - 2*marginRight, mMarkerY->thickness());
+    } else
+        hideMarker();
 
 }
 
 void CalibrationDrawing::mouseMoveEvent(QMouseEvent* e)
 {
-    int x = e->pos().x();
-    x = (x < 0) ? 0 : x;
-    x = (x > width()) ? width() : x;
+    const int x ( qBound(0, e->pos().x(), width()) );
 
-    int y = e->pos().y();
-    y = (y < 0) ? 0 : y;
-    y = (y > height()) ? height() : y;
+    const int y ( qBound(0, e->pos().y(), height()) );
+
     // draw the red cross lines
-    mMarkerX->raise();
-    mMarkerY->raise();
-    mMarkerX->move(x, mRefGraphView->y());
-    mMarkerY->move(mCalibGraph->marginRight(), y);
+    if (( mRefGraphView && mRefGraphView->geometry().contains(x, y))
+            || (mCalibGraph && mCalibGraph->geometry().contains(x, y))) {
+
+        mMouseOverCurve = true;
+
+    } else
+        mMouseOverCurve = false;
+
+
+    mMarkerX->move(x, mRefComment->y() + mRefComment->height() + mVerticalSpacer);
+    mMarkerY->move(0, y);
+
+
     /*
      *  The tip was set by "mCalibGraph->setTipXLab("t")" within CalibrationView
     */
+
+    update();
+}
+
+void CalibrationDrawing::setVisible(bool visible)
+{
+    mTitle->setVisible(visible);
+    mRefTitle->setVisible(visible);
+    mRefComment->setVisible(visible);
+    if (mRefGraphView)
+        mRefGraphView->setVisible(visible);
+
+    mCalibTitle->setVisible(visible);
+    mCalibComment->setVisible(visible);
+    if (mCalibGraph)
+        mCalibGraph->setVisible(visible);
+
+    if (visible)
+        showMarker();
+    else
+        hideMarker();
+
+    QWidget::setVisible(visible);
 }
 
 void CalibrationDrawing::resizeEvent(QResizeEvent* e)
 {
+    (void)e;
+
     updateLayout();
 }

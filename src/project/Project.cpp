@@ -56,7 +56,7 @@ mSaveData(true)
     mModel = new Model();
     mModel->setProject(this);
 
-    mReasonChangeStructure<<"project loaded";
+    mReasonChangeStructure<<"project loaded"<<"Settings updated";
     mReasonChangeStructure<<"Event constraint deleted"<<"Event constraint created"<<"Event(s) deleted";
     mReasonChangeStructure<<"Event created"<<"Bound created"<<"Event method updated" <<"Date created";
     mReasonChangeStructure<<"Event selected";
@@ -169,7 +169,7 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
         mItemsIsMoved = true;
 
     else
-        this->checkStateModification(state,mState);
+        this->checkStateModification(state, mState);
 
 
     if (mStructureIsChanged)
@@ -1385,6 +1385,11 @@ void Project::checkDatesCompatibility()
     mState = state;
 }
 
+/**
+ * @brief Project::updateDate : Function to change the date parameter inside an Event
+ * @param eventId
+ * @param dateIndex
+ */
 void Project::updateDate(int eventId, int dateIndex)
 {
     QJsonObject state = mState;

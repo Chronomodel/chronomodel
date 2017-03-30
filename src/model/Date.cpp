@@ -27,8 +27,8 @@ mName("No Named Date")
 
 void Date::init()
 {
-    mColor=Qt::blue;
-
+    mColor = Qt::blue;
+    mPlugin = nullptr;
     mTheta.mSupport = MetropolisVariable::eR;
     mSigma.mSupport = MetropolisVariable::eRp;
     mWiggle.mSupport = MetropolisVariable::eR;
@@ -53,8 +53,8 @@ void Date::init()
     mIsSelected = false;
     mSubDates.clear();
 
-    mTminRefCurve = 0.;
-    mTmaxRefCurve = 0.;
+    mTminRefCurve = -INFINITY;
+    mTmaxRefCurve = INFINITY;
 
     mCalibration = nullptr;
 

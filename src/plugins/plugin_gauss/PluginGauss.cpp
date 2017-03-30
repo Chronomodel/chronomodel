@@ -481,14 +481,17 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
 #pragma mark Settings / Input Form / RefView
 GraphViewRefAbstract* PluginGauss::getGraphViewRef()
 {
-    if (mRefGraph)
-        delete mRefGraph;
-
-    mRefGraph = new PluginGaussRefView();
+   mRefGraph = new PluginGaussRefView();
     
-    return mRefGraph;
+   return mRefGraph;
 }
+void PluginGauss::deleteGraphViewRef(GraphViewRefAbstract* graph)
+{
+    if (graph)
+        delete static_cast<PluginGaussRefView*>(graph);
 
+    graph = nullptr;
+}
 PluginSettingsViewAbstract* PluginGauss::getSettingsView()
 {
     return new PluginGaussSettingsView(this);

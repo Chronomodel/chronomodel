@@ -36,12 +36,13 @@ bool ProjectSettings::operator==(const ProjectSettings& s)
 
 bool ProjectSettings::isEqual(const ProjectSettings& s)
 {
-    if(s.mTmin != this->mTmin ||
-       s.mTmax != this->mTmax ||
-       s.mStep != this->mStep ||
-       s.mStepForced != this->mStepForced)
-        return false;
-    return true;
+    if (s.mTmin != mTmin ||
+       s.mTmax != mTmax ||
+       s.mStep != mStep ||
+       s.mStepForced != mStepForced)
+            return false;
+    else
+        return true;
 }
 
 void ProjectSettings::copyFrom(const ProjectSettings& s)
@@ -65,7 +66,7 @@ ProjectSettings ProjectSettings::fromJson(const QJsonObject& json)
     settings.mTmax = (double) json.contains(STATE_SETTINGS_TMAX) ? json.value(STATE_SETTINGS_TMAX).toInt() : STATE_SETTINGS_TMAX_DEF;
     settings.mStep = json.contains(STATE_SETTINGS_STEP) ? json.value(STATE_SETTINGS_STEP).toDouble() : STATE_SETTINGS_STEP_DEF;
     settings.mStepForced = json.contains(STATE_SETTINGS_STEP_FORCED) ? json.value(STATE_SETTINGS_STEP_FORCED).toBool() : STATE_SETTINGS_STEP_FORCED_DEF;
-    //settings.mProject = project;
+
     return settings;
 }
 
@@ -83,12 +84,13 @@ QJsonObject ProjectSettings::toJson() const
 double ProjectSettings::getStep(const double tmin, const double tmax)
 {
     const double diff = tmax - tmin;
-    const double linearUntil = 10000.;
+    const double linearUntil (10000.);
     
     if (diff <= linearUntil)
         return 1.;
+
     else {
-        const double maxPts = 50000.;
+        const double maxPts (50000.);
         const double lambda = - log((maxPts - linearUntil)/maxPts) / linearUntil;
         const double nbPts = maxPts * (1. - exp(-lambda * diff));
         double step = diff / nbPts;

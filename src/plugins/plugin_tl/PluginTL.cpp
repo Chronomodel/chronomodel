@@ -160,13 +160,16 @@ QPair<double,double> PluginTL::getTminTmaxRefsCurve(const QJsonObject& data) con
 
 GraphViewRefAbstract* PluginTL::getGraphViewRef()
 {
-    if (mRefGraph)
-        delete mRefGraph;
-
     mRefGraph = new PluginTLRefView();
     return mRefGraph;
 }
+void PluginTL::deleteGraphViewRef(GraphViewRefAbstract* graph)
+{
+    if (graph)
+        delete static_cast<PluginTLRefView*>(graph);
 
+    graph = nullptr;
+}
 PluginSettingsViewAbstract* PluginTL::getSettingsView()
 {
     return nullptr;

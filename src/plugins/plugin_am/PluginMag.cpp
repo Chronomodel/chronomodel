@@ -179,10 +179,10 @@ QJsonObject PluginMag::checkValuesCompatibility(const QJsonObject& values)
 QJsonObject PluginMag::fromCSV(const QStringList& list,const QLocale &csvLocale)
 {
     QJsonObject json;
-    if(list.size() >= csvMinColumns())
-    {
+    if (list.size() >= csvMinColumns()) {
         double error = csvLocale.toDouble(list.at(5));
-        if(error == 0) return json;
+        if (error == 0.)
+            return json;
 
         json.insert(DATE_AM_IS_INC_STR, list.at(1) == "inclination");
         json.insert(DATE_AM_IS_DEC_STR, list.at(1) == "declination");
@@ -233,46 +233,43 @@ RefCurve PluginMag::loadRefFile(QFileInfo refFile)
     curve.mName = refFile.fileName().toLower();
     
     QFile file(refFile.absoluteFilePath());
-    if(file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+
         QLocale locale = QLocale(QLocale::English);
         QTextStream stream(&file);
         bool firstLine = true;
         
-        while(!stream.atEnd())
-        {
+        while (!stream.atEnd()) {
             QString line = stream.readLine();
 
-            if(line.contains("reference", Qt::CaseInsensitive) && line.contains("point", Qt::CaseInsensitive))
-            {
+            if (line.contains("reference", Qt::CaseInsensitive) && line.contains("point", Qt::CaseInsensitive)) {
                 // TODO : start loading points
                 break;
             }
             bool ok;
-            if(!isComment(line))
-            {
+            if (!isComment(line)) {
                 QStringList values = line.split(",");
-                if(values.size() >= 3)
-                {
+                if (values.size() >= 3) {
                     int t = locale.toInt(values.at(0),&ok);
 
-                    double g = locale.toDouble(values.at(1),&ok);
-                    if(!ok) continue;
-                    double e = locale.toDouble(values.at(2),&ok);
-                    if(!ok) continue;
+                    double g = locale.toDouble(values.at(1), &ok);
+                    if (!ok)
+                        continue;
+                    double e = locale.toDouble(values.at(2), &ok);
+                    if(!ok)
+                        continue;
                     
-                    double gSup = g + 1.96f * e;
-                    if(!ok) continue;
-                    double gInf = g - 1.96f * e;
-                    if(!ok) continue;
+                    double gSup = g + 1.96 * e;
+
+                    double gInf = g - 1.96 * e;
+
                     
                     curve.mDataMean[t] = g;
                     curve.mDataError[t] = e;
                     curve.mDataSup[t] = gSup;
                     curve.mDataInf[t] = gInf;
                     
-                    if(firstLine)
-                    {
+                    if (firstLine) {
                         curve.mDataMeanMin = g;
                         curve.mDataMeanMax = g;
                         
@@ -284,9 +281,8 @@ RefCurve PluginMag::loadRefFile(QFileInfo refFile)
                         
                         curve.mDataInfMin = gInf;
                         curve.mDataInfMax = gInf;
-                    }
-                    else
-                    {
+
+                    } else {
                         curve.mDataMeanMin = qMin(curve.mDataMeanMin, g);
                         curve.mDataMeanMax = qMax(curve.mDataMeanMax, g);
                         
@@ -306,8 +302,7 @@ RefCurve PluginMag::loadRefFile(QFileInfo refFile)
         file.close();
         
         // invalid file ?
-        if(!curve.mDataMean.isEmpty())
-        {
+        if (!curve.mDataMean.isEmpty()) {
             curve.mTmin = curve.mDataMean.firstKey();
             curve.mTmax = curve.mDataMean.lastKey();
         }
@@ -330,12 +325,11 @@ double PluginMag::getRefErrorAt(const QJsonObject& data, const double& t)
 
 QPair<double,double> PluginMag::getTminTmaxRefsCurve(const QJsonObject& data) const
 {
-    double tmin = 0;
-    double tmax = 0;
+    double tmin (0.);
+    double tmax (0.);
     QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
     
-    if(mRefCurves.contains(ref_curve)  && !mRefCurves.value(ref_curve).mDataMean.isEmpty())
-    {
+    if (mRefCurves.contains(ref_curve)  && !mRefCurves.value(ref_curve).mDataMean.isEmpty()) {
         tmin = mRefCurves.value(ref_curve).mTmin;
         tmax = mRefCurves.value(ref_curve).mTmax;
     }
@@ -345,13 +339,16 @@ QPair<double,double> PluginMag::getTminTmaxRefsCurve(const QJsonObject& data) co
 #pragma mark Settings / Input Form / RefView
 GraphViewRefAbstract* PluginMag::getGraphViewRef()
 {
-    if (mRefGraph)
-        delete mRefGraph;
-
     mRefGraph = new PluginMagRefView();
     return mRefGraph;
 }
+void PluginMag::deleteGraphViewRef(GraphViewRefAbstract* graph)
+{
+    if (graph)
+        delete static_cast<PluginMagRefView*>(graph);
 
+    graph = nullptr;
+}
 PluginSettingsViewAbstract* PluginMag::getSettingsView()
 {
     return new PluginMagSettingsView(this);
@@ -370,18 +367,18 @@ bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& sett
     double dec = data.value(DATE_AM_DEC_STR).toDouble();
     double intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
     
-    double mesure = 0;
+    double mesure (0.);
     //double error = 0;
     
-    if(is_inc) {
+    if (is_inc) {
         //error = alpha / 2.448f;
         mesure = inc;
     }
-    else if(is_dec) {
+    else if (is_dec) {
         //error = alpha / (2.448f * cos(inc * M_PI / 180.f));
         mesure = dec;
     }
-    else if(is_int) {
+    else if (is_int) {
         //error = alpha;
         mesure = intensity;
     }
@@ -390,25 +387,25 @@ bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& sett
     const RefCurve& curve = mRefCurves.value(ref_curve);
     bool valid = false;
 
-    if(mesure>curve.mDataInfMin && mesure < curve.mDataSupMax){
+    if (mesure>curve.mDataInfMin && mesure < curve.mDataSupMax)
         valid = true;
-    }
+
     else {
         double t = curve.mTmin;
-        long double repartition = 0;
-        long double v = 0;
-        long double lastV = 0;
-        while(valid==false && t<=curve.mTmax) {
+        long double repartition (0.);
+        long double v (0.);
+        long double lastV (0.);
+        while (valid==false && t<=curve.mTmax) {
             v = (double)getLikelihood(t,data);
             // we have to check this calculs
             //because the repartition can be smaller than the calibration
-            if (lastV>0 && v>0) {
+            if (lastV>0. && v>0.)
                 repartition += (long double) settings.mStep * (lastV + v) / 2.;
-            }
+
             lastV = v;
 
-            valid = ( (double)repartition > 0);
-            t +=settings.mStep;
+            valid = ( (double)repartition > 0.);
+            t += settings.mStep;
         }
     }
 

@@ -47,6 +47,7 @@ mTipHeight(40.),
 mTipVisible(false),
 mUseTip(true)
 {
+
     mAxisToolX.mIsHorizontal = true;
     mAxisToolX.mShowArrow = true;
     mAxisToolY.mIsHorizontal = false;
@@ -62,11 +63,122 @@ mUseTip(true)
     setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
     
     setRangeY(0., 1.);
-    this->mAxisToolX.updateValues(width(), mStepMinWidth, mCurrentMinX, mCurrentMaxX);
+    //mAxisToolX.updateValues(width(), mStepMinWidth, mCurrentMinX, mCurrentMaxX);
     resetNothingMessage();
 
     connect(this, &GraphView::signalCurvesThickness, this, &GraphView::updateCurvesThickness);
   
+}
+
+GraphView::GraphView(const GraphView& graph, QWidget *parent):QWidget(parent),
+mStepMinWidth(graph.mStepMinWidth), // define secondary scale on axis
+mXAxisLine(graph.mStepMinWidth),
+mXAxisArrow(graph.mXAxisArrow),
+mXAxisTicks(graph.mStepMinWidth),
+mXAxisSubTicks(graph.mXAxisSubTicks),
+mXAxisValues(graph.mStepMinWidth),
+mYAxisLine(graph.mYAxisLine),
+mYAxisArrow(graph.mYAxisArrow),
+mYAxisTicks(graph.mYAxisTicks),
+mYAxisSubTicks(graph.mYAxisSubTicks),
+mYAxisValues(graph.mYAxisValues),
+mXAxisMode(graph.mXAxisMode),
+mYAxisMode(graph.mYAxisMode),
+mOverflowArrowMode(graph.mOverflowArrowMode),
+mRendering(graph.mRendering),
+mAutoAdjustYScale(graph.mAutoAdjustYScale),
+mShowInfos(graph.mShowInfos),
+mBackgroundColor(graph.mBackgroundColor),
+mThickness(graph.mThickness),
+mOpacity(graph.mOpacity),
+mCanControlOpacity(graph.mCanControlOpacity),
+mTipX(graph.mTipX),
+mTipY(graph.mTipY),
+mTipWidth(graph.mTipWidth),
+mTipHeight(graph.mTipHeight),
+mTipVisible(graph.mTipVisible),
+mUseTip(graph.mUseTip)
+{
+    mCurrentMinX = graph.mCurrentMinX;
+    mCurrentMaxX = graph.mCurrentMaxX;
+
+    mAxisToolX.mIsHorizontal = graph.mAxisToolX.mIsHorizontal;
+    mAxisToolX.mShowArrow = graph.mAxisToolX.mShowArrow;
+    mAxisToolY.mIsHorizontal = graph.mAxisToolY.mIsHorizontal;
+    mAxisToolX.mShowArrow = graph.mAxisToolX.mShowArrow;
+    mAxisToolY.mShowSubs = graph.mAxisToolY.mShowSubs;
+
+    mTipRect.setTop(0);
+    mTipRect.setLeft(0);
+    mTipRect.setWidth(mTipWidth);
+    mTipRect.setHeight(mTipHeight);
+
+    setMouseTracking(true);
+    setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
+
+    setRangeY(0., 1.);
+    //mAxisToolX.updateValues(width(), mStepMinWidth, mCurrentMinX, mCurrentMaxX);
+    resetNothingMessage();
+
+    connect(this, &GraphView::signalCurvesThickness, this, &GraphView::updateCurvesThickness);
+
+
+    mCurves = graph.mCurves;
+    mZones = graph.mZones;
+}
+
+void GraphView::copyFrom(const GraphView& graph)
+{
+    mStepMinWidth = graph.mStepMinWidth; // define secondary scale on axis
+    mXAxisLine = graph.mStepMinWidth;
+    mXAxisArrow = graph.mXAxisArrow;
+    mXAxisTicks = graph.mStepMinWidth;
+    mXAxisSubTicks = graph.mXAxisSubTicks;
+    mXAxisValues = graph.mStepMinWidth;
+    mYAxisLine = graph.mYAxisLine;
+    mYAxisArrow = graph.mYAxisArrow;
+    mYAxisTicks = graph.mYAxisTicks;
+    mYAxisSubTicks = graph.mYAxisSubTicks;
+    mYAxisValues = graph.mYAxisValues;
+    mXAxisMode = graph.mXAxisMode;
+    mYAxisMode = graph.mYAxisMode;
+    mOverflowArrowMode = graph.mOverflowArrowMode;
+    mRendering = graph.mRendering;
+    mAutoAdjustYScale = graph.mAutoAdjustYScale;
+    mShowInfos = graph.mShowInfos;
+    mBackgroundColor =graph.mBackgroundColor;
+    mThickness = graph.mThickness;
+    mOpacity = graph.mOpacity;
+    mCanControlOpacity =graph.mCanControlOpacity;
+    mTipX = graph.mTipX;
+    mTipY = graph.mTipY;
+    mTipWidth = graph.mTipWidth;
+    mTipHeight = graph.mTipHeight;
+    mTipVisible = graph.mTipVisible;
+    mUseTip = graph.mUseTip;
+    mCurrentMinX = graph.mCurrentMinX;
+    mCurrentMaxX = graph.mCurrentMaxX;
+
+    mAxisToolX.mIsHorizontal = graph.mAxisToolX.mIsHorizontal;
+    mAxisToolX.mShowArrow = graph.mAxisToolX.mShowArrow;
+    mAxisToolY.mIsHorizontal = graph.mAxisToolY.mIsHorizontal;
+    mAxisToolX.mShowArrow = graph.mAxisToolX.mShowArrow;
+    mAxisToolY.mShowSubs = graph.mAxisToolY.mShowSubs;
+
+    mTipRect.setTop(0);
+    mTipRect.setLeft(0);
+    mTipRect.setWidth(mTipWidth);
+    mTipRect.setHeight(mTipHeight);
+
+    setMouseTracking(true);
+    setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
+
+    setRangeY(0., 1.);
+    //mAxisToolX.updateValues(width(), mStepMinWidth, mCurrentMinX, mCurrentMaxX);
+    resetNothingMessage();
+
+    mCurves = graph.mCurves;
+    mZones = graph.mZones;
 }
 
 GraphView::~GraphView()
@@ -423,6 +535,7 @@ void GraphView::leaveEvent(QEvent* e)
 
 void GraphView::mouseMoveEvent(QMouseEvent* e)
 {
+    mRendering = eHD;
     qreal x = e->pos().x();
     qreal y = e->pos().y();
     
@@ -489,7 +602,30 @@ void GraphView::resizeGL(int w, int h)
 void GraphView::resizeEvent(QResizeEvent* event)
 {
     Q_UNUSED(event);
-    repaintGraph(true);
+    if (!mBufferBack.isNull()) {
+ //       qDebug()<< "resizeEvent rect "<<rect()<<" buffer rect"<<mBufferBack.rect();
+        const qreal sx = (qreal)rect().width() / (qreal)mBufferBack.rect().width() ;
+        const qreal sy = (qreal)rect().height() / (qreal)mBufferBack.rect().height() ;
+
+        if (sx>.5 || sy>.5) {
+            mBufferBack = QPixmap(width(), height());
+            updateGraphSize(width(), height());
+            paintToDevice(&mBufferBack);
+//qDebug()<<"GraphView::resizeEvent  Big Matrix "<<sx<<sy<<" new: "<<mBufferBack.rect().size();
+        } else {
+            QMatrix mx = QMatrix();//.scale(sx, sy);
+            mx.scale(sx, sy);
+            mBufferBack = mBufferBack.transformed(mx, Qt::SmoothTransformation);
+
+        }
+
+    }
+    else {
+        mBufferBack = QPixmap(width(), height());
+        updateGraphSize(width(), height());
+        paintToDevice(&mBufferBack);
+    }
+
 }
 #endif
 
@@ -510,8 +646,19 @@ void GraphView::repaintGraph(const bool aAlsoPaintBackground)
     
 void GraphView::paintEvent(QPaintEvent* )
 {
+    /* resize build mBufferBack, so we don't need to
+     * rebuid a graph. We need it in the resizeEvent
+     * */
+    if (!mBufferBack.isNull()) {
+        QPainter p(this);
+        p.setRenderHints(QPainter::Antialiasing);
+        p.drawPixmap(mBufferBack.rect(), mBufferBack, rect());
+        return;
+    }
+
     updateGraphSize(width(), height());
-    
+    if ((mGraphWidth<=0) || (mGraphHeight<=0))
+        return;
     // ----------------------------------------------------
     //  Nothing to draw !
     // ----------------------------------------------------
@@ -531,17 +678,18 @@ void GraphView::paintEvent(QPaintEvent* )
     if (mBufferBack.isNull() && mRendering == eSD) {
         mBufferBack = QPixmap(width(), height());
         paintToDevice(&mBufferBack);
-        
+#ifdef DEBUG
         if (mBufferBack.isNull() )
             qDebug()<< "mBufferBack.isNull()";
-        
+#endif
     }
     // ----------------------------------------------------
     //  HD : draw directly on widget
     // ----------------------------------------------------
-    else if (mRendering == eHD)
+    else if (mRendering == eHD) {
+        mBufferBack = QPixmap();
         paintToDevice(this);
-    
+    }
     // ----------------------------------------------------
     //  SD rendering : draw buffer on widget !
     // ----------------------------------------------------
@@ -750,6 +898,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
 
 void GraphView::drawCurves(QPainter& painter)
 {
+    if ((mGraphWidth<=0) || mGraphHeight)
     /* -------------------------- Curves ---------------------------*/
     painter.save();
     // Draw curves inside axis only (not in margins!)
@@ -922,12 +1071,14 @@ void GraphView::drawCurves(QPainter& painter)
                     QMap<type_data, type_data> lightMap;
 
                     if (subData.size() > mGraphWidth) { //always used in the items thumbnails
-                        int valuesPerPixel = subData.size() / (mGraphWidth);
+                        int valuesPerPixel = subData.size() /int(mGraphWidth);
+                        if (valuesPerPixel == 0)
+                            valuesPerPixel = 1;
                         QMap<type_data, type_data>::const_iterator iter = subData.cbegin();
-                        int index = 0;
+                        int index (0);
                         
                         while (iter != subData.cend()) {
-                            if (index % valuesPerPixel == 0)
+                            if ((index % valuesPerPixel) == 0)
                                 lightMap[iter.key()] = iter.value();
                             ++index;
                             ++iter;

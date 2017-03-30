@@ -48,6 +48,9 @@ public:
         eOverMax = 3
     };
     GraphView(QWidget* parent = nullptr);
+    explicit GraphView(const GraphView &graph, QWidget *parent= nullptr);
+    void setParent(QWidget *parent) {this->QWidget::setParent(parent);}
+    void copyFrom(const GraphView &graph);
     virtual ~GraphView();
     
     // Options

@@ -289,14 +289,16 @@ QPair<double,double> Plugin14C::getTminTmaxRefsCurve(const QJsonObject& data) co
 //#pragma mark Settings / Input Form / RefView
 GraphViewRefAbstract* Plugin14C::getGraphViewRef()
 {
-    if (mRefGraph)
-        delete mRefGraph;
-
     mRefGraph = new Plugin14CRefView();
-    
     return mRefGraph;
 }
+void Plugin14C::deleteGraphViewRef(GraphViewRefAbstract* graph)  {
 
+    if (graph)
+        delete static_cast<Plugin14CRefView*>(graph);
+
+    graph = nullptr;
+}
 PluginSettingsViewAbstract* Plugin14C::getSettingsView()
 {
     return new Plugin14CSettingsView(this);

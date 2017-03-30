@@ -11,6 +11,11 @@ LineEdit::LineEdit(QWidget* parent):QLineEdit(parent)
     setAlignment(Qt::AlignHCenter);
 }
 
+void LineEdit::setVisible(bool visible)
+{
+    QWidget::setVisible(visible);
+}
+
 void LineEdit::setFont(const QFont& font)
 {
     QWidget::setFont(font);

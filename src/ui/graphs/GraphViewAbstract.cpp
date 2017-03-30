@@ -11,7 +11,7 @@ mGraphWidth(50.), mGraphHeight(50),
 mMarginLeft(50), mMarginRight(10), mMarginTop(5), mMarginBottom(15),
 mMinX(0.), mMaxX(10.),
 mMinY(0.), mMaxY(10.),
-mCurrentMinX(0.),mCurrentMaxX(2000.)
+mCurrentMinX(-INFINITY),mCurrentMaxX(INFINITY)
 {
 //qDebug()<<"contructor GraphViewAbstract::GraphViewAbstrac ";
 }

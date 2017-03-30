@@ -21,8 +21,6 @@ mUpdatingSelection(false)
     DatesListItemDelegate* delegate = new DatesListItemDelegate(this);
     setItemDelegate(delegate);
     
-    // ----------
-    
     connect(this, &DatesList::itemClicked, this, &DatesList::handleItemClicked);
     connect(this, &DatesList::itemDoubleClicked, this, &DatesList::handleItemDoubleClicked);
     connect(this, &DatesList::itemSelectionChanged, this, &DatesList::forceAtLeastOneSelected);
@@ -44,7 +42,7 @@ void DatesList::setEvent(const QJsonObject& event)
         for (int i(0); i<dates.size(); ++i) {
             QJsonObject date = dates[i].toObject();
             
-            try{
+            try {
                 Date d = Date::fromJson(date);
                 if (!d.isNull()) {
                     QListWidgetItem* item = new QListWidgetItem();
@@ -67,7 +65,7 @@ void DatesList::setEvent(const QJsonObject& event)
                     addItem(item);
                 }
             }
-            catch(QString error){
+            catch (QString error) {
                 QMessageBox message(QMessageBox::Critical,
                                     qApp->applicationName() + " " + qApp->applicationVersion(),
                                     tr("Error : ") + error,
@@ -77,7 +75,7 @@ void DatesList::setEvent(const QJsonObject& event)
                 message.exec();
             }
         }
-        if(dates.size() > 0){
+        if (dates.size() > 0) {
             // Select first date by default :
             setCurrentRow(0);
             // Prepare calib window :
@@ -90,8 +88,7 @@ void DatesList::handleItemClicked(QListWidgetItem* item)
 {
     int index = row(item);
     QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
-    if(index < dates.size())
-    {
+    if (index < dates.size()) {
         QJsonObject date = dates[index].toObject();
         emit calibRequested(date);
     }
@@ -99,10 +96,9 @@ void DatesList::handleItemClicked(QListWidgetItem* item)
 
 void DatesList::handleItemDoubleClicked(QListWidgetItem* item)
 {
-    if(!mEvent.isEmpty() && item)
-    {
+    if (!mEvent.isEmpty() && item)
         MainWindow::getInstance()->getProject()->updateDate(mEvent[STATE_ID].toInt(), row(item));
-    }
+
 }
 
 void DatesList::dropEvent(QDropEvent* e)
@@ -110,8 +106,7 @@ void DatesList::dropEvent(QDropEvent* e)
     QListWidget::dropEvent(e);
     
     QList<int> ids;
-    for(int i=0; i<count(); ++i)
-    {
+    for (int i=0; i<count(); ++i) {
         QListWidgetItem* it = item(i);
         int id = it->data(0x0104).toInt();
         ids << id;
@@ -119,15 +114,12 @@ void DatesList::dropEvent(QDropEvent* e)
     QJsonObject event = mEvent;
     QJsonArray dates = event[STATE_EVENT_DATES].toArray();
     QJsonArray datesOrdered;
-    for(int i=0; i<ids.size(); ++i)
-    {
+    for (int i=0; i<ids.size(); ++i) {
         int id = ids[i];
-        for(int j=0; j<dates.size(); ++j)
-        {
+        for (int j=0; j<dates.size(); ++j){
             QJsonObject date = dates[j].toObject();
             int dateId = date[STATE_ID].toInt();
-            if(dateId == id)
-            {
+            if (dateId == id) {
                 datesOrdered.append(date);
                 break;
             }
@@ -139,24 +131,25 @@ void DatesList::dropEvent(QDropEvent* e)
 
 void DatesList::keyPressEvent(QKeyEvent* e)
 {
-    if(e->key() == Qt::Key_Return){
+    if (e->key() == Qt::Key_Return)
         handleItemDoubleClicked(currentItem());
-    }else{
+
+    else
         QListWidget::keyPressEvent(e);
-    }
+
 }
 
 void DatesList::forceAtLeastOneSelected()
 {
-    if(selectedItems().size() > 0){
-        if(!mUpdatingSelection)
+    if (selectedItems().size() > 0) {
+        if (!mUpdatingSelection)
             mSelectedItems = selectedItems();
-    }
-    else{
+
+    } else {
         mUpdatingSelection = true;
-        for(int i=0; i<mSelectedItems.size(); ++i){
-            mSelectedItems[i]->setSelected(true);
-        }
+        for (auto && it:mSelectedItems)
+            it->setSelected(true);
+
         mUpdatingSelection = false;
     }
 }

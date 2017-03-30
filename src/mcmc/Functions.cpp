@@ -281,8 +281,8 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
             // We must decrease of 1 because the array begin at 0
             const double ha( (traceAlpha.size()-1)*epsilon);
 
-            const int haInf( floor(ha) );
-            const int haSup( ceil(ha) );
+            const int haInf ( floor(ha) );
+            const int haSup ( ceil(ha) );
 
             const double a = traceAlpha.at(haInf) + ( (ha-haInf)*(traceAlpha.at(haSup)-traceAlpha.at(haInf)) );
 
@@ -295,7 +295,7 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
             // traceBeta is sorted with the value alpha join
             auto it = std::copy( traceBeta.begin()+ alphaIdx, traceBeta.end(), betaUpper.begin() );
 
-            const int betaUpperSize = std::distance(betaUpper.begin(),it);
+            const int betaUpperSize = std::distance(betaUpper.begin(), it);
 
             betaUpper.resize(betaUpperSize);  // shrink container to new size
 
@@ -317,9 +317,9 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
             const double bEpsilon( (1.-gamma)/(1.-epsilon) );
             // original calcul according to the article const float hb( (betaUpper.size()-1)*bEpsilon +1 );
             // We must decrease of 1 because the array begin at 0
-            const double hb( (betaUpper.size() - 1.)*bEpsilon);
-            const int hbInf( floor(hb) );
-            const int hbSup( ceil(hb) );
+            const double hb ( (betaUpper.size() - 1.)*bEpsilon);
+            const int hbInf ( floor(hb) );
+            const int hbSup ( ceil(hb) );
 
             const double b = betaUpper.at(hbInf) + ( (hb-hbInf)*(betaUpper.at(hbSup)-betaUpper.at(hbInf)) );
 

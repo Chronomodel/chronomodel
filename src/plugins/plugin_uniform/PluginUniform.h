@@ -36,6 +36,7 @@ public:
 
     PluginFormAbstract* getForm();
     GraphViewRefAbstract* getGraphViewRef();
+
     PluginSettingsViewAbstract* getSettingsView();
     
     QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;

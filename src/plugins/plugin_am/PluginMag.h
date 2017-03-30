@@ -46,6 +46,7 @@ public:
     
     PluginFormAbstract* getForm();
     GraphViewRefAbstract* getGraphViewRef();
+    virtual void deleteGraphViewRef(GraphViewRefAbstract* graph);
     PluginSettingsViewAbstract* getSettingsView();
     
     bool isDateValid(const QJsonObject& data, const ProjectSettings& settings);

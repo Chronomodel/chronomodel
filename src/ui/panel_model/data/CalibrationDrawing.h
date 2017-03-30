@@ -10,6 +10,10 @@ class Marker;
 class CalibrationDrawing : public QWidget
 {
     Q_OBJECT
+
+public slots:
+    virtual void setVisible(bool visible);
+
 public:
     explicit CalibrationDrawing(QWidget *parent = nullptr);
     ~CalibrationDrawing();
@@ -17,11 +21,11 @@ public:
     void setTitle(const QString& title) { mTitle->setText(title);}
     void setRefTitle(const QString& title) { mRefTitle->setText(title);}
     void setRefComment(const QString& comment) { mRefComment->setText(comment);}
-    void addRefGraph(GraphViewRefAbstract* refGraph);
+    void setRefGraph(GraphViewRefAbstract *refGraph);
 
     void setCalibTitle(const QString& title) { mCalibTitle->setText(title);}
     void setCalibComment(const QString& comment) { mCalibComment->setText(comment);}
-    void addCalibGraph(GraphView* calibGraph);
+    void setCalibGraph(GraphView *calibGraph);
 
     void setFont(const QFont& font) { mFont = font; update();}
     void hideMarker();
@@ -50,10 +54,9 @@ protected:
     void resizeEvent(QResizeEvent* e);
     void updateLayout();
 
-signals:
+    bool mMouseOverCurve;
 
 
-public slots:
 };
 
 #endif // CALIBRATIONDRAWING_H

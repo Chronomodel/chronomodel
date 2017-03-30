@@ -71,8 +71,8 @@ mButtonWidth(50)
     // -------------
     
     mDatesList = new DatesList(mEventView);
-    connect(mDatesList, SIGNAL(calibRequested(const QJsonObject&)), this, SIGNAL(updateCalibRequested(const QJsonObject&)));
-    
+    connect(mDatesList, &DatesList::calibRequested, this, &EventPropertiesView::updateCalibRequested);
+
     // -------------
 
     const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
@@ -204,14 +204,13 @@ EventPropertiesView::~EventPropertiesView()
 void EventPropertiesView::setEvent(const QJsonObject& event)
 {
     mEvent = event;
-    updateEvent();
+    if (rect().width() > 0)
+        updateEvent();
 }
 
 void EventPropertiesView::updateEvent()
 {
     qDebug()<<"EventPropertiesView::updateEvent";
-    if (this->isVisible() == false)
-        return;
 
     if (mEvent.isEmpty()) {
         mTopView->setVisible(false);
@@ -227,6 +226,7 @@ void EventPropertiesView::updateEvent()
         
         if (name != mNameEdit->text())
             mNameEdit->setText(name);
+
         mColorPicker->setColor(color);
         
         mMethodLab->setVisible(type == Event::eDefault);
@@ -247,7 +247,7 @@ void EventPropertiesView::updateEvent()
             mDeleteBut->setEnabled(hasDates);
             mRecycleBut->setEnabled(hasDates);
             
-        } else if(type == Event::eKnown) {
+        } else if (type == Event::eKnown) {
             EventKnown::KnownType knownType = (EventKnown::KnownType)mEvent.value(STATE_EVENT_KNOWN_TYPE).toInt();
             
             mKnownFixedRadio   -> setChecked(knownType == EventKnown::eFixed);

@@ -91,7 +91,6 @@ int main(int argc, char *argv[])
     QLocale::Language newLanguage = QLocale::system().language();
     QLocale::Country newCountry= QLocale::system().country();
     QLocale locale = QLocale(newLanguage, newCountry);
-    //QLocale locale("en");
     
     locale.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(locale);

@@ -7,18 +7,53 @@
 #include "Date.h"
 #include "CalibrationCurve.h"
 
-class GraphView;
-
-
 class GraphViewRefAbstract: public QWidget
 {
     Q_OBJECT
 public:
-    explicit GraphViewRefAbstract(QWidget* parent = nullptr):QWidget(parent),mMeasureColor(56, 120, 50)
+    explicit GraphViewRefAbstract(QWidget* parent = nullptr):QWidget(parent),
+        mMeasureColor(56, 120, 50)
     {
         setMouseTracking(true);
     }
-    virtual ~GraphViewRefAbstract(){}
+    explicit GraphViewRefAbstract(const GraphViewRefAbstract& graph, QWidget* parent = nullptr):QWidget(parent),
+        mMeasureColor(graph.mMeasureColor)
+    {
+        setMouseTracking(true);
+        mSettings = graph.mSettings;
+        mFormatFuncX = graph.mFormatFuncX;
+
+        mTminCalib = graph.mTminCalib;
+        mTmaxCalib = graph.mTmaxCalib;
+
+        mTminDisplay = graph.mTminDisplay;
+        mTmaxDisplay = graph.mTmaxDisplay;
+
+        mTminRef = graph.mTminRef;
+        mTmaxRef = graph.mTmaxRef;
+
+    }
+
+    void copyFrom(const GraphViewRefAbstract& graph)
+    {
+        mMeasureColor = graph.mMeasureColor;
+        setMouseTracking(true);
+        mSettings = graph.mSettings;
+        mFormatFuncX = graph.mFormatFuncX;
+
+        mTminCalib = graph.mTminCalib;
+        mTmaxCalib = graph.mTmaxCalib;
+
+        mTminDisplay = graph.mTminDisplay;
+        mTmaxDisplay = graph.mTmaxDisplay;
+
+        mTminRef = graph.mTminRef;
+        mTmaxRef = graph.mTmaxRef;
+
+    }
+
+    virtual ~GraphViewRefAbstract() {}
+
 
     virtual void setDate(const Date& date, const ProjectSettings& settings)
     {
@@ -50,6 +85,7 @@ public slots:
     {
         Q_UNUSED(margin);
     }
+
 protected:
     ProjectSettings mSettings;
     QColor mMeasureColor;

@@ -1,23 +1,26 @@
-#ifndef STEPDIALOG_H
-#define STEPDIALOG_H
+#ifndef STUDYPERIODDIALOG_H
+#define STUDYPERIODDIALOG_H
 
 #include <QDialog>
 
 class CheckBox;
 class Label;
-//class QSpinBox;
+class LineEdit;
 class QDoubleSpinBox;
 class Button;
+class ProjectSettings;
 
 
-class StepDialog: public QDialog
+class StudyPeriodDialog: public QDialog
 {
     Q_OBJECT
 public:
-    StepDialog(QWidget* parent = 0, Qt::WindowFlags flags = 0);
-    virtual ~StepDialog();
+    StudyPeriodDialog(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
+    virtual ~StudyPeriodDialog();
 
     void setStep(double step, bool forced, double suggested);
+    void setSettings(const ProjectSettings& s);
+    ProjectSettings getSettings() const;
     double step() const;
     bool forced() const;
     
@@ -26,6 +29,14 @@ protected:
     void resizeEvent(QResizeEvent* e);
     
 private:
+
+    Label* mStudyLab;
+    Label* mMinLab;
+    Label* mMaxLab;
+
+    LineEdit* mMinEdit;
+    LineEdit* mMaxEdit;
+
     Label* mTitleLab;
     Label* mForcedLab;
     CheckBox* mForcedCheck;

@@ -37,14 +37,18 @@ protected:
     void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent* e);
     void updateLayout();
-    
+
+public slots:
+    virtual void setVisible(bool visible);
+
 private slots:
     void updateGraphs();
     void updateZoom();
     void updateScroll();
     void exportImage();
     void copyText();
-    
+
+
 signals:
     void closed();
     
@@ -67,7 +71,6 @@ private:
     Button* mImageSaveBut;
     Button* mImageClipBut;
     Button* mResultsClipBut;
-    Button* mDataSaveBut;
     
     QFrame* frameSeparator;
 

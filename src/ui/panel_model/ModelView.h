@@ -49,8 +49,8 @@ public:
     
 public slots:
     void updateProject();
-    void applySettings();
-    void adjustStep();
+   // void applySettings();
+    void modifyPeriod();
     //void studyPeriodChanging();
     void minEditChanging();
     void maxEditChanging();
@@ -159,9 +159,11 @@ private:
     double mTmax;
     //LineEdit* mStepEdit;
     
-    Button* mButApply;
-    Button* mButStep;
+    //Button* mButApply;
+    Button* mButModifyPeriod;
     
+    Label* mLeftPanelTitle;
+    Label* mRightPanelTitle;
 
    // Button* mButPhasesModel;
     

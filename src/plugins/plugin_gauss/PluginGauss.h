@@ -47,6 +47,7 @@ public:
     
     PluginFormAbstract* getForm();
     GraphViewRefAbstract* getGraphViewRef();
+    virtual void deleteGraphViewRef(GraphViewRefAbstract* graph);
     PluginSettingsViewAbstract* getSettingsView();
     
     QJsonObject checkValuesCompatibility(const QJsonObject& values);

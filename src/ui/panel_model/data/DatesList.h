@@ -13,7 +13,7 @@ class DatesList: public QListWidget
 {
     Q_OBJECT
 public:
-    DatesList(QWidget* parent = 0);
+    DatesList(QWidget* parent = nullptr);
     ~DatesList();
     
     void setEvent(const QJsonObject& event);
