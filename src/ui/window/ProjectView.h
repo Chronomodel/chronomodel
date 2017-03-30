@@ -32,6 +32,7 @@ public:
     void writeSettings();
     void createProject();
     void setFont(const QFont &font);
+    void newPeriod();
 
 public slots:
     void updateProject();

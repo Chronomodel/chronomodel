@@ -182,6 +182,7 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
     if (mState != state || force)  {
         
         SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
+        //command->setText("pushProjectState " + command->actionText());
         MainWindow::getInstance()->getUndoStack()->push(command);
 
         updateState(state, reason, notify);
@@ -355,7 +356,7 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
         if ( eventsConstNew.size() != eventsConstOld.size()) {
             mStructureIsChanged = true;
             return;
-        } else if(eventsConstNew != eventsConstOld) {
+        } else if (eventsConstNew != eventsConstOld) {
                 mStructureIsChanged = true;
                 return;
         }
@@ -435,7 +436,7 @@ bool Project::event(QEvent* e)
 
 void Project::updateState(const QJsonObject& state, const QString& reason, bool notify)
 {
-    //qDebug() << " ---  Receiving : " << reason;
+    qDebug() << " ---  Receiving : " << reason;
     mState = state;
     if (notify) {
         
@@ -942,7 +943,7 @@ int Project::getUnusedEventId(const QJsonArray& events)
 void Project::createEvent()
 {
     if (studyPeriodIsValid()) {
-        EventDialog* dialog = new EventDialog(qApp->activeWindow(), tr("New Event"), Qt::Sheet);
+        EventDialog* dialog = new EventDialog(qApp->activeWindow(), tr("New Event"));//, Qt::Sheet);
         if (dialog->exec() == QDialog::Accepted) {
             Event event = Event();
             event.mName = dialog->getName();

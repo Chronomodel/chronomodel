@@ -140,6 +140,12 @@ void ProjectView::createProject()
 {
     mModelView->createProject();
 }
+
+void ProjectView::newPeriod()
+{
+    mModelView->modifyPeriod();
+}
+
 #pragma mark Update Results
 
 void ProjectView:: applySettings(Model* model,const AppSettings* appSet)

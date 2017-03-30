@@ -29,7 +29,6 @@
 #pragma mark constructor
 ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mEventsScene(nullptr),
-//  mCalibrationView(nullptr),
 mCurSearchIdx(0),
 mPhasesScene(nullptr),
 mCurrentRightWidget(nullptr),
@@ -175,15 +174,9 @@ mCalibVisible(false)
     mButImport->setIcon(QIcon(":csv_import.png"));
     mButImport->setFlatHorizontal();
 
-  //  connect(mButProperties, SIGNAL(toggled(bool)), this, SLOT(showProperties()));
-    connect(mButImport, SIGNAL(toggled(bool)), this, SLOT(showImport()));
-
+    connect(mButImport, static_cast<void (Button::*)(bool)>(&Button::toggled), this, &ModelView::showImport);
     connect(mEventsScene, &EventsScene::eventDoubleClicked, mButProperties, &Button::click);
-    // --- resize
 
-
-
-    
     // -------- Windows Data Importation --------------------
     
     mImportDataView = new ImportDataView(mRightWrapper);
@@ -568,21 +561,23 @@ void ModelView::modifyPeriod()
     QJsonObject state = mProject->state();
     ProjectSettings s = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
-    //double defaultVal = ProjectSettings::getStep(s.mTmin, s.mTmax);
-    
     StudyPeriodDialog dialog(qApp->activeWindow(), Qt::Sheet);
     dialog.setSettings(s);
     
     if (dialog.exec() == QDialog::Accepted) {
         ProjectSettings newS = dialog.getSettings();
         if (s != newS) {
-                // rebuild all calibration
-                //QList<Event*> events = mProject->mModel->mEvents;
+
             QJsonArray Qevents = state.value(STATE_EVENTS).toArray();
-            QList<Event> events;
-            for (auto && Qev: Qevents)
-                events.append(Event::fromJson(Qev.toObject()));
-//qDebug()<<events;
+
+            /* If the Events' Scene isEmpty (i.e. when the project is created)
+            * There is no date to calibrate
+            */
+            if (!Qevents.isEmpty()) {
+                QList<Event> events;
+                for (auto && Qev: Qevents)
+                    events.append(Event::fromJson(Qev.toObject()));
+
                 QProgressDialog *progress = new QProgressDialog("Calibration curve generation","Wait" , 1, 10, qApp->activeWindow());
                 progress->setWindowModality(Qt::WindowModal);
                 progress->setCancelButton(0);
@@ -595,7 +590,7 @@ void ModelView::modifyPeriod()
                 progress->setMaximum(position);
 
                 position = 0;
-
+                // rebuild all calibration
                 for (auto && ev : events)
                     for (auto && date : ev.mDates) {
                         date.mCalibration->mCurve.clear();
@@ -603,15 +598,13 @@ void ModelView::modifyPeriod()
                         ++position;
                         progress->setValue(position);
                     }
-                mProject -> setSettings(newS);
-                MainWindow::getInstance() -> setResultsEnabled(false);
-                MainWindow::getInstance() -> setLogEnabled(false);
-         }
+            }
+            mProject -> setSettings(newS);
+            MainWindow::getInstance() -> setResultsEnabled(false);
+            MainWindow::getInstance() -> setLogEnabled(false);
+        }
 
-    } /*else
-            s.mStep = defaultVal;*/
-        
-
+    }
 
 }
 
