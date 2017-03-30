@@ -166,17 +166,22 @@ void MainWindow::createActions()
     mUndoAction = mUndoStack->createUndoAction(this);
     mUndoAction->setIcon(QIcon(":undo_p.png"));
     mUndoAction->setText(tr("Undo"));
+    mUndoAction->setToolTip(tr("Undo"));
     
     mRedoAction = mUndoStack->createRedoAction(this);
     mRedoAction->setIcon(QIcon(":redo_p.png"));
+    mRedoAction->setText(tr("Redo"));
+    mRedoAction->setToolTip(tr("Redo"));
     
     mUndoViewAction = mUndoDock->toggleViewAction();
     mUndoViewAction->setText(tr("Show Undo Stack"));
+
     
     //-----------------------------------------------------------------
     // MCMC Actions
     //-----------------------------------------------------------------
     mMCMCSettingsAction = new QAction(QIcon(":settings_p.png"), tr("MCMC"), this);
+    mMCMCSettingsAction->setToolTip(tr("Change MCMC Settings"));
     
     mRunAction = new QAction(QIcon(":run_p.png"), tr("Run"), this);
     //runAction->setIcon(qApp->style()->standardIcon(QStyle::SP_MediaPlay));
@@ -418,11 +423,13 @@ void MainWindow::newProject()
 
             // resetInterface Disconnect also the scene
             resetInterface();
+
             activateInterface(true);
 
-            // Reset the project state and the MCMC Setting to the default value
-            // and then send a notification to update the views : send desabled
-            newProject->initState(NEW_PROJECT_REASON);
+            /* Reset the project state and the MCMC Setting to the default value
+             * and then send a notification to update the views : send desabled
+             */
+            newProject->initState(NEW_PROJECT_REASON);// emit showStudyPeriodWarning();
 
             delete mProject;
             /*if (mProject)
@@ -433,13 +440,13 @@ void MainWindow::newProject()
             mProject->setAppSettings(mAppSettings);
 
             mProjectView->createProject();
-
+            // Ask for the nes Study Period
+            mProjectView->newPeriod();
             mViewModelAction->trigger();
 
             mViewResultsAction->setEnabled(false);
         } else
             delete newProject;
-
 
         updateWindowTitle();
     }
@@ -518,7 +525,7 @@ void MainWindow::disconnectProject()
     disconnect(mResetMCMCAction, &QAction::triggered, mProject, &Project::resetMCMC);
     disconnect(mProjectExportAction, &QAction::triggered, mProject, &Project::exportAsText);
     disconnect(mRunAction, &QAction::triggered, mProject, &Project::run);
-    //mProjectView->doProjectConnections(0);
+
 }
 
 void MainWindow::closeProject()
@@ -564,10 +571,19 @@ void MainWindow::saveProjectAs()
 
 void MainWindow::updateWindowTitle()
 {
-    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + (!(mProject->mProjectFileName.isEmpty()) ? QString(" - ") + mProject->mProjectFileName : ""));
+    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + (mProject->mProjectFileName.isEmpty() ?  "" : QString(" - ") + mProject->mProjectFileName));
 }
 
-void MainWindow::updateProject(){
+void MainWindow::updateProject()
+{
+    mUndoAction->setText(tr("Undo"));
+    mUndoAction->setToolTip(tr("Undo : ") + mUndoStack->undoText());
+    mUndoAction->setStatusTip(tr("Click to go back to the previous action : ") + mUndoStack->undoText());
+
+    mRedoAction->setText(tr("Redo"));
+    mRedoAction->setToolTip(tr("Redo : ") + mUndoStack->redoText());
+    mRedoAction->setStatusTip(tr("Click to redo the last action : ") + mUndoStack->redoText());
+
     mRunAction->setEnabled(true);
     mProjectView->updateProject();
 }
