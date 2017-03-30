@@ -16,10 +16,11 @@ mNotify(notify)
     // However, this will also display action names in the main toolbar undo/redo buttons,
     // Resizing them every time... (actually, this is the only reason to disable the line below!)
     setText(mReason);
+
 }
 SetProjectState:: ~SetProjectState()
 {
-    mProject = 0;
+    mProject = nullptr;
 }
 
 void SetProjectState::undo()
@@ -40,6 +41,9 @@ void SetProjectState::redo()
     mProject->checkStateModification(mNextState,mProject->mState);
     mProject->sendUpdateState(mNextState, mReason, mNotify);
 
-    if (mProject->structureIsChanged() ) emit mProject->projectStructureChanged(true);
-    if (mProject->designIsChanged() )    emit mProject->projectDesignChanged(true);
+    if (mProject->structureIsChanged() )
+        emit mProject->projectStructureChanged(true);
+
+    if (mProject->designIsChanged() )
+        emit mProject->projectDesignChanged(true);
 }
