@@ -36,7 +36,7 @@ public:
 
      // virtual function
     long double getLikelihood(const double& t, const QJsonObject& data);
-    bool withLikelihoodArg() {return true; }
+    bool withLikelihoodArg() {return false; }
     QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);
     
     long double getLikelihoodForMode(const double& t, const QJsonObject& data, const QString& mode);

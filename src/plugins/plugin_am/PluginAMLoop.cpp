@@ -258,7 +258,10 @@ void PluginAMLoop::update()
     long double likelihood = 0.;
     long double likelihood_new = 0.;
     
-    if(mode == DATE_AM_MODE_ID)
+    if(t_new < tminCalib || t_new > tmaxCalib){
+        likelihood_new = 0;
+    }
+    else if(mode == DATE_AM_MODE_ID)
     {
         long double git = plugin->getRefCurveValueAt(curveI, mT.mX);
         long double sigma_git = plugin->getRefCurveErrorAt(curveI, mT.mX);
