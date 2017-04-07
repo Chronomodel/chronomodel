@@ -57,6 +57,8 @@ public:
     // avalable for Variance
     double mResultMaxVariance;
 
+    double mResultMaxDuration;
+
     bool mHasPhases;
     
     Model* mModel;
@@ -97,7 +99,7 @@ public slots:
     void updateModel();
     void updateResultsLog();
 
-    void adjustDuration(bool visible);
+  //  void adjustDuration(bool visible);
 
 private slots:
     void graphTypeChange();
@@ -126,6 +128,11 @@ private slots:
     void showInfos(bool);
     void exportFullImage();
     void exportResults();
+
+    void saveAsImage();
+    void imageToClipboard();
+    void resultsToClipboard();
+    void saveGraphData();
 
     void previousSheet();
     void nextSheet();
@@ -194,11 +201,18 @@ private:
     QWidget* mOptionsWidget;
     
     
-    Button* mUnfoldBut;
+    Button* mEventsfoldBut;
+    Button* mDatesfoldBut;
     Button* mStatsBut;
     Button* mExportImgBut;
     Button* mExportResults;
-    CheckBox* mShowDataUnderPhasesCheck;
+   // CheckBox* mShowDataUnderPhasesCheck;
+
+
+    Button* mImageSaveBut;
+    Button* mImageClipBut;
+    Button* mResultsClipBut;
+    Button* mDataSaveBut;
 
     Button* mNextSheetBut;
     Button* mPreviousSheetBut;
@@ -258,6 +272,7 @@ private:
     CheckBox* mDataCalibCheck;
     CheckBox* mWiggleCheck;
     RadioButton* mDataSigmaRadio;
+    RadioButton* mPhaseDurationRadio;
     
     //--------- Post. distrib. option
     QWidget* mPostDistGroup;
@@ -274,10 +289,11 @@ private:
 
     int mComboH;
     
-    QMap<int, QPair<double, double>> mZooms;
-
+   // QMap<int, QPair<double, double>> mZooms;
+    QMap<QPair<GraphViewResults::Variable, GraphViewResults::TypeGraph>, QPair<double, double>> mZooms;
     //propreties
     GraphViewResults::TypeGraph mCurrentTypeGraph;
+    GraphViewResults::Variable mCurrentVariable;
     double mBandwidthUsed;
     double mThresholdUsed;
     int mNumberOfGraph;

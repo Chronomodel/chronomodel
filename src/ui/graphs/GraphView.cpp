@@ -475,9 +475,9 @@ void GraphView::reserveCurves(const int size)
 void GraphView::setCurveVisible(const QString& name, const bool visible)
 {
     bool modified = false;
-    for (int i=0; i<mCurves.size(); ++i)
-        if (mCurves.at(i).mName == name && mCurves.at(i).mVisible != visible) {
-            mCurves[i].mVisible = visible;
+    for (auto && curve : mCurves)
+        if (curve.mName == name && curve.mVisible != visible) {
+            curve.mVisible = visible;
             modified = true;
             break;
         }
@@ -898,7 +898,8 @@ void GraphView::paintToDevice(QPaintDevice* device)
 
 void GraphView::drawCurves(QPainter& painter)
 {
-    if ((mGraphWidth<=0) || mGraphHeight)
+    if ((mGraphWidth<=0) || (mGraphHeight<=0))
+        return;
     /* -------------------------- Curves ---------------------------*/
     painter.save();
     // Draw curves inside axis only (not in margins!)

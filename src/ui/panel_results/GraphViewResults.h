@@ -10,12 +10,38 @@
 #include <QList>
 #include <QColor>
 #include <QBrush>
+#include <QTextEdit>
+#include <QPointer>
+#include <QEvent>
 
 class Button;
 class QPropertyAnimation;
-class QTextEdit;
+
 class MHVariable;
 class MetropolisVariable;
+
+class Overlay : public QWidget {
+public:
+    Overlay(QWidget * parent = nullptr) : QWidget{parent} {
+       setAttribute(Qt::WA_TransparentForMouseEvents);
+     //   setWindowFlags(Qt::Widget | Qt::FramelessWindowHint | Qt::ToolTip | Qt::WindowStaysOnTopHint);
+       setAttribute(Qt::WA_NoSystemBackground, true);
+       setAttribute(Qt::WA_TranslucentBackground, true);
+    }
+protected:
+
+    void paintEvent(QPaintEvent *) override {
+        const QColor color (49, 112, 176, 40);
+        QFont font (QFont().family(), 30, QFont::Medium, false);
+
+        QPainter p (this);
+        p.setFont(font);
+        p.fillRect(rect(), color);
+        p.setPen(color.darker());
+        p.drawText(rect(), Qt::AlignCenter | Qt::TextWordWrap, QObject::tr("Selected"));
+        p.end();
+    }
+};
 
 
 class GraphViewResults: public QWidget
@@ -30,12 +56,62 @@ public:
     };
     enum Variable{
         eTheta = 0,
-        eSigma = 1
+        eSigma = 1,
+        eDuration = 2
     };
     
+    // member
+protected:
+
+    Overlay* mOverLaySelect;
+
+    GraphView* mGraph;
+    TypeGraph mCurrentTypeGraph;
+    Variable mCurrentVariable;
+
+    QString mTitle;
+
+    QString mResultsText;
+
+    QColor mItemColor;
+    QString mItemTitle;
+
+    bool mShowAllChains;
+    QList<bool> mShowChainList;
+    bool mShowCredibility;
+
+    bool mShowCalib;
+    bool mShowWiggle;
+    bool mShowNumResults;
+    bool mIsSelected;
+    bool mShowSelectedRect;
+
+    ProjectSettings mSettings;
+    MCMCSettings mMCMCSettings;
+    QList<ChainSpecs> mChains;
+
+    QColor mMainColor;
+
+    QTextEdit* mTextArea;
+
+    qreal mMargin;
+    qreal mLineH;
+    qreal mGraphLeft;
+    qreal mTopShift;
+
+    qreal mHeightForVisibleAxis;
+
+    QPropertyAnimation* mAnimation;
+
+    //-----
+
+public:
+
     explicit GraphViewResults(QWidget *parent = nullptr);
     virtual ~GraphViewResults();
     
+    virtual void mousePressEvent(QMouseEvent *event);
+
     void setSettings(const ProjectSettings& settings);
     void setMCMCSettings(const MCMCSettings& mcmc, const QList<ChainSpecs>& chains);
     
@@ -49,11 +125,25 @@ public:
     
     void setItemColor(const QColor& itemColor);
     void setItemTitle(const QString& itemTitle);
-    
-    virtual void setButtonsVisible(const bool visible);
-    
-    GraphView* mGraph;
-    
+     
+    bool isSelected() const  { return mIsSelected;}
+    void setSelected( const bool&  selected) {
+            mIsSelected = selected;
+    }
+
+    void showSelectedRect(const bool & show) {
+        mShowSelectedRect = show;
+    }
+
+    void setShowNumericalResults(const bool show);
+
+
+    GraphView* getGraph() const { return mGraph;}
+    GraphView::Rendering getRendering() const  { return mGraph->getRendering(); }
+    QString getResultsText() const {return mResultsText;}
+    QString getTextAreaToHtml() const { return mTextArea->toHtml();}
+    QString getTextAreaToPlainText() const { return mTextArea->toPlainText();}
+
     GraphCurve generateDensityCurve(const QMap<double, double> &data,
                                     const QString& name,
                                     const QColor& lineColor,
@@ -82,8 +172,15 @@ public:
     
     void generateCorrelCurves(const QList<ChainSpecs>& chains,
                               MHVariable* variable);
-    void setShowNumericalResults(const bool show);
-    
+
+    // This method is used to recreate all curves in mGraph.
+    // It is vitual because we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
+    virtual void generateCurves(TypeGraph typeGraph, Variable variable);
+
+    // This method is used to update visible existing curves in mGraph.
+    // It is vitual because we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
+    virtual void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
+
 public slots:
     void setRange(type_data min, type_data max);
     void setCurrentX(type_data min, type_data max);
@@ -92,16 +189,11 @@ public slots:
     void showNumericalResults(bool show);
     void setNumericalResults(const QString& resultsHTML, const QString& resultsText);
 
-
-
-private slots:
     void saveAsImage();
     void imageToClipboard();
     void resultsToClipboard();
-    
-    
-protected slots:
-    virtual void saveGraphData() const; // must be accessible to modifie by GraphViewPhase
+    void saveGraphData() const; // must be accessible by ResultsView
+
     
 protected:
     
@@ -113,64 +205,38 @@ protected:
     // It is vitual beacause we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
     virtual void updateLayout();
     
-public:
-    // This method is used to recreate all curves in mGraph.
-    // It is vitual because we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
-    virtual void generateCurves(TypeGraph typeGraph, Variable variable);
-    
-    // This method is used to update visible existing curves in mGraph.
-    // It is vitual because we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
-    virtual void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
-    
-    
 signals:
     void unfoldToggled(bool toggled);
     void visibilityChanged(bool visible);
+    void selected();
 
-
-protected:
-    
-    
-    TypeGraph mCurrentTypeGraph;
-    Variable mCurrentVariable;
-    
-    QString mTitle;
-    
-    QString mResultsText;
-    
-    QColor mItemColor;
-    QString mItemTitle;
-    
-    bool mShowAllChains;
-    QList<bool> mShowChainList;
-    bool mShowCredibility;
-    
-    bool mShowCalib;
-    bool mShowWiggle;
-    bool mShowNumResults;
-    
-    ProjectSettings mSettings;
-    MCMCSettings mMCMCSettings;
-    QList<ChainSpecs> mChains;
-    
-    QColor mMainColor;
-    
-    QTextEdit* mTextArea;
-    
-    Button* mImageSaveBut;
-    Button* mImageClipBut;
-    Button* mResultsClipBut;
-    Button* mDataSaveBut;
-    
-    qreal mMargin;
-    qreal mLineH;
-    qreal mGraphLeft;
-    qreal mTopShift;
-    
-    bool mButtonsVisible;
-    qreal mHeightForVisibleAxis;
-    
-    QPropertyAnimation* mAnimation;
 };
+
+
+
+
+class Filter : public QObject {
+    QPointer<Overlay> m_overlay;
+    QPointer<QWidget> m_overlayOn;
+public:
+    Filter(QObject * parent = nullptr) : QObject{parent} {}
+protected:
+    bool eventFilter(QObject * obj, QEvent * ev) override {
+        //if (!obj->isWidgetType()) return false;
+        auto w = static_cast<QWidget*>(obj);
+        if (ev->type() == QEvent::MouseButtonPress) {
+            if (!m_overlay) m_overlay = new Overlay(w->parentWidget());
+            m_overlay->setGeometry(w->geometry());
+            m_overlayOn = w;
+            m_overlay->show();
+        }
+        else if (ev->type() == QEvent::Resize) {
+            if (m_overlay && m_overlayOn == w)
+                m_overlay->setGeometry(w->geometry());
+        }
+        return false;
+    }
+};
+
 
 #endif

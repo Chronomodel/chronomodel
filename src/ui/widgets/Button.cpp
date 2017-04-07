@@ -154,6 +154,7 @@ void Button::paintEvent(QPaintEvent* e)
         grad.setColorAt(1, gradColBot);
         painter.fillRect(r, grad);
         
+
         painter.setPen(gradLineLight);
         if (mFlatVertical)
             painter.drawLine(0, 0, r.width(), 0);
@@ -188,10 +189,10 @@ void Button::paintEvent(QPaintEvent* e)
             painter.drawText(r, Qt::AlignCenter, text());
 
         } else if (iconOnly) {
-            qreal border = 10.;
-            if (mMouseOver) {
+            qreal border = qMax( 3., qMin(width(), height()) * 0.2);
+            if (mMouseOver)
                 border = 0.;
-            }
+
             const qreal w = r.width() - 2.*border;
             const qreal h = r.height() - 2.*border;
             qreal borderH(0.);

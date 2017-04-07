@@ -25,7 +25,7 @@ mAxisColor(0, 0, 0)
 
 void AxisTool::updateValues(const int totalPix, const int minDeltaPix, const qreal minVal, const qreal maxVal)
 {
-    if (isinf(abs(minVal)) || isinf(maxVal))
+    if (isinf(fabs(minVal)) || isinf(maxVal))
         return;
 
     const qreal rigthBlank (5.); // the same name and the same value as GraphViewAbstract::getXForValue(

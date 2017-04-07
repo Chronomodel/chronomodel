@@ -14,7 +14,7 @@ QDialog(parent, flags)
 {
     setWindowTitle(tr("Study Period Settings"));
 
-    mStudyLab = new Label(tr("STUDY PERIOD BOUND (BC/AD)"), this);
+    mStudyLab = new Label(tr("STUDY PERIOD (BC/AD)"), this);
     mStudyLab-> setIsTitle(true);
 
     mMinLab = new Label(tr("Start"), this);

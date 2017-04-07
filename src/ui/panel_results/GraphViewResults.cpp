@@ -7,8 +7,7 @@
 #include <QtWidgets>
 #include <QtSvg>
 #include <QMessageBox>
-
-
+#include <QPointer>
 
 
 #pragma mark Constructor / Destructor
@@ -21,19 +20,24 @@ mShowCredibility(false),
 mShowCalib(false),
 mShowWiggle(false),
 mShowNumResults(false),
+mIsSelected(false),
+mShowSelectedRect(true),
 mMainColor(QColor(50, 50, 50)),
 mMargin(5),
 mLineH(20),
 mGraphLeft(128),
 mTopShift(0),
-mButtonsVisible(true),
+//mButtonsVisible(true),
 mHeightForVisibleAxis(100)
 {
     setGeometry(QRect(0,0,200,100));
     setMouseTracking(true);
-    
+
     mGraph = new GraphView(this);
-    
+    mGraph->setMouseTracking(true);
+
+    mOverLaySelect = new Overlay (this);
+
     mGraph->setCanControlOpacity(true);
     mGraph->setCurvesOpacity(30);
     
@@ -67,7 +71,7 @@ mHeightForVisibleAxis(100)
     mTextArea->setVisible(false);
     mTextArea->setReadOnly(true);
     
-    mImageSaveBut = new Button(tr("Save"), this);
+    /*mImageSaveBut = new Button(tr("Save"), this);
     mImageSaveBut->setIcon(QIcon(":picture_save.png"));
     mImageSaveBut->setFlatVertical();
     mImageSaveBut->setToolTip(tr("Save image as file"));
@@ -86,17 +90,18 @@ mHeightForVisibleAxis(100)
     mDataSaveBut->setIcon(QIcon(":data.png"));
     mDataSaveBut->setFlatVertical();
     mDataSaveBut->setToolTip(tr("Save graph data to file"));
-    
+ */
     mAnimation = new QPropertyAnimation(this);
     mAnimation->setPropertyName("geometry");
     mAnimation->setDuration(200);
     mAnimation->setTargetObject(this);
     mAnimation->setEasingCurve(QEasingCurve::Linear);
     
-    connect(mImageSaveBut, &Button::clicked, this, &GraphViewResults::saveAsImage);
+  /*  connect(mImageSaveBut, &Button::clicked, this, &GraphViewResults::saveAsImage);
     connect(mImageClipBut, &Button::clicked, this, &GraphViewResults::imageToClipboard);
     connect(mResultsClipBut, &Button::clicked, this, &GraphViewResults::resultsToClipboard);
     connect(mDataSaveBut, &Button::clicked, this, &GraphViewResults::saveGraphData);
+*/   // connect(this, &GraphViewResults::QWidget::clicked, this, GraphViewResults::)
 
     //connect(this, &GraphViewResults::setGraphsThickness, mGraph, &GraphView::updateCurvesThickness);
 
@@ -107,12 +112,6 @@ mHeightForVisibleAxis(100)
 GraphViewResults::~GraphViewResults()
 {
     mGraph = nullptr;
-  /*  mImageSaveBut = 0;
-    mImageClipBut = 0;
-    mResultsClipBut = 0;
-    mDataSaveBut = 0;
-    mAnimation = 0;*/
-
 }
 
 void GraphViewResults::generateCurves(TypeGraph typeGraph, Variable variable)
@@ -203,7 +202,7 @@ void GraphViewResults::saveAsImage()
     fileInfo = QFileInfo(fileName);
     QString fileExtension = fileInfo.suffix();
     if (!fileName.isEmpty()) {
-        QFileInfo fileInfo = QFileInfo(fileName);
+        //QFileInfo fileInfo = QFileInfo(fileName);
         bool asSvg = fileName.endsWith(".svg");
         if (asSvg) {
             if (mGraph)
@@ -215,8 +214,8 @@ void GraphViewResults::saveAsImage()
             //---
             GraphView::Rendering memoRendering= mGraph->getRendering();
             setRendering(GraphView::eHD);
-            short pr = MainWindow::getInstance()->getAppSettings().mPixelRatio;
-            int versionHeight = 20;
+            const short pr = MainWindow::getInstance()->getAppSettings().mPixelRatio;
+            const int versionHeight = 20;
 
             QImage image(mGraph->width() * pr, (mGraph->height() + versionHeight) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
 
@@ -324,7 +323,8 @@ void GraphViewResults::saveGraphData() const
 void GraphViewResults::setNumericalResults(const QString& resultsHTML, const QString& resultsText)
 {
     mResultsText = resultsText;
-    mTextArea->setText(resultsHTML);
+    //mTextArea->setText(resultsHTML);
+    mTextArea->setHtml(resultsHTML);
 }
 
 void GraphViewResults::showNumericalResults(bool show)
@@ -372,11 +372,11 @@ void GraphViewResults::resizeEvent(QResizeEvent* e)
 void GraphViewResults::updateLayout()
 {
     int h = height();
-    const qreal butInlineMaxH = 50.;
+    //const qreal butInlineMaxH = 50.;
     
     const bool axisVisible = (h > mHeightForVisibleAxis);
 
-    if (mButtonsVisible) {
+/*    if (mButtonsVisible) {
         qreal bw = mGraphLeft / 4;
         qreal bh = height() - mLineH;
         bh = std::min(bh, butInlineMaxH);
@@ -386,21 +386,21 @@ void GraphViewResults::updateLayout()
         mImageClipBut   -> setGeometry(2*bw, mLineH, bw, bh);
         mResultsClipBut -> setGeometry(mGraphLeft-bw, mLineH, bw, bh);
     }
-
+*/
      // define the rigth margin,according to the max on the scale
-    QFont fontTitle(this->font());
+    QFont fontTitle(font());
     fontTitle.setPointSizeF(this->font().pointSizeF() * 1.1);
     QFontMetricsF fmTitle(fontTitle);
     mTopShift = fmTitle.height() + 4. + 1.;
     
-    const qreal leftShift = mButtonsVisible ? mGraphLeft : 0.;
-    QRect graphRect(leftShift, mTopShift, width() - leftShift, height()-mTopShift);
+    //const qreal leftShift = mButtonsVisible ? mGraphLeft : 0.;
+    QRect graphRect(0, mTopShift, width(), height()-mTopShift);
 
     type_data max = mGraph->maximumX();
-    QFontMetricsF fmAxe (this->font());
+    QFontMetricsF fmAxe (font());
     qreal marginRight = floor(fmAxe.width(stringWithAppSettings(max)) / 2.);
     mGraph->setMarginRight(marginRight);
-    mGraph->setFont(this->font());
+    mGraph->setFont(font());
 
     if ((mGraph->hasCurve())) {
         mGraph->showXAxisValues(axisVisible);
@@ -416,53 +416,51 @@ void GraphViewResults::updateLayout()
 
     update();
 }
+
+void GraphViewResults::mousePressEvent(QMouseEvent *event)
+{
+    (void) event;
+    setSelected(!isSelected());
+    update();
+
+    emit selected();
+
+}
+
 void GraphViewResults::paintEvent(QPaintEvent* )
 {
-    qreal leftShift = mButtonsVisible ? mGraphLeft : 0.;
-    
     QPainter p;
     p.begin(this);
-    
-    // Left part of the view (title, buttons, ...)
-    if (mButtonsVisible) {
-        QColor backCol = mItemColor;
-        QColor foreCol = getContrastedColor(backCol);
-        
-        // affiche le texte dans la boite de gauche avec les boutons
-        QRectF topRect(0, 1, mGraphLeft-p.pen().widthF(), mLineH-p.pen().widthF() - 1.);
-        
-        p.setPen(backCol);
-        p.setBrush(backCol);
-        p.drawRect(topRect);
-        
-        p.setPen(foreCol);
-        QFont font;
-        font.setPointSizeF(pointSize(11));
-        p.setFont(font);
-        
-        p.drawText(QRectF(0., 1., mGraphLeft-p.pen().widthF(), mLineH-p.pen().widthF()-1.),
-                   Qt::AlignVCenter | Qt::AlignCenter,
-                   mItemTitle);
-    }
-    
-    // Right part of the view (graph, title, ...)
-    
+
     // write mTitle above the graph
     QFont fontTitle(this->font());
     fontTitle.setPointSizeF(this->font().pointSizeF()*1.1);
     QFontMetrics fmTitle(fontTitle);
     
-    QRectF textRect(leftShift, 1., this->width()-leftShift, mTopShift-1.);
+    QRectF textRect(0, 1., this->width(), mTopShift-1.);
     p.fillRect(textRect, mGraph->getBackgroundColor());
     
     p.setFont(fontTitle);
     p.setPen(Qt::black);
     
-    p.drawText(QRectF(leftShift + 50., 3., fmTitle.width(mTitle), mTopShift - 1.), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
+    p.drawText(QRectF(50., 3., fmTitle.width(mTitle), mTopShift - 1.), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
     
     p.drawText(QRectF(width() - fmTitle.width(mGraph->getInfo()), 3., fmTitle.width(mGraph->getInfo()), mTopShift-1.), Qt::AlignVCenter | Qt::AlignLeft, mGraph->getInfo());
     
+  /*  p.save();
+    if (mIsSelected && mShowSelectedRect) {
+        p.setPen(Qt::red);
+        p.drawRect(rect());
+    }
+    p.restore();*/
     p.end();
+
+    if (mIsSelected && mShowSelectedRect) {
+       // QRect rectOver = QRect(, 0, fmTitle.width(mGraph->getInfo()), mTopShift-1.);
+        mOverLaySelect->setGeometry(rect());
+        mOverLaySelect->show();
+    } else
+        mOverLaySelect->hide();
 
 }
 
@@ -475,7 +473,7 @@ void GraphViewResults::setItemTitle(const QString& itemTitle)
 {
     mItemTitle = itemTitle;
 }
-
+/*
 void GraphViewResults::setButtonsVisible(const bool visible)
 {
     if (mButtonsVisible != visible) {
@@ -489,6 +487,7 @@ void GraphViewResults::setButtonsVisible(const bool visible)
         updateLayout();
     }
 }
+*/
 
 /** Generate Typical curves for Chronomodel
  * */

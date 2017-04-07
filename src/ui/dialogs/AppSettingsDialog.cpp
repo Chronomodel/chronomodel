@@ -38,7 +38,7 @@ QDialog(parent, flags)
 
     mFontBut = new Button(this);
     mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
-    mFontBut->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+    mFontBut->QWidget::setStyleSheet("QPushButton { border-radius: 5px; }");
     /*
     mCountryLab = new QLabel(tr("Country") + " : ", this);
     mCountryCombo = new QComboBox(this);
@@ -80,7 +80,7 @@ QDialog(parent, flags)
     mPixelRatio = new QSpinBox(this);
     mPixelRatio->setRange(1, 5);
     mPixelRatio->setSingleStep(1);
-    mPixelRatio->setStyleSheet("QLineEdit { border-radius: 5px; }");
+    mPixelRatio->setStyleSheet("QSpinBox { border-radius: 5px; }");
     
     mDpmLab = new QLabel(tr("Image export DPM"), this);
     mDpm = new QComboBox(this);
@@ -90,7 +90,7 @@ QDialog(parent, flags)
     mImageQuality = new QSpinBox(this);
     mImageQuality->setRange(1, 100);
     mImageQuality->setSingleStep(1);
-    mImageQuality->setStyleSheet("QLineEdit { border-radius: 5px; }");
+    mImageQuality->setStyleSheet("QSpinBox { border-radius: 5px; }");
     
     mFormatDateLab = new QLabel(tr("Date format"), this);
     mFormatDateLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -106,7 +106,7 @@ QDialog(parent, flags)
     mPrecision = new QSpinBox(this);
     mPrecision->setRange(0, 5);
     mPrecision->setSingleStep(1);
-    mPrecision->setStyleSheet("QLineEdit { border-radius: 5px; }");
+    mPrecision->setStyleSheet("QSpinBox { border-radius: 5px; }");
     
     
     connect(mAutoSaveCheck, &QCheckBox::toggled, mAutoSaveDelayEdit, &QLineEdit::setEnabled);
@@ -167,7 +167,7 @@ QDialog(parent, flags)
     mNbSheet = new QSpinBox(this);
     mNbSheet->setRange(5, 100);
     mNbSheet->setSingleStep(1);
-    mNbSheet->setStyleSheet("QLineEdit { border-radius: 5px; }");
+    mNbSheet->setStyleSheet("QSpinBox { border-radius: 5px; }");
     
     grid->addWidget(mFormatDateLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mFormatDate, row, 1);
