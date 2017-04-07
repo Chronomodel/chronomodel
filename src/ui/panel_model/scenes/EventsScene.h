@@ -4,7 +4,7 @@
 #include "AbstractScene.h"
 #include "EventItem.h"
 #include "ProjectSettings.h"
-
+#include <QWheelEvent>
 
 class QGraphicsItemAnimation;
 class QTimeLine;
@@ -18,7 +18,7 @@ class EventsScene: public AbstractScene
 {
     Q_OBJECT
 public:
-    EventsScene(QGraphicsView* view, QObject* parent = 0);
+    EventsScene(QGraphicsView* view, QObject* parent = nullptr);
     ~EventsScene();
     
     void sendUpdateProject(const QString& reason, bool notify, bool async);
@@ -65,7 +65,6 @@ public:
 protected:
     virtual void keyPressEvent(QKeyEvent* keyEvent);
     virtual void keyReleaseEvent(QKeyEvent* keyEvent);
-    
     void dropEvent(QGraphicsSceneDragDropEvent* e);
     void dragMoveEvent(QGraphicsSceneDragDropEvent* e);
     

@@ -1030,11 +1030,9 @@ void EventsScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e
     QMessageBox message(QMessageBox::Question, tr("Delete constraint"), tr("Do you really want to delete this constraint?"), QMessageBox::Yes | QMessageBox::No, qApp->activeWindow(), Qt::Sheet);
     if (message.exec() == QMessageBox::Yes) {
         mProject->deleteEventConstraint(item->data().value(STATE_ID).toInt());
-        //qDebug() << "TODO : delete constraint";
     }
     
-    //Project* project = MainWindow::getInstance()->getProject();
-    //project->updateEventConstraint(item->constraint()[STATE_ID].toInt());
+
 }
 
 #pragma mark Key events
@@ -1044,6 +1042,8 @@ void EventsScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e
  */
 void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
 {
+ //   qDebug() << "EventsScene::keyPressEvent: " << keyEvent->modifiers() << keyEvent->key();
+
     if (keyEvent->isAutoRepeat())
         keyEvent->ignore();
     
@@ -1122,6 +1122,8 @@ void EventsScene::keyReleaseEvent(QKeyEvent* keyEvent)
     }
     
 }
+
+
 // -----------------------------------------------------------
 //  The following function are about drag & drop
 // -----------------------------------------------------------

@@ -52,8 +52,8 @@ public slots:
    // void applySettings();
     void modifyPeriod();
     //void studyPeriodChanging();
-    void minEditChanging();
-    void maxEditChanging();
+ //   void minEditChanging();
+ //   void maxEditChanging();
     
 protected:
     void paintEvent(QPaintEvent* e);
@@ -151,16 +151,17 @@ private:
     Label* mStudyLab;
     Label* mMinLab;
     Label* mMaxLab;
+    Label* mFormatDateLab;
     //Label* mStepLab;
     
-    LineEdit* mMinEdit;
-    LineEdit* mMaxEdit;
+  //  LineEdit* mMinEdit;
+ //   LineEdit* mMaxEdit;
     double mTmin;
     double mTmax;
     //LineEdit* mStepEdit;
     
     //Button* mButApply;
-    Button* mButModifyPeriod;
+    QPushButton* mButModifyPeriod;
     
     Label* mLeftPanelTitle;
     Label* mRightPanelTitle;
