@@ -1059,11 +1059,13 @@ void MainWindow::setLogEnabled(bool enabled)
 
 void MainWindow::mcmcFinished(Model* model)
 {
-    if (!model)
-        return;
+    Q_ASSERT(model);
+    //if (!model)
+    //    return;
     mViewLogAction -> setEnabled(true);
     mViewResultsAction -> setEnabled(true);
     mViewResultsAction -> setChecked(true); // Just check the Result Button after computation and mResultsView is show after
+    mProject->setNoResults(false); // set to be able to save the file *.res
 
     model->updateFormatSettings(&mAppSettings);
     
@@ -1077,5 +1079,6 @@ void MainWindow::mcmcFinished(Model* model)
      mViewResultsAction -> setChecked(false);
 
      mViewModelAction->trigger();
+     mProject->setNoResults(true); // set to disable the saving the file *.res
 
  }

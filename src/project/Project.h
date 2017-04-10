@@ -73,6 +73,11 @@ public:
     bool saveAs(const QString& dialogTitle);
     bool askToSave(const QString& saveDialogTitle);
     bool saveProjectToFile();
+    /**
+     * @brief setNoResults : set to disable the saving the file *.res
+     * @param noResults
+     */
+    void setNoResults( const bool& noResults) { mNoResults = noResults;}
     
     bool setSettings(const ProjectSettings& settings);    
     //void setAppSettings(const AppSettings& settings);
@@ -85,7 +90,6 @@ public:
     // ---------------------------
     void restoreMCMCSettings();
 
-    
     void addEvent(QJsonObject event, const QString& reason);
     int getUnusedEventId(const QJsonArray& events);
     void updateEvent(const QJsonObject& event, const QString& reason);
@@ -155,9 +159,7 @@ signals:
     void noResult();
     void projectStateChanged();
     void currentEventChanged(const QJsonObject& event);
-    //void currentPhaseChanged(const QJsonObject& phase);
-    // void selectedEventsChanged(); // not used
-    //void selectedPhasesChanged();
+
     void eyedPhasesModified(const QMap<int, bool>& eyedPhases);
     
     void mcmcStarted();
@@ -179,7 +181,7 @@ public:
     
     Model* mModel;
     
-    QMap<QString, CalibrationCurve> mCalibCurves; // QJsonObject is date.mData
+    QMap<QString, CalibrationCurve> mCalibCurves;
     QTimer* mAutoSaveTimer;
 
 private :
@@ -190,8 +192,8 @@ private :
     QSet<QString> mReasonChangeStructure;
     QSet<QString> mReasonChangeDesign;
     QSet<QString> mReasonChangePosition;
-    // used to save data in debug mode
-    bool mSaveData;
+
+    bool mNoResults;
 
 };
 

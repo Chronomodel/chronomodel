@@ -44,7 +44,7 @@ mProjectFileName(QObject::tr("Untitled")),
 mDesignIsChanged(true),
 mStructureIsChanged(true),
 mItemsIsMoved(true),
-mSaveData(true)
+mNoResults(true)
 {
     mState = emptyState();
     mLastSavedState = mState;
@@ -606,54 +606,56 @@ bool Project::load(const QString& path)
 
             clearModel();
 
-            if (mSaveData) {
-                QString dataPath = path + ".res";
+            // load results
+            QString dataPath = path + ".res";
 
-                QFile dataFile;
+            QFile dataFile;
 
-                dataFile.setFileName(dataPath);
+            dataFile.setFileName(dataPath);
 
-                QFileInfo fi(dataFile);
-                dataFile.open(QIODevice::ReadOnly);
-                if (fi.isFile())
+            QFileInfo fi(dataFile);
+            dataFile.open(QIODevice::ReadOnly);
+            if (fi.isFile()) {
                 if (dataFile.exists()) {
 
-                qDebug() << "Project::load Loading model file.res : " << dataPath << " size=" << dataFile.size();
-      
-                try {
-                    mModel->fromJson(mState);
+                    qDebug() << "Project::load Loading model file.res : " << dataPath << " size=" << dataFile.size();
 
-                }
-                catch (QString error) {
-                    QMessageBox message(QMessageBox::Critical,
-                                        tr("Error loading project"),
-                                        tr("The project could not be loaded.") + "\r" +
-                                        tr("Error message") + " : " + error,
-                                        QMessageBox::Ok,
-                                        qApp->activeWindow(),
-                                        Qt::Sheet);
-                    message.exec();
-                    
-                    clearModel();
-                }
-                
-                
-                try {
-                    mModel->setProject(this);
-                    mModel->restoreFromFile(dataPath);
-                    
-                    emit mcmcFinished(mModel);
-                } catch(QString error) {
-                    QMessageBox message(QMessageBox::Critical,
-                                        tr("Error loading project MCMC results"),
-                                        tr("The project MCMC results could not be loaded.") + "\r" +
-                                        tr("Error message") + " : " + error,
-                                        QMessageBox::Ok,
-                                        qApp->activeWindow(),
-                                        Qt::Sheet);
-                    message.exec();
-                }
-            }
+                    try {
+                        mModel->fromJson(mState);
+
+                    }
+                    catch (QString error) {
+                        QMessageBox message(QMessageBox::Critical,
+                                            tr("Error loading project"),
+                                            tr("The project could not be loaded.") + "\r" +
+                                            tr("Error message") + " : " + error,
+                                            QMessageBox::Ok,
+                                            qApp->activeWindow(),
+                                            Qt::Sheet);
+                        message.exec();
+
+                        clearModel();
+                    }
+
+
+                    try {
+                        mModel->setProject(this);
+                        mModel->restoreFromFile(dataPath);
+                        setNoResults(false);
+                        emit mcmcFinished(mModel);
+                    } catch(QString error) {
+                        QMessageBox message(QMessageBox::Critical,
+                                            tr("Error loading project MCMC results"),
+                                            tr("The project MCMC results could not be loaded.") + "\r" +
+                                            tr("Error message") + " : " + error,
+                                            QMessageBox::Ok,
+                                            qApp->activeWindow(),
+                                            Qt::Sheet);
+                        setNoResults(true);
+                        message.exec();
+                    }
+                } else
+                  setNoResults(true);
             }
             // --------------------
             
@@ -724,7 +726,7 @@ bool Project::saveProjectToFile()
         QFile file(path);
         if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
 #ifdef DEBUG
-            qDebug() << "Project saved to : " << path;
+            qDebug() << "Project::saveProjectToFile() Project saved to : " << path;
 #endif
             mLastSavedState = mState;
             
@@ -741,7 +743,6 @@ bool Project::saveProjectToFile()
 #endif
     }
 
-    // TODO insérer sauvegarde de la calibration
     QFile file(mProjectFileDir + "/" + mProjectFileName + ".cal");
     if (file.open(QIODevice::WriteOnly)) {
 
@@ -751,7 +752,6 @@ bool Project::saveProjectToFile()
 
         out << qApp->applicationVersion();
         // save Calibration Curve
-        //int si =  mProject->mCalibCurves.size();
         out << (quint32) mCalibCurves.size();
         for (QMap<QString, CalibrationCurve>::const_iterator it = mCalibCurves.cbegin() ; it != mCalibCurves.cend(); ++it) {
             out << it.key();
@@ -760,20 +760,14 @@ bool Project::saveProjectToFile()
         file.close();
      }
 
-   if (mSaveData) {
-       // keep to the future version
-       if (!mModel->mChains.isEmpty()) {
-            qDebug() << "Saving project results in "<<mProjectFileDir + "/" + mProjectFileName + ".res";
-            mModel->setProject(this);
-            mModel->saveToFile(mProjectFileDir + "/" + mProjectFileName + ".res");
-        }
-        else {
-            QFileInfo checkFile(mProjectFileDir + "/" + mProjectFileName + ".res");
-            if (checkFile.exists() && checkFile.isFile()) {
-                QFile(mProjectFileDir + "/" + mProjectFileName + ".res").remove();
-            } else
-                return true;
-        }
+    QFileInfo checkFile(mProjectFileDir + "/" + mProjectFileName + ".res");
+    if (checkFile.exists() && checkFile.isFile())
+        QFile(mProjectFileDir + "/" + mProjectFileName + ".res").remove();
+
+    if (!mNoResults && !mModel->mChains.isEmpty()) {
+        qDebug() << "Project::saveProjectToFile() Saving project results in "<<mProjectFileDir + "/" + mProjectFileName + ".res";
+        mModel->setProject(this);
+        mModel->saveToFile(mProjectFileDir + "/" + mProjectFileName + ".res");
     }
     return true;
 }
