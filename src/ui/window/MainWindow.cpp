@@ -415,9 +415,9 @@ void MainWindow::newProject()
          // just update mAutoSaveTimer to avoid open the save() dialog box
         newProject-> mAutoSaveTimer->stop();
 
-        // Ask to save the new project.
-        // Returns true only if a new file is created.
-        // Note : at this point, the project state is still the previous project state.
+        /* Ask to save the new project.
+         * Returns true only if a new file is created.
+         * Note : at this point, the project state is still the previous project state.*/
         if (newProject->saveAs(tr("Save new project as..."))) {
             mUndoStack->clear();
 
@@ -427,28 +427,29 @@ void MainWindow::newProject()
             activateInterface(true);
 
             /* Reset the project state and the MCMC Setting to the default value
-             * and then send a notification to update the views : send desabled
-             */
+             * and then send a notification to update the views : send desabled */
+
             newProject->initState(NEW_PROJECT_REASON);// emit showStudyPeriodWarning();
 
             delete mProject;
-            /*if (mProject)
-                disconnectProject();*/
 
             mProject = newProject;
             connectProject();
             mProject->setAppSettings(mAppSettings);
 
             mProjectView->createProject();
-            // Ask for the nes Study Period
+            // Ask for the new Study Period
             mProjectView->newPeriod();
             mViewModelAction->trigger();
 
             mViewResultsAction->setEnabled(false);
+
+            updateWindowTitle();
+
         } else
             delete newProject;
 
-        updateWindowTitle();
+
     }
 }
 
