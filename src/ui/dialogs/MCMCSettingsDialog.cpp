@@ -290,7 +290,8 @@ void MCMCSettingsDialog::inputControl()
     if (isValided) {
         settings.mSeeds = stringListToIntList(mSeedsEdit->text(), ";");
         for (auto seed : settings.mSeeds)
-            if (isnan(seed) || seed == 0) {
+            //if (std::isnan(seed) || // bug with MSVC2015_64bit
+            if ( seed == 0) {
                 errorMessage = QObject::tr("Each seed must be an integer, bigger than 0");
                 isValided = false;
             }
