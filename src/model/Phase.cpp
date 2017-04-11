@@ -98,7 +98,7 @@ Phase::~Phase()
     }
 }
 
-#pragma mark Properties
+//#pragma mark Properties
 
 /**
  * @todo Check the copy of the color if mJson is not set

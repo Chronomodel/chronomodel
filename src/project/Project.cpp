@@ -89,7 +89,7 @@ Project::~Project()
 }
 
 
-#pragma mark Project State
+//#pragma mark Project State
 
 void Project::initState(const QString& reason)
 {
@@ -456,7 +456,7 @@ void Project::sendEventsSelectionChanged()
     QCoreApplication::postEvent(this, e, Qt::NormalEventPriority);
 }
 
-#pragma mark Project File Management
+//#pragma mark Project File Management
 
 bool Project::load(const QString& path)
 {
@@ -775,7 +775,7 @@ bool Project::saveProjectToFile()
 // --------------------------------------------------------------------
 //     Project Settings
 // --------------------------------------------------------------------
-#pragma mark Settings
+//#pragma mark Settings
 bool Project::setSettings(const ProjectSettings& settings)
 {
     if (settings.mTmin >= settings.mTmax) {
@@ -917,7 +917,7 @@ void Project::showStudyPeriodWarning()
 // --------------------------------------------------------------------
 //     Events
 // --------------------------------------------------------------------
-#pragma mark Events
+//#pragma mark Events
 int Project::getUnusedEventId(const QJsonArray& events)
 {
     int id = -1;
@@ -1138,7 +1138,7 @@ void Project::mergeEvents(int eventFromId, int eventToId)
     pushProjectState(stateNext, tr("Events merged"), true);
 }
 
-#pragma mark Grouped actions on events
+//#pragma mark Grouped actions on events
 void Project::selectedEventsFromSelectedPhases()
 {
     const QJsonArray events = mState.value(STATE_EVENTS).toArray();
@@ -1229,7 +1229,7 @@ void Project::updateSelectedEventsDataMethod(Date::DataMethod method, const QStr
 // --------------------------------------------------------------------
 //     Dates
 // --------------------------------------------------------------------
-#pragma mark Dates
+//#pragma mark Dates
 int Project::getUnusedDateId(const QJsonArray& dates) const
 {
     int id = -1;
@@ -1681,7 +1681,7 @@ void Project::splitDate(const int eventId, const int dateId)
     pushProjectState(stateNext, tr("Dates splitted"), true);
 }
 
-#pragma mark Grouped actions on dates
+//#pragma mark Grouped actions on dates
 void Project::updateAllDataInSelectedEvents(const QHash<QString, QVariant>& groupedAction)
 {
     QJsonObject stateNext = mState;
@@ -1711,7 +1711,7 @@ void Project::updateAllDataInSelectedEvents(const QHash<QString, QVariant>& grou
     pushProjectState(stateNext, tr("Grouped action applied : ") + groupedAction.value("title").toString(), true);
 }
 
-#pragma mark Phases
+//#pragma mark Phases
 void Project::createPhase()
 {
     if (studyPeriodIsValid()) {
@@ -2144,7 +2144,7 @@ QList<Phase*> Project::getAllPhasesTo(Phase* phase)
     return phasesTo;
 }*/
 
-#pragma mark Events constraints
+//#pragma mark Events constraints
 bool Project::isEventConstraintAllowed(const QJsonObject& eventFrom, const QJsonObject& eventTo)
 {
     const QJsonArray constraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
@@ -2259,7 +2259,7 @@ int Project::getUnusedEventConstraintId(const QJsonArray& constraints)
     return id;
 }
 
-#pragma mark Phases constraints
+//#pragma mark Phases constraints
 bool Project::isPhaseConstraintAllowed(const QJsonObject& phaseFrom, const QJsonObject& phaseTo)
 {
     // TODO
@@ -2391,7 +2391,7 @@ int Project::getUnusedPhaseConstraintId(const QJsonArray& constraints)
 
 
 // -------
-#pragma mark export
+//#pragma mark export
 void Project::exportAsText()
 {
     /*QString currentDir = MainWindow::getInstance()->getCurrentPath();
@@ -2471,7 +2471,7 @@ void Project::exportAsText()
 // --------------------------------------------------------------------
 //     Project Run
 // --------------------------------------------------------------------
-#pragma mark Run Project
+//#pragma mark Run Project
 void Project::run()
 {
     // Check if project contains invalid dates, e.g. with no computable calibration curve

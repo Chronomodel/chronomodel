@@ -9,7 +9,7 @@
 #include <QtWidgets>
 
 
-#pragma mark constructor / destructor
+//#pragma mark constructor / destructor
 MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
 {
     setWindowTitle("ChronoModel");
@@ -88,7 +88,7 @@ MainWindow::~MainWindow()
     
 }
 
-#pragma mark Accessors
+//#pragma mark Accessors
 Project* MainWindow::getProject()
 {
     return mProject;
@@ -123,7 +123,7 @@ void MainWindow::setCurrentPath(const QString& path)
     mLastPath = path;
 }
 
-#pragma mark Actions & Menus
+//#pragma mark Actions & Menus
 void MainWindow::createActions()
 {
     //QWhatsThis::createAction();
@@ -397,7 +397,7 @@ void MainWindow::createToolBars()
 
 // -----------
 
-#pragma mark Project Management
+//#pragma mark Project Management
 
 void MainWindow::newProject()
 {
@@ -589,7 +589,7 @@ void MainWindow::updateProject()
     mProjectView->updateProject();
 }
 
-#pragma mark Settings & About
+//#pragma mark Settings & About
 void MainWindow::about()
 {
     AboutDialog dialog(qApp->activeWindow());
@@ -726,7 +726,7 @@ void MainWindow::setFont(const QFont &font)
 */
 }
 
-#pragma mark Language
+//#pragma mark Language
 void MainWindow::setLanguage(QAction* action)
 {
     QString lang = action->data().toString();
@@ -744,7 +744,7 @@ void MainWindow::setLanguage(QAction* action)
     }
 }
 
-#pragma mark Grouped Actions
+//#pragma mark Grouped Actions
 void MainWindow::selectedEventInSelectedPhases() {
     if (mProject)
         mProject->selectedEventsFromSelectedPhases();
@@ -826,7 +826,7 @@ void MainWindow::doGroupedAction()
     }
 }
 
-#pragma mark Events
+//#pragma mark Events
 /**
  * @todo Fix app close event called twice when updating with Qt >= 5.6
  */
@@ -885,7 +885,7 @@ void MainWindow::changeEvent(QEvent* event)
     
 }
 
-#pragma mark Settings
+//#pragma mark Settings
 void MainWindow::writeSettings()
 {
     mProjectView->writeSettings();

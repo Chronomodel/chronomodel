@@ -59,7 +59,7 @@ Ruler::~Ruler()
     
 }
 
-#pragma mark Areas
+//#pragma mark Areas
 void Ruler::clearAreas()
 {
     mAreas.clear();
@@ -76,7 +76,7 @@ void Ruler::addArea(double start, double end, const QColor& color)
     update();
 }
 
-#pragma mark Range & Zoom & Scroll & Current
+//#pragma mark Range & Zoom & Scroll & Current
 
 double Ruler::getRealValue()
 {
@@ -208,7 +208,7 @@ void Ruler::updateScroll()
     
  }
 
-#pragma mark Layout & Paint
+//#pragma mark Layout & Paint
 void Ruler::setFont(const QFont &font)
 {
     QWidget::setFont(font);

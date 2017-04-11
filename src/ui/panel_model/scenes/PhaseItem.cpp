@@ -28,7 +28,7 @@ PhaseItem::~PhaseItem()
     
 }
 
-#pragma mark Phase
+//#pragma mark Phase
 QJsonObject& PhaseItem::getPhase()
 {
     return mData;
@@ -100,7 +100,7 @@ void PhaseItem::setControlsVisible(const bool visible)
     mControlsVisible = visible;
 }
 
-#pragma mark Mouse events
+//#pragma mark Mouse events
 
 void PhaseItem::hoverEnterEvent(QGraphicsSceneHoverEvent* e)
 {

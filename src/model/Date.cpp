@@ -127,13 +127,13 @@ bool Date::isNull() const
 {
     return mData.isEmpty() || (mPlugin == nullptr);
 }
-#pragma mark Properties
+//#pragma mark Properties
 QColor Date::getEventColor() const
 {
     return randomColor();
 }
 
-#pragma mark JSON
+//#pragma mark JSON
 Date Date::fromJson(const QJsonObject& json)
 {
     Date date = Date();
@@ -724,7 +724,7 @@ void Date::updateWiggle()
     mWiggle.mX = mTheta.mX + mDelta;
 }
 
-#pragma mark CSV dates
+//#pragma mark CSV dates
 Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
 {
     Date date;
@@ -800,7 +800,7 @@ QStringList Date::toCSV(const QLocale &csvLocale) const
     return csv;
 }
 
-#pragma mark sampling ti function
+//#pragma mark sampling ti function
 void Date::autoSetTiSampler(const bool bSet)
 {
     // define sampling function

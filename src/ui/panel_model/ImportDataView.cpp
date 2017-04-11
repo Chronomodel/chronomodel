@@ -327,7 +327,7 @@ void ImportDataView::resizeEvent(QResizeEvent* e)
 
 // ------------------------------------------------------------------------------------
 
-#pragma mark Table
+//#pragma mark Table
 
 ImportDataTable::ImportDataTable(ImportDataView* importView, QWidget* parent):QTableWidget(parent),
 mImportView(importView)

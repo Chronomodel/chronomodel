@@ -22,7 +22,7 @@ mZoom(1.)
     mTempArrow->setVisible(false);
 
 }
-#pragma mark Setter & Getter
+//#pragma mark Setter & Getter
 void AbstractScene::setProject(Project* project)
 {
     mProject = project;        
@@ -85,7 +85,7 @@ void AbstractScene::updateConstraintsPos(AbstractItem* movedItem, const QPointF&
     }
 }
 
-#pragma mark Items events
+//#pragma mark Items events
 /**
  * @brief AbstractScene::itemClicked
  * @param item ie anEvent or a Phase
@@ -245,7 +245,7 @@ QRectF AbstractScene::specialItemsBoundingRect(QRectF r) const
     return rect;
 }
 
-#pragma mark Mouse events
+//#pragma mark Mouse events
 void AbstractScene::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 {
     if (mDrawingArrow) {
@@ -256,7 +256,7 @@ void AbstractScene::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
     QGraphicsScene::mouseMoveEvent(e);
 }
 
-#pragma mark Key events
+//#pragma mark Key events
 // Arrive quand on appuie sur une touche du clavier
 void AbstractScene::keyPressEvent(QKeyEvent* keyEvent)
 {

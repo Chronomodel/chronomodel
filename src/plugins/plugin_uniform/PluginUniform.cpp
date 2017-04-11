@@ -72,7 +72,7 @@ PluginFormAbstract* PluginUniform::getForm()
     PluginUniformForm* form = new PluginUniformForm(this);
     return form;
 }
-#pragma mark Convert old project versions
+//#pragma mark Convert old project versions
 QJsonObject PluginUniform::checkValuesCompatibility(const QJsonObject& values)
 {
     QJsonObject result = values;

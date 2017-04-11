@@ -4,7 +4,7 @@
 #include <QDebug>
 
 
-#pragma mark Constructor / Destructor
+//#pragma mark Constructor / Destructor
 
 GraphViewAbstract::GraphViewAbstract():
 mGraphWidth(50.), mGraphHeight(50),
@@ -89,7 +89,7 @@ void GraphViewAbstract::setMargins(const qreal aMarginLeft, const qreal aMarginR
 	mMarginBottom = aMarginBottom;
 }
 
-#pragma mark Values utilities
+//#pragma mark Values utilities
 /**
  * @brief GraphViewAbstract::getXForValue find a position on a graph for a Value in a table
  * @param aValue

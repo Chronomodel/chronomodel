@@ -75,7 +75,7 @@ void ProjectView::doProjectConnections(Project* project)
     mResultsView -> doProjectConnections(project);
 }
 
-#pragma mark Interface
+//#pragma mark Interface
 void ProjectView::resetInterface()
 {
     showModel();
@@ -87,7 +87,7 @@ void ProjectView::showHelp(bool show)
     mModelView->showHelp(show);
 }
 
-#pragma mark View Switch
+//#pragma mark View Switch
 void ProjectView::showModel()
 {
     mStack->setCurrentIndex(0);
@@ -146,7 +146,7 @@ void ProjectView::newPeriod()
     mModelView->modifyPeriod();
 }
 
-#pragma mark Update Results
+//#pragma mark Update Results
 
 void ProjectView:: applySettings(Model* model,const AppSettings* appSet)
 {
@@ -215,7 +215,7 @@ void ProjectView::updateResultsLog(const QString& log)
 }
 
 
-#pragma mark Read/Write settings
+//#pragma mark Read/Write settings
 void ProjectView::writeSettings()
 {
     mModelView->writeSettings();

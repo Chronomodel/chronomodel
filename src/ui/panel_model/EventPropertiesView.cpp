@@ -200,7 +200,7 @@ EventPropertiesView::~EventPropertiesView()
     
 }
 
-#pragma mark Event Managment
+//#pragma mark Event Managment
 void EventPropertiesView::setEvent(const QJsonObject& event)
 {
     mEvent = event;
@@ -270,7 +270,7 @@ const QJsonObject& EventPropertiesView::getEvent() const
     return mEvent;
 }
 
-#pragma mark Event Properties
+//#pragma mark Event Properties
 void EventPropertiesView::updateEventName()
 {
     QJsonObject event = mEvent;
@@ -294,7 +294,7 @@ void EventPropertiesView::updateEventMethod(int index)
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event method updated"));
 }
 
-#pragma mark Event Known Properties
+//#pragma mark Event Known Properties
 void EventPropertiesView::updateKnownType()
 {
     if((Event::Type)mEvent.value(STATE_EVENT_TYPE).toInt() == Event::eKnown)
@@ -405,7 +405,7 @@ void EventPropertiesView::updateKnownControls()
     mUniformGroup->setVisible(mKnownUniformRadio->isChecked());
 }
 
-#pragma mark Event Data
+//#pragma mark Event Data
 void EventPropertiesView::createDate()
 {
     if(!mEvent.isEmpty())
@@ -444,7 +444,7 @@ void EventPropertiesView::recycleDates()
     MainWindow::getInstance()->getProject()->recycleDates(mEvent.value(STATE_ID).toInt());
 }
 
-#pragma mark Merge / Split
+//#pragma mark Merge / Split
 void EventPropertiesView::updateCombineAvailability()
 {
     bool mergeable (false);
@@ -546,7 +546,7 @@ void EventPropertiesView::keyPressEvent(QKeyEvent* e)
 
 }
 
-#pragma mark Layout
+//#pragma mark Layout
 void EventPropertiesView::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);

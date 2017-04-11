@@ -403,7 +403,7 @@ QString stringWithAppSettings(const double valueToFormat, const bool forCSV)
    }
 }
 
-#pragma mark CSV File
+//#pragma mark CSV File
 bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep, const bool withDateFormat)
 {
     QFile file(filePath);

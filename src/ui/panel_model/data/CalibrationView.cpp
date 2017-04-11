@@ -175,7 +175,7 @@ void CalibrationView::setDate(const QJsonObject& date)
         mStartEdit->setText(stringWithAppSettings(mTminDisplay, false));
         mEndEdit->setText(stringWithAppSettings(mTmaxDisplay, false));
 
-        if (isinf(-mTminDisplay) || isinf(mTmaxDisplay))
+        if (std::isinf(-mTminDisplay) || std::isinf(mTmaxDisplay))
             throw("CalibrationView::setDate "+mDate.mPlugin->getName()+ mDate.mCalibration->mName + mDate.mCalibration->mTmin+mDate.mCalibration->mTmax);
 
         updateScroll();
@@ -376,15 +376,14 @@ void CalibrationView::updateZoom()
             posProp = 1;
 
         // Set scroll to correct position
-        type_data pos (0.);
+        /*type_data pos (0.);
         type_data rangeAfter = (type_data) 10;
         if (rangeAfter > 0)
             pos = floor(posProp * rangeAfter);
-
+        */
         
     } else
-
-    updateScroll();
+        updateScroll();
 }
 
 void CalibrationView::updateScroll()
@@ -428,7 +427,7 @@ void CalibrationView::updateScroll()
 
     // usefull when we set mStartEdit and mEndEdit at the begin of the display,
     // after a call to setDate
-    if (isinf(-mTminDisplay) || isinf(mTmaxDisplay))
+    if (std::isinf(-mTminDisplay) || std::isinf(mTmaxDisplay))
         return;
     else
         updateGraphs();

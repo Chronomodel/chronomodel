@@ -922,7 +922,7 @@ bool Model::isValid()
     return true;
 }
 
-#pragma mark Generate model data
+//#pragma mark Generate model data
 void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 {
 #ifdef DEBUG
@@ -1275,7 +1275,7 @@ void Model::generateHPD(const double thresh)
 
 }
 
-#pragma mark Clear model data
+//#pragma mark Clear model data
 void Model::clearPosteriorDensities()
 {
     QList<Event*>::iterator iterEvent = mEvents.begin();
@@ -1339,14 +1339,11 @@ void Model::clearCredibilityAndHPD()
 
 void Model::clearTraces()
 {
-   // QList<Event*>::iterator iterEvent = mEvents.begin();
-   // while (iterEvent!=mEvents.cend()) {
     for (auto ev : mEvents) {
-        for (Date date: ev->mDates) {
+        for (Date date : ev->mDates) {
             date.reset();
         }
         ev->reset();
-
     }
 
     for (auto ph : mPhases) {
@@ -1357,7 +1354,7 @@ void Model::clearTraces()
 }
 
 
-#pragma mark Date files read / write
+ //#pragma mark Date files read / write
 /** @Brief Save .res file, the result of computation and compress it
  *
  * */

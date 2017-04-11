@@ -10,7 +10,7 @@
 #include <QPointer>
 
 
-#pragma mark Constructor / Destructor
+//#pragma mark Constructor / Destructor
 
 GraphViewResults::GraphViewResults(QWidget *parent):QWidget(parent),
 mCurrentTypeGraph(ePostDistrib),
@@ -174,7 +174,7 @@ void GraphViewResults::setMainColor(const QColor& color)
     mMainColor = color;
     update();
 }
-#pragma mark Export Image & Data
+//#pragma mark Export Image & Data
 
 
 void GraphViewResults::saveAsImage()
@@ -367,7 +367,7 @@ void GraphViewResults::resizeEvent(QResizeEvent* e)
     updateLayout();
 }
 
-#pragma mark Layout
+//#pragma mark Layout
 
 void GraphViewResults::updateLayout()
 {
