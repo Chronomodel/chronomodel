@@ -40,19 +40,19 @@ ${QT_BIN_PATH}/lrelease $ROOT_PATH/Chronomodel.pro
 # -------------------------------------------------------
 #	Create XCode project in Release mode (.pro file is in debug mode by default)
 # -------------------------------------------------------
-#${QT_BIN_PATH}/qmake -spec macx-xcode "CONFIG+=release" $ROOT_PATH/Chronomodel.pro
+${QT_BIN_PATH}/qmake -spec macx-xcode "CONFIG+=release" $ROOT_PATH/Chronomodel.pro
 
 # -------------------------------------------------------
 #	Compile XCode project
 #	Important note : important post-compilation steps are defined in the .pro file:
 #	copying resource files as license, icons...
 # ------------------------------------------------------
-#xcodebuild -configuration Release ONLY_ACTIVE_ARCH=NO | grep -A 5 error
+xcodebuild -configuration Release ONLY_ACTIVE_ARCH=NO | grep -A 5 error
 
 # -------------------------------------------------------
 #	Qt utility "macdeployqt" : deploy Chronomodel's Qt dependencies inside the bundle
 # ------------------------------------------------------
-#${QT_BIN_PATH}/macdeployqt $BUNDLE_PATH
+${QT_BIN_PATH}/macdeployqt $BUNDLE_PATH
 
 # -------------------------------------------------------
 #	Create DMG

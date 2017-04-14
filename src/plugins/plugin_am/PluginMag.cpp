@@ -340,6 +340,7 @@ QPair<double,double> PluginMag::getTminTmaxRefsCurve(const QJsonObject& data) co
 GraphViewRefAbstract* PluginMag::getGraphViewRef()
 {
     mRefGraph = new PluginMagRefView();
+    mRefGraph->setMouseTracking(true);
     return mRefGraph;
 }
 void PluginMag::deleteGraphViewRef(GraphViewRefAbstract* graph)

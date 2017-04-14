@@ -13,7 +13,7 @@ CalibrationDrawing::CalibrationDrawing(QWidget *parent) : QWidget(parent),
 
 {
     mTitle = new QLabel(this);
-
+    setMouseTracking(true);
     mRefTitle = new QLabel(this);
     mRefComment = new QLabel(this);
   //  mRefGraphView = new GraphViewRefAbstract(this);
@@ -52,13 +52,18 @@ void CalibrationDrawing::showMarker()
 void CalibrationDrawing::setRefGraph(GraphViewRefAbstract* refGraph)
 {
       mRefGraphView = refGraph;
-      mRefGraphView->setParent(this);
+      if (mRefGraphView) {
+        mRefGraphView->setParent(this);
+        mRefGraphView->setMouseTracking(true);
+      }
 }
 
 void CalibrationDrawing::setCalibGraph(GraphView* calibGraph)
 {
     mCalibGraph = calibGraph;
     mCalibGraph->setParent(this);
+    mCalibGraph->setMouseTracking(true);
+    mCalibGraph->setTipXLab("t");
 }
 
 void CalibrationDrawing::paintEvent(QPaintEvent* e)

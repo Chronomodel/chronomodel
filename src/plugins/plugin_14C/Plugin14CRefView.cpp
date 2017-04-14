@@ -20,7 +20,8 @@ Plugin14CRefView::Plugin14CRefView(QWidget* parent):GraphViewRefAbstract(parent)
     mGraph->setTipYLab("age");
     mGraph->autoAdjustYScale(true);
     mGraph->setMarginBottom(mGraph->font().pointSizeF() + 10. );
-
+    setMouseTracking(true);
+    mGraph->setMouseTracking(true);
 
 }
 

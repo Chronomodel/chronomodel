@@ -38,6 +38,9 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
 {
 
     mDrawing = new CalibrationDrawing(this);
+    mDrawing->setMouseTracking(true);
+    setMouseTracking(true);
+
 
     mImageSaveBut = new Button(tr("Save"), this);
     mImageSaveBut->setIcon(QIcon(":picture_save.png"));
@@ -101,6 +104,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mCalibGraph->setRendering(GraphView::eHD);
     mCalibGraph->setYAxisMode(GraphView::eHidden);
     mCalibGraph->setXAxisMode(GraphView::eAllTicks);
+    mCalibGraph->setMouseTracking(true);
 
     mResultsText = new QTextEdit(this);
     mResultsText->setFrameStyle(QFrame::HLine);
@@ -545,7 +549,7 @@ void CalibrationView::updateLayout()
     y += mResultsClipBut->height();
 
 
-    const int separatorHeight (height()- y - 6*textHeight - 4* verticalSpacer);
+    const int separatorHeight (height()- y - 6*textHeight - 6* verticalSpacer);
     frameSeparator->setGeometry(0, y, mButtonWidth, separatorHeight);
     y += frameSeparator->height() + verticalSpacer;
 
@@ -556,7 +560,7 @@ void CalibrationView::updateLayout()
     mEndLab->setGeometry(0, y, mButtonWidth, textHeight);
     y += mEndLab->height();
     mEndEdit->setGeometry(3, y, mButtonWidth-6, textHeight);
-    y += mEndEdit->height() + verticalSpacer;
+    y += mEndEdit->height() + 3*verticalSpacer;
     mHPDLab->setGeometry(0, y, mButtonWidth, textHeight);
     y += mHPDLab->height();
     mHPDEdit->setGeometry(3, y, mButtonWidth-6, textHeight);

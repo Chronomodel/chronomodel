@@ -75,7 +75,7 @@ macx{
 	# to determine which version of the macOS SDK is installed with xcode? type on a terminal
 	# xcodebuild -showsdks
     QMAKE_MAC_SDK = macosx10.12
-	
+        QMAKESPEC = win32-msvc2015
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
 	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
 
@@ -88,6 +88,7 @@ macx{
 }
 win32{
 	# Resource file (Windows only)
+QMAKESPEC = win32-msvc2015
         RC_FILE += Chronomodel.rc
 	RC_ICONS += $$PRO_PATH/icon/Chronomodel.ico
 QT_FATAL_WARNING = 1

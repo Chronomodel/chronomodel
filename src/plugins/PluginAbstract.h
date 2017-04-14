@@ -106,7 +106,6 @@ public:
 
     void loadRefDatas()
     {
-        //const QString path = QDir::currentPath();
         const QString calibPath = getRefsPath();
         mRefCurves.clear();
         QDir calibDir(calibPath);
