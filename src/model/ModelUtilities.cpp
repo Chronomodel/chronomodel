@@ -585,7 +585,7 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
             //text += "<br>";
 
             QString result;
-            if (isinf(p->getFormatedGapRange().first) || isinf(p->getFormatedGapRange().second))
+            if (std::isinf(p->getFormatedGapRange().first) || std::isinf(p->getFormatedGapRange().second))
                result = QObject::tr("No Gap") ;
 
             else

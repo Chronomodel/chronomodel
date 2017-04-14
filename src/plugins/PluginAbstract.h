@@ -45,7 +45,12 @@ public:
     virtual ~PluginAbstract(){}
 
     virtual long double getLikelihood(const double& t, const QJsonObject& data) = 0;
-    virtual QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data){return QPair<long double, long double>();}
+    virtual QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data)
+    {
+        (void) t;
+        (void) data;
+        return QPair<long double, long double>();
+    }
     virtual bool withLikelihoodArg() {return false;}
 
     virtual QString getName() const = 0;
@@ -65,12 +70,17 @@ public:
      * @brief getDateDesc is the description of the Data showing in the properties of Event, in the list of data
      */
     virtual QString getDateDesc(const Date* date) const = 0;
-    virtual bool areDatesMergeable(const QJsonArray& dates) {return false;}
-    virtual QJsonObject mergeDates(const QJsonArray& dates) {QJsonObject ret; ret["error"] = tr("Cannot combine dates of type ") + getName(); return ret;}
-    
-    QColor getColor() const{
-        return mColor;
+    virtual bool areDatesMergeable(const QJsonArray& dates) { (void) dates; return false;}
+    virtual QJsonObject mergeDates(const QJsonArray& dates)
+    {
+        (void) dates;
+        QJsonObject ret;
+        ret["error"] = tr("Cannot combine dates of type ") + getName();
+        return ret;
     }
+    
+    QColor getColor() const {return mColor;}
+
     QString getId() const{
         QString name = getName().simplified().toLower();
         name = name.replace(" ", "_");
@@ -80,14 +90,16 @@ public:
     // Function to check if data values are ok : depending on the application version, plugin data values may change.
     // eg. : a new parameter may be added to 14C plugin, ...
     virtual QJsonObject checkValuesCompatibility(const QJsonObject& values){return values;}
-    virtual bool isDateValid(const QJsonObject& data, const ProjectSettings& settings){return true;}
+    virtual bool isDateValid(const QJsonObject& data, const ProjectSettings& settings)
+    {
+        (void)data;
+        (void) settings;
+        return true;
+    }
     
     virtual PluginFormAbstract* getForm() = 0;
     virtual GraphViewRefAbstract* getGraphViewRef() = 0;
-    virtual void deleteGraphViewRef(GraphViewRefAbstract* graph)
-    {
-        graph = nullptr;
-    }
+    virtual void deleteGraphViewRef(GraphViewRefAbstract* graph ) {(void) graph ;}
     virtual PluginSettingsViewAbstract* getSettingsView() = 0;
     virtual QList<QHash<QString, QVariant>> getGroupedActions() {return QList<QHash<QString, QVariant>>();}
     

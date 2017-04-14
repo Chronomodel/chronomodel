@@ -15,7 +15,10 @@ class PluginFormAbstract: public QGroupBox
     Q_OBJECT
 public:
     PluginFormAbstract(PluginAbstract* plugin, const QString& title, QWidget* parent = 0, Qt::WindowFlags flags = 0):QGroupBox(/*title, */parent),
-    mPlugin(plugin){
+    mPlugin(plugin)
+    {
+        (void) title;
+        (void) flags;
         setFlat(true);
 
     }

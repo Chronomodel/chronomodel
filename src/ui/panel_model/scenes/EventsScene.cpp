@@ -51,7 +51,7 @@ EventItem* EventsScene::findEventItemWithJsonId(const int id)
 }
 
 
-#pragma mark Actions
+//#pragma mark Actions
 void EventsScene::deleteSelectedItems()
 {
    qDebug()<<"EventsScene::deleteSelectedItems";
@@ -111,7 +111,7 @@ void EventsScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
 }
 
 
-#pragma mark Help Bubble
+//#pragma mark Help Bubble
 void EventsScene::updateHelp()
 {
     QString text;
@@ -162,7 +162,7 @@ void EventsScene::showHelp(bool show)
     mHelpView->setVisible(show);
 }
 
-#pragma mark Project Update
+//#pragma mark Project Update
 void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool storeUndoCommand)
 {
     qDebug()<<"EventsScene::sendUpdateProject";
@@ -763,7 +763,7 @@ void EventsScene::centerOnEvent(int eventId)
     }
 }
 
-#pragma mark Utilities
+//#pragma mark Utilities
 AbstractItem* EventsScene::currentItem()
 {
     QList<QGraphicsItem*> selItems = selectedItems();
@@ -835,7 +835,7 @@ AbstractItem* EventsScene::collidingItem(QGraphicsItem* item)
     return 0;
 }
 
-#pragma mark Dates Items
+//#pragma mark Dates Items
 void EventsScene::dateMoved(DateItem* dateItem, QGraphicsSceneMouseEvent* e)
 {
     Q_UNUSED(e);
@@ -936,7 +936,7 @@ void EventsScene::dateReleased(DateItem* dateItem, QGraphicsSceneMouseEvent* e)
 // ----------------------------------------------------------------------------------------
 
 
-#pragma mark Item mouse events
+//#pragma mark Item mouse events
 
 /**
  * @brief happen when the mouse come into a Event, it's an overwrite of AbstractScene::itemEntered
@@ -1035,7 +1035,7 @@ void EventsScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e
 
 }
 
-#pragma mark Key events
+//#pragma mark Key events
 /**
  * @brief EventsScene::keyPressEvent overwrtite AbstractScene::keyPressEvent
  * @param keyEvent
@@ -1127,7 +1127,7 @@ void EventsScene::keyReleaseEvent(QKeyEvent* keyEvent)
 // -----------------------------------------------------------
 //  The following function are about drag & drop
 // -----------------------------------------------------------
-#pragma mark Drag & Drop
+//#pragma mark Drag & Drop
 void EventsScene::dragMoveEvent(QGraphicsSceneDragDropEvent* e)
 {
     for (int i=0; i<mItems.size(); ++i) {

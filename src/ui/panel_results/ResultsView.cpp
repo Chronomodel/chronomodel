@@ -36,7 +36,7 @@
 #include <iostream>
 #include <QtSvg>
 
-#pragma mark Constructor & Destructor
+//#pragma mark Constructor & Destructor
 ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mResultMaxVariance(1000.),
 mHasPhases(false),
@@ -555,7 +555,7 @@ void ResultsView::doProjectConnections(Project* project)
 
 }
 
-#pragma mark Paint & Resize
+//#pragma mark Paint & Resize
 void ResultsView::paintEvent(QPaintEvent* )
 {
     //qDebug()<< "ResultsView::paintEvent()";
@@ -667,7 +667,7 @@ void ResultsView::resizeEvent(QResizeEvent* e)
 
 
 
-#pragma mark Options & Layout (Chained Functions)
+//#pragma mark Options & Layout (Chained Functions)
 
 /**
  * @brief ResultsView::updateControls set controls according to the differents tabs positions.  emit controlsUpdated()
@@ -2279,7 +2279,7 @@ void ResultsView::updateScaleY(int value)
 }
 
 
-#pragma mark Display options
+//#pragma mark Display options
 /**
  * @brief ResultsView::updateFont only on graph
  */

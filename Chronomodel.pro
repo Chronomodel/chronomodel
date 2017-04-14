@@ -52,7 +52,7 @@ RESOURCES = Chronomodel.qrc
 
 # Compilation warning flags
 # QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter # invalid option for MSVC2015
-QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter
+# QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter
 
 
 #########################################
@@ -62,7 +62,7 @@ QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter
 # In the future we'll need to increase to C++17
 # which offered namespace std::experimental::parallel;
 #########################################
-CONFIG += C++11
+CONFIG += c++11
 
 #########################################
 # MAC specific settings
@@ -153,7 +153,7 @@ macx{
 	#QMAKE_POST_LINK += install_name_tool -change old/path @executable_path/../Frameworks/libfftw3f.3.dylib $$PRO_PATH/Release/Chronomodel.app/Contents/MacOS/Chronomodel;
 }
 win32{
-	INCLUDEPATH += lib/FFTW
+        INCLUDEPATH += lib/FFTW
         #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3-3
         LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win64" -lfftw3-3 # to compile with a x64 machine
 }

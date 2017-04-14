@@ -48,7 +48,7 @@ void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
     QGraphicsObject::mousePressEvent(e);
 }
 
-#pragma mark Event Managment
+//#pragma mark Event Managment
 QJsonObject& EventItem::getEvent()
 {
     return mData;
@@ -226,7 +226,7 @@ void EventItem::setDatesVisible(bool visible)
     
 }
 
-#pragma mark Events
+//#pragma mark Events
 void EventItem::updateItemPosition(const QPointF& pos)
 {
     mData[STATE_ITEM_X] = pos.x();
@@ -380,7 +380,7 @@ QJsonArray EventItem::getPhases() const
     return phases;
 }
 
-#pragma mark Geometry
+//#pragma mark Geometry
 QRectF EventItem::boundingRect() const
 {
     return QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());

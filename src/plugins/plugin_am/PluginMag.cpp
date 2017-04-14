@@ -24,7 +24,7 @@ PluginMag::~PluginMag()
         delete mRefGraph;
 }
 
-#pragma mark Likelihood
+//#pragma mark Likelihood
 long double PluginMag::getLikelihood(const double& t, const QJsonObject& data)
 {
     QPair<long double, long double > result = getLikelihoodArg(t, data);
@@ -67,7 +67,7 @@ QPair<long double, long double> PluginMag::getLikelihoodArg(const double& t, con
     return qMakePair(variance, exponent);
 }
 
-#pragma mark Properties
+//#pragma mark Properties
 QString PluginMag::getName() const
 {
     return QString("AM");
@@ -141,7 +141,7 @@ QString PluginMag::getDateDesc(const Date* date) const
     return result;
 }
 
-#pragma mark CSV
+//#pragma mark CSV
 QStringList PluginMag::csvColumns() const
 {
     QStringList cols;
@@ -161,7 +161,7 @@ PluginFormAbstract* PluginMag::getForm()
     PluginMagForm* form = new PluginMagForm(this);
     return form;
 }
-#pragma mark Convert old project versions
+//#pragma mark Convert old project versions
 QJsonObject PluginMag::checkValuesCompatibility(const QJsonObject& values)
 {
     QJsonObject result = values;
@@ -209,7 +209,7 @@ QStringList PluginMag::toCSV(const QJsonObject& data, const QLocale& csvLocale) 
     return list;
 }
 
-#pragma mark Reference curves (files)
+//#pragma mark Reference curves (files)
 QString PluginMag::getRefExt() const
 {
     return "ref";
@@ -310,7 +310,7 @@ RefCurve PluginMag::loadRefFile(QFileInfo refFile)
     return curve;
 }
 
-#pragma mark Reference Values & Errors
+//#pragma mark Reference Values & Errors
 double PluginMag::getRefValueAt(const QJsonObject& data, const double& t)
 {
     QString curveName = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
@@ -336,7 +336,7 @@ QPair<double,double> PluginMag::getTminTmaxRefsCurve(const QJsonObject& data) co
     return qMakePair<double,double>(tmin,tmax);
 }
 
-#pragma mark Settings / Input Form / RefView
+//#pragma mark Settings / Input Form / RefView
 GraphViewRefAbstract* PluginMag::getGraphViewRef()
 {
     mRefGraph = new PluginMagRefView();
@@ -355,7 +355,7 @@ PluginSettingsViewAbstract* PluginMag::getSettingsView()
     return new PluginMagSettingsView(this);
 }
 
-#pragma mark Date validity
+//#pragma mark Date validity
 bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
 {
     // check valid curve

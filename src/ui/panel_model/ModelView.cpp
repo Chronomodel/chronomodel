@@ -26,7 +26,7 @@
 #include <QRectF>
 #include <assert.h>
 
-#pragma mark constructor
+//#pragma mark constructor
 ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mEventsScene(nullptr),
 mCurSearchIdx(0),
@@ -690,7 +690,7 @@ void ModelView::searchEvent()
 
 }
 
-#pragma mark Right animation
+//#pragma mark Right animation
 void ModelView::showProperties()
 {
    updateLayout();
@@ -800,7 +800,7 @@ void ModelView::prepareNextSlide()
     target = nullptr;
 }
 
-#pragma mark Painting
+//#pragma mark Painting
 void ModelView::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
@@ -812,7 +812,7 @@ void ModelView::paintEvent(QPaintEvent* e)
 
 }
 
-#pragma mark Layout
+//#pragma mark Layout
 void ModelView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
@@ -928,7 +928,7 @@ void ModelView::updateLayout()
     update();
 }
 
-#pragma mark Zoom
+//#pragma mark Zoom
 void ModelView::updateEventsZoom(const double prop)
 {
     const qreal scale = prop;
@@ -947,7 +947,7 @@ void ModelView::updatePhasesZoom(const double prop)
     mPhasesScene->adaptItemsForZoom(scale);
 }
 
-#pragma mark Export images
+//#pragma mark Export images
 void ModelView::exportEventsScene()
 {
     exportSceneImage(mEventsScene);
@@ -970,7 +970,7 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
 }
 
-#pragma mark Calibration
+//#pragma mark Calibration
 void ModelView::updateCalibration(const QJsonObject& date)
 {
     // A date has been double-clicked => update CalibrationView only if the date is not null
@@ -998,7 +998,7 @@ void ModelView::showCalibration(bool show)
 
 }
 
-#pragma mark Mouse Events
+//#pragma mark Mouse Events
 void ModelView::mousePressEvent(QMouseEvent* e)
 {
     if (mHandlerRect.contains(e->pos()))

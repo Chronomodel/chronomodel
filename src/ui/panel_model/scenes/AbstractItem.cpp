@@ -62,7 +62,7 @@ void AbstractItem::setCurrentInData(const bool current)
 {
     mData[STATE_IS_CURRENT] = current;
 }
-#pragma mark Events
+//#pragma mark Events
 void AbstractItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
     qDebug()<<"AbstractItem::mousePressEvent__________??";

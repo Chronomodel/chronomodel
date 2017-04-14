@@ -190,7 +190,7 @@ GraphView::~GraphView()
 // ------------------------------------------------------
 //  Zoom X
 // ------------------------------------------------------
-#pragma mark Zoom X
+//#pragma mark Zoom X
 void GraphView::zoomX(const type_data min, const type_data max)
 {
     if (mCurrentMinX != min || mCurrentMaxX || max) {
@@ -443,7 +443,7 @@ void GraphView::setFormatFunctY(FormatFunc f){
 /* ------------------------------------------------------
  Curves & Zones
  ------------------------------------------------------ */
-#pragma mark Curves & Zones
+//#pragma mark Curves & Zones
 
 void GraphView::addCurve(const GraphCurve& curve)
 {
@@ -518,7 +518,7 @@ void GraphView::removeAllZones()
     repaintGraph(false);
 }
 
-#pragma mark Mouse events & Tool Tip
+//#pragma mark Mouse events & Tool Tip
 void GraphView::enterEvent(QEvent* e)
 {
     Q_UNUSED(e);
@@ -586,7 +586,7 @@ void GraphView::setTipYLab(const QString& lab)
     mTipYLab = lab =="" ? "":  lab + " = ";
 }
 
-#pragma mark Resize & Paint
+//#pragma mark Resize & Paint
 
 #if GRAPH_OPENGL
 void GraphView::initializeGL()
@@ -1210,7 +1210,7 @@ void GraphView::drawCurves(QPainter& painter)
     painter.restore();
 }
 
-#pragma mark Save & Export
+//#pragma mark Save & Export
 
 /**
  * @brief Export a density with locale setting and separator and specific step
@@ -1249,7 +1249,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
                 // 1 -Create the header
                 list << curve.mName;
                 // 2 - Find x Min and x Max period, on all curve, we suppose Qmap is order
-                if ( isinf(xMin) ) {// firstCurveVisible) {
+                if ( std::isinf(xMin) ) {// firstCurveVisible) {
                     xMin = curve.mData.firstKey();
                     xMax = curve.mData.lastKey();
                 } else {
@@ -1258,7 +1258,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
                 }
             } else continue;
         }
-        if (isinf(xMin) || isinf(xMax))
+        if (std::isinf(xMin) || std::isinf(xMax))
             return;
 
         rows<<list;

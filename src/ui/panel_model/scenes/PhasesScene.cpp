@@ -18,7 +18,7 @@ PhasesScene::~PhasesScene()
     
 }
 
-#pragma mark Actions
+//#pragma mark Actions
 void PhasesScene::deleteSelectedItems()
 {
     mProject->deleteSelectedPhases();
@@ -103,7 +103,7 @@ void PhasesScene::setShowAllEvents(const bool show)
     update();
 }
 
-#pragma mark Project Update
+//#pragma mark Project Update
 void PhasesScene::sendUpdateProject(const QString& reason, bool notify, bool storeUndoCommand)
 {
     qDebug()<<"PhasesScene::sendUpdateProject "<<reason<<notify<<storeUndoCommand;
@@ -377,7 +377,7 @@ void PhasesScene::clean()
 }
 
 
-#pragma mark Selection & Current
+//#pragma mark Selection & Current
 void PhasesScene::updateStateSelectionFromItem()
 {
     qDebug()<<"PhasesScene::updateStateSelectionFromItem";
@@ -437,7 +437,7 @@ void PhasesScene::adaptItemsForZoom(const double prop)
     }
 }
 
-#pragma mark Utilities
+//#pragma mark Utilities
 PhaseItem* PhasesScene::currentPhase() const
 {
     QList<QGraphicsItem*> items = selectedItems();
@@ -471,7 +471,7 @@ AbstractItem* PhasesScene::collidingItem(QGraphicsItem* item)
 }
 
 
-#pragma mark Phase Items Events
+//#pragma mark Phase Items Events
 bool PhasesScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
 {
     Q_UNUSED(e);
@@ -556,7 +556,7 @@ void PhasesScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e
 }
 
 
-#pragma mark Check state
+//#pragma mark Check state
 /*void PhasesScene::updateCheckedPhases()
 {
     QJsonObject state = mProject->state();
