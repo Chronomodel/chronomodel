@@ -270,8 +270,10 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
         if (dataSrc.size()>0) {
             // if sigma is null and there are several values, it means: this is the same
             // value. It can appear with a bound fixed
-            result.insert(dataSrc.at(0)+tmin, 1.) ;
-            qDebug()<<"MetropolisVariable::generateHisto result = "<< (dataSrc.at(0)+tmin);
+            //result.insert(dataSrc.at(0)+tmin, 1.) ;
+            result.insert(dataSrc.at(0), 1.) ;
+            //qDebug()<<"MetropolisVariable::generateHisto result = "<< (dataSrc.at(0)+tmin);
+            qDebug()<<"MetropolisVariable::generateHisto result = "<< (dataSrc.at(0));
         }
         return result;
     }
