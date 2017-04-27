@@ -12,8 +12,9 @@ CalibrationDrawing::CalibrationDrawing(QWidget *parent) : QWidget(parent),
     mFont (parent->font())
 
 {
-    mTitle = new QLabel(this);
     setMouseTracking(true);
+    mTitle = new QLabel(this);
+
     mRefTitle = new QLabel(this);
     mRefComment = new QLabel(this);
   //  mRefGraphView = new GraphViewRefAbstract(this);
@@ -25,7 +26,7 @@ CalibrationDrawing::CalibrationDrawing(QWidget *parent) : QWidget(parent),
     mMarkerX = new Marker(this);
     mMarkerY = new Marker(this);
 
-    setMouseTracking(true);
+
 }
 
 CalibrationDrawing::~CalibrationDrawing()
@@ -37,6 +38,7 @@ void CalibrationDrawing::hideMarker()
 {
     mMarkerX->hideMarker();
     mMarkerY->hideMarker();
+
 }
 
 void CalibrationDrawing::showMarker()
@@ -47,6 +49,7 @@ void CalibrationDrawing::showMarker()
     mMarkerY->showMarker();
     mMarkerX->raise();
     mMarkerY->raise();
+
 }
 
 void CalibrationDrawing::setRefGraph(GraphViewRefAbstract* refGraph)
@@ -55,7 +58,13 @@ void CalibrationDrawing::setRefGraph(GraphViewRefAbstract* refGraph)
       if (mRefGraphView) {
         mRefGraphView->setParent(this);
         mRefGraphView->setMouseTracking(true);
+        if (mRefGraphView->mGraph) {
+            mRefGraphView->mGraph->setMouseTracking(true);
+            mRefGraphView->mGraph->setTipXLab("t Ref");
+            mRefGraphView->update();
+        }
       }
+  setMouseTracking(true);
 }
 
 void CalibrationDrawing::setCalibGraph(GraphView* calibGraph)
@@ -63,7 +72,8 @@ void CalibrationDrawing::setCalibGraph(GraphView* calibGraph)
     mCalibGraph = calibGraph;
     mCalibGraph->setParent(this);
     mCalibGraph->setMouseTracking(true);
-    mCalibGraph->setTipXLab("t");
+    mCalibGraph->setTipXLab("t Calib");
+
 }
 
 void CalibrationDrawing::paintEvent(QPaintEvent* e)
@@ -123,6 +133,12 @@ void CalibrationDrawing::updateLayout()
     if (mRefGraphView) {
         mRefGraphView->setGeometry(0, mRefComment->y() + mRefComment->height() + mVerticalSpacer, width(), refH);
         mRefGraphView->setMarginRight(marginRight);
+        if (mRefGraphView->mGraph) {
+            //mRefGraphView->setParent(this);
+            mRefGraphView->mGraph->setMouseTracking(true);
+            mRefGraphView->mGraph->setTipXLab("t Ref");
+
+        }
 
         mCalibTitle->setGeometry(20,  mRefGraphView->y() + mRefGraphView->height() + mVerticalSpacer, fmTitle.width(mCalibTitle->text()), fmTitle.height());
 
@@ -143,8 +159,19 @@ void CalibrationDrawing::updateLayout()
 
 }
 
+void CalibrationDrawing::setMouseTracking(bool enable)
+{
+    QWidget::setMouseTracking(enable);
+    if (mCalibGraph)
+        mCalibGraph->setMouseTracking(enable);
+    if (mRefGraphView)
+        mRefGraphView->setMouseTracking(enable);
+
+}
+
 void CalibrationDrawing::mouseMoveEvent(QMouseEvent* e)
 {
+
     const int x ( qBound(0, e->pos().x(), width()) );
 
     const int y ( qBound(0, e->pos().y(), height()) );

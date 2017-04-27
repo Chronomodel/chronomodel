@@ -30,6 +30,9 @@ public:
     void setFont(const QFont& font) { mFont = font; update();}
     void hideMarker();
     void showMarker();
+
+    void setMouseTracking(bool enable);
+
     virtual QFont font() const {return mFont;}
 
 private:

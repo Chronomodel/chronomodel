@@ -26,9 +26,6 @@
 
 
 
-
-
-
 CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
     mRefGraphView(nullptr),
     mResultsHeight(90),
@@ -125,6 +122,8 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     connect(mHPDEdit, &QLineEdit::textEdited, this, &CalibrationView::updateGraphs);
     connect(mImageSaveBut, &Button::clicked, this, &CalibrationView::exportImage);
     connect(mResultsClipBut, &Button::clicked, this, &CalibrationView::copyText);
+    connect(mImageClipBut, &Button::clicked, this, &CalibrationView::copyImage);
+
 
     setVisible(false);
 }
@@ -277,7 +276,7 @@ void CalibrationView::updateGraphs()
            // mCalibGraph->setVisible(true);
             mCalibGraph->setMarginBottom(mCalibGraph->font().pointSizeF() + 10.);
 
-            mCalibGraph->setTipXLab("t");
+         //   mCalibGraph->setTipXLab("t"); // don't work
 
             QString input = mHPDEdit->text();
             mHPDEdit->validator()->fixup(input);
@@ -342,6 +341,7 @@ void CalibrationView::updateGraphs()
 
         }
         mDrawing->setRefGraph(mRefGraphView);
+
         // ------------------------------------------------------------
         //  Labels
         // ------------------------------------------------------------
@@ -449,10 +449,16 @@ void CalibrationView::exportImage()
     mDrawing->showMarker();
 
 }
+void CalibrationView::copyImage()
+{
+    mDrawing->hideMarker();
+    QApplication::clipboard()->setPixmap(mDrawing->grab());
+    mDrawing->showMarker();
 
+}
 void CalibrationView::copyText()
 {
-     QClipboard *p_Clipboard = QApplication::clipboard();
+     //QClipboard *p_Clipboard = QApplication::clipboard();
     //str.remove(QRegExp("<[^>]*>"));
     //p_Clipboard->setText(mResultsText->text().simplified());
     /*QTextDocument doc;
@@ -460,7 +466,7 @@ void CalibrationView::copyText()
     p_Clipboard->setText(doc.toPlainText());
      */
     QString text = mDate.mName + " (" + mDate.mPlugin->getName() + ")" +"<br>" + mDate.getDesc() + "<br>" + mResultsText->toPlainText();// ->text();
-    p_Clipboard->setText(text.replace("<br>", "\r"));
+    QApplication::clipboard()->setText(text.replace("<br>", "\r"));
    
 }
 
@@ -517,6 +523,7 @@ void CalibrationView::paintEvent(QPaintEvent* e)
     p.fillRect(QRect(graphLeft, 0, graphWidth, height()), Qt::white);
 
     updateLayout();
+
 }
 
 void CalibrationView::updateLayout()
@@ -568,9 +575,9 @@ void CalibrationView::updateLayout()
     const int graphWidth = width() - graphLeft;
 
     const int resTextH = 5 * fm.height();
-
+ mDrawing->setMouseTracking(true);
     mDrawing->setGeometry(graphLeft, 0, graphWidth, height() - resTextH);
-
+ mDrawing->setMouseTracking(true);
     mResultsText->setGeometry(graphLeft + 20, mDrawing->y() + mDrawing->height(), graphWidth - 40 , resTextH);
     mResultsText->setAutoFillBackground(true);
 

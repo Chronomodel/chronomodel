@@ -46,6 +46,7 @@ private slots:
     void updateZoom();
     void updateScroll();
     void exportImage();
+    void copyImage();
     void copyText();
 
 
