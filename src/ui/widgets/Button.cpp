@@ -82,7 +82,6 @@ void Button::leaveEvent(QEvent * e)
 void Button::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
-    
     QPainter painter(this);
     painter.save();
     painter.setRenderHint(QPainter::Antialiasing);
@@ -96,7 +95,6 @@ void Button::paintEvent(QPaintEvent* e)
     }
     if (mIsClose) {
         r.adjust(1, 1, -1, -1);
-        
         painter.setPen(Qt::black);
         painter.setBrush(Qt::white);
         painter.drawEllipse(r);
@@ -125,13 +123,14 @@ void Button::paintEvent(QPaintEvent* e)
         painter.restore();
 
     } else if (mFlatVertical || mFlatHorizontal) {
+
         QColor gradColTop(40, 40, 40);
         QColor gradColBot(30, 30, 30);
         QColor gradLineLight(50, 50, 50);
         QColor gradLineDark(0, 0, 0);
         
         if (mMouseOver) {
-            gradColTop = QColor(60, 60, 60);
+            gradColTop = QColor(160, 160, 160);
             gradColBot = QColor(50, 50, 50);
             gradLineLight = QColor(70, 70, 70);
             gradLineDark = QColor(20, 20, 20);
@@ -152,9 +151,12 @@ void Button::paintEvent(QPaintEvent* e)
         QLinearGradient grad(0, 0, 0, r.height());
         grad.setColorAt(0, gradColTop);
         grad.setColorAt(1, gradColBot);
-        painter.fillRect(r, grad);
-        
 
+        if (mMouseOver)
+            painter.fillRect(r.adjusted(-50, -50, 50, 50), grad);
+        else
+            painter.fillRect(r, grad);
+        
         painter.setPen(gradLineLight);
         if (mFlatVertical)
             painter.drawLine(0, 0, r.width(), 0);
@@ -168,12 +170,12 @@ void Button::paintEvent(QPaintEvent* e)
             painter.drawLine(r.width(), 0, r.width(), r.height());
         
         // ---------
-        
+
         QIcon ic = icon();
         painter.setPen(QColor(200, 200, 200));
         
         bool iconOnly = mIconOnly;
-        bool textOnly = !mIconOnly && !text().isEmpty() && ic.isNull();
+        bool textOnly = !mIconOnly && !text().isEmpty();
 
         QFont adaptedFont (font());
         QFontMetricsF fm (adaptedFont);
@@ -186,7 +188,15 @@ void Button::paintEvent(QPaintEvent* e)
         painter.setFont(adaptedFont);
 
         if (textOnly) {
-            painter.drawText(r, Qt::AlignCenter, text());
+
+            if (mMouseOver) {
+                 painter.setPen(QColor(250, 250, 250));
+                 painter.drawText(r.adjusted(-50, -50, 50, 50), Qt::AlignHCenter | Qt::AlignVCenter, text());
+
+            } else {
+                painter.setPen(QColor(200, 200, 200));
+                painter.drawText(r, Qt::AlignHCenter | Qt::AlignVCenter, text());
+            }
 
         } else if (iconOnly) {
             qreal border = qMax( 3., qMin(width(), height()) * 0.2);
@@ -229,6 +239,7 @@ void Button::paintEvent(QPaintEvent* e)
             painter.drawPixmap(iconRect, pixmap, QRectF(0, 0, pixmap.width(), pixmap.height()));
         }
     } else {
+
         r.adjust(1, 1, -1, -1);
         
         QColor gradColTop(255, 255, 255);
