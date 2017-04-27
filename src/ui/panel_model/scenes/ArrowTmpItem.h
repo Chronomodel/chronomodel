@@ -13,10 +13,10 @@ public:
         eForbidden
     };
     
-    ArrowTmpItem(QGraphicsItem* parent = 0);
+    ArrowTmpItem(QGraphicsItem* parent = nullptr);
     
-    void setFrom(double x, double y);
-    void setTo(double x, double y);
+    void setFrom(const double& x, const double& y);
+    void setTo(const double& x, const double& y);
     void setState(const State state);
     void setLocked(bool locked);
     

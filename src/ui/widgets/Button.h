@@ -8,7 +8,7 @@ class Button: public QPushButton
 {
     Q_OBJECT
 public:
-    enum ColorState
+    enum    ColorState
     {
         eDefault = 0,
         eReady = 1,

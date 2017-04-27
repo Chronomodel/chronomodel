@@ -20,9 +20,6 @@ mButH(25)
     // -----------
    mMinLab = new QLabel(tr("Start"), this);
    mMinEdit = new LineEdit(this);
-   //mMinEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
-  // mMinEdit->selectAll();
- //  mMinEdit->setFocus();
 
    mMaxLab = new QLabel(tr("End"), this);
    mMaxEdit = new LineEdit(this);

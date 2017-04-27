@@ -112,6 +112,7 @@ public:
     virtual QString getRefsPath() const {return "";}
     virtual RefCurve loadRefFile(QFileInfo refFile)
     {
+        (void) refFile;
         RefCurve curve;
         return curve;
     }

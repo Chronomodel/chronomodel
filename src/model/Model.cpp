@@ -460,9 +460,10 @@ void Model::generateResultsLog()
 //#pragma mark Results CSV
 QList<QStringList> Model::getStats(const QLocale locale, const int precision, const bool withDateFormat)
 {
+    (void) withDateFormat;
     QList<QStringList> rows;
     
-    int maxHpd = 0;
+    int maxHpd (0);
     
     // Phases
 

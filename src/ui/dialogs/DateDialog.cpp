@@ -55,7 +55,7 @@ mWiggleEnabled(false)
     mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eInversion));
     mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
     
-    mWiggleLab = new QLabel(tr("Wiggle Matching") + " :", mAdvancedWidget);
+    mWiggleLab = new QLabel(tr("Wiggle Matching"), mAdvancedWidget);
     
     mDeltaFixedRadio = new QRadioButton(tr("Fixed"), mAdvancedWidget);
     mDeltaRangeRadio = new QRadioButton(tr("Range"), mAdvancedWidget);
@@ -74,11 +74,11 @@ mWiggleEnabled(false)
     mDeltaHelp->setFixedHeight(35);
     mDeltaHelp->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=11");
     
-    mDeltaFixedLab   = new QLabel(tr("Value") + " :", mAdvancedWidget);
-    mDeltaMinLab     = new QLabel(tr("Min") + " :", mAdvancedWidget);
-    mDeltaMaxLab     = new QLabel(tr("Max") + " :", mAdvancedWidget);
-    mDeltaAverageLab = new QLabel(tr("Mean") + " :", mAdvancedWidget);
-    mDeltaErrorLab   = new QLabel(tr("Error (sd)") + " :", mAdvancedWidget);
+    mDeltaFixedLab   = new QLabel(tr("Value"), mAdvancedWidget);
+    mDeltaMinLab     = new QLabel(tr("Min"), mAdvancedWidget);
+    mDeltaMaxLab     = new QLabel(tr("Max"), mAdvancedWidget);
+    mDeltaAverageLab = new QLabel(tr("Mean"), mAdvancedWidget);
+    mDeltaErrorLab   = new QLabel(tr("Error (sd)"), mAdvancedWidget);
     
     mDeltaFixedEdit   = new QLineEdit(mAdvancedWidget);
     mDeltaMinEdit     = new QLineEdit(mAdvancedWidget);

@@ -8,8 +8,8 @@ class CheckBox: public QCheckBox
 {
     Q_OBJECT
 public:
-    explicit CheckBox(QWidget* parent = 0);
-    explicit CheckBox(const QString& text, QWidget* parent = 0);
+    explicit CheckBox(QWidget* parent = nullptr);
+    explicit CheckBox(const QString& text, QWidget* parent = nullptr);
     
     ~CheckBox();
     

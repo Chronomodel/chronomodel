@@ -99,6 +99,7 @@ void ProjectView::showModel()
  */
 void ProjectView::changeDesign(bool refresh)
 {
+   (void) refresh;
   mRefreshResults = true;
 }
 

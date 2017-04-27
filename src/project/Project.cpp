@@ -93,6 +93,7 @@ Project::~Project()
 
 void Project::initState(const QString& reason)
 {
+    (void) reason;
     const QJsonObject state = emptyState();
     
     // Do no call pushProjectState here because we don't want to store this state in the UndoStack
@@ -696,7 +697,7 @@ bool Project::saveAs(const QString& dialogTitle)
 bool Project::askToSave(const QString& saveDialogTitle)
 {
     // Check if modifs have been made
-
+    (void) saveDialogTitle;
     if( mState == mLastSavedState)
         return true;
     
