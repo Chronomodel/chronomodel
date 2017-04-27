@@ -1,14 +1,23 @@
-#ifndef STUDYPERIODDIALOG_H
-#define STUDYPERIODDIALOG_H
+#ifndef StudyPeriodDialog_H
+#define StudyPeriodDialog_H
 
 #include <QDialog>
+#include <QJsonObject>
+#include "Date.h"
 
-class CheckBox;
-class Label;
-class LineEdit;
+class QLineEdit;
+class QComboBox;
+class QVBoxLayout;
+class QGroupBox;
+class QCheckBox;
+class QDialogButtonBox;
+
+class PluginFormAbstract;
+class Collapsible;
+class QRadioButton;
 class QDoubleSpinBox;
-class Button;
-class ProjectSettings;
+class QLabel;
+class HelpWidget;
 
 
 class StudyPeriodDialog: public QDialog
@@ -16,35 +25,50 @@ class StudyPeriodDialog: public QDialog
     Q_OBJECT
 public:
     StudyPeriodDialog(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
-    virtual ~StudyPeriodDialog();
-
+    ~StudyPeriodDialog();
+    
     void setStep(double step, bool forced, double suggested);
     void setSettings(const ProjectSettings& s);
     ProjectSettings getSettings() const;
     double step() const;
     bool forced() const;
     
-protected:
-    void paintEvent(QPaintEvent* e);
-    void resizeEvent(QResizeEvent* e);
+protected slots:
+    void setAdvancedVisible(bool visible);
+    void updateVisibleControls();
+    void setOkEnabled();
+
+signals:
+    void wiggleChange();
     
-private:
+public:
+    QLabel* mMinLab;
+    QLabel* mMaxLab;
 
-    Label* mStudyLab;
-    Label* mMinLab;
-    Label* mMaxLab;
+    QLineEdit* mMinEdit;
+    QLineEdit* mMaxEdit;
 
-    LineEdit* mMinEdit;
-    LineEdit* mMaxEdit;
+    Collapsible* mAdvanced;
+    
+    QCheckBox* mAdvancedCheck;
+    QGroupBox* mAdvancedWidget;
 
-    Label* mTitleLab;
-    Label* mForcedLab;
-    CheckBox* mForcedCheck;
-    Label* mStepLab;
-    //QSpinBox* mStepSpin;
+    QLabel* mForcedLab;
+    QCheckBox* mForcedCheck;
+    QLabel* mStepLab;
+
     QDoubleSpinBox* mStepSpin;
-    Button* mOkBut;
-    Button* mCancelBut;
+
+    
+    int mWidth;
+    int mMargin;
+    int mLineH;
+    int mButW;
+    int mButH;
+    int mComboH;
+    
+    QVBoxLayout* mLayout;
+    QDialogButtonBox* mButtonBox;
 };
 
 #endif

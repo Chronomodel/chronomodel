@@ -1,64 +1,103 @@
 #include "StudyPeriodDialog.h"
-
-#include "Button.h"
-#include "Label.h"
+#include "Collapsible.h"
+#include "HelpWidget.h"
 #include "LineEdit.h"
-#include "CheckBox.h"
 #include "Painting.h"
-#include "ProjectSettings.h"
+#include "ModelUtilities.h"
 #include <QtWidgets>
-#include <QDoubleSpinBox>
 
-StudyPeriodDialog::StudyPeriodDialog(QWidget* parent, Qt::WindowFlags flags):
-QDialog(parent, flags)
+
+StudyPeriodDialog::StudyPeriodDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags),
+mWidth(600),
+mMargin(5),
+mLineH(20),
+mButW(80),
+mButH(25)
 {
-    setWindowTitle(tr("Study Period Settings"));
-
-    mStudyLab = new Label(tr("STUDY PERIOD (BC/AD)"), this);
-    mStudyLab-> setIsTitle(true);
-
-    mMinLab = new Label(tr("Start"), this);
-    mMinEdit = new LineEdit(this);
-
-    mMaxLab = new Label(tr("End"), this);
-    mMaxEdit = new LineEdit(this);
-
-    //----
-    mTitleLab = new Label(tr("Resolution of distribution of calibrated date"), this);
-    mTitleLab -> setIsTitle(true);
+   setWindowTitle(tr("Study Period Settings"));
+   setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
     
-    mForcedLab   = new Label(tr("Force resolution") + " : ", this);
-    mForcedCheck = new CheckBox(this);
-    mStepLab     = new Label(tr("Resolution in years") + " : ", this);
+    // -----------
+   mMinLab = new QLabel(tr("Start"), this);
+   mMinEdit = new LineEdit(this);
+   //mMinEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+  // mMinEdit->selectAll();
+ //  mMinEdit->setFocus();
+
+   mMaxLab = new QLabel(tr("End"), this);
+   mMaxEdit = new LineEdit(this);
+
+   QGridLayout* grid = new QGridLayout();
+   grid->setContentsMargins(0, 0, 0, 0);
+   grid->addWidget(mMinLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
+   grid->addWidget(mMinEdit, 0, 1);
+   grid->addWidget(mMaxLab, 1, 0, Qt::AlignRight | Qt::AlignVCenter);
+   grid->addWidget(mMaxEdit, 1, 1);
+
+   // ----------
     
-    //mStepSpin = new QSpinBox(this);//QDoubleSpinBox
-    mStepSpin = new QDoubleSpinBox(this);//QDoubleSpinBox
+    mAdvancedCheck = new QCheckBox(tr("Advanced"));
+    mAdvancedWidget = new QGroupBox();
+    mAdvancedWidget->setCheckable(false);
+    mAdvancedWidget->setVisible(false);
+    mAdvancedWidget->setFlat(true);
+    connect(mAdvancedCheck, &QCheckBox::toggled, this, &StudyPeriodDialog::setAdvancedVisible);
+
+    mForcedLab   = new QLabel(tr("Force resolution"), mAdvancedWidget);
+    mForcedCheck = new QCheckBox(mAdvancedWidget);
+    mStepLab     = new QLabel(tr("Resolution in years"), mAdvancedWidget);
+
+    mStepSpin = new QDoubleSpinBox(mAdvancedWidget);
     mStepSpin -> setRange(0.01, 10000);
     mStepSpin -> setSingleStep(0.01);
     mStepSpin -> setDecimals(2);
+
+    QGridLayout* advGrid = new QGridLayout();
+    advGrid->setContentsMargins(0, 0, 0, 0);
+    advGrid->addWidget(mForcedLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
+    advGrid->addWidget(mForcedCheck, 0, 1, Qt::AlignLeft | Qt::AlignVCenter);
+    advGrid->addWidget(mStepLab, 1, 0, Qt::AlignRight | Qt::AlignVCenter);
+    advGrid->addWidget(mStepSpin, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+
+    connect(mForcedCheck, &QCheckBox::toggled, mStepSpin, &QDoubleSpinBox::setEnabled);
+
+    mAdvancedWidget->setLayout(advGrid);
     
-    mOkBut     = new Button(tr("Apply"), this);
-    mCancelBut = new Button(tr("Cancel"), this);
-    mOkBut -> setAutoDefault(true);
+    // ----------
     
-    connect(mOkBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &StudyPeriodDialog::accept);
-    connect(mCancelBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &StudyPeriodDialog::reject);
-    connect(mForcedCheck, &CheckBox::toggled, mStepSpin, &QDoubleSpinBox::setEnabled);
+    mButtonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    connect(mButtonBox, &QDialogButtonBox::accepted, this, &StudyPeriodDialog::accept);
+    connect(mButtonBox, &QDialogButtonBox::rejected, this, &StudyPeriodDialog::reject);
+
+    mLayout = new QVBoxLayout();
+    mLayout->addLayout(grid);
     
-    setFixedSize(500, 300);//(500, 110);
+    QFrame* line1 = new QFrame();
+    line1->setFrameShape(QFrame::HLine);
+    line1->setFrameShadow(QFrame::Sunken);
+    mLayout->addWidget(line1);
+     
+    mLayout->addWidget(mAdvancedCheck);
+    mLayout->addWidget(mAdvancedWidget);
+    mLayout->addWidget(mButtonBox);
+    mLayout->addStretch();
+    setLayout(mLayout);
+    
+    setFixedWidth(400);
+    
+    updateVisibleControls();
 }
 
 StudyPeriodDialog::~StudyPeriodDialog()
 {
-
 }
 
 void StudyPeriodDialog::setSettings(const ProjectSettings& s)
 {
     mMinEdit->setText(locale().toString(s.mTmin));
     mMaxEdit->setText(locale().toString(s.mTmax));
-    double suggested = s.getStep(s.mTmin, s.mTmax);
-    mForcedCheck -> setText("(" + tr("suggested/default value : ") + QString::number(suggested) + ")");
+    const double suggested = s.getStep(s.mTmin, s.mTmax);
+    mForcedCheck -> setText("(" + tr("suggested/default value") + " + " + QString::number(suggested) + ")");
     mForcedCheck -> setChecked(s.mStepForced);
     mStepSpin    -> setEnabled(s.mStepForced);
     mStepSpin    -> setValue(s.mStep);
@@ -66,7 +105,7 @@ void StudyPeriodDialog::setSettings(const ProjectSettings& s)
 
 void StudyPeriodDialog::setStep(double step, bool forced, double suggested)
 {
-    mForcedCheck -> setText("(" + tr("suggested/default value : ") + QString::number(suggested) + ")");
+    mForcedCheck -> setText("(" + tr("suggested/default value") + " + " + QString::number(suggested) + ")");
     mForcedCheck -> setChecked(forced);
     mStepSpin    -> setEnabled(forced);
     mStepSpin    -> setValue(step);
@@ -87,55 +126,31 @@ double StudyPeriodDialog::step() const
     return mStepSpin -> value();
 }
 
-bool StudyPeriodDialog::forced() const
+
+void StudyPeriodDialog::setOkEnabled()
 {
-    return mForcedCheck -> isChecked();
+    const bool enable = locale().toDouble(mMinEdit->text()) < locale().toDouble(mMaxEdit->text());
+    mButtonBox->button(QDialogButtonBox::Ok)->setEnabled(enable);
 }
 
-void StudyPeriodDialog::resizeEvent(QResizeEvent* e)
+
+void StudyPeriodDialog::updateVisibleControls()
 {
-    Q_UNUSED(e);
-    QFontMetrics fm(font());
-    int m (15);
-    int lineH (20);
-    int w1 (200);
-    int w2 (width() - 5*m - w1);
-    int middleWidth (width()/2);
-    int butW (fm.width("_______")+ 5);//(80);
-    int butH (fm.height()+ 5);//25);
-    int verticalSpacer (10);
-
-    int y (verticalSpacer);
+    mForcedLab->setVisible(mAdvancedCheck->isChecked());
+    mForcedCheck->setVisible(mAdvancedCheck->isChecked());
     
-    mStudyLab->setGeometry(m, y, width() - 2*m , butH);
+    mStepLab->setVisible(mAdvancedCheck->isChecked());
+    mStepSpin->setVisible(mAdvancedCheck->isChecked());
 
-    y += (mStudyLab->height() + verticalSpacer);
-    mMinLab->setGeometry(middleWidth - m - fm.width(mMinLab->text()), y, fm.width(mMinLab->text()), butH);
-    mMinEdit->setGeometry(middleWidth + m, y , butW, butH);
-
-    y += (mMinLab->height() + verticalSpacer);
-    mMaxLab->setGeometry(middleWidth - m - fm.width(mMaxLab->text()), y, fm.width(mMaxLab->text()), butH);
-    mMaxEdit->setGeometry(middleWidth + m, y , butW, butH);
-
-    y += (mMinLab->height() + verticalSpacer);
-
-    //---
-    mTitleLab    -> setGeometry(m, y += (lineH + m), width() - 2*m, lineH);
-    
-    mForcedLab   -> setGeometry(m, y += (lineH + m), w1, lineH);
-    mForcedCheck -> setGeometry(2*m + w1, y, w2, lineH);
-    
-    mStepLab     -> setGeometry(m, y += (lineH + m), w1, lineH);
-    mStepSpin    -> setGeometry(2*m + w1, y, 120, lineH);
-    
-    mOkBut       -> setGeometry(width() - 2*m - 2*butW, height() - m - butH, butW, butH);
-    mCancelBut   -> setGeometry(width() - m - butW, height() - m - butH, butW, butH);
+    adjustSize();
 }
 
-void StudyPeriodDialog::paintEvent(QPaintEvent* e)
+void StudyPeriodDialog::setAdvancedVisible(bool visible)
 {
-    Q_UNUSED(e);
-    QPainter p(this);
-    p.fillRect(rect(), QColor(180, 180, 180));
+    mAdvancedWidget->setVisible(visible);
+    if (visible)
+        updateVisibleControls();
+    else
+        adjustSize();
 }
 
