@@ -45,14 +45,11 @@ void GraphViewPhase::setPhase(Phase* phase)
 
 void GraphViewPhase::updateLayout()
 {
-
         GraphViewResults::updateLayout();
-
 }
 
 void GraphViewPhase::paintEvent(QPaintEvent* e)
 {
-
     GraphViewResults::paintEvent(e);
 }
 
@@ -172,7 +169,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->setFormatFunctX(stringWithAppSettings);
         mGraph->setFormatFunctY(nullptr);
 
-        mTitle = tr("Duration") + " : " + mPhase->mName;
+        mTitle = tr("Phase Duration") + " : " + mPhase->mName;
         GraphCurve curveDuration;
 
         if (mPhase->mDuration.fullHisto().size()>1) {
@@ -279,6 +276,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         }
 
         mGraph->setTipXLab("t");
+        mGraph->setTipYLab("");
         mGraph->setYAxisMode(GraphView::eHidden);
         mGraph->autoAdjustYScale(true); // do repaintGraph()
 
@@ -291,10 +289,11 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setCurveVisible("Post Distrib Duration All Chains", mShowAllChains);
             mGraph->setCurveVisible("HPD Duration All Chains", mShowAllChains);
 
-            for (int i=0; i<mShowChainList.size(); ++i) {
+            for (int i=0; i<mShowChainList.size(); ++i)
                 mGraph->setCurveVisible("Post Distrib Duration " + QString::number(i), mShowChainList.at(i));
-            }
+
             mGraph->setTipXLab("t");
+            mGraph->setTipYLab("");
             mGraph->setYAxisMode(GraphView::eHidden);
             mGraph->autoAdjustYScale(true);
         }

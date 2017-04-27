@@ -18,7 +18,9 @@ PhasesScene::~PhasesScene()
     
 }
 
-//#pragma mark Actions
+/*
+ *  Actions
+ */
 void PhasesScene::deleteSelectedItems()
 {
     mProject->deleteSelectedPhases();
@@ -40,14 +42,14 @@ bool PhasesScene::constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo
     
     for (int i = 0; i < constraints.size(); ++i) {
         QJsonObject constraint = constraints.at(i).toObject();
-        // Interdit le doublon
-        if((constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == phaseFromId) && (constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == phaseToId)) {
+        // Prevent the double
+        if ((constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == phaseFromId) && (constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == phaseToId)) {
             
             ConstraintAllowed = false;
             //qDebug() << "PhasesScene::constraintAllowed: not Allowed " ;
         }
-        //Interdit l'inversion
-        else if(constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == phaseToId && constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == phaseFromId) {
+        //Prevent inversion
+        else if (constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == phaseToId && constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == phaseFromId) {
             
             ConstraintAllowed = false;
             //qDebug() << "PhasesScene::constraintAllowed: not Allowed Inversion" ;
@@ -103,7 +105,9 @@ void PhasesScene::setShowAllEvents(const bool show)
     update();
 }
 
-//#pragma mark Project Update
+/*Project Update
+ *
+ */
 void PhasesScene::sendUpdateProject(const QString& reason, bool notify, bool storeUndoCommand)
 {
     qDebug()<<"PhasesScene::sendUpdateProject "<<reason<<notify<<storeUndoCommand;
@@ -372,12 +376,14 @@ void PhasesScene::clean()
         mConstraintItems.removeOne(constraintItem);
         delete constraintItem;
     }
-    mProject = 0;
+    mProject = nullptr;
     update(sceneRect());
 }
 
 
-//#pragma mark Selection & Current
+/* Selection & Current
+ *
+ */
 void PhasesScene::updateStateSelectionFromItem()
 {
     qDebug()<<"PhasesScene::updateStateSelectionFromItem";
@@ -437,7 +443,9 @@ void PhasesScene::adaptItemsForZoom(const double prop)
     }
 }
 
-//#pragma mark Utilities
+/* Utilities
+ *
+ */
 PhaseItem* PhasesScene::currentPhase() const
 {
     QList<QGraphicsItem*> items = selectedItems();
@@ -446,7 +454,7 @@ PhaseItem* PhasesScene::currentPhase() const
         if (item)
             return item;
     }
-    return 0;
+    return nullptr;
 }
 
 AbstractItem* PhasesScene::currentItem()
@@ -457,7 +465,7 @@ AbstractItem* PhasesScene::currentItem()
         if (item)
             return item;
     }
-    return 0;
+    return nullptr;
 }
 
 AbstractItem* PhasesScene::collidingItem(QGraphicsItem* item)
@@ -467,11 +475,13 @@ AbstractItem* PhasesScene::collidingItem(QGraphicsItem* item)
         if (item != mItems.at(i) && isPhase && item->collidesWithItem(mItems[i]))
             return mItems[i];
     }
-    return 0;
+    return nullptr;
 }
 
 
-//#pragma mark Phase Items Events
+/* Phase Items Events
+ *
+ */
 bool PhasesScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
 {
     Q_UNUSED(e);

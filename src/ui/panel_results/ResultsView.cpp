@@ -555,7 +555,6 @@ void ResultsView::doProjectConnections(Project* project)
 
 }
 
-//#pragma mark Paint & Resize
 void ResultsView::paintEvent(QPaintEvent* )
 {
     //qDebug()<< "ResultsView::paintEvent()";
@@ -568,95 +567,6 @@ void ResultsView::paintEvent(QPaintEvent* )
 void ResultsView::setFont(const QFont & font)
 {
     mTabs->setFont(font);
-    /*
-     *
-     *   QScrollArea* mEventsScrollArea;
-    QScrollArea* mPhasesScrollArea;
- //   QWidget* mEventsWidget;
-    QList<GraphViewResults*> mByEventsGraphs;
-    QList<GraphViewResults*> mByPhasesGraphs;
-
-
-    Button* mByPhasesBut;
-    Button* mByEventsBut;
-
-
-    QWidget* mOptionsWidget;
-
-
-    Button* mUnfoldBut;
-    Button* mStatsBut;
-    Button* mExportImgBut;
-    Button* mExportResults;
-    CheckBox* mShowDataUnderPhasesCheck;
-
-    Button* mNextSheetBut;
-    Button* mPreviousSheetBut;
-
-    // ------ Span Options -----
-    QWidget* mSpanGroup;
-    Label* mSpanTitle;
-
-    Button* mDisplayStudyBut;
-    Label* mSpanLab;
-    LineEdit* mCurrentXMinEdit;
-    LineEdit* mCurrentXMaxEdit;
-
-    Label* mXScaleLab;
-    QSlider* mXSlider;
-    QDoubleSpinBox* mXScaleSpin;
-
-
-
-    QWidget* mGraphicGroup;
-    Label* mGraphicTitle;
-
-    Label* mYScaleLab;
-
-    QSlider* mYSlider;
-    QSpinBox* mYScaleSpin;
-
-    QFont mFont;
-    Button* mFontBut;
-    QSpinBox* mThicknessSpin;
-    QSpinBox* mOpacitySpin;
-    QComboBox* mRenderCombo;
-
-    Label* labFont;
-    Label* labThickness;
-    Label* labOpacity;
-    Label* labRendering;
-
-    QWidget* mChainsGroup;
-    Label* mChainsTitle;
-
-    CheckBox* mAllChainsCheck;
-    QList<CheckBox*> mCheckChainChecks;
-    QList<RadioButton*> mChainRadios;
-
-
-    QWidget* mResultsGroup;
-    Label* mResultsTitle;
-
-    RadioButton* mDataThetaRadio;
-
-    CheckBox* mDataCalibCheck;
-    CheckBox* mWiggleCheck;
-    RadioButton* mDataSigmaRadio;
-
-    //--------- Post. distrib. option
-    QWidget* mPostDistGroup;
-    Label* mPostDistOptsTitle;
-
-    Label* mThreshLab;
-    CheckBox* mCredibilityCheck;
-    LineEdit* mHPDEdit;
-    Label* mFFTLenLab;
-    QComboBox* mFFTLenCombo;
-    Label* mBandwidthLab;
-    LineEdit* mBandwidthEdit;
-    Button* mUpdateDisplay;
-     */
 }
 
 void ResultsView::resizeEvent(QResizeEvent* e)
@@ -665,9 +575,6 @@ void ResultsView::resizeEvent(QResizeEvent* e)
     updateControls(); // emit controleUpdated which is connected to updateLayout
 }
 
-
-
-//#pragma mark Options & Layout (Chained Functions)
 
 /**
  * @brief ResultsView::updateControls set controls according to the differents tabs positions.  emit controlsUpdated()
@@ -689,13 +596,6 @@ void ResultsView::updateControls()
     mDataSigmaRadio    -> setVisible(mDatesfoldBut->isVisible() && mDatesfoldBut->isChecked());
 
     mPhaseDurationRadio-> setVisible(mByPhasesBut->isChecked());
-
-  /*  if (mDataSigmaRadio->isChecked() && !mDataSigmaRadio->isVisible()) {
-        mDataThetaRadio->setChecked(true);
-        mCurrentVariable = GraphViewResults::eTheta;
-        changeScrollArea();
-    }
-*/
 
     mPostDistOptsTitle -> setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
     mPostDistGroup     -> setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
@@ -722,7 +622,6 @@ void ResultsView::updateControls()
      *  Display by phases or by events
      * -------------------------------------------------------*/
     mStack->setCurrentWidget(byEvents ? mEventsScrollArea : mPhasesScrollArea);
-    //mShowDataUnderPhasesCheck->setVisible(!byEvents);
 
     /* -------------------------------------------------------
      *  Enable or disable previous and next sheet
@@ -789,8 +688,8 @@ void ResultsView::updateControls()
     else
         mNextSheetBut->setEnabled(false);
 
-    qDebug() << "ResultsView::updateControls -> emit controlsUpdated()";
-    qDebug()<< "ResultsView::updateControls"<< mPhaseDurationRadio->isVisible();
+    //qDebug() << "ResultsView::updateControls -> emit controlsUpdated()";
+   // qDebug()<< "ResultsView::updateControls"<< mPhaseDurationRadio->isVisible();
     emit controlsUpdated();
 }
 
@@ -803,8 +702,6 @@ void ResultsView::changeScrollArea()
     if (mDataSigmaRadio->isChecked() && !mDatesfoldBut->isChecked())
            mDataThetaRadio->setChecked(true);
 
-
-
     if (mDataThetaRadio->isChecked())
         mCurrentVariable = GraphViewResults::eTheta;
 
@@ -813,7 +710,6 @@ void ResultsView::changeScrollArea()
 
     else if (mPhaseDurationRadio->isChecked())
             mCurrentVariable = GraphViewResults::eDuration;
-qDebug()<< "ResultsView::changeScrollArea"<< mPhaseDurationRadio->isVisible();
 
     if (mByEventsBut->isChecked())
             createEventsScrollArea(mTabEventsIndex);
@@ -827,7 +723,7 @@ void ResultsView::updateLayout()
     if (!mModel)
         return;
 
-    qDebug() << "ResultsView::updateLayout()";
+    //qDebug() << "ResultsView::updateLayout()";
 
     const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     int graphYAxis = 50;
@@ -1025,7 +921,6 @@ void ResultsView::updateLayout()
         mPhaseDurationRadio->setVisible(false);
 
     mResultsGroup   -> setGeometry(0, mResultsTitle->y() + mResultsTitle->height(), mOptionsW ,ySpan += (mMargin + mLineH));
-qDebug()<< "ResultsView::updateLayout() 7"<< mPhaseDurationRadio->isVisible();
     /* ----------------------------------------------------------
      *  Post. Distrib. options layout
      * ----------------------------------------------------------*/
@@ -1056,14 +951,12 @@ qDebug()<< "ResultsView::updateLayout() 7"<< mPhaseDurationRadio->isVisible();
                                             + mChainsTitle->height() + mChainsGroup->height()
                                             + mResultsTitle->height() + mResultsGroup->height()
                                             + mPostDistOptsTitle->height() + mPostDistGroup->height());
-   qDebug()<< "ResultsView::updateLayout() 8"<< mPhaseDurationRadio->isVisible();
     updateGraphsLayout();
-qDebug()<< "ResultsView::updateLayout() 9"<< mPhaseDurationRadio->isVisible();
 }
 
 void ResultsView::updateGraphsLayout()
 {
-    qDebug() << "ResultsView::updateGraphsLayout()";
+    //qDebug() << "ResultsView::updateGraphsLayout()";
     const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     
     /* ----------------------------------------------------------
@@ -1087,7 +980,7 @@ void ResultsView::updateGraphsLayout()
      * ----------------------------------------------------------*/
    
     else {
-         int y = 0;
+         int y (0);
          if (mEventsScrollArea) {
             QWidget* wid = mEventsScrollArea->widget();
 
@@ -1167,7 +1060,7 @@ void ResultsView::initResults(Model* model)
 {
     clearResults();
 
-    qDebug() << "ResultsView::initResults";
+   // qDebug() << "ResultsView::initResults";
 
     if (!mModel && !model)
         return;
@@ -1219,13 +1112,10 @@ void ResultsView::initResults(Model* model)
         createPhasesScrollArea(mTabPhasesIndex);
     else
         createEventsScrollArea(mTabEventsIndex);
-qDebug()<< "ResultsView::InitResults"<< mPhaseDurationRadio->isVisible();
     setStudyPeriod();
-qDebug()<< "ResultsView::InitResults"<< mPhaseDurationRadio->isVisible();
     // ------------------------------------------------------------
    // updateGraphsZoomX(); // to set the CurrentMinX value inside the graphView
     showInfos(mStatsBut->isChecked());
-qDebug()<< "ResultsView::InitResults"<< mPhaseDurationRadio->isVisible();
 }
 /**
  * @brief This function is call after click on "Results", when switching from Model panel to Result panel
@@ -1313,6 +1203,7 @@ void ResultsView::createEventsScrollArea(const int idx)
         mEventsScrollArea = new QScrollArea();
         mEventsScrollArea->setMouseTracking(true);
         mStack->addWidget(mEventsScrollArea);
+        mStack->setMouseTracking(true);
     }
 
     if (!mByEventsGraphs.isEmpty())
@@ -1393,7 +1284,7 @@ void ResultsView::createEventsScrollArea(const int idx)
 
     mEventsScrollArea->update();
     qDebug()<<"ResultsView::createEventsScrollArea()"<<counter<<" items";
-    
+    mStack->setMouseTracking(true);
     emit generateCurvesRequested();
 
 }
@@ -1407,6 +1298,7 @@ void ResultsView::createPhasesScrollArea(const int idx)
         mPhasesScrollArea = new QScrollArea(this);
         mPhasesScrollArea->setMouseTracking(true);
         mStack->addWidget(mPhasesScrollArea);
+        mStack->setMouseTracking(true);
     }
     if ( !mByPhasesGraphs.isEmpty())
         for (auto&& g : mByPhasesGraphs) {
@@ -1441,14 +1333,12 @@ void ResultsView::createPhasesScrollArea(const int idx)
         if ((*iterPhase)->mIsSelected || showAllPhases) {
             if ( (idx*mNumberOfGraph)<counter && counter <= ((idx+1)*mNumberOfGraph) ) {
                 GraphViewPhase* graphPhase = new GraphViewPhase(phasesWidget);
-                //graphPhase->setUpdatesEnabled(false);
                 graphPhase->setSettings(mModel->mSettings);
                 graphPhase->setMCMCSettings(mModel->mMCMCSettings, mChains);
                 graphPhase->setPhase((*iterPhase));
                 graphPhase->setGraphFont(mFont);
                 graphPhase->setGraphsThickness(mThicknessSpin->value());
                 connect(graphPhase, &GraphViewResults::selected, this, &ResultsView::updateLayout);
-                //connect(graphPhase->mShowDuration, &Button::toggled, this, &ResultsView::adjustDuration);
                 mByPhasesGraphs.append(graphPhase);
              }
             ++ counter;//count one phase graph
@@ -1475,7 +1365,6 @@ void ResultsView::createPhasesScrollArea(const int idx)
                             if ( (idx*mNumberOfGraph)<counter && counter <= (idx+1)*mNumberOfGraph) {
                                 Date& date = (*iterEvent)->mDates[j];
                                 GraphViewDate* graphDate = new GraphViewDate(phasesWidget);
-                                //graphDate->setUpdatesEnabled(false);
                                 graphDate->setSettings(mModel->mSettings);
                                 graphDate->setMCMCSettings(mModel->mMCMCSettings, mChains);
                                 graphDate->setDate(&date);
@@ -1496,10 +1385,8 @@ void ResultsView::createPhasesScrollArea(const int idx)
 
     }
 
-       //phasesWidget->setUpdatesEnabled(true);
     mPhasesScrollArea->setWidget(phasesWidget);
     mPhasesScrollArea->update();
-    
     qDebug()<<"ResultsView::createPhasesScrollArea()"<<counter<<" items";
     emit generateCurvesRequested();
 }

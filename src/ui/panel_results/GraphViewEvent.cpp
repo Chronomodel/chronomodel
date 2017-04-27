@@ -212,11 +212,11 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->setFormatFunctY(stringWithAppSettings);
 
             if (mEvent->type()==Event::eKnown)
-                mTitle = tr("Bound ") + " : " + mEvent->mName;
+                mTitle = tr("Bound") + " : " + mEvent->mName;
             else
-                mTitle = tr("Std") + " : " + mEvent->mName;
+                mTitle = tr("Std Compilation") + " : " + mEvent->mName;
 
-            mGraph->setBackgroundColor(QColor(Qt::white));
+            mGraph->setBackgroundColor(QColor(230, 230, 230));
 
             int i(0);
             for (auto&& date : mEvent->mDates) {
