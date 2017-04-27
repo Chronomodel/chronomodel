@@ -73,7 +73,7 @@ public:
     {
         mFormatFuncX = f;
     }
-    
+
     
 public slots:
     virtual void zoomX(const double min, const double max)
@@ -99,6 +99,9 @@ protected:
     
     double mTminDisplay;
     double mTmaxDisplay;
+
+public:
+    GraphView* mGraph;
 };
 
 #endif

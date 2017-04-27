@@ -25,8 +25,8 @@ public slots:
 protected:
     void resizeEvent(QResizeEvent* e);
     
-private:
-    GraphView* mGraph;
+//private:
+  //  GraphView* mGraph;
 };
 
 #endif

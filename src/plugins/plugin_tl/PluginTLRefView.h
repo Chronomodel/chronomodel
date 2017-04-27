@@ -26,7 +26,7 @@ protected:
     void resizeEvent(QResizeEvent* e);
     
 private:
-    GraphView* mGraph;
+   // GraphView* mGraph;
 };
 
 #endif

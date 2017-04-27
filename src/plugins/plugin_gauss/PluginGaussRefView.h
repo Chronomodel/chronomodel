@@ -14,7 +14,7 @@ class PluginGaussRefView: public GraphViewRefAbstract
 {
     Q_OBJECT
 public:
-    explicit PluginGaussRefView(QWidget* parent = 0);
+    explicit PluginGaussRefView(QWidget* parent = nullptr);
     virtual ~PluginGaussRefView();
     
     void setDate(const Date& d, const ProjectSettings& settings);
@@ -26,7 +26,7 @@ protected:
     void resizeEvent(QResizeEvent* e);
     
 private:
-    GraphView* mGraph;
+   // GraphView* mGraph;
 };
 
 #endif
