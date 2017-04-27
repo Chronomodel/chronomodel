@@ -21,17 +21,17 @@ mGreyedOut(false)
     // Date::fromJson doesn't create mCalibration
     Date d = Date::fromJson(date);
     ProjectSettings s = ProjectSettings::fromJson(settings);
-    //qDebug()<<"setting"<< s.mTmin;
+
     d.mSettings.mTmin = s.mTmin;
     d.mSettings.mTmax = s.mTmax;
     d.mSettings.mStep = s.mStep;
     
     if (d.mPlugin!=NULL) {
-
         if (!d.mIsValid)
             mCalibThumb = QPixmap();
+
         else {
-            if (d.mCalibration == 0)
+            if (d.mCalibration == nullptr)
                      d.calibrate(s, EventsScene->getProject());
 
             if (d.mPlugin->getName() != "Typo")
@@ -124,11 +124,11 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
             painter->drawText(rct, Qt::AlignCenter, tr("Not computable"));
     }
     // border
-    painter->setPen(mColor);
-    painter->drawRect(boundingRect());
+   // painter->setPen(mColor);
+   // painter->drawRect(boundingRect());
 
     // restore default opacity
-    painter->setOpacity(1.f);
+    painter->setOpacity(1.);
 
     // we don't need to refresh the Event
 
