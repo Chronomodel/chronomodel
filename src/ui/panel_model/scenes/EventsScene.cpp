@@ -1,4 +1,4 @@
- #include "EventsScene.h"
+#include "EventsScene.h"
 #include "Event.h"
 #include "EventKnown.h"
 #include "EventConstraint.h"
@@ -7,7 +7,6 @@
 #include "DateItem.h"
 #include "ArrowItem.h"
 #include "ArrowTmpItem.h"
-//#include "SetProjectState.h"
 #include "MainWindow.h"
 #include "Project.h"
 #include "HelpWidget.h"
@@ -47,11 +46,12 @@ EventItem* EventsScene::findEventItemWithJsonId(const int id)
         if (evJson.value(STATE_ID)== id)
             return ev;
     }
-    return 0;
+    return nullptr;
 }
 
 
-//#pragma mark Actions
+/* Actions
+ */
 void EventsScene::deleteSelectedItems()
 {
    qDebug()<<"EventsScene::deleteSelectedItems";
@@ -111,7 +111,9 @@ void EventsScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
 }
 
 
-//#pragma mark Help Bubble
+/* Help Bubble
+ *
+ */
 void EventsScene::updateHelp()
 {
     QString text;
@@ -162,7 +164,7 @@ void EventsScene::showHelp(bool show)
     mHelpView->setVisible(show);
 }
 
-//#pragma mark Project Update
+
 void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool storeUndoCommand)
 {
     qDebug()<<"EventsScene::sendUpdateProject";
@@ -623,8 +625,6 @@ void EventsScene::clean()
 }
 
 
-//pragma mark Selection & Current
-
 /**
  * @brief EventsScene::updateStateSelectionFromItem look inside the scene which items (Widget) are selected and update the QJsonObject
  */
@@ -763,7 +763,6 @@ void EventsScene::centerOnEvent(int eventId)
     }
 }
 
-//#pragma mark Utilities
 AbstractItem* EventsScene::currentItem()
 {
     QList<QGraphicsItem*> selItems = selectedItems();
@@ -782,7 +781,7 @@ AbstractItem* EventsScene::currentItem()
 #endif
         return absItem;
     } else
-        return 0;
+        return nullptr;
    
    
 }
@@ -790,11 +789,11 @@ AbstractItem* EventsScene::currentItem()
 EventItem* EventsScene::currentEvent() const
 {
     QList<QGraphicsItem*> selItems = selectedItems();
-    EventItem* cEvt = 0;
+    EventItem* cEvt = nullptr;
     if (selItems.size() == 0)
         return cEvt;
 
-    QGraphicsItem* it = 0;
+    QGraphicsItem* it = nullptr;
     foreach (it , selItems) {
         EventItem* tmpItem = dynamic_cast< EventItem*>(it);
         if (tmpItem)
@@ -819,7 +818,7 @@ EventItem* EventsScene::currentEvent() const
                 }
             }
 
-            return 0;
+            return nullptr;
     }
     
 }
@@ -835,7 +834,7 @@ AbstractItem* EventsScene::collidingItem(QGraphicsItem* item)
     return 0;
 }
 
-//#pragma mark Dates Items
+
 void EventsScene::dateMoved(DateItem* dateItem, QGraphicsSceneMouseEvent* e)
 {
     Q_UNUSED(e);
@@ -931,12 +930,9 @@ void EventsScene::dateReleased(DateItem* dateItem, QGraphicsSceneMouseEvent* e)
     }
 }
 
-// ----------------------------------------------------------------------------------------
-//  Event Items Events
-// ----------------------------------------------------------------------------------------
-
-
-//#pragma mark Item mouse events
+/* ----------------------------------------------------------------------------------------
+ *  Event Items Events
+ *----------------------------------------------------------------------------------------*/
 
 /**
  * @brief happen when the mouse come into a Event, it's an overwrite of AbstractScene::itemEntered
@@ -960,7 +956,7 @@ void EventsScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 
         } else {
             mTempArrow->setState(ArrowTmpItem::eForbidden);
-            mTempArrow->setLocked(true);
+            mTempArrow->setLocked(false);
         }
     }
     
@@ -1035,7 +1031,6 @@ void EventsScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e
 
 }
 
-//#pragma mark Key events
 /**
  * @brief EventsScene::keyPressEvent overwrtite AbstractScene::keyPressEvent
  * @param keyEvent
