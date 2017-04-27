@@ -566,12 +566,13 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
         
         mTipY = getValueForY(e->y());//+0.5);
         
-        update(old_rect.adjusted(-30, -30, 30, 30).toRect());
+        update(old_rect.adjusted(-20, -20, 20, 20).toRect());
+
         
     } else
         mTipVisible = false;
     
-    update(mTipRect.adjusted(-30, -30, 30, 30).toRect());
+    update(mTipRect.adjusted(-20, -20, 20, 20).toRect());
     
     // forward to parent to move a marker for example
     e->ignore();
@@ -649,7 +650,8 @@ void GraphView::paintEvent(QPaintEvent* )
     /* resize build mBufferBack, so we don't need to
      * rebuid a graph. We need it in the resizeEvent
      * */
-    if (!mBufferBack.isNull()) {
+
+    if (!mBufferBack.isNull() && !mTipVisible) {
         QPainter p(this);
         p.setRenderHints(QPainter::Antialiasing);
         p.drawPixmap(mBufferBack.rect(), mBufferBack, rect());

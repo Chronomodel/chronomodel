@@ -203,7 +203,7 @@ protected:
     QString  mTipYLab;
     qreal  mTipWidth;
     qreal  mTipHeight;
-    qreal  mTipVisible;
+    bool  mTipVisible;
     bool  mUseTip;
     
     int mCurveMaxResolution;
