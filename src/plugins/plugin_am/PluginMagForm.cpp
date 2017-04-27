@@ -17,12 +17,12 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     connect(mDecRadio, SIGNAL(clicked()), this, SLOT(updateOptions()));
     connect(mIntensityRadio, SIGNAL(clicked()), this, SLOT(updateOptions()));
     
-    mIncLab = new QLabel(tr("Inclination") + " :", this);
-    mDecLab = new QLabel(tr("Declination") + " :", this);
-    mDecIncLab = new QLabel(tr("Inclination") + " :", this);
-    mIntensityLab = new QLabel(tr("Intensity") + " :", this);
-    mAlpha95Lab = new QLabel(tr("Alpha 95") + " :", this);
-    mRefLab = new QLabel(tr("Reference") + " :", this);
+    mIncLab = new QLabel(tr("Inclination"), this);
+    mDecLab = new QLabel(tr("Declination"), this);
+    mDecIncLab = new QLabel(tr("Inclination"), this);
+    mIntensityLab = new QLabel(tr("Intensity"), this);
+    mAlpha95Lab = new QLabel(tr("Alpha 95"), this);
+    mRefLab = new QLabel(tr("Reference"), this);
     
     mIncEdit = new QLineEdit(this);
     mDecEdit = new QLineEdit(this);
@@ -33,7 +33,7 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
 
     mRefCombo = new QComboBox(this);
     QStringList refCurves = plugin->getRefsNames();
-    for(int i = 0; i<refCurves.size(); ++i)
+    for (int i = 0; i<refCurves.size(); ++i)
         mRefCombo->addItem(refCurves[i]);
     
     mIncEdit->setText("60");
@@ -85,6 +85,7 @@ PluginMagForm::~PluginMagForm()
 
 void PluginMagForm::setData(const QJsonObject& data, bool isCombined)
 {
+    (void) isCombined;
     QLocale locale=QLocale();
     const bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
     const bool is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
@@ -122,7 +123,7 @@ QJsonObject PluginMagForm::getData()
     
     double inc = locale.toDouble(mIncEdit->text());
     const double dec = locale.toDouble(mDecEdit->text());
-    if(is_dec)
+    if (is_dec)
         inc = locale.toDouble(mDecIncEdit->text());
     const double intensity = locale.toDouble(mIntensityEdit->text());
     const double error = locale.toDouble(mAlpha95Edit->text());
@@ -176,10 +177,10 @@ void PluginMagForm::updateOptions()
     mIntensityLab->setVisible(mIntensityRadio->isChecked());
     //if(mIntensityRadio->isChecked())    mRefCombo->setCurrentIndex(mRefCombo->findText("f.ref",Qt::MatchEndsWith));
 
-    if(mIntensityRadio->isChecked())
-        mAlpha95Lab->setText(tr("Error (sd)") + " :");
+    if (mIntensityRadio->isChecked())
+        mAlpha95Lab->setText(tr("Error (sd)"));
     else
-        mAlpha95Lab->setText(tr("Alpha 95") + " :");
+        mAlpha95Lab->setText(tr("Alpha 95"));
 
 }
 

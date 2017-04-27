@@ -10,9 +10,9 @@ PluginTLForm::PluginTLForm(PluginTL* plugin, QWidget* parent, Qt::WindowFlags fl
 {
    // PluginTL* pluginTL = (PluginTL*)mPlugin;
     
-    mAverageLab = new QLabel(tr("Age") + " :", this);
-    mErrorLab = new QLabel(tr("Error (sd)") + " :", this);
-    mYearLab = new QLabel(tr("Ref. year") + " :", this);
+    mAverageLab = new QLabel(tr("Age"), this);
+    mErrorLab = new QLabel(tr("Error (sd)"), this);
+    mYearLab = new QLabel(tr("Ref. year"), this);
     
     mAverageEdit = new QLineEdit(this);
     mAverageEdit->setText("0");
@@ -46,6 +46,7 @@ PluginTLForm::~PluginTLForm()
 
 void PluginTLForm::setData(const QJsonObject& data, bool isCombined)
 {
+    (void) isCombined;
     QLocale locale=QLocale();
     double a = data.value(DATE_TL_AGE_STR).toDouble();
     double e = data.value(DATE_TL_ERROR_STR).toDouble();

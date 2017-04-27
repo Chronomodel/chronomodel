@@ -11,11 +11,11 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
 {
     Plugin14C* plugin14C = (Plugin14C*)mPlugin;
     
-    mAverageLab = new QLabel(tr("Age (BP)") + " :", this);
-    mErrorLab = new QLabel(tr("Error (sd)") + " :", this);
-    mRLab = new QLabel(tr("Reservoir Effect (ΔR)") + " :", this);
-    mRErrorLab = new QLabel(tr("ΔR Error") + " :", this);
-    mRefLab = new QLabel(tr("Reference curve") + " :", this);
+    mAverageLab = new QLabel(tr("Age (BP)"), this);
+    mErrorLab = new QLabel(tr("Error (sd)"), this);
+    mRLab = new QLabel(tr("Reservoir Effect (ΔR)"), this);
+    mRErrorLab = new QLabel(tr("ΔR Error"), this);
+    mRefLab = new QLabel(tr("Reference curve"), this);
     
     mAverageEdit = new QLineEdit(this);
     mAverageEdit->setText("0");
@@ -32,12 +32,11 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     
     mRefCombo = new QComboBox(this);
     QStringList refCurves = plugin14C->getRefsNames();
-    for(int i = 0; i<refCurves.size(); ++i)
-    {
+    for (int i = 0; i<refCurves.size(); ++i)
         mRefCombo->addItem(refCurves.at(i));
-    }
+
     QString defCurve = QString("intcal13.14c").toLower();
-    if(mSelectedRefCurve.isEmpty() && refCurves.contains(defCurve, Qt::CaseInsensitive))
+    if (mSelectedRefCurve.isEmpty() && refCurves.contains(defCurve, Qt::CaseInsensitive))
        mSelectedRefCurve = defCurve;
         
     mRefCombo->setCurrentText(mSelectedRefCurve);

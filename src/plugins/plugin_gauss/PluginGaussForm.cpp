@@ -13,9 +13,9 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
 {
     //PluginGauss* pluginGauss = (PluginGauss*)mPlugin;
     
-    mAverageLab = new QLabel(tr("Measure") + " :", this);
-    mErrorLab = new QLabel(tr("Error (sd)") + " :", this);
-    mCalibLab = new QLabel(tr("Calibration") + " :", this);
+    mAverageLab = new QLabel(tr("Measure"), this);
+    mErrorLab = new QLabel(tr("Error (sd)"), this);
+    mCalibLab = new QLabel(tr("Calibration"), this);
     
     mAverageEdit = new QLineEdit(this);
     mErrorEdit = new QLineEdit(this);
@@ -60,9 +60,9 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
     
     mCurveCombo = new QComboBox(this);
     QStringList refCurves = plugin->getRefsNames();
-    for(int i = 0; i<refCurves.size(); ++i){
+    for (int i = 0; i<refCurves.size(); ++i)
          mCurveCombo->addItem(refCurves[i]);
-    }
+
     
     connect(mEquationRadio, &QRadioButton::toggled, this, &PluginGaussForm::updateVisibleElements);
     connect(mNoneRadio, &QRadioButton::toggled, this, &PluginGaussForm::updateVisibleElements);
@@ -100,6 +100,7 @@ PluginGaussForm::~PluginGaussForm()
 
 void PluginGaussForm::setData(const QJsonObject& data, bool isCombined)
 {
+    (void) isCombined;
     const QLocale locale=QLocale();
     const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
     const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
@@ -170,14 +171,16 @@ void PluginGaussForm::errorIsValid(QString str)
 
 void PluginGaussForm::equationIsValid()
 {
-    if(mEquationRadio->isChecked()) {
+    if (mEquationRadio->isChecked()) {
         bool oka,okb;
         const QLocale locale;
         const double a = locale.toDouble(mAEdit->text(),&oka);
-        if(a == 0) oka = false;
+        if(a == 0)
+            oka = false;
 
         const double b = locale.toDouble(mBEdit->text(),&okb);
-        if(b == 0) okb = false;
+        if (b == 0)
+            okb = false;
 
         emit PluginFormAbstract::OkEnabled(oka || okb);
     }
