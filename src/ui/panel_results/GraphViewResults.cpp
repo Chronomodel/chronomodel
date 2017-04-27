@@ -364,36 +364,22 @@ void GraphViewResults::setGraphsOpacity(int value)
 
 void GraphViewResults::resizeEvent(QResizeEvent* e)
 {
+    (void) e;
     updateLayout();
 }
-
-//#pragma mark Layout
 
 void GraphViewResults::updateLayout()
 {
     int h = height();
-    //const qreal butInlineMaxH = 50.;
     
     const bool axisVisible = (h > mHeightForVisibleAxis);
 
-/*    if (mButtonsVisible) {
-        qreal bw = mGraphLeft / 4;
-        qreal bh = height() - mLineH;
-        bh = std::min(bh, butInlineMaxH);
-        
-        mImageSaveBut   -> setGeometry(0., mLineH, bw, bh);
-        mDataSaveBut    -> setGeometry(bw, mLineH, bw, bh);
-        mImageClipBut   -> setGeometry(2*bw, mLineH, bw, bh);
-        mResultsClipBut -> setGeometry(mGraphLeft-bw, mLineH, bw, bh);
-    }
-*/
      // define the rigth margin,according to the max on the scale
     QFont fontTitle(font());
     fontTitle.setPointSizeF(this->font().pointSizeF() * 1.1);
     QFontMetricsF fmTitle(fontTitle);
     mTopShift = fmTitle.height() + 4. + 1.;
-    
-    //const qreal leftShift = mButtonsVisible ? mGraphLeft : 0.;
+
     QRect graphRect(0, mTopShift, width(), height()-mTopShift);
 
     type_data max = mGraph->maximumX();
@@ -422,9 +408,7 @@ void GraphViewResults::mousePressEvent(QMouseEvent *event)
     (void) event;
     setSelected(!isSelected());
     update();
-
     emit selected();
-
 }
 
 void GraphViewResults::paintEvent(QPaintEvent* )
@@ -447,18 +431,12 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     
     p.drawText(QRectF(width() - fmTitle.width(mGraph->getInfo()), 3., fmTitle.width(mGraph->getInfo()), mTopShift-1.), Qt::AlignVCenter | Qt::AlignLeft, mGraph->getInfo());
     
-  /*  p.save();
-    if (mIsSelected && mShowSelectedRect) {
-        p.setPen(Qt::red);
-        p.drawRect(rect());
-    }
-    p.restore();*/
     p.end();
 
     if (mIsSelected && mShowSelectedRect) {
-       // QRect rectOver = QRect(, 0, fmTitle.width(mGraph->getInfo()), mTopShift-1.);
         mOverLaySelect->setGeometry(rect());
         mOverLaySelect->show();
+
     } else
         mOverLaySelect->hide();
 
@@ -473,21 +451,6 @@ void GraphViewResults::setItemTitle(const QString& itemTitle)
 {
     mItemTitle = itemTitle;
 }
-/*
-void GraphViewResults::setButtonsVisible(const bool visible)
-{
-    if (mButtonsVisible != visible) {
-        mButtonsVisible = visible;
-        
-        mImageSaveBut   -> setVisible(mButtonsVisible);
-        mDataSaveBut    -> setVisible(mButtonsVisible);
-        mImageClipBut   -> setVisible(mButtonsVisible);
-        mResultsClipBut -> setVisible(mButtonsVisible);
-        
-        updateLayout();
-    }
-}
-*/
 
 /** Generate Typical curves for Chronomodel
  * */
