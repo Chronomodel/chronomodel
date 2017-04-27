@@ -49,11 +49,7 @@ public:
     
 public slots:
     void updateProject();
-   // void applySettings();
     void modifyPeriod();
-    //void studyPeriodChanging();
- //   void minEditChanging();
- //   void maxEditChanging();
     
 protected:
     void paintEvent(QPaintEvent* e);
@@ -147,26 +143,13 @@ private:
     QPropertyAnimation* mAnimationCalib;
     
     // ------
-    
-    Label* mStudyLab;
-    Label* mMinLab;
-    Label* mMaxLab;
-    Label* mFormatDateLab;
-    //Label* mStepLab;
-    
-  //  LineEdit* mMinEdit;
- //   LineEdit* mMaxEdit;
     double mTmin;
     double mTmax;
-    //LineEdit* mStepEdit;
-    
-    //Button* mButApply;
-    QPushButton* mButModifyPeriod;
+
+    Button* mButModifyPeriod;
     
     Label* mLeftPanelTitle;
     Label* mRightPanelTitle;
-
-   // Button* mButPhasesModel;
     
     QRect mTopRect;
     QRect mHandlerRect;
@@ -175,7 +158,6 @@ private:
     QRect mLeftHiddenRect;
 
     QRect mRightRect;
-    //QRect mRightSubRect;
     QRect mRightHiddenRect;
 
 

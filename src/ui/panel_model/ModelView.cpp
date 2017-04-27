@@ -26,14 +26,13 @@
 #include <QRectF>
 #include <assert.h>
 
-//#pragma mark constructor
 ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mEventsScene(nullptr),
 mCurSearchIdx(0),
 mPhasesScene(nullptr),
 mCurrentRightWidget(nullptr),
-mTmin(0),
-mTmax(2000),
+mTmin(0.),
+mTmax(2000.),
 mProject(nullptr),
 mMargin(5),
 mToolbarH(50),
@@ -48,6 +47,7 @@ mCalibVisible(false)
     mTopRect = QRect(0, 0, width(), 3 * fm.height());
     mTopWrapper = new QWidget(this);
     mTopWrapper->setGeometry(mTopRect);
+  //  mTopWrapper->setMouseTracking(true);
 
     mHandlerRect = QRect((width()-mHandlerW)*mSplitProp, mTopRect.height(), mHandlerW, height() - mTopRect.height());
 
@@ -66,27 +66,15 @@ mCalibVisible(false)
     // ---- Header Top Bar with Study period --------------
     // ----------- on mTopWrapper ------------------
 
-    mStudyLab = new Label(tr("STUDY PERIOD"), mTopWrapper);
-    mStudyLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    mStudyLab->setLight();
-    QPalette palette = mStudyLab->palette();
-    palette.setColor(QPalette::WindowText, Qt::white);
-    mStudyLab->setPalette(palette);
-
-    mMinLab = new Label(tr("Start"), mTopWrapper);
-    mMinLab  ->setLight();
-    mMinLab->setIsTitle(true);
-
-    mMaxLab = new Label(tr("End") , mTopWrapper);
-    mMaxLab  ->setLight();
-    mMaxLab->setIsTitle(true);
-
-    mFormatDateLab = new Label(tr("BD / AD") , mTopWrapper);
-    mFormatDateLab  ->setLight();
-
-    mButModifyPeriod = new QPushButton(tr("Modify"), mTopWrapper);
-    mButModifyPeriod->setStyleSheet("QPushButton { text-align:center; background-color: white; "
-                                    "color: red ; border-radius: 5px;}");
+    const int topButtonHeight = fm.height() + 6;
+    const QString studyStr = tr("STUDY PERIOD") + " [ "+ locale().toString(mTmin) +" : "+ locale().toString(mTmax) + " ] BC/AD";
+    mButModifyPeriod = new Button(studyStr, mTopWrapper);
+    mButModifyPeriod->setIconOnly(false);
+   // mButModifyPeriod->setMouseTracking(true);
+   // mButModifyPeriod->setStyleSheet("QPushButton { text-align:Vcenter; background-color: rgb(56, 95, 153); "
+   //                                 "color: white ; border-radius: 5px;}");
+    mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text()) + 10) /2, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 5, topButtonHeight );
+    mButModifyPeriod->setFlatHorizontal();
     connect(mButModifyPeriod,  static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &ModelView::modifyPeriod);
 
     mLeftPanelTitle = new Label(tr("Events' Scene"), mTopWrapper);
@@ -303,12 +291,6 @@ void ModelView::setFont(const QFont & font)
   if (mCalibrationView)
       mCalibrationView->setFont(font);
 
-  mStudyLab->setFont(font);
-  mMinLab->setFont(font);
-  mMaxLab->setFont(font);
-
- // mMinEdit->setFont(font);
- // mMaxEdit->setFont(font);
   mButModifyPeriod->setFont(font);
 
   mButProperties->setFont(font);
@@ -434,8 +416,12 @@ void ModelView::createProject()
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
 
-    mMinLab->setText(QString::number(settings.mTmin));
+  /*  mMinLab->setText(QString::number(settings.mTmin));
     mMaxLab->setText(QString::number(settings.mTmax));
+   */
+    const QString studyStr = tr("STUDY PERIOD") + " [ "+ locale().toString(settings.mTmin) +" : "+ locale().toString(settings.mTmax) + " ] BC/AD";
+    mButModifyPeriod->setText(studyStr);
+
     mProject->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
     mProject->mState[STATE_SETTINGS_TMAX] = settings.mTmax;
     mProject->mState[STATE_SETTINGS_STEP] = settings.mStep;
@@ -477,8 +463,13 @@ void ModelView::updateProject()
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
     
-    mMinLab->setText(QString::number(settings.mTmin));
+  /*  mMinLab->setText(QString::number(settings.mTmin));
     mMaxLab->setText(QString::number(settings.mTmax));
+   */
+    const QString studyStr = tr("STUDY PERIOD") + " [ "+ locale().toString(settings.mTmin) +" : "+ locale().toString(settings.mTmax) + " ] BC/AD";
+    mButModifyPeriod->setText(studyStr);
+
+
     mProject->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
     mProject->mState[STATE_SETTINGS_TMAX] = settings.mTmax;
     mProject->mState[STATE_SETTINGS_STEP] = settings.mStep;
@@ -823,9 +814,9 @@ void ModelView::updateLayout()
     const QFontMetrics fm (font());
     const int textSpacer(fm.width("_") * 2);
     mTopRect = QRect(0, 0, width(), 3 * fm.height() );
-    const int topButtonHeight = fm.height() + 6;//mTopRect.height()/2;
+    const int topButtonHeight = fm.height() + 6;
     mTopWrapper->setGeometry(mTopRect);
-
+    mTopWrapper->setGeometry(mTopRect);
     //-------------- Top Flag
     // ---------- Panel Title
     QString leftTitle (tr("Events' Scene"));
@@ -833,7 +824,7 @@ void ModelView::updateLayout()
         leftTitle = tr("Calibrated Data View");
 
     mLeftPanelTitle->setText(leftTitle);
-    mLeftPanelTitle ->setGeometry(textSpacer, mStudyLab->y(), fm.width(mLeftPanelTitle->text()), topButtonHeight );
+    mLeftPanelTitle ->setGeometry(textSpacer, mButModifyPeriod->y(), fm.width(mLeftPanelTitle->text()), topButtonHeight );
 
     QString rightTitle (tr("Phases' Scene"));
     if (mButProperties->isChecked() )
@@ -842,18 +833,11 @@ void ModelView::updateLayout()
         rightTitle = tr("Import Data");
 
     mRightPanelTitle->setText(rightTitle);
-    mRightPanelTitle->setGeometry( width() - (fm.width(mRightPanelTitle->text()) + textSpacer), mStudyLab->y(), fm.width(mRightPanelTitle->text()), topButtonHeight );
+    mRightPanelTitle->setGeometry( width() - (fm.width(mRightPanelTitle->text()) + textSpacer), mButModifyPeriod->y(), fm.width(mRightPanelTitle->text()), topButtonHeight );
 
     //------- Study Period
-    mStudyLab->setGeometry(mLeftPanelTitle->x() + mLeftPanelTitle->width() + (10* textSpacer), mTopRect.height()/3, fm.width(mStudyLab->text()) + textSpacer, topButtonHeight );
-    mButModifyPeriod ->setGeometry(mStudyLab->x() + mStudyLab->width() + textSpacer, mStudyLab->y(), fm.width(mButModifyPeriod->text()) + textSpacer, topButtonHeight );
 
-    mMinLab->setGeometry(mButModifyPeriod->x() + mButModifyPeriod->width() + textSpacer, mStudyLab->y(),  fm.width(mMinLab->text()) + textSpacer, topButtonHeight );
-    mMaxLab->setGeometry(mMinLab->x() + mMinLab->width() + textSpacer, mStudyLab->y(), fm.width(mMaxLab->text()) + textSpacer, topButtonHeight );
-
-    mFormatDateLab->setGeometry(mMaxLab->x() + mMaxLab->width() + textSpacer, mStudyLab->y(), fm.width(mFormatDateLab->text()) + textSpacer, topButtonHeight );
-
-
+    mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text()) + 10) /2, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 5, topButtonHeight );
 
     // coordinates in ModelView
 
