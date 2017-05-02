@@ -31,6 +31,8 @@ mButH(25)
    grid->addWidget(mMaxLab, 1, 0, Qt::AlignRight | Qt::AlignVCenter);
    grid->addWidget(mMaxEdit, 1, 1);
 
+   connect(mMinEdit, &LineEdit::textChanged, this, &StudyPeriodDialog::setOkEnabled);
+   connect(mMaxEdit, &LineEdit::textChanged, this, &StudyPeriodDialog::setOkEnabled);
    // ----------
     
     mAdvancedCheck = new QCheckBox(tr("Advanced"));
@@ -124,9 +126,14 @@ double StudyPeriodDialog::step() const
 }
 
 
-void StudyPeriodDialog::setOkEnabled()
+void StudyPeriodDialog::setOkEnabled(const QString &text)
 {
-    const bool enable = locale().toDouble(mMinEdit->text()) < locale().toDouble(mMaxEdit->text());
+    (void) text;
+    bool minOk (false);
+    bool maxOk (false);
+    const double min = locale().toDouble(mMinEdit->text(), &minOk);
+    const double max = locale().toDouble(mMaxEdit->text(), &maxOk);
+    const bool enable = ( min< max) && minOk && maxOk;
     mButtonBox->button(QDialogButtonBox::Ok)->setEnabled(enable);
 }
 

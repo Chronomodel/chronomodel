@@ -36,7 +36,7 @@ public:
 protected slots:
     void setAdvancedVisible(bool visible);
     void updateVisibleControls();
-    void setOkEnabled();
+    void setOkEnabled(const QString& text);
 
 signals:
     void wiggleChange();
