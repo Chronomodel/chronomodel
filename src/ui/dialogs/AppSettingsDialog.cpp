@@ -34,23 +34,23 @@ QDialog(parent, flags)
         mLanguageCombo->addItem(QLocale::languageToString((QLocale::Language)i),QVariant((QLocale::Language)i));
 
 
-    mFontLab = new Label(tr("Font"), this);
+ /*   mFontLab = new Label(tr("Font"), this);
 
     mFontBut = new Button(this);
     mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
     mFontBut->QWidget::setStyleSheet("QPushButton { border-radius: 5px; }");
-    /*
+
     mCountryLab = new QLabel(tr("Country") + " : ", this);
     mCountryCombo = new QComboBox(this);
     mCountryCombo->addItem(QLocale::countryToString(QLocale::France), QVariant(QLocale::France));
     mCountryCombo->addItem(QLocale::countryToString(QLocale::UnitedKingdom), QVariant(QLocale::UnitedKingdom));
-    */
+ */
 
     mAutoSaveLab = new QLabel(tr("Auto save project"), this);
     mAutoSaveCheck = new QCheckBox(this);
     mAutoSaveDelayLab = new QLabel(tr("Auto save interval (in minutes)"), this);
     mAutoSaveDelayEdit = new QLineEdit(this);
-    mAutoSaveDelayEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
+    //mAutoSaveDelayEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
     
     QIntValidator* positiveValidator = new QIntValidator();
     positiveValidator->setBottom(1);
@@ -58,7 +58,7 @@ QDialog(parent, flags)
     
     mCSVCellSepLab = new QLabel(tr("CSV cell separator"), this);
     mCSVCellSepEdit = new QLineEdit(this);
-    mCSVCellSepEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
+    //mCSVCellSepEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
     
     mCSVDecSepLab = new QLabel(tr("CSV decimal separator"), this);
     mCSVDecSepCombo = new QComboBox(this);
@@ -80,7 +80,7 @@ QDialog(parent, flags)
     mPixelRatio = new QSpinBox(this);
     mPixelRatio->setRange(1, 5);
     mPixelRatio->setSingleStep(1);
-    mPixelRatio->setStyleSheet("QSpinBox { border-radius: 5px; }");
+   // mPixelRatio->setStyleSheet("QSpinBox { border-radius: 5px; }");
     
     mDpmLab = new QLabel(tr("Image export DPM"), this);
     mDpm = new QComboBox(this);
@@ -90,7 +90,7 @@ QDialog(parent, flags)
     mImageQuality = new QSpinBox(this);
     mImageQuality->setRange(1, 100);
     mImageQuality->setSingleStep(1);
-    mImageQuality->setStyleSheet("QSpinBox { border-radius: 5px; }");
+    //mImageQuality->setStyleSheet("QSpinBox { border-radius: 5px; }");
     
     mFormatDateLab = new QLabel(tr("Date format"), this);
     mFormatDateLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -99,14 +99,14 @@ QDialog(parent, flags)
         mFormatDate->addItem(DateUtils::formatString((DateUtils::FormatDate)i));
     
     mFormatDate->setCurrentIndex(1);
-    mFormatDate->setStyleSheet("QLineEdit { border-radius: 5px; }");
+    //mFormatDate->setStyleSheet("QLineEdit { border-radius: 5px; }");
     mFormatDate->setVisible(true);
     
     mPrecisionLab = new QLabel(tr("Graph display date precision"), this);
     mPrecision = new QSpinBox(this);
     mPrecision->setRange(0, 5);
     mPrecision->setSingleStep(1);
-    mPrecision->setStyleSheet("QSpinBox { border-radius: 5px; }");
+   // mPrecision->setStyleSheet("QSpinBox { border-radius: 5px; }");
     
     
     connect(mAutoSaveCheck, &QCheckBox::toggled, mAutoSaveDelayEdit, &QLineEdit::setEnabled);
@@ -120,8 +120,8 @@ QDialog(parent, flags)
     grid->addWidget(mLanguageLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mLanguageCombo, row, 1);
 
-    grid->addWidget(mFontLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mFontBut, ++row, 0, 1, 2);
+   // grid->addWidget(mFontLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+   // grid->addWidget(mFontBut, ++row, 0, 1, 2);
     grid->addWidget(mLangHelpLab, ++row, 0, 1, 2);
 
     QFrame* line1 = new QFrame();
@@ -167,7 +167,7 @@ QDialog(parent, flags)
     mNbSheet = new QSpinBox(this);
     mNbSheet->setRange(5, 100);
     mNbSheet->setSingleStep(1);
-    mNbSheet->setStyleSheet("QSpinBox { border-radius: 5px; }");
+    //mNbSheet->setStyleSheet("QSpinBox { border-radius: 1px; }");
     
     grid->addWidget(mFormatDateLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mFormatDate, row, 1);
@@ -186,7 +186,7 @@ QDialog(parent, flags)
     
     connect(mLanguageCombo,static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &AppSettingsDialog::changeSettings);
     //connect(mCountryCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(changeSettings()));
-    connect(mFontBut, &Button::clicked, this, &AppSettingsDialog::fontButtonClicked);
+    //connect(mFontBut, &Button::clicked, this, &AppSettingsDialog::fontButtonClicked);
 
     connect(mAutoSaveCheck, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this,  &AppSettingsDialog::changeSettings);
     connect(mAutoSaveDelayEdit, &QLineEdit::editingFinished, this,  &AppSettingsDialog::changeSettings);
@@ -261,7 +261,7 @@ void AppSettingsDialog::setSettings(const AppSettings& settings)
     mLanguageCombo->setCurrentText(QLocale::languageToString(settings.mLanguage));
     //mCountryCombo->setCurrentText(QLocale::countryToString(settings.mCountry)); // keep in memory
     mFont=settings.mFont;
-    mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
+    //mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
 
     mAutoSaveCheck->setChecked(settings.mAutoSave);
     mAutoSaveDelayEdit->setText(QString::number(settings.mAutoSaveDelay / 60));
@@ -309,8 +309,8 @@ void AppSettingsDialog::changeSettings()
 {
     AppSettings s = getSettings();
     
-    qApp->setFont(mFont);
-    mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
+    //qApp->setFont(mFont);
+    //mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
 
     QLocale::Language newLanguage = s.mLanguage;
     QLocale::Country newCountry= s.mCountry;
@@ -322,6 +322,7 @@ void AppSettingsDialog::changeSettings()
    // emit settingsChanged(s);
 }
 
+/*
 void AppSettingsDialog::fontButtonClicked()
 {
     QFontDialog dialog;
@@ -332,10 +333,11 @@ void AppSettingsDialog::fontButtonClicked()
     const QFont font = QFontDialog::getFont(&ok, mFont, this);
     if (ok) {
         mFont = font;
-        mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
+       // mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
        // qApp->setFont(mFont);
    }
 }
+*/
 
 /**
  * @brief AppSettingsDialog::buttonClicked Corresponding to the restore Default Button
@@ -345,7 +347,7 @@ void AppSettingsDialog::buttonClicked(QAbstractButton* button)
 {
      (void) button;
     mFont = QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE);
-    mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
+    //mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
 
     mLanguageCombo->setCurrentText(QLocale::languageToString(QLocale::system().language()));
     //mCountryCombo->setCurrentText(QLocale::countryToString(QLocale::system().country()));

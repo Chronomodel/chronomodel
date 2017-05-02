@@ -37,7 +37,7 @@ protected:
     //void resizeEvent(QResizeEvent* e);
     
 private slots:
-    void fontButtonClicked();
+    //void fontButtonClicked();
     void changeSettings();
     void buttonClicked(QAbstractButton*);
     
@@ -55,8 +55,8 @@ private:
     QLabel* mLanguageLab;
     QComboBox* mLanguageCombo;
 
-    Label* mFontLab;
-    Button* mFontBut;
+    //Label* mFontLab;
+    //Button* mFontBut;
     QFont mFont;
    // QLabel* mCountryLab;
    // QComboBox* mCountryCombo;
