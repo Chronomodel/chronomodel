@@ -201,14 +201,15 @@ QString MCMCLoopMain::initMCMC()
                     curLevelMaxValue = mModel->mSettings.mTmin;
                 }
                 
-                if (bound->mKnownType == EventKnown::eFixed) {
-                    bound->mTheta.mX = bound->mFixed;
-                }
+                //if (bound->mKnownType == EventKnown::eFixed) {
+                bound->mTheta.mX = bound->mFixed;
+              /*  }
                 else if (bound->mKnownType == EventKnown::eUniform) {
                     bound->mTheta.mX = Generator::randomUniform(qMax(bound->mUniformStart, prevLevelMaxValue),
                                                                 bound->mUniformEnd);
                     qDebug()<<"in initMCMC(): init bound "+bound->mName+QString::number(bound->mTheta.mX);
                 }
+            */
                 curLevelMaxValue = qMax(curLevelMaxValue, bound->mTheta.mX);
                 
                 bound->mTheta.memo();

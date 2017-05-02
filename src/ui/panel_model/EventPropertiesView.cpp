@@ -131,15 +131,15 @@ mButtonWidth(50)
     
     mBoundView = new QWidget(this);
     
-    mKnownFixedRadio   = new QRadioButton(tr("Fixed"), mBoundView);
-    mKnownUniformRadio = new QRadioButton(tr("Uniform"), mBoundView);
+    //mKnownFixedRadio   = new QRadioButton(tr("Fixed"), mBoundView);
+    //mKnownUniformRadio = new QRadioButton(tr("Uniform"), mBoundView);
     
-    connect(mKnownFixedRadio, static_cast<void (QRadioButton::*)(bool)>(&QRadioButton::clicked), this, &EventPropertiesView::updateKnownType);
-    connect(mKnownUniformRadio, static_cast<void (QRadioButton::*)(bool)>(&QRadioButton::clicked), this, &EventPropertiesView::updateKnownType);
+   // connect(mKnownFixedRadio, static_cast<void (QRadioButton::*)(bool)>(&QRadioButton::clicked), this, &EventPropertiesView::updateKnownType);
+   // connect(mKnownUniformRadio, static_cast<void (QRadioButton::*)(bool)>(&QRadioButton::clicked), this, &EventPropertiesView::updateKnownType);
     
     mKnownFixedEdit = new QLineEdit(mBoundView);
-    mKnownStartEdit = new QLineEdit(mBoundView);
-    mKnownEndEdit   = new QLineEdit(mBoundView);
+    //mKnownStartEdit = new QLineEdit(mBoundView);
+    //mKnownEndEdit   = new QLineEdit(mBoundView);
     
     QDoubleValidator* doubleValidator = new QDoubleValidator(this);
     doubleValidator->setDecimals(2);
@@ -164,26 +164,26 @@ mButtonWidth(50)
     
     connect(mDatesList, &DatesList::itemSelectionChanged, this, &EventPropertiesView::updateCombineAvailability);
     connect(mKnownFixedEdit, &QLineEdit::textEdited, this, &EventPropertiesView::updateKnownFixed);
-    connect(mKnownStartEdit, &QLineEdit::textEdited, this, &EventPropertiesView::updateKnownUnifStart);
-    connect(mKnownEndEdit, &QLineEdit::textEdited, this, &EventPropertiesView::updateKnownUnifEnd);
+    //connect(mKnownStartEdit, &QLineEdit::textEdited, this, &EventPropertiesView::updateKnownUnifStart);
+    //connect(mKnownEndEdit, &QLineEdit::textEdited, this, &EventPropertiesView::updateKnownUnifEnd);
     
     QFormLayout* fixedLayout = new QFormLayout();
     fixedLayout->addRow(tr("Value"), mKnownFixedEdit);
     mFixedGroup = new QGroupBox();
     mFixedGroup->setLayout(fixedLayout);
     
-    QFormLayout* uniformLayout = new QFormLayout();
+    /*QFormLayout* uniformLayout = new QFormLayout();
     uniformLayout->addRow(tr("Start"), mKnownStartEdit);
     uniformLayout->addRow(tr("End"), mKnownEndEdit);
     mUniformGroup = new QGroupBox();
     mUniformGroup->setLayout(uniformLayout);
-    
+    */
     QVBoxLayout* boundLayout = new QVBoxLayout();
     boundLayout->setContentsMargins(10, 6, 15, 6);
     boundLayout->setSpacing(10);
-    boundLayout->addWidget(mKnownFixedRadio);
+//    boundLayout->addWidget(mKnownFixedRadio);
     boundLayout->addWidget(mFixedGroup);
-    boundLayout->addWidget(mKnownUniformRadio);
+//    boundLayout->addWidget(mKnownUniformRadio);
     boundLayout->addWidget(mUniformGroup);
     boundLayout->addWidget(mKnownGraph);
     boundLayout->addStretch();
@@ -248,16 +248,16 @@ void EventPropertiesView::updateEvent()
             mRecycleBut->setEnabled(hasDates);
             
         } else if (type == Event::eKnown) {
-            EventKnown::KnownType knownType = (EventKnown::KnownType)mEvent.value(STATE_EVENT_KNOWN_TYPE).toInt();
+          //  EventKnown::KnownType knownType = (EventKnown::KnownType)mEvent.value(STATE_EVENT_KNOWN_TYPE).toInt();
             
-            mKnownFixedRadio   -> setChecked(knownType == EventKnown::eFixed);
-            mKnownUniformRadio -> setChecked(knownType == EventKnown::eUniform);
+            //mKnownFixedRadio   -> setChecked(knownType == EventKnown::eFixed);
+           // mKnownUniformRadio -> setChecked(knownType == EventKnown::eUniform);
             
             mKnownFixedEdit -> setText(QString::number(mEvent.value(STATE_EVENT_KNOWN_FIXED).toDouble()));
-            mKnownStartEdit -> setText(QString::number(mEvent.value(STATE_EVENT_KNOWN_START).toDouble()));
-            mKnownEndEdit   -> setText(QString::number(mEvent.value(STATE_EVENT_KNOWN_END).toDouble()));
+           // mKnownStartEdit -> setText(QString::number(mEvent.value(STATE_EVENT_KNOWN_START).toDouble()));
+            //mKnownEndEdit   -> setText(QString::number(mEvent.value(STATE_EVENT_KNOWN_END).toDouble()));
             
-            updateKnownControls();
+            //updateKnownControls();
             updateKnownGraph();
         }
     }
@@ -270,7 +270,7 @@ const QJsonObject& EventPropertiesView::getEvent() const
     return mEvent;
 }
 
-//#pragma mark Event Properties
+
 void EventPropertiesView::updateEventName()
 {
     QJsonObject event = mEvent;
@@ -295,29 +295,30 @@ void EventPropertiesView::updateEventMethod(int index)
 }
 
 //#pragma mark Event Known Properties
+/*
 void EventPropertiesView::updateKnownType()
 {
-    if((Event::Type)mEvent.value(STATE_EVENT_TYPE).toInt() == Event::eKnown)
-    {
+    if ((Event::Type)mEvent.value(STATE_EVENT_TYPE).toInt() == Event::eKnown)  {
         EventKnown::KnownType type = EventKnown::eFixed;
-        if(mKnownUniformRadio->isChecked())
+       // if(mKnownUniformRadio->isChecked())
             type = EventKnown::eUniform;
         
-        if((EventKnown::KnownType)mEvent.value(STATE_EVENT_KNOWN_TYPE).toInt() != type)
-        {
+        if ((EventKnown::KnownType)mEvent.value(STATE_EVENT_KNOWN_TYPE).toInt() != type) {
             QJsonObject event = mEvent;
             event[STATE_EVENT_KNOWN_TYPE] = type;
             MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound type updated"));
         }
     }
 }
-
+*/
 void EventPropertiesView::updateKnownFixed(const QString& text)
 {
     QJsonObject event = mEvent;
     event[STATE_EVENT_KNOWN_FIXED] = round(text.toDouble());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound fixed value updated"));
 }
+
+/*
 void EventPropertiesView::updateKnownUnifStart(const QString& text)
 {
     QJsonObject event = mEvent;
@@ -331,6 +332,7 @@ void EventPropertiesView::updateKnownUnifEnd(const QString& text)
     event[STATE_EVENT_KNOWN_END] = round(text.toDouble());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound max updated"));
 }
+*/
 
 /*void EventPropertiesView::loadKnownCsv()
 {
@@ -351,11 +353,11 @@ void EventPropertiesView::updateKnownGraph()
         const double step = settings.value(STATE_SETTINGS_STEP).toDouble();
         EventKnown event = EventKnown::fromJson(mEvent);
 
-        if(  ( (event.mKnownType==EventKnown::eFixed) && ((tmin>event.mFixed) || (event.mFixed>tmax)) )
+     /*   if (  ( (event.mKnownType==EventKnown::eFixed) && ((tmin>event.mFixed) || (event.mFixed>tmax)) ) )
           || ( (event.mKnownType==EventKnown::eUniform) && (event.mUniformStart>event.mUniformEnd)  )
           || ( (event.mKnownType==EventKnown::eUniform) && (event.mUniformStart>tmax)  )
-          || ( (event.mKnownType==EventKnown::eUniform) && (event.mUniformEnd<tmin)  ))
-        {
+          || ( (event.mKnownType==EventKnown::eUniform) && (event.mUniformEnd<tmin)  )) */
+        if ( (tmin>event.mFixed) || (event.mFixed>tmax) ) {
 
             return;
         }
@@ -378,20 +380,20 @@ void EventPropertiesView::updateKnownGraph()
         curve.mName = "Bound";
         curve.mBrush = Painting::mainColorLight;
 
-        curve.mPen = QPen(Painting::mainColorLight, 2.f);
+        curve.mPen = QPen(Painting::mainColorLight, 2.);
         
         curve.mIsHorizontalSections = true;
         qreal tLower;
         qreal tUpper;
-        if(event.mKnownType == EventKnown::eFixed) {
+        //if(event.mKnownType == EventKnown::eFixed) {
             tLower = event.fixedValue();
             tUpper = tLower;
 
-        }
+       /* }
         else {
             tLower = event.uniformStart();
             tUpper = event.uniformEnd();
-        }
+        } */
 
         curve.mSections.append(qMakePair(tLower,tUpper));
         mKnownGraph->addCurve(curve);
@@ -399,29 +401,26 @@ void EventPropertiesView::updateKnownGraph()
     //}
 }
 
+/*
 void EventPropertiesView::updateKnownControls()
 {
     mFixedGroup->setVisible(mKnownFixedRadio->isChecked());
     mUniformGroup->setVisible(mKnownUniformRadio->isChecked());
 }
+*/
 
-//#pragma mark Event Data
 void EventPropertiesView::createDate()
 {
-    if(!mEvent.isEmpty())
-    {
+    if (!mEvent.isEmpty()) {
         Button* but = dynamic_cast<Button*>(sender());
-        if(but)
-        {
+        if (but) {
             Project* project = MainWindow::getInstance()->getProject();
             const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
             
-            for(int i=0; i<plugins.size(); ++i)
-            {
-                if(plugins.at(i)->getName() == but->text())
-                {
+            for (int i=0; i<plugins.size(); ++i) {
+                if (plugins.at(i)->getName() == but->text()) {
                     Date date = project->createDateFromPlugin(plugins.at(i));
-                    if(!date.isNull())
+                    if (!date.isNull())
                         project->addDate(mEvent.value(STATE_ID).toInt(), date.toJson());
                 }
             }
@@ -433,7 +432,7 @@ void EventPropertiesView::deleteSelectedDates()
 {
     QList<QListWidgetItem*> items = mDatesList->selectedItems();
     QList<int> indexes;
-    for(int i=0; i<items.size(); ++i)
+    for (int i=0; i<items.size(); ++i)
         indexes.push_back(mDatesList->row(items[i]));
     
     MainWindow::getInstance()->getProject()->deleteDates(mEvent.value(STATE_ID).toInt(), indexes);

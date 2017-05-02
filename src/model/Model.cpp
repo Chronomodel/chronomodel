@@ -732,21 +732,22 @@ bool Model::isValid()
                 double lower = (double) mSettings.mTmin;
                 for (int k=0; k<j; ++k) {
                     Event* evt = eventBranches[i][k];
-                    if(evt->mType == Event::eKnown) {
+                    if (evt->mType == Event::eKnown) {
                         EventKnown* bd = dynamic_cast<EventKnown*>(evt);
-                        if(bd->mKnownType == EventKnown::eFixed)
-                            lower = qMax(lower, bd->mFixed);
-                        else if(bd->mKnownType == EventKnown::eUniform)
-                            lower = qMax(lower, bd->mUniformStart);
+                        //if(bd->mKnownType == EventKnown::eFixed)
+                        lower = qMax(lower, bd->mFixed);
+                        //else if(bd->mKnownType == EventKnown::eUniform)
+                        //    lower = qMax(lower, bd->mUniformStart);
                     }
                 }
                 // Update bound interval
-                if (bound->mKnownType == EventKnown::eFixed && bound->mFixed < lower)
+                //if (bound->mKnownType == EventKnown::eFixed && bound->mFixed < lower)
+                if (bound->mFixed < lower)
                     throw QString("The bound \"" + bound->mName + "\" has a fixed value inconsistent with previous bounds in chain!");
 
-                else if (bound->mKnownType == EventKnown::eUniform)
+              /*  else if (bound->mKnownType == EventKnown::eUniform)
                     bound->mUniformStart = qMax(bound->mUniformStart, lower);
-
+                */
                 
                 // --------------------
                 // Check bound interval upper value
@@ -756,24 +757,26 @@ bool Model::isValid()
                     Event* evt = eventBranches[i][k];
                     if (evt->mType == Event::eKnown) {
                         EventKnown* bd = dynamic_cast<EventKnown*>(evt);
-                        if (bd->mKnownType == EventKnown::eFixed)
-                            upper = qMin(upper, bd->mFixed);
-
+                        // if (bd->mKnownType == EventKnown::eFixed)
+                        upper = qMin(upper, bd->mFixed);
+                        /*
                         else if (bd->mKnownType == EventKnown::eUniform)
                             upper = qMin(upper, bd->mUniformEnd);
+                        */
                     }
                 }
                 // Update bound interval
-                if (bound->mKnownType == EventKnown::eFixed && bound->mFixed > upper)
+                //if (bound->mKnownType == EventKnown::eFixed && bound->mFixed > upper)
+                if (bound->mFixed > upper)
                     throw QString("The bound \"" + bound->mName + "\" has a fixed value inconsistent with next bounds in chain!");
-
+                /*
                 else if (bound->mKnownType == EventKnown::eUniform) {
                     bound->mUniformEnd = qMin(bound->mUniformEnd, upper);
 
                     if (bound->mUniformStart >= bound->mUniformEnd)
                         throw QString("The bound \"" + bound->mName + "\" has an inconsistent range with other related bounds!");
 
-                }
+                } */
             }
             event = nullptr;
         }
@@ -794,11 +797,11 @@ bool Model::isValid()
         for (int j=0; j<phaseFrom->mEvents.size(); ++j) {
             EventKnown* bound = dynamic_cast<EventKnown*>(phaseFrom->mEvents[j]);
             if (bound) {
-                if (bound->mKnownType == EventKnown::eFixed)
-                    lower = qMax(lower, bound->mFixed);
+                //if (bound->mKnownType == EventKnown::eFixed)
+                lower = qMax(lower, bound->mFixed);
 
-                else if (bound->mKnownType == EventKnown::eUniform)
-                    lower = qMax(lower, bound->mUniformStart);
+                /* else if (bound->mKnownType == EventKnown::eUniform)
+                    lower = qMax(lower, bound->mUniformStart); */
             }
         }
         double upper = (double) mSettings.mTmax;
@@ -806,11 +809,11 @@ bool Model::isValid()
         for (int j=0; j<phaseTo->mEvents.size(); ++j) {
             EventKnown* bound = dynamic_cast<EventKnown*>(phaseTo->mEvents[j]);
             if (bound) {
-                if (bound->mKnownType == EventKnown::eFixed)
+               // if (bound->mKnownType == EventKnown::eFixed)
                     upper = qMin(upper, bound->mFixed);
-
+                /*
                 else if (bound->mKnownType == EventKnown::eUniform)
-                    upper = qMin(upper, bound->mUniformEnd);
+                    upper = qMin(upper, bound->mUniformEnd); */
             }
             bound = nullptr;
         }
@@ -841,15 +844,15 @@ bool Model::isValid()
                     EventKnown* bound = dynamic_cast<EventKnown*>(mPhases.at(i)->mEvents[j]);
                     if (bound) {
                         boundFound = true;
-                        if(bound->mKnownType == EventKnown::eFixed) {
+                        //if(bound->mKnownType == EventKnown::eFixed) {
                             min = std::max(min, bound->mFixed);
                             max = std::min(max, bound->mFixed);
-                        }
-
+                       // }
+                        /*
                         else if(bound->mKnownType == EventKnown::eUniform) {
                             min = std::max(min, bound->mUniformEnd);
                             max = std::min(max, bound->mUniformStart);
-                        }
+                        } */
                     }
                     bound = nullptr;
                 }
@@ -859,6 +862,7 @@ bool Model::isValid()
                     throw QString("The phase \"" + mPhases.at(i)->mName + "\" has a duration inconsistent with the bounds it contains!");
 
                 // Modify bounds intervals to match max phase duration
+                /*
                 for (int j=0; j<mPhases.at(i)->mEvents.size(); ++j) {
                     if (mPhases.at(i)->mEvents[j]->mType == Event::eKnown) {
                         EventKnown* bound = dynamic_cast<EventKnown*>(mPhases.at(i)->mEvents[j]);
@@ -874,6 +878,7 @@ bool Model::isValid()
                         bound = nullptr;
                     }
                 }
+                */
             }
         }
     }
@@ -1165,8 +1170,8 @@ void Model::generateCredibility(const double thresh)
     for (auto && pEvent : mEvents) {
         bool isFixedBound = false;
         if (pEvent->type() == Event::eKnown) {
-            EventKnown* ek = dynamic_cast<EventKnown*>(pEvent);
-            if (ek->knownType() == EventKnown::eFixed)
+            //EventKnown* ek = dynamic_cast<EventKnown*>(pEvent);
+            //if (ek->knownType() == EventKnown::eFixed)
                 isFixedBound = true;
         }
 
@@ -1244,16 +1249,16 @@ void Model::generateHPD(const double thresh)
     while (iterEvent!=mEvents.end()) {
         bool isFixedBound = false;
 
-        if((*iterEvent)->type() == Event::eKnown) {
-            EventKnown* ek = dynamic_cast<EventKnown*>(*iterEvent);
-            if(ek->knownType() == EventKnown::eFixed)
+        if ((*iterEvent)->type() == Event::eKnown) {
+            //EventKnown* ek = dynamic_cast<EventKnown*>(*iterEvent);
+            //if(ek->knownType() == EventKnown::eFixed)
                 isFixedBound = true;
         }
 
-        if(!isFixedBound) {
+        if (!isFixedBound) {
             (*iterEvent)->mTheta.generateHPD(thresh);
 
-            for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
+            for (int j=0; j<(*iterEvent)->mDates.size(); ++j) {
                 Date& date = (*iterEvent)->mDates[j];
                 date.mTheta.generateHPD(thresh);
                 date.mSigma.generateHPD(thresh);

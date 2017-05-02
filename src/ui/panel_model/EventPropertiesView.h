@@ -61,13 +61,13 @@ private slots:
     void sendCombineSelectedDates();
     void sendSplitDate();
     
-    void updateKnownType();
+//    void updateKnownType();
     void updateKnownFixed(const QString& text);
-    void updateKnownUnifStart(const QString& text);
-    void updateKnownUnifEnd(const QString& text);
+//    void updateKnownUnifStart(const QString& text);
+//    void updateKnownUnifEnd(const QString& text);
     
     void updateKnownGraph();
-    void updateKnownControls();
+//    void updateKnownControls();
     
 signals:
     void combineDatesRequested(const int eventId, const QList<int>& dateIds);
@@ -102,12 +102,12 @@ private:
     Button* mCombineBut;
     Button* mSplitBut;
     
-    QRadioButton* mKnownFixedRadio;
-    QRadioButton* mKnownUniformRadio;
+   // QRadioButton* mKnownFixedRadio;
+   // QRadioButton* mKnownUniformRadio;
     
     QLineEdit* mKnownFixedEdit;
-    QLineEdit* mKnownStartEdit;
-    QLineEdit* mKnownEndEdit;
+   // QLineEdit* mKnownStartEdit;
+   // QLineEdit* mKnownEndEdit;
     
     GraphView* mKnownGraph;
     

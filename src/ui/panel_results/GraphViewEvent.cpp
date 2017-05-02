@@ -71,15 +71,15 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     setNumericalResults(resultsHTML, resultsText);
 
     bool isFixedBound = false;
-    bool isUnifBound = false;
+  //  bool isUnifBound = false;
     EventKnown* bound = nullptr;
     if (mEvent->type() == Event::eKnown) {
         bound = dynamic_cast<EventKnown*>(mEvent);
         if (bound) {
-            if (bound->knownType() == EventKnown::eFixed)
+            //if (bound->knownType() == EventKnown::eFixed)
                 isFixedBound = true;
-            else if (bound->knownType() == EventKnown::eUniform)
-                isUnifBound = true;
+          //  else if (bound->knownType() == EventKnown::eUniform)
+          //      isUnifBound = true;
         }
     }
 
@@ -113,7 +113,8 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                 curveLineBound.mVerticalValue = bound->fixedValue();
                 mGraph->addCurve(curveLineBound);
 
-            } else if (isUnifBound) {
+            }
+            /*else if (isUnifBound) {
                 GraphCurve curveLineStart;
                 curveLineStart.mName = "Post Distrib All Chains";
                 curveLineStart.mPen.setColor(color);
@@ -127,7 +128,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                 curveLineEnd.mIsVerticalLine = true;
                 curveLineEnd.mVerticalValue = bound->uniformEnd();
                 mGraph->addCurve(curveLineEnd);
-            }
+            }*/
 
 
             // ------------------------------------
@@ -255,10 +256,11 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
      *  - Accept i
      *  - Accept Target
      * ------------------------------------------------  */
-    else if (typeGraph == eAccept && variable == eTheta
+   /* else if (typeGraph == eAccept && variable == eTheta
                 && mEvent->mMethod == Event::eMHAdaptGauss
-                && isUnifBound == false) {
-
+                && isUnifBound == false) {*/
+    else if (typeGraph == eAccept && variable == eTheta
+                && mEvent->mMethod == Event::eMHAdaptGauss) {
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(stringWithAppSettings);
@@ -295,7 +297,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
     EventKnown* bound = nullptr;
     if (mEvent->type() == Event::eKnown) {
         bound = dynamic_cast<EventKnown*>(mEvent);
-        if (bound && bound->knownType() == EventKnown::eFixed)
+        //if (bound && bound->knownType() == EventKnown::eFixed)
                 isFixedBound = true;
 
     }

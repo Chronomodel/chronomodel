@@ -15,8 +15,6 @@
 EventKnownItem::EventKnownItem(EventsScene* eventsScene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):EventItem(eventsScene, event, settings, parent),
 mThumbH(20),
 mThumbVisible(true)
-//mWithSelectedPhase(false),
-//mShowAllThumbs(true)
 {
     setEvent(event, settings);
     mScene = static_cast<AbstractScene*>(eventsScene);
@@ -53,10 +51,10 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     
     EventKnown bound = EventKnown::fromJson(event);
     // if Fixed Bound with fixed value in study period or uniform Bound with bound.mUniformStart<bound.mUniformEnd
-    if(  ( (bound.mKnownType==EventKnown::eFixed) && (tmin<=bound.mFixed) && (bound.mFixed<=tmax) )
+   /* if(  ( (bound.mKnownType==EventKnown::eFixed) && (tmin<=bound.mFixed) && (bound.mFixed<=tmax) )
       || ( (bound.mKnownType==EventKnown::eUniform) &&
-           (bound.mUniformStart<bound.mUniformEnd)  && (bound.mUniformStart< tmax) && (bound.mUniformEnd>tmin)     ))
-    {
+           (bound.mUniformStart<bound.mUniformEnd)  && (bound.mUniformStart< tmax) && (bound.mUniformEnd>tmin)     )) */
+    if ( (tmin<=bound.mFixed) && (bound.mFixed<=tmax) ) {
         bound.updateValues(tmin, tmax, step);
 
         GraphView* graph = new GraphView();
@@ -65,7 +63,7 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
 
         graph->setRangeX(tmin, tmax);
         graph->setCurrentX(tmin, tmax);
-        graph->setRangeY(0, 1.1f);
+        graph->setRangeY(0, 1.1);
 
         graph->showXAxisArrow(false);
         graph->showXAxisTicks(false);
@@ -85,18 +83,18 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
         GraphCurve curve;
         curve.mName = "Bound";
         curve.mBrush = Painting::mainColorLight;
-        curve.mPen = QPen(Painting::mainColorLight, 2.f);
+        curve.mPen = QPen(Painting::mainColorLight, 2.);
 
         curve.mIsHorizontalSections = true;
         qreal tLower;
         qreal tUpper;
-        if (bound.mKnownType == EventKnown::eFixed) {
+        //if (bound.mKnownType == EventKnown::eFixed) {
             tLower = bound.mFixed;
             tUpper = tLower;
-        } else {
+       /* } else {
             tLower = bound.mUniformStart;
             tUpper = bound.mUniformEnd;
-        }
+        } */
 
         curve.mSections.append(qMakePair(tLower,tUpper));
         graph->addCurve(curve);
@@ -168,22 +166,6 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     const QJsonArray phases = getPhases();
     const int numPhases = (int)phases.size();
     const double w = phasesRect.width()/numPhases;
-
-   /* mWithSelectedPhase = false;
-    foreach (const QJsonValue phase, phases) {
-            if ((mWithSelectedPhase == false) && (phase.toObject().value(STATE_IS_SELECTED)==true))
-                    mWithSelectedPhase = true;
-     }
-
-    const bool noHide = dynamic_cast<EventsScene*>(mScene)->showAllThumbs();
-
-    if (mWithSelectedPhase || noHide)
-       // setGreyedOut(false);
-    mGreyedOut = false;
-    else
-        mGreyedOut = true;
-        //setGreyedOut(true);
-   */
 
     if (mGreyedOut) //setting with setGreyedOut() just above
         painter->setOpacity(0.1f);

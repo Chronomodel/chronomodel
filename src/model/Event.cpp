@@ -558,7 +558,7 @@ void Event::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, co
 
     else {
         EventKnown* ek = dynamic_cast<EventKnown*>(this);
-        if (ek && (ek->knownType() == EventKnown::eFixed)) {
+        //if (ek && (ek->knownType() == EventKnown::eFixed)) {
             // Nothing todo : this is just a Dirac !
             ek->mTheta.mHisto.clear();
             ek->mTheta.mChainsHistos.clear();
@@ -568,7 +568,7 @@ void Event::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, co
             for (int i =0 ;i<chains.size(); ++i)
                 ek->mTheta.mChainsHistos.append(ek->mTheta.mHisto);
 
-        }
+        //}
     }
 
 }

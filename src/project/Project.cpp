@@ -310,9 +310,10 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
                    eventsNew.at(i).toObject().value(STATE_EVENT_METHOD) != eventsOld.at(i).toObject().value(STATE_EVENT_METHOD) ||
                    eventsNew.at(i).toObject().value(STATE_EVENT_PHASE_IDS) != eventsOld.at(i).toObject().value(STATE_EVENT_PHASE_IDS) ||
                    eventsNew.at(i).toObject().value(STATE_EVENT_KNOWN_TYPE) != eventsOld.at(i).toObject().value(STATE_EVENT_KNOWN_TYPE) ||
-                   eventsNew.at(i).toObject().value(STATE_EVENT_KNOWN_FIXED) != eventsOld.at(i).toObject().value(STATE_EVENT_KNOWN_FIXED) ||
-                   eventsNew.at(i).toObject().value(STATE_EVENT_KNOWN_START) != eventsOld.at(i).toObject().value(STATE_EVENT_KNOWN_START) ||
-                   eventsNew.at(i).toObject().value(STATE_EVENT_KNOWN_END) != eventsOld.at(i).toObject().value(STATE_EVENT_KNOWN_END) ) {
+                   eventsNew.at(i).toObject().value(STATE_EVENT_KNOWN_FIXED) != eventsOld.at(i).toObject().value(STATE_EVENT_KNOWN_FIXED) )
+                   // || eventsNew.at(i).toObject().value(STATE_EVENT_KNOWN_START) != eventsOld.at(i).toObject().value(STATE_EVENT_KNOWN_START) ||
+                   //eventsNew.at(i).toObject().value(STATE_EVENT_KNOWN_END) != eventsOld.at(i).toObject().value(STATE_EVENT_KNOWN_END) )
+               {
                    mStructureIsChanged = true;
                    return;
                }

@@ -7,26 +7,28 @@
 class EventKnown: public Event
 {
 public:
+    /*
     enum KnownType{
         eFixed = 0,
         eUniform = 1
     };
-    
+    */
+
     EventKnown();
     virtual ~EventKnown();
     
     static EventKnown fromJson(const QJsonObject& json);
     virtual QJsonObject toJson() const;
     
-    void setKnownType(KnownType type);
+//    void setKnownType(KnownType type);
     void setFixedValue(const double& value);
-    void setUniformStart(const double& value);
-    void setUniformEnd(const double& value);
+ //   void setUniformStart(const double& value);
+ //   void setUniformEnd(const double& value);
     
-    KnownType knownType() const;
+//    KnownType knownType() const;
     double fixedValue() const;
-    double uniformStart() const;
-    double uniformEnd() const;
+//    double uniformStart() const;
+//    double uniformEnd() const;
     
     void updateValues(const double &tmin, const double &tmax, const double &step);
     
@@ -34,12 +36,12 @@ public:
     
     
 public:
-    KnownType mKnownType;
+//    KnownType mKnownType;
     
     double mFixed;
     
-    double mUniformStart;
-    double mUniformEnd;
+//    double mUniformStart;
+//    double mUniformEnd;
     
     QMap<double, double> mValues;
 };
