@@ -124,11 +124,7 @@ void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
     path.lineTo(arrow_w/2., arrow_l/2.);
     path.lineTo(0, -arrow_l/2.);
     path.closeSubpath();
-    
-    //const double posX = rect.width()/2.;
-    //const double posY = rect.height()/2.;
 
-   // const QRectF axeBox = QRectF(qMin(mXFrom, mXTo), qMin(mYFrom, mYTo), std::abs(mXTo-mXFrom), std::abs(mYTo-mYFrom));
      const QPoint centrum ((mXFrom + mXTo)/2., (mYFrom + mYTo)/2.);
 
     if (mXFrom < mXTo && mYFrom > mYTo) {

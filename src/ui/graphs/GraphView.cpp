@@ -432,11 +432,15 @@ void GraphView::setCanControlOpacity(bool can)
     mCanControlOpacity = can;
 }
 
-void GraphView::setFormatFunctX(FormatFunc f){
+void GraphView::setFormatFunctX(FormatFunc f)
+{
+    (void) f;
     //mFormatFuncX = f;
 }
 
-void GraphView::setFormatFunctY(FormatFunc f){
+void GraphView::setFormatFunctY(FormatFunc f)
+{
+    (void) f;
     //mFormatFuncY = f;
 }
 
