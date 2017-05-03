@@ -10,8 +10,8 @@ PluginUniformForm::PluginUniformForm(PluginUniform* plugin, QWidget* parent, Qt:
 {
     //PluginUniform* pluginUnif = (PluginUniform*)mPlugin;
     
-    mMinLab = new QLabel(tr("Lower date"), this);
-    mMaxLab = new QLabel(tr("Upper date"), this);
+    mMinLab = new QLabel(tr("Lower date (BC/AD)"), this);
+    mMaxLab = new QLabel(tr("Upper date (BC/AD"), this);
     
     mMinEdit = new QLineEdit(this);
     mMinEdit->setText("0");

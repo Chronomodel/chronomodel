@@ -60,11 +60,10 @@ void PluginTLForm::setData(const QJsonObject& data, bool isCombined)
 QJsonObject PluginTLForm::getData()
 {
     QJsonObject data;
-    QLocale locale=QLocale();
     
-    double a = locale.toDouble(mAverageEdit->text());
-    double e = locale.toDouble(mErrorEdit->text());
-    double y = locale.toDouble(mYearEdit->text());
+    double a = locale().toDouble(mAverageEdit->text());
+    double e = locale().toDouble(mErrorEdit->text());
+    double y = locale().toDouble(mYearEdit->text());
     
     data.insert(DATE_TL_AGE_STR, a);
     data.insert(DATE_TL_ERROR_STR, e);
@@ -76,8 +75,7 @@ QJsonObject PluginTLForm::getData()
 void PluginTLForm::errorIsValid(QString str)
 {
     bool ok;
-    QLocale locale;
-    double value = locale.toDouble(str,&ok);
+    double value = locale().toDouble(str,&ok);
 
     emit PluginFormAbstract::OkEnabled(ok && (value>0) );
 
