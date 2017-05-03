@@ -58,16 +58,17 @@ mNoResults(true)
 
     mReasonChangeStructure<<"project loaded"<<"Settings updated";
     mReasonChangeStructure<<"Event constraint deleted"<<"Event constraint created"<<"Event(s) deleted";
-    mReasonChangeStructure<<"Event created"<<"Bound created"<<"Event method updated" <<"Date created";
-    mReasonChangeStructure<<"Event selected";
+    mReasonChangeStructure<<"Event created"<<"Bound created"<<"Event method updated" ;
+    mReasonChangeStructure<<"Update selected event method";//<<"Event selected";
 
-    mReasonChangeStructure<<"Date updated"<<"Phase constraint updated"<<"Phase created"<<"Phase(s) deleted";
-
+    mReasonChangeStructure<<"Date created"<<"Date updated"<<"Phase constraint updated"<<"Phase created"<<"Phase(s) deleted";
+    mReasonChangeStructure<<"Update selected data method";
     mReasonChangeStructure<<"Phase updated"<<"Phase constraint created"<<"Phase's events updated";
     mReasonChangeStructure<<"Phase selected";
     mReasonChangeStructure.squeeze();
 
     mReasonChangeDesign<<"Event color updated"<< "Event color updated"<<"Event name updated";
+    mReasonChangeDesign<<"Date name updates"<<"Date color updated";
     mReasonChangeDesign.squeeze();
 
     mReasonChangePosition<<"item moved";
@@ -85,11 +86,7 @@ Project::~Project()
     mLastSavedState = QJsonObject();
     delete mModel;
     mModel = nullptr;
-
 }
-
-
-//#pragma mark Project State
 
 void Project::initState(const QString& reason)
 {
@@ -100,9 +97,6 @@ void Project::initState(const QString& reason)
     // This is called when closing a project or openning a new one,
     // so the undoStack has just been cleared and we want to keep it empty at project start!
     mState = state;
-
-
-
 }
 
 QJsonObject Project::emptyState() const
@@ -268,7 +262,7 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
             }
         }
 
-        // Check phases  constraintes modification
+        // Check phases constraintes modification
         const QJsonArray phasesConstNew = stateNew.value(STATE_PHASES_CONSTRAINTS).toArray();
         const QJsonArray phasesConstOld = stateOld.value(STATE_PHASES_CONSTRAINTS).toArray();
 
@@ -325,8 +319,8 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
                    mStructureIsChanged = true;
                    return;
                } else {
-                   for (int j = 0; j<datesNew.size(); ++j){
-                        // Check name of Event
+                   for (int j = 0; j<datesNew.size(); ++j) {
+                        // Check name of Date
                         if (datesNew.at(j).toObject().value(STATE_NAME) != datesOld.at(j).toObject().value(STATE_NAME))
                             mDesignIsChanged = true;
 
@@ -342,6 +336,19 @@ void Project::checkStateModification(const QJsonObject& stateNew,const QJsonObje
                             datesNew.at(j).toObject().value(STATE_DATE_DELTA_AVERAGE).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_AVERAGE).toDouble() ||
                             datesNew.at(j).toObject().value(STATE_DATE_DELTA_ERROR).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_ERROR).toDouble() ||
                             datesNew.at(j).toObject().value(STATE_DATE_SUB_DATES) != datesOld.at(j).toObject().value(STATE_DATE_SUB_DATES) ) {
+
+                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_DATA) != datesOld.at(j).toObject().value(STATE_DATE_DATA) );
+                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_PLUGIN_ID) != datesOld.at(j).toObject().value(STATE_DATE_PLUGIN_ID));
+                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_VALID) != datesOld.at(j).toObject().value(STATE_DATE_VALID) );
+                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_DELTA_TYPE).toInt() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_TYPE).toInt());
+                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_DELTA_FIXED).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_FIXED).toDouble());
+                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_DELTA_MIN).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_MIN).toDouble() );
+                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_DELTA_MAX).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_MAX).toDouble());
+                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_DELTA_AVERAGE).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_AVERAGE).toDouble());
+                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_DELTA_ERROR).toDouble() != datesOld.at(j).toObject().value(STATE_DATE_DELTA_ERROR).toDouble());
+                            qDebug()<< (datesNew.at(j).toObject().value(STATE_DATE_SUB_DATES) != datesOld.at(j).toObject().value(STATE_DATE_SUB_DATES) );
+
+
                             mStructureIsChanged = true;
                             return;
                         }
@@ -1224,7 +1231,7 @@ void Project::updateSelectedEventsDataMethod(Date::DataMethod method, const QStr
         }
     }
     stateNext[STATE_EVENTS] = events;
-    pushProjectState(stateNext, tr("Update selected events method"), true);
+    pushProjectState(stateNext, tr("Update selected data method"), true);
 }
 
 
@@ -1256,6 +1263,7 @@ Date Project::createDateFromPlugin(PluginAbstract* plugin)
         PluginFormAbstract* form = plugin->getForm();
         dialog.setForm(form);
         dialog.setDataMethod(plugin->getDataMethod());
+
         
         if (dialog.exec() == QDialog::Accepted) {
             if (form->isValid()) {
@@ -1413,7 +1421,12 @@ void Project::updateDate(int eventId, int dateIndex)
                 
                 if (dialog.exec() == QDialog::Accepted) {
                     if (form->isValid()) {
+                        // this reason is not inside the list of mReasonChangeStructure
+                        // or mReasonChangeDesign or mReasonChangePosition,
+                        // we force to use the fonction checkStateModification() within pushProjectState()
+                        const QString reason ("Date from dialog");
                         date[STATE_DATE_DATA] = form->getData();
+
                         date[STATE_NAME] = dialog.getName();
                         date[STATE_DATE_METHOD] = dialog.getMethod();
                         
@@ -1432,8 +1445,8 @@ void Project::updateDate(int eventId, int dateIndex)
                         event[STATE_EVENT_DATES] = dates;
                         events[i] = event;
                         state[STATE_EVENTS] = events;
-                        
-                        pushProjectState(state, tr("Date updated"), true);
+
+                        pushProjectState(state, reason, true);
                         
                     } else {
                         QMessageBox message(QMessageBox::Critical,

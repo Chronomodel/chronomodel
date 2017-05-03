@@ -163,22 +163,25 @@ void DateDialog::setForm(PluginFormAbstract* form)
 {
     if (mForm) {
         mForm->setVisible(false);
-        mForm->setParent(0);
+        mForm->setParent(nullptr);
     }
     if (form) {
+
         mForm = form;
         connect(mForm, &PluginFormAbstract::OkEnabled, this, &DateDialog::setPluginDataValid);
 
         mLayout->insertWidget(2, mForm);
         PluginAbstract* plugin = form->mPlugin;
-        
+
+        setWindowTitle(tr("Create") + " " + plugin->getName() + " " + tr("Data"));
         // Check if wiggle is allowed by plugin
         mWiggleIsValid = true;
         mPluginDataAreValid = true;
 
-        if (plugin->wiggleAllowed()) {
+        if (plugin->wiggleAllowed())
             setWiggleEnabled(true);
-        } else
+
+        else
             setWiggleEnabled(false);
 
         
@@ -355,14 +358,20 @@ Date::DataMethod DateDialog::getMethod() const
 
 Date::DeltaType DateDialog::getDeltaType() const
 {
-    Date::DeltaType type = Date::eDeltaNone;
-    if (mDeltaFixedRadio->isChecked() && mDeltaFixedEdit->text().toDouble() !=0 )
-        type = Date::eDeltaFixed;
+    if (!mWiggleIsValid)
+        return Date::eDeltaNone;
+
+    else if (mDeltaFixedRadio->isChecked() && mDeltaFixedEdit->text().toDouble() != 0. )
+        return Date::eDeltaFixed;
+
     else if (mDeltaRangeRadio->isChecked())
-        type = Date::eDeltaRange;
+        return Date::eDeltaRange;
+
     else if (mDeltaGaussRadio->isChecked())
-        type = Date::eDeltaGaussian;
-    return type;
+        return Date::eDeltaGaussian;
+
+    else
+        return Date::eDeltaNone;
 }
 
 
