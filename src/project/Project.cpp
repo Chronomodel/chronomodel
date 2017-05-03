@@ -192,11 +192,6 @@ void Project::sendUpdateState(const QJsonObject& state, const QString& reason, b
 #ifdef DEBUG
     qDebug()<<"Project::sendUpdateState "<<reason<<notify;
     //-----------------
-  /*  QJsonArray phases = state.value(STATE_EVENTS).toArray();
-    foreach(QJsonValue phase, phases) {
-        qDebug()<<"Project sendUpdateState"<<phase.toObject().value(STATE_NAME).toString()<<phase.toObject().value(STATE_IS_SELECTED).toBool()<<phase.toObject().value(STATE_IS_CURRENT).toBool();
-    }*/
-
     //-----------------
 #endif
     StateEvent* event = new StateEvent(state, reason, notify);

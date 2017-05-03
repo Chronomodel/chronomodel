@@ -3,11 +3,11 @@
 
 CalibrationCurve::CalibrationCurve():
 mName(QString("unkown")),
-mDescription(QString("undefined")),
-mMethod(CalibrationCurve::Method::eFromRef)
+mDescription(QString("undefined"))
+//mMethod(CalibrationCurve::Method::eFromRef)
 {
     // Parameter refere to the Method
-    mMCMCSetting = MCMCSettings();
+    //mMCMCSetting = MCMCSettings();
     mPluginId = "";
     mPlugin = nullptr;
     mRepartition = QVector< double>();
@@ -19,12 +19,12 @@ mMethod(CalibrationCurve::Method::eFromRef)
 CalibrationCurve::CalibrationCurve(const CalibrationCurve& other)
 {
     mName = other.mName;
-    mMCMCSetting =other.mMCMCSetting;
+    //mMCMCSetting =other.mMCMCSetting;
     mPluginId = other.mPluginId;
     mPlugin = other.mPlugin;
 
     mDescription = other.mDescription;
-    mMethod = other.mMethod;
+    //mMethod = other.mMethod;
     mRepartition.resize(other.mRepartition.size());
     std::copy(other.mRepartition.begin(), other.mRepartition.end(), mRepartition.begin());
     mCurve .resize(other.mCurve.size());

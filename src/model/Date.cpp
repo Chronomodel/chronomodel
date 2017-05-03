@@ -280,7 +280,7 @@ qDebug()<<"Date::calibrate insert mData "<<toFind;
 
     mCalibration = & (project->mCalibCurves[toFind]);
     mCalibration->mDescription = toFind;
-    mCalibration->mMethod = CalibrationCurve::eFromRef;
+    //mCalibration->mMethod = CalibrationCurve::eFromRef;
 
     mCalibration->mStep = mSettings.mStep;
     mCalibration->mPluginId = mPlugin->getId();
