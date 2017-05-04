@@ -181,10 +181,10 @@ mButtonWidth(50)
     QVBoxLayout* boundLayout = new QVBoxLayout();
     boundLayout->setContentsMargins(10, 6, 15, 6);
     boundLayout->setSpacing(10);
-//    boundLayout->addWidget(mKnownFixedRadio);
+//  boundLayout->addWidget(mKnownFixedRadio);
     boundLayout->addWidget(mFixedGroup);
-//    boundLayout->addWidget(mKnownUniformRadio);
-    boundLayout->addWidget(mUniformGroup);
+//  boundLayout->addWidget(mKnownUniformRadio);
+//  boundLayout->addWidget(mUniformGroup);
     boundLayout->addWidget(mKnownGraph);
     boundLayout->addStretch();
     mBoundView->setLayout(boundLayout);
