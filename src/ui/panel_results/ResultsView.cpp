@@ -1657,7 +1657,10 @@ void ResultsView::updateScales()
             const double tCenter = (mResultMinX + mResultMaxX) / 2;
             const double studySpan = mResultMaxX - mResultMinX;
 
+            forceXSlideSetValue = true;
             mXSlider->setRange(-100, 100);
+
+            forceXSpinSetValue = true;
             mXScaleSpin->setRange(sliderToZoom(-100), sliderToZoom(100));
             mXScaleSpin->setSingleStep(.01);
             mXScaleSpin->setDecimals(3);
@@ -1674,19 +1677,27 @@ void ResultsView::updateScales()
             mRuler->setRange(mResultMinX, mResultMaxX);
             const int rangeZoom = mResultMaxX / 10;
             mXSlider->setRange(1, rangeZoom);
+
+            forceXSpinSetValue = true;
             mXScaleSpin->setRange(1, rangeZoom);
             mXScaleSpin->setSingleStep(1.);
             mXScaleSpin->setDecimals(0);
 
+
         } else if (mCurrentVariable == GraphViewResults::eDuration) {
             mResultMinX = 0.;
             mResultMaxX = mResultMaxDuration;
-            mRuler->setRange(mResultMinX, mResultMaxX);
+
             const int rangeZoom = mResultMaxX / 10;
-            mXSlider->setRange(1, rangeZoom);
+            forceXSlideSetValue = true;
+            mXSlider->setRange(1, rangeZoom); //setRange is connected to setValue
+
+            forceXSpinSetValue = true;
             mXScaleSpin->setRange(1, rangeZoom);
             mXScaleSpin->setSingleStep(1.);
             mXScaleSpin->setDecimals(0);
+
+            mRuler->setRange(mResultMinX, mResultMaxX);
         }
 
     } else if ((mCurrentTypeGraph == GraphViewResults::eTrace) ||  (mCurrentTypeGraph == GraphViewResults::eAccept) ) {
@@ -1701,7 +1712,10 @@ void ResultsView::updateScales()
         mRuler->setRange(mResultMinX, mResultMaxX);
 
         const int rangeZoom = mResultMaxX / 100;
+        forceXSlideSetValue = true;
         mXSlider->setRange(1, rangeZoom);
+
+        forceXSpinSetValue = true;
         mXScaleSpin->setRange(1, rangeZoom);
         mXScaleSpin->setSingleStep(1.);
 
@@ -1709,14 +1723,18 @@ void ResultsView::updateScales()
         mResultMinX = 0.;
         mResultMaxX = 39.;
         mRuler->setRange(mResultMinX, mResultMaxX);
+
+        forceXSlideSetValue = true;
         mXSlider->setRange(1, 5);   // we can zoom 5 time
+
+        forceXSpinSetValue = true;
         mXScaleSpin->setRange(1, 5);
         mXScaleSpin->setSingleStep(1.);
         mXScaleSpin->setDecimals(0);
     }
    
     /* ------------------------------------------
-     *  Set Ruler Range
+     *  Set Ruler Current Position
      * ------------------------------------------*/
     mRuler->setFormatFunctX(stringWithAppSettings);
 
@@ -1742,8 +1760,6 @@ void ResultsView::updateScales()
         }
     }
 
-
-
     /* ------------------------------------------
      *  Restore last zoom values; must be stored in unformated value
      * ------------------------------------------*/
@@ -1755,32 +1771,19 @@ void ResultsView::updateScales()
                                              DateUtils::convertToAppSettingsFormat(mZooms.value(situ).second));
             mResultCurrentMinX = currentMinMax.first;
             mResultCurrentMaxX = currentMinMax.second;
+
         } else {
             mResultCurrentMinX = mZooms.value(situ).first;
             mResultCurrentMaxX = mZooms.value(situ).second;
-
         }
-        // controle if the current value is in rigth range depending to mDataThetaRadio and mDataSigmaRadio
-      //  mResultCurrentMinX = qBound(mRuler->mMin, mResultCurrentMinX, mRuler->mMax);
-     //   mResultCurrentMaxX = qBound(mResultCurrentMinX, mResultCurrentMaxX, mRuler->mMax);
+//      qDebug()<<"ResultsView::updateScales() restore var"<<mCurrentVariable<<" graph"<< mCurrentTypeGraph <<" current min"<<mResultCurrentMinX<<mResultCurrentMaxX;
 
     } else {
-        if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && mCurrentVariable == GraphViewResults::eSigma) {
-            mResultMinX = 0.;
-            mResultMaxX = mResultMaxVariance;
-        } else  if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && mCurrentVariable == GraphViewResults::eDuration) {
-            mResultMinX = 0.;
-            mResultMaxX = mResultMaxDuration;
-        }
-
-
         mResultCurrentMinX = mResultMinX;
         mResultCurrentMaxX = mResultMaxX;
     }
 
-    mResultZoomX = ((mResultCurrentMaxX - mResultCurrentMinX) / (mRuler->mMax - mRuler->mMin));// * (100.  );
-    
-    
+    mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
     
     /* -----------------------------------------------
      *  Set All Graphs Ranges (This is not done by generateCurves !)
@@ -1804,13 +1807,13 @@ void ResultsView::updateScales()
      *  Set Zoom Slider & Zoom Edit
      * ------------------------------------------*/
 
-    int zoom = (int) mResultZoomX;
-
+//  qDebug()<<"ResultsView::updateScales() fin"<<mResultCurrentMinX<<mResultCurrentMaxX<<mResultMinX<<mResultMaxX<<mResultZoomX;
     forceXSlideSetValue = true;
-    setXScaleSlide(zoom);
+    setXScaleSlide( zoomToSlider(mResultZoomX));
 
+//  qDebug()<<"ResultsView::updateScales() restore Slider"<<mResultZoomX<< zoomToSlider(mResultZoomX) ;
     forceXSpinSetValue = true;
-    setXScaleSpin(zoom);
+    setXScaleSpin(mResultZoomX);
 
     updateZoomEdit();
     
@@ -1821,7 +1824,6 @@ void ResultsView::updateScales()
     emit scalesUpdated();
 }
 
-//pragma mark Log results
 void ResultsView::settingChange()
 {
     if (mModel) {
@@ -1864,11 +1866,17 @@ void ResultsView::mouseMoveEvent(QMouseEvent* e)
 }
 
 //pragma mark Zoom X
+/**
+ * @brief ResultsView::XScaleSliderChanged
+ * @param value
+ * connected to mXSlider, &QSlider::valueChanged(value)
+ */
 void ResultsView::XScaleSliderChanged(int value)
 {
     if (!forceXSlideSetValue) {
         forceXSpinSetValue = true;
         setXScaleSpin(sliderToZoom(value));
+qDebug()<<"XScaleSliderChanged"<<value<<sliderToZoom(value)        ;
         updateZoomX();
     }
 }
@@ -1915,8 +1923,7 @@ void ResultsView::setXScaleSlide(const int value)
 
 double ResultsView::sliderToZoom(const int coef)
 {
-   // qDebug()<<"ResultsView::sliderToZoom "<<coef<<pow(10., (double)coef/100.);
-    if (mTabs->currentIndex() == 0)
+    if (mCurrentTypeGraph == GraphViewResults::ePostDistrib)
          return pow(10., (double)coef/100.);
     else
         return coef;
@@ -1924,9 +1931,8 @@ double ResultsView::sliderToZoom(const int coef)
 
 int ResultsView::zoomToSlider(const double zoom)
 {
-   //  qDebug()<<"ResultsView::zoomToSlider "<<zoom<< (int)round(log10(zoom) * 100.);
-   if (mTabs->currentIndex() == 0)
-        return (int)round(log10(zoom) * 100.);
+   if (mCurrentTypeGraph == GraphViewResults::ePostDistrib)
+        return (int)round(log10(zoom) * (100.));
    else
        return zoom;
 }
@@ -1945,13 +1951,9 @@ void ResultsView::updateZoomX()
     /* --------------------------------------------------
      *  Find new current min & max, update mResultZoomX
      * --------------------------------------------------*/
-    //double zoom = sliderToZoom(mXSlider->value());
     double zoom = mXScaleSpin->value();
-    //forceXSpinSetValue = true;
-    //setXScaleSpin(zoom);
-    //mXScaleSpin->setValue(zoom);
 
-    mResultZoomX = zoom;
+    mResultZoomX = 1/zoom;
 
     const double tCenter = (mResultCurrentMaxX + mResultCurrentMinX)/2.;
     const double span = (mResultMaxX - mResultMinX)* (1./ zoom);
@@ -2015,12 +2017,9 @@ void ResultsView::editCurrentMinX()
         //const double minVisible = mRuler->mMin;
         const double minVisible = mRuler->mMin ;
         const double current = qBound(minVisible, value, mResultCurrentMaxX);
-        /*if (current == mResultCurrentMaxX) {
-            current = minVisible;
-        }*/
         mResultCurrentMinX = current;
-       // mResultCurrentMinX = value;
-        mResultZoomX = (double)(mResultCurrentMaxX - mResultCurrentMinX)/ (double)(mResultMaxX - mResultMinX);
+
+        mResultZoomX = (mResultMaxX - mResultMinX)/ (mResultCurrentMaxX - mResultCurrentMinX);
         
         /* --------------------------------------------------
          *  Update other elements
@@ -2059,7 +2058,7 @@ void ResultsView::editCurrentMaxX()
         */
         mResultCurrentMaxX = current;
         //mResultCurrentMaxX = value;
-        mResultZoomX = (mResultCurrentMaxX - mResultCurrentMinX) / (mResultMaxX - mResultMinX);
+        mResultZoomX =  (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX) ;
         
         /* --------------------------------------------------
          *  Update other elements
@@ -2068,7 +2067,7 @@ void ResultsView::editCurrentMaxX()
 
         forceXSlideSetValue = true;
         setXScaleSlide(zoomToSlider(mResultZoomX));// the signal valueChange() must be not connected with a slot
-
+qDebug()<<"editCurrentMaxX()"<<mResultZoomX<<zoomToSlider(mResultZoomX);
         forceXSpinSetValue = true;
         setXScaleSpin(mResultZoomX);
 
@@ -2082,23 +2081,24 @@ void ResultsView::editCurrentMaxX()
 
 void ResultsView:: setStudyPeriod()
 {
+qDebug()<<"setStudyPeriod()"    ;
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && mCurrentVariable == GraphViewResults::eTheta) {
         mResultCurrentMinX = mSettings.getTminFormated();
         mResultCurrentMaxX = mSettings.getTmaxFormated();
-        mResultZoomX = (double)(mResultCurrentMaxX - mResultCurrentMinX)/ (double)(mResultMaxX - mResultMinX);
+        mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
      }
 
     else if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && mCurrentVariable == GraphViewResults::eSigma) {
 
         mResultCurrentMinX = 0.;
         mResultCurrentMaxX = mResultMaxVariance;
-        mResultZoomX = (double)(mResultCurrentMaxX - mResultCurrentMinX)/ (double)(mResultMaxX - mResultMinX);
+        mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
      }
 
     else if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && mCurrentVariable == GraphViewResults::eDuration) {
         mResultCurrentMinX = 0.;
         mResultCurrentMaxX = mResultMaxDuration;
-        mResultZoomX = (double)(mResultCurrentMaxX - mResultCurrentMinX)/ (double)(mResultMaxX - mResultMinX);
+        mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
      }
     else
         return;
@@ -2120,8 +2120,13 @@ void ResultsView::updateZoomEdit()
     mCurrentXMaxEdit->setText(stringWithAppSettings(mResultCurrentMaxX));
 }
 
+/**
+ * @brief ResultsView::updateGraphsZoomX
+ * Update graphs display according to the current values and store them in mZooms[]
+ */
 void ResultsView::updateGraphsZoomX()
 {
+    qDebug()<<"ResultsView::updateGraphsZoomX()";
     if (mByPhasesBut->isChecked()) {
         for (GraphViewResults* phaseGraph : mByPhasesGraphs)
             if (phaseGraph)
@@ -2147,6 +2152,7 @@ void ResultsView::updateGraphsZoomX()
     } else
         mZooms[situ] = QPair<double, double>(mResultCurrentMinX, mResultCurrentMaxX);
 
+qDebug()<<"ResultsView::updateGraphsZoomX()() store varia"<<mCurrentVariable<<"graph"<< mCurrentTypeGraph<<"min"<<mResultCurrentMinX<<mResultCurrentMaxX<<mResultMinX<<mResultMaxX<<mResultZoomX;
 }
 
 /**
