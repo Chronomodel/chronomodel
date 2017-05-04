@@ -168,7 +168,7 @@ mButtonWidth(50)
     //connect(mKnownEndEdit, &QLineEdit::textEdited, this, &EventPropertiesView::updateKnownUnifEnd);
     
     QFormLayout* fixedLayout = new QFormLayout();
-    fixedLayout->addRow(tr("Value"), mKnownFixedEdit);
+    fixedLayout->addRow(QString(tr("Value") + "(BC/AD)"), mKnownFixedEdit);
     mFixedGroup = new QGroupBox();
     mFixedGroup->setLayout(fixedLayout);
     
