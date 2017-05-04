@@ -36,20 +36,23 @@ CalibrationDrawing::~CalibrationDrawing()
 }
 void CalibrationDrawing::hideMarker()
 {
-    mMarkerX->hideMarker();
-    mMarkerY->hideMarker();
-
+   mMarkerX->hideMarker();
+   mMarkerY->hideMarker();
+   mMouseOverCurve = false;
+   update();
 }
 
 void CalibrationDrawing::showMarker()
 {
-    mMarkerX->resize( mMarkerX->thickness(), height());
-    mMarkerY->resize( width(), mMarkerY->thickness());
+    mMouseOverCurve = true;
     mMarkerX->showMarker();
     mMarkerY->showMarker();
+    mMarkerX->resize( mMarkerX->thickness(), height());
+    mMarkerY->resize( width(), mMarkerY->thickness());
+
     mMarkerX->raise();
     mMarkerY->raise();
-
+    update();
 }
 
 void CalibrationDrawing::setRefGraph(GraphViewRefAbstract* refGraph)

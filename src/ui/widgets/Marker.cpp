@@ -20,6 +20,7 @@ Marker::~Marker()
 void Marker::hideMarker()
 {
     setVisible(false);
+
 }
 void Marker::showMarker()
 {

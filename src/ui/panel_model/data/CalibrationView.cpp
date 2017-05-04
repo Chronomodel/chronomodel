@@ -441,6 +441,7 @@ void CalibrationView::updateScroll()
 void CalibrationView::exportImage()
 {
     mDrawing->hideMarker();
+
     QFileInfo fileInfo = saveWidgetAsImage(mDrawing, mDrawing->rect(), tr("Save calibration image as..."),
                                            MainWindow::getInstance()->getCurrentPath(), MainWindow::getInstance()->getAppSettings());
     if (fileInfo.isFile())
@@ -452,6 +453,7 @@ void CalibrationView::exportImage()
 void CalibrationView::copyImage()
 {
     mDrawing->hideMarker();
+    repaint();
     QApplication::clipboard()->setPixmap(mDrawing->grab());
     mDrawing->showMarker();
 
@@ -575,9 +577,7 @@ void CalibrationView::updateLayout()
     const int graphWidth = width() - graphLeft;
 
     const int resTextH = 5 * fm.height();
- mDrawing->setMouseTracking(true);
     mDrawing->setGeometry(graphLeft, 0, graphWidth, height() - resTextH);
- mDrawing->setMouseTracking(true);
     mResultsText->setGeometry(graphLeft + 20, mDrawing->y() + mDrawing->height(), graphWidth - 40 , resTextH);
     mResultsText->setAutoFillBackground(true);
 
