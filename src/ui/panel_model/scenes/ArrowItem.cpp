@@ -13,10 +13,10 @@ mType(type),
 mScene(scene),
 mXStart(0),
 mYStart(0),
-mXEnd(0),
-mYEnd(0),
-mBubbleWidth(130.f),
-mBubbleHeight(20.f),
+mXEnd(0.),
+mYEnd(0.),
+mBubbleWidth(30.),
+mBubbleHeight(30.),
 mEditing(false),
 mShowDelete(false),
 mGreyedOut(false)
@@ -155,18 +155,18 @@ QRectF ArrowItem::boundingRect() const
     qreal h = qAbs(mYEnd - mYStart);
 
     if (!text.isEmpty()) {
-        const qreal hBubble = mBubbleHeight;
+ //       const qreal hBubble = mBubbleHeight;
         QFont font;
-        font.setPointSizeF(18.f);
+        font.setPointSizeF(18.);
         QFontMetrics metrics(font);
-        qreal wBubble =metrics.width(text) + 20;
-        qreal xa = (mXStart + mXEnd- wBubble)/2;
-        qreal ya = (mYStart + mYEnd- hBubble)/2;
+        qreal wBubble = qMax(mBubbleWidth, qreal(metrics.width(text) + 5));
+        qreal xa = (mXStart + mXEnd - wBubble)/2.;
+        qreal ya = (mYStart + mYEnd - mBubbleHeight)/2.;
 
         x = qMin(x, xa);
         y = qMin(y, ya);
         w = qMax(w, wBubble);
-        h = qMax(h, hBubble);
+        h = qMax(h, mBubbleHeight);
     }
 
     return QRectF(x, y, w, h);
@@ -241,21 +241,22 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         painter->setPen(Qt::white);
         painter->setBrush(Qt::red);
         font.setBold(true);
-        font.setPointSizeF(18.f);
+        font.setPointSizeF(18.);
 
     } else {
         painter->setPen(Qt::black);
         painter->setBrush(Qt::white);
         font.setBold(false);
-        font.setPointSizeF(12.f);
+        font.setPointSizeF(12.);
     }
     painter->setFont(font);
 
     if (!bubbleText.isEmpty()) {
         showMiddleArrow = false;
         const QRectF br = getBubbleRect(bubbleText);
+        const int as = QFontMetrics(font).descent();
         painter->drawEllipse(br);
-        painter->drawText(br, Qt::AlignCenter, bubbleText);
+        painter->drawText(br.adjusted(0, as, 0, 0), Qt::AlignCenter, bubbleText);
      }
 
     // arrows
@@ -367,25 +368,27 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
 QRectF ArrowItem::getBubbleRect(const QString& text) const
 {
-    qreal w = 0;
-    qreal h = 0;
+    qreal w (0.);
+    qreal h (0.);
     if (!text.isEmpty()) {
         QFont font;
         if (mShowDelete)
-            font.setPointSizeF(18.f);
+            font.setPointSizeF(18.);
         else
-            font.setPointSizeF(12.f);
+            font.setPointSizeF(12.);
 
         QFontMetrics metrics(font);
-        qreal wm = metrics.width(text) + 20;
+        qreal wm = metrics.width(text) + 5;
+
         w = qMax(wm, w);
         h = mBubbleHeight;
     }
-
+    w = qMax(w, h);
+    h = w;
     
     QRectF rect = boundingRect();
-    qreal bubble_x = rect.x() + (rect.width() - w) / 2.f - 0.5f;
-    qreal bubble_y = rect.y() + (rect.height() - h) / 2.f - 0.5f;
+    qreal bubble_x = rect.x() + (rect.width() - w) / 2. ;
+    qreal bubble_y = rect.y() + (rect.height() - h) / 2. ;
     QRectF r(bubble_x, bubble_y, w, h);
     return r;
 }
