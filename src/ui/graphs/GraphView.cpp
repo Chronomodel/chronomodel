@@ -802,10 +802,12 @@ void GraphView::paintToDevice(QPaintDevice* device)
 
          if (mOverflowArrowMode == eBothOverflow || mOverflowArrowMode == eUnderMin) {
 
-             type_data maxData = (type_data) - INFINITY;
+             type_data maxData = (type_data) (- INFINITY);
              for (auto&& curve : mCurves)
                  if (curve.mVisible && curve.mData.size()>0)
                     maxData = std::max(maxData, curve.mData.lastKey());
+                 else if (curve.mVisible && curve.mIsVerticalLine)
+                     maxData = std::max(maxData, curve.mVerticalValue);
 
 
              if ( maxData <= mCurrentMinX) {
@@ -823,11 +825,13 @@ void GraphView::paintToDevice(QPaintDevice* device)
 
          }
          if (mOverflowArrowMode == eBothOverflow || mOverflowArrowMode == eOverMax) {
-             type_data minData = (type_data) INFINITY;
+             type_data minData = (type_data) (INFINITY);
 
              for (auto&& curve : mCurves)
                  if (curve.mVisible && curve.mData.size()>0)
                     minData = std::min(minData, curve.mData.firstKey());
+                 else if (curve.mVisible && curve.mIsVerticalLine)
+                     minData = std::min(minData, curve.mVerticalValue);
 
 
              if (mCurrentMaxX <= minData) {
