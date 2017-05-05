@@ -83,13 +83,14 @@ mButtonWidth(50)
         button->setIcon(plugins.at(i)->getIcon());
         button->setFlatVertical();
         button->setIconOnly(false);
+        button->setToolTip(tr("Insert") +" "+ plugins.at(i)->getName() +" "+ tr("Data") );
         button->resize(mButtonWidth, mButtonWidth);
         connect(button, SIGNAL(clicked()), this, SLOT(createDate()));
         
         minimumHeight+=button->height();
         
         
-        if(plugins.at(i)->doesCalibration())
+        if (plugins.at(i)->doesCalibration())
             mPluginButs1.append(button);
         else
             mPluginButs2.append(button);
@@ -98,12 +99,16 @@ mButtonWidth(50)
     mDeleteBut = new Button(tr("Delete"), mEventView);
     mDeleteBut->setIcon(QIcon(":delete.png"));
     mDeleteBut->setFlatVertical();
+    mDeleteBut->setToolTip(tr("Delete Data"));
+
     connect(mDeleteBut, static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &EventPropertiesView::deleteSelectedDates);
     minimumHeight += mDeleteBut->height();
     
     mRecycleBut = new Button(tr("Restore"), mEventView);
     mRecycleBut->setIcon(QIcon(":restore.png"));
     mRecycleBut->setFlatVertical();
+    mRecycleBut->setToolTip(tr("Restore Deleted Data"));
+
     connect(mRecycleBut, static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &EventPropertiesView::recycleDates);
 
     // ---------------
@@ -112,17 +117,20 @@ mButtonWidth(50)
     mCalibBut->setIcon(QIcon(":results_w.png"));
     mCalibBut->setFlatVertical();
     mCalibBut->setCheckable(true);
+    mCalibBut->setToolTip(tr("Calibrate"));
     
     mCombineBut = new Button(tr("Combine"), mEventView);
     mCombineBut->setFlatVertical();
     mCombineBut->setIconOnly(false);
     mCombineBut->setEnabled(false);
+    mCombineBut->setToolTip(tr("Combine 14C ages"));
 
     mSplitBut = new Button(tr("Split"), mEventView);
     mSplitBut->setFlatVertical();
     mSplitBut->setIconOnly(false);
     mSplitBut->setEnabled(false);
-    
+    mSplitBut->setToolTip(tr("Split combined 14C ages"));
+
     connect(mCalibBut, &Button::clicked, this, &EventPropertiesView::showCalibRequested);
     connect(mCombineBut, static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &EventPropertiesView::sendCombineSelectedDates);
     connect(mSplitBut, static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &EventPropertiesView::sendSplitDate);
@@ -168,7 +176,7 @@ mButtonWidth(50)
     //connect(mKnownEndEdit, &QLineEdit::textEdited, this, &EventPropertiesView::updateKnownUnifEnd);
     
     QFormLayout* fixedLayout = new QFormLayout();
-    fixedLayout->addRow(QString(tr("Value") + "(BC/AD)"), mKnownFixedEdit);
+    fixedLayout->addRow(QString(tr("Value") + " " + "(BC/AD)"), mKnownFixedEdit);
     mFixedGroup = new QGroupBox();
     mFixedGroup->setLayout(fixedLayout);
     

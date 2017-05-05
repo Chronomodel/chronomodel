@@ -175,7 +175,7 @@ void Button::paintEvent(QPaintEvent* e)
         painter.setPen(QColor(200, 200, 200));
         
         bool iconOnly = mIconOnly;
-        bool textOnly = !mIconOnly && !text().isEmpty();
+        bool textOnly = !mIconOnly && !text().isEmpty() && ic.isNull();
 
         QFont adaptedFont (font());
         QFontMetricsF fm (adaptedFont);
@@ -232,11 +232,14 @@ void Button::paintEvent(QPaintEvent* e)
             const qreal h = r.height() - border - textH;
             const qreal s = qMin(w, h);
             
-            painter.drawText(r.adjusted(0, r.height() - textH, 0, 0), Qt::AlignCenter , text());
+
 
             QRectF iconRect((r.width() - s)/2., border, s, s);
             QPixmap pixmap = ic.pixmap(iconRect.size().toSize());
             painter.drawPixmap(iconRect, pixmap, QRectF(0, 0, pixmap.width(), pixmap.height()));
+
+            painter.setPen(QColor(200, 200, 200));
+            painter.drawText(r.adjusted(0, r.height() - textH, 0, 0), Qt::AlignCenter , text());
         }
     } else {
 
