@@ -230,7 +230,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
      *  - Q3 i
      * ------------------------------------------------
      */
-    else if (typeGraph == eTrace) {
+    else if (typeGraph == eTrace && (variable == eTheta || variable == eSigma)) {
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(DateUtils::convertToAppSettingsFormatStr);
@@ -244,7 +244,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
      *  - Accept Target
      * ------------------------------------------------
      */
-    else if (typeGraph == eAccept) {
+    else if (typeGraph == eAccept && (variable == eTheta || variable == eSigma)) {
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);
@@ -262,7 +262,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
      *  - Correl Limit Upper i
      * ------------------------------------------------
      */
-    else if (typeGraph == eCorrel) {
+    else if (typeGraph == eCorrel && (variable == eTheta || variable == eSigma)) {
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(stringWithAppSettings);
