@@ -39,21 +39,30 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     mLogMCMCEdit->setFont(font);
     mLogResultsEdit->setFont(font);
     
-    mLogTabs = new QTabWidget();
+    mLogTabs = new Tabs(this);
     mLogTabs->addTab(mLogModelEdit,   tr("Model description"));
     mLogTabs->addTab(mLogMCMCEdit,    tr("MCMC initialization"));
     mLogTabs->addTab(mLogResultsEdit, tr("Posterior distrib. results"));
-    mLogTabs->setContentsMargins(15, 15, 15, 15);
-    
-    mLogView = new QWidget();
+    mLogTabs->resize(width(), height());
+   // mLogTabs->setContentsMargins(15, 15, 15, 15);
+    connect(mLogTabs, &Tabs::tabClicked, this, &ProjectView::showLogTab);
+    const int logTabY0 (mLogTabs->getTabHeight() + 5);
+    const int logTabHusefull (mLogTabs->height() - mLogTabs->getTabHeight() -10);
+
+    mLogModelEdit->setGeometry(0, logTabY0, mLogTabs->width(), logTabHusefull );
+    mLogMCMCEdit->setGeometry(0, logTabY0, mLogTabs->width(), logTabHusefull );
+    mLogResultsEdit->setGeometry(0, logTabY0, mLogTabs->width() , logTabHusefull );
+
+/*    mLogView = new QWidget(this);
     QVBoxLayout* logLayout = new QVBoxLayout();
     logLayout->addWidget(mLogTabs);
     mLogView->setLayout(logLayout);
-    
+*/
     mStack = new QStackedWidget();
     mStack->addWidget(mModelView);
     mStack->addWidget(mResultsView);
-    mStack->addWidget(mLogView);
+    //mStack->addWidget(mLogView);
+     mStack->addWidget(mLogTabs);
     mStack->setCurrentIndex(0);
     
     QHBoxLayout* layout = new QHBoxLayout();
@@ -62,11 +71,27 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     setLayout(layout);
     
     connect(mResultsView, &ResultsView::resultsLogUpdated, this, &ProjectView::updateResultsLog);
+
+    mLogTabs->setTab(2, false);
+    mLogTabs->showWidget(2);
 }
 
 ProjectView::~ProjectView()
 {
     
+}
+
+void ProjectView::resizeEvent(QResizeEvent* e)
+{
+    (void) e;
+    mLogTabs->resize(width(), height());
+    const int logTabY0 (mLogTabs->getTabHeight() + 5);
+    const int logTabHusefull (mLogTabs->height() - mLogTabs->getTabHeight() - 10);
+
+    mLogModelEdit->setGeometry(5, logTabY0, mLogTabs->width() - 10, logTabHusefull );
+    mLogMCMCEdit->setGeometry(5, logTabY0, mLogTabs->width() - 10, logTabHusefull );
+    mLogResultsEdit->setGeometry(5, logTabY0, mLogTabs->width() -10 , logTabHusefull );
+
 }
 
 void ProjectView::doProjectConnections(Project* project)
@@ -75,19 +100,19 @@ void ProjectView::doProjectConnections(Project* project)
     mResultsView -> doProjectConnections(project);
 }
 
-//#pragma mark Interface
+
 void ProjectView::resetInterface()
 {
     showModel();
     mModelView   -> resetInterface();
     mResultsView -> clearResults();
 }
+
 void ProjectView::showHelp(bool show)
 {
     mModelView->showHelp(show);
 }
 
-//#pragma mark View Switch
 void ProjectView::showModel()
 {
     mStack->setCurrentIndex(0);
@@ -121,6 +146,8 @@ void ProjectView::showResults()
     mStack->setCurrentIndex(1);
     // come from mViewResultsAction and  updateResults send repaint on mStack
 }
+
+
 void ProjectView::showLog()
 {
     mResultsView->mModel->generateResultsLog();
@@ -128,7 +155,6 @@ void ProjectView::showLog()
     mStack->setCurrentIndex(2);
 }
 
-//pragma mark Update Model
 /**
  * @brief Update All model views (Scenes, ...) after pushing state
  */
@@ -147,7 +173,6 @@ void ProjectView::newPeriod()
     mModelView->modifyPeriod();
 }
 
-//#pragma mark Update Results
 
 void ProjectView:: applySettings(Model* model,const AppSettings* appSet)
 {
@@ -215,6 +240,11 @@ void ProjectView::updateResultsLog(const QString& log)
     mLogResultsEdit->setText(log);
 }
 
+void ProjectView::showLogTab(const int &i)
+{
+    mLogTabs->showWidget(i);
+   // mLogTabs->getCurrentWidget()->setGeometry(0, mLogTabs->getTabHeight() + 5, width(), height() - (mLogTabs->getTabHeight() + 5) );
+}
 
 //#pragma mark Read/Write settings
 void ProjectView::writeSettings()

@@ -5,6 +5,7 @@
 #include "MCMCLoopMain.h"
 #include "AppSettings.h"
 #include "Project.h"
+#include "Tabs.h"
 
 class QStackedWidget;
 class QTextEdit;
@@ -22,7 +23,9 @@ class ProjectView: public QWidget
 public:
     ProjectView(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
     ~ProjectView();
-    
+
+    void resizeEvent(QResizeEvent* e);
+
     bool mRefreshResults;
 
     void doProjectConnections(Project* project);
@@ -38,6 +41,7 @@ public slots:
     void updateProject();
     void showModel();
     void showResults();
+    void showLogTab(const int &i);
 
     void changeDesign(bool refresh);
     void showLog();
@@ -53,8 +57,8 @@ private:
     QStackedWidget* mStack;
     ModelView* mModelView;
     ResultsView* mResultsView;
-    QWidget* mLogView;
-    QTabWidget* mLogTabs;
+ //   QWidget* mLogView;
+    Tabs* mLogTabs;
     QTextEdit* mLogModelEdit;
     QTextEdit* mLogMCMCEdit;
     QTextEdit* mLogResultsEdit;
