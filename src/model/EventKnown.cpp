@@ -130,6 +130,8 @@ void EventKnown::updateValues(const double& tmin, const double& tmax, const doub
 
 void EventKnown::updateTheta(const double& tmin, const double& tmax)
 {
+    (void) tmin;
+    (void) tmax;
      mTheta.tryUpdate(mFixed, 1.);
 /*
     switch(mKnownType)

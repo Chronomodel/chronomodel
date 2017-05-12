@@ -586,12 +586,11 @@ void GraphView::setTipXLab(const QString& lab)
 {
     mTipXLab = lab =="" ? "":  lab + " = ";
 }
+
 void GraphView::setTipYLab(const QString& lab)
 {
     mTipYLab = lab =="" ? "":  lab + " = ";
 }
-
-//#pragma mark Resize & Paint
 
 #if GRAPH_OPENGL
 void GraphView::initializeGL()
@@ -618,10 +617,9 @@ void GraphView::resizeEvent(QResizeEvent* event)
             paintToDevice(&mBufferBack);
 //qDebug()<<"GraphView::resizeEvent  Big Matrix "<<sx<<sy<<" new: "<<mBufferBack.rect().size();
         } else {
-            QMatrix mx = QMatrix();//.scale(sx, sy);
+            QMatrix mx = QMatrix();
             mx.scale(sx, sy);
             mBufferBack = mBufferBack.transformed(mx, Qt::SmoothTransformation);
-
         }
 
     }

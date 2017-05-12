@@ -31,28 +31,28 @@ public:
     
     // Setters
     
-    virtual void setRangeX(const type_data aMinX, const type_data aMaxX);
-    virtual void setCurrentX(const type_data aMinX, const type_data aMaxX);
-    virtual void setRangeY(const type_data aMinY, const type_data aMaxY);
+    virtual void setRangeX(const type_data &aMinX, const type_data &aMaxX);
+    virtual void setCurrentX(const type_data &aMinX, const type_data &aMaxX);
+    virtual void setRangeY(const type_data &aMinY, const type_data &aMaxY);
     
-    void setMinimumX(const type_data aMinX);
-    void setMaximumX(const type_data aMaxX);
-    void setMinimumY(const type_data aMinY);
-    void setMaximumY(const type_data aMaxY);
+    void setMinimumX(const type_data &aMinX);
+    void setMaximumX(const type_data &aMaxX);
+    void setMinimumY(const type_data &aMinY);
+    void setMaximumY(const type_data &aMaxY);
     
-    void setMarginLeft(const qreal aMarginLeft);
-    void setMarginRight(const qreal aMarginRight);
-    void setMarginTop(const qreal aMarginTop);
-    void setMarginBottom(const qreal aMarginBottom);
-    void setMargins(const qreal aMarginLeft, const qreal aMarginRight, const qreal aMarginTop, const qreal aMarginBottom);
+    void setMarginLeft(const qreal &aMarginLeft);
+    void setMarginRight(const qreal &aMarginRight);
+    void setMarginTop(const qreal &aMarginTop);
+    void setMarginBottom(const qreal &aMarginBottom);
+    void setMargins(const qreal &aMarginLeft, const qreal &aMarginRight, const qreal &aMarginTop, const qreal &aMarginBottom);
 	
 protected:
 	virtual void repaintGraph(const bool aAlsoPaintBackground) = 0;
 	
-    virtual qreal getXForValue(const type_data aValue, const bool aConstainResult = true);
-    virtual type_data getValueForX(const qreal x, const bool aConstainResult = true);
-    virtual qreal getYForValue(const type_data aValue, const bool aConstainResult = true);
-    virtual type_data getValueForY(const qreal y, const bool aConstainResult = true);
+    virtual qreal getXForValue(const type_data &aValue, const bool &aConstainResult = true);
+    virtual type_data getValueForX(const qreal &x, const bool &aConstainResult = true);
+    virtual qreal getYForValue(const type_data &aValue, const bool &aConstainResult = true);
+    virtual type_data getValueForY(const qreal &y, const bool &aConstainResult = true);
     
 protected:
     qreal		mGraphWidth;
@@ -73,7 +73,7 @@ protected:
 };
 
 template <typename T>
-T valueForProportion(const T value, const T valMin, const T valMax, const T Pmin, const T Pmax, const bool resultInBounds)
+T valueForProportion(const T &value, const T &valMin, const T &valMax, const T &Pmin, const T &Pmax, const bool &resultInBounds)
 {
     T v2 = Pmin + (value - valMin) * (Pmax - Pmin) / (valMax - valMin);
 
