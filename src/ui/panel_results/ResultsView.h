@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QVBoxLayout>
+#include <QTabWidget>
 #include "MCMCLoopMain.h"
 #include "AxisTool.h"
 #include "GraphViewResults.h"
@@ -81,6 +82,10 @@ protected:
     void createPhasesScrollArea(const int idx = 0);
     void generateCurves(const QList<GraphViewResults*>& listGraphs);
 
+    void updateTabDisplay(const int &i);
+    void updateTabByScene();
+    void updateTabPageTools();
+
 public slots:
     void updateResults(Model* model = nullptr);
     void initResults(Model* model = nullptr);
@@ -138,6 +143,8 @@ private slots:
     void nextSheet();
     void unfoldToggle();
 
+ //   void showTabDisplay( const int &i);
+
     // SETTER
     void setFFTLength();
     void setBandwidth();
@@ -148,7 +155,7 @@ signals:
     void curvesGenerated();
     
     void controlsUpdated();
-    void resultsLogUpdated(const QString& log);
+    void resultsLogUpdated(const QString &log);
     
     void scalesUpdated();
     
@@ -162,8 +169,8 @@ signals:
 private:
     void clearHisto();
     void clearChainHistos();
-    double sliderToZoom(const int coef);
-    int zoomToSlider(const double zoom);
+    double sliderToZoom(const int &coef);
+    int zoomToSlider(const double &zoom);
     Ruler* mRuler;
 
     ProjectSettings mSettings;
@@ -189,34 +196,54 @@ private:
     QStackedWidget* mStack;
     QScrollArea* mEventsScrollArea;
     QScrollArea* mPhasesScrollArea;
- //   QWidget* mEventsWidget;
+
     QList<GraphViewResults*> mByEventsGraphs;
     QList<GraphViewResults*> mByPhasesGraphs;
 
-    
-    Button* mByPhasesBut;
-    Button* mByEventsBut;
-    
-    
     QWidget* mOptionsWidget;
-    
-    
-    Button* mEventsfoldBut;
-    Button* mDatesfoldBut;
+
+
+
+    Tabs* mTabPageTools;
+    QWidget* mPageWidget;
+    // Page Navigator
+    Label* mSheetTitle;
+    Button* mNextSheetBut;
+    Button* mPreviousSheetBut;
+
+    QWidget* mToolsWidget;
     Button* mStatsBut;
     Button* mExportImgBut;
     Button* mExportResults;
-   // CheckBox* mShowDataUnderPhasesCheck;
-
 
     Button* mImageSaveBut;
     Button* mImageClipBut;
     Button* mResultsClipBut;
     Button* mDataSaveBut;
 
-    Button* mNextSheetBut;
-    Button* mPreviousSheetBut;
-    
+
+
+    // --- Variables
+    Tabs* mTabByScene; // replace mByEventsBut and mByPhasesBut
+    QWidget* mResultsGroup;
+
+    CheckBox* mEventsfoldCheck;
+    CheckBox* mDatesfoldCheck;
+    RadioButton* mDataThetaRadio;
+
+    CheckBox* mDataCalibCheck;
+    CheckBox* mWiggleCheck;
+    RadioButton* mDataSigmaRadio;
+    RadioButton* mPhaseDurationRadio;
+
+
+
+    // -- tabs
+
+    Tabs *mTabDisplayMCMC;
+    QWidget* mTabDisplay;
+    QWidget* mTabMCMC;
+
     // ------ Span Options -----
     QWidget* mSpanGroup;
     Label* mSpanTitle;
@@ -263,20 +290,11 @@ private:
     QList<CheckBox*> mCheckChainChecks;
     QList<RadioButton*> mChainRadios;
     
-    //------------ Posterior distrib.---------
-    QWidget* mResultsGroup;
-    Label* mResultsTitle;
 
-    RadioButton* mDataThetaRadio;
     
-    CheckBox* mDataCalibCheck;
-    CheckBox* mWiggleCheck;
-    RadioButton* mDataSigmaRadio;
-    RadioButton* mPhaseDurationRadio;
-    
-    //--------- Post. distrib. option
-    QWidget* mPostDistGroup;
-    Label* mPostDistOptsTitle;
+    //--------- Density Options
+    QWidget* mDensityOptsGroup;
+    Label* mDensityOptsTitle;
 
     Label* mThreshLab;
     CheckBox* mCredibilityCheck;
