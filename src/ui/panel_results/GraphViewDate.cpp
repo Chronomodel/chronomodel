@@ -193,7 +193,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
          * ------------------------------------------------
          */
         else if (variable == eSigma) {
-            mTitle = QString(tr("Std") + " : " + mDate->mName);
+            mTitle = QString(tr("Individual Std") + " : " + mDate->mName);
 
             mGraph->mLegendX = "";
             mGraph->setFormatFunctX(nullptr);
@@ -234,6 +234,10 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(DateUtils::convertToAppSettingsFormatStr);
+        if (variable == eTheta)
+            mTitle = QString(tr("Data") + " : " + mDate->mName);
+        else
+             mTitle = QString(tr("Individual Std") + " : " + mDate->mName);
 
         generateTraceCurves(mChains, variableDate);
     }
@@ -249,6 +253,10 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);
         mGraph->autoAdjustYScale(true);
+        if (variable == eTheta)
+            mTitle = QString(tr("Data") + " : " + mDate->mName);
+        else
+             mTitle = QString(tr("Individual Std") + " : " + mDate->mName);
 
         mGraph->addCurve( generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine) );
         generateAcceptCurves(mChains, variableDate);
@@ -266,8 +274,20 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(stringWithAppSettings);
+        if (variable == eTheta)
+            mTitle = QString(tr("Data") + " : " + mDate->mName);
+        else
+             mTitle = QString(tr("Individual Std") + " : " + mDate->mName);
 
         generateCorrelCurves(mChains, variableDate);
+    }
+    else {
+        if (variable == eTheta)
+            mTitle = QString(tr("Data") + " : " + mDate->mName);
+        else
+             mTitle = QString(tr("Individual Std") + " : " + mDate->mName);
+
+        mGraph->resetNothingMessage();
     }
 
 }
