@@ -206,7 +206,11 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
 
                 mGraph->addCurve(curveDuration);
             }
-     }
+     } else if (typeGraph == ePostDistrib && variable == eSigma) {
+        /** @todo
+         * adding compil of data's sigma curves
+         */
+    }
 
     /* -----------------second tab : history plot-------------------------------
      *  - Trace Alpha i
@@ -305,6 +309,10 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->autoAdjustYScale(true);
         }
 
+    } else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eSigma) {
+        /** @todo
+         * adding compil of data's sigma curves
+         */
     }
     /* ---------------- second tab : history plot--------------------------------
      *  - Alpha Trace i

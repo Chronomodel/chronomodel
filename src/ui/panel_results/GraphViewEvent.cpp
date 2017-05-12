@@ -248,6 +248,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(stringWithAppSettings);
+        mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->mName;
 
         generateTraceCurves(mChains, &(mEvent->mTheta));
 
@@ -264,6 +265,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(stringWithAppSettings);
+        mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->mName;
 
         generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine);
         generateAcceptCurves(mChains, &(mEvent->mTheta));
@@ -281,10 +283,14 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(stringWithAppSettings);
+        mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->mName;
 
         generateCorrelCurves(mChains, &(mEvent->mTheta));
     }
-
+    else {
+        mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->mName;
+        mGraph->resetNothingMessage();
+    }
 }
 
 void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle)
@@ -404,6 +410,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         mGraph->autoAdjustYScale(false); // do  repaintGraph()
         mGraph->setRangeY(-1, 1);
     }
+
     update();
 }
 

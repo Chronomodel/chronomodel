@@ -417,11 +417,11 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     p.begin(this);
 
     // write mTitle above the graph
-    QFont fontTitle(this->font());
-    fontTitle.setPointSizeF(this->font().pointSizeF()*1.1);
+    QFont fontTitle(font());
+    fontTitle.setPointSizeF(font().pointSizeF()*1.1);
     QFontMetrics fmTitle(fontTitle);
     
-    QRectF textRect(0, 1., this->width(), mTopShift-1.);
+    QRectF textRect(0, 1., width(), mTopShift-1.);
     p.fillRect(textRect, mGraph->getBackgroundColor());
     
     p.setFont(fontTitle);
