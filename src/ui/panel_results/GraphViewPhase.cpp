@@ -128,6 +128,11 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
 
         mGraph->setOverArrow(GraphView::eBothOverflow);
 
+        GraphCurve curveTimeRange = generateSectionCurve(mPhase->getFormatedTimeRange(),
+                                                                   "Time Range",
+                                                                   color);
+        mGraph->addCurve(curveTimeRange);
+
         // ------------------------------------------------------------
         //  Add zones outside study period
         // ------------------------------------------------------------
@@ -217,6 +222,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(stringWithAppSettings);
+        mTitle = tr("Phase") + " : " + mPhase->mName;
 
         generateTraceCurves(mChains, &(mPhase->mAlpha), "Alpha");
         generateTraceCurves(mChains, &(mPhase->mBeta), "Beta");
@@ -226,6 +232,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(stringWithAppSettings);
+        mTitle = tr("Phase Duration") + " : " + mPhase->mName;
 
         generateTraceCurves(mChains, &(mPhase->mDuration), "Duration");
         mGraph->autoAdjustYScale(true);
@@ -234,10 +241,10 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
      *  third tab : Acception rate
      *  fourth tab : Autocorrelation
      * ------------------------------------------------ */
-   // else if ((typeGraph == eAccept) || (typeGraph == eCorrel) ) {
-    else
+    else {
+       mTitle = tr("Phase") + " : " + mPhase->mName;
        mGraph->resetNothingMessage();
-  //  }
+    }
 
 
 }
@@ -268,7 +275,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         mGraph->setCurveVisible("HPD Alpha All Chains", mShowAllChains);
         mGraph->setCurveVisible("HPD Beta All Chains", mShowAllChains);
 
-        mGraph->setCurveVisible("Time Range", mShowAllChains);
+        mGraph->setCurveVisible("Time Range", mShowAllChains && mShowCredibility);
 
         for (int i=0; i<mShowChainList.size(); ++i) {
             mGraph->setCurveVisible("Post Distrib Alpha " + QString::number(i), mShowChainList.at(i));
