@@ -298,7 +298,7 @@ void CalibrationView::updateGraphs()
             
             yMax = map_max_value(hpdCurve.mData);
 
-            mCalibGraph->setRangeY(0., 1.1 * yMax);
+            mCalibGraph->setRangeY(0., 1. * yMax);
 
             mCalibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             mCalibGraph->setFormatFunctX(stringWithAppSettings);
