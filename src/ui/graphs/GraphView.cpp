@@ -651,10 +651,23 @@ void GraphView::repaintGraph(const bool aAlsoPaintBackground)
     
 void GraphView::paintEvent(QPaintEvent* )
 {
+
+    /* ----------------------------------------------------
+     *  Nothing to draw !
+     * ----------------------------------------------------*/
+    if (mCurves.size() == 0 && mZones.size() == 0) {
+        QPainter p(this);
+        p.setFont(font());
+        p.fillRect(0, 0, width(), height(), QColor(200, 200, 200));
+        p.setPen(QColor(100, 100, 100));
+        p.drawText(0, 0, width(), height(), Qt::AlignCenter, mNothingMessage);
+
+        return;
+    }
+
     /* resize build mBufferBack, so we don't need to
      * rebuid a graph. We need it in the resizeEvent
      * */
-
     if (!mBufferBack.isNull() && !mTipVisible) {
         QPainter p(this);
         p.setRenderHints(QPainter::Antialiasing);
@@ -665,18 +678,6 @@ void GraphView::paintEvent(QPaintEvent* )
     updateGraphSize(width(), height());
     if ((mGraphWidth<=0) || (mGraphHeight<=0))
         return;
-    // ----------------------------------------------------
-    //  Nothing to draw !
-    // ----------------------------------------------------
-    if (mCurves.size() == 0 && mZones.size() == 0) {
-        QPainter p(this);
-        p.setFont(font());
-        p.fillRect(0, 0, width(), height(), QColor(200, 200, 200));
-        p.setPen(QColor(100, 100, 100));
-        p.drawText(0, 0, width(), height(), Qt::AlignCenter, mNothingMessage);
-        
-        return;
-    }
     
     // ----------------------------------------------------
     //  SD : draw on a buffer only if it has been reset
