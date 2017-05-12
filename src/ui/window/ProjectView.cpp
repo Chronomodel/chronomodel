@@ -43,15 +43,20 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     mLogTabs->addTab(mLogModelEdit,   tr("Model description"));
     mLogTabs->addTab(mLogMCMCEdit,    tr("MCMC initialization"));
     mLogTabs->addTab(mLogResultsEdit, tr("Posterior distrib. results"));
-    mLogTabs->resize(width(), height());
+    //mLogTabs->resize(width(), height());
    // mLogTabs->setContentsMargins(15, 15, 15, 15);
     connect(mLogTabs, &Tabs::tabClicked, this, &ProjectView::showLogTab);
-    const int logTabY0 (mLogTabs->getTabHeight() + 5);
-    const int logTabHusefull (mLogTabs->height() - mLogTabs->getTabHeight() -10);
+   // const int logTabY0 (mLogTabs->tabHeight() + 5);
+    const int logTabHusefull (height() - mLogTabs->tabHeight() - 10);
 
-    mLogModelEdit->setGeometry(0, logTabY0, mLogTabs->width(), logTabHusefull );
-    mLogMCMCEdit->setGeometry(0, logTabY0, mLogTabs->width(), logTabHusefull );
-    mLogResultsEdit->setGeometry(0, logTabY0, mLogTabs->width() , logTabHusefull );
+  /*  mLogModelEdit->setGeometry(0, logTabY0, width(), logTabHusefull );
+    mLogMCMCEdit->setGeometry(0, logTabY0, width(), logTabHusefull );
+    mLogResultsEdit->setGeometry(0, logTabY0, width() , logTabHusefull );
+ */
+    mLogModelEdit->resize( width() - 10, logTabHusefull );
+    mLogMCMCEdit->resize( width() - 10, logTabHusefull );
+    mLogResultsEdit->resize( width() -10 , logTabHusefull );
+    mLogTabs->resize(mLogTabs->minimalWidth(), mLogTabs->minimalHeight());
 
 /*    mLogView = new QWidget(this);
     QVBoxLayout* logLayout = new QVBoxLayout();
@@ -84,14 +89,12 @@ ProjectView::~ProjectView()
 void ProjectView::resizeEvent(QResizeEvent* e)
 {
     (void) e;
-    mLogTabs->resize(width(), height());
-    const int logTabY0 (mLogTabs->getTabHeight() + 5);
-    const int logTabHusefull (mLogTabs->height() - mLogTabs->getTabHeight() - 10);
+    const int logTabHusefull (height() - mLogTabs->tabHeight() - 10);
 
-    mLogModelEdit->setGeometry(5, logTabY0, mLogTabs->width() - 10, logTabHusefull );
-    mLogMCMCEdit->setGeometry(5, logTabY0, mLogTabs->width() - 10, logTabHusefull );
-    mLogResultsEdit->setGeometry(5, logTabY0, mLogTabs->width() -10 , logTabHusefull );
-
+    mLogModelEdit->resize( width() - 10, logTabHusefull );
+    mLogMCMCEdit->resize( width() - 10, logTabHusefull );
+    mLogResultsEdit->resize( width() -10 , logTabHusefull );
+    mLogTabs->resize(width(), mLogTabs->minimalHeight());
 }
 
 void ProjectView::doProjectConnections(Project* project)
