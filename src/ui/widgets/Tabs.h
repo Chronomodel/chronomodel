@@ -11,23 +11,40 @@ public:
     Tabs(QWidget* parent = nullptr);
     ~Tabs();
     
+    // setter
     void addTab(const QString& name);
+    void addTab(QWidget* wid, const QString& name);
     int currentIndex() const;
     void setTab(int index, bool notify);
     void setFont(const QFont &font);
+    void setTabHeight(const int &h) {mTabHeight = h;}
+
+    // getter
+    QWidget* getWidget(const int &i);
+    QWidget* getCurrentWidget();
+    QRect widgetRect() const;
+    QRect minimalGeometry() const;
+    int minimalHeight() const;
+    int minimalWidth() const;
+    int tabHeight() const { return mTabHeight;}
     
 signals:
-    void tabClicked(int index);
+    void tabClicked(const int &index);
     
+public slots:
+    void showWidget(const int &i);
+
 protected:
     void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent* e);
     void mousePressEvent(QMouseEvent* e);
     void updateLayout();
-    
+
 private:
+    int mTabHeight;
     QStringList mTabNames;
     QList<QRectF> mTabRects;
+    QList<QWidget*> mTabWidgets;
     int mCurrentIndex;
 };
 
