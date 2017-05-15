@@ -210,6 +210,43 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         /** @todo
          * adding compil of data's sigma curves
          */
+        mGraph->mLegendX = "";
+        mGraph->setFormatFunctX(stringWithAppSettings);
+        mGraph->setFormatFunctY(stringWithAppSettings);
+
+        mTitle = tr("Phase's Events' Std Compil.") + " : " + mPhase->mName;
+
+        int i(0);
+        for ( auto && ev : mPhase->mEvents) {
+        /* ------------------------------------------------
+         *  Events don't have std dev BUT we can visualize
+         *  an overlay of all dates std dev instead.
+         *  Possible curves, FOR ALL DATES :
+         *  - Sigma Date i All Chains
+         *  - Sigma Date i Chain j
+         * ------------------------------------------------
+         */
+
+            for (auto&& date : ev->mDates) {
+                GraphCurve curve = generateDensityCurve(date.mSigma.fullHisto(),
+                                                        "Sigma Date " + QString::number(i) + " All Chains",
+                                                        color);
+
+                mGraph->addCurve(curve);
+                if (!date.mSigma.mChainsHistos.isEmpty())
+                    for (int j=0; j<mChains.size(); ++j) {
+                        GraphCurve curveChain = generateDensityCurve(date.mSigma.histoForChain(j),
+                                                                     "Sigma Date " + QString::number(i) + " Chain " + QString::number(j),
+                                                                     Painting::chainColors.at(j));
+                        mGraph->addCurve(curveChain);
+                    }
+                ++i;
+            }
+
+
+
+        }
+        // end todo
     }
 
     /* -----------------second tab : history plot-------------------------------
@@ -309,10 +346,22 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->autoAdjustYScale(true);
         }
 
-    } else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eSigma) {
-        /** @todo
-         * adding compil of data's sigma curves
-         */
+    }
+    else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eSigma) {
+            int i (0);
+            for (auto && ev : mPhase->mEvents) {
+                for (auto && date : ev->mDates) {
+                    mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " All Chains", mShowAllChains);
+
+                   for (int j=0; j<mShowChainList.size(); ++j)
+                        mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " Chain " + QString::number(j), mShowChainList.at(j));
+                    ++i;
+                }
+            }
+            mGraph->setTipXLab("duration");
+            mGraph->setYAxisMode(GraphView::eHidden);
+            mGraph->autoAdjustYScale(true);
+
     }
     /* ---------------- second tab : history plot--------------------------------
      *  - Alpha Trace i

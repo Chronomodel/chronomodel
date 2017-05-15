@@ -33,7 +33,7 @@ void Label::setIsTitle(bool isTitle)
         
         QPalette palette = QLabel::palette();
         palette.setColor(QPalette::WindowText, Qt::white);
-        palette.setColor(QPalette::Window, Painting::mainColorDark);
+        palette.setColor(QPalette::Window, Painting::mainColorGrey);
         setPalette(palette);
         
         setAlignment(Qt::AlignCenter);

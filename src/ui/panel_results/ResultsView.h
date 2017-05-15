@@ -84,7 +84,7 @@ protected:
 
     void updateTabDisplay(const int &i);
     void updateTabByScene();
-    void updateTabPageTools();
+    void updateTabPageSaving();
 
 public slots:
     void updateResults(Model* model = nullptr);
@@ -103,8 +103,6 @@ public slots:
     
     void updateModel();
     void updateResultsLog();
-
-  //  void adjustDuration(bool visible);
 
 private slots:
     void graphTypeChange();
@@ -142,8 +140,6 @@ private slots:
     void previousSheet();
     void nextSheet();
     void unfoldToggle();
-
- //   void showTabDisplay( const int &i);
 
     // SETTER
     void setFFTLength();
@@ -203,26 +199,6 @@ private:
     QWidget* mOptionsWidget;
 
 
-
-    Tabs* mTabPageTools;
-    QWidget* mPageWidget;
-    // Page Navigator
-    Label* mSheetTitle;
-    Button* mNextSheetBut;
-    Button* mPreviousSheetBut;
-
-    QWidget* mToolsWidget;
-    Button* mStatsBut;
-    Button* mExportImgBut;
-    Button* mExportResults;
-
-    Button* mImageSaveBut;
-    Button* mImageClipBut;
-    Button* mResultsClipBut;
-    Button* mDataSaveBut;
-
-
-
     // --- Variables
     Tabs* mTabByScene; // replace mByEventsBut and mByPhasesBut
     QWidget* mResultsGroup;
@@ -274,8 +250,8 @@ private:
 
     QFont mFont;
     Button* mFontBut;
-    QSpinBox* mThicknessSpin;
-    QSpinBox* mOpacitySpin;
+    QComboBox* mThicknessCombo;
+    QComboBox* mOpacityCombo;
     QComboBox* mRenderCombo;
     
     Label* labFont;
@@ -305,9 +281,27 @@ private:
     LineEdit* mBandwidthEdit;
     Button* mUpdateDisplay;
 
+
+    Tabs* mTabPageSaving;
+    QWidget* mPageWidget;
+    // Page Navigator
+    Button* mNextSheetBut;
+    LineEdit* mSheetNum;
+    Button* mPreviousSheetBut;
+
+    QWidget* mToolsWidget;
+    Button* mStatsBut;
+    Button* mExportImgBut;
+    Button* mExportResults;
+
+    Button* mImageSaveBut;
+    Button* mImageClipBut;
+    Button* mResultsClipBut;
+    Button* mDataSaveBut;
+
+
     int mComboH;
     
-   // QMap<int, QPair<double, double>> mZooms;
     QMap<QPair<GraphViewResults::Variable, GraphViewResults::TypeGraph>, QPair<double, double>> mZooms;
     //propreties
     GraphViewResults::TypeGraph mCurrentTypeGraph;

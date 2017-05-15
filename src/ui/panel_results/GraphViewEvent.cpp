@@ -257,9 +257,6 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
      *  - Accept i
      *  - Accept Target
      * ------------------------------------------------  */
-   /* else if (typeGraph == eAccept && variable == eTheta
-                && mEvent->mMethod == Event::eMHAdaptGauss
-                && isUnifBound == false) {*/
     else if (typeGraph == eAccept && variable == eTheta
                 && mEvent->mMethod == Event::eMHAdaptGauss) {
         mGraph->mLegendX = "Iterations";

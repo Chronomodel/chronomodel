@@ -74,7 +74,7 @@ mMaximunNumberOfVisibleGraph(0)
 
     mTabs = new Tabs(this);
     mTabs->addTab(tr("Posterior Distrib."));
-    mTabs->addTab(tr("History Plots"));
+    mTabs->addTab(tr("History Plot"));
     mTabs->addTab(tr("Acceptance Rate"));
     mTabs->addTab(tr("Autocorrelation"));
     mTabs->setTab(0, false);
@@ -109,99 +109,6 @@ mMaximunNumberOfVisibleGraph(0)
 
     mOptionsWidget = new QWidget(this); // this is the parent of group of widget on the rigth of the panel
     mOptionsWidget->setFixedWidth(mOptionsW);
-    /*-------------
-     * ------Tools for all graph
-     * ------------- */
-    mToolsWidget = new QWidget(this);
-    mToolsWidget->resize(mOptionsW, 50);
-
-    const QSize allDensitiesButSize (int(ceil(mOptionsW/3.)), 50);
-    mStatsBut = new Button(tr("Stats"), mToolsWidget);
-    mStatsBut->setCheckable(true);
-    mStatsBut->setFlatHorizontal();
-    mStatsBut->setIcon(QIcon(":stats_w.png"));
-    mStatsBut->setFixedSize(allDensitiesButSize);
-    mStatsBut->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
-
-    mExportImgBut = new Button(tr("Capture"), mToolsWidget);
-    mExportImgBut->setFlatHorizontal();
-    mExportImgBut->setIcon(QIcon(":picture_save.png"));
-    mExportImgBut->setFixedSize(allDensitiesButSize);
-    mExportImgBut->setToolTip(tr("Save all currently visible results as an image.<br><u>Note</u> : If you want to copy textual results, see the Log tab."));
-
-    mExportResults = new Button(tr("Results"), mToolsWidget);
-    mExportResults->setFlatHorizontal();
-    mExportResults->setIcon(QIcon(":csv.png"));
-    mExportResults->setFixedSize(allDensitiesButSize);
-    mExportResults->setToolTip(tr("Export all result in several files"));
-
-
-    /*-------------
-     * ------Tools for single graph
-     * ------------- */
-
-    const QSize singleDensityButSize (mOptionsW/4, 50);
-    mImageSaveBut = new Button(tr("Save"), mToolsWidget);
-    mImageSaveBut->setIcon(QIcon(":picture_save.png"));
-    mImageSaveBut->setFlatVertical();
-    mImageSaveBut->setToolTip(tr("Save image as file"));
-    mImageSaveBut->setFixedSize(singleDensityButSize);
-
-    mImageClipBut = new Button(tr("Copy"), mToolsWidget);
-    mImageClipBut->setIcon(QIcon(":picture_copy.png"));
-    mImageClipBut->setFlatVertical();
-    mImageClipBut->setToolTip(tr("Copy image to clipboard"));
-    mImageClipBut->setFixedSize(singleDensityButSize);
-
-    mResultsClipBut = new Button(tr("Copy"), mToolsWidget);
-    mResultsClipBut->setIcon(QIcon(":text.png"));
-    mResultsClipBut->setFlatVertical();
-    mResultsClipBut->setToolTip(tr("Copy text results to clipboard"));
-    mResultsClipBut->setFixedSize(singleDensityButSize);
-
-    mDataSaveBut = new Button(tr("Save"), mToolsWidget);
-    mDataSaveBut->setIcon(QIcon(":data.png"));
-    mDataSaveBut->setFlatVertical();
-    mDataSaveBut->setToolTip(tr("Save graph data to file"));
-    mDataSaveBut->setFixedSize(singleDensityButSize);
-
-    connect(mImageSaveBut, &Button::clicked, this, &ResultsView::saveAsImage);
-    connect(mImageClipBut, &Button::clicked, this, &ResultsView::imageToClipboard);
-    connect(mResultsClipBut, &Button::clicked, this, &ResultsView::resultsToClipboard);
-    connect(mDataSaveBut, &Button::clicked, this, &ResultsView::saveGraphData);
-
-    // Page widget
-    mPageWidget = new QWidget (this);
-    mPageWidget->resize(mOptionsW, mRulerH);
-    mSheetTitle = new Label(tr("Navigator"), mPageWidget);
-    mSheetTitle->setIsTitle(true);
-    mSheetTitle->setFixedSize(mOptionsW, int(mRulerH/2));
-
-    mPreviousSheetBut  = new Button(tr("Prev."), mPageWidget);
-    mPreviousSheetBut->setFixedSize(mOptionsW/2, int(mRulerH/2));
-    mPreviousSheetBut->setCheckable(false);
-    mPreviousSheetBut->setFlatHorizontal();
-    mPreviousSheetBut->setToolTip(tr("Display previous data"));
-    mPreviousSheetBut->setIconOnly(false);
-
-    mNextSheetBut  = new Button(tr("Next"), mPageWidget);
-    mNextSheetBut->setFixedSize(mOptionsW/2, int(mRulerH/2));
-    mNextSheetBut->setCheckable(false);
-    mNextSheetBut->setFlatHorizontal();
-    mNextSheetBut->setToolTip(tr("Display next data"));
-    mNextSheetBut->setIconOnly(false);
-
-    connect(mPreviousSheetBut, &Button::pressed, this, &ResultsView::previousSheet);
-    connect(mNextSheetBut, &Button::pressed, this, &ResultsView::nextSheet);
-
-    mTabPageTools = new Tabs(mOptionsWidget);
-    mTabPageTools->setFixedWidth(mOptionsW);
-    mTabPageTools->addTab(mPageWidget, tr("Page"));
-    mTabPageTools->addTab(mToolsWidget, tr("Tools"));
-
-    connect(mTabPageTools, &Tabs::tabClicked, mTabPageTools, &Tabs::showWidget);
-
-    //connect(mTabDisplayMCMC, &Tabs::tabClicked, this, &ResultsView::updateTabDisplay);
 
     /* -------------------------------------- mResultsGroup---------------------------------------------------*/
 
@@ -256,7 +163,9 @@ mMaximunNumberOfVisibleGraph(0)
     mTabDisplayMCMC->addTab(mTabMCMC, tr("Distrib. Options"));
 
     connect(mTabDisplayMCMC, &Tabs::tabClicked, mTabDisplayMCMC, &Tabs::showWidget);
-    connect(mTabDisplayMCMC, &Tabs::tabClicked, this, &ResultsView::updateTabDisplay);
+    connect(mTabDisplayMCMC,static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::updateLayout);
+
+    //connect(mTabDisplayMCMC, &Tabs::tabClicked, this, &ResultsView::updateTabDisplay);
 
     /* ----------------------------------------------------------
      *  Display Options layout
@@ -343,75 +252,55 @@ mMaximunNumberOfVisibleGraph(0)
     connect(mFontBut, &QPushButton::clicked, this, &ResultsView::updateFont);
     
     labThickness = new Label(tr("Thickness"), mGraphicGroup);
-    labThickness->setFixedSize(fm.width(labThickness->text()), fm.height() + 2);
+    labThickness->setFixedSize(fm.width(labThickness->text()), fm.height() + 5);
     labThickness->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
-    mThicknessSpin = new QSpinBox(mGraphicGroup);
-    mThicknessSpin->setRange(1, 10);
-    mThicknessSpin->setSuffix(" px");
-    mThicknessSpin->setFixedSize(wEdit, fm.height() + 10 );
-    mThicknessSpin->setToolTip(tr("Select to change the thickness of the drawing"));
+    mThicknessCombo = new QComboBox(mGraphicGroup);
+    mThicknessCombo->addItem(tr("1 px"));
+    mThicknessCombo->addItem(tr("2 px"));
+    mThicknessCombo->addItem(tr("3 px"));
+    mThicknessCombo->addItem(tr("4 px"));
+    mThicknessCombo->addItem(tr("5 px"));
+
+    mThicknessCombo->setFixedSize(wEdit, fm.height() + 5 );
+    mThicknessCombo->setToolTip(tr("Select to change the thickness of the drawing"));
 
    // mThicknessSpin->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }"); // not supported
-    connect(mThicknessSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::updateThickness);
+    connect(mThicknessCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::updateThickness);
     
     labOpacity = new Label(tr("Opacity"), mGraphicGroup);
     labOpacity->setFixedSize(fm.width(labOpacity->text()), fm.height() + 2);
     labOpacity->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
-    mOpacitySpin = new QSpinBox(mGraphicGroup);
-    mOpacitySpin->setRange(0, 100);
-    mOpacitySpin->setValue(30);
-    mOpacitySpin->setSuffix(" %");
-    mOpacitySpin->setFixedSize(wEdit, fm.height() + 10 );
-    mOpacitySpin->setToolTip(tr("Select to change the opacity of the drawing"));
+    mOpacityCombo = new QComboBox(mGraphicGroup);
+    mOpacityCombo->addItem(tr("0 %"));
+    mOpacityCombo->addItem(tr("10 %"));
+    mOpacityCombo->addItem(tr("20 %"));
+    mOpacityCombo->addItem(tr("30 %"));
+    mOpacityCombo->addItem(tr("40 %"));
+    mOpacityCombo->addItem(tr("50 %"));
+    mOpacityCombo->addItem(tr("60 %"));
+    mOpacityCombo->addItem(tr("70 %"));
+    mOpacityCombo->addItem(tr("80 %"));
+    mOpacityCombo->addItem(tr("90 %"));
+    mOpacityCombo->addItem(tr("100 %"));
+    mOpacityCombo->setFixedSize(wEdit, fm.height() + 5 );
+    mOpacityCombo->setToolTip(tr("Select to change the opacity of the drawing"));
+    mOpacityCombo->setCurrentIndex(5);
     //mOpacitySpin->setStyleSheet("QLineEdit { border-radius: 5px; }"); // not supported
 
-    connect(mOpacitySpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::updateOpacity);
+    connect(mOpacityCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::updateOpacity);
 
     labRendering = new Label(tr("Rendering"), mGraphicGroup);
-    labRendering->setFixedSize(fm.width(labRendering->text()), fm.height() + 2);
+    labRendering->setFixedSize(fm.width(labRendering->text()), fm.height() + 5);
     labRendering->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mRenderCombo = new QComboBox(mGraphicGroup);
     mRenderCombo->addItem(tr("Standard (faster)"));
     mRenderCombo->addItem(tr("Retina (slower)"));
-    mRenderCombo->setFixedSize(fm.width(tr("Retina (slower)")), fm.height()+ 5);
+    mRenderCombo->setFixedSize(fm.width(tr("Standard (faster)")), fm.height() + 5);
 
-
-    /* ------------------ Graphic option ----------------*/
-/*    int ySpan = mMargin ;
-    mGraphicTitle->move(0, mSpanTitle->y() + mSpanTitle->height() + mSpanGroup->height());
-
-    int heiTemp = mYScaleSpin->height();
-    ySpan = mMargin ;
-    mYScaleLab->move(mMargin, mYScaleLab->height()/2.);
-    mYScaleSpin->move(mOptionsW - mYScaleSpin->width() - mMargin, ySpan);
-    const int ySliderWidth = mOptionsW - mYScaleLab->width() - mYScaleSpin->width() - 4*mMargin;
-    mYSlider->setGeometry(mYScaleLab->x() + mYScaleLab->width() + mMargin , ySpan, ySliderWidth, heiTemp );
-
-    ySpan += mMargin + heiTemp;
-    labFont->move(mMargin, ySpan);
-    mFontBut->move(mOptionsW/2, ySpan );
-
-    ySpan += mMargin + mFontBut->height();
-    labThickness->move(mMargin, ySpan);
-    mThicknessSpin->move(mOptionsW/2, ySpan);
-
-    ySpan += mMargin + mThicknessSpin->height() +3;
-    labOpacity->move(mMargin, ySpan);
-    mOpacitySpin->setGeometry(mOptionsW/2, ySpan, mCurrentXMinEdit->width(), mOpacitySpin->height());
-
-    ySpan += mMargin + mOpacitySpin->height();
-    labRendering->move(mMargin, ySpan);
-    mRenderCombo->move(mOptionsW/2, ySpan);
-
-    // fit the size and the position of the widget of the group in the mOptionsWidget coordonnate
-    ySpan += mMargin + mRenderCombo->height();
-    mGraphicGroup->setGeometry(mGraphicTitle->x(), mGraphicTitle->y()+ mGraphicTitle->height() , mOptionsW, ySpan);
-
- */
-    /* -------------------------------------- mChainsGroup---------------------------------------------------*/
+   /* -------------------------------------- mChainsGroup---------------------------------------------------*/
     
     mChainsTitle = new Label(tr("MCMC Chains"), mTabMCMC);
     mChainsTitle->setIsTitle(true);
@@ -421,6 +310,7 @@ mMaximunNumberOfVisibleGraph(0)
 
     mAllChainsCheck = new CheckBox(tr("Chains Concatenation"), mChainsGroup);
     mAllChainsCheck->setChecked(true);
+    mAllChainsCheck->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
 
     /*
      * QList<CheckBox*> mCheckChainChecks;
@@ -431,7 +321,7 @@ mMaximunNumberOfVisibleGraph(0)
 
 
    
-    /* -------------------------------------- mPostDistGroup ---------------------------------------------------*/
+    /* -------------------------------------- mDensityOptsGroup ---------------------------------------------------*/
     
     mDensityOptsTitle = new Label(tr("Density Options"), mTabMCMC);
     mDensityOptsTitle->setIsTitle(true);
@@ -474,7 +364,7 @@ mMaximunNumberOfVisibleGraph(0)
     mFFTLenCombo->setFixedSize(wEdit, fm.height() + 2);
     mFFTLenCombo->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     
-    mComboH = fm.height() + 6;  //mFFTLenCombo->sizeHint().height();
+    mComboH = fm.height() + 6;
     mTabsH = mComboH + 2*mMargin;
     
     mBandwidthLab = new Label(tr("Bandwidth Const."), mDensityOptsGroup);
@@ -482,8 +372,6 @@ mMaximunNumberOfVisibleGraph(0)
     mBandwidthLab->setFixedSize(fm.width(mBandwidthLab->text()), fm.height()+2);
     mBandwidthEdit = new LineEdit(mDensityOptsGroup);
     mBandwidthEdit->setFixedSize(wEdit, fm.height() + 2);
-    //mBandwidthEdit->setFont(font);
-   // QLocale locale;
     mBandwidthEdit->setText(locale().toString(1.06));
 
 
@@ -540,18 +428,120 @@ mMaximunNumberOfVisibleGraph(0)
     // -------------------------
     
     connect(mRenderCombo,static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::updateRendering);
+
+
+    /*-------------
+     * ------Tools for all graph
+     * ------------- */
+    mToolsWidget = new QWidget(this);
+    mToolsWidget->resize(mOptionsW, 50);
+
+    const QSize allDensitiesButSize (int(ceil(mOptionsW/3.)), 50);
+    mStatsBut = new Button(tr("Stats"), mToolsWidget);
+    mStatsBut->setCheckable(true);
+    mStatsBut->setFlatHorizontal();
+    mStatsBut->setIcon(QIcon(":stats_w.png"));
+    mStatsBut->setFixedSize(allDensitiesButSize);
+    mStatsBut->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
+
+    mExportImgBut = new Button(tr("Capture"), mToolsWidget);
+    mExportImgBut->setFlatHorizontal();
+    mExportImgBut->setIcon(QIcon(":picture_save.png"));
+    mExportImgBut->setFixedSize(allDensitiesButSize);
+    mExportImgBut->setToolTip(tr("Save all currently visible results as an image.<br><u>Note</u> : If you want to copy textual results, see the Log tab."));
+
+    mExportResults = new Button(tr("Results"), mToolsWidget);
+    mExportResults->setFlatHorizontal();
+    mExportResults->setIcon(QIcon(":csv.png"));
+    mExportResults->setFixedSize(allDensitiesButSize);
+    mExportResults->setToolTip(tr("Export all result in several files"));
+
     connect(mStatsBut, &Button::toggled, this, &ResultsView::showInfos);
     connect(mExportImgBut, &Button::clicked, this, &ResultsView::exportFullImage);
     connect(mExportResults, &Button::clicked, this, &ResultsView::exportResults);
+
+
+    /*-------------
+     * ------Tools for single graph
+     * ------------- */
+
+    const QSize singleDensityButSize (mOptionsW/4, 50);
+    mImageSaveBut = new Button(tr("Save"), mToolsWidget);
+    mImageSaveBut->setIcon(QIcon(":picture_save.png"));
+    mImageSaveBut->setFlatVertical();
+    mImageSaveBut->setToolTip(tr("Save image as file"));
+    mImageSaveBut->setFixedSize(singleDensityButSize);
+
+    mImageClipBut = new Button(tr("Copy"), mToolsWidget);
+    mImageClipBut->setIcon(QIcon(":picture_copy.png"));
+    mImageClipBut->setFlatVertical();
+    mImageClipBut->setToolTip(tr("Copy image to clipboard"));
+    mImageClipBut->setFixedSize(singleDensityButSize);
+
+    mResultsClipBut = new Button(tr("Copy"), mToolsWidget);
+    mResultsClipBut->setIcon(QIcon(":text.png"));
+    mResultsClipBut->setFlatVertical();
+    mResultsClipBut->setToolTip(tr("Copy text results to clipboard"));
+    mResultsClipBut->setFixedSize(singleDensityButSize);
+
+    mDataSaveBut = new Button(tr("Save"), mToolsWidget);
+    mDataSaveBut->setIcon(QIcon(":data.png"));
+    mDataSaveBut->setFlatVertical();
+    mDataSaveBut->setToolTip(tr("Save graph data to file"));
+    mDataSaveBut->setFixedSize(singleDensityButSize);
+
+    connect(mImageSaveBut, &Button::clicked, this, &ResultsView::saveAsImage);
+    connect(mImageClipBut, &Button::clicked, this, &ResultsView::imageToClipboard);
+    connect(mResultsClipBut, &Button::clicked, this, &ResultsView::resultsToClipboard);
+    connect(mDataSaveBut, &Button::clicked, this, &ResultsView::saveGraphData);
+
+    // Page widget
+    mPageWidget = new QWidget (this);
+    mPageWidget->resize(mOptionsW, mRulerH);
+
+    mSheetNum = new LineEdit(mPageWidget);
+    mSheetNum->setEnabled(false);
+    mSheetNum->setReadOnly(true);
+    mSheetNum->setFixedSize(fm.width("__/__"), 50);//fm.height() + 2);
+    mSheetNum->setAlignment(Qt::AlignCenter);
+    mSheetNum->setText(locale().toString(mMaximunNumberOfVisibleGraph));
+
+    mPreviousSheetBut  = new Button(tr("Prev."), mPageWidget);
+    mPreviousSheetBut->setFixedSize((mOptionsW- mSheetNum->width())/2, 50);//int(mRulerH/2));
+    mPreviousSheetBut->setCheckable(false);
+    mPreviousSheetBut->setFlatHorizontal();
+    mPreviousSheetBut->setToolTip(tr("Display previous data"));
+    mPreviousSheetBut->setIconOnly(false);
+
+
+    mNextSheetBut  = new Button(tr("Next"), mPageWidget);
+    mNextSheetBut->setFixedSize((mOptionsW - mSheetNum->width())/2, 50);//int(mRulerH/2));
+    mNextSheetBut->setCheckable(false);
+    mNextSheetBut->setFlatHorizontal();
+    mNextSheetBut->setToolTip(tr("Display next data"));
+    mNextSheetBut->setIconOnly(false);
+
+    connect(mPreviousSheetBut, &Button::pressed, this, &ResultsView::previousSheet);
+    connect(mNextSheetBut, &Button::pressed, this, &ResultsView::nextSheet);
+
+    mTabPageSaving = new Tabs(mOptionsWidget);
+    mTabPageSaving->setFixedWidth(mOptionsW);
+    mTabPageSaving->addTab(mPageWidget, tr("Page"));
+    mTabPageSaving->addTab(mToolsWidget, tr("Saving"));
+
+    connect(mTabPageSaving, &Tabs::tabClicked, mTabPageSaving, &Tabs::showWidget);
+    connect(mTabPageSaving,static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::updateLayout);
+
+    //connect(mTabDisplayMCMC, &Tabs::tabClicked, this, &ResultsView::updateTabDisplay);
 
     mMarker->raise();
     mTabDisplayMCMC->setTab(0, false);
     mTabDisplayMCMC->showWidget(0);
     updateTabDisplay(mTabDisplayMCMC->currentIndex());
 
-    mTabPageTools->setTab(0, false);
-    mTabPageTools->showWidget(0);
-    updateTabPageTools();
+    mTabPageSaving->setTab(0, false);
+    mTabPageSaving->showWidget(0);
+    updateTabPageSaving();
 }
 
 ResultsView::~ResultsView()
@@ -840,10 +830,10 @@ void ResultsView::updateTabDisplay(const int &i)
            *  Graphic options
            * ----------------------------------------------------------*/
         int ySpan = mMargin;
-        mGraphicTitle->setGeometry(0, mSpanGroup->y()+ mSpanGroup->height() , mOptionsW, ySpan);
+        mGraphicTitle->move(0, mSpanGroup->y()+ mSpanGroup->height());
 
         ySpan += mMargin;
-        mYScaleLab->move(mMargin, mYScaleLab->height()/2.);
+        mYScaleLab->setGeometry(mMargin, ySpan , wBut - 4*mMargin, heiTemp);
         mYScaleSpin->move(mOptionsW - mYScaleSpin->width() - mMargin, ySpan);
         const int ySliderWidth = mOptionsW - mYScaleLab->width() - mYScaleSpin->width() - 4*mMargin;
         mYSlider->setGeometry(mYScaleLab->x() + mYScaleLab->width() + mMargin , ySpan, ySliderWidth, heiTemp );
@@ -854,13 +844,13 @@ void ResultsView::updateTabDisplay(const int &i)
 
         ySpan += mMargin + mFontBut->height();
         labThickness->move(mMargin, ySpan);
-        mThicknessSpin->move(mOptionsW/2, ySpan);
+        mThicknessCombo->move(mOptionsW/2, ySpan);
 
-        ySpan += mMargin + mThicknessSpin->height() +3;
+        ySpan += mMargin + mThicknessCombo->height();
         labOpacity->move(mMargin, ySpan);
-        mOpacitySpin->setGeometry(mOptionsW/2, ySpan, mCurrentXMinEdit->width(), mOpacitySpin->height());
+        mOpacityCombo->move(mOptionsW/2, ySpan);
 
-        ySpan += mMargin + mOpacitySpin->height();
+        ySpan += mMargin + mOpacityCombo->height();
         labRendering->move(mMargin, ySpan);
         mRenderCombo->move(mOptionsW/2, ySpan);
 
@@ -868,12 +858,12 @@ void ResultsView::updateTabDisplay(const int &i)
         ySpan += mMargin + mRenderCombo->height();
         mGraphicGroup->setGeometry(0, mGraphicTitle->y()+ mGraphicTitle->height() , mOptionsW, ySpan);
 
-        mTabDisplay->resize(mOptionsW,  mGraphicGroup->y() + mGraphicGroup->height() + 5 );
+        mTabDisplay->resize(mOptionsW,  mGraphicGroup->y() + mGraphicGroup->height() );
 
         }
         break;
 
-    default: //MCMC tab
+    default: //Distrib. Options tab
        {
         /* ----------------------------------------------------------
            *  MCMC Chains options layout
@@ -888,39 +878,34 @@ void ResultsView::updateTabDisplay(const int &i)
           const int tabIdx = mTabs->currentIndex();
           if (tabIdx == 0) {
               // inside mChainsGroup Coordonnate
-              mAllChainsCheck->setGeometry(mMargin, mMargin, int(mChainsGroup->width()-2*mMargin), mLineH);
+              mAllChainsCheck->move(mMargin, ySpan);
+              ySpan += mAllChainsCheck->height() + mMargin;
 
-              for (int i=0; i<numChains; ++i) {
-                  QRect geometry(mMargin, mMargin + (i+1) * (mLineH + mMargin), int(mChainsGroup->width()-2*mMargin), mLineH);
-                  mCheckChainChecks.at(i)->setGeometry(geometry);
-                  mChainRadios.at(i)->setGeometry(geometry);
+              for (auto && check: mCheckChainChecks) {
+                  check->move(mMargin, ySpan);
+                  ySpan += check->height() + mMargin;
               }
-              ySpan = mMargin + (numChains+1) * (mLineH + mMargin) + mMargin;
-          // trace, accept or correl : chains are selectable with radio-buttons
-          } else {
-              for (int i=0; i<numChains; ++i) {
-                  QRect geometry(mMargin, int(mMargin + i * (mLineH + mMargin)), int(mChainsGroup->width()-2*mMargin), mLineH);
-                  mCheckChainChecks.at(i) -> setGeometry(geometry);
-                  mChainRadios.at(i)     -> setGeometry(geometry);
+
+          } else {      // trace, accept or correl : chains are selectable with radio-buttons
+              for (auto && radio : mChainRadios) {
+                  radio->move(mMargin, ySpan);
+                  ySpan += radio->height() + mMargin;
               }
-              ySpan = mMargin + numChains * (mLineH + mMargin) + mMargin;
           }
 
-          mChainsGroup->setGeometry(0, mChainsTitle->y() + mChainsTitle->height(), mOptionsW, ySpan);
 
+          mChainsGroup->setGeometry(0, mChainsTitle->y() + mChainsTitle->height(), mOptionsW, ySpan);
+qDebug()<<"updateTabDisplay mChainsGroup"<<mChainsGroup->geometry();
           /* ----------------------------------------------------------
            *  Density Options layout
            * ----------------------------------------------------------*/
-         //  mTabMCMC->resize(mOptionsW, 100) ;
           if (mDensityOptsTitle->isVisible()) {
                mDensityOptsTitle->move(0, mChainsGroup->y() + mChainsGroup->height());
 
                ySpan = mMargin;
 
-
               if (mCredibilityCheck->isVisible()) {
-                  mCredibilityCheck->move(mMargin, ySpan);//, mPostDistGroup->width() - 2*mMargin, mLineH);
-                 // mCredibilityCheck->setGeometry(mMargin, ySpan, mPostDistGroup->width() - 2*mMargin, mLineH);
+                  mCredibilityCheck->move(mMargin, ySpan);
                   ySpan += mCredibilityCheck->height() + mMargin;
               }
 
@@ -937,42 +922,44 @@ void ResultsView::updateTabDisplay(const int &i)
               }
 
               if (mBandwidthLab->isVisible()) {
-                mBandwidthLab->move(mMargin, ySpan);
-                mBandwidthEdit->move(mOptionsW - mMargin - mBandwidthEdit->width(), ySpan );
-                ySpan += mBandwidthEdit->height() + mMargin;
+                  mBandwidthLab->move(mMargin, ySpan);
+                  mBandwidthEdit->move(mOptionsW - mMargin - mBandwidthEdit->width(), ySpan );
+                  ySpan += mBandwidthEdit->height() + mMargin;
               }
 
               mDensityOptsGroup->setGeometry(0, mDensityOptsTitle->y() + mDensityOptsTitle->height(), mOptionsW, ySpan);
               mTabMCMC->resize(mOptionsW, mDensityOptsGroup->y() + mDensityOptsGroup->height() + 5) ;
-         }
-          else {
 
-              mTabMCMC->resize(mOptionsW, mChainsGroup->y() + mChainsGroup->height() + 5) ;
+          } else {
+                mTabMCMC->resize(mOptionsW, mChainsGroup->y() + mChainsGroup->height() + 5) ;
           }
 
         }
         break;
     }
     mTabDisplayMCMC->resize(mOptionsW, mTabDisplayMCMC->minimalHeight());
-    updateLayout();
+
 }
 
-void ResultsView::updateTabPageTools()
+void ResultsView::updateTabPageSaving()
 {
     bool byPhases (mTabByScene->currentIndex() == 1);
    // bool byEvents (mTabByScene->currentIndex() == 0);
     int ySpan (mMargin);
-    switch (mTabPageTools->currentIndex()) {
+    switch (mTabPageSaving->currentIndex()) {
     case 0:
         {
             /*
              *  Page Navigator
              */
             ySpan = mMargin;
-            mSheetTitle->move(0 , ySpan);
-            ySpan = mSheetTitle->y() + mSheetTitle->height();
             mPreviousSheetBut->move(0 , ySpan);
-            mNextSheetBut->move(mPreviousSheetBut->width(),  ySpan);
+
+            mSheetNum->move(mPreviousSheetBut->width(), ySpan);
+            mSheetNum->setText(locale().toString(byPhases ? mTabPhasesIndex : mTabEventsIndex ) + "/"
+                               + locale().toString(ceil(mMaximunNumberOfVisibleGraph/mNumberOfGraph)));
+
+            mNextSheetBut->move(mOptionsW - mPreviousSheetBut->width(),  ySpan);
 
             ySpan += mNextSheetBut->height() + mMargin;
             mPageWidget->resize(mOptionsW, ySpan);
@@ -1015,7 +1002,6 @@ void ResultsView::updateTabPageTools()
                 mExportImgBut->setVisible(false);
                 mExportResults->setVisible(false);
 
-                //mToolsWidget->move(0,mTabPageTools->tabHeight());
                 mToolsWidget->resize(mOptionsW, mDataSaveBut->height() + 2*mMargin);
 
             } else {
@@ -1043,24 +1029,14 @@ void ResultsView::updateTabPageTools()
         break;
     }
 
-    // mTabPageTools
-    //mTabPageTools->update();
-    mTabPageTools->resize(mOptionsW, mTabPageTools->minimalHeight());
+    mTabPageSaving->resize(mOptionsW, mTabPageSaving->minimalHeight());
 
 }
 
 void ResultsView::changeScrollArea()
 {
-    bool byPhases (false);
-    bool byEvents (false);
-    switch (mTabByScene->currentIndex()) {
-    case 0:
-        byEvents = true;
-        break;
-    default:
-        byPhases = true;
-        break;
-    }
+    const bool byPhases (mTabByScene->currentIndex() == 1);
+    const bool byEvents (mTabByScene->currentIndex() == 0);
 
     if (byPhases && !mEventsfoldCheck->isChecked()) {
         mDatesfoldCheck->setChecked(false);
@@ -1098,24 +1074,10 @@ void ResultsView::updateLayout()
     if (!mModel)
         return;
 
-    bool byPhases (false);
-    bool byEvents (false);
-    switch (mTabByScene->currentIndex()) {
-    case 0:
-        byEvents = true;
-        break;
-    default:
-        byPhases = true;
-        break;
-    }
     //qDebug() << "ResultsView::updateLayout()";
 
     const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     int graphYAxis = 50;
-    //const int m = mMargin;
-
-    
-   // const int tabIdx = mTabs->currentIndex();
     
     mCurrentXMinEdit->setText( stringWithAppSettings(mResultCurrentMinX) );
     mCurrentXMaxEdit->setText( stringWithAppSettings(mResultCurrentMaxX) );
@@ -1146,17 +1108,17 @@ void ResultsView::updateLayout()
 
     ySpan = mTabByScene->y() + mTabByScene->height() + 5;
 
+    updateTabDisplay(mTabDisplayMCMC->currentIndex());
     mTabDisplayMCMC->move(0, ySpan);
     mTabDisplayMCMC->resize(mOptionsW, mTabDisplayMCMC->minimalHeight());
-   // mTabDisplayMCMC->setGeometry(mResultsGroup->x(), ySpan, mOptionsW, mTabDisplayMCMC->minimalHeight());
 
     ySpan = mTabDisplayMCMC->y() + mTabDisplayMCMC->height() + 5;
-    updateTabPageTools();
-    mTabPageTools->move(0, ySpan);
+    updateTabPageSaving();
+    mTabPageSaving->move(0, ySpan);
 
     mOptionsWidget->move(width() - mOptionsW, 0);
-    mOptionsWidget->resize(mOptionsW, mTabPageTools->y()
-                                                + mTabPageTools->height()
+    mOptionsWidget->resize(mOptionsW, mTabPageSaving->y()
+                                                + mTabPageSaving->height()
                                                 + 10
                                                 );
     mOptionsWidget->repaint();
@@ -1168,27 +1130,20 @@ void ResultsView::updateGraphsLayout()
 {
     //qDebug() << "ResultsView::updateGraphsLayout()";
     const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
-    bool byPhases (false);
-    bool byEvents (false);
-    switch (mTabByScene->currentIndex()) {
-    case 0:
-        byEvents = true;
-        break;
-    default:
-        byPhases = true;
-        break;
-    }
+    const bool byPhases (mTabByScene->currentIndex() == 1);
+    //bool byEvents (mTabByScene->currentIndex() == 0);
+
     /* ----------------------------------------------------------
      *  Graphs by phases layout
      *    mRuler  -> setGeometry(mGraphLeft, mTabsH, width() - mGraphLeft - mOptionsW - sbe, mRulerH);
      * ----------------------------------------------------------*/
     if (byPhases) {
-        int y = 0;
+        int y (0);
         if (mPhasesScrollArea) {
             QWidget* wid = mPhasesScrollArea->widget();
-            for (int i=0; i<mByPhasesGraphs.size(); ++i) {
-                mByPhasesGraphs.at(i)->setGeometry(0, y, width() - mOptionsW - sbe, mGraphsH);
-                y += mByPhasesGraphs.at(i)->height();
+            for (auto && graph : mByPhasesGraphs) {
+                graph->setGeometry(0, y, width() - mOptionsW - sbe, mGraphsH);
+                y += graph->height();
             }
             if (y>0)
                 wid->setFixedSize(width() - sbe - mOptionsW, y);
@@ -1203,10 +1158,9 @@ void ResultsView::updateGraphsLayout()
          if (mEventsScrollArea) {
             QWidget* wid = mEventsScrollArea->widget();
 
-            for (int i=0; i<mByEventsGraphs.size(); ++i) {
-                mByEventsGraphs.at(i)->setGeometry(0, y, width() - mOptionsW - sbe, mGraphsH);
-                y += mByEventsGraphs.at(i)->height();
-
+            for (auto && graph : mByEventsGraphs) {
+                graph->setGeometry(0, y, width() - mOptionsW - sbe, mGraphsH);
+                y += graph->height();
             }
             if (y>0)
                 wid->setFixedSize(width() - sbe - mOptionsW, y);
@@ -1221,8 +1175,6 @@ void ResultsView::updateGraphsLayout()
 void ResultsView::clearResults()
 {
     mTabByScene->setEnabled(false);
-   // mByEventsBut->setEnabled(false);
-   // mByPhasesBut->setEnabled(false);
 
     for (auto && check : mCheckChainChecks )
         delete check;
@@ -1297,17 +1249,12 @@ void ResultsView::initResults(Model* model)
     if (mHasPhases) {
         mTabByScene->setTab(1, false);
         mTabByScene->setEnabled(true);
+
      } else {
         mTabByScene->setTab(0, false);
         mTabByScene->setEnabled(false);
     }
-    /*
-    mByPhasesBut->setChecked(mHasPhases);
-    mByEventsBut->setChecked(!mHasPhases);
 
-    mByEventsBut->setEnabled(mHasPhases);
-    mByPhasesBut->setEnabled(mHasPhases);
-    */
     // ----------------------------------------------------
     //  Create Chains option controls (radio and checkboxes under "MCMC Chains")
     // ----------------------------------------------------
@@ -1316,6 +1263,7 @@ void ResultsView::initResults(Model* model)
             CheckBox* check = new CheckBox(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
             connect(check, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
             check->setVisible(true);
+            check->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
             mCheckChainChecks.append(check);
 
             RadioButton* radio = new RadioButton(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
@@ -1323,6 +1271,7 @@ void ResultsView::initResults(Model* model)
             radio->setVisible(true);
             if (i == 0)
                 radio->setChecked(true);
+            radio->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
             mChainRadios.append(radio);
         }
     }
@@ -1374,7 +1323,6 @@ void ResultsView::updateResults(Model* model)
         mTabByScene->setEnabled(false) ;
      }
 
-
     /* ----------------------------------------------------
     *  Update Chains option controls (radio and checkboxes under "MCMC Chains")
     * ---------------------------------------------------- */
@@ -1383,11 +1331,13 @@ void ResultsView::updateResults(Model* model)
             CheckBox* check = new CheckBox(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
             connect(check, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
             check->setVisible(true);
+            check->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
             mCheckChainChecks.append(check);
 
             RadioButton* radio = new RadioButton(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
             connect(radio, &RadioButton::clicked, this, &ResultsView::updateCurvesToShow);
             radio->setVisible(true);
+            radio->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
             if (i == 0)
                 radio->setChecked(true);
             mChainRadios.append(radio);
@@ -1410,7 +1360,6 @@ void ResultsView::updateResults(Model* model)
     * before calculation
     * ------------------------------------------------------------*/
 
-    //mModel->initDensities(getFFTLength(), getBandwidth(), getThreshold());
     mModel->updateDensities(getFFTLength(), getBandwidth(), getThreshold());
     /* ----------------------------------------------------
     *  Events Views : generate all phases graph
@@ -1475,7 +1424,7 @@ void ResultsView::createEventsScrollArea(const int idx)
                 graphEvent->setMCMCSettings(mModel->mMCMCSettings, mChains);
                 graphEvent->setEvent((*iterEvent));
                 graphEvent->setGraphFont(mFont);
-                graphEvent->setGraphsThickness(mThicknessSpin->value());
+                graphEvent->setGraphsThickness(mThicknessCombo->currentIndex());
                 mByEventsGraphs.append(graphEvent);
               }
             ++counter; //count one event graph
@@ -1497,8 +1446,8 @@ void ResultsView::createEventsScrollArea(const int idx)
                                 graphDate->setColor((*iterEvent)->mColor);
 
                                 graphDate->setGraphFont(mFont);
-                                graphDate->setGraphsThickness(mThicknessSpin->value());
-                                graphDate->setGraphsOpacity(mOpacitySpin->value());
+                                graphDate->setGraphsThickness(mThicknessCombo->currentIndex());
+                                graphDate->setGraphsOpacity(mOpacityCombo->currentIndex()*10);
                                 connect(graphDate, &GraphViewResults::selected, this, &ResultsView::updateLayout);
                                 mByEventsGraphs.append(graphDate);
 
@@ -1569,7 +1518,7 @@ void ResultsView::createPhasesScrollArea(const int idx)
                 graphPhase->setMCMCSettings(mModel->mMCMCSettings, mChains);
                 graphPhase->setPhase((*iterPhase));
                 graphPhase->setGraphFont(mFont);
-                graphPhase->setGraphsThickness(mThicknessSpin->value());
+                graphPhase->setGraphsThickness(mThicknessCombo->currentIndex());
                 connect(graphPhase, &GraphViewResults::selected, this, &ResultsView::updateLayout);
                 mByPhasesGraphs.append(graphPhase);
              }
@@ -1584,7 +1533,7 @@ void ResultsView::createPhasesScrollArea(const int idx)
                         graphEvent->setMCMCSettings(mModel->mMCMCSettings, mChains);
                         graphEvent->setEvent((*iterEvent));
                         graphEvent->setGraphFont(mFont);
-                        graphEvent->setGraphsThickness(mThicknessSpin->value());
+                        graphEvent->setGraphsThickness(mThicknessCombo->currentIndex());
                         connect(graphEvent, &GraphViewResults::selected, this, &ResultsView::updateLayout);
                         mByPhasesGraphs.append(graphEvent);
                     }
@@ -1602,7 +1551,7 @@ void ResultsView::createPhasesScrollArea(const int idx)
                                 graphDate->setDate(&date);
                                 graphDate->setColor((*iterEvent)->mColor);
                                 graphDate->setGraphFont(mFont);
-                                graphDate->setGraphsThickness(mThicknessSpin->value());
+                                graphDate->setGraphsThickness(mThicknessCombo->currentIndex());
                                 connect(graphDate, &GraphViewResults::selected, this, &ResultsView::updateLayout);
                                 mByPhasesGraphs.append(graphDate);
                             }
@@ -2446,11 +2395,12 @@ void ResultsView::updateThickness(int value)
 
 void ResultsView::updateOpacity(int value)
 {
+    const int opValue (value*10);
     for (GraphViewResults* allKindGraph : mByPhasesGraphs)
-       allKindGraph->setGraphsOpacity(value);
+       allKindGraph->setGraphsOpacity(opValue);
     
     for (GraphViewResults* allKindGraph : mByEventsGraphs)
-        allKindGraph->setGraphsOpacity(value);
+        allKindGraph->setGraphsOpacity(opValue);
     
 }
 

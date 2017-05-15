@@ -151,12 +151,12 @@ void Tabs::paintEvent(QPaintEvent* e)
         const int x0 = (width() - mTabWidgets[mCurrentIndex]->width() )/2;
 //qDebug()<<"Tabs: x0"<<x0;
         mTabWidgets[mCurrentIndex]->move(x0, mTabHeight);
-        p.drawRoundRect(mTabWidgets[mCurrentIndex]->geometry(), 2, 2);
+        //p.drawRoundRect(mTabWidgets[mCurrentIndex]->geometry(), 2, 2);
 
-    } else {
+    } //else {
         p.drawLine(0, mTabHeight - p.pen().width(), mTabRects[mCurrentIndex].x(), mTabHeight - p.pen().width());
         p.drawLine(mTabRects[mCurrentIndex].x() + mTabRects[mCurrentIndex].width(), mTabHeight - p.pen().width(),width() , mTabHeight - p.pen().width());
-    }
+   // }
 }
 
 void Tabs::resizeEvent(QResizeEvent* e)
