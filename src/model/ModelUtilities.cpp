@@ -189,10 +189,10 @@ QVector<QVector<Event*> > ModelUtilities::getAllEventsBranches(const QList<Event
     //  store events at start of branches (= not having constraint backward)
     // ----------------------------------------
     QVector<Event*> starts;
-    for (int i=0; i<events.size(); ++i) {
-        events[i]->mLevel = 0;
-        if (events[i]->mConstraintsBwd.size() == 0)
-            starts.append(events[i]);
+    for ( auto && event : events) {
+        event->mLevel = 0;
+        if (event->mConstraintsBwd.size() == 0)
+            starts.append(event);
     }
 
     if (starts.size() == 0 && events.size() != 0)

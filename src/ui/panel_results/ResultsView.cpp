@@ -872,7 +872,6 @@ void ResultsView::updateTabDisplay(const int &i)
           mChainsTitle->move(0, 3 );
 
           ySpan = mMargin ;
-          int numChains = mCheckChainChecks.size();
 
           // posterior distribution : chains are selectable with checkboxes
           const int tabIdx = mTabs->currentIndex();
@@ -2306,7 +2305,7 @@ void ResultsView::updateZoomEdit()
  */
 void ResultsView::updateGraphsZoomX()
 {
-    qDebug()<<"ResultsView::updateGraphsZoomX()";
+   // qDebug()<<"ResultsView::updateGraphsZoomX()";
     if (mTabByScene->currentIndex() == 1) {
         for (GraphViewResults* phaseGraph : mByPhasesGraphs)
             if (phaseGraph)
@@ -2332,7 +2331,6 @@ void ResultsView::updateGraphsZoomX()
     } else
         mZooms[situ] = QPair<double, double>(mResultCurrentMinX, mResultCurrentMaxX);
 
-qDebug()<<"ResultsView::updateGraphsZoomX()() store varia"<<mCurrentVariable<<"graph"<< mCurrentTypeGraph<<"min"<<mResultCurrentMinX<<mResultCurrentMaxX<<mResultMinX<<mResultMaxX<<mResultZoomX;
 }
 
 /**

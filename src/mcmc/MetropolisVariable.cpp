@@ -266,14 +266,12 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
 
 
     if (sigma == 0) {
-        qDebug()<<"MetropolisVariable::generateHisto sigma == 0";
+        qDebug()<<"MetropolisVariable::generateHisto sigma == 0"<<mName;
         if (dataSrc.size()>0) {
             // if sigma is null and there are several values, it means: this is the same
             // value. It can appear with a bound fixed
-            //result.insert(dataSrc.at(0)+tmin, 1.) ;
             result.insert(dataSrc.at(0), 1.) ;
-            //qDebug()<<"MetropolisVariable::generateHisto result = "<< (dataSrc.at(0)+tmin);
-            qDebug()<<"MetropolisVariable::generateHisto result = "<< (dataSrc.at(0));
+            qDebug()<<"MetropolisVariable::generateHisto result = "<< (dataSrc.at(0))<<mName;
         }
         return result;
     }
@@ -293,7 +291,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QVector<double>& da
 
      double* output = (double*) fftw_malloc(outputSize * sizeof(double));
     
-    if (input != 0) {
+    if (input != nullptr) {
         // ----- FFT -----
         // http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data
         //https://jperalta.wordpress.com/2006/12/12/using-fftw3/
