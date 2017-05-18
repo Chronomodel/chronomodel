@@ -49,6 +49,8 @@ public:
     bool isValid();
     void clear();
 
+    void initNodeEvents(); // use in MCMCLoopMain::initMCMC()
+
     void saveToFile(const QString& fileName);
     void restoreFromFile(const QString& fileName);
     

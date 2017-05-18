@@ -23,7 +23,6 @@
 #define NOTEST //TEST
 
 class Model;
-//class EventKnown;
 class Project;
 
 MCMCLoopMain::MCMCLoopMain(Model* model, Project* project):MCMCLoop(),
@@ -145,7 +144,6 @@ QString MCMCLoopMain::initMCMC()
     
     const double tmin = mModel->mSettings.mTmin;
     const double tmax = mModel->mSettings.mTmax;
-    //const double step = mModel->mSettings.mStep;
     
     if (isInterruptionRequested())
         return ABORTED_BY_USER;
@@ -200,16 +198,9 @@ QString MCMCLoopMain::initMCMC()
                     prevLevelMaxValue = curLevelMaxValue;
                     curLevelMaxValue = mModel->mSettings.mTmin;
                 }
-                
-                //if (bound->mKnownType == EventKnown::eFixed) {
+
                 bound->mTheta.mX = bound->mFixed;
-              /*  }
-                else if (bound->mKnownType == EventKnown::eUniform) {
-                    bound->mTheta.mX = Generator::randomUniform(qMax(bound->mUniformStart, prevLevelMaxValue),
-                                                                bound->mUniformEnd);
-                    qDebug()<<"in initMCMC(): init bound "+bound->mName+QString::number(bound->mTheta.mX);
-                }
-            */
+
                 curLevelMaxValue = qMax(curLevelMaxValue, bound->mTheta.mX);
                 
                 bound->mTheta.memo();
@@ -235,8 +226,13 @@ QString MCMCLoopMain::initMCMC()
 
     for (int i=0; i<unsortedEvents.size(); ++i) {
         if (unsortedEvents.at(i)->mType == Event::eDefault) {
-            const double min = unsortedEvents.at(i)->getThetaMinRecursive(tmin, eventBranches, phaseBranches);
-            const double max = unsortedEvents.at(i)->getThetaMaxRecursive(tmax, eventBranches, phaseBranches);
+
+            qDebug() << "in initMCMC(): ---------------------------------";
+            mModel->initNodeEvents();
+            const double min (unsortedEvents.at(i)->getThetaMinRecursive(tmin) );
+            qDebug() << "in initMCMC(): Event initialized min : " << unsortedEvents[i]->mName << " : "<<" min"<<min<<tmin;
+            mModel->initNodeEvents();
+            const double max ( unsortedEvents.at(i)->getThetaMaxRecursive(tmax) );
             
             unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
             unsortedEvents.at(i)->mInitialized = true;
@@ -348,6 +344,7 @@ QString MCMCLoopMain::initMCMC()
     }
     // --------------------------- Init phases ----------------------
     emit stepChanged(tr("Initializing Phases..."), 0, phases.size());
+ qDebug()<<"MCMCLoopMain::initMCMC() emit stepChanged(tr(Initializing Phases...)";
     i = 0;
     for (Phase* phase : phases ) {
         phase->updateAll(tmin, tmax);
@@ -372,13 +369,13 @@ QString MCMCLoopMain::initMCMC()
         if (event->type() == Event::eKnown) {
              const EventKnown* bound = dynamic_cast<const EventKnown*>(event);
             if (bound) {
-                log += line(textRed("Bound (" + QString::number(i) + "/" + QString::number(events.size()) + ") : " + bound->mName));
+                log += line(textRed(tr("Bound") +" (" + QString::number(i) + "/" + QString::number(events.size()) + ") : " + bound->mName));
                 log += line(textRed(" - Theta : " + DateUtils::convertToAppSettingsFormatStr(bound->mTheta.mX)+" "+ DateUtils::getAppSettingsFormatStr()));
                 log += line(textRed(" - Sigma_MH on Theta : " + stringWithAppSettings(bound->mTheta.mSigmaMH)));
             }
         }
         else {
-            log += line(textBlue("Event (" + QString::number(i) + "/" + QString::number(events.size()) + ") : " + event->mName));
+            log += line(textBlue(tr("Event")+ " (" + QString::number(i) + "/" + QString::number(events.size()) + ") : " + event->mName));
             log += line(textBlue(" - Theta : " + DateUtils::convertToAppSettingsFormatStr(event->mTheta.mX) +" "+ DateUtils::getAppSettingsFormatStr()));
             log += line(textBlue(" - Sigma_MH on Theta : " + stringWithAppSettings(event->mTheta.mSigmaMH)));
             log += line(textBlue(" - S02 : " + stringWithAppSettings(event->mS02)));
@@ -390,7 +387,7 @@ QString MCMCLoopMain::initMCMC()
             ++j;
             log += "<br>";
 
-            log += line(textBlack("Data (" + QString::number(j) + "/" + QString::number(event->mDates.size()) + ") : " + date.mName));
+            log += line(textBlack(tr("Data")+ " (" + QString::number(j) + "/" + QString::number(event->mDates.size()) + ") : " + date.mName));
             log += line(textBlack(" - ti : " + DateUtils::convertToAppSettingsFormatStr(date.mTheta.mX)+" "+ DateUtils::getAppSettingsFormatStr()));
             if (date.mMethod == Date::eMHSymGaussAdapt)
                 log += line(textBlack(" - Sigma_MH on ti : " + stringWithAppSettings(date.mTheta.mSigmaMH)));
@@ -412,7 +409,7 @@ QString MCMCLoopMain::initMCMC()
         for (const Phase * phase : phases) {
             ++i;
             log += "<br>";
-            log += line(textPurple("Phase (" + QString::number(i) + "/" + QString::number(phases.size()) + ") : " + phase->mName));
+            log += line(textPurple(tr("Phase") +" (" + QString::number(i) + "/" + QString::number(phases.size()) + ") : " + phase->mName));
             log += line(textPurple(" - Alpha : " + DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mX)+" "+ DateUtils::getAppSettingsFormatStr()));
             log += line(textPurple(" - Beta : " + DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mX)+" "+ DateUtils::getAppSettingsFormatStr()));
             log += line(textPurple(" - Tau : " + stringWithAppSettings(phase->mTau)));
@@ -428,9 +425,7 @@ QString MCMCLoopMain::initMCMC()
         for (const PhaseConstraint* constraint : phasesConstraints) {
             ++i;
             log += "<br>";
-            log += line("Succession (" + QString::number(i) + "/" + QString::number(phasesConstraints.size()) + ") : from " + constraint->mPhaseFrom->mName +" to "+ constraint->mPhaseTo->mName);
-
-            //log += line("PhaseConstraint (" + QString::number(i) + "/" + QString::number(phasesConstraints.size()) + ") : " + QString::number(constraint->mId));
+            log += line(tr("Succession")+ " (" + QString::number(i) + "/" + QString::number(phasesConstraints.size()) + ") : " + tr("from") + constraint->mPhaseFrom->mName +" " + tr("to") + constraint->mPhaseTo->mName);
             log += line(" - Gamma : " + stringWithAppSettings(constraint->mGamma));
         }
     }
@@ -445,8 +440,9 @@ QString MCMCLoopMain::initMCMC()
 
 void MCMCLoopMain::update()
 {
-    const double t_min = mModel->mSettings.mTmin;
-    const double t_max = mModel->mSettings.mTmax;
+    //qDebug()<<"MCMCLoopMain::update()";
+    const double t_max (mModel->mSettings.mTmax);
+    const double t_min (mModel->mSettings.mTmin);
 
     ChainSpecs& chain = mChains[mChainIndex];
     

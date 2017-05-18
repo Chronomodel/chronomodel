@@ -50,13 +50,17 @@ public:
     
     
     // 2 functions used within the init MCMC process
-    double getThetaMinRecursive(const double defaultValue,
+    double getThetaMinRecursive_old(const double defaultValue,
                                 const QVector<QVector<Event*> >& eventBranches,
                                 const QVector<QVector<Phase*> >& phaseBranches);
 
-    double getThetaMaxRecursive(const double defaultValue,
+    double getThetaMaxRecursive_old(const double defaultValue,
                                 const QVector<QVector<Event*> >& eventBranches,
                                 const QVector<QVector<Phase*> >& phaseBranches);
+
+    double getThetaMinRecursive(const double defaultValue, const QList<Event *> startEvents = QList<Event*>());
+
+    double getThetaMaxRecursive(const double defaultValue, const QList<Event *> startEvents = QList<Event*>());
     
     virtual void updateTheta(const double& min, const double& max);
 
@@ -92,6 +96,8 @@ public:
     double mAShrinkage;
     bool mInitialized;
     
+    bool mNodeInitialized;
+    double mThetaNode;
     int mLevel; // used to init mcmc
     
     double mMixingLevel;

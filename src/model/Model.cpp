@@ -983,6 +983,11 @@ void Model::setFFTLength(const int FFTLength)
     }
 }
 
+void Model::initNodeEvents()
+{
+    std::for_each(mEvents.begin(), mEvents.end(), [](Event* ev) {ev->mNodeInitialized = false; ev->mThetaNode = INFINITY;});
+}
+
 /**
  * @brief Make all densities and credibilities and time range and set mFFTLength, mBandwidth and mThreshold
  * @param[in] fftLength

@@ -10,8 +10,6 @@ Phase::Phase():
 mId(0),
 mName("no Phase Name"),
 mTau(0.),
-//mIsAlphaFixed(true),
-//mIsBetaFixed(true),
 mTauType(Phase::eTauUnknown),
 mTauFixed(0),
 mTauMin(0),
@@ -52,12 +50,8 @@ void Phase::copyFrom(const Phase& phase)
     mColor = phase.mColor;
     
     mAlpha = phase.mAlpha;
-    //mAlpha.mSupport = phase.mAlpha.mSupport;
-
     mBeta = phase.mBeta;
-    //mBeta.mSupport = phase.mBeta.mSupport;
     mDuration = phase.mDuration;
-   // mDuration.mSupport = phase.mDuration.mSupport;
 
     mTau = phase.mTau;
     
@@ -164,6 +158,17 @@ QPair<double,double> Phase::getFormatedTimeRange() const
 
 double Phase::getMaxThetaEvents(double tmax)
 {
+    Q_ASSERT_X(!mEvents.isEmpty(), "Phase::getMaxThetaEvents", QString("No Event in Phase :" + this->mName).toStdString().c_str());
+    (void) tmax;
+    double theta (mEvents[0]->mTheta.mX);
+
+    // All Event must be Initialized
+    std::for_each(mEvents.begin(), mEvents.end(), [&theta] (Event* ev) {theta= std::max(ev->mTheta.mX, theta);});
+    return theta;
+
+    // if we need to use this function with event not initalized we have to use the next code
+ /*
+
     double theta;
     bool found = false;
     QList<Event*>::const_iterator iterEvent = mEvents.constBegin();
@@ -181,17 +186,25 @@ double Phase::getMaxThetaEvents(double tmax)
     }
 
     return found ? theta : tmax;
-
+*/
 }
 /**
  * @brief Phase::getMinThetaEvents
  * @param tmin
- * @return
- * @todo could be faster with use of iterator
+ * @return the min of Event inside the phase, used in Phase::updateAll() to set alpha and beta
  */
 double Phase::getMinThetaEvents(double tmin)
 {
-    double theta;
+    Q_ASSERT_X(!mEvents.isEmpty(), "Phase::getMinThetaEvents", QString("No Event in Phase :" + this->mName).toStdString().c_str());
+    (void) tmin;
+    double theta (mEvents[0]->mTheta.mX);
+
+    // All Event must be Initialized
+    std::for_each(mEvents.begin(), mEvents.end(), [&theta] (Event* ev){theta= std::min(ev->mTheta.mX, theta);});
+    return theta;
+
+    // if we need to use this function with event not initalized we have to use the next code
+ /*
     bool found = false;
     QList<Event*>::const_iterator iterEvent = mEvents.constBegin();
     while(iterEvent != mEvents.constEnd()) {
@@ -199,46 +212,44 @@ double Phase::getMinThetaEvents(double tmin)
             if (!found) {
                 theta = (*iterEvent)->mTheta.mX;
                 found = true;
-            }
-            else {
+            } else
                 theta = qMin(theta, (*iterEvent)->mTheta.mX);
-            }
+
         }
         ++iterEvent;
     }
     return found ? theta : tmin;
-
+*/
 }
 
 
 double Phase::getMinThetaNextPhases(const double tmax)
 {
     double minTheta = tmax;
-    //for (int i=0; i<mConstraintsFwd.size(); ++i) {
-    for (auto&& pConstFwd : mConstraintsFwd) {
+    for (auto &&constFwd : mConstraintsFwd) {
         // we can juste look alpha and beta set in member mAlpha and mBeta
         //double theta= mConstraintsFwd[i]->mPhaseTo->getMinThetaEvents(tmax);
-        double theta= pConstFwd->mPhaseTo->mAlpha.mX;
+        double theta (constFwd->mPhaseTo->mAlpha.mX);
         
-        if (pConstFwd->mGammaType != PhaseConstraint::eGammaUnknown)
-            minTheta = qMin(minTheta, theta - pConstFwd->mGamma);
+        if (constFwd->mGammaType != PhaseConstraint::eGammaUnknown)
+            minTheta = std::min(minTheta, theta - constFwd->mGamma);
         else
-            minTheta = qMin(minTheta, theta);
+            minTheta = std::min(minTheta, theta);
     }
     return minTheta;
 }
 
 double Phase::getMaxThetaPrevPhases(const double tmin)
 {
-    double maxTheta = tmin;
+    double maxTheta (tmin);
 
-    for (auto&& pConstBwd : mConstraintsBwd) {
-        double theta= pConstBwd->mPhaseFrom->mBeta.mX;
+    for (auto &&constBwd : mConstraintsBwd) {
+        const double theta (constBwd->mPhaseFrom->mBeta.mX);
         
-        if (pConstBwd->mGammaType != PhaseConstraint::eGammaUnknown)
-            maxTheta = qMax(maxTheta, theta + pConstBwd->mGamma);
+        if (constBwd->mGammaType != PhaseConstraint::eGammaUnknown)
+            maxTheta = std::max(maxTheta, theta + constBwd->mGamma);
         else
-            maxTheta = qMax(maxTheta, theta);
+            maxTheta = std::max(maxTheta, theta);
     }
     return maxTheta;
 }
