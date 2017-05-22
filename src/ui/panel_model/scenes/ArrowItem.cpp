@@ -15,8 +15,8 @@ mXStart(0),
 mYStart(0),
 mXEnd(0.),
 mYEnd(0.),
-mBubbleWidth(30.),
-mBubbleHeight(30.),
+mBubbleWidth(10.),
+mBubbleHeight(10.),
 mEditing(false),
 mShowDelete(false),
 mGreyedOut(false)
@@ -149,24 +149,30 @@ QRectF ArrowItem::boundingRect() const
 {
     const QString text = getBubbleText();
 
-    qreal x = qMin(mXStart, mXEnd);
-    qreal y = qMin(mYStart, mYEnd);
-    qreal w = qAbs(mXEnd - mXStart);
-    qreal h = qAbs(mYEnd - mYStart);
+    qreal x = std::min(mXStart, mXEnd);
+    qreal y = std::min(mYStart, mYEnd);
+    qreal w = std::abs(mXEnd - mXStart) ;
+    qreal h = std::abs(mYEnd - mYStart) ;
+
 
     if (!text.isEmpty()) {
- //       const qreal hBubble = mBubbleHeight;
-        QFont font;
-        font.setPointSizeF(18.);
-        QFontMetrics metrics(font);
-        qreal wBubble = qMax(mBubbleWidth, qreal(metrics.width(text) + 5));
-        qreal xa = (mXStart + mXEnd - wBubble)/2.;
-        qreal ya = (mYStart + mYEnd - mBubbleHeight)/2.;
+        const QSize s = getBubbleSize(text);
+        const qreal xa = (mXStart + mXEnd - s.width())/2.;
+        const qreal ya = (mYStart + mYEnd - s.height())/2.;
 
-        x = qMin(x, xa);
-        y = qMin(y, ya);
-        w = qMax(w, wBubble);
-        h = qMax(h, mBubbleHeight);
+        x = std::min(x, xa);
+        y = std::min(y, ya);
+        w = std::max(w, (qreal) s.width());
+        h = std::max(h, (qreal) s.height());
+    } else { // the arrow size in the shape()
+        const qreal xa = (mXStart + mXEnd - 15.)/2.;
+        const qreal ya = (mYStart + mYEnd - 15.)/2.;
+
+        x = std::min(x, xa);
+        y = std::min(y, ya);
+        w = std::max(w, 15.);
+        h = std::max(h, 15.);
+
     }
 
     return QRectF(x, y, w, h);
@@ -176,7 +182,7 @@ QPainterPath ArrowItem::shape() const
 {
     QPainterPath path;
     QRectF rect = boundingRect();
-    const qreal shift = 15;
+    const qreal shift (15.);
     
     if (mXStart < mXEnd && mYStart > mYEnd) {
         path.moveTo(mXStart + shift, mYStart);
@@ -249,13 +255,18 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         font.setBold(false);
         font.setPointSizeF(12.);
     }
-    painter->setFont(font);
 
+    painter->setFont(font);
     if (!bubbleText.isEmpty()) {
         showMiddleArrow = false;
         const QRectF br = getBubbleRect(bubbleText);
         const int as = QFontMetrics(font).descent();
-        painter->drawEllipse(br);
+
+        if (bubbleText.count() > 5)
+            painter->drawRect(br);
+        else
+            painter->drawEllipse(br);
+
         painter->drawText(br.adjusted(0, as, 0, 0), Qt::AlignCenter, bubbleText);
      }
 
@@ -265,8 +276,8 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     const double angle_deg = angle_rad * 180. / M_PI;
     
     QPainterPath path;
-    const int arrow_w = 10;
-    const int arrow_l = 15;
+    const int arrow_w (10);
+    const int arrow_l (15);
     path.moveTo(-arrow_w/2, arrow_l/2);
     path.lineTo(arrow_w/2, arrow_l/2);
     path.lineTo(0, -arrow_l/2);
@@ -366,10 +377,10 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
 }
 
-QRectF ArrowItem::getBubbleRect(const QString& text) const
+QSize ArrowItem::getBubbleSize(const QString& text) const
 {
-    qreal w (0.);
-    qreal h (0.);
+    int w (0);
+    int h (0);
     if (!text.isEmpty()) {
         QFont font;
         if (mShowDelete)
@@ -378,19 +389,27 @@ QRectF ArrowItem::getBubbleRect(const QString& text) const
             font.setPointSizeF(12.);
 
         QFontMetrics metrics(font);
-        qreal wm = metrics.width(text) + 5;
-
-        w = qMax(wm, w);
-        h = mBubbleHeight;
+        w = metrics.width(text) + 10 ;
+        h = metrics.height() + 10;
     }
-    w = qMax(w, h);
-    h = w;
-    
-    QRectF rect = boundingRect();
-    qreal bubble_x = rect.x() + (rect.width() - w) / 2. ;
-    qreal bubble_y = rect.y() + (rect.height() - h) / 2. ;
-    QRectF r(bubble_x, bubble_y, w, h);
-    return r;
+
+    if (text.count() < 5) {
+        w = std::max(w, h);
+        h = w;
+    }
+
+    return QSize(w, h);
+}
+
+QRectF ArrowItem::getBubbleRect(const QString& text) const
+{
+    const QSize s (getBubbleSize(text));
+    const QRectF rect (boundingRect());
+
+    const int bubble_x = rect.x() + (rect.width() - s.width()) / 2 ;
+    const int bubble_y = rect.y() + (rect.height() - s.height()) / 2 ;
+    return QRectF(QPoint(bubble_x, bubble_y), s);
+
 }
 
 QString ArrowItem::getBubbleText() const
@@ -423,5 +442,5 @@ EventItem* ArrowItem::findEventItemWithJsonId(const int id)
         if (evJson.value(STATE_ID)== id)
             return ev;
     }
-    return 0;
+    return nullptr;
 }
