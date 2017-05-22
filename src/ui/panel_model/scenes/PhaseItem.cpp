@@ -11,7 +11,6 @@
 
 
 PhaseItem::PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsItem* parent):AbstractItem(scene, parent),
-//mEyeActivated(false),
 mControlsVisible(false),
 mControlsEnabled(false),
 mAtLeastOneEventSelected(false)
@@ -28,7 +27,6 @@ PhaseItem::~PhaseItem()
     
 }
 
-//#pragma mark Phase
 QJsonObject& PhaseItem::getPhase()
 {
     return mData;
@@ -46,7 +44,7 @@ void PhaseItem::setPhase(const QJsonObject& phase)
     // ----------------------------------------------------
     //  Calculate item size
     // ----------------------------------------------------
-    qreal w = 150.;
+    const qreal w = 150.;
     qreal h = mTitleHeight + 2*mBorderWidth + 2*mEltsMargin;
     
     const QJsonArray events = getEvents();
@@ -56,39 +54,12 @@ void PhaseItem::setPhase(const QJsonObject& phase)
     const QString tauStr = getTauString();
     if (!tauStr.isEmpty())
         h += mEltsMargin + mEltsHeight;
-/*
-    QFont font("Helvetica", 10);
-    const QString name = mData.value(STATE_NAME).toString();
-    QFontMetrics metrics(font);
 
-   // Width of the phase box Name Width
-    int nw = metrics.width(name) + 2*mBorderWidth + 2*mEltsMargin ;
-    w = (nw > w) ? nw : w;
-    
-    font.setPointSizeF(11.);
-    QFontMetrics metricsName(font);
-    
-    nw = metricsName.width(tauStr) + 2*mBorderWidth + 4*mEltsMargin;
-    w = (nw > w) ? nw : w;
-    
-    for (int i=0; i<events.size(); ++i) {
-        const QJsonObject event = events.at(i).toObject();
-        const QString eventName = event.value(STATE_NAME).toString();
-        nw = metricsName.width(eventName) + 2*mBorderWidth + 4*mEltsMargin;
-        w = (nw > w) ? nw : w;
-    }
-
-  */
     mSize = QSize(w, h);
     
     update();
 }
 
-/*void PhaseItem::setState(Qt::CheckState state)
-{
-    mState = state;
-    //update();
-}*/
 
 void PhaseItem::setControlsEnabled(const bool enabled)
 {
@@ -131,35 +102,17 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
             return;
         }
 
-      /*  if (eyeRect().contains(e->pos())) {
-            //qDebug() << "PhaseItem::mousePressEvent-> Eye clicked";
-            // Do not select phase when clicking on the box
-            e->accept();
-
-            mEyeActivated = !mEyeActivated;
-            // we must update() because we don't do any PushState
-            update();
-            if (mScene) {
-                static_cast<PhasesScene*>(mScene)->updateEyedPhases();
-                //mScene->update();
-            }
-            return;
-        }*/
     }
 
   // overwrite AbstractItem::mousePressEvent(e);
 
     PhasesScene* itemScene = dynamic_cast<PhasesScene*>(mScene);
-  //  PhaseItem* currentPhase = itemScene->currentPhase();
 
     if (itemScene->selectedItems().size()<2) {
-      /*  if ((this != currentPhase) && (!itemScene->mDrawingArrow)) {
-            itemScene->clearSelection();
-        }*/
-
         if (!itemScene->itemClicked(this, e)) {
             setZValue(2.);
             QGraphicsItem::mousePressEvent(e);
+
         } else
             itemScene->mTempArrow->setFrom(pos().x(), pos().y());
     }
@@ -189,7 +142,6 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     // QPainter::Antialiasing is effective on native shape = circle, square, line
 
     painter->setRenderHints(painter->renderHints() | QPainter::SmoothPixmapTransform | QPainter::Antialiasing );
-    //painter->setRenderHint(QPainter::Antialiasing);
     
     QRectF rect = boundingRect();
     int rounded (15);
@@ -215,7 +167,6 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
     const QJsonArray events = getEvents();
     double dy = mEltsMargin + mEltsHeight;
-    //PhasesScene* itemScene = dynamic_cast<PhasesScene*>(mScene);
 
     const bool showAlldata = mScene->showAllThumbs();
     mAtLeastOneEventSelected = false;
@@ -293,24 +244,6 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->setOpacity(1);
         }
 
-        // Eye button
-        /*const QRectF eRect = eyeRect();
-        painter->drawRect(eRect);
-        if (mEyeActivated) {
-            QLinearGradient grad(0, 0, 0, eRect.height());
-            grad.setColorAt(0, Painting::mainColorLight);
-            grad.setColorAt(1,Painting::mainColorDark);
-
-            painter->fillRect(eRect,grad);
-        }
-        else
-            painter->fillRect(eRect, Qt::black);
-
-        const QPixmap eye(":eye_w.png");
-        const QPixmap eye2 = eye.transformed(mx, Qt::SmoothTransformation);
-        painter->drawPixmap(eRect, eye2, eye2.rect());*/
-
-
     } else {
         // Name
         const QRectF tr(rect.x() + mBorderWidth ,
@@ -319,7 +252,6 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
                   mTitleHeight);
 
         painter->setFont(font);
-        //QFontMetrics metrics(font);
         QString name = mData.value(STATE_NAME).toString();
         name = fm.elidedText(name, Qt::ElideRight, tr.width());
         painter->setPen(fontColor);
