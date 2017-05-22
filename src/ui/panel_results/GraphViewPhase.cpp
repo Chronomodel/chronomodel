@@ -207,16 +207,14 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                 mGraph->addCurve(curveDuration);
             }
      } else if (typeGraph == ePostDistrib && variable == eSigma) {
-        /** @todo
-         * adding compil of data's sigma curves
-         */
+
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(stringWithAppSettings);
         mGraph->setFormatFunctY(stringWithAppSettings);
 
         mTitle = tr("Phase's Events' Std Compil.") + " : " + mPhase->mName;
 
-        int i(0);
+
         for ( auto && ev : mPhase->mEvents) {
         /* ------------------------------------------------
          *  Events don't have std dev BUT we can visualize
@@ -226,7 +224,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
          *  - Sigma Date i Chain j
          * ------------------------------------------------
          */
-
+            int i(0);
             for (auto&& date : ev->mDates) {
                 GraphCurve curve = generateDensityCurve(date.mSigma.fullHisto(),
                                                         "Sigma Date " + QString::number(i) + " All Chains",
@@ -243,10 +241,8 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                 ++i;
             }
 
-
-
         }
-        // end todo
+
     }
 
     /* -----------------second tab : history plot-------------------------------
@@ -348,14 +344,14 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
     }
     else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eSigma) {
-            int i (0);
             for (auto && ev : mPhase->mEvents) {
-                for (auto && date : ev->mDates) {
+                const int n (ev->mDates.size());
+                for (auto i=0 ; i<n; ++i) {
                     mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " All Chains", mShowAllChains);
 
                    for (int j=0; j<mShowChainList.size(); ++j)
                         mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " Chain " + QString::number(j), mShowChainList.at(j));
-                    ++i;
+
                 }
             }
             mGraph->setTipXLab("duration");

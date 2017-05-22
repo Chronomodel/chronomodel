@@ -92,7 +92,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->setFormatFunctY(nullptr);
         mGraph->setBackgroundColor(QColor(230, 230, 230));
 
-        mGraph->setOverArrow(GraphView::eBothOverflow);
+
 
         mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->mName;
 
@@ -105,6 +105,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
          * ------------------------------------------------
          */
         if (variable == eTheta) {
+            mGraph->setOverArrow(GraphView::eBothOverflow);
             if (isFixedBound) {
                 GraphCurve curveLineBound;
                 curveLineBound.mName = "Post Distrib All Chains";
@@ -208,6 +209,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
          * ------------------------------------------------
          */
         else if (variable == eSigma) {
+            mGraph->setOverArrow(GraphView::eNone);
             mGraph->mLegendX = "";
             mGraph->setFormatFunctX(stringWithAppSettings);
             mGraph->setFormatFunctY(stringWithAppSettings);
@@ -288,6 +290,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->mName;
         mGraph->resetNothingMessage();
     }
+
 }
 
 void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle)

@@ -96,7 +96,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
      * ------------------------------------------------
      */
     if (typeGraph == ePostDistrib) {
-        mGraph->setOverArrow(GraphView::eBothOverflow);
+
         /* ------------------------------------------------
          *  Possible Curves :
          *  - Post Distrib All Chains
@@ -108,6 +108,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
          * ------------------------------------------------
          */
         if (variable == eTheta) {
+            mGraph->setOverArrow(GraphView::eBothOverflow);
             mTitle = QString(tr("Data") + " : " + mDate->mName);
 
 
@@ -193,6 +194,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
          * ------------------------------------------------
          */
         else if (variable == eSigma) {
+            mGraph->setOverArrow(GraphView::eNone);
             mTitle = QString(tr("Individual Std") + " : " + mDate->mName);
 
             mGraph->mLegendX = "";
