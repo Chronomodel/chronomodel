@@ -56,7 +56,7 @@ void PhaseItem::setPhase(const QJsonObject& phase)
     const QString tauStr = getTauString();
     if (!tauStr.isEmpty())
         h += mEltsMargin + mEltsHeight;
-    
+/*
     QFont font("Helvetica", 10);
     const QString name = mData.value(STATE_NAME).toString();
     QFontMetrics metrics(font);
@@ -78,7 +78,7 @@ void PhaseItem::setPhase(const QJsonObject& phase)
         w = (nw > w) ? nw : w;
     }
 
-    
+  */
     mSize = QSize(w, h);
     
     update();
@@ -192,13 +192,14 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     //painter->setRenderHint(QPainter::Antialiasing);
     
     QRectF rect = boundingRect();
-    int rounded = 15;
+    int rounded (15);
     
     const QColor phaseColor = QColor(mData.value(STATE_COLOR_RED).toInt(),
                                mData.value(STATE_COLOR_GREEN).toInt(),
                                mData.value(STATE_COLOR_BLUE).toInt());
     const QColor fontColor = getContrastedColor(phaseColor);
     QFont font = qApp->font();
+    QFontMetrics fm (font);
 
     // Draw then container
     painter->setPen(Qt::NoPen);
@@ -231,27 +232,28 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
         painter->setPen(getContrastedColor(eventColor));
 
+        const QString eventName = fm.elidedText(event.value(STATE_NAME).toString(), Qt::ElideRight, r.width());
         // magnify and highlight selected events
         if (isSelected) {
             mAtLeastOneEventSelected = true;
 
-            painter->setPen(QPen(fontColor, 3.f));
+            painter->setPen(QPen(fontColor, 3.));
             r.adjust(1, 1, -1, -1);
             painter->drawRoundedRect(r, 1, 1);
             painter->fillRect(r, eventColor);
             painter->setPen(QPen(getContrastedColor(eventColor), 1));
 
-            painter->drawText(r, Qt::AlignCenter, event.value(STATE_NAME).toString());
+            painter->drawText(r, Qt::AlignCenter, eventName);
             r.adjust(-1, -1, +1, +1);
         }
         else if (isSelected || showAlldata) {
                 painter->fillRect(r, eventColor);
-                painter->drawText(r, Qt::AlignCenter, event.value(STATE_NAME).toString());
+                painter->drawText(r, Qt::AlignCenter, eventName);
 
         } else {
             painter->setOpacity(0.2);
             painter->fillRect(r, eventColor);
-            painter->drawText(r, Qt::AlignCenter, event.value(STATE_NAME).toString());
+            painter->drawText(r, Qt::AlignCenter, eventName);
             painter->setOpacity(1);
         }
 
@@ -317,9 +319,9 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
                   mTitleHeight);
 
         painter->setFont(font);
-        QFontMetrics metrics(font);
+        //QFontMetrics metrics(font);
         QString name = mData.value(STATE_NAME).toString();
-        name = metrics.elidedText(name, Qt::ElideRight, tr.width());
+        name = fm.elidedText(name, Qt::ElideRight, tr.width());
         painter->setPen(fontColor);
         painter->drawText(tr, Qt::AlignCenter, name);
     }
