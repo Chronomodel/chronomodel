@@ -6,12 +6,12 @@
 
 AbstractItem::AbstractItem(AbstractScene* scene, QGraphicsItem* parent):QGraphicsObject(parent),
 mScene(scene),
-mBorderWidth(1.f),
-mTitleHeight(20.f),
-mPhasesHeight(20.f),
-mEltsMargin(3.f),
-mEltsWidth(15.f),
-mEltsHeight(40.f),
+mBorderWidth(1.),
+mTitleHeight(20.),
+mPhasesHeight(20.),
+mEltsMargin(3.),
+mEltsWidth(15.),
+mEltsHeight(40.),
 mMoving(false),
 mMergeable(false),
 mGreyedOut(false)

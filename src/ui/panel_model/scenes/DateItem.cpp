@@ -99,7 +99,11 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     painter->setFont(font);
 
     painter->setPen(Qt::black);
-    painter->drawText(r.adjusted(0, 0, 0, -rHeightMid), Qt::AlignCenter, mDate.value(STATE_NAME).toString());
+    QString name = mDate.value(STATE_NAME).toString();
+    QFontMetrics metrics (font);
+    name = metrics.elidedText(name, Qt::ElideRight, r.width() - 5);
+
+    painter->drawText(r.adjusted(0, 0, 0, -rHeightMid), Qt::AlignCenter, name);
 
     // thumbnail
     const QRectF rct = r.adjusted(0, r.height()-rHeightMid, 0, 0);

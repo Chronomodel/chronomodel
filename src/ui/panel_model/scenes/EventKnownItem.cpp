@@ -115,18 +115,21 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
 
 QRectF EventKnownItem::boundingRect() const
 {
-    QFont font = qApp->font();
-    QFontMetrics metrics(font);
-    const QString name = mData.value(STATE_NAME).toString();
+    //QFont font = qApp->font();
+    //QFontMetrics metrics(font);
+    //const QString name = mData.value(STATE_NAME).toString();
     
-    qreal w = metrics.width(name) + 2 * (mBorderWidth + mEltsMargin);
+    //qreal w = metrics.width(name) + 2 * (mBorderWidth + mEltsMargin);
+    // the size is independant of the size name
+
     qreal h = mTitleHeight + mThumbH + mPhasesHeight + 2*mEltsMargin;
-    
-    w += 80.f;
-    h += 50.f;
-    
-    w = qMax(w, 180.);
-    
+    h += 40.;
+
+    qreal w = 202;//qMax(w, 150.);
+    //w += 52.;
+
+
+
     return QRectF(-w/2, -h/2, w, h);
 }
 
@@ -149,13 +152,13 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
                                mData.value(STATE_COLOR_BLUE).toInt());
 
     if (isSelected()) {
-        painter->setPen(QPen(Painting::mainColorDark, 3.f));
+        painter->setPen(QPen(Painting::mainColorDark, 3.));
         painter->setBrush(Qt::NoBrush);
         painter->drawEllipse(rect.adjusted(1, 1, -1, -1));
     }
 
-    const double side = 40.f;
-    const double top = 25.f;
+    const double side = 30;//40.;
+    const double top = 15;//25.;
 
     QRectF nameRect(rect.x() + side, rect.y() + top, rect.width() - 2*side, mTitleHeight);
     QRectF thumbRect(rect.x() + side, rect.y() + top + mEltsMargin + mTitleHeight, rect.width() - 2*side, mThumbH);
@@ -164,13 +167,13 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     phasesRect.adjust(1, 1, -1, -1);
     // detect selected phases and set mGreyedOut
     const QJsonArray phases = getPhases();
-    const int numPhases = (int)phases.size();
+    const int numPhases = phases.size();
     const double w = phasesRect.width()/numPhases;
 
     if (mGreyedOut) //setting with setGreyedOut() just above
-        painter->setOpacity(0.1f);
+        painter->setOpacity(0.1);
     else
-        painter->setOpacity(1.f);
+        painter->setOpacity(1.);
 
     // the elliptic item box
     painter->setPen(Qt::NoPen);
@@ -183,7 +186,7 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     painter->setFont(font);
     QFontMetrics metrics(font);
     QString name = mData.value(STATE_NAME).toString();
-    name = metrics.elidedText(name, Qt::ElideRight, nameRect.width());
+    name = metrics.elidedText(name, Qt::ElideRight, nameRect.width() - 5);
 
     QColor frontColor = getContrastedColor(eventColor);
     painter->setPen(frontColor);
@@ -230,20 +233,20 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     // Border
     painter->setBrush(Qt::NoBrush);
     if (mMergeable) {
-        painter->setPen(QPen(Qt::white, 5.f));
+        painter->setPen(QPen(Qt::white, 5.));
         painter->drawEllipse(rect.adjusted(1, 1, -1, -1));
 
-        painter->setPen(QPen(Painting::mainColorLight, 3.f, Qt::DashLine));
+        painter->setPen(QPen(Painting::mainColorLight, 3., Qt::DashLine));
         painter->drawEllipse(rect.adjusted(1, 1, -1, -1));
     } else if (isSelected()){
-        painter->setPen(QPen(Qt::white, 5.f));
+        painter->setPen(QPen(Qt::white, 5.));
         painter->drawEllipse(rect.adjusted(1, 1, -1, -1));
 
-        painter->setPen(QPen(Qt::red, 3.f));
+        painter->setPen(QPen(Qt::red, 3.));
         painter->drawEllipse(rect.adjusted(1, 1, -1, -1));
     }
     // restore Opacity
-    painter->setOpacity(1.f);
+    painter->setOpacity(1.);
 
 }
 

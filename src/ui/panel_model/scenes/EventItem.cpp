@@ -91,7 +91,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     QString name = event.value(STATE_NAME).toString();
     QFont font = mScene->font();
     QFontMetrics metrics(font);
-    qreal w = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin + 2*mTitleHeight;
+ //   qreal w = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin + 2*mTitleHeight;
     
     const QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
     
@@ -103,13 +103,14 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     
     font.setPointSizeF(11.);
     QFontMetrics metricsName(font);
-    for (int i=0; i<count; ++i) {
+ /*   for (int i=0; i<count; ++i) {
         const QJsonObject date = dates.at(i).toObject();
         name = date.value(STATE_NAME).toString();
         const int nw = metricsName.width(name) + 2*mBorderWidth + 4*mEltsMargin;
         w = (nw > w) ? nw : w;
     }
-    w = (w < 150) ? 150 : w;
+*/
+    qreal  w (150);//(w < 150) ? 150 : w;
     
     mSize = QSize(w, h);
     
@@ -295,8 +296,6 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->setBrush(eventColor);
     painter->drawRect(rect);
 
-
-
     if (numPhases == 0) {
         QFont font = qApp->font();
         font.setPointSizeF(pointSize(11));
@@ -324,9 +323,9 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->drawRect(phasesRect);
 
     // Name
-    QRectF tr(rect.x() + mBorderWidth + 2*mEltsMargin + mTitleHeight,
+    QRectF tr(rect.x() + mBorderWidth + 2*mEltsMargin ,
               rect.y() + mBorderWidth + mEltsMargin,
-              rect.width() - 2*mBorderWidth - 2*(mTitleHeight + 2*mEltsMargin),
+              rect.width() - 2*mBorderWidth - 4*mEltsMargin,
               mTitleHeight);
     
     QFont font = qApp->font();
@@ -340,7 +339,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->drawText(tr, Qt::AlignCenter, name);
 
     // restore Opacity from GreyedOut
-    painter->setOpacity(1.f);
+    painter->setOpacity(1.);
 
     // Border
     painter->setBrush(Qt::NoBrush);
