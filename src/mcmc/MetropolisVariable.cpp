@@ -448,7 +448,7 @@ void MetropolisVariable::generateCorrelations(const QList<ChainSpecs>& chains)
         
         // Correlation pour cette chaine
 
-        for (int h=0; h<hmax; ++h) {
+        for (int h=0; h<=hmax; ++h) {
             double sH = 0.;
             for (QVector<double>::const_iterator iter = trace.cbegin(); iter != trace.cbegin() + (n-h); ++iter)
                 sH += (*iter - m) * (*(iter + h) - m);
