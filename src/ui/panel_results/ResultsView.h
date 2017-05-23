@@ -51,10 +51,6 @@ public:
     double mResultMinX;
     double mResultMaxX;
 
-    // avalable for Date
-    //double mResultMinDateX;
-    //double mResultMaxDateX;
-
     // avalable for Variance
     double mResultMaxVariance;
 

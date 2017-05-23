@@ -5,7 +5,6 @@
 #include "GraphViewPhase.h"
 #include "Tabs.h"
 #include "Ruler.h"
-#include "ZoomControls.h"
 #include "Marker.h"
 
 #include "Date.h"
@@ -601,7 +600,7 @@ void ResultsView::updateControls()
     // mDataThetaRadio is always visible
     mDataThetaRadio    -> setVisible(true);
 
-    mDataSigmaRadio    -> setVisible(byEvents || (mEventsfoldCheck->isVisible() && mEventsfoldCheck->isChecked()) );
+    mDataSigmaRadio    -> setVisible(true);
 
     mPhaseDurationRadio-> setVisible(byPhases);
 
@@ -726,10 +725,9 @@ void ResultsView:: updateTabByScene()
     mDataThetaRadio->move(mMargin, ySpan);
     ySpan += mDataThetaRadio->height() + mMargin;
 
-    if (mDataSigmaRadio->isVisible()) {
-        mDataSigmaRadio -> move(mMargin, ySpan);
-        ySpan += mDataSigmaRadio->height() + mMargin;
-    }
+    mDataSigmaRadio -> move(mMargin, ySpan);
+    ySpan += mDataSigmaRadio->height() + mMargin;
+
 
     if (byPhases) {
         mPhaseDurationRadio->setVisible(true);
@@ -894,7 +892,7 @@ void ResultsView::updateTabDisplay(const int &i)
 
 
           mChainsGroup->setGeometry(0, mChainsTitle->y() + mChainsTitle->height(), mOptionsW, ySpan);
-qDebug()<<"updateTabDisplay mChainsGroup"<<mChainsGroup->geometry();
+
           /* ----------------------------------------------------------
            *  Density Options layout
            * ----------------------------------------------------------*/
@@ -929,9 +927,9 @@ qDebug()<<"updateTabDisplay mChainsGroup"<<mChainsGroup->geometry();
               mDensityOptsGroup->setGeometry(0, mDensityOptsTitle->y() + mDensityOptsTitle->height(), mOptionsW, ySpan);
               mTabMCMC->resize(mOptionsW, mDensityOptsGroup->y() + mDensityOptsGroup->height() + 5) ;
 
-          } else {
+          } else
                 mTabMCMC->resize(mOptionsW, mChainsGroup->y() + mChainsGroup->height() + 5) ;
-          }
+
 
         }
         break;
@@ -1049,8 +1047,8 @@ void ResultsView::changeScrollArea()
             mDataThetaRadio->setChecked(true);
 
     // Append when we change mDatesfoldBut with mDataSigmaRadio checked
-    if (byPhases && mDataSigmaRadio->isChecked() && !mEventsfoldCheck->isChecked())
-           mDataThetaRadio->setChecked(true);
+ //   if (byPhases && mDataSigmaRadio->isChecked() && !mEventsfoldCheck->isChecked())
+   //        mDataThetaRadio->setChecked(true);
 
     if (mDataThetaRadio->isChecked())
         mCurrentVariable = GraphViewResults::eTheta;
@@ -1116,10 +1114,7 @@ void ResultsView::updateLayout()
     mTabPageSaving->move(0, ySpan);
 
     mOptionsWidget->move(width() - mOptionsW, 0);
-    mOptionsWidget->resize(mOptionsW, mTabPageSaving->y()
-                                                + mTabPageSaving->height()
-                                                + 10
-                                                );
+    mOptionsWidget->resize(mOptionsW, mTabPageSaving->y() + mTabPageSaving->height() + 10 );
     mOptionsWidget->repaint();
     updateGraphsLayout();
 }
@@ -1175,17 +1170,17 @@ void ResultsView::clearResults()
 {
     mTabByScene->setEnabled(false);
 
-    for (auto && check : mCheckChainChecks )
+    for (auto &&check : mCheckChainChecks )
         delete check;
 
     mCheckChainChecks.clear();
     
-    for (auto && chain : mChainRadios)
+    for (auto &&chain : mChainRadios)
         delete chain;
 
     mChainRadios.clear();
 
-    for (auto && graph : mByEventsGraphs)
+    for (auto &&graph : mByEventsGraphs)
         delete graph;
 
     mByEventsGraphs.clear();
@@ -1900,7 +1895,7 @@ void ResultsView::updateScales()
 
     } else if (mCurrentTypeGraph == GraphViewResults::eCorrel) {
         mResultMinX = 0.;
-        mResultMaxX = 39.;
+        mResultMaxX = 40.;
         mRuler->setRange(mResultMinX, mResultMaxX);
 
         forceXSlideSetValue = true;
