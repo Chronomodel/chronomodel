@@ -36,8 +36,8 @@ void ScrollCompressor::setVertical(bool vertical)
 void ScrollCompressor::setProp(const double& prop, bool sendNotification)
 {
     mProp = prop;
-    mProp = (mProp < 0) ? 0 : mProp;
-    mProp = (mProp > 1) ? 1 : mProp;
+    mProp = (mProp < 0.) ? 0. : mProp;
+    mProp = (mProp > 1.) ? 1. : mProp;
     if (sendNotification)
         emit valueChanged(mProp);
     update();
@@ -67,7 +67,7 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
     QFont adaptedFont (font());
     QFontMetricsF fm (adaptedFont);
     qreal textSize = fm.width(mText);
-    if (textSize > (r.width() - 2. )) {
+    if (!mIsVertical && textSize > (r.width() - 2. ) ) {
         const qreal fontRate = textSize / (r.width() - 2. );
         const qreal ptSiz = adaptedFont.pointSizeF() / fontRate;
         adaptedFont.setPointSizeF(ptSiz);
@@ -97,9 +97,13 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
         
         if (mShowText) {
             QString text = mText;// + "\r" + QString::number(qRound(mProp * 100)) + " %";
+            const int x = (- r.height() - fm.width(mText))/2;
+            const int y = r.width()/2;
+            //qDebug()<<"ScroolCompressor"<<r;
             p.setPen(QColor(200, 200, 200));
-            p.rotate(90);
-            p.drawText(r, Qt::AlignCenter, text);
+            p.rotate(-90); // coordonates are rotated
+            p.drawText(x, y, text);
+            //p.rotate(-90);
         }
     } else {
         const qreal w = r.width() * mProp;
