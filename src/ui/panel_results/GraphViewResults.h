@@ -96,7 +96,7 @@ protected:
 
     qreal mMargin;
     qreal mLineH;
-    qreal mGraphLeft;
+   // qreal mGraphLeft;
     qreal mTopShift;
 
     qreal mHeightForVisibleAxis;
@@ -117,6 +117,8 @@ public:
     
     void setMainColor(const QColor& color);
     void toggle(const QRect& geometry);
+
+    void setMarginLeft (qreal &m);
     
     void setRendering(GraphView::Rendering render);
     virtual void setGraphFont(const QFont& font);

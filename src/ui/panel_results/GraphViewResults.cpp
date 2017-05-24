@@ -25,7 +25,7 @@ mShowSelectedRect(true),
 mMainColor(QColor(50, 50, 50)),
 mMargin(5),
 mLineH(20),
-mGraphLeft(128),
+//mGraphLeft(128),
 mTopShift(0),
 //mButtonsVisible(true),
 mHeightForVisibleAxis(100)
@@ -339,6 +339,13 @@ void GraphViewResults::setShowNumericalResults(const bool show)
     mShowNumResults = show;
     mTextArea->setVisible(show);
 }
+
+void GraphViewResults::setMarginLeft (qreal &m)
+{
+    mGraph->setMarginLeft(m);
+   // mGraph->update();
+}
+
 
 void GraphViewResults::setRendering(GraphView::Rendering render)
 {
