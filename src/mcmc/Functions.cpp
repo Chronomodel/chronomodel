@@ -198,6 +198,7 @@ Quartiles quartilesForRepartition(const QVector<double>& repartition, const doub
 
 QPair<double, double> credibilityForTrace(const QVector<double>& trace, double thresh, double& exactThresholdResult,const  QString description)
 {
+    (void) description;
     QPair<double, double> credibility(0.,0.);
     exactThresholdResult = 0.;
     const int n = trace.size();

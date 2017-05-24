@@ -48,17 +48,17 @@ QString MCMCLoopMain::calibrate()
         
         QList<Date*> dates;
         // find number of dates, to optimize memory space
-        int nbDates = 0;
-        for (const Event* e: events)
+        int nbDates (0);
+        for (auto &&e: events)
             nbDates += e->mDates.size();
 
         dates.reserve(nbDates);
-        for (int i=0; i<events.size(); ++i) {
-            int num_dates = events.at(i)->mDates.size();
+        for (auto &&ev : events) {
+            int num_dates = ev->mDates.size();
             for (int j=0; j<num_dates; ++j) {
-                Date* date = &events.at(i)->mDates[j];
+                Date* date = &ev->mDates[j];
                 dates.push_back(date);
-                date = nullptr;
+                //date = nullptr;
             }
         }
 
@@ -218,8 +218,8 @@ QString MCMCLoopMain::initMCMC()
     // ----------------------------------------------------------------
 
     QVector<Event*> unsortedEvents = ModelUtilities::unsortEvents(events);
-    QVector<QVector<Event*> > eventBranches = ModelUtilities::getAllEventsBranches(events);
-    QVector<QVector<Phase*> > phaseBranches = ModelUtilities::getAllPhasesBranches(phases, mModel->mSettings.mTmax - mModel->mSettings.mTmin);
+   // QVector<QVector<Event*> > eventBranches = ModelUtilities::getAllEventsBranches(events);
+   // QVector<QVector<Phase*> > phaseBranches = ModelUtilities::getAllPhasesBranches(phases, mModel->mSettings.mTmax - mModel->mSettings.mTmin);
        
 
     emit stepChanged(tr("Initializing Events..."), 0, unsortedEvents.size());
@@ -230,14 +230,14 @@ QString MCMCLoopMain::initMCMC()
             qDebug() << "in initMCMC(): ---------------------------------";
             mModel->initNodeEvents();
             const double min (unsortedEvents.at(i)->getThetaMinRecursive(tmin) );
-            qDebug() << "in initMCMC(): Event initialized min : " << unsortedEvents[i]->mName << " : "<<" min"<<min<<tmin;
+            //qDebug() << "in initMCMC(): Event initialized min : " << unsortedEvents[i]->mName << " : "<<" min"<<min<<tmin;
             mModel->initNodeEvents();
             const double max ( unsortedEvents.at(i)->getThetaMaxRecursive(tmax) );
             
             unsortedEvents.at(i)->mTheta.mX = Generator::randomUniform(min, max);
             unsortedEvents.at(i)->mInitialized = true;
             
-            qDebug() << "in initMCMC(): Event initialized : " << unsortedEvents[i]->mName << " : " << unsortedEvents[i]->mTheta.mX<<" between"<<min<<max;
+            //qDebug() << "in initMCMC(): Event initialized : " << unsortedEvents[i]->mName << " : " << unsortedEvents[i]->mTheta.mX<<" between"<<min<<max;
 
             double s02_sum (0.);
             for (int j=0; j<unsortedEvents.at(i)->mDates.size(); ++j) {

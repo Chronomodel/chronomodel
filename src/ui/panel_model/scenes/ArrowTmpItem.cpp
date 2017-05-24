@@ -88,8 +88,6 @@ void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
 {
     Q_UNUSED(option);
     Q_UNUSED(widget);
-
-    QRectF rect = boundingRect();
     
     painter->setRenderHint(QPainter::Antialiasing);
     const int penWidth (2);

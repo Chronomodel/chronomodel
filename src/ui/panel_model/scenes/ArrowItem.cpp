@@ -151,8 +151,8 @@ QRectF ArrowItem::boundingRect() const
 
     qreal x = std::min(mXStart, mXEnd);
     qreal y = std::min(mYStart, mYEnd);
-    qreal w = std::abs(mXEnd - mXStart) ;
-    qreal h = std::abs(mYEnd - mYStart) ;
+    qreal w = std::abs(mXEnd - mXStart);
+    qreal h = std::abs(mYEnd - mYStart);
 
 
     if (!text.isEmpty()) {

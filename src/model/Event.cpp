@@ -404,11 +404,9 @@ double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event 
             }
             minPhases = std::min(minPhases, thetaMin + phase->mTau);
         }
-        qDebug()<<"getThetaMax fin mTau minPhases="<<minPhases;
     }
 
-    if (noPhaseFwd && mConstraintsFwd.isEmpty())
-        {
+    if (noPhaseFwd && mConstraintsFwd.isEmpty()) {
             mNodeInitialized = true;
             mThetaNode = minPhases;
             return mThetaNode;
@@ -418,11 +416,10 @@ double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event 
     else {
         double minTheta (defaultValue);
         if (!mConstraintsFwd.isEmpty())
-            for (auto constFwd : mConstraintsFwd) {
-                if (!newStartEvents.contains(constFwd->mEventTo)) {
+            for (auto &&constFwd : mConstraintsFwd) {
+                if (!newStartEvents.contains(constFwd->mEventTo))
                     minTheta = std::min(minTheta, (constFwd->mEventTo)->getThetaMaxRecursive(defaultValue, newStartEvents));
-                    //qDebug()<<" thetaMax "<< mName<<"in constFwd"<<constFwd->mEventTo->mName;
-                }
+
             }
 
 
@@ -435,11 +432,10 @@ double Event::getThetaMaxRecursive(const double defaultValue, const QList<Event 
                     for (auto &&phaseFwd : phase->mConstraintsFwd) {
 
                         for (auto &&eventPhaseFwd : phaseFwd->mPhaseTo->mEvents) {
-                            if (!newStartEvents.contains(eventPhaseFwd)) {
+                            if (!newStartEvents.contains(eventPhaseFwd))
                                 minThetaFwd = std::min(minThetaFwd, eventPhaseFwd->getThetaMaxRecursive(defaultValue, newStartEvents));
-                                //qDebug()<<" thetaMax in "<<phase->mName <<" phaseFwd->mPhaseTo "<<phaseFwd->mPhaseTo->mName<<eventPhaseFwd->mName;
-                            }
                         }
+
                         if (phaseFwd->mGammaType != PhaseConstraint::eGammaUnknown)
                             minPhasesFwd = std::min(minPhasesFwd, minThetaFwd - phaseFwd->mGamma);
                         else
