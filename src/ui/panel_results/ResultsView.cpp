@@ -43,7 +43,7 @@ mModel(nullptr),
 mMargin(5),
 mOptionsW(200),
 mLineH(15),
-mGraphLeft(130),
+//mGraphLeft(130), //130
 mRulerH(40),
 mTabsH(30),
 mGraphsH(150),
@@ -65,11 +65,16 @@ mMaximunNumberOfVisibleGraph(0)
     mResultMinX = mSettings.mTmin;
     mResultMaxX = mSettings.mTmax;
 
+    QFontMetricsF fm(font());
+
+   // mGraphLeft = std::max(fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mResultMinX))),
+     //                            fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mResultMinX)))) + 5;
+
     mResultCurrentMinX = mResultMinX ;
     mResultCurrentMaxX = mResultMaxX ;
     mResultZoomX = 1.;
     
-    QFontMetricsF fm(font());
+
 
     mTabs = new Tabs(this);
     mTabs->addTab(tr("Posterior Distrib."));
@@ -239,9 +244,8 @@ mMaximunNumberOfVisibleGraph(0)
     mYScaleSpin->setFixedSize(mCurrentXMinEdit->width(), fm.height()+ 10);
     mYScaleSpin->setToolTip(tr("Enter zoom value to magnify the curves on Y scale"));
 
-
     labFont = new Label(tr("Font"), mGraphicGroup);
-    labFont->setFixedSize(fm.width(labFont->text()), fm.height() + 2);
+    labFont->setFixedSize(fm.width(labFont->text()), fm.height() + 5);
     labFont->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mFont.setPointSize(font().pointSize());
@@ -316,10 +320,7 @@ mMaximunNumberOfVisibleGraph(0)
      * QList<RadioButton*> mChainRadios;
      * mCheckChainChecks and mChainRadios are created in  initResults() they are children of mChainsGroup
     */
-    
 
-
-   
     /* -------------------------------------- mDensityOptsGroup ---------------------------------------------------*/
     
     mDensityOptsTitle = new Label(tr("Density Options"), mTabMCMC);
@@ -335,8 +336,6 @@ mMaximunNumberOfVisibleGraph(0)
     
     mHPDEdit = new LineEdit(mDensityOptsGroup);
     mHPDEdit->setFixedSize(wEdit, fm.height()+2);
-    //mHPDEdit->setFont(font);
-    //mHPDEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mHPDEdit->setText("95");
     
     DoubleValidator* percentValidator = new DoubleValidator();
@@ -369,6 +368,7 @@ mMaximunNumberOfVisibleGraph(0)
     mBandwidthLab = new Label(tr("Bandwidth Const."), mDensityOptsGroup);
     mBandwidthLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mBandwidthLab->setFixedSize(fm.width(mBandwidthLab->text()), fm.height()+2);
+
     mBandwidthEdit = new LineEdit(mDensityOptsGroup);
     mBandwidthEdit->setFixedSize(wEdit, fm.height() + 2);
     mBandwidthEdit->setText(locale().toString(1.06));
@@ -501,27 +501,37 @@ mMaximunNumberOfVisibleGraph(0)
     mSheetNum = new LineEdit(mPageWidget);
     mSheetNum->setEnabled(false);
     mSheetNum->setReadOnly(true);
-    mSheetNum->setFixedSize(fm.width("__/__"), 50);//fm.height() + 2);
+    mSheetNum->setFixedSize(fm.width("__/__"), 25);
     mSheetNum->setAlignment(Qt::AlignCenter);
     mSheetNum->setText(locale().toString(mMaximunNumberOfVisibleGraph));
 
     mPreviousSheetBut  = new Button(tr("Prev."), mPageWidget);
-    mPreviousSheetBut->setFixedSize((mOptionsW- mSheetNum->width())/2, 50);//int(mRulerH/2));
+    mPreviousSheetBut->setFixedSize((mOptionsW- mSheetNum->width())/2, 25);
     mPreviousSheetBut->setCheckable(false);
     mPreviousSheetBut->setFlatHorizontal();
     mPreviousSheetBut->setToolTip(tr("Display previous data"));
     mPreviousSheetBut->setIconOnly(false);
 
-
     mNextSheetBut  = new Button(tr("Next"), mPageWidget);
-    mNextSheetBut->setFixedSize((mOptionsW - mSheetNum->width())/2, 50);//int(mRulerH/2));
+    mNextSheetBut->setFixedSize((mOptionsW - mSheetNum->width())/2, 25);
     mNextSheetBut->setCheckable(false);
     mNextSheetBut->setFlatHorizontal();
     mNextSheetBut->setToolTip(tr("Display next data"));
     mNextSheetBut->setIconOnly(false);
 
+    mNbDensityLab = new Label(tr("Nb Densities / Sheet"), mPageWidget);
+    mNbDensityLab->setFixedSize(fm.width(mNbDensityLab->text()), fm.height() + 10);
+    mNbDensityLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+
+    mNbDensitySpin = new QSpinBox(mPageWidget);
+    mNbDensitySpin->setRange(1, 50);
+    mNbDensitySpin->setValue(mNumberOfGraph);
+    mNbDensitySpin->setFixedSize(mCurrentXMinEdit->width(), fm.height() + 10);
+    mNbDensitySpin->setToolTip(tr("Enter the maximum densities to display on a sheet"));
+
     connect(mPreviousSheetBut, &Button::pressed, this, &ResultsView::previousSheet);
     connect(mNextSheetBut, &Button::pressed, this, &ResultsView::nextSheet);
+    connect(mNbDensitySpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::updateNbDensity);
 
     mTabPageSaving = new Tabs(mOptionsWidget);
     mTabPageSaving->setFixedWidth(mOptionsW);
@@ -953,12 +963,17 @@ void ResultsView::updateTabPageSaving()
             mPreviousSheetBut->move(0 , ySpan);
 
             mSheetNum->move(mPreviousSheetBut->width(), ySpan);
-            mSheetNum->setText(locale().toString(byPhases ? mTabPhasesIndex : mTabEventsIndex ) + "/"
-                               + locale().toString(ceil(mMaximunNumberOfVisibleGraph/mNumberOfGraph)));
+            mSheetNum->setText(locale().toString(byPhases ? mTabPhasesIndex+1 : mTabEventsIndex+1 ) + "/"
+                               + locale().toString(ceil(mMaximunNumberOfVisibleGraph/mNumberOfGraph) + 1));
 
             mNextSheetBut->move(mOptionsW - mPreviousSheetBut->width(),  ySpan);
 
             ySpan += mNextSheetBut->height() + mMargin;
+
+            mNbDensityLab->move(mMargin, ySpan);
+            mNbDensitySpin->move(mOptionsW - mNbDensitySpin->width() - mMargin, ySpan);
+            ySpan += mNbDensitySpin->height() + mMargin;
+
             mPageWidget->resize(mOptionsW, ySpan);
 
         }
@@ -1029,6 +1044,23 @@ void ResultsView::updateTabPageSaving()
     mTabPageSaving->resize(mOptionsW, mTabPageSaving->minimalHeight());
 
 }
+
+void ResultsView::updateNbDensity(int i)
+{
+   mNumberOfGraph = i;
+
+   //the same code that unfoldToggle()
+   if (mStack->currentWidget() == mEventsScrollArea)
+        mTabEventsIndex = 0;
+
+   else if (mStack->currentWidget() == mPhasesScrollArea)
+      mTabPhasesIndex = 0;
+
+
+   emit updateScrollAreaRequested();
+
+}
+
 
 void ResultsView::changeScrollArea()
 {
@@ -1215,7 +1247,11 @@ void ResultsView::updateFormatSetting(Model* model, const AppSettings* appSet)
     if (model)
         mModel = model;
     mModel->updateFormatSettings(appSet);
-    mNumberOfGraph = appSet->mNbSheet;
+
+    //QFontMetricsF fm(font());
+    //mGraphLeft = std::max(fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mModel->mSettings.mTmin))),
+    //                      fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mModel->mSettings.mTmin)))) + 5;
+
 }
 
 /**
@@ -1233,6 +1269,12 @@ void ResultsView::initResults(Model* model)
 
     if (model)
         mModel = model;
+
+    QFontMetricsF fm(font());
+
+    mMarginLeft = std::max(fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mModel->mSettings.mTmin))),
+                           fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mModel->mSettings.mTmin)))) + 5;
+
 
     mChains = mModel->mChains;
     mSettings = mModel->mSettings;
@@ -1306,6 +1348,11 @@ void ResultsView::updateResults(Model* model)
     mChains = mModel->mChains;
     mSettings = mModel->mSettings;
     mMCMCSettings = mModel->mMCMCSettings;
+
+    QFontMetricsF fm(font());
+
+    mMarginLeft = std::max(fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mModel->mSettings.mTmin))),
+                           fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mModel->mSettings.mTmin)))) + 5;
 
     mHasPhases = (mModel->mPhases.size() > 0);
 
@@ -1419,6 +1466,8 @@ void ResultsView::createEventsScrollArea(const int idx)
                 graphEvent->setEvent((*iterEvent));
                 graphEvent->setGraphFont(mFont);
                 graphEvent->setGraphsThickness(mThicknessCombo->currentIndex());
+   qDebug()<<mMarginLeft;
+               // graphEvent->setMarginLeft(mMarginLeft);
                 mByEventsGraphs.append(graphEvent);
               }
             ++counter; //count one event graph
@@ -1442,6 +1491,8 @@ void ResultsView::createEventsScrollArea(const int idx)
                                 graphDate->setGraphFont(mFont);
                                 graphDate->setGraphsThickness(mThicknessCombo->currentIndex());
                                 graphDate->setGraphsOpacity(mOpacityCombo->currentIndex()*10);
+
+                                graphDate->setMarginLeft(mMarginLeft);
                                 connect(graphDate, &GraphViewResults::selected, this, &ResultsView::updateLayout);
                                 mByEventsGraphs.append(graphDate);
 

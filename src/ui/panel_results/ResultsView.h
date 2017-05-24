@@ -81,6 +81,7 @@ protected:
     void updateTabDisplay(const int &i);
     void updateTabByScene();
     void updateTabPageSaving();
+    void updateNbDensity(int i);
 
 public slots:
     void updateResults(Model* model = nullptr);
@@ -174,7 +175,7 @@ private:
     int mOptionsW;
     int mLineH;
     //used for graph
-    int mGraphLeft;
+    qreal mMarginLeft;
     int mRulerH;
     int mTabsH;
     int mGraphsH;
@@ -284,6 +285,9 @@ private:
     Button* mNextSheetBut;
     LineEdit* mSheetNum;
     Button* mPreviousSheetBut;
+
+    Label* mNbDensityLab;
+    QSpinBox* mNbDensitySpin;
 
     QWidget* mToolsWidget;
     Button* mStatsBut;
