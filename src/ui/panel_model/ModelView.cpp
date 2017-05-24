@@ -137,6 +137,7 @@ mCalibVisible(false)
     mEventsGlobalZoom = new ScrollCompressor(mLeftWrapper);
     mEventsGlobalZoom->setProp(1);
     mEventsGlobalZoom->showText(tr("Zoom"), true);
+    mEventsGlobalZoom->setVertical(true);
     
     // just to refresh when selection changes :
     //connect(mEventsScene, SIGNAL(selectionChanged()), mEventsGlobalView, SLOT(update()));
@@ -658,15 +659,33 @@ void ModelView::searchEvent()
         QJsonObject state = mProject->state();
         QJsonArray events = state.value(STATE_EVENTS).toArray();
         
-        for (int i=0; i<events.size(); ++i) {
-            QJsonObject event = events.at(i).toObject();
-            int id = event.value(STATE_ID).toInt();
-            QString name = event.value(STATE_NAME).toString();
+        for (auto &&evJSON : events) {
+            const QJsonObject event = evJSON.toObject();
+            const int eventId = event.value(STATE_ID).toInt();
+            const QString name = event.value(STATE_NAME).toString();
             
             if (name.contains(search, Qt::CaseInsensitive))
-                mSearchIds.push_back(id);
+                mSearchIds.push_back(eventId);
+
+            else {
+                const QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
+
+                 for (auto &&datJSON : dates) {
+                     const QJsonObject data = datJSON.toObject();
+                     const QString dataName = data.value(STATE_NAME).toString();
+
+                     if (dataName.contains(search, Qt::CaseInsensitive)) {
+                         mSearchIds.push_back(eventId);
+                         continue;
+                     }
+                 }
+             }
 
         }
+
+
+
+
         mCurSearchIdx = 0;
     }
     else if (mSearchIds.size() > 0) {
@@ -681,7 +700,6 @@ void ModelView::searchEvent()
 
 }
 
-//#pragma mark Right animation
 void ModelView::showProperties()
 {
    updateLayout();
