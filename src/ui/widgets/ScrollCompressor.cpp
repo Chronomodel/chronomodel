@@ -96,14 +96,13 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
         p.drawRect(r);
         
         if (mShowText) {
-            QString text = mText;// + "\r" + QString::number(qRound(mProp * 100)) + " %";
-            const int x = (- r.height() - fm.width(mText))/2;
-            const int y = r.width()/2;
-            //qDebug()<<"ScroolCompressor"<<r;
+           // QString text = mText;// + "\r" + QString::number(qRound(mProp * 100)) + " %";
             p.setPen(QColor(200, 200, 200));
             p.rotate(-90); // coordonates are rotated
-            p.drawText(x, y, text);
-            //p.rotate(-90);
+            const int x = (- r.height() - fm.width(mText))/2;
+            const int y = r.width()/2;
+            p.drawText(x, y, mText);
+            p.rotate(90);
         }
     } else {
         const qreal w = r.width() * mProp;
