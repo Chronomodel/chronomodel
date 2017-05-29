@@ -128,8 +128,6 @@ void PhaseDialog::setPhase(const QJsonObject& phase)
                                   mPhase.value(STATE_COLOR_BLUE).toInt()));
     mTauTypeCombo->setCurrentIndex(mPhase.value(STATE_PHASE_TAU_TYPE).toInt());
     mTauFixedEdit->setText(QString::number(mPhase.value(STATE_PHASE_TAU_FIXED).toDouble()));
-    //mTauMinEdit->setText(QString::number(mPhase[STATE_PHASE_TAU_MIN].toDouble()));
-    //mTauMaxEdit->setText(QString::number(mPhase[STATE_PHASE_TAU_MAX].toDouble()));
     
     showAppropriateTauOptions(mTauTypeCombo->currentIndex());
 }
@@ -142,8 +140,6 @@ QJsonObject PhaseDialog::getPhase()
     mPhase[STATE_COLOR_BLUE] = mColorPicker->getColor().blue();
     mPhase[STATE_PHASE_TAU_TYPE] = (Phase::TauType) mTauTypeCombo->currentIndex();
     mPhase[STATE_PHASE_TAU_FIXED] = mTauFixedEdit->text().toDouble();
-    //mPhase[STATE_PHASE_TAU_MIN] = mTauMinEdit->text().toDouble();
-    //mPhase[STATE_PHASE_TAU_MAX] = mTauMaxEdit->text().toDouble();
     return mPhase;
 }
 

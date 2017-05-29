@@ -1466,8 +1466,7 @@ void ResultsView::createEventsScrollArea(const int idx)
                 graphEvent->setEvent((*iterEvent));
                 graphEvent->setGraphFont(mFont);
                 graphEvent->setGraphsThickness(mThicknessCombo->currentIndex());
-   qDebug()<<mMarginLeft;
-               // graphEvent->setMarginLeft(mMarginLeft);
+
                 mByEventsGraphs.append(graphEvent);
               }
             ++counter; //count one event graph
@@ -1492,7 +1491,6 @@ void ResultsView::createEventsScrollArea(const int idx)
                                 graphDate->setGraphsThickness(mThicknessCombo->currentIndex());
                                 graphDate->setGraphsOpacity(mOpacityCombo->currentIndex()*10);
 
-                                graphDate->setMarginLeft(mMarginLeft);
                                 connect(graphDate, &GraphViewResults::selected, this, &ResultsView::updateLayout);
                                 mByEventsGraphs.append(graphDate);
 

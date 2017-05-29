@@ -462,24 +462,23 @@ void EventsScene::updateSceneFromState()
                 // Thus the scene will move it randomly around the currently viewed center point.
                 QPointF pos = newItem->pos();
                 if (pos.isNull()) {
-                    // Usefull to add some dates to last created Event!
+                    // Usefull to add some dates inside the last created Event!
                     clearSelection();
                     newItem->setSelected(true);
-
 
                     QList<QGraphicsView*> gviews = views();
                     
                     if (gviews.size() > 0) {
                         QGraphicsView* gview = gviews[0];
                         QPointF pt = gview->mapToScene(gview->width()/2, gview->height()/2);
-                        int posDelta = 100;
+                        const int posDelta (100);
                         newItem->setPos(pt.x() + rand() % posDelta - posDelta/2,
                                           pt.y() + rand() % posDelta - posDelta/2);
                     }
 
                 newItem = nullptr;
 
-                qDebug() << "EventsScene::updateScene Event created : id = " << event.value(STATE_ID).toInt() << event.value(STATE_NAME).toString()<<", type : " << type;
+                qDebug() << "EventsScene::updateScene Event created : id = " << event.value(STATE_ID).toInt() <<event[STATE_ITEM_X].toDouble()<<event[STATE_ITEM_Y].toDouble();//<< event.value(STATE_NAME).toString()<<", type : " << type;
 
             }
 

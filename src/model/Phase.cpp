@@ -11,9 +11,9 @@ mId(0),
 mName("no Phase Name"),
 mTau(0.),
 mTauType(Phase::eTauUnknown),
-mTauFixed(0),
-mTauMin(0),
-mTauMax(0),
+mTauFixed(0.),
+mTauMin(0.),
+mTauMax(0.),
 mIsSelected(false),
 mIsCurrent(false),
 mLevel(0)
@@ -28,8 +28,8 @@ mLevel(0)
     mDuration.mSupport = MetropolisVariable::eRp;
     mDuration.mFormat = DateUtils::eUnknown;
     // Item initial position :
-    mItemX = 0;
-    mItemY = 0;
+    mItemX = 0.;
+    mItemY = 0.;
 }
 
 Phase::Phase(const Phase& phase)

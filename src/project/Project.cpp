@@ -1087,6 +1087,7 @@ void Project::updateEvent(const QJsonObject& event, const QString& reason)
     stateNext[STATE_EVENTS] = events;
     pushProjectState(stateNext, reason, true);
 }
+
 /**
  * @brief Project::mergeEvents Offer to insert all the dates of an event inside an other event
  * @param eventFromId
@@ -1721,7 +1722,6 @@ void Project::updateAllDataInSelectedEvents(const QHash<QString, QVariant>& grou
     pushProjectState(stateNext, tr("Grouped action applied : ") + groupedAction.value("title").toString(), true);
 }
 
-//#pragma mark Phases
 void Project::createPhase()
 {
     if (studyPeriodIsValid()) {
@@ -1729,7 +1729,6 @@ void Project::createPhase()
         if (dialog->exec() == QDialog::Accepted) {
             if (dialog->isValid()) {
                 QJsonObject phase = dialog->getPhase();
-                
                 QJsonObject stateNext = mState;
                 QJsonArray phases = stateNext.value(STATE_PHASES).toArray();
                 

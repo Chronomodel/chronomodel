@@ -16,6 +16,7 @@ mMoving(false),
 mMergeable(false),
 mGreyedOut(false)
 {
+    setPos(0.f, 0.f);
     setZValue(1.);
     setAcceptHoverEvents(true);
     setAcceptDrops(true);

@@ -29,8 +29,8 @@ mLevel(0)
 
     // Item initial position :
     //int posDelta = 100;
-    mItemX = 0;//rand() % posDelta - posDelta/2;
-    mItemY = 0;//rand() % posDelta - posDelta/2;
+    mItemX = 0.;//rand() % posDelta - posDelta/2;
+    mItemY = 0.;//rand() % posDelta - posDelta/2;
     
     // Note : setting an event in (0, 0) tells the scene that this item is new!
     // Thus the scene will move it randomly around the currently viewed center point.
