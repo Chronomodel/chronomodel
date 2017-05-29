@@ -259,29 +259,38 @@ void PhasesScene::updateSceneFromState()
             PhaseItem* phaseItem = new PhaseItem(this, phase);
             mItems.append(phaseItem);
             addItem(phaseItem);
-            
-            // Pratique
-          //  clearSelection();
-          //  phaseItem->setSelected(true);
+            hasCreated = true;
+
+            // usefull, changing the selected item force to update the state
+            clearSelection();
+            phaseItem->setSelected(true);
             
             // Note : setting an event in (0, 0) tells the scene that this item is new!
-            // Thus the scene will move it randomly around the currently viewed center point.
+            // Thus the scene will move it randomly around the central point (in the old version: around the currently viewed center point).
             QPointF pos = phaseItem->pos();
             if (pos.isNull()) {
-                QList<QGraphicsView*> gviews = views();
+                const int posDelta (100);
+                // With the code above the new phase item is created randomly near the center of the view
+              /*  QList<QGraphicsView*> gviews = views();
                 if (gviews.size() > 0) {
                     QGraphicsView* gview = gviews[0];
                     QPointF pt = gview->mapToScene(gview->width()/2, gview->height()/2);
-                    int posDelta = 100;
+
                     phaseItem->setPos(pt.x() + rand() % posDelta - posDelta/2,
                                       pt.y() + rand() % posDelta - posDelta/2);
+
                 }
+               */
+                // the new phase item is created randomly near the central point (0, 0)
+                QPointF pt  (rand() % posDelta - posDelta/2, rand() % posDelta - posDelta/2);
+                phaseItem->setPos( pt.x(), pt.y());
             }
-            
-            hasCreated = true;
+
+
 #ifdef DEBUG
-            //qDebug() << "Phase item created : id = " << phase[STATE_ID].toInt();
+            qDebug() << "Phase item created : id = " << phase[STATE_ID].toInt();
 #endif
+
         }
     }
     
