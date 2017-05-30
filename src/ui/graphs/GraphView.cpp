@@ -193,7 +193,7 @@ GraphView::~GraphView()
 //#pragma mark Zoom X
 void GraphView::zoomX(const type_data min, const type_data max)
 {
-    if (mCurrentMinX != min || mCurrentMaxX || max) {
+    if (mCurrentMinX != min || mCurrentMaxX != max || mMinY>=mMaxY || mAutoAdjustYScale) {
         mCurrentMinX = min;
         mCurrentMaxX = max;
         
@@ -607,7 +607,6 @@ void GraphView::resizeEvent(QResizeEvent* event)
 {
     Q_UNUSED(event);
     if (!mBufferBack.isNull()) {
- //       qDebug()<< "resizeEvent rect "<<rect()<<" buffer rect"<<mBufferBack.rect();
         const qreal sx = (qreal)rect().width() / (qreal)mBufferBack.rect().width() ;
         const qreal sy = (qreal)rect().height() / (qreal)mBufferBack.rect().height() ;
 
@@ -615,7 +614,6 @@ void GraphView::resizeEvent(QResizeEvent* event)
             mBufferBack = QPixmap(width(), height());
             updateGraphSize(width(), height());
             paintToDevice(&mBufferBack);
-//qDebug()<<"GraphView::resizeEvent  Big Matrix "<<sx<<sy<<" new: "<<mBufferBack.rect().size();
         } else {
             QMatrix mx = QMatrix();
             mx.scale(sx, sy);
