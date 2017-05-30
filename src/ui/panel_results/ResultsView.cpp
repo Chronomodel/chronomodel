@@ -143,7 +143,6 @@ mMaximunNumberOfVisibleGraph(0)
     mWiggleCheck = new CheckBox(tr("Wiggle shifted"), mResultsGroup);
     mWiggleCheck->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
 
-
     mTabByScene = new Tabs(mOptionsWidget);
     mTabByScene->setFixedWidth(mOptionsW);
     // we set the same widget
@@ -151,7 +150,6 @@ mMaximunNumberOfVisibleGraph(0)
     mTabByScene->addTab(mResultsGroup, tr("Phases"));
 
     connect(mTabByScene, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::changeScrollArea);
-
 
 
     // -------------------------
@@ -543,6 +541,8 @@ mMaximunNumberOfVisibleGraph(0)
 
     //connect(mTabDisplayMCMC, &Tabs::tabClicked, this, &ResultsView::updateTabDisplay);
 
+    updateTabByScene();
+
     mMarker->raise();
     mTabDisplayMCMC->setTab(0, false);
     mTabDisplayMCMC->showWidget(0);
@@ -551,6 +551,7 @@ mMaximunNumberOfVisibleGraph(0)
     mTabPageSaving->setTab(0, false);
     mTabPageSaving->showWidget(0);
     updateTabPageSaving();
+
 }
 
 ResultsView::~ResultsView()
@@ -589,7 +590,6 @@ void ResultsView::setFont(const QFont & font)
 void ResultsView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
-    updateTabDisplay(mTabDisplayMCMC->currentIndex());
     updateControls(); // emit controleUpdated which is connected to updateLayout
 }
 
@@ -600,8 +600,9 @@ void ResultsView::resizeEvent(QResizeEvent* e)
 void ResultsView::updateControls()
 {
    qDebug() << "ResultsView::updateControls()";
-    bool byPhases (mTabByScene->currentIndex() == 1);
     bool byEvents (mTabByScene->currentIndex() == 0);
+    bool byPhases (!byEvents);
+
 
 
     /* -------------------------------------------------------
@@ -658,23 +659,23 @@ void ResultsView::updateControls()
     int unselectedGraph (0);
     bool showAllGraph (true);
 
-    if (mStack->currentWidget() == mEventsScrollArea) {
+    if (byEvents) {
         for (auto && ev : mModel->mEvents) {
             if (ev->mIsSelected) {
                 selectedGraph += 1;
-                if (mEventsfoldCheck->isChecked())
+                if (mDatesfoldCheck->isChecked())
                     selectedGraph += ev->mDates.size();
                 showAllGraph = false;
             } else {
                 unselectedGraph += 1;
-                if (mEventsfoldCheck->isChecked())
+                if (mDatesfoldCheck->isChecked())
                     unselectedGraph += ev->mDates.size();
             }
         }
         currentIndex = mTabEventsIndex;
     }
 
-    else if (mStack->currentWidget() == mPhasesScrollArea) {
+    else if (byPhases) {
          for (auto && ph : mModel->mPhases) {
             if (ph->mIsSelected) {
                 showAllGraph = false;
@@ -722,7 +723,7 @@ void ResultsView::updateControls()
 
 void ResultsView:: updateTabByScene()
 {
-    bool byPhases (mTabByScene->currentIndex() == 1);
+    bool byPhases (false);
    // bool byEvents (mTabByScene->currentIndex() == 0);
 
     /* ----------------------------------------------------------
@@ -743,6 +744,7 @@ void ResultsView:: updateTabByScene()
         mPhaseDurationRadio->setVisible(true);
         mPhaseDurationRadio -> move(mMargin, ySpan);
         ySpan += mPhaseDurationRadio->height() + mMargin;
+
     } else
         mPhaseDurationRadio->setVisible(false);
 
@@ -753,14 +755,19 @@ void ResultsView:: updateTabByScene()
         mEventsfoldCheck->move(mMargin , ySpan);
         ySpan += mEventsfoldCheck->height() + mMargin;
         mDatesfoldCheck->setVisible(mEventsfoldCheck->isChecked());
+        if (mEventsfoldCheck->isChecked()) {
+            //mDatesfoldCheck->setEnabled(true);
+            mDatesfoldCheck->move(mMargin , ySpan);
+            ySpan += mDatesfoldCheck->height() + mMargin;
+        }
     } else {
         mEventsfoldCheck->setVisible(false);
         mDatesfoldCheck->setVisible(true);
-    }
-    if (mDatesfoldCheck->isVisible()) {
         mDatesfoldCheck->move(mMargin , ySpan);
         ySpan += mDatesfoldCheck->height() + mMargin;
     }
+
+
 
     int dx (mLineH + mMargin);
 
@@ -770,7 +777,7 @@ void ResultsView:: updateTabByScene()
             ySpan += mDataCalibCheck->height() + mMargin;
         }
         if (mWiggleCheck->isVisible()) {
-            mWiggleCheck    -> move(mMargin + dx, ySpan);
+            mWiggleCheck -> move(mMargin + dx, ySpan);
             ySpan += mWiggleCheck->height() + mMargin;
         }
     }
@@ -963,8 +970,9 @@ void ResultsView::updateTabPageSaving()
             mPreviousSheetBut->move(0 , ySpan);
 
             mSheetNum->move(mPreviousSheetBut->width(), ySpan);
+
             mSheetNum->setText(locale().toString(byPhases ? mTabPhasesIndex+1 : mTabEventsIndex+1 ) + "/"
-                               + locale().toString(ceil(mMaximunNumberOfVisibleGraph/mNumberOfGraph) + 1));
+                               + locale().toString(ceil((double)mMaximunNumberOfVisibleGraph/(double)mNumberOfGraph) ));
 
             mNextSheetBut->move(mOptionsW - mPreviousSheetBut->width(),  ySpan);
 
@@ -1056,6 +1064,7 @@ void ResultsView::updateNbDensity(int i)
    else if (mStack->currentWidget() == mPhasesScrollArea)
       mTabPhasesIndex = 0;
 
+   updateControls();
 
    emit updateScrollAreaRequested();
 
@@ -1169,6 +1178,7 @@ void ResultsView::updateGraphsLayout()
             QWidget* wid = mPhasesScrollArea->widget();
             for (auto && graph : mByPhasesGraphs) {
                 graph->setGeometry(0, y, width() - mOptionsW - sbe, mGraphsH);
+
                 y += graph->height();
             }
             if (y>0)
@@ -1186,6 +1196,7 @@ void ResultsView::updateGraphsLayout()
 
             for (auto && graph : mByEventsGraphs) {
                 graph->setGeometry(0, y, width() - mOptionsW - sbe, mGraphsH);
+
                 y += graph->height();
             }
             if (y>0)
@@ -1197,10 +1208,9 @@ void ResultsView::updateGraphsLayout()
     
 }
 
-//pragma mark Update (Chained Functions)
+
 void ResultsView::clearResults()
 {
-    mTabByScene->setEnabled(false);
 
     for (auto &&check : mCheckChainChecks )
         delete check;
@@ -1283,13 +1293,13 @@ void ResultsView::initResults(Model* model)
     mHasPhases = (mModel->mPhases.size() > 0);
 
     if (mHasPhases) {
+        mTabByScene->setTabVisible(1, false);
         mTabByScene->setTab(1, false);
-        mTabByScene->setEnabled(true);
 
      } else {
         mTabByScene->setTab(0, false);
-        mTabByScene->setEnabled(false);
-    }
+        mTabByScene->setTabVisible(1, false);
+     }
 
     // ----------------------------------------------------
     //  Create Chains option controls (radio and checkboxes under "MCMC Chains")
@@ -1329,6 +1339,9 @@ void ResultsView::initResults(Model* model)
     // ------------------------------------------------------------
    // updateGraphsZoomX(); // to set the CurrentMinX value inside the graphView
     showInfos(mStatsBut->isChecked());
+
+    updateControls();
+
 }
 
 /**
@@ -1358,10 +1371,10 @@ void ResultsView::updateResults(Model* model)
 
     if (mHasPhases) {
         mTabByScene->setTab(1, false);
-        mTabByScene->setEnabled(true);
+        mTabByScene->setTabVisible(1, true);
      } else {
+        mTabByScene->setTabVisible(1, false);
         mTabByScene->setTab(0, false);
-        mTabByScene->setEnabled(false) ;
      }
 
     /* ----------------------------------------------------
@@ -1413,7 +1426,7 @@ void ResultsView::updateResults(Model* model)
     // ------------------------------------------------------------
     updateControls();
     showInfos(mStatsBut->isChecked());
-
+updateGraphsZoomX();
 }
 
 
@@ -1692,12 +1705,9 @@ void ResultsView::unfoldToggle()
 {
 
     if (mStack->currentWidget() == mEventsScrollArea) {
-        
          mTabEventsIndex = 0;
         
     } else if (mStack->currentWidget() == mPhasesScrollArea) {
-        
-
        mTabPhasesIndex = 0;
     }
     
@@ -1732,7 +1742,7 @@ void ResultsView::previousSheet()
 }
 
 /**
- *  @brief Decide which curve graphs must show, based on currently selected options.
+ *  @brief Decide which curve graphs must be show, based on currently selected options.
  *  @brief This function does NOT remove or create any curve in graphs! It only checks if existing curves should be visible or not.
  */
 void ResultsView::updateCurvesToShow()
@@ -2077,7 +2087,6 @@ qDebug()<< "ResultsView::updateResultsLog()-> emit resultsLogUpdated(log)";
     emit resultsLogUpdated(log);
 }
 
-//#pragma mark Mouse & Marker
 void ResultsView::mouseMoveEvent(QMouseEvent* e)
 {
     int shiftX (0);
@@ -2088,7 +2097,7 @@ void ResultsView::mouseMoveEvent(QMouseEvent* e)
     mMarker->setGeometry(x, mMarker->pos().y(), mMarker->width(), mMarker->height());
 }
 
-//pragma mark Zoom X
+
 /**
  * @brief ResultsView::XScaleSliderChanged
  * @param value
@@ -2103,6 +2112,7 @@ qDebug()<<"XScaleSliderChanged"<<value<<sliderToZoom(value)        ;
         updateZoomX();
     }
 }
+
 /**
  * @brief ResultsView::XScaleSpinChanged slot connected to mXScaleSpin->setValue()
  * @param value
@@ -2176,7 +2186,7 @@ void ResultsView::updateZoomX()
      * --------------------------------------------------*/
     double zoom = mXScaleSpin->value();
 
-    mResultZoomX = 1/zoom;
+    mResultZoomX = 1./zoom;
 
     const double tCenter = (mResultCurrentMaxX + mResultCurrentMinX)/2.;
     const double span = (mResultMaxX - mResultMinX)* (1./ zoom);
@@ -2193,8 +2203,11 @@ void ResultsView::updateZoomX()
         curMin = curMax - span;
     }
 
-    mResultCurrentMinX = ceil(curMin);
-    mResultCurrentMaxX = floor(curMax);
+    //mResultCurrentMinX = ceil(curMin);
+    //mResultCurrentMaxX = floor(curMax);
+
+    mResultCurrentMinX = curMin;
+    mResultCurrentMaxX = curMax;
     
     /* --------------------------------------------------
      *  Update other elements
