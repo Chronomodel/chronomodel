@@ -22,6 +22,7 @@ void Tabs::addTab(const QString& name)
         mCurrentIndex = 0;
 
     mTabWidgets.append(nullptr);
+    mTabVisible.append(true);
 }
 
 void Tabs::addTab(QWidget* wid, const QString& name)
@@ -32,6 +33,8 @@ void Tabs::addTab(QWidget* wid, const QString& name)
 
     mTabWidgets.append(wid);
     wid->setParent(this);
+
+    mTabVisible.append(true);
 }
 
 QWidget* Tabs::getWidget(const int &i)
@@ -108,11 +111,11 @@ void Tabs::setTab(int i, bool notify)
 
     mCurrentIndex = i;
 
-    //resize(width(), height());
-
     if (notify)
         emit tabClicked(i);
-    update();
+
+    updateLayout();
+
 }
 
 void Tabs::setFont(const QFont &font)
@@ -149,9 +152,7 @@ void Tabs::paintEvent(QPaintEvent* e)
     p.setPen(Painting::mainColorDark);
     if (mTabWidgets[mCurrentIndex]) {
         const int x0 = (width() - mTabWidgets[mCurrentIndex]->width() )/2;
-//qDebug()<<"Tabs: x0"<<x0;
         mTabWidgets[mCurrentIndex]->move(x0, mTabHeight);
-        //p.drawRoundRect(mTabWidgets[mCurrentIndex]->geometry(), 2, 2);
 
     } //else {
         p.drawLine(0, mTabHeight - p.pen().width(), mTabRects[mCurrentIndex].x(), mTabHeight - p.pen().width());
@@ -174,16 +175,22 @@ void Tabs::mousePressEvent(QMouseEvent* e)
 
 void Tabs::updateLayout()
 {
-    const qreal m = 10.;
+    const qreal m (10.);
     mTabRects.clear();
     qreal x = 1.;
-    const qreal h = mTabHeight - 1.;
+    const qreal h (mTabHeight - 1.);
     QFontMetrics metrics(font());
 
+    int i (0);
     for (auto && name : mTabNames) {
-        const qreal w = metrics.width(name);
-        mTabRects.append(QRectF(x, 1, 2*m + w, h));
-        x += 2*m + w;
+        if (mTabVisible[i]) {
+            const qreal w = metrics.width(name);
+            mTabRects.append(QRectF(x, 1, 2*m + w, h));
+            x += 2*m + w;
+        } else
+            mTabRects.append(QRectF(x, 1, 0, h));
+
+        ++i;
     }
     update();
 }

@@ -18,6 +18,7 @@ public:
     void setTab(int index, bool notify);
     void setFont(const QFont &font);
     void setTabHeight(const int &h) {mTabHeight = h;}
+    void setTabVisible(const int &i , const bool visible) {mTabVisible[i] = visible;}
 
     // getter
     QWidget* getWidget(const int &i);
@@ -45,6 +46,7 @@ private:
     QStringList mTabNames;
     QList<QRectF> mTabRects;
     QList<QWidget*> mTabWidgets;
+    QList<bool> mTabVisible;
     int mCurrentIndex;
 };
 
