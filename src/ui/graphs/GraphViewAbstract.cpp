@@ -112,17 +112,15 @@ type_data GraphViewAbstract::getValueForX(const qreal& x, const bool& aConstainR
 #define TOPBLANK 10
 qreal GraphViewAbstract::getYForValue(const type_data& aValue, const bool& aConstainResult)
 {
-    //const qreal topBlank (7.);
-    const type_data lYFromBase = valueForProportion(aValue, mMinY, mMaxY, (type_data)(0.), (type_data)(mGraphHeight), aConstainResult);
-    const qreal y = mGraphHeight+ mMarginTop + TOPBLANK - (qreal)lYFromBase;
+    const type_data lYFromBase = valueForProportion(aValue, mMinY, mMaxY, (type_data)(0.), (type_data)(mGraphHeight) -TOPBLANK, aConstainResult);
+    const qreal y = mGraphHeight+ mMarginTop - (qreal)lYFromBase ;
     return y;
 }
 
 type_data GraphViewAbstract::getValueForY(const qreal& y, const bool& aConstainResult)
 {
-    //const qreal topBlank (7.);
-    const qreal lYFromBase = mMarginTop + mGraphHeight + TOPBLANK - y;
-    const type_data lValue = valueForProportion( (type_data)(lYFromBase), (type_data)0., (type_data)(mGraphHeight), mMinY, mMaxY, aConstainResult);
+    const qreal lYFromBase = mMarginTop + mGraphHeight - y;
+    const type_data lValue = valueForProportion( (type_data)(lYFromBase), (type_data)0., (type_data)(mGraphHeight) -TOPBLANK, mMinY, mMaxY, aConstainResult);
     return lValue;
 }
 
