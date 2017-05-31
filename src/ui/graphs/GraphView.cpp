@@ -187,10 +187,10 @@ GraphView::~GraphView()
    mZones.clear();
 }
 
-// ------------------------------------------------------
-//  Zoom X
-// ------------------------------------------------------
-//#pragma mark Zoom X
+/* ------------------------------------------------------
+ *  Zoom X
+ * ------------------------------------------------------*/
+
 void GraphView::zoomX(const type_data min, const type_data max)
 {
     if (mCurrentMinX != min || mCurrentMaxX != max || mMinY>=mMaxY || mAutoAdjustYScale) {
@@ -654,7 +654,7 @@ void GraphView::paintEvent(QPaintEvent* )
     if (mCurves.size() == 0 && mZones.size() == 0) {
         QPainter p(this);
         p.setFont(font());
-        p.fillRect(0, 0, width(), height(), QColor(200, 200, 200));
+        p.fillRect(0, 0, width(), height(), mBackgroundColor);
         p.setPen(QColor(100, 100, 100));
         p.drawText(0, 0, width(), height(), Qt::AlignCenter, mNothingMessage);
 
@@ -1144,7 +1144,7 @@ void GraphView::drawCurves(QPainter& painter)
                                 
                                 if (curve.mIsHisto) {
                                     // histo bars must be centered around x value :
-                                    const qreal dx2 = (x - last_x)/2.f;
+                                    const qreal dx2 = (x - last_x)/2.;
                                     path.lineTo(x - dx2, last_y);
                                     path.lineTo(x - dx2, y);
                                     
