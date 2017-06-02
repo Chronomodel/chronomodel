@@ -95,7 +95,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
      *  First tab : Posterior distrib.
      * ------------------------------------------------
      */
-    if (typeGraph == ePostDistrib) {
+    if (typeGraph == ePostDistrib && (variable == eTheta || variable == eSigma)) {
 
         /* ------------------------------------------------
          *  Possible Curves :
@@ -219,6 +219,11 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                                                                             Qt::NoBrush);
                     mGraph->addCurve(curvePostDistribChain);
                 }
+            // HPD All Chains
+            GraphCurve curveHPD = generateHPDCurve(variableDate->mHPD,
+                                                   "Sigma HPD All Chains",
+                                                    color);
+            mGraph->addCurve(curveHPD);
 
         }
 
@@ -284,11 +289,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         generateCorrelCurves(mChains, variableDate);
     }
     else {
-        if (variable == eTheta)
-            mTitle = QString(tr("Data") + " : " + mDate->mName);
-        else
-             mTitle = QString(tr("Individual Std") + " : " + mDate->mName);
-
+        mTitle = QString(tr("Data") + " : " + mDate->mName);
         mGraph->resetNothingMessage();
     }
 
@@ -336,7 +337,9 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
             mGraph->setCurveVisible("Sigma all Chains", mShowAllChains);
             for (int i=0; i<mShowChainList.size(); ++i)
                 mGraph->setCurveVisible("Sigma for Chain " + QString::number(i), mShowChainList[i]);
-            
+
+            mGraph->setCurveVisible("Sigma HPD All Chains", mShowAllChains);
+
             mGraph->setTipXLab("sigma");
             mGraph->setYAxisMode(GraphView::eHidden);
         }
