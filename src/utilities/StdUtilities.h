@@ -108,8 +108,6 @@ T vector_min_value(const QVector<T>& aVector)
 template <class U, class T>
 T map_max_value(const QMap<U, T>& aMap)
 {
-    if (aMap.isEmpty())
-        return (T)0;
     QMapIterator<U, T> iter(aMap);
     T max = iter.hasNext() ?  iter.next().value()  :  (T) 0 ;
     

@@ -586,7 +586,6 @@ QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, cons
 
 QString intervalText(const QPair<double, QPair<double, double> > &interval, FormatFunc formatFunc, const bool forCSV)
 {
-    const QLocale locale;
     if (formatFunc)
         return "[" + formatFunc(interval.second.first, forCSV) + " : " + formatFunc(interval.second.second, forCSV) + "] (" + stringWithAppSettings(interval.first, forCSV) + "%)";
 
