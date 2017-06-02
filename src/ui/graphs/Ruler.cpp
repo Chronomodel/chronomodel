@@ -83,7 +83,7 @@ double Ruler::getRealValue()
     return realPosition;
 }
 
-void Ruler::scrollValueChanged(int value)
+void Ruler::scrollValueChanged(double value)
 {
     emit valueChanged(value);
 }
@@ -142,7 +142,7 @@ double Ruler::getZoom()
 }
 
 
-void Ruler::setZoom(int prop)
+void Ruler::setZoom(double &prop)
 {
     // Ici, 10 correspond à la différence minimale de valeur (quand le zoom est le plus fort)
     double minProp = 1. / (mMax - mMin);   //10. / (mMax - mMin);
@@ -224,9 +224,7 @@ void Ruler::setFormatFunctX(FormatFunc f){
 
 void Ruler::layout()
 {
-    QFont font = this->font();
-
-    QFontMetricsF fmAxe (font);
+    QFontMetricsF fmAxe (font());
     mMarginRight = floor( fmAxe.width(stringWithAppSettings(mMax))/2.);
     qreal penSize = 1.;// same value as pen.width in AxisTool
 
@@ -277,12 +275,12 @@ void Ruler::paintEvent(QPaintEvent* e)
      *  and the size of mRulerRect are calucate in layout too.
      * ----------------------------------------------
      */
-    QFont font = this->font();
-    painter.setFont(font);
+    QFont f = font();
+    painter.setFont(f);
 
-    if (font.pointSizeF() >20) {
-        font.setPointSizeF(20.);
-        painter.setFont(font);
+    if (f.pointSizeF() >20.) {
+        f.setPointSizeF(20.);
+        painter.setFont(f);
     }
 
     const qreal heigthSize = 7.; // the same name in AxisTool and the same value as GraphView

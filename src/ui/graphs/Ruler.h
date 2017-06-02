@@ -53,14 +53,14 @@ protected:
     FormatFunc mFormatFuncX;
     
 public slots:
-    void setZoom(int prop);
+    void setZoom(double & prop);
     void updateScroll();
-    void scrollValueChanged(int value);
+    void scrollValueChanged(double value);
 
     
 signals:
     void positionChanged(double min, double max);
-    void valueChanged(int value);
+    void valueChanged(double value);
     
 private:
     QScrollBar* mScrollBar;
