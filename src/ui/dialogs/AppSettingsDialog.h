@@ -90,8 +90,8 @@ private:
     QLabel* mPrecisionLab;
     QSpinBox* mPrecision;
     
-    QLabel* mSheetLab;
-    QSpinBox* mNbSheet;
+  //  QLabel* mSheetLab;
+   // QSpinBox* mNbSheet;
     
     QDialogButtonBox* mButtonBox;
 };

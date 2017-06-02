@@ -5,7 +5,7 @@
 #include <QLocale>
 
 
-double DateUtils::convertToFormat(const double valueToFormat, const FormatDate format)
+double DateUtils::convertToFormat(const double &valueToFormat, const FormatDate &format)
 {
     switch (format) {
         case eCalBP:
@@ -20,6 +20,12 @@ double DateUtils::convertToFormat(const double valueToFormat, const FormatDate f
         case eDatB2K:
             return valueToFormat - 2000.;
             break;
+        case eKa:
+            return (2. - valueToFormat/1e+03);
+        break;
+        case eMa:
+            return (- valueToFormat/1e+06);
+        break;
         case eBCAD:
         case eNumeric:
         default:
@@ -27,7 +33,7 @@ double DateUtils::convertToFormat(const double valueToFormat, const FormatDate f
             break;
     }
 }
-double DateUtils::convertFromFormat(const double formattedValue, const FormatDate format)
+double DateUtils::convertFromFormat(const double &formattedValue, const FormatDate &format)
 {
     switch (format) {
         case eCalBP:
@@ -42,6 +48,13 @@ double DateUtils::convertFromFormat(const double formattedValue, const FormatDat
         case eDatB2K:
             return formattedValue + 2000.;
             break;
+        case eKa:
+            return (2. - formattedValue)*1e+03;
+        break;
+        case eMa:
+            return (- formattedValue*1e+06);
+        break;
+
         case eBCAD:
         case eNumeric:
         default:
@@ -67,6 +80,12 @@ QString DateUtils::formatString(const FormatDate format)
             break;
         case eBCAD:
             return "BC/AD";
+            break;
+        case eKa:
+            return "Age Ka";
+            break;
+        case eMa:
+            return "Age Ma";
             break;
         case eNumeric:
         default:
@@ -111,7 +130,7 @@ QString DateUtils::convertToAppSettingsFormatStr(const double valueToFormat, con
     return stringWithAppSettings(convertToAppSettingsFormat(valueToFormat), forCSV);
 }
 
-double DateUtils::convertToAppSettingsFormat(const double valueToFormat)
+double DateUtils::convertToAppSettingsFormat(const double& valueToFormat)
 {
     return DateUtils::convertToFormat(valueToFormat, getAppSettingsFormat());
 }
@@ -121,7 +140,7 @@ QString DateUtils::convertFromAppSettingsFormatStr(const double formattedValue)
     return stringWithAppSettings(convertFromAppSettingsFormat(formattedValue));
 }
 
-double DateUtils::convertFromAppSettingsFormat(const double formattedValue)
+double DateUtils::convertFromAppSettingsFormat(const double &formattedValue)
 {
     return DateUtils::convertFromFormat(formattedValue, getAppSettingsFormat());
 }

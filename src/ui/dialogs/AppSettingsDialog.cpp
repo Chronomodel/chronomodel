@@ -73,38 +73,38 @@ QDialog(parent, flags)
     }
 
 
-    mOpenLastProjectLab = new QLabel(tr("Open last project at launch"), this);
+    mOpenLastProjectLab = new QLabel(tr("Open Last Project at Launch"), this);
     mOpenLastProjectCheck = new QCheckBox(this);
     
-    mPixelRatioLab = new QLabel(tr("Images export pixel ratio"), this);
+    mPixelRatioLab = new QLabel(tr("Images Export Pixel Ratio"), this);
     mPixelRatio = new QSpinBox(this);
     mPixelRatio->setRange(1, 5);
     mPixelRatio->setSingleStep(1);
    // mPixelRatio->setStyleSheet("QSpinBox { border-radius: 5px; }");
     
-    mDpmLab = new QLabel(tr("Image export DPM"), this);
+    mDpmLab = new QLabel(tr("Image Export DPM"), this);
     mDpm = new QComboBox(this);
     mDpm->addItems(QStringList() << "72" << "96" << "100" << "150" << "200" << "300");
     
-    mImageQualityLab = new QLabel(tr("Image export quality (0 to 100)"), this);
+    mImageQualityLab = new QLabel(tr("Image Export Quality (0 to 100)"), this);
     mImageQuality = new QSpinBox(this);
     mImageQuality->setRange(1, 100);
     mImageQuality->setSingleStep(1);
     //mImageQuality->setStyleSheet("QSpinBox { border-radius: 5px; }");
     
-    mFormatDateLab = new QLabel(tr("Date format"), this);
+    mFormatDateLab = new QLabel(tr("Time Scale"), this);
     mFormatDateLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mFormatDate = new QComboBox(this);
-    for (int i=0; i<5; ++i)
+    for (int i=0; i<7; ++i)
         mFormatDate->addItem(DateUtils::formatString((DateUtils::FormatDate)i));
     
     mFormatDate->setCurrentIndex(1);
     //mFormatDate->setStyleSheet("QLineEdit { border-radius: 5px; }");
     mFormatDate->setVisible(true);
     
-    mPrecisionLab = new QLabel(tr("Graph display date precision"), this);
+    mPrecisionLab = new QLabel(tr("Decimal Precision"), this);
     mPrecision = new QSpinBox(this);
-    mPrecision->setRange(0, 5);
+    mPrecision->setRange(0, 6);
     mPrecision->setSingleStep(1);
    // mPrecision->setStyleSheet("QSpinBox { border-radius: 5px; }");
     
@@ -163,18 +163,18 @@ QDialog(parent, flags)
     line4->setFrameShadow(QFrame::Sunken);
     grid->addWidget(line4, ++row, 0, 1, 2);
 
-    mSheetLab = new QLabel(tr("Number of max graph per sheet"), this);
+ /*   mSheetLab = new QLabel(tr("Number of max graph per sheet"), this);
     mNbSheet = new QSpinBox(this);
     mNbSheet->setRange(5, 100);
     mNbSheet->setSingleStep(1);
-    //mNbSheet->setStyleSheet("QSpinBox { border-radius: 1px; }");
+ */   //mNbSheet->setStyleSheet("QSpinBox { border-radius: 1px; }");
     
     grid->addWidget(mFormatDateLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mFormatDate, row, 1);
     grid->addWidget(mPrecisionLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mPrecision, row, 1);
-    grid->addWidget(mSheetLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mNbSheet, row, 1);
+  //  grid->addWidget(mSheetLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+  //  grid->addWidget(mNbSheet, row, 1);
     
     QVBoxLayout* mainLayout = new QVBoxLayout();
 
@@ -200,7 +200,7 @@ QDialog(parent, flags)
     connect(mDpm,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &AppSettingsDialog::changeSettings);
     connect(mFormatDate, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &AppSettingsDialog::changeSettings);
     connect(mPrecision, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &AppSettingsDialog::changeSettings);
-    connect(mNbSheet, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &AppSettingsDialog::changeSettings);
+    //connect(mNbSheet, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &AppSettingsDialog::changeSettings);
     // -----------------------------
     //  List & Stack
     // -----------------------------
@@ -281,7 +281,7 @@ void AppSettingsDialog::setSettings(const AppSettings& settings)
     mImageQuality->setValue(settings.mImageQuality);
     mFormatDate->setCurrentIndex((int)settings.mFormatDate);
     mPrecision->setValue(settings.mPrecision);
-    mNbSheet->setValue(settings.mNbSheet);
+   // mNbSheet->setValue(settings.mNbSheet);
 }
 
 AppSettings AppSettingsDialog::getSettings()
@@ -301,7 +301,7 @@ AppSettings AppSettingsDialog::getSettings()
     settings.mImageQuality = mImageQuality->value();
     settings.mFormatDate = (DateUtils::FormatDate)mFormatDate->currentIndex();
     settings.mPrecision = mPrecision->value();    
-    settings.mNbSheet = mNbSheet->value();
+    //settings.mNbSheet = mNbSheet->value();
     return settings;
 }
 
@@ -370,7 +370,7 @@ void AppSettingsDialog::buttonClicked(QAbstractButton* button)
     mImageQuality->setValue(APP_SETTINGS_DEFAULT_IMAGE_QUALITY);
     mFormatDate->setCurrentIndex((int)APP_SETTINGS_DEFAULT_FORMATDATE);
     mPrecision->setValue(APP_SETTINGS_DEFAULT_PRECISION);
-    mNbSheet->setValue(APP_SETTINGS_DEFAULT_SHEET);
+  //  mNbSheet->setValue(APP_SETTINGS_DEFAULT_SHEET);
 
     AppSettings s = getSettings();
     emit settingsChanged(s);
