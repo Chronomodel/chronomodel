@@ -157,11 +157,11 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
             for (int i=0; i<mChains.size(); ++i) {
                 GraphCurve curveAlpha = generateDensityCurve(mPhase->mAlpha.histoForChain(i),
                                                              "Post Distrib Alpha " + QString::number(i),
-                                                             color, Qt::DotLine);
+                                                             Painting::chainColors.at(i), Qt::DotLine);
 
                 GraphCurve curveBeta = generateDensityCurve(mPhase->mBeta.histoForChain(i),
                                                             "Post Distrib Beta " + QString::number(i),
-                                                            colorBeta, Qt::DashLine);
+                                                            Painting::chainColors.at(i).darker(170), Qt::DashLine);
                 mGraph->addCurve(curveAlpha);
                 mGraph->addCurve(curveBeta);
             }
@@ -202,7 +202,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
             for (int i=0; i<mChains.size(); ++i) {
                 GraphCurve curveDuration = generateDensityCurve(mPhase->mDuration.histoForChain(i),
                                                              "Post Distrib Duration " + QString::number(i),
-                                                             color, Qt::DotLine);
+                                                             Painting::chainColors.at(i), Qt::DotLine);
 
                 mGraph->addCurve(curveDuration);
             }
