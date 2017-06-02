@@ -518,7 +518,7 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
 {
     QList<QStringList> rows;
     
-    int runSize = 0;
+    int runSize (0);
     for(int i=0; i<mChains.size(); ++i)
         runSize += mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
     
@@ -530,9 +530,9 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
 
     rows << headers;
     
-    int shift = 0;
+    int shift (0);
     for (int i = 0; i < mChains.size(); ++i) {
-        int burnAdaptSize = mChains.at(i).mNumBurnIter + (mChains.at(i).mBatchIndex * mChains.at(i).mNumBatchIter);
+        int burnAdaptSize = 1 + mChains.at(i).mNumBurnIter + (mChains.at(i).mBatchIndex * mChains.at(i).mNumBatchIter);
         int runSize = mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
         
         for (int j = burnAdaptSize; j<burnAdaptSize + runSize; ++j) {
@@ -552,7 +552,7 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
                     valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
                 
                 l << locale.toString(valueBeta, 'g', 15);
-                phase = 0;
+                phase = nullptr;
 
             }
             rows << l;
@@ -574,7 +574,7 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
         return QList<QStringList>();
 
     
-    int runSize = 0;
+    int runSize (0);
 
     for (ChainSpecs chain : mChains)
         runSize += chain.mNumRunIter / chain.mThinningInterval;
@@ -586,10 +586,10 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
 
     rows << headers;
     
-    int shift = 0;
+    int shift (0);
 
     for (ChainSpecs chain : mChains) {
-        int burnAdaptSize = chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);
+        int burnAdaptSize = 1 + chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);
         int runSize = chain.mNumRunIter / chain.mThinningInterval;
         
         for (int j = burnAdaptSize; j < (burnAdaptSize + runSize); ++j) {
@@ -640,7 +640,7 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
     int shift = 0;
     //for (int i = 0; i < mChains.size(); ++i) {
     for ( auto&& chain : mChains)  {
-        const int burnAdaptSize = chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);
+        const int burnAdaptSize = 1+ chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);
         const int runSize = chain.mNumRunIter / chain.mThinningInterval;
         
         for (int j = burnAdaptSize; j < burnAdaptSize + runSize; ++j) {
