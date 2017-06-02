@@ -752,6 +752,10 @@ QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
           break;
        case DateUtils::eDatB2K : stream << (qint16)(4);
           break;
+        case  DateUtils::eKa : stream << (qint16)(5);
+           break;
+        case DateUtils::eMa : stream << (qint16)(6);
+           break;
     }
 
     stream << data.mRawTrace->size();
@@ -801,6 +805,10 @@ QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
          break;
       case 4 : data.mFormat = DateUtils::eDatB2K;
          break;
+      case 5 : data.mFormat = DateUtils::eKa;
+         break;
+      case 6 : data.mFormat = DateUtils::eMa;
+        break;
    }
 
     quint32 siz;
