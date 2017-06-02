@@ -101,7 +101,7 @@ void Tabs::showWidget(const int &i)
             w->setVisible(true);
         ++j;
     }
-
+    update();
 }
 
 
