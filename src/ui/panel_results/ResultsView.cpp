@@ -143,6 +143,10 @@ mMaximunNumberOfVisibleGraph(0)
     mWiggleCheck = new CheckBox(tr("Wiggle shifted"), mResultsGroup);
     mWiggleCheck->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
 
+    mStatCheck = new CheckBox(tr("Unfold Stat."), mResultsGroup);
+    mStatCheck->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
+    mStatCheck->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
+
     mTabByScene = new Tabs(mOptionsWidget);
     mTabByScene->setFixedWidth(mOptionsW);
     // we set the same widget
@@ -151,7 +155,13 @@ mMaximunNumberOfVisibleGraph(0)
 
     connect(mTabByScene, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::changeScrollArea);
 
+    connect(mDataThetaRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
+    connect(mDataSigmaRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
+    connect(mPhaseDurationRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
 
+    connect(mDataCalibCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mWiggleCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mStatCheck, &CheckBox::clicked, this, &ResultsView::showInfos);
     // -------------------------
 
     /* - mTabDisplayMCMC
@@ -167,8 +177,6 @@ mMaximunNumberOfVisibleGraph(0)
     connect(mTabDisplayMCMC, &Tabs::tabClicked, mTabDisplayMCMC, &Tabs::showWidget);
     connect(mTabDisplayMCMC,static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::updateLayout);
 
-    //connect(mTabDisplayMCMC, &Tabs::tabClicked, this, &ResultsView::updateTabDisplay);
-
     /* ----------------------------------------------------------
      *  Display Options layout
      * ----------------------------------------------------------*/
@@ -179,7 +187,6 @@ mMaximunNumberOfVisibleGraph(0)
     mSpanTitle->setFixedSize(mOptionsW, int(mRulerH/2));
 
     mSpanGroup  = new QWidget(mTabDisplay);
-   // mSpanGroup->setFont(font);
 
     mDisplayStudyBut = new Button(tr("Study Period Display"), mSpanGroup);
     mDisplayStudyBut->setFixedSize(mOptionsW, fm.height() + 5);
@@ -200,7 +207,6 @@ mMaximunNumberOfVisibleGraph(0)
     mXScaleLab = new Label(tr("X"), mSpanGroup);
     mXScaleLab->setAlignment(Qt::AlignCenter);
     mXScaleLab->setFixedWidth(fm.width(mXScaleLab->text()));
-
 
     mXSlider = new QSlider(Qt::Horizontal, mSpanGroup);
     mXSlider->setRange(-100, 100);
@@ -386,12 +392,6 @@ mMaximunNumberOfVisibleGraph(0)
     
     connect(mHPDEdit, &LineEdit::editingFinished, this, &ResultsView::setThreshold);
 
-    connect(mDataThetaRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
-    connect(mDataSigmaRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
-    connect(mPhaseDurationRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
-    
-    connect(mDataCalibCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
-    connect(mWiggleCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     connect(mAllChainsCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     connect(mCredibilityCheck, &CheckBox::clicked, this, &ResultsView::generateCurvesRequested);
     
@@ -433,14 +433,14 @@ mMaximunNumberOfVisibleGraph(0)
     mToolsWidget = new QWidget(this);
     mToolsWidget->resize(mOptionsW, 50);
 
-    const QSize allDensitiesButSize (int(ceil(mOptionsW/3.)), 50);
-    mStatsBut = new Button(tr("Stats"), mToolsWidget);
+    const QSize allDensitiesButSize (int(ceil(mOptionsW/2.)), 50);
+  /*  mStatsBut = new Button(tr("Stats"), mToolsWidget);
     mStatsBut->setCheckable(true);
     mStatsBut->setFlatHorizontal();
     mStatsBut->setIcon(QIcon(":stats_w.png"));
     mStatsBut->setFixedSize(allDensitiesButSize);
     mStatsBut->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
-
+*/
     mExportImgBut = new Button(tr("Capture"), mToolsWidget);
     mExportImgBut->setFlatHorizontal();
     mExportImgBut->setIcon(QIcon(":picture_save.png"));
@@ -453,7 +453,7 @@ mMaximunNumberOfVisibleGraph(0)
     mExportResults->setFixedSize(allDensitiesButSize);
     mExportResults->setToolTip(tr("Export all result in several files"));
 
-    connect(mStatsBut, &Button::toggled, this, &ResultsView::showInfos);
+    //connect(mStatsBut, &Button::toggled, this, &ResultsView::showInfos);
     connect(mExportImgBut, &Button::clicked, this, &ResultsView::exportFullImage);
     connect(mExportResults, &Button::clicked, this, &ResultsView::exportResults);
 
@@ -522,7 +522,7 @@ mMaximunNumberOfVisibleGraph(0)
     mNbDensityLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mNbDensitySpin = new QSpinBox(mPageWidget);
-    mNbDensitySpin->setRange(1, 50);
+    mNbDensitySpin->setRange(1, 100);
     mNbDensitySpin->setValue(mNumberOfGraph);
     mNbDensitySpin->setFixedSize(mCurrentXMinEdit->width(), fm.height() + 10);
     mNbDensitySpin->setToolTip(tr("Enter the maximum densities to display on a sheet"));
@@ -627,7 +627,10 @@ void ResultsView::updateControls()
 
     mDensityOptsTitle -> setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
     mDensityOptsGroup -> setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-    
+    mCredibilityCheck->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+    mThreshLab->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+    mFFTLenLab->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+    mBandwidthLab->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
     /* -------------------------------------------------------
      *  Switch between checkBoxes or Radio-buttons for chains
      * -------------------------------------------------------*/
@@ -723,7 +726,7 @@ void ResultsView::updateControls()
 
 void ResultsView:: updateTabByScene()
 {
-    bool byPhases (false);
+    bool byPhases (mTabByScene->currentIndex() == 1);
    // bool byEvents (mTabByScene->currentIndex() == 0);
 
     /* ----------------------------------------------------------
@@ -756,7 +759,6 @@ void ResultsView:: updateTabByScene()
         ySpan += mEventsfoldCheck->height() + mMargin;
         mDatesfoldCheck->setVisible(mEventsfoldCheck->isChecked());
         if (mEventsfoldCheck->isChecked()) {
-            //mDatesfoldCheck->setEnabled(true);
             mDatesfoldCheck->move(mMargin , ySpan);
             ySpan += mDatesfoldCheck->height() + mMargin;
         }
@@ -766,8 +768,6 @@ void ResultsView:: updateTabByScene()
         mDatesfoldCheck->move(mMargin , ySpan);
         ySpan += mDatesfoldCheck->height() + mMargin;
     }
-
-
 
     int dx (mLineH + mMargin);
 
@@ -782,7 +782,8 @@ void ResultsView:: updateTabByScene()
         }
     }
 
-
+    mStatCheck->move(mMargin , ySpan);
+    ySpan += mDatesfoldCheck->height() + mMargin;
 
     mResultsGroup->resize(mOptionsW, ySpan);
     mTabByScene->resize(mOptionsW, mTabByScene->minimalHeight());
@@ -813,7 +814,7 @@ void ResultsView::updateTabDisplay(const int &i)
                 ySpan += mDisplayStudyBut->height() + 5;
             }
             else if (mCurrentVariable == GraphViewResults::eSigma || (mCurrentVariable == GraphViewResults::eDuration)) {
-                mDisplayStudyBut->setText(tr("Reset Display"));
+                mDisplayStudyBut->setText(tr("Fit Display"));
                 mDisplayStudyBut->setVisible(true);
                 mDisplayStudyBut->move(0, ySpan);
                 ySpan += mDisplayStudyBut->height() + 5;
@@ -913,39 +914,38 @@ void ResultsView::updateTabDisplay(const int &i)
           /* ----------------------------------------------------------
            *  Density Options layout
            * ----------------------------------------------------------*/
-          if (mDensityOptsTitle->isVisible()) {
-               mDensityOptsTitle->move(0, mChainsGroup->y() + mChainsGroup->height());
+          if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
+              mDensityOptsTitle->move(0, mChainsGroup->y() + mChainsGroup->height());
 
-               ySpan = mMargin;
+              ySpan = mMargin;
 
-              if (mCredibilityCheck->isVisible()) {
+              if (mCurrentVariable == GraphViewResults::eTheta || mCurrentVariable == GraphViewResults::eDuration) {
+                  mCredibilityCheck->setVisible(true);
                   mCredibilityCheck->move(mMargin, ySpan);
                   ySpan += mCredibilityCheck->height() + mMargin;
-              }
 
-              if (mThreshLab->isVisible()) {
-                  mThreshLab->move(mMargin, ySpan);
-                  mHPDEdit->move(mOptionsW - mMargin - mHPDEdit->width(), ySpan);
-                  ySpan += mHPDEdit->height() + mMargin;
-              }
+              } else
+                  mCredibilityCheck->setVisible(false);
 
-              if (mFFTLenLab->isVisible()) {
-                  mFFTLenLab->move(mMargin, ySpan);
-                  mFFTLenCombo->move(mOptionsW - mMargin - mFFTLenCombo->width(), ySpan);
-                  ySpan += mFFTLenCombo->height() + mMargin;
-              }
+              mThreshLab->setVisible(true);
+              mHPDEdit->setVisible(true);
+              mThreshLab->move(mMargin, ySpan);
+              mHPDEdit->move(mOptionsW - mMargin - mHPDEdit->width(), ySpan);
+              ySpan += mHPDEdit->height() + mMargin;
 
-              if (mBandwidthLab->isVisible()) {
-                  mBandwidthLab->move(mMargin, ySpan);
-                  mBandwidthEdit->move(mOptionsW - mMargin - mBandwidthEdit->width(), ySpan );
-                  ySpan += mBandwidthEdit->height() + mMargin;
-              }
+              mFFTLenLab->move(mMargin, ySpan);
+              mFFTLenCombo->move(mOptionsW - mMargin - mFFTLenCombo->width(), ySpan);
+              ySpan += mFFTLenCombo->height() + mMargin;
+
+              mBandwidthLab->move(mMargin, ySpan);
+              mBandwidthEdit->move(mOptionsW - mMargin - mBandwidthEdit->width(), ySpan );
+              ySpan += mBandwidthEdit->height() + mMargin;
 
               mDensityOptsGroup->setGeometry(0, mDensityOptsTitle->y() + mDensityOptsTitle->height(), mOptionsW, ySpan);
               mTabMCMC->resize(mOptionsW, mDensityOptsGroup->y() + mDensityOptsGroup->height() + 5) ;
 
           } else
-                mTabMCMC->resize(mOptionsW, mChainsGroup->y() + mChainsGroup->height() + 5) ;
+              mTabMCMC->resize(mOptionsW, mChainsGroup->y() + mChainsGroup->height() + 5) ;
 
 
         }
@@ -1018,7 +1018,7 @@ void ResultsView::updateTabPageSaving()
                 mResultsClipBut->move(mImageClipBut->x() + mImageClipBut->width(), mMargin);
                 mDataSaveBut->move(mResultsClipBut->x() + mResultsClipBut->width(), mMargin);
 
-                mStatsBut->setVisible(false);
+                //mStatsBut->setVisible(false);
                 mExportImgBut->setVisible(false);
                 mExportResults->setVisible(false);
 
@@ -1030,14 +1030,12 @@ void ResultsView::updateTabPageSaving()
                 mResultsClipBut->setVisible(false);
                 mDataSaveBut->setVisible(false);
 
-                mStatsBut->setVisible(true);
                 mExportImgBut->setVisible(true);
                 mExportResults->setVisible(true);
-                mStatsBut->move(0, mMargin);
-                mExportImgBut->move(mStatsBut->x() + mStatsBut->width(), mMargin);
+                mExportImgBut->move(0, mMargin);
                 mExportResults->move(mExportImgBut->x() + mExportImgBut->width(), mMargin);
 
-                mToolsWidget->resize(mOptionsW, mStatsBut->height() + 2*mMargin);
+                mToolsWidget->resize(mOptionsW, mExportImgBut->height() + 2*mMargin);
                 //mToolsWidget->update();
             }
 
@@ -1245,7 +1243,7 @@ void ResultsView::clearResults()
     mTabEventsIndex = 0;
     mTabPhasesIndex = 0;
 
-    setStudyPeriod();
+    //setStudyPeriod();
 
 }
 
@@ -1272,14 +1270,14 @@ void ResultsView::initResults(Model* model)
 {
     clearResults();
 
-   // qDebug() << "ResultsView::initResults";
+ qDebug() << "ResultsView::initResults";
 
     if (!mModel && !model)
         return;
 
     if (model)
         mModel = model;
-
+ qDebug() << "ResultsView::initResults with model";
     QFontMetricsF fm(font());
 
     mMarginLeft = std::max(fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mModel->mSettings.mTmin))),
@@ -1293,8 +1291,8 @@ void ResultsView::initResults(Model* model)
     mHasPhases = (mModel->mPhases.size() > 0);
 
     if (mHasPhases) {
-        mTabByScene->setTabVisible(1, false);
         mTabByScene->setTab(1, false);
+        mTabByScene->setTabVisible(1, true);
 
      } else {
         mTabByScene->setTab(0, false);
@@ -1329,17 +1327,20 @@ void ResultsView::initResults(Model* model)
     *  - generateCurves
     *  - updateCurvesToShow
     * ------------------------------------------------------------ */
+qDebug()<<"ResultsView::initResults() "<<mResultCurrentMinX<<mResultCurrentMaxX;
+    mResultMaxDuration = 0.;
+    mResultMaxVariance = 0.;
     mModel->initDensities(getFFTLength(), getBandwidth(), getThreshold());
+
+    setStudyPeriod();
 
     if (mHasPhases)
         createPhasesScrollArea(mTabPhasesIndex);
     else
         createEventsScrollArea(mTabEventsIndex);
-    setStudyPeriod();
-    // ------------------------------------------------------------
-   // updateGraphsZoomX(); // to set the CurrentMinX value inside the graphView
-    showInfos(mStatsBut->isChecked());
 
+    // ------------------------------------------------------------
+    showInfos(mStatCheck->isChecked());
     updateControls();
 
 }
@@ -1420,13 +1421,16 @@ void ResultsView::updateResults(Model* model)
     *  No posterior density has been computed yet!
     *  Graphs are empty at the moment
     * ----------------------------------------------------*/
-    if (mHasPhases) createPhasesScrollArea(mTabPhasesIndex);
-    else createEventsScrollArea(mTabEventsIndex);
+    if (mHasPhases)
+        createPhasesScrollArea(mTabPhasesIndex);
+    else
+        createEventsScrollArea(mTabEventsIndex);
 
     // ------------------------------------------------------------
+    showInfos(mStatCheck->isChecked());
     updateControls();
-    showInfos(mStatsBut->isChecked());
-updateGraphsZoomX();
+
+
 }
 
 
@@ -1764,7 +1768,7 @@ void ResultsView::updateCurvesToShow()
     const bool showCalib = mDataCalibCheck->isChecked();
     const bool showWiggle = mWiggleCheck->isChecked();
     const bool showCredibility = mCredibilityCheck->isChecked();
-    const bool showStat = mStatsBut->isChecked();
+    const bool showStat = mStatCheck->isChecked();
 
     if (mTabByScene->currentIndex() == 1 )
         for (GraphViewResults* phaseGraph : mByPhasesGraphs) {
@@ -1825,8 +1829,10 @@ void ResultsView::generateCurves(const QList<GraphViewResults*>& listGraphs)
                 for (int i=0; i <nbCurves; ++i) {
                    const GraphCurve* graphDuration = graphPhase->getGraph()->getCurve("Post Distrib Duration " + QString::number(i));
 
-                    if (graphDuration)
+                    if (graphDuration) {
                         mResultMaxDuration = ceil(qMax(mResultMaxDuration, graphDuration->mData.lastKey()));
+                        mResultMaxDuration = std::max(100., mResultMaxDuration);
+                    }
                 }
             }
             ++constIter;
@@ -1837,7 +1843,7 @@ void ResultsView::generateCurves(const QList<GraphViewResults*>& listGraphs)
 
     // With variable eSigma, we look for mResultMaxVariance in the curve named "Post Distrib All Chains"
     if (mCurrentVariable == GraphViewResults::eSigma) {
-        mResultMaxVariance = 0.;
+       mResultMaxVariance = 0.;
 
         QList<GraphViewResults*>::const_iterator constIter;
         constIter = listGraphs.cbegin();
@@ -1852,6 +1858,7 @@ void ResultsView::generateCurves(const QList<GraphViewResults*>& listGraphs)
             }
             ++constIter;
         }
+         mResultMaxVariance = std::max(100., mResultMaxVariance);
 
     }
     qDebug() << "ResultsView::generateCurves()-> emit curvesGenerated()";
@@ -1874,7 +1881,7 @@ void ResultsView::updateCurves()
  */
 void ResultsView::updateScales()
 {
-    qDebug() << "ResultsView::updateScales()";
+    //qDebug() << "ResultsView::updateScales()";
     
     int tabIdx = mTabs->currentIndex();
     ProjectSettings s = mSettings;
@@ -1903,11 +1910,10 @@ void ResultsView::updateScales()
 
             mRuler->setRange(tRangeMin, tRangeMax);
 
-
         } else if (mCurrentVariable == GraphViewResults::eSigma) {
             mResultMinX = 0.;
             mResultMaxX = mResultMaxVariance;
-            mRuler->setRange(mResultMinX, mResultMaxX);
+            /*
             const int rangeZoom = mResultMaxX / 10;
             mXSlider->setRange(1, rangeZoom);
 
@@ -1917,10 +1923,25 @@ void ResultsView::updateScales()
             mXScaleSpin->setDecimals(0);
 
 
+            mRuler->setRange(mResultMinX, mResultMaxX);
+
+*/
+            forceXSlideSetValue = true;
+            mXSlider->setRange(-100, 100);
+
+            forceXSpinSetValue = true;
+            mXScaleSpin->setRange(sliderToZoom(-100), sliderToZoom(100));
+            mXScaleSpin->setSingleStep(.01);
+            mXScaleSpin->setDecimals(3);
+
+            const double tRangeMax =  ( mResultMaxVariance  / sliderToZoom( mXSlider->minimum()));
+
+            mRuler->setRange(0, tRangeMax);
+
         } else if (mCurrentVariable == GraphViewResults::eDuration) {
             mResultMinX = 0.;
             mResultMaxX = mResultMaxDuration;
-
+/*
             const int rangeZoom = mResultMaxX / 10;
             forceXSlideSetValue = true;
             mXSlider->setRange(1, rangeZoom); //setRange is connected to setValue
@@ -1931,6 +1952,18 @@ void ResultsView::updateScales()
             mXScaleSpin->setDecimals(0);
 
             mRuler->setRange(mResultMinX, mResultMaxX);
+*/
+            forceXSlideSetValue = true;
+            mXSlider->setRange(-100, 100);
+
+            forceXSpinSetValue = true;
+            mXScaleSpin->setRange(sliderToZoom(-100), sliderToZoom(100));
+            mXScaleSpin->setSingleStep(.01);
+            mXScaleSpin->setDecimals(3);
+
+            const double tRangeMax =  ( mResultMaxDuration  / sliderToZoom( mXSlider->minimum()));
+
+            mRuler->setRange(0, tRangeMax);
         }
 
     } else if ((mCurrentTypeGraph == GraphViewResults::eTrace) ||  (mCurrentTypeGraph == GraphViewResults::eAccept) ) {
@@ -1977,6 +2010,7 @@ void ResultsView::updateScales()
      *  Set Ruler Areas (Burn, Adapt, Run)
      * ------------------------------------------*/
     mRuler->clearAreas();
+
     if (tabIdx == 1 || tabIdx == 2) {
         for (int i=0; i<mChainRadios.size(); ++i) {
             if (mChainRadios.at(i)->isChecked()){
@@ -2000,8 +2034,9 @@ void ResultsView::updateScales()
 
     if (mZooms.find(situ) != mZooms.end()) {
         if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && mCurrentVariable == GraphViewResults::eTheta) {
-            auto currentMinMax = std::minmax(DateUtils::convertToAppSettingsFormat(mZooms.value(situ).first),
+            std::pair<double, double> currentMinMax = std::minmax(DateUtils::convertToAppSettingsFormat(mZooms.value(situ).first),
                                              DateUtils::convertToAppSettingsFormat(mZooms.value(situ).second));
+
             mResultCurrentMinX = currentMinMax.first;
             mResultCurrentMaxX = currentMinMax.second;
 
@@ -2017,7 +2052,7 @@ void ResultsView::updateScales()
     }
 
     mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
-    
+
     /* -----------------------------------------------
      *  Set All Graphs Ranges (This is not done by generateCurves !)
      * -----------------------------------------------*/
@@ -2040,11 +2075,9 @@ void ResultsView::updateScales()
      *  Set Zoom Slider & Zoom Edit
      * ------------------------------------------*/
 
-//  qDebug()<<"ResultsView::updateScales() fin"<<mResultCurrentMinX<<mResultCurrentMaxX<<mResultMinX<<mResultMaxX<<mResultZoomX;
     forceXSlideSetValue = true;
     setXScaleSlide( zoomToSlider(mResultZoomX));
 
-//  qDebug()<<"ResultsView::updateScales() restore Slider"<<mResultZoomX<< zoomToSlider(mResultZoomX) ;
     forceXSpinSetValue = true;
     setXScaleSpin(mResultZoomX);
 
@@ -2092,7 +2125,6 @@ void ResultsView::mouseMoveEvent(QMouseEvent* e)
     int shiftX (0);
     
     int x = e->pos().x() - shiftX;
-   // x = (x >= mGraphLeft) ? x : mGraphLeft;
     x = (x <= width() - mOptionsW) ? x : width() - mOptionsW;
     mMarker->setGeometry(x, mMarker->pos().y(), mMarker->width(), mMarker->height());
 }
@@ -2108,7 +2140,7 @@ void ResultsView::XScaleSliderChanged(int value)
     if (!forceXSlideSetValue) {
         forceXSpinSetValue = true;
         setXScaleSpin(sliderToZoom(value));
-qDebug()<<"XScaleSliderChanged"<<value<<sliderToZoom(value)        ;
+//qDebug()<<"XScaleSliderChanged"<<value<<sliderToZoom(value);
         updateZoomX();
     }
 }
@@ -2317,11 +2349,12 @@ qDebug()<<"editCurrentMaxX()"<<mResultZoomX<<zoomToSlider(mResultZoomX);
 
 void ResultsView:: setStudyPeriod()
 {
-qDebug()<<"setStudyPeriod()"    ;
+qDebug()<<"ResultsView::setStudyPeriod()"    ;
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && mCurrentVariable == GraphViewResults::eTheta) {
         mResultCurrentMinX = mSettings.getTminFormated();
         mResultCurrentMaxX = mSettings.getTmaxFormated();
         mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
+        qDebug()<<"ResultsView::setStudyPeriod() mCurrentTypeGraph"<<mResultCurrentMinX<<mResultCurrentMaxX<<mSettings.getTmaxFormated();
      }
 
     else if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && mCurrentVariable == GraphViewResults::eSigma) {
@@ -2344,7 +2377,7 @@ qDebug()<<"setStudyPeriod()"    ;
 
     forceXSpinSetValue = true;
     setXScaleSpin(mResultZoomX);
-
+qDebug()<<"ResultsView::setStudyPeriod()"<<mResultCurrentMinX<<mResultCurrentMaxX;
     mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
     updateZoomEdit();
     updateGraphsZoomX();
@@ -2381,8 +2414,9 @@ void ResultsView::updateGraphsZoomX()
 
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && mCurrentVariable == GraphViewResults::eTheta) {
 
-        auto resultMinMax = std::minmax( DateUtils::convertFromAppSettingsFormat(mResultCurrentMinX),
+        std::pair<double, double> resultMinMax = std::minmax( DateUtils::convertFromAppSettingsFormat(mResultCurrentMinX),
                                      DateUtils::convertFromAppSettingsFormat(mResultCurrentMaxX));
+
         mZooms[situ] = QPair<double, double>(resultMinMax.first, resultMinMax.second);
 
     } else

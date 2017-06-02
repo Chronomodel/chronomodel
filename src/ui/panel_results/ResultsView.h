@@ -209,6 +209,7 @@ private:
     RadioButton* mDataSigmaRadio;
     RadioButton* mPhaseDurationRadio;
 
+    CheckBox* mStatCheck;
 
 
     // -- tabs
@@ -290,7 +291,7 @@ private:
     QSpinBox* mNbDensitySpin;
 
     QWidget* mToolsWidget;
-    Button* mStatsBut;
+   // Button* mStatsBut;
     Button* mExportImgBut;
     Button* mExportResults;
 

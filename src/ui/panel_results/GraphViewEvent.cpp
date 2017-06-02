@@ -287,7 +287,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         generateCorrelCurves(mChains, &(mEvent->mTheta));
     }
     else {
-        mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->mName;
+        mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound") : tr("Event")) + " : " + mEvent->mName;
         mGraph->resetNothingMessage();
     }
 
