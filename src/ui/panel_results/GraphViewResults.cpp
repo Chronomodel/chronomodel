@@ -401,8 +401,8 @@ void GraphViewResults::updateLayout()
     }
 
     if (mShowNumResults) {
-        mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height() /2. ));
-        mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height() /2. , 0, 0));
+        mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height() *3./4. ));
+        mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height() /4. , 0, 0));
 
     } else
             mGraph->setGeometry(graphRect);
