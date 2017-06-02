@@ -266,12 +266,12 @@ void PhasesScene::updateSceneFromState()
             phaseItem->setSelected(true);
             
             // Note : setting an event in (0, 0) tells the scene that this item is new!
-            // Thus the scene will move it randomly around the central point (in the old version: around the currently viewed center point).
+            // Thus the scene will move it randomly around currently viewed center point).
             QPointF pos = phaseItem->pos();
             if (pos.isNull()) {
                 const int posDelta (100);
                 // With the code above the new phase item is created randomly near the center of the view
-              /*  QList<QGraphicsView*> gviews = views();
+                QList<QGraphicsView*> gviews = views();
                 if (gviews.size() > 0) {
                     QGraphicsView* gview = gviews[0];
                     QPointF pt = gview->mapToScene(gview->width()/2, gview->height()/2);
@@ -280,10 +280,10 @@ void PhasesScene::updateSceneFromState()
                                       pt.y() + rand() % posDelta - posDelta/2);
 
                 }
-               */
+
                 // the new phase item is created randomly near the central point (0, 0)
-                QPointF pt  (rand() % posDelta - posDelta/2, rand() % posDelta - posDelta/2);
-                phaseItem->setPos( pt.x(), pt.y());
+               // QPointF pt  (rand() % posDelta - posDelta/2, rand() % posDelta - posDelta/2);
+               // phaseItem->setPos( pt.x(), pt.y());
             }
 
 
