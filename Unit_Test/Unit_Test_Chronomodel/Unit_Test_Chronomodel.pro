@@ -279,7 +279,6 @@ HEADERS += ../../src/ui/widgets/Marker.h
 HEADERS += ../../src/ui/widgets/RadioButton.h
 HEADERS += ../../src/ui/widgets/ScrollCompressor.h
 HEADERS += ../../src/ui/widgets/Tabs.h
-HEADERS += ../../src/ui/widgets/ZoomControls.h
 
 HEADERS += ../../src/ui/window/MainWindow.h
 HEADERS += ../../src/ui/window/ProjectView.h
@@ -405,7 +404,6 @@ SOURCES += ../../src/ui/panel_results/GraphViewResults.cpp
 SOURCES += ../../src/ui/panel_results/ResultsView.cpp
 
 SOURCES += ../../src/ui/widgets/ColorPicker.cpp
-SOURCES += ../../src/ui/widgets/ZoomControls.cpp
 SOURCES += ../../src/ui/widgets/Collapsible.cpp
 SOURCES += ../../src/ui/widgets/ScrollCompressor.cpp
 SOURCES += ../../src/ui/widgets/Button.cpp
