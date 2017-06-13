@@ -379,7 +379,7 @@ void GraphViewResults::updateLayout()
 {
     int h = height();
     
-    const bool axisVisible = (h > mHeightForVisibleAxis);
+
 
      // define the rigth margin,according to the max on the scale
     QFont fontTitle(font());
@@ -395,10 +395,7 @@ void GraphViewResults::updateLayout()
     mGraph->setMarginRight(marginRight);
     mGraph->setFont(font());
 
-    if ((mGraph->hasCurve())) {
-        mGraph->showXAxisValues(axisVisible);
-        mGraph->setMarginBottom(axisVisible ? mGraph->font().pointSizeF() + 10. : 10.);
-    }
+
 
     if (mShowNumResults) {
         mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height() *3./4. ));
@@ -406,6 +403,13 @@ void GraphViewResults::updateLayout()
 
     } else
             mGraph->setGeometry(graphRect);
+
+    const bool axisVisible = (mGraph->height() > mHeightForVisibleAxis);
+
+    if ((mGraph->hasCurve())) {
+        mGraph->showXAxisValues(axisVisible);
+        mGraph->setMarginBottom(axisVisible ? mGraph->font().pointSizeF() + 10. : 10.);
+    }
 
     update();
 }
