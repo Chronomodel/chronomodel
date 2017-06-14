@@ -1,4 +1,4 @@
-﻿#include "GraphViewAbstract.h"
+#include "GraphViewAbstract.h"
 #include "StdUtilities.h"
 #include <cmath>
 #include <QDebug>
@@ -7,7 +7,7 @@
 //#pragma mark Constructor / Destructor
 
 GraphViewAbstract::GraphViewAbstract():
-mGraphWidth(50.), mGraphHeight(50),
+mGraphWidth(150.), mGraphHeight(50),
 mMarginLeft(50), mMarginRight(10), mMarginTop(5), mMarginBottom(15),
 mMinX(0.), mMaxX(10.),
 mMinY(0.), mMaxY(10.),

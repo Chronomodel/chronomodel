@@ -1,4 +1,4 @@
-﻿#ifndef GRAPHVIEW_H
+#ifndef GRAPHVIEW_H
 #define GRAPHVIEW_H
 
 #define GRAPH_OPENGL 0

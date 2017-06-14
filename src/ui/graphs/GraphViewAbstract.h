@@ -1,4 +1,3 @@
-﻿#pragma once
 
 #include <qglobal.h>
 #include <QPainterPath>

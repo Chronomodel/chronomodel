@@ -1,4 +1,4 @@
-﻿#ifndef ResultsWrapper_H
+#ifndef ResultsWrapper_H
 #define ResultsWrapper_H
 
 #include <QWidget>

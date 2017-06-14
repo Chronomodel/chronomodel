@@ -435,19 +435,16 @@ void GraphView::setCanControlOpacity(bool can)
 void GraphView::setFormatFunctX(FormatFunc f)
 {
     (void) f;
-    //mFormatFuncX = f;
 }
 
 void GraphView::setFormatFunctY(FormatFunc f)
 {
     (void) f;
-    //mFormatFuncY = f;
 }
 
 /* ------------------------------------------------------
  Curves & Zones
  ------------------------------------------------------ */
-//#pragma mark Curves & Zones
 
 void GraphView::addCurve(const GraphCurve& curve)
 {
@@ -613,6 +610,7 @@ void GraphView::resizeEvent(QResizeEvent* event)
         if (sx>.5 || sy>.5) {
             mBufferBack = QPixmap(width(), height());
             updateGraphSize(width(), height());
+qDebug()<<"Graphview::resize"<< width();
             paintToDevice(&mBufferBack);
         } else {
             QMatrix mx = QMatrix();
@@ -634,6 +632,7 @@ void GraphView::updateGraphSize(int w, int h)
 {
     mGraphWidth = w - mMarginLeft - mMarginRight;
     mGraphHeight = h - mMarginTop - mMarginBottom;
+qDebug()<<"GraphView::updateGraphSize w mGraphWidth"<<w<<mMarginRight<<mMarginLeft<<mGraphWidth;
     mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
     mAxisToolY.updateValues(mGraphHeight, 12, mMinY, mMaxY);
 }
@@ -670,14 +669,14 @@ void GraphView::paintEvent(QPaintEvent* )
         p.drawPixmap(mBufferBack.rect(), mBufferBack, rect());
         return;
     }
-
+qDebug()<<"GRaphView::paintEvent"<<width();
     updateGraphSize(width(), height());
     if ((mGraphWidth<=0) || (mGraphHeight<=0))
         return;
     
-    // ----------------------------------------------------
-    //  SD : draw on a buffer only if it has been reset
-    // ----------------------------------------------------
+    /* ----------------------------------------------------
+     *  SD : draw on a buffer only if it has been reset
+     * ----------------------------------------------------*/
     if (mBufferBack.isNull() && mRendering == eSD) {
         mBufferBack = QPixmap(width(), height());
         paintToDevice(&mBufferBack);
@@ -686,25 +685,25 @@ void GraphView::paintEvent(QPaintEvent* )
             qDebug()<< "mBufferBack.isNull()";
 #endif
     }
-    // ----------------------------------------------------
-    //  HD : draw directly on widget
-    // ----------------------------------------------------
+    /* ----------------------------------------------------
+     *  HD : draw directly on widget
+     * ----------------------------------------------------*/
     else if (mRendering == eHD) {
         mBufferBack = QPixmap();
         paintToDevice(this);
     }
-    // ----------------------------------------------------
-    //  SD rendering : draw buffer on widget !
-    // ----------------------------------------------------
+    /* ----------------------------------------------------
+     *  SD rendering : draw buffer on widget !
+     * ----------------------------------------------------*/
     if (mRendering == eSD) {
         QPainter p(this);
         p.setRenderHints(QPainter::Antialiasing);
         p.drawPixmap(mBufferBack.rect(), mBufferBack, rect());
     }
     
-    // ----------------------------------------------------
-    //  Tool Tip (above all) Draw horizontal and vertical red line
-    // ----------------------------------------------------
+    /* ----------------------------------------------------
+     *  Tool Tip (above all) Draw horizontal and vertical red line
+     * ----------------------------------------------------*/
     if (mTipVisible && (!mTipXLab.isEmpty() || !mTipYLab.isEmpty())) {
         QPainterPath tipPath;
         if (mTipRect.width()<2) {
@@ -745,12 +744,8 @@ void GraphView::paintEvent(QPaintEvent* )
 }
 
 
-
-
-
-
 /**
- * @brief draw graphics
+ * @brief Draw graphics
  */
 void GraphView::paintToDevice(QPaintDevice* device)
 {
@@ -872,8 +867,9 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolX.mShowText = mXAxisValues;
 
     mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
+qDebug()<<"GraphView::paintToDevice paint mAxisToolX.paint("<<mGraphWidth;
     mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), (qreal) 7.,stringWithAppSettings);
-    
+
     /* ----------------------------------------------------
      *  Vertical axis
      * ----------------------------------------------------*/
@@ -1389,7 +1385,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
 
 bool GraphView::saveAsSVG(const QString& fileName, const QString& graphTitle, const QString& svgDescrition, const bool withVersion, const int versionHeight)
 {
-    if(fileName.isEmpty()) {
+    if (fileName.isEmpty()) {
         return false;
         
     } else {

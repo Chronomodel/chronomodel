@@ -377,10 +377,6 @@ void GraphViewResults::resizeEvent(QResizeEvent* e)
 
 void GraphViewResults::updateLayout()
 {
-    int h = height();
-    
-
-
      // define the rigth margin,according to the max on the scale
     QFont fontTitle(font());
     fontTitle.setPointSizeF(this->font().pointSizeF() * 1.1);
@@ -389,18 +385,19 @@ void GraphViewResults::updateLayout()
 
     QRect graphRect(0, mTopShift, width(), height()-mTopShift);
 
+
     type_data max = mGraph->maximumX();
-    QFontMetricsF fmAxe (font());
+    QFontMetricsF fmAxe (qApp->font());
     qreal marginRight = floor(fmAxe.width(stringWithAppSettings(max)) / 2.);
+qDebug()<< "GraphViewResults::updateLayout()"   <<max<<marginRight<<font();
     mGraph->setMarginRight(marginRight);
     mGraph->setFont(font());
 
-
-
     if (mShowNumResults) {
-        mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height() *3./4. ));
-        mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height() /4. , 0, 0));
-
+        //mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height() *3./4. ));
+        //mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height() /4. , 0, 0));
+        mGraph    -> setGeometry(graphRect.adjusted(0, 0, -width()/2., 0 ));
+        mTextArea -> setGeometry(graphRect.adjusted(width()/2., -mTopShift + 2 , 0, -2));
     } else
             mGraph->setGeometry(graphRect);
 
@@ -433,7 +430,7 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     QFontMetrics fmTitle(fontTitle);
     
     QRectF textRect(0, 1., width(), mTopShift-1.);
-    p.fillRect(textRect, mGraph->getBackgroundColor());
+    p.fillRect(rect().adjusted(0, 1, 0, -1), mGraph->getBackgroundColor());
     
     p.setFont(fontTitle);
     p.setPen(Qt::black);
@@ -445,7 +442,7 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     p.end();
 
     if (mIsSelected && mShowSelectedRect) {
-        mOverLaySelect->setGeometry(rect());
+        mOverLaySelect->setGeometry(mGraph->geometry().adjusted(0, -mTopShift, 0,0));//rect());
         mOverLaySelect->show();
 
     } else

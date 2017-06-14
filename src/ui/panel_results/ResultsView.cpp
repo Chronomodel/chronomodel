@@ -143,7 +143,7 @@ mMaximunNumberOfVisibleGraph(0)
     mWiggleCheck = new CheckBox(tr("Wiggle shifted"), mResultsGroup);
     mWiggleCheck->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
 
-    mStatCheck = new CheckBox(tr("Unfold Stat."), mResultsGroup);
+    mStatCheck = new CheckBox(tr("Show Stat."), mResultsGroup);
     mStatCheck->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
     mStatCheck->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
 
@@ -1122,9 +1122,18 @@ void ResultsView::updateLayout()
      * ----------------------------------------------------------*/
 
     mTabs->setGeometry(graphYAxis, 0, width() - mOptionsW - sbe - graphYAxis, mTabsH);
-    mRuler->setGeometry(0, mTabsH, width() - mOptionsW - sbe, mRulerH);
-
     mStack->setGeometry(0, mTabsH + mRulerH, width() - mOptionsW, height() - mRulerH - mTabsH);
+
+    mMarker->setGeometry(mMarker->pos().x(), mTabsH + sbe, mMarker->thickness(), height() - sbe - mTabsH);
+
+    if (mStatCheck->isChecked())
+         mRuler->setGeometry(0, mTabsH, (width() - mOptionsW - sbe)/2, mRulerH);
+    else
+        mRuler->setGeometry(0, mTabsH, width() - mOptionsW - sbe, mRulerH);
+
+
+qDebug()<<"ResultsView::updateLayout() mRuler->width();"<<mRuler->width();
+
     mMarker->setGeometry(mMarker->pos().x(), mTabsH + sbe, mMarker->thickness(), height() - sbe - mTabsH);
     
     /* ----------------------------------------------------------
@@ -1176,7 +1185,7 @@ void ResultsView::updateGraphsLayout()
             QWidget* wid = mPhasesScrollArea->widget();
             for (auto && graph : mByPhasesGraphs) {
                 graph->setGeometry(0, y, width() - mOptionsW - sbe, mGraphsH);
-
+qDebug()<<" ResultsView::updateGraphsLayout() graph->width();"<<graph->width();//<<graph->mGraph->mGraphWidth;
                 y += graph->height();
             }
             if (y>0)
@@ -2510,7 +2519,7 @@ void ResultsView::showInfos(bool show)
     
     for (GraphViewResults* allKindGraph : mByEventsGraphs)
         allKindGraph->showNumericalResults(show);
-    
+    updateLayout();
 }
 
 void ResultsView::saveAsImage()
