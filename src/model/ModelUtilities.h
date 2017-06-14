@@ -1,4 +1,4 @@
-﻿#ifndef ModelUtilities_H
+#ifndef ModelUtilities_H
 #define ModelUtilities_H
 
 #include <QIcon>

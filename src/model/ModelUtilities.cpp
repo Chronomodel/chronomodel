@@ -1,4 +1,4 @@
-﻿#include "ModelUtilities.h"
+#include "ModelUtilities.h"
 #include "Date.h"
 #include "EventConstraint.h"
 #include "PhaseConstraint.h"
@@ -520,7 +520,7 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
 QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, const Model* model)
 {
     QString text;
-        text += "<hr>";
+ //       text += "<hr>";  // useless line
         if (e->mType == Event::eKnown) {
             text += line(textBold(textRed("Bound : " + e->mName))) + "<br>";
             text += line(textBold(textRed("Posterior bound date. :")));
@@ -541,7 +541,7 @@ QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, c
 QString ModelUtilities::phaseResultsHTML(const Phase* p)
 {
     QString text;
-        text += "<hr>";
+//        text += "<hr>"; // useless line
         text += line(textBold(textPurple("Phase : " + p->mName)));
         
         text += "<br>";
@@ -568,7 +568,7 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
 QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
 {
     QString text;
-        text += "<hr>";
+ //       text += "<hr>";  // useless line
         text += line(textBold(textPurple("Succession : from " + p->mPhaseFrom->mName +" to "+ p->mPhaseTo->mName)));
 
         if (p->mTransitionRange != QPair<double,double>()) {
