@@ -224,13 +224,12 @@ void Ruler::setFormatFunctX(FormatFunc f){
 
 void Ruler::layout()
 {
-    QFontMetricsF fmAxe (font());
+    QFontMetricsF fmAxe (qApp->font());
     mMarginRight = floor( fmAxe.width(stringWithAppSettings(mMax))/2.);
     qreal penSize = 1.;// same value as pen.width in AxisTool
 
-    mRulerRect = QRectF(mMarginLeft- penSize, mScrollBarHeight, width() - mMarginRight - mMarginLeft+ 2*penSize, height() - mScrollBarHeight);
-    mScrollBar->setGeometry(mMarginLeft - penSize, 0., mRulerRect.width()  , mScrollBarHeight);
-
+    mRulerRect = QRectF(mMarginLeft + penSize, mScrollBarHeight, width() - mMarginRight - mMarginLeft, height() - mScrollBarHeight);
+    mScrollBar->setGeometry(mMarginLeft , 0., mRulerRect.width()  , mScrollBarHeight);
     mAxisTool.updateValues(mRulerRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
 
     update();

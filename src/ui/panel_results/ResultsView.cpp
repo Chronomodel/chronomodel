@@ -1127,7 +1127,7 @@ void ResultsView::updateLayout()
     mMarker->setGeometry(mMarker->pos().x(), mTabsH + sbe, mMarker->thickness(), height() - sbe - mTabsH);
 
     if (mStatCheck->isChecked())
-         mRuler->setGeometry(0, mTabsH, (width() - mOptionsW - sbe)/2, mRulerH);
+         mRuler->setGeometry(0, mTabsH, (width() - mOptionsW - sbe)*2./3., mRulerH);
     else
         mRuler->setGeometry(0, mTabsH, width() - mOptionsW - sbe, mRulerH);
 
@@ -1287,12 +1287,12 @@ void ResultsView::initResults(Model* model)
     if (model)
         mModel = model;
  qDebug() << "ResultsView::initResults with model";
-    QFontMetricsF fm(font());
+    QFontMetricsF fm(qApp->font());
 
     mMarginLeft = std::max(fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mModel->mSettings.mTmin))),
                            fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mModel->mSettings.mTmin)))) + 5;
 
-
+//mRuler->mMarginLeft = mMarginLeft;
     mChains = mModel->mChains;
     mSettings = mModel->mSettings;
     mMCMCSettings = mModel->mMCMCSettings;
@@ -1372,11 +1372,11 @@ void ResultsView::updateResults(Model* model)
     mSettings = mModel->mSettings;
     mMCMCSettings = mModel->mMCMCSettings;
 
-    QFontMetricsF fm(font());
+    QFontMetricsF fm(qApp->font());
 
     mMarginLeft = std::max(fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mModel->mSettings.mTmin))),
                            fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mModel->mSettings.mTmin)))) + 5;
-
+//mRuler->mMarginLeft = mMarginLeft;
     mHasPhases = (mModel->mPhases.size() > 0);
 
     if (mHasPhases) {
@@ -2743,11 +2743,6 @@ void ResultsView::exportFullImage()
     if (mStack->currentWidget() == mPhasesScrollArea) {
         curWid = mPhasesScrollArea->widget();
         curWid->setFont(mByPhasesGraphs.at(0)->font());
-       // witchScroll = eScrollPhases;
-        //  hide all buttons in the both scrollAreaWidget
-        //for (int i=0; i<mByPhasesGraphs.size(); ++i)
-        //    mByPhasesGraphs.at(i)->setButtonsVisible(false);
-        
     }
     
     else  {
@@ -2768,32 +2763,44 @@ void ResultsView::exportFullImage()
     
     AxisWidget* axisWidget = nullptr;
     QLabel* axisLegend = nullptr;
-    int axeHeight = 20;
-    int legendHeight = 20;
+    int axeHeight (20);
+    int legendHeight (20);
     
     if (printAxis) {
         curWid->setFixedHeight(curWid->height() + axeHeight + legendHeight);
         
-        FormatFunc f = 0;
+        FormatFunc f = nullptr;
         if (mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked())
             f = stringWithAppSettings;
         
         axisWidget = new AxisWidget(f, curWid);
         axisWidget->mMarginLeft = 50.;
         axisWidget->mMarginRight = 10.;
-        axisWidget->setGeometry(0, curWid->height() - axeHeight, curWid->width(), axeHeight);
+
+        if (mStatCheck->isChecked()) {
+            axisWidget->setGeometry(0, curWid->height() - axeHeight, curWid->width()*2./3., axeHeight);
+            axisWidget->updateValues(curWid->width()*2./3. - axisWidget->mMarginLeft - axisWidget->mMarginRight, 50, mResultCurrentMinX, mResultCurrentMaxX);
+
+        } else {
+            axisWidget->setGeometry(0, curWid->height() - axeHeight, curWid->width(), axeHeight);
+            axisWidget->updateValues(curWid->width() - axisWidget->mMarginLeft - axisWidget->mMarginRight, 50, mResultCurrentMinX, mResultCurrentMaxX);
+        }
         axisWidget->mShowText = true;
         axisWidget->setAutoFillBackground(true);
         axisWidget->mShowSubs = true;
         axisWidget->mShowSubSubs = true;
         axisWidget->mShowArrow = true;
         axisWidget->mShowText = true;
-        axisWidget->updateValues(curWid->width() - axisWidget->mMarginLeft - axisWidget->mMarginRight, 50, mResultCurrentMinX, mResultCurrentMaxX);
+
         axisWidget->raise();
         axisWidget->setVisible(true);
         
         axisLegend = new QLabel(DateUtils::getAppSettingsFormatStr(), curWid);
-        axisLegend->setGeometry(0, curWid->height() - axeHeight - legendHeight, curWid->width() - 10, legendHeight);
+        if (mStatCheck->isChecked())
+            axisLegend->setGeometry(0, curWid->height() - axeHeight - legendHeight, curWid->width()*2./3. - 10, legendHeight);
+        else
+            axisLegend->setGeometry(0, curWid->height() - axeHeight - legendHeight, curWid->width() - 10, legendHeight);
+
         axisLegend->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
         axisLegend->raise();
         axisLegend->setVisible(true);
@@ -2826,18 +2833,8 @@ void ResultsView::exportFullImage()
     // Reset rendering back to its current value
     updateRendering(rendering);
     
-    //  show all buttons
-/*    if (mByPhasesBut->isChecked())
-        for (int i=0; i<mByPhasesGraphs.size(); ++i)
-            mByPhasesGraphs.at(i)->setButtonsVisible(true);
-    
-    else
-        for (int i=0; i<mByEventsGraphs.size(); ++i)
-            mByEventsGraphs.at(i)->setButtonsVisible(true);
- */
 }
 
-//#pragma mark Refresh All Model
 /**
  * @brief ResultsView::updateModel Update Design
  */

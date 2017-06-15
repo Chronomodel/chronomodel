@@ -106,7 +106,6 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, F
     qreal yo = r.y();
     qreal w = r.width();
     qreal h = r.height();
-    
     if (mIsHorizontal) {
        if (mShowArrow) { // the arrow is over the rectangle of heigthSize
             QPolygonF triangle (std::initializer_list<QPointF>({ QPointF(xo + w + heigthSize*.65, yo),
@@ -119,7 +118,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, F
         }
         
         p.drawLine(xo, yo, xo + w, yo);       
-
+ p.drawLine(xo, yo, xo, yo + heigthSize);
         
         if (mMinMaxOnly) {
             if (mShowText){
@@ -139,7 +138,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, F
             for (qreal x = xo + mStartPix - mDeltaPix; x <= xo + w ; x += mDeltaPix) {
                 if ((x >= xo)) {
                     if (mShowSubSubs) {
-                        for (qreal sx = x + mDeltaPix/10; sx < std::min(x + mDeltaPix, xo + w); sx += mDeltaPix/10)
+                        for (qreal sx = x + mDeltaPix/10.; sx < std::min(x + mDeltaPix, xo + w); sx += mDeltaPix/10.)
                             p.drawLine(QLineF(sx, yo, sx, yo + heigthSize/2));
 
                     }
@@ -171,7 +170,7 @@ QVector<qreal> AxisTool::paint(QPainter& p, const QRectF& r, qreal heigthSize, F
     }
     else // ______________________vertical axe______________________________________________________
     {
-        const qreal xov = r.x() + r.width()- p.pen().width();
+        const qreal xov = r.x() + r.width();
         const qreal yov = r.y() + r.height();
        
         p.drawLine(xov, yov, xov, yov - h );

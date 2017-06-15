@@ -1,4 +1,4 @@
-﻿#ifndef AXISTOOL_H
+#ifndef AXISTOOL_H
 #define AXISTOOL_H
 
 #include <QVector>

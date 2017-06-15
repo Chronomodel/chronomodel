@@ -325,9 +325,15 @@ void GraphView::setYAxisMode(AxisMode mode)
         mAxisToolY.mMinMaxOnly = (mYAxisMode == eMinMax);
         
         if (mYAxisMode==eHidden) {
+
             showYAxisValues(false);
             showYAxisTicks(false);
             showYAxisSubTicks(false);
+        } else {
+
+            showYAxisValues(true);
+            showYAxisTicks(true);
+            showYAxisSubTicks(true);
         }
      //   repaintGraph(true); //not necessary ?
     }
@@ -610,8 +616,8 @@ void GraphView::resizeEvent(QResizeEvent* event)
         if (sx>.5 || sy>.5) {
             mBufferBack = QPixmap(width(), height());
             updateGraphSize(width(), height());
-qDebug()<<"Graphview::resize"<< width();
             paintToDevice(&mBufferBack);
+
         } else {
             QMatrix mx = QMatrix();
             mx.scale(sx, sy);
@@ -632,7 +638,6 @@ void GraphView::updateGraphSize(int w, int h)
 {
     mGraphWidth = w - mMarginLeft - mMarginRight;
     mGraphHeight = h - mMarginTop - mMarginBottom;
-qDebug()<<"GraphView::updateGraphSize w mGraphWidth"<<w<<mMarginRight<<mMarginLeft<<mGraphWidth;
     mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
     mAxisToolY.updateValues(mGraphHeight, 12, mMinY, mMaxY);
 }
@@ -669,7 +674,6 @@ void GraphView::paintEvent(QPaintEvent* )
         p.drawPixmap(mBufferBack.rect(), mBufferBack, rect());
         return;
     }
-qDebug()<<"GRaphView::paintEvent"<<width();
     updateGraphSize(width(), height());
     if ((mGraphWidth<=0) || (mGraphHeight<=0))
         return;
@@ -867,20 +871,20 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolX.mShowText = mXAxisValues;
 
     mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
-qDebug()<<"GraphView::paintToDevice paint mAxisToolX.paint("<<mGraphWidth;
     mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), (qreal) 7.,stringWithAppSettings);
 
     /* ----------------------------------------------------
      *  Vertical axis
      * ----------------------------------------------------*/
-    mAxisToolY.mShowArrow = mYAxisArrow;
-    mAxisToolY.mShowSubs = mYAxisTicks;
-    mAxisToolY.mShowSubSubs = mYAxisSubTicks;
-    mAxisToolY.mShowText = mYAxisValues;
+    if (mYAxisLine) {
+        mAxisToolY.mShowArrow = mYAxisArrow;
+        mAxisToolY.mShowSubs = mYAxisTicks;
+        mAxisToolY.mShowSubSubs = mYAxisSubTicks;
+        mAxisToolY.mShowText = mYAxisValues;
 
-    mAxisToolY.updateValues(mGraphHeight, mStepMinWidth, mMinY, mMaxY);
-    mAxisToolY.paint(p, QRectF(0., mMarginTop, mMarginLeft, mGraphHeight), (qreal) 1.,stringWithAppSettings);
-    
+        mAxisToolY.updateValues(mGraphHeight, mStepMinWidth, mMinY, mMaxY);
+        mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), (qreal) 1.,stringWithAppSettings);
+     }
     /* ----------------------------------------------------
      *  Graph specific infos at the top right
      * ----------------------------------------------------*/
@@ -907,7 +911,6 @@ void GraphView::drawCurves(QPainter& painter)
     painter.save();
     // Draw curves inside axis only (not in margins!)
     painter.setClipRect(mMarginLeft, mMarginTop, mGraphWidth, mGraphHeight);
-    //QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom)
     
     for (auto && curve : mCurves) {
         if (curve.mVisible) {
@@ -1021,7 +1024,7 @@ void GraphView::drawCurves(QPainter& painter)
                 
                 if (curve.mUseVectorData) {
                     // Down sample vector
-                    if(curve.mDataVector.isEmpty())
+                    if (curve.mDataVector.isEmpty())
                         return;
 
                     QVector<type_data> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);

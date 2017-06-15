@@ -1,4 +1,4 @@
-﻿#ifndef GraphCurve_H
+#ifndef GraphCurve_H
 #define GraphCurve_H
 
 #include <QMap>

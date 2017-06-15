@@ -396,8 +396,8 @@ qDebug()<< "GraphViewResults::updateLayout()"   <<max<<marginRight<<font();
     if (mShowNumResults) {
         //mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height() *3./4. ));
         //mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height() /4. , 0, 0));
-        mGraph    -> setGeometry(graphRect.adjusted(0, 0, -width()/2., 0 ));
-        mTextArea -> setGeometry(graphRect.adjusted(width()/2., -mTopShift + 2 , 0, -2));
+        mGraph    -> setGeometry(graphRect.adjusted(0, 0, -width()/3., 0 ));
+        mTextArea -> setGeometry(graphRect.adjusted(width()*2./3. + 2., -mTopShift + 2 , -2, -2));
     } else
             mGraph->setGeometry(graphRect);
 
@@ -421,16 +421,14 @@ void GraphViewResults::mousePressEvent(QMouseEvent *event)
 
 void GraphViewResults::paintEvent(QPaintEvent* )
 {
-    QPainter p;
-    p.begin(this);
-
     // write mTitle above the graph
     QFont fontTitle(font());
     fontTitle.setPointSizeF(font().pointSizeF()*1.1);
     QFontMetrics fmTitle(fontTitle);
-    
-    QRectF textRect(0, 1., width(), mTopShift-1.);
-    p.fillRect(rect().adjusted(0, 1, 0, -1), mGraph->getBackgroundColor());
+
+    QPainter p;
+    p.begin(this);
+    p.fillRect(mGraph->geometry().adjusted(0, - mTopShift, 0, 0), mGraph->getBackgroundColor());
     
     p.setFont(fontTitle);
     p.setPen(Qt::black);
@@ -439,10 +437,14 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     
     p.drawText(QRectF(width() - fmTitle.width(mGraph->getInfo()), 3., fmTitle.width(mGraph->getInfo()), mTopShift-1.), Qt::AlignVCenter | Qt::AlignLeft, mGraph->getInfo());
     
+    p.setPen(QColor(105, 105, 105));
+    if (mShowNumResults)
+        p.drawRect(mTextArea->geometry().adjusted(-1, -1, 1, 1));
+
     p.end();
 
     if (mIsSelected && mShowSelectedRect) {
-        mOverLaySelect->setGeometry(mGraph->geometry().adjusted(0, -mTopShift, 0,0));//rect());
+        mOverLaySelect->setGeometry(mGraph->geometry().adjusted(0, -mTopShift, 0, 0));
         mOverLaySelect->show();
 
     } else
