@@ -80,7 +80,6 @@ QDialog(parent, flags)
     mPixelRatio = new QSpinBox(this);
     mPixelRatio->setRange(1, 5);
     mPixelRatio->setSingleStep(1);
-   // mPixelRatio->setStyleSheet("QSpinBox { border-radius: 5px; }");
     
     mDpmLab = new QLabel(tr("Image Export DPM"), this);
     mDpm = new QComboBox(this);
@@ -90,28 +89,25 @@ QDialog(parent, flags)
     mImageQuality = new QSpinBox(this);
     mImageQuality->setRange(1, 100);
     mImageQuality->setSingleStep(1);
-    //mImageQuality->setStyleSheet("QSpinBox { border-radius: 5px; }");
     
     mFormatDateLab = new QLabel(tr("Time Scale"), this);
     mFormatDateLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mFormatDate = new QComboBox(this);
-    for (int i=0; i<7; ++i)
+    for (int i=0; i<5; ++i) // until 7 to use Age Ma and ka
         mFormatDate->addItem(DateUtils::formatString((DateUtils::FormatDate)i));
     
     mFormatDate->setCurrentIndex(1);
-    //mFormatDate->setStyleSheet("QLineEdit { border-radius: 5px; }");
     mFormatDate->setVisible(true);
     
     mPrecisionLab = new QLabel(tr("Decimal Precision"), this);
     mPrecision = new QSpinBox(this);
     mPrecision->setRange(0, 6);
     mPrecision->setSingleStep(1);
-   // mPrecision->setStyleSheet("QSpinBox { border-radius: 5px; }");
-    
+
     
     connect(mAutoSaveCheck, &QCheckBox::toggled, mAutoSaveDelayEdit, &QLineEdit::setEnabled);
     
-    mButtonBox = new QDialogButtonBox(QDialogButtonBox::RestoreDefaults);// QDialogButtonBox::Reset);
+    mButtonBox = new QDialogButtonBox(QDialogButtonBox::RestoreDefaults);
     connect(mButtonBox, &QDialogButtonBox::clicked, this, &AppSettingsDialog::buttonClicked);
     
     QGridLayout* grid = new QGridLayout();
@@ -120,8 +116,6 @@ QDialog(parent, flags)
     grid->addWidget(mLanguageLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mLanguageCombo, row, 1);
 
-   // grid->addWidget(mFontLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-   // grid->addWidget(mFontBut, ++row, 0, 1, 2);
     grid->addWidget(mLangHelpLab, ++row, 0, 1, 2);
 
     QFrame* line1 = new QFrame();

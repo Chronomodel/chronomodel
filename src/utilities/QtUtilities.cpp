@@ -1,4 +1,4 @@
-﻿#include "QtUtilities.h"
+#include "QtUtilities.h"
 #include "StdUtilities.h"
 #include "StateKeys.h"
 #include "MainWindow.h"
@@ -31,16 +31,13 @@ void sortIntList(QList<int>& list)
 QList<QStringList> readCSV(const QString& filePath, const QString& separator)
 {
     QFile file(filePath);
-    if(file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QList<QStringList> data;
         
         QTextStream stream(&file);
-        while(!stream.atEnd())
-        {
+        while (!stream.atEnd()) {
             QString line = stream.readLine();
-            if( (line.left(1) != "#") && (line.left(1) != "/") )
-            {
+            if ( (line.left(1) != "#") && (line.left(1) != "/") ) {
                 QStringList values = line.split(separator);
                 data.append(values);
             }
@@ -53,7 +50,7 @@ QList<QStringList> readCSV(const QString& filePath, const QString& separator)
 
 int defaultDpiX()
 {
-    if(qApp->testAttribute(Qt::AA_Use96Dpi))
+    if (qApp->testAttribute(Qt::AA_Use96Dpi))
         return 96;
 
     //if(!qt_is_gui_used)
@@ -135,7 +132,6 @@ QString intListToString(const QList<int>& intList, const QString& separator)
 }
 
 
-// pragma mark Save Widget
 
 QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogTitle, const QString& defaultPath, const AppSettings & appSetting)
 {

@@ -1131,9 +1131,6 @@ void ResultsView::updateLayout()
     else
         mRuler->setGeometry(0, mTabsH, width() - mOptionsW - sbe, mRulerH);
 
-
-qDebug()<<"ResultsView::updateLayout() mRuler->width();"<<mRuler->width();
-
     mMarker->setGeometry(mMarker->pos().x(), mTabsH + sbe, mMarker->thickness(), height() - sbe - mTabsH);
     
     /* ----------------------------------------------------------
@@ -1185,7 +1182,6 @@ void ResultsView::updateGraphsLayout()
             QWidget* wid = mPhasesScrollArea->widget();
             for (auto && graph : mByPhasesGraphs) {
                 graph->setGeometry(0, y, width() - mOptionsW - sbe, mGraphsH);
-qDebug()<<" ResultsView::updateGraphsLayout() graph->width();"<<graph->width();//<<graph->mGraph->mGraphWidth;
                 y += graph->height();
             }
             if (y>0)
@@ -1201,7 +1197,7 @@ qDebug()<<" ResultsView::updateGraphsLayout() graph->width();"<<graph->width();/
          if (mEventsScrollArea) {
             QWidget* wid = mEventsScrollArea->widget();
 
-            for (auto && graph : mByEventsGraphs) {
+            for (auto &&graph : mByEventsGraphs) {
                 graph->setGeometry(0, y, width() - mOptionsW - sbe, mGraphsH);
 
                 y += graph->height();
@@ -2676,7 +2672,7 @@ void ResultsView::exportResults()
             const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
             const QString projectName = tr("Project filename")+" : "+ MainWindow::getInstance()->getNameProject()+ "<br>";
 
-            QFile file(dirPath + "/Model_description.html");
+            QFile file(dirPath + "/Log_Model_Description.html");
             if (file.open(QFile::WriteOnly | QFile::Truncate)) {
                 QTextStream output(&file);
                 output<<version+"<br>";
@@ -2686,7 +2682,7 @@ void ResultsView::exportResults()
             }
             file.close();
 
-            file.setFileName(dirPath + "/MCMC_Initialization.html");
+            file.setFileName(dirPath + "/Log_MCMC_Initialization.html");
             
             if (file.open(QFile::WriteOnly | QFile::Truncate)) {
                 QTextStream output(&file);
@@ -2697,7 +2693,7 @@ void ResultsView::exportResults()
             }
             file.close();
 
-            file.setFileName(dirPath + "/Posterior_distrib_results.html");
+            file.setFileName(dirPath + "/Log_Posterior_Distrib_Stats.html");
             
             if (file.open(QFile::WriteOnly | QFile::Truncate)) {
                 QTextStream output(&file);
@@ -2709,20 +2705,20 @@ void ResultsView::exportResults()
             file.close();
 
             const QList<QStringList> stats = mModel->getStats(csvLocal, precision, true);
-            saveCsvTo(stats, dirPath + "/Stats_table.csv", csvSep, true);
+            saveCsvTo(stats, dirPath + "/Synthetic_Stats_Table.csv", csvSep, true);
             
             if (mModel->mPhases.size() > 0) {
                 const QList<QStringList> phasesTraces = mModel->getPhasesTraces(csvLocal, false);
-                saveCsvTo(phasesTraces, dirPath + "/phases.csv", csvSep, false);
+                saveCsvTo(phasesTraces, dirPath + "/Chain_all_Phases.csv", csvSep, false);
                 
                 for (int i=0; i<mModel->mPhases.size(); ++i) {
                     const QList<QStringList> phaseTrace = mModel->getPhaseTrace(i,csvLocal, false);
                     const QString name = mModel->mPhases.at(i)->mName.toLower().simplified().replace(" ", "_");
-                    saveCsvTo(phaseTrace, dirPath + "/phase_" + name + ".csv", csvSep, false);
+                    saveCsvTo(phaseTrace, dirPath + "/Chain_Phase_" + name + ".csv", csvSep, false);
                 }
             }
             QList<QStringList> eventsTraces = mModel->getEventsTraces(csvLocal, false);
-            saveCsvTo(eventsTraces, dirPath + "/events.csv", csvSep, false);
+            saveCsvTo(eventsTraces, dirPath + "/Chain_all_Events.csv", csvSep, false);
         }
     }
 }
@@ -2740,19 +2736,19 @@ void ResultsView::exportFullImage()
     
     QWidget* curWid;
     
+    type_data max (0.);
+
     if (mStack->currentWidget() == mPhasesScrollArea) {
         curWid = mPhasesScrollArea->widget();
         curWid->setFont(mByPhasesGraphs.at(0)->font());
+        max = mByPhasesGraphs.at(0)->getGraph()->maximumX();
     }
     
     else  {
         curWid = mEventsScrollArea->widget();
         curWid->setFont(mByEventsGraphs.at(0)->font());
-        //witchScroll = eScrollEvents;
-        //  hide all buttons in the both scrollAreaWidget
-       // for (int i=0; i<mByEventsGraphs.size(); ++i)
-       //     mByEventsGraphs.at(i)->setButtonsVisible(false);
-        
+        max = mByEventsGraphs.at(0)->getGraph()->maximumX();
+
     }
     
     
@@ -2772,10 +2768,14 @@ void ResultsView::exportFullImage()
         FormatFunc f = nullptr;
         if (mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked())
             f = stringWithAppSettings;
-        
+
+        QFontMetricsF fmAxe (qApp->font());
+        qreal marginRight = floor(fmAxe.width(stringWithAppSettings(max)) / 2.);
+
+
         axisWidget = new AxisWidget(f, curWid);
         axisWidget->mMarginLeft = 50.;
-        axisWidget->mMarginRight = 10.;
+        axisWidget->mMarginRight = marginRight;//10.;
 
         if (mStatCheck->isChecked()) {
             axisWidget->setGeometry(0, curWid->height() - axeHeight, curWid->width()*2./3., axeHeight);
@@ -2795,7 +2795,18 @@ void ResultsView::exportFullImage()
         axisWidget->raise();
         axisWidget->setVisible(true);
         
-        axisLegend = new QLabel(DateUtils::getAppSettingsFormatStr(), curWid);
+        QString legend = "";
+        if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && mCurrentVariable == GraphViewResults::eTheta)
+            legend = DateUtils::getAppSettingsFormatStr();
+
+        else if (mCurrentTypeGraph == GraphViewResults::eTrace || mCurrentTypeGraph == GraphViewResults::eAccept)
+            legend = "Iterations";
+
+        else if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && mCurrentVariable == GraphViewResults::eDuration)
+            legend = "Years";
+
+
+        axisLegend = new QLabel(legend, curWid);
         if (mStatCheck->isChecked())
             axisLegend->setGeometry(0, curWid->height() - axeHeight - legendHeight, curWid->width()*2./3. - 10, legendHeight);
         else

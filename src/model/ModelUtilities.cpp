@@ -424,28 +424,27 @@ QString ModelUtilities::phaseResultsText(const Phase* p, const bool forCSV)
 {
     QString text;
     const QString nl = "\r";
-//    if (p) {
-        text += "Phase : " + p->mName + nl + nl;
-        
-        text += "Duration : " + nl;
-        text += p->mDuration.resultsString(nl, QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"));
-        
+
+    text += "Phase : " + p->mName + nl + nl;
+
+    text += "Duration : " + nl;
+    text += p->mDuration.resultsString(nl, QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), "Years");
+
+    text += nl + nl;
+    text += "Begin : " + nl;
+    text += p->mAlpha.resultsString(nl, "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings);
+
+    text += nl + nl;
+    text += "End : " + nl;
+    text += p->mBeta.resultsString(nl, "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings);
+
+    if (p->mTimeRange != QPair<double,double>()) {
         text += nl + nl;
-        text += "Begin : " + nl;
-        text += p->mAlpha.resultsString(nl, "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings);
-        
-        text += nl + nl;
-        text += "End : " + nl;
-        text += p->mBeta.resultsString(nl, "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings);
+        // we suppose it's the same mThreshohdUsed than alpha
+        const QString result = QObject::tr("Phase Time Range") + " ("+stringWithAppSettings(p->mAlpha.mThresholdUsed, forCSV) + "%)" + " : [" + stringWithAppSettings(p->getFormatedTimeRange().first, forCSV) + " : " + stringWithAppSettings(p->getFormatedTimeRange().second, false) + "] "+ DateUtils::getAppSettingsFormatStr();
+        text += result + nl;
+    }
 
-        if (p->mTimeRange != QPair<double,double>()) {
-            text += nl + nl;
-
-            const QString result = "Phase Time Range : [" + stringWithAppSettings(p->getFormatedTimeRange().first, forCSV) + " : " + stringWithAppSettings(p->getFormatedTimeRange().second, forCSV) + "]" + DateUtils::getAppSettingsFormatStr();
-            text += result + nl;
-        }
-
-//    }
     return text;
 }
 
@@ -471,10 +470,21 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p, const bo
             break;
         }
 
+        if (p->mTransitionRange != QPair<double,double>()) {
+            text += nl;
+            // we suppose it's the same mThreshohdUsed than alpha
+            const QString result = QObject::tr("Transition Range") + " ("+stringWithAppSettings(p->mPhaseFrom->mAlpha.mThresholdUsed, forCSV) + "%)" +" : [" + stringWithAppSettings(p->getFormatedTransitionRange().first, forCSV)
+                    + " : " + stringWithAppSettings(p->getFormatedTransitionRange().second, forCSV) + "] "
+                    + DateUtils::getAppSettingsFormatStr();
+
+            text += result + nl;
+        }
+
+
         if (p->mGapRange != QPair<double,double>()) {
             text += nl;
 
-            const QString result = QObject::tr("Gap Range") + " : [" + stringWithAppSettings(p->getFormatedGapRange().first, forCSV)
+            const QString result = QObject::tr("Gap Range") + " (" +stringWithAppSettings(p->mPhaseFrom->mAlpha.mThresholdUsed, forCSV) + "%)" + " : [" + stringWithAppSettings(p->getFormatedGapRange().first, forCSV)
                     + ", " + stringWithAppSettings(p->getFormatedGapRange().second, forCSV) + "]";
 
             text += result + nl;
@@ -546,7 +556,7 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
         
         text += "<br>";
         text += line(textBold(textPurple("Duration (posterior distrib.) : ")));
-        text += line(textPurple(p->mDuration.resultsString("<br>", QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"))));
+        text += line(textPurple(p->mDuration.resultsString("<br>", QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), "Years")));
         
         text += "<br>";
         text += line(textBold(textPurple("Begin (posterior distrib.) : ")));
@@ -558,8 +568,8 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
 
         if (p->mTimeRange != QPair<double,double>()) {
             text += "<br>";
-
-            const QString result = "Phase Time Range : [" + stringWithAppSettings(p->getFormatedTimeRange().first, false) + " : " + stringWithAppSettings(p->getFormatedTimeRange().second, false) + "] "+ DateUtils::getAppSettingsFormatStr();
+            // we suppose it's the same mThreshohdUsed than alpha
+            const QString result = QObject::tr("Phase Time Range") + " ("+stringWithAppSettings(p->mAlpha.mThresholdUsed, false) + "%)" + " : [" + stringWithAppSettings(p->getFormatedTimeRange().first, false) + " : " + stringWithAppSettings(p->getFormatedTimeRange().second, false) + "] "+ DateUtils::getAppSettingsFormatStr();
             text += line(textBold(textPurple(result + "<br>")));
         }
     return text;
@@ -573,8 +583,8 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
 
         if (p->mTransitionRange != QPair<double,double>()) {
             text += "<br>";
-
-            const QString result = QObject::tr("Transition Range") +" : [" + stringWithAppSettings(p->getFormatedTransitionRange().first, false)
+            // we suppose it's the same mThreshohdUsed than alpha
+            const QString result = QObject::tr("Transition Range") + " ("+stringWithAppSettings(p->mPhaseFrom->mAlpha.mThresholdUsed, false) + "%)" +" : [" + stringWithAppSettings(p->getFormatedTransitionRange().first, false)
                     + " : " + stringWithAppSettings(p->getFormatedTransitionRange().second, false) + "] "
                     + DateUtils::getAppSettingsFormatStr();
 
@@ -589,7 +599,7 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
                result = QObject::tr("No Gap") ;
 
             else
-                result = QObject::tr("Gap Range") + " : [" + stringWithAppSettings(p->getFormatedGapRange().first, false)
+                result = QObject::tr("Gap Range") + " ("+stringWithAppSettings(p->mPhaseFrom->mAlpha.mThresholdUsed, false) + "%)" + " : [" + stringWithAppSettings(p->getFormatedGapRange().first, false)
                         + ", " + stringWithAppSettings(p->getFormatedGapRange().second, false) + "] "
                         + DateUtils::getAppSettingsFormatStr();
 

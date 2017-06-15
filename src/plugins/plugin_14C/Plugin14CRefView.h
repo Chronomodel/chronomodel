@@ -1,4 +1,4 @@
-﻿#ifndef Plugin14CRefView_H
+#ifndef Plugin14CRefView_H
 #define Plugin14CRefView_H
 
 #if USE_PLUGIN_14C

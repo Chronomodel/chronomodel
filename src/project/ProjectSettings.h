@@ -1,4 +1,4 @@
-﻿#ifndef PROJECTSETTINGS_H
+#ifndef PROJECTSETTINGS_H
 #define PROJECTSETTINGS_H
 
 #include <QString>

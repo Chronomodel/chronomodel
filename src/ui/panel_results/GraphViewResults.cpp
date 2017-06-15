@@ -389,13 +389,11 @@ void GraphViewResults::updateLayout()
     type_data max = mGraph->maximumX();
     QFontMetricsF fmAxe (qApp->font());
     qreal marginRight = floor(fmAxe.width(stringWithAppSettings(max)) / 2.);
-qDebug()<< "GraphViewResults::updateLayout()"   <<max<<marginRight<<font();
+
     mGraph->setMarginRight(marginRight);
     mGraph->setFont(font());
 
     if (mShowNumResults) {
-        //mGraph    -> setGeometry(graphRect.adjusted(0, 0, 0, -graphRect.height() *3./4. ));
-        //mTextArea -> setGeometry(graphRect.adjusted(0, graphRect.height() /4. , 0, 0));
         mGraph    -> setGeometry(graphRect.adjusted(0, 0, -width()/3., 0 ));
         mTextArea -> setGeometry(graphRect.adjusted(width()*2./3. + 2., -mTopShift + 2 , -2, -2));
     } else

@@ -1,4 +1,4 @@
-﻿#include "PluginMagRefView.h"
+#include "PluginMagRefView.h"
 #if USE_PLUGIN_AM
 
 #include "PluginMag.h"

@@ -670,7 +670,7 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
         if (formatFunc)
             result += "Credibility Interval (" + stringWithAppSettings(mExactCredibilityThreshold * 100., forCSV) + "%) : [" + formatFunc(mCredibility.first, forCSV) + " : " + formatFunc(mCredibility.second, forCSV) + "] " + unit;
         else
-            result += "Credibility Interval (" + stringWithAppSettings(mExactCredibilityThreshold * 100., forCSV) + "%) : [" + stringWithAppSettings(mCredibility.first, forCSV) + " : " + stringWithAppSettings(mCredibility.second, forCSV) + "]";
+            result += "Credibility Interval (" + stringWithAppSettings(mExactCredibilityThreshold * 100., forCSV) + "%) : [" + stringWithAppSettings(mCredibility.first, forCSV) + " : " + stringWithAppSettings(mCredibility.second, forCSV) + "]"  + unit;
 
    }
    return result;

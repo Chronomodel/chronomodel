@@ -1,4 +1,4 @@
-﻿#ifndef STDUTILITIES_H
+#ifndef STDUTILITIES_H
 #define STDUTILITIES_H
 
 #include <vector>

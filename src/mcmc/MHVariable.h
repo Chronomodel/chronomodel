@@ -1,4 +1,5 @@
-﻿#ifndef MHVARIABLE_H
+
+#ifndef MHVARIABLE_H
 #define MHVARIABLE_H
 
 #include "MetropolisVariable.h"

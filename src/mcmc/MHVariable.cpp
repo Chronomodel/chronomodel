@@ -1,4 +1,5 @@
-﻿#include "MHVariable.h"
+
+#include "MHVariable.h"
 #include "StdUtilities.h"
 #include "QtUtilities.h"
 #include "Generator.h"

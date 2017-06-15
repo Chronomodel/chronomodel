@@ -1,4 +1,4 @@
-﻿#include "CalibrationView.h"
+#include "CalibrationView.h"
 #include "Ruler.h"
 #include "Date.h"
 #include "Event.h"

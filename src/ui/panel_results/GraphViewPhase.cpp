@@ -169,7 +169,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
 
 
     else if ((typeGraph == ePostDistrib) && (variable == eDuration)) {
-        mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+        mGraph->mLegendX = "Years";
         mGraph->mLegendY = "";
         mGraph->setFormatFunctX(stringWithAppSettings);
         mGraph->setFormatFunctY(nullptr);

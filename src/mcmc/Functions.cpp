@@ -1,4 +1,5 @@
-﻿#include "Functions.h"
+
+#include "Functions.h"
 #include "Generator.h"
 #include "StdUtilities.h"
 #include "DateUtils.h"

@@ -1,4 +1,4 @@
-﻿#ifndef PluginGaussRefView_H
+#ifndef PluginGaussRefView_H
 #define PluginGaussRefView_H
 
 #if USE_PLUGIN_GAUSS

@@ -1,4 +1,4 @@
-﻿#include "StdUtilities.h"
+#include "StdUtilities.h"
 #include <cmath>
 #include <ctgmath>
 #include <cstdlib>

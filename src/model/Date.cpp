@@ -1,4 +1,4 @@
-﻿#include "Date.h"
+#include "Date.h"
 #include "Event.h"
 #include "Generator.h"
 #include "StdUtilities.h"
@@ -567,6 +567,7 @@ QPixmap Date::generateCalibThumb()
         
         graph.setXAxisMode(GraphView::eHidden);
         graph.setYAxisMode(GraphView::eHidden);
+        graph.showYAxisLine(false);
 
         
         QPixmap thumb(size);
@@ -605,7 +606,7 @@ double Date::getLikelihoodFromCalib(const double t)
     
     // We need at least two points to interpolate
     if (mCalibration->mCurve.size() < 2 || t < tmin || t > tmax)
-        return 0;
+        return 0.;
     
     double prop = (t - tmin) / (tmax - tmin);
     double idx = prop * (mCalibration->mCurve.size() - 1); // tricky : if (tmax - tmin) = 2000, then calib size is 2001 !
@@ -614,12 +615,10 @@ double Date::getLikelihoodFromCalib(const double t)
     
     // Important pour le créneau : pas d'interpolation autour des créneaux!
     double v = 0.;
-    if (mCalibration->mCurve[idxUnder] != 0 && mCalibration->mCurve[idxUpper] != 0)
+    if (mCalibration->mCurve[idxUnder] != 0. && mCalibration->mCurve[idxUpper] != 0.)
         v = interpolate((double) idx, (double)idxUnder, (double)idxUpper, mCalibration->mCurve[idxUnder], mCalibration->mCurve[idxUpper]);
     return v;
 }
-
-
 
 
 void Date::updateTheta(Event* event)
