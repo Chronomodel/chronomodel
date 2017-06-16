@@ -94,7 +94,7 @@ mCalibVisible(false)
     mEventsGlobalView->setVisible(false);
     
     mEventsSearchEdit = new LineEdit(mLeftWrapper);
-    mEventsSearchEdit->setPlaceholderText(tr("Search event name..."));
+    mEventsSearchEdit->setPlaceholderText(tr("Search Event or Data..."));
     mEventsSearchEdit->setVisible(false);
     
     mButNewEvent = new Button(tr("New Event"), mLeftWrapper);
