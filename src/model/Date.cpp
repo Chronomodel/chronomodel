@@ -482,6 +482,7 @@ QPixmap Date::generateTypoThumb()
             graph.showYAxisTicks(false);
             graph.showYAxisSubTicks(false);
             graph.showYAxisValues(false);
+            graph.showYAxisLine(false);
 
             graph.setXAxisMode(GraphView::eHidden);
             graph.setYAxisMode(GraphView::eHidden);
