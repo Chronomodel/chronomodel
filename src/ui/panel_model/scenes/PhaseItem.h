@@ -29,13 +29,12 @@ protected:
 
     // size and position of the buttons
     QRectF checkRect() const;
-    //QRectF eyeRect() const;
     QRectF insertRect() const;
     QRectF extractRect() const;
 
     QJsonArray getEvents() const;
     QString getTauString() const;
-    // the two pixmap of insert_Event and extract Event
+    // the two pixmaps of insert_Event and extract Event
     QPixmap* inPix;
     QPixmap* exPix;
 
@@ -45,8 +44,6 @@ public:
     
     QJsonObject& getPhase();
     void setPhase(const QJsonObject& phase);
-    
-   // void setState(Qt::CheckState state);
     
     virtual void updateItemPosition(const QPointF& pos);
     

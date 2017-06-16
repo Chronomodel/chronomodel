@@ -140,7 +140,7 @@ private:
 
     
     QAction* mHelpAction;
-    QAction* mManualAction;
+ //   QAction* mManualAction;
     QAction* mWebsiteAction;
     
 private:

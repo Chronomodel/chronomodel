@@ -341,6 +341,7 @@ void AppSettingsDialog::buttonClicked(QAbstractButton* button)
 {
      (void) button;
     mFont = QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE);
+
     //mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
 
     mLanguageCombo->setCurrentText(QLocale::languageToString(QLocale::system().language()));

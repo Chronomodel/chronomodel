@@ -1,6 +1,7 @@
 #include "AppSettings.h"
 #include <QString>
 #include <QLocale>
+//#include <QDebug>
 
 AppSettings::AppSettings():
 mAutoSave(APP_SETTINGS_DEFAULT_AUTO_SAVE),
@@ -21,7 +22,8 @@ mNbSheet(APP_SETTINGS_DEFAULT_SHEET)
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
 
-    mFont = QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE);
+   mFont = QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE);
+  //  mFont.setPointSize(APP_SETTINGS_DEFAULT_FONT_SIZE);
 
     if (newLoc.decimalPoint()==',') {
         mCSVCellSeparator=";";

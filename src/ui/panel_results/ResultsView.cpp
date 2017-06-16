@@ -35,7 +35,6 @@
 #include <iostream>
 #include <QtSvg>
 
-//#pragma mark Constructor & Destructor
 ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mResultMaxVariance(1000.),
 mHasPhases(false),
@@ -64,9 +63,10 @@ mMaximunNumberOfVisibleGraph(0)
 
     mResultMinX = mSettings.mTmin;
     mResultMaxX = mSettings.mTmax;
-
-    QFontMetricsF fm(font());
-
+   //setFont();
+    QFont ft = QFont();
+    ft.setPointSize(APP_SETTINGS_DEFAULT_FONT_SIZE);
+    QFontMetricsF fm(QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
    // mGraphLeft = std::max(fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mResultMinX))),
      //                            fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mResultMinX)))) + 5;
 
@@ -74,8 +74,6 @@ mMaximunNumberOfVisibleGraph(0)
     mResultCurrentMaxX = mResultMaxX ;
     mResultZoomX = 1.;
     
-
-
     mTabs = new Tabs(this);
     mTabs->addTab(tr("Posterior Distrib."));
     mTabs->addTab(tr("History Plot"));
@@ -194,7 +192,7 @@ mMaximunNumberOfVisibleGraph(0)
 
     mSpanLab = new Label(tr("Span"), mSpanGroup);
     mSpanLab->setFixedSize(fm.width(mSpanLab->text()), fm.height() + 5);
-
+qDebug()<<"ResultsView::construc "<<mSpanLab->width()<<fm.width(mSpanLab->text());
     const int wEdit = (int)ceil(mOptionsW/3.);
     mCurrentXMinEdit = new LineEdit(mSpanGroup);
     mCurrentXMinEdit->setFixedSize(wEdit, fm.height()+2);
@@ -224,7 +222,7 @@ mMaximunNumberOfVisibleGraph(0)
     mXScaleSpin->setFixedSize(mCurrentXMinEdit->width(), fm.height()+ 10);
     mXScaleSpin->setToolTip(tr("Enter zoom value to magnify the curves on X span"));
 
-    /* -------------------------------------- GraphicDisplay (old mDisplayGroup) ---------------------------------------------------*/
+    /* -------------------------------------- Graphic Options (old mDisplayGroup) ---------------------------------------------------*/
     
     mGraphicTitle = new Label(tr("Graphic Options"), mTabDisplay);
     mGraphicTitle->setIsTitle(true);
@@ -827,8 +825,10 @@ void ResultsView::updateTabDisplay(const int &i)
         mCurrentXMinEdit->move(mMargin, ySpan);
 
         mCurrentXMaxEdit->move(mOptionsW - mCurrentXMinEdit->width() - mMargin, ySpan );
-        const int w = mSpanLab->width();
-        mSpanLab->setGeometry((mCurrentXMinEdit->x() + mCurrentXMinEdit->width() + mCurrentXMaxEdit->x() )/2 - (w/2), mCurrentXMinEdit->y() , w, mCurrentXMinEdit->height() );
+
+     //   QFontMetrics ff (qApp->font());
+        const int w = mSpanLab->width();//ff.width(mSpanLab->text());//
+        mSpanLab->setGeometry((mCurrentXMinEdit->x() + mCurrentXMinEdit->width() + mCurrentXMaxEdit->x() )/2. - (w/2.), mCurrentXMinEdit->y() , w, mCurrentXMinEdit->height() );
 
         ySpan += mMargin + mCurrentXMinEdit->height();
 

@@ -181,7 +181,7 @@ bool EventItem::withSelectedDate() const
     return false;
 }
 
-void EventItem::setGreyedOut(bool greyedOut)
+void EventItem::setGreyedOut(const bool greyedOut)
 {
     mGreyedOut = greyedOut;
     QList<QGraphicsItem*> children = childItems();
