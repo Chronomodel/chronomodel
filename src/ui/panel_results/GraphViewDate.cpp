@@ -249,7 +249,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         generateTraceCurves(mChains, variableDate);
     }
     /* ------------------------------------------------
-     *  Third tab : Acceptation rate.
+     *  Third tab : Acceptance rate.
      *  Possible curves (could be for theta or sigma):
      *  - Accept i
      *  - Accept Target
@@ -366,7 +366,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
         mGraph->setYAxisMode(GraphView::eMinMax);
         mGraph->autoAdjustYScale(true); // do  repaintGraph()
     }
-    /* -----------------------Third tab : Acceptation rate.-------------------------
+    /* -----------------------Third tab : Acceptance rate.-------------------------
      *  Possible curves (could be for theta or sigma):
      *  - Accept i
      *  - Accept Target
