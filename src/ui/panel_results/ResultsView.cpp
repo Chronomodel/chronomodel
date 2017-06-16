@@ -2587,6 +2587,8 @@ void ResultsView::imageToClipboard()
         graph->setRendering(memoRendering);
     }
     p.setPen(Qt::black);
+    p.setBrush(Qt::white);
+    p.fillRect(0, ptStart.y(), image.width(), versionHeight, Qt::white);
     p.drawText(0, ptStart.y(), image.width(), versionHeight,
                Qt::AlignCenter,
                qApp->applicationName() + " " + qApp->applicationVersion());
@@ -2763,7 +2765,7 @@ void ResultsView::exportFullImage()
     int legendHeight (20);
     
     if (printAxis) {
-        curWid->setFixedHeight(curWid->height() + axeHeight + legendHeight);
+        curWid->setFixedHeight(curWid->height() + axeHeight + legendHeight );
         
         FormatFunc f = nullptr;
         if (mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked())

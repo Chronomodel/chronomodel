@@ -220,13 +220,12 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             QPainter p;
             p.begin(&image);
             p.setRenderHint(QPainter::Antialiasing);
-            
-            QFont ft = scene ? qApp->font() : widget->font();
+
             // -------------------------------
             //  If widget, draw with or without axis
             // -------------------------------
-            if (widget)
-                widget->render(&p, QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), r.height()));
+            if (widget) // exportFullImage in ReseultsView
+                 widget->render(&p, QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), r.height()+heightText +20));
 
             
             // -------------------------------
@@ -251,22 +250,24 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             // -------------------------------
             //  Write application and version
             // -------------------------------
-            
+            QFont ft =  QFont() ;
             ft.setPixelSize(heightText);
             
             p.setFont(ft);
             p.setPen(Qt::black);
             
-            p.drawText(0, r.height(), r.width(), heightText,
+            p.drawText(0, r.height() - 5 , r.width(), heightText,
+
                        Qt::AlignCenter,
                        qApp->applicationName() + " " + qApp->applicationVersion());
+
             p.end();
             
             // -------------------------------
             //  Save file
             // -------------------------------
             image.save(fileName, fileExtension.toUtf8(), quality);
-            
+
             //image.save(fileName, formatExt);
             /*QImageWriter writer;
              writer.setFormat("jpg");
