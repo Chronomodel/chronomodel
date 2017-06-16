@@ -82,7 +82,7 @@ mButH(25)
     mLayout->addStretch();
     setLayout(mLayout);
     
-    setFixedWidth(400);
+    setFixedWidth(350);
     
     updateVisibleControls();
 }
