@@ -6,7 +6,7 @@
 # Chronomodel
 #
 #-------------------------------------------------
-VERSION = 1.6.2_beta # must match value in src/main.cpp
+VERSION = 1.6.3_alpha # must match value in src/main.cpp
 #PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_
 
