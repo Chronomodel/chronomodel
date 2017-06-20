@@ -196,7 +196,7 @@ void GraphView::zoomX(const type_data min, const type_data max)
     if (mCurrentMinX != min || mCurrentMaxX != max || mMinY>=mMaxY || mAutoAdjustYScale) {
         mCurrentMinX = min;
         mCurrentMaxX = max;
-        
+
         this->mAxisToolX.updateValues(width(), 10., min, max);
         if (mAutoAdjustYScale) {
             qreal yMax = -INFINITY;
@@ -681,7 +681,7 @@ void GraphView::paintEvent(QPaintEvent* )
     /* ----------------------------------------------------
      *  SD : draw on a buffer only if it has been reset
      * ----------------------------------------------------*/
-    if (mBufferBack.isNull() && mRendering == eSD) {
+    if (mBufferBack.isNull()  && mRendering == eSD) {
         mBufferBack = QPixmap(width(), height());
         paintToDevice(&mBufferBack);
 #ifdef DEBUG
@@ -699,7 +699,7 @@ void GraphView::paintEvent(QPaintEvent* )
     /* ----------------------------------------------------
      *  SD rendering : draw buffer on widget !
      * ----------------------------------------------------*/
-    if (mRendering == eSD) {
+    else if (mRendering == eSD) {
         QPainter p(this);
         p.setRenderHints(QPainter::Antialiasing);
         p.drawPixmap(mBufferBack.rect(), mBufferBack, rect());
@@ -854,8 +854,8 @@ void GraphView::paintToDevice(QPaintDevice* device)
     /* ----------------------------------------------------
      *  Curves
      * ----------------------------------------------------*/
-    drawCurves(p);
-    
+      drawCurves(p);
+
     /* ----------------------------------------------------
      *  Horizontal axis
      * ----------------------------------------------------*/
@@ -1093,7 +1093,6 @@ void GraphView::drawCurves(QPainter& painter)
                     } else
                         lightMap = subData;
                     
-                    
                     // Draw
                     
                     QMapIterator<type_data, type_data> iter(lightMap);
@@ -1125,7 +1124,6 @@ void GraphView::drawCurves(QPainter& painter)
                         last_x = getXForValue(valueX, true);
                         last_y = getYForValue((type_data)0., false);
                     }
-
                     while (iter.hasNext()) {
                         iter.next();
                         valueX = iter.key();
@@ -1211,12 +1209,15 @@ void GraphView::drawCurves(QPainter& painter)
                     painter.drawPath(path);
                 
             }
+
         }
+
     }
     painter.restore();
+
 }
 
-//#pragma mark Save & Export
+//Save & Export
 
 /**
  * @brief Export a density with locale setting and separator and specific step

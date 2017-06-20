@@ -130,7 +130,8 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
 
 CalibrationView::~CalibrationView()
 {
-    
+    mRefGraphView = nullptr;
+
 }
 
 void CalibrationView::setFont(const QFont &font)
@@ -152,12 +153,12 @@ void CalibrationView::setDate(const QJsonObject& date)
     const QJsonObject state = project->state();
     const QJsonObject settings = state.value(STATE_SETTINGS).toObject();
     mSettings = ProjectSettings::fromJson(settings);
- //   if (mDate.mPlugin)
-  //      mDate.mPlugin->deleteGraphViewRef();
-    if (mRefGraphView && mDate.mPlugin)
-        mDate.mPlugin->deleteGraphViewRef(mRefGraphView);
 
-    mRefGraphView = nullptr;
+    if (mRefGraphView) {
+         if (mDate.mPlugin)
+                    mDate.mPlugin->deleteGraphViewRef(mRefGraphView);
+        mRefGraphView = nullptr;
+    }
 
     try {
         mDate.init();
@@ -193,6 +194,7 @@ void CalibrationView::setDate(const QJsonObject& date)
                             Qt::Sheet);
         message.exec();
     }
+    mDrawing->updateLayout();
     update();
 }
 
@@ -205,7 +207,7 @@ void CalibrationView::updateGraphs()
     
 
     if (!mDate.isNull()) {
-
+qDebug()<<" CalibrationView::updateGraphs()"<<mTminDisplay<<mTmaxDisplay;
         mCalibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
         mCalibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
         
@@ -316,18 +318,14 @@ void CalibrationView::updateGraphs()
         //  Reference curve from plugin
         // ------------------------------------------------------------
         
-        // release the pointer
-     //   if (mRefGraphView)
-         //   delete mRefGraphView;
- //           mRefGraphView->setParent(nullptr);
-                // mDate.mPlugin->deleteGraphViewRef();
-
 
         // Get the ref graph for this plugin and this date
-        mRefGraphView = mDate.mPlugin->getGraphViewRef();
+        if (!mRefGraphView) {
+
+            mRefGraphView = mDate.mPlugin->getGraphViewRef();
+        }
 
         if (mRefGraphView) {
-
             mRefGraphView->setParent(mDrawing);
             mRefGraphView->setVisible(true);
 
@@ -336,12 +334,13 @@ void CalibrationView::updateGraphs()
             tmpSettings.mTmax = mTmaxDisplay;
             tmpSettings.mTmin = mTminDisplay;
             tmpSettings.mStep = 1.;
+
             mRefGraphView->setDate(mDate, tmpSettings);
             mRefGraphView->zoomX(mTminDisplay, mTmaxDisplay);
 
         }
         mDrawing->setRefGraph(mRefGraphView);
-
+        mDrawing->updateLayout();
         // ------------------------------------------------------------
         //  Labels
         // ------------------------------------------------------------
@@ -388,6 +387,7 @@ void CalibrationView::updateZoom()
         
     } else
         updateScroll();
+
 }
 
 void CalibrationView::updateScroll()
@@ -428,13 +428,15 @@ void CalibrationView::updateScroll()
     }
     else
         mEndEdit->setFont(font());
-
+qDebug()<<"CalibrationView::updateScroll()"<<mTminDisplay<<mTmaxDisplay;
     // usefull when we set mStartEdit and mEndEdit at the begin of the display,
     // after a call to setDate
     if (std::isinf(-mTminDisplay) || std::isinf(mTmaxDisplay))
         return;
+    else if (mTminDisplay<mTmaxDisplay)
+            updateGraphs();
     else
-        updateGraphs();
+        return;
 
 }
 

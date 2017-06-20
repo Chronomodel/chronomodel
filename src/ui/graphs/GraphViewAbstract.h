@@ -11,8 +11,9 @@ public:
     virtual ~GraphViewAbstract();
 	
     QPainterPath mPainterPath;
+
     // Getters
-    
+    bool parameterChange() const;
     type_data rangeX() const;
     type_data rangeY() const;
     type_data getCurrentMaxX() const;
@@ -29,7 +30,8 @@ public:
     qreal marginBottom() const;
     
     // Setters
-    
+    void setPrevParameter();
+
     virtual void setRangeX(const type_data &aMinX, const type_data &aMaxX);
     virtual void setCurrentX(const type_data &aMinX, const type_data &aMaxX);
     virtual void setRangeY(const type_data &aMinY, const type_data &aMaxY);
@@ -69,6 +71,24 @@ protected:
     
     type_data   mCurrentMinX;
     type_data   mCurrentMaxX;
+
+    // previous parameter
+    qreal		mPrevGraphWidth;
+    qreal		mPrevGraphHeight;
+
+    qreal		mPrevMarginLeft;
+    qreal		mPrevMarginRight;
+    qreal		mPrevMarginTop;
+    qreal		mPrevMarginBottom;
+
+   /* type_data	mMinX;
+    type_data	mMaxX;
+    type_data	mMinY;
+    type_data	mMaxY;
+   */
+    type_data   mPrevCurrentMinX;
+    type_data   mPrevCurrentMaxX;
+
 };
 
 template <typename T>

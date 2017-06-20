@@ -67,8 +67,6 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         
         const double tminRef = date.getFormatedTminRefCurve();
         const double tmaxRef = date.getFormatedTmaxRefCurve();
-
-        const QColor color2(150, 150, 150);
         
         Plugin14C* plugin = (Plugin14C*)date.mPlugin;
 
@@ -106,21 +104,26 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         }
         const double t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
         double yMin = plugin->getRefValueAt(date.mData, t0);
-        double yMax = yMin;
+        double yMax (yMin);
 
         QMap<double, double> curveG;
         QMap<double, double> curveG95Sup;
         QMap<double, double> curveG95Inf;
 
-        for (double t=tminDisplay; t<=tmaxDisplay; ++t) {
-            if (t>tminRef && t<tmaxRef) {
-                const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
-                const double value = plugin->getRefValueAt(date.mData, tRaw);
-                const double error = plugin->getRefErrorAt(date.mData, tRaw) * 1.96;
-                
-                curveG[t] = value;
-                curveG95Sup[t] = value + error;
-                curveG95Inf[t] = value - error;
+
+        /*
+         * We need to skim the real map to fit with the real value of the calibration curve
+         * The graphView function does the interpolation between the real point
+         */
+        for ( QMap<double, double>::const_iterator &&iPt = curve.mDataMean.cbegin();  iPt!=curve.mDataMean.cend(); ++iPt) {
+            const double t (iPt.key());
+            const double tDisplay = DateUtils::convertToAppSettingsFormat(t);
+            if (tDisplay>tminDisplay && tDisplay<tmaxDisplay) {
+                const double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
+
+                curveG[t] = iPt.value();
+                curveG95Sup[t] = iPt.value() + error;
+                curveG95Inf[t] = iPt.value() - error;
 
                 yMin = qMin(yMin, curveG95Inf.value(t));
                 yMax = qMax(yMax, curveG95Sup.value(t));
@@ -164,9 +167,10 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         QColor brushColor(mMeasureColor);
         
         // Lower opacity in case of delta r not null
-        if (delta_r != 0 && delta_r_error != 0) {
+        if (delta_r != 0. && delta_r_error != 0.) {
             penColor.setAlpha(100);
             brushColor.setAlpha(15);
+
         } else {
             penColor.setAlpha(255);
             brushColor.setAlpha(50);
@@ -182,7 +186,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         double step = (yMax - yMin) / 5000.;
         QMap<double, double> measureCurve;
         for (double t = yMin; t<yMax; t += step) {
-            const double v = exp(-0.5 * pow((age - t) / error, 2));
+            const double v = exp(-0.5 * pow((age - t) / error, 2.));
             measureCurve[t] = v;
         }
         measureCurve = normalize_map(measureCurve);
@@ -195,7 +199,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         // ----------------------------------------------
         //  Delta R curve
         // ----------------------------------------------
-        if (delta_r != 0 && delta_r_error != 0) {
+        if (delta_r != 0. && delta_r_error != 0.) {
             // Apply reservoir effect
             age = (age - delta_r);
             error = sqrt(error * error + delta_r_error * delta_r_error);
@@ -222,7 +226,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             step = (yMax - yMin) / 5000.;
             QMap<double, double> deltaRCurve;
             for (double t = yMin; t<yMax; t += step) {
-                const double v = exp(-0.5 * pow((age - t) / error, 2));
+                const double v = exp(-0.5 * pow((age - t) / error, 2.));
                 deltaRCurve[t] = v;
                 //curveDeltaR.mData[t] = v;
             }
@@ -236,7 +240,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         // ----------------------------------------------
         //  Sub-dates curves (combination)
         // ----------------------------------------------
-        QList<QMap<double, double>> subDatesCurve;
+
         for (int i=0; i<date.mSubDates.size(); ++i) {
             const Date& d = date.mSubDates.at(i);
             
@@ -247,7 +251,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             double sub_error = d.mData.value(DATE_14C_ERROR_STR).toDouble();
             double sub_delta_r = d.mData.value(DATE_14C_DELTA_R_STR).toDouble();
             double sub_delta_r_error = d.mData.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
-    qDebug()<<"Plugin14CRefView::SetDate()"<<sub_age<<sub_error<<sub_delta_r<<sub_delta_r_error;
+
             // Apply reservoir effect
             sub_age = (sub_age - sub_delta_r);
             sub_error = sqrt(sub_error * sub_error + sub_delta_r_error * sub_delta_r_error);
@@ -271,7 +275,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             const double step = (yMax - yMin) / 1000.;
             QMap<double, double> subCurve;
             for (double t = yMin; t<yMax; t += step) {
-                const double v = exp(-0.5 * pow((sub_age - t) / sub_error, 2));
+                const double v = exp(-0.5 * pow((sub_age - t) / sub_error, 2.));
                 subCurve.insert(t, v);
             }
             //subDatesCurve[i] = normalize_map(subDatesCurve.at(i));

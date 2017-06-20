@@ -209,6 +209,8 @@ protected:
     int mCurveMaxResolution;
     QList<GraphCurve> mCurves;
     QList<GraphZone> mZones;
+
+    QPainter mPrevPainter;
     
 public:
     QString mLegendX;

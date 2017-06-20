@@ -336,12 +336,11 @@ QPair<double,double> PluginMag::getTminTmaxRefsCurve(const QJsonObject& data) co
     return qMakePair<double,double>(tmin,tmax);
 }
 
-//#pragma mark Settings / Input Form / RefView
+//Settings / Input Form / RefView
 GraphViewRefAbstract* PluginMag::getGraphViewRef()
 {
-    mRefGraph = new PluginMagRefView();
-    mRefGraph->setMouseTracking(true);
-    return mRefGraph;
+   mRefGraph = new PluginMagRefView();
+   return mRefGraph;
 }
 void PluginMag::deleteGraphViewRef(GraphViewRefAbstract* graph)
 {
@@ -349,13 +348,14 @@ void PluginMag::deleteGraphViewRef(GraphViewRefAbstract* graph)
         delete static_cast<PluginMagRefView*>(graph);
 
     graph = nullptr;
+    mRefGraph = nullptr;
 }
 PluginSettingsViewAbstract* PluginMag::getSettingsView()
 {
     return new PluginMagSettingsView(this);
 }
 
-//#pragma mark Date validity
+//Date validity
 bool PluginMag::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
 {
     // check valid curve

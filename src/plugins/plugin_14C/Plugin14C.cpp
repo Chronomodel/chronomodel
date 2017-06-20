@@ -13,8 +13,10 @@
 
 
 Plugin14C::Plugin14C()
+
 {
     mColor = QColor(47, 46, 68);
+    mRefGraph = nullptr;
     loadRefDatas();
 }
 
@@ -36,11 +38,11 @@ QPair<long double, long double> Plugin14C::getLikelihoodArg(const double& t, con
     age = (age - delta_r);
     error = sqrt(error * error + delta_r_error * delta_r_error);
     
-    double refValue = getRefValueAt(data, t);
-    double refError = getRefErrorAt(data, t);
+    long double refValue = (long double) getRefValueAt(data, t);
+    long double refError = (long double) getRefErrorAt(data, t);
     
     long double variance = refError * refError + error * error;
-    long double exponent = -0.5 * powl((long double)(age - refValue), 2.l) / variance;
+    long double exponent = (-0.5l) * powl((long double)(age - refValue), 2.l) / variance;
     return qMakePair(variance, exponent);
 }
 
@@ -286,7 +288,7 @@ QPair<double,double> Plugin14C::getTminTmaxRefsCurve(const QJsonObject& data) co
     return qMakePair<double,double>(tmin,tmax);
 }
 
-//#pragma mark Settings / Input Form / RefView
+//Settings / Input Form / RefView
 GraphViewRefAbstract* Plugin14C::getGraphViewRef()
 {
     mRefGraph = new Plugin14CRefView();
@@ -298,6 +300,7 @@ void Plugin14C::deleteGraphViewRef(GraphViewRefAbstract* graph)  {
         delete static_cast<Plugin14CRefView*>(graph);
 
     graph = nullptr;
+    mRefGraph = nullptr;
 }
 PluginSettingsViewAbstract* Plugin14C::getSettingsView()
 {
@@ -355,9 +358,9 @@ bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& sett
         
         else {
             double t = curve.mTmin;
-            long double repartition = 0;
-            long double v = 0;
-            long double lastV = 0;
+            long double repartition = 0.;
+            long double v = 0.;
+            long double lastV = 0.;
             while (valid==false && t<=curve.mTmax) {
                 v = (double)getLikelihood(t,data);
                 // we have to check this calculs

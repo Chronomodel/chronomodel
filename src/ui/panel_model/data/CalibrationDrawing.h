@@ -34,6 +34,7 @@ public:
     void setMouseTracking(bool enable);
 
     virtual QFont font() const {return mFont;}
+    void updateLayout();
 
 private:
     QLabel* mTitle;
@@ -55,7 +56,7 @@ protected:
     void paintEvent(QPaintEvent* e);
     void mouseMoveEvent(QMouseEvent* e);
     void resizeEvent(QResizeEvent* e);
-    void updateLayout();
+
 
     bool mMouseOverCurve;
 

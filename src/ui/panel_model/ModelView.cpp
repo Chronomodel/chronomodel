@@ -238,7 +238,8 @@ mCalibVisible(false)
 
     // ------------- Windows calibration ---------------------
     
-    mCalibrationView = new CalibrationView(mLeftWrapper);
+ //   mCalibrationView = new CalibrationView(mLeftWrapper);
+    mCalibrationView = nullptr;
     
     // -------- Animation -------------------------------
     
@@ -706,7 +707,8 @@ void ModelView::showProperties()
    if (mButProperties->isChecked()) {
        mEventPropertiesView->updateEvent();
        mButImport      -> setChecked(false);
-       mCalibrationView->repaint();
+       //mCalibrationView->repaint();
+       mCalibrationView = new CalibrationView(mLeftWrapper);
        mAnimationCalib->setTargetObject(mCalibrationView);
 
        mAnimationShow->setStartValue(mRightHiddenRect);
@@ -717,6 +719,7 @@ void ModelView::showProperties()
 
     } else {
        mAnimationCalib->setTargetObject(nullptr);
+       delete mCalibrationView;
         if (!mButImport->isChecked()) {
             mAnimationHide->setStartValue(mRightRect);
             mAnimationHide->setEndValue(mRightHiddenRect);
@@ -907,11 +910,11 @@ void ModelView::updateLayout()
 
     // ----------
 
-    if (mButProperties->isChecked() && mEventPropertiesView->isCalibChecked())
+    if (mButProperties->isChecked() && mEventPropertiesView->isCalibChecked() && mCalibrationView)
          mCalibrationView->setGeometry( mLeftRect );
-    else
+    /*else
         mCalibrationView->setGeometry(0, 0, 0, 0);
-
+*/
     // ----------
     if (mButProperties->isChecked())
         mPhasesView ->setGeometry(0, 0, 0, 0);
@@ -972,7 +975,7 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
 }
 
-//#pragma mark Calibration
+//Calibration
 void ModelView::updateCalibration(const QJsonObject& date)
 {
     // A date has been double-clicked => update CalibrationView only if the date is not null
@@ -986,6 +989,7 @@ void ModelView::showCalibration(bool show)
    updateLayout();
    if (show) {
        mEventPropertiesView->updateEvent();
+
        mCalibrationView->setVisible(true);
        mCalibrationView->repaint();
        mCalibrationView->raise();
@@ -995,6 +999,7 @@ void ModelView::showCalibration(bool show)
     } else {
         mAnimationCalib->setStartValue(mLeftRect);
         mAnimationCalib->setEndValue(mLeftHiddenRect);
+
     }
     mAnimationCalib->start();
 

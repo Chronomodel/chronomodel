@@ -491,6 +491,7 @@ void PluginGauss::deleteGraphViewRef(GraphViewRefAbstract* graph)
         delete static_cast<PluginGaussRefView*>(graph);
 
     graph = nullptr;
+    mRefGraph = nullptr;
 }
 PluginSettingsViewAbstract* PluginGauss::getSettingsView()
 {

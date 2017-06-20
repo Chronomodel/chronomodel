@@ -269,7 +269,6 @@ void Date::reset()
 
 void Date::calibrate(const ProjectSettings& settings, Project *project)
 {
-
     mSettings = settings;
 
     const QString toFind (mName+getDesc());
@@ -302,7 +301,7 @@ qDebug()<<"Date::calibrate insert mData "<<toFind;
         const double nbRefPts = 1. + round((mTmaxRefCurve - mTminRefCurve) / (double)settings.mStep);
         long double v = getLikelihood(mTminRefCurve);
         calibrationTemp.append(v);
-        repartitionTemp.append(0);
+        repartitionTemp.append(0.);
         long double lastRepVal = v;
         
         // we use long double type because
@@ -800,7 +799,6 @@ QStringList Date::toCSV(const QLocale &csvLocale) const
     return csv;
 }
 
-//#pragma mark sampling ti function
 void Date::autoSetTiSampler(const bool bSet)
 {
     // define sampling function
