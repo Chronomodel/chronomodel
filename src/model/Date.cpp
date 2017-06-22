@@ -380,12 +380,14 @@ const QMap<double, double> Date::getRawCalibMap() const
 
 const QMap<double, double> Date::getFormatedCalibMap() const
 {
-    if(mCalibration->mCurve.isEmpty())
+    if (mCalibration->mCurve.isEmpty())
         return QMap<double, double>();
 
     QMap<double, double> calib = vector_to_map(mCalibration->mCurve, mCalibration->mTmin, mCalibration->mTmax, mCalibration->mStep);
-    QMap<double, double>::const_iterator iter = calib.cbegin();
+     //QMap<double, double> calib = vector_to_map(mCalibration->mRepartition, mCalibration->mTmin, mCalibration->mTmax, mCalibration->mStep);
+
     QMap<double, double> formatedCalib;
+    QMap<double, double>::const_iterator iter = calib.cbegin();
     while(iter!= calib.constEnd()){
         formatedCalib.insert(DateUtils::convertToAppSettingsFormat(iter.key()), iter.value());
         ++iter;

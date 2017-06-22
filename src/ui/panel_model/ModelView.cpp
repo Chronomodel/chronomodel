@@ -70,9 +70,6 @@ mCalibVisible(false)
     const QString studyStr = tr("STUDY PERIOD") + " [ "+ locale().toString(mTmin) +" : "+ locale().toString(mTmax) + " ] BC/AD";
     mButModifyPeriod = new Button(studyStr, mTopWrapper);
     mButModifyPeriod->setIconOnly(false);
-   // mButModifyPeriod->setMouseTracking(true);
-   // mButModifyPeriod->setStyleSheet("QPushButton { text-align:Vcenter; background-color: rgb(56, 95, 153); "
-   //                                 "color: white ; border-radius: 5px;}");
     mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text()) + 10) /2, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 5, topButtonHeight );
     mButModifyPeriod->setFlatHorizontal();
     connect(mButModifyPeriod,  static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &ModelView::modifyPeriod);
@@ -238,8 +235,8 @@ mCalibVisible(false)
 
     // ------------- Windows calibration ---------------------
     
- //   mCalibrationView = new CalibrationView(mLeftWrapper);
-    mCalibrationView = nullptr;
+    mCalibrationView = new CalibrationView(mLeftWrapper);
+  //  mCalibrationView = nullptr;
     
     // -------- Animation -------------------------------
     
@@ -705,10 +702,11 @@ void ModelView::showProperties()
 {
    updateLayout();
    if (mButProperties->isChecked()) {
+
        mEventPropertiesView->updateEvent();
        mButImport      -> setChecked(false);
-       //mCalibrationView->repaint();
-       mCalibrationView = new CalibrationView(mLeftWrapper);
+       mCalibrationView->repaint();
+
        mAnimationCalib->setTargetObject(mCalibrationView);
 
        mAnimationShow->setStartValue(mRightHiddenRect);
@@ -719,7 +717,7 @@ void ModelView::showProperties()
 
     } else {
        mAnimationCalib->setTargetObject(nullptr);
-       delete mCalibrationView;
+      // delete mCalibrationView;
         if (!mButImport->isChecked()) {
             mAnimationHide->setStartValue(mRightRect);
             mAnimationHide->setEndValue(mRightHiddenRect);
@@ -912,9 +910,9 @@ void ModelView::updateLayout()
 
     if (mButProperties->isChecked() && mEventPropertiesView->isCalibChecked() && mCalibrationView)
          mCalibrationView->setGeometry( mLeftRect );
-    /*else
+    else
         mCalibrationView->setGeometry(0, 0, 0, 0);
-*/
+
     // ----------
     if (mButProperties->isChecked())
         mPhasesView ->setGeometry(0, 0, 0, 0);
@@ -975,7 +973,7 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
 }
 
-//Calibration
+//Calibration come from EventPropertiesView::updateCalibRequested
 void ModelView::updateCalibration(const QJsonObject& date)
 {
     // A date has been double-clicked => update CalibrationView only if the date is not null
@@ -984,6 +982,7 @@ void ModelView::updateCalibration(const QJsonObject& date)
 
 }
 
+// come from EventPropertiesView::showCalibRequested
 void ModelView::showCalibration(bool show)
 {
    updateLayout();
@@ -1005,7 +1004,7 @@ void ModelView::showCalibration(bool show)
 
 }
 
-//#pragma mark Mouse Events
+// Mouse Events
 void ModelView::mousePressEvent(QMouseEvent* e)
 {
     if (mHandlerRect.contains(e->pos()))

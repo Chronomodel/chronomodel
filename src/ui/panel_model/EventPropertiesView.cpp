@@ -247,25 +247,20 @@ void EventPropertiesView::updateEvent()
         if (type == Event::eDefault) {
             mMethodCombo->setCurrentIndex(mEvent.value(STATE_EVENT_METHOD).toInt());
             mDatesList->setEvent(mEvent);
-            
+            mDatesList->setCurrentRow(0);
+
             QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
+
             bool hasDates = (dates.size() > 0);
-            
+            if (hasDates)
+                updateCalibRequested(dates[0].toObject());
+
             mCalibBut->setEnabled(hasDates);
             mDeleteBut->setEnabled(hasDates);
             mRecycleBut->setEnabled(hasDates);
             
         } else if (type == Event::eKnown) {
-          //  EventKnown::KnownType knownType = (EventKnown::KnownType)mEvent.value(STATE_EVENT_KNOWN_TYPE).toInt();
-            
-            //mKnownFixedRadio   -> setChecked(knownType == EventKnown::eFixed);
-           // mKnownUniformRadio -> setChecked(knownType == EventKnown::eUniform);
-            
             mKnownFixedEdit -> setText(QString::number(mEvent.value(STATE_EVENT_KNOWN_FIXED).toDouble()));
-           // mKnownStartEdit -> setText(QString::number(mEvent.value(STATE_EVENT_KNOWN_START).toDouble()));
-            //mKnownEndEdit   -> setText(QString::number(mEvent.value(STATE_EVENT_KNOWN_END).toDouble()));
-            
-            //updateKnownControls();
             updateKnownGraph();
         }
     }
