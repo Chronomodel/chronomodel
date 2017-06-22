@@ -100,16 +100,35 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->setFormatFunctX(stringWithAppSettings);
         mGraph->setFormatFunctY(nullptr);
         mTitle = tr("Phase") + " : " + mPhase->mName;
-
+        QMap<double,double> &alpha = mPhase->mAlpha.fullHisto();
+        QMap<double,double> &beta = mPhase->mBeta.fullHisto();
+        /*
+         * Detection of one Bound used as boundary != is xor
+         * If there is two Bound, the both are egal to 1, thus nothing to do
+         */
+        if ((alpha.size()==1) != (beta.size()==1)) {
+            if (alpha.size() == 1) {
+                alpha[alpha.firstKey()] = map_max_value(beta) * 2.;
+            } else {
+                beta[beta.firstKey()] = map_max_value(alpha) * 2.;
+            }
+        }
+        /*
         GraphCurve curveAlpha = generateDensityCurve(mPhase->mAlpha.fullHisto(),
+                                                     "Post Distrib Alpha All Chains",
+                                                     color, Qt::DotLine);*/
+        GraphCurve curveAlpha = generateDensityCurve(alpha,
                                                      "Post Distrib Alpha All Chains",
                                                      color, Qt::DotLine);
         QColor colorBeta = mPhase->mColor.darker(170);
 
+        /*
         GraphCurve curveBeta = generateDensityCurve(mPhase->mBeta.fullHisto(),
                                                      "Post Distrib Beta All Chains",
+                                                     colorBeta, Qt::DashLine);*/
+        GraphCurve curveBeta = generateDensityCurve(beta,
+                                                     "Post Distrib Beta All Chains",
                                                      colorBeta, Qt::DashLine);
-
         color.setAlpha(255); // set mBrush to fill
         GraphCurve curveAlphaHPD = generateHPDCurve(mPhase->mAlpha.mHPD,
                                                      "HPD Alpha All Chains",
