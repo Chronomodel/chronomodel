@@ -699,7 +699,7 @@ void GraphView::paintEvent(QPaintEvent* )
     /* ----------------------------------------------------
      *  SD rendering : draw buffer on widget !
      * ----------------------------------------------------*/
-    else if (mRendering == eSD) {
+    if (mRendering == eSD) {
         QPainter p(this);
         p.setRenderHints(QPainter::Antialiasing);
         p.drawPixmap(mBufferBack.rect(), mBufferBack, rect());
