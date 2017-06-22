@@ -10,7 +10,7 @@
 #include "Button.h"
 #include <QtWidgets>
 
-//pragma mark Constructor / Destructor
+// Constructor / Destructor
 
 GraphViewPhase::GraphViewPhase(QWidget *parent):GraphViewResults(parent),
 mPhase(nullptr)
@@ -194,6 +194,16 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
 
             mGraph->addCurve(curveDuration);
 
+
+            /* ------------------------------------
+             *  Theta Credibility
+             * ------------------------------------
+             */
+            GraphCurve curveCred = generateSectionCurve(mPhase->mDuration.mCredibility,
+                                                            "Credibility All Chains",
+                                                            color);
+            mGraph->addCurve(curveCred);
+
         } else
             mGraph->resetNothingMessage();
 
@@ -332,6 +342,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
             mGraph->setCurveVisible("Post Distrib Duration All Chains", mShowAllChains);
             mGraph->setCurveVisible("HPD Duration All Chains", mShowAllChains);
+            mGraph->setCurveVisible("Credibility All Chains", mShowCredibility && mShowAllChains);
 
             for (int i=0; i<mShowChainList.size(); ++i)
                 mGraph->setCurveVisible("Post Distrib Duration " + QString::number(i), mShowChainList.at(i));
