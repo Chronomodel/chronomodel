@@ -8,7 +8,7 @@
 
 //#define APP_SETTINGS_DEFAULT_LANGUAGE QLocale::English
 //#define APP_SETTINGS_DEFAULT_COUNTRY QLocale::UnitedKingdom
-#define APP_SETTINGS_DEFAULT_FONT_FAMILY "Cambria" // "Calibri"
+#define APP_SETTINGS_DEFAULT_FONT_FAMILY "Helvetica" // "Calibri"
 #define APP_SETTINGS_DEFAULT_FONT_SIZE 12.
 
 #define APP_SETTINGS_DEFAULT_AUTO_SAVE false
