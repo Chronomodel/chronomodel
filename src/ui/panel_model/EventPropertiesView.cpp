@@ -321,33 +321,13 @@ void EventPropertiesView::updateKnownFixed(const QString& text)
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound fixed value updated"));
 }
 
-/*
-void EventPropertiesView::updateKnownUnifStart(const QString& text)
-{
-    QJsonObject event = mEvent;
-    event[STATE_EVENT_KNOWN_START] = round(text.toDouble());
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound min updated"));
-}
 
-void EventPropertiesView::updateKnownUnifEnd(const QString& text)
-{
-    QJsonObject event = mEvent;
-    event[STATE_EVENT_KNOWN_END] = round(text.toDouble());
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound max updated"));
-}
-*/
-
-/*void EventPropertiesView::loadKnownCsv()
-{
-
-}*/
 
 void EventPropertiesView::updateKnownGraph()
 {
     mKnownGraph->removeAllCurves();
     
-    //if((Event::Type)mEvent[STATE_EVENT_TYPE].toInt() == Event::eKnown)
-    //{
+
         Project* project = MainWindow::getInstance()->getProject();
         QJsonObject state = project->state();
         QJsonObject settings = state.value(STATE_SETTINGS).toObject();
@@ -356,10 +336,6 @@ void EventPropertiesView::updateKnownGraph()
         const double step = settings.value(STATE_SETTINGS_STEP).toDouble();
         EventKnown event = EventKnown::fromJson(mEvent);
 
-     /*   if (  ( (event.mKnownType==EventKnown::eFixed) && ((tmin>event.mFixed) || (event.mFixed>tmax)) ) )
-          || ( (event.mKnownType==EventKnown::eUniform) && (event.mUniformStart>event.mUniformEnd)  )
-          || ( (event.mKnownType==EventKnown::eUniform) && (event.mUniformStart>tmax)  )
-          || ( (event.mKnownType==EventKnown::eUniform) && (event.mUniformEnd<tmin)  )) */
         if ( (tmin>event.mFixed) || (event.mFixed>tmax) ) {
 
             return;
@@ -388,15 +364,9 @@ void EventPropertiesView::updateKnownGraph()
         curve.mIsHorizontalSections = true;
         qreal tLower;
         qreal tUpper;
-        //if(event.mKnownType == EventKnown::eFixed) {
-            tLower = event.fixedValue();
-            tUpper = tLower;
+        tLower = event.fixedValue();
+        tUpper = tLower;
 
-       /* }
-        else {
-            tLower = event.uniformStart();
-            tUpper = event.uniformEnd();
-        } */
 
         curve.mSections.append(qMakePair(tLower,tUpper));
         mKnownGraph->addCurve(curve);

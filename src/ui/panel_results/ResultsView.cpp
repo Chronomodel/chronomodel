@@ -63,12 +63,10 @@ mMaximunNumberOfVisibleGraph(0)
 
     mResultMinX = mSettings.mTmin;
     mResultMaxX = mSettings.mTmax;
-   //setFont();
+
     QFont ft = QFont();
     ft.setPointSize(APP_SETTINGS_DEFAULT_FONT_SIZE);
     QFontMetricsF fm(QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
-   // mGraphLeft = std::max(fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mResultMinX))),
-     //                            fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mResultMinX)))) + 5;
 
     mResultCurrentMinX = mResultMinX ;
     mResultCurrentMaxX = mResultMaxX ;
@@ -380,6 +378,7 @@ qDebug()<<"ResultsView::construc "<<mSpanLab->width()<<fm.width(mSpanLab->text()
 
     connect(this, &ResultsView::controlsUpdated, this, &ResultsView::updateLayout);
     connect(this, &ResultsView::scalesUpdated, this, &ResultsView::updateControls);
+
     
     // -------------------------
 
@@ -398,6 +397,7 @@ qDebug()<<"ResultsView::construc "<<mSpanLab->width()<<fm.width(mSpanLab->text()
     connect(mDatesfoldCheck, &CheckBox::clicked, this, &ResultsView::unfoldToggle);
 
     connect(this, &ResultsView::curvesGenerated, this, &ResultsView::updateCurvesToShow);
+
     connect(this, &ResultsView::updateScrollAreaRequested, this, &ResultsView::changeScrollArea);
     connect(this, &ResultsView::generateCurvesRequested, this, &ResultsView::updateCurves);
     // -------------------------
@@ -1103,6 +1103,8 @@ void ResultsView::changeScrollArea()
 
     else if (byPhases)
             createPhasesScrollArea(mTabPhasesIndex);
+
+
 }
 
 void ResultsView::updateLayout()
@@ -1167,7 +1169,7 @@ void ResultsView::updateLayout()
 
 void ResultsView::updateGraphsLayout()
 {
-    //qDebug() << "ResultsView::updateGraphsLayout()";
+  //qDebug() << "ResultsView::updateGraphsLayout()";
     const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     const bool byPhases (mTabByScene->currentIndex() == 1);
     //bool byEvents (mTabByScene->currentIndex() == 0);
@@ -1182,6 +1184,7 @@ void ResultsView::updateGraphsLayout()
             QWidget* wid = mPhasesScrollArea->widget();
             for (auto && graph : mByPhasesGraphs) {
                 graph->setGeometry(0, y, width() - mOptionsW - sbe, mGraphsH);
+                graph->update();
                 y += graph->height();
             }
             if (y>0)
@@ -1199,7 +1202,7 @@ void ResultsView::updateGraphsLayout()
 
             for (auto &&graph : mByEventsGraphs) {
                 graph->setGeometry(0, y, width() - mOptionsW - sbe, mGraphsH);
-
+                graph->update();
                 y += graph->height();
             }
             if (y>0)
@@ -2092,6 +2095,7 @@ void ResultsView::updateScales()
     //updateGraphsZoomX();
 
     qDebug()<< "ResultsView::updateScales emit scalesUpdated()";
+
     emit scalesUpdated();
 }
 
@@ -2281,13 +2285,12 @@ void ResultsView::editCurrentMinX()
      *  Find new current min & max (check range validity !!!)
      *  Update mResultZoomX
      * --------------------------------------------------*/
-    QLocale locale = QLocale();
+    //QLocale locale = QLocale();
     QString str = mCurrentXMinEdit->text();
     bool isNumber(true);
-    double value =  locale.toDouble(&str, &isNumber);
+    double value =  locale().toDouble(&str, &isNumber);
 
     if (isNumber && value != mResultCurrentMinX) {
-        //const double minVisible = mRuler->mMin;
         const double minVisible = mRuler->mMin ;
         const double current = qBound(minVisible, value, mResultCurrentMaxX);
         mResultCurrentMinX = current;
@@ -2297,7 +2300,6 @@ void ResultsView::editCurrentMinX()
         /* --------------------------------------------------
          *  Update other elements
          * --------------------------------------------------*/
-       // int zoom = int(mResultZoomX);
 
         forceXSlideSetValue = true;
         setXScaleSlide(zoomToSlider(mResultZoomX));
@@ -2319,9 +2321,9 @@ void ResultsView::editCurrentMaxX()
      *  Update mResultZoomX
      * --------------------------------------------------*/
     QString str = mCurrentXMaxEdit->text();
-    QLocale locale = QLocale();
+    //QLocale locale = QLocale();
     bool isNumber(true);
-    double value =  locale.toDouble(&str, &isNumber);
+    double value =  locale().toDouble(&str, &isNumber);
 
     if (isNumber && value != mResultCurrentMaxX) {
         const double maxVisible = mRuler->mMax;
@@ -2336,11 +2338,10 @@ void ResultsView::editCurrentMaxX()
         /* --------------------------------------------------
          *  Update other elements
          * --------------------------------------------------*/
-        //int zoom = int(mResultZoomX);
 
         forceXSlideSetValue = true;
         setXScaleSlide(zoomToSlider(mResultZoomX));// the signal valueChange() must be not connected with a slot
-qDebug()<<"editCurrentMaxX()"<<mResultZoomX<<zoomToSlider(mResultZoomX);
+
         forceXSpinSetValue = true;
         setXScaleSpin(mResultZoomX);
 
@@ -2354,16 +2355,14 @@ qDebug()<<"editCurrentMaxX()"<<mResultZoomX<<zoomToSlider(mResultZoomX);
 
 void ResultsView:: setStudyPeriod()
 {
-qDebug()<<"ResultsView::setStudyPeriod()"    ;
+    //qDebug()<<"ResultsView::setStudyPeriod()";
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && mCurrentVariable == GraphViewResults::eTheta) {
         mResultCurrentMinX = mSettings.getTminFormated();
         mResultCurrentMaxX = mSettings.getTmaxFormated();
         mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
-        qDebug()<<"ResultsView::setStudyPeriod() mCurrentTypeGraph"<<mResultCurrentMinX<<mResultCurrentMaxX<<mSettings.getTmaxFormated();
      }
 
     else if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && mCurrentVariable == GraphViewResults::eSigma) {
-
         mResultCurrentMinX = 0.;
         mResultCurrentMaxX = mResultMaxVariance;
         mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
@@ -2374,6 +2373,7 @@ qDebug()<<"ResultsView::setStudyPeriod()"    ;
         mResultCurrentMaxX = mResultMaxDuration;
         mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
      }
+
     else
         return;
 
@@ -2382,7 +2382,7 @@ qDebug()<<"ResultsView::setStudyPeriod()"    ;
 
     forceXSpinSetValue = true;
     setXScaleSpin(mResultZoomX);
-qDebug()<<"ResultsView::setStudyPeriod()"<<mResultCurrentMinX<<mResultCurrentMaxX;
+
     mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
     updateZoomEdit();
     updateGraphsZoomX();
@@ -2410,6 +2410,7 @@ void ResultsView::updateGraphsZoomX()
         for (GraphViewResults* eventGraph : mByEventsGraphs)
             eventGraph->zoom(mResultCurrentMinX, mResultCurrentMaxX);
     
+
     /* --------------------------------------------------
      * Store zoom values in an unformated value AD/BD for Post. distrib tab
      * --------------------------------------------------*/

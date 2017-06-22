@@ -1399,7 +1399,6 @@ void Model::saveToFile(const QString& fileName)
             reserveInit += event->mTheta.mHistoryAcceptRateMH->size();
             reserveInit += 4;
 
-
             QList<Date>& dates = event->mDates;
             numDates += event->mDates.size();
             for (int j=0; j<dates.size(); ++j) {

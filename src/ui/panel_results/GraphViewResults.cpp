@@ -166,7 +166,7 @@ void GraphViewResults::setCurrentX(type_data min, type_data max)
 
 void GraphViewResults::zoom(type_data min, type_data max)
 {
-    mGraph->zoomX(min, max);  
+    mGraph->zoomX(min, max);
 }
 
 void GraphViewResults::setMainColor(const QColor& color)
