@@ -83,16 +83,16 @@ mMaximunNumberOfVisibleGraph(0)
     connect(mTabs,static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::updateLayout);
     // -------------
 
-     mRuler = new Ruler(this);
-     mRuler->mMarginLeft = 50.;
-     mRuler->mMarginRight = 10.;
+    mRuler = new Ruler(this);
+    mRuler->mMarginLeft = 50.;
+    mRuler->mMarginRight = 10.;
 
-     mRuler->mMax = mSettings.mTmax;
-     mRuler->mMin = mSettings.mTmin;
-     mRuler->mCurrentMax = mSettings.mTmax;
-     mRuler->mCurrentMin = mSettings.mTmin;
+    mRuler->mMax = mSettings.mTmax;
+    mRuler->mMin = mSettings.mTmin;
+    mRuler->mCurrentMax = mSettings.mTmax;
+    mRuler->mCurrentMin = mSettings.mTmin;
 
-      //------
+    //------
 
     
     mStack = new QStackedWidget(this);

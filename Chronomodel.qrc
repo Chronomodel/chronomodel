@@ -81,5 +81,7 @@
         <file alias="recycle_w.png">resources/recycle_w.png</file>
         <file alias="extract_event.png">resources/extract_event.png</file>
         <file alias="insert_event.png">resources/insert_event.png</file>
+        <file alias="multiCalib_w.png">resources/multiCalib_w.png</file>
+        <file alias="color.png">resources/color.png</file>
     </qresource>
 </RCC>

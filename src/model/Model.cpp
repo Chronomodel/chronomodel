@@ -255,6 +255,7 @@ void Model::updateDesignFromJson(const QJsonObject& json)
         Phase * p = mPhases[i];
         p->mName = phaseJS.value(STATE_NAME).toString();
         p->mColor = QColor(phaseJS.value(STATE_COLOR_RED).toInt(),phaseJS.value(STATE_COLOR_GREEN).toInt(),phaseJS.value(STATE_COLOR_BLUE ).toInt()) ;
+        p->mItemY = phaseJS.value(STATE_ITEM_Y).toDouble();
     }
 
     const QJsonArray eventsJSON = json.value(STATE_EVENTS).toArray();
@@ -265,6 +266,7 @@ void Model::updateDesignFromJson(const QJsonObject& json)
         const QJsonObject eventJS = eventsJSON.at(i).toObject();
         Event * e = mEvents[i];
         e->mName = eventJS.value(STATE_NAME).toString();
+        e->mItemY = eventJS.value(STATE_ITEM_Y).toDouble();
         e->mColor = QColor(eventJS.value(STATE_COLOR_RED).toInt(),eventJS.value(STATE_COLOR_GREEN).toInt(),eventJS.value(STATE_COLOR_BLUE ).toInt()) ;
 
         QJsonArray datesJS = eventJS.value(STATE_EVENT_DATES).toArray();

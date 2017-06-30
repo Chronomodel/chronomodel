@@ -1,4 +1,8 @@
 #include "CalibrationView.h"
+
+#include <QtWidgets>
+#include <QClipboard>
+
 #include "Ruler.h"
 #include "Date.h"
 #include "Event.h"
@@ -19,12 +23,6 @@
 #include "DoubleValidator.h"
 
 #include "CalibrationDrawing.h"
-
-#include <QtWidgets>
-#include <QClipboard>
-//#include <QStringBuilder>
-
-
 
 CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
     mRefGraphView(nullptr),
@@ -207,7 +205,6 @@ void CalibrationView::updateGraphs()
     
 
     if (!mDate.isNull()) {
-qDebug()<<" CalibrationView::updateGraphs()"<<mTminDisplay<<mTmaxDisplay;
         mCalibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
         mCalibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
         
@@ -242,8 +239,6 @@ qDebug()<<" CalibrationView::updateGraphs()"<<mTminDisplay<<mTmaxDisplay;
 
         // Fill under distrib. of calibrated date only if typo :
         const bool isTypo (mDate.mPlugin->getName() == "Typo");
-      /*  mHPDLab->setVisible(!isTypo);
-        mHPDEdit->setVisible(!isTypo);*/
 
         // Fill HPD only if not typo :
         mResultsText->clear();

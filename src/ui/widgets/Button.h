@@ -25,9 +25,8 @@ public:
     void setIsClose(bool isClose);
     void setIconOnly(bool iconOnly) { mIconOnly = iconOnly; }
 
-
-
     void setColorState(ColorState state);
+    virtual void isCheckable(const bool checkable);
     
 protected:
     void paintEvent(QPaintEvent* e);

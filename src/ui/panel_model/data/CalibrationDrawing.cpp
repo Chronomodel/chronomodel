@@ -17,15 +17,12 @@ CalibrationDrawing::CalibrationDrawing(QWidget *parent) : QWidget(parent),
 
     mRefTitle = new QLabel(this);
     mRefComment = new QLabel(this);
-  //  mRefGraphView = new GraphViewRefAbstract(this);
 
     mCalibTitle = new QLabel(this);
     mCalibComment = new QLabel(this);
-  //  mCalibGraph = new GraphView(this);
 
     mMarkerX = new Marker(this);
     mMarkerY = new Marker(this);
-
 
 }
 
@@ -34,6 +31,7 @@ CalibrationDrawing::~CalibrationDrawing()
     if (mCalibGraph)
         delete mCalibGraph;
 }
+
 void CalibrationDrawing::hideMarker()
 {
    mMarkerX->hideMarker();

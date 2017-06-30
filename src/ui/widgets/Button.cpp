@@ -19,18 +19,13 @@ void Button::init()
 {
     setAutoRepeat(false);
     setCursor(Qt::PointingHandCursor);
-    //  setMouseTracking(true);
 
-    //setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
-    
-   // QFont font(QApplication::font());
-   // setFont(font);
     mMouseOver = false;
     mFlatVertical = false;
     mFlatHorizontal = false;
     mIsClose = false;
     
-    mColorState = eDefault;
+    mColorState = eReady;
     
     mUseMargin = false;
     mIconOnly = true;
@@ -69,7 +64,8 @@ void Button::enterEvent(QEvent *e)
 {
     mMouseOver = true;
     update();
-    QPushButton::QWidget::enterEvent(e);
+    if (QPushButton::isCheckable())
+        QPushButton::QWidget::enterEvent(e);
 }
 void Button::leaveEvent(QEvent * e)
 {
@@ -78,6 +74,15 @@ void Button::leaveEvent(QEvent * e)
     QPushButton::QWidget::leaveEvent(e);
 }
 
+void Button::isCheckable(const bool checkable)
+{
+    if (!checkable)
+        mColorState = eWarning;
+    else
+        mColorState = eReady;
+
+    QPushButton::setCheckable(checkable);
+}
 
 void Button::paintEvent(QPaintEvent* e)
 {
@@ -129,13 +134,13 @@ void Button::paintEvent(QPaintEvent* e)
         QColor gradLineLight(50, 50, 50);
         QColor gradLineDark(0, 0, 0);
         
-        if (mMouseOver) {
+     /*   if (mMouseOver) {
             gradColTop = QColor(160, 160, 160);
             gradColBot = QColor(50, 50, 50);
             gradLineLight = QColor(70, 70, 70);
             gradLineDark = QColor(20, 20, 20);
         }
-
+*/
         if (!isEnabled()) {
             gradColTop = QColor(110, 110, 110);
             gradColBot = QColor(100, 100, 100);
@@ -219,6 +224,8 @@ void Button::paintEvent(QPaintEvent* e)
             QRectF iconRect(borderW, borderH, s, s);
 
             QPixmap pixmap = ic.pixmap(iconRect.size().toSize());
+            if (!isEnabled())
+                painter.setOpacity(0.2);
             painter.drawPixmap(iconRect, pixmap, QRectF(0, 0, pixmap.width(), pixmap.height()));
 
         } else if ( !(ic.isNull()) && !(text().isEmpty())) {
@@ -236,8 +243,10 @@ void Button::paintEvent(QPaintEvent* e)
 
             QRectF iconRect((r.width() - s)/2., border, s, s);
             QPixmap pixmap = ic.pixmap(iconRect.size().toSize());
+            if (!isEnabled())
+                painter.setOpacity(0.2);
             painter.drawPixmap(iconRect, pixmap, QRectF(0, 0, pixmap.width(), pixmap.height()));
-
+            painter.setOpacity(1);
             painter.setPen(QColor(200, 200, 200));
             painter.drawText(r.adjusted(0, r.height() - textH, 0, 0), Qt::AlignCenter , text());
         }

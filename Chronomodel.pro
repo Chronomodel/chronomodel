@@ -203,7 +203,9 @@ INCLUDEPATH += src/utilities/
 # HEADERS
 #########################################
 
-HEADERS += src/MainController.h
+HEADERS += src/MainController.h \
+    src/ui/panel_model/MultiCalibrationView.h \
+    src/ui/panel_model/MultiCalibrationDrawing.h
 HEADERS += src/AppSettings.h
 HEADERS += src/StateKeys.h
 HEADERS += src/ChronoApp.h
@@ -346,7 +348,9 @@ HEADERS += src/utilities/StdUtilities.h
 # SOURCES
 #########################################
 
-SOURCES += src/AppSettings.cpp
+SOURCES += src/AppSettings.cpp \
+    src/ui/panel_model/MultiCalibrationView.cpp \
+    src/ui/panel_model/MultiCalibrationDrawing.cpp
 SOURCES += src/ChronoApp.cpp
 SOURCES += src/main.cpp
 SOURCES += src/MainController.cpp

@@ -26,9 +26,8 @@ QColor ColorPicker::getColor() const
 
 void ColorPicker::openDialog()
 {
-    QColor color = QColorDialog::getColor(mColor, qApp->activeWindow(), tr("Select Phase Color"));
-    if(color.isValid())
-    {
+    QColor color = QColorDialog::getColor(mColor, qApp->activeWindow(), tr("Select Color"));
+    if (color.isValid()) {
         setColor(color);
         emit colorChanged(color);
     }
@@ -47,7 +46,8 @@ void ColorPicker::paintEvent(QPaintEvent* e)
 
 void ColorPicker::mousePressEvent(QMouseEvent* e)
 {
-    if(isEnabled())
-        openDialog();
     Q_UNUSED(e);
+    if (isEnabled())
+        openDialog();
+
 }

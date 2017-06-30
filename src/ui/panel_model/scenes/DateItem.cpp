@@ -144,9 +144,9 @@ void DateItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 
     EventItem* eventItem = dynamic_cast<EventItem*>(parentItem());
 
-    if ((!eventItem->isSelected()) && (!mEventsScene->mDrawingArrow))
+/*    if ((!eventItem->isSelected()) && (!mEventsScene->mDrawingArrow))
         mEventsScene->clearSelection();
-
+*/
     if (eventItem)  {
         eventItem->setZValue(2.);
         eventItem->mousePressEvent(e);

@@ -211,7 +211,7 @@ void EventsScene::setShowAllThumbs(const bool show)
         foreach (const QJsonValue phase, phases) {
                 if ((selectedPhase == false) && (phase.toObject().value(STATE_IS_SELECTED).toBool() == true)) {
                         selectedPhase = true;
-                        qDebug()<<"EventsScene::setShowAllThumbs Phase Selected: "<<phase.toObject().value(STATE_NAME).toString();
+                      //  qDebug()<<"EventsScene::setShowAllThumbs Phase Selected: "<<phase.toObject().value(STATE_NAME).toString();
                 }
          }
         dynamic_cast<EventItem*>(*cIter)->setWithSelectedPhase(selectedPhase);
@@ -980,22 +980,43 @@ bool EventsScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
 
     // if mDrawingArrow is true, an Event is already selected and we can create a Constraint.
     if (eventClicked ) {
-        if (current && (eventClicked != current)) {
-            if (mDrawingArrow && constraintAllowed(current, eventClicked)) {
-                    createConstraint(current, eventClicked);
-                    mTempArrow->setVisible(false);
-                    mDrawingArrow=false;
-                    updateStateSelectionFromItem();
-                    sendUpdateProject("Event constraint created", true, true);
+        if (current) {
+            if (eventClicked != current) {
+                if (mDrawingArrow && constraintAllowed(current, eventClicked)) {
+                        createConstraint(current, eventClicked);
+                        mTempArrow->setVisible(false);
+                        mDrawingArrow=false;
+                        updateStateSelectionFromItem();
+                        sendUpdateProject("Event constraint created", true, true);
 
-              }
+                }  else {
+                    if (eventClicked->isSelected()) {
+                            eventClicked->setSelected(false);
+                            for (QGraphicsItem* d : eventClicked->childItems())
+                                d->setSelected(false);
+                   } else {
+                            eventClicked->setSelected(true);
+                            //for (QGraphicsItem* d : eventClicked->childItems())
+                            //    d->setSelected(true);
+                   }
+                }
+            } else {
+                eventClicked->setSelected(false);
+                for (QGraphicsItem* it : eventClicked->childItems()) {
+                    DateItem* d = dynamic_cast<DateItem*>(it);
+                    d->setSelected(false);
+                }
+                updateStateSelectionFromItem();
+                sendUpdateProject("Item UnSelected", true, false);//  bool notify = true, bool storeUndoCommand = false
+            }
+
+
         } else {
-            eventClicked->setSelected(true);
-            updateStateSelectionFromItem();
-            sendUpdateProject("Item selected", true, false);//  bool notify = true, bool storeUndoCommand = false
+         // now this is the current
+                 eventClicked->setSelected(true);
+                updateStateSelectionFromItem();
+                sendUpdateProject("Item selected", true, false);//  bool notify = true, bool storeUndoCommand = false
         }
-        
-        
     } else
         clearSelection();
 

@@ -19,12 +19,13 @@ Marker::~Marker()
 }
 void Marker::hideMarker()
 {
-    setVisible(false);
-
+    QWidget::setVisible(false);
+    update();
 }
 void Marker::showMarker()
 {
-    setVisible(true);
+    QWidget::setVisible(true);
+    update();
 }
 
 int Marker::thickness() const
@@ -35,8 +36,10 @@ int Marker::thickness() const
 void Marker::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
-    QPainter p(this);
-    p.setPen(mPen);
-    p.setBrush(mBrush);
-    p.drawRect(rect());
+    if (QWidget::isVisible()) {
+        QPainter p(this);
+        p.setPen(mPen);
+        p.setBrush(mBrush);
+        p.drawRect(rect());
+    }
 }

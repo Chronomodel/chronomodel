@@ -890,13 +890,13 @@ void GraphView::paintToDevice(QPaintDevice* device)
      * ----------------------------------------------------*/
     if (mShowInfos) {
         font.setPointSizeF(font.pointSizeF() + 2.);
+        QFontMetrics fm (font);
         p.setFont(font);
         p.setPen(QColor(50, 50, 50));
         int y (0);
-        int lineH (16);
-
+        int lineH (fm.height() +2);
         for (auto && info : mInfos) {
-            p.drawText(mMarginLeft + 5., mMarginTop + 5. + y, mGraphWidth - 10., lineH, Qt::AlignRight | Qt::AlignTop, info);
+            p.drawText(mMarginLeft + 5., mMarginTop + 5. + y, mGraphWidth - 10., lineH, Qt::AlignLeft | Qt::AlignTop, info);
             y += lineH;
         }
     }

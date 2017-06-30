@@ -43,12 +43,13 @@ void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
             QGraphicsItem::mousePressEvent(e);
         } else
             itemScene->mTempArrow->setFrom(pos().x(), pos().y());
-    }
-
+    } /*else
+        itemScene->itemClicked(this, e);
+*/
     QGraphicsObject::mousePressEvent(e);
 }
 
-//#pragma mark Event Managment
+//Event Managment
 QJsonObject& EventItem::getEvent()
 {
     return mData;

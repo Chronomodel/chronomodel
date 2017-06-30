@@ -1,5 +1,5 @@
-#ifndef CalibrationView_H
-#define CalibrationView_H
+#ifndef CALIBRATIONVIEW_H
+#define CALIBRATIONVIEW_H
 
 #include "Date.h"
 #include "ProjectSettings.h"

@@ -1143,7 +1143,7 @@ void Project::mergeEvents(int eventFromId, int eventToId)
     pushProjectState(stateNext, tr("Events merged"), true);
 }
 
-//#pragma mark Grouped actions on events
+// Grouped actions on events
 void Project::selectedEventsFromSelectedPhases()
 {
     const QJsonArray events = mState.value(STATE_EVENTS).toArray();

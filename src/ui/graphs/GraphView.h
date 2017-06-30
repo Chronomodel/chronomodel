@@ -108,6 +108,8 @@ public:
     const QList<GraphCurve>& getCurves() const;
     int numCurves() const;
     
+
+
     void addZone(const GraphZone& zone);
     void removeAllZones();
     
@@ -118,7 +120,7 @@ public:
     // Paint
     
     void paintToDevice(QPaintDevice* device);
- 
+    void forceRefresh() {repaintGraph(true);}
     // Save
     
     bool saveAsSVG(const QString& fileName, const QString& svgTitle, const QString& svgDescrition, const bool withVersion, const int versionHeight=20);

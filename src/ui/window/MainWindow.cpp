@@ -189,7 +189,7 @@ void MainWindow::createActions()
     mRunAction->setIconVisibleInMenu(true);
     mRunAction->setToolTip(tr("Run Model"));
     
-    mResetMCMCAction = new QAction(tr("Reset MCMC methods"), this);
+    mResetMCMCAction = new QAction(tr("Reset Events and Data methods"), this);
     
     //-----------------------------------------------------------------
     // View Actions
@@ -510,6 +510,7 @@ void MainWindow::connectProject()
     connect(mRunAction, &QAction::triggered, mProject, &Project::run);
 
     mProjectView->doProjectConnections(mProject);
+
 }
 
 void MainWindow::disconnectProject()
@@ -742,12 +743,11 @@ void MainWindow::setLanguage(QAction* action)
     }
 }
 
-//#pragma mark Grouped Actions
+// Grouped Actions
 void MainWindow::selectedEventInSelectedPhases() {
     if (mProject)
         mProject->selectedEventsFromSelectedPhases();
 }
-
 
 
 void MainWindow::changeEventsColor()
