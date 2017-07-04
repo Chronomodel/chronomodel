@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QWidget>
 #include <QFrame>
+#include <QTextEdit>
 
 #include "Button.h"
 #include "Event.h"
@@ -36,7 +37,6 @@ protected:
 public slots:
     virtual void setVisible(bool visible);
     void updateMultiCalib(); // come from ModelView
-    void changeCurveColor();
 
 
 private slots:
@@ -49,7 +49,8 @@ private slots:
     void copyImage();
     void copyText();
 
-
+    void changeCurveColor();
+    void showStat();
 
 signals:
     void closed();
@@ -62,7 +63,7 @@ public:
 private:
 
     MultiCalibrationDrawing* mDrawing;
-
+    QTextEdit* mTextArea;
     qreal mButtonWidth;
 
     Button* mImageSaveBut;
@@ -70,7 +71,6 @@ private:
     Button* mResultsClipBut;
     Button* mColorClipBut;
     ColorPicker* mColorPicker;
-
 
     QFrame* frameSeparator;
 

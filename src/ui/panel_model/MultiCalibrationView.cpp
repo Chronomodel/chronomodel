@@ -21,6 +21,19 @@ mCurveColor(Painting::mainColorDark)
     mDrawing = new MultiCalibrationDrawing(this);
     setMouseTracking(true);
 
+    mTextArea = new QTextEdit(this);
+    mTextArea->setFrameStyle(QFrame::HLine);
+    QPalette palette = mTextArea->palette();
+    palette.setColor(QPalette::Base, Qt::white);
+    palette.setColor(QPalette::Text, Qt::black);
+    mTextArea->setPalette(palette);
+    QFont font = mTextArea->font();
+    font.setPointSizeF(pointSize(11));
+    mTextArea->setFont(font);
+    mTextArea->setText(tr("Nothing to display"));
+    mTextArea->setVisible(false);
+    mTextArea->setReadOnly(true);
+
     mImageSaveBut = new Button(tr("Save"), this);
     mImageSaveBut->setIcon(QIcon(":picture_save.png"));
     mImageSaveBut->setFlatVertical();
@@ -38,6 +51,8 @@ mCurveColor(Painting::mainColorDark)
     mResultsClipBut->setFlatVertical();
     mResultsClipBut->setToolTip(tr("Copy text results to clipboard"));
     mResultsClipBut->setIconOnly(true);
+    mResultsClipBut->setChecked(false);
+    mResultsClipBut->setCheckable(true);
 
 
     mGraphHeightLab = new Label(tr("Size"), this);
@@ -62,8 +77,6 @@ mCurveColor(Painting::mainColorDark)
     frameSeparator = new QFrame(this);
     frameSeparator->setFrameStyle(QFrame::Panel);
     frameSeparator->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
-  //  frameSeparator->setStyleSheet("QFrame { border: 5px solid rgb(49, 112, 176); }");//same color as Painting::mainColorLight = QColor(49, 112, 176);
-
 
     mHPDLab = new Label(tr("HPD (%)"), this);
     mHPDLab->setAlignment(Qt::AlignHCenter);
@@ -107,7 +120,7 @@ mCurveColor(Painting::mainColorDark)
     connect(mHPDEdit, &QLineEdit::textEdited, this, &MultiCalibrationView::updateHPDGraphs);
     connect(mImageSaveBut, &Button::clicked, this, &MultiCalibrationView::exportFullImage);
     connect(mImageClipBut, &Button::clicked, this, &MultiCalibrationView::copyImage);
-    connect(mResultsClipBut, &Button::clicked, this, &MultiCalibrationView::copyText);
+    connect(mResultsClipBut, &Button::clicked, this, &MultiCalibrationView::showStat);
     connect(mGraphHeightEdit, &QLineEdit::textEdited, this, &MultiCalibrationView::updateGraphsSize);
     connect(mColorClipBut, &Button::clicked, this, &MultiCalibrationView::changeCurveColor);
 
@@ -125,6 +138,7 @@ void MultiCalibrationView::setFont(const QFont &font)
     mHPDEdit->setFont(font);
     mStartEdit->setFont(font);
     mEndEdit->setFont(font);
+    mTextArea->setFont(font);
     repaint();
 }
 
@@ -219,10 +233,16 @@ void MultiCalibrationView::updateLayout()
 
     const int graphWidth = width() - mButtonWidth;
 
-    mDrawing->setGeometry(0, 0, graphWidth, height());
-    mDrawing->setGraphHeight(mGraphHeight);
+    if (mResultsClipBut->isChecked()) {
+        mTextArea->setGeometry(0, 0, graphWidth, height());
 
-    mDrawing->update();
+    } else {
+        mDrawing->setGeometry(0, 0, graphWidth, height());
+        mDrawing->setGraphHeight(mGraphHeight);
+
+        mDrawing->update();
+    }
+
 
 }
 
@@ -241,7 +261,7 @@ void MultiCalibrationView::updateGraphList()
 
     QColor penColor = mCurveColor;// Painting::mainColorDark;
     QColor brushColor = mCurveColor;//Painting::mainColorLight;
-    brushColor.setAlpha(100);
+    brushColor.setAlpha(170);
 
     QList<GraphView*> graphList;
     QList<QColor> colorList;
@@ -268,7 +288,6 @@ void MultiCalibrationView::updateGraphList()
 
     for (auto &&ev : selectedEvents) {
         const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
-      //  mResultText += "<br>" + ev.value(STATE_NAME).toString() + "<br>";
 
         for (auto &&date : dates) {
             const QJsonObject jdate = date.toObject();
@@ -278,14 +297,12 @@ void MultiCalibrationView::updateGraphList()
 
             QMap<double, double> calibMap = d.getFormatedCalibMap();
 
-
-
             GraphCurve calibCurve;
             calibCurve.mName = "Calibration";
             calibCurve.mPen.setColor(penColor);
+            calibCurve.mPen.setWidth(2);
             calibCurve.mIsHisto = false;
             calibCurve.mData = calibMap;
-
 
             const bool isTypo (d.mPlugin->getName() == "Typo");
             calibCurve.mIsRectFromZero = isTypo;
@@ -302,7 +319,6 @@ void MultiCalibrationView::updateGraphList()
             QString eventName (ev.value(STATE_NAME).toString());
             if (eventName != preEventName)
                 calibGraph->addInfo(tr("Event") + " : "+ eventName);
-
 
             else
                 calibGraph->addInfo("");
@@ -349,6 +365,9 @@ void MultiCalibrationView::updateGraphList()
    mDrawing->setEventsColorList(colorList);
    mDrawing->setGraphList(graphList);
 
+   if (mResultsClipBut->isChecked()) {
+       showStat();
+   }
    update();
 }
 
@@ -378,6 +397,9 @@ void MultiCalibrationView::updateHPDGraphs(const QString &thres)
         hpdCurve->mData = hpd;
         gr->forceRefresh();
     }
+
+    if (mResultsClipBut ->isChecked())
+        showStat();
 
 }
 
@@ -455,8 +477,6 @@ void MultiCalibrationView::updateGraphsZoom()
         gr->forceRefresh();
     }
 
-    //mDrawing->forceRefresh();//updateLayout();
-    //update();
 }
 
 void MultiCalibrationView::exportImage()
@@ -557,11 +577,15 @@ void MultiCalibrationView::exportFullImage()
 
 void MultiCalibrationView::copyImage()
 {
-    mDrawing->hideMarker();
-    mDrawing->repaint();
-    QApplication::clipboard()->setPixmap(mDrawing->grab());
-    mDrawing->showMarker();
+    if (mResultsClipBut->isChecked()) {
+        QApplication::clipboard()->setText(mTextArea->toPlainText());
 
+    } else {
+        mDrawing->hideMarker();
+        mDrawing->repaint();
+        QApplication::clipboard()->setPixmap(mDrawing->grab());
+        mDrawing->showMarker();
+    }
 }
 
 void MultiCalibrationView::changeCurveColor()
@@ -587,34 +611,87 @@ void MultiCalibrationView::changeCurveColor()
 
 void MultiCalibrationView::copyText()
 {
+    QApplication::clipboard()->setText(mResultText.replace("<br>", "\r"));
+}
 
-    QList<GraphView*> *graphList = mDrawing->getGraphList();
-    mResultText = "";
+void MultiCalibrationView::showStat()
+{
+   if (mResultsClipBut ->isChecked()) {
+       mDrawing->setVisible(false);
+       mTextArea->setVisible(true);
+       // update Results from selected Event in JSON
+       QJsonObject state = mProject->state();
+       const QJsonArray events = state.value(STATE_EVENTS).toArray();
+       QList<QJsonObject> selectedEvents;
 
-    for (GraphView* gr : *graphList) {
-        GraphCurve* calibCurve = gr->getCurve("Calibration");
+       for (auto &&ev : events) {
+          QJsonObject jsonEv = ev.toObject();
+           if (jsonEv.value(STATE_IS_SELECTED).toBool())
+               selectedEvents.append(jsonEv);
+       }
 
-       QMap<double, double> calibMap = calibCurve->mData;
-       //QString resultsStr = d.mName + " (" + d.mPlugin->getName() + ")" +"<br>" + d.getDesc() + "<br>";
-       QString resultsStr = "<br>"+gr->getInfo();
-       DensityAnalysis results;
-       results.analysis = analyseFunction(calibMap);
-    //   results.quartiles = quartilesForRepartition(d.getFormatedRepartition(), d.getFormatedTminCalib(), mSettings.mStep);
-       resultsStr += densityAnalysisToString(results);
+       // Sort Event by Position
+       std::sort(selectedEvents.begin(), selectedEvents.end(), [] (QJsonObject ev1, QJsonObject ev2) {return (ev1.value(STATE_ITEM_Y).toDouble() < ev2.value(STATE_ITEM_Y).toDouble());});
+
+       mResultText = "";
+       for (auto &&ev : selectedEvents) {
+           // Insert the Event's Name only if different to the previous Event's name
+           const QString eventName (ev.value(STATE_NAME).toString());
+           const QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
+                                 ev.value(STATE_COLOR_GREEN).toInt(),
+                                 ev.value(STATE_COLOR_BLUE).toInt());
+           const QColor nameColor = getContrastedColor(color);
+           QString resultsStr = textBackgroundColor("<big>" +textColor(eventName, nameColor) + "</big> ", color);
 
 
-        GraphCurve* hpdCurve = gr->getCurve("Calibration HPD");
 
-        QMap<type_data, type_data> hpd = hpdCurve->mData;
-        double realThresh = map_area(hpd) / map_area(calibCurve->mData);
+           if ( (Event::Type)ev.value(STATE_EVENT_TYPE).toInt() == Event::eKnown) {
+               const double bound = ev.value(STATE_EVENT_KNOWN_FIXED).toDouble();
+               resultsStr += " <br><strong>"+ tr("Bound") + " : " + locale().toString(bound) + " BC/AD </strong><br>";
 
-        resultsStr += + "<br> HPD (" + locale().toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), stringWithAppSettings);
+           } else {
 
-        mResultText += resultsStr + "<br>";
+               const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
+
+
+                for (auto &&date : dates) {
+                   const QJsonObject jdate = date.toObject();
+
+                   Date d = Date::fromJson(jdate);
+
+                   const bool isTypo (d.mPlugin->getName() == "Typo");
+
+                   resultsStr += " <br> <strong>"+ d.mName + "</strong> (" + d.mPlugin->getName() + ")" +"<br> <i>" + d.getDesc() + "</i><br> ";
+
+                   if (!isTypo) {
+                       d.autoSetTiSampler(true); // needed if calibration is not done
+
+                       QMap<double, double> calibMap = d.getFormatedCalibMap();
+                       DensityAnalysis results;
+                       results.analysis = analyseFunction(calibMap);
+                       results.quartiles = quartilesForRepartition(d.getFormatedRepartition(), d.getFormatedTminCalib(), mSettings.mStep);
+                       resultsStr += densityAnalysisToString(results);
+
+                       // hpd results
+
+                       QMap<type_data, type_data> hpd = create_HPD(calibMap, mThreshold);
+                       const double realThresh = map_area(hpd) / map_area(calibMap);
+
+                       resultsStr += + "<br> HPD (" + locale().toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), stringWithAppSettings) + "<br>";
+                  }
+
+               }
+            }
+            mResultText += resultsStr;
+      }
+
+    mTextArea->setHtml(mResultText);
+
+
+    } else {
+       mDrawing->setVisible(true);
+       mTextArea->setVisible(false);
     }
 
-
-
-
-    QApplication::clipboard()->setText(mResultText.replace("<br>", "\r"));
+   updateLayout();
 }
