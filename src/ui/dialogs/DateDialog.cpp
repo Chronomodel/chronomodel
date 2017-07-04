@@ -30,7 +30,7 @@ mWiggleEnabled(false)
     
     mNameLab = new QLabel(tr("Name") + " :", this);
     mNameEdit = new QLineEdit(this);
-    mNameEdit->setText("<New Data>");
+    mNameEdit->setText("New Data");
     mNameEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mNameEdit->selectAll();
     mNameEdit->setFocus();
