@@ -330,22 +330,48 @@ QString textBold(const QString& str)
 {
     return "<b>" + str + "</b>";
 }
+
 QString textRed(const QString& str)
 {
     return "<span style=\"color: red;\">" + str + "</span>";
 }
+
 QString textGreen(const QString& str)
 {
     return "<span style=\"color: green;\">" + str + "</span>";
 }
+
 QString textBlue(const QString& str)
 {
     return "<span style=\"color: blue;\">" + str + "</span>";
 }
+
 QString textPurple(const QString& str)
 {
     return "<span style=\"color: #C95805;\">" + str + "</span>";
 }
+
+QString textColor(const QString &str,const QColor &color)
+{
+    int red, green, blue;
+    color.getRgb(&red, &green, &blue);
+    const QString text ="<span style=""color:rgb("+ QString::number(red)
+                                        + "," + QString::number(green)
+                                        + "," + QString ::number(blue) + ");>" + str + "</span>";
+
+   return text;
+}
+QString textBackgroundColor(const QString &str, const QColor &color)
+{
+    int red, green, blue;
+    color.getRgb(&red, &green, &blue);
+    const QString text ="<center><p style=""background-color:rgb("+ QString::number(red)
+                                        + "," + QString::number(green)
+                                        + "," + QString ::number(blue) + "); >" + str + "</p></center>";
+
+   return text;
+}
+
 
 QColor randomColor()
 {

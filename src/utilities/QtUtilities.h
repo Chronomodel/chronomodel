@@ -33,6 +33,8 @@ QString textRed(const QString& str);
 QString textGreen(const QString& str);
 QString textBlue(const QString& str);
 QString textPurple(const QString& str);
+QString textColor(const QString &str, const QColor &color);
+QString textBackgroundColor(const QString &str, const QColor &color);
 
 QColor randomColor();
 
