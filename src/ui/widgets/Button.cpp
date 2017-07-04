@@ -82,6 +82,7 @@ void Button::isCheckable(const bool checkable)
         mColorState = eReady;
 
     QPushButton::setCheckable(checkable);
+
 }
 
 void Button::paintEvent(QPaintEvent* e)
