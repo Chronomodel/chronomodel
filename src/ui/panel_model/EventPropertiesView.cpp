@@ -208,7 +208,7 @@ EventPropertiesView::~EventPropertiesView()
     
 }
 
-//#pragma mark Event Managment
+// Event Managment
 void EventPropertiesView::setEvent(const QJsonObject& event)
 {
     mEvent = event;

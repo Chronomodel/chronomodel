@@ -654,8 +654,8 @@ void EventsScene::updateStateSelectionFromItem()
             if (isCurrent)
                 currentEvent = curItem->getEvent();
 #ifdef DEBUG
-            if (modified)
-                qDebug()<<"EventsScene::updateStateSelectionFromItem "<<nextEvent.value(STATE_NAME).toString()<<selected<<isCurrent;
+         //   if (modified)
+         //       qDebug()<<"EventsScene::updateStateSelectionFromItem "<<nextEvent.value(STATE_NAME).toString()<<selected<<isCurrent;
 #endif
          }
        
@@ -669,7 +669,7 @@ void EventsScene::updateStateSelectionFromItem()
                 emit eventsAreSelected();
 
             // refresh the Event propreties view
-            //if (selectedItems().size() == 1)
+
            if (selectedItems().size() >= 1)
                 emit mProject->currentEventChanged(currentEvent);
             else {

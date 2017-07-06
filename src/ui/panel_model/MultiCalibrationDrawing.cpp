@@ -136,7 +136,11 @@ void MultiCalibrationDrawing::updateLayout()
             graph->setMarginBottom(marginBottom);
             graph->setYAxisMode(GraphView::eHidden);
             graph->showYAxisLine(false);
-            graph->setOverArrow(GraphView::eBothOverflow);
+            // usefull for bound, because there is no curve named "Calibration"
+            if (graph->getCurve("Calibration"))
+                graph->setOverArrow(GraphView::eNone);
+            else
+                graph->setOverArrow(GraphView::eBothOverflow);
             graph->setFont(font());
             graph->setTipXLab(tr("t="));
             graph->setGeometry(panelWidth + 5, y, width() - panelWidth, mGraphHeight );

@@ -4,6 +4,7 @@
 #include "Painting.h"
 #include "QtUtilities.h"
 #include "MainWindow.h"
+#include "EventKnown.h"
 
 #include <QPainter>
 #include "Project.h"
@@ -41,7 +42,7 @@ mCurveColor(Painting::mainColorDark)
     mImageSaveBut->setIconOnly(true);
 
     mImageClipBut = new Button(tr("Copy"), this);
-    mImageClipBut->setIcon(QIcon(":picture_copy.png"));
+    mImageClipBut->setIcon(QIcon(":clipboard_graph.png"));
     mImageClipBut->setFlatVertical();
     mImageClipBut->setToolTip(tr("Copy image to clipboard"));
     mImageClipBut->setIconOnly(true);
@@ -55,7 +56,7 @@ mCurveColor(Painting::mainColorDark)
     mResultsClipBut->setCheckable(true);
 
 
-    mGraphHeightLab = new Label(tr("Size"), this);
+    mGraphHeightLab = new Label(tr("V Size"), this);
     mGraphHeightLab->setAlignment(Qt::AlignHCenter);
     mGraphHeightLab->setLight();
 
@@ -205,11 +206,11 @@ void MultiCalibrationView::updateLayout()
     mImageClipBut->setGeometry(x0, y, mButtonWidth, mButtonWidth);
     y += mImageClipBut->height();
     mResultsClipBut->setGeometry(x0, y, mButtonWidth, mButtonWidth);
-    y += mResultsClipBut->height();
+    y += mResultsClipBut->height() + 5;
 
     mGraphHeightLab->setGeometry(x0, y, mButtonWidth, textHeight);
     y += mGraphHeightLab->height();
-    mGraphHeightEdit->setGeometry(x0+3, y, mButtonWidth-6, textHeight);
+    mGraphHeightEdit->setGeometry(x0 + 3, y, mButtonWidth-6, textHeight);
     y += mGraphHeightEdit->height() + verticalSpacer;
 
     mColorClipBut->setGeometry(x0, y, mButtonWidth, mButtonWidth);
@@ -289,59 +290,28 @@ void MultiCalibrationView::updateGraphList()
     for (auto &&ev : selectedEvents) {
         const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
 
-        for (auto &&date : dates) {
-            const QJsonObject jdate = date.toObject();
+        if (ev.value(STATE_EVENT_TYPE).toInt() == Event::eKnown) {
 
-            Date d = Date::fromJson(jdate);
-            d.autoSetTiSampler(true);
-
-            QMap<double, double> calibMap = d.getFormatedCalibMap();
+            EventKnown bound = EventKnown::fromJson(ev);
 
             GraphCurve calibCurve;
-            calibCurve.mName = "Calibration";
+            calibCurve.mName = "Bound";
             calibCurve.mPen.setColor(penColor);
-            calibCurve.mPen.setWidth(2);
-            calibCurve.mIsHisto = false;
-            calibCurve.mData = calibMap;
+            calibCurve.mPen.setWidth(20);
+            calibCurve.mBrush = brushColor;
+            calibCurve.mPen = QPen(Painting::mainColorLight, 2.);
+          /*  QMap<type_data, type_data> b;
+            b[bound.mFixed] = 1.;
+            calibCurve.mData = b;
+            calibCurve.mIsRectFromZero = true;*/
+            calibCurve.mIsHorizontalSections = true;
 
-            const bool isTypo (d.mPlugin->getName() == "Typo");
-            calibCurve.mIsRectFromZero = isTypo;
-            calibCurve.mBrush = QBrush(Qt::NoBrush);// isTypo ? QBrush(brushColor) : QBrush(Qt::NoBrush);
-
-            type_data yMax = map_max_value(calibCurve.mData);
-            yMax = (yMax > 0.) ? yMax : 1.;
+            calibCurve.mSections.append(qMakePair(bound.mFixed,bound.mFixed));
 
             GraphView* calibGraph = new GraphView(this);
-            calibGraph->setRangeY(0., 1. * yMax);
+            calibGraph->setRangeY(0., 1.);
+
             calibGraph->addCurve(calibCurve);
-
-            // Insert the Event's Name only if different to the previous Event's name
-            QString eventName (ev.value(STATE_NAME).toString());
-            if (eventName != preEventName)
-                calibGraph->addInfo(tr("Event") + " : "+ eventName);
-
-            else
-                calibGraph->addInfo("");
-            preEventName = eventName;
-
-            calibGraph->addInfo(d.mName);
-            calibGraph->showInfos(true);
-
-            QMap<type_data, type_data> hpd = create_HPD(calibCurve.mData, mThreshold);
-
-            GraphCurve hpdCurve;
-            hpdCurve.mName = "Calibration HPD";
-            hpdCurve.mPen = penColor;
-            hpdCurve.mBrush = brushColor;
-            hpdCurve.mIsHisto = false;
-            hpdCurve.mIsRectFromZero = true;
-            hpdCurve.mData = hpd;
-            calibGraph->addCurve(hpdCurve);
-
-            yMax = map_max_value(hpdCurve.mData);
-
-            calibGraph->setRangeY(0., 1. * yMax);
-
             calibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             calibGraph->setFormatFunctX(stringWithAppSettings);
             calibGraph->setFormatFunctY(nullptr);
@@ -352,11 +322,85 @@ void MultiCalibrationView::updateGraphList()
             calibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
             calibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
             calibGraph->setRendering(GraphView::eHD);
+
             graphList.append(calibGraph);
+
             QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
                                   ev.value(STATE_COLOR_GREEN).toInt(),
                                   ev.value(STATE_COLOR_BLUE).toInt());
             colorList.append(color);
+        }
+        else {
+            for (auto &&date : dates) {
+                const QJsonObject jdate = date.toObject();
+
+                Date d = Date::fromJson(jdate);
+                d.autoSetTiSampler(true);
+
+                QMap<double, double> calibMap = d.getFormatedCalibMap();
+
+                GraphCurve calibCurve;
+                calibCurve.mName = "Calibration";
+                calibCurve.mPen.setColor(penColor);
+                calibCurve.mPen.setWidth(2);
+                calibCurve.mIsHisto = false;
+                calibCurve.mData = calibMap;
+
+                const bool isTypo (d.mPlugin->getName() == "Typo");
+                calibCurve.mIsRectFromZero = isTypo;
+                calibCurve.mBrush = QBrush(Qt::NoBrush);
+
+                type_data yMax = map_max_value(calibCurve.mData);
+                yMax = (yMax > 0.) ? yMax : 1.;
+
+                GraphView* calibGraph = new GraphView(this);
+                calibGraph->setRangeY(0., 1. * yMax);
+                calibGraph->addCurve(calibCurve);
+
+                // Insert the Event Name only if different to the previous Event's name
+                QString eventName (ev.value(STATE_NAME).toString());
+                if (eventName != preEventName)
+                    calibGraph->addInfo(tr("Event") + " : "+ eventName);
+
+                else
+                    calibGraph->addInfo("");
+                preEventName = eventName;
+
+                calibGraph->addInfo(d.mName);
+                calibGraph->showInfos(true);
+
+                QMap<type_data, type_data> hpd = create_HPD(calibCurve.mData, mThreshold);
+
+                GraphCurve hpdCurve;
+                hpdCurve.mName = "Calibration HPD";
+                hpdCurve.mPen = penColor;
+                hpdCurve.mBrush = brushColor;
+                hpdCurve.mIsHisto = false;
+                hpdCurve.mIsRectFromZero = true;
+                hpdCurve.mData = hpd;
+                calibGraph->addCurve(hpdCurve);
+
+                yMax = map_max_value(hpdCurve.mData);
+
+                calibGraph->setRangeY(0., 1. * yMax);
+
+                calibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+                calibGraph->setFormatFunctX(stringWithAppSettings);
+                calibGraph->setFormatFunctY(nullptr);
+
+                calibGraph->setMarginRight(marginRight);
+                calibGraph->setMarginLeft(marginLeft);
+
+                calibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
+                calibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
+                calibGraph->setRendering(GraphView::eHD);
+                graphList.append(calibGraph);
+                QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
+                                      ev.value(STATE_COLOR_GREEN).toInt(),
+                                      ev.value(STATE_COLOR_BLUE).toInt());
+                colorList.append(color);
+
+            }
 
         }
    }
@@ -391,11 +435,13 @@ void MultiCalibrationView::updateHPDGraphs(const QString &thres)
 
     for (GraphView* gr : *graphList) {
         GraphCurve* calibCurve = gr->getCurve("Calibration");
-
-        QMap<type_data, type_data> hpd = create_HPD(calibCurve->mData, mThreshold);
-        GraphCurve* hpdCurve = gr->getCurve("Calibration HPD");
-        hpdCurve->mData = hpd;
-        gr->forceRefresh();
+        // there is curve named "Calibration" in a Bound
+        if (calibCurve) {
+            QMap<type_data, type_data> hpd = create_HPD(calibCurve->mData, mThreshold);
+            GraphCurve* hpdCurve = gr->getCurve("Calibration HPD");
+            hpdCurve->mData = hpd;
+            gr->forceRefresh();
+        }
     }
 
     if (mResultsClipBut ->isChecked())
