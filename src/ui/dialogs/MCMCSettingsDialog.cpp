@@ -12,14 +12,14 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, Qt::WindowFlags flags):
 QDialog(parent, flags),
   mTotalWidth(600),
   mMargin(5),
-  top(65), // y position of the colored box
+  top(35), // y position of the colored box
   lineH(20),
   editW(100.),
   h (115.), // size of the colored box
   butW(80),
   butH(25)
 {
-    setWindowTitle(tr("MCMC Options"));
+    setWindowTitle(tr("MCMC Settings"));
     QFont font (QApplication::font());
     mSeedsLab = new Label(tr("Seeds (separated by \";\")") + ": ", this);
     mSeedsEdit = new LineEdit(this);
@@ -75,16 +75,21 @@ QDialog(parent, flags),
     mOkBut = new Button(tr("OK"), this);
     mCancelBut = new Button(tr("Cancel"), this);
     
+    mTestBut = new Button(tr("Quick Test"), this);
+    mResetBut = new Button(tr("Reset"), this);
+
     //connect(mOkBut, &Button::clicked, this, &MCMCSettingsDialog::accept);
     connect(mOkBut, &Button::clicked, this, &MCMCSettingsDialog::inputControl);
     connect(this, &MCMCSettingsDialog::inputValided, this, &MCMCSettingsDialog::accept);
 
     connect(mCancelBut, &Button::clicked, this, &MCMCSettingsDialog::reject);
     
+    connect(mResetBut, &Button::clicked, this, &MCMCSettingsDialog::reset);
+    connect(mTestBut, &Button::clicked, this, &MCMCSettingsDialog::setQuickTest);
 
     w = mTotalWidth - 2.*mMargin;
 
-    int fixedHeight = mHelp->heightForWidth(mTotalWidth - 2*mMargin)  + 3*mMargin + butH + lineH + h + top;
+    int fixedHeight = mHelp->heightForWidth(mTotalWidth - 2*mMargin)  + 3*mMargin + butH + lineH + h + top + 20;
 
     setFixedSize(mTotalWidth, fixedHeight);
 }
@@ -96,7 +101,7 @@ MCMCSettingsDialog::~MCMCSettingsDialog()
 
 void MCMCSettingsDialog::setSettings(const MCMCSettings& settings)
 {
-    const QLocale mLoc=QLocale();
+    const QLocale mLoc = QLocale();
     mNumProcEdit->setText(mLoc.toString(settings.mNumChains));
     mNumIterEdit->setText(mLoc.toString(settings.mNumRunIter));
     mNumBurnEdit->setText(mLoc.toString(settings.mNumBurnIter));
@@ -145,13 +150,13 @@ void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
     font.setWeight(QFont::Bold);
     p.setFont(font);
     
-    p.drawText(0, 0, width(), 30, Qt::AlignCenter, tr("MCMC Settings"));
+    //p.drawText(0, 0, width(), 30, Qt::AlignCenter, tr("MCMC Settings"));
     
     font.setWeight(QFont::Normal);
     //font.setPointSizeF(pointSize(11));
     p.setFont(font);
     
-    p.drawText(0, 40, width()/2, lineH, Qt::AlignVCenter | Qt::AlignRight, tr("Number of chains") + " :");
+    p.drawText(0, 10, width()/2, lineH, Qt::AlignVCenter | Qt::AlignRight, tr("Number of chains") + " :");
     
     p.setBrush(QColor(235, 115, 100));
     p.drawRect(mBurnRect);
@@ -191,6 +196,8 @@ void MCMCSettingsDialog::resizeEvent(QResizeEvent* e)
 
 void MCMCSettingsDialog::updateLayout()
 {
+    mNumProcEdit->setGeometry(width()/2 + mMargin, 10, editW, lineH);
+
     mBurnRect = QRectF(mMargin, top, w * 0.2, h);
     mAdaptRect = QRectF(mMargin + mBurnRect.width(), top, w * 0.4, h);
     mAquireRect = QRectF(mMargin + mBurnRect.width() + mAdaptRect.width(), top, w * 0.4, h);
@@ -202,7 +209,6 @@ void MCMCSettingsDialog::updateLayout()
     mBatchInterRect = mBatch1Rect.adjusted(mBatch1Rect.width() + mMargin, 0, mBatch1Rect.width() + mMargin, 0);
     mBatchNRect = mBatch1Rect.adjusted(2*mBatch1Rect.width() + 2*mMargin, 0, 2*mBatch1Rect.width() + 2*mMargin, 0);
     
-    mNumProcEdit->setGeometry(width()/2 + mMargin, 40, editW, lineH);
     mNumBurnEdit->setGeometry(mBurnRect.x() + (mBurnRect.width() - editW)/2, mBurnRect.y() + 2*lineH, editW, lineH);
     mNumIterEdit->setGeometry(mAquireRect.x() + (mAquireRect.width() - editW)/2, mAquireRect.y() + 2*lineH, editW, lineH);
     mDownSamplingEdit->setGeometry(mAquireRect.x() + (mAquireRect.width() - editW)/2, mAquireRect.y() + 4*lineH, editW, lineH);
@@ -210,18 +216,22 @@ void MCMCSettingsDialog::updateLayout()
     mMaxBatchesEdit->setGeometry(mAdaptRect.x() + mAdaptRect.width()/2 + mMargin, mAdaptRect.y() + mAdaptRect.height() - mMargin - lineH, editW, lineH);
 
     mHelp->setGeometry(mMargin,
-                       height() - 3*mMargin - butH - lineH - mHelp->heightForWidth(width() - 2*mMargin),
+                       top + h + mMargin,
                        width() - 2*mMargin,
                        mHelp->heightForWidth(width() - 2*mMargin));
 
-    mSeedsLab->setGeometry(width()/2 - mMargin/2 - 300, height() - 2*mMargin - butH - lineH, 200, lineH);
-    mSeedsEdit->setGeometry(width()/2 + mMargin/2-100, height() - 2*mMargin - butH - lineH, editW, lineH);
+    mSeedsLab->setGeometry(width()/2 - mMargin/2 - 300, height() - 2*mMargin - butH - lineH -10, 200, lineH);
+    mSeedsEdit->setGeometry(width()/2 + mMargin/2-100, height() - 2*mMargin - butH - lineH - 10, editW, lineH);
 
-    mLabelLevel->setGeometry(width()/2 + mMargin/2+10, height() - 2*mMargin - butH - lineH, editW, lineH);
-    mLevelEdit->setGeometry(width()/2 + mMargin/2+120, height() - 2*mMargin - butH - lineH, 50, lineH);
+    mLabelLevel->setGeometry(width()/2 + mMargin/2+10, height() - 2*mMargin - butH - lineH - 10, editW, lineH);
+    mLevelEdit->setGeometry(width()/2 + mMargin/2+120, height() - 2*mMargin - butH - lineH -10, 50, lineH);
     
-    mOkBut->setGeometry(width() - 2*mMargin - 2*butW, height() - mMargin - butH, butW, butH);
-    mCancelBut->setGeometry(width() - mMargin - butW, height() - mMargin - butH, butW, butH);
+    mOkBut->setGeometry(width() - 2*mMargin - 2*butW, height() - mMargin - butH - 5, butW, butH);
+    mCancelBut->setGeometry(width() - mMargin - butW, height() - mMargin - butH - 5, butW, butH);
+
+
+    mTestBut->setGeometry(2*mMargin + butW, height() - mMargin - butH - 5, butW, butH);
+    mResetBut->setGeometry(mMargin, height() - mMargin - butH - 5, butW, butH);
 }
 
 void MCMCSettingsDialog::inputControl()
@@ -306,4 +316,31 @@ void MCMCSettingsDialog::inputControl()
                                    QMessageBox::Ok ,
                                    QMessageBox::Ok);
 
+}
+
+void MCMCSettingsDialog::reset()
+{
+    mNumProcEdit->setText(locale().toString(MCMC_NUM_CHAINS_DEFAULT));
+    mNumIterEdit->setText(locale().toString(MCMC_NUM_RUN_DEFAULT));
+    mNumBurnEdit->setText(locale().toString(MCMC_NUM_BURN_DEFAULT));
+    mMaxBatchesEdit->setText(locale().toString(MCMC_MAX_ADAPT_BATCHES_DEFAULT));
+    mIterPerBatchSpin->setValue(MCMC_ITER_PER_BATCH_DEFAULT);
+    mDownSamplingEdit->setText(locale().toString(MCMC_THINNING_INTERVAL_DEFAULT));
+    mSeedsEdit->setText("");
+
+    mLevelEdit->setText(locale().toString(MCMC_MIXING_DEFAULT));
+}
+
+void MCMCSettingsDialog::setQuickTest()
+{
+    mNumProcEdit->setText(locale().toString(1));
+
+    mNumBurnEdit->setText(locale().toString(10));
+    mMaxBatchesEdit->setText(locale().toString(10));
+    mIterPerBatchSpin->setValue(100);
+    mNumIterEdit->setText(locale().toString(200));
+    mDownSamplingEdit->setText(locale().toString(5));
+    mSeedsEdit->setText("");
+
+    mLevelEdit->setText(locale().toString(0.99));
 }

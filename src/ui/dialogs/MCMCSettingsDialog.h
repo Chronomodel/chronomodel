@@ -23,6 +23,8 @@ public:
 
 protected slots:
     void inputControl();
+    void reset();
+    void setQuickTest();
 
 signals:
     void inputValided();
@@ -50,6 +52,9 @@ private:
     
     Button* mOkBut;
     Button* mCancelBut;
+
+    Button* mTestBut;
+    Button* mResetBut;
     
     QRectF mBurnRect;
     QRectF mAdaptRect;
