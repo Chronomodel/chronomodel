@@ -165,7 +165,7 @@ mCalibVisible(false)
     mButImport->setAutoExclusive(false);
 
     connect(mButImport, static_cast<void (Button::*)(bool)>(&Button::toggled), this, &ModelView::showImport);
-    connect(mEventsScene, &EventsScene::eventDoubleClicked, mButProperties, &Button::click);
+   // connect(mEventsScene, &EventsScene::eventDoubleClicked, mButProperties, &Button::click);
 
     // -------- Windows Data Importation --------------------
     
@@ -334,9 +334,10 @@ void ModelView::connectScenes()
     connect(mButEventsOverview, &Button::toggled, mEventsSearchEdit, &LineEdit::setVisible);
     connect(mEventsSearchEdit, &LineEdit::returnPressed, this, &ModelView::searchEvent);
     connect(mEventsGlobalZoom, &ScrollCompressor::valueChanged, this, &ModelView::updateEventsZoom);
-    connect(mButExportEvents, &Button::clicked, this, &ModelView::exportEventsScene);
-    connect(mButProperties, SIGNAL(toggled(bool)), this, SLOT(showProperties()));
+    connect(mButExportEvents, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ModelView::exportEventsScene);
 
+    //connect(mButProperties, static_cast<void (Button::*)(bool)> (&Button::toggled), this, &ModelView::showProperties);
+    connect(mButProperties, &Button::clicked, this, &ModelView::showProperties);
 
     connect(mButNewPhase, &Button::clicked, mProject, &Project::createPhase);
     connect(mButDeletePhase, &Button::clicked, mPhasesScene, &PhasesScene::deleteSelectedItems);// mProject, &Project::deleteSelectedPhases);
@@ -348,12 +349,13 @@ void ModelView::connectScenes()
     //connect(mEventsScene, &EventsScene::eventsAreSelected, mPhasesScene, &PhasesScene::eventsSelected);
     connect(mEventsScene, &EventsScene::eventsAreSelected, this, &ModelView::eventsAreSelected);
     //connect(this, &ModelView::emitToPhase, mPhasesScene, &PhasesScene::eventsSelected);
+    connect(mEventsScene, &EventsScene::eventDoubleClicked, this, &ModelView::togglePropeties);//mButProperties, &Button::toggle);
 
     // When one or several phases are selected, we hightLigth the data inside the Events included in the phases
     connect(mPhasesScene, &PhasesScene::noSelection, mEventsScene, &EventsScene::noHide);
     connect(mPhasesScene, &PhasesScene::phasesAreSelected, mEventsScene, &EventsScene::phasesSelected);
 
-    connect(mProject, static_cast<void (Project::*)(const QJsonObject&)> (&Project::currentEventChanged), this, &ModelView::eventsAreSelected);
+   // connect(mProject, static_cast<void (Project::*)(const QJsonObject&)> (&Project::currentEventChanged), this, &ModelView::eventsAreSelected);
 
     connect(mProject, &Project::currentEventChanged, mEventPropertiesView, &EventPropertiesView::setEvent);
     connect(mEventPropertiesView, &EventPropertiesView::combineDatesRequested, mProject, &Project::combineDates);
@@ -380,7 +382,8 @@ void ModelView::disconnectScenes()
     disconnect(mEventsSearchEdit, &LineEdit::returnPressed, this, &ModelView::searchEvent);
     disconnect(mEventsGlobalZoom, &ScrollCompressor::valueChanged, this, &ModelView::updateEventsZoom);
     disconnect(mButExportEvents, &Button::clicked, this, &ModelView::exportEventsScene);
-    disconnect(mButProperties, SIGNAL(toggled(bool)), this, SLOT(showProperties()));
+    //disconnect(mButProperties, SIGNAL(toggled(bool)), this, SLOT(showProperties()));
+    disconnect(mButProperties, &Button::clicked, this, &ModelView::showProperties);
 
     disconnect(mButMultiCalib,  &Button::clicked, this, &ModelView::showMultiCalib);
     mMultiCalibrationView->setProject(nullptr);
@@ -391,7 +394,7 @@ void ModelView::disconnectScenes()
     // when there is no Event selected we must show all data inside phases
     disconnect(mEventsScene, &EventsScene::noSelection, mPhasesScene, &PhasesScene::noHide);
     disconnect(mEventsScene, &EventsScene::eventsAreSelected, mPhasesScene, &PhasesScene::eventsSelected);
-
+    disconnect(mEventsScene, &EventsScene::eventDoubleClicked, this, &ModelView::togglePropeties);
     // When one or several phases are selected, we hightLigth the data inside the Event includes in the phases
     disconnect(mPhasesScene, &PhasesScene::noSelection, mEventsScene, &EventsScene::noHide);
     disconnect(mPhasesScene, &PhasesScene::phasesAreSelected, mEventsScene, &EventsScene::phasesSelected);
@@ -717,7 +720,7 @@ void ModelView::searchEvent()
 
 void ModelView::showProperties()
 {
-
+   updateLayout();
    if (mButProperties->isChecked() && mButProperties->isEnabled()) {
 
        mEventPropertiesView->updateEvent();
@@ -748,11 +751,12 @@ void ModelView::showProperties()
 
 void ModelView::showMultiCalib()
 {
-
+    updateLayout();
     if (mButMultiCalib->isChecked() && mButMultiCalib->isEnabled()) {
 
         mMultiCalibrationView->updateGraphList();
         mMultiCalibrationView->setVisible(true);
+       // mMultiCalibrationView->setGeometry(mRightRect);
 
         mButImport      -> setChecked(false);
 
@@ -813,6 +817,31 @@ void ModelView::showImport()
  */
 void ModelView::eventsAreSelected()
 {
+    qDebug()<<"ModelView::eventsAreSelected()";
+    if (!mButProperties->isEnabled()) {
+        mButNewEventKnown->setDisabled(true);
+        mButNewEvent->setDisabled(true);
+
+        mButExportEvents->setDisabled(true);
+        mButImport->setDisabled(true);
+
+        mButProperties->setDisabled(false);
+        mButMultiCalib->setDisabled(false);
+        mButDeleteEvent->setDisabled(false);
+
+        mButProperties->setAutoExclusive(true);
+        mButMultiCalib->setAutoExclusive(true);
+    }
+    updateLayout();
+    if (!mButMultiCalib->isChecked() && !mButProperties->isChecked())
+        mPhasesScene->eventsSelected();
+}
+
+void ModelView::togglePropeties()
+{
+    qDebug()<<"ModelView::togglePropeties()";
+    //eventsAreSelected();
+
     mButNewEventKnown->setDisabled(true);
     mButNewEvent->setDisabled(true);
 
@@ -826,13 +855,31 @@ void ModelView::eventsAreSelected()
     mButProperties->setAutoExclusive(true);
     mButMultiCalib->setAutoExclusive(true);
 
-    updateLayout();
-    if (!mButMultiCalib->isChecked() && !mButProperties->isChecked())
-        mPhasesScene->eventsSelected();
+mButProperties->setChecked(true);
+mButProperties->update();
+  //  updateLayout();
+showProperties();
+
+    /*
+    mButProperties->click();
+
+    mEventPropertiesView->updateEvent();
+    mButImport      -> setChecked(false);
+    mCalibrationView->repaint();
+
+    mAnimationCalib->setTargetObject(mCalibrationView);
+
+    mAnimationShow->setStartValue(mRightHiddenRect);
+    mAnimationShow->setEndValue(mRightRect);
+    mEventPropertiesView->raise();
+    mAnimationShow->setTargetObject(mEventPropertiesView);
+    mAnimationShow->start();
+    */
 }
 
 void ModelView::noEventSelected()
 {
+    qDebug()<<"ModelView::noEventSelected()";
     mButNewEventKnown->setDisabled(false);
     mButNewEvent->setDisabled(false);
 

@@ -128,8 +128,7 @@ void Tabs::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
 
-    if (mTabWidgets[mCurrentIndex])
-        resize(width(), height());
+
 
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
@@ -141,11 +140,20 @@ void Tabs::paintEvent(QPaintEvent* e)
             p.fillRect(r, Qt::black);
             p.setPen(QColor(200, 200, 200));
             p.drawText(r, Qt::AlignCenter, mTabNames[i]);
+            if (mTabWidgets[i])
+                mTabWidgets[i]->setVisible(false);
         }
-    
+
+    // we start to hide all widget and after we show the current widget, because if there is the same widget used in the several
+    // tabs we have to show it again
+    if (mTabWidgets[mCurrentIndex]) {
+        mTabWidgets[mCurrentIndex]->setVisible(true);
+        resize(width(), height());
+    }
+
     if (mCurrentIndex != -1) {
         p.fillRect(mTabRects[mCurrentIndex], Painting::mainColorDark);
-        p.setPen(Qt::white);//QColor(200, 200, 200));
+        p.setPen(Qt::white);
         p.drawText(mTabRects[mCurrentIndex], Qt::AlignCenter, mTabNames[mCurrentIndex]);
     }
 
@@ -177,12 +185,12 @@ void Tabs::updateLayout()
 {
     const qreal m (10.);
     mTabRects.clear();
-    qreal x = 1.;
+    qreal x  (1.);
     const qreal h (mTabHeight - 1.);
     QFontMetrics metrics(font());
 
     int i (0);
-    for (auto && name : mTabNames) {
+    for (auto &&name : mTabNames) {
         if (mTabVisible[i]) {
             const qreal w = metrics.width(name);
             mTabRects.append(QRectF(x, 1, 2*m + w, h));

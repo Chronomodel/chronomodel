@@ -319,6 +319,7 @@ HEADERS += src/ui/panel_results/GraphViewDate.h
 HEADERS += src/ui/panel_results/GraphViewEvent.h
 HEADERS += src/ui/panel_results/GraphViewPhase.h
 HEADERS += src/ui/panel_results/GraphViewResults.h
+HEADERS += src/ui/panel_results/GraphViewTempo.h
 HEADERS += src/ui/panel_results/ResultsView.h
 
 HEADERS += src/ui/widgets/Button.h
@@ -457,6 +458,7 @@ SOURCES += src/ui/panel_results/GraphViewDate.cpp
 SOURCES += src/ui/panel_results/GraphViewEvent.cpp
 SOURCES += src/ui/panel_results/GraphViewPhase.cpp
 SOURCES += src/ui/panel_results/GraphViewResults.cpp
+SOURCES += src/ui/panel_results/GraphViewTempo.cpp
 SOURCES += src/ui/panel_results/ResultsView.cpp
 
 SOURCES += src/ui/widgets/ColorPicker.cpp

@@ -76,10 +76,12 @@ protected:
 
     void createEventsScrollArea(const int idx = 0);
     void createPhasesScrollArea(const int idx = 0);
+    void createTempoScrollArea(const int idx = 0);
     void generateCurves(const QList<GraphViewResults*>& listGraphs);
 
     void updateTabDisplay(const int &i);
     void updateTabByScene();
+    void updateTabByTempo();
     void updateTabPageSaving();
     void updateNbDensity(int i);
 
@@ -102,6 +104,7 @@ public slots:
     void updateResultsLog();
 
 private slots:
+    void updateTabs(const int &index);
     void graphTypeChange();
     void updateCurvesToShow();
     
@@ -183,15 +186,18 @@ private:
     Tabs* mTabs;
     int mTabEventsIndex;
     int mTabPhasesIndex;
+    int mTabTempoIndex;
 
     Marker* mMarker;
 
     QStackedWidget* mStack;
     QScrollArea* mEventsScrollArea;
     QScrollArea* mPhasesScrollArea;
+    QScrollArea* mTempoScrollArea;
 
     QList<GraphViewResults*> mByEventsGraphs;
     QList<GraphViewResults*> mByPhasesGraphs;
+    QList<GraphViewResults*> mByTempoGraphs;
 
     QWidget* mOptionsWidget;
 
@@ -207,9 +213,15 @@ private:
     CheckBox* mDataCalibCheck;
     CheckBox* mWiggleCheck;
     RadioButton* mDataSigmaRadio;
-    RadioButton* mPhaseDurationRadio;
-
     CheckBox* mStatCheck;
+
+    QWidget* mTempoGroup;
+    RadioButton* mDurationRadio;
+    RadioButton* mTempoRadio;
+    RadioButton* mIntensityRadio;
+    CheckBox* mTempoStatCheck;
+
+
 
 
     // -- tabs

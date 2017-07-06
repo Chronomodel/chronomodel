@@ -57,7 +57,9 @@ public:
     enum Variable{
         eTheta = 0,
         eSigma = 1,
-        eDuration = 2
+        eDuration = 2,
+        eTempo = 3,
+        eIntensity = 4
     };
     
     // member

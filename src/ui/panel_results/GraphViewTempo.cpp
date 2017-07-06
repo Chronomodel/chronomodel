@@ -1,4 +1,4 @@
-#include "GraphViewPhase.h"
+#include "GraphViewTempo.h"
 #include "GraphView.h"
 #include "Phase.h"
 #include "Painting.h"
@@ -7,12 +7,11 @@
 #include "DateUtils.h"
 #include "ModelUtilities.h"
 #include "MainWindow.h"
-#include "Button.h"
 #include <QtWidgets>
 
 // Constructor / Destructor
 
-GraphViewPhase::GraphViewPhase(QWidget *parent):GraphViewResults(parent),
+GraphViewTempo::GraphViewTempo(QWidget *parent):GraphViewResults(parent),
 mPhase(nullptr)
 {
     setMainColor(QColor(50, 50, 50));
@@ -20,19 +19,19 @@ mPhase(nullptr)
 
 }
 
-GraphViewPhase::~GraphViewPhase()
+GraphViewTempo::~GraphViewTempo()
 {
     mPhase = nullptr;
 }
 
-void GraphViewPhase::setGraphFont(const QFont& font)
+void GraphViewTempo::setGraphFont(const QFont& font)
 {
     GraphViewResults::setFont(font);
     updateLayout();
 }
 
 
-void GraphViewPhase::setPhase(Phase* phase)
+void GraphViewTempo::setPhase(Phase* phase)
 {
     Q_ASSERT(phase);
 
@@ -43,24 +42,24 @@ void GraphViewPhase::setPhase(Phase* phase)
 
 }
 
-void GraphViewPhase::updateLayout()
+void GraphViewTempo::updateLayout()
 {
         GraphViewResults::updateLayout();
 }
 
-void GraphViewPhase::paintEvent(QPaintEvent* e)
+void GraphViewTempo::paintEvent(QPaintEvent* e)
 {
     GraphViewResults::paintEvent(e);
 }
 
-void GraphViewPhase::resizeEvent(QResizeEvent* )
+void GraphViewTempo::resizeEvent(QResizeEvent* )
 {
     updateLayout();
 }
 
-void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
+void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
 {
-    //qDebug()<<"GraphViewPhase::generateCurves()";
+    //qDebug()<<"GraphViewTempo::generateCurves()";
     Q_ASSERT(mPhase);
     GraphViewResults::generateCurves(typeGraph, variable);
     
@@ -77,8 +76,8 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
     
     QColor color = mPhase->mColor;
 
-    QString resultsText = ModelUtilities::phaseResultsText(mPhase);
-    QString resultsHTML = ModelUtilities::phaseResultsHTML(mPhase);
+    QString resultsText = QString("Tempo Results");//ModelUtilities::phaseResultsText(mPhase);
+    QString resultsHTML = QString("Tempo Results");//ModelUtilities::phaseResultsHTML(mPhase);
     setNumericalResults(resultsHTML, resultsText);
 
     mGraph->setOverArrow(GraphView::eNone);
@@ -94,7 +93,58 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
      *  - Post Distrib Beta i
      *  - Time Range
      * ------------------------------------------------  */
-    if ((typeGraph == ePostDistrib) && (variable == eTheta)) {
+
+    if ((typeGraph == ePostDistrib) && (variable == eDuration)) {
+        mGraph->mLegendX = "Years";
+        mGraph->mLegendY = "";
+        mGraph->setFormatFunctX(stringWithAppSettings);
+        mGraph->setFormatFunctY(nullptr);
+
+        mTitle = tr("Phase Duration") + " : " + mPhase->mName;
+        GraphCurve curveDuration;
+
+        if (mPhase->mDuration.fullHisto().size()>1) {
+            curveDuration = generateDensityCurve(mPhase->mDuration.fullHisto(),
+                                                            "Post Distrib Duration All Chains",
+                                                            color);
+
+            mGraph->setRangeX(0., ceil(curveDuration.mData.lastKey()));
+            color.setAlpha(255);
+            GraphCurve curveDurationHPD = generateHPDCurve(mPhase->mDuration.mHPD,
+                                                           "HPD Duration All Chains",
+                                                           color);
+            mGraph->setCanControlOpacity(true);
+            mGraph->addCurve(curveDurationHPD);
+            mGraph->setFormatFunctX(stringWithAppSettings);
+            mGraph->setFormatFunctY(nullptr);
+
+            mGraph->addCurve(curveDuration);
+
+
+            /* ------------------------------------
+             *  Theta Credibility
+             * ------------------------------------
+             */
+            GraphCurve curveCred = generateSectionCurve(mPhase->mDuration.mCredibility,
+                                                            "Credibility All Chains",
+                                                            color);
+            mGraph->addCurve(curveCred);
+
+        } else
+            mGraph->resetNothingMessage();
+
+
+        if (!mPhase->mDuration.mChainsHistos.isEmpty())
+            for (int i=0; i<mChains.size(); ++i) {
+                GraphCurve curveDuration = generateDensityCurve(mPhase->mDuration.histoForChain(i),
+                                                             "Post Distrib Duration " + QString::number(i),
+                                                             Painting::chainColors.at(i), Qt::DotLine);
+
+                mGraph->addCurve(curveDuration);
+            }
+     }
+
+    else if ((typeGraph == ePostDistrib) && (variable == eTempo)) {
         mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
         mGraph->mLegendY = "";
         mGraph->setFormatFunctX(stringWithAppSettings);
@@ -118,7 +168,6 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                                                      "Post Distrib Alpha All Chains",
                                                      color, Qt::DotLine);
         QColor colorBeta = mPhase->mColor.darker(170);
-
 
         GraphCurve curveBeta = generateDensityCurve(beta,
                                                      "Post Distrib Beta All Chains",
@@ -180,56 +229,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
             }
     }
 
-
-    else if ((typeGraph == ePostDistrib) && (variable == eDuration)) {
-        mGraph->mLegendX = "Years";
-        mGraph->mLegendY = "";
-        mGraph->setFormatFunctX(stringWithAppSettings);
-        mGraph->setFormatFunctY(nullptr);
-
-        mTitle = tr("Phase Duration") + " : " + mPhase->mName;
-        GraphCurve curveDuration;
-
-        if (mPhase->mDuration.fullHisto().size()>1) {
-            curveDuration = generateDensityCurve(mPhase->mDuration.fullHisto(),
-                                                            "Post Distrib Duration All Chains",
-                                                            color);
-
-            mGraph->setRangeX(0., ceil(curveDuration.mData.lastKey()));
-            color.setAlpha(255);
-            GraphCurve curveDurationHPD = generateHPDCurve(mPhase->mDuration.mHPD,
-                                                           "HPD Duration All Chains",
-                                                           color);
-            mGraph->setCanControlOpacity(true);
-            mGraph->addCurve(curveDurationHPD);
-            mGraph->setFormatFunctX(stringWithAppSettings);
-            mGraph->setFormatFunctY(nullptr);
-
-            mGraph->addCurve(curveDuration);
-
-
-            /* ------------------------------------
-             *  Theta Credibility
-             * ------------------------------------
-             */
-            GraphCurve curveCred = generateSectionCurve(mPhase->mDuration.mCredibility,
-                                                            "Credibility All Chains",
-                                                            color);
-            mGraph->addCurve(curveCred);
-
-        } else
-            mGraph->resetNothingMessage();
-
-
-        if (!mPhase->mDuration.mChainsHistos.isEmpty())
-            for (int i=0; i<mChains.size(); ++i) {
-                GraphCurve curveDuration = generateDensityCurve(mPhase->mDuration.histoForChain(i),
-                                                             "Post Distrib Duration " + QString::number(i),
-                                                             Painting::chainColors.at(i), Qt::DotLine);
-
-                mGraph->addCurve(curveDuration);
-            }
-     } else if (typeGraph == ePostDistrib && variable == eSigma) {
+    else if (typeGraph == ePostDistrib && variable == eIntensity) {
 
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(stringWithAppSettings);
@@ -238,33 +238,6 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
         mTitle = tr("Phase's Events' Std Compil.") + " : " + mPhase->mName;
 
 
-        for ( auto && ev : mPhase->mEvents) {
-        /* ------------------------------------------------
-         *  Events don't have std dev BUT we can visualize
-         *  an overlay of all dates std dev instead.
-         *  Possible curves, FOR ALL DATES :
-         *  - Sigma Date i All Chains
-         *  - Sigma Date i Chain j
-         * ------------------------------------------------
-         */
-            int i(0);
-            for (auto&& date : ev->mDates) {
-                GraphCurve curve = generateDensityCurve(date.mSigma.fullHisto(),
-                                                        "Sigma Date " + QString::number(i) + " All Chains",
-                                                        color);
-
-                mGraph->addCurve(curve);
-                if (!date.mSigma.mChainsHistos.isEmpty())
-                    for (int j=0; j<mChains.size(); ++j) {
-                        GraphCurve curveChain = generateDensityCurve(date.mSigma.histoForChain(j),
-                                                                     "Sigma Date " + QString::number(i) + " Chain " + QString::number(j),
-                                                                     Painting::chainColors.at(j));
-                        mGraph->addCurve(curveChain);
-                    }
-                ++i;
-            }
-
-        }
 
     }
 
@@ -278,16 +251,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
      *  - Q2 Beta i
      *  - Q3 Beta i
      * ------------------------------------------------ */
-    else if (typeGraph == eTrace && variable == eTheta) {
-        mGraph->mLegendX = "Iterations";
-        mGraph->setFormatFunctX(nullptr);
-        mGraph->setFormatFunctY(stringWithAppSettings);
-        mTitle = tr("Phase") + " : " + mPhase->mName;
 
-        generateTraceCurves(mChains, &(mPhase->mAlpha), "Alpha");
-        generateTraceCurves(mChains, &(mPhase->mBeta), "Beta");
-        mGraph->autoAdjustYScale(true);
-    }
     else if (typeGraph == eTrace && variable == eDuration) {
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
@@ -309,7 +273,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
 
 }
 
-void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle)
+void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle)
 {
     Q_ASSERT(mPhase);
     GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
@@ -327,28 +291,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      *  - Post Distrib Beta i
      * ------------------------------------------------
      */
-    if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eTheta) {
-        mGraph->setTipYLab("");
-
-        mGraph->setCurveVisible("Post Distrib Alpha All Chains", mShowAllChains);
-        mGraph->setCurveVisible("Post Distrib Beta All Chains", mShowAllChains);
-        mGraph->setCurveVisible("HPD Alpha All Chains", mShowAllChains);
-        mGraph->setCurveVisible("HPD Beta All Chains", mShowAllChains);
-
-        mGraph->setCurveVisible("Time Range", mShowAllChains && mShowCredibility);
-
-        for (int i=0; i<mShowChainList.size(); ++i) {
-            mGraph->setCurveVisible("Post Distrib Alpha " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Post Distrib Beta " + QString::number(i), mShowChainList.at(i));
-        }
-
-        mGraph->setTipXLab("t");
-        mGraph->setTipYLab("");
-        mGraph->setYAxisMode(GraphView::eHidden);
-        mGraph->autoAdjustYScale(true); // do repaintGraph()
-
-    }
-    else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eDuration) {
+     if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eDuration) {
         const GraphCurve* duration = mGraph->getCurve("Post Distrib Duration All Chains");
 
         if ( duration && !duration->mData.isEmpty()) {
@@ -367,7 +310,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         }
 
     }
-    else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eSigma) {
+    else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eTempo) {
             for (auto && ev : mPhase->mEvents) {
                 const int n (ev->mDates.size());
                 for (auto i=0 ; i<n; ++i) {
@@ -378,7 +321,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
                 }
             }
-            mGraph->setTipXLab("duration");
+            mGraph->setTipXLab("t");
             mGraph->setYAxisMode(GraphView::eHidden);
             mGraph->autoAdjustYScale(true);
 
@@ -393,25 +336,6 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      *  - Beta Q2 i
      *  - Beta Q3 i
      * ------------------------------------------------ */
-    else if (mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta) {
-
-        for (int i=0; i<mShowChainList.size(); ++i) {
-            mGraph->setCurveVisible("Alpha Trace " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Alpha Q1 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Alpha Q2 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Alpha Q3 " + QString::number(i), mShowChainList.at(i));
-
-            mGraph->setCurveVisible("Beta Trace " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Beta Q1 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Beta Q2 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Beta Q3 " + QString::number(i), mShowChainList.at(i));
-        }
-
-        mGraph->setTipXLab("iteration");
-        mGraph->setTipYLab("t");
-        mGraph->setYAxisMode(GraphView::eMinMax);
-        mGraph->autoAdjustYScale(true);
-    }
     else if (mCurrentTypeGraph == eTrace && mCurrentVariable == eDuration) {
 
         for (int i=0; i<mShowChainList.size(); ++i) {

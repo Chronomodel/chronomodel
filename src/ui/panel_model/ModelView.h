@@ -71,6 +71,7 @@ protected:
     void disconnectScenes();
     
 private slots:
+    void togglePropeties();
     void showProperties();
     void showImport();
     void showPhases();

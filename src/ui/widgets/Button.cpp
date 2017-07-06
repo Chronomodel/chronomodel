@@ -25,7 +25,7 @@ void Button::init()
     mFlatHorizontal = false;
     mIsClose = false;
     
-    mColorState = eReady;
+    mColorState = eDefault;
     
     mUseMargin = false;
     mIconOnly = true;
@@ -79,7 +79,7 @@ void Button::isCheckable(const bool checkable)
     if (!checkable)
         mColorState = eWarning;
     else
-        mColorState = eReady;
+        mColorState = eDefault;
 
     QPushButton::setCheckable(checkable);
 
