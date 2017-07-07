@@ -57,3 +57,4 @@ x64/*
 moc*.*
 Makefile.Release
 Makefile.Debug
+*.Debug
