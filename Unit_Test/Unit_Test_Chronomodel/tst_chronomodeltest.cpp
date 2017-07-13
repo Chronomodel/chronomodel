@@ -1,4 +1,7 @@
+#define UNIT_TEST
+
 #include <QString>
+#include <QProgressDialog>
 #include <QtTest>
 
 #include "ChronoApp.h"
@@ -6,6 +9,9 @@
 #include "MainController.h"
 #include "StdUtilities.h"
 #include "MetropolisVariable.h"
+#include "Model.h"
+#include "Phase.h"
+#include "Event.h"
 
 #include "fftw3.h"
 
@@ -15,6 +21,8 @@
 //#include <fenv.h>
 #include "Generator.h"
 #include "Functions.h"
+
+
 
 QString formatFunction(const double valueToFormat, const bool forCSV = false);
 
@@ -45,6 +53,7 @@ private Q_SLOTS:
     void trace();
     void fft();
     void hpd();
+    void tempo();
 };
 
 ChronomodelTest::ChronomodelTest()
@@ -229,6 +238,7 @@ void ChronomodelTest::trace()
 
 QString formatFunction(const double valueToFormat, const bool forCSV)
 {
+    (void) forCSV;
     QLocale loc = QLocale();
     return loc.toString(valueToFormat);
 }
@@ -362,6 +372,74 @@ void ChronomodelTest::hpd()
       */
 
 
+}
+
+void ChronomodelTest::tempo()
+{
+
+    Event ev1;
+    QVector<double> trace1;
+    // i had <<0.0 for the init plot, not used in the RawTrace
+    trace1<<0.0<<0.1<<3.8<<5.6<<9.9<<7.4<<8.2<<5.7<<8.6<<9.4<<4.2<<6.1<<4.3<<8.7<<9.1<<11.6<<5.2<<1.18<<2.4<<6.8<<3.12;
+    //trace1<<0.0 <<6.6<<7.7<<8.8<<9.9<<9.9 <<1.1<<2.2<<3.3<<4.4<<5.5;//mNumRunIter=10
+
+    ev1.mTheta.mRawTrace = new QVector<double>(trace1.size());
+    std::copy(trace1.begin(), trace1.end(), ev1.mTheta.mRawTrace->begin());
+
+
+    Event ev2;
+    QVector<double> trace2;
+    trace2<<0.0<<0.1<<3.8<<5.6<<9.9<<7.4<<8.2<<5.7<<8.6<<9.4<<4.2<<6.1<<4.3<<8.7<<9.1<<11.6<<5.2<<1.18<<2.4<<6.8<<3.12; //mNumRunIter=20
+    //trace2<<0.0<<1.1<<2.2<<3.3<<4.4<<5.5<<6.6<<7.7<<8.8<<9.9<<9.9; //mNumRunIter=10
+
+    ev2.mTheta.mRawTrace = new QVector<double>(trace2.size());
+    std::copy(trace2.begin(), trace2.end(), ev2.mTheta.mRawTrace->begin() );
+
+    Event ev3;
+    QVector<double> trace3;
+    trace3 <<0.0 <<4.2<<6.1<<4.3<<8.7<<9.1<<11.6<<5.2<<1.18<<2.4<<6.8<<3.12  <<0.1<<3.8<<5.6<<9.9<<7.4<<8.2<<5.7<<8.6<<9.4;
+
+    ev3.mTheta.mRawTrace = new QVector<double>(trace3.size());
+    std::copy(trace3.begin(), trace3.end(), ev3.mTheta.mRawTrace->begin() );
+
+
+    Phase phase;
+    phase.mEvents.append(&ev1);
+   // phase.mEvents.append(&ev2);
+   // phase.mEvents.append(&ev3);
+
+
+    ChainSpecs chain1;
+    chain1.mNumBurnIter = 0; //not used
+    chain1.mBurnIterIndex=0;
+
+    chain1.mBatchIterIndex = 0;
+    chain1.mBatchIndex = 0; //not used
+    chain1.mNumBatchIter = 0; //not used
+
+    chain1.mNumRunIter = 20; //used
+    chain1.mRunIterIndex = 5;
+
+    chain1.mThinningInterval = 1; //used
+
+    Model model;
+    model.mSettings.mTmin = 0.;
+    model.mSettings.mTmax = 10.;
+    model.mPhases.append(&phase);
+    model.mChains.append(chain1);
+
+    model.generateTempo();
+
+    for (auto val : model.mPhases[0]->mIntensity.toStdMap()) {
+
+        qDebug()<<val.first<<" "<<val.second;
+    }
+
+    // controle Tempo
+    int expected = chain1.mNumRunIter * phase.mEvents.size();
+    int total = model.mPhases[0]->mTempo.last();
+qDebug()<<" Total = "<<total<<" Total expected"<<expected;
+     QVERIFY(total == expected);
 }
 
 QTEST_APPLESS_MAIN(ChronomodelTest)

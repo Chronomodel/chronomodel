@@ -10,6 +10,8 @@
 #include "DateUtils.h"
 #include "MainWindow.h"
 #include "../PluginAbstract.h"
+#include "MetropolisVariable.h"
+
 #include <QJsonArray>
 #include <QtWidgets>
 #include <QtCore/QStringList>
@@ -1009,6 +1011,10 @@ void Model::initDensities(const int fftLength, const double bandwidth, const dou
 
     generateCredibility(mThreshold);
     generateNumericalResults(mChains);
+    if (!mPhases.isEmpty()) {
+        generateTempo();
+        //generateIntensity();
+    }
     qDebug()<<"Model::initDensities";
  //   emit newCalculus();
 }
@@ -1035,6 +1041,10 @@ void Model::updateDensities(const int fftLength, const double bandwidth, const d
     if (newPosteriorDensities)
         generateHPD(mThreshold);
 
+    if (!mPhases.isEmpty()) {
+        generateTempo();
+        //generateIntensity();
+    }
     generateNumericalResults(mChains);
 
 }
@@ -1288,7 +1298,206 @@ void Model::generateHPD(const double thresh)
 
 }
 
-//#pragma mark Clear model data
+//#define UNIT_TEST
+void Model::generateTempo()
+{
+    qDebug()<<"Model::generateTempo()";
+
+
+    QTime t = QTime::currentTime();
+
+#ifndef UNIT_TEST
+    // Diplay a progressBar if "long" set with setMinimumDuration()
+    QProgressDialog *progress = new QProgressDialog("Tempo Plot generation","Wait" , 1, 10, qApp->activeWindow());
+    progress->setWindowModality(Qt::WindowModal);
+    progress->setCancelButton(0);
+    progress->setMinimumDuration(4);
+    progress->setMinimum(0);
+    progress->setMaximum(mPhases.size()*1);
+    int position(1);
+#endif
+
+    const double tmin = mSettings.mTmin;
+    const double tmax = mSettings.mTmax;
+
+#ifdef UNIT_TEST
+    const int nbPts (10);
+#else
+    const int nbPts (1000);
+#endif
+
+    const double deltat = (tmax-tmin)/ (double)nbPts;
+
+
+
+    const int totalIter = (int) ceil(mChains[0].mNumRunIter / mChains[0].mThinningInterval);
+
+    for (auto &&phase : mPhases) {
+        // we suppose, it is the same iteration number for all chains
+
+         // 1 - generate Event scenario,todo controle event are not Bound?
+        QList<QVector<double>> listTrace;
+        for (auto &&ev : phase->mEvents)
+            listTrace.append(ev->mTheta.fullRunRawTrace(mChains));
+
+        // create Empty containers
+        QVector<double> N (nbPts); // Tempo
+        QVector<double> N2 (nbPts);
+        QVector<double> I (nbPts); //Intensity
+
+        QVector<double> previousN (nbPts);
+        QVector<double> previousN2 (nbPts);
+        //QVector<double> previousI (nbPts);
+
+        for (int i(0); i<totalIter; ++i) {
+            // create one scenario per iteration
+            QVector<double> scenario;
+
+            for (auto &&l:listTrace)
+                scenario.append(l.at(i));
+            // sort scenario trace
+            std::sort(scenario.begin(),scenario.end());
+
+            QVector<double>::const_iterator itScenario (scenario.cbegin());
+
+            QVector<double>::iterator itN (N.begin());
+            QVector<double>::iterator itPrevN (previousN.begin());
+
+            QVector<double>::iterator itN2 (N2.begin());
+            QVector<double>::iterator itPrevN2 (previousN2.begin());
+
+            QVector<double>::iterator itI (I.begin());
+           // QVector<double>::iterator itPrevI (previousI.begin());
+            //int h (*itN); // first Value in table N
+            int index (1); // index of table N corresponding to the first value // faster than used of Distance
+            double t (tmin + index*deltat);
+            int memoScenarioIdx (0);
+            int scenarioIdx (1);
+
+            while (itScenario != scenario.cend()) {
+
+                if (*itScenario> t && t<=tmax ) {
+                    (*itN2) = (*itPrevN2) + (scenarioIdx * scenarioIdx);
+                    ++itN2;
+                    ++itPrevN2;
+
+                    (*itN) = (*itPrevN) + memoScenarioIdx;
+                    ++itN;
+                    ++itPrevN;
+
+                    ++itI;
+                   // ++itPrevI;
+
+                    ++index;
+                    t = tmin + index*deltat;
+
+
+                } else {
+                    (*itN2) = (*itPrevN2) + (scenarioIdx * scenarioIdx);
+
+                    (*itN) = (*itPrevN) + scenarioIdx;
+
+                    (*itI) = (*itI) + 1;
+                    memoScenarioIdx = scenarioIdx;
+                    if (itScenario != scenario.cend()) {
+                        ++itScenario;
+                        ++scenarioIdx;
+                    }
+
+
+                }
+
+            }
+
+
+            while (index <= nbPts) {
+                (*itN) = (*itPrevN) + memoScenarioIdx;
+                ++itN;
+                ++itPrevN;
+
+                (*itN2) = (*itPrevN2) + (scenarioIdx * scenarioIdx);
+                ++itN2;
+                ++itPrevN2;
+
+                ++index;
+
+            }
+
+             //previousN2.resize(nbPts);
+            std::copy(N2.begin(), N2.end(), previousN2.begin());
+
+             //previousN.resize(nbPts);
+            std::copy(N.begin(), N.end(), previousN.begin());
+        }
+
+
+#ifndef UNIT_TEST
+        progress->setValue(position);
+#endif
+
+    // calculation of the variance
+        QVector<double> inf;
+        QVector<double> sup;
+        QVector<double> mean;
+        QVector<double>::iterator itN2 (N2.begin());
+        for (auto &&x : N) {
+             const double di= totalIter;
+             const double m = x/di;
+             const double s2 = std::sqrt( (*itN2)/di - std::pow(m, 2.) );
+
+             mean.append(m );
+
+             const double infp = ( m < 1.96*s2 ? 0 : m - 1.96*s2 );
+             inf.append( infp);
+             sup.append( m + 1.96*s2);
+             ++itN2;
+
+        }
+       // 2 - cumulate Nj and Nj2
+
+        phase->mTempo = vector_to_map(mean, tmin, tmax, deltat);
+        phase->mTempoInf = vector_to_map(inf, tmin, tmax, deltat);
+        phase->mTempoSup = vector_to_map(sup, tmin, tmax, deltat);
+
+        // 3 - partial derivate
+        QVector<double> dN;
+        QVector<double>::const_iterator xp (N.cbegin());
+        for (QVector<double>::const_iterator x = N.cbegin()+1; x != N.cend(); ++x) {
+            dN.append( (*x) - (*xp) );
+            ++xp;
+        }
+        phase->mIntensity = vector_to_map(I, tmin, tmax, deltat);
+
+#ifndef UNIT_TEST
+        ++position;
+#endif
+    }
+
+#ifndef UNIT_TEST
+    QTime t2 = QTime::currentTime();
+    qint64 timeDiff = t.msecsTo(t2);
+    qDebug() <<  "=> Model::generateTempo() done in " + QString::number(timeDiff) + " ms";
+#endif
+
+/*
+   delete progress;
+    QTime t2 (QTime::currentTime());
+    qint64 timeDiff = t.msecsTo(t2);
+    qDebug() <<  "=> Model::generateTempo done in " + QString::number(timeDiff) + " ms";
+*/
+}
+
+/*
+void Model::generateIntensity()
+{
+    qDebug()<<"Model::generateIntensity()";
+   for (auto &&phase :mPhases) {
+       phase->mIntensity = phase->mBeta.mHisto;
+   }
+}
+*/
+
+// Clear model data
 void Model::clearPosteriorDensities()
 {
     QList<Event*>::iterator iterEvent = mEvents.begin();

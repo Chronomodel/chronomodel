@@ -149,51 +149,30 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->mLegendY = "";
         mGraph->setFormatFunctX(stringWithAppSettings);
         mGraph->setFormatFunctY(nullptr);
-        mTitle = tr("Phase") + " : " + mPhase->mName;
-        QMap<double,double> &alpha = mPhase->mAlpha.fullHisto();
-        QMap<double,double> &beta = mPhase->mBeta.fullHisto();
-        /*
-         * Detection of one Bound used as boundary != is xor
-         * If there is two Bound, the both are egal to 1, thus nothing to do
-         */
-        if ((alpha.size()==1) != (beta.size()==1)) {
-            if (alpha.size() == 1)
-                alpha[alpha.firstKey()] = map_max_value(beta) * 2.;
-            else
-                beta[beta.firstKey()] = map_max_value(alpha) * 2.;
-
-        }
-
-        GraphCurve curveAlpha = generateDensityCurve(alpha,
-                                                     "Post Distrib Alpha All Chains",
-                                                     color, Qt::DotLine);
-        QColor colorBeta = mPhase->mColor.darker(170);
-
-        GraphCurve curveBeta = generateDensityCurve(beta,
-                                                     "Post Distrib Beta All Chains",
-                                                     colorBeta, Qt::DashLine);
-        color.setAlpha(255); // set mBrush to fill
-        GraphCurve curveAlphaHPD = generateHPDCurve(mPhase->mAlpha.mHPD,
-                                                     "HPD Alpha All Chains",
-                                                     color);
-
-        GraphCurve curveBetaHPD = generateHPDCurve(mPhase->mBeta.mHPD,
-                                                   "HPD Beta All Chains",
-                                                   colorBeta);
-
-        mGraph->addCurve(curveAlpha);
-        mGraph->addCurve(curveBeta);
+        mTitle = tr("Phase Tempo") + " : " + mPhase->mName;
 
 
-        mGraph->addCurve(curveAlphaHPD);
-        mGraph->addCurve(curveBetaHPD);
+        GraphCurve curveTempo = generateDensityCurve(mPhase->mTempo,
+                                                     "Post Distrib Tempo All Chains",
+                                                     color.darker(), Qt::SolidLine);
+
+        GraphCurve curveTempoInf = generateDensityCurve(mPhase->mTempoInf,
+                                                     "Post Distrib Tempo Inf All Chains",
+                                                     color, Qt::SolidLine);
+
+        GraphCurve curveTempoSup = generateDensityCurve(mPhase->mTempoSup,
+                                                     "Post Distrib Tempo Sup All Chains",
+                                                     color, Qt::SolidLine);
+
+
+        mGraph->addCurve(curveTempoInf);
+        mGraph->addCurve(curveTempo);
+        mGraph->addCurve(curveTempoSup);
+
 
         mGraph->setOverArrow(GraphView::eBothOverflow);
 
-        GraphCurve curveTimeRange = generateSectionCurve(mPhase->getFormatedTimeRange(),
-                                                                   "Time Range",
-                                                                   color);
-        mGraph->addCurve(curveTimeRange);
+
 
         // ------------------------------------------------------------
         //  Add zones outside study period
@@ -214,7 +193,7 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
         zoneMax.mColor.setAlpha(35);
         zoneMax.mText = tr("Outside study period");
         mGraph->addZone(zoneMax);
-
+/*
         if (!mPhase->mAlpha.mChainsHistos.isEmpty())
             for (int i=0; i<mChains.size(); ++i) {
                 GraphCurve curveAlpha = generateDensityCurve(mPhase->mAlpha.histoForChain(i),
@@ -227,6 +206,7 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
                 mGraph->addCurve(curveAlpha);
                 mGraph->addCurve(curveBeta);
             }
+ */
     }
 
     else if (typeGraph == ePostDistrib && variable == eIntensity) {
@@ -235,10 +215,12 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->setFormatFunctX(stringWithAppSettings);
         mGraph->setFormatFunctY(stringWithAppSettings);
 
-        mTitle = tr("Phase's Events' Std Compil.") + " : " + mPhase->mName;
+        mTitle = tr("Phase Intensity") + " : " + mPhase->mName;
+        GraphCurve curveIntensity = generateDensityCurve(mPhase->mIntensity,
+                                                     "Post Distrib Intensity All Chains",
+                                                     color, Qt::SolidLine);
 
-
-
+        mGraph->addCurve(curveIntensity);
     }
 
     /* -----------------second tab : history plot-------------------------------
@@ -311,21 +293,44 @@ void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
     }
     else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eTempo) {
-            for (auto && ev : mPhase->mEvents) {
-                const int n (ev->mDates.size());
-                for (auto i=0 ; i<n; ++i) {
-                    mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " All Chains", mShowAllChains);
 
-                   for (int j=0; j<mShowChainList.size(); ++j)
-                        mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " Chain " + QString::number(j), mShowChainList.at(j));
+         const GraphCurve* tempo = mGraph->getCurve("Post Distrib Tempo All Chains");
 
-                }
-            }
-            mGraph->setTipXLab("t");
-            mGraph->setYAxisMode(GraphView::eHidden);
-            mGraph->autoAdjustYScale(true);
+         if ( tempo && !tempo->mData.isEmpty()) {
+
+            // mGraph->setCurveVisible("Post Distrib Tempo All Chains", mShowAllChains);
+             mGraph->setCurveVisible("Post Distrib Tempo Inf All Chains", mShowAllChains);
+             mGraph->setCurveVisible("Post Distrib Tempo Sup All Chains", mShowAllChains);
+
+            /* for (int i=0; i<mShowChainList.size(); ++i)
+                 mGraph->setCurveVisible("Post Distrib Duration " + QString::number(i), mShowChainList.at(i));
+            */
+             mGraph->setTipXLab("t");
+             mGraph->setTipYLab("n");
+             mGraph->setYAxisMode(GraphView::eMinMax);
+             //mGraph->autoAdjustYScale(true);
+             mGraph->adjustYToMinMaxValue();
+         }
 
     }
+     else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eIntensity) {
+
+          const GraphCurve* intensity = mGraph->getCurve("Post Distrib Intensity All Chains");
+
+          if ( intensity && !intensity->mData.isEmpty()) {
+
+              mGraph->setCurveVisible("Post Distrib Intensity All Chains", mShowAllChains);
+
+             /* for (int i=0; i<mShowChainList.size(); ++i)
+                  mGraph->setCurveVisible("Post Distrib Duration " + QString::number(i), mShowChainList.at(i));
+             */
+              mGraph->setTipXLab("t");
+              mGraph->setTipYLab("");
+              mGraph->setYAxisMode(GraphView::eHidden);
+              mGraph->autoAdjustYScale(true);
+          }
+
+     }
     /* ---------------- second tab : history plot--------------------------------
      *  - Alpha Trace i
      *  - Alpha Q1 i
