@@ -48,10 +48,12 @@ public:
     // Virtual because MHVariable subclass adds some information
     virtual void generateNumericalResults(const QList<ChainSpecs>& chains);
 
+
+    QMap<double, double> generateHisto(const QVector<double>& data, const int fftLen, const  double bandwidth, const double tmin = 0., const double tmax = 0.);
+
     // -----
     // These functions do not make any calculation
     // -----
-    
     QMap<double, double>& fullHisto();
     QMap<double, double>& histoForChain(const int index);
     
@@ -96,7 +98,6 @@ public slots:
 private:
     void generateBufferForHisto(double* input, const QVector<double> &dataSrc, const int numPts, const double a, const double b);
     QMap<double, double> bufferToMap(const double* buffer);
-    QMap<double, double> generateHisto(const QVector<double>& data, const int fftLen, const  double bandwidth, const double tmin = 0., const double tmax = 0.);
 
 
 

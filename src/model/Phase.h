@@ -69,6 +69,11 @@ public:
    */
     MetropolisVariable mDuration;
     QString mDurationCredibility;
+    QMap<double, double> mTempo;
+    QMap<double, double> mTempoInf;
+    QMap<double, double> mTempoSup;
+
+    QMap<double, double> mIntensity;
     
     TauType mTauType;
     double mTauFixed;
