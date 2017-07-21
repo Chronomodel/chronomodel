@@ -109,6 +109,8 @@ void Date::copyFrom(const Date& date)
     updateti = date.updateti;
     
     mMixingLevel = date.mMixingLevel;
+
+    mSettings = date.mSettings;
 }
 
 Date::~Date()
@@ -178,6 +180,7 @@ Date Date::fromJson(const QJsonObject& json)
         date.mSigma.setName("Sigma of date : "+ date.mName);
 
         Project* project = MainWindow::getInstance()->getProject();
+        date.mSettings = project->mModel->mSettings;
 
         QString toFind = date.mName + date.getDesc();
         QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
@@ -211,7 +214,7 @@ QJsonObject Date::toJson() const
     date[STATE_COLOR_BLUE] = mColor.blue();
     
     QJsonArray subdates;
-    for(int i=0; i<mSubDates.size(); ++i){
+    for (int i=0; i<mSubDates.size(); ++i) {
         QJsonObject d = mSubDates.at(i).toJson();
         subdates.push_back(d);
     }
@@ -222,7 +225,7 @@ QJsonObject Date::toJson() const
 
 double Date::getLikelihood(const double& t) const
 {
-    double result = 0.;
+    double result (0.);
     if (mPlugin)
         result = (double)mPlugin->getLikelihood(t, mData);
     return result;
@@ -307,14 +310,14 @@ qDebug()<<"Date::calibrate insert mData "<<toFind;
         // we use long double type because
         // after several sums, the repartion can be in the double type range
         for(int i = 1; i < nbRefPts; ++i) {
-            const double t = mTminRefCurve + (double)i * (double)settings.mStep;
+            const double t = mTminRefCurve + (double)i * mSettings.mStep;
             long double lastV = v;
             v = getLikelihood(t);
             
             calibrationTemp.append(v);
             long double rep = lastRepVal;
             if(v != 0. && lastV != 0.)
-                rep = lastRepVal + (long double) settings.mStep * (lastV + v) / 2.;
+                rep = lastRepVal + (long double) mSettings.mStep * (lastV + v) / 2.;
 
             repartitionTemp.append((double)rep);
             lastRepVal = rep;
@@ -329,8 +332,8 @@ qDebug()<<"Date::calibrate insert mData "<<toFind;
             const int minIdx = (int)floor(vector_interpolate_idx_for_value(threshold * lastRepVal, repartitionTemp));
             const int maxIdx = (int)ceil(vector_interpolate_idx_for_value((1 - threshold) * lastRepVal, repartitionTemp));
             
-            tminCal = mTminRefCurve + minIdx * settings.mStep;
-            tmaxCal = mTminRefCurve + maxIdx * settings.mStep;
+            tminCal = mTminRefCurve + minIdx * mSettings.mStep;
+            tmaxCal = mTminRefCurve + maxIdx * mSettings.mStep;
             
             // Truncate both functions where data live
             mCalibration->mCurve = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
@@ -346,7 +349,7 @@ qDebug()<<"Date::calibrate insert mData "<<toFind;
             mCalibration->mRepartition = stretch_vector(mCalibration->mRepartition, 0., 1.);
             
             // Approximation : even if the calib has been truncated, we consider its area to be = 1
-            mCalibration->mCurve = equal_areas(mCalibration->mCurve, settings.mStep, 1.);
+            mCalibration->mCurve = equal_areas(mCalibration->mCurve, mSettings.mStep, 1.);
 
         }
         // ------------------------------------------------------------------
@@ -388,7 +391,7 @@ const QMap<double, double> Date::getFormatedCalibMap() const
 
     QMap<double, double> formatedCalib;
     QMap<double, double>::const_iterator iter = calib.cbegin();
-    while(iter!= calib.constEnd()){
+    while (iter!= calib.constEnd()) {
         formatedCalib.insert(DateUtils::convertToAppSettingsFormat(iter.key()), iter.value());
         ++iter;
     }
@@ -603,8 +606,8 @@ QPixmap Date::generateCalibThumb()
 
 double Date::getLikelihoodFromCalib(const double t)
 {
-    double tmin = mSettings.mTmin;
-    double tmax = mSettings.mTmax;
+    double tmin = mCalibration->mTmin;// mSettings.mTmin;
+    double tmax = mCalibration->mTmax;//mSettings.mTmax;
     
     // We need at least two points to interpolate
     if (mCalibration->mCurve.size() < 2 || t < tmin || t > tmax)
@@ -917,13 +920,13 @@ void fMHSymetricWithArg(Date* date,Event* event)
  */
 double fProposalDensity(const double t, const double t0, Date* date)
 {
-    const double tmin = date->mSettings.mTmin;
-    const double tmax = date->mSettings.mTmax;
-    const double level = date->mMixingLevel;
+    const double tmin (date->mSettings.mTmin);
+    const double tmax (date->mSettings.mTmax);
+    const double level (date->mMixingLevel);
     double q1 (0.);
 
-    const double tminCalib = date->mCalibration->mTmin;
-    const double tmaxCalib = date->mCalibration->mTmax;
+    const double tminCalib (date->mCalibration->mTmin);
+    const double tmaxCalib (date->mCalibration->mTmax);
 
     /// ----q1------Defined only on Calibration range-----
     if (t > tminCalib && t < tmaxCalib){
@@ -933,7 +936,7 @@ double fProposalDensity(const double t, const double t0, Date* date)
         const int idxUnder = (int)floor(idx);
         
         //double step =(tmax-tmin+1)/date->mRepartition.size();
-        const double step = date->mSettings.mStep;
+        const double step (date->mCalibration->mStep);
 
         q1 = (date->mCalibration->mRepartition[idxUnder+1] - date->mCalibration->mRepartition[idxUnder])/step;
     }
@@ -958,20 +961,20 @@ double fProposalDensity(const double t, const double t0, Date* date)
 void fInversion(Date* date, Event* event)
 {
     const double u1 = Generator::randomUniform();
-    const double level = date->mMixingLevel;
+    const double level (date->mMixingLevel);
     double tiNew;
-    const double tmin = date->mSettings.mTmin;
-    const double tmax = date->mSettings.mTmax;
+    const double tmin (date->mSettings.mTmin);
+    const double tmax (date->mSettings.mTmax);
 
     const double tminCalib = date->mCalibration->mTmin;
     
     if (u1<level) { // tiNew always in the study period
         const double idx = vector_interpolate_idx_for_value(u1, date->mCalibration->mRepartition);
-        tiNew = tminCalib + idx *date->mSettings.mStep;
+        tiNew = tminCalib + idx *date->mCalibration->mStep;
     } else {
         // -- gaussian
-        const double t0 = date->mTheta.mX;
-        const double s = (tmax-tmin)/2;
+        const double t0 (date->mTheta.mX);
+        const double s = (tmax-tmin)/2.;
         
         tiNew = Generator::gaussByBoxMuller(t0, s);
         /*
@@ -1009,21 +1012,23 @@ void fInversion(Date* date, Event* event)
 void fInversionWithArg(Date* date, Event* event)
 {
     const double u1 = Generator::randomUniform();
-    const double level = date->mMixingLevel;
+    const double level (date->mMixingLevel);
     double tiNew;
-    const double tmin = date->mSettings.mTmin;
-    const double tmax = date->mSettings.mTmax;
+    const double tmin (date->mSettings.mTmin);
+    const double tmax (date->mSettings.mTmax);
 
     const double tminCalib = date->mCalibration->mTmin;
     
     if (u1<level) { // tiNew always in the study period
         const double u2 = Generator::randomUniform();
         const double idx = vector_interpolate_idx_for_value(u2, date->mCalibration->mRepartition);
-        tiNew = tminCalib + idx *date->mSettings.mStep;
+        tiNew = tminCalib + idx *date->mCalibration->mStep;
+
+
     } else {
         // -- gaussian
-        const double t0 =(tmax+tmin)/2;
-        const double s = (tmax-tmin)/2;
+        const double t0 =(tmax+tmin)/2.;
+        const double s = (tmax-tmin)/2.;
         
         tiNew = Generator::gaussByBoxMuller(t0, s);
         /*
@@ -1044,15 +1049,15 @@ void fInversionWithArg(Date* date, Event* event)
          */
     }
     
-    
+
     QPair<long double, long double> argOld, argNew;
     
     argOld = date->getLikelihoodArg(date->mTheta.mX);
     argNew = date->getLikelihoodArg(tiNew);
     
     const long double logGRapport = argNew.second-argOld.second;
-    const long double logHRapport = (-0.5/(date->mSigma.mX * date->mSigma.mX)) * (pow(tiNew - (event->mTheta.mX - date->mDelta), 2)
-                                                                      - pow(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2)
+    const long double logHRapport = (-0.5l/(date->mSigma.mX * date->mSigma.mX)) * (powl(tiNew - (event->mTheta.mX - date->mDelta), 2.)
+                                                                      - powl(date->mTheta.mX - (event->mTheta.mX - date->mDelta), 2.)
                                                                       );
     
     const long double rapport = sqrt(argOld.first/argNew.first) * exp(logGRapport+logHRapport);
@@ -1071,14 +1076,7 @@ void fInversionWithArg(Date* date, Event* event)
  */
 void fMHSymGaussAdapt(Date* date, Event* event)
 {
-    /* double rapport = 0;
-    // if(theta >= tmin && theta <= tmax)
-    // {
-    //  rapport = (G(theta_new) / G(theta_old)) * (H(theta_new) / H(theta_old))
-    //  rapport = getLikelihoodFromCalib(theta) / getLikelihoodFromCalib(mTheta.mX); // rapport des G(theta i)
-    // }
-    */
-    
+
     const double tiNew = Generator::gaussByBoxMuller(date->mTheta.mX, date->mTheta.mSigmaMH);
     double rapport = date->getLikelihood(tiNew) / date->getLikelihood(date->mTheta.mX);
     rapport *= exp((-0.5/(date->mSigma.mX * date->mSigma.mX)) * (   pow(tiNew - (event->mTheta.mX - date->mDelta), 2)

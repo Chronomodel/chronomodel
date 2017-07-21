@@ -247,7 +247,7 @@ QString MCMCLoopMain::initMCMC()
                 double sigma;
                 if (!date.mCalibration->mRepartition.isEmpty()) {
                     const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mCalibration->mRepartition);
-                    date.mTheta.mX = date.mCalibration->mTmin + idx *mModel->mSettings.mStep;
+                    date.mTheta.mX = date.mCalibration->mTmin + idx *date.mCalibration->mStep;
                     qDebug()<<"MCMCLoopMain::Init mThe.mx="<<QString::number(date.mTheta.mX, 'g', 15);
 
                     FunctionAnalysis data = analyseFunction(vector_to_map(date.mCalibration->mCurve, tmin, tmax, date.mCalibration->mStep));
