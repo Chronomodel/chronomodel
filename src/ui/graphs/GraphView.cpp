@@ -1244,7 +1244,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         type_data xMin = INFINITY;
         type_data xMax = INFINITY;
         
-        for (const auto & curve : mCurves) {
+        for (const auto &curve : mCurves) {
             if (!curve.mData.empty() &&
                 !curve.mIsHorizontalLine &&
                 !curve.mIsVerticalLine &&
@@ -1276,7 +1276,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         for (type_data x= xMin; x <= xMax; x += step) {
             list.clear();
 
-            list << QString::number(x);
+            list << locale.toString(x);
             for (auto && curve : mCurves) {
                 if (!curve.mData.empty() &&
                     !curve.mIsHorizontalLine &&
