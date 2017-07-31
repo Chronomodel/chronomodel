@@ -430,6 +430,21 @@ QMap<double, double> vector_to_map(const QVector<double>& data, const double min
     }
     return map;
 }
+
+QMap<double, double> vector_to_map(const QVector<int>& data, const double min, const double max, const double step)
+{
+    QMap<double, double> map;
+    const int nbPts = 1 + (int)round((max - min) / step); // step is not usefull, it's must be data.size/(max-min+1)
+
+    for (int i=0; i<nbPts; ++i) {
+        double t = min + i * step;
+
+        if (i < data.size())
+            map.insert(t, (double)data.at(i));
+    }
+    return map;
+}
+
 QMap<float, float> vector_to_map(const QVector<float>& data, const float min, const float max, const float step)
 {
     QMap<float, float> map;
@@ -461,7 +476,7 @@ double vector_interpolate_idx_for_value(const double value, const QVector<double
     if (idxSup > idxInf) {
         do
         {
-            const int idxMid = idxInf + floor((idxSup - idxInf) / 2.f);
+            const int idxMid = idxInf + floor((idxSup - idxInf) / 2.);
             const double valueMid = vector.at(idxMid);
             
             if (value < valueMid)

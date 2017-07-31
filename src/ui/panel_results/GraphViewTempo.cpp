@@ -155,20 +155,34 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
         GraphCurve curveTempo = generateDensityCurve(mPhase->mTempo,
                                                      "Post Distrib Tempo All Chains",
                                                      color.darker(), Qt::SolidLine);
+        curveTempo.mIsRectFromZero = false;
 
         GraphCurve curveTempoInf = generateDensityCurve(mPhase->mTempoInf,
                                                      "Post Distrib Tempo Inf All Chains",
-                                                     color, Qt::SolidLine);
+                                                     color, Qt::DashLine);
+        curveTempoInf.mIsRectFromZero = false;
 
         GraphCurve curveTempoSup = generateDensityCurve(mPhase->mTempoSup,
                                                      "Post Distrib Tempo Sup All Chains",
-                                                     color, Qt::SolidLine);
+                                                     color, Qt::DashLine);
+        curveTempoSup.mIsRectFromZero = false;
 
+        GraphCurve curveCredInf = generateDensityCurve(mPhase->mTempoCredibilityInf,
+                                                     "Post Distrib Tempo Cred Inf All Chains",
+                                                     color, Qt::SolidLine);
+        curveCredInf.mIsRectFromZero = false;
+
+        GraphCurve curveCredSup = generateDensityCurve(mPhase->mTempoCredibilitySup,
+                                                     "Post Distrib Tempo Cred Sup All Chains",
+                                                     color, Qt::SolidLine);
+        curveCredSup.mIsRectFromZero = false;
 
         mGraph->addCurve(curveTempoInf);
         mGraph->addCurve(curveTempo);
         mGraph->addCurve(curveTempoSup);
 
+        mGraph->addCurve(curveCredInf);
+        mGraph->addCurve(curveCredSup);
 
         mGraph->setOverArrow(GraphView::eBothOverflow);
 
@@ -209,29 +223,23 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
  */
     }
 
-    else if (typeGraph == ePostDistrib && variable == eIntensity) {
+    else if (typeGraph == ePostDistrib && variable == eActivity) {
 
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(stringWithAppSettings);
         mGraph->setFormatFunctY(stringWithAppSettings);
 
-        mTitle = tr("Phase Intensity") + " : " + mPhase->mName;
-        GraphCurve curveIntensity = generateDensityCurve(mPhase->mIntensity,
-                                                     "Post Distrib Intensity All Chains",
+        mTitle = tr("Phase Activity") + " : " + mPhase->mName;
+        GraphCurve curveActivity = generateDensityCurve(mPhase->mActivity,
+                                                     "Post Distrib Activity All Chains",
                                                      color, Qt::SolidLine);
 
-        mGraph->addCurve(curveIntensity);
+        mGraph->addCurve(curveActivity);
     }
 
     /* -----------------second tab : history plot-------------------------------
-     *  - Trace Alpha i
-     *  - Q1 Alpha i
-     *  - Q2 Alpha i
-     *  - Q3 Alpha i
-     *  - Trace Beta i
-     *  - Q1 Beta i
-     *  - Q2 Beta i
-     *  - Q3 Beta i
+     *  - Duration
+     *
      * ------------------------------------------------ */
 
     else if (typeGraph == eTrace && variable == eDuration) {
@@ -263,14 +271,10 @@ void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& s
     /* --------------------first tab : posterior distrib----------------------------
      *
      *  Possible curves :
-     *  - Post Distrib Alpha All Chains
-     *  - Post Distrib Beta All Chains
-     *  - HPD Alpha All Chains
-     *  - HPD Beta All Chains
-     *  - Duration
-     *  - HPD Duration
-     *  - Post Distrib Alpha i
-     *  - Post Distrib Beta i
+     *  - Post Distrib Duration All Chains
+     *  - HPD Duration All Chains
+     *  - Credibility All Chains
+     *
      * ------------------------------------------------
      */
      if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eDuration) {
@@ -298,9 +302,12 @@ void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
          if ( tempo && !tempo->mData.isEmpty()) {
 
-            // mGraph->setCurveVisible("Post Distrib Tempo All Chains", mShowAllChains);
+             mGraph->setCurveVisible("Post Distrib Tempo All Chains", mShowAllChains);
              mGraph->setCurveVisible("Post Distrib Tempo Inf All Chains", mShowAllChains);
              mGraph->setCurveVisible("Post Distrib Tempo Sup All Chains", mShowAllChains);
+
+             mGraph->setCurveVisible("Post Distrib Tempo Cred Inf All Chains", mShowAllChains);
+             mGraph->setCurveVisible("Post Distrib Tempo Cred Sup All Chains", mShowAllChains);
 
             /* for (int i=0; i<mShowChainList.size(); ++i)
                  mGraph->setCurveVisible("Post Distrib Duration " + QString::number(i), mShowChainList.at(i));
@@ -313,13 +320,13 @@ void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& s
          }
 
     }
-     else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eIntensity) {
+     else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eActivity) {
 
-          const GraphCurve* intensity = mGraph->getCurve("Post Distrib Intensity All Chains");
+          const GraphCurve* Activity = mGraph->getCurve("Post Distrib Activity All Chains");
 
-          if ( intensity && !intensity->mData.isEmpty()) {
+          if ( Activity && !Activity->mData.isEmpty()) {
 
-              mGraph->setCurveVisible("Post Distrib Intensity All Chains", mShowAllChains);
+              mGraph->setCurveVisible("Post Distrib Activity All Chains", mShowAllChains);
 
              /* for (int i=0; i<mShowChainList.size(); ++i)
                   mGraph->setCurveVisible("Post Distrib Duration " + QString::number(i), mShowChainList.at(i));
@@ -333,13 +340,7 @@ void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      }
     /* ---------------- second tab : history plot--------------------------------
      *  - Alpha Trace i
-     *  - Alpha Q1 i
-     *  - Alpha Q2 i
-     *  - Alpha Q3 i
-     *  - Beta Trace i
-     *  - Beta Q1 i
-     *  - Beta Q2 i
-     *  - Beta Q3 i
+     *
      * ------------------------------------------------ */
     else if (mCurrentTypeGraph == eTrace && mCurrentVariable == eDuration) {
 
