@@ -37,7 +37,7 @@ public slots:
     //void updateSelection(bool sendNotification = true, bool force = false);
     void updateStateSelectionFromItem();
     void updateHelp();
-    
+
     //void updateSelectedEventsFromPhases();
     //void updateGreyedOutEvents(const QMap<int, bool>& eyedPhases);
 
@@ -49,8 +49,8 @@ public:
     void constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e);
     void constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e);
     
-    void dateMoved(DateItem* dateItem, QGraphicsSceneMouseEvent* e);
-    void dateReleased(DateItem* dateItem, QGraphicsSceneMouseEvent* e);
+    void dateMoved(const DateItem* dateItem);
+    EventItem *dateReleased(DateItem *dateItem);
     
     QList<Date> decodeDataDrop(QGraphicsSceneDragDropEvent* e);
     
@@ -68,13 +68,13 @@ protected:
     void dropEvent(QGraphicsSceneDragDropEvent* e);
     void dragMoveEvent(QGraphicsSceneDragDropEvent* e);
     
-    AbstractItem* collidingItem(QGraphicsItem* item);
+    AbstractItem* collidingItem(const QGraphicsItem *item);
     AbstractItem* currentItem() ;
 
     void setCurrentItem(QGraphicsItem* item);
     
     void deleteSelectedItems();
-    bool constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo);
+    bool constraintAllowed(AbstractItem *itemFrom, AbstractItem *itemTo);
     void createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo);
     void mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo);
     EventItem *findEventItemWithJsonId(const int id);
@@ -86,14 +86,15 @@ signals:
     void eventDoubleClicked();
     void noSelection();
     void eventsAreSelected();
+    void eventsAreModified(const QString& reason, bool notify, bool storeUndoCommand);
     
 private:
     HelpWidget* mHelpView;
     QTimer* mHelpTimer;
     ProjectSettings mSettings;
     
-    QGraphicsItemAnimation* mDatesAnim;
-    QTimeLine* mDatesAnimTimer;
+//    QGraphicsItemAnimation* mDatesAnim;
+//    QTimeLine* mDatesAnimTimer;
     //bool mShowAllThumbs;
 
 };
