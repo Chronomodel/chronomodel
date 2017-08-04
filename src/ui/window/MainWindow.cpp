@@ -54,6 +54,8 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     connect(mProjectSaveAction, SIGNAL(triggered()), this, SLOT(saveProject()));
     connect(mProjectSaveAsAction, SIGNAL(triggered()), this, SLOT(saveProjectAs()));
 
+
+
    /* connect(mMCMCSettingsAction, SIGNAL(triggered()), mProject, SLOT(mcmcSettings()));
     connect(mResetMCMCAction, SIGNAL(triggered()), mProject, SLOT(resetMCMC()));
     connect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
@@ -1070,8 +1072,8 @@ void MainWindow::mcmcFinished(Model* model)
     mProjectView->initResults(model, &mAppSettings);
   
 }
- void MainWindow::noResult()
- {
+void MainWindow::noResult()
+{
      mViewLogAction -> setEnabled(false);
      mViewResultsAction -> setEnabled(false);
      mViewResultsAction -> setChecked(false);
@@ -1079,4 +1081,4 @@ void MainWindow::mcmcFinished(Model* model)
      mViewModelAction->trigger();
      mProject->setNoResults(true); // set to disable the saving the file *.res
 
- }
+}

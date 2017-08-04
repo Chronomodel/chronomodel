@@ -128,7 +128,7 @@ mMaximunNumberOfVisibleGraph(0)
     mDataThetaRadio->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
     mDataThetaRadio->setChecked(true);
 
-    mDataSigmaRadio = new RadioButton(tr("Std. Deviations"), mResultsGroup);
+    mDataSigmaRadio = new RadioButton(tr("Ind. Std. Deviations"), mResultsGroup);
     mDataSigmaRadio->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
 
     mDataCalibCheck = new CheckBox(tr("Individual Calib. Dates"), mResultsGroup);
@@ -153,8 +153,8 @@ mMaximunNumberOfVisibleGraph(0)
     mTempoRadio = new RadioButton(tr("Phases Tempo"), mTempoGroup);
     mTempoRadio->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
 
-    mIntensityRadio = new RadioButton(tr("Phases Intensity"), mTempoGroup);
-    mIntensityRadio->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
+    mActivityRadio = new RadioButton(tr("Phases Activity"), mTempoGroup);
+    mActivityRadio->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
 
     mTempoStatCheck = new CheckBox(tr("Show Tempo Stat."), mTempoGroup);
     mTempoStatCheck->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
@@ -181,7 +181,7 @@ mMaximunNumberOfVisibleGraph(0)
 
     connect(mDurationRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
     connect(mTempoRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
-    connect(mIntensityRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
+    connect(mActivityRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
     connect(mTempoStatCheck, &CheckBox::clicked, this, &ResultsView::showInfos);
 
     // -------------------------
@@ -627,13 +627,6 @@ void ResultsView::updateControls()
     /* -------------------------------------------------------
      *  Activate specific controls for post. distrib. (first tab)
      * -------------------------------------------------------*/
-   // mDataThetaRadio    -> setVisible(true);
-
-   // mDataSigmaRadio    -> setVisible(true);
-
-   // mDurationRadio-> setVisible(byTempo);
-   // mTempoRadio-> setVisible(byTempo);
-   // mIntensityRadio-> setVisible(byTempo);
 
     mAllChainsCheck    -> setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
     mDataCalibCheck    -> setVisible((mCurrentTypeGraph == GraphViewResults::ePostDistrib)
@@ -658,14 +651,14 @@ void ResultsView::updateControls()
         for (auto &&checkChain : mCheckChainChecks)
             checkChain->setVisible(true);
         
-        for (auto &&chainRadio :mChainRadios)
+        for (auto &&chainRadio : mChainRadios)
             chainRadio->setVisible(false);
 
     } else {
         for (auto &&checkChain : mCheckChainChecks)
             checkChain->setVisible(false);
         
-        for (auto &&chainRadio :mChainRadios)
+        for (auto &&chainRadio : mChainRadios)
             chainRadio->setVisible(true);
     }
     
@@ -846,9 +839,8 @@ void ResultsView::updateTabByTempo()
     mTempoRadio -> move(mMargin, ySpan);
     ySpan += mTempoRadio->height() + mMargin;
 
-    //mIntensityRadio->setVisible(true);
-    mIntensityRadio -> move(mMargin, ySpan);
-    ySpan += mIntensityRadio->height() + mMargin;
+    mActivityRadio -> move(mMargin, ySpan);
+    ySpan += mActivityRadio->height() + mMargin;
 
     //mTempoStatCheck->setVisible(true);
     mTempoStatCheck->move(mMargin , ySpan);
@@ -995,7 +987,7 @@ void ResultsView::updateTabDisplay(const int &i)
 
               } else
                   mCredibilityCheck->setVisible(false);
-              if (mCurrentVariable == GraphViewResults::eTempo || mCurrentVariable == GraphViewResults::eIntensity ) {
+              if (mCurrentVariable == GraphViewResults::eTempo || mCurrentVariable == GraphViewResults::eActivity ) {
                   mThreshLab->setVisible(false);
                   mHPDEdit->setVisible(false);
 
@@ -1187,8 +1179,8 @@ void ResultsView::changeScrollArea()
     else if (mTempoRadio->isChecked())
             mCurrentVariable = GraphViewResults::eTempo;
 
-    else if (mIntensityRadio->isChecked())
-            mCurrentVariable = GraphViewResults::eIntensity;
+    else if (mActivityRadio->isChecked())
+            mCurrentVariable = GraphViewResults::eActivity;
 
     if (byEvents)
             createEventsScrollArea(mTabEventsIndex);
@@ -2050,8 +2042,8 @@ void ResultsView::generateCurves(const QList<GraphViewResults*> &listGraphs)
         else if (mTempoRadio->isChecked())
             mCurrentVariable = GraphViewResults::eTempo;
 
-        else if (mIntensityRadio->isChecked())
-            mCurrentVariable = GraphViewResults::eIntensity;
+        else if (mActivityRadio->isChecked())
+            mCurrentVariable = GraphViewResults::eActivity;
 
     } else
         return;
@@ -2228,7 +2220,7 @@ void ResultsView::updateScales()
 
             mRuler->setRange(0, tRangeMax);
         }
-        else if (mCurrentVariable == GraphViewResults::eTempo || mCurrentVariable == GraphViewResults::eIntensity) {
+        else if (mCurrentVariable == GraphViewResults::eTempo || mCurrentVariable == GraphViewResults::eActivity) {
 
                 mResultMinX = s.getTminFormated();
                 mResultMaxX = s.getTmaxFormated();
@@ -2641,7 +2633,7 @@ void ResultsView:: setStudyPeriod()
     //qDebug()<<"ResultsView::setStudyPeriod()";
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && (mCurrentVariable == GraphViewResults::eTheta
                                                                 || mCurrentVariable == GraphViewResults::eTempo
-                                                                || mCurrentVariable == GraphViewResults::eIntensity)) {
+                                                                || mCurrentVariable == GraphViewResults::eActivity)) {
         mResultCurrentMinX = mSettings.getTminFormated();
         mResultCurrentMaxX = mSettings.getTmaxFormated();
         mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
@@ -2713,7 +2705,7 @@ void ResultsView::updateGraphsZoomX()
 
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && (mCurrentVariable == GraphViewResults::eTheta
                                                                 || mCurrentVariable == GraphViewResults::eTempo
-                                                                || mCurrentVariable == GraphViewResults::eIntensity)) {
+                                                                || mCurrentVariable == GraphViewResults::eActivity)) {
 
         std::pair<double, double> resultMinMax = std::minmax( DateUtils::convertFromAppSettingsFormat(mResultCurrentMinX),
                                      DateUtils::convertFromAppSettingsFormat(mResultCurrentMaxX));
@@ -3154,7 +3146,7 @@ void ResultsView::exportFullImage()
         QString legend = "";
         if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && ( mCurrentVariable == GraphViewResults::eTheta
                                                                      || mCurrentVariable == GraphViewResults::eTempo
-                                                                     || mCurrentVariable == GraphViewResults::eIntensity) )
+                                                                     || mCurrentVariable == GraphViewResults::eActivity) )
             legend = DateUtils::getAppSettingsFormatStr();
 
         else if (mCurrentTypeGraph == GraphViewResults::eTrace || mCurrentTypeGraph == GraphViewResults::eAccept)

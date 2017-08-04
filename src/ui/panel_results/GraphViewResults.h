@@ -15,7 +15,7 @@
 #include <QEvent>
 
 class Button;
-class QPropertyAnimation;
+//class QPropertyAnimation;
 
 class MHVariable;
 class MetropolisVariable;
@@ -59,7 +59,7 @@ public:
         eSigma = 1,
         eDuration = 2,
         eTempo = 3,
-        eIntensity = 4
+        eActivity = 4
     };
     
     // member
@@ -103,7 +103,7 @@ protected:
 
     qreal mHeightForVisibleAxis;
 
-    QPropertyAnimation* mAnimation;
+   // QPropertyAnimation* mAnimation;
 
     //-----
 
@@ -118,7 +118,7 @@ public:
     void setMCMCSettings(const MCMCSettings& mcmc, const QList<ChainSpecs>& chains);
     
     void setMainColor(const QColor& color);
-    void toggle(const QRect& geometry);
+   // void toggle(const QRect& geometry); //useless
 
     void setMarginLeft (qreal &m);
     

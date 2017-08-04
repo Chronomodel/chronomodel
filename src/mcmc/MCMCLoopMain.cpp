@@ -290,6 +290,7 @@ QString MCMCLoopMain::initMCMC()
                 // intermediary calculus for the harmonic average
                 s02_sum += 1. / (sigma * sigma);
             }
+
             // 4 - Init S02 of each Event
             unsortedEvents.at(i)->mS02 = unsortedEvents.at(i)->mDates.size() / s02_sum;
 
@@ -323,6 +324,7 @@ QString MCMCLoopMain::initMCMC()
             
             // date.mSigma.mX = sqrt(shrinkageUniform(events[i]->mS02)); // modif the 2015/05/19 with PhL
             date.mSigma.mX = std::abs(date.mTheta.mX - (events.at(i)->mTheta.mX - date.mDelta));
+ date.mSigma.mX = 1;
            
             if (date.mSigma.mX<=1E-6) {
                date.mSigma.mX = 1E-6; // Add control the 2015/06/15 with PhL

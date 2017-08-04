@@ -119,8 +119,6 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 
     QGraphicsObject::mousePressEvent(e);
 
-
-
 }
 
 void PhaseItem::updateItemPosition(const QPointF& pos)

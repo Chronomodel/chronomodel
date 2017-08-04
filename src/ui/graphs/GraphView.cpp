@@ -125,6 +125,8 @@ mUseTip(graph.mUseTip)
 
     mCurves = graph.mCurves;
     mZones = graph.mZones;
+
+   mBufferBack = QPixmap();
 }
 
 void GraphView::copyFrom(const GraphView& graph)
@@ -179,6 +181,8 @@ void GraphView::copyFrom(const GraphView& graph)
 
     mCurves = graph.mCurves;
     mZones = graph.mZones;
+
+    mBufferBack = graph.mBufferBack;
 }
 
 GraphView::~GraphView()
@@ -608,14 +612,24 @@ void GraphView::resizeGL(int w, int h)
 #else
 void GraphView::resizeEvent(QResizeEvent* event)
 {
-    Q_UNUSED(event);
+    //Q_UNUSED(event);
+
+    qreal wNew = event->size().width();
+    qreal hNew = event->size().height();
+
+    qreal wOld = event->oldSize().width();
+    qreal hOld = event->oldSize().height();
+    /*
     if (!mBufferBack.isNull()) {
-        const qreal sx = (qreal)rect().width() / (qreal)mBufferBack.rect().width() ;
-        const qreal sy = (qreal)rect().height() / (qreal)mBufferBack.rect().height() ;
+        //const qreal sx = (qreal)rect().width() / (qreal)mBufferBack.rect().width() ;
+        //const qreal sy = (qreal)rect().height() / (qreal)mBufferBack.rect().height() ;
+
+        const qreal sx = wNew / (qreal)mBufferBack.rect().width() ;
+        const qreal sy = hNew / (qreal)mBufferBack.rect().height() ;
 
         if (sx>.5 || sy>.5) {
-            mBufferBack = QPixmap(width(), height());
-            updateGraphSize(width(), height());
+            mBufferBack = QPixmap(wNew, hNew);//mBufferBack = QPixmap(width(), height());
+            updateGraphSize(wNew, hNew);//updateGraphSize(width(), height());
             paintToDevice(&mBufferBack);
 
         } else {
@@ -626,11 +640,12 @@ void GraphView::resizeEvent(QResizeEvent* event)
 
     }
     else {
-        mBufferBack = QPixmap(width(), height());
-        updateGraphSize(width(), height());
+        mBufferBack = QPixmap(wNew, hNew);//mBufferBack = QPixmap(width(), height());
+        updateGraphSize(wNew, hNew);//updateGraphSize(width(), height());
         paintToDevice(&mBufferBack);
     }
-
+*/
+    repaintGraph(true);
 }
 #endif
 
@@ -1240,7 +1255,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         QList<QStringList> rows;
         QStringList list;
         
-        list << "# X Axis";
+        list << " X Axis";
         type_data xMin = INFINITY;
         type_data xMax = INFINITY;
         

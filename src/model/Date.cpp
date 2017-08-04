@@ -706,17 +706,17 @@ void Date::updateSigma(Event* event)
     // ------------------------------------------------------------------------------------------
     const double lambda = pow(mTheta.mX - (event->mTheta.mX - mDelta), 2) / 2.;
     
-    const int logVMin = -6;
-    const int logVMax = 100;
+    const int logVMin (-6);
+    const int logVMax (100);
     
     const double V1 = mSigma.mX * mSigma.mX;
     const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigma.mSigmaMH);
     const double V2 = pow(10, logV2);
     
-    double rapport = 0;
+    double rapport (0.);
     if (logV2 >= logVMin && logV2 <= logVMax) {
         const double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
-        const double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1);
+        const double x2 = pow((event->mS02 + V1) / (event->mS02 + V2), event->mAShrinkage + 1.);
         rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1; // (V2 / V1) est le jacobien!
     }
 

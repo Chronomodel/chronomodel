@@ -140,6 +140,11 @@ QJsonObject Project::state() const
 {
     return mState;
 }
+
+QJsonObject* Project::state_ptr()
+{
+    return &mState;
+}
 /**
  * @brief Project::pushProjectState used to store action in Undo-Redo Command
  * @param state
@@ -1070,14 +1075,7 @@ void Project::updateEvent(const QJsonObject& event, const QString& reason)
 {
     QJsonObject stateNext = mState;
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
-    /*for (int i = 0; i<events.size(); ++i) {
-        QJsonObject evt = events.at(i).toObject();
-        if (evt.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
-            events[i] = event;
-            break;
-        }
-    }
-    */
+
     for (QJsonArray::iterator i = events.begin(); i != events.end(); ++i) {
         if ( i->toObject().value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
             *i = event;

@@ -635,7 +635,12 @@ void Event::updateTheta(const double &tmin, const double &tmax)
     if (min >= max)
         throw QObject::tr("Error for event : ") + mName + " : min = " + QString::number(min) + " : max = " + QString::number(max);
 
-    
+    // test no Event emboxed
+  /*  const double theta = mDates[0].mTheta.mX;
+    mTheta.tryUpdate(theta, 1.);
+    return;
+*/
+
     //qDebug() << "[" << min << ", " << max << "]";
     
     // -------------------------------------------------------------------------------------------------
@@ -648,7 +653,6 @@ void Event::updateTheta(const double &tmin, const double &tmax)
     double sum_t (0.);
 
     for (auto &&date: mDates) {
-  //  for (QList<Date>::const_iterator date = mDates.cbegin(); date != mDates.cend(); date++) {
         const double variance (date.mSigma.mX * date.mSigma.mX);
         sum_t += (date.mTheta.mX + date.mDelta) / variance;
         sum_p += 1. / variance;
@@ -673,7 +677,7 @@ void Event::updateTheta(const double &tmin, const double &tmax)
         case eBoxMuller:
         {
             double theta;
-            long long counter = 0;
+            long long counter (0.);
             do {
                 theta = Generator::gaussByBoxMuller(theta_avg, sigma);
                 ++counter;
@@ -711,7 +715,6 @@ void Event::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, co
 
     else {
         EventKnown* ek = dynamic_cast<EventKnown*>(this);
-        //if (ek && (ek->knownType() == EventKnown::eFixed)) {
             // Nothing todo : this is just a Dirac !
             ek->mTheta.mHisto.clear();
             ek->mTheta.mChainsHistos.clear();
@@ -721,7 +724,6 @@ void Event::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, co
             for (int i =0 ;i<chains.size(); ++i)
                 ek->mTheta.mChainsHistos.append(ek->mTheta.mHisto);
 
-        //}
     }
 
 }

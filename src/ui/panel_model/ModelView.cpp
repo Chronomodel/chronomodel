@@ -348,14 +348,12 @@ void ModelView::connectScenes()
     connect(mEventsScene, &EventsScene::noSelection, this, &ModelView::noEventSelected);
     //connect(mEventsScene, &EventsScene::eventsAreSelected, mPhasesScene, &PhasesScene::eventsSelected);
     connect(mEventsScene, &EventsScene::eventsAreSelected, this, &ModelView::eventsAreSelected);
-    //connect(this, &ModelView::emitToPhase, mPhasesScene, &PhasesScene::eventsSelected);
+
     connect(mEventsScene, &EventsScene::eventDoubleClicked, this, &ModelView::togglePropeties);//mButProperties, &Button::toggle);
 
     // When one or several phases are selected, we hightLigth the data inside the Events included in the phases
     connect(mPhasesScene, &PhasesScene::noSelection, mEventsScene, &EventsScene::noHide);
     connect(mPhasesScene, &PhasesScene::phasesAreSelected, mEventsScene, &EventsScene::phasesSelected);
-
-   // connect(mProject, static_cast<void (Project::*)(const QJsonObject&)> (&Project::currentEventChanged), this, &ModelView::eventsAreSelected);
 
     connect(mProject, &Project::currentEventChanged, mEventPropertiesView, &EventPropertiesView::setEvent);
     connect(mEventPropertiesView, &EventPropertiesView::combineDatesRequested, mProject, &Project::combineDates);

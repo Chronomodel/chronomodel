@@ -81,6 +81,7 @@ public slots:
     void changeDatesMethod();
     void selectedEventInSelectedPhases();
     void doGroupedAction();
+
     
 private:
     QToolBar* mToolBar;

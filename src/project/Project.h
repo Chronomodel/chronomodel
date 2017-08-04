@@ -67,6 +67,7 @@ public:
     
     QJsonObject emptyState() const;
     QJsonObject state() const;
+    QJsonObject* state_ptr();
     
     
     bool load(const QString& path);

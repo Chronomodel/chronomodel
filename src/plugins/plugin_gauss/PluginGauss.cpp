@@ -23,7 +23,7 @@ PluginGauss::~PluginGauss()
         delete mRefGraph;
 }
 
-//#pragma mark Likelihood
+// Likelihood
 long double PluginGauss::getLikelihood(const double& t, const QJsonObject& data)
 {
     QPair<long double, long double > result = getLikelihoodArg(t, data);
@@ -33,19 +33,7 @@ long double PluginGauss::getLikelihood(const double& t, const QJsonObject& data)
 
 QPair<long double, long double> PluginGauss::getLikelihoodArg(const double& t, const QJsonObject& data)
 {
-   /*  double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
-     double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
-     double refError = 0;
-     long double variance = refError * refError + error * error;
-     long double exponent = -0.5f * pow((long double)(age - t), 2.l) / variance;
 
-     QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
-     if(mode == DATE_GAUSS_MODE_CURVE) {
-        exponent = 0;
-     }
-     return qMakePair(variance, exponent);
-   // return qMakePair(variance, -0.5f * pow((long double)(age - t), 2.l) / variance);
-*/
     const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
     const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
     const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
@@ -57,24 +45,19 @@ QPair<long double, long double> PluginGauss::getLikelihoodArg(const double& t, c
 
     double refValue;
 
-    if(mode == DATE_GAUSS_MODE_CURVE) {
+    if (mode == DATE_GAUSS_MODE_CURVE) {
         const QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
-
         refValue = getRefCurveValueAt(ref_curve, t);
-       // exponent = -0.5f * pow((long double)(age - refValue), 2.l) / variance;
-      }
-    else {
-        refValue = getRefValueAt(data, t);
-        //exponent = -0.5f * pow((long double)(age - refValue), 2.l) / variance;
     }
+    else
+        refValue = getRefValueAt(data, t);
 
-    //double refValue = getRefValueAt(data, t);
-    const long double exponent = -0.5l * pow((long double)(age - refValue), 2.l) / variance;
+    const long double exponent = -0.5l * powl((long double)(age - refValue), 2.l) / variance;
 
     return qMakePair(variance, exponent);
 }
 
-//#pragma mark Properties
+// Properties
 QString PluginGauss::getName() const
 {
     return QString("Gauss");
@@ -88,12 +71,11 @@ QIcon PluginGauss::getIcon() const
 bool PluginGauss::doesCalibration() const
 {
     return true;
-
 }
 
 bool PluginGauss::wiggleAllowed() const
 {
-    return false;
+    return true;
 }
 
 Date::DataMethod PluginGauss::getDataMethod() const
@@ -176,7 +158,7 @@ QString PluginGauss::getDateDesc(const Date* date) const
     return result;
 }
 
-//#pragma mark CSV
+// CSV
 QString PluginGauss::csvHelp() const
 {
     return "Calibration : g(t) = at^2 + bt + c\r";
@@ -208,9 +190,10 @@ QJsonObject PluginGauss::fromCSV(const QStringList& list, const QLocale& csvLoca
             double a = csvLocale.toDouble(list.at(4));
             double b = csvLocale.toDouble(list.at(5));
             double c = csvLocale.toDouble(list.at(6));
-            if( (a==0) && (b== 0)) { // this solution is forbiden
+            if ( (a==0) && (b== 0))  // this solution is forbiden
                 return QJsonObject();
-            } else {
+
+            else {
                 json.insert(DATE_GAUSS_A_STR, a);
                 json.insert(DATE_GAUSS_B_STR, b);
                 json.insert(DATE_GAUSS_C_STR, c);
@@ -249,7 +232,7 @@ QStringList PluginGauss::toCSV(const QJsonObject& data, const QLocale& csvLocale
 
 // ------------------------------------------------------------------
 
-//#pragma mark Reference Curves (files)
+// Reference Curves (files)
 QString PluginGauss::getRefExt() const
 {
     return "csv";
@@ -358,7 +341,7 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
     return curve;
 }
 
-//#pragma mark Reference Values & Errors
+// Reference Values & Errors
 double PluginGauss::getRefValueAt(const QJsonObject& data, const double& t)
 {
     const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
@@ -382,10 +365,9 @@ double PluginGauss::getRefValueAt(const QJsonObject& data, const double& t)
 double PluginGauss::getRefErrorAt(const QJsonObject& data, const double& t, const QString mode)
 {
     //QString mode = data[DATE_GAUSS_MODE_STR].toString();
-    double e = 0;
+    double e (0.);
     
-    if(mode == DATE_GAUSS_MODE_CURVE)
-    {
+    if (mode == DATE_GAUSS_MODE_CURVE) {
         QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
         e = getRefCurveErrorAt(ref_curve, t);
     }
@@ -394,33 +376,29 @@ double PluginGauss::getRefErrorAt(const QJsonObject& data, const double& t, cons
 
 QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) const
 {
-    double tmin = 0;
-    double tmax = 0;
-    const double k = 5;
+    double tmin (0.);
+    double tmax (0.);
+    const double k (5.);
     
-    if(data.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_CURVE)
-    {
+    if (data.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_CURVE) {
         QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
-        if(mRefCurves.contains(ref_curve) && !mRefCurves.value(ref_curve).mDataMean.isEmpty())
-        {
+
+        if (mRefCurves.contains(ref_curve) && !mRefCurves.value(ref_curve).mDataMean.isEmpty()) {
            tmin = mRefCurves.value(ref_curve).mTmin;
            tmax = mRefCurves.value(ref_curve).mTmax;
         }
         else
-        {
             qDebug() << "PluginGauss::getTminTmaxRefsCurve no ref curve";
-        }
+
     }
-    else if(data.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_NONE)
-    {
+    else if (data.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_NONE) {
         double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
         double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
         
         tmin = age - k * error;
         tmax = age + k * error;
     }
-    else if(data[DATE_GAUSS_MODE_STR].toString() == DATE_GAUSS_MODE_EQ)
-    {
+    else if (data[DATE_GAUSS_MODE_STR].toString() == DATE_GAUSS_MODE_EQ) {
         double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
         double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
         
@@ -431,42 +409,40 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
         double v1 = age - k * error;
         double v2 = age + k * error;
 
-        if(a == 0){
-            if(b == 0){
+        if (a == 0.) {
+            if (b == 0.) {
                 // Error!
-            }else{
-                double t1 = (v1 - c) / b;
-                double t2 = (v2 - c) / b;
+            } else {
+                const double t1 = (v1 - c) / b;
+                const double t2 = (v2 - c) / b;
                 tmin = qMin(t1, t2);
                 tmax = qMax(t1, t2);
             }
         }
-        else{
+        else {
             double delta1 = b*b - 4*a*(c - v1);
             double delta2 = b*b - 4*a*(c - v2);
             
             bool hasDelta1 = false;
             
-            if(delta1 > 0)
-            {
+            if (delta1 > 0) {
                 hasDelta1 = true;
                 
-                double t11 = (- b - sqrt(delta1)) / (2 * a);
-                double t12 = (- b + sqrt(delta1)) / (2 * a);
+                const double t11 = (- b - sqrt(delta1)) / (2 * a);
+                const double t12 = (- b + sqrt(delta1)) / (2 * a);
                 
                 tmin = qMin(t11, t12);
                 tmax = qMax(t11, t12);
             }
-            if(delta2 > 0)
-            {
-                double t21 = (- b - sqrt(delta2)) / (2 * a);
-                double t22 = (- b + sqrt(delta2)) / (2 * a);
+            if (delta2 > 0) {
+                const double t21 = (- b - sqrt(delta2)) / (2 * a);
+                const double t22 = (- b + sqrt(delta2)) / (2 * a);
                 
-                if(hasDelta1){
+                if (hasDelta1) {
                     tmin = qMin(qMin(t21, t22), tmin);
                     tmax = qMax(qMax(t21, t22), tmax);
                 }
-                else{
+                else {
                     tmin = qMin(t21, t22);
                     tmax = qMax(t21, t22);
                 }
@@ -506,11 +482,11 @@ PluginFormAbstract* PluginGauss::getForm()
 
 // ------------------------------------------------------------------
 
-//#pragma mark Convert old project versions
+// Convert old project versions
 QJsonObject PluginGauss::checkValuesCompatibility(const QJsonObject& values)
 {
     QJsonObject result = values;
-    if(!values.contains(DATE_GAUSS_MODE_STR)){
+    if (!values.contains(DATE_GAUSS_MODE_STR)) {
         result.insert(DATE_GAUSS_MODE_STR, QString(DATE_GAUSS_MODE_EQ));
     }
     //force type double
@@ -524,36 +500,36 @@ QJsonObject PluginGauss::checkValuesCompatibility(const QJsonObject& values)
     return result;
 }
 
-//#pragma mark Date Validity
+// Date Validity
 bool PluginGauss::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
 {
     QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
     bool valid = true;
-    long double v = 0;
-    long double lastV = 0;
-    if(mode == DATE_GAUSS_MODE_CURVE) {
+    long double v (0.);
+    long double lastV (0.);
+    if (mode == DATE_GAUSS_MODE_CURVE) {
          // controle valid solution (double)likelihood>0
         // remember likelihood type is long double
-        QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
+        const QString ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
         const RefCurve& curve = mRefCurves.value(ref_curve);
         valid = false;
         double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
-        if(age>curve.mDataInfMin && age < curve.mDataSupMax){
+        if (age>curve.mDataInfMin && age < curve.mDataSupMax)
             valid = true;
-        }
+
         else {
             double t = curve.mTmin;
-            long double repartition = 0;
-            while(valid==false && t<=curve.mTmax) {
+            long double repartition (0.);
+            while (valid==false && t<=curve.mTmax) {
                 v = (double)getLikelihood(t,data);
                 // we have to check this calculs
                 //because the repartition can be smaller than the calibration
-                if (lastV>0 && v>0) {
+                if (lastV>0. && v>0.)
                     repartition += (long double) settings.mStep * (lastV + v) / 2.;
-                }
+
                 lastV = v;
 
-                valid = ( (double)repartition > 0);
+                valid = ( (double)repartition > 0.);
                 t +=settings.mStep;
             }
         }

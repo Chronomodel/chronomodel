@@ -1340,12 +1340,12 @@ void Model::generateTempo()
 
         //look for tmin tmax
 #ifndef UNIT_TEST
- /*       for (auto &&l:listTrace) {
+        for (auto &&l:listTrace) {
             tmin = std::min(tmin, *std::min(l.begin(), l.end()));
             tmax = std::max(tmax, *std::max(l.begin(), l.end()));
         }
         tmin = floor(tmin);
-        tmax = ceil(tmax);  */
+        tmax = ceil(tmax);
 #endif
 
 
