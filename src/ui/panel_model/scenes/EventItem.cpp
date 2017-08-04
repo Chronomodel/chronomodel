@@ -26,27 +26,28 @@ EventItem::~EventItem()
 }
 
 /**
- * @brief EventItem::mousePressEvent Overwrite of AbstractScene::mousePressEvent
+ * @brief EventItem::mousePressEvent Overwrite of AbstractItem::mousePressEvent
  * @param e
  */
 void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-    qDebug()<<"EventItem::mousePressEvent ";
+qDebug()<<"EventItem::mousePressEvent() pos() scenePos() et e.pos()"<<pos()<<scenePos()<<e->pos()<<e->scenePos();
+qDebug()<<"EventItem::mousePressEvent() mData"<<mData.value(STATE_ITEM_X).toDouble()<<mData.value(STATE_ITEM_Y).toDouble();
     EventsScene* itemScene = dynamic_cast<EventsScene*>(mScene);
-    if (itemScene->selectedItems().size()<2) {
-       /* if ((this != itemScene->currentEvent()) && (!itemScene->mDrawingArrow)) {
-            itemScene->clearSelection();
-        }*/
 
+    if ((this != itemScene->currentEvent()) && (!itemScene->mDrawingArrow) && (!itemScene->mSelectKeyIsDown)) {
+        itemScene->clearSelection();
+    }
+
+    if (itemScene->selectedItems().size()<2) {
         if (!itemScene->itemClicked(this, e)) {
             setZValue(2.);
-            QGraphicsItem::mousePressEvent(e);
+           // e->accept();
+          //  QGraphicsItem::mousePressEvent(e);
         } else
             itemScene->mTempArrow->setFrom(pos().x(), pos().y());
-    } /*else
-        itemScene->itemClicked(this, e);
-*/
-    QGraphicsObject::mousePressEvent(e);
+    }
+    //QGraphicsObject::mousePressEvent(e);
 }
 
 //Event Managment
@@ -66,14 +67,15 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     setSelected(isSelected);
     setPos(event.value(STATE_ITEM_X).toDouble(),
            event.value(STATE_ITEM_Y).toDouble());
-    
+//qDebug()<<"EventItem::setEvent() mData"<<event.value(STATE_ITEM_X).toDouble()<< event.value(STATE_ITEM_Y).toDouble();
+//qDebug()<<"EventItem::setEvent() setPos"<<pos()<<scenePos();
     // ----------------------------------------------
     //  Check if item should be greyed out
     // ----------------------------------------------
     const QJsonArray phases = getPhases();
     mWithSelectedPhase = false;
 
-    for (auto && phase : phases) {
+    for (auto &&phase : phases) {
             if ((mWithSelectedPhase == false) && (phase.toObject().value(STATE_IS_SELECTED) == true))
                     mWithSelectedPhase = true;
      }
@@ -124,15 +126,16 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
             mScene->removeItem(dateItems[i]);
             delete dateItems[i];
         }
-        
+
         // ----------------------------------------------
         //  Re-create Date Items
         // ----------------------------------------------
+        const QColor color(event.value(STATE_COLOR_RED).toInt(),
+                     event.value(STATE_COLOR_GREEN).toInt(),
+                     event.value(STATE_COLOR_BLUE).toInt());
+
         for (int i=0; i<dates.size(); ++i) {
-            const QJsonObject date = dates.at(i).toObject();
-            const QColor color(event.value(STATE_COLOR_RED).toInt(),
-                         event.value(STATE_COLOR_GREEN).toInt(),
-                         event.value(STATE_COLOR_BLUE).toInt());
+            const QJsonObject date = dates.at(i).toObject();           
             
             try {
                 DateItem* dateItem = new DateItem((EventsScene*)mScene, date, color, settings);
@@ -166,7 +169,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     // ----------------------------------------------
     //  Repaint based on mEvent
     // ----------------------------------------------
-    //update(); Done by prepareGeometryChange() at the function start
+    //update(); //Done by prepareGeometryChange() at the function start
 }
 
 /**
@@ -223,16 +226,17 @@ void EventItem::updateGreyedOut()
 void EventItem::setDatesVisible(bool visible)
 {
     QList<QGraphicsItem*> dateItems = childItems();
-    for (auto && item : dateItems)
+    for (auto &&item : dateItems)
         item->setVisible(visible);
     
 }
 
-//#pragma mark Events
+//Events
 void EventItem::updateItemPosition(const QPointF& pos)
 {
-    mData[STATE_ITEM_X] = pos.x();
-    mData[STATE_ITEM_Y] = pos.y();
+    qDebug()<<"EventItem::updateItemPosition() pos="<<pos;
+    mData[STATE_ITEM_X] = (double) pos.x();
+    mData[STATE_ITEM_Y] = (double) pos.y();
 }
 
 void EventItem::dropEvent(QGraphicsSceneDragDropEvent* e)
@@ -241,7 +245,7 @@ void EventItem::dropEvent(QGraphicsSceneDragDropEvent* e)
 }
 
 /**
- * @brief EventItem::handleDrop this function move a dateItem from an EventItem to and an other EventItem
+ * @brief EventItem::handleDrop this function move a data from CSV file to an EventItem
  * @param e
  */
 void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
@@ -264,6 +268,47 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
     scene->sendUpdateProject("Item selected", true, false); //  bool notify = true, bool storeUndoCommand = false
 }
 
+void EventItem::redrawEvent()
+{
+    prepareGeometryChange();
+    // Set DateItems positions
+    const QList<QGraphicsItem*> datesItemsList = childItems();
+    // ----------------------------------------------
+    //  Calculate item size
+    // ----------------------------------------------
+    const QJsonArray dates = getEvent().value(STATE_EVENT_DATES).toArray();
+    qreal h = mTitleHeight + mPhasesHeight + 2*mBorderWidth + 2*mEltsMargin;
+
+    const int count = dates.size();
+    if (count > 0)
+        h += count * (mEltsHeight + mEltsMargin);
+    else
+        h += mEltsMargin + mEltsHeight;
+if (count != datesItemsList.size())
+    qDebug()<<"EventItem::redrawEvent()";
+
+    mSize.setHeight(h);
+    int i (0);
+    for (QGraphicsItem* item: datesItemsList) {
+
+        DateItem* dateItem = dynamic_cast<DateItem*>(item);
+        if (dateItem) {
+            dateItem->setGreyedOut(mGreyedOut);
+            QPointF pos(0, boundingRect().y() +
+                        mTitleHeight +
+                        mBorderWidth +
+                        2*mEltsMargin +
+                        i * (mEltsHeight + mEltsMargin));
+
+            dateItem->setPos(pos);
+            dateItem->setOriginalPos(pos);
+            ++i;
+        }
+
+    }
+
+    update();
+}
 
 void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
@@ -351,7 +396,8 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         painter->setPen(QPen(Painting::mainColorLight, 3., Qt::DashLine));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
 
-    } else if (isSelected() || withSelectedDate()) {
+    //} else if (isSelected() || withSelectedDate()) {
+    } else if (isSelected()) {
         painter->setPen(QPen(Qt::white, 5.));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
         
@@ -380,7 +426,7 @@ QJsonArray EventItem::getPhases() const
     return phases;
 }
 
-//#pragma mark Geometry
+// Geometry
 QRectF EventItem::boundingRect() const
 {
     return QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());

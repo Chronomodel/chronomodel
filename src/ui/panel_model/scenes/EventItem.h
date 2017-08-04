@@ -27,6 +27,7 @@ public:
     virtual void updateItemPosition(const QPointF& pos);
     
     virtual void setDatesVisible(bool visible);
+    void redrawEvent();
     
     bool withSelectedDate() const;
     

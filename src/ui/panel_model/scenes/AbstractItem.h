@@ -40,7 +40,7 @@ public:
     qreal mEltsWidth;
     qreal mEltsHeight;
     
-    bool mMoving;
+    bool mMoving; // used in AbstractScene::itemReleased() to merge item like eventItem and phaseItem
     bool mMergeable;
     bool mGreyedOut;
 

@@ -13,7 +13,7 @@ class AbstractScene: public QGraphicsScene
 {
     Q_OBJECT
 public:
-    AbstractScene(QGraphicsView* view, QObject* parent = 0);
+    AbstractScene(QGraphicsView* view, QObject* parent = nullptr);
     ~AbstractScene();
     
     QRectF specialItemsBoundingRect(QRectF r = QRectF()) const;
@@ -26,6 +26,9 @@ public:
 
     QList<AbstractItem*> getItemsList() const  {return mItems;}
     bool showAllThumbs() const { return mShowAllThumbs;}
+
+    bool mSelectKeyIsDown; // used to add item in selection
+    bool mShowGrid;
 
 public slots:
     void showGrid(bool show);
@@ -57,7 +60,7 @@ protected:
     virtual void keyReleaseEvent(QKeyEvent* keyEvent);
     
     virtual AbstractItem* currentItem() = 0;
-    virtual AbstractItem* collidingItem(QGraphicsItem* item) = 0;
+    virtual AbstractItem* collidingItem(const QGraphicsItem* item) = 0;
     virtual void deleteSelectedItems() = 0;
     
     virtual bool constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo) = 0;
@@ -74,9 +77,9 @@ protected:
     
     bool mUpdatingItems;
     bool mAltIsDown;
-    bool mShiftIsDown;
+
     
-    bool mShowGrid;
+
 
     bool mShowAllThumbs;
     

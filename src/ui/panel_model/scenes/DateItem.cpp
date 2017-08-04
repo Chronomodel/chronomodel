@@ -16,7 +16,15 @@ mGreyedOut(false)
     setZValue(1.);
     setAcceptHoverEvents(true);
     setAcceptDrops(true);
+    //setFlag(ItemIsSelectable, true);
     setFlags(ItemIsMovable | ItemIsSelectable);
+
+    mDatesAnimTimer = new QTimeLine(100);
+    mDatesAnimTimer->setFrameRange(0, 2);
+
+    mDatesAnim = new QGraphicsItemAnimation();
+    mDatesAnim->setTimeLine(mDatesAnimTimer);
+
 
     // Date::fromJson doesn't create mCalibration
     Date d = Date::fromJson(date);
@@ -26,7 +34,7 @@ mGreyedOut(false)
     d.mSettings.mTmax = s.mTmax;
     d.mSettings.mStep = s.mStep;
     
-    if (d.mPlugin!=NULL) {
+    if (d.mPlugin!= nullptr) {
         if (!d.mIsValid)
             mCalibThumb = QPixmap();
 
@@ -138,36 +146,71 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
 
 }
 
+
 void DateItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
     qDebug()<<"DateItem::mousePressEvent___________________ ";
-
+  /*  if (e->modifiers() == Qt::ShiftModifier || e->modifiers() == Qt::ControlModifier) {
+        //EventItem* eventItem = dynamic_cast<EventItem*>(parentItem());
+        //eventItem->mousePressEvent(e);
+        setFlag(ItemIsMovable, true);
+    } else
+        setFlag(ItemIsMovable, false);
+*/
+//QGraphicsObject::mousePressEvent(e);
     EventItem* eventItem = dynamic_cast<EventItem*>(parentItem());
 
-/*    if ((!eventItem->isSelected()) && (!mEventsScene->mDrawingArrow))
+    if ((!eventItem->isSelected()) && (!mEventsScene->mDrawingArrow))
         mEventsScene->clearSelection();
-*/
-    if (eventItem)  {
+
+   if (eventItem)  {
         eventItem->setZValue(2.);
         eventItem->mousePressEvent(e);
         //e->accept();
     }
+
+ //   e->accept();
     // offers the possibility to move the item by heritage
-    QGraphicsObject::mousePressEvent(e);
+   //
 }
+
 
 void DateItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
 {
     parentItem()->setZValue(1.);
-    mEventsScene->dateReleased(this, e);
+    EventItem* hoveredEventItem = mEventsScene->dateReleased(this);
+    if (hoveredEventItem) {
+        //setParent(hoveredEventItem);
+        //setParentItem(hoveredEventItem);
+        // redraw find set the new position
+        hoveredEventItem->redrawEvent();
+
+
+        emit mEventsScene->eventsAreModified(tr("Date moved to event"), true, true);
+        //mEventsScene->getProject()->updateState(mEventsScene->getProject()->state(),tr("Date moved to event"), true);
+        //mEventsScene->updateSceneFromState();
+
+    } else {
+        mDatesAnim->setItem(this);
+        mDatesAnim->setPosAt(0, pos());
+        mDatesAnim->setPosAt(1, mOriginalPos);
+        mDatesAnimTimer->start();
+        e->accept();
+        //setSelected(false);
+
+    }
+    //must do it
     QGraphicsObject::mouseReleaseEvent(e);
 }
 
 void DateItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 {
-    //setGreyedOut(false);
-    mEventsScene->dateMoved(this, e);
+    qDebug()<<"DateItem::mouseMoveEvent()";
+    mEventsScene->dateMoved(this);
+    e->accept();
     QGraphicsObject::mouseMoveEvent(e);
+
+
 }
 
 void DateItem::dropEvent(QGraphicsSceneDragDropEvent* e)

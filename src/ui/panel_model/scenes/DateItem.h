@@ -36,6 +36,11 @@ public:
     QPointF mOriginalPos;
     QPixmap mCalibThumb;
     bool mGreyedOut;
+
+private:
+    QGraphicsItemAnimation* mDatesAnim;
+    QTimeLine* mDatesAnimTimer;
+
 };
 
 #endif
