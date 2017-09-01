@@ -67,7 +67,8 @@ mNoResults(true)
     mReasonChangeStructure<<"Phase selected";
     mReasonChangeStructure.squeeze();
 
-    mReasonChangeDesign<<"Event color updated"<< "Event color updated"<<"Event name updated";
+    mReasonChangeDesign<<"Phase color updated"<<"Phase name updated";
+    mReasonChangeDesign<<"Event color updated"<<"Event name updated";
     mReasonChangeDesign<<"Date name updates"<<"Date color updated";
     mReasonChangeDesign.squeeze();
 
@@ -1761,16 +1762,36 @@ void Project::updatePhase(const QJsonObject& phaseIn)
             
             QJsonObject stateNext = mState;
             QJsonArray phases = stateNext.value(STATE_PHASES).toArray();
-            
+            QString reason;
             for (int i=0; i<phases.size(); ++i) {
                 QJsonObject p = phases.at(i).toObject();
                 if (p.value(STATE_ID).toInt() == phase.value(STATE_ID).toInt()) {
+                    // check modification type to set mReasonChangeStructure or mReasonChangeDesign in pushProjectState
+                    // if only mReasonChangeDesign we don't need to redo cacul to see the result
+                    if (p.value(STATE_NAME).toString() != phase.value(STATE_NAME).toString())
+                        reason = "Phase name updated";
+
+                    else if (p.value(STATE_COLOR_BLUE).toInt() != phase.value(STATE_COLOR_BLUE).toInt()
+                              || p.value(STATE_COLOR_GREEN).toInt() != phase.value(STATE_COLOR_GREEN).toInt()
+                              || p.value(STATE_COLOR_RED).toInt() != phase.value(STATE_COLOR_RED).toInt() )
+                        reason = "Phase color updated";
+
+                    // set mReasonChangeStructure
+
+                    if (p.value(STATE_PHASE_TAU_TYPE).toInt() != phase.value(STATE_PHASE_TAU_TYPE).toInt())
+                        reason = "Phase updated";
+
+                    else if (p.value(STATE_PHASE_TAU_FIXED).toDouble() != phase.value(STATE_PHASE_TAU_FIXED).toDouble())
+                        reason = "Phase updated";
+
+
                     phases[i] = phase;
+
                     break;
                 }
             }
             stateNext[STATE_PHASES] = phases;
-            pushProjectState(stateNext, tr("Phase updated"), true);
+            pushProjectState(stateNext, reason, true);
 
         } else {
             QMessageBox message(QMessageBox::Critical,
