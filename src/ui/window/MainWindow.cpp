@@ -9,7 +9,7 @@
 #include <QtWidgets>
 
 
-//#pragma mark constructor / destructor
+// mark constructor / destructor
 MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
 {
     setWindowTitle("ChronoModel");
@@ -885,7 +885,7 @@ void MainWindow::changeEvent(QEvent* event)
     
 }
 
-//#pragma mark Settings
+//mark Settings
 void MainWindow::writeSettings()
 {
     mProjectView->writeSettings();
