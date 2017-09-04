@@ -116,25 +116,25 @@ void EventsScene::updateHelp()
     
     if (mItems.size() == 0) {
         text = tr("Define a study period on the right panel, apply it, and start creating your model by clicking on \"New Event...\".");
-        mHelpView->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=24"); // chapter
+        mHelpView->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=24"); // chapter
     }
     else if (selected.count() == 0) {
         text = tr("Select an event or a bound by clicking on it.");
         if (mConstraintItems.size() != 0)
             text += tr("\nYou can also edit constraints by double clicking on the arrow");
-        mHelpView->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=24"); // Chapter
+        mHelpView->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=24"); // Chapter
     } else if (selected.count() == 1) {
         const bool isBound = (dynamic_cast<EventKnownItem*>(selected[0]) != 0);
         
         if (mAltIsDown) {
             text = tr("Mouve your mouse and click on another element to create a constraint.");
-                mHelpView->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=24");
+                mHelpView->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=24");
         } else if (mSelectKeyIsDown && !isBound) {
             text = tr("Drag the event onto another one to merge them together.");
-                mHelpView->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=24");
+                mHelpView->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=24");
         } else {
             text = tr("You have selected an element. You can now:\r- Edit its properties from the right panel.\r- Create a constraint by holding the \"Alt\" key down and clicking on another element.");
-                mHelpView->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=24");
+                mHelpView->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=24");
             if (!isBound)
                 text += tr("\r- Merge it with another element by holding the \"Shift\" key down and dragging the selected element onto another one.\r- Delete it with the button on the left.");
         }
@@ -882,7 +882,7 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
         QJsonObject dateToRemove = dateItem->date();
         QJsonObject dateToAdd = dateItem->date();
 
-        dateItem->setParentItem(hoveredEventItem);
+
 
         if (nextEvent.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
             // Move the date to another event :
@@ -899,6 +899,9 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
              * the DateItem will be destroy and a new dateItem will be created. So when the code return in
              * DateItem::mouseReleaseEvent(), there is no valid DateItem.
              */
+
+            dateItem->setParentItem(hoveredEventItem);
+
             for (int i(0); !(isRemove && isAdd) && (i<events.size()) ; ++i) {
                 QJsonObject event = events.at(i).toObject();
 
@@ -916,7 +919,7 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
                     // new code
                     prevEventItem->mData = event;
                     if (dates.size() != prevEventItem->childItems().size())
-                        qDebug()<<"EventItem::redrawEvent()";
+                        qDebug()<<"EventsScene::dateReleased() (dates.size() != prevEventItem->childItems().size())";
 
                     prevEventItem->redrawEvent();
                 }
@@ -929,7 +932,7 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
                     // new code
                     hoveredEventItem->mData = event;
                     if (dates.size() != hoveredEventItem->childItems().size())
-                        qDebug()<<"EventItem::redrawEvent()";
+                        qDebug()<<"EventsScene::dateReleased() (dates.size() != hoveredEventItem->childItems().size())";
                     // redrawEvent is done in DateItem Release
                     isAdd = true;
                 }

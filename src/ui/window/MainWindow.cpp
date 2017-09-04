@@ -9,7 +9,7 @@
 #include <QtWidgets>
 
 
-// mark constructor / destructor
+// Constructor / Destructor
 MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
 {
     setWindowTitle("ChronoModel");
@@ -90,7 +90,7 @@ MainWindow::~MainWindow()
     
 }
 
-//#pragma mark Accessors
+// Accessors
 Project* MainWindow::getProject()
 {
     return mProject;
@@ -254,10 +254,10 @@ void MainWindow::createActions()
     mHelpAction = new QAction(QIcon(":help_p.png"), tr("Help"), this);
     mHelpAction->setCheckable(true);
     connect(mHelpAction, &QAction::triggered, this, &MainWindow::showHelp);
-   /*
+
     mManualAction = new QAction(QIcon(":pdf_p.png"), tr("Manual Online"), this);
     connect(mManualAction, &QAction::triggered, this, &MainWindow::openManual);
-  */
+
     mWebsiteAction = new QAction(QIcon(":web_p.png"), tr("Website"), this);
     connect(mWebsiteAction, &QAction::triggered, this, &MainWindow::openWebsite);
     
@@ -389,7 +389,7 @@ void MainWindow::createToolBars()
     mToolBar->addWidget(separator4);
     
     mToolBar->addAction(mHelpAction);
-    //mToolBar->addAction(mManualAction);
+    mToolBar->addAction(mManualAction);
     mToolBar->addAction(mWebsiteAction);
     /* toolBar->addAction(mAboutAct);
     toolBar->addAction(mAboutQtAct); */
@@ -590,7 +590,7 @@ void MainWindow::updateProject()
     mProjectView->updateProject();
 }
 
-//#pragma mark Settings & About
+// Settings & About
 void MainWindow::about()
 {
     AboutDialog dialog(qApp->activeWindow());
@@ -636,7 +636,7 @@ void MainWindow::setAppSettings(const AppSettings& s)
 
 void MainWindow::openManual()
 {
-    QDesktopServices::openUrl(QUrl("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf", QUrl::TolerantMode));
+    QDesktopServices::openUrl(QUrl("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf", QUrl::TolerantMode));
   
 
  /*   QString path = qApp->applicationDirPath();
@@ -662,7 +662,7 @@ void MainWindow::showHelp(bool show)
 
 void MainWindow::openWebsite()
 {
-    QDesktopServices::openUrl(QUrl("http://www.chronomodel.fr", QUrl::TolerantMode));
+    QDesktopServices::openUrl(QUrl("http://chronomodel.com", QUrl::TolerantMode));
 }
 
 void MainWindow::setFont(const QFont &font)

@@ -27,7 +27,7 @@ QDialog(parent, flags),
     mSeedsEdit->setFont(font);
 
     mHelp = new HelpWidget(tr("About seeds : each MCMC chain is different from the others because it uses a different seed. By default, seeds are picked randomly. However, you can force the chains to use specific seeds by entering them below. By doing so, you can replicate exactly the same results using the same seeds."), this);
-    mHelp->setLink("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf#page=47"); // chapter 4.2 MCMC settings
+    mHelp->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=47"); // chapter 4.2 MCMC settings
     mHelp->setFont(font);
 
     mNumProcEdit = new LineEdit(this);
