@@ -19,14 +19,14 @@ AboutDialog::AboutDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
     text += "<a href=\"http://www.chronomodel.com\">http://www.chronomodel.com</a><br><br>";
     text += "Copyright © CNRS<br>";
     
-    text += "Published in 2015<br><br>";
+    text += "Published in 2017<br><br>";
     text += "<b>Project director</b> : Philippe LANOS<br>";
-    text += "<b>Project co-director</b> : Anne PHILIPPE<br><br>";
+//    text += "<b>Project co-director</b> : Anne PHILIPPE<br><br>";
 
     text += "<b>Authors</b> : Helori LANOS, Philippe DUFRESNE<br><br>";
     
     text += "<b>Contact</b> :<br>";
-    text += "<a href=\"mailto:contact@chronomodel.fr\">contact@chronomodel.fr</a><br><br>";
+    text += "<a href=\"mailto:support@chronomodel.com \">support@chronomodel.com </a><br><br>";
     
     text += "<b>License</b> :<br>";
     text += "Chronomodel is released under the <a href=\"http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html\">CeCILL License V2.1</a><br><br>";
