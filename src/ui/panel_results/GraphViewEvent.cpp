@@ -32,13 +32,22 @@ void GraphViewEvent::setEvent(Event* event)
     QString eventTitle = ( (mEvent->mType == Event::eDefault) ? tr("Event") : tr("Bound") ) ;
     this->setItemTitle(eventTitle + " : " + mEvent->mName);
     setItemColor(mEvent->mColor);
-
     update();
+}
+
+void GraphViewEvent::updateLayout()
+{
+        GraphViewResults::updateLayout();
 }
 
 void GraphViewEvent::paintEvent(QPaintEvent* e)
 {
     GraphViewResults::paintEvent(e);
+}
+
+void GraphViewEvent::resizeEvent(QResizeEvent* )
+{
+    updateLayout();
 }
 
 void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
@@ -247,7 +256,8 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->setFormatFunctY(stringWithAppSettings);
         mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->mName;
 
-        generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine);
+        mGraph->addCurve(generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
+
         generateAcceptCurves(mChains, &(mEvent->mTheta));
         mGraph->repaint();
     }
