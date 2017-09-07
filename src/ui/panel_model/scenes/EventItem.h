@@ -23,6 +23,7 @@ public:
     virtual QRectF boundingRect() const;
     void handleDrop(QGraphicsSceneDragDropEvent* e);
     QJsonArray getPhases() const;
+    QJsonObject getSettings() const {return mSettings;}
     
     virtual void updateItemPosition(const QPointF& pos);
     

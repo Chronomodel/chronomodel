@@ -31,23 +31,22 @@ EventItem::~EventItem()
  */
 void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-qDebug()<<"EventItem::mousePressEvent() pos() scenePos() et e.pos()"<<pos()<<scenePos()<<e->pos()<<e->scenePos();
-qDebug()<<"EventItem::mousePressEvent() mData"<<mData.value(STATE_ITEM_X).toDouble()<<mData.value(STATE_ITEM_Y).toDouble();
+//qDebug()<<"EventItem::mousePressEvent() pos() scenePos() et e.pos()"<<pos()<<scenePos()<<e->pos()<<e->scenePos();
+//qDebug()<<"EventItem::mousePressEvent() mData"<<mData.value(STATE_ITEM_X).toDouble()<<mData.value(STATE_ITEM_Y).toDouble();
     EventsScene* itemScene = dynamic_cast<EventsScene*>(mScene);
 
-    if ((this != itemScene->currentEvent()) && (!itemScene->mDrawingArrow) && (!itemScene->mSelectKeyIsDown)) {
+    if ((this != itemScene->currentEvent()) && (!itemScene->mDrawingArrow) && (e->modifiers() != Qt::ControlModifier)) {// && (!itemScene->mSelectKeyIsDown)) {
         itemScene->clearSelection();
     }
 
-    if (itemScene->selectedItems().size()<2) {
-        if (!itemScene->itemClicked(this, e)) {
+    if (itemScene->selectedItems().size()<2 ) {
+        if (!itemScene->itemClicked(this, e))
             setZValue(2.);
-           // e->accept();
-          //  QGraphicsItem::mousePressEvent(e);
-        } else
+        else
             itemScene->mTempArrow->setFrom(pos().x(), pos().y());
     }
-    //QGraphicsObject::mousePressEvent(e);
+
+    QGraphicsObject::mousePressEvent(e);
 }
 
 //Event Managment
@@ -105,15 +104,8 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
         h += mEltsMargin + mEltsHeight;
     
     font.setPointSizeF(11.);
- /*   QFontMetrics metricsName(font);
-    for (int i=0; i<count; ++i) {
-        const QJsonObject date = dates.at(i).toObject();
-        name = date.value(STATE_NAME).toString();
-        const int nw = metricsName.width(name) + 2*mBorderWidth + 4*mEltsMargin;
-        w = (nw > w) ? nw : w;
-    }
-*/
-    qreal  w (150);//(w < 150) ? 150 : w;
+
+    qreal  w (150);
     
     mSize = QSize(w, h);
     
@@ -231,7 +223,7 @@ void EventItem::setDatesVisible(bool visible)
     
 }
 
-//Events
+// Events
 void EventItem::updateItemPosition(const QPointF& pos)
 {
     qDebug()<<"EventItem::updateItemPosition() pos="<<pos;
@@ -256,6 +248,7 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
     Project* project = scene->getProject();
     QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
     QList<Date> datesDragged = scene->decodeDataDrop(e);
+
     for (int i=0; i<datesDragged.size(); ++i) {
         QJsonObject date = datesDragged.at(i).toJson();
         date[STATE_ID] = project->getUnusedDateId(dates);
@@ -284,8 +277,11 @@ void EventItem::redrawEvent()
         h += count * (mEltsHeight + mEltsMargin);
     else
         h += mEltsMargin + mEltsHeight;
-if (count != datesItemsList.size())
-    qDebug()<<"EventItem::redrawEvent()";
+
+#ifdef DEBUG
+    if (count != datesItemsList.size())
+        qDebug()<<"EventItem::redrawEvent()";
+#endif
 
     mSize.setHeight(h);
     int i (0);
@@ -335,8 +331,6 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         painter->setOpacity(0.35);
     else
         painter->setOpacity(1.);
-
-
 
     painter->setPen(Qt::NoPen);
     painter->setBrush(eventColor);
@@ -396,8 +390,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         painter->setPen(QPen(Painting::mainColorLight, 3., Qt::DashLine));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
 
-    //} else if (isSelected() || withSelectedDate()) {
-    } else if (isSelected()) {
+    } else if (isSelected() || withSelectedDate()) {
         painter->setPen(QPen(Qt::white, 5.));
         painter->drawRect(rect.adjusted(1, 1, -1, -1));
         

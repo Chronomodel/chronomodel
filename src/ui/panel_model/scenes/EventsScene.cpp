@@ -628,14 +628,13 @@ void EventsScene::updateStateSelectionFromItem()
             // without selected update
             const QJsonObject prevEvent = item->getEvent();
 
-            //const bool selected = (item->isSelected() || item->withSelectedDate() );
+            const bool selected = (item->isSelected() || item->withSelectedDate() );
 
-            const bool selected = item->isSelected();
             selectedItems().append(item);
             if (selected)
                 ++nbOfSelectedEvent;
           //  if (selected)
-          //      qDebug()<<"EventsScene::updateStateSelectionFromItem updateState selected="<<prevEvent.value(STATE_NAME).toString();
+          //  qDebug()<<"EventsScene::updateStateSelectionFromItem updateState selected="<<prevEvent.value(STATE_NAME).toString()<<selected;
 
             const bool isCurrent = (curItem == item);
             // update mData in AbtractItem
@@ -657,9 +656,9 @@ void EventsScene::updateStateSelectionFromItem()
         if (modified ) {
            sendUpdateProject(tr("events selection : no undo, no view update!"), true, false);//  bool notify = true, bool storeUndoCommand = false
             // refresh the show and hide Event in the phases Scenes
-            if (nbOfSelectedEvent == 0)
+           if (nbOfSelectedEvent == 0)
                 emit noSelection();
-            else
+           else
                 emit eventsAreSelected();
 
             // refresh the Event propreties view
@@ -675,7 +674,7 @@ void EventsScene::updateStateSelectionFromItem()
     }
 }
 
-/* keep in memory
+/* keep in mind
 void EventsScene::updateSelectedEventsFromPhases()
 {
     // Do not send "selection updated" each time an item is selected in this function!
@@ -776,8 +775,7 @@ AbstractItem* EventsScene::currentItem()
         return absItem;
     } else
         return nullptr;
-   
-   
+
 }
 
 EventItem* EventsScene::currentEvent() const
@@ -854,7 +852,6 @@ void EventsScene::dateMoved(const DateItem* dateItem)
             lastEntered->setMergeable(false);
         lastEntered = hoveredEventItem;
 
-
         if (hoveredEventItem && prevEventItem && (hoveredEventItem != prevEventItem) ) {
             const QJsonObject& event = hoveredEventItem->getEvent();
 
@@ -882,8 +879,6 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
         QJsonObject dateToRemove = dateItem->date();
         QJsonObject dateToAdd = dateItem->date();
 
-
-
         if (nextEvent.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
             // Move the date to another event :
             //qDebug()<<"EventsScene::dateReleased MERGE";
@@ -909,6 +904,7 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
                 if (event.value(STATE_ID).toInt() == prevEvent.value(STATE_ID).toInt()) {
                     QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
                     for (int j (0); j<dates.size(); ++j) {
+                        qDebug()<<"dates j"<<dates.at(j)<<" "<<dateToRemove;
                         if (dates.at(j).toObject() == dateToRemove) {
                             dates.removeAt(j);
                             isRemove=true;
@@ -923,14 +919,16 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
 
                     prevEventItem->redrawEvent();
                 }
-                // add dateToAdd to next event :
+                // add dateToAdd to next event : and update mDate[STATE_ID] of the dateItem itself
                 else if (event.value(STATE_ID).toInt() == nextEvent.value(STATE_ID).toInt()) {
                     QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
                     dateToAdd[STATE_ID] = mProject->getUnusedDateId(dates);
+                    dateItem->mDate[STATE_ID] = dateToAdd[STATE_ID];
                     dates.append(dateToAdd);
                     event[STATE_EVENT_DATES] = dates;
                     // new code
                     hoveredEventItem->mData = event;
+
                     if (dates.size() != hoveredEventItem->childItems().size())
                         qDebug()<<"EventsScene::dateReleased() (dates.size() != hoveredEventItem->childItems().size())";
                     // redrawEvent is done in DateItem Release
@@ -941,42 +939,8 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
             }
             (*state)[STATE_EVENTS] = events;
 
-
-//            // remove dateToRemove from previous event :
-//            QJsonArray dates = prevEvent.value(STATE_EVENT_DATES).toArray();
-//            for (int j (0); j<dates.size(); ++j) {
-//                if (dates.at(j).toObject() == dateToRemove) {
-//                    dates.removeAt(j);
-//                    isRemove=true;
-//                    break;
-//                }
-//            }
-//            prevEvent[STATE_EVENT_DATES] = dates;
-//            // new
-//            prevEventItem->mData = prevEvent;
-//            prevEventItem->redrawEvent();
-
-//            // add dateToAdd to next event :
-//            dates = nextEvent.value(STATE_EVENT_DATES).toArray();
-//            dateToAdd[STATE_ID] = mProject->getUnusedDateId(dates);
-//            dates.append(dateToAdd);
-//            nextEvent[STATE_EVENT_DATES] = dates;
-//            // new
-//            hoveredEventItem->mData = nextEvent;
-//            // redrawEvent is done in DateItem Release
-//            isAdd = true;
-
-
             hoveredEventItem->setMergeable(false);
-//            bool inv = QMetaObject::invokeMethod(this, "sendUpdateProject",
-//                                      Qt::QueuedConnection,
-//                                      Q_ARG(QString("Date moved to event")),
-//                                      Q_ARG(bool, true),
-//                                      Q_ARG(bool, true)
-//                                      );
-          //  emit eventsAreModified(tr("Date moved to event"), true, true); // connect to sendUpdateProject
-
-           // mProject->pushProjectState(state, tr("Date moved to event"), true);
+            mProject->pushProjectState(*state, tr("Date moved to event"), true); // used to disable ResultsView
             return hoveredEventItem;
 
         } else
@@ -1030,6 +994,7 @@ void EventsScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
  * Becareful with the linux system Alt+click can't be detected,
  *  in this case the user must combine Alt+Shift+click to valided a constraint
  */
+
 bool EventsScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
 {
     Q_UNUSED(e);
@@ -1082,14 +1047,14 @@ qDebug()<<"itemClicked eventClicked select" <<eventClicked->mData.value(STATE_NA
                // sendUpdateProject("Item UnSelected", true, false);//  bool notify = true, bool storeUndoCommand = false
             }
 
-
-        } else {
+*/
+        } //else {
             // now this is the current
-            eventClicked->setSelected(true);
+            //eventClicked->setSelected(true);
 
           //  updateStateSelectionFromItem();
           //  sendUpdateProject("Item selected", true, false);//  bool notify = true, bool storeUndoCommand = false
-      */  }
+       // }
 
     } //else
       //  clearSelection();
@@ -1122,11 +1087,8 @@ void EventsScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e
     Q_UNUSED(item);
     
     QMessageBox message(QMessageBox::Question, tr("Delete constraint"), tr("Do you really want to delete this constraint?"), QMessageBox::Yes | QMessageBox::No, qApp->activeWindow(), Qt::Sheet);
-    if (message.exec() == QMessageBox::Yes) {
+    if (message.exec() == QMessageBox::Yes)
         mProject->deleteEventConstraint(item->data().value(STATE_ID).toInt());
-    }
-    
-
 }
 
 /**
@@ -1135,7 +1097,7 @@ void EventsScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e
  */
 void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
 {
- //   qDebug() << "EventsScene::keyPressEvent: " << keyEvent->modifiers() << keyEvent->key();
+    qDebug() << "EventsScene::keyPressEvent: " << keyEvent->modifiers() << keyEvent->key();
 
     if (keyEvent->isAutoRepeat())
         keyEvent->ignore();
@@ -1143,6 +1105,7 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
    if (selectedItems().count() == 0) {
         qDebug() << "EventsScene::keyPressEvent No item selected";
         emit noSelection();
+
     } else {
        qDebug() << "EventsScene::keyPressEvent emit selectionChanged() ";
        emit selectionChanged();
@@ -1175,14 +1138,26 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
     else if (keyEvent->key() == Qt::Key_Shift)
         mSelectKeyIsDown = true;
 //#endif
+    /* REMARK
+     * On macOS Qt::MetaModifier correspond to the keyboard key "Ctrl"
+     * and      Qt::ControlModifier to the keyboard key "cmd"
+     */
 #ifdef Q_OS_MAC
     else if (keyEvent->modifiers() == Qt::ControlModifier)  {
-        // on MacOs it is the the key cmd = command
         mSelectKeyIsDown = true;
-        //if (QApplication::keyboardModifiers().testFlag(Qt::ControlModifier) == true) {
-                    qDebug() << "EventsScene::keyPressEvent You Press: "<< "Qt::ControlModifier";
+        qDebug() << "EventsScene::keyPressEvent You Press: "<< "Qt::ControlModifier";
+
+    }
+    else if (keyEvent->modifiers() == Qt::MetaModifier)  {
+        mSelectKeyIsDown = true;
+        qDebug() << "EventsScene::keyPressEvent You Press: "<< "Qt::MetaModifier";
 
                 }
+    else if (keyEvent->key() == Qt::Key_Shift)  {
+        mSelectKeyIsDown = true;
+        qDebug() << "EventsScene::keyPressEvent You Press: "<< "Qt::Key_Shift";
+    }
+
 #endif
    /* else if (keyEvent->modifiers() && Qt::ControlModifier)  {
                 mDrawingArrow = false;
