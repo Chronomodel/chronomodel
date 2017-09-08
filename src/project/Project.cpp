@@ -61,9 +61,9 @@ mNoResults(true)
     mReasonChangeStructure<<"Event created"<<"Bound created"<<"Event method updated" ;
     mReasonChangeStructure<<"Update selected event method";//<<"Event selected";
 
-    mReasonChangeStructure<<"Date created"<<"Date updated"<<"Phase constraint updated"<<"Phase created"<<"Phase(s) deleted";
+    mReasonChangeStructure<<"Date created"<<"Date moved to event"<<"Date updated"<<"Phase created"<<"Phase(s) deleted";
     mReasonChangeStructure<<"Update selected data method";
-    mReasonChangeStructure<<"Phase updated"<<"Phase constraint created"<<"Phase's events updated";
+    mReasonChangeStructure<<"Phase updated"<<"Phase constraint created"<<"Phase constraint updated"<<"Phase's events updated";
     mReasonChangeStructure<<"Phase selected";
     mReasonChangeStructure.squeeze();
 
