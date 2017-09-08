@@ -135,7 +135,7 @@ QColor Date::getEventColor() const
     return randomColor();
 }
 
-//#pragma mark JSON
+// JSON
 Date Date::fromJson(const QJsonObject& json)
 {
     Date date = Date();

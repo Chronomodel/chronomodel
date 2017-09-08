@@ -36,10 +36,10 @@ int Marker::thickness() const
 void Marker::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
-    if (QWidget::isVisible()) {
+   // if (QWidget::isVisible()) {
         QPainter p(this);
         p.setPen(mPen);
         p.setBrush(mBrush);
         p.drawRect(rect());
-    }
+   // }
 }

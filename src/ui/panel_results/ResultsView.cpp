@@ -763,7 +763,8 @@ void ResultsView:: updateTabByScene()
 
     bool byEvents (mTabByScene->currentIndex() == 0);
     bool byPhases (mTabByScene->currentIndex() == 1);
- //   bool byTempo (mTabByScene->currentIndex() == 2);
+    if (not(byEvents) && not(byPhases))
+        return;
 
     /* ----------------------------------------------------------
      *  Results options layout, member within  mTabByScene
@@ -819,30 +820,29 @@ void ResultsView:: updateTabByScene()
 
     mResultsGroup->resize(mOptionsW, ySpan);
     mTabByScene->resize(mOptionsW, mTabByScene->minimalHeight());
-
+    update();
 }
 
 
 void ResultsView::updateTabByTempo()
 {
+    if (mTabByScene->currentIndex() != 2)
+        return;
 
     /* ----------------------------------------------------------
      *  Results options layout, member within  mTempoGroup
      * ----------------------------------------------------------*/
     int ySpan (mMargin);
 
-    //mDurationRadio->setVisible(true);
     mDurationRadio -> move(mMargin, ySpan);
     ySpan += mDurationRadio->height() + mMargin;
 
-   // mTempoRadio->setVisible(true);
     mTempoRadio -> move(mMargin, ySpan);
     ySpan += mTempoRadio->height() + mMargin;
 
     mActivityRadio -> move(mMargin, ySpan);
     ySpan += mActivityRadio->height() + mMargin;
 
-    //mTempoStatCheck->setVisible(true);
     mTempoStatCheck->move(mMargin , ySpan);
     ySpan += mTempoStatCheck->height() + mMargin;
 

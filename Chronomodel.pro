@@ -3,7 +3,7 @@
 # Created by Helori LANOS
 # March 14th, 2014
 # and Philippe Dufresne
-# Chronomodel
+# ChronoModel
 #
 #-------------------------------------------------
 VERSION = 1.6.3_alpha # must match value in src/main.cpp
@@ -20,6 +20,7 @@ CONFIG(debug, debug|release) {
 } else {
         BUILD_DIR=build/release
 	message("Running qmake : Release")
+        DEFINES += QT_NO_DEBUG_OUTPUT # to disable qDebug()
 	macx{
 		REAL_DESTDIR=Release
 	}

@@ -135,7 +135,7 @@ MultiCalibrationView::~MultiCalibrationView()
 
 void MultiCalibrationView::setFont(const QFont &font)
 {
-    // we must force setFont on QLineEdi !!
+    // we must force setFont on QLineEdit !!
     mHPDEdit->setFont(font);
     mStartEdit->setFont(font);
     mEndEdit->setFont(font);
@@ -145,17 +145,12 @@ void MultiCalibrationView::setFont(const QFont &font)
 
 void MultiCalibrationView::resizeEvent(QResizeEvent* )
 {
-
-    update();
-
+    updateLayout();
 }
 
 void MultiCalibrationView::paintEvent(QPaintEvent* e)
 {
     (void) e;
-
-
-    //const int graphLeft (mButtonWidth);//mImageSaveBut->x() + mImageSaveBut->width());
     const int graphWidth (width() - mButtonWidth);
 
     QPainter p(this);
@@ -166,7 +161,6 @@ void MultiCalibrationView::paintEvent(QPaintEvent* e)
     // drawing a background under curve
    // p.fillRect(QRect(0, 0, graphWidth, height()), Qt::green);
 
-    updateLayout();
 
 }
 

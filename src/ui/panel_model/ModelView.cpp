@@ -1114,7 +1114,7 @@ void ModelView::updatePhasesZoom(const double prop)
     mPhasesScene->adaptItemsForZoom(scale);
 }
 
-//#pragma mark Export images
+// Export images
 void ModelView::exportEventsScene()
 {
     exportSceneImage(mEventsScene);

@@ -12,7 +12,7 @@
 
 
 
-//pragma mark Constructor / Destructor
+// Constructor / Destructor
 
 GraphViewDate::GraphViewDate(QWidget *parent):GraphViewResults(parent),
 mDate(nullptr),

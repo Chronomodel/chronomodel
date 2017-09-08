@@ -15,7 +15,6 @@ void ColoredPanel::paintEvent(QPaintEvent *)
 {
     QPainter p (this);
     p.fillRect(rect(), mColor);
-    QWidget::update();
 }
 
 
@@ -32,7 +31,6 @@ mMouseOverCurve (true)
    mScrollArea = new QScrollArea(this);
    mScrollArea->setMouseTracking(true);
    mScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
 
    mGraphWidget = new QWidget();
    mGraphWidget->setMouseTracking(true);
@@ -108,10 +106,6 @@ void MultiCalibrationDrawing::mouseMoveEvent(QMouseEvent* e)
     */
 }
 
-void MultiCalibrationDrawing::paintEvent(QPaintEvent* )
-{
-
-}
 
 void MultiCalibrationDrawing::updateLayout()
 {

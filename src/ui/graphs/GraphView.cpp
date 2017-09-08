@@ -661,6 +661,7 @@ void GraphView::repaintGraph(const bool aAlsoPaintBackground)
 {
     if (aAlsoPaintBackground)
         mBufferBack = QPixmap();
+
     update();
 }
     

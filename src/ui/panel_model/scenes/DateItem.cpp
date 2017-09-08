@@ -17,8 +17,10 @@ mGreyedOut(false)
     setAcceptHoverEvents(true);
     setAcceptDrops(true);
     setFlag(ItemIsMovable, false);
-    setFlag(ItemIsSelectable, false); // set the selection directly to the parent item, here the EventItem
-    //setFlags(ItemIsMovable | ItemIsSelectable | QGraphicsItem::ItemIsFocusable);
+
+    // set the selection directly to the parent item, here the EventItem
+    setFlag(ItemIsSelectable, false);
+
 
     mDatesAnimTimer = new QTimeLine(100);
     mDatesAnimTimer->setFrameRange(0, 2);
@@ -178,15 +180,10 @@ void DateItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
     parentItem()->setZValue(1.);
     EventItem* hoveredEventItem = mEventsScene->dateReleased(this);
     if (hoveredEventItem) {
-        //setParent(hoveredEventItem);
-        //setParentItem(hoveredEventItem);
         // redraw find set the new position
         hoveredEventItem->redrawEvent();
 
-
         emit mEventsScene->eventsAreModified(tr("Date moved to event"), true, true);
-        //mEventsScene->getProject()->updateState(mEventsScene->getProject()->state(),tr("Date moved to event"), true);
-        //mEventsScene->updateSceneFromState();
 
     } else {
         if (pos() != mOriginalPos) {
@@ -195,7 +192,7 @@ void DateItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
             mDatesAnim->setPosAt(1, mOriginalPos);
             mDatesAnimTimer->start();
             e->accept();
-            //setSelected(false);
+
         } else {
             EventItem* eventItem = dynamic_cast<EventItem*>(parentItem());
             eventItem->setSelected(true);
@@ -204,7 +201,7 @@ void DateItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
 
     }
 
-    //must do it, this select the dateItem and automaticaly emit GraphicsScene::selectionChanged
+    // Must do it, this select the dateItem and automaticaly emit GraphicsScene::selectionChanged
     // which are connect to EventsScene::updateStateSelectionFromItem
     QGraphicsObject::mouseReleaseEvent(e);
 }

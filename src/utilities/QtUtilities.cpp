@@ -224,7 +224,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             // -------------------------------
             //  If widget, draw with or without axis
             // -------------------------------
-            if (widget) // exportFullImage in ReseultsView
+            if (widget) // exportFullImage in ResultsView
                  widget->render(&p, QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), r.height()+heightText +20));
 
             

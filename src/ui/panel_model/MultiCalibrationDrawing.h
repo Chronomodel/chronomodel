@@ -68,7 +68,7 @@ private:
     bool mMouseOverCurve;
 
 protected:
-    void paintEvent(QPaintEvent*);
+  //  void paintEvent(QPaintEvent*);
     void mouseMoveEvent(QMouseEvent* e);
     void resizeEvent(QResizeEvent* e);
 

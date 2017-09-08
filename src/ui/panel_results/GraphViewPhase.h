@@ -1,5 +1,5 @@
-#ifndef GraphViewPhase_H
-#define GraphViewPhase_H
+#ifndef GRAPHVIEWPHASE_H
+#define GRAPHVIEWPHASE_H
 
 #include "GraphViewResults.h"
 
@@ -15,8 +15,6 @@ public:
     
     void setPhase(Phase* phase);
     void setGraphFont(const QFont& font);
-
-    Phase* mPhase;
     
     void generateCurves(TypeGraph typeGraph, Variable variable);
     void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
@@ -27,9 +25,8 @@ protected:
     void resizeEvent(QResizeEvent* );
     void updateLayout();
     
-protected slots:
-//    void saveGraphData() const;
-    
+private:
+    Phase* mPhase;
 
 };
 
