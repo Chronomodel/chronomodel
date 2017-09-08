@@ -961,13 +961,32 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     if (!defaultFilePath.isEmpty()) {
         QFileInfo fileInfo(defaultFilePath);
         if (fileInfo.isFile()) {
-            if (mProject->mModel) {
+            if (!mProject)
+                mProject = new Project();
+
+            else if (mProject->mModel) {
                 mProject->mModel->clear();
                 mProjectView->resetInterface();
             }
             if (mProject->load(defaultFilePath)) {
                 activateInterface(true);
                 updateWindowTitle();
+                connectProject();
+
+                mProject->setAppSettings(mAppSettings);
+
+                mProjectView->createProject();
+
+                mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
+                // to do, it'is done in project load
+                if (! mProject->mModel->mChains.isEmpty()) {
+                    mViewLogAction -> setEnabled(true);
+                    mViewResultsAction -> setEnabled(true);
+                    mViewResultsAction -> setChecked(true); // Just check the Result Button after computation and mResultsView is show after
+
+                    mProject->mModel->updateFormatSettings(&mAppSettings);
+                 }
+
                 fileOpened = true;
             }
         }
