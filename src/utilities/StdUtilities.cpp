@@ -440,7 +440,8 @@ QMap<double, double> vector_to_map(const QVector<int>& data, const double min, c
         double t = min + i * step;
 
         if (i < data.size())
-            map.insert(t, (double)data.at(i));
+            map.insert(t,  (double) data.at(i));
+
     }
     return map;
 }

@@ -77,7 +77,7 @@ mHeightForVisibleAxis(100)
     mImageSaveBut->setToolTip(tr("Save image as file"));
     
     mImageClipBut = new Button(tr("Copy"), this);
-    mImageClipBut->setIcon(QIcon(":picture_copy.png"));
+    mImageClipBut->setIcon(QIcon(":clipboard_graph.png"));
     mImageClipBut->setFlatVertical();
     mImageClipBut->setToolTip(tr("Copy image to clipboard"));
     

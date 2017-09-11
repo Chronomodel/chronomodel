@@ -44,7 +44,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mImageSaveBut->setIconOnly(true);
 
     mImageClipBut = new Button(tr("Copy"), this);
-    mImageClipBut->setIcon(QIcon(":picture_copy.png"));
+    mImageClipBut->setIcon(QIcon(":clipboard_graph.png"));
     mImageClipBut->setFlatVertical();
     mImageClipBut->setToolTip(tr("Copy image to clipboard"));
     mImageClipBut->setIconOnly(true);

@@ -612,13 +612,14 @@ void GraphView::resizeGL(int w, int h)
 #else
 void GraphView::resizeEvent(QResizeEvent* event)
 {
-    //Q_UNUSED(event);
-
+    Q_UNUSED(event);
+/*
     qreal wNew = event->size().width();
     qreal hNew = event->size().height();
 
     qreal wOld = event->oldSize().width();
     qreal hOld = event->oldSize().height();
+ */
     /*
     if (!mBufferBack.isNull()) {
         //const qreal sx = (qreal)rect().width() / (qreal)mBufferBack.rect().width() ;

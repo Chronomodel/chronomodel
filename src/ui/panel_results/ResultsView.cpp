@@ -763,7 +763,7 @@ void ResultsView:: updateTabByScene()
 
     bool byEvents (mTabByScene->currentIndex() == 0);
     bool byPhases (mTabByScene->currentIndex() == 1);
-    if (not(byEvents) && not(byPhases))
+    if (!byEvents && !byPhases)
         return;
 
     /* ----------------------------------------------------------

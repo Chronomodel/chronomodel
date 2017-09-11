@@ -218,7 +218,7 @@ QVector<float> equal_areas(const QVector<float>& data, const float step, const f
 
 QMap<float, float> vector_to_map(const QVector<float>& data, const float min, const float max, const float step);
 QMap<double, double> vector_to_map(const QVector<double>& data, const double min, const double max, const double step);
-QMap<double, double> vector_to_map(const QVector<int>& data, const double min, const double max, const double step);
+QMap<double, double> vector_to_map(const QVector<int> &data, const double min, const double max, const double step);
 
 double vector_interpolate_idx_for_value(const double value, const QVector<double> &vector);
 float vector_interpolate_idx_for_value(const float value, const QVector<float> &vector);

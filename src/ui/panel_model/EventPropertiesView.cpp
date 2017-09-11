@@ -33,9 +33,11 @@ mButtonWidth(50)
     
     mColorLab = new Label(tr("Color"), this);
     mColorPicker = new ColorPicker(Qt::black);
+    mColorPicker->setFixedHeight(17);
     
     mMethodLab = new Label(tr("Method"), this);
     mMethodCombo = new QComboBox();
+    mMethodCombo->setFixedHeight(20);
     
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eDoubleExp));
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eBoxMuller));
@@ -54,15 +56,16 @@ mButtonWidth(50)
     grid->addWidget(mColorPicker, 1, 1);
     grid->addWidget(mMethodLab, 2, 0);
     grid->addWidget(mMethodCombo, 2, 1);
-    
+
     QVBoxLayout* topLayout = new QVBoxLayout();
-    topLayout->setContentsMargins(10, 6, 10, 6);
+    topLayout->setContentsMargins(6, 6, 6, 6);
     topLayout->addLayout(grid);
     topLayout->addStretch();
     
     mTopView = new QWidget(this);
     mTopView->setLayout(topLayout);
-    mTopView->setFixedHeight(mToolbarH);
+ //   mTopView->setFixedHeight(mToolbarH);
+    mTopView->setFixedHeight(mNameEdit->height()+mColorPicker->height()+mMethodCombo->height() + 2*grid->spacing());
       
     // Event default propreties Window mEventView
     mEventView = new QWidget(this);
