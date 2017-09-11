@@ -76,7 +76,7 @@ macx{
 	# to determine which version of the macOS SDK is installed with xcode? type on a terminal
 	# xcodebuild -showsdks
     QMAKE_MAC_SDK = macosx10.12
-        QMAKESPEC = win32-msvc2015
+        QMAKESPEC = win32-msvc2015 # ???
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
 	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
 
@@ -89,18 +89,17 @@ macx{
 }
 win32{
 	# Resource file (Windows only)
-QMAKESPEC = win32-msvc2015
+        message(" win32 QMAKESPEC = winrt-x64-msvc2017")
+
+        # QMAKESPEC = win32-msvc
+        QMAKESPEC = winrt-x64-msvc2017
         RC_FILE += Chronomodel.rc
 	RC_ICONS += $$PRO_PATH/icon/Chronomodel.ico
-QT_FATAL_WARNING = 1
+        QT_FATAL_WARNING = 1
 
 }
 
-contains(QT_ARCH, i386) {
-    message("32-bit")
-} else {
-    message("64-bit")
-}
+
 
 #########################################
 # DEFINES
@@ -159,6 +158,7 @@ macx{
 	#QMAKE_POST_LINK += install_name_tool -id @executable_path/../Frameworks/libfftw3f.dylib $$PRO_PATH/deploy/mac/FFTW/libfftw3f.dylib
 	#QMAKE_POST_LINK += install_name_tool -change old/path @executable_path/../Frameworks/libfftw3f.3.dylib $$PRO_PATH/Release/Chronomodel.app/Contents/MacOS/Chronomodel;
 }
+
 win32{
         INCLUDEPATH += lib/FFTW
         contains(QT_ARCH, i386) {
@@ -168,8 +168,6 @@ win32{
             message("64-bit")
             LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win64" -lfftw3-3 # to compile with a x64 machine
         }
-        #
-
 }
 #linux :
 unix:!macx{ 
