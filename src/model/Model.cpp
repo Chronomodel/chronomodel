@@ -1298,11 +1298,10 @@ void Model::generateHPD(const double thresh)
 
 }
 
-#define UNIT_TEST
+//#define UNIT_TEST
 void Model::generateTempo()
 {
     qDebug()<<"Model::generateTempo()";
-
 
     QTime t = QTime::currentTime();
 
@@ -1371,7 +1370,7 @@ void Model::generateTempo()
             // sort scenario trace
             std::sort(scenario.begin(),scenario.end());
 
-            QVector<double>::const_iterator itScenario (scenario.cbegin());
+            QVector<double>::const_iterator itScenario (scenario.begin());
 
             QVector<int>::iterator itN (N.begin()); // for Tempo
             QVector<int>::iterator itPrevN (previousN.begin());
@@ -1381,7 +1380,6 @@ void Model::generateTempo()
 
             QVector<int>::iterator itI (I.begin()); // for Intensity/Activity
 
-
             int index (0); // index of table N corresponding to the first value // faster than used of Distance
             double t (tmin + index*deltat);
             int memoScenarioIdx (0);
@@ -1389,7 +1387,7 @@ void Model::generateTempo()
 
             while (itScenario != scenario.cend()) {
 
-  //              if (*itScenario> t && t<tmax ) {
+                if (*itScenario> t && t<tmax ) {
                      if (itN != N.end()) {
                              (*itN2) = (*itPrevN2) + (memoScenarioIdx * memoScenarioIdx);
 
@@ -1408,77 +1406,69 @@ void Model::generateTempo()
                     ++index;
                     t = tmin + index*deltat;
 
-//                } else {
-//                    (*itN2) = (*itPrevN2) + (scenarioIdx * scenarioIdx);
+                } else {
+                    (*itN2) = (*itPrevN2) + (scenarioIdx * scenarioIdx);
 
-//                    (*itN) = (*itPrevN) + scenarioIdx;
+                    (*itN) = (*itPrevN) + scenarioIdx;
 
-//                    (*itI) = (*itI) + 1;
-//                    memoScenarioIdx = scenarioIdx;
-//                    if (itScenario != scenario.cend()) {
+                    (*itI) = (*itI) + 1;
+                   memoScenarioIdx = scenarioIdx;
+
+                   if (itScenario != scenario.cend()) {
                         ++itScenario;
-//                        ++scenarioIdx;
-//                    }
+                       ++scenarioIdx;
+                    }
 
-//                }
+                }
 
             }
 
-
             while (index <= nbPts) {
-                (*itN) = (*itPrevN) + memoScenarioIdx;
-                ++itN;
-                ++itPrevN;
-
-                (*itN2) = (*itPrevN2) + (memoScenarioIdx * memoScenarioIdx);
-                ++itN2;
-                ++itPrevN2;
-
+                if (itN != N.end()) {
+                     (*itN) = (*itPrevN) + memoScenarioIdx;
+                    ++itN;
+                    ++itPrevN;
+                }
+                if (itN2 != N2.end()) {
+                    (*itN2) = (*itPrevN2) + (memoScenarioIdx * memoScenarioIdx);
+                    ++itN2;
+                    ++itPrevN2;
+                }
                 ++index;
                 Ni[t].append(memoScenarioIdx);
                 t = tmin + index*deltat;
             }
-
-//            for (int i (0); i <N2.size(); ++i)
-//                previousN2[i]= N2.at(i);
-
-//            for (int i (0); i <N.size(); ++i)
-//                previousN[i]= N.at(i);
-
-        //    previousN2 = N2;
-        //    previousN = N;
             std::copy(N2.begin(), N2.end(), previousN2.begin());
             std::copy(N.begin(), N.end(), previousN.begin());
         }
-
 
 #ifndef UNIT_TEST
         progress->setValue(position);
 #endif
 
     // calculation of the variance
-//        QVector<double> inf;
-//        QVector<double> sup;
-//        QVector<double> mean;
-//        QVector<int>::iterator itN2 (N2.begin());
-//        for (auto &&x : N) {
-//            const double di (totalIter);
-//            const double m = x/di;
-//            const double s2 = std::sqrt( (*itN2)/di - std::pow(m, 2.) );
+        QVector<double> inf;
+        QVector<double> sup;
+        QVector<double> mean;
+        QVector<int>::iterator itN2 (N2.begin());
+        for (auto &&x : N) {
+            const double di (totalIter);
+            const double m = x/di;
+            const double s2 = std::sqrt( (*itN2)/di - std::pow(m, 2.) );
 
-//            mean.append(m);
-//            // Forbidden negative error
-//            const double infp = ( m < 1.96*s2 ? 0 : m - 1.96*s2 );
-//            inf.append( infp);
-//            sup.append( m + 1.96*s2);
-//            ++itN2;
+            mean.append(m);
+            // Forbidden negative error
+            const double infp = ( m < 1.96*s2 ? 0 : m - 1.96*s2 );
+            inf.append( infp);
+            sup.append( m + 1.96*s2);
+            ++itN2;
 
-//        }
+        }
        // 2 - Cumulate Nj and Nj2
 
-//        phase->mTempo = vector_to_map(mean, tmin, tmax, deltat);
-//        phase->mTempoInf = vector_to_map(inf, tmin, tmax, deltat);
-//        phase->mTempoSup = vector_to_map(sup, tmin, tmax, deltat);
+        phase->mTempo = vector_to_map(mean, tmin, tmax, deltat);
+        phase->mTempoInf = vector_to_map(inf, tmin, tmax, deltat);
+        phase->mTempoSup = vector_to_map(sup, tmin, tmax, deltat);
 
         // 3 - Derivative function
        /* QVector<double> dN;
@@ -1488,32 +1478,32 @@ void Model::generateTempo()
             ++xp;
         }
         */
-//        phase->mActivity = vector_to_map(I, tmin, tmax, deltat);
+        phase->mActivity = vector_to_map(I, tmin, tmax, deltat);
 
 
 //        // 4 - Credibility
-//        QVector<double> credInf (nbPts);
-//        QVector<double> credSup (nbPts);
+        QVector<double> credInf (nbPts);
+        QVector<double> credSup (nbPts);
 
-//        QVector<double>::iterator itCredInf (credInf.begin());
-//        QVector<double>::iterator itCredSup (credSup.begin());
-//        int index (0); // index of table N corresponding to the first value // faster than used of Distance
-//        double t (tmin + index*deltat);
-//        while (t<tmax ) {
+        QVector<double>::iterator itCredInf (credInf.begin());
+        QVector<double>::iterator itCredSup (credSup.begin());
+        int index (0); // index of table N corresponding to the first value // faster than used of Distance
+        double t (tmin + index*deltat);
+        while (t<tmax ) {
 
-// //qDebug()<<"cred"<<Ni[t];
-//            Quartiles cred = quartilesType(Ni[t], 8, 0.025);
-//            *itCredInf = cred.Q1;
-//            *itCredSup = cred.Q3;
-//            ++itCredInf;
-//            ++itCredSup;
+ //qDebug()<<"cred"<<Ni[t];
+            Quartiles cred = quartilesType(Ni[t], 8, 0.025);
+            *itCredInf = cred.Q1;
+            *itCredSup = cred.Q3;
+            ++itCredInf;
+            ++itCredSup;
 
-//            ++index;
-//            t = tmin + index*deltat;
-//        }
+            ++index;
+            t = tmin + index*deltat;
+        }
 
-//        phase->mTempoCredibilityInf = vector_to_map(credInf, tmin, tmax, deltat);
-//        phase->mTempoCredibilitySup = vector_to_map(credSup, tmin, tmax, deltat);
+        phase->mTempoCredibilityInf = vector_to_map(credInf, tmin, tmax, deltat);
+        phase->mTempoCredibilitySup = vector_to_map(credSup, tmin, tmax, deltat);
 
 #ifndef UNIT_TEST
         ++position;
