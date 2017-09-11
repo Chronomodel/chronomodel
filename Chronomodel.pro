@@ -96,6 +96,12 @@ QT_FATAL_WARNING = 1
 
 }
 
+contains(QT_ARCH, i386) {
+    message("32-bit")
+} else {
+    message("64-bit")
+}
+
 #########################################
 # DEFINES
 #########################################
@@ -155,8 +161,15 @@ macx{
 }
 win32{
         INCLUDEPATH += lib/FFTW
-        #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3-3
-        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win64" -lfftw3-3 # to compile with a x64 machine
+        contains(QT_ARCH, i386) {
+            message("32-bit")
+            LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3-3
+        } else {
+            message("64-bit")
+            LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win64" -lfftw3-3 # to compile with a x64 machine
+        }
+        #
+
 }
 #linux :
 unix:!macx{ 
