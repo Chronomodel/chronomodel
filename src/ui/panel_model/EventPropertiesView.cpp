@@ -92,7 +92,6 @@ mButtonWidth(50)
         
         minimumHeight+=button->height();
         
-        
         if (plugins.at(i)->doesCalibration())
             mPluginButs1.append(button);
         else
