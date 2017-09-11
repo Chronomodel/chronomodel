@@ -327,7 +327,8 @@ mMaximunNumberOfVisibleGraph(0)
     mRenderCombo = new QComboBox(mGraphicGroup);
     mRenderCombo->addItem(tr("Standard (faster)"));
     mRenderCombo->addItem(tr("Retina (slower)"));
-    mRenderCombo->setFixedSize(fm.width(tr("Standard (faster)")), fm.height() + 5);
+   const  int renderWidth = std::min((int) fm.width(tr("Standard (faster)")),(int)( mOptionsW/2 - mMargin) );
+    mRenderCombo->setFixedSize(renderWidth, fm.height() + 5);
 
    /* -------------------------------------- mChainsGroup---------------------------------------------------*/
     
