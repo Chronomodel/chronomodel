@@ -9,7 +9,7 @@
 #include <QtWidgets>
 
 
-//#pragma mark constructor / destructor
+// Constructor / Destructor
 MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
 {
     setWindowTitle("ChronoModel");
@@ -54,6 +54,8 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     connect(mProjectSaveAction, SIGNAL(triggered()), this, SLOT(saveProject()));
     connect(mProjectSaveAsAction, SIGNAL(triggered()), this, SLOT(saveProjectAs()));
 
+
+
    /* connect(mMCMCSettingsAction, SIGNAL(triggered()), mProject, SLOT(mcmcSettings()));
     connect(mResetMCMCAction, SIGNAL(triggered()), mProject, SLOT(resetMCMC()));
     connect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
@@ -88,7 +90,7 @@ MainWindow::~MainWindow()
     
 }
 
-//#pragma mark Accessors
+// Accessors
 Project* MainWindow::getProject()
 {
     return mProject;
@@ -189,7 +191,7 @@ void MainWindow::createActions()
     mRunAction->setIconVisibleInMenu(true);
     mRunAction->setToolTip(tr("Run Model"));
     
-    mResetMCMCAction = new QAction(tr("Reset MCMC methods"), this);
+    mResetMCMCAction = new QAction(tr("Reset Events and Data methods"), this);
     
     //-----------------------------------------------------------------
     // View Actions
@@ -252,10 +254,10 @@ void MainWindow::createActions()
     mHelpAction = new QAction(QIcon(":help_p.png"), tr("Help"), this);
     mHelpAction->setCheckable(true);
     connect(mHelpAction, &QAction::triggered, this, &MainWindow::showHelp);
-   /*
+
     mManualAction = new QAction(QIcon(":pdf_p.png"), tr("Manual Online"), this);
     connect(mManualAction, &QAction::triggered, this, &MainWindow::openManual);
-  */
+
     mWebsiteAction = new QAction(QIcon(":web_p.png"), tr("Website"), this);
     connect(mWebsiteAction, &QAction::triggered, this, &MainWindow::openWebsite);
     
@@ -387,7 +389,7 @@ void MainWindow::createToolBars()
     mToolBar->addWidget(separator4);
     
     mToolBar->addAction(mHelpAction);
-    //mToolBar->addAction(mManualAction);
+    mToolBar->addAction(mManualAction);
     mToolBar->addAction(mWebsiteAction);
     /* toolBar->addAction(mAboutAct);
     toolBar->addAction(mAboutQtAct); */
@@ -510,6 +512,7 @@ void MainWindow::connectProject()
     connect(mRunAction, &QAction::triggered, mProject, &Project::run);
 
     mProjectView->doProjectConnections(mProject);
+
 }
 
 void MainWindow::disconnectProject()
@@ -587,7 +590,7 @@ void MainWindow::updateProject()
     mProjectView->updateProject();
 }
 
-//#pragma mark Settings & About
+// Settings & About
 void MainWindow::about()
 {
     AboutDialog dialog(qApp->activeWindow());
@@ -633,7 +636,7 @@ void MainWindow::setAppSettings(const AppSettings& s)
 
 void MainWindow::openManual()
 {
-    QDesktopServices::openUrl(QUrl("http://www.chronomodel.fr/Chronomodel_User_Manual.pdf", QUrl::TolerantMode));
+    QDesktopServices::openUrl(QUrl("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf", QUrl::TolerantMode));
   
 
  /*   QString path = qApp->applicationDirPath();
@@ -659,7 +662,7 @@ void MainWindow::showHelp(bool show)
 
 void MainWindow::openWebsite()
 {
-    QDesktopServices::openUrl(QUrl("http://www.chronomodel.fr", QUrl::TolerantMode));
+    QDesktopServices::openUrl(QUrl("http://chronomodel.com", QUrl::TolerantMode));
 }
 
 void MainWindow::setFont(const QFont &font)
@@ -742,12 +745,11 @@ void MainWindow::setLanguage(QAction* action)
     }
 }
 
-//#pragma mark Grouped Actions
+// Grouped Actions
 void MainWindow::selectedEventInSelectedPhases() {
     if (mProject)
         mProject->selectedEventsFromSelectedPhases();
 }
-
 
 
 void MainWindow::changeEventsColor()
@@ -883,7 +885,7 @@ void MainWindow::changeEvent(QEvent* event)
     
 }
 
-//#pragma mark Settings
+//mark Settings
 void MainWindow::writeSettings()
 {
     mProjectView->writeSettings();
@@ -959,13 +961,32 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     if (!defaultFilePath.isEmpty()) {
         QFileInfo fileInfo(defaultFilePath);
         if (fileInfo.isFile()) {
-            if (mProject->mModel) {
+            if (!mProject)
+                mProject = new Project();
+
+            else if (mProject->mModel) {
                 mProject->mModel->clear();
                 mProjectView->resetInterface();
             }
             if (mProject->load(defaultFilePath)) {
                 activateInterface(true);
                 updateWindowTitle();
+                connectProject();
+
+                mProject->setAppSettings(mAppSettings);
+
+                mProjectView->createProject();
+
+                mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
+                // to do, it'is done in project load
+                if (! mProject->mModel->mChains.isEmpty()) {
+                    mViewLogAction -> setEnabled(true);
+                    mViewResultsAction -> setEnabled(true);
+                    mViewResultsAction -> setChecked(true); // Just check the Result Button after computation and mResultsView is show after
+
+                    mProject->mModel->updateFormatSettings(&mAppSettings);
+                 }
+
                 fileOpened = true;
             }
         }
@@ -1070,8 +1091,8 @@ void MainWindow::mcmcFinished(Model* model)
     mProjectView->initResults(model, &mAppSettings);
   
 }
- void MainWindow::noResult()
- {
+void MainWindow::noResult()
+{
      mViewLogAction -> setEnabled(false);
      mViewResultsAction -> setEnabled(false);
      mViewResultsAction -> setChecked(false);
@@ -1079,4 +1100,4 @@ void MainWindow::mcmcFinished(Model* model)
      mViewModelAction->trigger();
      mProject->setNoResults(true); // set to disable the saving the file *.res
 
- }
+}

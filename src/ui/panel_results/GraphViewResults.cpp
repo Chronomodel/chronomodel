@@ -91,12 +91,12 @@ mHeightForVisibleAxis(100)
     mDataSaveBut->setFlatVertical();
     mDataSaveBut->setToolTip(tr("Save graph data to file"));
  */
-    mAnimation = new QPropertyAnimation(this);
+ /*   mAnimation = new QPropertyAnimation(this);
     mAnimation->setPropertyName("geometry");
     mAnimation->setDuration(200);
     mAnimation->setTargetObject(this);
     mAnimation->setEasingCurve(QEasingCurve::Linear);
-    
+ */
   /*  connect(mImageSaveBut, &Button::clicked, this, &GraphViewResults::saveAsImage);
     connect(mImageClipBut, &Button::clicked, this, &GraphViewResults::imageToClipboard);
     connect(mResultsClipBut, &Button::clicked, this, &GraphViewResults::resultsToClipboard);
@@ -130,6 +130,7 @@ void GraphViewResults::updateCurvesToShow(bool showAllChains, const QList<bool>&
    // update();
 }
 
+/*
 void GraphViewResults::toggle(const QRect& targetGeometry)
 {
     if (geometry() != targetGeometry) {
@@ -138,7 +139,7 @@ void GraphViewResults::toggle(const QRect& targetGeometry)
         mAnimation->start();
     }
 }
-
+*/
 void GraphViewResults::setSettings(const ProjectSettings& settings)
 {
     mSettings = settings;
@@ -166,7 +167,7 @@ void GraphViewResults::setCurrentX(type_data min, type_data max)
 
 void GraphViewResults::zoom(type_data min, type_data max)
 {
-    mGraph->zoomX(min, max);  
+    mGraph->zoomX(min, max);
 }
 
 void GraphViewResults::setMainColor(const QColor& color)

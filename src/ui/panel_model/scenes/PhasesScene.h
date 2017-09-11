@@ -47,7 +47,7 @@ public:
    // bool showAllEvents() const { return mShowAllEvents;}
     
 protected:
-    AbstractItem* collidingItem(QGraphicsItem* item);
+    AbstractItem* collidingItem(const QGraphicsItem* item);
     AbstractItem* currentItem();
     void setCurrentItem(QGraphicsItem* item);
 

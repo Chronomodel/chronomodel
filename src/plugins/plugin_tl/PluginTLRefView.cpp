@@ -30,9 +30,7 @@ PluginTLRefView::~PluginTLRefView()
 
 void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
 {
-   // QLocale locale = QLocale();
     GraphViewRefAbstract::setDate(date, settings);
-
 
     const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
     const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
@@ -62,10 +60,17 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         curve.mPen.setColor(Painting::mainColorDark);
         curve.mIsHisto = false;
         QMap<double, double> refCurve;
+        /**
+          * @todo maybe we can simplify with few point (e.i minimal is 2)
+          */
+        /*
         for (double t=tminDisplay; t<=tmaxDisplay; t+=mSettings.mStep) {
             const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
             refCurve[t] = ref_year - tRaw;
         }
+        */
+        refCurve[tminDisplay] = ref_year - DateUtils::convertFromAppSettingsFormat(tminDisplay);
+        refCurve[tmaxDisplay] = ref_year - DateUtils::convertFromAppSettingsFormat(tmaxDisplay);
         curve.mData =refCurve;
         mGraph->addCurve(curve);
         

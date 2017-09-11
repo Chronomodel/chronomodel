@@ -1,5 +1,5 @@
-#ifndef GraphViewEvent_H
-#define GraphViewEvent_H
+#ifndef GRAPHVIEWEVENT_H
+#define GRAPHVIEWEVENT_H
 
 #include "GraphViewResults.h"
 
@@ -10,7 +10,7 @@ class GraphViewEvent: public GraphViewResults
 {
     Q_OBJECT
 public:
-    explicit GraphViewEvent(QWidget *parent = 0);
+    explicit GraphViewEvent(QWidget *parent = nullptr);
     virtual ~GraphViewEvent();
     
     void setEvent(Event *event);
@@ -20,6 +20,8 @@ public:
     
 protected:
     void paintEvent(QPaintEvent* e);
+    void resizeEvent(QResizeEvent* );
+    void updateLayout();
     
 private:
     Event* mEvent;

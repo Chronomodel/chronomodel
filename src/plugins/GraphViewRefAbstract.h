@@ -74,6 +74,8 @@ public:
         mFormatFuncX = f;
     }
 
+    void setMarginLeft(const qreal &aMarginLeft) { mGraph->setMarginLeft(aMarginLeft);}
+    void setMarginRight(const qreal &aMarginRight) { mGraph->setMarginRight(aMarginRight);}
     
 public slots:
     virtual void zoomX(const double min, const double max)

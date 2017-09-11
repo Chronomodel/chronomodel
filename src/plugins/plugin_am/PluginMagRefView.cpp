@@ -30,7 +30,7 @@ PluginMagRefView::~PluginMagRefView()
 
 void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings)
 {
-    QLocale locale=QLocale();
+    //QLocale locale=QLocale();
     GraphViewRefAbstract::setDate(date, settings);
 
     double tminDisplay;
@@ -115,21 +115,24 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         QMap<double, double> curveG95Sup;
         QMap<double, double> curveG95Inf;
 
-        for (double t=tminDisplay; t<=tmaxDisplay; ++t) {
-            if (t>tminRef && t<tmaxRef)  {
-                const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
-                const double value = plugin->getRefValueAt(date.mData, tRaw);
-                const double error = plugin->getRefErrorAt(date.mData, tRaw) * 1.96;
+        /*
+         * We need to skim the real map to fit with the real value of the calibration curve
+         * The graphView function does the interpolation between the real point
+         */
+        for ( QMap<double, double>::const_iterator &&iPt = curve.mDataMean.cbegin();  iPt!=curve.mDataMean.cend(); ++iPt) {
+            const double t (iPt.key());
+            const double tDisplay = DateUtils::convertToAppSettingsFormat(t);
+            if (tDisplay>tminDisplay && tDisplay<tmaxDisplay) {
+                const double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
 
-                curveG[t] = value;
-                curveG95Sup[t] = value + error;
-                curveG95Inf[t] = value - error;
+                curveG[t] = iPt.value();
+                curveG95Sup[t] = iPt.value() + error;
+                curveG95Inf[t] = iPt.value() - error;
 
-                yMin = qMin(yMin, curveG95Inf[t]);
-                yMax = qMax(yMax, curveG95Sup[t]);
+                yMin = qMin(yMin, curveG95Inf.value(t));
+                yMax = qMax(yMax, curveG95Sup.value(t));
             }
         }
-
         mGraph->setRangeX(tminDisplay,tmaxDisplay);
         mGraph->setCurrentX(tminDisplay, tmaxDisplay);
 

@@ -10,6 +10,8 @@
 #include "DateUtils.h"
 #include "MainWindow.h"
 #include "../PluginAbstract.h"
+#include "MetropolisVariable.h"
+
 #include <QJsonArray>
 #include <QtWidgets>
 #include <QtCore/QStringList>
@@ -255,6 +257,7 @@ void Model::updateDesignFromJson(const QJsonObject& json)
         Phase * p = mPhases[i];
         p->mName = phaseJS.value(STATE_NAME).toString();
         p->mColor = QColor(phaseJS.value(STATE_COLOR_RED).toInt(),phaseJS.value(STATE_COLOR_GREEN).toInt(),phaseJS.value(STATE_COLOR_BLUE ).toInt()) ;
+        p->mItemY = phaseJS.value(STATE_ITEM_Y).toDouble();
     }
 
     const QJsonArray eventsJSON = json.value(STATE_EVENTS).toArray();
@@ -265,6 +268,7 @@ void Model::updateDesignFromJson(const QJsonObject& json)
         const QJsonObject eventJS = eventsJSON.at(i).toObject();
         Event * e = mEvents[i];
         e->mName = eventJS.value(STATE_NAME).toString();
+        e->mItemY = eventJS.value(STATE_ITEM_Y).toDouble();
         e->mColor = QColor(eventJS.value(STATE_COLOR_RED).toInt(),eventJS.value(STATE_COLOR_GREEN).toInt(),eventJS.value(STATE_COLOR_BLUE ).toInt()) ;
 
         QJsonArray datesJS = eventJS.value(STATE_EVENT_DATES).toArray();
@@ -1007,6 +1011,10 @@ void Model::initDensities(const int fftLength, const double bandwidth, const dou
 
     generateCredibility(mThreshold);
     generateNumericalResults(mChains);
+    if (!mPhases.isEmpty()) {
+        generateTempo();
+        //generateTempoCredibility();
+    }
     qDebug()<<"Model::initDensities";
  //   emit newCalculus();
 }
@@ -1033,6 +1041,10 @@ void Model::updateDensities(const int fftLength, const double bandwidth, const d
     if (newPosteriorDensities)
         generateHPD(mThreshold);
 
+    if (!mPhases.isEmpty()) {
+        generateTempo();
+        //generateTempoCredibility();
+    }
     generateNumericalResults(mChains);
 
 }
@@ -1286,7 +1298,325 @@ void Model::generateHPD(const double thresh)
 
 }
 
-//#pragma mark Clear model data
+//#define UNIT_TEST
+void Model::generateTempo()
+{
+    qDebug()<<"Model::generateTempo()";
+
+
+    QTime t = QTime::currentTime();
+
+#ifndef UNIT_TEST
+    // Diplay a progressBar if "long" set with setMinimumDuration()
+    QProgressDialog *progress = new QProgressDialog("Tempo Plot generation","Wait" , 1, 10, qApp->activeWindow());
+    progress->setWindowModality(Qt::WindowModal);
+    progress->setCancelButton(0);
+    progress->setMinimumDuration(4);
+    progress->setMinimum(0);
+    progress->setMaximum(mPhases.size()*1);
+    int position(1);
+#endif
+
+    double tmin = mSettings.mTmin;
+    double tmax = mSettings.mTmax;
+
+#ifdef UNIT_TEST
+    const int nbPts (20);
+#else
+    const int nbPts (1000);
+#endif
+
+
+    const int totalIter = (int) ceil(mChains[0].mNumRunIter / mChains[0].mThinningInterval);
+
+    for (auto &&phase : mPhases) {
+        // we suppose, it is the same iteration number for all chains
+
+         // 1 - generate Event scenario,todo controle event are not Bound?
+        QList<QVector<double>> listTrace;
+        for (auto &&ev : phase->mEvents) {
+            listTrace.append(ev->mTheta.fullRunRawTrace(mChains));
+        }
+
+        //look for tmin tmax
+#ifndef UNIT_TEST
+        for (auto &&l:listTrace) {
+            tmin = std::min(tmin, *std::min(l.begin(), l.end()));
+            tmax = std::max(tmax, *std::max(l.begin(), l.end()));
+        }
+        tmin = floor(tmin);
+        tmax = ceil(tmax);
+#endif
+
+
+        const double deltat = (tmax-tmin)/ (double)nbPts;
+
+
+        // create Empty containers
+        QVector<int> N (nbPts); // Tempo
+        QVector<int> N2 (nbPts);
+        QVector<int> I (nbPts); //mActivity
+
+        QVector<int> previousN (nbPts);
+        QVector<int> previousN2 (nbPts);
+
+        QMap<double, QVector<int>> Ni; // mTempoCredibility t, QVector(N)
+
+        for (int i(0); i<totalIter; ++i) {
+            // create one scenario per iteration
+            QVector<double> scenario;
+
+            for (auto &&l:listTrace)
+                scenario.append(l.at(i));
+            // sort scenario trace
+            std::sort(scenario.begin(),scenario.end());
+
+            QVector<double>::const_iterator itScenario (scenario.cbegin());
+
+            QVector<int>::iterator itN (N.begin()); // for Tempo
+            QVector<int>::iterator itPrevN (previousN.begin());
+
+            QVector<int>::iterator itN2 (N2.begin()); // for Tempo Error
+            QVector<int>::iterator itPrevN2 (previousN2.begin());
+
+            QVector<int>::iterator itI (I.begin()); // for Intensity/Activity
+
+
+            int index (0); // index of table N corresponding to the first value // faster than used of Distance
+            double t (tmin + index*deltat);
+            int memoScenarioIdx (0);
+            int scenarioIdx (1);
+
+            while (itScenario != scenario.cend()) {
+
+                if (*itScenario> t && t<tmax ) {
+                    (*itN2) = (*itPrevN2) + (memoScenarioIdx * memoScenarioIdx);
+                    ++itN2;
+                    ++itPrevN2;
+
+                    (*itN) = (*itPrevN) + memoScenarioIdx;
+                    ++itN;
+                    ++itPrevN;
+
+                    ++itI;
+
+                    Ni[t].append(memoScenarioIdx);
+
+                    ++index;
+                    t = tmin + index*deltat;
+
+                } else {
+                    (*itN2) = (*itPrevN2) + (scenarioIdx * scenarioIdx);
+
+                    (*itN) = (*itPrevN) + scenarioIdx;
+
+                    (*itI) = (*itI) + 1;
+                    memoScenarioIdx = scenarioIdx;
+                    if (itScenario != scenario.cend()) {
+                        ++itScenario;
+                        ++scenarioIdx;
+                    }
+
+                }
+
+            }
+
+
+            while (index <= nbPts) {
+                (*itN) = (*itPrevN) + memoScenarioIdx;
+                ++itN;
+                ++itPrevN;
+
+                (*itN2) = (*itPrevN2) + (memoScenarioIdx * memoScenarioIdx);
+                ++itN2;
+                ++itPrevN2;
+
+                ++index;
+                Ni[t].append(memoScenarioIdx);
+                t = tmin + index*deltat;
+            }
+
+            std::copy(N2.begin(), N2.end(), previousN2.begin());
+            std::copy(N.begin(), N.end(), previousN.begin());
+        }
+
+
+#ifndef UNIT_TEST
+        progress->setValue(position);
+#endif
+
+    // calculation of the variance
+        QVector<double> inf;
+        QVector<double> sup;
+        QVector<double> mean;
+        QVector<int>::iterator itN2 (N2.begin());
+        for (auto &&x : N) {
+            const double di (totalIter);
+            const double m = x/di;
+            const double s2 = std::sqrt( (*itN2)/di - std::pow(m, 2.) );
+
+            mean.append(m);
+            // Forbidden negative error
+            const double infp = ( m < 1.96*s2 ? 0 : m - 1.96*s2 );
+            inf.append( infp);
+            sup.append( m + 1.96*s2);
+            ++itN2;
+
+        }
+       // 2 - Cumulate Nj and Nj2
+
+        phase->mTempo = vector_to_map(mean, tmin, tmax, deltat);
+        phase->mTempoInf = vector_to_map(inf, tmin, tmax, deltat);
+        phase->mTempoSup = vector_to_map(sup, tmin, tmax, deltat);
+
+        // 3 - Derivative function
+       /* QVector<double> dN;
+        QVector<double>::const_iterator xp (N.cbegin());
+        for (QVector<double>::const_iterator x = N.cbegin()+1; x != N.cend(); ++x) {
+            dN.append( (*x) - (*xp) );
+            ++xp;
+        }
+        */
+        phase->mActivity = vector_to_map(I, tmin, tmax, deltat);
+
+        // 4 - Credibility
+        QVector<double> credInf (nbPts);
+        QVector<double> credSup (nbPts);
+
+        QVector<double>::iterator itCredInf (credInf.begin());
+        QVector<double>::iterator itCredSup (credSup.begin());
+        int index (0); // index of table N corresponding to the first value // faster than used of Distance
+        double t (tmin + index*deltat);
+        while (t<tmax ) {
+
+//qDebug()<<"cred"<<Ni[t];
+            Quartiles cred = quartilesType(Ni[t], 8, 0.025);
+            *itCredInf = cred.Q1;
+            *itCredSup = cred.Q3;
+            ++itCredInf;
+            ++itCredSup;
+
+            ++index;
+            t = tmin + index*deltat;
+        }
+
+        phase->mTempoCredibilityInf = vector_to_map(credInf, tmin, tmax, deltat);
+        phase->mTempoCredibilitySup = vector_to_map(credSup, tmin, tmax, deltat);
+
+#ifndef UNIT_TEST
+        ++position;
+#endif
+    }
+
+#ifndef UNIT_TEST
+    QTime t2 = QTime::currentTime();
+    qint64 timeDiff = t.msecsTo(t2);
+    qDebug() <<  "=> Model::generateTempo() done in " + QString::number(timeDiff) + " ms";
+#endif
+
+
+}
+
+
+void Model::generateTempoCredibility()
+{
+    qDebug()<<"Model::generateTempoCredibility()";
+
+    QTime t = QTime::currentTime();
+
+#ifdef UNIT_TEST
+    const int nbPts (10);
+#else
+    const int nbPts (1000);
+#endif
+
+    const double tmin = mSettings.mTmin;
+    const double tmax = mSettings.mTmax;
+    const double deltat = (tmax-tmin)/ (double)nbPts;
+    const int totalIter = (int) ceil(mChains[0].mNumRunIter / mChains[0].mThinningInterval);
+
+#ifndef UNIT_TEST
+    // Diplay a progressBar if "long" set with setMinimumDuration()
+    QProgressDialog *progress = new QProgressDialog("Tempo Credibility Plot generation","Wait" , 1, 10, qApp->activeWindow());
+    progress->setWindowModality(Qt::WindowModal);
+    progress->setCancelButton(0);
+    progress->setMinimumDuration(4);
+    progress->setMinimum(0);
+    progress->setMaximum(mPhases.size()*totalIter);
+    int position(1);
+#endif
+
+
+    for (auto &&phase : mPhases) {
+        // we suppose, it is the same iteration number for all chains
+
+         // 1 - Unique trace
+        QVector<double> trace (phase->mEvents.size() * totalIter);
+        int shift (0);
+        for (auto &&ev : phase->mEvents) {
+            QVector<double> eventTrace (ev->mTheta.fullRunRawTrace(mChains));
+            std::copy(eventTrace.begin(), eventTrace.end(), trace.begin() + shift);
+            shift += eventTrace.size();
+
+        }
+        // sort trace
+        std::sort(trace.begin(),trace.end());
+
+        QVector<double> credInf (nbPts);
+        QVector<double> credSup (nbPts);
+
+        QVector<double>::iterator itCredInf (credInf.begin());
+        QVector<double>::iterator itCredSup (credSup.begin());
+
+        QVector<double>::iterator itTrace (trace.begin());
+
+        int index (1); // index of table N corresponding to the first value // faster than used of Distance
+        double t (tmin + index*deltat);
+
+        while (itTrace != trace.cend()) {
+
+            if (*itTrace> t && t<tmax ) {
+                // Compute Credibility
+                double exactThresh;
+                QString text;
+                QVector<double> cerdTrace (index);
+                std::copy(trace.begin(), itTrace, cerdTrace.begin());
+
+                QPair<double, double> cred = credibilityForTrace(cerdTrace, 95, exactThresh, text);
+                *itCredInf = cred.first;
+                *itCredSup = cred.second;
+                ++itCredInf;
+                ++itCredSup;
+
+                ++index;
+                t = tmin + index*deltat;
+
+            } else {
+                ++itTrace;
+
+#ifndef UNIT_TEST
+                ++position;
+#endif
+            }
+
+
+        }
+
+        phase->mTempoCredibilityInf = vector_to_map(credInf, tmin, tmax, deltat);
+        phase->mTempoCredibilitySup = vector_to_map(credSup, tmin, tmax, deltat);
+
+
+    }
+
+#ifndef UNIT_TEST
+    QTime t2 = QTime::currentTime();
+    qint64 timeDiff = t.msecsTo(t2);
+    qDebug() <<  "=> Model::generateTempoCredibility() done in " + QString::number(timeDiff) + " ms";
+#endif
+}
+
+
+// Clear model data
 void Model::clearPosteriorDensities()
 {
     QList<Event*>::iterator iterEvent = mEvents.begin();
@@ -1398,7 +1728,6 @@ void Model::saveToFile(const QString& fileName)
             reserveInit += event->mTheta.mAllAccepts->size();
             reserveInit += event->mTheta.mHistoryAcceptRateMH->size();
             reserveInit += 4;
-
 
             QList<Date>& dates = event->mDates;
             numDates += event->mDates.size();

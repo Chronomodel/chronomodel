@@ -17,15 +17,12 @@ CalibrationDrawing::CalibrationDrawing(QWidget *parent) : QWidget(parent),
 
     mRefTitle = new QLabel(this);
     mRefComment = new QLabel(this);
-  //  mRefGraphView = new GraphViewRefAbstract(this);
 
     mCalibTitle = new QLabel(this);
     mCalibComment = new QLabel(this);
-  //  mCalibGraph = new GraphView(this);
 
     mMarkerX = new Marker(this);
     mMarkerY = new Marker(this);
-
 
 }
 
@@ -34,6 +31,7 @@ CalibrationDrawing::~CalibrationDrawing()
     if (mCalibGraph)
         delete mCalibGraph;
 }
+
 void CalibrationDrawing::hideMarker()
 {
    mMarkerX->hideMarker();
@@ -85,7 +83,7 @@ void CalibrationDrawing::paintEvent(QPaintEvent* e)
     // drawing a background under curve
     QPainter p(this);
     p.fillRect(rect(), Qt::white);
-    updateLayout();
+
 }
 
 void CalibrationDrawing::updateLayout()
@@ -134,13 +132,15 @@ void CalibrationDrawing::updateLayout()
     mRefComment->setGeometry(30,  mRefTitle->y() + mRefTitle->height() + mVerticalSpacer, fm.width(mRefComment->text()), fm.height());
 
     if (mRefGraphView) {
-        mRefGraphView->setGeometry(0, mRefComment->y() + mRefComment->height() + mVerticalSpacer, width(), refH);
+        /* must be before setGeometry, because setGeometry is connected to resize.
+         *  So to update the curve we need marginRight parameter
+         */
         mRefGraphView->setMarginRight(marginRight);
+        mRefGraphView->setGeometry(0, mRefComment->y() + mRefComment->height() + mVerticalSpacer, width(), refH);
+
         if (mRefGraphView->mGraph) {
-            //mRefGraphView->setParent(this);
             mRefGraphView->mGraph->setMouseTracking(true);
             mRefGraphView->mGraph->setTipXLab("t Ref");
-
         }
 
         mCalibTitle->setGeometry(20,  mRefGraphView->y() + mRefGraphView->height() + mVerticalSpacer, fmTitle.width(mCalibTitle->text()), fmTitle.height());

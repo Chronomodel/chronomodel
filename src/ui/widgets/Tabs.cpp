@@ -110,6 +110,15 @@ void Tabs::setTab(int i, bool notify)
     Q_ASSERT (i<mTabNames.size());
 
     mCurrentIndex = i;
+// we start to hide all widget and after we show the current widget, because if there is the same widget used in the several
+    for (auto wid : mTabWidgets)
+        if (wid)
+            wid->setVisible(false);
+
+    // tabs we have to show again
+    if (mTabWidgets[mCurrentIndex])
+        mTabWidgets[mCurrentIndex]->setVisible(true);
+
 
     if (notify)
         emit tabClicked(i);
@@ -128,13 +137,27 @@ void Tabs::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
 
-    if (mTabWidgets[mCurrentIndex])
-        resize(width(), height());
-
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
     p.setFont(font());
+/*
+    for (int i=0; i<mTabNames.size(); ++i)
+        if (i != mCurrentIndex) {
+            const QRectF r = mTabRects[i];
+            p.fillRect(r, Qt::black);
+            p.setPen(QColor(200, 200, 200));
+            p.drawText(r, Qt::AlignCenter, mTabNames[i]);
+            if (mTabWidgets[i])
+                mTabWidgets[i]->setVisible(false);
+        }
 
+    // we start to hide all widget and after we show the current widget, because if there is the same widget used in the several
+    // tabs we have to show it again
+    if (mTabWidgets[mCurrentIndex]) {
+      //  mTabWidgets[mCurrentIndex]->setVisible(true);
+       // resize(width(), height());
+    }
+*/
     for (int i=0; i<mTabNames.size(); ++i)
         if (i != mCurrentIndex) {
             const QRectF r = mTabRects[i];
@@ -142,10 +165,10 @@ void Tabs::paintEvent(QPaintEvent* e)
             p.setPen(QColor(200, 200, 200));
             p.drawText(r, Qt::AlignCenter, mTabNames[i]);
         }
-    
+
     if (mCurrentIndex != -1) {
         p.fillRect(mTabRects[mCurrentIndex], Painting::mainColorDark);
-        p.setPen(Qt::white);//QColor(200, 200, 200));
+        p.setPen(Qt::white);
         p.drawText(mTabRects[mCurrentIndex], Qt::AlignCenter, mTabNames[mCurrentIndex]);
     }
 
@@ -154,10 +177,11 @@ void Tabs::paintEvent(QPaintEvent* e)
         const int x0 = (width() - mTabWidgets[mCurrentIndex]->width() )/2;
         mTabWidgets[mCurrentIndex]->move(x0, mTabHeight);
 
-    } //else {
-        p.drawLine(0, mTabHeight - p.pen().width(), mTabRects[mCurrentIndex].x(), mTabHeight - p.pen().width());
-        p.drawLine(mTabRects[mCurrentIndex].x() + mTabRects[mCurrentIndex].width(), mTabHeight - p.pen().width(),width() , mTabHeight - p.pen().width());
-   // }
+    }
+
+    p.drawLine(0, mTabHeight - p.pen().width(), mTabRects[mCurrentIndex].x(), mTabHeight - p.pen().width());
+    p.drawLine(mTabRects[mCurrentIndex].x() + mTabRects[mCurrentIndex].width(), mTabHeight - p.pen().width(),width() , mTabHeight - p.pen().width());
+
 }
 
 void Tabs::resizeEvent(QResizeEvent* e)
@@ -177,12 +201,12 @@ void Tabs::updateLayout()
 {
     const qreal m (10.);
     mTabRects.clear();
-    qreal x = 1.;
+    qreal x  (1.);
     const qreal h (mTabHeight - 1.);
     QFontMetrics metrics(font());
 
     int i (0);
-    for (auto && name : mTabNames) {
+    for (auto &&name : mTabNames) {
         if (mTabVisible[i]) {
             const qreal w = metrics.width(name);
             mTabRects.append(QRectF(x, 1, 2*m + w, h));

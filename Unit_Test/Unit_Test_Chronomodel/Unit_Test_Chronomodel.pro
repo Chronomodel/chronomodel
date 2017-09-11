@@ -243,6 +243,8 @@ HEADERS += ../../src/ui/panel_model/EventPropertiesView.h
 HEADERS += ../../src/ui/panel_model/EventsListItemDelegate.h
 HEADERS += ../../src/ui/panel_model/ImportDataView.h
 HEADERS += ../../src/ui/panel_model/ModelView.h
+HEADERS += ../../src/ui/panel_model/MultiCalibrationDrawing.h
+HEADERS += ../../src/ui/panel_model/MultiCalibrationView.h
 HEADERS += ../../src/ui/panel_model/SceneGlobalView.h
 
 HEADERS += ../../src/ui/panel_model/data/CalibrationDrawing.h
@@ -265,6 +267,7 @@ HEADERS += ../../src/ui/panel_results/GraphViewDate.h
 HEADERS += ../../src/ui/panel_results/GraphViewEvent.h
 HEADERS += ../../src/ui/panel_results/GraphViewPhase.h
 HEADERS += ../../src/ui/panel_results/GraphViewResults.h
+HEADERS += ../../src/ui/panel_results/GraphViewTempo.h
 HEADERS += ../../src/ui/panel_results/ResultsView.h
 
 HEADERS += ../../src/ui/widgets/Button.h
@@ -384,6 +387,8 @@ SOURCES += ../../src/ui/panel_model/data/DatesList.cpp
 SOURCES += ../../src/ui/panel_model/EventPropertiesView.cpp
 SOURCES += ../../src/ui/panel_model/ImportDataView.cpp
 SOURCES += ../../src/ui/panel_model/ModelView.cpp
+SOURCES += ../../src/ui/panel_model/MultiCalibrationDrawing.cpp
+SOURCES += ../../src/ui/panel_model/MultiCalibrationView.cpp
 SOURCES += ../../src/ui/panel_model/SceneGlobalView.cpp
 
 SOURCES += ../../src/ui/panel_model/scenes/AbstractItem.cpp
@@ -401,6 +406,7 @@ SOURCES += ../../src/ui/panel_results/GraphViewDate.cpp
 SOURCES += ../../src/ui/panel_results/GraphViewEvent.cpp
 SOURCES += ../../src/ui/panel_results/GraphViewPhase.cpp
 SOURCES += ../../src/ui/panel_results/GraphViewResults.cpp
+SOURCES += ../../src/ui/panel_results/GraphViewTempo.cpp
 SOURCES += ../../src/ui/panel_results/ResultsView.cpp
 
 SOURCES += ../../src/ui/widgets/ColorPicker.cpp

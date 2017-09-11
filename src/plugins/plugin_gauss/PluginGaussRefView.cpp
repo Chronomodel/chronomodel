@@ -30,7 +30,7 @@ PluginGaussRefView::~PluginGaussRefView()
 
 void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settings)
 {
-    QLocale locale = QLocale();
+
     GraphViewRefAbstract::setDate(date, settings);
     
     const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
@@ -134,7 +134,26 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             QMap<double, double> curveG;
             QMap<double, double> curveG95Sup;
             QMap<double, double> curveG95Inf;
-            
+            /*
+             * We need to skim the real map to fit with the real value of the calibration curve
+             * The graphView function does the interpolation between the real point
+             */
+            for ( QMap<double, double>::const_iterator &&iPt = curve.mDataMean.cbegin();  iPt!=curve.mDataMean.cend(); ++iPt) {
+                const double t (iPt.key());
+                const double tDisplay = DateUtils::convertToAppSettingsFormat(t);
+                if (tDisplay>tminDisplay && tDisplay<tmaxDisplay) {
+                    const double error = plugin->getRefErrorAt(date.mData, t, mode) * 1.96;
+
+                    curveG[t] = iPt.value();
+                    curveG95Sup[t] = iPt.value() + error;
+                    curveG95Inf[t] = iPt.value() - error;
+
+                    yMin = qMin(yMin, curveG95Inf.value(t));
+                    yMax = qMax(yMax, curveG95Sup.value(t));
+                }
+            }
+
+            /*
             for(double t=tminDisplay; t<=tmaxDisplay; ++t) {
                 if (t > tminRef && t < tmaxRef) {
                     const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
@@ -149,7 +168,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                     yMax = qMax(yMax, curveG95Sup.value(t));
                 }
             }
-
+*/
             //---
             GraphCurve graphCurveG95Sup;
             graphCurveG95Sup.mName = "G95Sup";
@@ -179,9 +198,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
         if(mode != DATE_GAUSS_MODE_NONE) {
             yMin = qMin(yMin, age - error * 1.96);
             yMax = qMax(yMax, age + error * 1.96);
-            
-            //qDebug() << "ymin : " << yMin << ", ymax : " << yMax;
-            
+
             mGraph->setRangeY(yMin, yMax);
             
             // ----------------------------------------------
@@ -208,7 +225,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                 measureCurve[t] = v;
             }
             measureCurve = normalize_map(measureCurve);
-            //curveMeasure.mData = normalize_map(curveMeasure.mData);
+
             curveMeasure.mData = measureCurve;
             mGraph->addCurve(curveMeasure);
 

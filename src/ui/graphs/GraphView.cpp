@@ -125,6 +125,8 @@ mUseTip(graph.mUseTip)
 
     mCurves = graph.mCurves;
     mZones = graph.mZones;
+
+   mBufferBack = QPixmap();
 }
 
 void GraphView::copyFrom(const GraphView& graph)
@@ -179,6 +181,8 @@ void GraphView::copyFrom(const GraphView& graph)
 
     mCurves = graph.mCurves;
     mZones = graph.mZones;
+
+    mBufferBack = graph.mBufferBack;
 }
 
 GraphView::~GraphView()
@@ -196,7 +200,7 @@ void GraphView::zoomX(const type_data min, const type_data max)
     if (mCurrentMinX != min || mCurrentMaxX != max || mMinY>=mMaxY || mAutoAdjustYScale) {
         mCurrentMinX = min;
         mCurrentMaxX = max;
-        
+
         this->mAxisToolX.updateValues(width(), 10., min, max);
         if (mAutoAdjustYScale) {
             qreal yMax = -INFINITY;
@@ -608,14 +612,24 @@ void GraphView::resizeGL(int w, int h)
 #else
 void GraphView::resizeEvent(QResizeEvent* event)
 {
-    Q_UNUSED(event);
+    //Q_UNUSED(event);
+
+    qreal wNew = event->size().width();
+    qreal hNew = event->size().height();
+
+    qreal wOld = event->oldSize().width();
+    qreal hOld = event->oldSize().height();
+    /*
     if (!mBufferBack.isNull()) {
-        const qreal sx = (qreal)rect().width() / (qreal)mBufferBack.rect().width() ;
-        const qreal sy = (qreal)rect().height() / (qreal)mBufferBack.rect().height() ;
+        //const qreal sx = (qreal)rect().width() / (qreal)mBufferBack.rect().width() ;
+        //const qreal sy = (qreal)rect().height() / (qreal)mBufferBack.rect().height() ;
+
+        const qreal sx = wNew / (qreal)mBufferBack.rect().width() ;
+        const qreal sy = hNew / (qreal)mBufferBack.rect().height() ;
 
         if (sx>.5 || sy>.5) {
-            mBufferBack = QPixmap(width(), height());
-            updateGraphSize(width(), height());
+            mBufferBack = QPixmap(wNew, hNew);//mBufferBack = QPixmap(width(), height());
+            updateGraphSize(wNew, hNew);//updateGraphSize(width(), height());
             paintToDevice(&mBufferBack);
 
         } else {
@@ -626,11 +640,12 @@ void GraphView::resizeEvent(QResizeEvent* event)
 
     }
     else {
-        mBufferBack = QPixmap(width(), height());
-        updateGraphSize(width(), height());
+        mBufferBack = QPixmap(wNew, hNew);//mBufferBack = QPixmap(width(), height());
+        updateGraphSize(wNew, hNew);//updateGraphSize(width(), height());
         paintToDevice(&mBufferBack);
     }
-
+*/
+    repaintGraph(true);
 }
 #endif
 
@@ -646,6 +661,7 @@ void GraphView::repaintGraph(const bool aAlsoPaintBackground)
 {
     if (aAlsoPaintBackground)
         mBufferBack = QPixmap();
+
     update();
 }
     
@@ -681,7 +697,7 @@ void GraphView::paintEvent(QPaintEvent* )
     /* ----------------------------------------------------
      *  SD : draw on a buffer only if it has been reset
      * ----------------------------------------------------*/
-    if (mBufferBack.isNull() && mRendering == eSD) {
+    if (mBufferBack.isNull()  && mRendering == eSD) {
         mBufferBack = QPixmap(width(), height());
         paintToDevice(&mBufferBack);
 #ifdef DEBUG
@@ -854,8 +870,8 @@ void GraphView::paintToDevice(QPaintDevice* device)
     /* ----------------------------------------------------
      *  Curves
      * ----------------------------------------------------*/
-    drawCurves(p);
-    
+      drawCurves(p);
+
     /* ----------------------------------------------------
      *  Horizontal axis
      * ----------------------------------------------------*/
@@ -890,13 +906,13 @@ void GraphView::paintToDevice(QPaintDevice* device)
      * ----------------------------------------------------*/
     if (mShowInfos) {
         font.setPointSizeF(font.pointSizeF() + 2.);
+        QFontMetrics fm (font);
         p.setFont(font);
         p.setPen(QColor(50, 50, 50));
         int y (0);
-        int lineH (16);
-
+        int lineH (fm.height() +2);
         for (auto && info : mInfos) {
-            p.drawText(mMarginLeft + 5., mMarginTop + 5. + y, mGraphWidth - 10., lineH, Qt::AlignRight | Qt::AlignTop, info);
+            p.drawText(mMarginLeft + 5., mMarginTop + 5. + y, mGraphWidth - 10., lineH, Qt::AlignLeft | Qt::AlignTop, info);
             y += lineH;
         }
     }
@@ -1093,7 +1109,6 @@ void GraphView::drawCurves(QPainter& painter)
                     } else
                         lightMap = subData;
                     
-                    
                     // Draw
                     
                     QMapIterator<type_data, type_data> iter(lightMap);
@@ -1125,7 +1140,6 @@ void GraphView::drawCurves(QPainter& painter)
                         last_x = getXForValue(valueX, true);
                         last_y = getYForValue((type_data)0., false);
                     }
-
                     while (iter.hasNext()) {
                         iter.next();
                         valueX = iter.key();
@@ -1211,12 +1225,15 @@ void GraphView::drawCurves(QPainter& painter)
                     painter.drawPath(path);
                 
             }
+
         }
+
     }
     painter.restore();
+
 }
 
-//#pragma mark Save & Export
+//Save & Export
 
 /**
  * @brief Export a density with locale setting and separator and specific step
@@ -1239,11 +1256,11 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         QList<QStringList> rows;
         QStringList list;
         
-        list << "# X Axis";
+        list << " X Axis";
         type_data xMin = INFINITY;
         type_data xMax = INFINITY;
         
-        for (const auto & curve : mCurves) {
+        for (const auto &curve : mCurves) {
             if (!curve.mData.empty() &&
                 !curve.mIsHorizontalLine &&
                 !curve.mIsVerticalLine &&
@@ -1275,7 +1292,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         for (type_data x= xMin; x <= xMax; x += step) {
             list.clear();
 
-            list << QString::number(x);
+            list << locale.toString(x);
             for (auto && curve : mCurves) {
                 if (!curve.mData.empty() &&
                     !curve.mIsHorizontalLine &&

@@ -8,11 +8,11 @@
 
 AbstractScene::AbstractScene(QGraphicsView* view, QObject* parent):QGraphicsScene(parent),
 mDrawingArrow(false),
-mProject(0),
+mProject(nullptr),
 mView(view),
 mUpdatingItems(false),
+mSelectKeyIsDown(false),
 mAltIsDown(false),
-mShiftIsDown(false),
 mShowGrid(false),
 mShowAllThumbs(true),
 mZoom(1.)
@@ -22,7 +22,7 @@ mZoom(1.)
     mTempArrow->setVisible(false);
 
 }
-//#pragma mark Setter & Getter
+// Setter & Getter
 void AbstractScene::setProject(Project* project)
 {
     mProject = project;        
@@ -49,43 +49,38 @@ void AbstractScene::updateConstraintsPos(AbstractItem* movedItem, const QPointF&
     Q_UNUSED(newPos);
     
     AbstractItem* curItem = currentItem();
-    if(curItem)
+    if (curItem)
         mTempArrow->setFrom(curItem->pos().x(), curItem->pos().y());
     
-    if(movedItem)
-    {
+    if (movedItem) {
         int itemId = movedItem->mData[STATE_ID].toInt();
         double itemX = movedItem->mData[STATE_ITEM_X].toDouble();
         double itemY = movedItem->mData[STATE_ITEM_Y].toDouble();
-        
+
         //qDebug() << "---------";
         //qDebug() << "Moving event id : " << itemId;
         
-        for(int i=0; i<mConstraintItems.size(); ++i)
-        {
+        for (int i(0); i<mConstraintItems.size(); ++i) {
             QJsonObject cData = mConstraintItems[i]->data();
             
             //int cId = cData[STATE_ID].toInt();
             int bwdId = cData[STATE_CONSTRAINT_BWD_ID].toInt();
             int fwdId = cData[STATE_CONSTRAINT_FWD_ID].toInt();
             
-            if(bwdId == itemId)
-            {
+            if (bwdId == itemId) {
                 //qDebug() << "Backward const. id : " << cId << " (link: "<<bwdId<<" -> "<< fwdId <<", setFrom: " << itemX << ", " << itemY << ")";
                 mConstraintItems[i]->setFrom(itemX, itemY);
             }
-            else if(fwdId == itemId)
-            {
+            else if (fwdId == itemId) {
                 //qDebug() << "Forward const. id : " << cId << " (link: "<<bwdId<<" -> "<< fwdId <<", setTo: " << itemX << ", " << itemY << ")";
                 mConstraintItems[i]->setTo(itemX, itemY);
             }
-            
-            //mConstraintItems[i]->updatePosition();
+
         }
     }
 }
 
-//#pragma mark Items events
+// Items events
 /**
  * @brief AbstractScene::itemClicked
  * @param item ie anEvent or a Phase
@@ -115,9 +110,9 @@ bool AbstractScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
             return false;
 
         
-    } else {
+    } else
             return false;
-    }
+
 
 }
 
@@ -183,14 +178,14 @@ void AbstractScene::itemMoved(AbstractItem* item, QPointF newPos, bool merging)
 
     // Bug moving multiple items out from the scene...
     //adjustSceneRect();
-    
+  /*
     QRectF r(newPos.x() - item->boundingRect().width()/2,
              newPos.y() - item->boundingRect().height()/2,
              item->boundingRect().size().width(),
              item->boundingRect().size().height());
     
     // Follow the moving item
-    /* QList<QGraphicsView*> graphicsViews = views();
+     QList<QGraphicsView*> graphicsViews = views();
    for (int i=0; i<graphicsViews.size(); ++i)
     {
         graphicsViews[i]->ensureVisible(r, 30, 30);
@@ -245,7 +240,7 @@ QRectF AbstractScene::specialItemsBoundingRect(QRectF r) const
     return rect;
 }
 
-//#pragma mark Mouse events
+//# Mouse events
 void AbstractScene::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 {
     if (mDrawingArrow) {
@@ -288,7 +283,7 @@ void AbstractScene::keyPressEvent(QKeyEvent* keyEvent)
     }
     //else if(keyEvent->modifiers() == Qt::ShiftModifier)
     else if (keyEvent->key() == Qt::Key_Shift)
-        mShiftIsDown = true;
+        mSelectKeyIsDown = true;
   /*  else if (keyEvent->modifiers() == Qt::ControlModifier) {
         qDebug() << "AbstractScene::keyPressEvent You Press: "<< "Qt::ControlModifier";
     }*/
@@ -307,7 +302,7 @@ void AbstractScene::keyReleaseEvent(QKeyEvent* keyEvent)
              qDebug() << "AbstractScene::keyReleaseEvent You Released: "<<"Qt::Key_Alt";
              mDrawingArrow = false;
              mAltIsDown = false;
-             mShiftIsDown = false;
+             mSelectKeyIsDown = false;
              mTempArrow->setVisible(false);
              QGraphicsScene::keyReleaseEvent(keyEvent);
     }
@@ -318,7 +313,7 @@ void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
 {
     painter->fillRect(rect, QColor(230, 230, 230));
     
-    QBrush backBrush;
+    //QBrush backBrush;
 
     painter->setBrush(Qt::white);
     painter->setPen(Qt::NoPen);
@@ -331,11 +326,11 @@ void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
         int w = sceneRect().width();
         int h = sceneRect().height();
         int delta = 100;
-        for (int i=0; i<w; i+=delta)
+        for (int i(0); i<w; i+=delta)
             painter->drawLine(x + i, y, x + i, y + h);
         
-        for (int i=0; i<h; i+=delta)
-            painter->drawLine(x, y + i, x+w, y + i);
+        for (int i(0); i<h; i+=delta)
+            painter->drawLine(x, y + i, x + w, y + i);
     }
     
     // Cross for origin :

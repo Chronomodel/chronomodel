@@ -16,7 +16,17 @@ mGreyedOut(false)
     setZValue(1.);
     setAcceptHoverEvents(true);
     setAcceptDrops(true);
-    setFlags(ItemIsMovable | ItemIsSelectable);
+    setFlag(ItemIsMovable, false);
+
+    // set the selection directly to the parent item, here the EventItem
+    setFlag(ItemIsSelectable, false);
+
+
+    mDatesAnimTimer = new QTimeLine(100);
+    mDatesAnimTimer->setFrameRange(0, 2);
+
+    mDatesAnim = new QGraphicsItemAnimation();
+    mDatesAnim->setTimeLine(mDatesAnimTimer);
 
     // Date::fromJson doesn't create mCalibration
     Date d = Date::fromJson(date);
@@ -26,17 +36,17 @@ mGreyedOut(false)
     d.mSettings.mTmax = s.mTmax;
     d.mSettings.mStep = s.mStep;
     
-    if (d.mPlugin!=NULL) {
+    if (d.mPlugin!= nullptr) {
         if (!d.mIsValid)
             mCalibThumb = QPixmap();
 
         else {
             if (d.mCalibration == nullptr)
-                     d.calibrate(s, EventsScene->getProject());
+                d.calibrate(s, EventsScene->getProject());
 
             if (d.mPlugin->getName() != "Typo")
-               mCalibThumb = d.generateCalibThumb();
-             else
+                mCalibThumb = d.generateCalibThumb();
+            else
                 mCalibThumb = d.generateTypoThumb();
         }
     }
@@ -138,36 +148,71 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
 
 }
 
+
 void DateItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-    qDebug()<<"DateItem::mousePressEvent___________________ ";
+    qDebug()<<"DateItem::mousePressEvent___________________ "<<e->modifiers();
+    /* REMARK
+     * On macOS Qt::MetaModifier map to the keyboard key "Ctrl"
+     * and      Qt::ControlModifier to the keyboard key " cmd" = Command key (⌘)
+     */
+    if (e->modifiers() == Qt::ShiftModifier) {
+    // if (       e->modifiers() == Qt::MetaModifier) { // don't work
+        setFlag(ItemIsMovable, true);
+        mEventsScene->clearSelection();
+    } else
+        setFlag(ItemIsMovable, false);
 
     EventItem* eventItem = dynamic_cast<EventItem*>(parentItem());
 
-    if ((!eventItem->isSelected()) && (!mEventsScene->mDrawingArrow))
-        mEventsScene->clearSelection();
-
-    if (eventItem)  {
+   if (eventItem && (mEventsScene->mDrawingArrow))  {
         eventItem->setZValue(2.);
         eventItem->mousePressEvent(e);
-        //e->accept();
     }
-    // offers the possibility to move the item by heritage
+   // must do it to send move the EventItem by heritage
     QGraphicsObject::mousePressEvent(e);
 }
 
+
 void DateItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
 {
+    setFlag(ItemIsMovable, false);
     parentItem()->setZValue(1.);
-    mEventsScene->dateReleased(this, e);
+    EventItem* hoveredEventItem = mEventsScene->dateReleased(this);
+    if (hoveredEventItem) {
+        // redraw find set the new position
+        hoveredEventItem->redrawEvent();
+
+        emit mEventsScene->eventsAreModified(tr("Date moved to event"), true, true);
+
+    } else {
+        if (pos() != mOriginalPos) {
+            mDatesAnim->setItem(this);
+            mDatesAnim->setPosAt(0, pos());
+            mDatesAnim->setPosAt(1, mOriginalPos);
+            mDatesAnimTimer->start();
+            e->accept();
+
+        } else {
+            EventItem* eventItem = dynamic_cast<EventItem*>(parentItem());
+            eventItem->setSelected(true);
+            eventItem->mousePressEvent(e);
+        }
+
+    }
+
+    // Must do it, this select the dateItem and automaticaly emit GraphicsScene::selectionChanged
+    // which are connect to EventsScene::updateStateSelectionFromItem
     QGraphicsObject::mouseReleaseEvent(e);
 }
 
 void DateItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 {
-    //setGreyedOut(false);
-    mEventsScene->dateMoved(this, e);
+    qDebug()<<"DateItem::mouseMoveEvent()";
+    mEventsScene->dateMoved(this);
+    e->accept();
     QGraphicsObject::mouseMoveEvent(e);
+
 }
 
 void DateItem::dropEvent(QGraphicsSceneDragDropEvent* e)
@@ -177,3 +222,4 @@ void DateItem::dropEvent(QGraphicsSceneDragDropEvent* e)
         eventItem->handleDrop(e);
 
 }
+

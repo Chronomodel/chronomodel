@@ -477,7 +477,7 @@ AbstractItem* PhasesScene::currentItem()
     return nullptr;
 }
 
-AbstractItem* PhasesScene::collidingItem(QGraphicsItem* item)
+AbstractItem* PhasesScene::collidingItem(const QGraphicsItem* item)
 {
     for (int i=0; i<mItems.size(); ++i) {
         bool isPhase = (dynamic_cast<PhaseItem*>(mItems.at(i)) != 0);

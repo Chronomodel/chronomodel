@@ -65,12 +65,15 @@ public:
     // Computed from trace using FFT :
     void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double bandwidth);
     // Trace and Posterior density needed for this :
-    //void generateCredibilityAndHPD(const QList<ChainSpecs>& chains,const double threshold);
+
     void generateCredibility(const double threshold);
     void generateHPD(const double threshold);
     // Trace and Posterior density needed for this :
     void generateNumericalResults(const QList<ChainSpecs>& chains);
     
+    void generateTempo();
+    void generateTempoCredibility();
+
     void clearTraces();
     void clearPosteriorDensities();
     void clearCredibilityAndHPD();

@@ -6,9 +6,19 @@
 #include <QFont>
 #include "DateUtils.h"
 
+#include <qsystemdetection.h>
+
 //#define APP_SETTINGS_DEFAULT_LANGUAGE QLocale::English
 //#define APP_SETTINGS_DEFAULT_COUNTRY QLocale::UnitedKingdom
-#define APP_SETTINGS_DEFAULT_FONT_FAMILY "Helvetica" // "Calibri"
+
+#ifdef Q_OS_MAC
+    #define APP_SETTINGS_DEFAULT_FONT_FAMILY "Helvetica"
+#endif
+
+#ifdef Q_OS_WIN
+    #define APP_SETTINGS_DEFAULT_FONT_FAMILY "Calibri"
+#endif
+
 #define APP_SETTINGS_DEFAULT_FONT_SIZE 12.
 
 #define APP_SETTINGS_DEFAULT_AUTO_SAVE false

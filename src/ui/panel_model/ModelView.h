@@ -24,6 +24,7 @@ class Button;
 class SceneGlobalView;
 class ScrollCompressor;
 class CalibrationView;
+class MultiCalibrationView;
 class Label;
 class LineEdit;
 
@@ -50,6 +51,12 @@ public:
 public slots:
     void updateProject();
     void modifyPeriod();
+    void updateMultiCalibration();
+
+    void eventsAreSelected(); //connect with EventAreSelected
+    //void phasesAreSelected();
+    void noEventSelected();
+
     
 protected:
     void paintEvent(QPaintEvent* e);
@@ -64,6 +71,7 @@ protected:
     void disconnectScenes();
     
 private slots:
+    void togglePropeties();
     void showProperties();
     void showImport();
     void showPhases();
@@ -79,6 +87,8 @@ private slots:
     void updateCalibration(const QJsonObject& date);
     void showCalibration(bool show);
     
+    void showMultiCalib();
+
     void setSettingsValid(bool valid);
     
     void searchEvent();
@@ -112,6 +122,7 @@ private:
     Button* mButEventsOverview;
     Button* mButEventsGrid;
     Button* mButProperties;
+    Button* mButMultiCalib;
     Button* mButImport;
     
     // ------
@@ -140,6 +151,8 @@ private:
     // ------
     
     CalibrationView* mCalibrationView;
+    MultiCalibrationView* mMultiCalibrationView;
+
     QPropertyAnimation* mAnimationCalib;
     
     // ------

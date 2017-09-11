@@ -150,7 +150,7 @@ public:
     // curveName must be in lower Case
     double getRefCurveValueAt(const QString& curveName, const double& t)
     {
-        long double value = 0;
+        long double value = 0.;
         if (mRefCurves.constFind(curveName) != mRefCurves.constEnd()) {
             const RefCurve& curve = mRefCurves.value(curveName);
             
@@ -173,7 +173,7 @@ public:
             }
             else { // onExtension depreciated
                 //value = interpolate(t, curve.mTmin, curve.mTmax, curve.mDataMean[curve.mTmin], curve.mDataMean[curve.mTmax]);
-                value = (curve.mDataSupMax + curve.mDataInfMin )/2;
+                value = (curve.mDataSupMax + curve.mDataInfMin )/2.;
             }
 
         }

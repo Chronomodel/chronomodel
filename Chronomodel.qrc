@@ -31,7 +31,6 @@
         <file alias="text.png">resources/text.png</file>
         <file alias="data.png">resources/data.png</file>
         <file alias="picture_save.png">resources/picture_save.png</file>
-        <file alias="picture_copy.png">resources/picture_copy.png</file>
         <file alias="e_w.png">resources/e_w.png</file>
         <file alias="bound.png">resources/bound.png</file>
         <file alias="bound_w.png">resources/bound_w.png</file>
@@ -81,5 +80,8 @@
         <file alias="recycle_w.png">resources/recycle_w.png</file>
         <file alias="extract_event.png">resources/extract_event.png</file>
         <file alias="insert_event.png">resources/insert_event.png</file>
+        <file alias="multiCalib_w.png">resources/multiCalib_w.png</file>
+        <file alias="color.png">resources/color.png</file>
+        <file alias="clipboard_graph.png">resources/cilpboard_graph.png</file>
     </qresource>
 </RCC>

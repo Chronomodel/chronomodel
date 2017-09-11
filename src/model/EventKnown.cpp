@@ -32,14 +32,17 @@ EventKnown EventKnown::fromJson(const QJsonObject& json)
     event.mColor = QColor(json[STATE_COLOR_RED].toInt(),
                            json[STATE_COLOR_GREEN].toInt(),
                            json[STATE_COLOR_BLUE].toInt());
-    event.mMethod = (Method)json[STATE_EVENT_METHOD].toInt();
+    event.mMethod = Event::eFixe; //(Method)json[STATE_EVENT_METHOD].toInt();
     event.mItemX = json[STATE_ITEM_X].toDouble();
     event.mItemY = json[STATE_ITEM_Y].toDouble();
     event.mIsSelected = json[STATE_IS_SELECTED].toBool();
     event.mIsCurrent = json[STATE_IS_CURRENT].toBool();
     
     //event.mKnownType = (EventKnown::KnownType)json[STATE_EVENT_KNOWN_TYPE].toInt();
-    event.mFixed = json[STATE_EVENT_KNOWN_FIXED].toDouble();
+    if (json.contains(STATE_EVENT_KNOWN_FIXED))
+        event.mFixed = json[STATE_EVENT_KNOWN_FIXED].toDouble();
+    else
+        event.mFixed = 0.;
     //event.mUniformStart = json[STATE_EVENT_KNOWN_START].toDouble();
     //event.mUniformEnd = json[STATE_EVENT_KNOWN_END].toDouble();
     
@@ -66,7 +69,7 @@ QJsonObject EventKnown::toJson() const
     event[STATE_COLOR_GREEN] = mColor.green();
     event[STATE_COLOR_BLUE] = mColor.blue();
     
-    event[STATE_EVENT_METHOD] = mMethod;
+    event[STATE_EVENT_METHOD] = Event::eFixe;
     event[STATE_ITEM_X] = mItemX;
     event[STATE_ITEM_Y] = mItemY;
     event[STATE_IS_SELECTED] = mIsSelected;
@@ -98,30 +101,6 @@ void EventKnown::updateValues(const double& tmin, const double& tmax, const doub
         mValues[t] = 0.;
     mValues[mFixed] = 1.;
 
-/*   now mKnowType is always eFixed
- *   switch(mKnownType)
-    {
-        case eFixed:
-        {
-            for (double t=tmin; t<=tmax; t+=step)
-                mValues[t] = 0.;
-            mValues[mFixed] = 1.;
-            break;
-        }
-        case eUniform:
-        {
-            if (mUniformStart < mUniformEnd) {
-                for (double t=tmin; t<=tmax; t+=step) {
-                    const double v = (t > mUniformStart && t <= mUniformEnd) ? 1. / (mUniformEnd - mUniformStart) : 0.;
-                    mValues[t] = v;
-                }
-            }
-            break;
-        }
-        default:
-            break;
-    }
-*/
     if (mValues.size() == 0) {
         for (double t=tmin; t<=tmax; t+=step)
             mValues[t] = 0.;
@@ -132,32 +111,8 @@ void EventKnown::updateTheta(const double& tmin, const double& tmax)
 {
     (void) tmin;
     (void) tmax;
-     mTheta.tryUpdate(mFixed, 1.);
-/*
-    switch(mKnownType)
-    {
-        case eFixed:
-        {
-            mTheta.tryUpdate(mFixed, 1.);
-            break;
-        }
-        case eUniform:
-        {
-            double min = getThetaMin(tmin);
-            double max = getThetaMax(tmax);
-            
-            min = qMax(mUniformStart, min);
-            max = qMin(mUniformEnd, max);
+    mTheta.tryUpdate(mFixed, 1.);
 
-            const double theta ( Generator::randomUniform(min, max) );
 
-            mTheta.tryUpdate(theta, 1.);
-            //qDebug()<<"EventKnown updateTheta"<<min<<" "<<theta<<" "<<max<<" "<< mTheta.mX;
-            break;
-        }
-        default:
-            break;
-    }
- */
 }
 

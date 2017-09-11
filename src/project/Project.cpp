@@ -61,13 +61,14 @@ mNoResults(true)
     mReasonChangeStructure<<"Event created"<<"Bound created"<<"Event method updated" ;
     mReasonChangeStructure<<"Update selected event method";//<<"Event selected";
 
-    mReasonChangeStructure<<"Date created"<<"Date updated"<<"Phase constraint updated"<<"Phase created"<<"Phase(s) deleted";
+    mReasonChangeStructure<<"Date created"<<"Date moved to event"<<"Date updated"<<"Phase created"<<"Phase(s) deleted";
     mReasonChangeStructure<<"Update selected data method";
-    mReasonChangeStructure<<"Phase updated"<<"Phase constraint created"<<"Phase's events updated";
+    mReasonChangeStructure<<"Phase updated"<<"Phase constraint created"<<"Phase constraint updated"<<"Phase's events updated";
     mReasonChangeStructure<<"Phase selected";
     mReasonChangeStructure.squeeze();
 
-    mReasonChangeDesign<<"Event color updated"<< "Event color updated"<<"Event name updated";
+    mReasonChangeDesign<<"Phase color updated"<<"Phase name updated";
+    mReasonChangeDesign<<"Event color updated"<<"Event name updated";
     mReasonChangeDesign<<"Date name updates"<<"Date color updated";
     mReasonChangeDesign.squeeze();
 
@@ -139,6 +140,11 @@ QJsonObject Project::emptyState() const
 QJsonObject Project::state() const
 {
     return mState;
+}
+
+QJsonObject* Project::state_ptr()
+{
+    return &mState;
 }
 /**
  * @brief Project::pushProjectState used to store action in Undo-Redo Command
@@ -1070,14 +1076,7 @@ void Project::updateEvent(const QJsonObject& event, const QString& reason)
 {
     QJsonObject stateNext = mState;
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
-    /*for (int i = 0; i<events.size(); ++i) {
-        QJsonObject evt = events.at(i).toObject();
-        if (evt.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
-            events[i] = event;
-            break;
-        }
-    }
-    */
+
     for (QJsonArray::iterator i = events.begin(); i != events.end(); ++i) {
         if ( i->toObject().value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
             *i = event;
@@ -1143,7 +1142,7 @@ void Project::mergeEvents(int eventFromId, int eventToId)
     pushProjectState(stateNext, tr("Events merged"), true);
 }
 
-//#pragma mark Grouped actions on events
+// Grouped actions on events
 void Project::selectedEventsFromSelectedPhases()
 {
     const QJsonArray events = mState.value(STATE_EVENTS).toArray();
@@ -1763,16 +1762,36 @@ void Project::updatePhase(const QJsonObject& phaseIn)
             
             QJsonObject stateNext = mState;
             QJsonArray phases = stateNext.value(STATE_PHASES).toArray();
-            
+            QString reason;
             for (int i=0; i<phases.size(); ++i) {
                 QJsonObject p = phases.at(i).toObject();
                 if (p.value(STATE_ID).toInt() == phase.value(STATE_ID).toInt()) {
+                    // check modification type to set mReasonChangeStructure or mReasonChangeDesign in pushProjectState
+                    // if only mReasonChangeDesign we don't need to redo cacul to see the result
+                    if (p.value(STATE_NAME).toString() != phase.value(STATE_NAME).toString())
+                        reason = "Phase name updated";
+
+                    else if (p.value(STATE_COLOR_BLUE).toInt() != phase.value(STATE_COLOR_BLUE).toInt()
+                              || p.value(STATE_COLOR_GREEN).toInt() != phase.value(STATE_COLOR_GREEN).toInt()
+                              || p.value(STATE_COLOR_RED).toInt() != phase.value(STATE_COLOR_RED).toInt() )
+                        reason = "Phase color updated";
+
+                    // set mReasonChangeStructure
+
+                    if (p.value(STATE_PHASE_TAU_TYPE).toInt() != phase.value(STATE_PHASE_TAU_TYPE).toInt())
+                        reason = "Phase updated";
+
+                    else if (p.value(STATE_PHASE_TAU_FIXED).toDouble() != phase.value(STATE_PHASE_TAU_FIXED).toDouble())
+                        reason = "Phase updated";
+
+
                     phases[i] = phase;
+
                     break;
                 }
             }
             stateNext[STATE_PHASES] = phases;
-            pushProjectState(stateNext, tr("Phase updated"), true);
+            pushProjectState(stateNext, reason, true);
 
         } else {
             QMessageBox message(QMessageBox::Critical,

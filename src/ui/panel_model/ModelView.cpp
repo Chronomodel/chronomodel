@@ -12,6 +12,8 @@
 #include "SceneGlobalView.h"
 #include "ScrollCompressor.h"
 #include "CalibrationView.h"
+#include "MultiCalibrationView.h"
+
 #include "HelpWidget.h"
 #include "MainWindow.h"
 #include "Project.h"
@@ -20,6 +22,7 @@
 #include "StudyPeriodDialog.h"
 #include "DateUtils.h"
 #include "PluginManager.h"
+
 #include <QtWidgets>
 #include <QtSvg>
 #include <QPropertyAnimation>
@@ -70,9 +73,6 @@ mCalibVisible(false)
     const QString studyStr = tr("STUDY PERIOD") + " [ "+ locale().toString(mTmin) +" : "+ locale().toString(mTmax) + " ] BC/AD";
     mButModifyPeriod = new Button(studyStr, mTopWrapper);
     mButModifyPeriod->setIconOnly(false);
-   // mButModifyPeriod->setMouseTracking(true);
-   // mButModifyPeriod->setStyleSheet("QPushButton { text-align:Vcenter; background-color: rgb(56, 95, 153); "
-   //                                 "color: white ; border-radius: 5px;}");
     mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text()) + 10) /2, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 5, topButtonHeight );
     mButModifyPeriod->setFlatHorizontal();
     connect(mButModifyPeriod,  static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &ModelView::modifyPeriod);
@@ -139,33 +139,33 @@ mCalibVisible(false)
     mEventsGlobalZoom->showText(tr("Zoom"), true);
     mEventsGlobalZoom->setVertical(true);
     
-    // just to refresh when selection changes :
-    //connect(mEventsScene, SIGNAL(selectionChanged()), mEventsGlobalView, SLOT(update()));
-  /*  connect(mButEventsOverview, &Button::toggled, mEventsGlobalView, &SceneGlobalView::setVisible);
-    connect(mButEventsOverview, &Button::toggled, mEventsSearchEdit, &LineEdit::setVisible);
-    
-    connect(mEventsSearchEdit, &LineEdit::returnPressed, this, &ModelView::searchEvent);
-    connect(mEventsGlobalZoom, &ScrollCompressor::valueChanged, this, &ModelView::updateEventsZoom);
-     connect(mButExportEvents, &Button::clicked, this, &ModelView::exportEventsScene);*/
     connect(mButEventsGrid, &Button::toggled, mEventsScene, &EventsScene::showGrid);
-
-
 
     mButProperties = new Button(tr("Properties"), mLeftWrapper);
     mButProperties->setToolTip(tr("Show the propeties of the first selected Event"));
     mButProperties->setCheckable(true);
     mButProperties->setIcon(QIcon(":settings_w.png"));
     mButProperties->setChecked(false);
+    mButProperties->setDisabled(true);
     mButProperties->setFlatHorizontal();
+
+    mButMultiCalib = new Button(tr("MultiCalib"), mLeftWrapper);
+    mButMultiCalib->setToolTip(tr("Show the calibrated curves of data within selected Events"));
+    mButMultiCalib->setCheckable(true);
+    mButMultiCalib->setIcon(QIcon(":multiCalib_w.png"));
+    mButMultiCalib->setChecked(false);
+    mButMultiCalib->setDisabled(true);
+    mButMultiCalib->setFlatHorizontal();
 
     mButImport = new Button(tr("Data"), mLeftWrapper);
     mButImport->setToolTip(tr("Show the data importation panel from file"));
     mButImport->setCheckable(true);
     mButImport->setIcon(QIcon(":csv_import.png"));
     mButImport->setFlatHorizontal();
+    mButImport->setAutoExclusive(false);
 
     connect(mButImport, static_cast<void (Button::*)(bool)>(&Button::toggled), this, &ModelView::showImport);
-    connect(mEventsScene, &EventsScene::eventDoubleClicked, mButProperties, &Button::click);
+   // connect(mEventsScene, &EventsScene::eventDoubleClicked, mButProperties, &Button::click);
 
     // -------- Windows Data Importation --------------------
     
@@ -239,7 +239,10 @@ mCalibVisible(false)
     // ------------- Windows calibration ---------------------
     
     mCalibrationView = new CalibrationView(mLeftWrapper);
+  //  mCalibrationView = nullptr;
     
+     // ------------- Windows Multi-calibration ---------------------
+     mMultiCalibrationView = new MultiCalibrationView(mRightWrapper);
     // -------- Animation -------------------------------
     
     mAnimationHide = new QPropertyAnimation();
@@ -291,10 +294,12 @@ void ModelView::setFont(const QFont & font)
 
   if (mCalibrationView)
       mCalibrationView->setFont(font);
+  mMultiCalibrationView->setFont(font);
 
   mButModifyPeriod->setFont(font);
 
   mButProperties->setFont(font);
+  mButMultiCalib->setFont(font);
   mButImport->setFont(font);
 }
 
@@ -329,18 +334,24 @@ void ModelView::connectScenes()
     connect(mButEventsOverview, &Button::toggled, mEventsSearchEdit, &LineEdit::setVisible);
     connect(mEventsSearchEdit, &LineEdit::returnPressed, this, &ModelView::searchEvent);
     connect(mEventsGlobalZoom, &ScrollCompressor::valueChanged, this, &ModelView::updateEventsZoom);
-    connect(mButExportEvents, &Button::clicked, this, &ModelView::exportEventsScene);
-    connect(mButProperties, SIGNAL(toggled(bool)), this, SLOT(showProperties()));
+    connect(mButExportEvents, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ModelView::exportEventsScene);
+
+    //connect(mButProperties, static_cast<void (Button::*)(bool)> (&Button::toggled), this, &ModelView::showProperties);
+    connect(mButProperties, &Button::clicked, this, &ModelView::showProperties);
 
     connect(mButNewPhase, &Button::clicked, mProject, &Project::createPhase);
     connect(mButDeletePhase, &Button::clicked, mPhasesScene, &PhasesScene::deleteSelectedItems);// mProject, &Project::deleteSelectedPhases);
 
 
     // when there is no Event selected we must show all data inside phases
-    connect(mEventsScene, &EventsScene::noSelection, mPhasesScene, &PhasesScene::noHide);
-    connect(mEventsScene, &EventsScene::eventsAreSelected, mPhasesScene, &PhasesScene::eventsSelected);
+    //connect(mEventsScene, &EventsScene::noSelection, mPhasesScene, &PhasesScene::noHide);
+    connect(mEventsScene, &EventsScene::noSelection, this, &ModelView::noEventSelected);
+    //connect(mEventsScene, &EventsScene::eventsAreSelected, mPhasesScene, &PhasesScene::eventsSelected);
+    connect(mEventsScene, &EventsScene::eventsAreSelected, this, &ModelView::eventsAreSelected);
 
-    // When one or several phases are selected, we hightLigth the data inside the Event includes in the phases
+    connect(mEventsScene, &EventsScene::eventDoubleClicked, this, &ModelView::togglePropeties);//mButProperties, &Button::toggle);
+
+    // When one or several phases are selected, we hightLigth the data inside the Events included in the phases
     connect(mPhasesScene, &PhasesScene::noSelection, mEventsScene, &EventsScene::noHide);
     connect(mPhasesScene, &PhasesScene::phasesAreSelected, mEventsScene, &EventsScene::phasesSelected);
 
@@ -351,6 +362,10 @@ void ModelView::connectScenes()
     // Properties View
     connect(mEventPropertiesView, &EventPropertiesView::updateCalibRequested, this, &ModelView::updateCalibration);
     connect(mEventPropertiesView, &EventPropertiesView::showCalibRequested, this, &ModelView::showCalibration);
+
+    connect(mButMultiCalib,  &Button::clicked, this, &ModelView::showMultiCalib);
+    connect(mProject, &Project::projectStateChanged, this, &ModelView::updateMultiCalibration);
+    mMultiCalibrationView->setProject(mProject);
 
 }
 
@@ -365,7 +380,11 @@ void ModelView::disconnectScenes()
     disconnect(mEventsSearchEdit, &LineEdit::returnPressed, this, &ModelView::searchEvent);
     disconnect(mEventsGlobalZoom, &ScrollCompressor::valueChanged, this, &ModelView::updateEventsZoom);
     disconnect(mButExportEvents, &Button::clicked, this, &ModelView::exportEventsScene);
-    disconnect(mButProperties, SIGNAL(toggled(bool)), this, SLOT(showProperties()));
+    //disconnect(mButProperties, SIGNAL(toggled(bool)), this, SLOT(showProperties()));
+    disconnect(mButProperties, &Button::clicked, this, &ModelView::showProperties);
+
+    disconnect(mButMultiCalib,  &Button::clicked, this, &ModelView::showMultiCalib);
+    mMultiCalibrationView->setProject(nullptr);
 
     disconnect(mButNewPhase, &Button::clicked, mProject, &Project::createPhase);
     disconnect(mButDeletePhase, &Button::clicked, mPhasesScene, &PhasesScene::deleteSelectedItems);
@@ -373,7 +392,7 @@ void ModelView::disconnectScenes()
     // when there is no Event selected we must show all data inside phases
     disconnect(mEventsScene, &EventsScene::noSelection, mPhasesScene, &PhasesScene::noHide);
     disconnect(mEventsScene, &EventsScene::eventsAreSelected, mPhasesScene, &PhasesScene::eventsSelected);
-
+    disconnect(mEventsScene, &EventsScene::eventDoubleClicked, this, &ModelView::togglePropeties);
     // When one or several phases are selected, we hightLigth the data inside the Event includes in the phases
     disconnect(mPhasesScene, &PhasesScene::noSelection, mEventsScene, &EventsScene::noHide);
     disconnect(mPhasesScene, &PhasesScene::phasesAreSelected, mEventsScene, &EventsScene::phasesSelected);
@@ -401,6 +420,8 @@ void ModelView::resetInterface()
     mEventsScene->clean();
     mPhasesScene->clean();
     mCalibrationView->setDate(QJsonObject());
+    mMultiCalibrationView->setEventsList(QList<Event*> ());
+
     mEventPropertiesView->setEvent(QJsonObject());
     mButProperties->click();
     updateLayout();
@@ -629,9 +650,7 @@ void ModelView::maxEditChanging()
  * @todo controle management with project->pushProjectState()
  */
 void ModelView::setSettingsValid(bool valid)
-{
-    //mButApply->setColorState(valid ? Button::eReady : Button::eWarning);
-    
+{ 
     if (!valid) {
         MainWindow::getInstance()->setRunEnabled(false);
         MainWindow::getInstance()->setResultsEnabled(false);
@@ -683,9 +702,6 @@ void ModelView::searchEvent()
 
         }
 
-
-
-
         mCurSearchIdx = 0;
     }
     else if (mSearchIds.size() > 0) {
@@ -703,10 +719,12 @@ void ModelView::searchEvent()
 void ModelView::showProperties()
 {
    updateLayout();
-   if (mButProperties->isChecked()) {
+   if (mButProperties->isChecked() && mButProperties->isEnabled()) {
+
        mEventPropertiesView->updateEvent();
        mButImport      -> setChecked(false);
        mCalibrationView->repaint();
+
        mAnimationCalib->setTargetObject(mCalibrationView);
 
        mAnimationShow->setStartValue(mRightHiddenRect);
@@ -717,6 +735,7 @@ void ModelView::showProperties()
 
     } else {
        mAnimationCalib->setTargetObject(nullptr);
+      // delete mCalibrationView;
         if (!mButImport->isChecked()) {
             mAnimationHide->setStartValue(mRightRect);
             mAnimationHide->setEndValue(mRightHiddenRect);
@@ -726,6 +745,42 @@ void ModelView::showProperties()
             mEventPropertiesView->lower();
      }
 
+}
+
+void ModelView::showMultiCalib()
+{
+    updateLayout();
+    if (mButMultiCalib->isChecked() && mButMultiCalib->isEnabled()) {
+
+        mMultiCalibrationView->updateGraphList();
+        mMultiCalibrationView->setVisible(true);
+       // mMultiCalibrationView->setGeometry(mRightRect);
+
+        mButImport      -> setChecked(false);
+
+        mAnimationShow->setStartValue(mRightHiddenRect);
+        mAnimationShow->setEndValue(mRightRect);
+        mMultiCalibrationView->raise();
+
+        mAnimationShow->setTargetObject(mMultiCalibrationView);
+        mAnimationShow->start();
+
+     } else {
+
+             mAnimationHide->setStartValue(mRightRect);
+             mAnimationHide->setEndValue(mRightHiddenRect);
+             mAnimationHide->setTargetObject(mMultiCalibrationView);
+             mAnimationHide->start();
+
+      }
+
+}
+
+void ModelView::updateMultiCalibration()
+{
+    if (mButMultiCalib->isChecked()) {
+        mMultiCalibrationView->updateMultiCalib();
+    }
 }
 
 void ModelView::showImport()
@@ -750,21 +805,115 @@ void ModelView::showImport()
 
         } else
            mImportDataView->lower();
-
    }
 
 }
+
+/**
+ * @brief ModelView::eventsAreSelected It's a bridge to stop the signal from Events'Scene::eventsAreSelected
+ * if there is a panel with the phases' scene
+ */
+void ModelView::eventsAreSelected()
+{
+    qDebug()<<"ModelView::eventsAreSelected()";
+    if (!mButProperties->isEnabled()) {
+        mButNewEventKnown->setDisabled(true);
+        mButNewEvent->setDisabled(true);
+
+        mButExportEvents->setDisabled(true);
+        mButImport->setDisabled(true);
+
+        mButProperties->setDisabled(false);
+        mButMultiCalib->setDisabled(false);
+        mButDeleteEvent->setDisabled(false);
+
+        mButProperties->setAutoExclusive(true);
+        mButMultiCalib->setAutoExclusive(true);
+    }
+    updateLayout();
+    if (!mButMultiCalib->isChecked() && !mButProperties->isChecked())
+        mPhasesScene->eventsSelected();
+}
+
+void ModelView::togglePropeties()
+{
+    qDebug()<<"ModelView::togglePropeties()";
+    //eventsAreSelected();
+
+    mButNewEventKnown->setDisabled(true);
+    mButNewEvent->setDisabled(true);
+
+    mButExportEvents->setDisabled(true);
+    mButImport->setDisabled(true);
+
+    mButProperties->setDisabled(false);
+    mButMultiCalib->setDisabled(false);
+    mButDeleteEvent->setDisabled(false);
+
+    mButProperties->setAutoExclusive(true);
+    mButMultiCalib->setAutoExclusive(true);
+
+mButProperties->setChecked(true);
+mButProperties->update();
+  //  updateLayout();
+showProperties();
+
+    /*
+    mButProperties->click();
+
+    mEventPropertiesView->updateEvent();
+    mButImport      -> setChecked(false);
+    mCalibrationView->repaint();
+
+    mAnimationCalib->setTargetObject(mCalibrationView);
+
+    mAnimationShow->setStartValue(mRightHiddenRect);
+    mAnimationShow->setEndValue(mRightRect);
+    mEventPropertiesView->raise();
+    mAnimationShow->setTargetObject(mEventPropertiesView);
+    mAnimationShow->start();
+    */
+}
+
+void ModelView::noEventSelected()
+{
+    qDebug()<<"ModelView::noEventSelected()";
+    mButNewEventKnown->setDisabled(false);
+    mButNewEvent->setDisabled(false);
+
+    mButExportEvents->setDisabled(false);
+    mButImport->setDisabled(false);
+
+    // we disable AutoEsclusive to be able to uncheck both Properties and MultiCalib
+    mButProperties->setAutoExclusive(false);
+    mButMultiCalib->setAutoExclusive(false);
+
+    mButProperties->setDisabled(true);
+    mButMultiCalib->setDisabled(true);
+
+    if (mButProperties->isChecked())
+        mButProperties->setChecked(false);
+
+    if (mButMultiCalib->isChecked())
+        mButMultiCalib->setChecked(false);
+
+    mButDeleteEvent->setDisabled(true);
+    updateLayout();
+
+    mPhasesScene->noHide();
+}
+
 void ModelView::showPhases()
 {
     if (mProject->studyPeriodIsValid()) {
         showCalibration(false);
         
-        mButProperties->setChecked(false);
+        //mButProperties->setChecked(false);
         mButImport->setChecked(false);
         slideRightPanel();
 
     } else {
-        mButProperties->setChecked(true);
+        //mButProperties->setChecked(true);
         mButImport->setChecked(false);
     }
 }
@@ -827,8 +976,10 @@ void ModelView::resizeEvent(QResizeEvent* e)
     Q_UNUSED(e);
     updateLayout();
 }
+
 void ModelView::updateLayout()
 {
+
     const QFontMetrics fm (font());
     const int textSpacer(fm.width("_") * 2);
     mTopRect = QRect(0, 0, width(), 3 * fm.height() );
@@ -838,7 +989,7 @@ void ModelView::updateLayout()
     //-------------- Top Flag
     // ---------- Panel Title
     QString leftTitle (tr("Events' Scene"));
-    if (mButProperties->isChecked()  && mEventPropertiesView->isCalibChecked())
+    if (mButProperties->isChecked()  && mEventPropertiesView->isCalibChecked() && !mButMultiCalib->isChecked())
         leftTitle = tr("Calibrated Data View");
 
     mLeftPanelTitle->setText(leftTitle);
@@ -849,6 +1000,8 @@ void ModelView::updateLayout()
         rightTitle = tr("Event Properties");
     else if (mButImport->isChecked())
         rightTitle = tr("Import Data");
+    else if (mButMultiCalib->isChecked())
+            rightTitle = tr("Multi Calibration Panel");
 
     mRightPanelTitle->setText(rightTitle);
     mRightPanelTitle->setGeometry( width() - (fm.width(mRightPanelTitle->text()) + textSpacer), mButModifyPeriod->y(), fm.width(mRightPanelTitle->text()), topButtonHeight );
@@ -873,6 +1026,9 @@ void ModelView::updateLayout()
     mRightHiddenRect = mRightRect.adjusted(mRightWrapper->width(), 0, 0, 0);
 
     mEventPropertiesView->setGeometry(mButProperties->isChecked() ? mRightRect : mRightHiddenRect);
+
+    mMultiCalibrationView->setGeometry(mButMultiCalib->isChecked() ? mRightRect : mRightHiddenRect);
+
     mImportDataView->setGeometry(mButImport->isChecked() ? mRightRect : mRightHiddenRect);
 
     // ----------
@@ -896,9 +1052,10 @@ void ModelView::updateLayout()
     mButEventsOverview->setGeometry(0, 5*mButtonWidth, mButtonWidth, mButtonWidth);
     mButEventsGrid    ->setGeometry(0, 6*mButtonWidth, mButtonWidth, mButtonWidth);
     mButProperties ->setGeometry(0, 7*mButtonWidth, mButtonWidth, mButtonWidth);
-    mButImport     ->setGeometry(0, 8*mButtonWidth, mButtonWidth, mButtonWidth);
+    mButMultiCalib->setGeometry(0, 8*mButtonWidth, mButtonWidth, mButtonWidth);
+    mButImport     ->setGeometry(0, 9*mButtonWidth, mButtonWidth, mButtonWidth);
 
-    mEventsGlobalZoom ->setGeometry(0, 9*mButtonWidth, mButtonWidth, mLeftRect.height() - 9*mButtonWidth);
+    mEventsGlobalZoom ->setGeometry(0, 10*mButtonWidth, mButtonWidth, mLeftRect.height() - 10*mButtonWidth);
 
     const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     const qreal helpW = qMin(400.0, mEventsView->width() - radarW - mMargin - sbe);
@@ -907,26 +1064,34 @@ void ModelView::updateLayout()
 
     // ----------
 
-    if (mButProperties->isChecked() && mEventPropertiesView->isCalibChecked())
+    if (mButProperties->isChecked() && mEventPropertiesView->isCalibChecked() && mCalibrationView)
          mCalibrationView->setGeometry( mLeftRect );
     else
         mCalibrationView->setGeometry(0, 0, 0, 0);
 
     // ----------
-    if (mButProperties->isChecked())
-        mPhasesView ->setGeometry(0, 0, 0, 0);
-    else
+    if (mButProperties->isChecked() || mButMultiCalib->isChecked()) {
+        mPhasesView ->resize(0, 0);
+        mPhasesGlobalView->setGeometry(5, 5, radarW, radarH);
+
+        mButNewPhase->resize(0, 0);
+        mButDeletePhase->resize(0, 0);
+        mButExportPhases->resize(0, 0);
+        mButPhasesOverview->resize(0, 0);
+        mButPhasesGrid->resize(0, 0);
+        mPhasesGlobalZoom->resize(0, 0);
+     }  else {
         mPhasesView->setGeometry(mRightRect.adjusted(0, 0, -mButtonWidth, 0));
 
-    mPhasesGlobalView->setGeometry(5, 5, radarW, radarH);
-    
-    mButNewPhase      ->setGeometry(mPhasesView->width(), 0, mButtonWidth, mButtonWidth);
-    mButDeletePhase   ->setGeometry(mPhasesView->width(), mButtonWidth, mButtonWidth, mButtonWidth);
-    mButExportPhases  ->setGeometry(mPhasesView->width(), 2*mButtonWidth, mButtonWidth, mButtonWidth);
-    mButPhasesOverview->setGeometry(mPhasesView->width(), 3*mButtonWidth, mButtonWidth, mButtonWidth);
-    mButPhasesGrid    ->setGeometry(mPhasesView->width(), 4*mButtonWidth, mButtonWidth, mButtonWidth);
-    mPhasesGlobalZoom ->setGeometry(mPhasesView->width(), 5*mButtonWidth, mButtonWidth, mRightRect.height() - 5*mButtonWidth);
+        mPhasesGlobalView->setGeometry(5, 5, radarW, radarH);
 
+        mButNewPhase      ->setGeometry(mPhasesView->width(), 0, mButtonWidth, mButtonWidth);
+        mButDeletePhase   ->setGeometry(mPhasesView->width(), mButtonWidth, mButtonWidth, mButtonWidth);
+        mButExportPhases  ->setGeometry(mPhasesView->width(), 2*mButtonWidth, mButtonWidth, mButtonWidth);
+        mButPhasesOverview->setGeometry(mPhasesView->width(), 3*mButtonWidth, mButtonWidth, mButtonWidth);
+        mButPhasesGrid    ->setGeometry(mPhasesView->width(), 4*mButtonWidth, mButtonWidth, mButtonWidth);
+        mPhasesGlobalZoom ->setGeometry(mPhasesView->width(), 5*mButtonWidth, mButtonWidth, mRightRect.height() - 5*mButtonWidth);
+     }
     update();
 }
 
@@ -949,7 +1114,7 @@ void ModelView::updatePhasesZoom(const double prop)
     mPhasesScene->adaptItemsForZoom(scale);
 }
 
-//#pragma mark Export images
+// Export images
 void ModelView::exportEventsScene()
 {
     exportSceneImage(mEventsScene);
@@ -972,7 +1137,7 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
 }
 
-//#pragma mark Calibration
+//Calibration come from EventPropertiesView::updateCalibRequested
 void ModelView::updateCalibration(const QJsonObject& date)
 {
     // A date has been double-clicked => update CalibrationView only if the date is not null
@@ -981,11 +1146,13 @@ void ModelView::updateCalibration(const QJsonObject& date)
 
 }
 
+// come from EventPropertiesView::showCalibRequested
 void ModelView::showCalibration(bool show)
 {
    updateLayout();
    if (show) {
        mEventPropertiesView->updateEvent();
+
        mCalibrationView->setVisible(true);
        mCalibrationView->repaint();
        mCalibrationView->raise();
@@ -995,12 +1162,13 @@ void ModelView::showCalibration(bool show)
     } else {
         mAnimationCalib->setStartValue(mLeftRect);
         mAnimationCalib->setEndValue(mLeftHiddenRect);
+
     }
     mAnimationCalib->start();
 
 }
 
-//#pragma mark Mouse Events
+// Mouse Events
 void ModelView::mousePressEvent(QMouseEvent* e)
 {
     if (mHandlerRect.contains(e->pos()))
@@ -1021,9 +1189,8 @@ void ModelView::mouseMoveEvent(QMouseEvent* e)
 
         qreal minLeft = 200.;
         qreal minRight = 580. + mHandlerW/2;
-        x = (x < minLeft) ? minLeft : x;
-        x = (x > width() - minRight) ? width() - minRight : x;
-
+        x = qBound(minLeft, x, width()- minRight);
+        mSplitProp = x / (double) width();
         mHandlerRect.moveTo(x+(mHandlerW)/2, mTopRect.height());
 
         updateLayout();
@@ -1032,15 +1199,8 @@ void ModelView::mouseMoveEvent(QMouseEvent* e)
 
 void ModelView::keyPressEvent(QKeyEvent* event)
 {
-   /* if ((event->key() == Qt::Key_Escape) && mButProperties->isChecked())
-        mEventPropertiesView->setCalibChecked(false);// showCalibration(false);
-    else if (event->key() == Qt::Key_C)
-        showCalibration(!mCalibVisible);
-   // else*/
-        QWidget::keyPressEvent(event);
-    
+    QWidget::keyPressEvent(event);
 }
-
 
 
 void ModelView::writeSettings()

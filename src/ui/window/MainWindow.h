@@ -24,7 +24,7 @@ class MainWindow : public QMainWindow, public Singleton<MainWindow>
     friend class Singleton<MainWindow>;
     
 public:
-    MainWindow(QWidget* aParent = 0);
+    MainWindow(QWidget* aParent = nullptr);
     ~MainWindow();
     
     Project* getProject();
@@ -81,6 +81,7 @@ public slots:
     void changeDatesMethod();
     void selectedEventInSelectedPhases();
     void doGroupedAction();
+
     
 private:
     QToolBar* mToolBar;
@@ -138,13 +139,12 @@ private:
     QAction* mDatesMethodAction;
     QList<QAction*> mDatesActions;
 
-    
     QAction* mHelpAction;
- //   QAction* mManualAction;
+    QAction* mManualAction;
     QAction* mWebsiteAction;
     
 private:
-    Q_DISABLE_COPY(MainWindow);
+    Q_DISABLE_COPY(MainWindow)
 };
 
 #endif

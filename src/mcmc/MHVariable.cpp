@@ -82,7 +82,6 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
      
     mLastAccepts.append(accepted);    
     mAllAccepts->append(accepted);
-
     return accepted;
 
      

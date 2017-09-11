@@ -18,7 +18,7 @@ mCurrentMinX(-INFINITY),mCurrentMaxX(INFINITY)
 
 GraphViewAbstract::~GraphViewAbstract(){}
 
-//pragma mark Getters
+// Getters
 
 type_data GraphViewAbstract::rangeX() const {return mMaxX - mMinX;}
 type_data GraphViewAbstract::rangeY() const {return mMaxY - mMinY;}
@@ -38,7 +38,7 @@ qreal GraphViewAbstract::marginTop() const {return mMarginTop;}
 qreal GraphViewAbstract::marginBottom() const {return mMarginBottom;}
 
 
-//pragma mark Setters
+// Setters
 
 void GraphViewAbstract::setRangeX(const type_data &aMinX, const type_data &aMaxX)
 {
@@ -87,6 +87,28 @@ void GraphViewAbstract::setMargins(const qreal &aMarginLeft, const qreal &aMargi
 	mMarginRight = aMarginRight;
 	mMarginTop = aMarginTop;
 	mMarginBottom = aMarginBottom;
+}
+
+bool GraphViewAbstract::parameterChange() const
+{
+    bool no = (mMarginLeft == mPrevMarginLeft) && (mMarginRight == mPrevMarginRight);
+    no = no && (mMarginTop == mPrevMarginTop) && (mMarginBottom == mPrevMarginBottom);
+    no = no && (mCurrentMinX == mPrevCurrentMinX) && (mCurrentMaxX == mPrevCurrentMaxX);
+    no = no && (mGraphWidth == mPrevGraphWidth) && (mGraphHeight == mPrevGraphHeight);
+
+    return !no;
+}
+
+void GraphViewAbstract::setPrevParameter()
+{
+   mPrevMarginLeft = mMarginLeft;
+   mPrevMarginRight =mMarginRight;
+   mPrevMarginTop = mMarginTop;
+   mPrevMarginBottom = mMarginBottom;
+   mPrevCurrentMinX = mCurrentMinX;
+   mPrevCurrentMaxX = mCurrentMaxX;
+   mPrevGraphWidth = mGraphWidth;
+   mPrevGraphHeight = mGraphHeight;
 }
 
 /**

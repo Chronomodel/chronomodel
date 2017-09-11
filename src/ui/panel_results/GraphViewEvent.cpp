@@ -10,7 +10,7 @@
 #include <QtWidgets>
 
 
-//pragma mark Constructor / Destructor
+// Constructor / Destructor
 
 GraphViewEvent::GraphViewEvent(QWidget *parent):GraphViewResults(parent),
 mEvent(nullptr)
@@ -27,18 +27,27 @@ GraphViewEvent::~GraphViewEvent()
 void GraphViewEvent::setEvent(Event* event)
 {
     Q_ASSERT(event);
- //   if (event) {
-        mEvent = event;
-        QString eventTitle = ( (mEvent->mType == Event::eDefault) ? tr("Event") : tr("Bound") ) ;
-        this->setItemTitle(eventTitle + " : " + mEvent->mName);
-        setItemColor(mEvent->mColor);
-//    }
+
+    mEvent = event;
+    QString eventTitle = ( (mEvent->mType == Event::eDefault) ? tr("Event") : tr("Bound") ) ;
+    this->setItemTitle(eventTitle + " : " + mEvent->mName);
+    setItemColor(mEvent->mColor);
     update();
+}
+
+void GraphViewEvent::updateLayout()
+{
+        GraphViewResults::updateLayout();
 }
 
 void GraphViewEvent::paintEvent(QPaintEvent* e)
 {
     GraphViewResults::paintEvent(e);
+}
+
+void GraphViewEvent::resizeEvent(QResizeEvent* )
+{
+    updateLayout();
 }
 
 void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
@@ -71,16 +80,12 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     setNumericalResults(resultsHTML, resultsText);
 
     bool isFixedBound = false;
-  //  bool isUnifBound = false;
     EventKnown* bound = nullptr;
     if (mEvent->type() == Event::eKnown) {
         bound = dynamic_cast<EventKnown*>(mEvent);
-        if (bound) {
-            //if (bound->knownType() == EventKnown::eFixed)
+        if (bound)
                 isFixedBound = true;
-          //  else if (bound->knownType() == EventKnown::eUniform)
-          //      isUnifBound = true;
-        }
+
     }
 
     // ------------------------------------------------
@@ -115,21 +120,6 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                 mGraph->addCurve(curveLineBound);
 
             }
-            /*else if (isUnifBound) {
-                GraphCurve curveLineStart;
-                curveLineStart.mName = "Post Distrib All Chains";
-                curveLineStart.mPen.setColor(color);
-                curveLineStart.mIsVerticalLine = true;
-                curveLineStart.mVerticalValue = bound->uniformStart();
-                mGraph->addCurve(curveLineStart);
-
-                GraphCurve curveLineEnd;
-                curveLineEnd.mName = "Post Distrib All Chains";
-                curveLineEnd.mPen.setColor(color);
-                curveLineEnd.mIsVerticalLine = true;
-                curveLineEnd.mVerticalValue = bound->uniformEnd();
-                mGraph->addCurve(curveLineEnd);
-            }*/
 
 
             // ------------------------------------
@@ -255,18 +245,19 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         generateTraceCurves(mChains, &(mEvent->mTheta));
 
     }
-    /* ---------------------third tab : Acception rate---------------------------
+    /* ---------------------third tab : Acceptance rate---------------------------
      *  - Accept i
      *  - Accept Target
      * ------------------------------------------------  */
     else if (typeGraph == eAccept && variable == eTheta
-                && mEvent->mMethod == Event::eMHAdaptGauss) {
+                && (mEvent->mMethod == Event::eMHAdaptGauss || mEvent->mMethod == Event::eFixe)) {
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(stringWithAppSettings);
         mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->mName;
 
-        generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine);
+        mGraph->addCurve(generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
+
         generateAcceptCurves(mChains, &(mEvent->mTheta));
         mGraph->repaint();
     }
@@ -303,8 +294,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
     EventKnown* bound = nullptr;
     if (mEvent->type() == Event::eKnown) {
         bound = dynamic_cast<EventKnown*>(mEvent);
-        //if (bound && bound->knownType() == EventKnown::eFixed)
-                isFixedBound = true;
+        isFixedBound = true;
 
     }
 
@@ -376,12 +366,12 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         mGraph->autoAdjustYScale(true);
     }
 
-    /* ----------------------Third tab : Acception rate--------------------------
+    /* ----------------------Third tab : Acceptance rate--------------------------
      *  Possible curves :
      *  - Accept i
      *  - Accept Target
      * ------------------------------------------------  */
-    else if ((mCurrentTypeGraph == eAccept) && (mCurrentVariable == eTheta) && (mEvent->mMethod == Event::eMHAdaptGauss)) {
+    else if ((mCurrentTypeGraph == eAccept) && (mCurrentVariable == eTheta) && ((mEvent->mMethod == Event::eMHAdaptGauss) || (mEvent->mMethod == Event::eFixe))) {
         mGraph->setCurveVisible("Accept Target", true);
         for (int i=0; i<mShowChainList.size(); ++i)
             mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList.at(i));

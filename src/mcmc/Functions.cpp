@@ -196,7 +196,14 @@ Quartiles quartilesForRepartition(const QVector<double>& repartition, const doub
     
     return quartiles;
 }
-
+/**
+ * @brief credibilityForTrace find the smallest interval Credibility with the confidence thresh
+ * @param trace
+ * @param thresh
+ * @param exactThresholdResult
+ * @param description
+ * @return
+ */
 QPair<double, double> credibilityForTrace(const QVector<double>& trace, double thresh, double& exactThresholdResult,const  QString description)
 {
     (void) description;
@@ -226,11 +233,48 @@ QPair<double, double> credibilityForTrace(const QVector<double>& trace, double t
     }
 
     if (credibility.first == credibility.second) {
-        //It means : there is only on value
+        //It means : there is only one value
         return QPair<double, double>();
     }
     else return credibility;
 }
+
+// Used in generateTempo for credibility
+QPair<double, double> credibilityForTrace(const QVector<int>& trace, double thresh, double& exactThresholdResult,const  QString description)
+{
+    (void) description;
+    QPair<double, double> credibility(0.,0.);
+    exactThresholdResult = 0.;
+    const int n = trace.size();
+    if (thresh > 0 && n > 0) {
+        double threshold = inRange(0.0, thresh, 100.0);
+        QVector<int> sorted (trace);
+        std::sort(sorted.begin(),sorted.end());
+
+        const int numToRemove = (int)floor(n * (1. - threshold / 100.));
+        exactThresholdResult = ((double)n - (double)numToRemove) / (double)n;
+
+        double lmin (0.);
+        int foundJ (0);
+
+        for (int j=0; j<=numToRemove; ++j) {
+            const double l = sorted.at((n - 1) - numToRemove + j) - sorted.at(j);
+            if ((lmin == 0.) || (l < lmin)) {
+                foundJ = j;
+                lmin = l;
+            }
+        }
+        credibility.first = (double)sorted.at(foundJ);
+        credibility.second = (double)sorted.at((n - 1) - numToRemove + foundJ);
+    }
+
+    if (credibility.first == credibility.second) {
+        //It means : there is only one value
+        return QPair<double, double>();
+    }
+    else return credibility;
+}
+
 
 /**
  * @brief timeRangeFromTraces

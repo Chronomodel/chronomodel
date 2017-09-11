@@ -3,10 +3,10 @@
 # Created by Helori LANOS
 # March 14th, 2014
 # and Philippe Dufresne
-# Chronomodel
+# ChronoModel
 #
 #-------------------------------------------------
-VERSION = 1.6.2_beta # must match value in src/main.cpp
+VERSION = 1.6.3_alpha # must match value in src/main.cpp
 #PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_
 
@@ -20,6 +20,7 @@ CONFIG(debug, debug|release) {
 } else {
         BUILD_DIR=build/release
 	message("Running qmake : Release")
+        DEFINES += QT_NO_DEBUG_OUTPUT # to disable qDebug()
 	macx{
 		REAL_DESTDIR=Release
 	}
@@ -203,7 +204,9 @@ INCLUDEPATH += src/utilities/
 # HEADERS
 #########################################
 
-HEADERS += src/MainController.h
+HEADERS += src/MainController.h \
+    src/ui/panel_model/MultiCalibrationView.h \
+    src/ui/panel_model/MultiCalibrationDrawing.h
 HEADERS += src/AppSettings.h
 HEADERS += src/StateKeys.h
 HEADERS += src/ChronoApp.h
@@ -317,6 +320,7 @@ HEADERS += src/ui/panel_results/GraphViewDate.h
 HEADERS += src/ui/panel_results/GraphViewEvent.h
 HEADERS += src/ui/panel_results/GraphViewPhase.h
 HEADERS += src/ui/panel_results/GraphViewResults.h
+HEADERS += src/ui/panel_results/GraphViewTempo.h
 HEADERS += src/ui/panel_results/ResultsView.h
 
 HEADERS += src/ui/widgets/Button.h
@@ -346,7 +350,9 @@ HEADERS += src/utilities/StdUtilities.h
 # SOURCES
 #########################################
 
-SOURCES += src/AppSettings.cpp
+SOURCES += src/AppSettings.cpp \
+    src/ui/panel_model/MultiCalibrationView.cpp \
+    src/ui/panel_model/MultiCalibrationDrawing.cpp
 SOURCES += src/ChronoApp.cpp
 SOURCES += src/main.cpp
 SOURCES += src/MainController.cpp
@@ -453,6 +459,7 @@ SOURCES += src/ui/panel_results/GraphViewDate.cpp
 SOURCES += src/ui/panel_results/GraphViewEvent.cpp
 SOURCES += src/ui/panel_results/GraphViewPhase.cpp
 SOURCES += src/ui/panel_results/GraphViewResults.cpp
+SOURCES += src/ui/panel_results/GraphViewTempo.cpp
 SOURCES += src/ui/panel_results/ResultsView.cpp
 
 SOURCES += src/ui/widgets/ColorPicker.cpp

@@ -13,8 +13,10 @@
 
 
 Plugin14C::Plugin14C()
+
 {
     mColor = QColor(47, 46, 68);
+    mRefGraph = nullptr;
     loadRefDatas();
 }
 
@@ -24,7 +26,7 @@ Plugin14C::~Plugin14C()
         delete mRefGraph;
 }
 
-//#pragma mark Likelihood
+// Likelihood
 QPair<long double, long double> Plugin14C::getLikelihoodArg(const double& t, const QJsonObject& data)
 {
     double age = data.value(DATE_14C_AGE_STR).toDouble();
@@ -36,11 +38,11 @@ QPair<long double, long double> Plugin14C::getLikelihoodArg(const double& t, con
     age = (age - delta_r);
     error = sqrt(error * error + delta_r_error * delta_r_error);
     
-    double refValue = getRefValueAt(data, t);
-    double refError = getRefErrorAt(data, t);
+    long double refValue = (long double) getRefValueAt(data, t);
+    long double refError = (long double) getRefErrorAt(data, t);
     
     long double variance = refError * refError + error * error;
-    long double exponent = -0.5 * powl((long double)(age - refValue), 2.l) / variance;
+    long double exponent = -0.5l * powl((long double)(age - refValue), 2.l) / variance;
     return qMakePair(variance, exponent);
 }
 
@@ -51,7 +53,7 @@ long double Plugin14C::getLikelihood(const double& t, const QJsonObject& data)
     return back;
 }
 
-//#pragma mark Properties
+// Properties
 QString Plugin14C::getName() const
 {
     return QString("14C");
@@ -116,7 +118,7 @@ QString Plugin14C::getDateDesc(const Date* date) const
     return result;
 }
 
-//#pragma mark CSV
+// CSV
 QStringList Plugin14C::csvColumns() const
 {
     QStringList cols;
@@ -260,7 +262,7 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
     return curve;
 }
 
-//#pragma mark References Values & Errors
+// References Values & Errors
 double Plugin14C::getRefValueAt(const QJsonObject& data, const double& t)
 {
     const QString curveName = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
@@ -286,7 +288,7 @@ QPair<double,double> Plugin14C::getTminTmaxRefsCurve(const QJsonObject& data) co
     return qMakePair<double,double>(tmin,tmax);
 }
 
-//#pragma mark Settings / Input Form / RefView
+//Settings / Input Form / RefView
 GraphViewRefAbstract* Plugin14C::getGraphViewRef()
 {
     mRefGraph = new Plugin14CRefView();
@@ -298,6 +300,7 @@ void Plugin14C::deleteGraphViewRef(GraphViewRefAbstract* graph)  {
         delete static_cast<Plugin14CRefView*>(graph);
 
     graph = nullptr;
+    mRefGraph = nullptr;
 }
 PluginSettingsViewAbstract* Plugin14C::getSettingsView()
 {
@@ -331,7 +334,7 @@ QJsonObject Plugin14C::checkValuesCompatibility(const QJsonObject& values)
     return result;
 }
 
-//#pragma mark Date Validity
+// Date Validity
 bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
 {
     const QString ref_curve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
@@ -355,9 +358,9 @@ bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& sett
         
         else {
             double t = curve.mTmin;
-            long double repartition = 0;
-            long double v = 0;
-            long double lastV = 0;
+            long double repartition = 0.;
+            long double v = 0.;
+            long double lastV = 0.;
             while (valid==false && t<=curve.mTmax) {
                 v = (double)getLikelihood(t,data);
                 // we have to check this calculs
@@ -375,7 +378,7 @@ bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& sett
     return valid;
 }
 
-//#pragma mark Grouped Actions
+// Grouped Actions
 QList<QHash<QString, QVariant>> Plugin14C::getGroupedActions()
 {
     QList<QHash<QString, QVariant>> result;
@@ -392,7 +395,7 @@ QList<QHash<QString, QVariant>> Plugin14C::getGroupedActions()
     return result;
 }
 
-//#pragma mark Combine / Split
+// Combine / Split
 bool Plugin14C::areDatesMergeable(const QJsonArray& dates)
 {
     QString refCurve;
@@ -403,6 +406,7 @@ bool Plugin14C::areDatesMergeable(const QJsonArray& dates)
         
         if (refCurve.isEmpty())
             refCurve = curve;
+
         else if (refCurve != curve)
             return false;
     }
@@ -460,8 +464,8 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
         QJsonObject mergedData;
         mergedData[DATE_14C_AGE_STR] = sum_mi_vi / sum_1_vi;
         mergedData[DATE_14C_ERROR_STR] = sqrt(1 / sum_1_vi);
-        mergedData[DATE_14C_DELTA_R_STR] = 0.f;
-        mergedData[DATE_14C_DELTA_R_ERROR_STR] = 0.f;
+        mergedData[DATE_14C_DELTA_R_STR] = 0.;
+        mergedData[DATE_14C_DELTA_R_ERROR_STR] = 0.;
         mergedData[DATE_14C_REF_CURVE_STR] = firstCurve ;
         
         // inherits the first data propeties as plug-in and method...

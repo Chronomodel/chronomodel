@@ -77,9 +77,12 @@ void DatesList::setEvent(const QJsonObject& event)
         }
         if (dates.size() > 0) {
             // Select first date by default :
-            setCurrentRow(0);
-            // Prepare calib window :
-            handleItemClicked(item(0));
+            int idx = this->currentRow();
+            if (idx>=0) {
+                setCurrentRow(idx);
+                // Prepare calib window :
+                handleItemClicked(item(idx));
+            }
         }
     }
 }
