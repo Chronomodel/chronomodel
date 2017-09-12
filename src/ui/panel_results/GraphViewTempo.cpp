@@ -76,8 +76,8 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
     
     QColor color = mPhase->mColor;
 
-    QString resultsText = QString("Tempo Results");//ModelUtilities::phaseResultsText(mPhase);
-    QString resultsHTML = QString("Tempo Results");//ModelUtilities::phaseResultsHTML(mPhase);
+    QString resultsText = ModelUtilities::tempoResultsText(mPhase);
+    QString resultsHTML = ModelUtilities::tempoResultsHTML(mPhase);
     setNumericalResults(resultsHTML, resultsText);
 
     mGraph->setOverArrow(GraphView::eNone);

@@ -2391,16 +2391,21 @@ void ResultsView::updateResultsLog()
 {
     QString log;
     try {
-        for (auto &&event : mModel->mEvents)
-            log += ModelUtilities::eventResultsHTML(event, true, mModel);
-
         for (auto &&phase : mModel->mPhases)
             log += ModelUtilities::phaseResultsHTML(phase);
 
+        for (auto &&phase : mModel->mPhases)
+            log += ModelUtilities::tempoResultsHTML(phase);
+
         for (auto &&phaseConstraint : mModel->mPhaseConstraints) {
             log += ModelUtilities::constraintResultsHTML(phaseConstraint);
-            log += "<hr>";
+
+         for (auto &&event : mModel->mEvents)
+              log += ModelUtilities::eventResultsHTML(event, true, mModel);
+          log += "<hr>";
         }
+
+
     } catch (std::exception const & e) {
         qDebug()<< "in ResultsView::updateResultsLog() Error"<<e.what();
         log = tr("impossible to compute");

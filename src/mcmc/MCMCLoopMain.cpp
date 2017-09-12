@@ -427,7 +427,7 @@ QString MCMCLoopMain::initMCMC()
         for (const PhaseConstraint* constraint : phasesConstraints) {
             ++i;
             log += "<br>";
-            log += line(tr("Succession")+ " (" + QString::number(i) + "/" + QString::number(phasesConstraints.size()) + ") : " + tr("from") + constraint->mPhaseFrom->mName +" " + tr("to") + constraint->mPhaseTo->mName);
+            log += line(tr("Succession")+ " (" + QString::number(i) + "/" + QString::number(phasesConstraints.size()) + ") : " + tr("from") + " " +constraint->mPhaseFrom->mName +" " + tr("to") + " " +constraint->mPhaseTo->mName);
             log += line(" - Gamma : " + stringWithAppSettings(constraint->mGamma));
         }
     }

@@ -36,11 +36,13 @@ public:
     static QString dateResultsText(const Date* d, const Model* model = nullptr, const bool forCSV = false);
     static QString eventResultsText(const Event* e, bool withDates, const Model* model = nullptr, const bool forCSV = false);
     static QString phaseResultsText(const Phase* p, const bool forCSV = false);
+    static QString tempoResultsText(const Phase* p, const bool forCSV = false);
     static QString constraintResultsText(const PhaseConstraint* p, const bool forCSV = false);
     
     static QString dateResultsHTML(const Date* d, const Model* model = nullptr);
     static QString eventResultsHTML(const Event* e,const bool withDates, const Model* model = nullptr);
     static QString phaseResultsHTML(const Phase* p);
+    static QString tempoResultsHTML(const Phase* p);
     static QString constraintResultsHTML(const PhaseConstraint* p);
 
     static short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const Model* model);

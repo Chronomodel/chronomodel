@@ -335,7 +335,7 @@ void Model::generateModelLog()
     QString log;
     // Study period
     QLocale locale = QLocale();
-    log += line(textBold(textBlack(tr("Prior Study Period : [ ") + locale.toString(mSettings.getTminFormated()) + " : " + locale.toString(mSettings.getTmaxFormated()) + " ] " + DateUtils::getAppSettingsFormatStr() )));
+    log += line(textBold(textBlack(tr("Prior Study Period") + " : [ " + locale.toString(mSettings.getTminFormated()) + " : " + locale.toString(mSettings.getTmaxFormated()) + " ] " + DateUtils::getAppSettingsFormatStr() )));
     log += "<br>";
 
     int i(0);
@@ -388,17 +388,17 @@ void Model::generateModelLog()
     i = 0;
     for (auto&& pPhaseConst : mPhaseConstraints) {
         log += "<hr>";
-        log += line(textBold(textPurple("Succession : from " + pPhaseConst->mPhaseFrom->mName +" to "+ pPhaseConst->mPhaseTo->mName)));
+        log += line(textBold(textPurple( QObject::tr("Succession") +" : "+ QObject::tr("from") +" "+ pPhaseConst->mPhaseFrom->mName +" "+ QObject::tr("to")+"  "+ pPhaseConst->mPhaseTo->mName)));
 
         switch(pPhaseConst->mGammaType) {
             case PhaseConstraint::eGammaFixed :
-                log += line(textBold(textPurple( QObject::tr("Min Hiatus fixed = ") + pPhaseConst->mGammaFixed)));
+                log += line(textBold(textPurple( QObject::tr("Min Hiatus fixed")+" = " + pPhaseConst->mGammaFixed)));
                 break;
             case PhaseConstraint::eGammaUnknown :
                 log += line(textBold(textPurple( QObject::tr("Min Hiatus unknown") )));
                 break;
             case PhaseConstraint::eGammaRange : //no longer used
-                 log += line(textBold(textPurple( QObject::tr("Min Hiatus between ") + pPhaseConst->mGammaMin + QObject::tr(" and ") +pPhaseConst->mGammaMax)));
+                 log += line(textBold(textPurple( QObject::tr("Min Hiatus between") +" "+  pPhaseConst->mGammaMin +" "+  QObject::tr("and") +" "+ pPhaseConst->mGammaMax)));
                 break;
             default:
                 log += "Hiatus undefined -> ERROR";
@@ -442,26 +442,31 @@ QString Model::getResultsLog() const{
 
 void Model::generateResultsLog()
 {
-    QString log;
+    QString log; 
 
-    for (auto && pEvent : mEvents) {
+    for (auto &&pPhase : mPhases) {
+        log += ModelUtilities::phaseResultsHTML(pPhase);
+        log += "<hr>";
+    }
+
+    for (auto &&pPhase : mPhases) {
+        log += ModelUtilities::tempoResultsHTML(pPhase);
+        log += "<hr>";;
+    }
+
+    for (auto &&pPhaseConstraint : mPhaseConstraints) {
+        log += ModelUtilities::constraintResultsHTML(pPhaseConstraint);
+        log += "<hr>";
+    }
+    for (auto &&pEvent : mEvents) {
         log += ModelUtilities::eventResultsHTML(pEvent, true, this);
         log += "<hr>";
     }
 
-    for (auto && pPhase : mPhases) {
-        log += ModelUtilities::phaseResultsHTML(pPhase);
-        log += "<hr>";;
-    }
-
-    for (auto && pPhaseConstraint : mPhaseConstraints) {
-        log += ModelUtilities::constraintResultsHTML(pPhaseConstraint);
-        log += "<hr>";
-    }
     mLogResults = log;
 }
 
-//#pragma mark Results CSV
+// Results CSV
 QList<QStringList> Model::getStats(const QLocale locale, const int precision, const bool withDateFormat)
 {
     (void) withDateFormat;
@@ -471,7 +476,7 @@ QList<QStringList> Model::getStats(const QLocale locale, const int precision, co
     
     // Phases
 
-    for (auto && pPhase : mPhases) {
+    for (auto &&pPhase : mPhases) {
         QStringList l = pPhase->mAlpha.getResultsList(locale, precision);
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
         l.prepend(pPhase->mName + " alpha");
@@ -523,14 +528,15 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
     QList<QStringList> rows;
     
     int runSize (0);
-    for(int i=0; i<mChains.size(); ++i)
-        runSize += mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
-    
+
+    for (auto &&ch :mChains)
+        runSize += ch.mNumRunIter / ch.mThinningInterval;
     
     QStringList headers;
     headers << "iter";
-    for (int j = 0; j < mPhases.size(); ++j)
-        headers << mPhases.at(j)->mName + " alpha" << mPhases.at(j)->mName + " beta";
+
+    for (auto &&pPhase : mPhases)
+        headers << pPhase->mName + " alpha" << pPhase->mName + " beta";
 
     rows << headers;
     
@@ -542,21 +548,19 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
         for (int j = burnAdaptSize; j<burnAdaptSize + runSize; ++j) {
             QStringList l;
             l << QString::number(shift + j);
-            for (int k = 0; k < mPhases.size(); ++k) {
-                Phase* phase = mPhases.at(k);
-                double valueAlpha = phase->mAlpha.mRawTrace->at(shift + j);
+            for (auto &&pPhase : mPhases) {
+                double valueAlpha = pPhase->mAlpha.mRawTrace->at(shift + j);
                 
                 if (withDateFormat)
                     valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
                 l << locale.toString(valueAlpha, 'g', 15);
 
-                double valueBeta = phase->mBeta.mRawTrace->at(shift + j);
+                double valueBeta = pPhase->mBeta.mRawTrace->at(shift + j);
                 
                 if (withDateFormat)
                     valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
                 
                 l << locale.toString(valueBeta, 'g', 15);
-                phase = nullptr;
 
             }
             rows << l;

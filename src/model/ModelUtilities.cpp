@@ -427,9 +427,6 @@ QString ModelUtilities::phaseResultsText(const Phase* p, const bool forCSV)
 
     text += "Phase : " + p->mName + nl + nl;
 
-    text += "Duration : " + nl;
-    text += p->mDuration.resultsString(nl, QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), "Years");
-
     text += nl + nl;
     text += "Begin : " + nl;
     text += p->mAlpha.resultsString(nl, "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings);
@@ -444,6 +441,19 @@ QString ModelUtilities::phaseResultsText(const Phase* p, const bool forCSV)
         const QString result = QObject::tr("Phase Time Range") + " ("+stringWithAppSettings(p->mAlpha.mThresholdUsed, forCSV) + "%)" + " : [" + stringWithAppSettings(p->getFormatedTimeRange().first, forCSV) + " : " + stringWithAppSettings(p->getFormatedTimeRange().second, false) + "] "+ DateUtils::getAppSettingsFormatStr();
         text += result + nl;
     }
+
+    return text;
+}
+
+QString ModelUtilities::tempoResultsText(const Phase* p, const bool forCSV)
+{
+    QString text;
+    const QString nl = "\r";
+
+    text += "Phase : " + p->mName + nl + nl;
+
+    text += "Duration : " + nl;
+    text += p->mDuration.resultsString(nl, QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), "Years", nullptr ,forCSV);
 
     return text;
 }
@@ -553,11 +563,7 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
     QString text;
 //        text += "<hr>"; // useless line
         text += line(textBold(textPurple("Phase : " + p->mName)));
-        
-        text += "<br>";
-        text += line(textBold(textPurple("Duration (posterior distrib.) : ")));
-        text += line(textPurple(p->mDuration.resultsString("<br>", QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), "Years")));
-        
+             
         text += "<br>";
         text += line(textBold(textPurple("Begin (posterior distrib.) : ")));
         text += line(textPurple(p->mAlpha.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, false)));
@@ -572,6 +578,19 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
             const QString result = QObject::tr("Phase Time Range") + " ("+stringWithAppSettings(p->mAlpha.mThresholdUsed, false) + "%)" + " : [" + stringWithAppSettings(p->getFormatedTimeRange().first, false) + " : " + stringWithAppSettings(p->getFormatedTimeRange().second, false) + "] "+ DateUtils::getAppSettingsFormatStr();
             text += line(textBold(textPurple(result + "<br>")));
         }
+    return text;
+}
+
+QString ModelUtilities::tempoResultsHTML(const Phase* p)
+{
+    QString text;
+//        text += "<hr>"; // useless line
+        text += line(textBold(textPurple("Phase : " + p->mName)));
+
+        text += "<br>";
+        text += line(textBold(textPurple("Duration (posterior distrib.) : ")));
+        text += line(textPurple(p->mDuration.resultsString("<br>", QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), "Years")));
+
     return text;
 }
 
