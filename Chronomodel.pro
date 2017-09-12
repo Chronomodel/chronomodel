@@ -69,14 +69,15 @@ CONFIG += c++11
 # MAC specific settings
 #########################################
 macx{
+    message("MacOs specific settings")
 	# Icon file
-    ICON = $$PRO_PATH/icon/Chronomodel.icns
+        ICON = $$PRO_PATH/icon/Chronomodel.icns
     
 	# This is the SDK used to compile : change it to whatever latest version of mac you are using.
 	# to determine which version of the macOS SDK is installed with xcode? type on a terminal
 	# xcodebuild -showsdks
-    QMAKE_MAC_SDK = macosx10.12
-        QMAKESPEC = win32-msvc2015 # ???
+        QMAKE_MAC_SDK = macosx10.12
+        QMAKESPEC = macx-clang
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
 	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
 
@@ -89,7 +90,7 @@ macx{
 }
 win32{
 	# Resource file (Windows only)
-        message(" win32 QMAKESPEC = winrt-x64-msvc2017")
+        message("WIN specific settings")
 
         # QMAKESPEC = win32-msvc
         QMAKESPEC = winrt-x64-msvc2017
