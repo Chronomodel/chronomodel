@@ -10,9 +10,9 @@ AbstractScene::AbstractScene(QGraphicsView* view, QObject* parent):QGraphicsScen
 mDrawingArrow(false),
 mProject(nullptr),
 mView(view),
-mUpdatingItems(false),
 mSelectKeyIsDown(false),
 mAltIsDown(false),
+mUpdatingItems(false),
 mShowGrid(false),
 mShowAllThumbs(true),
 mZoom(1.)
