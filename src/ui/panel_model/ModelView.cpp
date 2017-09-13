@@ -26,6 +26,7 @@
 #include <QtWidgets>
 #include <QtSvg>
 #include <QPropertyAnimation>
+#include <QSequentialAnimationGroup>
 #include <QRectF>
 #include <assert.h>
 
@@ -162,7 +163,7 @@ mCalibVisible(false)
     mButImport->setCheckable(true);
     mButImport->setIcon(QIcon(":csv_import.png"));
     mButImport->setFlatHorizontal();
-    mButImport->setAutoExclusive(false);
+    //mButImport->setAutoExclusive(false);
 
     connect(mButImport, static_cast<void (Button::*)(bool)>(&Button::toggled), this, &ModelView::showImport);
    // connect(mEventsScene, &EventsScene::eventDoubleClicked, mButProperties, &Button::click);
@@ -235,26 +236,28 @@ mCalibVisible(false)
     // -------- Windows Event propreties -----------------------
     
     mEventPropertiesView = new EventPropertiesView(mRightWrapper);
+    mEventPropertiesView->hide();
 
     // ------------- Windows calibration ---------------------
     
     mCalibrationView = new CalibrationView(mLeftWrapper);
-  //  mCalibrationView = nullptr;
+
     
      // ------------- Windows Multi-calibration ---------------------
      mMultiCalibrationView = new MultiCalibrationView(mRightWrapper);
+     mMultiCalibrationView->hide();
     // -------- Animation -------------------------------
     
     mAnimationHide = new QPropertyAnimation();
     mAnimationHide->setPropertyName("geometry");
-    mAnimationHide->setDuration(200);
+    mAnimationHide->setDuration(300);
     mAnimationHide->setTargetObject(mEventPropertiesView);
-    mAnimationHide->setEasingCurve(QEasingCurve::Linear);
+    mAnimationHide->setEasingCurve(QEasingCurve::OutCubic);//(QEasingCurve::Linear);
     
     mAnimationShow = new QPropertyAnimation();
     mAnimationShow->setPropertyName("geometry");
-    mAnimationShow->setDuration(200);
-    mAnimationShow->setEasingCurve(QEasingCurve::OutCubic);
+    mAnimationShow->setDuration(300);
+    mAnimationShow->setEasingCurve(QEasingCurve::OutCubic);//(QEasingCurve::Linear);
 
     mAnimationCalib = new QPropertyAnimation();
     mAnimationCalib->setPropertyName("geometry");
@@ -390,7 +393,7 @@ void ModelView::disconnectScenes()
     disconnect(mButDeletePhase, &Button::clicked, mPhasesScene, &PhasesScene::deleteSelectedItems);
 
     // when there is no Event selected we must show all data inside phases
-    disconnect(mEventsScene, &EventsScene::noSelection, mPhasesScene, &PhasesScene::noHide);
+    disconnect(mEventsScene, &EventsScene::noSelection, this, &ModelView::noEventSelected);
     disconnect(mEventsScene, &EventsScene::eventsAreSelected, mPhasesScene, &PhasesScene::eventsSelected);
     disconnect(mEventsScene, &EventsScene::eventDoubleClicked, this, &ModelView::togglePropeties);
     // When one or several phases are selected, we hightLigth the data inside the Event includes in the phases
@@ -716,48 +719,77 @@ void ModelView::searchEvent()
 
 }
 
+/**
+ * @brief ModelView::showProperties is done to work with ModelView::showMultiCalib()
+ * Both manage button to keep only one of them checked or any of them
+ */
 void ModelView::showProperties()
 {
    updateLayout();
+
    if (mButProperties->isChecked() && mButProperties->isEnabled()) {
+       if (mButMultiCalib->isChecked()) {
+           // hide mMultiCalibrationView
+           mAnimationHide->setStartValue(mRightRect);
+           mAnimationHide->setEndValue(mRightHiddenRect);
+           mAnimationHide->setTargetObject(mMultiCalibrationView);
+           mAnimationHide->start();
 
-       mEventPropertiesView->updateEvent();
-       mButImport      -> setChecked(false);
-       mCalibrationView->repaint();
+           mButMultiCalib->setChecked(false);
+       }
+        mButImport-> setChecked(false);
 
-       mAnimationCalib->setTargetObject(mCalibrationView);
+        // show Properties View
+        mEventPropertiesView->updateEvent();
 
-       mAnimationShow->setStartValue(mRightHiddenRect);
-       mAnimationShow->setEndValue(mRightRect);
-       mEventPropertiesView->raise();
-       mAnimationShow->setTargetObject(mEventPropertiesView);
-       mAnimationShow->start();
+        mCalibrationView->repaint();
+        mEventPropertiesView->show();
+
+        mAnimationCalib->setTargetObject(mCalibrationView);
+
+        mAnimationShow->setStartValue(mRightHiddenRect);
+        mAnimationShow->setEndValue(mRightRect);
+        mEventPropertiesView->raise();
+        mAnimationShow->setTargetObject(mEventPropertiesView);
+        mAnimationShow->start();
 
     } else {
        mAnimationCalib->setTargetObject(nullptr);
       // delete mCalibrationView;
-        if (!mButImport->isChecked()) {
-            mAnimationHide->setStartValue(mRightRect);
-            mAnimationHide->setEndValue(mRightHiddenRect);
-            mAnimationHide->setTargetObject(mEventPropertiesView);
-            mAnimationHide->start();
-        } else
-            mEventPropertiesView->lower();
+
+        mAnimationHide->setStartValue(mRightRect);
+        mAnimationHide->setEndValue(mRightHiddenRect);
+        mAnimationHide->setTargetObject(mEventPropertiesView);
+        mAnimationHide->start();
+
+
+
      }
 
 }
 
+/**
+ * @brief ModelView::showMultiCalib is done to work with ModelView::showProperties()
+ * Both manage button to keep only one of them checked or any of them
+ */
 void ModelView::showMultiCalib()
 {
     updateLayout();
     if (mButMultiCalib->isChecked() && mButMultiCalib->isEnabled()) {
+        if (mButProperties->isChecked()) {
+            // hide mEventPropertiesView
+            mAnimationHide->setStartValue(mRightRect);
+            mAnimationHide->setEndValue(mRightHiddenRect);
+            mAnimationHide->setTargetObject(mEventPropertiesView);
+            mAnimationHide->start();
+
+            mButProperties->setChecked(false);
+        }
 
         mMultiCalibrationView->updateGraphList();
         mMultiCalibrationView->setVisible(true);
-       // mMultiCalibrationView->setGeometry(mRightRect);
 
         mButImport      -> setChecked(false);
-
         mAnimationShow->setStartValue(mRightHiddenRect);
         mAnimationShow->setEndValue(mRightRect);
         mMultiCalibrationView->raise();
@@ -766,12 +798,10 @@ void ModelView::showMultiCalib()
         mAnimationShow->start();
 
      } else {
-
              mAnimationHide->setStartValue(mRightRect);
              mAnimationHide->setEndValue(mRightHiddenRect);
              mAnimationHide->setTargetObject(mMultiCalibrationView);
              mAnimationHide->start();
-
       }
 
 }
@@ -827,8 +857,10 @@ void ModelView::eventsAreSelected()
         mButMultiCalib->setDisabled(false);
         mButDeleteEvent->setDisabled(false);
 
-        mButProperties->setAutoExclusive(true);
-        mButMultiCalib->setAutoExclusive(true);
+        /* useless
+        * mButProperties->setAutoExclusive(false);
+        * mButMultiCalib->setAutoExclusive(false);
+        */
     }
     updateLayout();
     if (!mButMultiCalib->isChecked() && !mButProperties->isChecked())
@@ -850,8 +882,11 @@ void ModelView::togglePropeties()
     mButMultiCalib->setDisabled(false);
     mButDeleteEvent->setDisabled(false);
 
-    mButProperties->setAutoExclusive(true);
-    mButMultiCalib->setAutoExclusive(true);
+    /* useless
+     * mButProperties->setAutoExclusive(false);
+     * mButMultiCalib->setAutoExclusive(false);
+     */
+
 
 mButProperties->setChecked(true);
 mButProperties->update();
@@ -884,17 +919,19 @@ void ModelView::noEventSelected()
     mButExportEvents->setDisabled(false);
     mButImport->setDisabled(false);
 
-    // we disable AutoEsclusive to be able to uncheck both Properties and MultiCalib
-    mButProperties->setAutoExclusive(false);
-    mButMultiCalib->setAutoExclusive(false);
+    /* useless modify managment
+    * // we disable AutoEsclusive to be able to uncheck both Properties and MultiCalib
+    * mButProperties->setAutoExclusive(false);
+    * mButMultiCalib->setAutoExclusive(false);
+    */
 
     mButProperties->setDisabled(true);
     mButMultiCalib->setDisabled(true);
 
-    if (mButProperties->isChecked())
+   // if (mButProperties->isChecked())
         mButProperties->setChecked(false);
 
-    if (mButMultiCalib->isChecked())
+   // if (mButMultiCalib->isChecked())
         mButMultiCalib->setChecked(false);
 
     mButDeleteEvent->setDisabled(true);

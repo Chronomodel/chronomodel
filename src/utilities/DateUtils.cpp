@@ -4,7 +4,6 @@
 #include <cmath>
 #include <QLocale>
 
-
 double DateUtils::convertToFormat(const double &valueToFormat, const FormatDate &format)
 {
     switch (format) {
