@@ -33,14 +33,22 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
 
     GraphViewRefAbstract::setDate(date, settings);
     
+    double tminDisplay;
+    double tmaxDisplay;
+
     const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
     const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
-    const double t3 = date.getFormatedTminCalib();
-    const double t4 = date.getFormatedTmaxCalib();
 
-    double  tminDisplay = qMin(t1,qMin(t2,t3));
-    double  tmaxDisplay = qMax(t1,qMax(t2,t4));
-    
+    if (!date.isNull() && date.mIsValid) {
+        const double t3 = date.getFormatedTminCalib();
+        const double t4 = date.getFormatedTmaxCalib();
+
+        tminDisplay = qMin(t1,qMin(t2,t3));
+        tmaxDisplay = qMax(t1,qMax(t2,t4));
+    } else {
+        tminDisplay = qMin(t1, t2);
+        tmaxDisplay = qMax(t1, t2);
+    }
 
     mGraph->setRangeX(tminDisplay, tmaxDisplay);
     mGraph->setCurrentX(tminDisplay, tmaxDisplay);

@@ -249,7 +249,7 @@ void ProjectView::showLogTab(const int &i)
    // mLogTabs->getCurrentWidget()->setGeometry(0, mLogTabs->getTabHeight() + 5, width(), height() - (mLogTabs->getTabHeight() + 5) );
 }
 
-//#pragma mark Read/Write settings
+//  Read/Write settings
 void ProjectView::writeSettings()
 {
     mModelView->writeSettings();

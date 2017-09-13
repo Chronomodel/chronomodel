@@ -446,12 +446,11 @@ void Model::generateResultsLog()
 
     for (auto &&pPhase : mPhases) {
         log += ModelUtilities::phaseResultsHTML(pPhase);
+        /** @todo delete repeted word phase */
+         QString tempoStr = ModelUtilities::tempoResultsHTML(pPhase);
+         tempoStr.remove(1, 41);
+         log += tempoStr;
         log += "<hr>";
-    }
-
-    for (auto &&pPhase : mPhases) {
-        log += ModelUtilities::tempoResultsHTML(pPhase);
-        log += "<hr>";;
     }
 
     for (auto &&pPhaseConstraint : mPhaseConstraints) {

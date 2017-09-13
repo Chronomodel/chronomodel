@@ -17,14 +17,14 @@ public:
         eEvent = 1
     };
     
-    TrashDialog(Type type, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    TrashDialog(Type type, QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
     ~TrashDialog();
     
     QList<int> getSelectedIndexes();
     
 private slots:
     void updateFromSelection();
-    void deleteItems();
+    void deleteItems(bool checked);
     
 public:
     QListWidget* mList;

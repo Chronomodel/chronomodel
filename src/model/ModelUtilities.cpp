@@ -598,7 +598,7 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
 {
     QString text;
  //       text += "<hr>";  // useless line
-        text += line(textBold(textPurple("Succession : from " + p->mPhaseFrom->mName +" to "+ p->mPhaseTo->mName)));
+        text += line(textBold(textGreen("Succession : from " + p->mPhaseFrom->mName +" to "+ p->mPhaseTo->mName)));
 
         if (p->mTransitionRange != QPair<double,double>()) {
             text += "<br>";
@@ -607,7 +607,7 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
                     + " : " + stringWithAppSettings(p->getFormatedTransitionRange().second, false) + "] "
                     + DateUtils::getAppSettingsFormatStr();
 
-            text += line(textPurple(result));
+            text += line(textGreen(result));
         }
 
         if (p->mGapRange != QPair<double,double>()) {
@@ -622,7 +622,7 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
                         + ", " + stringWithAppSettings(p->getFormatedGapRange().second, false) + "] "
                         + DateUtils::getAppSettingsFormatStr();
 
-            text += line(textPurple(result + "<br>"));
+            text += line(textGreen(result + "<br>"));
         }
 
     return text;

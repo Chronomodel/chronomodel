@@ -12,7 +12,7 @@ class DatesListItemDelegate : public QItemDelegate
 {
     Q_OBJECT
 public:
-    inline DatesListItemDelegate(QObject* parent = 0):QItemDelegate(parent){}
+    inline DatesListItemDelegate(QObject* parent = nullptr):QItemDelegate(parent){}
     
     inline QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex&) const
     {
@@ -20,24 +20,24 @@ public:
         //font.setPointSizeF(pointSize(11));
         QFontMetrics metrics(font);
         
-        int mm = 2;
+        const int mm (2);
         int mh = metrics.height();
         return QSize(option.rect.width(), 4*mh + 5*mm);
     }
     
     inline void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
     {
-        int mm = 2;
+        int mm (2);
         int x = option.rect.x();
         int y = option.rect.y();
         int w = option.rect.width();
         int h = option.rect.height();
-        int iconW = 30;
-        int iconS = 20;
+        int iconW (30);
+        int iconS (20);
         
         painter->setRenderHint(QPainter::Antialiasing);
         
-        if(option.state & QStyle::State_Selected) {
+        if (option.state & QStyle::State_Selected) {
             painter->fillRect(option.rect, QColor(230, 230, 230));
             painter->setPen(QColor(245, 245, 245));
             painter->drawLine(x, y, x + w, y);
@@ -55,9 +55,9 @@ public:
         
         PluginAbstract* plugin = PluginManager::getPluginFromId(pluginId);
         
-        if(plugin)
+        if (plugin)
         {
-            int im = 5;
+            const int im (5);
             int is = (h - 3*im)/2;
             int ix = x + w - im - is;
             int iy = y + im;
@@ -74,7 +74,7 @@ public:
                 painter->setPen(Qt::white);
                 painter->drawText(ix, iy, is, is, Qt::AlignCenter, "X");
             }*/
-            if(isCombined){
+            if (isCombined){
                 painter->setBrush(Painting::mainColorDark);
                 painter->setPen(Painting::mainColorDark);
                 painter->drawEllipse(ix, iy + is + im, is, is);

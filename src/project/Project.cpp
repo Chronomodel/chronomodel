@@ -1233,7 +1233,8 @@ void Project::updateSelectedEventsDataMethod(Date::DataMethod method, const QStr
 // --------------------------------------------------------------------
 //     Dates
 // --------------------------------------------------------------------
-//#pragma mark Dates
+/** @brief getUnusedDateId find a valid index in a project
+ */
 int Project::getUnusedDateId(const QJsonArray& dates) const
 {
     int id = -1;
@@ -1527,6 +1528,14 @@ void Project::recycleDates(int eventId)
                 QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
                 for (int i = indexes.size()-1; i >= 0; --i) {
                     QJsonObject date = dates_trash.takeAt(indexes.at(i)).toObject();
+                    // Validate the date before adding it to the correct event and pushing the state
+                    QJsonObject settingsJson = stateNext[STATE_SETTINGS].toObject();
+                    ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
+                    PluginAbstract* plugin = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
+                    bool valid = plugin->isDateValid(date[STATE_DATE_DATA].toObject(), settings);
+                    date[STATE_DATE_VALID] = valid;
+
+
                     date[STATE_ID] = getUnusedDateId(dates);
                     dates.append(date);
                 }

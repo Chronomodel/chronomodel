@@ -70,6 +70,7 @@ public:
     double getLikelihood(const double& t) const;
     QPair<long double, long double> getLikelihoodArg(const double& t) const;
     QString getDesc() const;
+    PluginAbstract* getPlugin() const {return mPlugin;}
     
     void reset();
     void calibrate(const ProjectSettings & settings, Project *project);

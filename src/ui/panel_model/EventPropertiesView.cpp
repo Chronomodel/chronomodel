@@ -259,7 +259,7 @@ void EventPropertiesView::updateEvent()
 
             mCalibBut->setEnabled(hasDates);
             mDeleteBut->setEnabled(hasDates);
-            mRecycleBut->setEnabled(hasDates);
+            mRecycleBut->setEnabled(true);
             
         } else if (type == Event::eKnown) {
             mKnownFixedEdit -> setText(QString::number(mEvent.value(STATE_EVENT_KNOWN_FIXED).toDouble()));
@@ -418,7 +418,7 @@ void EventPropertiesView::recycleDates()
     MainWindow::getInstance()->getProject()->recycleDates(mEvent.value(STATE_ID).toInt());
 }
 
-//#pragma mark Merge / Split
+// Merge / Split
 void EventPropertiesView::updateCombineAvailability()
 {
     bool mergeable (false);

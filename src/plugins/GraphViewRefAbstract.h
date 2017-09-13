@@ -59,11 +59,20 @@ public:
     {
         mSettings = settings;
         
-        mTminCalib = date.mCalibration->mTmin;
-        mTmaxCalib = date.mCalibration->mTmax;
-        
-        mTminDisplay = qMin(mTminCalib, (double)mSettings.mTmin);
-        mTmaxDisplay = qMax(mTmaxCalib, (double)mSettings.mTmax);
+        if (date.mCalibration && date.mIsValid) {
+            mTminCalib = date.mCalibration->mTmin;
+            mTmaxCalib = date.mCalibration->mTmax;
+
+            mTminDisplay = qMin(mTminCalib, (double)mSettings.mTmin);
+            mTmaxDisplay = qMax(mTmaxCalib, (double)mSettings.mTmax);
+
+        } else {
+            mTminCalib = - INFINITY;
+            mTmaxCalib = + INFINITY;
+
+            mTminDisplay =  (double)mSettings.mTmin;
+            mTmaxDisplay = (double)mSettings.mTmax;
+        }
         
         mTminRef = date.getTminRefCurve();
         mTmaxRef = date.getTmaxRefCurve();

@@ -358,9 +358,9 @@ bool Plugin14C::isDateValid(const QJsonObject& data, const ProjectSettings& sett
         
         else {
             double t = curve.mTmin;
-            long double repartition = 0.;
-            long double v = 0.;
-            long double lastV = 0.;
+            long double repartition (0.);
+            long double v (0.);
+            long double lastV (0.);
             while (valid==false && t<=curve.mTmax) {
                 v = (double)getLikelihood(t,data);
                 // we have to check this calculs
@@ -402,7 +402,7 @@ bool Plugin14C::areDatesMergeable(const QJsonArray& dates)
     for (int i=0; i<dates.size(); ++i) {
         QJsonObject date = dates.at(i).toObject();
         QJsonObject data = date.value(STATE_DATE_DATA).toObject();
-        QString curve = data.value(DATE_14C_REF_CURVE_STR).toString();
+        QString curve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
         
         if (refCurve.isEmpty())
             refCurve = curve;
@@ -423,12 +423,12 @@ QJsonObject Plugin14C::mergeDates(const QJsonArray& dates)
         // Verify all dates have the same ref curve :
         const QJsonObject firstDate = dates.at(0).toObject();
         const  QJsonObject firstDateData = firstDate.value(STATE_DATE_DATA).toObject();
-        QString firstCurve = firstDateData.value(DATE_14C_REF_CURVE_STR).toString();
+        QString firstCurve = firstDateData.value(DATE_14C_REF_CURVE_STR).toString().toLower();
         
         for (int i=1; i<dates.size(); ++i) {
             QJsonObject date = dates.at(i).toObject();
             const QJsonObject dateData = date.value(STATE_DATE_DATA).toObject();
-            const QString curve = dateData.value(DATE_14C_REF_CURVE_STR).toString();
+            const QString curve = dateData.value(DATE_14C_REF_CURVE_STR).toString().toLower();
             
             if (firstCurve != curve) {
                 result["error"] = tr("All combined data must use the same reference curve !");
