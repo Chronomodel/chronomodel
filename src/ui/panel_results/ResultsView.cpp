@@ -356,9 +356,9 @@ mMaximunNumberOfVisibleGraph(0)
 
     mDensityOptsGroup = new QWidget(mTabMCMC);
     
-    mCredibilityCheck = new CheckBox(tr("Show Credibility"), mDensityOptsGroup);
+    mCredibilityCheck = new CheckBox(tr("Show Confidence Bar"), mDensityOptsGroup);
     mCredibilityCheck->setChecked(true);
-    mThreshLab = new Label(tr("HPD / Credibility (%)"), mDensityOptsGroup);
+    mThreshLab = new Label(tr("Confidence Level (%)"), mDensityOptsGroup);
     mThreshLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     
     mHPDEdit = new LineEdit(mDensityOptsGroup);
@@ -371,7 +371,7 @@ mMaximunNumberOfVisibleGraph(0)
     percentValidator->setDecimals(1);
     mHPDEdit->setValidator(percentValidator);
     
-    mFFTLenLab = new Label(tr("Grid length"), mDensityOptsGroup);
+    mFFTLenLab = new Label(tr("Grid Length"), mDensityOptsGroup);
     mFFTLenLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mFFTLenCombo = new QComboBox(mDensityOptsGroup);
