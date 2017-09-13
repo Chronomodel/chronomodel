@@ -167,11 +167,16 @@ void CalibrationView::setDate(const QJsonObject& date)
 
         const double t1 ( mSettings.getTminFormated() );
         const double t2 ( mSettings.getTmaxFormated() );
-        const double t3 ( mDate.getFormatedTminCalib() );
-        const double t4 ( mDate.getFormatedTmaxCalib() );
+        if (mDate.mIsValid) {
+            const double t3 ( mDate.getFormatedTminCalib() );
+            const double t4 ( mDate.getFormatedTmaxCalib() );
 
-        mTminDisplay = qMin(t1, t3);
-        mTmaxDisplay = qMax(t2, t4);
+            mTminDisplay = qMin(t1, t3);
+            mTmaxDisplay = qMax(t2, t4);
+        } else {
+            mTminDisplay = t1;
+            mTmaxDisplay = t2;
+        }
 
         // setText doesn't emit signal textEdited, when the text is changed programmatically
         mStartEdit->setText(stringWithAppSettings(mTminDisplay, false));
@@ -201,10 +206,7 @@ void CalibrationView::updateGraphs()
     mCalibGraph->removeAllCurves();
     mCalibGraph->removeAllZones();
     
-    //const QLocale locale;
-    
-
-    if (!mDate.isNull()) {
+     if (!mDate.isNull() ) {
         mCalibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
         mCalibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
         
@@ -242,7 +244,9 @@ void CalibrationView::updateGraphs()
 
         // Fill HPD only if not typo :
         mResultsText->clear();
-        QMap<double, double> calibMap = mDate.getFormatedCalibMap();
+        QMap<double, double> calibMap;
+        if (mDate.mIsValid)
+            calibMap = mDate.getFormatedCalibMap();
 
         if (!calibMap.isEmpty()) {
             // ------------------------------------------------------------
@@ -306,9 +310,17 @@ void CalibrationView::updateGraphs()
             resultsStr += + "<br> HPD (" + locale().toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), stringWithAppSettings);
             
             mResultsText->setText(resultsStr);
-            mDrawing->setCalibGraph(mCalibGraph);
-        }
 
+        } else {
+            GraphZone zone;
+            zone.mXStart = mSettings.getTminFormated();
+            zone.mXEnd = mSettings.getTmaxFormated();
+            zone.mColor = QColor(217, 163, 69);
+            zone.mColor.setAlpha(35);
+            zone.mText = tr("Individual calibration not digitally computable ...");
+            mCalibGraph->addZone(zone);
+        }
+        mDrawing->setCalibGraph(mCalibGraph);
         // ------------------------------------------------------------
         //  Reference curve from plugin
         // ------------------------------------------------------------
@@ -316,7 +328,6 @@ void CalibrationView::updateGraphs()
 
         // Get the ref graph for this plugin and this date
         if (!mRefGraphView) {
-
             mRefGraphView = mDate.mPlugin->getGraphViewRef();
         }
 
@@ -329,8 +340,8 @@ void CalibrationView::updateGraphs()
             tmpSettings.mTmax = mTmaxDisplay;
             tmpSettings.mTmin = mTminDisplay;
             tmpSettings.mStep = 1.;
-
             mRefGraphView->setDate(mDate, tmpSettings);
+
             mRefGraphView->zoomX(mTminDisplay, mTmaxDisplay);
 
         }
@@ -351,6 +362,15 @@ void CalibrationView::updateGraphs()
             mDrawing->setCalibTitle(tr("Typological date"));
             mDrawing->setCalibComment("HPD = " + mHPDEdit->text() + " %");
         }
+    } else {
+//            GraphZone zone;
+//            zone.mXStart = mSettings.getTminFormated();
+//            zone.mXEnd = mSettings.getTmaxFormated();
+//            zone.mColor = QColor(217, 163, 69);
+//            zone.mColor.setAlpha(35);
+//            zone.mText = tr("Individual calibration not digitally computable ...");
+//            mCalibGraph->addZone(zone);
+//            mDrawing->setCalibGraph(mCalibGraph);
     }
     
 

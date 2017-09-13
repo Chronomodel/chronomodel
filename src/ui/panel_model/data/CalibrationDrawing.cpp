@@ -167,6 +167,7 @@ void CalibrationDrawing::setMouseTracking(bool enable)
     QWidget::setMouseTracking(enable);
     if (mCalibGraph)
         mCalibGraph->setMouseTracking(enable);
+
     if (mRefGraphView)
         mRefGraphView->setMouseTracking(enable);
 
