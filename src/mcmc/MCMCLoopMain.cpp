@@ -68,16 +68,22 @@ QString MCMCLoopMain::calibrate()
         
         emit stepChanged(tr("Calibrating..."), 0, dates.size());
         
-        for (int i=0; i<dates.size(); ++i) {
+        int i (0);
+        for (auto &&date : dates) {
             //QTime startTime = QTime::currentTime();
-            if (dates.at(i)->mCalibration->mCurve.isEmpty())
-                dates.at(i)->calibrate(mModel->mSettings, mProject);
+            if (date->mCalibration) {
+                if (date->mCalibration->mCurve.isEmpty())
+                    date->calibrate(mModel->mSettings, mProject);
+            } else
+                return (tr("Invalid Model -> No Calibration on Data") +" " + date->mName);
+
          
             if (isInterruptionRequested())
                 return ABORTED_BY_USER;
             
             emit stepProgressed(i);
-            dates[i] = nullptr;
+            ++i;
+
             //QTime endTime = QTime::currentTime();
             //int timeDiff = startTime.msecsTo(endTime);
             //mLog += "Data \"" + dates[i]->mName + "\" (" + dates[i]->mPlugin->getName() + ") calibrated in " + QString::number(timeDiff) + " ms\n";
