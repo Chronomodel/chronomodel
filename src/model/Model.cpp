@@ -1331,6 +1331,24 @@ void Model::generateTempo()
 
     const int totalIter = (int) ceil(mChains[0].mNumRunIter / mChains[0].mThinningInterval);
 
+    // create Empty containers
+    QVector<int> N ;  // Tempo
+    N.resize(nbPts);
+
+    QVector<int> N2 ;
+    N2.resize(nbPts);
+
+    QVector<int> activity ; //mActivity
+    activity.resize(nbPts);
+
+    QVector<int> previousN ;
+    previousN.resize(nbPts);
+
+    QVector<int> previousN2 ;
+    previousN2.resize(nbPts);
+
+    QMap<double, QVector<int>> Ni; // mTempoCredibility t, QVector(N)
+
     for (auto &&phase : mPhases) {
         // we suppose, it is the same iteration number for all chains
 
@@ -1350,26 +1368,27 @@ void Model::generateTempo()
         tmax = ceil(tmax);
 #endif
 
-
         const double deltat = (tmax-tmin)/ (double)nbPts;
 
+        // erase containers
+        N.fill(0);
+        N2.fill(0);
+#ifdef ACTIVITY // used uf we want to compute with the some vs derivative function
+        activity .fill(0); //mActivity
+#endif
 
-        // create Empty containers
-        QVector<int> N (nbPts); // Tempo
-        QVector<int> N2 (nbPts);
-        QVector<int> I (nbPts); //mActivity
+        previousN .fill(0);
+        previousN2 .fill(0);
 
-        QVector<int> previousN (nbPts);
-        QVector<int> previousN2 (nbPts);
-
-        QMap<double, QVector<int>> Ni; // mTempoCredibility t, QVector(N)
+        Ni.clear();
 
         for (int i(0); i<totalIter; ++i) {
             // create one scenario per iteration
             QVector<double> scenario;
 
-            for (auto &&l:listTrace)
-                scenario.append(l.at(i));
+            for (auto &&t : listTrace)
+                scenario.append(t.at(i));
+
             // sort scenario trace
             std::sort(scenario.begin(),scenario.end());
 
@@ -1380,9 +1399,9 @@ void Model::generateTempo()
 
             QVector<int>::iterator itN2 (N2.begin()); // for Tempo Error
             QVector<int>::iterator itPrevN2 (previousN2.begin());
-
-            QVector<int>::iterator itI (I.begin()); // for Intensity/Activity
-
+#ifdef ACTIVITY
+            QVector<int>::iterator itactivity (activity.begin()); // for Intensity/Activity
+#endif
             int index (0); // index of table N corresponding to the first value // faster than used of Distance
             double t (tmin + index*deltat);
             int memoScenarioIdx (0);
@@ -1400,10 +1419,10 @@ void Model::generateTempo()
                             ++itN;
                             ++itPrevN;
                      }
-
-                     if (itI != I.end())
-                         ++itI;
-
+#ifdef ACTIVITY
+                     if (itactivity!= activity.end())
+                         ++itactivity;
+#endif
                     Ni[t].append(memoScenarioIdx);
 
                     ++index;
@@ -1413,8 +1432,10 @@ void Model::generateTempo()
                     (*itN2) = (*itPrevN2) + (scenarioIdx * scenarioIdx);
 
                     (*itN) = (*itPrevN) + scenarioIdx;
+#ifdef ACTIVITY
+                    (*itactivity) = (*itactivity) + 1;
+#endif
 
-                    (*itI) = (*itI) + 1;
                    memoScenarioIdx = scenarioIdx;
 
                    if (itScenario != scenario.cend()) {
@@ -1473,18 +1494,31 @@ void Model::generateTempo()
         phase->mTempoInf = vector_to_map(inf, tmin, tmax, deltat);
         phase->mTempoSup = vector_to_map(sup, tmin, tmax, deltat);
 
+#ifndef ACTIVITY
         // 3 - Derivative function
-       /* QVector<double> dN;
-        QVector<double>::const_iterator xp (N.cbegin());
-        for (QVector<double>::const_iterator x = N.cbegin()+1; x != N.cend(); ++x) {
-            dN.append( (*x) - (*xp) );
-            ++xp;
+        QVector<double> dN;
+      //  QVector<int>::const_iterator xp (N.cbegin());
+        // first value, we can't use the same formula
+        int Np (N[1]);
+        int Nm (N[0]);
+        dN.append( Np - Nm );
+        for (QVector<int>::const_iterator x = N.cbegin()+1;  x != N.cend()-1; ++x) {
+            Np = (* (x+1));
+           // int mea = (Np - Nm )/2;
+            dN.append((Np - Nm )/2. );
+
+            Nm= (*x);
         }
-        */
-        phase->mActivity = vector_to_map(I, tmin, tmax, deltat);
+        //last value
+        Np = N.last();
+        dN.append( (Np - Nm )/2. );
+        phase->mActivity = vector_to_map(dN, tmin, tmax, deltat);
 
+ #else
+       phase->mActivity = vector_to_map(activity, tmin, tmax, deltat);
+#endif
 
-//        // 4 - Credibility
+        // 4 - Credibility
         QVector<double> credInf (nbPts);
         QVector<double> credSup (nbPts);
 
@@ -1493,8 +1527,6 @@ void Model::generateTempo()
         int index (0); // index of table N corresponding to the first value // faster than used of Distance
         double t (tmin + index*deltat);
         while (t<tmax ) {
-
- //qDebug()<<"cred"<<Ni[t];
             Quartiles cred = quartilesType(Ni[t], 8, 0.025);
             *itCredInf = cred.Q1;
             *itCredSup = cred.Q3;
