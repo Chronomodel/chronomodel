@@ -83,14 +83,8 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
     mGraph->setOverArrow(GraphView::eNone);
     /* -------------first tab : posterior distrib-----------------------------------
      *  Possible curves :
-     *  - Post Distrib Alpha All Chains
-     *  - Post Distrib Beta All Chains
-     *  - HPD Alpha All Chains
-     *  - HPD Beta All Chains
-     *  - Duration
-     *  - HPD Duration
-     *  - Post Distrib Alpha i
-     *  - Post Distrib Beta i
+     *  - Post Distrib Duration
+     *  - Post Distrib Tempo All Chains
      *  - Time Range
      * ------------------------------------------------  */
 
@@ -151,31 +145,35 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->setFormatFunctY(nullptr);
         mTitle = tr("Phase Tempo") + " : " + mPhase->mName;
 
-
         GraphCurve curveTempo = generateDensityCurve(mPhase->mTempo,
                                                      "Post Distrib Tempo All Chains",
                                                      color.darker(), Qt::SolidLine);
         curveTempo.mIsRectFromZero = false;
+         curveTempo.mIsHisto = false;
 
         GraphCurve curveTempoInf = generateDensityCurve(mPhase->mTempoInf,
                                                      "Post Distrib Tempo Inf All Chains",
                                                      color, Qt::DashLine);
         curveTempoInf.mIsRectFromZero = false;
+        curveTempoInf.mIsHisto = false;
 
         GraphCurve curveTempoSup = generateDensityCurve(mPhase->mTempoSup,
                                                      "Post Distrib Tempo Sup All Chains",
                                                      color, Qt::DashLine);
         curveTempoSup.mIsRectFromZero = false;
+        curveTempoSup.mIsHisto = false;
 
         GraphCurve curveCredInf = generateDensityCurve(mPhase->mTempoCredibilityInf,
                                                      "Post Distrib Tempo Cred Inf All Chains",
                                                      color, Qt::SolidLine);
         curveCredInf.mIsRectFromZero = false;
+        curveCredInf.mIsHisto = false;
 
         GraphCurve curveCredSup = generateDensityCurve(mPhase->mTempoCredibilitySup,
                                                      "Post Distrib Tempo Cred Sup All Chains",
                                                      color, Qt::SolidLine);
         curveCredSup.mIsRectFromZero = false;
+        curveCredSup.mIsHisto = false;
 
         mGraph->addCurve(curveTempoInf);
         mGraph->addCurve(curveTempo);
@@ -186,11 +184,9 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
 
         mGraph->setOverArrow(GraphView::eBothOverflow);
 
-
-
-        // ------------------------------------------------------------
-        //  Add zones outside study period
-        // ------------------------------------------------------------
+        /* ------------------------------------------------------------
+        *   Add zones outside study period
+        * ------------------------------------------------------------*/
 
         GraphZone zoneMin;
         zoneMin.mXStart = -INFINITY;
@@ -207,20 +203,7 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
         zoneMax.mColor.setAlpha(35);
         zoneMax.mText = tr("Outside study period");
         mGraph->addZone(zoneMax);
-/*
-        if (!mPhase->mAlpha.mChainsHistos.isEmpty())
-            for (int i=0; i<mChains.size(); ++i) {
-                GraphCurve curveAlpha = generateDensityCurve(mPhase->mAlpha.histoForChain(i),
-                                                             "Post Distrib Alpha " + QString::number(i),
-                                                             Painting::chainColors.at(i), Qt::DotLine);
 
-                GraphCurve curveBeta = generateDensityCurve(mPhase->mBeta.histoForChain(i),
-                                                            "Post Distrib Beta " + QString::number(i),
-                                                            Painting::chainColors.at(i).darker(170), Qt::DashLine);
-                mGraph->addCurve(curveAlpha);
-                mGraph->addCurve(curveBeta);
-            }
- */
     }
 
     else if (typeGraph == ePostDistrib && variable == eActivity) {
@@ -237,9 +220,8 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->addCurve(curveActivity);
     }
 
-    /* -----------------second tab : history plot-------------------------------
+    /* -----------------Second tab : History plot-------------------------------
      *  - Duration
-     *
      * ------------------------------------------------ */
 
     else if (typeGraph == eTrace && variable == eDuration) {
@@ -252,8 +234,8 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->autoAdjustYScale(true);
     }
     /* ------------------------------------------------
-     *  third tab : Acception rate
-     *  fourth tab : Autocorrelation
+     *  third tab : Nothing
+     *  fourth tab : Nothing
      * ------------------------------------------------ */
     else {
        mTitle = tr("Phase") + " : " + mPhase->mName;
@@ -274,7 +256,11 @@ void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      *  - Post Distrib Duration All Chains
      *  - HPD Duration All Chains
      *  - Credibility All Chains
-     *
+     * - Post Distrib Tempo All Chains
+     *  - Post Distrib Tempo Inf All Chain
+     *  - Post Distrib Tempo Sup All Chain
+     *  - Post Distrib Tempo Cred Inf All Chains
+     *  - Post Distrib Tempo Cred Sup All Chains
      * ------------------------------------------------
      */
      if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eDuration) {
@@ -309,13 +295,9 @@ void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& s
              mGraph->setCurveVisible("Post Distrib Tempo Cred Inf All Chains", mShowAllChains);
              mGraph->setCurveVisible("Post Distrib Tempo Cred Sup All Chains", mShowAllChains);
 
-            /* for (int i=0; i<mShowChainList.size(); ++i)
-                 mGraph->setCurveVisible("Post Distrib Duration " + QString::number(i), mShowChainList.at(i));
-            */
              mGraph->setTipXLab("t");
              mGraph->setTipYLab("n");
              mGraph->setYAxisMode(GraphView::eMinMax);
-             //mGraph->autoAdjustYScale(true);
              mGraph->adjustYToMinMaxValue();
          }
 
@@ -338,9 +320,11 @@ void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& s
           }
 
      }
-    /* ---------------- second tab : history plot--------------------------------
-     *  - Alpha Trace i
-     *
+    /* ---------------- Second tab : History plot--------------------------------
+     *  - Duration Trace i
+     *  - Duration Q1 i
+     *  - Duration Q2 i
+     *  - Duration Q3 i
      * ------------------------------------------------ */
     else if (mCurrentTypeGraph == eTrace && mCurrentVariable == eDuration) {
 

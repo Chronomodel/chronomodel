@@ -613,24 +613,14 @@ void GraphView::resizeGL(int w, int h)
 void GraphView::resizeEvent(QResizeEvent* event)
 {
     Q_UNUSED(event);
-/*
-    qreal wNew = event->size().width();
-    qreal hNew = event->size().height();
 
-    qreal wOld = event->oldSize().width();
-    qreal hOld = event->oldSize().height();
- */
-    /*
     if (!mBufferBack.isNull()) {
-        //const qreal sx = (qreal)rect().width() / (qreal)mBufferBack.rect().width() ;
-        //const qreal sy = (qreal)rect().height() / (qreal)mBufferBack.rect().height() ;
-
-        const qreal sx = wNew / (qreal)mBufferBack.rect().width() ;
-        const qreal sy = hNew / (qreal)mBufferBack.rect().height() ;
+        const qreal sx = (qreal)rect().width() / (qreal)mBufferBack.rect().width() ;
+        const qreal sy = (qreal)rect().height() / (qreal)mBufferBack.rect().height() ;
 
         if (sx>.5 || sy>.5) {
-            mBufferBack = QPixmap(wNew, hNew);//mBufferBack = QPixmap(width(), height());
-            updateGraphSize(wNew, hNew);//updateGraphSize(width(), height());
+            mBufferBack = QPixmap(width(), height());
+            updateGraphSize(width(), height());
             paintToDevice(&mBufferBack);
 
         } else {
@@ -641,11 +631,11 @@ void GraphView::resizeEvent(QResizeEvent* event)
 
     }
     else {
-        mBufferBack = QPixmap(wNew, hNew);//mBufferBack = QPixmap(width(), height());
-        updateGraphSize(wNew, hNew);//updateGraphSize(width(), height());
+        mBufferBack = QPixmap(width(), height());
+        updateGraphSize(width(), height());
         paintToDevice(&mBufferBack);
     }
-*/
+
     repaintGraph(true);
 }
 #endif
@@ -1201,19 +1191,19 @@ void GraphView::drawCurves(QPainter& painter)
 
                     // Detect square signal back-end without null value at the end of the QMap
                     // e.i calibration of typo-ref
-                    if (lightMap.size()>1) {
-                        QMapIterator<type_data, type_data> lastIter(lightMap);
-                        lastIter.toBack();
-                        lastIter.previous();
-                        if ( lastIter.value() == lastIter.peekPrevious().value() ) {
-                            type_data x = lastIter.key();
-                            if ( x > mCurrentMinX && x < mCurrentMaxX)
-                                path.lineTo(getXForValue(x, true), getYForValue(0, true) );
 
+                       if (curve.mIsRectFromZero && lightMap.size()>1) {
+                            QMapIterator<type_data, type_data> lastIter(lightMap);
+                            lastIter.toBack();
+                            lastIter.previous();
+                            if ( lastIter.value() == lastIter.peekPrevious().value() ) {
+                                type_data x = lastIter.key();
+                                if ( x > mCurrentMinX && x < mCurrentMaxX)
+                                    path.lineTo(getXForValue(x, true), getYForValue(0, true) );
+                            }
                         }
                     }
 
-                }
 
                 if (curve.mIsRectFromZero && (curve.mBrush != Qt::NoBrush) ) {
                     // Close the path on the left side
