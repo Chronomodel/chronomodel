@@ -91,9 +91,8 @@ macx{
 win32{
 	# Resource file (Windows only)
         message("WIN specific settings")
+       QMAKESPEC = win32-msvc  # for 32-bit and 64-bit
 
-        # QMAKESPEC = win32-msvc
-        QMAKESPEC = winrt-x64-msvc2017
         RC_FILE += Chronomodel.rc
 	RC_ICONS += $$PRO_PATH/icon/Chronomodel.ico
         QT_FATAL_WARNING = 1
@@ -165,9 +164,10 @@ win32{
         contains(QT_ARCH, i386) {
             message("32-bit")
             LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3-3
-        } else {
+
+        } else { # to compile with a x64 machine
             message("64-bit")
-            LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win64" -lfftw3-3 # to compile with a x64 machine
+            LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win64" -lfftw3-3
         }
 }
 #linux :
