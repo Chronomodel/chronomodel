@@ -1482,7 +1482,7 @@ void Model::generateTempo()
 
             mean.append(m);
             // Forbidden negative error
-            const double infp = ( m < 1.96*s2 ? 0 : m - 1.96*s2 );
+            const double infp = ( m < 1.96*s2 ? 0. : m - 1.96*s2 );
             inf.append( infp);
             sup.append( m + 1.96*s2);
             ++itN2;
@@ -1496,17 +1496,16 @@ void Model::generateTempo()
 
 #ifndef ACTIVITY
         // 3 - Derivative function
+        //  compute the slope of a nearby secant line through the points (x-h,f(x-h)) and (x+h,f(x+h)).
+        // https://en.wikipedia.org/wiki/Numerical_differentiation
         QVector<double> dN;
-      //  QVector<int>::const_iterator xp (N.cbegin());
         // first value, we can't use the same formula
         int Np (N[1]);
         int Nm (N[0]);
         dN.append( Np - Nm );
         for (QVector<int>::const_iterator x = N.cbegin()+1;  x != N.cend()-1; ++x) {
             Np = (* (x+1));
-           // int mea = (Np - Nm )/2;
-            dN.append((Np - Nm )/2. );
-
+             dN.append((Np - Nm )/2. );
             Nm= (*x);
         }
         //last value
