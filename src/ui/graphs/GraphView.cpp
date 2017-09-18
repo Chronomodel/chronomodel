@@ -780,33 +780,35 @@ void GraphView::paintToDevice(QPaintDevice* device)
                 mMarginTop,
                 getXForValue(zone.mXEnd) - getXForValue(zone.mXStart),
                 mGraphHeight);
-        
-        p.save();
-        p.setClipRect(r);
-        
-        p.fillRect(r, zone.mColor);
-        p.setPen(zone.mColor.darker());
-        QFont fontZone = p.font();
-        fontZone.setWeight(QFont::Black);
-        fontZone.setPointSizeF(pointSize(20));
-        p.setFont(fontZone);
-        p.drawText(r, Qt::AlignCenter | Qt::TextWordWrap, zone.mText);
-        p.restore();
+
+        if (r.width()>1) {
+            p.save();
+            p.setClipRect(r);
+
+            p.fillRect(r, zone.mColor);
+            p.setPen(zone.mColor.darker());
+            QFont fontZone = p.font();
+            fontZone.setWeight(QFont::Black);
+            fontZone.setPointSizeF(pointSize(20));
+            p.setFont(fontZone);
+            p.drawText(r, Qt::AlignCenter | Qt::TextWordWrap, zone.mText);
+            p.restore();
+        }
     }
     
     /* mOverflowArrowMode, draw a arrow on the rigth or on the left
      * if the data are over the window (current min, current max)  */
 
      if (mOverflowArrowMode != eNone) {
-         qreal arrowSize = 7.;
-         const qreal yo = mGraphHeight/2. ;
+         qreal arrowSize (7.);
+         const qreal yo (mGraphHeight/2.) ;
          const QColor gradColDark(150, 150, 150);
          const QColor gradColLigth(190, 190, 190);
 
          if (mOverflowArrowMode == eBothOverflow || mOverflowArrowMode == eUnderMin) {
 
              type_data maxData = (type_data) (- INFINITY);
-             for (auto&& curve : mCurves)
+             for (auto &&curve : mCurves)
                  if (curve.mVisible && curve.mData.size()>0)
                     maxData = std::max(maxData, curve.mData.lastKey());
                  else if (curve.mVisible && curve.mIsVerticalLine)
@@ -830,7 +832,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
          if (mOverflowArrowMode == eBothOverflow || mOverflowArrowMode == eOverMax) {
              type_data minData = (type_data) (INFINITY);
 
-             for (auto&& curve : mCurves)
+             for (auto &&curve : mCurves)
                  if (curve.mVisible && curve.mData.size()>0)
                     minData = std::min(minData, curve.mData.firstKey());
                  else if (curve.mVisible && curve.mIsVerticalLine)
@@ -1425,7 +1427,7 @@ bool GraphView::saveAsSVG(const QString& fileName, const QString& graphTitle, co
         QFontMetrics fm(painter.font());
         painter.drawText( graphRigthShift,0, graphRigthShift+fm.width(graphTitle), versionHeight,
                          Qt::AlignCenter,
-                         graphTitle);
+                         svgGen.title());
         
         if (withVersion) {
             painter.setPen(Qt::black);
