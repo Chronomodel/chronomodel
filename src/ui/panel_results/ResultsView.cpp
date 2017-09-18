@@ -2851,12 +2851,107 @@ void ResultsView::saveAsImage()
                    selectedGraph.append(graph);
     }
 
-    for (auto &&graph : selectedGraph) {
-        graph->showSelectedRect(false);
-        graph->saveAsImage();
-        graph->showSelectedRect(true);
-    }
 
+//----
+    if (selectedGraph.isEmpty())
+        return;
+    // ---- Ask for file name and type (SVG or png)
+    QString filter = QObject::tr("Image (*.png);;Photo (*.jpg);;Scalable Vector Graphics (*.svg)");
+    QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                    tr("Save graph image as..."),
+                                                    MainWindow::getInstance()->getCurrentPath(),
+                                                    filter);
+
+    if (!fileName.isEmpty()) {
+        QFileInfo fileInfo;
+        fileInfo = QFileInfo(fileName);
+        QString fileExtension = fileInfo.suffix();
+        bool asSvg = fileName.endsWith(".svg");
+        // --- if png
+        const int versionHeight (20);
+        if (!asSvg) {
+
+            const short pr = MainWindow::getInstance()->getAppSettings().mPixelRatio;
+
+            QImage image (selectedGraph.at(0)->width() * pr, (selectedGraph.size() * selectedGraph.at(0)->height() + versionHeight) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
+
+            if (image.isNull() )
+                qDebug()<< " image width = 0";
+
+            image.setDevicePixelRatio(pr);
+            image.fill(Qt::transparent);
+
+            QPainter p;
+            p.begin(&image);
+            p.setRenderHint(QPainter::Antialiasing);
+
+            QPoint ptStart (0, 0);
+            for (auto &&graph : selectedGraph) {
+                graph->showSelectedRect(false);
+                GraphView::Rendering memoRendering= graph->getRendering();
+                graph->setRendering(GraphView::eHD);
+                graph->render(&p, ptStart, QRegion(0, 0, graph->width(), graph->height()));
+                ptStart = QPoint(0, ptStart.y() + graph->height());
+                graph->showSelectedRect(true);
+                graph->setRendering(memoRendering);
+            }
+            p.setPen(Qt::black);
+            p.setBrush(Qt::white);
+            p.fillRect(0, ptStart.y(), selectedGraph.at(0)->width(), versionHeight, Qt::white);
+            p.drawText(0, ptStart.y(), selectedGraph.at(0)->width(), versionHeight,
+                       Qt::AlignCenter,
+                       qApp->applicationName() + " " + qApp->applicationVersion());
+            p.end();
+
+            if (fileExtension=="png") {
+                image.save(fileName, "png");
+            }
+            else if (fileExtension == "jpg") {
+                int imageQuality = MainWindow::getInstance()->getAppSettings().mImageQuality;
+                image.save(fileName, "jpg",imageQuality);
+            }
+            else if (fileExtension == "bmp") {
+                image.save(fileName, "bmp");
+            }
+
+        } // not svg
+        // if svg type
+        else {
+            //Rendering memoRendering= mRendering;
+            QRect rTotal( QRect(0, 0, width(), height()+versionHeight) );
+            // Set SVG Generator
+            QSvgGenerator svgGen;
+            svgGen.setFileName(fileName);
+            svgGen.setSize(rTotal.size());
+            svgGen.setViewBox(rTotal);
+            svgGen.setTitle(fileName);
+            svgGen.setDescription(fileName);
+
+            QPainter painter;
+            painter.begin(&svgGen);
+            font().wordSpacing();
+
+            QPoint ptStart (0, versionHeight);
+            for (auto &&graph : selectedGraph) {
+                graph->showSelectedRect(false);
+                 /* We can not have a svg graph in eSD Rendering Mode */
+                GraphView::Rendering memoRendering= graph->getRendering();
+                graph->setRendering(GraphView::eHD);
+                graph->render(&painter, ptStart, QRegion(0, 0, graph->width(), graph->height()));
+                ptStart = QPoint(0, ptStart.y() + graph->height());
+                graph->showSelectedRect(true);
+                graph->setRendering(memoRendering);
+            }
+            painter.setPen(Qt::black);
+            painter.drawText(0, ptStart.y(), selectedGraph.at(0)->width(), versionHeight,
+                             Qt::AlignCenter,
+                             qApp->applicationName() + " " + qApp->applicationVersion());
+
+            painter.end();
+
+        }
+    // end if not Empty filename
+    }
 }
 
 void ResultsView::imageToClipboard()
@@ -2916,8 +3011,8 @@ void ResultsView::imageToClipboard()
     }
     p.setPen(Qt::black);
     p.setBrush(Qt::white);
-    p.fillRect(0, ptStart.y(), image.width(), versionHeight, Qt::white);
-    p.drawText(0, ptStart.y(), image.width(), versionHeight,
+    p.fillRect(0, ptStart.y(), selectedGraph.at(0)->width(), versionHeight, Qt::white);
+    p.drawText(0, ptStart.y(), selectedGraph.at(0)->width(), versionHeight,
                Qt::AlignCenter,
                qApp->applicationName() + " " + qApp->applicationVersion());
 
