@@ -240,18 +240,14 @@ void GraphViewResults::saveAsImage()
             
             p.end();
 
-            //image.save(fileName, "PNG");
-            // char formatExt[];
             if (fileExtension=="png") {
-                //   formatExt[] = "png";
-                image.save(fileName, "png");
+                 image.save(fileName, "png");
             }
             else if (fileExtension == "jpg") {
-                //formatExt[5] = "jpg";
-                image.save(fileName, "jpg",50);
+                int imageQuality = MainWindow::getInstance()->getAppSettings().mImageQuality;
+                image.save(fileName, "jpg",imageQuality);
             }
-            else if (fileExtension == "bmp") {
-                
+            else if (fileExtension == "bmp") {              
                 image.save(fileName, "bmp");
             }
             
