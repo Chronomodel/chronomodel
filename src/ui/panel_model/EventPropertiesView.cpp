@@ -338,10 +338,8 @@ void EventPropertiesView::updateKnownGraph()
         const double step = settings.value(STATE_SETTINGS_STEP).toDouble();
         EventKnown event = EventKnown::fromJson(mEvent);
 
-        if ( (tmin>event.mFixed) || (event.mFixed>tmax) ) {
-
+        if ( (tmin>event.mFixed) || (event.mFixed>tmax) )
             return;
-        }
 
         event.updateValues(tmin, tmax,step );
         
@@ -372,8 +370,14 @@ void EventPropertiesView::updateKnownGraph()
 
         curve.mSections.append(qMakePair(tLower,tUpper));
         mKnownGraph->addCurve(curve);
+
+        mKnownGraph->setMarginBottom(mKnownGraph->font().pointSizeF() + 10. );
+
+        // Adjust scale :
+        const int xScale = int(log10(tmax-tmin)) -1;
+        mKnownGraph->setXScale(std::pow(10, xScale), 4);
         //---------------------
-    //}
+
 }
 
 /*
@@ -520,7 +524,7 @@ void EventPropertiesView::keyPressEvent(QKeyEvent* e)
 
 }
 
-//#pragma mark Layout
+// Layout
 void EventPropertiesView::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
