@@ -29,7 +29,9 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mResultsHeight(90),
     mButtonWidth(50),
     mTminDisplay(-INFINITY),
-    mTmaxDisplay(INFINITY)
+    mTmaxDisplay(INFINITY),
+    mMajorScale (100),
+    mMinorScale (4)
 {
 
     mDrawing = new CalibrationDrawing(this);
@@ -87,6 +89,22 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
 
     mEndEdit = new LineEdit(this);
     mEndEdit->setText("1000");
+// ----------
+    mMajorScaleLab = new Label(tr("Maj. Int"), this);
+    mMajorScaleLab->setAlignment(Qt::AlignHCenter);
+    mMajorScaleLab->setLight();
+
+    mMajorScaleEdit = new LineEdit(this);
+    mMajorScaleEdit->setToolTip(tr("Enter a value of Major Interval for the scale under the curves"));
+    mMajorScaleEdit->setText(locale().toString(mMajorScale));
+
+    mMinorScaleLab = new Label(tr("Min. Cnt"), this);
+    mMinorScaleLab->setAlignment(Qt::AlignHCenter);
+    mMinorScaleLab->setLight();
+
+    mMinorScaleEdit = new LineEdit(this);
+    mMinorScaleEdit->setToolTip(tr("Enter a value of Minior Interval Count for the scale under the curves"));
+    mMinorScaleEdit->setText(locale().toString(mMinorScale));
 
     mHPDLab->raise();
     mHPDEdit->raise();
@@ -117,6 +135,10 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
 
     connect(mStartEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &CalibrationView::updateScroll);
     connect(mEndEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &CalibrationView::updateScroll);
+    connect(mMajorScaleEdit, &LineEdit::editingFinished, this, &CalibrationView::updateScaleX);
+    connect(mMinorScaleEdit, &LineEdit::editingFinished, this, &CalibrationView::updateScaleX);
+
+
     connect(mHPDEdit, &QLineEdit::textEdited, this, &CalibrationView::updateGraphs);
     connect(mImageSaveBut, &Button::clicked, this, &CalibrationView::exportImage);
     connect(mResultsClipBut, &Button::clicked, this, &CalibrationView::copyText);
@@ -209,7 +231,7 @@ void CalibrationView::updateGraphs()
      if (!mDate.isNull() ) {
         mCalibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
         mCalibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
-        
+        mCalibGraph->changeXScale(mMajorScale, mMinorScale);
         // ------------------------------------------------------------
         //  Show zones if calibrated data are outside study period
         // ------------------------------------------------------------
@@ -343,6 +365,7 @@ void CalibrationView::updateGraphs()
             mRefGraphView->setDate(mDate, tmpSettings);
 
             mRefGraphView->zoomX(mTminDisplay, mTmaxDisplay);
+            mRefGraphView->changeXScale(mMajorScale, mMinorScale);
 
         }
         mDrawing->setRefGraph(mRefGraphView);
@@ -362,17 +385,7 @@ void CalibrationView::updateGraphs()
             mDrawing->setCalibTitle(tr("Typological date"));
             mDrawing->setCalibComment("HPD = " + mHPDEdit->text() + " %");
         }
-    } else {
-//            GraphZone zone;
-//            zone.mXStart = mSettings.getTminFormated();
-//            zone.mXEnd = mSettings.getTmaxFormated();
-//            zone.mColor = QColor(217, 163, 69);
-//            zone.mColor.setAlpha(35);
-//            zone.mText = tr("Individual calibration not digitally computable ...");
-//            mCalibGraph->addZone(zone);
-//            mDrawing->setCalibGraph(mCalibGraph);
     }
-    
 
     updateLayout();
 }
@@ -402,6 +415,24 @@ void CalibrationView::updateZoom()
         
     } else
         updateScroll();
+
+}
+
+void CalibrationView::updateScaleX()
+{
+    QString str = mMajorScaleEdit->text();
+    bool isNumber(true);
+    mMajorScale =  locale().toDouble(&str, &isNumber);
+    if (!isNumber)
+        return;
+
+    str = mMinorScaleEdit->text();
+    mMinorScale =  locale().toDouble(&str, &isNumber);
+
+    if (isNumber) {
+        mCalibGraph->changeXScale(mMajorScale, mMinorScale);
+        mRefGraphView->changeXScale(mMajorScale, mMinorScale);
+    }
 
 }
 
@@ -520,10 +551,7 @@ void CalibrationView::resizeEvent(QResizeEvent* e)
     } else
         setVisible(true);
 
-
-//QWidget::resizeEvent(e);
     update();
-    //repaint();
 
 }
 void CalibrationView::paintEvent(QPaintEvent* e)
@@ -551,13 +579,6 @@ void CalibrationView::updateLayout()
         mDrawing->setGeometry(mButtonWidth, 0, 0, 0);
         return;
     }
- /*   if (!mDate.mPlugin || width()<0 || height()<0) {
-        setVisible(false);
-        return;
-
-    } else
-        setVisible(true);
-*/
 
     QFontMetrics fm (font());
     const int textHeight (fm.height() + 3);
@@ -573,8 +594,7 @@ void CalibrationView::updateLayout()
     mResultsClipBut->setGeometry(0, y, mButtonWidth, mButtonWidth);
     y += mResultsClipBut->height();
 
-
-    const int separatorHeight (height()- y - 6*textHeight - 6* verticalSpacer);
+    const int separatorHeight (height()- y - 10*textHeight - 10* verticalSpacer);
     frameSeparator->setGeometry(0, y, mButtonWidth, separatorHeight);
     y += frameSeparator->height() + verticalSpacer;
 
@@ -585,7 +605,17 @@ void CalibrationView::updateLayout()
     mEndLab->setGeometry(0, y, mButtonWidth, textHeight);
     y += mEndLab->height();
     mEndEdit->setGeometry(3, y, mButtonWidth-6, textHeight);
-    y += mEndEdit->height() + 3*verticalSpacer;
+    y += mEndEdit->height() + verticalSpacer;
+
+    mMajorScaleLab->setGeometry(0, y, mButtonWidth, textHeight);
+    y += mMajorScaleLab->height();
+    mMajorScaleEdit->setGeometry(3, y, mButtonWidth-6, textHeight);
+    y += mMajorScaleEdit->height() + verticalSpacer;
+    mMinorScaleLab->setGeometry(0, y, mButtonWidth, textHeight);
+    y += mMinorScaleLab->height();
+    mMinorScaleEdit->setGeometry(3, y, mButtonWidth-6, textHeight);
+    y += mMinorScaleEdit->height() + 3*verticalSpacer;
+
     mHPDLab->setGeometry(0, y, mButtonWidth, textHeight);
     y += mHPDLab->height();
     mHPDEdit->setGeometry(3, y, mButtonWidth-6, textHeight);

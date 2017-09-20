@@ -96,6 +96,7 @@ public slots:
     {
         Q_UNUSED(margin);
     }
+    void changeXScale (const double &major, const int & minor) {mGraph->changeXScale(major,minor);}
 
 protected:
     ProjectSettings mSettings;

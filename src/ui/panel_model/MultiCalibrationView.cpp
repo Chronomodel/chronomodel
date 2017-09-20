@@ -16,7 +16,9 @@ mTminDisplay(-INFINITY),
 mTmaxDisplay(INFINITY),
 mThreshold(95),
 mGraphHeight(105),
-mCurveColor(Painting::mainColorDark)
+mCurveColor(Painting::mainColorDark),
+  mMajorScale (100),
+  mMinorScale (4)
 {
     setMouseTracking(true);
     mDrawing = new MultiCalibrationDrawing(this);
@@ -106,6 +108,22 @@ mCurveColor(Painting::mainColorDark)
     mEndEdit = new LineEdit(this);
     mEndEdit->setText("1000");
 
+    mMajorScaleLab = new Label(tr("Maj. Int"), this);
+    mMajorScaleLab->setAlignment(Qt::AlignHCenter);
+    mMajorScaleLab->setLight();
+
+    mMajorScaleEdit = new LineEdit(this);
+    mMajorScaleEdit->setToolTip(tr("Enter a value of Major Interval for the scale under the curves"));
+    mMajorScaleEdit->setText(locale().toString(mMajorScale));
+
+    mMinorScaleLab = new Label(tr("Min. Cnt"), this);
+    mMinorScaleLab->setAlignment(Qt::AlignHCenter);
+    mMinorScaleLab->setLight();
+
+    mMinorScaleEdit = new LineEdit(this);
+    mMinorScaleEdit->setToolTip(tr("Enter a value of Minior Interval Count for the scale under the curves"));
+    mMinorScaleEdit->setText(locale().toString(mMinorScale));
+
     mHPDLab->raise();
     mHPDEdit->raise();
 
@@ -118,6 +136,9 @@ mCurveColor(Painting::mainColorDark)
 
     connect(mStartEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &MultiCalibrationView::updateScroll);
     connect(mEndEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &MultiCalibrationView::updateScroll);
+    connect(mMajorScaleEdit, &LineEdit::editingFinished, this, &MultiCalibrationView::updateScaleX);
+    connect(mMinorScaleEdit, &LineEdit::editingFinished, this, &MultiCalibrationView::updateScaleX);
+
     connect(mHPDEdit, &QLineEdit::textEdited, this, &MultiCalibrationView::updateHPDGraphs);
     connect(mImageSaveBut, &Button::clicked, this, &MultiCalibrationView::exportFullImage);
     connect(mImageClipBut, &Button::clicked, this, &MultiCalibrationView::copyImage);
@@ -216,15 +237,26 @@ void MultiCalibrationView::updateLayout()
 
     mStartLab->setGeometry(x0, y, mButtonWidth, textHeight);
     y += mStartLab->height();
-    mStartEdit->setGeometry(x0+3, y, mButtonWidth-6, textHeight);
+    mStartEdit->setGeometry(x0 + 3, y, mButtonWidth-6, textHeight);
     y += mStartEdit->height() + verticalSpacer;
     mEndLab->setGeometry(x0, y, mButtonWidth, textHeight);
     y += mEndLab->height();
-    mEndEdit->setGeometry(x0+3, y, mButtonWidth-6, textHeight);
-    y += mEndEdit->height() + 3*verticalSpacer;
+    mEndEdit->setGeometry(x0 + 3, y, mButtonWidth-6, textHeight);
+    y += mEndEdit->height() + verticalSpacer;
+
+    mMajorScaleLab->setGeometry(x0, y, mButtonWidth, textHeight);
+    y += mMajorScaleLab->height();
+    mMajorScaleEdit->setGeometry(x0 + 3, y, mButtonWidth-6, textHeight);
+    y += mMajorScaleEdit->height() + verticalSpacer;
+    mMinorScaleLab->setGeometry(x0, y, mButtonWidth, textHeight);
+    y += mMinorScaleLab->height();
+    mMinorScaleEdit->setGeometry(x0 + 3, y, mButtonWidth-6, textHeight);
+    y += mMinorScaleEdit->height() + 3*verticalSpacer;
+
+
     mHPDLab->setGeometry(x0, y, mButtonWidth, textHeight);
     y += mHPDLab->height();
-    mHPDEdit->setGeometry(x0+3, y, mButtonWidth-6, textHeight);
+    mHPDEdit->setGeometry(x0 + 3, y, mButtonWidth-6, textHeight);
 
     const int graphWidth = width() - mButtonWidth;
 
@@ -315,6 +347,7 @@ void MultiCalibrationView::updateGraphList()
 
             calibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
             calibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
+            calibGraph->changeXScale(mMajorScale, mMinorScale);
             calibGraph->setRendering(GraphView::eHD);
 
             graphList.append(calibGraph);
@@ -387,6 +420,7 @@ void MultiCalibrationView::updateGraphList()
 
                 calibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
                 calibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
+                calibGraph->changeXScale(mMajorScale, mMinorScale);
                 calibGraph->setRendering(GraphView::eHD);
                 graphList.append(calibGraph);
                 QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
@@ -504,6 +538,30 @@ void MultiCalibrationView::updateScroll()
             updateGraphsZoom();
     else
         return;
+
+}
+
+void MultiCalibrationView::updateScaleX()
+{
+    QString str = mMajorScaleEdit->text();
+    bool isNumber(true);
+    mMajorScale =  locale().toDouble(&str, &isNumber);
+    if (!isNumber)
+        return;
+
+    str = mMinorScaleEdit->text();
+    mMinorScale =  locale().toDouble(&str, &isNumber);
+
+    if (isNumber) {
+        QList<GraphView*> *graphList = mDrawing->getGraphList();
+
+        for (GraphView* gr : *graphList) {
+            gr->changeXScale(mMajorScale, mMinorScale);
+           // gr->setCurrentX(mTminDisplay, mTmaxDisplay);
+           // gr->forceRefresh();
+        }
+
+    }
 
 }
 

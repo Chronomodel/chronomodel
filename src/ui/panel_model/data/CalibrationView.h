@@ -40,6 +40,7 @@ protected:
 
 public slots:
     virtual void setVisible(bool visible);
+    void updateScaleX();
 
 private slots:
     void updateGraphs();
@@ -84,8 +85,17 @@ private:
     Label* mEndLab;
     LineEdit* mEndEdit;
 
+    Label* mMajorScaleLab;
+    LineEdit* mMajorScaleEdit;
+
+    Label* mMinorScaleLab;
+    LineEdit* mMinorScaleEdit;
+
     double mTminDisplay;
     double mTmaxDisplay;
+
+    double mMajorScale;
+    int mMinorScale;
 };
 
 #endif

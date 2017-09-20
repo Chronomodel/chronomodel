@@ -37,7 +37,7 @@ protected:
 public slots:
     virtual void setVisible(bool visible);
     void updateMultiCalib(); // come from ModelView
-
+    void updateScaleX();
 
 private slots:
     void updateHPDGraphs(const QString & thres);
@@ -85,6 +85,19 @@ private:
 
     Label* mEndLab;
     LineEdit* mEndEdit;
+
+    Label* mMajorScaleLab;
+    LineEdit* mMajorScaleEdit;
+
+    Label* mMinorScaleLab;
+    LineEdit* mMinorScaleEdit;
+
+ //   double mTminDisplay;
+   // double mTmaxDisplay;
+
+    double mMajorScale;
+    int mMinorScale;
+
 
     double mTminDisplay;
     double mTmaxDisplay;
