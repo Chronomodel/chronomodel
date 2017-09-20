@@ -55,7 +55,7 @@ public:
     
     // Options
     
-    void setBackgroundColor(const QColor& aColor);
+    void setBackgroundColor(const QColor &color);
     QColor getBackgroundColor() const;
     
     void addInfo(const QString& info);
@@ -116,6 +116,9 @@ public:
     // Set value formatting functions
     void setFormatFunctX(FormatFunc f);
     void setFormatFunctY(FormatFunc f);
+
+    void setXScale(const double &major, const int &minorCount) { mAxisToolX.setScale(major, minorCount);}
+    void setYScale(const double &major, const int &minorCount) { mAxisToolY.setScale(major, minorCount);}
     
     // Paint
     
@@ -139,7 +142,7 @@ public slots:
     void exportCurrentDensityCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step =1.) const;
 
     void exportCurrentVectorCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, bool writeInRows, int offset = 0) const;
-
+    void changeXScale (const double &major, const int & minor);
 
 protected:
     void adaptMarginBottom();

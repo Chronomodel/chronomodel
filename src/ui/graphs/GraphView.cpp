@@ -12,14 +12,14 @@
 
 class ProjectSettings;
 
-//pragma mark Constructor / Destructor
+// Constructor / Destructor
 
 #if GRAPH_OPENGL
 GraphView::GraphView(QWidget *parent):QOpenGLWidget(parent),
 #else
 GraphView::GraphView(QWidget *parent):QWidget(parent),
 #endif
-mStepMinWidth(100), // define secondary scale on axis
+mStepMinWidth(3), // define when the minor scale on axis can appear
 mXAxisLine(true),
 mXAxisArrow(true),
 mXAxisTicks(true),
@@ -63,7 +63,6 @@ mUseTip(true)
     setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
     
     setRangeY(0., 1.);
-    //mAxisToolX.updateValues(width(), mStepMinWidth, mCurrentMinX, mCurrentMaxX);
     resetNothingMessage();
 
     connect(this, &GraphView::signalCurvesThickness, this, &GraphView::updateCurvesThickness);
@@ -71,7 +70,7 @@ mUseTip(true)
 }
 
 GraphView::GraphView(const GraphView& graph, QWidget *parent):QWidget(parent),
-mStepMinWidth(graph.mStepMinWidth), // define secondary scale on axis
+mStepMinWidth(graph.mStepMinWidth), // define minorCount scale on axis
 mXAxisLine(graph.mStepMinWidth),
 mXAxisArrow(graph.mXAxisArrow),
 mXAxisTicks(graph.mStepMinWidth),
@@ -117,7 +116,6 @@ mUseTip(graph.mUseTip)
     setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
 
     setRangeY(0., 1.);
-    //mAxisToolX.updateValues(width(), mStepMinWidth, mCurrentMinX, mCurrentMaxX);
     resetNothingMessage();
 
     connect(this, &GraphView::signalCurvesThickness, this, &GraphView::updateCurvesThickness);
@@ -131,7 +129,7 @@ mUseTip(graph.mUseTip)
 
 void GraphView::copyFrom(const GraphView& graph)
 {
-    mStepMinWidth = graph.mStepMinWidth; // define secondary scale on axis
+    mStepMinWidth = graph.mStepMinWidth; // define minorCount scale on axis
     mXAxisLine = graph.mStepMinWidth;
     mXAxisArrow = graph.mXAxisArrow;
     mXAxisTicks = graph.mStepMinWidth;
@@ -176,7 +174,7 @@ void GraphView::copyFrom(const GraphView& graph)
     setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
 
     setRangeY(0., 1.);
-    //mAxisToolX.updateValues(width(), mStepMinWidth, mCurrentMinX, mCurrentMaxX);
+
     resetNothingMessage();
 
     mCurves = graph.mCurves;
@@ -232,13 +230,19 @@ void GraphView::zoomX(const type_data min, const type_data max)
     
 }
 
+void GraphView::changeXScale (const double &major, const int & minor)
+{
+    setXScale(major, minor);
+    repaintGraph(true);
+}
+
 /* ------------------------------------------------------
  *  Options
  * ------------------------------------------------------*/
 
-void GraphView::setBackgroundColor(const QColor& aColor)
+void GraphView::setBackgroundColor(const QColor &color)
 {
-    mBackgroundColor = aColor;
+    mBackgroundColor = color;
     repaintGraph(true);
 }
 
@@ -500,9 +504,10 @@ void GraphView::setCurveVisible(const QString& name, const bool visible)
 
 GraphCurve* GraphView::getCurve(const QString& name)
 {
-    for (int i=0; i<mCurves.size(); ++i)
-        if (mCurves.at(i).mName == name)
-            return &mCurves[i];
+    //for (int i=0; i<mCurves.size(); ++i)
+    for (auto &&cu : mCurves)
+        if (cu.mName == name)
+            return &cu;
 
     return nullptr;
 }
@@ -892,7 +897,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolY.mShowText = mYAxisValues;
 
         mAxisToolY.updateValues(mGraphHeight, mStepMinWidth, mMinY, mMaxY);
-        mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), (qreal) 1.,stringWithAppSettings);
+        mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), (qreal) 3.,stringWithAppSettings);
      }
     /* ----------------------------------------------------
      *  Graph specific infos at the top right

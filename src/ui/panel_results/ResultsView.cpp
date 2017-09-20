@@ -43,7 +43,6 @@ mModel(nullptr),
 mMargin(5),
 mOptionsW(200),
 mLineH(15),
-//mGraphLeft(130), //130
 mRulerH(40),
 mTabsH(30),
 mGraphsH(150),
@@ -59,7 +58,9 @@ mCurrentVariable(GraphViewResults::eTheta),
 mBandwidthUsed(1.06),
 mThresholdUsed(95.0),
 mNumberOfGraph(APP_SETTINGS_DEFAULT_SHEET),
-mMaximunNumberOfVisibleGraph(0)
+mMaximunNumberOfVisibleGraph(0),
+mMajorScale (100),
+mMinorCountScale (4)
 {
     mSettings = ProjectSettings();
 
@@ -245,6 +246,23 @@ mMaximunNumberOfVisibleGraph(0)
     mXScaleSpin->setValue(sliderToZoom(mXSlider->value()));
     mXScaleSpin->setFixedSize(mCurrentXMinEdit->width(), fm.height()+ 10);
     mXScaleSpin->setToolTip(tr("Enter zoom value to magnify the curves on X span"));
+
+    mMajorScaleLab = new Label(tr("Major Interval"), mSpanGroup);
+    mMajorScaleLab->setFixedSize(fm.width(mMajorScaleLab->text()), fm.height() + 5);
+
+    mMajorScaleEdit = new LineEdit(mSpanGroup);
+    mMajorScaleEdit->setText(locale().toString(mMajorScale));
+    mMajorScaleEdit->setFixedSize(wEdit, fm.height()+2);
+    mMajorScaleEdit->setToolTip(tr("Enter a value of Major Interval for the scale under the curves"));
+
+
+    mMinorScaleLab = new Label(tr("Minor Interval Count"), mSpanGroup);
+    mMinorScaleLab->setFixedSize(fm.width(mMinorScaleLab->text()), fm.height() + 5);
+
+    mMinorScaleEdit = new LineEdit(mSpanGroup);
+    mMinorScaleEdit->setText(locale().toString(mMinorCountScale));
+    mMinorScaleEdit->setFixedSize(wEdit, fm.height()+2);
+    mMinorScaleEdit->setToolTip(tr("Enter a value of Minior Interval Count for the scale under the curves"));
 
     /* -------------------------------------- Graphic Options (old mDisplayGroup) ---------------------------------------------------*/
     
@@ -439,6 +457,10 @@ mMaximunNumberOfVisibleGraph(0)
     connect(mCurrentXMinEdit, &LineEdit::editingFinished, this, &ResultsView::editCurrentMinX);
     connect(mCurrentXMaxEdit, &LineEdit::editingFinished, this, &ResultsView::editCurrentMaxX);
     connect(mDisplayStudyBut, &Button::clicked, this, &ResultsView::setStudyPeriod);
+
+    connect(mMajorScaleEdit, &LineEdit::editingFinished, this, &ResultsView::updateScaleX);
+    connect(mMinorScaleEdit, &LineEdit::editingFinished, this, &ResultsView::updateScaleX);
+
 
     connect(mRuler, &Ruler::positionChanged, this, &ResultsView::updateScroll);
     
@@ -896,12 +918,34 @@ void ResultsView::updateTabDisplay(const int &i)
 
         int heiTemp = mXScaleSpin->height();
         mXScaleLab->setGeometry(mMargin, ySpan , wBut - 4*mMargin, heiTemp);
-        mXScaleSpin->move(mOptionsW - mXScaleSpin->width() - mMargin, ySpan);//, mCurrentXMinEdit->width(), heiTemp);
+        mXScaleSpin->move(mOptionsW - mXScaleSpin->width() - mMargin, ySpan);
         const int xSliderWidth = mOptionsW - mXScaleLab->width() - mXScaleSpin->width() - 4*mMargin;
         mXSlider->setGeometry(mXScaleLab->x() + mXScaleLab->width() + mMargin , ySpan, xSliderWidth, heiTemp );
         ySpan += mXScaleSpin->height() + mMargin;
 
-        // fit the size and the position of the widget of the group in the mOptionsWidget coordonnate
+        if (mCurrentTypeGraph != GraphViewResults::eCorrel) {
+            mMajorScaleLab->setVisible(true);
+            mMajorScaleEdit->setVisible(true);
+            mMinorScaleLab->setVisible(true);
+            mMinorScaleEdit->setVisible(true);
+
+            mMajorScaleLab->setGeometry(mMargin, ySpan , wBut - 4*mMargin, heiTemp);
+            mMajorScaleEdit->move(mOptionsW - mMargin - mMajorScaleEdit->width(), ySpan );
+            ySpan += mMajorScaleEdit->height() + mMargin;
+
+            mMinorScaleLab->setGeometry(mMargin, ySpan , wBut - 4*mMargin, heiTemp);
+            mMinorScaleEdit->move(mOptionsW - mMargin - mMinorScaleEdit->width(), ySpan );
+            ySpan += mMinorScaleEdit->height() + mMargin;
+
+        } else {
+            mMajorScaleLab->setVisible(false);
+            mMajorScaleEdit->setVisible(false);
+            mMinorScaleLab->setVisible(false);
+            mMinorScaleEdit->setVisible(false);
+        }
+
+
+        // Fit the size and the position of the widget of the group in the mOptionsWidget coordonnate
         mSpanGroup->setGeometry(0, mSpanTitle->y() + mSpanTitle->height() , mOptionsW, ySpan);
 
         /* ----------------------------------------------------------
@@ -2266,6 +2310,7 @@ void ResultsView::updateScales()
         mResultMinX = 0.;
         mResultMaxX = 40.;
         mRuler->setRange(mResultMinX, mResultMaxX);
+        mRuler->setScale(10, 10);
 
         forceXSlideSetValue = true;
         mXSlider->setRange(1, 5);   // we can zoom 5 time
@@ -2274,6 +2319,7 @@ void ResultsView::updateScales()
         mXScaleSpin->setRange(1, 5);
         mXScaleSpin->setSingleStep(1.);
         mXScaleSpin->setDecimals(0);
+
     }
    
     /* ------------------------------------------
@@ -2497,7 +2543,37 @@ int ResultsView::zoomToSlider(const double &zoom)
 
 void ResultsView::updateScaleX()
 {
-    updateZoomX();
+    QString str = mMajorScaleEdit->text();
+    bool isNumber(true);
+    mMajorScale =  locale().toDouble(&str, &isNumber);
+    if (!isNumber)
+        return;
+
+    str = mMinorScaleEdit->text();
+    mMinorCountScale =  locale().toDouble(&str, &isNumber);
+
+    if (isNumber) {
+
+        mRuler->setScale (mMajorScale, mMinorCountScale);
+
+        if (mTabByScene->currentIndex() == 0) {
+            for (GraphViewResults* eventGraph : mByEventsGraphs)
+                if (eventGraph)
+                    eventGraph->changeXScale(mMajorScale, mMinorCountScale);
+        }
+        else if (mTabByScene->currentIndex() == 1) {
+            for (GraphViewResults* phaseGraph : mByPhasesGraphs)
+                if (phaseGraph)
+                    phaseGraph->changeXScale(mMajorScale, mMinorCountScale);
+
+       }
+       else if (mTabByScene->currentIndex() == 2) {
+            for (GraphViewResults* tempoGraph : mByTempoGraphs)
+                if (tempoGraph)
+                    tempoGraph->changeXScale(mMajorScale, mMinorCountScale);
+
+       }
+    }
 }
 
 /**

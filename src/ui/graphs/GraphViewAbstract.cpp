@@ -117,7 +117,7 @@ void GraphViewAbstract::setPrevParameter()
  * @param aConstainResult
  * @return
  */
-qreal GraphViewAbstract::getXForValue(const type_data& aValue, const bool& aConstainResult)
+qreal GraphViewAbstract:: getXForValue(const type_data& aValue, const bool& aConstainResult)
 {
     const qreal rigthBlank (5.); // the same name and the same value as AxisTool::updateValues()
     return (qreal)(mMarginLeft + valueForProportion(aValue, mCurrentMinX, mCurrentMaxX, (type_data)0., (type_data)(mGraphWidth - rigthBlank), aConstainResult));

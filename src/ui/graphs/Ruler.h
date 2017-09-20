@@ -24,6 +24,8 @@ public:
     void setRange(const double min, const double max);
     void setCurrent(const double min, const double max);
     void currentChanged(const double min, const double max);
+    void setScale (const double &major, const double &minorCount);
+
     double getZoom();
     double getRealValue();
     

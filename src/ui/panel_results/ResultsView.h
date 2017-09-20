@@ -121,9 +121,13 @@ private slots:
     void XScaleSpinChanged(double value);
     void setXScaleSlide(const int value);
     void XScaleSliderChanged( int value);
-    void updateScaleX();
+
     void updateScaleY(int value);
+    // connected to mMajorScaleEdit and mMinorScaleEdit
+    void updateScaleX();
     
+
+
     void updateFont();
     void updateThickness(const int value);
     void updateOpacity(const int value);
@@ -242,6 +246,11 @@ private:
     Label* mXScaleLab;
     QSlider* mXSlider;
     QDoubleSpinBox* mXScaleSpin;
+
+    Label* mMajorScaleLab;
+    LineEdit* mMajorScaleEdit;
+    Label* mMinorScaleLab;
+    LineEdit* mMinorScaleEdit;
     /* used to controle the signal XScaleSpin::valueChanged () when we need to change the value
      * xScaleChanged(int value)
      * emit xScaleUpdate(value);
@@ -323,6 +332,8 @@ private:
     double mThresholdUsed;
     int mNumberOfGraph;
     int mMaximunNumberOfVisibleGraph;
+    double mMajorScale;
+    int mMinorCountScale;
 };
 
 #endif

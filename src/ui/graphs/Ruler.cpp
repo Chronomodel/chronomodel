@@ -14,9 +14,9 @@ mCurrentMax(1000.),
 mMin(0.),
 mMax(1000.),
 mZoomProp(1.),
-mMarginLeft(20),
-mMarginRight(20),
-mStepMinWidth(50),//define secondary scale
+mMarginLeft(20.),
+mMarginRight(20.),
+mStepMinWidth(3.),//define when minor scale can appear
 mStepWidth(100)
 {
     mScrollBarHeight = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
@@ -34,23 +34,8 @@ mStepWidth(100)
     
     mAxisTool.mIsHorizontal = true;
     mAxisTool.mShowArrow = false;
-    
-    /*
-     mScrollBarHeight = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
-     
-     setMouseTracking(true);
-     
-     mScrollBar = new QScrollBar(Qt::Horizontal, this);
-     mScrollBar->setRange(0, 0);
-     mScrollBar->setSingleStep(1);
-     mScrollBar->setPageStep(10000);
-     mScrollBar->setTracking(true);
-     
-     connect(mScrollBar, SIGNAL(valueChanged(int)), this, SLOT(updateScroll()));
-     }
-     */
-    
-    
+    mAxisTool.mShowSubSubs = true;
+
     
 }
 
@@ -59,7 +44,7 @@ Ruler::~Ruler()
     
 }
 
-//#pragma mark Areas
+// Areas
 void Ruler::clearAreas()
 {
     mAreas.clear();
@@ -76,7 +61,7 @@ void Ruler::addArea(double start, double end, const QColor& color)
     update();
 }
 
-//#pragma mark Range & Zoom & Scroll & Current
+// Range & Zoom & Scroll & Current
 
 double Ruler::getRealValue()
 {
@@ -86,6 +71,13 @@ double Ruler::getRealValue()
 void Ruler::scrollValueChanged(double value)
 {
     emit valueChanged(value);
+}
+
+void Ruler::setScale (const double &major, const double &minorCount)
+{
+    mAxisTool.mShowSubSubs = true;
+    mAxisTool.setScale(major, minorCount);
+    update();
 }
 
 void Ruler::setRange(const double min, const double max)
@@ -128,6 +120,7 @@ void Ruler::setCurrent(const double min, const double max)
     layout();
     update();
 }
+
 void Ruler::currentChanged(const double min, const double max)
 {    
     setCurrent(min, max);
@@ -200,6 +193,7 @@ void Ruler::updateScroll()
         mCurrentMax = mMax;
     }
 
+    mAxisTool.mShowSubSubs = true; // updateValues can set mShowSubSubs to false;
     mAxisTool.updateValues(mRulerRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
     
     emit positionChanged(mCurrentMin, mCurrentMax);
@@ -208,7 +202,7 @@ void Ruler::updateScroll()
     
  }
 
-//#pragma mark Layout & Paint
+// Layout & Paint
 void Ruler::setFont(const QFont &font)
 {
     QWidget::setFont(font);
@@ -230,6 +224,8 @@ void Ruler::layout()
 
     mRulerRect = QRectF(mMarginLeft + penSize, mScrollBarHeight, width() - mMarginRight - mMarginLeft, height() - mScrollBarHeight);
     mScrollBar->setGeometry(mMarginLeft , 0., mRulerRect.width()  , mScrollBarHeight);
+
+    mAxisTool.mShowSubSubs = true;
     mAxisTool.updateValues(mRulerRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
 
     update();
