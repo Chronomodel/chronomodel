@@ -280,6 +280,9 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         mGraph->addCurve(curveMeasureSup);
         mGraph->addCurve(curveMeasureInf);
         mGraph->setFormatFunctY(0);
+
+        const int yScale = int(log10(yMax-yMin)) -1;
+        mGraph->setYScale(std::pow(10, yScale), 4);
     }
 }
 

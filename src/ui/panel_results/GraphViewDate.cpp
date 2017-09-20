@@ -287,10 +287,12 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
              mTitle = QString(tr("Individual Std") + " : " + mDate->mName);
 
         generateCorrelCurves(mChains, variableDate);
+        mGraph->setXScale(10, 10);
     }
     else {
         mTitle = QString(tr("Data") + " : " + mDate->mName);
         mGraph->resetNothingMessage();
+
     }
 
 }

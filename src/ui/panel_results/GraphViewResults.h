@@ -103,8 +103,6 @@ protected:
 
     qreal mHeightForVisibleAxis;
 
-   // QPropertyAnimation* mAnimation;
-
     //-----
 
 public:
@@ -197,7 +195,7 @@ public slots:
     void imageToClipboard();
     void resultsToClipboard();
     void saveGraphData() const; // must be accessible by ResultsView
-
+    void changeXScale(const double &major, const int &minor) {mGraph->changeXScale(major, minor); update();}
     
 protected:
     

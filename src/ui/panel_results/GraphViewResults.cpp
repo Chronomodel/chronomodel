@@ -10,7 +10,7 @@
 #include <QPointer>
 
 
-//#pragma mark Constructor / Destructor
+//  Constructor / Destructor
 
 GraphViewResults::GraphViewResults(QWidget *parent):QWidget(parent),
 mCurrentTypeGraph(ePostDistrib),
@@ -25,9 +25,7 @@ mShowSelectedRect(true),
 mMainColor(QColor(50, 50, 50)),
 mMargin(5),
 mLineH(20),
-//mGraphLeft(128),
 mTopShift(0),
-//mButtonsVisible(true),
 mHeightForVisibleAxis(100)
 {
     setGeometry(QRect(0,0,200,100));
@@ -57,7 +55,7 @@ mHeightForVisibleAxis(100)
     mGraph->setMargins(50, 10, 5, 30);
     mGraph->setRangeY(0, 1);
     mGraph->setMarginBottom(mGraph->font().pointSizeF() + 10);
-    
+
     mTextArea = new QTextEdit(this);
     mTextArea->setFrameStyle(QFrame::HLine);
     QPalette palette = mTextArea->palette();
@@ -71,47 +69,13 @@ mHeightForVisibleAxis(100)
     mTextArea->setVisible(false);
     mTextArea->setReadOnly(true);
     
-    /*mImageSaveBut = new Button(tr("Save"), this);
-    mImageSaveBut->setIcon(QIcon(":picture_save.png"));
-    mImageSaveBut->setFlatVertical();
-    mImageSaveBut->setToolTip(tr("Save image as file"));
-    
-    mImageClipBut = new Button(tr("Copy"), this);
-    mImageClipBut->setIcon(QIcon(":clipboard_graph.png"));
-    mImageClipBut->setFlatVertical();
-    mImageClipBut->setToolTip(tr("Copy image to clipboard"));
-    
-    mResultsClipBut = new Button(tr("Copy"), this);
-    mResultsClipBut->setIcon(QIcon(":text.png"));
-    mResultsClipBut->setFlatVertical();
-    mResultsClipBut->setToolTip(tr("Copy text results to clipboard"));
-    
-    mDataSaveBut = new Button(tr("Save"), this);
-    mDataSaveBut->setIcon(QIcon(":data.png"));
-    mDataSaveBut->setFlatVertical();
-    mDataSaveBut->setToolTip(tr("Save graph data to file"));
- */
- /*   mAnimation = new QPropertyAnimation(this);
-    mAnimation->setPropertyName("geometry");
-    mAnimation->setDuration(200);
-    mAnimation->setTargetObject(this);
-    mAnimation->setEasingCurve(QEasingCurve::Linear);
- */
-  /*  connect(mImageSaveBut, &Button::clicked, this, &GraphViewResults::saveAsImage);
-    connect(mImageClipBut, &Button::clicked, this, &GraphViewResults::imageToClipboard);
-    connect(mResultsClipBut, &Button::clicked, this, &GraphViewResults::resultsToClipboard);
-    connect(mDataSaveBut, &Button::clicked, this, &GraphViewResults::saveGraphData);
-*/   // connect(this, &GraphViewResults::QWidget::clicked, this, GraphViewResults::)
-
-    //connect(this, &GraphViewResults::setGraphsThickness, mGraph, &GraphView::updateCurvesThickness);
-
     setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
         
 }
 
 GraphViewResults::~GraphViewResults()
 {
-    mGraph = nullptr;
+
 }
 
 void GraphViewResults::generateCurves(TypeGraph typeGraph, Variable variable)

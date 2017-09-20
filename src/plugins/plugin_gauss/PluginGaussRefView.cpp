@@ -88,7 +88,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
         } else if (mode == DATE_GAUSS_MODE_EQ) {
             QMap<double,double> refCurve;
             
-            for(double t=tminDisplay; t<=tmaxDisplay; t+=mSettings.mStep) {
+            for (double t=tminDisplay; t<=tmaxDisplay; t+=mSettings.mStep) {
                 const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
                 refCurve[t] = a * tRaw * tRaw + b * tRaw + c;
             }
@@ -98,6 +98,9 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             // Adjust scale :
             yMin = map_min_value(refCurve);
             yMax = map_max_value(refCurve);
+            const int xScale = int(log10(yMax-yMin)) -1;
+            mGraph->setYScale(std::pow(10, xScale), 4);
+
             
         } else if (mode == DATE_GAUSS_MODE_CURVE) {
             PluginGauss* plugin = (PluginGauss*)date.mPlugin;
@@ -149,7 +152,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             for ( QMap<double, double>::const_iterator &&iPt = curve.mDataMean.cbegin();  iPt!=curve.mDataMean.cend(); ++iPt) {
                 const double t (iPt.key());
                 const double tDisplay = DateUtils::convertToAppSettingsFormat(t);
-                if (tDisplay>tminDisplay && tDisplay<tmaxDisplay) {
+                if (tDisplay>=tminDisplay && tDisplay<=tmaxDisplay) {
                     const double error = plugin->getRefErrorAt(date.mData, t, mode) * 1.96;
 
                     curveG[t] = iPt.value();
@@ -201,9 +204,15 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             
             // Display reference curve name
            // mGraph->addInfo(tr("Ref : ") + ref_curve);
+
+            // Adjust Y scale :
+            yMin = map_min_value(curveG95Sup);
+            yMax = map_max_value(curveG95Inf);
+            const int yScale = int(log10(yMax-yMin)) -1;
+            mGraph->setYScale(std::pow(10, yScale), 4);
         }
         
-        if(mode != DATE_GAUSS_MODE_NONE) {
+        if (mode != DATE_GAUSS_MODE_NONE) {
             yMin = qMin(yMin, age - error * 1.96);
             yMax = qMax(yMax, age + error * 1.96);
 
