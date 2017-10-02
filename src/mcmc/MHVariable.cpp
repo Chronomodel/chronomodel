@@ -58,8 +58,13 @@ MHVariable::MHVariable( const MHVariable& origin)
 
 MHVariable::~MHVariable()
 {
-   mAllAccepts->clear();
-   mHistoryAcceptRateMH->clear();
+   //mAllAccepts->clear();
+   //mHistoryAcceptRateMH->clear();
+    
+    mAllAccepts->~QVector();// = nullptr;
+    mHistoryAcceptRateMH->~QVector();// = nullptr;
+    mRawTrace->~QVector();// = nullptr;;
+    mFormatedTrace->~QVector();// = nullptr;;
 }
 
 bool MHVariable::tryUpdate(const double x, const double rapport)

@@ -126,6 +126,7 @@ void Model::fromJson(const QJsonObject& json)
             const QJsonObject phase = phases.at(i).toObject();
             Phase* p = new Phase(Phase::fromJson(phase));
             mPhases.append(p);
+            p = nullptr;
         }
     }
 
@@ -141,7 +142,8 @@ void Model::fromJson(const QJsonObject& json)
 
             if (event.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
                 try {
-                    Event* e = new Event(Event::fromJson(event));
+                    Event* e = new Event();//Event::fromJson(event));
+                    e->copyFrom(Event::fromJson(event));
                     e->mMixingLevel = mMCMCSettings.mMixingLevel;
                     mNumberOfDates += e->mDates.size();
 
@@ -150,6 +152,7 @@ void Model::fromJson(const QJsonObject& json)
                         e->mDates[j].mColor = e->mColor;
                     }
                     mEvents.append(e);
+                    e = nullptr;
                 }
                 catch(QString error){
                     QMessageBox message(QMessageBox::Critical,
@@ -369,7 +372,7 @@ void Model::generateModelLog()
     }
     
     i = 0;
-    for (auto&& pPhase : mPhases) {
+    for (auto &&pPhase : mPhases) {
         log += line(textPurple("Phase (" + QString::number(i+1) + "/" + QString::number(mPhases.size()) + ") : " + pPhase->mName + " (" +
                                QString::number(pPhase->mEvents.size()) + " events"+
                                QString::number(pPhase->mConstraintsBwd.size()) + " const. back., " +
@@ -377,7 +380,7 @@ void Model::generateModelLog()
                                "<br>- Type : " + pPhase->getTauTypeText()));
         log += "<br>";
 
-        for (auto&& pEvent : pPhase->mEvents)
+        for (auto &&pEvent : pPhase->mEvents)
             log += line(textBlue("Event : " + pEvent->mName));
 
         log += "<hr>";
@@ -385,7 +388,7 @@ void Model::generateModelLog()
         ++i;
     }
 
-    i = 0;
+   // i = 0;
     for (auto&& pPhaseConst : mPhaseConstraints) {
         log += "<hr>";
         log += line(textBold(textPurple( QObject::tr("Succession") +" : "+ QObject::tr("from") +" "+ pPhaseConst->mPhaseFrom->mName +" "+ QObject::tr("to")+"  "+ pPhaseConst->mPhaseTo->mName)));

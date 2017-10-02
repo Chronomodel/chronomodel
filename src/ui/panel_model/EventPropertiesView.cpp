@@ -583,7 +583,7 @@ void EventPropertiesView::updateLayout()
             y += butPluginHeigth;
         }
 
-        x = listRect.x();
+       // x = listRect.x();
         y = listRect.y() + listRect.height();
         const int w = mButtonWidth; //listRect.width() / 5;
         const int h = mButtonWidth;

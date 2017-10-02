@@ -73,26 +73,26 @@ void Phase::copyFrom(const Phase& phase)
 
 Phase::~Phase()
 {
-   for (Event* ev: mEvents)
+   for (auto && ev: mEvents)
             ev = nullptr;
 
    mEvents.clear();
 
     if (!mConstraintsFwd.isEmpty()) {
-        for (PhaseConstraint* pc : mConstraintsFwd)
+        for (auto && pc : mConstraintsFwd)
             pc = nullptr;
 
         mConstraintsFwd.clear();
     }
     if (!mConstraintsBwd.isEmpty()) {
-        for (PhaseConstraint* pc : mConstraintsBwd)
+        for (auto && pc : mConstraintsBwd)
             pc = nullptr;
 
         mConstraintsBwd.clear();
     }
 }
 
-//#pragma mark Properties
+// Properties
 
 /**
  * @todo Check the copy of the color if mJson is not set

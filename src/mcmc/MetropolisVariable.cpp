@@ -78,7 +78,12 @@ MetropolisVariable::MetropolisVariable (const MetropolisVariable& origin)
 /** Destructor */
 MetropolisVariable::~MetropolisVariable()
 {
-    reset();
+    //reset();
+    mRawTrace = nullptr;
+    mFormatedTrace = nullptr;
+    
+    mCredibility.~QPair();
+    mHPD.~QMap();
     QObject::disconnect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
 
 }

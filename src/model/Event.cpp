@@ -89,7 +89,7 @@ void Event::copyFrom(const Event& event)
 
 Event::~Event()
 {
-    for (auto&& date : mDates) {
+    for (auto &&date : mDates) {
         date.mTheta.reset();
         date.mSigma.reset();
         date.mWiggle.reset();
@@ -100,18 +100,15 @@ Event::~Event()
     if (!mPhases.isEmpty())
         mPhases.clear();
 
-
     if (!mConstraintsFwd.isEmpty())
        mConstraintsFwd.clear();
 
-
     if (!mConstraintsBwd.isEmpty())
         mConstraintsBwd.clear();
-
 }
 
 
-//#pragma mark JSON
+// JSON
 Event Event::fromJson(const QJsonObject& json)
 {
     Event event;
@@ -134,17 +131,19 @@ Event Event::fromJson(const QJsonObject& json)
     
     
     const QJsonArray dates = json.value(STATE_EVENT_DATES).toArray();
-    for (int j=0; j<dates.size(); ++j) {
-        QJsonObject jdate = dates.at(j).toObject();
+    //for (int j=0; j<dates.size(); ++j) {
+    for (auto && date : dates) {
+        //QJsonObject jdate = dates.at(j).toObject();
         
-        Date d = Date::fromJson(jdate);
+        Date d;
+        d.fromJson(date.toObject());
         d.autoSetTiSampler(true);
         d.mMixingLevel=event.mMixingLevel;
         
         if (!d.isNull())
             event.mDates.append(d);
         else
-            throw QObject::tr("ERROR : data could not be created with plugin ") + jdate.value(STATE_DATE_PLUGIN_ID).toString();
+            throw QObject::tr("ERROR : data could not be created with plugin ") + date.toObject().value(STATE_DATE_PLUGIN_ID).toString();
 
     }
     return event;

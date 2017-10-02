@@ -191,8 +191,8 @@ void CalibrationDrawing::mouseMoveEvent(QMouseEvent* e)
 
 
     mMarkerX->move(x, mRefComment->y() + mRefComment->height() + mVerticalSpacer);
-    mMarkerY->resize(mRefGraphView->width(), mMarkerY->thickness());
-    mMarkerY->move(mRefGraphView->x(), y);
+    mMarkerY->resize(width(), mMarkerY->thickness());
+    mMarkerY->move(0, y);
 
 
     /*

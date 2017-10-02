@@ -22,7 +22,7 @@ mShowAllThumbs(true)
 
 EventItem::~EventItem()
 {
-    
+    mScene = nullptr;
 }
 
 /**
@@ -142,6 +142,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
                             i * (mEltsHeight + mEltsMargin));
                 dateItem->setPos(pos);
                 dateItem->setOriginalPos(pos);
+                dateItem = nullptr;
             }
             catch(QString error){
                 QMessageBox message(QMessageBox::Critical,

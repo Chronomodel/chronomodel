@@ -876,7 +876,8 @@ void Project::resetMCMC()
                 QJsonObject date = dates.at(j).toObject();
                 
                 try {
-                    Date d = Date::fromJson(date);
+                    Date d;
+                    d.fromJson(date);
                     if (!d.isNull()) {
                         date[STATE_DATE_METHOD] = (int)d.mPlugin->getDataMethod();
                         dates[j] = date;

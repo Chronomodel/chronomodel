@@ -181,7 +181,7 @@ void CalibrationView::setDate(const QJsonObject& date)
 
     try {
         mDate.init();
-        mDate = Date::fromJson(date);
+        mDate.fromJson(date);
         mDate.autoSetTiSampler(false);
 
         mDrawing->setTitle(mDate.mName + " (" + mDate.mPlugin->getName() + ")");
@@ -391,7 +391,7 @@ void CalibrationView::updateGraphs()
 
 void CalibrationView::updateZoom()
 {
-    type_data min = mCalibGraph->minimumX();
+/*    type_data min = mCalibGraph->minimumX();
     type_data max = mCalibGraph->maximumX();
     type_data minProp = 5. / (max - min);
     type_data prop = 1;
@@ -405,14 +405,10 @@ void CalibrationView::updateZoom()
         if (rangeBefore > 0)
             posProp = 1;
 
-        // Set scroll to correct position
-        /*type_data pos (0.);
-        type_data rangeAfter = (type_data) 10;
-        if (rangeAfter > 0)
-            pos = floor(posProp * rangeAfter);
-        */
+       
         
     } else
+*/
         updateScroll();
 
 }

@@ -43,7 +43,8 @@ void DatesList::setEvent(const QJsonObject& event)
             QJsonObject date = dates[i].toObject();
             
             try {
-                Date d = Date::fromJson(date);
+                Date d;
+                d.fromJson(date);
                 if (!d.isNull()) {
                     QListWidgetItem* item = new QListWidgetItem();
                     item->setFlags(Qt::ItemIsSelectable

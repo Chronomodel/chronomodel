@@ -29,7 +29,8 @@ mGreyedOut(false)
     mDatesAnim->setTimeLine(mDatesAnimTimer);
 
     // Date::fromJson doesn't create mCalibration
-    Date d = Date::fromJson(date);
+    Date d;
+    d.fromJson(date);
     ProjectSettings s = ProjectSettings::fromJson(settings);
 
     d.mSettings.mTmin = s.mTmin;
@@ -50,6 +51,7 @@ mGreyedOut(false)
                 mCalibThumb = d.generateTypoThumb();
         }
     }
+    
 }
 
 const QJsonObject& DateItem::date() const

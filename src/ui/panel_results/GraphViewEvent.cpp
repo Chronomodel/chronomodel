@@ -292,9 +292,9 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
     
     bool isFixedBound = false;
 
-    EventKnown* bound = nullptr;
+  //  EventKnown* bound = nullptr;
     if (mEvent->type() == Event::eKnown) {
-        bound = dynamic_cast<EventKnown*>(mEvent);
+  //      bound = dynamic_cast<EventKnown*>(mEvent);
         isFixedBound = true;
 
     }

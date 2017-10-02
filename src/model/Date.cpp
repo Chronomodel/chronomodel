@@ -15,7 +15,37 @@
 Date::Date():
 mName("No Named Date")
 {
-    init();   
+   // init();
+    mColor = Qt::blue;
+    mPlugin = nullptr;
+    mTheta.mSupport = MetropolisVariable::eR;
+    mSigma.mSupport = MetropolisVariable::eRp;
+    mWiggle.mSupport = MetropolisVariable::eR;
+    
+    mTheta.mFormat = DateUtils::eUnknown;
+    mSigma.mFormat = DateUtils::eUnknown;
+    mWiggle.mFormat = DateUtils::eUnknown;
+    
+    mId = -1;
+    mMethod = eMHSymetric;
+    updateti = fMHSymetric;
+    
+    mIsValid = true;
+    mDelta = 0.;
+    mDeltaType = eDeltaNone;
+    mDeltaFixed = 0.;
+    mDeltaMin = 0.;
+    mDeltaMax = 0.;
+    mDeltaAverage = 0.;
+    mDeltaError = 0.;
+    mIsCurrent = false;
+    mIsSelected = false;
+    mSubDates.clear();
+    
+    mTminRefCurve = -INFINITY;
+    mTmaxRefCurve = INFINITY;
+    
+    mCalibration = nullptr;
 }
 
 Date::Date(PluginAbstract* plugin):
@@ -115,14 +145,14 @@ void Date::copyFrom(const Date& date)
 
 Date::~Date()
 {
-    reset();
+    //reset();
 
     mPlugin = nullptr;
     mCalibration = nullptr;
 
-    mCalibHPD.clear();
+    mCalibHPD.~QMap();
 
-    mSubDates.clear();
+    mSubDates.~QList();
 }
 
 bool Date::isNull() const
@@ -137,10 +167,11 @@ QColor Date::getEventColor() const
 }
 
 // JSON
+/*
 Date Date::fromJson(const QJsonObject& json)
 {
     Q_ASSERT(&json);
-    Date date = Date();
+    Date date;// = Date();
     
     date.mId = json.value(STATE_ID).toInt();
     date.mName = json.value(STATE_NAME).toString();
@@ -191,6 +222,59 @@ Date Date::fromJson(const QJsonObject& json)
 
     
     return date;
+}
+*/
+void Date::fromJson(const QJsonObject& json)
+{
+    Q_ASSERT(&json);
+    mId = json.value(STATE_ID).toInt();
+    mName = json.value(STATE_NAME).toString();
+    
+    // Copy plugin specific values for this data :
+    mData = json.value(STATE_DATE_DATA).toObject();
+    
+    mMethod = (DataMethod)json.value(STATE_DATE_METHOD).toInt();
+    mIsValid = json.value(STATE_DATE_VALID).toBool();
+    
+    mDeltaType = (Date::DeltaType)json.value(STATE_DATE_DELTA_TYPE).toInt();
+    mDeltaFixed = json.value(STATE_DATE_DELTA_FIXED).toDouble();
+    mDeltaMin = json.value(STATE_DATE_DELTA_MIN).toDouble();
+    mDeltaMax = json.value(STATE_DATE_DELTA_MAX).toDouble();
+    mDeltaAverage = json.value(STATE_DATE_DELTA_AVERAGE).toDouble();
+    mDeltaError = json.value(STATE_DATE_DELTA_ERROR).toDouble();
+    
+    QString pluginId = json.value(STATE_DATE_PLUGIN_ID).toString();
+    mPlugin = PluginManager::getPluginFromId(pluginId);
+    if (mPlugin == nullptr)
+        throw QObject::tr("Data could not be loaded : invalid plugin : ") + pluginId;
+    else  {
+        QPair<double, double> tminTmax = mPlugin->getTminTmaxRefsCurve(mData);
+        mTminRefCurve = tminTmax.first;
+        mTmaxRefCurve = tminTmax.second;
+    }
+    
+    mSubDates.clear();
+    QJsonArray subdates = json.value(STATE_DATE_SUB_DATES).toArray();
+    for (int i(0); i<subdates.size(); ++i) {
+        const QJsonObject d = subdates.at(i).toObject();
+        Date subDate;
+        subDate.fromJson(d);
+        mSubDates.push_back(subDate);
+    }
+    
+    mTheta.mProposal = ModelUtilities::getDataMethodText(mMethod);
+    mTheta.setName("Theta of date : "+ mName);
+    mSigma.mProposal = ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt);
+    mSigma.setName("Sigma of date : "+ mName);
+    
+    Project* project = MainWindow::getInstance()->getProject();
+    mSettings = project->mModel->mSettings;
+    
+    QString toFind = mName + getDesc();
+    QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
+    if ( it!=project->mCalibCurves.end())
+        mCalibration = & it.value();
+    
 }
 
 QJsonObject Date::toJson() const

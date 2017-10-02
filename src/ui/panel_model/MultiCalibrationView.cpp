@@ -322,7 +322,8 @@ void MultiCalibrationView::updateGraphList()
 
         if (ev.value(STATE_EVENT_TYPE).toInt() == Event::eKnown) {
 
-            EventKnown bound = EventKnown::fromJson(ev);
+            EventKnown *bound = new EventKnown();
+            bound->fromJson(ev);
 
             GraphCurve calibCurve;
             calibCurve.mName = "Bound";
@@ -333,7 +334,7 @@ void MultiCalibrationView::updateGraphList()
 
             calibCurve.mIsHorizontalSections = true;
 
-            calibCurve.mSections.append(qMakePair(bound.mFixed,bound.mFixed));
+            calibCurve.mSections.append(qMakePair(bound->mFixed,bound->mFixed));
 
             GraphView* calibGraph = new GraphView(this);
             QString boundName (ev.value(STATE_NAME).toString());
@@ -364,12 +365,14 @@ void MultiCalibrationView::updateGraphList()
                                   ev.value(STATE_COLOR_GREEN).toInt(),
                                   ev.value(STATE_COLOR_BLUE).toInt());
             colorList.append(color);
+            bound = nullptr;
         }
         else {
             for (auto &&date : dates) {
-                const QJsonObject jdate = date.toObject();
+               // QJsonObject jdate (date.toObject());
 
-                Date d = Date::fromJson(jdate);
+                Date d;
+                d.fromJson(date.toObject());
                 d.autoSetTiSampler(true);
 
                 QMap<double, double> calibMap = d.getFormatedCalibMap();
@@ -780,7 +783,8 @@ void MultiCalibrationView::showStat()
                 for (auto &&date : dates) {
                    const QJsonObject jdate = date.toObject();
 
-                   Date d = Date::fromJson(jdate);
+                    Date d;
+                    d.fromJson(jdate);
 
                    const bool isTypo (d.mPlugin->getName() == "Typo");
 

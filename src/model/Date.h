@@ -61,7 +61,7 @@ public:
     void init();
     bool isNull() const;
     
-    static Date fromJson(const QJsonObject& json);
+    void fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
     
     static Date fromCSV(const QStringList &dataStr, const QLocale& csvLocale);

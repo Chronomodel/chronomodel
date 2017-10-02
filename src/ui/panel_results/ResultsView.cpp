@@ -1068,14 +1068,14 @@ void ResultsView::updateTabPageSaving()
     const bool byPhases (mTabByScene->currentIndex() == 1);
     const bool byTempo (mTabByScene->currentIndex() == 2);
 
-    int ySpan (mMargin);
+    
     switch (mTabPageSaving->currentIndex()) {
     case 0:
         {
             /*
              *  Page Navigator
              */
-            ySpan = mMargin;
+            int ySpan (mMargin);
             mPreviousSheetBut->move(0 , ySpan);
 
             mSheetNum->move(mPreviousSheetBut->width(), ySpan);
@@ -1988,11 +1988,15 @@ void ResultsView::nextSheet()
 
     else if (mStack->currentWidget() == mTempoScrollArea)
         currentIndex = &mTabTempoIndex;
+    
+    else
+        return;
   
-    if ( (((*currentIndex) + 1)*mNumberOfGraph) < mMaximunNumberOfVisibleGraph)
+    if ( ( ((*currentIndex) + 1)*mNumberOfGraph) < mMaximunNumberOfVisibleGraph )
         ++(*currentIndex);
     
     emit updateScrollAreaRequested();
+    
     
 }
 
@@ -2006,6 +2010,9 @@ void ResultsView::previousSheet()
 
     else if ((mTabByScene->currentIndex() == 2) && (mTabTempoIndex>0))
         --mTabTempoIndex;
+    
+    else
+        return;
     
     emit updateScrollAreaRequested();
 }

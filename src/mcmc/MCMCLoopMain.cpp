@@ -192,7 +192,7 @@ QString MCMCLoopMain::initMCMC()
     QVector<Event*> eventsByLevel = ModelUtilities::sortEventsByLevel(mModel->mEvents);
     int curLevel (0);
     double curLevelMaxValue = mModel->mSettings.mTmin;
-    double prevLevelMaxValue = mModel->mSettings.mTmin;
+  //  double prevLevelMaxValue = mModel->mSettings.mTmin;
     
     for (int i=0; i<eventsByLevel.size(); ++i) {
         if (eventsByLevel.at(i)->type() == Event::eKnown) {
@@ -201,7 +201,7 @@ QString MCMCLoopMain::initMCMC()
             if (bound) {
                 if (curLevel != bound->mLevel) {
                     curLevel = bound->mLevel;
-                    prevLevelMaxValue = curLevelMaxValue;
+ //                   prevLevelMaxValue = curLevelMaxValue;
                     curLevelMaxValue = mModel->mSettings.mTmin;
                 }
 

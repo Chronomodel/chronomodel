@@ -48,8 +48,8 @@ message("RCC_DIR : $$RCC_DIR")
 QT += core gui widgets svg
 
 # Resource file (for images)
-#RESOURCES = $$PRO_PATH/Chronomodel.qrc
-RESOURCES = Chronomodel.qrc
+RESOURCES = $$PRO_PATH/Chronomodel.qrc
+#RESOURCES = Chronomodel.qrc
 
 # Compilation warning flags
 # QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter # invalid option for MSVC2015

@@ -85,16 +85,11 @@ mType(type)
                 PluginAbstract* plugin = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
                 bool valid = plugin->isDateValid(date[STATE_DATE_DATA].toObject(), settings);
                 date[STATE_DATE_VALID] = valid;
-                Date d = Date::fromJson(date);
+                Date d;
+                d.fromJson(date);
 
                 if (!d.isNull()) {
                     QListWidgetItem* item = new QListWidgetItem(d.mName);
-//                    item->setData(0x0101, d.mName);
-//                    item->setData(0x0102, d.mPlugin->getId());
-//                    item->setData(0x0103, d.getDesc());
-//                    item->setData(0x0105, d.mDeltaFixed);
-//                    item->setData(0x0106, d.mId);
-
 
                     item->setText(d.mName);
                     item->setData(0x0101, d.mName);

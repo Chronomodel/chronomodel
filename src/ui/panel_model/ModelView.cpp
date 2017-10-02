@@ -1086,12 +1086,12 @@ void ModelView::updateLayout()
     mEventsScene->getHelpView()->setGeometry(mEventsView->width() - mMargin - helpW, mMargin, helpW, helpH);
 
     // ----------
-
-    if (mButProperties->isChecked() && mEventPropertiesView->isCalibChecked() && mCalibrationView)
-         mCalibrationView->setGeometry( mLeftRect );
-    else
-        mCalibrationView->setGeometry(0, 0, 0, 0);
-
+    if (mCalibrationView) {
+        if (mButProperties->isChecked() && mEventPropertiesView->isCalibChecked() )
+            mCalibrationView->setGeometry( mLeftRect );
+        else
+            mCalibrationView->setGeometry(0, 0, 0, 0);
+    }
     // ----------
     if (mButProperties->isChecked() || mButMultiCalib->isChecked()) {
         mPhasesView ->resize(0, 0);
