@@ -195,7 +195,8 @@ public slots:
     void imageToClipboard();
     void resultsToClipboard();
     void saveGraphData() const; // must be accessible by ResultsView
-    void changeXScale(const double &major, const int &minor) {mGraph->changeXScale(major, minor); update();}
+    void changeXScaleDivision(const Scale &sc) {mGraph->changeXScaleDivision(sc); update();}
+    void changeXScaleDivision(const double &major, const int &minor) {mGraph->changeXScaleDivision(major, minor); update();}
     
 protected:
     

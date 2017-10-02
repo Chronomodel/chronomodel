@@ -12,13 +12,13 @@
 
 MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mButtonWidth(50),
+mMajorScale (100),
+mMinorScale (4),
 mTminDisplay(-INFINITY),
 mTmaxDisplay(INFINITY),
 mThreshold(95),
-mGraphHeight(105),
-mCurveColor(Painting::mainColorDark),
-  mMajorScale (100),
-  mMinorScale (4)
+mGraphHeight(100),
+mCurveColor(Painting::mainColorDark)
 {
     setMouseTracking(true);
     mDrawing = new MultiCalibrationDrawing(this);
@@ -113,7 +113,7 @@ mCurveColor(Painting::mainColorDark),
     mMajorScaleLab->setLight();
 
     mMajorScaleEdit = new LineEdit(this);
-    mMajorScaleEdit->setToolTip(tr("Enter a value of Major Interval for the scale under the curves"));
+    mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves"));
     mMajorScaleEdit->setText(locale().toString(mMajorScale));
 
     mMinorScaleLab = new Label(tr("Min. Cnt"), this);
@@ -121,7 +121,7 @@ mCurveColor(Painting::mainColorDark),
     mMinorScaleLab->setLight();
 
     mMinorScaleEdit = new LineEdit(this);
-    mMinorScaleEdit->setToolTip(tr("Enter a value of Minior Interval Count for the scale under the curves"));
+    mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves"));
     mMinorScaleEdit->setText(locale().toString(mMinorScale));
 
     mHPDLab->raise();
@@ -136,8 +136,9 @@ mCurveColor(Painting::mainColorDark),
 
     connect(mStartEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &MultiCalibrationView::updateScroll);
     connect(mEndEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &MultiCalibrationView::updateScroll);
-    connect(mMajorScaleEdit, &LineEdit::editingFinished, this, &MultiCalibrationView::updateScaleX);
-    connect(mMinorScaleEdit, &LineEdit::editingFinished, this, &MultiCalibrationView::updateScaleX);
+    connect(mMajorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &MultiCalibrationView::updateScaleX);
+    connect(mMinorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &MultiCalibrationView::updateScaleX);
+
 
     connect(mHPDEdit, &QLineEdit::textEdited, this, &MultiCalibrationView::updateHPDGraphs);
     connect(mImageSaveBut, &Button::clicked, this, &MultiCalibrationView::exportFullImage);
@@ -248,10 +249,13 @@ void MultiCalibrationView::updateLayout()
     y += mMajorScaleLab->height();
     mMajorScaleEdit->setGeometry(x0 + 3, y, mButtonWidth-6, textHeight);
     y += mMajorScaleEdit->height() + verticalSpacer;
+    mMajorScaleEdit->setText(locale().toString(mMajorScale));
+
     mMinorScaleLab->setGeometry(x0, y, mButtonWidth, textHeight);
     y += mMinorScaleLab->height();
     mMinorScaleEdit->setGeometry(x0 + 3, y, mButtonWidth-6, textHeight);
     y += mMinorScaleEdit->height() + 3*verticalSpacer;
+    mMinorScaleEdit->setText(locale().toString(mMinorScale));
 
 
     mHPDLab->setGeometry(x0, y, mButtonWidth, textHeight);
@@ -326,15 +330,17 @@ void MultiCalibrationView::updateGraphList()
             calibCurve.mPen.setWidth(20);
             calibCurve.mBrush = brushColor;
             calibCurve.mPen = QPen(Painting::mainColorLight, 2.);
-          /*  QMap<type_data, type_data> b;
-            b[bound.mFixed] = 1.;
-            calibCurve.mData = b;
-            calibCurve.mIsRectFromZero = true;*/
+
             calibCurve.mIsHorizontalSections = true;
 
             calibCurve.mSections.append(qMakePair(bound.mFixed,bound.mFixed));
 
             GraphView* calibGraph = new GraphView(this);
+            QString boundName (ev.value(STATE_NAME).toString());
+
+            calibGraph->addInfo(tr("Bound") + " : "+ boundName);
+            calibGraph->showInfos(true);
+
             calibGraph->setRangeY(0., 1.);
 
             calibGraph->addCurve(calibCurve);
@@ -347,9 +353,11 @@ void MultiCalibrationView::updateGraphList()
 
             calibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
             calibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
-            calibGraph->changeXScale(mMajorScale, mMinorScale);
-            calibGraph->setRendering(GraphView::eHD);
+            calibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
+            calibGraph->setOverArrow(GraphView::eNone);
 
+
+            calibGraph->setRendering(GraphView::eHD);
             graphList.append(calibGraph);
 
             QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
@@ -391,6 +399,7 @@ void MultiCalibrationView::updateGraphList()
 
                 else
                     calibGraph->addInfo("");
+
                 preEventName = eventName;
 
                 calibGraph->addInfo(d.mName);
@@ -420,7 +429,8 @@ void MultiCalibrationView::updateGraphList()
 
                 calibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
                 calibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
-                calibGraph->changeXScale(mMajorScale, mMinorScale);
+                calibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
+
                 calibGraph->setRendering(GraphView::eHD);
                 graphList.append(calibGraph);
                 QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
@@ -437,9 +447,9 @@ void MultiCalibrationView::updateGraphList()
    mDrawing->setEventsColorList(colorList);
    mDrawing->setGraphList(graphList);
 
-   if (mResultsClipBut->isChecked()) {
+   if (mResultsClipBut->isChecked())
        showStat();
-   }
+
    update();
 }
 
@@ -447,13 +457,12 @@ void MultiCalibrationView::updateMultiCalib()
 {
     qDebug()<<"MultiCalibrationView::updateMultiCalib()";
     updateGraphList();
-
 }
 
 void MultiCalibrationView::updateHPDGraphs(const QString &thres)
 {
     bool ok;
-    double val = locale().toDouble(thres,&ok);
+    double val = locale().toDouble(thres, &ok);
     if (ok)
         mThreshold = val;
     else
@@ -492,7 +501,6 @@ void MultiCalibrationView::updateGraphsSize(const QString &size)
 
 void MultiCalibrationView::updateScroll()
 {
-
     bool ok;
     double val = locale().toDouble(mStartEdit->text(),&ok);
     if (ok)
@@ -514,8 +522,7 @@ void MultiCalibrationView::updateScroll()
         const qreal ptSiz = adaptedFont.pointSizeF() / fontRate;
         adaptedFont.setPointSizeF(ptSiz);
         mStartEdit->setFont(adaptedFont);
-    }
-    else
+    } else
         mStartEdit->setFont(font());
 
     adaptedFont = font();
@@ -529,8 +536,8 @@ void MultiCalibrationView::updateScroll()
     }
     else
         mEndEdit->setFont(font());
-//qDebug()<<"MultiCalibrationView::updateScroll()"<<mTminDisplay<<mTmaxDisplay;
-    // usefull when we set mStartEdit and mEndEdit at the begin of the display,
+
+    // Usefull when we set mStartEdit and mEndEdit at the begin of the display,
     // after a call to setDate
     if (std::isinf(-mTminDisplay) || std::isinf(mTmaxDisplay))
         return;
@@ -555,13 +562,11 @@ void MultiCalibrationView::updateScaleX()
     if (isNumber) {
         QList<GraphView*> *graphList = mDrawing->getGraphList();
 
-        for (GraphView* gr : *graphList) {
-            gr->changeXScale(mMajorScale, mMinorScale);
-           // gr->setCurrentX(mTminDisplay, mTmaxDisplay);
-           // gr->forceRefresh();
-        }
+        for (GraphView* gr : *graphList)
+            gr->changeXScaleDivision(mMajorScale, mMinorScale);
 
-    }
+    } else
+        return;
 
 }
 
@@ -572,6 +577,29 @@ void MultiCalibrationView::updateGraphsZoom()
     for (GraphView* gr : *graphList) {
         gr->setRangeX(mTminDisplay, mTmaxDisplay);
         gr->setCurrentX(mTminDisplay, mTmaxDisplay);
+        // ------------------------------------------------------------
+        //  Show zones if calibrated data are outside study period
+        // ------------------------------------------------------------
+        qDebug()<<"multicalView"<<mSettings.getTminFormated();
+        if (mTminDisplay < mSettings.getTminFormated()) {
+            GraphZone zone;
+            zone.mXStart = mTminDisplay;
+            zone.mXEnd = mSettings.getTminFormated();
+            zone.mColor = QColor(217, 163, 69);
+            zone.mColor.setAlpha(35);
+            zone.mText = tr("Outside study period");
+            gr->addZone(zone);
+        }
+        if (mTmaxDisplay > mSettings.getTmaxFormated()) {
+            GraphZone zone;
+            zone.mXStart = mSettings.getTmaxFormated();
+            zone.mXEnd = mTmaxDisplay;
+            zone.mColor = QColor(217, 163, 69);
+            zone.mColor.setAlpha(35);
+            zone.mText = tr("Outside study period");
+            gr->addZone(zone);
+        }
+
         gr->forceRefresh();
     }
 
@@ -588,12 +616,10 @@ void MultiCalibrationView::exportImage()
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
 
     mDrawing->showMarker();
-
 }
 
 void MultiCalibrationView::exportFullImage()
 {
-
     bool printAxis = (mGraphHeight <= 100.);
 
     QWidget* widgetExport = mDrawing->getGraphWidget();
@@ -722,7 +748,7 @@ void MultiCalibrationView::showStat()
        const QJsonArray events = state.value(STATE_EVENTS).toArray();
        QList<QJsonObject> selectedEvents;
 
-       for (auto &&ev : events) {
+       for (auto ev : events) {
           QJsonObject jsonEv = ev.toObject();
            if (jsonEv.value(STATE_IS_SELECTED).toBool())
                selectedEvents.append(jsonEv);
@@ -748,7 +774,6 @@ void MultiCalibrationView::showStat()
                resultsStr += " <br><strong>"+ tr("Bound") + " : " + locale().toString(bound) + " BC/AD </strong><br>";
 
            } else {
-
                const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
 
 

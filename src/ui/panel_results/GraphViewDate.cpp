@@ -185,6 +185,9 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             zoneMax.mColor.setAlpha(35);
             zoneMax.mText = tr("Outside study period");
             mGraph->addZone(zoneMax);
+
+
+            mGraph->setYAxisMode(GraphView::eHidden);
         }
 
         /* ------------------------------------------------
@@ -225,6 +228,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
                                                     color);
             mGraph->addCurve(curveHPD);
 
+            mGraph->setYAxisMode(GraphView::eHidden);
         }
 
     }
@@ -287,7 +291,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
              mTitle = QString(tr("Individual Std") + " : " + mDate->mName);
 
         generateCorrelCurves(mChains, variableDate);
-        mGraph->setXScale(10, 10);
+        mGraph->setXScaleDivision(10, 10);
     }
     else {
         mTitle = QString(tr("Data") + " : " + mDate->mName);
@@ -328,6 +332,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
             mGraph->setTipXLab("t");
 
             mGraph->setYAxisMode(GraphView::eHidden);
+
         }
         /* ------------------------------------------------
          *  Possible Curves :
@@ -383,8 +388,9 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
         mGraph->setTipYLab("rate");
 
         mGraph->setYAxisMode(GraphView::eMinMax);
+
         mGraph->autoAdjustYScale(false); // do  repaintGraph()
-        mGraph->setRangeY(0, 100);
+        mGraph->setRangeY(0, 100); // do repaintGraph() !!
     }
     
     /* -------------------- fourth tab : Autocorrelation----------------------------

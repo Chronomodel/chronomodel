@@ -32,6 +32,12 @@ qreal AxisTool::getXForValue(const qreal &value)
     return (qreal)(valueForProportion(value, (qreal) mStartVal, (qreal) mEndVal, qreal (0.), (qreal) (mTotalPix-rigthBlank), true));
 }
 
+qreal AxisTool::getYForValue(const qreal &value)
+{
+    const qreal blank (10.);
+    return (qreal)(valueForProportion(value, (qreal) mStartVal, (qreal) mEndVal, qreal (0.), (qreal) (mTotalPix-blank), true));
+}
+
 void AxisTool::updateValues(const int &totalPix, const int &minDeltaPix, const qreal &minVal, const qreal &maxVal)
 {
     mStartVal = minVal;
@@ -44,13 +50,24 @@ void AxisTool::updateValues(const int &totalPix, const int &minDeltaPix, const q
 
 }
 
-void AxisTool::setScale (const double &major, const double &minorCount)
+/**
+ * @brief AxisTool::setScaleDivision set the mark and the tip
+ * @param sc
+ */
+void AxisTool::setScaleDivision (const Scale & sc)
 {
-    mMajorScale= major;
+    mMajorScale = sc.mark;
+    mMinorScaleCount = sc.tip;
+    if ( (mTotalPix*mMajorScale) / ((mEndVal-mStartVal)*mMinorScaleCount) < mMinDeltaPix)
+        mShowSubSubs = false;
+}
+
+void AxisTool::setScaleDivision (const double &major, const double &minorCount)
+{
+    mMajorScale = major;
     mMinorScaleCount = minorCount;
     if ( (mTotalPix*mMajorScale) / ((mEndVal-mStartVal)*mMinorScaleCount) < mMinDeltaPix)
         mShowSubSubs = false;
-
 }
 
 
@@ -91,7 +108,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, F
         p.drawLine(xo, yo, xo, yo + heigthSize);
 
         if (mMinMaxOnly) {
-            if (mShowText){
+            if (mShowText) {
                 QRectF tr(xo, yo, w, h);
 
                 if (valueFormatFunc) {
@@ -108,6 +125,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, F
                 mTextInc = 1;
                 // look for the text increment
                 int textInc (1);
+
                 qreal prevTextWidth (0.);
                 for (qreal v = mStartVal; v <= mEndVal ; v += mMajorScale)  {
                     const qreal x = getXForValue(v) + xo;
@@ -122,8 +140,8 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, F
                         textInc = 1;
                     } else
                         ++textInc;
-
                 }
+
 
 
 
@@ -135,15 +153,20 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, F
                 for (qreal v = mStartVal; v <= mEndVal ; v += mMajorScale)  {
                     const qreal x = getXForValue(v) + xo;
                     linesPos.append(x);
+
+
                     ++textInc;
 
                     if ( textInc == mTextInc) {
                         p.drawLine(QLineF(x, yo, x, yo + heigthSize));
-                        const QString text =(valueFormatFunc ? valueFormatFunc(v, false) : stringWithAppSettings(v, false) );
-                        const int textWidth =  fm.width(text) ;
-                        const qreal tx = x - textWidth/2.;
-                        const QRectF textRect(tx, yo + h - heightText, textWidth, heightText);
-                        p.drawText(textRect,Qt::AlignCenter ,text);
+                        if (mShowText) {
+                            const QString text =(valueFormatFunc ? valueFormatFunc(v, false) : stringWithAppSettings(v, false) );
+                            const int textWidth =  fm.width(text) ;
+                            const qreal tx = x - textWidth/2.;
+                            const QRectF textRect(tx, yo + h - heightText, textWidth, heightText);
+                            p.drawText(textRect,Qt::AlignCenter ,text);
+                        }
+
                         textInc = 0;
                         xPrev = x;
                     } else {
@@ -211,11 +234,10 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, F
                 int textInc (1);
                 qreal prevTextHeight (0.);
                 for (qreal v = mStartVal; v <= mEndVal ; v += mMajorScale)  {
-                    const qreal y = getXForValue(v) + yov;
-
-                    //QString text =(valueFormatFunc ? valueFormatFunc(v, false) : stringWithAppSettings(v, false) );
+                    const qreal y = getYForValue(v) + yov;
                     const int textHeight =  fm.height() ;
                     const qreal ty = y - textHeight/2.;
+
                     if ( ty > prevTextHeight) {
                         // memo previous text position
                         prevTextHeight = ty + textHeight + 1.;
@@ -233,7 +255,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, F
 
                 textInc = mTextInc - 1;
                 for (qreal v = mStartVal; v <= mEndVal ; v += mMajorScale)  {
-                    const qreal y = yov - getXForValue(v) ;
+                    const qreal y = yov - getYForValue(v) ;
 
                     p.drawLine(QLineF(xov, y, xov - heigthSize, y));
                     linesPos.append(y);
@@ -252,15 +274,13 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, F
 
                     if (mShowSubSubs && v<mEndVal) {
                         for (qreal sv = 1.; sv < mMinorScaleCount; sv += 1.) {
-                            const qreal ym = yov - getXForValue(sv*minorStep + v);
+                            const qreal ym = yov - getYForValue(sv*minorStep + v);
 
                             p.drawLine(QLineF(xov, ym, xov - heigthSize/2., ym));
                         }
                     }
 
-
                 }
-
 
             }
         }
@@ -268,7 +288,6 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, F
     p.setPen(memoPen);
     p.setBrush(memoBrush);
     return linesPos;
-
 }
 
 
@@ -279,8 +298,39 @@ mMarginRight(0.)
     mFormatFunct = funct;
 }
 
-void AxisWidget::paintEvent(QPaintEvent*){
+void AxisWidget::paintEvent(QPaintEvent*)
+{
     QPainter p(this);
     paint(p, QRectF( mMarginLeft, 0, width() - mMarginLeft - mMarginRight, height()), 7., mFormatFunct);
 }
 
+/**
+ * @brief scale::findOptimal search the most aesthetic
+ * @param a the minimum value which must be visible
+ * @param b the maximun value which must be visible
+ * @param nOptimal the target of number of step, mark-1
+ */
+void Scale::findOptimal(const double & a, const double & b, const int & nOptimal)
+{
+    double e (b - a);
+    double u = int(log10(e));
+    u = std::pow(10., u);
+
+    double fract[4] = { 1. , 2. , 5. , 10. };
+
+    double diff (std::max(u, e));
+    mark =  diff;
+
+    for (int i (0); i<5; ++i) {
+        const double stp = u/fract[i];
+
+        if (std::abs(nOptimal - e/stp) < diff) {
+            diff = nOptimal - e/stp;
+            mark = stp;
+        }
+    }
+
+    min = std::floor(a/ mark) * mark;
+    max = min + std::ceil( (b - min) / mark ) * mark;
+
+}

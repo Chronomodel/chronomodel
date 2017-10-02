@@ -73,10 +73,17 @@ void Ruler::scrollValueChanged(double value)
     emit valueChanged(value);
 }
 
-void Ruler::setScale (const double &major, const double &minorCount)
+void Ruler::setScaleDivision (const Scale &sc)
 {
     mAxisTool.mShowSubSubs = true;
-    mAxisTool.setScale(major, minorCount);
+    mAxisTool.setScaleDivision(sc);
+    update();
+}
+
+void Ruler::setScaleDivision (const double &major, const double &minorCount)
+{
+    mAxisTool.mShowSubSubs = true;
+    mAxisTool.setScaleDivision(major, minorCount);
     update();
 }
 
@@ -105,7 +112,7 @@ void Ruler::setCurrent(const double min, const double max)
     //  (small value here : only allows few discrete positions)
     // ---------------------------------------------------
     else {
-        double range = 1000.;
+        double range (1000.);
         double pageStep = range * (mCurrentMax - mCurrentMin) / (mMax - mMin);
         double scrollRange = range - pageStep;
         
@@ -195,7 +202,7 @@ void Ruler::updateScroll()
 
     mAxisTool.mShowSubSubs = true; // updateValues can set mShowSubSubs to false;
     mAxisTool.updateValues(mRulerRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
-    
+
     emit positionChanged(mCurrentMin, mCurrentMax);
     
     update();

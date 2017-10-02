@@ -178,6 +178,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
                 mGraph->addCurve(curveAlpha);
                 mGraph->addCurve(curveBeta);
             }
+        mGraph->setYAxisMode(GraphView::eMinMax);
     }
 
 

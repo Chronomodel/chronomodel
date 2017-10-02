@@ -375,7 +375,7 @@ void EventPropertiesView::updateKnownGraph()
 
         // Adjust scale :
         const int xScale = int(log10(tmax-tmin)) -1;
-        mKnownGraph->setXScale(std::pow(10, xScale), 4);
+        mKnownGraph->setXScaleDivision(std::pow(10, xScale), 4);
         //---------------------
 
 }

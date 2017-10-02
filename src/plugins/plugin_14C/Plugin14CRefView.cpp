@@ -327,8 +327,8 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         mGraph->addCurve(curveMeasureSup);
         mGraph->addCurve(curveMeasureInf);
         
-        // ----------------------------------------------
-        mGraph->setRangeY(yMin, yMax);
+        //Y scale and RangeY are define in graphView::zommX()
+
     }
 }
 

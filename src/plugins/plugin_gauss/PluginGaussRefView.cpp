@@ -45,6 +45,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
 
         tminDisplay = qMin(t1,qMin(t2,t3));
         tmaxDisplay = qMax(t1,qMax(t2,t4));
+
     } else {
         tminDisplay = qMin(t1, t2);
         tmaxDisplay = qMax(t1, t2);
@@ -58,7 +59,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
     mGraph->showInfos(true);
     mGraph->setFormatFunctX(0);
     
-    if(!date.isNull()) {
+    if (!date.isNull()) {
         const double age = date.mData.value(DATE_GAUSS_AGE_STR).toDouble();
         const double error = date.mData.value(DATE_GAUSS_ERROR_STR).toDouble();
         const double a = date.mData.value(DATE_GAUSS_A_STR).toDouble();
@@ -79,10 +80,10 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
         curve.mPen.setColor(Painting::mainColorDark);
         curve.mIsHisto = false;
         
-        double yMin = tminDisplay;
-        double yMax = tmaxDisplay;
+        double yMin (tminDisplay);
+        double yMax (tmaxDisplay);
         
-        if(mode == DATE_GAUSS_MODE_NONE){
+        if (mode == DATE_GAUSS_MODE_NONE){
           // nothing to do
             
         } else if (mode == DATE_GAUSS_MODE_EQ) {
@@ -94,12 +95,9 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             }
             curve.mData = refCurve;
             mGraph->addCurve(curve);
-            
-            // Adjust scale :
-            yMin = map_min_value(refCurve);
-            yMax = map_max_value(refCurve);
-            const int xScale = int(log10(yMax-yMin)) -1;
-            mGraph->setYScale(std::pow(10, xScale), 4);
+
+            // Y scale and RangeY are define in graphView::zommX()
+
 
             
         } else if (mode == DATE_GAUSS_MODE_CURVE) {
@@ -164,22 +162,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                 }
             }
 
-            /*
-            for(double t=tminDisplay; t<=tmaxDisplay; ++t) {
-                if (t > tminRef && t < tmaxRef) {
-                    const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
-                    const double value = plugin->getRefValueAt(date.mData, tRaw);
-                    const double error = plugin->getRefErrorAt(date.mData, tRaw, mode) * 1.96;
 
-                    curveG[t] = value;
-                    curveG95Sup[t] = value + error;
-                    curveG95Inf[t] = value - error;
-
-                    yMin = qMin(yMin, curveG95Inf.value(t));
-                    yMax = qMax(yMax, curveG95Sup.value(t));
-                }
-            }
-*/
             //---
             GraphCurve graphCurveG95Sup;
             graphCurveG95Sup.mName = "G95Sup";
@@ -203,20 +186,17 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             mGraph->addCurve(graphCurveG);
             
             // Display reference curve name
-           // mGraph->addInfo(tr("Ref : ") + ref_curve);
+            // mGraph->addInfo(tr("Ref : ") + ref_curve);
 
-            // Adjust Y scale :
-            yMin = map_min_value(curveG95Sup);
-            yMax = map_max_value(curveG95Inf);
-            const int yScale = int(log10(yMax-yMin)) -1;
-            mGraph->setYScale(std::pow(10, yScale), 4);
+            // Y scale and RangeY are define in graphView::zommX()
+
         }
         
         if (mode != DATE_GAUSS_MODE_NONE) {
             yMin = qMin(yMin, age - error * 1.96);
             yMax = qMax(yMax, age + error * 1.96);
 
-            mGraph->setRangeY(yMin, yMax);
+            //mGraph->setRangeY(yMin, yMax);
             
             // ----------------------------------------------
             //  Measure curve

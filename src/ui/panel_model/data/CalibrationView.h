@@ -1,12 +1,13 @@
 #ifndef CALIBRATIONVIEW_H
 #define CALIBRATIONVIEW_H
 
-#include "Date.h"
-#include "ProjectSettings.h"
 #include <QWidget>
 #include <QJsonObject>
 
-class GraphView;
+#include "Date.h"
+#include "ProjectSettings.h"
+#include "GraphView.h"
+
 class GraphViewRefAbstract;
 class Date;
 class Marker;
@@ -32,6 +33,8 @@ public:
     
     void setDate(const QJsonObject& date);
     void setFont(const QFont& font);
+    void initScale (const double &majorScale, const int &minorScale) { mMajorScale= majorScale; mMinorScale = minorScale;}
+    void initScale (const Scale &s) { mMajorScale = s.mark; mMinorScale = s.tip;}
     
 protected:
     void paintEvent(QPaintEvent* e);

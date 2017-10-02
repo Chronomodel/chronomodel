@@ -92,7 +92,8 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         yMin = qMin(yMin, age - error * 1.96);
         yMax = qMax(yMax, age + error * 1.96);
         
-        mGraph->setRangeY(yMin, yMax);
+         // Y scale and RangeY are define in graphView::zommX()
+
         
         // ----------------------------------------------
         //  Measure curve
@@ -157,9 +158,8 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         mGraph->addCurve(curveMeasureSup);
         mGraph->addCurve(curveMeasureInf);
 
+        // Y scale and RangeY are define in graphView::zommX()
 
-        const int yScale = int(log10(yMax-yMin)) -1;
-        mGraph->setYScale(std::pow(10, yScale), 4);
     }
 }
 

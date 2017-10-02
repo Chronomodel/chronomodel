@@ -125,7 +125,7 @@ private slots:
     void updateScaleY(int value);
     // connected to mMajorScaleEdit and mMinorScaleEdit
     void updateScaleX();
-    
+    void updateScaleEdit();
 
 
     void updateFont();
@@ -325,6 +325,7 @@ private:
     int mComboH;
     
     QMap<QPair<GraphViewResults::Variable, GraphViewResults::TypeGraph>, QPair<double, double>> mZooms;
+    QMap<QPair<GraphViewResults::Variable, GraphViewResults::TypeGraph>, QPair<double, int>> mScales;
     //propreties
     GraphViewResults::TypeGraph mCurrentTypeGraph;
     GraphViewResults::Variable mCurrentVariable;

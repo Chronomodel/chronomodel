@@ -95,7 +95,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mMajorScaleLab->setLight();
 
     mMajorScaleEdit = new LineEdit(this);
-    mMajorScaleEdit->setToolTip(tr("Enter a value of Major Interval for the scale under the curves"));
+    mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves"));
     mMajorScaleEdit->setText(locale().toString(mMajorScale));
 
     mMinorScaleLab = new Label(tr("Min. Cnt"), this);
@@ -103,7 +103,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mMinorScaleLab->setLight();
 
     mMinorScaleEdit = new LineEdit(this);
-    mMinorScaleEdit->setToolTip(tr("Enter a value of Minior Interval Count for the scale under the curves"));
+    mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves"));
     mMinorScaleEdit->setText(locale().toString(mMinorScale));
 
     mHPDLab->raise();
@@ -135,9 +135,8 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
 
     connect(mStartEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &CalibrationView::updateScroll);
     connect(mEndEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &CalibrationView::updateScroll);
-    connect(mMajorScaleEdit, &LineEdit::editingFinished, this, &CalibrationView::updateScaleX);
-    connect(mMinorScaleEdit, &LineEdit::editingFinished, this, &CalibrationView::updateScaleX);
-
+    connect(mMajorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &CalibrationView::updateScaleX);
+    connect(mMinorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &CalibrationView::updateScaleX);
 
     connect(mHPDEdit, &QLineEdit::textEdited, this, &CalibrationView::updateGraphs);
     connect(mImageSaveBut, &Button::clicked, this, &CalibrationView::exportImage);
@@ -156,7 +155,7 @@ CalibrationView::~CalibrationView()
 
 void CalibrationView::setFont(const QFont &font)
 {
-    // we must force setFont on QLineEdi !!
+    // We must force setFont on QLineEdit !!
     mHPDEdit->setFont(font);
     mStartEdit->setFont(font);
     mEndEdit->setFont(font);
@@ -231,7 +230,7 @@ void CalibrationView::updateGraphs()
      if (!mDate.isNull() ) {
         mCalibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
         mCalibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
-        mCalibGraph->changeXScale(mMajorScale, mMinorScale);
+        mCalibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
         // ------------------------------------------------------------
         //  Show zones if calibrated data are outside study period
         // ------------------------------------------------------------
@@ -365,7 +364,7 @@ void CalibrationView::updateGraphs()
             mRefGraphView->setDate(mDate, tmpSettings);
 
             mRefGraphView->zoomX(mTminDisplay, mTmaxDisplay);
-            mRefGraphView->changeXScale(mMajorScale, mMinorScale);
+            mRefGraphView->changeXScaleDivision(mMajorScale, mMinorScale);
 
         }
         mDrawing->setRefGraph(mRefGraphView);
@@ -430,8 +429,8 @@ void CalibrationView::updateScaleX()
     mMinorScale =  locale().toDouble(&str, &isNumber);
 
     if (isNumber) {
-        mCalibGraph->changeXScale(mMajorScale, mMinorScale);
-        mRefGraphView->changeXScale(mMajorScale, mMinorScale);
+        mCalibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
+        mRefGraphView->changeXScaleDivision(mMajorScale, mMinorScale);
     }
 
 }
@@ -611,10 +610,13 @@ void CalibrationView::updateLayout()
     y += mMajorScaleLab->height();
     mMajorScaleEdit->setGeometry(3, y, mButtonWidth-6, textHeight);
     y += mMajorScaleEdit->height() + verticalSpacer;
+    mMajorScaleEdit->setText(locale().toString(mMajorScale));
+
     mMinorScaleLab->setGeometry(0, y, mButtonWidth, textHeight);
     y += mMinorScaleLab->height();
     mMinorScaleEdit->setGeometry(3, y, mButtonWidth-6, textHeight);
     y += mMinorScaleEdit->height() + 3*verticalSpacer;
+    mMinorScaleEdit->setText(locale().toString(mMinorScale));
 
     mHPDLab->setGeometry(0, y, mButtonWidth, textHeight);
     y += mHPDLab->height();

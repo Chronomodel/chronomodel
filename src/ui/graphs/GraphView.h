@@ -117,8 +117,11 @@ public:
     void setFormatFunctX(FormatFunc f);
     void setFormatFunctY(FormatFunc f);
 
-    void setXScale(const double &major, const int &minorCount) { mAxisToolX.setScale(major, minorCount);}
-    void setYScale(const double &major, const int &minorCount) { mAxisToolY.setScale(major, minorCount);}
+    void setXScaleDivision(const Scale &sc) { mAxisToolX.setScaleDivision(sc);}
+    void setXScaleDivision(const double &major, const int &minorCount) { mAxisToolX.setScaleDivision(major, minorCount);}
+
+    void setYScaleDivision(const Scale &sc) { mAxisToolY.setScaleDivision(sc);}
+    void setYScaleDivision(const double &major, const int &minorCount) { mAxisToolY.setScaleDivision(major, minorCount);}
     
     // Paint
     
@@ -142,7 +145,9 @@ public slots:
     void exportCurrentDensityCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step =1.) const;
 
     void exportCurrentVectorCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, bool writeInRows, int offset = 0) const;
-    void changeXScale (const double &major, const int & minor);
+
+    void changeXScaleDivision (const Scale &sc);
+    void changeXScaleDivision (const double &major, const int & minor);
 
 protected:
     void adaptMarginBottom();

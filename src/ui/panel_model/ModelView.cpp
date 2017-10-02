@@ -592,7 +592,7 @@ void ModelView::modifyPeriod()
             */
             if (!Qevents.isEmpty()) {
                 QList<Event> events;
-                for (auto && Qev: Qevents)
+                for (auto Qev: Qevents)
                     events.append(Event::fromJson(Qev.toObject()));
 
                 QProgressDialog *progress = new QProgressDialog("Calibration curve generation","Wait" , 1, 10, qApp->activeWindow());
@@ -615,6 +615,12 @@ void ModelView::modifyPeriod()
                         ++position;
                         progress->setValue(position);
                     }
+
+                Scale xScale;
+                xScale.findOptimal(newS.mTmin, newS.mTmax, 7);
+                xScale.tip = 4;
+                mMultiCalibrationView->initScale(xScale);
+                mCalibrationView->initScale(xScale);
             }
             mProject -> setSettings(newS);
             MainWindow::getInstance() -> setResultsEnabled(false);
@@ -624,27 +630,7 @@ void ModelView::modifyPeriod()
     }
 
 }
-/*
-void ModelView::minEditChanging()
-{
-    //QLocale locale = QLocale();
-    //mTmin = DateUtils::convertFromAppSettingsFormat(locale.toDouble(mMinEdit->text()));
-    
-    mTmin = mMinEdit->text().toDouble();
-    setSettingsValid(false);
-    showCalibration(false);
-}
 
-void ModelView::maxEditChanging()
-{
-    //QLocale locale =QLocale();
-    //mTmax = DateUtils::convertFromAppSettingsFormat(locale.toDouble(mMaxEdit->text()));
-    
-    mTmax = mMaxEdit->text().toDouble();
-    setSettingsValid(false);
-    showCalibration(false);
-}
-*/
 /**
  * @brief ModelView::setSettingsValid
  * Important : just disable "Run" and "Results" and "Log" when typing in tmin and tmax edit boxes
@@ -681,7 +667,7 @@ void ModelView::searchEvent()
         QJsonObject state = mProject->state();
         QJsonArray events = state.value(STATE_EVENTS).toArray();
         
-        for (auto &&evJSON : events) {
+        for (auto evJSON : events) {
             const QJsonObject event = evJSON.toObject();
             const int eventId = event.value(STATE_ID).toInt();
             const QString name = event.value(STATE_NAME).toString();

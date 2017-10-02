@@ -112,7 +112,7 @@ void MultiCalibrationDrawing::updateLayout()
     const int panelWidth (15);
     const QFontMetrics fm (font());
 
-    const bool axisVisible = (mGraphHeight > 100.);
+    const bool axisVisible = (mGraphHeight >= 100.);
     const qreal marginBottom =(axisVisible ? font().pointSizeF() + 10. : 10.);
     int y (0);
     int i (0);
@@ -132,9 +132,10 @@ void MultiCalibrationDrawing::updateLayout()
             graph->showYAxisLine(false);
             // usefull for bound, because there is no curve named "Calibration"
             if (graph->getCurve("Calibration"))
-                graph->setOverArrow(GraphView::eNone);
-            else
                 graph->setOverArrow(GraphView::eBothOverflow);
+            else
+                graph->setOverArrow(GraphView::eNone);
+
             graph->setFont(font());
             graph->setTipXLab(tr("t="));
             graph->setGeometry(panelWidth + 5, y, width() - panelWidth, mGraphHeight );
@@ -179,7 +180,7 @@ void MultiCalibrationDrawing::forceRefresh()
     const int panelWidth (15);
     const QFontMetrics fm (font());
 
-    const bool axisVisible = (mGraphHeight > 100.);
+    const bool axisVisible = (mGraphHeight >= 100.);
     const qreal marginBottom =(axisVisible ? font().pointSizeF() + 10. : 10.);
     int y (0);
     int i (0);

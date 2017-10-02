@@ -27,6 +27,8 @@ public:
     void setProject(Project *project) {mProject = project;}
     void setFont(const QFont& font);
     void updateGraphList();
+    void initScale (const double &majorScale, const int &minorScale) { mMajorScale= majorScale; mMinorScale = minorScale;}
+    void initScale (const Scale &s) { mMajorScale = s.mark; mMinorScale = s.tip;}
 
 
 protected:
@@ -92,12 +94,8 @@ private:
     Label* mMinorScaleLab;
     LineEdit* mMinorScaleEdit;
 
- //   double mTminDisplay;
-   // double mTmaxDisplay;
-
     double mMajorScale;
     int mMinorScale;
-
 
     double mTminDisplay;
     double mTmaxDisplay;

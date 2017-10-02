@@ -199,7 +199,7 @@ void GraphView::zoomX(const type_data min, const type_data max)
         mCurrentMinX = min;
         mCurrentMaxX = max;
 
-        this->mAxisToolX.updateValues(width(), 10., min, max);
+        mAxisToolX.updateValues(width(), 10., min, max);
         if (mAutoAdjustYScale) {
             qreal yMax = -INFINITY;
             qreal yMin =  INFINITY;
@@ -220,8 +220,17 @@ void GraphView::zoomX(const type_data min, const type_data max)
                     }
                  }
             }
-            if (yMax > yMin)
-                setRangeY(yMin, yMax);
+            if (yMax > yMin) {
+                if (mAxisToolY.mMinMaxOnly || !mYAxisTicks)
+                    setRangeY(yMin, yMax);
+
+                else {
+                    Scale yScale;
+                    yScale.findOptimal(yMin, yMax, 7);
+                    setRangeY(yScale.min, yScale.max);
+                    setYScaleDivision(yScale);
+                }
+            }
         }
             repaintGraph(true);
     }
@@ -230,9 +239,15 @@ void GraphView::zoomX(const type_data min, const type_data max)
     
 }
 
-void GraphView::changeXScale (const double &major, const int & minor)
+void GraphView::changeXScaleDivision (const Scale &sc)
 {
-    setXScale(major, minor);
+    setXScaleDivision(sc);
+    repaintGraph(true);
+}
+
+void GraphView::changeXScaleDivision (const double &major, const int & minor)
+{
+    setXScaleDivision(major, minor);
     repaintGraph(true);
 }
 
@@ -504,7 +519,6 @@ void GraphView::setCurveVisible(const QString& name, const bool visible)
 
 GraphCurve* GraphView::getCurve(const QString& name)
 {
-    //for (int i=0; i<mCurves.size(); ++i)
     for (auto &&cu : mCurves)
         if (cu.mName == name)
             return &cu;
@@ -534,7 +548,7 @@ void GraphView::removeAllZones()
     repaintGraph(false);
 }
 
-//#pragma mark Mouse events & Tool Tip
+//  Mouse events & Tool Tip
 void GraphView::enterEvent(QEvent* e)
 {
     Q_UNUSED(e);
