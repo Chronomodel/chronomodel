@@ -48,7 +48,7 @@ message("RCC_DIR : $$RCC_DIR")
 QT += core gui widgets svg
 
 # Resource file (for images)
-RESOURCES = $$PRO_PATH/Chronomodel.qrc
+#RESOURCES = $$PRO_PATH/Chronomodel.qrc
 RESOURCES = Chronomodel.qrc
 
 # Compilation warning flags
@@ -76,10 +76,12 @@ macx{
 	# This is the SDK used to compile : change it to whatever latest version of mac you are using.
 	# to determine which version of the macOS SDK is installed with xcode? type on a terminal
 	# xcodebuild -showsdks
-        QMAKE_MAC_SDK = macosx10.12
-        QMAKESPEC = macx-clang
+        QMAKE_MAC_SDK=macosx #macosx10.12
+        # QMAKE_MAC_SDK.macosx.version=10.13
+        message("QMAKE_MAC_SDK = $$QMAKE_MAC_SDK")
+        QMAKESPEC=macx-clang
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
-	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
+        QMAKE_MACOSX_DEPLOYMENT_TARGET=10.7
 
 	# Define a set of resources to deploy inside the bundle :
 	RESOURCES_FILES.path = Contents/Resources

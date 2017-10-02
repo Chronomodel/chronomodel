@@ -785,7 +785,7 @@ bool Project::saveProjectToFile()
 // --------------------------------------------------------------------
 //     Project Settings
 // --------------------------------------------------------------------
-//#pragma mark Settings
+// Settings
 bool Project::setSettings(const ProjectSettings& settings)
 {
     if (settings.mTmin >= settings.mTmax) {

@@ -341,7 +341,7 @@ QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const Q
             // traceBeta is sorted with the value alpha join
             auto it = std::copy( traceBeta.begin()+ alphaIdx, traceBeta.end(), betaUpper.begin() );
 
-            const int betaUpperSize = std::distance(betaUpper.begin(), it);
+            const int betaUpperSize = (const int) std::distance(betaUpper.begin(), it);
 
             betaUpper.resize(betaUpperSize);  // shrink container to new size
 
@@ -484,7 +484,7 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const 
             // traceAlpha is sorted with the value alpha join
             auto it = std::copy( traceAlpha.begin(), traceAlpha.begin() + alphaIdx, alphaUnder.begin() );
 
-            const int alphaUnderSize = std::distance(alphaUnder.begin(),it);
+            const int alphaUnderSize = (const int) std::distance(alphaUnder.begin(),it);
 
             alphaUnder.resize(alphaUnderSize);  // shrink container to new size
 

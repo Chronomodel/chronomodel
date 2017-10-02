@@ -78,9 +78,6 @@ protected:
     bool mUpdatingItems;
     bool mAltIsDown;
 
-    
-
-
     bool mShowAllThumbs;
     
     double mZoom;

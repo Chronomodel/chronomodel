@@ -105,7 +105,7 @@ void Tabs::showWidget(const int &i)
 }
 
 
-void Tabs::setTab(int i, bool notify)
+void Tabs::setTab(const int &i, bool notify)
 {
     Q_ASSERT (i<mTabNames.size());
 
@@ -140,24 +140,7 @@ void Tabs::paintEvent(QPaintEvent* e)
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
     p.setFont(font());
-/*
-    for (int i=0; i<mTabNames.size(); ++i)
-        if (i != mCurrentIndex) {
-            const QRectF r = mTabRects[i];
-            p.fillRect(r, Qt::black);
-            p.setPen(QColor(200, 200, 200));
-            p.drawText(r, Qt::AlignCenter, mTabNames[i]);
-            if (mTabWidgets[i])
-                mTabWidgets[i]->setVisible(false);
-        }
 
-    // we start to hide all widget and after we show the current widget, because if there is the same widget used in the several
-    // tabs we have to show it again
-    if (mTabWidgets[mCurrentIndex]) {
-      //  mTabWidgets[mCurrentIndex]->setVisible(true);
-       // resize(width(), height());
-    }
-*/
     for (int i=0; i<mTabNames.size(); ++i)
         if (i != mCurrentIndex) {
             const QRectF r = mTabRects[i];

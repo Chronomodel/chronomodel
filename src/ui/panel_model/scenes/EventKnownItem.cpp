@@ -88,13 +88,10 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
         curve.mIsHorizontalSections = true;
         qreal tLower;
         qreal tUpper;
-        //if (bound.mKnownType == EventKnown::eFixed) {
-            tLower = bound.mFixed;
-            tUpper = tLower;
-       /* } else {
-            tLower = bound.mUniformStart;
-            tUpper = bound.mUniformEnd;
-        } */
+
+        tLower = bound.mFixed;
+        tUpper = tLower;
+
 
         curve.mSections.append(qMakePair(tLower,tUpper));
         graph->addCurve(curve);

@@ -223,6 +223,7 @@ void ProjectView::initResults(Model* model, const AppSettings* appSet)
         
         mResultsView->initResults(model);
         mRefreshResults = true;
+        mResultsView->update();
 
         model->generateModelLog();
         mLogModelEdit->setText(model->getModelLog());

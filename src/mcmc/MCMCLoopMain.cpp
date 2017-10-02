@@ -99,7 +99,7 @@ void MCMCLoopMain::initVariablesForChain()
 {
     // today we have the same acceptBufferLen for every chain
     const int acceptBufferLen =  mChains[0].mNumBatchIter;
-    long int initReserve = 0;
+    int initReserve (0);
 
     for (const ChainSpecs c: mChains)
        initReserve += ( 1 + (c.mMaxBatchs*c.mNumBatchIter) + c.mNumBurnIter + (c.mNumRunIter/c.mThinningInterval) );
@@ -391,7 +391,7 @@ QString MCMCLoopMain::initMCMC()
         
         
         int j = 0;
-        for (const Date date : event->mDates) {
+        for (const Date & date : event->mDates) {
             ++j;
             log += "<br>";
 
