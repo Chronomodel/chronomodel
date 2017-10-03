@@ -78,12 +78,10 @@ MetropolisVariable::MetropolisVariable (const MetropolisVariable& origin)
 /** Destructor */
 MetropolisVariable::~MetropolisVariable()
 {
-    //reset();
-    mRawTrace = nullptr;
-    mFormatedTrace = nullptr;
-    
-    mCredibility.~QPair();
-    mHPD.~QMap();
+    mRawTrace->~QVector();
+    mFormatedTrace->~QVector();
+
+    mHPD.clear();
     QObject::disconnect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
 
 }
@@ -91,9 +89,6 @@ MetropolisVariable::~MetropolisVariable()
 /** Copy assignment operator */
 MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable & origin)
 {
-   // MetropolisVariable tmp(origin);
-   // *this = std::move(tmp);
-
     mX = origin.mX;
     mRawTrace->resize(origin.mRawTrace->size());
     std::copy(origin.mRawTrace->begin(),origin.mRawTrace->end(),mRawTrace->begin());
@@ -124,7 +119,7 @@ MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable & ori
     mtminUsed = origin.mtminUsed;
     mtmaxUsed = origin.mtmaxUsed;
 
-QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
+    QObject::connect(this, &MetropolisVariable::formatChanged, this, &MetropolisVariable::updateFormatedTrace);
 
     return *this;
 }

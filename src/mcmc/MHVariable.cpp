@@ -58,13 +58,12 @@ MHVariable::MHVariable( const MHVariable& origin)
 
 MHVariable::~MHVariable()
 {
-   //mAllAccepts->clear();
-   //mHistoryAcceptRateMH->clear();
-    
-    mAllAccepts->~QVector();// = nullptr;
-    mHistoryAcceptRateMH->~QVector();// = nullptr;
-    mRawTrace->~QVector();// = nullptr;;
-    mFormatedTrace->~QVector();// = nullptr;;
+    mAllAccepts->~QVector();
+    mHistoryAcceptRateMH->~QVector();
+
+    // mRawTrace and mFormatedTrace are destroye by the MetropolisVariable destructor
+   // mRawTrace->~QVector();// = nullptr;;
+   // mFormatedTrace->~QVector();// = nullptr;;
 }
 
 bool MHVariable::tryUpdate(const double x, const double rapport)
@@ -72,7 +71,7 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
     if (mLastAccepts.length() >= mLastAcceptsLength)
         mLastAccepts.removeAt(0);
 
-    bool accepted = false;
+    bool accepted (false);
     
     if (rapport >= 1.)
         accepted = true;
@@ -88,7 +87,6 @@ bool MHVariable::tryUpdate(const double x, const double rapport)
     mLastAccepts.append(accepted);    
     mAllAccepts->append(accepted);
     return accepted;
-
      
 }
 
@@ -112,7 +110,6 @@ void MHVariable::reserve(const int reserve)
 
 MHVariable& MHVariable::copy(MHVariable const& origin)
 {
-    //MetropolisVariable(origin);
     mX = origin.mX;
     mRawTrace->resize(origin.mRawTrace->size());
     std::copy(origin.mRawTrace->begin(),origin.mRawTrace->end(),mRawTrace->begin());
@@ -189,7 +186,7 @@ void MHVariable::saveCurrentAcceptRate()
 QVector<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains, int index)
 {
     QVector<double> accept(0);
-    int shift = 0;
+    int shift (0);
     const int reserveSize = (int) ceil(chains.at(index).mNumBurnIter + (chains.at(index).mBatchIndex * chains.at(index).mNumBatchIter) + chains.at(index).mNumRunIter / chains.at(index).mThinningInterval);
 
     accept.reserve(reserveSize);
@@ -216,9 +213,9 @@ QVector<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains,
 
 void MHVariable::generateGlobalRunAcceptation(const QList<ChainSpecs> &chains)
 {
-    double accepted = 0.;
-    double acceptsLength = 0.;
-    int shift = 0;
+    double accepted (0.);
+    double acceptsLength (0.);
+    int shift (0);
 
     for (auto&& chain : chains) {
         int burnAdaptSize = chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);

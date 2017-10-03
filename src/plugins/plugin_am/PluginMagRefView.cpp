@@ -172,7 +172,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         double avg (0.);
         if (is_inc)  {
             avg = inc;
-            error = alpha / 2.448f;
+            error = alpha / 2.448;
 
         } else if (is_dec) {
             avg = dec;
@@ -214,10 +214,10 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
                 v = exp(-0.5 * pow((t - inc) / error, 2.));
 
             else if (is_dec)
-                v = exp(-0.5 * pow((t - dec) / error, 2));
+                v = exp(-0.5 * pow((t - dec) / error, 2.));
 
             else if(is_int)
-                v = exp(-0.5 * pow((t - intensity) / error, 2));
+                v = exp(-0.5 * pow((t - intensity) / error, 2.));
 
             measureCurve[t] = v;
         }
