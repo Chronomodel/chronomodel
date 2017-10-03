@@ -49,10 +49,10 @@ void GraphViewDate::paintEvent(QPaintEvent* e)
 }
 
 // not used since v1.4
-QColor GraphViewDate::getEventColor()
-{
-    return mDate->getEventColor();
-}
+//QColor GraphViewDate::getEventColor()
+//{
+//    return mDate->getEventColor();
+//}
 
 void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
 {

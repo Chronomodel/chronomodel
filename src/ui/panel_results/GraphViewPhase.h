@@ -14,7 +14,7 @@ public:
     virtual ~GraphViewPhase();
     
     void setPhase(Phase* phase);
-    void setGraphFont(const QFont& font);
+ //   void setGraphFont(const QFont& font);
     
     void generateCurves(TypeGraph typeGraph, Variable variable);
     void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
@@ -23,7 +23,7 @@ public:
 protected:
     void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent* );
-    void updateLayout();
+ //   void updateLayout();
     
 private:
     Phase* mPhase;

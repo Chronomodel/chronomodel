@@ -25,11 +25,6 @@ GraphViewPhase::~GraphViewPhase()
     mPhase = nullptr;
 }
 
-void GraphViewPhase::setGraphFont(const QFont& font)
-{
-    GraphViewResults::setFont(font);
-    updateLayout();
-}
 
 
 void GraphViewPhase::setPhase(Phase* phase)
@@ -43,10 +38,10 @@ void GraphViewPhase::setPhase(Phase* phase)
 
 }
 
-void GraphViewPhase::updateLayout()
-{
-        GraphViewResults::updateLayout();
-}
+//void GraphViewPhase::updateLayout()
+//{
+//        GraphViewResults::updateLayout();
+//}
 
 void GraphViewPhase::paintEvent(QPaintEvent* e)
 {

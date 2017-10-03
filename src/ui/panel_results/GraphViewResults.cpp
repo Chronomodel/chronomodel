@@ -26,7 +26,8 @@ mMainColor(QColor(50, 50, 50)),
 mMargin(5),
 mLineH(20),
 mTopShift(0),
-mHeightForVisibleAxis(100)
+mHeightForVisibleAxis(100),
+mGraphFont(font())
 {
     setGeometry(QRect(0,0,200,100));
     setMouseTracking(true);
@@ -62,7 +63,7 @@ mHeightForVisibleAxis(100)
     palette.setColor(QPalette::Base, Qt::white);
     palette.setColor(QPalette::Text, Qt::black);
     mTextArea->setPalette(palette);
-    QFont font = mTextArea->font();
+    QFont font (qApp->font());
     font.setPointSizeF(pointSize(11));
     mTextArea->setFont(font);
     mTextArea->setText(tr("Nothing to display"));
@@ -288,9 +289,10 @@ void GraphViewResults::setNumericalResults(const QString& resultsHTML, const QSt
     mTextArea->setHtml(resultsHTML);
 }
 
-void GraphViewResults::showNumericalResults(bool show)
+void GraphViewResults::showNumericalResults(const bool show)
 {
     mShowNumResults = show;
+   // mTextArea->setFont(qApp->font());
     mTextArea->setVisible(show);
     updateLayout();
 }
@@ -298,6 +300,7 @@ void GraphViewResults::showNumericalResults(bool show)
 void GraphViewResults::setShowNumericalResults(const bool show)
 {
     mShowNumResults = show;
+   // mTextArea->setFont(qApp->font());
     mTextArea->setVisible(show);
 }
 
@@ -315,8 +318,10 @@ void GraphViewResults::setRendering(GraphView::Rendering render)
 
 void GraphViewResults::setGraphFont(const QFont& font)
 {
-    setFont(font);
+   // setFont(font);
+    // mTextArea->setFont(qApp->font());
     // Recalcule mTopShift based on the new font, and position the graph according :
+    mGraphFont = font;
     updateLayout();
 }
 
@@ -339,8 +344,8 @@ void GraphViewResults::resizeEvent(QResizeEvent* e)
 void GraphViewResults::updateLayout()
 {
      // define the rigth margin,according to the max on the scale
-    QFont fontTitle(font());
-    fontTitle.setPointSizeF(this->font().pointSizeF() * 1.1);
+    QFont fontTitle(mGraphFont);
+    fontTitle.setPointSizeF(mGraphFont.pointSizeF() * 1.1);
     QFontMetricsF fmTitle(fontTitle);
     mTopShift = fmTitle.height() + 4. + 1.;
 
@@ -348,15 +353,16 @@ void GraphViewResults::updateLayout()
 
 
     type_data max = mGraph->maximumX();
-    QFontMetricsF fmAxe (qApp->font());
+    QFontMetricsF fmAxe (mGraphFont);
     qreal marginRight = floor(fmAxe.width(stringWithAppSettings(max)) / 2.);
 
     mGraph->setMarginRight(marginRight);
-    mGraph->setFont(font());
+    mGraph->setFont(mGraphFont);
 
     if (mShowNumResults) {
         mGraph    -> setGeometry(graphRect.adjusted(0, 0, -width()/3., 0 ));
         mTextArea -> setGeometry(graphRect.adjusted(width()*2./3. + 2., -mTopShift + 2 , -2, -2));
+
     } else
             mGraph->setGeometry(graphRect);
 
@@ -364,7 +370,7 @@ void GraphViewResults::updateLayout()
 
     if ((mGraph->hasCurve())) {
         mGraph->showXAxisValues(axisVisible);
-        mGraph->setMarginBottom(axisVisible ? mGraph->font().pointSizeF() + 10. : 10.);
+        mGraph->setMarginBottom(axisVisible ? mGraphFont.pointSizeF() + 10. : 10.);
     }
 
     update();
@@ -381,8 +387,8 @@ void GraphViewResults::mousePressEvent(QMouseEvent *event)
 void GraphViewResults::paintEvent(QPaintEvent* )
 {
     // write mTitle above the graph
-    QFont fontTitle(font());
-    fontTitle.setPointSizeF(font().pointSizeF()*1.1);
+    QFont fontTitle(mGraphFont);
+    fontTitle.setPointSizeF(mGraphFont.pointSizeF()*1.1);
     QFontMetrics fmTitle(fontTitle);
 
     QPainter p;
@@ -390,6 +396,7 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     p.fillRect(mGraph->geometry().adjusted(0, - mTopShift, 0, 0), mGraph->getBackgroundColor());
     
     p.setFont(fontTitle);
+
     p.setPen(Qt::black);
     
     p.drawText(QRectF(50., 3., fmTitle.width(mTitle), mTopShift - 1.), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
@@ -399,6 +406,7 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     p.setPen(QColor(105, 105, 105));
     if (mShowNumResults)
         p.drawRect(mTextArea->geometry().adjusted(-1, -1, 1, 1));
+
 
     p.end();
 

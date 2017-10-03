@@ -35,10 +35,10 @@ void GraphViewEvent::setEvent(Event* event)
     update();
 }
 
-void GraphViewEvent::updateLayout()
-{
-        GraphViewResults::updateLayout();
-}
+//void GraphViewEvent::updateLayout()
+//{
+//        GraphViewResults::updateLayout();
+//}
 
 void GraphViewEvent::paintEvent(QPaintEvent* e)
 {

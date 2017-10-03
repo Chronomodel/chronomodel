@@ -643,7 +643,7 @@ void ResultsView::updateControls()
      *  Activate specific controls for post. distrib. (first tab)
      * -------------------------------------------------------*/
 
-    mAllChainsCheck    -> setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+//    mAllChainsCheck    -> setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
     mDataCalibCheck    -> setVisible((mCurrentTypeGraph == GraphViewResults::ePostDistrib)
                                      && mDatesfoldCheck->isVisible()
                                      && mDatesfoldCheck->isChecked()
@@ -653,29 +653,29 @@ void ResultsView::updateControls()
                                      && mDatesfoldCheck->isChecked()
                                      && mDataThetaRadio->isChecked());
 
-    mDensityOptsTitle -> setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-    mDensityOptsGroup -> setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-    mCredibilityCheck->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-    mThreshLab->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-    mFFTLenLab->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-    mBandwidthLab->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-    /* -------------------------------------------------------
-     *  Switch between checkBoxes or Radio-buttons for chains
-     * -------------------------------------------------------*/
-    if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
-        for (auto &&checkChain : mCheckChainChecks)
-            checkChain->setVisible(true);
+//    mDensityOptsTitle -> setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+//    mDensityOptsGroup -> setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+//    mCredibilityCheck->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+//    mThreshLab->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+//    mFFTLenLab->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+//    mBandwidthLab->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+//    /* -------------------------------------------------------
+//     *  Switch between checkBoxes or Radio-buttons for chains
+//     * -------------------------------------------------------*/
+//    if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
+//        for (auto &&checkChain : mCheckChainChecks)
+//            checkChain->setVisible(true);
         
-        for (auto &&chainRadio : mChainRadios)
-            chainRadio->setVisible(false);
+//        for (auto &&chainRadio : mChainRadios)
+//            chainRadio->setVisible(false);
 
-    } else {
-        for (auto &&checkChain : mCheckChainChecks)
-            checkChain->setVisible(false);
+//    } else {
+//        for (auto &&checkChain : mCheckChainChecks)
+//            checkChain->setVisible(false);
         
-        for (auto &&chainRadio : mChainRadios)
-            chainRadio->setVisible(true);
-    }
+//        for (auto &&chainRadio : mChainRadios)
+//            chainRadio->setVisible(true);
+//    }
     
     /* -------------------------------------------------------
      *  Display by phases or by events
@@ -869,6 +869,44 @@ void ResultsView::updateTabByTempo()
 
 void ResultsView::updateTabDisplay(const int &i)
 {
+
+    /* -------------------------------------------------------
+     *  Activate specific controls for post. distrib. (first tab)
+     * -------------------------------------------------------*/
+
+    mAllChainsCheck    -> setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+
+    mDensityOptsTitle -> setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+    if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && ( mCurrentVariable != GraphViewResults::eTempo
+                                                                 && mCurrentVariable != GraphViewResults::eActivity) ) {
+        mDensityOptsGroup -> setVisible(true);
+
+    } else {
+        mDensityOptsGroup -> setVisible(false);
+    }
+
+    mCredibilityCheck->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+    mThreshLab->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+    mFFTLenLab->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+    mBandwidthLab->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+    /* -------------------------------------------------------
+     *  Switch between checkBoxes or Radio-buttons for chains
+     * -------------------------------------------------------*/
+    if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
+        for (auto &&checkChain : mCheckChainChecks)
+            checkChain->setVisible(true);
+
+        for (auto &&chainRadio : mChainRadios)
+            chainRadio->setVisible(false);
+
+    } else {
+        for (auto &&checkChain : mCheckChainChecks)
+            checkChain->setVisible(false);
+
+        for (auto &&chainRadio : mChainRadios)
+            chainRadio->setVisible(true);
+    }
+
     int ySpan(0);
 
     switch (i) {
@@ -884,7 +922,10 @@ void ResultsView::updateTabDisplay(const int &i)
         int wBut = mOptionsW/3;
         ySpan =  mMargin;// Reset ySpan inside mSpanGroup
         if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
-            if (mCurrentVariable == GraphViewResults::eTheta) {
+            if ( mCurrentVariable == GraphViewResults::eTheta
+                || mCurrentVariable == GraphViewResults::eTempo
+                || mCurrentVariable == GraphViewResults::eActivity ) {
+
                 mDisplayStudyBut->setText(tr("Study Period Display"));
                 mDisplayStudyBut->setVisible(true);
                 mDisplayStudyBut->move(0, ySpan);
@@ -996,9 +1037,12 @@ void ResultsView::updateTabDisplay(const int &i)
               mAllChainsCheck->move(mMargin, ySpan);
               ySpan += mAllChainsCheck->height() + mMargin;
 
-              for (auto && check: mCheckChainChecks) {
-                  check->move(mMargin, ySpan);
-                  ySpan += check->height() + mMargin;
+
+              if (mCurrentVariable != GraphViewResults::eTempo && mCurrentVariable != GraphViewResults::eActivity ) {
+                  for (auto && check: mCheckChainChecks) {
+                      check->move(mMargin, ySpan);
+                      ySpan += check->height() + mMargin;
+                  }
               }
 
           } else {      // trace, accept or correl : chains are selectable with radio-buttons
@@ -1028,10 +1072,13 @@ void ResultsView::updateTabDisplay(const int &i)
                   mCredibilityCheck->setVisible(false);
 
               if (mCurrentVariable == GraphViewResults::eTempo || mCurrentVariable == GraphViewResults::eActivity ) {
+                  mDensityOptsTitle->setVisible(false);
                   mThreshLab->setVisible(false);
                   mHPDEdit->setVisible(false);
+                  mDensityOptsGroup->setGeometry(0, 0, mOptionsW, 0);
 
               } else {
+                  mDensityOptsTitle->setVisible(true);
                   mThreshLab->setVisible(true);
                   mHPDEdit->setVisible(true);
                   mThreshLab->move(mMargin, ySpan);
@@ -1045,10 +1092,11 @@ void ResultsView::updateTabDisplay(const int &i)
                   mBandwidthLab->move(mMargin, ySpan);
                   mBandwidthEdit->move(mOptionsW - mMargin - mBandwidthEdit->width(), ySpan);
                   ySpan += mBandwidthEdit->height() + mMargin;
+
+                  mDensityOptsGroup->setGeometry(0, mDensityOptsTitle->y() + mDensityOptsTitle->height(), mOptionsW, ySpan);
               }
 
 
-              mDensityOptsGroup->setGeometry(0, mDensityOptsTitle->y() + mDensityOptsTitle->height(), mOptionsW, ySpan);
               mTabMCMC->resize(mOptionsW, mDensityOptsGroup->y() + mDensityOptsGroup->height() + 5) ;
 
           } else
@@ -1300,6 +1348,12 @@ void ResultsView::updateLayout()
     updateTabByScene();
     updateTabByTempo();
 
+    if (mCurrentVariable == GraphViewResults::eTempo || mCurrentVariable == GraphViewResults::eActivity) {
+        mTabDisplayMCMC->setTabVisible(1, false);
+        mTabDisplayMCMC->setTab(0, false);
+     } else
+        mTabDisplayMCMC->setTabVisible(1, true);
+
     /*
      *  mTabDisplayMCMC
      */
@@ -1327,7 +1381,7 @@ void ResultsView::updateGraphsLayout()
     const int sbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     const bool byEvents (mTabByScene->currentIndex() == 0);
     const bool byPhases (mTabByScene->currentIndex() == 1);
-    const bool byTempo (mTabByScene->currentIndex() == 2);
+    const bool byTempo  (mTabByScene->currentIndex() == 2);
     //
 
     /* ----------------------------------------------------------
@@ -1338,7 +1392,7 @@ void ResultsView::updateGraphsLayout()
         int y (0);
         if (mPhasesScrollArea) {
             QWidget* wid = mPhasesScrollArea->widget();
-            for (auto && graph : mByPhasesGraphs) {
+            for (auto &&graph : mByPhasesGraphs) {
                 graph->setGeometry(0, y, width() - mOptionsW - sbe, mGraphsH);
                 graph->update();
                 y += graph->height();
@@ -1402,7 +1456,6 @@ void ResultsView::clearResults()
         delete graph;
 
     mByEventsGraphs.clear();
-    
     mByPhasesGraphs.clear();
     mByTempoGraphs.clear();
 
@@ -2841,20 +2894,20 @@ void ResultsView::updateFont()
         for (GraphViewResults* phaseGraph : mByPhasesGraphs)
             phaseGraph->setGraphFont(mFont);
 
-         for (GraphViewResults* eventGraph : mByEventsGraphs)
+        for (GraphViewResults* eventGraph : mByEventsGraphs)
             eventGraph->setGraphFont(mFont);
 
-         for (GraphViewResults* tempoGraph : mByTempoGraphs)
+        for (GraphViewResults* tempoGraph : mByTempoGraphs)
             tempoGraph->setGraphFont(mFont);
 
-         mRuler->setFont(mFont);
+        mRuler->setFont(mFont);
 
     }
 }
 
 void ResultsView::updateThickness(int value)
 {
-     for (GraphViewResults* allKindGraph : mByEventsGraphs)
+    for (GraphViewResults* allKindGraph : mByEventsGraphs)
         allKindGraph->setGraphsThickness(value);
 
     for (GraphViewResults* allKindGraph : mByPhasesGraphs)
@@ -2862,7 +2915,7 @@ void ResultsView::updateThickness(int value)
 
     for (GraphViewResults* allKindGraph : mByTempoGraphs)
         allKindGraph->setGraphsThickness(value);
-    
+
 }
 
 void ResultsView::updateOpacity(int value)

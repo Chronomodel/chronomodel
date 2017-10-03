@@ -14,16 +14,14 @@ public:
     virtual ~GraphViewTempo();
     
     void setPhase(Phase* phase);
-    void setGraphFont(const QFont& font);
 
     void generateCurves(TypeGraph typeGraph, Variable variable);
     void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
 
-
 protected:
     void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent* );
-    void updateLayout();
+
 
 private:
     Phase* mPhase;

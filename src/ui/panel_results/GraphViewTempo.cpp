@@ -24,12 +24,6 @@ GraphViewTempo::~GraphViewTempo()
     mPhase = nullptr;
 }
 
-void GraphViewTempo::setGraphFont(const QFont& font)
-{
-    GraphViewResults::setFont(font);
-    updateLayout();
-}
-
 
 void GraphViewTempo::setPhase(Phase* phase)
 {
@@ -42,10 +36,6 @@ void GraphViewTempo::setPhase(Phase* phase)
 
 }
 
-void GraphViewTempo::updateLayout()
-{
-        GraphViewResults::updateLayout();
-}
 
 void GraphViewTempo::paintEvent(QPaintEvent* e)
 {
@@ -283,17 +273,17 @@ void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
     }
     else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eTempo) {
-
+    // With variable eTemp there is no choise of "chain", it must be "all chains"
          const GraphCurve* tempo = mGraph->getCurve("Post Distrib Tempo All Chains");
 
          if ( tempo && !tempo->mData.isEmpty()) {
 
-             mGraph->setCurveVisible("Post Distrib Tempo All Chains", mShowAllChains);
-             mGraph->setCurveVisible("Post Distrib Tempo Inf All Chains", mShowAllChains);
-             mGraph->setCurveVisible("Post Distrib Tempo Sup All Chains", mShowAllChains);
+             mGraph->setCurveVisible("Post Distrib Tempo All Chains", true);//mShowAllChains);
+             mGraph->setCurveVisible("Post Distrib Tempo Inf All Chains", true);//mShowAllChains);
+             mGraph->setCurveVisible("Post Distrib Tempo Sup All Chains", true);//mShowAllChains);
 
-             mGraph->setCurveVisible("Post Distrib Tempo Cred Inf All Chains", mShowAllChains);
-             mGraph->setCurveVisible("Post Distrib Tempo Cred Sup All Chains", mShowAllChains);
+             mGraph->setCurveVisible("Post Distrib Tempo Cred Inf All Chains", true);//mShowAllChains);
+             mGraph->setCurveVisible("Post Distrib Tempo Cred Sup All Chains", true);//mShowAllChains);
 
              mGraph->setTipXLab("t");
              mGraph->setTipYLab("n");
@@ -303,16 +293,13 @@ void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
     }
      else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eActivity) {
-
+        // With variable eActivity there is no choise of "chain", it must be "all chains"
           const GraphCurve* Activity = mGraph->getCurve("Post Distrib Activity All Chains");
 
           if ( Activity && !Activity->mData.isEmpty()) {
 
-              mGraph->setCurveVisible("Post Distrib Activity All Chains", mShowAllChains);
+              mGraph->setCurveVisible("Post Distrib Activity All Chains", true);//mShowAllChains);
 
-             /* for (int i=0; i<mShowChainList.size(); ++i)
-                  mGraph->setCurveVisible("Post Distrib Duration " + QString::number(i), mShowChainList.at(i));
-             */
               mGraph->setTipXLab("t");
               mGraph->setTipYLab("");
               mGraph->setYAxisMode(GraphView::eHidden);

@@ -103,6 +103,7 @@ protected:
 
     qreal mHeightForVisibleAxis;
 
+    QFont mGraphFont;
     //-----
 
 public:
@@ -188,7 +189,7 @@ public slots:
     void setCurrentX(type_data min, type_data max);
     
     void zoom(type_data min, type_data max);
-    void showNumericalResults(bool show);
+    void showNumericalResults(const bool show);
     void setNumericalResults(const QString& resultsHTML, const QString& resultsText);
 
     void saveAsImage();
@@ -205,7 +206,7 @@ protected:
     virtual void resizeEvent(QResizeEvent* e);
     
     // This is not from QWidget : we create this function to update the layout from different places (eg: in resizeEvent()).
-    // It is vitual beacause we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
+    // It is vitual because we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
     virtual void updateLayout();
     
 signals:
