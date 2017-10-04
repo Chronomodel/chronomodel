@@ -3359,7 +3359,8 @@ void ResultsView::exportFullImage()
 
         axisWidget = new AxisWidget(f, curWid);
         axisWidget->mMarginLeft = 50.;
-        axisWidget->mMarginRight = marginRight;//10.;
+        axisWidget->mMarginRight = marginRight;
+        axisWidget->setScaleDivision(mMajorScale, mMinorCountScale);
 
         if (mStatCheck->isChecked()) {
             axisWidget->setGeometry(0, curWid->height() - axeHeight, curWid->width()*2./3., axeHeight);

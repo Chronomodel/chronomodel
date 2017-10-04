@@ -147,7 +147,6 @@ void MultiCalibrationDrawing::updateLayout()
 
     mGraphWidget->resize(width(), y); // Don't use setGeometry() only resize()
 
-
     if (mMouseOverCurve)
         mMarkerX->resize( mMarkerX->thickness(), y);
     else

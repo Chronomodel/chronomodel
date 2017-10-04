@@ -58,7 +58,7 @@ mCurveColor(Painting::mainColorDark)
     mResultsClipBut->setCheckable(true);
 
 
-    mGraphHeightLab = new Label(tr("V Size"), this);
+    mGraphHeightLab = new Label(tr("Y Zoom"), this);
     mGraphHeightLab->setAlignment(Qt::AlignHCenter);
     mGraphHeightLab->setLight();
 
@@ -623,7 +623,7 @@ void MultiCalibrationView::exportImage()
 
 void MultiCalibrationView::exportFullImage()
 {
-    bool printAxis = (mGraphHeight <= 100.);
+    bool printAxis = (mGraphHeight < 100.);
 
     QWidget* widgetExport = mDrawing->getGraphWidget();
 
@@ -636,25 +636,27 @@ void MultiCalibrationView::exportFullImage()
     int legendHeight (20);
 
     if (printAxis) {
-        widgetExport->setFixedHeight(widgetExport->height() + axeHeight + legendHeight );
+        widgetExport->resize(widgetExport->width(), widgetExport->height() + axeHeight + legendHeight );
 
         FormatFunc f = stringWithAppSettings;
 
-        QFontMetricsF fmAxe (font());
+        QFontMetricsF fmAxe (widgetExport->font());
 
         // 3 const : The same Name and same Value as in MultiCalibrationDrawing::updateLayout()
-        const int marginRight = (int) floor(fmAxe.width(mStartEdit->text())/2) + 5;
+        const int marginRight = (int) floor(fmAxe.width(mStartEdit->text())/2);
         const int marginLeft = (int) floor(fmAxe.width(mEndEdit->text())/2) + 5;
         const int panelWidth (20);
 
         axisWidget = new AxisWidget(f, widgetExport);
+        axisWidget->setFont(widgetExport->font());
         axisWidget->mMarginLeft = marginLeft + panelWidth;
         axisWidget->mMarginRight = marginRight;
 
         axisWidget->setGeometry(0, widgetExport->height() - axeHeight, widgetExport->width(), axeHeight);
+        axisWidget->setScaleDivision(mMajorScale, mMinorScale);
         axisWidget->updateValues(widgetExport->width() - axisWidget->mMarginLeft - axisWidget->mMarginRight, 50, mTminDisplay, mTmaxDisplay);
 
-        axisWidget->mShowText = true;
+        //axisWidget->mShowText = true;
         axisWidget->setAutoFillBackground(true);
         axisWidget->mShowSubs = true;
         axisWidget->mShowSubSubs = true;
@@ -690,15 +692,16 @@ void MultiCalibrationView::exportFullImage()
             axisLegend->setParent(nullptr);
             delete axisLegend;
         }
-        widgetExport->setFixedHeight(widgetExport->height() - axeHeight - legendHeight);
-    }
+        widgetExport->resize(widgetExport->width() ,widgetExport->height() - axeHeight - legendHeight);
+    } else
+        widgetExport->resize(widgetExport->width() ,widgetExport->height() - legendHeight);
 
 
     // Revert to default display :
 
     if (fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
-
+    updateLayout();
 }
 
 

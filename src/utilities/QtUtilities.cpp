@@ -155,7 +155,8 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
     if (!fileName.isEmpty()) {
         fileInfo = QFileInfo(fileName);
         const QString fileExtension = fileInfo.suffix();
-        const qreal heightText = r.height()/50.;
+        const qreal heightText (10);
+        const qreal bottomSpace (5);
 
         if (fileExtension == "svg") {
             if (mGraph)
@@ -191,7 +192,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             // -------------------------------
             //  Create the image
             // -------------------------------
-            QImage image(r.width() * pr, (r.height() + heightText) * pr , QImage::Format_ARGB32_Premultiplied);
+            QImage image(r.width() * pr, (r.height() + heightText +bottomSpace) * pr , QImage::Format_ARGB32_Premultiplied);
             if (image.isNull()) {
                 qDebug() << "Cannot export null image!";
                 return fileInfo;
@@ -225,7 +226,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             //  If widget, draw with or without axis
             // -------------------------------
             if (widget) // exportFullImage in ResultsView
-                 widget->render(&p, QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), r.height()+heightText +20));
+                 widget->render(&p, QPoint(0, 0), QRegion(r.x(), r.y(), r.width(), r.height() + heightText + 20));
 
             
             // -------------------------------
@@ -256,16 +257,16 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             p.setFont(ft);
             p.setPen(Qt::black);
             
-            p.drawText(0, r.height() - 5 , r.width(), heightText,
+            p.drawText(0, r.height() + bottomSpace, r.width(), heightText,
 
                        Qt::AlignCenter,
                        qApp->applicationName() + " " + qApp->applicationVersion());
 
             p.end();
             
-            // -------------------------------
-            //  Save file
-            // -------------------------------
+            /* -------------------------------
+             *  Save file
+             * ------------------------------- */
             image.save(fileName, fileExtension.toUtf8(), quality);
 
             //image.save(fileName, formatExt);
@@ -276,7 +277,6 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
              writer.write(image);*/
         }
     }
-
     
     return fileInfo;
 }
