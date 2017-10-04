@@ -221,7 +221,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
     painter->setRenderHint(QPainter::Antialiasing);
     
-    int penWidth = 1;
+    const int penWidth (2);
     QColor color = mEditing ? QColor(77, 180, 62) : QColor(0, 0, 0);
     //set the Arrow under the Event
     setZValue(-1);
