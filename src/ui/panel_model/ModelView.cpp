@@ -1024,7 +1024,7 @@ void ModelView::updateLayout()
     else if (mButImport->isChecked())
         rightTitle = tr("Import Data");
     else if (mButMultiCalib->isChecked())
-            rightTitle = tr("Multi Calibration Panel");
+            rightTitle = tr("Multi-Calibration View");
 
     mRightPanelTitle->setText(rightTitle);
     mRightPanelTitle->setGeometry( width() - (fm.width(mRightPanelTitle->text()) + textSpacer), mButModifyPeriod->y(), fm.width(mRightPanelTitle->text()), topButtonHeight );
