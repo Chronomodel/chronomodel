@@ -31,13 +31,8 @@ public:
 
     void setSettings(const AppSettings& settings);
     AppSettings getSettings();
-    
-protected:
-    //void paintEvent(QPaintEvent* e);
-    //void resizeEvent(QResizeEvent* e);
-    
+        
 private slots:
-    //void fontButtonClicked();
     void changeSettings();
     void buttonClicked(QAbstractButton*);
     
@@ -78,8 +73,10 @@ private:
     QLabel* mPixelRatioLab;
     QSpinBox* mPixelRatio;
     
-    QLabel* mDpmLab;
-    QComboBox* mDpm;
+    /* disabled since v 1.6.4_alpha
+     QLabel* mDpmLab;
+     QComboBox* mDpm;
+    */
     
     QLabel* mImageQualityLab;
     QSpinBox* mImageQuality;
@@ -89,9 +86,6 @@ private:
     
     QLabel* mPrecisionLab;
     QSpinBox* mPrecision;
-    
-  //  QLabel* mSheetLab;
-   // QSpinBox* mNbSheet;
     
     QDialogButtonBox* mButtonBox;
 };

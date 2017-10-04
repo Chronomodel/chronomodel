@@ -137,7 +137,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
 {
     QFileInfo fileInfo;
     
-    QGraphicsScene* scene = nullptr;//dynamic_cast<QGraphicsScene*>(wid);
+    QGraphicsScene* scene = nullptr;
     QWidget* widget = dynamic_cast<QWidget*>(wid);
     GraphView* mGraph = dynamic_cast<GraphView*>(wid);
     
@@ -182,17 +182,19 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
         }
         else { // save PNG
 
-            // -------------------------------
-            //  Get preferences
-            // -------------------------------
+            /* -------------------------------
+             *  Get preferences
+             * -------------------------------*/
+            //For the scene exportation pixel Ration is forced to 1
             const short pr = appSetting.mPixelRatio;
+
             const short dpm = appSetting.mDpm;
             const short quality = appSetting.mImageQuality;
             
             // -------------------------------
             //  Create the image
             // -------------------------------
-            QImage image(r.width() * pr, (r.height() + heightText +bottomSpace) * pr , QImage::Format_ARGB32_Premultiplied);
+            QImage image(r.width() * pr, (r.height() + heightText + bottomSpace) * pr , QImage::Format_ARGB32_Premultiplied);
             if (image.isNull()) {
                 qDebug() << "Cannot export null image!";
                 return fileInfo;
@@ -201,8 +203,10 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             // -------------------------------
             //  Set image properties
             // -------------------------------
-            image.setDotsPerMeterX(dpm * 11811.024 / 300.);
-            image.setDotsPerMeterY(dpm * 11811.024 / 300.);
+            //QGuiApplication::primaryScreen()->devicePixelRatio()
+           // QGuiApplication::primaryScreen()->logicalDotsPerInch(); // physicalDotsPerInchX()
+           //  image.setDotsPerMeterX(dpm * 11811.024 / 300.);
+           //  image.setDotsPerMeterY(dpm * 11811.024 / 300.);
             image.setDevicePixelRatio(pr);
             
             // -------------------------------

@@ -81,14 +81,19 @@ QDialog(parent, flags)
     mPixelRatio->setRange(1, 5);
     mPixelRatio->setSingleStep(1);
     
+    // Not use because modify the size of the text in the scene, dusable since version: v 1.6.4_alpha
+    /*
     mDpmLab = new QLabel(tr("Image Export DPM"), this);
     mDpm = new QComboBox(this);
     mDpm->addItems(QStringList() << "72" << "96" << "100" << "150" << "200" << "300");
+    */
     
+    //Specify 0 to obtain small compressed files, 100 for large uncompressed files
     mImageQualityLab = new QLabel(tr("Image Export Quality (0 to 100)"), this);
     mImageQuality = new QSpinBox(this);
     mImageQuality->setRange(1, 100);
     mImageQuality->setSingleStep(1);
+    mImageQuality->setToolTip(tr("0 for small compressed files, 100 for large uncompressed files"));
     
     mFormatDateLab = new QLabel(tr("Time Scale"), this);
     mFormatDateLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -147,8 +152,8 @@ QDialog(parent, flags)
     
     grid->addWidget(mPixelRatioLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mPixelRatio, row, 1);
-    grid->addWidget(mDpmLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mDpm, row, 1);
+    //grid->addWidget(mDpmLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    //grid->addWidget(mDpm, row, 1);
     grid->addWidget(mImageQualityLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mImageQuality, row, 1);
     
@@ -191,7 +196,7 @@ QDialog(parent, flags)
 
     connect(mImageQuality, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &AppSettingsDialog::changeSettings);
     connect(mPixelRatio, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &AppSettingsDialog::changeSettings);
-    connect(mDpm,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &AppSettingsDialog::changeSettings);
+    //connect(mDpm,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &AppSettingsDialog::changeSettings);
     connect(mFormatDate, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &AppSettingsDialog::changeSettings);
     connect(mPrecision, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &AppSettingsDialog::changeSettings);
     //connect(mNbSheet, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &AppSettingsDialog::changeSettings);
@@ -271,7 +276,7 @@ void AppSettingsDialog::setSettings(const AppSettings& settings)
     mOpenLastProjectCheck->setChecked(settings.mOpenLastProjectAtLaunch);
     
     mPixelRatio->setValue(settings.mPixelRatio);
-    mDpm->setCurrentText(QString::number(settings.mDpm));
+    //mDpm->setCurrentText(QString::number(settings.mDpm));
     mImageQuality->setValue(settings.mImageQuality);
     mFormatDate->setCurrentIndex((int)settings.mFormatDate);
     mPrecision->setValue(settings.mPrecision);
@@ -291,7 +296,7 @@ AppSettings AppSettingsDialog::getSettings()
     settings.mCSVDecSeparator = mCSVDecSepCombo->currentData().toString();
     settings.mOpenLastProjectAtLaunch = mOpenLastProjectCheck->isChecked();
     settings.mPixelRatio = mPixelRatio->value();
-    settings.mDpm = mDpm->currentText().toShort();
+    //settings.mDpm = mDpm->currentText().toShort();
     settings.mImageQuality = mImageQuality->value();
     settings.mFormatDate = (DateUtils::FormatDate)mFormatDate->currentIndex();
     settings.mPrecision = mPrecision->value();    
@@ -361,7 +366,7 @@ void AppSettingsDialog::buttonClicked(QAbstractButton* button)
     mOpenLastProjectCheck->setChecked(APP_SETTINGS_DEFAULT_OPEN_PROJ);
 
     mPixelRatio->setValue(APP_SETTINGS_DEFAULT_PIXELRATIO);
-    mDpm->setCurrentText(QString(APP_SETTINGS_DEFAULT_DPM));
+    //mDpm->setCurrentText(QString(APP_SETTINGS_DEFAULT_DPM));
     mImageQuality->setValue(APP_SETTINGS_DEFAULT_IMAGE_QUALITY);
     mFormatDate->setCurrentIndex((int)APP_SETTINGS_DEFAULT_FORMATDATE);
     mPrecision->setValue(APP_SETTINGS_DEFAULT_PRECISION);
