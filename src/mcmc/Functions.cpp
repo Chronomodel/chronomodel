@@ -177,6 +177,57 @@ Quartiles quartilesForTrace(const QVector<type_data> &trace)
     return quartiles;
 }
 
+QVector<double> calculRepartition (const QVector<double>& calib)
+{
+    QVector<double> repartitionTemp;
+
+    // we use long double type because
+    // after several sums, the repartion can be in the double type range
+    long double lastRepVal (0.);
+    for (auto &&v : calib) {
+        long double lastV = v;
+
+        long double rep = lastRepVal;
+        if(v != 0. && lastV != 0.)
+            rep = lastRepVal + (lastV + v) / 2.;
+
+        repartitionTemp.append((double)rep);
+        lastRepVal = rep;
+    }
+    return repartitionTemp;
+}
+
+QVector<double> calculRepartition (const QMap<double, double>  &calib)
+{
+    QVector<double> repartitionTemp;
+
+    // we use long double type because
+    // after several sums, the repartion can be in the double type range
+    long double lastV = calib.value(calib.firstKey());
+    double lastT = calib.firstKey();
+    QMap<double, double>::const_iterator it (calib.cbegin());
+    long double lastRepVal (0.);
+
+    while (it != calib.cend()) {
+        double v = it.value();
+        double t = it.key();
+        long double rep = lastRepVal;
+        if(v != 0. && lastV != 0.)
+            rep = lastRepVal + (t-lastT)*(lastV + v) / 2.;
+
+        lastV = v;
+        lastT = t;
+
+        repartitionTemp.append((double)rep);
+        lastRepVal = rep;
+        ++it;
+    }
+    // normalize repartition
+    for (auto &&v : repartitionTemp)
+        v = v/lastRepVal;
+
+    return repartitionTemp;
+}
 Quartiles quartilesForRepartition(const QVector<double>& repartition, const double tmin, const double step)
 {
     Quartiles quartiles;

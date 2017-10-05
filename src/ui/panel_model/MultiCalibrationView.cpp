@@ -408,7 +408,11 @@ void MultiCalibrationView::updateGraphList()
                 calibGraph->addInfo(d.mName);
                 calibGraph->showInfos(true);
 
-                QMap<type_data, type_data> hpd = create_HPD(calibCurve.mData, mThreshold);
+                // hpd is calculate only on the study Period
+                QMap<type_data, type_data> subData = calibCurve.mData;
+                subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+
+                QMap<type_data, type_data> hpd = create_HPD(subData, mThreshold);
 
                 GraphCurve hpdCurve;
                 hpdCurve.mName = "Calibration HPD";
@@ -477,7 +481,12 @@ void MultiCalibrationView::updateHPDGraphs(const QString &thres)
         GraphCurve* calibCurve = gr->getCurve("Calibration");
         // there is curve named "Calibration" in a Bound
         if (calibCurve) {
-            QMap<type_data, type_data> hpd = create_HPD(calibCurve->mData, mThreshold);
+            // hpd is calculate only on the study Period
+            QMap<type_data, type_data> subData = calibCurve->mData;
+            subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+
+            QMap<type_data, type_data> hpd = create_HPD(subData, mThreshold);
+
             GraphCurve* hpdCurve = gr->getCurve("Calibration HPD");
             hpdCurve->mData = hpd;
             gr->forceRefresh();
@@ -580,6 +589,7 @@ void MultiCalibrationView::updateGraphsZoom()
     for (GraphView* gr : *graphList) {
         gr->setRangeX(mTminDisplay, mTmaxDisplay);
         gr->setCurrentX(mTminDisplay, mTmaxDisplay);
+        gr->removeAllZones();
         // ------------------------------------------------------------
         //  Show zones if calibrated data are outside study period
         // ------------------------------------------------------------
@@ -797,17 +807,28 @@ void MultiCalibrationView::showStat()
                        d.autoSetTiSampler(true); // needed if calibration is not done
 
                        QMap<double, double> calibMap = d.getFormatedCalibMap();
+                       // hpd is calculate only on the study Period
+
+                       QMap<double, double>  subData = calibMap;
+                       subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+
                        DensityAnalysis results;
-                       results.analysis = analyseFunction(calibMap);
-                       results.quartiles = quartilesForRepartition(d.getFormatedRepartition(), d.getFormatedTminCalib(), mSettings.mStep);
-                       resultsStr += densityAnalysisToString(results);
+                       results.analysis = analyseFunction(subData);
 
-                       // hpd results
+                       if (!subData.isEmpty()) {
+                           QVector<double> subRepart = calculRepartition(subData);
 
-                       QMap<type_data, type_data> hpd = create_HPD(calibMap, mThreshold);
-                       const double realThresh = map_area(hpd) / map_area(calibMap);
+                           results.quartiles = quartilesForRepartition(subRepart, subData.firstKey(), mSettings.mStep);
+                           resultsStr += densityAnalysisToString(results);
 
-                       resultsStr += + "<br> HPD (" + locale().toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), stringWithAppSettings) + "<br>";
+                            // hpd results
+
+                           QMap<type_data, type_data> hpd = create_HPD(subData, mThreshold);
+
+                           const double realThresh = map_area(hpd) / map_area(subData);
+
+                           resultsStr += + "<br> HPD (" + locale().toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), stringWithAppSettings) + "<br>";
+                       }
                   }
 
                }

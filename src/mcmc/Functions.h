@@ -39,6 +39,8 @@ double shrinkageUniform(const double so2);
 
 Quartiles quartilesForTrace(const QVector<type_data>& trace);
 
+QVector<double> calculRepartition (const QVector<double>& calib);
+QVector<double> calculRepartition (const QMap<double, double> &calib);
 Quartiles quartilesForRepartition(const QVector<double> &repartition, const double tmin, const double step);
 QPair<double, double> credibilityForTrace(const QVector<double>& trace, double thresh, double& exactThresholdResult, const QString description = "Credibility computation");
 QPair<double, double> credibilityForTrace(const QVector<int>& trace, double thresh, double& exactThresholdResult, const QString description = "Credibility computation");

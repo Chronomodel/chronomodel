@@ -270,18 +270,7 @@ void CalibrationView::updateGraphs()
             calibMap = mDate.getFormatedCalibMap();
 
         if (!calibMap.isEmpty()) {
-            // ------------------------------------------------------------
-            //  Display numerical results
-            // ------------------------------------------------------------
-            QString resultsStr;
-            
-            DensityAnalysis results;
-            results.analysis = analyseFunction(calibMap);
 
-            results.quartiles = quartilesForRepartition(mDate.getFormatedRepartition(), mDate.getFormatedTminCalib(), mSettings.mStep);
-
-            resultsStr = densityAnalysisToString(results);
-            
             GraphCurve calibCurve;
             calibCurve.mName = "Calibration";
             calibCurve.mPen.setColor(penColor);
@@ -303,12 +292,16 @@ void CalibrationView::updateGraphs()
             QString input = mHPDEdit->text();
             mHPDEdit->validator()->fixup(input);
             mHPDEdit->setText(input);
-          //  QLocale loc = QLocale();
 
+            // hpd results
             const double thresh = qBound(0., locale().toDouble(input), 100.);
+            // do QMap<type_data, type_data> mData; to calcul HPD on study Period
+            QMap<type_data, type_data> subData = calibCurve.mData;
+            subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
-            QMap<type_data, type_data> hpd = create_HPD(calibCurve.mData, thresh);
-            
+            QMap<type_data, type_data> hpd = create_HPD(subData, thresh);
+
+
             GraphCurve hpdCurve;
             hpdCurve.mName = "Calibration HPD";
             hpdCurve.mPen = penColor;
@@ -318,7 +311,7 @@ void CalibrationView::updateGraphs()
             hpdCurve.mData = hpd;
             mCalibGraph->addCurve(hpdCurve);
             
-            yMax = map_max_value(hpdCurve.mData);
+            yMax = map_max_value(hpd);
 
             mCalibGraph->setRangeY(0., 1. * yMax);
 
@@ -326,10 +319,28 @@ void CalibrationView::updateGraphs()
             mCalibGraph->setFormatFunctX(stringWithAppSettings);
             mCalibGraph->setFormatFunctY(stringWithAppSettings);
             
-            double realThresh = map_area(hpd) / map_area(calibCurve.mData);
-            
-            resultsStr += + "<br> HPD (" + locale().toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), stringWithAppSettings);
-            
+            // ------------------------------------------------------------
+            //  Display numerical results
+            // ------------------------------------------------------------
+            QString resultsStr;
+
+            DensityAnalysis results;
+            results.analysis = analyseFunction(calibMap);
+
+
+
+            if (!subData.isEmpty()) {
+                QVector<double> subRepart = calculRepartition(subData);
+
+                results.quartiles = quartilesForRepartition(subRepart, subData.firstKey(), mSettings.mStep);
+                resultsStr += densityAnalysisToString(results);
+             }
+
+            const double realThresh = map_area(hpd) / map_area(subData);
+
+            resultsStr += + "<br> HPD (" + locale().toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), stringWithAppSettings) ;
+
+
             mResultsText->setText(resultsStr);
 
         } else {
