@@ -58,14 +58,16 @@ Title; Toy
 EVENT1;AM;mesure_inclinaison_a_Paris;inclination;68,5;0;0;0,98;gal2002sph2014_i.ref
 EventAM;AM;mesure_Declinaison_a_Paris;declination;60;10;0;3;gal2002sph2014_d.ref
 Event14C;14C;14C1;1225;30;intcal13.14c;0;0
+// No event name
 ;Gauss;Gauss_ss_event;0;50;equation;0;1;0;none
+// event with data name missing
 Event9;Gauss;;650;50;none;none
-Event1;Gauss;<New Date>;24;50;none;none
+Event1;Gauss; New Data;24;50;none;none
 Event1;14C;New 14C;1600;35;intcal13.14c;0;0;none
 Event1;14C;With Wiggle;50000;5;intcal13.14c;0;0;range;5;10
 # test info
 Structure; Terrestrial
-Event8;Gauss;<New Date>;-79;50;none;none
+Event8;Gauss; New Data;-79;50;none;none
 
 EventAM;AM;incli;inclination;60;0;0;1;gal2002sph2014_i.ref;none
 Event14C;﻿14C;shell;2900;36;marine04.14c;-150;20;none
@@ -238,8 +240,8 @@ void ImportDataView::browse()
 }
 
 /**
- * @brief ImportDataView::exportDates export all data inside event, in a compatible csv file to import them later
- * /// the bound are insert as Structure but they are not importable
+ * @brief Export all data inside event, in a compatible csv file to import them later
+ *  the bound are insert as Structure but they are not importable
  */
 void ImportDataView::exportDates()
 {
