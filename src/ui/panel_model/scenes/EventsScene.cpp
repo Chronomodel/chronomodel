@@ -1230,6 +1230,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
         // look for an existing event with the same Name
         QString eventName = listDates.at(i).first;
         Date date = listDates.at(i).second;
+
         int eventIdx (-1);
         int j (0);
 
@@ -1247,6 +1248,8 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
             QJsonObject dateJson = date.toJson();
             QJsonArray datesEvent = eventFinded.value(STATE_EVENT_DATES).toArray();
             dateJson[STATE_ID] = project->getUnusedDateId(datesEvent);
+            if (dateJson[STATE_NAME].toString() == "")
+                dateJson[STATE_NAME] = "No Name " + QString::number(dateJson[STATE_ID].toInt());
             datesEvent.append(dateJson);
             eventFinded[STATE_EVENT_DATES] = datesEvent;
             // updateEvent() do pushProjectState(stateNext, reason, true);
@@ -1258,6 +1261,8 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
             event.mName = (eventName=="" ? date.mName : eventName);
             event.mId = project->getUnusedEventId(events);
             date.mId = 0;
+            if (date.mName == "")
+                date.mName = "No Name";
             event.mDates.append(date);
             event.mItemX = e->scenePos().x() + EventCount * deltaX;
             event.mItemY = e->scenePos().y() + EventCount * deltaY;

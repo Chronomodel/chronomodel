@@ -253,6 +253,8 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
     for (int i=0; i<datesDragged.size(); ++i) {
         QJsonObject date = datesDragged.at(i).second.toJson();
         date[STATE_ID] = project->getUnusedDateId(dates);
+        if (date[STATE_NAME].toString() == "")
+            date[STATE_NAME] = "No Name " + QString::number(date[STATE_ID].toInt());
         dates.append(date);
     }
     event[STATE_EVENT_DATES] = dates;
