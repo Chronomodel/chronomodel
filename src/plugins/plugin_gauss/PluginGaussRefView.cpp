@@ -55,6 +55,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
     mGraph->setCurrentX(tminDisplay, tmaxDisplay);
     
     mGraph->removeAllCurves();
+    mGraph->removeAllZones();
     mGraph->clearInfos();
     mGraph->showInfos(true);
     mGraph->setFormatFunctX(0);

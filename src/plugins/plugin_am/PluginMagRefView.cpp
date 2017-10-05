@@ -52,6 +52,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
     mGraph->setCurrentX(tminDisplay, tmaxDisplay);
 
     mGraph->removeAllCurves();
+    mGraph->removeAllZones();
     mGraph->clearInfos();
     mGraph->showInfos(true);
     mGraph->setFormatFunctX(0);
