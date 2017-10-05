@@ -18,7 +18,6 @@ class Date;
 class CalibrationCurve;
 
 class Project;
-//class ProjectSettings;
 
 typedef void (*samplingFunction)(Date* date, Event* event);
 

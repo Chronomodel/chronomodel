@@ -81,7 +81,7 @@ QList<Date::DataMethod> PluginTL::allowedDataMethods() const
 QStringList PluginTL::csvColumns() const
 {
     QStringList cols;
-    cols << "Name" << "Age" << "Error (sd)" << "Reference year";
+    cols << "Data Name" << "Age" << "Error (sd)" << "Reference year";
     return cols;
 }
 

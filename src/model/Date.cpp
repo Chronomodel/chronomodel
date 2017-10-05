@@ -813,7 +813,7 @@ void Date::updateWiggle()
     mWiggle.mX = mTheta.mX + mDelta;
 }
 
-//#pragma mark CSV dates
+// CSV dates
 Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
 {
     Date date;
@@ -856,7 +856,7 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale)
         date.mIsValid = plugin->isDateValid(date.mData,date.mSettings);
     }
 
-    plugin = 0;
+    plugin = nullptr;
     return date;
 }
 

@@ -122,7 +122,7 @@ QString Plugin14C::getDateDesc(const Date* date) const
 QStringList Plugin14C::csvColumns() const
 {
     QStringList cols;
-    cols << "Name" << "Age" << "Error (sd)" << "Reference curve" << "ΔR" << "ΔR Error";
+    cols << "Data Name" << "Age" << "Error (sd)" << "Ref. curve" << "ΔR" << "ΔR Error";
     return cols;
 }
 

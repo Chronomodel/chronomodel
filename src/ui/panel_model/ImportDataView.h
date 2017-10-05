@@ -1,5 +1,5 @@
-#ifndef ImportDataView_H
-#define ImportDataView_H
+#ifndef IMPORTDATAVIEW_H
+#define IMPORTDATAVIEW_H
 
 #include <QDialog>
 #include <QTableWidget>
@@ -15,7 +15,7 @@ class ImportDataTable : public QTableWidget
 {
     Q_OBJECT
 public:
-    ImportDataTable(ImportDataView* importView, QWidget* parent = 0);
+    ImportDataTable(ImportDataView* importView, QWidget* parent = nullptr);
     virtual ~ImportDataTable();
 
 private slots:

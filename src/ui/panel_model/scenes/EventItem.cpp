@@ -248,10 +248,10 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
     EventsScene* scene = dynamic_cast<EventsScene*>(mScene);
     Project* project = scene->getProject();
     QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
-    QList<Date> datesDragged = scene->decodeDataDrop(e);
+    QList<QPair<QString, Date>> datesDragged = scene->decodeDataDrop(e);
 
     for (int i=0; i<datesDragged.size(); ++i) {
-        QJsonObject date = datesDragged.at(i).toJson();
+        QJsonObject date = datesDragged.at(i).second.toJson();
         date[STATE_ID] = project->getUnusedDateId(dates);
         dates.append(date);
     }

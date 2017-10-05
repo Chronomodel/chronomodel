@@ -141,17 +141,18 @@ QString PluginMag::getDateDesc(const Date* date) const
     return result;
 }
 
-//#pragma mark CSV
+// CSV
 QStringList PluginMag::csvColumns() const
 {
     QStringList cols;
-    cols << "Name"
-        << "type (inclination | declination | intensity)"
+    cols << "Data Name"
+        //<< "type (inclination | declination | intensity)"
+        << "type"
         << "Inclination value"
         << "Declination value"
         << "Intensity value"
-        << "Error (sd) or alpha 95"
-        << "Reference curve (file name)";
+        << "Error (sd) or α_95"
+        << "Ref. curve";
     return cols;
 }
 

@@ -81,8 +81,8 @@ bool isComment(const QString& str)
     commentsMarkers << "//" << "#" << "/*";
     QString strClean = str.trimmed();
     
-    for (int i=0; i<commentsMarkers.size(); ++i) {
-        if (strClean.startsWith(commentsMarkers[i]))
+    for (auto &&str : commentsMarkers) {
+        if (strClean.startsWith(str))
             return true;
     }
     return false;
@@ -130,7 +130,6 @@ QString intListToString(const QList<int>& intList, const QString& separator)
     QStringList list = intListToStringList(intList);
     return list.join(separator);
 }
-
 
 
 QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogTitle, const QString& defaultPath, const AppSettings & appSetting)
@@ -188,7 +187,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             //For the scene exportation pixel Ration is forced to 1
             const short pr = appSetting.mPixelRatio;
 
-            const short dpm = appSetting.mDpm;
+            //const short dpm = appSetting.mDpm;
             const short quality = appSetting.mImageQuality;
             
             // -------------------------------
@@ -296,7 +295,7 @@ bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName)
     QSvgGenerator svgGenFile;
     svgGenFile.setFileName(fileName);
     svgGenFile.setViewBox(viewBox);
-    //svgGenFile.setSize(QSize(widget->width(),widget->height() + heightText));
+
     svgGenFile.setDescription(QObject::tr("SVG widget drawing "));
     
     QPainter p;
@@ -410,7 +409,7 @@ QString stringWithAppSettings(const double valueToFormat, const bool forCSV)
     if (std::abs(valueToFormat)<1E-6)
         return "0";
 
-    int precision = MainWindow::getInstance()->getAppSettings().mPrecision;
+    const int precision = MainWindow::getInstance()->getAppSettings().mPrecision;
 
     char fmt = 'f';
     if (std::abs(valueToFormat)>250000)
@@ -423,14 +422,14 @@ QString stringWithAppSettings(const double valueToFormat, const bool forCSV)
 
     } else {
         QLocale locale = QLocale();
-        if (precision >0)
+        if (precision > 0)
              return removeZeroAtRight(locale.toString(valueToFormat, fmt, precision));
         else
             return locale.toString(valueToFormat, fmt, precision);
    }
 }
 
-//#pragma mark CSV File
+// CSV File
 bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep, const bool withDateFormat)
 {
     QFile file(filePath);

@@ -330,7 +330,7 @@ void EventsScene::updateSceneFromState()
 {
 
 #ifdef DEBUG
-   qDebug()<<"EventsScene::updateSceneFromState()";
+   //qDebug()<<"EventsScene::updateSceneFromState()";
    QTime startTime = QTime::currentTime();
 #endif
     QJsonObject state = mProject->state();
@@ -1017,51 +1017,12 @@ bool EventsScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
                         return true;
 
                 }
-                /* else {
-                    if (mSelectKeyIsDown) {
 
-                        if (eventClicked->isSelected()) {
-qDebug()<<"eventClicked unselect" <<eventClicked->mData.value(STATE_NAME).toString();
-                                eventClicked->setSelected(false);
-                                eventClicked->setSelectedInData(false);
-                             //   for (QGraphicsItem* d : eventClicked->childItems())
-                               //     d->setSelected(false);
-                       } else {
-                                eventClicked->setSelected(true);
-                                eventClicked->setSelectedInData(true);
-qDebug()<<"itemClicked eventClicked select" <<eventClicked->mData.value(STATE_NAME).toString();
-                                //for (QGraphicsItem* d : eventClicked->childItems())
-                                //    d->setSelected(true);
-                       }
-                   }
-
-                }*/
-            }
-          /*  else {
-                eventClicked->setSelected(false);
-                for (QGraphicsItem* it : eventClicked->childItems()) {
-                    DateItem* d = dynamic_cast<DateItem*>(it);
-                    d->setSelected(false);
-                }
-               // updateStateSelectionFromItem();
-               // sendUpdateProject("Item UnSelected", true, false);//  bool notify = true, bool storeUndoCommand = false
             }
 
-*/
-        } //else {
-            // now this is the current
-            //eventClicked->setSelected(true);
+        }
 
-          //  updateStateSelectionFromItem();
-          //  sendUpdateProject("Item selected", true, false);//  bool notify = true, bool storeUndoCommand = false
-       // }
-
-    } //else
-      //  clearSelection();
-
-   // for (auto i : selectedItems())
-     //   qDebug()<<" itemClicked() select"<<i;
-
+    }
     //updateStateSelectionFromItem(); // emit sendUpdateProject
     sendUpdateProject("Item selected", true, false);//  bool notify = true, bool storeUndoCommand = false
     
@@ -1097,7 +1058,7 @@ void EventsScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e
  */
 void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
 {
-    qDebug() << "EventsScene::keyPressEvent: " << keyEvent->modifiers() << keyEvent->key();
+    //qDebug() << "EventsScene::keyPressEvent: " << keyEvent->modifiers() << keyEvent->key();
 
     if (keyEvent->isAutoRepeat())
         keyEvent->ignore();
@@ -1207,15 +1168,16 @@ void EventsScene::keyReleaseEvent(QKeyEvent* keyEvent)
 }
 
 
-// -----------------------------------------------------------
-//  The following function are about drag & drop
-// -----------------------------------------------------------
+/* -----------------------------------------------------------
+ *  The following function are about drag & drop
+ * ----------------------------------------------------------- */
+
 // Drag & Drop
 void EventsScene::dragMoveEvent(QGraphicsSceneDragDropEvent* e)
 {
-    for (int i=0; i<mItems.size(); ++i) {
-        QRectF r = mItems.at(i)->boundingRect();
-        r.translate(mItems.at(i)->scenePos());
+    for (auto &&it : mItems) {
+        QRectF r = it->boundingRect();
+        r.translate(it->scenePos());
         if (r.contains(e->scenePos())) {
             QGraphicsScene::dragMoveEvent(e);
             return;
@@ -1224,58 +1186,100 @@ void EventsScene::dragMoveEvent(QGraphicsSceneDragDropEvent* e)
     e->accept();
 }
 
+/**
+ * @brief EventsScene::dropEvent Drag and drop from importDataView to the Events'scene. If the data is drop over an existing Event, it is inserting
+ * Or if the data is drop over the scene the data is insert in a new Event or inside an event with the same name (with the same character, no UpperCase check)
+ * @param e
+ */
 void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
 {
-    // ------------------------------------------------------------------
-    //  Check if data have been dropped on an existing event.
-    //  If so, QGraphicsScene::dropEvent(e) will pass the event to the corresponding item
-    // ------------------------------------------------------------------
-    for (int i=0; i<mItems.size(); ++i) {
-        QRectF r = mItems.at(i)->boundingRect();
-        r.translate(mItems.at(i)->scenePos());
+    /* ------------------------------------------------------------------
+     *  Check if data have been dropped on an existing event.
+     *  If so, QGraphicsScene::dropEvent(e) will pass the event to the corresponding item
+     * ------------------------------------------------------------------ */
+    for (auto &&it : mItems) {
+        QRectF r = it->boundingRect();
+        r.translate(it->scenePos());
         if (r.contains(e->scenePos())) {
             QGraphicsScene::dropEvent(e);
             return;
         }
     }
     
-    // ------------------------------------------------------------------
-    //  The data have been dropped on the scene background,
-    //  so create one event per data!
-    // ------------------------------------------------------------------
+    /* ------------------------------------------------------------------
+     *  The data have been dropped on the scene background,
+     *  so create one event per data!
+     * ------------------------------------------------------------------ */
     e->accept();
-    
+
+
+    QList<QPair<QString, Date>> listDates = decodeDataDrop(e);
+
     Project* project = MainWindow::getInstance()->getProject();
-    QJsonObject state = project->state();
-    QJsonArray events = state.value(STATE_EVENTS).toArray();
     
-    QList<Date> dates = decodeDataDrop(e);
-    
+
     // Create one event per data
-    const int deltaY = 100;
-    for (int i=0; i<dates.size(); ++i) {
-        Event event;
-        event.mName = dates.at(i).mName;
-        event.mId = project->getUnusedEventId(events);
-        dates[i].mId = 0;
-        event.mDates.append(dates.at(i));
-        event.mItemX = e->scenePos().x();
-        event.mItemY = e->scenePos().y() + i * deltaY;
-        event.mColor = randomColor();
-        events.append(event.toJson());
+    const int deltaX (152);
+    const int deltaY (100);
+    int EventCount (0);
+    for (int i=0; i<listDates.size(); ++i) {
+        // We must regenerate the variables "state" and "events" after event or data inclusion
+        QJsonObject state = project->state();
+        QJsonArray events = state.value(STATE_EVENTS).toArray();
+
+        // look for an existing event with the same Name
+        QString eventName = listDates.at(i).first;
+        Date date = listDates.at(i).second;
+        int eventIdx (-1);
+        int j (0);
+
+        QJsonObject eventFinded;
+        for (auto &&ev : events) {
+            if (ev.toObject().value(STATE_NAME).toString() == eventName) {
+                eventIdx = j;
+                eventFinded = ev.toObject();
+                break;
+            }
+            ++j;
+        }
+
+        if (eventIdx > -1) {
+            QJsonObject dateJson = date.toJson();
+            QJsonArray datesEvent = eventFinded.value(STATE_EVENT_DATES).toArray();
+            dateJson[STATE_ID] = project->getUnusedDateId(datesEvent);
+            datesEvent.append(dateJson);
+            eventFinded[STATE_EVENT_DATES] = datesEvent;
+            // updateEvent() do pushProjectState(stateNext, reason, true);
+            project->updateEvent(eventFinded, QObject::tr("Dates added to event by CSV drag"));
+
+        } else {
+            Event event;
+            // eventName=="" must never happen because we set "No Name" in ImportDataView::browse()
+            event.mName = (eventName=="" ? date.mName : eventName);
+            event.mId = project->getUnusedEventId(events);
+            date.mId = 0;
+            event.mDates.append(date);
+            event.mItemX = e->scenePos().x() + EventCount * deltaX;
+            event.mItemY = e->scenePos().y() + EventCount * deltaY;
+            event.mColor = randomColor();
+            events.append(event.toJson());
+            state[STATE_EVENTS] = events;
+            project->pushProjectState(state, tr("New Event by CSV drag)"), true);
+            ++EventCount;
+        }
+
+
     }
-    state[STATE_EVENTS] = events;
-    project->pushProjectState(state, tr("Dates added (CSV drag)"), true);
+
 }
 
-QList<Date> EventsScene::decodeDataDrop(QGraphicsSceneDragDropEvent* e)
+QList<Date> EventsScene::decodeDataDrop_old(QGraphicsSceneDragDropEvent* e)
 {
     const QMimeData* mimeData = e->mimeData();
 
     QByteArray encodedData = mimeData->data("application/chronomodel.import.data");
     QDataStream stream(&encodedData, QIODevice::ReadOnly);
-    
-   // QList<QStringList> failed;
+
     QList<int> acceptedRows;
     QList<int> rejectedRows;
     QList<Date> dates;
@@ -1297,10 +1301,9 @@ QList<Date> EventsScene::decodeDataDrop(QGraphicsSceneDragDropEvent* e)
             dates << date;
             acceptedRows.append(csvRow);
             
-        } else {
-            //failed.append(dataStr);
+        } else
             rejectedRows.append(csvRow);
-        }
+
     }
     emit csvDataLineDropAccepted(acceptedRows); //connected to slot ImportDataView::removeCsvRows
     emit csvDataLineDropRejected(rejectedRows);
@@ -1308,3 +1311,41 @@ QList<Date> EventsScene::decodeDataDrop(QGraphicsSceneDragDropEvent* e)
     return dates;
 }
 
+ QList<QPair<QString, Date>> EventsScene::decodeDataDrop(QGraphicsSceneDragDropEvent* e)
+{
+    const QMimeData* mimeData = e->mimeData();
+
+    QByteArray encodedData = mimeData->data("application/chronomodel.import.data");
+    QDataStream stream(&encodedData, QIODevice::ReadOnly);
+
+    QList<int> acceptedRows;
+    QList<int> rejectedRows;
+    QList<QPair<QString, Date>> dates;
+
+    while (!stream.atEnd()) {
+        QString itemStr;
+        stream >> itemStr;
+        const AppSettings settings = MainWindow::getInstance()->getAppSettings();
+        const QString csvSep = settings.mCSVCellSeparator;
+        QStringList dataStr = itemStr.split(csvSep);
+
+        // Remove first column corresponding to csvRow
+        const int csvRow = dataStr.takeFirst().toInt();
+        const QString eventName = dataStr.takeFirst();
+
+        const QLocale csvLocal = settings.mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+        Date date = Date::fromCSV(dataStr, csvLocal);
+
+        if (!date.isNull()) {
+            dates << qMakePair(eventName, date);
+            acceptedRows.append(csvRow);
+
+        } else
+            rejectedRows.append(csvRow);
+
+    }
+    emit csvDataLineDropAccepted(acceptedRows); //connected to slot ImportDataView::removeCsvRows
+    emit csvDataLineDropRejected(rejectedRows);
+
+    return dates;
+}
