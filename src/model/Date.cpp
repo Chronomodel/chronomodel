@@ -871,7 +871,7 @@ QStringList Date::toCSV(const QLocale &csvLocale) const
     if (mDeltaType == Date::eDeltaNone) {
         csv << "none";
 
-    } else if(mDeltaType == Date::eDeltaFixed) {
+    } else if (mDeltaType == Date::eDeltaFixed) {
         csv << "fixed";
         csv << csvLocale.toString(mDeltaFixed);
 
@@ -936,7 +936,7 @@ void Date::autoSetTiSampler(const bool bSet)
                 
                 break;
             }
-                // Seul cas où le taux d'acceptation a du sens car on utilise sigmaMH :
+                // only case with acceptation rate, because we use sigmaMH :
             case eMHSymGaussAdapt:
             {
                 updateti = fMHSymGaussAdapt;
@@ -954,7 +954,7 @@ void Date::autoSetTiSampler(const bool bSet)
   
 }
 
-/*
+/**
  * @brief MH proposal = prior distribution
  *
  */
@@ -978,7 +978,7 @@ void fMHSymetric(Date* date,Event* event)
      
 
 }
-/*
+/**
  * @brief MH proposal = prior distribution
  * @brief identic as fMHSymetric but use getLikelyhoodArg, when plugin offer it
  *
@@ -990,8 +990,8 @@ void fMHSymetricWithArg(Date* date,Event* event)
     
     QPair<long double, long double> argOld, argNew;
     
-    argOld=date->getLikelihoodArg(date->mTheta.mX);
-    argNew=date->getLikelihoodArg(tiNew);
+    argOld = date->getLikelihoodArg(date->mTheta.mX);
+    argNew = date->getLikelihoodArg(tiNew);
     
     const long double rapport=sqrt(argOld.first/argNew.first)*exp(argNew.second-argOld.second);
 
@@ -1013,7 +1013,7 @@ double fProposalDensity(const double t, const double t0, Date* date)
     const double tminCalib (date->mCalibration->mTmin);
     const double tmaxCalib (date->mCalibration->mTmax);
 
-    /// ----q1------Defined only on Calibration range-----
+    // ----q1------Defined only on Calibration range-----
     if (t > tminCalib && t < tmaxCalib){
         //double prop = (t - tmin) / (tmax - tmin);
         const double prop = (t - tminCalib) / (tmaxCalib - tminCalib);
@@ -1025,13 +1025,13 @@ double fProposalDensity(const double t, const double t0, Date* date)
 
         q1 = (date->mCalibration->mRepartition[idxUnder+1] - date->mCalibration->mRepartition[idxUnder])/step;
     }
-    /// ----q2 shrinkage-----------
+    // ----q2 shrinkage-----------
     /*double t0 =(tmax+tmin)/2;
     double s = (tmax-tmin)/2;
     double q2= s / ( 2* pow((s+fabs(t-t0)), 2) );
      */
         
-    /// ----q2 gaussian-----------
+    // ----q2 gaussian-----------
     //double t0 = (tmax+tmin)/2;
     const double sigma = qMax(tmax - tmin, tmaxCalib - tminCalib) / 2;
     const double q2 = exp(-0.5* pow((t-t0)/ sigma, 2)) / (sigma*sqrt(2*M_PI));

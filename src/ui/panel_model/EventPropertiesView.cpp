@@ -174,9 +174,7 @@ mButtonWidth(50)
     
     connect(mDatesList, &DatesList::itemSelectionChanged, this, &EventPropertiesView::updateCombineAvailability);
     connect(mKnownFixedEdit, &QLineEdit::textEdited, this, &EventPropertiesView::updateKnownFixed);
-    //connect(mKnownStartEdit, &QLineEdit::textEdited, this, &EventPropertiesView::updateKnownUnifStart);
-    //connect(mKnownEndEdit, &QLineEdit::textEdited, this, &EventPropertiesView::updateKnownUnifEnd);
-    
+
     QFormLayout* fixedLayout = new QFormLayout();
     fixedLayout->addRow(QString(tr("Value") + " " + "(BC/AD)"), mKnownFixedEdit);
     mFixedGroup = new QGroupBox();

@@ -18,7 +18,7 @@ std::mt19937 Generator::sEngine(0);
 std::uniform_real_distribution<double> Generator::sDoubleDistribution(0.0, 1.0);
 
 //http://xoroshiro.di.unimi.it/
-std::uint64_t Generator::xorshift64starSeed(35);
+std::uint64_t Generator::xorshift64starSeed(35); /**< used with Generator::xorshift64star(void) */
 
 void Generator::initGenerator(const int seed)
 {
@@ -26,7 +26,6 @@ void Generator::initGenerator(const int seed)
    sDoubleDistribution.reset();
    qDebug()<<"initGenerator seed"<<seed;
    xorshift64starSeed = seed;
-
 }
 
 int Generator::createSeed()
@@ -60,7 +59,7 @@ int Generator::randomUniformInt(const int& min, const int& max)
 double Generator::gaussByDoubleExp(const double mean, const double sigma, const double min, const double max)
 {
     errno=0;
-    if((min >= max) || (sigma == 0)) {
+    if ((min >= max) || (sigma == 0)) {
         if(min == max)
             qDebug() << "DOUBLE EXP WARNING : min == max";
         else
@@ -169,27 +168,40 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     return (double)(mean + (x * sigma));
 }
 
-// Simulation d'une loi gaussienne centrée réduite
+
+/**
+ * @brief  Uniformly distributed random numbers with Box-Muller transform see: https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform
+ *
+ *  \f$ U_1 \in [0;1]\f$ and \f$ U_2 \in[0;1] \f$
+ *
+ *  \f$ Z_0=\sqrt{-2 \ln{U_1}} * cos(2  \Pi * U_2) \f$
+ */
 double Generator::boxMuller()
 {
-    const double rand1 = randomUniform();
-    const double rand2 = randomUniform();
-    return sqrt(-2. * log(rand1)) * cos(2. * M_PI * rand2);
+    const double U1 = randomUniform();
+    const double U2 = randomUniform();
+    return sqrt(-2. * log(U1)) * cos(2. * M_PI * U2);
     //checkFloatingPointException("boxMuller");
 }
 
 double Generator::gaussByBoxMuller(const double& mean, const double& sigma)
 {
     return mean + boxMuller() * sigma;
-    
 }
 
-//https://en.wikipedia.org/wiki/Xorshift
-//uint64_t xorshift64starSeed; /* The state must be seeded with a nonzero value. */
+/** https://en.wikipedia.org/wiki/Xorshift
+ *
+ *  more information : http://xoroshiro.di.unimi.it/
+ *
+ *  uint64_t xorshift64starSeed;  The state must be seeded with a nonzero value.
+ *
+ *  This function is ready to use, but not used in this version
+ */
 
 double Generator::xorshift64star(void) {
-       Generator:: xorshift64starSeed ^= Generator::xorshift64starSeed >> 12; // a
-        Generator::xorshift64starSeed ^= Generator::xorshift64starSeed << 25; // b
-        Generator::xorshift64starSeed ^= Generator::xorshift64starSeed >> 27; // c
-        return to_double(Generator::xorshift64starSeed * UINT64_C(2685821657736338717));
+       Generator::xorshift64starSeed ^= Generator::xorshift64starSeed >> 12; // a
+       Generator::xorshift64starSeed ^= Generator::xorshift64starSeed << 25; // b
+       Generator::xorshift64starSeed ^= Generator::xorshift64starSeed >> 27; // c
+
+       return to_double(Generator::xorshift64starSeed * UINT64_C(2685821657736338717));
 }

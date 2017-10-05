@@ -237,6 +237,10 @@ void ImportDataView::browse()
     }
 }
 
+/**
+ * @brief ImportDataView::exportDates export all data inside event, in a compatible csv file to import them later
+ * /// the bound are insert as Structure but they are not importable
+ */
 void ImportDataView::exportDates()
 {
     QString currentDir = MainWindow::getInstance()->getCurrentPath();
@@ -263,21 +267,23 @@ void ImportDataView::exportDates()
                 QJsonArray dates = event[STATE_EVENT_DATES].toArray();
                 
                 int type = event[STATE_EVENT_TYPE].toInt();
-                stream << "Structure"<< sep << ((type == Event::eKnown) ? tr("Bound") : tr("Event")) << " : ";
-                stream << event[STATE_NAME].toString() << "\n\r";
-                
-                for (int j=0; j<dates.size(); ++j) {
-                    QJsonObject date = dates.at(j).toObject();
-                    
-                    try{
-                        Date d;
-                        d.fromJson(date);
-                        if (!d.isNull()) {
-                            QStringList dateCsv = d.toCSV(csvLocal);
-                            stream << dateCsv.join(sep) << "\n\r";
+                const QString eventName = event[STATE_NAME].toString();
+                if (type == Event::eKnown) {
+                    stream << "Structure"<< sep << tr("Bound") << sep << eventName<<  sep << event.value(STATE_EVENT_KNOWN_FIXED).toDouble();
+                } else {
+                   for (int j=0; j<dates.size(); ++j) {
+                        QJsonObject date = dates.at(j).toObject();
+
+                        try{
+                            Date d;
+                            d.fromJson(date);
+                            if (!d.isNull()) {
+                                QStringList dateCsv = d.toCSV(csvLocal);
+                                stream <<eventName<<sep;
+                                stream << dateCsv.join(sep) << "\n\r";
+                            }
                         }
-                    }
-                    catch(QString error){
+                        catch(QString error){
                         QMessageBox message(QMessageBox::Critical,
                                             qApp->applicationName() + " " + qApp->applicationVersion(),
                                             tr("Error : ") + error,
@@ -285,6 +291,7 @@ void ImportDataView::exportDates()
                                             qApp->activeWindow(),
                                             Qt::Sheet);
                         message.exec();
+                    }
                     }
                 }
                 stream << "\n\r";

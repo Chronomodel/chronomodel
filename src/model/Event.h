@@ -19,12 +19,12 @@ class Event
 {
 public:
     enum Type{
-        eDefault = 0,
-        eKnown = 1
+        eDefault = 0,   /**<  The classic type of Event with variance */
+        eKnown = 1     /**< The Bound type */
     };
     enum Method{
-        eFixe = -1, // use with Type==eKnown
-        eDoubleExp = 0,
+        eFixe = -1,  /**<  use with Type==eKnown */
+        eDoubleExp = 0, /**<  The default method */
         eBoxMuller = 1,
         eMHAdaptGauss = 2,
 
@@ -44,12 +44,12 @@ public:
     void reset();
     
     
-    // 2 functions used within the MCMC process ( not in the init part!) :
+    /// Functions used within the MCMC process ( not in the init part!) :
     double getThetaMin(double defaultValue);
     double getThetaMax(double defaultValue);
     
     
-    // 2 functions used within the init MCMC process
+    ///  Functions used within the init MCMC process
     double getThetaMinRecursive_old(const double defaultValue,
                                 const QVector<QVector<Event*> >& eventBranches,
                                 const QVector<QVector<Phase*> >& phaseBranches);
