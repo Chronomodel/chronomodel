@@ -2576,9 +2576,9 @@ void ResultsView::updateScaleX()
     bool isNumber(true);
     double aNumber = locale().toDouble(&str, &isNumber);
 
-    if (!isNumber && aNumber<1)
+    if (!isNumber || aNumber<1)
         return;
-
+qDebug()<<"ResultsView::updateScaleX()"<<mMajorScale<<aNumber<<mMinorCountScale;
     mMajorScale = aNumber;
 
     str = mMinorScaleEdit->text();

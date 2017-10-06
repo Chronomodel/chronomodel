@@ -570,7 +570,7 @@ void MultiCalibrationView::updateScaleX()
     bool isNumber(true);
     double aNumber = locale().toDouble(&str, &isNumber);
 
-    if (!isNumber && aNumber<1)
+    if (!isNumber || aNumber<1)
         return;
     mMajorScale = aNumber;
 
