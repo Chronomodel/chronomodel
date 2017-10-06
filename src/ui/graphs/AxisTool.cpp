@@ -122,33 +122,27 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, F
         }
         else {
             if ( mShowSubs && (mEndVal - mStartVal != INFINITY)) {
-                mTextInc = 1;
+
                 // look for the text increment
-                int textInc (1);
+                const QString textMin =(valueFormatFunc ? valueFormatFunc(mStartVal, false) : stringWithAppSettings(mStartVal, false) );
+                const int textMinWidth =  fm.width(textMin) ;
 
-                qreal prevTextWidth (0.);
-                for (qreal v = mStartVal; v <= mEndVal ; v += mMajorScale)  {
-                    const qreal x = getXForValue(v) + xo;
+                const QString textMax =(valueFormatFunc ? valueFormatFunc(mEndVal, false) : stringWithAppSettings(mEndVal, false) );
+                const int textMaxWidth =  fm.width(textMax) ;
 
-                    QString text =(valueFormatFunc ? valueFormatFunc(v, false) : stringWithAppSettings(v, false) );
-                    const int textWidth =  fm.width(text) ;
-                    const qreal tx = x - textWidth/2.;
-                    if ( tx > prevTextWidth ) {
-                        // memo previous text position
-                        prevTextWidth = tx + textWidth + 1.;
-                        mTextInc = std::max(mTextInc, textInc);
-                        textInc = 1;
-                    } else
-                        ++textInc;
-                }
+                const double nbPossibleText = std::abs(getXForValue(mStartVal) -getXForValue(mEndVal)) / (std::max(textMinWidth, textMaxWidth) + 5.);
 
+                const double nbTheoText = std::abs(getXForValue(mStartVal) -getXForValue(mEndVal)) / std::abs(getXForValue(mStartVal) -getXForValue(mStartVal+mMajorScale));
 
-
+                if (nbTheoText > nbPossibleText)
+                    mTextInc = int (std::ceil(nbTheoText/nbPossibleText));
+                else
+                    mTextInc = 1;
 
                 // draw scale with this text
                 const qreal minorStep (mMajorScale/ mMinorScaleCount);
 
-                textInc = mTextInc - 1;
+                int textInc = mTextInc - 1;
                 qreal xPrev (0.);
                 for (qreal v = mStartVal; v <= mEndVal ; v += mMajorScale)  {
                     const qreal x = getXForValue(v) + xo;
