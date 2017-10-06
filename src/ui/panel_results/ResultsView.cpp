@@ -239,12 +239,11 @@ mMinorCountScale (4)
 
     mXScaleSpin = new QDoubleSpinBox(mSpanGroup);
     mXScaleSpin->setRange(pow(10., (double)mXSlider->minimum()/100.),pow(10., (double)mXSlider->maximum()/100.));
-    //mXScaleSpin->setSuffix("");
     mXScaleSpin->setSingleStep(.01);
     mXScaleSpin->setDecimals(3);
     forceXSpinSetValue = true;
     mXScaleSpin->setValue(sliderToZoom(mXSlider->value()));
-    mXScaleSpin->setFixedSize(mCurrentXMinEdit->width(), fm.height()+ 10);
+    mXScaleSpin->setFixedSize(mCurrentXMinEdit->width(), fm.height() + 10);
     mXScaleSpin->setToolTip(tr("Enter zoom value to magnify the curves on X span"));
 
     mMajorScaleLab = new Label(tr("Major Interval"), mSpanGroup);
@@ -252,16 +251,16 @@ mMinorCountScale (4)
 
     mMajorScaleEdit = new LineEdit(mSpanGroup);
     mMajorScaleEdit->setText(locale().toString(mMajorScale));
-    mMajorScaleEdit->setFixedSize(wEdit, fm.height()+2);
-    mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves"));
+    mMajorScaleEdit->setFixedSize(wEdit, fm.height() + 2);
+    mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves, upper than 1"));
 
     mMinorScaleLab = new Label(tr("Minor Interval Count"), mSpanGroup);
     mMinorScaleLab->setFixedSize(fm.width(mMinorScaleLab->text()), fm.height() + 5);
 
     mMinorScaleEdit = new LineEdit(mSpanGroup);
     mMinorScaleEdit->setText(locale().toString(mMinorCountScale));
-    mMinorScaleEdit->setFixedSize(wEdit, fm.height()+2);
-    mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves"));
+    mMinorScaleEdit->setFixedSize(wEdit, fm.height() + 2);
+    mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves, upper than 1"));
 
     /* -------------------------------------- Graphic Options (old mDisplayGroup) ---------------------------------------------------*/
     
@@ -2575,26 +2574,23 @@ void ResultsView::updateScaleX()
 {
     QString str = mMajorScaleEdit->text();
     bool isNumber(true);
-    mMajorScale =  locale().toDouble(&str, &isNumber);
-    if (!isNumber)
+    double aNumber = locale().toDouble(&str, &isNumber);
+
+    if (!isNumber && aNumber<1)
         return;
 
+    mMajorScale = aNumber;
+
     str = mMinorScaleEdit->text();
-    mMinorCountScale =  locale().toDouble(&str, &isNumber);
-    // update graph and store mMajorScale and mMinorCountScale in mScales[]
-    //qDebug()<<"ResultsView::updateScaleX()"<<mCurrentVariable<<mCurrentTypeGraph;
-/*    if (isNumber)
-        updateGraphsZoomX();
-    else
-        return;
-*/
-    if (isNumber) {
+    aNumber = locale().toDouble(&str, &isNumber);
+
+    if (isNumber && aNumber>=1) {
+        mMinorCountScale =  aNumber;
 
         mRuler->setScaleDivision(mMajorScale, mMinorCountScale);
         QPair<GraphViewResults::Variable, GraphViewResults::TypeGraph> situ (mCurrentVariable, mCurrentTypeGraph);
 
         mScales[situ] = QPair<double, int>(mMajorScale, mMinorCountScale);
-    qDebug()<<"ResultsView::updateScaleX() store "<<situ<<mZooms[situ]<<mScales[situ];
 
         if (mTabByScene->currentIndex() == 0) {
             for (GraphViewResults* eventGraph : mByEventsGraphs)
