@@ -412,7 +412,7 @@ QString stringWithAppSettings(const double valueToFormat, const bool forCSV)
     const int precision = MainWindow::getInstance()->getAppSettings().mPrecision;
 
     char fmt = 'f';
-    if (std::abs(valueToFormat)>250000)
+    if (std::abs(valueToFormat)>100000)
         fmt = 'G';
 
     if (forCSV) {

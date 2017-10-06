@@ -388,11 +388,11 @@ void MultiCalibrationView::updateGraphList()
                 calibCurve.mIsRectFromZero = isTypo;
                 calibCurve.mBrush = QBrush(Qt::NoBrush);
 
-                type_data yMax = map_max_value(calibCurve.mData);
-                yMax = (yMax > 0.) ? yMax : 1.;
+                //type_data yMax = map_max_value(calibCurve.mData);
+                //yMax = (yMax > 0.) ? yMax : 1.;
 
                 GraphView* calibGraph = new GraphView(this);
-                calibGraph->setRangeY(0., 1. * yMax);
+                //calibGraph->setRangeY(0., 1. * yMax);
                 calibGraph->addCurve(calibCurve);
 
                 // Insert the Event Name only if different to the previous Event's name
@@ -423,7 +423,11 @@ void MultiCalibrationView::updateGraphList()
                 hpdCurve.mData = hpd;
                 calibGraph->addCurve(hpdCurve);
 
-                yMax = map_max_value(hpdCurve.mData);
+                // update max inside the display period
+                QMap<type_data, type_data> subDisplay = calibCurve.mData;
+                subDisplay = getMapDataInRange(subDisplay, mTminDisplay, mTmaxDisplay);
+
+                const type_data yMax = map_max_value(subDisplay);
 
                 calibGraph->setRangeY(0., 1. * yMax);
 
@@ -564,14 +568,17 @@ void MultiCalibrationView::updateScaleX()
 {
     QString str = mMajorScaleEdit->text();
     bool isNumber(true);
-    mMajorScale =  locale().toDouble(&str, &isNumber);
-    if (!isNumber)
+    double aNumber = locale().toDouble(&str, &isNumber);
+
+    if (!isNumber && aNumber<1)
         return;
+    mMajorScale = aNumber;
 
     str = mMinorScaleEdit->text();
-    mMinorScale =  locale().toDouble(&str, &isNumber);
+    aNumber = locale().toDouble(&str, &isNumber);
 
-    if (isNumber) {
+    if (isNumber && aNumber>=1) {
+        mMinorScale =  aNumber;
         QList<GraphView*> *graphList = mDrawing->getGraphList();
 
         for (GraphView* gr : *graphList)
@@ -589,17 +596,26 @@ void MultiCalibrationView::updateGraphsZoom()
     for (GraphView* gr : *graphList) {
         gr->setRangeX(mTminDisplay, mTmaxDisplay);
         gr->setCurrentX(mTminDisplay, mTmaxDisplay);
-        gr->removeAllZones();
+
+        // update max inside the display period (mTminDisplay, mTmaxDisplay)
+        GraphCurve* calibCurve = gr->getCurve("Calibration");
+        QMap<type_data, type_data> subDisplay = calibCurve->mData;
+        subDisplay = getMapDataInRange(subDisplay, mTminDisplay, mTmaxDisplay);
+
+        const type_data yMax = map_max_value(subDisplay);
+
+        gr->setRangeY(0., 1. * yMax);
+
         // ------------------------------------------------------------
         //  Show zones if calibrated data are outside study period
         // ------------------------------------------------------------
-        qDebug()<<"multicalView"<<mSettings.getTminFormated();
-        if (mTminDisplay < mSettings.getTminFormated()) {
+       gr->removeAllZones();
+       if (mTminDisplay < mSettings.getTminFormated()) {
             GraphZone zone;
             zone.mXStart = mTminDisplay;
             zone.mXEnd = mSettings.getTminFormated();
             zone.mColor = QColor(217, 163, 69);
-            zone.mColor.setAlpha(35);
+            zone.mColor.setAlpha(75);
             zone.mText = tr("Outside study period");
             gr->addZone(zone);
         }
@@ -608,7 +624,7 @@ void MultiCalibrationView::updateGraphsZoom()
             zone.mXStart = mSettings.getTmaxFormated();
             zone.mXEnd = mTmaxDisplay;
             zone.mColor = QColor(217, 163, 69);
-            zone.mColor.setAlpha(35);
+            zone.mColor.setAlpha(75);
             zone.mText = tr("Outside study period");
             gr->addZone(zone);
         }

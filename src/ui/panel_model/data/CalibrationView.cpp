@@ -89,13 +89,13 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
 
     mEndEdit = new LineEdit(this);
     mEndEdit->setText("1000");
-// ----------
+
     mMajorScaleLab = new Label(tr("Maj. Int"), this);
     mMajorScaleLab->setAlignment(Qt::AlignHCenter);
     mMajorScaleLab->setLight();
 
     mMajorScaleEdit = new LineEdit(this);
-    mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves"));
+    mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves, upper than 1"));
     mMajorScaleEdit->setText(locale().toString(mMajorScale));
 
     mMinorScaleLab = new Label(tr("Min. Cnt"), this);
@@ -103,14 +103,13 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mMinorScaleLab->setLight();
 
     mMinorScaleEdit = new LineEdit(this);
-    mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves"));
+    mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves, upper than 1"));
     mMinorScaleEdit->setText(locale().toString(mMinorScale));
 
     mHPDLab->raise();
     mHPDEdit->raise();
 
     //-------- DrawingView
-
 
     mCalibGraph = new GraphView(mDrawing);
     
@@ -236,19 +235,19 @@ void CalibrationView::updateGraphs()
         // ------------------------------------------------------------
         if (mTminDisplay < mSettings.getTminFormated()) {
             GraphZone zone;
-            zone.mXStart = -INFINITY;
+            zone.mXStart = mTminDisplay;
             zone.mXEnd = mSettings.getTminFormated();
             zone.mColor = QColor(217, 163, 69);
-            zone.mColor.setAlpha(35);
+            zone.mColor.setAlpha(75);
             zone.mText = tr("Outside study period");
             mCalibGraph->addZone(zone);
         }
         if (mTmaxDisplay > mSettings.getTmaxFormated()) {
             GraphZone zone;
             zone.mXStart = mSettings.getTmaxFormated();
-            zone.mXEnd = INFINITY;
+            zone.mXEnd = mTmaxDisplay;
             zone.mColor = QColor(217, 163, 69);
-            zone.mColor.setAlpha(35);
+            zone.mColor.setAlpha(75);
             zone.mText = tr("Outside study period");
             mCalibGraph->addZone(zone);
         }
@@ -279,9 +278,9 @@ void CalibrationView::updateGraphs()
             calibCurve.mIsRectFromZero = isTypo;
             calibCurve.mBrush = isTypo ? QBrush(brushColor) : QBrush(Qt::NoBrush);
 
-            type_data yMax = map_max_value(calibCurve.mData);
-            yMax = (yMax > 0.) ? yMax : 1.;
-            mCalibGraph->setRangeY(0., 1. * yMax);
+          //  type_data yMax = map_max_value(calibCurve.mData);
+          //  yMax = (yMax > 0.) ? yMax : 1.;
+          //  mCalibGraph->setRangeY(0., 1. * yMax);
 
             mCalibGraph->addCurve(calibCurve);
            // mCalibGraph->setVisible(true);
@@ -311,7 +310,11 @@ void CalibrationView::updateGraphs()
             hpdCurve.mData = hpd;
             mCalibGraph->addCurve(hpdCurve);
             
-            yMax = map_max_value(hpd);
+            // update max inside the display period
+            QMap<type_data, type_data> subDisplay = calibCurve.mData;
+            subDisplay = getMapDataInRange(subDisplay, mTminDisplay, mTmaxDisplay);
+
+            const type_data yMax = map_max_value(subDisplay);
 
             mCalibGraph->setRangeY(0., 1. * yMax);
 
@@ -402,40 +405,25 @@ void CalibrationView::updateGraphs()
 
 void CalibrationView::updateZoom()
 {
-/*    type_data min = mCalibGraph->minimumX();
-    type_data max = mCalibGraph->maximumX();
-    type_data minProp = 5. / (max - min);
-    type_data prop = 1;
-    if (prop < minProp)
-        prop = minProp;
-    
-    if (prop != 1) {
-        // Remember old scroll position
-        type_data posProp (0);
-        type_data rangeBefore = (type_data) 10;
-        if (rangeBefore > 0)
-            posProp = 1;
-
-       
-        
-    } else
-*/
-        updateScroll();
-
+    updateScroll();
 }
 
 void CalibrationView::updateScaleX()
 {
     QString str = mMajorScaleEdit->text();
     bool isNumber(true);
-    mMajorScale =  locale().toDouble(&str, &isNumber);
-    if (!isNumber)
+    double aNumber = locale().toDouble(&str, &isNumber);
+
+    if (!isNumber && aNumber<1)
         return;
 
-    str = mMinorScaleEdit->text();
-    mMinorScale =  locale().toDouble(&str, &isNumber);
+    mMajorScale = aNumber;
 
-    if (isNumber) {
+    str = mMinorScaleEdit->text();
+    aNumber = locale().toDouble(&str, &isNumber);
+
+    if (isNumber && aNumber>=1) {
+        mMinorScale =  aNumber;
         mCalibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
         mRefGraphView->changeXScaleDivision(mMajorScale, mMinorScale);
     }
