@@ -89,8 +89,10 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             
         } else if (mode == DATE_GAUSS_MODE_EQ) {
             QMap<double,double> refCurve;
-            
-            for (double t=tminDisplay; t<=tmaxDisplay; t+=mSettings.mStep) {
+            double stepDisplay (tmaxDisplay - tminDisplay);
+            if (a>0)
+                stepDisplay = stepDisplay/1000.;
+            for (double t=tminDisplay; t<=tmaxDisplay; t+=stepDisplay) {
                 const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
                 refCurve[t] = a * tRaw * tRaw + b * tRaw + c;
             }
@@ -109,7 +111,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             if (curve.mDataMean.isEmpty()) {
                 GraphZone zone;
                 zone.mColor = Qt::gray;
-                zone.mColor.setAlpha(25);
+                zone.mColor.setAlpha(75);
                 zone.mXStart = tminDisplay;
                 zone.mXEnd = tmaxDisplay;
                 zone.mText = tr("No reference data");
@@ -120,7 +122,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             if (tminDisplay < tminRef) {
                 GraphZone zone;
                 zone.mColor = QColor(217, 163, 69);
-                zone.mColor.setAlpha(35);
+                zone.mColor.setAlpha(75);
                 zone.mXStart = tminDisplay;
                 zone.mXEnd = tminRef;
                 zone.mText = tr("Outside reference area");
@@ -130,7 +132,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             if (tmaxRef < tmaxDisplay) {
                 GraphZone zone;
                 zone.mColor = QColor(217, 163, 69);
-                zone.mColor.setAlpha(35);
+                zone.mColor.setAlpha(75);
                 zone.mXStart = tmaxRef;
                 zone.mXEnd = tmaxDisplay;
                 zone.mText = tr("Outside reference area");

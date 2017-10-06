@@ -82,7 +82,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         if (curve.mDataMean.isEmpty()) {
             GraphZone zone;
             zone.mColor = Qt::gray;
-            zone.mColor.setAlpha(25);
+            zone.mColor.setAlpha(75);
             zone.mXStart = tminDisplay;
             zone.mXEnd = tmaxDisplay;
             zone.mText = tr("No reference data");
@@ -93,7 +93,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         if (tminDisplay < tminRef) {
             GraphZone zone;
             zone.mColor = QColor(217, 163, 69);
-            zone.mColor.setAlpha(35);
+            zone.mColor.setAlpha(75);
             zone.mXStart = tminDisplay;
             zone.mXEnd = tminRef;
             zone.mText = tr("Outside reference area");
@@ -103,7 +103,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         if (tmaxRef < tmaxDisplay) {
             GraphZone zone;
             zone.mColor = QColor(217, 163, 69);
-            zone.mColor.setAlpha(35);
+            zone.mColor.setAlpha(75);
             zone.mXStart = tmaxRef;
             zone.mXEnd = tmaxDisplay;
             zone.mText = tr("Outside reference area");

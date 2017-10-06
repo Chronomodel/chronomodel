@@ -74,8 +74,6 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
 
         double tminRef = date.getFormatedTminRefCurve();
         double tmaxRef = date.getFormatedTmaxRefCurve();
-
-        //QColor color2(150, 150, 150);
         
         PluginMag* plugin = (PluginMag*)date.mPlugin;
         const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
@@ -83,7 +81,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         if (curve.mDataMean.isEmpty()) {
             GraphZone zone;
             zone.mColor = Qt::gray;
-            zone.mColor.setAlpha(25);
+            zone.mColor.setAlpha(75);
             zone.mXStart = tminDisplay;
             zone.mXEnd = tmaxDisplay;
             zone.mText = tr("No reference data");
@@ -94,7 +92,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         if (tminDisplay < tminRef){
             GraphZone zone;
             zone.mColor = QColor(217, 163, 69);
-            zone.mColor.setAlpha(35);
+            zone.mColor.setAlpha(75);
             zone.mXStart = tminDisplay;
             zone.mXEnd = tminRef;
             zone.mText = tr("Outside reference area");
@@ -104,7 +102,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         if (tmaxRef < tmaxDisplay) {
             GraphZone zone;
             zone.mColor = QColor(217, 163, 69);
-            zone.mColor.setAlpha(35);
+            zone.mColor.setAlpha(75);
             zone.mXStart = tmaxRef;
             zone.mXEnd = tmaxDisplay;
             zone.mText = tr("Outside reference area");
