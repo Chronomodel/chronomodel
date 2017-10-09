@@ -552,7 +552,7 @@ void CalibrationView::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
     
-    const int graphLeft (mButtonWidth);//mImageSaveBut->x() + mImageSaveBut->width());
+    const int graphLeft (mButtonWidth);
     const int graphWidth (width() - graphLeft);
 
     QPainter p(this);
@@ -605,13 +605,11 @@ void CalibrationView::updateLayout()
     y += mMajorScaleLab->height();
     mMajorScaleEdit->setGeometry(3, y, mButtonWidth-6, textHeight);
     y += mMajorScaleEdit->height() + verticalSpacer;
-   // mMajorScaleEdit->setText(locale().toString(mMajorScale));
 
     mMinorScaleLab->setGeometry(0, y, mButtonWidth, textHeight);
     y += mMinorScaleLab->height();
     mMinorScaleEdit->setGeometry(3, y, mButtonWidth-6, textHeight);
     y += mMinorScaleEdit->height() + 3*verticalSpacer;
-   // mMinorScaleEdit->setText(locale().toString(mMinorScale));
 
     mHPDLab->setGeometry(0, y, mButtonWidth, textHeight);
     y += mHPDLab->height();

@@ -72,7 +72,6 @@ public:
     void generateNumericalResults(const QList<ChainSpecs>& chains);
     
     void generateTempo();
-    void generateTempoCredibility();
 
     void clearTraces();
     void clearPosteriorDensities();

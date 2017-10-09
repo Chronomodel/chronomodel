@@ -2369,10 +2369,7 @@ void ResultsView::updateScales()
         }
     }
 
-qDebug()<<"ResultsView::updateScales() restore "<<mMajorScale<<mMinorCountScale;
-
     mResultZoomX = (mResultMaxX - mResultMinX)/(mResultCurrentMaxX - mResultCurrentMinX);
-qDebug()<<"ResultsView::updateScales() mResultZoomX = "<<mResultZoomX;
 
     /* ------------------------------------------
      *  Set Ruler Current Position
@@ -2405,8 +2402,6 @@ qDebug()<<"ResultsView::updateScales() mResultZoomX = "<<mResultZoomX;
     /* -----------------------------------------------
      *  Set All Graphs Ranges (This is not done by generateCurves !)
      * -----------------------------------------------*/
-
-
 
     if (mTabByScene->currentIndex() == 0) {
         for (GraphViewResults* allGraph : mByEventsGraphs) {
@@ -2578,7 +2573,7 @@ void ResultsView::updateScaleX()
 
     if (!isNumber || aNumber<1)
         return;
-qDebug()<<"ResultsView::updateScaleX()"<<mMajorScale<<aNumber<<mMinorCountScale;
+
     mMajorScale = aNumber;
 
     str = mMinorScaleEdit->text();
@@ -2807,7 +2802,7 @@ void ResultsView::updateScaleEdit()
  */
 void ResultsView::updateGraphsZoomX()
 {
-    qDebug()<<"ResultsView::updateGraphsZoomX()";
+   // qDebug()<<"ResultsView::updateGraphsZoomX()";
 
     if (mTabByScene->currentIndex() == 0) {
         for (GraphViewResults* eventGraph : mByEventsGraphs)

@@ -339,7 +339,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                     mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " Chain " + QString::number(j), mShowChainList.at(j));
 
             }
-            mGraph->setTipXLab("duration");
+            mGraph->setTipXLab(tr("Duration"));
             mGraph->setYAxisMode(GraphView::eHidden);
 
         }
@@ -361,7 +361,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList.at(i));
         }
 
-        mGraph->setTipXLab("iteration");
+        mGraph->setTipXLab(tr("Iteration"));
         mGraph->setTipYLab("t");
         mGraph->setYAxisMode(GraphView::eMinMax);
         mGraph->autoAdjustYScale(true);
@@ -377,8 +377,8 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         for (int i=0; i<mShowChainList.size(); ++i)
             mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList.at(i));
 
-        mGraph->setTipXLab("iteration");
-        mGraph->setTipYLab("rate");
+        mGraph->setTipXLab(tr("Iteration"));
+        mGraph->setTipYLab(tr("rate"));
         mGraph->setYAxisMode(GraphView::eMinMax);
         mGraph->autoAdjustYScale(false); // do  repaintGraph()
         mGraph->setRangeY(0, 100);
@@ -396,7 +396,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setCurveVisible("Correl Limit Upper " + QString::number(i), mShowChainList.at(i));
         }
         mGraph->setTipXLab("h");
-        mGraph->setTipYLab("value");
+        mGraph->setTipYLab(tr("Value"));
         mGraph->setYAxisMode(GraphView::eMinMax);
         mGraph->autoAdjustYScale(false); // do  repaintGraph()
         mGraph->setRangeY(-1, 1);

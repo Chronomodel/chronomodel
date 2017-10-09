@@ -49,7 +49,7 @@ void GraphViewTempo::resizeEvent(QResizeEvent* )
 
 void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
 {
-    //qDebug()<<"GraphViewTempo::generateCurves()";
+    qDebug()<<"GraphViewTempo::generateCurves()";
     Q_ASSERT(mPhase);
     GraphViewResults::generateCurves(typeGraph, variable);
     
@@ -70,7 +70,7 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
     QString resultsHTML = ModelUtilities::tempoResultsHTML(mPhase);
     setNumericalResults(resultsHTML, resultsText);
 
-    mGraph->setOverArrow(GraphView::eNone);
+    mGraph->setOverArrow(GraphView::eNone); // ??
     /* -------------first tab : posterior distrib-----------------------------------
      *  Possible curves :
      *  - Post Distrib Duration
@@ -101,7 +101,7 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->addCurve(curveDurationHPD);
             mGraph->setFormatFunctX(stringWithAppSettings);
             mGraph->setFormatFunctY(nullptr);
-
+            mGraph->setOverArrow(GraphView::eBothOverflow);
             mGraph->addCurve(curveDuration);
 
 
@@ -139,7 +139,7 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
                                                      "Post Distrib Tempo All Chains",
                                                      color.darker(), Qt::SolidLine);
         curveTempo.mIsRectFromZero = false;
-         curveTempo.mIsHisto = false;
+        curveTempo.mIsHisto = false;
 
         GraphCurve curveTempoInf = generateDensityCurve(mPhase->mTempoInf,
                                                      "Post Distrib Tempo Inf All Chains",
@@ -194,6 +194,10 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
         zoneMax.mText = tr("Outside study period");
         mGraph->addZone(zoneMax);
 
+        const type_data yMax = map_max_value(curveCredSup.mData);
+
+        mGraph->setRangeY(0., yMax);
+
     }
 
     else if (typeGraph == ePostDistrib && variable == eActivity) {
@@ -207,7 +211,12 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
                                                      "Post Distrib Activity All Chains",
                                                      color, Qt::SolidLine);
 
+        mGraph->setOverArrow(GraphView::eBothOverflow);
         mGraph->addCurve(curveActivity);
+        const type_data yMax = map_max_value(curveActivity.mData);
+
+        mGraph->setRangeY(0., yMax);
+
     }
 
     /* -----------------Second tab : History plot-------------------------------
@@ -215,7 +224,7 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
      * ------------------------------------------------ */
 
     else if (typeGraph == eTrace && variable == eDuration) {
-        mGraph->mLegendX = "Iterations";
+        mGraph->mLegendX = tr("Iterations");
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(stringWithAppSettings);
         mTitle = tr("Phase Duration") + " : " + mPhase->mName;
@@ -278,17 +287,17 @@ void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
          if ( tempo && !tempo->mData.isEmpty()) {
 
-             mGraph->setCurveVisible("Post Distrib Tempo All Chains", true);//mShowAllChains);
-             mGraph->setCurveVisible("Post Distrib Tempo Inf All Chains", true);//mShowAllChains);
-             mGraph->setCurveVisible("Post Distrib Tempo Sup All Chains", true);//mShowAllChains);
+             mGraph->setCurveVisible("Post Distrib Tempo All Chains", true);    //mShowAllChains);
+             mGraph->setCurveVisible("Post Distrib Tempo Inf All Chains", true);    //mShowAllChains);
+             mGraph->setCurveVisible("Post Distrib Tempo Sup All Chains", true);    //mShowAllChains);
 
-             mGraph->setCurveVisible("Post Distrib Tempo Cred Inf All Chains", true);//mShowAllChains);
-             mGraph->setCurveVisible("Post Distrib Tempo Cred Sup All Chains", true);//mShowAllChains);
+             mGraph->setCurveVisible("Post Distrib Tempo Cred Inf All Chains", true);   //mShowAllChains);
+             mGraph->setCurveVisible("Post Distrib Tempo Cred Sup All Chains", true);   //mShowAllChains);
 
              mGraph->setTipXLab("t");
              mGraph->setTipYLab("n");
              mGraph->setYAxisMode(GraphView::eMinMax);
-             mGraph->adjustYToMinMaxValue();
+             mGraph->autoAdjustYScale(true);// do repaintGraph()
          }
 
     }
@@ -298,12 +307,12 @@ void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
           if ( Activity && !Activity->mData.isEmpty()) {
 
-              mGraph->setCurveVisible("Post Distrib Activity All Chains", true);//mShowAllChains);
+              mGraph->setCurveVisible("Post Distrib Activity All Chains", true);    //mShowAllChains);
 
               mGraph->setTipXLab("t");
               mGraph->setTipYLab("");
               mGraph->setYAxisMode(GraphView::eHidden);
-              mGraph->autoAdjustYScale(true);
+              mGraph->autoAdjustYScale(true); // do repaintGraph()
           }
 
      }
@@ -325,7 +334,7 @@ void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         mGraph->setTipXLab("iteration");
         mGraph->setTipYLab("t");
         mGraph->setYAxisMode(GraphView::eMinMax);
-        mGraph->autoAdjustYScale(true);
+        mGraph->autoAdjustYScale(true); // do repaintGraph()
     }
     repaint();
 }

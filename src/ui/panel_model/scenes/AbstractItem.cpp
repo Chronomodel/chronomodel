@@ -175,7 +175,7 @@ QVariant AbstractItem::itemChange(GraphicsItemChange change, const QVariant& val
         }*/
     } else  if (change == ItemPositionHasChanged && scene()) {
 
-        qDebug()<<"AbstractItem::itemChange() ItemPositionHasChanged "<<value.toPointF()<<"pos()"<<pos();
+      //  qDebug()<<"AbstractItem::itemChange() ItemPositionHasChanged "<<value.toPointF()<<"pos()"<<pos();
         updateItemPosition(value.toPointF());
     }
     else if (change == ItemSelectedHasChanged || change == ItemSelectedChange) {
@@ -185,7 +185,7 @@ QVariant AbstractItem::itemChange(GraphicsItemChange change, const QVariant& val
         }
     else if (change == ItemChildAddedChange ) {
 
-            qDebug()<<"AbstractItem::itemChange() ItemChildAddedChange  d "<<mData.value(STATE_NAME).toString()<<value;
+          //  qDebug()<<"AbstractItem::itemChange() ItemChildAddedChange  d "<<mData.value(STATE_NAME).toString()<<value;
           // mScene->sendUpdateProject(tr("item move"), true, false);
             // mScene->updateStateSelectionFromItem(); // selection is manage in the scene unit
         }
