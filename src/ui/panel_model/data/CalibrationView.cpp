@@ -316,7 +316,7 @@ void CalibrationView::updateGraphs()
 
             const type_data yMax = map_max_value(subDisplay);
 
-            mCalibGraph->setRangeY(0., 1. * yMax);
+            mCalibGraph->setRangeY(0., yMax);
 
             mCalibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             mCalibGraph->setFormatFunctX(stringWithAppSettings);
@@ -605,13 +605,13 @@ void CalibrationView::updateLayout()
     y += mMajorScaleLab->height();
     mMajorScaleEdit->setGeometry(3, y, mButtonWidth-6, textHeight);
     y += mMajorScaleEdit->height() + verticalSpacer;
-    mMajorScaleEdit->setText(locale().toString(mMajorScale));
+   // mMajorScaleEdit->setText(locale().toString(mMajorScale));
 
     mMinorScaleLab->setGeometry(0, y, mButtonWidth, textHeight);
     y += mMinorScaleLab->height();
     mMinorScaleEdit->setGeometry(3, y, mButtonWidth-6, textHeight);
     y += mMinorScaleEdit->height() + 3*verticalSpacer;
-    mMinorScaleEdit->setText(locale().toString(mMinorScale));
+   // mMinorScaleEdit->setText(locale().toString(mMinorScale));
 
     mHPDLab->setGeometry(0, y, mButtonWidth, textHeight);
     y += mHPDLab->height();
