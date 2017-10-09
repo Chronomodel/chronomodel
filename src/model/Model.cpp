@@ -1394,7 +1394,7 @@ void Model::generateTempo()
         /// Erase containers
         N.fill(0);
         N2.fill(0);
-#ifdef ACTIVITY // used uf we want to compute with the some vs derivative function
+#ifdef ACTIVITY // used if we want to compute with the some vs derivative function
         activity .fill(0); //mActivity
 #endif
 
