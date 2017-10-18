@@ -6,7 +6,7 @@
 # ChronoModel
 #
 #-------------------------------------------------
-VERSION = 2.0.1_beta # must match value in src/main.cpp
+VERSION = 2.0.2_alpha # must match value in src/main.cpp
 #PRO_PATH=$$PWD
 PRO_PATH=$$_PRO_FILE_PWD_
 
@@ -66,23 +66,24 @@ RESOURCES = $$PRO_PATH/Chronomodel.qrc
 CONFIG += c++11
 
 #########################################
-# MAC specific settings
+# MacOS specific settings
 #########################################
 macx{
-    message("MacOs specific settings")
+    message("MacOSX specific settings")
 	# Icon file
         ICON = $$PRO_PATH/icon/Chronomodel.icns
     
 	# This is the SDK used to compile : change it to whatever latest version of mac you are using.
 	# to determine which version of the macOS SDK is installed with xcode? type on a terminal
 	# xcodebuild -showsdks
-        QMAKE_MAC_SDK=macosx #macosx10.12
-        # QMAKE_MAC_SDK.macosx.version=10.13
+
+
+        QMAKESPEC = macx-clang
+        QMAKE_MAC_SDK = macosx10.13 #macosx10.12
         message("QMAKE_MAC_SDK = $$QMAKE_MAC_SDK")
-        QMAKESPEC=macx-clang
+
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
         QMAKE_MACOSX_DEPLOYMENT_TARGET=10.7
-
 	# Define a set of resources to deploy inside the bundle :
 	RESOURCES_FILES.path = Contents/Resources
 	RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
@@ -90,6 +91,9 @@ macx{
 	QMAKE_BUNDLE_DATA += RESOURCES_FILES
 
 }
+#########################################
+# Windows specific settings
+#########################################
 win32{
 	# Resource file (Windows only)
         message("WIN specific settings")
