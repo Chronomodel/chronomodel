@@ -49,14 +49,13 @@ mCurveColor(Painting::mainColorDark)
     mImageClipBut->setToolTip(tr("Copy image to clipboard"));
     mImageClipBut->setIconOnly(true);
 
-    mResultsClipBut = new Button(tr("Stat"), this);
-    mResultsClipBut->setIcon(QIcon(":stats_w.png"));
-    mResultsClipBut->setFlatVertical();
-    mResultsClipBut->setToolTip(tr("Copy text results to clipboard"));
-    mResultsClipBut->setIconOnly(true);
-    mResultsClipBut->setChecked(false);
-    mResultsClipBut->setCheckable(true);
-
+    mStatClipBut = new Button(tr("Stat"), this);
+    mStatClipBut->setIcon(QIcon(":stats_w.png"));
+    mStatClipBut->setFlatVertical();
+    mStatClipBut->setToolTip(tr("Show Stats for calibrated dates"));
+    mStatClipBut->setIconOnly(true);
+    mStatClipBut->setChecked(false);
+    mStatClipBut->setCheckable(true);
 
     mGraphHeightLab = new Label(tr("Y Zoom"), this);
     mGraphHeightLab->setAlignment(Qt::AlignHCenter);
@@ -68,7 +67,6 @@ mCurveColor(Painting::mainColorDark)
     QIntValidator* heightValidator = new QIntValidator();
     heightValidator->setRange(50, 500);
     mGraphHeightEdit->setValidator(heightValidator);
-
 
     mColorClipBut = new Button(tr("Color"), this);
     mColorClipBut->setIcon(QIcon(":color.png"));
@@ -143,7 +141,7 @@ mCurveColor(Painting::mainColorDark)
     connect(mHPDEdit, &QLineEdit::textEdited, this, &MultiCalibrationView::updateHPDGraphs);
     connect(mImageSaveBut, &Button::clicked, this, &MultiCalibrationView::exportFullImage);
     connect(mImageClipBut, &Button::clicked, this, &MultiCalibrationView::copyImage);
-    connect(mResultsClipBut, &Button::clicked, this, &MultiCalibrationView::showStat);
+    connect(mStatClipBut, &Button::clicked, this, &MultiCalibrationView::showStat);
     connect(mGraphHeightEdit, &QLineEdit::textEdited, this, &MultiCalibrationView::updateGraphsSize);
     connect(mColorClipBut, &Button::clicked, this, &MultiCalibrationView::changeCurveColor);
 
@@ -190,7 +188,7 @@ void MultiCalibrationView::setVisible(bool visible)
 {
     mImageSaveBut->setVisible(visible);
     mImageClipBut->setVisible(visible);
-    mResultsClipBut->setVisible(visible);
+    mStatClipBut->setVisible(visible);
     frameSeparator->setVisible(visible);
 
     mStartLab->setVisible(visible);
@@ -221,8 +219,8 @@ void MultiCalibrationView::updateLayout()
     y += mImageSaveBut->height();
     mImageClipBut->setGeometry(x0, y, mButtonWidth, mButtonWidth);
     y += mImageClipBut->height();
-    mResultsClipBut->setGeometry(x0, y, mButtonWidth, mButtonWidth);
-    y += mResultsClipBut->height() + 5;
+    mStatClipBut->setGeometry(x0, y, mButtonWidth, mButtonWidth);
+    y += mStatClipBut->height() + 5;
 
     mGraphHeightLab->setGeometry(x0, y, mButtonWidth, textHeight);
     y += mGraphHeightLab->height();
@@ -264,10 +262,10 @@ void MultiCalibrationView::updateLayout()
 
     const int graphWidth = width() - mButtonWidth;
 
-    if (mResultsClipBut->isChecked()) {
+    if (mStatClipBut->isChecked())
         mTextArea->setGeometry(0, 0, graphWidth, height());
 
-    } else {
+    else {
         mDrawing->setGeometry(0, 0, graphWidth, height());
         mDrawing->setGraphHeight(mGraphHeight);
 
@@ -290,8 +288,8 @@ void MultiCalibrationView::updateGraphList()
     mEndEdit->setText(locale().toString(mTmaxDisplay));
     mHPDEdit->setText(locale().toString(mThreshold));
 
-    QColor penColor = mCurveColor;// Painting::mainColorDark;
-    QColor brushColor = mCurveColor;//Painting::mainColorLight;
+    QColor penColor = mCurveColor;
+    QColor brushColor = mCurveColor;
     brushColor.setAlpha(170);
 
     QList<GraphView*> graphList;
@@ -300,8 +298,8 @@ void MultiCalibrationView::updateGraphList()
 
 
     const QFontMetrics fm (font());
-    const int marginRight = (int) floor(fm.width(mStartEdit->text())/2) + 5;
-    const int marginLeft = (int) floor(fm.width(mEndEdit->text())/2) + 5;
+    const int marginRight = (int) floor(fm.width(mEndEdit->text())/2) + 5;
+    const int marginLeft = (int) floor(fm.width(mStartEdit->text())/2) + 5;
 
     QList<QJsonObject> selectedEvents;
 
@@ -458,7 +456,7 @@ void MultiCalibrationView::updateGraphList()
    mDrawing->setEventsColorList(colorList);
    mDrawing->setGraphList(graphList);
 
-   if (mResultsClipBut->isChecked())
+   if (mStatClipBut->isChecked())
        showStat();
 
    update();
@@ -497,7 +495,7 @@ void MultiCalibrationView::updateHPDGraphs(const QString &thres)
         }
     }
 
-    if (mResultsClipBut ->isChecked())
+    if (mStatClipBut ->isChecked())
         showStat();
 
 }
@@ -591,6 +589,10 @@ void MultiCalibrationView::updateScaleX()
 
 void MultiCalibrationView::updateGraphsZoom()
 {
+    const QFontMetrics fm (font());
+    const int marginRight = (int) floor(fm.width(mEndEdit->text())/2) + 5;
+    const int marginLeft = (int) floor(fm.width(mStartEdit->text())/2) + 5;
+
     QList<GraphView*> *graphList = mDrawing->getGraphList();
 
     for (GraphView* gr : *graphList) {
@@ -598,13 +600,22 @@ void MultiCalibrationView::updateGraphsZoom()
         gr->setCurrentX(mTminDisplay, mTmaxDisplay);
 
         // update max inside the display period (mTminDisplay, mTmaxDisplay)
+        // Bound doesn't have curve named "Calibration", this curve name is "Bound"
         GraphCurve* calibCurve = gr->getCurve("Calibration");
+        if (!calibCurve) {
+            calibCurve = gr->getCurve("Bound");
+        }
+
         QMap<type_data, type_data> subDisplay = calibCurve->mData;
         subDisplay = getMapDataInRange(subDisplay, mTminDisplay, mTmaxDisplay);
 
-        const type_data yMax = map_max_value(subDisplay);
-
+        type_data yMax = map_max_value(subDisplay);
+        if (yMax == 0)
+            yMax = 1;
         gr->setRangeY(0., 1. * yMax);
+
+        gr->setMarginRight(marginRight);
+        gr->setMarginLeft(marginLeft);
 
         // ------------------------------------------------------------
         //  Show zones if calibrated data are outside study period
@@ -669,8 +680,8 @@ void MultiCalibrationView::exportFullImage()
         QFontMetricsF fmAxe (widgetExport->font());
 
         // 3 const : The same Name and same Value as in MultiCalibrationDrawing::updateLayout()
-        const int marginRight = (int) floor(fmAxe.width(mStartEdit->text())/2);
-        const int marginLeft = (int) floor(fmAxe.width(mEndEdit->text())/2) + 5;
+        const int marginRight = (int) floor(fmAxe.width(mEndEdit->text())/2);
+        const int marginLeft = (int) floor(fmAxe.width(mStartEdit->text())/2) + 5;
         const int panelWidth (20);
 
         axisWidget = new AxisWidget(f, widgetExport);
@@ -733,7 +744,7 @@ void MultiCalibrationView::exportFullImage()
 
 void MultiCalibrationView::copyImage()
 {
-    if (mResultsClipBut->isChecked()) {
+    if (mStatClipBut->isChecked()) {
         QApplication::clipboard()->setText(mTextArea->toPlainText());
 
     } else {
@@ -772,7 +783,7 @@ void MultiCalibrationView::copyText()
 
 void MultiCalibrationView::showStat()
 {
-   if (mResultsClipBut ->isChecked()) {
+   if (mStatClipBut ->isChecked()) {
        mDrawing->setVisible(false);
        mTextArea->setVisible(true);
        // update Results from selected Event in JSON

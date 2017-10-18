@@ -70,7 +70,7 @@ private:
 
     Button* mImageSaveBut;
     Button* mImageClipBut;
-    Button* mResultsClipBut;
+    Button* mStatClipBut;
     Button* mColorClipBut;
     ColorPicker* mColorPicker;
 
