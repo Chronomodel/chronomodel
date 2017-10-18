@@ -70,12 +70,13 @@ mCalibVisible(false)
     // ---- Header Top Bar with Study period --------------
     // ----------- on mTopWrapper ------------------
 
-    const int topButtonHeight = fm.height() + 6;
-    const QString studyStr = tr("STUDY PERIOD") + " [ "+ locale().toString(mTmin) +" : "+ locale().toString(mTmax) + " ] BC/AD";
-    mButModifyPeriod = new Button(studyStr, mTopWrapper);
-    mButModifyPeriod->setIconOnly(false);
-    mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text()) + 10) /2, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 5, topButtonHeight );
-    mButModifyPeriod->setFlatHorizontal();
+    //const int topButtonHeight = fm.height() + 10;
+    //const QString studyStr = tr("STUDY PERIOD") + " [ "+ locale().toString(mTmin) +" : "+ locale().toString(mTmax) + " ] BC/AD";
+    mButModifyPeriod = new Button(tr("STUDY PERIOD") , mTopWrapper);
+    //mButModifyPeriod->setIconOnly(false);
+   // mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text()) + 30) /2, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 30, topButtonHeight );
+   // mButModifyPeriod->setFlatHorizontal();
+    adaptStudyPeriodButton(mTmin, mTmax);
     connect(mButModifyPeriod,  static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &ModelView::modifyPeriod);
 
     mLeftPanelTitle = new Label(tr("Events' Scene"), mTopWrapper);
@@ -408,7 +409,6 @@ void ModelView::disconnectScenes()
     disconnect(mEventPropertiesView, &EventPropertiesView::updateCalibRequested, this, &ModelView::updateCalibration);
     disconnect(mEventPropertiesView, &EventPropertiesView::showCalibRequested, this, &ModelView::showCalibration);
 
-
 }
 
 Project* ModelView::getProject() const
@@ -424,6 +424,10 @@ void ModelView::resetInterface()
     if (mButImport->isChecked())
         mButImport->click();
 
+   /* mButNewEvent->setCheckable(true);
+    mButDeleteEvent->setCheckable(false);
+    mButNewEventKnown->setCheckable(true);*/
+    noEventSelected();
     disconnectScenes();
     mProject = nullptr;
     mEventsScene->clean();
@@ -433,12 +437,23 @@ void ModelView::resetInterface()
 
     mEventPropertiesView->setEvent(QJsonObject());
 
-
-
     updateLayout();
 }
 
 
+void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
+{
+    QFontMetrics fm(font());
+    const int topButtonHeight = fm.height() + 10;
+    const int hMarg = 15;
+    const QString studyStr = tr("STUDY PERIOD") + " [ "+ locale().toString(min) +" : "+ locale().toString(max) + " ] BC/AD";
+    mButModifyPeriod->setIconOnly(false);
+    mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text())) /2 -hMarg, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + hMarg, topButtonHeight );
+   // mButModifyPeriod->setFlatHorizontal();
+
+    mButModifyPeriod->setText(studyStr);
+
+}
 void ModelView::createProject()
 {
     showCalibration(false);
@@ -449,11 +464,7 @@ void ModelView::createProject()
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
 
-  /*  mMinLab->setText(QString::number(settings.mTmin));
-    mMaxLab->setText(QString::number(settings.mTmax));
-   */
-    const QString studyStr = tr("STUDY PERIOD") + " [ "+ locale().toString(settings.mTmin) +" : "+ locale().toString(settings.mTmax) + " ] BC/AD";
-    mButModifyPeriod->setText(studyStr);
+    adaptStudyPeriodButton(settings.mTmin, settings.mTmax);
 
     mProject->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
     mProject->mState[STATE_SETTINGS_TMAX] = settings.mTmax;
@@ -495,13 +506,8 @@ void ModelView::updateProject()
    
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
-    
-  /*  mMinLab->setText(QString::number(settings.mTmin));
-    mMaxLab->setText(QString::number(settings.mTmax));
-   */
-    const QString studyStr = tr("STUDY PERIOD") + " [ "+ locale().toString(settings.mTmin) +" : "+ locale().toString(settings.mTmax) + " ] BC/AD";
-    mButModifyPeriod->setText(studyStr);
 
+    adaptStudyPeriodButton(settings.mTmin, settings.mTmax);
 
     mProject->mState[STATE_SETTINGS_TMIN] = settings.mTmin;
     mProject->mState[STATE_SETTINGS_TMAX] = settings.mTmax;
@@ -534,52 +540,7 @@ void ModelView::updateProject()
     }
 }
 
-/*
-void ModelView::applySettings()
-{
-    showCalibration(false);
-    
-    QJsonObject state = mProject->state();
-    ProjectSettings s = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
-    ProjectSettings oldSettings = s;
-    
-    // This was used to display study period using the date format defined in application settings :
-    //mTmax = DateUtils::convertFromAppSettingsFormat(mMaxEdit->text().toDouble());
-    //mTmin = DateUtils::convertFromAppSettingsFormat(mMinEdit->text().toDouble());
-    
-    mTmax = mMaxEdit->text().toDouble();
-    mTmin = mMinEdit->text().toDouble();
-    
-    qDebug()<<"ModelView::applySettings()"<<mTmin<<mTmax;
-    
-    s.mTmin = (int) mTmin;
-    s.mTmax = (int) mTmax;
-    if (!s.mStepForced)
-        s.mStep = ProjectSettings::getStep(s.mTmin, s.mTmax);
-    
-    if (!mProject->setSettings(s)) {
-        // Min and max are not consistents :
-        // go back to previous values
-        
-        mTmin = oldSettings.mTmin;
-        mTmax = oldSettings.mTmax;
-        
-        mMinEdit->setText(QString::number(mTmin));
-        mMaxEdit->setText(QString::number(mTmax));
-        
-        if (oldSettings.mTmin < oldSettings.mTmax)
-            setSettingsValid(true);
 
-    } else {
-        state[STATE_SETTINGS_TMIN] = mTmin;
-        state[STATE_SETTINGS_TMAX] = mTmax;
-       // state[STATE_SETTINGS_STEP] ;
-
-     //   project->pushProjectState(state,"Study Period Change",false,false);
-      //  emit project->projectStateChanged();
-    }
-}
-*/
 
 void ModelView::modifyPeriod()
 {
@@ -1039,7 +1000,7 @@ void ModelView::updateLayout()
 
     //------- Study Period
 
-    mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text()) + 10) /2, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 5, topButtonHeight );
+   // mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text()) + 10) /2, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 5, topButtonHeight );
 
     // coordinates in ModelView
 

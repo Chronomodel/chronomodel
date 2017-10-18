@@ -67,6 +67,7 @@ protected:
     void mouseMoveEvent(QMouseEvent* e);
     void keyPressEvent(QKeyEvent* event);
 
+    void adaptStudyPeriodButton(const double& min, const double& max);
     void connectScenes();
     void disconnectScenes();
     
