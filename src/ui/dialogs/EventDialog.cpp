@@ -19,7 +19,7 @@ EventDialog::EventDialog(QWidget* parent, const QString& title, Qt::WindowFlags 
     colorLab->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
     
     mNameEdit = new LineEdit();
-    mNameEdit->setText(tr("Untitled"));
+    mNameEdit->setText(tr("No name"));
     mNameEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
     mNameEdit->selectAll();
     mNameEdit->setFocus();

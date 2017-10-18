@@ -167,7 +167,7 @@ void ImportDataView::browse()
                     }
                     if (isComment(values.at(0))) {
                         continue;
-                    } else if (values.at(0).contains("title", Qt::CaseInsensitive)) {
+                    } else if (values.at(0).contains("title", Qt::CaseInsensitive) && !values.at(0).contains("ntitle", Qt::CaseInsensitive)) {
                         headers << "TITLE";
                         
                         QStringList titleText;
@@ -227,9 +227,7 @@ void ImportDataView::browse()
                     
                     if (j != 0) {
                         QTableWidgetItem* item = new QTableWidgetItem(d.at(j).simplified());
-                        //if ((d[0]=="Title") || (d[0]=="Structure")) item->setBackgroundColor(Qt::red);
                         mTable->setItem(i, j-1, item);
-
                     }
                 }
             }
