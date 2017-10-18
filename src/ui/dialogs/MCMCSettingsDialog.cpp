@@ -100,7 +100,7 @@ QDialog(parent, flags),
 
     w = mTotalWidth - 2.*mMargin;
 
-    int fixedHeight = mHelp->heightForWidth(mTotalWidth - 2*mMargin)  + 3*mMargin + butH + lineH + h + top + 20;
+    const int fixedHeight = mHelp->heightForWidth(mTotalWidth - 2*mMargin)  + 3*mMargin + butH + lineH + h + top + 20;
 
     setFixedSize(mTotalWidth, fixedHeight);
 }
