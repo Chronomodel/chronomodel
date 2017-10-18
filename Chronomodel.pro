@@ -13,6 +13,7 @@ PRO_PATH=$$_PRO_FILE_PWD_
 message("-------------------------------------------")
 CONFIG(debug, debug|release) {
         BUILD_DIR=build/debug
+        DEFINES += DEBUG # to validate all #ifdef DEBUG in all file
 	message("Running qmake : Debug")
 	macx{
 		REAL_DESTDIR=Debug

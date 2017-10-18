@@ -7,6 +7,7 @@
 class Label;
 class LineEdit;
 class Button;
+class QDialogButtonBox;
 class QSpinBox;
 class HelpWidget;
 
@@ -55,6 +56,7 @@ private:
 
     Button* mTestBut;
     Button* mResetBut;
+    //QDialogButtonBox * mResetBut;
     
     QRectF mBurnRect;
     QRectF mAdaptRect;

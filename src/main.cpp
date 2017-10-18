@@ -13,7 +13,7 @@
 
 //#pragma STDC FENV_ACCESS ON // not supported with Clang
 
-#define DEBUG
+//#define DEBUG
 
 void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {

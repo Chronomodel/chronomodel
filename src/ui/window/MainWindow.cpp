@@ -573,18 +573,22 @@ void MainWindow::saveProjectAs()
 
 void MainWindow::updateWindowTitle()
 {
+#ifdef DEBUG
+    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + " DEBUG Mode "+ (mProject->mProjectFileName.isEmpty() ?  "" : QString(" - ") + mProject->mProjectFileName));
+#else
     setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + (mProject->mProjectFileName.isEmpty() ?  "" : QString(" - ") + mProject->mProjectFileName));
+#endif
 }
 
 void MainWindow::updateProject()
 {
     mUndoAction->setText(tr("Undo"));
-    mUndoAction->setToolTip(tr("Undo : ") + mUndoStack->undoText());
-    mUndoAction->setStatusTip(tr("Click to go back to the previous action : ") + mUndoStack->undoText());
+    mUndoAction->setToolTip(tr("Undo") + " : " + mUndoStack->undoText());
+    mUndoAction->setStatusTip(tr("Click to go back to the previous action") + " : " + mUndoStack->undoText());
 
     mRedoAction->setText(tr("Redo"));
-    mRedoAction->setToolTip(tr("Redo : ") + mUndoStack->redoText());
-    mRedoAction->setStatusTip(tr("Click to redo the last action : ") + mUndoStack->redoText());
+    mRedoAction->setToolTip(tr("Redo") + " : " + mUndoStack->redoText());
+    mRedoAction->setStatusTip(tr("Click to redo the last action") + " : " + mUndoStack->redoText());
 
     mRunAction->setEnabled(true);
     mProjectView->updateProject();
@@ -769,7 +773,7 @@ void MainWindow::changeEventsMethod()
     bool ok;
     QString methodStr = QInputDialog::getItem(qApp->activeWindow(),
                                           tr("Change Events Method"),
-                                          tr("Change Selected Events MCMC Method :"),
+                                          tr("Change Selected Events MCMC Method") + " :",
                                           opts, 0, false, &ok);
     if (ok && !methodStr.isEmpty()) {
         Event::Method method = ModelUtilities::getEventMethodFromText(methodStr);
@@ -796,7 +800,7 @@ void MainWindow::changeDatesMethod()
         
         QString methodStr = QInputDialog::getItem(qApp->activeWindow(),
                                                   tr("Change Data Method"),
-                                                  tr("Change MCMC method of data in selected events :"),
+                                                  tr("Change MCMC method of data in selected events") + " :",
                                                   opts, 0, false, &ok);
         if (ok && !methodStr.isEmpty()) {
             Date::DataMethod method = ModelUtilities::getDataMethodFromText(methodStr);
@@ -826,7 +830,7 @@ void MainWindow::doGroupedAction()
     }
 }
 
-//#pragma mark Events
+// Events
 /**
  * @todo Fix app close event called twice when updating with Qt >= 5.6
  */
@@ -885,7 +889,7 @@ void MainWindow::changeEvent(QEvent* event)
     
 }
 
-//mark Settings
+// Settings
 void MainWindow::writeSettings()
 {
     mProjectView->writeSettings();

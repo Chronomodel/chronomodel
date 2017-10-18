@@ -76,7 +76,17 @@ QDialog(parent, flags),
     mCancelBut = new Button(tr("Cancel"), this);
     
     mTestBut = new Button(tr("Quick Test"), this);
-    mResetBut = new Button(tr("Reset"), this);
+#ifdef DEBUG
+    mTestBut->setVisible(true);
+#else
+    mTestBut->setVisible(false);
+#endif
+
+    mResetBut = new Button(tr("Restore Defaults"), this);
+
+    const QFontMetrics fm (mResetBut->font());
+    mResetBut->setFixedSize(fm.width(mResetBut->text()) + 4*mMargin, butH);
+    //mResetBut = new QDialogButtonBox(QDialogButtonBox::RestoreDefaults, this);
 
     //connect(mOkBut, &Button::clicked, this, &MCMCSettingsDialog::accept);
     connect(mOkBut, &Button::clicked, this, &MCMCSettingsDialog::inputControl);
@@ -85,6 +95,7 @@ QDialog(parent, flags),
     connect(mCancelBut, &Button::clicked, this, &MCMCSettingsDialog::reject);
     
     connect(mResetBut, &Button::clicked, this, &MCMCSettingsDialog::reset);
+    //connect(mResetBut, &QDialogButtonBox::clicked, this, &MCMCSettingsDialog::reset);
     connect(mTestBut, &Button::clicked, this, &MCMCSettingsDialog::setQuickTest);
 
     w = mTotalWidth - 2.*mMargin;
@@ -225,13 +236,19 @@ void MCMCSettingsDialog::updateLayout()
 
     mLabelLevel->setGeometry(width()/2 + mMargin/2+10, height() - 2*mMargin - butH - lineH - 10, editW, lineH);
     mLevelEdit->setGeometry(width()/2 + mMargin/2+120, height() - 2*mMargin - butH - lineH -10, 50, lineH);
-    
+
+    mResetBut->move(mMargin, height() - mMargin - butH - 5);
+
     mOkBut->setGeometry(width() - 2*mMargin - 2*butW, height() - mMargin - butH - 5, butW, butH);
     mCancelBut->setGeometry(width() - mMargin - butW, height() - mMargin - butH - 5, butW, butH);
 
+    //mResetBut->setGeometry(mMargin, height() - mMargin - butH - 5, butW, butH);
 
-    mTestBut->setGeometry(2*mMargin + butW, height() - mMargin - butH - 5, butW, butH);
-    mResetBut->setGeometry(mMargin, height() - mMargin - butH - 5, butW, butH);
+
+#ifdef DEBUG
+    mTestBut->setGeometry(mResetBut->x() + mResetBut->width() + mMargin, mResetBut->y(), butW, butH);
+#endif
+
 }
 
 void MCMCSettingsDialog::inputControl()
