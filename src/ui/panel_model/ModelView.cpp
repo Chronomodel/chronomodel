@@ -418,6 +418,12 @@ Project* ModelView::getProject() const
 
 void ModelView::resetInterface()
 {
+    if (mButProperties->isChecked())
+        mButProperties->click();
+
+    if (mButImport->isChecked())
+        mButImport->click();
+
     disconnectScenes();
     mProject = nullptr;
     mEventsScene->clean();
@@ -426,7 +432,9 @@ void ModelView::resetInterface()
     mMultiCalibrationView->setEventsList(QList<Event*> ());
 
     mEventPropertiesView->setEvent(QJsonObject());
-    mButProperties->click();
+
+
+
     updateLayout();
 }
 
@@ -1118,7 +1126,7 @@ void ModelView::updateLayout()
     update();
 }
 
-//#pragma mark Zoom
+// Zoom
 void ModelView::updateEventsZoom(const double prop)
 {
     const qreal scale = prop;
