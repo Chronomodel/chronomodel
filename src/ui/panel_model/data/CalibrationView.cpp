@@ -328,9 +328,7 @@ void CalibrationView::updateGraphs()
             QString resultsStr;
 
             DensityAnalysis results;
-            results.analysis = analyseFunction(calibMap);
-
-
+            results.analysis = analyseFunction(subData);
 
             if (!subData.isEmpty()) {
                 QVector<double> subRepart = calculRepartition(subData);
@@ -342,7 +340,6 @@ void CalibrationView::updateGraphs()
             const double realThresh = map_area(hpd) / map_area(subData);
 
             resultsStr += + "<br> HPD (" + locale().toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), stringWithAppSettings) ;
-
 
             mResultsText->setText(resultsStr);
 

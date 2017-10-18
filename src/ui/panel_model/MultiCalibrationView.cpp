@@ -602,9 +602,8 @@ void MultiCalibrationView::updateGraphsZoom()
         // update max inside the display period (mTminDisplay, mTmaxDisplay)
         // Bound doesn't have curve named "Calibration", this curve name is "Bound"
         GraphCurve* calibCurve = gr->getCurve("Calibration");
-        if (!calibCurve) {
+        if (!calibCurve)
             calibCurve = gr->getCurve("Bound");
-        }
 
         QMap<type_data, type_data> subDisplay = calibCurve->mData;
         subDisplay = getMapDataInRange(subDisplay, mTminDisplay, mTmaxDisplay);
@@ -612,6 +611,7 @@ void MultiCalibrationView::updateGraphsZoom()
         type_data yMax = map_max_value(subDisplay);
         if (yMax == 0)
             yMax = 1;
+
         gr->setRangeY(0., 1. * yMax);
 
         gr->setMarginRight(marginRight);
