@@ -87,7 +87,7 @@ private:
     QLabel* mPrecisionLab;
     QSpinBox* mPrecision;
     
-    QDialogButtonBox* mButtonBox;
+    QDialogButtonBox* mRestoreBox;
 };
 
 #endif

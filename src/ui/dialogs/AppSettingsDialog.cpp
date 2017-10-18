@@ -112,8 +112,8 @@ QDialog(parent, flags)
     
     connect(mAutoSaveCheck, &QCheckBox::toggled, mAutoSaveDelayEdit, &QLineEdit::setEnabled);
     
-    mButtonBox = new QDialogButtonBox(QDialogButtonBox::RestoreDefaults);
-    connect(mButtonBox, &QDialogButtonBox::clicked, this, &AppSettingsDialog::buttonClicked);
+    mRestoreBox = new QDialogButtonBox(QDialogButtonBox::RestoreDefaults);
+    connect(mRestoreBox, &QDialogButtonBox::clicked, this, &AppSettingsDialog::buttonClicked);
     
     QGridLayout* grid = new QGridLayout();
     grid->setContentsMargins(0, 0, 0, 0);
@@ -177,7 +177,7 @@ QDialog(parent, flags)
     
     QVBoxLayout* mainLayout = new QVBoxLayout();
 
-    mainLayout->addWidget(mButtonBox);
+    mainLayout->addWidget(mRestoreBox);
     mainLayout->addLayout(grid);
     mainLayout->addSpacing(20);
 
