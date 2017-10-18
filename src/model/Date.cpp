@@ -150,9 +150,9 @@ Date::~Date()
     mPlugin = nullptr;
     mCalibration = nullptr;
 
-    mCalibHPD.~QMap();
+    //mCalibHPD.~QMap();
 
-    mSubDates.~QList();
+   // mSubDates.~QList();
 }
 
 bool Date::isNull() const
