@@ -424,10 +424,7 @@ void ModelView::resetInterface()
     if (mButImport->isChecked())
         mButImport->click();
 
-   /* mButNewEvent->setCheckable(true);
-    mButDeleteEvent->setCheckable(false);
-    mButNewEventKnown->setCheckable(true);*/
-    noEventSelected();
+  //  noEventSelected();
     disconnectScenes();
     mProject = nullptr;
     mEventsScene->clean();
@@ -440,20 +437,17 @@ void ModelView::resetInterface()
     updateLayout();
 }
 
-
 void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
 {
     QFontMetrics fm(font());
     const int topButtonHeight = fm.height() + 10;
     const int hMarg = 15;
     const QString studyStr = tr("STUDY PERIOD") + " [ "+ locale().toString(min) +" : "+ locale().toString(max) + " ] BC/AD";
+    mButModifyPeriod->setText(studyStr);
     mButModifyPeriod->setIconOnly(false);
     mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text())) /2 -hMarg, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + hMarg, topButtonHeight );
-   // mButModifyPeriod->setFlatHorizontal();
-
-    mButModifyPeriod->setText(studyStr);
-
 }
+
 void ModelView::createProject()
 {
     showCalibration(false);
