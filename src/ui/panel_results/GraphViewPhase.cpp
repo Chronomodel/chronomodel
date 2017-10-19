@@ -374,7 +374,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
                 }
             }
-            mGraph->setTipXLab("duration");
+            mGraph->setTipXLab("Sigma");
             mGraph->setYAxisMode(GraphView::eHidden);
             mGraph->autoAdjustYScale(true);
 
@@ -403,7 +403,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setCurveVisible("Beta Q3 " + QString::number(i), mShowChainList.at(i));
         }
 
-        mGraph->setTipXLab(tr("iteration"));
+        mGraph->setTipXLab(tr("Iteration"));
         mGraph->setTipYLab("t");
         mGraph->setYAxisMode(GraphView::eMinMax);
         mGraph->autoAdjustYScale(true);
@@ -417,7 +417,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setCurveVisible("Duration Q3 " + QString::number(i), mShowChainList.at(i));
         }
 
-        mGraph->setTipXLab(tr("iteration"));
+        mGraph->setTipXLab(tr("Iteration"));
         mGraph->setTipYLab("t");
         mGraph->setYAxisMode(GraphView::eMinMax);
         mGraph->autoAdjustYScale(true);
