@@ -1,13 +1,14 @@
+#include <QtWidgets>
+#include <QtSvg>
+#include <algorithm>
+
 #include "QtUtilities.h"
 #include "StdUtilities.h"
 #include "StateKeys.h"
 #include "MainWindow.h"
-#include <QtWidgets>
-#include <QtSvg>
-
 #include "GraphView.h"
 #include "AppSettings.h"
-#include <algorithm>
+
 
 
 bool colorIsDark(const QColor& color)

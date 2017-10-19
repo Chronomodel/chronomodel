@@ -13,7 +13,6 @@
 #include <QList>
 #include <QDebug>
 
-//#define DEBUG
 #ifdef DEBUG
 #include <iostream>
 #endif

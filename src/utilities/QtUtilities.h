@@ -4,6 +4,7 @@
 #include <QStringList>
 #include <QColor>
 #include <QFileInfo>
+//#include <QFontMetricsF>
 #include "AppSettings.h"
 #include "AxisTool.h"
 
@@ -11,6 +12,9 @@
 
 bool colorIsDark(const QColor& color);
 void sortIntList(QList<int>& list);
+
+//qreal boxHeight(const QFont& font) {const QFontMetricsF fm (font); return fm.height() + 10;}
+//qreal boxHeight(QFontMetricsF fm) { return qreal(fm.height() + 10);}
 
 QList<QStringList> readCSV(const QString& filePath, const QString& separator = ",");
 int defaultDpiX();

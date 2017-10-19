@@ -19,25 +19,38 @@
 #include "PluginOptionsDialog.h"
 #include <QtWidgets>
 
+//const qreal titleHeight (20);
+//const qreal labelHeight (20);
+const qreal lineEditHeight (20);
+//const qreal checkBoxHeight (17);
+const qreal comboBoxHeight (30);
+//const qreal radioButtonHeight (17);
+//const qreal spinBoxHeight (22);
+const qreal buttonHeight (22);
 
 EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mButtonWidth(50)
 {
     QFontMetrics fm (font());
     minimumHeight = 0;
-    mToolbarH = 5 * fm.height();
+
     // ------------- commun with defautlt Event and Bound ----------
     mNameLab = new Label(tr("Name"), this);
+    mNameLab->setFixedHeight(lineEditHeight);
     
     mNameEdit = new LineEdit(this);
-    
+    mNameEdit->setFixedHeight(lineEditHeight);
+
     mColorLab = new Label(tr("Color"), this);
+    mColorLab->setFixedHeight(buttonHeight);
     mColorPicker = new ColorPicker(Qt::black);
-    mColorPicker->setFixedHeight(17);
+    mColorPicker->setFixedHeight(buttonHeight);
     
     mMethodLab = new Label(tr("Method"), this);
+    mMethodLab->setFixedHeight(comboBoxHeight);
+
     mMethodCombo = new QComboBox();
-    mMethodCombo->setFixedHeight(20);
+    mMethodCombo->setFixedHeight(comboBoxHeight);
     
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eDoubleExp));
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eBoxMuller));
@@ -48,7 +61,7 @@ mButtonWidth(50)
     connect(mMethodCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &EventPropertiesView::updateEventMethod);
     
     QGridLayout* grid = new QGridLayout();
-    grid->setSpacing(6);
+    grid->setSpacing(15);
     grid->setContentsMargins(0, 0, 0, 0);
     grid->addWidget(mNameLab, 0, 0);
     grid->addWidget(mNameEdit, 0, 1);
@@ -58,7 +71,7 @@ mButtonWidth(50)
     grid->addWidget(mMethodCombo, 2, 1);
 
     QVBoxLayout* topLayout = new QVBoxLayout();
-    topLayout->setContentsMargins(6, 6, 6, 6);
+    topLayout->setContentsMargins(6, 6, 6, 16);
     topLayout->addLayout(grid);
     topLayout->addStretch();
     
@@ -72,6 +85,7 @@ mButtonWidth(50)
     
     minimumHeight += mEventView->height();
     // -------------
+    mToolbarH = mNameEdit->height()+mColorPicker->height()+mMethodCombo->height() + 4*grid->spacing();//5 * fm.height();
     
     mDatesList = new DatesList(mEventView);
     connect(mDatesList, &DatesList::calibRequested, this, &EventPropertiesView::updateCalibRequested);

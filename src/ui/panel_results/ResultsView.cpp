@@ -36,13 +36,22 @@
 #include <iostream>
 #include <QtSvg>
 
+const qreal titleHeight (20);
+const qreal labelHeight (20);
+const qreal lineEditHeight (15);
+const qreal checkBoxHeight (17);
+const qreal comboBoxHeight (20);
+const qreal radioButtonHeight (17);
+const qreal spinBoxHeight (22);
+const qreal buttonHeight (20);
+
+
 ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mResultMaxVariance(1000.),
 mHasPhases(false),
 mModel(nullptr),
 mMargin(5),
 mOptionsW(200),
-mLineH(15),
 mRulerH(40),
 mTabsH(30),
 mGraphsH(150),
@@ -69,7 +78,8 @@ mMinorCountScale (4)
 
     QFont ft = QFont();
     ft.setPointSize(APP_SETTINGS_DEFAULT_FONT_SIZE);
-    QFontMetricsF fm(QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
+    const QFontMetricsF fm(QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
+   // mLineH = 20;//boxHeight(fm);
 
     mResultCurrentMinX = mResultMinX ;
     mResultCurrentMaxX = mResultMaxX ;
@@ -118,29 +128,29 @@ mMinorCountScale (4)
     mResultsGroup = new QWidget();
 
     mEventsfoldCheck = new CheckBox(tr("Unfold Events"), mResultsGroup);
-    mEventsfoldCheck->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
+    mEventsfoldCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
     mEventsfoldCheck->setToolTip(tr("Display phases' events"));
 
     mDatesfoldCheck = new CheckBox(tr("Unfold Data"), mResultsGroup);
-    mDatesfoldCheck->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
+    mDatesfoldCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
     mDatesfoldCheck->setToolTip(tr("Display Events' data"));
 
     mDataThetaRadio = new RadioButton(tr("Calendar Dates"), mResultsGroup);
-    mDataThetaRadio->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
+    mDataThetaRadio->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
     mDataThetaRadio->setChecked(true);
 
     mDataSigmaRadio = new RadioButton(tr("Ind. Std. Deviations"), mResultsGroup);
-    mDataSigmaRadio->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
+    mDataSigmaRadio->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
 
     mDataCalibCheck = new CheckBox(tr("Individual Calib. Dates"), mResultsGroup);
-    mDataCalibCheck->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
+    mDataCalibCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
     mDataCalibCheck->setChecked(true);
 
     mWiggleCheck = new CheckBox(tr("Wiggle shifted"), mResultsGroup);
-    mWiggleCheck->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
+    mWiggleCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
 
     mStatCheck = new CheckBox(tr("Show Stat."), mResultsGroup);
-    mStatCheck->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
+    mStatCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
     mStatCheck->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
 
 
@@ -148,17 +158,17 @@ mMinorCountScale (4)
     mTempoGroup = new QWidget();
 
     mDurationRadio = new RadioButton(tr("Phases Duration"), mTempoGroup);
-    mDurationRadio->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
+    mDurationRadio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
     mDurationRadio->setChecked(true);
 
     mTempoRadio = new RadioButton(tr("Phases Tempo"), mTempoGroup);
-    mTempoRadio->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
+    mTempoRadio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
 
     mActivityRadio = new RadioButton(tr("Phases Activity"), mTempoGroup);
-    mActivityRadio->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
+    mActivityRadio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
 
     mTempoStatCheck = new CheckBox(tr("Show Tempo Stat."), mTempoGroup);
-    mTempoStatCheck->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
+    mTempoStatCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
     mTempoStatCheck->setToolTip(tr("Display numerical results computed on posterior densities below all graphs."));
 
 // -------------end TempoGroup
@@ -207,24 +217,24 @@ mMinorCountScale (4)
     // ------ Span Options -----
     mSpanTitle = new Label(tr("Span Options"), mTabDisplay);
     mSpanTitle->setIsTitle(true);
-    mSpanTitle->setFixedSize(mOptionsW, int(mRulerH/2));
+    mSpanTitle->setFixedSize(mOptionsW, titleHeight);
 
     mSpanGroup  = new QWidget(mTabDisplay);
 
     mDisplayStudyBut = new Button(tr("Study Period Display"), mSpanGroup);
-    mDisplayStudyBut->setFixedSize(mOptionsW, fm.height() + 5);
+    mDisplayStudyBut->setFixedSize(mOptionsW - 2*mMargin, buttonHeight);
     mDisplayStudyBut->setToolTip(tr("Restore view with the study period span"));
 
     mSpanLab = new Label(tr("Span"), mSpanGroup);
-    mSpanLab->setFixedSize(fm.width(mSpanLab->text()), fm.height() + 5);
+    mSpanLab->setFixedSize(fm.width(mSpanLab->text()), labelHeight);
 
     const int wEdit = (int)ceil(mOptionsW/3.);
     mCurrentXMinEdit = new LineEdit(mSpanGroup);
-    mCurrentXMinEdit->setFixedSize(wEdit, fm.height()+2);
+    mCurrentXMinEdit->setFixedSize(wEdit, lineEditHeight);
     mCurrentXMinEdit->setToolTip(tr("Enter a minimal value to display the curves"));
 
     mCurrentXMaxEdit = new LineEdit(mSpanGroup);
-    mCurrentXMaxEdit->setFixedSize(wEdit, fm.height()+2);
+    mCurrentXMaxEdit->setFixedSize(wEdit, lineEditHeight);
     mCurrentXMaxEdit->setToolTip(tr("Enter a maximal value to display the curves"));
 
     mXScaleLab = new Label(tr("X"), mSpanGroup);
@@ -243,36 +253,36 @@ mMinorCountScale (4)
     mXScaleSpin->setDecimals(3);
     forceXSpinSetValue = true;
     mXScaleSpin->setValue(sliderToZoom(mXSlider->value()));
-    mXScaleSpin->setFixedSize(mCurrentXMinEdit->width(), fm.height() + 10);
+    mXScaleSpin->setFixedSize(mCurrentXMinEdit->width(), spinBoxHeight);
     mXScaleSpin->setToolTip(tr("Enter zoom value to magnify the curves on X span"));
 
     mMajorScaleLab = new Label(tr("Major Interval"), mSpanGroup);
-    mMajorScaleLab->setFixedSize(fm.width(mMajorScaleLab->text()), fm.height() + 5);
+    mMajorScaleLab->setFixedSize(fm.width(mMajorScaleLab->text()), labelHeight);
 
     mMajorScaleEdit = new LineEdit(mSpanGroup);
     mMajorScaleEdit->setText(locale().toString(mMajorScale));
-    mMajorScaleEdit->setFixedSize(wEdit, fm.height() + 2);
+    mMajorScaleEdit->setFixedSize(wEdit, lineEditHeight);
     mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves, upper than 1"));
 
     mMinorScaleLab = new Label(tr("Minor Interval Count"), mSpanGroup);
-    mMinorScaleLab->setFixedSize(fm.width(mMinorScaleLab->text()), fm.height() + 5);
+    mMinorScaleLab->setFixedSize(fm.width(mMinorScaleLab->text()), labelHeight);
 
     mMinorScaleEdit = new LineEdit(mSpanGroup);
     mMinorScaleEdit->setText(locale().toString(mMinorCountScale));
-    mMinorScaleEdit->setFixedSize(wEdit, fm.height() + 2);
+    mMinorScaleEdit->setFixedSize(wEdit, lineEditHeight);
     mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves, upper than 1"));
 
     /* -------------------------------------- Graphic Options (old mDisplayGroup) ---------------------------------------------------*/
     
     mGraphicTitle = new Label(tr("Graphic Options"), mTabDisplay);
     mGraphicTitle->setIsTitle(true);
-    mGraphicTitle->setFixedSize(mOptionsW, fm.height() + 5);
+    mGraphicTitle->setFixedSize(mOptionsW, titleHeight);
 
     mGraphicGroup = new QWidget(mTabDisplay);
 
     mYScaleLab = new Label(tr("Y"), mGraphicGroup);
     mYScaleLab->setAlignment(Qt::AlignCenter);
-    mYScaleLab->setFixedWidth(fm.width(mYScaleLab->text()));
+    mYScaleLab->setFixedSize(fm.width(mYScaleLab->text()), labelHeight);
 
     mYSlider = new QSlider(Qt::Horizontal, mGraphicGroup);
     mYSlider->setRange(10, 300);
@@ -283,21 +293,21 @@ mMinorCountScale (4)
     mYScaleSpin->setRange(mYSlider->minimum(), mYSlider->maximum());
     mYScaleSpin->setSuffix(" %");
     mYScaleSpin->setValue(mYSlider->value());
-    mYScaleSpin->setFixedSize(mCurrentXMinEdit->width(), fm.height()+ 10);
+    mYScaleSpin->setFixedSize(mCurrentXMinEdit->width(), labelHeight);
     mYScaleSpin->setToolTip(tr("Enter zoom value to magnify the curves on Y scale"));
 
     labFont = new Label(tr("Font"), mGraphicGroup);
-    labFont->setFixedSize(fm.width(labFont->text()), fm.height() + 5);
+    labFont->setFixedSize(fm.width(labFont->text()), labelHeight);
     labFont->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mFont.setPointSize(font().pointSize());
     mFontBut = new Button(mFont.family(), mGraphicGroup);
-    mFontBut->setFixedSize(mOptionsW/2 - mMargin, fm.height()+ 5);
+    mFontBut->setFixedSize(mOptionsW/2 - mMargin, labelHeight);
     mFontBut->setToolTip(tr("Click to change the font on the drawing"));
     connect(mFontBut, &QPushButton::clicked, this, &ResultsView::updateFont);
     
     labThickness = new Label(tr("Thickness"), mGraphicGroup);
-    labThickness->setFixedSize(fm.width(labThickness->text()), fm.height() + 5);
+    labThickness->setFixedSize(fm.width(labThickness->text()), comboBoxHeight);
     labThickness->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mThicknessCombo = new QComboBox(mGraphicGroup);
@@ -307,14 +317,14 @@ mMinorCountScale (4)
     mThicknessCombo->addItem(tr("4 px"));
     mThicknessCombo->addItem(tr("5 px"));
 
-    mThicknessCombo->setFixedSize(wEdit, fm.height() + 5 );
+    mThicknessCombo->setFixedSize(wEdit, comboBoxHeight );
     mThicknessCombo->setToolTip(tr("Select to change the thickness of the drawing"));
 
    // mThicknessSpin->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }"); // not supported
     connect(mThicknessCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::updateThickness);
     
     labOpacity = new Label(tr("Opacity"), mGraphicGroup);
-    labOpacity->setFixedSize(fm.width(labOpacity->text()), fm.height() + 2);
+    labOpacity->setFixedSize(fm.width(labOpacity->text()), comboBoxHeight);
     labOpacity->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mOpacityCombo = new QComboBox(mGraphicGroup);
@@ -329,7 +339,7 @@ mMinorCountScale (4)
     mOpacityCombo->addItem(tr("80 %"));
     mOpacityCombo->addItem(tr("90 %"));
     mOpacityCombo->addItem(tr("100 %"));
-    mOpacityCombo->setFixedSize(wEdit, fm.height() + 5 );
+    mOpacityCombo->setFixedSize(wEdit, comboBoxHeight);
     mOpacityCombo->setToolTip(tr("Select to change the opacity of the drawing"));
     mOpacityCombo->setCurrentIndex(5);
     //mOpacitySpin->setStyleSheet("QLineEdit { border-radius: 5px; }"); // not supported
@@ -337,26 +347,26 @@ mMinorCountScale (4)
     connect(mOpacityCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::updateOpacity);
 
     labRendering = new Label(tr("Rendering"), mGraphicGroup);
-    labRendering->setFixedSize(fm.width(labRendering->text()), fm.height() + 5);
+    labRendering->setFixedSize(fm.width(labRendering->text()), comboBoxHeight);
     labRendering->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mRenderCombo = new QComboBox(mGraphicGroup);
     mRenderCombo->addItem(tr("Standard (faster)"));
     mRenderCombo->addItem(tr("Retina (slower)"));
    const  int renderWidth = std::min((int) fm.width(tr("Standard (faster)")),(int)( mOptionsW/2 - mMargin) );
-    mRenderCombo->setFixedSize(renderWidth, fm.height() + 5);
+    mRenderCombo->setFixedSize(renderWidth, comboBoxHeight);
 
    /* -------------------------------------- mChainsGroup---------------------------------------------------*/
     
     mChainsTitle = new Label(tr("MCMC Chains"), mTabMCMC);
     mChainsTitle->setIsTitle(true);
-    mChainsTitle->setFixedSize(mOptionsW, 20);
+    mChainsTitle->setFixedSize(mOptionsW, titleHeight);
 
     mChainsGroup = new QWidget(mTabMCMC);
 
     mAllChainsCheck = new CheckBox(tr("Chains Concatenation"), mChainsGroup);
     mAllChainsCheck->setChecked(true);
-    mAllChainsCheck->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
+    mAllChainsCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
 
     /*
      * QList<CheckBox*> mCheckChainChecks;
@@ -368,17 +378,20 @@ mMinorCountScale (4)
     
     mDensityOptsTitle = new Label(tr("Density Options"), mTabMCMC);
     mDensityOptsTitle->setIsTitle(true);
-    mDensityOptsTitle->setFixedSize(mOptionsW, 20);
+    mDensityOptsTitle->setFixedSize(mOptionsW, titleHeight);
 
     mDensityOptsGroup = new QWidget(mTabMCMC);
     
     mCredibilityCheck = new CheckBox(tr("Show Confidence Bar"), mDensityOptsGroup);
     mCredibilityCheck->setChecked(true);
+    mCredibilityCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
+
     mThreshLab = new Label(tr("Confidence Level") + " (%)", mDensityOptsGroup);
     mThreshLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mThreshLab->setFixedHeight(lineEditHeight);
     
     mHPDEdit = new LineEdit(mDensityOptsGroup);
-    mHPDEdit->setFixedSize(wEdit, fm.height()+2);
+    mHPDEdit->setFixedSize(wEdit, lineEditHeight);
     mHPDEdit->setText("95");
     
     DoubleValidator* percentValidator = new DoubleValidator();
@@ -389,6 +402,7 @@ mMinorCountScale (4)
     
     mFFTLenLab = new Label(tr("Grid Length"), mDensityOptsGroup);
     mFFTLenLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mFFTLenLab->setFixedHeight(comboBoxHeight);
 
     mFFTLenCombo = new QComboBox(mDensityOptsGroup);
     mFFTLenCombo->addItem("32");
@@ -402,7 +416,7 @@ mMinorCountScale (4)
     mFFTLenCombo->addItem("8192");
     mFFTLenCombo->addItem("16384");
     mFFTLenCombo->setCurrentText("1024");
-    mFFTLenCombo->setFixedSize(wEdit, fm.height() + 2);
+    mFFTLenCombo->setFixedSize(wEdit, comboBoxHeight);
     mFFTLenCombo->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     
     mComboH = fm.height() + 6;
@@ -410,10 +424,10 @@ mMinorCountScale (4)
     
     mBandwidthLab = new Label(tr("Bandwidth Const."), mDensityOptsGroup);
     mBandwidthLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    mBandwidthLab->setFixedSize(fm.width(mBandwidthLab->text()), fm.height()+2);
+    mBandwidthLab->setFixedSize(fm.width(mBandwidthLab->text()), lineEditHeight);
 
     mBandwidthEdit = new LineEdit(mDensityOptsGroup);
-    mBandwidthEdit->setFixedSize(wEdit, fm.height() + 2);
+    mBandwidthEdit->setFixedSize(wEdit, lineEditHeight);
     mBandwidthEdit->setText(locale().toString(1.06));
 
 
@@ -553,13 +567,13 @@ mMinorCountScale (4)
     mNextSheetBut->setIconOnly(false);
 
     mNbDensityLab = new Label(tr("Nb Densities / Sheet"), mPageWidget);
-    mNbDensityLab->setFixedSize(fm.width(mNbDensityLab->text()), fm.height() + 10);
+    mNbDensityLab->setFixedSize(fm.width(mNbDensityLab->text()), spinBoxHeight);
     mNbDensityLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mNbDensitySpin = new QSpinBox(mPageWidget);
     mNbDensitySpin->setRange(1, 100);
     mNbDensitySpin->setValue(mNumberOfGraph);
-    mNbDensitySpin->setFixedSize(mCurrentXMinEdit->width(), fm.height() + 10);
+    mNbDensitySpin->setFixedSize(mCurrentXMinEdit->width(), spinBoxHeight);
     mNbDensitySpin->setToolTip(tr("Enter the maximum densities to display on a sheet"));
 
     connect(mPreviousSheetBut, &Button::pressed, this, &ResultsView::previousSheet);
@@ -818,7 +832,7 @@ void ResultsView:: updateTabByScene()
 
     }
 
-    int dx (mLineH + mMargin);
+    int dx (20 + mMargin);
 
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
         if (mDataCalibCheck->isVisible()) {
@@ -880,9 +894,9 @@ void ResultsView::updateTabDisplay(const int &i)
                                                                  && mCurrentVariable != GraphViewResults::eActivity) ) {
         mDensityOptsGroup -> setVisible(true);
 
-    } else {
+    } else
         mDensityOptsGroup -> setVisible(false);
-    }
+
 
     mCredibilityCheck->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
     mThreshLab->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
@@ -927,14 +941,14 @@ void ResultsView::updateTabDisplay(const int &i)
 
                 mDisplayStudyBut->setText(tr("Study Period Display"));
                 mDisplayStudyBut->setVisible(true);
-                mDisplayStudyBut->move(0, ySpan);
-                ySpan += mDisplayStudyBut->height() + 5;
+                mDisplayStudyBut->move(mMargin, ySpan);
+                ySpan += mDisplayStudyBut->height() + mMargin;
             }
             else if (mCurrentVariable == GraphViewResults::eSigma || (mCurrentVariable == GraphViewResults::eDuration)) {
                 mDisplayStudyBut->setText(tr("Fit Display"));
                 mDisplayStudyBut->setVisible(true);
-                mDisplayStudyBut->move(0, ySpan);
-                ySpan += mDisplayStudyBut->height() + 5;
+                mDisplayStudyBut->move(mMargin, ySpan);
+                ySpan += mDisplayStudyBut->height() + mMargin;
             }
             else
                 mDisplayStudyBut->setVisible(false);
@@ -952,9 +966,11 @@ void ResultsView::updateTabDisplay(const int &i)
 
         int heiTemp = mXScaleSpin->height();
         mXScaleLab->setGeometry(mMargin, ySpan , wBut - 4*mMargin, heiTemp);
+
         mXScaleSpin->move(mOptionsW - mXScaleSpin->width() - mMargin, ySpan);
         const int xSliderWidth = mOptionsW - mXScaleLab->width() - mXScaleSpin->width() - 4*mMargin;
         mXSlider->setGeometry(mXScaleLab->x() + mXScaleLab->width() + mMargin , ySpan, xSliderWidth, heiTemp );
+
         ySpan += mXScaleSpin->height() + mMargin;
 
         if (mCurrentTypeGraph != GraphViewResults::eCorrel) {
@@ -1547,7 +1563,7 @@ void ResultsView::initResults(Model* model)
             CheckBox* check = new CheckBox(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
             connect(check, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
             check->setVisible(true);
-            check->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
+            check->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
             mCheckChainChecks.append(check);
 
             RadioButton* radio = new RadioButton(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
@@ -1555,7 +1571,7 @@ void ResultsView::initResults(Model* model)
             radio->setVisible(true);
             if (i == 0)
                 radio->setChecked(true);
-            radio->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
+            radio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
             mChainRadios.append(radio);
         }
     }
@@ -1628,13 +1644,13 @@ void ResultsView::updateResults(Model* model)
             CheckBox* check = new CheckBox(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
             connect(check, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
             check->setVisible(true);
-            check->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
+            check->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
             mCheckChainChecks.append(check);
 
             RadioButton* radio = new RadioButton(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
             connect(radio, &RadioButton::clicked, this, &ResultsView::updateCurvesToShow);
             radio->setVisible(true);
-            radio->setFixedSize(int(mOptionsW - 2*mMargin), mLineH);
+            radio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
             if (i == 0)
                 radio->setChecked(true);
             mChainRadios.append(radio);

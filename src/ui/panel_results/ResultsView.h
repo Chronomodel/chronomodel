@@ -180,7 +180,7 @@ private:
     // used for options side
     int mMargin;
     int mOptionsW;
-    int mLineH;
+   // int mLineH;
     //used for graph
     qreal mMarginLeft;
     int mRulerH;
