@@ -17,7 +17,7 @@ ImportDataView::ImportDataView(QWidget* parent, Qt::WindowFlags flags):QWidget(p
     mHelp = new HelpWidget(this);
     mHelp->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=29"); //chapter 3.4.2.1 Radiocarbon dating (14C)
     
-    mHelp->setText(tr("Your CSV file must contain 1 data per row. Each row must start with the datation method to use. Allowed datation methods are : 14C, AM, Gauss, Typo, TL/OSL.\nComments are allowed in your CSV. They must start with  # or // and can be placed at the end of a data row. When placed at the begining of a row, the whole row is ignored.\r Be careful, cell separator and decimal separator of the CSV file should be those defined in the Application Settings, otherwise the CSV file will not be opened"));
+    mHelp->setText(tr("Your CSV file must contain 1 data per row. Each row must start with an Event name, the second row is the datation method to use. Allowed datation methods are : 14C, AM, Gauss, Typo, TL/OSL.\nComments are allowed in your CSV. They must start with  # or // and can be placed at the end of a data row. When placed at the begining of a row, the whole row is ignored.\r Be careful, cell separator and decimal separator of the CSV file should be those defined in the Application Settings, otherwise the CSV file will not be opened"));
     
     mTable = new ImportDataTable(this, this);
     mTable->setAlternatingRowColors(true);
@@ -25,9 +25,6 @@ ImportDataView::ImportDataView(QWidget* parent, Qt::WindowFlags flags):QWidget(p
     mTable->setSelectionMode(QAbstractItemView::ExtendedSelection);
     mTable->setDragEnabled(true);
     mTable->setDragDropMode(QAbstractItemView::DragOnly);
-
-//    connect(mBrowseBut, static_cast<void (Button::*)(const bool&)>(&Button::Clicked), this, &ImportDataView::browse);
-//    connect(mExportBut, static_cast<void (Button::*)(const bool&)>(&Button::Clicked), this,  &ImportDataView::exportDates);
 
     connect(mBrowseBut, &Button::pressed, this, &ImportDataView::browse);
     connect(mExportBut, &Button::pressed, this,  &ImportDataView::exportDates);
@@ -156,7 +153,7 @@ void ImportDataView::browse()
 
             // Read every lines of the file
             int noNameCount (1);
-            while(!stream.atEnd()) {
+            while (!stream.atEnd()) {
                 const QString line = stream.readLine();
                 QStringList values = line.split(csvSep);
                 if (values.size() > 0) {
@@ -219,20 +216,26 @@ void ImportDataView::browse()
             /*
              * Update table view with data constructed before
              */
-            for (int i=0; i<data.size(); ++i) {
-                const QStringList d = data.at(i);
-                //qDebug() << d;
-                for (int j=1; j<d.size(); ++j) {
-                    // Skip the first column containing the eventName (already used in the table line header)
-                    
-                    if (j != 0) {
-                        QTableWidgetItem* item = new QTableWidgetItem(d.at(j).simplified());
-                        mTable->setItem(i, j-1, item);
+            if (data.isEmpty()){
+                QMessageBox message(QMessageBox::Warning, tr("Bad file"), tr("May be you need to check the manual to build your file CSV ! <a href=\https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=29 \>More...</a> "),
+                                    QMessageBox::Ok, qApp->activeWindow());//, Qt::Sheet);
+                message.exec();
+            } else {
+                for (int i=0; i<data.size(); ++i) {
+                    const QStringList d = data.at(i);
+                    //qDebug() << d;
+                    for (int j=1; j<d.size(); ++j) {
+                        // Skip the first column containing the eventName (already used in the table line header)
+
+                        if (j != 0) {
+                            QTableWidgetItem* item = new QTableWidgetItem(d.at(j).simplified());
+                            mTable->setItem(i, j-1, item);
+                        }
                     }
                 }
-            }
 
-            mTable->setCurrentCell(0, 0);
+                mTable->setCurrentCell(0, 0);
+         }
         }
     }
 }
