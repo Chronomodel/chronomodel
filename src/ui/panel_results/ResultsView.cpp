@@ -258,19 +258,23 @@ mMinorCountScale (4)
 
     mMajorScaleLab = new Label(tr("Major Interval"), mSpanGroup);
     mMajorScaleLab->setFixedSize(fm.width(mMajorScaleLab->text()), labelHeight);
+   mMajorScaleLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mMajorScaleEdit = new LineEdit(mSpanGroup);
     mMajorScaleEdit->setText(locale().toString(mMajorScale));
     mMajorScaleEdit->setFixedSize(wEdit, lineEditHeight);
     mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves, upper than 1"));
 
+
     mMinorScaleLab = new Label(tr("Minor Interval Count"), mSpanGroup);
     mMinorScaleLab->setFixedSize(fm.width(mMinorScaleLab->text()), labelHeight);
+    mMinorScaleLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mMinorScaleEdit = new LineEdit(mSpanGroup);
     mMinorScaleEdit->setText(locale().toString(mMinorCountScale));
     mMinorScaleEdit->setFixedSize(wEdit, lineEditHeight);
     mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves, upper than 1"));
+
 
     /* -------------------------------------- Graphic Options (old mDisplayGroup) ---------------------------------------------------*/
     
@@ -388,7 +392,7 @@ mMinorCountScale (4)
 
     mThreshLab = new Label(tr("Confidence Level") + " (%)", mDensityOptsGroup);
     mThreshLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    mThreshLab->setFixedHeight(lineEditHeight);
+    mThreshLab->setFixedSize( fm.width(mThreshLab->text()), lineEditHeight);
     
     mHPDEdit = new LineEdit(mDensityOptsGroup);
     mHPDEdit->setFixedSize(wEdit, lineEditHeight);
@@ -402,7 +406,7 @@ mMinorCountScale (4)
     
     mFFTLenLab = new Label(tr("Grid Length"), mDensityOptsGroup);
     mFFTLenLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    mFFTLenLab->setFixedHeight(comboBoxHeight);
+    mFFTLenLab->setFixedSize(fm.width(mFFTLenLab->text()), comboBoxHeight);
 
     mFFTLenCombo = new QComboBox(mDensityOptsGroup);
     mFFTLenCombo->addItem("32");
