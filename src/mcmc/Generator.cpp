@@ -139,7 +139,7 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
 
         if (errno != 0) {
             //qDebug() << "DOUBLE EXP dans boucle = "<<strerror(errno);
-            throw "DoubleExp could not find a solution after " + QString::number(limit) + " trials! This may be ue to Taylor unsufficients developpement orders. Please try to run the calculations again!";
+            throw "DoubleExp could not find a solution after " + QString::number(limit) + " trials! This may be due to Taylor unsufficients developpement orders. Please try to run the calculations again!";
         }
         ur = randomUniform();
         
@@ -156,7 +156,7 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     }
 
     if (trials == limit)
-        throw "DoubleExp could not find a solution after " + QString::number(limit) + " trials! This may be ue to Taylor unsufficients developpement orders. Please try to run the calculations again!";
+        throw "DoubleExp could not find a solution after " + QString::number(limit) + " trials! This may bed ue to Taylor unsufficients developpement orders. Please try to run the calculations again!";
 #ifdef DEBUG
     if ((x<x_min) || (x>x_max)) {
         qDebug() << "DOUBLE EXP DoubleExp : x = "<<(double)(x);
