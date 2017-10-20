@@ -25,9 +25,10 @@ const qreal lineEditHeight (20);
 //const qreal checkBoxHeight (17);
 #ifdef Q_OS_MAC
     const qreal comboBoxHeight (30);
-#elif Q_OS_WIN
+#endif
+
+#ifdef Q_OS_WIN
     const qreal comboBoxHeight (20);
-    #endif
 #else
     const qreal comboBoxHeight (20);
 #endif
