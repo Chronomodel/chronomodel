@@ -11,9 +11,7 @@
 #include <fenv.h>
 
 
-//#pragma STDC FENV_ACCESS ON // not supported with Clang
-
-//#define DEBUG
+// STDC FENV_ACCESS ON // not supported with Clang
 
 void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
@@ -47,6 +45,7 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
 
 int main(int argc, char *argv[])
 {
+
 #ifdef Q_OS_MAC
     if (math_errhandling & MATH_ERREXCEPT) {
         std::cout << "cmath raises exceptions" << std::endl;
