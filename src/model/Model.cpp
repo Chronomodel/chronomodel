@@ -671,13 +671,17 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
     return rows;
 }
 
-//#pragma mark Model validity
+//   Model validity
+/**
+ * @brief Model::isValid Check if the model is valid
+ * @return
+ */
 bool Model::isValid()
 {
     // 1 - At least one event is required in a model
-    if (mEvents.size() == 0)
+    if (mEvents.isEmpty())
         throw QObject::tr("At least one event is required");
-    
+
     // 2 - The event must contain at least 1 data
     for (int i = 0; i < mEvents.size(); ++i) {
         if (mEvents.at(i)->type() == Event::eDefault) {
@@ -718,7 +722,6 @@ bool Model::isValid()
             for (auto&& pEvent : phase->mEvents) {
                 if (!branchEvents.contains(pEvent)) {
                     branchEvents.append(pEvent);
-                    //qDebug() << phase->mEvents[k]->mName << " in " << phase->mName;
                 } else
                     throw QString("The event \"" + pEvent->mName + "\" cannot belong to several phases in a same branch!");
             }
@@ -751,7 +754,7 @@ bool Model::isValid()
                     }
                 }
                 // Update bound interval
-                //if (bound->mKnownType == EventKnown::eFixed && bound->mFixed < lower)
+
                 if (bound->mFixed < lower)
                     throw QString("The bound \"" + bound->mName + "\" has a fixed value inconsistent with previous bounds in chain!");
 
@@ -776,7 +779,6 @@ bool Model::isValid()
                     }
                 }
                 // Update bound interval
-                //if (bound->mKnownType == EventKnown::eFixed && bound->mFixed > upper)
                 if (bound->mFixed > upper)
                     throw QString("The bound \"" + bound->mName + "\" has a fixed value inconsistent with next bounds in chain!");
                 /*
