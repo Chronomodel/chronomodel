@@ -917,7 +917,7 @@ void Project::showStudyPeriodWarning()
     // Display help message
     QMessageBox message(QMessageBox::Information,
                         tr("Study period definition required"),
-                        tr("To start your new project, you first have to define a study period and click the \"Apply\" button."),
+                        tr("To start your new project, you first have to define a study period."),
                         QMessageBox::Ok,
                         qApp->activeWindow(),
                         Qt::Sheet);
@@ -928,7 +928,7 @@ void Project::showStudyPeriodWarning()
 // --------------------------------------------------------------------
 //     Events
 // --------------------------------------------------------------------
-//#pragma mark Events
+
 int Project::getUnusedEventId(const QJsonArray& events)
 {
     int id = -1;
