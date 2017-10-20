@@ -2193,7 +2193,6 @@ void ResultsView::generateCurves(const QList<GraphViewResults*> &listGraphs)
 
     }
 
-
     // With variable eSigma, we look for mResultMaxVariance in the curve named "Post Distrib All Chains"
     if (mCurrentVariable == GraphViewResults::eSigma) {
        mResultMaxVariance = 0.;
@@ -2206,10 +2205,8 @@ void ResultsView::generateCurves(const QList<GraphViewResults*> &listGraphs)
             QList<GraphCurve> curves = (*constIter)->getGraph()->getCurves();
 
             for (auto &&curve : curves) {
-                 if (curve.mName.contains("Sigma") && (curve.mVisible == true)) {
+                 if (curve.mName.contains("Sigma") && (curve.mVisible == true))
                      mResultMaxVariance = ceil(qMax(mResultMaxVariance, curve.mData.lastKey()));
-                     qDebug()<<"Sigma Date: "<<curve.mName<<curve.mData.lastKey()<<mResultMaxVariance;
-                 }
             }
             ++constIter;
         }
@@ -2373,6 +2370,7 @@ void ResultsView::updateScales()
     if (mScales.find(situ) != mScales.end()) {
         mMajorScale = mScales.value(situ).first;
         mMinorCountScale = mScales.value(situ).second;
+
     } else {
         if (mCurrentTypeGraph == GraphViewResults::eCorrel) {
             mMajorScale = 10.;
@@ -2488,6 +2486,7 @@ void ResultsView::updateResultsLog()
 
          for (auto &&event : mModel->mEvents)
               log += ModelUtilities::eventResultsHTML(event, true, mModel);
+
           log += "<hr>";
         }
 
@@ -2650,7 +2649,6 @@ void ResultsView::updateZoomX()
         curMax = mRuler->mMax;
         curMin = curMax - span;
     }
-
 
     mResultCurrentMinX = curMin;
     mResultCurrentMaxX = curMax;
