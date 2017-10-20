@@ -1329,11 +1329,13 @@ void Model::generateTempo()
     double tmax (mSettings.mTmax);
 
 #ifdef UNIT_TEST
-    const int nbPts (20);
+    const int nbStep (20);
 #else
-    const int nbPts (1000); ///&< Number of point for the calulation table, if the size is too important, there is problem with the memory place
+    const int nbStep (1000); ///&< Number of point for the calulation table, if the size is too important, there is problem with the memory place
 #endif
 
+    /// We want an interval bigger than the maximun finded value, we need a point on tmin, tmax and tmax+deltat
+    const int nbPts (nbStep + 1);
 
     const int totalIter = (int) std::ceil(mChains[0].mNumRunIter / mChains[0].mThinningInterval);
 
@@ -1369,9 +1371,10 @@ void Model::generateTempo()
         for (auto &&ev : phase->mEvents)
             listTrace.append(ev->mTheta.fullRunRawTrace(mChains));
 
-        /// Look for the maximum span containing values
+        /// Look for the maximum span containing values \f$ x=2 \f$
         tmin = mSettings.mTmax;
         tmax = mSettings.mTmin;
+
 #ifndef UNIT_TEST
         for (auto &&l:listTrace) {
             const double lmin = *std::min_element(l.cbegin(), l.cend());
@@ -1383,13 +1386,15 @@ void Model::generateTempo()
         tmax = std::ceil(tmax);
 #endif
 #ifdef DEBUG
-        if (tmax>mSettings.mTmax) {
+        if (tmax > mSettings.mTmax) {
             qWarning("Model::generateTempo() tmax>mSettings.mTmax force tmax = mSettings.mTmax");
             tmax = mSettings.mTmax;
         }
 #endif
 
-        const double deltat = (tmax-tmin)/ (double)nbPts;
+        /// \f$ \delta_t = (t_max - t_min)/(nbStep) \f$
+        const double deltat = (tmax-tmin)/ (double)(nbStep);
+
 
         /// Erase containers
         N.fill(0);
@@ -1402,7 +1407,7 @@ void Model::generateTempo()
         previousN2 .fill(0);
 
         Ni.clear();
-
+        /// Loop
         for (int i(0); i<totalIter; ++i) {
             /// Create one scenario per iteration
             QVector<double> scenario;
@@ -1424,13 +1429,13 @@ void Model::generateTempo()
             QVector<int>::iterator itactivity (activity.begin()); // for Intensity/Activity
 #endif
             int index (0); // index of table N corresponding to the first value // faster than used of Distance
-            double t (tmin + index*deltat);
+            double t (tmin);
             int memoScenarioIdx (0);
             int scenarioIdx (1);
 
             while (itScenario != scenario.cend()) {
 
-                if (*itScenario> t && t<tmax ) {
+                if (*itScenario > t && t <= tmax ) {
                      if (itN != N.end()) {
                              (*itN2) = (*itPrevN2) + (memoScenarioIdx * memoScenarioIdx);
 
@@ -1463,12 +1468,10 @@ void Model::generateTempo()
                         ++itScenario;
                        ++scenarioIdx;
                     }
-
                 }
-
             }
 
-            while (index <= nbPts) {
+            while (index < nbPts) {
                 if (itN != N.end()) {
                      (*itN) = (*itPrevN) + memoScenarioIdx;
                     ++itN;
@@ -1479,25 +1482,29 @@ void Model::generateTempo()
                     ++itN2;
                     ++itPrevN2;
                 }
-                ++index;
+
                 Ni[t].append(memoScenarioIdx);
+                ++index;
                 t = tmin + index*deltat;
+
             }
             std::copy(N2.begin(), N2.end(), previousN2.begin());
             std::copy(N.begin(), N.end(), previousN.begin());
         }
+        /// Loop End
 
 #ifndef UNIT_TEST
         progress->setValue(position);
 #endif
 
-    /// Calculation of the variance
+    ///# Calculation of the variance
         QVector<double> inf;
         QVector<double> sup;
         QVector<double> mean;
         QVector<int>::iterator itN2 (N2.begin());
+        const double di (totalIter);
         for (auto &&x : N) {
-            const double di (totalIter);
+
             const double m = x/di;
             const double s2 = std::sqrt( (*itN2)/di - std::pow(m, 2.) );
 
@@ -1517,13 +1524,21 @@ void Model::generateTempo()
         // close the error curve on mean value
         const double tEnd (phase->mTempo.lastKey());
         const double vEnd (phase->mTempo[tEnd]);
-       // phase->mTempo[mSettings.mTmax] = vEnd;
-        phase->mTempoInf[tEnd + deltat] = vEnd;
-        phase->mTempoSup[tEnd + deltat] = vEnd;
-        qDebug()<<mSettings.mTmax;
-        phase->mTempo.insert(mSettings.mTmax, vEnd);
-        phase->mTempoInf.insert(mSettings.mTmax, vEnd);
 
+        if ( (tEnd ) <= mSettings.mTmax) {
+            phase->mTempoInf[tEnd] = vEnd;
+            phase->mTempoSup[tEnd ] = vEnd;
+        }
+        phase->mTempo.insert(mSettings.mTmax, vEnd);
+
+        const double tBegin (phase->mTempo.firstKey());
+        const double vBegin (0.);
+        // We need to add a point with the value 0 for the automatique Y scaling
+        if ((tBegin - deltat) >= mSettings.mTmin) {
+            phase->mTempo[tBegin - deltat] = vBegin;
+            phase->mTempoInf[tBegin - deltat] = vBegin;
+            phase->mTempoSup[tBegin - deltat] = vBegin;
+        }
 
 
 #ifndef ACTIVITY
@@ -1533,36 +1548,40 @@ void Model::generateTempo()
          */
 
         QVector<double> dN;
-        // first value, we can't use the same formula
-        int Np (N[1]);
-        int Nm (N[0]);
-        dN.append( Np - Nm );
+        // first value, we can't use the same formula for the beginning because we don't have f(x-h)
+        int Np (N[0]);
+        int Nm (0);
+        dN.append( (Np - Nm)/2. );
+        Nm = Np;
         for (QVector<int>::const_iterator x = N.cbegin()+1;  x != N.cend()-1; ++x) {
             Np = (* (x+1));
             dN.append((Np - Nm )/2. );
-            Nm= (*x);
+            Nm = (*x);
         }
         //last value
         Np = N.last();
         dN.append( (Np - Nm )/2. );
         phase->mActivity = vector_to_map(dN, tmin, tmax, deltat);
-        phase->mActivity[tmin-deltat] = 0.;
-        phase->mActivity[tEnd+deltat] = 0.;
 
+        if ( tEnd  <= mSettings.mTmax)
+            phase->mActivity[tEnd] = 0.;
+
+        if ((tmin - deltat) >= mSettings.mTmin)
+            phase->mActivity[tmin - deltat] = 0.;
 
  #else
        phase->mActivity = vector_to_map(activity, tmin, tmax, deltat);
 #endif
 
-        /// 4 - Credibility
+        ///# 4 - Credibility
         QVector<double> credInf (nbPts);
         QVector<double> credSup (nbPts);
 
         QVector<double>::iterator itCredInf (credInf.begin());
         QVector<double>::iterator itCredSup (credSup.begin());
         int index (0); // index of table N corresponding to the first value // faster than used of Distance
-        double t (tmin + index*deltat);
-        while (t<tmax ) {
+        double t (tmin);
+        while (t <= tmax ) {
             Quartiles cred = quartilesType(Ni[t], 8, 0.025);
             *itCredInf = cred.Q1;
             *itCredSup = cred.Q3;
@@ -1575,10 +1594,16 @@ void Model::generateTempo()
 
         phase->mTempoCredibilityInf = vector_to_map(credInf, tmin, tmax, deltat);
         phase->mTempoCredibilitySup = vector_to_map(credSup, tmin, tmax, deltat);
-        // Closing curves
-        phase->mTempoCredibilityInf[tEnd] = vEnd;
-        phase->mTempoCredibilitySup[tEnd] = vEnd;
+        // Joining curves on the curve Tempo
+        if ( tmax  <= mSettings.mTmax) {
+            phase->mTempoCredibilityInf[tmax] = vEnd;
+            phase->mTempoCredibilitySup[tmax] = vEnd;
+        }
 
+        if ((tBegin - deltat) >= mSettings.mTmin) {
+            phase->mTempoCredibilityInf[tBegin - deltat] = vBegin;
+            phase->mTempoCredibilitySup[tBegin - deltat] = vBegin;
+        }
 
 #ifndef UNIT_TEST
         ++position;
