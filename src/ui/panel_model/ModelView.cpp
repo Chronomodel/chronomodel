@@ -541,7 +541,7 @@ void ModelView::modifyPeriod()
     QJsonObject state = mProject->state();
     ProjectSettings s = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
-    StudyPeriodDialog dialog(qApp->activeWindow());//, Qt::Sheet);
+    StudyPeriodDialog dialog(qApp->activeWindow());
     dialog.setSettings(s);
     
     if (dialog.exec() == QDialog::Accepted) {

@@ -478,8 +478,7 @@ bool Project::load(const QString& path)
                             path  +
                             tr("Could not be find"),
                             QMessageBox::Ok,
-                            qApp->activeWindow(),
-                            Qt::Sheet);
+                            qApp->activeWindow());
         message.exec();
         return false;
     }
@@ -504,8 +503,7 @@ bool Project::load(const QString& path)
                                 tr("The project file could not be loaded.") + "\r" +
                                 tr("Error message") + " : " + error.errorString(),
                                 QMessageBox::Ok,
-                                qApp->activeWindow(),
-                                Qt::Sheet);
+                                qApp->activeWindow());
             message.exec();
             return false;
         } else {
@@ -539,8 +537,7 @@ bool Project::load(const QString& path)
                                             tr("Project version doesn't match"),
                                             "This project has been saved with a newer version of ChronoModel :\r\r- Project version : " + projectVersionStr + "\r- Current version : " + appVersionStr + "\r\rSome incompatible data may be missing and you may encounter problems running the model.\r\rLoading the project will update and overwrite the existing file. Do you really want to continue ?",
                                             QMessageBox::Yes | QMessageBox::No,
-                                            qApp->activeWindow(),
-                                            Qt::Sheet);
+                                            qApp->activeWindow());
                         if (message.exec() == QMessageBox::No)
                             return false;
                     }
@@ -640,8 +637,7 @@ bool Project::load(const QString& path)
                                             tr("The project could not be loaded.") + "\r" +
                                             tr("Error message") + " : " + error,
                                             QMessageBox::Ok,
-                                            qApp->activeWindow(),
-                                            Qt::Sheet);
+                                            qApp->activeWindow());
                         message.exec();
 
                         clearModel();
@@ -659,8 +655,7 @@ bool Project::load(const QString& path)
                                             tr("The project MCMC results could not be loaded.") + "\r" +
                                             tr("Error message") + " : " + error,
                                             QMessageBox::Ok,
-                                            qApp->activeWindow(),
-                                            Qt::Sheet);
+                                            qApp->activeWindow());
                         setNoResults(true);
                         message.exec();
                     }
@@ -789,7 +784,7 @@ bool Project::saveProjectToFile()
 bool Project::setSettings(const ProjectSettings& settings)
 {
     if (settings.mTmin >= settings.mTmax) {
-        QMessageBox message(QMessageBox::Critical, tr("Inconsistent values"), tr("Start Date must be lower than End Date !"), QMessageBox::Ok, qApp->activeWindow(), Qt::Sheet);
+        QMessageBox message(QMessageBox::Critical, tr("Inconsistent values"), tr("Start Date must be lower than End Date !"), QMessageBox::Ok, qApp->activeWindow());
         message.exec();
         return false;
     }
@@ -861,8 +856,7 @@ void Project::resetMCMC()
                         tr("Reset MCMC methods"),
                         tr("All event's and data's MCMC methods will be reset to their default value.\rDo you really want to do this ?"),
                         QMessageBox::Yes | QMessageBox::No,
-                        qApp->activeWindow(),
-                        Qt::Sheet);
+                        qApp->activeWindow());
     if (message.exec() == QMessageBox::Yes) {
         QJsonObject stateNext = mState;
         QJsonArray events = mState.value(STATE_EVENTS).toArray();
@@ -887,8 +881,7 @@ void Project::resetMCMC()
                                         qApp->applicationName() + " " + qApp->applicationVersion(),
                                         tr("Error : ") + error,
                                         QMessageBox::Ok,
-                                        qApp->activeWindow(),
-                                        Qt::Sheet);
+                                        qApp->activeWindow());
                     message.exec();
                 }
             }
@@ -919,8 +912,7 @@ void Project::showStudyPeriodWarning()
                         tr("Study period definition required"),
                         tr("To start your new project, you first have to define a study period."),
                         QMessageBox::Ok,
-                        qApp->activeWindow(),
-                        Qt::Sheet);
+                        qApp->activeWindow());
     message.exec();
 }
 
@@ -964,7 +956,7 @@ void Project::createEvent()
 void Project::createEventKnown()
 {
     if (studyPeriodIsValid()) {
-        EventDialog* dialog = new EventDialog(qApp->activeWindow(), tr("New Bound"), Qt::Sheet);
+        EventDialog* dialog = new EventDialog(qApp->activeWindow(), tr("New Bound"));
         if (dialog->exec() == QDialog::Accepted) {
             EventKnown event = EventKnown();
             event.mName = dialog->getName();
@@ -1052,7 +1044,7 @@ void Project::deleteSelectedTrashedEvents(const QList<int>& ids)
 
 void Project::recycleEvents()
 {
-    TrashDialog dialog(TrashDialog::eEvent, qApp->activeWindow(), Qt::Sheet);
+    TrashDialog dialog(TrashDialog::eEvent, qApp->activeWindow());
     if (dialog.exec() == QDialog::Accepted) {
         QList<int> indexes = dialog.getSelectedIndexes();
         qDebug() << indexes;
@@ -1280,8 +1272,7 @@ Date Project::createDateFromPlugin(PluginAbstract* plugin)
                                     tr("Invalid data"),
                                     form->mError,
                                     QMessageBox::Ok,
-                                    qApp->activeWindow(),
-                                    Qt::Sheet);
+                                    qApp->activeWindow());
                 message.exec();
             }
         }
@@ -1411,7 +1402,7 @@ void Project::updateDate(int eventId, int dateIndex)
                 QString pluginId = date.value(STATE_DATE_PLUGIN_ID).toString();
                 PluginAbstract* plugin = PluginManager::getPluginFromId(pluginId);
                 
-                DateDialog dialog(qApp->activeWindow(), Qt::Sheet);
+                DateDialog dialog(qApp->activeWindow());
                 PluginFormAbstract* form = plugin->getForm();
                 dialog.setForm(form);
                 dialog.setDate(date);
@@ -1450,8 +1441,7 @@ void Project::updateDate(int eventId, int dateIndex)
                                             tr("Invalid data"),
                                             form->mError,
                                             QMessageBox::Ok,
-                                            qApp->activeWindow(),
-                                            Qt::Sheet);
+                                            qApp->activeWindow());
                         message.exec();
                     }
                 }
@@ -1631,8 +1621,7 @@ void Project::combineDates(const int eventId, const QList<int>& dateIds)
                                             tr("Cannot combine"),
                                             mergedDate["error"].toString(),
                                             QMessageBox::Ok,
-                                            qApp->activeWindow(),
-                                            Qt::Sheet);
+                                            qApp->activeWindow());
                         message.exec();
                     } else {
                         // remove merged dates
@@ -1734,7 +1723,7 @@ void Project::updateAllDataInSelectedEvents(const QHash<QString, QVariant>& grou
 void Project::createPhase()
 {
     if (studyPeriodIsValid()) {
-        PhaseDialog* dialog = new PhaseDialog(qApp->activeWindow(), Qt::Sheet);
+        PhaseDialog* dialog = new PhaseDialog(qApp->activeWindow());
         if (dialog->exec() == QDialog::Accepted) {
             if (dialog->isValid()) {
                 QJsonObject phase = dialog->getPhase();
@@ -1752,8 +1741,7 @@ void Project::createPhase()
                                     tr("Invalid value"),
                                     dialog->mError,
                                     QMessageBox::Ok,
-                                    qApp->activeWindow(),
-                                    Qt::Sheet);
+                                    qApp->activeWindow());
                 message.exec();
                 return;
             }
@@ -1764,7 +1752,7 @@ void Project::createPhase()
 
 void Project::updatePhase(const QJsonObject& phaseIn)
 {
-    PhaseDialog* dialog = new PhaseDialog(qApp->activeWindow(), Qt::Sheet);
+    PhaseDialog* dialog = new PhaseDialog(qApp->activeWindow());
     dialog->setPhase(phaseIn);
     if (dialog->exec() == QDialog::Accepted) {
         if (dialog->isValid()) {
@@ -1808,8 +1796,7 @@ void Project::updatePhase(const QJsonObject& phaseIn)
                                 tr("Invalid value"),
                                 dialog->mError,
                                 QMessageBox::Ok,
-                                qApp->activeWindow(),
-                                Qt::Sheet);
+                                qApp->activeWindow());
             message.exec();
             return;
         }
@@ -2265,7 +2252,7 @@ void Project::updateEventConstraint(int constraintId)
         }
     }
     if (index != -1) {
-        ConstraintDialog* dialog = new ConstraintDialog(qApp->activeWindow(), ConstraintDialog::eEvent, Qt::Sheet);
+        ConstraintDialog* dialog = new ConstraintDialog(qApp->activeWindow(), ConstraintDialog::eEvent);
         dialog->setConstraint(constraint);
         if (dialog->exec() == QDialog::Accepted) {
             if (dialog->deleteRequested())
@@ -2370,7 +2357,7 @@ void Project::updatePhaseConstraint(const int constraintId)
         }
     }
     if (index != -1) {
-        ConstraintDialog dialog(qApp->activeWindow(), ConstraintDialog::ePhase, Qt::Sheet);
+        ConstraintDialog dialog(qApp->activeWindow(), ConstraintDialog::ePhase);
         dialog.setConstraint(constraint);
         if (dialog.exec() == QDialog::Accepted) {
             if (dialog.deleteRequested())
@@ -2385,8 +2372,7 @@ void Project::updatePhaseConstraint(const int constraintId)
                                         tr("Invalid value"),
                                         tr("The fixed value must be positive!"),
                                         QMessageBox::Ok,
-                                        qApp->activeWindow(),
-                                        Qt::Sheet);
+                                        qApp->activeWindow());
                     message.exec();
                     return;
                 }
@@ -2397,8 +2383,7 @@ void Project::updatePhaseConstraint(const int constraintId)
                                         tr("Invalid values"),
                                         tr("Min must be lower than max!"),
                                         QMessageBox::Ok,
-                                        qApp->activeWindow(),
-                                        Qt::Sheet);
+                                        qApp->activeWindow());
                     message.exec();
                     return;
                 }
@@ -2509,7 +2494,7 @@ void Project::exportAsText()
 // --------------------------------------------------------------------
 //     Project Run
 // --------------------------------------------------------------------
-//#pragma mark Run Project
+// Run Project
 void Project::run()
 {
     // Check if project contains invalid dates, e.g. with no computable calibration curve
@@ -2556,13 +2541,12 @@ void Project::run()
                             tr("Your model is not valid"),
                             error,
                             QMessageBox::Ok,
-                            qApp->activeWindow(),
-                            Qt::Sheet);
+                            qApp->activeWindow());
         message.exec();
     }
     if (modelOk) {
         MCMCLoopMain loop(mModel, this);
-        MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::Sheet);
+        MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint);
         
         // --------------------------------------------------------------------
         //  The dialog startMCMC() method starts the loop and the dialog.
@@ -2591,8 +2575,7 @@ void Project::run()
                                         tr("Error"),
                                         loop.mAbortedReason,
                                         QMessageBox::Ok,
-                                        qApp->activeWindow(),
-                                        Qt::Sheet);
+                                        qApp->activeWindow());
                     message.exec();
                 }
                 clearModel();

@@ -213,8 +213,7 @@ void CalibrationView::setDate(const QJsonObject& date)
                             qApp->applicationName() + " " + qApp->applicationVersion(),
                             tr("Error : ") + error,
                             QMessageBox::Ok,
-                            qApp->activeWindow(),
-                            Qt::Sheet);
+                            qApp->activeWindow());
         message.exec();
     }
     mDrawing->updateLayout();

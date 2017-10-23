@@ -32,7 +32,7 @@ const qreal lineEditHeight (20);
 #endif
 
  # ifdef Q_OS_UNIX
-    const qreal comboBoxHeight (20);
+    //const qreal comboBoxHeight (20);
 #endif
 
 //const qreal radioButtonHeight (17);

@@ -109,8 +109,7 @@ mType(type)
                                     qApp->applicationName() + " " + qApp->applicationVersion(),
                                     tr("Warning : ") + error,
                                     QMessageBox::Ok,
-                                    qApp->activeWindow(),
-                                    Qt::Sheet);
+                                    qApp->activeWindow());
                 message.exec();
             }
         }

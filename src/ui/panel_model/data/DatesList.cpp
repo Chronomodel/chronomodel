@@ -71,8 +71,7 @@ void DatesList::setEvent(const QJsonObject& event)
                                     qApp->applicationName() + " " + qApp->applicationVersion(),
                                     tr("Error : ") + error,
                                     QMessageBox::Ok,
-                                    qApp->activeWindow(),
-                                    Qt::Sheet);
+                                    qApp->activeWindow());
                 message.exec();
             }
         }

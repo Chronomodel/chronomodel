@@ -149,8 +149,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
                                     qApp->applicationName() + " " + qApp->applicationVersion(),
                                     tr("Error : ") + error,
                                     QMessageBox::Ok,
-                                    qApp->activeWindow(),
-                                    Qt::Sheet);
+                                    qApp->activeWindow());
                 message.exec();
             }
         }

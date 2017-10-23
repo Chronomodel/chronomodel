@@ -1047,7 +1047,7 @@ void EventsScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e
     Q_UNUSED(e);
     Q_UNUSED(item);
     
-    QMessageBox message(QMessageBox::Question, tr("Delete constraint"), tr("Do you really want to delete this constraint?"), QMessageBox::Yes | QMessageBox::No, qApp->activeWindow(), Qt::Sheet);
+    QMessageBox message(QMessageBox::Question, tr("Delete constraint"), tr("Do you really want to delete this constraint?"), QMessageBox::Yes | QMessageBox::No, qApp->activeWindow());
     if (message.exec() == QMessageBox::Yes)
         mProject->deleteEventConstraint(item->data().value(STATE_ID).toInt());
 }

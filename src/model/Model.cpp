@@ -159,8 +159,7 @@ void Model::fromJson(const QJsonObject& json)
                                         qApp->applicationName() + " " + qApp->applicationVersion(),
                                         QObject::tr("Error : ") + error,
                                         QMessageBox::Ok,
-                                        qApp->activeWindow(),
-                                        Qt::Sheet);
+                                        qApp->activeWindow());
                     message.exec();
                 }
             } else {
