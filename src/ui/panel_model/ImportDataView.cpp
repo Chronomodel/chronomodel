@@ -217,7 +217,7 @@ void ImportDataView::browse()
              * Update table view with data constructed before
              */
             if (data.isEmpty()){
-                QMessageBox message(QMessageBox::Warning, tr("Bad file"), tr("Maybe you need to check the manual to build your CSV file ! <a href=\https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=29 \>More...</a> "),
+                QMessageBox message(QMessageBox::Warning, tr("Bad file"), tr("Maybe you need to check the manual to build your CSV file !") + " <a href=\https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=29 \>"+ tr("More...")+"</a> ",
                                     QMessageBox::Ok, qApp->activeWindow());
                 message.exec();
             } else {

@@ -466,7 +466,7 @@ void Project::sendEventsSelectionChanged()
     QCoreApplication::postEvent(this, e, Qt::NormalEventPriority);
 }
 
-//#pragma mark Project File Management
+// Project File Management
 
 bool Project::load(const QString& path)
 {

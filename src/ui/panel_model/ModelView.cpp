@@ -994,7 +994,8 @@ void ModelView::updateLayout()
 
     //------- Study Period
 
-   // mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text()) + 10) /2, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 5, topButtonHeight );
+    //mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text()) + 10) /2, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 5, topButtonHeight );
+    mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text())) /2 -15, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 15, topButtonHeight );
 
     // coordinates in ModelView
 
