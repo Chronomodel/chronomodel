@@ -163,6 +163,8 @@ mMinorCountScale (4)
 
     mTempoRadio = new RadioButton(tr("Phases Tempo"), mTempoGroup);
     mTempoRadio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
+    mTempoCredCheck = new CheckBox(tr("Tempo Cred."), mTempoGroup);
+    mTempoErrCheck = new CheckBox(tr("Tempo Error"), mTempoGroup);
 
     mActivityRadio = new RadioButton(tr("Phases Activity"), mTempoGroup);
     mActivityRadio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
@@ -189,6 +191,9 @@ mMinorCountScale (4)
     connect(mDataCalibCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     connect(mWiggleCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     connect(mStatCheck, &CheckBox::clicked, this, &ResultsView::showInfos);
+
+    connect(mTempoCredCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mTempoErrCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
 
     connect(mDurationRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
     connect(mTempoRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
@@ -873,6 +878,19 @@ void ResultsView::updateTabByTempo()
 
     mTempoRadio -> move(mMargin, ySpan);
     ySpan += mTempoRadio->height() + mMargin;
+    int dx (20 + mMargin);
+
+    if (mTempoRadio->isChecked()) {
+        mTempoCredCheck->setVisible(true);
+        mTempoErrCheck->setVisible(true);
+        mTempoCredCheck -> move(mMargin + dx, ySpan);
+        ySpan += mTempoCredCheck->height() + mMargin;
+        mTempoErrCheck -> move(mMargin + dx, ySpan);
+        ySpan += mTempoErrCheck->height() + mMargin;
+    } else {
+        mTempoCredCheck->setVisible(false);
+        mTempoErrCheck->setVisible(false);
+    }
 
     mActivityRadio -> move(mMargin, ySpan);
     ySpan += mActivityRadio->height() + mMargin;
@@ -2127,7 +2145,7 @@ void ResultsView::updateCurvesToShow()
     else if (mTabByScene->currentIndex() == 2 )
         for (GraphViewResults* tempoGraph : mByTempoGraphs) {
             tempoGraph->setShowNumericalResults(showStat);
-            tempoGraph->updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
+            tempoGraph->updateCurvesToShow(showAllChains, showChainList, mTempoCredCheck->isChecked(), mTempoErrCheck->isChecked(), showWiggle);
         }
 
     updateScales();

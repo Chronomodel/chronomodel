@@ -244,10 +244,10 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
 
 }
 
-void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle)
+void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showError, bool showWiggle)
 {
     Q_ASSERT(mPhase);
-    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
+    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showCredibility, showError, showWiggle);
     
     /* --------------------first tab : posterior distrib----------------------------
      *
@@ -287,12 +287,12 @@ void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
          if ( tempo && !tempo->mData.isEmpty()) {
 
-             mGraph->setCurveVisible("Post Distrib Tempo All Chains", true);    //mShowAllChains);
-             mGraph->setCurveVisible("Post Distrib Tempo Inf All Chains", true);    //mShowAllChains);
-             mGraph->setCurveVisible("Post Distrib Tempo Sup All Chains", true);    //mShowAllChains);
+             mGraph->setCurveVisible("Post Distrib Tempo All Chains", true);
+             mGraph->setCurveVisible("Post Distrib Tempo Inf All Chains", showError);
+             mGraph->setCurveVisible("Post Distrib Tempo Sup All Chains", showError);
 
-             mGraph->setCurveVisible("Post Distrib Tempo Cred Inf All Chains", true);   //mShowAllChains);
-             mGraph->setCurveVisible("Post Distrib Tempo Cred Sup All Chains", true);   //mShowAllChains);
+             mGraph->setCurveVisible("Post Distrib Tempo Cred Inf All Chains", showCredibility);
+             mGraph->setCurveVisible("Post Distrib Tempo Cred Sup All Chains", showCredibility);
 
              mGraph->setTipXLab("t");
              mGraph->setTipYLab("n");

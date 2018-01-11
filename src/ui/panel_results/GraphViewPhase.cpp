@@ -344,7 +344,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         mGraph->autoAdjustYScale(true); // do repaintGraph()
 
     }
-    else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eDuration) {
+  /*  else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eDuration) {
         const GraphCurve* duration = mGraph->getCurve("Post Distrib Duration All Chains");
 
         if ( duration && !duration->mData.isEmpty()) {
@@ -362,7 +362,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->autoAdjustYScale(true);
         }
 
-    }
+    }*/
     else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eSigma) {
             for (auto && ev : mPhase->mEvents) {
                 const int n (ev->mDates.size());
