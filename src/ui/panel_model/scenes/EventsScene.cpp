@@ -509,7 +509,19 @@ void EventsScene::updateSceneFromState()
         bool itemExists = false;
         for (int j=0; j<mConstraintItems.size(); ++j) {
             QJsonObject constraintItem = mConstraintItems.at(j)->data();
+
+
             if (constraintItem.value(STATE_ID).toInt() == constraint.value(STATE_ID).toInt()) {
+
+                // in case of UNDO command check and update position
+                const int fromId = constraintItem.value(STATE_CONSTRAINT_BWD_ID).toInt();
+                const int toId = constraintItem.value(STATE_CONSTRAINT_FWD_ID).toInt();
+                EventItem* eventFrom = mConstraintItems.at(j)->findEventItemWithJsonId(fromId);
+                EventItem* eventTo = mConstraintItems.at(j)->findEventItemWithJsonId(toId);
+                // control if all event still exist
+                if (eventFrom && eventTo)
+                    mConstraintItems.at(j)->updatePosition();
+
                 itemExists = true;
                 if (constraint != constraintItem) {
                     // UPDATE ITEM
@@ -600,7 +612,7 @@ void EventsScene::clean()
         delete constraintItem;
     }
     
-    mProject = 0;
+    mProject = nullptr;
     // ------------------------------------------------------
     //  Reset scene rect
     // ------------------------------------------------------
@@ -1053,7 +1065,7 @@ void EventsScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e
 }
 
 /**
- * @brief EventsScene::keyPressEvent overwrtite AbstractScene::keyPressEvent
+ * @brief EventsScene::keyPressEvent overwrite AbstractScene::keyPressEvent
  * @param keyEvent
  */
 void EventsScene::keyPressEvent(QKeyEvent* keyEvent)

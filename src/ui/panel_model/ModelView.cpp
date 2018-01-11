@@ -384,7 +384,6 @@ void ModelView::disconnectScenes()
     disconnect(mEventsSearchEdit, &LineEdit::returnPressed, this, &ModelView::searchEvent);
     disconnect(mEventsGlobalZoom, &ScrollCompressor::valueChanged, this, &ModelView::updateEventsZoom);
     disconnect(mButExportEvents, &Button::clicked, this, &ModelView::exportEventsScene);
-    //disconnect(mButProperties, SIGNAL(toggled(bool)), this, SLOT(showProperties()));
     disconnect(mButProperties, &Button::clicked, this, &ModelView::showProperties);
 
     disconnect(mButMultiCalib,  &Button::clicked, this, &ModelView::showMultiCalib);
@@ -418,11 +417,13 @@ Project* ModelView::getProject() const
 
 void ModelView::resetInterface()
 {
-    if (mButProperties->isChecked())
-        mButProperties->click();
+    mButProperties->setEnabled(false);
+    mButMultiCalib->setEnabled(false);
+    mButDeleteEvent->setEnabled(false);
 
-    if (mButImport->isChecked())
-        mButImport->click();
+    mButNewEvent->setEnabled(true);
+    mButNewEventKnown->setEnabled(true);
+    mButImport->setEnabled(true);
 
   //  noEventSelected();
     disconnectScenes();
@@ -430,6 +431,8 @@ void ModelView::resetInterface()
     mEventsScene->clean();
     mPhasesScene->clean();
     mCalibrationView->setDate(QJsonObject());
+
+    mMultiCalibrationView->setProject(mProject);
     mMultiCalibrationView->setEventsList(QList<Event*> ());
 
     mEventPropertiesView->setEvent(QJsonObject());

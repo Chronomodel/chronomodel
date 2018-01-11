@@ -40,7 +40,7 @@ public:
     
     void setData(const QJsonObject& c);
     QJsonObject& data();
-protected:
+
     EventItem* findEventItemWithJsonId(const int id);
 
 public:
