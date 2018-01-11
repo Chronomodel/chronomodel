@@ -157,7 +157,7 @@ void ImportDataView::browse()
                 const QString line = stream.readLine();
                 QStringList values = line.split(csvSep);
                 if (values.size() > 0) {
-                    qDebug()<<"ImportDataView::browse() "<<values.at(0)<<values.at(0).toUpper();
+                    qDebug()<<"ImportDataView::browse() "<<values.at(0).toUpper();
                     if (values.size() > 2 && values.at(0) == "") {
                         values[0]="No Name "+ QString::number(noNameCount);
                         ++noNameCount;
