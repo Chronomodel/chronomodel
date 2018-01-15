@@ -12,8 +12,12 @@
 // Constructor / Destructor
 MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
 {
-    setWindowTitle("ChronoModel");
-
+   // setWindowTitle("ChronoModel");
+#ifdef DEBUG
+    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + " DEBUG Mode ");
+#else
+    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() );
+#endif
     QPalette tooltipPalette;
     tooltipPalette.setColor(QPalette::ToolTipBase, Qt::white);
     tooltipPalette.setColor(QPalette::ToolTipText, Qt::black);
