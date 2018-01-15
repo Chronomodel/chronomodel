@@ -250,7 +250,7 @@ void EventsScene::createSceneFromState()
 
      //http://doc.qt.io/qt-5/qprogressdialog.html#minimumDuration-prop
 
-    QProgressDialog* progress = new QProgressDialog("Create event items","Wait" , 1, eventsInState.size(),qApp->activeWindow());
+    QProgressDialog* progress = new QProgressDialog("Create event items","Wait" , 1, eventsInState.size());//,qApp->activeWindow(), Qt::Window);
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(0);
 
@@ -349,7 +349,7 @@ void EventsScene::updateSceneFromState()
     if (mItems.size() != eventsInNewState.size()) {
         //http://doc.qt.io/qt-5/qprogressdialog.html#minimumDuration-prop
         displayProgress = true;
-        progress = new QProgressDialog("Create / Update event items","Wait" , 1, eventsInNewState.size(),qApp->activeWindow());
+        progress = new QProgressDialog("Create / Update event items","Wait" , 1, eventsInNewState.size());//,qApp->activeWindow(), Qt::Window);
         progress->setWindowModality(Qt::WindowModal);
         progress->setCancelButton(nullptr);
     }
@@ -374,7 +374,6 @@ void EventsScene::updateSceneFromState()
     
     mUpdatingItems = true;
 
-    //progress->show();
     // ------------------------------------------------------
     //  Delete items not in current state
     // ------------------------------------------------------

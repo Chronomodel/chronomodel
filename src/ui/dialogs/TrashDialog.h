@@ -17,7 +17,7 @@ public:
         eEvent = 1
     };
     
-    TrashDialog(Type type, QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
+    TrashDialog(Type type, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Window);
     ~TrashDialog();
     
     QList<int> getSelectedIndexes();

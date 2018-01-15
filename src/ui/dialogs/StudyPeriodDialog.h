@@ -24,7 +24,7 @@ class StudyPeriodDialog: public QDialog
 {
     Q_OBJECT
 public:
-    StudyPeriodDialog(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
+    StudyPeriodDialog(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Window);
     ~StudyPeriodDialog();
     
     void setStep(double step, bool forced, double suggested);

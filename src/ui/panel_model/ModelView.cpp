@@ -552,7 +552,7 @@ bool ModelView::findCalibrateMissing()
         for (auto Qev: Qevents)
             events.append(Event::fromJson(Qev.toObject()));
 
-        QProgressDialog *progress = new QProgressDialog("Calibration curve missing","Wait" , 1, 10, qApp->activeWindow());
+        QProgressDialog *progress = new QProgressDialog("Calibration curve missing","Wait" , 1, 10);//, qApp->activeWindow(), Qt::Window);
         progress->setWindowModality(Qt::WindowModal);
         progress->setCancelButton(0);
         progress->setMinimumDuration(4);
@@ -615,7 +615,8 @@ void ModelView::calibrateAll(ProjectSettings newS)
         for (auto Qev: Qevents)
             events.append(Event::fromJson(Qev.toObject()));
 
-        QProgressDialog *progress = new QProgressDialog("Calibration curve generation","Wait" , 1, 10, qApp->activeWindow());
+        //QProgressDialog *progress = new QProgressDialog("Calibration curve generation -----2","Wait" , 1, 10, qApp->activeWindow(), Qt::Widget);
+        QProgressDialog *progress = new QProgressDialog("Calibration curve generation","Wait" , 1, 10);
         progress->setWindowModality(Qt::WindowModal);
         progress->setCancelButton(0);
         progress->setMinimumDuration(4);

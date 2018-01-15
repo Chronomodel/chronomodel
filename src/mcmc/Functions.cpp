@@ -5,7 +5,6 @@
 #include "DateUtils.h"
 #include "QtUtilities.h"
 #include <QDebug>
-#include <QProgressDialog>
 #include <QApplication>
 #include <set>
 #include <map>

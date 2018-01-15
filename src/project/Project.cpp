@@ -788,12 +788,7 @@ bool Project::setSettings(const ProjectSettings& settings)
         message.exec();
         return false;
     }
-   /* else if(settings.mStep < 0.1)
-    {
-        QMessageBox message(QMessageBox::Critical, tr("Inconsistent values"), tr("Step must be >= 0.1 !"), QMessageBox::Ok, qApp->activeWindow(), Qt::Sheet);
-        message.exec();
-        return false;
-    } */
+
     else {
         QJsonObject stateNext = mState;
         
@@ -940,7 +935,7 @@ int Project::getUnusedEventId(const QJsonArray& events)
 void Project::createEvent()
 {
     if (studyPeriodIsValid()) {
-        EventDialog* dialog = new EventDialog(qApp->activeWindow(), tr("New Event"));//, Qt::Sheet);
+        EventDialog* dialog = new EventDialog(qApp->activeWindow(), tr("New Event"));
         if (dialog->exec() == QDialog::Accepted) {
             Event event = Event();
             event.mName = dialog->getName();

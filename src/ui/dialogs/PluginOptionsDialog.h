@@ -13,7 +13,7 @@ class PluginOptionsDialog: public QDialog
 {
     Q_OBJECT
 public:
-    PluginOptionsDialog(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    PluginOptionsDialog(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Window);
     virtual ~PluginOptionsDialog();
 
     QString getC14Ref() const;

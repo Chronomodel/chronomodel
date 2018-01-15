@@ -14,7 +14,7 @@ class MCMCProgressDialog: public QDialog
 {
     Q_OBJECT
 public:
-    MCMCProgressDialog(MCMCLoopMain* loop, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    MCMCProgressDialog(MCMCLoopMain* loop, QWidget* parent = 0, Qt::WindowFlags flags = Qt::Window);
     ~MCMCProgressDialog();
     
     int startMCMC();

@@ -1210,7 +1210,7 @@ void Model::generateCredibility(const double thresh)
     }
 
     // Diplay a progressBar if "long" set with setMinimumDuration()
-    QProgressDialog *progress = new QProgressDialog("Time range & credibilities generation","Wait" , 1, 10, qApp->activeWindow());
+    QProgressDialog *progress = new QProgressDialog("Time range & credibilities generation","Wait" , 1, 10);//, qApp->activeWindow(), Qt::Window);
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(0);
     progress->setMinimumDuration(4);
@@ -1317,7 +1317,7 @@ void Model::generateTempo()
 
 #ifndef UNIT_TEST
     // Display a progressBar if "long" set with setMinimumDuration()
-    QProgressDialog *progress = new QProgressDialog("Tempo Plot generation","Wait" , 1, 10, qApp->activeWindow());
+    QProgressDialog *progress = new QProgressDialog("Tempo Plot generation","Wait" , 1, 10);//, qApp->activeWindow(), Qt::Window);
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(0);
     progress->setMinimumDuration(4);

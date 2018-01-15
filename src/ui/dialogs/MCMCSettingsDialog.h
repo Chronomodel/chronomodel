@@ -16,7 +16,7 @@ class MCMCSettingsDialog: public QDialog
 {
     Q_OBJECT
 public:
-    MCMCSettingsDialog(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
+    MCMCSettingsDialog(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Window);
     virtual ~MCMCSettingsDialog();
 
     void setSettings(const MCMCSettings& settings);
