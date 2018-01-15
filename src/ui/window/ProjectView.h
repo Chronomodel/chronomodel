@@ -48,7 +48,7 @@ public slots:
     void showHelp(bool show);
     
     void applySettings(Model* model, const AppSettings* appSet);
-
+    void applyFilesSettings(Model* model, const AppSettings* appSet);
     void initResults(Model*, const AppSettings* appSet);
     void updateResults(Model*);
     void updateResultsLog(const QString& log);

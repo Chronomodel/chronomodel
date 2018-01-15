@@ -13,7 +13,7 @@ class PluginRefCurveSettingsView: public QWidget
 {
     Q_OBJECT
 public:
-    PluginRefCurveSettingsView(PluginAbstract* plugin, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    PluginRefCurveSettingsView(PluginAbstract* plugin, QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
     virtual ~PluginRefCurveSettingsView();
     
     void updateFilesInFolder();
@@ -25,6 +25,9 @@ protected slots:
    // void openSelectedFile();
     void updateSelection();
     
+signals:
+ void listRefCurveChanged();
+
 private:
     PluginAbstract* mPlugin;
     

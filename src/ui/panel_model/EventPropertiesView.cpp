@@ -593,22 +593,20 @@ void EventPropertiesView::updateLayout()
         int y = 0;
 
         // Plugin with calibration,
-        //for (int i=0; i<mPluginButs1.size(); ++i) {
-        for (auto && plugBut : mPluginButs1) {
+         for (auto && plugBut : mPluginButs1) {
             plugBut->setGeometry(x, y, mButtonWidth, butPluginHeigth);
             y += butPluginHeigth;
         }
 
         // plugin without calibration
-        //for (int i(0); i<mPluginButs2.size(); ++i) {
+
         for (auto && plugBut : mPluginButs2) {
             plugBut->setGeometry(x, y, mButtonWidth, butPluginHeigth);
             y += butPluginHeigth;
         }
 
-       // x = listRect.x();
         y = listRect.y() + listRect.height();
-        const int w = mButtonWidth; //listRect.width() / 5;
+        const int w = mButtonWidth;
         const int h = mButtonWidth;
 
         mCalibBut->setGeometry(0, y, w, butPluginHeigth);

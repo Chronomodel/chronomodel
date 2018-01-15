@@ -94,68 +94,84 @@ QList<Date::DataMethod> PluginGauss::allowedDataMethods() const
 
 QString PluginGauss::getDateDesc(const Date* date) const
 {
-    QLocale locale=QLocale();
+    Q_ASSERT(date);
     QString result;
-    if (date) {
-        QJsonObject data = date->mData;
-        
+
+    const QJsonObject &data = date->mData;
+
+    const QString mode = data[DATE_GAUSS_MODE_STR].toString();
+
+
+    result += QObject::tr("Age") + " : " + QLocale().toString(data[DATE_GAUSS_AGE_STR].toDouble());
+    result += " ± " + QLocale().toString(data[DATE_GAUSS_ERROR_STR].toDouble());
+
+    if (mode == DATE_GAUSS_MODE_NONE)
+        result += " (No calibration)";
+
+    else if (mode == DATE_GAUSS_MODE_EQ) {
         const double a = data[DATE_GAUSS_A_STR].toDouble();
         const double b = data[DATE_GAUSS_B_STR].toDouble();
         const double c = data[DATE_GAUSS_C_STR].toDouble();
-        const QString mode = data[DATE_GAUSS_MODE_STR].toString();
-        const QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
-        
-        result += QObject::tr("Age") + " : " + locale.toString(data[DATE_GAUSS_AGE_STR].toDouble());
-        result += " ± " + locale.toString(data[DATE_GAUSS_ERROR_STR].toDouble());
-        
-        if (mode == DATE_GAUSS_MODE_NONE)
-            result += " (No calibration)";
 
-        if (mode == DATE_GAUSS_MODE_EQ) {
-            QString aStr;
-            if (a != 0.) {
-                if (a == -1.)
-                    aStr += "-";
-                else if (a != 1.)
-                    aStr += locale.toString(a);
+        QString aStr;
+        if (a != 0.) {
+            if (a == -1.)
+                aStr += "-";
+            else if (a != 1.)
+                aStr += QLocale().toString(a);
 
-                aStr += "t²";
-            }
-            QString bStr;
-            if (b != 0.) {
-                if (b == -1.)
-                    bStr += "-";
-                else if (b != 1.)
-                    bStr += locale.toString(b);
-
-                bStr += "t";
-            }
-            QString cStr;
-            if (c != 0.)
-                cStr +=locale.toString(c);
-
-            QString eq = aStr;
-            if (!eq.isEmpty() && !bStr.isEmpty())
-                eq += " + ";
-
-            eq += bStr;
-            if (!eq.isEmpty() && !cStr.isEmpty())
-                eq += " + ";
-
-            eq += cStr;
-            
-            result += "; " + QObject::tr("Ref. curve") + " : g(t) = " + eq;
+            aStr += "t²";
         }
-        else if (mode == DATE_GAUSS_MODE_CURVE) {
-            if (mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
-                result += "; " + tr("Ref. curve") + " : " + ref_curve;
-            }
-            else {
-                result += ", " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
-            }
+        QString bStr;
+        if (b != 0.) {
+            if (b == -1.)
+                bStr += "-";
+            else if (b != 1.)
+                bStr += QLocale().toString(b);
+
+            bStr += "t";
         }
+        QString cStr;
+        if (c != 0.)
+            cStr += QLocale().toString(c);
+
+        QString eq = aStr;
+        if (!eq.isEmpty() && !bStr.isEmpty())
+            eq += " + ";
+
+        eq += bStr;
+        if (!eq.isEmpty() && !cStr.isEmpty())
+            eq += " + ";
+
+        eq += cStr;
+
+        result += "; " + QObject::tr("Ref. curve") + " : g(t) = " + eq;
     }
+    else if (mode == DATE_GAUSS_MODE_CURVE) {
+        const QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
+        if (mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty())
+            result += "; " + tr("Ref. curve") + " : " + ref_curve;
+        else
+            result += ", " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
+
+    }
+
     return result;
+}
+
+QString PluginGauss::getDateRefCurveName(const Date* date)
+{
+    Q_ASSERT(date);
+    const QJsonObject &data = date->mData;
+
+    const QString mode = data[DATE_GAUSS_MODE_STR].toString();
+
+    if (mode == DATE_GAUSS_MODE_CURVE)
+            return data[DATE_GAUSS_CURVE_STR].toString().toLower();
+
+    else
+        return QString();
+
 }
 
 // CSV

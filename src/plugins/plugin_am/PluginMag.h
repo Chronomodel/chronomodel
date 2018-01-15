@@ -43,6 +43,7 @@ public:
     QJsonObject checkValuesCompatibility(const QJsonObject& values);
 
     QString getDateDesc(const Date* date) const;
+    QString getDateRefCurveName(const Date* date) ;
     
     PluginFormAbstract* getForm();
     GraphViewRefAbstract* getGraphViewRef();

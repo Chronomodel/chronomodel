@@ -9,7 +9,8 @@
 Plugin14CSettingsView::Plugin14CSettingsView(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags flags):PluginSettingsViewAbstract(plugin, parent, flags){
     
     mRefView = new PluginRefCurveSettingsView(plugin);
-    
+    connect(mRefView, &PluginRefCurveSettingsView::listRefCurveChanged, this, &Plugin14CSettingsView::calibrationNeeded);
+
     QVBoxLayout* layout = new QVBoxLayout();
     layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(mRefView);

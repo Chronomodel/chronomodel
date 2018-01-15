@@ -117,6 +117,8 @@ void PluginRefCurveSettingsView::addRefCurve(){
         mFilesNew.insert(fileInfo.fileName(), fileInfo.absoluteFilePath());
         updateFilesInFolder();
         updateRefsList();
+
+        emit listRefCurveChanged();
     }
 }
 
@@ -127,6 +129,8 @@ void PluginRefCurveSettingsView::deleteRefCurve(){
         mFilesNew.remove(filename);
         updateFilesInFolder();
         updateRefsList();
+
+        emit listRefCurveChanged();
     }
 }
 

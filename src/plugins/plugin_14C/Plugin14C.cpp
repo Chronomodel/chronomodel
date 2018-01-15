@@ -90,32 +90,41 @@ QList<Date::DataMethod> Plugin14C::allowedDataMethods() const
 
 QString Plugin14C::getDateDesc(const Date* date) const
 {
+    Q_ASSERT(date);
     QLocale locale = QLocale();
     QString result;
-    if (date) {
-        QJsonObject data = date->mData;
+
+    const QJsonObject data = date->mData;
         
-        double age = data.value(DATE_14C_AGE_STR).toDouble();
-        double error = data.value(DATE_14C_ERROR_STR).toDouble();
-        double delta_r = data.value(DATE_14C_DELTA_R_STR).toDouble();
-        double delta_r_error = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
-        QString ref_curve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
-        
-        result += QObject::tr("Age") + " : " + locale.toString(age);
-        result += " ± " + locale.toString(error);
-        
-        if (delta_r != 0. || delta_r_error != 0.) {
-            result += ", " + QObject::tr("ΔR") + " : " + locale.toString(delta_r);
-            result += " ± " +locale.toString(delta_r_error);
-        }
-        
-        if (mRefCurves.contains(ref_curve) && !mRefCurves.value(ref_curve).mDataMean.isEmpty())
-            result += "; " + tr("Ref. curve") + " : " + ref_curve;
-        else
-            result += "; " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
-        
+    const double age = data.value(DATE_14C_AGE_STR).toDouble();
+    const double error = data.value(DATE_14C_ERROR_STR).toDouble();
+    const double delta_r = data.value(DATE_14C_DELTA_R_STR).toDouble();
+    const double delta_r_error = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
+    const QString ref_curve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
+
+    result += QObject::tr("Age") + " : " + locale.toString(age);
+    result += " ± " + locale.toString(error);
+
+    if (delta_r != 0. || delta_r_error != 0.) {
+        result += ", " + QObject::tr("ΔR") + " : " + locale.toString(delta_r);
+        result += " ± " +locale.toString(delta_r_error);
     }
+
+    if (mRefCurves.contains(ref_curve) && !mRefCurves.value(ref_curve).mDataMean.isEmpty())
+        result += "; " + tr("Ref. curve") + " : " + ref_curve;
+    else
+        result += "; " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
+        
+
     return result;
+}
+
+QString Plugin14C::getDateRefCurveName(const Date* date)
+{
+    Q_ASSERT(date);
+    const QJsonObject data = date->mData;
+
+    return  data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
 }
 
 // CSV

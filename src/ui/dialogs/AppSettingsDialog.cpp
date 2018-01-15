@@ -8,11 +8,10 @@
 
 #include "AppSettings.h"
 
-AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags):
-QDialog(parent, flags)
+AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QDialog(parent, flags)
 {
     setWindowTitle(tr("Application Settings"));
-
+    filesChanged = false,
     // -----------------------------
     //  General View
     // -----------------------------
@@ -32,19 +31,6 @@ QDialog(parent, flags)
 
     for (int i=0; i<339; i++)
         mLanguageCombo->addItem(QLocale::languageToString((QLocale::Language)i),QVariant((QLocale::Language)i));
-
-
- /*   mFontLab = new Label(tr("Font"), this);
-
-    mFontBut = new Button(this);
-    mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
-    mFontBut->QWidget::setStyleSheet("QPushButton { border-radius: 5px; }");
-
-    mCountryLab = new QLabel(tr("Country") + " : ", this);
-    mCountryCombo = new QComboBox(this);
-    mCountryCombo->addItem(QLocale::countryToString(QLocale::France), QVariant(QLocale::France));
-    mCountryCombo->addItem(QLocale::countryToString(QLocale::UnitedKingdom), QVariant(QLocale::UnitedKingdom));
- */
 
     mAutoSaveLab = new QLabel(tr("Auto save project"), this);
     mAutoSaveCheck = new QCheckBox(this);
@@ -230,6 +216,7 @@ QDialog(parent, flags)
             item->setData(0x0102, plug->getId());
             mList->addItem(item);
             mStack->addWidget(view);
+            connect(view, &PluginSettingsViewAbstract::calibrationNeeded, this, &AppSettingsDialog::needCalibration);
         }
     }
     
@@ -252,7 +239,18 @@ AppSettingsDialog::~AppSettingsDialog()
 {
     qDebug()<<"fin AppSettingsDialog::~AppSettingsDialog()";
     AppSettings s = getSettings();
-    emit settingsChanged(s);
+
+    if (filesChanged)
+        emit settingsFilesChanged(s);
+    else
+        emit settingsChanged(s);
+
+    filesChanged = false;
+}
+
+void AppSettingsDialog::needCalibration()
+{
+    filesChanged = true;
 }
 
 void AppSettingsDialog::setSettings(const AppSettings& settings)
@@ -373,6 +371,10 @@ void AppSettingsDialog::buttonClicked(QAbstractButton* button)
   //  mNbSheet->setValue(APP_SETTINGS_DEFAULT_SHEET);
 
     AppSettings s = getSettings();
-    emit settingsChanged(s);
 
+   /* if (filesChanged)
+        emit settingsFilesChanged(s);
+    else
+        emit settingsChanged(s);
+*/
 }

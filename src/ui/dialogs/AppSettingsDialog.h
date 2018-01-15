@@ -31,13 +31,17 @@ public:
 
     void setSettings(const AppSettings& settings);
     AppSettings getSettings();
+
+    bool filesChanged;
         
 private slots:
     void changeSettings();
     void buttonClicked(QAbstractButton*);
+    void needCalibration();
     
 signals:
     void settingsChanged(const AppSettings&);
+    void settingsFilesChanged(const AppSettings&);
     
 private:
     QListWidget* mList;

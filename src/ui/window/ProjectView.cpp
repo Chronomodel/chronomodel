@@ -176,12 +176,25 @@ void ProjectView::newPeriod()
     mModelView->modifyPeriod();
 }
 
+void ProjectView:: applyFilesSettings(Model* model,const AppSettings* appSet)
+{
+    // Rebuild all calibration curve
+
+    QJsonObject state = mModelView->getProject()->state();
+    ProjectSettings s = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+    bool calibrate = mModelView->findCalibrateMissing();
+    if (calibrate)
+        mModelView->calibrateAll(s);
+
+    applySettings(model, appSet);
+}
 
 void ProjectView:: applySettings(Model* model,const AppSettings* appSet)
 {
     setFont(appSet->mFont);
     if (model) {
         mModelView->setFont(appSet->mFont);
+
         mResultsView->updateFormatSetting(model,appSet);
 
         // force to regenerate the densities

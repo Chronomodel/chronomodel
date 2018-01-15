@@ -70,6 +70,7 @@ public:
      * @brief getDateDesc is the description of the Data showing in the properties of Event, in the list of data
      */
     virtual QString getDateDesc(const Date* date) const = 0;
+    virtual QString getDateRefCurveName(const Date* ) {return QString();}
     virtual bool areDatesMergeable(const QJsonArray& dates) { (void) dates; return false;}
     virtual QJsonObject mergeDates(const QJsonArray& dates)
     {

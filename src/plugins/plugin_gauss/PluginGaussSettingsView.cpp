@@ -9,6 +9,7 @@
 PluginGaussSettingsView::PluginGaussSettingsView(PluginGauss* plugin, QWidget* parent, Qt::WindowFlags flags):PluginSettingsViewAbstract(plugin, parent, flags)
 {
     mRefView = new PluginRefCurveSettingsView(plugin);
+    connect(mRefView, &PluginRefCurveSettingsView::listRefCurveChanged, this, &PluginGaussSettingsView::calibrationNeeded);
     
     QVBoxLayout* layout = new QVBoxLayout();
     layout->setContentsMargins(0, 0, 0, 0);

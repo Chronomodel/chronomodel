@@ -607,8 +607,34 @@ void MainWindow::appSettings()
 
     dialog.setSettings(mAppSettings);
     connect(&dialog, &AppSettingsDialog::settingsChanged, this, &MainWindow::setAppSettings);
+    connect(&dialog, &AppSettingsDialog::settingsFilesChanged, this, &MainWindow::setAppFilesSettings);
     dialog.exec();
 
+}
+
+void MainWindow::setAppFilesSettings(const AppSettings& s)
+{
+    mAppSettings = s;
+
+    QLocale::Language newLanguage = s.mLanguage;
+    QLocale::Country newCountry= s.mCountry;
+
+    QLocale newLoc = QLocale(newLanguage,newCountry);
+    newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
+    QLocale::setDefault(newLoc);
+    //statusBar()->showMessage(tr("Language") + " : " + QLocale::languageToString(QLocale().language()));
+    setFont(mAppSettings.mFont);
+    qApp->setFont(mAppSettings.mFont);
+    QFont tooltipFont(font());
+    tooltipFont.setItalic(true);
+
+    QToolTip::setFont(tooltipFont);
+
+    if (mProject) {
+        mProject->setAppSettings(mAppSettings);
+        mProjectView->applyFilesSettings(mProject->mModel, &mAppSettings);
+    }
+    writeSettings();
 }
 
 void MainWindow::setAppSettings(const AppSettings& s)
@@ -632,8 +658,8 @@ void MainWindow::setAppSettings(const AppSettings& s)
     if (mProject) {
         mProject->setAppSettings(mAppSettings);
 
-        if (mViewResultsAction->isEnabled())
-            mProjectView->applySettings(mProject->mModel, &mAppSettings);
+     if (mViewResultsAction->isEnabled())
+        mProjectView->applySettings(mProject->mModel, &mAppSettings);
     }
     writeSettings();
 }

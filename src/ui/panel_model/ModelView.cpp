@@ -537,7 +537,109 @@ void ModelView::updateProject()
     }
 }
 
+bool ModelView::findCalibrateMissing()
+{
+    bool calibMissing (false);
+    QJsonObject state = mProject->state();
 
+    QJsonArray Qevents = state.value(STATE_EVENTS).toArray();
+
+    /* If the Events' Scene isEmpty (i.e. when the project is created)
+    * There is no date to calibrate
+    */
+    if (!Qevents.isEmpty()) {
+        QList<Event> events;
+        for (auto Qev: Qevents)
+            events.append(Event::fromJson(Qev.toObject()));
+
+        QProgressDialog *progress = new QProgressDialog("Calibration curve missing","Wait" , 1, 10, qApp->activeWindow());
+        progress->setWindowModality(Qt::WindowModal);
+        progress->setCancelButton(0);
+        progress->setMinimumDuration(4);
+        progress->setMinimum(0);
+
+        int position(0);
+        for (auto && ev : events)
+            position += ev.mDates.size();
+        progress->setMaximum(position);
+
+        position = 0;
+        // look for missing calibration
+
+        for (auto && ev : events) {
+            for (auto && date : ev.mDates) {
+                // look if the refCurve is still in the Plugin Ref. Curves list
+                // because the mProject->mCalibCurves is still existing but maybe not the curve in the list of the plugin
+                if (date.mCalibration) {
+                    const QStringList refsNames = date.getPlugin()->getRefsNames();
+                    const QString dateRefName = date.getPlugin()->getDateRefCurveName(&date);
+
+                    if (!dateRefName.isEmpty() && !refsNames.contains(dateRefName) ) {
+                        calibMissing = true;
+                        continue;
+                    }
+                }
+                // look inside mProject->mCalibCurves, if there is a missing calibration
+                // to try to rebuild it after
+                const QString toFind (date.mName+date.getDesc());
+                QMap<QString, CalibrationCurve>::const_iterator it = mProject->mCalibCurves.find(toFind);
+                if ( it == mProject->mCalibCurves.end()) {
+                    calibMissing = true;
+                    continue;
+                }
+                ++position;
+                progress->setValue(position);
+            }
+            if (calibMissing) {
+                progress->setValue(progress->maximum());
+                continue;
+            }
+       }
+
+    }
+    return calibMissing;
+}
+
+void ModelView::calibrateAll(ProjectSettings newS)
+{
+    QJsonObject state = mProject->state();
+
+    QJsonArray Qevents = state.value(STATE_EVENTS).toArray();
+
+    /* If the Events' Scene isEmpty (i.e. when the project is created)
+    * There is no date to calibrate
+    */
+    if (!Qevents.isEmpty()) {
+        mProject->mCalibCurves.clear();
+        QList<Event> events;
+        for (auto Qev: Qevents)
+            events.append(Event::fromJson(Qev.toObject()));
+
+        QProgressDialog *progress = new QProgressDialog("Calibration curve generation","Wait" , 1, 10, qApp->activeWindow());
+        progress->setWindowModality(Qt::WindowModal);
+        progress->setCancelButton(0);
+        progress->setMinimumDuration(4);
+        progress->setMinimum(0);
+
+        int position(0);
+        for (auto && ev : events)
+            position += ev.mDates.size();
+        progress->setMaximum(position);
+
+        position = 0;
+        // rebuild all calibration
+        for (auto && ev : events)
+            for (auto && date : ev.mDates) {
+                // date.mCalibration->mCurve.clear();
+                date.calibrate(newS, mProject);
+                ++position;
+                progress->setValue(position);
+            }
+         mProject -> setSettings(newS); //do pushProjectState
+    }
+
+
+}
 
 void ModelView::modifyPeriod()
 {
@@ -550,47 +652,17 @@ void ModelView::modifyPeriod()
     if (dialog.exec() == QDialog::Accepted) {
         ProjectSettings newS = dialog.getSettings();
         if (s != newS) {
+          ModelView::calibrateAll(newS);
 
-            QJsonArray Qevents = state.value(STATE_EVENTS).toArray();
+          Scale xScale;
+          xScale.findOptimal(newS.mTmin, newS.mTmax, 7);
+          xScale.tip = 4;
+          mMultiCalibrationView->initScale(xScale);
+          mCalibrationView->initScale(xScale);
 
-            /* If the Events' Scene isEmpty (i.e. when the project is created)
-            * There is no date to calibrate
-            */
-            if (!Qevents.isEmpty()) {
-                QList<Event> events;
-                for (auto Qev: Qevents)
-                    events.append(Event::fromJson(Qev.toObject()));
-
-                QProgressDialog *progress = new QProgressDialog("Calibration curve generation","Wait" , 1, 10, qApp->activeWindow());
-                progress->setWindowModality(Qt::WindowModal);
-                progress->setCancelButton(0);
-                progress->setMinimumDuration(4);
-                progress->setMinimum(0);
-
-                int position(0);
-                for (auto && ev : events)
-                    position += ev.mDates.size();
-                progress->setMaximum(position);
-
-                position = 0;
-                // rebuild all calibration
-                for (auto && ev : events)
-                    for (auto && date : ev.mDates) {
-                        date.mCalibration->mCurve.clear();
-                        date.calibrate(newS, mProject);
-                        ++position;
-                        progress->setValue(position);
-                    }
-
-                Scale xScale;
-                xScale.findOptimal(newS.mTmin, newS.mTmax, 7);
-                xScale.tip = 4;
-                mMultiCalibrationView->initScale(xScale);
-                mCalibrationView->initScale(xScale);
-            }
-            mProject -> setSettings(newS);
-            MainWindow::getInstance() -> setResultsEnabled(false);
-            MainWindow::getInstance() -> setLogEnabled(false);
+          mProject -> setSettings(newS); //do pushProjectState
+          MainWindow::getInstance() -> setResultsEnabled(false);
+          MainWindow::getInstance() -> setLogEnabled(false);
         }
 
     }

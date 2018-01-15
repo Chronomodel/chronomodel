@@ -68,6 +68,7 @@ public slots:
     void about();
     void appSettings();
     void setAppSettings(const AppSettings& s);
+    void setAppFilesSettings(const AppSettings& s);
     void openManual();
     void openWebsite();
     void showHelp(bool);

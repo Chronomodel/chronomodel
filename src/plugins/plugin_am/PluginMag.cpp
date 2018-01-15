@@ -104,41 +104,50 @@ QList<Date::DataMethod> PluginMag::allowedDataMethods() const
 
 QString PluginMag::getDateDesc(const Date* date) const
 {
+    Q_ASSERT(date);
     QLocale locale=QLocale();
     QString result;
-    if (date) {
-        QJsonObject data = date->mData;
-        
-        double is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
-        double is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
-        double is_int = data.value(DATE_AM_IS_INT_STR).toBool();
-        double alpha = data.value(DATE_AM_ERROR_STR).toDouble();
-        double inc = data.value(DATE_AM_INC_STR).toDouble();
-        double dec = data.value(DATE_AM_DEC_STR).toDouble();
-        double intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
-        QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
-        
-        if (is_inc) {
-            result += QObject::tr("Inclination") + " : " + locale.toString(inc);
-            // this is the html form, but not reconized in the DatesListItemDelegate
-           // result += "; " + QString("α<SUB>95</SUB>") + " : " + locale.toString(alpha);
-             result += "; " + QObject::tr("α_95") + " : " + locale.toString(alpha);
-        } else if (is_dec) {
-            result += QObject::tr("Declination") + " : " + locale.toString(dec);
-            result += "; " + QObject::tr("Inclination") + " : " + locale.toString(inc);
-            result += "; " + QObject::tr("α_95") + " : " + locale.toString(alpha);
-        } else if (is_int)  {
-            result += QObject::tr("Intensity") + " : " + locale.toString(intensity);
-            result += "; " + QObject::tr("Error") + " : " + locale.toString(alpha);
-        }
 
-        if (mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty())
-            result += "; " + tr("Ref. curve") + " : " + ref_curve;
-        else
-            result += "; " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
+    const QJsonObject data = date->mData;
 
+    double is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
+    double is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
+    double is_int = data.value(DATE_AM_IS_INT_STR).toBool();
+    double alpha = data.value(DATE_AM_ERROR_STR).toDouble();
+    double inc = data.value(DATE_AM_INC_STR).toDouble();
+    double dec = data.value(DATE_AM_DEC_STR).toDouble();
+    double intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
+    const QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
+
+    if (is_inc) {
+        result += QObject::tr("Inclination") + " : " + locale.toString(inc);
+        // this is the html form, but not reconized in the DatesListItemDelegate
+       // result += "; " + QString("α<SUB>95</SUB>") + " : " + locale.toString(alpha);
+         result += "; " + QObject::tr("α_95") + " : " + locale.toString(alpha);
+    } else if (is_dec) {
+        result += QObject::tr("Declination") + " : " + locale.toString(dec);
+        result += "; " + QObject::tr("Inclination") + " : " + locale.toString(inc);
+        result += "; " + QObject::tr("α_95") + " : " + locale.toString(alpha);
+    } else if (is_int)  {
+        result += QObject::tr("Intensity") + " : " + locale.toString(intensity);
+        result += "; " + QObject::tr("Error") + " : " + locale.toString(alpha);
     }
+
+    if (mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty())
+        result += "; " + tr("Ref. curve") + " : " + ref_curve;
+    else
+        result += "; " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
+
+
     return result;
+}
+
+QString PluginMag::getDateRefCurveName(const Date* date)
+{
+    Q_ASSERT(date);
+    const QJsonObject data = date->mData;
+
+    return  data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
 }
 
 // CSV

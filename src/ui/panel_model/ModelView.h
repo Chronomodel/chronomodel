@@ -1,7 +1,9 @@
 #ifndef ModelView_H
 #define ModelView_H
 
+
 #include <QWidget>
+
 
 class QStackedWidget;
 class QSplitter;
@@ -13,6 +15,7 @@ class QPropertyAnimation;
 class QGraphicsScene;
 
 class Project;
+class ProjectSettings;
 class ModelToolsView;
 class EventsScene;
 class PhasesScene;
@@ -38,7 +41,9 @@ public:
     
     void setProject(Project* project);
     Project* getProject() const;
-    
+    void calibrateAll(ProjectSettings newS);
+    bool findCalibrateMissing();
+
     void resetInterface();
     void showHelp(bool show);
     
@@ -51,6 +56,7 @@ public:
 public slots:
     void updateProject();
     void modifyPeriod();
+
     void updateMultiCalibration();
 
     void eventsAreSelected(); //connect with EventAreSelected

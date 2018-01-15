@@ -2494,7 +2494,7 @@ void Project::exportAsText()
 // --------------------------------------------------------------------
 //     Project Run
 // --------------------------------------------------------------------
-// Run Project
+
 void Project::run()
 {
     // Check if project contains invalid dates, e.g. with no computable calibration curve

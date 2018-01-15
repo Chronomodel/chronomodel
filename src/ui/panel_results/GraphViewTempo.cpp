@@ -282,11 +282,10 @@ void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
     }
     else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eTempo) {
-    // With variable eTemp there is no choise of "chain", it must be "all chains"
+    // With variable eTemp there is no choice of "chain", it must be "all chains"
          const GraphCurve* tempo = mGraph->getCurve("Post Distrib Tempo All Chains");
 
          if ( tempo && !tempo->mData.isEmpty()) {
-
              mGraph->setCurveVisible("Post Distrib Tempo All Chains", true);
              mGraph->setCurveVisible("Post Distrib Tempo Inf All Chains", showError);
              mGraph->setCurveVisible("Post Distrib Tempo Sup All Chains", showError);
@@ -302,12 +301,12 @@ void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
     }
      else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eActivity) {
-        // With variable eActivity there is no choise of "chain", it must be "all chains"
+        // With variable eActivity there is no choice of "chain", it must be "all chains"
           const GraphCurve* Activity = mGraph->getCurve("Post Distrib Activity All Chains");
 
           if ( Activity && !Activity->mData.isEmpty()) {
 
-              mGraph->setCurveVisible("Post Distrib Activity All Chains", true);    //mShowAllChains);
+              mGraph->setCurveVisible("Post Distrib Activity All Chains", true);
 
               mGraph->setTipXLab("t");
               mGraph->setTipYLab("");
@@ -331,7 +330,7 @@ void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setCurveVisible("Duration Q3 " + QString::number(i), mShowChainList.at(i));
         }
 
-        mGraph->setTipXLab("iteration");
+        mGraph->setTipXLab("Iteration");
         mGraph->setTipYLab("t");
         mGraph->setYAxisMode(GraphView::eMinMax);
         mGraph->autoAdjustYScale(true); // do repaintGraph()
