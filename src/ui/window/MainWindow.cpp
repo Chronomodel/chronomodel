@@ -469,10 +469,12 @@ void MainWindow::openProject()
 
         if (mProject) {
             mProject->askToSave(tr("Save current project as..."));
+
             disconnectProject();
 
-            //resetInterface(): clear mEventsScene and mPhasesScene, set mProject = 0
+            //resetInterface(): clear mEventsScene and mPhasesScene, set mProject = nullptr
             resetInterface();
+
             delete mProject;
         }
 

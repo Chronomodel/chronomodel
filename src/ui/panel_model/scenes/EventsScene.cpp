@@ -582,6 +582,7 @@ void EventsScene::clean()
     // ------------------------------------------------------
     for (int i=mItems.size()-1; i>=0; --i) {
         EventItem* eventItem = (EventItem*)mItems[i];
+
         QJsonObject& event = eventItem->getEvent();
         
         if (event.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
@@ -598,7 +599,7 @@ void EventsScene::clean()
         
         // This does not break the code but is commented to match PhasesScene implementation
         //removeItem(eventItem);
-        
+        eventItem->setVisible(false); // The item disappears and after it's deleted later
         eventItem->deleteLater();
     }
     

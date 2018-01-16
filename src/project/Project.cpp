@@ -100,7 +100,7 @@ void Project::initState(const QString& reason)
     mState = state;
 }
 
-QJsonObject Project::emptyState() const
+QJsonObject Project::emptyState()
 {
     QJsonObject state;
     
@@ -567,7 +567,7 @@ bool Project::load(const QString& path)
 //            pushProjectState(state, PROJECT_LOADED_REASON, true, true);
            qDebug() << "in Project::load  End pushProjectState";
             file.close();
-            
+
             // -------------------- look for the calibration file
             QString caliPath = path + ".cal";
             QFileInfo calfi(caliPath);
@@ -577,7 +577,7 @@ bool Project::load(const QString& path)
                 QFile calFile(caliPath);
                 if (calFile.open(QIODevice::ReadOnly)) {
 
-                    if (calFile.exists()) {
+                    if (calFile.exists()) {                      
                         qDebug() << "Project::load Loading model file.cal : " << calFile.fileName() << " size =" << calFile.size();
                         QDataStream in(&calFile);
 

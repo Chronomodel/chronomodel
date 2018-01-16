@@ -65,7 +65,7 @@ public:
     void sendEventsSelectionChanged();
     //void sendPhasesSelectionChanged();
     
-    QJsonObject emptyState() const;
+    static QJsonObject emptyState();
     QJsonObject state() const;
     QJsonObject* state_ptr();
     

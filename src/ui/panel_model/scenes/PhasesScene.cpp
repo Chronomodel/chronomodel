@@ -369,6 +369,7 @@ void PhasesScene::clean()
         //removeItem(item);
         
         // This is a QObject : call deleteLater instead of delete
+        item->setVisible(false); // The item disappears and after it's deleted
         item->deleteLater();
     }
     
