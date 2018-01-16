@@ -217,13 +217,14 @@ void ImportDataView::browse()
              * Update table view with data constructed before
              */
             if (data.isEmpty()){
-                QMessageBox message(QMessageBox::Warning, tr("Bad file"), tr("Maybe you need to check the manual to build your CSV file !") + " <a href=\https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=29 \>"+ tr("More...")+"</a> ",
+                // to have a \ char in string, in C++ you must use two char
+                QMessageBox message(QMessageBox::Warning, tr("Bad file"), tr("Maybe you need to check the manual to build your CSV file !") + " <a href='https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=29 '>"+ tr("More...")+"</a> ",
                                     QMessageBox::Ok, qApp->activeWindow());
                 message.exec();
             } else {
                 for (int i=0; i<data.size(); ++i) {
                     const QStringList d = data.at(i);
-                    //qDebug() << d;
+
                     for (int j=1; j<d.size(); ++j) {
                         // Skip the first column containing the eventName (already used in the table line header)
 

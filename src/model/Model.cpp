@@ -1067,8 +1067,9 @@ void Model::updateDensities(const int fftLength, const double bandwidth, const d
 
 void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth)
 {
+#ifdef DEBUG
     QTime t = QTime::currentTime();
-    
+#endif
     const double tmin = mSettings.getTminFormated();
     const double tmax = mSettings.getTmaxFormated();
     
@@ -1081,16 +1082,19 @@ void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftL
     
     for (auto && phase : mPhases)
         phase->generateHistos(chains, fftLen, bandwidth, tmin, tmax);
-
+#ifdef DEBUG
     QTime t2 = QTime::currentTime();
     qint64 timeDiff = t.msecsTo(t2);
     qDebug() <<  "=> Model::generatePosteriorDensities done in " + QString::number(timeDiff) + " ms";
+#endif
 }
 
 void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
 {
+#ifdef DEBUG
     QTime t = QTime::currentTime();
-    
+#endif
+
     for (auto && event : mEvents) {
         event->mTheta.generateNumericalResults(chains);
         
@@ -1106,10 +1110,12 @@ void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
         phase->mBeta.generateNumericalResults(chains);
         phase->mDuration.generateNumericalResults(chains);
     }
-    
+
+#ifdef DEBUG
     QTime t2 = QTime::currentTime();
     qint64 timeDiff = t.msecsTo(t2);
     qDebug() <<  "=> Model::generateNumericalResults done in " + QString::number(timeDiff) + " ms";
+#endif
 }
 
 void Model::clearThreshold()
@@ -1197,9 +1203,10 @@ double Model::getThreshold() const
 
 void Model::generateCredibility(const double thresh)
 {
+#ifdef DEBUG
     qDebug()<<"Model::generateCredibility("<<thresh;
     QTime t = QTime::currentTime();
-
+#endif
     for (auto && pEvent : mEvents) {
         bool isFixedBound = false;
         if (pEvent->type() == Event::eKnown) {
@@ -1268,15 +1275,19 @@ void Model::generateCredibility(const double thresh)
 
     }
     delete progress;
+#ifdef DEBUG
     QTime t2 (QTime::currentTime());
     qint64 timeDiff = t.msecsTo(t2);
     qDebug() <<  "=> Model::generateCredibility done in " + QString::number(timeDiff) + " ms";
+#endif
 
 }
 
 void Model::generateHPD(const double thresh)
 {
+#ifdef DEBUG
     QTime t = QTime::currentTime();
+#endif
 
     QList<Event*>::iterator iterEvent = mEvents.begin();
     while (iterEvent!=mEvents.end()) {
@@ -1307,10 +1318,11 @@ void Model::generateHPD(const double thresh)
        (*iterPhase)->mDuration.generateHPD(thresh);
         ++iterPhase;
     }
-
+#ifdef DEBUG
     QTime t2 = QTime::currentTime();
     qint64 timeDiff = t.msecsTo(t2);
     qDebug() <<  "=> Model::generateHPD done in " + QString::number(timeDiff) + " ms";
+#endif
 
 }
 
@@ -1322,9 +1334,10 @@ void Model::generateHPD(const double thresh)
  */
 void Model::generateTempo()
 {
+#ifdef DEBUG
     qDebug()<<"Model::generateTempo()"<<mSettings.mTmin<<mSettings.mTmax;
-
     QTime t = QTime::currentTime();
+#endif
 
 #ifndef UNIT_TEST
     // Display a progressBar if "long" set with setMinimumDuration()
@@ -1645,6 +1658,9 @@ void Model::generateTempo()
 
 #ifndef UNIT_TEST
     progress->~QProgressDialog();
+#endif
+
+#ifdef DEBUG
     QTime t2 = QTime::currentTime();
     qint64 timeDiff = t.msecsTo(t2);
     qDebug() <<  "=> Model::generateTempo() done in " + QString::number(timeDiff) + " ms";

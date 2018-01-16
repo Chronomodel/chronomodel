@@ -336,6 +336,7 @@ QPair<double, double> credibilityForTrace(const QVector<int>& trace, double thre
  */
 QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh, const QString description)
 {
+    (void) description;
     QPair<double, double> range(- INFINITY, +INFINITY);
 #ifdef DEBUG
     QTime startTime (QTime::currentTime());
@@ -467,6 +468,7 @@ QPair<double, double> transitionRangeFromTraces(const QVector<double>& trace1, c
  */
 QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const QVector<double>& traceBegin, const double thresh, const QString description)
 {
+    (void) description;
 #ifdef DEBUG
     QTime startTime = QTime::currentTime();
 #endif
@@ -595,7 +597,7 @@ QPair<double, double> gapRangeFromTraces(const QVector<double>& traceEnd, const 
  */
 QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, const QVector<float>& traceAlpha, const float thresh, const QString description)
 {
-
+    (void) description;
 #ifdef DEBUG
     QTime startTime = QTime::currentTime();
 #endif

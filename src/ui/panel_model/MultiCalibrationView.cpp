@@ -363,6 +363,7 @@ void MultiCalibrationView::updateGraphList()
                                   ev.value(STATE_COLOR_GREEN).toInt(),
                                   ev.value(STATE_COLOR_BLUE).toInt());
             colorList.append(color);
+            delete bound;
             bound = nullptr;
         }
         else {
