@@ -100,10 +100,20 @@ void Model::updateFormatSettings(const AppSettings* appSet)
         phase->mAlpha.setFormat(appSet->mFormatDate);
         phase->mBeta.setFormat(appSet->mFormatDate);
         phase->mDuration.setFormat(DateUtils::eNumeric);
+
+        // update Tempo and activity curves
+        phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
+        phase->mTempoInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoInf);
+        phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
+        phase->mTempoCredibilityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilityInf);
+        phase->mTempoCredibilitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilitySup);
+
+        phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
+
     }
 }
 
-//#pragma mark JSON conversion
+// JSON conversion
 
 void Model::fromJson(const QJsonObject& json)
 {
@@ -1307,7 +1317,8 @@ void Model::generateHPD(const double thresh)
 //#define UNIT_TEST
 /**
  * @brief Model::generateTempo
- * The function check if the table mTempo exist. In this case, there is no calcul
+ * The function check if the table mTempo exist. In this case, there is no calcul.
+ * This calculus must be in date, not in age
  */
 void Model::generateTempo()
 {
@@ -1360,7 +1371,7 @@ void Model::generateTempo()
 
     for (auto &&phase : mPhases) {
         // Avoid to redo calculation, when mTempo exist, it happen when the control is changed
-        if (!phase->mTempo.isEmpty()) {
+        if (!phase->mRawTempo.isEmpty()) {
 #ifndef UNIT_TEST
             progress->setValue(position);
 #endif
@@ -1371,6 +1382,7 @@ void Model::generateTempo()
         QList<QVector<double>> listTrace;
         for (auto &&ev : phase->mEvents)
             listTrace.append(ev->mTheta.fullRunRawTrace(mChains));
+
 
         /// Look for the maximum span containing values \f$ x=2 \f$
         tmin = mSettings.mTmax;
@@ -1518,29 +1530,37 @@ void Model::generateTempo()
 
         }
        ///# 2 - Cumulate Nj and Nj2
+        /*QMap<double, double> tempo;
+        QMap<double, double> tempoInf;
+        QMap<double, double> tempoSup;
+*/
+        phase->mRawTempo = vector_to_map(mean, tmin, tmax, deltat);
+        phase->mRawTempoInf = vector_to_map(inf, tmin, tmax, deltat);
+        phase->mRawTempoSup = vector_to_map(sup, tmin, tmax, deltat);
 
-        phase->mTempo = vector_to_map(mean, tmin, tmax, deltat);
-        phase->mTempoInf = vector_to_map(inf, tmin, tmax, deltat);
-        phase->mTempoSup = vector_to_map(sup, tmin, tmax, deltat);
         // close the error curve on mean value
-        const double tEnd (phase->mTempo.lastKey());
-        const double vEnd (phase->mTempo[tEnd]);
+        const double tEnd (phase->mRawTempo.lastKey());
+        const double vEnd (phase->mRawTempo[tEnd]);
 
         if ( (tEnd ) <= mSettings.mTmax) {
-            phase->mTempoInf[tEnd] = vEnd;
-            phase->mTempoSup[tEnd ] = vEnd;
+            phase->mRawTempoInf[tEnd] = vEnd;
+            phase->mRawTempoSup[tEnd ] = vEnd;
         }
-        phase->mTempo.insert(mSettings.mTmax, vEnd);
+        phase->mRawTempo.insert(mSettings.mTmax, vEnd);
 
-        const double tBegin (phase->mTempo.firstKey());
+        const double tBegin (phase->mRawTempo.firstKey());
         const double vBegin (0.);
         // We need to add a point with the value 0 for the automatique Y scaling
         if ((tBegin - deltat) >= mSettings.mTmin) {
-            phase->mTempo[tBegin - deltat] = vBegin;
-            phase->mTempoInf[tBegin - deltat] = vBegin;
-            phase->mTempoSup[tBegin - deltat] = vBegin;
+            phase->mRawTempo[tBegin - deltat] = vBegin;
+            phase->mRawTempoInf[tBegin - deltat] = vBegin;
+            phase->mRawTempoSup[tBegin - deltat] = vBegin;
         }
 
+        // Convertion in the good Date format
+        phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
+        phase->mTempoInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoInf);
+        phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
 
 #ifndef ACTIVITY
         ///# 3 - Derivative function
@@ -1562,16 +1582,24 @@ void Model::generateTempo()
         //last value
         Np = N.last();
         dN.append( (Np - Nm )/2. );
-        phase->mActivity = vector_to_map(dN, tmin, tmax, deltat);
+
+        //QMap<double, double> activity;
+        phase->mRawActivity = vector_to_map(dN, tmin, tmax, deltat);
 
         if ( tEnd  <= mSettings.mTmax)
-            phase->mActivity[tEnd] = 0.;
+            phase->mRawActivity[tEnd] = 0.;
 
         if ((tmin - deltat) >= mSettings.mTmin)
-            phase->mActivity[tmin - deltat] = 0.;
+            phase->mRawActivity[tmin - deltat] = 0.;
+
+        // Convertion in the good Date format
+        phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
 
  #else
-       phase->mActivity = vector_to_map(activity, tmin, tmax, deltat);
+       //phase->phase->mRawActivity = vector_to_map(activity, tmin, tmax, deltat);
+       // Convertion in the good Date format
+       phase->mActivity = DateUtils::convertMapToAppSettingsFormat(vector_to_map(phase->mRawActivity, tmin, tmax, deltat));
+
 #endif
 
         ///# 4 - Credibility
@@ -1592,19 +1620,22 @@ void Model::generateTempo()
             ++index;
             t = tmin + index*deltat;
         }
+        phase->mRawTempoCredibilityInf = vector_to_map(credInf, tmin, tmax, deltat);
+        phase->mRawTempoCredibilitySup = vector_to_map(credSup, tmin, tmax, deltat);
 
-        phase->mTempoCredibilityInf = vector_to_map(credInf, tmin, tmax, deltat);
-        phase->mTempoCredibilitySup = vector_to_map(credSup, tmin, tmax, deltat);
         // Joining curves on the curve Tempo
         if ( tmax  <= mSettings.mTmax) {
-            phase->mTempoCredibilityInf[tmax] = vEnd;
-            phase->mTempoCredibilitySup[tmax] = vEnd;
+            phase->mRawTempoCredibilityInf[tmax] = vEnd;
+            phase->mRawTempoCredibilitySup[tmax] = vEnd;
         }
 
         if ((tBegin - deltat) >= mSettings.mTmin) {
-            phase->mTempoCredibilityInf[tBegin - deltat] = vBegin;
-            phase->mTempoCredibilitySup[tBegin - deltat] = vBegin;
+            phase->mRawTempoCredibilityInf[tBegin - deltat] = vBegin;
+            phase->mRawTempoCredibilitySup[tBegin - deltat] = vBegin;
         }
+        // Convertion in the good Date format
+        phase->mTempoCredibilityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilityInf);
+        phase->mTempoCredibilitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilitySup);
 
 #ifndef UNIT_TEST
         ++position;
@@ -1701,6 +1732,12 @@ void Model::clearTraces()
         ph->mAlpha.reset();
         ph->mBeta.reset();
         ph->mDuration.reset();
+
+        ph->mRawTempo.clear();
+        ph->mRawTempoInf.clear();
+        ph->mRawTempoSup.clear();
+        ph->mRawTempoCredibilityInf.clear();
+        ph->mRawTempoCredibilitySup.clear();
     }
 }
 

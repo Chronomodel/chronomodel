@@ -202,7 +202,7 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
 
     else if (typeGraph == ePostDistrib && variable == eActivity) {
 
-        mGraph->mLegendX = "";
+        mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
         mGraph->setFormatFunctX(stringWithAppSettings);
         mGraph->setFormatFunctY(stringWithAppSettings);
 

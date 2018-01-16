@@ -31,6 +31,7 @@ public:
      */
     static double convertToAppSettingsFormat(const double &valueToFormat);
     static QString convertToAppSettingsFormatStr(const double valueToFormat, const bool forCSV = false);
+    static QMap<double, double> convertMapToAppSettingsFormat(const QMap<double,double> &mapToFormat);
 
     /**
      * @brief convert formatted values (Cal B2k, Cal BP, ...) to native value (classic BC/AD)

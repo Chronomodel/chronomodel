@@ -69,6 +69,7 @@ public:
    */
     MetropolisVariable mDuration;
     QString mDurationCredibility;
+
     QMap<double, double> mTempo;
     QMap<double, double> mTempoInf;
     QMap<double, double> mTempoSup;
@@ -77,6 +78,17 @@ public:
     QMap<double, double> mTempoCredibilitySup;
 
     QMap<double, double> mActivity;
+
+    // Raw curve without date format
+
+    QMap<double, double> mRawTempo;
+    QMap<double, double> mRawTempoInf;
+    QMap<double, double> mRawTempoSup;
+
+    QMap<double, double> mRawTempoCredibilityInf;
+    QMap<double, double> mRawTempoCredibilitySup;
+
+    QMap<double, double> mRawActivity;
     
     TauType mTauType;
     double mTauFixed;

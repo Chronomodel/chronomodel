@@ -143,3 +143,12 @@ double DateUtils::convertFromAppSettingsFormat(const double &formattedValue)
 {
     return DateUtils::convertFromFormat(formattedValue, getAppSettingsFormat());
 }
+
+QMap<double, double> DateUtils::convertMapToAppSettingsFormat(const QMap<double, double> &mapToFormat)
+{
+   QMap<double, double> mapResult;
+   for (QMap<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+       mapResult.insert(convertToAppSettingsFormat(value.key()), value.value());
+
+   return mapResult;
+}
