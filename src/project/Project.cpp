@@ -1011,7 +1011,8 @@ void Project::deleteSelectedEvents()
 
     // send to clear the propertiesView
     const QJsonObject itemEmpty ;
-    emit currentEventChanged(itemEmpty);
+    emit currentEventChanged(itemEmpty); // connect to EventPropertiesView::setEvent
+
 
     clearModel();
     MainWindow::getInstance() -> setResultsEnabled(false);

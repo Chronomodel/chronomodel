@@ -51,6 +51,7 @@ void EventsScene::deleteSelectedItems()
 {
    qDebug()<<"EventsScene::deleteSelectedItems";
    mProject->deleteSelectedEvents();
+   emit noSelection();
 }
 
 bool EventsScene::constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo)
