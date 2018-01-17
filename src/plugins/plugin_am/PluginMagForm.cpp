@@ -13,9 +13,9 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     mDecRadio = new QRadioButton(tr("Declination"));
     mIntensityRadio = new QRadioButton(tr("Intensity"));
     
-    connect(mIncRadio, SIGNAL(clicked()), this, SLOT(updateOptions()));
-    connect(mDecRadio, SIGNAL(clicked()), this, SLOT(updateOptions()));
-    connect(mIntensityRadio, SIGNAL(clicked()), this, SLOT(updateOptions()));
+    connect(mIncRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this,  &PluginMagForm:: updateOptions);
+    connect(mDecRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: updateOptions);
+    connect(mIntensityRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: updateOptions);
     
     mIncLab = new QLabel(tr("Inclination"), this);
     mDecLab = new QLabel(tr("Declination"), this);

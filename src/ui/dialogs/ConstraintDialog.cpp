@@ -47,11 +47,13 @@ mDeleteRequested(false)
     
     // ----------
     
-    connect(mTypeCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(showAppropriateOptions()));
+  //  connect(mTypeCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(showAppropriateOptions()));
+
+    connect(mTypeCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ConstraintDialog::showAppropriateOptions);
     
-    connect(mOkBut, SIGNAL(clicked()), this, SLOT(accept()));
-    connect(mCancelBut, SIGNAL(clicked()), this, SLOT(reject()));
-    connect(mDeleteBut, SIGNAL(clicked()), this, SLOT(deleteConstraint()));
+    connect(mOkBut, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ConstraintDialog::accept);
+    connect(mCancelBut, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ConstraintDialog::reject);
+    connect(mDeleteBut, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ConstraintDialog::deleteConstraint);
     
     setFixedWidth(400);
     

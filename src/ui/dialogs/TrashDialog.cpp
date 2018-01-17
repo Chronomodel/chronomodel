@@ -37,8 +37,8 @@ mType(type)
     mCancelBut = new Button(tr("Cancel"), this);
     
     connect(mDeleteBut, &Button::clicked, this, &TrashDialog::deleteItems);
-    connect(mOkBut, &Button::clicked, this, &TrashDialog::accept);
-    connect(mCancelBut, &Button::clicked, this, &TrashDialog::reject);
+    connect(mOkBut,static_cast<void (Button::*)(bool)> (&Button::clicked), this, &TrashDialog::accept);
+    connect(mCancelBut, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &TrashDialog::reject);
     
     QHBoxLayout* butLayout = new QHBoxLayout();
     butLayout->setContentsMargins(0, 0, 0, 0);

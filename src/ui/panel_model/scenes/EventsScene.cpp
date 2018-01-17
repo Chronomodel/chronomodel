@@ -47,6 +47,9 @@ EventItem* EventsScene::findEventItemWithJsonId(const int id)
 
 /* Actions
  */
+/**
+ * @brief EventsScene::deleteSelectedItems virtual implementation of AbstractScene
+ */
 void EventsScene::deleteSelectedItems()
 {
    qDebug()<<"EventsScene::deleteSelectedItems";

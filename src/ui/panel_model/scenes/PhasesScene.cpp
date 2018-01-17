@@ -21,11 +21,13 @@ PhasesScene::~PhasesScene()
 /*
  *  Actions
  */
+/**
+ * @brief PhasesScene::deleteSelectedItems virtual implementation of AbstractScene
+ */
 void PhasesScene::deleteSelectedItems()
 {
     mProject->deleteSelectedPhases();
     emit noSelection();
-
 }
 
 bool PhasesScene::constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo)

@@ -24,9 +24,9 @@ QDialog(parent, flags)
     mComboH = mC14RefCombo->sizeHint().height();
     Plugin14C* plugin14C = (Plugin14C*)PluginManager::getPluginFromName("14C");
     QStringList refCurves = plugin14C->getRefsNames();
-    for (int i = 0; i<refCurves.size(); ++i) {
+    for (int i = 0; i<refCurves.size(); ++i)
         mC14RefCombo->addItem(refCurves[i]);
-    }
+
     QString defCurve = QString("intcal13.14c").toLower();
     
     mOkBut = new Button(tr("OK"), this);
@@ -34,8 +34,8 @@ QDialog(parent, flags)
     
     mOkBut->setAutoDefault(true);
     
-    connect(mOkBut, SIGNAL(clicked()), this, SLOT(accept()));
-    connect(mCancelBut, SIGNAL(clicked()), this, SLOT(reject()));
+    connect(mOkBut, static_cast<void (Button::*)(bool)> (&Button::clicked), this,  &PluginOptionsDialog::accept);
+    connect(mCancelBut,  static_cast<void (Button::*)(bool)> (&Button::clicked), this,  &PluginOptionsDialog::reject);
     
     setFixedSize(500, 90);
 }

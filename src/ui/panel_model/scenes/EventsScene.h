@@ -38,6 +38,7 @@ public slots:
     void updateStateSelectionFromItem();
     void updateHelp();
 
+   virtual  void deleteSelectedItems();
     //void updateSelectedEventsFromPhases();
     //void updateGreyedOutEvents(const QMap<int, bool>& eyedPhases);
 
@@ -73,8 +74,7 @@ protected:
     AbstractItem* currentItem() ;
 
     void setCurrentItem(QGraphicsItem* item);
-    
-    void deleteSelectedItems();
+
     bool constraintAllowed(AbstractItem *itemFrom, AbstractItem *itemTo);
     void createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo);
     void mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo);

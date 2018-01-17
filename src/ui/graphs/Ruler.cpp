@@ -29,13 +29,11 @@ mStepWidth(100)
     mScrollBar->setPageStep(10000);
     //mScrollBar->setTracking(true);
     
-    connect(mScrollBar, SIGNAL(sliderMoved(int)), this, SLOT(updateScroll()));
-    //connect(mScrollBar, SIGNAL(valueChanged(int)), this, SLOT(scrollValueChanged(int)));
-    
+    connect(mScrollBar, static_cast<void (QScrollBar::*)(int)>(&QScrollBar::sliderMoved), this, &Ruler::updateScroll);
+
     mAxisTool.mIsHorizontal = true;
     mAxisTool.mShowArrow = false;
     mAxisTool.mShowSubSubs = true;
-
     
 }
 
@@ -112,7 +110,7 @@ void Ruler::setCurrent(const double min, const double max)
     //  (small value here : only allows few discrete positions)
     // ---------------------------------------------------
     else {
-        double range (1000.);
+        const double range (1000.);
         double pageStep = range * (mCurrentMax - mCurrentMin) / (mMax - mMin);
         double scrollRange = range - pageStep;
         

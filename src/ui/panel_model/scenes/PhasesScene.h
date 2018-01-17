@@ -30,7 +30,7 @@ public slots:
     void noHide();
     void eventsSelected();
 
-    void deleteSelectedItems();
+   virtual  void deleteSelectedItems();
     
 public:
     void itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);

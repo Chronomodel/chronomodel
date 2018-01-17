@@ -138,10 +138,9 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     connect(mMinorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &CalibrationView::updateScaleX);
 
     connect(mHPDEdit, &QLineEdit::textEdited, this, &CalibrationView::updateGraphs);
-    connect(mImageSaveBut, &Button::clicked, this, &CalibrationView::exportImage);
-    connect(mResultsClipBut, &Button::clicked, this, &CalibrationView::copyText);
-    connect(mImageClipBut, &Button::clicked, this, &CalibrationView::copyImage);
-
+    connect(mImageSaveBut, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &CalibrationView::exportImage);
+    connect(mResultsClipBut, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &CalibrationView::copyText);
+    connect(mImageClipBut, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &CalibrationView::copyImage);
 
     setVisible(false);
 }

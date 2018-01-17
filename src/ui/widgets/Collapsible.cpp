@@ -78,7 +78,7 @@ mOpened(false)
     
     resize(100, mHeaderHeight);
     
-    connect(mAnimation, SIGNAL(valueChanged(const QVariant&)), this, SLOT(sendCollapsing(const QVariant&)));
+    connect(mAnimation, &QPropertyAnimation::valueChanged, this, &Collapsible:: sendCollapsing);
 }
 
 Collapsible::~Collapsible()

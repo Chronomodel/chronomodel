@@ -113,7 +113,7 @@ mButtonWidth(50)
         button->setIconOnly(false);
         button->setToolTip(tr("Insert") +" "+ plugins.at(i)->getName() +" "+ tr("Data") );
         button->resize(mButtonWidth, mButtonWidth);
-        connect(button, SIGNAL(clicked()), this, SLOT(createDate()));
+        connect(button, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &EventPropertiesView::createDate);
         
         minimumHeight+=button->height();
         

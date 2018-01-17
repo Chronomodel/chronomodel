@@ -48,7 +48,7 @@ mButW(80)
     
     mOkBut->setAutoDefault(true);
     
-    connect(mTauTypeCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(showAppropriateTauOptions(int)));
+    connect(mTauTypeCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &PhaseDialog::showAppropriateTauOptions);
     connect(mOkBut, &Button::clicked, this, &PhaseDialog::accept);
     connect(mCancelBut, &Button::clicked, this, &PhaseDialog::reject);
     

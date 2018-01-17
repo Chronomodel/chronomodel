@@ -192,10 +192,6 @@ mCalibVisible(false)
     
     mPhasesGlobalView = new SceneGlobalView(mPhasesScene, mPhasesView, mRightWrapper);
     mPhasesGlobalView->setVisible(false);
-    //connect(mPhasesScene, SIGNAL(selectionChanged()), this, SLOT(update()));
-    //connection between scene
-    //connect(mPhasesScene, SIGNAL(selectionChanged()), mEventsGlobalView, SLOT(update()));
-    //connect(mEventsScene, SIGNAL(selectionChanged()), this, SLOT(update()));
 
     mButNewPhase = new Button(tr("New Phase"), mRightWrapper);
     mButNewPhase->setToolTip(tr("Create a new Phase"));
@@ -330,27 +326,24 @@ void ModelView::setProject(Project* project)
 
 void ModelView::connectScenes()
 {
-    connect(mButNewEvent, &Button::clicked, mProject, &Project::createEvent);
-    connect(mButNewEventKnown, &Button::clicked, mProject, &Project::createEventKnown);
-    connect(mButDeleteEvent, &Button::clicked, mProject, &Project::deleteSelectedEvents);
-    connect(mButRecycleEvent, &Button::clicked, mProject, &Project::recycleEvents);
+    connect(mButNewEvent, static_cast<void (Button::*)(bool)> (&Button::clicked), mProject, &Project::createEvent);
+    connect(mButNewEventKnown, static_cast<void (Button::*)(bool)> (&Button::clicked), mProject, &Project::createEventKnown);
+   // connect(mButDeleteEvent, &Button::clicked, mProject, &Project::deleteSelectedEvents);
+    connect(mButDeleteEvent,  static_cast<void (Button::*)(bool)> (&Button::clicked), mEventsScene, &EventsScene::deleteSelectedItems);
+
+    connect(mButRecycleEvent,  static_cast<void (Button::*)(bool)> (&Button::clicked), mProject, &Project::recycleEvents);
     connect(mButEventsOverview, &Button::toggled, mEventsGlobalView, &SceneGlobalView::setVisible);
     connect(mButEventsOverview, &Button::toggled, mEventsSearchEdit, &LineEdit::setVisible);
     connect(mEventsSearchEdit, &LineEdit::returnPressed, this, &ModelView::searchEvent);
     connect(mEventsGlobalZoom, &ScrollCompressor::valueChanged, this, &ModelView::updateEventsZoom);
     connect(mButExportEvents, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ModelView::exportEventsScene);
 
-    //connect(mButProperties, static_cast<void (Button::*)(bool)> (&Button::toggled), this, &ModelView::showProperties);
-    connect(mButProperties, &Button::clicked, this, &ModelView::showProperties);
+    connect(mButProperties, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ModelView::showProperties);
 
-    connect(mButNewPhase, &Button::clicked, mProject, &Project::createPhase);
-    connect(mButDeletePhase, &Button::clicked, mPhasesScene, &PhasesScene::deleteSelectedItems);// mProject, &Project::deleteSelectedPhases);
+    connect(mButNewPhase,  static_cast<void (Button::*)(bool)> (&Button::clicked), mProject, &Project::createPhase);
+    connect(mButDeletePhase,  static_cast<void (Button::*)(bool)> (&Button::clicked), mPhasesScene, &PhasesScene::deleteSelectedItems);// mProject, &Project::deleteSelectedPhases);
 
-
-    // when there is no Event selected we must show all data inside phases
-    //connect(mEventsScene, &EventsScene::noSelection, mPhasesScene, &PhasesScene::noHide);
-    connect(mEventsScene, &EventsScene::noSelection, this, &ModelView::noEventSelected);
-    //connect(mEventsScene, &EventsScene::eventsAreSelected, mPhasesScene, &PhasesScene::eventsSelected);
+     connect(mEventsScene, &EventsScene::noSelection, this, &ModelView::noEventSelected);
     connect(mEventsScene, &EventsScene::eventsAreSelected, this, &ModelView::eventsAreSelected);
 
     connect(mEventsScene, &EventsScene::eventDoubleClicked, this, &ModelView::togglePropeties);//mButProperties, &Button::toggle);
@@ -367,7 +360,7 @@ void ModelView::connectScenes()
     connect(mEventPropertiesView, &EventPropertiesView::updateCalibRequested, this, &ModelView::updateCalibration);
     connect(mEventPropertiesView, &EventPropertiesView::showCalibRequested, this, &ModelView::showCalibration);
 
-    connect(mButMultiCalib,  &Button::clicked, this, &ModelView::showMultiCalib);
+    connect(mButMultiCalib,   static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ModelView::showMultiCalib);
     connect(mProject, &Project::projectStateChanged, this, &ModelView::updateMultiCalibration);
     mMultiCalibrationView->setProject(mProject);
 
@@ -375,9 +368,10 @@ void ModelView::connectScenes()
 
 void ModelView::disconnectScenes()
 {
-    disconnect(mButNewEvent, SIGNAL(clicked(bool)), mProject, SLOT(createEvent()));
+    disconnect(mButNewEvent, &Button::clicked, mProject, &Project::createEvent);
     disconnect(mButNewEventKnown, &Button::clicked, mProject, &Project::createEventKnown);
-    disconnect(mButDeleteEvent, &Button::clicked, mProject, &Project::deleteSelectedEvents);
+    disconnect(mButDeleteEvent,  static_cast<void (Button::*)(bool)> (&Button::clicked), mEventsScene, &EventsScene::deleteSelectedItems);
+
     disconnect(mButRecycleEvent, &Button::clicked, mProject, &Project::recycleEvents);
     disconnect(mButEventsOverview, &Button::toggled, mEventsGlobalView, &SceneGlobalView::setVisible);
     disconnect(mButEventsOverview, &Button::toggled, mEventsSearchEdit, &LineEdit::setVisible);

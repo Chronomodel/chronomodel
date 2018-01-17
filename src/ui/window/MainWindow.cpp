@@ -55,22 +55,12 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     setWindowIcon(QIcon(":chronomodel.png"));
     setMinimumSize(800, 500);
     
-    connect(mProjectSaveAction, SIGNAL(triggered()), this, SLOT(saveProject()));
-    connect(mProjectSaveAsAction, SIGNAL(triggered()), this, SLOT(saveProjectAs()));
+    connect(mProjectSaveAction, static_cast<void (QAction::*)(bool)> (&QAction::triggered), this, &MainWindow::saveProject);
+    connect(mProjectSaveAsAction, static_cast<void (QAction::*)(bool)> (&QAction::triggered), this, &MainWindow::saveProjectAs);
 
-
-
-   /* connect(mMCMCSettingsAction, SIGNAL(triggered()), mProject, SLOT(mcmcSettings()));
-    connect(mResetMCMCAction, SIGNAL(triggered()), mProject, SLOT(resetMCMC()));
-    connect(mProjectExportAction, SIGNAL(triggered()), mProject, SLOT(exportAsText()));
-    connect(mRunAction, SIGNAL(triggered()), mProject, SLOT(run()));*/
-
-
-    connect(mViewModelAction, SIGNAL(triggered()), mProjectView, SLOT(showModel()));
-    
-    connect(mViewLogAction, SIGNAL(triggered()), mProjectView, SLOT(showLog()));
-
-    connect(mViewResultsAction, SIGNAL(triggered()), mProjectView, SLOT(showResults()));
+    connect(mViewModelAction, static_cast<void (QAction::*)(bool)> (&QAction::triggered), mProjectView, &ProjectView::showModel );
+    connect(mViewLogAction, static_cast<void (QAction::*)(bool)> (&QAction::triggered), mProjectView, &ProjectView::showLog);
+    connect(mViewResultsAction, static_cast<void (QAction::*)(bool)> (&QAction::triggered), mProjectView, &ProjectView::showResults);
 
     QLocale newLoc(QLocale::system());
     mAppSettings.mLanguage = newLoc.language();
