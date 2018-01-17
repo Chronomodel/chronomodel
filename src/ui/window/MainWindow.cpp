@@ -790,13 +790,19 @@ void MainWindow::selectedEventInSelectedPhases() {
 
 void MainWindow::changeEventsColor()
 {
+    if (!mProject)
+        return;
+
     const QColor color = QColorDialog::getColor(Qt::blue, qApp->activeWindow(), tr("Change Selected Events Color"));
-    if (color.isValid())
+    if (color.isValid() && mProject)
         mProject->updateSelectedEventsColor(color);
     
 }
 void MainWindow::changeEventsMethod()
 {
+    if (!mProject)
+        return;
+
     QStringList opts;
     opts.append(ModelUtilities::getEventMethodText(Event::eMHAdaptGauss));
     opts.append(ModelUtilities::getEventMethodText(Event::eBoxMuller));
@@ -812,8 +818,12 @@ void MainWindow::changeEventsMethod()
         mProject->updateSelectedEventsMethod(method);
     }
 }
+
 void MainWindow::changeDatesMethod()
 {
+    if (!mProject)
+        return;
+
     QStringList opts;
     const QList<PluginAbstract*>& plugins = PluginManager::getPlugins();
     for (int i=0; i<plugins.size(); ++i)
@@ -844,6 +854,9 @@ void MainWindow::changeDatesMethod()
 }
 void MainWindow::doGroupedAction()
 {
+    if (!mProject)
+        return;
+
     QAction* act = qobject_cast<QAction*>(sender());
     QVariant groupedActionVariant = act->data();
     QHash<QString, QVariant> groupedAction = groupedActionVariant.toHash();
