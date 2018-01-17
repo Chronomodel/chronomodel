@@ -590,22 +590,42 @@ bool Project::load(const QString& path)
                         QString appliVersion;
                         in >> appliVersion;
                         // prepare the future
-                        if (appliVersion != qApp->applicationVersion())
-                            qDebug()<<calFile.fileName()<<" different version="<<appliVersion<<" actual="<<qApp->applicationVersion();
+                         mCalibCurves.clear();
+                        if (appliVersion != qApp->applicationVersion()) {
+                            QString strMessage = calFile.fileName() + " was made with a different version= " + appliVersion + " actual= " + qApp->applicationVersion();
+                            QMessageBox message(QMessageBox::Question, strMessage, tr("Do you really want to load the calibration file ?"), QMessageBox::Yes | QMessageBox::No, qApp->activeWindow());
+                            if (message.exec() == QMessageBox::Yes) {
+                                // loading cal curve
+                                mCalibCurves = QMap<QString, CalibrationCurve>();
+                                quint32 siz;
+                                in >> siz;
+                                for (int i = 0; i < (int)siz; ++i) {
+                                    QString descript;
+                                    in >> descript;
+                                    CalibrationCurve cal;
+                                    in >> cal;
+                                    mCalibCurves.insert(descript,cal);
+                                }
+                            } else {
+                                return true;
+                            }
+                            qDebug()<<strMessage;
 
+                        } else {
+                            // loading cal curve
+                            mCalibCurves = QMap<QString, CalibrationCurve>();
+                            quint32 siz;
+                            in >> siz;
+                            for (int i = 0; i < (int)siz; ++i) {
+                                QString descript;
+                                in >> descript;
+                                CalibrationCurve cal;
+                                in >> cal;
+                                mCalibCurves.insert(descript,cal);
+                            }
+                        }
                         //QStringList projectVersionList = appliVersion.split(".");
 
-                        mCalibCurves.clear();
-                        mCalibCurves = QMap<QString, CalibrationCurve>();
-                        quint32 siz;
-                        in >> siz;
-                        for (int i = 0; i < (int)siz; ++i) {
-                            QString descript;
-                            in >> descript;
-                            CalibrationCurve cal;
-                            in >> cal;
-                            mCalibCurves.insert(descript,cal);
-                        }
                      }
                  }
                 calFile.close();
@@ -622,7 +642,7 @@ bool Project::load(const QString& path)
 
             QFileInfo fi(dataFile);
             dataFile.open(QIODevice::ReadOnly);
-            if (fi.isFile()) {
+            if (fi.isFile() && !mCalibCurves.isEmpty()) {
                 if (dataFile.exists()) {
 
                     qDebug() << "Project::load Loading model file.res : " << dataPath << " size=" << dataFile.size();
@@ -1134,6 +1154,7 @@ void Project::mergeEvents(int eventFromId, int eventToId)
 // Grouped actions on events
 void Project::selectedEventsFromSelectedPhases()
 {
+
     const QJsonArray events = mState.value(STATE_EVENTS).toArray();
     QJsonArray newEvents = QJsonArray();
     for (int i = 0; i < events.size(); ++i) {
