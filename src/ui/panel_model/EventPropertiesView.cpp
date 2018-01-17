@@ -159,8 +159,9 @@ mButtonWidth(50)
     mSplitBut->setToolTip(tr("Split combined 14C ages"));
 
     connect(mCalibBut, &Button::clicked, this, &EventPropertiesView::showCalibRequested);
-    connect(mCombineBut, static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &EventPropertiesView::sendCombineSelectedDates);
-    connect(mSplitBut, static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &EventPropertiesView::sendSplitDate);
+    connect(mCalibBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &EventPropertiesView::updateButton);
+    connect(mCombineBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &EventPropertiesView::sendCombineSelectedDates);
+    connect(mSplitBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &EventPropertiesView::sendSplitDate);
 
     // --------------- Case of Event is a Bound -> Bound properties windows---------------------------
     
@@ -621,6 +622,13 @@ void EventPropertiesView::updateLayout()
             mBoundView->setGeometry(0, mTopView->height(), width() - mButtonWidth, height() - mTopView->height());
         }
     }
+}
+
+void EventPropertiesView::updateButton() {
+    // mCombineBut->setEnabled(isCalibChecked());
+    //mSplitBut->setEnabled(isCalibChecked());
+   // mRecycleBut->setEnabled(isCalibChecked());
+    mDeleteBut->setEnabled(!isCalibChecked());
 }
 
 void EventPropertiesView::setCalibChecked(bool checked)

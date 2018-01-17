@@ -60,6 +60,8 @@ private slots:
     void updateCombineAvailability();
     void sendCombineSelectedDates();
     void sendSplitDate();
+
+    void updateButton();
     
 //    void updateKnownType();
     void updateKnownFixed(const QString& text);
