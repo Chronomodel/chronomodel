@@ -45,10 +45,16 @@ mGreyedOut(false)
             if (d.mCalibration == nullptr)
                 d.calibrate(s, EventsScene->getProject());
 
-            if (d.mPlugin->getName() != "Typo")
-                mCalibThumb = d.generateCalibThumb();
-            else
+            if (d.mPlugin->getName() == "Typo")
                 mCalibThumb = d.generateTypoThumb();
+
+             // Can happen when there is trouble with the ref curve
+            else if (!d.mCalibration->mCurve.isEmpty())
+                mCalibThumb = d.generateCalibThumb();
+
+            else
+                mCalibThumb = QPixmap();
+
         }
     }
     
