@@ -21,8 +21,8 @@ mZoom(1.)
     mTempArrow = new ArrowTmpItem();
     addItem(mTempArrow);
     mTempArrow->setVisible(false);
-
 }
+
 // Setter & Getter
 void AbstractScene::setProject(Project* project)
 {
@@ -122,7 +122,13 @@ void AbstractScene::itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEve
     Q_UNUSED(item);
     Q_UNUSED(e);
 }
-// Arrive lorsque la souris passe sur un Event
+
+/**
+ * @brief AbstractScene::itemEntered
+ * @param item
+ * @param e
+ * Happens when the mouse hovers over an event
+ */
 void AbstractScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 {
     Q_UNUSED(e);
@@ -145,11 +151,12 @@ void AbstractScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
     }
 
 }
-// Arrive lorsque la souris sort d'un Event
+
 /**
  * @brief AbstractScene::itemLeaved
  * @param item
  * @param e
+ * Happen when leaving an item (ei an Event)
  *
  */
 void AbstractScene::itemLeaved(AbstractItem* item, QGraphicsSceneHoverEvent* e)
@@ -241,7 +248,7 @@ QRectF AbstractScene::specialItemsBoundingRect(QRectF r) const
     return rect;
 }
 
-//# Mouse events
+// Mouse events
 void AbstractScene::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 {
     if (mDrawingArrow) {
@@ -252,8 +259,12 @@ void AbstractScene::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
     QGraphicsScene::mouseMoveEvent(e);
 }
 
-//#pragma mark Key events
-// Arrive quand on appuie sur une touche du clavier
+// Key events
+/**
+ * @brief AbstractScene::keyPressEvent
+ * @param keyEvent
+ * Happen when we hit a key on the keyboard, for example "delete"
+ */
 void AbstractScene::keyPressEvent(QKeyEvent* keyEvent)
 {
     QGraphicsScene::keyPressEvent(keyEvent);
@@ -261,17 +272,17 @@ void AbstractScene::keyPressEvent(QKeyEvent* keyEvent)
     if (keyEvent->isAutoRepeat())
         keyEvent->ignore();
 
-    if (keyEvent->key() == Qt::Key_Delete) {
+    if (keyEvent->key() == Qt::Key_Delete)
         deleteSelectedItems();
-    }  
-    // Ici reperage de la touche Alt
+
+    //key "Alt" detection
    else if (keyEvent->modifiers() == Qt::AltModifier && selectedItems().count()==1) {
         qDebug() << "AbstractScene::keyPressEvent You Press: "<< "Qt::Key_Alt";
         mAltIsDown = true;
-        QList<QGraphicsItem*> items = selectedItems();        
+     //   QList<QGraphicsItem*> items = selectedItems();
         
         AbstractItem* curItem = currentItem();
-        // Controle si un item est déjà sélectionné
+        // Check if an item is already selected
         if (curItem) {
             mDrawingArrow = true;
             mTempArrow->setVisible(true);
