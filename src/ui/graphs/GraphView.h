@@ -59,7 +59,7 @@ public:
     QColor getBackgroundColor() const;
     
     void addInfo(const QString& info);
-    QString getInfo();
+    QString getInfo(char sep = '|');
     void clearInfos();
     void showInfos(bool show);
     bool isShow();

@@ -120,9 +120,12 @@ void MultiCalibrationDrawing::updateLayout()
     for (GraphView *graph: mListCalibGraph) {
         mListPanel[i]->setGeometry(5, y, panelWidth, mGraphHeight - marginBottom);
         mListPanel[i]->setVisible(true);
+
         if (!graph->hasCurve()) {
-            QLabel noCalib (tr("No Calibration"), this);
-            noCalib.setGeometry(panelWidth +5, y, width() - panelWidth - fm.width(noCalib.text()), mGraphHeight);
+             graph->showInfos(true);
+            graph->setNothingMessage( graph->getInfo(' ')  + " -> Not computable" );
+            graph->setGeometry(panelWidth + 5, y, width() - panelWidth, mGraphHeight );
+            graph->setVisible(true);
 
          } else {
             graph->showXAxisValues(axisVisible);

@@ -1463,9 +1463,9 @@ bool GraphView::saveAsSVG(const QString& fileName, const QString& graphTitle, co
     }
     
 }
-QString GraphView::getInfo()
+QString GraphView::getInfo(char sep)
 { 
-    return ( isShow() ? mInfos.join("|") : "");
+    return ( isShow() ? mInfos.join(sep) : "");
 }
 
 bool GraphView::isShow()
