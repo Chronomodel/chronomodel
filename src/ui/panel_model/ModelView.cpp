@@ -623,13 +623,19 @@ void ModelView::calibrateAll(ProjectSettings newS)
 
         position = 0;
         // rebuild all calibration
-        for (auto && ev : events)
-            for (auto && date : ev.mDates) {
-                // date.mCalibration->mCurve.clear();
-                date.calibrate(newS, mProject);
-                ++position;
-                progress->setValue(position);
-            }
+        for (auto && ev : events) {
+                 const QJsonArray listDates = ev.toJson().value(STATE_EVENT_DATES).toArray();
+
+                for (auto && date : listDates) {
+                    Date d;
+                    d.fromJson(date.toObject());
+                    d.autoSetTiSampler(true);
+                    // date.mCalibration->mCurve.clear();
+                    d.calibrate(newS, mProject);
+                    ++position;
+                    progress->setValue(position);
+                }
+          }
          mProject -> setSettings(newS); //do pushProjectState
     }
 
