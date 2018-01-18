@@ -295,10 +295,20 @@ void Date::reset()
 
 void Date::calibrate(const ProjectSettings& settings, Project *project)
 {
+  // Check if the ref curve is in the plugin list
+    const QStringList refsNames = mPlugin->getRefsNames();
+    const QString dateRefName = mPlugin->getDateRefCurveName(this);
+
+    if (!dateRefName.isEmpty() && !refsNames.contains(dateRefName) ) {
+        return;
+    }
+
+    // add the calibration
     mSettings = settings;
 
     const QString toFind (mName+getDesc());
     QMap<QString, CalibrationCurve>::const_iterator it = project->mCalibCurves.find (toFind);
+
     if ( it==project->mCalibCurves.end())
         project->mCalibCurves.insert(toFind, CalibrationCurve());
 
