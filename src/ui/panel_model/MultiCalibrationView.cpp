@@ -331,8 +331,8 @@ void MultiCalibrationView::updateGraphList()
             calibCurve.mPen = QPen(Painting::mainColorLight, 2.);
 
             calibCurve.mIsHorizontalSections = true;
-
-            calibCurve.mSections.append(qMakePair(bound->mFixed,bound->mFixed));
+            double tFixedFormated = DateUtils::convertToAppSettingsFormat( bound->mFixed);
+            calibCurve.mSections.append(qMakePair(tFixedFormated, tFixedFormated));
 
             GraphView* calibGraph = new GraphView(this);
             QString boundName (ev.value(STATE_NAME).toString());
@@ -368,31 +368,35 @@ void MultiCalibrationView::updateGraphList()
         }
         else {
             for (auto &&date : dates) {
-               // QJsonObject jdate (date.toObject());
 
                 Date d;
                 d.fromJson(date.toObject());
                 d.autoSetTiSampler(true);
 
-                QMap<double, double> calibMap = d.getFormatedCalibMap();
-
                 GraphCurve calibCurve;
-                calibCurve.mName = "Calibration";
-                calibCurve.mPen.setColor(penColor);
-                calibCurve.mPen.setWidth(2);
-                calibCurve.mIsHisto = false;
-                calibCurve.mData = calibMap;
+                GraphView* calibGraph = new GraphView(this);
 
-                const bool isTypo (d.mPlugin->getName() == "Typo");
-                calibCurve.mIsRectFromZero = isTypo;
-                calibCurve.mBrush = QBrush(Qt::NoBrush);
+                 if (d.mIsValid && !d.mCalibration->mCurve.isEmpty()) {
+                    calibCurve.mName = "Calibration";
+                    calibCurve.mPen.setColor(penColor);
+                    calibCurve.mPen.setWidth(2);
+                    calibCurve.mIsHisto = false;
+
+
+                    calibCurve.mData = d.getFormatedCalibMap();
+
+                    const bool isTypo (d.mPlugin->getName() == "Typo");
+                    calibCurve.mIsRectFromZero = isTypo;
+                    calibCurve.mBrush = QBrush(Qt::NoBrush);
+
+                    calibGraph->addCurve(calibCurve);
+                }
+
 
                 //type_data yMax = map_max_value(calibCurve.mData);
                 //yMax = (yMax > 0.) ? yMax : 1.;
 
-                GraphView* calibGraph = new GraphView(this);
-                //calibGraph->setRangeY(0., 1. * yMax);
-                calibGraph->addCurve(calibCurve);
+
 
                 // Insert the Event Name only if different to the previous Event's name
                 QString eventName (ev.value(STATE_NAME).toString());
@@ -407,41 +411,45 @@ void MultiCalibrationView::updateGraphList()
                 calibGraph->addInfo(d.mName);
                 calibGraph->showInfos(true);
 
-                // hpd is calculate only on the study Period
-                QMap<type_data, type_data> subData = calibCurve.mData;
-                subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+                if (d.mIsValid && !d.mCalibration->mCurve.isEmpty()) {
+                        // hpd is calculate only on the study Period
+                        QMap<type_data, type_data> subData = calibCurve.mData;
+                        subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
-                QMap<type_data, type_data> hpd = create_HPD(subData, mThreshold);
+                        QMap<type_data, type_data> hpd = create_HPD(subData, mThreshold);
 
-                GraphCurve hpdCurve;
-                hpdCurve.mName = "Calibration HPD";
-                hpdCurve.mPen = penColor;
-                hpdCurve.mBrush = brushColor;
-                hpdCurve.mIsHisto = false;
-                hpdCurve.mIsRectFromZero = true;
-                hpdCurve.mData = hpd;
-                calibGraph->addCurve(hpdCurve);
+                        GraphCurve hpdCurve;
+                        hpdCurve.mName = "Calibration HPD";
+                        hpdCurve.mPen = penColor;
+                        hpdCurve.mBrush = brushColor;
+                        hpdCurve.mIsHisto = false;
+                        hpdCurve.mIsRectFromZero = true;
+                        hpdCurve.mData = hpd;
+                        calibGraph->addCurve(hpdCurve);
 
-                // update max inside the display period
-                QMap<type_data, type_data> subDisplay = calibCurve.mData;
-                subDisplay = getMapDataInRange(subDisplay, mTminDisplay, mTmaxDisplay);
+                        // update max inside the display period
+                        QMap<type_data, type_data> subDisplay = calibCurve.mData;
+                        subDisplay = getMapDataInRange(subDisplay, mTminDisplay, mTmaxDisplay);
 
-                const type_data yMax = map_max_value(subDisplay);
+                        const type_data yMax = map_max_value(subDisplay);
 
-                calibGraph->setRangeY(0., 1. * yMax);
+                        calibGraph->setRangeY(0., 1. * yMax);
 
-                calibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
-                calibGraph->setFormatFunctX(stringWithAppSettings);
-                calibGraph->setFormatFunctY(nullptr);
+                        calibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+                        calibGraph->setFormatFunctX(stringWithAppSettings);
+                        calibGraph->setFormatFunctY(nullptr);
 
-                calibGraph->setMarginRight(marginRight);
-                calibGraph->setMarginLeft(marginLeft);
+                        calibGraph->setMarginRight(marginRight);
+                        calibGraph->setMarginLeft(marginLeft);
 
-                calibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
-                calibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
-                calibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
+                        calibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
+                        calibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
+                        calibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
 
-                calibGraph->setRendering(GraphView::eHD);
+                        calibGraph->setRendering(GraphView::eHD);
+                   //     graphList.append(calibGraph);
+        }
+
                 graphList.append(calibGraph);
                 QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
                                       ev.value(STATE_COLOR_GREEN).toInt(),
@@ -580,8 +588,11 @@ void MultiCalibrationView::updateScaleX()
         mMinorScale =  aNumber;
         QList<GraphView*> *graphList = mDrawing->getGraphList();
 
-        for (GraphView* gr : *graphList)
+        for (GraphView* gr : *graphList) {
+            if (!gr->hasCurve())
+                continue;
             gr->changeXScaleDivision(mMajorScale, mMinorScale);
+        }
 
     } else
         return;
@@ -597,51 +608,56 @@ void MultiCalibrationView::updateGraphsZoom()
     QList<GraphView*> *graphList = mDrawing->getGraphList();
 
     for (GraphView* gr : *graphList) {
-        gr->setRangeX(mTminDisplay, mTmaxDisplay);
-        gr->setCurrentX(mTminDisplay, mTmaxDisplay);
 
-        // update max inside the display period (mTminDisplay, mTmaxDisplay)
-        // Bound doesn't have curve named "Calibration", this curve name is "Bound"
-        GraphCurve* calibCurve = gr->getCurve("Calibration");
-        if (!calibCurve)
-            calibCurve = gr->getCurve("Bound");
+        if (gr->hasCurve()) {
 
-        QMap<type_data, type_data> subDisplay = calibCurve->mData;
-        subDisplay = getMapDataInRange(subDisplay, mTminDisplay, mTmaxDisplay);
 
-        type_data yMax = map_max_value(subDisplay);
-        if (yMax == 0)
-            yMax = 1;
+            gr->setRangeX(mTminDisplay, mTmaxDisplay);
+            gr->setCurrentX(mTminDisplay, mTmaxDisplay);
 
-        gr->setRangeY(0., 1. * yMax);
+            // update max inside the display period (mTminDisplay, mTmaxDisplay)
+            // Bound doesn't have curve named "Calibration", this curve name is "Bound"
+            GraphCurve* calibCurve = gr->getCurve("Calibration");
+            if (!calibCurve)
+                calibCurve = gr->getCurve("Bound");
 
-        gr->setMarginRight(marginRight);
-        gr->setMarginLeft(marginLeft);
+            QMap<type_data, type_data> subDisplay = calibCurve->mData;
+            subDisplay = getMapDataInRange(subDisplay, mTminDisplay, mTmaxDisplay);
 
-        // ------------------------------------------------------------
-        //  Show zones if calibrated data are outside study period
-        // ------------------------------------------------------------
-       gr->removeAllZones();
-       if (mTminDisplay < mSettings.getTminFormated()) {
-            GraphZone zone;
-            zone.mXStart = mTminDisplay;
-            zone.mXEnd = mSettings.getTminFormated();
-            zone.mColor = QColor(217, 163, 69);
-            zone.mColor.setAlpha(75);
-            zone.mText = tr("Outside study period");
-            gr->addZone(zone);
-        }
-        if (mTmaxDisplay > mSettings.getTmaxFormated()) {
-            GraphZone zone;
-            zone.mXStart = mSettings.getTmaxFormated();
-            zone.mXEnd = mTmaxDisplay;
-            zone.mColor = QColor(217, 163, 69);
-            zone.mColor.setAlpha(75);
-            zone.mText = tr("Outside study period");
-            gr->addZone(zone);
-        }
+            type_data yMax = map_max_value(subDisplay);
+            if (yMax == 0)
+                yMax = 1;
 
-        gr->forceRefresh();
+            gr->setRangeY(0., 1. * yMax);
+
+            gr->setMarginRight(marginRight);
+            gr->setMarginLeft(marginLeft);
+
+            // ------------------------------------------------------------
+            //  Show zones if calibrated data are outside study period
+            // ------------------------------------------------------------
+           gr->removeAllZones();
+           if (mTminDisplay < mSettings.getTminFormated()) {
+                GraphZone zone;
+                zone.mXStart = mTminDisplay;
+                zone.mXEnd = mSettings.getTminFormated();
+                zone.mColor = QColor(217, 163, 69);
+                zone.mColor.setAlpha(75);
+                zone.mText = tr("Outside study period");
+                gr->addZone(zone);
+            }
+            if (mTmaxDisplay > mSettings.getTmaxFormated()) {
+                GraphZone zone;
+                zone.mXStart = mSettings.getTmaxFormated();
+                zone.mXEnd = mTmaxDisplay;
+                zone.mColor = QColor(217, 163, 69);
+                zone.mColor.setAlpha(75);
+                zone.mText = tr("Outside study period");
+                gr->addZone(zone);
+            }
+
+            gr->forceRefresh();
+    }
     }
 
 }
@@ -764,15 +780,17 @@ void MultiCalibrationView::changeCurveColor()
         QList<GraphView*> *graphList = mDrawing->getGraphList();
 
         for (GraphView* gr : *graphList) {
-            GraphCurve* calibCurve = gr->getCurve("Calibration");
-            calibCurve->mPen.setColor(mCurveColor);
+            if (gr->hasCurve()) {
+                GraphCurve* calibCurve = gr->getCurve("Calibration");
+                calibCurve->mPen.setColor(mCurveColor);
 
-            GraphCurve* hpdCurve = gr->getCurve("Calibration HPD");
-            hpdCurve->mPen.setColor(mCurveColor);
-            const QColor brushColor (mCurveColor.red(),mCurveColor.green(), mCurveColor.blue(), 100);
-            hpdCurve->mBrush = QBrush(brushColor);
+                GraphCurve* hpdCurve = gr->getCurve("Calibration HPD");
+                hpdCurve->mPen.setColor(mCurveColor);
+                const QColor brushColor (mCurveColor.red(),mCurveColor.green(), mCurveColor.blue(), 100);
+                hpdCurve->mBrush = QBrush(brushColor);
 
-            gr->forceRefresh();
+                gr->forceRefresh();
+        }
         }
     }
 }
@@ -827,38 +845,46 @@ void MultiCalibrationView::showStat()
                     Date d;
                     d.fromJson(jdate);
 
-                   const bool isTypo (d.mPlugin->getName() == "Typo");
 
-                   resultsStr += " <br> <strong>"+ d.mName + "</strong> (" + d.mPlugin->getName() + ")" +"<br> <i>" + d.getDesc() + "</i><br> ";
+                    resultsStr += " <br> <strong>"+ d.mName + "</strong> (" + d.mPlugin->getName() + ")" +"<br> <i>" + d.getDesc() + "</i><br> ";
 
-                   if (!isTypo) {
-                       d.autoSetTiSampler(true); // needed if calibration is not done
+                 if (d.mIsValid && !d.mCalibration->mCurve.isEmpty()) {
 
-                       QMap<double, double> calibMap = d.getFormatedCalibMap();
-                       // hpd is calculate only on the study Period
 
-                       QMap<double, double>  subData = calibMap;
-                       subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+                       const bool isTypo (d.mPlugin->getName() == "Typo");
 
-                       DensityAnalysis results;
-                       results.analysis = analyseFunction(subData);
 
-                       if (!subData.isEmpty()) {
-                           QVector<double> subRepart = calculRepartition(subData);
+                       if (!isTypo) {
+                           d.autoSetTiSampler(true); // needed if calibration is not done
 
-                           results.quartiles = quartilesForRepartition(subRepart, subData.firstKey(), mSettings.mStep);
-                           resultsStr += densityAnalysisToString(results);
+                           QMap<double, double> calibMap = d.getFormatedCalibMap();
+                           // hpd is calculate only on the study Period
 
-                            // hpd results
+                           QMap<double, double>  subData = calibMap;
+                           subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
-                           QMap<type_data, type_data> hpd = create_HPD(subData, mThreshold);
+                           DensityAnalysis results;
+                           results.analysis = analyseFunction(subData);
 
-                           const double realThresh = map_area(hpd) / map_area(subData);
+                           if (!subData.isEmpty()) {
+                               QVector<double> subRepart = calculRepartition(subData);
 
-                           resultsStr += + "<br> HPD (" + locale().toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), stringWithAppSettings) + "<br>";
-                       }
-                  }
+                               results.quartiles = quartilesForRepartition(subRepart, subData.firstKey(), mSettings.mStep);
+                               resultsStr += densityAnalysisToString(results);
 
+                                // hpd results
+
+                               QMap<type_data, type_data> hpd = create_HPD(subData, mThreshold);
+
+                               const double realThresh = map_area(hpd) / map_area(subData);
+
+                               resultsStr += + "<br> HPD (" + locale().toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), stringWithAppSettings) + "<br>";
+                           }
+                      }
+                 } else {
+                     resultsStr += + "<br> HPD  : " + tr("Not  computable")+ "<br>";
+
+                 }
                }
             }
             mResultText += resultsStr;
