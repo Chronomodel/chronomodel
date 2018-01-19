@@ -128,8 +128,8 @@ void CalibrationDrawing::updateLayout()
     const int titlePosition = ((width() - fmTop.width(mTitle->text()) - 6) /2) + 3;
     mTitle->setGeometry(titlePosition, mVerticalSpacer, fmTop.width(mTitle->text()) + 3, fmTop.height());
 
-    mRefTitle->setGeometry(20,  mTitle->y() + mTitle->height() + mVerticalSpacer, fmTitle.width(mRefTitle->text()), fmTitle.height());
-    mRefComment->setGeometry(30,  mRefTitle->y() + mRefTitle->height() + mVerticalSpacer, fmTitle.width(mRefComment->text()), fmTitle.height());
+    mRefTitle->setGeometry(20,  mTitle->y() + mTitle->height() + mVerticalSpacer, fmTitle.width(mRefTitle->text()), fm.height());
+    mRefComment->setGeometry(30,  mRefTitle->y() + mRefTitle->height() + mVerticalSpacer, fmTitle.width(mRefComment->text()), fm.height());
 
     if (mRefGraphView) {
         /* must be before setGeometry, because setGeometry is connected to resize.
@@ -148,7 +148,7 @@ void CalibrationDrawing::updateLayout()
     } else
         mCalibTitle->setGeometry(20,  mTitle->y() + mTitle->height() + mVerticalSpacer + refH, fmTitle.width(mCalibTitle->text()), fmTitle.height());
 
-    mCalibComment->setGeometry(30,  mCalibTitle->y() + mCalibTitle->height() + mVerticalSpacer, fmTitle.width(mCalibComment->text()), fmTitle.height());
+    mCalibComment->setGeometry(30,  mCalibTitle->y() + mCalibTitle->height() + mVerticalSpacer, fmTitle.width(mCalibComment->text()), fm.height());
 
     mCalibGraph->setGeometry(0, mCalibComment->y() + mCalibComment->height() + mVerticalSpacer, width(), calibH);
     mCalibGraph->setMarginRight(marginRight);
