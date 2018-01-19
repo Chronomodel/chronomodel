@@ -100,6 +100,8 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             curve.mData = refCurve;
             mGraph->addCurve(curve);
 
+          yMin = qMin( refCurve.first(), refCurve.last());
+          yMax = qMax( refCurve.first(), refCurve.last());
             // Y scale and RangeY are define in graphView::zommX()
 
 
