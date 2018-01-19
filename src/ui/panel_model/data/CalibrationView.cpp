@@ -367,8 +367,10 @@ void CalibrationView::updateGraphs()
 
             mRefGraphView->setFormatFunctX(stringWithAppSettings); // must be before setDate, because setDate use it
             ProjectSettings tmpSettings;
-            tmpSettings.mTmax = mTmaxDisplay;
-            tmpSettings.mTmin = mTminDisplay;
+            const double maxDisplayInRaw = DateUtils::convertFromAppSettingsFormat(mTmaxDisplay);
+            const double minDisplayInRaw = DateUtils::convertFromAppSettingsFormat(mTminDisplay);
+            tmpSettings.mTmax = qMax(minDisplayInRaw, maxDisplayInRaw);//mTmaxDisplay;
+            tmpSettings.mTmin = qMin(minDisplayInRaw, maxDisplayInRaw);// mTminDisplay;
             tmpSettings.mStep = 1.;
             mRefGraphView->setDate(mDate, tmpSettings);
 

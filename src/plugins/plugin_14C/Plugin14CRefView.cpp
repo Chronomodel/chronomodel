@@ -32,8 +32,7 @@ Plugin14CRefView::~Plugin14CRefView()
 
 void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings)
 {
-    QLocale locale = QLocale();
-    GraphViewRefAbstract::setDate(date, settings);
+     GraphViewRefAbstract::setDate(date, settings);
     double tminDisplay;
     double tmaxDisplay;
    
@@ -46,6 +45,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
 
         tminDisplay = qMin(t1,qMin(t2,t3));
         tmaxDisplay = qMax(t1,qMax(t2,t4));
+
     } else {
         tminDisplay = qMin(t1, t2);
         tmaxDisplay = qMax(t1, t2);
@@ -76,7 +76,6 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         const double tmaxRef = date.getFormatedTmaxRefCurve();
         
         Plugin14C* plugin = (Plugin14C*)date.mPlugin;
-
         const RefCurve& curve = plugin->mRefCurves.value(ref_curve);
         
         if (curve.mDataMean.isEmpty()) {
@@ -109,6 +108,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             zone.mText = tr("Outside reference area");
             mGraph->addZone(zone);
         }
+
         const double t0 = DateUtils::convertFromAppSettingsFormat(qMax(tminDisplay, tminRef));
         double yMin = plugin->getRefValueAt(date.mData, t0);
         double yMax (yMin);
@@ -116,7 +116,6 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         QMap<double, double> curveG;
         QMap<double, double> curveG95Sup;
         QMap<double, double> curveG95Inf;
-
 
         /*
          * We need to skim the real map to fit with the real value of the calibration curve
@@ -128,14 +127,16 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             if (tDisplay>tminDisplay && tDisplay<tmaxDisplay) {
                 const double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
 
-                curveG[t] = iPt.value();
-                curveG95Sup[t] = iPt.value() + error;
-                curveG95Inf[t] = iPt.value() - error;
+                curveG[tDisplay] = iPt.value();
+                curveG95Sup[tDisplay] = iPt.value() + error;
+                curveG95Inf[tDisplay] = iPt.value() - error;
 
-                yMin = qMin(yMin, curveG95Inf.value(t));
-                yMax = qMax(yMax, curveG95Sup.value(t));
+                yMin = qMin(yMin, curveG95Inf.value(tDisplay));
+                yMax = qMax(yMax, curveG95Sup.value(tDisplay));
             }
         }
+        mGraph->setRangeX(tminDisplay,tmaxDisplay);
+        mGraph->setCurrentX(tminDisplay, tmaxDisplay);
 
         GraphCurve graphCurveG;
         graphCurveG.mName = "G";
@@ -201,7 +202,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
         mGraph->addCurve(curveMeasure);
         
         // Infos to write :
-        QString info = tr("Age BP : ") + locale.toString(age) + " ± " + locale.toString(error);
+        QString info = tr("Age BP : ") + locale().toString(age) + " ± " + locale().toString(error);
         
         // ----------------------------------------------
         //  Delta R curve
@@ -241,7 +242,7 @@ void Plugin14CRefView::setDate(const Date& date, const ProjectSettings& settings
             curveDeltaR.mData = deltaRCurve;
             mGraph->addCurve(curveDeltaR);
             
-            info += tr(", ΔR : ") + locale.toString(delta_r) + " ± " + locale.toString(delta_r_error);
+            info += tr(", ΔR : ") + locale().toString(delta_r) + " ± " + locale().toString(delta_r_error);
         }
         
         // ----------------------------------------------

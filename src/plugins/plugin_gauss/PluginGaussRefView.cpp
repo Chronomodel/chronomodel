@@ -84,7 +84,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
         double yMin (tminDisplay);
         double yMax (tmaxDisplay);
         
-        if (mode == DATE_GAUSS_MODE_NONE){
+        if (mode == DATE_GAUSS_MODE_NONE) {
           // nothing to do
             
         } else if (mode == DATE_GAUSS_MODE_EQ) {
@@ -92,7 +92,8 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             double stepDisplay (tmaxDisplay - tminDisplay);
             if (a>0)
                 stepDisplay = stepDisplay/1000.;
-            for (double t=tminDisplay; t<=tmaxDisplay; t+=stepDisplay) {
+
+            for (double t = tminDisplay; t<=tmaxDisplay; t += stepDisplay) {
                 const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
                 refCurve[t] = a * tRaw * tRaw + b * tRaw + c;
             }
@@ -146,6 +147,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             QMap<double, double> curveG;
             QMap<double, double> curveG95Sup;
             QMap<double, double> curveG95Inf;
+
             /*
              * We need to skim the real map to fit with the real value of the calibration curve
              * The graphView function does the interpolation between the real point
@@ -156,12 +158,12 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                 if (tDisplay>=tminDisplay && tDisplay<=tmaxDisplay) {
                     const double error = plugin->getRefErrorAt(date.mData, t, mode) * 1.96;
 
-                    curveG[t] = iPt.value();
-                    curveG95Sup[t] = iPt.value() + error;
-                    curveG95Inf[t] = iPt.value() - error;
+                    curveG[tDisplay] = iPt.value();
+                    curveG95Sup[tDisplay] = iPt.value() + error;
+                    curveG95Inf[tDisplay] = iPt.value() - error;
 
-                    yMin = qMin(yMin, curveG95Inf.value(t));
-                    yMax = qMax(yMax, curveG95Sup.value(t));
+                    yMin = qMin(yMin, curveG95Inf.value(tDisplay));
+                    yMax = qMax(yMax, curveG95Sup.value(tDisplay));
                 }
             }
 

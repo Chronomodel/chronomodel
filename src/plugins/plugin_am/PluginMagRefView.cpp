@@ -127,17 +127,16 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
             if (tDisplay>tminDisplay && tDisplay<tmaxDisplay) {
                 const double error = plugin->getRefErrorAt(date.mData, t) * 1.96;
 
-                curveG[t] = iPt.value();
-                curveG95Sup[t] = iPt.value() + error;
-                curveG95Inf[t] = iPt.value() - error;
+                curveG[tDisplay] = iPt.value();
+                curveG95Sup[tDisplay] = iPt.value() + error;
+                 curveG95Inf[tDisplay] = iPt.value() - error;
 
-                yMin = qMin(yMin, curveG95Inf.value(t));
-                yMax = qMax(yMax, curveG95Sup.value(t));
+                yMin = qMin(yMin, curveG95Inf.value(tDisplay));
+                yMax = qMax(yMax, curveG95Sup.value(tDisplay));
             }
         }
         mGraph->setRangeX(tminDisplay,tmaxDisplay);
         mGraph->setCurrentX(tminDisplay, tmaxDisplay);
-
 
         GraphCurve graphCurveG;
         graphCurveG.mName = "G";
