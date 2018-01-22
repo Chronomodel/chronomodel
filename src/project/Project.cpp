@@ -592,8 +592,12 @@ bool Project::load(const QString& path)
                         // prepare the future
                          mCalibCurves.clear();
                         if (appliVersion != qApp->applicationVersion()) {
-                            QString strMessage = calFile.fileName() + " has been done with a different version  = " + appliVersion + " (current =  " + qApp->applicationVersion() + ")";
-                            QMessageBox message(QMessageBox::Question, strMessage, tr("Do you really want to load the calibration file: *.chr.cal ?"), QMessageBox::Yes | QMessageBox::No, qApp->activeWindow());
+                            QFileInfo fileInfo(calFile);
+                            QString filename(fileInfo.fileName());
+                            QString strMessage = filename + " " + tr("has been done with a different version") + "  = " + appliVersion + " \n (" + tr("current") + " =  "
+                                    + qApp->applicationVersion() + ") \n"+ tr("Do you really want to load the calibration file: *.chr.cal ?");
+                            QString strTitle = tr("Compatibility risk");
+                            QMessageBox message(QMessageBox::Question, strTitle, strMessage, QMessageBox::Yes | QMessageBox::No, qApp->activeWindow());
                             if (message.exec() == QMessageBox::Yes) {
                                 // loading cal curve
                                 mCalibCurves = QMap<QString, CalibrationCurve>();
