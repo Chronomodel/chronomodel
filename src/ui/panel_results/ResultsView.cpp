@@ -646,7 +646,8 @@ void ResultsView::setFont(const QFont & font)
 void ResultsView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
-    updateControls(); // emit controleUpdated which is connected to updateLayout
+    if (mModel->mProject->withResults())
+         updateControls(); // emit controleUpdated which is connected to updateLayout
 }
 
 

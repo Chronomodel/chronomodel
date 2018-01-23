@@ -79,6 +79,7 @@ public:
      * @param noResults
      */
     void setNoResults( const bool& noResults) { mNoResults = noResults;}
+    bool withResults() {return !mNoResults;}
     
     bool setSettings(const ProjectSettings& settings);    
     //void setAppSettings(const AppSettings& settings);
