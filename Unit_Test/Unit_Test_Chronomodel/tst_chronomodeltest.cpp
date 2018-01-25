@@ -231,7 +231,8 @@ void ChronomodelTest::trace()
 
     QVERIFY(runTrace1 == runTrace3);
 
-    fullTrace.mFormatedTrace = fullTrace.mRawTrace;
+    //fullTrace.mFormatedTrace
+            std::copy(fullTrace.mRawTrace->cbegin(), fullTrace.mRawTrace->cend(), fullTrace.mFormatedTrace->begin());
     QVector<double> fullRunTrace = fullTrace.fullRunTrace(chains);
 //    qDebug()<<"fullRunTrace"<<fullRunTrace;
     QVector<double> fullRunTraceVerif = runTrace1;
@@ -274,7 +275,9 @@ void ChronomodelTest::fft()
      MetropolisVariable density1;
      density1.mSupport = MetropolisVariable::eR;
      density1.setName("test unit");
-     density1.mFormatedTrace = &trace1;
+     //density1.mFormatedTrace = &trace1;
+
+     std::copy(trace1.cbegin(), trace1.cend(), density1.mFormatedTrace->begin());
 
      QList<ChainSpecs> chain1Spe;
      chain1Spe.append(chain1);
@@ -298,7 +301,8 @@ void ChronomodelTest::fft()
     MetropolisVariable density2;
     density2.mSupport = MetropolisVariable::eR;
     density2.setName("test unit2");
-    density2.mFormatedTrace = &trace2;
+    //density2.mFormatedTrace = &trace2;
+    std::copy(trace2.cbegin(), trace2.cend(), density2.mFormatedTrace->begin());
     density2.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
     //qDebug()<<"histo2"<<density2.mHisto;
 
@@ -449,7 +453,7 @@ qDebug()<<" Total = "<<total<<" Total expected"<<expected;
 Quartiles ChronomodelTest::quartilesTypeTest(const QVector<double>& trace, const int quartileType, const double p)
 
 {
-    Q_ASSERT(trace);
+    Q_ASSERT(&trace);
     Quartiles Q;
     QVector<double> traceSorted (trace);
 

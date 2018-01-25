@@ -1326,7 +1326,7 @@ void GraphView::exportCurrentDensityCurves(const QString& defaultPath, const QLo
         // 4 - Save Qlist
         QTextStream output(&file);
         const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
-        const QString projectName = tr("Project filename")+" : "+ MainWindow::getInstance()->getNameProject();
+        const QString projectName = tr("Project filename : %1").arg(MainWindow::getInstance()->getNameProject());
 
         output << "# "+ version + "\r";
         output << "# "+ projectName + "\r";
@@ -1346,7 +1346,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
 {
     Q_UNUSED(writeInRows);
     qDebug()<<"GraphView::exportCurrentVectorCurves";
-    QString filter = tr("CSV (*.csv)");
+    QString filter = "CSV (*.csv)";
     QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                     tr("Save graph data as..."),
                                                     defaultPath,

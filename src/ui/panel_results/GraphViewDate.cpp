@@ -31,7 +31,7 @@ void GraphViewDate::setDate(Date* date)
 {
     Q_ASSERT(date);
     mDate = date;
-    setItemTitle(QString(tr("Data") + " : " + mDate->mName));
+    setItemTitle(tr("Data : %1").arg(mDate->mName));
 
     update();
 }
@@ -109,7 +109,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
          */
         if (variable == eTheta) {
             mGraph->setOverArrow(GraphView::eBothOverflow);
-            mTitle = QString(tr("Data") + " : " + mDate->mName);
+            mTitle = tr("Data : %1").arg(mDate->mName);
 
 
             mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
@@ -198,7 +198,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
          */
         else if (variable == eSigma) {
             mGraph->setOverArrow(GraphView::eNone);
-            mTitle = QString(tr("Individual Std") + " : " + mDate->mName);
+            mTitle = tr("Individual Std : %1").arg(mDate->mName);
 
             mGraph->mLegendX = "";
             mGraph->setFormatFunctX(nullptr);
@@ -242,13 +242,13 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
      * ------------------------------------------------
      */
     else if (typeGraph == eTrace && (variable == eTheta || variable == eSigma)) {
-        mGraph->mLegendX = "Iterations";
+        mGraph->mLegendX = tr("Iterations");
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(DateUtils::convertToAppSettingsFormatStr);
         if (variable == eTheta)
-            mTitle = QString(tr("Data") + " : " + mDate->mName);
+            mTitle = tr("Data : %1").arg(mDate->mName);
         else
-             mTitle = QString(tr("Individual Std") + " : " + mDate->mName);
+             mTitle = tr("Individual Std : %1").arg(mDate->mName);
 
         generateTraceCurves(mChains, variableDate);
     }
@@ -260,14 +260,14 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
      * ------------------------------------------------
      */
     else if (typeGraph == eAccept && (variable == eTheta || variable == eSigma)) {
-        mGraph->mLegendX = "Iterations";
+        mGraph->mLegendX = tr("Iterations");
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);
         mGraph->autoAdjustYScale(true);
         if (variable == eTheta)
-            mTitle = QString(tr("Data") + " : " + mDate->mName);
+            mTitle = tr("Data : %1").arg(mDate->mName);
         else
-             mTitle = QString(tr("Individual Std") + " : " + mDate->mName);
+             mTitle = tr("Individual Std : %1").arg(mDate->mName);
 
         mGraph->addCurve( generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine) );
         generateAcceptCurves(mChains, variableDate);
@@ -286,15 +286,15 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(stringWithAppSettings);
         if (variable == eTheta)
-            mTitle = QString(tr("Data") + " : " + mDate->mName);
+            mTitle = tr("Data : %1").arg(mDate->mName);
         else
-             mTitle = QString(tr("Individual Std") + " : " + mDate->mName);
+             mTitle = tr("Individual Std : %1").arg(mDate->mName);
 
         generateCorrelCurves(mChains, variableDate);
         mGraph->setXScaleDivision(10, 10);
     }
     else {
-        mTitle = QString(tr("Data") + " : " + mDate->mName);
+        mTitle = tr("Data : %1").arg(mDate->mName);
         mGraph->resetNothingMessage();
 
     }

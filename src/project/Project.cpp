@@ -594,7 +594,7 @@ bool Project::load(const QString& path)
                         if (appliVersion != qApp->applicationVersion()) {
                             QFileInfo fileInfo(calFile);
                             QString filename(fileInfo.fileName());
-                            QString strMessage = filename + " " + tr("has been done with a different version") + "  = " + appliVersion + " \n (" + tr("current") + " =  "
+                            QString strMessage = tr("%1 has been done with a different version = %2").arg(filename, appliVersion) + " \n (" + tr("current") + " =  "
                                     + qApp->applicationVersion() + ") \n"+ tr("Do you really want to load the calibration file: *.chr.cal ?");
                             QString strTitle = tr("Compatibility risk");
                             QMessageBox message(QMessageBox::Question, strTitle, strMessage, QMessageBox::Yes | QMessageBox::No, qApp->activeWindow());
@@ -659,7 +659,7 @@ bool Project::load(const QString& path)
                         QMessageBox message(QMessageBox::Critical,
                                             tr("Error loading project"),
                                             tr("The project could not be loaded.") + "\r" +
-                                            tr("Error message") + " : " + error,
+                                            tr("Error : %1").arg(error),
                                             QMessageBox::Ok,
                                             qApp->activeWindow());
                         message.exec();
@@ -673,11 +673,12 @@ bool Project::load(const QString& path)
                         mModel->restoreFromFile(dataPath);
                         setNoResults(false);
                         emit mcmcFinished(mModel);
-                    } catch(QString error) {
+
+                    } catch (QString error) {
                         QMessageBox message(QMessageBox::Critical,
                                             tr("Error loading project MCMC results"),
                                             tr("The project MCMC results could not be loaded.") + "\r" +
-                                            tr("Error message") + " : " + error,
+                                            tr("Error : %1").arg(error),
                                             QMessageBox::Ok,
                                             qApp->activeWindow());
                         setNoResults(true);
@@ -898,7 +899,7 @@ void Project::resetMCMC()
                 } catch(QString error) {
                     QMessageBox message(QMessageBox::Critical,
                                         qApp->applicationName() + " " + qApp->applicationVersion(),
-                                        tr("Error : ") + error,
+                                        tr("Error : %1").arg(error),
                                         QMessageBox::Ok,
                                         qApp->activeWindow());
                     message.exec();

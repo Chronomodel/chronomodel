@@ -102,8 +102,7 @@ QString PluginGauss::getDateDesc(const Date* date) const
     const QString mode = data[DATE_GAUSS_MODE_STR].toString();
 
 
-    result += QObject::tr("Age") + " : " + QLocale().toString(data[DATE_GAUSS_AGE_STR].toDouble());
-    result += " ± " + QLocale().toString(data[DATE_GAUSS_ERROR_STR].toDouble());
+    result += QObject::tr("Age : %1  ±  %2").arg(QLocale().toString(data[DATE_GAUSS_AGE_STR].toDouble()), QLocale().toString(data[DATE_GAUSS_ERROR_STR].toDouble()));
 
     if (mode == DATE_GAUSS_MODE_NONE)
         result += " (No calibration)";
@@ -150,9 +149,9 @@ QString PluginGauss::getDateDesc(const Date* date) const
     else if (mode == DATE_GAUSS_MODE_CURVE) {
         const QString ref_curve = data[DATE_GAUSS_CURVE_STR].toString();
         if (mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty())
-            result += "; " + tr("Ref. curve") + " : " + ref_curve;
+            result += "; " + tr("Ref. curve : %1").arg(ref_curve);
         else
-            result += ", " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
+            result += ", " + tr("ERROR ->  Ref. curve : %1").arg(ref_curve);
 
     }
 

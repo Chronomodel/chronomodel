@@ -96,7 +96,7 @@ void StudyPeriodDialog::setSettings(const ProjectSettings& s)
     mMinEdit->setText(locale().toString(s.mTmin));
     mMaxEdit->setText(locale().toString(s.mTmax));
     const double suggested = s.getStep(s.mTmin, s.mTmax);
-    mForcedCheck -> setText("(" + tr("suggested/default value") + " + " + QString::number(suggested) + ")");
+    mForcedCheck -> setText(tr("(suggested/default value = %1 )").arg(QString::number(suggested) ) );
     mForcedCheck -> setChecked(s.mStepForced);
     mStepSpin    -> setEnabled(s.mStepForced);
     mStepSpin    -> setValue(s.mStep);
@@ -104,7 +104,7 @@ void StudyPeriodDialog::setSettings(const ProjectSettings& s)
 
 void StudyPeriodDialog::setStep(double step, bool forced, double suggested)
 {
-    mForcedCheck -> setText("(" + tr("suggested/default value") + " + " + QString::number(suggested) + ")");
+    mForcedCheck -> setText(tr("(suggested/default value = %1 )").arg(QString::number(suggested) ) );
     mForcedCheck -> setChecked(forced);
     mStepSpin    -> setEnabled(forced);
     mStepSpin    -> setValue(step);

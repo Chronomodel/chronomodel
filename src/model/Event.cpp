@@ -143,7 +143,7 @@ Event Event::fromJson(const QJsonObject& json)
         if (!d.isNull())
             event.mDates.append(d);
         else
-            throw QObject::tr("ERROR : data could not be created with plugin ") + date.toObject().value(STATE_DATE_PLUGIN_ID).toString();
+            throw QObject::tr("ERROR : data could not be created with plugin %1").arg(date.toObject().value(STATE_DATE_PLUGIN_ID).toString());
 
     }
     return event;
@@ -632,7 +632,7 @@ void Event::updateTheta(const double &tmin, const double &tmax)
     const double max ( getThetaMax(tmax) );
     
     if (min >= max)
-        throw QObject::tr("Error for event : ") + mName + " : min = " + QString::number(min) + " : max = " + QString::number(max);
+        throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(mName, QString::number(min), QString::number(max));
 
     // test no Event emboxed
   /*  const double theta = mDates[0].mTheta.mX;
@@ -669,7 +669,7 @@ void Event::updateTheta(const double &tmin, const double &tmax)
                 mTheta.tryUpdate(theta, 1.);
             }
             catch(QString error){
-                throw QObject::tr("Error for event") + " : " + mName + " : " + error;
+                throw QObject::tr("Error for event : %1 : %2").arg(mName, error);
             }
             break;
         }
@@ -681,11 +681,10 @@ void Event::updateTheta(const double &tmin, const double &tmax)
                 theta = Generator::gaussByBoxMuller(theta_avg, sigma);
                 ++counter;
                 if (counter == 100000000)
-                    throw QObject::tr("No MCMC solution could be found using event method ") + ModelUtilities::getEventMethodText(mMethod) + " for event named " + mName + ". (" + QString::number(counter) + " trials done)";
+                    throw QObject::tr("No MCMC solution could be found using event method %1 for event named %2 ( %3  trials done)").arg(ModelUtilities::getEventMethodText(mMethod), mName, QString::number(counter));
 
             } while(theta < min || theta > max);
-            
-            //qDebug() << "Event::updateTheta() case eBoxMuller Event update num trials : " << counter;
+
             mTheta.tryUpdate(theta, 1.);
             break;
         }

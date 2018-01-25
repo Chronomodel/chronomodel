@@ -167,7 +167,7 @@ void Model::fromJson(const QJsonObject& json)
                 catch(QString error){
                     QMessageBox message(QMessageBox::Critical,
                                         qApp->applicationName() + " " + qApp->applicationVersion(),
-                                        QObject::tr("Error : ") + error,
+                                        QObject::tr("Error : %1").arg(error),
                                         QMessageBox::Ok,
                                         qApp->activeWindow());
                     message.exec();
@@ -347,32 +347,32 @@ void Model::generateModelLog()
     QString log;
     // Study period
     QLocale locale = QLocale();
-    log += line(textBold(textBlack(tr("Prior Study Period") + " : [ " + locale.toString(mSettings.getTminFormated()) + " : " + locale.toString(mSettings.getTmaxFormated()) + " ] " + DateUtils::getAppSettingsFormatStr() )));
+    log += line(textBold(textBlack(tr("Prior Study Period : [ %1 : %2 ] %3").arg(locale.toString(mSettings.getTminFormated()), locale.toString(mSettings.getTmaxFormated()), DateUtils::getAppSettingsFormatStr() ))));
     log += "<br>";
 
     int i(0);
     for (auto&& pEvent : mEvents) {
         if (pEvent->type() == Event::eKnown) {
-            log += line(textRed("Bound (" + QString::number(i+1) + "/" + QString::number(mEvents.size()) + ") : " + pEvent->mName + " (" +
-                                 QString::number(pEvent->mPhases.size()) + " phases, " +
-                                 QString::number(pEvent->mConstraintsBwd.size()) + " const. back., " +
-                                 QString::number(pEvent->mConstraintsFwd.size()) + " const. fwd.)"));
+            log += line(textRed(tr("Bound ( %1 / %2 ) : %3 ( %4  phases, %5 const. back., %6 const.fwd.)").arg(QString::number(i+1), QString::number(mEvents.size()), pEvent->mName,
+                                                                                                               QString::number(pEvent->mPhases.size()),
+                                                                                                               QString::number(pEvent->mConstraintsBwd.size()),
+                                                                                                               QString::number(pEvent->mConstraintsFwd.size()))));
         } else {
-            log += line(textBlue("Event (" + QString::number(i+1) + "/" + QString::number(mEvents.size()) + ") : " + pEvent->mName + " (" +
-                                 QString::number(pEvent->mDates.size()) + " data, " +
-                                 QString::number(pEvent->mPhases.size()) + " phases, " +
-                                 QString::number(pEvent->mConstraintsBwd.size()) + " const. back., " +
-                                 QString::number(pEvent->mConstraintsFwd.size()) + " const. fwd.)" +
-                                 "<br>- Method : " + ModelUtilities::getEventMethodText(pEvent->mMethod)));
+            log += line(textBlue(tr("Event ( %1 / %2 ) : %3 ( %4 data, %5 phases, %6 const. back., %7 const. fwd.)").arg(QString::number(i+1), QString::number(mEvents.size()), pEvent->mName,
+                                                                                                                         QString::number(pEvent->mDates.size()),
+                                                                                                                         QString::number(pEvent->mPhases.size()),
+                                                                                                                         QString::number(pEvent->mConstraintsBwd.size()),
+                                                                                                                         QString::number(pEvent->mConstraintsFwd.size()))
+                                 + "<br>" + tr("- Method : %1").arg(ModelUtilities::getEventMethodText(pEvent->mMethod))));
         }
         
         int j(0);
         for (auto&& date : pEvent->mDates) {
             log += "<br>";
-            log += line(textBlack("Data (" + QString::number(j+1) + "/" + QString::number(pEvent->mDates.size()) + ") : " + date.mName +
-                                  "<br>- Type : " + date.mPlugin->getName() +
-                                  "<br>- Method : " + ModelUtilities::getDataMethodText(date.mMethod) +
-                                  "<br>- Params : " + date.getDesc()));
+            log += line(textBlack(tr("Data ( %1 / %2 ) : %3").arg(QString::number(j+1), QString::number(pEvent->mDates.size()), date.mName)
+                                  + "<br>" + tr("- Type : %1").arg(date.mPlugin->getName())
+                                  + "<br>" + tr("- Method : %1").arg(ModelUtilities::getDataMethodText(date.mMethod))
+                                  + "<br>" + tr("- Params : %1").arg(date.getDesc())));
             ++j;
         }
         log += "<hr>";
@@ -382,15 +382,15 @@ void Model::generateModelLog()
     
     i = 0;
     for (auto &&pPhase : mPhases) {
-        log += line(textPurple("Phase (" + QString::number(i+1) + "/" + QString::number(mPhases.size()) + ") : " + pPhase->mName + " (" +
-                               QString::number(pPhase->mEvents.size()) + " events"+
-                               QString::number(pPhase->mConstraintsBwd.size()) + " const. back., " +
-                               QString::number(pPhase->mConstraintsFwd.size()) + " const. fwd.)" +
-                               "<br>- Type : " + pPhase->getTauTypeText()));
+        log += line(textPurple(tr("Phase ( %1 / %2 ) : %3 ( %4 events, %5 const. back., %6 const. fwd.)").arg(QString::number(i+1), QString::number(mPhases.size()), pPhase->mName,
+                                                                                                              QString::number(pPhase->mEvents.size()),
+                                                                                                              QString::number(pPhase->mConstraintsBwd.size()),
+                                                                                                              QString::number(pPhase->mConstraintsFwd.size()))
+                               + "<br>" + tr("- Type : %1").arg(pPhase->getTauTypeText())));
         log += "<br>";
 
         for (auto &&pEvent : pPhase->mEvents)
-            log += line(textBlue("Event : " + pEvent->mName));
+            log += line(textBlue(tr("Event : %1").arg(pEvent->mName)));
 
         log += "<hr>";
         log += "<br>";
@@ -400,17 +400,17 @@ void Model::generateModelLog()
    // i = 0;
     for (auto&& pPhaseConst : mPhaseConstraints) {
         log += "<hr>";
-        log += line(textBold(textPurple( QObject::tr("Succession") +" : "+ QObject::tr("from") +" "+ pPhaseConst->mPhaseFrom->mName +" "+ QObject::tr("to")+"  "+ pPhaseConst->mPhaseTo->mName)));
+        log += line(textBold(textPurple( QObject::tr("Succession from %1 to %2").arg(pPhaseConst->mPhaseFrom->mName, pPhaseConst->mPhaseTo->mName))));
 
         switch(pPhaseConst->mGammaType) {
             case PhaseConstraint::eGammaFixed :
-                log += line(textBold(textPurple( QObject::tr("Min Hiatus fixed")+" = " + pPhaseConst->mGammaFixed)));
+                log += line(textBold(textPurple( QObject::tr("Min Hiatus fixed = %1").arg(pPhaseConst->mGammaFixed))));
                 break;
             case PhaseConstraint::eGammaUnknown :
                 log += line(textBold(textPurple( QObject::tr("Min Hiatus unknown") )));
                 break;
             case PhaseConstraint::eGammaRange : //no longer used
-                 log += line(textBold(textPurple( QObject::tr("Min Hiatus between") +" "+  pPhaseConst->mGammaMin +" "+  QObject::tr("and") +" "+ pPhaseConst->mGammaMax)));
+                 log += line(textBold(textPurple( QObject::tr("Min Hiatus between %1 and %2").arg(pPhaseConst->mGammaMin, pPhaseConst->mGammaMax))));
                 break;
             default:
                 log += "Hiatus undefined -> ERROR";
@@ -423,29 +423,6 @@ void Model::generateModelLog()
 
     mLogModel = log;
     
-    
-    /*qDebug() << "=> Phases : " << model->mPhases.size();
-     for(int i=0; i<model->mPhases.size(); ++i)
-     {
-     qDebug() << "  => Phase " << model->mPhases[i]->mId << " : " << model->mPhases[i]->mEvents.size() << " events"
-     << " : " << model->mPhases[i]->mConstraintsBwd.size() << " const. back."
-     << " : " << model->mPhases[i]->mConstraintsFwd.size() << " const. fwd.";
-     }
-     qDebug() << "=> Event Constraints : " << model->mEventConstraints.size();
-     for(int i=0; i<model->mEventConstraints.size(); ++i)
-     {
-     qDebug() << "  => E. Const. " << model->mEventConstraints[i]->mId
-     << " : event " << model->mEventConstraints[i]->mEventFrom->mId << "(" + model->mEventConstraints[i]->mEventFrom->mName + ")"
-     << " to " << model->mEventConstraints[i]->mEventTo->mId << "(" + model->mEventConstraints[i]->mEventTo->mName + ")";
-     }
-     qDebug() << "=> Phase Constraints : " << model->mPhaseConstraints.size();
-     for(int i=0; i<model->mPhaseConstraints.size(); ++i)
-     {
-     qDebug() << "  => P. Const. " << model->mPhaseConstraints[i]->mId
-     << " : phase " << model->mPhaseConstraints[i]->mPhaseFrom->mId
-     << " to " << model->mPhaseConstraints[i]->mPhaseTo->mId;
-     }
-     qDebug() << "===========================================";*/
 }
 
 QString Model::getResultsLog() const{
@@ -651,14 +628,13 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
     
     QStringList headers;
     headers << "iter";
-    for (auto&& pEvent : mEvents)
+    for (auto &&pEvent : mEvents)
         headers << pEvent->mName;
 
     rows << headers;
     
-    int shift = 0;
-    //for (int i = 0; i < mChains.size(); ++i) {
-    for ( auto&& chain : mChains)  {
+    int shift (0);
+    for ( auto &&chain : mChains)  {
         const int burnAdaptSize = 1+ chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);
         const int runSize = chain.mNumRunIter / chain.mThinningInterval;
         
@@ -695,14 +671,14 @@ bool Model::isValid()
     for (int i = 0; i < mEvents.size(); ++i) {
         if (mEvents.at(i)->type() == Event::eDefault) {
             if (mEvents.at(i)->mDates.size() == 0)
-                throw QObject::tr(" The event") + " \"" + mEvents.at(i)->mName + "\" " + QObject::tr("must contain at least 1 data");
+                throw QObject::tr("The event  \" %1 \" must contain at least 1 data").arg(mEvents.at(i)->mName);
         }
     }
     
     // 3 - The phase must contain at least 1 event
     for (int i=0; i<mPhases.size(); ++i) {
         if (mPhases.at(i)->mEvents.size() == 0)
-            throw QObject::tr("The phase") + " \"" + mPhases.at(i)->mName + "\" " + QObject::tr("must contain at least 1 event");
+            throw QObject::tr("The phase \" %1 \" must contain at least 1 event").arg(mPhases.at(i)->mName);
     }
     
     // 4 - Pas de circularité sur les contraintes de faits
@@ -727,12 +703,11 @@ bool Model::isValid()
         QVector<Event*> branchEvents;
         for (int j = 0; j < phaseBranches.at(i).size(); ++j) {
             Phase* phase = phaseBranches[i][j];
-            //for (int k = 0; k<phase->mEvents.size(); ++k) {
-            for (auto&& pEvent : phase->mEvents) {
+             for (auto&& pEvent : phase->mEvents) {
                 if (!branchEvents.contains(pEvent)) {
                     branchEvents.append(pEvent);
                 } else
-                    throw QString("The event \"" + pEvent->mName + "\" cannot belong to several phases in a same branch!");
+                    throw QString(tr("The event \" %1 \" cannot belong to several phases in a same branch!").arg(pEvent->mName));
             }
         }
     }
@@ -765,7 +740,7 @@ bool Model::isValid()
                 // Update bound interval
 
                 if (bound->mFixed < lower)
-                    throw QString("The bound \"" + bound->mName + "\" has a fixed value inconsistent with previous bounds in chain!");
+                    throw QString(tr("The bound \" %1 \" has a fixed value inconsistent with previous bounds in chain!").arg(bound->mName));
 
               /*  else if (bound->mKnownType == EventKnown::eUniform)
                     bound->mUniformStart = qMax(bound->mUniformStart, lower);
@@ -781,23 +756,13 @@ bool Model::isValid()
                         EventKnown* bd = dynamic_cast<EventKnown*>(evt);
                         // if (bd->mKnownType == EventKnown::eFixed)
                         upper = qMin(upper, bd->mFixed);
-                        /*
-                        else if (bd->mKnownType == EventKnown::eUniform)
-                            upper = qMin(upper, bd->mUniformEnd);
-                        */
+
                     }
                 }
                 // Update bound interval
                 if (bound->mFixed > upper)
-                    throw QString("The bound \"" + bound->mName + "\" has a fixed value inconsistent with next bounds in chain!");
-                /*
-                else if (bound->mKnownType == EventKnown::eUniform) {
-                    bound->mUniformEnd = qMin(bound->mUniformEnd, upper);
+                    throw QString(tr("The bound \" %1 \" has a fixed value inconsistent with next bounds in chain!").arg(bound->mName));
 
-                    if (bound->mUniformStart >= bound->mUniformEnd)
-                        throw QString("The bound \"" + bound->mName + "\" has an inconsistent range with other related bounds!");
-
-                } */
             }
             event = nullptr;
         }
@@ -817,30 +782,22 @@ bool Model::isValid()
         Phase* phaseFrom = mPhaseConstraints.at(i)->mPhaseFrom;
         for (int j=0; j<phaseFrom->mEvents.size(); ++j) {
             EventKnown* bound = dynamic_cast<EventKnown*>(phaseFrom->mEvents[j]);
-            if (bound) {
-                //if (bound->mKnownType == EventKnown::eFixed)
+            if (bound)
                 lower = qMax(lower, bound->mFixed);
 
-                /* else if (bound->mKnownType == EventKnown::eUniform)
-                    lower = qMax(lower, bound->mUniformStart); */
-            }
         }
         double upper = (double) mSettings.mTmax;
         Phase* phaseTo = mPhaseConstraints.at(i)->mPhaseTo;
         for (int j=0; j<phaseTo->mEvents.size(); ++j) {
             EventKnown* bound = dynamic_cast<EventKnown*>(phaseTo->mEvents[j]);
-            if (bound) {
-               // if (bound->mKnownType == EventKnown::eFixed)
-                    upper = qMin(upper, bound->mFixed);
-                /*
-                else if (bound->mKnownType == EventKnown::eUniform)
-                    upper = qMin(upper, bound->mUniformEnd); */
-            }
+            if (bound)
+                upper = qMin(upper, bound->mFixed);
+
             bound = nullptr;
         }
-        if (gammaMin >= (upper - lower)) {
-            throw QString("The constraint between phases \"" + phaseFrom->mName + "\" and \"" + phaseTo->mName + "\" is not consistent with the bounds they contain!");
-        }
+        if (gammaMin >= (upper - lower))
+            throw QString(tr("The constraint between phases \" %1 \" and \" %2 \" is not consistent with the bounds they contain!").arg(phaseFrom->mName, phaseTo->mName));
+
         phaseFrom = nullptr;
         phaseTo = nullptr;
     }
@@ -865,41 +822,16 @@ bool Model::isValid()
                     EventKnown* bound = dynamic_cast<EventKnown*>(mPhases.at(i)->mEvents[j]);
                     if (bound) {
                         boundFound = true;
-                        //if(bound->mKnownType == EventKnown::eFixed) {
-                            min = std::max(min, bound->mFixed);
-                            max = std::min(max, bound->mFixed);
-                       // }
-                        /*
-                        else if(bound->mKnownType == EventKnown::eUniform) {
-                            min = std::max(min, bound->mUniformEnd);
-                            max = std::min(max, bound->mUniformStart);
-                        } */
+                        min = std::max(min, bound->mFixed);
+                        max = std::min(max, bound->mFixed);
+
                     }
                     bound = nullptr;
                 }
             }
             if (boundFound){
                 if (tauMax < (max - min))
-                    throw QString("The phase \"" + mPhases.at(i)->mName + "\" has a duration inconsistent with the bounds it contains!");
-
-                // Modify bounds intervals to match max phase duration
-                /*
-                for (int j=0; j<mPhases.at(i)->mEvents.size(); ++j) {
-                    if (mPhases.at(i)->mEvents[j]->mType == Event::eKnown) {
-                        EventKnown* bound = dynamic_cast<EventKnown*>(mPhases.at(i)->mEvents[j]);
-                        if (bound) {
-                            if (bound->mKnownType == EventKnown::eUniform) {
-                                bound->mUniformStart = std::max(bound->mUniformStart, max - tauMax);
-                                bound->mUniformEnd = std::min(bound->mUniformEnd, min + tauMax);
-                                
-                                min = std::max(min, bound->mUniformEnd);
-                                max = std::min(max, bound->mUniformStart);
-                            }
-                        }
-                        bound = nullptr;
-                    }
-                }
-                */
+                    throw QString(tr("The phase \" %1 \" has a duration inconsistent with the bounds it contains!").arg(mPhases.at(i)->mName));
             }
         }
     }
@@ -927,14 +859,13 @@ bool Model::isValid()
                             if (!phaseFound) {
                                 for (int n=0; n<e->mConstraintsBwd.size(); ++n) {
                                     if (e->mConstraintsBwd[n]->mEventFrom == event)
-                                        throw "The event " + event->mName + " (in phase " + phase->mName + ") is before the event " + e->mName + " (in phase " + p->mName + "), BUT the phase " + phase->mName + " is after the phase " + p->mName + ".\r=> Contradiction !";
+                                        throw tr("The event %1  (in phase %2 ) is before the event %3 (in phase %4), BUT the phase %5 is after the phase %6 .\r=> Contradiction !").arg(event->mName, phase->mName, e->mName, p->mName, phase->mName, p->mName) ;
 
                                 }
                             } else {
                                 for (int n=0; n<e->mConstraintsFwd.size(); ++n) {
                                     if (e->mConstraintsFwd[n]->mEventTo == event)
-                                        throw "The event " + event->mName + " (in phase " + phase->mName + ") is after the event " + e->mName + " (in phase " + p->mName + "), BUT the phase " + phase->mName + " is before the phase " + p->mName + ".\r=> Contradiction !";
-
+                                        throw tr("The event %1 ( in phase %2 ) is after the event %3  ( in phase %4 ), BUT the phase %4 is before the phase .\r=> Contradiction !").arg(event->mName, phase->mName, e->mName, p->mName, phase->mName, p->mName);
                                 }
                             }
                         }
@@ -949,7 +880,7 @@ bool Model::isValid()
     return true;
 }
 
-//#pragma mark Generate model data
+//Generate model data
 void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 {
 #ifdef DEBUG
@@ -1227,7 +1158,7 @@ void Model::generateCredibility(const double thresh)
     }
 
     // Diplay a progressBar if "long" set with setMinimumDuration()
-    QProgressDialog *progress = new QProgressDialog("Time range & credibilities generation","Wait" , 1, 10);//, qApp->activeWindow(), Qt::Window);
+    QProgressDialog *progress = new QProgressDialog(tr("Time range & credibilities generation"),tr("Wait") , 1, 10);//, qApp->activeWindow(), Qt::Window);
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(0);
     progress->setMinimumDuration(4);
@@ -1252,7 +1183,7 @@ void Model::generateCredibility(const double thresh)
     }
     progress->setMinimum(0);
     progress->setMaximum(mPhaseConstraints.size()*2);
-    progress->setLabelText("Gaps and transitions generation");
+    progress->setLabelText(tr("Gaps and transitions generation"));
 
     position = 1;
 
@@ -1341,7 +1272,7 @@ void Model::generateTempo()
 
 #ifndef UNIT_TEST
     // Display a progressBar if "long" set with setMinimumDuration()
-    QProgressDialog *progress = new QProgressDialog("Tempo Plot generation","Wait" , 1, 10);//, qApp->activeWindow(), Qt::Window);
+    QProgressDialog *progress = new QProgressDialog(tr("Tempo Plot generation"),tr("Wait") , 1, 10);//, qApp->activeWindow(), Qt::Window);
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(0);
     progress->setMinimumDuration(4);

@@ -26,8 +26,6 @@ mButW(80)
     mColorLab = new Label(tr("Phase color") + " :", this);
     mTauTypeLab = new Label(tr("Max duration") + " :", this);
     mTauFixedLab = new Label(tr("Max duration value") + " :", this);
-    //mTauMinLab = new Label(tr("Lower date") + " :", this);
-    //mTauMaxLab = new Label(tr("Upper date") + " :", this);
     
     mNameEdit = new LineEdit(this);
     mNameEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
@@ -37,12 +35,9 @@ mButW(80)
     mTauTypeCombo = new QComboBox(this);
     mTauTypeCombo->addItem(tr("Unknown"));
     mTauTypeCombo->addItem(tr("Known"));
-    //mTauTypeCombo->addItem(tr("Range (uniform)"));
-    
+
     mTauFixedEdit = new LineEdit(this);
-    //mTauMinEdit = new LineEdit(this);
-    //mTauMaxEdit = new LineEdit(this);
-    
+
     mOkBut = new Button(tr("OK"), this);
     mCancelBut = new Button(tr("Cancel"), this);
     
@@ -152,16 +147,7 @@ bool PhaseDialog::isValid()
             return false;
         }
     }
-    /*else if(mTauTypeCombo->currentIndex() == 2)
-    {
-        int tauMin = mTauMinEdit->text().toInt();
-        int tauMax = mTauMaxEdit->text().toInt();
-        if(tauMin >= tauMax)
-        {
-            mError = tr("Duration min must be lower than duration max !");
-            return false;
-        }
-    }*/
+
     return true;
 }
 

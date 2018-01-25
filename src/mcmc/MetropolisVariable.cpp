@@ -658,19 +658,24 @@ QString MetropolisVariable::resultsString(const QString& nl, const QString& noRe
 {
     if (mHisto.isEmpty())
         return noResultMessage;
-    
-    //const QLocale locale;
+
     QString result = densityAnalysisToString(mResults, nl, forCSV) + nl;
     
     if (!mHPD.isEmpty())
-        result += "HPD Region (" + stringWithAppSettings(mThresholdUsed, forCSV) + "%) : " + getHPDText(mHPD, mThresholdUsed, unit, formatFunc, forCSV) + nl;
+        result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringWithAppSettings(mThresholdUsed, forCSV), getHPDText(mHPD, mThresholdUsed, unit, formatFunc, forCSV)) + nl;
 
     
     if (mCredibility != QPair<double, double>()) {
         if (formatFunc)
-            result += "Credibility Interval (" + stringWithAppSettings(mExactCredibilityThreshold * 100., forCSV) + "%) : [" + formatFunc(mCredibility.first, forCSV) + " : " + formatFunc(mCredibility.second, forCSV) + "] " + unit;
+            result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringWithAppSettings(mExactCredibilityThreshold * 100., forCSV),
+                                                                              formatFunc(mCredibility.first, forCSV),
+                                                                              formatFunc(mCredibility.second, forCSV),
+                                                                              unit);
         else
-            result += "Credibility Interval (" + stringWithAppSettings(mExactCredibilityThreshold * 100., forCSV) + "%) : [" + stringWithAppSettings(mCredibility.first, forCSV) + " : " + stringWithAppSettings(mCredibility.second, forCSV) + "] "  + unit;
+            result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringWithAppSettings(mExactCredibilityThreshold * 100., forCSV),
+                                                                               stringWithAppSettings(mCredibility.first, forCSV),
+                                                                               stringWithAppSettings(mCredibility.second, forCSV),
+                                                                               unit);
 
    }
    return result;

@@ -138,8 +138,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     
     grid->addWidget(mPixelRatioLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mPixelRatio, row, 1);
-    //grid->addWidget(mDpmLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-    //grid->addWidget(mDpm, row, 1);
+
     grid->addWidget(mImageQualityLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mImageQuality, row, 1);
     
@@ -148,18 +147,10 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     line4->setFrameShadow(QFrame::Sunken);
     grid->addWidget(line4, ++row, 0, 1, 2);
 
- /*   mSheetLab = new QLabel(tr("Number of max graph per sheet"), this);
-    mNbSheet = new QSpinBox(this);
-    mNbSheet->setRange(5, 100);
-    mNbSheet->setSingleStep(1);
- */   //mNbSheet->setStyleSheet("QSpinBox { border-radius: 1px; }");
-    
     grid->addWidget(mFormatDateLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mFormatDate, row, 1);
     grid->addWidget(mPrecisionLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mPrecision, row, 1);
-  //  grid->addWidget(mSheetLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
-  //  grid->addWidget(mNbSheet, row, 1);
     
     QVBoxLayout* mainLayout = new QVBoxLayout();
 
@@ -182,10 +173,10 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
     connect(mImageQuality, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &AppSettingsDialog::changeSettings);
     connect(mPixelRatio, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &AppSettingsDialog::changeSettings);
-    //connect(mDpm,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &AppSettingsDialog::changeSettings);
+
     connect(mFormatDate, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &AppSettingsDialog::changeSettings);
     connect(mPrecision, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &AppSettingsDialog::changeSettings);
-    //connect(mNbSheet, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &AppSettingsDialog::changeSettings);
+
     // -----------------------------
     //  List & Stack
     // -----------------------------

@@ -30,7 +30,7 @@ void GraphViewTempo::setPhase(Phase* phase)
     Q_ASSERT(phase);
 
     mPhase = phase;
-    setItemTitle(tr("Phase") + " : " + mPhase->mName);
+    setItemTitle(tr("Phase : %1").arg(mPhase->mName));
 
     setItemColor(mPhase->mColor);
 
@@ -79,12 +79,12 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
      * ------------------------------------------------  */
 
     if ((typeGraph == ePostDistrib) && (variable == eDuration)) {
-        mGraph->mLegendX = "Years";
+        mGraph->mLegendX = tr("Years");
         mGraph->mLegendY = "";
         mGraph->setFormatFunctX(stringWithAppSettings);
         mGraph->setFormatFunctY(nullptr);
 
-        mTitle = tr("Phase Duration") + " : " + mPhase->mName;
+        mTitle = tr("Phase Duration : %1").arg(mPhase->mName);
         GraphCurve curveDuration;
 
         if (mPhase->mDuration.fullHisto().size()>1) {
@@ -133,7 +133,7 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->mLegendY = "";
         mGraph->setFormatFunctX(stringWithAppSettings);
         mGraph->setFormatFunctY(nullptr);
-        mTitle = tr("Phase Tempo") + " : " + mPhase->mName;
+        mTitle = tr("Phase Tempo : %1").arg(mPhase->mName);
 
         GraphCurve curveTempo = generateDensityCurve(mPhase->mTempo,
                                                      "Post Distrib Tempo All Chains",
@@ -206,7 +206,7 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->setFormatFunctX(stringWithAppSettings);
         mGraph->setFormatFunctY(stringWithAppSettings);
 
-        mTitle = tr("Phase Activity") + " : " + mPhase->mName;
+        mTitle = tr("Phase Activity : %1").arg(mPhase->mName);
         GraphCurve curveActivity = generateDensityCurve(mPhase->mActivity,
                                                      "Post Distrib Activity All Chains",
                                                      color, Qt::SolidLine);
@@ -227,7 +227,7 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->mLegendX = tr("Iterations");
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(stringWithAppSettings);
-        mTitle = tr("Phase Duration") + " : " + mPhase->mName;
+        mTitle = tr("Phase Duration : %1").arg(mPhase->mName);
 
         generateTraceCurves(mChains, &(mPhase->mDuration), "Duration");
         mGraph->autoAdjustYScale(true);
@@ -237,7 +237,7 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
      *  fourth tab : Nothing
      * ------------------------------------------------ */
     else {
-       mTitle = tr("Phase") + " : " + mPhase->mName;
+       mTitle = tr("Phase : %1").arg(mPhase->mName);
        mGraph->resetNothingMessage();
     }
 
@@ -330,7 +330,7 @@ void GraphViewTempo::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setCurveVisible("Duration Q3 " + QString::number(i), mShowChainList.at(i));
         }
 
-        mGraph->setTipXLab("Iteration");
+        mGraph->setTipXLab(tr("Iteration"));
         mGraph->setTipYLab("t");
         mGraph->setYAxisMode(GraphView::eMinMax);
         mGraph->autoAdjustYScale(true); // do repaintGraph()

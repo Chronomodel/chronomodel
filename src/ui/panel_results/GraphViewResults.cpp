@@ -140,7 +140,7 @@ void GraphViewResults::setMainColor(const QColor& color)
     mMainColor = color;
     update();
 }
-//#pragma mark Export Image & Data
+//Export Image & Data
 
 
 void GraphViewResults::saveAsImage()
@@ -218,8 +218,7 @@ void GraphViewResults::saveAsImage()
             
             mGraph->setRendering(memoRendering);
         }
-        //---
-        
+
     }
 }
 
@@ -307,7 +306,6 @@ void GraphViewResults::setShowNumericalResults(const bool show)
 void GraphViewResults::setMarginLeft (qreal &m)
 {
     mGraph->setMarginLeft(m);
-   // mGraph->update();
 }
 
 
@@ -528,7 +526,7 @@ void GraphViewResults::generateAcceptCurves(const QList<ChainSpecs> &chains,
                                             MHVariable* variable){
     for (int i=0; i<chains.size(); ++i) {
         GraphCurve curve;
-        curve.mName = QString("Accept " + QString::number(i));
+        curve.mName = "Accept " + QString::number(i);
         curve.mDataVector = variable->acceptationForChain(chains, i);
         curve.mPen.setColor(Painting::chainColors.at(i));
         curve.mUseVectorData = true;
@@ -541,7 +539,7 @@ void GraphViewResults::generateCorrelCurves(const QList<ChainSpecs> &chains,
                                             MHVariable* variable){
     for (int i=0; i<chains.size(); ++i) {
         GraphCurve curve;
-        curve.mName = QString("Correl " + QString::number(i));
+        curve.mName = "Correl " + QString::number(i);
         curve.mDataVector = variable->correlationForChain(i);
         // if there is no data, no curve to add.
         // It can append if there is not enought iteration, for example since a test

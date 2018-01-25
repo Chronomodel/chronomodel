@@ -57,19 +57,19 @@ const QString& MCMCLoop::getChainsLog() const
 const QString MCMCLoop::getMCMCSettingsLog() const
 {
     QString log;
-    int i =0;
+    int i (0);
     foreach (const ChainSpecs chain, mChains) {
             ++i;
             log += "<hr>";
-            log += tr("Chain")+ " : " + QString::number(i)+"<br>";
-            log += tr("Seed")+ " : " + QString::number(chain.mSeed)+"<br>";
-            log += tr("Number of burning iterations")+ " : " + QString::number(chain.mBurnIterIndex)+"<br>";//+ " / " + QString::number(chain.mNumBurnIter)+"<br>";
-            log += tr("Number of batches")+ " : " + QString::number(chain.mBatchIndex)+ " / " + QString::number(chain.mMaxBatchs)+"<br>";
-            log += tr("Number of iterations per batches")+ " : " + QString::number(chain.mNumBatchIter)+"<br>";
-            log += tr("Number of running iterations")+ " : " + QString::number(chain.mRunIterIndex)+"<br>";//+ " / " + QString::number(chain.mNumRunIter)+"<br>";
-            log += tr("Thinning Interval")+ " : " + QString::number(chain.mThinningInterval)+"<br>";
-            log += tr("Total iterations")+ " : " + QString::number(chain.mTotalIter)+"<br>";
-            log += tr("Mixing level")+ " : " + QString::number(chain.mMixingLevel)+"<br>";
+            log += tr("Chain %1").arg(QString::number(i)) +"<br>";
+            log += tr("Seed %1").arg(QString::number(chain.mSeed))+"<br>";
+            log += tr("Number of burning iterations : %1").arg(QString::number(chain.mBurnIterIndex)) + "<br>";
+            log += tr("Number of batches : %1 / %2").arg(QString::number(chain.mBatchIndex), QString::number(chain.mMaxBatchs)) + "<br>";
+            log += tr("Number of iterations per batches : %1").arg(QString::number(chain.mNumBatchIter)) + "<br>";
+            log += tr("Number of running iterations : %1").arg(QString::number(chain.mRunIterIndex)) + "<br>";
+            log += tr("Thinning Interval : %1").arg(QString::number(chain.mThinningInterval)) + "<br>";
+            log += tr("Total iterations : %1").arg(QString::number(chain.mTotalIter)) + "<br>";
+            log += tr("Mixing level : %1").arg(QString::number(chain.mMixingLevel)) + "<br>";
      }
 
     return log;
@@ -124,7 +124,7 @@ void MCMCLoop::run()
             return;
         }
         
-        emit stepChanged("Chain " + QString::number(mChainIndex+1) + "/" + QString::number(mChains.size()) + " : " + tr("Initializing MCMC"), 0, 0);
+        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))  + " : " + tr("Initializing MCMC"), 0, 0);
         
         //QTime startInitTime = QTime::currentTime();
         
@@ -140,7 +140,7 @@ void MCMCLoop::run()
         
         //----------------------- Burning --------------------------------------
         
-        emit stepChanged("Chain " + QString::number(mChainIndex+1) + "/" + QString::number(mChains.size()) + " : " + tr("Burning"), 0, chain.mNumBurnIter);
+        emit stepChanged(tr("Chain : %1 / %2").arg(QString::number(mChainIndex + 1), QString::number(mChains.size()))  + " : " + tr("Burning"), 0, chain.mNumBurnIter);
         mState = eBurning;
         
         //QTime startBurnTime = QTime::currentTime();
@@ -165,17 +165,12 @@ void MCMCLoop::run()
             emit stepProgressed(chain.mBurnIterIndex);
         }
         
-        /*QTime endBurnTime = QTime::currentTime();
-        timeDiff = startBurnTime.msecsTo(endBurnTime);
-        log += "=> Burn done in " + QString::number(timeDiff) + " ms\n";*/
-        
+
         //----------------------- Adapting --------------------------------------
         
-        emit stepChanged("Chain " + QString::number(mChainIndex+1) + "/" + QString::number(mChains.size()) + " : " + tr("Adapting"), 0, chain.mMaxBatchs * chain.mNumBatchIter);
-        mState = eAdapting;
-        
-        //QTime startAdaptTime = QTime::currentTime();
-        
+        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size()))  + " : " + tr("Adapting"), 0, chain.mMaxBatchs * chain.mNumBatchIter);
+        mState = eAdapting;     
+
         while (chain.mBatchIndex * chain.mNumBatchIter < chain.mMaxBatchs * chain.mNumBatchIter) {
             if (isInterruptionRequested()) {
                 mAbortedReason = ABORTED_BY_USER;
@@ -215,10 +210,9 @@ void MCMCLoop::run()
         
         //----------------------- Running --------------------------------------
         
-        emit stepChanged("Chain " + QString::number(mChainIndex+1) + "/" + QString::number(mChains.size()) + " : " + tr("Running"), 0, chain.mNumRunIter);
+        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mChains.size())) + " : " + tr("Running"), 0, chain.mNumRunIter);
         mState = eRunning;
-        
-        //QTime startRunTime = QTime::currentTime();
+
         
         while (chain.mRunIterIndex < chain.mNumRunIter) {
             if (isInterruptionRequested()) {
@@ -256,12 +250,6 @@ void MCMCLoop::run()
     log += line(tr("List of used chains seeds (to be copied for re-use in MCMC Settings) : ") + seeds.join(";"));
     
     
-    /*QTime endTotalTime = QTime::currentTime();
-    timeDiff = startTotalTime.msecsTo(endTotalTime);
-    log += "=> MCMC done in " + QString::number(timeDiff) + " ms\n";
-
-
-    QTime startFinalizeTime = QTime::currentTime();*/
     //-----------------------------------------------------------------------
 
     emit stepChanged(tr("Computing posterior distributions and numerical results (HPD, credibility, ...)"), 0, 0);
@@ -279,8 +267,11 @@ void MCMCLoop::run()
     timeDiff = timeDiff.addMSecs(startTime.elapsed()).addMSecs(-1);
 
     log += line(tr("Model computed") );
-    log += line(tr("finish at ") + endTime.toString("hh:mm:ss.zzz") );
-    log += line(tr("time elapsed ")+QString::number(timeDiff.hour())+"h "+QString::number(timeDiff.minute())+"m "+QString::number(timeDiff.second())+"s "+QString::number(timeDiff.msec())+"ms" );
+    log += line(tr("finish at %1").arg(endTime.toString("hh:mm:ss.zzz")) );
+    log += line(tr("time elapsed %1 h %2 m %3 s %4 ms").arg(QString::number(timeDiff.hour()),
+                                                            QString::number(timeDiff.minute()),
+                                                            QString::number(timeDiff.second()),
+                                                            QString::number(timeDiff.msec()) ));
 
 
     //-----------------------------------------------------------------------

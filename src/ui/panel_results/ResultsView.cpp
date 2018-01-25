@@ -320,11 +320,11 @@ mMinorCountScale (4)
     labThickness->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mThicknessCombo = new QComboBox(mGraphicGroup);
-    mThicknessCombo->addItem(tr("1 px"));
-    mThicknessCombo->addItem(tr("2 px"));
-    mThicknessCombo->addItem(tr("3 px"));
-    mThicknessCombo->addItem(tr("4 px"));
-    mThicknessCombo->addItem(tr("5 px"));
+    mThicknessCombo->addItem("1 px");
+    mThicknessCombo->addItem("2 px");
+    mThicknessCombo->addItem("3 px");
+    mThicknessCombo->addItem("4 px");
+    mThicknessCombo->addItem("5 px");
 
     mThicknessCombo->setFixedSize(wEdit, comboBoxHeight );
     mThicknessCombo->setToolTip(tr("Select to change the thickness of the drawing"));
@@ -337,17 +337,17 @@ mMinorCountScale (4)
     labOpacity->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mOpacityCombo = new QComboBox(mGraphicGroup);
-    mOpacityCombo->addItem(tr("0 %"));
-    mOpacityCombo->addItem(tr("10 %"));
-    mOpacityCombo->addItem(tr("20 %"));
-    mOpacityCombo->addItem(tr("30 %"));
-    mOpacityCombo->addItem(tr("40 %"));
-    mOpacityCombo->addItem(tr("50 %"));
-    mOpacityCombo->addItem(tr("60 %"));
-    mOpacityCombo->addItem(tr("70 %"));
-    mOpacityCombo->addItem(tr("80 %"));
-    mOpacityCombo->addItem(tr("90 %"));
-    mOpacityCombo->addItem(tr("100 %"));
+    mOpacityCombo->addItem("0 %");
+    mOpacityCombo->addItem("10 %");
+    mOpacityCombo->addItem("20 %");
+    mOpacityCombo->addItem("30 %");
+    mOpacityCombo->addItem("40 %");
+    mOpacityCombo->addItem("50 %");
+    mOpacityCombo->addItem("60 %");
+    mOpacityCombo->addItem("70 %");
+    mOpacityCombo->addItem("80 %");
+    mOpacityCombo->addItem("90 %");
+    mOpacityCombo->addItem("100 %");
     mOpacityCombo->setFixedSize(wEdit, comboBoxHeight);
     mOpacityCombo->setToolTip(tr("Select to change the opacity of the drawing"));
     mOpacityCombo->setCurrentIndex(5);
@@ -395,7 +395,7 @@ mMinorCountScale (4)
     mCredibilityCheck->setChecked(true);
     mCredibilityCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
 
-    mThreshLab = new Label(tr("Confidence Level") + " (%)", mDensityOptsGroup);
+    mThreshLab = new Label(tr("Confidence Level (%)"), mDensityOptsGroup);
     mThreshLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mThreshLab->setFixedSize( fm.width(mThreshLab->text()), lineEditHeight);
     
@@ -666,7 +666,6 @@ void ResultsView::updateControls()
      *  Activate specific controls for post. distrib. (first tab)
      * -------------------------------------------------------*/
 
-//    mAllChainsCheck    -> setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
     mDataCalibCheck    -> setVisible((mCurrentTypeGraph == GraphViewResults::ePostDistrib)
                                      && mDatesfoldCheck->isVisible()
                                      && mDatesfoldCheck->isChecked()
@@ -676,29 +675,6 @@ void ResultsView::updateControls()
                                      && mDatesfoldCheck->isChecked()
                                      && mDataThetaRadio->isChecked());
 
-//    mDensityOptsTitle -> setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-//    mDensityOptsGroup -> setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-//    mCredibilityCheck->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-//    mThreshLab->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-//    mFFTLenLab->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-//    mBandwidthLab->setVisible(mCurrentTypeGraph == GraphViewResults::ePostDistrib);
-//    /* -------------------------------------------------------
-//     *  Switch between checkBoxes or Radio-buttons for chains
-//     * -------------------------------------------------------*/
-//    if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
-//        for (auto &&checkChain : mCheckChainChecks)
-//            checkChain->setVisible(true);
-        
-//        for (auto &&chainRadio : mChainRadios)
-//            chainRadio->setVisible(false);
-
-//    } else {
-//        for (auto &&checkChain : mCheckChainChecks)
-//            checkChain->setVisible(false);
-        
-//        for (auto &&chainRadio : mChainRadios)
-//            chainRadio->setVisible(true);
-//    }
     
     /* -------------------------------------------------------
      *  Display by phases or by events
@@ -707,10 +683,12 @@ void ResultsView::updateControls()
             if (!mTempoScrollArea)
                 createTempoScrollArea(mTabTempoIndex);
             mStack->setCurrentWidget(mEventsScrollArea);
+
     } else if (byPhases) {
         if (!mTempoScrollArea)
             createTempoScrollArea(mTabTempoIndex);
         mStack->setCurrentWidget(mPhasesScrollArea);
+
     } else if (byTempo) {
         if (!mTempoScrollArea)
             createTempoScrollArea(mTabTempoIndex);
@@ -1583,13 +1561,13 @@ void ResultsView::initResults(Model* model)
      * ---------------------------------------------------- */
     if (mCheckChainChecks.isEmpty()) {
         for (int i=0; i<mChains.size(); ++i) {
-            CheckBox* check = new CheckBox(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
+            CheckBox* check = new CheckBox(tr("Chain %1").arg(QString::number(i+1)), mChainsGroup);
             connect(check, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
             check->setVisible(true);
             check->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
             mCheckChainChecks.append(check);
 
-            RadioButton* radio = new RadioButton(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
+            RadioButton* radio = new RadioButton(tr("Chain %1").arg(QString::number(i+1)), mChainsGroup);
             connect(radio, &RadioButton::clicked, this, &ResultsView::updateCurvesToShow);
             radio->setVisible(true);
             if (i == 0)
@@ -1664,13 +1642,13 @@ void ResultsView::updateResults(Model* model)
     * ---------------------------------------------------- */
     if (mCheckChainChecks.isEmpty()) {
         for (int i = 0; i<mChains.size(); ++i) {
-            CheckBox* check = new CheckBox(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
+            CheckBox* check = new CheckBox(tr("Chain %1").arg(QString::number(i+1)), mChainsGroup);
             connect(check, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
             check->setVisible(true);
             check->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
             mCheckChainChecks.append(check);
 
-            RadioButton* radio = new RadioButton(tr("Chain") + " " + QString::number(i+1), mChainsGroup);
+            RadioButton* radio = new RadioButton(tr("Chain %1").arg(QString::number(i+1)), mChainsGroup);
             connect(radio, &RadioButton::clicked, this, &ResultsView::updateCurvesToShow);
             radio->setVisible(true);
             radio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
@@ -2516,7 +2494,7 @@ void ResultsView::updateResultsLog()
 
     } catch (std::exception const & e) {
         qDebug()<< "in ResultsView::updateResultsLog() Error"<<e.what();
-        log = tr("impossible to compute");
+        log = tr("Impossible to compute");
     }
 qDebug()<< "ResultsView::updateResultsLog()-> emit resultsLogUpdated(log)";
     emit resultsLogUpdated(log);
@@ -3275,7 +3253,7 @@ void ResultsView::exportResults()
 
             // copy tabs ------------------------------------------
             const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
-            const QString projectName = tr("Project filename")+" : "+ MainWindow::getInstance()->getNameProject()+ "<br>";
+            const QString projectName = tr("Project filename : %1").arg(MainWindow::getInstance()->getNameProject()) + "<br>";
 
             QFile file(dirPath + "/Log_Model_Description.html");
             if (file.open(QFile::WriteOnly | QFile::Truncate)) {

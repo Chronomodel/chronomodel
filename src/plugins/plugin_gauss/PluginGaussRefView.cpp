@@ -191,11 +191,6 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             graphCurveG.mPen.setColor(Qt::blue);
             graphCurveG.mIsHisto = false;
             mGraph->addCurve(graphCurveG);
-            
-            // Display reference curve name
-            // mGraph->addInfo(tr("Ref : ") + ref_curve);
-
-            // Y scale and RangeY are define in graphView::zommX()
 
         }
         
@@ -225,7 +220,6 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             QMap<double, double> measureCurve;
             for (double t=yMin; t<yMax; t += step) {
                 double v = exp(-0.5 * pow((t - age) / error, 2.));
-                //curveMeasure.mData[t] = v;
                 measureCurve[t] = v;
             }
             measureCurve = normalize_map(measureCurve);
@@ -233,9 +227,7 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             curveMeasure.mData = measureCurve;
             mGraph->addCurve(curveMeasure);
 
-            // Write measure value :
-           // mGraph->addInfo(tr("Measure : ") + locale.toString(age) + " ± " + locale.toString(error));
-            
+
             // ----------------------------------------------
             //  Error on measure
             // ----------------------------------------------

@@ -118,9 +118,6 @@ void PluginTLRefView::setDate(const Date& date, const ProjectSettings& settings)
         curveMeasure.mData = measureCurve;
         mGraph->addCurve(curveMeasure);
         
-        // Write measure value :
-        //mGraph->addInfo(tr("Age : ") + locale.toString(age) + " ± " + locale.toString(error) + " ( " + tr("Ref year") + " : " + locale.toString(ref_year) + ")");
-        
         // ----------------------------------------------
         //  Error on measure
         // ----------------------------------------------

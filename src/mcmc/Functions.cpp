@@ -119,11 +119,12 @@ QString functionAnalysisToString(const FunctionAnalysis& analysis, const bool fo
 
     if (analysis.stddev<0.)
         result = QObject::tr("No data");
-    else {
-        result += "MAP : " + stringWithAppSettings(analysis.mode, forCSV) + "   ";
-        result += "Mean : " + stringWithAppSettings(analysis.mean, forCSV) + "   ";
-        result += "Std deviation : " +stringWithAppSettings(analysis.stddev, forCSV);
-    }
+
+    else
+        result += QObject::tr("MAP = %1  ;  Mean = %2  ;  Std deviation = %3").arg(stringWithAppSettings(analysis.mode, forCSV),
+                                                                                stringWithAppSettings(analysis.mean, forCSV),
+                                                                                stringWithAppSettings(analysis.stddev, forCSV));
+
     return result;
 }
 
@@ -136,9 +137,9 @@ QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& 
     QString result (QObject::tr("No data"));
     if (analysis.analysis.stddev>=0.) {
         result = functionAnalysisToString(analysis.analysis, forCSV) + nl;
-        result += "Q1 : " + stringWithAppSettings(analysis.quartiles.Q1, forCSV) + "   ";
-        result += "Q2 (Median) : " + stringWithAppSettings(analysis.quartiles.Q2, forCSV) + "   ";
-        result += "Q3 : " + stringWithAppSettings(analysis.quartiles.Q3, forCSV);
+        result += QObject::tr("Q1 = %1  ;  Q2 (Median) = %2  ;  Q3 = %3 ").arg(stringWithAppSettings(analysis.quartiles.Q1, forCSV),
+                                                                            stringWithAppSettings(analysis.quartiles.Q2, forCSV),
+                                                                            stringWithAppSettings(analysis.quartiles.Q3, forCSV));
     }
     return result;
 }
@@ -168,7 +169,7 @@ Quartiles quartilesForTrace(const QVector<type_data> &trace)
         const int q2indexLow = n / 2;
         const int q2indexUp = q2indexLow + 1;
         
-        quartiles.Q2 = sorted.at(q2indexLow) + (sorted.at(q2indexUp) - sorted.at(q2indexLow)) / 2.f;
+        quartiles.Q2 = sorted.at(q2indexLow) + (sorted.at(q2indexUp) - sorted.at(q2indexLow)) / 2.;
     } else {
         const int q2index = (int)ceil(n * 0.5);
         quartiles.Q2 = sorted.at(q2index);
@@ -684,10 +685,10 @@ QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, cons
 QString intervalText(const QPair<double, QPair<double, double> > &interval, FormatFunc formatFunc, const bool forCSV)
 {
     if (formatFunc)
-        return "[" + formatFunc(interval.second.first, forCSV) + " : " + formatFunc(interval.second.second, forCSV) + "] (" + stringWithAppSettings(interval.first, forCSV) + "%)";
+        return "[ " + formatFunc(interval.second.first, forCSV) + " ; " + formatFunc(interval.second.second, forCSV) + " ] (" + stringWithAppSettings(interval.first, forCSV) + "%)";
 
     else
-        return "[" + stringWithAppSettings(interval.second.first, forCSV) + " : " + stringWithAppSettings(interval.second.second, forCSV) + "] (" + stringWithAppSettings(interval.first,forCSV) + "%)";
+        return "[ " + stringWithAppSettings(interval.second.first, forCSV) + " ; " + stringWithAppSettings(interval.second.second, forCSV) + " ] (" + stringWithAppSettings(interval.first,forCSV) + "%)";
 
 }
 
@@ -708,6 +709,7 @@ QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString
 
     return result;
 }
+
 /**
  * @brief Extract intervals (QPair of date) and calcul the area corresponding, from a HPD QMap maded before
  */

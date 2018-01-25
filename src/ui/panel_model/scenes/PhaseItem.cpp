@@ -307,12 +307,8 @@ QString PhaseItem::getTauString() const
     QString tauStr;
     Phase::TauType type = (Phase::TauType)mData.value(STATE_PHASE_TAU_TYPE).toInt();
     if (type == Phase::eTauFixed)
-        tauStr += tr("duration") + " ≤ " + QString::number(mData.value(STATE_PHASE_TAU_FIXED).toDouble());
+        tauStr += tr("Duration ≤ %1").arg(QString::number(mData.value(STATE_PHASE_TAU_FIXED).toDouble()));
 
-    /*else if(type == Phase::eTauRange)
-    {
-        tauStr += tr("max duration") + " ∈ [" + QString::number(mData[STATE_PHASE_TAU_MIN].toDouble()) + "; " + QString::number(mData[STATE_PHASE_TAU_MAX].toDouble()) + "]";
-    }*/
     return tauStr;
 }
 
@@ -326,17 +322,7 @@ QRectF PhaseItem::checkRect() const
     return r;
 }
 
-/*
- * QRectF PhaseItem::eyeRect() const
-{
-    const QRectF rect = boundingRect();
-    const QRectF r(rect.x() + rect.width() - mBorderWidth - mEltsMargin - mTitleHeight,
-             rect.y() + mBorderWidth + mEltsMargin,
-             mTitleHeight,
-             mTitleHeight);
-    return r;
-}
-*/
+
 QRectF PhaseItem::extractRect() const
 {
     QRectF rect = boundingRect();

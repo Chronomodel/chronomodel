@@ -220,7 +220,7 @@ void AbstractScene::itemReleased(AbstractItem* item, QGraphicsSceneMouseEvent* e
             if (colliding)
                 mergeItems(item, colliding);
         } else
-            sendUpdateProject(tr("item moved"), true, true);//  bool notify = true, bool storeUndoCommand = true
+            sendUpdateProject(tr("Item moved"), true, true);//  bool notify = true, bool storeUndoCommand = true
         
         // Ajust Scene rect to minimal (and also fix the scene rect)
         // After doing this, the scene no longer stetches when moving items!

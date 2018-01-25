@@ -111,7 +111,7 @@ mButtonWidth(50)
         button->setIcon(plugins.at(i)->getIcon());
         button->setFlatVertical();
         button->setIconOnly(false);
-        button->setToolTip(tr("Insert") +" "+ plugins.at(i)->getName() +" "+ tr("Data") );
+        button->setToolTip(tr("Insert %1 Data").arg(plugins.at(i)->getName()) );
         button->resize(mButtonWidth, mButtonWidth);
         connect(button, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &EventPropertiesView::createDate);
         
@@ -167,15 +167,7 @@ mButtonWidth(50)
     
     mBoundView = new QWidget(this);
     
-    //mKnownFixedRadio   = new QRadioButton(tr("Fixed"), mBoundView);
-    //mKnownUniformRadio = new QRadioButton(tr("Uniform"), mBoundView);
-    
-   // connect(mKnownFixedRadio, static_cast<void (QRadioButton::*)(bool)>(&QRadioButton::clicked), this, &EventPropertiesView::updateKnownType);
-   // connect(mKnownUniformRadio, static_cast<void (QRadioButton::*)(bool)>(&QRadioButton::clicked), this, &EventPropertiesView::updateKnownType);
-    
     mKnownFixedEdit = new QLineEdit(mBoundView);
-    //mKnownStartEdit = new QLineEdit(mBoundView);
-    //mKnownEndEdit   = new QLineEdit(mBoundView);
     
     QDoubleValidator* doubleValidator = new QDoubleValidator(this);
     doubleValidator->setDecimals(2);
@@ -323,30 +315,14 @@ void EventPropertiesView::updateEventMethod(int index)
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Event method updated"));
 }
 
-//#pragma mark Event Known Properties
-/*
-void EventPropertiesView::updateKnownType()
-{
-    if ((Event::Type)mEvent.value(STATE_EVENT_TYPE).toInt() == Event::eKnown)  {
-        EventKnown::KnownType type = EventKnown::eFixed;
-       // if(mKnownUniformRadio->isChecked())
-            type = EventKnown::eUniform;
-        
-        if ((EventKnown::KnownType)mEvent.value(STATE_EVENT_KNOWN_TYPE).toInt() != type) {
-            QJsonObject event = mEvent;
-            event[STATE_EVENT_KNOWN_TYPE] = type;
-            MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound type updated"));
-        }
-    }
-}
-*/
+// Event Known Properties
+
 void EventPropertiesView::updateKnownFixed(const QString& text)
 {
     QJsonObject event = mEvent;
     event[STATE_EVENT_KNOWN_FIXED] = round(text.toDouble());
     MainWindow::getInstance()->getProject()->updateEvent(event, tr("Bound fixed value updated"));
 }
-
 
 
 void EventPropertiesView::updateKnownGraph()
@@ -368,8 +344,7 @@ void EventPropertiesView::updateKnownGraph()
         event.updateValues(tmin, tmax,step );
         
         mKnownGraph->setRangeX(tmin,tmax);
-        
-        //qDebug() << "EventPropertiesView::updateKnownGraph()"<<event.mValues.size();
+
         mKnownGraph->setCurrentX(tmin,tmax);
         
         double max = map_max_value(event.mValues);
@@ -404,13 +379,6 @@ void EventPropertiesView::updateKnownGraph()
 
 }
 
-/*
-void EventPropertiesView::updateKnownControls()
-{
-    mFixedGroup->setVisible(mKnownFixedRadio->isChecked());
-    mUniformGroup->setVisible(mKnownUniformRadio->isChecked());
-}
-*/
 
 void EventPropertiesView::createDate()
 {

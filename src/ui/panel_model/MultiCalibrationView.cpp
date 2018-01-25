@@ -337,7 +337,7 @@ void MultiCalibrationView::updateGraphList()
             GraphView* calibGraph = new GraphView(this);
             QString boundName (ev.value(STATE_NAME).toString());
 
-            calibGraph->addInfo(tr("Bound") + " : "+ boundName);
+            calibGraph->addInfo(tr("Bound : %1").arg(boundName));
             calibGraph->showInfos(true);
 
             calibGraph->setRangeY(0., 1.);
@@ -392,12 +392,6 @@ void MultiCalibrationView::updateGraphList()
                     calibGraph->addCurve(calibCurve);
                 }
 
-
-                //type_data yMax = map_max_value(calibCurve.mData);
-                //yMax = (yMax > 0.) ? yMax : 1.;
-
-
-
                 // Insert the Event Name only if different to the previous Event's name
                 QString eventName (ev.value(STATE_NAME).toString());
                 if (eventName != preEventName)
@@ -447,7 +441,7 @@ void MultiCalibrationView::updateGraphList()
                         calibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
 
                         calibGraph->setRendering(GraphView::eHD);
-                   //     graphList.append(calibGraph);
+
         }
 
                 graphList.append(calibGraph);
@@ -512,7 +506,7 @@ void MultiCalibrationView::updateHPDGraphs(const QString &thres)
 void MultiCalibrationView::updateGraphsSize(const QString &size)
 {
     bool ok;
-    double val = locale().toDouble(size,&ok);
+    double val = locale().toDouble(size, &ok);
     if (ok)
         mGraphHeight = val;
     else
@@ -833,7 +827,7 @@ void MultiCalibrationView::showStat()
 
            if ( (Event::Type)ev.value(STATE_EVENT_TYPE).toInt() == Event::eKnown) {
                const double bound = ev.value(STATE_EVENT_KNOWN_FIXED).toDouble();
-               resultsStr += " <br><strong>"+ tr("Bound") + " : " + locale().toString(bound) + " BC/AD </strong><br>";
+               resultsStr += " <br><strong>"+ tr("Bound : %1").arg(locale().toString(bound)) +" BC/AD </strong><br>";
 
            } else {
                const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();

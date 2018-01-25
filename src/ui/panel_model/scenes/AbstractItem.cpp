@@ -147,9 +147,6 @@ QVariant AbstractItem::itemChange(GraphicsItemChange change, const QVariant& val
     if (change == ItemPositionChange && scene()) {
         // value is the new position.
         QPointF newPos = value.toPointF();
-//qDebug()<<"AbstractItem::itemChange() newPos"<<newPos<<"pos()"<<pos();
- // qDebug()<<"AbstractItem::itemChange() mData"<<this->mData.value(STATE_ITEM_X).toDouble()<<mData.value(STATE_ITEM_Y).toDouble();
-
 
         // See comment in itemMoved function!
         // used to merge date

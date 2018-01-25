@@ -120,23 +120,23 @@ QString PluginMag::getDateDesc(const Date* date) const
     const QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
 
     if (is_inc) {
-        result += QObject::tr("Inclination") + " : " + locale.toString(inc);
+        result += QObject::tr("Inclination : %1").arg(locale.toString(inc));
         // this is the html form, but not reconized in the DatesListItemDelegate
        // result += "; " + QString("α<SUB>95</SUB>") + " : " + locale.toString(alpha);
-         result += "; " + QObject::tr("α_95") + " : " + locale.toString(alpha);
+         result += "; " + QObject::tr("α_95 : %1").arg(locale.toString(alpha));
     } else if (is_dec) {
-        result += QObject::tr("Declination") + " : " + locale.toString(dec);
-        result += "; " + QObject::tr("Inclination") + " : " + locale.toString(inc);
-        result += "; " + QObject::tr("α_95") + " : " + locale.toString(alpha);
+        result += QObject::tr("Declination : %1").arg(locale.toString(dec));
+        result += "; " + QObject::tr("Inclination : %1").arg(locale.toString(inc));
+        result += "; " + QObject::tr("α_95 : %1").arg(locale.toString(alpha));
     } else if (is_int)  {
-        result += QObject::tr("Intensity") + " : " + locale.toString(intensity);
-        result += "; " + QObject::tr("Error") + " : " + locale.toString(alpha);
+        result += QObject::tr("Intensity : %1").arg(locale.toString(intensity));
+        result += "; " + QObject::tr("Error : %1").arg(locale.toString(alpha));
     }
 
     if (mRefCurves.contains(ref_curve) && !mRefCurves[ref_curve].mDataMean.isEmpty())
-        result += "; " + tr("Ref. curve") + " : " + ref_curve;
+        result += "; " + tr("Ref. curve : %1").arg(ref_curve);
     else
-        result += "; " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
+        result += "; " + tr("ERROR -> Ref. curve : %1").arg(ref_curve);
 
 
     return result;
@@ -171,7 +171,7 @@ PluginFormAbstract* PluginMag::getForm()
     PluginMagForm* form = new PluginMagForm(this);
     return form;
 }
-//#pragma mark Convert old project versions
+//Convert old project versions
 QJsonObject PluginMag::checkValuesCompatibility(const QJsonObject& values)
 {
     QJsonObject result = values;
@@ -219,7 +219,7 @@ QStringList PluginMag::toCSV(const QJsonObject& data, const QLocale& csvLocale) 
     return list;
 }
 
-//#pragma mark Reference curves (files)
+//Reference curves (files)
 QString PluginMag::getRefExt() const
 {
     return "ref";
@@ -320,7 +320,7 @@ RefCurve PluginMag::loadRefFile(QFileInfo refFile)
     return curve;
 }
 
-//#pragma mark Reference Values & Errors
+//Reference Values & Errors
 double PluginMag::getRefValueAt(const QJsonObject& data, const double& t)
 {
     QString curveName = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();

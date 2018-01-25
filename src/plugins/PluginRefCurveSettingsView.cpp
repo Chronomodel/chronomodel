@@ -70,12 +70,13 @@ void PluginRefCurveSettingsView::updateFilesInFolder()
    // Delete removed curves
     QMapIterator<QString, QString> iter(mFilesOrg);
     iter = QMapIterator<QString, QString>(mFilesOrg);
-    while(iter.hasNext()){
+    while (iter.hasNext()){
         iter.next();
         if (!mFilesNew.contains(iter.key())) {
-            if (QMessageBox::question(qApp->activeWindow(), tr("Warning"), tr("You are about to delete a reference curve : ") + " " + iter.key() + ". All data using this curve (in all your projects) will be invalid until you specify another curve for each one. Do you really want to delete this curve?") == QMessageBox::Yes) {
+            if (QMessageBox::question(qApp->activeWindow(), tr("Warning"),
+                                      tr("You are about to delete a reference curve : %1. All data using this curve (in all your projects) will be invalid until you specify another curve for each one. Do you really want to delete this curve?").arg(iter.key())) == QMessageBox::Yes) {
                QString filepath = calibPath + "/" + iter.key();
-                if(QFile::remove(filepath))
+               if (QFile::remove(filepath))
                    mFilesOrg.remove(iter.key());
                 
             }
@@ -83,14 +84,13 @@ void PluginRefCurveSettingsView::updateFilesInFolder()
     }
     
     iter = QMapIterator<QString, QString>(mFilesNew);
-    while(iter.hasNext()){
+    while (iter.hasNext()) {
         iter.next();
         // The file name already existed, but we have a new path : replace it !
         if (mFilesOrg.contains(iter.key()) && iter.value() != mFilesOrg.value(iter.key())) {
-            if (QMessageBox::question(qApp->activeWindow(), tr("Warning"), tr("Do you really want to replace existing") + " " + iter.key()) == QMessageBox::Yes) {
+            if (QMessageBox::question(qApp->activeWindow(), tr("Warning"), tr("Do you really want to replace existing %1").arg(iter.key())) == QMessageBox::Yes) {
                 QString filepath = calibPath + "/" + iter.key();
-                //if(QFile::remove(filepath) && QFile::copy(iter.value(), filepath)){
-                //}
+
             }
         }
         // The file does not exist : copy it.
@@ -109,10 +109,9 @@ void PluginRefCurveSettingsView::addRefCurve(){
     QString path = QFileDialog::getOpenFileName(qApp->activeWindow(),
                                                 tr("Open File"),
                                                 "",
-                                                tr("Reference curve") + " (*." + mPlugin->getRefExt() + ")");
+                                                tr("Reference curve (*.%1)").arg(mPlugin->getRefExt() ));
     
-    if(!path.isEmpty())
-    {
+    if (!path.isEmpty()) {
         QFileInfo fileInfo(path);
         mFilesNew.insert(fileInfo.fileName(), fileInfo.absoluteFilePath());
         updateFilesInFolder();
@@ -122,9 +121,10 @@ void PluginRefCurveSettingsView::addRefCurve(){
     }
 }
 
-void PluginRefCurveSettingsView::deleteRefCurve(){
+void PluginRefCurveSettingsView::deleteRefCurve()
+{
     QList<QListWidgetItem*> selectedItems = mRefCurvesList->selectedItems();
-    for(int i=0; i<selectedItems.size(); ++i){
+    for (int i=0; i<selectedItems.size(); ++i) {
         QString filename = selectedItems.at(i)->text();
         mFilesNew.remove(filename);
         updateFilesInFolder();
@@ -146,7 +146,8 @@ void PluginRefCurveSettingsView::deleteRefCurve(){
     }
 }*/
 
-void PluginRefCurveSettingsView::updateSelection(){
+void PluginRefCurveSettingsView::updateSelection()
+{
     QList<QListWidgetItem*> selectedItems = mRefCurvesList->selectedItems();
     mDeleteRefCurveBut->setEnabled(selectedItems.size() > 0);
     mOpenBut->setEnabled(selectedItems.size() > 0);

@@ -29,16 +29,12 @@ void GraphViewEvent::setEvent(Event* event)
     Q_ASSERT(event);
 
     mEvent = event;
-    QString eventTitle = ( (mEvent->mType == Event::eDefault) ? tr("Event") : tr("Bound") ) ;
-    this->setItemTitle(eventTitle + " : " + mEvent->mName);
+    QString eventTitle = ( (mEvent->mType == Event::eDefault) ? tr("Event : %1").arg(mEvent->mName) : tr("Bound : %1").arg(mEvent->mName) ) ;
+    setItemTitle(eventTitle);
     setItemColor(mEvent->mColor);
     update();
 }
 
-//void GraphViewEvent::updateLayout()
-//{
-//        GraphViewResults::updateLayout();
-//}
 
 void GraphViewEvent::paintEvent(QPaintEvent* e)
 {
@@ -99,7 +95,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
 
 
 
-        mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->mName;
+        mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound : %1").arg(mEvent->mName) : tr("Event : %1").arg(mEvent->mName));
 
         /* ------------------------------------------------
          *  Possible curves :
@@ -205,9 +201,9 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->setFormatFunctY(stringWithAppSettings);
 
             if (mEvent->type()==Event::eKnown)
-                mTitle = tr("Bound") + " : " + mEvent->mName;
+                mTitle = tr("Bound : %1").arg(mEvent->mName);
             else
-                mTitle = tr("Std Compilation") + " : " + mEvent->mName;
+                mTitle = tr("Std Compilation : %1").arg(mEvent->mName);
 
             mGraph->setBackgroundColor(QColor(230, 230, 230));
 
@@ -240,7 +236,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(stringWithAppSettings);
-        mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->mName;
+        mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound : %1").arg(mEvent->mName) : tr("Event : %1").arg(mEvent->mName));
 
         generateTraceCurves(mChains, &(mEvent->mTheta));
 
@@ -254,7 +250,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(stringWithAppSettings);
-        mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->mName;
+        mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound : %1").arg(mEvent->mName) : tr("Event : %1").arg(mEvent->mName));
 
         mGraph->addCurve(generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
 
@@ -273,13 +269,13 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(stringWithAppSettings);
-        mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound ") : tr("Event")) + " : " + mEvent->mName;
+        mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound : %1").arg(mEvent->mName) : tr("Event : %1").arg(mEvent->mName));
 
         generateCorrelCurves(mChains, &(mEvent->mTheta));
         mGraph->setXScaleDivision(10, 10);
     }
     else {
-        mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound") : tr("Event")) + " : " + mEvent->mName;
+        mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound : %1").arg(mEvent->mName) : tr("Event : %1").arg(mEvent->mName));
         mGraph->resetNothingMessage();
     }
 

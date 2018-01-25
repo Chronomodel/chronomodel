@@ -158,9 +158,6 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         graphCurveG95Inf.mPen.setColor(QColor(180, 180, 180));
         graphCurveG95Inf.mIsHisto = false;
         mGraph->addCurve(graphCurveG95Inf);
-        
-        // Display reference curve name
-        //mGraph->addInfo(tr("Ref : ") + ref_curve);
 
 
         // ----------------------------------------------
@@ -224,20 +221,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         //curveMeasure.mData = normalize_map(curveMeasure.mData);
         mGraph->addCurve(curveMeasure);
         
-        // Write measure values :
-    /*    if(is_inc)
-        {
-            mGraph->addInfo(tr("Inclination : ") + locale.toString(inc) + ", α : " + locale.toString(alpha));
-        }
-        else if(is_dec)
-        {
-            mGraph->addInfo(tr("Declination : ") + locale.toString(dec) + ", α : " + locale.toString(alpha) + tr(", Inclination : ") + locale.toString(inc));
-        }
-        else if(is_int)
-        {
-            mGraph->addInfo(tr("Intensity : ") + locale.toString(intensity) + " ± : " + locale.toString(alpha));
-        }
-     */
+
         // ----------------------------------------------
         //  Error on measure
         // ----------------------------------------------

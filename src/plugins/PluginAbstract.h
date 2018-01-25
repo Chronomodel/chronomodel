@@ -76,7 +76,7 @@ public:
     {
         (void) dates;
         QJsonObject ret;
-        ret["error"] = tr("Cannot combine dates of type ") + getName();
+        ret["error"] = tr("Cannot combine dates of type %1").arg(getName());
         return ret;
     }
     

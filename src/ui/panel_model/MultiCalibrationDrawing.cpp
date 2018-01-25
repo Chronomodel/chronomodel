@@ -140,7 +140,7 @@ void MultiCalibrationDrawing::updateLayout()
                 graph->setOverArrow(GraphView::eNone);
 
             graph->setFont(font());
-            graph->setTipXLab(tr("t="));
+            graph->setTipXLab("t");
             graph->setGeometry(panelWidth + 5, y, width() - panelWidth, mGraphHeight );
             graph->setVisible(true);
          }

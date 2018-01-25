@@ -58,17 +58,22 @@ int Generator::randomUniformInt(const int& min, const int& max)
 
 double Generator::gaussByDoubleExp(const double mean, const double sigma, const double min, const double max)
 {
-    errno=0;
+    errno = 0;
     if ((min >= max) || (sigma == 0)) {
-        if(min == max)
-            qDebug() << "DOUBLE EXP WARNING : min == max";
-        else
-            throw QObject::tr("DOUBLE EXP ERROR : min = ") + QString::number(min) + ", max = " + QString::number(max);
+        if ((min >= max) && (sigma != 0))
+            throw QObject::tr("DOUBLE EXP ERROR : min = %1 , max = %2").arg(QString::number(min), QString::number(max));
 
-        if(sigma == 0)
-            qDebug() << "DOUBLE EXP WARNING : sigma == 0";
+#ifdef DEBUG
         else
-            throw QObject::tr("DOUBLE EXP ERROR : sigma == 0, mman = ") + QString::number(mean) ;
+            qDebug() << "DOUBLE EXP WARNING : min == max";
+#endif
+
+        if ((sigma == 0) && (min <= max))
+            throw QObject::tr("DOUBLE EXP ERROR : sigma == 0, mean = %1").arg(QString::number(mean)) ;
+#ifdef DEBUG
+        else
+            qDebug() << "DOUBLE EXP WARNING : sigma == 0";
+#endif
 
         return min;
     }

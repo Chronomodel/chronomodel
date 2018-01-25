@@ -173,7 +173,7 @@ void DateDialog::setForm(PluginFormAbstract* form)
         mLayout->insertWidget(2, mForm);
         PluginAbstract* plugin = form->mPlugin;
 
-        setWindowTitle(tr("Create") + " " + plugin->getName() + " " + tr("Data"));
+        setWindowTitle(tr("Create %1 Data").arg(plugin->getName()));
         // Check if wiggle is allowed by plugin
         mWiggleIsValid = true;
         mPluginDataAreValid = true;

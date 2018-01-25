@@ -70,12 +70,8 @@ mCalibVisible(false)
     // ---- Header Top Bar with Study period --------------
     // ----------- on mTopWrapper ------------------
 
-    //const int topButtonHeight = fm.height() + 10;
-    //const QString studyStr = tr("STUDY PERIOD") + " [ "+ locale().toString(mTmin) +" : "+ locale().toString(mTmax) + " ] BC/AD";
     mButModifyPeriod = new Button(tr("STUDY PERIOD") , mTopWrapper);
-    //mButModifyPeriod->setIconOnly(false);
-   // mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text()) + 30) /2, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 30, topButtonHeight );
-   // mButModifyPeriod->setFlatHorizontal();
+
     adaptStudyPeriodButton(mTmin, mTmax);
     connect(mButModifyPeriod,  static_cast<void (QPushButton::*)(bool)>(&Button::clicked), this, &ModelView::modifyPeriod);
 
@@ -439,7 +435,7 @@ void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
     QFontMetrics fm(font());
     const int topButtonHeight = fm.height() + 10;
     const int hMarg = 15;
-    const QString studyStr = tr("STUDY PERIOD") + " [ "+ locale().toString(min) +" : "+ locale().toString(max) + " ] BC/AD";
+    const QString studyStr = tr("STUDY PERIOD") + QString(" [ %1 ; %2 ] BC/AD").arg(locale().toString(min), locale().toString(max));;
     mButModifyPeriod->setText(studyStr);
     mButModifyPeriod->setIconOnly(false);
     mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text())) /2 -hMarg, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + hMarg, topButtonHeight );

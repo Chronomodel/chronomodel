@@ -19,7 +19,7 @@ QDialog(parent, flags)
     mTitleLab = new Label(tr("Data Options"), this);
     mTitleLab->setIsTitle(true);
     
-    mC14RefLab = new Label(tr("Change all 14C references to") + " : ", this);
+    mC14RefLab = new Label(tr("Change all 14C references to : "), this);
     mC14RefCombo = new QComboBox(this);
     mComboH = mC14RefCombo->sizeHint().height();
     Plugin14C* plugin14C = (Plugin14C*)PluginManager::getPluginFromName("14C");
@@ -27,7 +27,7 @@ QDialog(parent, flags)
     for (int i = 0; i<refCurves.size(); ++i)
         mC14RefCombo->addItem(refCurves[i]);
 
-    QString defCurve = QString("intcal13.14c").toLower();
+   // QString defCurve = QString("intcal13.14c").toLower();
     
     mOkBut = new Button(tr("OK"), this);
     mCancelBut = new Button(tr("Cancel"), this);

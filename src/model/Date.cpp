@@ -185,7 +185,7 @@ void Date::fromJson(const QJsonObject& json)
     QString pluginId = json.value(STATE_DATE_PLUGIN_ID).toString();
     mPlugin = PluginManager::getPluginFromId(pluginId);
     if (mPlugin == nullptr)
-        throw QObject::tr("Data could not be loaded : invalid plugin : ") + pluginId;
+        throw QObject::tr("Data could not be loaded : invalid plugin : %1").arg(pluginId);
     else  {
         QPair<double, double> tminTmax = mPlugin->getTminTmaxRefsCurve(mData);
         mTminRefCurve = tminTmax.first;

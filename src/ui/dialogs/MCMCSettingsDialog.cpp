@@ -297,20 +297,17 @@ void MCMCSettingsDialog::inputControl()
      }
     if (isValided == true && (ok == false || (settings.mNumRunIter/settings.mThinningInterval) < 40) ) {
         if ((settings.mNumRunIter/40) < 2)
-            errorMessage = QObject::tr("With ")+ mLoc.toString(settings.mNumRunIter)
-                          + QObject::tr(" the thinning interval in one run must be 1 ");
+            errorMessage = QObject::tr("With %1 the thinning interval in one run must be 1").arg(mLoc.toString(settings.mNumRunIter));
 
         else
-            errorMessage = QObject::tr("The thinning interval in one run must be smaller than ")
-                            + mLoc.toString((unsigned int)floor(settings.mNumRunIter/40));
+            errorMessage = QObject::tr("The thinning interval in one run must be smaller than %1").arg(mLoc.toString((unsigned int)floor(settings.mNumRunIter/40)));
+
         isValided = false;
      }
 
     settings.mMixingLevel = mLoc.toDouble(mLevelEdit->text(), &ok);
     if (isValided == true && (ok == false || settings.mMixingLevel < 0.0001 || settings.mMixingLevel > 0.9999) ) {
-            errorMessage = QObject::tr("The number of the iteration in one run must be bigger than ")
-                        + mLoc.toString(0.0001) + QObject::tr( " and smaller than ")
-                        + mLoc.toString(0.9999);
+            errorMessage = QObject::tr("The number of the iteration in one run must be bigger than %1  and smaller than %2").arg(mLoc.toString(0.0001), mLoc.toString(0.9999));
             isValided = false;
      }
 

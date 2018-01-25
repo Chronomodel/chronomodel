@@ -284,14 +284,14 @@ QString Phase::getTauTypeText() const
 {
     switch (mTauType) {
         case eTauFixed:
-                return QObject::tr("Max duration ≤ ") + QString::number(mTauFixed);
+                return QObject::tr("Max duration ≤ %1").arg( QString::number(mTauFixed));
             break;
         case eTauUnknown:
                 return QObject::tr("Max duration unknown");
             break;
 
         case eTauRange: // no longer used
-            return QObject::tr("Tau Range")+ " [ " + QString::number(mTauMin) + " ; " + QString::number(mTauMax) + " ]";
+            return QObject::tr("Tau Range") + QString(" [ %1 ; %2 ]").arg(QString::number(mTauMin), QString::number(mTauMax));
         break;
         default:
                 return QObject::tr("Tau Undefined->Error");

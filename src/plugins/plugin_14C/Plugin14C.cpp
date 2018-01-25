@@ -102,18 +102,17 @@ QString Plugin14C::getDateDesc(const Date* date) const
     const double delta_r_error = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
     const QString ref_curve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
 
-    result += QObject::tr("Age") + " : " + locale.toString(age);
+    result += QObject::tr("Age : %1").arg(locale.toString(age));
     result += " ± " + locale.toString(error);
 
-    if (delta_r != 0. || delta_r_error != 0.) {
-        result += ", " + QObject::tr("ΔR") + " : " + locale.toString(delta_r);
-        result += " ± " +locale.toString(delta_r_error);
-    }
+    if (delta_r != 0. || delta_r_error != 0.)
+        result += ", " + QObject::tr("ΔR : %1 ± %2").arg(locale.toString(delta_r), locale.toString(delta_r_error));
+
 
     if (mRefCurves.contains(ref_curve) && !mRefCurves.value(ref_curve).mDataMean.isEmpty())
-        result += "; " + tr("Ref. curve") + " : " + ref_curve;
+        result += "; " + tr("Ref. curve : %1").arg(ref_curve);
     else
-        result += "; " + tr("ERROR") +"-> "+ tr("Ref. curve") + " : " + ref_curve;
+        result += "; " + tr("ERROR -> Ref. curve : %1").arg(ref_curve);
         
 
     return result;
@@ -173,7 +172,7 @@ QStringList Plugin14C::toCSV(const QJsonObject& data, const QLocale& csvLocale) 
 
 // ------------------------------------------------------------------
 
-//#pragma mark Ref curves (files)
+// Ref curves (files)
 QString Plugin14C::getRefExt() const
 {
     return "14c";

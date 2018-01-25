@@ -98,7 +98,7 @@ public:
             painter->drawText(x + iconW, y + mm, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, dateName);
             
             painter->setPen(QColor(120, 120, 120));
-            painter->drawText(x + iconW, y + 2*mm + mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, tr("Type") + " : " + plugin->getName() + " | " + tr("Method") + " : " + dateMethodStr);
+            painter->drawText(x + iconW, y + 2*mm + mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, tr("Type : %1 | Method : %2").arg(plugin->getName(), dateMethodStr));
             painter->drawText(x + iconW, y + 3*mm + 2*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, dateDesc);
 
             painter->setPen(Painting::mainColorLight);
@@ -112,19 +112,7 @@ public:
             painter->setPen(QColor(200, 200, 200));
             painter->drawLine(x, y + h, x + w, y + h);
             
-            // ------
-            
-            /*QRect updateRect(x + iconW, y + h - mm - butH, butW, butH);
-            QRect calibRect(x + iconW + 2*mm + butW, y + h - mm - butH, butW, butH);
-            
-            painter->setPen(QColor(150, 150, 150));
-            painter->setBrush(QColor(240, 240, 240));
-            painter->drawRect(updateRect);
-            painter->drawRect(calibRect);
-            
-            painter->setPen(QColor(40, 40, 40));
-            painter->drawText(updateRect, Qt::AlignCenter, tr("Modify"));
-            painter->drawText(calibRect, Qt::AlignCenter, tr("Calibrate"));*/
+
         }
     }
 };

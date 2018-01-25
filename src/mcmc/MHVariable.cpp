@@ -242,7 +242,7 @@ QString MHVariable::resultsString(const QString& nl, const QString& noResultMess
 {
     QString result = MetropolisVariable::resultsString(nl, noResultMessage, unit, formatFunc, forCSV);
     if (!mProposal.isEmpty())
-        result += nl + "Acceptance rate (all acquire iterations) : " + stringWithAppSettings(mGlobalAcceptation*100., forCSV) + "% ("+mProposal+")";
+        result += nl + tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(stringWithAppSettings(mGlobalAcceptation*100., forCSV), mProposal);
 
     return result;
 }

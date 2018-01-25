@@ -202,7 +202,7 @@ void CalibrationView::setDate(const QJsonObject& date)
         mEndEdit->setText(stringWithAppSettings(mTmaxDisplay, false));
 
         if (std::isinf(-mTminDisplay) || std::isinf(mTmaxDisplay))
-            throw("CalibrationView::setDate "+mDate.mPlugin->getName()+ mDate.mCalibration->mName + mDate.mCalibration->mTmin+mDate.mCalibration->mTmax);
+            throw(tr("CalibrationView::setDate ")+mDate.mPlugin->getName() + mDate.mCalibration->mName + mDate.mCalibration->mTmin + mDate.mCalibration->mTmax);
 
         updateScroll();
         //updateGraphs();
@@ -210,7 +210,7 @@ void CalibrationView::setDate(const QJsonObject& date)
     catch(QString error) {
         QMessageBox message(QMessageBox::Critical,
                             qApp->applicationName() + " " + qApp->applicationVersion(),
-                            tr("Error : ") + error,
+                            tr("Error : %1").arg(error),
                             QMessageBox::Ok,
                             qApp->activeWindow());
         message.exec();

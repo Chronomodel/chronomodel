@@ -70,12 +70,11 @@ QString MCMCLoopMain::calibrate()
         
         int i (0);
         for (auto &&date : dates) {
-            //QTime startTime = QTime::currentTime();
-            if (date->mCalibration) {
+              if (date->mCalibration) {
                 if (date->mCalibration->mCurve.isEmpty())
                     date->calibrate(mModel->mSettings, mProject);
-            } else
-                return (tr("Invalid Model -> No Calibration on Data") +" " + date->mName);
+                } else
+                    return (tr("Invalid Model -> No Calibration on Data %1").arg(date->mName));
 
          
             if (isInterruptionRequested())
@@ -84,9 +83,6 @@ QString MCMCLoopMain::calibrate()
             emit stepProgressed(i);
             ++i;
 
-            //QTime endTime = QTime::currentTime();
-            //int timeDiff = startTime.msecsTo(endTime);
-            //mLog += "Data \"" + dates[i]->mName + "\" (" + dates[i]->mPlugin->getName() + ") calibrated in " + QString::number(timeDiff) + " ms\n";
         }
         dates.clear();
         return QString();
@@ -376,33 +372,33 @@ QString MCMCLoopMain::initMCMC()
         if (event->type() == Event::eKnown) {
              const EventKnown* bound = dynamic_cast<const EventKnown*>(event);
             if (bound) {
-                log += line(textRed(tr("Bound") +" (" + QString::number(i) + "/" + QString::number(events.size()) + ") : " + bound->mName));
-                log += line(textRed(" - Theta : " + DateUtils::convertToAppSettingsFormatStr(bound->mTheta.mX)+" "+ DateUtils::getAppSettingsFormatStr()));
-                log += line(textRed(" - Sigma_MH on Theta : " + stringWithAppSettings(bound->mTheta.mSigmaMH)));
+                log += line(textRed(tr("Bound ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(events.size()), bound->mName)));
+                log += line(textRed(tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(bound->mTheta.mX), DateUtils::getAppSettingsFormatStr())));
+                log += line(textRed(tr(" - Sigma_MH on Theta : %1").arg(stringWithAppSettings(bound->mTheta.mSigmaMH))));
             }
         }
         else {
-            log += line(textBlue(tr("Event")+ " (" + QString::number(i) + "/" + QString::number(events.size()) + ") : " + event->mName));
-            log += line(textBlue(" - Theta : " + DateUtils::convertToAppSettingsFormatStr(event->mTheta.mX) +" "+ DateUtils::getAppSettingsFormatStr()));
-            log += line(textBlue(" - Sigma_MH on Theta : " + stringWithAppSettings(event->mTheta.mSigmaMH)));
-            log += line(textBlue(" - S02 : " + stringWithAppSettings(event->mS02)));
+            log += line(textBlue(tr("Event ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(events.size()), event->mName)));
+            log += line(textBlue(tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(event->mTheta.mX), DateUtils::getAppSettingsFormatStr())));
+            log += line(textBlue(tr(" - Sigma_MH on Theta : %1").arg(stringWithAppSettings(event->mTheta.mSigmaMH))));
+            log += line(textBlue(tr(" - S02 : %1").arg(stringWithAppSettings(event->mS02))));
         }
         
         
-        int j = 0;
+        int j (0);
         for (const Date & date : event->mDates) {
             ++j;
             log += "<br>";
 
-            log += line(textBlack(tr("Data")+ " (" + QString::number(j) + "/" + QString::number(event->mDates.size()) + ") : " + date.mName));
-            log += line(textBlack(" - ti : " + DateUtils::convertToAppSettingsFormatStr(date.mTheta.mX)+" "+ DateUtils::getAppSettingsFormatStr()));
+            log += line(textBlack(tr("Data ( %1 / %2 ) : %3").arg(QString::number(j), QString::number(event->mDates.size()), date.mName)));
+            log += line(textBlack(tr(" - ti : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(date.mTheta.mX), DateUtils::getAppSettingsFormatStr())));
             if (date.mMethod == Date::eMHSymGaussAdapt)
-                log += line(textBlack(" - Sigma_MH on ti : " + stringWithAppSettings(date.mTheta.mSigmaMH)));
+                log += line(textBlack(tr(" - Sigma_MH on ti : %1").arg(stringWithAppSettings(date.mTheta.mSigmaMH))));
 
-            log += line(textBlack(" - Sigma_i : " + stringWithAppSettings(date.mSigma.mX)));
-            log += line(textBlack(" - Sigma_MH on Sigma_i : " + stringWithAppSettings(date.mSigma.mSigmaMH)));
+            log += line(textBlack(tr(" - Sigma_i : %1").arg(stringWithAppSettings(date.mSigma.mX))));
+            log += line(textBlack(tr(" - Sigma_MH on Sigma_i : %1").arg(stringWithAppSettings(date.mSigma.mSigmaMH))));
             if (date.mDeltaType != Date::eDeltaNone)
-                log += line(textBlack(" - Delta_i : " + stringWithAppSettings(date.mDelta)));
+                log += line(textBlack(tr(" - Delta_i : %1").arg(stringWithAppSettings(date.mDelta))));
 
         }
     }
@@ -416,10 +412,10 @@ QString MCMCLoopMain::initMCMC()
         for (const Phase * phase : phases) {
             ++i;
             log += "<br>";
-            log += line(textPurple(tr("Phase") +" (" + QString::number(i) + "/" + QString::number(phases.size()) + ") : " + phase->mName));
-            log += line(textPurple(" - Alpha : " + DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mX)+" "+ DateUtils::getAppSettingsFormatStr()));
-            log += line(textPurple(" - Beta : " + DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mX)+" "+ DateUtils::getAppSettingsFormatStr()));
-            log += line(textPurple(" - Tau : " + stringWithAppSettings(phase->mTau)));
+            log += line(textPurple(tr("Phase ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(phases.size()), phase->mName)));
+            log += line(textPurple(tr(" - Alpha : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mX), DateUtils::getAppSettingsFormatStr())));
+            log += line(textPurple(tr(" - Beta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mX), DateUtils::getAppSettingsFormatStr())));
+            log += line(textPurple(tr(" - Tau : %1").arg(stringWithAppSettings(phase->mTau))));
         }
     }
     
@@ -432,13 +428,13 @@ QString MCMCLoopMain::initMCMC()
         for (const PhaseConstraint* constraint : phasesConstraints) {
             ++i;
             log += "<br>";
-            log += line(tr("Succession")+ " (" + QString::number(i) + "/" + QString::number(phasesConstraints.size()) + ") : " + tr("from") + " " +constraint->mPhaseFrom->mName +" " + tr("to") + " " +constraint->mPhaseTo->mName);
-            log += line(" - Gamma : " + stringWithAppSettings(constraint->mGamma));
+            log += line(tr("Succession ( %1 / %2) : from %3 to %4").arg(QString::number(i),QString::number(phasesConstraints.size()),constraint->mPhaseFrom->mName, constraint->mPhaseTo->mName));
+            log += line(tr(" - Gamma : %1").arg(stringWithAppSettings(constraint->mGamma)));
         }
     }
     
     mInitLog += "<hr>";
-    mInitLog += textBold("INIT CHAIN " + QString::number(mChainIndex+1));
+    mInitLog += textBold(tr("INIT CHAIN %1").arg(QString::number(mChainIndex+1)));
     mInitLog += "<hr>";
     mInitLog += log;
  

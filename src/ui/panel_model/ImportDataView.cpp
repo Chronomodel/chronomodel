@@ -74,7 +74,7 @@ Event1;14C;onshore;1600;35;intcal13.14c;0;0;none
 void ImportDataView::browse()
 {
     const QString currentDir = MainWindow::getInstance()->getCurrentPath();
-    const QString path = QFileDialog::getOpenFileName(qApp->activeWindow(), tr("Open CSV File"), currentDir, tr("CSV File (*.csv)"));
+    const QString path = QFileDialog::getOpenFileName(qApp->activeWindow(), tr("Open CSV File"), currentDir, "CSV File (*.csv)");
     
     if (!path.isEmpty()) {
         QFileInfo info(path);
@@ -248,7 +248,7 @@ void ImportDataView::browse()
 void ImportDataView::exportDates()
 {
     QString currentDir = MainWindow::getInstance()->getCurrentPath();
-    QString path = QFileDialog::getSaveFileName(qApp->activeWindow(), tr("Save as CSV"), currentDir, tr("CSV File (*.csv)"));
+    QString path = QFileDialog::getSaveFileName(qApp->activeWindow(), tr("Save as CSV"), currentDir, "CSV File (*.csv)");
     
     if (!path.isEmpty())  {
         QFileInfo info(path);
@@ -290,7 +290,7 @@ void ImportDataView::exportDates()
                         catch(QString error){
                         QMessageBox message(QMessageBox::Critical,
                                             qApp->applicationName() + " " + qApp->applicationVersion(),
-                                            tr("Error : ") + error,
+                                            tr("Error : %1").arg(error),
                                             QMessageBox::Ok,
                                             qApp->activeWindow());
                         message.exec();

@@ -69,7 +69,7 @@ void DatesList::setEvent(const QJsonObject& event)
             catch (QString error) {
                 QMessageBox message(QMessageBox::Critical,
                                     qApp->applicationName() + " " + qApp->applicationVersion(),
-                                    tr("Error : ") + error,
+                                    tr("Error : %1").arg(error),
                                     QMessageBox::Ok,
                                     qApp->activeWindow());
                 message.exec();
