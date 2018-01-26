@@ -86,8 +86,9 @@ void AbstractItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
 {
     setZValue(1.);
     if (mScene->mShowGrid) {
-        QPointF ptBefore = pos();
-        ptBefore = QPointF(floor(ptBefore.rx()/10.) *10, floor(ptBefore.ry()/10.) *10);
+        qreal delta (mScene->deltaGrid());
+        QPointF ptBefore = scenePos();
+        ptBefore = QPointF(round(ptBefore.rx()/delta) * delta, round(ptBefore.ry()/delta) * delta);
         setPos(ptBefore);
         e->setPos(ptBefore);
     }
@@ -113,7 +114,8 @@ void AbstractItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
     qDebug()<<"AbstractItem::mouseMoveEvent() e->pos avant mouseMove2"<<e->pos()<<e->scenePos()<<pos();
     if (mScene->mShowGrid) {
         QPointF ptBefore = pos();
-        ptBefore = QPointF(floor(ptBefore.rx()/20.) *20, floor(ptBefore.ry()/20.) *20);
+        qreal delta (mScene->deltaGrid());
+        ptBefore = QPointF(round(ptBefore.rx()/delta) * delta, floor(ptBefore.ry()/ delta) * delta);
         setPos(ptBefore);
         e->setPos(ptBefore);
     }

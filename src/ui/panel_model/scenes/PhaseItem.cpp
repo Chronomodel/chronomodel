@@ -44,7 +44,7 @@ void PhaseItem::setPhase(const QJsonObject& phase)
     // ----------------------------------------------------
     //  Calculate item size
     // ----------------------------------------------------
-    const qreal w = 150.;
+    const qreal w (150);
     qreal h = mTitleHeight + 2*mBorderWidth + 2*mEltsMargin;
     
     const QJsonArray events = getEvents();
@@ -123,8 +123,8 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 
 void PhaseItem::updateItemPosition(const QPointF& pos)
 {
-    mData[STATE_ITEM_X] = pos.x();
-    mData[STATE_ITEM_Y] = pos.y();
+    mData[STATE_ITEM_X] = (double) pos.x();
+    mData[STATE_ITEM_Y] = (double) pos.y();
 }
 
 QRectF PhaseItem::boundingRect() const

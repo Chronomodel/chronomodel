@@ -164,12 +164,14 @@ QRectF ArrowItem::boundingRect() const
         y = std::min(y, ya);
         w = std::max(w, (qreal) s.width());
         h = std::max(h, (qreal) s.height());
+
     } else { // the arrow size in the shape()
         const qreal xa = (mXStart + mXEnd - 15.)/2.;
         const qreal ya = (mYStart + mYEnd - 15.)/2.;
 
         x = std::min(x, xa);
         y = std::min(y, ya);
+
         w = std::max(w, 15.);
         h = std::max(h, 15.);
 
@@ -184,25 +186,29 @@ QPainterPath ArrowItem::shape() const
     QRectF rect = boundingRect();
     const qreal shift (15.);
     
-    if (mXStart < mXEnd && mYStart > mYEnd) {
+    if (mXStart < mXEnd && mYStart >= mYEnd) {
         path.moveTo(mXStart + shift, mYStart);
         path.lineTo(mXStart, mYStart - shift);
         path.lineTo(mXEnd - shift, mYEnd);
+
         path.lineTo(mXEnd, mYEnd + shift);
 
     } else if (mXStart < mXEnd && mYStart < mYEnd) {
         path.moveTo(mXStart + shift, mYStart);
+
         path.lineTo(mXStart, mYStart + shift);
+
         path.lineTo(mXEnd - shift, mYEnd);
+
         path.lineTo(mXEnd, mYEnd - shift);
 
-    } else if (mXStart > mXEnd && mYStart < mYEnd) {
+    } else if (mXStart >= mXEnd && mYStart < mYEnd) {
         path.moveTo(mXStart - shift, mYStart);
         path.lineTo(mXStart, mYStart + shift);
         path.lineTo(mXEnd + shift, mYEnd);
         path.lineTo(mXEnd, mYEnd - shift);
 
-    } else if (mXStart > mXEnd && mYStart > mYEnd) {
+    } else if (mXStart >= mXEnd && mYStart >= mYEnd) {
         path.moveTo(mXStart - shift, mYStart);
         path.lineTo(mXStart, mYStart - shift);
         path.lineTo(mXEnd + shift, mYEnd);
@@ -292,7 +298,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     const qreal posY1 = axeBox.height()/3;
     const qreal posY2 = 2*axeBox.height()/3;
     
-    if (mXStart < mXEnd && mYStart > mYEnd) {
+    if (mXStart < mXEnd && mYStart >= mYEnd) {
         if (showMiddleArrow) {
             painter->save();
             painter->translate(axeBox.x() + posX, axeBox.y() + posY);
@@ -332,7 +338,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->fillPath(path, color);
             painter->restore();
         }
-    } else if (mXStart > mXEnd && mYStart < mYEnd) {
+    } else if (mXStart >= mXEnd && mYStart < mYEnd) {
         if (showMiddleArrow) {
             painter->save();
             painter->translate(axeBox.x() + posX, axeBox.y() + posY);
@@ -352,7 +358,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
             painter->fillPath(path, color);
             painter->restore();
         }
-    } else if (mXStart > mXEnd && mYStart > mYEnd) {
+    } else if (mXStart >= mXEnd && mYStart >= mYEnd) {
         if (showMiddleArrow) {
             painter->save();
             painter->translate(axeBox.x() + axeBox.width()/2, axeBox.y() + axeBox.height()/2);

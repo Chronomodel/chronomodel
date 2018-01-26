@@ -16,7 +16,8 @@ mUpdatingItems(false),
 mAltIsDown(false),
 
 mShowAllThumbs(true),
-mZoom(1.)
+mZoom(1.),
+mDeltaGrid (150/4) // 150 is the width of the Event and phase Item
 {
     mTempArrow = new ArrowTmpItem();
     addItem(mTempArrow);
@@ -337,11 +338,11 @@ void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
         int y = sceneRect().y();
         int w = sceneRect().width();
         int h = sceneRect().height();
-        int delta = 100;
-        for (int i(0); i<w; i+=delta)
+        int delta (4 * mDeltaGrid );
+        for (int i(0); i<w; i += delta)
             painter->drawLine(x + i, y, x + i, y + h);
         
-        for (int i(0); i<h; i+=delta)
+        for (int i(0); i<h; i += delta)
             painter->drawLine(x, y + i, x + w, y + i);
     }
     

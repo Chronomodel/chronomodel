@@ -29,6 +29,7 @@ public:
 
     bool mSelectKeyIsDown; // used to add item in selection
     bool mShowGrid;
+    qreal deltaGrid() const {return mDeltaGrid;}
 
 public slots:
     void showGrid(bool show);
@@ -83,6 +84,7 @@ protected:
     double mZoom;
     
     AbstractItem* mCurrentItem;
+    qreal mDeltaGrid;
 
 signals:
     void projectUpdated();
