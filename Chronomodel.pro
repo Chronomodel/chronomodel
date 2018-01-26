@@ -45,7 +45,7 @@ message("MOC_DIR : $$MOC_DIR")
 message("RCC_DIR : $$RCC_DIR")
 
 
-# Qt modules (must be deployed along with the application
+# Qt modules (must be deployed along with the application)
 QT += core gui widgets svg
 
 # Resource file (for images)

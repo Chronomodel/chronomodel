@@ -727,9 +727,9 @@ bool Project::askToSave(const QString& saveDialogTitle)
 {
     // Check if modifs have been made
     (void) saveDialogTitle;
-    if( mState == mLastSavedState)
+    /*if( mState == mLastSavedState)
         return true;
-    
+    */
     // We have some modifications : ask to save :
     int result = QMessageBox::question(QApplication::activeWindow(),
                                        QApplication::applicationName(),
@@ -739,9 +739,11 @@ bool Project::askToSave(const QString& saveDialogTitle)
     if (result == QMessageBox::Yes) {
         // return true if saving is done correcty
         return save();
+
     } else if (result == QMessageBox::No) {
-        // the user doesn't want to save : returning true to continue
+        // the user doesn't want to save : return true to continue
         return true;
+
     } else if (result == QMessageBox::Cancel) {
         // the user canceled : return false to cancel any further operations
         return false;
@@ -1712,7 +1714,7 @@ void Project::splitDate(const int eventId, const int dateId)
     pushProjectState(stateNext, tr("Dates splitted"), true);
 }
 
-//#pragma mark Grouped actions on dates
+// Grouped actions on dates
 void Project::updateAllDataInSelectedEvents(const QHash<QString, QVariant>& groupedAction)
 {
     QJsonObject stateNext = mState;
@@ -1971,227 +1973,7 @@ QJsonObject Project::getPhasesWithId(const int id)
     return QJsonObject();
 }
 
-// --------------------------------------------------------------------
-//     Event Constraints authorizations
-// --------------------------------------------------------------------
-/*#pragma mark Event Constraints authorizations
-
-bool Project::isEventConstraintAllowed(Event* eventFrom, Event* eventTo, QString& message)
-{
-    if(eventFrom && eventTo && (eventFrom != eventTo))
-    {
-        // ------------------------------------------------------------
-        //  Vérifier que la contrainte n'existe pas déjà, dans un sens ou dans l'autre
-        // ------------------------------------------------------------
-        for(int i=0; i<(int)mEventConstraints.size(); ++i)
-        {
-            if((mEventConstraints[i]->getEventTo() == eventTo &&
-                mEventConstraints[i]->getEventFrom() == eventFrom))
-            {
-                message = tr("The constraint already exists");
-                return false;
-            }
-            else if(mEventConstraints[i]->getEventTo() == eventFrom &&
-                mEventConstraints[i]->getEventFrom() == eventTo)
-            {
-                message = tr("The constraint already exists in the other direction");
-                return false;
-            }
-        }
-        
-        // ------------------------------------------------------------
-        //  TODO : Vérifier que l'on ne créé pas de boucle
-        // ------------------------------------------------------------
-        //qDebug() << "Checking loops for " << QString::number(eventFrom->mId);
-        QList<Event*> eventsFrom = getAllEventsFrom(eventFrom);
-        for(int i=0; i<(int)eventsFrom.size(); ++i)
-        {
-            if(eventsFrom[i] == eventTo)
-            {
-                message = tr("You cannot create a loop");
-                return false;
-            }
-        }
-        
-        // ------------------------------------------------------------
-        //  TODO : Vérifier que la contrainte n'est pas redondante
-        // ------------------------------------------------------------
-        //qDebug() << "Checking duplicates for " << QString::number(eventFrom->mId);
-        QList<Event*> eventsTo = getAllEventsTo(eventFrom);
-        for(int i=0; i<(int)eventsFrom.size(); ++i)
-        {
-            QList<Event*> subEventsTo = getAllEventsTo(eventsFrom[i]);
-            for(int j=0; j<(int)subEventsTo.size(); ++j)
-            {
-                if(std::find(eventsTo.begin(), eventsTo.end(), subEventsTo[j]) == eventsTo.end())
-                {
-                    eventsTo.push_back(subEventsTo[j]);
-                }
-            }
-        }
-        for(int i=0; i<(int)eventsTo.size(); ++i)
-        {
-            //qDebug() << eventsTo[i]->mId << " compared to " << eventTo->mId;
-            if(eventsTo[i] == eventTo)
-            {
-                message = tr("This information already exists thanks to other constraints");
-                return false;
-            }
-        }
-        
-        return true;
-    }
-    message = tr("Unvalid events for constraint creation");
-    return false;
-}
-
-QList<Event*> Project::getAllEventsFrom(Event* event)
-{
-    QList<Event*> eventsFrom;
-    for(int i=0; i<(int)event->mConstraintsBwd.size(); ++i)
-    {
-        Event* eventFrom = event->mConstraintsBwd[i]->getEventFrom();
-        //qDebug() << "- from : " << eventFrom->mId;
-        eventsFrom.push_back(eventFrom);
-        
-        QList<Event*> subEventsFrom = getAllEventsFrom(eventFrom);
-        for(int i=0; i<(int)subEventsFrom.size(); ++i)
-            eventsFrom.push_back(subEventsFrom[i]);
-    }
-    return eventsFrom;
-}
-
-QList<Event*> Project::getAllEventsTo(Event* event)
-{
-    QList<Event*> eventsTo;
-    for(int i=0; i<(int)event->mConstraintsFwd.size(); ++i)
-    {
-        Event* eventTo = event->mConstraintsFwd[i]->getEventTo();
-        //qDebug() << "- to : " << eventTo->mId;
-        eventsTo.push_back(eventTo);
-        
-        QList<Event*> subEventsTo = getAllEventsTo(eventTo);
-        for(int i=0; i<(int)subEventsTo.size(); ++i)
-            eventsTo.push_back(subEventsTo[i]);
-    }
-    return eventsTo;
-}*/
-
-
-
-
-
-
-
-
-
-// --------------------------------------------------------------------
-//     Phase Constraints authorizations
-// --------------------------------------------------------------------
-/*#pragma mark Phase Constraints authorizations
-
-bool Project::isPhaseConstraintAllowed(Phase* phaseFrom, Phase* phaseTo)
-{
-    if(phaseFrom && phaseTo && (phaseFrom != phaseTo))
-    {
-        // ------------------------------------------------------------
-        //  Vérifier que la contrainte n'existe pas déjà, dans un sens ou dans l'autre
-        // ------------------------------------------------------------
-        for(int i=0; i<(int)mPhaseConstraints.size(); ++i)
-        {
-            if((mPhaseConstraints[i]->getPhaseTo() == phaseTo &&
-                mPhaseConstraints[i]->getPhaseFrom() == phaseFrom) ||
-               (mPhaseConstraints[i]->getPhaseTo() == phaseFrom &&
-                mPhaseConstraints[i]->getPhaseFrom() == phaseTo))
-            {
-                return false;
-            }
-        }
-        
-        // ------------------------------------------------------------
-        //  Vérifier que les phases n'ont pas de faits communs
-        // ------------------------------------------------------------
-        for(int i=0; i<(int)phaseFrom->mEvents.size(); ++i)
-        {
-            for(int j=0; j<(int)phaseTo->mEvents.size(); ++j)
-            {
-                if(phaseFrom->mEvents[i] == phaseTo->mEvents[j])
-                    return false;
-            }
-        }
-        // ------------------------------------------------------------
-        //  TODO : Vérifier que l'on ne créé pas de boucle
-        // ------------------------------------------------------------
-        //qDebug() << "Checking loops for " << QString::number(phaseFrom->mId);
-        QList<Phase*> phasesFrom = getAllPhasesFrom(phaseFrom);
-        for(int i=0; i<(int)phasesFrom.size(); ++i)
-        {
-            if(phasesFrom[i] == phaseTo)
-                return false;
-        }
-        
-        // ------------------------------------------------------------
-        //  TODO : Vérifier que la contrainte n'est pas redondante
-        // ------------------------------------------------------------
-        //qDebug() << "Checking duplicates for " << QString::number(phaseFrom->mId);
-        QList<Phase*> phasesTo = getAllPhasesTo(phaseFrom);
-        for(int i=0; i<(int)phasesFrom.size(); ++i)
-        {
-            QList<Phase*> subPhasesTo = getAllPhasesTo(phasesFrom[i]);
-            for(int j=0; j<(int)subPhasesTo.size(); ++j)
-            {
-                if(std::find(phasesTo.begin(), phasesTo.end(), subPhasesTo[j]) == phasesTo.end())
-                {
-                    phasesTo.push_back(subPhasesTo[j]);
-                }
-            }
-        }
-        for(int i=0; i<(int)phasesTo.size(); ++i)
-        {
-            //qDebug() << phasesTo[i]->mId << " compared to " << phaseTo->mId;
-            if(phasesTo[i] == phaseTo)
-                return false;
-        }
-        
-        return true;
-    }
-    return false;
-    return true;
-}
-
-QList<Phase*> Project::getAllPhasesFrom(Phase* phase)
-{
-    QList<Phase*> phasesFrom;
-    for(int i=0; i<(int)phase->mConstraintsBwd.size(); ++i)
-    {
-        Phase* phaseFrom = phase->mConstraintsBwd[i]->getPhaseFrom();
-        //qDebug() << "- from : " << phaseFrom->mId;
-        phasesFrom.push_back(phaseFrom);
-        
-        QList<Phase*> subPhasesFrom = getAllPhasesFrom(phaseFrom);
-        for(int i=0; i<(int)subPhasesFrom.size(); ++i)
-            phasesFrom.push_back(subPhasesFrom[i]);
-    }
-    return phasesFrom;
-}
-
-QList<Phase*> Project::getAllPhasesTo(Phase* phase)
-{
-    QList<Phase*> phasesTo;
-    for(int i=0; i<(int)phase->mConstraintsFwd.size(); ++i)
-    {
-        Phase* phaseTo = phase->mConstraintsFwd[i]->getPhaseTo();
-        //qDebug() << "- to : " << phaseTo->mId;
-        phasesTo.push_back(phaseTo);
-        
-        QList<Phase*> subPhasesTo = getAllPhasesTo(phaseTo);
-        for(int i=0; i<(int)subPhasesTo.size(); ++i)
-            phasesTo.push_back(subPhasesTo[i]);
-    }
-    return phasesTo;
-}*/
-
-//#pragma mark Events constraints
+// Events constraints
 bool Project::isEventConstraintAllowed(const QJsonObject& eventFrom, const QJsonObject& eventTo)
 {
     const QJsonArray constraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
@@ -2306,10 +2088,9 @@ int Project::getUnusedEventConstraintId(const QJsonArray& constraints)
     return id;
 }
 
-//#pragma mark Phases constraints
+// Phases constraints
 bool Project::isPhaseConstraintAllowed(const QJsonObject& phaseFrom, const QJsonObject& phaseTo)
 {
-    // TODO
     if(!phaseFrom.isEmpty() && !phaseTo.isEmpty())
         return true;
 
@@ -2436,7 +2217,7 @@ int Project::getUnusedPhaseConstraintId(const QJsonArray& constraints)
 
 
 // -------
-//#pragma mark export
+// Export
 void Project::exportAsText()
 {
     /*QString currentDir = MainWindow::getInstance()->getCurrentPath();

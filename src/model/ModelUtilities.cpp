@@ -125,7 +125,7 @@ QString ModelUtilities::getDeltaText(const Date& date)
     return result;
 }
 
-//#pragma mark Events Branches
+// Events Branches
 QVector<QVector<Event*> > ModelUtilities::getNextBranches(const QVector<Event*>& curBranch, Event* lastNode)
 {
     QVector<QVector<Event*> > branches;
@@ -216,7 +216,7 @@ QVector<QVector<Event*> > ModelUtilities::getAllEventsBranches(const QList<Event
 
 
 
-//#pragma mark Phases Branches
+// Phases Branches
 QVector<QVector<Phase*> > ModelUtilities::getNextBranches(const QVector<Phase*>& curBranch, Phase* lastNode, const double gammaSum, const double maxLength)
 {
     QVector<QVector<Phase*> > branches;
@@ -269,6 +269,7 @@ QVector<QVector<Phase*> > ModelUtilities::getNextBranches(const QVector<Phase*>&
 
 QVector<QVector<Phase*> > ModelUtilities::getBranchesFromPhase(Phase* start, const double maxLength)
 {
+    Q_ASSERT(start);
     QVector<Phase*> startBranch;
     start->mLevel = 0;
     startBranch.append(start);
@@ -311,7 +312,7 @@ QVector<QVector<Phase*> > ModelUtilities::getAllPhasesBranches(const QList<Phase
 }
 
 
-//#pragma mark sort events by level
+//Sort events by level
 QVector<Event*> ModelUtilities::sortEventsByLevel(const QList<Event*>& events)
 {
     int numSorted = 0;
@@ -366,33 +367,33 @@ QVector<Event*> ModelUtilities::unsortEvents(const QList<Event*>& events)
 
 QString ModelUtilities::dateResultsText(const Date* d, const Model* model, const bool forCSV)
 {
+    Q_ASSERT(d);
     QString text;
     const QString nl = "\r";
- //   if (d) {
-        text += QObject::tr("Data : %1").arg(d->mName) + nl + nl;
-        text += QObject::tr("Date :") + nl;
-        text += d->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormatStr(),stringWithAppSettings, forCSV) ;
 
-        if (model) {
-            short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTheta.mHPD,model);
-            switch (position) {
-                case -1:
-                    text += QObject::tr("Solution under Study period");
-                    break;
-                case +1:
-                    text += QObject::tr("Solution over Study period");
-                    break;
-                case +2:
-                    text += QObject::tr("Solution under and over Study period");
-                    break;
-                default:
-                    break;
-            }
-         }
-        text += nl + nl;
-        text += QObject::tr("Std. Deviation :") + nl;
-        text += d->mSigma.resultsString(nl);
-//    }
+    text += QObject::tr("Data : %1").arg(d->mName) + nl + nl;
+    text += d->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormatStr(),stringWithAppSettings, forCSV) ;
+
+    if (model) {
+        short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTheta.mHPD,model);
+        switch (position) {
+            case -1:
+                text += QObject::tr("Solutions exist under study period");
+                break;
+            case +1:
+                text += QObject::tr("Solutions exist over study period");
+                break;
+            case +2:
+                text += QObject::tr("Solutions exist outside study period");
+                break;
+            default:
+                break;
+        }
+     }
+    text += nl + nl;
+    text += QObject::tr("Posterior Std. Deviation") + nl;
+    text += d->mSigma.resultsString(nl);
+
     return text;
 }
 
@@ -430,11 +431,11 @@ QString ModelUtilities::phaseResultsText(const Phase* p, const bool forCSV)
     text += QObject::tr("Phase : %1").arg(p->mName) + nl + nl;
 
     text += nl + nl;
-    text += QObject::tr("Begin : ") + nl;
+    text += QObject::tr("Begin (posterior distrib.)") + nl;
     text += p->mAlpha.resultsString(nl, "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings);
 
     text += nl + nl;
-    text += QObject::tr("End : ") + nl;
+    text += QObject::tr("End (posterior distrib.)") + nl;
     text += p->mBeta.resultsString(nl, "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings);
 
     if (p->mTimeRange != QPair<double,double>()) {
@@ -444,7 +445,7 @@ QString ModelUtilities::phaseResultsText(const Phase* p, const bool forCSV)
                                                                                             stringWithAppSettings(p->getFormatedTimeRange().first, forCSV),
                                                                                             stringWithAppSettings(p->getFormatedTimeRange().second, false),
                                                                                             DateUtils::getAppSettingsFormatStr());
-        text += result + nl;
+        text += result;
     }
 
     return text;
@@ -458,7 +459,7 @@ QString ModelUtilities::tempoResultsText(const Phase* p, const bool forCSV)
 
     text += QObject::tr("Phase : %1").arg(p->mName) + nl + nl;
 
-    text += QObject::tr("Duration : ") + nl;
+    text += QObject::tr("Duration") + nl;
     text += p->mDuration.resultsString(nl, QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr ,forCSV);
 
     return text;
@@ -519,19 +520,19 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
     Q_ASSERT(d);
     QString text;
     text += line(textBold(textBlack(QObject::tr("Data : %1").arg(d->mName)))) + "<br>";
-    text += line(textBold(textBlack(QObject::tr("Posterior calib. date :"))));
+    text += line(textBold(textBlack(QObject::tr("Posterior calib. date"))));
 
     if (model) {
         short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTheta.mHPD, model);
         switch (position) {
             case -1:
-               text += line( textBold(textRed(QObject::tr("Solutions exist before study period") )) ) + "<br>";
+               text += line( textBold(textRed(QObject::tr("Solutions exist before study period") )) );
                 break;
             case +1:
-                text += line( textBold(textRed(QObject::tr("Solutions exist after study period"))) ) + "<br>";
+                text += line( textBold(textRed(QObject::tr("Solutions exist after study period"))) );
                 break;
             case +2:
-                text += line( textBold(textRed(QObject::tr("Solutions exist outside study period"))) ) + "<br>";
+                text += line( textBold(textRed(QObject::tr("Solutions exist outside study period"))) );
                 break;
             default:
                 break;
@@ -542,7 +543,7 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
     text += line(textBlack(d->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, false))) ;
 
     text += line("<br>");
-    text += line(textBold(textBlack(QObject::tr("Posterior Std. Deviation :"))));
+    text += line(textBold(textBlack(QObject::tr("Posterior Std. Deviation"))));
     text += line(textBlack(d->mSigma.resultsString()));
     return text;
 }
@@ -551,15 +552,14 @@ QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, c
 {
     Q_ASSERT(e);
     QString text;
- //       text += "<hr>";  // useless line
     if (e->mType == Event::eKnown) {
         text += line(textBold(textRed(QObject::tr("Bound : %1").arg(e->mName)))) + "<br>";
-        text += line(textBold(textRed(QObject::tr("Posterior bound date. :"))));
+        text += line(textBold(textRed(QObject::tr("Posterior bound date"))));
         text += line(textRed(e->mTheta.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, false)));
     }
     else {
         text += line(textBold(textBlue(QObject::tr("Event : %1").arg(e->mName)))) + "<br>";
-        text += line(textBold(textBlue(QObject::tr("Posterior event date. :"))));
+        text += line(textBold(textBlue(QObject::tr("Posterior event date"))));
         text += line(textBlue(e->mTheta.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, false)));
         if (withDates){
             for (auto&& date : e->mDates)
@@ -577,11 +577,11 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
     text += line(textBold(textPurple(QObject::tr("Phase : %1").arg(p->mName))));
 
     text += "<br>";
-    text += line(textBold(textPurple(QObject::tr("Begin (posterior distrib.) : "))));
+    text += line(textBold(textPurple(QObject::tr("Begin (posterior distrib.)"))));
     text += line(textPurple(p->mAlpha.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, false)));
 
     text += "<br>";
-    text += line(textBold(textPurple(QObject::tr("End (posterior distrib.) : "))));
+    text += line(textBold(textPurple(QObject::tr("End (posterior distrib.)"))));
     text += line(textPurple(p->mBeta.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, false)));
 
     if (p->mTimeRange != QPair<double,double>()) {
@@ -591,7 +591,7 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
                                                                                             stringWithAppSettings(p->getFormatedTimeRange().first, false),
                                                                                             stringWithAppSettings(p->getFormatedTimeRange().second, false),
                                                                                             DateUtils::getAppSettingsFormatStr());
-        text += line(textBold(textPurple(result + "<br>")));
+        text += line(textBold(textPurple(result)));
     }
     return text;
 }
@@ -600,11 +600,10 @@ QString ModelUtilities::tempoResultsHTML(const Phase* p)
 {
     Q_ASSERT(p);
     QString text;
-//        text += "<hr>"; // useless line
     text += line(textBold(textPurple(QObject::tr("Phase : %1").arg(p->mName))));
 
     text += "<br>";
-    text += line(textBold(textPurple(QObject::tr("Duration (posterior distrib.) : "))));
+    text += line(textBold(textPurple(QObject::tr("Duration (posterior distrib.)"))));
     text += line(textPurple(p->mDuration.resultsString("<br>", QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"))));
 
     return text;
@@ -614,7 +613,6 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
 {
     Q_ASSERT(p);
     QString text;
- //       text += "<hr>";  // useless line
     text += line(textBold(textGreen(QObject::tr("Succession : from %1 to %2").arg(p->mPhaseFrom->mName, p->mPhaseTo->mName))));
 
     if (p->mTransitionRange != QPair<double,double>()) {
@@ -629,8 +627,6 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
     }
 
     if (p->mGapRange != QPair<double,double>()) {
-        //text += "<br>";
-
         QString result;
         if (std::isinf(p->getFormatedGapRange().first) || std::isinf(p->getFormatedGapRange().second))
            result = QObject::tr("No Gap") ;

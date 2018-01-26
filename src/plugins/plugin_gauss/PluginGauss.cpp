@@ -469,7 +469,7 @@ QPair<double,double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject& data) 
 
 // ------------------------------------------------------------------
 
-//#pragma mark Settings / Input Form / RefView
+// Settings / Input Form / RefView
 GraphViewRefAbstract* PluginGauss::getGraphViewRef()
 {
    mRefGraph = new PluginGaussRefView();

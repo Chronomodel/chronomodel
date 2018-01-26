@@ -480,7 +480,7 @@ void MetropolisVariable::generateNumericalResults(const QList<ChainSpecs> &chain
     }
 }
 
-//#pragma mark getters (no calculs)
+// Getters (no calculs)
 QMap<double, double> &MetropolisVariable::fullHisto()
 {
     return mHisto;

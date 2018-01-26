@@ -605,7 +605,6 @@ void MultiCalibrationView::updateGraphsZoom()
 
         if (gr->hasCurve()) {
 
-
             gr->setRangeX(mTminDisplay, mTmaxDisplay);
             gr->setCurrentX(mTminDisplay, mTmaxDisplay);
 
@@ -776,15 +775,22 @@ void MultiCalibrationView::changeCurveColor()
         for (GraphView* gr : *graphList) {
             if (gr->hasCurve()) {
                 GraphCurve* calibCurve = gr->getCurve("Calibration");
+                if (!calibCurve)
+                    calibCurve = gr->getCurve("Bound");
+
                 calibCurve->mPen.setColor(mCurveColor);
 
+
                 GraphCurve* hpdCurve = gr->getCurve("Calibration HPD");
-                hpdCurve->mPen.setColor(mCurveColor);
-                const QColor brushColor (mCurveColor.red(),mCurveColor.green(), mCurveColor.blue(), 100);
-                hpdCurve->mBrush = QBrush(brushColor);
+                if (hpdCurve) {
+                    hpdCurve->mPen.setColor(mCurveColor);
+                    const QColor brushColor (mCurveColor.red(),mCurveColor.green(), mCurveColor.blue(), 100);
+                    hpdCurve->mBrush = QBrush(brushColor);
+                }
+
 
                 gr->forceRefresh();
-        }
+            }
         }
     }
 }
@@ -873,12 +879,15 @@ void MultiCalibrationView::showStat()
                                const double realThresh = map_area(hpd) / map_area(subData);
 
                                resultsStr += + "<br> HPD (" + locale().toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), stringWithAppSettings) + "<br>";
-                           }
+
+                           } else
+                               resultsStr += "<br>" + textBold(textRed(QObject::tr("Solutions exist outside study period") ))  + "<br>";
+
                       }
-                 } else {
+
+                 } else
                      resultsStr += + "<br> HPD  : " + tr("Not  computable")+ "<br>";
 
-                 }
                }
             }
             mResultText += resultsStr;

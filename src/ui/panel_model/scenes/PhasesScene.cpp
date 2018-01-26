@@ -578,7 +578,7 @@ void PhasesScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e
 }
 
 
-//#pragma mark Check state
+// Check state
 /*void PhasesScene::updateCheckedPhases()
 {
     QJsonObject state = mProject->state();

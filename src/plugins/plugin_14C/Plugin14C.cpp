@@ -321,7 +321,7 @@ PluginFormAbstract* Plugin14C::getForm()
     return form;
 }
 
-//#pragma mark Convert old project versions
+// Convert old project versions
 QJsonObject Plugin14C::checkValuesCompatibility(const QJsonObject& values)
 {
     QJsonObject result = values;

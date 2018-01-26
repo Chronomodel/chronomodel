@@ -20,7 +20,8 @@ EventKnown::~EventKnown()
 {
 
 }
-//#pragma mark JSON
+
+// JSON
 
 EventKnown EventKnown::fromJson(const QJsonObject& json)
 {

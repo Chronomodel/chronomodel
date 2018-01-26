@@ -71,7 +71,7 @@ void PhaseItem::setControlsVisible(const bool visible)
     mControlsVisible = visible;
 }
 
-//#pragma mark Mouse events
+// Mouse events
 
 void PhaseItem::hoverEnterEvent(QGraphicsSceneHoverEvent* e)
 {

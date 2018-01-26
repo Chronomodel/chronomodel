@@ -119,7 +119,7 @@ void MainWindow::setCurrentPath(const QString& path)
     mLastPath = path;
 }
 
-//#pragma mark Actions & Menus
+// Actions & Menus
 void MainWindow::createActions()
 {
     //QWhatsThis::createAction();
@@ -529,28 +529,29 @@ void MainWindow::disconnectProject()
 void MainWindow::closeProject()
 {
    if (mProject) {
-        if ( mProject && mProject->askToSave(tr("Save current project as..."))) {
-            mUndoStack->clear();
+        if ( mProject->askToSave(tr("Save current project as...")) == true)
+             mProject->saveProjectToFile();
 
-            mProject->initState(CLOSE_PROJECT_REASON);
-            mProject->mLastSavedState = mProject->mState;//emptyState();
-            mProject->mProjectFileName = QString();
+        mUndoStack->clear();
 
-            // Go back to model tab :
-            mViewModelAction->trigger();
-            mProject->clearModel();
-            disconnectProject();
+        mProject->initState(CLOSE_PROJECT_REASON);
+        mProject->mLastSavedState = mProject->mState;//emptyState();
+        mProject->mProjectFileName = QString();
 
-            resetInterface();
+        // Go back to model tab :
+        mViewModelAction->trigger();
+        mProject->clearModel();
+        disconnectProject();
 
-            activateInterface(false);
-            mViewResultsAction->setEnabled(false);
+        resetInterface();
 
-            updateWindowTitle();
-            delete mProject;
-            mProject = nullptr;
+        activateInterface(false);
+        mViewResultsAction->setEnabled(false);
 
-        }
+        updateWindowTitle();
+        delete mProject;
+        mProject = nullptr;
+
    } else // if there is no project, we suppose it means to close the programm
        QApplication::exit(0);
 }
@@ -753,7 +754,7 @@ void MainWindow::setFont(const QFont &font)
 */
 }
 
-//#pragma mark Language
+// Language
 void MainWindow::setLanguage(QAction* action)
 {
     QString lang = action->data().toString();
@@ -879,7 +880,7 @@ void MainWindow::closeEvent(QCloseEvent* e)
                             qApp->activeWindow());
 
         if (message.exec() == QMessageBox::Yes) {
-            if (mProject->askToSave(tr("Save project before quitting?"))) {
+            if (mProject->askToSave(tr("Save project before quitting?")) == true) {
                 writeSettings();
                 e->accept();
 

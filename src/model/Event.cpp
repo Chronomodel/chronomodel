@@ -184,13 +184,13 @@ QJsonObject Event::toJson() const
     return event;
 }
 
-//#pragma mark Properties
+// Properties
 Event::Type Event::type() const
 {
     return mType;
 }
 
-//#pragma mark MCMC
+// MCMC
 void Event::reset()
 {
     mTheta.reset();

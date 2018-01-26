@@ -1016,7 +1016,7 @@ void ModelView::prepareNextSlide()
     target = nullptr;
 }
 
-//#pragma mark Painting
+// Painting
 void ModelView::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
@@ -1028,7 +1028,7 @@ void ModelView::paintEvent(QPaintEvent* e)
 
 }
 
-//#pragma mark Layout
+// Layout
 void ModelView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);

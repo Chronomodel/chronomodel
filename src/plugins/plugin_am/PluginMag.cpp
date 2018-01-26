@@ -24,7 +24,7 @@ PluginMag::~PluginMag()
         delete mRefGraph;
 }
 
-//#pragma mark Likelihood
+// Likelihood
 long double PluginMag::getLikelihood(const double& t, const QJsonObject& data)
 {
     QPair<long double, long double > result = getLikelihoodArg(t, data);
@@ -67,7 +67,7 @@ QPair<long double, long double> PluginMag::getLikelihoodArg(const double& t, con
     return qMakePair(variance, exponent);
 }
 
-//#pragma mark Properties
+// Properties
 QString PluginMag::getName() const
 {
     return QString("AM");

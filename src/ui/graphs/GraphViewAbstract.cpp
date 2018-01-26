@@ -4,7 +4,7 @@
 #include <QDebug>
 
 
-//#pragma mark Constructor / Destructor
+// Constructor / Destructor
 
 GraphViewAbstract::GraphViewAbstract():
 mGraphWidth(150.), mGraphHeight(50),
