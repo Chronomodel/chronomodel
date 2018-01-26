@@ -474,7 +474,7 @@ mMinorCountScale (4)
 
     connect(mCurrentXMinEdit, &LineEdit::editingFinished, this, &ResultsView::editCurrentMinX);
     connect(mCurrentXMaxEdit, &LineEdit::editingFinished, this, &ResultsView::editCurrentMaxX);
-    connect(mDisplayStudyBut, &Button::clicked, this, &ResultsView::setStudyPeriod);
+    connect(mDisplayStudyBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::setStudyPeriod);
 
     // Connection
     // QLineEdit::setText() doesn't emit signal textEdited, when the text is changed programmatically
@@ -512,8 +512,8 @@ mMinorCountScale (4)
     mExportResults->setFixedSize(allDensitiesButSize);
     mExportResults->setToolTip(tr("Export all result in several files"));
 
-    connect(mExportImgBut, &Button::clicked, this, &ResultsView::exportFullImage);
-    connect(mExportResults, &Button::clicked, this, &ResultsView::exportResults);
+    connect(mExportImgBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::exportFullImage);
+    connect(mExportResults, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::exportResults);
 
 
     /*-------------
@@ -545,10 +545,10 @@ mMinorCountScale (4)
     mDataSaveBut->setToolTip(tr("Save graph data to file"));
     mDataSaveBut->setFixedSize(singleDensityButSize);
 
-    connect(mImageSaveBut, &Button::clicked, this, &ResultsView::saveAsImage);
-    connect(mImageClipBut, &Button::clicked, this, &ResultsView::imageToClipboard);
-    connect(mResultsClipBut, &Button::clicked, this, &ResultsView::resultsToClipboard);
-    connect(mDataSaveBut, &Button::clicked, this, &ResultsView::saveGraphData);
+    connect(mImageSaveBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::saveAsImage);
+    connect(mImageClipBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::imageToClipboard);
+    connect(mResultsClipBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::resultsToClipboard);
+    connect(mDataSaveBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::saveGraphData);
 
     // Page widget
     mPageWidget = new QWidget (this);
@@ -3168,7 +3168,7 @@ void ResultsView::resultsToClipboard()
 {
     QString resultText;
 
-    if (mTabByScene->currentIndex() == 1) {
+    if (mTabByScene->currentIndex() == 0) {
         if (mEventsScrollArea) {
                     for (auto && graph : mByEventsGraphs)
                         if (graph->isSelected())
@@ -3195,7 +3195,7 @@ void ResultsView::saveGraphData()
 {
     QList<GraphViewResults*> selectedGraph;
 
-    if (mTabByScene->currentIndex() == 1) {
+    if (mTabByScene->currentIndex() == 0) {
         if (mEventsScrollArea) {
             for (auto &&graph : mByEventsGraphs)
                 if (graph->isSelected())
