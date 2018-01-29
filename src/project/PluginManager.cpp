@@ -62,26 +62,29 @@ void PluginManager::loadPlugins()
         else
             qDebug() << "Chargement échoué : " << plugin;
     }*/
-    
-#if USE_PLUGIN_UNIFORM
-    PluginAbstract* pluginUniform = new PluginUniform();
-    mPlugins.append(pluginUniform);
-#endif
-#if USE_PLUGIN_GAUSS
-    PluginAbstract* pluginGauss = new PluginGauss();
-    mPlugins.append(pluginGauss);
-#endif
-#if USE_PLUGIN_TL
-    PluginAbstract* pluginTL = new PluginTL();
-    mPlugins.append(pluginTL);
-#endif
 #if USE_PLUGIN_14C
     PluginAbstract* plugin14C = new Plugin14C();
     mPlugins.append(plugin14C);
 #endif
+
 #if USE_PLUGIN_AM
     PluginAbstract* pluginMag = new PluginMag();
     mPlugins.append(pluginMag);
+#endif
+
+#if USE_PLUGIN_TL
+    PluginAbstract* pluginTL = new PluginTL();
+    mPlugins.append(pluginTL);
+#endif
+
+#if USE_PLUGIN_UNIFORM
+    PluginAbstract* pluginUniform = new PluginUniform();
+    mPlugins.append(pluginUniform);
+#endif
+
+#if USE_PLUGIN_GAUSS
+    PluginAbstract* pluginGauss = new PluginGauss();
+    mPlugins.append(pluginGauss);
 #endif
 }
 
