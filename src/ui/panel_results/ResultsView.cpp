@@ -2124,7 +2124,11 @@ void ResultsView::updateCurvesToShow()
     else if (mTabByScene->currentIndex() == 2 )
         for (GraphViewResults* tempoGraph : mByTempoGraphs) {
             tempoGraph->setShowNumericalResults(showStat);
-            tempoGraph->updateCurvesToShow(showAllChains, showChainList, mTempoCredCheck->isChecked(), mTempoErrCheck->isChecked(), showWiggle);
+            if (mCurrentVariable == GraphViewResults::eTempo)
+                tempoGraph->updateCurvesToShow(showAllChains, showChainList, mTempoCredCheck->isChecked(), mTempoErrCheck->isChecked(), showWiggle);
+
+            else // (mCurrentVariable == GraphViewResults::eDuration) || (mCurrentVariable == GraphViewResults::eActivity)
+             tempoGraph->updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
         }
 
     updateScales();
