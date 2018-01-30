@@ -465,6 +465,7 @@ void CalibrationView::updateScroll()
     }
     else
         mEndEdit->setFont(font());
+
 qDebug()<<"CalibrationView::updateScroll()"<<mTminDisplay<<mTmaxDisplay;
     // usefull when we set mStartEdit and mEndEdit at the begin of the display,
     // after a call to setDate

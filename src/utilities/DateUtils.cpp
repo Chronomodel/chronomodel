@@ -93,26 +93,6 @@ QString DateUtils::formatString(const FormatDate format)
     }
 }
 
-/*QString DateUtils::dateToString(const double date)
-{
-    return formatValueToAppSettingsPrecision(date);
-}*/
-
-/*QString DateUtils::dateToString(const double date, int precision)
-{
-    QLocale locale;
-    locale.setNumberOptions(QLocale::OmitGroupSeparator);
-    char fmt = 'f';
-    if (date>250000)
-        fmt = 'G';
-
-    if (std::abs(date)<1E-10)
-        return "0";
-
-    else
-        return locale.toString(date, fmt, precision);
-}*/
-
 DateUtils::FormatDate DateUtils::getAppSettingsFormat()
 {
     return MainWindow::getInstance()->getAppSettings().mFormatDate;
