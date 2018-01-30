@@ -680,13 +680,13 @@ void ResultsView::updateControls()
      *  Display by phases or by events
      * -------------------------------------------------------*/
     if (byEvents) {
-            if (!mTempoScrollArea)
-                createTempoScrollArea(mTabTempoIndex);
+            if (!mEventsScrollArea)
+                createEventsScrollArea(mTabEventsIndex);
             mStack->setCurrentWidget(mEventsScrollArea);
 
     } else if (byPhases) {
-        if (!mTempoScrollArea)
-            createTempoScrollArea(mTabTempoIndex);
+        if (!mPhasesScrollArea)
+            createPhasesScrollArea(mTabPhasesIndex);
         mStack->setCurrentWidget(mPhasesScrollArea);
 
     } else if (byTempo) {
@@ -1301,7 +1301,7 @@ void ResultsView::changeScrollArea()
  * @brief ResultsView::updateTabs Update mTabs according to mTabByScene index
  * @param index
  */
-void ResultsView:: updateTabs(const int &index)
+void ResultsView::updateTabs(const int &index)
 {
     switch (index) {
         case 0: //mTabByScene on Events
@@ -1550,11 +1550,13 @@ void ResultsView::initResults(Model* model)
         mTabByScene->setTab(1, false);
         mTabByScene->setTabVisible(1, true);
         mTabByScene->setTabVisible(2, true);
+        updateTabs(1);
 
      } else {
         mTabByScene->setTabVisible(2, false);
         mTabByScene->setTabVisible(1, false);
         mTabByScene->setTab(0, false);
+        updateTabs(0);
      }
     /* ----------------------------------------------------
      *  Create Chains option controls (radio and checkboxes under "MCMC Chains")
@@ -1591,15 +1593,22 @@ void ResultsView::initResults(Model* model)
 
     setStudyPeriod();
 
-    if (mHasPhases)
+  /*  if (mHasPhases)
         createPhasesScrollArea(mTabPhasesIndex);
     else
-        createEventsScrollArea(mTabEventsIndex);
+        createEventsScrollArea(mTabEventsIndex);*/
+
+
 
     // ------------------------------------------------------------
     showInfos(false);
     updateControls();
 
+ /*   if (mHasPhases)
+        mTabByScene->setTab(1, true);
+    else
+        mTabByScene->setTab(0, true);
+*/
 }
 
 /**
@@ -1608,12 +1617,13 @@ void ResultsView::initResults(Model* model)
 void ResultsView::updateResults(Model* model)
 {
     qDebug() << "ResultsView::updateResults";
+    Q_ASSERT(model);
 
     if (!mModel && !model)
         return;
 
-    if (model)
-        mModel = model;
+  //  if (model)
+    mModel = model;
 
     mChains = mModel->mChains;
     mSettings = mModel->mSettings;
@@ -1630,11 +1640,13 @@ void ResultsView::updateResults(Model* model)
         mTabByScene->setTab(1, false);
         mTabByScene->setTabVisible(1, true);
         mTabByScene->setTabVisible(2, true);
+        updateTabs(1);
 
      } else {
         mTabByScene->setTabVisible(2, false);
         mTabByScene->setTabVisible(1, false);
         mTabByScene->setTab(0, false);
+        updateTabs(0);
      }
 
     /* ----------------------------------------------------
@@ -1681,9 +1693,11 @@ void ResultsView::updateResults(Model* model)
     *  Graphs are empty at this moment
     * ----------------------------------------------------*/
     if (mHasPhases)
-        createPhasesScrollArea(mTabPhasesIndex);
+        mTabByScene->setTab(1, false);
+        //createPhasesScrollArea(mTabPhasesIndex);
     else
-        createEventsScrollArea(mTabEventsIndex);
+        mTabByScene->setTab(0, false);
+        //createEventsScrollArea(mTabEventsIndex);
 
     // ------------------------------------------------------------
     showInfos(false);
@@ -2804,8 +2818,35 @@ void ResultsView:: setStudyPeriod()
 
 void ResultsView::updateZoomEdit()
 {
-    mCurrentXMinEdit->setText(stringWithAppSettings(mResultCurrentMinX));
-    mCurrentXMaxEdit->setText(stringWithAppSettings(mResultCurrentMaxX));
+    QFont adaptedFont (font());
+    QFontMetricsF fm (font());
+    qreal textSize = fm.width(locale().toString(mResultCurrentMinX,'f',0));
+    if (textSize > (mCurrentXMinEdit->width() - 2. )) {
+        const qreal fontRate = textSize / (mCurrentXMinEdit->width() - 2. );
+        const qreal ptSiz = adaptedFont.pointSizeF() / fontRate;
+        adaptedFont.setPointSizeF(ptSiz);
+        mCurrentXMinEdit->setFont(adaptedFont);
+    }
+    else
+        mCurrentXMinEdit->setFont(font());
+
+    mCurrentXMinEdit->setText(locale().toString(mResultCurrentMinX,'f',0));
+
+    textSize = fm.width(locale().toString(mResultCurrentMaxX,'f',0));
+    if (textSize > (mCurrentXMaxEdit->width() - 2. )) {
+        const qreal fontRate = textSize / (mCurrentXMaxEdit->width() - 2. );
+        const qreal ptSiz = adaptedFont.pointSizeF() / fontRate;
+        adaptedFont.setPointSizeF(ptSiz);
+        mCurrentXMaxEdit->setFont(adaptedFont);
+    }
+    else
+        mCurrentXMaxEdit->setFont(font());
+
+    mCurrentXMaxEdit->setText(locale().toString(mResultCurrentMaxX,'f',0));
+
+
+    /*mCurrentXMinEdit->setText(stringWithAppSettings(mResultCurrentMinX));
+    mCurrentXMaxEdit->setText(stringWithAppSettings(mResultCurrentMaxX));*/
 }
 
 void ResultsView::updateScaleEdit()
