@@ -467,21 +467,6 @@ void ModelView::createProject()
     mEventsScene->createSceneFromState();
     mPhasesScene->createSceneFromState();
 
-    // open and set the properties View, if there is no phase
-    const QJsonArray phases = mProject->mState.value(STATE_PHASES).toArray();
-    if (phases.isEmpty()) {
-        const QJsonObject& event = mEventPropertiesView->getEvent();
-        if (!event.isEmpty()) {
-            const QJsonArray events = state.value(STATE_EVENTS).toArray();
-            for (int i=0; i<events.size(); ++i) {
-                const QJsonObject evt = events.at(i).toObject();
-                if (evt.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
-                    if (evt != event)
-                        mEventPropertiesView->setEvent(evt);
-                }
-            }
-        }
-    }
 }
 
 void ModelView::updateProject()
