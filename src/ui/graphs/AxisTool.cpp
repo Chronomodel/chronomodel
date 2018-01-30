@@ -121,7 +121,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, F
             }
         }
         else {
-            if ( mShowSubs && (mEndVal - mStartVal != INFINITY)) {
+            if (  mShowSubs && (mEndVal - mStartVal != INFINITY) && (mEndVal > mStartVal) && (mMajorScale > 0)) {
 
                 // look for the text increment
                 const QString textMin =(valueFormatFunc ? valueFormatFunc(mStartVal, false) : stringWithAppSettings(mStartVal, false) );
@@ -132,7 +132,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, F
 
                 const double nbPossibleText = std::abs(getXForValue(mStartVal) -getXForValue(mEndVal)) / (std::max(textMinWidth, textMaxWidth) + 5.);
 
-                const double nbTheoText = std::abs(getXForValue(mStartVal) -getXForValue(mEndVal)) / std::abs(getXForValue(mStartVal) -getXForValue(mStartVal+mMajorScale));
+                const double nbTheoText = std::abs(getXForValue(mStartVal) -getXForValue(mEndVal)) / std::abs(getXForValue(mStartVal) - getXForValue(mStartVal + mMajorScale));
 
                 if (nbTheoText > nbPossibleText)
                     mTextInc = int (std::ceil(nbTheoText/nbPossibleText));
