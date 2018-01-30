@@ -880,29 +880,73 @@ bool Model::isValid()
     return true;
 }
 
-//Generate model data
+// Generate model data
 void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 {
+
 #ifdef DEBUG
+    qDebug()<<"Model::generateCorrelations()";
     QTime t = QTime::currentTime();
 #endif
+
+#ifndef UNIT_TEST
+    // Display a progressBar if "long" set with setMinimumDuration()
+    QProgressDialog *progress = new QProgressDialog(tr("Correlation generation"), tr("Wait") , 1, 10);
+    progress->setWindowModality(Qt::WindowModal);
+    progress->setCancelButton(0);
+    progress->setMinimumDuration(4);
+    progress->setMinimum(0);
+
+    int sum (0);
+    for (auto && event : mEvents )
+        sum += event->mDates.size() +1;
+
+    progress->setMaximum(mPhases.size() + sum);
+    int position(1);
+#endif
+
+
     for (auto && event : mEvents ) {
         event->mTheta.generateCorrelations(chains);
-        
+#ifndef UNIT_TEST
+            ++position;
+            progress->setValue(position);
+#endif
         for (auto&& date : event->mDates ) {
             date.mTheta.generateCorrelations(chains);
             date.mSigma.generateCorrelations(chains);
+
+#ifndef UNIT_TEST
+            ++position;
+            progress->setValue(position);
+#endif
         }
     }
     
     for (auto && phase : mPhases ) {
         phase->mAlpha.generateCorrelations(chains);
         phase->mBeta.generateCorrelations(chains);
+
+#ifndef UNIT_TEST
+        ++position;
+         progress->setValue(position);
+#endif
     }
+
+#ifndef UNIT_TEST
+    progress->~QProgressDialog();
+#endif
+
 #ifdef DEBUG
-    QTime t2 = QTime::currentTime();
-    qint64 timeDiff = t.msecsTo(t2);
-    qDebug() <<  "=> Model::generateCorrelations done in " + QString::number(timeDiff) + " ms";
+    //QTime t2 = QTime::currentTime();
+    QTime timeDiff(0,0,0,1);
+    timeDiff = timeDiff.addMSecs(t.elapsed()).addMSecs(-1);
+//    qint64 timeDiff = t.msecsTo(t2);
+
+    qDebug() <<  QString("=> Model::generateCorrelations done in  %1 h %2 m %3 s %4 ms").arg(QString::number(timeDiff.hour()),
+                                                                QString::number(timeDiff.minute()),
+                                                                QString::number(timeDiff.second()),
+                                                                QString::number(timeDiff.msec()) );
 #endif
 }
 
@@ -1135,16 +1179,13 @@ double Model::getThreshold() const
 void Model::generateCredibility(const double thresh)
 {
 #ifdef DEBUG
-    qDebug()<<"Model::generateCredibility("<<thresh;
+    qDebug()<<QString("Model::generateCredibility( %1 %)").arg(thresh);
     QTime t = QTime::currentTime();
 #endif
     for (auto && pEvent : mEvents) {
         bool isFixedBound = false;
-        if (pEvent->type() == Event::eKnown) {
-            //EventKnown* ek = dynamic_cast<EventKnown*>(pEvent);
-            //if (ek->knownType() == EventKnown::eFixed)
+        if (pEvent->type() == Event::eKnown)
                 isFixedBound = true;
-        }
 
         if (!isFixedBound) {
             pEvent->mTheta.generateCredibility(mChains, thresh);
@@ -1158,54 +1199,67 @@ void Model::generateCredibility(const double thresh)
     }
 
     // Diplay a progressBar if "long" set with setMinimumDuration()
-    QProgressDialog *progress = new QProgressDialog(tr("Time range & credibilities generation"),tr("Wait") , 1, 10);//, qApp->activeWindow(), Qt::Window);
+
+    QProgressDialog *progress = new QProgressDialog(tr("Time range & credibilities generation"), tr("Wait") , 1, 10);
+
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(0);
-    progress->setMinimumDuration(4);
+    progress->setMinimumDuration(1);
     progress->setMinimum(0);
     progress->setMaximum(mPhases.size()*4);
-    int position(1);
+    progress->setMinimumWidth(300);
+
+    int position(0);
 
     for (auto && pPhase :mPhases) {
-        progress->setValue(position);
+
         // if there is only one Event in the phase, there is no Duration
         pPhase->mAlpha.generateCredibility(mChains, thresh);
-        ++position;
+        progress->setValue(++position);
+
         pPhase->mBeta.generateCredibility(mChains, thresh);
-        ++position;
+        progress->setValue(++position);
+
         pPhase->mDuration.generateCredibility(mChains, thresh);
-        ++position;
+        progress->setValue(++position);
+
         pPhase->mTimeRange = timeRangeFromTraces(pPhase->mAlpha.fullRunRawTrace(mChains),
                                                              pPhase->mBeta.fullRunRawTrace(mChains),thresh, "Time Range for Phase : "+pPhase->mName);
 
-        ++position;
+        progress->setValue(++position);
 
     }
-    progress->setMinimum(0);
-    progress->setMaximum(mPhaseConstraints.size()*2);
-    progress->setLabelText(tr("Gaps and transitions generation"));
+    delete progress;
 
-    position = 1;
+    QProgressDialog *progressGap = new QProgressDialog(tr("Gaps and transitions generation"), tr("Wait") , 1, 10);
+    progressGap->setWindowModality(Qt::WindowModal);
+    progressGap->setCancelButton(0);
+    progressGap->setMinimumDuration(1);
+    progressGap->setMinimum(0);
+    progressGap->setMaximum(mPhases.size()*4);
+    progressGap->setMinimum(0);
+    progressGap->setMaximum(mPhaseConstraints.size()*2);
 
+    position = 0;
     for (auto && phaseConstraint : mPhaseConstraints) {
-        progress->setValue(position);
+
         Phase* phaseFrom = phaseConstraint->mPhaseFrom;
         Phase* phaseTo  = phaseConstraint->mPhaseTo;
 
         phaseConstraint->mGapRange = gapRangeFromTraces(phaseFrom->mBeta.fullRunRawTrace(mChains),
                                                              phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Gap Range : "+phaseFrom->mName+ " to "+ phaseTo->mName);
 
-        ++position;
         qDebug()<<"Gap Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
+        progressGap->setValue(++position);
 
         phaseConstraint->mTransitionRange = transitionRangeFromTraces(phaseFrom->mBeta.fullRunRawTrace(mChains),
                                                              phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Transition Range : "+phaseFrom->mName+ " to "+ phaseTo->mName);
 
-        ++position;
         qDebug()<<"Transition Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
+        progressGap->setValue(++position);
 
     }
-    delete progress;
+    delete progressGap;
 #ifdef DEBUG
     QTime t2 (QTime::currentTime());
     qint64 timeDiff = t.msecsTo(t2);
@@ -1272,13 +1326,13 @@ void Model::generateTempo()
 
 #ifndef UNIT_TEST
     // Display a progressBar if "long" set with setMinimumDuration()
-    QProgressDialog *progress = new QProgressDialog(tr("Tempo Plot generation"),tr("Wait") , 1, 10);//, qApp->activeWindow(), Qt::Window);
+    QProgressDialog *progress = new QProgressDialog(tr("Tempo Plot generation"), tr("Wait") , 1, 10);//, qApp->activeWindow(), Qt::Window);
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(0);
-    progress->setMinimumDuration(4);
+    progress->setMinimumDuration(1);
     progress->setMinimum(0);
-    progress->setMaximum(mPhases.size()*1);
-    int position(1);
+    progress->setMaximum(mPhases.size() * 4);
+    int position(0);
 #endif
 
     double tmin (mSettings.mTmin);
@@ -1317,10 +1371,12 @@ void Model::generateTempo()
         // Avoid to redo calculation, when mTempo exist, it happen when the control is changed
         if (!phase->mRawTempo.isEmpty()) {
 #ifndef UNIT_TEST
+            position += 4;
             progress->setValue(position);
 #endif
             continue;
         }
+
          ///# 1 - Generate Event scenario
          // We suppose, it is the same iteration number for all chains
         QList<QVector<double>> listTrace;
@@ -1450,9 +1506,6 @@ void Model::generateTempo()
         }
         /// Loop End
 
-#ifndef UNIT_TEST
-        progress->setValue(position);
-#endif
 
     ///# Calculation of the variance
         QVector<double> inf;
@@ -1473,6 +1526,11 @@ void Model::generateTempo()
             ++itN2;
 
         }
+#ifndef UNIT_TEST
+        ++position;
+        progress->setValue(position);
+#endif
+
        ///# 2 - Cumulate Nj and Nj2
         /*QMap<double, double> tempo;
         QMap<double, double> tempoInf;
@@ -1506,6 +1564,10 @@ void Model::generateTempo()
         phase->mTempoInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoInf);
         phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
 
+#ifndef UNIT_TEST
+        ++position;
+        progress->setValue(position);
+#endif
 #ifndef ACTIVITY
         ///# 3 - Derivative function
         /**  compute the slope of a nearby secant line through the points (x-h,f(x-h)) and (x+h,f(x+h)).
@@ -1545,7 +1607,10 @@ void Model::generateTempo()
        phase->mActivity = DateUtils::convertMapToAppSettingsFormat(vector_to_map(phase->mRawActivity, tmin, tmax, deltat));
 
 #endif
-
+#ifndef UNIT_TEST
+        ++position;
+        progress->setValue(position);
+#endif
         ///# 4 - Credibility
         QVector<double> credInf (nbPts);
         QVector<double> credSup (nbPts);
@@ -1583,6 +1648,7 @@ void Model::generateTempo()
 
 #ifndef UNIT_TEST
         ++position;
+        progress->setValue(position);
 #endif
 
     }
@@ -1592,9 +1658,16 @@ void Model::generateTempo()
 #endif
 
 #ifdef DEBUG
-    QTime t2 = QTime::currentTime();
-    qint64 timeDiff = t.msecsTo(t2);
-    qDebug() <<  "=> Model::generateTempo() done in " + QString::number(timeDiff) + " ms";
+    //QTime t2 = QTime::currentTime();
+    //qint64 timeDiff = t.msecsTo(t2);
+
+    QTime timeDiff(0,0,0,1);
+    timeDiff = timeDiff.addMSecs(t.elapsed()).addMSecs(-1);
+
+    qDebug() <<  QString("=> Model::generateTempo() done in  %1 h %2 m %3 s %4 ms").arg(QString::number(timeDiff.hour()),
+                                                                QString::number(timeDiff.minute()),
+                                                                QString::number(timeDiff.second()),
+                                                                QString::number(timeDiff.msec()) );
 #endif
 
 
