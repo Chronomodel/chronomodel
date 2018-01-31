@@ -9,7 +9,8 @@ mIsTitle(false)
     init();
 }
 
-Label::Label(const QString& text, QWidget* parent):QLabel(text, parent)
+Label::Label(const QString& text, QWidget* parent):QLabel(text, parent),
+mIsTitle(false)
 {
     init();
 }
@@ -22,6 +23,17 @@ Label::~Label()
 void Label::init()
 {
     setAlignment(Qt::AlignVCenter | Qt::AlignRight);
+    mPalette = this->parentWidget()->palette();
+}
+
+void Label::setPalette(QPalette &palette)
+{
+    mPalette = palette;
+}
+
+void Label::setBackground(QColor color)
+{
+    mPalette.setColor(QPalette::Background, color);
 }
 
 void Label::setIsTitle(bool isTitle)
@@ -29,30 +41,34 @@ void Label::setIsTitle(bool isTitle)
     mIsTitle = isTitle;
     
     if (mIsTitle) {
-        setAutoFillBackground(true);
-        
-        QPalette palette = QLabel::palette();
-        palette.setColor(QPalette::WindowText, Qt::white);
-        palette.setColor(QPalette::Window, Painting::mainColorGrey);
-        setPalette(palette);
-        
+        mPalette.setColor(QPalette::Text, Qt::white);
+        mPalette.setColor(QPalette::Background, Painting::mainColorGrey);
         setAlignment(Qt::AlignCenter);
         setFixedHeight(20);
     }
-    
-    update();
+
 }
+
+void Label::paintEvent(QPaintEvent*)
+{
+    QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing);
+    p.setFont(font());
+    const QRectF r = rect();
+
+    p.fillRect(r, mPalette.background().color());
+    p.setPen(mPalette.text().color());
+    p.drawText(r, alignment(), text());
+
+}
+
 
 void Label::setLight()
 {
-    QPalette palette = QLabel::palette();
-    palette.setColor(QPalette::WindowText, QColor(200, 200, 200));
-    setPalette(palette);
+    mPalette.setColor(QPalette::Text, QColor(200, 200, 200));
 }
 
 void Label::setDark()
 {
-    QPalette palette = QLabel::palette();
-    palette.setColor(QPalette::WindowText, Qt::black);
-    setPalette(palette);
+    mPalette.setColor(QPalette::Text, Qt::black);
 }

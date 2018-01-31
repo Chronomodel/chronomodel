@@ -920,7 +920,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
         font.setPointSizeF(font.pointSizeF() + 2.);
         QFontMetrics fm (font);
         p.setFont(font);
-        p.setPen(QColor(50, 50, 50));
+        p.setPen(Painting::borderDark);
         int y (0);
         int lineH (fm.height() +2);
         for (auto && info : mInfos) {

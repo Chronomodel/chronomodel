@@ -1,4 +1,5 @@
 #include "SceneGlobalView.h"
+#include "Painting.h"
 #include <QtWidgets>
 
 
@@ -24,7 +25,7 @@ void SceneGlobalView::paintEvent(QPaintEvent* e)
     
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
-    p.setPen(QColor(50, 50, 50));
+    p.setPen(Painting::borderDark);
     p.setBrush(QColor(100, 100, 100));
     p.drawRect(r);
     

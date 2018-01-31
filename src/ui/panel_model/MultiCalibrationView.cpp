@@ -60,6 +60,7 @@ mCurveColor(Painting::mainColorDark)
     mGraphHeightLab = new Label(tr("Y Zoom"), this);
     mGraphHeightLab->setAlignment(Qt::AlignHCenter);
     mGraphHeightLab->setLight();
+    mGraphHeightLab->setBackground(Painting::borderDark);
 
     mGraphHeightEdit = new LineEdit(this);
     mGraphHeightEdit->setText(locale().toString(mGraphHeight));
@@ -82,6 +83,7 @@ mCurveColor(Painting::mainColorDark)
     mHPDLab = new Label(tr("HPD (%)"), this);
     mHPDLab->setAlignment(Qt::AlignHCenter);
     mHPDLab->setLight();
+    mHPDLab->setBackground(Painting::borderDark);
 
     mHPDEdit = new LineEdit(this);
     mHPDEdit->setText("95");
@@ -95,6 +97,7 @@ mCurveColor(Painting::mainColorDark)
     mStartLab = new Label(tr("Start"), this);
     mStartLab->setAlignment(Qt::AlignHCenter);
     mStartLab->setLight();
+    mStartLab->setBackground(Painting::borderDark);
 
     mStartEdit = new LineEdit(this);
     mStartEdit->setText("-1000");
@@ -102,6 +105,7 @@ mCurveColor(Painting::mainColorDark)
     mEndLab = new Label(tr("End"), this);
     mEndLab->setAlignment(Qt::AlignHCenter);
     mEndLab->setLight();
+    mEndLab->setBackground(Painting::borderDark);
 
     mEndEdit = new LineEdit(this);
     mEndEdit->setText("1000");
@@ -109,6 +113,7 @@ mCurveColor(Painting::mainColorDark)
     mMajorScaleLab = new Label(tr("Maj. Int"), this);
     mMajorScaleLab->setAlignment(Qt::AlignHCenter);
     mMajorScaleLab->setLight();
+    mMajorScaleLab->setBackground(Painting::borderDark);
 
     mMajorScaleEdit = new LineEdit(this);
     mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves"));
@@ -117,6 +122,7 @@ mCurveColor(Painting::mainColorDark)
     mMinorScaleLab = new Label(tr("Min. Cnt"), this);
     mMinorScaleLab->setAlignment(Qt::AlignHCenter);
     mMinorScaleLab->setLight();
+    mMinorScaleLab->setBackground(Painting::borderDark);
 
     mMinorScaleEdit = new LineEdit(this);
     mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves"));
@@ -176,7 +182,7 @@ void MultiCalibrationView::paintEvent(QPaintEvent* e)
     QPainter p(this);
     //p.setRenderHint(QPainter::Antialiasing); // not necessary
     // drawing a background under button
-    p.fillRect(QRect(graphWidth, 0, mButtonWidth, height()), QColor(50, 50, 50));
+    p.fillRect(QRect(graphWidth, 0, mButtonWidth, height()), Painting::borderDark);
 
     // drawing a background under curve
    // p.fillRect(QRect(0, 0, graphWidth, height()), Qt::green);

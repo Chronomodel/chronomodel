@@ -91,7 +91,7 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
         QRectF r2 = r.adjusted(0, r.height() - h, 0, 0);
         p.fillRect(r2, grad2);
         
-        p.setPen(QColor(50, 50, 50));
+        p.setPen(Painting::borderDark);
         p.setBrush(Qt::NoBrush);
         p.drawRect(r);
         
@@ -107,23 +107,6 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
     } else {
         const qreal w = r.width() * mProp;
         const QRectF r2 = r.adjusted(0, 0, -r.width() + w, 0);
-        
-        /*QLinearGradient grad1(0, 0, 0, height());
-        grad1.setColorAt(0, QColor(60, 60, 60));
-        grad1.setColorAt(1, QColor(80, 80, 80));
-        
-        p.setPen(Qt::NoPen);
-        p.setBrush(grad1);
-        p.drawRect(r);
-        
-        QLinearGradient grad2(0, 0, 0, height());
-        grad2.setColorAt(0, Painting::mainColorLight);
-        grad2.setColorAt(1, Painting::mainColorDark);
-        p.fillRect(r2, grad2);
-         
-        p.setPen(QColor(50, 50, 50));
-        p.setBrush(Qt::NoBrush);
-        p.drawRect(r);*/
         
         p.setPen(QColor(150, 150, 150));
         p.setBrush(QColor(150, 150, 150));

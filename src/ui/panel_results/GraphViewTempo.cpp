@@ -14,7 +14,7 @@
 GraphViewTempo::GraphViewTempo(QWidget *parent):GraphViewResults(parent),
 mPhase(nullptr)
 {
-    setMainColor(QColor(50, 50, 50));
+    setMainColor(Painting::borderDark);
     mGraph->setBackgroundColor(QColor(210, 210, 210));
 
 }

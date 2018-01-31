@@ -9,6 +9,8 @@ QList<QColor> Painting::chainColors = QList<QColor>();
 QColor Painting::greyedOut = QColor(255, 255, 255, 200);
 QColor Painting::mainGreen = QColor(0, 169, 157);
 
+QColor Painting::borderDark = QColor(50, 50, 50);
+
 void Painting::init()
 {
     chainColors.append(Qt::blue);
@@ -58,7 +60,7 @@ void drawButton(QPainter& painter, const QRectF& rect, bool hover, bool isEnable
         grad.setColorAt(1, QColor(30, 30, 30));
         painter.fillRect(rect, grad);
         
-        painter.setPen(QColor(50, 50, 50));
+        painter.setPen(Painting::borderDark);
         painter.drawLine(0, 0, rect.width(), 0);
         
         painter.setPen(Qt::black);
@@ -93,8 +95,8 @@ void drawButton2(QPainter& painter, const QRectF& rect, bool hover, bool isEnabl
     QRectF r = rect;
     
     if (isFlat) {
-        painter.setPen(hover ? Qt::black : QColor(50, 50, 50));
-        painter.setBrush(hover ? Qt::black : QColor(50, 50, 50));
+        painter.setPen(hover ? Qt::black : Painting::borderDark);
+        painter.setBrush(hover ? Qt::black : Painting::borderDark);
         painter.drawRect(r);
     } else {
         r = rect.adjusted(1, 1, -1, -1);
@@ -129,7 +131,7 @@ void drawButton2(QPainter& painter, const QRectF& rect, bool hover, bool isEnabl
             painter.setPen(QColor(110, 110, 110));
             painter.setBrush(Qt::NoBrush);
             painter.drawRoundedRect(r.adjusted(0, 1, 0, 0), 4, 4);
-            painter.setPen(QColor(50, 50, 50));
+            painter.setPen(Painting::borderDark);
             painter.drawRoundedRect(r, 4, 4);
         }
     }
@@ -165,10 +167,10 @@ void drawButton2(QPainter& painter, const QRectF& rect, bool hover, bool isEnabl
 
 void drawBox(QPainter& painter, const QRectF& r, const QString& text)
 {
-    painter.setPen(QColor(50, 50, 50));
+    painter.setPen(Painting::borderDark);
     painter.setBrush(QColor(75, 75, 75));
     painter.drawRect(r);
-    painter.setBrush(QColor(50, 50, 50));
+    painter.setBrush(Painting::borderDark);
     painter.drawRect(r.adjusted(0, 0, 0, -r.height() + 20));
     
     QFont font = painter.font();

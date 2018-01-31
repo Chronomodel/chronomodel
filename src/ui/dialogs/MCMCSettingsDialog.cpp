@@ -156,7 +156,7 @@ void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
     QPainter p(this);
     p.fillRect(rect(), QColor(220, 220, 220));
     
-    p.setPen(QColor(50, 50, 50));
+    p.setPen(Painting::borderDark);
     QFont font = p.font();
     font.setWeight(QFont::Bold);
     p.setFont(font);

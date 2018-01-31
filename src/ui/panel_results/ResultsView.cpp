@@ -212,7 +212,6 @@ mMinorCountScale (4)
     mTabDisplayMCMC->addTab(mTabDisplay, tr("Display"));
     mTabDisplayMCMC->addTab(mTabMCMC, tr("Distrib. Options"));
 
-    //connect(mTabDisplayMCMC, &Tabs::tabClicked, mTabDisplayMCMC, &Tabs::showWidget);
     connect(mTabDisplayMCMC,static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::updateLayout);
 
     /* ----------------------------------------------------------
@@ -220,11 +219,12 @@ mMinorCountScale (4)
      * ----------------------------------------------------------*/
 
     // ------ Span Options -----
-    mSpanTitle = new Label(tr("Span Options"), mTabDisplay);
-    mSpanTitle->setIsTitle(true);
-    mSpanTitle->setFixedSize(mOptionsW, titleHeight);
-
     mSpanGroup  = new QWidget(mTabDisplay);
+
+    mSpanTitle = new Label(tr("Span Options"), mTabDisplay);
+    mSpanTitle->setFixedSize(mOptionsW, titleHeight);
+    mSpanTitle->setIsTitle(true);
+
 
     mDisplayStudyBut = new Button(tr("Study Period Display"), mSpanGroup);
     mDisplayStudyBut->setFixedSize(mOptionsW - 2*mMargin, buttonHeight);
@@ -263,7 +263,7 @@ mMinorCountScale (4)
 
     mMajorScaleLab = new Label(tr("Major Interval"), mSpanGroup);
     mMajorScaleLab->setFixedSize(fm.width(mMajorScaleLab->text()), labelHeight);
-   mMajorScaleLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mMajorScaleLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mMajorScaleEdit = new LineEdit(mSpanGroup);
     mMajorScaleEdit->setText(locale().toString(mMajorScale));
@@ -362,7 +362,7 @@ mMinorCountScale (4)
     mRenderCombo = new QComboBox(mGraphicGroup);
     mRenderCombo->addItem(tr("Standard (faster)"));
     mRenderCombo->addItem(tr("Retina (slower)"));
-   const  int renderWidth = std::min((int) fm.width(tr("Standard (faster)")),(int)( mOptionsW/2 - mMargin) );
+    const  int renderWidth = std::min((int) fm.width(tr("Standard (faster)")),(int)( mOptionsW/2 - mMargin) );
     mRenderCombo->setFixedSize(renderWidth, comboBoxHeight);
 
    /* -------------------------------------- mChainsGroup---------------------------------------------------*/
@@ -598,6 +598,7 @@ mMinorCountScale (4)
     connect(mTabPageSaving,static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::updateLayout);
 
     //connect(mTabDisplayMCMC, &Tabs::tabClicked, this, &ResultsView::updateTabDisplay);
+    updateTabs(0);
 
     updateTabByScene();
     updateTabByTempo();
@@ -605,9 +606,10 @@ mMinorCountScale (4)
     mTabByScene->showWidget(0);
 
     mMarker->raise();
+
     mTabDisplayMCMC->setTab(0, false);
     mTabDisplayMCMC->showWidget(0);
-    updateTabDisplay(mTabDisplayMCMC->currentIndex());
+    updateTabDisplay(0);//mTabDisplayMCMC->currentIndex());
 
     mTabPageSaving->setTab(0, false);
     mTabPageSaving->showWidget(0);
@@ -932,7 +934,6 @@ void ResultsView::updateTabDisplay(const int &i)
          * */
 
         mSpanTitle->move(0, 3);
-
         int wBut = mOptionsW/3;
         ySpan =  mMargin;// Reset ySpan inside mSpanGroup
         if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
@@ -1601,7 +1602,15 @@ void ResultsView::initResults(Model* model)
 
 
     // ------------------------------------------------------------
+
+   /* if (mHasPhases) {
+        updateTabDisplay(1);
+     } else {
+        updateTabDisplay(0);
+     }*/
+
     showInfos(false);
+   // updateLayout();
     updateControls();
 
  /*   if (mHasPhases)
@@ -1692,16 +1701,18 @@ void ResultsView::updateResults(Model* model)
     *  No posterior density has been computed yet!
     *  Graphs are empty at this moment
     * ----------------------------------------------------*/
-    if (mHasPhases)
-        mTabByScene->setTab(1, false);
+//    if (mHasPhases)
+//        mTabByScene->setTab(1, false);
         //createPhasesScrollArea(mTabPhasesIndex);
-    else
-        mTabByScene->setTab(0, false);
+//    else
+ //       mTabByScene->setTab(0, false);
         //createEventsScrollArea(mTabEventsIndex);
 
     // ------------------------------------------------------------
     showInfos(false);
     updateControls();
+
+    updateTabByScene();
 
 
 }

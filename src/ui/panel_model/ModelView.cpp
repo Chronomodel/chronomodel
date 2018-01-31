@@ -77,8 +77,11 @@ mCalibVisible(false)
 
     mLeftPanelTitle = new Label(tr("Events' Scene"), mTopWrapper);
     mLeftPanelTitle->setLight();
+    mLeftPanelTitle->setBackground(Painting::borderDark);
+
     mRightPanelTitle = new Label(tr("Phases' Scene"), mTopWrapper);
     mRightPanelTitle->setLight();
+    mRightPanelTitle->setBackground(Painting::borderDark);
     
    // ---- Windows on the left hand Event scene --------------
     mEventsView = new QGraphicsView(mLeftWrapper);
@@ -990,8 +993,7 @@ void ModelView::prepareNextSlide()
     QWidget* target = nullptr;
     if (mButImport->isChecked())
         target = mImportDataView;
- //   else if (mButPhasesModel->isChecked())
- //       target = mPhasesWrapper;
+
     else if (mButProperties->isChecked())
         target = mEventPropertiesView;
     
@@ -1006,10 +1008,8 @@ void ModelView::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
     QPainter p(this);
-    p.fillRect(mTopRect, QColor(50, 50, 50));
-  //  p.fillRect(mLeftRect, QColor(50, 50, 50));
-    p.fillRect(mHandlerRect, QColor(50, 50, 50));
- //   p.fillRect(mRightRect, QColor(50, 50, 50));
+    p.fillRect(mTopRect, Painting::borderDark);
+    p.fillRect(mHandlerRect, Painting::borderDark);
 
 }
 
@@ -1028,7 +1028,7 @@ void ModelView::updateLayout()
     mTopRect = QRect(0, 0, width(), 3 * fm.height() );
     const int topButtonHeight = fm.height() + 6;
     mTopWrapper->setGeometry(mTopRect);
-    mTopWrapper->setGeometry(mTopRect);
+    //mTopWrapper->setGeometry(mTopRect);
     //-------------- Top Flag
     // ---------- Panel Title
     QString leftTitle (tr("Events' Scene"));

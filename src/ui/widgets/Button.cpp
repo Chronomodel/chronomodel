@@ -132,16 +132,9 @@ void Button::paintEvent(QPaintEvent* e)
 
         QColor gradColTop(40, 40, 40);
         QColor gradColBot(30, 30, 30);
-        QColor gradLineLight(50, 50, 50);
+        QColor gradLineLight(Painting::borderDark);
         QColor gradLineDark(0, 0, 0);
-        
-     /*   if (mMouseOver) {
-            gradColTop = QColor(160, 160, 160);
-            gradColBot = QColor(50, 50, 50);
-            gradLineLight = QColor(70, 70, 70);
-            gradLineDark = QColor(20, 20, 20);
-        }
-*/
+
         if (!isEnabled()) {
             gradColTop = QColor(110, 110, 110);
             gradColBot = QColor(100, 100, 100);
@@ -257,7 +250,7 @@ void Button::paintEvent(QPaintEvent* e)
         
         QColor gradColTop(255, 255, 255);
         QColor gradColBot(220, 220, 220);
-        QColor penCol(50, 50, 50);
+        QColor penCol(Painting::borderDark);
         
         if (mColorState == eReady) {
             gradColTop = QColor(91, 196, 98);
