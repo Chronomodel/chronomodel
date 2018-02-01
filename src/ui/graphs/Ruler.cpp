@@ -20,7 +20,7 @@ mStepMinWidth(3.),//define when minor scale can appear
 mStepWidth(100)
 {
     mScrollBarHeight = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
-    
+    setFont(parentWidget()->font());
     setMouseTracking(true);
     
     mScrollBar = new QScrollBar(Qt::Horizontal, this);
@@ -208,12 +208,13 @@ void Ruler::updateScroll()
  }
 
 // Layout & Paint
+/*
 void Ruler::setFont(const QFont &font)
 {
     QWidget::setFont(font);
     layout();
 }
-
+*/
 /**
  * @brief Set value formatting functions
  */
@@ -223,7 +224,8 @@ void Ruler::setFormatFunctX(FormatFunc f){
 
 void Ruler::layout()
 {
-    QFontMetricsF fmAxe (qApp->font());
+    //QFontMetricsF fmAxe (qApp->font());
+    QFontMetricsF fmAxe (font());
     mMarginRight = floor( fmAxe.width(stringWithAppSettings(mMax))/2.);
     qreal penSize = 1.;// same value as pen.width in AxisTool
 

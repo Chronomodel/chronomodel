@@ -890,35 +890,34 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 #endif
 
 #ifndef UNIT_TEST
+    // we can't use a progressBar here becasue ther is the finalyze bar on the top, and it's bug
     // Display a progressBar if "long" set with setMinimumDuration()
-    QProgressDialog *progress = new QProgressDialog(tr("Correlation generation"), tr("Wait") , 1, 10);
-    progress->setWindowModality(Qt::WindowModal);
+ /*   QProgressDialog *progress = new QProgressDialog(tr("Correlation generation"), tr("Wait") , 1, 10);
+    progress->setWindowModality(Qt::NonModal);
     progress->setCancelButton(0);
     progress->setMinimumDuration(4);
     progress->setMinimum(0);
 
     int sum (0);
     for (auto && event : mEvents )
-        sum += event->mDates.size() +1;
+        sum += (event->mDates.size() + 1);
 
     progress->setMaximum(mPhases.size() + sum);
-    int position(1);
+    int position(0);*/
 #endif
 
 
     for (auto && event : mEvents ) {
         event->mTheta.generateCorrelations(chains);
 #ifndef UNIT_TEST
-            ++position;
-            progress->setValue(position);
+        //progress->setValue(++position);
 #endif
         for (auto&& date : event->mDates ) {
             date.mTheta.generateCorrelations(chains);
             date.mSigma.generateCorrelations(chains);
 
 #ifndef UNIT_TEST
-            ++position;
-            progress->setValue(position);
+            //progress->setValue(++position);
 #endif
         }
     }
@@ -928,13 +927,12 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
         phase->mBeta.generateCorrelations(chains);
 
 #ifndef UNIT_TEST
-        ++position;
-         progress->setValue(position);
+    //    progress->setValue(++position);
 #endif
     }
 
 #ifndef UNIT_TEST
-    progress->~QProgressDialog();
+//    progress->~QProgressDialog();
 #endif
 
 #ifdef DEBUG

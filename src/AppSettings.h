@@ -4,15 +4,15 @@
 #include <QString>
 #include <QLocale>
 #include <QFont>
-#include "DateUtils.h"
 
+#include "DateUtils.h"
 #include <qsystemdetection.h>
 
 //#define APP_SETTINGS_DEFAULT_LANGUAGE QLocale::English
 //#define APP_SETTINGS_DEFAULT_COUNTRY QLocale::UnitedKingdom
 
 #ifdef Q_OS_MAC
-    #define APP_SETTINGS_DEFAULT_FONT_FAMILY "Helvetica"
+    #define APP_SETTINGS_DEFAULT_FONT_FAMILY "Helvetica" //"Zapfino"
 #endif
 
 #ifdef Q_OS_WIN

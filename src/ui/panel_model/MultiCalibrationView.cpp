@@ -20,6 +20,8 @@ mThreshold(95),
 mGraphHeight(100),
 mCurveColor(Painting::mainColorDark)
 {
+    setFont(QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
+
     setMouseTracking(true);
     mDrawing = new MultiCalibrationDrawing(this);
     setMouseTracking(true);
@@ -159,6 +161,7 @@ MultiCalibrationView::~MultiCalibrationView()
 
 }
 
+/*
 void MultiCalibrationView::setFont(const QFont &font)
 {
     // we must force setFont on QLineEdit !!
@@ -166,9 +169,9 @@ void MultiCalibrationView::setFont(const QFont &font)
     mStartEdit->setFont(font);
     mEndEdit->setFont(font);
     mTextArea->setFont(font);
-    repaint();
+    update();
 }
-
+*/
 void MultiCalibrationView::resizeEvent(QResizeEvent* )
 {
     updateLayout();

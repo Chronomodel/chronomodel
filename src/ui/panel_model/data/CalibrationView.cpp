@@ -34,6 +34,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mMinorScale (4)
 {
 
+    setFont(QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
     mDrawing = new CalibrationDrawing(this);
     mDrawing->setMouseTracking(true);
     setMouseTracking(true);
@@ -155,7 +156,7 @@ CalibrationView::~CalibrationView()
     mRefGraphView = nullptr;
 
 }
-
+/*
 void CalibrationView::setFont(const QFont &font)
 {
     // We must force setFont on QLineEdit !!
@@ -164,7 +165,7 @@ void CalibrationView::setFont(const QFont &font)
     mEndEdit->setFont(font);
     repaint();
 }
-
+*/
 void CalibrationView::setDate(const QJsonObject& date)
 {
     Q_ASSERT(&date);
@@ -447,8 +448,8 @@ void CalibrationView::updateScroll()
     else
         return;
 
-    QFont adaptedFont (font());
-    QFontMetricsF fm (font());
+    QFont adaptedFont (this->font());
+    const QFontMetricsF fm (this->font());
     qreal textSize = fm.width(mStartEdit->text());
     if (textSize > (mStartEdit->width() - 2. )) {
         const qreal fontRate = textSize / (mStartEdit->width() - 2. );
@@ -457,10 +458,10 @@ void CalibrationView::updateScroll()
         mStartEdit->setFont(adaptedFont);
     }
     else
-        mStartEdit->setFont(font());
+        mStartEdit->setFont(this->font());
 
-    adaptedFont = font();
-    fm = QFontMetrics(font());
+    adaptedFont = this->font();
+   // fm = QFontMetrics(font());
     textSize = fm.width(mEndEdit->text());
     if (textSize > (mEndEdit->width() - 2. )) {
         const qreal fontRate = textSize / (mEndEdit->width() - 2. );
@@ -469,7 +470,7 @@ void CalibrationView::updateScroll()
         mEndEdit->setFont(adaptedFont);
     }
     else
-        mEndEdit->setFont(font());
+        mEndEdit->setFont(this->font());
 
 qDebug()<<"CalibrationView::updateScroll()"<<mTminDisplay<<mTmaxDisplay;
     // usefull when we set mStartEdit and mEndEdit at the begin of the display,

@@ -20,7 +20,7 @@ public:
     Ruler(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
     ~Ruler();
     
-    void setFont(const QFont &font);
+   // void setFont(const QFont &font);
     void setRange(const double min, const double max);
     void setCurrent(const double min, const double max);
     void currentChanged(const double min, const double max);

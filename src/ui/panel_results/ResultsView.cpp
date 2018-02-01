@@ -76,9 +76,11 @@ mMinorCountScale (4)
     mResultMinX = mSettings.mTmin;
     mResultMaxX = mSettings.mTmax;
 
-    QFont ft = QFont();
-    ft.setPointSize(APP_SETTINGS_DEFAULT_FONT_SIZE);
-    const QFontMetricsF fm(QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
+    QFont ft = QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE);
+    //ft.setPointSize(APP_SETTINGS_DEFAULT_FONT_SIZE);
+    const QFontMetricsF fm(ft);
+    setFont(ft);
+    mFont = ft;
    // mLineH = 20;//boxHeight(fm);
 
     mResultCurrentMinX = mResultMinX ;
@@ -91,12 +93,14 @@ mMinorCountScale (4)
     mTabs->addTab(tr("Acceptance Rate"));
     mTabs->addTab(tr("Autocorrelation"));
     mTabs->setTab(0, false);
+   // mTabs->setFont(ft);
 
     connect(mTabs, &Tabs::tabClicked, this, &ResultsView::graphTypeChange);
     connect(mTabs,static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::updateLayout);
     // -------------
 
     mRuler = new Ruler(this);
+    mRuler->setFont(ft);
     mRuler->mMarginLeft = 50.;
     mRuler->mMarginRight = 10.;
 
@@ -122,6 +126,7 @@ mMinorCountScale (4)
 
     mOptionsWidget = new QWidget(this); // this is the parent of group of widget on the rigth of the panel
     mOptionsWidget->setFixedWidth(mOptionsW);
+    mOptionsWidget->setFont(ft);
 
     /* -------------------------------------- mResultsGroup---------------------------------------------------*/
 
@@ -207,8 +212,13 @@ mMinorCountScale (4)
      */
     mTabDisplayMCMC = new Tabs(mOptionsWidget);
 
+
     mTabDisplay = new QWidget();
+    mTabDisplay->setFont(ft);
+
     mTabMCMC = new QWidget();
+    mTabMCMC->setFont(ft);
+
     mTabDisplayMCMC->addTab(mTabDisplay, tr("Display"));
     mTabDisplayMCMC->addTab(mTabMCMC, tr("Distrib. Options"));
 
@@ -640,11 +650,12 @@ void ResultsView::paintEvent(QPaintEvent* )
     //qDebug()<< "ResultsView::paintEvent()";
 }
 
+/*
 void ResultsView::setFont(const QFont & font)
 {
-    mTabs->setFont(font);
+   mTabs->setFont(font);
 }
-
+*/
 void ResultsView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);

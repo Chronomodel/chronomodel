@@ -24,6 +24,7 @@ void Label::init()
 {
     setAlignment(Qt::AlignVCenter | Qt::AlignRight);
     mPalette = this->parentWidget()->palette();
+    setFont(parentWidget()->font());
 }
 
 void Label::setPalette(QPalette &palette)

@@ -51,7 +51,7 @@ public:
     void writeSettings();
     void createProject();
 
-    void setFont(const QFont & font);
+//    void setFont(const QFont & font);
     
 public slots:
     void updateProject();

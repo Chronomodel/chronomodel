@@ -25,7 +25,7 @@ public:
 
     void setEventsList(const QList<Event*> &list) {mEventsList = list;}
     void setProject(Project *project) {mProject = project;}
-    void setFont(const QFont& font);
+  //  void setFont(const QFont& font);
     void updateGraphList();
     void initScale (const double &majorScale, const int &minorScale) { mMajorScale= majorScale; mMinorScale = minorScale;}
     void initScale (const Scale &s) { mMajorScale = s.mark; mMinorScale = s.tip;}

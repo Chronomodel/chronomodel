@@ -701,12 +701,20 @@ bool Project::save()
     return info.exists() ? saveProjectToFile() : saveAs(tr("Save current project as..."));
 }
 
+/**
+ * @brief Project::saveAs On native Windows of MacOS the title is not show
+ * @param dialogTitle
+ * @return
+ */
+
 bool Project::saveAs(const QString& dialogTitle)
 {
     QString path = QFileDialog::getSaveFileName(qApp->activeWindow(),
-                                                dialogTitle,
-                                                MainWindow::getInstance()->getCurrentPath(),
-                                                tr("Chronomodel Project (*.chr)"));
+                                           dialogTitle,
+                                           MainWindow::getInstance()->getCurrentPath(),
+                                           tr("Chronomodel Project (*.chr)"));
+
+
     if (!path.isEmpty()) {
         QFileInfo info(path);
         MainWindow::getInstance()->setCurrentPath(info.absolutePath());

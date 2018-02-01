@@ -42,7 +42,7 @@ const qreal buttonHeight (22);
 EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mButtonWidth(50)
 {
-    QFontMetrics fm (font());
+    setFont(QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
     minimumHeight = 0;
 
     // ------------- commun with defautlt Event and Bound ----------

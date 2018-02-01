@@ -47,10 +47,12 @@ mIsSplitting(false),
 mCalibVisible(false)
 {
     setMouseTracking(true);
+    setFont(QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
     QFontMetrics fm(font());
     mTopRect = QRect(0, 0, width(), 3 * fm.height());
     mTopWrapper = new QWidget(this);
     mTopWrapper->setGeometry(mTopRect);
+    mTopWrapper->setFont(font());
   //  mTopWrapper->setMouseTracking(true);
 
     mHandlerRect = QRect((width()-mHandlerW)*mSplitProp, mTopRect.height(), mHandlerW, height() - mTopRect.height());
@@ -270,6 +272,7 @@ ModelView::~ModelView()
     
 }
 
+/*
 void ModelView::setFont(const QFont & font)
 {
   mLeftWrapper->setFont(font);
@@ -301,7 +304,7 @@ void ModelView::setFont(const QFont & font)
   mButMultiCalib->setFont(font);
   mButImport->setFont(font);
 }
-
+*/
 void ModelView::setProject(Project* project)
 {
     assert(project!= nullptr);
@@ -1022,8 +1025,7 @@ void ModelView::resizeEvent(QResizeEvent* e)
 
 void ModelView::updateLayout()
 {
-
-    const QFontMetrics fm (font());
+    const QFontMetrics fm (this->font());
     const int textSpacer(fm.width("_") * 2);
     mTopRect = QRect(0, 0, width(), 3 * fm.height() );
     const int topButtonHeight = fm.height() + 6;
@@ -1036,7 +1038,7 @@ void ModelView::updateLayout()
         leftTitle = tr("Calibrated Data View");
 
     mLeftPanelTitle->setText(leftTitle);
-    mLeftPanelTitle ->setGeometry(textSpacer, mButModifyPeriod->y(), fm.width(mLeftPanelTitle->text()), topButtonHeight );
+    mLeftPanelTitle->setGeometry(textSpacer, mButModifyPeriod->y(), fm.tightBoundingRect(mLeftPanelTitle->text()).width(), topButtonHeight );
 
     QString rightTitle (tr("Phases' Scene"));
     if (mButProperties->isChecked() )

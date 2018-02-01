@@ -16,7 +16,7 @@ public:
     void addTab(QWidget* wid, const QString& name);
     int currentIndex() const;
     void setTab(const int &index, bool notify);
-    void setFont(const QFont &font);
+   // void setFont(const QFont &font);
     void setTabHeight(const int &h) {mTabHeight = h;}
 
     void setTabVisible(const int &i , const bool visible) {

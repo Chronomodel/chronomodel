@@ -7,7 +7,7 @@ Tabs::Tabs(QWidget* parent):QWidget(parent),
 mTabHeight(30),
 mCurrentIndex(-1)
 {
-
+    setFont(parent->font());
 }
 
 Tabs::~Tabs()
@@ -127,12 +127,13 @@ void Tabs::setTab(const int &i, bool notify)
 
 }
 
-void Tabs::setFont(const QFont &font)
+ /*
+  * void Tabs::setFont(const QFont &font)
 {
     (void) font;
     updateLayout();
 }
-
+*/
 void Tabs::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
