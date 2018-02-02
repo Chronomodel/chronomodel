@@ -1480,15 +1480,19 @@ void ResultsView::updateGraphsLayout()
 
 void ResultsView::clearResults()
 {
-    for (auto &&check : mCheckChainChecks )
-        delete check;
 
-    mCheckChainChecks.clear();
-    
-    for (auto &&chain : mChainRadios)
-        delete chain;
+     if (mChains.size() != mCheckChainChecks.size() ) {
 
-    mChainRadios.clear();
+        for (auto &&check : mCheckChainChecks )
+            delete check;
+
+        mCheckChainChecks.clear();
+
+        for (auto &&chain : mChainRadios)
+            delete chain;
+
+        mChainRadios.clear();
+     }
 
     for (auto &&graph : mByEventsGraphs)
         delete graph;
@@ -1537,20 +1541,22 @@ void ResultsView::updateFormatSetting(Model* model, const AppSettings* appSet)
  */
 void ResultsView::initResults(Model* model)
 {
-    clearResults();
-
-    //qDebug() << "ResultsView::initResults";
-
     if (!mModel && !model)
         return;
 
     if (model)
         mModel = model;
-    //qDebug() << "ResultsView::initResults with model";
+
+    mChains = mModel->mChains;
+    mSettings = mModel->mSettings;
+    mMCMCSettings = mModel->mMCMCSettings;
+
+    clearResults();
+
     QFontMetricsF fm(qApp->font());
 
     mMarginLeft = std::max(fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mModel->mSettings.mTmin))),
-                           fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mModel->mSettings.mTmin)))) + 5;
+                                                     fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mModel->mSettings.mTmin)))) + 5;
     Scale xScale;
     xScale.findOptimal(mModel->mSettings.mTmin, mModel->mSettings.mTmax, 7);
 
@@ -1561,10 +1567,6 @@ void ResultsView::initResults(Model* model)
 
     mMajorScaleEdit->setText(locale().toString(mMajorScale));
     mMinorScaleEdit->setText(locale().toString(mMinorCountScale));
-
-    mChains = mModel->mChains;
-    mSettings = mModel->mSettings;
-    mMCMCSettings = mModel->mMCMCSettings;
 
     mHasPhases = (mModel->mPhases.size() > 0);
 
@@ -1665,6 +1667,7 @@ void ResultsView::updateResults(Model* model)
     /* ----------------------------------------------------
     *  Update Chains option controls (radio and checkboxes under "MCMC Chains")
     * ---------------------------------------------------- */
+
     if (mCheckChainChecks.isEmpty()) {
         for (int i = 0; i<mChains.size(); ++i) {
             CheckBox* check = new CheckBox(tr("Chain %1").arg(QString::number(i+1)), mChainsGroup);
@@ -1682,6 +1685,7 @@ void ResultsView::updateResults(Model* model)
             mChainRadios.append(radio);
         }
     } else {
+
         for (int i = 0; i<mChains.size(); ++i) {
            mCheckChainChecks[i]->setVisible(true);
            mChainRadios[i]->setVisible(true);
