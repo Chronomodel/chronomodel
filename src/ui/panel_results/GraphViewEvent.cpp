@@ -115,6 +115,16 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                 curveLineBound.mVerticalValue = bound->fixedValue();
                 mGraph->addCurve(curveLineBound);
 
+                // generate theorical curves
+                for (int i=0; i<mChains.size(); ++i) {
+                    GraphCurve curveLineBound;
+                    curveLineBound.mName = "Post Distrib Chain " + QString::number(i);
+                    curveLineBound.mPen.setColor(Painting::chainColors.at(i));
+                    curveLineBound.mIsVerticalLine = true;
+                    curveLineBound.mVerticalValue = bound->fixedValue();
+                    mGraph->addCurve(curveLineBound);
+                }
+
             }
 
 
