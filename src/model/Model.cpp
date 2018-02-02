@@ -16,6 +16,7 @@
 #include <QtWidgets>
 #include <QtCore/QStringList>
 
+
 // Constructor...
 Model::Model():
 mProject(nullptr),
@@ -1227,16 +1228,18 @@ void Model::generateCredibility(const double thresh)
         progress->setValue(++position);
 
     }
-    delete progress;
+    progress->hide();
+    progress->~QProgressDialog();
 
     QProgressDialog *progressGap = new QProgressDialog(tr("Gaps and transitions generation"), tr("Wait") , 1, 10);
     progressGap->setWindowModality(Qt::WindowModal);
     progressGap->setCancelButton(0);
-    progressGap->setMinimumDuration(1);
+    progressGap->setMinimumDuration(0);
     progressGap->setMinimum(0);
     progressGap->setMaximum(mPhases.size()*4);
     progressGap->setMinimum(0);
     progressGap->setMaximum(mPhaseConstraints.size()*2);
+    progressGap->setMinimumWidth(300);
 
     position = 0;
     for (auto && phaseConstraint : mPhaseConstraints) {
@@ -1327,9 +1330,10 @@ void Model::generateTempo()
     QProgressDialog *progress = new QProgressDialog(tr("Tempo Plot generation"), tr("Wait") , 1, 10);//, qApp->activeWindow(), Qt::Window);
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(0);
-    progress->setMinimumDuration(1);
+    progress->setMinimumDuration(0);
     progress->setMinimum(0);
     progress->setMaximum(mPhases.size() * 4);
+    progress->show();
     int position(0);
 #endif
 
@@ -1396,6 +1400,39 @@ void Model::generateTempo()
         tmin = std::floor(tmin);
         tmax = std::ceil(tmax);
 #endif
+        if (tmin == tmax) {
+
+           qDebug()<<"Model::generateTempo() tmin == tmax : " <<phase->mName;
+
+            phase->mRawTempoCredibilityInf[tmax] = 1;
+
+            phase->mRawTempo[tmax] = 1;
+            phase->mRawTempoInf[tmax] = 1;
+            phase->mRawTempoSup[tmax] = 1;
+
+            phase->mRawTempo.insert(mSettings.mTmax, 1);
+
+            phase->mRawTempoCredibilityInf[tmax] = 1;
+            phase->mRawTempoCredibilitySup[tmax] = 1;
+
+            phase->mRawActivity[tmin] = 1;
+
+            // Convertion in the good Date format
+            phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
+            phase->mTempoInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoInf);
+            phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
+            phase->mTempoCredibilityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilityInf);
+            phase->mTempoCredibilitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilitySup);
+
+            phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
+
+#ifndef UNIT_TEST
+            position += 4;
+            progress->setValue(position);
+#endif
+
+            continue;
+        }
 #ifdef DEBUG
         if (tmax > mSettings.mTmax) {
             qWarning("Model::generateTempo() tmax>mSettings.mTmax force tmax = mSettings.mTmax");
