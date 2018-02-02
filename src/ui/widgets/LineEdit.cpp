@@ -7,7 +7,6 @@
 LineEdit::LineEdit(QWidget* parent):QLineEdit(parent)
 {
     setParent(parent);
-    //QWidget::setStyleSheet("QLineEdit { border-radius: 5px;}");
     setAlignment(Qt::AlignHCenter);
     setFont(parentWidget()->font());
 }
@@ -20,8 +19,15 @@ void LineEdit::setVisible(bool visible)
 
 void LineEdit::setFont(const QFont& font)
 {
-    QString styleSh = "QLineEdit { border-radius: 5px; font: "+ QString::number(font.pointSize()) + "px ;font-family: "+font.family() + ";}";
-    QLineEdit::setStyleSheet(styleSh);
+    #ifdef Q_OS_MAC
+    //QString styleSh = "QLineEdit { border-radius: 5px; font: "+ QString::number(font.pointSize()) + "px ;font-family: "+font.family() + ";}";
+    //QLineEdit::setStyleSheet(styleSh);
+#endif
+
+#ifdef Q_OS_WIN
+    QWidget::setStyleSheet("QLineEdit { border-radius: 5px;}");
+    QLineEdit::setFont(font);
+ #endif
 }
 
 LineEdit::~LineEdit()

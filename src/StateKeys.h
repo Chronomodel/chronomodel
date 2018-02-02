@@ -47,7 +47,7 @@
 #define STATE_EVENT_DATES "dates"
 #define STATE_EVENT_PHASE_IDS "phase_ids"
 
-#define STATE_EVENT_KNOWN_TYPE "known_type"
+//#define STATE_EVENT_KNOWN_TYPE "known_type"
 #define STATE_EVENT_KNOWN_FIXED "known_fixed"
 //#define STATE_EVENT_KNOWN_START "known_unif_start"
 //#define STATE_EVENT_KNOWN_END "known_unif_end"
