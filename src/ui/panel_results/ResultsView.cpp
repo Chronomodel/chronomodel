@@ -188,8 +188,9 @@ mMinorCountScale (4)
     mTabByScene->addTab(mResultsGroup, tr("Phases"));
     mTabByScene->addTab(mTempoGroup, tr("Tempo"));
 
-    connect(mTabByScene, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::updateTabs);
+
     connect(mTabByScene, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::changeScrollArea);
+    connect(mTabByScene, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::updateTabs);
 
     connect(mDataThetaRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
     connect(mDataSigmaRadio, &RadioButton::clicked, this, &ResultsView::changeScrollArea);
@@ -320,7 +321,7 @@ mMinorCountScale (4)
     labFont->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mFont.setPointSize(font().pointSize());
-    mFontBut = new Button(mFont.family(), mGraphicGroup);
+    mFontBut = new Button(mFont.family() + ", " + QString::number(mFont.pointSizeF()), mGraphicGroup);
     mFontBut->setFixedSize(mOptionsW/2 - mMargin, labelHeight);
     mFontBut->setToolTip(tr("Click to change the font on the drawing"));
     connect(mFontBut, &QPushButton::clicked, this, &ResultsView::updateFont);
@@ -680,11 +681,11 @@ void ResultsView::updateControls()
      * -------------------------------------------------------*/
 
     mDataCalibCheck    -> setVisible((mCurrentTypeGraph == GraphViewResults::ePostDistrib)
-                                     && mDatesfoldCheck->isVisible()
+                                     && !byTempo
                                      && mDatesfoldCheck->isChecked()
                                      && mDataThetaRadio->isChecked());
     mWiggleCheck       -> setVisible((mCurrentTypeGraph == GraphViewResults::ePostDistrib)
-                                     && mDatesfoldCheck->isVisible()
+                                     && !byTempo
                                      && mDatesfoldCheck->isChecked()
                                      && mDataThetaRadio->isChecked());
 
@@ -836,11 +837,10 @@ void ResultsView:: updateTabByScene()
     int dx (20 + mMargin);
 
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
-        if (mDataCalibCheck->isVisible()) {
+        if (( byEvents || (byPhases && mEventsfoldCheck->isChecked()) )   && mDatesfoldCheck->isChecked()) {
             mDataCalibCheck -> move(mMargin + dx, ySpan);
             ySpan += mDataCalibCheck->height() + mMargin;
-        }
-        if (mWiggleCheck->isVisible()) {
+
             mWiggleCheck -> move(mMargin + dx, ySpan);
             ySpan += mWiggleCheck->height() + mMargin;
         }
@@ -1315,8 +1315,16 @@ void ResultsView::changeScrollArea()
  */
 void ResultsView::updateTabs(const int &index)
 {
+
     switch (index) {
         case 0: //mTabByScene on Events
+            {
+            mTabs->setTabVisible(0, true); // Posterior Distrib.
+            mTabs->setTabVisible(1, true); // History Plot
+            mTabs->setTabVisible(2, true); // Acceptance Rate
+            mTabs->setTabVisible(3, true); // Autocorrelation
+        }
+        break;
 
         case 1: //mTabByScene on Phases
             {
@@ -1340,6 +1348,8 @@ void ResultsView::updateTabs(const int &index)
         default:
         break;
     }
+
+
 }
 
 void ResultsView::updateLayout()
@@ -1558,6 +1568,10 @@ void ResultsView::initResults(Model* model)
 
     mHasPhases = (mModel->mPhases.size() > 0);
 
+    // set the variable and the graphic type
+    mCurrentTypeGraph = GraphViewResults::ePostDistrib;
+    mCurrentVariable = GraphViewResults::eTheta;
+
     if (mHasPhases) {
         mTabByScene->setTab(1, false);
         mTabByScene->setTabVisible(1, true);
@@ -1605,30 +1619,10 @@ void ResultsView::initResults(Model* model)
 
     setStudyPeriod();
 
-  /*  if (mHasPhases)
-        createPhasesScrollArea(mTabPhasesIndex);
-    else
-        createEventsScrollArea(mTabEventsIndex);*/
-
-
-
-    // ------------------------------------------------------------
-
-   /* if (mHasPhases) {
-        updateTabDisplay(1);
-     } else {
-        updateTabDisplay(0);
-     }*/
-
     showInfos(false);
-   // updateLayout();
     updateControls();
 
- /*   if (mHasPhases)
-        mTabByScene->setTab(1, true);
-    else
-        mTabByScene->setTab(0, true);
-*/
+
 }
 
 /**
@@ -1636,19 +1630,18 @@ void ResultsView::initResults(Model* model)
  */
 void ResultsView::updateResults(Model* model)
 {
-    qDebug() << "ResultsView::updateResults";
+    qDebug() << "ResultsView::updateResults()";
     Q_ASSERT(model);
 
     if (!mModel && !model)
         return;
 
-  //  if (model)
     mModel = model;
 
     mChains = mModel->mChains;
     mSettings = mModel->mSettings;
     mMCMCSettings = mModel->mMCMCSettings;
-
+/*
     QFontMetricsF fm(qApp->font());
 
     mMarginLeft = std::max(fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mModel->mSettings.mTmin))),
@@ -1668,7 +1661,7 @@ void ResultsView::updateResults(Model* model)
         mTabByScene->setTab(0, false);
         updateTabs(0);
      }
-
+*/
     /* ----------------------------------------------------
     *  Update Chains option controls (radio and checkboxes under "MCMC Chains")
     * ---------------------------------------------------- */
@@ -1720,7 +1713,7 @@ void ResultsView::updateResults(Model* model)
         //createEventsScrollArea(mTabEventsIndex);
 
     // ------------------------------------------------------------
-    showInfos(false);
+   // showInfos(false);
     updateControls();
 
     updateTabByScene();

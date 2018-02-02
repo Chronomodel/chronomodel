@@ -195,7 +195,7 @@ Quartiles quartilesType(const QVector<T>& trace, const int quartileType, const d
     Quartiles Q;
     QVector<T> traceSorted (trace);
 
-    QPair<int, double> parQ1 = gammaQuartile(trace, quartileType, p); // first is j and secand is gamma
+    QPair<int, double> parQ1 = gammaQuartile(trace, quartileType, p); // first is j and second is gamma
     QPair<int, double> parQ2 = gammaQuartile(trace, quartileType, 0.5);
     QPair<int, double> parQ3 = gammaQuartile(trace, quartileType, 1-p);
 
