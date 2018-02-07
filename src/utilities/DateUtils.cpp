@@ -25,7 +25,9 @@ double DateUtils::convertToFormat(const double &valueToFormat, const FormatDate 
         case eMa:
             return (- valueToFormat/1e+06);
         break;
+
         case eBCAD:
+        case eBCECE:
         case eNumeric:
         default:
             return valueToFormat;
@@ -55,6 +57,7 @@ double DateUtils::convertFromFormat(const double &formattedValue, const FormatDa
         break;
 
         case eBCAD:
+        case eBCECE:
         case eNumeric:
         default:
             return formattedValue;
@@ -79,6 +82,9 @@ QString DateUtils::formatString(const FormatDate format)
             break;
         case eBCAD:
             return "BC/AD";
+            break;
+        case eBCECE:
+            return "BCE/CE";
             break;
         case eKa:
             return "Age Ka";

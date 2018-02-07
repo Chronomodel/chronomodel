@@ -761,14 +761,14 @@ void GraphView::paintEvent(QPaintEvent* )
         p.setPen(Qt::white);
         
         if (!mTipXLab.isEmpty() && !mTipYLab.isEmpty()) {
-            p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + stringWithAppSettings(mTipX));
-            p.drawText(mTipRect.adjusted(0, (int)(mTipRect.height()/2), 0, 0), Qt::AlignCenter, mTipYLab + stringWithAppSettings(mTipY));
+            p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + stringWithAppSettings(mTipX, true));
+            p.drawText(mTipRect.adjusted(0, (int)(mTipRect.height()/2), 0, 0), Qt::AlignCenter, mTipYLab + stringWithAppSettings(mTipY, true));
             
         } else if (!mTipXLab.isEmpty())
-            p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + stringWithAppSettings(mTipX));
+            p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + stringWithAppSettings(mTipX, true));
         
         else if (!mTipYLab.isEmpty())
-            p.drawText(mTipRect, Qt::AlignCenter, mTipYLab + stringWithAppSettings(mTipY));
+            p.drawText(mTipRect, Qt::AlignCenter, mTipYLab + stringWithAppSettings(mTipY, true));
        
     }
 }

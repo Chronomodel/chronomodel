@@ -76,7 +76,7 @@ public:
                                   const QString& noResultMessage = QObject::tr("No result to display"),
                                   const QString& unit = QString(),
                                   FormatFunc formatFunc = nullptr,
-                                  const bool forCSV = false) const;
+                                  const bool forcePrecision = false) const;
     
     QStringList getResultsList(const QLocale locale, const int precision = 0, const bool withDateFormat = true);
 

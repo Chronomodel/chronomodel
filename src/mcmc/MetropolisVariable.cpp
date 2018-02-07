@@ -618,7 +618,6 @@ QVector<double> MetropolisVariable::runRawTraceForChain(const QList<ChainSpecs> 
 
 QVector<double> MetropolisVariable::runFormatedTraceForChain(const QList<ChainSpecs> &chains, const int index)
 {
-   // QVector<float> trace(0);
     std::vector<double> trace;
     if (mFormatedTrace->empty()) {
         qDebug() << "in MetropolisVariable::runFormatedTraceForChain -> mFormatedTrace empty";
@@ -654,27 +653,27 @@ QVector<double> MetropolisVariable::correlationForChain(const int index)
 }
 
 
-QString MetropolisVariable::resultsString(const QString& nl, const QString& noResultMessage, const QString& unit, FormatFunc formatFunc, const bool forCSV) const
+QString MetropolisVariable::resultsString(const QString& nl, const QString& noResultMessage, const QString& unit, FormatFunc formatFunc, const bool forcePrecision) const
 {
     if (mHisto.isEmpty())
         return noResultMessage;
 
-    QString result = densityAnalysisToString(mResults, nl, forCSV) + nl;
+    QString result = densityAnalysisToString(mResults, nl, forcePrecision) + nl;
     
     if (!mHPD.isEmpty())
-        result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringWithAppSettings(mThresholdUsed, forCSV), getHPDText(mHPD, mThresholdUsed, unit, formatFunc, forCSV)) + nl;
+        result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringWithAppSettings(mThresholdUsed, forcePrecision), getHPDText(mHPD, mThresholdUsed, unit, formatFunc, forcePrecision)) + nl;
 
     
     if (mCredibility != QPair<double, double>()) {
         if (formatFunc)
-            result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringWithAppSettings(mExactCredibilityThreshold * 100., forCSV),
-                                                                              formatFunc(mCredibility.first, forCSV),
-                                                                              formatFunc(mCredibility.second, forCSV),
+            result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringWithAppSettings(mExactCredibilityThreshold * 100., forcePrecision),
+                                                                              formatFunc(mCredibility.first, forcePrecision),
+                                                                              formatFunc(mCredibility.second, forcePrecision),
                                                                               unit);
         else
-            result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringWithAppSettings(mExactCredibilityThreshold * 100., forCSV),
-                                                                               stringWithAppSettings(mCredibility.first, forCSV),
-                                                                               stringWithAppSettings(mCredibility.second, forCSV),
+            result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringWithAppSettings(mExactCredibilityThreshold * 100., forcePrecision),
+                                                                               stringWithAppSettings(mCredibility.first, forcePrecision),
+                                                                               stringWithAppSettings(mCredibility.second, forcePrecision),
                                                                                unit);
 
    }
@@ -743,12 +742,15 @@ QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
     }
 
     switch (data.mFormat) {
+       case DateUtils::eBCECE : stream << (qint16)(-3);
+        break;
        case DateUtils::eUnknown : stream << (qint16)(-2);
         break;
        case DateUtils::eNumeric : stream << (qint16)(-1);
           break;
        case DateUtils::eBCAD : stream << (qint16)(0);
           break;
+
        case DateUtils::eCalBP : stream << (qint16)(1);
           break;
        case DateUtils::eCalB2K : stream << (qint16)(2);
@@ -796,6 +798,8 @@ QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
     qint16 formatDate;
     stream >> formatDate;
     switch (formatDate) {
+       case -3 : data.mFormat = DateUtils::eBCECE;
+        break;
       case -2 : data.mFormat = DateUtils::eUnknown;
        break;
       case -1 : data.mFormat = DateUtils::eNumeric;

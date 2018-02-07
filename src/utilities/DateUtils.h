@@ -9,6 +9,7 @@ class DateUtils
 public:
     enum FormatDate
     {
+        eBCECE = -3,
         eUnknown = -2,
         eNumeric = -1,
         eBCAD = 0,
@@ -16,8 +17,8 @@ public:
         eCalB2K = 2,
         eDatBP = 3,
         eDatB2K = 4,
-        eKa = 5,
-        eMa = 6
+        eKa = 6,
+        eMa = 7
     };
     static double convertToFormat(const double &valueToFormat, const FormatDate &format);
     static double convertFromFormat(const double &formattedValue, const FormatDate &format);

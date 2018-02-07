@@ -338,12 +338,12 @@ void CalibrationView::updateGraphs()
                 QVector<double> subRepart = calculRepartition(subData);
 
                 results.quartiles = quartilesForRepartition(subRepart, subData.firstKey(), mSettings.mStep);
-                resultsStr += densityAnalysisToString(results);
+                resultsStr += densityAnalysisToString(results,"<br>", true);
              }
 
             const double realThresh = map_area(hpd) / map_area(subData);
 
-            resultsStr += + "<br> HPD (" + locale().toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), stringWithAppSettings) ;
+            resultsStr += + "<br> HPD (" + locale().toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, true) ;
 
             mResultsText->setText(resultsStr);
 

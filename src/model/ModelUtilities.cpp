@@ -365,14 +365,14 @@ QVector<Event*> ModelUtilities::unsortEvents(const QList<Event*>& events)
     return results;
 }
 
-QString ModelUtilities::dateResultsText(const Date* d, const Model* model, const bool forCSV)
+QString ModelUtilities::dateResultsText(const Date* d, const Model* model, const bool forcePrecision)
 {
     Q_ASSERT(d);
     QString text;
     const QString nl = "\r";
 
     text += QObject::tr("Data : %1").arg(d->mName) + nl + nl;
-    text += d->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormatStr(),stringWithAppSettings, forCSV) ;
+    text += d->mTheta.resultsString(nl,"",DateUtils::getAppSettingsFormatStr(),stringWithAppSettings, forcePrecision) ;
 
     if (model) {
         short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTheta.mHPD,model);
@@ -397,7 +397,7 @@ QString ModelUtilities::dateResultsText(const Date* d, const Model* model, const
     return text;
 }
 
-QString ModelUtilities::eventResultsText(const Event* e, bool withDates, const Model* model, const bool forCSV)
+QString ModelUtilities::eventResultsText(const Event* e, bool withDates, const Model* model, const bool forcePrecision)
 {
     Q_ASSERT(e);
     QString text;
@@ -405,12 +405,12 @@ QString ModelUtilities::eventResultsText(const Event* e, bool withDates, const M
 
     if (e->mType == Event::eKnown) {
         text += QObject::tr("Bound : %1").arg(e->mName) + nl;
-        text += e->mTheta.resultsString( nl, "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, forCSV);
+        text += e->mTheta.resultsString( nl, "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, forcePrecision);
         text += nl+"----------------------"+nl;
     }
     else  {
         text += QObject::tr("Event : %1").arg(e->mName) + nl;
-        text += e->mTheta.resultsString( nl,"", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, forCSV);
+        text += e->mTheta.resultsString( nl,"", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, forcePrecision);
         if (withDates) {
             text += nl + nl;
             text += "----------------------"+nl;
@@ -422,7 +422,7 @@ QString ModelUtilities::eventResultsText(const Event* e, bool withDates, const M
     return text;
 }
 
-QString ModelUtilities::phaseResultsText(const Phase* p, const bool forCSV)
+QString ModelUtilities::phaseResultsText(const Phase* p, const bool forcePrecision)
 {
     Q_ASSERT(p);
     QString text;
@@ -441,9 +441,9 @@ QString ModelUtilities::phaseResultsText(const Phase* p, const bool forCSV)
     if (p->mTimeRange != QPair<double,double>()) {
         text += nl + nl;
         // we suppose it's the same mThreshohdUsed than alpha
-        const QString result = QObject::tr("Phase Time Range") + QString(" ( %1 %) : [ %2 : %3 ] %4").arg(stringWithAppSettings(p->mAlpha.mThresholdUsed, forCSV),
-                                                                                            stringWithAppSettings(p->getFormatedTimeRange().first, forCSV),
-                                                                                            stringWithAppSettings(p->getFormatedTimeRange().second, false),
+        const QString result = QObject::tr("Phase Time Range") + QString(" ( %1 %) : [ %2 : %3 ] %4").arg(stringWithAppSettings(p->mAlpha.mThresholdUsed, forcePrecision),
+                                                                                            stringWithAppSettings(p->getFormatedTimeRange().first, forcePrecision),
+                                                                                            stringWithAppSettings(p->getFormatedTimeRange().second, forcePrecision),
                                                                                             DateUtils::getAppSettingsFormatStr());
         text += result;
     }
@@ -451,7 +451,7 @@ QString ModelUtilities::phaseResultsText(const Phase* p, const bool forCSV)
     return text;
 }
 
-QString ModelUtilities::tempoResultsText(const Phase* p, const bool forCSV)
+QString ModelUtilities::tempoResultsText(const Phase* p, const bool forcePrecision)
 {
     Q_ASSERT(p);
     QString text;
@@ -460,12 +460,12 @@ QString ModelUtilities::tempoResultsText(const Phase* p, const bool forCSV)
     text += QObject::tr("Phase : %1").arg(p->mName) + nl + nl;
 
     text += QObject::tr("Duration") + nl;
-    text += p->mDuration.resultsString(nl, QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr ,forCSV);
+    text += p->mDuration.resultsString(nl, QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr ,forcePrecision);
 
     return text;
 }
 
-QString ModelUtilities::constraintResultsText(const PhaseConstraint* p, const bool forCSV)
+QString ModelUtilities::constraintResultsText(const PhaseConstraint* p, const bool forcePrecision)
 {
     Q_ASSERT(p);
     QString text;
@@ -491,9 +491,9 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p, const bo
         if (p->mTransitionRange != QPair<double,double>()) {
             text += nl;
             // we suppose it's the same mThreshohdUsed than alpha
-            const QString result = QObject::tr("Transition Range") + QString(" (%1 %) : [ %2 ; %3 ] %4").arg(stringWithAppSettings(p->mPhaseFrom->mAlpha.mThresholdUsed, forCSV),
-                                                                                               stringWithAppSettings(p->getFormatedTransitionRange().first, forCSV),
-                                                                                               stringWithAppSettings(p->getFormatedTransitionRange().second, forCSV),
+            const QString result = QObject::tr("Transition Range") + QString(" (%1 %) : [ %2 ; %3 ] %4").arg(stringWithAppSettings(p->mPhaseFrom->mAlpha.mThresholdUsed, forcePrecision),
+                                                                                               stringWithAppSettings(p->getFormatedTransitionRange().first, forcePrecision),
+                                                                                               stringWithAppSettings(p->getFormatedTransitionRange().second, forcePrecision),
                                                                                                DateUtils::getAppSettingsFormatStr());
 
             text += result + nl;
@@ -503,9 +503,9 @@ QString ModelUtilities::constraintResultsText(const PhaseConstraint* p, const bo
         if (p->mGapRange != QPair<double,double>()) {
             text += nl;
 
-            const QString result = QObject::tr("Gap Range") + QString(" ( %1 ) : [ %2 ; %3 ]").arg(stringWithAppSettings(p->mPhaseFrom->mAlpha.mThresholdUsed, forCSV),
-                                                                                     stringWithAppSettings(p->getFormatedGapRange().first, forCSV),
-                                                                                     stringWithAppSettings(p->getFormatedGapRange().second, forCSV) );
+            const QString result = QObject::tr("Gap Range") + QString(" ( %1 ) : [ %2 ; %3 ]").arg(stringWithAppSettings(p->mPhaseFrom->mAlpha.mThresholdUsed, forcePrecision),
+                                                                                     stringWithAppSettings(p->getFormatedGapRange().first, forcePrecision),
+                                                                                     stringWithAppSettings(p->getFormatedGapRange().second, forcePrecision) );
 
             text += result + nl;
         }
@@ -540,7 +540,7 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const Model* model)
      }
 
 
-    text += line(textBlack(d->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, false))) ;
+    text += line(textBlack(d->mTheta.resultsString("<br>", "",DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, true))) ;
 
     text += line("<br>");
     text += line(textBold(textBlack(QObject::tr("Posterior Std. Deviation"))));
@@ -555,12 +555,12 @@ QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, c
     if (e->mType == Event::eKnown) {
         text += line(textBold(textRed(QObject::tr("Bound : %1").arg(e->mName)))) + "<br>";
         text += line(textBold(textRed(QObject::tr("Posterior bound date"))));
-        text += line(textRed(e->mTheta.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, false)));
+        text += line(textRed(e->mTheta.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, true)));
     }
     else {
         text += line(textBold(textBlue(QObject::tr("Event : %1").arg(e->mName)))) + "<br>";
         text += line(textBold(textBlue(QObject::tr("Posterior event date"))));
-        text += line(textBlue(e->mTheta.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, false)));
+        text += line(textBlue(e->mTheta.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, true)));
         if (withDates){
             for (auto&& date : e->mDates)
                 text += "<br><br>" + dateResultsHTML(&(date), model);
@@ -578,18 +578,18 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
 
     text += "<br>";
     text += line(textBold(textPurple(QObject::tr("Begin (posterior distrib.)"))));
-    text += line(textPurple(p->mAlpha.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, false)));
+    text += line(textPurple(p->mAlpha.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, true)));
 
     text += "<br>";
     text += line(textBold(textPurple(QObject::tr("End (posterior distrib.)"))));
-    text += line(textPurple(p->mBeta.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, false)));
+    text += line(textPurple(p->mBeta.resultsString("<br>", "", DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, true)));
 
     if (p->mTimeRange != QPair<double,double>()) {
         text += "<br>";
         // we suppose it's the same mThreshohdUsed than alpha
-        const QString result = QObject::tr("Phase Time Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringWithAppSettings(p->mAlpha.mThresholdUsed, false),
-                                                                                            stringWithAppSettings(p->getFormatedTimeRange().first, false),
-                                                                                            stringWithAppSettings(p->getFormatedTimeRange().second, false),
+        const QString result = QObject::tr("Phase Time Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringWithAppSettings(p->mAlpha.mThresholdUsed, true),
+                                                                                            stringWithAppSettings(p->getFormatedTimeRange().first, true),
+                                                                                            stringWithAppSettings(p->getFormatedTimeRange().second, true),
                                                                                             DateUtils::getAppSettingsFormatStr());
         text += line(textBold(textPurple(result)));
     }
@@ -604,7 +604,7 @@ QString ModelUtilities::tempoResultsHTML(const Phase* p)
 
     text += "<br>";
     text += line(textBold(textPurple(QObject::tr("Duration (posterior distrib.)"))));
-    text += line(textPurple(p->mDuration.resultsString("<br>", QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"))));
+    text += line(textPurple(p->mDuration.resultsString("<br>", QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), nullptr,true)));
 
     return text;
 }
@@ -618,9 +618,9 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
     if (p->mTransitionRange != QPair<double,double>()) {
         text += "<br>";
         // we suppose it's the same mThreshohdUsed than alpha
-        const QString result = QObject::tr("Transition Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringWithAppSettings(p->mPhaseFrom->mAlpha.mThresholdUsed, false),
-                                                                                            stringWithAppSettings(p->getFormatedTransitionRange().first, false),
-                                                                                            stringWithAppSettings(p->getFormatedTransitionRange().second, false),
+        const QString result = QObject::tr("Transition Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringWithAppSettings(p->mPhaseFrom->mAlpha.mThresholdUsed, true),
+                                                                                            stringWithAppSettings(p->getFormatedTransitionRange().first, true),
+                                                                                            stringWithAppSettings(p->getFormatedTransitionRange().second, true),
                                                                                             DateUtils::getAppSettingsFormatStr());
 
         text += line(textGreen(result));
@@ -632,9 +632,9 @@ QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
            result = QObject::tr("No Gap") ;
 
         else
-            result = QObject::tr("Gap Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringWithAppSettings(p->mPhaseFrom->mAlpha.mThresholdUsed, false),
-                                                                           stringWithAppSettings(p->getFormatedGapRange().first, false),
-                                                                           stringWithAppSettings(p->getFormatedGapRange().second, false),
+            result = QObject::tr("Gap Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringWithAppSettings(p->mPhaseFrom->mAlpha.mThresholdUsed, true),
+                                                                           stringWithAppSettings(p->getFormatedGapRange().first, true),
+                                                                           stringWithAppSettings(p->getFormatedGapRange().second, true),
                                                                            DateUtils::getAppSettingsFormatStr());
 
         text += line(textGreen(result + "<br>"));

@@ -405,24 +405,31 @@ bool constraintIsCircular(QJsonArray constraints, const int fromId, const int to
     return false;
 }
 
-QString stringWithAppSettings(const double valueToFormat, const bool forCSV)
+QString stringWithAppSettings(const double valueToFormat, const bool forcePrecision)
 {
-    if (std::abs(valueToFormat)<1E-6)
-        return "0";
+    char fmt = 'f';
+    QLocale locale = QLocale();
 
     const int precision = MainWindow::getInstance()->getAppSettings().mPrecision;
 
-    char fmt = 'f';
+    if (std::abs(valueToFormat)<1E-6) {
+        if (forcePrecision)
+            return locale.toString(0., fmt, precision);
+        else
+            return "0";
+    }
+
+
     if (std::abs(valueToFormat)>1E+06)
         fmt = 'G';
 
-    if (forCSV) {
+    if (forcePrecision) {
         QLocale locale = MainWindow::getInstance()->getAppSettings().mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
         locale.setNumberOptions(QLocale::OmitGroupSeparator);
         return locale.toString(valueToFormat, fmt, precision);
 
     } else {
-        QLocale locale = QLocale();
+
         if (precision > 0)
              return removeZeroAtRight(locale.toString(valueToFormat, fmt, precision));
         else
