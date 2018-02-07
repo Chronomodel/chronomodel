@@ -1,13 +1,11 @@
 #include "AppSettings.h"
 #include <QString>
 #include <QLocale>
-//#include <QDebug>
 
 AppSettings::AppSettings():
 mAutoSave(APP_SETTINGS_DEFAULT_AUTO_SAVE),
 mAutoSaveDelay(APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC),
 mShowHelp(APP_SETTINGS_DEFAULT_SHOW_HELP),
-
 mOpenLastProjectAtLaunch(APP_SETTINGS_DEFAULT_OPEN_PROJ),
 mPixelRatio(APP_SETTINGS_DEFAULT_PIXELRATIO),
 mDpm(APP_SETTINGS_DEFAULT_DPM),
@@ -23,13 +21,11 @@ mNbSheet(APP_SETTINGS_DEFAULT_SHEET)
     QLocale::setDefault(newLoc);
 
    mFont = QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE);
-  //  mFont.setPointSize(APP_SETTINGS_DEFAULT_FONT_SIZE);
 
     if (newLoc.decimalPoint()==',') {
         mCSVCellSeparator=";";
         mCSVDecSeparator=",";
-    }
-    else {
+    } else {
         mCSVCellSeparator=",";
         mCSVDecSeparator=".";
     }

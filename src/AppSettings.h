@@ -53,6 +53,7 @@
 #define APP_SETTINGS_STR_PRECISION "precision"
 #define APP_SETTINGS_STR_SHEET "sheet"
 
+
 class AppSettings
 {
 public:
