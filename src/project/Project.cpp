@@ -524,14 +524,15 @@ bool Project::load(const QString& path)
                     if (projectVersionList[0].toInt() > appVersionList[0].toInt())
                         newerProject = true;
 
-                    else if (projectVersionList[0].toInt() == appVersionList[0].toInt()) {
+                    else if (projectVersionList[0].toInt() == appVersionList[0].toInt()) { // version
                             if (projectVersionList[1].toInt() > appVersionList[1].toInt())
                                 newerProject = true;
-                        else if (projectVersionList[1].toInt() == appVersionList[1].toInt()) {
-                                if (projectVersionList[2].toInt() > appVersionList[2].toInt())
+                        else if (projectVersionList[1].toInt() == appVersionList[1].toInt()) { //
+                              //  if (projectVersionList[2].toInt() > appVersionList[2].toInt()) // build
                                     newerProject = true;
                         }
                     }
+#ifdef DEBUG
                     if (newerProject) {
                         QMessageBox message(QMessageBox::Warning,
                                             tr("Project version doesn't match"),
@@ -541,6 +542,12 @@ bool Project::load(const QString& path)
                         if (message.exec() == QMessageBox::No)
                             return false;
                     }
+
+#else
+                    if (newerProject) {
+                        return false;
+                    }
+#endif
                 }
             }
             
