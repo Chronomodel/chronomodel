@@ -330,16 +330,16 @@ void MainWindow::createMenus()
     //-----------------------------------------------------------------
     // Grouped Actions Menu
     //-----------------------------------------------------------------
-    mPluginsMenu = menuBar()->addMenu(tr("Actions"));
-    mPluginsMenu->addAction(mSelectEventsAction);
-    mPluginsMenu->addSeparator();
-    mPluginsMenu->addAction(mEventsColorAction);
-    mPluginsMenu->addAction(mEventsMethodAction);
-    mPluginsMenu->addAction(mDatesMethodAction);
-    mPluginsMenu->addSeparator();
+    mActionsMenu = menuBar()->addMenu(tr("Actions"));
+    mActionsMenu->addAction(mSelectEventsAction);
+    mActionsMenu->addSeparator();
+    mActionsMenu->addAction(mEventsColorAction);
+    mActionsMenu->addAction(mEventsMethodAction);
+    mActionsMenu->addAction(mDatesMethodAction);
+    mActionsMenu->addSeparator();
     
     for (int i=0; i<mDatesActions.size(); ++i)
-        mPluginsMenu->addAction(mDatesActions[i]);
+        mActionsMenu->addAction(mDatesActions[i]);
     
 }
 /**
@@ -705,53 +705,7 @@ void MainWindow::setFont(const QFont &font)
     //AppSettings mAppSettings
     //QString mLastPath;
 
-    /*mProjectMenu->setFont(font);
-    mEditMenu->setFont(font);
-    mMCMCMenu->setFont(font);
-    mViewMenu->setFont(font);
-    mHelpMenu->setFont(font);
-    mPluginsMenu->setFont(font);
-    //mLanguageMenu->setFont(font);
 
-    mAppSettingsAction->setFont(font);
-    mAboutAct->setFont(font);
-    mAboutQtAct->setFont(font);
-
-    //mLangGroup->setFont(font);
-    mTranslateEnglishAct->setFont(font);
-    mTranslateFrenchAct->setFont(font);
-
-    mNewProjectAction->setFont(font);
-    mOpenProjectAction->setFont(font);
-    mCloseProjectAction->setFont(font);
-
-    mProjectSaveAction->setFont(font);
-    mProjectSaveAsAction->setFont(font);
-    mProjectExportAction->setFont(font);
-
-    mMCMCSettingsAction->setFont(font);
-    mRunAction->setFont(font);
-    mResetMCMCAction->setFont(font);
-
-    //mViewGroup->setFont(font);
-    mViewModelAction->setFont(font);
-    mViewResultsAction->setFont(font);
-    mViewLogAction->setFont(font);
-
-    mUndoAction->setFont(font);
-    mRedoAction->setFont(font);
-    mUndoViewAction->setFont(font);
-
-    mSelectEventsAction->setFont(font);
-    mEventsColorAction->setFont(font);
-    mEventsMethodAction->setFont(font);
-    mDatesMethodAction->setFont(font);
-    //QList<QAction*> mDatesActions->setFont(font);
-
-    mHelpAction->setFont(font);
-    mManualAction->setFont(font);
-    mWebsiteAction->setFont(font);
-*/
 }
 
 // Language
@@ -1089,6 +1043,13 @@ void MainWindow::activateInterface(bool activate)
     mMCMCSettingsAction->setEnabled(activate);
     mResetMCMCAction->setEnabled(activate);
     
+    mSelectEventsAction->setEnabled(activate);
+    mEventsColorAction->setEnabled(activate);
+    mEventsMethodAction->setEnabled(activate);
+    mDatesMethodAction->setEnabled(activate);
+    for (auto act : mDatesActions)
+        act->setEnabled(activate);
+
     // Les actions suivantes doivent être désactivées si on ferme le projet.
     // Par contre, elles ne doivent pas être ré-activée dès l'ouverture d'un projet
     mRunAction->setEnabled(activate);

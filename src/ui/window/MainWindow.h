@@ -102,7 +102,7 @@ private:
     QMenu* mMCMCMenu;
     QMenu* mViewMenu;
     QMenu* mHelpMenu;
-    QMenu* mPluginsMenu;
+    QMenu* mActionsMenu;
     QMenu* mLanguageMenu;
 
     QAction* mAppSettingsAction;
