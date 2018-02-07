@@ -32,7 +32,7 @@ mMouseOverCurve (true)
    mScrollArea->setMouseTracking(true);
    mScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-   mGraphWidget = new QWidget();
+   mGraphWidget = new QWidget(this);
    mGraphWidget->setMouseTracking(true);
 
    mScrollArea->setWidget(mGraphWidget);

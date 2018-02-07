@@ -325,12 +325,10 @@ void MultiCalibrationView::updateGraphList()
     QString preEventName ="";
 
     for (auto &&ev : selectedEvents) {
-        const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
 
         if (ev.value(STATE_EVENT_TYPE).toInt() == Event::eKnown) {
 
-            EventKnown *bound = new EventKnown();
-            bound->fromJson(ev);
+            EventKnown *bound = new EventKnown(ev);
 
             GraphCurve calibCurve;
             calibCurve.mName = "Bound";
@@ -338,9 +336,10 @@ void MultiCalibrationView::updateGraphList()
             calibCurve.mPen.setWidth(20);
             calibCurve.mBrush = brushColor;
             calibCurve.mPen = QPen(Painting::mainColorLight, 2.);
-
             calibCurve.mIsHorizontalSections = true;
-            double tFixedFormated = DateUtils::convertToAppSettingsFormat( bound->mFixed);
+
+            double tFixedFormated =  bound->fixedValue();
+            tFixedFormated = DateUtils::convertToAppSettingsFormat( bound->fixedValue());
             calibCurve.mSections.append(qMakePair(tFixedFormated, tFixedFormated));
 
             GraphView* calibGraph = new GraphView(this);
@@ -364,7 +363,6 @@ void MultiCalibrationView::updateGraphList()
             calibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
             calibGraph->setOverArrow(GraphView::eNone);
 
-
             calibGraph->setRendering(GraphView::eHD);
             graphList.append(calibGraph);
 
@@ -374,8 +372,10 @@ void MultiCalibrationView::updateGraphList()
             colorList.append(color);
             delete bound;
             bound = nullptr;
-        }
-        else {
+
+        }  else {
+            const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
+
             for (auto &&date : dates) {
 
                 Date d;

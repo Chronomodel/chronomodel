@@ -28,10 +28,10 @@ mWiggleEnabled(false)
     
     // -----------
     
-    mNameLab = new QLabel(tr("Name") + " :", this);
-    mNameEdit = new QLineEdit(this);
+    mNameLab = new Label(tr("Name"), this);
+    mNameEdit = new LineEdit(this);
     mNameEdit->setText("New Data");
-    mNameEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+   // mNameEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mNameEdit->selectAll();
     mNameEdit->setFocus();
     
@@ -49,13 +49,13 @@ mWiggleEnabled(false)
     mAdvancedWidget->setFlat(true);
     connect(mAdvancedCheck, &QCheckBox::toggled, this, &DateDialog::setAdvancedVisible);
     
-    mMethodLab = new QLabel(tr("Method") + " :", mAdvancedWidget);
+    mMethodLab = new Label(tr("Method"), mAdvancedWidget);
     mMethodCombo = new QComboBox(mAdvancedWidget);
     mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHSymetric));
     mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eInversion));
     mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
     
-    mWiggleLab = new QLabel(tr("Wiggle Matching"), mAdvancedWidget);
+    mWiggleLab = new Label(tr("Wiggle Matching"), mAdvancedWidget);
     
     mDeltaFixedRadio = new QRadioButton(tr("Fixed"), mAdvancedWidget);
     mDeltaRangeRadio = new QRadioButton(tr("Range"), mAdvancedWidget);
@@ -74,17 +74,17 @@ mWiggleEnabled(false)
     mDeltaHelp->setFixedHeight(35);
     mDeltaHelp->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=11");
     
-    mDeltaFixedLab   = new QLabel(tr("Value"), mAdvancedWidget);
-    mDeltaMinLab     = new QLabel(tr("Min"), mAdvancedWidget);
-    mDeltaMaxLab     = new QLabel(tr("Max"), mAdvancedWidget);
-    mDeltaAverageLab = new QLabel(tr("Mean"), mAdvancedWidget);
-    mDeltaErrorLab   = new QLabel(tr("Error (sd)"), mAdvancedWidget);
+    mDeltaFixedLab   = new Label(tr("Value"), mAdvancedWidget);
+    mDeltaMinLab     = new Label(tr("Min"), mAdvancedWidget);
+    mDeltaMaxLab     = new Label(tr("Max"), mAdvancedWidget);
+    mDeltaAverageLab = new Label(tr("Mean"), mAdvancedWidget);
+    mDeltaErrorLab   = new Label(tr("Error (sd)"), mAdvancedWidget);
     
-    mDeltaFixedEdit   = new QLineEdit(mAdvancedWidget);
-    mDeltaMinEdit     = new QLineEdit(mAdvancedWidget);
-    mDeltaMaxEdit     = new QLineEdit(mAdvancedWidget);
-    mDeltaAverageEdit = new QLineEdit(mAdvancedWidget);
-    mDeltaErrorEdit   = new QLineEdit(mAdvancedWidget);
+    mDeltaFixedEdit   = new LineEdit(mAdvancedWidget);
+    mDeltaMinEdit     = new LineEdit(mAdvancedWidget);
+    mDeltaMaxEdit     = new LineEdit(mAdvancedWidget);
+    mDeltaAverageEdit = new LineEdit(mAdvancedWidget);
+    mDeltaErrorEdit   = new LineEdit(mAdvancedWidget);
     
     mDeltaFixedEdit->setText(QString::number(0));
     mDeltaMinEdit->setText(QString::number(0));
