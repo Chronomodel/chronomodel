@@ -742,8 +742,7 @@ QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
     }
 
     switch (data.mFormat) {
-       case DateUtils::eBCECE : stream << (qint16)(-3);
-        break;
+
        case DateUtils::eUnknown : stream << (qint16)(-2);
         break;
        case DateUtils::eNumeric : stream << (qint16)(-1);
@@ -759,10 +758,13 @@ QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
           break;
        case DateUtils::eDatB2K : stream << (qint16)(4);
           break;
-        case  DateUtils::eKa : stream << (qint16)(5);
-           break;
-        case DateUtils::eMa : stream << (qint16)(6);
-           break;
+       case DateUtils::eBCECE : stream << (qint16)(5);
+          break;
+
+       case  DateUtils::eKa : stream << (qint16)(6);
+          break;
+       case DateUtils::eMa : stream << (qint16)(7);
+          break;
     }
 
     stream << data.mRawTrace->size();
@@ -798,8 +800,6 @@ QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
     qint16 formatDate;
     stream >> formatDate;
     switch (formatDate) {
-       case -3 : data.mFormat = DateUtils::eBCECE;
-        break;
       case -2 : data.mFormat = DateUtils::eUnknown;
        break;
       case -1 : data.mFormat = DateUtils::eNumeric;
@@ -814,9 +814,12 @@ QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
          break;
       case 4 : data.mFormat = DateUtils::eDatB2K;
          break;
-      case 5 : data.mFormat = DateUtils::eKa;
+      case 5 : data.mFormat = DateUtils::eBCECE;
+       break;
+
+      case 6 : data.mFormat = DateUtils::eKa;
          break;
-      case 6 : data.mFormat = DateUtils::eMa;
+      case 7 : data.mFormat = DateUtils::eMa;
         break;
    }
 

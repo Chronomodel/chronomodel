@@ -9,7 +9,6 @@ class DateUtils
 public:
     enum FormatDate
     {
-        eBCECE = -3,
         eUnknown = -2,
         eNumeric = -1,
         eBCAD = 0,
@@ -17,6 +16,7 @@ public:
         eCalB2K = 2,
         eDatBP = 3,
         eDatB2K = 4,
+        eBCECE = 5,
         eKa = 6,
         eMa = 7
     };

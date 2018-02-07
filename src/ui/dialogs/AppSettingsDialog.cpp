@@ -67,7 +67,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     mPixelRatio->setRange(1, 5);
     mPixelRatio->setSingleStep(1);
     
-    // Not use because modify the size of the text in the scene, dusable since version: v 1.6.4_alpha
+    // Not use because modify the size of the text in the scene, disable since version: v 1.6.4_alpha
     /*
     mDpmLab = new QLabel(tr("Image Export DPM"), this);
     mDpm = new QComboBox(this);
@@ -84,7 +84,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     mFormatDateLab = new QLabel(tr("Time Scale"), this);
     mFormatDateLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mFormatDate = new QComboBox(this);
-    for (int i=0; i<5; ++i) // until 7 to use Age Ma and ka
+    for (int i=0; i<6; ++i) // until 8 to use Age Ma and ka
         mFormatDate->addItem(DateUtils::formatString((DateUtils::FormatDate)i));
     
     mFormatDate->setCurrentIndex(1);
