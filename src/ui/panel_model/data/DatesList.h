@@ -26,6 +26,7 @@ protected slots:
     
 signals:
     void calibRequested(const QJsonObject& date);
+    void indexChange(const int idx);
     
 protected:
     void dropEvent(QDropEvent* e);

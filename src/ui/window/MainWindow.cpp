@@ -641,7 +641,7 @@ void MainWindow::setAppSettings(const AppSettings& s)
     QLocale::Language newLanguage = s.mLanguage;
     QLocale::Country newCountry= s.mCountry;
     
-    QLocale newLoc = QLocale(newLanguage,newCountry);
+    QLocale newLoc = QLocale(newLanguage, newCountry);
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
     //statusBar()->showMessage(tr("Language") + " : " + QLocale::languageToString(QLocale().language()));
@@ -655,8 +655,10 @@ void MainWindow::setAppSettings(const AppSettings& s)
     if (mProject) {
         mProject->setAppSettings(mAppSettings);
 
-     if (mViewResultsAction->isEnabled())
+    mProjectView->updateMultiCalibration();
+    if (mViewResultsAction->isEnabled())
         mProjectView->applySettings(mProject->mModel, &mAppSettings);
+
     }
     writeSettings();
 }

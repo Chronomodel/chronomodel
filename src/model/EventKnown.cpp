@@ -6,14 +6,38 @@
 
 
 EventKnown::EventKnown():Event(),
-//mKnownType(eFixed),
 mFixed(0.)
-//mUniformStart(0.),
-//mUniformEnd(0.)
 {
     mType = eKnown;
     mMethod= eFixe;
     mTheta.mSigmaMH = 0.;
+}
+
+EventKnown::EventKnown(const QJsonObject& json):Event()
+{
+    mType = (Type)json[STATE_EVENT_TYPE].toInt();
+    mId = json[STATE_ID].toInt();
+    mName =  json[STATE_NAME].toString();
+    mColor = QColor(json[STATE_COLOR_RED].toInt(),
+                    json[STATE_COLOR_GREEN].toInt(),
+                    json[STATE_COLOR_BLUE].toInt());
+    mMethod = Event::eFixe;
+    mItemX = json[STATE_ITEM_X].toDouble();
+    mItemY = json[STATE_ITEM_Y].toDouble();
+    mIsSelected = json[STATE_IS_SELECTED].toBool();
+    mIsCurrent = json[STATE_IS_CURRENT].toBool();
+
+    if (json.contains(STATE_EVENT_KNOWN_FIXED))
+        mFixed = json[STATE_EVENT_KNOWN_FIXED].toDouble();
+    else
+        mFixed = 0.;
+
+    QString eventIdsStr = json[STATE_EVENT_PHASE_IDS].toString();
+    if (!eventIdsStr.isEmpty()) {
+        QStringList eventIds = eventIdsStr.split(",");
+        for(auto &&evIds :eventIds)
+            mPhasesIds.append(evIds.toInt());
+    }
 }
 
 EventKnown::~EventKnown()
@@ -22,7 +46,7 @@ EventKnown::~EventKnown()
 }
 
 // JSON
-
+// static function
 EventKnown EventKnown::fromJson(const QJsonObject& json)
 {
     EventKnown event;
@@ -33,19 +57,16 @@ EventKnown EventKnown::fromJson(const QJsonObject& json)
     event.mColor = QColor(json[STATE_COLOR_RED].toInt(),
                            json[STATE_COLOR_GREEN].toInt(),
                            json[STATE_COLOR_BLUE].toInt());
-    event.mMethod = Event::eFixe; //(Method)json[STATE_EVENT_METHOD].toInt();
+    event.mMethod = Event::eFixe;
     event.mItemX = json[STATE_ITEM_X].toDouble();
     event.mItemY = json[STATE_ITEM_Y].toDouble();
     event.mIsSelected = json[STATE_IS_SELECTED].toBool();
     event.mIsCurrent = json[STATE_IS_CURRENT].toBool();
     
-    //event.mKnownType = (EventKnown::KnownType)json[STATE_EVENT_KNOWN_TYPE].toInt();
     if (json.contains(STATE_EVENT_KNOWN_FIXED))
         event.mFixed = json[STATE_EVENT_KNOWN_FIXED].toDouble();
     else
         event.mFixed = 0.;
-    //event.mUniformStart = json[STATE_EVENT_KNOWN_START].toDouble();
-    //event.mUniformEnd = json[STATE_EVENT_KNOWN_END].toDouble();
     
     QString eventIdsStr = json[STATE_EVENT_PHASE_IDS].toString();
     if (!eventIdsStr.isEmpty()) {
@@ -75,24 +96,17 @@ QJsonObject EventKnown::toJson() const
     event[STATE_ITEM_Y] = mItemY;
     event[STATE_IS_SELECTED] = mIsSelected;
     event[STATE_IS_CURRENT] = mIsCurrent;
-    
-    //event[STATE_EVENT_KNOWN_TYPE] = mKnownType;
+
     event[STATE_EVENT_KNOWN_FIXED] = mFixed;
-    //event[STATE_EVENT_KNOWN_START] = mUniformStart;
-    //event[STATE_EVENT_KNOWN_END] = mUniformEnd;
     
     return event;
 }
 
-//void EventKnown::setKnownType(KnownType type) {mKnownType = type;}
-void EventKnown::setFixedValue(const double& value) {mFixed = value;}
-//void EventKnown::setUniformStart(const double& value) {mUniformStart = value;}
-//void EventKnown::setUniformEnd(const double& value) {mUniformEnd = value;}
 
-//EventKnown::KnownType EventKnown::knownType() const {return mKnownType;}
+void EventKnown::setFixedValue(const double& value) {mFixed = value;}
+
 double EventKnown::fixedValue() const {return mFixed;}
-//double EventKnown::uniformStart() const {return mUniformStart;}
-//double EventKnown::uniformEnd() const {return mUniformEnd;}
+
 
 void EventKnown::updateValues(const double& tmin, const double& tmax, const double& step)
 {
@@ -113,7 +127,5 @@ void EventKnown::updateTheta(const double& tmin, const double& tmax)
     (void) tmin;
     (void) tmax;
     mTheta.tryUpdate(mFixed, 1.);
-
-
 }
 

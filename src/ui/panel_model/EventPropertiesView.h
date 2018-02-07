@@ -52,7 +52,8 @@ private slots:
     void updateEventName();
     void updateEventColor(const QColor& color);
     void updateEventMethod(int index);
-    
+    void updateIndex(int index);
+
     void createDate();
     void deleteSelectedDates();
     void recycleDates();
@@ -81,6 +82,7 @@ signals:
 private:
     int minimumHeight;
     QJsonObject mEvent;
+    int mCurrentDateIdx;
     
     QWidget* mTopView;
     QWidget* mEventView;

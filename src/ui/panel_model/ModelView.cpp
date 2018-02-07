@@ -272,39 +272,6 @@ ModelView::~ModelView()
     
 }
 
-/*
-void ModelView::setFont(const QFont & font)
-{
-  mLeftWrapper->setFont(font);
-  mButNewEvent->setFont(font);
-  mButNewEventKnown->setFont(font);
-  mButDeleteEvent->setFont(font);
-  mButRecycleEvent->setFont(font);
-  mButExportEvents->setFont(font);
-  mButEventsOverview->setFont(font);
-  mButEventsGrid->setFont(font);
-
-  mImportDataView->setFont(font);
-  mEventPropertiesView->setFont(font);
-
-  mRightWrapper->setFont(font);
-  mButNewPhase->setFont(font);
-  mButDeletePhase->setFont(font);
-  mButExportPhases->setFont(font);
-  mButPhasesOverview->setFont(font);
-  mButPhasesGrid->setFont(font);
-
-  if (mCalibrationView)
-      mCalibrationView->setFont(font);
-  mMultiCalibrationView->setFont(font);
-
-  mButModifyPeriod->setFont(font);
-
-  mButProperties->setFont(font);
-  mButMultiCalib->setFont(font);
-  mButImport->setFont(font);
-}
-*/
 void ModelView::setProject(Project* project)
 {
     assert(project!= nullptr);
@@ -774,8 +741,6 @@ void ModelView::showProperties()
         mAnimationHide->setTargetObject(mEventPropertiesView);
         mAnimationHide->start();
 
-
-
      }
 
 }
@@ -820,9 +785,12 @@ void ModelView::showMultiCalib()
 
 void ModelView::updateMultiCalibration()
 {
-    if (mButMultiCalib->isChecked()) {
+    if (mButMultiCalib->isChecked())
         mMultiCalibrationView->updateMultiCalib();
-    }
+
+    if (mButProperties->isChecked())
+        mEventPropertiesView->updateEvent();
+
 }
 
 void ModelView::showImport()
@@ -1230,14 +1198,10 @@ void ModelView::mouseReleaseEvent(QMouseEvent* e)
 void ModelView::mouseMoveEvent(QMouseEvent* e)
 {
     if (mIsSplitting) {
-        mSplitProp = (double)e->pos().x() / (double)width();
-        qreal x = width() * mSplitProp;
+        qreal x = qBound(200, e->pos().x(), width() - 450);
 
-        qreal minLeft = 200.;
-        qreal minRight = 580. + mHandlerW/2;
-        x = qBound(minLeft, x, width()- minRight);
-        mSplitProp = x / (double) width();
-        mHandlerRect.moveTo(x+(mHandlerW)/2, mTopRect.height());
+        mSplitProp = x / (width() - mHandlerW/2);
+        mHandlerRect.moveTo(x + mHandlerW/2, mTopRect.height());
 
         updateLayout();
     }

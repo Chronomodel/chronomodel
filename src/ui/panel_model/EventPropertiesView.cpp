@@ -6,7 +6,6 @@
 #include "EventKnown.h"
 #include "DatesList.h"
 #include "Button.h"
-//#include "RadioButton.h"
 #include "GraphView.h"
 #include "Painting.h"
 #include "MainWindow.h"
@@ -19,10 +18,8 @@
 #include "PluginOptionsDialog.h"
 #include <QtWidgets>
 
-//const qreal titleHeight (20);
-//const qreal labelHeight (20);
 const qreal lineEditHeight (20);
-//const qreal checkBoxHeight (17);
+
 #ifdef Q_OS_MAC
     const qreal comboBoxHeight (30);
 #endif
@@ -35,8 +32,6 @@ const qreal lineEditHeight (20);
     //const qreal comboBoxHeight (20);
 #endif
 
-//const qreal radioButtonHeight (17);
-//const qreal spinBoxHeight (22);
 const qreal buttonHeight (22);
 
 EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
@@ -99,6 +94,7 @@ mButtonWidth(50)
     mToolbarH = mNameEdit->height()+mColorPicker->height()+mMethodCombo->height() + 4*grid->spacing();//5 * fm.height();
     
     mDatesList = new DatesList(mEventView);
+    connect(mDatesList, &DatesList::indexChange, this, &EventPropertiesView::updateIndex);
     connect(mDatesList, &DatesList::calibRequested, this, &EventPropertiesView::updateCalibRequested);
 
     // -------------
@@ -230,8 +226,18 @@ EventPropertiesView::~EventPropertiesView()
 void EventPropertiesView::setEvent(const QJsonObject& event)
 {
     mEvent = event;
+    QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
+
+    bool hasDates = (dates.size() > 0);
+    if (hasDates)
+        mCurrentDateIdx = 0;
+
     if (rect().width() > 0)
         updateEvent();
+}
+void EventPropertiesView::updateIndex(int index)
+{
+    mCurrentDateIdx = index;
 }
 
 void EventPropertiesView::updateEvent()
@@ -265,13 +271,13 @@ void EventPropertiesView::updateEvent()
         if (type == Event::eDefault) {
             mMethodCombo->setCurrentIndex(mEvent.value(STATE_EVENT_METHOD).toInt());
             mDatesList->setEvent(mEvent);
-            mDatesList->setCurrentRow(0);
+            mDatesList->setCurrentRow(mCurrentDateIdx);
 
             QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
 
             bool hasDates = (dates.size() > 0);
             if (hasDates)
-                updateCalibRequested(dates[0].toObject());
+                updateCalibRequested(dates[mCurrentDateIdx].toObject());
 
             mCalibBut->setEnabled(hasDates);
             mDeleteBut->setEnabled(hasDates);
@@ -329,53 +335,52 @@ void EventPropertiesView::updateKnownGraph()
 {
     mKnownGraph->removeAllCurves();
     
+    Project* project = MainWindow::getInstance()->getProject();
+    QJsonObject state = project->state();
+    QJsonObject settings = state.value(STATE_SETTINGS).toObject();
+    const double tmin = settings.value(STATE_SETTINGS_TMIN).toDouble();
+    const double tmax = settings.value(STATE_SETTINGS_TMAX).toDouble();
+    const double step = settings.value(STATE_SETTINGS_STEP).toDouble();
+    EventKnown event = EventKnown::fromJson(mEvent);
 
-        Project* project = MainWindow::getInstance()->getProject();
-        QJsonObject state = project->state();
-        QJsonObject settings = state.value(STATE_SETTINGS).toObject();
-        const double tmin = settings.value(STATE_SETTINGS_TMIN).toDouble();
-        const double tmax = settings.value(STATE_SETTINGS_TMAX).toDouble();
-        const double step = settings.value(STATE_SETTINGS_STEP).toDouble();
-        EventKnown event = EventKnown::fromJson(mEvent);
+    if ( (tmin>event.mFixed) || (event.mFixed>tmax) )
+        return;
 
-        if ( (tmin>event.mFixed) || (event.mFixed>tmax) )
-            return;
+    event.updateValues(tmin, tmax,step );
 
-        event.updateValues(tmin, tmax,step );
-        
-        mKnownGraph->setRangeX(tmin,tmax);
+    mKnownGraph->setRangeX(tmin,tmax);
 
-        mKnownGraph->setCurrentX(tmin,tmax);
-        
-        double max = map_max_value(event.mValues);
-        max = (max == 0) ? 1 : max;
-        mKnownGraph->setRangeY(0, max);
-        mKnownGraph->showYAxisValues(false);
+    mKnownGraph->setCurrentX(tmin,tmax);
 
-        //---------------------
+    double max = map_max_value(event.mValues);
+    max = (max == 0) ? 1 : max;
+    mKnownGraph->setRangeY(0, max);
+    mKnownGraph->showYAxisValues(false);
 
-        GraphCurve curve;
-        curve.mName = "Bound";
-        curve.mBrush = Painting::mainColorLight;
+    //---------------------
 
-        curve.mPen = QPen(Painting::mainColorLight, 2.);
-        
-        curve.mIsHorizontalSections = true;
-        qreal tLower;
-        qreal tUpper;
-        tLower = event.fixedValue();
-        tUpper = tLower;
+    GraphCurve curve;
+    curve.mName = "Bound";
+    curve.mBrush = Painting::mainColorLight;
+
+    curve.mPen = QPen(Painting::mainColorLight, 2.);
+
+    curve.mIsHorizontalSections = true;
+    qreal tLower;
+    qreal tUpper;
+    tLower = event.fixedValue();
+    tUpper = tLower;
 
 
-        curve.mSections.append(qMakePair(tLower,tUpper));
-        mKnownGraph->addCurve(curve);
+    curve.mSections.append(qMakePair(tLower,tUpper));
+    mKnownGraph->addCurve(curve);
 
-        mKnownGraph->setMarginBottom(mKnownGraph->font().pointSizeF() + 10. );
+    mKnownGraph->setMarginBottom(mKnownGraph->font().pointSizeF() + 10. );
 
-        // Adjust scale :
-        const int xScale = int(log10(tmax-tmin)) -1;
-        mKnownGraph->setXScaleDivision(std::pow(10, xScale), 4);
-        //---------------------
+    // Adjust scale :
+    const int xScale = int(log10(tmax-tmin)) -1;
+    mKnownGraph->setXScaleDivision(std::pow(10, xScale), 4);
+    //---------------------
 
 }
 

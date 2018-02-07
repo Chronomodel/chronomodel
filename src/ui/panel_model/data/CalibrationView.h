@@ -44,9 +44,10 @@ protected:
 public slots:
     virtual void setVisible(bool visible);
     void updateScaleX();
+    void updateGraphs();
 
 private slots:
-    void updateGraphs();
+
     void updateZoom();
     void updateScroll();
     void exportImage();

@@ -37,6 +37,8 @@ public:
     void setFont(const QFont &font);
     void newPeriod();
 
+    void updateMultiCalibration();
+
 public slots:
     void updateProject();
     void showModel();
@@ -52,6 +54,8 @@ public slots:
     void initResults(Model*, const AppSettings* appSet);
     void updateResults(Model*);
     void updateResultsLog(const QString& log);
+
+
     
 private:
     QStackedWidget* mStack;

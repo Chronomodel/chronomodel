@@ -93,7 +93,9 @@ void DatesList::handleItemClicked(QListWidgetItem* item)
     QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
     if (index < dates.size()) {
         QJsonObject date = dates[index].toObject();
+        emit indexChange(index);
         emit calibRequested(date);
+
     }
 }
 

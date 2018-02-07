@@ -1,6 +1,7 @@
 #include "EventDialog.h"
 #include "ColorPicker.h"
 #include "LineEdit.h"
+#include "Label.h"
 #include "ModelUtilities.h"
 #include "QtUtilities.h"
 #include <QtWidgets>
@@ -12,15 +13,15 @@ EventDialog::EventDialog(QWidget* parent, const QString& title, Qt::WindowFlags 
     
     // -----------
     
-    QLabel* nameLab = new QLabel(tr("Name") + " :");
+    Label* nameLab = new Label(tr("Name"), this);
     nameLab->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
     
-    QLabel* colorLab = new QLabel(tr("Color") + " :");
+    Label* colorLab = new Label(tr("Color"), this);
     colorLab->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
     
-    mNameEdit = new LineEdit();
+    mNameEdit = new LineEdit(this);
     mNameEdit->setText(tr("No name"));
-    mNameEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
+   // mNameEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
     mNameEdit->selectAll();
     mNameEdit->setFocus();
     
@@ -48,7 +49,7 @@ EventDialog::EventDialog(QWidget* parent, const QString& title, Qt::WindowFlags 
     QFont font;
     font.setWeight(QFont::Bold);
     
-    QLabel* titleLab = new QLabel(title);
+    Label* titleLab = new Label(title, this);
     titleLab->setFont(font);
     titleLab->setAlignment(Qt::AlignCenter);
     

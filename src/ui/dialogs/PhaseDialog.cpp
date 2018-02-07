@@ -22,13 +22,13 @@ mButW(80)
     
     setWindowTitle(tr("Create / Modify phase"));
     
-    mNameLab = new Label(tr("Phase name") + " :", this);
-    mColorLab = new Label(tr("Phase color") + " :", this);
-    mTauTypeLab = new Label(tr("Max duration") + " :", this);
-    mTauFixedLab = new Label(tr("Max duration value") + " :", this);
+    mNameLab = new Label(tr("Phase name"), this);
+    mColorLab = new Label(tr("Phase color"), this);
+    mTauTypeLab = new Label(tr("Max duration"), this);
+    mTauFixedLab = new Label(tr("Max duration value") , this);
     
     mNameEdit = new LineEdit(this);
-    mNameEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
+   // mNameEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
     
     mColorPicker = new ColorPicker(QColor(), this);
     

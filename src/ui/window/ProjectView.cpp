@@ -58,11 +58,6 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     mLogResultsEdit->resize( width() -10 , logTabHusefull );
     mLogTabs->resize(mLogTabs->minimalWidth(), mLogTabs->minimalHeight());
 
-/*    mLogView = new QWidget(this);
-    QVBoxLayout* logLayout = new QVBoxLayout();
-    logLayout->addWidget(mLogTabs);
-    mLogView->setLayout(logLayout);
-*/
     mStack = new QStackedWidget();
     mStack->addWidget(mModelView);
     mStack->addWidget(mResultsView);
@@ -189,11 +184,12 @@ void ProjectView:: applyFilesSettings(Model* model,const AppSettings* appSet)
     applySettings(model, appSet);
 }
 
-void ProjectView:: applySettings(Model* model,const AppSettings* appSet)
+void ProjectView::applySettings(Model* model,const AppSettings* appSet)
 {
     setFont(appSet->mFont);
     if (model) {
-        mModelView->setFont(appSet->mFont);
+      //  mModelView->setFont(appSet->mFont);
+//mModelView->updateMultiCalibration();
 
         mResultsView->updateFormatSetting(model,appSet);
 
@@ -208,6 +204,11 @@ void ProjectView:: applySettings(Model* model,const AppSettings* appSet)
         model->generateResultsLog();
         updateResultsLog(model->getResultsLog());
     }
+}
+
+void ProjectView::updateMultiCalibration()
+{
+    mModelView->updateMultiCalibration();
 }
 
 void ProjectView::updateResults(Model* model)
