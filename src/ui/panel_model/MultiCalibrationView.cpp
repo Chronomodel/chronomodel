@@ -814,6 +814,8 @@ void MultiCalibrationView::showStat()
    if (mStatClipBut ->isChecked()) {
        mDrawing->setVisible(false);
        mTextArea->setVisible(true);
+       mTextArea->setFont( this ->parentWidget()->font());
+
        // update Results from selected Event in JSON
        QJsonObject state = mProject->state();
        const QJsonArray events = state.value(STATE_EVENTS).toArray();

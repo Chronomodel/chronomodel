@@ -1,30 +1,44 @@
 #ifndef DatesListItemDelegate_H
 #define DatesListItemDelegate_H
 
-#include <QItemDelegate>
-#include <QtWidgets>
+#include "AppSettings.h"
 #include "PluginManager.h"
-#include "../PluginAbstract.h"
+#include "PluginAbstract.h"
 #include "Painting.h"
 
+#include <QItemDelegate>
+#include <QtWidgets>
 
 class DatesListItemDelegate : public QItemDelegate
 {
     Q_OBJECT
 public:
     inline DatesListItemDelegate(QObject* parent = nullptr):QItemDelegate(parent){}
-    
+
     inline QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex&) const
     {
         QFont font(QApplication::font());// = option.font;
         //font.setPointSizeF(pointSize(11));
         QFontMetrics metrics(font);
-        
+
         const int mm (2);
         int mh = metrics.height();
         return QSize(option.rect.width(), 4*mh + 5*mm);
     }
-    
+
+   inline  QRectF boundingRect() const
+    {
+
+       QFont font(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE);
+       //font.setPointSizeF(pointSize(11));
+       QFontMetrics metrics(font);
+
+       const int mm (2);
+       int mh = metrics.height() *5;
+       return QRectF(0, 0, 100, 4*mh + 5*mm);
+
+    }
+
     inline void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
     {
         int mm (2);
@@ -32,6 +46,7 @@ public:
         int y = option.rect.y();
         int w = option.rect.width();
         int h = option.rect.height();
+
         int iconW (30);
         int iconS (20);
         
@@ -64,17 +79,11 @@ public:
             
             painter->save();
             QFont font = option.font;
-            font.setPointSizeF(pointSize(16));
-            painter->setFont(font);
-             /* this part draw a white cross in a red circle
-            if(!isValid){
-                painter->setBrush(Qt::red);
-                painter->setPen(Qt::red);
-                painter->drawEllipse(ix, iy, is, is);
-                painter->setPen(Qt::white);
-                painter->drawText(ix, iy, is, is, Qt::AlignCenter, "X");
-            }*/
-            if (isCombined){
+            font.setFamily(APP_SETTINGS_DEFAULT_FONT_FAMILY);
+
+            if (isCombined) {
+                font.setPointSize(16);
+                painter->setFont(font);
                 painter->setBrush(Painting::mainColorDark);
                 painter->setPen(Painting::mainColorDark);
                 painter->drawEllipse(ix, iy + is + im, is, is);
@@ -86,9 +95,10 @@ public:
             QIcon icon = plugin->getIcon();
             QPixmap pixmap = icon.pixmap(iconS, iconS);
             painter->drawPixmap(x + (iconW - iconS)/2, y + (h - iconS)/2, iconS, iconS, pixmap, 0, 0, pixmap.width(), pixmap.height());
-            
-            font = option.font;
-            font.setPointSizeF(pointSize(11));
+
+            //font = option.font;
+            font.setPointSizeF(qreal(APP_SETTINGS_DEFAULT_FONT_SIZE));//pointSize(11));
+
             painter->setFont(font);
             QFontMetrics metrics(font);
             
@@ -104,7 +114,7 @@ public:
             painter->setPen(Painting::mainColorLight);
             painter->drawText(x + iconW, y + 4*mm + 3*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, deltaText);
 
-            if(!isValid){
+            if (!isValid) {
                 painter->setPen(Qt::black);
                 QString str = tr("Individual calibration not digitally computable ...");
                 painter->drawText(x + iconW, y + 4*mm + 3*mh, w - iconW, mh, Qt::AlignRight | Qt::AlignVCenter, str );
