@@ -469,6 +469,9 @@ void Project::sendEventsSelectionChanged()
 
 bool Project::load(const QString& path)
 {
+    bool newerProject = false;
+    bool olderProject = false;
+
     QFileInfo checkFile(path);
     if (!checkFile.exists() || !checkFile.isFile()) {
         QMessageBox message(QMessageBox::Critical,
@@ -517,21 +520,27 @@ bool Project::load(const QString& path)
                 
                 QString appVersionStr = QApplication::applicationVersion();
                 QStringList appVersionList = appVersionStr.split(".");
-                
+
+
                 if (projectVersionList.size() == 3 && appVersionList.size() == 3) {
-                    bool newerProject = false;
+
                     if (projectVersionList[0].toInt() > appVersionList[0].toInt())
                         newerProject = true;
 
                     else if (projectVersionList[0].toInt() == appVersionList[0].toInt()) { // version
                             if (projectVersionList[1].toInt() > appVersionList[1].toInt())
                                 newerProject = true;
-                        else if (projectVersionList[1].toInt() == appVersionList[1].toInt()) { //
-                              //  if (projectVersionList[2].toInt() > appVersionList[2].toInt()) // build
+                            else if (projectVersionList[1].toInt() < appVersionList[1].toInt())
+                                olderProject = true;
+                        // Test on build number
+                      /*  else if (projectVersionList[1].toInt() == appVersionList[1].toInt()) {
+                                if (projectVersionList[2].toInt() > appVersionList[2].toInt())
                                     newerProject = true;
-                        }
+                        }*/
+                    }  else {
+                        olderProject = true;
                     }
-#ifdef DEBUG
+
                     if (newerProject) {
                         QMessageBox message(QMessageBox::Warning,
                                             tr("Project version doesn't match"),
@@ -542,11 +551,15 @@ bool Project::load(const QString& path)
                             return false;
                     }
 
-#else
-                    if (newerProject) {
-                        return false;
+                    if (olderProject) {
+                        QMessageBox message(QMessageBox::Warning,
+                                            tr("Project version doesn't match"),
+                                            "This project has been saved with a older version of ChronoModel :\r\r- Project version : " + projectVersionStr + "\r- Current version : " + appVersionStr + "\r\rSome incompatible data may be missing and you may encounter problems running the model.\r\rLoading the project will update and overwrite the existing file. Do you really want to continue ?",
+                                            QMessageBox::Yes | QMessageBox::No,
+                                            qApp->activeWindow());
+                        if (message.exec() == QMessageBox::No)
+                            return false;
                     }
-#endif
                 }
             }
             
@@ -575,6 +588,9 @@ bool Project::load(const QString& path)
             file.close();
 
             // -------------------- look for the calibration file
+            if (newerProject || olderProject)
+                return true;
+
             QString caliPath = path + ".cal";
             QFileInfo calfi(caliPath);
 
@@ -659,8 +675,7 @@ bool Project::load(const QString& path)
 
                     try {
                         mModel->fromJson(mState);
-
-                    }
+                     }
                     catch (QString error) {
                         QMessageBox message(QMessageBox::Critical,
                                             tr("Error loading project"),
@@ -708,7 +723,7 @@ bool Project::save()
 }
 
 /**
- * @brief Project::saveAs On native Windows of MacOS the title is not show
+ * @brief Project::saveAs On native box of MacOS the title is not show
  * @param dialogTitle
  * @return
  */
@@ -774,6 +789,9 @@ bool Project::saveProjectToFile()
 #ifdef DEBUG
             qDebug() << "Project::saveProjectToFile() Project saved to : " << path;
 #endif
+            // reset version number
+            mState[STATE_APP_VERSION] = QApplication::applicationVersion();
+
             mLastSavedState = mState;
             
             QJsonDocument jsonDoc(mState);
