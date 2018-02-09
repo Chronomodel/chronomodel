@@ -21,6 +21,8 @@ mGraphHeight(100),
 mCurveColor(Painting::mainColorDark)
 {
     setFont(QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
+    QFontMetrics fm (QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
+mButtonWidth = fm.width('_') * 8;
 
     setMouseTracking(true);
     mDrawing = new MultiCalibrationDrawing(this);

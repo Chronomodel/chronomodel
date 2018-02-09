@@ -49,6 +49,10 @@ mCalibVisible(false)
     setMouseTracking(true);
     setFont(QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
     QFontMetrics fm(font());
+ //   QFontMetrics fm (QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
+mButtonWidth = fm.width('_') * 8;
+
+
     mTopRect = QRect(0, 0, width(), 3 * fm.height());
     mTopWrapper = new QWidget(this);
     mTopWrapper->setGeometry(mTopRect);
@@ -405,7 +409,8 @@ void ModelView::resetInterface()
 
 void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
 {
-    QFontMetrics fm(font());
+ //   QFontMetrics fm(this->font());
+   QFontMetrics fm( QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
     const int topButtonHeight = fm.height() + 10;
     const int hMarg = 15;
     const QString studyStr = tr("STUDY PERIOD") + QString(" [ %1 ; %2 ] BC/AD").arg(locale().toString(min), locale().toString(max));;
@@ -993,7 +998,8 @@ void ModelView::resizeEvent(QResizeEvent* e)
 
 void ModelView::updateLayout()
 {
-    const QFontMetrics fm (this->font());
+   // const QFontMetrics fm (this->font());
+   const  QFontMetrics fm( QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
     const int textSpacer(fm.width("_") * 2);
     mTopRect = QRect(0, 0, width(), 3 * fm.height() );
     const int topButtonHeight = fm.height() + 6;

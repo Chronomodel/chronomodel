@@ -17,8 +17,8 @@
 #endif
 
 #ifdef Q_OS_WIN
-    #define APP_SETTINGS_DEFAULT_FONT_FAMILY "Calibri"
-    #define APP_SETTINGS_DEFAULT_FONT_SIZE 10
+    #define APP_SETTINGS_DEFAULT_FONT_FAMILY "Helvetica" //"Calibri"
+    #define APP_SETTINGS_DEFAULT_FONT_SIZE 12 //10
 #endif
 
 

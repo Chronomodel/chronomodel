@@ -18,7 +18,7 @@
 #include "PluginOptionsDialog.h"
 #include <QtWidgets>
 
-const qreal lineEditHeight (20);
+qreal lineEditHeight (20);
 
 #ifdef Q_OS_MAC
     const qreal comboBoxHeight (30);
@@ -34,11 +34,15 @@ const qreal lineEditHeight (20);
 
 const qreal buttonHeight (22);
 
-EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-mButtonWidth(50)
+EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
+//mButtonWidth(50)
 {
     setFont(QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
     minimumHeight = 0;
+
+    QFontMetrics fm (QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
+   mButtonWidth = fm.width('_') * 8;
+   lineEditHeight = fm.width('|') * 4;
 
     // ------------- commun with defautlt Event and Bound ----------
     mNameLab = new Label(tr("Name"), this);

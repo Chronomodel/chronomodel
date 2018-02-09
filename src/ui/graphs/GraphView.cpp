@@ -780,7 +780,7 @@ void GraphView::paintEvent(QPaintEvent* )
 void GraphView::paintToDevice(QPaintDevice* device)
 {
     QPainter p(device);    
-    p.setFont(font());
+    p.setFont(this->font());
     
     p.setRenderHints(QPainter::Antialiasing);
     
@@ -917,7 +917,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
      *  Graph specific infos at the top right
      * ----------------------------------------------------*/
     if (mShowInfos) {
-        font.setPointSizeF(font.pointSizeF() + 2.);
+       // font.setPointSizeF(font.pointSizeF() + 2.);
         QFontMetrics fm (font);
         p.setFont(font);
         p.setPen(Painting::borderDark);
