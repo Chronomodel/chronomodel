@@ -37,7 +37,7 @@ protected:
     void updateLayout();
     
 private:
-    Label* mSeedsLab;
+ //   Label* mSeedsLab;
     
     LineEdit* mNumProcEdit;
     LineEdit* mNumBurnEdit;
@@ -48,7 +48,7 @@ private:
     LineEdit* mSeedsEdit;
     HelpWidget* mHelp;
     
-    Label* mLabelLevel;
+  //  Label* mLabelLevel;
     LineEdit* mLevelEdit;
     
     Button* mOkBut;

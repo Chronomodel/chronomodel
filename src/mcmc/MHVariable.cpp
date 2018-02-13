@@ -238,11 +238,15 @@ void MHVariable::generateNumericalResults(const QList<ChainSpecs> &chains)
     generateGlobalRunAcceptation(chains);
 }
 
-QString MHVariable::resultsString(const QString& nl, const QString& noResultMessage, const QString& unit, FormatFunc formatFunc, const bool forCSV) const
+QString MHVariable::resultsString(const QString& nl, const QString& noResultMessage, const QString& unit, DateConversion formatFunc, const bool forCSV) const
 {
     QString result = MetropolisVariable::resultsString(nl, noResultMessage, unit, formatFunc, forCSV);
     if (!mProposal.isEmpty())
-        result += nl + tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(stringWithAppSettings(mGlobalAcceptation*100., forCSV), mProposal);
+        if (forCSV)
+             result += nl + tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(stringForCSV(mGlobalAcceptation*100.), mProposal);
+
+        else
+             result += nl + tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(stringForLocal(mGlobalAcceptation*100.), mProposal);
 
     return result;
 }

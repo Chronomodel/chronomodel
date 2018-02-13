@@ -89,7 +89,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     // ------------------------------------------------
     if (typeGraph == ePostDistrib) {
         mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
-        mGraph->setFormatFunctX(stringWithAppSettings);
+        mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormat);
         mGraph->setFormatFunctY(nullptr);
         mGraph->setBackgroundColor(QColor(230, 230, 230));
 
@@ -207,8 +207,8 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         else if (variable == eSigma) {
             mGraph->setOverArrow(GraphView::eNone);
             mGraph->mLegendX = "";
-            mGraph->setFormatFunctX(stringWithAppSettings);
-            mGraph->setFormatFunctY(stringWithAppSettings);
+            mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormat);
+            mGraph->setFormatFunctY(nullptr);
 
             if (mEvent->type()==Event::eKnown)
                 mTitle = tr("Bound : %1").arg(mEvent->mName);
@@ -245,7 +245,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     else if (typeGraph == eTrace && variable == eTheta) {
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
-        mGraph->setFormatFunctY(stringWithAppSettings);
+        mGraph->setFormatFunctY(DateUtils::convertToAppSettingsFormat);
         mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound : %1").arg(mEvent->mName) : tr("Event : %1").arg(mEvent->mName));
 
         generateTraceCurves(mChains, &(mEvent->mTheta));
@@ -259,7 +259,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                 && (mEvent->mMethod == Event::eMHAdaptGauss || mEvent->mMethod == Event::eFixe)) {
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
-        mGraph->setFormatFunctY(stringWithAppSettings);
+        mGraph->setFormatFunctY(nullptr);
         mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound : %1").arg(mEvent->mName) : tr("Event : %1").arg(mEvent->mName));
 
         mGraph->addCurve(generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
@@ -278,7 +278,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     else if ((typeGraph == eCorrel) && (variable == eTheta) && (!isFixedBound)) {
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(nullptr);
-        mGraph->setFormatFunctY(stringWithAppSettings);
+        mGraph->setFormatFunctY(nullptr);
         mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound : %1").arg(mEvent->mName) : tr("Event : %1").arg(mEvent->mName));
 
         generateCorrelCurves(mChains, &(mEvent->mTheta));

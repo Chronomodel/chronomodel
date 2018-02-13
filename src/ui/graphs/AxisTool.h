@@ -1,11 +1,13 @@
 #ifndef AXISTOOL_H
 #define AXISTOOL_H
+#include "StdUtilities.h"
+#include "DateUtils.h"
 
 #include <QVector>
 #include <QPainter>
 #include <QRectF>
 #include <QWidget>
-#include "StdUtilities.h"
+
 
 struct Scale
 {
@@ -32,7 +34,7 @@ public:
     void updateValues(const int &totalPix, const int &minDeltaPix, const qreal &minVal, const qreal &maxVal);
     qreal getXForValue(const qreal &value);
     qreal getYForValue(const qreal &value);
-    QVector<qreal> paint(QPainter &p, const QRectF &r, qreal heigthSize, FormatFunc valueFormatFunc = nullptr);
+    QVector<qreal> paint(QPainter &p, const QRectF &r, qreal heigthSize, DateConversion valueFormatFunc = nullptr);
 
     double getMajorScale() const {return mMajorScale;}
     int getMinorScaleCount() const {return mMinorScaleCount;} // Tip
@@ -66,13 +68,13 @@ private:
 
 class AxisWidget: public QWidget, public AxisTool{
 public:
-    AxisWidget(FormatFunc funct = 0, QWidget* parent = nullptr);
+    AxisWidget(DateConversion funct = nullptr, QWidget* parent = nullptr);
     
 protected:
     void paintEvent(QPaintEvent* e);
     
 private:
-    FormatFunc mFormatFunct;
+    DateConversion mFormatFunct;
     
 public:
     qreal mMarginLeft;

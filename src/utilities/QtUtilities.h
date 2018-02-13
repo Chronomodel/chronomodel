@@ -13,9 +13,6 @@
 bool colorIsDark(const QColor& color);
 void sortIntList(QList<int>& list);
 
-//qreal boxHeight(const QFont& font) {const QFontMetricsF fm (font); return fm.height() + 10;}
-//qreal boxHeight(QFontMetricsF fm) { return qreal(fm.height() + 10);}
-
 QList<QStringList> readCSV(const QString& filePath, const QString& separator = ",");
 int defaultDpiX();
 qreal dpiScaled(qreal value);
@@ -46,7 +43,11 @@ bool constraintIsCircular( QJsonArray constraints, const int FromId, const int T
 
 
 QString removeZeroAtRight(QString str); // use StdUtilities::eraseZeroAtLeft()
-QString stringWithAppSettings(const double valueToFormat, const bool forcePrecision = false);
+//QString stringWithAppSettings(const double valueToFormat, const bool forcePrecision = false);
+QString stringForGraph(const double valueToFormat);
+QString stringForLocal(const double valueToFormat, const bool forcePrecision = true);
+QString stringForCSV(const double valueToFormat, const bool forcePrecision = true);
+
 bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep, const bool withDateFormat = false);
 bool saveAsCsv(const QList<QStringList>& data, const QString& title = QObject::tr("Save as..."));
 

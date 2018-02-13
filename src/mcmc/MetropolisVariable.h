@@ -75,8 +75,8 @@ public:
     virtual QString resultsString(const QString& nl = "<br>",
                                   const QString& noResultMessage = QObject::tr("No result to display"),
                                   const QString& unit = QString(),
-                                  FormatFunc formatFunc = nullptr,
-                                  const bool forcePrecision = false) const;
+                                  DateConversion formatFunc = nullptr,
+                                  const bool forCSV = false) const;
     
     QStringList getResultsList(const QLocale locale, const int precision = 0, const bool withDateFormat = true);
 

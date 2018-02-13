@@ -71,7 +71,7 @@ mWiggleEnabled(false)
     connect(mDeltaGaussRadio, &QRadioButton::toggled, this,  &DateDialog::checkWiggle);
     
     mDeltaHelp = new HelpWidget(tr("Wiggle Sign : \"+\" if data ≤ event, \"-\" if data ≥ event"), mAdvancedWidget);
-    mDeltaHelp->setFixedHeight(35);
+    mDeltaHelp->setFixedHeight(50);
     mDeltaHelp->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=11");
     
     mDeltaFixedLab   = new Label(tr("Value"), mAdvancedWidget);
@@ -110,10 +110,12 @@ mWiggleEnabled(false)
     
     advGrid->addWidget(mDeltaFixedLab, 5, 0, Qt::AlignRight | Qt::AlignVCenter);
     advGrid->addWidget(mDeltaFixedEdit, 5, 1);
+
     advGrid->addWidget(mDeltaMinLab, 5, 0, Qt::AlignRight | Qt::AlignVCenter);
-    advGrid->addWidget(mDeltaMinEdit, 5, 1);
+    advGrid->addWidget(mDeltaMinEdit, 5, 1);   
     advGrid->addWidget(mDeltaMaxLab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
     advGrid->addWidget(mDeltaMaxEdit, 6, 1);
+
     advGrid->addWidget(mDeltaAverageLab, 5, 0, Qt::AlignRight | Qt::AlignVCenter);
     advGrid->addWidget(mDeltaAverageEdit, 5, 1);
     advGrid->addWidget(mDeltaErrorLab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
@@ -148,7 +150,7 @@ mWiggleEnabled(false)
     mLayout->addStretch();
     setLayout(mLayout);
     
-    setFixedWidth(600);
+   // setFixedWidth(600);
     
     updateVisibleControls();
 }

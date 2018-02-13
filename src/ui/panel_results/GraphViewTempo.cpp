@@ -81,7 +81,7 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
     if ((typeGraph == ePostDistrib) && (variable == eDuration)) {
         mGraph->mLegendX = tr("Years");
         mGraph->mLegendY = "";
-        mGraph->setFormatFunctX(stringWithAppSettings);
+        mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormat);
         mGraph->setFormatFunctY(nullptr);
 
         mTitle = tr("Phase Duration : %1").arg(mPhase->mName);
@@ -99,7 +99,7 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
                                                            color);
             mGraph->setCanControlOpacity(true);
             mGraph->addCurve(curveDurationHPD);
-            mGraph->setFormatFunctX(stringWithAppSettings);
+            mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormat);
             mGraph->setFormatFunctY(nullptr);
             mGraph->setOverArrow(GraphView::eBothOverflow);
             mGraph->addCurve(curveDuration);
@@ -131,7 +131,7 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
     else if ((typeGraph == ePostDistrib) && (variable == eTempo)) {
         mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
         mGraph->mLegendY = "";
-        mGraph->setFormatFunctX(stringWithAppSettings);
+        mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormat);
         mGraph->setFormatFunctY(nullptr);
         mTitle = tr("Phase Tempo : %1").arg(mPhase->mName);
 
@@ -203,8 +203,8 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
     else if (typeGraph == ePostDistrib && variable == eActivity) {
 
         mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
-        mGraph->setFormatFunctX(stringWithAppSettings);
-        mGraph->setFormatFunctY(stringWithAppSettings);
+        mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormat);
+        mGraph->setFormatFunctY(nullptr);
 
         mTitle = tr("Phase Activity : %1").arg(mPhase->mName);
         GraphCurve curveActivity = generateDensityCurve(mPhase->mActivity,
@@ -226,7 +226,7 @@ void GraphViewTempo::generateCurves(TypeGraph typeGraph, Variable variable)
     else if (typeGraph == eTrace && variable == eDuration) {
         mGraph->mLegendX = tr("Iterations");
         mGraph->setFormatFunctX(nullptr);
-        mGraph->setFormatFunctY(stringWithAppSettings);
+        mGraph->setFormatFunctY(DateUtils::convertToAppSettingsFormat);
         mTitle = tr("Phase Duration : %1").arg(mPhase->mName);
 
         generateTraceCurves(mChains, &(mPhase->mDuration), "Duration");

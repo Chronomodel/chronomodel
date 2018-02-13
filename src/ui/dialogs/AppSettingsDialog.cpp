@@ -85,7 +85,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     mFormatDateLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mFormatDate = new QComboBox(this);
     for (int i=0; i<6; ++i) // until 8 to use Age Ma and ka
-        mFormatDate->addItem(DateUtils::formatString((DateUtils::FormatDate)i));
+        mFormatDate->addItem(DateUtils::dateFormatToString((DateUtils::FormatDate)i));
     
     mFormatDate->setCurrentIndex(1);
     mFormatDate->setVisible(true);
@@ -248,7 +248,7 @@ void AppSettingsDialog::setSettings(const AppSettings& settings)
 {
     mLanguageCombo->setCurrentText(QLocale::languageToString(settings.mLanguage));
     //mCountryCombo->setCurrentText(QLocale::countryToString(settings.mCountry)); // keep in memory
-    mFont=settings.mFont;
+    mFont = AppSettings::font();
     //mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
 
     mAutoSaveCheck->setChecked(settings.mAutoSave);
@@ -277,7 +277,7 @@ AppSettings AppSettingsDialog::getSettings()
     AppSettings settings;
     settings.mLanguage = (QLocale::Language)mLanguageCombo->currentData().toInt();
     settings.mCountry = locale().country();
-    settings.mFont = mFont;
+    //settings.mFont = AppSettings::font();
 
     settings.mAutoSave = mAutoSaveCheck->isChecked();
     settings.mAutoSaveDelay = mAutoSaveDelayEdit->text().toInt() * 60;
@@ -289,7 +289,7 @@ AppSettings AppSettingsDialog::getSettings()
     settings.mImageQuality = mImageQuality->value();
     settings.mFormatDate = (DateUtils::FormatDate)mFormatDate->currentIndex();
     settings.mPrecision = mPrecision->value();    
-    //settings.mNbSheet = mNbSheet->value();
+
     return settings;
 }
 

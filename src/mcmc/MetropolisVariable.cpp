@@ -653,30 +653,48 @@ QVector<double> MetropolisVariable::correlationForChain(const int index)
 }
 
 
-QString MetropolisVariable::resultsString(const QString& nl, const QString& noResultMessage, const QString& unit, FormatFunc formatFunc, const bool forcePrecision) const
+QString MetropolisVariable::resultsString(const QString& nl, const QString& noResultMessage, const QString& unit, DateConversion conversionFunc, const bool forCSV) const
 {
     if (mHisto.isEmpty())
         return noResultMessage;
 
-    QString result = densityAnalysisToString(mResults, nl, forcePrecision) + nl;
+    QString result = densityAnalysisToString(mResults, nl, forCSV) + nl;
     
-    if (!mHPD.isEmpty())
-        result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringWithAppSettings(mThresholdUsed, forcePrecision), getHPDText(mHPD, mThresholdUsed, unit, formatFunc, forcePrecision)) + nl;
+    if (forCSV) {
+            if (!mHPD.isEmpty())
+                result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForCSV(mThresholdUsed), getHPDText(mHPD, mThresholdUsed, unit, conversionFunc, true)) + nl;
 
-    
-    if (mCredibility != QPair<double, double>()) {
-        if (formatFunc)
-            result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringWithAppSettings(mExactCredibilityThreshold * 100., forcePrecision),
-                                                                              formatFunc(mCredibility.first, forcePrecision),
-                                                                              formatFunc(mCredibility.second, forcePrecision),
-                                                                              unit);
-        else
-            result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringWithAppSettings(mExactCredibilityThreshold * 100., forcePrecision),
-                                                                               stringWithAppSettings(mCredibility.first, forcePrecision),
-                                                                               stringWithAppSettings(mCredibility.second, forcePrecision),
-                                                                               unit);
 
-   }
+            if (mCredibility != QPair<double, double>()) {
+                if (conversionFunc)
+                    result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForCSV(mExactCredibilityThreshold * 100.),
+                                                                                     stringForCSV( conversionFunc(mCredibility.first)),
+                                                                                     stringForCSV( conversionFunc(mCredibility.second)),
+                                                                                      unit);
+                else
+                    result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForCSV(mExactCredibilityThreshold * 100.),
+                                                                                       stringForCSV(mCredibility.first),
+                                                                                       stringForCSV(mCredibility.second),
+                                                                                       unit);
+           }
+   } else {
+            if (!mHPD.isEmpty())
+                result += tr("HPD Region") + QString(" ( %1 %) : %2").arg(stringForLocal(mThresholdUsed), getHPDText(mHPD, mThresholdUsed, unit, conversionFunc, false)) + nl;
+
+
+            if (mCredibility != QPair<double, double>()) {
+                if (conversionFunc)
+                    result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(mExactCredibilityThreshold * 100.),
+                                                                                      stringForLocal(conversionFunc(mCredibility.first)),
+                                                                                      stringForLocal(conversionFunc(mCredibility.second)),
+                                                                                      unit);
+                else
+                    result += tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(mExactCredibilityThreshold * 100.),
+                                                                                       stringForLocal(mCredibility.first),
+                                                                                       stringForLocal(mCredibility.second),
+                                                                                       unit);
+            }
+  }
    return result;
 }
 

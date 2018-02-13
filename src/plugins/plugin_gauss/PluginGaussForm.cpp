@@ -5,20 +5,26 @@
 #include "Label.h"
 #include "LineEdit.h"
 #include "RadioButton.h"
+#include "AppSettings.h"
+
 #include <QJsonObject>
 #include <QtWidgets>
 
 
 PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("Gaussian measurement"), parent, flags)
 {
-    //PluginGauss* pluginGauss = (PluginGauss*)mPlugin;
-    
+    setFont(AppSettings::font());
+   const  int  lineHeight = 1.1 * AppSettings::heigthUnit();
+   const int lineWidth = 5 * AppSettings::widthUnit();
+
     mAverageLab = new QLabel(tr("Measure"), this);
     mErrorLab = new QLabel(tr("Error (sd)"), this);
     mCalibLab = new QLabel(tr("Calibration"), this);
     
     mAverageEdit = new QLineEdit(this);
+ //   mAverageEdit->resize(lineWidth, lineHeight);
     mErrorEdit = new QLineEdit(this);
+ //    mErrorEdit->resize(lineWidth, lineHeight);
     connect(mErrorEdit, &QLineEdit::textChanged, this, &PluginGaussForm::errorIsValid);
     
     mAverageEdit->setText("0");
@@ -36,9 +42,13 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
     mAEdit = new QLineEdit(this);
     mBEdit = new QLineEdit(this);
     mCEdit = new QLineEdit(this);
+//     mAEdit->resize(lineWidth, lineHeight);
+//     mBEdit->resize(lineWidth, lineHeight);
+//     mCEdit->resize(lineWidth, lineHeight);
     mAEdit->setText("0");
     mBEdit->setText("1");
     mCEdit->setText("0");
+
     connect(mAEdit, &QLineEdit::textChanged, this, &PluginGaussForm::equationIsValid);
     connect(mBEdit, &QLineEdit::textChanged, this, &PluginGaussForm::equationIsValid);
     

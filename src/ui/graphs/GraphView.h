@@ -7,6 +7,7 @@
 #include "GraphCurve.h"
 #include "GraphZone.h"
 #include "Ruler.h"
+#include "DateUtils.h"
 
 #if GRAPH_OPENGL
 #include <QOpenGLWidget>
@@ -114,8 +115,8 @@ public:
     void removeAllZones();
     
     // Set value formatting functions
-    void setFormatFunctX(FormatFunc f);
-    void setFormatFunctY(FormatFunc f);
+    void setFormatFunctX(DateConversion f);
+    void setFormatFunctY(DateConversion f);
 
     void setXScaleDivision(const Scale &sc) { mAxisToolX.setScaleDivision(sc);}
     void setXScaleDivision(const double &major, const int &minorCount) { mAxisToolX.setScaleDivision(major, minorCount);}
@@ -225,6 +226,11 @@ protected:
 public:
     QString mLegendX;
     QString mLegendY;
+
+private:
+     DateConversion mUnitFunctionX;
+     DateConversion mUnitFunctionY;
+
 };
 
 #endif

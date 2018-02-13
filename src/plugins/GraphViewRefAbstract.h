@@ -78,7 +78,7 @@ public:
         mTmaxRef = date.getTmaxRefCurve();
     }
     
-    void setFormatFunctX(FormatFunc f)
+    void setFormatFunctX(DateConversion f)
     {
         mFormatFuncX = f;
     }
@@ -101,7 +101,7 @@ public slots:
 protected:
     ProjectSettings mSettings;
     QColor mMeasureColor;
-    FormatFunc mFormatFuncX;
+    DateConversion mFormatFuncX;
     
     double mTminCalib;
     double mTmaxCalib;

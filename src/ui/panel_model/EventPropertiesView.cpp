@@ -18,49 +18,38 @@
 #include "PluginOptionsDialog.h"
 #include <QtWidgets>
 
-qreal lineEditHeight (20);
 
-#ifdef Q_OS_MAC
-    const qreal comboBoxHeight (30);
-#endif
-
-#ifdef Q_OS_WIN
-    const qreal comboBoxHeight (20);
-#endif
-
- # ifdef Q_OS_UNIX
-    //const qreal comboBoxHeight (20);
-#endif
-
-const qreal buttonHeight (22);
 
 EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
-//mButtonWidth(50)
 {
-    setFont(QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
+    setFont(AppSettings::font());
     minimumHeight = 0;
 
-    QFontMetrics fm (QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
-   mButtonWidth = fm.width('_') * 8;
-   lineEditHeight = fm.width('|') * 4;
+  //  QFontMetrics fm (QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
+  // mButtonWidth = fm.width('_') * 8;
+
+   mButtonWidth = 1.7 * AppSettings::widthUnit();
+   mLineEditHeight = 1.1*AppSettings::heigthUnit();// fm.height() * 1.5;
+   mComboBoxHeight = 1.2*AppSettings::heigthUnit();//fm.height() * 1.5;
+   mButtonHeight = 1.1*AppSettings::heigthUnit();
 
     // ------------- commun with defautlt Event and Bound ----------
     mNameLab = new Label(tr("Name"), this);
-    mNameLab->setFixedHeight(lineEditHeight);
+    mNameLab->setFixedHeight(mLineEditHeight);
     
     mNameEdit = new LineEdit(this);
-    mNameEdit->setFixedHeight(lineEditHeight);
+    mNameEdit->setFixedHeight(mLineEditHeight);
 
     mColorLab = new Label(tr("Color"), this);
-    mColorLab->setFixedHeight(buttonHeight);
+    mColorLab->setFixedHeight(mButtonHeight);
     mColorPicker = new ColorPicker(Qt::black);
-    mColorPicker->setFixedHeight(buttonHeight);
+    mColorPicker->setFixedHeight(mButtonHeight);
     
     mMethodLab = new Label(tr("Method"), this);
-    mMethodLab->setFixedHeight(comboBoxHeight);
+    mMethodLab->setFixedHeight(mComboBoxHeight);
 
     mMethodCombo = new QComboBox();
-    mMethodCombo->setFixedHeight(comboBoxHeight);
+    mMethodCombo->setFixedHeight(mComboBoxHeight);
     
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eDoubleExp));
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eBoxMuller));

@@ -218,15 +218,15 @@ void Ruler::setFont(const QFont &font)
 /**
  * @brief Set value formatting functions
  */
-void Ruler::setFormatFunctX(FormatFunc f){
+void Ruler::setFormatFunctX(DateConversion f)
+{
     mFormatFuncX = f;
 }
 
 void Ruler::layout()
 {
-    //QFontMetricsF fmAxe (qApp->font());
     QFontMetricsF fmAxe (font());
-    mMarginRight = floor( fmAxe.width(stringWithAppSettings(mMax))/2.);
+    mMarginRight = floor( fmAxe.width(stringForLocal(mMax))/2.);
     qreal penSize = 1.;// same value as pen.width in AxisTool
 
     mRulerRect = QRectF(mMarginLeft + penSize, mScrollBarHeight, width() - mMarginRight - mMarginLeft, height() - mScrollBarHeight);

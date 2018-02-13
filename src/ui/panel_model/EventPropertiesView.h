@@ -120,6 +120,15 @@ private:
     
     int mToolbarH;
     int mButtonWidth;
+    int mButtonHeight;
+
+    int mLineEditHeight;
+
+     int mComboBoxHeight;
+
+
+
+
 };
 
 #endif

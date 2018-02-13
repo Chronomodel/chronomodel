@@ -352,7 +352,7 @@ void GraphViewResults::updateLayout()
 
     type_data max = mGraph->maximumX();
     QFontMetricsF fmAxe (mGraphFont);
-    qreal marginRight = floor(fmAxe.width(stringWithAppSettings(max)) / 2.);
+    qreal marginRight = floor(fmAxe.width(stringForGraph( DateUtils::convertToAppSettingsFormat(max)) )/ 2.);
 
     mGraph->setMarginRight(marginRight);
     mGraph->setFont(mGraphFont);

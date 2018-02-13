@@ -1,6 +1,12 @@
 #include "AppSettings.h"
 #include <QString>
 #include <QLocale>
+#include <QFontMetrics>
+
+int AppSettings::mWidthUnit;
+int AppSettings::mHeigthUnit;
+QFont AppSettings::mFont;
+int AppSettings::mFontDescent;
 
 AppSettings::AppSettings():
 mAutoSave(APP_SETTINGS_DEFAULT_AUTO_SAVE),
@@ -20,7 +26,14 @@ mNbSheet(APP_SETTINGS_DEFAULT_SHEET)
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
 
-   mFont = QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE);
+    AppSettings::widthUnit();
+    AppSettings::heigthUnit();
+
+
+    AppSettings::setFont( QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
+   QFontMetrics fm(mFont);
+   AppSettings::mWidthUnit  = fm. maxWidth();
+   AppSettings::mHeigthUnit = fm.height();
 
     if (newLoc.decimalPoint()==',') {
         mCSVCellSeparator=";";
@@ -65,3 +78,32 @@ AppSettings::~AppSettings()
 {
     
 }
+
+ int AppSettings::widthUnit()
+{
+    return AppSettings::mWidthUnit;
+}
+
+ int AppSettings::heigthUnit()
+ {
+     return AppSettings::mHeigthUnit;
+ }
+
+ void AppSettings::setFont(const QFont& font)
+ {
+     AppSettings::mFont = font;
+     QFontMetrics fm(font);
+     AppSettings::mWidthUnit  = fm. maxWidth();
+     AppSettings::mHeigthUnit = fm.height();
+     AppSettings::mFontDescent = fm.descent();
+ }
+
+ int  AppSettings::fontDescent()
+ {
+     return AppSettings::mFontDescent;
+ }
+
+ QFont AppSettings::font()
+ {
+     return AppSettings::mFont;
+ }

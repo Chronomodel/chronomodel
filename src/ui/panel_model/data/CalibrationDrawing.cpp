@@ -2,6 +2,7 @@
 #include "GraphViewRefAbstract.h"
 #include "GraphView.h"
 #include "Marker.h"
+#include "QtUtilities.h"
 
 #include <QMouseEvent>
 
@@ -102,7 +103,7 @@ void CalibrationDrawing::updateLayout()
     }
 
     const type_data max = mCalibGraph->maximumX();
-    const int marginRight = (int) floor(fm.width(locale().toString(max))/2);
+    const int marginRight = (int) floor(fm.width(stringForGraph(max))/2);
 
     QFont topFont(mFont);
     topFont.setBold(true);

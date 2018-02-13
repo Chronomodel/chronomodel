@@ -186,10 +186,8 @@ void ProjectView:: applyFilesSettings(Model* model,const AppSettings* appSet)
 
 void ProjectView::applySettings(Model* model,const AppSettings* appSet)
 {
-    setFont(appSet->mFont);
+    setFont(AppSettings::font());
     if (model) {
-      //  mModelView->setFont(appSet->mFont);
-//mModelView->updateMultiCalibration();
 
         mResultsView->updateFormatSetting(model,appSet);
 

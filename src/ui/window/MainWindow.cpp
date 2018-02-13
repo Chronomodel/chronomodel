@@ -1,7 +1,7 @@
 #include "MainWindow.h"
 #include "Project.h"
 #include "ProjectView.h"
-#include "../PluginAbstract.h"
+#include "PluginAbstract.h"
 #include "AboutDialog.h"
 #include "AppSettingsDialog.h"
 #include "PluginManager.h"
@@ -620,8 +620,8 @@ void MainWindow::setAppFilesSettings(const AppSettings& s)
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
     //statusBar()->showMessage(tr("Language") + " : " + QLocale::languageToString(QLocale().language()));
-    setFont(mAppSettings.mFont);
-    qApp->setFont(mAppSettings.mFont);
+    setFont(AppSettings::font());
+    qApp->setFont(AppSettings::font());
     QFont tooltipFont(font());
     tooltipFont.setItalic(true);
 
@@ -645,8 +645,8 @@ void MainWindow::setAppSettings(const AppSettings& s)
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
     //statusBar()->showMessage(tr("Language") + " : " + QLocale::languageToString(QLocale().language()));
-    setFont(mAppSettings.mFont);
-    qApp->setFont(mAppSettings.mFont);
+    setFont(AppSettings::font());
+    qApp->setFont(AppSettings::font());
     QFont tooltipFont(font());
     tooltipFont.setItalic(true);
 
@@ -898,8 +898,8 @@ void MainWindow::writeSettings()
     settings.beginGroup("AppSettings");
     settings.setValue(APP_SETTINGS_STR_AUTO_SAVE, mAppSettings.mAutoSave);
     settings.setValue(APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC, mAppSettings.mAutoSaveDelay);
-    settings.setValue(APP_SETTINGS_STR_FONT_FAMILY, mAppSettings.mFont.family());
-    settings.setValue(APP_SETTINGS_STR_FONT_SIZE, mAppSettings.mFont.pointSizeF());
+    settings.setValue(APP_SETTINGS_STR_FONT_FAMILY, AppSettings::font().family());
+    settings.setValue(APP_SETTINGS_STR_FONT_SIZE, AppSettings::font().pointSizeF());
 
     settings.setValue(APP_SETTINGS_STR_SHOW_HELP, mAppSettings.mShowHelp);
     settings.setValue(APP_SETTINGS_STR_CELL_SEP, mAppSettings.mCSVCellSeparator);
@@ -932,7 +932,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     qreal pointF = settings.value(APP_SETTINGS_STR_FONT_SIZE, APP_SETTINGS_DEFAULT_FONT_SIZE).toDouble();
     f.setFamily(fam);
     f.setPointSizeF(pointF);
-    mAppSettings.mFont = f;
+    AppSettings::setFont(f);
     mAppSettings.mAutoSave = settings.value(APP_SETTINGS_STR_AUTO_SAVE, APP_SETTINGS_DEFAULT_AUTO_SAVE).toBool();
     mAppSettings.mAutoSaveDelay = settings.value(APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC, APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC).toInt();
     mAppSettings.mShowHelp = settings.value(APP_SETTINGS_STR_SHOW_HELP, APP_SETTINGS_DEFAULT_SHOW_HELP).toBool();

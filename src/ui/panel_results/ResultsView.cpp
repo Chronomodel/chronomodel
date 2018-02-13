@@ -36,25 +36,25 @@
 #include <iostream>
 #include <QtSvg>
 
-const qreal titleHeight (20);
-const qreal labelHeight (20);
-const qreal lineEditHeight (15);
-const qreal checkBoxHeight (17);
-const qreal comboBoxHeight (20);
-const qreal radioButtonHeight (17);
-const qreal spinBoxHeight (22);
-const qreal buttonHeight (20);
+ qreal titleHeight ;
+ qreal labelHeight ;
+ qreal lineEditHeight;
+ qreal checkBoxHeight;
+ qreal comboBoxHeight ;
+ qreal radioButtonHeight;
+ qreal spinBoxHeight;
+ qreal buttonHeight;
 
 
 ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mResultMaxVariance(1000.),
 mHasPhases(false),
 mModel(nullptr),
-mMargin(5),
-mOptionsW(200),
-mRulerH(40),
-mTabsH(30),
-mGraphsH(150),
+mMargin(.2* AppSettings::widthUnit()),
+mOptionsW(7 * AppSettings::widthUnit()),
+mRulerH(2.5 * AppSettings::heigthUnit()),
+mTabsH(3 * AppSettings::heigthUnit()),
+mGraphsH(6 * AppSettings::heigthUnit()),
 mTabEventsIndex(0),
 mTabPhasesIndex(0),
 mEventsScrollArea(nullptr),
@@ -76,10 +76,19 @@ mMinorCountScale (4)
     mResultMinX = mSettings.mTmin;
     mResultMaxX = mSettings.mTmax;
 
-    QFont ft = QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE);
+    QFont ft = AppSettings::font();
     //ft.setPointSize(APP_SETTINGS_DEFAULT_FONT_SIZE);
     const QFontMetricsF fm(ft);
     setFont(ft);
+     titleHeight = 1.5 * AppSettings::heigthUnit();
+     labelHeight = AppSettings::heigthUnit();
+     lineEditHeight = AppSettings::heigthUnit();
+     checkBoxHeight  = AppSettings::heigthUnit();
+     comboBoxHeight  = AppSettings::heigthUnit();
+     radioButtonHeight = AppSettings::heigthUnit();
+     spinBoxHeight  =1.5 * AppSettings::heigthUnit();
+     buttonHeight  = 1.5 * AppSettings::heigthUnit();
+
     mFont = ft;
    // mLineH = 20;//boxHeight(fm);
 
@@ -233,8 +242,9 @@ mMinorCountScale (4)
     mSpanGroup  = new QWidget(mTabDisplay);
 
     mSpanTitle = new Label(tr("Span Options"), mTabDisplay);
+     mSpanTitle->setIsTitle(true);
     mSpanTitle->setFixedSize(mOptionsW, titleHeight);
-    mSpanTitle->setIsTitle(true);
+
 
 
     mDisplayStudyBut = new Button(tr("Study Period Display"), mSpanGroup);
@@ -313,7 +323,7 @@ mMinorCountScale (4)
     mYScaleSpin->setRange(mYSlider->minimum(), mYSlider->maximum());
     mYScaleSpin->setSuffix(" %");
     mYScaleSpin->setValue(mYSlider->value());
-    mYScaleSpin->setFixedSize(mCurrentXMinEdit->width(), labelHeight);
+    mYScaleSpin->setFixedSize(mCurrentXMinEdit->width(), spinBoxHeight);
     mYScaleSpin->setToolTip(tr("Enter zoom value to magnify the curves on Y scale"));
 
     labFont = new Label(tr("Font"), mGraphicGroup);
@@ -322,7 +332,7 @@ mMinorCountScale (4)
 
     mFont.setPointSize(font().pointSize());
     mFontBut = new Button(mFont.family() + ", " + QString::number(mFont.pointSizeF()), mGraphicGroup);
-    mFontBut->setFixedSize(mOptionsW/2 - mMargin, labelHeight);
+    mFontBut->setFixedSize(mOptionsW/2 - mMargin, buttonHeight);
     mFontBut->setToolTip(tr("Click to change the font on the drawing"));
     connect(mFontBut, &QPushButton::clicked, this, &ResultsView::updateFont);
     
@@ -651,12 +661,7 @@ void ResultsView::paintEvent(QPaintEvent* )
     //qDebug()<< "ResultsView::paintEvent()";
 }
 
-/*
-void ResultsView::setFont(const QFont & font)
-{
-   mTabs->setFont(font);
-}
-*/
+
 void ResultsView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
@@ -2426,7 +2431,7 @@ void ResultsView::updateScales()
     /* ------------------------------------------
      *  Set Ruler Current Position
      * ------------------------------------------*/
-    mRuler->setFormatFunctX(stringWithAppSettings);
+    mRuler->setFormatFunctX(DateUtils::convertToAppSettingsFormat);
 
     mRuler->setCurrent(mResultCurrentMinX, mResultCurrentMaxX);
     mRuler->setScaleDivision(mMajorScale, mMinorCountScale);
@@ -3419,12 +3424,12 @@ void ResultsView::exportFullImage()
     if (printAxis) {
         curWid->setFixedHeight(curWid->height() + axeHeight + legendHeight );
         
-        FormatFunc f = nullptr;
+        DateConversion f = nullptr;
         if (mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked())
-            f = stringWithAppSettings;
+            f = DateUtils::convertToAppSettingsFormat;
 
         QFontMetricsF fmAxe (qApp->font());
-        qreal marginRight = floor(fmAxe.width(stringWithAppSettings(max)) / 2.);
+        qreal marginRight = floor(fmAxe.width(DateUtils::convertToAppSettingsFormatStr(max)) / 2.);
 
 
         axisWidget = new AxisWidget(f, curWid);

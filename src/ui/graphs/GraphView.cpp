@@ -45,7 +45,9 @@ mTipY(0.),
 mTipWidth(110.),
 mTipHeight(40.),
 mTipVisible(false),
-mUseTip(true)
+mUseTip(true),
+mUnitFunctionX(nullptr),
+mUnitFunctionY(nullptr)
 {
 
     mAxisToolX.mIsHorizontal = true;
@@ -96,7 +98,9 @@ mTipY(graph.mTipY),
 mTipWidth(graph.mTipWidth),
 mTipHeight(graph.mTipHeight),
 mTipVisible(graph.mTipVisible),
-mUseTip(graph.mUseTip)
+mUseTip(graph.mUseTip),
+  mUnitFunctionX(nullptr),
+  mUnitFunctionY(nullptr)
 {
     mCurrentMinX = graph.mCurrentMinX;
     mCurrentMaxX = graph.mCurrentMaxX;
@@ -461,14 +465,14 @@ void GraphView::setCanControlOpacity(bool can)
     mCanControlOpacity = can;
 }
 
-void GraphView::setFormatFunctX(FormatFunc f)
+void GraphView::setFormatFunctX(DateConversion f)
 {
-    (void) f;
+    mUnitFunctionX = f;
 }
 
-void GraphView::setFormatFunctY(FormatFunc f)
+void GraphView::setFormatFunctY(DateConversion f)
 {
-    (void) f;
+    mUnitFunctionY = f;
 }
 
 /* ------------------------------------------------------
@@ -761,15 +765,27 @@ void GraphView::paintEvent(QPaintEvent* )
         p.setPen(Qt::white);
         
         if (!mTipXLab.isEmpty() && !mTipYLab.isEmpty()) {
-            p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + stringWithAppSettings(mTipX, true));
-            p.drawText(mTipRect.adjusted(0, (int)(mTipRect.height()/2), 0, 0), Qt::AlignCenter, mTipYLab + stringWithAppSettings(mTipY, true));
+            if (mUnitFunctionX)
+                 p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + stringForLocal(mUnitFunctionX(mTipX)));
+            else
+                 p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + stringForLocal(mTipX));
+            if (mUnitFunctionY)
+                 p.drawText(mTipRect.adjusted(0, (int)(mTipRect.height()/2), 0, 0), Qt::AlignCenter, mTipYLab + stringForLocal(mUnitFunctionY(mTipY)));
+            else
+                p.drawText(mTipRect.adjusted(0, (int)(mTipRect.height()/2), 0, 0), Qt::AlignCenter, mTipYLab + stringForLocal(mTipY));
             
-        } else if (!mTipXLab.isEmpty())
-            p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + stringWithAppSettings(mTipX, true));
+        } else if (!mTipXLab.isEmpty()) {
+            if (mUnitFunctionX)
+                p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + stringForLocal(mUnitFunctionX(mTipX)));
+           else
+                p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + stringForLocal(mTipX));
         
-        else if (!mTipYLab.isEmpty())
-            p.drawText(mTipRect, Qt::AlignCenter, mTipYLab + stringWithAppSettings(mTipY, true));
-       
+        } else if (!mTipYLab.isEmpty()) {
+            if (mUnitFunctionY)
+                p.drawText(mTipRect, Qt::AlignCenter, mTipYLab + stringForLocal(mUnitFunctionY(mTipY)));
+            else
+                p.drawText(mTipRect, Qt::AlignCenter, mTipYLab + stringForLocal(mTipY));
+       }
     }
 }
 
@@ -899,7 +915,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolX.mShowText = mXAxisValues;
 
     mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
-    mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), (qreal) 7.,stringWithAppSettings);
+    mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), (qreal) 7.,mUnitFunctionX);
 
     /* ----------------------------------------------------
      *  Vertical axis
@@ -911,7 +927,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolY.mShowText = mYAxisValues;
 
         mAxisToolY.updateValues(mGraphHeight, mStepMinWidth, mMinY, mMaxY);
-        mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), (qreal) 3.,stringWithAppSettings);
+        mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), (qreal) 3.,mUnitFunctionY);
      }
     /* ----------------------------------------------------
      *  Graph specific infos at the top right

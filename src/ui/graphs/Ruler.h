@@ -33,7 +33,7 @@ public:
     void clearAreas();
     void addArea(double start, double end, const QColor& color);
     // Set value formatting functions
-    void setFormatFunctX(FormatFunc f);
+    void setFormatFunctX(DateConversion f);
     
     double realPosition;
     double mCurrentMin;
@@ -53,7 +53,7 @@ protected:
     void resizeEvent(QResizeEvent* e);
     void paintEvent(QPaintEvent* e);
     
-    FormatFunc mFormatFuncX;
+    DateConversion mFormatFuncX;
     
 public slots:
     void setZoom(double & prop);

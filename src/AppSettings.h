@@ -63,10 +63,16 @@ public:
     void copyFrom(const AppSettings& s);
     virtual ~AppSettings();
 
+    static QFont font();
+    static void setFont(const QFont &font);
+    static int widthUnit();
+    static int heigthUnit();
+    static int fontDescent();
+
 public:
     QLocale::Language mLanguage;
     QLocale::Country mCountry;
-    QFont mFont;
+
     bool mAutoSave;
     int mAutoSaveDelay;
     bool mShowHelp;
@@ -79,6 +85,13 @@ public:
     DateUtils::FormatDate mFormatDate;
     int mPrecision;
     int mNbSheet;
+
+  private:
+  static  QFont mFont;
+  static int mWidthUnit;
+  static int mHeigthUnit;
+  static int mFontDescent;
+
 };
 
 #endif

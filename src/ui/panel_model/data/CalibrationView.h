@@ -70,7 +70,7 @@ private:
     GraphViewRefAbstract* mRefGraphView;
     
     QTextEdit* mResultsText;
-    qreal mResultsHeight;
+   // qreal mResultsHeight;
 
     qreal mButtonWidth;
 

@@ -3,6 +3,7 @@
 
 #include <QString>
 
+typedef double (*DateConversion)(const double &);
 
 class DateUtils
 {
@@ -20,12 +21,10 @@ public:
         eKa = 6,
         eMa = 7
     };
-    static double convertToFormat(const double &valueToFormat, const FormatDate &format);
-    static double convertFromFormat(const double &formattedValue, const FormatDate &format);
+
     
-    static QString formatString(const FormatDate format);
-    //static QString dateToString(const double date);
-    //static QString dateToString(const double date, int precision);
+    static QString dateFormatToString(const FormatDate format);
+
     
     /** 
      * @brief convert native values (classic BC/AD) to their prefered display date format (Cal B2k, ...)
@@ -34,6 +33,9 @@ public:
     static QString convertToAppSettingsFormatStr(const double valueToFormat, const bool forCSV = false);
     static QMap<double, double> convertMapToAppSettingsFormat(const QMap<double,double> &mapToFormat);
 
+
+    static double convertToFormat(const double &valueToFormat, const FormatDate &format);
+    static double convertFromFormat(const double &formattedValue, const FormatDate &format);
     /**
      * @brief convert formatted values (Cal B2k, Cal BP, ...) to native value (classic BC/AD)
      */

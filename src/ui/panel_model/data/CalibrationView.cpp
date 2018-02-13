@@ -26,15 +26,16 @@
 
 CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
     mRefGraphView(nullptr),
-    mResultsHeight(90),
-    mButtonWidth(50),
     mTminDisplay(-INFINITY),
     mTmaxDisplay(INFINITY),
     mMajorScale (100),
     mMinorScale (4)
 {
 
-    setFont(QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
+    setFont(AppSettings::font());
+
+    mButtonWidth = 1.7 * AppSettings::widthUnit();
+
     mDrawing = new CalibrationDrawing(this);
     mDrawing->setMouseTracking(true);
     setMouseTracking(true);
@@ -204,8 +205,8 @@ void CalibrationView::setDate(const QJsonObject& date)
         }
 
         // setText doesn't emit signal textEdited, when the text is changed programmatically
-        mStartEdit->setText(stringWithAppSettings(mTminDisplay, false));
-        mEndEdit->setText(stringWithAppSettings(mTmaxDisplay, false));
+        mStartEdit->setText(stringForLocal(mTminDisplay, false));
+        mEndEdit->setText(stringForLocal(mTmaxDisplay, false));
 
         if (std::isinf(-mTminDisplay) || std::isinf(mTmaxDisplay))
             throw(tr("CalibrationView::setDate ")+mDate.mPlugin->getName() + mDate.mCalibration->mName + mDate.mCalibration->mTmin + mDate.mCalibration->mTmax);
@@ -221,6 +222,7 @@ void CalibrationView::setDate(const QJsonObject& date)
                             qApp->activeWindow());
         message.exec();
     }
+    mDrawing->setRefGraph( mRefGraphView);
     mDrawing->updateLayout();
     update();
 }
@@ -323,8 +325,8 @@ void CalibrationView::updateGraphs()
             mCalibGraph->setRangeY(0., yMax);
 
             mCalibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
-            mCalibGraph->setFormatFunctX(stringWithAppSettings);
-            mCalibGraph->setFormatFunctY(stringWithAppSettings);
+            mCalibGraph->setFormatFunctX(DateUtils::convertFromAppSettingsFormat);
+            mCalibGraph->setFormatFunctY(nullptr);
             
             // ------------------------------------------------------------
             //  Display numerical results
@@ -338,12 +340,12 @@ void CalibrationView::updateGraphs()
                 QVector<double> subRepart = calculRepartition(subData);
 
                 results.quartiles = quartilesForRepartition(subRepart, subData.firstKey(), mSettings.mStep);
-                resultsStr += densityAnalysisToString(results,"<br>", true);
+                resultsStr += densityAnalysisToString(results,"<br>", false);
              }
 
             const double realThresh = map_area(hpd) / map_area(subData);
 
-            resultsStr += + "<br> HPD (" + locale().toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), stringWithAppSettings, true) ;
+            resultsStr +=  "<br> HPD (" + stringForLocal(100. * realThresh) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false) ;
 
             mResultsText->setText(resultsStr);
 
@@ -371,7 +373,7 @@ void CalibrationView::updateGraphs()
             mRefGraphView->setParent(mDrawing);
             mRefGraphView->setVisible(true);
 
-            mRefGraphView->setFormatFunctX(stringWithAppSettings); // must be before setDate, because setDate use it
+            mRefGraphView->setFormatFunctX(DateUtils::convertFromAppSettingsFormat); // must be before setDate, because setDate use it
             ProjectSettings tmpSettings;
             const double maxDisplayInRaw = DateUtils::convertFromAppSettingsFormat(mTmaxDisplay);
             const double minDisplayInRaw = DateUtils::convertFromAppSettingsFormat(mTminDisplay);
@@ -436,13 +438,14 @@ void CalibrationView::updateScaleX()
 void CalibrationView::updateScroll()
 {
     bool ok;
-    double val = locale().toDouble(mStartEdit->text(),&ok);
+    QLocale locale = QLocale();
+    double val = locale.toDouble(mStartEdit->text(),&ok);
     if (ok)
         mTminDisplay = val;
     else
         return;
 
-    val = locale().toDouble(mEndEdit->text(),&ok);
+    val = locale.toDouble(mEndEdit->text(),&ok);
     if (ok)
         mTmaxDisplay = val;
     else
@@ -622,7 +625,7 @@ void CalibrationView::updateLayout()
     const int graphLeft = mImageSaveBut->x() + mImageSaveBut->width();
     const int graphWidth = width() - graphLeft;
 
-    const int resTextH = 5 * fm.height();
+    const int resTextH = 4 * fm.height();
     mDrawing->setGeometry(graphLeft, 0, graphWidth, height() - resTextH);
     mResultsText->setGeometry(graphLeft + 20, mDrawing->y() + mDrawing->height(), graphWidth - 40 , resTextH);
     mResultsText->setAutoFillBackground(true);

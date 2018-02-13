@@ -113,7 +113,7 @@ double shrinkageUniform(const double so2)
  * @brief Return a text from a FunctionAnalysis
  * @see FunctionAnalysis
  */
-QString functionAnalysisToString(const FunctionAnalysis& analysis, const bool forcePrecision)
+QString functionAnalysisToString(const FunctionAnalysis& analysis, const bool forCSV)
 {
     QString result;
 
@@ -121,9 +121,16 @@ QString functionAnalysisToString(const FunctionAnalysis& analysis, const bool fo
         result = QObject::tr("No data");
 
     else
-        result += QObject::tr("MAP = %1  ;  Mean = %2  ;  Std deviation = %3").arg(stringWithAppSettings(analysis.mode, forcePrecision),
-                                                                                stringWithAppSettings(analysis.mean, forcePrecision),
-                                                                                stringWithAppSettings(analysis.stddev, forcePrecision));
+        if (forCSV) {
+            result += QObject::tr("MAP = %1  ;  Mean = %2  ;  Std deviation = %3").arg(stringForCSV(analysis.mode),
+                                                                                    stringForCSV(analysis.mean),
+                                                                                    stringForCSV(analysis.stddev));
+        }  else {
+            result += QObject::tr("MAP = %1  ;  Mean = %2  ;  Std deviation = %3").arg(stringForLocal(analysis.mode),
+                                                                                    stringForLocal(analysis.mean),
+                                                                                    stringForLocal(analysis.stddev));
+        }
+
 
     return result;
 }
@@ -132,14 +139,21 @@ QString functionAnalysisToString(const FunctionAnalysis& analysis, const bool fo
  * @brief Return a text with the value of th Quartiles Q1, Q2 and Q3
  * @see DensityAnalysis
  */
-QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& nl, const bool forcePrecision)
+QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& nl, const bool forCSV)
 {
     QString result (QObject::tr("No data"));
     if (analysis.analysis.stddev>=0.) {
-        result = functionAnalysisToString(analysis.analysis, forcePrecision) + nl;
-        result += QObject::tr("Q1 = %1  ;  Q2 (Median) = %2  ;  Q3 = %3 ").arg(stringWithAppSettings(analysis.quartiles.Q1, forcePrecision),
-                                                                            stringWithAppSettings(analysis.quartiles.Q2, forcePrecision),
-                                                                            stringWithAppSettings(analysis.quartiles.Q3, forcePrecision));
+        result = functionAnalysisToString(analysis.analysis, forCSV) + nl;
+        if (forCSV){
+            result += QObject::tr("Q1 = %1  ;  Q2 (Median) = %2  ;  Q3 = %3 ").arg(stringForCSV(analysis.quartiles.Q1),
+                                                                                stringForCSV(analysis.quartiles.Q2),
+                                                                                stringForCSV(analysis.quartiles.Q3));
+        } else {
+            result += QObject::tr("Q1 = %1  ;  Q2 (Median) = %2  ;  Q3 = %3 ").arg(stringForLocal(analysis.quartiles.Q1),
+                                                                                stringForLocal(analysis.quartiles.Q2),
+                                                                                stringForLocal(analysis.quartiles.Q3));
+        }
+
     }
     return result;
 }
@@ -682,17 +696,37 @@ QPair<float, float> gapRangeFromTraces_old(const QVector<float>& traceBeta, cons
 
 
 
-QString intervalText(const QPair<double, QPair<double, double> > &interval, FormatFunc formatFunc, const bool forcePrecision)
+QString intervalText(const QPair<double, QPair<double, double> > &interval,  DateConversion conversionFunc, const bool forCSV)
 {
-    if (formatFunc)
-        return "[ " + formatFunc(interval.second.first, forcePrecision) + " ; " + formatFunc(interval.second.second, forcePrecision) + " ] (" + stringWithAppSettings(interval.first, forcePrecision) + "%)";
+    const double perCent = interval.first;
+    const double inter1 = (conversionFunc ? conversionFunc(interval.second.first) : interval.second.first );
+    const double inter2 = (conversionFunc ? conversionFunc(interval.second.second) : interval.second.second );
 
-    else
-        return "[ " + stringWithAppSettings(interval.second.first, forcePrecision) + " ; " + stringWithAppSettings(interval.second.second, forcePrecision) + " ] (" + stringWithAppSettings(interval.first,forcePrecision) + "%)";
+     if (forCSV)
+         return "[ " + stringForCSV(inter1) + " ; " + stringForCSV(inter2) + " ] (" + stringForCSV(perCent) + "%)";
+     else
+         return "[ " + stringForLocal(interval.second.first) + " ; " + stringForLocal(interval.second.second) + " ] (" + stringForLocal(interval.first) + "%)";
+
+/*
+    if (forCSV) {
+        if (formatFunc)
+            return "[ " + formatFunc(interval.second.first, true) + " ; " + formatFunc(interval.second.second, true) + " ] (" + stringForCSV(interval.first) + "%)";
+
+        else
+            return "[ " + stringForCSV(interval.second.first) + " ; " + stringForCSV(interval.second.second) + " ] (" + stringForCSV(interval.first) + "%)";
+
+    } else {
+        if (formatFunc)
+            return "[ " + formatFunc(interval.second.first, false) + " ; " + formatFunc(interval.second.second, false) + " ] (" + stringForLocal(interval.first) + "%)";
+
+        else
+            return "[ " + stringForLocal(interval.second.first) + " ; " + stringForLocal(interval.second.second) + " ] (" + stringForLocal(interval.first) + "%)";
+
+    }*/
 
 }
 
-QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString& unit, FormatFunc formatFunc, const bool forcePrecision)
+QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString& unit,  DateConversion conversionFunc, const bool forCSV)
 {
     if (hpd.isEmpty() )
         return "";
@@ -701,7 +735,7 @@ QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString
     QStringList results;
 
     for (auto&& interval : intervals)
-        results << intervalText(interval, formatFunc, forcePrecision);
+        results << intervalText(interval, conversionFunc, forCSV);
 
     QString result = results.join(", ");
     if (!unit.isEmpty())

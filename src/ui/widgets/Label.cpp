@@ -45,7 +45,7 @@ void Label::setIsTitle(bool isTitle)
         mPalette.setColor(QPalette::Text, Qt::white);
         mPalette.setColor(QPalette::Background, Painting::mainColorGrey);
         setAlignment(Qt::AlignCenter);
-        setFixedHeight(20);
+        //setFixedHeight(20);
     }
 
 }

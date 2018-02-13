@@ -405,37 +405,54 @@ bool constraintIsCircular(QJsonArray constraints, const int fromId, const int to
     return false;
 }
 
-QString stringWithAppSettings(const double valueToFormat, const bool forcePrecision)
+//QString stringWithAppSettings(const double valueToFormat, const bool forcePrecision)
+
+QString stringForGraph(const double valueToFormat)
 {
+    char fmt = 'f';
+    QLocale locale = QLocale();
+    const int precision = MainWindow::getInstance()->getAppSettings().mPrecision;
+
+    if (std::abs(valueToFormat)>1E+06)
+        fmt = 'G';
+
+    if (std::abs(valueToFormat) > 1E-6)
+         return removeZeroAtRight(locale.toString( valueToFormat, fmt, precision));
+    else
+        return "0";
+}
+
+
+QString stringForLocal(const double valueToFormat, const bool forcePrecision)
+{
+    (void) forcePrecision;
     char fmt = 'f';
     QLocale locale = QLocale();
 
     const int precision = MainWindow::getInstance()->getAppSettings().mPrecision;
 
-    if (std::abs(valueToFormat)<1E-6) {
-        if (forcePrecision)
-            return locale.toString(0., fmt, precision);
-        else
-            return "0";
-    }
-
-
     if (std::abs(valueToFormat)>1E+06)
         fmt = 'G';
 
-    if (forcePrecision) {
-        QLocale locale = MainWindow::getInstance()->getAppSettings().mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
-        locale.setNumberOptions(QLocale::OmitGroupSeparator);
-        return locale.toString(valueToFormat, fmt, precision);
+      return locale.toString(valueToFormat, fmt, precision);
 
-    } else {
-
-        if (precision > 0)
-             return removeZeroAtRight(locale.toString(valueToFormat, fmt, precision));
-        else
-            return locale.toString(valueToFormat, fmt, precision);
-   }
 }
+
+QString stringForCSV(const double valueToFormat, const bool forcePrecision)
+{
+    (void) forcePrecision;
+    char fmt = 'f';
+    if (std::abs(valueToFormat)>1E+06)
+        fmt = 'G';
+
+    const int precision = MainWindow::getInstance()->getAppSettings().mPrecision;
+
+    QLocale locale = MainWindow::getInstance()->getAppSettings().mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+    locale.setNumberOptions(QLocale::OmitGroupSeparator);
+    return locale.toString(valueToFormat, fmt, precision);
+
+}
+
 
 // CSV File
 bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep, const bool withDateFormat)

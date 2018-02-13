@@ -11,7 +11,6 @@
 #include <QJsonArray>
 
 MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-mButtonWidth(50),
 mMajorScale (100),
 mMinorScale (4),
 mTminDisplay(-INFINITY),
@@ -20,10 +19,10 @@ mThreshold(95),
 mGraphHeight(100),
 mCurveColor(Painting::mainColorDark)
 {
-    setFont(QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
-    QFontMetrics fm (QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
-mButtonWidth = fm.width('_') * 8;
+    setFont(AppSettings::font());
+ //   QFontMetrics fm (QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
 
+   mButtonWidth = 1.7 * AppSettings::widthUnit();
     setMouseTracking(true);
     mDrawing = new MultiCalibrationDrawing(this);
     setMouseTracking(true);
@@ -354,7 +353,7 @@ void MultiCalibrationView::updateGraphList()
 
             calibGraph->addCurve(calibCurve);
             calibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
-            calibGraph->setFormatFunctX(stringWithAppSettings);
+            calibGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormat);
             calibGraph->setFormatFunctY(nullptr);
 
             calibGraph->setMarginRight(marginRight);
@@ -441,7 +440,7 @@ void MultiCalibrationView::updateGraphList()
                         calibGraph->setRangeY(0., 1. * yMax);
 
                         calibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
-                        calibGraph->setFormatFunctX(stringWithAppSettings);
+                        calibGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormat);
                         calibGraph->setFormatFunctY(nullptr);
 
                         calibGraph->setMarginRight(marginRight);
@@ -696,7 +695,7 @@ void MultiCalibrationView::exportFullImage()
     if (printAxis) {
         widgetExport->resize(widgetExport->width(), widgetExport->height() + axeHeight + legendHeight );
 
-        FormatFunc f = stringWithAppSettings;
+        DateConversion f = DateUtils::convertToAppSettingsFormat;
 
         QFontMetricsF fmAxe (widgetExport->font());
 
@@ -891,7 +890,7 @@ void MultiCalibrationView::showStat()
 
                                const double realThresh = map_area(hpd) / map_area(subData);
 
-                               resultsStr += + "<br> HPD (" + locale().toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), stringWithAppSettings) + "<br>";
+                               resultsStr += + "<br> HPD (" + locale().toString(100. * realThresh, 'f', 1) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat) + "<br>";
 
                            } else
                                resultsStr += "<br>" + textBold(textRed(QObject::tr("Solutions exist outside study period") ))  + "<br>";

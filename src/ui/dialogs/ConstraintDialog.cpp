@@ -173,13 +173,9 @@ void ConstraintDialog::resizeEvent(QResizeEvent* e)
     
     mTypeLab->setGeometry(m, m, w1, mComboH);
     mFixedLab->setGeometry(m, 2*m + mComboH, w1, lineH);
-    //mMinLab->setGeometry(m, 2*m + mComboH, w1, lineH);
-    //mMaxLab->setGeometry(m, 2*m + lineH + mComboH, w1, lineH);
     
     mTypeCombo->setGeometry(2*m + w1, m, w2, mComboH);
     mFixedEdit->setGeometry(2*m + w1, 2*m + mComboH, w2, lineH);
-    //mMinEdit->setGeometry(2*m + w1, 2*m + mComboH, w2, lineH);
-    //mMaxEdit->setGeometry(2*m + w1, 3*m + mComboH + lineH, w2, lineH);
     
     mDeleteBut->setGeometry(width() -3*m - 2*butW - deleteButW, height() - m - butH, deleteButW, butH);
     mOkBut->setGeometry(width() -2*m - 2*butW, height() - m - butH, butW, butH);

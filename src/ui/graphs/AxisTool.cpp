@@ -29,7 +29,7 @@ mAxisColor(0, 0, 0)
 qreal AxisTool::getXForValue(const qreal &value)
 {
     const qreal rigthBlank (5.); // the same name and the same value as AxisTool::updateValues()
-    return (qreal)(valueForProportion(value, (qreal) mStartVal, (qreal) mEndVal, qreal (0.), (qreal) (mTotalPix-rigthBlank), true));
+    return (qreal)(valueForProportion(value, (qreal) mStartVal, (qreal) mEndVal, qreal (0.), (qreal) (mTotalPix - rigthBlank), true));
 }
 
 qreal AxisTool::getYForValue(const qreal &value)
@@ -75,7 +75,7 @@ void AxisTool::setScaleDivision (const double &major, const double &minorCount)
  * @brief Draw axis on a QPainter, if there is no valueFormatFunc, all number is converted in QString with precision 0, it's meanning only integer
  *
  */
-QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, FormatFunc valueFormatFunc)
+QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, DateConversion valueFormatFunc)
 {
     QPen memoPen(p.pen());
     QBrush memoBrush(p.brush());
@@ -112,11 +112,11 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, F
                 QRectF tr(xo, yo, w, h);
 
                 if (valueFormatFunc) {
-                    p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, valueFormatFunc(mStartVal, false));
-                    p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, valueFormatFunc(mEndVal, false));
+                    p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter,stringForGraph(valueFormatFunc(mStartVal)));
+                    p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter,stringForGraph(valueFormatFunc(mEndVal)));
                 } else {
-                    p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, stringWithAppSettings(mStartVal, false));
-                    p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, stringWithAppSettings(mEndVal, false));
+                    p.drawText(tr, Qt::AlignLeft  | Qt::AlignVCenter, stringForGraph(mStartVal));
+                    p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, stringForGraph(mEndVal));
                 }
             }
         }
@@ -124,10 +124,10 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, F
             if (  mShowSubs && (mEndVal - mStartVal != INFINITY) && (mEndVal > mStartVal) && (mMajorScale > 0)) {
 
                 // look for the text increment
-                const QString textMin =(valueFormatFunc ? valueFormatFunc(mStartVal, false) : stringWithAppSettings(mStartVal, false) );
+                const QString textMin =(valueFormatFunc ? stringForGraph(valueFormatFunc(mStartVal)) : stringForGraph(mStartVal) );
                 const int textMinWidth =  fm.width(textMin) ;
 
-                const QString textMax =(valueFormatFunc ? valueFormatFunc(mEndVal, false) : stringWithAppSettings(mEndVal, false) );
+                const QString textMax =(valueFormatFunc ?stringForGraph(valueFormatFunc(mEndVal)) : stringForGraph(mEndVal) );
                 const int textMaxWidth =  fm.width(textMax) ;
 
                 const double nbPossibleText = std::abs(getXForValue(mStartVal) -getXForValue(mEndVal)) / (std::max(textMinWidth, textMaxWidth) + 5.);
@@ -154,7 +154,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, F
                     if ( textInc == mTextInc) {
                         p.drawLine(QLineF(x, yo, x, yo + heigthSize));
                         if (mShowText) {
-                            const QString text =(valueFormatFunc ? valueFormatFunc(v, false) : stringWithAppSettings(v, false) );
+                            const QString text =(valueFormatFunc ? stringForGraph(valueFormatFunc(v)) : stringForGraph(v) );
                             const int textWidth =  fm.width(text) ;
                             const qreal tx = x - textWidth/2.;
                             const QRectF textRect(tx, yo + h - heightText, textWidth, heightText);
@@ -215,10 +215,10 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, F
         {
             if (mShowText){
                 const QRectF tr(r.x(), r.y(), w - 8, h);
-                const QString textStarVal = (valueFormatFunc ? valueFormatFunc(mStartVal, false) : QString::number(mStartVal,'f', 0) );
+                const QString textStarVal = (valueFormatFunc ?stringForGraph(valueFormatFunc(mStartVal)) : stringForGraph(mStartVal) );
 
                 p.drawText(tr, Qt::AlignRight | Qt::AlignBottom, textStarVal);
-                const QString textEndVal = (valueFormatFunc ? valueFormatFunc(mEndVal, false) : QString::number(mEndVal,'f', 0) );
+                const QString textEndVal = (valueFormatFunc ? stringForGraph(valueFormatFunc(mEndVal)) : stringForGraph(mEndVal) );
                 p.drawText(tr, Qt::AlignRight | Qt::AlignTop, textEndVal);
             }
         } else  {
@@ -256,7 +256,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, F
                     ++textInc;
 
                     if ( textInc == mTextInc) {
-                        const QString text =(valueFormatFunc ? valueFormatFunc(v, false) : stringWithAppSettings(v, false) );
+                        const QString text =(valueFormatFunc ?stringForGraph(valueFormatFunc(v)) : stringForGraph(v) );
                         const int textHeight =  fm.height() ;
 
                         const int align (Qt::AlignRight | Qt::AlignVCenter);
@@ -285,7 +285,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, F
 }
 
 
-AxisWidget::AxisWidget(FormatFunc funct, QWidget* parent):QWidget(parent),
+AxisWidget::AxisWidget(DateConversion funct, QWidget* parent):QWidget(parent),
 mMarginLeft(0.),
 mMarginRight(0.)
 {

@@ -1,6 +1,7 @@
 #include "DateUtils.h"
 #include "MainWindow.h"
 #include "QtUtilities.h"
+
 #include <cmath>
 #include <QLocale>
 
@@ -65,7 +66,7 @@ double DateUtils::convertFromFormat(const double &formattedValue, const FormatDa
     }
 }
 
-QString DateUtils::formatString(const FormatDate format)
+QString DateUtils::dateFormatToString(const FormatDate format)
 {
     switch (format) {
         case eCalBP:
@@ -106,13 +107,16 @@ DateUtils::FormatDate DateUtils::getAppSettingsFormat()
 
 QString DateUtils::getAppSettingsFormatStr()
 {
-    return formatString(getAppSettingsFormat());
+    return dateFormatToString(getAppSettingsFormat());
 }
 
 
 QString DateUtils::convertToAppSettingsFormatStr(const double valueToFormat, const bool forCSV)
 {
-    return stringWithAppSettings(convertToAppSettingsFormat(valueToFormat), forCSV);
+    if (forCSV)
+         return stringForCSV(convertToAppSettingsFormat(valueToFormat));
+    else
+         return stringForLocal(convertToAppSettingsFormat(valueToFormat));
 }
 
 double DateUtils::convertToAppSettingsFormat(const double& valueToFormat)
@@ -122,7 +126,7 @@ double DateUtils::convertToAppSettingsFormat(const double& valueToFormat)
 
 QString DateUtils::convertFromAppSettingsFormatStr(const double formattedValue)
 {
-    return stringWithAppSettings(convertFromAppSettingsFormat(formattedValue));
+    return stringForLocal(convertFromAppSettingsFormat(formattedValue));
 }
 
 double DateUtils::convertFromAppSettingsFormat(const double &formattedValue)
