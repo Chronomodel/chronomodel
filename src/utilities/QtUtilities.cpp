@@ -133,7 +133,7 @@ QString intListToString(const QList<int>& intList, const QString& separator)
 }
 
 
-QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogTitle, const QString& defaultPath, const AppSettings & appSetting)
+QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogTitle, const QString& defaultPath)
 {
     QFileInfo fileInfo;
     
@@ -186,10 +186,10 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
              *  Get preferences
              * -------------------------------*/
             //For the scene exportation pixel Ration is forced to 1
-            const short pr = appSetting.mPixelRatio;
+            const short pr = AppSettings::mPixelRatio;
 
             //const short dpm = appSetting.mDpm;
-            const short quality = appSetting.mImageQuality;
+            const short quality = AppSettings::mImageQuality;
             
             // -------------------------------
             //  Create the image
@@ -290,7 +290,6 @@ bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName)
     const QFontMetrics fm(widget->font());
     
     const int heightText= fm.height()+10;
-    
 
     const  QRect viewBox = QRect( 0, 0,r.width(), r.height() + heightText );
     QSvgGenerator svgGenFile;
@@ -411,13 +410,13 @@ QString stringForGraph(const double valueToFormat)
 {
     char fmt = 'f';
     QLocale locale = QLocale();
-    const int precision = MainWindow::getInstance()->getAppSettings().mPrecision;
+    const int precision = AppSettings::mPrecision;
 
     if (std::abs(valueToFormat)>1E+06)
         fmt = 'G';
 
     if (std::abs(valueToFormat) > 1E-6)
-         return removeZeroAtRight(locale.toString( valueToFormat, fmt, precision));
+         return removeZeroAtRight(locale.toString( valueToFormat, fmt, precision + 1)); // if appSettings precision is 0, we need a decimal
     else
         return "0";
 }
@@ -429,7 +428,7 @@ QString stringForLocal(const double valueToFormat, const bool forcePrecision)
     char fmt = 'f';
     QLocale locale = QLocale();
 
-    const int precision = MainWindow::getInstance()->getAppSettings().mPrecision;
+    const int precision = AppSettings::mPrecision;
 
     if (std::abs(valueToFormat)>1E+06)
         fmt = 'G';
@@ -445,9 +444,9 @@ QString stringForCSV(const double valueToFormat, const bool forcePrecision)
     if (std::abs(valueToFormat)>1E+06)
         fmt = 'G';
 
-    const int precision = MainWindow::getInstance()->getAppSettings().mPrecision;
+    const int precision = AppSettings::mPrecision;
 
-    QLocale locale = MainWindow::getInstance()->getAppSettings().mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+    QLocale locale = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
     locale.setNumberOptions(QLocale::OmitGroupSeparator);
     return locale.toString(valueToFormat, fmt, precision);
 
@@ -483,8 +482,7 @@ bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QS
 
 bool saveAsCsv(const QList<QStringList>& data, const QString& title)
 {
-    const AppSettings settings = MainWindow::getInstance()->getAppSettings();
-    const QString csvSep = settings.mCSVCellSeparator;
+    const QString csvSep = AppSettings::mCSVCellSeparator;
     
     const QString currentPath = MainWindow::getInstance()->getCurrentPath();
     const QString filter = "CSV (*.csv)";

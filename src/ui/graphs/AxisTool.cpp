@@ -73,9 +73,9 @@ void AxisTool::setScaleDivision (const double &major, const double &minorCount)
 
 /**
  * @brief Draw axis on a QPainter, if there is no valueFormatFunc, all number is converted in QString with precision 0, it's meanning only integer
- *
+ * @param graduationSize size of the main graduation; if -1 indiquate automatique size according to the font; default =-1
  */
-QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, DateConversion valueFormatFunc)
+QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSize, DateConversion valueFormatFunc)
 {
     QPen memoPen(p.pen());
     QBrush memoBrush(p.brush());
@@ -89,15 +89,19 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, D
 
     QFontMetrics fm (p.font());
     int heightText = fm.height();
+
+    if (graduationSize = -1)
+        graduationSize = heightText /3;
+
     qreal xo = r.x();
     qreal yo = r.y();
     qreal w = r.width();
     qreal h = r.height();
     if (mIsHorizontal) {
        if (mShowArrow) { // the arrow is over the rectangle of heigthSize
-            QPolygonF triangle (std::initializer_list<QPointF>({ QPointF(xo + w + heigthSize*.65, yo),
-                                                                 QPointF(xo + w , yo - heigthSize*.65),
-                                                                 QPointF(xo + w, yo + heigthSize*.65) }));
+            QPolygonF triangle (std::initializer_list<QPointF>({ QPointF(xo + w + graduationSize*.65, yo),
+                                                                 QPointF(xo + w , yo - graduationSize*.65),
+                                                                 QPointF(xo + w, yo + graduationSize*.65) }));
 
 
             p.setBrush(mAxisColor);
@@ -105,7 +109,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, D
         }
 
         p.drawLine(xo, yo, xo + w, yo);
-        p.drawLine(xo, yo, xo, yo + heigthSize);
+        p.drawLine(xo, yo, xo, yo + graduationSize);
 
         if (mMinMaxOnly) {
             if (mShowText) {
@@ -152,7 +156,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, D
                     ++textInc;
 
                     if ( textInc == mTextInc) {
-                        p.drawLine(QLineF(x, yo, x, yo + heigthSize));
+                        p.drawLine(QLineF(x, yo, x, yo + graduationSize));
                         if (mShowText) {
                             const QString text =(valueFormatFunc ? stringForGraph(valueFormatFunc(v)) : stringForGraph(v) );
                             const int textWidth =  fm.width(text) ;
@@ -165,9 +169,9 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, D
                         xPrev = x;
                     } else {
                         if (mShowSubSubs)
-                            p.drawLine(QLineF(x, yo, x, yo + heigthSize));
+                            p.drawLine(QLineF(x, yo, x, yo + graduationSize));
                         else if ( (x-xPrev) > mMinDeltaPix) {
-                            p.drawLine(QLineF(x, yo, x, yo + heigthSize/2.));
+                            p.drawLine(QLineF(x, yo, x, yo + graduationSize/2.));
                             xPrev = x;
                        }
                     }
@@ -178,7 +182,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, D
                     if (mShowSubSubs && v<mEndVal) {
                         for (qreal sv = 1.; sv < mMinorScaleCount; sv += 1.) {
                             const qreal vm = getXForValue(sv*minorStep + v) + xo;
-                            p.drawLine(QLineF(vm, yo, vm, yo + heigthSize/2.));
+                            p.drawLine(QLineF(vm, yo, vm, yo + graduationSize/2.));
                         }
                     }
 
@@ -201,25 +205,40 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, D
         if (mShowArrow) { // the arrow is over the rectangle of heigthSize
 
             QPolygonF triangle (std::initializer_list<QPointF>({ QPointF(xov, yov - h),
-                                                                 QPointF(xov - heigthSize*.65, yov - h + heigthSize*.65),
-                                                                 QPointF(xov + heigthSize*.65, yov - h + heigthSize*.65) }));
+                                                                 QPointF(xov - graduationSize*.65, yov - h + graduationSize*.65),
+                                                                 QPointF(xov + graduationSize*.65, yov - h + graduationSize*.65) }));
 
             p.setBrush(mAxisColor);
             p.drawPolygon(triangle);
 
+        } else {
+           qreal y = yov - getYForValue(mStartVal) ;
+            p.drawLine(QLineF(xov, y, xov - graduationSize, y));
+
+             y = yov - getYForValue(mEndVal) ;
+             p.drawLine(QLineF(xov, y, xov - graduationSize, y));
         }
-        if (!mShowText) {
+  /*      if (!mShowText) {
             // Nothing else to draw !
         }
-        else if (mMinMaxOnly) // used on posterior densities Maybe change the type of the text exp ou float
+        else*/
+        if (mMinMaxOnly) // used on posterior densities Maybe change the type of the text exp ou float
         {
             if (mShowText){
-                const QRectF tr(r.x(), r.y(), w - 8, h);
-                const QString textStarVal = (valueFormatFunc ?stringForGraph(valueFormatFunc(mStartVal)) : stringForGraph(mStartVal) );
 
-                p.drawText(tr, Qt::AlignRight | Qt::AlignBottom, textStarVal);
-                const QString textEndVal = (valueFormatFunc ? stringForGraph(valueFormatFunc(mEndVal)) : stringForGraph(mEndVal) );
-                p.drawText(tr, Qt::AlignRight | Qt::AlignTop, textEndVal);
+                 const QString textStarVal = (valueFormatFunc ? stringForLocal(valueFormatFunc(mStartVal)) : stringForGraph(mStartVal) );
+                 const QString textEndVal = (valueFormatFunc ? stringForLocal(valueFormatFunc(mEndVal)) : stringForGraph(mEndVal) );
+                 const int textHeight =  fm.height() ;
+                 w = qMax( fm.width(textStarVal), fm.width(textEndVal) );
+                 const qreal xText = (xov - graduationSize -w) / 2.;
+                 qreal y = yov - getYForValue(mStartVal) - textHeight/2. ;
+                  const QRectF trS(xText, y, w, textHeight);
+                  p.drawText(trS, Qt::AlignRight | Qt::AlignBottom, textStarVal);
+
+                  y = yov - getYForValue(mEndVal) - textHeight/2. ;
+                  const QRectF trE(xText, y, w, textHeight);
+                  p.drawText(trE, Qt::AlignRight | Qt::AlignVCenter, textEndVal);
+
             }
         } else  {
             if ( mShowSubs && (mEndVal - mStartVal != INFINITY)) {
@@ -242,8 +261,6 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, D
 
                 }
 
-
-
                 // draw scale with this text
                 const qreal minorStep (mMajorScale/ mMinorScaleCount);
 
@@ -251,7 +268,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, D
                 for (qreal v = mStartVal; v <= mEndVal ; v += mMajorScale)  {
                     const qreal y = yov - getYForValue(v) ;
 
-                    p.drawLine(QLineF(xov, y, xov - heigthSize, y));
+                    p.drawLine(QLineF(xov, y, xov - graduationSize, y));
                     linesPos.append(y);
                     ++textInc;
 
@@ -270,7 +287,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal heigthSize, D
                         for (qreal sv = 1.; sv < mMinorScaleCount; sv += 1.) {
                             const qreal ym = yov - getYForValue(sv*minorStep + v);
 
-                            p.drawLine(QLineF(xov, ym, xov - heigthSize/2., ym));
+                            p.drawLine(QLineF(xov, ym, xov - graduationSize/2., ym));
                         }
                     }
 
@@ -295,6 +312,7 @@ mMarginRight(0.)
 void AxisWidget::paintEvent(QPaintEvent*)
 {
     QPainter p(this);
+    p.setFont(this->font());
     paint(p, QRectF( mMarginLeft, 0, width() - mMarginLeft - mMarginRight, height()), 7., mFormatFunct);
 }
 

@@ -4,11 +4,10 @@
 
 
 Tabs::Tabs(QWidget* parent):QWidget(parent),
-mTabHeight(30),
 mCurrentIndex(-1)
 {
-    setFont(parent->font());
-}
+    setFont(parentWidget()->font());
+ }
 
 Tabs::~Tabs()
 {
@@ -127,20 +126,22 @@ void Tabs::setTab(const int &i, bool notify)
 
 }
 
- /*
-  * void Tabs::setFont(const QFont &font)
+  void Tabs::setFont(const QFont &font)
 {
-    (void) font;
+      mFont = font;
+     QWidget::setFont(mFont);
+    QFontMetrics fm (mFont);
+    mTabHeight = 2 * fm.height();
     updateLayout();
 }
-*/
+
 void Tabs::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
 
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
-    p.setFont(font());
+    p.setFont(mFont);
 
     for (int i=0; i<mTabNames.size(); ++i)
         if (i != mCurrentIndex) {
@@ -183,18 +184,18 @@ void Tabs::mousePressEvent(QMouseEvent* e)
 
 void Tabs::updateLayout()
 {
-    const qreal m (10.);
+
     mTabRects.clear();
     qreal x  (1.);
     const qreal h (mTabHeight - 1.);
-    QFontMetrics metrics(font());
+    QFontMetrics metrics(mFont);
 
     int i (0);
     for (auto &&name : mTabNames) {
         if (mTabVisible[i]) {
             const qreal w = metrics.width(name);
-            mTabRects.append(QRectF(x, 1, 2*m + w, h));
-            x += 2*m + w;
+            mTabRects.append(QRectF(x, 1,  1.3* w, h));
+            x += 1.3* w;
         } else
             mTabRects.append(QRectF(x, 1, 0, h));
 

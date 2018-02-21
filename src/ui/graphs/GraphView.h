@@ -29,17 +29,18 @@ class GraphView: public QWidget, public GraphViewAbstract
 {
     Q_OBJECT
 public:
-    enum Rendering
+/*    enum Rendering
     {
         eSD = 0,
         eHD = 1
-    };
+    };*/
     enum AxisMode
     {
         eHidden = 0,
         eMinMax = 1,
-        eMainTicksOnly = 2,
-        eAllTicks = 3
+        eMinMaxHidden = 2,
+        eMainTicksOnly = 3,
+        eAllTicks = 4
     };
     enum OverflowDataArrowMode
     {
@@ -89,8 +90,8 @@ public:
     void adjustYToMaxValue(const qreal& marginProp = 0.);
     void adjustYToMinMaxValue();
     
-    void setRendering(Rendering render);
-    Rendering getRendering();
+   // void setRendering(Rendering render);
+   // Rendering getRendering();
     void setGraphFont(const QFont& font);
 
     void setGraphsThickness(int value);
@@ -193,7 +194,7 @@ protected:
     AxisMode mYAxisMode;
     OverflowDataArrowMode mOverflowArrowMode;
 
-    Rendering mRendering;
+   // Rendering mRendering;
     
     bool mAutoAdjustYScale; 
        

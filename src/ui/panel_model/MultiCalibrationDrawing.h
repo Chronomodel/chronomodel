@@ -61,9 +61,10 @@ private:
     Marker* mMarkerX;
 
     int mVerticalSpacer;
-    QFont mFont;
 
     int mGraphHeight;
+    int mHeightForVisibleAxis;
+    QFont mGraphFont;
 
     bool mMouseOverCurve;
 

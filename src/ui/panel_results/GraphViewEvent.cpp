@@ -369,8 +369,11 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
         mGraph->setTipXLab(tr("Iteration"));
         mGraph->setTipYLab("t");
-        mGraph->setYAxisMode(GraphView::eMinMax);
+
+        mGraph->setYAxisMode(GraphView::eMinMaxHidden);
+        mGraph->showInfos(true);
         mGraph->autoAdjustYScale(true);
+
     }
 
     /* ----------------------Third tab : Acceptance rate--------------------------
@@ -385,7 +388,8 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
         mGraph->setTipXLab(tr("Iteration"));
         mGraph->setTipYLab(tr("Rate"));
-        mGraph->setYAxisMode(GraphView::eMinMax);
+        mGraph->setYAxisMode(GraphView::eMinMaxHidden);
+        mGraph->showInfos(false);
         mGraph->autoAdjustYScale(false); // do  repaintGraph()
         mGraph->setRangeY(0, 100);
     }
@@ -404,6 +408,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         mGraph->setTipXLab("h");
         mGraph->setTipYLab(tr("Value"));
         mGraph->setYAxisMode(GraphView::eMinMax);
+        mGraph->showInfos(false);
         mGraph->autoAdjustYScale(false); // do  repaintGraph()
         mGraph->setRangeY(-1, 1);
     }

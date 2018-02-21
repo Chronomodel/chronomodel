@@ -99,9 +99,8 @@ void ImportDataView::browse()
             
             QStringList headers;
             const QStringList pluginNames = PluginManager::getPluginsNames();
-            
-            const AppSettings settings = MainWindow::getInstance()->getAppSettings();
-            const QString csvSep = settings.mCSVCellSeparator;
+
+            const QString csvSep = AppSettings::mCSVCellSeparator;
             
             // endline detection, we want to find which system, OsX, Mac, Windows made this file
            // QString line = stream.readLine();
@@ -255,8 +254,8 @@ void ImportDataView::exportDates()
         mPath = info.absolutePath();
         MainWindow::getInstance()->setCurrentPath(mPath);
         
-        QString sep = MainWindow::getInstance()->getAppSettings().mCSVCellSeparator;
-        QLocale csvLocal = MainWindow::getInstance()->getAppSettings().mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+        QString sep = AppSettings::mCSVCellSeparator;
+        QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
         csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
 
         QFile file(path);
@@ -265,7 +264,7 @@ void ImportDataView::exportDates()
             
             Project* project = MainWindow::getInstance()->getProject();
             QJsonArray events = project->mState[STATE_EVENTS].toArray();
-            stream << "Title"<< sep << project->mProjectFileName<< "\n\r";
+            stream << "Title"<< sep << AppSettings::mLastFile<< "\n\r";
             for (int i=0; i<events.size(); ++i) {
                 QJsonObject event = events[i].toObject();
                 QJsonArray dates = event[STATE_EVENT_DATES].toArray();
@@ -383,9 +382,8 @@ QMimeData* ImportDataTable::mimeData(const QList<QTableWidgetItem*> items) const
     
     int row (-1);
     QStringList itemStr;
-    
-    const AppSettings settings = MainWindow::getInstance()->getAppSettings();
-    const QString csvSep = settings.mCSVCellSeparator;
+
+    const QString csvSep = AppSettings::mCSVCellSeparator;
     
     foreach (QTableWidgetItem* item, items) {
         if (item) {

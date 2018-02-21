@@ -20,36 +20,35 @@ public:
     Ruler(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
     ~Ruler();
     
-   // void setFont(const QFont &font);
-    void setRange(const double min, const double max);
-    void setCurrent(const double min, const double max);
-    void currentChanged(const double min, const double max);
-    void setScaleDivision (const double &major, const double &minorCount);
-    void setScaleDivision (const Scale &sc);
-
-    double getZoom();
-    double getRealValue();
-    
-    void clearAreas();
-    void addArea(double start, double end, const QColor& color);
-    // Set value formatting functions
-    void setFormatFunctX(DateConversion f);
-    
     double realPosition;
     double mCurrentMin;
     double mCurrentMax;
     double mMin;
     double mMax;
     double mZoomProp;
-    
-    qreal mMarginLeft;
-    qreal mMarginRight;
-    
-    AxisTool mAxisTool;
-   // QFont mFont;
-    
+    void setFont(const QFont &font);
+
+     void setRange(const double min, const double max);
+     void setCurrent(const double min, const double max);
+     void setMarginTop (const qreal &top) {mMarginTop = top;}
+     void setMarginBottom (const qreal &bottom) {mMarginBottom = bottom;}
+     void setMarginRight (const qreal &right) {mMarginRight = right;}
+      void setMarginLeft (const qreal &left) {mMarginLeft = left;}
+
+     void currentChanged(const double &min, const double &max);
+     void setScaleDivision (const double &major, const double &minorCount);
+     void setScaleDivision (const Scale &sc);
+
+     double getZoom();
+     double getRealValue();
+
+     void clearAreas();
+     void addArea(double start, double end, const QColor& color);
+     // Set value formatting functions
+     void setFormatFunctX(DateConversion f);
+    void updateLayout();
 protected:
-    void layout();
+
     void resizeEvent(QResizeEvent* e);
     void paintEvent(QPaintEvent* e);
     
@@ -68,11 +67,17 @@ signals:
 private:
     QScrollBar* mScrollBar;
     qreal mScrollBarHeight;
-    
-    QRectF mRulerRect;
-        
+    QFont mAxisFont;
+    QRectF mAxisRect;
+
     qreal mStepMinWidth;
     qreal mStepWidth;
+    qreal mMarginLeft;
+    qreal mMarginRight;
+    qreal mMarginTop;
+    qreal mMarginBottom;
+
+    AxisTool mAxisTool;
 
     
     QVector<RulerArea> mAreas;

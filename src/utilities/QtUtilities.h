@@ -21,7 +21,7 @@ QList<int> stringListToIntList(const QString& listStr, const QString& separator 
 QStringList intListToStringList(const QList<int>& intList);
 QString intListToString(const QList<int>& intList, const QString& separator = ",");
 
-QFileInfo saveWidgetAsImage(QObject* widget, const QRect& r, const QString& dialogTitle, const QString& defaultPath,  const AppSettings & setting);
+QFileInfo saveWidgetAsImage(QObject* widget, const QRect& r, const QString& dialogTitle, const QString& defaultPath);
 bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName);
 
 bool isComment(const QString& str);

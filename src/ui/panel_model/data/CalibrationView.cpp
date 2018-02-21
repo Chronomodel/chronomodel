@@ -34,7 +34,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
 
     setFont(AppSettings::font());
 
-    mButtonWidth = 1.7 * AppSettings::widthUnit();
+    mButtonWidth = 8 * AppSettings::widthUnit();
 
     mDrawing = new CalibrationDrawing(this);
     mDrawing->setMouseTracking(true);
@@ -120,7 +120,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
 
     mCalibGraph = new GraphView(mDrawing);
     
-    mCalibGraph->setRendering(GraphView::eHD);
+    //mCalibGraph->setRendering(GraphView::eHD);
     mCalibGraph->setYAxisMode(GraphView::eHidden);
     mCalibGraph->setXAxisMode(GraphView::eAllTicks);
     mCalibGraph->setMouseTracking(true);
@@ -157,16 +157,33 @@ CalibrationView::~CalibrationView()
     mRefGraphView = nullptr;
 
 }
-/*
-void CalibrationView::setFont(const QFont &font)
+
+void CalibrationView::applyAppSettings()
 {
     // We must force setFont on QLineEdit !!
-    mHPDEdit->setFont(font);
-    mStartEdit->setFont(font);
-    mEndEdit->setFont(font);
+    mButtonWidth = AppSettings::mButtonWidth;
+
+    mHPDLab->setFont(AppSettings::font());
+    mHPDEdit->setFont(AppSettings::font());
+
+    mStartLab->setFont(AppSettings::font());
+    mStartEdit->setFont(AppSettings::font());
+
+    mEndLab->setFont(AppSettings::font());
+    mEndEdit->setFont(AppSettings::font());
+
+    mMajorScaleLab->setFont(AppSettings::font());
+    mMajorScaleEdit->setFont(AppSettings::font());
+
+    mMinorScaleLab->setFont(AppSettings::font());
+    mMinorScaleEdit -> setFont(AppSettings::font());
+
+    mDrawing->setFont(AppSettings::font());
+    mResultsText->setFont(AppSettings::font());
+
     repaint();
 }
-*/
+
 void CalibrationView::setDate(const QJsonObject& date)
 {
     Q_ASSERT(&date);
@@ -284,13 +301,8 @@ void CalibrationView::updateGraphs()
             calibCurve.mIsRectFromZero = isTypo;
             calibCurve.mBrush = isTypo ? QBrush(brushColor) : QBrush(Qt::NoBrush);
 
-          //  type_data yMax = map_max_value(calibCurve.mData);
-          //  yMax = (yMax > 0.) ? yMax : 1.;
-          //  mCalibGraph->setRangeY(0., 1. * yMax);
-
             mCalibGraph->addCurve(calibCurve);
-           // mCalibGraph->setVisible(true);
-            mCalibGraph->setMarginBottom(mCalibGraph->font().pointSizeF() + 10.);
+            mCalibGraph->setMarginBottom(mCalibGraph->font().pointSize() * 2.2);
 
          //   mCalibGraph->setTipXLab("t"); // don't work
 
@@ -492,7 +504,7 @@ void CalibrationView::exportImage()
     mDrawing->hideMarker();
 
     QFileInfo fileInfo = saveWidgetAsImage(mDrawing, mDrawing->rect(), tr("Save calibration image as..."),
-                                           MainWindow::getInstance()->getCurrentPath(), MainWindow::getInstance()->getAppSettings());
+                                           MainWindow::getInstance()->getCurrentPath());
     if (fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
     
@@ -581,9 +593,11 @@ void CalibrationView::updateLayout()
         return;
     }
 
-    QFontMetrics fm (font());
+    QFontMetrics fm (AppSettings::font());
     const int textHeight (fm.height() + 3);
     const int verticalSpacer (fm.height());
+
+    const qreal margin = 0.1 * mButtonWidth;
 
     //Position of Widget
     int y (0);
@@ -601,11 +615,11 @@ void CalibrationView::updateLayout()
 
     mStartLab->setGeometry(0, y, mButtonWidth, textHeight);
     y += mStartLab->height();
-    mStartEdit->setGeometry(3, y, mButtonWidth-6, textHeight);
+    mStartEdit->setGeometry(margin, y, mButtonWidth - 2*margin, textHeight);
     y += mStartEdit->height() + verticalSpacer;
     mEndLab->setGeometry(0, y, mButtonWidth, textHeight);
     y += mEndLab->height();
-    mEndEdit->setGeometry(3, y, mButtonWidth-6, textHeight);
+    mEndEdit->setGeometry(margin, y, mButtonWidth - 2*margin, textHeight);
     y += mEndEdit->height() + verticalSpacer;
 
     mMajorScaleLab->setGeometry(0, y, mButtonWidth, textHeight);
@@ -615,17 +629,17 @@ void CalibrationView::updateLayout()
 
     mMinorScaleLab->setGeometry(0, y, mButtonWidth, textHeight);
     y += mMinorScaleLab->height();
-    mMinorScaleEdit->setGeometry(3, y, mButtonWidth-6, textHeight);
+    mMinorScaleEdit->setGeometry(margin, y, mButtonWidth - 2*margin, textHeight);
     y += mMinorScaleEdit->height() + 3*verticalSpacer;
 
     mHPDLab->setGeometry(0, y, mButtonWidth, textHeight);
     y += mHPDLab->height();
-    mHPDEdit->setGeometry(3, y, mButtonWidth-6, textHeight);
+    mHPDEdit->setGeometry(margin, y, mButtonWidth - 2*margin, textHeight);
 
     const int graphLeft = mImageSaveBut->x() + mImageSaveBut->width();
     const int graphWidth = width() - graphLeft;
 
-    const int resTextH = 4 * fm.height();
+    const int resTextH = 5 * fm.height();
     mDrawing->setGeometry(graphLeft, 0, graphWidth, height() - resTextH);
     mResultsText->setGeometry(graphLeft + 20, mDrawing->y() + mDrawing->height(), graphWidth - 40 , resTextH);
     mResultsText->setAutoFillBackground(true);

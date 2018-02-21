@@ -24,9 +24,7 @@ public slots:
     void setMarginRight(const int margin);
 protected:
     void resizeEvent(QResizeEvent* e);
-    
-private:
-   // GraphView* mGraph;
+
 };
 
 #endif

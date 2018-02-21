@@ -1,4 +1,5 @@
 #include "MultiCalibrationDrawing.h"
+#include "AppSettings.h"
 #include <QMouseEvent>
 
 ColoredPanel::ColoredPanel(QWidget *parent) : QWidget(parent),
@@ -20,8 +21,9 @@ void ColoredPanel::paintEvent(QPaintEvent *)
 
 MultiCalibrationDrawing::MultiCalibrationDrawing(QWidget *parent) : QWidget(parent),
 mVerticalSpacer (5),
-mFont (parent->font()),
-mGraphHeight (70),
+mGraphFont (AppSettings::font()),
+mGraphHeight (6 * AppSettings::heigthUnit()),
+mHeightForVisibleAxis(5 * AppSettings::heigthUnit()),
 mMouseOverCurve (true)
 {
    setMouseTracking(true);
@@ -110,10 +112,9 @@ void MultiCalibrationDrawing::mouseMoveEvent(QMouseEvent* e)
 void MultiCalibrationDrawing::updateLayout()
 {
     const int panelWidth (15);
-    const QFontMetrics fm (font());
 
-    const bool axisVisible = (mGraphHeight >= 100.);
-    const qreal marginBottom =(axisVisible ? font().pointSizeF() + 10. : 10.);
+    const bool axisVisible = (mGraphHeight >= mHeightForVisibleAxis);
+    const qreal marginBottom = (axisVisible ? font().pointSize() * 2.2 : font().pointSize() * 0.5);
     int y (0);
     int i (0);
 
@@ -182,8 +183,8 @@ void MultiCalibrationDrawing::forceRefresh()
     const int panelWidth (15);
     const QFontMetrics fm (font());
 
-    const bool axisVisible = (mGraphHeight >= 100.);
-    const qreal marginBottom =(axisVisible ? font().pointSizeF() + 10. : 10.);
+    const bool axisVisible = (mGraphHeight >= mHeightForVisibleAxis);
+    const qreal marginBottom =(axisVisible ? font().pointSize() * 2.2 : 10.);
     int y (0);
     int i (0);
 

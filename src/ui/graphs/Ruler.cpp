@@ -14,13 +14,14 @@ mCurrentMax(1000.),
 mMin(0.),
 mMax(1000.),
 mZoomProp(1.),
-mMarginLeft(20.),
-mMarginRight(20.),
 mStepMinWidth(3.),//define when minor scale can appear
 mStepWidth(100)
 {
     mScrollBarHeight = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
-    setFont(parentWidget()->font());
+    mMarginTop = 5;
+    mAxisFont = parentWidget()->font();
+    setMarginBottom( mAxisFont.pointSize() * 1.2 );
+
     setMouseTracking(true);
     
     mScrollBar = new QScrollBar(Qt::Horizontal, this);
@@ -34,13 +35,23 @@ mStepWidth(100)
     mAxisTool.mIsHorizontal = true;
     mAxisTool.mShowArrow = false;
     mAxisTool.mShowSubSubs = true;
-    
+
+    updateLayout();
 }
 
 Ruler::~Ruler()
 {
     
 }
+
+void Ruler::setFont(const QFont &font)
+{
+    mMarginTop = 0;
+    mAxisFont = font;
+
+    updateLayout();
+}
+
 
 // Areas
 void Ruler::clearAreas()
@@ -122,11 +133,11 @@ void Ruler::setCurrent(const double min, const double max)
         mScrollBar->setValue(value);
     }
     
-    layout();
+    updateLayout();
     update();
 }
 
-void Ruler::currentChanged(const double min, const double max)
+void Ruler::currentChanged(const double &min, const double &max)
 {    
     setCurrent(min, max);
     
@@ -199,7 +210,7 @@ void Ruler::updateScroll()
     }
 
     mAxisTool.mShowSubSubs = true; // updateValues can set mShowSubSubs to false;
-    mAxisTool.updateValues(mRulerRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
+    mAxisTool.updateValues(mAxisRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
 
     emit positionChanged(mCurrentMin, mCurrentMax);
     
@@ -208,13 +219,7 @@ void Ruler::updateScroll()
  }
 
 // Layout & Paint
-/*
-void Ruler::setFont(const QFont &font)
-{
-    QWidget::setFont(font);
-    layout();
-}
-*/
+
 /**
  * @brief Set value formatting functions
  */
@@ -223,33 +228,31 @@ void Ruler::setFormatFunctX(DateConversion f)
     mFormatFuncX = f;
 }
 
-void Ruler::layout()
+void Ruler::updateLayout()
 {
-    QFontMetricsF fmAxe (font());
-    mMarginRight = floor( fmAxe.width(stringForLocal(mMax))/2.);
-    qreal penSize = 1.;// same value as pen.width in AxisTool
+    mAxisRect = QRectF(mMarginLeft + 1, mMarginTop + mScrollBarHeight, width() - mMarginLeft - mMarginRight , mMarginBottom + font().pointSizeF());
 
-    mRulerRect = QRectF(mMarginLeft + penSize, mScrollBarHeight, width() - mMarginRight - mMarginLeft, height() - mScrollBarHeight);
-    mScrollBar->setGeometry(mMarginLeft , 0., mRulerRect.width()  , mScrollBarHeight);
+    mScrollBar->setGeometry(mMarginLeft , 0., mAxisRect.width()  , mScrollBarHeight);
 
     mAxisTool.mShowSubSubs = true;
-    mAxisTool.updateValues(mRulerRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
-
+    mAxisTool.updateValues(mAxisRect.width(), mStepMinWidth, mCurrentMin, mCurrentMax);
+    setFixedHeight(mScrollBarHeight + mAxisRect.height());
     update();
 }
 
 void Ruler::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
-    layout();
+    updateLayout();
 }
 
 void Ruler::paintEvent(QPaintEvent* e)
 {
     QWidget::paintEvent(e);
-    double w = mRulerRect.width();
+    const double w = mAxisRect.width();
     
     QPainter painter(this);
+    painter.setFont(mAxisFont);
     painter.setRenderHint(QPainter::Antialiasing);
       
     /* ----------------------------------------------
@@ -266,7 +269,7 @@ void Ruler::paintEvent(QPaintEvent* e)
             
             painter.setPen(area.mColor);
             painter.setBrush(area.mColor);
-            painter.drawRect(mRulerRect.x() + x1, mRulerRect.y(), x2 - x1, mRulerRect.height());
+            painter.drawRect(mAxisRect.x() + x1, mAxisRect.y(), x2 - x1, mAxisRect.height());
         }
     }
 
@@ -277,16 +280,8 @@ void Ruler::paintEvent(QPaintEvent* e)
      *  and the size of mRulerRect are calucate in layout too.
      * ----------------------------------------------
      */
-    QFont f = font();
-    painter.setFont(f);
 
-    if (f.pointSizeF() >20.) {
-        f.setPointSizeF(20.);
-        painter.setFont(f);
-    }
-
-    const qreal heigthSize = 7.; // the same name in AxisTool and the same value as GraphView
-    mAxisTool.paint(painter, mRulerRect , heigthSize, mFormatFuncX);
+    mAxisTool.paint(painter, mAxisRect , -1, mFormatFuncX);
 
 }
 

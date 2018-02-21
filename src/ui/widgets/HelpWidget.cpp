@@ -17,8 +17,7 @@ HelpWidget::HelpWidget(const QString& text, QWidget* parent):QWidget(parent)
 void HelpWidget::construct()
 {
     mFont = font();
-   // mFont.setPointSize(pointSize(11));
-    
+
     mHyperLink = new QLabel(this);
     mHyperLink->setTextFormat(Qt::RichText);
     mHyperLink->setFont(mFont);
@@ -57,7 +56,7 @@ int HelpWidget::heightForWidth(int w) const
     QRect rect = metrics.boundingRect(QRect(0, 0, w - 10, 1000),
                                       Qt::TextWordWrap | Qt::AlignVCenter | Qt::AlignLeft,
                                       mText);
-    return rect.height() + 10 + 5 + 15; // 15 is the height of the link, and 5 its margin
+    return rect.height() + 10 + 5 + mFont.pointSize(); // 15 is the height of the link, and 5 its margin
 }
 
 void HelpWidget::paintEvent(QPaintEvent* e)
@@ -76,11 +75,13 @@ void HelpWidget::paintEvent(QPaintEvent* e)
     p.setFont(mFont);
     QTextOption options;
     options.setWrapMode(QTextOption::WordWrap);
-    options.setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    options.setAlignment(Qt::AlignLeft);// | Qt::AlignVCenter);
     p.drawText(rect().adjusted(5, 5, -5, -5), mText, options);
 }
 
 void HelpWidget::resizeEvent(QResizeEvent*)
 {
-    mHyperLink->setGeometry(5, height() - 20, width() - 10, 15);
+    QFontMetrics metrics(mFont);
+    mHyperLink->setFont(mFont);
+    mHyperLink->setGeometry(5, height() - 2*mFont.pointSize() -5, width() - metrics.width("More..") -5, 2*mFont.pointSize());
 }

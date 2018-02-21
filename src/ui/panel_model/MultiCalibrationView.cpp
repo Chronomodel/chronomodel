@@ -20,9 +20,8 @@ mGraphHeight(100),
 mCurveColor(Painting::mainColorDark)
 {
     setFont(AppSettings::font());
- //   QFontMetrics fm (QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
 
-   mButtonWidth = 1.7 * AppSettings::widthUnit();
+   mButtonWidth = 3 * AppSettings::widthUnit();
     setMouseTracking(true);
     mDrawing = new MultiCalibrationDrawing(this);
     setMouseTracking(true);
@@ -34,7 +33,6 @@ mCurveColor(Painting::mainColorDark)
     palette.setColor(QPalette::Text, Qt::black);
     mTextArea->setPalette(palette);
     QFont font = mTextArea->font();
-    font.setPointSizeF(pointSize(11));
     mTextArea->setFont(font);
     mTextArea->setText(tr("Nothing to display"));
     mTextArea->setVisible(false);
@@ -78,24 +76,9 @@ mCurveColor(Painting::mainColorDark)
     mColorClipBut->setToolTip(tr("Set Personal Densities Color"));
     mColorClipBut->setIconOnly(true);
 
-
     frameSeparator = new QFrame(this);
     frameSeparator->setFrameStyle(QFrame::Panel);
     frameSeparator->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
-
-    mHPDLab = new Label(tr("HPD (%)"), this);
-    mHPDLab->setAlignment(Qt::AlignHCenter);
-    mHPDLab->setLight();
-    mHPDLab->setBackground(Painting::borderDark);
-
-    mHPDEdit = new LineEdit(this);
-    mHPDEdit->setText("95");
-
-    DoubleValidator* percentValidator = new DoubleValidator();
-    percentValidator->setBottom(0.);
-    percentValidator->setTop(100.);
-    percentValidator->setDecimals(3);
-    mHPDEdit->setValidator(percentValidator);
 
     mStartLab = new Label(tr("Start"), this);
     mStartLab->setAlignment(Qt::AlignHCenter);
@@ -131,6 +114,19 @@ mCurveColor(Painting::mainColorDark)
     mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves"));
     mMinorScaleEdit->setText(locale().toString(mMinorScale));
 
+    mHPDLab = new Label(tr("HPD (%)"), this);
+    mHPDLab->setAlignment(Qt::AlignHCenter);
+    mHPDLab->setLight();
+    mHPDLab->setBackground(Painting::borderDark);
+
+    mHPDEdit = new LineEdit(this);
+    mHPDEdit->setText("95");
+    DoubleValidator* percentValidator = new DoubleValidator();
+    percentValidator->setBottom(0.);
+    percentValidator->setTop(100.);
+    percentValidator->setDecimals(3);
+    mHPDEdit->setValidator(percentValidator);
+
     mHPDLab->raise();
     mHPDEdit->raise();
 
@@ -162,17 +158,6 @@ MultiCalibrationView::~MultiCalibrationView()
 
 }
 
-/*
-void MultiCalibrationView::setFont(const QFont &font)
-{
-    // we must force setFont on QLineEdit !!
-    mHPDEdit->setFont(font);
-    mStartEdit->setFont(font);
-    mEndEdit->setFont(font);
-    mTextArea->setFont(font);
-    update();
-}
-*/
 void MultiCalibrationView::resizeEvent(QResizeEvent* )
 {
     updateLayout();
@@ -184,7 +169,6 @@ void MultiCalibrationView::paintEvent(QPaintEvent* e)
     const int graphWidth (width() - mButtonWidth);
 
     QPainter p(this);
-    //p.setRenderHint(QPainter::Antialiasing); // not necessary
     // drawing a background under button
     p.fillRect(QRect(graphWidth, 0, mButtonWidth, height()), Painting::borderDark);
 
@@ -213,14 +197,44 @@ void MultiCalibrationView::setVisible(bool visible)
     QWidget::setVisible(visible);
 }
 
+void MultiCalibrationView::applyAppSettings()
+{
+    mButtonWidth = AppSettings::mButtonWidth;
+    mTextArea->setFont(AppSettings::font());
+    mDrawing->setFont(AppSettings::font());
+
+    mGraphHeightLab->setFont(AppSettings::font());
+    mGraphHeightEdit->setFont(AppSettings::font());
+
+   mStartLab->setFont(AppSettings::font());
+   mStartEdit->setFont(AppSettings::font());
+
+   mEndLab->setFont(AppSettings::font());
+   mEndEdit->setFont(AppSettings::font());
+
+   mMajorScaleLab->setFont(AppSettings::font());
+   mMajorScaleEdit->setFont(AppSettings::font());
+
+   mMinorScaleLab->setFont(AppSettings::font());
+   mMinorScaleEdit->setFont(AppSettings::font());
+
+   mHPDLab->setFont(AppSettings::font());
+   mHPDEdit->setFont(AppSettings::font());
+
+   updateLayout();
+}
+
 void MultiCalibrationView::updateLayout()
 {
 
-    qreal x0 = width()-mButtonWidth;
 
-    QFontMetrics fm (font());
-    const int textHeight (fm.height() + 3);
-    const int verticalSpacer (fm.height());
+    const qreal x0 = width() - mButtonWidth;
+    const qreal margin = 0.1 * mButtonWidth;
+    const qreal xm = x0 + margin;
+
+    QFontMetrics fm (AppSettings::font());
+    const int textHeight (AppSettings::heigthUnit() + 3);
+    const int verticalSpacer (AppSettings::heigthUnit());
 
     //Position of Widget
     int y (0);
@@ -234,7 +248,7 @@ void MultiCalibrationView::updateLayout()
 
     mGraphHeightLab->setGeometry(x0, y, mButtonWidth, textHeight);
     y += mGraphHeightLab->height();
-    mGraphHeightEdit->setGeometry(x0 + 3, y, mButtonWidth-6, textHeight);
+    mGraphHeightEdit->setGeometry(xm, y, mButtonWidth - 2 * margin, textHeight);
     y += mGraphHeightEdit->height() + verticalSpacer;
 
     mColorClipBut->setGeometry(x0, y, mButtonWidth, mButtonWidth);
@@ -246,29 +260,29 @@ void MultiCalibrationView::updateLayout()
 
     mStartLab->setGeometry(x0, y, mButtonWidth, textHeight);
     y += mStartLab->height();
-    mStartEdit->setGeometry(x0 + 3, y, mButtonWidth-6, textHeight);
+    mStartEdit->setGeometry(xm, y, mButtonWidth  - 2 * margin, textHeight);
     y += mStartEdit->height() + verticalSpacer;
     mEndLab->setGeometry(x0, y, mButtonWidth, textHeight);
     y += mEndLab->height();
-    mEndEdit->setGeometry(x0 + 3, y, mButtonWidth-6, textHeight);
+    mEndEdit->setGeometry(xm, y, mButtonWidth - 2 * margin, textHeight);
     y += mEndEdit->height() + verticalSpacer;
 
     mMajorScaleLab->setGeometry(x0, y, mButtonWidth, textHeight);
     y += mMajorScaleLab->height();
-    mMajorScaleEdit->setGeometry(x0 + 3, y, mButtonWidth-6, textHeight);
+    mMajorScaleEdit->setGeometry(xm, y, mButtonWidth - 2 * margin, textHeight);
     y += mMajorScaleEdit->height() + verticalSpacer;
     mMajorScaleEdit->setText(locale().toString(mMajorScale));
 
     mMinorScaleLab->setGeometry(x0, y, mButtonWidth, textHeight);
     y += mMinorScaleLab->height();
-    mMinorScaleEdit->setGeometry(x0 + 3, y, mButtonWidth-6, textHeight);
+    mMinorScaleEdit->setGeometry(xm, y, mButtonWidth  - 2 * margin, textHeight);
     y += mMinorScaleEdit->height() + 3*verticalSpacer;
     mMinorScaleEdit->setText(locale().toString(mMinorScale));
 
 
     mHPDLab->setGeometry(x0, y, mButtonWidth, textHeight);
     y += mHPDLab->height();
-    mHPDEdit->setGeometry(x0 + 3, y, mButtonWidth-6, textHeight);
+    mHPDEdit->setGeometry(xm, y, mButtonWidth - 2 * margin, textHeight);
 
     const int graphWidth = width() - mButtonWidth;
 
@@ -292,7 +306,7 @@ void MultiCalibrationView::updateGraphList()
 
     mTminDisplay = mSettings.getTminFormated() ;
     mTmaxDisplay = mSettings.getTmaxFormated();
-   // mThreshold = 95.;
+
     // setText doesn't emit signal textEdited, when the text is changed programmatically
     mStartEdit->setText(locale().toString(mTminDisplay));
     mEndEdit->setText(locale().toString(mTmaxDisplay));
@@ -364,7 +378,7 @@ void MultiCalibrationView::updateGraphList()
             calibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
             calibGraph->setOverArrow(GraphView::eNone);
 
-            calibGraph->setRendering(GraphView::eHD);
+           // calibGraph->setRendering(GraphView::eHD);
             graphList.append(calibGraph);
 
             QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
@@ -450,7 +464,7 @@ void MultiCalibrationView::updateGraphList()
                         calibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
                         calibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
 
-                        calibGraph->setRendering(GraphView::eHD);
+                        //calibGraph->setRendering(GraphView::eHD);
 
         }
 
@@ -671,7 +685,7 @@ void MultiCalibrationView::exportImage()
     mDrawing->update();
     QWidget* widgetExport = mDrawing->getGraphWidget();
     QFileInfo fileInfo = saveWidgetAsImage(widgetExport, widgetExport->rect(), tr("Save calibration image as..."),
-                                           MainWindow::getInstance()->getCurrentPath(), MainWindow::getInstance()->getAppSettings());
+                                           MainWindow::getInstance()->getCurrentPath());
     if (fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
 
@@ -737,7 +751,7 @@ void MultiCalibrationView::exportFullImage()
     QFileInfo fileInfo = saveWidgetAsImage(widgetExport,
                                            QRect(0, 0, widgetExport->width() , widgetExport->height()),
                                            tr("Save graph image as..."),
-                                           MainWindow::getInstance()->getCurrentPath(), MainWindow::getInstance()->getAppSettings());
+                                           MainWindow::getInstance()->getCurrentPath());
 
     // Delete additional widgets if necessary :
     if (printAxis) {
@@ -815,7 +829,7 @@ void MultiCalibrationView::showStat()
    if (mStatClipBut ->isChecked()) {
        mDrawing->setVisible(false);
        mTextArea->setVisible(true);
-       mTextArea->setFont( this ->parentWidget()->font());
+       mTextArea->setFont( AppSettings::font());
 
        // update Results from selected Event in JSON
        QJsonObject state = mProject->state();

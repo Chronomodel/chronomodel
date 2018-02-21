@@ -15,12 +15,11 @@ PluginGaussRefView::PluginGaussRefView(QWidget* parent):GraphViewRefAbstract(par
     mGraph = new GraphView(this);
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eAllTicks);
-    mGraph->setRendering(GraphView::eHD);
+    //mGraph->setRendering(GraphView::eHD);
     mGraph->autoAdjustYScale(true);
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("x");
-    mGraph->setMarginBottom(mGraph->font().pointSizeF() + 10. );
-
+    mGraph->setMarginBottom(mGraph->font().pointSize() * 2.2 );
 }
 
 PluginGaussRefView::~PluginGaussRefView()
@@ -30,7 +29,6 @@ PluginGaussRefView::~PluginGaussRefView()
 
 void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settings)
 {
-
     GraphViewRefAbstract::setDate(date, settings);
     
     double tminDisplay;

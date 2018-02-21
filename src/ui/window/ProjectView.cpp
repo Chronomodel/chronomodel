@@ -2,6 +2,8 @@
 #include "ModelView.h"
 #include "ResultsView.h"
 #include "Painting.h"
+#include "AppSettings.h"
+
 #include <QtWidgets>
 
 // Constructor / Destructor / Init
@@ -9,7 +11,7 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
 {
     mModelView = new ModelView();
     mResultsView = new ResultsView();
-    
+
     QPalette palette;
     palette.setColor(QPalette::Base, Qt::transparent);
     palette.setColor(QPalette::Text, Qt::black);
@@ -19,7 +21,7 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     mLogModelEdit->setAcceptRichText(true);
     mLogModelEdit->setFrameStyle(QFrame::NoFrame);
     mLogModelEdit->setPalette(palette);
-    
+
     mLogMCMCEdit = new QTextEdit();
     mLogMCMCEdit->setReadOnly(true);
     mLogMCMCEdit->setAcceptRichText(true);
@@ -31,38 +33,26 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     mLogResultsEdit->setAcceptRichText(true);
     mLogResultsEdit->setFrameStyle(QFrame::NoFrame);
     mLogResultsEdit->setPalette(palette);
-    
-    QFont font = QFont();
-    //font.setPointSizeF(pointSize(11));
-    
-    mLogModelEdit->setFont(font);
-    mLogMCMCEdit->setFont(font);
-    mLogResultsEdit->setFont(font);
-    
+
     mLogTabs = new Tabs(this);
     mLogTabs->addTab(mLogModelEdit,   tr("Model Description"));
     mLogTabs->addTab(mLogMCMCEdit,    tr("MCMC Initialization"));
     mLogTabs->addTab(mLogResultsEdit, tr("Posterior Distrib. Stats"));
-    //mLogTabs->resize(width(), height());
+
    // mLogTabs->setContentsMargins(15, 15, 15, 15);
     connect(mLogTabs, &Tabs::tabClicked, this, &ProjectView::showLogTab);
-   // const int logTabY0 (mLogTabs->tabHeight() + 5);
-    const int logTabHusefull (height() - mLogTabs->tabHeight() - 10);
 
-  /*  mLogModelEdit->setGeometry(0, logTabY0, width(), logTabHusefull );
-    mLogMCMCEdit->setGeometry(0, logTabY0, width(), logTabHusefull );
-    mLogResultsEdit->setGeometry(0, logTabY0, width() , logTabHusefull );
- */
-    mLogModelEdit->resize( width() - 10, logTabHusefull );
-    mLogMCMCEdit->resize( width() - 10, logTabHusefull );
-    mLogResultsEdit->resize( width() -10 , logTabHusefull );
+    const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
+
+    mLogModelEdit->resize( width() -  AppSettings::widthUnit(), logTabHusefull );
+    mLogMCMCEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
+    mLogResultsEdit->resize( width() -AppSettings::widthUnit() , logTabHusefull );
     mLogTabs->resize(mLogTabs->minimalWidth(), mLogTabs->minimalHeight());
 
     mStack = new QStackedWidget();
     mStack->addWidget(mModelView);
     mStack->addWidget(mResultsView);
-    //mStack->addWidget(mLogView);
-     mStack->addWidget(mLogTabs);
+    mStack->addWidget(mLogTabs);
     mStack->setCurrentIndex(0);
     
     QHBoxLayout* layout = new QHBoxLayout();
@@ -72,6 +62,7 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     
     connect(mResultsView, &ResultsView::resultsLogUpdated, this, &ProjectView::updateResultsLog);
 
+    setAppSettingsFont();
     mLogTabs->setTab(2, false);
     mLogTabs->showWidget(2);
 }
@@ -84,11 +75,11 @@ ProjectView::~ProjectView()
 void ProjectView::resizeEvent(QResizeEvent* e)
 {
     (void) e;
-    const int logTabHusefull (height() - mLogTabs->tabHeight() - 10);
+    const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
 
-    mLogModelEdit->resize( width() - 10, logTabHusefull );
-    mLogMCMCEdit->resize( width() - 10, logTabHusefull );
-    mLogResultsEdit->resize( width() -10 , logTabHusefull );
+    mLogModelEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
+    mLogMCMCEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
+    mLogResultsEdit->resize( width() -AppSettings::widthUnit() , logTabHusefull );
     mLogTabs->resize(width(), mLogTabs->minimalHeight());
 }
 
@@ -97,7 +88,6 @@ void ProjectView::doProjectConnections(Project* project)
     mModelView   -> setProject(project);
     mResultsView -> doProjectConnections(project);
 }
-
 
 void ProjectView::resetInterface()
 {
@@ -126,12 +116,24 @@ void ProjectView::changeDesign(bool refresh)
   mRefreshResults = true;
 }
 
-void ProjectView::setFont(const QFont &font)
+void ProjectView::setAppSettingsFont()
 {
-    mModelView->setFont(font);
-    mResultsView->setFont(font);
-    //mLogView>setFont(font);
-    //mLogTabs>setFont(font);
+    setFont(AppSettings::font());
+
+    mModelView->applyAppSettings();
+    mResultsView->applyAppSettings();
+    mLogModelEdit->setFont(AppSettings::font());
+    mLogMCMCEdit->setFont(AppSettings::font());
+    mLogResultsEdit->setFont(AppSettings::font());
+    mLogTabs->setFont(AppSettings::font());
+
+    const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
+
+    mLogModelEdit->resize( width() -  AppSettings::widthUnit(), logTabHusefull );
+    mLogMCMCEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
+    mLogResultsEdit->resize( width() -AppSettings::widthUnit(), logTabHusefull );
+    mLogTabs->resize(mLogTabs->minimalWidth(), mLogTabs->minimalHeight());
+
 }
 
 void ProjectView::showResults()
@@ -171,7 +173,7 @@ void ProjectView::newPeriod()
     mModelView->modifyPeriod();
 }
 
-void ProjectView:: applyFilesSettings(Model* model,const AppSettings* appSet)
+void ProjectView:: applyFilesSettings(Model* model)
 {
     // Rebuild all calibration curve
 
@@ -181,15 +183,15 @@ void ProjectView:: applyFilesSettings(Model* model,const AppSettings* appSet)
     if (calibrate)
         mModelView->calibrateAll(s);
 
-    applySettings(model, appSet);
+    applySettings(model);
 }
 
-void ProjectView::applySettings(Model* model,const AppSettings* appSet)
+void ProjectView::applySettings(Model* model)
 {
-    setFont(AppSettings::font());
+    setAppSettingsFont();
     if (model) {
 
-        mResultsView->updateFormatSetting(model,appSet);
+        mResultsView->updateFormatSetting(model);
 
         // force to regenerate the densities
         mResultsView->initResults(model);
@@ -226,12 +228,12 @@ void ProjectView::updateResults(Model* model)
     }
 }
 
-void ProjectView::initResults(Model* model, const AppSettings* appSet)
+void ProjectView::initResults(Model* model)
 {
     qDebug()<<"ProjectView::initResults()";
     if (model) {
         mResultsView->clearResults();
-        mResultsView->updateFormatSetting(model,appSet);
+        mResultsView->updateFormatSetting(model);
         
         mResultsView->initResults(model);
         mRefreshResults = true;

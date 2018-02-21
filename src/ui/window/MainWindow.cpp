@@ -18,6 +18,9 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
 #else
     setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() );
 #endif
+
+    const  QFont ft (font());
+
     QPalette tooltipPalette;
     tooltipPalette.setColor(QPalette::ToolTipBase, Qt::white);
     tooltipPalette.setColor(QPalette::ToolTipText, Qt::black);
@@ -25,12 +28,15 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     QFont tooltipFont(font());
     tooltipFont.setItalic(true);
 
+
+
     QToolTip::setFont(tooltipFont);
 
     mLastPath = QDir::homePath();
     
     mProject = nullptr;
 
+    /* Creation of ResultsView and ModelView */
     mProjectView = new ProjectView();
     setCentralWidget(mProjectView);
 
@@ -63,17 +69,17 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     connect(mViewResultsAction, static_cast<void (QAction::*)(bool)> (&QAction::triggered), mProjectView, &ProjectView::showResults);
 
     QLocale newLoc(QLocale::system());
-    mAppSettings.mLanguage = newLoc.language();
-    mAppSettings.mCountry = newLoc.country();
+    AppSettings::mLanguage = newLoc.language();
+    AppSettings::mCountry = newLoc.country();
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
     
     if (newLoc.decimalPoint()==',') {
-        mAppSettings.mCSVCellSeparator=";";
-        mAppSettings.mCSVDecSeparator=",";
+        AppSettings::mCSVCellSeparator=";";
+        AppSettings::mCSVDecSeparator=",";
     } else {
-        mAppSettings.mCSVCellSeparator=",";
-        mAppSettings.mCSVDecSeparator=".";
+        AppSettings::mCSVCellSeparator=",";
+        AppSettings::mCSVDecSeparator=".";
     }
 
     activateInterface(false);
@@ -99,10 +105,6 @@ QString MainWindow::getNameProject() const
     return mProject->mName;
 }
 
-AppSettings MainWindow::getAppSettings() const
-{
-    return mAppSettings;
-}
 
 QUndoStack* MainWindow::getUndoStack()
 {
@@ -278,6 +280,7 @@ void MainWindow::createMenus()
     //-----------------------------------------------------------------
     // Project menu
     //-----------------------------------------------------------------
+    const  QFont ft (font());
     mProjectMenu = menuBar()->addMenu(tr("File"));
 
     mProjectMenu->addAction(mAppSettingsAction);
@@ -293,6 +296,7 @@ void MainWindow::createMenus()
     mProjectMenu->addSeparator();
 
     mProjectMenu->addAction(mProjectExportAction);
+    mProjectMenu->setFont(ft);
     
     //-----------------------------------------------------------------
     // Edit menu
@@ -301,6 +305,7 @@ void MainWindow::createMenus()
     
     mEditMenu->addAction(mUndoAction);
     mEditMenu->addAction(mRedoAction);
+    mEditMenu->setFont(ft);
     
     //-----------------------------------------------------------------
     // MCMC menu
@@ -429,7 +434,7 @@ void MainWindow::newProject()
 
             mProject = newProject;
             connectProject();
-            mProject->setAppSettings(mAppSettings);
+            mProject->setAppSettings();
 
             mProjectView->createProject();
             // Ask for the new Study Period
@@ -473,7 +478,7 @@ void MainWindow::openProject()
         connectProject();
 
         //setAppSettings(): just update mAutoSaveTimer
-        mProject->setAppSettings(mAppSettings);
+        mProject->setAppSettings();
         const QFileInfo info(path);
         setCurrentPath(info.absolutePath());
 
@@ -536,7 +541,7 @@ void MainWindow::closeProject()
 
         mProject->initState(CLOSE_PROJECT_REASON);
         mProject->mLastSavedState = mProject->mState;//emptyState();
-        mProject->mProjectFileName = QString();
+        AppSettings::mLastDir = QString();
 
         // Go back to model tab :
         mViewModelAction->trigger();
@@ -571,9 +576,9 @@ void MainWindow::saveProjectAs()
 void MainWindow::updateWindowTitle()
 {
 #ifdef DEBUG
-    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + " DEBUG Mode "+ (mProject->mProjectFileName.isEmpty() ?  "" : QString(" - ") + mProject->mProjectFileName));
+    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + " DEBUG Mode "+ (AppSettings::mLastFile.isEmpty() ?  "" : QString(" - ") + AppSettings::mLastFile));
 #else
-    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + (mProject->mProjectFileName.isEmpty() ?  "" : QString(" - ") + mProject->mProjectFileName));
+    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + (AppSettings::mLastFile.isEmpty() ?  "" : QString(" - ") + AppSettings::mLastFile));
 #endif
 }
 
@@ -602,19 +607,18 @@ void MainWindow::appSettings()
 {
     AppSettingsDialog dialog(qApp->activeWindow());
 
-    dialog.setSettings(mAppSettings);
+    dialog.setSettings();
     connect(&dialog, &AppSettingsDialog::settingsChanged, this, &MainWindow::setAppSettings);
     connect(&dialog, &AppSettingsDialog::settingsFilesChanged, this, &MainWindow::setAppFilesSettings);
     dialog.exec();
 
 }
 
-void MainWindow::setAppFilesSettings(const AppSettings& s)
+void MainWindow::setAppFilesSettings()
 {
-    mAppSettings = s;
 
-    QLocale::Language newLanguage = s.mLanguage;
-    QLocale::Country newCountry= s.mCountry;
+    QLocale::Language newLanguage = AppSettings::mLanguage;
+    QLocale::Country newCountry= AppSettings::mCountry;
 
     QLocale newLoc = QLocale(newLanguage,newCountry);
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
@@ -628,18 +632,17 @@ void MainWindow::setAppFilesSettings(const AppSettings& s)
     QToolTip::setFont(tooltipFont);
 
     if (mProject) {
-        mProject->setAppSettings(mAppSettings);
-        mProjectView->applyFilesSettings(mProject->mModel, &mAppSettings);
+        mProject->setAppSettings();
+        mProjectView->applyFilesSettings(mProject->mModel);
     }
     writeSettings();
 }
 
-void MainWindow::setAppSettings(const AppSettings& s)
+void MainWindow::setAppSettings()
 {
-    mAppSettings = s;
 
-    QLocale::Language newLanguage = s.mLanguage;
-    QLocale::Country newCountry= s.mCountry;
+    QLocale::Language newLanguage = AppSettings::mLanguage;
+    QLocale::Country newCountry= AppSettings::mCountry;
     
     QLocale newLoc = QLocale(newLanguage, newCountry);
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
@@ -653,11 +656,11 @@ void MainWindow::setAppSettings(const AppSettings& s)
     QToolTip::setFont(tooltipFont);
 
     if (mProject) {
-        mProject->setAppSettings(mAppSettings);
+        mProject->setAppSettings();
 
     mProjectView->updateMultiCalibration();
     if (mViewResultsAction->isEnabled())
-        mProjectView->applySettings(mProject->mModel, &mAppSettings);
+        mProjectView->applySettings(mProject->mModel);
 
     }
     writeSettings();
@@ -685,7 +688,7 @@ void MainWindow::showHelp(bool show)
         QWhatsThis::enterWhatsThisMode();
     else
         QWhatsThis::leaveWhatsThisMode();*/
-    mAppSettings.mShowHelp = show;
+    AppSettings::mShowHelp = show;
     mProjectView->showHelp(show);
 }
 
@@ -884,41 +887,16 @@ void MainWindow::changeEvent(QEvent* event)
 void MainWindow::writeSettings()
 {
     mProjectView->writeSettings();
-    
-    QSettings settings;
-    
-    settings.beginGroup("MainWindow");
-    
-    settings.setValue("size", size());
-    settings.setValue("pos", pos());
-    if (mProject) {
-        settings.setValue("last_project_dir", mProject->mProjectFileDir);
-        settings.setValue("last_project_filename", mProject->mProjectFileName);
-    }
-    settings.beginGroup("AppSettings");
-    settings.setValue(APP_SETTINGS_STR_AUTO_SAVE, mAppSettings.mAutoSave);
-    settings.setValue(APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC, mAppSettings.mAutoSaveDelay);
-    settings.setValue(APP_SETTINGS_STR_FONT_FAMILY, AppSettings::font().family());
-    settings.setValue(APP_SETTINGS_STR_FONT_SIZE, AppSettings::font().pointSizeF());
+    AppSettings::mLastSize = size();
+    AppSettings::mLastPosition = pos();
 
-    settings.setValue(APP_SETTINGS_STR_SHOW_HELP, mAppSettings.mShowHelp);
-    settings.setValue(APP_SETTINGS_STR_CELL_SEP, mAppSettings.mCSVCellSeparator);
-    settings.setValue(APP_SETTINGS_STR_DEC_SEP, mAppSettings.mCSVDecSeparator);
-    settings.setValue(APP_SETTINGS_STR_OPEN_PROJ, mAppSettings.mOpenLastProjectAtLaunch);
-    settings.setValue(APP_SETTINGS_STR_PIXELRATIO, mAppSettings.mPixelRatio);
-    settings.setValue(APP_SETTINGS_STR_DPM, mAppSettings.mDpm);
-    settings.setValue(APP_SETTINGS_STR_IMAGE_QUALITY, mAppSettings.mImageQuality);
-    settings.setValue(APP_SETTINGS_STR_FORMATDATE, mAppSettings.mFormatDate);
-    settings.setValue(APP_SETTINGS_STR_PRECISION, mAppSettings.mPrecision);
-    settings.setValue(APP_SETTINGS_STR_SHEET, mAppSettings.mNbSheet);
-   // settings.endGroup(); // Group AppSettings
-    
-    settings.endGroup();// Group MainWindows
+    AppSettings::writeSettings();
+
 }
 
 void MainWindow::readSettings(const QString& defaultFilePath)
 {
-    QSettings settings;
+ /*   QSettings settings;
     settings.beginGroup("MainWindow");
     
     resize(settings.value("size", QSize(400, 400)).toSize());
@@ -948,9 +926,16 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     settings.endGroup();
     
     //settings.endGroup();
+*/
 
-    mProjectView->showHelp(mAppSettings.mShowHelp);
-    mHelpAction->setChecked(mAppSettings.mShowHelp);
+    move( AppSettings::mLastPosition);
+    if (AppSettings::mLastSize.width() >50)
+        resize( AppSettings::mLastSize);
+    else
+        resize( QSize(400, 400));
+
+    mProjectView->showHelp(AppSettings::mShowHelp);
+    mHelpAction->setChecked(AppSettings::mShowHelp);
     
     bool fileOpened = false;
     if (!defaultFilePath.isEmpty()) {
@@ -968,7 +953,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
                 updateWindowTitle();
                 connectProject();
 
-                mProject->setAppSettings(mAppSettings);
+                mProject->setAppSettings();
 
                 mProjectView->createProject();
 
@@ -979,7 +964,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
                     mViewResultsAction -> setEnabled(true);
                     mViewResultsAction -> setChecked(true); // Just check the Result Button after computation and mResultsView is show after
 
-                    mProject->mModel->updateFormatSettings(&mAppSettings);
+                    mProject->mModel->updateFormatSettings();
                  }
 
                 fileOpened = true;
@@ -987,9 +972,9 @@ void MainWindow::readSettings(const QString& defaultFilePath)
         }
     }
     
-    if (!fileOpened && mAppSettings.mOpenLastProjectAtLaunch) {
-        const QString dir = settings.value("last_project_dir", "").toString();
-        const QString filename = settings.value("last_project_filename", "").toString();
+    if (!fileOpened && AppSettings::mOpenLastProjectAtLaunch) {
+        const QString dir = AppSettings::mLastDir;
+        const QString filename = AppSettings::mLastFile;
         const QString path = dir + "/" + filename;
         QFileInfo fileInfo(path);
 
@@ -1001,18 +986,21 @@ void MainWindow::readSettings(const QString& defaultFilePath)
                 updateWindowTitle();
                 connectProject();
 
-                mProject->setAppSettings(mAppSettings);
+                mProject->setAppSettings();
 
                 mProjectView->createProject();
 
                 mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
                 // to do, it'is done in project load
                 if (! mProject->mModel->mChains.isEmpty()) {
+                    // pushProjectState find mStructurelsChanged on true and emit NoResult()
+                //    mProject->mStructureIsChanged = false;
+                //    mProject->setNoResults(false);
                     mViewLogAction -> setEnabled(true);
                     mViewResultsAction -> setEnabled(true);
                     mViewResultsAction -> setChecked(true); // Just check the Result Button after computation and mResultsView is show after
 
-                    mProject->mModel->updateFormatSettings(&mAppSettings);
+                    mProject->mModel->updateFormatSettings();
                  }
             }
         }
@@ -1020,7 +1008,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     
   //  settings.endGroup();
     
-    setAppSettings(mAppSettings);
+    setAppSettings();
     mProjectView->readSettings();
     if ( (mProject) && (! mProject->mModel->mChains.isEmpty()) ) {
         mProjectView->mRefreshResults = true;
@@ -1081,16 +1069,15 @@ void MainWindow::setLogEnabled(bool enabled)
 void MainWindow::mcmcFinished(Model* model)
 {
     Q_ASSERT(model);
-    //if (!model)
-    //    return;
+
     mViewLogAction -> setEnabled(true);
     mViewResultsAction -> setEnabled(true);
     mViewResultsAction -> setChecked(true); // Just check the Result Button after computation and mResultsView is show after
     mProject->setNoResults(false); // set to be able to save the file *.res
 
-    model->updateFormatSettings(&mAppSettings);
+    model->updateFormatSettings();
     
-    mProjectView->initResults(model, &mAppSettings);
+    mProjectView->initResults(model);
   
 }
 void MainWindow::noResult()

@@ -24,32 +24,29 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 {
     setFont(AppSettings::font());
     minimumHeight = 0;
-
-  //  QFontMetrics fm (QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
-  // mButtonWidth = fm.width('_') * 8;
-
-   mButtonWidth = 1.7 * AppSettings::widthUnit();
-   mLineEditHeight = 1.1*AppSettings::heigthUnit();// fm.height() * 1.5;
-   mComboBoxHeight = 1.2*AppSettings::heigthUnit();//fm.height() * 1.5;
+/*
+   mButtonWidth = AppSettings::mButtonWidth;
+   mLineEditHeight = 1.1*AppSettings::heigthUnit();
+   mComboBoxHeight = 1.2*AppSettings::heigthUnit();
    mButtonHeight = 1.1*AppSettings::heigthUnit();
-
+*/
     // ------------- commun with defautlt Event and Bound ----------
     mNameLab = new Label(tr("Name"), this);
-    mNameLab->setFixedHeight(mLineEditHeight);
+    //mNameLab->setFixedHeight(mLineEditHeight);
     
     mNameEdit = new LineEdit(this);
-    mNameEdit->setFixedHeight(mLineEditHeight);
+    //mNameEdit->setFixedHeight(mLineEditHeight);
 
     mColorLab = new Label(tr("Color"), this);
-    mColorLab->setFixedHeight(mButtonHeight);
+    //mColorLab->setFixedHeight(mButtonHeight);
     mColorPicker = new ColorPicker(Qt::black);
-    mColorPicker->setFixedHeight(mButtonHeight);
+    //mColorPicker->setFixedHeight(mButtonHeight);
     
     mMethodLab = new Label(tr("Method"), this);
-    mMethodLab->setFixedHeight(mComboBoxHeight);
+    //mMethodLab->setFixedHeight(mComboBoxHeight);
 
     mMethodCombo = new QComboBox();
-    mMethodCombo->setFixedHeight(mComboBoxHeight);
+   // mMethodCombo->setFixedHeight(mComboBoxHeight);
     
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eDoubleExp));
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eBoxMuller));
@@ -76,7 +73,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     
     mTopView = new QWidget(this);
     mTopView->setLayout(topLayout);
- //   mTopView->setFixedHeight(mToolbarH);
+
     mTopView->setFixedHeight(mNameEdit->height()+mColorPicker->height()+mMethodCombo->height() + 2*grid->spacing());
       
     // Event default propreties Window mEventView
@@ -101,10 +98,10 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
         button->setFlatVertical();
         button->setIconOnly(false);
         button->setToolTip(tr("Insert %1 Data").arg(plugins.at(i)->getName()) );
-        button->resize(mButtonWidth, mButtonWidth);
+        //button->resize(mButtonWidth, mButtonWidth);
         connect(button, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &EventPropertiesView::createDate);
         
-        minimumHeight+=button->height();
+        minimumHeight += button->height();
         
         if (plugins.at(i)->doesCalibration())
             mPluginButs1.append(button);
@@ -164,7 +161,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mKnownGraph = new GraphView(mBoundView);
     mKnownGraph->setMinimumHeight(250);
     
-    mKnownGraph->setRendering(GraphView::eHD);
+    //mKnownGraph->setRendering(GraphView::eHD);
     
     mKnownGraph->showXAxisArrow(true);
     mKnownGraph->showXAxisTicks(true);
@@ -187,12 +184,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mFixedGroup = new QGroupBox();
     mFixedGroup->setLayout(fixedLayout);
     
-    /*QFormLayout* uniformLayout = new QFormLayout();
-    uniformLayout->addRow(tr("Start"), mKnownStartEdit);
-    uniformLayout->addRow(tr("End"), mKnownEndEdit);
-    mUniformGroup = new QGroupBox();
-    mUniformGroup->setLayout(uniformLayout);
-    */
+
     QVBoxLayout* boundLayout = new QVBoxLayout();
     boundLayout->setContentsMargins(10, 6, 15, 6);
     boundLayout->setSpacing(10);
@@ -208,6 +200,8 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mTopView->setVisible(false);
     mEventView->setVisible(false);
     mBoundView->setVisible(false);
+
+    applyAppSettings();
 }
 
 EventPropertiesView::~EventPropertiesView()
@@ -536,6 +530,70 @@ void EventPropertiesView::paintEvent(QPaintEvent* e)
 void EventPropertiesView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
+    updateLayout();
+}
+
+void EventPropertiesView::applyAppSettings()
+{
+    mButtonWidth = AppSettings::mButtonWidth;
+    mLineEditHeight = 1.1*AppSettings::heigthUnit();
+    mComboBoxHeight = 1.2*AppSettings::heigthUnit();
+    mButtonHeight = 1.1*AppSettings::heigthUnit();
+
+    mTopView->setFont(AppSettings::font());
+    mEventView->setFont(AppSettings::font());
+    mBoundView->setFont(AppSettings::font());
+
+    minimumHeight += mEventView->height();
+
+    mNameLab->setFont(AppSettings::font());
+    mNameLab->setFixedHeight(mLineEditHeight);
+    mNameEdit->setFont(AppSettings::font());
+    mNameEdit->setFixedHeight(mLineEditHeight);
+
+    mColorLab->setFont(AppSettings::font());
+    mColorLab->setFixedHeight(mButtonHeight);
+    mColorPicker->setFont(AppSettings::font());
+    mColorPicker->setFixedHeight(mButtonHeight);
+
+    mMethodLab->setFont(AppSettings::font());
+    mMethodLab->setFixedHeight(mComboBoxHeight);
+    mMethodCombo->setFont(AppSettings::font());
+    mMethodCombo->setFixedHeight(mComboBoxHeight);
+
+    // mDateList font is define in the DatesListItemsDelegate.h
+
+    minimumHeight = 0;
+    for (auto &&but : mPluginButs1) {
+        but->setFont(AppSettings::font());
+        but->resize(mButtonWidth, mButtonWidth);
+        minimumHeight += but->height();
+    }
+
+    for (auto &&but : mPluginButs2) {
+        but->setFont(AppSettings::font());
+        but->resize(mButtonWidth, mButtonWidth);
+        minimumHeight += but->height();
+    }
+
+     mTopView->setFixedHeight(mNameEdit->height()+mColorPicker->height()+mMethodCombo->height() + 2*15);
+     mToolbarH = mNameEdit->height()+mColorPicker->height()+mMethodCombo->height() + 4*15;//5 * fm.height();
+
+    mDeleteBut->setFont(AppSettings::font());
+    minimumHeight += mDeleteBut->height();
+
+    mRecycleBut->setFont(AppSettings::font());
+
+    mCalibBut->setFont(AppSettings::font());
+    mCombineBut->setFont(AppSettings::font());
+    mSplitBut->setFont(AppSettings::font());
+
+    mKnownFixedEdit->setFont(AppSettings::font());
+
+    mKnownGraph->setFont(AppSettings::font());
+
+    mFixedGroup->setFont(AppSettings::font());
+
     updateLayout();
 }
 

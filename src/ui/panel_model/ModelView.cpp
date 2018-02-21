@@ -35,29 +35,20 @@ mEventsScene(nullptr),
 mCurSearchIdx(0),
 mPhasesScene(nullptr),
 mCurrentRightWidget(nullptr),
+mHandlerW ( AppSettings::widthUnit()),
 mTmin(0.),
 mTmax(2000.),
 mProject(nullptr),
-mMargin(5),
-mToolbarH(50),
-mButtonWidth(50),
 mSplitProp(0.6),
-mHandlerW(10),
 mIsSplitting(false),
 mCalibVisible(false)
 {
     setMouseTracking(true);
-    setFont(QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
-    QFontMetrics fm(font());
- //   QFontMetrics fm (QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
-mButtonWidth = fm.width('_') * 8;
+    setFont(AppSettings::font());
 
-
-    mTopRect = QRect(0, 0, width(), 3 * fm.height());
+    mTopRect = QRect(0, 0, width(), 3 * AppSettings::heigthUnit());
     mTopWrapper = new QWidget(this);
     mTopWrapper->setGeometry(mTopRect);
-    mTopWrapper->setFont(font());
-  //  mTopWrapper->setMouseTracking(true);
 
     mHandlerRect = QRect((width()-mHandlerW)*mSplitProp, mTopRect.height(), mHandlerW, height() - mTopRect.height());
 
@@ -266,9 +257,9 @@ mButtonWidth = fm.width('_') * 8;
     mAnimationCalib->setDuration(400);
     mAnimationCalib->setEasingCurve(QEasingCurve::OutCubic);
 
-    // ---- update and paint
+    // ---- update and paint with the appSettingsFont
     
-    updateLayout();
+    applyAppSettings();
 }
 
 ModelView::~ModelView()
@@ -411,8 +402,8 @@ void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
 {
  //   QFontMetrics fm(this->font());
    QFontMetrics fm( QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
-    const int topButtonHeight = fm.height() + 10;
-    const int hMarg = 15;
+    const int topButtonHeight = mMargin;//fm.height() + 10;
+    const int hMarg = mMargin;
     const QString studyStr = tr("STUDY PERIOD") + QString(" [ %1 ; %2 ] BC/AD").arg(locale().toString(min), locale().toString(max));;
     mButModifyPeriod->setText(studyStr);
     mButModifyPeriod->setIconOnly(false);
@@ -990,6 +981,70 @@ void ModelView::paintEvent(QPaintEvent* e)
 }
 
 // Layout
+void ModelView::applyAppSettings()
+{
+    mMargin = .5* AppSettings::widthUnit();
+    mToolbarH = 3 * AppSettings::heigthUnit();
+    mButtonWidth = AppSettings::mButtonWidth;
+    mHandlerW =  AppSettings::widthUnit();
+
+    mTopWrapper->setFont(AppSettings::font());
+    mLeftWrapper->setFont(AppSettings::font());
+    mRightWrapper->setFont(AppSettings::font());
+
+    // ------
+
+    mEventsScene->setFont(AppSettings::font());
+    mEventsView->setFont(AppSettings::font());
+
+    mEventsGlobalView->setFont(AppSettings::font());
+    mEventsGlobalZoom->setFont(AppSettings::font());
+
+    mEventsSearchEdit->setFont(AppSettings::font());
+
+    mButNewEvent->setFont(AppSettings::font());
+    mButNewEventKnown->setFont(AppSettings::font());
+    mButDeleteEvent->setFont(AppSettings::font());
+    mButRecycleEvent->setFont(AppSettings::font());
+    mButExportEvents->setFont(AppSettings::font());
+    mButEventsOverview->setFont(AppSettings::font());
+    mButEventsGrid->setFont(AppSettings::font());
+    mButProperties->setFont(AppSettings::font());
+    mButMultiCalib->setFont(AppSettings::font());
+    mButImport->setFont(AppSettings::font());
+
+    // ------
+
+    mImportDataView->setFont(AppSettings::font());
+    mEventPropertiesView->applyAppSettings();
+
+    mPhasesScene->setFont(AppSettings::font());
+    mPhasesView->setFont(AppSettings::font());
+
+    mPhasesGlobalView->setFont(AppSettings::font());
+    mPhasesGlobalZoom->setFont(AppSettings::font());
+
+    mButNewPhase->setFont(AppSettings::font());
+    mButDeletePhase->setFont(AppSettings::font());
+    mButExportPhases->setFont(AppSettings::font());
+    mButPhasesOverview->setFont(AppSettings::font());
+    mButPhasesGrid->setFont(AppSettings::font());
+
+    // ------
+    mCalibrationView->applyAppSettings();
+    mMultiCalibrationView->applyAppSettings();
+
+    mButModifyPeriod->setFont(AppSettings::font());
+    const int topButtonHeight = 1.6 * AppSettings::heigthUnit();
+    QFontMetrics fm (AppSettings::font());
+    mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text())) /2 -mMargin, (mTopWrapper->height() - mMargin)/2, fm.width(mButModifyPeriod->text()) + mMargin, topButtonHeight );
+
+    mLeftPanelTitle->setFont(AppSettings::font());
+    mRightPanelTitle->setFont(AppSettings::font());
+
+    updateLayout();
+}
+
 void ModelView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
@@ -998,13 +1053,15 @@ void ModelView::resizeEvent(QResizeEvent* e)
 
 void ModelView::updateLayout()
 {
-   // const QFontMetrics fm (this->font());
-   const  QFontMetrics fm( QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
-    const int textSpacer(fm.width("_") * 2);
-    mTopRect = QRect(0, 0, width(), 3 * fm.height() );
-    const int topButtonHeight = fm.height() + 6;
+
+   const  QFontMetrics fm( AppSettings::font());
+
+
+    const int textSpacer(2 * AppSettings::widthUnit()); // marge of title
+    mTopRect = QRect(0, 0, width(), 3 * AppSettings::heigthUnit() );
+    const int topButtonHeight = 1.6 * AppSettings::heigthUnit();
     mTopWrapper->setGeometry(mTopRect);
-    //mTopWrapper->setGeometry(mTopRect);
+
     //-------------- Top Flag
     // ---------- Panel Title
     QString leftTitle (tr("Events' Scene"));
@@ -1053,9 +1110,9 @@ void ModelView::updateLayout()
 
     // ----------
 
-    const qreal radarW (150.);
-    const qreal radarH (200.);
-    const qreal searchH (fm.height() + 6);
+    const qreal radarW (5 * AppSettings::widthUnit());
+    const qreal radarH (10 * AppSettings::heigthUnit());
+    const qreal searchH (1.2 * AppSettings::heigthUnit());
     if (mButProperties->isChecked() && mEventPropertiesView->isCalibChecked())
         mEventsView      ->setGeometry(0, 0, 0, 0);
     else
@@ -1152,7 +1209,7 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
     QRect r = scene->sceneRect().toRect();
     QFileInfo fileInfo = saveWidgetAsImage(scene, r,
                                            tr("Save model image as..."),
-                                           MainWindow::getInstance()->getCurrentPath(),MainWindow::getInstance()->getAppSettings());
+                                           MainWindow::getInstance()->getCurrentPath());
     if (fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
 }

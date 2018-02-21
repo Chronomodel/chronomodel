@@ -34,7 +34,7 @@ public:
     void readSettings();
     void writeSettings();
     void createProject();
-    void setFont(const QFont &font);
+   // void setFont(const QFont &font);
     void newPeriod();
 
     void updateMultiCalibration();
@@ -49,12 +49,12 @@ public slots:
     void showLog();
     void showHelp(bool show);
     
-    void applySettings(Model* model, const AppSettings* appSet);
-    void applyFilesSettings(Model* model, const AppSettings* appSet);
-    void initResults(Model*, const AppSettings* appSet);
+    void applySettings(Model* model);
+    void applyFilesSettings(Model* model);
+    void initResults(Model*);
     void updateResults(Model*);
     void updateResultsLog(const QString& log);
-
+    void setAppSettingsFont();
 
     
 private:

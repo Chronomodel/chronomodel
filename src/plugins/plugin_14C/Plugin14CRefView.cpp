@@ -15,11 +15,11 @@ Plugin14CRefView::Plugin14CRefView(QWidget* parent):GraphViewRefAbstract(parent)
     mGraph = new GraphView(this);
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eAllTicks);
-    mGraph->setRendering(GraphView::eHD);
+    //mGraph->setRendering(GraphView::eHD);
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("age");
     mGraph->autoAdjustYScale(true);
-    mGraph->setMarginBottom(mGraph->font().pointSizeF() + 10. );
+    mGraph->setMarginBottom(mGraph->font().pointSize() * 2.2 );
     setMouseTracking(true);
     mGraph->setMouseTracking(true);
 

@@ -84,22 +84,22 @@ void Model::clear()
  * @brief Model::updateFormatSettings, set all date format according to the Application Preference, date format
  * @param appSet
  */
-void Model::updateFormatSettings(const AppSettings* appSet)
+void Model::updateFormatSettings()
 {
     for (auto&& event : mEvents) {
-        event->mTheta.setFormat(appSet->mFormatDate);
+        event->mTheta.setFormat(AppSettings::mFormatDate);
 
         for (auto && date : event->mDates) {
-            date.mTheta.setFormat(appSet->mFormatDate);
+            date.mTheta.setFormat(AppSettings::mFormatDate);
             date.mSigma.setFormat(DateUtils::eNumeric);
-            date.mWiggle.setFormat(appSet->mFormatDate);
+            date.mWiggle.setFormat(AppSettings::mFormatDate);
         }
 
     }
 
     for (auto && phase : mPhases) {
-        phase->mAlpha.setFormat(appSet->mFormatDate);
-        phase->mBeta.setFormat(appSet->mFormatDate);
+        phase->mAlpha.setFormat(AppSettings::mFormatDate);
+        phase->mBeta.setFormat(AppSettings::mFormatDate);
         phase->mDuration.setFormat(DateUtils::eNumeric);
 
         // update Tempo and activity curves

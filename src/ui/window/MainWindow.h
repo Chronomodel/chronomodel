@@ -29,7 +29,7 @@ public:
     
     Project* getProject();
     QJsonObject getState() const;
-    AppSettings getAppSettings() const;
+
     QUndoStack* getUndoStack();
     QString getCurrentPath() const;
     void setCurrentPath(const QString& path);
@@ -67,8 +67,8 @@ public slots:
     void saveProjectAs();
     void about();
     void appSettings();
-    void setAppSettings(const AppSettings& s);
-    void setAppFilesSettings(const AppSettings& s);
+    void setAppSettings();
+    void setAppFilesSettings();
     void openManual();
     void openWebsite();
     void showHelp(bool);
@@ -93,8 +93,7 @@ private:
     QUndoStack* mUndoStack;
     QUndoView* mUndoView;
     QDockWidget* mUndoDock;
-    
-    AppSettings mAppSettings;
+
     QString mLastPath;
     
     QMenu* mProjectMenu;

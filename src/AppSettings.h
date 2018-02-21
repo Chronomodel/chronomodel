@@ -4,7 +4,7 @@
 #include <QString>
 #include <QLocale>
 #include <QFont>
-
+#include "Singleton.h"
 #include "DateUtils.h"
 #include <qsystemdetection.h>
 
@@ -17,8 +17,8 @@
 #endif
 
 #ifdef Q_OS_WIN
-    #define APP_SETTINGS_DEFAULT_FONT_FAMILY "Helvetica" //"Calibri"
-    #define APP_SETTINGS_DEFAULT_FONT_SIZE 12 //10
+    #define APP_SETTINGS_DEFAULT_FONT_FAMILY "Helvetica"// "Caladea" //"Calibri""Helvetica"
+    #define APP_SETTINGS_DEFAULT_FONT_SIZE  12
 #endif
 
 
@@ -58,10 +58,13 @@ class AppSettings
 {
 public:
     AppSettings();
-    AppSettings(const AppSettings& s);
-    AppSettings& operator=(const AppSettings& s);
-    void copyFrom(const AppSettings& s);
+   // AppSettings(const AppSettings& s);
+   // AppSettings& operator=(const AppSettings& s);
+   // void copyFrom(const AppSettings& s);
     virtual ~AppSettings();
+
+    static void readSettings();
+    static void writeSettings();
 
     static QFont font();
     static void setFont(const QFont &font);
@@ -70,27 +73,38 @@ public:
     static int fontDescent();
 
 public:
-    QLocale::Language mLanguage;
-    QLocale::Country mCountry;
+    static int mButtonWidth;
 
-    bool mAutoSave;
-    int mAutoSaveDelay;
-    bool mShowHelp;
-    QString mCSVCellSeparator;
-    QString mCSVDecSeparator;
-    bool mOpenLastProjectAtLaunch;
-    short mPixelRatio;
-    short mDpm;
-    short mImageQuality;
-    DateUtils::FormatDate mFormatDate;
-    int mPrecision;
-    int mNbSheet;
+    static QLocale::Language mLanguage;
+    static QLocale::Country mCountry;
 
-  private:
+    static bool mAutoSave;
+    static int mAutoSaveDelay;
+    static bool mShowHelp;
+    static QString mCSVCellSeparator;
+    static  QString mCSVDecSeparator;
+    static  bool mOpenLastProjectAtLaunch;
+    static short mPixelRatio;
+    static short mDpm;
+    static short mImageQuality;
+    static  DateUtils::FormatDate mFormatDate;
+    static int mPrecision;
+    static int mNbSheet;
+    static QString mFontFamily;
+    static  int  mFontPointSize;
+
+    static QString mLastDir;
+    static QString mLastFile;
+
+    static QSize mLastSize;
+    static QPoint mLastPosition;
+
+private:
   static  QFont mFont;
   static int mWidthUnit;
   static int mHeigthUnit;
   static int mFontDescent;
+
 
 };
 

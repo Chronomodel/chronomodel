@@ -29,8 +29,8 @@ public:
     AppSettingsDialog(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
     virtual ~AppSettingsDialog();
 
-    void setSettings(const AppSettings& settings);
-    AppSettings getSettings();
+    void setSettings();
+    void getSettings();
 
     bool filesChanged;
         
@@ -38,10 +38,11 @@ private slots:
     void changeSettings();
     void buttonClicked(QAbstractButton*);
     void needCalibration();
+    void fontButtonClicked();
     
 signals:
-    void settingsChanged(const AppSettings&);
-    void settingsFilesChanged(const AppSettings&);
+    void settingsChanged();
+    void settingsFilesChanged();
     
 private:
     QListWidget* mList;
@@ -54,8 +55,8 @@ private:
     QLabel* mLanguageLab;
     QComboBox* mLanguageCombo;
 
-    //Label* mFontLab;
-    //Button* mFontBut;
+    Label* mFontLab;
+    Button* mFontBut;
     QFont mFont;
    // QLabel* mCountryLab;
    // QComboBox* mCountryCombo;

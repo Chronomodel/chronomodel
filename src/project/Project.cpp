@@ -39,8 +39,8 @@
 
 Project::Project():
 mName(tr("ChronoModel Project")),
-mProjectFileDir(""),
-mProjectFileName(QObject::tr("Untitled")),
+//mProjectFileDir(""),
+//mProjectFileName(QObject::tr("Untitled")),
 mDesignIsChanged(true),
 mStructureIsChanged(true),
 mItemsIsMoved(true),
@@ -173,7 +173,7 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
         this->checkStateModification(state, mState);
 
 
-    if (mStructureIsChanged)
+    if (mStructureIsChanged && (reason != PROJECT_LOADED_REASON) )
         emit projectStructureChanged(true); // connected to MainWindows::noResults
 
     else if (mDesignIsChanged)
@@ -492,8 +492,8 @@ bool Project::load(const QString& path)
         QFileInfo info(path);
         MainWindow::getInstance()->setCurrentPath(info.absolutePath());
         
-        mProjectFileDir = info.absolutePath();
-        mProjectFileName = info.fileName();
+        AppSettings::mLastDir = info.absolutePath();
+        AppSettings::mLastFile = info.fileName();
         mName = info.fileName();
         QByteArray saveData = file.readAll();
         QJsonParseError error;
@@ -587,7 +587,7 @@ bool Project::load(const QString& path)
            qDebug() << "in Project::load  End pushProjectState";
             file.close();
 
-            // -------------------- look for the calibration file
+            // -------------------- look for the calibration file --------------------
             if (newerProject || olderProject)
                 return true;
 
@@ -659,7 +659,7 @@ bool Project::load(const QString& path)
 
             clearModel();
 
-            // load results
+            /* -------------------- Load results -------------------- */
             QString dataPath = path + ".res";
 
             QFile dataFile;
@@ -718,7 +718,7 @@ bool Project::load(const QString& path)
 
 bool Project::save()
 {
-    QFileInfo info(mProjectFileDir + "/" + mProjectFileName);
+    QFileInfo info(AppSettings::mLastDir + "/" + AppSettings::mLastFile);
     return info.exists() ? saveProjectToFile() : saveAs(tr("Save current project as..."));
 }
 
@@ -740,8 +740,8 @@ bool Project::saveAs(const QString& dialogTitle)
         QFileInfo info(path);
         MainWindow::getInstance()->setCurrentPath(info.absolutePath());
         
-        mProjectFileDir = info.absolutePath();
-        mProjectFileName = info.fileName();
+        AppSettings::mLastDir = info.absolutePath();
+        AppSettings::mLastFile = info.fileName();
         
         // We need to reset mLastSavedState because it corresponds
         // to the last saved state in the previous file.
@@ -783,7 +783,7 @@ bool Project::askToSave(const QString& saveDialogTitle)
 bool Project::saveProjectToFile()
 {
     if (mLastSavedState != mState) {
-        QString path = mProjectFileDir + "/" + mProjectFileName;
+        QString path = AppSettings::mLastDir + "/" + AppSettings::mLastFile;
         QFile file(path);
         if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
 #ifdef DEBUG
@@ -807,7 +807,7 @@ bool Project::saveProjectToFile()
 #endif
     }
 
-    QFile file(mProjectFileDir + "/" + mProjectFileName + ".cal");
+    QFile file(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".cal");
     if (file.open(QIODevice::WriteOnly)) {
 
         QDataStream out(&file);
@@ -824,14 +824,14 @@ bool Project::saveProjectToFile()
         file.close();
      }
 
-    QFileInfo checkFile(mProjectFileDir + "/" + mProjectFileName + ".res");
+    QFileInfo checkFile(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res");
     if (checkFile.exists() && checkFile.isFile())
-        QFile(mProjectFileDir + "/" + mProjectFileName + ".res").remove();
+        QFile(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res").remove();
 
     if (!mNoResults && !mModel->mChains.isEmpty()) {
-        qDebug() << "Project::saveProjectToFile() Saving project results in "<<mProjectFileDir + "/" + mProjectFileName + ".res";
+        qDebug() << "Project::saveProjectToFile() Saving project results in "<<AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res";
         mModel->setProject(this);
-        mModel->saveToFile(mProjectFileDir + "/" + mProjectFileName + ".res");
+        mModel->saveToFile(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res");
     }
     return true;
 }
@@ -862,12 +862,12 @@ bool Project::setSettings(const ProjectSettings& settings)
     }
 }
 
-void Project::setAppSettings(const AppSettings& settings)
+void Project::setAppSettings()
 {
-    mAutoSaveTimer->setInterval(settings.mAutoSaveDelay * 1000);
-    if(mAutoSaveTimer->isActive() && !settings.mAutoSave)
+    mAutoSaveTimer->setInterval(AppSettings::mAutoSaveDelay * 1000);
+    if(mAutoSaveTimer->isActive() && !AppSettings::mAutoSave)
         mAutoSaveTimer->stop();
-    else if(!mAutoSaveTimer->isActive() && settings.mAutoSave)
+    else if(!mAutoSaveTimer->isActive() && AppSettings::mAutoSave)
         mAutoSaveTimer->start();
 }
 
@@ -2353,8 +2353,8 @@ void Project::run()
     }
 
     // Save the project before running MCMC :
-    const AppSettings s = MainWindow::getInstance()->getAppSettings();
-    if (s.mAutoSave)
+
+    if (AppSettings::mAutoSave)
         save();
     else
        askToSave(tr("Save current project as..."));

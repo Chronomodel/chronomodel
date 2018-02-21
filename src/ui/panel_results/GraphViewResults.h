@@ -120,8 +120,9 @@ public:
    // void toggle(const QRect& geometry); //useless
 
     void setMarginLeft (qreal &m);
+    void setMarginRight (qreal &m);
     
-    void setRendering(GraphView::Rendering render);
+   // void setRendering(GraphView::Rendering render);
     virtual void setGraphFont(const QFont& font);
     void setGraphsThickness(int value);
     void setGraphsOpacity(int value);
@@ -142,7 +143,7 @@ public:
 
 
     GraphView* getGraph() const { return mGraph;}
-    GraphView::Rendering getRendering() const  { return mGraph->getRendering(); }
+   // GraphView::Rendering getRendering() const  { return mGraph->getRendering(); }
     QString getResultsText() const {return mResultsText;}
     QString getTextAreaToHtml() const { return mTextArea->toHtml();}
     QString getTextAreaToPlainText() const { return mTextArea->toPlainText();}

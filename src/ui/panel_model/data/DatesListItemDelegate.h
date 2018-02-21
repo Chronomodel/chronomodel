@@ -17,7 +17,7 @@ public:
 
     inline QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex&) const
     {
-        QFont font(QApplication::font());// = option.font;
+        QFont font(AppSettings::font());// = option.font;
         //font.setPointSizeF(pointSize(11));
         QFontMetrics metrics(font);
 
@@ -29,7 +29,7 @@ public:
    inline  QRectF boundingRect() const
     {
 
-       QFont font(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE);
+       QFont font(AppSettings::font());
        //font.setPointSizeF(pointSize(11));
        QFontMetrics metrics(font);
 
@@ -70,19 +70,17 @@ public:
         
         PluginAbstract* plugin = PluginManager::getPluginFromId(pluginId);
         
-        if (plugin)
-        {
+        if (plugin)  {
             const int im (5);
             int is = (h - 3*im)/2;
             int ix = x + w - im - is;
             int iy = y + im;
             
             painter->save();
-            QFont font = option.font;
-            font.setFamily(APP_SETTINGS_DEFAULT_FONT_FAMILY);
+            QFont font =AppSettings::font();
 
             if (isCombined) {
-                font.setPointSize(16);
+                font.setPointSize(AppSettings::font().pixelSize()* 1.5);
                 painter->setFont(font);
                 painter->setBrush(Painting::mainColorDark);
                 painter->setPen(Painting::mainColorDark);
@@ -96,11 +94,8 @@ public:
             QPixmap pixmap = icon.pixmap(iconS, iconS);
             painter->drawPixmap(x + (iconW - iconS)/2, y + (h - iconS)/2, iconS, iconS, pixmap, 0, 0, pixmap.width(), pixmap.height());
 
-            //font = option.font;
-            font.setPointSizeF(qreal(APP_SETTINGS_DEFAULT_FONT_SIZE));//pointSize(11));
-
-            painter->setFont(font);
-            QFontMetrics metrics(font);
+            painter->setFont(AppSettings::font());
+            QFontMetrics metrics(AppSettings::font());
             
             int mh = metrics.height();
             

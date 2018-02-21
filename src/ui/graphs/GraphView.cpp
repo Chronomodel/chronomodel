@@ -33,7 +33,7 @@ mYAxisValues(true),
 mXAxisMode(eAllTicks),
 mYAxisMode(eAllTicks),
 mOverflowArrowMode(eNone),
-mRendering(eSD),
+//mRendering(eSD),
 mAutoAdjustYScale(false),
 mShowInfos(false),
 mBackgroundColor(Qt::white),
@@ -86,7 +86,7 @@ mYAxisValues(graph.mYAxisValues),
 mXAxisMode(graph.mXAxisMode),
 mYAxisMode(graph.mYAxisMode),
 mOverflowArrowMode(graph.mOverflowArrowMode),
-mRendering(graph.mRendering),
+//mRendering(graph.mRendering),
 mAutoAdjustYScale(graph.mAutoAdjustYScale),
 mShowInfos(graph.mShowInfos),
 mBackgroundColor(graph.mBackgroundColor),
@@ -147,7 +147,7 @@ void GraphView::copyFrom(const GraphView& graph)
     mXAxisMode = graph.mXAxisMode;
     mYAxisMode = graph.mYAxisMode;
     mOverflowArrowMode = graph.mOverflowArrowMode;
-    mRendering = graph.mRendering;
+    //mRendering = graph.mRendering;
     mAutoAdjustYScale = graph.mAutoAdjustYScale;
     mShowInfos = graph.mShowInfos;
     mBackgroundColor =graph.mBackgroundColor;
@@ -301,7 +301,7 @@ void GraphView::resetNothingMessage()
     mNothingMessage = tr("Nothing to display");
     repaintGraph(true);
 }
-
+/*
 void GraphView::setRendering(GraphView::Rendering render)
 {
     mRendering = render;
@@ -312,7 +312,7 @@ GraphView::Rendering GraphView::getRendering()
 {
     return mRendering;
 }
-
+*/
 void GraphView::showXAxisLine(bool show)     {if(mXAxisLine != show){mXAxisLine = show; repaintGraph(true);} }
 void GraphView::showXAxisArrow(bool show)    {if(mXAxisArrow != show){mXAxisArrow = show; repaintGraph(true);} }
 void GraphView::showXAxisTicks(bool show)    {if(mXAxisTicks != show){mXAxisTicks = show; repaintGraph(true);} }
@@ -339,25 +339,32 @@ void GraphView::setYAxisMode(AxisMode mode)
 {
     if (mYAxisMode != mode) {
         mYAxisMode = mode;
-        showYAxisValues(true);
+      /*  showYAxisValues(true);
         showYAxisTicks(true);
         showYAxisSubTicks(true);
-        
-        if (mYAxisMode==eMinMax) {
-            showYAxisValues(true);
-            showYAxisTicks(false);
-            showYAxisSubTicks(false);
-        }
-
+        */
         mAxisToolY.mMinMaxOnly = (mYAxisMode == eMinMax);
-        
-        if (mYAxisMode==eHidden) {
 
+        if (mYAxisMode==eMinMax) {
             showYAxisValues(false);
             showYAxisTicks(false);
             showYAxisSubTicks(false);
-        } else {
+            mYAxisArrow = false;
+            mAxisToolY.mShowText = true;
 
+        } else  if (mYAxisMode==eMinMaxHidden) {
+            showYAxisValues(false);
+            showYAxisTicks(false);
+            showYAxisSubTicks(false);
+            mYAxisArrow = false;
+            mAxisToolY.mShowText = false;
+
+        } else  if (mYAxisMode==eHidden) {
+            showYAxisValues(false);
+            showYAxisTicks(false);
+            showYAxisSubTicks(false);
+
+        } else {
             showYAxisValues(true);
             showYAxisTicks(true);
             showYAxisSubTicks(true);
@@ -373,6 +380,9 @@ void GraphView::setYAxisMode(AxisMode mode)
 void GraphView::autoAdjustYScale(bool active)
 {
     mAutoAdjustYScale = active;
+  //  if (active)
+ //       mAxisToolY.mShowText = false;
+
     repaintGraph(true);
 }
 /**
@@ -569,7 +579,7 @@ void GraphView::leaveEvent(QEvent* e)
 
 void GraphView::mouseMoveEvent(QMouseEvent* e)
 {
-    mRendering = eHD;
+    //mRendering = eHD;
     qreal x = e->pos().x();
     qreal y = e->pos().y();
     
@@ -711,29 +721,29 @@ void GraphView::paintEvent(QPaintEvent* )
     /* ----------------------------------------------------
      *  SD : draw on a buffer only if it has been reset
      * ----------------------------------------------------*/
-    if (mBufferBack.isNull()  && mRendering == eSD) {
+/*    if (mBufferBack.isNull()  && mRendering == eSD) {
         mBufferBack = QPixmap(width(), height());
         paintToDevice(&mBufferBack);
 #ifdef DEBUG
         if (mBufferBack.isNull() )
             qDebug()<< "mBufferBack.isNull()";
 #endif
-    }
+    }*/
     /* ----------------------------------------------------
      *  HD : draw directly on widget
      * ----------------------------------------------------*/
-    else if (mRendering == eHD) {
+//    else if (mRendering == eHD) {
         mBufferBack = QPixmap();
         paintToDevice(this);
-    }
+ //   }
     /* ----------------------------------------------------
      *  SD rendering : draw buffer on widget !
      * ----------------------------------------------------*/
-    if (mRendering == eSD) {
+//    if (mRendering == eSD) {
         QPainter p(this);
         p.setRenderHints(QPainter::Antialiasing);
         p.drawPixmap(mBufferBack.rect(), mBufferBack, rect());
-    }
+//    }
     
     /* ----------------------------------------------------
      *  Tool Tip (above all) Draw horizontal and vertical red line
@@ -805,8 +815,8 @@ void GraphView::paintToDevice(QPaintDevice* device)
     p.fillRect(rect(), mBackgroundColor);
     
     QFont font = p.font();
-    font.setPointSizeF(font.pointSizeF());// - 2.);
-    p.setFont(font);
+   // font.setPointSizeF(font.pointSizeF());// - 2.);
+ //   p.setFont(font);
     
     /* ---------------------- Zones --------------------------*/
 
@@ -904,7 +914,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
      *  Horizontal axis
      * ----------------------------------------------------*/
     if (!mLegendX.isEmpty() && mXAxisValues) {
-        QRectF tr(mMarginLeft, mGraphHeight + mMarginTop- mMarginBottom, mGraphWidth, mMarginBottom);
+        QRectF tr(mMarginLeft, mGraphHeight + mMarginTop - mMarginBottom, mGraphWidth, mMarginBottom);
         p.setPen(Qt::black);
         p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, mLegendX);
     }
@@ -915,7 +925,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolX.mShowText = mXAxisValues;
 
     mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
-    mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), (qreal) 7.,mUnitFunctionX);
+    mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), -1.,mUnitFunctionX);
 
     /* ----------------------------------------------------
      *  Vertical axis
@@ -924,23 +934,28 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolY.mShowArrow = mYAxisArrow;
         mAxisToolY.mShowSubs = mYAxisTicks;
         mAxisToolY.mShowSubSubs = mYAxisSubTicks;
-        mAxisToolY.mShowText = mYAxisValues;
-
+      //  mAxisToolY.mShowText = mYAxisValues;
+    if (mAutoAdjustYScale && mYAxisMode != eHidden && mShowInfos) {
+       // const QString minMaxText = "Min = " + stringForLocal(mMinY) + " ; Max = " + stringForLocal(mMaxY);
+         const QString minMaxText =QString(tr( "Min = %1 ; Max = %2")).arg(stringForLocal(mMinY), stringForLocal(mMaxY));
+        mInfos.clear();
+        mInfos.append(minMaxText);
+    }
         mAxisToolY.updateValues(mGraphHeight, mStepMinWidth, mMinY, mMaxY);
-        mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), (qreal) 3.,mUnitFunctionY);
+        mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), -1., mUnitFunctionY);
+
      }
     /* ----------------------------------------------------
      *  Graph specific infos at the top right
      * ----------------------------------------------------*/
-    if (mShowInfos) {
-       // font.setPointSizeF(font.pointSizeF() + 2.);
+    if (mShowInfos && mYAxisMode == eHidden) {
         QFontMetrics fm (font);
         p.setFont(font);
         p.setPen(Painting::borderDark);
         int y (0);
-        int lineH (fm.height() +2);
+        int lineH (fm.height()*1.0);
         for (auto && info : mInfos) {
-            p.drawText(mMarginLeft + 5., mMarginTop + 5. + y, mGraphWidth - 10., lineH, Qt::AlignLeft | Qt::AlignTop, info);
+            p.drawText(1.2 * mMarginLeft, mMarginTop  + y, mGraphWidth - 1.2*mMarginLeft -mMarginRight, lineH, Qt::AlignLeft | Qt::AlignBottom, info);
             y += lineH;
         }
     }
@@ -1077,7 +1092,7 @@ void GraphView::drawCurves(QPainter& painter)
                     const type_data dataStep = (type_data)subData.size() / (type_data)(mGraphWidth);
                     if (dataStep > 1) {
                         for (int i = 0; i<mGraphWidth; ++i) {
-                            const int idx = (int)round(i * dataStep);
+                            const int idx = (int)floor(i * dataStep);
                             lightData.append(subData.at(idx));
                         }
                     } else
@@ -1437,14 +1452,14 @@ bool GraphView::saveAsSVG(const QString& fileName, const QString& graphTitle, co
         return false;
         
     } else {
-        Rendering memoRendering= mRendering;
+        //Rendering memoRendering= mRendering;
         QRect rTotal(withVersion ? QRect(0, 0, width(), height()+versionHeight) : QRect(0, 0, width(), height()));
         
         const int graphRigthShift = 40;
 
         QRect rGraph(0, 0, width(), height());
         /* We can not have a svg graph in eSD Rendering Mode */
-        setRendering(eHD);
+      //  setRendering(eHD);
         // Set SVG Generator
         QSvgGenerator svgGen;
         svgGen.setFileName(fileName);
@@ -1472,7 +1487,7 @@ bool GraphView::saveAsSVG(const QString& fileName, const QString& graphTitle, co
         }
         painter.end();
         
-        setRendering(memoRendering);
+        //setRendering(memoRendering);
         
         return true;
         

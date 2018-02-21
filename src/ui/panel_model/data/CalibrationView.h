@@ -45,6 +45,7 @@ public slots:
     virtual void setVisible(bool visible);
     void updateScaleX();
     void updateGraphs();
+    void applyAppSettings();
 
 private slots:
 

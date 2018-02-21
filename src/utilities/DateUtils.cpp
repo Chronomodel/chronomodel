@@ -102,7 +102,7 @@ QString DateUtils::dateFormatToString(const FormatDate format)
 
 DateUtils::FormatDate DateUtils::getAppSettingsFormat()
 {
-    return MainWindow::getInstance()->getAppSettings().mFormatDate;
+    return AppSettings::mFormatDate;
 }
 
 QString DateUtils::getAppSettingsFormatStr()

@@ -62,15 +62,15 @@ public:
 
     void doProjectConnections(Project* project);
 
-    void updateFormatSetting(Model* model, const AppSettings* appSet);
+    void updateFormatSetting(Model* model);
     double getBandwidth() const;
     int getFFTLength() const;
     double getThreshold() const;
 
- //   void setFont(const QFont & font);
 
 protected:
-    void paintEvent(QPaintEvent* );
+    void setGraphFont(const QFont &font);
+
     void mouseMoveEvent(QMouseEvent* e);
     void resizeEvent(QResizeEvent* e);
 
@@ -98,13 +98,14 @@ public slots:
     
     
     void updateControls();
+    void applyAppSettings();
     void updateScales();
     
     void updateModel();
     void updateResultsLog();
 
 private slots:
-    void updateTabs(const int &index);
+    void updateVisibleTabs(const int &index);
     void graphTypeChange();
     void updateCurvesToShow();
     
@@ -128,10 +129,10 @@ private slots:
     void updateScaleEdit();
 
 
-    void updateFont();
+    void updateGraphFont();
     void updateThickness(const int value);
     void updateOpacity(const int value);
-    void updateRendering(int index);
+   // void updateRendering(int index);
     void showInfos(bool);
     void exportFullImage();
     void exportResults();
@@ -183,9 +184,10 @@ private:
    // int mLineH;
     //used for graph
     qreal mMarginLeft;
+    qreal mMarginRight;
     int mRulerH;
     int mTabsH;
-    int mGraphsH;
+    int mGraphHeight;
     
     Tabs* mTabs;
     int mTabEventsIndex;
@@ -227,9 +229,6 @@ private:
     RadioButton* mActivityRadio;
     CheckBox* mTempoStatCheck;
 
-
-
-
     // -- tabs
 
     Tabs *mTabDisplayMCMC;
@@ -269,16 +268,16 @@ private:
     QSlider* mYSlider;
     QSpinBox* mYScaleSpin;
 
-    QFont mFont;
+    QFont mGraphFont;
     Button* mFontBut;
     QComboBox* mThicknessCombo;
     QComboBox* mOpacityCombo;
-    QComboBox* mRenderCombo;
+   // QComboBox* mRenderCombo;
     
     Label* labFont;
     Label* labThickness;
     Label* labOpacity;
-    Label* labRendering;
+   // Label* labRendering;
     //------------ MCMC Chains---------
     QWidget* mChainsGroup;
     Label* mChainsTitle;
@@ -286,7 +285,6 @@ private:
     CheckBox* mAllChainsCheck;
     QList<CheckBox*> mCheckChainChecks;
     QList<RadioButton*> mChainRadios;
-    
 
     
     //--------- Density Options
@@ -314,7 +312,6 @@ private:
     QSpinBox* mNbDensitySpin;
 
     QWidget* mToolsWidget;
-   // Button* mStatsBut;
     Button* mExportImgBut;
     Button* mExportResults;
 
@@ -337,6 +334,17 @@ private:
     int mMaximunNumberOfVisibleGraph;
     double mMajorScale;
     int mMinorCountScale;
+
+
+    qreal titleHeight ;
+    qreal labelHeight ;
+    qreal lineEditHeight;
+    qreal checkBoxHeight;
+    qreal comboBoxHeight ;
+    qreal radioButtonHeight;
+    qreal spinBoxHeight;
+    qreal buttonHeight;
+
 };
 
 #endif

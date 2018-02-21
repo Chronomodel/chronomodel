@@ -51,7 +51,6 @@ public:
     void writeSettings();
     void createProject();
 
-//    void setFont(const QFont & font);
     
 public slots:
     void updateProject();
@@ -62,7 +61,7 @@ public slots:
     void eventsAreSelected(); //connect with EventAreSelected
     //void phasesAreSelected();
     void noEventSelected();
-
+    void applyAppSettings();
     
 protected:
     void paintEvent(QPaintEvent* e);
@@ -137,7 +136,6 @@ private:
     ImportDataView* mImportDataView;
     EventPropertiesView* mEventPropertiesView;
     
-    QWidget* mPhasesWrapper;
     PhasesScene* mPhasesScene;
     QGraphicsView* mPhasesView;
     

@@ -1308,14 +1308,14 @@ QList<Date> EventsScene::decodeDataDrop_old(QGraphicsSceneDragDropEvent* e)
     while (!stream.atEnd()) {
         QString itemStr;
         stream >> itemStr;
-        const AppSettings settings = MainWindow::getInstance()->getAppSettings();
-        const QString csvSep = settings.mCSVCellSeparator;
+
+        const QString csvSep = AppSettings::mCSVCellSeparator;
         QStringList dataStr = itemStr.split(csvSep);
         
         // Remove first column corresponding to csvRow
         const int csvRow = dataStr.takeFirst().toInt();
         
-        const QLocale csvLocal = settings.mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+        const QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
         Date date = Date::fromCSV(dataStr, csvLocal);
 
         if (!date.isNull()) {
@@ -1346,15 +1346,15 @@ QList<Date> EventsScene::decodeDataDrop_old(QGraphicsSceneDragDropEvent* e)
     while (!stream.atEnd()) {
         QString itemStr;
         stream >> itemStr;
-        const AppSettings settings = MainWindow::getInstance()->getAppSettings();
-        const QString csvSep = settings.mCSVCellSeparator;
+
+        const QString csvSep = AppSettings::mCSVCellSeparator;
         QStringList dataStr = itemStr.split(csvSep);
 
         // Remove first column corresponding to csvRow
         const int csvRow = dataStr.takeFirst().toInt();
         const QString eventName = dataStr.takeFirst();
 
-        const QLocale csvLocal = settings.mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+        const QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
         Date date = Date::fromCSV(dataStr, csvLocal);
 
         if (!date.isNull()) {

@@ -144,7 +144,7 @@ public slots:
     void run();
     void exportAsText();
     
-    void setAppSettings(const AppSettings& s);
+    void setAppSettings();
 
     void createEvent();
     void createEventKnown();
@@ -178,8 +178,8 @@ public:
     QJsonObject mLastSavedState;
     
     QString mName;
-    QString mProjectFileDir;
-    QString mProjectFileName;
+   // QString mProjectFileDir;
+    //QString mProjectFileName;
     
     Model* mModel;
     

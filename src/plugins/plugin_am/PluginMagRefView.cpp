@@ -15,11 +15,10 @@ PluginMagRefView::PluginMagRefView(QWidget* parent):GraphViewRefAbstract(parent)
     mGraph = new GraphView(this);
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eAllTicks);
-    mGraph->setRendering(GraphView::eHD);
     mGraph->autoAdjustYScale(true);
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("value");
-    mGraph->setMarginBottom(mGraph->font().pointSizeF() + 10. );
+    mGraph->setMarginBottom(mGraph->font().pointSize() * 2.2 );
 
 }
 

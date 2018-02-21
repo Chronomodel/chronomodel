@@ -617,7 +617,7 @@ QPixmap Date::generateCalibThumb()
             //thumb = QPixmap::fromImage(image);
             
             // This works but there are some drawing region issues...
-            graph.setRendering(GraphView::eHD);
+            //graph.setRendering(GraphView::eHD);
             graph.paintToDevice(&thumb);
         } else {
             QPainter p;

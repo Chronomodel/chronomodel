@@ -40,6 +40,7 @@ public:
     
 public slots:
     void setEvent(const QJsonObject& event);
+    void applyAppSettings();
     
 protected:
     void paintEvent(QPaintEvent* e);
@@ -116,7 +117,7 @@ private:
     GraphView* mKnownGraph;
     
     QGroupBox* mFixedGroup;
-    QGroupBox* mUniformGroup;
+//    QGroupBox* mUniformGroup;
     
     int mToolbarH;
     int mButtonWidth;

@@ -1,6 +1,7 @@
 #ifndef MAINCONTROLLER_H
 #define MAINCONTROLLER_H
 
+#include "AppSettings.h"
 #include <QString>
 
 class MainWindow;
@@ -12,6 +13,7 @@ public:
 
 private:
     MainWindow* mMainWindow;
+    AppSettings* mAppSettings;
 };
 
 #endif

@@ -40,6 +40,7 @@ public slots:
     virtual void setVisible(bool visible);
     void updateMultiCalib(); // come from ModelView
     void updateScaleX();
+    void applyAppSettings();
 
 private slots:
     void updateHPDGraphs(const QString & thres);

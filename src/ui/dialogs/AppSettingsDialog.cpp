@@ -15,7 +15,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     // -----------------------------
     //  General View
     // -----------------------------
-    mFont = font();
+    mFont = AppSettings::font();
 
     mGeneralView = new QWidget();
     
@@ -31,6 +31,13 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
     for (int i=0; i<339; i++)
         mLanguageCombo->addItem(QLocale::languageToString((QLocale::Language)i),QVariant((QLocale::Language)i));
+
+    QFontDialog dialog;
+    dialog.setParent(qApp->activeWindow());
+    dialog.setFont(mFont);
+
+    mFontLab = new Label(tr("Font"), this);
+    mFontBut = new Button(mFont.family() + ", " + QString::number(mFont.pointSizeF()), this);
 
     mAutoSaveLab = new QLabel(tr("Auto save project"), this);
     mAutoSaveCheck = new QCheckBox(this);
@@ -109,6 +116,9 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
     grid->addWidget(mLangHelpLab, ++row, 0, 1, 2);
 
+    grid->addWidget(mFontLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mFontBut, row, 1);
+
     QFrame* line1 = new QFrame();
     line1->setFrameShape(QFrame::HLine);
     line1->setFrameShadow(QFrame::Sunken);
@@ -162,7 +172,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     
     connect(mLanguageCombo,static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &AppSettingsDialog::changeSettings);
     //connect(mCountryCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(changeSettings()));
-    //connect(mFontBut, &Button::clicked, this, &AppSettingsDialog::fontButtonClicked);
+    connect(mFontBut, &Button::clicked, this, &AppSettingsDialog::fontButtonClicked);
 
     connect(mAutoSaveCheck, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this,  &AppSettingsDialog::changeSettings);
     connect(mAutoSaveDelayEdit, &QLineEdit::editingFinished, this,  &AppSettingsDialog::changeSettings);
@@ -223,18 +233,18 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     mList->setCurrentRow(0);
     mStack->setCurrentIndex(0);
     
-    setFixedWidth(700);
+    setFixedWidth(30 * AppSettings::heigthUnit());
 }
 
 AppSettingsDialog::~AppSettingsDialog()
 {
-    qDebug()<<"fin AppSettingsDialog::~AppSettingsDialog()";
-    AppSettings s = getSettings();
+    qDebug()<<"end AppSettingsDialog::~AppSettingsDialog()";
+    getSettings();
 
     if (filesChanged)
-        emit settingsFilesChanged(s);
+        emit settingsFilesChanged();
     else
-        emit settingsChanged(s);
+        emit settingsChanged();
 
     filesChanged = false;
 }
@@ -244,64 +254,61 @@ void AppSettingsDialog::needCalibration()
     filesChanged = true;
 }
 
-void AppSettingsDialog::setSettings(const AppSettings& settings)
+void AppSettingsDialog::setSettings()
 {
-    mLanguageCombo->setCurrentText(QLocale::languageToString(settings.mLanguage));
+    mLanguageCombo->setCurrentText(QLocale::languageToString(AppSettings::mLanguage));
     //mCountryCombo->setCurrentText(QLocale::countryToString(settings.mCountry)); // keep in memory
     mFont = AppSettings::font();
-    //mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
+    mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
 
-    mAutoSaveCheck->setChecked(settings.mAutoSave);
-    mAutoSaveDelayEdit->setText(QString::number(settings.mAutoSaveDelay / 60));
-    mAutoSaveDelayEdit->setEnabled(settings.mAutoSave);
+    mAutoSaveCheck->setChecked(AppSettings::mAutoSave);
+    mAutoSaveDelayEdit->setText(QString::number(AppSettings::mAutoSaveDelay / 60));
+    mAutoSaveDelayEdit->setEnabled(AppSettings::mAutoSave);
     
-    mCSVCellSepEdit->setText(settings.mCSVCellSeparator);
+    mCSVCellSepEdit->setText(AppSettings::mCSVCellSeparator);
 
-    if (settings.mCSVDecSeparator==",")
+    if (AppSettings::mCSVDecSeparator==",")
         mCSVDecSepCombo->setCurrentIndex(0);
     
     else mCSVDecSepCombo->setCurrentIndex(1);
 
-    mOpenLastProjectCheck->setChecked(settings.mOpenLastProjectAtLaunch);
+    mOpenLastProjectCheck->setChecked(AppSettings::mOpenLastProjectAtLaunch);
     
-    mPixelRatio->setValue(settings.mPixelRatio);
+    mPixelRatio->setValue(AppSettings::mPixelRatio);
     //mDpm->setCurrentText(QString::number(settings.mDpm));
-    mImageQuality->setValue(settings.mImageQuality);
-    mFormatDate->setCurrentIndex((int)settings.mFormatDate);
-    mPrecision->setValue(settings.mPrecision);
+    mImageQuality->setValue(AppSettings::mImageQuality);
+    mFormatDate->setCurrentIndex((int)AppSettings::mFormatDate);
+    mPrecision->setValue(AppSettings::mPrecision);
    // mNbSheet->setValue(settings.mNbSheet);
 }
 
-AppSettings AppSettingsDialog::getSettings()
+void AppSettingsDialog::getSettings()
 {
-    AppSettings settings;
-    settings.mLanguage = (QLocale::Language)mLanguageCombo->currentData().toInt();
-    settings.mCountry = locale().country();
-    //settings.mFont = AppSettings::font();
+    AppSettings::mLanguage = (QLocale::Language)mLanguageCombo->currentData().toInt();
+    AppSettings::mCountry = locale().country();
+    AppSettings::setFont(mFont);
 
-    settings.mAutoSave = mAutoSaveCheck->isChecked();
-    settings.mAutoSaveDelay = mAutoSaveDelayEdit->text().toInt() * 60;
-    settings.mCSVCellSeparator = mCSVCellSepEdit->text();
-    settings.mCSVDecSeparator = mCSVDecSepCombo->currentData().toString();
-    settings.mOpenLastProjectAtLaunch = mOpenLastProjectCheck->isChecked();
-    settings.mPixelRatio = mPixelRatio->value();
+    AppSettings::mAutoSave = mAutoSaveCheck->isChecked();
+    AppSettings::mAutoSaveDelay = mAutoSaveDelayEdit->text().toInt() * 60;
+    AppSettings::mCSVCellSeparator = mCSVCellSepEdit->text();
+    AppSettings::mCSVDecSeparator = mCSVDecSepCombo->currentData().toString();
+    AppSettings::mOpenLastProjectAtLaunch = mOpenLastProjectCheck->isChecked();
+    AppSettings::mPixelRatio = mPixelRatio->value();
     //settings.mDpm = mDpm->currentText().toShort();
-    settings.mImageQuality = mImageQuality->value();
-    settings.mFormatDate = (DateUtils::FormatDate)mFormatDate->currentIndex();
-    settings.mPrecision = mPrecision->value();    
-
-    return settings;
+    AppSettings::mImageQuality = mImageQuality->value();
+    AppSettings::mFormatDate = (DateUtils::FormatDate)mFormatDate->currentIndex();
+    AppSettings::mPrecision = mPrecision->value();
 }
 
 void AppSettingsDialog::changeSettings()
 {
-    AppSettings s = getSettings();
+    //AppSettings s = getSettings();
     
     //qApp->setFont(mFont);
     //mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
 
-    QLocale::Language newLanguage = s.mLanguage;
-    QLocale::Country newCountry= s.mCountry;
+    QLocale::Language newLanguage = AppSettings::mLanguage;
+    QLocale::Country newCountry= AppSettings::mCountry;
     
     QLocale newLoc = QLocale(newLanguage, newCountry);
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
@@ -310,7 +317,7 @@ void AppSettingsDialog::changeSettings()
    // emit settingsChanged(s);
 }
 
-/*
+
 void AppSettingsDialog::fontButtonClicked()
 {
     QFontDialog dialog;
@@ -321,11 +328,11 @@ void AppSettingsDialog::fontButtonClicked()
     const QFont font = QFontDialog::getFont(&ok, mFont, this);
     if (ok) {
         mFont = font;
-       // mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
+        mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
        // qApp->setFont(mFont);
    }
 }
-*/
+
 
 /**
  * @brief AppSettingsDialog::buttonClicked Corresponding to the restore Default Button
@@ -336,7 +343,7 @@ void AppSettingsDialog::buttonClicked(QAbstractButton* button)
      (void) button;
     mFont = QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE);
 
-    //mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
+    mFontBut->setText(mFont.family() + ", " + QString::number(mFont.pointSizeF()));
 
     mLanguageCombo->setCurrentText(QLocale::languageToString(QLocale::system().language()));
     //mCountryCombo->setCurrentText(QLocale::countryToString(QLocale::system().country()));
@@ -361,7 +368,7 @@ void AppSettingsDialog::buttonClicked(QAbstractButton* button)
     mPrecision->setValue(APP_SETTINGS_DEFAULT_PRECISION);
   //  mNbSheet->setValue(APP_SETTINGS_DEFAULT_SHEET);
 
-    AppSettings s = getSettings();
+    //AppSettings s = getSettings();
 
    /* if (filesChanged)
         emit settingsFilesChanged(s);

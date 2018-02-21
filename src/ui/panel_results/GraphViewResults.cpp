@@ -26,20 +26,20 @@ mMainColor(Painting::borderDark),
 mMargin(5),
 mLineH(20),
 mTopShift(0),
-mHeightForVisibleAxis(100),
-mGraphFont(font())
+mHeightForVisibleAxis(5 * AppSettings::heigthUnit()),
+mGraphFont(AppSettings::font())
 {
-    setGeometry(QRect(0,0,200,100));
+    //setGeometry(QRect(0,0, parentWidget()->width(), 8 * AppSettings::heigthUnit()));
     setMouseTracking(true);
+    mOverLaySelect = new Overlay (this);
 
     mGraph = new GraphView(this);
     mGraph->setMouseTracking(true);
 
-    mOverLaySelect = new Overlay (this);
-
     mGraph->setCanControlOpacity(true);
     mGraph->setCurvesOpacity(30);
-    
+
+    mGraph->showXAxisValues(true);
     mGraph->showXAxisArrow(true);
     mGraph->showXAxisTicks(true);
     mGraph->showXAxisSubTicks(true);
@@ -53,9 +53,9 @@ mGraphFont(font())
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eMinMax);
     
-    mGraph->setMargins(50, 10, 5, 30);
+    mGraph->setMargins(50, 10, 5, mGraphFont.pointSize() * 2.2); // make setMarginRight seMarginLeft ...
+
     mGraph->setRangeY(0, 1);
-    mGraph->setMarginBottom(mGraph->font().pointSizeF() + 10);
 
     mTextArea = new QTextEdit(this);
     mTextArea->setFrameStyle(QFrame::HLine);
@@ -63,9 +63,8 @@ mGraphFont(font())
     palette.setColor(QPalette::Base, Qt::white);
     palette.setColor(QPalette::Text, Qt::black);
     mTextArea->setPalette(palette);
-    QFont font (qApp->font());
-    font.setPointSizeF(pointSize(11));
-    mTextArea->setFont(font);
+
+    mTextArea->setFont(mGraphFont);
     mTextArea->setText(tr("Nothing to display"));
     mTextArea->setVisible(false);
     mTextArea->setReadOnly(true);
@@ -95,16 +94,7 @@ void GraphViewResults::updateCurvesToShow(bool showAllChains, const QList<bool>&
    // update();
 }
 
-/*
-void GraphViewResults::toggle(const QRect& targetGeometry)
-{
-    if (geometry() != targetGeometry) {
-        mAnimation->setStartValue(geometry());
-        mAnimation->setEndValue(targetGeometry);
-        mAnimation->start();
-    }
-}
-*/
+
 void GraphViewResults::setSettings(const ProjectSettings& settings)
 {
     mSettings = settings;
@@ -178,9 +168,9 @@ void GraphViewResults::saveAsImage()
         else {
         
             //---
-            GraphView::Rendering memoRendering= mGraph->getRendering();
-            setRendering(GraphView::eHD);
-            const short pr = MainWindow::getInstance()->getAppSettings().mPixelRatio;
+            //GraphView::Rendering memoRendering= mGraph->getRendering();
+            //setRendering(GraphView::eHD);
+            const short pr = AppSettings::mPixelRatio;
             const int versionHeight = 20;
 
             QImage image(mGraph->width() * pr, (mGraph->height() + versionHeight) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
@@ -209,14 +199,14 @@ void GraphViewResults::saveAsImage()
                  image.save(fileName, "png");
             }
             else if (fileExtension == "jpg") {
-                int imageQuality = MainWindow::getInstance()->getAppSettings().mImageQuality;
+                int imageQuality = AppSettings::mImageQuality;
                 image.save(fileName, "jpg",imageQuality);
             }
             else if (fileExtension == "bmp") {              
                 image.save(fileName, "bmp");
             }
             
-            mGraph->setRendering(memoRendering);
+            //mGraph->setRendering(memoRendering);
         }
 
     }
@@ -240,10 +230,9 @@ void GraphViewResults::resultsToClipboard()
  */
 void GraphViewResults::saveGraphData() const
 {
-    AppSettings settings = MainWindow::getInstance()->getAppSettings();
-    const QString csvSep = settings.mCSVCellSeparator;
+    const QString csvSep = AppSettings::mCSVCellSeparator;
 
-    QLocale csvLocal = settings.mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+    QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
     csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
     
     int offset = 0;
@@ -284,14 +273,12 @@ void GraphViewResults::saveGraphData() const
 void GraphViewResults::setNumericalResults(const QString& resultsHTML, const QString& resultsText)
 {
     mResultsText = resultsText;
-    //mTextArea->setText(resultsHTML);
     mTextArea->setHtml(resultsHTML);
 }
 
 void GraphViewResults::showNumericalResults(const bool show)
 {
     mShowNumResults = show;
-   // mTextArea->setFont(qApp->font());
     mTextArea->setVisible(show);
     updateLayout();
 }
@@ -299,7 +286,6 @@ void GraphViewResults::showNumericalResults(const bool show)
 void GraphViewResults::setShowNumericalResults(const bool show)
 {
     mShowNumResults = show;
-   // mTextArea->setFont(qApp->font());
     mTextArea->setVisible(show);
 }
 
@@ -307,19 +293,17 @@ void GraphViewResults::setMarginLeft (qreal &m)
 {
     mGraph->setMarginLeft(m);
 }
-
-
-void GraphViewResults::setRendering(GraphView::Rendering render)
+void GraphViewResults::setMarginRight(qreal &m)
 {
-    mGraph->setRendering(render);
+    mGraph->setMarginRight(m);
 }
 
 void GraphViewResults::setGraphFont(const QFont& font)
 {
-   // setFont(font);
-    // mTextArea->setFont(qApp->font());
-    // Recalcule mTopShift based on the new font, and position the graph according :
+     // Recalcule mTopShift based on the new font, and position the graph according :
     mGraphFont = font;
+    mTextArea->setFont(font);
+    mGraph->setFont(font);
     updateLayout();
 }
 
@@ -345,21 +329,24 @@ void GraphViewResults::updateLayout()
     QFont fontTitle(mGraphFont);
     fontTitle.setPointSizeF(mGraphFont.pointSizeF() * 1.1);
     QFontMetricsF fmTitle(fontTitle);
-    mTopShift = fmTitle.height() + 4. + 1.;
+    mTopShift = fmTitle.height() ;
 
-    QRect graphRect(0, mTopShift, width(), height()-mTopShift);
-
-
+    QRect graphRect(0, mTopShift, width(), height() - mTopShift);
+/*
     type_data max = mGraph->maximumX();
     QFontMetricsF fmAxe (mGraphFont);
+
     qreal marginRight = floor(fmAxe.width(stringForGraph( DateUtils::convertToAppSettingsFormat(max)) )/ 2.);
-
     mGraph->setMarginRight(marginRight);
-    mGraph->setFont(mGraphFont);
 
+    qreal marginLeft= floor(fmAxe.width(stringForGraph( DateUtils::convertToAppSettingsFormat(max)) ));
+    mGraph->setMarginLeft(marginLeft);
+
+    mGraph->setFont(mGraphFont);
+*/
     if (mShowNumResults) {
-        mGraph    -> setGeometry(graphRect.adjusted(0, 0, -width()/3., 0 ));
-        mTextArea -> setGeometry(graphRect.adjusted(width()*2./3. + 2., -mTopShift + 2 , -2, -2));
+        mGraph->setGeometry(graphRect.adjusted(0, 0, -width()/3., 0 ));
+        mTextArea->setGeometry(graphRect.adjusted(width()*2./3. + 2., -mTopShift + 2 , -2, -2));
 
     } else
             mGraph->setGeometry(graphRect);
@@ -368,7 +355,7 @@ void GraphViewResults::updateLayout()
 
     if ((mGraph->hasCurve())) {
         mGraph->showXAxisValues(axisVisible);
-        mGraph->setMarginBottom(axisVisible ? mGraphFont.pointSizeF() + 10. : 10.);
+        mGraph->setMarginBottom(axisVisible ? mGraphFont.pointSize() * 2.2 : mGraphFont.pointSize() * 0.5);
     }
 
     update();
@@ -397,10 +384,22 @@ void GraphViewResults::paintEvent(QPaintEvent* )
 
     p.setPen(Qt::black);
     
-    p.drawText(QRectF(50., 3., fmTitle.width(mTitle), mTopShift - 1.), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
+    p.drawText(QRectF( 3 * AppSettings::widthUnit(), 0, fmTitle.width(mTitle), mTopShift), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
     
-    p.drawText(QRectF(width() - fmTitle.width(mGraph->getInfo()), 3., fmTitle.width(mGraph->getInfo()), mTopShift-1.), Qt::AlignVCenter | Qt::AlignLeft, mGraph->getInfo());
-    
+    p.setFont(QFont(mGraphFont.family(), mGraphFont.pointSize()* 0.8, -1 , true));
+
+    /*
+     *  Write info at the right of the title line
+     */
+   mGraph->showInfos(true);
+   QString graphInfo = mGraph->getInfo();
+   if (!graphInfo.isEmpty()) {
+        if (mShowNumResults) {
+             p.drawText(QRectF(width()*2/3. - fmTitle.width(graphInfo),  mTopShift - fmTitle.capHeight()-fmTitle.descent(), fmTitle.width(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
+         } else
+            p.drawText(QRectF(width() - fmTitle.width(graphInfo), mTopShift - fmTitle.capHeight()-fmTitle.descent() , fmTitle.width(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
+
+     }
     p.setPen(QColor(105, 105, 105));
     if (mShowNumResults)
         p.drawRect(mTextArea->geometry().adjusted(-1, -1, 1, 1));

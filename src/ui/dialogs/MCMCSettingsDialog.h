@@ -43,7 +43,7 @@ private:
     LineEdit* mNumBurnEdit;
     LineEdit* mNumIterEdit;
     LineEdit* mMaxBatchesEdit;
-    QSpinBox* mIterPerBatchSpin;
+    LineEdit* mIterPerBatchEdit;
     LineEdit* mDownSamplingEdit;
     LineEdit* mSeedsEdit;
     HelpWidget* mHelp;

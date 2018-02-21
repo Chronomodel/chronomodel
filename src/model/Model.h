@@ -38,7 +38,7 @@ public:
     QList<QStringList> getPhaseTrace(int phaseIdx, const QLocale locale, const bool withDateFormat = false);
     QList<QStringList> getEventsTraces(const QLocale locale, const bool withDateFormat = false);
     
-    void updateFormatSettings(const AppSettings *appSet);
+    void updateFormatSettings();
 
     QJsonObject toJson() const;
     void fromJson( const QJsonObject& json);
