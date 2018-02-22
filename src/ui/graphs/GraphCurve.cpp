@@ -3,7 +3,7 @@
 
 
 GraphCurve::GraphCurve():
-mPen(Qt::black),
+mPen(Qt::black, 1),
 mBrush(Qt::NoBrush),
 mIsHisto(true),
 mIsRectFromZero(false),

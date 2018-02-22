@@ -913,6 +913,9 @@ void GraphView::paintToDevice(QPaintDevice* device)
     /* ----------------------------------------------------
      *  Horizontal axis
      * ----------------------------------------------------*/
+      QPen pen = QPen(Qt::black, 1);
+      pen.setWidth(pen.width() * mThickness);
+      p.setPen(pen);
     if (!mLegendX.isEmpty() && mXAxisValues) {
         QRectF tr(mMarginLeft, mGraphHeight + mMarginTop - mMarginBottom, mGraphWidth, mMarginBottom);
         p.setPen(Qt::black);
@@ -925,7 +928,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolX.mShowText = mXAxisValues;
 
     mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
-    mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight, mGraphWidth , mMarginBottom), -1.,mUnitFunctionX);
+    mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight + 1, mGraphWidth , mMarginBottom), -1.,mUnitFunctionX);
 
     /* ----------------------------------------------------
      *  Vertical axis

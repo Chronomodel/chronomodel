@@ -81,11 +81,13 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
     QBrush memoBrush(p.brush());
     QVector<qreal> linesPos;
 
-    QPen pen(Qt::SolidLine);
+    QPen pen(p.pen());//Qt::SolidLine);
     pen.setColor(mAxisColor);
-    pen.setWidth(1);
+    pen.setCapStyle(Qt::SquareCap);
+   // pen.setWidth(1);
 
     p.setPen(pen);
+    p.setRenderHints(QPainter::Antialiasing);
 
     QFontMetrics fm (p.font());
     int heightText = fm.height();
@@ -232,12 +234,12 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
                  w = qMax( fm.width(textStarVal), fm.width(textEndVal) );
                  const qreal xText = (xov - graduationSize -w) / 2.;
                  qreal y = yov - getYForValue(mStartVal) - textHeight/2. ;
-                  const QRectF trS(xText, y, w, textHeight);
-                  p.drawText(trS, Qt::AlignRight | Qt::AlignBottom, textStarVal);
+                  //const QRectF trS(xText, y, w, textHeight);
+                  p.drawText(xText, y, w, textHeight, Qt::AlignRight | Qt::AlignBottom, textStarVal);
 
                   y = yov - getYForValue(mEndVal) - textHeight/2. ;
-                  const QRectF trE(xText, y, w, textHeight);
-                  p.drawText(trE, Qt::AlignRight | Qt::AlignVCenter, textEndVal);
+                 // const QRectF trE(xText, y, w, textHeight);
+                  p.drawText(xText, y, w, textHeight, Qt::AlignRight | Qt::AlignVCenter, textEndVal);
 
             }
         } else  {
@@ -275,12 +277,14 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
                     if ( textInc == mTextInc) {
                         const QString text =(valueFormatFunc ?stringForGraph(valueFormatFunc(v)) : stringForGraph(v) );
                         const int textHeight =  fm.height() ;
+                        w =  fm.width(text);
+                        const qreal xText = (xov - graduationSize -w) / 2.;
+                        const qreal yText = y - textHeight/2. ;
+                         //const QRectF trS(xText, yText, w, textHeight);
+                         p.drawText(xText, yText, w, textHeight, Qt::AlignRight | Qt::AlignBottom, text);
 
-                        const int align (Qt::AlignRight | Qt::AlignVCenter);
-                        const qreal ty ( y - textHeight/2 );
-                        const QRectF tr(xov - w, ty, w - 8, textHeight);
-                        p.drawText(tr, align, text);
                         textInc = 0;
+
                     }
 
                     if (mShowSubSubs && v<mEndVal) {
