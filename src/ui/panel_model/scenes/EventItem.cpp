@@ -91,7 +91,7 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     qreal h = mTitleHeight + mPhasesHeight + 2*mBorderWidth + 2*mEltsMargin;
     
     //QString name = event.value(STATE_NAME).toString();
-    QFont font = mScene->font();
+  //  QFont font = AppSettings::font();
     //QFontMetrics metrics(font);
  //   qreal w = metrics.width(name) + 2*mBorderWidth + 4*mEltsMargin + 2*mTitleHeight;
     
@@ -103,11 +103,9 @@ void EventItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
     else
         h += mEltsMargin + mEltsHeight;
     
-    font.setPointSizeF(11.);
+  //  font.setPointSizeF(11.);
 
-    qreal  w (150);
-    
-    mSize = QSize(w, h);
+     mSize = QSize(mItemWidth, h);
     
     if (event.value(STATE_EVENT_DATES).toArray() != mData.value(STATE_EVENT_DATES).toArray() || mSettings != settings) {
         // ----------------------------------------------
@@ -339,7 +337,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->drawRect(rect);
 
     if (numPhases == 0) {
-        QFont font = qApp->font();
+        QFont font = AppSettings::font();// qApp->font();
         font.setPointSizeF(pointSize(11));
         painter->setFont(font);
         painter->fillRect(phasesRect, QColor(0, 0, 0, 180));
@@ -370,7 +368,8 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
               rect.width() - 2*mBorderWidth - 4*mEltsMargin,
               mTitleHeight);
     
-    QFont font = qApp->font();
+    QFont font = AppSettings::font();
+    font.setPointSizeF(11.);
     painter->setFont(font);
     QFontMetrics metrics(font);
     QString name = mData.value(STATE_NAME).toString();

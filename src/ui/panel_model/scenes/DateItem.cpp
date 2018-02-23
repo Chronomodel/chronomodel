@@ -112,8 +112,8 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     const int rHeightMid =  int(r.height()/2);
     painter->fillRect(r.adjusted(0, 0, 0, -rHeightMid), Qt::white);
     
-    QFont font = qApp->font();
-    font.setPointSizeF(pointSize(11));
+    QFont font = AppSettings::font();
+    font.setPointSizeF(11.);
     painter->setFont(font);
 
     painter->setPen(Qt::black);

@@ -18,7 +18,6 @@ PluginMagRefView::PluginMagRefView(QWidget* parent):GraphViewRefAbstract(parent)
     mGraph->autoAdjustYScale(true);
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("value");
-    mGraph->setMarginBottom(mGraph->font().pointSize() * 2.2 );
 
 }
 
@@ -128,10 +127,10 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
 
                 curveG[tDisplay] = iPt.value();
                 curveG95Sup[tDisplay] = iPt.value() + error;
-                 curveG95Inf[tDisplay] = iPt.value() - error;
+                curveG95Inf[tDisplay] = iPt.value() - error;
 
-                yMin = qMin(yMin, curveG95Inf.value(tDisplay));
-                yMax = qMax(yMax, curveG95Sup.value(tDisplay));
+               yMin = qMin(yMin, curveG95Inf.value(tDisplay));
+               yMax = qMax(yMax, curveG95Sup.value(tDisplay));
             }
         }
         mGraph->setRangeX(tminDisplay,tmaxDisplay);

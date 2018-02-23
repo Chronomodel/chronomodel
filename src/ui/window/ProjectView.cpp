@@ -233,7 +233,7 @@ void ProjectView::initResults(Model* model)
     qDebug()<<"ProjectView::initResults()";
     if (model) {
         mResultsView->clearResults();
-        mResultsView->updateFormatSetting(model);
+    //    mResultsView->updateFormatSetting(model);
         
         mResultsView->initResults(model);
         mRefreshResults = true;
@@ -261,7 +261,6 @@ void ProjectView::updateResultsLog(const QString& log)
 void ProjectView::showLogTab(const int &i)
 {
     mLogTabs->showWidget(i);
-   // mLogTabs->getCurrentWidget()->setGeometry(0, mLogTabs->getTabHeight() + 5, width(), height() - (mLogTabs->getTabHeight() + 5) );
 }
 
 //  Read/Write settings

@@ -79,6 +79,7 @@ protected:
 private slots:
     void togglePropeties();
     void showProperties();
+    void hideProperties();
     void showImport();
     void showPhases();
     void slideRightPanel();

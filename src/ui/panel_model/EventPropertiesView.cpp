@@ -188,10 +188,8 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     QVBoxLayout* boundLayout = new QVBoxLayout();
     boundLayout->setContentsMargins(10, 6, 15, 6);
     boundLayout->setSpacing(10);
-//  boundLayout->addWidget(mKnownFixedRadio);
     boundLayout->addWidget(mFixedGroup);
-//  boundLayout->addWidget(mKnownUniformRadio);
-//  boundLayout->addWidget(mUniformGroup);
+
     boundLayout->addWidget(mKnownGraph);
     boundLayout->addStretch();
     mBoundView->setLayout(boundLayout);
@@ -213,6 +211,7 @@ EventPropertiesView::~EventPropertiesView()
 void EventPropertiesView::setEvent(const QJsonObject& event)
 {
     mEvent = event;
+    mCalibBut->setChecked(false);
     QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
 
     bool hasDates = (dates.size() > 0);

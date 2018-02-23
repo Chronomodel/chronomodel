@@ -12,6 +12,7 @@ mPhasesHeight(20.),
 mEltsMargin(3.),
 mEltsWidth(15.),
 mEltsHeight(40.),
+mItemWidth(150.),
 //mMoving(false),
 mMergeable(false),
 mGreyedOut(false)

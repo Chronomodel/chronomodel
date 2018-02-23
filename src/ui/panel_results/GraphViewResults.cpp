@@ -26,12 +26,12 @@ mMainColor(Painting::borderDark),
 mMargin(5),
 mLineH(20),
 mTopShift(0),
-mHeightForVisibleAxis(5 * AppSettings::heigthUnit()),
+mHeightForVisibleAxis(7 * AppSettings::heigthUnit()),
 mGraphFont(AppSettings::font())
 {
-    //setGeometry(QRect(0,0, parentWidget()->width(), 8 * AppSettings::heigthUnit()));
+    setGeometry(QRect(0, 0, parentWidget()->width(), 20 * AppSettings::heigthUnit()));
     setMouseTracking(true);
-    mOverLaySelect = new Overlay (this);
+
 
     mGraph = new GraphView(this);
     mGraph->setMouseTracking(true);
@@ -54,7 +54,6 @@ mGraphFont(AppSettings::font())
     mGraph->setYAxisMode(GraphView::eMinMax);
     
     mGraph->setMargins(50, 10, 5, mGraphFont.pointSize() * 2.2); // make setMarginRight seMarginLeft ...
-
     mGraph->setRangeY(0, 1);
 
     mTextArea = new QTextEdit(this);
@@ -68,7 +67,10 @@ mGraphFont(AppSettings::font())
     mTextArea->setText(tr("Nothing to display"));
     mTextArea->setVisible(false);
     mTextArea->setReadOnly(true);
-    
+
+     /* OverLaySelect must be created after mGraph, because it must be refresh after/over the graph
+      */
+     mOverLaySelect = new Overlay (this);
     setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
         
 }
@@ -332,18 +334,7 @@ void GraphViewResults::updateLayout()
     mTopShift = fmTitle.height() ;
 
     QRect graphRect(0, mTopShift, width(), height() - mTopShift);
-/*
-    type_data max = mGraph->maximumX();
-    QFontMetricsF fmAxe (mGraphFont);
 
-    qreal marginRight = floor(fmAxe.width(stringForGraph( DateUtils::convertToAppSettingsFormat(max)) )/ 2.);
-    mGraph->setMarginRight(marginRight);
-
-    qreal marginLeft= floor(fmAxe.width(stringForGraph( DateUtils::convertToAppSettingsFormat(max)) ));
-    mGraph->setMarginLeft(marginLeft);
-
-    mGraph->setFont(mGraphFont);
-*/
     if (mShowNumResults) {
         mGraph->setGeometry(graphRect.adjusted(0, 0, -width()/3., 0 ));
         mTextArea->setGeometry(graphRect.adjusted(width()*2./3. + 2., -mTopShift + 2 , -2, -2));
@@ -378,37 +369,44 @@ void GraphViewResults::paintEvent(QPaintEvent* )
 
     QPainter p;
     p.begin(this);
-    p.fillRect(mGraph->geometry().adjusted(0, - mTopShift, 0, 0), mGraph->getBackgroundColor());
-    
+   // p.fillRect(mGraph->geometry().adjusted(0, - mTopShift, 0, 0), mGraph->getBackgroundColor());
+     p.fillRect(rect(), mGraph->getBackgroundColor());
     p.setFont(fontTitle);
 
     p.setPen(Qt::black);
     
     p.drawText(QRectF( 3 * AppSettings::widthUnit(), 0, fmTitle.width(mTitle), mTopShift), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
     
-    p.setFont(QFont(mGraphFont.family(), mGraphFont.pointSize()* 0.8, -1 , true));
+    p.setFont(QFont(mGraphFont.family(), mGraphFont.pointSize(), -1 , true));
 
     /*
      *  Write info at the right of the title line
      */
-   mGraph->showInfos(true);
+   //mGraph->showInfos(true);
    QString graphInfo = mGraph->getInfo();
    if (!graphInfo.isEmpty()) {
-        if (mShowNumResults) {
+        if (mShowNumResults)
              p.drawText(QRectF(width()*2/3. - fmTitle.width(graphInfo),  mTopShift - fmTitle.capHeight()-fmTitle.descent(), fmTitle.width(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
-         } else
+         else
             p.drawText(QRectF(width() - fmTitle.width(graphInfo), mTopShift - fmTitle.capHeight()-fmTitle.descent() , fmTitle.width(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
 
-     }
+   } /*else {
+       if (mShowNumResults)
+            p.fillRect(QRectF(3 * AppSettings::widthUnit() + fmTitle.width(mTitle), 0,  fmTitle.width(graphInfo), mTopShift), mGraph->getBackgroundColor());
+        else
+           p.fillRect(QRectF(3 * AppSettings::widthUnit() + fmTitle.width(mTitle), 0,  fmTitle.width(graphInfo), mTopShift) ,mGraph->getBackgroundColor());
+
+
+       p.fillRect(mGraph->geometry().adjusted(0, - mTopShift, 0, 0), mGraph->getBackgroundColor());
+   }*/
     p.setPen(QColor(105, 105, 105));
     if (mShowNumResults)
         p.drawRect(mTextArea->geometry().adjusted(-1, -1, 1, 1));
 
-
     p.end();
 
     if (mIsSelected && mShowSelectedRect) {
-        mOverLaySelect->setGeometry(mGraph->geometry().adjusted(0, -mTopShift, 0, 0));
+        mOverLaySelect->setGeometry(rect());//mGraph->geometry().adjusted(0, -mTopShift, 0, 0));
         mOverLaySelect->show();
 
     } else

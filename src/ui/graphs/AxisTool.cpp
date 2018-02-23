@@ -16,7 +16,8 @@ mShowText(true),
 mMinMaxOnly(false),
 mMajorScale (100),
 mMinorScaleCount (4),
-mAxisColor(0, 0, 0)
+mAxisColor(0, 0, 0),
+mShowArrow(false)
 {
     
 }
@@ -214,7 +215,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
             p.drawPolygon(triangle);
 
         } else {
-           qreal y = yov - getYForValue(mStartVal) ;
+            qreal y = yov - getYForValue(mStartVal) ;
             p.drawLine(QLineF(xov, y, xov - graduationSize, y));
 
              y = yov - getYForValue(mEndVal) ;
@@ -224,21 +225,18 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
             // Nothing else to draw !
         }
         else*/
-        if (mMinMaxOnly) // used on posterior densities Maybe change the type of the text exp ou float
-        {
-            if (mShowText){
+        if (mMinMaxOnly) { // used on posterior densities Maybe change the type of the text exp ou float
+            if (mShowText) {
 
                  const QString textStarVal = (valueFormatFunc ? stringForLocal(valueFormatFunc(mStartVal)) : stringForGraph(mStartVal) );
                  const QString textEndVal = (valueFormatFunc ? stringForLocal(valueFormatFunc(mEndVal)) : stringForGraph(mEndVal) );
                  const int textHeight =  fm.height() ;
                  w = qMax( fm.width(textStarVal), fm.width(textEndVal) );
-                 const qreal xText = (xov - graduationSize -w) / 2.;
+                 const qreal xText = (xov - graduationSize -w) *2.  / 3.;
                  qreal y = yov - getYForValue(mStartVal) - textHeight/2. ;
-                  //const QRectF trS(xText, y, w, textHeight);
                   p.drawText(xText, y, w, textHeight, Qt::AlignRight | Qt::AlignBottom, textStarVal);
 
                   y = yov - getYForValue(mEndVal) - textHeight/2. ;
-                 // const QRectF trE(xText, y, w, textHeight);
                   p.drawText(xText, y, w, textHeight, Qt::AlignRight | Qt::AlignVCenter, textEndVal);
 
             }
@@ -278,10 +276,9 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
                         const QString text =(valueFormatFunc ?stringForGraph(valueFormatFunc(v)) : stringForGraph(v) );
                         const int textHeight =  fm.height() ;
                         w =  fm.width(text);
-                        const qreal xText = (xov - graduationSize -w) / 2.;
+                        const qreal xText = (xov - graduationSize -w)*2. / 3.;
                         const qreal yText = y - textHeight/2. ;
-                         //const QRectF trS(xText, yText, w, textHeight);
-                         p.drawText(xText, yText, w, textHeight, Qt::AlignRight | Qt::AlignBottom, text);
+                        p.drawText(xText, yText, w, textHeight, Qt::AlignRight | Qt::AlignBottom, text);
 
                         textInc = 0;
 

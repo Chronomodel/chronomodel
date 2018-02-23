@@ -78,7 +78,7 @@ int Tabs::minimalWidth() const
 {
     const int xMaxTab = !mTabRects.isEmpty() ? (mTabRects[mTabRects.size()-1].x() + mTabRects[mTabRects.size()-1].width()) : 10;
 
-    const int w =  mTabWidgets[mCurrentIndex] ? std::max(xMaxTab, mTabWidgets[mCurrentIndex]->rect().width()) : xMaxTab;
+    const int w = mTabWidgets[mCurrentIndex] ? std::max(xMaxTab, mTabWidgets[mCurrentIndex]->rect().width()) : xMaxTab;
 
     return  w;
 }
@@ -129,9 +129,10 @@ void Tabs::setTab(const int &i, bool notify)
   void Tabs::setFont(const QFont &font)
 {
       mFont = font;
-     QWidget::setFont(mFont);
-    QFontMetrics fm (mFont);
-    mTabHeight = 2 * fm.height();
+      QWidget::setFont(mFont);
+     QFontMetrics fm (mFont);
+     mTabHeight = 2 * fm.height();
+  //  setMinimumSize(minimalWidth(), minimalHeight());
     updateLayout();
 }
 

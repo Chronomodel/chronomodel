@@ -179,7 +179,8 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
 
     // Name
 
-    QFont font = qApp->font();
+    QFont font = AppSettings::font();
+    font.setPointSizeF(11.);
     painter->setFont(font);
     QFontMetrics metrics(font);
     QString name = mData.value(STATE_NAME).toString();
@@ -204,8 +205,8 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
     // Phases
 
     if (numPhases == 0) {
-        QFont font = qApp->font();
-        font.setPointSizeF(pointSize(11));
+     //   QFont font = qApp->font();
+        //font.setPointSizeF(11.);
         painter->setFont(font);
         painter->fillRect(phasesRect, QColor(0, 0, 0, 180));
         painter->setPen(QColor(200, 200, 200));

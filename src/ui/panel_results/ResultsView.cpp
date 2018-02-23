@@ -603,17 +603,16 @@ void ResultsView::applyAppSettings()
 
         mMargin = .5* AppSettings::heigthUnit();
 
-
          mTabs->setFont(ft);
          mRuler->setFont(ft);
-         mRuler->setMarginBottom( ft.pointSize() * 1.2 );
+         mRuler->setMarginBottom( 1.2 * AppSettings::heigthUnit() );
          mRulerH = mRuler->height();
 
         mTabsH = 2 * fm.height();
-        mGraphHeight = 15 * AppSettings::heigthUnit();
+        mGraphHeight = 20 * AppSettings::heigthUnit();
 
         mOptionsW = ( fm.width(tr("Nb Densities / Sheet ")) + 2 * mMargin) *3 / 2;
-                //35 * AppSettings::widthUnit();
+
         const int wEdit = (int)ceil((mOptionsW - 4 * mMargin)/3.);
         const QSize allDensitiesButSize (mOptionsW/2, mOptionsW/4);
         const QSize singleDensityButSize (mOptionsW/4, mOptionsW/4);
@@ -848,11 +847,11 @@ void ResultsView::updateControls()
      *  Activate specific controls for post. distrib. (first tab)
      * -------------------------------------------------------*/
 
-    mDataCalibCheck    -> setVisible((mCurrentTypeGraph == GraphViewResults::ePostDistrib)
+    mDataCalibCheck -> setVisible((mCurrentTypeGraph == GraphViewResults::ePostDistrib)
                                      && !byTempo
                                      && mDatesfoldCheck->isChecked()
                                      && mDataThetaRadio->isChecked());
-    mWiggleCheck       -> setVisible((mCurrentTypeGraph == GraphViewResults::ePostDistrib)
+    mWiggleCheck-> setVisible((mCurrentTypeGraph == GraphViewResults::ePostDistrib)
                                      && !byTempo
                                      && mDatesfoldCheck->isChecked()
                                      && mDataThetaRadio->isChecked());
@@ -1002,10 +1001,10 @@ void ResultsView:: updateTabByScene()
 
     }
 
-    int dx (20 + mMargin);
+    int dx (2 * mMargin);
 
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
-        if (( byEvents || (byPhases && mEventsfoldCheck->isChecked()) )   && mDatesfoldCheck->isChecked()) {
+        if (( byEvents || (byPhases && mEventsfoldCheck->isChecked()) )   && mDatesfoldCheck->isChecked() && mDataCalibCheck->isVisible()) {
             mDataCalibCheck -> move(mMargin + dx, ySpan);
             ySpan += mDataCalibCheck->height() + mMargin;
 
@@ -3132,9 +3131,11 @@ void ResultsView::updateGraphsZoomX()
  */
 void ResultsView::updateScaleY(int value)
 {
+    //GraphViewResults::mHeightForVisibleAxis(7 * AppSettings::heigthUnit()),
+
     mYScaleSpin->setValue(value);
-    const double min (70.);
-    const double origin (150.);
+    const double min (3 * AppSettings::heigthUnit());//(70.);
+    const double origin (20 * AppSettings::heigthUnit());// (150.);
     const double prop = (double)value / 100.;
     mGraphHeight = min + prop * (origin - min);
     
@@ -3151,26 +3152,29 @@ void ResultsView::setGraphFont(const QFont &font)
     switch(mTabs->currentIndex()) {
         case 0: // Posterior Distrib.
                 {
-                    const int marg = qMax(gfm.width(stringForLocal(mResultCurrentMinX))/ 2., gfm.width(stringForLocal(mResultCurrentMaxX))/ 2.);
-                    mMarginLeft = 2 * marg;
-                    mMarginRight = 2 * marg;
+                  //  const int marg = qMax(gfm.width(stringForLocal(mResultCurrentMinX))/ 2., gfm.width(stringForLocal(mResultCurrentMaxX))/ 2.);
+                    mMarginLeft =  1.5 * gfm.width(stringForLocal( 5 * mSettings.getTminFormated()))/ 2. +  gfm.averageCharWidth();
+                    mMarginRight = 1.5 * gfm.width(stringForLocal(5 * mSettings.getTmaxFormated()))/ 2.;
                   }
          break;
 
         case 1: // History Plot
         case 2:// Acceptance Rate
                         {
-                         const int marg = qMax(qMax(gfm.width(stringForLocal(mResultCurrentMinX))/ 2, gfm.width(stringForGraph(100))), gfm.width(stringForLocal(mResultCurrentMaxX))/ 2) ;
-                        mMarginLeft =  2 * marg ;
-                        mMarginRight = 2 * marg;
+                        // const int marg = qMax(gfm.width(stringForLocal(mResultCurrentMinX))/ 2, gfm.width(stringForGraph(100)));
+
+                        const int maxIter = 1+ mChains.at(0).mNumBurnIter + (mChains.at(0).mBatchIndex * mChains.at(0).mNumBatchIter) + mChains.at(0).mNumRunIter / mChains.at(0).mThinningInterval;
+                         const int marg = gfm.width(stringForLocal(maxIter));
+                        mMarginLeft =  1.7 * marg ;
+                        mMarginRight = 1.5 *marg;// gfm.width(stringForLocal(mSettings:))/ 2;
                     }
         break;
 
          case 3:// Autocorrelation
                     {
-                        const int marg = qMax(gfm.width(stringForLocal(40))/ 2, gfm.width(stringForGraph(-1)));
-                        mMarginLeft = 2 * marg ;
-                         mMarginRight = 2 * gfm.width(stringForLocal(40))/ 2.;
+                        const int marg = qMax(gfm.width(stringForLocal(40))/ 2, gfm.width(stringForGraph(100)));
+                        mMarginLeft = 1.7 * marg ;
+                         mMarginRight = 4 * gfm.width(stringForLocal(40))/ 2.;
                 }
         break;
 
@@ -3178,10 +3182,8 @@ void ResultsView::setGraphFont(const QFont &font)
                 break;
       }
 
-  //  mRuler->setFont(mGraphFont);
     mRuler->setMarginLeft(mMarginLeft);
     mRuler->setMarginRight(mMarginRight);
- //   mRuler->setMarginBottom( mGraphFont.pointSize() * 1.2 );
 
     mRuler->updateLayout();
     mRulerH = mRuler->height();

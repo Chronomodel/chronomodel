@@ -2337,6 +2337,7 @@ void Project::run()
     if (invalidDates.size() > 0) {
 
         QMessageBox messageBox;
+        messageBox.setMinimumWidth(30 * AppSettings::widthUnit());
         messageBox.setIcon(QMessageBox::Warning);
         //http://doc.qt.io/qt-5/qmessagebox.html#setWindowTitle
         //Sets the title of the message box to title. On OS X, the window title is ignored (as required by the OS X Guidelines).

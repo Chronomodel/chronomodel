@@ -17,10 +17,12 @@ public:
     bool mControlsEnabled;
     bool mAtLeastOneEventSelected;
     QSize mSize;
+ void redrawPhase();
 
 //functions
 protected:
     QRectF boundingRect() const;
+
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
     void mousePressEvent(QGraphicsSceneMouseEvent* e);
 

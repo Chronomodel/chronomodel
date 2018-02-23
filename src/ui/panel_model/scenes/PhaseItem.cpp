@@ -15,8 +15,8 @@ mControlsVisible(false),
 mControlsEnabled(false),
 mAtLeastOneEventSelected(false)
 {
-    mBorderWidth = 10.;
-    mEltsHeight = 15.;
+    mBorderWidth = 10;
+    mEltsHeight = 15;
     setPhase(phase);
     inPix = new QPixmap(":insert_event.png");
     exPix = new QPixmap(":extract_event.png");
@@ -44,7 +44,7 @@ void PhaseItem::setPhase(const QJsonObject& phase)
     // ----------------------------------------------------
     //  Calculate item size
     // ----------------------------------------------------
-    const qreal w (150);
+    const qreal w (mItemWidth);
     qreal h = mTitleHeight + 2*mBorderWidth + 2*mEltsMargin;
     
     const QJsonArray events = getEvents();
@@ -132,6 +132,10 @@ QRectF PhaseItem::boundingRect() const
     return QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
 }
 
+void PhaseItem::redrawPhase()
+{
+    update();
+}
 
 void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
@@ -148,7 +152,8 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
                                mData.value(STATE_COLOR_GREEN).toInt(),
                                mData.value(STATE_COLOR_BLUE).toInt());
     const QColor fontColor = getContrastedColor(phaseColor);
-    QFont font = qApp->font();
+    QFont font = AppSettings::font();
+    font.setPointSizeF(11.);
     QFontMetrics fm (font);
 
     // Draw then container
@@ -257,7 +262,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     }
 
     // Change font
-    font.setPointSizeF(pointSize(11.f));
+    font.setPointSizeF(10.);
     painter->setFont(font);
     
     // Type (duration tau)

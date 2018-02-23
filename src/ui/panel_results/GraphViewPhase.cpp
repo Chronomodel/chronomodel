@@ -337,6 +337,8 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         mGraph->setTipXLab("t");
         mGraph->setTipYLab("");
         mGraph->setYAxisMode(GraphView::eHidden);
+        mGraph->showInfos(false);
+        mGraph->clearInfos();
         mGraph->autoAdjustYScale(true); // do repaintGraph()
 
     }
@@ -384,23 +386,10 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         mGraph->setTipXLab(tr("Iteration"));
         mGraph->setTipYLab("t");
         mGraph->setYAxisMode(GraphView::eMinMaxHidden);
-      //  mGraph->showInfos(true);
+        mGraph->showInfos(true);
         mGraph->autoAdjustYScale(true);
     }
-    /*else if (mCurrentTypeGraph == eTrace && mCurrentVariable == eDuration) {
 
-        for (int i=0; i<mShowChainList.size(); ++i) {
-            mGraph->setCurveVisible("Duration Trace " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Duration Q1 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Duration Q2 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Duration Q3 " + QString::number(i), mShowChainList.at(i));
-        }
-
-        mGraph->setTipXLab(tr("Iteration"));
-        mGraph->setTipYLab("t");
-        mGraph->setYAxisMode(GraphView::eMinMax);
-        mGraph->autoAdjustYScale(true);
-    }*/
 
     repaint();
 }

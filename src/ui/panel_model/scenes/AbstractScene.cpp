@@ -2,6 +2,7 @@
 #include "AbstractItem.h"
 #include "ArrowItem.h"
 #include "ArrowTmpItem.h"
+#include "AppSettings.h"
 #include "StateKeys.h"
 #include <QtWidgets>
 
@@ -14,10 +15,9 @@ mProject(nullptr),
 mView(view),
 mUpdatingItems(false),
 mAltIsDown(false),
-
 mShowAllThumbs(true),
 mZoom(1.),
-mDeltaGrid (150/4) // 150 is the width of the Event and phase Item
+mDeltaGrid ( 150. /4.) // 150 is the width of the Event and phase Item
 {
     mTempArrow = new ArrowTmpItem();
     addItem(mTempArrow);

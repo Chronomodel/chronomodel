@@ -36,35 +36,34 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     dialog.setParent(qApp->activeWindow());
     dialog.setFont(mFont);
 
-    mFontLab = new Label(tr("Font"), this);
+    mFontLab = new Label(tr("Font Menu"), this);
     mFontBut = new Button(mFont.family() + ", " + QString::number(mFont.pointSizeF()), this);
 
-    mAutoSaveLab = new QLabel(tr("Auto save project"), this);
+    mAutoSaveLab = new QLabel(tr("Auto Save Project"), this);
     mAutoSaveCheck = new QCheckBox(this);
-    mAutoSaveDelayLab = new QLabel(tr("Auto save interval (in minutes)"), this);
+    mAutoSaveDelayLab = new QLabel(tr("Auto Save Interval (in minutes)"), this);
     mAutoSaveDelayEdit = new QLineEdit(this);
-    //mAutoSaveDelayEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
-    
+
     QIntValidator* positiveValidator = new QIntValidator();
     positiveValidator->setBottom(1);
     mAutoSaveDelayEdit->setValidator(positiveValidator);
     
-    mCSVCellSepLab = new QLabel(tr("CSV cell separator"), this);
+    mCSVCellSepLab = new QLabel(tr("CSV Cell Separator"), this);
     mCSVCellSepEdit = new QLineEdit(this);
-    //mCSVCellSepEdit->setStyleSheet("QLineEdit { border-radius: 5px; }");
     
-    mCSVDecSepLab = new QLabel(tr("CSV decimal separator"), this);
+    mCSVDecSepLab = new QLabel(tr("CSV Decimal Separator"), this);
     mCSVDecSepCombo = new QComboBox(this);
     mCSVDecSepCombo->addItem(", (comma)", QVariant(","));
     mCSVDecSepCombo->addItem(". (dot)", QVariant("."));
+
     if (QLocale::system().language()==QLocale::French) {
         mCSVCellSepEdit->setText(";");
         mCSVDecSepCombo->setCurrentIndex(0);
+
     } else {
         mCSVCellSepEdit->setText(",");
         mCSVDecSepCombo->setCurrentIndex(1);
     }
-
 
     mOpenLastProjectLab = new QLabel(tr("Open Last Project at Launch"), this);
     mOpenLastProjectCheck = new QCheckBox(this);
@@ -233,7 +232,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     mList->setCurrentRow(0);
     mStack->setCurrentIndex(0);
     
-    setFixedWidth(30 * AppSettings::heigthUnit());
+//    setFixedWidth(30 * AppSettings::heigthUnit());
 }
 
 AppSettingsDialog::~AppSettingsDialog()

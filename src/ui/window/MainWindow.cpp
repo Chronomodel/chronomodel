@@ -19,15 +19,12 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() );
 #endif
 
-    const  QFont ft (font());
-
     QPalette tooltipPalette;
     tooltipPalette.setColor(QPalette::ToolTipBase, Qt::white);
     tooltipPalette.setColor(QPalette::ToolTipText, Qt::black);
     QToolTip::setPalette(tooltipPalette);
-    QFont tooltipFont(font());
+    QFont tooltipFont(AppSettings::font());
     tooltipFont.setItalic(true);
-
 
 
     QToolTip::setFont(tooltipFont);
@@ -46,7 +43,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     mUndoView = new QUndoView(mUndoStack);
     mUndoView->setEmptyLabel(tr("Initial state"));
     mUndoDock = new QDockWidget(this);
-    mUndoDock->setFixedWidth(250);
+    //mUndoDock->setFixedWidth(250);
     mUndoDock->setWidget(mUndoView);
     mUndoDock->setAllowedAreas(Qt::RightDockWidgetArea);
     addDockWidget(Qt::RightDockWidgetArea, mUndoDock);
@@ -59,7 +56,7 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     statusBar()->showMessage(tr("Ready"));
     //setUnifiedTitleAndToolBarOnMac(true);
     setWindowIcon(QIcon(":chronomodel.png"));
-    setMinimumSize(800, 500);
+    setMinimumSize(50 * AppSettings::widthUnit(), 50 * AppSettings::heigthUnit());
     
     connect(mProjectSaveAction, static_cast<void (QAction::*)(bool)> (&QAction::triggered), this, &MainWindow::saveProject);
     connect(mProjectSaveAsAction, static_cast<void (QAction::*)(bool)> (&QAction::triggered), this, &MainWindow::saveProjectAs);
@@ -418,7 +415,7 @@ void MainWindow::newProject()
          * Returns true only if a new file is created.
          * Note : at this point, the project state is still the previous project state.*/
         if (newProject->saveAs(tr("Save new project as..."))) {
-            mUndoStack->clear();
+            //mUndoStack->clear();
 
             // resetInterface Disconnect also the scene
             resetInterface();
@@ -445,6 +442,7 @@ void MainWindow::newProject()
 
             updateWindowTitle();
 
+            mUndoStack->clear();
         } else
             delete newProject;
 
@@ -472,7 +470,7 @@ void MainWindow::openProject()
 
             delete mProject;
         }
-
+        statusBar()->showMessage(tr("Loading project : %1").arg(path));
         // assign new project
         mProject = new Project();
         connectProject();
@@ -482,7 +480,7 @@ void MainWindow::openProject()
         const QFileInfo info(path);
         setCurrentPath(info.absolutePath());
 
-        mUndoStack->clear();
+
         // look MainWindows::readSetting()
         if (mProject->load(path)) {
             activateInterface(true);
@@ -495,6 +493,8 @@ void MainWindow::openProject()
                 emit mProject->mcmcFinished(mProject->mModel);
          }
 
+        mUndoStack->clear();
+        statusBar()->showMessage(tr("Ready"));
     }
 
 }
@@ -659,7 +659,7 @@ void MainWindow::setAppSettings()
         mProject->setAppSettings();
 
     mProjectView->updateMultiCalibration();
-    if (mViewResultsAction->isEnabled())
+ //   if (mViewResultsAction->isEnabled())
         mProjectView->applySettings(mProject->mModel);
 
     }

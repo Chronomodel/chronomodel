@@ -1,6 +1,7 @@
 #include "ModelView.h"
 #include "EventsScene.h"
 #include "PhasesScene.h"
+#include "PhaseItem.h"
 #include "Event.h"
 #include "EventKnown.h"
 #include "Painting.h"
@@ -133,7 +134,7 @@ mCalibVisible(false)
     mButEventsGrid->setFlatVertical();
     
     mEventsGlobalZoom = new ScrollCompressor(mLeftWrapper);
-    mEventsGlobalZoom->setProp(1);
+    mEventsGlobalZoom->setProp(0.5);
     mEventsGlobalZoom->showText(tr("Zoom"), true);
     mEventsGlobalZoom->setVertical(true);
     
@@ -217,7 +218,7 @@ mCalibVisible(false)
     mButPhasesGrid->setFlatVertical();
     
     mPhasesGlobalZoom = new ScrollCompressor(mRightWrapper);
-    mPhasesGlobalZoom->setProp(1);
+    mPhasesGlobalZoom->setProp(0.5);
     mPhasesGlobalZoom->showText(tr("Zoom"), true);
     
     connect(mPhasesGlobalZoom, &ScrollCompressor::valueChanged, this, &ModelView::updatePhasesZoom);
@@ -376,8 +377,13 @@ Project* ModelView::getProject() const
 void ModelView::resetInterface()
 {
     mButProperties->setEnabled(false);
+    mButProperties->setChecked(false);
+
     mButMultiCalib->setEnabled(false);
+    mButMultiCalib->setChecked(false);
+
     mButDeleteEvent->setEnabled(false);
+    mButDeleteEvent->setChecked(false);
 
     mButNewEvent->setEnabled(true);
     mButNewEventKnown->setEnabled(true);
@@ -394,20 +400,22 @@ void ModelView::resetInterface()
     mMultiCalibrationView->setEventsList(QList<Event*> ());
 
     mEventPropertiesView->setEvent(QJsonObject());
-
+   // hideProperties();
     updateLayout();
 }
 
 void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
 {
- //   QFontMetrics fm(this->font());
-   QFontMetrics fm( QFont(APP_SETTINGS_DEFAULT_FONT_FAMILY, APP_SETTINGS_DEFAULT_FONT_SIZE));
-    const int topButtonHeight = mMargin;//fm.height() + 10;
-    const int hMarg = mMargin;
+    QFontMetrics fm(AppSettings::font());
+
+
+      /* Addapt mButModifyPeriod size and position */
+    const int topButtonHeight =  1.6 * AppSettings::heigthUnit();
     const QString studyStr = tr("STUDY PERIOD") + QString(" [ %1 ; %2 ] BC/AD").arg(locale().toString(min), locale().toString(max));;
     mButModifyPeriod->setText(studyStr);
     mButModifyPeriod->setIconOnly(false);
-    mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text())) /2 -hMarg, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + hMarg, topButtonHeight );
+    mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text())) /2 - 2*mMargin, (mTopWrapper->height() - mMargin -topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 4*mMargin, topButtonHeight );
+
 }
 
 void ModelView::createProject()
@@ -501,6 +509,7 @@ bool ModelView::findCalibrateMissing()
         progress->setCancelButton(0);
         progress->setMinimumDuration(4);
         progress->setMinimum(0);
+        progress->setMinimumWidth(20 * AppSettings::widthUnit());
 
         int position(0);
         for (auto && ev : events)
@@ -565,6 +574,7 @@ void ModelView::calibrateAll(ProjectSettings newS)
         progress->setCancelButton(0);
         progress->setMinimumDuration(4);
         progress->setMinimum(0);
+        progress->setMinimumWidth(20 * AppSettings::widthUnit());
 
         int position(0);
         for (auto && ev : events)
@@ -741,6 +751,23 @@ void ModelView::showProperties()
 
 }
 
+void ModelView::hideProperties()
+{
+   if (mCalibrationView && (mCalibrationView->geometry() == mLeftRect) ) {
+       mAnimationCalib->setTargetObject(mCalibrationView);
+       mAnimationCalib->setStartValue(mLeftRect);
+       mAnimationCalib->setEndValue(mLeftHiddenRect);
+       mAnimationCalib->start();
+    }
+   if (mEventPropertiesView && (mEventPropertiesView->geometry() == mRightRect) ) {
+       mAnimationHide->setTargetObject(mEventPropertiesView);
+       mAnimationHide->setStartValue(mRightRect);
+       mAnimationHide->setEndValue(mRightHiddenRect);
+       mAnimationHide->start();
+  }
+
+}
+
 /**
  * @brief ModelView::showMultiCalib is done to work with ModelView::showProperties()
  * Both manage button to keep only one of them checked or any of them
@@ -833,11 +860,7 @@ void ModelView::eventsAreSelected()
         mButMultiCalib->setDisabled(false);
         mButDeleteEvent->setDisabled(false);
 
-        /* useless
-        * mButProperties->setAutoExclusive(false);
-        * mButMultiCalib->setAutoExclusive(false);
-        */
-    }
+     }
     updateLayout();
     if (!mButMultiCalib->isChecked() && !mButProperties->isChecked())
         mPhasesScene->eventsSelected();
@@ -858,16 +881,10 @@ void ModelView::togglePropeties()
     mButMultiCalib->setDisabled(false);
     mButDeleteEvent->setDisabled(false);
 
-    /* useless
-     * mButProperties->setAutoExclusive(false);
-     * mButMultiCalib->setAutoExclusive(false);
-     */
-
-
-mButProperties->setChecked(true);
-mButProperties->update();
-  //  updateLayout();
-showProperties();
+    mButProperties->setChecked(true);
+    mButProperties->update();
+      //  updateLayout();
+    showProperties();
 
     /*
     mButProperties->click();
@@ -902,15 +919,15 @@ void ModelView::noEventSelected()
     */
 
     mButProperties->setDisabled(true);
+    mButProperties->setChecked(false);
+
     mButMultiCalib->setDisabled(true);
-
-   // if (mButProperties->isChecked())
-        mButProperties->setChecked(false);
-
-   // if (mButMultiCalib->isChecked())
-        mButMultiCalib->setChecked(false);
+    mButMultiCalib->setChecked(false);
 
     mButDeleteEvent->setDisabled(true);
+
+    mCalibrationView->hide();
+
     updateLayout();
 
     mPhasesScene->noHide();
@@ -946,7 +963,7 @@ void ModelView::slideRightPanel()
     else if (mButProperties->isChecked())
         target = mEventPropertiesView;
     
-    if ( target && (target != mCurrentRightWidget) ) {
+    if ( target && mCurrentRightWidget && (target != mCurrentRightWidget) ) {
         mCurrentRightWidget = target;
         target->raise();
         mAnimationShow->setTargetObject(target);
@@ -983,64 +1000,76 @@ void ModelView::paintEvent(QPaintEvent* e)
 // Layout
 void ModelView::applyAppSettings()
 {
-    mMargin = .5* AppSettings::widthUnit();
-    mToolbarH = 3 * AppSettings::heigthUnit();
-    mButtonWidth = AppSettings::mButtonWidth;
-    mHandlerW =  AppSettings::widthUnit();
+   // if (font() !=  AppSettings::font()) {
+        mMargin = .5* AppSettings::widthUnit();
+        mToolbarH = 3 * AppSettings::heigthUnit();
+        mButtonWidth = AppSettings::mButtonWidth;
+        mHandlerW =  AppSettings::widthUnit();
 
-    mTopWrapper->setFont(AppSettings::font());
-    mLeftWrapper->setFont(AppSettings::font());
-    mRightWrapper->setFont(AppSettings::font());
+        mTopWrapper->setFont(AppSettings::font());
+        mLeftWrapper->setFont(AppSettings::font());
+        mRightWrapper->setFont(AppSettings::font());
 
-    // ------
+        mRightPanelTitle->setFont(AppSettings::font());
+        mLeftPanelTitle->setFont(AppSettings::font());
+        // ------
 
-    mEventsScene->setFont(AppSettings::font());
-    mEventsView->setFont(AppSettings::font());
+        mEventsScene->setFont(AppSettings::font());
+       for (auto && item : mEventsScene->getItemsList()) {
+            static_cast<EventItem*>(item)->redrawEvent();
+            static_cast<EventItem*>(item)->update();
+        }
+        mEventsView->setFont(AppSettings::font());
 
-    mEventsGlobalView->setFont(AppSettings::font());
-    mEventsGlobalZoom->setFont(AppSettings::font());
 
-    mEventsSearchEdit->setFont(AppSettings::font());
+        mEventsGlobalView->setFont(AppSettings::font());
+        mEventsGlobalZoom->setFont(AppSettings::font());
 
-    mButNewEvent->setFont(AppSettings::font());
-    mButNewEventKnown->setFont(AppSettings::font());
-    mButDeleteEvent->setFont(AppSettings::font());
-    mButRecycleEvent->setFont(AppSettings::font());
-    mButExportEvents->setFont(AppSettings::font());
-    mButEventsOverview->setFont(AppSettings::font());
-    mButEventsGrid->setFont(AppSettings::font());
-    mButProperties->setFont(AppSettings::font());
-    mButMultiCalib->setFont(AppSettings::font());
-    mButImport->setFont(AppSettings::font());
+        mEventsSearchEdit->setFont(AppSettings::font());
 
-    // ------
+        mButNewEvent->setFont(AppSettings::font());
+        mButNewEventKnown->setFont(AppSettings::font());
+        mButDeleteEvent->setFont(AppSettings::font());
+        mButRecycleEvent->setFont(AppSettings::font());
+        mButExportEvents->setFont(AppSettings::font());
+        mButEventsOverview->setFont(AppSettings::font());
+        mButEventsGrid->setFont(AppSettings::font());
+        mButProperties->setFont(AppSettings::font());
+        mButMultiCalib->setFont(AppSettings::font());
+        mButImport->setFont(AppSettings::font());
 
-    mImportDataView->setFont(AppSettings::font());
-    mEventPropertiesView->applyAppSettings();
+        // ------
 
-    mPhasesScene->setFont(AppSettings::font());
-    mPhasesView->setFont(AppSettings::font());
+        mImportDataView->setFont(AppSettings::font());
+        mEventPropertiesView->applyAppSettings();
 
-    mPhasesGlobalView->setFont(AppSettings::font());
-    mPhasesGlobalZoom->setFont(AppSettings::font());
+        mPhasesScene->setFont(AppSettings::font());
+        for (AbstractItem* item : mPhasesScene->getItemsList()) {
+            static_cast<PhaseItem*>(item)->redrawPhase();
+            static_cast<PhaseItem*>(item)->update();
+        }
+        mPhasesView->setFont(AppSettings::font());
 
-    mButNewPhase->setFont(AppSettings::font());
-    mButDeletePhase->setFont(AppSettings::font());
-    mButExportPhases->setFont(AppSettings::font());
-    mButPhasesOverview->setFont(AppSettings::font());
-    mButPhasesGrid->setFont(AppSettings::font());
+        mPhasesGlobalView->setFont(AppSettings::font());
+        mPhasesGlobalZoom->setFont(AppSettings::font());
 
-    // ------
-    mCalibrationView->applyAppSettings();
-    mMultiCalibrationView->applyAppSettings();
+        mButNewPhase->setFont(AppSettings::font());
+        mButDeletePhase->setFont(AppSettings::font());
+        mButExportPhases->setFont(AppSettings::font());
+        mButPhasesOverview->setFont(AppSettings::font());
+        mButPhasesGrid->setFont(AppSettings::font());
 
-    mButModifyPeriod->setFont(AppSettings::font());
-    const int topButtonHeight = 1.6 * AppSettings::heigthUnit();
-    QFontMetrics fm (AppSettings::font());
-    mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text())) /2 -mMargin, (mTopWrapper->height() - mMargin)/2, fm.width(mButModifyPeriod->text()) + mMargin, topButtonHeight );
+        // ------
+        mCalibrationView->applyAppSettings();
+        mMultiCalibrationView->applyAppSettings();
 
-    mLeftPanelTitle->setFont(AppSettings::font());
-    mRightPanelTitle->setFont(AppSettings::font());
+        mButModifyPeriod->setFont(AppSettings::font());
+        adaptStudyPeriodButton(mTmin, mTmax);
+       /* const int topButtonHeight = 1.6 * AppSettings::heigthUnit();
+        QFontMetrics fm (AppSettings::font());
+       mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text())) /2 - 2*mMargin, (mTopWrapper->height() - mMargin -topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 4*mMargin, topButtonHeight );
+*/
+
 
     updateLayout();
 }
@@ -1084,8 +1113,7 @@ void ModelView::updateLayout()
 
     //------- Study Period
 
-    //mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text()) + 10) /2, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 5, topButtonHeight );
-    mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text())) /2 -15, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 15, topButtonHeight );
+     mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text())) /2 - 2*mMargin, (mTopWrapper->height() - mMargin -topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 4*mMargin, topButtonHeight );
 
     // coordinates in ModelView
 
@@ -1175,7 +1203,7 @@ void ModelView::updateLayout()
 // Zoom
 void ModelView::updateEventsZoom(const double prop)
 {
-    const qreal scale = prop;
+    const qreal scale = 2. * prop;
     QMatrix matrix;
     matrix.scale(scale, scale);
     mEventsView->setMatrix(matrix);
@@ -1184,7 +1212,7 @@ void ModelView::updateEventsZoom(const double prop)
 
 void ModelView::updatePhasesZoom(const double prop)
 {
-    const qreal scale = prop;
+    const qreal scale = 2. * prop;
     QMatrix matrix;
     matrix.scale(scale, scale);
     mPhasesView->setMatrix(matrix);

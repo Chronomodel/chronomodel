@@ -105,6 +105,7 @@ void CalibrationDrawing::updateLayout()
     const type_data max = mCalibGraph->maximumX();
     const int marginRight = (int) floor(fm.width(stringForGraph(max))/2);
 
+    mFont = AppSettings::font();
     QFont topFont(mFont);
     topFont.setBold(true);
     topFont.setPointSizeF(16.);
@@ -140,8 +141,11 @@ void CalibrationDrawing::updateLayout()
         mRefGraphView->setGeometry(0, mRefComment->y() + mRefComment->height() + mVerticalSpacer, width(), refH);
 
         if (mRefGraphView->mGraph) {
+            mRefGraphView->mGraph->setFont(mFont);
             mRefGraphView->mGraph->setMouseTracking(true);
             mRefGraphView->mGraph->setTipXLab("t Ref");
+            mRefGraphView->mGraph->setMarginBottom(2.2 * mFont.pointSize());//setMarginBottom(1.5 * fm.height());
+           // mRefGraphView->mGraph->setYAxisMode(GraphView::eHidden);
         }
 
         mCalibTitle->setGeometry(20,  mRefGraphView->y() + mRefGraphView->height() + mVerticalSpacer, fmTitle.width(mCalibTitle->text()), fmTitle.height());
@@ -151,8 +155,12 @@ void CalibrationDrawing::updateLayout()
 
     mCalibComment->setGeometry(30,  mCalibTitle->y() + mCalibTitle->height() + mVerticalSpacer, fmTitle.width(mCalibComment->text()), fm.height());
 
+    mCalibGraph->setFont(mFont);
     mCalibGraph->setGeometry(0, mCalibComment->y() + mCalibComment->height() + mVerticalSpacer, width(), calibH);
     mCalibGraph->setMarginRight(marginRight);
+    mCalibGraph->setMarginBottom(2.2 * mFont.pointSize());
+    mCalibGraph->setYAxisMode(GraphView::eMinMaxHidden);
+    mCalibGraph->autoAdjustYScale(true);
 
     if (mMouseOverCurve) {
         showMarker();

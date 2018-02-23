@@ -257,6 +257,7 @@ void EventsScene::createSceneFromState()
     QProgressDialog* progress = new QProgressDialog("Create event items","Wait" , 1, eventsInState.size());//,qApp->activeWindow(), Qt::Window);
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(0);
+    progress->setMinimumWidth(40 * AppSettings::widthUnit());
 
     mSettings = ProjectSettings::fromJson(settings);
 
@@ -356,6 +357,7 @@ void EventsScene::updateSceneFromState()
         progress = new QProgressDialog("Create / Update event items","Wait" , 1, eventsInNewState.size());//,qApp->activeWindow(), Qt::Window);
         progress->setWindowModality(Qt::WindowModal);
         progress->setCancelButton(nullptr);
+        progress->setMinimumWidth(20 * AppSettings::widthUnit());
     }
 
     QList<int> events_ids_inNewState;
@@ -670,7 +672,7 @@ void EventsScene::updateStateSelectionFromItem()
          }
 
         if (modified ) {
-           sendUpdateProject(tr("events selection : no undo, no view update!"), true, false);//  bool notify = true, bool storeUndoCommand = false
+           sendUpdateProject(tr("events selection : no undo, no view update!"), false, false);//  bool notify = true, bool storeUndoCommand = false
             // refresh the show and hide Event in the phases Scenes
            if (nbOfSelectedEvent == 0)
                 emit noSelection();

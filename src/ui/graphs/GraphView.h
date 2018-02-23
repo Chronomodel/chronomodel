@@ -223,6 +223,8 @@ protected:
     QList<GraphZone> mZones;
 
     QPainter mPrevPainter;
+
+    qreal mBottomSpacer;
     
 public:
     QString mLegendX;

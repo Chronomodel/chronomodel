@@ -26,7 +26,7 @@ mXAxisTicks(true),
 mXAxisSubTicks(true),
 mXAxisValues(true),
 mYAxisLine(true),
-mYAxisArrow(true),
+mYAxisArrow(false),
 mYAxisTicks(true),
 mYAxisSubTicks(true),
 mYAxisValues(true),
@@ -363,11 +363,14 @@ void GraphView::setYAxisMode(AxisMode mode)
             showYAxisValues(false);
             showYAxisTicks(false);
             showYAxisSubTicks(false);
+            mYAxisArrow = false;
 
-        } else {
+        } else { // eMainTicksOnly = 3,       eAllTicks = 4
             showYAxisValues(true);
             showYAxisTicks(true);
             showYAxisSubTicks(true);
+            mYAxisArrow = false;
+            mAxisToolY.mShowText = false;
         }
      //   repaintGraph(true); //not necessary ?
     }
@@ -675,8 +678,9 @@ void GraphView::resizeEvent(QResizeEvent* event)
 
 void GraphView::updateGraphSize(int w, int h)
 {
+    mBottomSpacer = 0.04 * h;
     mGraphWidth = w - mMarginLeft - mMarginRight;
-    mGraphHeight = h - mMarginTop - mMarginBottom;
+    mGraphHeight = h - mMarginTop - mMarginBottom - mBottomSpacer;
     mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
     mAxisToolY.updateValues(mGraphHeight, 12, mMinY, mMaxY);
 }
@@ -916,11 +920,11 @@ void GraphView::paintToDevice(QPaintDevice* device)
       QPen pen = QPen(Qt::black, 1);
       pen.setWidth(pen.width() * mThickness);
       p.setPen(pen);
-    if (!mLegendX.isEmpty() && mXAxisValues) {
-        QRectF tr(mMarginLeft, mGraphHeight + mMarginTop - mMarginBottom, mGraphWidth, mMarginBottom);
-        p.setPen(Qt::black);
-        p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, mLegendX);
-    }
+     if (!mLegendX.isEmpty() && mXAxisValues) {
+          QRectF tr(mMarginLeft, mGraphHeight + mMarginTop - mMarginBottom, mGraphWidth, mMarginBottom);
+          p.setPen(Qt::black);
+          p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, mLegendX);
+     }
     
     mAxisToolX.mShowArrow = mXAxisArrow;
     mAxisToolX.mShowSubs = mXAxisTicks;
@@ -928,7 +932,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolX.mShowText = mXAxisValues;
 
     mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
-    mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight + 1, mGraphWidth , mMarginBottom), -1.,mUnitFunctionX);
+    mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight , mGraphWidth , mMarginBottom), -1.,mUnitFunctionX);
 
     /* ----------------------------------------------------
      *  Vertical axis
@@ -937,10 +941,9 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolY.mShowArrow = mYAxisArrow;
         mAxisToolY.mShowSubs = mYAxisTicks;
         mAxisToolY.mShowSubSubs = mYAxisSubTicks;
-      //  mAxisToolY.mShowText = mYAxisValues;
+
     if (mAutoAdjustYScale && mYAxisMode != eHidden && mShowInfos) {
-       // const QString minMaxText = "Min = " + stringForLocal(mMinY) + " ; Max = " + stringForLocal(mMaxY);
-         const QString minMaxText =QString(tr( "Min = %1 ; Max = %2")).arg(stringForLocal(mMinY), stringForLocal(mMaxY));
+          const QString minMaxText =QString(tr( "Min = %1  /  Max = %2")).arg(stringForLocal(mMinY), stringForLocal(mMaxY));
         mInfos.clear();
         mInfos.append(minMaxText);
     }
@@ -956,7 +959,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
         p.setFont(font);
         p.setPen(Painting::borderDark);
         int y (0);
-        int lineH (fm.height()*1.0);
+        int lineH (fm.height());
         for (auto && info : mInfos) {
             p.drawText(1.2 * mMarginLeft, mMarginTop  + y, mGraphWidth - 1.2*mMarginLeft -mMarginRight, lineH, Qt::AlignLeft | Qt::AlignBottom, info);
             y += lineH;
@@ -1499,7 +1502,7 @@ bool GraphView::saveAsSVG(const QString& fileName, const QString& graphTitle, co
 }
 QString GraphView::getInfo(char sep)
 { 
-    return ( isShow() ? mInfos.join(sep) : "");
+    return mInfos.join(sep);// ( isShow() ? mInfos.join(sep) : "");
 }
 
 bool GraphView::isShow()

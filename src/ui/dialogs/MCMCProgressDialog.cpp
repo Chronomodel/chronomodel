@@ -1,5 +1,6 @@
 #include "MCMCProgressDialog.h"
 #include "MCMCLoopMain.h"
+#include "AppSettings.h"
 #include <QtWidgets>
 
 
@@ -9,7 +10,7 @@ mLoop(loop)
     setWindowTitle(tr("MCMC in progress..."));
     
     // -----------
-    
+    setFont(AppSettings::font());
     mLabel1 = new QLabel(this);
     mLabel2 = new QLabel(this);
     
@@ -17,9 +18,6 @@ mLoop(loop)
     mProgressBar1->setMinimum(0);
     mProgressBar1->setMaximum(0);
     
-    /*mProgressBar2 = new QProgressBar(this);
-    mProgressBar2->setMinimum(0);
-    mProgressBar2->setMaximum(0);*/
     
     // ----------
     
@@ -34,7 +32,7 @@ mLoop(loop)
     layout->addWidget(buttonBox);
     setLayout(layout);
     
-    setMinimumWidth(700);
+    setMinimumWidth(30 * AppSettings::widthUnit());
     
     // -----------
     

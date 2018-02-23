@@ -1206,7 +1206,7 @@ void Model::generateCredibility(const double thresh)
     progress->setMinimumDuration(1);
     progress->setMinimum(0);
     progress->setMaximum(mPhases.size()*4);
-    progress->setMinimumWidth(300);
+    progress->setMinimumWidth(20 * AppSettings::widthUnit());
 
     int position(0);
 
@@ -1239,7 +1239,7 @@ void Model::generateCredibility(const double thresh)
     progressGap->setMaximum(mPhases.size()*4);
     progressGap->setMinimum(0);
     progressGap->setMaximum(mPhaseConstraints.size()*2);
-    progressGap->setMinimumWidth(300);
+    progressGap->setMinimumWidth(20 * AppSettings::widthUnit());
 
     position = 0;
     for (auto && phaseConstraint : mPhaseConstraints) {
@@ -1333,6 +1333,7 @@ void Model::generateTempo()
     progress->setMinimumDuration(0);
     progress->setMinimum(0);
     progress->setMaximum(mPhases.size() * 4);
+    progress->setMinimumWidth(20 * AppSettings::widthUnit());
     progress->show();
     int position(0);
 #endif
