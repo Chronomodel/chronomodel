@@ -3164,17 +3164,17 @@ void ResultsView::setGraphFont(const QFont &font)
                         // const int marg = qMax(gfm.width(stringForLocal(mResultCurrentMinX))/ 2, gfm.width(stringForGraph(100)));
 
                         const int maxIter = 1+ mChains.at(0).mNumBurnIter + (mChains.at(0).mBatchIndex * mChains.at(0).mNumBatchIter) + mChains.at(0).mNumRunIter / mChains.at(0).mThinningInterval;
-                         const int marg = gfm.width(stringForLocal(maxIter));
-                        mMarginLeft =  1.7 * marg ;
-                        mMarginRight = 1.5 *marg;// gfm.width(stringForLocal(mSettings:))/ 2;
+                        const int marg = gfm.width(stringForLocal(maxIter));
+                        mMarginLeft =  marg ;
+                        mMarginRight = marg;// gfm.width(stringForLocal(mSettings:))/ 2;
                     }
         break;
 
          case 3:// Autocorrelation
                     {
-                        const int marg = qMax(gfm.width(stringForLocal(40))/ 2, gfm.width(stringForGraph(100)));
-                        mMarginLeft = 1.7 * marg ;
-                         mMarginRight = 4 * gfm.width(stringForLocal(40))/ 2.;
+                       const int marg = qMax(gfm.width(stringForLocal(40))/ 2, gfm.width(stringForGraph(100)));
+                       mMarginLeft = 1.7 * marg ;
+                       mMarginRight = 4 * gfm.width(stringForLocal(40))/ 2.;
                 }
         break;
 

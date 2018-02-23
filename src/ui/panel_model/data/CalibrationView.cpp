@@ -222,8 +222,8 @@ void CalibrationView::setDate(const QJsonObject& date)
         }
 
         // setText doesn't emit signal textEdited, when the text is changed programmatically
-        mStartEdit->setText(stringForLocal(mTminDisplay, false));
-        mEndEdit->setText(stringForLocal(mTmaxDisplay, false));
+        mStartEdit->setText(stringForGraph(mTminDisplay));
+        mEndEdit->setText(stringForGraph(mTmaxDisplay));
 
         if (std::isinf(-mTminDisplay) || std::isinf(mTmaxDisplay))
             throw(tr("CalibrationView::setDate ")+mDate.mPlugin->getName() + mDate.mCalibration->mName + mDate.mCalibration->mTmin + mDate.mCalibration->mTmax);
@@ -624,7 +624,7 @@ void CalibrationView::updateLayout()
 
     mMajorScaleLab->setGeometry(0, y, mButtonWidth, textHeight);
     y += mMajorScaleLab->height();
-    mMajorScaleEdit->setGeometry(3, y, mButtonWidth-6, textHeight);
+    mMajorScaleEdit->setGeometry(margin, y, mButtonWidth- 2*margin, textHeight);
     y += mMajorScaleEdit->height() + verticalSpacer;
 
     mMinorScaleLab->setGeometry(0, y, mButtonWidth, textHeight);

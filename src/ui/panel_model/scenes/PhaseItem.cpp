@@ -253,8 +253,9 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
                   rect.y() + mBorderWidth + mEltsMargin,
                   rect.width() - 2*mBorderWidth ,
                   mTitleHeight);
-
+        font.setPointSizeF(10.);
         painter->setFont(font);
+
         QString name = mData.value(STATE_NAME).toString();
         name = fm.elidedText(name, Qt::ElideRight, tr.width());
         painter->setPen(fontColor);

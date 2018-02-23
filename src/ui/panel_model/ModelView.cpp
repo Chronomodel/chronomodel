@@ -1001,10 +1001,10 @@ void ModelView::paintEvent(QPaintEvent* e)
 void ModelView::applyAppSettings()
 {
    // if (font() !=  AppSettings::font()) {
-        mMargin = .5* AppSettings::widthUnit();
+        mMargin = AppSettings::widthUnit();
         mToolbarH = 3 * AppSettings::heigthUnit();
         mButtonWidth = AppSettings::mButtonWidth;
-        mHandlerW =  AppSettings::widthUnit();
+        mHandlerW = 1.5 * AppSettings::widthUnit();
 
         mTopWrapper->setFont(AppSettings::font());
         mLeftWrapper->setFont(AppSettings::font());

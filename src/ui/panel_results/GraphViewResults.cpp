@@ -336,7 +336,7 @@ void GraphViewResults::updateLayout()
     QRect graphRect(0, mTopShift, width(), height() - mTopShift);
 
     if (mShowNumResults) {
-        mGraph->setGeometry(graphRect.adjusted(0, 0, -width()/3., 0 ));
+        mGraph->setGeometry(graphRect.adjusted(0, 0, -width()/3. -1, 0 ));
         mTextArea->setGeometry(graphRect.adjusted(width()*2./3. + 2., -mTopShift + 2 , -2, -2));
 
     } else

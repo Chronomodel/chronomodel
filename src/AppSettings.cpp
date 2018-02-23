@@ -186,7 +186,7 @@ AppSettings::~AppSettings()
      const QString txt1 = " HPD (%) ";
      const QString txt2 = " Min. Cnt ";
      const int lgTxt = qMax(fm.width(txt1), fm.width(txt2) );
-     AppSettings::mWidthUnit  =  fm.averageCharWidth() + fm.minRightBearing(); // for ResultsView
+     AppSettings::mWidthUnit  =  fm.averageCharWidth();// + fm.minRightBearing());//, 5); // for ResultsView
      AppSettings::mButtonWidth = lgTxt;//fm.rightBearing('f') + fm.width(txt) + fm.leftBearing('f');
      AppSettings::mHeigthUnit = fm.height();
      AppSettings::mFontDescent = fm.descent();

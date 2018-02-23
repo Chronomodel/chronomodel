@@ -753,7 +753,7 @@ void EventsScene::adaptItemsForZoom(const double prop)
     for (int i=0; i<mItems.size(); ++i) {
         EventItem* item = dynamic_cast<EventItem*>(mItems[i]);
         if (item)
-                item->setDatesVisible(mZoom > 0.6);
+                item->setDatesVisible(mZoom > 0.3);
     }
 }
 
