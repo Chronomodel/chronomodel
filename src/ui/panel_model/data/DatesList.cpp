@@ -24,6 +24,7 @@ mUpdatingSelection(false)
     connect(this, &DatesList::itemClicked, this, &DatesList::handleItemClicked);
     connect(this, &DatesList::itemDoubleClicked, this, &DatesList::handleItemDoubleClicked);
     connect(this, &DatesList::itemSelectionChanged, this, &DatesList::forceAtLeastOneSelected);
+    connect(this, &DatesList::itemSelectionChanged, this, &DatesList::handleItemIsChanged);
 }
 
 DatesList::~DatesList()
@@ -96,6 +97,19 @@ void DatesList::handleItemClicked(QListWidgetItem* item)
         QJsonObject date = dates[index].toObject();
         emit indexChange(index);
         emit calibRequested(date);
+    }
+}
+
+void DatesList::handleItemIsChanged()
+{
+    QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+    for (int i (0); i <dates.size(); ++i ) {
+        if (item(i)->isSelected() ) {
+            QJsonObject date = dates[i].toObject();
+            emit indexChange(i);
+            emit calibRequested(date);
+            break;
+        }
 
     }
 }
@@ -153,9 +167,12 @@ void DatesList::forceAtLeastOneSelected()
 
     } else {
         mUpdatingSelection = true;
-        for (auto && it:mSelectedItems)
+        for (auto && it:mSelectedItems) {
             it->setSelected(true);
 
+        }
         mUpdatingSelection = false;
+
     }
+
 }

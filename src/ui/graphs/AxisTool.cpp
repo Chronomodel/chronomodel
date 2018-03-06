@@ -91,9 +91,14 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
     p.setRenderHints(QPainter::Antialiasing);
 
     QFontMetrics fm (p.font());
-    int heightText = fm.height();
 
-    if (graduationSize = -1)
+#ifdef Q_OS_MAC
+    int heightText = 1.5 * fm.height();
+#else
+    int heightText = fm.height();
+#endif
+
+    if (graduationSize == -1)
         graduationSize = heightText /3;
 
     qreal xo = r.x();

@@ -338,7 +338,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
     if (numPhases == 0) {
         QFont font = AppSettings::font();// qApp->font();
-        font.setPointSizeF(11.);
+        font.setPointSizeF(10.);
         painter->setFont(font);
         painter->fillRect(phasesRect, QColor(0, 0, 0, 180));
         painter->setPen(QColor(200, 200, 200));
@@ -369,7 +369,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
               mTitleHeight);
     
     QFont font = AppSettings::font();
-    font.setPointSizeF(10.);
+    font.setPointSizeF(12.);
     painter->setFont(font);
     QFontMetrics metrics(font);
     QString name = mData.value(STATE_NAME).toString();

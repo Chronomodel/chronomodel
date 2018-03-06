@@ -21,7 +21,7 @@ public:
 protected slots:
     void handleItemClicked(QListWidgetItem* item);
     void handleItemDoubleClicked(QListWidgetItem* item);
-    
+    void handleItemIsChanged();
     void forceAtLeastOneSelected();
     
 signals:

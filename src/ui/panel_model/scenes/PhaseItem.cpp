@@ -15,7 +15,7 @@ mControlsVisible(false),
 mControlsEnabled(false),
 mAtLeastOneEventSelected(false)
 {
-    mBorderWidth = 10;
+    mBorderWidth = 7;
     mEltsHeight = 15;
     setPhase(phase);
     inPix = new QPixmap(":insert_event.png");
@@ -49,8 +49,9 @@ void PhaseItem::setPhase(const QJsonObject& phase)
     
     const QJsonArray events = getEvents();
     if (events.size() > 0)
-        h += events.size() * (mEltsHeight + mEltsMargin) - mEltsMargin;
-    
+        h += events.size() * (mEltsHeight + mEltsMargin);// - mEltsMargin;
+
+
     const QString tauStr = getTauString();
     if (!tauStr.isEmpty())
         h += mEltsMargin + mEltsHeight;
@@ -146,14 +147,14 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->setRenderHints(painter->renderHints() | QPainter::SmoothPixmapTransform | QPainter::Antialiasing );
     
     QRectF rect = boundingRect();
-    int rounded (15);
+    int rounded (10);
     
     const QColor phaseColor = QColor(mData.value(STATE_COLOR_RED).toInt(),
                                mData.value(STATE_COLOR_GREEN).toInt(),
                                mData.value(STATE_COLOR_BLUE).toInt());
     const QColor fontColor = getContrastedColor(phaseColor);
     QFont font = AppSettings::font();
-    font.setPointSizeF(11.);
+    font.setPointSizeF(10.);
     QFontMetrics fm (font);
 
     // Draw then container
@@ -173,6 +174,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
     const bool showAlldata = mScene->showAllThumbs();
     mAtLeastOneEventSelected = false;
+    painter->setFont(font);
     for (int i=0; i<events.size(); ++i) {
 
         const QJsonObject event = events.at(i).toObject();
@@ -248,12 +250,12 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         }
 
     } else {
-        // Name
+        // Phase Name
         const QRectF tr(rect.x() + mBorderWidth ,
-                  rect.y() + mBorderWidth + mEltsMargin,
+                  rect.y() + mBorderWidth + mEltsMargin - mEltsMargin,
                   rect.width() - 2*mBorderWidth ,
                   mTitleHeight);
-        font.setPointSizeF(10.);
+        font.setPointSizeF(12.);
         painter->setFont(font);
 
         QString name = mData.value(STATE_NAME).toString();
@@ -270,7 +272,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     const QString tauStr = getTauString();
     if (!tauStr.isEmpty()) {
         const QRectF tpr(rect.x() + mBorderWidth + mEltsMargin,
-                   rect.y() + rect.height() - mBorderWidth - mEltsMargin - mEltsHeight,
+                   rect.y() + rect.height() - mBorderWidth - mEltsHeight - mEltsMargin,
                    rect.width() - 2*mBorderWidth - 2*mEltsMargin,
                    mEltsHeight);
         

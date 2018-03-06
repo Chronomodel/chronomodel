@@ -230,7 +230,7 @@ void Ruler::setFormatFunctX(DateConversion f)
 
 void Ruler::updateLayout()
 {
-    mAxisRect = QRectF(mMarginLeft + 1, mMarginTop + mScrollBarHeight, width() - mMarginLeft - mMarginRight , mMarginBottom + font().pointSizeF());
+    mAxisRect = QRectF(mMarginLeft + 1, mMarginTop + mScrollBarHeight, width() - mMarginLeft - mMarginRight , mMarginBottom);// + font().pointSizeF());
 
     mScrollBar->setGeometry(mMarginLeft , 0., mAxisRect.width()  , mScrollBarHeight);
 

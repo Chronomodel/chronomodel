@@ -155,7 +155,7 @@ mMinorCountScale (4)
     mTempoGroup = new QWidget(this);
 
     mDurationRadio = new RadioButton(tr("Phases Duration"), mTempoGroup);
-       mDurationRadio->setChecked(true);
+    mDurationRadio->setChecked(true);
 
     mTempoRadio = new RadioButton(tr("Phases Tempo"), mTempoGroup);
 
@@ -220,7 +220,7 @@ mMinorCountScale (4)
     //mSpanGroup->setFont(ft);
 
     mSpanTitle = new Label(tr("Span Options"), mTabDisplay);
-     mSpanTitle->setIsTitle(true);
+    mSpanTitle->setIsTitle(true);
 
 
     mDisplayStudyBut = new Button(tr("Study Period Display"), mSpanGroup);
@@ -588,210 +588,215 @@ void ResultsView::resizeEvent(QResizeEvent* e)
 }
 void ResultsView::applyAppSettings()
 {
-  //  if (AppSettings::font() != font()) {
-        const QFont ft (AppSettings::font());
-        const QFontMetricsF fm(ft);
-        setFont(ft);
-        titleHeight = 1.5 * AppSettings::heigthUnit();
-        labelHeight = AppSettings::heigthUnit();
-        lineEditHeight = AppSettings::heigthUnit();
-        checkBoxHeight  = 1.1 * AppSettings::heigthUnit();
-        comboBoxHeight  = 1.1 * AppSettings::heigthUnit();
-        radioButtonHeight = 1.1 *AppSettings::heigthUnit();
-        spinBoxHeight  =1.4 * AppSettings::heigthUnit();
-        buttonHeight  = 1.5 * AppSettings::heigthUnit();
+    const QFont ft (AppSettings::font());
+    const QFontMetricsF fm(ft);
+    setFont(ft);
+    titleHeight = 1.5 * AppSettings::heigthUnit();
+    labelHeight = AppSettings::heigthUnit();
+    lineEditHeight = AppSettings::heigthUnit();
+    checkBoxHeight  = 1.1 * AppSettings::heigthUnit();
 
-        mMargin = .5* AppSettings::heigthUnit();
+    radioButtonHeight = 1.1 *AppSettings::heigthUnit();
+    spinBoxHeight  =1.4 * AppSettings::heigthUnit();
+    buttonHeight  = 1.5 * AppSettings::heigthUnit();
 
-         mTabs->setFont(ft);
-         mRuler->setFont(ft);
-         mRuler->setMarginBottom( 1.2 * AppSettings::heigthUnit() );
-         mRulerH = mRuler->height();
+#ifdef Q_OS_MAC
+    comboBoxHeight  = 1.3 * AppSettings::heigthUnit();
+#else
+    comboBoxHeight  = 1.1 * AppSettings::heigthUnit();
+#endif
 
-        mTabsH = 2 * fm.height();
-        mGraphHeight = 20 * AppSettings::heigthUnit();
+    mMargin = .5* AppSettings::heigthUnit();
 
-        mOptionsW = ( fm.width(tr("Nb Densities / Sheet ")) + 2 * mMargin) *3 / 2;
+    mTabs->setFont(ft);
+    mRuler->setFont(ft);
+    mRuler->setMarginBottom( ft.pointSize() * 2.2);//1.2 * AppSettings::heigthUnit() );
+    mRulerH = mRuler->height();
 
-        const int wEdit = (int)ceil((mOptionsW - 4 * mMargin)/3.);
-        const QSize allDensitiesButSize (mOptionsW/2, mOptionsW/4);
-        const QSize singleDensityButSize (mOptionsW/4, mOptionsW/4);
+    mTabsH = 2 * fm.height();
+    mGraphHeight = 20 * AppSettings::heigthUnit();
 
+    mOptionsW = ( fm.width(tr("Nb Densities / Sheet ")) + 2 * mMargin) *3 / 2;
 
-        mOptionsWidget->setFixedWidth(mOptionsW);
-
-        mOptionsWidget->setFont(ft);
-
-        mPageWidget->resize(mOptionsW, mRulerH);
-         /* -------------------------------------- mResultsGroup---------------------------------------------------*/
-        mResultsGroup->setFont(ft);
-
-        mEventsfoldCheck->setFont(ft);
-        mDatesfoldCheck->setFont(ft);
-        mDataThetaRadio->setFont(ft);
-        mDataSigmaRadio->setFont(ft);
-        mDataCalibCheck->setFont(ft);
-        mWiggleCheck->setFont(ft);
-        mStatCheck->setFont(ft);
-
-        mEventsfoldCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
-        mDatesfoldCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
-        mDataThetaRadio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
-        mDataSigmaRadio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
-        mDataCalibCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
-        mWiggleCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
-        mStatCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
-
-         // ______ TempoGroup
-        mDurationRadio->setFont(ft);
-        mTempoRadio->setFont(ft);
-        mActivityRadio->setFont(ft);
-        mTempoStatCheck->setFont(ft);
-        mTempoCredCheck->setFont(ft);
-        mTempoErrCheck->setFont(ft);
-
-        mDurationRadio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
-        mTempoRadio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
-        mActivityRadio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
-        mTempoStatCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
-        mTempoCredCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
-        mTempoErrCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
-
-         // -------------end TempoGroup
-         mTabByScene->setFont(ft);
-        mTabByScene->setFixedWidth(mOptionsW);
-
-         /* - mTabDisplayMCMC */
-        mTabDisplayMCMC->setFont(ft);
-        mTabDisplay->setFont(ft);
-        mTabMCMC->setFont(ft);
-
-         /*  Display Options layout */
-        mSpanGroup->setFont(ft);
-        mSpanTitle->setFont(ft);
-        mDisplayStudyBut->setFont(ft);
-        mSpanLab->setFont(ft);
-        mCurrentXMinEdit->setFont(ft);
-        mCurrentXMaxEdit->setFont(ft);
-        mXScaleLab->setFont(ft);
-        mXScaleSpin->setFont(ft);
-        mMajorScaleLab->setFont(ft);
-        mMajorScaleEdit->setFont(ft);
-        mMinorScaleLab->setFont(ft);
-        mMinorScaleEdit->setFont(ft);
-
-        mSpanTitle->setFixedSize(mOptionsW, titleHeight);
-        mDisplayStudyBut->setFixedSize(mOptionsW - 2*mMargin, buttonHeight);
-        mSpanLab->setFixedSize(fm.width(mSpanLab->text()), labelHeight);
-        mCurrentXMinEdit->setFixedSize(wEdit, lineEditHeight);
-        mCurrentXMaxEdit->setFixedSize(wEdit, lineEditHeight);
-        mXScaleLab->setFixedWidth(fm.width(mXScaleLab->text()));
-        mXScaleSpin->setFixedSize(mCurrentXMinEdit->width(), spinBoxHeight);
-        mMajorScaleLab->setFixedSize(fm.width(mMajorScaleLab->text()), labelHeight);
-        mMajorScaleEdit->setFixedSize(wEdit, lineEditHeight);
-        mMinorScaleLab->setFixedSize(fm.width(mMinorScaleLab->text()), labelHeight);
-        mMinorScaleEdit->setFixedSize(wEdit, lineEditHeight);
-
-        /* -------------------------------------- Graphic Options (old mDisplayGroup) ---------------------------------------------------*/
-        mGraphicTitle->setFont(ft);
-        mYScaleLab->setFont(ft);
-        mYScaleSpin->setFont(ft);
-        labFont->setFont(ft);
-        mFontBut->setFont(ft);
-        labThickness->setFont(ft);
-        mThicknessCombo->setFont(ft);
-        labOpacity->setFont(ft);
-        mOpacityCombo->setFont(ft);
-
-        mGraphicTitle->setFixedSize(mOptionsW, titleHeight);
-        mYScaleLab->setFixedSize(fm.width(mYScaleLab->text()), labelHeight);
-        mYScaleSpin->setFixedSize(mCurrentXMinEdit->width(), spinBoxHeight);
-        labFont->setFixedSize(fm.width(labFont->text()), labelHeight);
-        mFontBut->setFixedSize(mOptionsW/2 - mMargin, buttonHeight);
-        labThickness->setFixedSize(fm.width(labThickness->text()), comboBoxHeight);
-        mThicknessCombo->setFixedSize(wEdit, comboBoxHeight );
-        labOpacity->setFixedSize(fm.width(labOpacity->text()), comboBoxHeight);
-        mOpacityCombo->setFixedSize(wEdit, comboBoxHeight);
-
-         /* -------------------------------------- mChainsGroup---------------------------------------------------*/
-        mChainsTitle->setFont(ft);
-        mAllChainsCheck->setFont(ft);
-        mAllChainsCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
-
-        if (!mCheckChainChecks.isEmpty())
-            for (auto check : mCheckChainChecks)
-                check->setFont(ft);
-
-        if (!mChainRadios .isEmpty())
-            for (auto radio : mChainRadios)
-                radio->setFont(ft);
-
-        mChainsTitle->setFixedSize(mOptionsW, titleHeight);
-        mAllChainsCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
-
-        if (mCheckChainChecks.isEmpty())
-               for (auto check : mCheckChainChecks)
-                    check->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
-
-        if (mChainRadios.isEmpty())
-               for (auto radio : mChainRadios)
-                    radio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
+    const int wEdit = (int)ceil((mOptionsW - 4 * mMargin)/3.);
+    const QSize allDensitiesButSize (mOptionsW/2, mOptionsW/4);
+    const QSize singleDensityButSize (mOptionsW/4, mOptionsW/4);
 
 
-         /* -------------------------------------- mDensityOptsGroup ---------------------------------------------------*/
-        mDensityOptsTitle->setFont(ft);
-        mDensityOptsGroup->setFont(ft);
-        mCredibilityCheck->setFont(ft);
-        mThreshLab->setFont(ft);
-        mHPDEdit->setFont(ft);
-        mFFTLenLab->setFont(ft);
-        mFFTLenCombo->setFont(ft);
-        mBandwidthLab->setFont(ft);
-        mBandwidthEdit->setFont(ft);
+    mOptionsWidget->setFixedWidth(mOptionsW);
 
-        mDensityOptsTitle->setFixedSize(mOptionsW, titleHeight);
-        mCredibilityCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
-        mThreshLab->setFixedSize( fm.width(mThreshLab->text()), lineEditHeight);
-        mHPDEdit->setFixedSize(wEdit, lineEditHeight);
-        mFFTLenLab->setFixedSize(fm.width(mFFTLenLab->text()), comboBoxHeight);
-        mFFTLenCombo->setFixedSize(wEdit, comboBoxHeight);
-        mBandwidthLab->setFixedSize(fm.width(mBandwidthLab->text()), lineEditHeight);
-        mBandwidthEdit->setFixedSize(wEdit, lineEditHeight);
+    mOptionsWidget->setFont(ft);
 
-         /* --------------------------------------Tools for all graph -------------------------------------- */
-        mToolsWidget->setFont(ft);
-        mExportImgBut->setFont(ft);
-        mExportResults->setFont(ft);
-        mImageSaveBut->setFont(ft);
-        mImageClipBut->setFont(ft);
-        mResultsClipBut->setFont(ft);
-        mDataSaveBut->setFont(ft);
+    mPageWidget->resize(mOptionsW, mRulerH);
+     /* -------------------------------------- mResultsGroup---------------------------------------------------*/
+    mResultsGroup->setFont(ft);
 
-        mToolsWidget->resize(mOptionsW, 50);
-        mExportImgBut->setFixedSize(allDensitiesButSize);
-        mExportResults->setFixedSize(allDensitiesButSize);
-        mImageSaveBut->setFixedSize(singleDensityButSize);
-        mImageClipBut->setFixedSize(singleDensityButSize);
-        mResultsClipBut->setFixedSize(singleDensityButSize);
-        mDataSaveBut->setFixedSize(singleDensityButSize);
+    mEventsfoldCheck->setFont(ft);
+    mDatesfoldCheck->setFont(ft);
+    mDataThetaRadio->setFont(ft);
+    mDataSigmaRadio->setFont(ft);
+    mDataCalibCheck->setFont(ft);
+    mWiggleCheck->setFont(ft);
+    mStatCheck->setFont(ft);
 
-        /* -------------------------------------- Page widget -------------------------------------- */
-        mPageWidget->setFont(ft);
-        mSheetNum->setFont(ft);
-        mPreviousSheetBut->setFont(ft);
-        mNextSheetBut->setFont(ft);
-        mNbDensityLab->setFont(ft);
-        mNbDensitySpin->setFont(ft);
-        mTabPageSaving->setFont(ft);
+    mEventsfoldCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
+    mDatesfoldCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
+    mDataThetaRadio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
+    mDataSigmaRadio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
+    mDataCalibCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
+    mWiggleCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
+    mStatCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
 
-        mPageWidget->resize(mOptionsW, mRulerH);
-        mSheetNum->setFixedSize(fm.width("__ /__"), buttonHeight);
-        mPreviousSheetBut->setFixedSize((mOptionsW- mSheetNum->width())/2, buttonHeight);
-        mNextSheetBut->setFixedSize((mOptionsW - mSheetNum->width())/2, buttonHeight);
-        mNbDensityLab->setFixedSize(fm.width(mNbDensityLab->text()), spinBoxHeight);
-        mNbDensitySpin->setFixedSize(mCurrentXMinEdit->width(), spinBoxHeight);
-        mTabPageSaving->setFixedWidth(mOptionsW);
-//    }
+     // ______ TempoGroup
+    mDurationRadio->setFont(ft);
+    mTempoRadio->setFont(ft);
+    mActivityRadio->setFont(ft);
+    mTempoStatCheck->setFont(ft);
+    mTempoCredCheck->setFont(ft);
+    mTempoErrCheck->setFont(ft);
+
+    mDurationRadio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
+    mTempoRadio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
+    mActivityRadio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
+    mTempoStatCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
+    mTempoCredCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
+    mTempoErrCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
+
+     // -------------end TempoGroup
+     mTabByScene->setFont(ft);
+    mTabByScene->setFixedWidth(mOptionsW);
+
+     /* - mTabDisplayMCMC */
+    mTabDisplayMCMC->setFont(ft);
+    mTabDisplay->setFont(ft);
+    mTabMCMC->setFont(ft);
+
+     /*  Display Options layout */
+    mSpanGroup->setFont(ft);
+    mSpanTitle->setFont(ft);
+    mDisplayStudyBut->setFont(ft);
+    mSpanLab->setFont(ft);
+    mCurrentXMinEdit->setFont(ft);
+    mCurrentXMaxEdit->setFont(ft);
+    mXScaleLab->setFont(ft);
+    mXScaleSpin->setFont(ft);
+    mMajorScaleLab->setFont(ft);
+    mMajorScaleEdit->setFont(ft);
+    mMinorScaleLab->setFont(ft);
+    mMinorScaleEdit->setFont(ft);
+
+    mSpanTitle->setFixedSize(mOptionsW, titleHeight);
+    mDisplayStudyBut->setFixedSize(mOptionsW - 2*mMargin, buttonHeight);
+    mSpanLab->setFixedSize(fm.width(mSpanLab->text()), labelHeight);
+    mCurrentXMinEdit->setFixedSize(wEdit, lineEditHeight);
+    mCurrentXMaxEdit->setFixedSize(wEdit, lineEditHeight);
+    mXScaleLab->setFixedWidth(fm.width(mXScaleLab->text()));
+    mXScaleSpin->setFixedSize(mCurrentXMinEdit->width(), spinBoxHeight);
+    mMajorScaleLab->setFixedSize(fm.width(mMajorScaleLab->text()), labelHeight);
+    mMajorScaleEdit->setFixedSize(wEdit, lineEditHeight);
+    mMinorScaleLab->setFixedSize(fm.width(mMinorScaleLab->text()), labelHeight);
+    mMinorScaleEdit->setFixedSize(wEdit, lineEditHeight);
+
+    /* -------------------------------------- Graphic Options (old mDisplayGroup) ---------------------------------------------------*/
+    mGraphicTitle->setFont(ft);
+    mYScaleLab->setFont(ft);
+    mYScaleSpin->setFont(ft);
+    labFont->setFont(ft);
+    mFontBut->setFont(ft);
+    labThickness->setFont(ft);
+    mThicknessCombo->setFont(ft);
+    labOpacity->setFont(ft);
+    mOpacityCombo->setFont(ft);
+
+    mGraphicTitle->setFixedSize(mOptionsW, titleHeight);
+    mYScaleLab->setFixedSize(fm.width(mYScaleLab->text()), labelHeight);
+    mYScaleSpin->setFixedSize(mCurrentXMinEdit->width(), spinBoxHeight);
+    labFont->setFixedSize(fm.width(labFont->text()), labelHeight);
+    mFontBut->setFixedSize(mOptionsW/2 - mMargin, buttonHeight);
+    labThickness->setFixedSize(fm.width(labThickness->text()), comboBoxHeight);
+    mThicknessCombo->setFixedSize(mOptionsW/2 - mMargin, comboBoxHeight);//->setFixedSize(wEdit, comboBoxHeight );
+    labOpacity->setFixedSize(fm.width(labOpacity->text()), comboBoxHeight);
+    mOpacityCombo->setFixedSize(mOptionsW/2 - mMargin, comboBoxHeight);//setFixedSize(wEdit, comboBoxHeight);
+
+     /* -------------------------------------- mChainsGroup---------------------------------------------------*/
+    mChainsTitle->setFont(ft);
+    mAllChainsCheck->setFont(ft);
+    mAllChainsCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
+
+    if (!mCheckChainChecks.isEmpty())
+        for (auto check : mCheckChainChecks)
+            check->setFont(ft);
+
+    if (!mChainRadios .isEmpty())
+        for (auto radio : mChainRadios)
+            radio->setFont(ft);
+
+    mChainsTitle->setFixedSize(mOptionsW, titleHeight);
+    mAllChainsCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
+
+    if (mCheckChainChecks.isEmpty())
+           for (auto check : mCheckChainChecks)
+                check->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
+
+    if (mChainRadios.isEmpty())
+           for (auto radio : mChainRadios)
+                radio->setFixedSize(int(mOptionsW - 2*mMargin), radioButtonHeight);
+
+
+     /* -------------------------------------- mDensityOptsGroup ---------------------------------------------------*/
+    mDensityOptsTitle->setFont(ft);
+    mDensityOptsGroup->setFont(ft);
+    mCredibilityCheck->setFont(ft);
+    mThreshLab->setFont(ft);
+    mHPDEdit->setFont(ft);
+    mFFTLenLab->setFont(ft);
+    mFFTLenCombo->setFont(ft);
+    mBandwidthLab->setFont(ft);
+    mBandwidthEdit->setFont(ft);
+
+    mDensityOptsTitle->setFixedSize(mOptionsW, titleHeight);
+    mCredibilityCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
+    mThreshLab->setFixedSize( fm.width(mThreshLab->text()), lineEditHeight);
+    mHPDEdit->setFixedSize(wEdit, lineEditHeight);
+    mFFTLenLab->setFixedSize(fm.width(mFFTLenLab->text()), comboBoxHeight);
+    mFFTLenCombo->setFixedSize(wEdit, comboBoxHeight);
+    mBandwidthLab->setFixedSize(fm.width(mBandwidthLab->text()), lineEditHeight);
+    mBandwidthEdit->setFixedSize(wEdit, lineEditHeight);
+
+     /* --------------------------------------Tools for all graph -------------------------------------- */
+    mToolsWidget->setFont(ft);
+    mExportImgBut->setFont(ft);
+    mExportResults->setFont(ft);
+    mImageSaveBut->setFont(ft);
+    mImageClipBut->setFont(ft);
+    mResultsClipBut->setFont(ft);
+    mDataSaveBut->setFont(ft);
+
+    mToolsWidget->resize(mOptionsW, 50);
+    mExportImgBut->setFixedSize(allDensitiesButSize);
+    mExportResults->setFixedSize(allDensitiesButSize);
+    mImageSaveBut->setFixedSize(singleDensityButSize);
+    mImageClipBut->setFixedSize(singleDensityButSize);
+    mResultsClipBut->setFixedSize(singleDensityButSize);
+    mDataSaveBut->setFixedSize(singleDensityButSize);
+
+    /* -------------------------------------- Page widget -------------------------------------- */
+    mPageWidget->setFont(ft);
+    mSheetNum->setFont(ft);
+    mPreviousSheetBut->setFont(ft);
+    mNextSheetBut->setFont(ft);
+    mNbDensityLab->setFont(ft);
+    mNbDensitySpin->setFont(ft);
+    mTabPageSaving->setFont(ft);
+
+    mPageWidget->resize(mOptionsW, mRulerH);
+    mSheetNum->setFixedSize(fm.width("__ /__"), buttonHeight);
+    mPreviousSheetBut->setFixedSize((mOptionsW- mSheetNum->width())/2, buttonHeight);
+    mNextSheetBut->setFixedSize((mOptionsW - mSheetNum->width())/2, buttonHeight);
+    mNbDensityLab->setFixedSize(fm.width(mNbDensityLab->text()), spinBoxHeight);
+    mNbDensitySpin->setFixedSize(mCurrentXMinEdit->width(), spinBoxHeight);
+    mTabPageSaving->setFixedWidth(mOptionsW);
+
 
 
     // set the variable and the graphic type
@@ -1046,6 +1051,7 @@ void ResultsView::updateTabByTempo()
         ySpan += mTempoCredCheck->height() + mMargin;
         mTempoErrCheck -> move(mMargin + dx, ySpan);
         ySpan += mTempoErrCheck->height() + mMargin;
+
     } else {
         mTempoCredCheck->setVisible(false);
         mTempoErrCheck->setVisible(false);
@@ -1063,7 +1069,7 @@ void ResultsView::updateTabByTempo()
 
 void ResultsView::updateTabDisplay(const int &i)
 {
-
+    const QFontMetrics fm(AppSettings::font());
     /* -------------------------------------------------------
      *  Activate specific controls for post. distrib. (first tab)
      * -------------------------------------------------------*/
@@ -1102,6 +1108,7 @@ void ResultsView::updateTabDisplay(const int &i)
     }
 
     int ySpan(0);
+    qreal dy(0); // shift between Y position of the Edit and the y position of the label
 
     switch (i) {
     case 0: //Display tab
@@ -1140,8 +1147,9 @@ void ResultsView::updateTabDisplay(const int &i)
         mCurrentXMaxEdit->move(mOptionsW - mCurrentXMinEdit->width() -  mMargin, ySpan );
 
         const int w = mSpanLab->width();
-        mSpanLab->setGeometry((mCurrentXMinEdit->x() + mCurrentXMinEdit->width() + mCurrentXMaxEdit->x() )/2. - (w/2.), mCurrentXMinEdit->y() , w, mCurrentXMinEdit->height() );
-
+        dy = (mXScaleSpin->height() - mSpanLab->height()) /2.;
+        //mSpanLab->setGeometry((mCurrentXMinEdit->x() + mCurrentXMinEdit->width() + mCurrentXMaxEdit->x() )/2. - (w/2.), mCurrentXMinEdit->y() , w, mCurrentXMinEdit->height() );
+        mSpanLab->move((mCurrentXMinEdit->x() + mCurrentXMinEdit->width() + mCurrentXMaxEdit->x() )/2. - (w/2.), mCurrentXMinEdit->y() + dy);
         ySpan += mMargin + mCurrentXMinEdit->height();
 
         int heiTemp = mXScaleSpin->height();
@@ -1149,6 +1157,7 @@ void ResultsView::updateTabDisplay(const int &i)
 
         mXScaleSpin->move(mOptionsW - mXScaleSpin->width() - mMargin, ySpan);
         const int xSliderWidth = mOptionsW - mXScaleLab->width() - mXScaleSpin->width() - 4*mMargin;
+        dy = (mXScaleSpin->height() - mXSlider->height()) /2.;
         mXSlider->setGeometry(mXScaleLab->x() + mXScaleLab->width() + mMargin , ySpan, xSliderWidth, heiTemp );
 
         ySpan += mXScaleSpin->height() + mMargin;
@@ -1159,12 +1168,20 @@ void ResultsView::updateTabDisplay(const int &i)
             mMinorScaleLab->setVisible(true);
             mMinorScaleEdit->setVisible(true);
 
-            mMajorScaleLab->setGeometry(mMargin, ySpan , wBut - 4*mMargin, heiTemp);
+
             mMajorScaleEdit->move(mOptionsW - mMargin - mMajorScaleEdit->width(), ySpan );
+            dy = (mMajorScaleEdit->height() - mMajorScaleLab->height())/2.;
+            //mMajorScaleLab->setGeometry(mOptionsW - 2*mMargin - mMajorScaleEdit->width() - fm.width(mMajorScaleLab->text()), ySpan , wBut - 4*mMargin, heiTemp);
+            mMajorScaleLab->move(mOptionsW - 2*mMargin - mMajorScaleEdit->width() - fm.width(mMajorScaleLab->text()), ySpan + dy);
+
             ySpan += mMajorScaleEdit->height() + mMargin;
 
-            mMinorScaleLab->setGeometry(mMargin, ySpan , wBut - 4*mMargin, heiTemp);
+           // mMinorScaleLab->setGeometry(mMargin, ySpan , wBut - 4*mMargin, heiTemp);
+            //mMinorScaleLab->setGeometry(mOptionsW - 2*mMargin - mMinorScaleEdit->width() - fm.width(mMinorScaleLab->text()), ySpan , wBut - 4*mMargin, heiTemp);
+
             mMinorScaleEdit->move(mOptionsW - mMargin - mMinorScaleEdit->width(), ySpan );
+            dy = (mMinorScaleEdit->height() - mMinorScaleLab->height())/2.;
+            mMinorScaleLab->move(mOptionsW - 2*mMargin - mMinorScaleEdit->width() - fm.width(mMinorScaleLab->text()), ySpan);
             ySpan += mMinorScaleEdit->height() + mMargin;
 
         } else {
@@ -1185,22 +1202,29 @@ void ResultsView::updateTabDisplay(const int &i)
         mGraphicTitle->move(0, mSpanGroup->y()+ mSpanGroup->height());
 
         ySpan += mMargin;
-        mYScaleLab->setGeometry(mMargin, ySpan , wBut - 4*mMargin, heiTemp);
+
         mYScaleSpin->move(mOptionsW - mYScaleSpin->width() - mMargin, ySpan);
+        dy = (mYScaleSpin->height() - mYScaleLab->height()) /2.;
+        mYScaleLab->move(mMargin, ySpan + dy);
         const int ySliderWidth = mOptionsW - mYScaleLab->width() - mYScaleSpin->width() - 4*mMargin;
-        mYSlider->setGeometry(mYScaleLab->x() + mYScaleLab->width() + mMargin , ySpan, ySliderWidth, heiTemp );
+        dy = (mYScaleSpin->height() - mYSlider->height()) /2.;
+        mYSlider->setGeometry(mYScaleLab->x() + mYScaleLab->width() + mMargin , ySpan + dy, ySliderWidth, heiTemp);
 
         ySpan += mMargin + mYScaleSpin->height();
-        labFont->move(mMargin, ySpan);
         mFontBut->move(mOptionsW/2, ySpan );
+        dy = (mFontBut->height() - labFont->height()) /2.;
+        labFont->move(mOptionsW/2 - mMargin -fm.width(labFont->text()), ySpan + dy);
 
         ySpan += mMargin + mFontBut->height();
-        labThickness->move(mMargin, ySpan);
         mThicknessCombo->move(mOptionsW/2, ySpan);
+        dy = (mThicknessCombo->height() - labThickness->height()) /2.;
+        labThickness->move(mOptionsW/2 - mMargin -fm.width(labThickness->text()), ySpan + dy);
+
 
         ySpan += mMargin + mThicknessCombo->height();
-        labOpacity->move(mMargin, ySpan);
         mOpacityCombo->move(mOptionsW/2, ySpan);
+        dy = (mOpacityCombo->height() - labOpacity->height()) /2.;
+        labOpacity->move(mOptionsW/2 - mMargin -fm.width(labOpacity->text()), ySpan + dy);
 
         ySpan += mMargin + mOpacityCombo->height();
         //labRendering->move(mMargin, ySpan);
@@ -1276,16 +1300,20 @@ void ResultsView::updateTabDisplay(const int &i)
                   mDensityOptsTitle->setVisible(true);
                   mThreshLab->setVisible(true);
                   mHPDEdit->setVisible(true);
-                  mThreshLab->move(mMargin, ySpan);
+
                   mHPDEdit->move(mOptionsW - mMargin - mHPDEdit->width(), ySpan);
+                  dy = (mHPDEdit->height() - mThreshLab->height())/2.;
+                  mThreshLab->move(mHPDEdit->x() - fm.width(mThreshLab->text()) - mMargin, ySpan + dy);
                   ySpan += mHPDEdit->height() + mMargin;
 
-                  mFFTLenLab->move(mMargin, ySpan);
                   mFFTLenCombo->move(mOptionsW - mMargin - mFFTLenCombo->width(), ySpan);
+                  dy = (mFFTLenCombo->height() - mFFTLenLab->height())/2.;
+                  mFFTLenLab->move(mFFTLenCombo->x() - fm.width(mFFTLenLab->text()) - mMargin, ySpan + dy);
                   ySpan += mFFTLenCombo->height() + mMargin;
 
-                  mBandwidthLab->move(mMargin, ySpan);
                   mBandwidthEdit->move(mOptionsW - mMargin - mBandwidthEdit->width(), ySpan);
+                  dy = (mBandwidthEdit->height() - mBandwidthLab->height())/2.;
+                  mBandwidthLab->move(mBandwidthEdit->x() - fm.width(mBandwidthLab->text()) - mMargin, ySpan);
                   ySpan += mBandwidthEdit->height() + mMargin;
 
                   mDensityOptsGroup->setGeometry(0, mDensityOptsTitle->y() + mDensityOptsTitle->height(), mOptionsW, ySpan);
@@ -1319,19 +1347,21 @@ void ResultsView::updateTabPageSaving()
              *  Page Navigator
              */
             int ySpan (mMargin);
+            qreal dy (0);
             mPreviousSheetBut->move(0 , ySpan);
 
             mSheetNum->move(mPreviousSheetBut->width(), ySpan);
 
-            mSheetNum->setText(locale().toString(byPhases ? mTabPhasesIndex+1 : mTabEventsIndex+1 ) + "/"
-                               + locale().toString(ceil((double)mMaximunNumberOfVisibleGraph/(double)mNumberOfGraph) ));
+            mSheetNum->setText(locale().toString(byPhases ? mTabPhasesIndex+1 : mTabEventsIndex+1 ) + "/" +
+                               locale().toString(ceil((double)mMaximunNumberOfVisibleGraph/(double)mNumberOfGraph) ));
 
             mNextSheetBut->move(mOptionsW - mPreviousSheetBut->width(),  ySpan);
 
             ySpan += mNextSheetBut->height() + mMargin;
 
-            mNbDensityLab->move(mMargin, ySpan);
             mNbDensitySpin->move(mOptionsW - mNbDensitySpin->width() - mMargin, ySpan);
+            dy = (mNbDensitySpin->height() - mNbDensityLab->height())/2.;
+            mNbDensityLab->move(mMargin, ySpan + dy);
             ySpan += mNbDensitySpin->height() + mMargin;
 
             mPageWidget->resize(mOptionsW, ySpan);

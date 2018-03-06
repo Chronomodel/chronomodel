@@ -13,7 +13,7 @@ public:
 
 private:
     MainWindow* mMainWindow;
-    AppSettings* mAppSettings;
+    //AppSettings* mAppSettings;
 };
 
 #endif

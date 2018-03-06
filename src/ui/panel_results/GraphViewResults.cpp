@@ -63,7 +63,8 @@ mGraphFont(AppSettings::font())
     palette.setColor(QPalette::Text, Qt::black);
     mTextArea->setPalette(palette);
 
-    mTextArea->setFont(mGraphFont);
+    mTextArea->setFontFamily(mGraphFont.family());
+    mTextArea->setFontPointSize(mGraphFont.pointSizeF());
     mTextArea->setText(tr("Nothing to display"));
     mTextArea->setVisible(false);
     mTextArea->setReadOnly(true);
@@ -304,7 +305,8 @@ void GraphViewResults::setGraphFont(const QFont& font)
 {
      // Recalcule mTopShift based on the new font, and position the graph according :
     mGraphFont = font;
-    mTextArea->setFont(font);
+    mTextArea->setFontFamily(font.family());
+    mTextArea->setFontPointSize(font.pointSizeF());
     mGraph->setFont(font);
     updateLayout();
 }
@@ -386,19 +388,12 @@ void GraphViewResults::paintEvent(QPaintEvent* )
    QString graphInfo = mGraph->getInfo();
    if (!graphInfo.isEmpty()) {
         if (mShowNumResults)
-             p.drawText(QRectF(width()*2/3. - fmTitle.width(graphInfo),  mTopShift - fmTitle.capHeight()-fmTitle.descent(), fmTitle.width(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
+             p.drawText(QRectF(width()*2/3. - fmTitle.width(graphInfo) - 3 * AppSettings::widthUnit(),  mTopShift - fmTitle.capHeight()-fmTitle.descent(), fmTitle.width(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
          else
-            p.drawText(QRectF(width() - fmTitle.width(graphInfo), mTopShift - fmTitle.capHeight()-fmTitle.descent() , fmTitle.width(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
+            p.drawText(QRectF(width() - fmTitle.width(graphInfo)  - 3 * AppSettings::widthUnit(), mTopShift - fmTitle.capHeight()-fmTitle.descent() , fmTitle.width(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
 
-   } /*else {
-       if (mShowNumResults)
-            p.fillRect(QRectF(3 * AppSettings::widthUnit() + fmTitle.width(mTitle), 0,  fmTitle.width(graphInfo), mTopShift), mGraph->getBackgroundColor());
-        else
-           p.fillRect(QRectF(3 * AppSettings::widthUnit() + fmTitle.width(mTitle), 0,  fmTitle.width(graphInfo), mTopShift) ,mGraph->getBackgroundColor());
+   }
 
-
-       p.fillRect(mGraph->geometry().adjusted(0, - mTopShift, 0, 0), mGraph->getBackgroundColor());
-   }*/
     p.setPen(QColor(105, 105, 105));
     if (mShowNumResults)
         p.drawRect(mTextArea->geometry().adjusted(-1, -1, 1, 1));

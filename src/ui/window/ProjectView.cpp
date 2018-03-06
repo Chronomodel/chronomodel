@@ -122,11 +122,27 @@ void ProjectView::setAppSettingsFont()
 
     mModelView->applyAppSettings();
     mResultsView->applyAppSettings();
-    mLogModelEdit->setFont(AppSettings::font());
-    mLogMCMCEdit->setFont(AppSettings::font());
-    mLogResultsEdit->setFont(AppSettings::font());
-    mLogTabs->setFont(AppSettings::font());
 
+    mLogModelEdit->setFontFamily(AppSettings::font().family());
+    mLogModelEdit->setFontPointSize(AppSettings::font().pointSizeF());
+
+    mLogMCMCEdit->setFontFamily(AppSettings::font().family());
+    mLogMCMCEdit->setFontPointSize(AppSettings::font().pointSizeF());
+
+   // mLogResultsEdit->setFontFamily(AppSettings::font().family());
+    mLogResultsEdit->setFontPointSize(AppSettings::font().pointSizeF()*2);
+#ifdef Q_OS_MAC
+    const QFont font (AppSettings::font());
+    QString styleSh = "QLineEdit { border-radius: 5px; font: "+ QString::number(font.pointSize()) + "px ;font-family: "+font.family() + ";}";
+    mLogResultsEdit->setStyleSheet(styleSh);
+#else
+    mLogResultsEdit->setFont(AppSettings::font());
+#endif
+
+  //  mLogTabs->setFont(AppSettings::font());
+  /*  if (mResultsView->mModel && !mResultsView->mModel->mChains.isEmpty())
+        updateResultsLog(mResultsView->mModel->getResultsLog());
+*/
     const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
 
     mLogModelEdit->resize( width() -  AppSettings::widthUnit(), logTabHusefull );
@@ -138,11 +154,10 @@ void ProjectView::setAppSettingsFont()
 
 void ProjectView::showResults()
 {
-   // if (mRefreshResults) {
-        mResultsView->clearResults();
-        mResultsView->updateModel(); // update Design e.g. Name and color //updateResults() is call inside
-        mRefreshResults = false;
-   // }
+    mResultsView->clearResults();
+    mResultsView->updateModel(); // update Design e.g. Name and color //updateResults() is call inside
+    mRefreshResults = false;
+
     mStack->setCurrentIndex(1);
     // come from mViewResultsAction and  updateResults send repaint on mStack
 }
@@ -255,7 +270,12 @@ void ProjectView::initResults(Model* model)
 
 void ProjectView::updateResultsLog(const QString& log)
 {
-    mLogResultsEdit->setText(log);
+#ifdef Q_OS_MAC
+    const QFont font (AppSettings::font());
+    QString styleSh = "QLineEdit { border-radius: 5px; font: "+ QString::number(font.pointSize()) + "px ;font-family: "+font.family() + ";}";
+    mLogResultsEdit->setStyleSheet(styleSh);
+#endif
+    mLogResultsEdit->setHtml(log);
 }
 
 void ProjectView::showLogTab(const int &i)

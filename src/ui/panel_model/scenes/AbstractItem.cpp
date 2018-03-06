@@ -6,8 +6,8 @@
 
 AbstractItem::AbstractItem(AbstractScene* scene, QGraphicsItem* parent):QGraphicsObject(parent),
 mScene(scene),
-mBorderWidth(1.),
-mTitleHeight(20.),
+mBorderWidth(2.),
+mTitleHeight(15.),
 mPhasesHeight(20.),
 mEltsMargin(3.),
 mEltsWidth(15.),

@@ -128,8 +128,8 @@ void Tabs::setTab(const int &i, bool notify)
 
   void Tabs::setFont(const QFont &font)
 {
-      mFont = font;
-      QWidget::setFont(mFont);
+     mFont = font;
+     QWidget::setFont(mFont);
      QFontMetrics fm (mFont);
      mTabHeight = 2 * fm.height();
   //  setMinimumSize(minimalWidth(), minimalHeight());
@@ -189,14 +189,15 @@ void Tabs::updateLayout()
     mTabRects.clear();
     qreal x  (1.);
     const qreal h (mTabHeight - 1.);
-    QFontMetrics metrics(mFont);
+    QFontMetrics fm(mFont);
 
     int i (0);
     for (auto &&name : mTabNames) {
         if (mTabVisible[i]) {
-            const qreal w = metrics.width(name);
-            mTabRects.append(QRectF(x, 1,  1.3* w, h));
-            x += 1.3* w;
+            const qreal w = fm.width(name);
+            const qreal m = 1.5 * fm.width(QString("H"));
+            mTabRects.append(QRectF(x, 1,  2*m + w, h));
+            x += 2*m + w;
         } else
             mTabRects.append(QRectF(x, 1, 0, h));
 

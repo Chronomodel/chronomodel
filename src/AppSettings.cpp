@@ -10,29 +10,29 @@ QFont AppSettings::mFont;
 int AppSettings::mFontDescent;
 int AppSettings::mButtonWidth;
 
- QLocale::Language AppSettings::mLanguage;
- QLocale::Country AppSettings::mCountry;
+QLocale::Language AppSettings::mLanguage;
+QLocale::Country AppSettings::mCountry;
 
- bool AppSettings::mAutoSave;
- int AppSettings::mAutoSaveDelay;
- bool AppSettings::mShowHelp;
- QString AppSettings:: mCSVCellSeparator;
-  QString AppSettings::mCSVDecSeparator;
-  bool AppSettings::mOpenLastProjectAtLaunch;
- short AppSettings:: mPixelRatio;
- short AppSettings:: mDpm;
- short AppSettings::mImageQuality;
- DateUtils::FormatDate AppSettings::mFormatDate;
- int AppSettings::mPrecision;
- int AppSettings::mNbSheet;
- QString AppSettings::mFontFamily;
-  int  AppSettings::mFontPointSize;
+bool AppSettings::mAutoSave;
+int AppSettings::mAutoSaveDelay;
+bool AppSettings::mShowHelp;
+QString AppSettings::mCSVCellSeparator;
+QString AppSettings::mCSVDecSeparator;
+bool AppSettings::mOpenLastProjectAtLaunch;
+short AppSettings::mPixelRatio;
+short AppSettings::mDpm;
+short AppSettings::mImageQuality;
+DateUtils::FormatDate AppSettings::mFormatDate;
+int AppSettings::mPrecision;
+int AppSettings::mNbSheet;
+QString AppSettings::mFontFamily;
+int AppSettings::mFontPointSize;
 
- QString AppSettings:: mLastDir;
- QString AppSettings::mLastFile;
+QString AppSettings:: mLastDir;
+QString AppSettings::mLastFile;
 
- QSize AppSettings::mLastSize;
- QPoint AppSettings::mLastPosition;
+QSize AppSettings::mLastSize;
+QPoint AppSettings::mLastPosition;
 
 AppSettings::AppSettings()
 {
@@ -188,9 +188,14 @@ AppSettings::~AppSettings()
      const int lgTxt = qMax(fm.width(txt1), fm.width(txt2) );
      AppSettings::mWidthUnit  =  fm.averageCharWidth();// + fm.minRightBearing());//, 5); // for ResultsView
      AppSettings::mButtonWidth = lgTxt;//fm.rightBearing('f') + fm.width(txt) + fm.leftBearing('f');
+
+#ifdef Q_OS_MAC
+     AppSettings::mHeigthUnit = 1.2 * fm.height();
+#else
      AppSettings::mHeigthUnit = fm.height();
+#endif
      AppSettings::mFontDescent = fm.descent();
-     AppSettings:: mFontFamily = font.family();
+     AppSettings::mFontFamily = font.family();
      AppSettings::mFontPointSize = font.pointSize();
  }
 

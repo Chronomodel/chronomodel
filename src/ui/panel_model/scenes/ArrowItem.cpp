@@ -266,14 +266,15 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     if (!bubbleText.isEmpty()) {
         showMiddleArrow = false;
         const QRectF br = getBubbleRect(bubbleText);
-        const int as = QFontMetrics(font).descent();
+       // const int as = QFontMetrics(font).descent();
 
         if (bubbleText.count() > 5)
             painter->drawRect(br);
         else
             painter->drawEllipse(br);
 
-        painter->drawText(br.adjusted(0, as, 0, 0), Qt::AlignCenter, bubbleText);
+        //painter->drawText(br.adjusted(0, -as, 0, 0), Qt::AlignCenter, bubbleText);
+        painter->drawText(br, Qt::AlignCenter, bubbleText);
      }
 
     // arrows

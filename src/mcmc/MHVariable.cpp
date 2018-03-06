@@ -241,13 +241,13 @@ void MHVariable::generateNumericalResults(const QList<ChainSpecs> &chains)
 QString MHVariable::resultsString(const QString& nl, const QString& noResultMessage, const QString& unit, DateConversion formatFunc, const bool forCSV) const
 {
     QString result = MetropolisVariable::resultsString(nl, noResultMessage, unit, formatFunc, forCSV);
-    if (!mProposal.isEmpty())
+    if (!mProposal.isEmpty()) {
         if (forCSV)
              result += nl + tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(stringForCSV(mGlobalAcceptation*100.), mProposal);
 
         else
              result += nl + tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(stringForLocal(mGlobalAcceptation*100.), mProposal);
-
+    }
     return result;
 }
 

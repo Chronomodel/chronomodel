@@ -113,7 +113,7 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     painter->fillRect(r.adjusted(0, 0, 0, -rHeightMid), Qt::white);
     
     QFont font = AppSettings::font();
-    font.setPointSizeF(11.);
+    font.setPointSizeF(10.);
     painter->setFont(font);
 
     painter->setPen(Qt::black);

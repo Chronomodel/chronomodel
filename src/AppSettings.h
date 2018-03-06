@@ -12,12 +12,12 @@
 //#define APP_SETTINGS_DEFAULT_COUNTRY QLocale::UnitedKingdom
 
 #ifdef Q_OS_MAC
-    #define APP_SETTINGS_DEFAULT_FONT_FAMILY "Helvetica" //"Zapfino"
+   #define APP_SETTINGS_DEFAULT_FONT_FAMILY "Calibri" // "Helvetica" //"Zapfino"
    #define APP_SETTINGS_DEFAULT_FONT_SIZE 12.
 #endif
 
 #ifdef Q_OS_WIN
-    #define APP_SETTINGS_DEFAULT_FONT_FAMILY "Helvetica"// "Caladea" //"Calibri""Helvetica"
+    #define APP_SETTINGS_DEFAULT_FONT_FAMILY "Calibri"// "Caladea" //"Calibri""Helvetica"
     #define APP_SETTINGS_DEFAULT_FONT_SIZE  12
 #endif
 
