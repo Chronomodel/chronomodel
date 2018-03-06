@@ -104,7 +104,12 @@ void PhasesScene::setShowAllEvents(const bool show)
 {
     mShowAllThumbs = show;
     // update childItems
+    /* The code below is usefull on Windows with MSVC2017 */
+    for( auto && it : mItems)
+        it->update();
+
     update();
+
 }
 
 /*Project Update
