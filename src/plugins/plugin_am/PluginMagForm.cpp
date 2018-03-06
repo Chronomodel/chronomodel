@@ -25,10 +25,15 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     mRefLab = new QLabel(tr("Reference"), this);
     
     mIncEdit = new QLineEdit(this);
+    mIncEdit->setAlignment(Qt::AlignHCenter);
     mDecEdit = new QLineEdit(this);
+    mDecEdit->setAlignment(Qt::AlignHCenter);
     mDecIncEdit = new QLineEdit(this);
+    mDecIncEdit->setAlignment(Qt::AlignHCenter);
     mIntensityEdit = new QLineEdit(this);
+    mIntensityEdit->setAlignment(Qt::AlignHCenter);
     mAlpha95Edit = new QLineEdit(this);
+    mAlpha95Edit->setAlignment(Qt::AlignHCenter);
     connect(mAlpha95Edit, &QLineEdit::textChanged, this, &PluginMagForm::errorIsValid);
 
     mRefCombo = new QComboBox(this);
@@ -46,7 +51,7 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     mRefCombo->setCurrentIndex(mRefCombo->findText("i.ref",Qt::MatchEndsWith));
     
     QGridLayout* grid = new QGridLayout();
-    grid->setContentsMargins(0, 0, 0, 0);
+    grid->setContentsMargins(0, 5, 0, 0);
     
     grid->addWidget(mIncRadio, 0, 1);
     grid->addWidget(mDecRadio, 1, 1);

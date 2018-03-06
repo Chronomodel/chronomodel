@@ -14,16 +14,18 @@ PluginUniformForm::PluginUniformForm(PluginUniform* plugin, QWidget* parent, Qt:
     mMaxLab = new QLabel(tr("Upper date (BC/AD"), this);
     
     mMinEdit = new QLineEdit(this);
+    mMinEdit->setAlignment(Qt::AlignHCenter);
     mMinEdit->setText("0");
     
     mMaxEdit = new QLineEdit(this);
+    mMaxEdit->setAlignment(Qt::AlignHCenter);
     mMaxEdit->setText("100");
 
     connect(mMinEdit, &QLineEdit::textChanged, this, &PluginUniformForm::errorIsValid);
     connect(mMaxEdit, &QLineEdit::textChanged, this, &PluginUniformForm::errorIsValid);
 
     QGridLayout* grid = new QGridLayout();
-    grid->setContentsMargins(0, 0, 0, 0);
+    grid->setContentsMargins(0, 5, 0, 0);
     
     grid->addWidget(mMinLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mMinEdit, 0, 1);

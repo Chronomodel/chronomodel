@@ -14,37 +14,40 @@
 PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("Gaussian measurement"), parent, flags)
 {
     setFont(AppSettings::font());
-   const  int  lineHeight = 1.1 * AppSettings::heigthUnit();
-   const int lineWidth = 5 * AppSettings::widthUnit();
+   //const  int  lineHeight = 1.1 * AppSettings::heigthUnit();
+   //const int lineWidth = 5 * AppSettings::widthUnit();
 
     mAverageLab = new QLabel(tr("Measure"), this);
     mErrorLab = new QLabel(tr("Error (sd)"), this);
     mCalibLab = new QLabel(tr("Calibration"), this);
     
     mAverageEdit = new QLineEdit(this);
- //   mAverageEdit->resize(lineWidth, lineHeight);
+    mAverageEdit->setAlignment(Qt::AlignHCenter);
+
     mErrorEdit = new QLineEdit(this);
- //    mErrorEdit->resize(lineWidth, lineHeight);
+    mErrorEdit->setAlignment(Qt::AlignHCenter);
+
     connect(mErrorEdit, &QLineEdit::textChanged, this, &PluginGaussForm::errorIsValid);
     
     mAverageEdit->setText("0");
     mErrorEdit->setText("50");
     
-    mEqWidget = new QWidget();
+    mEqWidget = new QWidget(this);
     
-    mEq1Lab = new QLabel("g(t) = ", this);
-    mEq2Lab = new QLabel(" t^2 + ", this);
-    mEq3Lab = new QLabel(" t + ", this);
+    mEq1Lab = new QLabel("g(t) =", this);
+    mEq2Lab = new QLabel("t^2 +", this);
+    mEq3Lab = new QLabel("t +", this);
     mEq1Lab->setAlignment(Qt::AlignCenter);
     mEq2Lab->setAlignment(Qt::AlignCenter);
     mEq3Lab->setAlignment(Qt::AlignCenter);
     
     mAEdit = new QLineEdit(this);
+    mAEdit->setAlignment(Qt::AlignHCenter);
     mBEdit = new QLineEdit(this);
+    mBEdit->setAlignment(Qt::AlignHCenter);
     mCEdit = new QLineEdit(this);
-//     mAEdit->resize(lineWidth, lineHeight);
-//     mBEdit->resize(lineWidth, lineHeight);
-//     mCEdit->resize(lineWidth, lineHeight);
+    mCEdit->setAlignment(Qt::AlignHCenter);
+
     mAEdit->setText("0");
     mBEdit->setText("1");
     mCEdit->setText("0");
@@ -52,7 +55,7 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
     connect(mAEdit, &QLineEdit::textChanged, this, &PluginGaussForm::equationIsValid);
     connect(mBEdit, &QLineEdit::textChanged, this, &PluginGaussForm::equationIsValid);
     
-    QHBoxLayout* eqLayout = new QHBoxLayout();
+    QHBoxLayout* eqLayout = new QHBoxLayout(this);
     eqLayout->setContentsMargins(0, 0, 0, 0);
     eqLayout->QLayout::addWidget(mEq1Lab);
     eqLayout->QLayout::addWidget(mAEdit);
@@ -60,6 +63,7 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
     eqLayout->QLayout::addWidget(mBEdit);
     eqLayout->QLayout::addWidget(mEq3Lab);
     eqLayout->QLayout::addWidget(mCEdit);
+
     mEqWidget->setLayout(eqLayout);
     
     mNoneRadio = new QRadioButton(tr("None"), this);
@@ -82,10 +86,10 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
     connect(mNoneRadio, &QRadioButton::toggled, this, &PluginGaussForm::equationIsValid);
     connect(mEquationRadio, &QRadioButton::toggled, this, &PluginGaussForm::equationIsValid);
 
-    updateVisibleElements();
+
     
     QGridLayout* grid = new QGridLayout();
-    grid->setContentsMargins(0, 0, 0, 0);
+    grid->setContentsMargins(0, 5, 0, 0);
     grid->addWidget(mAverageLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mAverageEdit, 0, 1);
     
@@ -99,8 +103,10 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
     
     grid->addWidget(mEqWidget, 5, 1);
     grid->addWidget(mCurveCombo, 5, 1);
-    
+
     setLayout(grid);
+
+    updateVisibleElements();
 }
 
 PluginGaussForm::~PluginGaussForm()
@@ -138,7 +144,9 @@ void PluginGaussForm::updateVisibleElements()
 {
     mCurveCombo->setVisible(mCurveRadio->isChecked());
     mEqWidget->setVisible(mEquationRadio->isChecked());
+    mEqWidget->adjustSize();
     adjustSize();
+    emit sizeChanged();
 }
 
 QJsonObject PluginGaussForm::getData()

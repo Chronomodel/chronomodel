@@ -15,17 +15,20 @@ PluginTLForm::PluginTLForm(PluginTL* plugin, QWidget* parent, Qt::WindowFlags fl
     mYearLab = new QLabel(tr("Ref. year"), this);
     
     mAverageEdit = new QLineEdit(this);
+    mAverageEdit->setAlignment(Qt::AlignHCenter);
     mAverageEdit->setText("0");
     
     mErrorEdit = new QLineEdit(this);
+    mErrorEdit->setAlignment(Qt::AlignHCenter);
     mErrorEdit->setText("30");
     connect(mErrorEdit, &QLineEdit::textChanged, this, &PluginTLForm::errorIsValid);
     
     mYearEdit = new QLineEdit(this);
+    mYearEdit->setAlignment(Qt::AlignHCenter);
     mYearEdit->setText(QString::number(QDate::currentDate().year()));
     
     QGridLayout* grid = new QGridLayout();
-    grid->setContentsMargins(0, 0, 0, 0);
+    grid->setContentsMargins(0, 5, 0, 0);
     
     grid->addWidget(mAverageLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mAverageEdit, 0, 1);

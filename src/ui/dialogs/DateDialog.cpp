@@ -157,8 +157,10 @@ mWiggleEnabled(false)
 
 DateDialog::~DateDialog()
 {
-   if (mForm)
-    disconnect(mForm, &PluginFormAbstract::OkEnabled, this, &DateDialog::setOkEnabled);
+   if (mForm) {
+       disconnect(mForm, &PluginFormAbstract::OkEnabled, this, &DateDialog::setOkEnabled);
+       disconnect(mForm, &PluginFormAbstract::sizeChanged , this, &DateDialog::updateVisibleControls);
+   }
 }
 
 void DateDialog::setForm(PluginFormAbstract* form)
@@ -171,6 +173,8 @@ void DateDialog::setForm(PluginFormAbstract* form)
 
         mForm = form;
         connect(mForm, &PluginFormAbstract::OkEnabled, this, &DateDialog::setPluginDataValid);
+        connect(mForm, &PluginFormAbstract::sizeChanged , this, &DateDialog::updateVisibleControls);
+
 
         mLayout->insertWidget(2, mForm);
         PluginAbstract* plugin = form->mPlugin;

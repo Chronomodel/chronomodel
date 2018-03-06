@@ -32,6 +32,7 @@ public:
     
 signals:
    void OkEnabled(bool enabled) ;
+   void sizeChanged();
     
 public:
     PluginAbstract* mPlugin;

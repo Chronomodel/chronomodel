@@ -22,16 +22,20 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     
     mAverageEdit = new QLineEdit(this);
     mAverageEdit->setText("0");
+    mAverageEdit->setAlignment(Qt::AlignHCenter);
     
     mErrorEdit = new QLineEdit(this);
     mErrorEdit->setText("50");
+    mErrorEdit->setAlignment(Qt::AlignHCenter);
     connect(mErrorEdit, &QLineEdit::textChanged, this, &Plugin14CForm::errorIsValid);
     
     mREdit = new QLineEdit(this);
     mREdit->setText("0");
+    mREdit->setAlignment(Qt::AlignHCenter);
     
     mRErrorEdit = new QLineEdit(this);
     mRErrorEdit->setText("0");
+    mRErrorEdit->setAlignment(Qt::AlignHCenter);
     
     mRefCombo = new QComboBox(this);
     QStringList refCurves = plugin14C->getRefsNames();
@@ -46,7 +50,7 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     
     
     QGridLayout* grid = new QGridLayout();
-    grid->setContentsMargins(0, 0, 0, 0);
+    grid->setContentsMargins(0, 5, 0, 0);
     
     grid->addWidget(mAverageLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mAverageEdit, 0, 1);

@@ -112,8 +112,8 @@ void PhasesScene::setShowAllEvents(const bool show)
 
 }
 
-/*Project Update
- *
+/*
+ *  Project Update
  */
 void PhasesScene::sendUpdateProject(const QString& reason, bool notify, bool storeUndoCommand)
 {
