@@ -610,11 +610,11 @@ void ResultsView::applyAppSettings()
 
     mTabs->setFont(ft);
     mRuler->setFont(ft);
-    mRuler->setMarginBottom( ft.pointSize() * 2.2);//1.2 * AppSettings::heigthUnit() );
+    mRuler->setMarginBottom( ft.pointSize() * 2.2);
     mRulerH = mRuler->height();
 
     mTabsH = 2 * fm.height();
-    mGraphHeight = 20 * AppSettings::heigthUnit();
+    mGraphHeight = 10 * AppSettings::heigthUnit(); // same value in ResultsView::updateScaleY(int value)
 
     mOptionsW = ( fm.width(tr("Nb Densities / Sheet ")) + 2 * mMargin) *3 / 2;
 
@@ -663,7 +663,7 @@ void ResultsView::applyAppSettings()
     mTempoErrCheck->setFixedSize(int(mOptionsW - 2*mMargin), checkBoxHeight);
 
      // -------------end TempoGroup
-     mTabByScene->setFont(ft);
+    mTabByScene->setFont(ft);
     mTabByScene->setFixedWidth(mOptionsW);
 
      /* - mTabDisplayMCMC */
@@ -680,6 +680,9 @@ void ResultsView::applyAppSettings()
     mCurrentXMaxEdit->setFont(ft);
     mXScaleLab->setFont(ft);
     mXScaleSpin->setFont(ft);
+
+    mXScaleSpin->setLocale(QLocale(AppSettings::mLanguage, AppSettings::mCountry));
+
     mMajorScaleLab->setFont(ft);
     mMajorScaleEdit->setFont(ft);
     mMinorScaleLab->setFont(ft);
@@ -817,22 +820,6 @@ void ResultsView::applyAppSettings()
         updateVisibleTabs(0);
         mTabs->setTab(0, false);
      }
-   // updateControls();
- /*   updateTabByScene();
-   // updateTabByTempo();
-
-    mTabByScene->showWidget(0);
-
-    mMarker->raise();
-
-    mTabDisplayMCMC->setTab(0, false);
-    mTabDisplayMCMC->showWidget(0);
-    updateTabDisplay(0);//mTabDisplayMCMC->currentIndex());
-
-    mTabPageSaving->setTab(0, false);
-    mTabPageSaving->showWidget(0);
-    updateTabPageSaving();
-*/
 
 }
 
@@ -1009,7 +996,7 @@ void ResultsView:: updateTabByScene()
     int dx (2 * mMargin);
 
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
-        if (( byEvents || (byPhases && mEventsfoldCheck->isChecked()) )   && mDatesfoldCheck->isChecked() && mDataCalibCheck->isVisible()) {
+        if (( byEvents || (byPhases && mEventsfoldCheck->isChecked()) )   && mDatesfoldCheck->isChecked()) {
             mDataCalibCheck -> move(mMargin + dx, ySpan);
             ySpan += mDataCalibCheck->height() + mMargin;
 
@@ -1640,6 +1627,7 @@ void ResultsView::updateGraphsLayout()
             }
             if (y>0)
                 wid->setFixedSize(width() - sbe - mOptionsW, y);
+            mPhasesScrollArea->repaint();
        }
     }
     /* ----------------------------------------------------------
@@ -1658,6 +1646,7 @@ void ResultsView::updateGraphsLayout()
             }
             if (y>0)
                 wid->setFixedSize(width() - sbe - mOptionsW, y);
+            mEventsScrollArea->repaint();
          }
         
     }
@@ -1673,6 +1662,7 @@ void ResultsView::updateGraphsLayout()
             }
             if (y>0)
                 wid->setFixedSize(width() - sbe - mOptionsW, y);
+            mTempoScrollArea->repaint();
          }
 
     }
@@ -3165,7 +3155,7 @@ void ResultsView::updateScaleY(int value)
 
     mYScaleSpin->setValue(value);
     const double min (3 * AppSettings::heigthUnit());//(70.);
-    const double origin (20 * AppSettings::heigthUnit());// (150.);
+    const double origin (10 * AppSettings::heigthUnit());// (150.); Same value in ResultsView::applyAppSettings()
     const double prop = (double)value / 100.;
     mGraphHeight = min + prop * (origin - min);
     
