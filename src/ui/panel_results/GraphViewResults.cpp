@@ -348,7 +348,7 @@ void GraphViewResults::updateLayout()
 
     if ((mGraph->hasCurve())) {
         mGraph->showXAxisValues(axisVisible);
-        mGraph->setMarginBottom(axisVisible ? mGraphFont.pointSize() * 2.2 : mGraphFont.pointSize() * 0.5);
+        mGraph->setMarginBottom(axisVisible ? mGraphFont.pointSize() * 2.2 : mGraphFont.pointSize());
     }
 
     update();

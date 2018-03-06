@@ -15,7 +15,7 @@ mControlsVisible(false),
 mControlsEnabled(false),
 mAtLeastOneEventSelected(false)
 {
-    mBorderWidth = 7;
+    mBorderWidth = 5;
     mEltsHeight = 15;
     setPhase(phase);
     inPix = new QPixmap(":insert_event.png");

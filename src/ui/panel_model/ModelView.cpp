@@ -1138,7 +1138,7 @@ void ModelView::updateLayout()
 
     // ----------
 
-    const qreal radarW (5 * AppSettings::widthUnit());
+    const qreal radarW (25 * AppSettings::widthUnit());
     const qreal radarH (10 * AppSettings::heigthUnit());
     const qreal searchH (1.2 * AppSettings::heigthUnit());
     if (mButProperties->isChecked() && mEventPropertiesView->isCalibChecked())

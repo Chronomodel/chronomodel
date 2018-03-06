@@ -678,7 +678,12 @@ void GraphView::resizeEvent(QResizeEvent* event)
 
 void GraphView::updateGraphSize(int w, int h)
 {
-    mBottomSpacer = 0.04 * h;
+#ifdef Q_OS_MAC
+     mBottomSpacer = 0.02 * h;
+#else
+     mBottomSpacer = 0.04 * h;
+#endif
+
     mGraphWidth = w - mMarginLeft - mMarginRight;
     mGraphHeight = h - mMarginTop - mMarginBottom - mBottomSpacer;
     mAxisToolX.updateValues(mGraphWidth, mStepMinWidth, mCurrentMinX, mCurrentMaxX);
