@@ -1846,27 +1846,7 @@ void ResultsView::updateResults(Model* model)
     mChains = mModel->mChains;
     mSettings = mModel->mSettings;
     mMCMCSettings = mModel->mMCMCSettings;
-/*
-    QFontMetricsF fm(qApp->font());
 
-    mMarginLeft = std::max(fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mModel->mSettings.mTmin))),
-                           fm.width(locale().toString(DateUtils::convertToAppSettingsFormat(mModel->mSettings.mTmin)))) + 5;
-
-    mHasPhases = (mModel->mPhases.size() > 0);
-
-    if (mHasPhases) {
-        mTabByScene->setTab(1, false);
-        mTabByScene->setTabVisible(1, true);
-        mTabByScene->setTabVisible(2, true);
-        updateVisibleTabs(1);
-
-     } else {
-        mTabByScene->setTabVisible(2, false);
-        mTabByScene->setTabVisible(1, false);
-        mTabByScene->setTab(0, false);
-        updateVisibleTabs(0);
-     }
-*/
     /* ----------------------------------------------------
     *  Update Chains option controls (radio and checkboxes under "MCMC Chains")
     * ---------------------------------------------------- */

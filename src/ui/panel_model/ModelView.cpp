@@ -414,7 +414,7 @@ void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
     const QString studyStr = tr("STUDY PERIOD") + QString(" [ %1 ; %2 ] BC/AD").arg(locale().toString(min), locale().toString(max));;
     mButModifyPeriod->setText(studyStr);
     mButModifyPeriod->setIconOnly(false);
-    mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text())) /2 - 2*mMargin, (mTopWrapper->height() - mMargin -topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 4*mMargin, topButtonHeight );
+    mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text())) /2 - 2*mMargin, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 4*mMargin, topButtonHeight );
 
 }
 
@@ -1000,75 +1000,71 @@ void ModelView::paintEvent(QPaintEvent* e)
 // Layout
 void ModelView::applyAppSettings()
 {
-   // if (font() !=  AppSettings::font()) {
-        mMargin = AppSettings::widthUnit();
-        mToolbarH = 3 * AppSettings::heigthUnit();
-        mButtonWidth = AppSettings::mButtonWidth;
-        mHandlerW = 1.5 * AppSettings::widthUnit();
 
-        mTopWrapper->setFont(AppSettings::font());
-        mLeftWrapper->setFont(AppSettings::font());
-        mRightWrapper->setFont(AppSettings::font());
+    mMargin = AppSettings::widthUnit();
+    mToolbarH = 3 * AppSettings::heigthUnit();
+    mButtonWidth = AppSettings::mButtonWidth;
+    mHandlerW = 1.5 * AppSettings::widthUnit();
 
-        mRightPanelTitle->setFont(AppSettings::font());
-        mLeftPanelTitle->setFont(AppSettings::font());
-        // ------
+    mTopWrapper->setFont(AppSettings::font());
+    mLeftWrapper->setFont(AppSettings::font());
+    mRightWrapper->setFont(AppSettings::font());
 
-        mEventsScene->setFont(AppSettings::font());
-       for (auto && item : mEventsScene->getItemsList()) {
-            static_cast<EventItem*>(item)->redrawEvent();
-            static_cast<EventItem*>(item)->update();
-        }
-        mEventsView->setFont(AppSettings::font());
+    mRightPanelTitle->setFont(AppSettings::font());
+    mLeftPanelTitle->setFont(AppSettings::font());
+    // ------
+
+    mEventsScene->setFont(AppSettings::font());
+   for (auto && item : mEventsScene->getItemsList()) {
+        static_cast<EventItem*>(item)->redrawEvent();
+        static_cast<EventItem*>(item)->update();
+    }
+    mEventsView->setFont(AppSettings::font());
 
 
-        mEventsGlobalView->setFont(AppSettings::font());
-        mEventsGlobalZoom->setFont(AppSettings::font());
+    mEventsGlobalView->setFont(AppSettings::font());
+    mEventsGlobalZoom->setFont(AppSettings::font());
 
-        mEventsSearchEdit->setFont(AppSettings::font());
+    mEventsSearchEdit->setFont(AppSettings::font());
 
-        mButNewEvent->setFont(AppSettings::font());
-        mButNewEventKnown->setFont(AppSettings::font());
-        mButDeleteEvent->setFont(AppSettings::font());
-        mButRecycleEvent->setFont(AppSettings::font());
-        mButExportEvents->setFont(AppSettings::font());
-        mButEventsOverview->setFont(AppSettings::font());
-        mButEventsGrid->setFont(AppSettings::font());
-        mButProperties->setFont(AppSettings::font());
-        mButMultiCalib->setFont(AppSettings::font());
-        mButImport->setFont(AppSettings::font());
+    mButNewEvent->setFont(AppSettings::font());
+    mButNewEventKnown->setFont(AppSettings::font());
+    mButDeleteEvent->setFont(AppSettings::font());
+    mButRecycleEvent->setFont(AppSettings::font());
+    mButExportEvents->setFont(AppSettings::font());
+    mButEventsOverview->setFont(AppSettings::font());
+    mButEventsGrid->setFont(AppSettings::font());
+    mButProperties->setFont(AppSettings::font());
+    mButMultiCalib->setFont(AppSettings::font());
+    mButImport->setFont(AppSettings::font());
 
-        // ------
+    // ------
 
-        mImportDataView->setFont(AppSettings::font());
-        mEventPropertiesView->applyAppSettings();
+    mImportDataView->setFont(AppSettings::font());
+    mEventPropertiesView->applyAppSettings();
 
-        mPhasesScene->setFont(AppSettings::font());
-        for (AbstractItem* item : mPhasesScene->getItemsList()) {
-            static_cast<PhaseItem*>(item)->redrawPhase();
-            static_cast<PhaseItem*>(item)->update();
-        }
-        mPhasesView->setFont(AppSettings::font());
+    mPhasesScene->setFont(AppSettings::font());
+    for (AbstractItem* item : mPhasesScene->getItemsList()) {
+        static_cast<PhaseItem*>(item)->redrawPhase();
+        static_cast<PhaseItem*>(item)->update();
+    }
+    mPhasesView->setFont(AppSettings::font());
 
-        mPhasesGlobalView->setFont(AppSettings::font());
-        mPhasesGlobalZoom->setFont(AppSettings::font());
+    mPhasesGlobalView->setFont(AppSettings::font());
+    mPhasesGlobalZoom->setFont(AppSettings::font());
 
-        mButNewPhase->setFont(AppSettings::font());
-        mButDeletePhase->setFont(AppSettings::font());
-        mButExportPhases->setFont(AppSettings::font());
-        mButPhasesOverview->setFont(AppSettings::font());
-        mButPhasesGrid->setFont(AppSettings::font());
+    mButNewPhase->setFont(AppSettings::font());
+    mButDeletePhase->setFont(AppSettings::font());
+    mButExportPhases->setFont(AppSettings::font());
+    mButPhasesOverview->setFont(AppSettings::font());
+    mButPhasesGrid->setFont(AppSettings::font());
 
-        // ------
-        mCalibrationView->applyAppSettings();
-        mMultiCalibrationView->applyAppSettings();
+    // ------
+    mCalibrationView->applyAppSettings();
+    mMultiCalibrationView->applyAppSettings();
 
-        mButModifyPeriod->setFont(AppSettings::font());
-        adaptStudyPeriodButton(mTmin, mTmax);
-       /* const int topButtonHeight = 1.6 * AppSettings::heigthUnit();
-        QFontMetrics fm (AppSettings::font());
-       mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text())) /2 - 2*mMargin, (mTopWrapper->height() - mMargin -topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 4*mMargin, topButtonHeight );
-*/
+    mButModifyPeriod->setFont(AppSettings::font());
+    adaptStudyPeriodButton(mTmin, mTmax);
 
 
     updateLayout();
@@ -1092,6 +1088,10 @@ void ModelView::updateLayout()
     mTopWrapper->setGeometry(mTopRect);
 
     //-------------- Top Flag
+    //------- Study Period
+
+     mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text())) /2 - 2*mMargin, (mTopWrapper->height() - topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 4*mMargin, topButtonHeight );
+
     // ---------- Panel Title
     QString leftTitle (tr("Events' Scene"));
     if (mButProperties->isChecked()  && mEventPropertiesView->isCalibChecked() && !mButMultiCalib->isChecked())
@@ -1111,9 +1111,6 @@ void ModelView::updateLayout()
     mRightPanelTitle->setText(rightTitle);
     mRightPanelTitle->setGeometry( width() - (fm.width(mRightPanelTitle->text()) + textSpacer), mButModifyPeriod->y(), fm.width(mRightPanelTitle->text()), topButtonHeight );
 
-    //------- Study Period
-
-     mButModifyPeriod ->setGeometry((mTopWrapper->width() - fm.width(mButModifyPeriod->text())) /2 - 2*mMargin, (mTopWrapper->height() - mMargin -topButtonHeight)/2, fm.width(mButModifyPeriod->text()) + 4*mMargin, topButtonHeight );
 
     // coordinates in ModelView
 

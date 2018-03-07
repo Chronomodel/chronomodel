@@ -161,6 +161,7 @@ CalibrationView::~CalibrationView()
 void CalibrationView::applyAppSettings()
 {
     // We must force setFont on QLineEdit !!
+    setFont(AppSettings::font());
     mButtonWidth = AppSettings::mButtonWidth;
 
     mHPDLab->setFont(AppSettings::font());
@@ -463,8 +464,8 @@ void CalibrationView::updateScroll()
     else
         return;
 
-    QFont adaptedFont (this->font());
-    const QFontMetricsF fm (this->font());
+    QFont adaptedFont (mStartEdit->font());
+    const QFontMetricsF fm (mStartEdit->font());
     qreal textSize = fm.width(mStartEdit->text());
     if (textSize > (mStartEdit->width() - 2. )) {
         const qreal fontRate = textSize / (mStartEdit->width() - 2. );
@@ -475,7 +476,7 @@ void CalibrationView::updateScroll()
     else
         mStartEdit->setFont(this->font());
 
-    adaptedFont = this->font();
+    adaptedFont = mEndEdit->font();
    // fm = QFontMetrics(font());
     textSize = fm.width(mEndEdit->text());
     if (textSize > (mEndEdit->width() - 2. )) {
