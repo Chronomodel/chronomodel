@@ -1033,7 +1033,7 @@ void Model::updateDensities(const int fftLength, const double bandwidth, const d
 
     if (!mPhases.isEmpty()) {
         generateTempo();
-        //generateTempoCredibility();
+
     }
     generateNumericalResults(mChains);
 
@@ -1203,10 +1203,10 @@ void Model::generateCredibility(const double thresh)
 
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(0);
-    progress->setMinimumDuration(1);
+    progress->setMinimumDuration(5);
     progress->setMinimum(0);
     progress->setMaximum(mPhases.size()*4);
-    progress->setMinimumWidth(20 * AppSettings::widthUnit());
+    progress->setMinimumWidth(50 * AppSettings::widthUnit());
 
     int position(0);
 
@@ -1234,12 +1234,12 @@ void Model::generateCredibility(const double thresh)
     QProgressDialog *progressGap = new QProgressDialog(tr("Gaps and transitions generation"), tr("Wait") , 1, 10);
     progressGap->setWindowModality(Qt::WindowModal);
     progressGap->setCancelButton(0);
-    progressGap->setMinimumDuration(0);
+    progressGap->setMinimumDuration(5);
     progressGap->setMinimum(0);
     progressGap->setMaximum(mPhases.size()*4);
     progressGap->setMinimum(0);
     progressGap->setMaximum(mPhaseConstraints.size()*2);
-    progressGap->setMinimumWidth(20 * AppSettings::widthUnit());
+    progressGap->setMinimumWidth(50 * AppSettings::widthUnit());
 
     position = 0;
     for (auto && phaseConstraint : mPhaseConstraints) {
@@ -1325,12 +1325,23 @@ void Model::generateTempo()
     QTime t = QTime::currentTime();
 #endif
 
+// Avoid to redo calculation, when mTempo exist, it happen when the control is changed
+    int tempoToDo (0);
+    for (auto &&phase : mPhases) {
+        if (phase->mRawTempo.isEmpty())
+            ++tempoToDo;
+    }
+
+    if(tempoToDo == 0) // no computation
+        return;
+
+
 #ifndef UNIT_TEST
     // Display a progressBar if "long" set with setMinimumDuration()
     QProgressDialog *progress = new QProgressDialog(tr("Tempo Plot generation"), tr("Wait") , 1, 10);//, qApp->activeWindow(), Qt::Window);
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(0);
-    progress->setMinimumDuration(0);
+    progress->setMinimumDuration(5);
     progress->setMinimum(0);
     progress->setMaximum(mPhases.size() * 4);
     progress->setMinimumWidth(20 * AppSettings::widthUnit());
