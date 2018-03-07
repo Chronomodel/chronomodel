@@ -10,10 +10,12 @@ MainController::MainController(const QString& filePath)
     Painting::init();
     PluginManager::loadPlugins();
     AppSettings::AppSettings();
-    //mAppSettings = new AppSettings();
 
     mMainWindow = MainWindow::getInstance();
     mMainWindow->readSettings(filePath);
+    mMainWindow->move(AppSettings::mLastPosition);
+    mMainWindow->resize(AppSettings::mLastSize);
+
     mMainWindow->show();
 
 }
