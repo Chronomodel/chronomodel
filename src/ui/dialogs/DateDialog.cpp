@@ -29,9 +29,10 @@ mWiggleEnabled(false)
     // -----------
     
     mNameLab = new Label(tr("Name"), this);
-    mNameEdit = new LineEdit(this);
+    mNameEdit = new QLineEdit(this);
+    mNameEdit->setAlignment(Qt::AlignHCenter);
     mNameEdit->setText("New Data");
-   // mNameEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+   //mNameEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mNameEdit->selectAll();
     mNameEdit->setFocus();
     
@@ -80,11 +81,16 @@ mWiggleEnabled(false)
     mDeltaAverageLab = new Label(tr("Mean"), mAdvancedWidget);
     mDeltaErrorLab   = new Label(tr("Error (sd)"), mAdvancedWidget);
     
-    mDeltaFixedEdit   = new LineEdit(mAdvancedWidget);
-    mDeltaMinEdit     = new LineEdit(mAdvancedWidget);
-    mDeltaMaxEdit     = new LineEdit(mAdvancedWidget);
-    mDeltaAverageEdit = new LineEdit(mAdvancedWidget);
-    mDeltaErrorEdit   = new LineEdit(mAdvancedWidget);
+    mDeltaFixedEdit   = new QLineEdit(mAdvancedWidget);
+    mDeltaFixedEdit->setAlignment(Qt::AlignHCenter);
+    mDeltaMinEdit     = new QLineEdit(mAdvancedWidget);
+    mDeltaMinEdit->setAlignment(Qt::AlignHCenter);
+    mDeltaMaxEdit     = new QLineEdit(mAdvancedWidget);
+    mDeltaMaxEdit->setAlignment(Qt::AlignHCenter);
+    mDeltaAverageEdit = new QLineEdit(mAdvancedWidget);
+    mDeltaAverageEdit->setAlignment(Qt::AlignHCenter);
+    mDeltaErrorEdit   = new QLineEdit(mAdvancedWidget);
+    mDeltaErrorEdit->setAlignment(Qt::AlignHCenter);
     
     mDeltaFixedEdit->setText(QString::number(0));
     mDeltaMinEdit->setText(QString::number(0));
@@ -149,8 +155,6 @@ mWiggleEnabled(false)
     mLayout->addWidget(mButtonBox);
     mLayout->addStretch();
     setLayout(mLayout);
-    
-   // setFixedWidth(600);
     
     updateVisibleControls();
 }
