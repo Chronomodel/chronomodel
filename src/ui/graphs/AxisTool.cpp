@@ -16,8 +16,8 @@ mShowText(true),
 mMinMaxOnly(false),
 mMajorScale (100),
 mMinorScaleCount (4),
-mAxisColor(0, 0, 0),
-mShowArrow(false)
+mShowArrow(false),
+mAxisColor(0, 0, 0)
 {
     
 }
@@ -116,8 +116,8 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
             p.drawPolygon(triangle);
         }
 
-        p.drawLine(xo, yo, xo + w, yo);
-        p.drawLine(xo, yo, xo, yo + graduationSize);
+        p.drawLine(QLineF(xo, yo, xo + w, yo)); // QLineF() done a smaller line
+       // p.drawLine(xo, yo, xo, yo + graduationSize);
 
         if (mMinMaxOnly) {
             if (mShowText) {
@@ -208,7 +208,7 @@ QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSiz
         const qreal xov = r.x() + r.width();
         const qreal yov = r.y() + r.height();
 
-        p.drawLine(xov, yov, xov, yov - h );
+        p.drawLine(QLineF(xov, yov, xov, yov - h ));
 
         if (mShowArrow) { // the arrow is over the rectangle of heigthSize
 
