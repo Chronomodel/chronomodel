@@ -56,7 +56,8 @@ MainWindow::MainWindow(QWidget* aParent):QMainWindow(aParent)
     statusBar()->showMessage(tr("Ready"));
     //setUnifiedTitleAndToolBarOnMac(true);
     setWindowIcon(QIcon(":chronomodel.png"));
-    setMinimumSize(50 * AppSettings::widthUnit(), 50 * AppSettings::heigthUnit());
+    //setMinimumSize(50 * AppSettings::widthUnit(), 50 * AppSettings::heigthUnit());
+    resize(AppSettings::mLastSize);
     
     connect(mProjectSaveAction, static_cast<void (QAction::*)(bool)> (&QAction::triggered), this, &MainWindow::saveProject);
     connect(mProjectSaveAsAction, static_cast<void (QAction::*)(bool)> (&QAction::triggered), this, &MainWindow::saveProjectAs);
@@ -489,8 +490,8 @@ void MainWindow::openProject()
             mProjectView->createProject();
 
             mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true, true);
-            if (! mProject->mModel->mChains.isEmpty())
-                emit mProject->mcmcFinished(mProject->mModel);
+           /* if (! mProject->mModel->mChains.isEmpty())
+                emit mProject->mcmcFinished(mProject->mModel);*/
          }
 
         mUndoStack->clear();
