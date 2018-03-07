@@ -181,9 +181,9 @@ void MCMCSettingsDialog::paintEvent(QPaintEvent* e)
 
     p.drawText(mAdaptRect.x(), mAdaptRect.y() + mAdaptRect.height() - 2*mMargin - lineH, mAdaptRect.width()/2, lineH, Qt::AlignVCenter | Qt::AlignRight, tr("Max batches") );
 
-    const qreal posLine=  height() - 5*mMargin - butH -1.2* AppSettings::fontDescent();
-    p.drawText(2* mMargin, posLine,  tr("Seeds (separated by \";\")"));
-    p.drawText(width()/2 + 2*mMargin , posLine,  tr("Mixing level"));
+    const qreal posLine =  mSeedsEdit->y() + mSeedsEdit->height() - 0.3* AppSettings::heigthUnit();
+    p.drawText(10 * mMargin, posLine,  tr("Seeds (separated by \";\")"));
+    p.drawText(width()/2 + 10 * mMargin , posLine,  tr("Mixing level"));
 
 }
 
@@ -223,9 +223,9 @@ void MCMCSettingsDialog::updateLayout()
 
     QFontMetrics fm(AppSettings::font());
 
-    mSeedsEdit->setGeometry(4* mMargin + fm.width( tr("Seeds (separated by \";\")")), height() - 5*mMargin - butH -lineH, editW, lineH);
+    mSeedsEdit->setGeometry(15* mMargin + fm.width( tr("Seeds (separated by \";\")")), height() - 5*mMargin - butH -lineH, editW, lineH);
 
-    mLevelEdit->setGeometry(width()/2 + 4* mMargin + fm.width( tr("Mixing level")),  height() - 5*mMargin - butH - lineH, editW/1.8, lineH);
+    mLevelEdit->setGeometry(width()/2 + 15* mMargin + fm.width( tr("Mixing level")),  height() - 5*mMargin - butH - lineH, editW/1.8, lineH);
 
     mResetBut->move(mMargin, height() - 2*mMargin - butH );
 #ifdef DEBUG
