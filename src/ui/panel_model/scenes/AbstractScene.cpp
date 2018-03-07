@@ -339,11 +339,24 @@ void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
         int w = sceneRect().width();
         int h = sceneRect().height();
         int delta (4 * mDeltaGrid );
-        for (int i(0); i<w; i += delta)
+
+        int xi = ceil(x/delta) * delta;
+        while (xi< x + w) {
+            painter->drawLine(xi , y, xi, y + h);
+            xi += delta;
+        }
+
+        int yi = floor(y/delta) * delta;
+        while (yi< y + h) {
+            painter->drawLine(x , yi, x + w, yi);
+            yi += delta;
+        }
+
+       /* for (int i(0); i<w; i += delta)
             painter->drawLine(x + i, y, x + i, y + h);
         
         for (int i(0); i<h; i += delta)
-            painter->drawLine(x, y + i, x + w, y + i);
+            painter->drawLine(x, y + i, x + w, y + i);*/
     }
     
     // Cross for origin :
