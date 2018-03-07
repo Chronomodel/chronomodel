@@ -21,9 +21,9 @@ void ColoredPanel::paintEvent(QPaintEvent *)
 
 MultiCalibrationDrawing::MultiCalibrationDrawing(QWidget *parent) : QWidget(parent),
 mVerticalSpacer (5),
-mGraphFont (AppSettings::font()),
 mGraphHeight (6 * AppSettings::heigthUnit()),
 mHeightForVisibleAxis(5 * AppSettings::heigthUnit()),
+mGraphFont (AppSettings::font()),
 mMouseOverCurve (true)
 {
    setMouseTracking(true);

@@ -109,7 +109,7 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     
     r.adjust(2, 2, -2, -2);
     // box name
-    const int rHeightMid =  int(r.height()/2);
+    const int rHeightMid =  int(r.height() *2/3);
     painter->fillRect(r.adjusted(0, 0, 0, -rHeightMid), Qt::white);
     
     QFont font = AppSettings::font();

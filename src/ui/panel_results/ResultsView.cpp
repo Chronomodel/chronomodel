@@ -1563,8 +1563,8 @@ void ResultsView::updateLayout()
          mRuler->setGeometry(0, mTabs->y() + mTabs->height(), (width() - mOptionsW - sbe)*2./3., mRulerH);
     else
         mRuler->setGeometry(0, mTabs->y() + mTabs->height(), width() - mOptionsW - sbe, mRulerH );
-
-    mStack->setGeometry(0, mTabsH + mRulerH + 20, width() - mOptionsW, height() - mRulerH - mTabsH);
+    //const int statusHeight = 0;//MainWindow.statusBar()->height();
+    mStack->setGeometry(0, mTabsH + 1.2 * mRulerH + 2, width() - mOptionsW, height() - 1.2 * mRulerH - mTabsH);
     mMarker->setGeometry(mMarker->pos().x(), mTabsH + sbe, mMarker->thickness(), height() - sbe - mTabsH);
     
     /* ----------------------------------------------------------

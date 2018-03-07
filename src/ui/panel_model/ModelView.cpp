@@ -36,18 +36,18 @@ mEventsScene(nullptr),
 mCurSearchIdx(0),
 mPhasesScene(nullptr),
 mCurrentRightWidget(nullptr),
-mHandlerW ( AppSettings::widthUnit()),
 mTmin(0.),
 mTmax(2000.),
 mProject(nullptr),
 mSplitProp(0.6),
+mHandlerW ( AppSettings::widthUnit()),
 mIsSplitting(false),
 mCalibVisible(false)
 {
     setMouseTracking(true);
     setFont(AppSettings::font());
 
-    mTopRect = QRect(0, 0, width(), 3 * AppSettings::heigthUnit());
+    mTopRect = QRect(0, 0, width(), 2 * AppSettings::heigthUnit());
     mTopWrapper = new QWidget(this);
     mTopWrapper->setGeometry(mTopRect);
 
@@ -410,7 +410,7 @@ void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
 
 
       /* Addapt mButModifyPeriod size and position */
-    const int topButtonHeight =  1.6 * AppSettings::heigthUnit();
+    const int topButtonHeight =  1.5 * AppSettings::heigthUnit();
     const QString studyStr = tr("STUDY PERIOD") + QString(" [ %1 ; %2 ] BC/AD").arg(locale().toString(min), locale().toString(max));;
     mButModifyPeriod->setText(studyStr);
     mButModifyPeriod->setIconOnly(false);
@@ -1083,8 +1083,8 @@ void ModelView::updateLayout()
 
 
     const int textSpacer(2 * AppSettings::widthUnit()); // marge of title
-    mTopRect = QRect(0, 0, width(), 3 * AppSettings::heigthUnit() );
-    const int topButtonHeight = 1.6 * AppSettings::heigthUnit();
+    mTopRect = QRect(0, 0, width(), 2 * AppSettings::heigthUnit() );
+    const int topButtonHeight = 1.5 * AppSettings::heigthUnit();
     mTopWrapper->setGeometry(mTopRect);
 
     //-------------- Top Flag

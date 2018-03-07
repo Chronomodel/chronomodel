@@ -484,7 +484,7 @@ QPixmap Date::generateTypoThumb()
     if (mIsValid){
         //  No need to draw the graph on a large size
         //  These values are arbitary
-        const QSize size(200, 30);
+        const QSize size(1000, 150);
         QPixmap thumb(size);
 
         const double tLower = mData.value(DATE_UNIFORM_MIN_STR).toDouble();
@@ -561,7 +561,7 @@ QPixmap Date::generateCalibThumb()
     if (mIsValid) {
         //  No need to draw the graph on a large size
         //  These values are arbitary
-        const QSize size(200, 30);
+        const QSize size(1000, 150);
         
         const double tmin = mSettings.mTmin;
         const double tmax = mSettings.mTmax;

@@ -329,11 +329,11 @@ void GraphViewResults::resizeEvent(QResizeEvent* e)
 
 void GraphViewResults::updateLayout()
 {
-     // define the rigth margin,according to the max on the scale
-    QFont fontTitle(mGraphFont);
+     // Define the rigth margin, according to the max on the scale
+    QFont fontTitle (mGraphFont);
     fontTitle.setPointSizeF(mGraphFont.pointSizeF() * 1.1);
-    QFontMetricsF fmTitle(fontTitle);
-    mTopShift = fmTitle.height() ;
+    QFontMetricsF fmTitle (fontTitle);
+    mTopShift = 2 * fmTitle.height() ;
 
     QRect graphRect(0, mTopShift, width(), height() - mTopShift);
 
@@ -342,7 +342,7 @@ void GraphViewResults::updateLayout()
         mTextArea->setGeometry(graphRect.adjusted(width()*2./3. + 2., -mTopShift + 2 , -2, -2));
 
     } else
-            mGraph->setGeometry(graphRect);
+        mGraph->setGeometry(graphRect);
 
     const bool axisVisible = (mGraph->height() > mHeightForVisibleAxis);
 
@@ -372,7 +372,7 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     QPainter p;
     p.begin(this);
    // p.fillRect(mGraph->geometry().adjusted(0, - mTopShift, 0, 0), mGraph->getBackgroundColor());
-     p.fillRect(rect(), mGraph->getBackgroundColor());
+    p.fillRect(rect(), mGraph->getBackgroundColor());
     p.setFont(fontTitle);
 
     p.setPen(Qt::black);

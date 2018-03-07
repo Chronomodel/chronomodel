@@ -1015,8 +1015,8 @@ void GraphView::drawCurves(QPainter& painter)
                 painter.strokePath(path, pen);
                 
             } else if (curve.mIsHorizontalSections) {
-                const qreal y1 = mMarginTop;
-                const qreal y0 = mMarginTop + mGraphHeight;
+                const qreal y1 = getYForValue(mMaxY);// mMarginTop;
+                const qreal y0 = getYForValue(mMinY);//mMarginTop + mGraphHeight;
                 path.moveTo(mMarginLeft, y0);
                 
                 for (const auto & section : curve.mSections ) {

@@ -10,7 +10,7 @@
 
 PluginUniform::PluginUniform()
 {
-    mColor = QColor(220, 204, 173);
+    mColor = QColor(100, 50, 140);
 }
 
 PluginUniform::~PluginUniform()

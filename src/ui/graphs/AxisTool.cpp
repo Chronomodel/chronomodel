@@ -14,9 +14,9 @@ mShowSubs(true),
 mShowSubSubs(true),
 mShowText(true),
 mMinMaxOnly(false),
+mShowArrow(false),
 mMajorScale (100),
 mMinorScaleCount (4),
-mShowArrow(false),
 mAxisColor(0, 0, 0)
 {
     
