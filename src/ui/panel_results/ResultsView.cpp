@@ -3163,23 +3163,30 @@ void ResultsView::setGraphFont(const QFont &font)
     mGraphFont = font;
     const QFontMetrics gfm (mGraphFont);
 
+    /* Variable identic in AxisTool */
+
+#ifdef Q_OS_MAC
+    int heightText = 1.5 * gfm.height();
+#else
+    int heightText = gfm.height();
+#endif
+    qreal graduationSize = heightText /3;
+
     switch(mTabs->currentIndex()) {
         case 0: // Posterior Distrib.
                 {
                   //  const int marg = qMax(gfm.width(stringForLocal(mResultCurrentMinX))/ 2., gfm.width(stringForLocal(mResultCurrentMaxX))/ 2.);
-                    mMarginLeft =  1.5 * gfm.width(stringForLocal( 5 * mSettings.getTminFormated()))/ 2. +  gfm.averageCharWidth();
+                    mMarginLeft =  1.5 * gfm.width(stringForLocal( 5 * mSettings.getTminFormated()))/ 2. +  2*graduationSize;
                     mMarginRight = 1.5 * gfm.width(stringForLocal(5 * mSettings.getTmaxFormated()))/ 2.;
                   }
          break;
 
         case 1: // History Plot
         case 2:// Acceptance Rate
-                        {
-                        // const int marg = qMax(gfm.width(stringForLocal(mResultCurrentMinX))/ 2, gfm.width(stringForGraph(100)));
-
+                 {
                         const int maxIter = 1+ mChains.at(0).mNumBurnIter + (mChains.at(0).mBatchIndex * mChains.at(0).mNumBatchIter) + mChains.at(0).mNumRunIter / mChains.at(0).mThinningInterval;
                         const int marg = gfm.width(stringForLocal(maxIter));
-                        mMarginLeft =  marg ;
+                        mMarginLeft =  marg + 2*graduationSize ;
                         mMarginRight = marg;// gfm.width(stringForLocal(mSettings:))/ 2;
                     }
         break;
@@ -3187,7 +3194,7 @@ void ResultsView::setGraphFont(const QFont &font)
          case 3:// Autocorrelation
                     {
                        const int marg = qMax(gfm.width(stringForLocal(40))/ 2, gfm.width(stringForGraph(100)));
-                       mMarginLeft = 1.7 * marg ;
+                       mMarginLeft = marg + 2*graduationSize ;
                        mMarginRight = 4 * gfm.width(stringForLocal(40))/ 2.;
                 }
         break;
@@ -3665,23 +3672,15 @@ void ResultsView::exportFullImage()
     
     AxisWidget* axisWidget = nullptr;
     QLabel* axisLegend = nullptr;
-    int axeHeight (20);
-    int legendHeight (20);
+    int axeHeight (mGraphFont.pointSize() * 2.2); // equal MarginBottom()
+    int legendHeight (2* AppSettings::font().pointSizeF());// 20);
     
     if (printAxis) {
         curWid->setFixedHeight(curWid->height() + axeHeight + legendHeight );
-        
-        DateConversion f = nullptr;
-        if (mTabs->currentIndex() == 0 && mDataThetaRadio->isChecked())
-            f = DateUtils::convertToAppSettingsFormat;
 
-        QFontMetricsF fmAxe (qApp->font());
-        qreal marginRight = floor(fmAxe.width(DateUtils::convertToAppSettingsFormatStr(max)) / 2.);
-
-
-        axisWidget = new AxisWidget(f, curWid);
-        axisWidget->mMarginLeft = 50.;
-        axisWidget->mMarginRight = marginRight;
+        axisWidget = new AxisWidget(nullptr, curWid);
+        axisWidget->mMarginLeft = mMarginLeft;
+        axisWidget->mMarginRight = mMarginRight;
         axisWidget->setScaleDivision(mMajorScale, mMinorCountScale);
 
         if (mStatCheck->isChecked()) {
@@ -3692,6 +3691,7 @@ void ResultsView::exportFullImage()
             axisWidget->setGeometry(0, curWid->height() - axeHeight, curWid->width(), axeHeight);
             axisWidget->updateValues(curWid->width() - axisWidget->mMarginLeft - axisWidget->mMarginRight, 50, mResultCurrentMinX, mResultCurrentMaxX);
         }
+
         axisWidget->mShowText = true;
         axisWidget->setAutoFillBackground(true);
         axisWidget->mShowSubs = true;
@@ -3716,10 +3716,12 @@ void ResultsView::exportFullImage()
 
 
         axisLegend = new QLabel(legend, curWid);
+        axisLegend->setFont(AppSettings::font());
+        QFontMetrics fm(AppSettings::font());
         if (mStatCheck->isChecked())
-            axisLegend->setGeometry(0, curWid->height() - axeHeight - legendHeight, curWid->width()*2./3. - 10, legendHeight);
+            axisLegend->setGeometry(fm.width(legend), curWid->height() - axeHeight - legendHeight, curWid->width()*2./3. - 10, legendHeight);
         else
-            axisLegend->setGeometry(0, curWid->height() - axeHeight - legendHeight, curWid->width() - 10, legendHeight);
+            axisLegend->setGeometry(curWid->width() - fm.width(legend) - mMarginRight, curWid->height() - axeHeight - legendHeight, fm.width(legend) , legendHeight);
 
         axisLegend->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
         axisLegend->raise();

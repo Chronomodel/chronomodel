@@ -44,6 +44,38 @@ Ruler::~Ruler()
     
 }
 
+/** Copy assignment operator */
+Ruler& Ruler::operator=(const Ruler & origin)
+{
+    realPosition = origin.realPosition;
+    mCurrentMin = origin.mCurrentMin;
+    mCurrentMax = origin.mCurrentMax;
+    mMin = origin.mMin;
+    mMax = origin.mMax;
+    mZoomProp = origin.mZoomProp;
+
+    mFormatFuncX = origin.mFormatFuncX;
+
+    //mScrollBar = origin.mScrollBar;
+
+    mScrollBarHeight = origin.mScrollBarHeight;
+    mAxisFont = origin.mAxisFont;
+    mAxisRect = origin.mAxisRect;
+
+    mStepMinWidth = origin.mStepMinWidth;
+    mStepWidth = origin.mStepWidth;
+    mMarginLeft = origin.mMarginLeft;
+    mMarginRight = origin.mMarginRight;
+    mMarginTop = origin.mMarginTop;
+    mMarginBottom = origin.mMarginBottom;
+
+    mAxisTool = origin.mAxisTool;
+
+    mAreas = origin.mAreas;
+
+    return *this;
+}
+
 void Ruler::setFont(const QFont &font)
 {
     mMarginTop = 0;
