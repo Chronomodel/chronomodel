@@ -838,15 +838,29 @@ void ResultsView::updateControls()
     /* -------------------------------------------------------
      *  Activate specific controls for post. distrib. (first tab)
      * -------------------------------------------------------*/
+    if (byEvents) {
+        mDataCalibCheck -> setVisible((mCurrentTypeGraph == GraphViewResults::ePostDistrib)
+                                                                        && mDatesfoldCheck->isChecked()
+                                                                        && mDataThetaRadio->isChecked());
+        mWiggleCheck-> setVisible((mCurrentTypeGraph == GraphViewResults::ePostDistrib)
+                                                                 && mDatesfoldCheck->isChecked()
+                                                                 && mDataThetaRadio->isChecked());
 
-    mDataCalibCheck -> setVisible((mCurrentTypeGraph == GraphViewResults::ePostDistrib)
-                                     && !byTempo
-                                     && mDatesfoldCheck->isChecked()
-                                     && mDataThetaRadio->isChecked());
-    mWiggleCheck-> setVisible((mCurrentTypeGraph == GraphViewResults::ePostDistrib)
-                                     && !byTempo
-                                     && mDatesfoldCheck->isChecked()
-                                     && mDataThetaRadio->isChecked());
+    } else if (byPhases) {
+        mDataCalibCheck -> setVisible((mCurrentTypeGraph == GraphViewResults::ePostDistrib)
+                                                                         && mEventsfoldCheck->isChecked()
+                                                                         && mDatesfoldCheck->isChecked()
+                                                                         && mDataThetaRadio->isChecked());
+        mWiggleCheck-> setVisible((mCurrentTypeGraph == GraphViewResults::ePostDistrib)
+                                                                && mEventsfoldCheck->isChecked()
+                                                                && mDatesfoldCheck->isChecked()
+                                                                && mDataThetaRadio->isChecked());
+    } else {
+        mDataCalibCheck -> setVisible(false);
+        mWiggleCheck-> setVisible(false);
+    }
+
+
 
     
     /* -------------------------------------------------------
@@ -995,7 +1009,7 @@ void ResultsView:: updateTabByScene()
 
     int dx (2 * mMargin);
 
-    if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
+    if ((mCurrentTypeGraph == GraphViewResults::ePostDistrib)  && mDataThetaRadio->isChecked() ) {
         if (( byEvents || (byPhases && mEventsfoldCheck->isChecked()) )   && mDatesfoldCheck->isChecked()) {
             mDataCalibCheck -> move(mMargin + dx, ySpan);
             ySpan += mDataCalibCheck->height() + mMargin;
