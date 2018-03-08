@@ -17,6 +17,7 @@ public:
 
     void setFixedValue(const double& value);
     double fixedValue() const;
+    double formatedFixedValue() const;
     
     void updateValues(const double &tmin, const double &tmax, const double &step);
     

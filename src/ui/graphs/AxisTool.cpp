@@ -74,7 +74,7 @@ void AxisTool::setScaleDivision (const double &major, const double &minorCount)
 
 /**
  * @brief Draw axis on a QPainter, if there is no valueFormatFunc, all number is converted in QString with precision 0, it's meanning only integer
- * @param graduationSize size of the main graduation; if -1 indiquate automatique size according to the font; default =-1
+ * @param graduationSize size of the main graduation; if -1 indiquate automatique size according to the font; default = -1
  */
 QVector<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSize, DateConversion valueFormatFunc)
 {

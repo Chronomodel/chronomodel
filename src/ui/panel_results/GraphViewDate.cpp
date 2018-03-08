@@ -113,7 +113,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
 
 
             mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
-            mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormat);
+            mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
             mGraph->setFormatFunctY(nullptr);
 
 
@@ -201,7 +201,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             mTitle = tr("Individual Std : %1").arg(mDate->mName);
 
             mGraph->mLegendX = "";
-            mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormat);
+            mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
             mGraph->setFormatFunctY(nullptr);
 
             //  Post Distrib All Chains
@@ -244,7 +244,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
     else if (typeGraph == eTrace && (variable == eTheta || variable == eSigma)) {
         mGraph->mLegendX = tr("Iterations");
         mGraph->setFormatFunctX(nullptr);
-        mGraph->setFormatFunctY(DateUtils::convertToAppSettingsFormat);
+        mGraph->setFormatFunctY(nullptr);//DateUtils::convertToAppSettingsFormat);
         if (variable == eTheta)
             mTitle = tr("Data : %1").arg(mDate->mName);
         else

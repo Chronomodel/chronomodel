@@ -2491,7 +2491,7 @@ void ResultsView::updateScales()
             const double tRangeMax = tCenter + ( (studySpan/2.)  / sliderToZoom( mXSlider->minimum()));
 
             mRuler->setRange(tRangeMin, tRangeMax);
-            mRuler->setFormatFunctX(DateUtils::convertToAppSettingsFormat);
+            mRuler->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
 
         } else if (mCurrentVariable == GraphViewResults::eSigma) {
             mResultMinX = 0.;

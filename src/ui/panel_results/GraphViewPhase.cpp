@@ -88,7 +88,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
     if ((typeGraph == ePostDistrib) && (variable == eTheta)) {
         mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
         mGraph->mLegendY = "";
-        mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormat);
+        mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
         mGraph->setFormatFunctY(nullptr);
         mTitle = tr("Phase : %1").arg(mPhase->mName);
         QMap<double,double> &alpha = mPhase->mAlpha.fullHisto();
@@ -224,7 +224,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
      } else if (typeGraph == ePostDistrib && variable == eSigma) {
 
         mGraph->mLegendX = "";
-        mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormat);
+        mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
         mGraph->setFormatFunctY(nullptr);
 
         mTitle = tr("Phase's Events' Std Compil. : %1").arg(mPhase->mName);
@@ -273,7 +273,7 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
     else if (typeGraph == eTrace && variable == eTheta) {
         mGraph->mLegendX = tr("Iterations");
         mGraph->setFormatFunctX(nullptr);
-        mGraph->setFormatFunctY(DateUtils::convertToAppSettingsFormat);
+        mGraph->setFormatFunctY(nullptr);//DateUtils::convertToAppSettingsFormat);
         mTitle = tr("Phase : %1").arg(mPhase->mName);
 
         generateTraceCurves(mChains, &(mPhase->mAlpha), "Alpha");

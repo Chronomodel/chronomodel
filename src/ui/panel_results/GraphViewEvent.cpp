@@ -89,7 +89,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     // ------------------------------------------------
     if (typeGraph == ePostDistrib) {
         mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
-        mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormat);
+        mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
         mGraph->setFormatFunctY(nullptr);
         mGraph->setBackgroundColor(QColor(230, 230, 230));
 
@@ -111,14 +111,11 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                 GraphCurve curveLineBound;
                 curveLineBound.mName = "Post Distrib All Chains";
                 curveLineBound.mPen.setColor(color);
-         /*       curveLineBound.mIsVerticalLine = true;
-                curveLineBound.mVerticalValue = bound->fixedValue(); */
-
                 curveLineBound.mIsHorizontalSections = true;
                 qreal tLower;
                 qreal tUpper;
 
-                tLower =bound->fixedValue();
+                tLower =bound->formatedFixedValue();
                 tUpper = tLower;
 
                 curveLineBound.mSections.append(qMakePair(tLower,tUpper));
@@ -129,10 +126,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                    // GraphCurve curveLineBound;
                     curveLineBound.mName = "Post Distrib Chain " + QString::number(i);
                     curveLineBound.mPen.setColor(Painting::chainColors.at(i));
-                    //curveLineBound.mIsVerticalLine = true;
-                   // curveLineBound.mVerticalValue = bound->fixedValue();
-                   // curveLineBound.mIsHorizontalSections = true;
-                    //curveLineBound.mSections.append(qMakePair(tLower,tUpper));
+
                     mGraph->addCurve(curveLineBound);
                 }
 
@@ -218,7 +212,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
         else if (variable == eSigma) {
             mGraph->setOverArrow(GraphView::eNone);
             mGraph->mLegendX = "";
-            mGraph->setFormatFunctX(DateUtils::convertToAppSettingsFormat);
+            mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
             mGraph->setFormatFunctY(nullptr);
 
             if (mEvent->type()==Event::eKnown)
@@ -256,7 +250,7 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
     else if (typeGraph == eTrace && variable == eTheta) {
         mGraph->mLegendX = "Iterations";
         mGraph->setFormatFunctX(nullptr);
-        mGraph->setFormatFunctY(DateUtils::convertToAppSettingsFormat);
+        mGraph->setFormatFunctY(nullptr);//DateUtils::convertToAppSettingsFormat);
         mTitle = ((mEvent->type()==Event::eKnown) ? tr("Bound : %1").arg(mEvent->mName) : tr("Event : %1").arg(mEvent->mName));
 
         generateTraceCurves(mChains, &(mEvent->mTheta));

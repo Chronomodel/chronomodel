@@ -105,7 +105,15 @@ QJsonObject EventKnown::toJson() const
 
 void EventKnown::setFixedValue(const double& value) {mFixed = value;}
 
-double EventKnown::fixedValue() const {return mFixed;}
+double EventKnown::fixedValue() const
+{
+    return mFixed;
+}
+
+double EventKnown::formatedFixedValue() const
+{
+    return DateUtils::convertToAppSettingsFormat(mFixed);
+}
 
 
 void EventKnown::updateValues(const double& tmin, const double& tmax, const double& step)
