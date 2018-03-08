@@ -41,14 +41,14 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
 
    // mLogTabs->setContentsMargins(15, 15, 15, 15);
     connect(mLogTabs, &Tabs::tabClicked, this, &ProjectView::showLogTab);
-
+/*
     const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
 
     mLogModelEdit->resize( width() -  AppSettings::widthUnit(), logTabHusefull );
     mLogMCMCEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
     mLogResultsEdit->resize( width() -AppSettings::widthUnit() , logTabHusefull );
     mLogTabs->resize(mLogTabs->minimalWidth(), mLogTabs->minimalHeight());
-
+*/
     mStack = new QStackedWidget();
     mStack->addWidget(mModelView);
     mStack->addWidget(mResultsView);
@@ -75,12 +75,12 @@ ProjectView::~ProjectView()
 void ProjectView::resizeEvent(QResizeEvent* e)
 {
     (void) e;
-    const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
+   const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
 
     mLogModelEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
     mLogMCMCEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
     mLogResultsEdit->resize( width() -AppSettings::widthUnit() , logTabHusefull );
-    mLogTabs->resize(width(), mLogTabs->minimalHeight());
+   /*  mLogTabs->resize(width(), mLogTabs->minimalHeight()); */
 }
 
 void ProjectView::doProjectConnections(Project* project)
@@ -123,6 +123,7 @@ void ProjectView::setAppSettingsFont()
     mModelView->applyAppSettings();
     mResultsView->applyAppSettings();
 
+    mLogTabs->setFont(AppSettings::font());
     mLogModelEdit->setFontFamily(AppSettings::font().family());
     mLogModelEdit->setFontPointSize(AppSettings::font().pointSizeF());
 
@@ -143,13 +144,14 @@ void ProjectView::setAppSettingsFont()
   /*  if (mResultsView->mModel && !mResultsView->mModel->mChains.isEmpty())
         updateResultsLog(mResultsView->mModel->getResultsLog());
 */
-    const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
+   const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
 
     mLogModelEdit->resize( width() -  AppSettings::widthUnit(), logTabHusefull );
     mLogMCMCEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
     mLogResultsEdit->resize( width() -AppSettings::widthUnit(), logTabHusefull );
+/*
     mLogTabs->resize(mLogTabs->minimalWidth(), mLogTabs->minimalHeight());
-
+*/
 }
 
 void ProjectView::showResults()
