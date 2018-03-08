@@ -867,6 +867,9 @@ void GraphView::paintToDevice(QPaintDevice* device)
                     maxData = std::max(maxData, curve.mData.lastKey());
                  else if (curve.mVisible && curve.mIsVerticalLine)
                      maxData = std::max(maxData, curve.mVerticalValue);
+                 else if (curve.mVisible && curve.mIsHorizontalSections)
+                     for (const auto & section : curve.mSections )
+                         maxData = std::max(maxData, section.second);
 
 
              if ( maxData <= mCurrentMinX) {
@@ -891,6 +894,9 @@ void GraphView::paintToDevice(QPaintDevice* device)
                     minData = std::min(minData, curve.mData.firstKey());
                  else if (curve.mVisible && curve.mIsVerticalLine)
                      minData = std::min(minData, curve.mVerticalValue);
+                 else if (curve.mVisible && curve.mIsHorizontalSections)
+                     for (const auto & section : curve.mSections )
+                         minData = std::min(minData, section.first);
 
 
              if (mCurrentMaxX <= minData) {
@@ -899,7 +905,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
                                                                       QPointF(xr, yo - arrowSize),
                                                                       QPointF(xr , yo + arrowSize) }));
 
-                 QLinearGradient linearGradientR(xr, yo, xr+arrowSize, yo);
+                 QLinearGradient linearGradientR(xr, yo, xr + arrowSize, yo);
                          linearGradientR.setColorAt(0, gradColLigth );
                          linearGradientR.setColorAt(1, gradColDark);
 
@@ -1014,9 +1020,9 @@ void GraphView::drawCurves(QPainter& painter)
                 
                 painter.strokePath(path, pen);
                 
-            } else if (curve.mIsHorizontalSections) {
-                const qreal y1 = getYForValue(mMaxY);// mMarginTop;
-                const qreal y0 = getYForValue(mMinY);//mMarginTop + mGraphHeight;
+            } else if (curve.mIsHorizontalSections) { // used for Bound and Typo
+                const qreal y1 = getYForValue(mMaxY);
+                const qreal y0 = getYForValue(mMinY);
                 path.moveTo(mMarginLeft, y0);
                 
                 for (const auto & section : curve.mSections ) {

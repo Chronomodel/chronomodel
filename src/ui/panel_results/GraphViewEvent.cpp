@@ -111,17 +111,28 @@ void GraphViewEvent::generateCurves(TypeGraph typeGraph, Variable variable)
                 GraphCurve curveLineBound;
                 curveLineBound.mName = "Post Distrib All Chains";
                 curveLineBound.mPen.setColor(color);
-                curveLineBound.mIsVerticalLine = true;
-                curveLineBound.mVerticalValue = bound->fixedValue();
+         /*       curveLineBound.mIsVerticalLine = true;
+                curveLineBound.mVerticalValue = bound->fixedValue(); */
+
+                curveLineBound.mIsHorizontalSections = true;
+                qreal tLower;
+                qreal tUpper;
+
+                tLower =bound->fixedValue();
+                tUpper = tLower;
+
+                curveLineBound.mSections.append(qMakePair(tLower,tUpper));
                 mGraph->addCurve(curveLineBound);
 
                 // generate theorical curves
                 for (int i=0; i<mChains.size(); ++i) {
-                    GraphCurve curveLineBound;
+                   // GraphCurve curveLineBound;
                     curveLineBound.mName = "Post Distrib Chain " + QString::number(i);
                     curveLineBound.mPen.setColor(Painting::chainColors.at(i));
-                    curveLineBound.mIsVerticalLine = true;
-                    curveLineBound.mVerticalValue = bound->fixedValue();
+                    //curveLineBound.mIsVerticalLine = true;
+                   // curveLineBound.mVerticalValue = bound->fixedValue();
+                   // curveLineBound.mIsHorizontalSections = true;
+                    //curveLineBound.mSections.append(qMakePair(tLower,tUpper));
                     mGraph->addCurve(curveLineBound);
                 }
 
