@@ -206,22 +206,22 @@ void MultiCalibrationView::applyAppSettings()
     mGraphHeightLab->setFont(AppSettings::font());
     mGraphHeightEdit->setFont(AppSettings::font());
 
-   mStartLab->setFont(AppSettings::font());
-   mStartEdit->setFont(AppSettings::font());
+    mStartLab->setFont(AppSettings::font());
+    mStartEdit->setFont(AppSettings::font());
 
-   mEndLab->setFont(AppSettings::font());
-   mEndEdit->setFont(AppSettings::font());
+    mEndLab->setFont(AppSettings::font());
+    mEndEdit->setFont(AppSettings::font());
 
-   mMajorScaleLab->setFont(AppSettings::font());
-   mMajorScaleEdit->setFont(AppSettings::font());
+    mMajorScaleLab->setFont(AppSettings::font());
+    mMajorScaleEdit->setFont(AppSettings::font());
 
-   mMinorScaleLab->setFont(AppSettings::font());
-   mMinorScaleEdit->setFont(AppSettings::font());
+    mMinorScaleLab->setFont(AppSettings::font());
+    mMinorScaleEdit->setFont(AppSettings::font());
 
-   mHPDLab->setFont(AppSettings::font());
-   mHPDEdit->setFont(AppSettings::font());
+    mHPDLab->setFont(AppSettings::font());
+    mHPDEdit->setFont(AppSettings::font());
 
-   updateLayout();
+    updateLayout();
 }
 
 void MultiCalibrationView::updateLayout()
@@ -322,8 +322,8 @@ void MultiCalibrationView::updateGraphList()
 
 
     const QFontMetrics fm (font());
-    const int marginRight = (int) floor(fm.width(mEndEdit->text())/2) + 5;
-    const int marginLeft = (int) floor(fm.width(mStartEdit->text())/2) + 5;
+    const int marginRight = (int) 1.5 * floor(fm.width(mEndEdit->text())/2);
+    const int marginLeft = (int) 1.5 * floor(fm.width(mStartEdit->text())/2);
 
     QList<QJsonObject> selectedEvents;
 

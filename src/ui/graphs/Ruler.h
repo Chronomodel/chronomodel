@@ -19,7 +19,8 @@ class Ruler: public QWidget
 public:
     Ruler(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
     ~Ruler();
-    
+    Ruler& operator=(const Ruler & origin);
+
     double realPosition;
     double mCurrentMin;
     double mCurrentMax;
@@ -28,12 +29,12 @@ public:
     double mZoomProp;
     void setFont(const QFont &font);
 
-     void setRange(const double min, const double max);
-     void setCurrent(const double min, const double max);
-     void setMarginTop (const qreal &top) {mMarginTop = top;}
-     void setMarginBottom (const qreal &bottom) {mMarginBottom = bottom;}
-     void setMarginRight (const qreal &right) {mMarginRight = right;}
-      void setMarginLeft (const qreal &left) {mMarginLeft = left;}
+    void setRange(const double min, const double max);
+    void setCurrent(const double min, const double max);
+    void setMarginTop (const qreal &top) {mMarginTop = top;}
+    void setMarginBottom (const qreal &bottom) {mMarginBottom = bottom;}
+    void setMarginRight (const qreal &right) {mMarginRight = right;}
+    void setMarginLeft (const qreal &left) {mMarginLeft = left;}
 
      void currentChanged(const double &min, const double &max);
      void setScaleDivision (const double &major, const double &minorCount);

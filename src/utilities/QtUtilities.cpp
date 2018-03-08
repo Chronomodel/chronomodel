@@ -155,7 +155,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
     if (!fileName.isEmpty()) {
         fileInfo = QFileInfo(fileName);
         const QString fileExtension = fileInfo.suffix();
-        const qreal heightText (10);
+        const qreal heightText (2 * AppSettings::font().pointSizeF());//10);
         const qreal bottomSpace (5);
 
         if (fileExtension == "svg") {
@@ -255,8 +255,8 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
             // -------------------------------
             //  Write application and version
             // -------------------------------
-            QFont ft =  QFont() ;
-            ft.setPixelSize(heightText);
+            QFont ft =  QFont(AppSettings::font()) ;
+            //ft.setPixelSize(heightText);
             
             p.setFont(ft);
             p.setPen(Qt::black);
