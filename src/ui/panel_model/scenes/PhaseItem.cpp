@@ -251,15 +251,15 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
     } else {
         // Phase Name
-        const QRectF tr(rect.x() + mBorderWidth ,
-                  rect.y() + mBorderWidth + mEltsMargin - mEltsMargin,
-                  rect.width() - 2*mBorderWidth ,
+        const QRectF tr(rect.x() + mBorderWidth + mEltsMargin,
+                  rect.y() + mBorderWidth,
+                  rect.width() - 2*(mBorderWidth+ mEltsMargin),
                   mTitleHeight);
         font.setPointSizeF(12.);
         painter->setFont(font);
-
+        QFontMetrics fmName (font);
         QString name = mData.value(STATE_NAME).toString();
-        name = fm.elidedText(name, Qt::ElideRight, tr.width());
+        name = fmName.elidedText(name, Qt::ElideRight, tr.width());
         painter->setPen(fontColor);
         painter->drawText(tr, Qt::AlignCenter, name);
     }
@@ -273,7 +273,7 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     if (!tauStr.isEmpty()) {
         const QRectF tpr(rect.x() + mBorderWidth + mEltsMargin,
                    rect.y() + rect.height() - mBorderWidth - mEltsHeight - mEltsMargin,
-                   rect.width() - 2*mBorderWidth - 2*mEltsMargin,
+                   rect.width() - 2*(mBorderWidth + mEltsMargin),
                    mEltsHeight);
         
         painter->setPen(Qt::black);
