@@ -115,10 +115,7 @@ void PluginMagRefView::setDate(const Date& date, const ProjectSettings& settings
         QMap<double, double> curveG95Sup;
         QMap<double, double> curveG95Inf;
 
-        /*
-         * We need to skim the real map to fit with the real value of the calibration curve
-         * The graphView function does the interpolation between the real point
-         */
+
         for ( QMap<double, double>::const_iterator &&iPt = curve.mDataMean.cbegin();  iPt!=curve.mDataMean.cend(); ++iPt) {
             const double t (iPt.key());
             const double tDisplay = DateUtils::convertToAppSettingsFormat(t);

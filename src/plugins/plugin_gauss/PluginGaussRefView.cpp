@@ -149,9 +149,36 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
             QMap<double, double> curveG95Inf;
 
             /*
-             * We need to skim the real map to fit with the real value of the calibration curve
-             * The graphView function does the interpolation between the real point
+             *  Define the first point, which is often not the first point of the ref curve
              */
+
+            if (tminDisplay>curve.mDataMean.firstKey() && tminDisplay<curve.mDataMean.lastKey()) {
+                // This actually return the iterator with the nearest greater key !!!
+                 QMap<double, double>::const_iterator iter = curve.mDataMean.lowerBound(tminDisplay);
+                 // the higher value must be mTmax.
+                 double v;
+                 if (iter != curve.mDataError.constBegin()) {
+                     const double t_upper = iter.key();
+                     const double v_upper = iter.value();
+                     --iter;
+                     const double t_under = iter.key();
+                     const double v_under = iter.value();
+
+                     v = interpolate(tminDisplay, t_under, t_upper, v_under, v_upper);
+                 } else
+                     v = iter.value();
+
+                 const double error = plugin->getRefErrorAt(date.mData, tminDisplay, mode) * 1.96;
+
+                 curveG[tminDisplay] = v;
+                 curveG95Sup[tminDisplay] = v + error;
+                 curveG95Inf[tminDisplay] = v - error;
+
+                 yMin = qMin(yMin, curveG95Inf.value(tminDisplay));
+                 yMax = qMax(yMax, curveG95Sup.value(tminDisplay));
+            }
+
+
             for ( QMap<double, double>::const_iterator &&iPt = curve.mDataMean.cbegin();  iPt!=curve.mDataMean.cend(); ++iPt) {
                 const double t (iPt.key());
                 const double tDisplay = DateUtils::convertToAppSettingsFormat(t);
@@ -165,6 +192,29 @@ void PluginGaussRefView::setDate(const Date& date, const ProjectSettings& settin
                     yMin = qMin(yMin, curveG95Inf.value(tDisplay));
                     yMax = qMax(yMax, curveG95Sup.value(tDisplay));
                 }
+            }
+            if (tmaxDisplay>curve.mDataMean.firstKey() && tmaxDisplay<curve.mDataMean.lastKey()) {
+                 QMap<double, double>::const_iterator iter = curve.mDataMean.lowerBound(tmaxDisplay);
+                 double v;
+                 if (iter != curve.mDataError.constBegin()) {
+                     const double t_upper = iter.key();
+                     const double v_upper = iter.value();
+                     --iter;
+                     const double t_under = iter.key();
+                     const double v_under = iter.value();
+
+                     v = interpolate(tmaxDisplay, t_under, t_upper, v_under, v_upper);
+                 } else
+                     v = iter.value();
+
+                 const double error = plugin->getRefErrorAt(date.mData, tmaxDisplay, mode) * 1.96;
+
+                 curveG[tmaxDisplay] = v;
+                 curveG95Sup[tmaxDisplay] = v + error;
+                 curveG95Inf[tmaxDisplay] = v - error;
+
+                 yMin = qMin(yMin, curveG95Inf.value(tmaxDisplay));
+                 yMax = qMax(yMax, curveG95Sup.value(tmaxDisplay));
             }
 
 
