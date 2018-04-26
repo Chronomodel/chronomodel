@@ -55,19 +55,21 @@ void SceneGlobalView::paintEvent(QPaintEvent* e)
                            visiblePos.y(),
                            viewRect.width(),
                            viewRect.height());
-        
+
+
         double propX = (visibleRect.x() - sceneRect.x()) / sceneRect.width();
         double propY = (visibleRect.y() - sceneRect.y()) / sceneRect.height();
-        double propW = visibleRect.width() / sceneRect.width();
+        double propW = visibleRect.width() / sceneRect.width() ;
         double propH = visibleRect.height() / sceneRect.height();
-        
+
         propX = (propX < 0) ? 0 : propX;
         propY = (propY < 0) ? 0 : propY;
         propW = (propW > 1) ? 1 : propW;
         propH = (propH > 1) ? 1 : propH;
-        
-        QRectF targetVisibleRect(targetRect.x() + targetRect.width() * propX,
-                                 targetRect.y() + targetRect.height() * propY,
+
+        const QMatrix m = mView->matrix();
+        QRectF targetVisibleRect(targetRect.x() + targetRect.width() * propX * m.m11(),
+                                 targetRect.y() + targetRect.height() * propY * m.m22(),
                                  targetRect.width() * propW,
                                  targetRect.height() * propH);
         
@@ -113,7 +115,7 @@ QRectF SceneGlobalView::getTargetRect()
                       targetSize.width(),
                       targetSize.height());
     
-    return targetRect.adjusted(1, 1, -1, -1);
+    return targetRect;//.adjusted(1, 1, -1, -1);
 }
 
 void SceneGlobalView::mousePressEvent(QMouseEvent* e)
