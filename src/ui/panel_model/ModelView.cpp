@@ -569,7 +569,7 @@ void ModelView::calibrateAll(ProjectSettings newS)
             events.append(Event::fromJson(Qev.toObject()));
 
         //QProgressDialog *progress = new QProgressDialog("Calibration curve generation -----2","Wait" , 1, 10, qApp->activeWindow(), Qt::Widget);
-        QProgressDialog *progress = new QProgressDialog("Calibration curve generation","Wait" , 1, 10);
+        QProgressDialog *progress = new QProgressDialog("Calibration in progress...","Wait" , 1, 10);
         progress->setWindowModality(Qt::WindowModal);
         progress->setCancelButton(0);
         progress->setMinimumDuration(4);
@@ -1243,7 +1243,7 @@ void ModelView::exportSceneImage(QGraphicsScene* scene)
 void ModelView::updateCalibration(const QJsonObject& date)
 {
     // A date has been double-clicked => update CalibrationView only if the date is not null
-    if (!date.isEmpty() && mEventPropertiesView->isCalibChecked())
+     if (!date.isEmpty() && mEventPropertiesView->isVisible() && mEventPropertiesView->isCalibChecked())
         mCalibrationView->setDate(date);
 
 }
@@ -1264,7 +1264,6 @@ void ModelView::showCalibration(bool show)
     } else {
         mAnimationCalib->setStartValue(mLeftRect);
         mAnimationCalib->setEndValue(mLeftHiddenRect);
-
     }
     mAnimationCalib->start();
 
