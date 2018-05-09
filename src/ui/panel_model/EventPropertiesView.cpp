@@ -24,29 +24,16 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
 {
     setFont(AppSettings::font());
     minimumHeight = 0;
-/*
-   mButtonWidth = AppSettings::mButtonWidth;
-   mLineEditHeight = 1.1*AppSettings::heigthUnit();
-   mComboBoxHeight = 1.2*AppSettings::heigthUnit();
-   mButtonHeight = 1.1*AppSettings::heigthUnit();
-*/
     // ------------- commun with defautlt Event and Bound ----------
-    mNameLab = new Label(tr("Name"), this);
-    //mNameLab->setFixedHeight(mLineEditHeight);
-    
+    mNameLab = new Label(tr("Name"), this);    
     mNameEdit = new LineEdit(this);
-    //mNameEdit->setFixedHeight(mLineEditHeight);
 
     mColorLab = new Label(tr("Color"), this);
-    //mColorLab->setFixedHeight(mButtonHeight);
     mColorPicker = new ColorPicker(Qt::black);
-    //mColorPicker->setFixedHeight(mButtonHeight);
+
     
     mMethodLab = new Label(tr("Method"), this);
-    //mMethodLab->setFixedHeight(mComboBoxHeight);
-
     mMethodCombo = new QComboBox();
-   // mMethodCombo->setFixedHeight(mComboBoxHeight);
     
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eDoubleExp));
     mMethodCombo->addItem(ModelUtilities::getEventMethodText(Event::eBoxMuller));
@@ -262,12 +249,15 @@ void EventPropertiesView::updateEvent()
             QJsonArray dates = mEvent.value(STATE_EVENT_DATES).toArray();
 
             bool hasDates = (dates.size() > 0);
-            if (hasDates)
+            if (hasDates) {
                 updateCalibRequested(dates[mCurrentDateIdx].toObject());
 
-            mCalibBut->setEnabled(hasDates);
-            mDeleteBut->setEnabled(hasDates);
-            mRecycleBut->setEnabled(true);
+            } else {
+                mCalibBut->setEnabled(false);
+                mDeleteBut->setEnabled(false);
+                mRecycleBut->setEnabled(true);
+            }
+
             
         } else if (type == Event::eKnown) {
             mKnownFixedEdit -> setText(QString::number(mEvent.value(STATE_EVENT_KNOWN_FIXED).toDouble()));

@@ -118,7 +118,6 @@ void DatesList::handleItemDoubleClicked(QListWidgetItem* item)
 {
     if (!mEvent.isEmpty() && item)
         MainWindow::getInstance()->getProject()->updateDate(mEvent[STATE_ID].toInt(), row(item));
-
 }
 
 void DatesList::dropEvent(QDropEvent* e)
@@ -135,7 +134,7 @@ void DatesList::dropEvent(QDropEvent* e)
     QJsonArray dates = event[STATE_EVENT_DATES].toArray();
     QJsonArray datesOrdered;
     for (int i=0; i<ids.size(); ++i) {
-        int id = ids[i];
+        const int id = ids[i];
         for (int j=0; j<dates.size(); ++j){
             QJsonObject date = dates[j].toObject();
             int dateId = date[STATE_ID].toInt();

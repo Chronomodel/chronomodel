@@ -531,6 +531,9 @@ bool ModelView::findCalibrateMissing()
                         calibMissing = true;
                         continue;
                     }
+                } else {
+                    calibMissing = true;
+                    continue;
                 }
                 // look inside mProject->mCalibCurves, if there is a missing calibration
                 // to try to rebuild it after

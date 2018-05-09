@@ -48,8 +48,11 @@ mGreyedOut(false)
             if (d.mPlugin->getName() == "Typo")
                 mCalibThumb = d.generateTypoThumb();
 
-             // Can happen when there is trouble with the ref curve
-            else if (!d.mCalibration->mCurve.isEmpty())
+             /* Can happen when there is trouble with the ref curve, for example with un Undo after
+              * removing a refCurve
+              */
+
+            else if (d.mCalibration && !d.mCalibration->mCurve.isEmpty())
                 mCalibThumb = d.generateCalibThumb();
 
             else
