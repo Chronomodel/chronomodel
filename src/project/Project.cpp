@@ -56,7 +56,7 @@ mNoResults(true)
     mModel = new Model();
     mModel->setProject(this);
 
-    mReasonChangeStructure<<"project loaded"<<"Settings updated";
+    mReasonChangeStructure<< PROJECT_LOADED_REASON << PROJECT_SETTINGS_UPDATED_REASON;
     mReasonChangeStructure<<"Event constraint deleted"<<"Event constraint created"<<"Event(s) deleted";
     mReasonChangeStructure<<"Event created"<<"Bound created"<<"Event method updated" ;
     mReasonChangeStructure<<"Update selected event method";//<<"Event selected";
@@ -184,7 +184,8 @@ bool Project::pushProjectState(const QJsonObject& state, const QString& reason, 
         
         SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
         //command->setText("pushProjectState " + command->actionText());
-        MainWindow::getInstance()->getUndoStack()->push(command);
+        if (reason != NEW_PROJECT_REASON && reason != PROJECT_LOADED_REASON)
+            MainWindow::getInstance()->getUndoStack()->push(command);
 
         updateState(state, reason, notify);
         return true;
@@ -858,7 +859,7 @@ bool Project::setSettings(const ProjectSettings& settings)
         stateNext = checkValidDates(stateNext);
         
         //  Push the new state having a new study period with dates' "valid flag" updated!
-        return pushProjectState(stateNext, tr("Settings updated"), true, true);
+        return pushProjectState(stateNext, PROJECT_SETTINGS_UPDATED_REASON, true, true);
     }
 }
 
@@ -881,7 +882,7 @@ void Project::restoreMCMCSettings()
 
     QJsonObject stateNext = mState;
     stateNext[STATE_MCMC] = settings.toJson();
-    pushProjectState(stateNext, tr("MCMC Settings restore default"), true);
+    pushProjectState(stateNext, MCMC_SETTINGS_RESTORE_DEFAULT_REASON, true);
 
 }
 
@@ -898,7 +899,7 @@ void Project::mcmcSettings()
         
         QJsonObject stateNext = mState;
         stateNext[STATE_MCMC] = settings.toJson();
-        pushProjectState(stateNext, tr("MCMC Settings updated"), true);
+        pushProjectState(stateNext, MCMC_SETTINGS_UPDATED_REASON, true);
     }
 }
 /**
@@ -944,7 +945,7 @@ void Project::resetMCMC()
         }
         stateNext[STATE_EVENTS] = events;
         stateNext[STATE_MCMC_MIXING] = MCMC_MIXING_DEFAULT;
-        pushProjectState(stateNext, tr("MCMC methods reset"), true);
+        pushProjectState(stateNext, MCMC_METHODE_RESET_REASON, true);
     }
 }
 
@@ -1066,7 +1067,7 @@ void Project::deleteSelectedEvents()
     stateNext[STATE_EVENTS_CONSTRAINTS] = events_constraints;
     stateNext[STATE_EVENTS_TRASH] = events_trash;
     
-    pushProjectState(stateNext, tr("Event(s) deleted"), true);
+    pushProjectState(stateNext, "Event(s) deleted", true);
 
     // send to clear the propertiesView
     const QJsonObject itemEmpty ;
@@ -1094,7 +1095,7 @@ void Project::deleteSelectedTrashedEvents(const QList<int>& ids)
     }
     stateNext[STATE_EVENTS_TRASH] = events_trash;
     
-    pushProjectState(stateNext, tr("Trashed event(s) deleted"), true);
+    pushProjectState(stateNext, "Trashed event(s) deleted", true);
 }
 
 void Project::recycleEvents()
@@ -1116,7 +1117,7 @@ void Project::recycleEvents()
         stateNext[STATE_EVENTS] = events;
         stateNext[STATE_EVENTS_TRASH] = events_trash;
         
-        pushProjectState(stateNext, tr("Event(s) restored"), true);
+        pushProjectState(stateNext, "Event(s) restored", true);
     }
 }
 
@@ -1187,7 +1188,7 @@ void Project::mergeEvents(int eventFromId, int eventToId)
     
     //qDebug() << events;
     
-    pushProjectState(stateNext, tr("Events merged"), true);
+    pushProjectState(stateNext, "Events merged", true);
 }
 
 // Grouped actions on events
@@ -1218,7 +1219,7 @@ void Project::selectedEventsFromSelectedPhases()
     // create new state to push
     QJsonObject stateNext = mState;
     stateNext[STATE_EVENTS] = newEvents;
-    pushProjectState(stateNext, tr("Select events in selected phases"), true);
+    pushProjectState(stateNext, "Select events in selected phases", true);
 }
 
 void Project::updateSelectedEventsColor(const QColor& color)
@@ -1237,7 +1238,7 @@ void Project::updateSelectedEventsColor(const QColor& color)
 
     QJsonObject stateNext = mState;
     stateNext[STATE_EVENTS] = events;
-    pushProjectState(stateNext, tr("Update selected events color"), true);
+    pushProjectState(stateNext, "Update selected events color", true);
 }
 
 void Project::updateSelectedEventsMethod(Event::Method method)
@@ -1252,7 +1253,7 @@ void Project::updateSelectedEventsMethod(Event::Method method)
         }
     }
     stateNext[STATE_EVENTS] = events;
-    pushProjectState(stateNext, tr("Update selected events method"), true);
+    pushProjectState(stateNext, "Update selected events method", true);
 }
 
 void Project::updateSelectedEventsDataMethod(Date::DataMethod method, const QString& pluginId)
@@ -1275,7 +1276,7 @@ void Project::updateSelectedEventsDataMethod(Date::DataMethod method, const QStr
         }
     }
     stateNext[STATE_EVENTS] = events;
-    pushProjectState(stateNext, tr("Update selected data method"), true);
+    pushProjectState(stateNext, "Update selected data method", true);
 }
 
 
@@ -1359,7 +1360,7 @@ void Project::addDate(int eventId, QJsonObject date)
             evt[STATE_EVENT_DATES] = dates;
             events[i] = evt;
             stateNext[STATE_EVENTS] = events;
-            pushProjectState(stateNext, tr("Date created"), true);
+            pushProjectState(stateNext, "Date created", true);
             break;
         }
     }
@@ -1436,6 +1437,7 @@ void Project::checkDatesCompatibility()
 
 /**
  * @brief Project::updateDate : Function to change the date parameter inside an Event
+ * Open the dialogBox
  * @param eventId
  * @param dateIndex
  */
@@ -1468,7 +1470,7 @@ void Project::updateDate(int eventId, int dateIndex)
                         // this reason is not inside the list of mReasonChangeStructure
                         // or mReasonChangeDesign or mReasonChangePosition,
                         // we force to use the fonction checkStateModification() within pushProjectState()
-                        const QString reason ("Date from dialog");
+
                         date[STATE_DATE_DATA] = form->getData();
 
                         date[STATE_NAME] = dialog.getName();
@@ -1490,7 +1492,7 @@ void Project::updateDate(int eventId, int dateIndex)
                         events[i] = event;
                         state[STATE_EVENTS] = events;
 
-                        pushProjectState(state, reason, true);
+                        pushProjectState(state, "Date from dialog", true);
                         
                     } else {
                         QMessageBox message(QMessageBox::Critical,
@@ -1529,7 +1531,7 @@ void Project::deleteDates(int eventId, const QList<int>& dateIndexes)
             state[STATE_EVENTS] = events;
             state[STATE_DATES_TRASH] = dates_trash;
             
-            pushProjectState(state, QString::number(dateIndexes.size()) + tr(" date(s) deleted"), true);
+            pushProjectState(state, QString::number(dateIndexes.size()) + " date(s) deleted", true);
             
             break;
         }
@@ -1555,7 +1557,7 @@ void Project::deleteSelectedTrashedDates(const QList<int>& ids)
     }
     stateNext[STATE_DATES_TRASH] = dates_trash;
     
-    pushProjectState(stateNext, tr("Trashed data deleted"), true);
+    pushProjectState(stateNext, "Trashed data deleted", true);
 }
 
 void Project::recycleDates(int eventId)
@@ -1591,7 +1593,7 @@ void Project::recycleDates(int eventId)
                 stateNext[STATE_EVENTS] = events;
                 stateNext[STATE_DATES_TRASH] = dates_trash;
                 
-                pushProjectState(stateNext, QString::number(indexes.size()) + tr(" date(s) restored"), true);
+                pushProjectState(stateNext, QString::number(indexes.size()) + " date(s) restored", true);
                 
                 break;
             }
@@ -1701,7 +1703,7 @@ void Project::combineDates(const int eventId, const QList<int>& dateIds)
             events[i] = event;
             stateNext[STATE_EVENTS] = events;
             
-            pushProjectState(stateNext, tr("Dates combined"), true);
+            pushProjectState(stateNext, "Dates combined", true);
             
             break;
         }
@@ -1743,7 +1745,7 @@ void Project::splitDate(const int eventId, const int dateId)
         events[i] = event;
     }
     stateNext[STATE_EVENTS] = events;
-    pushProjectState(stateNext, tr("Dates splitted"), true);
+    pushProjectState(stateNext, "Dates splitted", true);
 }
 
 // Grouped actions on dates
@@ -1773,7 +1775,7 @@ void Project::updateAllDataInSelectedEvents(const QHash<QString, QVariant>& grou
     }
     stateNext[STATE_EVENTS] = events;
     
-    pushProjectState(stateNext, tr("Grouped action applied : ") + groupedAction.value("title").toString(), true);
+    pushProjectState(stateNext, "Grouped action applied : " + groupedAction.value("title").toString(), true);
 }
 
 void Project::createPhase()
@@ -1790,7 +1792,7 @@ void Project::createPhase()
                 phases.append(phase);
                 stateNext[STATE_PHASES] = phases;
                 
-                pushProjectState(stateNext, tr("Phase created"), true);
+                pushProjectState(stateNext, "Phase created", true);
 
             } else {
                 QMessageBox message(QMessageBox::Critical,
@@ -1821,7 +1823,7 @@ void Project::updatePhase(const QJsonObject& phaseIn)
                 QJsonObject p = phases.at(i).toObject();
                 if (p.value(STATE_ID).toInt() == phase.value(STATE_ID).toInt()) {
                     // check modification type to set mReasonChangeStructure or mReasonChangeDesign in pushProjectState
-                    // if only mReasonChangeDesign we don't need to redo cacul to see the result
+                    // if only mReasonChangeDesign we don't need to redo calcul to see the result
                     if (p.value(STATE_NAME).toString() != phase.value(STATE_NAME).toString())
                         reason = "Phase name updated";
 
@@ -1897,7 +1899,7 @@ void Project::deleteSelectedPhases()
     stateNext[STATE_PHASES_CONSTRAINTS] = phases_constraints;
     stateNext[STATE_EVENTS] = events;
 
-    pushProjectState(stateNext, tr("Phase(s) deleted"), true);
+    pushProjectState(stateNext, "Phase(s) deleted", true);
     
     clearModel();
     MainWindow::getInstance() -> setResultsEnabled(false);
@@ -1966,7 +1968,7 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
     stateNext[STATE_EVENTS] = events;
     stateNext[STATE_PHASES_CONSTRAINTS] = phases_constraints;
     
-    pushProjectState(stateNext, tr("Phases merged"), true);
+    pushProjectState(stateNext, "Phases merged", true);
 }
 
 
@@ -1992,7 +1994,7 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
         }
     }
     stateNext[STATE_EVENTS] = events;
-    pushProjectState(stateNext, tr("Phase's events updated"), true);
+    pushProjectState(stateNext, "Phase's events updated", true);
 }
 
 QJsonObject Project::getPhasesWithId(const int id)
@@ -2053,7 +2055,7 @@ void Project::createEventConstraint(const int eventFromId, const int eventToId)
     constraints.append(constraint);
     state[STATE_EVENTS_CONSTRAINTS] = constraints;
 
-    pushProjectState(state, tr("Event constraint created"), true, false);// notify=true, force=false
+    pushProjectState(state, "Event constraint created", true, false);// notify=true, force=false
 
 }
 
@@ -2070,7 +2072,7 @@ void Project::deleteEventConstraint(int constraintId)
         }
     }
     state[STATE_EVENTS_CONSTRAINTS] = constraints;
-    pushProjectState(state, tr("Event constraint deleted"), true);
+    pushProjectState(state, "Event constraint deleted", true);
 }
 
 void Project::updateEventConstraint(int constraintId)
@@ -2098,7 +2100,7 @@ void Project::updateEventConstraint(int constraintId)
                 constraints[index] = constraint;
             }
             stateNext[STATE_EVENTS_CONSTRAINTS] = constraints;
-            pushProjectState(stateNext, tr("Event constraint updated"), true);
+            pushProjectState(stateNext, "Event constraint updated", true);
         }
         delete dialog;
     }
@@ -2157,7 +2159,7 @@ void Project::createPhaseConstraint(int phaseFromId, int phaseToId)
         constraints.append(constraint);
         state[STATE_PHASES_CONSTRAINTS] = constraints;
 
-        pushProjectState(state, tr("Phase constraint created"), true, false);
+        pushProjectState(state, "Phase constraint created", true, false);
 
     }
 }
@@ -2175,7 +2177,7 @@ void Project::deletePhaseConstraint(int constraintId)
         }
     }
     state[STATE_PHASES_CONSTRAINTS] = constraints;
-    pushProjectState(state, tr("Phase constraint deleted"), true);
+    pushProjectState(state, "Phase constraint deleted", true);
 }
 
 void Project::updatePhaseConstraint(const int constraintId)
@@ -2226,7 +2228,7 @@ void Project::updatePhaseConstraint(const int constraintId)
                 constraints[index] = constraint;
             }
             state[STATE_PHASES_CONSTRAINTS] = constraints;
-            pushProjectState(state, tr("Phase constraint updated"), true);
+            pushProjectState(state, "Phase constraint updated", true);
         }
     }
 }

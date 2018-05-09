@@ -958,7 +958,7 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
             (*state)[STATE_EVENTS] = events;
 
             hoveredEventItem->setMergeable(false);
-            mProject->pushProjectState(*state, tr("Date moved to event"), true); // used to disable ResultsView
+            mProject->pushProjectState(*state, DATE_MOVE_TO_EVENT_REASON, true); // used to disable ResultsView
             return hoveredEventItem;
 
         } else
@@ -1287,7 +1287,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
             event.mColor = randomColor();
             events.append(event.toJson());
             state[STATE_EVENTS] = events;
-            project->pushProjectState(state, tr("New Event by CSV drag)"), true);
+            project->pushProjectState(state, NEW_EVEN_BY_CSV_DRAG_REASON, true);
             ++EventCount;
         }
 

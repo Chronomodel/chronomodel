@@ -18,6 +18,13 @@
 #define PROJECT_LOADED_REASON "project loaded"
 #define NEW_PROJECT_REASON "new project"
 #define CLOSE_PROJECT_REASON "close project"
+#define PROJECT_SETTINGS_UPDATED_REASON "Settings updated"
+#define MCMC_SETTINGS_UPDATED_REASON "MCMC Settings updated"
+#define MCMC_SETTINGS_RESTORE_DEFAULT_REASON "MCMC Settings restore default"
+#define MCMC_METHODE_RESET_REASON "MCMC methods reset"
+#define DATE_MOVE_TO_EVENT_REASON "Date moved to event"
+#define NEW_EVEN_BY_CSV_DRAG_REASON "New Event by CSV drag"
+
 
 class Date;
 class Event;
