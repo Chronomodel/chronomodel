@@ -123,12 +123,17 @@ void PluginRefCurveSettingsView::addRefCurve(){
 
 void PluginRefCurveSettingsView::deleteRefCurve()
 {
-    QList<QListWidgetItem*> selectedItems = mRefCurvesList->selectedItems();
-    for (int i=0; i<selectedItems.size(); ++i) {
-        QString filename = selectedItems.at(i)->text();
+    // copy of the selected file, because mRefCurvesList is cleared with updateRefsList()
+    QList<QString> selectedFile;
+
+    for (auto item : mRefCurvesList->selectedItems())
+        selectedFile.append(item->text());
+
+    for (int i=0; i<selectedFile.size(); ++i) {
+        const QString filename = selectedFile.at(i);
         mFilesNew.remove(filename);
         updateFilesInFolder();
-        updateRefsList();
+        updateRefsList(); //Clear and update mRefCurvesList
 
         emit listRefCurveChanged();
     }
