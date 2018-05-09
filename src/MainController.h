@@ -2,6 +2,7 @@
 #define MAINCONTROLLER_H
 
 #include "AppSettings.h"
+
 #include <QString>
 
 class MainWindow;

@@ -2,6 +2,7 @@
 #define DATEUTILS_H
 
 #include <QString>
+#include <QMap>
 
 typedef double (*DateConversion)(const double &);
 

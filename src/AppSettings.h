@@ -1,12 +1,14 @@
 #ifndef APPSETTINGS_H
 #define APPSETTINGS_H
 
+#include "Singleton.h"
+#include "DateUtils.h"
+
+#include <qsystemdetection.h>
 #include <QString>
 #include <QLocale>
 #include <QFont>
-#include "Singleton.h"
-#include "DateUtils.h"
-#include <qsystemdetection.h>
+
 
 //#define APP_SETTINGS_DEFAULT_LANGUAGE QLocale::English
 //#define APP_SETTINGS_DEFAULT_COUNTRY QLocale::UnitedKingdom
@@ -21,6 +23,10 @@
     #define APP_SETTINGS_DEFAULT_FONT_SIZE  12
 #endif
 
+#ifdef Q_OS_LINUX
+    #define APP_SETTINGS_DEFAULT_FONT_FAMILY "Sans Serif"
+    #define APP_SETTINGS_DEFAULT_FONT_SIZE  10
+#endif
 
 #define APP_SETTINGS_DEFAULT_AUTO_SAVE false
 #define APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC 300

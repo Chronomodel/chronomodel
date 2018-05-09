@@ -1,25 +1,23 @@
 #ifndef METROPOLISVARIABLE_H
 #define METROPOLISVARIABLE_H
 
-#include <QMap>
-#include <QVector>
-#include <QList>
 #include "MCMCLoop.h"
 #include "Functions.h"
 #include "ProjectSettings.h"
 #include "DateUtils.h"
+
+#include <QMap>
+#include <QVector>
+#include <QList>
 #include <QDataStream>
 #include <QObject>
-//#include <deque>
-
-
 
 class MetropolisVariable: public QObject
 {
     Q_OBJECT
 public:
     MetropolisVariable(QObject *parent = nullptr);
-    MetropolisVariable (const MetropolisVariable& origin);
+    explicit MetropolisVariable(const MetropolisVariable& origin);
    // MetropolisVariable (MetropolisVariable&& origin) noexcept;
     virtual ~MetropolisVariable();
     MetropolisVariable& operator=(const MetropolisVariable & origin);

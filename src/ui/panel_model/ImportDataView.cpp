@@ -7,6 +7,7 @@
 #include "Label.h"
 #include "MainWindow.h"
 #include "Project.h"
+
 #include <QtWidgets>
 
 
@@ -16,9 +17,9 @@ ImportDataView::ImportDataView(QWidget* parent, Qt::WindowFlags flags):QWidget(p
     mExportBut = new Button(tr("Export all project data as CSV"), this);
     mHelp = new HelpWidget(this);
     mHelp->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=29"); //chapter 3.4.2.1 Radiocarbon dating (14C)
-    
+
     mHelp->setText(tr("Your CSV file must contain 1 data per row. Each row must start with an Event name, the second row is the datation method to use. Allowed datation methods are : 14C, AM, Gauss, Typo, TL/OSL.\nComments are allowed in your CSV. They must start with  # or // and can be placed at the end of a data row. When placed at the begining of a row, the whole row is ignored.\r Be careful, cell separator and decimal separator of the CSV file should be those defined in the Application Settings, otherwise the CSV file will not be opened"));
-    
+
     mTable = new ImportDataTable(this, this);
     mTable->setAlternatingRowColors(true);
     mTable->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -32,7 +33,7 @@ ImportDataView::ImportDataView(QWidget* parent, Qt::WindowFlags flags):QWidget(p
 
 ImportDataView::~ImportDataView()
 {
-    
+
 }
 
 /**
@@ -67,7 +68,7 @@ Structure; Terrestrial
 Event8;Gauss; New Data;-79;50;none;none
 
 EventAM;AM;incli;inclination;60;0;0;1;gal2002sph2014_i.ref;none
-Event14C;﻿14C;shell;2900;36;marine04.14c;-150;20;none
+Event14C;14C;shell;2900;36;marine04.14c;-150;20;none
 Event1;14C;onshore;1600;35;intcal13.14c;0;0;none
  *
  */
@@ -75,33 +76,33 @@ void ImportDataView::browse()
 {
     const QString currentDir = MainWindow::getInstance()->getCurrentPath();
     const QString path = QFileDialog::getOpenFileName(qApp->activeWindow(), tr("Open CSV File"), currentDir, "CSV File (*.csv)");
-    
+
     if (!path.isEmpty()) {
         QFileInfo info(path);
         mPath = info.absolutePath();
         MainWindow::getInstance()->setCurrentPath(mPath);
-        
+
         while(mTable->rowCount() > 0)
             mTable->removeRow(0);
-        
+
         QFile file(path);
         if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
             QTextStream stream(&file);
             QList<QStringList> data;
-            
+
            /**
             * @todo File encoding must be UTF8, Unix LF !!
             */
             //QTextCodec* codec = stream.codec();
-            
+
             int rows = 0;
             int cols = 0;
-            
+
             QStringList headers;
             const QStringList pluginNames = PluginManager::getPluginsNames();
 
             const QString csvSep = AppSettings::mCSVCellSeparator;
-            
+
             // endline detection, we want to find which system, OsX, Mac, Windows made this file
            // QString line = stream.readLine();
            /* char * pText;
@@ -165,7 +166,7 @@ void ImportDataView::browse()
                         continue;
                     } else if (values.at(0).contains("title", Qt::CaseInsensitive) && !values.at(0).contains("ntitle", Qt::CaseInsensitive)) {
                         headers << "TITLE";
-                        
+
                         QStringList titleText;
                         values.push_front("");
                         foreach (const QString val, values) {
@@ -194,7 +195,7 @@ void ImportDataView::browse()
                         if (pluginNames.contains(pluginName, Qt::CaseInsensitive)) {
                             headers << EventName;
                             data << values;
-                            
+
                             // Adapt max columns count if necessary
                             cols = (values.size() > cols) ? values.size() : cols;
                             ++rows;
@@ -248,12 +249,12 @@ void ImportDataView::exportDates()
 {
     QString currentDir = MainWindow::getInstance()->getCurrentPath();
     QString path = QFileDialog::getSaveFileName(qApp->activeWindow(), tr("Save as CSV"), currentDir, "CSV File (*.csv)");
-    
+
     if (!path.isEmpty())  {
         QFileInfo info(path);
         mPath = info.absolutePath();
         MainWindow::getInstance()->setCurrentPath(mPath);
-        
+
         QString sep = AppSettings::mCSVCellSeparator;
         QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
         csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
@@ -261,14 +262,14 @@ void ImportDataView::exportDates()
         QFile file(path);
         if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
             QTextStream stream(&file);
-            
+
             Project* project = MainWindow::getInstance()->getProject();
             QJsonArray events = project->mState[STATE_EVENTS].toArray();
             stream << "Title"<< sep << AppSettings::mLastFile<< "\n\r";
             for (int i=0; i<events.size(); ++i) {
                 QJsonObject event = events[i].toObject();
                 QJsonArray dates = event[STATE_EVENT_DATES].toArray();
-                
+
                 int type = event[STATE_EVENT_TYPE].toInt();
                 const QString eventName = event[STATE_NAME].toString();
                 if (type == Event::eKnown) {
@@ -309,12 +310,12 @@ void ImportDataView::removeCsvRows(QList<int> rows)
     for (int i=rows.size()-1; i>=0; --i) {
         //qDebug() << "Removing row : " << rows[i];
         //mTable->removeRow(rows[i]);
-        
+
         for (int c=0; c<mTable->columnCount(); ++c) {
             QTableWidgetItem* item = mTable->item(rows.at(i), c);
             if (item)
                 item->setBackgroundColor(QColor(100, 200, 100));
-            
+
         }
     }
 }
@@ -341,14 +342,14 @@ void ImportDataView::paintEvent(QPaintEvent* e)
 void ImportDataView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);
-    
+
     int m = 5;
     int butH = 25;
     int helpH = mHelp->heightForWidth(width() - 2*m);
-    
+
     mBrowseBut->setGeometry(m, m, (width() - 3*m)/2, butH);
     mExportBut->setGeometry(2*m + (width() - 3*m)/2, m, (width() - 3*m)/2, butH);
-    
+
     mTable->setGeometry(0, 2*m + butH, width(), height() - 4*m - butH - helpH);
     mHelp->setGeometry(m, height() - helpH - m, width() - 2*m, helpH);
 }
@@ -376,25 +377,25 @@ ImportDataTable::~ImportDataTable()
 QMimeData* ImportDataTable::mimeData(const QList<QTableWidgetItem*> items) const
 {
     QMimeData* mimeData = new QMimeData();
-    
+
     QByteArray encodedData;
     QDataStream stream(&encodedData, QIODevice::WriteOnly);
-    
+
     int row (-1);
     QStringList itemStr;
 
     const QString csvSep = AppSettings::mCSVCellSeparator;
-    
+
     foreach (QTableWidgetItem* item, items) {
         if (item) {
             if (item->row() != row) {
                 if (!itemStr.empty())
                     stream << itemStr.join(csvSep);
-                
+
                 itemStr.clear();
                 row = item->row();
                 itemStr << QString::number(row);
-                
+
                 //QString pluginName = verticalHeaderItem(row)->text();
                 // itemStr << pluginName;
                 QString evenName = verticalHeaderItem(row)->text();
@@ -407,7 +408,7 @@ QMimeData* ImportDataTable::mimeData(const QList<QTableWidgetItem*> items) const
     }
     if (!itemStr.empty())
         stream << itemStr.join(csvSep);
-    
+
     mimeData->setData("application/chronomodel.import.data", encodedData);
     return mimeData;
 }
@@ -428,7 +429,7 @@ void ImportDataTable::updateTableHeaders()
             break;
         }
     }
-    
+
     QStringList headers;
 
     int numCols = columnCount();

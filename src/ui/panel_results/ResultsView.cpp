@@ -3643,7 +3643,7 @@ void ResultsView::exportFullImage()
     
     QWidget* curWid (nullptr);
     
-    type_data max (0.);
+    type_data max;
 
     if (mStack->currentWidget() == mEventsScrollArea) {
         curWid = mEventsScrollArea->widget();

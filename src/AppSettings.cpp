@@ -191,9 +191,17 @@ AppSettings::~AppSettings()
 
 #ifdef Q_OS_MAC
      AppSettings::mHeigthUnit = 1.2 * fm.height();
-#else
+#endif
+
+#ifdef Q_OS_WIN
      AppSettings::mHeigthUnit = fm.height();
 #endif
+
+#ifdef Q_OS_LINUX
+     AppSettings::mHeigthUnit = abs(fm.height());
+#endif
+
+
      AppSettings::mFontDescent = fm.descent();
      AppSettings::mFontFamily = font.family();
      AppSettings::mFontPointSize = font.pointSize();

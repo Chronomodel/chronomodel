@@ -258,7 +258,7 @@ double Phase::getMaxThetaPrevPhases(const double tmin)
 
 void Phase::updateAll(const double tmin, const double tmax)
 {
-    static bool initalized = false; // What is it??
+    //static bool initalized = false; // What is it??
     
     mAlpha.mX = getMinThetaEvents(tmin);
     mBeta.mX = getMaxThetaEvents(tmax);
@@ -277,7 +277,7 @@ void Phase::updateAll(const double tmin, const double tmax)
     
     updateTau();
     
-    initalized = true;
+    //initalized = true;
 }
 
 QString Phase::getTauTypeText() const

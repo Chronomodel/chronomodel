@@ -1,4 +1,3 @@
-
 #ifndef MHVARIABLE_H
 #define MHVARIABLE_H
 
@@ -7,10 +6,10 @@
 
 class MHVariable: public MetropolisVariable
 {
-   // Q_OBJECT
+
 public:
     MHVariable();
-    MHVariable(const MHVariable &origin);
+    explicit MHVariable(const MHVariable &origin);
     virtual ~MHVariable();
     
     virtual void reset();
