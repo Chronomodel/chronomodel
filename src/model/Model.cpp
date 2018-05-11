@@ -1667,6 +1667,9 @@ void Model::generateTempo()
         int index (0); // index of table N corresponding to the first value // faster than used of Distance
         double t (tmin);
         while (t <= tmax ) {
+            /* quartile for 95%,
+             * 2.5% on inferior curve
+             * and 2.5% on the superior curve */
             Quartiles cred = quartilesType(Ni[t], 8, 0.025);
             *itCredInf = cred.Q1;
             *itCredSup = cred.Q3;
